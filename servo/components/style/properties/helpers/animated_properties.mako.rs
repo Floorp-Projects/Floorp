@@ -401,7 +401,6 @@ impl AnimationValue {
             PropertyDeclarationId::Custom(_) => return None,
         };
 
-        let property = property.to_physical(style.writing_mode);
         Some(match property {
             % for prop in data.longhands:
             % if prop.animatable and not prop.logical:

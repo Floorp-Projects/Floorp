@@ -169,7 +169,7 @@ bool nsTransitionManager::DoUpdateTransitions(
           // or because the new value is not interpolable); a new transition
           // would have anim->ToValue() matching currentValue.
           !Servo_ComputedValues_TransitionValueMatches(
-              &aNewStyle, property.mID, anim->ToValue().mServo.get())) {
+              &aNewStyle, &property, anim->ToValue().mServo.get())) {
         // Stop the transition.
         DoCancelTransition(aElement, aPseudoType, aElementTransitions, i);
       }
@@ -189,7 +189,7 @@ static Keyframe& AppendKeyframe(double aOffset,
   RefPtr<StyleLockedDeclarationBlock> decl =
       Servo_AnimationValue_Uncompute(aValue.mServo).Consume();
   frame.mPropertyValues.AppendElement(
-      PropertyValuePair(aProperty.mID, std::move(decl)));
+      PropertyValuePair(aProperty, std::move(decl)));
   return frame;
 }
 
@@ -205,11 +205,7 @@ static nsTArray<Keyframe> GetTransitionKeyframes(
 }
 
 static bool IsTransitionable(const AnimatedPropertyID& aProperty) {
-  // TODO(bug 1846516): handle custom property.
-  if (aProperty.IsCustom()) {
-    return false;
-  }
-  return Servo_Property_IsTransitionable(aProperty.mID);
+  return Servo_Property_IsTransitionable(&aProperty);
 }
 
 static Maybe<CSSTransition::ReplacedTransitionProperties>
@@ -321,7 +317,7 @@ bool nsTransitionManager::ConsiderInitiatingTransition(
   AnimationValue startValue, endValue;
   const StyleShouldTransitionResult result =
       Servo_ComputedValues_ShouldTransition(
-          &aOldStyle, &aNewStyle, aProperty.mID,
+          &aOldStyle, &aNewStyle, &aProperty,
           oldTransition ? oldTransition->ToValue().mServo.get() : nullptr,
           &startValue.mServo, &endValue.mServo);
 

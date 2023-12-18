@@ -18,6 +18,7 @@ use std::{ops, ptr};
 use std::fmt::{self, Write};
 use std::mem;
 
+use crate::Atom;
 use cssparser::{Parser, ParserInput, TokenSerializationType};
 #[cfg(feature = "servo")] use euclid::SideOffsets2D;
 #[cfg(feature = "gecko")] use crate::gecko_bindings::structs::{self, nsCSSPropertyID};
@@ -2087,6 +2088,23 @@ impl PropertyId {
     #[inline]
     pub fn from_nscsspropertyid(id: nsCSSPropertyID) -> Option<Self> {
         Some(NonCustomPropertyId::from_nscsspropertyid(id)?.to_property_id())
+    }
+
+    /// Returns a property id from Gecko's AnimatedPropertyID.
+    #[cfg(feature = "gecko")]
+    #[allow(non_upper_case_globals)]
+    #[inline]
+    pub fn from_gecko_animated_property_id(property: &structs::AnimatedPropertyID) -> Result<Self, ()> {
+        Ok(if property.mID == nsCSSPropertyID::eCSSPropertyExtra_variable {
+            if property.mCustomName.mRawPtr.is_null() {
+                return Err(());
+            }
+            PropertyId::Custom(unsafe {
+                Atom::from_raw(property.mCustomName.mRawPtr)
+            })
+        } else {
+            NonCustomPropertyId::from_nscsspropertyid(property.mID)?.to_property_id()
+        })
     }
 
     /// Returns true if the property is a shorthand or shorthand alias.

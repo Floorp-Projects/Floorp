@@ -287,8 +287,9 @@ void KeyframeEffect::ReplaceTransitionStartValue(AnimationValue&& aStartValue) {
 
   // Check that the value we are about to substitute in is actually for the
   // same property.
-  if (Servo_AnimationValue_GetPropertyId(aStartValue.mServo) !=
-      mProperties[0].mProperty.mID) {
+  AnimatedPropertyID property(eCSSProperty_UNKNOWN);
+  Servo_AnimationValue_GetPropertyId(aStartValue.mServo, &property);
+  if (property != mProperties[0].mProperty) {
     return;
   }
 
@@ -587,7 +588,7 @@ void KeyframeEffect::EnsureBaseStyle(
   }
   RefPtr<StyleAnimationValue> baseValue =
       Servo_ComputedValues_ExtractAnimationValue(aBaseComputedStyle,
-                                                 aProperty.mProperty.mID)
+                                                 &aProperty.mProperty)
           .Consume();
   mBaseValues.InsertOrUpdate(aProperty.mProperty.mID, std::move(baseValue));
 }
@@ -604,10 +605,9 @@ void KeyframeEffect::ComposeStyleRule(StyleAnimationValueMap& aAnimationValues,
                                       const ComputedTiming& aComputedTiming) {
   auto* opaqueTable =
       reinterpret_cast<RawServoAnimationValueTable*>(&mBaseValues);
-  Servo_AnimationCompose(&aAnimationValues, opaqueTable,
-                         aProperty.mProperty.mID, &aSegment,
-                         &aProperty.mSegments.LastElement(), &aComputedTiming,
-                         mEffectOptions.mIterationComposite);
+  Servo_AnimationCompose(&aAnimationValues, opaqueTable, &aProperty.mProperty,
+                         &aSegment, &aProperty.mSegments.LastElement(),
+                         &aComputedTiming, mEffectOptions.mIterationComposite);
 }
 
 void KeyframeEffect::ComposeStyle(StyleAnimationValueMap& aComposeResult,
@@ -1287,7 +1287,7 @@ void KeyframeEffect::GetKeyframes(JSContext* aCx, nsTArray<JSObject*>& aResult,
     // This workaround will be solved by bug 1391537.
     if (isCSSAnimation) {
       for (const PropertyValuePair& propertyValue : keyframe.mPropertyValues) {
-        if (propertyValue.mProperty ==
+        if (propertyValue.mProperty.mID ==
             nsCSSPropertyID::eCSSPropertyExtra_variable) {
           customProperties = propertyValue.mServoDeclarationBlock;
           break;
@@ -1299,17 +1299,17 @@ void KeyframeEffect::GetKeyframes(JSContext* aCx, nsTArray<JSObject*>& aResult,
     for (const PropertyValuePair& propertyValue : keyframe.mPropertyValues) {
       nsAutoCString stringValue;
       // Don't serialize the custom properties for this keyframe.
-      if (propertyValue.mProperty ==
+      if (propertyValue.mProperty.mID ==
           nsCSSPropertyID::eCSSPropertyExtra_variable) {
         continue;
       }
       if (propertyValue.mServoDeclarationBlock) {
         Servo_DeclarationBlock_SerializeOneValue(
-            propertyValue.mServoDeclarationBlock, propertyValue.mProperty,
+            propertyValue.mServoDeclarationBlock, &propertyValue.mProperty,
             &stringValue, computedStyle, customProperties, rawData);
       } else {
-        if (auto* value = mBaseValues.GetWeak(propertyValue.mProperty)) {
-          Servo_AnimationValue_Serialize(value, propertyValue.mProperty,
+        if (auto* value = mBaseValues.GetWeak(propertyValue.mProperty.mID)) {
+          Servo_AnimationValue_Serialize(value, &propertyValue.mProperty,
                                          rawData, &stringValue);
         }
       }
@@ -1322,7 +1322,15 @@ void KeyframeEffect::GetKeyframes(JSContext* aCx, nsTArray<JSObject*>& aResult,
       // "offset" property in BaseKeyframe.)
       // https://drafts.csswg.org/web-animations/#property-name-conversion
       const char* name = nullptr;
-      switch (propertyValue.mProperty) {
+      nsAutoCString customName;
+      nsAutoCString identifier;
+      switch (propertyValue.mProperty.mID) {
+        case nsCSSPropertyID::eCSSPropertyExtra_variable:
+          customName.Append("--");
+          propertyValue.mProperty.mCustomName->ToUTF8String(identifier);
+          customName.Append(identifier);
+          name = customName.get();
+          break;
         case nsCSSPropertyID::eCSSProperty_offset:
           name = "cssOffset";
           break;
@@ -1330,7 +1338,7 @@ void KeyframeEffect::GetKeyframes(JSContext* aCx, nsTArray<JSObject*>& aResult,
           // FIXME: Bug 1582314: Should handle cssFloat manually if we remove it
           // from nsCSSProps::PropertyIDLName().
         default:
-          name = nsCSSProps::PropertyIDLName(propertyValue.mProperty);
+          name = nsCSSProps::PropertyIDLName(propertyValue.mProperty.mID);
       }
 
       JS::Rooted<JS::Value> value(aCx);
