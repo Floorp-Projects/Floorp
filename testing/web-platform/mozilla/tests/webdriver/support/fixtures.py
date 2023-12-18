@@ -14,6 +14,8 @@ import webdriver
 from mozprofile import Preferences, Profile
 from mozrunner import FirefoxRunner
 
+from .context import using_context
+
 
 def get_arg_value(arg_names, args):
     """Get an argument value from a list of arguments
@@ -330,3 +332,87 @@ def readOutputLine(stream, callback):
             break
 
         callback(line)
+
+
+def clear_pref(session, pref):
+    """Clear the user-defined value from the specified preference.
+
+    :param pref: Name of the preference.
+    """
+    with using_context(session, "chrome"):
+        session.execute_script(
+            """
+           const { Preferences } = ChromeUtils.importESModule(
+             "resource://gre/modules/Preferences.sys.mjs"
+           );
+           Preferences.reset(arguments[0]);
+           """,
+            args=(pref,),
+        )
+
+
+def get_pref(session, pref):
+    """Get the value of the specified preference.
+
+    :param pref: Name of the preference.
+    """
+    with using_context(session, "chrome"):
+        pref_value = session.execute_script(
+            """
+            const { Preferences } = ChromeUtils.importESModule(
+              "resource://gre/modules/Preferences.sys.mjs"
+            );
+
+            let pref = arguments[0];
+
+            prefs = new Preferences();
+            return prefs.get(pref, null);
+            """,
+            args=(pref,),
+        )
+        return pref_value
+
+
+def set_pref(session, pref, value):
+    """Set the value of the specified preference.
+
+    :param pref: Name of the preference.
+    :param value: The value to set the preference to. If the value is None,
+                  reset the preference to its default value. If no default
+                  value exists, the preference will cease to exist.
+    """
+    if value is None:
+        clear_pref(session, pref)
+        return
+
+    with using_context(session, "chrome"):
+        session.execute_script(
+            """
+            const { Preferences } = ChromeUtils.importESModule(
+              "resource://gre/modules/Preferences.sys.mjs"
+            );
+
+            const [pref, value] = arguments;
+
+            prefs = new Preferences();
+            prefs.set(pref, value);
+            """,
+            args=(pref, value),
+        )
+
+
+@pytest.fixture
+def use_pref(session):
+    """Set a specific pref value."""
+    reset_values = {}
+
+    def _use_pref(pref, value):
+        if pref not in reset_values:
+            reset_values[pref] = get_pref(session, pref)
+
+        set_pref(session, pref, value)
+
+    yield _use_pref
+
+    for pref, reset_value in reset_values.items():
+        set_pref(session, pref, reset_value)
