@@ -3,6 +3,7 @@ union Foo {
     ByteBuf;
 };
 
+[ChildProc=any]
 intr protocol Pbytebuf {
 parent:
     async Msg(ByteBuf s, Foo f);

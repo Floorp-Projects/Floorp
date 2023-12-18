@@ -1,3 +1,4 @@
+[ChildProc=any]
 protocol Pactorparam {
 
 child: async Msg(Pactorparam p);

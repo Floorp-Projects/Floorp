@@ -87,7 +87,7 @@ struct SocketPorcessInitAttributes {
   FileDescriptor? mSandboxBroker;
 };
 
-[NeedsOtherPid]
+[NeedsOtherPid, ChildProc=Socket]
 sync protocol PSocketProcess
 {
   manages PDNSRequest;

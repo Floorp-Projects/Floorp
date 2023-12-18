@@ -22,7 +22,7 @@ namespace gfx {
  * compositor process. This protocol should be used to create accelerated
  * canvas instances.
  */
-[NeedsOtherPid]
+[NeedsOtherPid, ParentProc=compositor, ChildProc=anydom]
 sync protocol PCanvasManager
 {
   manages PCanvas;

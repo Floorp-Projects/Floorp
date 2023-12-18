@@ -7,6 +7,7 @@ using class mozilla::ipc::SomeMoveonlyType from "SomeFile.h";
 [MoveOnly=send] using class mozilla::ipc::SomeMoveonlySendType from "SomeFile.h";
 [MoveOnly=data] using class mozilla::ipc::SomeMoveonlySendType from "SomeFile.h";
 
+[ChildProc=any]
 protocol PInconsistentMoveOnly {
 child:
   async SomeMessage();

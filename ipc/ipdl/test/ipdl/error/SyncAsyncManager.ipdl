@@ -2,6 +2,7 @@
 
 include protocol SyncAsyncManagee;
 
+[ChildProc=any]
 async protocol SyncAsyncManager {
     manages SyncAsyncManagee;
 parent:

@@ -20,7 +20,7 @@ namespace layers {
  * compositor from the UI thread. Primarily used on Android to coordinate registering and
  * releasing the surface with the compositor.
  */
-[NeedsOtherPid]
+[NeedsOtherPid, ParentProc=compositor, ChildProc=Parent]
 sync protocol PUiCompositorController
 {
 

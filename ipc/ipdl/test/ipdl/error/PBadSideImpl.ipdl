@@ -1,7 +1,7 @@
 //error: invalid value for attribute `ParentImpl', expected one of: virtual, StringLiteral
 //error: invalid value for attribute `ChildImpl', expected one of: virtual, StringLiteral
 
-[ParentImpl=NotQuoted, ChildImpl]
+[ParentImpl=NotQuoted, ChildImpl, ChildProc=any]
 async protocol PBadSideImpl {
  parent:
   async __delete__();

@@ -9,6 +9,7 @@ namespace mozilla {
 namespace dom {
 
 // PJSOracle is a top-level actor which manages PJSValidator
+[ChildProc=Utility]
 async protocol PJSOracle {
   manages PJSValidator;
 

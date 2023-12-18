@@ -2,6 +2,7 @@
 
 include protocol cyclecheck_Child;
 
+[ChildProc=any]
 protocol cyclecheck_Parent {
     manages cyclecheck_Child;
 

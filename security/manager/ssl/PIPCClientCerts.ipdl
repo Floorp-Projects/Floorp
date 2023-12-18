@@ -10,6 +10,7 @@ using mozilla::OriginAttributes from "mozilla/ipc/BackgroundUtils.h";
 namespace mozilla {
 namespace psm {
 
+[ChildProc=Socket]
 sync protocol PIPCClientCerts
 {
 parent:

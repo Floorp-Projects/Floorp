@@ -1,5 +1,6 @@
 //error: ctor for protocol `conflictProtocolMsg', which is not managed by protocol `conflictProtocolMsg'
 
+[ChildProc=any]
 protocol conflictProtocolMsg {
 
     // it's an error to re-use the protocol name as a message ID; these

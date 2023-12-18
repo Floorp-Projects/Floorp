@@ -10,6 +10,7 @@ namespace mozilla {
 namespace dom {
 
 // Manager of utility actors that run in the windows utility process.
+[ChildProc=Utility]
 protocol PWindowsUtils {
   manages PWindowsLocation;
 

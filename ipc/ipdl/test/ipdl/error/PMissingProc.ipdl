@@ -1,0 +1,6 @@
+//error: Toplevel protocols must specify [ChildProc]
+
+protocol PMissingProc {
+parent:
+    async Msg();
+};

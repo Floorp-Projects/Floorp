@@ -309,17 +309,13 @@ class IProtocol : public HasResultCodes {
 
   // Called when IPC has acquired its first reference to the actor. This method
   // may take references which will later be freed by `ActorDealloc`.
-  virtual void ActorAlloc() {}
+  virtual void ActorAlloc() = 0;
 
   // Called when IPC has released its final reference to the actor. It will call
   // the dealloc method, causing the actor to be actually freed.
   //
   // The actor has been freed after this method returns.
-  virtual void ActorDealloc() {
-    if (Manager()) {
-      Manager()->DeallocManagee(mProtocolId, this);
-    }
-  }
+  virtual void ActorDealloc() = 0;
 
   static const int32_t kNullActorId = 0;
   static const int32_t kFreedActorId = 1;

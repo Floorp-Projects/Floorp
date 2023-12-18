@@ -45,6 +45,7 @@ union StreamResetOrStopSendingError {
   StopSendingError;
 };
 
+[ChildProc=anydom]
 async protocol PWebTransport
 {
  parent:

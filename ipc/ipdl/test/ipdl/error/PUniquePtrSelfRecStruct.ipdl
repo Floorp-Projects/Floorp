@@ -4,6 +4,7 @@ struct X {
     UniquePtr<X> x;
 };
 
+[ChildProc=any]
 protocol PUniquePtrSelfRecStruct {
 child: async Msg(UniquePtr<X> aa);
 };

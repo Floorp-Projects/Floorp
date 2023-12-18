@@ -1,6 +1,7 @@
 //error: Repeated extended attribute `RefCounted'
 
-[RefCounted, RefCounted] async protocol PExtendedAttrRepeated {
+[RefCounted, RefCounted, ChildProc=any]
+async protocol PExtendedAttrRepeated {
 parent:
     async Msg();
 };

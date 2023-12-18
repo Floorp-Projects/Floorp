@@ -265,6 +265,8 @@ class CxxCodeGen(CodePrinter, Visitor):
 
         if md.methodspec == MethodSpec.OVERRIDE:
             self.write(" override")
+        elif md.methodspec == MethodSpec.FINAL:
+            self.write(" final")
         elif md.methodspec == MethodSpec.PURE:
             self.write(" = 0")
 
