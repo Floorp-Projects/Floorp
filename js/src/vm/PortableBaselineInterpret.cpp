@@ -652,6 +652,17 @@ ICInterpretOps(BaselineFrame* frame, VMFrameManager& frameMgr, State& state,
     DISPATCH_CACHEOP();
   }
 
+  CACHEOP_CASE(GuardFuse) {
+    RealmFuses::FuseIndex fuseIndex = icregs.cacheIRReader.realmFuseIndex();
+    if (!frameMgr.cxForLocalUseOnly()
+             ->realm()
+             ->realmFuses.getFuseByIndex(fuseIndex)
+             ->intact()) {
+      return ICInterpretOpResult::NextIC;
+    }
+    DISPATCH_CACHEOP();
+  }
+
   CACHEOP_CASE(GuardProto) {
     ObjOperandId objId = icregs.cacheIRReader.objOperandId();
     uint32_t protoOffset = icregs.cacheIRReader.stubOffset();
