@@ -41,9 +41,9 @@ class SharedSurface_ANGLEShareHandle final : public SharedSurface {
   virtual void LockProdImpl() override;
   virtual void UnlockProdImpl() override;
 
-  virtual void ProducerAcquireImpl() override;
+  virtual bool ProducerAcquireImpl() override;
   virtual void ProducerReleaseImpl() override;
-  virtual void ProducerReadAcquireImpl() override;
+  virtual bool ProducerReadAcquireImpl() override;
   virtual void ProducerReadReleaseImpl() override;
 
   Maybe<layers::SurfaceDescriptor> ToSurfaceDescriptor() override;

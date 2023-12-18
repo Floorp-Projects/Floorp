@@ -626,12 +626,18 @@ bool RenderDXGIYCbCrTextureHost::EnsureD3D11Texture2D(ID3D11Device* aDevice) {
 bool RenderDXGIYCbCrTextureHost::LockInternal() {
   if (!mLocked) {
     if (mKeyedMutexs[0]) {
-      for (const auto& mutex : mKeyedMutexs) {
-        HRESULT hr = mutex->AcquireSync(0, 10000);
+      for (int i = 0; i < 3; ++i) {
+        HRESULT hr = mKeyedMutexs[i]->AcquireSync(0, 10000);
         if (hr != S_OK) {
           gfxCriticalError()
               << "RenderDXGIYCbCrTextureHost AcquireSync timeout, hr="
               << gfx::hexa(hr);
+
+          // Ensure that we release all of the mutexes in the event of failure.
+          while (i > 0) {
+            --i;
+            mKeyedMutexs[i]->ReleaseSync(0);
+          }
           return false;
         }
       }

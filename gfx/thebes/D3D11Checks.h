@@ -9,6 +9,10 @@
 #include "mozilla/EnumSet.h"
 #include "mozilla/EnumTypeTraits.h"
 
+#ifdef XP_WIN
+#  include <winerror.h>
+#endif
+
 struct ID3D11Device;
 struct IDXGIAdapter;
 struct DXGI_ADAPTER_DESC;
@@ -32,6 +36,9 @@ struct D3D11Checks {
   static bool GetDxgiDesc(ID3D11Device* device, DXGI_ADAPTER_DESC* out);
   static bool DoesRemotePresentWork(IDXGIAdapter* adapter);
   static VideoFormatOptionSet FormatOptions(ID3D11Device* device);
+#ifdef XP_WIN
+  static bool DidAcquireSyncSucceed(const char* aCaller, HRESULT aResult);
+#endif
 };
 
 }  // namespace gfx
