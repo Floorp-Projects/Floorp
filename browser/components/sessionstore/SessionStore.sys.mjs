@@ -6532,27 +6532,29 @@ var SessionStoreInternal = {
           activeIndex = Math.min(activeIndex, tabState.entries.length - 1);
           activeIndex = Math.max(activeIndex, 0);
 
-          let title =
-            tabState.entries[activeIndex].title ||
-            tabState.entries[activeIndex].url;
+          if (activeIndex in tabState.entries) {
+            let title =
+              tabState.entries[activeIndex].title ||
+              tabState.entries[activeIndex].url;
 
-          let tabData = {
-            state: tabState,
-            title,
-            image: tabState.image,
-            pos: tIndex,
-            closedAt: Date.now(),
-            closedInGroup: false,
-            removeAfterRestore: true,
-          };
+            let tabData = {
+              state: tabState,
+              title,
+              image: tabState.image,
+              pos: tIndex,
+              closedAt: Date.now(),
+              closedInGroup: false,
+              removeAfterRestore: true,
+            };
 
-          if (this._shouldSaveTabState(tabState)) {
-            this.saveClosedTabData(
-              window,
-              newWindowState._closedTabs,
-              tabData,
-              false
-            );
+            if (this._shouldSaveTabState(tabState)) {
+              this.saveClosedTabData(
+                window,
+                newWindowState._closedTabs,
+                tabData,
+                false
+              );
+            }
           }
         }
         tIndex++;
