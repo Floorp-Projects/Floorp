@@ -61,9 +61,9 @@ fun ReviewQualityCheckContextualOnboarding(
     val learnMoreText =
         stringResource(id = R.string.review_quality_check_contextual_onboarding_learn_more_link)
     val privacyPolicyText =
-        stringResource(id = R.string.review_quality_check_contextual_onboarding_privacy_policy_2)
+        stringResource(id = R.string.review_quality_check_contextual_onboarding_privacy_policy)
     val termsOfUseText =
-        stringResource(id = R.string.review_quality_check_contextual_onboarding_terms_use_2)
+        stringResource(id = R.string.review_quality_check_contextual_onboarding_terms_use)
     val titleContentDescription =
         headingResource(R.string.review_quality_check_contextual_onboarding_title)
 
@@ -111,19 +111,13 @@ fun ReviewQualityCheckContextualOnboarding(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Text(
-            text = stringResource(
-                id = R.string.review_quality_check_contextual_onboarding_caption_2,
-                stringResource(id = R.string.shopping_product_name),
-            ),
-            color = FirefoxTheme.colors.textPrimary,
-            style = FirefoxTheme.typography.caption,
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
         LinkText(
-            text = privacyPolicyText,
+            text = stringResource(
+                id = R.string.review_quality_check_contextual_onboarding_caption,
+                stringResource(id = R.string.shopping_product_name),
+                privacyPolicyText,
+                termsOfUseText,
+            ),
             linkTextStates = listOf(
                 LinkTextState(
                     text = privacyPolicyText,
@@ -132,16 +126,6 @@ fun ReviewQualityCheckContextualOnboarding(
                         onPrivacyPolicyClick()
                     },
                 ),
-            ),
-            style = FirefoxTheme.typography.body2,
-            linkTextDecoration = TextDecoration.Underline,
-        )
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        LinkText(
-            text = termsOfUseText,
-            linkTextStates = listOf(
                 LinkTextState(
                     text = termsOfUseText,
                     url = "",
@@ -150,7 +134,10 @@ fun ReviewQualityCheckContextualOnboarding(
                     },
                 ),
             ),
-            style = FirefoxTheme.typography.body2,
+            style = FirefoxTheme.typography.caption
+                .copy(
+                    color = FirefoxTheme.colors.textSecondary,
+                ),
             linkTextDecoration = TextDecoration.Underline,
         )
 
