@@ -107,7 +107,7 @@ support-files = [
 
 ["test_engine_selector_application_name.js"]
 
-["test_engine_selector_environment_base.js"]
+["test_engine_selector_environment.js"]
 
 ["test_engine_selector_order.js"]
 
