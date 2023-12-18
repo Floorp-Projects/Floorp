@@ -258,6 +258,15 @@ class nsGridContainerFrame final : public nsContainerFrame,
     return HasAnyStateBits(NS_STATE_GRID_HAS_ROW_SUBGRID_ITEM |
                            NS_STATE_GRID_HAS_COL_SUBGRID_ITEM);
   }
+  /**
+   * Return true if the grid item aChild should stretch in its aAxis (i.e. aAxis
+   * is in the aChild's writing-mode).
+   *
+   * Note: this method does *not* consider the grid item's aspect-ratio and
+   * natural size in the axis when the self-alignment value is 'normal' per
+   * https://drafts.csswg.org/css-grid/#grid-item-sizing
+   */
+  bool GridItemShouldStretch(const nsIFrame* aChild, LogicalAxis aAxis) const;
 
   /**
    * Return a container grid frame for the supplied frame, if available.
