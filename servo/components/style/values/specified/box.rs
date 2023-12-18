@@ -1648,6 +1648,12 @@ pub enum Appearance {
     #[parse(condition = "ParserContext::chrome_rules_enabled")]
     MozMacHelpButton,
 
+    /// An appearance value for the root, so that we can get unified toolbar looks (which require a
+    /// transparent gecko background) without really using the whole transparency set-up which
+    /// otherwise loses window borders, see bug 1870481.
+    #[parse(condition = "ParserContext::chrome_rules_enabled")]
+    MozMacUnifiedToolbarWindow,
+
     /// Windows themed window frame elements.
     #[parse(condition = "ParserContext::chrome_rules_enabled")]
     MozWindowButtonBox,
