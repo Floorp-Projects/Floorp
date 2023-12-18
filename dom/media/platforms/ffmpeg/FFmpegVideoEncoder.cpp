@@ -30,17 +30,18 @@ using FFmpegBitRate = int;
 constexpr size_t FFmpegErrorMaxStringSize = 64;
 #endif
 
-struct H264Profile {
+struct H264Setting {
   int mValue;
-  const char* mString;
+  nsCString mString;
 };
 
-static const H264Profile H264Profiles[]{{FF_PROFILE_H264_BASELINE, "baseline"},
-                                        {FF_PROFILE_H264_MAIN, "main"},
-                                        {FF_PROFILE_H264_EXTENDED, nullptr},
-                                        {FF_PROFILE_H264_HIGH, "high"}};
+static const H264Setting H264Profiles[]{
+    {FF_PROFILE_H264_BASELINE, "baseline"_ns},
+    {FF_PROFILE_H264_MAIN, "main"_ns},
+    {FF_PROFILE_H264_EXTENDED, EmptyCString()},
+    {FF_PROFILE_H264_HIGH, "high"_ns}};
 
-static mozilla::Maybe<H264Profile> GetH264Profile(
+static mozilla::Maybe<H264Setting> GetH264Profile(
     const mozilla::H264_PROFILE& aProfile) {
   switch (aProfile) {
     case mozilla::H264_PROFILE::H264_PROFILE_UNKNOWN:
@@ -58,6 +59,24 @@ static mozilla::Maybe<H264Profile> GetH264Profile(
   }
   MOZ_ASSERT_UNREACHABLE("undefined profile");
   return mozilla::Nothing();
+}
+
+static mozilla::Maybe<H264Setting> GetH264Level(
+    const mozilla::H264_LEVEL& aLevel) {
+  int val = static_cast<int>(aLevel);
+  // Make sure value is in [10, 13] or [20, 22] or [30, 32] or [40, 42] or [50,
+  // 52].
+  if (val < 10 || val > 52) {
+    return mozilla::Nothing();
+  }
+  if ((val % 10) > 2) {
+    if (val != 13) {
+      return mozilla::Nothing();
+    }
+  }
+  nsPrintfCString str("%d", val);
+  str.Insert('.', 1);
+  return mozilla::Some(H264Setting{val, str});
 }
 
 #if LIBAVCODEC_VERSION_MAJOR < 54
@@ -426,7 +445,7 @@ MediaResult FFmpegVideoEncoder<LIBAV_VER>::InitInternal() {
       const H264Specific& specific = mConfig.mCodecSpecific->as<H264Specific>();
 
       // Set profile.
-      Maybe<ffmpeg::H264Profile> profile =
+      Maybe<ffmpeg::H264Setting> profile =
           ffmpeg::GetH264Profile(specific.mProfile);
       if (!profile) {
         FFMPEGV_LOG("failed to get h264 profile");
@@ -434,12 +453,22 @@ MediaResult FFmpegVideoEncoder<LIBAV_VER>::InitInternal() {
                            RESULT_DETAIL("H264 profile is unknown"));
       }
       mCodecContext->profile = profile->mValue;
-      if (profile->mString) {
-        mLib->av_opt_set(mCodecContext->priv_data, "profile", profile->mString,
-                         0);
+      if (!profile->mString.IsEmpty()) {
+        mLib->av_opt_set(mCodecContext->priv_data, "profile",
+                         profile->mString.get(), 0);
       }
 
-      // TODO: Set level.
+      // Set level.
+      Maybe<ffmpeg::H264Setting> level = ffmpeg::GetH264Level(specific.mLevel);
+      if (!level) {
+        FFMPEGV_LOG("failed to get h264 level");
+        return MediaResult(NS_ERROR_DOM_MEDIA_NOT_SUPPORTED_ERR,
+                           RESULT_DETAIL("H264 level is unknown"));
+      }
+      mCodecContext->level = level->mValue;
+      MOZ_ASSERT(!level->mString.IsEmpty());
+      mLib->av_opt_set(mCodecContext->priv_data, "level", level->mString.get(),
+                       0);
     }
   }
   // TODO: keyint_min, max_b_frame?
