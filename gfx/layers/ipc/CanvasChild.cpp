@@ -314,6 +314,10 @@ already_AddRefed<gfx::DrawTarget> CanvasChild::CreateDrawTarget(
 
 bool CanvasChild::EnsureDataSurfaceShmem(gfx::IntSize aSize,
                                          gfx::SurfaceFormat aFormat) {
+  if (!mRecorder) {
+    return false;
+  }
+
   size_t sizeRequired =
       ImageDataSerializer::ComputeRGBBufferSize(aSize, aFormat);
   if (!sizeRequired) {
