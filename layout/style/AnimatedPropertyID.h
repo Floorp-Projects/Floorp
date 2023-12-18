@@ -23,19 +23,21 @@ struct AnimatedPropertyID {
   }
 
   explicit AnimatedPropertyID(RefPtr<nsAtom> aCustomName)
-      : mID(eCSSPropertyExtra_variable), mCustomName(std::move(aCustomName)) {}
+      : mID(eCSSPropertyExtra_variable), mCustomName(std::move(aCustomName)) {
+    MOZ_ASSERT(mCustomName, "Null custom property name");
+  }
 
   nsCSSPropertyID mID = eCSSProperty_UNKNOWN;
   RefPtr<nsAtom> mCustomName;
 
   bool IsCustom() const { return mID == eCSSPropertyExtra_variable; }
   bool operator==(const AnimatedPropertyID& aOther) const {
-    return mID == aOther.mID &&
-           (!IsCustom() || mCustomName == aOther.mCustomName);
+    return mID == aOther.mID && mCustomName == aOther.mCustomName;
   }
   bool operator!=(const AnimatedPropertyID& aOther) const {
     return !(*this == aOther);
   }
+
   bool IsValid() const {
     if (mID == eCSSProperty_UNKNOWN) {
       return false;
@@ -56,7 +58,23 @@ struct AnimatedPropertyID {
     HashNumber hash = mCustomName ? mCustomName->hash() : 0;
     return AddToHash(hash, mID);
   }
+
+  AnimatedPropertyID ToPhysical(const ComputedStyle& aStyle) const {
+    if (IsCustom()) {
+      return *this;
+    }
+    return AnimatedPropertyID{nsCSSProps::Physicalize(mID, aStyle)};
+  }
 };
+
+// MOZ_DBG support for AnimatedPropertyId
+inline std::ostream& operator<<(std::ostream& aOut,
+                                const AnimatedPropertyID& aProperty) {
+  if (aProperty.IsCustom()) {
+    return aOut << nsAtomCString(aProperty.mCustomName);
+  }
+  return aOut << nsCSSProps::GetStringValue(aProperty.mID);
+}
 
 }  // namespace mozilla
 
