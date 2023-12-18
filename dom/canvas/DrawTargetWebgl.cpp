@@ -239,12 +239,9 @@ void DrawTargetWebgl::ClearSnapshot(bool aCopyOnWrite, bool aNeedHandle) {
 DrawTargetWebgl::~DrawTargetWebgl() {
   ClearSnapshot(false);
   if (mSharedContext) {
-    if (mShmem.IsWritable()) {
-      // Force any Skia snapshots to copy the shmem before it deallocs.
+    // Force any Skia snapshots to copy the shmem before it deallocs.
+    if (mSkia) {
       mSkia->DetachAllSnapshots();
-      if (mShmemAllocator && mShmemAllocator->CanSend()) {
-        mShmemAllocator->DeallocShmem(mShmem);
-      }
     }
     mSharedContext->ClearLastTexture(true);
     mClipMask = nullptr;
@@ -373,7 +370,6 @@ void SharedContextWebgl::ClearCachesIfNecessary() {
 // Try to initialize a new WebGL context. Verifies that the requested size does
 // not exceed the available texture limits and that shader creation succeeded.
 bool DrawTargetWebgl::Init(const IntSize& size, const SurfaceFormat format,
-                           ipc::IProtocol* aShmemAllocator,
                            const RefPtr<SharedContextWebgl>& aSharedContext) {
   MOZ_ASSERT(format == SurfaceFormat::B8G8R8A8 ||
              format == SurfaceFormat::B8G8R8X8);
@@ -398,24 +394,32 @@ bool DrawTargetWebgl::Init(const IntSize& size, const SurfaceFormat format,
     return false;
   }
 
-  mShmemAllocator = aShmemAllocator;
-  if (mShmemAllocator && mShmemAllocator->CanSend()) {
-    size_t byteSize = layers::ImageDataSerializer::ComputeRGBBufferSize(
-        mSize, SurfaceFormat::B8G8R8A8);
-    if (byteSize) {
-      (void)mShmemAllocator->AllocUnsafeShmem(byteSize, &mShmem);
-    }
+  size_t byteSize = layers::ImageDataSerializer::ComputeRGBBufferSize(
+      mSize, SurfaceFormat::B8G8R8A8);
+  if (byteSize == 0) {
+    return false;
   }
 
+  size_t shmemSize = mozilla::ipc::SharedMemory::PageAlignedSize(byteSize);
+  if (NS_WARN_IF(shmemSize > UINT32_MAX)) {
+    MOZ_ASSERT_UNREACHABLE("Buffer too big?");
+    return false;
+  }
+
+  auto shmem = MakeRefPtr<mozilla::ipc::SharedMemoryBasic>();
+  if (NS_WARN_IF(!shmem->Create(shmemSize)) ||
+      NS_WARN_IF(!shmem->Map(shmemSize))) {
+    return false;
+  }
+
+  mShmem = std::move(shmem);
+  mShmemSize = shmemSize;
+
   mSkia = new DrawTargetSkia;
-  if (mShmem.IsWritable()) {
-    auto stride = layers::ImageDataSerializer::ComputeRGBStride(
-        SurfaceFormat::B8G8R8A8, size.width);
-    if (!mSkia->Init(mShmem.get<uint8_t>(), size, stride,
-                     SurfaceFormat::B8G8R8A8, true)) {
-      return false;
-    }
-  } else if (!mSkia->Init(size, SurfaceFormat::B8G8R8A8)) {
+  auto stride = layers::ImageDataSerializer::ComputeRGBStride(
+      SurfaceFormat::B8G8R8A8, size.width);
+  if (!mSkia->Init(reinterpret_cast<uint8_t*>(mShmem->memory()), size, stride,
+                   SurfaceFormat::B8G8R8A8, true)) {
     return false;
   }
 
@@ -858,7 +862,6 @@ bool DrawTargetWebgl::CanCreate(const IntSize& aSize, SurfaceFormat aFormat) {
 
 already_AddRefed<DrawTargetWebgl> DrawTargetWebgl::Create(
     const IntSize& aSize, SurfaceFormat aFormat,
-    ipc::IProtocol* aShmemAllocator,
     const RefPtr<SharedContextWebgl>& aSharedContext) {
   // Validate the size and format.
   if (!CanCreate(aSize, aFormat)) {
@@ -866,8 +869,7 @@ already_AddRefed<DrawTargetWebgl> DrawTargetWebgl::Create(
   }
 
   RefPtr<DrawTargetWebgl> dt = new DrawTargetWebgl;
-  if (!dt->Init(aSize, aFormat, aShmemAllocator, aSharedContext) ||
-      !dt->IsValid()) {
+  if (!dt->Init(aSize, aFormat, aSharedContext) || !dt->IsValid()) {
     return nullptr;
   }
 
