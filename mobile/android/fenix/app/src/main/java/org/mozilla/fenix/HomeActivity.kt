@@ -28,13 +28,11 @@ import androidx.annotation.CallSuper
 import androidx.annotation.IdRes
 import androidx.annotation.RequiresApi
 import androidx.annotation.VisibleForTesting
-import androidx.annotation.VisibleForTesting.Companion.PROTECTED
 import androidx.appcompat.app.ActionBar
 import androidx.appcompat.widget.Toolbar
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.lifecycleScope
-import androidx.navigation.NavDestination
 import androidx.navigation.NavDirections
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.AppBarConfiguration
@@ -107,6 +105,9 @@ import org.mozilla.fenix.experiments.ResearchSurfaceDialogFragment
 import org.mozilla.fenix.ext.alreadyOnDestination
 import org.mozilla.fenix.ext.breadcrumb
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.getBreadcrumbMessage
+import org.mozilla.fenix.ext.getIntentSessionId
+import org.mozilla.fenix.ext.getIntentSource
 import org.mozilla.fenix.ext.hasTopDestination
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.setNavigationIcon
@@ -887,20 +888,6 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         super.onUserLeaveHint()
     }
 
-    protected open fun getBreadcrumbMessage(destination: NavDestination): String {
-        val fragmentName = resources.getResourceEntryName(destination.id)
-        return "Changing to fragment $fragmentName, isCustomTab: false"
-    }
-
-    @VisibleForTesting(otherwise = PROTECTED)
-    internal open fun getIntentSource(intent: SafeIntent): String? {
-        return when {
-            intent.isLauncherIntent -> APP_ICON
-            intent.action == Intent.ACTION_VIEW -> "LINK"
-            else -> null
-        }
-    }
-
     /**
      * External sources such as 3rd party links and shortcuts use this function to enter
      * private mode directly before the content view is created. Returns the mode set by the intent
@@ -980,8 +967,6 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
             onBackPressed()
         }
     }
-
-    protected open fun getIntentSessionId(intent: SafeIntent): String? = null
 
     /**
      * Navigates to the browser fragment and loads a URL or performs a search (depending on the

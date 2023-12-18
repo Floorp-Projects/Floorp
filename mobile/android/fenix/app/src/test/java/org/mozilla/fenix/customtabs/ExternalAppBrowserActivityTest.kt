@@ -28,6 +28,7 @@ import org.junit.runner.RunWith
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.getIntentSource
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.utils.Settings
 

@@ -15,11 +15,15 @@ import androidx.annotation.DrawableRes
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.os.bundleOf
+import androidx.navigation.NavDestination
 import mozilla.components.concept.base.crash.Breadcrumb
 import mozilla.components.concept.engine.EngineSession
+import mozilla.components.feature.intent.ext.getSessionId
+import mozilla.components.support.utils.SafeIntent
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
+import org.mozilla.fenix.customtabs.ExternalAppBrowserActivity
 import org.mozilla.fenix.settings.SupportUtils
 
 /**
@@ -174,3 +178,54 @@ const val REQUEST_CODE_BROWSER_ROLE = 1
 const val SETTINGS_SELECT_OPTION_KEY = ":settings:fragment_args_key"
 const val SETTINGS_SHOW_FRAGMENT_ARGS = ":settings:show_fragment_args"
 const val DEFAULT_BROWSER_APP_OPTION = "default_browser"
+const val EXTERNAL_APP_BROWSER_INTENT_SOURCE = "CUSTOM_TAB"
+
+/**
+ * Depending on the [Activity], maybe derive the source of the given [intent].
+ *
+ * @param intent the [SafeIntent] to derive the source from.
+ */
+fun Activity.getIntentSource(intent: SafeIntent): String? = when (this) {
+    is ExternalAppBrowserActivity -> EXTERNAL_APP_BROWSER_INTENT_SOURCE
+    else -> getHomeIntentSource(intent)
+}
+
+private fun getHomeIntentSource(intent: SafeIntent): String? {
+    return when {
+        intent.isLauncherIntent -> HomeActivity.APP_ICON
+        intent.action == Intent.ACTION_VIEW -> "LINK"
+        else -> null
+    }
+}
+
+/**
+ * Depending on the [Activity], maybe derive the session ID of the given [intent].
+ *
+ * @param intent the [SafeIntent] to derive the session ID from.
+ */
+fun Activity.getIntentSessionId(intent: SafeIntent): String? = when (this) {
+    is ExternalAppBrowserActivity -> getExternalAppBrowserIntentSessionId(intent)
+    else -> null
+}
+
+private fun getExternalAppBrowserIntentSessionId(intent: SafeIntent) = intent.getSessionId()
+
+/**
+ * Get the breadcrumb message for the [Activity].
+ *
+ * @param destination the [NavDestination] required to provide the destination ID.
+ */
+fun Activity.getBreadcrumbMessage(destination: NavDestination): String = when (this) {
+    is ExternalAppBrowserActivity -> getExternalAppBrowserBreadcrumbMessage(destination.id)
+    else -> getHomeBreadcrumbMessage(destination.id)
+}
+
+private fun Activity.getExternalAppBrowserBreadcrumbMessage(destinationId: Int): String {
+    val fragmentName = resources.getResourceEntryName(destinationId)
+    return "Changing to fragment $fragmentName, isCustomTab: true"
+}
+
+private fun Activity.getHomeBreadcrumbMessage(destinationId: Int): String {
+    val fragmentName = resources.getResourceEntryName(destinationId)
+    return "Changing to fragment $fragmentName, isCustomTab: false"
+}
