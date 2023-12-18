@@ -28,6 +28,7 @@
 #include "vm/JSObject.h"
 #include "vm/PlainObject.h"  // js::PlainObject
 #include "vm/StringType.h"
+#include "vm/Watchtower.h"
 
 #include "vm/Interpreter-inl.h"
 
@@ -1821,6 +1822,7 @@ RObjectState::RObjectState(CompactBufferReader& reader) {
 bool RObjectState::recover(JSContext* cx, SnapshotIterator& iter) const {
   RootedObject object(cx, &iter.read().toObject());
   Handle<NativeObject*> nativeObject = object.as<NativeObject>();
+  MOZ_ASSERT(!Watchtower::watchesPropertyModification(nativeObject));
   MOZ_ASSERT(nativeObject->slotSpan() == numSlots());
 
   for (size_t i = 0; i < numSlots(); i++) {

@@ -842,6 +842,11 @@ static bool CanAddNewPropertyExcludingProtoFast(PlainObject* obj) {
     return false;
   }
 
+  // Don't fastpath assign if we're watching for property modification.
+  if (Watchtower::watchesPropertyModification(obj)) {
+    return false;
+  }
+
   // Ensure the object has no non-writable properties or getters/setters.
   // For now only support PlainObjects so that we don't have to worry about
   // resolve hooks and other JSClass hooks.
