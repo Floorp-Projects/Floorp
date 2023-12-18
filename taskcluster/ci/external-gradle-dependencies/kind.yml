@@ -72,10 +72,8 @@ jobs:
             arguments:
                 - mobile/android/android-components/
                 - lint
-                - githubLintAndroidDetails
                 - ktlint
                 - detekt
-                - githubLintDetektDetails
             resources:
                 # TODO: Make focus lint tasks use their own gradle deps tasks
                 - mobile/android/focus-android/plugins/focusdependencies/src/main/java/FocusDependenciesPlugin.kt
@@ -87,10 +85,8 @@ jobs:
             arguments:
                 - mobile/android/fenix/
                 - lint
-                - githubLintAndroidDetails
                 - ktlint
                 - detekt
-                - githubLintDetektDetails
                 - mozilla-detekt-rules:test
                 - mozilla-lint-rules:test
             resources:
