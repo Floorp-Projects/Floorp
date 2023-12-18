@@ -5333,21 +5333,11 @@ export class CheckerService {
     // built-in or not.
     try {
       let sslStatus = request.channel.securityInfo;
-      if (sslStatus && sslStatus.succeededCertChain) {
-        let rootCert = null;
-        // The root cert is the last cert in the chain.
-        if (sslStatus.succeededCertChain.length) {
-          rootCert =
-            sslStatus.succeededCertChain[
-              sslStatus.succeededCertChain.length - 1
-            ];
-        }
-        if (rootCert) {
-          Services.prefs.setBoolPref(
-            "security.pki.mitm_detected",
-            !rootCert.isBuiltInRoot
-          );
-        }
+      if (sslStatus) {
+        Services.prefs.setBoolPref(
+          "security.pki.mitm_detected",
+          !sslStatus.isBuiltCertChainRootBuiltInRoot
+        );
       }
     } catch (e) {
       LOG("CheckerService:#updateCheck - Getting sslStatus failed.");
