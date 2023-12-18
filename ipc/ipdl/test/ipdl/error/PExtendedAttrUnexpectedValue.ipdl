@@ -1,6 +1,7 @@
 //error: unexpected value for valueless attribute `ManualDealloc'
 
-[ManualDealloc=invalid] async protocol PExtendedAttrUnexpectedValue {
+[ManualDealloc=invalid, ChildProc=any]
+async protocol PExtendedAttrUnexpectedValue {
 parent:
     async Msg();
 };

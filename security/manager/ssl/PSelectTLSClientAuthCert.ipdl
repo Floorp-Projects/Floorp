@@ -10,6 +10,7 @@ include PSMIPCTypes;
 namespace mozilla {
 namespace psm {
 
+[ChildProc=Socket]
 protocol PSelectTLSClientAuthCert
 {
 child:

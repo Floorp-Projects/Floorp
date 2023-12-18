@@ -5,6 +5,7 @@ include protocol ForgottenManager;
 // See ForgottenManager. This includes ForgottenManager to ensure that
 // loading this file fails.
 
+[ChildProc=any]
 protocol ManageeForgot {
 child:
     async __delete__();

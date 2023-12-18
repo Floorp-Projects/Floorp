@@ -2,7 +2,8 @@
 
 include protocol PBadNestedManagee;
 
-[NestedUpTo=not] async protocol PBadNestedManager {
+[NestedUpTo=not, ChildProc=any]
+async protocol PBadNestedManager {
     manages PBadNestedManagee;
 parent:
     async PBadNestedManagee();

@@ -2,6 +2,7 @@
 
 include protocol "Foo.ipdl";
 
+[ChildProc=any]
 protocol oldIncludeSyntax {
 child: async __delete__(X x);
 };

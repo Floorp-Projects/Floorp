@@ -1,5 +1,6 @@
 //error: invalid value for attribute `Priority', expected one of: normal, input, vsync, mediumhigh, control
 
+[ChildProc=any]
 protocol ExtendedAttrInvalidPriorityValue {
 child:
   [Priority=invalid] async __delete__();

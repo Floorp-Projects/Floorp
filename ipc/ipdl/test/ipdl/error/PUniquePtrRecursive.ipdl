@@ -1,5 +1,6 @@
 //error: bad syntax near `UniquePtr'
 
+[ChildProc=any]
 protocol PUniquePtrRecursive {
 child: async Msg( UniquePtr< UniquePtr<int> > aa);
 };

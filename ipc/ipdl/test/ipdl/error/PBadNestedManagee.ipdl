@@ -2,7 +2,8 @@
 
 include protocol PBadNestedManager;
 
-[NestedUpTo=inside_sync] async protocol PBadNestedManagee {
+[NestedUpTo=inside_sync, ChildProc=any]
+async protocol PBadNestedManagee {
     manager PBadNestedManager;
 child:
     async __delete__();

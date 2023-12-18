@@ -1,5 +1,6 @@
 //error: IPC message PasyncMessageListed::Msg is async, can be delisted
 
+[ChildProc=any]
 protocol PasyncMessageListed {
 parent:
     async Msg();

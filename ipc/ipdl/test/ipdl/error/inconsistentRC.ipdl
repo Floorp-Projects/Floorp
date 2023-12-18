@@ -3,6 +3,7 @@
 [RefCounted] using class mozilla::ipc::SomeRefcountedType from "SomeFile.h";
 using class mozilla::ipc::SomeRefcountedType from "SomeFile.h";
 
+[ChildProc=any]
 protocol inconsistentRC {
 child:
   async SomeMessage();

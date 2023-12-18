@@ -7,6 +7,7 @@ using struct mozilla::void_t from "mozilla/ipc/IPCCore.h";
 namespace mozilla {
 namespace dom {
 
+[ChildProc=anydom]
 async protocol PFileSystemAccessHandleControl
 {
  parent:

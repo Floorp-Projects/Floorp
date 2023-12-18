@@ -2,6 +2,7 @@ namespace basic {
 
 // sanity check of namespaced protocols
 
+[ChildProc=any]
 protocol Pnamespace_Basic {
 
 child:

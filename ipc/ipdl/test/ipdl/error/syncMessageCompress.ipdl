@@ -1,5 +1,6 @@
 //error: message `foo' in protocol `syncMessageCompress' requests compression but is not async
 
+[ChildProc=any]
 sync protocol syncMessageCompress {
 parent:
     [Compress] sync foo();

@@ -1,5 +1,6 @@
 //error: redeclaration of symbol `f', first declared at
 
+[ChildProc=any]
 sync protocol redeclParamReturn {
 
     // it's an error to name a parameter with the same id as a return

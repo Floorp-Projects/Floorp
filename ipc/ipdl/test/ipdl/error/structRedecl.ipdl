@@ -5,6 +5,7 @@ struct Redecl {
     double a;
 };
 
+[ChildProc=any]
 protocol structRedecl {
 child: async __delete__();
 };

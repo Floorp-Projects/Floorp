@@ -9,6 +9,7 @@ union Union {
     nullable nsIURI?;
 };
 
+[ChildProc=any]
 protocol PNullable {
 child:
     async Msg(nullable PNullable n);

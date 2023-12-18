@@ -14,7 +14,7 @@ namespace mozilla {
 // It is a top-level protocol so that its child endpoint can be on a
 // background thread, so that profiles can be gathered even if the main thread
 // is unresponsive.
-[ChildImpl=virtual, ParentImpl=virtual]
+[ChildImpl=virtual, ParentImpl=virtual, ChildProc=anychild]
 async protocol PProfiler
 {
 child:

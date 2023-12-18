@@ -2,6 +2,7 @@
 
 include protocol multimanDupMgrs;
 
+[ChildProc=any]
 protocol multimanDupMgrsMgr {
     manages multimanDupMgrs;
 

@@ -351,6 +351,7 @@ one in ``PMyManager.ipdl``:
 
 .. code-block:: cpp
 
+    [ChildProc=Content]
     sync protocol PMyManager {
         manages PMyManaged;
 
@@ -405,6 +406,12 @@ They will be discussed further in `Nested messages`_.
                                can be handled while waiting for a ``sync``
                                response.
 ============================== ================================================
+
+In addition, top-level protocols are annotated with which processes each side
+should be bound into using the ``[ParentProc=*]`` and ``[ChildProc=*]``
+attributes.  The ``[ParentProc]`` attribute is optional, and defaults to the
+``Parent`` process.  The ``[ChildProc]`` attribute is required.  See `Process
+Type Attributes`_ for possible values.
 
 The ``manages`` clause tells IPDL that ``PMyManager`` manages the
 ``PMyManaged`` actor that was previously ``include`` d.  As with any managed
@@ -730,7 +737,62 @@ for use in IPDL files:
                               ``Recv`` methods should be used instead of direct
                               function calls.  *New uses of this attribute are
                               discouraged.*
+``[ChildProc=...]``           Indicates which process the child side of the actor
+                              is expected to be bound in.  This will be release
+                              asserted when creating the actor.  Required for
+                              top-level actors.  See `Process Type Attributes`_
+                              for possible values.
+``[ParentProc=...]``          Indicates which process the parent side of the
+                              actor is expected to be bound in.  This will be
+                              release asserted when creating the actor.
+                              Defaults to ``Parent`` for top-level actors.  See
+                              `Process Type Attributes`_ for possible values.
 ============================= =================================================
+
+.. _Process Type Attributes:
+
+Process Type Attributes
+^^^^^^^^^^^^^^^^^^^^^^^
+
+The following are valid values for the ``[ChildProc=...]`` and
+``[ParentProc=...]`` attributes on protocols, each corresponding to a specific
+process type:
+
+============================= =================================================
+``Parent``                    The primary "parent" or "main" process
+``Content``                   A content process, such as those used to host web
+                              pages, workers, and extensions
+``IPDLUnitTest``              Test-only process used in IPDL gtests
+``GMPlugin``                  Gecko Media Plugin (GMP) process
+``GPU``                       GPU process
+``VR``                        VR process
+``RDD``                       Remote Data Decoder (RDD) process
+``Socket``                    Socket/Networking process
+``RemoteSandboxBroker``       Remote Sandbox Broker process
+``ForkServer``                Fork Server process
+``Utility``                   Utility process
+============================= =================================================
+
+The attributes also support some wildcard values, which can be used when an
+actor can be bound in multiple processes.  If you are adding an actor which
+needs a new wildcard value, please reach out to the IPC team, and we can add one
+for your use-case.  They are as follows:
+
+============================= =================================================
+``any``                       Any process.  If a more specific value is
+                              applicable, it should be preferred where possible.
+``anychild``                  Any process other than ``Parent``.  Often used for
+                              utility actors which are bound on a per-process
+                              basis, such as profiling.
+``compositor``                Either the ``GPU`` or ``Parent`` process.  Often
+                              used for actors bound to the compositor thread.
+``anydom``                    Either the ``Parent`` or a ``Content`` process.
+                              Often used for actors used to implement DOM APIs.
+============================= =================================================
+
+Note that these assertions do not provide security guarantees, and are primarily
+intended for use when auditing and as documentation for how actors are being
+used.
 
 
 The C++ Interface

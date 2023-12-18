@@ -1,5 +1,6 @@
 //error: sync parent-to-child messages are verboten (here, message `Msg' in protocol `syncParentToChild')
 
+[ChildProc=any]
 intr protocol syncParentToChild {
 
     // can't declare sync parent-to-child messages

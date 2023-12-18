@@ -7,7 +7,7 @@
 namespace mozilla {
 namespace _ipdltest {
 
-[ParentImpl=virtual, ChildImpl=virtual]
+[ParentImpl=virtual, ChildImpl=virtual, ChildProc=any]
 async protocol PTestCrossProcessSemaphore {
 child:
     async CrossProcessSemaphore(CrossProcessSemaphoreHandle aSem);

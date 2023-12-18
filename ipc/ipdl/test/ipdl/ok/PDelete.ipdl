@@ -1,5 +1,6 @@
 include protocol PDeleteSub;
 
+[ChildProc=any]
 sync protocol PDelete {
     manages PDeleteSub;
 

@@ -80,7 +80,7 @@ using mozilla::camera::CamerasAccessStatus from "mozilla/media/CamerasTypes.h";
 namespace mozilla {
 namespace ipc {
 
-[NeedsOtherPid, ChildImpl=virtual, ParentImpl=virtual]
+[NeedsOtherPid, ChildImpl=virtual, ParentImpl=virtual, ChildProc=anydom]
 sync protocol PBackground
 {
   manages PBackgroundIDBFactory;

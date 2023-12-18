@@ -4,6 +4,7 @@ union MaybeUnion {
     double;
 };
 
+[ChildProc=any]
 sync protocol Pmaybe_Union {
 parent:
     async Msg(MaybeUnion u, MaybeUnion? au) returns (MaybeUnion r);

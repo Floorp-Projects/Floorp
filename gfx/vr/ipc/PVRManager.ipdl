@@ -34,7 +34,7 @@ namespace gfx {
  * enumeration and sensor state between the compositor thread and
  * content threads/processes.
  */
-[NeedsOtherPid, ChildImpl="VRManagerChild", ParentImpl="VRManagerParent"]
+[NeedsOtherPid, ChildImpl="VRManagerChild", ParentImpl="VRManagerParent", ParentProc=compositor, ChildProc=anydom]
 sync protocol PVRManager
 {
   manages PVRLayer;

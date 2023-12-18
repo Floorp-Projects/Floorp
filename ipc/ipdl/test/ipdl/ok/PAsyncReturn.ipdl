@@ -2,6 +2,7 @@
 
 //error: asynchronous message `Msg' declares return values
 
+[ChildProc=any]
 protocol PAsyncReturn {
 child:
     async Msg() returns(int32_t aNumber);

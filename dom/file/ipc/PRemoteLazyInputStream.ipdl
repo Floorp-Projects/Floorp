@@ -6,6 +6,7 @@ include IPCStream;
 
 namespace mozilla {
 
+[ChildProc=any]
 protocol PRemoteLazyInputStream
 {
 parent:
