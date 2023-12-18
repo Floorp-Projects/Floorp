@@ -47,6 +47,7 @@ interface nsIWebBrowserChrome : nsISupports
 
     // special cases
     const unsigned long CHROME_WINDOW_MIN             = 0x00004000;
+    const unsigned long CHROME_WINDOW_POPUP           = 0x00008000;
 
     // whether to open a new private window.  CHROME_NON_PRIVATE_WINDOW
     // forces the opened window to be non-private, and overrides
