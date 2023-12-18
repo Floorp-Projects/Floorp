@@ -52,9 +52,11 @@ use crate::gecko_bindings::structs::{nsINode as RawGeckoNode, Element as RawGeck
 use crate::global_style_data::GLOBAL_STYLE_DATA;
 use crate::invalidation::element::restyle_hints::RestyleHint;
 use crate::media_queries::Device;
-use crate::properties::animated_properties::{AnimationValue, AnimationValueMap};
-use crate::properties::{ComputedValues, LonghandId};
-use crate::properties::{Importance, PropertyDeclaration, PropertyDeclarationBlock};
+use crate::properties::{
+    animated_properties::{AnimationValue, AnimationValueMap},
+    ComputedValues, Importance, OwnedPropertyDeclarationId, PropertyDeclaration,
+    PropertyDeclarationBlock, PropertyDeclarationId, PropertyDeclarationIdSet,
+};
 use crate::rule_tree::CascadeLevel as ServoCascadeLevel;
 use crate::selector_parser::{AttrValue, Lang};
 use crate::shared_lock::{Locked, SharedRwLock};
@@ -812,7 +814,7 @@ impl<'le> GeckoElement<'le> {
         host.is_svg_element() && host.local_name() == &**local_name!("use")
     }
 
-    fn css_transitions_info(&self) -> FxHashMap<LonghandId, Arc<AnimationValue>> {
+    fn css_transitions_info(&self) -> FxHashMap<OwnedPropertyDeclarationId, Arc<AnimationValue>> {
         use crate::gecko_bindings::bindings::Gecko_ElementTransitions_EndValueAt;
         use crate::gecko_bindings::bindings::Gecko_ElementTransitions_Length;
 
@@ -824,21 +826,21 @@ impl<'le> GeckoElement<'le> {
                 unsafe { Arc::from_raw_addrefed(Gecko_ElementTransitions_EndValueAt(self.0, i)) };
             let property = end_value.id();
             debug_assert!(!property.is_logical());
-            map.insert(property, end_value);
+            map.insert(property.to_owned(), end_value);
         }
         map
     }
 
     fn needs_transitions_update_per_property(
         &self,
-        longhand_id: LonghandId,
+        property_declaration_id: PropertyDeclarationId,
         combined_duration_seconds: f32,
         before_change_style: &ComputedValues,
         after_change_style: &ComputedValues,
-        existing_transitions: &FxHashMap<LonghandId, Arc<AnimationValue>>,
+        existing_transitions: &FxHashMap<OwnedPropertyDeclarationId, Arc<AnimationValue>>,
     ) -> bool {
         use crate::values::animated::{Animate, Procedure};
-        debug_assert!(!longhand_id.is_logical());
+        debug_assert!(!property_declaration_id.is_logical());
 
         // If there is an existing transition, update only if the end value
         // differs.
@@ -846,15 +848,17 @@ impl<'le> GeckoElement<'le> {
         // If the end value has not changed, we should leave the currently
         // running transition as-is since we don't want to interrupt its timing
         // function.
-        if let Some(ref existing) = existing_transitions.get(&longhand_id) {
+        if let Some(ref existing) = existing_transitions.get(&property_declaration_id.to_owned()) {
             let after_value =
-                AnimationValue::from_computed_values(longhand_id, after_change_style).unwrap();
+                AnimationValue::from_computed_values(property_declaration_id, after_change_style)
+                    .unwrap();
 
             return ***existing != after_value;
         }
 
-        let from = AnimationValue::from_computed_values(longhand_id, before_change_style);
-        let to = AnimationValue::from_computed_values(longhand_id, after_change_style);
+        let from =
+            AnimationValue::from_computed_values(property_declaration_id, before_change_style);
+        let to = AnimationValue::from_computed_values(property_declaration_id, after_change_style);
 
         debug_assert_eq!(to.is_some(), from.is_some());
 
@@ -1517,8 +1521,6 @@ impl<'le> TElement for GeckoElement<'le> {
         before_change_style: &ComputedValues,
         after_change_style: &ComputedValues,
     ) -> bool {
-        use crate::properties::LonghandIdSet;
-
         let after_change_ui_style = after_change_style.get_ui();
         let existing_transitions = self.css_transitions_info();
 
@@ -1527,11 +1529,13 @@ impl<'le> TElement for GeckoElement<'le> {
             return !existing_transitions.is_empty();
         }
 
-        let mut transitions_to_keep = LonghandIdSet::new();
+        let mut transitions_to_keep = PropertyDeclarationIdSet::default();
         for transition_property in after_change_style.transition_properties() {
-            let physical_longhand = transition_property
-                .longhand_id
-                .to_physical(after_change_style.writing_mode);
+            let physical_longhand = PropertyDeclarationId::Longhand(
+                transition_property
+                    .longhand_id
+                    .to_physical(after_change_style.writing_mode),
+            );
             transitions_to_keep.insert(physical_longhand);
             if self.needs_transitions_update_per_property(
                 physical_longhand,
@@ -1550,7 +1554,7 @@ impl<'le> TElement for GeckoElement<'le> {
         // a matching transition-property value.
         existing_transitions
             .keys()
-            .any(|property| !transitions_to_keep.contains(*property))
+            .any(|property| !transitions_to_keep.contains(property.as_borrowed()))
     }
 
     /// Whether there is an ElementData container.

@@ -38,12 +38,14 @@ use to_shmem::impl_trivial_to_shmem;
 use crate::stylesheets::{CssRuleType, CssRuleTypes, Origin, UrlExtraData};
 use crate::logical_geometry::{LogicalAxis, LogicalCorner, LogicalSide};
 use crate::use_counters::UseCounters;
-use crate::values::generics::font::LineHeight;
-use crate::values::specified::length::LineHeightBase;
-use crate::values::{computed, resolved, serialize_atom_name};
-use crate::values::specified::font::SystemFont;
 use crate::rule_tree::StrongRuleNode;
 use crate::str::{CssString, CssStringWriter};
+use crate::values::{
+    computed,
+    generics::font::LineHeight,
+    resolved, serialize_atom_name,
+    specified::{font::SystemFont, length::LineHeightBase},
+};
 use std::cell::Cell;
 use super::declaration_block::AppendableValue;
 use super::property_declaration::PropertyDeclarationId;

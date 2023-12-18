@@ -10,15 +10,19 @@
 %>
 
 #[cfg(feature = "gecko")] use crate::gecko_bindings::structs::nsCSSPropertyID;
-use crate::properties::{CSSWideKeyword, PropertyDeclaration, NonCustomPropertyIterator};
-use crate::properties::longhands;
-use crate::properties::longhands::visibility::computed_value::T as Visibility;
-use crate::properties::longhands::content_visibility::computed_value::T as ContentVisibility;
-use crate::properties::LonghandId;
+use crate::properties::{
+    longhands::{
+        self, content_visibility::computed_value::T as ContentVisibility,
+        visibility::computed_value::T as Visibility,
+    },
+    CSSWideKeyword, LonghandId, NonCustomPropertyIterator, PropertyDeclaration,
+    PropertyDeclarationId,
+};
 use std::ptr;
 use std::mem;
 use fxhash::FxHashMap;
 use super::ComputedValues;
+use crate::properties::property_declaration::OwnedPropertyDeclarationId;
 use crate::values::animated::{Animate, Procedure, ToAnimatedValue, ToAnimatedZero};
 use crate::values::animated::effects::AnimatedFilter;
 #[cfg(feature = "gecko")] use crate::values::computed::TransitionProperty;
@@ -58,7 +62,7 @@ impl From<nsCSSPropertyID> for TransitionProperty {
 /// A collection of AnimationValue that were composed on an element.
 /// This HashMap stores the values that are the last AnimationValue to be
 /// composed for each TransitionProperty.
-pub type AnimationValueMap = FxHashMap<LonghandId, AnimationValue>;
+pub type AnimationValueMap = FxHashMap<OwnedPropertyDeclarationId, AnimationValue>;
 
 /// An enum to represent a single computed value belonging to an animated
 /// property in order to be interpolated with another one. When interpolating,
@@ -184,7 +188,7 @@ impl PartialEq for AnimationValue {
 impl AnimationValue {
     /// Returns the longhand id this animated value corresponds to.
     #[inline]
-    pub fn id(&self) -> LonghandId {
+    pub fn id(&self) -> PropertyDeclarationId {
         let id = unsafe { *(self as *const _ as *const LonghandId) };
         debug_assert_eq!(id, match *self {
             % for prop in data.longhands:
@@ -195,7 +199,7 @@ impl AnimationValue {
             % endif
             % endfor
         });
-        id
+        PropertyDeclarationId::Longhand(id)
     }
 
     /// Returns whether this value is interpolable with another one.
@@ -388,9 +392,15 @@ impl AnimationValue {
 
     /// Get an AnimationValue for an AnimatableLonghand from a given computed values.
     pub fn from_computed_values(
-        property: LonghandId,
+        property: PropertyDeclarationId,
         style: &ComputedValues,
     ) -> Option<Self> {
+        let property = match property {
+            PropertyDeclarationId::Longhand(id) => id,
+            // TODO(bug 1846516): Implement this for custom properties.
+            PropertyDeclarationId::Custom(_) => return None,
+        };
+
         let property = property.to_physical(style.writing_mode);
         Some(match property {
             % for prop in data.longhands:

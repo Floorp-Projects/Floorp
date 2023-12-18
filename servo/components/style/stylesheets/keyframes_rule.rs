@@ -6,12 +6,14 @@
 
 use crate::error_reporting::ContextualParseError;
 use crate::parser::ParserContext;
-use crate::properties::longhands::animation_composition::single_value::SpecifiedValue as SpecifiedComposition;
-use crate::properties::longhands::transition_timing_function::single_value::SpecifiedValue as SpecifiedTimingFunction;
-use crate::properties::LonghandIdSet;
-use crate::properties::{Importance, PropertyDeclaration};
-use crate::properties::{LonghandId, PropertyDeclarationBlock, PropertyId};
-use crate::properties::{PropertyDeclarationId, SourcePropertyDeclaration};
+use crate::properties::{
+    longhands::{
+        animation_composition::single_value::SpecifiedValue as SpecifiedComposition,
+        transition_timing_function::single_value::SpecifiedValue as SpecifiedTimingFunction,
+    },
+    Importance, LonghandId, PropertyDeclaration, PropertyDeclarationBlock, PropertyDeclarationId,
+    PropertyDeclarationIdSet, PropertyId, SourcePropertyDeclaration,
+};
 use crate::shared_lock::{DeepCloneParams, DeepCloneWithLock, SharedRwLock, SharedRwLockReadGuard};
 use crate::shared_lock::{Locked, ToCssWithGuard};
 use crate::str::CssStringWriter;
@@ -407,7 +409,7 @@ pub struct KeyframesAnimation {
     /// The difference steps of the animation.
     pub steps: Vec<KeyframesStep>,
     /// The properties that change in this animation.
-    pub properties_changed: LonghandIdSet,
+    pub properties_changed: PropertyDeclarationIdSet,
     /// Vendor prefix type the @keyframes has.
     pub vendor_prefix: Option<VendorPrefix>,
 }
@@ -416,8 +418,8 @@ pub struct KeyframesAnimation {
 fn get_animated_properties(
     keyframes: &[Arc<Locked<Keyframe>>],
     guard: &SharedRwLockReadGuard,
-) -> LonghandIdSet {
-    let mut ret = LonghandIdSet::new();
+) -> PropertyDeclarationIdSet {
+    let mut ret = PropertyDeclarationIdSet::default();
     // NB: declarations are already deduplicated, so we don't have to check for
     // it here.
     for keyframe in keyframes {
@@ -430,20 +432,17 @@ fn get_animated_properties(
         // be properties with !important in keyframe rules here.
         // See the spec issue https://github.com/w3c/csswg-drafts/issues/1824
         for declaration in block.normal_declaration_iter() {
-            let longhand_id = match declaration.id() {
-                PropertyDeclarationId::Longhand(id) => id,
-                _ => continue,
-            };
+            let declaration_id = declaration.id();
 
-            if longhand_id == LonghandId::Display {
+            if declaration_id == PropertyDeclarationId::Longhand(LonghandId::Display) {
                 continue;
             }
 
-            if !longhand_id.is_animatable() {
+            if !declaration_id.is_animatable() {
                 continue;
             }
 
-            ret.insert(longhand_id);
+            ret.insert(declaration_id);
         }
     }
 
@@ -466,7 +465,7 @@ impl KeyframesAnimation {
     ) -> Self {
         let mut result = KeyframesAnimation {
             steps: vec![],
-            properties_changed: LonghandIdSet::new(),
+            properties_changed: PropertyDeclarationIdSet::default(),
             vendor_prefix,
         };
 
