@@ -1320,10 +1320,6 @@ pref("places.frecency.origins.alternative.featureGate", false);
 // selects "Forget About This Site".
 pref("places.forgetThisSite.clearByBaseDomain", true);
 
-#ifdef NIGHTLY_BUILD
-pref("places.experimental.useSingleQueueTransactionManager", true);
-#endif
-
 // Whether to warm up network connections for places: menus and places: toolbar.
 pref("browser.places.speculativeConnect.enabled", true);
 
