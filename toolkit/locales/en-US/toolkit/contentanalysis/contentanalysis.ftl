@@ -15,6 +15,14 @@ contentanalysis-slow-agent-dialog-body = Content Analysis is analyzing resource 
 contentanalysis-operationtype-clipboard = clipboard
 contentanalysis-operationtype-dropped-text = dropped text
 
+contentanalysis-warndialogtitle = This content may be unsafe
+
+# Variables:
+#   $content - Description of the content being warned about, such as "clipboard" or "aFile.txt"
+contentanalysis-warndialogtext = Your organization uses data-loss prevention software that has flagged this content as unsafe: { $content }. Use it anyway?
+contentanalysis-warndialog-response-allow = Use content
+contentanalysis-warndialog-response-deny = Cancel
+
 contentanalysis-notification-title = Content Analysis
 # Variables:
 #   $content - Description of the content being reported, such as "clipboard" or "aFile.txt"
