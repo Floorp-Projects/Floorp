@@ -480,9 +480,8 @@ StyleVerticalAlignKeyword nsTableWrapperFrame::GetCaptionVerticalAlign() const {
 }
 
 nscoord nsTableWrapperFrame::ComputeFinalBSize(
-    const MaybeCaptionSide& aCaptionSide, const LogicalSize& aInnerSize,
-    const LogicalSize& aCaptionSize, const LogicalMargin& aCaptionMargin,
-    const WritingMode aWM) const {
+    const LogicalSize& aInnerSize, const LogicalSize& aCaptionSize,
+    const LogicalMargin& aCaptionMargin, const WritingMode aWM) const {
   // negative sizes can upset overflow-area code
   return std::max(0, aInnerSize.BSize(aWM) +
                          std::max(0, aCaptionSize.BSize(aWM) +
@@ -783,7 +782,7 @@ void nsTableWrapperFrame::Reflow(nsPresContext* aPresContext,
   // border-box inline-size.
   desiredSize.ISize(wm) = contentBoxISize;
   desiredSize.BSize(wm) =
-      ComputeFinalBSize(captionSide, innerSize, captionSize, captionMargin, wm);
+      ComputeFinalBSize(innerSize, captionSize, captionMargin, wm);
 
   aDesiredSize.SetSize(wm, desiredSize);
   nsSize containerSize = aDesiredSize.PhysicalSize();
