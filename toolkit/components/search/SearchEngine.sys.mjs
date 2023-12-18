@@ -289,23 +289,8 @@ function ParamSubstitution(paramValue, searchTerms, engine) {
     }
 
     // moz: parameters are only available for default search engines.
-    if (name.startsWith("moz:") && engine.isAppProvided) {
-      // {moz:locale} is common.
-      if (name == lazy.SearchUtils.MOZ_PARAM.LOCALE) {
-        return Services.locale.requestedLocale;
-      }
-
-      // {moz:date}
-      if (name == lazy.SearchUtils.MOZ_PARAM.DATE) {
-        let date = new Date();
-        let pad = number => number.toString().padStart(2, "0");
-        return (
-          String(date.getFullYear()) +
-          pad(date.getMonth() + 1) +
-          pad(date.getDate()) +
-          pad(date.getHours())
-        );
-      }
+    if (engine.isAppProvided && name == lazy.SearchUtils.MOZ_PARAM.LOCALE) {
+      return Services.locale.requestedLocale;
     }
 
     // Handle the less common OpenSearch parameters we're confident about.

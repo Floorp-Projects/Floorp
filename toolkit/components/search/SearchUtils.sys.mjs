@@ -198,7 +198,6 @@ export var SearchUtils = {
   DEFAULT_TAG: "default",
 
   MOZ_PARAM: {
-    DATE: "moz:date",
     LOCALE: "moz:locale",
   },
 
