@@ -22,6 +22,8 @@
 #include "nsContentUtils.h"
 #include "SVGAnimatedTransformList.h"
 
+// XXX Tight coupling with content classes ahead!
+
 using namespace mozilla::dom;
 using namespace mozilla::dom::SVGGradientElement_Binding;
 using namespace mozilla::dom::SVGUnitTypes_Binding;
@@ -208,52 +210,20 @@ dom::SVGRadialGradientElement* SVGGradientFrame::GetRadialGradientWithLength(
 //----------------------------------------------------------------------
 // SVGPaintServerFrame methods:
 
-// helpers
-
-static ColorStop GetStopInformation(const nsIFrame* aStopFrame,
-                                    float aGraphicOpacity,
-                                    float& aLastPosition) {
+// helper
+static void GetStopInformation(nsIFrame* aStopFrame, float* aOffset,
+                               nscolor* aStopColor, float* aStopOpacity) {
   nsIContent* stopContent = aStopFrame->GetContent();
   MOZ_ASSERT(stopContent && stopContent->IsSVGElement(nsGkAtoms::stop));
 
-  float position;
   static_cast<SVGStopElement*>(stopContent)
-      ->GetAnimatedNumberValues(&position, nullptr);
+      ->GetAnimatedNumberValues(aOffset, nullptr);
 
-  position = clamped(position, 0.0f, 1.0f);
-
-  if (position < aLastPosition) {
-    position = aLastPosition;
-  } else {
-    aLastPosition = position;
-  }
-
-  const auto* svgReset = aStopFrame->StyleSVGReset();
-
-  sRGBColor stopColor =
-      sRGBColor::FromABGR(svgReset->mStopColor.CalcColor(aStopFrame));
-  stopColor.a *= svgReset->mStopOpacity * aGraphicOpacity;
-
-  return ColorStop(position, false,
-                   StyleAbsoluteColor::FromColor(stopColor.ToABGR()));
+  const nsStyleSVGReset* styleSVGReset = aStopFrame->StyleSVGReset();
+  *aOffset = mozilla::clamped(*aOffset, 0.0f, 1.0f);
+  *aStopColor = styleSVGReset->mStopColor.CalcColor(aStopFrame);
+  *aStopOpacity = styleSVGReset->mStopOpacity;
 }
-
-class MOZ_STACK_CLASS SVGColorStopInterpolator
-    : public ColorStopInterpolator<SVGColorStopInterpolator> {
- public:
-  SVGColorStopInterpolator(
-      gfxPattern* aGradient, const nsTArray<ColorStop>& aStops,
-      const StyleColorInterpolationMethod& aStyleColorInterpolationMethod)
-      : ColorStopInterpolator(aStops, aStyleColorInterpolationMethod),
-        mGradient(aGradient) {}
-
-  void CreateStop(float aPosition, DeviceColor aColor) {
-    mGradient->AddColorStop(aPosition, aColor);
-  }
-
- private:
-  gfxPattern* mGradient;
-};
 
 already_AddRefed<gfxPattern> SVGGradientFrame::GetPaintServerPattern(
     nsIFrame* aSource, const DrawTarget* aDrawTarget,
@@ -270,21 +240,29 @@ already_AddRefed<gfxPattern> SVGGradientFrame::GetPaintServerPattern(
     mSource = aSource->IsTextFrame() ? aSource->GetParent() : aSource;
   }
 
-  AutoTArray<ColorStop, 8> stops;
-  GetStops(&stops, aGraphicOpacity);
+  AutoTArray<nsIFrame*, 8> stopFrames;
+  GetStopFrames(&stopFrames);
 
-  uint32_t nStops = stops.Length();
+  uint32_t nStops = stopFrames.Length();
 
   // SVG specification says that no stops should be treated like
   // the corresponding fill or stroke had "none" specified.
   if (nStops == 0) {
+    RefPtr<gfxPattern> pattern = new gfxPattern(DeviceColor());
     return do_AddRef(new gfxPattern(DeviceColor()));
   }
 
   if (nStops == 1 || GradientVectorLengthIsZero()) {
+    auto* lastStopFrame = stopFrames[nStops - 1];
+    const auto* svgReset = lastStopFrame->StyleSVGReset();
     // The gradient paints a single colour, using the stop-color of the last
     // gradient step if there are more than one.
-    return do_AddRef(new gfxPattern(ToDeviceColor(stops.LastElement().mColor)));
+    float stopOpacity = svgReset->mStopOpacity;
+    nscolor stopColor = svgReset->mStopColor.CalcColor(lastStopFrame);
+
+    sRGBColor stopColor2 = sRGBColor::FromABGR(stopColor);
+    stopColor2.a *= stopOpacity * aGraphicOpacity;
+    return do_AddRef(new gfxPattern(ToDeviceColor(stopColor2)));
   }
 
   // Get the transform list (if there is one). We do this after the returns
@@ -323,16 +301,23 @@ already_AddRefed<gfxPattern> SVGGradientFrame::GetPaintServerPattern(
 
   gradient->SetMatrix(patternMatrix);
 
-  if (StyleSVG()->mColorInterpolation == StyleColorInterpolation::Linearrgb) {
-    static constexpr auto interpolationMethod = StyleColorInterpolationMethod{
-        StyleColorSpace::SrgbLinear, StyleHueInterpolationMethod::Shorter};
-    SVGColorStopInterpolator interpolator(gradient, stops, interpolationMethod);
-    interpolator.CreateStops();
-  } else {
-    // setup standard sRGB stops
-    for (const auto& stop : stops) {
-      gradient->AddColorStop(stop.mPosition, ToDeviceColor(stop.mColor));
-    }
+  // setup stops
+  float lastOffset = 0.0f;
+
+  for (uint32_t i = 0; i < nStops; i++) {
+    float offset, stopOpacity;
+    nscolor stopColor;
+
+    GetStopInformation(stopFrames[i], &offset, &stopColor, &stopOpacity);
+
+    if (offset < lastOffset)
+      offset = lastOffset;
+    else
+      lastOffset = offset;
+
+    sRGBColor stopColor2 = sRGBColor::FromABGR(stopColor);
+    stopColor2.a *= stopOpacity * aGraphicOpacity;
+    gradient->AddColorStop(offset, ToDeviceColor(stopColor2));
   }
 
   return gradient.forget();
@@ -366,16 +351,15 @@ SVGGradientFrame* SVGGradientFrame::GetReferencedGradient() {
   return do_QueryFrame(SVGObserverUtils::GetAndObserveTemplate(this, GetHref));
 }
 
-void SVGGradientFrame::GetStops(nsTArray<ColorStop>* aStops,
-                                float aGraphicOpacity) {
-  float lastPosition = 0.0f;
-  for (const auto* stopFrame : mFrames) {
+void SVGGradientFrame::GetStopFrames(nsTArray<nsIFrame*>* aStopFrames) {
+  nsIFrame* stopFrame = nullptr;
+  for (stopFrame = mFrames.FirstChild(); stopFrame;
+       stopFrame = stopFrame->GetNextSibling()) {
     if (stopFrame->IsSVGStopFrame()) {
-      aStops->AppendElement(
-          GetStopInformation(stopFrame, aGraphicOpacity, lastPosition));
+      aStopFrames->AppendElement(stopFrame);
     }
   }
-  if (aStops->Length() > 0) {
+  if (aStopFrames->Length() > 0) {
     return;
   }
 
@@ -393,7 +377,7 @@ void SVGGradientFrame::GetStops(nsTArray<ColorStop>* aStops,
 
   SVGGradientFrame* next = GetReferencedGradient();
   if (next) {
-    next->GetStops(aStops, aGraphicOpacity);
+    next->GetStopFrames(aStopFrames);
   }
 }
 
