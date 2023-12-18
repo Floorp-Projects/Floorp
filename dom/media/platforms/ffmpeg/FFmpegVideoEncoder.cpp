@@ -393,6 +393,16 @@ MediaResult FFmpegVideoEncoder<LIBAV_VER>::InitInternal() {
 
   FFMPEGV_LOG("InitInternal");
 
+  if (mCodecID == AV_CODEC_ID_H264) {
+    // H264Specific is required to get the format (avcc vs annexb).
+    if (!mConfig.mCodecSpecific ||
+        !mConfig.mCodecSpecific->is<H264Specific>()) {
+      return MediaResult(
+          NS_ERROR_DOM_MEDIA_FATAL_ERR,
+          RESULT_DETAIL("Unable to get H264 necessary encoding info"));
+    }
+  }
+
   AVCodec* codec = mLib->avcodec_find_encoder(mCodecID);
   if (!codec) {
     FFMPEGV_LOG("failed to find ffmpeg encoder for codec id %d", mCodecID);
@@ -469,6 +479,19 @@ MediaResult FFmpegVideoEncoder<LIBAV_VER>::InitInternal() {
       MOZ_ASSERT(!level->mString.IsEmpty());
       mLib->av_opt_set(mCodecContext->priv_data, "level", level->mString.get(),
                        0);
+
+      // Set format: libx264's default format is annexb
+      if (specific.mFormat == H264BitStreamFormat::AVC) {
+        mLib->av_opt_set(mCodecContext->priv_data, "x264-params", "annexb=0",
+                         0);
+        // mCodecContext->flags |= AV_CODEC_FLAG_GLOBAL_HEADER
+        // if we don't want to append SPS/PPS data in all keyframe
+        // (LIBAVCODEC_VERSION_MAJOR >= 57 only).
+      } else {
+        // Set annexb explicitly even if it's default format.
+        mLib->av_opt_set(mCodecContext->priv_data, "x264-params", "annexb=1",
+                         0);
+      }
     }
   }
   // TODO: keyint_min, max_b_frame?
@@ -481,11 +504,6 @@ MediaResult FFmpegVideoEncoder<LIBAV_VER>::InitInternal() {
   // - if min and max rates are known (VBR?),
   // av_opt_set(mCodecContext->priv_data, "minrate", x, 0) and
   // av_opt_set(mCodecContext->priv_data, "maxrate", y, 0)
-  // TODO: H264 specific settings.
-  // - for AVCC format: set mCodecContext->extradata and
-  // mCodecContext->extradata_size.
-  // - for AnnexB format: set mCodecContext->flags |=
-  // AV_CODEC_FLAG_GLOBAL_HEADER for start code.
   // TODO: AV1 specific settings.
 
   AVDictionary* options = nullptr;
@@ -943,6 +961,14 @@ RefPtr<MediaRawData> FFmpegVideoEncoder<LIBAV_VER>::ToMediaRawData(
   MOZ_ASSERT(aPacket);
 
   // TODO: Do we need to check AV_PKT_FLAG_CORRUPT?
+
+  // TODO: if this is key frame, and encoding is H264 in AVCC format, and
+  // AV_CODEC_FLAG_GLOBAL_HEADER is NOT set in mCodecContext->flags, then SPS
+  // and PPS is in the header. See[1, 2].
+  // [1]
+  // https://github.com/FFmpeg/FFmpeg/blob/b51d9eb58eae046b08ef0a967ab2d3e863047d74/libavcodec/libx264.c#L1174-L1175
+  // [2]
+  // https://code.videolan.org/videolan/x264/-/blob/c1c9931dc87289b8aeba78150467f17bdb97d019/encoder/encoder.c#L3665-L3691
 
   // Copy frame data from AVPacket.
   auto data = MakeRefPtr<MediaRawData>();
