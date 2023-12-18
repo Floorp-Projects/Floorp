@@ -164,11 +164,22 @@ add_task(async function testWindowCreate() {
       }
     }
     try {
-      // First collect all results, in parallel.
-      const results = await Promise.allSettled(
-        TEST_SETS.map(t => create({ url: t.url }))
-      );
-      // Then check the results sequentially
+      let promises = [];
+      for (let testSet of TEST_SETS) {
+        try {
+          let testPromise = create({ url: testSet.url });
+          promises.push(testPromise);
+          // Bug 1869385 - we need to await each window opening sequentially.
+          // The events we check for depend on paint finishing,
+          // which won't happen if the window is occluded before it finishes
+          // loading.
+          await testPromise;
+        } catch (e) {
+          // Some of these calls are expected to fail,
+          // which we verify when calling checkCreateResult below.
+        }
+      }
+      const results = await Promise.allSettled(promises);
       await Promise.all(
         TEST_SETS.map((t, i) => checkCreateResult(results[i], t))
       );
