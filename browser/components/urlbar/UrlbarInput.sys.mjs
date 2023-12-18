@@ -695,7 +695,7 @@ export class UrlbarInput {
         oneOffParams.engine,
         searchString
       );
-      this._recordSearch(oneOffParams.engine, event, { url });
+      this._recordSearch(oneOffParams.engine, event);
 
       lazy.UrlbarUtils.addToFormHistory(
         this,
@@ -1170,7 +1170,6 @@ export class UrlbarInput {
           isFormHistory:
             result.source == lazy.UrlbarUtils.RESULT_SOURCE.HISTORY,
           alias: result.payload.keyword,
-          url,
         };
         const engine = Services.search.getEngineByName(result.payload.engine);
         this._recordSearch(engine, event, actionDetails);
