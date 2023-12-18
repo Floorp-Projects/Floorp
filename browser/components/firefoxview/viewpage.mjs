@@ -15,6 +15,15 @@ import "chrome://browser/content/firefoxview/fxview-tab-list.mjs";
 
 import { placeLinkOnClipboard } from "./helpers.mjs";
 
+const lazy = {};
+
+ChromeUtils.defineESModuleGetters(lazy, {
+  DeferredTask: "resource://gre/modules/DeferredTask.sys.mjs",
+});
+
+const WIN_RESIZE_DEBOUNCE_RATE_MS = 500;
+const WIN_RESIZE_DEBOUNCE_TIMEOUT_MS = 1000;
+
 /**
  * A base class for content container views displayed on firefox-view.
  *
@@ -123,10 +132,20 @@ export class ViewPage extends ViewPageContent {
     this.selectedTab = false;
     this.recentBrowsing = Boolean(this.recentBrowsingElement);
     this.onVisibilityChange = this.onVisibilityChange.bind(this);
+    this.onResize = this.onResize.bind(this);
   }
 
   get recentBrowsingElement() {
     return this.closest("VIEW-RECENTBROWSING");
+  }
+
+  onResize() {
+    this.windowResizeTask = new lazy.DeferredTask(
+      () => this.updateAllVirtualLists(),
+      WIN_RESIZE_DEBOUNCE_RATE_MS,
+      WIN_RESIZE_DEBOUNCE_TIMEOUT_MS
+    );
+    this.windowResizeTask?.arm();
   }
 
   onVisibilityChange(event) {
@@ -156,6 +175,35 @@ export class ViewPage extends ViewPageContent {
       "visibilitychange",
       this.onVisibilityChange
     );
+    this.getWindow().removeEventListener("resize", this.onResize);
+  }
+
+  updateAllVirtualLists() {
+    if (!this.paused) {
+      let tabLists = [];
+      if (this.recentBrowsing) {
+        let viewComponents = this.querySelectorAll("[slot]");
+        viewComponents.forEach(viewComponent => {
+          let currentTabLists = [];
+          if (viewComponent.nodeName.includes("OPENTABS")) {
+            viewComponent.viewCards.forEach(viewCard => {
+              currentTabLists.push(viewCard.tabList);
+            });
+          } else {
+            currentTabLists =
+              viewComponent.shadowRoot.querySelectorAll("fxview-tab-list");
+          }
+          tabLists.push(...currentTabLists);
+        });
+      } else {
+        tabLists = this.shadowRoot.querySelectorAll("fxview-tab-list");
+      }
+      tabLists.forEach(tabList => {
+        if (!tabList.updatesPaused && tabList.rootVirtualListEl?.isVisible) {
+          tabList.rootVirtualListEl.recalculateAfterWindowResize();
+        }
+      });
+    }
   }
 
   toggleVisibilityInCardContainer(isOpenTabs) {
@@ -195,6 +243,7 @@ export class ViewPage extends ViewPageContent {
     if (this.isVisible) {
       this.paused = false;
       this.viewVisibleCallback();
+      this.getWindow().addEventListener("resize", this.onResize);
     }
   }
 
@@ -202,5 +251,9 @@ export class ViewPage extends ViewPageContent {
     this.selectedTab = false;
     this.paused = true;
     this.viewHiddenCallback();
+    if (!this.windowResizeTask?.isFinalized) {
+      this.windowResizeTask?.finalize();
+    }
+    this.getWindow().removeEventListener("resize", this.onResize);
   }
 }
