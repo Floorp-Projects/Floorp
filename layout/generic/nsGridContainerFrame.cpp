@@ -7433,10 +7433,12 @@ void nsGridContainerFrame::ReflowInFlowChild(
         j == StyleAlignFlags::NORMAL || j == StyleAlignFlags::STRETCH;
     stretch[eLogicalAxisBlock] =
         a == StyleAlignFlags::NORMAL || a == StyleAlignFlags::STRETCH;
-    auto childIAxis = isOrthogonal ? eLogicalAxisBlock : eLogicalAxisInline;
+
+    const auto childIAxisInWM =
+        isOrthogonal ? eLogicalAxisBlock : eLogicalAxisInline;
     // Clamp during reflow if we're stretching in that axis.
-    if (stretch[childIAxis]) {
-      if (aGridItemInfo->mState[childIAxis] &
+    if (stretch[childIAxisInWM]) {
+      if (aGridItemInfo->mState[childIAxisInWM] &
           ItemState::eClampMarginBoxMinSize) {
         csFlags += ComputeSizeFlag::IClampMarginBoxMinSize;
       }
@@ -7444,9 +7446,9 @@ void nsGridContainerFrame::ReflowInFlowChild(
       csFlags += ComputeSizeFlag::ShrinkWrap;
     }
 
-    auto childBAxis = GetOrthogonalAxis(childIAxis);
-    if (stretch[childBAxis] &&
-        aGridItemInfo->mState[childBAxis] & ItemState::eClampMarginBoxMinSize) {
+    const auto childBAxisInWM = GetOrthogonalAxis(childIAxisInWM);
+    if (stretch[childBAxisInWM] && aGridItemInfo->mState[childBAxisInWM] &
+                                       ItemState::eClampMarginBoxMinSize) {
       csFlags += ComputeSizeFlag::BClampMarginBoxMinSize;
       aChild->SetProperty(BClampMarginBoxMinSizeProperty(),
                           childCBSize.BSize(childWM));
@@ -7454,7 +7456,8 @@ void nsGridContainerFrame::ReflowInFlowChild(
       aChild->RemoveProperty(BClampMarginBoxMinSizeProperty());
     }
 
-    if ((aGridItemInfo->mState[childIAxis] & ItemState::eApplyAutoMinSize)) {
+    if ((aGridItemInfo->mState[childIAxisInWM] &
+         ItemState::eApplyAutoMinSize)) {
       csFlags += ComputeSizeFlag::IApplyAutoMinSize;
     }
   }
