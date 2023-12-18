@@ -31,7 +31,8 @@ bool FFmpegEncoderModule<V>::Supports(const EncoderConfig& aConfig) const {
       return false;
     }
     if (specific.mProfile != H264_PROFILE_BASE &&
-        specific.mProfile != H264_PROFILE_MAIN) {
+        specific.mProfile != H264_PROFILE_MAIN &&
+        specific.mProfile != H264_PROFILE_HIGH) {
       return false;
     }
     if (width > 4096 || height > 4096) {
