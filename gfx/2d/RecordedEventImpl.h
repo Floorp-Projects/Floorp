@@ -824,6 +824,44 @@ class RecordedDrawSurfaceWithShadow
   CompositionOp mOp;
 };
 
+class RecordedDrawShadow : public RecordedDrawingEvent<RecordedDrawShadow> {
+ public:
+  RecordedDrawShadow(DrawTarget* aDT, ReferencePtr aPath,
+                     const Pattern& aPattern, const ShadowOptions& aShadow,
+                     const DrawOptions& aOptions,
+                     const StrokeOptions* aStrokeOptions)
+      : RecordedDrawingEvent(DRAWSHADOW, aDT),
+        mPath(aPath),
+        mPattern(),
+        mShadow(aShadow),
+        mOptions(aOptions),
+        mHasStrokeOptions(!!aStrokeOptions),
+        mStrokeOptions(aStrokeOptions ? *aStrokeOptions : StrokeOptions()) {
+    StorePattern(mPattern, aPattern);
+  }
+
+  bool PlayEvent(Translator* aTranslator) const override;
+
+  template <class S>
+  void Record(S& aStream) const;
+  void OutputSimpleEventInfo(std::stringstream& aStringStream) const override;
+
+  std::string GetName() const override { return "DrawShadow"; }
+
+ private:
+  friend class RecordedEvent;
+
+  template <class S>
+  MOZ_IMPLICIT RecordedDrawShadow(S& aStream);
+
+  ReferencePtr mPath;
+  PatternStorage mPattern;
+  ShadowOptions mShadow;
+  DrawOptions mOptions;
+  bool mHasStrokeOptions;
+  StrokeOptions mStrokeOptions;
+};
+
 class RecordedDrawFilter : public RecordedDrawingEvent<RecordedDrawFilter> {
  public:
   RecordedDrawFilter(DrawTarget* aDT, ReferencePtr aNode,
@@ -3098,6 +3136,55 @@ inline void RecordedDrawSurfaceWithShadow::OutputSimpleEventInfo(
                 << mShadow.mColor.a << ")";
 }
 
+inline bool RecordedDrawShadow::PlayEvent(Translator* aTranslator) const {
+  DrawTarget* dt = aTranslator->LookupDrawTarget(mDT);
+  if (!dt) {
+    return false;
+  }
+
+  Path* path = aTranslator->LookupPath(mPath);
+  if (!path) {
+    return false;
+  }
+
+  dt->DrawShadow(path, *GenericPattern(mPattern, aTranslator), mShadow,
+                 mOptions, mHasStrokeOptions ? &mStrokeOptions : nullptr);
+  return true;
+}
+
+template <class S>
+void RecordedDrawShadow::Record(S& aStream) const {
+  RecordedDrawingEvent::Record(aStream);
+  WriteElement(aStream, mPath);
+  RecordPatternData(aStream, mPattern);
+  WriteElement(aStream, mShadow);
+  WriteElement(aStream, mOptions);
+  WriteElement(aStream, mHasStrokeOptions);
+  if (mHasStrokeOptions) {
+    RecordStrokeOptions(aStream, mStrokeOptions);
+  }
+}
+
+template <class S>
+RecordedDrawShadow::RecordedDrawShadow(S& aStream)
+    : RecordedDrawingEvent(DRAWSHADOW, aStream) {
+  ReadElement(aStream, mPath);
+  ReadPatternData(aStream, mPattern);
+  ReadElement(aStream, mShadow);
+  ReadDrawOptions(aStream, mOptions);
+  ReadElement(aStream, mHasStrokeOptions);
+  if (mHasStrokeOptions) {
+    ReadStrokeOptions(aStream, mStrokeOptions);
+  }
+}
+
+inline void RecordedDrawShadow::OutputSimpleEventInfo(
+    std::stringstream& aStringStream) const {
+  aStringStream << "[" << mDT << "] DrawShadow (" << mPath << ") DeviceColor: ("
+                << mShadow.mColor.r << ", " << mShadow.mColor.g << ", "
+                << mShadow.mColor.b << ", " << mShadow.mColor.a << ")";
+}
+
 inline RecordedPathCreation::RecordedPathCreation(PathRecording* aPath)
     : RecordedEventDerived(PATHCREATION),
       mRefPtr(aPath),
@@ -4154,6 +4241,7 @@ inline void RecordedDestination::OutputSimpleEventInfo(
   f(DRAWSURFACE, RecordedDrawSurface);                             \
   f(DRAWDEPENDENTSURFACE, RecordedDrawDependentSurface);           \
   f(DRAWSURFACEWITHSHADOW, RecordedDrawSurfaceWithShadow);         \
+  f(DRAWSHADOW, RecordedDrawShadow);                               \
   f(DRAWFILTER, RecordedDrawFilter);                               \
   f(PATHCREATION, RecordedPathCreation);                           \
   f(PATHDESTRUCTION, RecordedPathDestruction);                     \

@@ -73,6 +73,11 @@ class DrawTargetRecording : public DrawTarget {
                                      const ShadowOptions& aShadow,
                                      CompositionOp aOperator) override;
 
+  virtual void DrawShadow(const Path* aPath, const Pattern& aPattern,
+                          const ShadowOptions& aShadow,
+                          const DrawOptions& aOptions,
+                          const StrokeOptions* aStrokeOptions) override;
+
   /*
    * Clear a rectangle on the draw target to transparent black. This will
    * respect the clipping region and transform.
