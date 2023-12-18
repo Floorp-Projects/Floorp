@@ -3172,6 +3172,7 @@ bool nsNativeThemeCocoa::ThemeSupportsWidget(nsPresContext* aPresContext,
     case StyleAppearance::MozMacHelpButton:
     case StyleAppearance::MozMacDisclosureButtonOpen:
     case StyleAppearance::MozMacDisclosureButtonClosed:
+    case StyleAppearance::MozMacUnifiedToolbarWindow:
     case StyleAppearance::Button:
     case StyleAppearance::Toolbarbutton:
     case StyleAppearance::Spinner:
@@ -3308,7 +3309,10 @@ nsITheme::Transparency nsNativeThemeCocoa::GetWidgetTransparency(
     case StyleAppearance::Tooltip:
     case StyleAppearance::Toolbar:
       return eTransparent;
-
+    case StyleAppearance::MozMacUnifiedToolbarWindow:
+      // We want these to be treated as opaque by Gecko. We ensure there's an
+      // appropriate OS-level clear color to make sure that's the case.
+      return eOpaque;
     case StyleAppearance::Statusbar:
       // Knowing that scrollbars and statusbars are opaque improves
       // performance, because we create layers for them.
