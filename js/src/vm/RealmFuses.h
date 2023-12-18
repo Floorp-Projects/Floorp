@@ -90,7 +90,7 @@ struct RealmFuses {
   }
 
   static int32_t fuseOffsets[];
-  // static const char* fuseNames[];
+  static const char* fuseNames[];
 
   static int32_t offsetOfFuseWordRelativeToRealm(FuseIndex index);
   static const char* getFuseName(FuseIndex index);
