@@ -212,7 +212,8 @@ static gboolean key_release_event_cb(GtkWidget* widget, GdkEventKey* event);
 static gboolean property_notify_event_cb(GtkWidget* widget,
                                          GdkEventProperty* event);
 static gboolean scroll_event_cb(GtkWidget* widget, GdkEventScroll* event);
-
+static gboolean visibility_notify_event_cb(GtkWidget* widget,
+                                           GdkEventVisibility* event);
 static void hierarchy_changed_cb(GtkWidget* widget,
                                  GtkWidget* previous_toplevel);
 static gboolean window_state_event_cb(GtkWidget* widget,
@@ -5204,6 +5205,14 @@ void nsWindow::DispatchPanGesture(PanGestureInput& aPanInput) {
   ProcessUntransformedAPZEvent(&event, result);
 }
 
+void nsWindow::OnVisibilityNotifyEvent(GdkVisibilityState aState) {
+  LOG("nsWindow::OnVisibilityNotifyEvent [%p] state 0x%x\n", this, aState);
+  auto state = aState == GDK_VISIBILITY_FULLY_OBSCURED
+                   ? OcclusionState::OCCLUDED
+                   : OcclusionState::UNKNOWN;
+  NotifyOcclusionState(state);
+}
+
 void nsWindow::OnWindowStateEvent(GtkWidget* aWidget,
                                   GdkEventWindowState* aEvent) {
   LOG("nsWindow::OnWindowStateEvent for %p changed 0x%x new_window_state "
@@ -6286,6 +6295,8 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
                    nullptr);
   g_signal_connect(mShell, "window_state_event",
                    G_CALLBACK(window_state_event_cb), nullptr);
+  g_signal_connect(mShell, "visibility-notify-event",
+                   G_CALLBACK(visibility_notify_event_cb), nullptr);
   g_signal_connect(mShell, "check-resize", G_CALLBACK(check_resize_cb),
                    nullptr);
   g_signal_connect(mShell, "composited-changed",
@@ -8370,6 +8381,16 @@ static gboolean scroll_event_cb(GtkWidget* widget, GdkEventScroll* event) {
   return TRUE;
 }
 
+static gboolean visibility_notify_event_cb(GtkWidget* widget,
+                                           GdkEventVisibility* event) {
+  RefPtr<nsWindow> window = get_window_for_gdk_window(event->window);
+  if (!window) {
+    return FALSE;
+  }
+  window->OnVisibilityNotifyEvent(event->state);
+  return TRUE;
+}
+
 static void hierarchy_changed_cb(GtkWidget* widget,
                                  GtkWidget* previous_toplevel) {
   GtkWidget* toplevel = gtk_widget_get_toplevel(widget);
@@ -9887,12 +9908,12 @@ bool nsWindow::ApplyEnterLeaveMutterWorkaround() {
   return false;
 }
 
-void nsWindow::NotifyOcclusionState(mozilla::widget::OcclusionState aState) {
+void nsWindow::NotifyOcclusionState(OcclusionState aState) {
   if (!IsTopLevelWindowType()) {
     return;
   }
 
-  bool isFullyOccluded = aState == mozilla::widget::OcclusionState::OCCLUDED;
+  bool isFullyOccluded = aState == OcclusionState::OCCLUDED;
   if (mIsFullyOccluded == isFullyOccluded) {
     return;
   }
