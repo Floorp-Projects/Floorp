@@ -40,14 +40,28 @@ export class GeckoViewTranslations extends GeckoViewModule {
     debug`onEvent: event=${aEvent}, data=${aData}`;
     switch (aEvent) {
       case "GeckoView:Translations:Translate":
-        const { fromLanguage, toLanguage } = aData;
         try {
-          this.getActor("Translations").translate(fromLanguage, toLanguage);
-          aCallback.onSuccess();
+          const fromLanguage =
+            GeckoViewTranslationsSettings._checkValidLanguageTagAndMinimize(
+              aData.fromLanguage
+            );
+          const toLanguage =
+            GeckoViewTranslationsSettings._checkValidLanguageTagAndMinimize(
+              aData.toLanguage
+            );
+          try {
+            this.getActor("Translations").translate(fromLanguage, toLanguage);
+            aCallback.onSuccess();
+          } catch (error) {
+            aCallback.onError(`Could not translate: ${error}`);
+          }
         } catch (error) {
-          aCallback.onError(`Could not translate: ${error}`);
+          aCallback.onError(
+            `The language tag ${aData.fromLanguage} or ${aData.toLanguage} is not valid: ${error}`
+          );
         }
         break;
+
       case "GeckoView:Translations:RestorePage":
         try {
           this.getActor("Translations").restorePage();
@@ -511,6 +525,44 @@ export const GeckoViewTranslationsSettings = {
           );
         }
         break;
+      case "GeckoView:Translations:GetTranslateDownloadSize": {
+        if (
+          Cu.isInAutomation &&
+          Services.prefs.getBoolPref(
+            "browser.translations.geckoview.enableAllTestMocks",
+            false
+          )
+        ) {
+          aCallback.onSuccess({ bytes: 1234567 });
+          return;
+        }
+
+        try {
+          const fromLanguage = this._checkValidLanguageTagAndMinimize(
+            aData.fromLanguage
+          );
+          const toLanguage = this._checkValidLanguageTagAndMinimize(
+            aData.toLanguage
+          );
+
+          lazy.TranslationsParent.getExpectedTranslationDownloadSize(
+            fromLanguage,
+            toLanguage
+          ).then(
+            function (bytes) {
+              aCallback.onSuccess({ bytes });
+            },
+            function (error) {
+              aCallback.onError(`Could not get the download size: ${error}`);
+            }
+          );
+        } catch (error) {
+          aCallback.onError(
+            `The language tag ${aData.fromLanguage} or ${aData.toLanguage} is not valid: ${error}`
+          );
+        }
+        break;
+      }
     }
   },
 };
