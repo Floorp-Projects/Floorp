@@ -46,7 +46,6 @@
 #include "util/Memory.h"
 #include "vm/FunctionFlags.h"
 #include "vm/Opcodes.h"
-#include "vm/RealmFuses.h"
 #include "wasm/WasmCodegenTypes.h"
 #include "wasm/WasmFrame.h"
 
@@ -4849,8 +4848,6 @@ class MacroAssembler : public MacroAssemblerSpecific {
   void loadJSContext(Register dest);
 
   void loadGlobalObjectData(Register dest);
-
-  void loadRealmFuse(RealmFuses::FuseIndex index, Register dest);
 
   void switchToRealm(Register realm);
   void switchToRealm(const void* realm, Register scratch);

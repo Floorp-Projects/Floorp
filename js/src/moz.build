@@ -403,7 +403,6 @@ UNIFIED_SOURCES += [
     "vm/PropMap.cpp",
     "vm/ProxyObject.cpp",
     "vm/Realm.cpp",
-    "vm/RealmFuses.cpp",
     "vm/RegExpObject.cpp",
     "vm/RegExpStatics.cpp",
     "vm/Runtime.cpp",

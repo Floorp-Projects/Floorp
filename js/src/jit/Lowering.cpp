@@ -4787,12 +4787,6 @@ void LIRGenerator::visitGuardGlobalGeneration(MGuardGlobalGeneration* ins) {
   add(lir, ins);
 }
 
-void LIRGenerator::visitGuardFuse(MGuardFuse* ins) {
-  auto* lir = new (alloc()) LGuardFuse(temp());
-  assignSnapshot(lir, ins->bailoutKind());
-  add(lir, ins);
-}
-
 void LIRGenerator::visitGuardIsProxy(MGuardIsProxy* ins) {
   MOZ_ASSERT(ins->object()->type() == MIRType::Object);
 

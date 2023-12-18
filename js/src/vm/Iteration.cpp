@@ -1977,7 +1977,7 @@ bool GlobalObject::initIteratorProto(JSContext* cx,
 
 /* static */
 template <GlobalObject::ProtoKind Kind, const JSClass* ProtoClass,
-          const JSFunctionSpec* Methods, const bool hasFuseProperty>
+          const JSFunctionSpec* Methods>
 bool GlobalObject::initObjectIteratorProto(JSContext* cx,
                                            Handle<GlobalObject*> global,
                                            Handle<JSAtom*> tag) {
@@ -1998,12 +1998,6 @@ bool GlobalObject::initObjectIteratorProto(JSContext* cx,
     return false;
   }
 
-  if (hasFuseProperty) {
-    if (!JSObject::setHasFuseProperty(cx, proto)) {
-      return false;
-    }
-  }
-
   global->initBuiltinProto(Kind, proto);
   return true;
 }
@@ -2014,9 +2008,9 @@ NativeObject* GlobalObject::getOrCreateArrayIteratorPrototype(
   return MaybeNativeObject(getOrCreateBuiltinProto(
       cx, global, ProtoKind::ArrayIteratorProto,
       cx->names().Array_Iterator_.toHandle(),
-      initObjectIteratorProto<
-          ProtoKind::ArrayIteratorProto, &ArrayIteratorPrototypeClass,
-          array_iterator_methods, /* hasFuseProperty= */ true>));
+      initObjectIteratorProto<ProtoKind::ArrayIteratorProto,
+                              &ArrayIteratorPrototypeClass,
+                              array_iterator_methods>));
 }
 
 /* static */

@@ -1012,6 +1012,7 @@ BlockLexicalEnvironmentObject* BlockLexicalEnvironmentObject::clone(
   }
 
   MOZ_ASSERT(env->shape() == copy->shape());
+
   for (uint32_t i = JSSLOT_FREE(&class_); i < copy->slotSpan(); i++) {
     copy->setSlot(i, env->getSlot(i));
   }

@@ -1613,15 +1613,6 @@
   alias_set: custom
   might_alias: custom
 
-- name: GuardFuse
-  arguments:
-    fuseIndex: RealmFuses::FuseIndex
-  result_type: None
-  guard: true
-  movable: true
-  congruent_to: custom
-  alias_set: custom
-
 - name: GuardMultipleShapes
   operands:
     object: Object

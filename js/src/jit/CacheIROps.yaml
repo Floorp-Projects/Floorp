@@ -272,14 +272,6 @@
     obj: ObjId
     kind: GuardClassKindImm
 
-# Guard on a realm fuse.
-- name: GuardFuse
-  shared: true
-  transpile: true
-  cost_estimate: 1
-  args:
-    fuseWord: RealmFuseIndexImm
-
 # Guard on an arbitrary JSClass.
 - name: GuardAnyClass
   shared: false

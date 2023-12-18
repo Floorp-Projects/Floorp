@@ -11,8 +11,6 @@
 
 #include "gc/Pretenuring.h"
 #include "js/TypeDecls.h"
-#include "vm/Realm.h"
-#include "vm/RealmFuses.h"
 
 struct JSAtomState;
 
@@ -139,8 +137,6 @@ class CompileRealm {
   CompileRuntime* runtime();
 
   const void* realmPtr() { return realm(); }
-
-  RealmFuses& realmFuses() { return realm()->realmFuses; }
 
   const mozilla::non_crypto::XorShift128PlusRNG*
   addressOfRandomNumberGenerator();

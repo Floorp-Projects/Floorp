@@ -102,9 +102,6 @@ class MOZ_RAII CacheIRReader {
   }
   gc::AllocKind allocKind() { return gc::AllocKind(buffer_.readByte()); }
   CompletionKind completionKind() { return CompletionKind(buffer_.readByte()); }
-  RealmFuses::FuseIndex realmFuseIndex() {
-    return RealmFuses::FuseIndex(buffer_.readByte());
-  }
 
   Scalar::Type scalarType() { return Scalar::Type(buffer_.readByte()); }
   JSWhyMagic whyMagic() { return JSWhyMagic(buffer_.readByte()); }
