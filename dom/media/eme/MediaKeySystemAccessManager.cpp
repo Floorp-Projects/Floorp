@@ -404,6 +404,7 @@ void MediaKeySystemAccessManager::RequestMediaKeySystemAccess(
   }
 
   nsAutoCString message;
+  // TODO : trigger L1 detection.
   MediaKeySystemStatus status =
       MediaKeySystemAccess::GetKeySystemStatus(aRequest->mKeySystem, message);
 
@@ -414,6 +415,8 @@ void MediaKeySystemAccessManager::RequestMediaKeySystemAccess(
       nsCString(MediaKeySystemStatusValues::GetString(status)).get(),
       message.get());
   LogToBrowserConsole(NS_ConvertUTF8toUTF16(msg));
+  EME_LOG("%s, requestHWDRM=%d", msg.get(),
+          CheckIfHarewareDRMConfigExists(aRequest->mConfigs));
 
   // We may need to install the CDM to continue.
   if (status == MediaKeySystemStatus::Cdm_not_installed &&
