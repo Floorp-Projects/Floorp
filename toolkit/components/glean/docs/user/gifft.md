@@ -209,6 +209,21 @@ The same happens for samples in `timing_distribution` metrics:
 values passed to the Telemetry mirror histogram will saturate at $2^{32} - 1$
 until they get past $2^{64}$ when they'll overflow.
 
+#### `timing_distribution` mirrors: Samples and Sums might be Different
+
+A specific value in a `timing_distribution` metric will not always agree with
+the corresponding value in its mirrored-to histogram.
+Though the calls to the clock are very close together in the code in Telemetry and Glean,
+Telemetry's are not on the exact same instruction as Glean's _and_
+Telemetry uses a different clock source (`TimeStamp::Now()`) than Glean (`time::precise_time_ns()`).
+
+Also, if these slight drifts happen to cross the boundary of a bucket in either system,
+samples might end up looking more different than you'd expect.
+
+This shouldn't affect analysis, but it can affect testing, so please
+[bear this difference in mind](./instrumentation_tests.md#general-things-to-bear-in-mind)
+in testing.
+
 ### App Shutdown
 
 Telemetry only works up to
