@@ -4196,7 +4196,7 @@ const BrowserSearch = {
       inBackground = !inBackground;
     }
 
-    let { engine, url } = await BrowserSearch._loadSearch(
+    let { engine } = await BrowserSearch._loadSearch(
       terms,
       where,
       usePrivate,
@@ -4212,8 +4212,7 @@ const BrowserSearch = {
       BrowserSearchTelemetry.recordSearch(
         gBrowser.selectedBrowser,
         engine,
-        "contextmenu",
-        { url }
+        "contextmenu"
       );
     }
   },
@@ -4222,7 +4221,7 @@ const BrowserSearch = {
    * Perform a search initiated from the command line.
    */
   async loadSearchFromCommandLine(terms, usePrivate, triggeringPrincipal, csp) {
-    let { engine, url } = await BrowserSearch._loadSearch(
+    let { engine } = await BrowserSearch._loadSearch(
       terms,
       "current",
       usePrivate,
@@ -4234,8 +4233,7 @@ const BrowserSearch = {
       BrowserSearchTelemetry.recordSearch(
         gBrowser.selectedBrowser,
         engine,
-        "system",
-        { url }
+        "system"
       );
     }
   },
@@ -4265,8 +4263,7 @@ const BrowserSearch = {
     BrowserSearchTelemetry.recordSearch(
       gBrowser.selectedBrowser,
       result.engine,
-      "webextension",
-      { url: result.url }
+      "webextension"
     );
   },
 

@@ -415,7 +415,6 @@
       const details = {
         isOneOff,
         isSuggestion: !isOneOff && this.telemetrySelectedIndex != -1,
-        url: submission.uri,
       };
 
       this.telemetrySelectedIndex = -1;

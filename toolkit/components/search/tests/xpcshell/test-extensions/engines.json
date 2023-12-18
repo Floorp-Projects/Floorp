@@ -44,7 +44,6 @@
         "suggest_url": "https://ac.duckduckgo.com/ac/q={searchTerms}&type=list"
       },
       "orderHint": 10000,
-      "sendAttributionRequest": true,
       "appliesTo": [
         {
           "included": { "everywhere": true },
@@ -84,8 +83,7 @@
           "default": "yes"
         },
         {
-          "included": { "everywhere": true },
-          "sendAttributionRequest": true
+          "included": { "everywhere": true }
         }
       ]
     },

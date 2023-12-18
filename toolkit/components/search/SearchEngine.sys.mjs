@@ -589,8 +589,6 @@ export class SearchEngine {
   _queryCharset = null;
   // The engine's raw SearchForm value (URL string pointing to a search form).
   #cachedSearchForm = null;
-  // Whether or not to send an attribution request to the server.
-  _sendAttributionRequest = false;
   // The order hint from the configuration (if any).
   _orderHint = null;
   // The telemetry id from the configuration (if any).
@@ -926,8 +924,6 @@ export class SearchEngine {
   _initWithDetails(details, configuration = {}) {
     this._orderHint = configuration.orderHint;
     this._name = details.name.trim();
-    this._sendAttributionRequest =
-      configuration.sendAttributionRequest ?? false;
 
     this._definedAliases = [];
     if (Array.isArray(details.keyword)) {
@@ -1400,10 +1396,6 @@ export class SearchEngine {
     }
 
     return ParamSubstitution(this._searchForm, "", this);
-  }
-
-  get sendAttributionRequest() {
-    return this._sendAttributionRequest;
   }
 
   get queryCharset() {
