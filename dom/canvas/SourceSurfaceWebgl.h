@@ -13,6 +13,7 @@
 namespace mozilla::gfx {
 
 class DrawTargetWebgl;
+class SharedContextWebgl;
 class TextureHandle;
 
 // SourceSurfaceWebgl holds WebGL resources that can be used to efficiently
@@ -23,9 +24,8 @@ class SourceSurfaceWebgl : public DataSourceSurface {
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(SourceSurfaceWebgl, override)
 
   explicit SourceSurfaceWebgl(DrawTargetWebgl* aDT);
-  SourceSurfaceWebgl(
-      const RefPtr<TextureHandle>& aHandle,
-      const RefPtr<typename DrawTargetWebgl::SharedContext>& aSharedContext);
+  SourceSurfaceWebgl(const RefPtr<TextureHandle>& aHandle,
+                     const RefPtr<SharedContextWebgl>& aSharedContext);
   virtual ~SourceSurfaceWebgl();
 
   SurfaceType GetType() const override { return SurfaceType::WEBGL; }
@@ -44,6 +44,7 @@ class SourceSurfaceWebgl : public DataSourceSurface {
 
  private:
   friend class DrawTargetWebgl;
+  friend class SharedContextWebgl;
 
   bool EnsureData();
 
@@ -51,7 +52,7 @@ class SourceSurfaceWebgl : public DataSourceSurface {
 
   void GiveTexture(RefPtr<TextureHandle> aHandle);
 
-  void OnUnlinkTexture(typename DrawTargetWebgl::SharedContext* aContext);
+  void OnUnlinkTexture(SharedContextWebgl* aContext);
 
   DrawTargetWebgl* GetTarget() const { return mDT.get(); }
 
@@ -62,7 +63,7 @@ class SourceSurfaceWebgl : public DataSourceSurface {
   // The draw target that currently owns the texture for this surface.
   WeakPtr<DrawTargetWebgl> mDT;
   // The actual shared context that any WebGL resources belong to.
-  WeakPtr<typename DrawTargetWebgl::SharedContext> mSharedContext;
+  WeakPtr<SharedContextWebgl> mSharedContext;
   // If this snapshot has been copied into a cached texture handle.
   RefPtr<TextureHandle> mHandle;
 };
