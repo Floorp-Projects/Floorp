@@ -5,6 +5,7 @@
 #ifndef nsTableWrapperFrame_h__
 #define nsTableWrapperFrame_h__
 
+#include "LayoutConstants.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
 #include "nscore.h"
@@ -202,6 +203,15 @@ class nsTableWrapperFrame : public nsContainerFrame {
                       const mozilla::LogicalSize& aInnerSize,
                       mozilla::LogicalPoint& aOrigin,
                       mozilla::WritingMode aWM) const;
+
+  // This is a helper for CreateReflowInputForInnerTable() and
+  // ComputeAutoSize(). It computes whether we need shrink-wrap behavior for
+  // children.
+  //
+  // Note: We don't need to call this in CreateReflowInputForCaption() because
+  // when we reflow the captions, we want them to stretch their inline-sizes to
+  // be at least as wide as the inner table frame.
+  mozilla::ComputeSizeFlags CreateComputeSizeFlagsForChild() const;
 
   // Create and init the child reflow input, using passed-in aChildRI, so that
   // caller can use it after we return.
