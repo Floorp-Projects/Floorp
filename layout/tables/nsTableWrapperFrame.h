@@ -184,8 +184,7 @@ class nsTableWrapperFrame : public nsContainerFrame {
 
   mozilla::StyleVerticalAlignKeyword GetCaptionVerticalAlign() const;
 
-  nscoord ComputeFinalBSize(const MaybeCaptionSide&,
-                            const mozilla::LogicalSize& aInnerSize,
+  nscoord ComputeFinalBSize(const mozilla::LogicalSize& aInnerSize,
                             const mozilla::LogicalSize& aCaptionSize,
                             const mozilla::LogicalMargin& aCaptionMargin,
                             const mozilla::WritingMode aWM) const;
