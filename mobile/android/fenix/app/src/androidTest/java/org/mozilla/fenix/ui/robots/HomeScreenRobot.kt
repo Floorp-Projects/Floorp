@@ -86,9 +86,9 @@ class HomeScreenRobot {
             " service provider, it makes it easier to keep what you do online private from anyone" +
             " else who uses this device."
 
-    fun verifyNavigationToolbar() = assertUIObjectExists(navigationToolbar)
+    fun verifyNavigationToolbar() = assertUIObjectExists(navigationToolbar())
 
-    fun verifyHomeScreen() = assertUIObjectExists(homeScreen)
+    fun verifyHomeScreen() = assertUIObjectExists(homeScreen())
 
     fun verifyPrivateBrowsingHomeScreenItems() {
         verifyHomeScreenAppBarItems()
@@ -97,19 +97,19 @@ class HomeScreenRobot {
     }
 
     fun verifyHomeScreenAppBarItems() =
-        assertUIObjectExists(homeScreen, privateBrowsingButton, homepageWordmark)
+        assertUIObjectExists(homeScreen(), privateBrowsingButton(), homepageWordmark())
 
     fun verifyNavigationToolbarItems(numberOfOpenTabs: String = "0") =
-        assertUIObjectExists(navigationToolbar, menuButton, tabCounter(numberOfOpenTabs))
+        assertUIObjectExists(navigationToolbar(), menuButton, tabCounter(numberOfOpenTabs))
 
-    fun verifyHomePrivateBrowsingButton() = assertUIObjectExists(privateBrowsingButton)
+    fun verifyHomePrivateBrowsingButton() = assertUIObjectExists(privateBrowsingButton())
     fun verifyHomeMenuButton() = assertUIObjectExists(menuButton)
     fun verifyTabButton() = assertTabButton()
     fun verifyCollectionsHeader() = assertCollectionsHeader()
     fun verifyNoCollectionsText() = assertNoCollectionsText()
     fun verifyHomeWordmark() {
         homeScreenList().scrollToBeginning(3)
-        assertUIObjectExists(homepageWordmark)
+        assertUIObjectExists(homepageWordmark())
     }
     fun verifyHomeComponent() = assertHomeComponent()
 
@@ -292,7 +292,7 @@ class HomeScreenRobot {
         mDevice.waitNotNull(findObject(By.text(expectedText)), waitingTime)
     }
 
-    fun clickFirefoxLogo() = homepageWordmark.click()
+    fun clickFirefoxLogo() = homepageWordmark().click()
 
     fun verifyThoughtProvokingStories(enabled: Boolean) {
         if (enabled) {
@@ -481,8 +481,8 @@ class HomeScreenRobot {
         }
 
         fun openSearch(interact: SearchRobot.() -> Unit): SearchRobot.Transition {
-            navigationToolbar.waitForExists(waitingTime)
-            navigationToolbar.click()
+            navigationToolbar().waitForExists(waitingTime)
+            navigationToolbar().click()
             mDevice.waitForIdle()
 
             SearchRobot().interact()
@@ -502,14 +502,14 @@ class HomeScreenRobot {
         fun togglePrivateBrowsingMode(switchPBModeOn: Boolean = true) {
             // Switch to private browsing homescreen
             if (switchPBModeOn && !isPrivateModeEnabled()) {
-                privateBrowsingButton.waitForExists(waitingTime)
-                privateBrowsingButton.click()
+                privateBrowsingButton().waitForExists(waitingTime)
+                privateBrowsingButton().click()
             }
 
             // Switch to normal browsing homescreen
             if (!switchPBModeOn && isPrivateModeEnabled()) {
-                privateBrowsingButton.waitForExists(waitingTime)
-                privateBrowsingButton.click()
+                privateBrowsingButton().waitForExists(waitingTime)
+                privateBrowsingButton().click()
             }
         }
 
@@ -521,7 +521,7 @@ class HomeScreenRobot {
                         waitingTime,
                     )
 
-                privateBrowsingButton.click()
+                privateBrowsingButton().click()
             }
 
             AddToHomeScreenRobot().interact()
@@ -535,7 +535,7 @@ class HomeScreenRobot {
         fun openNavigationToolbar(interact: NavigationToolbarRobot.() -> Unit): NavigationToolbarRobot.Transition {
             mDevice.findObject(UiSelector().resourceId("$packageName:id/toolbar"))
                 .waitForExists(waitingTime)
-            navigationToolbar.click()
+            navigationToolbar().click()
 
             NavigationToolbarRobot().interact()
             return NavigationToolbarRobot.Transition()
@@ -948,9 +948,9 @@ private fun sponsoredShortcut(sponsoredShortcutTitle: String) =
 private fun storyByTopicItem(composeTestRule: ComposeTestRule, position: Int) =
     composeTestRule.onNodeWithTag("pocket.categories").onChildAt(position - 1)
 
-private val homeScreen =
+private fun homeScreen() =
     itemWithResId("$packageName:id/homeLayout")
-private val privateBrowsingButton =
+private fun privateBrowsingButton() =
     itemWithResId("$packageName:id/privateBrowsingButton")
 
 private fun isPrivateModeEnabled(): Boolean =
@@ -959,10 +959,10 @@ private fun isPrivateModeEnabled(): Boolean =
         "Disable private browsing",
     ).exists()
 
-private val homepageWordmark =
+private fun homepageWordmark() =
     itemWithResId("$packageName:id/wordmark")
 
-private val navigationToolbar =
+private fun navigationToolbar() =
     itemWithResId("$packageName:id/toolbar")
 private val menuButton =
     itemWithResId("$packageName:id/menuButton")

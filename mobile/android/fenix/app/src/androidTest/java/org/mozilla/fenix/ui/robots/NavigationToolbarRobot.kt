@@ -15,6 +15,7 @@ import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.IdlingRegistry
 import androidx.test.espresso.IdlingResource
 import androidx.test.espresso.action.ViewActions
+import androidx.test.espresso.action.ViewActions.longClick
 import androidx.test.espresso.assertion.ViewAssertions
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.contrib.RecyclerViewActions
@@ -274,7 +275,7 @@ class NavigationToolbarRobot {
 
         fun openTabButtonShortcutsMenu(interact: NavigationToolbarRobot.() -> Unit): Transition {
             mDevice.waitNotNull(Until.findObject(By.res("$packageName:id/counter_root")))
-            tabsCounter().click(LONG_CLICK_DURATION)
+            tabsCounter().perform(longClick())
             Log.i(TAG, "Tabs counter long-click successful.")
 
             NavigationToolbarRobot().interact()
@@ -388,8 +389,7 @@ private fun awesomeBar() =
     mDevice.findObject(UiSelector().resourceId("$packageName:id/mozac_browser_toolbar_edit_url_view"))
 private fun threeDotButton() = onView(withId(R.id.mozac_browser_toolbar_menu))
 private fun tabTrayButton() = onView(withId(R.id.tab_button))
-private fun tabsCounter() =
-    mDevice.findObject(By.res("$packageName:id/counter_root"))
+private fun tabsCounter() = onView(withId(R.id.mozac_browser_toolbar_browser_actions))
 private fun fillLinkButton() = onView(withId(R.id.fill_link_from_clipboard))
 private fun clearAddressBarButton() = itemWithResId("$packageName:id/mozac_browser_toolbar_clear_view")
 private fun readerViewToggle() =
