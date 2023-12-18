@@ -945,7 +945,7 @@ class CGInterfaceObjectJSClass(CGThing):
             ctorname = "nullptr"
         else:
             ctorname = "ThrowingConstructor"
-        needsHasInstance = self.descriptor.interface.hasInterfacePrototypeObject()
+        wantsIsInstance = self.descriptor.interface.hasInterfacePrototypeObject()
 
         prototypeID, depth = PrototypeIDAndDepth(self.descriptor)
         slotCount = "DOM_INTERFACE_SLOTS_BASE"
@@ -1018,7 +1018,7 @@ class CGInterfaceObjectJSClass(CGThing):
                 ${hooks},
                 ${protoGetter}
               },
-              ${needsHasInstance},
+              ${wantsIsInstance},
               ${funToString}
             };
             """,
@@ -1033,7 +1033,7 @@ class CGInterfaceObjectJSClass(CGThing):
             prototypeID=prototypeID,
             depth=depth,
             protoGetter=protoGetter,
-            needsHasInstance=toStringBool(needsHasInstance),
+            wantsIsInstance=toStringBool(wantsIsInstance),
             funToString=funToString,
         )
         return ret
