@@ -212,6 +212,7 @@ export class GeckoViewStartup {
             "GeckoView:Translations:SetLanguageSettings",
             "GeckoView:Translations:GetNeverTranslateSpecifiedSites",
             "GeckoView:Translations:SetNeverTranslateSpecifiedSite",
+            "GeckoView:Translations:GetTranslateDownloadSize",
           ],
         });
 

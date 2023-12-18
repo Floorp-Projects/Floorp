@@ -190,3 +190,46 @@ add_task(async function test_translations_actor_sync_create() {
 
   return cleanup();
 });
+
+add_task(async function test_translations_parent_download_size() {
+  const { cleanup } = await setupActorTest({
+    languagePairs: [
+      { fromLang: "en", toLang: "es" },
+      { fromLang: "es", toLang: "en" },
+      { fromLang: "en", toLang: "de" },
+      { fromLang: "de", toLang: "en" },
+    ],
+  });
+
+  const directSize =
+    await TranslationsParent.getExpectedTranslationDownloadSize("en", "es");
+  // Includes model, lex, and vocab files (x3), each mocked at 123 bytes.
+  is(
+    directSize,
+    3 * 123,
+    "Returned the expected download size for a direct translation."
+  );
+
+  const pivotSize = await TranslationsParent.getExpectedTranslationDownloadSize(
+    "es",
+    "de"
+  );
+  // Includes a pivot (x2), model, lex, and vocab files (x3), each mocked at 123 bytes.
+  is(
+    pivotSize,
+    2 * 3 * 123,
+    "Returned the expected download size for a pivot."
+  );
+
+  const notApplicableSize =
+    await TranslationsParent.getExpectedTranslationDownloadSize(
+      "unknown",
+      "unknown"
+    );
+  is(
+    notApplicableSize,
+    0,
+    "Returned the expected download size for an unknown or not applicable model."
+  );
+  return cleanup();
+});

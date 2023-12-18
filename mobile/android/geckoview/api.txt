@@ -2392,6 +2392,7 @@ package org.mozilla.geckoview {
     field public static final int ERROR_MODEL_COULD_NOT_DELETE = -8;
     field public static final int ERROR_MODEL_COULD_NOT_DOWNLOAD = -9;
     field public static final int ERROR_MODEL_COULD_NOT_RETRIEVE = -7;
+    field public static final int ERROR_MODEL_DOWNLOAD_REQUIRED = -11;
     field public static final int ERROR_MODEL_LANGUAGE_REQUIRED = -10;
     field public static final int ERROR_UNKNOWN = -1;
     field public final int code;
