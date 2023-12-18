@@ -3254,7 +3254,7 @@ impl ComputedValues {
                 s
             }
             PropertyDeclarationId::Custom(name) => {
-                // FIXME(bug 1273706): This should use a stylist to determine
+                // FIXME(bug 1869476): This should use a stylist to determine
                 // whether the name corresponds to an inherited custom property
                 // and then choose the inherited/non_inherited map accordingly.
                 let p = &self.custom_properties;
