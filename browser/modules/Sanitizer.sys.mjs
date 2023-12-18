@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
 const lazy = {};
@@ -14,6 +15,13 @@ ChromeUtils.defineESModuleGetters(lazy, {
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
   PrincipalsCollector: "resource://gre/modules/PrincipalsCollector.sys.mjs",
 });
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "useOldClearHistoryDialog",
+  "privacy.sanitize.useOldClearHistoryDialog",
+  false
+);
 
 var logConsole;
 function log(msg) {
@@ -106,14 +114,19 @@ export var Sanitizer = {
     ) {
       parentWindow = null;
     }
+
+    let dialogFile = lazy.useOldClearHistoryDialog
+      ? "sanitize.xhtml"
+      : "sanitize_v2.xhtml";
+
     if (parentWindow?.gDialogBox) {
-      parentWindow.gDialogBox.open("chrome://browser/content/sanitize.xhtml", {
+      parentWindow.gDialogBox.open(`chrome://browser/content/${dialogFile}`, {
         inBrowserWindow: true,
       });
     } else {
       Services.ww.openWindow(
         parentWindow,
-        "chrome://browser/content/sanitize.xhtml",
+        `chrome://browser/content/${dialogFile}`,
         "Sanitize",
         "chrome,titlebar,dialog,centerscreen,modal",
         { needNativeUI: true }
