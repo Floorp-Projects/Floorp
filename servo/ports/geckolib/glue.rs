@@ -110,12 +110,13 @@ use style::invalidation::element::restyle_hints::RestyleHint;
 use style::invalidation::stylesheets::RuleChangeKind;
 use style::media_queries::MediaList;
 use style::parser::{Parse, ParserContext};
-use style::properties::animated_properties::{AnimationValue, AnimationValueMap};
-use style::properties::{parse_one_declaration_into, parse_style_attribute};
-use style::properties::{ComputedValues, CountedUnknownProperty, Importance, NonCustomPropertyId};
-use style::properties::{LonghandId, LonghandIdSet, PropertyDeclarationBlock, PropertyId};
-use style::properties::{PropertyDeclarationId, ShorthandId};
-use style::properties::{SourcePropertyDeclaration, StyleBuilder};
+use style::properties::{
+    animated_properties::{AnimationValue, AnimationValueMap},
+    parse_one_declaration_into, parse_style_attribute, ComputedValues, CountedUnknownProperty,
+    Importance, LonghandId, LonghandIdSet, NonCustomPropertyId, OwnedPropertyDeclarationId,
+    PropertyDeclarationBlock, PropertyDeclarationId, PropertyDeclarationIdSet, PropertyId,
+    ShorthandId, SourcePropertyDeclaration, StyleBuilder,
+};
 use style::properties_and_values::registry::PropertyRegistration;
 use style::properties_and_values::rule::Inherits as PropertyInherits;
 use style::rule_cache::RuleCacheConditions;
@@ -629,10 +630,13 @@ pub extern "C" fn Servo_AnimationCompose(
     use style::gecko_bindings::bindings::Gecko_GetPositionInSegment;
     use style::gecko_bindings::bindings::Gecko_GetProgressFromComputedTiming;
 
-    let property = match LonghandId::from_nscsspropertyid(css_property) {
-        Some(longhand) if longhand.is_animatable() => longhand,
-        _ => return,
-    };
+    // TODO(bug 1846516): Caller should be able to pass custom properties.
+    let property = OwnedPropertyDeclarationId::Longhand(
+        match LonghandId::from_nscsspropertyid(css_property) {
+            Some(longhand) if longhand.is_animatable() => longhand,
+            _ => return,
+        },
+    );
 
     // We will need an underlying value if either of the endpoints is null...
     let need_underlying_value = segment.mFromValue.mServo.mRawPtr.is_null() ||
@@ -1127,10 +1131,12 @@ pub extern "C" fn Servo_AnimationValueMap_GetValue(
     value_map: &AnimationValueMap,
     property_id: nsCSSPropertyID,
 ) -> Strong<AnimationValue> {
-    let property = match LonghandId::from_nscsspropertyid(property_id) {
-        Some(longhand) => longhand,
-        None => return Strong::null(),
-    };
+    // TODO(bug 1846516): Caller should be able to pass custom properties.
+    let property =
+        OwnedPropertyDeclarationId::Longhand(match LonghandId::from_nscsspropertyid(property_id) {
+            Some(longhand) => longhand,
+            Err(()) => return Strong::null(),
+        });
     value_map
         .get(&property)
         .map_or(Strong::null(), |value| Arc::new(value.clone()).into())
@@ -1199,12 +1205,17 @@ pub extern "C" fn Servo_ComputedValues_ShouldTransition(
     start: &mut structs::RefPtr<AnimationValue>,
     end: &mut structs::RefPtr<AnimationValue>,
 ) -> ShouldTransitionResult {
-    let Some(prop) = LonghandId::from_nscsspropertyid(prop) else {
-        return Default::default();
-    };
-    if prop.is_discrete_animatable() && prop != LonghandId::Visibility {
-        return Default::default();
-    }
+    // TODO(bug 1846516): Caller should be able to pass custom properties.
+    let prop = PropertyDeclarationId::Longhand({
+        let Some(prop) = LonghandId::from_nscsspropertyid(prop) else {
+            return Default::default();
+        };
+        if prop.is_discrete_animatable() && prop != LonghandId::Visibility {
+            return Default::default();
+        }
+        prop
+    });
+
     let Some(new_value) = AnimationValue::from_computed_values(prop, new) else {
         return Default::default();
     };
@@ -1240,12 +1251,16 @@ pub extern "C" fn Servo_ComputedValues_TransitionValueMatches(
     prop: nsCSSPropertyID,
     transition_value: &AnimationValue,
 ) -> bool {
-    let Some(prop) = LonghandId::from_nscsspropertyid(prop) else {
-        return false;
-    };
-    if prop.is_discrete_animatable() && prop != LonghandId::Visibility {
-        return false;
-    }
+    // TODO(bug 1846516): Caller should be able to pass custom properties.
+    let prop = PropertyDeclarationId::Longhand({
+        let Some(prop) = LonghandId::from_nscsspropertyid(prop) else {
+            return false;
+        };
+        if prop.is_discrete_animatable() && prop != LonghandId::Visibility {
+            return false;
+        }
+        prop
+    });
     let Some(value) = AnimationValue::from_computed_values(prop, style) else {
         return false;
     };
@@ -1257,10 +1272,12 @@ pub extern "C" fn Servo_ComputedValues_ExtractAnimationValue(
     computed_values: &ComputedValues,
     property_id: nsCSSPropertyID,
 ) -> Strong<AnimationValue> {
-    let property = match LonghandId::from_nscsspropertyid(property_id) {
-        Some(longhand) => longhand,
-        None => return Strong::null(),
-    };
+    // TODO(bug 1846516): Caller should be able to pass custom properties.
+    let property =
+        PropertyDeclarationId::Longhand(match LonghandId::from_nscsspropertyid(property_id) {
+            Ok(longhand) => longhand,
+            None => return Strong::null(),
+        });
     match AnimationValue::from_computed_values(property, &computed_values) {
         Some(v) => Arc::new(v).into(),
         None => Strong::null(),
@@ -4925,7 +4942,11 @@ pub unsafe extern "C" fn Servo_DeclarationBlock_SetPropertyToAnimationValue(
     animation_value: &AnimationValue,
     before_change_closure: DeclarationBlockMutationClosure,
 ) -> bool {
-    let non_custom_property_id = animation_value.id().into();
+    let non_custom_property_id = match animation_value.id() {
+        PropertyDeclarationId::Longhand(id) => id.into(),
+        // TODO(bug 1846516): Support custom properties too?
+        PropertyDeclarationId::Custom(_) => return false,
+    };
     let mut source_declarations = SourcePropertyDeclaration::with_one(animation_value.uncompute());
 
     set_property_to_declarations(
@@ -6140,6 +6161,7 @@ pub extern "C" fn Servo_GetComputedKeyframeValues(
     raw_data: &PerDocumentStyleData,
     computed_keyframes: &mut nsTArray<structs::ComputedKeyframeValues>,
 ) {
+    // TODO(bug 1846516): Make this work for animated custom properties too.
     let data = raw_data.borrow();
     let element = GeckoElement(element);
     let pseudo = PseudoElement::from_pseudo_type(pseudo_type, None);
@@ -6255,7 +6277,10 @@ pub extern "C" fn Servo_GetComputedKeyframeValues(
             );
 
             for value in iter {
-                let id = value.id();
+                let id = match value.id() {
+                    PropertyDeclarationId::Longhand(id) => id,
+                    PropertyDeclarationId::Custom(_) => continue,
+                };
                 maybe_append_animation_value(id, Some(value));
             }
         }
@@ -6405,6 +6430,7 @@ fn fill_in_missing_keyframe_values(
     offset: Offset,
     keyframes: &mut nsTArray<structs::Keyframe>,
 ) {
+    // TODO(bug 1846516): Make this work for animated custom properties too.
     // Return early if all animated properties are already set.
     if longhands_at_offset.contains_all(all_properties) {
         return;
@@ -6447,6 +6473,7 @@ pub unsafe extern "C" fn Servo_StyleSet_GetKeyframesForName(
     inherited_timing_function: &ComputedTimingFunction,
     keyframes: &mut nsTArray<structs::Keyframe>,
 ) -> bool {
+    // TODO(bug 1846516): Make this work for animated custom properties too.
     use style::gecko_bindings::structs::CompositeOperationOrAuto;
     use style::properties::longhands::animation_composition::single_value::computed_value::T as Composition;
 
@@ -6513,7 +6540,7 @@ pub unsafe extern "C" fn Servo_StyleSet_GetKeyframesForName(
                 // to represent that all properties animated by the keyframes
                 // animation should be set to the underlying computed value for
                 // that keyframe.
-                let mut seen = LonghandIdSet::new();
+                let mut seen = PropertyDeclarationIdSet::default();
                 for property in animation.properties_changed.iter() {
                     let property = property.to_physical(writing_mode);
                     if seen.contains(property) {
@@ -6608,7 +6635,12 @@ pub unsafe extern "C" fn Servo_StyleSet_GetKeyframesForName(
 
     let mut properties_changed = LonghandIdSet::new();
     for property in animation.properties_changed.iter() {
-        properties_changed.insert(property.to_physical(writing_mode));
+        let longhand_id = match property.to_physical(writing_mode) {
+            PropertyDeclarationId::Longhand(id) => id,
+            // TODO(zrhoffman, bug 1846516): Handle custom properties here.
+            PropertyDeclarationId::Custom(_) => continue,
+        };
+        properties_changed.insert(longhand_id);
     }
 
     // Append property values that are missing in the initial or the final keyframes.
