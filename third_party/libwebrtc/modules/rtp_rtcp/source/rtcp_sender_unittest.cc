@@ -328,12 +328,13 @@ TEST_F(RtcpSenderTest, SendBye) {
   EXPECT_EQ(kSenderSsrc, parser()->bye()->sender_ssrc());
 }
 
-TEST_F(RtcpSenderTest, StopSendingDoesNotTriggersBye) {
+TEST_F(RtcpSenderTest, StopSendingTriggersBye) {
   auto rtcp_sender = CreateRtcpSender(GetDefaultConfig());
   rtcp_sender->SetRTCPStatus(RtcpMode::kReducedSize);
   rtcp_sender->SetSendingStatus(feedback_state(), true);
   rtcp_sender->SetSendingStatus(feedback_state(), false);
-  EXPECT_EQ(0, parser()->bye()->num_packets());
+  EXPECT_EQ(1, parser()->bye()->num_packets());
+  EXPECT_EQ(kSenderSsrc, parser()->bye()->sender_ssrc());
 }
 
 TEST_F(RtcpSenderTest, SendFir) {

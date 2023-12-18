@@ -212,8 +212,23 @@ bool RTCPSender::Sending() const {
 
 void RTCPSender::SetSendingStatus(const FeedbackState& feedback_state,
                                   bool sending) {
-  MutexLock lock(&mutex_rtcp_sender_);
-  sending_ = sending;
+  bool sendRTCPBye = false;
+  {
+    MutexLock lock(&mutex_rtcp_sender_);
+
+    if (method_ != RtcpMode::kOff) {
+      if (sending == false && sending_ == true) {
+        // Trigger RTCP bye
+        sendRTCPBye = true;
+      }
+    }
+    sending_ = sending;
+  }
+  if (sendRTCPBye) {
+    if (SendRTCP(feedback_state, kRtcpBye) != 0) {
+      RTC_LOG(LS_WARNING) << "Failed to send RTCP BYE";
+    }
+  }
 }
 
 void RTCPSender::SetNonSenderRttMeasurement(bool enabled) {
