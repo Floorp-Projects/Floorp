@@ -2931,6 +2931,8 @@ void gfxPlatform::InitWebGLConfig() {
       IsFeatureOk(nsIGfxInfo::FEATURE_WEBGL_OPENGL));
   gfxVars::SetAllowWebglAccelAngle(
       IsFeatureOk(nsIGfxInfo::FEATURE_WEBGL_ANGLE));
+  gfxVars::SetWebglUseHardware(
+      IsFeatureOk(nsIGfxInfo::FEATURE_WEBGL_USE_HARDWARE));
 
   if (kIsMacOS) {
     // Avoid crash for Intel HD Graphics 3000 on OSX. (Bug 1413269)

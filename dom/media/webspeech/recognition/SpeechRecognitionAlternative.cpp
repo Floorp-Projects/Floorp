@@ -32,7 +32,7 @@ JSObject* SpeechRecognitionAlternative::WrapObject(
 }
 
 nsISupports* SpeechRecognitionAlternative::GetParentObject() const {
-  return static_cast<DOMEventTargetHelper*>(mParent.get());
+  return static_cast<EventTarget*>(mParent.get());
 }
 
 void SpeechRecognitionAlternative::GetTranscript(nsString& aRetVal) const {

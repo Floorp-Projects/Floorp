@@ -55,6 +55,8 @@ unic-langid = { version = "0.9", features = ["likelysubtags"] }
 unic-langid-ffi = { path = "../../../../intl/locale/rust/unic-langid-ffi" }
 fluent-langneg = { version = "0.13", features = ["cldr"] }
 fluent-langneg-ffi = { path = "../../../../intl/locale/rust/fluent-langneg-ffi" }
+oxilangtag = "0.1.3"
+oxilangtag-ffi = { path = "../../../../intl/locale/rust/oxilangtag-ffi" }
 rure = "0.2.2"
 rust_minidump_writer_linux = { path = "../../../crashreporter/rust_minidump_writer_linux", optional = true }
 gecko-profiler = { path = "../../../../tools/profiler/rust-api"}

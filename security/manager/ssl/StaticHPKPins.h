@@ -111,14 +111,6 @@ static const char kFacebookBackupFingerprint[] =
 static const char kGOOGLE_PIN_DigiCertECCSecureServerCAFingerprint[] =
   "PZXN3lRAy+8tBKk2Ox6F7jIlnzr2Yzmwqc3JnyfXoCw=";
 
-/* GOOGLE_PIN_GTSCA1O1 */
-static const char kGOOGLE_PIN_GTSCA1O1Fingerprint[] =
-  "YZPgTZ+woNCCCIW3LH2CxQeLzB/1m42QcCTBSdgayjs=";
-
-/* GOOGLE_PIN_GlobalSignRootCA_R2 */
-static const char kGOOGLE_PIN_GlobalSignRootCA_R2Fingerprint[] =
-  "iie1VXtL7HzAMF+/PVPR9xzT80kQxdZeJ+zduCB3uj0=";
-
 /* GOOGLE_PIN_R3LetsEncrypt */
 static const char kGOOGLE_PIN_R3LetsEncryptFingerprint[] =
   "jQJTbIh0grw0/1TkHSumWb+Fs0Ggogr621gT3PvPKG0=";
@@ -150,6 +142,10 @@ static const char kGTS_Root_R3Fingerprint[] =
 /* GTS Root R4 */
 static const char kGTS_Root_R4Fingerprint[] =
   "mEflZT5enoR1FuXLgYYGqnVEoZvmf9c2bVBpiOjYQ0c=";
+
+/* GlobalSign ECC Root CA - R4 */
+static const char kGlobalSign_ECC_Root_CA___R4Fingerprint[] =
+  "CLOmM1/OXvSPjw5UOYbAf9GKOxImEp9hhku9W90fHMk=";
 
 /* GlobalSign ECC Root CA - R5 */
 static const char kGlobalSign_ECC_Root_CA___R5Fingerprint[] =
@@ -308,12 +304,11 @@ static const StaticFingerprints kPinset_test = {
 };
 
 static const char* const kPinset_google_Data[] = {
+  kGlobalSign_ECC_Root_CA___R4Fingerprint,
   kGoogleBackup2048Fingerprint,
   kGTS_Root_R3Fingerprint,
   kGTS_Root_R2Fingerprint,
-  kGOOGLE_PIN_GTSCA1O1Fingerprint,
   kGTS_Root_R1Fingerprint,
-  kGOOGLE_PIN_GlobalSignRootCA_R2Fingerprint,
   kGTS_Root_R4Fingerprint,
 };
 static const StaticFingerprints kPinset_google = {
@@ -780,4 +775,4 @@ static const TransportSecurityPreload kPublicKeyPinningPreloadList[] = {
 
 static const int32_t kUnknownId = -1;
 
-static const PRTime kPreloadPKPinsExpirationTime = INT64_C(1708339972078000);
+static const PRTime kPreloadPKPinsExpirationTime = INT64_C(1710759186047000);

@@ -219,13 +219,15 @@ void VisualViewport::FireResizeEvent() {
   VVP_LOG("%p, FireResizeEvent, fire mozvisualresize\n", this);
   WidgetEvent mozEvent(true, eMozVisualResize);
   mozEvent.mFlags.mOnlySystemGroupDispatch = true;
-  EventDispatcher::Dispatch(this, presContext, &mozEvent);
+  EventDispatcher::Dispatch(static_cast<EventTarget*>(this), presContext,
+                            &mozEvent);
 
   VVP_LOG("%p, FireResizeEvent, fire VisualViewport resize\n", this);
   WidgetEvent event(true, eResize);
   event.mFlags.mBubbles = false;
   event.mFlags.mCancelable = false;
-  EventDispatcher::Dispatch(this, presContext, &event);
+  EventDispatcher::Dispatch(static_cast<EventTarget*>(this), presContext,
+                            &event);
 }
 
 /* ================= Scroll event handling ================= */
@@ -302,7 +304,8 @@ void VisualViewport::FireScrollEvent() {
       VVP_LOG("%p: FireScrollEvent, fire mozvisualscroll\n", this);
       WidgetEvent mozEvent(true, eMozVisualScroll);
       mozEvent.mFlags.mOnlySystemGroupDispatch = true;
-      EventDispatcher::Dispatch(this, presContext, &mozEvent);
+      EventDispatcher::Dispatch(static_cast<EventTarget*>(this), presContext,
+                                &mozEvent);
     }
 
     // Check whether the relative visual viewport offset actually changed -
@@ -321,7 +324,8 @@ void VisualViewport::FireScrollEvent() {
       WidgetGUIEvent event(true, eScroll, nullptr);
       event.mFlags.mBubbles = false;
       event.mFlags.mCancelable = false;
-      EventDispatcher::Dispatch(this, presContext, &event);
+      EventDispatcher::Dispatch(static_cast<EventTarget*>(this), presContext,
+                                &event);
     }
   }
 }

@@ -266,6 +266,9 @@ static const char* GetPrefNameForFeature(int32_t aFeature) {
     case nsIGfxInfo::FEATURE_AV1_HW_DECODE:
       name = BLOCKLIST_PREF_BRANCH "av1.hw-decode";
       break;
+    case nsIGfxInfo::FEATURE_WEBGL_USE_HARDWARE:
+      name = BLOCKLIST_PREF_BRANCH "webgl-use-hardware";
+      break;
     default:
       MOZ_ASSERT_UNREACHABLE("Unexpected nsIGfxInfo feature?!");
       break;

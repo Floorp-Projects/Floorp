@@ -260,6 +260,82 @@
         }
       },
       "required": ["selector", "regexp"]
+    },
+    "domainExtraction": {
+      "type": "object",
+      "title": "Domain Extraction",
+      "description": "An array of methods for extracting domains from a SERP result.",
+      "properties": {
+        "ads": {
+          "type": "array",
+          "description": "An array of methods for extracting domains from ads.",
+          "items": {
+            "$ref": "/schemas/extraction"
+          }
+        },
+        "nonAds": {
+          "type": "array",
+          "description": "An array of methods for extracting domains from non-ads.",
+          "items": {
+            "$ref": "/schemas/extraction"
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "extraction": {
+      "$id": "/schemas/extraction",
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "selectors": {
+              "type": "string",
+              "description": "The query to inspect all elements on the SERP."
+            },
+            "method": {
+              "enum": ["data-attribute"],
+              "description": "The extraction method used for the query."
+            },
+            "options": {
+              "type": "object",
+              "properties": {
+                "dataAttributeKey": {
+                  "type": "string",
+                  "description": "The data attribute key that will be looked up in order to retrieve its data attribute value."
+                }
+              },
+              "required": ["dataAttributeKey"]
+            }
+          },
+          "required": ["selectors", "method", "options"]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "selectors": {
+              "type": "string",
+              "description": "The query to use to inspect all elements on the SERP."
+            },
+            "method": {
+              "enum": ["href"],
+              "description": "The extraction method to use for the query."
+            },
+            "options": {
+              "type": "object",
+              "properties": {
+                "queryParamKey": {
+                  "type": "string",
+                  "description": "The query parameter key to inspect in the href."
+                }
+              },
+              "required": ["queryParamKey"]
+            }
+          },
+          "required": ["selectors", "method"]
+        }
+      ]
     }
   }
 }

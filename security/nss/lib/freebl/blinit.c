@@ -47,6 +47,7 @@ static PRBool ppc_crypto_support_ = PR_FALSE;
 /*
  * Adapted from the example code in "How to detect New Instruction support in
  * the 4th generation Intel Core processor family" by Max Locktyukhin.
+ * https://www.intel.com/content/dam/develop/external/us/en/documents/how-to-detect-new-instruction-support-in-the-4th-generation-intel-core-processor-family.pdf
  *
  * XGETBV:
  *   Reads an extended control register (XCR) specified by ECX into EDX:EAX.
@@ -112,13 +113,20 @@ CheckX86CPUSupport()
     aesni_support_ = (PRBool)((ecx & ECX_AESNI) != 0 && disable_hw_aes == NULL);
     clmul_support_ = (PRBool)((ecx & ECX_CLMUL) != 0 && disable_pclmul == NULL);
     sha_support_ = (PRBool)((ebx7 & EBX_SHA) != 0 && disable_hw_sha == NULL);
-    /* For AVX we check AVX, OSXSAVE, and XSAVE
-     * as well as XMM and YMM state. */
+    /* For AVX we ensure that:
+     *  - The AVX, OSXSAVE, and XSAVE bits of ECX from CPUID(EAX=1) are set, and
+     *  - the SSE and AVX state bits of XCR0 are set (check_xcr0_ymm).
+     */
     avx_support_ = (PRBool)((ecx & AVX_BITS) == AVX_BITS) && check_xcr0_ymm() &&
                    disable_avx == NULL;
-    /* For AVX2 we check AVX2, BMI1, BMI2, FMA, MOVBE.
-     * We do not check for AVX above. */
-    avx2_support_ = (PRBool)((ebx7 & AVX2_EBX_BITS) == AVX2_EBX_BITS &&
+    /* For AVX2 we ensure that:
+     *  - AVX is supported,
+     *  - the AVX2, BMI1, and BMI2 bits of EBX from CPUID(EAX=7) are set, and
+     *  - the FMA, and MOVBE bits of ECX from CPUID(EAX=1) are set.
+     * We do not check for LZCNT support.
+     */
+    avx2_support_ = (PRBool)(avx_support_ == PR_TRUE &&
+                             (ebx7 & AVX2_EBX_BITS) == AVX2_EBX_BITS &&
                              (ecx & AVX2_ECX_BITS) == AVX2_ECX_BITS &&
                              disable_avx2 == NULL);
     ssse3_support_ = (PRBool)((ecx & ECX_SSSE3) != 0 &&

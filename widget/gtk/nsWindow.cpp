@@ -6576,6 +6576,14 @@ void nsWindow::ResumeCompositorFlickering() {
 
   MozClearHandleID(mCompositorPauseTimeoutID, g_source_remove);
 
+  // mCompositorWidgetDelegate can be deleted during timeout.
+  // In such case just flip compositor back to enabled and let
+  // SetCompositorWidgetDelegate() or Map event resume it.
+  if (!mCompositorWidgetDelegate) {
+    mCompositorState = COMPOSITOR_ENABLED;
+    return;
+  }
+
   ResumeCompositorImpl();
 }
 

@@ -1171,6 +1171,10 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
     nsWeakPtr mFullscreenPresShell;
   } mChromeFields;
 
+  // Whether the chrome window is currently in a full screen transition. This
+  // flag is updated from FullscreenTransitionTask.
+  bool mIsInFullScreenTransition = false;
+
   friend class nsDOMScriptableHelper;
   friend class nsDOMWindowUtils;
   friend class mozilla::dom::BrowsingContext;

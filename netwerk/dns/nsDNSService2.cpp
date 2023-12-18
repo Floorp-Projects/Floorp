@@ -876,9 +876,6 @@ nsDNSService::Init() {
 
   RegisterWeakMemoryReporter(this);
 
-  nsCOMPtr<nsIObliviousHttpService> ohttpService(
-      do_GetService("@mozilla.org/network/oblivious-http-service;1"));
-
   mTrrService = new TRRService();
   if (NS_FAILED(mTrrService->Init())) {
     mTrrService = nullptr;

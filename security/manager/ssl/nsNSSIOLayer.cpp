@@ -25,6 +25,7 @@
 #include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/RandomNum.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/StaticPrefs_security.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/ipc/BackgroundChild.h"
@@ -321,13 +322,20 @@ PRIOMethods nsSSLIOLayerHelpers::nsSSLIOLayerMethods;
 PRIOMethods nsSSLIOLayerHelpers::nsSSLPlaintextLayerMethods;
 
 static PRStatus nsSSLIOLayerClose(PRFileDesc* fd) {
-  if (!fd) return PR_FAILURE;
+  if (!fd) {
+    return PR_FAILURE;
+  }
 
-  MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
-          ("[%p] Shutting down socket\n", (void*)fd));
+  MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("[%p] Shutting down socket", fd));
 
-  NSSSocketControl* socketInfo = (NSSSocketControl*)fd->secret;
-  MOZ_ASSERT(socketInfo, "NSSSocketControl was null for an fd");
+  // Take the owning reference from the layer. See the corresponding comment in
+  // nsSSLIOLayerAddToSocket where this gets set.
+  RefPtr<NSSSocketControl> socketInfo(
+      already_AddRefed((NSSSocketControl*)fd->secret));
+  fd->secret = nullptr;
+  if (!socketInfo) {
+    return PR_FAILURE;
+  }
 
   return socketInfo->CloseSocketAndDestroy();
 }
@@ -970,17 +978,17 @@ PrefObserver::Observe(nsISupports* aSubject, const char* aTopic,
 
 static int32_t PlaintextRecv(PRFileDesc* fd, void* buf, int32_t amount,
                              int flags, PRIntervalTime timeout) {
-  // The shutdownlocker is not needed here because it will already be
-  // held higher in the stack
   NSSSocketControl* socketInfo = nullptr;
 
   int32_t bytesRead =
       fd->lower->methods->recv(fd->lower, buf, amount, flags, timeout);
-  if (fd->identity == nsSSLIOLayerHelpers::nsSSLPlaintextLayerIdentity)
+  if (fd->identity == nsSSLIOLayerHelpers::nsSSLPlaintextLayerIdentity) {
     socketInfo = (NSSSocketControl*)fd->secret;
+  }
 
-  if ((bytesRead > 0) && socketInfo)
+  if ((bytesRead > 0) && socketInfo) {
     socketInfo->AddPlaintextBytesRead(bytesRead);
+  }
   return bytesRead;
 }
 
@@ -1246,43 +1254,46 @@ nsresult nsSSLIOLayerNewSocket(int32_t family, const char* host, int32_t port,
 static PRFileDesc* nsSSLIOLayerImportFD(PRFileDesc* fd,
                                         NSSSocketControl* infoObject,
                                         const char* host, bool haveHTTPSProxy) {
+  // Memory allocated here is released when fd is closed, regardless of the
+  // success of this function.
   PRFileDesc* sslSock = SSL_ImportFD(nullptr, fd);
   if (!sslSock) {
-    MOZ_ASSERT_UNREACHABLE("NSS: Error importing socket");
     return nullptr;
   }
-  SSL_SetPKCS11PinArg(sslSock, (nsIInterfaceRequestor*)infoObject);
-  SSL_HandshakeCallback(sslSock, HandshakeCallback, infoObject);
-  SSL_SetCanFalseStartCallback(sslSock, CanFalseStartCallback, infoObject);
+  if (SSL_SetPKCS11PinArg(sslSock, infoObject) != SECSuccess) {
+    return nullptr;
+  }
+  if (SSL_HandshakeCallback(sslSock, HandshakeCallback, infoObject) !=
+      SECSuccess) {
+    return nullptr;
+  }
+  if (SSL_SetCanFalseStartCallback(sslSock, CanFalseStartCallback,
+                                   infoObject) != SECSuccess) {
+    return nullptr;
+  }
 
   // Disable this hook if we connect anonymously. See bug 466080.
-  uint32_t flags = 0;
-  infoObject->GetProviderFlags(&flags);
+  uint32_t flags = infoObject->GetProviderFlags();
+  SSLGetClientAuthData clientAuthDataHook = SSLGetClientAuthDataHook;
   // Provide the client cert to HTTPS proxy no matter if it is anonymous.
   if (flags & nsISocketProvider::ANONYMOUS_CONNECT && !haveHTTPSProxy &&
       !(flags & nsISocketProvider::ANONYMOUS_CONNECT_ALLOW_CLIENT_CERT)) {
-    SSL_GetClientAuthDataHook(sslSock, nullptr, infoObject);
-  } else {
-    SSL_GetClientAuthDataHook(sslSock, SSLGetClientAuthDataHook, infoObject);
+    clientAuthDataHook = nullptr;
+  }
+  if (SSL_GetClientAuthDataHook(sslSock, clientAuthDataHook, infoObject) !=
+      SECSuccess) {
+    return nullptr;
   }
 
-  if (SECSuccess !=
-      SSL_AuthCertificateHook(sslSock, AuthCertificateHook, infoObject)) {
-    MOZ_ASSERT_UNREACHABLE("Failed to configure AuthCertificateHook");
-    goto loser;
+  if (SSL_AuthCertificateHook(sslSock, AuthCertificateHook, infoObject) !=
+      SECSuccess) {
+    return nullptr;
   }
-
-  if (SECSuccess != SSL_SetURL(sslSock, host)) {
-    MOZ_ASSERT_UNREACHABLE("SSL_SetURL failed");
-    goto loser;
+  if (SSL_SetURL(sslSock, host) != SECSuccess) {
+    return nullptr;
   }
 
   return sslSock;
-loser:
-  if (sslSock) {
-    PR_Close(sslSock);
-  }
-  return nullptr;
 }
 
 // Please change getSignatureName in nsNSSCallbacks.cpp when changing the list
@@ -1540,11 +1551,6 @@ nsresult nsSSLIOLayerAddToSocket(int32_t family, const char* host, int32_t port,
                                  nsITLSSocketControl** tlsSocketControl,
                                  bool forSTARTTLS, uint32_t providerFlags,
                                  uint32_t providerTlsFlags) {
-  PRFileDesc* layer = nullptr;
-  PRFileDesc* plaintextLayer = nullptr;
-  nsresult rv;
-  PRStatus stat;
-
   SharedSSLState* sharedState = nullptr;
   RefPtr<SharedSSLState> allocatedState;
   if (providerTlsFlags) {
@@ -1557,12 +1563,13 @@ nsresult nsSSLIOLayerAddToSocket(int32_t family, const char* host, int32_t port,
     sharedState = isPrivate ? PrivateSSLState() : PublicSSLState();
   }
 
-  NSSSocketControl* infoObject =
+  RefPtr<NSSSocketControl> infoObject(
       new NSSSocketControl(nsDependentCString(host), port, *sharedState,
-                           providerFlags, providerTlsFlags);
-  if (!infoObject) return NS_ERROR_FAILURE;
+                           providerFlags, providerTlsFlags));
+  if (!infoObject) {
+    return NS_ERROR_FAILURE;
+  }
 
-  NS_ADDREF(infoObject);
   infoObject->SetForSTARTTLS(forSTARTTLS);
   infoObject->SetOriginAttributes(originAttributes);
   if (allocatedState) {
@@ -1573,7 +1580,10 @@ nsresult nsSSLIOLayerAddToSocket(int32_t family, const char* host, int32_t port,
   bool haveHTTPSProxy = false;
   if (proxy) {
     nsAutoCString proxyHost;
-    proxy->GetHost(proxyHost);
+    nsresult rv = proxy->GetHost(proxyHost);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
     haveProxy = !proxyHost.IsEmpty();
     nsAutoCString type;
     haveHTTPSProxy = haveProxy && NS_SUCCEEDED(proxy->GetType(type)) &&
@@ -1582,46 +1592,69 @@ nsresult nsSSLIOLayerAddToSocket(int32_t family, const char* host, int32_t port,
 
   // A plaintext observer shim is inserted so we can observe some protocol
   // details without modifying nss
-  plaintextLayer =
+  PRFileDesc* plaintextLayer =
       PR_CreateIOLayerStub(nsSSLIOLayerHelpers::nsSSLPlaintextLayerIdentity,
                            &nsSSLIOLayerHelpers::nsSSLPlaintextLayerMethods);
-  if (plaintextLayer) {
-    plaintextLayer->secret = (PRFilePrivate*)infoObject;
-    stat = PR_PushIOLayer(fd, PR_TOP_IO_LAYER, plaintextLayer);
-    if (stat == PR_FAILURE) {
-      plaintextLayer->dtor(plaintextLayer);
-      plaintextLayer = nullptr;
-    }
+  if (!plaintextLayer) {
+    return NS_ERROR_FAILURE;
   }
+  plaintextLayer->secret = (PRFilePrivate*)infoObject.get();
+  if (PR_PushIOLayer(fd, PR_TOP_IO_LAYER, plaintextLayer) != PR_SUCCESS) {
+    plaintextLayer->dtor(plaintextLayer);
+    return NS_ERROR_FAILURE;
+  }
+  auto plaintextLayerCleanup = MakeScopeExit([&fd] {
+    // Note that PR_*IOLayer operations may modify the stack of fds, so a
+    // previously-valid pointer may no longer point to what we think it points
+    // to after calling PR_PopIOLayer. We must operate on the pointer returned
+    // by PR_PopIOLayer.
+    PRFileDesc* plaintextLayer =
+        PR_PopIOLayer(fd, nsSSLIOLayerHelpers::nsSSLPlaintextLayerIdentity);
+    if (plaintextLayer) {
+      plaintextLayer->dtor(plaintextLayer);
+    }
+  });
 
   PRFileDesc* sslSock =
       nsSSLIOLayerImportFD(fd, infoObject, host, haveHTTPSProxy);
   if (!sslSock) {
-    MOZ_ASSERT_UNREACHABLE("NSS: Error importing socket");
-    goto loser;
+    return NS_ERROR_FAILURE;
   }
 
-  infoObject->SetFileDescPtr(sslSock);
-
-  rv = nsSSLIOLayerSetOptions(sslSock, forSTARTTLS, haveProxy, host, port,
-                              infoObject);
-
-  if (NS_FAILED(rv)) goto loser;
+  nsresult rv = nsSSLIOLayerSetOptions(sslSock, forSTARTTLS, haveProxy, host,
+                                       port, infoObject);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   // Now, layer ourselves on top of the SSL socket...
-  layer = PR_CreateIOLayerStub(nsSSLIOLayerHelpers::nsSSLIOLayerIdentity,
-                               &nsSSLIOLayerHelpers::nsSSLIOLayerMethods);
-  if (!layer) goto loser;
-
-  layer->secret = (PRFilePrivate*)infoObject;
-  stat = PR_PushIOLayer(sslSock, PR_GetLayersIdentity(sslSock), layer);
-
-  if (stat == PR_FAILURE) {
-    goto loser;
+  PRFileDesc* layer =
+      PR_CreateIOLayerStub(nsSSLIOLayerHelpers::nsSSLIOLayerIdentity,
+                           &nsSSLIOLayerHelpers::nsSSLIOLayerMethods);
+  if (!layer) {
+    return NS_ERROR_FAILURE;
   }
+  // Give the layer an owning reference to the NSSSocketControl.
+  // This is the simplest way to prevent the layer from outliving the
+  // NSSSocketControl (otherwise, the layer could potentially use it in
+  // nsSSLIOLayerClose after it has been released).
+  // nsSSLIOLayerClose takes the owning reference when the underlying fd gets
+  // closed. If the fd never gets closed (as in, leaks), the NSSSocketControl
+  // will also leak.
+  layer->secret = (PRFilePrivate*)do_AddRef(infoObject).take();
 
-  MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("[%p] Socket set up", (void*)sslSock));
-  *tlsSocketControl = do_AddRef(infoObject).take();
+  if (PR_PushIOLayer(sslSock, PR_GetLayersIdentity(sslSock), layer) !=
+      PR_SUCCESS) {
+    layer->dtor(layer);
+    return NS_ERROR_FAILURE;
+  }
+  auto layerCleanup = MakeScopeExit([&fd] {
+    PRFileDesc* layer =
+        PR_PopIOLayer(fd, nsSSLIOLayerHelpers::nsSSLIOLayerIdentity);
+    if (layer) {
+      layer->dtor(layer);
+    }
+  });
 
   // We are going use a clear connection first //
   if (forSTARTTLS || haveProxy) {
@@ -1630,28 +1663,22 @@ nsresult nsSSLIOLayerAddToSocket(int32_t family, const char* host, int32_t port,
 
   infoObject->SharedState().NoteSocketCreated();
 
-  rv = infoObject->SetResumptionTokenFromExternalCache();
+  rv = infoObject->SetResumptionTokenFromExternalCache(sslSock);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  SSL_SetResumptionTokenCallback(sslSock, &StoreResumptionToken, infoObject);
+  if (SSL_SetResumptionTokenCallback(sslSock, &StoreResumptionToken,
+                                     infoObject) != SECSuccess) {
+    return NS_ERROR_FAILURE;
+  }
 
+  MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("[%p] Socket set up", (void*)sslSock));
+
+  (void)infoObject->SetFileDescPtr(sslSock);
+  layerCleanup.release();
+  plaintextLayerCleanup.release();
+  *tlsSocketControl = infoObject.forget().take();
   return NS_OK;
-loser:
-  NS_IF_RELEASE(infoObject);
-  if (layer) {
-    layer->dtor(layer);
-  }
-  if (plaintextLayer) {
-    // Note that PR_*IOLayer operations may modify the stack of fds, so a
-    // previously-valid pointer may no longer point to what we think it points
-    // to after calling PR_PopIOLayer. We must operate on the pointer returned
-    // by PR_PopIOLayer.
-    plaintextLayer =
-        PR_PopIOLayer(fd, nsSSLIOLayerHelpers::nsSSLPlaintextLayerIdentity);
-    plaintextLayer->dtor(plaintextLayer);
-  }
-  return NS_ERROR_FAILURE;
 }
 
 already_AddRefed<IPCClientCertsChild> GetIPCClientCertsActor() {

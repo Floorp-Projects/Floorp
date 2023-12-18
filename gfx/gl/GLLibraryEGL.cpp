@@ -210,6 +210,44 @@ static std::shared_ptr<EglDisplay> GetAndInitDeviceDisplay(
   return EglDisplay::Create(egl, display, true, aProofOfLock);
 }
 
+static std::shared_ptr<EglDisplay> GetAndInitSoftwareDisplay(
+    GLLibraryEGL& egl, const StaticMutexAutoLock& aProofOfLock) {
+  if (!egl.IsExtensionSupported(EGLLibExtension::EXT_platform_device) ||
+      !egl.IsExtensionSupported(EGLLibExtension::EXT_device_enumeration)) {
+    return nullptr;
+  }
+
+  EGLint maxDevices;
+  if (!egl.fQueryDevicesEXT(0, nullptr, &maxDevices)) {
+    return nullptr;
+  }
+
+  std::vector<EGLDeviceEXT> devices(maxDevices);
+  EGLint numDevices;
+  if (!egl.fQueryDevicesEXT(devices.size(), devices.data(), &numDevices)) {
+    return nullptr;
+  }
+  devices.resize(numDevices);
+
+  EGLDisplay display = EGL_NO_DISPLAY;
+  for (const auto& device : devices) {
+    const char* renderNodeString =
+        egl.fQueryDeviceStringEXT(device, LOCAL_EGL_DRM_RENDER_NODE_FILE_EXT);
+    // We are looking for a device with no file
+    if (!renderNodeString || *renderNodeString == 0) {
+      const EGLAttrib attrib_list[] = {LOCAL_EGL_NONE};
+      display = egl.fGetPlatformDisplay(LOCAL_EGL_PLATFORM_DEVICE_EXT, device,
+                                        attrib_list);
+      break;
+    }
+  }
+  if (!display) {
+    return nullptr;
+  }
+
+  return EglDisplay::Create(egl, display, true, aProofOfLock);
+}
+
 static std::shared_ptr<EglDisplay> GetAndInitSurfacelessDisplay(
     GLLibraryEGL& egl, const StaticMutexAutoLock& aProofOfLock) {
   if (!egl.IsExtensionSupported(EGLLibExtension::MESA_platform_surfaceless)) {
@@ -904,12 +942,17 @@ std::shared_ptr<EglDisplay> GLLibraryEGL::CreateDisplayLocked(
   } else {
     void* nativeDisplay = EGL_DEFAULT_DISPLAY;
 #ifdef MOZ_WAYLAND
-    if (!gdk_display_get_default()) {
+    if (!ret && !gfx::gfxVars::WebglUseHardware()) {
+      // Initialize a swrast egl device such as llvmpipe
+      ret = GetAndInitSoftwareDisplay(*this, aProofOfLock);
+    }
+    // Initialize the display the normal way
+    if (!ret && !gdk_display_get_default()) {
       ret = GetAndInitDeviceDisplay(*this, aProofOfLock);
       if (!ret) {
         ret = GetAndInitSurfacelessDisplay(*this, aProofOfLock);
       }
-    } else if (widget::GdkIsWaylandDisplay()) {
+    } else if (!ret && widget::GdkIsWaylandDisplay()) {
       // Wayland does not support EGL_DEFAULT_DISPLAY
       nativeDisplay = widget::WaylandDisplayGetWLDisplay();
       if (!nativeDisplay) {

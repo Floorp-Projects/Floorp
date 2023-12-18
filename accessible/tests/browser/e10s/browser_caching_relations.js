@@ -18,6 +18,8 @@ const attrRelationsSpec = [
   ["aria-describedby", RELATION_DESCRIBED_BY, RELATION_DESCRIPTION_FOR],
   ["aria-controls", RELATION_CONTROLLER_FOR, RELATION_CONTROLLED_BY],
   ["aria-flowto", RELATION_FLOWS_TO, RELATION_FLOWS_FROM],
+  ["aria-details", RELATION_DETAILS, RELATION_DETAILS_FOR],
+  ["aria-errormessage", RELATION_ERRORMSG, RELATION_ERRORMSG_FOR],
 ];
 
 /**

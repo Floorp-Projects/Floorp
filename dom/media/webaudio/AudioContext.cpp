@@ -841,8 +841,8 @@ class OnStateChangeTask final : public Runnable {
     }
 
     return nsContentUtils::DispatchTrustedEvent(
-        doc, static_cast<DOMEventTargetHelper*>(mAudioContext),
-        u"statechange"_ns, CanBubble::eNo, Cancelable::eNo);
+        doc, static_cast<EventTarget*>(mAudioContext), u"statechange"_ns,
+        CanBubble::eNo, Cancelable::eNo);
   }
 
  private:
@@ -1192,7 +1192,7 @@ void AudioContext::ReportBlocked() {
         AUTOPLAY_LOG("Dispatch `blocked` event for AudioContext %p",
                      self.get());
         nsContentUtils::DispatchTrustedEvent(
-            doc, static_cast<DOMEventTargetHelper*>(self), u"blocked"_ns,
+            doc, static_cast<EventTarget*>(self), u"blocked"_ns,
             CanBubble::eNo, Cancelable::eNo);
       });
   Dispatch(r.forget());

@@ -10,6 +10,7 @@ include protocol PTexture;
 include "mozilla/GfxMessageUtils.h";
 include "mozilla/layers/LayersMessageUtils.h";
 
+using mozilla::dom::ContentParentId from "mozilla/dom/ipc/IdType.h";
 using mozilla::layers::TextureFlags from "mozilla/layers/CompositorTypes.h";
 
 namespace mozilla {
@@ -25,8 +26,12 @@ sync protocol PVideoBridge
   manages PTexture;
 
 parent:
+  /**
+   * Since PVideoBridge creates textures on behalf of another process, we also
+   * supply ContentParentId of the owning content process.
+   */
   async PTexture(SurfaceDescriptor aSharedData, ReadLockDescriptor aReadLock, LayersBackend aBackend,
-                 TextureFlags aTextureFlags, uint64_t aSerial);
+                 TextureFlags aTextureFlags, ContentParentId aContentId, uint64_t aSerial);
 };
 
 } // namespace

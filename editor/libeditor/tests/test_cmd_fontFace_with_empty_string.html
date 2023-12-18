@@ -1,0 +1,30 @@
+<!doctype html>
+<html>
+<head>
+<title>Tests typing in empty paragraph after running `cmd_fontFace` with empty string</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+<script>
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(() => {
+  document.designMode = "on";
+  document.body.innerHTML = "<p><font face=\"monospace\">abc</font><br></p>";
+  getSelection().collapse(document.querySelector("font").firstChild, "abc".length);
+  document.execCommand("insertParagraph");
+  // Calling document.execCommand("fontName", false, "") is NOOP, but HTMLEditor
+  // accepts empty string param for cmd_fontFace.
+  SpecialPowers.doCommand(window, "cmd_fontFace", "");
+  document.execCommand("insertText", false, "d");
+  is(
+    document.querySelector("p+p").innerHTML,
+    "d<br>",
+    "The typed text should not be wrapped in <font face=\"monospace\">"
+  );
+  document.designMode = "off";
+  SimpleTest.finish();
+});
+</script>
+</head>
+<body></body>
+</html>

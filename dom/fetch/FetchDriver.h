@@ -152,6 +152,9 @@ class FetchDriver final : public nsIStreamListener,
   SafeRefPtr<InternalRequest> mRequest;
   SafeRefPtr<InternalResponse> mResponse;
   nsCOMPtr<nsIOutputStream> mPipeOutputStream;
+  // Access to mObserver can be racy from OnDataAvailable and
+  // FetchAbortActions. This must not be modified
+  // in either of these functions.
   RefPtr<FetchDriverObserver> mObserver;
   RefPtr<Document> mDocument;
   nsCOMPtr<nsICSPEventListener> mCSPEventListener;

@@ -18,6 +18,7 @@ const ICON_ATTRIBUTE_SHOWING = "showing";
 const ICON_ANCHOR_ATTRIBUTE = "popupnotificationanchor";
 
 const PREF_SECURITY_DELAY = "security.notification_enable_delay";
+const FULLSCREEN_TRANSITION_TIME_SHOWN_OFFSET_MS = 2000;
 
 // Enumerated values for the POPUP_NOTIFICATION_STATS telemetry histogram.
 const TELEMETRY_STAT_OFFERED = 0;
@@ -306,6 +307,12 @@ export function PopupNotifications(tabbrowser, panel, iconBox, options = {}) {
     true
   );
 
+  Services.obs.addObserver(this, "fullscreen-transition-start");
+
+  this.window.addEventListener("unload", () => {
+    Services.obs.removeObserver(this, "fullscreen-transition-start");
+  });
+
   this.window.addEventListener("activate", this, true);
   if (this.tabbrowser.tabContainer) {
     this.tabbrowser.tabContainer.addEventListener("TabSelect", this, true);
@@ -350,6 +357,18 @@ PopupNotifications.prototype = {
   },
   get iconBox() {
     return this._iconBox;
+  },
+
+  observe(subject, topic) {
+    if (topic == "fullscreen-transition-start") {
+      // Extend security delay if the panel is open.
+      if (this.isPanelOpen) {
+        let notification = this.panel.firstChild?.notification;
+        if (notification) {
+          this._extendSecurityDelay([notification]);
+        }
+      }
+    }
   },
 
   /**
@@ -796,7 +815,10 @@ PopupNotifications.prototype = {
       case "activate":
         if (this.isPanelOpen) {
           for (let elt of this.panel.children) {
-            elt.notification.timeShown = this.window.performance.now();
+            elt.notification.timeShown = Math.max(
+              this.window.performance.now(),
+              elt.notification.timeShown ?? 0
+            );
           }
           break;
         }
@@ -1211,6 +1233,13 @@ PopupNotifications.prototype = {
     }
   },
 
+  _extendSecurityDelay(notifications) {
+    let now = this.window.performance.now();
+    notifications.forEach(n => {
+      n.timeShown = now + FULLSCREEN_TRANSITION_TIME_SHOWN_OFFSET_MS;
+    });
+  },
+
   _showPanel: function PopupNotifications_showPanel(
     notificationsToShow,
     anchorElement
@@ -1257,7 +1286,11 @@ PopupNotifications.prototype = {
 
     // Remember the time the notification was shown for the security delay.
     notificationsToShow.forEach(
-      n => (n.timeShown = this.window.performance.now())
+      n =>
+        (n.timeShown = Math.max(
+          this.window.performance.now(),
+          n.timeShown ?? 0
+        ))
     );
 
     if (this.isPanelOpen && this._currentAnchorElement == anchorElement) {
@@ -1300,6 +1333,12 @@ PopupNotifications.prototype = {
         // shown with "options.dismissed" will be recorded in a separate bucket.
         n._recordTelemetryStat(TELEMETRY_STAT_OFFERED);
       }, this);
+
+      // We're about to open the panel while in a full screen transition. Extend
+      // the security delay.
+      if (this.window.isInFullScreenTransition) {
+        this._extendSecurityDelay(notificationsToShow);
+      }
 
       let target = this.panel;
       if (target.parentNode) {
@@ -1898,8 +1937,8 @@ PopupNotifications.prototype = {
         return;
       }
 
-      let timeSinceShown =
-        this.window.performance.now() - notification.timeShown;
+      let now = this.window.performance.now();
+      let timeSinceShown = now - notification.timeShown;
       if (timeSinceShown < lazy.buttonDelay) {
         Services.console.logStringMessage(
           "PopupNotifications._onButtonEvent: " +
@@ -1907,6 +1946,7 @@ PopupNotifications.prototype = {
             timeSinceShown +
             "ms"
         );
+        notification.timeShown = Math.max(now, notification.timeShown);
         return;
       }
     }

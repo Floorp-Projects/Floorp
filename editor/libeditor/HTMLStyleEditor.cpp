@@ -2400,18 +2400,29 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::ClearStyleAt(
             {EmptyCheckOption::TreatListItemAsVisible,
              EmptyCheckOption::TreatTableCellAsVisible},
             &seenBR)) {
+      if (seenBR && !brElement) {
+        brElement = HTMLEditUtils::GetFirstBRElement(
+            *unwrappedSplitResultAtStartOfNextNode.GetNextContentAs<Element>());
+      }
+      // Once we remove <br> element's parent, we lose the rights to remove it
+      // from the parent because the parent becomes not editable.  Therefore, we
+      // need to delete the <br> element before removing its parents for reusing
+      // it later.
+      if (brElement) {
+        nsresult rv = DeleteNodeWithTransaction(*brElement);
+        if (NS_FAILED(rv)) {
+          NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed");
+          return Err(rv);
+        }
+      }
       // Delete next node if it's empty.
-      // MOZ_KnownLive(unwrappedSplitResultAtStartOfNextNode.GetNextContent()):
-      // It's grabbed by unwrappedSplitResultAtStartOfNextNode.
+      // MOZ_KnownLive because of grabbed by
+      // unwrappedSplitResultAtStartOfNextNode.
       nsresult rv = DeleteNodeWithTransaction(MOZ_KnownLive(
           *unwrappedSplitResultAtStartOfNextNode.GetNextContent()));
       if (NS_FAILED(rv)) {
         NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed");
         return Err(rv);
-      }
-      if (seenBR && !brElement) {
-        brElement = HTMLEditUtils::GetFirstBRElement(
-            *unwrappedSplitResultAtStartOfNextNode.GetNextContentAs<Element>());
       }
     }
   }
@@ -2448,16 +2459,25 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::ClearStyleAt(
   // the left node left node.  This is so we you don't revert back to the
   // previous style if you happen to click at the end of a line.
   if (brElement) {
-    {
+    if (brElement->GetParentNode()) {
       Result<MoveNodeResult, nsresult> moveBRElementResult =
           MoveNodeWithTransaction(*brElement, pointToPutCaret);
       if (MOZ_UNLIKELY(moveBRElementResult.isErr())) {
         NS_WARNING("HTMLEditor::MoveNodeWithTransaction() failed");
         return moveBRElementResult.propagateErr();
       }
-      MoveNodeResult unwrappedMoveBRElementResult =
-          moveBRElementResult.unwrap();
-      unwrappedMoveBRElementResult.MoveCaretPointTo(
+      moveBRElementResult.unwrap().MoveCaretPointTo(
+          pointToPutCaret, *this,
+          {SuggestCaret::OnlyIfHasSuggestion,
+           SuggestCaret::OnlyIfTransactionsAllowedToDoIt});
+    } else {
+      Result<CreateElementResult, nsresult> insertBRElementResult =
+          InsertNodeWithTransaction<Element>(*brElement, pointToPutCaret);
+      if (MOZ_UNLIKELY(insertBRElementResult.isErr())) {
+        NS_WARNING("EditorBase::InsertNodeWithTransaction() failed");
+        return insertBRElementResult.propagateErr();
+      }
+      insertBRElementResult.unwrap().MoveCaretPointTo(
           pointToPutCaret, *this,
           {SuggestCaret::OnlyIfHasSuggestion,
            SuggestCaret::OnlyIfTransactionsAllowedToDoIt});

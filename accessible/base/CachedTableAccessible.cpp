@@ -249,6 +249,11 @@ CachedTableCellAccessible* CachedTableCellAccessible::GetFrom(
     if (auto cellIdx = cachedTable->mAccToCellIdx.Lookup(aAcc)) {
       return &cachedTable->mCells[*cellIdx];
     }
+    // We found a table, but it doesn't know about this cell. This can happen
+    // if a cell is outside of a row due to authoring error. We must not search
+    // ancestor tables, since this cell's data is not valid there and vice
+    // versa.
+    break;
   }
   return nullptr;
 }

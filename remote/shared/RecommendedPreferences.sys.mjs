@@ -331,8 +331,8 @@ const COMMON_PREFERENCES = new Map([
   // Do not download intermediate certificates
   ["security.remote_settings.intermediates.enabled", false],
 
-  // Ensure blocklist updates do not hit the network
-  ["services.settings.server", "http://%(server)s/dummy/blocklist/"],
+  // Ensure remote settings do not hit the network
+  ["services.settings.server", "data:,#remote-settings-dummy/v1"],
 
   // Do not automatically fill sign-in forms with known usernames and
   // passwords

@@ -131,7 +131,8 @@ already_AddRefed<DocumentFragment> TextTrackCue::GetCueAsHTML() {
   }
 
   RefPtr<DocumentFragment> frag;
-  sParserWrapper->ConvertCueToDOMTree(window, this, getter_AddRefs(frag));
+  sParserWrapper->ConvertCueToDOMTree(window, static_cast<EventTarget*>(this),
+                                      getter_AddRefs(frag));
   if (!frag) {
     return mDocument->CreateDocumentFragment();
   }

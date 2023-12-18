@@ -71,6 +71,11 @@ NS_IMPL_ISUPPORTS(nsFilePicker, nsIFilePicker)
 NS_IMETHODIMP nsFilePicker::Init(mozIDOMWindowProxy* aParent,
                                  const nsAString& aTitle,
                                  nsIFilePicker::Mode aMode) {
+  // Don't attempt to open a real file-picker in headless mode.
+  if (gfxPlatform::IsHeadless()) {
+    return nsresult::NS_ERROR_NOT_AVAILABLE;
+  }
+
   nsCOMPtr<nsPIDOMWindowOuter> window = do_QueryInterface(aParent);
   nsIDocShell* docShell = window ? window->GetDocShell() : nullptr;
   mLoadContext = do_QueryInterface(docShell);
@@ -291,6 +296,11 @@ bool nsFilePicker::ShowFilePicker(const nsString& aInitialDir) {
 // nsIFilePicker impl.
 
 nsresult nsFilePicker::ShowW(nsIFilePicker::ResultCode* aReturnVal) {
+  // Don't attempt to open a real file-picker in headless mode.
+  if (gfxPlatform::IsHeadless()) {
+    return nsresult::NS_ERROR_NOT_AVAILABLE;
+  }
+
   NS_ENSURE_ARG_POINTER(aReturnVal);
 
   *aReturnVal = returnCancel;

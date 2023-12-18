@@ -579,6 +579,14 @@ partial interface Window {
    */
   [ChromeOnly]
   readonly attribute Principal? clientPrincipal;
+
+  /**
+   *  Whether the chrome window is currently in a full screen transition. This
+   *  flag is updated from FullscreenTransitionTask.
+   *  Always set to false for non-chrome windows.
+   */
+  [ChromeOnly]
+  readonly attribute boolean isInFullScreenTransition;
 };
 
 Window includes TouchEventHandlers;

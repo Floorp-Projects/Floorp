@@ -1970,6 +1970,46 @@ nsLocalFile::Contains(nsIFile* aInFile, bool* aResult) {
   return NS_OK;
 }
 
+static nsresult ReadLinkSafe(const nsCString& aTarget, int32_t aExpectedSize,
+                             nsACString& aOutBuffer) {
+  // If we call readlink with a buffer size S it returns S, then we cannot tell
+  // if the buffer was big enough to hold the entire path. We allocate an
+  // additional byte so we can check if the buffer was large enough.
+  const auto allocSize = CheckedInt<size_t>(aExpectedSize) + 1;
+  if (!allocSize.isValid()) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  auto result = aOutBuffer.BulkWrite(allocSize.value(), 0, false);
+  if (result.isErr()) {
+    return result.unwrapErr();
+  }
+
+  auto handle = result.unwrap();
+
+  while (true) {
+    ssize_t bytesWritten =
+        readlink(aTarget.get(), handle.Elements(), handle.Length());
+    if (bytesWritten < 0) {
+      return NSRESULT_FOR_ERRNO();
+    }
+
+    // written >= 0 so it is safe to cast to size_t.
+    if ((size_t)bytesWritten < handle.Length()) {
+      // Target might have changed since the lstat call, or lstat might lie, see
+      // bug 1791029.
+      handle.Finish(bytesWritten, false);
+      return NS_OK;
+    }
+
+    // The buffer was not large enough, so double it and try again.
+    auto restartResult = handle.RestartBulkWrite(handle.Length() * 2, 0, false);
+    if (restartResult.isErr()) {
+      return restartResult.unwrapErr();
+    }
+  }
+}
+
 NS_IMETHODIMP
 nsLocalFile::GetNativeTarget(nsACString& aResult) {
   CHECK_mPath();
@@ -1984,21 +2024,12 @@ nsLocalFile::GetNativeTarget(nsACString& aResult) {
     return NS_ERROR_FILE_INVALID_PATH;
   }
 
-  int32_t size = (int32_t)symStat.st_size;
   nsAutoCString target;
-  if (!target.SetLength(size, mozilla::fallible)) {
-    return NS_ERROR_OUT_OF_MEMORY;
+  nsresult rv = ReadLinkSafe(mPath, symStat.st_size, target);
+  if (NS_FAILED(rv)) {
+    return rv;
   }
 
-  ssize_t written = readlink(mPath.get(), target.BeginWriting(), size_t(size));
-  if (written < 0) {
-    return NSRESULT_FOR_ERRNO();
-  }
-  // Target might have changed since the lstat call, or lstat might lie, see bug
-  // 1791029.
-  target.Truncate(written);
-
-  nsresult rv = NS_OK;
   nsCOMPtr<nsIFile> self(this);
   int32_t maxLinks = 40;
   while (true) {
@@ -2036,21 +2067,12 @@ nsLocalFile::GetNativeTarget(nsACString& aResult) {
       break;
     }
 
-    int32_t newSize = (int32_t)symStat.st_size;
-    size = newSize;
     nsAutoCString newTarget;
-    if (!newTarget.SetLength(size, mozilla::fallible)) {
-      rv = NS_ERROR_OUT_OF_MEMORY;
+    rv = ReadLinkSafe(flatRetval, symStat.st_size, newTarget);
+    if (NS_FAILED(rv)) {
       break;
     }
 
-    ssize_t linkLen =
-        readlink(flatRetval.get(), newTarget.BeginWriting(), size);
-    if (linkLen == -1) {
-      rv = NSRESULT_FOR_ERRNO();
-      break;
-    }
-    newTarget.Truncate(linkLen);
     target = newTarget;
   }
 
