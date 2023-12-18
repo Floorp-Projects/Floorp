@@ -108,6 +108,16 @@ skip-if = [
 ]
 support-files = ["browser_multiple_popups.html"]
 
+["browser_object_attachment.js"]
+support-files = [
+  "file_img_object_attachment.html",
+  "file_img_attachment.jpg",
+  "file_img_attachment.jpg^headers^",
+  "file_pdf_object_attachment.html",
+  "file_pdf_attachment.pdf",
+  "file_pdf_attachment.pdf^headers^",
+]
+
 ["browser_outline_refocus.js"]
 
 ["browser_page_load_event_telemetry.js"]
