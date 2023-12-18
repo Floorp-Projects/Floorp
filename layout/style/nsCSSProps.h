@@ -67,9 +67,12 @@ class nsCSSProps {
   static bool IsCustomPropertyName(const nsACString& aProperty);
 
   static bool IsShorthand(nsCSSPropertyID aProperty) {
+    if (aProperty == eCSSPropertyExtra_variable) {
+      return false;
+    }
     MOZ_ASSERT(0 <= aProperty && aProperty < eCSSProperty_COUNT,
                "out of range");
-    return (aProperty >= eCSSProperty_COUNT_no_shorthands);
+    return aProperty >= eCSSProperty_COUNT_no_shorthands;
   }
 
   // Same but for @font-face descriptors

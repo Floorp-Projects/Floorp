@@ -17,6 +17,7 @@
 #include "mozilla/UniquePtr.h"
 #include "nsCOMArray.h"
 #include "nsString.h"
+#include "mozilla/AnimatedPropertyID.h"
 #include "mozilla/ComputedStyle.h"
 #include "nsComputedDOMStyle.h"
 #include "nsCSSPseudoElements.h"
@@ -155,13 +156,13 @@ MatrixScales AnimationValue::GetScaleValue(const nsIFrame* aFrame) const {
 }
 
 void AnimationValue::SerializeSpecifiedValue(
-    nsCSSPropertyID aProperty, const StylePerDocumentStyleData* aRawData,
-    nsACString& aString) const {
+    const AnimatedPropertyID& aProperty,
+    const StylePerDocumentStyleData* aRawData, nsACString& aString) const {
   MOZ_ASSERT(mServo);
-  Servo_AnimationValue_Serialize(mServo, aProperty, aRawData, &aString);
+  Servo_AnimationValue_Serialize(mServo, aProperty.mID, aRawData, &aString);
 }
 
-bool AnimationValue::IsInterpolableWith(nsCSSPropertyID aProperty,
+bool AnimationValue::IsInterpolableWith(const AnimatedPropertyID& aProperty,
                                         const AnimationValue& aToValue) const {
   if (IsNull() || aToValue.IsNull()) {
     return false;

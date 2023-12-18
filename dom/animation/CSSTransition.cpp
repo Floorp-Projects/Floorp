@@ -21,10 +21,9 @@ JSObject* CSSTransition::WrapObject(JSContext* aCx,
 }
 
 void CSSTransition::GetTransitionProperty(nsString& aRetVal) const {
-  MOZ_ASSERT(eCSSProperty_UNKNOWN != mTransitionProperty,
+  MOZ_ASSERT(mTransitionProperty.IsValid(),
              "Transition Property should be initialized");
-  aRetVal =
-      NS_ConvertUTF8toUTF16(nsCSSProps::GetStringValue(mTransitionProperty));
+  mTransitionProperty.ToString(aRetVal);
 }
 
 AnimationPlayState CSSTransition::PlayStateFromJS() const {
@@ -194,8 +193,8 @@ void CSSTransition::Tick(TickState& aState) {
   QueueEvents();
 }
 
-nsCSSPropertyID CSSTransition::TransitionProperty() const {
-  MOZ_ASSERT(eCSSProperty_UNKNOWN != mTransitionProperty,
+const AnimatedPropertyID& CSSTransition::TransitionProperty() const {
+  MOZ_ASSERT(mTransitionProperty.IsValid(),
              "Transition property should be initialized");
   return mTransitionProperty;
 }
@@ -231,8 +230,10 @@ bool CSSTransition::HasLowerCompositeOrderThan(
   }
 
   // 3. (Same transition generation): Sort by transition property
-  return nsCSSProps::GetStringValue(TransitionProperty()) <
-         nsCSSProps::GetStringValue(aOther.TransitionProperty());
+  nsAutoString name, otherName;
+  GetTransitionProperty(name);
+  aOther.GetTransitionProperty(otherName);
+  return name < otherName;
 }
 
 /* static */

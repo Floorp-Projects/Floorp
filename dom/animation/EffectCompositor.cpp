@@ -608,11 +608,11 @@ nsCSSPropertyIDSet EffectCompositor::GetOverriddenProperties(
     nsCSSPropertyIDSet propertiesToTrackAsSet;
     for (KeyframeEffect* effect : aEffectSet) {
       for (const AnimationProperty& property : effect->Properties()) {
-        if (nsCSSProps::PropHasFlags(property.mProperty,
+        if (nsCSSProps::PropHasFlags(property.mProperty.mID,
                                      CSSPropFlags::CanAnimateOnCompositor) &&
-            !propertiesToTrackAsSet.HasProperty(property.mProperty)) {
-          propertiesToTrackAsSet.AddProperty(property.mProperty);
-          propertiesToTrack.AppendElement(property.mProperty);
+            !propertiesToTrackAsSet.HasProperty(property.mProperty.mID)) {
+          propertiesToTrackAsSet.AddProperty(property.mProperty.mID);
+          propertiesToTrack.AppendElement(property.mProperty.mID);
         }
       }
       // Skip iterating over the rest of the effects if we've already
@@ -684,16 +684,16 @@ void EffectCompositor::UpdateCascadeResults(EffectSet& aEffectSet,
     CascadeLevel cascadeLevel = effect->GetAnimation()->CascadeLevel();
 
     for (const AnimationProperty& prop : effect->Properties()) {
-      if (overriddenProperties.HasProperty(prop.mProperty)) {
-        propertiesWithImportantRules.AddProperty(prop.mProperty);
+      if (overriddenProperties.HasProperty(prop.mProperty.mID)) {
+        propertiesWithImportantRules.AddProperty(prop.mProperty.mID);
       }
 
       switch (cascadeLevel) {
         case EffectCompositor::CascadeLevel::Animations:
-          propertiesForAnimationsLevel.AddProperty(prop.mProperty);
+          propertiesForAnimationsLevel.AddProperty(prop.mProperty.mID);
           break;
         case EffectCompositor::CascadeLevel::Transitions:
-          propertiesForTransitionsLevel.AddProperty(prop.mProperty);
+          propertiesForTransitionsLevel.AddProperty(prop.mProperty.mID);
           break;
       }
     }
@@ -912,7 +912,7 @@ static void ReduceEffectSet(EffectSet& aEffectSet) {
   }
   sortedEffectList.Sort(EffectCompositeOrderComparator());
 
-  nsCSSPropertyIDSet setProperties;
+  AnimatedPropertyIDSet setProperties;
 
   // Iterate in reverse
   for (auto iter = sortedEffectList.rbegin(); iter != sortedEffectList.rend();
@@ -925,7 +925,7 @@ static void ReduceEffectSet(EffectSet& aEffectSet) {
         effect.GetPropertySet().IsSubsetOf(setProperties)) {
       animation.Remove();
     } else if (animation.IsReplaceable()) {
-      setProperties |= effect.GetPropertySet();
+      setProperties.AddProperties(effect.GetPropertySet());
     }
   }
 }

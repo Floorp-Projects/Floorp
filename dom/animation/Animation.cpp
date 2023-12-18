@@ -868,10 +868,11 @@ void Animation::CommitStyles(ErrorResult& aRv) {
 
   // Set the animated styles
   bool changed = false;
-  nsCSSPropertyIDSet properties = keyframeEffect->GetPropertySet();
-  for (nsCSSPropertyID property : properties) {
+  const AnimatedPropertyIDSet& properties = keyframeEffect->GetPropertySet();
+  for (const AnimatedPropertyID& property : properties) {
+    // TODO(zrhoffman, bug 1846516): Handle custom properties
     RefPtr<StyleAnimationValue> computedValue =
-        Servo_AnimationValueMap_GetValue(animationValues.get(), property)
+        Servo_AnimationValueMap_GetValue(animationValues.get(), property.mID)
             .Consume();
     if (computedValue) {
       changed |= Servo_DeclarationBlock_SetPropertyToAnimationValue(
