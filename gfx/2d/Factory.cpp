@@ -52,6 +52,7 @@
 #  include "HelpersD2D.h"
 #  include "DXVA2Manager.h"
 #  include "ImageContainer.h"
+#  include "mozilla/gfx/D3D11Checks.h"
 #  include "mozilla/layers/LayersSurfaces.h"
 #  include "mozilla/layers/TextureD3D11.h"
 #  include "nsWindowsHelpers.h"
@@ -1296,40 +1297,33 @@ bool Factory::ReadbackTexture(uint8_t* aDestData, int32_t aDestStride,
     return false;
   }
 
-  RefPtr<IDXGIKeyedMutex> mutex;
-  HRESULT hr = aSrcTexture->QueryInterface(__uuidof(IDXGIKeyedMutex),
-                                           (void**)getter_AddRefs(mutex));
-  if (SUCCEEDED(hr) && mutex) {
-    hr = mutex->AcquireSync(0, 2000);
-    if (hr != S_OK) {
-      gfxWarning() << "Could not acquire DXGI surface lock in 2 seconds";
+  D3D11_TEXTURE2D_DESC srcDesc = {0};
+  RefPtr<ID3D11Texture2D> srcCpuTexture;
+  HRESULT hr;
+
+  {
+    RefPtr<IDXGIKeyedMutex> mutex;
+    hr = aSrcTexture->QueryInterface(__uuidof(IDXGIKeyedMutex),
+                                     (void**)getter_AddRefs(mutex));
+    layers::AutoTextureLock lock(__func__, mutex, hr, 2000);
+    if (NS_WARN_IF(!lock.Succeeded())) {
       return false;
     }
-  }
 
-  D3D11_TEXTURE2D_DESC srcDesc = {0};
-  aSrcTexture->GetDesc(&srcDesc);
-  srcDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
-  srcDesc.Usage = D3D11_USAGE_STAGING;
-  srcDesc.BindFlags = 0;
-  srcDesc.MiscFlags = 0;
-  srcDesc.MipLevels = 1;
-  RefPtr<ID3D11Texture2D> srcCpuTexture;
-  hr =
-      device->CreateTexture2D(&srcDesc, nullptr, getter_AddRefs(srcCpuTexture));
-  if (FAILED(hr)) {
-    gfxWarning() << "Could not create source texture for mapping";
-    if (mutex) {
-      mutex->ReleaseSync(0);
+    aSrcTexture->GetDesc(&srcDesc);
+    srcDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
+    srcDesc.Usage = D3D11_USAGE_STAGING;
+    srcDesc.BindFlags = 0;
+    srcDesc.MiscFlags = 0;
+    srcDesc.MipLevels = 1;
+    hr = device->CreateTexture2D(&srcDesc, nullptr,
+                                 getter_AddRefs(srcCpuTexture));
+    if (FAILED(hr)) {
+      gfxWarning() << "Could not create source texture for mapping";
+      return false;
     }
-    return false;
-  }
 
-  context->CopyResource(srcCpuTexture, aSrcTexture);
-
-  if (mutex) {
-    mutex->ReleaseSync(0);
-    mutex = nullptr;
+    context->CopyResource(srcCpuTexture, aSrcTexture);
   }
 
   D3D11_MAPPED_SUBRESOURCE srcMap;

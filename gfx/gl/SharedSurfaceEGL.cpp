@@ -110,7 +110,7 @@ void SharedSurface_EGLImage::ProducerReleaseImpl() {
   gl->fFinish();
 }
 
-void SharedSurface_EGLImage::ProducerReadAcquireImpl() {
+bool SharedSurface_EGLImage::ProducerReadAcquireImpl() {
   const auto& gle = GLContextEGL::Cast(mDesc.gl);
   const auto& egl = gle->mEgl;
   // Wait on the fence, because presumably we're going to want to read this
@@ -118,6 +118,7 @@ void SharedSurface_EGLImage::ProducerReadAcquireImpl() {
   if (mSync) {
     egl->fClientWaitSync(mSync, 0, LOCAL_EGL_FOREVER);
   }
+  return true;
 }
 
 Maybe<layers::SurfaceDescriptor> SharedSurface_EGLImage::ToSurfaceDescriptor() {

@@ -42,7 +42,8 @@ class SwapChainPresenter final {
 
   const auto& BackBuffer() const { return mBackBuffer; }
 
-  std::shared_ptr<SharedSurface> SwapBackBuffer(std::shared_ptr<SharedSurface>);
+  std::shared_ptr<SharedSurface> SwapBackBuffer(std::shared_ptr<SharedSurface>,
+                                                bool& aSuccess);
   GLuint Fb() const;
 };
 

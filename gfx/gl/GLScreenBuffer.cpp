@@ -60,9 +60,13 @@ UniquePtr<SwapChainPresenter> SwapChain::Acquire(
     mPool.pop();
   }
 
+  bool success = false;
   auto ret = MakeUnique<SwapChainPresenter>(*this);
-  const auto old = ret->SwapBackBuffer(surf);
+  const auto old = ret->SwapBackBuffer(surf, success);
   MOZ_ALWAYS_TRUE(!old);
+  if (NS_WARN_IF(!success)) {
+    return nullptr;
+  }
   return ret;
 }
 
@@ -89,7 +93,8 @@ SwapChainPresenter::~SwapChainPresenter() {
   MOZ_RELEASE_ASSERT(mSwapChain->mPresenter == this);
   mSwapChain->mPresenter = nullptr;
 
-  auto newFront = SwapBackBuffer(nullptr);
+  bool success;
+  auto newFront = SwapBackBuffer(nullptr, success);
   if (newFront) {
     mSwapChain->mPrevFrontBuffer = mSwapChain->mFrontBuffer;
     mSwapChain->mFrontBuffer = newFront;
@@ -97,7 +102,7 @@ SwapChainPresenter::~SwapChainPresenter() {
 }
 
 std::shared_ptr<SharedSurface> SwapChainPresenter::SwapBackBuffer(
-    std::shared_ptr<SharedSurface> back) {
+    std::shared_ptr<SharedSurface> back, bool& aSuccess) {
   if (mBackBuffer) {
     mBackBuffer->UnlockProd();
     mBackBuffer->ProducerRelease();
@@ -107,9 +112,14 @@ std::shared_ptr<SharedSurface> SwapChainPresenter::SwapBackBuffer(
   mBackBuffer = back;
   if (mBackBuffer) {
     mBackBuffer->WaitForBufferOwnership();
-    mBackBuffer->ProducerAcquire();
+    if (NS_WARN_IF(!mBackBuffer->ProducerAcquire())) {
+      mBackBuffer = nullptr;
+      aSuccess = false;
+      return old;
+    }
     mBackBuffer->LockProd();
   }
+  aSuccess = true;
   return old;
 }
 
@@ -128,7 +138,8 @@ SwapChain::SwapChain() = default;
 SwapChain::~SwapChain() {
   if (mPresenter) {
     // Out of order destruction, but ok.
-    (void)mPresenter->SwapBackBuffer(nullptr);
+    bool success;
+    (void)mPresenter->SwapBackBuffer(nullptr, success);
     mPresenter->mSwapChain = nullptr;
     mPresenter = nullptr;
   }

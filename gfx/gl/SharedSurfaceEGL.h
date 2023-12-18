@@ -45,10 +45,10 @@ class SharedSurface_EGLImage final : public SharedSurface {
   virtual void LockProdImpl() override {}
   virtual void UnlockProdImpl() override {}
 
-  virtual void ProducerAcquireImpl() override {}
+  virtual bool ProducerAcquireImpl() override { return true; }
   virtual void ProducerReleaseImpl() override;
 
-  virtual void ProducerReadAcquireImpl() override;
+  virtual bool ProducerReadAcquireImpl() override;
   virtual void ProducerReadReleaseImpl() override{};
 
   Maybe<layers::SurfaceDescriptor> ToSurfaceDescriptor() override;
@@ -96,7 +96,7 @@ class SharedSurface_SurfaceTexture final : public SharedSurface {
   virtual void LockProdImpl() override;
   virtual void UnlockProdImpl() override;
 
-  virtual void ProducerAcquireImpl() override {}
+  virtual bool ProducerAcquireImpl() override { return true; }
   virtual void ProducerReleaseImpl() override {}
   virtual void ProducerReadReleaseImpl() override;
 
