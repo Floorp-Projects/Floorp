@@ -30,6 +30,36 @@ using FFmpegBitRate = int;
 constexpr size_t FFmpegErrorMaxStringSize = 64;
 #endif
 
+struct H264Profile {
+  int mValue;
+  const char* mString;
+};
+
+static const H264Profile H264Profiles[]{{FF_PROFILE_H264_BASELINE, "baseline"},
+                                        {FF_PROFILE_H264_MAIN, "main"},
+                                        {FF_PROFILE_H264_EXTENDED, nullptr},
+                                        {FF_PROFILE_H264_HIGH, "high"}};
+
+static mozilla::Maybe<H264Profile> GetH264Profile(
+    const mozilla::H264_PROFILE& aProfile) {
+  switch (aProfile) {
+    case mozilla::H264_PROFILE::H264_PROFILE_UNKNOWN:
+      return mozilla::Nothing();
+    case mozilla::H264_PROFILE::H264_PROFILE_BASE:
+      return mozilla::Some(H264Profiles[0]);
+    case mozilla::H264_PROFILE::H264_PROFILE_MAIN:
+      return mozilla::Some(H264Profiles[1]);
+    case mozilla::H264_PROFILE::H264_PROFILE_EXTENDED:
+      return mozilla::Some(H264Profiles[2]);
+    case mozilla::H264_PROFILE::H264_PROFILE_HIGH:
+      return mozilla::Some(H264Profiles[3]);
+    default:
+      break;
+  }
+  MOZ_ASSERT_UNREACHABLE("undefined profile");
+  return mozilla::Nothing();
+}
+
 #if LIBAVCODEC_VERSION_MAJOR < 54
 using FFmpegPixelFormat = enum PixelFormat;
 const FFmpegPixelFormat FFMPEG_PIX_FMT_NONE = FFmpegPixelFormat::PIX_FMT_NONE;
@@ -390,6 +420,27 @@ MediaResult FFmpegVideoEncoder<LIBAV_VER>::InitInternal() {
     // Explicitly ask encoder do not keep in flight at any one time for
     // lookahead purposes.
     mLib->av_opt_set(mCodecContext->priv_data, "lag-in-frames", "0", 0);
+  }
+  if (mConfig.mCodecSpecific) {
+    if (mConfig.mCodecSpecific->is<H264Specific>()) {
+      const H264Specific& specific = mConfig.mCodecSpecific->as<H264Specific>();
+
+      // Set profile.
+      Maybe<ffmpeg::H264Profile> profile =
+          ffmpeg::GetH264Profile(specific.mProfile);
+      if (!profile) {
+        FFMPEGV_LOG("failed to get h264 profile");
+        return MediaResult(NS_ERROR_DOM_MEDIA_NOT_SUPPORTED_ERR,
+                           RESULT_DETAIL("H264 profile is unknown"));
+      }
+      mCodecContext->profile = profile->mValue;
+      if (profile->mString) {
+        mLib->av_opt_set(mCodecContext->priv_data, "profile", profile->mString,
+                         0);
+      }
+
+      // TODO: Set level.
+    }
   }
   // TODO: keyint_min, max_b_frame?
   // TODO: VPX specific settings
