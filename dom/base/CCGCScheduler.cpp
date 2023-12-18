@@ -637,9 +637,10 @@ void CCGCScheduler::EnsureGCRunner(TimeDuration aDelay) {
     return;
   }
 
-  TimeDuration minimumBudget = nsRefreshDriver::IsInHighRateMode()
-                                   ? TimeDuration::FromMilliseconds(1)
-                                   : mActiveIntersliceGCBudget;
+  TimeDuration minimumBudget = TimeDuration::FromMilliseconds(
+      std::max(nsRefreshDriver::HighRateMultiplier() *
+                   mActiveIntersliceGCBudget.ToMilliseconds(),
+               1.0));
 
   // Wait at most the interslice GC delay before forcing a run.
   mGCRunner = IdleTaskRunner::Create(
@@ -702,9 +703,8 @@ void CCGCScheduler::KillGCRunner() {
 void CCGCScheduler::EnsureCCRunner(TimeDuration aDelay, TimeDuration aBudget) {
   MOZ_ASSERT(!mDidShutdown);
 
-  TimeDuration minimumBudget = nsRefreshDriver::IsInHighRateMode()
-                                   ? TimeDuration::FromMilliseconds(1)
-                                   : aBudget;
+  TimeDuration minimumBudget = TimeDuration::FromMilliseconds(std::max(
+      nsRefreshDriver::HighRateMultiplier() * aBudget.ToMilliseconds(), 1.0));
 
   if (!mCCRunner) {
     mCCRunner = IdleTaskRunner::Create(
