@@ -473,7 +473,7 @@ nsLiteralCString nsNavHistory::GetTagsSqlFragment(const uint16_t aQueryType,
     return "WITH tagged(place_id, tags) AS (VALUES(NULL, NULL)) "_ns;
   }
   return "WITH tagged(place_id, tags) AS ( "
-         "  SELECT b.fk, group_concat(p.title) "
+         "  SELECT b.fk, group_concat(p.title ORDER BY p.title) "
          "  FROM moz_bookmarks b "
          "  JOIN moz_bookmarks p ON p.id = b.parent "
          "  JOIN moz_bookmarks g ON g.id = p.parent "

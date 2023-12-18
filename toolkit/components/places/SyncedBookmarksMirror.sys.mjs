@@ -2237,7 +2237,7 @@ class BookmarkObserverRecorder {
               IFNULL(h.hidden, 0) AS hidden,
               IFNULL(h.visit_count, 0) AS visit_count,
               h.last_visit_date,
-              (SELECT group_concat(pp.title)
+              (SELECT group_concat(pp.title ORDER BY pp.title)
                FROM moz_bookmarks bb
                JOIN moz_bookmarks pp ON pp.id = bb.parent
                JOIN moz_bookmarks gg ON gg.id = pp.parent
@@ -2304,7 +2304,7 @@ class BookmarkObserverRecorder {
               IFNULL(h.frecency, 0) AS frecency, IFNULL(h.hidden, 0) AS hidden,
               IFNULL(h.visit_count, 0) AS visit_count,
               b.dateAdded, h.last_visit_date,
-              (SELECT group_concat(pp.title)
+              (SELECT group_concat(pp.title ORDER BY pp.title)
                FROM moz_bookmarks bb
                JOIN moz_bookmarks pp ON pp.id = bb.parent
                JOIN moz_bookmarks gg ON gg.id = pp.parent
