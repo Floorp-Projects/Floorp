@@ -731,6 +731,11 @@ void nsTableWrapperFrame::Reflow(nsPresContext* aPresContext,
   // it would break 'auto' margins), but this effectively does that.
   CreateReflowInputForInnerTable(aPresContext, InnerTableFrame(), aOuterRI,
                                  innerRI, contentBoxISize);
+
+  // First reflow the caption.
+  ReflowOutput captionMet(wm);
+  LogicalSize captionSize(wm);
+  LogicalMargin captionMargin(wm);
   if (captionSide) {
     // It's good that CSS 2.1 says not to include margins, since we can't, since
     // they already been converted so they exactly fill the available isize
@@ -740,20 +745,13 @@ void nsTableWrapperFrame::Reflow(nsPresContext* aPresContext,
         innerRI->ComputedSizeWithBorderPadding(wm).ISize(wm);
     CreateReflowInputForCaption(aPresContext, mCaptionFrames.FirstChild(),
                                 aOuterRI, captionRI, innerBorderISize);
-  }
 
-  // First reflow the caption.
-  Maybe<ReflowOutput> captionMet;
-  LogicalSize captionSize(wm);
-  LogicalMargin captionMargin(wm);
-  if (captionSide) {
-    captionMet.emplace(wm);
     // We intentionally don't merge capStatus into aStatus, since we currently
     // can't handle caption continuations, but we probably should.
     nsReflowStatus capStatus;
     ReflowChild(aPresContext, mCaptionFrames.FirstChild(), *captionRI,
-                *captionMet, capStatus);
-    captionSize = captionMet->Size(wm);
+                captionMet, capStatus);
+    captionSize = captionMet.Size(wm);
     captionMargin = captionRI->ComputedLogicalMargin(wm);
     nscoord bSizeOccupiedByCaption =
         captionSize.BSize(wm) + captionMargin.BStartEnd(wm);
@@ -792,7 +790,7 @@ void nsTableWrapperFrame::Reflow(nsPresContext* aPresContext,
     LogicalPoint captionOrigin(wm);
     GetCaptionOrigin(*captionSide, innerSize, captionSize, captionMargin,
                      captionOrigin, wm);
-    FinishReflowChild(mCaptionFrames.FirstChild(), aPresContext, *captionMet,
+    FinishReflowChild(mCaptionFrames.FirstChild(), aPresContext, captionMet,
                       captionRI.ptr(), wm, captionOrigin, containerSize,
                       ReflowChildFlags::ApplyRelativePositioning);
     captionRI.reset();
