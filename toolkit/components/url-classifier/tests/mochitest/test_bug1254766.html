@@ -191,6 +191,9 @@ function testUpdateCompletionsAfterReload() {
   return Promise.resolve()
     .then(addCompletionToDB)
     .then(classifierHelper.reloadDatabase)
+    // Call getTables to ensure the DB is fully reloaded before we load the test
+    // frame.
+    .then(classifierHelper.getTables)
     .then(loadTestFrame)
     .then(() => {
       ok(gCurGethashCounter == gPreGethashCounter, "Gethash request is not triggered.");
@@ -217,6 +220,9 @@ function testGethashCompletionsAfterReload() {
       ok(gCurGethashCounter == gPreGethashCounter, "Gethash request is not triggered.");
 })
     .then(classifierHelper.reloadDatabase)
+    // Call getTables to ensure the DB is fully reloaded before we load the test
+    // frame.
+    .then(classifierHelper.getTables)
     .then(loadTestFrame)
     .then(() => {
        ok(gCurGethashCounter > gPreGethashCounter, "Gethash request is triggered.");
