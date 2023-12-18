@@ -124,7 +124,9 @@ bool AnimationValue::IsOffsetPathUrl() const {
 MatrixScales AnimationValue::GetScaleValue(const nsIFrame* aFrame) const {
   using namespace nsStyleTransformMatrix;
 
-  switch (Servo_AnimationValue_GetPropertyId(mServo)) {
+  AnimatedPropertyID property(eCSSProperty_UNKNOWN);
+  Servo_AnimationValue_GetPropertyId(mServo, &property);
+  switch (property.mID) {
     case eCSSProperty_scale: {
       const StyleScale& scale = GetScaleProperty();
       return scale.IsNone()
@@ -159,7 +161,7 @@ void AnimationValue::SerializeSpecifiedValue(
     const AnimatedPropertyID& aProperty,
     const StylePerDocumentStyleData* aRawData, nsACString& aString) const {
   MOZ_ASSERT(mServo);
-  Servo_AnimationValue_Serialize(mServo, aProperty.mID, aRawData, &aString);
+  Servo_AnimationValue_Serialize(mServo, &aProperty, aRawData, &aString);
 }
 
 bool AnimationValue::IsInterpolableWith(const AnimatedPropertyID& aProperty,
@@ -211,8 +213,9 @@ AnimationValue AnimationValue::FromString(nsCSSPropertyID aProperty,
       nsComputedDOMStyle::GetComputedStyle(aElement);
   MOZ_ASSERT(computedStyle);
 
+  AnimatedPropertyID property(aProperty);
   RefPtr<StyleLockedDeclarationBlock> declarations =
-      ServoCSSParser::ParseProperty(aProperty, aValue,
+      ServoCSSParser::ParseProperty(property, aValue,
                                     ServoCSSParser::GetParsingEnvironment(doc),
                                     StyleParsingMode::DEFAULT);
 

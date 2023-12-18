@@ -22,6 +22,7 @@ class RefPtr;
 
 namespace mozilla {
 
+struct AnimatedPropertyID;
 class ServoStyleSet;
 struct URLExtraData;
 struct StyleFontFamilyList;
@@ -92,6 +93,10 @@ class ServoCSSParser {
    */
   static already_AddRefed<StyleLockedDeclarationBlock> ParseProperty(
       nsCSSPropertyID aProperty, const nsACString& aValue,
+      const ParsingEnvironment& aParsingEnvironment,
+      const StyleParsingMode& aParsingMode);
+  static already_AddRefed<StyleLockedDeclarationBlock> ParseProperty(
+      const AnimatedPropertyID& aProperty, const nsACString& aValue,
       const ParsingEnvironment& aParsingEnvironment,
       const StyleParsingMode& aParsingMode);
 

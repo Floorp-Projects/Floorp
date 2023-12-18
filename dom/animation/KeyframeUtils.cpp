@@ -334,7 +334,7 @@ nsTArray<AnimationProperty> KeyframeUtils::GetAnimationPropertiesFromKeyframes(
                  "Invalid computed offset");
       KeyframeValueEntry* entry = entries.AppendElement();
       entry->mOffset = frame.mComputedOffset;
-      entry->mProperty.mID = value.mProperty;
+      entry->mProperty = value.mProperty;
       entry->mValue = value.mValue;
       entry->mTimingFunction = frame.mTimingFunction;
       // The following assumes that CompositeOperation is a strict subset of
@@ -358,11 +358,7 @@ bool KeyframeUtils::IsAnimatableProperty(const AnimatedPropertyID& aProperty) {
   if (aProperty.mID == eCSSProperty_display) {
     return false;
   }
-  // TODO(bug 1846516): handle custom property.
-  if (!aProperty.IsCustom()) {
-    return false;
-  }
-  return Servo_Property_IsAnimatable(aProperty.mID);
+  return Servo_Property_IsAnimatable(&aProperty);
 }
 
 // ------------------------------------------------------------------
@@ -698,11 +694,11 @@ static Maybe<PropertyValuePair> MakePropertyValuePair(
   ServoCSSParser::ParsingEnvironment env =
       ServoCSSParser::GetParsingEnvironment(aDocument);
   RefPtr<StyleLockedDeclarationBlock> servoDeclarationBlock =
-      ServoCSSParser::ParseProperty(aProperty.mID, aStringValue, env,
+      ServoCSSParser::ParseProperty(aProperty, aStringValue, env,
                                     StyleParsingMode::DEFAULT);
 
   if (servoDeclarationBlock) {
-    result.emplace(aProperty.mID, std::move(servoDeclarationBlock));
+    result.emplace(aProperty, std::move(servoDeclarationBlock));
   } else {
     ReportInvalidPropertyValueToConsole(aProperty, aStringValue, aDocument);
   }
@@ -741,7 +737,7 @@ static bool HasValidOffsets(const nsTArray<Keyframe>& aKeyframes) {
  *              a shorthand property.
  */
 static void MarkAsComputeValuesFailureKey(PropertyValuePair& aPair) {
-  MOZ_ASSERT(nsCSSProps::IsShorthand(aPair.mProperty),
+  MOZ_ASSERT(nsCSSProps::IsShorthand(aPair.mProperty.mID),
              "Only shorthand property values can be marked as failure values");
 
   aPair.mSimulateComputeValuesFailure = true;

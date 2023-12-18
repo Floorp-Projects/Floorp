@@ -15,6 +15,7 @@
 #include "mozilla/ServoBindingTypes.h"
 #include "mozilla/ServoStyleConsts.h"  // Servo_AnimationValue_Dump
 #include "mozilla/DbgMacro.h"
+#include "mozilla/AnimatedPropertyID.h"
 #include "nsStringFwd.h"
 #include "nsStringBuffer.h"
 #include "nsCoord.h"
@@ -131,7 +132,7 @@ inline std::ostream& operator<<(std::ostream& aOut,
 }
 
 struct PropertyStyleAnimationValuePair {
-  nsCSSPropertyID mProperty;
+  AnimatedPropertyID mProperty;
   AnimationValue mValue;
 };
 }  // namespace mozilla

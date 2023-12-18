@@ -681,11 +681,11 @@ double Gecko_GetPositionInSegment(const AnimationPropertySegment* aSegment,
 }
 
 const StyleAnimationValue* Gecko_AnimationGetBaseStyle(
-    const RawServoAnimationValueTable* aBaseStyles, nsCSSPropertyID aProperty) {
-  auto base = reinterpret_cast<
-      const nsRefPtrHashtable<nsUint32HashKey, StyleAnimationValue>*>(
-      aBaseStyles);
-  return base->GetWeak(aProperty);
+    const RawServoAnimationValueTable* aBaseStyles,
+    const mozilla::AnimatedPropertyID* aProperty) {
+  const auto* base = reinterpret_cast<const nsRefPtrHashtable<
+      nsGenericHashKey<AnimatedPropertyID>, StyleAnimationValue>*>(aBaseStyles);
+  return base->GetWeak(*aProperty);
 }
 
 void Gecko_FillAllImageLayers(nsStyleImageLayers* aLayers, uint32_t aMaxLen) {
@@ -1161,7 +1161,8 @@ PropertyValuePair* Gecko_AppendPropertyValuePair(
   MOZ_ASSERT(aProperties);
   MOZ_ASSERT(aProperty == eCSSPropertyExtra_variable ||
              !nsCSSProps::PropHasFlags(aProperty, CSSPropFlags::IsLogical));
-  return aProperties->AppendElement(PropertyValuePair{aProperty});
+  mozilla::AnimatedPropertyID property(aProperty);
+  return aProperties->AppendElement(PropertyValuePair{property});
 }
 
 void Gecko_GetComputedURLSpec(const StyleComputedUrl* aURL, nsCString* aOut) {

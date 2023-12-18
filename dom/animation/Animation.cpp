@@ -870,9 +870,8 @@ void Animation::CommitStyles(ErrorResult& aRv) {
   bool changed = false;
   const AnimatedPropertyIDSet& properties = keyframeEffect->GetPropertySet();
   for (const AnimatedPropertyID& property : properties) {
-    // TODO(zrhoffman, bug 1846516): Handle custom properties
     RefPtr<StyleAnimationValue> computedValue =
-        Servo_AnimationValueMap_GetValue(animationValues.get(), property.mID)
+        Servo_AnimationValueMap_GetValue(animationValues.get(), &property)
             .Consume();
     if (computedValue) {
       changed |= Servo_DeclarationBlock_SetPropertyToAnimationValue(
