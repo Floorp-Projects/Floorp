@@ -13,9 +13,8 @@ use super::generated::{
 };
 use super::property_declaration::PropertyDeclarationId;
 use super::LonghandIdSetIterator;
-use crate::applicable_declarations::CascadePriority;
 use crate::context::QuirksMode;
-use crate::custom_properties::{self, ComputedCustomProperties, CustomPropertiesBuilder};
+use crate::custom_properties;
 use crate::error_reporting::{ContextualParseError, ParseErrorReporter};
 use crate::parser::ParserContext;
 use crate::properties::{
@@ -23,13 +22,12 @@ use crate::properties::{
     StyleBuilder,
 };
 use crate::rule_cache::RuleCacheConditions;
-use crate::rule_tree::CascadeLevel;
 use crate::selector_map::PrecomputedHashSet;
 use crate::selector_parser::SelectorImpl;
 use crate::shared_lock::Locked;
 use crate::str::{CssString, CssStringWriter};
 use crate::stylesheets::container_rule::ContainerSizeQuery;
-use crate::stylesheets::{layer_rule::LayerOrder, CssRuleType, Origin, UrlExtraData};
+use crate::stylesheets::{CssRuleType, Origin, UrlExtraData};
 use crate::stylist::Stylist;
 use crate::values::computed::Context;
 use cssparser::{
@@ -307,8 +305,6 @@ pub struct AnimationValueIterator<'a, 'cx, 'cx_a: 'cx> {
     iter: DeclarationImportanceIterator<'a>,
     context: &'cx mut Context<'cx_a>,
     default_values: &'a ComputedValues,
-    /// Custom properties in a keyframe if exists.
-    extra_custom_properties: Option<&'a crate::custom_properties::ComputedCustomProperties>,
 }
 
 impl<'a, 'cx, 'cx_a: 'cx> AnimationValueIterator<'a, 'cx, 'cx_a> {
@@ -316,13 +312,11 @@ impl<'a, 'cx, 'cx_a: 'cx> AnimationValueIterator<'a, 'cx, 'cx_a> {
         declarations: &'a PropertyDeclarationBlock,
         context: &'cx mut Context<'cx_a>,
         default_values: &'a ComputedValues,
-        extra_custom_properties: Option<&'a crate::custom_properties::ComputedCustomProperties>,
     ) -> AnimationValueIterator<'a, 'cx, 'cx_a> {
         AnimationValueIterator {
             iter: declarations.declaration_importance_iter(),
             context,
             default_values,
-            extra_custom_properties,
         }
     }
 }
@@ -341,7 +335,6 @@ impl<'a, 'cx, 'cx_a: 'cx> Iterator for AnimationValueIterator<'a, 'cx, 'cx_a> {
             let animation = AnimationValue::from_declaration(
                 decl,
                 &mut self.context,
-                self.extra_custom_properties,
                 self.default_values,
             );
 
@@ -428,9 +421,8 @@ impl PropertyDeclarationBlock {
         &'a self,
         context: &'cx mut Context<'cx_a>,
         default_values: &'a ComputedValues,
-        extra_custom_properties: Option<&'a crate::custom_properties::ComputedCustomProperties>,
     ) -> AnimationValueIterator<'a, 'cx, 'cx_a> {
-        AnimationValueIterator::new(self, context, default_values, extra_custom_properties)
+        AnimationValueIterator::new(self, context, default_values)
     }
 
     /// Returns whether this block contains any declaration with `!important`.
@@ -919,7 +911,6 @@ impl PropertyDeclarationBlock {
         property: &PropertyId,
         dest: &mut CssStringWriter,
         computed_values: Option<&ComputedValues>,
-        custom_properties_block: Option<&PropertyDeclarationBlock>,
         stylist: &Stylist,
     ) -> fmt::Result {
         if let Ok(shorthand) = property.as_shorthand() {
@@ -950,15 +941,6 @@ impl PropertyDeclarationBlock {
 
         if let Some(cv) = computed_values {
             context.builder.custom_properties = cv.custom_properties.clone();
-
-            // If there are extra custom properties for this declaration block,
-            // factor them in too.
-            if let Some(block) = custom_properties_block {
-                // FIXME(emilio): This is not super-efficient here, and all this
-                // feels like a hack anyway...
-                context.builder.custom_properties =
-                    block.cascade_custom_properties(stylist, &context);
-            }
         };
 
         match (declaration, computed_values) {
@@ -1012,31 +994,6 @@ impl PropertyDeclarationBlock {
         self.declarations.iter().any(|decl| {
             decl.id().is_or_is_longhand_of(property) && decl.get_css_wide_keyword().is_some()
         })
-    }
-
-    /// Returns a custom properties map which is the result of cascading custom
-    /// properties in this declaration block along with context's custom
-    /// properties.
-    pub fn cascade_custom_properties(
-        &self,
-        stylist: &Stylist,
-        context: &Context,
-    ) -> ComputedCustomProperties {
-        let mut builder = CustomPropertiesBuilder::new(stylist, context);
-
-        for declaration in self.normal_declaration_iter() {
-            if let PropertyDeclaration::Custom(ref declaration) = *declaration {
-                builder.cascade(
-                    declaration,
-                    CascadePriority::new(
-                        CascadeLevel::same_tree_author_normal(),
-                        LayerOrder::root(),
-                    ),
-                );
-            }
-        }
-
-        builder.build()
     }
 
     /// Like the method on ToCss, but without the type parameter to avoid

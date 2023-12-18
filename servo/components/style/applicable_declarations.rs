@@ -125,6 +125,11 @@ impl CascadePriority {
     pub fn important(&self) -> Self {
         Self::new(self.cascade_level().important(), self.layer_order())
     }
+
+    /// The same tree, in author origin, at the root layer.
+    pub fn same_tree_author_normal_at_root_layer() -> Self {
+        Self::new(CascadeLevel::same_tree_author_normal(), LayerOrder::root())
+    }
 }
 
 /// A property declaration together with its precedence among rules of equal

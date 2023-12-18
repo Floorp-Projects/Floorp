@@ -1253,8 +1253,8 @@ void KeyframeEffect::GetKeyframes(JSContext* aCx, nsTArray<JSObject*>& aResult,
   // know what custom property values to provide.
   RefPtr<const ComputedStyle> computedStyle;
   if (isCSSAnimation) {
-    // The following will flush style but that's ok since if you update
-    // a variable's computed value, you expect to see that updated value in the
+    // The following will flush style but that's ok since if you update a
+    // variable's computed value, you expect to see that updated value in the
     // result of getKeyframes().
     //
     // If we don't have a target, the following will return null. In that case
@@ -1297,12 +1297,10 @@ void KeyframeEffect::GetKeyframes(JSContext* aCx, nsTArray<JSObject*>& aResult,
       if (propertyValue.mServoDeclarationBlock) {
         Servo_DeclarationBlock_SerializeOneValue(
             propertyValue.mServoDeclarationBlock, &propertyValue.mProperty,
-            &stringValue, computedStyle, nullptr, rawData);
-      } else {
-        if (auto* value = mBaseValues.GetWeak(propertyValue.mProperty)) {
-          Servo_AnimationValue_Serialize(value, &propertyValue.mProperty,
-                                         rawData, &stringValue);
-        }
+            &stringValue, computedStyle, rawData);
+      } else if (auto* value = mBaseValues.GetWeak(propertyValue.mProperty)) {
+        Servo_AnimationValue_Serialize(value, &propertyValue.mProperty, rawData,
+                                       &stringValue);
       }
 
       // Basically, we need to do the mapping:
@@ -1314,12 +1312,10 @@ void KeyframeEffect::GetKeyframes(JSContext* aCx, nsTArray<JSObject*>& aResult,
       // https://drafts.csswg.org/web-animations/#property-name-conversion
       const char* name = nullptr;
       nsAutoCString customName;
-      nsAutoCString identifier;
       switch (propertyValue.mProperty.mID) {
         case nsCSSPropertyID::eCSSPropertyExtra_variable:
           customName.Append("--");
-          propertyValue.mProperty.mCustomName->ToUTF8String(identifier);
-          customName.Append(identifier);
+          customName.Append(nsAtomCString(propertyValue.mProperty.mCustomName));
           name = customName.get();
           break;
         case nsCSSPropertyID::eCSSProperty_offset:

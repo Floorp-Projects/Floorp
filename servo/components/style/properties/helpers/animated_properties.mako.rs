@@ -275,7 +275,6 @@ impl AnimationValue {
     pub fn from_declaration(
         decl: &PropertyDeclaration,
         context: &mut Context,
-        extra_custom_properties: Option< &crate::custom_properties::ComputedCustomProperties>,
         initial: &ComputedValues,
     ) -> Option<Self> {
         use super::PropertyDeclarationVariantRepr;
@@ -385,7 +384,7 @@ impl AnimationValue {
             PropertyDeclaration::WithVariables(ref declaration) => {
                 let mut cache = Default::default();
                 let substituted = {
-                    let custom_properties = extra_custom_properties.unwrap_or(&context.style().custom_properties());
+                    let custom_properties = &context.style().custom_properties();
 
                     debug_assert!(
                         context.builder.stylist.is_some(),
@@ -402,7 +401,6 @@ impl AnimationValue {
                 return AnimationValue::from_declaration(
                     &substituted,
                     context,
-                    extra_custom_properties,
                     initial,
                 )
             },

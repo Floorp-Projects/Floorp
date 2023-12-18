@@ -24,6 +24,7 @@ struct StyleLockedDeclarationBlock;
 struct PropertyValuePair {
   explicit PropertyValuePair(const AnimatedPropertyID& aProperty)
       : mProperty(aProperty) {}
+
   PropertyValuePair(const AnimatedPropertyID& aProperty,
                     RefPtr<StyleLockedDeclarationBlock>&& aValue)
       : mProperty(aProperty), mServoDeclarationBlock(std::move(aValue)) {
