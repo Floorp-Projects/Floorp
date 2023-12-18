@@ -408,9 +408,6 @@ function loadNSSCertinfo(extraCertificates) {
   let certNameToSKD = {};
   let certSKDToName = {};
   for (let cert of allCerts) {
-    if (!cert.isBuiltInRoot) {
-      continue;
-    }
     let name = cert.displayName;
     let SKD = cert.sha256SubjectPublicKeyInfoDigest;
     certNameToSKD[name] = SKD;
