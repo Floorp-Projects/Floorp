@@ -1,13 +1,5 @@
 # Messaging System & Onboarding Telemetry
 
-For historical reasons, the current (but soon-to-be legacy) Messaging System & Onboarding
-telemetry documentation is mixed in with the Activity Stream documentation. All
-except the main documentation is at [metrics we
-collect](/browser/components/newtab/docs/v2-system-addon/data_events.md) and the
-[data dictionary](/browser/components/newtab/docs/v2-system-addon/data_dictionary.md).
-
-## Migration to Glean
-
 Code all over the messaging system passes JSON ping objects up to a few
 central spots. It may be [annotated with
 attribution](https://searchfox.org/mozilla-central/search?q=symbol:AboutWelcomeTelemetry%23_maybeAttachAttribution&redirect=false)
@@ -15,17 +7,14 @@ along the way, and/or adjusted by some [policy
 routines](https://searchfox.org/mozilla-central/search?q=symbol:TelemetryFeed%23createASRouterEvent&redirect=false)
 before it's sent. [A version of the JSON that's been transformed slightly further is sent to
 Glean](https://searchfox.org/mozilla-central/search?q=.submitGleanPingForPing&path=*.jsm&case=false&regexp=false).
-The original annotated, policy-abiding JSON is sent to PingCentre immediately
-after. After more validation and usage of Glean data has happened, we'll [stop
-sending the data to PingCentre entirely](https://bugzilla.mozilla.org/show_bug.cgi?id=1849006).
 
 ## Adding or changing telemetry
 
-For now, do the same stuff we've always done in OMC: follow the [process in
+Follow the [process in
 the Activity Stream telemetry
-document](/browser/components/newtab/docs/v2-system-addon/telemetry.md) with one
-exception: avoid adding any new nested objects, as these end up being flattened
-or stringified before being sent to glean.  Note that when you need to add new metrics
+document](/browser/components/newtab/docs/v2-system-addon/telemetry.md),
+and avoid adding any new nested objects, as these end up being flattened
+or stringified before being sent to Glean.  Note that when you need to add new metrics
 (i.e. JSON keys), they MUST to be
 [added](https://mozilla.github.io/glean/book/user/metrics/adding-new-metrics.html) to
 [browser/components/newtab/metrics.yaml](https://searchfox.org/mozilla-central/source/browser/components/newtab/metrics.yaml)

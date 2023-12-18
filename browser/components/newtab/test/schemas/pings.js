@@ -5,7 +5,6 @@ import {
 import Joi from "joi-browser";
 
 export const baseKeys = {
-  // client_id will be set by PingCentre if it doesn't exist.
   client_id: Joi.string().optional(),
   addon_version: Joi.string().required(),
   locale: Joi.string().required(),
