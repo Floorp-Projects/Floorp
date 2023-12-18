@@ -98,21 +98,28 @@
           <menuitem value="1" data-l10n-id="newtab-background-random-image" />
           <menuitem value="2" data-l10n-id="newtab-background-gradation" />
           <menuitem value="3" data-l10n-id="newtab-background-selected-image" />
+          <menuitem value="4" data-l10n-id="newtab-background-selected-one-image" />
           <menuitem value="0" data-l10n-id="newtab-background-not-background" />
         </menupopup>
       </menulist>
     </hbox>
-    <label data-l10n-id="newtab-background-folder" style="margin-inline-end:1em;" class="pictureFolderDisplay"/>
-    <html:input id="pictureFolder" type="text" readonly="readonly" class="pictureFolderDisplay"/>
-    <hbox class="pictureFolderDisplay">
+    <label data-l10n-id="newtab-background-folder" style="margin-inline-end:1em;" displayBackgroundType="3"/>
+    <html:input id="pictureFolder" type="text" readonly="readonly" displayBackgroundType="3"/>
+    <hbox displayBackgroundType="3">
       <button id="openImagesFolder" class="accessory-button" data-l10n-id="newtab-background-folder-open" style="-moz-box-flex:1"/>
       <button id="reloadImages" class="accessory-button" data-l10n-id="newtab-background-folder-reload" style="-moz-box-flex:1"/>
       <button id="resetFolder" class="accessory-button" data-l10n-id="newtab-background-folder-default" style="-moz-box-flex:1"/>
       <button id="chooseImagesFolder" class="accessory-button" data-l10n-id="download-choose-folder" style="-moz-box-flex:1"/>
     </hbox>
 
-    <label data-l10n-id="newtab-background-extensions" class="pictureFolderDisplay"/>
-    <hbox style="-moz-box-align:center;" class="pictureFolderDisplay">  
+    <label data-l10n-id="newtab-background-image" style="margin-inline-end:1em;" displayBackgroundType="4"/>
+    <hbox>
+    <html:input id="picturePath" type="text" readonly="readonly" displayBackgroundType="4" style="flex-grow:1;"/>
+    <button id="chooseImagePath" class="accessory-button" data-l10n-id="newtab-choose-image" style="-moz-box-flex:1"/>
+  </hbox>
+
+    <label data-l10n-id="newtab-background-extensions" displayBackgroundType="3"/>
+    <hbox style="-moz-box-align:center;" displayBackgroundType="3">
       <html:input id="pictureExtensions" type="text" style="-moz-box-flex:1"/>
       <button id="resetExtensions" class="accessory-button" data-l10n-id="newtab-background-folder-default"/>
       <button id="saveExtensions" class="accessory-button" data-l10n-id="bookmark-panel-save-button"/>

@@ -10,20 +10,20 @@
     z-index: -1 !important;
     animation: fadeIn 3.7s ease 0s 1 normal !important;
   }
-  
+
   @keyframes fadeIn { 
     0% {opacity: 0.1 !important} 
     100% {opacity: 0.8 !important}
   }
   
-  .not_background,.not_background~#unsplash,.gradation~#unsplash,.selected_folder~#unsplash{
+  .not_background,:is(.not_background,.gradation,.selected_folder,.selected_image)~#unsplash{
     display: none !important;
   }
   
-  .random_image,.selected_folder{
+  .random_image,.selected_folder,.selected_image{
   background-color:rgb(0,0,0);
   }
-  .random_image > #background,.selected_folder > #background{
+  :is(.random_image,.selected_folder,.selected_image ) > #background{
     background-image: var(--background-url);
   opacity: 0.8 !important;
   }

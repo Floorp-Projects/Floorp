@@ -230,6 +230,9 @@ export class BaseContent extends React.PureComponent {
           case 3:
             Background_ClassName = "selected_folder"
             break;
+            case 4:
+              Background_ClassName = "selected_image"
+              break;
         default:
           Background_ClassName = "not_background"
           break;
@@ -237,7 +240,7 @@ export class BaseContent extends React.PureComponent {
 
     return (
       <div className={prefs["floorp.newtab.backdrop.blur.disable"] ? "" : "floorp-backdrop-blur-enable"}>
-        <Background className={Background_ClassName} imageList={prefs["backgroundPaths"]} getImg={this.getImageSend.bind(this)} pref={prefs} />
+        <Background className={Background_ClassName}  getImg={this.getImageSend.bind(this)} pref={prefs} />
         <CustomizeMenu
           onClose={this.closeCustomizationMenu}
           onOpen={this.openCustomizationMenu}
