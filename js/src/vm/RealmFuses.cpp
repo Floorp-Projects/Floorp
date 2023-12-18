@@ -7,20 +7,12 @@
 
 #include "vm/GlobalObject.h"
 #include "vm/NativeObject.h"
+#include "vm/ObjectOperations.h"
 #include "vm/Realm.h"
 #include "vm/SelfHosting.h"
 
-void js::ArrayPrototypeIteratorFuse::popFuse(JSContext* cx,
-                                             RealmFuses& realmFuses) {
-  // Pop Self.
-  RealmFuse::popFuse(cx);
-
-  // Pop associated fuse in same realm as current object.
-  realmFuses.optimizeGetIteratorFuse.popFuse(cx, realmFuses);
-}
-
-void js::ArrayPrototypeIteratorNextFuse::popFuse(JSContext* cx,
-                                                 RealmFuses& realmFuses) {
+void js::PopsOptimizedGetIteratorFuse::popFuse(JSContext* cx,
+                                               RealmFuses& realmFuses) {
   // Pop Self.
   RealmFuse::popFuse(cx);
 
@@ -64,11 +56,17 @@ const char* js::RealmFuses::getFuseName(RealmFuses::FuseIndex index) {
 }
 
 bool js::OptimizeGetIteratorFuse::checkInvariant(JSContext* cx) {
-  // Simple invariant: this fuse merely reflects the conjunction of two fuses,
-  // so if this fuse is intact, then the invariant it asserts is that these two
-  // realm fuses are also intact.
-  return cx->realm()->realmFuses.arrayPrototypeIteratorFuse.intact() &&
-         cx->realm()->realmFuses.arrayPrototypeIteratorNextFuse.intact();
+  // Simple invariant: this fuse merely reflects the conjunction of a group of
+  // fuses, so if this fuse is intact, then the invariant it asserts is that
+  // these two realm fuses are also intact.
+  auto& realmFuses = cx->realm()->realmFuses;
+  return realmFuses.arrayPrototypeIteratorFuse.intact() &&
+         realmFuses.arrayPrototypeIteratorNextFuse.intact() &&
+         realmFuses.arrayIteratorPrototypeHasNoReturnProperty.intact() &&
+         realmFuses.iteratorPrototypeHasNoReturnProperty.intact() &&
+         realmFuses.arrayIteratorPrototypeHasIteratorProto.intact() &&
+         realmFuses.iteratorPrototypeHasObjectProto.intact() &&
+         realmFuses.objectPrototypeHasNoReturnProperty.intact();
 }
 
 bool js::ArrayPrototypeIteratorFuse::checkInvariant(JSContext* cx) {
@@ -124,4 +122,84 @@ bool js::ArrayPrototypeIteratorNextFuse::checkInvariant(JSContext* cx) {
 
   auto* nextFun = &nextVal.toObject().as<JSFunction>();
   return IsSelfHostedFunctionWithName(nextFun, cx->names().ArrayIteratorNext);
+}
+
+static bool HasNoReturnName(JSContext* cx, JS::HandleObject proto) {
+  if (!proto) {
+    // Invariant holds if there is no array iterator proto.
+    return true;
+  }
+
+  JS::RootedId returnName(cx, NameToId(cx->names().return_));
+
+  // An alternative design here would chain together all the has-return-property
+  // fuses such that the fuses each express a stronger invariant; for now these
+  // fuses have only the invariant that each object -itself- has no return
+  // property.
+  bool found = true;
+  if (!HasOwnProperty(cx, proto, returnName, &found)) {
+    cx->recoverFromOutOfMemory();
+    return true;
+  }
+
+  return !found;
+}
+
+/* static */
+bool js::ArrayIteratorPrototypeHasNoReturnProperty::checkInvariant(
+    JSContext* cx) {
+  RootedObject proto(cx, cx->global()->maybeGetArrayIteratorPrototype());
+
+  if (!proto) {
+    // Invariant holds if there is no array iterator proto.
+    return true;
+  }
+
+  return HasNoReturnName(cx, proto);
+}
+
+/* static */
+bool js::IteratorPrototypeHasNoReturnProperty::checkInvariant(JSContext* cx) {
+  RootedObject proto(cx, cx->global()->maybeGetIteratorPrototype());
+
+  if (!proto) {
+    // Invariant holds if there is no array iterator proto.
+    return true;
+  }
+
+  return HasNoReturnName(cx, proto);
+}
+
+/* static */
+bool js::ArrayIteratorPrototypeHasIteratorProto::checkInvariant(JSContext* cx) {
+  RootedObject proto(cx, cx->global()->maybeGetArrayIteratorPrototype());
+  if (!proto) {
+    // Invariant holds if there is no array iterator proto.
+    return true;
+  }
+
+  RootedObject iterProto(cx, cx->global()->maybeGetIteratorPrototype());
+  if (!iterProto) {
+    MOZ_CRASH("Can we have the array iter proto without the iterator proto?");
+    return true;
+  }
+
+  return proto->staticPrototype() == iterProto;
+}
+
+/* static */
+bool js::IteratorPrototypeHasObjectProto::checkInvariant(JSContext* cx) {
+  RootedObject proto(cx, cx->global()->maybeGetIteratorPrototype());
+  if (!proto) {
+    // Invariant holds if there is no array iterator proto.
+    return true;
+  }
+
+  return proto->staticPrototype() == &cx->global()->getObjectPrototype();
+}
+
+/* static */
+bool js::ObjectPrototypeHasNoReturnProperty::checkInvariant(JSContext* cx) {
+  RootedObject proto(cx, &cx->global()->getObjectPrototype());
+  return HasNoReturnName(cx, proto);
 }

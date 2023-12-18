@@ -93,6 +93,7 @@ class GuardFuse {
   virtual void assertInvariant(JSContext* cx) {
     if (intact()) {
       if (!checkInvariant(cx)) {
+        fprintf(stderr, "Fuse %s failed invariant check\n", name());
         MOZ_CRASH("Failed invariant check");
       }
     }
