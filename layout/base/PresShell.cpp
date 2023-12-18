@@ -11607,14 +11607,6 @@ void PresShell::SyncWindowProperties(bool aSync) {
     windowWidget->SetTransparencyMode(mode);
     windowWidget->SetWindowShadowStyle(shadow);
 
-    nsCOMPtr<nsIWidget> viewWidget = view->GetWidget();
-    if (viewWidget != windowWidget) {
-      // Happens on macOS (where we have an nsChildView as a child of an
-      // nsCocoaWindow), and in popup=yes windows in other platforms, in
-      // practice.
-      viewWidget->SetTransparencyMode(mode);
-    }
-
     // For macOS, apply color scheme overrides to the top level window widget.
     if (auto scheme = pc->GetOverriddenOrEmbedderColorScheme()) {
       windowWidget->SetColorScheme(scheme);
