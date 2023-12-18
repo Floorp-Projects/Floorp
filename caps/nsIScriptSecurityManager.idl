@@ -288,6 +288,10 @@ interface nsIScriptSecurityManager : nsISupports
 
     const unsigned long DEFAULT_USER_CONTEXT_ID = 0;
 
+    /**
+     * The constant the indicates when mPrivateBrowsingId is _not_ in PBM.
+     * In other words, zero indicates Normal Browsing, and non-zero indicates PBM
+     */
     const unsigned long DEFAULT_PRIVATE_BROWSING_ID = 0;
 
     /**

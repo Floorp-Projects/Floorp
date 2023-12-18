@@ -643,7 +643,8 @@ static nsresult FormatTime(
   // instead of local time zone name (e.g. CEST).
   // To avoid this case when ResistFingerprinting is disabled, use
   // |FormatPRTime| to show exact time zone name.
-  if (!nsContentUtils::ShouldResistFingerprinting(RFPTarget::JSDateTimeUTC)) {
+  if (!nsContentUtils::ShouldResistFingerprinting(true,
+                                                  RFPTarget::JSDateTimeUTC)) {
     return mozilla::intl::AppDateTimeFormat::Format(aStyleBag, aPrTime,
                                                     aStringOut);
   }
