@@ -46,6 +46,7 @@
 #include "vm/PromiseObject.h"  // js::PromiseObject
 #include "vm/Realm.h"
 #include "vm/StringObject.h"
+#include "vm/Watchtower.h"
 #include "vm/WrapperObject.h"
 #ifdef ENABLE_RECORD_TUPLE
 #  include "vm/RecordType.h"
@@ -468,6 +469,8 @@ void JS::detail::SetReservedSlotWithBarrier(JSObject* obj, size_t slot,
   } else {
     // Note: we don't use setReservedSlot so that this also works on swappable
     // DOM objects. See NativeObject::getReservedSlotRef comment.
+    MOZ_ASSERT(
+        !Watchtower::watchesPropertyModification(&obj->as<NativeObject>()));
     obj->as<NativeObject>().setSlot(slot, value);
   }
 }
