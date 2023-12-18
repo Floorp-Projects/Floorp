@@ -685,7 +685,7 @@ export class VirtualList extends MozLitElement {
       { root: this.ownerDocument }
     );
     this.resizeObserver = new ResizeObserver(([entry]) => {
-      if (entry.contentRect) {
+      if (entry.contentRect?.height > 0) {
         // Update properties on top-level virtual-list
         this.parentElement.itemHeightEstimate = entry.contentRect.height;
         this.parentElement.maxRenderCountEstimate = Math.max(
