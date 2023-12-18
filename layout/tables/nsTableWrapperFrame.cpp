@@ -9,6 +9,7 @@
 #include "mozilla/ComputedStyle.h"
 #include "mozilla/PresShell.h"
 #include "nsFrameManager.h"
+#include "nsGridContainerFrame.h"
 #include "nsTableFrame.h"
 #include "nsTableCellFrame.h"
 #include "nsStyleConsts.h"
@@ -430,20 +431,7 @@ LogicalSize nsTableWrapperFrame::ComputeAutoSize(
   // actual size of the table, which (if it is specified as a percent)
   // could be something that is not reflected in our GetMinISize and
   // GetPrefISize.  See bug 349457 for an example.
-
-  // Shrink-wrap aChildFrame by default, except if we're a stretched grid item.
-  ComputeSizeFlags flags(ComputeSizeFlag::ShrinkWrap);
-  if (MOZ_UNLIKELY(IsGridItem()) && !StyleMargin()->HasInlineAxisAuto(aWM)) {
-    const auto* parent = GetParent();
-    auto inlineAxisAlignment =
-        aWM.IsOrthogonalTo(parent->GetWritingMode())
-            ? StylePosition()->UsedAlignSelf(parent->Style())._0
-            : StylePosition()->UsedJustifySelf(parent->Style())._0;
-    if (inlineAxisAlignment == StyleAlignFlags::NORMAL ||
-        inlineAxisAlignment == StyleAlignFlags::STRETCH) {
-      flags -= ComputeSizeFlag::ShrinkWrap;
-    }
-  }
+  const ComputeSizeFlags flags = CreateComputeSizeFlagsForChild();
 
   // Match the logic in Reflow() that sets aside space for the caption.
   Maybe<StyleCaptionSide> captionSide = GetCaptionSide();
@@ -555,6 +543,17 @@ void nsTableWrapperFrame::GetInnerOrigin(const MaybeCaptionSide& aCaptionSide,
   }
 }
 
+ComputeSizeFlags nsTableWrapperFrame::CreateComputeSizeFlagsForChild() const {
+  // Shrink-wrap child frames by default, except if we're a stretched grid item.
+  if (MOZ_UNLIKELY(IsGridItem())) {
+    auto* gridContainer = static_cast<nsGridContainerFrame*>(GetParent());
+    if (gridContainer->GridItemShouldStretch(this, eLogicalAxisInline)) {
+      return {};
+    }
+  }
+  return {ComputeSizeFlag::ShrinkWrap};
+}
+
 void nsTableWrapperFrame::CreateReflowInputForInnerTable(
     nsPresContext* aPresContext, nsTableFrame* aTableFrame,
     const ReflowInput& aOuterRI, Maybe<ReflowInput>& aChildRI,
@@ -588,11 +587,13 @@ void nsTableWrapperFrame::CreateReflowInputForInnerTable(
     }
   }
 
+  ComputeSizeFlags csFlags = CreateComputeSizeFlagsForChild();
   if (!aTableFrame->IsBorderCollapse() &&
       !aOuterRI.mStyleSizeOverrides.HasAnyOverrides()) {
     // We are not border-collapsed and not given any size overrides. It's
     // sufficient to call the standard ReflowInput constructor.
-    aChildRI.emplace(aPresContext, aOuterRI, aTableFrame, availSize, cbSize);
+    aChildRI.emplace(aPresContext, aOuterRI, aTableFrame, availSize, cbSize,
+                     ReflowInput::InitFlags{}, StyleSizeOverrides{}, csFlags);
     return;
   }
 
@@ -618,7 +619,8 @@ void nsTableWrapperFrame::CreateReflowInputForInnerTable(
       aBSizeOccupiedByCaption);
 
   aChildRI.emplace(aPresContext, aOuterRI, aTableFrame, availSize, Nothing(),
-                   ReflowInput::InitFlag::CallerWillInit, innerOverrides);
+                   ReflowInput::InitFlag::CallerWillInit, innerOverrides,
+                   csFlags);
   aChildRI->Init(aPresContext, cbSize, Some(*borderPadding - *padding),
                  padding);
 }
