@@ -32,12 +32,6 @@ const classnames = require("devtools/client/shared/classnames.js");
 import "./Footer.css";
 
 class SourceFooter extends PureComponent {
-  constructor() {
-    super();
-
-    this.state = { cursorPosition: { line: 0, column: 0 } };
-  }
-
   static get propTypes() {
     return {
       canPrettyPrint: PropTypes.bool.isRequired,
@@ -47,6 +41,7 @@ class SourceFooter extends PureComponent {
       jumpToMappedLocation: PropTypes.func.isRequired,
       mappedSource: PropTypes.object,
       selectedSource: PropTypes.object,
+      selectedLocation: PropTypes.object,
       isSelectedSourceBlackBoxed: PropTypes.bool.isRequired,
       sourceLoaded: PropTypes.bool.isRequired,
       toggleBlackBox: PropTypes.func.isRequired,
@@ -54,30 +49,6 @@ class SourceFooter extends PureComponent {
       prettyPrintAndSelectSource: PropTypes.func.isRequired,
       isSourceOnIgnoreList: PropTypes.bool.isRequired,
     };
-  }
-
-  componentDidUpdate() {
-    const eventDoc = document.querySelector(".editor-mount .CodeMirror");
-    // querySelector can return null
-    if (eventDoc) {
-      this.toggleCodeMirror(eventDoc, true);
-    }
-  }
-
-  componentWillUnmount() {
-    const eventDoc = document.querySelector(".editor-mount .CodeMirror");
-
-    if (eventDoc) {
-      this.toggleCodeMirror(eventDoc, false);
-    }
-  }
-
-  toggleCodeMirror(eventDoc, toggle) {
-    if (toggle === true) {
-      eventDoc.CodeMirror.on("cursorActivity", this.onCursorChange);
-    } else {
-      eventDoc.CodeMirror.off("cursorActivity", this.onCursorChange);
-    }
   }
 
   prettyPrintButton() {
@@ -224,26 +195,24 @@ class SourceFooter extends PureComponent {
       span(null, title)
     );
   }
-  onCursorChange = event => {
-    const { line, ch } = event.doc.getCursor();
-    this.setState({ cursorPosition: { line, column: ch } });
-  };
 
   renderCursorPosition() {
-    if (!this.props.selectedSource) {
+    // When we open a new source, there is no particular location selected and the line will be set to zero or falsy
+    if (!this.props.selectedLocation || !this.props.selectedLocation.line) {
       return null;
     }
 
-    const { line, column } = this.state.cursorPosition;
+    // Note that line is 1-based while column is 0-based.
+    const { line, column } = this.props.selectedLocation;
 
     const text = L10N.getFormatStr(
       "sourceFooter.currentCursorPosition",
-      line + 1,
+      line,
       column + 1
     );
     const title = L10N.getFormatStr(
       "sourceFooter.currentCursorPosition.tooltip",
-      line + 1,
+      line,
       column + 1
     );
     return div(
@@ -285,6 +254,7 @@ const mapStateToProps = state => {
 
   return {
     selectedSource,
+    selectedLocation,
     isSelectedSourceBlackBoxed: selectedSource
       ? isSourceBlackBoxed(state, selectedSource)
       : null,
