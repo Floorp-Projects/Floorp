@@ -1311,6 +1311,13 @@ printpreview-pagination:focus-within,
   }
 }
 
+/* Screenshots */
+#screenshotsPagePanel {
+  position: relative;
+  max-height: 0;
+}
+
+
 #sidebar-box {
   min-width: 14em;
   max-width: 36em;
