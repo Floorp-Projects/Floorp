@@ -6,8 +6,10 @@
 
 #include "FFmpegVideoEncoder.h"
 
+#include "BufferReader.h"
 #include "FFmpegLog.h"
 #include "FFmpegRuntimeLinker.h"
+#include "H264.h"
 #include "ImageContainer.h"
 #include "libavutil/error.h"
 #include "libavutil/pixfmt.h"
@@ -962,14 +964,6 @@ RefPtr<MediaRawData> FFmpegVideoEncoder<LIBAV_VER>::ToMediaRawData(
 
   // TODO: Do we need to check AV_PKT_FLAG_CORRUPT?
 
-  // TODO: if this is key frame, and encoding is H264 in AVCC format, and
-  // AV_CODEC_FLAG_GLOBAL_HEADER is NOT set in mCodecContext->flags, then SPS
-  // and PPS is in the header. See[1, 2].
-  // [1]
-  // https://github.com/FFmpeg/FFmpeg/blob/b51d9eb58eae046b08ef0a967ab2d3e863047d74/libavcodec/libx264.c#L1174-L1175
-  // [2]
-  // https://code.videolan.org/videolan/x264/-/blob/c1c9931dc87289b8aeba78150467f17bdb97d019/encoder/encoder.c#L3665-L3691
-
   // Copy frame data from AVPacket.
   auto data = MakeRefPtr<MediaRawData>();
   UniquePtr<MediaRawDataWriter> writer(data->CreateWriter());
@@ -987,7 +981,77 @@ RefPtr<MediaRawData> FFmpegVideoEncoder<LIBAV_VER>::ToMediaRawData(
                                     static_cast<int64_t>(mConfig.mFramerate));
   data->mTimecode =
       media::TimeUnit(aPacket->dts, static_cast<int64_t>(mConfig.mFramerate));
+
+  if (auto r = GetExtraData(aPacket); r.isOk()) {
+    data->mExtraData = r.unwrap();
+  }
+
   return data;
+}
+
+Result<already_AddRefed<MediaByteBuffer>, nsresult>
+FFmpegVideoEncoder<LIBAV_VER>::GetExtraData(AVPacket* aPacket) {
+  MOZ_ASSERT(aPacket);
+
+  // H264 Extra data comes with the key frame and we only extract it when
+  // encoding into AVCC format.
+  if (mCodecID != AV_CODEC_ID_H264 || !mConfig.mCodecSpecific ||
+      !mConfig.mCodecSpecific->is<H264Specific>() ||
+      mConfig.mCodecSpecific->as<H264Specific>().mFormat !=
+          H264BitStreamFormat::AVC ||
+      !(aPacket->flags & AV_PKT_FLAG_KEY)) {
+    return Err(NS_ERROR_NOT_AVAILABLE);
+  }
+
+  bool useGlobalHeader =
+#if LIBAVCODEC_VERSION_MAJOR >= 57
+      mCodecContext->flags & AV_CODEC_FLAG_GLOBAL_HEADER;
+#else
+      false;
+#endif
+
+  Span<const uint8_t> buf;
+  if (useGlobalHeader) {
+    buf =
+        Span<const uint8_t>(mCodecContext->extradata,
+                            static_cast<size_t>(mCodecContext->extradata_size));
+  } else {
+    buf =
+        Span<const uint8_t>(aPacket->data, static_cast<size_t>(aPacket->size));
+  }
+  if (buf.empty()) {
+    FFMPEGV_LOG("fail to get H264 AVCC header in key frame!");
+    return Err(NS_ERROR_UNEXPECTED);
+  }
+
+  BufferReader reader(buf);
+
+  // The first part is sps.
+  uint32_t spsSize;
+  MOZ_TRY_VAR(spsSize, reader.ReadU32());
+  Span<const uint8_t> spsData;
+  MOZ_TRY_VAR(spsData,
+              reader.ReadSpan<const uint8_t>(static_cast<size_t>(spsSize)));
+
+  // The second part is pps.
+  uint32_t ppsSize;
+  MOZ_TRY_VAR(ppsSize, reader.ReadU32());
+  Span<const uint8_t> ppsData;
+  MOZ_TRY_VAR(ppsData,
+              reader.ReadSpan<const uint8_t>(static_cast<size_t>(ppsSize)));
+
+  // Ensure we have profile, constraints and level needed to create the extra
+  // data.
+  if (spsData.Length() < 4) {
+    return Err(NS_ERROR_NOT_AVAILABLE);
+  }
+
+  // Create extra data.
+  auto extraData = MakeRefPtr<MediaByteBuffer>();
+  H264::WriteExtraData(extraData, spsData[1], spsData[2], spsData[3], spsData,
+                       ppsData);
+  MOZ_ASSERT(extraData);
+  return extraData.forget();
 }
 
 void FFmpegVideoEncoder<LIBAV_VER>::ForceEnablingFFmpegDebugLogs() {

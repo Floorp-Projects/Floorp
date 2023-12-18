@@ -69,6 +69,8 @@ class FFmpegVideoEncoder<LIBAV_VER> final : public MediaDataEncoder {
   RefPtr<EncodePromise> DrainWithModernAPIs();
 #endif
   RefPtr<MediaRawData> ToMediaRawData(AVPacket* aPacket);
+  Result<already_AddRefed<MediaByteBuffer>, nsresult> GetExtraData(
+      AVPacket* aPacket);
   void ForceEnablingFFmpegDebugLogs();
 
   // This refers to a static FFmpegLibWrapper, so raw pointer is adequate.
