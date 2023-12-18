@@ -18,6 +18,7 @@ class nsCSSPropertyIDSet;
 struct nsStyleUIReset;
 
 namespace mozilla {
+class AnimatedPropertyIDSet;
 class ComputedStyle;
 enum class PseudoStyleType : uint8_t;
 }  // namespace mozilla
@@ -60,17 +61,17 @@ class nsTransitionManager final
 
   // Returns whether the transition actually started.
   bool ConsiderInitiatingTransition(
-      nsCSSPropertyID aProperty, const nsStyleUIReset& aStyle,
+      const mozilla::AnimatedPropertyID&, const nsStyleUIReset& aStyle,
       uint32_t transitionIdx, mozilla::dom::Element* aElement,
       mozilla::PseudoStyleType aPseudoType,
       CSSTransitionCollection*& aElementTransitions,
       const mozilla::ComputedStyle& aOldStyle,
       const mozilla::ComputedStyle& aNewStyle,
-      nsCSSPropertyIDSet& aPropertiesChecked);
+      mozilla::AnimatedPropertyIDSet& aPropertiesChecked);
 
   already_AddRefed<mozilla::dom::CSSTransition> DoCreateTransition(
-      nsCSSPropertyID aProperty, mozilla::dom::Element* aElement,
-      mozilla::PseudoStyleType aPseudoType,
+      const mozilla::AnimatedPropertyID& aProperty,
+      mozilla::dom::Element* aElement, mozilla::PseudoStyleType aPseudoType,
       const mozilla::ComputedStyle& aNewStyle,
       CSSTransitionCollection*& aElementTransitions,
       mozilla::TimingParams&& aTiming, mozilla::AnimationValue&& aStartValue,

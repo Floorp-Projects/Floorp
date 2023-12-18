@@ -43,6 +43,7 @@ class Animatable;
 
 enum class PseudoStyleType : uint8_t;
 struct PropertyStyleAnimationValuePair;
+struct AnimatedPropertyID;
 
 struct AnimationValue {
   explicit AnimationValue(const RefPtr<StyleAnimationValue>& aValue)
@@ -91,12 +92,12 @@ struct AnimationValue {
   mozilla::gfx::MatrixScales GetScaleValue(const nsIFrame* aFrame) const;
 
   // Uncompute this AnimationValue and then serialize it.
-  void SerializeSpecifiedValue(nsCSSPropertyID aProperty,
+  void SerializeSpecifiedValue(const AnimatedPropertyID& aProperty,
                                const StylePerDocumentStyleData* aRawData,
                                nsACString& aString) const;
 
   // Check if |*this| and |aToValue| can be interpolated.
-  bool IsInterpolableWith(nsCSSPropertyID aProperty,
+  bool IsInterpolableWith(const AnimatedPropertyID& aProperty,
                           const AnimationValue& aToValue) const;
 
   // Compute the distance between *this and aOther.

@@ -3206,6 +3206,7 @@ nsDOMWindowUtils::GetUnanimatedComputedStyle(Element* aElement,
       nsCSSProps::IsShorthand(propertyID)) {
     return NS_ERROR_INVALID_ARG;
   }
+  // TODO(bug 1846516): Handle custom properties.
 
   switch (aFlushType) {
     case FLUSH_NONE:

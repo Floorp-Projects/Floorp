@@ -92,7 +92,7 @@ void AnimationEventInfo::MaybeAddMarker() const {
       if (dom::KeyframeEffect* keyFrameEffect = effect->AsKeyframeEffect()) {
         keyFrameEffect->GetTarget()->Describe(target, true);
         for (const AnimationProperty& property : keyFrameEffect->Properties()) {
-          propertySet.AddProperty(property.mProperty);
+          propertySet.AddProperty(property.mProperty.mID);
         }
       }
     }
@@ -136,7 +136,7 @@ void AnimationEventInfo::MaybeAddMarker() const {
           mAnimation->GetOwner()
               ? MarkerInnerWindowId(mAnimation->GetOwner()->WindowID())
               : MarkerInnerWindowId::NoId()),
-      CSSTransitionMarker, NS_ConvertUTF16toUTF8(target), data.mPropertyId,
+      CSSTransitionMarker, NS_ConvertUTF16toUTF8(target), data.mProperty.mID,
       message == eTransitionCancel);
 }
 

@@ -15,6 +15,8 @@
 #include "nsRefPtrHashtable.h"
 #include "nsTArray.h"
 #include "nsWrapperCache.h"
+#include "mozilla/AnimatedPropertyID.h"
+#include "mozilla/AnimatedPropertyIDSet.h"
 #include "mozilla/AnimationPerformanceWarning.h"
 #include "mozilla/AnimationPropertySegment.h"
 #include "mozilla/AnimationTarget.h"
@@ -55,7 +57,7 @@ struct AnimationPropertyDetails;
 }  // namespace dom
 
 struct AnimationProperty {
-  nsCSSPropertyID mProperty = eCSSProperty_UNKNOWN;
+  AnimatedPropertyID mProperty;
 
   // If true, the propery is currently being animated on the compositor.
   //
@@ -74,7 +76,7 @@ struct AnimationProperty {
 
   // The copy constructor/assignment doesn't copy mIsRunningOnCompositor and
   // mPerformanceWarning.
-  AnimationProperty() = default;
+  AnimationProperty() : mProperty(eCSSProperty_UNKNOWN){};
   AnimationProperty(const AnimationProperty& aOther)
       : mProperty(aOther.mProperty), mSegments(aOther.mSegments.Clone()) {}
   AnimationProperty& operator=(const AnimationProperty& aOther) {
@@ -199,7 +201,7 @@ class KeyframeEffect : public AnimationEffect {
 
   // Returns the set of properties affected by this effect regardless of
   // whether any of these properties is overridden by an !important rule.
-  nsCSSPropertyIDSet GetPropertySet() const;
+  AnimatedPropertyIDSet GetPropertySet() const;
 
   // Returns true if the effect includes a property in |aPropertySet| regardless
   // of whether any property in the set is overridden by an !important rule.
@@ -325,13 +327,13 @@ class KeyframeEffect : public AnimationEffect {
   // |aFrame| is used for calculation of scale values.
   bool ContainsAnimatedScale(const nsIFrame* aFrame) const;
 
-  AnimationValue BaseStyle(nsCSSPropertyID aProperty) const {
+  AnimationValue BaseStyle(const AnimatedPropertyID& aProperty) const {
     AnimationValue result;
     bool hasProperty = false;
     // We cannot use getters_AddRefs on StyleAnimationValue because it is
     // an incomplete type, so Get() doesn't work. Instead, use GetWeak, and
     // then assign the raw pointer to a RefPtr.
-    result.mServo = mBaseValues.GetWeak(aProperty, &hasProperty);
+    result.mServo = mBaseValues.GetWeak(aProperty.mID, &hasProperty);
     MOZ_ASSERT(hasProperty || result.IsNull());
     return result;
   }
