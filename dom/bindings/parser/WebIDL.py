@@ -498,16 +498,15 @@ class IDLExposureMixins:
         # they don't include any globals, and we don't really want to go through
         # and add global interfaces and [Exposed] annotations to all those
         # tests.
-        if len(scope.globalNames) != 0:
-            if len(self._exposureGlobalNames) == 0 and not self.isPseudoInterface():
-                raise WebIDLError(
-                    (
-                        "'%s' is not exposed anywhere even though we have "
-                        "globals to be exposed to"
-                    )
-                    % self,
-                    [self.location],
+        if len(scope.globalNames) != 0 and len(self._exposureGlobalNames) == 0:
+            raise WebIDLError(
+                (
+                    "'%s' is not exposed anywhere even though we have "
+                    "globals to be exposed to"
                 )
+                % self,
+                [self.location],
+            )
 
         globalNameSetToExposureSet(scope, self._exposureGlobalNames, self.exposureSet)
 
@@ -1031,8 +1030,6 @@ class IDLInterfaceOrNamespace(IDLInterfaceOrInterfaceMixinOrNamespace):
         self.interfacesBasedOnSelf = set([self])
         self._hasChildInterfaces = False
         self._isOnGlobalProtoChain = False
-        # Pseudo interfaces aren't exposed anywhere, and so shouldn't issue warnings
-        self._isPseudo = False
 
         # Tracking of the number of reserved slots we need for our
         # members and those of ancestor interfaces.
@@ -1802,14 +1799,13 @@ class IDLInterfaceOrNamespace(IDLInterfaceOrInterfaceMixinOrNamespace):
     def hasInterfaceObject(self):
         if self.isCallback():
             return self.hasConstants()
-        return not hasattr(self, "_noInterfaceObject") and not self.isPseudoInterface()
+        return not hasattr(self, "_noInterfaceObject")
 
     def hasInterfacePrototypeObject(self):
         return (
             not self.isCallback()
             and not self.isNamespace()
             and self.getUserData("hasConcreteDescendant", False)
-            and not self.isPseudoInterface()
         )
 
     def addIncludedMixin(self, includedMixin):
@@ -1872,9 +1868,6 @@ class IDLInterfaceOrNamespace(IDLInterfaceOrInterfaceMixinOrNamespace):
 
     def isOnGlobalProtoChain(self):
         return self._isOnGlobalProtoChain
-
-    def isPseudoInterface(self):
-        return self._isPseudo
 
     def _getDependentObjects(self):
         deps = set(self.members)
