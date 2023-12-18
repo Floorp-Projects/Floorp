@@ -2,7 +2,7 @@
 
 We use [mochitests](https://firefox-source-docs.mozilla.org/testing/browser-chrome/) to do functional (and possibly integration) testing. Mochitests are part of Firefox and allow us to test activity stream literally as you would use it.
 
-Mochitests live in `test/functional/mochitest`, and as of this writing, they are all the `browser-chrome` flavor of mochitests. They currently only run against the bootstrapped version of the add-on in system-addon, not the test pilot version at the top level directory.
+Mochitests live in `test/browser`, and as of this writing, they are all the `browser-chrome` flavor of mochitests. They currently only run against the bootstrapped version of the add-on in system-addon, not the test pilot version at the top level directory.
 
 ## Adding New Tests
 
@@ -23,5 +23,4 @@ ContentTask.spawn(gBrowser.selectedBrowser, null, function* () {
 
 The above calls the function `foo` that exists in the page itself. You can also access the DOM this way: `content.document.querySelector`, if you want to click a button or do other things. You can even you use assertions inside this callback to check DOM state.
 
-* If you run into problems running tests in e10s, refer to the [wiki](https://wiki.mozilla.org/Electrolysis/e10s_test_tips) for tips
 * Nobody likes to see intermittent oranges in their tests, so read the [docs on how to avoid them](https://firefox-source-docs.mozilla.org/testing/intermittent/)!
