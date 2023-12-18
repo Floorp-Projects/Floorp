@@ -350,7 +350,8 @@ class nsContentUtils {
 
   // Check whether we should avoid leaking distinguishing information to JS/CSS.
   // This function can be called both in the main thread and worker threads.
-  static bool ShouldResistFingerprinting(RFPTarget aTarget);
+  static bool ShouldResistFingerprinting(bool aIsPrivateMode,
+                                         RFPTarget aTarget);
   static bool ShouldResistFingerprinting(nsIGlobalObject* aGlobalObject,
                                          RFPTarget aTarget);
   // Similar to the function above, but always allows CallerType::System
@@ -1088,7 +1089,7 @@ class nsContentUtils {
   /**
    * Returns true if this document is in a Private Browsing window.
    */
-  static bool IsInPrivateBrowsing(Document* aDoc);
+  static bool IsInPrivateBrowsing(const Document* aDoc);
 
   /**
    * Returns true if this loadGroup uses Private Browsing.
