@@ -148,7 +148,6 @@ class RecentlyClosedTabsInView extends ViewPage {
 
   firstUpdated() {
     this.firstUpdateComplete = true;
-    this.toggleVisibilityInCardContainer();
   }
 
   getTabStateValue(tab, key) {
@@ -273,6 +272,7 @@ class RecentlyClosedTabsInView extends ViewPage {
 
   updated() {
     this.fullyUpdated = true;
+    this.toggleVisibilityInCardContainer();
   }
 
   async scheduleUpdate() {

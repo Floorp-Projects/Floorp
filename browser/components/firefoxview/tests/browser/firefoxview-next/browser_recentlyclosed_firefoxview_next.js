@@ -242,6 +242,24 @@ add_setup(async () => {
 });
 
 /**
+ * Asserts that we get the expected initial recently-closed tab list item
+ */
+add_task(async function test_initial_closed_tab() {
+  await withFirefoxView({}, async browser => {
+    const { document } = browser.contentWindow;
+    is(document.location.href, getFirefoxViewURL());
+    await navigateToCategoryAndWait(document, "recentlyclosed");
+    let { cleanup } = await prepareSingleClosedTab();
+    await switchToFxViewTab(window);
+    let [listItems] = await waitForRecentlyClosedTabsList(document);
+
+    ok(listItems.rowEls.length === 1, "Initial list item is rendered.");
+
+    await cleanup();
+  });
+});
+
+/**
  * Asserts that we get the expected order recently-closed tab list items given a known
  * sequence of tab closures
  */
