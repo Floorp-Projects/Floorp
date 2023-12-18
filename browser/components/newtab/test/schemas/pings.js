@@ -159,17 +159,6 @@ export const TileSchema = Joi.object().keys({
   pos: Joi.number().integer(),
 });
 
-export const ImpressionStatsPing = Joi.object().keys(
-  Object.assign({}, baseKeys, {
-    source: Joi.string().required(),
-    impression_id: Joi.string().required(),
-    tiles: Joi.array().items(TileSchema).required(),
-    click: Joi.number().integer(),
-    block: Joi.number().integer(),
-    pocket: Joi.number().integer(),
-  })
-);
-
 export const SessionPing = Joi.object().keys(
   Object.assign({}, baseKeys, {
     session_id: baseKeys.session_id.required(),
