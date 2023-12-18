@@ -825,18 +825,34 @@ def ensure_java(os_name, os_arch):
     if not java_path.exists():
         # e.g. https://github.com/adoptium/temurin17-binaries/releases/
         #      download/jdk-17.0.9%2B9/OpenJDK17U-jre_x64_linux_hotspot_17.0.9_9.tar.gz
-        java_url = (
-            "https://github.com/adoptium/temurin{major}-binaries/releases/"
-            "download/jdk-{major}.{minor}%2B{patch}/"
-            "OpenJDK{major}U-jdk_{arch}_{os}_hotspot_{major}.{minor}_{patch}.{ext}"
-        ).format(
-            major=JAVA_VERSION_MAJOR,
-            minor=JAVA_VERSION_MINOR,
-            patch=JAVA_VERSION_PATCH,
-            os=os_tag,
-            arch=arch,
-            ext=ext,
-        )
+        if os_name != "windows":
+            java_url = (
+                "https://github.com/adoptium/temurin{major}-binaries/releases/"
+                "download/jdk-{major}.{minor}%2B{patch}/"
+                "OpenJDK{major}U-jdk_{arch}_{os}_hotspot_{major}.{minor}_{patch}.{ext}"
+            ).format(
+                major=JAVA_VERSION_MAJOR,
+                minor=JAVA_VERSION_MINOR,
+                patch=JAVA_VERSION_PATCH,
+                os=os_tag,
+                arch=arch,
+                ext=ext,
+            )
+        # Hack the URL for Windows due missed binary uploads for the original
+        # JDK 17.0.9 release. See bug 1870252.
+        else:
+            java_url = (
+                "https://github.com/adoptium/temurin{major}-binaries/releases/"
+                "download/jdk-{major}.{minor}%2B{patch}.1/"
+                "OpenJDK{major}U-jdk_{arch}_{os}_hotspot_{major}.{minor}_{patch}.{ext}"
+            ).format(
+                major=JAVA_VERSION_MAJOR,
+                minor=JAVA_VERSION_MINOR,
+                patch=JAVA_VERSION_PATCH,
+                os=os_tag,
+                arch=arch,
+                ext=ext,
+            )
         install_mobile_android_sdk_or_ndk(java_url, mozbuild_path / "jdk")
     return java_path
 
