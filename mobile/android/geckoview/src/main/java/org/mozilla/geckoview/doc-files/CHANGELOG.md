@@ -15,7 +15,6 @@ exclude: true
 
 ## v123
 - For Translations, added [`checkPairDownloadSize`][123.1] and [`TranslationsException.ERROR_MODEL_LANGUAGE_REQUIRED`][123.2] as an error state.
-- ⚠️ Deprecated [`GeckoSession.requestAnalysisCreationStatus`][119.2] by 124, please use [`GeckoSession.requestCreateAnalysis`][122.2] instead.
 
 [123.1]: {{javadoc_uri}}/TranslationsController.RuntimeTranslation.html#checkPairDownloadSize(java.lang.String,java.lang.String)
 [123.2]: {{javadoc_uri}}/TranslationsController.TranslationsException.html#ERROR_MODEL_LANGUAGE_REQUIRED
@@ -85,7 +84,7 @@ exclude: true
 ## v119
 - Added `remoteType` to GeckoView child crash intent. ([bug 1851518]({{bugzilla}}1851518))
 
-[119.1]: {{javadoc_uri}}/GeckoSession.html#requestCreateAnalysis(String)
+- [119.1]: {{javadoc_uri}}/GeckoSession.html#requestCreateAnalysis(String)
 [119.2]: {{javadoc_uri}}/GeckoSession.html#requestAnalysisCreationStatus(String)
 [119.3]: {{javadoc_uri}}/GeckoSession.html#pollForAnalysisCompleted(String)
 
@@ -1501,4 +1500,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport(android.content.Context,android.os.Bundle,java.lang.String)
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 3f36799dec8719407927be36c724f5020bb127dc
+[api-version]: b0284760f2703400eb95830f92c699bf66ccc9bb
