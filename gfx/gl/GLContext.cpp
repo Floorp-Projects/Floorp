@@ -309,6 +309,13 @@ GLContext::~GLContext() {
 }
 
 /*static*/
+void GLContext::InvalidateCurrentContext() {
+  if (sCurrentContext.init()) {
+    sCurrentContext.set(nullptr);
+  }
+}
+
+/*static*/
 void GLContext::StaticDebugCallback(GLenum source, GLenum type, GLuint id,
                                     GLenum severity, GLsizei length,
                                     const GLchar* message,
@@ -2406,7 +2413,7 @@ bool GLContext::MakeCurrent(bool aForce) const {
     }
     if (MOZ_LIKELY(isCurrent)) {
       MOZ_ASSERT(IsCurrentImpl() ||
-                 !MakeCurrentImpl());  // Might have lost context.
+                 MakeCurrentImpl());  // Might have lost context.
       return true;
     }
   }
