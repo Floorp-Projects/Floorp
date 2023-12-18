@@ -12,15 +12,18 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=775852
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=775852">Mozilla Bug 775852</a>
 <p id="display"></p>
-<div id="content" style="display: none">
-  <canvas width="1" height="1" id="c"></canvas>
-</div>
+<iframe id="content" style="display: none">
+</iframe>
 <pre id="test">
 <script type="application/javascript">
 
 /** Test for Bug 775852 **/
 function doTest() {
-  var gl = $("c").getContext("experimental-webgl");
+  let win = document.getElementById("content").contentWindow;
+  let doc = win.document;
+  doc.body.innerHTML = `<canvas width="1" height="1" id="c"></canvas>`;
+
+  let gl = doc.getElementById("c").getContext("experimental-webgl");
   if (!gl) {
     // No WebGL support on MacOS 10.5.  Just skip this test
     todo(false, "WebGL not supported");
@@ -32,7 +35,7 @@ function doTest() {
   ok(extLength > 0,
      "This test won't work right if we have no supported extensions");
 
-  Object.defineProperty(Array.prototype, "0",
+  win.Object.defineProperty(win.Array.prototype, "0",
     {
       set(val) {
              setterCalled = true;
@@ -40,7 +43,7 @@ function doTest() {
     });
 
   // Test that our property got defined correctly
-  var arr = [];
+  let arr = new win.Array();
   arr[0] = 5;
   is(setterCalled, true, "Setter should be called when setting prop on array");
 
