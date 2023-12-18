@@ -26,7 +26,6 @@ import mozilla.components.feature.pwa.feature.WebAppActivityFeature
 import mozilla.components.feature.pwa.feature.WebAppContentFeature
 import mozilla.components.feature.pwa.feature.WebAppHideToolbarFeature
 import mozilla.components.feature.pwa.feature.WebAppSiteControlsFeature
-import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.ktx.android.arch.lifecycle.addObservers
 import org.mozilla.fenix.BuildConfig
@@ -44,7 +43,7 @@ import org.mozilla.fenix.settings.quicksettings.protections.cookiebanners.getCoo
 /**
  * Fragment used for browsing the web within external apps.
  */
-class ExternalAppBrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
+class ExternalAppBrowserFragment : BaseBrowserFragment() {
 
     private val args by navArgs<ExternalAppBrowserFragmentArgs>()
 
