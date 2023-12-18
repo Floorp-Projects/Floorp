@@ -17,23 +17,62 @@ add_task(async function () {
 
   info("Set the initial breakpoint.");
   await selectSource(dbg, "simple1.js");
+  ok(
+    !findElementWithSelector(dbg, ".cursor-position"),
+    "no position is displayed when selecting a location without an explicit line number"
+  );
+  await selectSource(dbg, "simple1.js", 1, 1);
+  assertCursorPosition(
+    dbg,
+    1,
+    2,
+    "when passing an explicit line number, the position is displayed"
+  );
+  // Note that CodeMirror is 0-based while the footer displays 1-based
+  getCM(dbg).setCursor({ line: 1, ch: 0 });
+  assertCursorPosition(
+    dbg,
+    2,
+    1,
+    "when moving the cursor, the position footer updates"
+  );
+  getCM(dbg).setCursor({ line: 2, ch: 0 });
+  assertCursorPosition(
+    dbg,
+    3,
+    1,
+    "when moving the cursor a second time, the position footer still updates"
+  );
+
   await addBreakpoint(dbg, "simple1.js", 4);
+  const breakpointItems = findAllElements(dbg, "breakpointItems");
+  breakpointItems[0].click();
+  await waitForCursorPosition(dbg, 4);
+  assertCursorPosition(
+    dbg,
+    4,
+    16,
+    "when moving the cursor a second time, the position footer still updates"
+  );
 
   info("Call the function that we set a breakpoint in.");
   invokeInTab("main");
   await waitForPaused(dbg);
   await waitForSelectedSource(dbg, "simple1.js");
   assertPausedAtSourceAndLine(dbg, findSource(dbg, "simple1.js").id, 4);
+  assertCursorPosition(dbg, 4, 16, "on pause, the cursor updates");
 
   info("Step into another file.");
   await stepOver(dbg);
   await stepIn(dbg);
   await waitForSelectedSource(dbg, "simple2.js");
   assertPausedAtSourceAndLine(dbg, findSource(dbg, "simple2.js").id, 3);
+  assertCursorPosition(dbg, 3, 5, "on step-in, the cursor updates");
 
   info("Step out to the initial file.");
   await stepOut(dbg);
   assertPausedAtSourceAndLine(dbg, findSource(dbg, "simple1.js").id, 6);
+  assertCursorPosition(dbg, 6, 3, "on step-out, the cursor updates");
   await resume(dbg);
 
   info("Make sure that the editor scrolls to the paused location.");

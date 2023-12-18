@@ -10,15 +10,20 @@
 %>
 
 #[cfg(feature = "gecko")] use crate::gecko_bindings::structs::nsCSSPropertyID;
-use crate::properties::{CSSWideKeyword, PropertyDeclaration, NonCustomPropertyIterator};
-use crate::properties::longhands;
-use crate::properties::longhands::visibility::computed_value::T as Visibility;
-use crate::properties::longhands::content_visibility::computed_value::T as ContentVisibility;
-use crate::properties::LonghandId;
+use crate::custom_properties::SpecifiedValue as SpecifiedCustomPropertyValue;
+use crate::properties::{
+    longhands::{
+        self, content_visibility::computed_value::T as ContentVisibility,
+        visibility::computed_value::T as Visibility,
+    },
+    CSSWideKeyword, CustomDeclaration, CustomDeclarationValue, LonghandId,
+    NonCustomPropertyIterator, PropertyDeclaration, PropertyDeclarationId,
+};
 use std::ptr;
 use std::mem;
 use fxhash::FxHashMap;
 use super::ComputedValues;
+use crate::properties::property_declaration::OwnedPropertyDeclarationId;
 use crate::values::animated::{Animate, Procedure, ToAnimatedValue, ToAnimatedZero};
 use crate::values::animated::effects::AnimatedFilter;
 #[cfg(feature = "gecko")] use crate::values::computed::TransitionProperty;
@@ -58,14 +63,11 @@ impl From<nsCSSPropertyID> for TransitionProperty {
 /// A collection of AnimationValue that were composed on an element.
 /// This HashMap stores the values that are the last AnimationValue to be
 /// composed for each TransitionProperty.
-pub type AnimationValueMap = FxHashMap<LonghandId, AnimationValue>;
+pub type AnimationValueMap = FxHashMap<OwnedPropertyDeclarationId, AnimationValue>;
 
 /// An enum to represent a single computed value belonging to an animated
 /// property in order to be interpolated with another one. When interpolating,
 /// both values need to belong to the same property.
-///
-/// FIXME: We need to add a path for custom properties, but that's trivial after
-/// this (is a similar path to that of PropertyDeclaration).
 #[derive(Debug, MallocSizeOf)]
 #[repr(u16)]
 pub enum AnimationValue {
@@ -77,6 +79,9 @@ pub enum AnimationValue {
     ${prop.camel_case}(Void),
     % endif
     % endfor
+    /// A custom property.
+    /// TODO(zrhoffman, bug 1869472): The Custom variant should hold only a single struct.
+    Custom(crate::custom_properties::Name, SpecifiedCustomPropertyValue),
 }
 
 <%
@@ -148,6 +153,7 @@ impl Clone for AnimationValue {
                 % endif
             }
             % endfor
+            Custom(ref name, ref value) => { Custom(name.clone(), value.clone()) },
             _ => unsafe { debug_unreachable!() }
         }
     }
@@ -158,23 +164,31 @@ impl PartialEq for AnimationValue {
     fn eq(&self, other: &Self) -> bool {
         use self::AnimationValue::*;
 
-        unsafe {
-            let this_tag = *(self as *const _ as *const u16);
-            let other_tag = *(other as *const _ as *const u16);
-            if this_tag != other_tag {
-                return false;
-            }
+        match (self, other) {
+            (Custom(name1, value1), Custom(name2, value2)) => {
+                name1 == name2 && value1 == value2
+            },
+            _ => {
+                unsafe {
+                    let this_tag = *(self as *const _ as *const u16);
+                    let other_tag = *(other as *const _ as *const u16);
+                    if this_tag != other_tag {
+                        return false;
+                    }
 
-            match *self {
-                % for ty, props in groupby(animated, key=lambda x: x.animated_type()):
-                ${" |\n".join("{}(ref this)".format(prop.camel_case) for prop in props)} => {
-                    let other_repr =
-                        &*(other as *const _ as *const AnimationValueVariantRepr<${ty}>);
-                    *this == other_repr.value
-                }
-                % endfor
-                ${" |\n".join("{}(void)".format(prop.camel_case) for prop in unanimated)} => {
-                    void::unreachable(void)
+                    match *self {
+                        % for ty, props in groupby(animated, key=lambda x: x.animated_type()):
+                        ${" |\n".join("{}(ref this)".format(prop.camel_case) for prop in props)} => {
+                            let other_repr =
+                                &*(other as *const _ as *const AnimationValueVariantRepr<${ty}>);
+                            *this == other_repr.value
+                        }
+                        % endfor
+                        ${" |\n".join("{}(void)".format(prop.camel_case) for prop in unanimated)} => {
+                            void::unreachable(void)
+                        },
+                        AnimationValue::Custom(..) => { debug_unreachable!() },
+                    }
                 }
             }
         }
@@ -184,7 +198,11 @@ impl PartialEq for AnimationValue {
 impl AnimationValue {
     /// Returns the longhand id this animated value corresponds to.
     #[inline]
-    pub fn id(&self) -> LonghandId {
+    pub fn id(&self) -> PropertyDeclarationId {
+        if let AnimationValue::Custom(name, _) = self {
+            return PropertyDeclarationId::Custom(name);
+        }
+
         let id = unsafe { *(self as *const _ as *const LonghandId) };
         debug_assert_eq!(id, match *self {
             % for prop in data.longhands:
@@ -194,8 +212,9 @@ impl AnimationValue {
             AnimationValue::${prop.camel_case}(void) => void::unreachable(void),
             % endif
             % endfor
+            AnimationValue::Custom(..) => unsafe { debug_unreachable!() },
         });
-        id
+        PropertyDeclarationId::Longhand(id)
     }
 
     /// Returns whether this value is interpolable with another one.
@@ -242,7 +261,13 @@ impl AnimationValue {
             % endfor
             ${" |\n".join("{}(void)".format(prop.camel_case) for prop in unanimated)} => {
                 void::unreachable(void)
-            }
+            },
+            Custom(ref name, ref value) => {
+                PropertyDeclaration::Custom(CustomDeclaration {
+                    name: name.clone(),
+                    value: CustomDeclarationValue::Value(value.clone().into()),
+                })
+            },
         }
     }
 
@@ -250,7 +275,6 @@ impl AnimationValue {
     pub fn from_declaration(
         decl: &PropertyDeclaration,
         context: &mut Context,
-        extra_custom_properties: Option< &crate::custom_properties::ComputedCustomProperties>,
         initial: &ComputedValues,
     ) -> Option<Self> {
         use super::PropertyDeclarationVariantRepr;
@@ -360,7 +384,7 @@ impl AnimationValue {
             PropertyDeclaration::WithVariables(ref declaration) => {
                 let mut cache = Default::default();
                 let substituted = {
-                    let custom_properties = extra_custom_properties.unwrap_or(&context.style().custom_properties());
+                    let custom_properties = &context.style().custom_properties();
 
                     debug_assert!(
                         context.builder.stylist.is_some(),
@@ -377,9 +401,14 @@ impl AnimationValue {
                 return AnimationValue::from_declaration(
                     &substituted,
                     context,
-                    extra_custom_properties,
                     initial,
                 )
+            },
+            PropertyDeclaration::Custom(ref declaration) => {
+              match &declaration.value {
+                CustomDeclarationValue::Value(value) => AnimationValue::Custom(declaration.name.clone(), (**value).clone()),
+                _ => return None,
+              }
             },
             _ => return None // non animatable properties will get included because of shorthands. ignore.
         };
@@ -388,10 +417,22 @@ impl AnimationValue {
 
     /// Get an AnimationValue for an AnimatableLonghand from a given computed values.
     pub fn from_computed_values(
-        property: LonghandId,
+        property: PropertyDeclarationId,
         style: &ComputedValues,
     ) -> Option<Self> {
-        let property = property.to_physical(style.writing_mode);
+        let property = match property {
+            PropertyDeclarationId::Longhand(id) => id,
+            PropertyDeclarationId::Custom(ref name) => {
+                // FIXME(bug 1869476): This should use a stylist to determine whether the name
+                // corresponds to an inherited custom property and then choose the
+                // inherited/non_inherited map accordingly.
+                let p = &style.custom_properties();
+                return p.inherited.as_ref().and_then(|map| map.get(*name))
+                    .or_else(|| p.non_inherited.as_ref().and_then(|map| map.get(*name)))
+                    .map(|value| AnimationValue::Custom((*name).clone(), (**value).clone()));
+            }
+        };
+
         Some(match property {
             % for prop in data.longhands:
             % if prop.animatable and not prop.logical:
@@ -433,6 +474,7 @@ impl AnimationValue {
             AnimationValue::${prop.camel_case}(..) => unreachable!(),
             % endif
             % endfor
+            AnimationValue::Custom(..) => unreachable!(),
         }
     }
 
@@ -452,6 +494,11 @@ fn animate_discrete<T: Clone>(this: &T, other: &T, procedure: Procedure) -> Resu
 
 impl Animate for AnimationValue {
     fn animate(&self, other: &Self, procedure: Procedure) -> Result<Self, ()> {
+        if let AnimationValue::Custom(..) = self {
+            // TODO(bug 1869185): Non-universal registered property may animate in a non-discrete way.
+            return Ok(animate_discrete(self, other, procedure)?)
+        }
+
         Ok(unsafe {
             use self::AnimationValue::*;
 
@@ -486,7 +533,8 @@ impl Animate for AnimationValue {
                 % endfor
                 ${" |\n".join("{}(void)".format(prop.camel_case) for prop in unanimated)} => {
                     void::unreachable(void)
-                }
+                },
+                Custom(..) => { debug_unreachable!() },
             }
         })
     }
@@ -536,6 +584,10 @@ impl ToAnimatedZero for AnimationValue {
             },
             % endif
             % endfor
+            AnimationValue::Custom(..) => {
+                // TODO(bug 1869185): For some non-universal registered custom properties, it may make sense to implement this.
+                Err(())
+            },
             _ => Err(()),
         }
     }

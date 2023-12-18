@@ -651,7 +651,7 @@ static CSSTransition* GetCurrentTransitionAt(const Element* aElement,
 nsCSSPropertyID Gecko_ElementTransitions_PropertyAt(const Element* aElement,
                                                     size_t aIndex) {
   CSSTransition* transition = GetCurrentTransitionAt(aElement, aIndex);
-  return transition ? transition->TransitionProperty()
+  return transition ? transition->TransitionProperty().mID
                     : nsCSSPropertyID::eCSSProperty_UNKNOWN;
 }
 
@@ -681,11 +681,11 @@ double Gecko_GetPositionInSegment(const AnimationPropertySegment* aSegment,
 }
 
 const StyleAnimationValue* Gecko_AnimationGetBaseStyle(
-    const RawServoAnimationValueTable* aBaseStyles, nsCSSPropertyID aProperty) {
-  auto base = reinterpret_cast<
-      const nsRefPtrHashtable<nsUint32HashKey, StyleAnimationValue>*>(
-      aBaseStyles);
-  return base->GetWeak(aProperty);
+    const RawServoAnimationValueTable* aBaseStyles,
+    const mozilla::AnimatedPropertyID* aProperty) {
+  const auto* base = reinterpret_cast<const nsRefPtrHashtable<
+      nsGenericHashKey<AnimatedPropertyID>, StyleAnimationValue>*>(aBaseStyles);
+  return base->GetWeak(*aProperty);
 }
 
 void Gecko_FillAllImageLayers(nsStyleImageLayers* aLayers, uint32_t aMaxLen) {
@@ -1157,11 +1157,13 @@ Keyframe* Gecko_GetOrCreateFinalKeyframe(
 }
 
 PropertyValuePair* Gecko_AppendPropertyValuePair(
-    nsTArray<PropertyValuePair>* aProperties, nsCSSPropertyID aProperty) {
+    nsTArray<PropertyValuePair>* aProperties,
+    const mozilla::AnimatedPropertyID* aProperty) {
   MOZ_ASSERT(aProperties);
-  MOZ_ASSERT(aProperty == eCSSPropertyExtra_variable ||
-             !nsCSSProps::PropHasFlags(aProperty, CSSPropFlags::IsLogical));
-  return aProperties->AppendElement(PropertyValuePair{aProperty});
+  MOZ_ASSERT(
+      aProperty->IsCustom() ||
+      !nsCSSProps::PropHasFlags(aProperty->mID, CSSPropFlags::IsLogical));
+  return aProperties->AppendElement(PropertyValuePair{*aProperty});
 }
 
 void Gecko_GetComputedURLSpec(const StyleComputedUrl* aURL, nsCString* aOut) {

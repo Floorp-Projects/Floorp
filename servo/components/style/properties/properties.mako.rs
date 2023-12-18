@@ -18,6 +18,7 @@ use std::{ops, ptr};
 use std::fmt::{self, Write};
 use std::mem;
 
+use crate::Atom;
 use cssparser::{Parser, ParserInput, TokenSerializationType};
 #[cfg(feature = "servo")] use euclid::SideOffsets2D;
 #[cfg(feature = "gecko")] use crate::gecko_bindings::structs::{self, nsCSSPropertyID};
@@ -38,12 +39,14 @@ use to_shmem::impl_trivial_to_shmem;
 use crate::stylesheets::{CssRuleType, CssRuleTypes, Origin, UrlExtraData};
 use crate::logical_geometry::{LogicalAxis, LogicalCorner, LogicalSide};
 use crate::use_counters::UseCounters;
-use crate::values::generics::font::LineHeight;
-use crate::values::specified::length::LineHeightBase;
-use crate::values::{computed, resolved, serialize_atom_name};
-use crate::values::specified::font::SystemFont;
 use crate::rule_tree::StrongRuleNode;
 use crate::str::{CssString, CssStringWriter};
+use crate::values::{
+    computed,
+    generics::font::LineHeight,
+    resolved, serialize_atom_name,
+    specified::{font::SystemFont, length::LineHeightBase},
+};
 use std::cell::Cell;
 use super::declaration_block::AppendableValue;
 use super::property_declaration::PropertyDeclarationId;
@@ -1036,12 +1039,6 @@ impl LonghandIdSet {
     }
 
     #[inline]
-    fn animatable() -> &'static Self {
-        ${static_longhand_id_set("ANIMATABLE", lambda p: p.animatable)}
-        &ANIMATABLE
-    }
-
-    #[inline]
     fn discrete_animatable() -> &'static Self {
         ${static_longhand_id_set("DISCRETE_ANIMATABLE", lambda p: p.animation_value_type == "discrete")}
         &DISCRETE_ANIMATABLE
@@ -1445,7 +1442,7 @@ impl LonghandId {
     /// Returns whether this property is animatable.
     #[inline]
     pub fn is_animatable(self) -> bool {
-        LonghandIdSet::animatable().contains(self)
+        NonCustomPropertyId::from(self).is_animatable()
     }
 
     /// Returns whether this property is animatable in a discrete way.
@@ -1983,6 +1980,22 @@ impl PropertyId {
         self.non_custom_non_alias_id()?.as_longhand()
     }
 
+    /// Returns true if this property is one of the animatable properties.
+    pub fn is_animatable(&self) -> bool {
+        match self {
+            Self::NonCustom(id) => id.is_animatable(),
+            Self::Custom(..) => true,
+        }
+    }
+
+    /// Returns true if this property is one of the transitionable properties.
+    pub fn is_transitionable(&self) -> bool {
+        match self {
+            Self::NonCustom(id) => id.is_transitionable(),
+            Self::Custom(..) => true,
+        }
+    }
+
     /// Returns a given property from the given name, _regardless of whether it
     /// is enabled or not_, or Err(()) for unknown properties.
     ///
@@ -2085,6 +2098,18 @@ impl PropertyId {
     #[inline]
     pub fn from_nscsspropertyid(id: nsCSSPropertyID) -> Option<Self> {
         Some(NonCustomPropertyId::from_nscsspropertyid(id)?.to_property_id())
+    }
+
+    /// Returns a property id from Gecko's AnimatedPropertyID.
+    #[cfg(feature = "gecko")]
+    #[inline]
+    pub fn from_gecko_animated_property_id(property: &structs::AnimatedPropertyID) -> Option<Self> {
+        Some(if property.mID == nsCSSPropertyID::eCSSPropertyExtra_variable {
+            debug_assert!(!property.mCustomName.mRawPtr.is_null());
+            Self::Custom(unsafe { Atom::from_raw(property.mCustomName.mRawPtr) })
+        } else {
+            Self::NonCustom(NonCustomPropertyId::from_nscsspropertyid(property.mID)?)
+        })
     }
 
     /// Returns true if the property is a shorthand or shorthand alias.
@@ -2405,10 +2430,7 @@ impl PropertyDeclaration {
 
     /// Returns true if this property declaration is for one of the animatable properties.
     pub fn is_animatable(&self) -> bool {
-        match self.id() {
-            PropertyDeclarationId::Longhand(id) => id.is_animatable(),
-            PropertyDeclarationId::Custom(..) => false,
-        }
+        self.id().is_animatable()
     }
 
     /// Returns true if this property is a custom property, false
@@ -3234,7 +3256,7 @@ impl ComputedValues {
                 s
             }
             PropertyDeclarationId::Custom(name) => {
-                // FIXME(bug 1273706): This should use a stylist to determine
+                // FIXME(bug 1869476): This should use a stylist to determine
                 // whether the name corresponds to an inherited custom property
                 // and then choose the inherited/non_inherited map accordingly.
                 let p = &self.custom_properties;

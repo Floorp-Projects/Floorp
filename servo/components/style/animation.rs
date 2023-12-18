@@ -15,8 +15,8 @@ use crate::properties::longhands::animation_fill_mode::computed_value::single_va
 use crate::properties::longhands::animation_play_state::computed_value::single_value::T as AnimationPlayState;
 use crate::properties::AnimationDeclarations;
 use crate::properties::{
-    ComputedValues, Importance, LonghandId, LonghandIdSet, PropertyDeclarationBlock,
-    PropertyDeclarationId,
+    ComputedValues, Importance, LonghandId, PropertyDeclarationBlock, PropertyDeclarationId,
+    PropertyDeclarationIdSet,
 };
 use crate::rule_tree::CascadeLevel;
 use crate::selector_parser::PseudoElement;
@@ -51,22 +51,22 @@ pub struct PropertyAnimation {
 
 impl PropertyAnimation {
     /// Returns the given property longhand id.
-    pub fn property_id(&self) -> LonghandId {
+    pub fn property_id(&self) -> PropertyDeclarationId {
         debug_assert_eq!(self.from.id(), self.to.id());
         self.from.id()
     }
 
-    fn from_longhand(
-        longhand: LonghandId,
+    fn from_property_declaration(
+        property_declaration: &PropertyDeclarationId,
         timing_function: TimingFunction,
         duration: Time,
         old_style: &ComputedValues,
         new_style: &ComputedValues,
     ) -> Option<PropertyAnimation> {
         // FIXME(emilio): Handle the case where old_style and new_style's writing mode differ.
-        let longhand = longhand.to_physical(new_style.writing_mode);
-        let from = AnimationValue::from_computed_values(longhand, old_style)?;
-        let to = AnimationValue::from_computed_values(longhand, new_style)?;
+        let property_declaration = property_declaration.to_physical(new_style.writing_mode);
+        let from = AnimationValue::from_computed_values(property_declaration, old_style)?;
+        let to = AnimationValue::from_computed_values(property_declaration, new_style)?;
         let duration = duration.seconds() as f64;
 
         if from == to || duration == 0.0 {
@@ -294,7 +294,7 @@ impl ComputedKeyframe {
     where
         E: TElement,
     {
-        let mut animating_properties = LonghandIdSet::new();
+        let mut animating_properties = PropertyDeclarationIdSet::default();
         for property in animation.properties_changed.iter() {
             debug_assert!(property.is_animatable());
             animating_properties.insert(property.to_physical(base_style.writing_mode));
@@ -314,7 +314,7 @@ impl ComputedKeyframe {
         let mut computed_steps: Vec<Self> = Vec::with_capacity(intermediate_steps.len());
         for (step_index, step) in intermediate_steps.into_iter().enumerate() {
             let start_percentage = step.start_percentage;
-            let properties_changed_in_step = step.declarations.longhands().clone();
+            let properties_changed_in_step = step.declarations.property_ids().clone();
             let step_timing_function = step.timing_function.clone();
             let step_style = step.resolve_style(element, context, base_style, resolver);
             let timing_function =
@@ -340,9 +340,9 @@ impl ComputedKeyframe {
                 animating_properties
                     .iter()
                     .zip(default_values.iter())
-                    .map(|(longhand, default_value)| {
-                        if properties_changed_in_step.contains(longhand) {
-                            AnimationValue::from_computed_values(longhand, &step_style)
+                    .map(|(property_declaration, default_value)| {
+                        if properties_changed_in_step.contains(property_declaration) {
+                            AnimationValue::from_computed_values(property_declaration, &step_style)
                                 .unwrap_or_else(|| default_value.clone())
                         } else {
                             default_value.clone()
@@ -368,7 +368,7 @@ pub struct Animation {
     pub name: Atom,
 
     /// The properties that change in this animation.
-    properties_changed: LonghandIdSet,
+    properties_changed: PropertyDeclarationIdSet,
 
     /// The computed style for each keyframe of this animation.
     computed_steps: Vec<ComputedKeyframe>,
@@ -669,7 +669,7 @@ impl Animation {
         // in order to avoid doing more work.
         let mut add_declarations_to_map = |keyframe: &ComputedKeyframe| {
             for value in keyframe.values.iter() {
-                map.insert(value.id(), value.clone());
+                map.insert(value.id().to_owned(), value.clone());
             }
         };
         if total_progress <= 0.0 {
@@ -702,7 +702,7 @@ impl Animation {
             };
 
             if let Ok(value) = animation.calculate_value(progress_between_keyframes) {
-                map.insert(value.id(), value);
+                map.insert(value.id().to_owned(), value);
             }
         }
     }
@@ -1024,7 +1024,7 @@ impl ElementAnimationSet {
     fn start_transition_if_applicable(
         &mut self,
         context: &SharedStyleContext,
-        longhand_id: LonghandId,
+        property_declaration_id: &PropertyDeclarationId,
         index: usize,
         old_style: &ComputedValues,
         new_style: &Arc<ComputedValues>,
@@ -1037,8 +1037,8 @@ impl ElementAnimationSet {
 
         // Only start a new transition if the style actually changes between
         // the old style and the new style.
-        let property_animation = match PropertyAnimation::from_longhand(
-            longhand_id,
+        let property_animation = match PropertyAnimation::from_property_declaration(
+            property_declaration_id,
             timing_function,
             duration,
             old_style,
@@ -1078,7 +1078,9 @@ impl ElementAnimationSet {
             .transitions
             .iter_mut()
             .filter(|transition| transition.state == AnimationState::Running)
-            .find(|transition| transition.property_animation.property_id() == longhand_id)
+            .find(|transition| {
+                transition.property_animation.property_id() == *property_declaration_id
+            })
         {
             // We always cancel any running transitions for the same property.
             old_transition.state = AnimationState::Canceled;
@@ -1106,7 +1108,7 @@ impl ElementAnimationSet {
                 Some(value) => value,
                 None => continue,
             };
-            map.insert(value.id(), value);
+            map.insert(value.id().to_owned(), value);
         }
 
         Some(map)
@@ -1268,10 +1270,12 @@ pub fn start_transitions_if_applicable(
     old_style: &ComputedValues,
     new_style: &Arc<ComputedValues>,
     animation_state: &mut ElementAnimationSet,
-) -> LonghandIdSet {
-    let mut properties_that_transition = LonghandIdSet::new();
+) -> PropertyDeclarationIdSet {
+    let mut properties_that_transition = PropertyDeclarationIdSet::default();
     for transition in new_style.transition_properties() {
-        let physical_property = transition.longhand_id.to_physical(new_style.writing_mode);
+        let physical_property = PropertyDeclarationId::Longhand(
+            transition.longhand_id.to_physical(new_style.writing_mode),
+        );
         if properties_that_transition.contains(physical_property) {
             continue;
         }
@@ -1279,7 +1283,7 @@ pub fn start_transitions_if_applicable(
         properties_that_transition.insert(physical_property);
         animation_state.start_transition_if_applicable(
             context,
-            physical_property,
+            &physical_property,
             transition.index,
             old_style,
             new_style,
@@ -1370,7 +1374,7 @@ pub fn maybe_start_animations<E>(
 
         let mut new_animation = Animation {
             name: name.clone(),
-            properties_changed: keyframe_animation.properties_changed,
+            properties_changed: keyframe_animation.properties_changed.clone(),
             computed_steps,
             started_at,
             duration,

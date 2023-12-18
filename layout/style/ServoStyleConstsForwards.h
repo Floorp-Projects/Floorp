@@ -93,6 +93,7 @@ class ServoElementSnapshotTable;
 template <typename T>
 struct StyleForgottenArcSlicePtr;
 
+struct AnimatedPropertyID;
 struct AnimationPropertySegment;
 struct AspectRatio;
 struct ComputedTiming;

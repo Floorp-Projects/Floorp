@@ -243,6 +243,7 @@ class nsWindow final : public nsBaseWidget {
 
   void OnScrollEvent(GdkEventScroll* aEvent);
 
+  void OnVisibilityNotifyEvent(GdkVisibilityState aState);
   void OnWindowStateEvent(GtkWidget* aWidget, GdkEventWindowState* aEvent);
   void OnDragDataReceivedEvent(GtkWidget* aWidget, GdkDragContext* aDragContext,
                                gint aX, gint aY,

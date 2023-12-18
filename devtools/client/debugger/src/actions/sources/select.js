@@ -189,7 +189,17 @@ export function selectLocation(location, { keepContext = true } = {}) {
 
     await dispatch(loadSourceText(source, sourceActor));
 
+    // Stop the async work if we started selecting another location
+    if (getSelectedLocation(getState()) != location) {
+      return;
+    }
+
     await dispatch(setBreakableLines(location));
+
+    // Stop the async work if we started selecting another location
+    if (getSelectedLocation(getState()) != location) {
+      return;
+    }
 
     const loadedSource = getSource(getState(), source.id);
 
@@ -212,6 +222,12 @@ export function selectLocation(location, { keepContext = true } = {}) {
     }
 
     await dispatch(setSymbols(location));
+
+    // Stop the async work if we started selecting another location
+    if (getSelectedLocation(getState()) != location) {
+      return;
+    }
+
     // /!\ we don't historicaly wait for this async action
     dispatch(setInScopeLines());
   };

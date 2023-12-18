@@ -42,15 +42,12 @@ add_task(async function () {
     62,
   ];
 
-  await waitFor(
-    () => getCursorPositionLine(dbg) === linesWithResults[0],
-    `typing in the search input did not set the search state in expected state`
-  );
-
-  is(
-    getCursorPositionLine(dbg),
+  await waitForCursorPosition(dbg, linesWithResults[0]);
+  assertCursorPosition(
+    dbg,
     linesWithResults[0],
-    "typing in the search input initialize the search"
+    6,
+    "typing in the search input moves the cursor in the source content"
   );
 
   info("Check that pressing Enter navigates forward through the results");
@@ -109,8 +106,11 @@ add_task(async function () {
   pressKey(dbg, "fileSearch");
   type(dbg, "doEval");
 
-  await waitFor(
-    () => getCursorPositionLine(dbg) === 9,
+  await waitForCursorPosition(dbg, 9);
+  assertCursorPosition(
+    dbg,
+    9,
+    16,
     "The UI navigates to the new search results"
   );
 
@@ -126,21 +126,6 @@ add_task(async function () {
 });
 
 async function navigateWithKey(dbg, key, expectedLine, assertionMessage) {
-  const currentLine = getCursorPositionLine(dbg);
   pressKey(dbg, key);
-  await waitFor(
-    () => currentLine !== getCursorPositionLine(dbg),
-    `Pressing "${key}" did not change the position`
-  );
-
-  is(getCursorPositionLine(dbg), expectedLine, assertionMessage);
-}
-
-function getCursorPositionLine(dbg) {
-  const cursorPosition = findElementWithSelector(dbg, ".cursor-position");
-  const { innerText } = cursorPosition;
-  // Cursor position text has the following shape: (L, C)
-  // where N is the line number, and C the column number
-  const line = innerText.substring(1, innerText.indexOf(","));
-  return parseInt(line, 10);
+  await waitForCursorPosition(dbg, expectedLine);
 }

@@ -203,6 +203,7 @@ class Editor extends PureComponent {
       });
 
     codeMirror.on("gutterClick", this.onGutterClick);
+    codeMirror.on("cursorActivity", this.onCursorChange);
 
     const codeMirrorWrapper = codeMirror.getWrapperElement();
     // Set code editor wrapper to be focusable
@@ -436,6 +437,31 @@ class Editor extends PureComponent {
 
     this.props.showEditorContextMenu(event, editor, location);
   }
+
+  /**
+   * CodeMirror event handler, called whenever the cursor moves
+   * for user-driven or programatic reasons.
+   */
+  onCursorChange = event => {
+    const { line, ch } = event.doc.getCursor();
+    this.props.selectLocation(
+      createLocation(
+        {
+          source: this.props.selectedSource,
+          // CodeMirror cursor location is all 0-based.
+          // Whereast in DevTools frontend and backend,
+          // only colunm is 0-based, the line is 1 based.
+          line: line + 1,
+          column: ch,
+        },
+        {
+          // Reset the context, so that we don't switch to original
+          // while moving the cursor within a bundle
+          keepContext: false,
+        }
+      )
+    );
+  };
 
   onGutterClick = (cm, line, gutter, ev) => {
     const {
@@ -763,6 +789,7 @@ const mapDispatchToProps = dispatch => ({
       closeTab: actions.closeTab,
       showEditorContextMenu: actions.showEditorContextMenu,
       showEditorGutterContextMenu: actions.showEditorGutterContextMenu,
+      selectLocation: actions.selectLocation,
     },
     dispatch
   ),

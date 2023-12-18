@@ -12,9 +12,9 @@ use super::generated::{
     SourcePropertyDeclaration, SourcePropertyDeclarationDrain, SubpropertiesVec,
 };
 use super::property_declaration::PropertyDeclarationId;
-use crate::applicable_declarations::CascadePriority;
+use super::LonghandIdSetIterator;
 use crate::context::QuirksMode;
-use crate::custom_properties::{self, ComputedCustomProperties, CustomPropertiesBuilder};
+use crate::custom_properties;
 use crate::error_reporting::{ContextualParseError, ParseErrorReporter};
 use crate::parser::ParserContext;
 use crate::properties::{
@@ -22,13 +22,12 @@ use crate::properties::{
     StyleBuilder,
 };
 use crate::rule_cache::RuleCacheConditions;
-use crate::rule_tree::CascadeLevel;
 use crate::selector_map::PrecomputedHashSet;
 use crate::selector_parser::SelectorImpl;
 use crate::shared_lock::Locked;
 use crate::str::{CssString, CssStringWriter};
 use crate::stylesheets::container_rule::ContainerSizeQuery;
-use crate::stylesheets::{layer_rule::LayerOrder, CssRuleType, Origin, UrlExtraData};
+use crate::stylesheets::{CssRuleType, Origin, UrlExtraData};
 use crate::stylist::Stylist;
 use crate::values::computed::Context;
 use cssparser::{
@@ -114,14 +113,16 @@ impl Importance {
     }
 }
 
-#[derive(Clone, ToShmem, Default, MallocSizeOf)]
-struct PropertyDeclarationIdSet {
+/// A set of properties.
+#[derive(Clone, Debug, ToShmem, Default, MallocSizeOf)]
+pub struct PropertyDeclarationIdSet {
     longhands: LonghandIdSet,
     custom: PrecomputedHashSet<custom_properties::Name>,
 }
 
 impl PropertyDeclarationIdSet {
-    fn insert(&mut self, id: PropertyDeclarationId) -> bool {
+    /// Add the given property to the set.
+    pub fn insert(&mut self, id: PropertyDeclarationId) -> bool {
         match id {
             PropertyDeclarationId::Longhand(id) => {
                 if self.longhands.contains(id) {
@@ -130,18 +131,20 @@ impl PropertyDeclarationIdSet {
                 self.longhands.insert(id);
                 return true;
             },
-            PropertyDeclarationId::Custom(name) => self.custom.insert(name.clone()),
+            PropertyDeclarationId::Custom(name) => self.custom.insert((*name).clone()),
         }
     }
 
-    fn contains(&self, id: PropertyDeclarationId) -> bool {
+    /// Return whether the given property is in the set.
+    pub fn contains(&self, id: PropertyDeclarationId) -> bool {
         match id {
             PropertyDeclarationId::Longhand(id) => self.longhands.contains(id),
             PropertyDeclarationId::Custom(name) => self.custom.contains(name),
         }
     }
 
-    fn remove(&mut self, id: PropertyDeclarationId) {
+    /// Remove the given property from the set.
+    pub fn remove(&mut self, id: PropertyDeclarationId) {
         match id {
             PropertyDeclarationId::Longhand(id) => self.longhands.remove(id),
             PropertyDeclarationId::Custom(name) => {
@@ -150,9 +153,73 @@ impl PropertyDeclarationIdSet {
         }
     }
 
-    fn clear(&mut self) {
+    /// Remove all properties from the set.
+    pub fn clear(&mut self) {
         self.longhands.clear();
         self.custom.clear();
+    }
+
+    /// Returns whether the set is empty.
+    #[inline]
+    pub fn is_empty(&self) -> bool {
+        self.longhands.is_empty() && self.custom.is_empty()
+    }
+    /// Returns whether this set contains any reset longhand.
+    #[inline]
+    pub fn contains_any_reset(&self) -> bool {
+        self.longhands.contains_any_reset()
+    }
+
+    /// Returns whether this set contains all longhands in the specified set.
+    #[inline]
+    pub fn contains_all_longhands(&self, longhands: &LonghandIdSet) -> bool {
+        self.longhands.contains_all(longhands)
+    }
+
+    /// Returns whether this set contains all properties in the specified set.
+    #[inline]
+    pub fn contains_all(&self, properties: &PropertyDeclarationIdSet) -> bool {
+        if !self.longhands.contains_all(&properties.longhands) {
+            return false;
+        }
+        if properties.custom.len() > self.custom.len() {
+            return false;
+        }
+        properties
+            .custom
+            .iter()
+            .all(|item| self.custom.contains(item))
+    }
+
+    /// Iterate over the current property declaration id set.
+    pub fn iter(&self) -> PropertyDeclarationIdSetIterator {
+        PropertyDeclarationIdSetIterator {
+            longhands: self.longhands.iter(),
+            custom: self.custom.iter(),
+        }
+    }
+}
+
+/// An iterator over a set of longhand ids.
+pub struct PropertyDeclarationIdSetIterator<'a> {
+    longhands: LonghandIdSetIterator<'a>,
+    custom: std::collections::hash_set::Iter<'a, custom_properties::Name>,
+}
+
+impl<'a> Iterator for PropertyDeclarationIdSetIterator<'a> {
+    type Item = PropertyDeclarationId<'a>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        // LonghandIdSetIterator's implementation always returns None
+        // after it did it once, so the code below will then continue
+        // to iterate over the custom properties.
+        match self.longhands.next() {
+            Some(id) => Some(PropertyDeclarationId::Longhand(id)),
+            None => match self.custom.next() {
+                Some(a) => Some(PropertyDeclarationId::Custom(a)),
+                None => None,
+            },
+        }
     }
 }
 
@@ -238,8 +305,6 @@ pub struct AnimationValueIterator<'a, 'cx, 'cx_a: 'cx> {
     iter: DeclarationImportanceIterator<'a>,
     context: &'cx mut Context<'cx_a>,
     default_values: &'a ComputedValues,
-    /// Custom properties in a keyframe if exists.
-    extra_custom_properties: Option<&'a crate::custom_properties::ComputedCustomProperties>,
 }
 
 impl<'a, 'cx, 'cx_a: 'cx> AnimationValueIterator<'a, 'cx, 'cx_a> {
@@ -247,13 +312,11 @@ impl<'a, 'cx, 'cx_a: 'cx> AnimationValueIterator<'a, 'cx, 'cx_a> {
         declarations: &'a PropertyDeclarationBlock,
         context: &'cx mut Context<'cx_a>,
         default_values: &'a ComputedValues,
-        extra_custom_properties: Option<&'a crate::custom_properties::ComputedCustomProperties>,
     ) -> AnimationValueIterator<'a, 'cx, 'cx_a> {
         AnimationValueIterator {
             iter: declarations.declaration_importance_iter(),
             context,
             default_values,
-            extra_custom_properties,
         }
     }
 }
@@ -272,7 +335,6 @@ impl<'a, 'cx, 'cx_a: 'cx> Iterator for AnimationValueIterator<'a, 'cx, 'cx_a> {
             let animation = AnimationValue::from_declaration(
                 decl,
                 &mut self.context,
-                self.extra_custom_properties,
                 self.default_values,
             );
 
@@ -359,9 +421,8 @@ impl PropertyDeclarationBlock {
         &'a self,
         context: &'cx mut Context<'cx_a>,
         default_values: &'a ComputedValues,
-        extra_custom_properties: Option<&'a crate::custom_properties::ComputedCustomProperties>,
     ) -> AnimationValueIterator<'a, 'cx, 'cx_a> {
-        AnimationValueIterator::new(self, context, default_values, extra_custom_properties)
+        AnimationValueIterator::new(self, context, default_values)
     }
 
     /// Returns whether this block contains any declaration with `!important`.
@@ -382,11 +443,11 @@ impl PropertyDeclarationBlock {
         !self.declarations_importance.all_true()
     }
 
-    /// Returns a `LonghandIdSet` representing the properties that are changed in
+    /// Returns a `PropertyDeclarationIdSet` representing the properties that are changed in
     /// this block.
     #[inline]
-    pub fn longhands(&self) -> &LonghandIdSet {
-        &self.property_ids.longhands
+    pub fn property_ids(&self) -> &PropertyDeclarationIdSet {
+        &self.property_ids
     }
 
     /// Returns whether this block contains a declaration of a given property id.
@@ -398,7 +459,7 @@ impl PropertyDeclarationBlock {
     /// Returns whether this block contains any reset longhand.
     #[inline]
     pub fn contains_any_reset(&self) -> bool {
-        self.property_ids.longhands.contains_any_reset()
+        self.property_ids.contains_any_reset()
     }
 
     /// Get a declaration for a given property.
@@ -850,7 +911,6 @@ impl PropertyDeclarationBlock {
         property: &PropertyId,
         dest: &mut CssStringWriter,
         computed_values: Option<&ComputedValues>,
-        custom_properties_block: Option<&PropertyDeclarationBlock>,
         stylist: &Stylist,
     ) -> fmt::Result {
         if let Ok(shorthand) = property.as_shorthand() {
@@ -881,15 +941,6 @@ impl PropertyDeclarationBlock {
 
         if let Some(cv) = computed_values {
             context.builder.custom_properties = cv.custom_properties.clone();
-
-            // If there are extra custom properties for this declaration block,
-            // factor them in too.
-            if let Some(block) = custom_properties_block {
-                // FIXME(emilio): This is not super-efficient here, and all this
-                // feels like a hack anyway...
-                context.builder.custom_properties =
-                    block.cascade_custom_properties(stylist, &context);
-            }
         };
 
         match (declaration, computed_values) {
@@ -921,7 +972,7 @@ impl PropertyDeclarationBlock {
         let mut property_ids = PropertyDeclarationIdSet::default();
 
         for (property, animation_value) in animation_value_map.iter() {
-            property_ids.longhands.insert(*property);
+            property_ids.insert(property.as_borrowed());
             declarations.push(animation_value.uncompute());
         }
 
@@ -943,31 +994,6 @@ impl PropertyDeclarationBlock {
         self.declarations.iter().any(|decl| {
             decl.id().is_or_is_longhand_of(property) && decl.get_css_wide_keyword().is_some()
         })
-    }
-
-    /// Returns a custom properties map which is the result of cascading custom
-    /// properties in this declaration block along with context's custom
-    /// properties.
-    pub fn cascade_custom_properties(
-        &self,
-        stylist: &Stylist,
-        context: &Context,
-    ) -> ComputedCustomProperties {
-        let mut builder = CustomPropertiesBuilder::new(stylist, context);
-
-        for declaration in self.normal_declaration_iter() {
-            if let PropertyDeclaration::Custom(ref declaration) = *declaration {
-                builder.cascade(
-                    declaration,
-                    CascadePriority::new(
-                        CascadeLevel::same_tree_author_normal(),
-                        LayerOrder::root(),
-                    ),
-                );
-            }
-        }
-
-        builder.build()
     }
 
     /// Like the method on ToCss, but without the type parameter to avoid
@@ -1048,7 +1074,7 @@ impl PropertyDeclarationBlock {
                 //     If all properties that map to shorthand are not present
                 //     in longhands, continue with the steps labeled shorthand
                 //     loop.
-                if !self.property_ids.longhands.contains_all(&longhands) {
+                if !self.property_ids.contains_all_longhands(&longhands) {
                     continue;
                 }
 

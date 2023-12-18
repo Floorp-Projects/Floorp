@@ -46,10 +46,12 @@ struct CSSAnimationMarker {
         oncompositor.AppendLiteral(", ");
       }
       properties.Append(nsCSSProps::GetStringValue(property));
-      oncompositor.Append(nsCSSProps::PropHasFlags(
-                              property, CSSPropFlags::CanAnimateOnCompositor)
-                              ? "true"
-                              : "false");
+      oncompositor.Append(
+          property != eCSSPropertyExtra_variable &&
+                  nsCSSProps::PropHasFlags(property,
+                                           CSSPropFlags::CanAnimateOnCompositor)
+              ? "true"
+              : "false");
     }
 
     aWriter.StringProperty("properties", properties);
@@ -81,9 +83,11 @@ struct CSSTransitionMarker {
                                    nsCSSPropertyID aProperty, bool aCanceled) {
     aWriter.StringProperty("Target", aTarget);
     aWriter.StringProperty("property", nsCSSProps::GetStringValue(aProperty));
-    aWriter.BoolProperty("oncompositor",
-                         nsCSSProps::PropHasFlags(
-                             aProperty, CSSPropFlags::CanAnimateOnCompositor));
+    aWriter.BoolProperty(
+        "oncompositor",
+        aProperty != eCSSPropertyExtra_variable &&
+            nsCSSProps::PropHasFlags(aProperty,
+                                     CSSPropFlags::CanAnimateOnCompositor));
     if (aCanceled) {
       aWriter.BoolProperty("Canceled", aCanceled);
     }
@@ -124,7 +128,7 @@ struct AnimationEventInfo {
 
   struct CssTransitionData : public CssAnimationOrTransitionData {
     // For transition events only.
-    const nsCSSPropertyID mPropertyId = eCSSProperty_UNKNOWN;
+    const AnimatedPropertyID mProperty;
   };
 
   struct WebAnimationData {
@@ -150,7 +154,7 @@ struct AnimationEventInfo {
   void MaybeAddMarker() const;
 
   // For CSS animation events
-  AnimationEventInfo(nsAtom* aAnimationName,
+  AnimationEventInfo(RefPtr<nsAtom> aAnimationName,
                      const NonOwningAnimationTarget& aTarget,
                      EventMessage aMessage, double aElapsedTime,
                      const TimeStamp& aScheduledEventTimeStamp,
@@ -160,14 +164,14 @@ struct AnimationEventInfo {
         mData(CssAnimationData{
             {OwningAnimationTarget(aTarget.mElement, aTarget.mPseudoType),
              aMessage, aElapsedTime},
-            aAnimationName}) {
+            std::move(aAnimationName)}) {
     if (profiler_thread_is_being_profiled_for_markers()) {
       MaybeAddMarker();
     }
   }
 
   // For CSS transition events
-  AnimationEventInfo(nsCSSPropertyID aProperty,
+  AnimationEventInfo(const AnimatedPropertyID& aProperty,
                      const NonOwningAnimationTarget& aTarget,
                      EventMessage aMessage, double aElapsedTime,
                      const TimeStamp& aScheduledEventTimeStamp,
@@ -242,8 +246,7 @@ struct AnimationEventInfo {
       }
 
       InternalTransitionEvent event(true, data.mMessage);
-      CopyUTF8toUTF16(nsCSSProps::GetStringValue(data.mPropertyId),
-                      event.mPropertyName);
+      data.mProperty.ToString(event.mPropertyName);
       event.mElapsedTime = data.mElapsedTime;
       event.mPseudoElement =
           nsCSSPseudoElements::PseudoTypeAsString(data.mTarget.mPseudoType);
