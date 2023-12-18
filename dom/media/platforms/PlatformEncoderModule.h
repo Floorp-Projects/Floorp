@@ -43,10 +43,14 @@ enum class CodecType {
 // TODO: Automatically generate this (Bug 1865896)
 const char* GetCodecTypeString(const CodecType& aCodecType);
 
+enum class H264BitStreamFormat { AVC, ANNEXB };
+
 struct H264Specific final {
   const H264_PROFILE mProfile;
+  const H264BitStreamFormat mFormat;
 
-  explicit H264Specific(H264_PROFILE aProfile) : mProfile(aProfile) {}
+  H264Specific(H264_PROFILE aProfile, H264BitStreamFormat aFormat)
+      : mProfile(aProfile), mFormat(aFormat) {}
 };
 
 struct OpusSpecific final {

@@ -38,6 +38,10 @@
 using namespace mozilla;
 
 static gfx::IntSize kImageSize(WIDTH, HEIGHT);
+const H264Specific kH264SpecificAnnexB(H264_PROFILE_BASE,
+                                       H264BitStreamFormat::ANNEXB);
+const H264Specific kH264SpecificAVCC(H264_PROFILE_BASE,
+                                     H264BitStreamFormat::AVC);
 
 class MediaDataEncoderTest : public testing::Test {
  protected:
@@ -179,8 +183,7 @@ static already_AddRefed<MediaDataEncoder> CreateH264Encoder(
     MediaDataEncoder::PixelFormat aPixelFormat =
         MediaDataEncoder::PixelFormat::YUV420P,
     int32_t aWidth = WIDTH, int32_t aHeight = HEIGHT,
-    const Maybe<H264Specific>& aSpecific =
-        Some(H264Specific(H264_PROFILE_BASE))) {
+    const Maybe<H264Specific>& aSpecific = Some(kH264SpecificAnnexB)) {
   return CreateVideoEncoder(CodecType::H264, aUsage, aPixelFormat, aWidth,
                             aHeight, aSpecific);
 }
@@ -302,7 +305,9 @@ TEST_F(MediaDataEncoderTest, H264Encodes) {
     WaitForShutdown(e);
 
     // Encode one frame and output in avcC format.
-    e = CreateH264Encoder(MediaDataEncoder::Usage::Record);
+    e = CreateH264Encoder(MediaDataEncoder::Usage::Record,
+                          MediaDataEncoder::PixelFormat::YUV420P, WIDTH, HEIGHT,
+                          Some(kH264SpecificAVCC));
     EnsureInit(e);
     output = Encode(e, NUM_FRAMES, mData);
     EXPECT_EQ(output.Length(), NUM_FRAMES);
@@ -318,17 +323,20 @@ TEST_F(MediaDataEncoderTest, InvalidSize) {
   RUN_IF_SUPPORTED(CodecType::H264, []() {
     RefPtr<MediaDataEncoder> e0x0 =
         CreateH264Encoder(MediaDataEncoder::Usage::Realtime,
-                          MediaDataEncoder::PixelFormat::YUV420P, 0, 0);
+                          MediaDataEncoder::PixelFormat::YUV420P, 0, 0,
+                          Some(kH264SpecificAnnexB));
     EXPECT_EQ(e0x0, nullptr);
 
     RefPtr<MediaDataEncoder> e0x1 =
         CreateH264Encoder(MediaDataEncoder::Usage::Realtime,
-                          MediaDataEncoder::PixelFormat::YUV420P, 0, 1);
+                          MediaDataEncoder::PixelFormat::YUV420P, 0, 1,
+                          Some(kH264SpecificAnnexB));
     EXPECT_EQ(e0x1, nullptr);
 
     RefPtr<MediaDataEncoder> e1x0 =
         CreateH264Encoder(MediaDataEncoder::Usage::Realtime,
-                          MediaDataEncoder::PixelFormat::YUV420P, 1, 0);
+                          MediaDataEncoder::PixelFormat::YUV420P, 1, 0,
+                          Some(kH264SpecificAnnexB));
     EXPECT_EQ(e1x0, nullptr);
   });
 }
@@ -338,7 +346,8 @@ TEST_F(MediaDataEncoderTest, AndroidNotSupportedSize) {
   RUN_IF_SUPPORTED(CodecType::H264, []() {
     RefPtr<MediaDataEncoder> e =
         CreateH264Encoder(MediaDataEncoder::Usage::Realtime,
-                          MediaDataEncoder::PixelFormat::YUV420P, 1, 1);
+                          MediaDataEncoder::PixelFormat::YUV420P, 1, 1,
+                          Some(kH264SpecificAnnexB));
     EXPECT_NE(e, nullptr);
     EXPECT_FALSE(EnsureInit(e));
   });

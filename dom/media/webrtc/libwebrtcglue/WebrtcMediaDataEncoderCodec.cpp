@@ -237,7 +237,8 @@ already_AddRefed<MediaDataEncoder> WebrtcMediaDataEncoder::CreateEncoder(
   switch (aCodecSettings->codecType) {
     case webrtc::VideoCodecType::kVideoCodecH264: {
       type = CodecType::H264;
-      specific.emplace(H264Specific(ConvertProfileLevel(mFormatParams)));
+      specific.emplace(H264Specific(ConvertProfileLevel(mFormatParams),
+                                    H264BitStreamFormat::ANNEXB));
       break;
     }
     case webrtc::VideoCodecType::kVideoCodecVP8: {
