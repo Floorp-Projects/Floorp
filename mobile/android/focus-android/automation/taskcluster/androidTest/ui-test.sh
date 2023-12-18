@@ -108,7 +108,7 @@ function failure_check() {
         echo "TEST_STATUS=${TEST_STATUS}"
         echo "PRODUCT_TYPE=${PRODUCT_TYPE}"
         echo "RELEASE_TYPE=${RELEASE_TYPE}"
-    } >> test_dashboard.env
+    } >> execution_metadata.env
 
     echo
     echo "RESULTS"
