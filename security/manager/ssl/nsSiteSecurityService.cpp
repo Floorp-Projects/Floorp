@@ -846,17 +846,13 @@ nsresult nsSiteSecurityService::RemoveWithMigration(
   return mSiteStateStorage->Remove(storageKey, aDataStorageType);
 }
 
-// Allows us to determine if we have an HSTS entry for a given host (and, if
-// so, what that state is). The return value says whether or not we know
-// anything about this host (true if the host has an HSTS entry). aHost is
-// the host which we wish to deteming HSTS information on,
-// aRequireIncludeSubdomains specifies whether we require includeSubdomains
-// to be set on the entry (with the other parameters being as per IsSecureHost).
-nsresult nsSiteSecurityService::HostHasHSTSEntry(
+// Determines whether or not there is a matching HSTS entry for the given host.
+// If aRequireIncludeSubdomains is set, then for there to be a matching HSTS
+// entry, it must assert includeSubdomains.
+nsresult nsSiteSecurityService::HostMatchesHSTSEntry(
     const nsAutoCString& aHost, bool aRequireIncludeSubdomains,
-    const OriginAttributes& aOriginAttributes, bool& aHostHasHSTSEntry,
-    bool* aResult) {
-  aHostHasHSTSEntry = false;
+    const OriginAttributes& aOriginAttributes, bool& aHostMatchesHSTSEntry) {
+  aHostMatchesHSTSEntry = false;
   // First we check for an entry in site security storage. If that entry exists,
   // we don't want to check in the preload lists. We only want to use the
   // stored value if it is not a knockout entry, however.
@@ -885,10 +881,9 @@ nsresult nsSiteSecurityService::HostHasHSTSEntry(
       if (!expired) {
         SSSLOG(("Entry for %s is not expired", aHost.get()));
         if (siteState.mHSTSState == SecurityPropertySet) {
-          *aResult = aRequireIncludeSubdomains
-                         ? siteState.mHSTSIncludeSubdomains
-                         : true;
-          aHostHasHSTSEntry = true;
+          aHostMatchesHSTSEntry = aRequireIncludeSubdomains
+                                      ? siteState.mHSTSIncludeSubdomains
+                                      : true;
           return NS_OK;
         }
       }
@@ -915,8 +910,8 @@ nsresult nsSiteSecurityService::HostHasHSTSEntry(
   // Finally look in the static preload list.
   if (checkPreloadList && GetPreloadStatus(aHost, &includeSubdomains)) {
     SSSLOG(("%s is a preloaded HSTS host", aHost.get()));
-    *aResult = aRequireIncludeSubdomains ? includeSubdomains : true;
-    aHostHasHSTSEntry = true;
+    aHostMatchesHSTSEntry =
+        aRequireIncludeSubdomains ? includeSubdomains : true;
   }
 
   return NS_OK;
@@ -926,8 +921,6 @@ nsresult nsSiteSecurityService::IsSecureHost(
     const nsACString& aHost, const OriginAttributes& aOriginAttributes,
     bool* aResult) {
   NS_ENSURE_ARG(aResult);
-
-  // set default in case if we can't find any STS information
   *aResult = false;
 
   /* An IP address never qualifies as a secure URI. */
@@ -940,48 +933,54 @@ nsresult nsSiteSecurityService::IsSecureHost(
       PublicKeyPinningService::CanonicalizeHostname(flatHost.get()));
 
   // First check the exact host.
-  bool hostHasHSTSEntry = false;
-  nsresult rv = HostHasHSTSEntry(host, false, aOriginAttributes,
-                                 hostHasHSTSEntry, aResult);
+  bool hostMatchesHSTSEntry = false;
+  nsresult rv = HostMatchesHSTSEntry(host, false, aOriginAttributes,
+                                     hostMatchesHSTSEntry);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  if (hostHasHSTSEntry) {
+  if (hostMatchesHSTSEntry) {
+    *aResult = true;
     return NS_OK;
   }
 
-  SSSLOG(("no HSTS data for %s found, walking up domain", host.get()));
-  const char* subdomain;
+  SSSLOG(("%s not congruent match for any known HSTS host", host.get()));
+  const char* superdomain;
 
   uint32_t offset = 0;
   for (offset = host.FindChar('.', offset) + 1; offset > 0;
        offset = host.FindChar('.', offset) + 1) {
-    subdomain = host.get() + offset;
+    superdomain = host.get() + offset;
 
     // If we get an empty string, don't continue.
-    if (strlen(subdomain) < 1) {
+    if (strlen(superdomain) < 1) {
       break;
     }
 
     // Do the same thing as with the exact host except now we're looking at
     // ancestor domains of the original host and, therefore, we have to require
-    // that the entry includes subdomains.
-    nsAutoCString subdomainString(subdomain);
-
-    hostHasHSTSEntry = false;
-    rv = HostHasHSTSEntry(subdomainString, true, aOriginAttributes,
-                          hostHasHSTSEntry, aResult);
+    // that the entry asserts includeSubdomains.
+    nsAutoCString superdomainString(superdomain);
+    hostMatchesHSTSEntry = false;
+    rv = HostMatchesHSTSEntry(superdomainString, true, aOriginAttributes,
+                              hostMatchesHSTSEntry);
     if (NS_FAILED(rv)) {
       return rv;
     }
-    if (hostHasHSTSEntry) {
-      break;
+    if (hostMatchesHSTSEntry) {
+      *aResult = true;
+      return NS_OK;
     }
 
-    SSSLOG(("no HSTS data for %s found, walking up domain", subdomain));
+    SSSLOG(
+        ("superdomain %s not known HSTS host (or includeSubdomains not set), "
+         "walking up domain",
+         superdomain));
   }
 
-  // Use whatever we ended up with, which defaults to false.
+  // If we get here, there was no congruent match, and no superdomain matched
+  // while asserting includeSubdomains, so this host is not HSTS.
+  *aResult = false;
   return NS_OK;
 }
 
