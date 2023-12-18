@@ -736,6 +736,13 @@ class GlobalObject : public NativeObject {
                                            Handle<GlobalObject*> global);
 
  public:
+  NativeObject* maybeGetIteratorPrototype() {
+    if (JSObject* obj = maybeBuiltinProto(ProtoKind::IteratorProto)) {
+      return &obj->as<NativeObject>();
+    }
+    return nullptr;
+  }
+
   static JSObject* getOrCreateIteratorPrototype(JSContext* cx,
                                                 Handle<GlobalObject*> global) {
     if (JSObject* proto = global->maybeBuiltinProto(ProtoKind::IteratorProto)) {

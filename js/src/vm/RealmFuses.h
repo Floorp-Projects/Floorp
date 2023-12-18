@@ -33,24 +33,79 @@ struct OptimizeGetIteratorFuse final : public RealmFuse {
   virtual bool checkInvariant(JSContext* cx) override;
 };
 
-struct ArrayPrototypeIteratorFuse final : public RealmFuse {
-  virtual const char* name() override { return "ArrayPrototypeIteratorFuse"; }
-  virtual bool checkInvariant(JSContext* cx) override;
-  // Override popFuse, because there are downstream fuses to pop.
+struct PopsOptimizedGetIteratorFuse : public RealmFuse {
   virtual void popFuse(JSContext* cx, RealmFuses& realmFuses) override;
 };
 
-struct ArrayPrototypeIteratorNextFuse final : public RealmFuse {
+struct ArrayPrototypeIteratorFuse final : public PopsOptimizedGetIteratorFuse {
   virtual const char* name() override { return "ArrayPrototypeIteratorFuse"; }
   virtual bool checkInvariant(JSContext* cx) override;
-  // Override popFuse, because there are downstream fuses to pop.
-  virtual void popFuse(JSContext* cx, RealmFuses& realmFuses) override;
 };
 
-#define FOR_EACH_REALM_FUSE(FUSE)                              \
-  FUSE(OptimizeGetIteratorFuse, optimizeGetIteratorFuse)       \
-  FUSE(ArrayPrototypeIteratorFuse, arrayPrototypeIteratorFuse) \
-  FUSE(ArrayPrototypeIteratorNextFuse, arrayPrototypeIteratorNextFuse)
+struct ArrayPrototypeIteratorNextFuse final
+    : public PopsOptimizedGetIteratorFuse {
+  virtual const char* name() override {
+    return "ArrayPrototypeIteratorNextFuse";
+  }
+  virtual bool checkInvariant(JSContext* cx) override;
+};
+
+// This fuse covers ArrayIteratorPrototype not having a return property;
+// however the fuse doesn't pop if a prototype acquires the return property.
+struct ArrayIteratorPrototypeHasNoReturnProperty final
+    : public PopsOptimizedGetIteratorFuse {
+  virtual const char* name() override {
+    return "ArrayIteratorPrototypeHasNoReturnProperty";
+  }
+  virtual bool checkInvariant(JSContext* cx) override;
+};
+
+// This fuse covers IteratorPrototype not having a return property;
+// however the fuse doesn't pop if a prototype acquires the return property.
+struct IteratorPrototypeHasNoReturnProperty final
+    : public PopsOptimizedGetIteratorFuse {
+  virtual const char* name() override {
+    return "IteratorPrototypeHasNoReturnProperty";
+  }
+  virtual bool checkInvariant(JSContext* cx) override;
+};
+
+struct ArrayIteratorPrototypeHasIteratorProto final
+    : public PopsOptimizedGetIteratorFuse {
+  virtual const char* name() override {
+    return "ArrayIteratorPrototypeHasIteratorProto";
+  }
+  virtual bool checkInvariant(JSContext* cx) override;
+};
+
+struct IteratorPrototypeHasObjectProto final
+    : public PopsOptimizedGetIteratorFuse {
+  virtual const char* name() override {
+    return "IteratorPrototypeHasObjectProto";
+  }
+  virtual bool checkInvariant(JSContext* cx) override;
+};
+
+struct ObjectPrototypeHasNoReturnProperty final
+    : public PopsOptimizedGetIteratorFuse {
+  virtual const char* name() override {
+    return "ObjectPrototypeHasNoReturnProperty";
+  }
+  virtual bool checkInvariant(JSContext* cx) override;
+};
+
+#define FOR_EACH_REALM_FUSE(FUSE)                                        \
+  FUSE(OptimizeGetIteratorFuse, optimizeGetIteratorFuse)                 \
+  FUSE(ArrayPrototypeIteratorFuse, arrayPrototypeIteratorFuse)           \
+  FUSE(ArrayPrototypeIteratorNextFuse, arrayPrototypeIteratorNextFuse)   \
+  FUSE(ArrayIteratorPrototypeHasNoReturnProperty,                        \
+       arrayIteratorPrototypeHasNoReturnProperty)                        \
+  FUSE(IteratorPrototypeHasNoReturnProperty,                             \
+       iteratorPrototypeHasNoReturnProperty)                             \
+  FUSE(ArrayIteratorPrototypeHasIteratorProto,                           \
+       arrayIteratorPrototypeHasIteratorProto)                           \
+  FUSE(IteratorPrototypeHasObjectProto, iteratorPrototypeHasObjectProto) \
+  FUSE(ObjectPrototypeHasNoReturnProperty, objectPrototypeHasNoReturnProperty)
 
 struct RealmFuses {
   RealmFuses() = default;

@@ -8,12 +8,6 @@ function intact(name) {
   return state[name].intact
 }
 
-g = newGlobal();
-g.evaluate(intact.toString())
-
-g.evaluate("delete Array.prototype[Symbol.iterator]")
-g.evaluate(`assertEq(intact("ArrayPrototypeIteratorFuse"), false)`)
-
 function testRealmChange() {
   let g = newGlobal();
   g.evaluate(intact.toString())
@@ -42,3 +36,18 @@ function testRealmChange() {
 }
 
 testRealmChange();
+
+function testInNewGlobal(pre, post) {
+  g = newGlobal();
+  g.evaluate(intact.toString());
+  g.evaluate(pre)
+  g.evaluate("assertRealmFuseInvariants()");
+  g.evaluate(post);
+}
+
+testInNewGlobal("delete Array.prototype[Symbol.iterator]", `assertEq(intact("ArrayPrototypeIteratorFuse"), false)`)
+testInNewGlobal("([])[Symbol.iterator]().__proto__['return'] = () => 10;", `assertEq(intact("ArrayIteratorPrototypeHasNoReturnProperty"), false)`)
+testInNewGlobal("([])[Symbol.iterator]().__proto__.__proto__['return'] = () => 10;", `assertEq(intact("IteratorPrototypeHasNoReturnProperty"), false)`)
+testInNewGlobal("Object.prototype['return'] = () => 10;", `assertEq(intact("ObjectPrototypeHasNoReturnProperty"), false)`)
+testInNewGlobal(`assertEq(intact("ArrayIteratorPrototypeHasIteratorProto"), true); Object.setPrototypeOf(( ([])[Symbol.iterator]().__proto__ ), {a:10})`, `assertEq(intact("ArrayIteratorPrototypeHasIteratorProto"), false);`);
+testInNewGlobal(`assertEq(intact("IteratorPrototypeHasObjectProto"), true); Object.setPrototypeOf( ( ([])[Symbol.iterator]().__proto__.__proto__ ), {a:10})`, `assertEq(intact("IteratorPrototypeHasObjectProto"), false);`);
