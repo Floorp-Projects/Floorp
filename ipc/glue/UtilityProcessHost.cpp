@@ -378,33 +378,37 @@ void UtilityProcessHost::EnsureWidevineL1PathForSandbox(
     return;
   }
 
-  // If Widevine L1 is installed after the MFCDM process starts, we will set it
-  // path later via MFCDMService::UpdateWideivineL1Path().
-  nsString widevineL1Path;
-  nsCOMPtr<nsIFile> pluginFile;
-  if (NS_WARN_IF(NS_FAILED(gmps->FindPluginDirectoryForAPI(
-          nsCString(kWidevineExperimentAPIName),
-          {nsCString(kWidevineExperimentKeySystemName)},
-          getter_AddRefs(pluginFile))))) {
-    WMF_LOG("Widevine L1 is not installed yet");
-    return;
+  // TODO : install L1 if it's not downloaded yet, and the version change in bug
+  // 1863800.
+  static nsString sWidevineL1Path;
+  if (sWidevineL1Path.IsEmpty()) {
+    nsCOMPtr<nsIFile> pluginFile;
+    if (NS_WARN_IF(NS_FAILED(gmps->FindPluginDirectoryForAPI(
+            nsCString(kWidevineExperimentAPIName),
+            {nsCString(kWidevineExperimentKeySystemName)},
+            getter_AddRefs(pluginFile))))) {
+      WMF_LOG("Widevine L1 is not installed yet");
+      return;
+    }
+
+    if (!pluginFile) {
+      WMF_LOG("No plugin file found!");
+      return;
+    }
+
+    if (NS_WARN_IF(NS_FAILED(pluginFile->GetTarget(sWidevineL1Path)))) {
+      WMF_LOG("Failed to get L1 path!");
+      return;
+    }
+
+    MOZ_ASSERT(!sWidevineL1Path.IsEmpty());
+    WMF_LOG("Store Widevine L1 path=%s",
+            NS_ConvertUTF16toUTF8(sWidevineL1Path).get());
   }
 
-  if (!pluginFile) {
-    WMF_LOG("No plugin file found!");
-    return;
-  }
-
-  if (NS_WARN_IF(NS_FAILED(pluginFile->GetTarget(widevineL1Path)))) {
-    WMF_LOG("Failed to get L1 path!");
-    return;
-  }
-
-  WMF_LOG("Set Widevine L1 path=%s",
-          NS_ConvertUTF16toUTF8(widevineL1Path).get());
-  geckoargs::sPluginPath.Put(NS_ConvertUTF16toUTF8(widevineL1Path).get(),
+  geckoargs::sPluginPath.Put(NS_ConvertUTF16toUTF8(sWidevineL1Path).get(),
                              aExtraOpts);
-  SandboxBroker::EnsureLpacPermsissionsOnDir(widevineL1Path);
+  SandboxBroker::EnsureLpacPermsissionsOnDir(sWidevineL1Path);
 }
 
 #  undef WMF_LOG

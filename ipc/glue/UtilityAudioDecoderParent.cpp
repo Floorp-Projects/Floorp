@@ -194,12 +194,6 @@ IPCResult UtilityAudioDecoderParent::RecvGetKeySystemCapabilities(
       });
   return IPC_OK();
 }
-
-IPCResult UtilityAudioDecoderParent::RecvUpdateWidevineL1Path(
-    const nsString& aPath) {
-  MFCDMParent::SetWidevineL1Path(NS_ConvertUTF16toUTF8(aPath).get());
-  return IPC_OK();
-}
 #endif
 
 }  // namespace mozilla::ipc

@@ -1955,7 +1955,7 @@ already_AddRefed<Promise> ChromeUtils::GetWMFContentDecryptionModuleInformation(
     return nullptr;
   }
   MOZ_ASSERT(domPromise);
-  MFCDMService::GetAllKeySystemsCapabilities(domPromise);
+  MFCDMCapabilities::GetAllKeySystemsCapabilities(domPromise);
   return domPromise.forget();
 }
 #endif

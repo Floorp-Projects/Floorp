@@ -52,10 +52,6 @@
 #  include "mozilla/dom/MediaKeys.h"  // MediaKeys::kMediaKeysRequestTopic
 #endif
 
-#ifdef MOZ_WMF_CDM
-#  include "mozilla/MFCDMParent.h"
-#endif
-
 namespace mozilla::gmp {
 
 #ifdef __CLASS__
@@ -654,12 +650,6 @@ void GeckoMediaPluginServiceParent::UpdateContentProcessGMPCapabilities(
           hasH264 = HAS_H264;
         }
       }
-#ifdef MOZ_WMF_CDM
-      if (name.Equals("gmp-widevinecdm-l1")) {
-        nsCOMPtr<nsIFile> pluginFile = gmp->GetDirectory();
-        MFCDMService::UpdateWidevineL1Path(pluginFile);
-      }
-#endif
       caps.AppendElement(std::move(x));
     }
   }

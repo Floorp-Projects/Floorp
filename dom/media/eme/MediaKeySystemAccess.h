@@ -24,8 +24,6 @@ class ErrorResult;
 
 namespace dom {
 
-struct MediaKeySystemAccessRequest;
-
 class MediaKeySystemAccess final : public nsISupports, public nsWrapperCache {
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -52,8 +50,7 @@ class MediaKeySystemAccess final : public nsISupports, public nsWrapperCache {
   already_AddRefed<Promise> CreateMediaKeys(ErrorResult& aRv);
 
   static MediaKeySystemStatus GetKeySystemStatus(
-      const MediaKeySystemAccessRequest& aRequest,
-      nsACString& aOutExceptionMessage);
+      const nsAString& aKeySystem, nsACString& aOutExceptionMessage);
 
   static void NotifyObservers(nsPIDOMWindowInner* aWindow,
                               const nsAString& aKeySystem,
