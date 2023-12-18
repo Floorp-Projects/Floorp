@@ -120,7 +120,7 @@ void SVGClipPathFrame::PaintChildren(gfxContext& aMaskContext,
   }
 
   // Paint our children into the mask:
-  for (nsIFrame* kid = mFrames.FirstChild(); kid; kid = kid->GetNextSibling()) {
+  for (auto* kid : mFrames) {
     PaintFrameIntoMask(kid, aClippedFrame, aMaskContext);
   }
 
@@ -276,7 +276,7 @@ bool SVGClipPathFrame::PointIsInsideClipPath(nsIFrame* aClippedFrame,
     return false;
   }
 
-  for (nsIFrame* kid = mFrames.FirstChild(); kid; kid = kid->GetNextSibling()) {
+  for (auto* kid : mFrames) {
     ISVGDisplayableFrame* SVGFrame = do_QueryFrame(kid);
     if (SVGFrame) {
       gfxPoint pointForChild = point;
@@ -310,7 +310,7 @@ bool SVGClipPathFrame::IsTrivial(ISVGDisplayableFrame** aSingleChild) {
 
   ISVGDisplayableFrame* foundChild = nullptr;
 
-  for (nsIFrame* kid = mFrames.FirstChild(); kid; kid = kid->GetNextSibling()) {
+  for (auto* kid : mFrames) {
     ISVGDisplayableFrame* svgChild = do_QueryFrame(kid);
     if (svgChild) {
       // We consider a non-trivial clipPath to be one containing
@@ -340,7 +340,7 @@ bool SVGClipPathFrame::IsValid() {
     return false;
   }
 
-  for (nsIFrame* kid = mFrames.FirstChild(); kid; kid = kid->GetNextSibling()) {
+  for (auto* kid : mFrames) {
     LayoutFrameType kidType = kid->Type();
 
     if (kidType == LayoutFrameType::SVGUse) {

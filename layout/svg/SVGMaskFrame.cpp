@@ -83,7 +83,7 @@ already_AddRefed<SourceSurface> SVGMaskFrame::GetMaskForMaskedFrame(
   mMatrixForChildren =
       GetMaskTransform(aParams.maskedFrame) * aParams.toUserSpace;
 
-  for (nsIFrame* kid = mFrames.FirstChild(); kid; kid = kid->GetNextSibling()) {
+  for (auto* kid : mFrames) {
     gfxMatrix m = mMatrixForChildren;
 
     // The CTM of each frame referencing us can be different
