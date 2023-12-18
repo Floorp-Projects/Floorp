@@ -96,7 +96,11 @@ nsPrintSettingsGTK& nsPrintSettingsGTK::operator=(
   mPrintSettings = gtk_print_settings_copy(rhs.mPrintSettings);
 
   if (mGTKPrinter) g_object_unref(mGTKPrinter);
-  mGTKPrinter = (GtkPrinter*)g_object_ref(rhs.mGTKPrinter);
+
+  if (rhs.mGTKPrinter) {
+    g_object_ref(rhs.mGTKPrinter);
+  }
+  mGTKPrinter = rhs.mGTKPrinter;
 
   return *this;
 }
