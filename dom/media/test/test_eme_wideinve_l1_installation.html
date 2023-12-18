@@ -1,0 +1,86 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test Widevine L1 installation</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+  <script type="text/javascript" src="eme.js"></script>
+</head>
+<body>
+<script class="testbody" type="text/javascript">
+
+// This test mostly follows the patten of test_eme_request_notifications.html.
+
+var manager = new MediaTestManager;
+
+function SetPrefs(prefs) {
+  return SpecialPowers.pushPrefEnv({"set": prefs});
+}
+
+function observe() {
+  return new Promise(function(resolve, reject) {
+    var observer = function(subject, topic, data) {
+      SpecialPowers.Services.obs.removeObserver(observer, "mediakeys-request");
+      resolve(JSON.parse(data).status);
+    };
+    SpecialPowers.Services.obs.addObserver(observer, "mediakeys-request");
+  });
+}
+
+function Test(test) {
+  var p = test.prefs ? SetPrefs(test.prefs) : Promise.resolve();
+  var name = "'" + test.keySystem + "'";
+
+  var res = observe().then((status) => {
+    is(status, test.expectedStatus, name + " expected status");
+  });
+
+  p.then(() => navigator.requestMediaKeySystemAccess(test.keySystem, gCencMediaKeySystemConfig))
+   .then((keySystemAccess) => keySystemAccess.createMediaKeys());
+
+  return res;
+}
+
+SimpleTest.waitForExplicitFinish();
+
+const tests = [
+  // GMP L1 pref is disabled
+  {
+    keySystem: "com.widevine.alpha.experiment",
+    expectedStatus: 'cdm-disabled',
+    prefs: [
+      ["media.eme.enabled", true],
+      ["media.wmf.media-engine.enabled", 2],
+      ["media.eme.widevine.experiment.enabled", true],
+      ["media.gmp-widevinecdm-l1.enabled", false],
+    ]
+  },
+  {
+    keySystem: "com.widevine.alpha.experiment2",
+    expectedStatus: 'cdm-disabled',
+  },
+  // Enable GMP L1 pref
+  {
+    keySystem: "com.widevine.alpha.experiment",
+    expectedStatus: 'cdm-not-installed',
+    prefs: [
+      ["media.gmp-widevinecdm-l1.enabled", true],
+    ]
+  },
+  {
+    keySystem: "com.widevine.alpha.experiment2",
+    expectedStatus: 'cdm-not-installed',
+  },
+];
+
+tests.reduce(function(p, c, i, array) {
+  return p.then(function() {
+    return Test(c);
+  });
+}, Promise.resolve())
+.then(SimpleTest.finish);
+
+</script>
+</body>
+</html>
