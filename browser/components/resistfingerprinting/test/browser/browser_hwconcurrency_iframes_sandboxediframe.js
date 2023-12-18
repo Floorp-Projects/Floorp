@@ -94,3 +94,9 @@ add_task(testG.bind(null, uri, testHWConcurrency, expectedResults));
 // (H) RFP is not exempted on the framer nor another (if needed) cross-origin domain but is on the framee
 expectedResults = structuredClone(allSpoofed);
 add_task(testH.bind(null, uri, testHWConcurrency, expectedResults));
+
+// Test RFP Enabled in PBM and FPP enabled in Normal Browsing Mode
+expectedResults = structuredClone(allNotSpoofed);
+add_task(
+  simpleRFPPBMFPPTest.bind(null, uri, testHWConcurrency, expectedResults)
+);

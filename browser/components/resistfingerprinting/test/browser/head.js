@@ -651,8 +651,10 @@ const CROSS_ORIGIN_DOMAIN = "example.net";
 async function runActualTest(uri, testFunction, expectedResults, extraData) {
   let browserWin = gBrowser;
   let openedWin = null;
+  let pbmWindow =
+    "private_window" in extraData && extraData.private_window === true;
 
-  if ("private_window" in extraData) {
+  if (pbmWindow) {
     openedWin = await BrowserTestUtils.openNewBrowserWindow({
       private: true,
     });
@@ -725,7 +727,7 @@ async function runActualTest(uri, testFunction, expectedResults, extraData) {
     ContentBlockingAllowList.remove(tab.linkedBrowser);
   }
   BrowserTestUtils.removeTab(tab);
-  if ("private_window" in extraData) {
+  if (pbmWindow) {
     await BrowserTestUtils.closeWindow(openedWin);
   }
 }
@@ -839,6 +841,35 @@ async function simplePBMFPPTest(
     set: [
       ["privacy.fingerprintingProtection.pbmode", true],
       ["privacy.fingerprintingProtection.overrides", "+HardwareConcurrency"],
+    ].concat(extraPrefs || []),
+  });
+
+  await runActualTest(uri, testFunction, expectedResults, extraData);
+
+  await SpecialPowers.popPrefEnv();
+}
+
+async function simpleRFPPBMFPPTest(
+  uri,
+  testFunction,
+  expectedResults,
+  extraData,
+  extraPrefs
+) {
+  if (extraData == undefined) {
+    extraData = {};
+  }
+  extraData.private_window = false;
+  extraData.testDesc =
+    extraData.testDesc ||
+    "RFP Enabled in PBM and FPP enabled in Normal Browsing Mode";
+  expectedResults.shouldRFPApply = false;
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["privacy.resistFingerprinting", false],
+      ["privacy.resistFingerprinting.pbmode", true],
+      ["privacy.fingerprintingProtection", true],
+      ["privacy.fingerprintingProtection.overrides", "-HardwareConcurrency"],
     ].concat(extraPrefs || []),
   });
 
