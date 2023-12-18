@@ -436,7 +436,7 @@ nsNavBookmarks::InsertBookmark(int64_t aFolder, nsIURI* aURI, int32_t aIndex,
       "  h.hidden, "
       "  h.visit_count, "
       "  h.last_visit_date, "
-      "  (SELECT group_concat(p.title, ',') "
+      "  (SELECT group_concat(p.title ORDER BY p.title) "
       "    FROM moz_bookmarks b "
       "    JOIN moz_bookmarks p ON p.id = b.parent "
       "    JOIN moz_bookmarks g ON g.id = p.parent "

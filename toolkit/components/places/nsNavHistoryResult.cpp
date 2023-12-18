@@ -369,25 +369,12 @@ nsNavHistoryResultNode::GetParentResult(nsINavHistoryResult** aResult) {
 }
 
 void nsNavHistoryResultNode::SetTags(const nsAString& aTags) {
-  mTags.SetIsVoid(true);
   if (aTags.IsVoid()) {
+    mTags.SetIsVoid(true);
     return;
   }
 
-  // We'd like to sort tags in the query, and completely skip the
-  // deconstructing, sorting and rebuilding here, unfortunately Sqlite's
-  // group_concat() at this time doesn't guarantee the concat order, even using
-  // a sub query. If that should change in the future, we could surely save some
-  // code here.
-  nsTArray<nsCString> tags;
-  ParseString(NS_ConvertUTF16toUTF8(aTags), ',', tags);
-  tags.Sort();
-  for (nsTArray<nsCString>::index_type i = 0; i < tags.Length(); ++i) {
-    AppendUTF8toUTF16(tags[i], mTags);
-    if (i < tags.Length() - 1) {
-      mTags.AppendLiteral(", ");
-    }
-  }
+  mTags.Assign(aTags);
 }
 
 NS_IMETHODIMP

@@ -171,7 +171,7 @@ add_task(async function test_add_bookmark_tags_from_library() {
   fillBookmarkTextField("editBMPanel_tagsField", "tag1, tag2", library);
 
   await TestUtils.waitForCondition(
-    () => bookmarkNode.tags === "tag1, tag2",
+    () => bookmarkNode.tags === "tag1,tag2",
     "Node tag is correct"
   );
 

@@ -1673,7 +1673,7 @@ export var PlacesUtils = {
          FROM moz_bookmarks b2
          JOIN descendants ON b2.parent = descendants.id AND b2.id <> :tags_folder),
        tagged(place_id, tags) AS (
-         SELECT b.fk, group_concat(p.title)
+         SELECT b.fk, group_concat(p.title ORDER BY p.title)
          FROM moz_bookmarks b
          JOIN moz_bookmarks p ON p.id = b.parent
          JOIN moz_bookmarks g ON g.id = p.parent

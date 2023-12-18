@@ -50,7 +50,7 @@ const SQL_BOOKMARK_TAGS_FRAGMENT = `EXISTS(SELECT 1 FROM moz_bookmarks WHERE fk 
    ( SELECT title FROM moz_bookmarks WHERE fk = h.id AND title NOTNULL
      ORDER BY lastModified DESC LIMIT 1
    ) AS btitle,
-   ( SELECT GROUP_CONCAT(t.title, ', ')
+   ( SELECT GROUP_CONCAT(t.title ORDER BY t.title)
      FROM moz_bookmarks b
      JOIN moz_bookmarks t ON t.id = +b.parent AND t.parent = :parent
      WHERE b.fk = h.id
@@ -181,16 +181,12 @@ class ProviderInputHistory extends UrlbarProvider {
         continue;
       }
 
-      let resultTags = tags
-        .split(",")
-        .map(t => t.trim())
-        .filter(tag => {
-          let lowerCaseTag = tag.toLocaleLowerCase();
-          return queryContext.tokens.some(token =>
-            lowerCaseTag.includes(token.lowerCaseValue)
-          );
-        })
-        .sort();
+      let resultTags = tags.split(",").filter(tag => {
+        let lowerCaseTag = tag.toLocaleLowerCase();
+        return queryContext.tokens.some(token =>
+          lowerCaseTag.includes(token.lowerCaseValue)
+        );
+      });
 
       let result = new lazy.UrlbarResult(
         UrlbarUtils.RESULT_TYPE.URL,

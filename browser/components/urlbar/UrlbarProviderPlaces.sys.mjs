@@ -52,7 +52,7 @@ const SQL_BOOKMARK_TAGS_FRAGMENT = `EXISTS(SELECT 1 FROM moz_bookmarks WHERE fk 
    ( SELECT title FROM moz_bookmarks WHERE fk = h.id AND title NOTNULL
      ORDER BY lastModified DESC LIMIT 1
    ) AS btitle,
-   ( SELECT GROUP_CONCAT(t.title, ', ')
+   ( SELECT GROUP_CONCAT(t.title ORDER BY t.title)
      FROM moz_bookmarks b
      JOIN moz_bookmarks t ON t.id = +b.parent AND t.parent = :parent
      WHERE b.fk = h.id
@@ -378,18 +378,12 @@ function makeUrlbarResult(tokens, info) {
       tags = "";
     }
 
-    // Tags are separated by a comma and in a random order.
+    // Tags are separated by a comma.
     // We should also just include tags that match the searchString.
-    tags = tags
-      .split(",")
-      .map(t => t.trim())
-      .filter(tag => {
-        let lowerCaseTag = tag.toLocaleLowerCase();
-        return tokens.some(token =>
-          lowerCaseTag.includes(token.lowerCaseValue)
-        );
-      })
-      .sort();
+    tags = tags.split(",").filter(tag => {
+      let lowerCaseTag = tag.toLocaleLowerCase();
+      return tokens.some(token => lowerCaseTag.includes(token.lowerCaseValue));
+    });
   }
 
   return new lazy.UrlbarResult(

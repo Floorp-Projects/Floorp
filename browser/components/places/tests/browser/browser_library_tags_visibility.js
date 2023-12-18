@@ -12,7 +12,8 @@ registerCleanupFunction(async function () {
 });
 
 const TEST_URI = Services.io.newURI("https://example.com/");
-const TEST_TAG = "testtag";
+const TEST_TAGS = ["tagB", "tagA"];
+const TAGS_TEXT = TEST_TAGS.sort().join(", ");
 
 add_task(async function base() {
   const { guid } = await PlacesUtils.bookmarks.insert({
@@ -20,7 +21,7 @@ add_task(async function base() {
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
   });
   await PlacesTestUtils.addVisits(TEST_URI);
-  PlacesUtils.tagging.tagURI(TEST_URI, [TEST_TAG]);
+  PlacesUtils.tagging.tagURI(TEST_URI, TEST_TAGS);
 
   const library = await promiseLibrary();
   registerCleanupFunction(() => {
@@ -74,12 +75,12 @@ async function assertTagsVisibility(libraryDocument, expectedVisible) {
   const tagInput = libraryDocument.getElementById("editBMPanel_tagsField");
   Assert.equal(BrowserTestUtils.is_visible(tagInput), expectedVisible);
   if (expectedVisible) {
-    Assert.equal(tagInput.value, TEST_TAG);
+    Assert.equal(tagInput.value, TAGS_TEXT);
   }
 
   // Check the cell.
   const tree = libraryDocument.getElementById("placeContent");
-  const expectedCellText = expectedVisible ? TEST_TAG : null;
+  const expectedCellText = expectedVisible ? TAGS_TEXT : null;
   Assert.equal(
     tree.view.getCellText(0, tree.columns.placesContentTags),
     expectedCellText

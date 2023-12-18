@@ -180,7 +180,7 @@ add_task(async function test_value_combo() {
         parentGuid: PlacesUtils.bookmarks.toolbarGuid,
         source: PlacesUtils.bookmarks.SOURCES.SYNC,
         dateAdded: now,
-        tags: "taggy,browsers",
+        tags: "browsers,taggy",
         frecency: 1,
         hidden: false,
         visitCount: 0,
@@ -270,11 +270,7 @@ add_task(async function test_value_combo() {
   let fxTags = PlacesUtils.tagging.getTagsForURI(
     Services.io.newURI("http://getfirefox.com")
   );
-  deepEqual(
-    fxTags.sort(),
-    ["browsers", "taggy"],
-    "Should tag new Firefox bookmark"
-  );
+  deepEqual(fxTags, ["browsers", "taggy"], "Should tag new Firefox bookmark");
 
   let folder = await PlacesUtils.bookmarks.fetch("tFolder_____");
   ok(folder, "New folder should exist");
@@ -1980,7 +1976,7 @@ add_task(async function test_tags() {
   let tagsForA = PlacesUtils.tagging.getTagsForURI(
     Services.io.newURI("http://example.com/a")
   );
-  deepEqual(tagsForA.sort(), ["one", "ten", "two"], "Should change tags for A");
+  deepEqual(tagsForA, ["one", "ten", "two"], "Should change tags for A");
 
   let tagsForB = PlacesUtils.tagging.getTagsForURI(
     Services.io.newURI("http://example.com/b")
@@ -2614,7 +2610,7 @@ add_task(async function test_duplicate_local_tags() {
     Services.io.newURI("http://example.com/a")
   );
   deepEqual(
-    tagsForA.sort(),
+    tagsForA,
     ["one", "one", "three", "three", "two"],
     "Tagging service should return duplicate tags"
   );
