@@ -171,14 +171,16 @@ add_task(async function testTabEvents() {
       highlightTab(tabIds[2]),
     ]);
 
-    await Promise.all([
-      openWindow(["http://example.com"]),
-      openWindow(["http://example.com", "http://example.org"]),
-      openWindow([
-        "http://example.com",
-        "http://example.org",
-        "http://example.net",
-      ]),
+    // If we open these windows in parallel, there is a risk
+    // that a window will be occluded by the next one before
+    // it can finish first paint, which will prevent
+    // the firing of browser-delayed-startup-finished
+    await openWindow(["http://example.com"]);
+    await openWindow(["http://example.com", "http://example.org"]);
+    await openWindow([
+      "http://example.com",
+      "http://example.org",
+      "http://example.net",
     ]);
 
     browser.test.assertEq(
