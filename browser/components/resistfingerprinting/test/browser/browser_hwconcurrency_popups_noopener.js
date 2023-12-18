@@ -87,3 +87,15 @@ add_task(testE.bind(null, uri, testHWConcurrency, expectedResults, extraData));
 //     it is safe to exempt the popup
 expectedResults = structuredClone(allNotSpoofed);
 add_task(testG.bind(null, uri, testHWConcurrency, expectedResults, extraData));
+
+// Test RFP Enabled in PBM and FPP enabled in Normal Browsing Mode
+expectedResults = structuredClone(allNotSpoofed);
+add_task(
+  simpleRFPPBMFPPTest.bind(
+    null,
+    uri,
+    testHWConcurrency,
+    expectedResults,
+    extraData
+  )
+);
