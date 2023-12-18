@@ -129,3 +129,69 @@ describe("test Window", () => {
     );
   });
 });
+
+describe("test cross-process iframe contentWindow", () => {
+  const stub = stubs.get("CrossOriginIframeContentWindow")._grip;
+
+  it("selects Window Rep correctly", () => {
+    expect(getRep(stub)).toBe(Window.rep);
+  });
+
+  it("renders with correct class name", () => {
+    const renderedComponent = shallow(
+      Rep({
+        object: stub,
+      })
+    );
+
+    expect(renderedComponent.hasClass("objectBox-Window")).toBe(true);
+    expectActorAttribute(renderedComponent, stub.actor);
+  });
+
+  it("renders with correct content", () => {
+    const renderedComponent = shallow(
+      Rep({
+        object: stub,
+        shouldRenderTooltip: true,
+      })
+    );
+
+    expect(renderedComponent.text()).toEqual(
+      "Window http://example.org/document-builder.sjs?html=example.org"
+    );
+    expect(renderedComponent.prop("title")).toEqual(
+      "Window http://example.org/document-builder.sjs?html=example.org"
+    );
+  });
+});
+
+describe("test cross-process iframe top window", () => {
+  const stub = stubs.get("CrossOriginIframeTopWindow")._grip;
+
+  it("selects Window Rep correctly", () => {
+    expect(getRep(stub)).toBe(Window.rep);
+  });
+
+  it("renders with correct class name", () => {
+    const renderedComponent = shallow(
+      Rep({
+        object: stub,
+      })
+    );
+
+    expect(renderedComponent.hasClass("objectBox-Window")).toBe(true);
+    expectActorAttribute(renderedComponent, stub.actor);
+  });
+
+  it("renders with correct content", () => {
+    const renderedComponent = shallow(
+      Rep({
+        object: stub,
+        shouldRenderTooltip: true,
+      })
+    );
+
+    expect(renderedComponent.text()).toEqual("Window Restricted");
+    expect(renderedComponent.prop("title")).toEqual("Window Restricted");
+  });
+});
