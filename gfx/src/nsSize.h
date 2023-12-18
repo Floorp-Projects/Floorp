@@ -12,7 +12,7 @@
 #include "mozilla/gfx/Point.h"
 
 // Maximum allowable size
-#define NS_MAXSIZE nscoord_MAX
+inline constexpr nscoord NS_MAXSIZE = nscoord_MAX;
 
 typedef mozilla::gfx::IntSize nsIntSize;
 

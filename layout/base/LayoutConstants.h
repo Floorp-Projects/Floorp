@@ -10,7 +10,6 @@
 #define LayoutConstants_h___
 
 #include "mozilla/EnumSet.h"
-#include "nsSize.h"  // for NS_MAXSIZE
 #include "Units.h"
 
 /**
@@ -20,15 +19,15 @@
  *       values, so user should not depend on the underlying numeric values. If
  *       new specific use cases arise, define a new constant here.
  */
-#define NS_UNCONSTRAINEDSIZE NS_MAXSIZE
+inline constexpr nscoord NS_UNCONSTRAINEDSIZE = nscoord_MAX;
 
 // NS_AUTOOFFSET is assumed to have the same value as NS_UNCONSTRAINEDSIZE.
-#define NS_AUTOOFFSET NS_UNCONSTRAINEDSIZE
+inline constexpr nscoord NS_AUTOOFFSET = NS_UNCONSTRAINEDSIZE;
 
 // +1 is to avoid clamped huge margin values being processed as auto margins
-#define NS_AUTOMARGIN (NS_UNCONSTRAINEDSIZE + 1)
+inline constexpr nscoord NS_AUTOMARGIN = NS_UNCONSTRAINEDSIZE + 1;
 
-#define NS_INTRINSIC_ISIZE_UNKNOWN nscoord_MIN
+inline constexpr nscoord NS_INTRINSIC_ISIZE_UNKNOWN = nscoord_MIN;
 
 namespace mozilla {
 

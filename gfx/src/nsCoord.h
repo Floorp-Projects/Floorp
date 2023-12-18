@@ -25,9 +25,9 @@
  * 96dpi as possible.
  */
 
-typedef int32_t nscoord;
-#define nscoord_MAX nscoord((1 << 30) - 1)
-#define nscoord_MIN (-nscoord_MAX)
+using nscoord = int32_t;
+inline constexpr nscoord nscoord_MAX = (1 << 30) - 1;
+inline constexpr nscoord nscoord_MIN = -nscoord_MAX;
 
 namespace mozilla {
 struct AppUnit {};
