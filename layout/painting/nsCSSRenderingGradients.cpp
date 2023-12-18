@@ -1189,45 +1189,6 @@ bool nsCSSGradientRenderer::TryPaintTilesWithExtendMode(
   return true;
 }
 
-class MOZ_STACK_CLASS WrColorStopInterpolator
-    : public ColorStopInterpolator<WrColorStopInterpolator> {
- public:
-  WrColorStopInterpolator(
-      const nsTArray<ColorStop>& aStops,
-      const StyleColorInterpolationMethod& aStyleColorInterpolationMethod,
-      float aOpacity, nsTArray<wr::GradientStop>& aResult)
-      : ColorStopInterpolator(aStops, aStyleColorInterpolationMethod),
-        mResult(aResult),
-        mOpacity(aOpacity),
-        mOutputStop(0) {}
-
-  void CreateStops() {
-    mResult.SetLengthAndRetainStorage(0);
-    // we always emit at least two stops (start and end) for each input stop,
-    // which avoids ambiguity with incomplete oklch/lch/hsv/hsb color stops for
-    // the last stop pair, where the last color stop can't be interpreted on its
-    // own because it actually depends on the previous stop.
-    mResult.SetLength(mStops.Length() * 2 + kFullRangeExtraStops);
-    mOutputStop = 0;
-    ColorStopInterpolator::CreateStops();
-    mResult.SetLength(mOutputStop);
-  }
-
-  void CreateStop(float aPosition, DeviceColor aColor) {
-    if (mOutputStop < mResult.Capacity()) {
-      mResult[mOutputStop].color = wr::ToColorF(aColor);
-      mResult[mOutputStop].color.a *= mOpacity;
-      mResult[mOutputStop].offset = aPosition;
-      mOutputStop++;
-    }
-  }
-
- private:
-  nsTArray<wr::GradientStop>& mResult;
-  float mOpacity;
-  uint32_t mOutputStop;
-};
-
 void nsCSSGradientRenderer::BuildWebRenderParameters(
     float aOpacity, wr::ExtendMode& aMode, nsTArray<wr::GradientStop>& aStops,
     LayoutDevicePoint& aLineStart, LayoutDevicePoint& aLineEnd,
@@ -1260,9 +1221,44 @@ void nsCSSGradientRenderer::BuildWebRenderParameters(
   if (mStops.Length() >= 2 &&
       (styleColorInterpolationMethod.space != StyleColorSpace::Srgb ||
        gfxPlatform::GetCMSMode() == CMSMode::All)) {
-    WrColorStopInterpolator interpolator(mStops, styleColorInterpolationMethod,
-                                         aOpacity, aStops);
-    interpolator.CreateStops();
+    aStops.SetLengthAndRetainStorage(0);
+    // this could be made tunable, but at 1.0/128 the error is largely
+    // irrelevant, as WebRender re-encodes it to 128 pairs of stops.
+    //
+    // note that we don't attempt to place the positions of these stops
+    // precisely at intervals, we just add this many extra stops across the
+    // range where it is convenient.
+    const int fullRangeExtraStops = 128;
+    // we always emit at least two stops (start and end) for each input stop,
+    // which avoids ambiguity with incomplete oklch/lch/hsv/hsb color stops for
+    // the last stop pair, where the last color stop can't be interpreted on its
+    // own because it actually depends on the previous stop.
+    aStops.SetLength(mStops.Length() * 2 + fullRangeExtraStops);
+    uint32_t outputStop = 0;
+    for (uint32_t i = 0; i < mStops.Length() - 1; i++) {
+      auto& start = mStops[i];
+      auto& end = i + 1 < mStops.Length() ? mStops[i + 1] : mStops[i];
+      StyleAbsoluteColor startColor = start.mColor;
+      StyleAbsoluteColor endColor = end.mColor;
+      int extraStops = (int)(floor(end.mPosition * fullRangeExtraStops) -
+                             floor(start.mPosition * fullRangeExtraStops));
+      extraStops = clamped(extraStops, 1, fullRangeExtraStops);
+      float step = 1.0f / (float)extraStops;
+      for (int extraStop = 0;
+           extraStop <= extraStops && outputStop < aStops.Capacity();
+           extraStop++) {
+        auto lerp = (float)extraStop * step;
+        auto position =
+            start.mPosition + lerp * (end.mPosition - start.mPosition);
+        StyleAbsoluteColor color = Servo_InterpolateColor(
+            styleColorInterpolationMethod, &endColor, &startColor, lerp);
+        aStops[outputStop].color = wr::ToColorF(ToDeviceColor(color));
+        aStops[outputStop].color.a *= aOpacity;
+        aStops[outputStop].offset = (float)position;
+        outputStop++;
+      }
+    }
+    aStops.SetLength(outputStop);
   } else {
     aStops.SetLength(mStops.Length());
     for (uint32_t i = 0; i < mStops.Length(); i++) {
