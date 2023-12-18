@@ -30,33 +30,25 @@ namespace mozilla {
 
 /* static */
 bool KeySystemConfig::Supports(const nsAString& aKeySystem) {
-  // Check if Widevine L3 or Clearkey has been downloaded via GMP downloader.
-  if (IsWidevineKeySystem(aKeySystem) || IsClearkeyKeySystem(aKeySystem)) {
-    return HaveGMPFor(nsCString(CHROMIUM_CDM_API),
-                      {NS_ConvertUTF16toUTF8(aKeySystem)});
-  }
+  nsCString api = nsLiteralCString(CHROMIUM_CDM_API);
+  nsCString name = NS_ConvertUTF16toUTF8(aKeySystem);
 
+  if (HaveGMPFor(api, {name})) {
+    return true;
+  }
 #ifdef MOZ_WIDGET_ANDROID
   // Check if we can use MediaDrm for this keysystem.
-  if (mozilla::java::MediaDrmProxy::IsSchemeSupported(
-          NS_ConvertUTF16toUTF8(aKeySystem))) {
+  if (mozilla::java::MediaDrmProxy::IsSchemeSupported(name)) {
     return true;
   }
 #endif
-
 #if MOZ_WMF_CDM
-  // Check if Widevine L1 has been downloaded via GMP downloader.
-  if (IsWidevineExperimentKeySystemAndSupported(aKeySystem)) {
-    return HaveGMPFor(nsCString(kWidevineExperimentAPIName),
-                      {nsCString(kWidevineExperimentKeySystemName)});
-  }
-
-  if ((IsPlayReadyKeySystemAndSupported(aKeySystem)) &&
+  if ((IsPlayReadyKeySystemAndSupported(aKeySystem) ||
+       IsWidevineExperimentKeySystemAndSupported(aKeySystem)) &&
       WMFCDMImpl::Supports(aKeySystem)) {
     return true;
   }
 #endif
-
   return false;
 }
 

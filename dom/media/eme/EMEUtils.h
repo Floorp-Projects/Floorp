@@ -93,11 +93,6 @@ void MFCDMCapabilitiesIPDLToKeySystemConfig(
 
 bool DoesKeySystemSupportClearLead(const nsAString& aKeySystem);
 
-// Return true if there is any config in the given configs has hardware DRM
-// associated robustness.
-bool CheckIfHarewareDRMConfigExists(
-    const nsTArray<dom::MediaKeySystemConfiguration>& aConfigs);
-
 }  // namespace mozilla
 
 #endif  // EME_LOG_H_

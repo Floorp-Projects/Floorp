@@ -27,10 +27,6 @@
 #include "SpecialSystemDirectory.h"  // For temp dir
 #include "WMFUtils.h"
 
-#ifdef MOZ_WMF_CDM_LPAC_SANDBOX
-#  include "sandboxBroker.h"
-#endif
-
 using Microsoft::WRL::ComPtr;
 using Microsoft::WRL::MakeAndInitialize;
 
@@ -440,7 +436,7 @@ LPCWSTR MFCDMParent::GetCDMLibraryName(const nsString& aKeySystem) {
   }
   if (IsWidevineExperimentKeySystemAndSupported(aKeySystem) ||
       IsWidevineKeySystem(aKeySystem)) {
-    return sWidevineL1Path ? sWidevineL1Path : L"L1-not-found";
+    return sWidevineL1Path;
   }
   // TODO : support ClearKey
   return L"Unknown";
@@ -1103,8 +1099,7 @@ already_AddRefed<MFCDMProxy> MFCDMParent::GetMFCDMProxy() {
 }
 
 /* static */
-void MFCDMService::GetAllKeySystemsCapabilities(dom::Promise* aPromise) {
-  MOZ_ASSERT(XRE_IsParentProcess());
+void MFCDMCapabilities::GetAllKeySystemsCapabilities(dom::Promise* aPromise) {
   const static auto kSandboxKind = ipc::SandboxingKind::MF_MEDIA_ENGINE_CDM;
   LaunchMFCDMProcessIfNeeded(kSandboxKind)
       ->Then(
@@ -1124,9 +1119,8 @@ void MFCDMService::GetAllKeySystemsCapabilities(dom::Promise* aPromise) {
 }
 
 /* static */
-RefPtr<GenericNonExclusivePromise> MFCDMService::LaunchMFCDMProcessIfNeeded(
-    ipc::SandboxingKind aSandbox) {
-  MOZ_ASSERT(XRE_IsParentProcess());
+RefPtr<GenericNonExclusivePromise>
+MFCDMCapabilities::LaunchMFCDMProcessIfNeeded(ipc::SandboxingKind aSandbox) {
   MOZ_ASSERT(aSandbox == ipc::SandboxingKind::MF_MEDIA_ENGINE_CDM);
   RefPtr<ipc::UtilityProcessManager> utilityProc =
       ipc::UtilityProcessManager::GetSingleton();
@@ -1172,43 +1166,6 @@ RefPtr<GenericNonExclusivePromise> MFCDMService::LaunchMFCDMProcessIfNeeded(
             return GenericNonExclusivePromise::CreateAndReject(NS_ERROR_FAILURE,
                                                                __func__);
           });
-}
-
-/* static */
-void MFCDMService::UpdateWidevineL1Path(nsIFile* aFile) {
-  RefPtr<ipc::UtilityProcessManager> utilityProc =
-      ipc::UtilityProcessManager::GetSingleton();
-  if (NS_WARN_IF(!utilityProc)) {
-    NS_WARNING("Failed to get UtilityProcessManager");
-    return;
-  }
-
-  // If the MFCDM process hasn't been created yet, then we will set the path
-  // when creating the process later.
-  const auto sandboxKind = ipc::SandboxingKind::MF_MEDIA_ENGINE_CDM;
-  if (!utilityProc->Process(sandboxKind)) {
-    return;
-  }
-
-  // The MFCDM process has been started, we need to update its L1 path and set
-  // the permission for LPAC.
-  nsString widevineL1Path;
-  MOZ_ASSERT(aFile);
-  if (NS_WARN_IF(NS_FAILED(aFile->GetTarget(widevineL1Path)))) {
-    NS_WARNING("MFCDMService::UpdateWidevineL1Path, Failed to get L1 path!");
-    return;
-  }
-
-  RefPtr<ipc::UtilityAudioDecoderChild> uadc =
-      ipc::UtilityAudioDecoderChild::GetSingleton(sandboxKind);
-  if (NS_WARN_IF(!uadc)) {
-    NS_WARNING("Failed to get UtilityAudioDecoderChild");
-    return;
-  }
-  Unused << uadc->SendUpdateWidevineL1Path(widevineL1Path);
-#ifdef MOZ_WMF_CDM_LPAC_SANDBOX
-  SandboxBroker::EnsureLpacPermsissionsOnDir(widevineL1Path);
-#endif
 }
 
 #undef MFCDM_REJECT_IF_FAILED

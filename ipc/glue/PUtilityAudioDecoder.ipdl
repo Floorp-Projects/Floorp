@@ -37,8 +37,6 @@ parent:
 
 #ifdef MOZ_WMF_CDM
   async GetKeySystemCapabilities() returns (MFCDMCapabilitiesIPDL[] result);
-
-  async UpdateWidevineL1Path(nsString path);
 #endif
 
 child:
