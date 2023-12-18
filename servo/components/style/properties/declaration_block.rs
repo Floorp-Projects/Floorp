@@ -174,8 +174,23 @@ impl PropertyDeclarationIdSet {
 
     /// Returns whether this set contains all longhands in the specified set.
     #[inline]
-    pub fn contains_all(&self, longhands: &LonghandIdSet) -> bool {
+    pub fn contains_all_longhands(&self, longhands: &LonghandIdSet) -> bool {
         self.longhands.contains_all(longhands)
+    }
+
+    /// Returns whether this set contains all properties in the specified set.
+    #[inline]
+    pub fn contains_all(&self, properties: &PropertyDeclarationIdSet) -> bool {
+        if !self.longhands.contains_all(&properties.longhands) {
+            return false;
+        }
+        if properties.custom.len() > self.custom.len() {
+            return false;
+        }
+        properties
+            .custom
+            .iter()
+            .all(|item| self.custom.contains(item))
     }
 
     /// Iterate over the current property declaration id set.
@@ -1102,7 +1117,7 @@ impl PropertyDeclarationBlock {
                 //     If all properties that map to shorthand are not present
                 //     in longhands, continue with the steps labeled shorthand
                 //     loop.
-                if !self.property_ids.contains_all(&longhands) {
+                if !self.property_ids.contains_all_longhands(&longhands) {
                     continue;
                 }
 

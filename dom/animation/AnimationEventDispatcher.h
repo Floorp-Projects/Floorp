@@ -46,10 +46,12 @@ struct CSSAnimationMarker {
         oncompositor.AppendLiteral(", ");
       }
       properties.Append(nsCSSProps::GetStringValue(property));
-      oncompositor.Append(nsCSSProps::PropHasFlags(
-                              property, CSSPropFlags::CanAnimateOnCompositor)
-                              ? "true"
-                              : "false");
+      oncompositor.Append(
+          property != eCSSPropertyExtra_variable &&
+                  nsCSSProps::PropHasFlags(property,
+                                           CSSPropFlags::CanAnimateOnCompositor)
+              ? "true"
+              : "false");
     }
 
     aWriter.StringProperty("properties", properties);
@@ -81,9 +83,11 @@ struct CSSTransitionMarker {
                                    nsCSSPropertyID aProperty, bool aCanceled) {
     aWriter.StringProperty("Target", aTarget);
     aWriter.StringProperty("property", nsCSSProps::GetStringValue(aProperty));
-    aWriter.BoolProperty("oncompositor",
-                         nsCSSProps::PropHasFlags(
-                             aProperty, CSSPropFlags::CanAnimateOnCompositor));
+    aWriter.BoolProperty(
+        "oncompositor",
+        aProperty != eCSSPropertyExtra_variable &&
+            nsCSSProps::PropHasFlags(aProperty,
+                                     CSSPropFlags::CanAnimateOnCompositor));
     if (aCanceled) {
       aWriter.BoolProperty("Canceled", aCanceled);
     }

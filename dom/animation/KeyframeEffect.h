@@ -333,7 +333,7 @@ class KeyframeEffect : public AnimationEffect {
     // We cannot use getters_AddRefs on StyleAnimationValue because it is
     // an incomplete type, so Get() doesn't work. Instead, use GetWeak, and
     // then assign the raw pointer to a RefPtr.
-    result.mServo = mBaseValues.GetWeak(aProperty.mID, &hasProperty);
+    result.mServo = mBaseValues.GetWeak(aProperty, &hasProperty);
     MOZ_ASSERT(hasProperty || result.IsNull());
     return result;
   }
@@ -455,7 +455,8 @@ class KeyframeEffect : public AnimationEffect {
   // least one animation value that is composited with the underlying value
   // (i.e. it uses the additive or accumulate composite mode).
   using BaseValuesHashmap =
-      nsRefPtrHashtable<nsUint32HashKey, StyleAnimationValue>;
+      nsRefPtrHashtable<nsGenericHashKey<AnimatedPropertyID>,
+                        StyleAnimationValue>;
   BaseValuesHashmap mBaseValues;
 
  private:

@@ -27,6 +27,7 @@
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/StaticPrefs_layers.h"
+#include "nsCSSPropertyID.h"
 #include "nsComputedDOMStyle.h"  // nsComputedDOMStyle::GetComputedStyle
 #include "nsContentUtils.h"
 #include "nsCSSPropertyIDSet.h"
@@ -328,7 +329,8 @@ const AnimationProperty* KeyframeEffect::GetEffectiveAnimationOfProperty(
 bool KeyframeEffect::HasEffectiveAnimationOfPropertySet(
     const nsCSSPropertyIDSet& aPropertySet, const EffectSet& aEffectSet) const {
   for (const AnimationProperty& property : mProperties) {
-    if (aPropertySet.HasProperty(property.mProperty.mID) &&
+    if (!property.mProperty.IsCustom() &&
+        aPropertySet.HasProperty(property.mProperty.mID) &&
         IsEffectiveProperty(aEffectSet, property.mProperty.mID)) {
       return true;
     }
@@ -356,6 +358,9 @@ nsCSSPropertyIDSet KeyframeEffect::GetPropertiesForCompositor(
   AnimationPerformanceWarning::Type dummyWarning;
 
   for (const AnimationProperty& property : mProperties) {
+    if (property.mProperty.IsCustom()) {
+      continue;
+    }
     if (!compositorAnimatables.HasProperty(property.mProperty.mID)) {
       continue;
     }
@@ -467,6 +472,7 @@ void KeyframeEffect::UpdateProperties(const ComputedStyle* aStyle,
   mCumulativeChanges = {};
   for (AnimationProperty& property : mProperties) {
     property.mIsRunningOnCompositor =
+        !property.mProperty.IsCustom() &&
         runningOnCompositorProperties.HasProperty(property.mProperty.mID);
     CalculateCumulativeChangesForProperty(property);
   }
@@ -590,7 +596,7 @@ void KeyframeEffect::EnsureBaseStyle(
       Servo_ComputedValues_ExtractAnimationValue(aBaseComputedStyle,
                                                  &aProperty.mProperty)
           .Consume();
-  mBaseValues.InsertOrUpdate(aProperty.mProperty.mID, std::move(baseValue));
+  mBaseValues.InsertOrUpdate(aProperty.mProperty, std::move(baseValue));
 }
 
 void KeyframeEffect::WillComposeStyle() {
@@ -628,7 +634,8 @@ void KeyframeEffect::ComposeStyle(StyleAnimationValueMap& aComposeResult,
     MOZ_ASSERT(prop.mSegments[prop.mSegments.Length() - 1].mToKey == 1.0,
                "incorrect last to key");
 
-    if (aPropertiesToSkip.HasProperty(prop.mProperty.mID)) {
+    if (!prop.mProperty.IsCustom() &&
+        aPropertiesToSkip.HasProperty(prop.mProperty.mID)) {
       continue;
     }
 
@@ -687,10 +694,13 @@ bool KeyframeEffect::IsRunningOnCompositor() const {
 
 void KeyframeEffect::SetIsRunningOnCompositor(nsCSSPropertyID aProperty,
                                               bool aIsRunning) {
+  MOZ_ASSERT(aProperty != eCSSPropertyExtra_variable,
+             "Can't animate variables on compositor");
   MOZ_ASSERT(
       nsCSSProps::PropHasFlags(aProperty, CSSPropFlags::CanAnimateOnCompositor),
-      "Property being animated on compositor is a recognized "
+      "Property being animated on compositor is not a recognized "
       "compositor-animatable property");
+
   for (AnimationProperty& property : mProperties) {
     if (property.mProperty.mID == aProperty) {
       property.mIsRunningOnCompositor = aIsRunning;
@@ -710,7 +720,8 @@ void KeyframeEffect::SetIsRunningOnCompositor(nsCSSPropertyID aProperty,
 void KeyframeEffect::SetIsRunningOnCompositor(
     const nsCSSPropertyIDSet& aPropertySet, bool aIsRunning) {
   for (AnimationProperty& property : mProperties) {
-    if (aPropertySet.HasProperty(property.mProperty.mID)) {
+    if (!property.mProperty.IsCustom() &&
+        aPropertySet.HasProperty(property.mProperty.mID)) {
       MOZ_ASSERT(nsCSSProps::PropHasFlags(property.mProperty.mID,
                                           CSSPropFlags::CanAnimateOnCompositor),
                  "Property being animated on compositor is a recognized "
@@ -1280,35 +1291,15 @@ void KeyframeEffect::GetKeyframes(JSContext* aCx, nsTArray<JSObject*>& aResult,
       return;
     }
 
-    RefPtr<StyleLockedDeclarationBlock> customProperties;
-    // A workaround for CSS Animations in servo backend, custom properties in
-    // keyframe are stored in a servo's declaration block. Find the declaration
-    // block to resolve CSS variables in the keyframe.
-    // This workaround will be solved by bug 1391537.
-    if (isCSSAnimation) {
-      for (const PropertyValuePair& propertyValue : keyframe.mPropertyValues) {
-        if (propertyValue.mProperty.mID ==
-            nsCSSPropertyID::eCSSPropertyExtra_variable) {
-          customProperties = propertyValue.mServoDeclarationBlock;
-          break;
-        }
-      }
-    }
-
     JS::Rooted<JSObject*> keyframeObject(aCx, &keyframeJSValue.toObject());
     for (const PropertyValuePair& propertyValue : keyframe.mPropertyValues) {
       nsAutoCString stringValue;
-      // Don't serialize the custom properties for this keyframe.
-      if (propertyValue.mProperty.mID ==
-          nsCSSPropertyID::eCSSPropertyExtra_variable) {
-        continue;
-      }
       if (propertyValue.mServoDeclarationBlock) {
         Servo_DeclarationBlock_SerializeOneValue(
             propertyValue.mServoDeclarationBlock, &propertyValue.mProperty,
-            &stringValue, computedStyle, customProperties, rawData);
+            &stringValue, computedStyle, nullptr, rawData);
       } else {
-        if (auto* value = mBaseValues.GetWeak(propertyValue.mProperty.mID)) {
+        if (auto* value = mBaseValues.GetWeak(propertyValue.mProperty)) {
           Servo_AnimationValue_Serialize(value, &propertyValue.mProperty,
                                          rawData, &stringValue);
         }

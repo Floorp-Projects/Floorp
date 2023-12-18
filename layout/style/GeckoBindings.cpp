@@ -1157,12 +1157,13 @@ Keyframe* Gecko_GetOrCreateFinalKeyframe(
 }
 
 PropertyValuePair* Gecko_AppendPropertyValuePair(
-    nsTArray<PropertyValuePair>* aProperties, nsCSSPropertyID aProperty) {
+    nsTArray<PropertyValuePair>* aProperties,
+    const mozilla::AnimatedPropertyID* aProperty) {
   MOZ_ASSERT(aProperties);
-  MOZ_ASSERT(aProperty == eCSSPropertyExtra_variable ||
-             !nsCSSProps::PropHasFlags(aProperty, CSSPropFlags::IsLogical));
-  mozilla::AnimatedPropertyID property(aProperty);
-  return aProperties->AppendElement(PropertyValuePair{property});
+  MOZ_ASSERT(
+      aProperty->IsCustom() ||
+      !nsCSSProps::PropHasFlags(aProperty->mID, CSSPropFlags::IsLogical));
+  return aProperties->AppendElement(PropertyValuePair{*aProperty});
 }
 
 void Gecko_GetComputedURLSpec(const StyleComputedUrl* aURL, nsCString* aOut) {

@@ -25,7 +25,6 @@ use style::computed_value_flags::ComputedValueFlags;
 use style::context::ThreadLocalStyleContext;
 use style::context::{CascadeInputs, QuirksMode, SharedStyleContext, StyleContext};
 use style::counter_style;
-use style::custom_properties::ComputedCustomProperties;
 use style::data::{self, ElementStyles};
 use style::dom::{ShowSubtreeData, TDocument, TElement, TNode};
 use style::driver;
@@ -110,10 +109,12 @@ use style::invalidation::element::restyle_hints::RestyleHint;
 use style::invalidation::stylesheets::RuleChangeKind;
 use style::media_queries::MediaList;
 use style::parser::{Parse, ParserContext};
+#[cfg(feature = "gecko_debug")]
+use style::properties::LonghandIdSet;
 use style::properties::{
     animated_properties::{AnimationValue, AnimationValueMap},
     parse_one_declaration_into, parse_style_attribute, ComputedValues, CountedUnknownProperty,
-    Importance, LonghandId, LonghandIdSet, NonCustomPropertyId, OwnedPropertyDeclarationId,
+    Importance, LonghandId, NonCustomPropertyId, OwnedPropertyDeclarationId,
     PropertyDeclarationBlock, PropertyDeclarationId, PropertyDeclarationIdSet, PropertyId,
     ShorthandId, SourcePropertyDeclaration, StyleBuilder,
 };
@@ -4947,14 +4948,13 @@ pub unsafe extern "C" fn Servo_DeclarationBlock_SetPropertyToAnimationValue(
     before_change_closure: DeclarationBlockMutationClosure,
 ) -> bool {
     let non_custom_property_id = match animation_value.id() {
-        PropertyDeclarationId::Longhand(id) => id.into(),
-        // TODO(bug 1846516): Support custom properties too?
-        PropertyDeclarationId::Custom(_) => return false,
+        PropertyDeclarationId::Longhand(id) => Some(id.into()),
+        PropertyDeclarationId::Custom(_) => None,
     };
     let mut source_declarations = SourcePropertyDeclaration::with_one(animation_value.uncompute());
 
     set_property_to_declarations(
-        Some(non_custom_property_id),
+        non_custom_property_id,
         declarations,
         &mut source_declarations,
         before_change_closure,
@@ -6165,7 +6165,6 @@ pub extern "C" fn Servo_GetComputedKeyframeValues(
     raw_data: &PerDocumentStyleData,
     computed_keyframes: &mut nsTArray<structs::ComputedKeyframeValues>,
 ) {
-    // TODO(bug 1846516): Make this work for animated custom properties too.
     let data = raw_data.borrow();
     let element = GeckoElement(element);
     let pseudo = PseudoElement::from_pseudo_type(pseudo_type, None);
@@ -6198,23 +6197,10 @@ pub extern "C" fn Servo_GetComputedKeyframeValues(
     let guard = global_style_data.shared_lock.read();
     let default_values = data.default_computed_values();
 
-    let mut raw_custom_properties_block; // To make the raw block alive in the scope.
     for (index, keyframe) in keyframes.iter().enumerate() {
-        let mut custom_properties = ComputedCustomProperties::default();
-        for property in keyframe.mPropertyValues.iter() {
-            // Find the block for custom properties first.
-            if property.mProperty.mID == nsCSSPropertyID::eCSSPropertyExtra_variable {
-                raw_custom_properties_block = unsafe { &*property.mServoDeclarationBlock.mRawPtr };
-                let guard = raw_custom_properties_block.read_with(&guard);
-                custom_properties = guard.cascade_custom_properties(&data.stylist, &context);
-                // There should be one PropertyDeclarationBlock for custom properties.
-                break;
-            }
-        }
-
         let ref mut animation_values = computed_keyframes[index];
 
-        let mut seen = LonghandIdSet::new();
+        let mut seen = PropertyDeclarationIdSet::default();
 
         let mut property_index = 0;
         for property in PrioritizedPropertyIter::new(&keyframe.mPropertyValues) {
@@ -6223,12 +6209,12 @@ pub extern "C" fn Servo_GetComputedKeyframeValues(
             }
 
             let mut maybe_append_animation_value =
-                |property: LonghandId, value: Option<AnimationValue>| {
+                |property: PropertyDeclarationId, value: Option<AnimationValue>| {
                     debug_assert!(!property.is_logical());
                     debug_assert!(property.is_animatable());
 
                     // 'display' is only animatable from SMIL
-                    if property == LonghandId::Display {
+                    if property == PropertyDeclarationId::Longhand(LonghandId::Display) {
                         return;
                     }
 
@@ -6248,10 +6234,7 @@ pub extern "C" fn Servo_GetComputedKeyframeValues(
                         ptr::write(
                             &mut animation_values[property_index],
                             structs::PropertyStyleAnimationValuePair {
-                                mProperty: structs::AnimatedPropertyID {
-                                    mID: property.to_nscsspropertyid(),
-                                    mCustomName: structs::RefPtr::null(),
-                                },
+                                mProperty: property.to_gecko_animated_property_id(),
                                 mValue: structs::AnimationValue {
                                     mServo: value.map_or(structs::RefPtr::null(), |v| {
                                         structs::RefPtr::from_arc(Arc::new(v))
@@ -6264,31 +6247,20 @@ pub extern "C" fn Servo_GetComputedKeyframeValues(
                 };
 
             if property.mServoDeclarationBlock.mRawPtr.is_null() {
-                let property = LonghandId::from_nscsspropertyid(property.mProperty.mID);
-                if let Some(prop) = property {
-                    maybe_append_animation_value(prop, None);
+                if let Some(ref prop) =
+                    OwnedPropertyDeclarationId::from_gecko_animated_property_id(&property.mProperty)
+                {
+                    maybe_append_animation_value(prop.as_borrowed(), None);
                 }
                 continue;
             }
 
             let declarations = unsafe { &*property.mServoDeclarationBlock.mRawPtr };
             let guard = declarations.read_with(&guard);
-            let iter = guard.to_animation_value_iter(
-                &mut context,
-                &default_values,
-                if custom_properties.is_empty() {
-                    None
-                } else {
-                    Some(&custom_properties)
-                },
-            );
+            let iter = guard.to_animation_value_iter(&mut context, &default_values, None);
 
             for value in iter {
-                let id = match value.id() {
-                    PropertyDeclarationId::Longhand(id) => id,
-                    PropertyDeclarationId::Custom(_) => continue,
-                };
-                maybe_append_animation_value(id, Some(value));
+                maybe_append_animation_value(value.id(), Some(value.clone()));
             }
         }
     }
@@ -6341,9 +6313,7 @@ pub extern "C" fn Servo_AnimationValue_GetPropertyId(
     value: &AnimationValue,
     property_id: &mut structs::AnimatedPropertyID,
 ) {
-    // TODO(bug 1846516): Support custom properties.
-    property_id.mID = value.id().to_nscsspropertyid();
-    property_id.mCustomName = structs::RefPtr::null();
+    *property_id = value.id().to_gecko_animated_property_id();
 }
 
 #[no_mangle]
@@ -6436,13 +6406,12 @@ enum Offset {
 }
 
 fn fill_in_missing_keyframe_values(
-    all_properties: &LonghandIdSet,
+    all_properties: &PropertyDeclarationIdSet,
     timing_function: &ComputedTimingFunction,
-    longhands_at_offset: &LonghandIdSet,
+    longhands_at_offset: &PropertyDeclarationIdSet,
     offset: Offset,
     keyframes: &mut nsTArray<structs::Keyframe>,
 ) {
-    // TODO(bug 1846516): Make this work for animated custom properties too.
     // Return early if all animated properties are already set.
     if longhands_at_offset.contains_all(all_properties) {
         return;
@@ -6469,7 +6438,7 @@ fn fill_in_missing_keyframe_values(
             unsafe {
                 Gecko_AppendPropertyValuePair(
                     &mut *(*keyframe).mPropertyValues,
-                    property.to_nscsspropertyid(),
+                    &property.to_gecko_animated_property_id(),
                 );
             }
         }
@@ -6485,7 +6454,6 @@ pub unsafe extern "C" fn Servo_StyleSet_GetKeyframesForName(
     inherited_timing_function: &ComputedTimingFunction,
     keyframes: &mut nsTArray<structs::Keyframe>,
 ) -> bool {
-    // TODO(bug 1846516): Make this work for animated custom properties too.
     use style::gecko_bindings::structs::CompositeOperationOrAuto;
     use style::properties::longhands::animation_composition::single_value::computed_value::T as Composition;
 
@@ -6503,9 +6471,9 @@ pub unsafe extern "C" fn Servo_StyleSet_GetKeyframesForName(
     let global_style_data = &*GLOBAL_STYLE_DATA;
     let guard = global_style_data.shared_lock.read();
 
-    let mut properties_set_at_current_offset = LonghandIdSet::new();
-    let mut properties_set_at_start = LonghandIdSet::new();
-    let mut properties_set_at_end = LonghandIdSet::new();
+    let mut properties_set_at_current_offset = PropertyDeclarationIdSet::default();
+    let mut properties_set_at_start = PropertyDeclarationIdSet::default();
+    let mut properties_set_at_end = PropertyDeclarationIdSet::default();
     let mut has_complete_initial_keyframe = false;
     let mut has_complete_final_keyframe = false;
     let mut current_offset = -1.;
@@ -6562,7 +6530,7 @@ pub unsafe extern "C" fn Servo_StyleSet_GetKeyframesForName(
 
                     Gecko_AppendPropertyValuePair(
                         &mut *(*keyframe).mPropertyValues,
-                        property.to_nscsspropertyid(),
+                        &property.to_gecko_animated_property_id(),
                     );
                 }
                 if current_offset == 0.0 {
@@ -6574,36 +6542,23 @@ pub unsafe extern "C" fn Servo_StyleSet_GetKeyframesForName(
             KeyframesStepValue::Declarations { ref block } => {
                 let guard = block.read_with(&guard);
 
-                let mut custom_properties = PropertyDeclarationBlock::new();
-
                 // Filter out non-animatable properties and properties with
                 // !important.
                 //
                 // Also, iterate in reverse to respect the source order in case
                 // there are logical and physical longhands in the same block.
                 for declaration in guard.normal_declaration_iter().rev() {
-                    let id = declaration.id();
+                    let id = declaration.id().to_physical(writing_mode);
 
-                    let id = match id {
-                        PropertyDeclarationId::Longhand(id) => {
-                            // Skip the 'display' property because although it
-                            // is animatable from SMIL, it should not be
-                            // animatable from CSS Animations.
-                            if id == LonghandId::Display {
-                                continue;
-                            }
-
-                            if !id.is_animatable() {
-                                continue;
-                            }
-
-                            id.to_physical(writing_mode)
-                        },
-                        PropertyDeclarationId::Custom(..) => {
-                            custom_properties.push(declaration.clone(), Importance::Normal);
-                            continue;
-                        },
-                    };
+                    // Skip non-animatable properties, including
+                    // the 'display' property because although it
+                    // is animatable from SMIL, it should not be
+                    // animatable from CSS Animations.
+                    if !id.is_animatable() ||
+                        id == PropertyDeclarationId::Longhand(LonghandId::Display)
+                    {
+                        continue;
+                    }
 
                     if properties_set_at_current_offset.contains(id) {
                         continue;
@@ -6611,7 +6566,7 @@ pub unsafe extern "C" fn Servo_StyleSet_GetKeyframesForName(
 
                     let pair = Gecko_AppendPropertyValuePair(
                         &mut *(*keyframe).mPropertyValues,
-                        id.to_nscsspropertyid(),
+                        &id.to_gecko_animated_property_id(),
                     );
 
                     (*pair).mServoDeclarationBlock.set_arc(Arc::new(
@@ -6630,29 +6585,13 @@ pub unsafe extern "C" fn Servo_StyleSet_GetKeyframesForName(
                     }
                     properties_set_at_current_offset.insert(id);
                 }
-
-                if custom_properties.any_normal() {
-                    let pair = Gecko_AppendPropertyValuePair(
-                        &mut *(*keyframe).mPropertyValues,
-                        nsCSSPropertyID::eCSSPropertyExtra_variable,
-                    );
-
-                    (*pair).mServoDeclarationBlock.set_arc(Arc::new(
-                        global_style_data.shared_lock.wrap(custom_properties),
-                    ));
-                }
             },
         }
     }
 
-    let mut properties_changed = LonghandIdSet::new();
+    let mut properties_changed = PropertyDeclarationIdSet::default();
     for property in animation.properties_changed.iter() {
-        let longhand_id = match property.to_physical(writing_mode) {
-            PropertyDeclarationId::Longhand(id) => id,
-            // TODO(zrhoffman, bug 1846516): Handle custom properties here.
-            PropertyDeclarationId::Custom(_) => continue,
-        };
-        properties_changed.insert(longhand_id);
+        properties_changed.insert(property.to_physical(writing_mode));
     }
 
     // Append property values that are missing in the initial or the final keyframes.

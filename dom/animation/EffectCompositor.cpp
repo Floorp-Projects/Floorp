@@ -608,6 +608,9 @@ nsCSSPropertyIDSet EffectCompositor::GetOverriddenProperties(
     nsCSSPropertyIDSet propertiesToTrackAsSet;
     for (KeyframeEffect* effect : aEffectSet) {
       for (const AnimationProperty& property : effect->Properties()) {
+        if (property.mProperty.IsCustom()) {
+          continue;
+        }
         if (nsCSSProps::PropHasFlags(property.mProperty.mID,
                                      CSSPropFlags::CanAnimateOnCompositor) &&
             !propertiesToTrackAsSet.HasProperty(property.mProperty.mID)) {
@@ -684,6 +687,9 @@ void EffectCompositor::UpdateCascadeResults(EffectSet& aEffectSet,
     CascadeLevel cascadeLevel = effect->GetAnimation()->CascadeLevel();
 
     for (const AnimationProperty& prop : effect->Properties()) {
+      if (prop.mProperty.IsCustom()) {
+        continue;
+      }
       if (overriddenProperties.HasProperty(prop.mProperty.mID)) {
         propertiesWithImportantRules.AddProperty(prop.mProperty.mID);
       }
