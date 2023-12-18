@@ -27,6 +27,7 @@
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/StaticPrefs_layers.h"
+#include "nsCSSPropertyID.h"
 #include "nsComputedDOMStyle.h"  // nsComputedDOMStyle::GetComputedStyle
 #include "nsContentUtils.h"
 #include "nsCSSPropertyIDSet.h"
@@ -287,8 +288,9 @@ void KeyframeEffect::ReplaceTransitionStartValue(AnimationValue&& aStartValue) {
 
   // Check that the value we are about to substitute in is actually for the
   // same property.
-  if (Servo_AnimationValue_GetPropertyId(aStartValue.mServo) !=
-      mProperties[0].mProperty) {
+  AnimatedPropertyID property(eCSSProperty_UNKNOWN);
+  Servo_AnimationValue_GetPropertyId(aStartValue.mServo, &property);
+  if (property != mProperties[0].mProperty) {
     return;
   }
 
@@ -309,14 +311,14 @@ const AnimationProperty* KeyframeEffect::GetEffectiveAnimationOfProperty(
                                                     mTarget.mPseudoType));
 
   for (const AnimationProperty& property : mProperties) {
-    if (aProperty != property.mProperty) {
+    if (aProperty != property.mProperty.mID) {
       continue;
     }
 
     const AnimationProperty* result = nullptr;
     // Only include the property if it is not overridden by !important rules in
     // the transitions level.
-    if (IsEffectiveProperty(aEffects, property.mProperty)) {
+    if (IsEffectiveProperty(aEffects, property.mProperty.mID)) {
       result = &property;
     }
     return result;
@@ -327,8 +329,9 @@ const AnimationProperty* KeyframeEffect::GetEffectiveAnimationOfProperty(
 bool KeyframeEffect::HasEffectiveAnimationOfPropertySet(
     const nsCSSPropertyIDSet& aPropertySet, const EffectSet& aEffectSet) const {
   for (const AnimationProperty& property : mProperties) {
-    if (aPropertySet.HasProperty(property.mProperty) &&
-        IsEffectiveProperty(aEffectSet, property.mProperty)) {
+    if (!property.mProperty.IsCustom() &&
+        aPropertySet.HasProperty(property.mProperty.mID) &&
+        IsEffectiveProperty(aEffectSet, property.mProperty.mID)) {
       return true;
     }
   }
@@ -355,26 +358,30 @@ nsCSSPropertyIDSet KeyframeEffect::GetPropertiesForCompositor(
   AnimationPerformanceWarning::Type dummyWarning;
 
   for (const AnimationProperty& property : mProperties) {
-    if (!compositorAnimatables.HasProperty(property.mProperty)) {
+    if (property.mProperty.IsCustom()) {
+      continue;
+    }
+    if (!compositorAnimatables.HasProperty(property.mProperty.mID)) {
       continue;
     }
 
     // Transform-like properties are combined together on the compositor so we
     // need to evaluate them as a group. We build up a separate set here then
     // evaluate it as a separate step below.
-    if (transformLikeProperties.HasProperty(property.mProperty)) {
-      transformSet.AddProperty(property.mProperty);
+    if (transformLikeProperties.HasProperty(property.mProperty.mID)) {
+      transformSet.AddProperty(property.mProperty.mID);
       continue;
     }
 
-    KeyframeEffect::MatchForCompositor matchResult = IsMatchForCompositor(
-        nsCSSPropertyIDSet{property.mProperty}, aFrame, aEffects, dummyWarning);
+    KeyframeEffect::MatchForCompositor matchResult =
+        IsMatchForCompositor(nsCSSPropertyIDSet{property.mProperty.mID}, aFrame,
+                             aEffects, dummyWarning);
     if (matchResult ==
             KeyframeEffect::MatchForCompositor::NoAndBlockThisProperty ||
         matchResult == KeyframeEffect::MatchForCompositor::No) {
       continue;
     }
-    properties.AddProperty(property.mProperty);
+    properties.AddProperty(property.mProperty.mID);
   }
 
   if (!transformSet.IsEmpty()) {
@@ -389,8 +396,8 @@ nsCSSPropertyIDSet KeyframeEffect::GetPropertiesForCompositor(
   return properties;
 }
 
-nsCSSPropertyIDSet KeyframeEffect::GetPropertySet() const {
-  nsCSSPropertyIDSet result;
+AnimatedPropertyIDSet KeyframeEffect::GetPropertySet() const {
+  AnimatedPropertyIDSet result;
 
   for (const AnimationProperty& property : mProperties) {
     result.AddProperty(property.mProperty);
@@ -455,7 +462,7 @@ void KeyframeEffect::UpdateProperties(const ComputedStyle* aStyle,
 
   for (const AnimationProperty& property : mProperties) {
     if (property.mIsRunningOnCompositor) {
-      runningOnCompositorProperties.AddProperty(property.mProperty);
+      runningOnCompositorProperties.AddProperty(property.mProperty.mID);
     }
   }
 
@@ -465,7 +472,8 @@ void KeyframeEffect::UpdateProperties(const ComputedStyle* aStyle,
   mCumulativeChanges = {};
   for (AnimationProperty& property : mProperties) {
     property.mIsRunningOnCompositor =
-        runningOnCompositorProperties.HasProperty(property.mProperty);
+        !property.mProperty.IsCustom() &&
+        runningOnCompositorProperties.HasProperty(property.mProperty.mID);
     CalculateCumulativeChangesForProperty(property);
   }
 
@@ -551,7 +559,7 @@ void KeyframeEffect::EnsureBaseStyle(
         // delay on the compositor.
         return aTimeline && aTimeline->IsScrollTimeline() &&
                nsCSSPropertyIDSet::CompositorAnimatables().HasProperty(
-                   aProperty.mProperty) &&
+                   aProperty.mProperty.mID) &&
                (timing.Delay() > zeroDuration ||
                 timing.EndDelay() > zeroDuration);
       };
@@ -586,7 +594,7 @@ void KeyframeEffect::EnsureBaseStyle(
   }
   RefPtr<StyleAnimationValue> baseValue =
       Servo_ComputedValues_ExtractAnimationValue(aBaseComputedStyle,
-                                                 aProperty.mProperty)
+                                                 &aProperty.mProperty)
           .Consume();
   mBaseValues.InsertOrUpdate(aProperty.mProperty, std::move(baseValue));
 }
@@ -603,7 +611,7 @@ void KeyframeEffect::ComposeStyleRule(StyleAnimationValueMap& aAnimationValues,
                                       const ComputedTiming& aComputedTiming) {
   auto* opaqueTable =
       reinterpret_cast<RawServoAnimationValueTable*>(&mBaseValues);
-  Servo_AnimationCompose(&aAnimationValues, opaqueTable, aProperty.mProperty,
+  Servo_AnimationCompose(&aAnimationValues, opaqueTable, &aProperty.mProperty,
                          &aSegment, &aProperty.mSegments.LastElement(),
                          &aComputedTiming, mEffectOptions.mIterationComposite);
 }
@@ -626,7 +634,8 @@ void KeyframeEffect::ComposeStyle(StyleAnimationValueMap& aComposeResult,
     MOZ_ASSERT(prop.mSegments[prop.mSegments.Length() - 1].mToKey == 1.0,
                "incorrect last to key");
 
-    if (aPropertiesToSkip.HasProperty(prop.mProperty)) {
+    if (!prop.mProperty.IsCustom() &&
+        aPropertiesToSkip.HasProperty(prop.mProperty.mID)) {
       continue;
     }
 
@@ -685,12 +694,15 @@ bool KeyframeEffect::IsRunningOnCompositor() const {
 
 void KeyframeEffect::SetIsRunningOnCompositor(nsCSSPropertyID aProperty,
                                               bool aIsRunning) {
+  MOZ_ASSERT(aProperty != eCSSPropertyExtra_variable,
+             "Can't animate variables on compositor");
   MOZ_ASSERT(
       nsCSSProps::PropHasFlags(aProperty, CSSPropFlags::CanAnimateOnCompositor),
-      "Property being animated on compositor is a recognized "
+      "Property being animated on compositor is not a recognized "
       "compositor-animatable property");
+
   for (AnimationProperty& property : mProperties) {
-    if (property.mProperty == aProperty) {
+    if (property.mProperty.mID == aProperty) {
       property.mIsRunningOnCompositor = aIsRunning;
       // We currently only set a performance warning message when animations
       // cannot be run on the compositor, so if this animation is running
@@ -708,8 +720,9 @@ void KeyframeEffect::SetIsRunningOnCompositor(nsCSSPropertyID aProperty,
 void KeyframeEffect::SetIsRunningOnCompositor(
     const nsCSSPropertyIDSet& aPropertySet, bool aIsRunning) {
   for (AnimationProperty& property : mProperties) {
-    if (aPropertySet.HasProperty(property.mProperty)) {
-      MOZ_ASSERT(nsCSSProps::PropHasFlags(property.mProperty,
+    if (!property.mProperty.IsCustom() &&
+        aPropertySet.HasProperty(property.mProperty.mID)) {
+      MOZ_ASSERT(nsCSSProps::PropHasFlags(property.mProperty.mID,
                                           CSSPropFlags::CanAnimateOnCompositor),
                  "Property being animated on compositor is a recognized "
                  "compositor-animatable property");
@@ -1036,7 +1049,8 @@ void DumpAnimationProperties(
     const StylePerDocumentStyleData* aRawData,
     nsTArray<AnimationProperty>& aAnimationProperties) {
   for (auto& p : aAnimationProperties) {
-    printf("%s\n", nsCString(nsCSSProps::GetStringValue(p.mProperty)).get());
+    printf("%s\n",
+           nsCString(nsCSSProps::GetStringValue(p.mProperty.mID)).get());
     for (auto& s : p.mSegments) {
       nsAutoCString fromValue, toValue;
       s.mFromValue.SerializeSpecifiedValue(p.mProperty, aRawData, fromValue);
@@ -1120,7 +1134,7 @@ void KeyframeEffect::SetPseudoElement(const nsAString& aPseudoElement,
 }
 
 static void CreatePropertyValue(
-    nsCSSPropertyID aProperty, float aOffset,
+    const AnimatedPropertyID& aProperty, float aOffset,
     const Maybe<StyleComputedTimingFunction>& aTimingFunction,
     const AnimationValue& aValue, dom::CompositeOperation aComposite,
     const StylePerDocumentStyleData* aRawData,
@@ -1150,8 +1164,7 @@ void KeyframeEffect::GetProperties(
 
   for (const AnimationProperty& property : mProperties) {
     AnimationPropertyDetails propertyDetails;
-    propertyDetails.mProperty =
-        NS_ConvertASCIItoUTF16(nsCSSProps::GetStringValue(property.mProperty));
+    property.mProperty.ToString(propertyDetails.mProperty);
     propertyDetails.mRunningOnCompositor = property.mIsRunningOnCompositor;
 
     nsAutoString localizedString;
@@ -1240,8 +1253,8 @@ void KeyframeEffect::GetKeyframes(JSContext* aCx, nsTArray<JSObject*>& aResult,
   // know what custom property values to provide.
   RefPtr<const ComputedStyle> computedStyle;
   if (isCSSAnimation) {
-    // The following will flush style but that's ok since if you update
-    // a variable's computed value, you expect to see that updated value in the
+    // The following will flush style but that's ok since if you update a
+    // variable's computed value, you expect to see that updated value in the
     // result of getKeyframes().
     //
     // If we don't have a target, the following will return null. In that case
@@ -1278,38 +1291,16 @@ void KeyframeEffect::GetKeyframes(JSContext* aCx, nsTArray<JSObject*>& aResult,
       return;
     }
 
-    RefPtr<StyleLockedDeclarationBlock> customProperties;
-    // A workaround for CSS Animations in servo backend, custom properties in
-    // keyframe are stored in a servo's declaration block. Find the declaration
-    // block to resolve CSS variables in the keyframe.
-    // This workaround will be solved by bug 1391537.
-    if (isCSSAnimation) {
-      for (const PropertyValuePair& propertyValue : keyframe.mPropertyValues) {
-        if (propertyValue.mProperty ==
-            nsCSSPropertyID::eCSSPropertyExtra_variable) {
-          customProperties = propertyValue.mServoDeclarationBlock;
-          break;
-        }
-      }
-    }
-
     JS::Rooted<JSObject*> keyframeObject(aCx, &keyframeJSValue.toObject());
     for (const PropertyValuePair& propertyValue : keyframe.mPropertyValues) {
       nsAutoCString stringValue;
-      // Don't serialize the custom properties for this keyframe.
-      if (propertyValue.mProperty ==
-          nsCSSPropertyID::eCSSPropertyExtra_variable) {
-        continue;
-      }
       if (propertyValue.mServoDeclarationBlock) {
         Servo_DeclarationBlock_SerializeOneValue(
-            propertyValue.mServoDeclarationBlock, propertyValue.mProperty,
-            &stringValue, computedStyle, customProperties, rawData);
-      } else {
-        if (auto* value = mBaseValues.GetWeak(propertyValue.mProperty)) {
-          Servo_AnimationValue_Serialize(value, propertyValue.mProperty,
-                                         rawData, &stringValue);
-        }
+            propertyValue.mServoDeclarationBlock, &propertyValue.mProperty,
+            &stringValue, computedStyle, rawData);
+      } else if (auto* value = mBaseValues.GetWeak(propertyValue.mProperty)) {
+        Servo_AnimationValue_Serialize(value, &propertyValue.mProperty, rawData,
+                                       &stringValue);
       }
 
       // Basically, we need to do the mapping:
@@ -1320,7 +1311,13 @@ void KeyframeEffect::GetKeyframes(JSContext* aCx, nsTArray<JSObject*>& aResult,
       // "offset" property in BaseKeyframe.)
       // https://drafts.csswg.org/web-animations/#property-name-conversion
       const char* name = nullptr;
-      switch (propertyValue.mProperty) {
+      nsAutoCString customName;
+      switch (propertyValue.mProperty.mID) {
+        case nsCSSPropertyID::eCSSPropertyExtra_variable:
+          customName.Append("--");
+          customName.Append(nsAtomCString(propertyValue.mProperty.mCustomName));
+          name = customName.get();
+          break;
         case nsCSSPropertyID::eCSSProperty_offset:
           name = "cssOffset";
           break;
@@ -1328,7 +1325,7 @@ void KeyframeEffect::GetKeyframes(JSContext* aCx, nsTArray<JSObject*>& aResult,
           // FIXME: Bug 1582314: Should handle cssFloat manually if we remove it
           // from nsCSSProps::PropertyIDLName().
         default:
-          name = nsCSSProps::PropertyIDLName(propertyValue.mProperty);
+          name = nsCSSProps::PropertyIDLName(propertyValue.mProperty.mID);
       }
 
       JS::Rooted<JS::Value> value(aCx);
@@ -1475,7 +1472,7 @@ bool KeyframeEffect::CanThrottle() const {
     }
 
     MOZ_ASSERT(nsCSSPropertyIDSet::CompositorAnimatables().HasProperty(
-                   property.mProperty),
+                   property.mProperty.mID),
                "The property should be able to run on the compositor");
     if (!effectSet) {
       effectSet = EffectSet::Get(mTarget.mElement, mTarget.mPseudoType);
@@ -1483,12 +1480,14 @@ bool KeyframeEffect::CanThrottle() const {
                  "CanThrottle should be called on an effect "
                  "associated with a target element");
     }
-    MOZ_ASSERT(HasEffectiveAnimationOfProperty(property.mProperty, *effectSet),
-               "There should be an effective animation of the property while "
-               "it is marked as being run on the compositor");
+    MOZ_ASSERT(
+        HasEffectiveAnimationOfProperty(property.mProperty.mID, *effectSet),
+        "There should be an effective animation of the property while "
+        "it is marked as being run on the compositor");
 
     DisplayItemType displayItemType =
-        LayerAnimationInfo::GetDisplayItemTypeForProperty(property.mProperty);
+        LayerAnimationInfo::GetDisplayItemTypeForProperty(
+            property.mProperty.mID);
 
     // Note that AnimationInfo::GetGenarationFromFrame() is supposed to work
     // with the primary frame instead of the style frame.
@@ -1714,14 +1713,14 @@ bool KeyframeEffect::ShouldBlockAsyncTransformAnimations(
     // !important rules.
     if (effectSet &&
         effectSet->PropertiesWithImportantRules().HasProperty(
-            property.mProperty) &&
+            property.mProperty.mID) &&
         effectSet->PropertiesForAnimationsLevel().HasProperty(
-            property.mProperty)) {
+            property.mProperty.mID)) {
       continue;
     }
     // Check for geometric properties
     if (enableMainthreadSynchronizationWithGeometricAnimations &&
-        IsGeometricProperty(property.mProperty)) {
+        IsGeometricProperty(property.mProperty.mID)) {
       aPerformanceWarning =
           AnimationPerformanceWarning::Type::TransformWithGeometricProperties;
       return true;
@@ -1729,7 +1728,7 @@ bool KeyframeEffect::ShouldBlockAsyncTransformAnimations(
 
     // Check for unsupported transform animations
     if (LayerAnimationInfo::GetCSSPropertiesFor(DisplayItemType::TYPE_TRANSFORM)
-            .HasProperty(property.mProperty)) {
+            .HasProperty(property.mProperty.mID)) {
       if (!CanAnimateTransformOnCompositor(aFrame, aPerformanceWarning)) {
         return true;
       }
@@ -1737,7 +1736,7 @@ bool KeyframeEffect::ShouldBlockAsyncTransformAnimations(
 
     // If there are any offset-path animations whose animation values are url(),
     // we have to sync with the main thread when resolving it.
-    if (property.mProperty == eCSSProperty_offset_path) {
+    if (property.mProperty.mID == eCSSProperty_offset_path) {
       for (const auto& seg : property.mSegments) {
         if (seg.mFromValue.IsOffsetPathUrl() ||
             seg.mToValue.IsOffsetPathUrl()) {
@@ -1752,7 +1751,7 @@ bool KeyframeEffect::ShouldBlockAsyncTransformAnimations(
 
 bool KeyframeEffect::HasGeometricProperties() const {
   for (const AnimationProperty& property : mProperties) {
-    if (IsGeometricProperty(property.mProperty)) {
+    if (IsGeometricProperty(property.mProperty.mID)) {
       return true;
     }
   }
@@ -1765,11 +1764,11 @@ void KeyframeEffect::SetPerformanceWarning(
     const AnimationPerformanceWarning& aWarning) {
   nsCSSPropertyIDSet curr = aPropertySet;
   for (AnimationProperty& property : mProperties) {
-    if (!curr.HasProperty(property.mProperty)) {
+    if (!curr.HasProperty(property.mProperty.mID)) {
       continue;
     }
     property.SetPerformanceWarning(aWarning, mTarget.mElement);
-    curr.RemoveProperty(property.mProperty);
+    curr.RemoveProperty(property.mProperty.mID);
     if (curr.IsEmpty()) {
       return;
     }
@@ -1778,19 +1777,24 @@ void KeyframeEffect::SetPerformanceWarning(
 
 void KeyframeEffect::CalculateCumulativeChangesForProperty(
     const AnimationProperty& aProperty) {
+  if (aProperty.mProperty.IsCustom()) {
+    // Custom properties don't affect rendering on their own.
+    return;
+  }
+
   constexpr auto kInterestingFlags =
       CSSPropFlags::AffectsLayout | CSSPropFlags::AffectsOverflow;
-  if (aProperty.mProperty == eCSSProperty_opacity) {
+  if (aProperty.mProperty.mID == eCSSProperty_opacity) {
     mCumulativeChanges.mOpacity = true;
     return;  // We know opacity is visual-only.
   }
 
-  if (aProperty.mProperty == eCSSProperty_visibility) {
+  if (aProperty.mProperty.mID == eCSSProperty_visibility) {
     mCumulativeChanges.mVisibility = true;
     return;  // We know visibility is visual-only.
   }
 
-  if (aProperty.mProperty == eCSSProperty_background_color) {
+  if (aProperty.mProperty.mID == eCSSProperty_background_color) {
     if (!mCumulativeChanges.mHasBackgroundColorCurrentColor) {
       mCumulativeChanges.mHasBackgroundColorCurrentColor =
           HasCurrentColor(aProperty.mSegments);
@@ -1798,7 +1802,7 @@ void KeyframeEffect::CalculateCumulativeChangesForProperty(
     return;  // We know background-color is visual-only.
   }
 
-  auto flags = nsCSSProps::PropFlags(aProperty.mProperty);
+  auto flags = nsCSSProps::PropFlags(aProperty.mProperty.mID);
   if (!(flags & kInterestingFlags)) {
     return;  // Property is visual-only.
   }
@@ -1906,9 +1910,9 @@ bool KeyframeEffect::ContainsAnimatedScale(const nsIFrame* aFrame) const {
   }
 
   for (const AnimationProperty& prop : mProperties) {
-    if (prop.mProperty != eCSSProperty_transform &&
-        prop.mProperty != eCSSProperty_scale &&
-        prop.mProperty != eCSSProperty_rotate) {
+    if (prop.mProperty.mID != eCSSProperty_transform &&
+        prop.mProperty.mID != eCSSProperty_scale &&
+        prop.mProperty.mID != eCSSProperty_rotate) {
       continue;
     }
 

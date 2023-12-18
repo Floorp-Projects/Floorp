@@ -1661,6 +1661,9 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleUIReset {
   nsCSSPropertyID GetTransitionProperty(uint32_t aIndex) const {
     return mTransitions[aIndex % mTransitionPropertyCount].GetProperty();
   }
+  nsAtom* GetTransitionUnknownProperty(uint32_t aIndex) const {
+    return mTransitions[aIndex % mTransitionPropertyCount].GetUnknownProperty();
+  }
   const mozilla::StyleTime& GetTransitionDelay(uint32_t aIndex) const {
     return mTransitions[aIndex % mTransitionDelayCount].GetDelay();
   }

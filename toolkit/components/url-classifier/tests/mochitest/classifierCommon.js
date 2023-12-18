@@ -77,6 +77,20 @@ function waitForInit() {
   }
 }
 
+function doGetTables() {
+  const callback = tables => {
+    sendAsyncMessage("GetTableSuccess", tables);
+  };
+
+  try {
+    dbService.getTables(callback);
+  } catch (e) {
+    setTimeout(() => {
+      doGetTables();
+    }, 1000);
+  }
+}
+
 addMessageListener("doUpdate", ({ testUpdate }) => {
   doUpdate(testUpdate);
 });
@@ -87,4 +101,8 @@ addMessageListener("doReload", () => {
 
 addMessageListener("waitForInit", () => {
   waitForInit();
+});
+
+addMessageListener("doGetTables", () => {
+  doGetTables();
 });

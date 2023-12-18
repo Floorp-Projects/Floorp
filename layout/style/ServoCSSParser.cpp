@@ -8,6 +8,7 @@
 
 #include "ServoCSSParser.h"
 
+#include "mozilla/AnimatedPropertyID.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/dom/Document.h"
@@ -36,8 +37,17 @@ already_AddRefed<StyleLockedDeclarationBlock> ServoCSSParser::ParseProperty(
     nsCSSPropertyID aProperty, const nsACString& aValue,
     const ParsingEnvironment& aParsingEnvironment,
     const StyleParsingMode& aParsingMode) {
+  AnimatedPropertyID property(aProperty);
+  return ParseProperty(property, aValue, aParsingEnvironment, aParsingMode);
+}
+
+/* static */
+already_AddRefed<StyleLockedDeclarationBlock> ServoCSSParser::ParseProperty(
+    const AnimatedPropertyID& aProperty, const nsACString& aValue,
+    const ParsingEnvironment& aParsingEnvironment,
+    const StyleParsingMode& aParsingMode) {
   return Servo_ParseProperty(
-             aProperty, &aValue, aParsingEnvironment.mUrlExtraData,
+             &aProperty, &aValue, aParsingEnvironment.mUrlExtraData,
              aParsingMode, aParsingEnvironment.mCompatMode,
              aParsingEnvironment.mLoader, aParsingEnvironment.mRuleType)
       .Consume();

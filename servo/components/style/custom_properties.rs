@@ -863,34 +863,39 @@ pub struct CustomPropertiesBuilder<'a, 'b: 'a> {
 
 impl<'a, 'b: 'a> CustomPropertiesBuilder<'a, 'b> {
     /// Create a new builder, inheriting from a given custom properties map.
-    pub fn new(stylist: &'a Stylist, computed_context: &'a computed::Context<'b>) -> Self {
-        let is_root_element = computed_context.is_root_element();
-
-        let inherited = computed_context.inherited_custom_properties();
-        let initial_values = stylist.get_custom_property_initial_values();
-
-        // Reuse flags from computing registered custom properties initial values, such as whether
-        // they depend on viewport units.
-        computed_context
-            .style()
-            .add_flags(stylist.get_custom_property_initial_values_flags());
-
+    ///
+    /// We expose this publicly mostly for @keyframe blocks.
+    pub fn new_with_properties(stylist: &'a Stylist, custom_properties: ComputedCustomProperties, computed_context: &'a computed::Context<'b>) -> Self {
         Self {
             seen: PrecomputedHashSet::default(),
             reverted: Default::default(),
             may_have_cycles: false,
-            custom_properties: ComputedCustomProperties {
-                inherited: if is_root_element {
-                    debug_assert!(inherited.is_empty());
-                    initial_values.inherited.clone()
-                } else {
-                    inherited.inherited.clone()
-                },
-                non_inherited: initial_values.non_inherited.clone(),
-            },
+            custom_properties,
             stylist,
             computed_context,
         }
+    }
+
+    /// Create a new builder, inheriting from the right style given context.
+    pub fn new(stylist: &'a Stylist, context: &'a computed::Context<'b>) -> Self {
+        let is_root_element = context.is_root_element();
+
+        let inherited = context.inherited_custom_properties();
+        let initial_values = stylist.get_custom_property_initial_values();
+        let properties = ComputedCustomProperties {
+            inherited: if is_root_element {
+                debug_assert!(inherited.is_empty());
+                initial_values.inherited.clone()
+            } else {
+                inherited.inherited.clone()
+            },
+            non_inherited: initial_values.non_inherited.clone(),
+        };
+
+        // Reuse flags from computing registered custom properties initial values, such as
+        // whether they depend on viewport units.
+        context.style().add_flags(stylist.get_custom_property_initial_values_flags());
+        Self::new_with_properties(stylist, properties, context)
     }
 
     /// Cascade a given custom property declaration.

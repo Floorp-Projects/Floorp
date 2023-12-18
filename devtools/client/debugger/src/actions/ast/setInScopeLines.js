@@ -76,7 +76,14 @@ export function setInScopeLines() {
     const { location } = visibleFrame;
     const sourceTextContent = getSourceTextContent(getState(), location);
 
-    if (hasInScopeLines(getState(), location) || !sourceTextContent) {
+    // Ignore if in scope lines have already be computed, or if the selected location
+    // doesn't have its content already fully fetched.
+    // The ParserWorker will only have the source text content once the source text content is fulfilled.
+    if (
+      hasInScopeLines(getState(), location) ||
+      !sourceTextContent ||
+      !isFulfilled(sourceTextContent)
+    ) {
       return;
     }
 

@@ -11,6 +11,8 @@
 #include "nsAnimationManager.h"
 
 #include "nsIContent.h"
+#include "AnimatedPropertyID.h"
+#include "AnimatedPropertyIDSet.h"
 #include "mozilla/ComputedStyle.h"
 #include "mozilla/MemoryReporting.h"
 #include "nsCSSPropertyIDSet.h"
@@ -60,11 +62,17 @@ bool nsTransitionManager::UpdateTransitions(dom::Element* aElement,
 // transition-property, and then execute |aHandler| on the expanded longhand.
 // |aHandler| should be a lamda function which accepts nsCSSPropertyID.
 template <typename T>
-static void ExpandTransitionProperty(nsCSSPropertyID aProperty, T aHandler) {
+static void ExpandTransitionProperty(nsCSSPropertyID aProperty,
+                                     nsAtom* aCustomName, T aHandler) {
   if (aProperty == eCSSPropertyExtra_no_properties ||
-      aProperty == eCSSPropertyExtra_variable ||
       aProperty == eCSSProperty_UNKNOWN) {
     // Nothing to do.
+    return;
+  }
+
+  if (aProperty == eCSSPropertyExtra_variable) {
+    AnimatedPropertyID property(aCustomName);
+    aHandler(property);
     return;
   }
 
@@ -76,15 +84,18 @@ static void ExpandTransitionProperty(nsCSSPropertyID aProperty, T aHandler) {
       if (!nsCSSProps::IsEnabled(p, CSSEnabledState::ForAllContent)) {
         continue;
       }
-      aHandler(p);
+      AnimatedPropertyID property(p);
+      aHandler(property);
     }
   } else if (nsCSSProps::IsShorthand(aProperty)) {
     CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(subprop, aProperty,
                                          CSSEnabledState::ForAllContent) {
-      aHandler(*subprop);
+      AnimatedPropertyID property(*subprop);
+      aHandler(property);
     }
   } else {
-    aHandler(aProperty);
+    AnimatedPropertyID property(aProperty);
+    aHandler(property);
   }
 }
 
@@ -100,7 +111,7 @@ bool nsTransitionManager::DoUpdateTransitions(
   // 'transition-property' on down, and later ones will override earlier
   // ones (tracked using |propertiesChecked|).
   bool startedAny = false;
-  nsCSSPropertyIDSet propertiesChecked;
+  AnimatedPropertyIDSet propertiesChecked;
   for (uint32_t i = aStyle.mTransitionPropertyCount; i--;) {
     // We're not going to look at any further transitions, so we can just avoid
     // looking at this if we know it will not start any transitions.
@@ -109,7 +120,8 @@ bool nsTransitionManager::DoUpdateTransitions(
     }
 
     ExpandTransitionProperty(
-        aStyle.GetTransitionProperty(i), [&](nsCSSPropertyID aProperty) {
+        aStyle.GetTransitionProperty(i), aStyle.GetTransitionUnknownProperty(i),
+        [&](const AnimatedPropertyID& aProperty) {
           // We might have something to transition.  See if any of the
           // properties in question changed and are animatable.
           startedAny |= ConsiderInitiatingTransition(
@@ -128,14 +140,15 @@ bool nsTransitionManager::DoUpdateTransitions(
   if (aElementTransitions) {
     bool checkProperties =
         aStyle.GetTransitionProperty(0) != eCSSPropertyExtra_all_properties;
-    nsCSSPropertyIDSet allTransitionProperties;
+    AnimatedPropertyIDSet allTransitionProperties;
     if (checkProperties) {
       for (uint32_t i = aStyle.mTransitionPropertyCount; i-- != 0;) {
-        ExpandTransitionProperty(
-            aStyle.GetTransitionProperty(i), [&](nsCSSPropertyID aProperty) {
-              allTransitionProperties.AddProperty(
-                  nsCSSProps::Physicalize(aProperty, aNewStyle));
-            });
+        ExpandTransitionProperty(aStyle.GetTransitionProperty(i),
+                                 aStyle.GetTransitionUnknownProperty(i),
+                                 [&](const AnimatedPropertyID& aProperty) {
+                                   allTransitionProperties.AddProperty(
+                                       aProperty.ToPhysical(aNewStyle));
+                                 });
       }
     }
 
@@ -146,7 +159,7 @@ bool nsTransitionManager::DoUpdateTransitions(
     do {
       --i;
       CSSTransition* anim = animations[i];
-      const nsCSSPropertyID property = anim->TransitionProperty();
+      const AnimatedPropertyID& property = anim->TransitionProperty();
       if (
           // Properties no longer in `transition-property`.
           (checkProperties && !allTransitionProperties.HasProperty(property)) ||
@@ -155,7 +168,7 @@ bool nsTransitionManager::DoUpdateTransitions(
           // or because the new value is not interpolable); a new transition
           // would have anim->ToValue() matching currentValue.
           !Servo_ComputedValues_TransitionValueMatches(
-              &aNewStyle, property, anim->ToValue().mServo.get())) {
+              &aNewStyle, &property, anim->ToValue().mServo.get())) {
         // Stop the transition.
         DoCancelTransition(aElement, aPseudoType, aElementTransitions, i);
       }
@@ -165,7 +178,8 @@ bool nsTransitionManager::DoUpdateTransitions(
   return startedAny;
 }
 
-static Keyframe& AppendKeyframe(double aOffset, nsCSSPropertyID aProperty,
+static Keyframe& AppendKeyframe(double aOffset,
+                                const AnimatedPropertyID& aProperty,
                                 AnimationValue&& aValue,
                                 nsTArray<Keyframe>& aKeyframes) {
   Keyframe& frame = *aKeyframes.AppendElement();
@@ -178,9 +192,9 @@ static Keyframe& AppendKeyframe(double aOffset, nsCSSPropertyID aProperty,
   return frame;
 }
 
-static nsTArray<Keyframe> GetTransitionKeyframes(nsCSSPropertyID aProperty,
-                                                 AnimationValue&& aStartValue,
-                                                 AnimationValue&& aEndValue) {
+static nsTArray<Keyframe> GetTransitionKeyframes(
+    const AnimatedPropertyID& aProperty, AnimationValue&& aStartValue,
+    AnimationValue&& aEndValue) {
   nsTArray<Keyframe> keyframes(2);
 
   AppendKeyframe(0.0, aProperty, std::move(aStartValue), keyframes);
@@ -189,8 +203,8 @@ static nsTArray<Keyframe> GetTransitionKeyframes(nsCSSPropertyID aProperty,
   return keyframes;
 }
 
-static bool IsTransitionable(nsCSSPropertyID aProperty) {
-  return Servo_Property_IsTransitionable(aProperty);
+static bool IsTransitionable(const AnimatedPropertyID& aProperty) {
+  return Servo_Property_IsTransitionable(&aProperty);
 }
 
 static Maybe<CSSTransition::ReplacedTransitionProperties>
@@ -240,30 +254,31 @@ GetReplacedTransitionProperties(const CSSTransition* aTransition,
 }
 
 bool nsTransitionManager::ConsiderInitiatingTransition(
-    nsCSSPropertyID aProperty, const nsStyleUIReset& aStyle,
+    const AnimatedPropertyID& aProperty, const nsStyleUIReset& aStyle,
     uint32_t transitionIdx, dom::Element* aElement, PseudoStyleType aPseudoType,
     CSSTransitionCollection*& aElementTransitions,
     const ComputedStyle& aOldStyle, const ComputedStyle& aNewStyle,
-    nsCSSPropertyIDSet& aPropertiesChecked) {
+    AnimatedPropertyIDSet& aPropertiesChecked) {
   // IsShorthand itself will assert if aProperty is not a property.
-  MOZ_ASSERT(!nsCSSProps::IsShorthand(aProperty), "property out of range");
+  MOZ_ASSERT(aProperty.IsCustom() || !nsCSSProps::IsShorthand(aProperty.mID),
+             "property out of range");
   NS_ASSERTION(
       !aElementTransitions || &aElementTransitions->mElement == aElement,
       "Element mismatch");
 
-  aProperty = nsCSSProps::Physicalize(aProperty, aNewStyle);
+  AnimatedPropertyID property = aProperty.ToPhysical(aNewStyle);
 
   // A later item in transition-property already specified a transition for
   // this property, so we ignore this one.
   //
   // See http://lists.w3.org/Archives/Public/www-style/2009Aug/0109.html .
-  if (aPropertiesChecked.HasProperty(aProperty)) {
+  if (aPropertiesChecked.HasProperty(property)) {
     return false;
   }
 
-  aPropertiesChecked.AddProperty(aProperty);
+  aPropertiesChecked.AddProperty(property);
 
-  if (!IsTransitionable(aProperty)) {
+  if (!IsTransitionable(property)) {
     return false;
   }
 
@@ -287,7 +302,7 @@ bool nsTransitionManager::ConsiderInitiatingTransition(
     const OwningCSSTransitionPtrArray& animations =
         aElementTransitions->mAnimations;
     for (size_t i = 0, i_end = animations.Length(); i < i_end; ++i) {
-      if (animations[i]->TransitionProperty() == aProperty) {
+      if (animations[i]->TransitionProperty() == property) {
         currentIndex = i;
         return animations[i];
       }
@@ -298,7 +313,7 @@ bool nsTransitionManager::ConsiderInitiatingTransition(
   AnimationValue startValue, endValue;
   const StyleShouldTransitionResult result =
       Servo_ComputedValues_ShouldTransition(
-          &aOldStyle, &aNewStyle, aProperty,
+          &aOldStyle, &aNewStyle, &property,
           oldTransition ? oldTransition->ToValue().mServo.get() : nullptr,
           &startValue.mServo, &endValue.mServo);
 
@@ -389,7 +404,7 @@ bool nsTransitionManager::ConsiderInitiatingTransition(
   }
 
   RefPtr<CSSTransition> transition = DoCreateTransition(
-      aProperty, aElement, aPseudoType, aNewStyle, aElementTransitions,
+      property, aElement, aPseudoType, aNewStyle, aElementTransitions,
       std::move(timing), std::move(startValue), std::move(endValue),
       std::move(startForReversingTest), reversePortion);
   if (!transition) {
@@ -400,7 +415,7 @@ bool nsTransitionManager::ConsiderInitiatingTransition(
 #ifdef DEBUG
   for (size_t i = 0, i_end = transitions.Length(); i < i_end; ++i) {
     MOZ_ASSERT(
-        i == currentIndex || transitions[i]->TransitionProperty() != aProperty,
+        i == currentIndex || transitions[i]->TransitionProperty() != property,
         "duplicate transitions for property");
   }
 #endif
@@ -436,7 +451,7 @@ bool nsTransitionManager::ConsiderInitiatingTransition(
 }
 
 already_AddRefed<CSSTransition> nsTransitionManager::DoCreateTransition(
-    nsCSSPropertyID aProperty, dom::Element* aElement,
+    const AnimatedPropertyID& aProperty, dom::Element* aElement,
     PseudoStyleType aPseudoType, const mozilla::ComputedStyle& aNewStyle,
     CSSTransitionCollection*& aElementTransitions, TimingParams&& aTiming,
     AnimationValue&& aStartValue, AnimationValue&& aEndValue,
@@ -457,7 +472,7 @@ already_AddRefed<CSSTransition> nsTransitionManager::DoCreateTransition(
   }
 
   RefPtr<CSSTransition> animation =
-      new CSSTransition(mPresContext->Document()->GetScopeObject());
+      new CSSTransition(mPresContext->Document()->GetScopeObject(), aProperty);
   animation->SetOwningElement(OwningElementRef(*aElement, aPseudoType));
   animation->SetTimelineNoUpdate(timeline);
   animation->SetCreationSequence(

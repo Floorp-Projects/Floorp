@@ -17,6 +17,7 @@
 #include "mozilla/UniquePtr.h"
 #include "nsCOMArray.h"
 #include "nsString.h"
+#include "mozilla/AnimatedPropertyID.h"
 #include "mozilla/ComputedStyle.h"
 #include "nsComputedDOMStyle.h"
 #include "nsCSSPseudoElements.h"
@@ -123,7 +124,9 @@ bool AnimationValue::IsOffsetPathUrl() const {
 MatrixScales AnimationValue::GetScaleValue(const nsIFrame* aFrame) const {
   using namespace nsStyleTransformMatrix;
 
-  switch (Servo_AnimationValue_GetPropertyId(mServo)) {
+  AnimatedPropertyID property(eCSSProperty_UNKNOWN);
+  Servo_AnimationValue_GetPropertyId(mServo, &property);
+  switch (property.mID) {
     case eCSSProperty_scale: {
       const StyleScale& scale = GetScaleProperty();
       return scale.IsNone()
@@ -155,13 +158,13 @@ MatrixScales AnimationValue::GetScaleValue(const nsIFrame* aFrame) const {
 }
 
 void AnimationValue::SerializeSpecifiedValue(
-    nsCSSPropertyID aProperty, const StylePerDocumentStyleData* aRawData,
-    nsACString& aString) const {
+    const AnimatedPropertyID& aProperty,
+    const StylePerDocumentStyleData* aRawData, nsACString& aString) const {
   MOZ_ASSERT(mServo);
-  Servo_AnimationValue_Serialize(mServo, aProperty, aRawData, &aString);
+  Servo_AnimationValue_Serialize(mServo, &aProperty, aRawData, &aString);
 }
 
-bool AnimationValue::IsInterpolableWith(nsCSSPropertyID aProperty,
+bool AnimationValue::IsInterpolableWith(const AnimatedPropertyID& aProperty,
                                         const AnimationValue& aToValue) const {
   if (IsNull() || aToValue.IsNull()) {
     return false;
@@ -210,8 +213,9 @@ AnimationValue AnimationValue::FromString(nsCSSPropertyID aProperty,
       nsComputedDOMStyle::GetComputedStyle(aElement);
   MOZ_ASSERT(computedStyle);
 
+  AnimatedPropertyID property(aProperty);
   RefPtr<StyleLockedDeclarationBlock> declarations =
-      ServoCSSParser::ParseProperty(aProperty, aValue,
+      ServoCSSParser::ParseProperty(property, aValue,
                                     ServoCSSParser::GetParsingEnvironment(doc),
                                     StyleParsingMode::DEFAULT);
 

@@ -128,18 +128,20 @@ NO_PROFILE_GUIDED_OPTIMIZE = 1
 endif
 
 # Enable profile-based feedback
-ifneq (1,$(NO_PROFILE_GUIDED_OPTIMIZE))
 ifdef MOZ_PROFILE_GENERATE
+ifneq (1,$(NO_PROFILE_GUIDED_OPTIMIZE))
 PGO_CFLAGS += -DNS_FREE_PERMANENT_DATA=1
 PGO_CFLAGS += $(if $(filter $(notdir $<),$(notdir $(NO_PROFILE_GUIDED_OPTIMIZE))),,$(PROFILE_GEN_CFLAGS))
+endif # NO_PROFILE_GUIDED_OPTIMIZE
 PGO_LDFLAGS += $(PROFILE_GEN_LDFLAGS)
 endif # MOZ_PROFILE_GENERATE
 
 ifdef MOZ_PROFILE_USE
+ifneq (1,$(NO_PROFILE_GUIDED_OPTIMIZE))
 PGO_CFLAGS += $(if $(filter $(notdir $<),$(notdir $(NO_PROFILE_GUIDED_OPTIMIZE))),,$(PROFILE_USE_CFLAGS))
+endif # NO_PROFILE_GUIDED_OPTIMIZE
 PGO_LDFLAGS += $(PROFILE_USE_LDFLAGS)
 endif # MOZ_PROFILE_USE
-endif # NO_PROFILE_GUIDED_OPTIMIZE
 
 # Overloaded by comm builds to refer to $(commtopsrcdir), so that
 # `mail` resolves in en-US builds and in repacks.

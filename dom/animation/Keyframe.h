@@ -7,10 +7,10 @@
 #ifndef mozilla_dom_Keyframe_h
 #define mozilla_dom_Keyframe_h
 
-#include "nsCSSPropertyID.h"
 #include "nsCSSValue.h"
 #include "nsTArray.h"
 #include "mozilla/dom/BaseKeyframeTypesBinding.h"  // CompositeOperationOrAuto
+#include "mozilla/AnimatedPropertyID.h"
 #include "mozilla/ServoStyleConsts.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/RefPtr.h"
@@ -22,15 +22,16 @@ struct StyleLockedDeclarationBlock;
  * A property-value pair specified on a keyframe.
  */
 struct PropertyValuePair {
-  explicit PropertyValuePair(nsCSSPropertyID aProperty)
+  explicit PropertyValuePair(const AnimatedPropertyID& aProperty)
       : mProperty(aProperty) {}
-  PropertyValuePair(nsCSSPropertyID aProperty,
+
+  PropertyValuePair(const AnimatedPropertyID& aProperty,
                     RefPtr<StyleLockedDeclarationBlock>&& aValue)
       : mProperty(aProperty), mServoDeclarationBlock(std::move(aValue)) {
     MOZ_ASSERT(mServoDeclarationBlock, "Should be valid property value");
   }
 
-  nsCSSPropertyID mProperty;
+  AnimatedPropertyID mProperty;
 
   // The specified value when using the Servo backend.
   RefPtr<StyleLockedDeclarationBlock> mServoDeclarationBlock;
