@@ -461,6 +461,7 @@
   --cfr-button-features-icon: url(chrome://activity-stream/content/data/content/assets/glyph-cfr-feature-16.svg);
   --cfr-button-highlights-icon: url(chrome://global/skin/icons/highlights.svg);
   --cfr-active-color: #0060df;
+  --cfr-active-text-color: white;
 }
 
 #contextual-feature-recommendation {
@@ -468,32 +469,56 @@
   margin-inline-start: 0;
   transition: margin-inline-start step-end var(--cfr-animation-duration);
 }
+#contextual-feature-recommendation[data-cfr-icon="recommendations-icon"] {
+  width: auto;
+
+  #cfr-button {
+    height: auto;
+    align-items: center;
+  }
+}
+
 #urlbar[cfr-recommendation-state="expanded"] #contextual-feature-recommendation {
   margin-inline-start: calc(var(--cfr-label-width) * -1);
   transition: margin-inline-start step-start var(--cfr-animation-duration);
 }
 
 #cfr-button {
-  margin: -2px 0;
   transition-property: fill, fill-opacity, transform;
   transition-timing-function: ease-in-out;
   transition-duration: var(--cfr-animation-duration);
 }
+
 #contextual-feature-recommendation[data-cfr-icon="webextensions-icon"] #cfr-button {
   list-style-image: var(--cfr-button-addons-icon);
 }
+
 #contextual-feature-recommendation[data-cfr-icon="recommendations-icon"] #cfr-button {
   list-style-image: var(--cfr-button-features-icon);
 }
+
+#contextual-feature-recommendation[data-cfr-icon="highlights-icon"] {
+  width: auto;
+}
+
 #contextual-feature-recommendation[data-cfr-icon="highlights-icon"] #cfr-button {
   list-style-image: var(--cfr-button-highlights-icon);
+  height: auto;
+  align-items: center;
 }
+
+
 #urlbar[cfr-recommendation-state="expanded"] #cfr-button {
-  fill: white;
-  fill-opacity: 1;
-  background-color: transparent; /* Override hover background-color */
+  background-color: transparent;
   transform: translateX(calc(var(--cfr-label-width) * -1));
+
+  &,
+  .urlbar-icon {
+    fill: var(--cfr-active-text-color);
+    fill-opacity: 1;
+  }
 }
+
 #urlbar[cfr-recommendation-state="expanded"] #cfr-button:-moz-locale-dir(rtl) {
   transform: translateX(calc(var(--cfr-label-width)));
 }
@@ -514,7 +539,7 @@
 #cfr-label-container {
   width: 0;
   overflow: hidden;
-  border-radius: 5px;
+  border-radius: var(--urlbar-icon-border-radius);
   padding-inline-start: 28px;
   mask-image: linear-gradient(to right, transparent 0, black 0);
   mask-position-x: var(--cfr-label-width);

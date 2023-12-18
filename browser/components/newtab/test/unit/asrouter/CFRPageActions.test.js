@@ -17,6 +17,8 @@ describe("CFRPageActions", () => {
   let elements;
   let announceStub;
   let fakeRemoteL10n;
+  let isElmVisibleStub;
+  let getWidgetStub;
 
   const elementIDs = [
     "urlbar",
@@ -42,6 +44,8 @@ describe("CFRPageActions", () => {
   beforeEach(() => {
     sandbox = sinon.createSandbox();
     clock = sandbox.useFakeTimers();
+    isElmVisibleStub = sandbox.stub().returns(true);
+    getWidgetStub = sandbox.stub();
 
     announceStub = sandbox.stub();
     const A11yUtils = { announce: announceStub };
@@ -79,6 +83,8 @@ describe("CFRPageActions", () => {
       gBrowser: { selectedBrowser: fakeBrowser },
       A11yUtils,
       gURLBar,
+      isElementVisible: isElmVisibleStub,
+      CustomizableUI: { getWidget: getWidgetStub },
     });
     document.createXULElement = document.createElement;
 
@@ -938,8 +944,6 @@ describe("CFRPageActions", () => {
       let TEST_MESSAGE;
       let getElmStub;
       let getStyleStub;
-      let isElmVisibleStub;
-      let getWidgetStub;
       let isCustomizingStub;
       beforeEach(() => {
         TEST_MESSAGE = {
@@ -957,13 +961,10 @@ describe("CFRPageActions", () => {
         getStyleStub = sandbox
           .stub(window, "getComputedStyle")
           .returns({ display: "block", visibility: "visible" });
-        isElmVisibleStub = sandbox.stub().returns(true);
-        getWidgetStub = sandbox.stub();
+
         isCustomizingStub = sandbox.stub().returns(false);
         globals.set({
-          CustomizableUI: { getWidget: getWidgetStub },
           CustomizationHandler: { isCustomizing: isCustomizingStub },
-          isElementVisible: isElmVisibleStub,
         });
 
         savedRec = {
@@ -991,24 +992,24 @@ describe("CFRPageActions", () => {
         assert.equal(fakeBrowser.cfrpopupnotificationanchor.id, fakeAnchorId);
       });
 
-      it("should use default container if element exists but is in the widget overflow panel", async () => {
+      it("should use the cfr button if element exists but is in the widget overflow panel", async () => {
         getWidgetStub
           .withArgs(fakeAnchorId)
           .returns({ areaType: "menu-panel" });
         await pageAction.showPopup();
         assert.equal(
           fakeBrowser.cfrpopupnotificationanchor.id,
-          pageAction.container.id
+          pageAction.button.id
         );
       });
 
-      it("should use default container if element exists but is in the customization palette", async () => {
+      it("should use the cfr button if element exists but is in the customization palette", async () => {
         getWidgetStub.withArgs(fakeAnchorId).returns({ areaType: null });
         isCustomizingStub.returns(true);
         await pageAction.showPopup();
         assert.equal(
           fakeBrowser.cfrpopupnotificationanchor.id,
-          pageAction.container.id
+          pageAction.button.id
         );
       });
 
@@ -1046,10 +1047,27 @@ describe("CFRPageActions", () => {
         );
       });
 
-      it("should use default container if the anchor_id and alt_anchor_id are both not visible", async () => {
+      it("should use the button if the anchor_id and alt_anchor_id are both not visible", async () => {
         TEST_MESSAGE.content.alt_anchor_id = fakeAltAnchorId;
         getStyleStub
           .withArgs(sandbox.match({ id: fakeAnchorId }))
+          .returns({ display: "none", visibility: "visible" });
+        getWidgetStub.withArgs(fakeAltAnchorId).returns({ areaType: null });
+        isCustomizingStub.returns(true);
+        await pageAction.showPopup();
+        assert.equal(
+          fakeBrowser.cfrpopupnotificationanchor.id,
+          pageAction.button.id
+        );
+      });
+
+      it("should use the default container if the anchor_id, alt_anchor_id, and cfr button are not visible", async () => {
+        TEST_MESSAGE.content.alt_anchor_id = fakeAltAnchorId;
+        getStyleStub
+          .withArgs(sandbox.match({ id: fakeAnchorId }))
+          .returns({ display: "none", visibility: "visible" });
+        getStyleStub
+          .withArgs(sandbox.match({ id: "cfr-button" }))
           .returns({ display: "none", visibility: "visible" });
         getWidgetStub.withArgs(fakeAltAnchorId).returns({ areaType: null });
         isCustomizingStub.returns(true);
