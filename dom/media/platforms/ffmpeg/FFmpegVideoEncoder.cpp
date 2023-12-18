@@ -156,6 +156,13 @@ AVCodecID GetFFmpegEncoderCodecId<LIBAV_VER>(CodecType aCodec) {
   if (aCodec == CodecType::VP9) {
     return AV_CODEC_ID_VP9;
   }
+
+#  if !defined(USING_MOZFFVPX)
+  if (aCodec == CodecType::H264) {
+    return AV_CODEC_ID_H264;
+  }
+#  endif
+
 #endif
   return AV_CODEC_ID_NONE;
 }
