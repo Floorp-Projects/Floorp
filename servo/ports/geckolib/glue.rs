@@ -6268,7 +6268,7 @@ pub extern "C" fn Servo_GetComputedKeyframeValues(
                         ptr::write(
                             &mut animation_values[property_index],
                             structs::PropertyStyleAnimationValuePair {
-                                mProperty: property.to_gecko_animated_property_id(),
+                                mProperty: property.to_gecko_animated_property_id(/* owned = */ true),
                                 mValue: structs::AnimationValue {
                                     mServo: value.map_or(structs::RefPtr::null(), |v| {
                                         structs::RefPtr::from_arc(Arc::new(v))
@@ -6346,7 +6346,7 @@ pub extern "C" fn Servo_AnimationValue_GetPropertyId(
     value: &AnimationValue,
     property_id: &mut structs::AnimatedPropertyID,
 ) {
-    *property_id = value.id().to_gecko_animated_property_id();
+    *property_id = value.id().to_gecko_animated_property_id(/* owned = */ true);
 }
 
 #[no_mangle]
@@ -6470,7 +6470,7 @@ fn fill_in_missing_keyframe_values(
             unsafe {
                 Gecko_AppendPropertyValuePair(
                     &mut *(*keyframe).mPropertyValues,
-                    &property.to_gecko_animated_property_id(),
+                    &property.to_gecko_animated_property_id(/* owned = */ false),
                 );
             }
         }
@@ -6562,7 +6562,7 @@ pub unsafe extern "C" fn Servo_StyleSet_GetKeyframesForName(
 
                     Gecko_AppendPropertyValuePair(
                         &mut *(*keyframe).mPropertyValues,
-                        &property.to_gecko_animated_property_id(),
+                        &property.to_gecko_animated_property_id(/* owned = */ false),
                     );
                 }
                 if current_offset == 0.0 {
@@ -6597,7 +6597,7 @@ pub unsafe extern "C" fn Servo_StyleSet_GetKeyframesForName(
 
                     let pair = Gecko_AppendPropertyValuePair(
                         &mut *(*keyframe).mPropertyValues,
-                        &id.to_gecko_animated_property_id(),
+                        &id.to_gecko_animated_property_id(/* owned = */ false),
                     );
 
                     (*pair).mServoDeclarationBlock.set_arc(Arc::new(
