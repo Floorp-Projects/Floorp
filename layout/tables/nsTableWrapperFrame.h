@@ -191,7 +191,6 @@ class nsTableWrapperFrame : public nsContainerFrame {
                             const mozilla::WritingMode aWM) const;
 
   void GetCaptionOrigin(mozilla::StyleCaptionSide,
-                        const mozilla::LogicalSize& aContainBlockSize,
                         const mozilla::LogicalSize& aInnerSize,
                         const mozilla::LogicalSize& aCaptionSize,
                         mozilla::LogicalMargin& aCaptionMargin,
@@ -199,7 +198,6 @@ class nsTableWrapperFrame : public nsContainerFrame {
                         mozilla::WritingMode aWM) const;
 
   void GetInnerOrigin(const MaybeCaptionSide&,
-                      const mozilla::LogicalSize& aContainBlockSize,
                       const mozilla::LogicalSize& aCaptionSize,
                       const mozilla::LogicalMargin& aCaptionMargin,
                       const mozilla::LogicalSize& aInnerSize,

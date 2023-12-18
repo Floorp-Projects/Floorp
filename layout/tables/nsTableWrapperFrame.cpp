@@ -237,23 +237,6 @@ ComputedStyle* nsTableWrapperFrame::GetParentComputedStyle(
   return (*aProviderFrame = InnerTableFrame())->Style();
 }
 
-static nsSize GetContainingBlockSize(const ReflowInput& aOuterRI) {
-  nsSize size(0, 0);
-  const ReflowInput* containRS = aOuterRI.mCBReflowInput;
-
-  if (containRS) {
-    size.width = containRS->ComputedWidth();
-    if (NS_UNCONSTRAINEDSIZE == size.width) {
-      size.width = 0;
-    }
-    size.height = containRS->ComputedHeight();
-    if (NS_UNCONSTRAINEDSIZE == size.height) {
-      size.height = 0;
-    }
-  }
-  return size;
-}
-
 /* virtual */
 nscoord nsTableWrapperFrame::GetMinISize(gfxContext* aRenderingContext) {
   nscoord iSize = nsLayoutUtils::IntrinsicForContainer(
@@ -507,7 +490,6 @@ nscoord nsTableWrapperFrame::ComputeFinalBSize(
 }
 
 void nsTableWrapperFrame::GetCaptionOrigin(StyleCaptionSide aCaptionSide,
-                                           const LogicalSize& aContainBlockSize,
                                            const LogicalSize& aInnerSize,
                                            const LogicalSize& aCaptionSize,
                                            LogicalMargin& aCaptionMargin,
@@ -543,7 +525,6 @@ void nsTableWrapperFrame::GetCaptionOrigin(StyleCaptionSide aCaptionSide,
 }
 
 void nsTableWrapperFrame::GetInnerOrigin(const MaybeCaptionSide& aCaptionSide,
-                                         const LogicalSize& aContainBlockSize,
                                          const LogicalSize& aCaptionSize,
                                          const LogicalMargin& aCaptionMargin,
                                          const LogicalSize& aInnerSize,
@@ -789,20 +770,13 @@ void nsTableWrapperFrame::Reflow(nsPresContext* aPresContext,
     }
   }
 
-  // Then, now that we know how much to reduce the isize of the inner
-  // table to account for side captions, reflow the inner table.
+  // Now we know how much to reduce the block-size for the inner table to
+  // account for captions. Reflow the inner table.
   ReflowOutput innerMet(innerRI->GetWritingMode());
   ReflowChild(aPresContext, InnerTableFrame(), *innerRI, innerMet, aStatus);
   LogicalSize innerSize(wm, innerMet.ISize(wm), innerMet.BSize(wm));
 
-  LogicalSize containSize(wm, GetContainingBlockSize(aOuterRI));
-
   // Now that we've reflowed both we can place them.
-  // XXXldb Most of the input variables here are now uninitialized!
-
-  // XXX Need to recompute inner table's auto margins for the case of side
-  // captions.  (Caption's are broken too, but that should be fixed earlier.)
-
   // Compute the desiredSize so that we can use it as the containerSize
   // for the FinishReflowChild calls below.
   LogicalSize desiredSize(wm);
@@ -815,14 +789,12 @@ void nsTableWrapperFrame::Reflow(nsPresContext* aPresContext,
 
   aDesiredSize.SetSize(wm, desiredSize);
   nsSize containerSize = aDesiredSize.PhysicalSize();
-  // XXX It's possible for this to be NS_UNCONSTRAINEDSIZE, which will result
-  // in assertions from FinishReflowChild.
 
   MOZ_ASSERT(mCaptionFrames.NotEmpty() == captionSide.isSome());
   if (mCaptionFrames.NotEmpty()) {
     LogicalPoint captionOrigin(wm);
-    GetCaptionOrigin(*captionSide, containSize, innerSize, captionSize,
-                     captionMargin, captionOrigin, wm);
+    GetCaptionOrigin(*captionSide, innerSize, captionSize, captionMargin,
+                     captionOrigin, wm);
     FinishReflowChild(mCaptionFrames.FirstChild(), aPresContext, *captionMet,
                       captionRI.ptr(), wm, captionOrigin, containerSize,
                       ReflowChildFlags::ApplyRelativePositioning);
@@ -832,8 +804,8 @@ void nsTableWrapperFrame::Reflow(nsPresContext* aPresContext,
   // everything still fits...
 
   LogicalPoint innerOrigin(wm);
-  GetInnerOrigin(captionSide, containSize, captionSize, captionMargin,
-                 innerSize, innerOrigin, wm);
+  GetInnerOrigin(captionSide, captionSize, captionMargin, innerSize,
+                 innerOrigin, wm);
   // NOTE: Relative positioning on the table applies to the whole table wrapper.
   FinishReflowChild(InnerTableFrame(), aPresContext, innerMet, innerRI.ptr(),
                     wm, innerOrigin, containerSize, ReflowChildFlags::Default);
