@@ -6,6 +6,7 @@
 #include "gtest/gtest.h"
 
 #include "AnnexB.h"
+#include "H264.h"
 #include "ImageContainer.h"
 #include "mozilla/AbstractThread.h"
 #include "mozilla/Preferences.h"
@@ -435,6 +436,32 @@ TEST_F(MediaDataEncoderTest, VP8Encodes) {
 
 #if defined(XP_LINUX) && !defined(ANDROID) && \
     (defined(MOZ_FFMPEG) || defined(MOZ_FFVPX))
+TEST_F(MediaDataEncoderTest, H264AVCC) {
+  RUN_IF_SUPPORTED(CodecType::H264, [this]() {
+    // Encod frames in avcC format.
+    RefPtr<MediaDataEncoder> e = CreateH264Encoder(
+        MediaDataEncoder::Usage::Record, MediaDataEncoder::PixelFormat::YUV420P,
+        WIDTH, HEIGHT, Some(kH264SpecificAVCC));
+    EnsureInit(e);
+    MediaDataEncoder::EncodedData output = Encode(e, NUM_FRAMES, mData);
+    EXPECT_EQ(output.Length(), NUM_FRAMES);
+    for (auto frame : output) {
+      EXPECT_FALSE(AnnexB::IsAnnexB(frame));
+      if (frame->mKeyframe) {
+        AnnexB::IsAVCC(frame);
+        AVCCConfig config = AVCCConfig::Parse(frame).unwrap();
+        EXPECT_EQ(config.mAVCProfileIndication,
+                  static_cast<decltype(config.mAVCProfileIndication)>(
+                      kH264SpecificAVCC.mProfile));
+        EXPECT_EQ(config.mAVCLevelIndication,
+                  static_cast<decltype(config.mAVCLevelIndication)>(
+                      kH264SpecificAVCC.mLevel));
+      }
+    }
+    WaitForShutdown(e);
+  });
+}
+
 TEST_F(MediaDataEncoderTest, VP8EncodeAfterDrain) {
   RUN_IF_SUPPORTED(CodecType::VP8, [this]() {
     RefPtr<MediaDataEncoder> e = CreateVP8Encoder();
