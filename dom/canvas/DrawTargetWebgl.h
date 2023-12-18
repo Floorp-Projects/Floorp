@@ -14,7 +14,7 @@
 #include "mozilla/LinkedList.h"
 #include "mozilla/WeakPtr.h"
 #include "mozilla/ThreadLocal.h"
-#include "mozilla/ipc/Shmem.h"
+#include "mozilla/ipc/SharedMemoryBasic.h"
 #include "mozilla/layers/LayersTypes.h"
 
 #include <vector>
@@ -352,10 +352,11 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
   // Skia DT pointing to the same pixel data, but without any applied clips.
   RefPtr<DrawTargetSkia> mSkiaNoClip;
   // The Shmem backing the Skia DT, if applicable.
-  mozilla::ipc::Shmem mShmem;
-  mozilla::ipc::IProtocol* mShmemAllocator = nullptr;
+  RefPtr<mozilla::ipc::SharedMemoryBasic> mShmem;
   // The currently cached snapshot of the WebGL context
   RefPtr<DataSourceSurface> mSnapshot;
+  // The mappable size of mShmem.
+  uint32_t mShmemSize = 0;
   // Whether the framebuffer is still in the initially clear state.
   bool mIsClear = true;
   // Whether or not the Skia target has valid contents and is being drawn to
@@ -431,11 +432,9 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
   static bool CanCreate(const IntSize& aSize, SurfaceFormat aFormat);
   static already_AddRefed<DrawTargetWebgl> Create(
       const IntSize& aSize, SurfaceFormat aFormat,
-      ipc::IProtocol* aShmemAllocator,
       const RefPtr<SharedContextWebgl>& aSharedContext);
 
   bool Init(const IntSize& aSize, SurfaceFormat aFormat,
-            ipc::IProtocol* aShmemAllocator,
             const RefPtr<SharedContextWebgl>& aSharedContext);
 
   bool IsValid() const override;
@@ -565,9 +564,12 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
     return stream.str();
   }
 
-  Maybe<mozilla::ipc::Shmem> GetShmem() const {
-    return mShmem.IsWritable() ? Some(mShmem) : Nothing();
+  mozilla::ipc::SharedMemoryBasic::Handle TakeShmemHandle() const {
+    return mShmem ? mShmem->TakeHandle()
+                  : mozilla::ipc::SharedMemoryBasic::NULLHandle();
   }
+
+  uint32_t GetShmemSize() const { return mShmemSize; }
 
  private:
   bool SupportsPattern(const Pattern& aPattern) {

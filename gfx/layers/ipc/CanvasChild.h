@@ -42,6 +42,14 @@ class CanvasChild final : public PCanvasChild, public SupportsWeakPtr {
 
   ipc::IPCResult RecvDeactivate();
 
+  ipc::IPCResult RecvBlockCanvas();
+
+  ipc::IPCResult RecvNotifyRequiresRefresh(int64_t aTextureId);
+
+  ipc::IPCResult RecvSnapshotShmem(int64_t aTextureId, Handle&& aShmemHandle,
+                                   uint32_t aShmemSize,
+                                   SnapshotShmemResolver&& aResolve);
+
   /**
    * Ensures that the DrawEventRecorder has been created.
    *
@@ -92,12 +100,13 @@ class CanvasChild final : public PCanvasChild, public SupportsWeakPtr {
 
   /**
    * Create a DrawTargetRecording for a canvas texture.
+   * @param aTextureId the id of the new texture
    * @param aSize size for the DrawTarget
    * @param aFormat SurfaceFormat for the DrawTarget
    * @returns newly created DrawTargetRecording
    */
   already_AddRefed<gfx::DrawTarget> CreateDrawTarget(
-      gfx::IntSize aSize, gfx::SurfaceFormat aFormat);
+      int64_t aTextureId, gfx::IntSize aSize, gfx::SurfaceFormat aFormat);
 
   /**
    * Record an event for processing by the CanvasParent's CanvasTranslator.
@@ -111,21 +120,33 @@ class CanvasChild final : public PCanvasChild, public SupportsWeakPtr {
    * Wrap the given surface, so that we can provide a DataSourceSurface if
    * required.
    * @param aSurface the SourceSurface to wrap
+   * @param aTextureId the texture id of the source TextureData
    * @returns a SourceSurface that can provide a DataSourceSurface if required
    */
   already_AddRefed<gfx::SourceSurface> WrapSurface(
-      const RefPtr<gfx::SourceSurface>& aSurface);
+      const RefPtr<gfx::SourceSurface>& aSurface, int64_t aTextureId);
+
+  /**
+   * The DrawTargetRecording is about to change, so detach the old snapshot.
+   */
+  void DetachSurface(const RefPtr<gfx::SourceSurface>& aSurface);
 
   /**
    * Get DataSourceSurface from the translated equivalent version of aSurface in
    * the GPU process.
+   * @param aTextureId the source TextureData to read from
    * @param aSurface the SourceSurface in this process for which we need a
    *                 DataSourceSurface
+   * @param aDetached whether the surface is old
    * @returns a DataSourceSurface created from data for aSurface retrieve from
    *          GPU process
    */
   already_AddRefed<gfx::DataSourceSurface> GetDataSurface(
-      const gfx::SourceSurface* aSurface);
+      int64_t aTextureId, const gfx::SourceSurface* aSurface, bool aDetached);
+
+  bool RequiresRefresh(int64_t aTextureId) const;
+
+  void CleanupTexture(int64_t aTextureId);
 
  protected:
   void ActorDestroy(ActorDestroyReason aWhy) final;
@@ -153,6 +174,11 @@ class CanvasChild final : public PCanvasChild, public SupportsWeakPtr {
   int64_t mLastWriteLockCheckpoint = 0;
   uint32_t mTransactionsSinceGetDataSurface = kCacheDataSurfaceThreshold;
   std::vector<RefPtr<gfx::SourceSurface>> mLastTransactionExternalSurfaces;
+  struct TextureInfo {
+    RefPtr<mozilla::ipc::SharedMemoryBasic> mSnapshotShmem;
+    bool mRequiresRefresh = false;
+  };
+  std::unordered_map<int64_t, TextureInfo> mTextureInfo;
   bool mIsInTransaction = false;
   bool mHasOutstandingWriteLock = false;
   bool mDormant = false;
