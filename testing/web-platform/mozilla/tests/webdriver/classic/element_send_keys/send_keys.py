@@ -1,3 +1,4 @@
+import pytest
 from tests.support.asserts import assert_success
 from tests.support.keys import Keys
 
@@ -22,3 +23,22 @@ def test_modifier_key_toggles(session, inline, modifier_key):
     assert_success(response)
 
     assert element.property("value") == "cheese"
+
+
+@pytest.mark.parametrize("dispatch_once_per_surrogate_pair", [False, True])
+def test_dispatch_once_per_surrogate_pair(
+    session, use_pref, inline, dispatch_once_per_surrogate_pair
+):
+    use_pref(
+        "dom.event.keypress.dispatch_once_per_surrogate_pair",
+        dispatch_once_per_surrogate_pair,
+    )
+
+    session.url = inline("<input>")
+    element = session.find.css("input", all=False)
+
+    text = "🦥🍄"
+    response = element_send_keys(session, element, text)
+    assert_success(response)
+
+    assert element.property("value") == text
