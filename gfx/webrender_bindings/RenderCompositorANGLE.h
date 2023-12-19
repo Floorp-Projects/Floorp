@@ -151,6 +151,7 @@ class RenderCompositorANGLE : public RenderCompositor {
   bool mFullRender = false;
   // Used to know a timing of disabling native compositor.
   bool mDisablingNativeCompositor = false;
+  bool mFirstPresent = true;
 };
 
 }  // namespace wr

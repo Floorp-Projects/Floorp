@@ -197,6 +197,7 @@ HWND RenderCompositorANGLE::GetCompositorHwnd() {
 bool RenderCompositorANGLE::CreateSwapChain(nsACString& aError) {
   MOZ_ASSERT(!UseCompositor());
 
+  mFirstPresent = true;
   HWND hwnd = mWidget->AsWindows()->GetHwnd();
 
   RefPtr<IDXGIDevice> dxgiDevice;
@@ -449,6 +450,14 @@ RenderedFrameId RenderCompositorANGLE::EndFrame(
       }
     }
 
+    const UINT interval =
+        mFirstPresent ||
+                StaticPrefs::
+                    gfx_webrender_dcomp_video_swap_chain_present_interval_0()
+            ? 0
+            : 1;
+    const UINT flags = 0;
+
     const LayoutDeviceIntSize& bufferSize = mBufferSize.ref();
     if (mUsePartialPresent && mSwapChain1) {
       // Clear full render flag.
@@ -483,7 +492,7 @@ RenderedFrameId RenderCompositorANGLE::EndFrame(
           params.pDirtyRects = rects.data();
 
           HRESULT hr;
-          hr = mSwapChain1->Present1(0, 0, &params);
+          hr = mSwapChain1->Present1(interval, flags, &params);
           if (FAILED(hr) && hr != DXGI_STATUS_OCCLUDED) {
             gfxCriticalNote << "Present1 failed: " << gfx::hexa(hr);
             mFullRender = true;
@@ -491,11 +500,31 @@ RenderedFrameId RenderCompositorANGLE::EndFrame(
         }
       }
     } else {
-      mSwapChain->Present(0, 0);
+      mSwapChain->Present(interval, flags);
     }
     auto end = TimeStamp::Now();
     mozilla::Telemetry::Accumulate(mozilla::Telemetry::COMPOSITE_SWAP_TIME,
                                    (end - start).ToMilliseconds() * 10.);
+
+    if (mFirstPresent && mDCLayerTree) {
+      // Wait for the GPU to finish executing its commands before
+      // committing the DirectComposition tree, or else the swapchain
+      // may flicker black when it's first presented.
+      RefPtr<IDXGIDevice2> dxgiDevice2;
+      mDevice->QueryInterface((IDXGIDevice2**)getter_AddRefs(dxgiDevice2));
+      MOZ_ASSERT(dxgiDevice2);
+
+      HANDLE event = ::CreateEvent(nullptr, false, false, nullptr);
+      HRESULT hr = dxgiDevice2->EnqueueSetEvent(event);
+      if (SUCCEEDED(hr)) {
+        DebugOnly<DWORD> result = ::WaitForSingleObject(event, INFINITE);
+        MOZ_ASSERT(result == WAIT_OBJECT_0);
+      } else {
+        gfxCriticalNoteOnce << "EnqueueSetEvent failed: " << gfx::hexa(hr);
+      }
+      ::CloseHandle(event);
+    }
+    mFirstPresent = false;
   }
 
   if (mDisablingNativeCompositor) {
