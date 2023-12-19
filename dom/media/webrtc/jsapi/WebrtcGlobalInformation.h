@@ -60,9 +60,6 @@ class WebrtcGlobalInformation {
 
   static void ClearLogging(const GlobalObject& aGlobal);
 
-  static void SetDebugLevel(const GlobalObject& aGlobal, int32_t aLevel);
-  static int32_t DebugLevel(const GlobalObject& aGlobal);
-
   static void SetAecDebug(const GlobalObject& aGlobal, bool aEnable);
   static bool AecDebug(const GlobalObject& aGlobal);
   static void GetAecDebugLogDir(const GlobalObject& aGlobal, nsAString& aDir);
