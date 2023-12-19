@@ -15,11 +15,11 @@ add_task(async function () {
   info("Enable the tracing");
   await clickElement(dbg, "trace");
 
-  const topLevelThread =
+  const topLevelThreadActorID =
     dbg.toolbox.commands.targetCommand.targetFront.threadFront.actorID;
   info("Wait for tracing to be enabled");
   await waitForState(dbg, state => {
-    return dbg.selectors.getIsThreadCurrentlyTracing(topLevelThread);
+    return dbg.selectors.getIsThreadCurrentlyTracing(topLevelThreadActorID);
   });
 
   ok(
@@ -89,7 +89,7 @@ add_task(async function () {
   await clickElement(dbg, "trace");
   info("Wait for tracing to be disabled");
   await waitForState(dbg, state => {
-    return !dbg.selectors.getIsThreadCurrentlyTracing(topLevelThread);
+    return !dbg.selectors.getIsThreadCurrentlyTracing(topLevelThreadActorID);
   });
 
   invokeInTab("inline_script2");
@@ -179,10 +179,10 @@ add_task(async function testPageKeyShortcut() {
 
   const dbg = await initDebuggerWithAbsoluteURL("data:text/html,key-shortcut");
 
-  const topLevelThread =
+  const topLevelThreadActorID =
     dbg.toolbox.commands.targetCommand.targetFront.threadFront.actorID;
   ok(
-    !dbg.selectors.getIsThreadCurrentlyTracing(topLevelThread),
+    !dbg.selectors.getIsThreadCurrentlyTracing(topLevelThreadActorID),
     "Tracing is disabled on debugger opening"
   );
 
@@ -212,7 +212,7 @@ add_task(async function testPageKeyShortcut() {
 
   info("Wait for tracing to be enabled");
   await waitForState(dbg, state => {
-    return dbg.selectors.getIsThreadCurrentlyTracing(topLevelThread);
+    return dbg.selectors.getIsThreadCurrentlyTracing(topLevelThreadActorID);
   });
 
   is(
@@ -232,7 +232,7 @@ add_task(async function testPageKeyShortcut() {
 
   info("Wait for tracing to be disabled");
   await waitForState(dbg, state => {
-    return !dbg.selectors.getIsThreadCurrentlyTracing(topLevelThread);
+    return !dbg.selectors.getIsThreadCurrentlyTracing(topLevelThreadActorID);
   });
 });
 
@@ -315,4 +315,45 @@ add_task(async function testPageKeyShortcutWithoutDebugger() {
 
   info("Wait for tracing to be disabled");
   await onTracingStateDisabled;
+});
+
+add_task(async function testTracingValues() {
+  await pushPref("devtools.debugger.features.javascript-tracing", true);
+  // Cover tracing function argument values
+  const jsCode = `function foo() { bar(1, ["array"], { attribute: 3 }, BigInt(4), Infinity, Symbol("6"), "7"); }; function bar(a, b, c) {}`;
+  const dbg = await initDebuggerWithAbsoluteURL(
+    "data:text/html," + encodeURIComponent(`<script>${jsCode}</script>`)
+  );
+
+  await openContextMenuInDebugger(dbg, "trace", 4);
+  const toggled = waitForDispatch(
+    dbg.store,
+    "TOGGLE_JAVASCRIPT_TRACING_VALUES"
+  );
+  selectContextMenuItem(dbg, `#debugger-trace-menu-item-log-values`);
+  await toggled;
+  ok(true, "Toggled the log values setting");
+
+  await clickElement(dbg, "trace");
+
+  const topLevelThreadActorID =
+    dbg.toolbox.commands.targetCommand.targetFront.threadFront.actorID;
+  info("Wait for tracing to be enabled");
+  await waitForState(dbg, state => {
+    return dbg.selectors.getIsThreadCurrentlyTracing(topLevelThreadActorID);
+  });
+
+  invokeInTab("foo");
+
+  await hasConsoleMessage(dbg, "λ foo()");
+  await hasConsoleMessage(dbg, "λ bar");
+  const { value } = await findConsoleMessage(dbg, "λ bar");
+  is(
+    value,
+    `interpreter⟶λ bar(1, \nArray [ "array" ]\n, \nObject { attribute: 3 }\n, 4n, Infinity, Symbol("6"), "7")`,
+    "The argument were printed for bar()"
+  );
+
+  // Reset the log values setting
+  Services.prefs.clearUserPref("devtools.debugger.javascript-tracing-values");
 });

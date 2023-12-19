@@ -51,6 +51,7 @@ pref("devtools.debugger.map-scopes-enabled", false);
 pref("devtools.debugger.log-actions", false);
 pref("devtools.debugger.log-event-breakpoints", false);
 pref("devtools.debugger.javascript-tracing-log-method", "console");
+pref("devtools.debugger.javascript-tracing-values", false);
 
 pref("devtools.debugger.features.wasm", true);
 pref("devtools.debugger.features.code-folding", false);

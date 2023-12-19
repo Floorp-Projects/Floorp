@@ -20,6 +20,11 @@ const { tracerSpec } = require("resource://devtools/shared/specs/tracer.js");
 const { throttle } = require("resource://devtools/shared/throttle.js");
 
 const {
+  makeDebuggeeValue,
+  createValueGripForTarget,
+} = require("devtools/server/actors/object/utils");
+
+const {
   TYPES,
   getResourceWatcher,
 } = require("resource://devtools/server/actors/resources/index.js");
@@ -85,8 +90,18 @@ class TracerActor extends Actor {
     return false;
   }
 
-  startTracing(logMethod = LOG_METHODS.STDOUT) {
-    this.#startTracing({ logMethod });
+  /**
+   * Start tracing.
+   *
+   * @param {String} logMethod
+   *        The output method used by the tracer.
+   *        See `LOG_METHODS` for potential values.
+   * @param {Object} options
+   *        Options used to configure JavaScriptTracer.
+   *        See `JavaScriptTracer.startTracing`.
+   */
+  startTracing(logMethod = LOG_METHODS.STDOUT, options = {}) {
+    this.#startTracing({ ...options, logMethod });
   }
 
   #startTracing(options) {
@@ -109,11 +124,14 @@ class TracerActor extends Actor {
       onTracingInfiniteLoop: this.onTracingInfiniteLoop.bind(this),
     };
     addTracingListener(this.tracingListener);
+    this.traceValues = !!options.traceValues;
     startTracing({
       global: this.targetActor.window || this.targetActor.workerGlobal,
       prefix: options.prefix || "",
       // Enable receiving the `currentDOMEvent` being passed to `onTracingFrame`
       traceDOMEvents: true,
+      // Enable tracing function arguments as well as returned values
+      traceValues: !!options.traceValues,
     });
   }
 
@@ -238,6 +256,22 @@ class TracerActor extends Actor {
         });
       }
 
+      let args = undefined;
+      // Log arguments, but only when this feature is enabled as it introduce
+      // some significant overhead in perf as well as memory as it may hold the objects in memory.
+      if (this.traceValues) {
+        args = [];
+        for (let arg of frame.arguments) {
+          // Debugger.Frame.arguments contains either a Debugger.Object or primitive object
+          if (arg?.unsafeDereference) {
+            arg = arg.unsafeDereference();
+          }
+          // Instantiate a object actor so that the tools can easily inspect these objects
+          const dbgObj = makeDebuggeeValue(this.targetActor, arg);
+          args.push(createValueGripForTarget(this.targetActor, dbgObj));
+        }
+      }
+
       // Create a message object that fits Console Message Watcher expectations
       this.throttledTraces.push({
         resourceType: JSTRACER_TRACE,
@@ -251,6 +285,7 @@ class TracerActor extends Actor {
         lineNumber,
         columnNumber: columnNumber - columnBase,
         sourceId: script.source.id,
+        args,
       });
       this.throttleEmitTraces();
     } else if (this.logMethod == LOG_METHODS.PROFILER) {
