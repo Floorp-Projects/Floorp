@@ -74,6 +74,7 @@ def inplace_replace(replacements=[], filename=""):
 
         shutil.copystat(filename, tmp_file.name)
         shutil.move(tmp_file.name, filename)
+        os.utime(filename, None)
 
 
 def toggle_beta_status(is_beta):

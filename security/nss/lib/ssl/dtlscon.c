@@ -53,7 +53,7 @@ static const ssl3CipherSuite nonDTLSSuites[] = {
  * TLS             DTLS
  * 1.1 (0302)      1.0 (feff)
  * 1.2 (0303)      1.2 (fefd)
- * 1.3 (0304)      1.3 (0304)
+ * 1.3 (0304)      1.3 (fefc)
  */
 SSL3ProtocolVersion
 dtls_TLSVersionToDTLSVersion(SSL3ProtocolVersion tlsv)
@@ -495,7 +495,6 @@ dtls_HandleHandshake(sslSocket *ss, DTLSEpoch epoch, sslSequenceNumber seqNum,
     if (rv != SECSuccess) {
         goto loser;
     }
-
     rv = dtls13_SetupAcks(ss);
 
 loser:
@@ -577,8 +576,9 @@ dtls_FlushHandshakeMessages(sslSocket *ss, PRInt32 flags)
     PORT_Assert(ss->opt.noLocks || ssl_HaveXmitBufLock(ss));
 
     rv = dtls_StageHandshakeMessage(ss);
-    if (rv != SECSuccess)
+    if (rv != SECSuccess) {
         return rv;
+    }
 
     if (!(flags & ssl_SEND_FLAG_FORCE_INTO_BUFFER)) {
         rv = dtls_TransmitMessageFlight(ss);
@@ -612,7 +612,7 @@ dtls_RetransmitTimerExpiredCb(sslSocket *ss)
     if (!(ss->ssl3.hs.rtRetries % 3)) {
         /* If one of the messages was potentially greater than > MTU,
          * then downgrade. Do this every time we have retransmitted a
-         * message twice, per RFC 6347 Sec. 4.1.1 */
+         * message twice, per RFC 9147 Sec. 4.4 */
         dtls_SetMTU(ss, ss->ssl3.hs.maxMessageSent - 1);
     }
 
@@ -839,7 +839,6 @@ dtls_TransmitMessageFlight(sslSocket *ss)
          * to full.  This produces fewer records, but it means that messages can
          * be quite fragmented.  Adding an extra flush here would push new
          * messages into new records and reduce fragmentation. */
-
         if (msg->type == ssl_ct_handshake) {
             rv = dtls_FragmentHandshake(ss, msg);
         } else {
@@ -1124,7 +1123,7 @@ dtls_HandleHelloVerifyRequest(sslSocket *ss, PRUint8 *b, PRUint32 length)
      * match (Section 4.2.1) in the HelloVerifyRequest and the
      * ServerHello.
      *
-     * RFC 6347 suggests (SHOULD) that servers always use 1.0 in
+     * RFC 6347 (Section 4.2.1) suggests (SHOULD) that servers always use 1.0 in
      * HelloVerifyRequest and allows the versions not to match,
      * especially when 1.2 is being negotiated.
      *
@@ -1336,39 +1335,19 @@ dtls_IsDtls13Ciphertext(SSL3ProtocolVersion version, PRUint8 firstOctet)
 }
 
 DTLSEpoch
-dtls_ReadEpoch(const ssl3CipherSpec *crSpec, const PRUint8 *hdr)
+dtls_ReadEpoch(const SSL3ProtocolVersion version, const DTLSEpoch specEpoch, const PRUint8 *hdr)
 {
-    DTLSEpoch epoch;
-    DTLSEpoch maxEpoch;
-    DTLSEpoch partial;
-
-    if (dtls_IsLongHeader(crSpec->version, hdr[0])) {
+    if (dtls_IsLongHeader(version, hdr[0])) {
         return ((DTLSEpoch)hdr[3] << 8) | hdr[4];
     }
 
-    /* A lot of how we recover the epoch here will depend on how we plan to
-     * manage KeyUpdate.  In the case that we decide to install a new read spec
-     * as a KeyUpdate is handled, crSpec will always be the highest epoch we can
-     * possibly receive.  That makes this easier to manage.
-     */
-    if (dtls_IsDtls13Ciphertext(crSpec->version, hdr[0])) {
-        /* TODO(ekr@rtfm.com: do something with the two-bit epoch. */
-        /* Use crSpec->epoch, or crSpec->epoch - 1 if the last bit differs. */
-        return crSpec->epoch - ((hdr[0] ^ crSpec->epoch) & 0x3);
-    }
-
-    /* dtls_GatherData should ensure that this works. */
-    PORT_Assert(hdr[0] == ssl_ct_application_data);
-
-    /* This uses the same method as is used to recover the sequence number in
-     * dtls_ReadSequenceNumber, except that the maximum value is set to the
-     * current epoch. */
-    partial = hdr[1] >> 6;
-    maxEpoch = PR_MAX(crSpec->epoch, 3);
-    epoch = (maxEpoch & 0xfffc) | partial;
-    if (partial > (maxEpoch & 0x03)) {
+    DTLSEpoch epoch = (specEpoch & ~3) | (hdr[0] & 3);
+    /* The epoch cannot be higher than the current read epoch,
+        though guard against underflow. */
+    if (epoch > specEpoch && epoch > 4) {
         epoch -= 4;
     }
+
     return epoch;
 }
 

@@ -744,6 +744,30 @@ class TlsRecordLastByteDamager : public TlsRecordFilter {
   }
 };
 
+// Saves the first received message into a buffer and then drops it.
+// After receiving, the filter is disabled.
+class TLSRecordSaveAndDropNext : public TlsRecordFilter {
+ public:
+  TLSRecordSaveAndDropNext(const std::shared_ptr<TlsAgent>& a)
+      : TlsRecordFilter(a), replaced_(false), data_(0) {}
+
+  DataBuffer ReturnRecorded() { return data_; }
+
+ protected:
+  PacketFilter::Action Filter(const DataBuffer& input, DataBuffer* output) {
+    if (!replaced_) {
+      data_ = input;
+      replaced_ = true;
+      return DROP;
+    }
+    return KEEP;
+  }
+
+ private:
+  bool replaced_;
+  DataBuffer data_;
+};
+
 // This class selectively drops complete writes.  This relies on the fact that
 // writes in libssl are on record boundaries.
 class SelectiveDropFilter : public PacketFilter {

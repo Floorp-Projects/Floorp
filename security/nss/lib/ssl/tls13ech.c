@@ -664,6 +664,10 @@ SSLExp_SetServerEchConfigs(PRFileDesc *fd,
         return SECFailure;
     }
 
+    if (IS_DTLS(ss)) {
+        return SECFailure;
+    }
+
     /* Overwrite if we're already configured. */
     rv = SSLExp_RemoveEchConfigs(fd);
     if (rv != SECSuccess) {
@@ -719,6 +723,10 @@ SSLExp_SetClientEchConfigs(PRFileDesc *fd,
         SSL_DBG(("%d: SSL[%d]: bad socket in %s",
                  SSL_GETPID(), fd, __FUNCTION__));
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return SECFailure;
+    }
+
+    if (IS_DTLS(ss)) {
         return SECFailure;
     }
 
@@ -2358,6 +2366,8 @@ tls13_MaybeHandleEchSignal(sslSocket *ss, const PRUint8 *sh, PRUint32 shLen, PRB
         return SECSuccess;
     }
 
+    PORT_Assert(!IS_DTLS(ss));
+
     if (isHrr) {
         if (ss->xtnData.ech) {
             signal = ss->xtnData.ech->hrrConfirmation;
@@ -2644,7 +2654,7 @@ tls13_MaybeAcceptEch(sslSocket *ss, const SECItem *sidBytes, const PRUint8 *chOu
     TLSExtension *hrrXtn;
     PRBool previouslyOfferedEch;
 
-    if (!ss->xtnData.ech || ss->xtnData.ech->receivedInnerXtn) {
+    if (!ss->xtnData.ech || ss->xtnData.ech->receivedInnerXtn || IS_DTLS(ss)) {
         ss->ssl3.hs.echDecided = PR_TRUE;
         return SECSuccess;
     }

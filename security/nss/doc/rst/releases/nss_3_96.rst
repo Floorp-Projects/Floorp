@@ -1,0 +1,17 @@
+.. _mozilla_projects_nss_nss_3_96_release_notes:
+
+NSS 3.96 release notes
+======================
+
+Unfortunately due to issues with the release process we have inconsistent
+source code between the 3.96.0 tag in the NSS repo and the code that is on the FTP.
+The code for 3.96.0 available on the FTP contains some changes planned for the
+next release (namely DTLS 1.3).
+
+As we cannot change what has been published on the FTP easily, and to avoid further
+confusion, we published a dot release...
+
+As part of our roadmap to improve release automation, we will design things to be
+resilient against this divergence in the future.
+
+NSS 3.96.1 is available consistently in the FTP, the repo and Firefox as expected.
