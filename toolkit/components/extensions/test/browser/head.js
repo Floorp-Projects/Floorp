@@ -1,6 +1,6 @@
 /* exported ACCENT_COLOR, BACKGROUND, ENCODED_IMAGE_DATA, FRAME_COLOR, TAB_TEXT_COLOR,
    TEXT_COLOR, TAB_BACKGROUND_TEXT_COLOR, imageBufferFromDataURI, hexToCSS, hexToRGB, testBorderColor,
-   waitForTransition, loadTestSubscript, assertPersistentListeners */
+   waitForTransition, loadTestSubscript, assertPersistentListeners, getToolboxBackgroundColor */
 
 "use strict";
 
@@ -72,6 +72,15 @@ function waitForTransition(element, propertyName) {
       return event.target == element && event.propertyName == propertyName;
     }
   );
+}
+
+function getToolboxBackgroundColor() {
+  let toolbox = document.getElementById("navigator-toolbox");
+  // Ignore any potentially ongoing transition.
+  toolbox.style.transitionProperty = "none";
+  let color = window.getComputedStyle(toolbox).backgroundColor;
+  toolbox.style.transitionProperty = "";
+  return color;
 }
 
 function testBorderColor(element, expected) {

@@ -30,6 +30,7 @@
  *          getIncognitoWindow startIncognitoMonitorExtension
  *          loadTestSubscript awaitBrowserLoaded
  *          getScreenAt roundCssPixcel getCssAvailRect isRectContained
+ *          getToolboxBackgroundColor
  */
 
 // There are shutdown issues for which multiple rejections are left uncaught.
@@ -1033,4 +1034,13 @@ function isRectContained(actualRect, maxRect) {
     "top=true,bottom=true,left=true,right=true",
     `Dimension must be inside, top:${actualRect.top}>=${maxRect.top}, bottom:${actualRect.bottom}<=${maxRect.bottom}, left:${actualRect.left}>=${maxRect.left}, right:${actualRect.right}<=${maxRect.right}`
   );
+}
+
+function getToolboxBackgroundColor() {
+  let toolbox = document.getElementById("navigator-toolbox");
+  // Ignore any potentially ongoing transition.
+  toolbox.style.transitionProperty = "none";
+  let color = window.getComputedStyle(toolbox).backgroundColor;
+  toolbox.style.transitionProperty = "";
+  return color;
 }

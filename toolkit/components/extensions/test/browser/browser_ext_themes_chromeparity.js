@@ -44,7 +44,7 @@ add_task(async function test_support_theme_frame() {
     `The backgroundImage should use face.png. Actual value is: ${toolboxCS.backgroundImage}`
   );
   Assert.equal(
-    toolboxCS.backgroundColor,
+    getToolboxBackgroundColor(),
     "rgb(" + FRAME_COLOR.join(", ") + ")",
     "Expected correct background color"
   );
@@ -94,11 +94,9 @@ add_task(async function test_support_theme_frame_inactive() {
   await extension.startup();
 
   let docEl = window.document.documentElement;
-  let toolbox = document.querySelector("#navigator-toolbox");
-  let toolboxCS = window.getComputedStyle(toolbox);
 
   Assert.equal(
-    toolboxCS.backgroundColor,
+    getToolboxBackgroundColor(),
     "rgb(" + FRAME_COLOR.join(", ") + ")",
     "Window background is set to the colors.frame property"
   );
@@ -106,7 +104,7 @@ add_task(async function test_support_theme_frame_inactive() {
   // Now we'll open a new window to see if the inactive browser accent color changed
   let window2 = await BrowserTestUtils.openNewBrowserWindow();
   Assert.equal(
-    toolboxCS.backgroundColor,
+    getToolboxBackgroundColor(),
     "rgb(" + FRAME_COLOR_INACTIVE.join(", ") + ")",
     `Inactive window background color should be ${FRAME_COLOR_INACTIVE}`
   );
@@ -140,11 +138,8 @@ add_task(async function test_lack_of_theme_frame_inactive() {
   await extension.startup();
 
   let docEl = window.document.documentElement;
-  let toolbox = document.querySelector("#navigator-toolbox");
-  let toolboxCS = window.getComputedStyle(toolbox);
-
   Assert.equal(
-    toolboxCS.backgroundColor,
+    getToolboxBackgroundColor(),
     "rgb(" + FRAME_COLOR.join(", ") + ")",
     "Window background is set to the colors.frame property"
   );
@@ -152,7 +147,7 @@ add_task(async function test_lack_of_theme_frame_inactive() {
   // Now we'll open a new window to make sure the inactive browser accent color stayed the same
   let window2 = await BrowserTestUtils.openNewBrowserWindow();
   Assert.equal(
-    toolboxCS.backgroundColor,
+    getToolboxBackgroundColor(),
     "rgb(" + FRAME_COLOR.join(", ") + ")",
     "Inactive window background should not change if colors.frame_inactive isn't set"
   );
