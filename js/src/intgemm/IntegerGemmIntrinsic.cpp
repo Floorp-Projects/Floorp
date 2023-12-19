@@ -20,7 +20,10 @@
 #include "wasm/WasmInstance.h"
 #include "wasm/WasmLog.h"
 
-#if defined(USE_AVX2)
+#if defined(USE_AVXVNNI)
+#  define SUPPORTED_ARCHS \
+    xsimd::arch_list<xsimd::avxvnni, xsimd::avx2, xsimd::ssse3, xsimd::sse2>
+#elif defined(USE_AVX2)
 #  define SUPPORTED_ARCHS \
     xsimd::arch_list<xsimd::avx2, xsimd::ssse3, xsimd::sse2>
 #elif defined(USE_SSSE3)
