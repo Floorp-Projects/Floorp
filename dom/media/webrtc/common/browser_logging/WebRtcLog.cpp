@@ -4,7 +4,7 @@
 
 #include "WebRtcLog.h"
 
-#include "MainThreadUtils.h"
+#include "nsThreadUtils.h"
 #include "mozilla/Logging.h"
 #include "rtc_base/logging.h"
 
@@ -23,7 +23,9 @@
 
 using mozilla::LogLevel;
 
-static mozilla::LazyLogModule sWebRtcLog("webrtc_trace");
+#define WEBRTC_LOG_MODULE_NAME "webrtc_trace"
+#define WEBRTC_LOG_PREF "logging." WEBRTC_LOG_MODULE_NAME
+static mozilla::LazyLogModule sWebRtcLog(WEBRTC_LOG_MODULE_NAME);
 
 static rtc::LoggingSeverity LevelToSeverity(mozilla::LogLevel aLevel) {
   switch (aLevel) {
@@ -58,12 +60,26 @@ class LogSinkImpl : public WebrtcLogSinkHandle, public rtc::LogSink {
     return mozilla::MakeAndAddRef<LogSinkImpl>();
   }
 
+  static void OnPrefChanged(const char* aPref, void* aData) {
+    mozilla::AssertIsOnMainThread();
+    MOZ_ASSERT(strcmp(aPref, WEBRTC_LOG_PREF) == 0);
+    MOZ_ASSERT(aData == sSingleton);
+
+    // Bounce to main thread again so the LogModule can settle on the new level
+    // via its own observer.
+    NS_DispatchToMainThread(mozilla::NewRunnableMethod(
+        __func__, sSingleton, &LogSinkImpl::UpdateLogLevels));
+  }
+
   LogSinkImpl() {
     mozilla::AssertIsOnMainThread();
     MOZ_RELEASE_ASSERT(!sSingleton);
 
-    rtc::LogMessage::AddLogToStream(this, rtc::LoggingSeverity::LS_NONE);
+    rtc::LogMessage::AddLogToStream(this, LevelToSeverity(mLevel));
     sSingleton = this;
+
+    mozilla::Preferences::RegisterCallbackAndCall(&LogSinkImpl::OnPrefChanged,
+                                                  WEBRTC_LOG_PREF, this);
   }
 
  private:
@@ -71,6 +87,8 @@ class LogSinkImpl : public WebrtcLogSinkHandle, public rtc::LogSink {
     mozilla::AssertIsOnMainThread();
     MOZ_RELEASE_ASSERT(sSingleton == this);
 
+    mozilla::Preferences::UnregisterCallback(&LogSinkImpl::OnPrefChanged,
+                                             WEBRTC_LOG_PREF, this);
     rtc::LogMessage::RemoveLogToStream(this);
     sSingleton = nullptr;
   }
@@ -80,8 +98,14 @@ class LogSinkImpl : public WebrtcLogSinkHandle, public rtc::LogSink {
     mozilla::LogModule* webrtcModule = sWebRtcLog;
     mozilla::LogLevel webrtcLevel = webrtcModule->Level();
 
+    if (webrtcLevel == mLevel) {
+      return;
+    }
+
+    mLevel = webrtcLevel;
+
     rtc::LogMessage::RemoveLogToStream(this);
-    rtc::LogMessage::AddLogToStream(this, LevelToSeverity(webrtcLevel));
+    rtc::LogMessage::AddLogToStream(this, LevelToSeverity(mLevel));
   }
 
   void OnLogMessage(const std::string& message) override {
@@ -89,6 +113,8 @@ class LogSinkImpl : public WebrtcLogSinkHandle, public rtc::LogSink {
   }
 
   static LogSinkImpl* sSingleton MOZ_GUARDED_BY(mozilla::sMainThreadCapability);
+  LogLevel mLevel MOZ_GUARDED_BY(mozilla::sMainThreadCapability) =
+      LogLevel::Disabled;
 };
 
 LogSinkImpl* LogSinkImpl::sSingleton = nullptr;
