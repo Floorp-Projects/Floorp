@@ -10525,22 +10525,23 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
     uriModified = false;
   }
 
-  bool isXFOError = false;
+  bool isEmbeddingBlockedError = false;
   if (mFailedChannel) {
     nsresult status;
     mFailedChannel->GetStatus(&status);
-    isXFOError = status == NS_ERROR_XFO_VIOLATION;
+    isEmbeddingBlockedError = status == NS_ERROR_XFO_VIOLATION ||
+                              status == NS_ERROR_CSP_FRAME_ANCESTOR_VIOLATION;
   }
 
   nsLoadFlags loadFlags = aLoadState->CalculateChannelLoadFlags(
-      mBrowsingContext, Some(uriModified), Some(isXFOError));
+      mBrowsingContext, Some(uriModified), Some(isEmbeddingBlockedError));
 
   nsCOMPtr<nsIChannel> channel;
   if (DocumentChannel::CanUseDocumentChannel(aLoadState->URI()) &&
       !isAboutBlankLoadOntoInitialAboutBlank) {
-    channel = DocumentChannel::CreateForDocument(aLoadState, loadInfo,
-                                                 loadFlags, this, cacheKey,
-                                                 uriModified, isXFOError);
+    channel = DocumentChannel::CreateForDocument(
+        aLoadState, loadInfo, loadFlags, this, cacheKey, uriModified,
+        isEmbeddingBlockedError);
     MOZ_ASSERT(channel);
 
     // Disable keyword fixup when using DocumentChannel, since

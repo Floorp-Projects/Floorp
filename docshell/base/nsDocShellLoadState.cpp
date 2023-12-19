@@ -1092,7 +1092,7 @@ void nsDocShellLoadState::CalculateLoadURIFlags() {
 
 nsLoadFlags nsDocShellLoadState::CalculateChannelLoadFlags(
     BrowsingContext* aBrowsingContext, Maybe<bool> aUriModified,
-    Maybe<bool> aIsXFOError) {
+    Maybe<bool> aIsEmbeddingBlockedError) {
   MOZ_ASSERT(aBrowsingContext);
 
   nsLoadFlags loadFlags = aBrowsingContext->GetDefaultLoadFlags();
@@ -1106,13 +1106,13 @@ nsLoadFlags nsDocShellLoadState::CalculateChannelLoadFlags(
 
   // These values aren't available for loads initiated in the Parent process.
   MOZ_ASSERT_IF(loadType == LOAD_HISTORY, aUriModified.isSome());
-  MOZ_ASSERT_IF(loadType == LOAD_ERROR_PAGE, aIsXFOError.isSome());
+  MOZ_ASSERT_IF(loadType == LOAD_ERROR_PAGE, aIsEmbeddingBlockedError.isSome());
 
   if (loadType == LOAD_ERROR_PAGE) {
     // Error pages are LOAD_BACKGROUND, unless it's an
-    // XFO error for which we want an error page to load
+    // XFO / frame-ancestors error for which we want an error page to load
     // but additionally want the onload() event to fire.
-    if (!*aIsXFOError) {
+    if (!*aIsEmbeddingBlockedError) {
       loadFlags |= nsIChannel::LOAD_BACKGROUND;
     }
   }
