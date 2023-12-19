@@ -467,6 +467,14 @@ add_task(async function search_synced_tabs() {
 
     let cards = syncedTabsComponent.cardEls;
     is(cards.length, 2, "There are two device cards.");
+    await TestUtils.waitForCondition(
+      () =>
+        cards[0].querySelector("fxview-tab-list") &&
+        cards[0].querySelector("fxview-tab-list").rowEls.length &&
+        cards[1].querySelector("fxview-tab-list") &&
+        cards[1].querySelector("fxview-tab-list").rowEls.length,
+      "The tab list has loaded for the first two cards."
+    );
     let deviceOneTabs = cards[0].querySelector("fxview-tab-list").rowEls;
     let deviceTwoTabs = cards[1].querySelector("fxview-tab-list").rowEls;
 
@@ -482,6 +490,12 @@ add_task(async function search_synced_tabs() {
       "Synced Tabs component is done updating."
     );
     cards = syncedTabsComponent.cardEls;
+    await TestUtils.waitForCondition(
+      () =>
+        cards[0].querySelector("fxview-tab-list") &&
+        cards[0].querySelector("fxview-tab-list").rowEls.length,
+      "The tab list has loaded for the first card."
+    );
     deviceOneTabs = cards[0].querySelector("fxview-tab-list").rowEls;
     deviceTwoTabs = cards[1].querySelector("fxview-tab-list");
     await TestUtils.waitForCondition(
@@ -504,6 +518,14 @@ add_task(async function search_synced_tabs() {
       "Synced Tabs component is done updating."
     );
     cards = syncedTabsComponent.cardEls;
+    await TestUtils.waitForCondition(
+      () =>
+        cards[0].querySelector("fxview-tab-list") &&
+        cards[0].querySelector("fxview-tab-list").rowEls.length &&
+        cards[1].querySelector("fxview-tab-list") &&
+        cards[1].querySelector("fxview-tab-list").rowEls.length,
+      "The tab list has loaded for the first two cards."
+    );
     deviceOneTabs = cards[0].querySelector("fxview-tab-list").rowEls;
     deviceTwoTabs = cards[1].querySelector("fxview-tab-list").rowEls;
     await TestUtils.waitForCondition(
@@ -531,6 +553,12 @@ add_task(async function search_synced_tabs() {
       "Synced Tabs component is done updating."
     );
     cards = syncedTabsComponent.cardEls;
+    await TestUtils.waitForCondition(
+      () =>
+        cards[0].querySelector("fxview-tab-list") &&
+        cards[0].querySelector("fxview-tab-list").rowEls.length,
+      "The tab list has loaded for the first card."
+    );
     deviceOneTabs = cards[0].querySelector("fxview-tab-list").rowEls;
     deviceTwoTabs = cards[1].querySelector("fxview-tab-list");
     await TestUtils.waitForCondition(
@@ -559,6 +587,14 @@ add_task(async function search_synced_tabs() {
       "Synced Tabs component is done updating."
     );
     cards = syncedTabsComponent.cardEls;
+    await TestUtils.waitForCondition(
+      () =>
+        cards[0].querySelector("fxview-tab-list") &&
+        cards[0].querySelector("fxview-tab-list").rowEls.length &&
+        cards[1].querySelector("fxview-tab-list") &&
+        cards[1].querySelector("fxview-tab-list").rowEls.length,
+      "The tab list has loaded for the first two cards."
+    );
     deviceOneTabs = cards[0].querySelector("fxview-tab-list").rowEls;
     deviceTwoTabs = cards[1].querySelector("fxview-tab-list").rowEls;
     await TestUtils.waitForCondition(
