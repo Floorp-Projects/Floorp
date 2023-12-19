@@ -45,6 +45,24 @@ int32_t js::RealmFuses::offsetOfFuseWordRelativeToRealm(
   return base_offset + fuse_offset + fuseWordOffset;
 }
 
+const char* js::RealmFuses::fuseNames[] = {
+#define FUSE(Name, LowerName) #LowerName,
+    FOR_EACH_REALM_FUSE(FUSE)
+#undef FUSE
+};
+
+// TODO: It is not elegant that we have both this mechanism, but also
+// GuardFuse::name, and all the overrides for naming fuses. The issue is
+// that this method is static to handle consumers that don't have a
+// RealmFuses around but work with indexes (e.g. spew code).
+//
+// I'd love it if we had a better answer.
+const char* js::RealmFuses::getFuseName(RealmFuses::FuseIndex index) {
+  uint8_t rawIndex = uint8_t(index);
+  MOZ_ASSERT(rawIndex > 0 && index < RealmFuses::FuseIndex::LastFuseIndex);
+  return fuseNames[rawIndex];
+}
+
 bool js::OptimizeGetIteratorFuse::checkInvariant(JSContext* cx) {
   // Simple invariant: this fuse merely reflects the conjunction of two fuses,
   // so if this fuse is intact, then the invariant it asserts is that these two
