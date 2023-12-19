@@ -1,6 +1,5 @@
 //error: bad syntax near `?'
 
-[ChildProc=any]
 protocol maybe_Recursive {
 child: async Msg(int?? aa);
 };

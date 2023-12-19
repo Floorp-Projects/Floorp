@@ -2,7 +2,6 @@
 
 include protocol IntrAsyncManagee;
 
-[ChildProc=any]
 async protocol IntrAsyncManager {
     manages IntrAsyncManagee;
 parent:

@@ -2,7 +2,6 @@ include protocol PmanagedProtocol;
 
 // sanity check of managed/manager protocols
 
-[ChildProc=any]
 protocol PmanagerProtocol {
     manages PmanagedProtocol;
 

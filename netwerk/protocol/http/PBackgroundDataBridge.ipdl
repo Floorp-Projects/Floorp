@@ -9,7 +9,6 @@ namespace mozilla {
 namespace net {
 
 //-------------------------------------------------------------------
-[ParentProc=Socket, ChildProc=Content]
 async protocol PBackgroundDataBridge
 {
 child:

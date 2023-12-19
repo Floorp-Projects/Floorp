@@ -3,7 +3,6 @@ struct S {
     double d;
 };
 
-[ChildProc=any]
 sync protocol PStruct {
 parent:
     sync test(S s) returns (S ss);

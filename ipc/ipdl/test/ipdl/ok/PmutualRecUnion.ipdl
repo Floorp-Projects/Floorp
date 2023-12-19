@@ -14,7 +14,6 @@ union Z {
     X;
 };
 
-[ChildProc=any]
 protocol PmutualRecUnion {
 child:
     async Test(X x, Y y, Z z);

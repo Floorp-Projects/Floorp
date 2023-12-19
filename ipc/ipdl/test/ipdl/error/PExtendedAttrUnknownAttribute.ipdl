@@ -1,7 +1,6 @@
 //error: unknown attribute `InvalidAttr'
 
-[InvalidAttr, ChildProc=any]
-async protocol PExtendedAttrUnknownValue {
+[InvalidAttr] async protocol PExtendedAttrUnknownValue {
 parent:
     async Msg();
 };

@@ -1,4 +1,3 @@
-[ChildProc=any]
 intr protocol PintrProtocol {
 
     // sanity check of Interrupt protocols

@@ -1,4 +1,3 @@
-[ChildProc=any]
 async protocol Prio
 {
 child:

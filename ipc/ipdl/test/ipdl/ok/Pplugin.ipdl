@@ -1,4 +1,3 @@
-[ChildProc=any]
 intr protocol Pplugin {
 child:
     async __delete__();

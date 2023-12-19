@@ -44,7 +44,6 @@ union SomeUnion
   SomeMoveonlySendStruct;
 };
 
-[ChildProc=any]
 protocol PbasicUsing {
 child:
     async Msg(SomeUnion foo);

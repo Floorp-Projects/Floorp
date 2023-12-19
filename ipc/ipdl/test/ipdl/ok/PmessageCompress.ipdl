@@ -1,4 +1,3 @@
-[ChildProc=any]
 intr protocol PmessageCompress {
 child:
     [Compress] async foo();

@@ -4,7 +4,6 @@ include protocol ManageeForgot;
 
 // ManageeForgot should have this protocol as its manager.
 
-[ChildProc=any]
 protocol ForgottenManager {
     manages ManageeForgot;
 child:

@@ -1,4 +1,3 @@
 struct empty { };
 
-[ChildProc=any]
 protocol PemptyStruct { child:  async __delete__(); };

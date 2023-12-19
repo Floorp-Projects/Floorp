@@ -16,7 +16,7 @@ include "GMPContentChild.h";
 namespace mozilla {
 namespace gmp {
 
-[NeedsOtherPid, ChildImpl="GMPContentChild", ParentImpl=virtual, ParentProc=Content, ChildProc=GMPlugin]
+[NeedsOtherPid, ChildImpl="GMPContentChild", ParentImpl=virtual]
 sync protocol PGMPContent
 {
   manages PGMPVideoDecoder;
