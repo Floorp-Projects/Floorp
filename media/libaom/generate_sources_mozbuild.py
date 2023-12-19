@@ -61,7 +61,7 @@ if __name__ == '__main__':
     shared_variables = {
         'CMAKE_CURRENT_SOURCE_DIR': AOM_DIR,
         'CONFIG_AV1_DECODER': 1,
-        'CONFIG_AV1_ENCODER': 0,
+        'CONFIG_AV1_ENCODER': 1,
         'CONFIG_COLLECT_INTER_MODE_RD_STATS': 0,
         'CONFIG_INSPECTION': 0,
         'CONFIG_INTERNAL_STATS': 0,
