@@ -50,6 +50,10 @@
 
   :host(.search-results) & {
     font-size: unset;
+
+    & span {
+      overflow-wrap: anywhere;
+    }
   }
 
   &:not([hidden]) {
