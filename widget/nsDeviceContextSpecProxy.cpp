@@ -125,12 +125,6 @@ nsDeviceContextSpecProxy::EndDocument() {
 
   Unused << mRemotePrintJob->SendFinalizePrint();
 
-  if (mRecorder) {
-    MOZ_ASSERT(!mRecorder->IsOpen());
-    mRecorder->DetachResources();
-    mRecorder = nullptr;
-  }
-
   return mozilla::gfx::PrintEndDocumentPromise::CreateAndResolve(true,
                                                                  __func__);
 }

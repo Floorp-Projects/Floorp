@@ -8,20 +8,17 @@
 #define mozilla_layers_TextureRecorded_h
 
 #include "TextureClient.h"
-#include "mozilla/Mutex.h"
+#include "mozilla/layers/CanvasChild.h"
 #include "mozilla/layers/LayersTypes.h"
 
-namespace mozilla::layers {
-class CanvasChild;
-class CanvasDrawEventRecorder;
+namespace mozilla {
+namespace layers {
 
 class RecordedTextureData final : public TextureData {
  public:
-  RecordedTextureData(gfx::IntSize aSize, gfx::SurfaceFormat aFormat);
-
-  bool Init(TextureType aTextureType);
-
-  void DestroyOnOwningThread();
+  RecordedTextureData(already_AddRefed<CanvasChild> aCanvasChild,
+                      gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
+                      TextureType aTextureType);
 
   void FillInfo(TextureData::Info& aInfo) const final;
 
@@ -37,8 +34,6 @@ class RecordedTextureData final : public TextureData {
 
   void ReturnSnapshot(already_AddRefed<gfx::SourceSurface> aSnapshot) final;
 
-  void Forget(LayersIPCChannel* aAllocator) final { Deallocate(aAllocator); }
-
   void Deallocate(LayersIPCChannel* aAllocator) final;
 
   bool Serialize(SurfaceDescriptor& aDescriptor) final;
@@ -53,29 +48,23 @@ class RecordedTextureData final : public TextureData {
   bool RequiresRefresh() const final;
 
  private:
-  friend class TextureData;
-
   DISALLOW_COPY_AND_ASSIGN(RecordedTextureData);
 
   ~RecordedTextureData() override;
 
-  void DestroyOnOwningThreadLocked() MOZ_REQUIRES(mMutex);
-
-  int64_t mTextureId = 0;
-
-  Mutex mMutex;
+  int64_t mTextureId;
   RefPtr<CanvasChild> mCanvasChild;
-  RefPtr<CanvasDrawEventRecorder> mRecorder MOZ_GUARDED_BY(mMutex);
+  gfx::IntSize mSize;
+  gfx::SurfaceFormat mFormat;
   RefPtr<gfx::DrawTarget> mDT;
   RefPtr<gfx::SourceSurface> mSnapshot;
   ThreadSafeWeakPtr<gfx::SourceSurface> mSnapshotWrapper;
-  gfx::IntSize mSize;
-  gfx::SurfaceFormat mFormat;
-  OpenMode mLockedMode = OpenMode::OPEN_NONE;
+  OpenMode mLockedMode;
   layers::RemoteTextureId mLastRemoteTextureId;
   layers::RemoteTextureOwnerId mRemoteTextureOwnerId;
 };
 
-}  // namespace mozilla::layers
+}  // namespace layers
+}  // namespace mozilla
 
 #endif  // mozilla_layers_TextureRecorded_h

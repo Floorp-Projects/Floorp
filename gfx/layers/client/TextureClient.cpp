@@ -32,7 +32,6 @@
 #include "mozilla/layers/ImageBridgeChild.h"
 #include "mozilla/layers/ImageDataSerializer.h"
 #include "mozilla/layers/PTextureChild.h"
-#include "mozilla/layers/SynchronousTask.h"
 #include "mozilla/layers/TextureClientOGL.h"
 #include "mozilla/layers/TextureClientRecycleAllocator.h"
 #include "mozilla/layers/TextureRecorded.h"
@@ -76,43 +75,14 @@ using namespace mozilla::gl;
 using namespace mozilla::gfx;
 
 struct TextureDeallocParams {
-  TextureData* data = nullptr;
+  TextureData* data;
   RefPtr<TextureChild> actor;
-  RefPtr<TextureReadLock> readLock;
   RefPtr<LayersIPCChannel> allocator;
-  bool clientDeallocation = false;
-  bool syncDeallocation = false;
-  bool selfDeleting = false;
-
-  TextureDeallocParams() = default;
-  TextureDeallocParams(const TextureDeallocParams&) = delete;
-  TextureDeallocParams& operator=(const TextureDeallocParams&) = delete;
-
-  TextureDeallocParams(TextureDeallocParams&& aOther)
-      : data(aOther.data),
-        actor(std::move(aOther.actor)),
-        readLock(std::move(aOther.readLock)),
-        allocator(std::move(aOther.allocator)),
-        clientDeallocation(aOther.clientDeallocation),
-        syncDeallocation(aOther.syncDeallocation),
-        selfDeleting(aOther.selfDeleting) {
-    aOther.data = nullptr;
-  }
-
-  TextureDeallocParams& operator=(TextureDeallocParams&& aOther) {
-    data = aOther.data;
-    aOther.data = nullptr;
-    actor = std::move(aOther.actor);
-    readLock = std::move(aOther.readLock);
-    allocator = std::move(aOther.allocator);
-    clientDeallocation = aOther.clientDeallocation;
-    syncDeallocation = aOther.syncDeallocation;
-    selfDeleting = aOther.selfDeleting;
-    return *this;
-  }
+  bool clientDeallocation;
+  bool syncDeallocation;
 };
 
-void DeallocateTextureClient(TextureDeallocParams& params);
+void DeallocateTextureClient(TextureDeallocParams params);
 
 /**
  * TextureChild is the content-side incarnation of the PTexture IPDL actor.
@@ -143,7 +113,6 @@ class TextureChild final : PTextureChild {
         mDestroyed(false),
         mIPCOpen(false),
         mOwnsTextureData(false),
-        mSelfDeletingTextureData(false),
         mOwnerCalledDestroy(false),
         mUsesImageBridge(false) {}
 
@@ -263,12 +232,11 @@ class TextureChild final : PTextureChild {
   Atomic<bool> mDestroyed;
   bool mIPCOpen;
   bool mOwnsTextureData;
-  bool mSelfDeletingTextureData;
   bool mOwnerCalledDestroy;
   bool mUsesImageBridge;
 
   friend class TextureClient;
-  friend void DeallocateTextureClient(TextureDeallocParams& params);
+  friend void DeallocateTextureClient(TextureDeallocParams params);
 };
 
 static inline gfx::BackendType BackendTypeForBackendSelector(
@@ -392,9 +360,10 @@ TextureData* TextureData::Create(TextureForwarder* aAllocator,
 
   if ((aAllocFlags & ALLOC_FORCE_REMOTE) ||
       ShouldRemoteTextureType(textureType, aSelector)) {
-    RecordedTextureData* textureData = new RecordedTextureData(aSize, aFormat);
-    if (textureData->Init(textureType)) {
-      return textureData;
+    RefPtr<CanvasChild> canvasChild = aAllocator->GetCanvasChild();
+    if (canvasChild) {
+      return new RecordedTextureData(canvasChild.forget(), aSize, aFormat,
+                                     textureType);
     }
     if (aAllocFlags & ALLOC_FORCE_REMOTE) {
       // If we must be remote, but there is no canvas child, then falling back
@@ -402,9 +371,8 @@ TextureData* TextureData::Create(TextureForwarder* aAllocator,
       return nullptr;
     }
 
-    // We failed to initialize the RecordedTextureData, but are supposed to be
-    // remote. Fall back to software.
-    delete textureData;
+    // We don't have a CanvasChild, but are supposed to be remote.
+    // Fall back to software.
     textureType = TextureType::Unknown;
   }
 
@@ -430,8 +398,7 @@ bool TextureData::IsRemote(KnowsCompositor* aKnowsCompositor,
 }
 
 static void DestroyTextureData(TextureData* aTextureData,
-                               LayersIPCChannel* aAllocator, bool aDeallocate,
-                               bool aSelfDeleting) {
+                               LayersIPCChannel* aAllocator, bool aDeallocate) {
   if (!aTextureData) {
     return;
   }
@@ -441,10 +408,7 @@ static void DestroyTextureData(TextureData* aTextureData,
   } else {
     aTextureData->Forget(aAllocator);
   }
-
-  if (!aSelfDeleting) {
-    delete aTextureData;
-  }
+  delete aTextureData;
 }
 
 void TextureChild::ActorDestroy(ActorDestroyReason why) {
@@ -453,8 +417,7 @@ void TextureChild::ActorDestroy(ActorDestroyReason why) {
   mIPCOpen = false;
 
   if (mTextureData) {
-    DestroyTextureData(mTextureData, GetAllocator(), mOwnsTextureData,
-                       mSelfDeletingTextureData);
+    DestroyTextureData(mTextureData, GetAllocator(), mOwnsTextureData);
     mTextureData = nullptr;
   }
 }
@@ -469,14 +432,13 @@ void TextureChild::Destroy(const TextureDeallocParams& aParams) {
 
   if (!IPCOpen()) {
     DestroyTextureData(aParams.data, aParams.allocator,
-                       aParams.clientDeallocation, aParams.selfDeleting);
+                       aParams.clientDeallocation);
     return;
   }
 
   // DestroyTextureData will be called by TextureChild::ActorDestroy
   mTextureData = aParams.data;
   mOwnsTextureData = aParams.clientDeallocation;
-  mSelfDeletingTextureData = aParams.selfDeleting;
 
   if (!mCompositableForwarder ||
       !mCompositableForwarder->DestroyInTransaction(this)) {
@@ -487,12 +449,21 @@ void TextureChild::Destroy(const TextureDeallocParams& aParams) {
 /* static */
 Atomic<uint64_t> TextureClient::sSerialCounter(0);
 
+static void DeallocateTextureClientSyncProxy(TextureDeallocParams params,
+                                             ReentrantMonitor* aBarrier,
+                                             bool* aDone) {
+  DeallocateTextureClient(params);
+  ReentrantMonitorAutoEnter autoMon(*aBarrier);
+  *aDone = true;
+  aBarrier->NotifyAll();
+}
+
 /// The logic for synchronizing a TextureClient's deallocation goes here.
 ///
 /// This funciton takes care of dispatching work to the right thread using
 /// a synchronous proxy if needed, and handles client/host deallocation.
-void DeallocateTextureClient(TextureDeallocParams& params) {
-  if (!params.actor && !params.readLock && !params.data) {
+void DeallocateTextureClient(TextureDeallocParams params) {
+  if (!params.actor && !params.data) {
     // Nothing to do
     return;
   }
@@ -516,22 +487,15 @@ void DeallocateTextureClient(TextureDeallocParams& params) {
       bool done = false;
       ReentrantMonitor barrier MOZ_UNANNOTATED("DeallocateTextureClient");
       ReentrantMonitorAutoEnter autoMon(barrier);
-      ipdlThread->Dispatch(NS_NewRunnableFunction(
-          "DeallocateTextureClientSyncProxyRunnable", [&]() {
-            DeallocateTextureClient(params);
-            ReentrantMonitorAutoEnter autoMonInner(barrier);
-            done = true;
-            barrier.NotifyAll();
-          }));
+      ipdlThread->Dispatch(NewRunnableFunction(
+          "DeallocateTextureClientSyncProxyRunnable",
+          DeallocateTextureClientSyncProxy, params, &barrier, &done));
       while (!done) {
         barrier.Wait();
       }
     } else {
-      ipdlThread->Dispatch(
-          NS_NewRunnableFunction("DeallocateTextureClientRunnable",
-                                 [params = std::move(params)]() mutable {
-                                   DeallocateTextureClient(params);
-                                 }));
+      ipdlThread->Dispatch(NewRunnableFunction(
+          "DeallocateTextureClientRunnable", DeallocateTextureClient, params));
     }
     // The work has been forwarded to the IPDL thread, we are done.
     return;
@@ -548,18 +512,12 @@ void DeallocateTextureClient(TextureDeallocParams& params) {
     params.allocator = nullptr;
   }
 
-  if (params.readLock) {
-    // This should be the last reference to the object, which will destroy it.
-    params.readLock = nullptr;
-  }
-
   if (!actor) {
     // We don't have an IPDL actor, probably because we destroyed the
     // TextureClient before sharing it with the compositor. It means the data
     // cannot be owned by the TextureHost since we never created the
     // TextureHost...
-    DestroyTextureData(params.data, params.allocator, /* aDeallocate */ true,
-                       params.selfDeleting);
+    DestroyTextureData(params.data, params.allocator, /* aDeallocate */ true);
     return;
   }
 
@@ -576,14 +534,10 @@ void TextureClient::Destroy() {
 
   mBorrowedDrawTarget = nullptr;
   mBorrowedSnapshot = false;
+  mReadLock = nullptr;
 
-  RefPtr<TextureChild> actor = std::move(mActor);
-
-  RefPtr<TextureReadLock> readLock;
-  {
-    MutexAutoLock lock(mMutex);
-    readLock = std::move(mReadLock);
-  }
+  RefPtr<TextureChild> actor = mActor;
+  mActor = nullptr;
 
   if (actor && !actor->mDestroyed.compareExchange(false, true)) {
     actor->Unlock();
@@ -593,13 +547,11 @@ void TextureClient::Destroy() {
   TextureData* data = mData;
   mData = nullptr;
 
-  if (data || actor || readLock) {
+  if (data || actor) {
     TextureDeallocParams params;
-    params.actor = std::move(actor);
-    params.readLock = std::move(readLock);
+    params.actor = actor;
     params.allocator = mAllocator;
     params.clientDeallocation = !!(mFlags & TextureFlags::DEALLOCATE_CLIENT);
-    params.selfDeleting = !!(mFlags & TextureFlags::DATA_SELF_DELETING);
     params.data = data;
     // At the moment we always deallocate synchronously when deallocating on the
     // client side, but having asynchronous deallocate in some of the cases will
@@ -609,8 +561,8 @@ void TextureClient::Destroy() {
     // Release the lock before calling DeallocateTextureClient because the
     // latter may wait for the main thread which could create a dead-lock.
 
-    if (params.actor) {
-      params.actor->Unlock();
+    if (actor) {
+      actor->Unlock();
     }
 
     DeallocateTextureClient(params);
@@ -629,141 +581,38 @@ void TextureClient::UnlockActor() const {
   }
 }
 
-void TextureClient::EnsureHasReadLock() {
-  if (mFlags & TextureFlags::NON_BLOCKING_READ_LOCK) {
-    MOZ_ASSERT(!(mFlags & TextureFlags::BLOCKING_READ_LOCK));
-    EnableReadLock();
-  } else if (mFlags & TextureFlags::BLOCKING_READ_LOCK) {
-    MOZ_ASSERT(!(mFlags & TextureFlags::NON_BLOCKING_READ_LOCK));
-    EnableBlockingReadLock();
-  }
-}
-
-bool TextureClient::IsReadLocked() {
-  if (!ShouldReadLock()) {
+bool TextureClient::IsReadLocked() const {
+  if (!mReadLock) {
     return false;
   }
-
-  nsCOMPtr<nsISerialEventTarget> thread;
-
-  {
-    MutexAutoLock lock(mMutex);
-    if (mReadLock) {
-      MOZ_ASSERT(mReadLock->AsNonBlockingLock(),
-                 "Can only check locked for non-blocking locks!");
-      return mReadLock->AsNonBlockingLock()->GetReadCount() > 1;
-    }
-
-    thread = mAllocator->GetThread();
-    if (!thread) {
-      // We must be in the process of shutting down.
-      return false;
-    }
-
-    if (thread->IsOnCurrentThread()) {
-      EnsureHasReadLock();
-      if (NS_WARN_IF(!mReadLock)) {
-        MOZ_ASSERT(!mAllocator->IPCOpen());
-        return false;
-      }
-      MOZ_ASSERT(mReadLock->AsNonBlockingLock(),
-                 "Can only check locked for non-blocking locks!");
-      return mReadLock->AsNonBlockingLock()->GetReadCount() > 1;
-    }
-  }
-
-  MOZ_ASSERT(mAllocator->UsesImageBridge());
-
-  bool result = false;
-  SynchronousTask task("TextureClient::IsReadLocked");
-  thread->Dispatch(NS_NewRunnableFunction("TextureClient::IsReadLocked", [&]() {
-    AutoCompleteTask complete(&task);
-    result = IsReadLocked();
-  }));
-  task.Wait();
-
-  return result;
+  MOZ_ASSERT(mReadLock->AsNonBlockingLock(),
+             "Can only check locked for non-blocking locks!");
+  return mReadLock->AsNonBlockingLock()->GetReadCount() > 1;
 }
 
 bool TextureClient::TryReadLock() {
-  if (!ShouldReadLock()) {
+  if (!mReadLock || mIsReadLocked) {
     return true;
   }
 
-  nsCOMPtr<nsISerialEventTarget> thread;
-
-  {
-    MutexAutoLock lock(mMutex);
-    if (mIsReadLocked) {
-      return true;
-    }
-
-    if (mReadLock) {
-      if (mReadLock->AsNonBlockingLock() &&
-          mReadLock->AsNonBlockingLock()->GetReadCount() > 1) {
-        return false;
-      }
-
-      if (!mReadLock->TryReadLock(TimeDuration::FromMilliseconds(500))) {
-        return false;
-      }
-
-      mIsReadLocked = true;
-      return true;
-    }
-
-    thread = mAllocator->GetThread();
-    if (!thread) {
-      // We must be in the process of shutting down.
+  if (mReadLock->AsNonBlockingLock()) {
+    if (IsReadLocked()) {
       return false;
-    }
-
-    if (thread->IsOnCurrentThread()) {
-      EnsureHasReadLock();
-
-      if (NS_WARN_IF(!mReadLock)) {
-        MOZ_ASSERT(!mAllocator->IPCOpen());
-        return false;
-      }
-
-      if (mReadLock->AsNonBlockingLock() &&
-          mReadLock->AsNonBlockingLock()->GetReadCount() > 1) {
-        return false;
-      }
-
-      if (!mReadLock->TryReadLock(TimeDuration::FromMilliseconds(500))) {
-        return false;
-      }
-
-      mIsReadLocked = true;
-      return true;
     }
   }
 
-  MOZ_ASSERT(mAllocator->UsesImageBridge());
+  if (!mReadLock->TryReadLock(TimeDuration::FromMilliseconds(500))) {
+    return false;
+  }
 
-  bool result = false;
-  SynchronousTask task("TextureClient::TryReadLock");
-  thread->Dispatch(NS_NewRunnableFunction("TextureClient::TryReadLock", [&]() {
-    AutoCompleteTask complete(&task);
-    result = TryReadLock();
-  }));
-  task.Wait();
-
-  return result;
+  mIsReadLocked = true;
+  return true;
 }
 
 void TextureClient::ReadUnlock() {
-  if (!ShouldReadLock()) {
-    return;
-  }
-
-  MutexAutoLock lock(mMutex);
-
   if (!mIsReadLocked) {
     return;
   }
-
   MOZ_ASSERT(mReadLock);
   mReadLock->ReadUnlock();
   mIsReadLocked = false;
@@ -857,9 +706,13 @@ void TextureClient::Unlock() {
 }
 
 void TextureClient::EnableReadLock() {
-  MOZ_ASSERT(ShouldReadLock());
-  if (!mReadLock && mAllocator->GetTileLockAllocator()) {
-    mReadLock = NonBlockingTextureReadLock::Create(mAllocator);
+  if (!mReadLock) {
+    if (mAllocator->GetTileLockAllocator()) {
+      mReadLock = NonBlockingTextureReadLock::Create(mAllocator);
+    } else {
+      // IPC is down
+      gfxCriticalError() << "TextureClient::EnableReadLock IPC is down";
+    }
   }
 }
 
@@ -868,26 +721,15 @@ bool TextureClient::OnForwardedToHost() {
     mData->OnForwardedToHost();
   }
 
-  if (!ShouldReadLock() || !mUpdated) {
-    return false;
-  }
-
-  {
-    MutexAutoLock lock(mMutex);
-    EnsureHasReadLock();
-
-    if (NS_WARN_IF(!mReadLock)) {
-      MOZ_ASSERT(!mAllocator->IPCOpen());
-      return false;
-    }
-
+  if (mReadLock && mUpdated) {
     // Take a read lock on behalf of the TextureHost. The latter will unlock
     // after the shared data is available again for drawing.
     mReadLock->ReadLock();
+    mUpdated = false;
+    return true;
   }
 
-  mUpdated = false;
-  return true;
+  return false;
 }
 
 TextureClient::~TextureClient() {
@@ -1213,13 +1055,8 @@ bool TextureClient::InitIPDLActor(CompositableForwarder* aForwarder) {
       aForwarder->GetTextureForwarder()->GetNextExternalImageId();
 
   ReadLockDescriptor readLockDescriptor = null_t();
-
-  {
-    MutexAutoLock lock(mMutex);
-    EnsureHasReadLock();
-    if (mReadLock) {
-      mReadLock->Serialize(readLockDescriptor, GetAllocator()->GetParentPid());
-    }
+  if (mReadLock) {
+    mReadLock->Serialize(readLockDescriptor, GetAllocator()->GetParentPid());
   }
 
   PTextureChild* actor = aForwarder->GetTextureForwarder()->CreateTexture(
@@ -1287,12 +1124,8 @@ bool TextureClient::InitIPDLActor(KnowsCompositor* aKnowsCompositor,
       aKnowsCompositor->GetTextureForwarder()->GetNextExternalImageId();
 
   ReadLockDescriptor readLockDescriptor = null_t();
-  {
-    MutexAutoLock lock(mMutex);
-    EnsureHasReadLock();
-    if (mReadLock) {
-      mReadLock->Serialize(readLockDescriptor, GetAllocator()->GetParentPid());
-    }
+  if (mReadLock) {
+    mReadLock->Serialize(readLockDescriptor, GetAllocator()->GetParentPid());
   }
 
   PTextureChild* actor =
@@ -1507,7 +1340,6 @@ already_AddRefed<TextureClient> TextureClient::CreateForYCbCr(
 TextureClient::TextureClient(TextureData* aData, TextureFlags aFlags,
                              LayersIPCChannel* aAllocator)
     : AtomicRefCountedWithFinalize("TextureClient"),
-      mMutex("TextureClient::mMutex"),
       mAllocator(aAllocator),
       mActor(nullptr),
       mData(aData),
@@ -1531,6 +1363,14 @@ TextureClient::TextureClient(TextureData* aData, TextureFlags aFlags,
 {
   mData->FillInfo(mInfo);
   mFlags |= mData->GetTextureFlags();
+
+  if (mFlags & TextureFlags::NON_BLOCKING_READ_LOCK) {
+    MOZ_ASSERT(!(mFlags & TextureFlags::BLOCKING_READ_LOCK));
+    EnableReadLock();
+  } else if (mFlags & TextureFlags::BLOCKING_READ_LOCK) {
+    MOZ_ASSERT(!(mFlags & TextureFlags::NON_BLOCKING_READ_LOCK));
+    EnableBlockingReadLock();
+  }
 }
 
 bool TextureClient::CopyToTextureClient(TextureClient* aTarget,
@@ -1777,6 +1617,8 @@ bool MemoryTextureReadLock::Serialize(ReadLockDescriptor& aOutput,
 }
 
 bool MemoryTextureReadLock::ReadLock() {
+  NS_ASSERT_OWNINGTHREAD(MemoryTextureReadLock);
+
   ++mReadCount;
   return true;
 }
@@ -1788,7 +1630,10 @@ int32_t MemoryTextureReadLock::ReadUnlock() {
   return readCount;
 }
 
-int32_t MemoryTextureReadLock::GetReadCount() { return mReadCount; }
+int32_t MemoryTextureReadLock::GetReadCount() {
+  NS_ASSERT_OWNINGTHREAD(MemoryTextureReadLock);
+  return mReadCount;
+}
 
 ShmemTextureReadLock::ShmemTextureReadLock(LayersIPCChannel* aAllocator)
     : mClientAllocator(aAllocator), mAllocSuccess(false) {
@@ -1820,6 +1665,7 @@ bool ShmemTextureReadLock::Serialize(ReadLockDescriptor& aOutput,
 }
 
 bool ShmemTextureReadLock::ReadLock() {
+  NS_ASSERT_OWNINGTHREAD(ShmemTextureReadLock);
   if (!mAllocSuccess) {
     return false;
   }
@@ -1835,41 +1681,20 @@ int32_t ShmemTextureReadLock::ReadUnlock() {
   ShmReadLockInfo* info = GetShmReadLockInfoPtr();
   int32_t readCount = PR_ATOMIC_DECREMENT(&info->readCount);
   MOZ_ASSERT(readCount >= 0);
-  if (readCount > 0) {
-    return readCount;
-  }
-  if (mClientAllocator) {
-    if (nsCOMPtr<nsISerialEventTarget> thread = mClientAllocator->GetThread()) {
-      if (thread->IsOnCurrentThread()) {
-        if (auto* tileLockAllocator =
-                mClientAllocator->GetTileLockAllocator()) {
-          tileLockAllocator->DeallocShmemSection(mShmemSection);
-          return readCount;
-        }
-      } else {
-        thread->Dispatch(NS_NewRunnableFunction(
-            __func__,
-            [shmemSection = std::move(mShmemSection),
-             clientAllocator = std::move(mClientAllocator)]() mutable {
-              if (auto* tileLockAllocator =
-                      clientAllocator->GetTileLockAllocator()) {
-                tileLockAllocator->DeallocShmemSection(shmemSection);
-              } else {
-                // we are on the compositor process, or IPC is down.
-                FixedSizeSmallShmemSectionAllocator::FreeShmemSection(
-                    shmemSection);
-              }
-            }));
-        return readCount;
-      }
+  if (readCount <= 0) {
+    if (mClientAllocator && mClientAllocator->GetTileLockAllocator()) {
+      mClientAllocator->GetTileLockAllocator()->DeallocShmemSection(
+          mShmemSection);
+    } else {
+      // we are on the compositor process, or IPC is down.
+      FixedSizeSmallShmemSectionAllocator::FreeShmemSection(mShmemSection);
     }
   }
-  // we are on the compositor process, or IPC is down.
-  FixedSizeSmallShmemSectionAllocator::FreeShmemSection(mShmemSection);
   return readCount;
 }
 
 int32_t ShmemTextureReadLock::GetReadCount() {
+  NS_ASSERT_OWNINGTHREAD(ShmemTextureReadLock);
   if (!mAllocSuccess) {
     return 0;
   }
@@ -1891,7 +1716,6 @@ bool CrossProcessSemaphoreReadLock::Serialize(ReadLockDescriptor& aOutput,
 }
 
 void TextureClient::EnableBlockingReadLock() {
-  MOZ_ASSERT(ShouldReadLock());
   if (!mReadLock) {
     mReadLock = new CrossProcessSemaphoreReadLock();
   }
