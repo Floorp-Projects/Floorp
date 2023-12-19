@@ -7,11 +7,9 @@
 #include <stdarg.h>
 
 #include "CSFLog.h"
+#include "MainThreadUtils.h"
 
-#include <map>
-#include "prrwlock.h"
 #include "prthread.h"
-#include "nsThreadUtils.h"
 
 #include "mozilla/Logging.h"
 #include "mozilla/Sprintf.h"

@@ -8,13 +8,10 @@
 #include <map>
 #include <string>
 
-#include "WebrtcGlobalChild.h"
 #include "api/field_trials_view.h"
-#include "api/scoped_refptr.h"
 #include "call/audio_state.h"
 #include "MediaTransportHandler.h"  // Mostly for IceLogPromise
 #include "mozIGeckoMediaPluginService.h"
-#include "mozilla/Attributes.h"
 #include "mozilla/StaticPtr.h"
 #include "nsIRunnable.h"
 #include "PeerConnectionImpl.h"

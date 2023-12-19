@@ -3,11 +3,9 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "WebrtcGlobalStatsHistory.h"
-#include <memory>
 
 #include "domstubs.h"
 #include "mozilla/LinkedList.h"
-#include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/RTCStatsReportBinding.h"  // for RTCStatsReportInternal
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/StaticPrefs_media.h"
