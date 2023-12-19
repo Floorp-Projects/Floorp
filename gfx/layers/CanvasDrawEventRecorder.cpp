@@ -8,6 +8,11 @@
 
 #include <string.h>
 
+#include "mozilla/dom/WorkerCommon.h"
+#include "mozilla/dom/WorkerPrivate.h"
+#include "mozilla/dom/WorkerRef.h"
+#include "mozilla/dom/WorkerRunnable.h"
+#include "mozilla/layers/TextureRecorded.h"
 #include "mozilla/layers/SharedSurfacesChild.h"
 #include "mozilla/StaticPrefs_gfx.h"
 #include "RecordedCanvasEventImpl.h"
@@ -34,13 +39,17 @@ static Maybe<ShmemAndHandle> CreateAndMapShmem(size_t aSize) {
   return Some(ShmemAndHandle{shmem.forget(), std::move(shmemHandle)});
 }
 
-CanvasDrawEventRecorder::CanvasDrawEventRecorder() {
+CanvasDrawEventRecorder::CanvasDrawEventRecorder(
+    dom::ThreadSafeWorkerRef* aWorkerRef)
+    : mWorkerRef(aWorkerRef), mIsOnWorker(!!aWorkerRef) {
   mDefaultBufferSize = ipc::SharedMemory::PageAlignedSize(
       StaticPrefs::gfx_canvas_remote_default_buffer_size());
   mMaxSpinCount = StaticPrefs::gfx_canvas_remote_max_spin_count();
   mDropBufferLimit = StaticPrefs::gfx_canvas_remote_drop_buffer_limit();
   mDropBufferOnZero = mDropBufferLimit;
 }
+
+CanvasDrawEventRecorder::~CanvasDrawEventRecorder() { MOZ_ASSERT(!mWorkerRef); }
 
 bool CanvasDrawEventRecorder::Init(TextureType aTextureType,
                                    gfx::BackendType aBackendType,
@@ -296,6 +305,106 @@ void CanvasDrawEventRecorder::CheckAndSignalReader() {
         return;
     }
   } while (true);
+}
+
+void CanvasDrawEventRecorder::DetachResources() {
+  NS_ASSERT_OWNINGTHREAD(CanvasDrawEventRecorder);
+
+  DrawEventRecorderPrivate::DetachResources();
+
+  {
+    auto lockedPendingDeletions = mPendingDeletions.Lock();
+    mWorkerRef = nullptr;
+  }
+}
+
+void CanvasDrawEventRecorder::QueueProcessPendingDeletionsLocked(
+    RefPtr<CanvasDrawEventRecorder>&& aRecorder) {
+  if (!mWorkerRef) {
+    MOZ_RELEASE_ASSERT(
+        !mIsOnWorker,
+        "QueueProcessPendingDeletionsLocked called after worker shutdown!");
+
+    NS_DispatchToMainThread(NS_NewRunnableFunction(
+        "CanvasDrawEventRecorder::QueueProcessPendingDeletionsLocked",
+        [self = std::move(aRecorder)]() { self->ProcessPendingDeletions(); }));
+    return;
+  }
+
+  if (!NS_IsMainThread()) {
+    NS_DispatchToMainThread(NS_NewRunnableFunction(
+        "CanvasDrawEventRecorder::QueueProcessPendingDeletionsLocked",
+        [self = std::move(aRecorder)]() mutable {
+          self->QueueProcessPendingDeletions(std::move(self));
+        }));
+    return;
+  }
+
+  class ProcessPendingRunnable final : public dom::WorkerRunnable {
+   public:
+    ProcessPendingRunnable(dom::WorkerPrivate* aWorkerPrivate,
+                           RefPtr<CanvasDrawEventRecorder>&& aRecorder)
+        : dom::WorkerRunnable(aWorkerPrivate),
+          mRecorder(std::move(aRecorder)) {}
+
+    bool WorkerRun(JSContext*, dom::WorkerPrivate*) override {
+      RefPtr<CanvasDrawEventRecorder> recorder = std::move(mRecorder);
+      recorder->ProcessPendingDeletions();
+      return true;
+    }
+
+   private:
+    RefPtr<CanvasDrawEventRecorder> mRecorder;
+  };
+
+  auto task = MakeRefPtr<ProcessPendingRunnable>(mWorkerRef->Private(),
+                                                 std::move(aRecorder));
+  if (NS_WARN_IF(!task->Dispatch())) {
+    MOZ_CRASH("ProcessPendingRunnable leaked!");
+  }
+}
+
+void CanvasDrawEventRecorder::QueueProcessPendingDeletions(
+    RefPtr<CanvasDrawEventRecorder>&& aRecorder) {
+  auto lockedPendingDeletions = mPendingDeletions.Lock();
+  if (lockedPendingDeletions->empty()) {
+    // We raced to handle the deletions, and something got there first.
+    return;
+  }
+
+  QueueProcessPendingDeletionsLocked(std::move(aRecorder));
+}
+
+void CanvasDrawEventRecorder::AddPendingDeletion(
+    std::function<void()>&& aPendingDeletion) {
+  PendingDeletionsVector pendingDeletions;
+
+  {
+    auto lockedPendingDeletions = mPendingDeletions.Lock();
+    bool wasEmpty = lockedPendingDeletions->empty();
+    lockedPendingDeletions->emplace_back(std::move(aPendingDeletion));
+
+    MOZ_RELEASE_ASSERT(!mIsOnWorker || mWorkerRef,
+                       "AddPendingDeletion called after worker shutdown!");
+
+    // If we are not on the owning thread, we must queue an event to run the
+    // deletions, if we transitioned from empty to non-empty.
+    if ((mWorkerRef && !mWorkerRef->Private()->IsOnCurrentThread()) ||
+        (!mWorkerRef && !NS_IsMainThread())) {
+      if (wasEmpty) {
+        RefPtr<CanvasDrawEventRecorder> self(this);
+        QueueProcessPendingDeletionsLocked(std::move(self));
+      }
+      return;
+    }
+
+    // Otherwise, we can just run all of them right now.
+    pendingDeletions.swap(*lockedPendingDeletions);
+  }
+
+  for (const auto& pendingDeletion : pendingDeletions) {
+    pendingDeletion();
+  }
 }
 
 void CanvasDrawEventRecorder::StoreSourceSurfaceRecording(
