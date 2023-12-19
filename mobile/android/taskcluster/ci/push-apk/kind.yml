@@ -21,7 +21,6 @@ tasks:
         from-deps:
             with-attributes:
                 build-type:
-                    - focus-nightly
                     - focus-release
                     - klar-release
                     - focus-beta
