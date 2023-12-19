@@ -121,28 +121,22 @@ class ExpirationTrackerImpl {
         mEventTarget(aEventTarget) {
     static_assert(K >= 2 && K <= nsExpirationState::NOT_TRACKED,
                   "Unsupported number of generations (must be 2 <= K <= 15)");
-    MOZ_ASSERT(NS_IsMainThread());
-    if (mEventTarget) {
-      bool current = false;
-      // NOTE: The following check+crash could be condensed into a
-      // MOZ_RELEASE_ASSERT, but that triggers a segfault during compilation in
-      // clang 3.8. Once we don't have to care about clang 3.8 anymore, though,
-      // we can convert to MOZ_RELEASE_ASSERT here.
-      if (MOZ_UNLIKELY(NS_FAILED(mEventTarget->IsOnCurrentThread(&current)) ||
-                       !current)) {
-        MOZ_CRASH("Provided event target must be on the main thread");
-      }
+    // If we are not initialized on the main thread, the owner is responsible
+    // for dealing with memory pressure events.
+    if (NS_IsMainThread()) {
+      mObserver = new ExpirationTrackerObserver();
+      mObserver->Init(this);
     }
-    mObserver = new ExpirationTrackerObserver();
-    mObserver->Init(this);
   }
 
   virtual ~ExpirationTrackerImpl() {
-    MOZ_ASSERT(NS_IsMainThread());
     if (mTimer) {
       mTimer->Cancel();
     }
-    mObserver->Destroy();
+    if (mObserver) {
+      MOZ_ASSERT(NS_IsMainThread());
+      mObserver->Destroy();
+    }
   }
 
   /**
@@ -462,17 +456,10 @@ class ExpirationTrackerImpl {
     if (mTimer || !mTimerPeriod) {
       return NS_OK;
     }
-    nsCOMPtr<nsIEventTarget> target = mEventTarget;
-    if (!target && !NS_IsMainThread()) {
-      // TimerCallback should always be run on the main thread to prevent races
-      // to the destruction of the tracker.
-      target = do_GetMainThread();
-      NS_ENSURE_STATE(target);
-    }
 
     return NS_NewTimerWithFuncCallback(
         getter_AddRefs(mTimer), TimerCallback, this, mTimerPeriod,
-        nsITimer::TYPE_REPEATING_SLACK_LOW_PRIORITY, mName, target);
+        nsITimer::TYPE_REPEATING_SLACK_LOW_PRIORITY, mName, mEventTarget);
   }
 };
 
@@ -505,12 +492,12 @@ class nsExpirationTracker
   Lock mLock;
 
   AutoLock FakeLock() {
-    MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread());
+    NS_ASSERT_OWNINGTHREAD(nsExpirationTracker);
     return AutoLock(mLock);
   }
 
   Lock& GetMutex() override {
-    MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread());
+    NS_ASSERT_OWNINGTHREAD(nsExpirationTracker);
     return mLock;
   }
 
@@ -527,6 +514,8 @@ class nsExpirationTracker
   void NotifyHandlerEnd() final {}
 
  protected:
+  NS_DECL_OWNINGTHREAD
+
   virtual void NotifyExpired(T* aObj) = 0;
 
  public:
@@ -535,7 +524,9 @@ class nsExpirationTracker
       : ::detail::SingleThreadedExpirationTracker<T, K>(aTimerPeriod, aName,
                                                         aEventTarget) {}
 
-  virtual ~nsExpirationTracker() = default;
+  virtual ~nsExpirationTracker() {
+    NS_ASSERT_OWNINGTHREAD(nsExpirationTracker);
+  }
 
   nsresult AddObject(T* aObj) {
     return this->AddObjectLocked(aObj, FakeLock());
