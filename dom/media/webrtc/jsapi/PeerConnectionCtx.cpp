@@ -270,7 +270,6 @@ nsresult PeerConnectionCtx::InitializeGlobal() {
     }
   }
 
-  EnableWebRtcLog();
   return NS_OK;
 }
 
@@ -292,8 +291,6 @@ void PeerConnectionCtx::Destroy() {
     instance->Cleanup();
     delete instance;
   }
-
-  StopWebRtcLog();
 }
 
 template <typename T>
@@ -531,6 +528,12 @@ void PeerConnectionCtx::ClearClosedStats() {
     }
   }
 }
+
+PeerConnectionCtx::PeerConnectionCtx()
+    : mGMPReady(false),
+      mLogHandle(EnsureWebrtcLogging()),
+      mTransportHandler(
+          MediaTransportHandler::Create(GetMainThreadSerialEventTarget())) {}
 
 nsresult PeerConnectionCtx::Initialize() {
   MOZ_ASSERT(NS_IsMainThread());
