@@ -33,6 +33,70 @@ ALL_AXES = [(axis, False) for axis in PHYSICAL_AXES] + [
 SYSTEM_FONT_LONGHANDS = """font_family font_size font_style
                            font_stretch font_weight""".split()
 
+PRIORITARY_PROPERTIES = set(
+    [
+        # The writing-mode group has the most priority of all property groups, as
+        # sizes like font-size can depend on it.
+        "writing-mode",
+        "direction",
+        "text-orientation",
+        # The fonts and colors group has the second priority, as all other lengths
+        # and colors depend on them.
+        #
+        # There are some interdependencies between these, but we fix them up in
+        # Cascade::fixup_font_stuff.
+        # Needed to properly compute the zoomed font-size.
+        "-x-text-scale",
+        # Needed to do font-size computation in a language-dependent way.
+        "-x-lang",
+        # Needed for ruby to respect language-dependent min-font-size
+        # preferences properly, see bug 1165538.
+        "-moz-min-font-size-ratio",
+        # font-size depends on math-depth's computed value.
+        "math-depth",
+        # Needed to compute the first available font and its used size,
+        # in order to compute font-relative units correctly.
+        "font-size",
+        "font-size-adjust",
+        "font-weight",
+        "font-stretch",
+        "font-style",
+        "font-family",
+        # color-scheme affects how system colors resolve.
+        "color-scheme",
+        # forced-color-adjust affects whether colors are adjusted.
+        "forced-color-adjust",
+        # Zoom affects all absolute lengths.
+        "zoom",
+        # Line height lengths depend on this.
+        "line-height",
+    ]
+)
+
+VISITED_DEPENDENT_PROPERTIES = set(
+    [
+        "column-rule-color",
+        "text-emphasis-color",
+        "-webkit-text-fill-color",
+        "-webkit-text-stroke-color",
+        "text-decoration-color",
+        "fill",
+        "stroke",
+        "caret-color",
+        "background-color",
+        "border-top-color",
+        "border-right-color",
+        "border-bottom-color",
+        "border-left-color",
+        "border-block-start-color",
+        "border-inline-end-color",
+        "border-block-end-color",
+        "border-inline-start-color",
+        "outline-color",
+        "color",
+    ]
+)
+
 # Bitfield values for all rule types which can have property declarations.
 STYLE_RULE = 1 << 0
 PAGE_RULE = 1 << 1
@@ -280,6 +344,12 @@ class Property(object):
 
     def enabled_in_content(self):
         return self.enabled_in == "content"
+
+    def is_visited_dependent(self):
+        return self.name in VISITED_DEPENDENT_PROPERTIES
+
+    def is_prioritary(self):
+        return self.name in PRIORITARY_PROPERTIES
 
     def nscsspropertyid(self):
         return "nsCSSPropertyID::eCSSProperty_" + self.ident

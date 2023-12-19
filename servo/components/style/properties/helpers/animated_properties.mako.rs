@@ -23,7 +23,7 @@ use std::ptr;
 use std::mem;
 use fxhash::FxHashMap;
 use super::ComputedValues;
-use crate::properties::property_declaration::OwnedPropertyDeclarationId;
+use crate::properties::OwnedPropertyDeclarationId;
 use crate::values::animated::{Animate, Procedure, ToAnimatedValue, ToAnimatedZero};
 use crate::values::animated::effects::AnimatedFilter;
 #[cfg(feature = "gecko")] use crate::values::computed::TransitionProperty;
