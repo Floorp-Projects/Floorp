@@ -33,8 +33,6 @@ const MDNLink = require("resource://devtools/client/shared/components/MdnLink.js
 
 const { div, span } = dom;
 
-const TIMINGS_END_PADDING = "80px";
-
 /**
  * Timings panel component
  * Display timeline bars that shows the total wait time for various stages
@@ -98,22 +96,13 @@ class TimingsPanel extends Component {
           div(
             { className: "requests-list-timings-container" },
             span({
-              className: "requests-list-timings-offset",
-              style: {
-                width: `calc(${
-                  offset > 0 ? offset : 0
-                } * (100% - ${TIMINGS_END_PADDING})`,
-              },
-            }),
-            span({
               className: `requests-list-timings-box serviceworker-timings-color-${key.replace(
                 "ServiceWorker",
                 ""
               )}`,
               style: {
-                width: `calc(${
-                  value / totalTime
-                } * (100% - ${TIMINGS_END_PADDING}))`,
+                "--current-timing-offset": offset > 0 ? offset : 0,
+                "--current-timing-width": value / totalTime,
               },
             }),
             span(
@@ -154,19 +143,10 @@ class TimingsPanel extends Component {
           div(
             { className: "requests-list-timings-container" },
             span({
-              className: "requests-list-timings-offset",
-              style: {
-                width: `calc(${
-                  (totalTime - duration) / totalTime
-                } * (100% - ${TIMINGS_END_PADDING})`,
-              },
-            }),
-            span({
               className: `requests-list-timings-box server-timings-color-${color}`,
               style: {
-                width: `calc(${
-                  duration / totalTime
-                } * (100% - ${TIMINGS_END_PADDING}))`,
+                "--current-timing-offset": (totalTime - duration) / totalTime,
+                "--current-timing-width": duration / totalTime,
               },
             }),
             span(
@@ -231,15 +211,10 @@ class TimingsPanel extends Component {
         div(
           { className: "requests-list-timings-container" },
           span({
-            className: "requests-list-timings-offset",
-            style: {
-              width: `calc(${offsetScale} * (100% - ${TIMINGS_END_PADDING})`,
-            },
-          }),
-          span({
             className: `requests-list-timings-box ${type}`,
             style: {
-              width: `calc(${timelineScale} * (100% - ${TIMINGS_END_PADDING}))`,
+              "--current-timing-offset": offsetScale,
+              "--current-timing-width": timelineScale,
             },
           }),
           span(
