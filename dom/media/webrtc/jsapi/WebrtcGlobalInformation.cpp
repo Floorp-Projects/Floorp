@@ -9,13 +9,11 @@
 #include "mozilla/StaticPtr.h"
 #include "mozilla/dom/PWebrtcGlobal.h"
 #include "mozilla/dom/PWebrtcGlobalChild.h"
-#include "mozilla/media/webrtc/WebrtcGlobal.h"
 #include "WebrtcGlobalChild.h"
 #include "WebrtcGlobalParent.h"
 
 #include <algorithm>
 #include <vector>
-#include <type_traits>
 
 #include "mozilla/dom/WebrtcGlobalInformationBinding.h"
 #include "mozilla/dom/RTCStatsReportBinding.h"  // for RTCStatsReportInternal
@@ -30,7 +28,6 @@
 #include "nsXULAppAPI.h"
 #include "mozilla/ErrorResult.h"
 #include "nsProxyRelease.h"  // nsMainThreadPtrHolder
-#include "mozilla/Telemetry.h"
 #include "mozilla/Unused.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/ClearOnShutdown.h"

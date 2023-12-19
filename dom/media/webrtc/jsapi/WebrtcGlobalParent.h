@@ -6,7 +6,6 @@
 #define _WEBRTC_GLOBAL_PARENT_H_
 
 #include "mozilla/dom/PWebrtcGlobalParent.h"
-#include "mozilla/dom/BindingDeclarations.h"
 #include "nsISupportsImpl.h"
 
 namespace mozilla::dom {

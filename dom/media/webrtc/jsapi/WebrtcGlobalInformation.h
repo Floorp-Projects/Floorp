@@ -5,10 +5,8 @@
 #ifndef _WEBRTC_GLOBAL_INFORMATION_H_
 #define _WEBRTC_GLOBAL_INFORMATION_H_
 
-#include <tuple>
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/WebrtcGlobalInformationBinding.h"
-#include "nsString.h"
 #include "mozilla/dom/BindingDeclarations.h"  // for Optional
 #include "nsDOMNavigationTiming.h"
 #include "WebrtcGlobalStatsHistory.h"

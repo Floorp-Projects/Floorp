@@ -6,18 +6,20 @@
 
 #include "MainThreadUtils.h"
 #include "mozilla/Logging.h"
-#include "prenv.h"
 #include "rtc_base/logging.h"
 
 #include "nscore.h"
-#include "nsString.h"
+#include "nsStringFwd.h"
 #include "nsXULAppAPI.h"
 #include "mozilla/Preferences.h"
 
 #include "nsIFile.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsDirectoryServiceDefs.h"
-#include "nsNativeCharsetUtils.h"
+
+#ifdef XP_WIN
+#  include "nsNativeCharsetUtils.h"
+#endif
 
 using mozilla::LogLevel;
 
