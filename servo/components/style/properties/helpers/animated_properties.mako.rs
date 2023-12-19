@@ -16,7 +16,7 @@ use crate::properties::{
         self, content_visibility::computed_value::T as ContentVisibility,
         visibility::computed_value::T as Visibility,
     },
-    CSSWideKeyword, CustomDeclaration, CustomDeclarationValue, LonghandId,
+    CSSWideKeyword, CustomDeclaration, CustomDeclarationValue, NonCustomPropertyId, LonghandId,
     NonCustomPropertyIterator, PropertyDeclaration, PropertyDeclarationId,
 };
 use std::ptr;
@@ -38,25 +38,7 @@ use void::{self, Void};
 #[allow(non_upper_case_globals)]
 impl From<nsCSSPropertyID> for TransitionProperty {
     fn from(property: nsCSSPropertyID) -> TransitionProperty {
-        use crate::properties::ShorthandId;
-        match property {
-            % for prop in data.longhands:
-            ${prop.nscsspropertyid()} => {
-                TransitionProperty::Longhand(LonghandId::${prop.camel_case})
-            }
-            % endfor
-            % for prop in data.shorthands_except_all():
-            ${prop.nscsspropertyid()} => {
-                TransitionProperty::Shorthand(ShorthandId::${prop.camel_case})
-            }
-            % endfor
-            nsCSSPropertyID::eCSSPropertyExtra_all_properties => {
-                TransitionProperty::Shorthand(ShorthandId::All)
-            }
-            _ => {
-                panic!("non-convertible nsCSSPropertyID")
-            }
-        }
+        TransitionProperty::NonCustom(NonCustomPropertyId::from_nscsspropertyid(property).unwrap())
     }
 }
 
@@ -791,17 +773,22 @@ impl<'a> Iterator for TransitionPropertyIterator<'a> {
 
             let index = self.index_range.next()?;
             match self.style.get_ui().transition_property_at(index) {
-                TransitionProperty::Longhand(longhand_id) => {
-                    return Some(TransitionPropertyIteration {
-                        longhand_id,
-                        index,
-                    })
+                TransitionProperty::NonCustom(id) => {
+                    match id.longhand_or_shorthand() {
+                        Ok(longhand_id) => {
+                            return Some(TransitionPropertyIteration {
+                                longhand_id,
+                                index,
+                            });
+                        },
+                        Err(shorthand_id) => {
+                            // In the other cases, we set up our state so that we are ready to
+                            // compute the next value of the iterator and then loop (equivalent
+                            // to calling self.next()).
+                            self.longhand_iterator = Some(shorthand_id.longhands());
+                        },
+                    }
                 }
-                // In the other cases, we set up our state so that we are ready to
-                // compute the next value of the iterator and then loop (equivalent
-                // to calling self.next()).
-                TransitionProperty::Shorthand(ref shorthand_id) =>
-                    self.longhand_iterator = Some(shorthand_id.longhands()),
                 TransitionProperty::Custom(..) | TransitionProperty::Unsupported(..) => {}
             }
         }

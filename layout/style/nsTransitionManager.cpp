@@ -76,18 +76,7 @@ static void ExpandTransitionProperty(nsCSSPropertyID aProperty,
     return;
   }
 
-  // FIXME(emilio): This should probably just use the "all" shorthand id, and we
-  // should probably remove eCSSPropertyExtra_all_properties.
-  if (aProperty == eCSSPropertyExtra_all_properties) {
-    for (nsCSSPropertyID p = nsCSSPropertyID(0);
-         p < eCSSProperty_COUNT_no_shorthands; p = nsCSSPropertyID(p + 1)) {
-      if (!nsCSSProps::IsEnabled(p, CSSEnabledState::ForAllContent)) {
-        continue;
-      }
-      AnimatedPropertyID property(p);
-      aHandler(property);
-    }
-  } else if (nsCSSProps::IsShorthand(aProperty)) {
+  if (nsCSSProps::IsShorthand(aProperty)) {
     CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(subprop, aProperty,
                                          CSSEnabledState::ForAllContent) {
       AnimatedPropertyID property(*subprop);
@@ -138,8 +127,8 @@ bool nsTransitionManager::DoUpdateTransitions(
   // transition.  This can happen delay and duration are both zero, or
   // because the new value is not interpolable.
   if (aElementTransitions) {
-    bool checkProperties =
-        aStyle.GetTransitionProperty(0) != eCSSPropertyExtra_all_properties;
+    const bool checkProperties =
+        aStyle.GetTransitionProperty(0) != eCSSProperty_all;
     AnimatedPropertyIDSet allTransitionProperties;
     if (checkProperties) {
       for (uint32_t i = aStyle.mTransitionPropertyCount; i-- != 0;) {
