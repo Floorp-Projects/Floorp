@@ -1356,7 +1356,12 @@ void RenderThread::ClearSingletonGL() {
     mProgramsForCompositorOGL->Clear();
     mProgramsForCompositorOGL = nullptr;
   }
-  mShaders = nullptr;
+  if (mShaders) {
+    if (mSingletonGL) {
+      mSingletonGL->MakeCurrent();
+    }
+    mShaders = nullptr;
+  }
   mSingletonGL = nullptr;
 }
 
