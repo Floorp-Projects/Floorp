@@ -436,7 +436,7 @@ LPCWSTR MFCDMParent::GetCDMLibraryName(const nsString& aKeySystem) {
   }
   if (IsWidevineExperimentKeySystemAndSupported(aKeySystem) ||
       IsWidevineKeySystem(aKeySystem)) {
-    return sWidevineL1Path;
+    return sWidevineL1Path ? sWidevineL1Path : L"L1-not-found";
   }
   // TODO : support ClearKey
   return L"Unknown";
