@@ -622,16 +622,12 @@ export class FormAutofillParent extends JSWindowActorParent {
       return false;
     }
 
-    // Overwrite the guid if there is a duplicate
-    const duplicateRecord =
-      (await storage.getDuplicateRecords(creditCard.record).next()).value ?? {};
-
     return async () => {
       await lazy.FormAutofillPrompter.promptToSaveCreditCard(
         browser,
         storage,
-        creditCard.flowId,
-        { oldRecord: duplicateRecord, newRecord: creditCard.record }
+        creditCard.record,
+        creditCard.flowId
       );
     };
   }
