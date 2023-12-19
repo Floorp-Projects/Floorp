@@ -72,7 +72,7 @@ export async function onConnect(_commands, _resourceCommand, _actions, store) {
   await resourceCommand.watchResources([resourceCommand.TYPES.THREAD_STATE], {
     onAvailable: onThreadStateAvailable,
   });
-  await resourceCommand.watchResources([resourceCommand.TYPES.TRACING_STATE], {
+  await resourceCommand.watchResources([resourceCommand.TYPES.JSTRACER_STATE], {
     onAvailable: onTracingStateAvailable,
   });
 
@@ -98,7 +98,7 @@ export function onDisconnect() {
   resourceCommand.unwatchResources([resourceCommand.TYPES.THREAD_STATE], {
     onAvailable: onThreadStateAvailable,
   });
-  resourceCommand.unwatchResources([resourceCommand.TYPES.TRACING_STATE], {
+  resourceCommand.unwatchResources([resourceCommand.TYPES.JSTRACER_STATE], {
     onAvailable: onTracingStateAvailable,
   });
   resourceCommand.unwatchResources([resourceCommand.TYPES.ERROR_MESSAGE], {

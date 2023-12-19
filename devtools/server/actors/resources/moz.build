@@ -17,6 +17,8 @@ DevToolsModules(
     "error-messages.js",
     "extensions-backgroundscript-status.js",
     "index.js",
+    "jstracer-state.js",
+    "jstracer-trace.js",
     "last-private-context-exit.js",
     "network-events-content.js",
     "network-events-stacktraces.js",
@@ -34,7 +36,6 @@ DevToolsModules(
     "storage-session-storage.js",
     "stylesheets.js",
     "thread-states.js",
-    "tracing-state.js",
     "websockets.js",
 )
 

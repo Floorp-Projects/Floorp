@@ -34,6 +34,7 @@ const NavigationMarker = require("resource://devtools/client/webconsole/componen
 const NetworkEventMessage = require("resource://devtools/client/webconsole/components/Output/message-types/NetworkEventMessage.js");
 const PageError = require("resource://devtools/client/webconsole/components/Output/message-types/PageError.js");
 const SimpleTable = require("resource://devtools/client/webconsole/components/Output/message-types/SimpleTable.js");
+const JSTracerTrace = require("resource://devtools/client/webconsole/components/Output/message-types/JSTracerTrace.js");
 const WarningGroup = require("resource://devtools/client/webconsole/components/Output/message-types/WarningGroup.js");
 
 class MessageContainer extends Component {
@@ -87,6 +88,8 @@ function getMessageComponent(message) {
   switch (message.source) {
     case MESSAGE_SOURCE.CONSOLE_API:
       return ConsoleApiCall;
+    case MESSAGE_SOURCE.JSTRACER:
+      return JSTracerTrace;
     case MESSAGE_SOURCE.NETWORK:
       return NetworkEventMessage;
     case MESSAGE_SOURCE.CSS:
