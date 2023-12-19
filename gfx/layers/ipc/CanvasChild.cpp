@@ -214,7 +214,11 @@ void CanvasChild::EnsureRecorder(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
   if (!mRecorder) {
     gfx::BackendType backendType =
         gfxPlatform::GetPlatform()->GetPreferredCanvasBackend();
-    auto recorder = MakeRefPtr<CanvasDrawEventRecorder>();
+    RefPtr<CanvasDrawEventRecorder> recorder;
+    {
+      MutexAutoLock lock(mMutex);
+      recorder = MakeAndAddRef<CanvasDrawEventRecorder>(mWorkerRef);
+    }
     if (!recorder->Init(aTextureType, backendType,
                         MakeUnique<RecorderHelpers>(this))) {
       return;

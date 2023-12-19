@@ -21,6 +21,10 @@ namespace mozilla {
 
 using EventType = gfx::RecordedEvent::EventType;
 
+namespace dom {
+class ThreadSafeWorkerRef;
+}
+
 namespace layers {
 
 typedef mozilla::ipc::SharedMemoryBasic::Handle Handle;
@@ -31,7 +35,8 @@ class CanvasDrawEventRecorder final : public gfx::DrawEventRecorderPrivate,
  public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(CanvasDrawEventRecorder, final)
 
-  CanvasDrawEventRecorder();
+  explicit CanvasDrawEventRecorder(dom::ThreadSafeWorkerRef* aWorkerRef);
+  ~CanvasDrawEventRecorder() override;
 
   enum class State : uint32_t {
     Processing,
@@ -96,6 +101,10 @@ class CanvasDrawEventRecorder final : public gfx::DrawEventRecorderPrivate,
    */
   void RecordEvent(const gfx::RecordedEvent& aEvent) final;
 
+  void DetachResources() final;
+
+  void AddPendingDeletion(std::function<void()>&& aPendingDeletion) override;
+
   void StoreSourceSurfaceRecording(gfx::SourceSurface* aSurface,
                                    const char* aReason) final;
 
@@ -125,6 +134,11 @@ class CanvasDrawEventRecorder final : public gfx::DrawEventRecorderPrivate,
   void WriteInternalEvent(EventType aEventType);
 
   void CheckAndSignalReader();
+
+  void QueueProcessPendingDeletions(
+      RefPtr<CanvasDrawEventRecorder>&& aRecorder);
+  void QueueProcessPendingDeletionsLocked(
+      RefPtr<CanvasDrawEventRecorder>&& aRecorder);
 
   size_t mDefaultBufferSize;
   uint32_t mMaxSpinCount;
@@ -164,6 +178,9 @@ class CanvasDrawEventRecorder final : public gfx::DrawEventRecorderPrivate,
 
   UniquePtr<CrossProcessSemaphore> mWriterSemaphore;
   UniquePtr<CrossProcessSemaphore> mReaderSemaphore;
+
+  RefPtr<dom::ThreadSafeWorkerRef> mWorkerRef;
+  bool mIsOnWorker = false;
 };
 
 }  // namespace layers
