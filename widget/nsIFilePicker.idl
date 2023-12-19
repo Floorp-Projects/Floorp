@@ -37,7 +37,7 @@ interface nsIFilePicker : nsISupports
                                                 // *.png; *.bmp; *.ico; *.svg;
                                                 // *.svgz; *.tif; *.tiff; *.ai;
                                                 // *.drw; *.pct; *.psp; *.xcf;
-                                                // *.psd; *.raw; *.webp
+                                                // *.psd; *.raw; *.webp; *.heic
   const long filterXML        = 0x010;          // *.xml
   const long filterXUL        = 0x020;          // *.xul
   const long filterApps       = 0x040;          // Applications (per-platform implementation)
