@@ -15,7 +15,6 @@
     FormHistory: "resource://gre/modules/FormHistory.sys.mjs",
     SearchSuggestionController:
       "resource://gre/modules/SearchSuggestionController.sys.mjs",
-    UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
   });
 
   /**
@@ -427,7 +426,7 @@
       );
 
       // Record when the user uses the search bar
-      lazy.UrlbarPrefs.set(
+      Services.prefs.setStringPref(
         "browser.search.widget.lastUsed",
         new Date().toISOString()
       );
