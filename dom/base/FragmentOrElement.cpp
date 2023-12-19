@@ -766,7 +766,7 @@ void nsIContent::GetEventTargetParent(EventChainPreVisitor& aVisitor) {
 
   // Don't propagate mouseover and mouseout events when mouse is moving
   // inside chrome access only content.
-  const bool isAnonForEvents = IsRootOfChromeAccessOnlySubtree();
+  bool isAnonForEvents = IsRootOfChromeAccessOnlySubtree();
   aVisitor.mRootOfClosedTree = isAnonForEvents;
   if ((aVisitor.mEvent->mMessage == eMouseOver ||
        aVisitor.mEvent->mMessage == eMouseOut ||
@@ -778,7 +778,7 @@ void nsIContent::GetEventTargetParent(EventChainPreVisitor& aVisitor) {
       // a shadow root to a shadow root host.
       ((this == aVisitor.mEvent->mOriginalTarget && !ChromeOnlyAccess()) ||
        isAnonForEvents)) {
-    nsIContent* relatedTarget = nsIContent::FromEventTargetOrNull(
+    nsCOMPtr<nsIContent> relatedTarget = nsIContent::FromEventTargetOrNull(
         aVisitor.mEvent->AsMouseEvent()->mRelatedTarget);
     if (relatedTarget && relatedTarget->OwnerDoc() == OwnerDoc()) {
       // If current target is anonymous for events or we know that related
@@ -806,8 +806,9 @@ void nsIContent::GetEventTargetParent(EventChainPreVisitor& aVisitor) {
             }
             if (anonOwner == anonOwnerRelated) {
 #ifdef DEBUG_smaug
-              nsIContent* originalTarget = nsIContent::FromEventTargetOrNull(
-                  aVisitor.mEvent->mOriginalTarget);
+              nsCOMPtr<nsIContent> originalTarget =
+                  nsIContent::FromEventTargetOrNull(
+                      aVisitor.mEvent->mOriginalTarget);
               nsAutoString ot, ct, rt;
               if (originalTarget) {
                 originalTarget->NodeInfo()->NameAtom()->ToString(ot);
@@ -852,29 +853,23 @@ void nsIContent::GetEventTargetParent(EventChainPreVisitor& aVisitor) {
   HTMLSlotElement* slot = GetAssignedSlot();
   nsIContent* parent = slot ? slot : GetParent();
 
-  // Event may need to be retargeted if this is the root of a native anonymous
-  // content subtree.
+  // Event may need to be retargeted if this is the root of a native
+  // anonymous content subtree or event is dispatched somewhere inside XBL.
   if (isAnonForEvents) {
 #ifdef DEBUG
     // If a DOM event is explicitly dispatched using node.dispatchEvent(), then
     // all the events are allowed even in the native anonymous content..
-    nsIContent* t =
+    nsCOMPtr<nsIContent> t =
         nsIContent::FromEventTargetOrNull(aVisitor.mEvent->mOriginalTarget);
     NS_ASSERTION(!t || !t->ChromeOnlyAccess() ||
                      aVisitor.mEvent->mClass != eMutationEventClass ||
                      aVisitor.mDOMEvent,
                  "Mutation event dispatched in native anonymous content!?!");
 #endif
-    if (aVisitor.mEvent->mClass == eTransitionEventClass ||
-        aVisitor.mEvent->mClass == eAnimationEventClass) {
-      // Event should not propagate to non-anon content.
-      aVisitor.SetParentTarget(nullptr, false);
-      return;
-    }
     aVisitor.mEventTargetAtParent = parent;
   } else if (parent && aVisitor.mOriginalTargetIsInAnon) {
-    nsIContent* content =
-        nsIContent::FromEventTargetOrNull(aVisitor.mEvent->mTarget);
+    nsCOMPtr<nsIContent> content(
+        nsIContent::FromEventTargetOrNull(aVisitor.mEvent->mTarget));
     if (content &&
         content->GetClosestNativeAnonymousSubtreeRootParentOrHost() == parent) {
       aVisitor.mEventTargetAtParent = parent;
