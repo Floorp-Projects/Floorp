@@ -2290,11 +2290,11 @@
     <string name="download_languages_header_learn_more_preference">Learn more</string>
     <!-- The subhead of the download language preference screen will appear above the pivot language. -->
     <string name="download_languages_available_languages_preference">Available languages</string>
-    <!-- A text in parenthesis that will appear next to the pivot language -->
+    <!-- Text that will appear beside a core or pivot language package name to show that the language is necessary for the translation feature to function. -->
     <string name="download_languages_default_system_language_require_preference">required</string>
     <!-- The subhead of the download language preference screen will appear above the items that were not downloaded. -->
     <string name="download_language_header_preference">Download Languages</string>
-    <!-- All languages list item. When the user presses this item, he can download or delete all languages. -->
+    <!-- All languages list item. When the user presses this item, they can download or delete all languages. -->
     <string name="download_language_all_languages_item_preference">All languages</string>
     <!-- Content description (not visible, for screen readers etc.): For a language list item that was downloaded, the user can now delete it. -->
     <string name="download_languages_item_content_description_downloaded_state">Delete</string>
