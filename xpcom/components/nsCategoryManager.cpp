@@ -300,6 +300,7 @@ nsresult CategoryNode::Enumerate(nsISimpleEnumerator** aResult) {
 size_t CategoryNode::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) {
   // We don't measure the strings pointed to by the entries because the
   // pointers are non-owning.
+  MutexAutoLock lock(mLock);
   return mTable.ShallowSizeOfExcludingThis(aMallocSizeOf);
 }
 
@@ -378,6 +379,7 @@ nsCategoryManager::CollectReports(nsIHandleReportCallback* aHandleReport,
 
 size_t nsCategoryManager::SizeOfIncludingThis(
     mozilla::MallocSizeOf aMallocSizeOf) {
+  MutexAutoLock lock(mLock);
   size_t n = aMallocSizeOf(this);
 
   n += mArena.SizeOfExcludingThis(aMallocSizeOf);
