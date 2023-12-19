@@ -35,11 +35,14 @@ object CustomAttributeProvider : JexlAttributeProvider {
      * will unlikely to targeted as expected.
      */
     fun getCustomTargetingAttributes(context: Context): JSONObject {
-        val isFirstRun = context.settings().isFirstNimbusRun
+        val settings = context.settings()
+        val isFirstRun = settings.isFirstNimbusRun
+        val isReviewCheckerEnabled = settings.isReviewQualityCheckEnabled
         return JSONObject(
             mapOf(
                 // By convention, we should use snake case.
                 "is_first_run" to isFirstRun,
+                "is_review_checker_enabled" to isReviewCheckerEnabled,
 
                 // This camelCase attribute is a boolean value represented as a string.
                 // This is left for backwards compatibility.
@@ -74,7 +77,8 @@ object CustomAttributeProvider : JexlAttributeProvider {
                 UTM_TERM to settings.utmTerm,
                 UTM_CONTENT to settings.utmContent,
 
-                "are_notifications_enabled" to NotificationManagerCompat.from(context).areNotificationsEnabledSafe(),
+                "are_notifications_enabled" to NotificationManagerCompat.from(context)
+                    .areNotificationsEnabledSafe(),
             ),
         )
     }
