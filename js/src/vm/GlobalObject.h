@@ -1001,7 +1001,7 @@ class GlobalObject : public NativeObject {
   // Implemented in vm/Iteration.cpp.
   static bool initIteratorProto(JSContext* cx, Handle<GlobalObject*> global);
   template <ProtoKind Kind, const JSClass* ProtoClass,
-            const JSFunctionSpec* Methods>
+            const JSFunctionSpec* Methods, const bool needsFuseProperty = false>
   static bool initObjectIteratorProto(JSContext* cx,
                                       Handle<GlobalObject*> global,
                                       Handle<JSAtom*> tag);

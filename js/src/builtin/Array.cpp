@@ -5153,7 +5153,12 @@ static bool array_proto_finish(JSContext* cx, JS::HandleObject ctor,
 
   RootedId id(cx, PropertyKey::Symbol(cx->wellKnownSymbols().unscopables));
   value.setObject(*unscopables);
-  return DefineDataProperty(cx, proto, id, value, JSPROP_READONLY);
+  if (!DefineDataProperty(cx, proto, id, value, JSPROP_READONLY)) {
+    return false;
+  }
+
+  // Mark Array prototype as having fuse property (@iterator for example).
+  return JSObject::setHasFuseProperty(cx, proto);
 }
 
 static const JSClassOps ArrayObjectClassOps = {
