@@ -1597,14 +1597,21 @@ class HTMLInputElement final : public TextControlElement,
     }
   }
 
-  bool DoesDirnameApply() const {
+  /**
+   * https://html.spec.whatwg.org/#auto-directionality-form-associated-elements
+   */
+  bool IsAutoDirectionalityAssociated() const {
     switch (mType) {
+      case FormControlType::InputHidden:
       case FormControlType::InputText:
       case FormControlType::InputSearch:
-      case FormControlType::InputEmail:
-      case FormControlType::InputHidden:
       case FormControlType::InputTel:
       case FormControlType::InputUrl:
+      case FormControlType::InputEmail:
+      case FormControlType::InputPassword:
+      case FormControlType::InputSubmit:
+      case FormControlType::InputReset:
+      case FormControlType::InputButton:
         return true;
       default:
         return false;
