@@ -401,7 +401,8 @@ browsertime-benchmark:
                     firefox:
                         by-test-platform:
                             windows.*-32.*: []
-                            .*64.*shippable-qr/.*: [trunk, mozilla-release]
+                            # Disabled on autoland due to bug 1720063, and bug 1795826
+                            .*64.*shippable-qr/.*: [mozilla-central]
                             default: []
                     default: []
             speedometer:
