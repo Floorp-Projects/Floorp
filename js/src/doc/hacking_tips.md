@@ -354,7 +354,7 @@ The output file can then be used with **kcachegrind**, which provides a graphica
 
 IonMonkey spew is extremely verbose (not as much as the INFER spew), but you can filter it to focus on the list of compiled scripts or channels, IonMonkey spew channels can be selected with the IONFLAGS environment variable, and compilation spew can be filtered with IONFILTER.
 
-IONFLAGS contains the names of [each channel separated by commas](https://searchfox.org/mozilla-central/source/js/src/jit/JitSpewer.cpp#338). The **logs** channel produces 2 files in _/tmp/_, one (_/tmp/ion.json_) made to be used with [iongraph](https://github.com/sstangl/iongraph) (made by Sean Stangl) and another one (_/tmp/ion.cfg_) made to be used with [c1visualizer](http://java.net/projects/c1visualizer/). These tools will show the MIR & LIR steps done by IonMonkey during the compilation. If you would like to use [iongraph](https://github.com/sstangl/iongraph), you must install [Graphviz](https://www.graphviz.org/download/ "graphviz downloads").
+IONFLAGS contains the names of [each channel separated by commas](https://searchfox.org/mozilla-central/source/js/src/jit/JitSpewer.cpp#338). The **logs** channel produces one file (_/tmp/ion.json_), made to be used with [iongraph](https://github.com/sstangl/iongraph) (made by Sean Stangl). This tool will show the MIR & LIR steps done by IonMonkey during the compilation. To use [iongraph](https://github.com/sstangl/iongraph), you must install [Graphviz](https://www.graphviz.org/download/ "graphviz downloads").
 
 Compilation logs and spew can be filtered with the IONFILTER environment variable which contains locations as output by other spew channels. Multiple locations can be specified using comma as a separator.
 
