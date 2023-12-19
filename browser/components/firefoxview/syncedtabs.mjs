@@ -361,7 +361,7 @@ class SyncedTabsInView extends ViewPage {
         () => html`
           <div
             slot=${ifDefined(this.recentBrowsing ? null : "main")}
-            class="blackbox notabs"
+            class="blackbox notabs search-results-empty"
             data-l10n-id="firefoxview-search-results-empty"
             data-l10n-args=${JSON.stringify({
               query: escapeHtmlEntities(this.searchQuery),
