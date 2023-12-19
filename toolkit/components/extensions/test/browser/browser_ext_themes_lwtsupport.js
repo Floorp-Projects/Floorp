@@ -42,20 +42,11 @@ add_task(async function test_deprecated_LWT_properties_ignored() {
     "LWT text color attribute should not be set on deprecated textcolor alias"
   );
 
-  if (backgroundColorSetOnRoot()) {
-    let rootCS = window.getComputedStyle(docEl);
-    Assert.equal(
-      rootCS.backgroundColor,
-      DEFAULT_THEME_BG_COLOR,
-      "Expected default theme background color"
-    );
-  } else {
-    Assert.equal(
-      navigatorStyle.backgroundColor,
-      DEFAULT_THEME_BG_COLOR,
-      "Expected default theme background color"
-    );
-  }
+  Assert.equal(
+    navigatorStyle.backgroundColor,
+    DEFAULT_THEME_BG_COLOR,
+    "Expected default theme background color"
+  );
 
   Assert.equal(
     docStyle.color,
