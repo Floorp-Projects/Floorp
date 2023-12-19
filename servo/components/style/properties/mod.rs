@@ -192,7 +192,7 @@ impl fmt::Debug for PropertyDeclaration {
 
 /// A longhand or shorthand property.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct NonCustomPropertyId(u32);
+pub struct NonCustomPropertyId(u16);
 
 impl NonCustomPropertyId {
     /// Returns the underlying index, used for use counter.
@@ -217,7 +217,7 @@ impl NonCustomPropertyId {
             return None;
         }
         // guaranteed by static_assert_nscsspropertyid above.
-        Some(NonCustomPropertyId(prop as u32))
+        Some(NonCustomPropertyId(prop as u16))
     }
 
     /// Resolves the alias of a given property if needed.
@@ -237,7 +237,7 @@ impl NonCustomPropertyId {
     /// Returns a longhand id, if this property is one.
     #[inline]
     pub fn as_longhand(self) -> Option<LonghandId> {
-        if self.0 < property_counts::LONGHANDS as u32 {
+        if self.0 < property_counts::LONGHANDS as u16 {
             return Some(unsafe { mem::transmute(self.0 as u16) });
         }
         None
@@ -246,12 +246,10 @@ impl NonCustomPropertyId {
     /// Returns a shorthand id, if this property is one.
     #[inline]
     pub fn as_shorthand(self) -> Option<ShorthandId> {
-        if self.0 >= property_counts::LONGHANDS as u32 &&
-            self.0 < property_counts::LONGHANDS_AND_SHORTHANDS as u32
+        if self.0 >= property_counts::LONGHANDS as u16 &&
+            self.0 < property_counts::LONGHANDS_AND_SHORTHANDS as u16
         {
-            return Some(unsafe {
-                mem::transmute((self.0 - (property_counts::LONGHANDS as u32)) as u16)
-            });
+            return Some(unsafe { mem::transmute(self.0 - (property_counts::LONGHANDS as u16)) });
         }
         None
     }
@@ -260,9 +258,9 @@ impl NonCustomPropertyId {
     #[inline]
     pub fn as_alias(self) -> Option<AliasId> {
         debug_assert!((self.0 as usize) < property_counts::NON_CUSTOM);
-        if self.0 >= property_counts::LONGHANDS_AND_SHORTHANDS as u32 {
+        if self.0 >= property_counts::LONGHANDS_AND_SHORTHANDS as u16 {
             return Some(unsafe {
-                mem::transmute((self.0 - (property_counts::LONGHANDS_AND_SHORTHANDS as u32)) as u16)
+                mem::transmute(self.0 - (property_counts::LONGHANDS_AND_SHORTHANDS as u16))
             });
         }
         None
@@ -281,19 +279,19 @@ impl NonCustomPropertyId {
     /// Converts a longhand id into a non-custom property id.
     #[inline]
     pub const fn from_longhand(id: LonghandId) -> Self {
-        Self(id as u32)
+        Self(id as u16)
     }
 
     /// Converts a shorthand id into a non-custom property id.
     #[inline]
     pub const fn from_shorthand(id: ShorthandId) -> Self {
-        Self((id as u32) + (property_counts::LONGHANDS as u32))
+        Self((id as u16) + (property_counts::LONGHANDS as u16))
     }
 
     /// Converts an alias id into a non-custom property id.
     #[inline]
     pub const fn from_alias(id: AliasId) -> Self {
-        Self((id as u32) + (property_counts::LONGHANDS_AND_SHORTHANDS as u32))
+        Self((id as u16) + (property_counts::LONGHANDS_AND_SHORTHANDS as u16))
     }
 }
 
@@ -320,18 +318,12 @@ impl From<AliasId> for NonCustomPropertyId {
 
 /// Representation of a CSS property, that is, either a longhand, a shorthand, or a custom
 /// property.
-#[derive(Clone, Eq, PartialEq)]
+#[derive(Clone, Eq, PartialEq, Debug)]
 pub enum PropertyId {
     /// An alias for a shorthand property.
     NonCustom(NonCustomPropertyId),
     /// A custom property.
     Custom(custom_properties::Name),
-}
-
-impl fmt::Debug for PropertyId {
-    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-        self.to_css(&mut CssWriter::new(formatter))
-    }
 }
 
 impl ToCss for PropertyId {
