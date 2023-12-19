@@ -184,7 +184,9 @@ CanvasRenderingContextHelper::CreateContextHelper(
   }
   MOZ_ASSERT(ret);
 
-  ret->Initialize();
+  if (NS_WARN_IF(NS_FAILED(ret->Initialize()))) {
+    return nullptr;
+  }
   return ret.forget();
 }
 
@@ -206,6 +208,7 @@ already_AddRefed<nsISupports> CanvasRenderingContextHelper::GetOrCreateContext(
     RefPtr<nsICanvasRenderingContextInternal> context;
     context = CreateContext(aContextType);
     if (!context) {
+      aRv.ThrowUnknownError("Failed to create context");
       return nullptr;
     }
 
