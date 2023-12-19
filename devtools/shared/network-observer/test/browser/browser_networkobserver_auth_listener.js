@@ -100,6 +100,7 @@ add_task(async function testAuthRequestWithoutListener() {
   assertEventOwner(events[0], {
     hasResponseStart: true,
     hasEventTimings: true,
+    hasServerTimings: true,
   });
 
   networkObserver.destroy();
@@ -150,6 +151,7 @@ add_task(async function testAuthRequestWithForwardingListener() {
     hasResponseStart: true,
     hasEventTimings: true,
     hasAuthPrompt: true,
+    hasServerTimings: true,
   });
 
   networkObserver.destroy();
@@ -250,6 +252,7 @@ add_task(async function testAuthRequestWithWrongCredentialsListener() {
     hasAuthPrompt: true,
     hasResponseStart: true,
     hasEventTimings: true,
+    hasServerTimings: true,
   });
 
   networkObserver.destroy();

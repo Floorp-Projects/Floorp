@@ -446,13 +446,13 @@ export class NetworkObserver {
         // There also is never any timing events, so we can fire this
         // event with zeroed out values.
         const timings = this.#setupHarTimings(httpActivity);
-
         const serverTimings = this.#extractServerTimings(httpActivity.channel);
+
+        httpActivity.owner.addServerTimings(serverTimings);
         httpActivity.owner.addEventTimings(
           timings.total,
           timings.timings,
-          timings.offsets,
-          serverTimings
+          timings.offsets
         );
       } else if (topic === "http-on-failed-opening-request") {
         const { blockedReason } = lazy.NetworkUtils.getBlockedReason(
@@ -993,11 +993,11 @@ export class NetworkObserver {
       const result = this.#setupHarTimings(httpActivity);
       const serverTimings = this.#extractServerTimings(httpActivity.channel);
 
+      httpActivity.owner.addServerTimings(serverTimings);
       httpActivity.owner.addEventTimings(
         result.total,
         result.timings,
-        result.offsets,
-        serverTimings
+        result.offsets
       );
     }
   }
