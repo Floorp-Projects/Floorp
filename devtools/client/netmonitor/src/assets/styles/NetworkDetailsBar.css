@@ -440,6 +440,19 @@
 }
 
 
+.network-monitor .serviceworker-timings-color-launch {
+  background: var(--timing-server-color-1);
+}
+
+.network-monitor .serviceworker-timings-color-requestTo {
+  background: var(--timing-server-color-2);
+}
+
+.network-monitor .serviceworker-timings-color-handledBy {
+  background: var(--timing-server-color-3);
+}
+
+
 /* Stack trace panel */
 
 .network-monitor .stack-trace {

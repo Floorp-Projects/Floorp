@@ -59,6 +59,73 @@ class TimingsPanel extends Component {
     fetchNetworkUpdatePacket(connector.requestData, request, ["eventTimings"]);
   }
 
+  renderServiceWorkerTimings() {
+    const { serviceWorkerTimings } = this.props.request.eventTimings;
+
+    if (!serviceWorkerTimings) {
+      return null;
+    }
+
+    const totalTime = Object.values(serviceWorkerTimings).reduce(
+      (acc, value) => acc + value,
+      0
+    );
+
+    let offset = 0;
+    let preValue = 0;
+
+    return div(
+      {},
+      div(
+        { className: "label-separator" },
+        L10N.getStr("netmonitor.timings.serviceWorkerTiming")
+      ),
+      Object.entries(serviceWorkerTimings).map(([key, value], index) => {
+        if (preValue > 0) {
+          offset += preValue / totalTime;
+        }
+        preValue = value;
+        return div(
+          {
+            key,
+            className:
+              "tabpanel-summary-container timings-container service-worker",
+          },
+          span(
+            { className: "tabpanel-summary-label timings-label" },
+            L10N.getStr(`netmonitor.timings.${key}`)
+          ),
+          div(
+            { className: "requests-list-timings-container" },
+            span({
+              className: "requests-list-timings-offset",
+              style: {
+                width: `calc(${
+                  offset > 0 ? offset : 0
+                } * (100% - ${TIMINGS_END_PADDING})`,
+              },
+            }),
+            span({
+              className: `requests-list-timings-box serviceworker-timings-color-${key.replace(
+                "ServiceWorker",
+                ""
+              )}`,
+              style: {
+                width: `calc(${
+                  value / totalTime
+                } * (100% - ${TIMINGS_END_PADDING}))`,
+              },
+            }),
+            span(
+              { className: "requests-list-timings-total" },
+              getFormattedTime(value)
+            )
+          )
+        );
+      })
+    );
+  }
+
   renderServerTimings() {
     const { serverTimings, totalTime } = this.props.request.eventTimings;
 
@@ -215,6 +282,7 @@ class TimingsPanel extends Component {
         L10N.getStr("netmonitor.timings.requestTiming")
       ),
       timelines,
+      this.renderServiceWorkerTimings(),
       this.renderServerTimings(),
       MDNLink({
         url: getNetMonitorTimingsURL(),
