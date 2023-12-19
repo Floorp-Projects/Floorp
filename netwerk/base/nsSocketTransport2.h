@@ -46,67 +46,8 @@ namespace net {
 
 nsresult ErrorAccordingToNSPR(PRErrorCode errorCode);
 
-class nsSocketTransport;
-
-class nsSocketInputStream : public nsIAsyncInputStream {
- public:
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIINPUTSTREAM
-  NS_DECL_NSIASYNCINPUTSTREAM
-
-  explicit nsSocketInputStream(nsSocketTransport*);
-  virtual ~nsSocketInputStream() = default;
-
-  bool IsReferenced() { return mReaderRefCnt > 0; }
-  nsresult Condition() { return mCondition; }
-  uint64_t ByteCount() { return mByteCount; }
-
-  // called by the socket transport on the socket thread...
-  void OnSocketReady(nsresult condition);
-
- private:
-  nsSocketTransport* mTransport;
-  ThreadSafeAutoRefCnt mReaderRefCnt{0};
-
-  // access to these is protected by mTransport->mLock
-  nsresult mCondition{NS_OK};
-  nsCOMPtr<nsIInputStreamCallback> mCallback;
-  uint32_t mCallbackFlags{0};
-  uint64_t mByteCount{0};
-};
-
-//-----------------------------------------------------------------------------
-
-class nsSocketOutputStream : public nsIAsyncOutputStream {
- public:
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIOUTPUTSTREAM
-  NS_DECL_NSIASYNCOUTPUTSTREAM
-
-  explicit nsSocketOutputStream(nsSocketTransport*);
-  virtual ~nsSocketOutputStream() = default;
-
-  bool IsReferenced() { return mWriterRefCnt > 0; }
-  nsresult Condition() { return mCondition; }
-  uint64_t ByteCount() { return mByteCount; }
-
-  // called by the socket transport on the socket thread...
-  void OnSocketReady(nsresult condition);
-
- private:
-  static nsresult WriteFromSegments(nsIInputStream*, void*, const char*,
-                                    uint32_t offset, uint32_t count,
-                                    uint32_t* countRead);
-
-  nsSocketTransport* mTransport;
-  ThreadSafeAutoRefCnt mWriterRefCnt{0};
-
-  // access to these is protected by mTransport->mLock
-  nsresult mCondition{NS_OK};
-  nsCOMPtr<nsIOutputStreamCallback> mCallback;
-  uint32_t mCallbackFlags{0};
-  uint64_t mByteCount{0};
-};
+class nsSocketInputStream;
+class nsSocketOutputStream;
 
 //-----------------------------------------------------------------------------
 
@@ -165,8 +106,8 @@ class nsSocketTransport final : public nsASocketHandler,
   void OnSocketEvent(uint32_t type, nsresult status, nsISupports* param,
                      std::function<void()>&& task);
 
-  uint64_t ByteCountReceived() override { return mInput.ByteCount(); }
-  uint64_t ByteCountSent() override { return mOutput.ByteCount(); }
+  uint64_t ByteCountReceived() override;
+  uint64_t ByteCountSent() override;
   static void CloseSocket(PRFileDesc* aFd, bool aTelemetryEnabled);
   static void SendPRBlockingTelemetry(
       PRIntervalTime aStart, Telemetry::HistogramID aIDNormal,
@@ -377,10 +318,12 @@ class nsSocketTransport final : public nsASocketHandler,
   // the exception of some specific methods (XXX).
 
   // protects members in this section.
-  Mutex mLock MOZ_UNANNOTATED{"nsSocketTransport.mLock"};
-  LockedPRFileDesc mFD;
-  nsrefcnt mFDref{0};        // mFD is closed when mFDref goes to zero.
-  bool mFDconnected{false};  // mFD is available to consumer when TRUE.
+  Mutex mLock{"nsSocketTransport.mLock"};
+  LockedPRFileDesc mFD MOZ_GUARDED_BY(mLock);
+  // mFD is closed when mFDref goes to zero.
+  nsrefcnt mFDref MOZ_GUARDED_BY(mLock){0};
+  // mFD is available to consumer when TRUE.
+  bool mFDconnected MOZ_GUARDED_BY(mLock){false};
 
   // A delete protector reference to gSocketTransportService held for lifetime
   // of 'this'. Sometimes used interchangably with gSocketTransportService due
@@ -391,8 +334,8 @@ class nsSocketTransport final : public nsASocketHandler,
   nsCOMPtr<nsITransportEventSink> mEventSink;
   nsCOMPtr<nsITLSSocketControl> mTLSSocketControl;
 
-  nsSocketInputStream mInput;
-  nsSocketOutputStream mOutput;
+  UniquePtr<nsSocketInputStream> mInput;
+  UniquePtr<nsSocketOutputStream> mOutput;
 
   friend class nsSocketInputStream;
   friend class nsSocketOutputStream;
@@ -410,8 +353,8 @@ class nsSocketTransport final : public nsASocketHandler,
   //
   // mFD access methods: called with mLock held.
   //
-  PRFileDesc* GetFD_Locked();
-  void ReleaseFD_Locked(PRFileDesc* fd);
+  PRFileDesc* GetFD_Locked() MOZ_REQUIRES(mLock);
+  void ReleaseFD_Locked(PRFileDesc* fd) MOZ_REQUIRES(mLock);
 
   //
   // stream state changes (called outside mLock):
@@ -477,6 +420,88 @@ class nsSocketTransport final : public nsASocketHandler,
 
   bool mExternalDNSResolution = false;
   bool mRetryDnsIfPossible = false;
+};
+
+class nsSocketInputStream : public nsIAsyncInputStream {
+ public:
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_NSIINPUTSTREAM
+  NS_DECL_NSIASYNCINPUTSTREAM
+
+  explicit nsSocketInputStream(nsSocketTransport*);
+  virtual ~nsSocketInputStream() = default;
+
+  // nsSocketTransport holds a ref to us
+  bool IsReferenced() { return mReaderRefCnt > 0; }
+  nsresult Condition() {
+    MutexAutoLock lock(mTransport->mLock);
+    return mCondition;
+  }
+  uint64_t ByteCount() {
+    MutexAutoLock lock(mTransport->mLock);
+    return mByteCount;
+  }
+  uint64_t ByteCount(MutexAutoLock&) MOZ_NO_THREAD_SAFETY_ANALYSIS {
+    return mByteCount;
+  }
+
+  // called by the socket transport on the socket thread...
+  void OnSocketReady(nsresult condition);
+
+ private:
+  nsSocketTransport* mTransport;
+  ThreadSafeAutoRefCnt mReaderRefCnt{0};
+
+  // access to these should be protected by mTransport->mLock but we
+  // can't order things to allow using MOZ_GUARDED_BY().
+  nsresult mCondition MOZ_GUARDED_BY(mTransport->mLock){NS_OK};
+  nsCOMPtr<nsIInputStreamCallback> mCallback MOZ_GUARDED_BY(mTransport->mLock);
+  uint32_t mCallbackFlags MOZ_GUARDED_BY(mTransport->mLock){0};
+  uint64_t mByteCount MOZ_GUARDED_BY(mTransport->mLock){0};
+};
+
+//-----------------------------------------------------------------------------
+
+class nsSocketOutputStream : public nsIAsyncOutputStream {
+ public:
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_NSIOUTPUTSTREAM
+  NS_DECL_NSIASYNCOUTPUTSTREAM
+
+  explicit nsSocketOutputStream(nsSocketTransport*);
+  virtual ~nsSocketOutputStream() = default;
+
+  // nsSocketTransport holds a ref to us
+  bool IsReferenced() { return mWriterRefCnt > 0; }
+  nsresult Condition() {
+    MutexAutoLock lock(mTransport->mLock);
+    return mCondition;
+  }
+  uint64_t ByteCount() {
+    MutexAutoLock lock(mTransport->mLock);
+    return mByteCount;
+  }
+  uint64_t ByteCount(MutexAutoLock&) MOZ_NO_THREAD_SAFETY_ANALYSIS {
+    return mByteCount;
+  }
+
+  // called by the socket transport on the socket thread...
+  void OnSocketReady(nsresult condition);
+
+ private:
+  static nsresult WriteFromSegments(nsIInputStream*, void*, const char*,
+                                    uint32_t offset, uint32_t count,
+                                    uint32_t* countRead);
+
+  nsSocketTransport* mTransport;
+  ThreadSafeAutoRefCnt mWriterRefCnt{0};
+
+  // access to these should be protected by mTransport->mLock but we
+  // can't order things to allow using MOZ_GUARDED_BY().
+  nsresult mCondition MOZ_GUARDED_BY(mTransport->mLock){NS_OK};
+  nsCOMPtr<nsIOutputStreamCallback> mCallback MOZ_GUARDED_BY(mTransport->mLock);
+  uint32_t mCallbackFlags MOZ_GUARDED_BY(mTransport->mLock){0};
+  uint64_t mByteCount MOZ_GUARDED_BY(mTransport->mLock){0};
 };
 
 }  // namespace net
