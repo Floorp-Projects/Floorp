@@ -178,6 +178,15 @@ void HTMLButtonAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName) {
 uint64_t HTMLButtonAccessible::NativeState() const {
   uint64_t state = HyperTextAccessible::NativeState();
 
+  dom::Element* elm = Elm();
+  if (auto* popover = elm->GetEffectivePopoverTargetElement()) {
+    if (popover->IsPopoverOpen()) {
+      state |= states::EXPANDED;
+    } else {
+      state |= states::COLLAPSED;
+    }
+  }
+
   ElementState elmState = mContent->AsElement()->State();
   if (elmState.HasState(ElementState::DEFAULT)) state |= states::DEFAULT;
 
