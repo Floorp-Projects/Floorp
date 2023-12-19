@@ -83,7 +83,6 @@
   --lwt-background-tiling: no-repeat;
 
   --ext-theme-background-transition: background-color 0.1s cubic-bezier(.17,.67,.83,.67);
-  --inactive-window-transition: 0.2s ease;
 
   &:where([tabsintitlebar]) {
     --toolbox-non-lwt-bgcolor: ActiveCaption;
@@ -124,10 +123,6 @@
     --urlbar-box-hover-bgcolor: color-mix(in srgb, currentColor 22%, transparent);
   }
 
-  @media (prefers-reduced-motion) {
-    --inactive-window-transition: 0s;
-  }
-
   @media (min-resolution: 1.5dppx) {
     --tabs-navbar-shadow-size: 0.5px;
   }
@@ -145,9 +140,6 @@
 
   background-color: var(--toolbox-non-lwt-bgcolor);
   color: var(--toolbox-non-lwt-textcolor);
-
-  will-change: background-color;
-  transition: background-color var(--inactive-window-transition);
 
   &:-moz-window-inactive {
     background-color: var(--toolbox-non-lwt-bgcolor-inactive);
@@ -191,13 +183,8 @@
   }
 }
 
-:root[tabsintitlebar] #titlebar {
-  will-change: opacity;
-  transition: opacity var(--inactive-window-transition);
-
-  &:-moz-window-inactive {
-    opacity: .6;
-  }
+:root[tabsintitlebar] #titlebar:-moz-window-inactive {
+  opacity: .6;
 }
 
 /* Add space to beginning of toolbar and make that space click the first <toolbarbutton> */
