@@ -1698,6 +1698,19 @@ function start() {
       [ { property: 'opacity', runningOnCompositor: true } ]);
   }, 'overridden animation');
 
+  promise_test(async t => {
+      const keyframes = {
+        width: [ '100px', '200px' ],
+        transform: [ 'translate(0px)', 'translate(100px)' ],
+        "--foo": ["--bar", "--baz"],
+      };
+      const animation = addDivAndAnimate(t, { class: 'compositable' },
+                                         keyframes, 100 * MS_PER_SEC);
+      await waitForPaints();
+
+      assert_true(true, "Didn't crash");
+  }, 'Warning with custom props');
+
   done();
 }
 
