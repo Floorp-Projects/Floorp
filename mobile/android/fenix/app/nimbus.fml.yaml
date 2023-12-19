@@ -9,7 +9,6 @@ channels:
   - beta
   - nightly
   - developer
-  - withGeckoBinariesFenixDebug
 includes:
   - onboarding.fml.yaml
   - pbm.fml.yaml
