@@ -36,10 +36,12 @@
 #include "js/Value.h"
 #include "js/Vector.h"
 #include "util/Memory.h"
+#include "vm/GuardFuse.h"
 #include "vm/JSFunction.h"
 #include "vm/JSScript.h"
 #include "vm/List.h"
 #include "vm/Opcodes.h"
+#include "vm/RealmFuses.h"
 #include "vm/Shape.h"
 #include "wasm/WasmConstants.h"
 #include "wasm/WasmValType.h"
@@ -285,6 +287,11 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     buffer_.writeByte(uint8_t(kind));
   }
   void writeBoolImm(bool b) { buffer_.writeByte(uint32_t(b)); }
+  void writeRealmFuseIndexImm(RealmFuses::FuseIndex realmFuseIndex) {
+    static_assert(sizeof(RealmFuses::FuseIndex) == sizeof(uint8_t),
+                  "RealmFuses::FuseIndex must fit in a byte");
+    buffer_.writeByte(uint8_t(realmFuseIndex));
+  }
 
   void writeByteImm(uint32_t b) {
     MOZ_ASSERT(b <= UINT8_MAX);

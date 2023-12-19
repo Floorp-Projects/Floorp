@@ -9476,6 +9476,21 @@ bool CacheIRCompiler::emitGuardGlobalGeneration(uint32_t expectedOffset,
   return true;
 }
 
+bool CacheIRCompiler::emitGuardFuse(RealmFuses::FuseIndex fuseIndex) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+  AutoScratchRegister scratch(allocator, masm);
+
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
+
+  masm.loadRealmFuse(fuseIndex, scratch);
+  masm.branchPtr(Assembler::NotEqual, scratch, ImmPtr(nullptr),
+                 failure->label());
+  return true;
+}
+
 bool CacheIRCompiler::emitBailout() {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
 

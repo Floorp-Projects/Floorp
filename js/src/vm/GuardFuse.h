@@ -52,7 +52,9 @@ namespace js {
 //   - Watchtower::watchProtoChange
 //   - Watchtower::watchPropertyModification.
 //
-// and ObjectFlags::HasFuseProperty
+// and ObjectFlags::HasFuseProperty. As well, see MGuardFuse::aliasSet, which
+// should be updated if there is any modification to the possible set of places
+// fuses could be popped.
 //
 // In order to support relationships, the popFuse method is virtual and can be
 // overridden by subclasses. See RealmFuses.h for examples of how RealmScoped
