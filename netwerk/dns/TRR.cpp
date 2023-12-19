@@ -782,11 +782,13 @@ nsresult TRR::ReturnData(nsIChannel* aChannel) {
     if (!mHostResolver) {
       return NS_ERROR_FAILURE;
     }
+    RecordReason(TRRSkippedReason::TRR_OK);
     (void)mHostResolver->CompleteLookup(mRec, NS_OK, ai, mPB, mOriginSuffix,
                                         mTRRSkippedReason, this);
     mHostResolver = nullptr;
     mRec = nullptr;
   } else {
+    RecordReason(TRRSkippedReason::TRR_OK);
     (void)mHostResolver->CompleteLookupByType(mRec, NS_OK, mResult,
                                               mTRRSkippedReason, mTTL, mPB);
   }
