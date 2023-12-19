@@ -401,6 +401,12 @@ NS_IMETHODIMP nsBaseClipboard::GetData(nsITransferable* aTransferable,
     return NS_ERROR_FAILURE;
   }
 
+  if (!nsIClipboard::IsClipboardTypeSupported(aWhichClipboard)) {
+    MOZ_CLIPBOARD_LOG("%s: clipboard %d is not supported.", __FUNCTION__,
+                      aWhichClipboard);
+    return NS_ERROR_FAILURE;
+  }
+
   if (mozilla::StaticPrefs::widget_clipboard_use_cached_data_enabled()) {
     // If we were the last ones to put something on the native clipboard, then
     // just use the cached transferable. Otherwise clear it because it isn't
