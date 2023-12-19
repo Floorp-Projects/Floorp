@@ -416,9 +416,9 @@ fn create_streams_in_parallel_with_different_latency<F>(
         return;
     }
 
-    let context = AudioUnitContext::new();
+    let mut context = AudioUnitContext::new();
 
-    let context_ptr_value = &context as *const AudioUnitContext as usize;
+    let context_ptr_value = &mut context as *mut AudioUnitContext as usize;
 
     let mut join_handles = vec![];
     for i in 0..amount {
