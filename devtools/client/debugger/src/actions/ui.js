@@ -234,6 +234,12 @@ export function setJavascriptTracingLogMethod(value) {
   };
 }
 
+export function toggleJavascriptTracingValues() {
+  return {
+    type: "TOGGLE_JAVASCRIPT_TRACING_VALUES",
+  };
+}
+
 export function setHideOrShowIgnoredSources(shouldHide) {
   return ({ dispatch, getState }) => {
     dispatch({ type: "HIDE_IGNORED_SOURCES", shouldHide });
