@@ -119,10 +119,11 @@ LOCAL_INCLUDES += [
     '/third_party/aom',
 ]
 
-if CONFIG['OS_TARGET'] == 'Linux':
-    # For fuzzing, We only support building on Linux currently.
-    include('/tools/fuzzing/libfuzzer-config.mozbuild')
-    if CONFIG['FUZZING_INTERFACES']:
-        TEST_DIRS += [
-            'test/fuzztest'
-    ]
+# Disabled for now, see https://bugzilla.mozilla.org/show_bug.cgi?id=1869986
+# if CONFIG['OS_TARGET'] == 'Linux':
+#     # For fuzzing, We only support building on Linux currently.
+#     include('/tools/fuzzing/libfuzzer-config.mozbuild')
+#     if CONFIG['FUZZING_INTERFACES']:
+#         TEST_DIRS += [
+#             'test/fuzztest'
+#     ]
