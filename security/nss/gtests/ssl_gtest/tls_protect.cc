@@ -83,6 +83,11 @@ bool TlsCipherSpec::Unprotect(const TlsRecordHeader& header,
     seqno = out_header->sequence_number();
   }
 
+  if (header.is_dtls() && (header.version() >= SSL_LIBRARY_VERSION_TLS_1_3)) {
+    // Removing the epoch (16 first bits)
+    seqno = seqno & 0xffffffffffff;
+  }
+
   auto header_bytes = out_header->header();
   rv = SSL_AeadDecrypt(aead_.get(), seqno, header_bytes.data(),
                        header_bytes.len(), ciphertext.data(), ciphertext.len(),
@@ -114,6 +119,11 @@ bool TlsCipherSpec::Protect(const TlsRecordHeader& header,
   DataBuffer header_bytes;
   (void)header.WriteHeader(&header_bytes, 0, plaintext.len() + 16);
   uint64_t seqno = dtls_ ? header.sequence_number() : out_seqno_;
+
+  if (header.is_dtls() && (header.version() >= SSL_LIBRARY_VERSION_TLS_1_3)) {
+    // Removing the epoch (16 first bits)
+    seqno = seqno & 0xffffffffffff;
+  }
 
   SECStatus rv =
       SSL_AeadEncrypt(aead_.get(), seqno, header_bytes.data(),

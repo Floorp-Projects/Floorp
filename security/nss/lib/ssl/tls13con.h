@@ -138,7 +138,7 @@ SECStatus tls13_SendKeyUpdate(sslSocket *ss, tls13KeyUpdateRequest request,
                               PRBool buffer);
 SECStatus SSLExp_KeyUpdate(PRFileDesc *fd, PRBool requestUpdate);
 PRBool tls13_MaybeTls13(sslSocket *ss);
-unsigned int tls13_SetupAeadIv(PRBool isDTLS, unsigned char *ivOut,
+unsigned int tls13_SetupAeadIv(PRBool isDTLS, SSL3ProtocolVersion v, unsigned char *ivOut,
                                unsigned char *ivIn, unsigned int offset,
                                unsigned int ivLen, DTLSEpoch epoch);
 SECStatus tls13_AEAD(PK11Context *context, PRBool decrypt,
@@ -158,6 +158,9 @@ SECStatus tls13_RandomGreaseValue(PRUint16 *out);
 SECStatus tls13_MaybeGreaseExtensionType(const sslSocket *ss,
                                          const SSLHandshakeType message,
                                          PRUint16 *exType);
+
+SECStatus
+tls13_UpdateTrafficKeys(sslSocket *ss, SSLSecretDirection direction);
 
 /* Use this instead of FATAL_ERROR when no alert shall be sent. */
 #define LOG_ERROR(ss, prError)                                                     \
