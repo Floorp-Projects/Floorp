@@ -10,6 +10,7 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Swizzle.h"
 #include "mozilla/ipc/Endpoint.h"
+#include "mozilla/layers/ActiveResource.h"
 #include "mozilla/layers/CanvasChild.h"
 #include "mozilla/layers/CompositorManagerChild.h"
 #include "mozilla/webgpu/WebGPUChild.h"
@@ -38,6 +39,11 @@ void CanvasManagerChild::ActorDestroy(ActorDestroyReason aReason) {
 }
 
 void CanvasManagerChild::Destroy() {
+  if (mActiveResourceTracker) {
+    mActiveResourceTracker->AgeAllGenerations();
+    mActiveResourceTracker.reset();
+  }
+
   if (mCanvasChild) {
     mCanvasChild->Destroy();
     mCanvasChild = nullptr;
@@ -196,6 +202,14 @@ RefPtr<webgpu::WebGPUChild> CanvasManagerChild::GetWebGPUChild() {
   }
 
   return mWebGPUChild;
+}
+
+layers::ActiveResourceTracker* CanvasManagerChild::GetActiveResourceTracker() {
+  if (!mActiveResourceTracker) {
+    mActiveResourceTracker = MakeUnique<ActiveResourceTracker>(
+        1000, "CanvasManagerChild", GetCurrentSerialEventTarget());
+  }
+  return mActiveResourceTracker.get();
 }
 
 already_AddRefed<DataSourceSurface> CanvasManagerChild::GetSnapshot(
