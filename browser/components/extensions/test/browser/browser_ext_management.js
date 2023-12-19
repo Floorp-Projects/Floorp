@@ -111,11 +111,8 @@ add_task(async function test_management_install() {
   is(id, "tiger@persona.beard", "Static web extension theme installed");
   is(type, "theme", "Extension type is correct");
 
-  let toolboxCS = window.getComputedStyle(
-    document.documentElement.querySelector("#navigator-toolbox")
-  );
   is(
-    toolboxCS.backgroundColor,
+    getToolboxBackgroundColor(),
     "rgb(255, 165, 0)",
     "Background is the new black"
   );

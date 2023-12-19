@@ -46,7 +46,7 @@ function validateTheme(backgroundImage, accentColor, textColor, isLWT) {
     "Expected correct background image"
   );
   Assert.equal(
-    toolboxCS.backgroundColor,
+    getToolboxBackgroundColor(),
     accentColor,
     "Expected correct accent color"
   );
@@ -119,7 +119,8 @@ add_task(async function test_dynamic_theme_updates() {
   await extension.awaitMessage("theme-reset");
 
   let { color } = rootCS;
-  let { backgroundImage, backgroundColor } = toolboxCS;
+  let backgroundImage = toolboxCS.backgroundImage;
+  let backgroundColor = getToolboxBackgroundColor();
   validateTheme(backgroundImage, backgroundColor, color, false);
 
   await extension.unload();
@@ -187,7 +188,8 @@ add_task(async function test_dynamic_theme_updates_with_data_url() {
   await extension.awaitMessage("theme-reset");
 
   let { color } = rootCS;
-  let { backgroundImage, backgroundColor } = toolboxCS;
+  let backgroundImage = toolboxCS.backgroundImage;
+  let backgroundColor = getToolboxBackgroundColor();
   validateTheme(backgroundImage, backgroundColor, color, false);
 
   await extension.unload();
