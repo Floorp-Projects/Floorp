@@ -149,6 +149,11 @@ class MFCDMService {
   // This is used to display CDM capabilites in `about:support`.
   static void GetAllKeySystemsCapabilities(dom::Promise* aPromise);
 
+  // If Widevine L1 is downloaded after the MFCDM process is created, then we
+  // use this method to update the L1 path and setup L1 permission for the MFCDM
+  // process.
+  static void UpdateWidevineL1Path(nsIFile* aFile);
+
  private:
   static RefPtr<GenericNonExclusivePromise> LaunchMFCDMProcessIfNeeded(
       ipc::SandboxingKind aSandbox);

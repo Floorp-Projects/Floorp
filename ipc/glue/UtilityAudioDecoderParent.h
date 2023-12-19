@@ -48,6 +48,8 @@ class UtilityAudioDecoderParent final : public PUtilityAudioDecoderParent {
 #ifdef MOZ_WMF_CDM
   IPCResult RecvGetKeySystemCapabilities(
       GetKeySystemCapabilitiesResolver&& aResolver);
+
+  IPCResult RecvUpdateWidevineL1Path(const nsString& aPath);
 #endif
 
  private:
