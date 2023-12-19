@@ -13,6 +13,7 @@
 #include "mozilla/gfx/DataSurfaceHelpers.h"
 #include "mozilla/gfx/Swizzle.h"
 #include "mozilla/layers/ImageBridgeChild.h"
+#include "mozilla/layers/PersistentBufferProvider.h"
 #include "mozilla/layers/TextureClientSharedSurface.h"
 #include "mozilla/layers/TextureWrapperImage.h"
 #include "mozilla/SVGObserverUtils.h"
@@ -188,7 +189,9 @@ bool OffscreenCanvasDisplayHelper::CommitFrameToCompositor(
   }
 
   bool paintCallbacks = mData.mDoPaintCallbacks;
+  bool hasRemoteTextureDesc = false;
   RefPtr<layers::Image> image;
+  RefPtr<layers::TextureClient> texture;
   RefPtr<gfx::SourceSurface> surface;
   Maybe<layers::SurfaceDescriptor> desc;
 
@@ -199,18 +202,29 @@ bool OffscreenCanvasDisplayHelper::CommitFrameToCompositor(
     }
 
     desc = aContext->PresentFrontBuffer(nullptr, aTextureType);
-    if (!desc) {
-      surface =
-          aContext->GetFrontBufferSnapshot(/* requireAlphaPremult */ false);
-      if (surface && surface->GetType() == gfx::SurfaceType::WEBGL) {
-        // Ensure we can map in the surface. If we get a SourceSurfaceWebgl
-        // surface, then it may not be backed by raw pixels yet. We need to map
-        // it on the owning thread rather than the ImageBridge thread.
-        gfx::DataSourceSurface::ScopedMap map(
-            static_cast<gfx::DataSourceSurface*>(surface.get()),
-            gfx::DataSourceSurface::READ);
-        if (!map.IsMapped()) {
-          surface = nullptr;
+    if (desc) {
+      hasRemoteTextureDesc =
+          desc->type() ==
+          layers::SurfaceDescriptor::TSurfaceDescriptorRemoteTexture;
+    } else {
+      if (layers::PersistentBufferProvider* provider =
+              aContext->GetBufferProvider()) {
+        texture = provider->GetTextureClient();
+      }
+
+      if (!texture) {
+        surface =
+            aContext->GetFrontBufferSnapshot(/* requireAlphaPremult */ false);
+        if (surface && surface->GetType() == gfx::SurfaceType::WEBGL) {
+          // Ensure we can map in the surface. If we get a SourceSurfaceWebgl
+          // surface, then it may not be backed by raw pixels yet. We need to
+          // map it on the owning thread rather than the ImageBridge thread.
+          gfx::DataSourceSurface::ScopedMap map(
+              static_cast<gfx::DataSourceSurface*>(surface.get()),
+              gfx::DataSourceSurface::READ);
+          if (!map.IsMapped()) {
+            surface = nullptr;
+          }
         }
       }
     }
@@ -220,26 +234,33 @@ bool OffscreenCanvasDisplayHelper::CommitFrameToCompositor(
     }
   }
 
-  if (desc) {
-    if (desc->type() ==
-        layers::SurfaceDescriptor::TSurfaceDescriptorRemoteTexture) {
-      const auto& textureDesc = desc->get_SurfaceDescriptorRemoteTexture();
-      imageBridge->UpdateCompositable(mImageContainer, textureDesc.textureId(),
-                                      textureDesc.ownerId(), mData.mSize,
-                                      flags);
-    } else {
-      RefPtr<layers::TextureClient> texture =
-          layers::SharedSurfaceTextureData::CreateTextureClient(
-              *desc, format, mData.mSize, flags, imageBridge);
-      if (texture) {
-        image = new layers::TextureWrapperImage(
-            texture, gfx::IntRect(gfx::IntPoint(0, 0), mData.mSize));
-      }
-    }
-  } else if (surface) {
+  // We save any current surface because we might need it in GetSnapshot. If we
+  // are on a worker thread and not WebGL, then this will be the only way we can
+  // access the pixel data on the main thread.
+  mFrontBufferSurface = surface;
+
+  // We do not use the ImageContainer plumbing with remote textures, so if we
+  // have that, we can just early return here.
+  if (hasRemoteTextureDesc) {
+    const auto& textureDesc = desc->get_SurfaceDescriptorRemoteTexture();
+    imageBridge->UpdateCompositable(mImageContainer, textureDesc.textureId(),
+                                    textureDesc.ownerId(), mData.mSize, flags);
+    return true;
+  }
+
+  if (surface) {
     auto surfaceImage = MakeRefPtr<layers::SourceSurfaceImage>(surface);
     surfaceImage->SetTextureFlags(flags);
     image = surfaceImage;
+  } else {
+    if (desc && !texture) {
+      texture = layers::SharedSurfaceTextureData::CreateTextureClient(
+          *desc, format, mData.mSize, flags, imageBridge);
+    }
+    if (texture) {
+      image = new layers::TextureWrapperImage(
+          texture, gfx::IntRect(gfx::IntPoint(0, 0), texture->GetSize()));
+    }
   }
 
   if (image) {
@@ -247,16 +268,10 @@ bool OffscreenCanvasDisplayHelper::CommitFrameToCompositor(
     imageList.AppendElement(layers::ImageContainer::NonOwningImage(
         image, TimeStamp(), mLastFrameID++, mImageProducerID));
     mImageContainer->SetCurrentImages(imageList);
-  } else if (!desc ||
-             desc->type() !=
-                 layers::SurfaceDescriptor::TSurfaceDescriptorRemoteTexture) {
+  } else {
     mImageContainer->ClearAllImages();
   }
 
-  // We save any current surface because we might need it in GetSnapshot. If we
-  // are on a worker thread and not WebGL, then this will be the only way we can
-  // access the pixel data on the main thread.
-  mFrontBufferSurface = surface;
   return true;
 }
 
@@ -290,47 +305,84 @@ void OffscreenCanvasDisplayHelper::InvalidateElement() {
   }
 }
 
-bool OffscreenCanvasDisplayHelper::TransformSurface(
-    const gfx::DataSourceSurface::ScopedMap& aSrcMap,
-    const gfx::DataSourceSurface::ScopedMap& aDstMap,
-    gfx::SurfaceFormat aFormat, const gfx::IntSize& aSize, bool aNeedsPremult,
-    gl::OriginPos aOriginPos) const {
-  if (!aSrcMap.IsMapped() || !aDstMap.IsMapped()) {
-    return false;
+already_AddRefed<gfx::SourceSurface>
+OffscreenCanvasDisplayHelper::TransformSurface(gfx::SourceSurface* aSurface,
+                                               bool aHasAlpha,
+                                               bool aIsAlphaPremult,
+                                               gl::OriginPos aOriginPos) const {
+  if (!aSurface) {
+    return nullptr;
   }
 
+  if (aOriginPos == gl::OriginPos::TopLeft && (!aHasAlpha || aIsAlphaPremult)) {
+    // If we don't need to y-flip, and it is either opaque or premultiplied,
+    // we can just return the same surface.
+    return do_AddRef(aSurface);
+  }
+
+  // Otherwise we need to copy and apply the necessary transformations.
+  RefPtr<gfx::DataSourceSurface> srcSurface = aSurface->GetDataSurface();
+  if (!srcSurface) {
+    return nullptr;
+  }
+
+  const auto size = srcSurface->GetSize();
+  const auto format = srcSurface->GetFormat();
+
+  RefPtr<gfx::DataSourceSurface> dstSurface =
+      gfx::Factory::CreateDataSourceSurface(size, format, /* aZero */ false);
+  if (!dstSurface) {
+    return nullptr;
+  }
+
+  gfx::DataSourceSurface::ScopedMap srcMap(srcSurface,
+                                           gfx::DataSourceSurface::READ);
+  gfx::DataSourceSurface::ScopedMap dstMap(dstSurface,
+                                           gfx::DataSourceSurface::WRITE);
+  if (!srcMap.IsMapped() || !dstMap.IsMapped()) {
+    return nullptr;
+  }
+
+  bool success;
   switch (aOriginPos) {
     case gl::OriginPos::BottomLeft:
-      if (aNeedsPremult) {
-        return gfx::PremultiplyYFlipData(aSrcMap.GetData(), aSrcMap.GetStride(),
-                                         aFormat, aDstMap.GetData(),
-                                         aDstMap.GetStride(), aFormat, aSize);
+      if (aHasAlpha && !aIsAlphaPremult) {
+        success = gfx::PremultiplyYFlipData(
+            srcMap.GetData(), srcMap.GetStride(), format, dstMap.GetData(),
+            dstMap.GetStride(), format, size);
+      } else {
+        success = gfx::SwizzleYFlipData(srcMap.GetData(), srcMap.GetStride(),
+                                        format, dstMap.GetData(),
+                                        dstMap.GetStride(), format, size);
       }
-      return gfx::SwizzleYFlipData(aSrcMap.GetData(), aSrcMap.GetStride(),
-                                   aFormat, aDstMap.GetData(),
-                                   aDstMap.GetStride(), aFormat, aSize);
+      break;
     case gl::OriginPos::TopLeft:
-      if (aNeedsPremult) {
-        return gfx::PremultiplyData(aSrcMap.GetData(), aSrcMap.GetStride(),
-                                    aFormat, aDstMap.GetData(),
-                                    aDstMap.GetStride(), aFormat, aSize);
+      if (aHasAlpha && !aIsAlphaPremult) {
+        success = gfx::PremultiplyData(srcMap.GetData(), srcMap.GetStride(),
+                                       format, dstMap.GetData(),
+                                       dstMap.GetStride(), format, size);
+      } else {
+        success = gfx::SwizzleData(srcMap.GetData(), srcMap.GetStride(), format,
+                                   dstMap.GetData(), dstMap.GetStride(), format,
+                                   size);
       }
-      return gfx::SwizzleData(aSrcMap.GetData(), aSrcMap.GetStride(), aFormat,
-                              aDstMap.GetData(), aDstMap.GetStride(), aFormat,
-                              aSize);
+      break;
     default:
       MOZ_ASSERT_UNREACHABLE("Unhandled origin position!");
+      success = false;
       break;
   }
 
-  return false;
+  if (!success) {
+    return nullptr;
+  }
+
+  return dstSurface.forget();
 }
 
 already_AddRefed<gfx::SourceSurface>
 OffscreenCanvasDisplayHelper::GetSurfaceSnapshot() {
   MOZ_ASSERT(NS_IsMainThread());
-
-  Maybe<layers::SurfaceDescriptor> desc;
 
   bool hasAlpha;
   bool isAlphaPremult;
@@ -355,38 +407,7 @@ OffscreenCanvasDisplayHelper::GetSurfaceSnapshot() {
 
   if (surface) {
     // We already have a copy of the front buffer in our process.
-
-    if (originPos == gl::OriginPos::TopLeft && (!hasAlpha || isAlphaPremult)) {
-      // If we don't need to y-flip, and it is either opaque or premultiplied,
-      // we can just return the same surface.
-      return surface.forget();
-    }
-
-    // Otherwise we need to copy and apply the necessary transformations.
-    RefPtr<gfx::DataSourceSurface> srcSurface = surface->GetDataSurface();
-    if (!srcSurface) {
-      return nullptr;
-    }
-
-    const auto size = srcSurface->GetSize();
-    const auto format = srcSurface->GetFormat();
-
-    RefPtr<gfx::DataSourceSurface> dstSurface =
-        gfx::Factory::CreateDataSourceSurface(size, format, /* aZero */ false);
-    if (!dstSurface) {
-      return nullptr;
-    }
-
-    gfx::DataSourceSurface::ScopedMap srcMap(srcSurface,
-                                             gfx::DataSourceSurface::READ);
-    gfx::DataSourceSurface::ScopedMap dstMap(dstSurface,
-                                             gfx::DataSourceSurface::WRITE);
-    if (!TransformSurface(srcMap, dstMap, format, size,
-                          hasAlpha && !isAlphaPremult, originPos)) {
-      return nullptr;
-    }
-
-    return dstSurface.forget();
+    return TransformSurface(surface, hasAlpha, isAlphaPremult, originPos);
   }
 
 #ifdef MOZ_WIDGET_ANDROID
@@ -405,46 +426,39 @@ OffscreenCanvasDisplayHelper::GetSurfaceSnapshot() {
         hasAlpha && !isAlphaPremult, originPos == gl::OriginPos::BottomLeft);
   }
 
-  // If we don't have any protocol IDs, or an existing surface, it is possible
-  // it is a main thread OffscreenCanvas instance. If so, then the element's
-  // OffscreenCanvas is not neutered and has access to the context. We can use
-  // that to get the snapshot directly.
   if (!canvasElement) {
     return nullptr;
   }
 
+  // If we don't have any protocol IDs, or an existing surface, it is possible
+  // it is a main thread OffscreenCanvas instance. If so, then the element's
+  // OffscreenCanvas is not neutered and has access to the context. We can use
+  // that to get the snapshot directly.
   const auto* offscreenCanvas = canvasElement->GetOffscreenCanvas();
-  nsICanvasRenderingContextInternal* context = offscreenCanvas->GetContext();
-  if (!context) {
-    return nullptr;
+  if (nsICanvasRenderingContextInternal* context =
+          offscreenCanvas->GetContext()) {
+    surface = context->GetFrontBufferSnapshot(/* requireAlphaPremult */ false);
+    surface = TransformSurface(surface, hasAlpha, isAlphaPremult, originPos);
+    if (surface) {
+      return surface.forget();
+    }
   }
 
-  surface = context->GetFrontBufferSnapshot(/* requireAlphaPremult */ false);
-  if (!surface) {
-    return nullptr;
+  // Finally, we can try peeking into the image container to see if we are able
+  // to do a readback via the TextureClient.
+  if (layers::ImageContainer* container = canvasElement->GetImageContainer()) {
+    AutoTArray<layers::ImageContainer::OwningImage, 1> images;
+    uint32_t generationCounter;
+    container->GetCurrentImages(&images, &generationCounter);
+    if (!images.IsEmpty()) {
+      if (layers::Image* image = images.LastElement().mImage) {
+        surface = image->GetAsSourceSurface();
+        return TransformSurface(surface, hasAlpha, isAlphaPremult, originPos);
+      }
+    }
   }
 
-  if (originPos == gl::OriginPos::TopLeft && (!hasAlpha || isAlphaPremult)) {
-    // If we don't need to y-flip, and it is either opaque or premultiplied,
-    // we can just return the same surface.
-    return surface.forget();
-  }
-
-  // Otherwise we need to apply the necessary transformations in place.
-  RefPtr<gfx::DataSourceSurface> dataSurface = surface->GetDataSurface();
-  if (!dataSurface) {
-    return nullptr;
-  }
-
-  gfx::DataSourceSurface::ScopedMap map(dataSurface,
-                                        gfx::DataSourceSurface::READ_WRITE);
-  if (!TransformSurface(map, map, dataSurface->GetFormat(),
-                        dataSurface->GetSize(), hasAlpha && !isAlphaPremult,
-                        originPos)) {
-    return nullptr;
-  }
-
-  return surface.forget();
+  return nullptr;
 }
 
 already_AddRefed<layers::Image> OffscreenCanvasDisplayHelper::GetAsImage() {
