@@ -7,7 +7,7 @@ This is archived here because it captures valuable documentation that even if po
 ---
 
 
-This page lists a few tips to help you investigate issues related to SpiderMonkey. All tips listed here are dealing with the JavaScript shell obtained at the end of the [build documentation of SpiderMonkey](https://mdn-archive.mossop.dev/en-US/docs/SpiderMonkey "/en-US/docs/SpiderMonkey"). It is separated in 2 parts, one section related to debugging and another section related to drafting optimizations. Many of these tips only apply to debug builds of the JS shell; they will not function in a release build.
+This page lists a few tips to help you investigate issues related to SpiderMonkey. All tips listed here are dealing with the JavaScript shell obtained at the end of the [build documentation of SpiderMonkey](build.rst). It is separated in 2 parts, one section related to debugging and another section related to drafting optimizations. Many of these tips only apply to debug builds of the JS shell; they will not function in a release build.
 
 ## Debugging Tips
 
@@ -326,16 +326,18 @@ If you are in rr, and forgot to record with the spew enabled with IONFLAGS or be
     Bailout from self-hosted:20:403-500
     Invalidate self-hosted:20:403-500
 
-Note: the line 3196, listed above, corresponds to the location of the [Jit spew inside jit::Invalidate function](https://searchfox.org/mozilla-central/rev/f6c298b36db67a7109079c0dd7755f329c1d58e2/js/src/jit/Ion.cpp#3196).
+Note: the line 3196, listed above, corresponds to the location of the [Jit spew inside jit::Invalidate function](https://searchfox.org/mozilla-central/rev/655f49c541108e3d0a232aa7173fbcb9af88d80b/js/src/jit/Ion.cpp#2475).
 
 ## Hacking tips
 
 
 ### Using the Gecko Profiler (browser / xpcshell)
 
-See the section dedicated to [profiling with the gecko profiler](https://mdn-archive.mossop.dev/en-US/docs/Performance/Profiling_with_the_Built-in_Profiler "/en-US/docs/Performance/Profiling_with_the_Built-in_Profiler"). This method of profiling has the advantage of mixing the JavaScript stack with the C++ stack, which is useful for analyzing library function issues.
+See the section dedicated to [profiling with the Gecko Profiler](/tools/profiler/index.rst). This method of profiling has the advantage of mixing the JavaScript stack with the C++ stack, which is useful for analyzing library function issues.
 
 One tip is to start looking at a script with an inverted JS stack to locate the most expensive JS function, then to focus on the frame of this JS function, and to remove the inverted stack and look at C++ part of this function to determine from where the cost is coming from.
+
+These archived [tips on using the Gecko Profiler](https://mdn-archive.mossop.dev/en-US/docs/Performance/Profiling_with_the_Built-in_Profiler "/en-US/docs/Performance/Profiling_with_the_Built-in_Profiler") and [FAQ](https://mdn-archive.mossop.dev/en-US/docs/Mozilla/Performance/Gecko_Profiler_FAQ "Gecko Profiler FAQ") might also be useful as inspiration, but are old enough that they are probably not accurate any more.
 
 ### Using callgrind (JS shell)
 
