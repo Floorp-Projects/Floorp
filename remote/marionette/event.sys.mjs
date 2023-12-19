@@ -227,8 +227,9 @@ event.sendKeys = function (keyString, win) {
     modifiers[modifier] = false;
   }
 
-  for (let i = 0; i < keyString.length; i++) {
-    let keyValue = keyString.charAt(i);
+  for (let keyValue of keyString) {
+    // keyValue will contain enough to represent the UTF-16 encoding of a single abstract character
+    // i.e. either a single scalar value, or a surrogate pair
     if (modifiers.shiftKey) {
       keyValue = lazy.keyData.getShiftedKey(keyValue);
     }
