@@ -227,4 +227,10 @@ interface nsIContentAnalysis : nsISupports
    *        The token for the request to cancel.
    */
   void cancelContentAnalysisRequest(in ACString aRequestToken);
+
+  /**
+   * Indicates that the user has responded to a WARN dialog. aAllowContent represents
+   * whether the user wants to allow the request to go through.
+   */
+  void respondToWarnDialog(in ACString aRequestToken, in bool aAllowContent);
 };

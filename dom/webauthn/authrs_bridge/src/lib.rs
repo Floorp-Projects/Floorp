@@ -1161,25 +1161,31 @@ impl AuthrsService {
         self.do_get_assertion(None, guard)
     }
 
+    // Clears the transaction state if tid matches the ongoing transaction ID.
+    // Returns whether the tid was a match.
+    fn clear_transaction(&self, tid: u64) -> bool {
+        let mut guard = self.transaction.lock().unwrap();
+        let Some(state) = guard.as_ref() else {
+            return true; // workaround for Bug 1864526.
+        };
+        if state.tid != tid {
+            // Ignore the cancellation request if the transaction
+            // ID does not match.
+            return false;
+        }
+        // It's possible that we haven't dispatched the request to the usb_token_manager yet,
+        // e.g. if we're waiting for resume_make_credential. So reject the promise and drop the
+        // state here rather than from the StateCallback
+        let _ = state.promise.reject(NS_ERROR_DOM_NOT_ALLOWED_ERR);
+        *guard = None;
+        true
+    }
+
     xpcom_method!(cancel => Cancel(aTransactionId: u64));
     fn cancel(&self, tid: u64) -> Result<(), nsresult> {
-        {
-            let mut guard = self.transaction.lock().unwrap();
-            let Some(state) = guard.as_ref() else {
-                return Ok(());
-            };
-            if state.tid != tid {
-                // Ignore the cancellation request if the transaction
-                // ID does not match.
-                return Ok(());
-            }
-            // It's possible that we haven't dispatched the request to the usb_token_manager yet,
-            // e.g. if we're waiting for resume_make_credential. So reject the promise and drop the
-            // state here rather than from the StateCallback
-            state.promise.reject(NS_ERROR_DOM_NOT_ALLOWED_ERR)?;
-            *guard = None;
-        } // release the transaction lock so a StateCallback can take it
-        self.usb_token_manager.lock().unwrap().cancel();
+        if self.clear_transaction(tid) {
+            self.usb_token_manager.lock().unwrap().cancel();
+        }
         Ok(())
     }
 

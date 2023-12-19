@@ -1166,6 +1166,25 @@ nsNSSCertificateDB::GetCerts(nsTArray<RefPtr<nsIX509Cert>>& _retval) {
                                                                   _retval);
 }
 
+nsresult IsCertBuiltInRoot(const RefPtr<nsIX509Cert>& cert,
+                           bool& isBuiltInRoot) {
+  nsTArray<uint8_t> der;
+  nsresult rv = cert->GetRawDER(der);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  pkix::Input certInput;
+  pkix::Result result = certInput.Init(der.Elements(), der.Length());
+  if (result != pkix::Result::Success) {
+    return NS_ERROR_FAILURE;
+  }
+  result = IsCertBuiltInRoot(certInput, isBuiltInRoot);
+  if (result != pkix::Result::Success) {
+    return NS_ERROR_FAILURE;
+  }
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsNSSCertificateDB::AsyncHasThirdPartyRoots(nsIAsyncBoolCallback* aCallback) {
   NS_ENSURE_ARG_POINTER(aCallback);
@@ -1198,7 +1217,7 @@ nsNSSCertificateDB::AsyncHasThirdPartyRoots(nsIAsyncBoolCallback* aCallback) {
                 }
 
                 bool isBuiltInRoot = false;
-                rv = cert->GetIsBuiltInRoot(&isBuiltInRoot);
+                rv = IsCertBuiltInRoot(cert, isBuiltInRoot);
                 if (NS_FAILED(rv)) {
                   return false;
                 }

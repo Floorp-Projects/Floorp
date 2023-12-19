@@ -87,9 +87,6 @@ let gTestcases = [
 function doesCertExist(commonName) {
   let allCerts = gCertDB.getCerts();
   for (let cert of allCerts) {
-    if (cert.isBuiltInRoot) {
-      continue;
-    }
     if (cert.commonName == commonName) {
       return true;
     }

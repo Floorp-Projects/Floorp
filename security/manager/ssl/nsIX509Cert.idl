@@ -41,12 +41,6 @@ interface nsIX509Cert : nsISupports {
   readonly attribute AString emailAddress;
 
   /**
-   * Did this certificate ship with the platform as a built-in root?
-   */
-  [must_use]
-  readonly attribute bool isBuiltInRoot;
-
-  /**
    *  Obtain a list of all email addresses
    *  contained in the certificate.
    *

@@ -1566,10 +1566,18 @@ void nsJSContext::EndCycleCollectionCallback(
             StaticPrefs::javascript_options_gc_delay()) > kMaxICCDuration,
         "A max duration ICC shouldn't reduce GC delay to 0");
 
-    sScheduler->PokeGC(JS::GCReason::CC_FINISHED, nullptr,
-                       TimeDuration::FromMilliseconds(
-                           StaticPrefs::javascript_options_gc_delay()) -
-                           std::min(ccNowDuration, kMaxICCDuration));
+    TimeDuration delay;
+    if (aResults.mFreedGCed > 10000) {
+      // If we collected lots of GCed objects, trigger the next GC sooner.
+      delay = TimeDuration::FromMilliseconds(
+          StaticPrefs::javascript_options_gc_delay_interslice());
+    } else {
+      delay = TimeDuration::FromMilliseconds(
+                  StaticPrefs::javascript_options_gc_delay()) -
+              std::min(ccNowDuration, kMaxICCDuration);
+    }
+
+    sScheduler->PokeGC(JS::GCReason::CC_FINISHED, nullptr, delay);
   }
 #if defined(MOZ_MEMORY)
   else if (

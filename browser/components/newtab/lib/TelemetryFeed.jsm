@@ -31,8 +31,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "resource://gre/modules/ExtensionSettingsStore.sys.mjs",
   HomePage: "resource:///modules/HomePage.sys.mjs",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
-  PingCentre: "resource:///modules/PingCentre.sys.mjs",
-  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
   TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.sys.mjs",
   TelemetrySession: "resource://gre/modules/TelemetrySession.sys.mjs",
   UTEventReporting: "resource://activity-stream/lib/UTEventReporting.sys.mjs",
@@ -57,11 +55,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
     Glean.newtabHandoffPreference.enabled.set(new_value)
 );
 
-const ACTIVITY_STREAM_ID = "activity-stream";
-const DOMWINDOW_OPENED_TOPIC = "domwindowopened";
-const DOMWINDOW_UNLOAD_TOPIC = "unload";
-const TAB_PINNED_EVENT = "TabPinned";
-
 // This is a mapping table between the user preferences and its encoding code
 const USER_PREFS_ENCODING = {
   showSearch: 1 << 0,
@@ -77,11 +70,6 @@ const USER_PREFS_ENCODING = {
 const PREF_IMPRESSION_ID = "impressionId";
 const TELEMETRY_PREF = "telemetry";
 const EVENTS_TELEMETRY_PREF = "telemetry.ut.events";
-const STRUCTURED_INGESTION_ENDPOINT_PREF =
-  "telemetry.structuredIngestion.endpoint";
-// List of namespaces for the structured ingestion system.
-// They are defined in https://github.com/mozilla-services/mozilla-pipeline-schemas
-const STRUCTURED_INGESTION_NAMESPACE_AS = "activity-stream";
 
 // Used as the missing value for timestamps in the session ping
 const TIMESTAMP_MISSING_VALUE = -1;
@@ -120,9 +108,7 @@ class TelemetryFeed {
     this._impressionId = this.getOrCreateImpressionId();
     this._aboutHomeSeen = false;
     this._classifySite = classifySite;
-    this._addWindowListeners = this._addWindowListeners.bind(this);
     this._browserOpenNewtabStart = null;
-    this.handleEvent = this.handleEvent.bind(this);
   }
 
   get telemetryEnabled() {
@@ -131,10 +117,6 @@ class TelemetryFeed {
 
   get eventTelemetryEnabled() {
     return this._prefs.get(EVENTS_TELEMETRY_PREF);
-  }
-
-  get structuredIngestionEndpointBase() {
-    return this._prefs.get(STRUCTURED_INGESTION_ENDPOINT_PREF);
   }
 
   get telemetryClientId() {
@@ -160,12 +142,6 @@ class TelemetryFeed {
       this.browserOpenNewtabStart,
       "browser-open-newtab-start"
     );
-    // Add pin tab event listeners on future windows
-    Services.obs.addObserver(this._addWindowListeners, DOMWINDOW_OPENED_TOPIC);
-    // Listen for pin tab events on all open windows
-    for (let win of Services.wm.getEnumerator("navigator:browser")) {
-      this._addWindowListeners(win);
-    }
     // Set two scalars for the "deletion-request" ping (See bug 1602064 and 1729474)
     Services.telemetry.scalarSet(
       "deletion.request.impression_id",
@@ -176,58 +152,6 @@ class TelemetryFeed {
     Glean.newtabHandoffPreference.enabled.set(
       lazy.handoffToAwesomebarPrefValue
     );
-  }
-
-  handleEvent(event) {
-    switch (event.type) {
-      case TAB_PINNED_EVENT:
-        this.countPinnedTab(event.target);
-        break;
-      case DOMWINDOW_UNLOAD_TOPIC:
-        this._removeWindowListeners(event.target);
-        break;
-    }
-  }
-
-  _removeWindowListeners(win) {
-    win.removeEventListener(DOMWINDOW_UNLOAD_TOPIC, this.handleEvent);
-    win.removeEventListener(TAB_PINNED_EVENT, this.handleEvent);
-  }
-
-  _addWindowListeners(win) {
-    win.addEventListener(DOMWINDOW_UNLOAD_TOPIC, this.handleEvent);
-    win.addEventListener(TAB_PINNED_EVENT, this.handleEvent);
-  }
-
-  countPinnedTab(target, source = "TAB_CONTEXT_MENU") {
-    const win = target.ownerGlobal;
-    if (lazy.PrivateBrowsingUtils.isWindowPrivate(win)) {
-      return;
-    }
-    const event = Object.assign(this.createPing(), {
-      action: "activity_stream_user_event",
-      event: TAB_PINNED_EVENT.toUpperCase(),
-      value: { total_pinned_tabs: this.countTotalPinnedTabs() },
-      source,
-      // These fields are required but not relevant for this ping
-      page: "n/a",
-      session_id: "n/a",
-    });
-    this.sendEvent(event);
-  }
-
-  countTotalPinnedTabs() {
-    let pinnedTabs = 0;
-    for (let win of Services.wm.getEnumerator("navigator:browser")) {
-      if (win.closed || lazy.PrivateBrowsingUtils.isWindowPrivate(win)) {
-        continue;
-      }
-      for (let tab of win.gBrowser.tabs) {
-        pinnedTabs += tab.pinned ? 1 : 0;
-      }
-    }
-
-    return pinnedTabs;
   }
 
   getOrCreateImpressionId() {
@@ -286,16 +210,6 @@ class TelemetryFeed {
       return;
     }
     this.saveSessionPerfData(port, data_to_save);
-  }
-
-  /**
-   * Lazily initialize PingCentre for Activity Stream to send pings
-   */
-  get pingCentre() {
-    Object.defineProperty(this, "pingCentre", {
-      value: new lazy.PingCentre({ topic: ACTIVITY_STREAM_ID }),
-    });
-    return this.pingCentre;
   }
 
   /**
@@ -408,9 +322,6 @@ class TelemetryFeed {
       return;
     }
 
-    this.sendDiscoveryStreamLoadedContent(portID, session);
-    this.sendDiscoveryStreamImpressions(portID, session);
-
     Glean.newtab.closed.record({ newtab_visit_id: session.session_id });
     if (
       this.telemetryEnabled &&
@@ -443,75 +354,8 @@ class TelemetryFeed {
     }
 
     let sessionEndEvent = this.createSessionEndEvent(session);
-    this.sendEvent(sessionEndEvent);
     this.sendUTEvent(sessionEndEvent, this.utEvents.sendSessionEndEvent);
     this.sessions.delete(portID);
-  }
-
-  /**
-   * Send impression pings for Discovery Stream for a given session.
-   *
-   * @note the impression reports are stored in session.impressionSets for different
-   * sources, and will be sent separately accordingly.
-   *
-   * @param {String} port  The session port with which this is associated
-   * @param {Object} session  The session object
-   */
-  sendDiscoveryStreamImpressions(port, session) {
-    const { impressionSets } = session;
-
-    if (!impressionSets) {
-      return;
-    }
-
-    Object.keys(impressionSets).forEach(source => {
-      const { tiles, window_inner_width, window_inner_height } =
-        impressionSets[source];
-      const payload = this.createImpressionStats(port, {
-        source,
-        tiles,
-        window_inner_width,
-        window_inner_height,
-      });
-      this.sendStructuredIngestionEvent(
-        payload,
-        STRUCTURED_INGESTION_NAMESPACE_AS,
-        "impression-stats",
-        "1"
-      );
-    });
-  }
-
-  /**
-   * Send loaded content pings for Discovery Stream for a given session.
-   *
-   * @note the loaded content reports are stored in session.loadedContentSets for different
-   * sources, and will be sent separately accordingly.
-   *
-   * @param {String} port  The session port with which this is associated
-   * @param {Object} session  The session object
-   */
-  sendDiscoveryStreamLoadedContent(port, session) {
-    const { loadedContentSets } = session;
-
-    if (!loadedContentSets) {
-      return;
-    }
-
-    Object.keys(loadedContentSets).forEach(source => {
-      const tiles = loadedContentSets[source];
-      const payload = this.createImpressionStats(port, {
-        source,
-        tiles,
-        loaded: tiles.length,
-      });
-      this.sendStructuredIngestionEvent(
-        payload,
-        STRUCTURED_INGESTION_NAMESPACE_AS,
-        "impression-stats",
-        "1"
-      );
-    });
   }
 
   /**
@@ -551,23 +395,6 @@ class TelemetryFeed {
         Object.assign(ping, { page: session.page });
       }
     }
-    return ping;
-  }
-
-  /**
-   * createImpressionStats - Create a ping for an impression stats
-   *
-   * @param  {string} portID The portID of the open session
-   * @param  {ob} data The data object to be included in the ping.
-   * @return {obj}    A telemetry ping
-   */
-  createImpressionStats(portID, data) {
-    let ping = Object.assign(this.createPing(portID), data, {
-      impression_id: this._impressionId,
-    });
-    // Make sure `session_id` and `client_id` are not in the ping.
-    delete ping.session_id;
-    delete ping.client_id;
     return ping;
   }
 
@@ -753,89 +580,10 @@ class TelemetryFeed {
     return { ping, pingType: "undesired-events" };
   }
 
-  sendEvent(event_object) {
-    switch (event_object.action) {
-      case "activity_stream_user_event":
-        this.sendEventPing(event_object);
-        break;
-      case "activity_stream_session":
-        this.sendSessionPing(event_object);
-        break;
-    }
-  }
-
-  async sendEventPing(ping) {
-    delete ping.action;
-    ping.client_id = await this.telemetryClientId;
-    ping.browser_session_id = lazy.browserSessionId;
-    if (ping.value && typeof ping.value === "object") {
-      ping.value = JSON.stringify(ping.value);
-    }
-    this.sendStructuredIngestionEvent(
-      ping,
-      STRUCTURED_INGESTION_NAMESPACE_AS,
-      "events",
-      1
-    );
-  }
-
-  async sendSessionPing(ping) {
-    delete ping.action;
-    ping.client_id = await this.telemetryClientId;
-    this.sendStructuredIngestionEvent(
-      ping,
-      STRUCTURED_INGESTION_NAMESPACE_AS,
-      "sessions",
-      1
-    );
-  }
-
   sendUTEvent(event_object, eventFunction) {
     if (this.telemetryEnabled && this.eventTelemetryEnabled) {
       eventFunction(event_object);
     }
-  }
-
-  /**
-   * Generates an endpoint for Structured Ingestion telemetry pipeline. Note that
-   * Structured Ingestion requires a different endpoint for each ping. See more
-   * details about endpoint schema at:
-   * https://github.com/mozilla/gcp-ingestion/blob/master/docs/edge.md#postput-request
-   *
-   * @param {String} namespace Namespace of the ping, such as "activity-stream" or "messaging-system".
-   * @param {String} pingType  Type of the ping, such as "impression-stats".
-   * @param {String} version   Endpoint version for this ping type.
-   */
-  _generateStructuredIngestionEndpoint(namespace, pingType, version) {
-    const uuid = Services.uuid.generateUUID().toString();
-    // Structured Ingestion does not support the UUID generated by Services.uuid,
-    // because it contains leading and trailing braces. Need to trim them first.
-    const docID = uuid.slice(1, -1);
-    const extension = `${namespace}/${pingType}/${version}/${docID}`;
-    return `${this.structuredIngestionEndpointBase}/${extension}`;
-  }
-
-  sendStructuredIngestionEvent(eventObject, namespace, pingType, version) {
-    if (this.telemetryEnabled) {
-      this.pingCentre.sendStructuredIngestionPing(
-        eventObject,
-        this._generateStructuredIngestionEndpoint(namespace, pingType, version),
-        namespace
-      );
-    }
-  }
-
-  handleImpressionStats(action) {
-    const payload = this.createImpressionStats(
-      au.getPortIdOfSender(action),
-      action.data
-    );
-    this.sendStructuredIngestionEvent(
-      payload,
-      STRUCTURED_INGESTION_NAMESPACE_AS,
-      "impression-stats",
-      "1"
-    );
   }
 
   handleTopSitesSponsoredImpressionStats(action) {
@@ -847,8 +595,7 @@ class TelemetryFeed {
       advertiser: advertiser_name,
       tile_id,
     } = data;
-    // Legacy telemetry (scalars and PingCentre payloads) expects 1-based tile
-    // positions.
+    // Legacy telemetry expects 1-based tile positions.
     const legacyTelemetryPosition = position + 1;
 
     let pingType;
@@ -933,7 +680,6 @@ class TelemetryFeed {
 
   handleUserEvent(action) {
     let userEvent = this.createUserEvent(action);
-    this.sendEvent(userEvent);
     this.sendUTEvent(userEvent, this.utEvents.sendUserEvent);
   }
 
@@ -1019,7 +765,6 @@ class TelemetryFeed {
   async sendPageTakeoverData() {
     if (this.telemetryEnabled) {
       const value = {};
-      let newtabAffected = false;
       let homeAffected = false;
       let newtabCategory = "disabled";
       let homePageCategory = "disabled";
@@ -1035,7 +780,6 @@ class TelemetryFeed {
           value.newtab_url_category = await this._classifySite(
             lazy.AboutNewTab.newTabURL
           );
-          newtabAffected = true;
           newtabCategory = value.newtab_url_category;
         }
       }
@@ -1047,7 +791,6 @@ class TelemetryFeed {
       );
       if (newtabExtensionInfo && newtabExtensionInfo.id) {
         value.newtab_extension_id = newtabExtensionInfo.id;
-        newtabAffected = true;
         newtabCategory = "extension";
       }
 
@@ -1073,25 +816,6 @@ class TelemetryFeed {
         homePageCategory = "enabled";
       }
 
-      let page;
-      if (newtabAffected && homeAffected) {
-        page = "both";
-      } else if (newtabAffected) {
-        page = "about:newtab";
-      } else if (homeAffected) {
-        page = "about:home";
-      }
-
-      if (page) {
-        const event = Object.assign(this.createPing(), {
-          action: "activity_stream_user_event",
-          event: "PAGE_TAKEOVER_DATA",
-          value,
-          page,
-          session_id: "n/a",
-        });
-        this.sendEvent(event);
-      }
       Glean.newtab.newtabCategory.set(newtabCategory);
       Glean.newtab.homepageCategory.set(homePageCategory);
       if (lazy.NimbusFeatures.glean.getVariable("newtabPingEnabled") ?? true) {
@@ -1115,17 +839,8 @@ class TelemetryFeed {
       case at.SAVE_SESSION_PERF_DATA:
         this.saveSessionPerfData(au.getPortIdOfSender(action), action.data);
         break;
-      case at.TELEMETRY_IMPRESSION_STATS:
-        this.handleImpressionStats(action);
-        break;
       case at.DISCOVERY_STREAM_IMPRESSION_STATS:
         this.handleDiscoveryStreamImpressionStats(
-          au.getPortIdOfSender(action),
-          action.data
-        );
-        break;
-      case at.DISCOVERY_STREAM_LOADED_CONTENT:
-        this.handleDiscoveryStreamLoadedContent(
           au.getPortIdOfSender(action),
           action.data
         );
@@ -1215,12 +930,7 @@ class TelemetryFeed {
   }
 
   /**
-   * Handle impression stats actions from Discovery Stream. The data will be
-   * stored into the session.impressionSets object for the given port, so that
-   * it is sent to the server when the session ends.
-   *
-   * @note session.impressionSets will be keyed on `source` of the `data`,
-   * all the data will be appended to an array for the same source.
+   * Handle impression stats actions from Discovery Stream.
    *
    * @param {String} port  The session port with which this is associated
    * @param {Object} data  The impression data structured as {source: "SOURCE", tiles: [{id: 123}]}
@@ -1233,20 +943,8 @@ class TelemetryFeed {
       throw new Error("Session does not exist.");
     }
 
-    const { window_inner_width, window_inner_height, source, tiles } = data;
-    const impressionSets = session.impressionSets || {};
-    const impressions = impressionSets[source] || {
-      tiles: [],
-      window_inner_width,
-      window_inner_height,
-    };
-    // The payload might contain other properties, we need `id`, `pos` and potentially `shim` here.
+    const { tiles } = data;
     tiles.forEach(tile => {
-      impressions.tiles.push({
-        id: tile.id,
-        pos: tile.pos,
-        ...(tile.shim ? { shim: tile.shim } : {}),
-      });
       Glean.pocket.impression.record({
         newtab_visit_id: session.session_id,
         is_sponsored: tile.type === "spoc",
@@ -1259,37 +957,6 @@ class TelemetryFeed {
         GleanPings.spoc.submit("impression");
       }
     });
-    impressionSets[source] = impressions;
-    session.impressionSets = impressionSets;
-  }
-
-  /**
-   * Handle loaded content actions from Discovery Stream. The data will be
-   * stored into the session.loadedContentSets object for the given port, so that
-   * it is sent to the server when the session ends.
-   *
-   * @note session.loadedContentSets will be keyed on `source` of the `data`,
-   * all the data will be appended to an array for the same source.
-   *
-   * @param {String} port  The session port with which this is associated
-   * @param {Object} data  The loaded content structured as {source: "SOURCE", tiles: [{id: 123}]}
-   *
-   */
-  handleDiscoveryStreamLoadedContent(port, data) {
-    let session = this.sessions.get(port);
-
-    if (!session) {
-      throw new Error("Session does not exist.");
-    }
-
-    const loadedContentSets = session.loadedContentSets || {};
-    const loadedContents = loadedContentSets[data.source] || [];
-    // The payload might contain other properties, we need `id` and `pos` here.
-    data.tiles.forEach(tile =>
-      loadedContents.push({ id: tile.id, pos: tile.pos })
-    );
-    loadedContentSets[data.source] = loadedContents;
-    session.loadedContentSets = loadedContentSets;
   }
 
   /**
@@ -1423,19 +1090,12 @@ class TelemetryFeed {
         this.browserOpenNewtabStart,
         "browser-open-newtab-start"
       );
-      Services.obs.removeObserver(
-        this._addWindowListeners,
-        DOMWINDOW_OPENED_TOPIC
-      );
     } catch (e) {
       // Operation can fail when uninit is called before
       // init has finished setting up the observer
     }
 
     // Only uninit if the getter has initialized it
-    if (Object.prototype.hasOwnProperty.call(this, "pingCentre")) {
-      this.pingCentre.uninit();
-    }
     if (Object.prototype.hasOwnProperty.call(this, "utEvents")) {
       this.utEvents.uninit();
     }
@@ -1450,5 +1110,4 @@ const EXPORTED_SYMBOLS = [
   "PREF_IMPRESSION_ID",
   "TELEMETRY_PREF",
   "EVENTS_TELEMETRY_PREF",
-  "STRUCTURED_INGESTION_ENDPOINT_PREF",
 ];

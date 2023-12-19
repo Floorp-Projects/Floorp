@@ -8,6 +8,7 @@
 #include <d3d11.h>
 #include "GLContextEGL.h"
 #include "GLLibraryEGL.h"
+#include "mozilla/gfx/D3D11Checks.h"
 #include "mozilla/gfx/DeviceManagerDx.h"
 #include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptor, etc
 
@@ -142,11 +143,9 @@ void SharedSurface_ANGLEShareHandle::LockProdImpl() {
 
 void SharedSurface_ANGLEShareHandle::UnlockProdImpl() {}
 
-void SharedSurface_ANGLEShareHandle::ProducerAcquireImpl() {
+bool SharedSurface_ANGLEShareHandle::ProducerAcquireImpl() {
   HRESULT hr = mKeyedMutex->AcquireSync(0, 10000);
-  if (hr == WAIT_TIMEOUT) {
-    MOZ_CRASH("GFX: ANGLE share handle timeout");
-  }
+  return gfx::D3D11Checks::DidAcquireSyncSucceed(__func__, hr);
 }
 
 void SharedSurface_ANGLEShareHandle::ProducerReleaseImpl() {
@@ -158,8 +157,8 @@ void SharedSurface_ANGLEShareHandle::ProducerReleaseImpl() {
   mKeyedMutex->ReleaseSync(0);
 }
 
-void SharedSurface_ANGLEShareHandle::ProducerReadAcquireImpl() {
-  ProducerAcquireImpl();
+bool SharedSurface_ANGLEShareHandle::ProducerReadAcquireImpl() {
+  return ProducerAcquireImpl();
 }
 
 void SharedSurface_ANGLEShareHandle::ProducerReadReleaseImpl() {

@@ -251,7 +251,6 @@ export let ContentSearch = {
       data.healthReportKey,
       {
         selection: data.selection,
-        url: submission.uri,
       }
     );
   },

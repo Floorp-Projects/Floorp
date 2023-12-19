@@ -3017,11 +3017,16 @@ public class GeckoSession {
   }
 
   /**
-   * Request the status of the current analysis of product's reviews for a given product URL.
+   * This method is scheduled for deprecation, see Bug 1867079 for details. Please switch to
+   * requestAnalysisStatus for the same functionality.
+   *
+   * <p>Request the status of the current analysis of product's reviews for a given product URL.
    *
    * @param url The URL of the product page.
    * @return a {@link GeckoResult} result of status of analysis.
    */
+  @Deprecated
+  @DeprecationSchedule(version = 124, id = "shopping-status")
   @AnyThread
   public @NonNull GeckoResult<String> requestAnalysisCreationStatus(@NonNull final String url) {
     final GeckoBundle bundle = new GeckoBundle(1);

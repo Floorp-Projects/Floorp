@@ -76,8 +76,6 @@ support-files = [
 
 ["test_async.js"]
 
-["test_config_attribution.js"]
-
 ["test_config_engine_params.js"]
 support-files = [
   "method-extensions/get/manifest.json",
@@ -109,7 +107,7 @@ support-files = [
 
 ["test_engine_selector_application_name.js"]
 
-["test_engine_selector_environment_base.js"]
+["test_engine_selector_environment.js"]
 
 ["test_engine_selector_order.js"]
 

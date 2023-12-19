@@ -7,7 +7,6 @@ This reverts commit c649f29c24c9fc1502d8d53e0c96c3d24b31de1a because it
 depends on cead4eceb01b935fae07bf4a7e91911b344d2fec, which we revert.
 ---
  llvm/docs/CommandGuide/llvm-nm.rst            |   6 -
- llvm/docs/ReleaseNotes.rst                    |   3 -
  llvm/test/tools/llvm-nm/X86/line-numbers.test | 240 ------------------
  llvm/tools/llvm-nm/CMakeLists.txt             |   1 -
  llvm/tools/llvm-nm/Opts.td                    |   2 -
@@ -32,20 +31,6 @@ index 7067bb0a29a1..4b1290a15665 100644
  .. option:: -m
  
   Use Darwin format. Alias for ``--format=darwin``.
-diff --git a/llvm/docs/ReleaseNotes.rst b/llvm/docs/ReleaseNotes.rst
-index 660bb4e70a5a..352420e1110d 100644
---- a/llvm/docs/ReleaseNotes.rst
-+++ b/llvm/docs/ReleaseNotes.rst
-@@ -205,9 +205,6 @@ Changes to the LLVM tools
- * llvm-readelf now supports ``--extra-sym-info`` (``-X``) to display extra
-   information (section name) when showing symbols.
- 
--* ``llvm-nm`` now supports the ``--line-numbers`` (``-l``) option to use
--  debugging information to print symbols' filenames and line numbers.
--
- * llvm-symbolizer and llvm-addr2line now support addresses specified as symbol names.
- 
- Changes to LLDB
 diff --git a/llvm/test/tools/llvm-nm/X86/line-numbers.test b/llvm/test/tools/llvm-nm/X86/line-numbers.test
 deleted file mode 100644
 index 4b9817ab5c62..000000000000

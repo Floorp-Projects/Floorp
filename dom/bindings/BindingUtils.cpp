@@ -830,6 +830,72 @@ static bool DefineToStringTag(JSContext* cx, JS::Handle<JSObject*> obj,
                                JSPROP_READONLY);
 }
 
+static bool InterfaceIsInstance(JSContext* cx, unsigned argc, JS::Value* vp) {
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+  // If the thing we were passed is not an object, return false like
+  // OrdinaryHasInstance does.
+  if (!args.get(0).isObject()) {
+    args.rval().setBoolean(false);
+    return true;
+  }
+
+  // If "this" is not an object, likewise return false (again, like
+  // OrdinaryHasInstance).
+  if (!args.thisv().isObject()) {
+    args.rval().setBoolean(false);
+    return true;
+  }
+
+  // If "this" doesn't have a DOMIfaceAndProtoJSClass, it's not a DOM
+  // constructor, so just fall back.  But note that we should
+  // CheckedUnwrapStatic here, because otherwise we won't get the right answers.
+  // The static version is OK, because we're looking for DOM constructors, which
+  // are not cross-origin objects.
+  JS::Rooted<JSObject*> thisObj(
+      cx, js::CheckedUnwrapStatic(&args.thisv().toObject()));
+  if (!thisObj) {
+    // Just fall back on the normal thing, in case it still happens to work.
+    args.rval().setBoolean(false);
+    return true;
+  }
+
+  const JSClass* thisClass = JS::GetClass(thisObj);
+
+  if (!IsDOMIfaceAndProtoClass(thisClass)) {
+    args.rval().setBoolean(false);
+    return true;
+  }
+
+  const DOMIfaceAndProtoJSClass* clasp =
+      DOMIfaceAndProtoJSClass::FromJSClass(thisClass);
+
+  // If "this" isn't a DOM constructor or is a constructor for an interface
+  // without a prototype, just fall back.
+  if (clasp->mType != eInterface ||
+      clasp->mPrototypeID == prototypes::id::_ID_Count) {
+    args.rval().setBoolean(false);
+    return true;
+  }
+
+  JS::Rooted<JSObject*> instance(cx, &args[0].toObject());
+  const DOMJSClass* domClass = GetDOMClass(
+      js::UncheckedUnwrap(instance, /* stopAtWindowProxy = */ false));
+
+  if (domClass &&
+      domClass->mInterfaceChain[clasp->mDepth] == clasp->mPrototypeID) {
+    args.rval().setBoolean(true);
+    return true;
+  }
+
+  if (IsRemoteObjectProxy(instance, clasp->mPrototypeID)) {
+    args.rval().setBoolean(true);
+    return true;
+  }
+
+  args.rval().setBoolean(false);
+  return true;
+}
+
 // name must be an atom (or JS::PropertyKey::NonIntAtom will assert).
 static JSObject* CreateInterfaceObject(
     JSContext* cx, JS::Handle<JSObject*> global,
@@ -860,24 +926,11 @@ static JSObject* CreateInterfaceObject(
     }
   }
 
-  if (constructorClass->wantsInterfaceHasInstance) {
-    if (StaticPrefs::dom_webidl_crosscontext_hasinstance_enabled()) {
-      JS::Rooted<jsid> hasInstanceId(
-          cx, JS::GetWellKnownSymbolKey(cx, JS::SymbolCode::hasInstance));
-      if (!JS_DefineFunctionById(
-              cx, constructor, hasInstanceId, InterfaceHasInstance, 1,
-              // Flags match those of Function[Symbol.hasInstance]
-              JSPROP_READONLY | JSPROP_PERMANENT)) {
-        return nullptr;
-      }
-    }
-
-    if (isChrome && !JS_DefineFunction(cx, constructor, "isInstance",
-                                       InterfaceIsInstance, 1,
-                                       // Don't bother making it enumerable
-                                       0)) {
-      return nullptr;
-    }
+  if (constructorClass->wantsInterfaceIsInstance && isChrome &&
+      !JS_DefineFunction(cx, constructor, "isInstance", InterfaceIsInstance, 1,
+                         // Don't bother making it enumerable
+                         0)) {
+    return nullptr;
   }
 
   if (properties) {
@@ -1801,35 +1854,22 @@ static bool ResolvePrototypeOrConstructor(
                  JSPROP_PERMANENT | JSPROP_READONLY, desc, cacheOnHolder);
     }
 
-    bool resolvingIsInstance =
-        id.get() == GetJSIDByIndex(cx, XPCJSContext::IDX_ISINSTANCE);
-    if (resolvingIsInstance ||
-        (StaticPrefs::dom_webidl_crosscontext_hasinstance_enabled() &&
-         id.isWellKnownSymbol(JS::SymbolCode::hasInstance))) {
+    if (id.get() == GetJSIDByIndex(cx, XPCJSContext::IDX_ISINSTANCE)) {
       const JSClass* objClass = JS::GetClass(obj);
       if (IsDOMIfaceAndProtoClass(objClass)) {
         const DOMIfaceJSClass* clazz = DOMIfaceJSClass::FromJSClass(objClass);
-        if (clazz->wantsInterfaceHasInstance) {
+        if (clazz->wantsInterfaceIsInstance) {
           cacheOnHolder = true;
 
-          JSNative native;
-          JS::PropertyAttributes atts;
-          if (resolvingIsInstance) {
-            native = InterfaceIsInstance;
-            atts = {JS::PropertyAttribute::Configurable,
-                    JS::PropertyAttribute::Writable};
-          } else {
-            native = InterfaceHasInstance;
-          }
-          JSNativeWrapper nativeWrapper = {native, nullptr};
-          JSObject* funObj =
-              XrayCreateFunction(cx, wrapper, nativeWrapper, 1, id);
+          JSObject* funObj = XrayCreateFunction(
+              cx, wrapper, {InterfaceIsInstance, nullptr}, 1, id);
           if (!funObj) {
             return false;
           }
 
-          desc.set(Some(
-              JS::PropertyDescriptor::Data(JS::ObjectValue(*funObj), atts)));
+          desc.set(Some(JS::PropertyDescriptor::Data(
+              JS::ObjectValue(*funObj), {JS::PropertyAttribute::Configurable,
+                                         JS::PropertyAttribute::Writable})));
           return true;
         }
       }
@@ -2477,108 +2517,6 @@ CallerType GlobalObject::CallerType() const {
   return nsContentUtils::ThreadsafeIsSystemCaller(mCx)
              ? dom::CallerType::System
              : dom::CallerType::NonSystem;
-}
-
-static bool CallOrdinaryHasInstance(JSContext* cx, JS::CallArgs& args) {
-  JS::Rooted<JSObject*> thisObj(cx, &args.thisv().toObject());
-  bool isInstance;
-  if (!JS::OrdinaryHasInstance(cx, thisObj, args.get(0), &isInstance)) {
-    return false;
-  }
-  args.rval().setBoolean(isInstance);
-  return true;
-}
-
-using CheckInstanceFallback = bool (*)(JSContext* cx, JS::CallArgs& args);
-
-static bool InterfaceCheckInstance(JSContext* cx, unsigned argc, JS::Value* vp,
-                                   CheckInstanceFallback fallback) {
-  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
-  // If the thing we were passed is not an object, return false like
-  // OrdinaryHasInstance does.
-  if (!args.get(0).isObject()) {
-    args.rval().setBoolean(false);
-    return true;
-  }
-
-  // If "this" is not an object, likewise return false (again, like
-  // OrdinaryHasInstance).
-  if (!args.thisv().isObject()) {
-    args.rval().setBoolean(false);
-    return true;
-  }
-
-  // If "this" doesn't have a DOMIfaceAndProtoJSClass, it's not a DOM
-  // constructor, so just fall back.  But note that we should
-  // CheckedUnwrapStatic here, because otherwise we won't get the right answers.
-  // The static version is OK, because we're looking for DOM constructors, which
-  // are not cross-origin objects.
-  JS::Rooted<JSObject*> thisObj(
-      cx, js::CheckedUnwrapStatic(&args.thisv().toObject()));
-  if (!thisObj) {
-    // Just fall back on the normal thing, in case it still happens to work.
-    return fallback(cx, args);
-  }
-
-  const JSClass* thisClass = JS::GetClass(thisObj);
-
-  if (!IsDOMIfaceAndProtoClass(thisClass)) {
-    return fallback(cx, args);
-  }
-
-  const DOMIfaceAndProtoJSClass* clasp =
-      DOMIfaceAndProtoJSClass::FromJSClass(thisClass);
-
-  // If "this" isn't a DOM constructor or is a constructor for an interface
-  // without a prototype, just fall back.
-  if (clasp->mType != eInterface ||
-      clasp->mPrototypeID == prototypes::id::_ID_Count) {
-    return fallback(cx, args);
-  }
-
-  JS::Rooted<JSObject*> instance(cx, &args[0].toObject());
-  const DOMJSClass* domClass = GetDOMClass(
-      js::UncheckedUnwrap(instance, /* stopAtWindowProxy = */ false));
-
-  if (domClass &&
-      domClass->mInterfaceChain[clasp->mDepth] == clasp->mPrototypeID) {
-    args.rval().setBoolean(true);
-    return true;
-  }
-
-  if (IsRemoteObjectProxy(instance, clasp->mPrototypeID)) {
-    args.rval().setBoolean(true);
-    return true;
-  }
-
-  return fallback(cx, args);
-}
-
-bool InterfaceHasInstance(JSContext* cx, unsigned argc, JS::Value* vp) {
-  return InterfaceCheckInstance(cx, argc, vp,
-                                [](JSContext* cx, JS::CallArgs& args) {
-                                  return CallOrdinaryHasInstance(cx, args);
-                                });
-}
-
-bool InterfaceHasInstance(JSContext* cx, int prototypeID, int depth,
-                          JS::Handle<JSObject*> instance, bool* bp) {
-  const DOMJSClass* domClass = GetDOMClass(js::UncheckedUnwrap(instance));
-
-  MOZ_ASSERT(!domClass || prototypeID != prototypes::id::_ID_Count,
-             "Why do we have a hasInstance hook if we don't have a prototype "
-             "ID?");
-
-  *bp = (domClass && domClass->mInterfaceChain[depth] == prototypeID);
-  return true;
-}
-
-bool InterfaceIsInstance(JSContext* cx, unsigned argc, JS::Value* vp) {
-  return InterfaceCheckInstance(cx, argc, vp,
-                                [](JSContext*, JS::CallArgs& args) {
-                                  args.rval().setBoolean(false);
-                                  return true;
-                                });
 }
 
 bool ReportLenientThisUnwrappingFailure(JSContext* cx, JSObject* obj) {

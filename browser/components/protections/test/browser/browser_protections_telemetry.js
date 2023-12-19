@@ -50,7 +50,7 @@ add_setup(async function () {
       ["browser.contentblocking.report.vpn_regions", "us,ca,nz,sg,my,gb"],
       [
         "browser.vpn_promo.disallowed_regions",
-        "ae,by,cn,cu,iq,ir,kp,om,ru,sd,sy,tm,tr,ua",
+        "ae,by,cn,cu,iq,ir,kp,om,ru,sd,sy,tm,tr",
       ],
 
       // Change the endpoints to prevent non-local network connections when landing on the page.
@@ -897,7 +897,7 @@ add_task(async function checkTelemetryClickEventsVPN() {
       ["browser.vpn_promo.enabled", true],
       [
         "browser.vpn_promo.disallowed_regions",
-        "ae,by,cn,cu,iq,ir,kp,om,ru,sd,sy,tm,tr,ua",
+        "ae,by,cn,cu,iq,ir,kp,om,ru,sd,sy,tm,tr",
       ],
       ["browser.contentblocking.report.vpn_regions", "us,ca,nz,sg,my,gb"],
       ["browser.contentblocking.database.enabled", false],
@@ -1029,7 +1029,7 @@ add_task(async function checkTelemetryEventsVPNBanner() {
       ["browser.contentblocking.report.vpn_regions", "us,ca,nz,sg,my,gb"],
       [
         "browser.vpn_promo.disallowed_regions",
-        "ae,by,cn,cu,iq,ir,kp,om,ru,sd,sy,tm,tr,ua",
+        "ae,by,cn,cu,iq,ir,kp,om,ru,sd,sy,tm,tr",
       ],
       ["browser.contentblocking.database.enabled", false],
       ["browser.contentblocking.report.monitor.enabled", false],

@@ -19,9 +19,6 @@
         "$ref": "#/definitions/appliesToSection"
       }
     },
-    "sendAttributionRequest": {
-      "$ref": "#/definitions/sendAttributionRequest"
-    },
     "telemetryId": {
       "type": "string",
       "title": "Telemetry Id",
@@ -220,11 +217,6 @@
         }
       }
     },
-    "sendAttributionRequest": {
-      "type": "boolean",
-      "title": "Send Attribution Request",
-      "description": "Indicates if we should send an attribution request to Mozilla's server."
-    },
     "telemetryId": {
       "type": "string",
       "title": "Telemetry Id",
@@ -370,9 +362,6 @@
         },
         "urls": {
           "$ref": "#/definitions/urls"
-        },
-        "sendAttributionRequest": {
-          "$ref": "#/definitions/sendAttributionRequest"
         },
         "telemetryId": {
           "$ref": "#/definitions/telemetryId"

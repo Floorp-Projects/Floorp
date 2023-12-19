@@ -446,7 +446,15 @@ void TaskController::AddTask(already_AddRefed<Task>&& aTask) {
       insertion;
   switch (task->GetKind()) {
     case Task::Kind::MainThreadOnly:
-      insertion = mMainThreadTasks.insert(std::move(task));
+      if (task->GetPriority() >=
+              static_cast<uint32_t>(EventQueuePriority::Normal) &&
+          !mMainThreadTasks.empty()) {
+        insertion = std::pair(
+            mMainThreadTasks.insert(--mMainThreadTasks.end(), std::move(task)),
+            true);
+      } else {
+        insertion = mMainThreadTasks.insert(std::move(task));
+      }
       break;
     case Task::Kind::OffMainThreadOnly:
       insertion = mThreadableTasks.insert(std::move(task));

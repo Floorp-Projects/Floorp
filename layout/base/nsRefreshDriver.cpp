@@ -143,6 +143,8 @@ namespace mozilla {
 
 static TimeStamp sMostRecentHighRateVsync;
 
+static TimeDuration sMostRecentHighRate;
+
 /*
  * The base class for all global refresh driver timers.  It takes care
  * of managing the list of refresh drivers attached to them and
@@ -233,12 +235,12 @@ class RefreshDriverTimer {
     TimeStamp mostRecentRefresh = MostRecentRefresh();
     TimeDuration refreshPeriod = GetTimerRate();
     TimeStamp idleEnd = mostRecentRefresh + refreshPeriod;
-    bool inHighRateMode = nsRefreshDriver::IsInHighRateMode();
+    double highRateMultiplier = nsRefreshDriver::HighRateMultiplier();
 
     // If we haven't painted for some time, then guess that we won't paint
     // again for a while, so the refresh driver is not a good way to predict
     // idle time.
-    if (!inHighRateMode &&
+    if (highRateMultiplier == 1.0 &&
         (idleEnd +
              refreshPeriod *
                  StaticPrefs::layout_idle_period_required_quiescent_frames() <
@@ -249,10 +251,9 @@ class RefreshDriverTimer {
     // End the predicted idle time a little early, the amount controlled by a
     // pref, to prevent overrunning the idle time and delaying a frame.
     // But do that only if we aren't in high rate mode.
-    idleEnd =
-        idleEnd -
-        TimeDuration::FromMilliseconds(
-            inHighRateMode ? 0 : StaticPrefs::layout_idle_period_time_limit());
+    idleEnd = idleEnd - TimeDuration::FromMilliseconds(
+                            highRateMultiplier *
+                            StaticPrefs::layout_idle_period_time_limit());
     return idleEnd < aDefault ? idleEnd : aDefault;
   }
 
@@ -837,9 +838,10 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
           ContentChild::GetPerformanceHintTarget(rate));
     }
 
-    if (TimeDuration::FromMilliseconds(nsRefreshDriver::DefaultInterval() / 2) >
+    if (TimeDuration::FromMilliseconds(nsRefreshDriver::DefaultInterval()) >
         rate) {
       sMostRecentHighRateVsync = tickStart;
+      sMostRecentHighRate = rate;
     }
 
     // On 32-bit Windows we sometimes get times where TimeStamp::Now() is not
@@ -1257,7 +1259,7 @@ int32_t nsRefreshDriver::DefaultInterval() {
 }
 
 /* static */
-bool nsRefreshDriver::IsInHighRateMode() {
+double nsRefreshDriver::HighRateMultiplier() {
   // We're in high rate mode if we've gotten a fast rate during the last
   // DefaultInterval().
   bool inHighRateMode =
@@ -1269,8 +1271,11 @@ bool nsRefreshDriver::IsInHighRateMode() {
   if (!inHighRateMode) {
     // Clear the timestamp so that the next call is faster.
     sMostRecentHighRateVsync = TimeStamp();
+    sMostRecentHighRate = TimeDuration();
+    return 1.0;
   }
-  return inHighRateMode;
+
+  return sMostRecentHighRate.ToMilliseconds() / DefaultInterval();
 }
 
 // Compute the interval to use for the refresh driver timer, in milliseconds.

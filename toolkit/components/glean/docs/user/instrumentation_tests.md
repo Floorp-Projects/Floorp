@@ -45,7 +45,10 @@ you're going to want to write some automated tests.
   do not expect the values to be predictable.
     * Instead, check that a value is `> 0` or that the number of samples is expected.
     * You might be able to assert that the value is at least as much as a known, timed value,
-    but beware of rounding.
+      but beware of rounding.
+    * If your metric is a `timing_distribution` mirroring to a Telemetry probe via [GIFFT](./gifft.md),
+      there may be [small observed differences between systems](./gifft.md#timing-distribution-mirrors-samples-and-sums-might-be-different)
+      that can cause equality assertions to fail.
 * Errors in instrumentation APIs do not panic, throw, or crash.
   But Glean remembers that the errors happened.
     * Test APIs, on the other hand, are permitted

@@ -3856,11 +3856,7 @@ async function checkSearch({ name, searchString, expectedResults }) {
 
   // Impression stats are updated only on engagement, so force one now.
   // `selIndex` doesn't really matter but since we're not trying to simulate a
-  // click on the suggestion, pass in -1 to ensure we don't record a click. Pass
-  // in true for `isPrivate` so we don't attempt to record the impression ping
-  // because otherwise the following PingCentre error is logged:
-  // "Structured Ingestion ping failure with error: undefined"
-  context.isPrivate = true;
+  // click on the suggestion, pass in -1 to ensure we don't record a click.
   if (UrlbarProviderQuickSuggest._resultFromLastQuery) {
     UrlbarProviderQuickSuggest._resultFromLastQuery.isVisible = true;
   }

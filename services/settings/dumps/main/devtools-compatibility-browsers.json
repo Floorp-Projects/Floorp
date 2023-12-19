@@ -1,6 +1,60 @@
 {
   "data": [
     {
+      "name": "Node.js",
+      "schema": 1702685107693,
+      "status": "esr",
+      "version": "20.10.0",
+      "browserid": "nodejs",
+      "id": "0d78585f-e9e0-41e8-816a-22461158e36d",
+      "last_modified": 1702890886929
+    },
+    {
+      "name": "Opera Android",
+      "schema": 1702685107820,
+      "status": "current",
+      "version": "79",
+      "browserid": "opera_android",
+      "id": "8cbd1672-6d05-4c4f-9ad6-7955804a3f0c",
+      "last_modified": 1702890886926
+    },
+    {
+      "name": "Safari",
+      "schema": 1702685108023,
+      "status": "beta",
+      "version": "17.3",
+      "browserid": "safari",
+      "id": "7eb602be-e2c9-47d6-9491-29f8a42c3ddd",
+      "last_modified": 1702890886922
+    },
+    {
+      "name": "Safari on iOS",
+      "schema": 1702685108210,
+      "status": "beta",
+      "version": "17.3",
+      "browserid": "safari_ios",
+      "id": "f8eb9101-134d-481e-b713-42a1543008e5",
+      "last_modified": 1702890886919
+    },
+    {
+      "name": "Safari on iOS",
+      "schema": 1702685108148,
+      "status": "current",
+      "version": "17.2",
+      "browserid": "safari_ios",
+      "id": "0709a73b-ba98-4e14-a086-6515bb7fa106",
+      "last_modified": 1702890886904
+    },
+    {
+      "name": "Safari",
+      "schema": 1702685107959,
+      "status": "current",
+      "version": "17.2",
+      "browserid": "safari",
+      "id": "0358e297-4312-4137-87b7-08e6d5f03bb5",
+      "last_modified": 1702890886900
+    },
+    {
       "name": "Edge",
       "schema": 1702166707858,
       "status": "current",
@@ -8,15 +62,6 @@
       "browserid": "edge",
       "id": "74e217cb-3eb9-44b3-82d4-c14d54e78187",
       "last_modified": 1702283211298
-    },
-    {
-      "name": "Opera Android",
-      "schema": 1701561907381,
-      "status": "current",
-      "version": "78",
-      "browserid": "opera_android",
-      "id": "5889915d-7fa8-4cae-a1ae-e370a28aaec5",
-      "last_modified": 1701778564580
     },
     {
       "name": "Chrome",
@@ -190,24 +235,6 @@
       "last_modified": 1701078578032
     },
     {
-      "name": "Safari",
-      "schema": 1700352303483,
-      "status": "beta",
-      "version": "17.2",
-      "browserid": "safari",
-      "id": "0358e297-4312-4137-87b7-08e6d5f03bb5",
-      "last_modified": 1700557930490
-    },
-    {
-      "name": "Safari on iOS",
-      "schema": 1700352303702,
-      "status": "beta",
-      "version": "17.2",
-      "browserid": "safari_ios",
-      "id": "0709a73b-ba98-4e14-a086-6515bb7fa106",
-      "last_modified": 1700557930487
-    },
-    {
       "name": "Samsung Internet",
       "schema": 1700352303815,
       "status": "current",
@@ -215,24 +242,6 @@
       "browserid": "samsunginternet_android",
       "id": "b6194ce4-1588-4c83-9a7c-54081c540d01",
       "last_modified": 1700557930484
-    },
-    {
-      "name": "Safari on iOS",
-      "schema": 1700352303644,
-      "status": "current",
-      "version": "17.1",
-      "browserid": "safari_ios",
-      "id": "af9852bc-ad45-481d-a3b5-f8854224f568",
-      "last_modified": 1700557930473
-    },
-    {
-      "name": "Safari",
-      "schema": 1700352303427,
-      "status": "current",
-      "version": "17.1",
-      "browserid": "safari",
-      "id": "d517252f-b545-46e6-ab30-6ff27c72b32a",
-      "last_modified": 1700557930471
     },
     {
       "name": "Firefox for Android",
@@ -305,25 +314,7 @@
       "browserid": "oculus",
       "id": "371ced3b-8ff1-4540-a230-bc1827964bda",
       "last_modified": 1665656484764
-    },
-    {
-      "name": "Node.js",
-      "schema": 1661424922206,
-      "status": "esr",
-      "version": "16.17.0",
-      "browserid": "nodejs",
-      "id": "a7efd4b1-c035-4333-bfa9-148cd9878ac9",
-      "last_modified": 1661426998144
-    },
-    {
-      "name": "Node.js",
-      "schema": 1645204132602,
-      "status": "esr",
-      "version": "14.8.0",
-      "browserid": "nodejs",
-      "id": "4436cf1f-e30d-401a-893f-306dfd0b1e4e",
-      "last_modified": 1645448267500
     }
   ],
-  "timestamp": 1702283211301
+  "timestamp": 1702890886929
 }

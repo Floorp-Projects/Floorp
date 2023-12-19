@@ -119,7 +119,7 @@ bool VRSession::SubmitFrame(
           gfxCriticalNote << "GFX: D3D11 lock mutex abandoned";
         }
 #  endif
-        if (SUCCEEDED(hr)) {
+        if (SUCCEEDED(hr) && hr != WAIT_TIMEOUT && hr != WAIT_ABANDONED) {
           success = SubmitFrame(aLayer, dxTexture);
           hr = mutex->ReleaseSync(0);
           if (FAILED(hr)) {

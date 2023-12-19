@@ -5,7 +5,6 @@ import {
 import Joi from "joi-browser";
 
 export const baseKeys = {
-  // client_id will be set by PingCentre if it doesn't exist.
   client_id: Joi.string().optional(),
   addon_version: Joi.string().required(),
   locale: Joi.string().required(),
@@ -158,17 +157,6 @@ export const TileSchema = Joi.object().keys({
   id: Joi.number().integer().required(),
   pos: Joi.number().integer(),
 });
-
-export const ImpressionStatsPing = Joi.object().keys(
-  Object.assign({}, baseKeys, {
-    source: Joi.string().required(),
-    impression_id: Joi.string().required(),
-    tiles: Joi.array().items(TileSchema).required(),
-    click: Joi.number().integer(),
-    block: Joi.number().integer(),
-    pocket: Joi.number().integer(),
-  })
-);
 
 export const SessionPing = Joi.object().keys(
   Object.assign({}, baseKeys, {

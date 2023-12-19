@@ -448,7 +448,8 @@ bool TestNrSocket::allow_ingress(const nr_transport_addr& to,
   *port_mapping_used = nullptr;
   for (PortMapping* port_mapping : port_mappings_) {
     if (!nr_transport_addr_cmp(&to, &port_mapping->external_socket_->my_addr(),
-                               NR_TRANSPORT_ADDR_CMP_MODE_ALL)) {
+                               NR_TRANSPORT_ADDR_CMP_MODE_ALL) &&
+        !is_port_mapping_stale(*port_mapping)) {
       *port_mapping_used = port_mapping;
       // TODO: Bug 1857149
       // Adding a break here causes test failures, but we would not expect to
@@ -456,11 +457,10 @@ bool TestNrSocket::allow_ingress(const nr_transport_addr& to,
     }
   }
 
-  if (NS_WARN_IF(!(*port_mapping_used))) {
-    MOZ_ASSERT(false);
+  if (!(*port_mapping_used)) {
     r_log(LOG_GENERIC, LOG_INFO,
           "TestNrSocket %s denying ingress from %s: "
-          "No port mapping for this local port! What?",
+          "No non-stale port mapping for this local port.",
           internal_socket_->my_addr().as_string, from.as_string);
     return false;
   }
@@ -469,14 +469,6 @@ bool TestNrSocket::allow_ingress(const nr_transport_addr& to,
     r_log(LOG_GENERIC, LOG_INFO,
           "TestNrSocket %s denying ingress from %s: "
           "Filtered (no port mapping for source)",
-          internal_socket_->my_addr().as_string, from.as_string);
-    return false;
-  }
-
-  if (is_port_mapping_stale(**port_mapping_used)) {
-    r_log(LOG_GENERIC, LOG_INFO,
-          "TestNrSocket %s denying ingress from %s: "
-          "Stale port mapping",
           internal_socket_->my_addr().as_string, from.as_string);
     return false;
   }
@@ -800,6 +792,12 @@ bool TestNrSocket::is_port_mapping_stale(
   PRIntervalTime now = PR_IntervalNow();
   PRIntervalTime elapsed_ticks = now - port_mapping.last_used_;
   uint32_t idle_duration = PR_IntervalToMilliseconds(elapsed_ticks);
+  r_log(LOG_GENERIC, LOG_INFO,
+        "TestNrSocket %s port mapping %s -> %s last used %u",
+        internal_socket_->my_addr().as_string,
+        port_mapping.external_socket_->my_addr().as_string,
+        port_mapping.remote_address_.as_string,
+        static_cast<unsigned>(idle_duration));
   return idle_duration > nat_->mapping_timeout_;
 }
 

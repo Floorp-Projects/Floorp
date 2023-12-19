@@ -40,13 +40,16 @@ already_AddRefed<TextureHost> CreateTextureHostD3D11(
 
 class MOZ_RAII AutoTextureLock final {
  public:
-  AutoTextureLock(IDXGIKeyedMutex* aMutex, HRESULT& aResult,
-                  uint32_t aTimeout = 0);
+  AutoTextureLock(const char* aCaller, IDXGIKeyedMutex* aMutex,
+                  HRESULT& aResult, uint32_t aTimeout);
   ~AutoTextureLock();
 
+  bool Succeeded() const { return mSuccess; }
+
  private:
+  const char* mCaller;
   RefPtr<IDXGIKeyedMutex> mMutex;
-  HRESULT mResult;
+  bool mSuccess = false;
 };
 
 class CompositorD3D11;
@@ -567,8 +570,11 @@ class AutoLockD3D11Texture {
   explicit AutoLockD3D11Texture(ID3D11Texture2D* aTexture);
   ~AutoLockD3D11Texture();
 
+  bool Succeeded() const { return mSuccess; }
+
  private:
   RefPtr<IDXGIKeyedMutex> mMutex;
+  bool mSuccess = false;
 };
 
 class D3D11MTAutoEnter {

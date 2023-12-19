@@ -289,23 +289,8 @@ function ParamSubstitution(paramValue, searchTerms, engine) {
     }
 
     // moz: parameters are only available for default search engines.
-    if (name.startsWith("moz:") && engine.isAppProvided) {
-      // {moz:locale} is common.
-      if (name == lazy.SearchUtils.MOZ_PARAM.LOCALE) {
-        return Services.locale.requestedLocale;
-      }
-
-      // {moz:date}
-      if (name == lazy.SearchUtils.MOZ_PARAM.DATE) {
-        let date = new Date();
-        let pad = number => number.toString().padStart(2, "0");
-        return (
-          String(date.getFullYear()) +
-          pad(date.getMonth() + 1) +
-          pad(date.getDate()) +
-          pad(date.getHours())
-        );
-      }
+    if (engine.isAppProvided && name == lazy.SearchUtils.MOZ_PARAM.LOCALE) {
+      return Services.locale.requestedLocale;
     }
 
     // Handle the less common OpenSearch parameters we're confident about.
@@ -589,8 +574,6 @@ export class SearchEngine {
   _queryCharset = null;
   // The engine's raw SearchForm value (URL string pointing to a search form).
   #cachedSearchForm = null;
-  // Whether or not to send an attribution request to the server.
-  _sendAttributionRequest = false;
   // The order hint from the configuration (if any).
   _orderHint = null;
   // The telemetry id from the configuration (if any).
@@ -926,8 +909,6 @@ export class SearchEngine {
   _initWithDetails(details, configuration = {}) {
     this._orderHint = configuration.orderHint;
     this._name = details.name.trim();
-    this._sendAttributionRequest =
-      configuration.sendAttributionRequest ?? false;
 
     this._definedAliases = [];
     if (Array.isArray(details.keyword)) {
@@ -1400,10 +1381,6 @@ export class SearchEngine {
     }
 
     return ParamSubstitution(this._searchForm, "", this);
-  }
-
-  get sendAttributionRequest() {
-    return this._sendAttributionRequest;
   }
 
   get queryCharset() {

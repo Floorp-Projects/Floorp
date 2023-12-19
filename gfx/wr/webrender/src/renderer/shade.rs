@@ -661,7 +661,7 @@ impl Shaders {
         } else {
             TextureExternalVersion::ESSL1
         };
-        let mut shader_flags = get_shader_feature_flags(gl_type, texture_external_version);
+        let mut shader_flags = get_shader_feature_flags(gl_type, texture_external_version, device);
         shader_flags.set(ShaderFeatureFlags::ADVANCED_BLEND_EQUATION, use_advanced_blend_equation);
         shader_flags.set(ShaderFeatureFlags::DUAL_SOURCE_BLENDING, use_dual_source_blending);
         shader_flags.set(ShaderFeatureFlags::DITHERING, options.enable_dithering);
@@ -1355,7 +1355,7 @@ impl CompositorShaders {
             TextureExternalVersion::ESSL1
         };
 
-        let feature_flags = get_shader_feature_flags(gl_type, texture_external_version);
+        let feature_flags = get_shader_feature_flags(gl_type, texture_external_version, device);
         let shader_list = get_shader_features(feature_flags);
 
         for _ in 0..IMAGE_BUFFER_KINDS.len() {
@@ -1485,18 +1485,23 @@ impl CompositorShaders {
     }
 }
 
-fn get_shader_feature_flags(gl_type: GlType, texture_external_version: TextureExternalVersion) -> ShaderFeatureFlags {
+fn get_shader_feature_flags(
+    gl_type: GlType,
+    texture_external_version: TextureExternalVersion,
+    device: &Device
+) -> ShaderFeatureFlags {
     match gl_type {
         GlType::Gl => ShaderFeatureFlags::GL,
         GlType::Gles => {
-            let texture_external_flag = match texture_external_version {
-                TextureExternalVersion::ESSL3 => {
-                    ShaderFeatureFlags::TEXTURE_EXTERNAL
-                        | ShaderFeatureFlags::TEXTURE_EXTERNAL_BT709
-                }
+            let mut flags = ShaderFeatureFlags::GLES;
+            flags |= match texture_external_version {
+                TextureExternalVersion::ESSL3 => ShaderFeatureFlags::TEXTURE_EXTERNAL,
                 TextureExternalVersion::ESSL1 => ShaderFeatureFlags::TEXTURE_EXTERNAL_ESSL1,
             };
-            ShaderFeatureFlags::GLES | texture_external_flag
+            if device.supports_extension("GL_EXT_YUV_target") {
+                flags |= ShaderFeatureFlags::TEXTURE_EXTERNAL_BT709;
+            }
+            flags
         }
     }
 }

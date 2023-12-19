@@ -75,6 +75,7 @@ browser.jar:
         content/browser/safeMode.js                         (content/safeMode.js)
         content/browser/safeMode.xhtml                      (content/safeMode.xhtml)
         content/browser/sanitize.xhtml                      (content/sanitize.xhtml)
+        content/browser/sanitize_v2.xhtml                   (content/sanitize_v2.xhtml)
         content/browser/sanitizeDialog.js                   (content/sanitizeDialog.js)
         content/browser/sanitizeDialog.css                  (content/sanitizeDialog.css)
         content/browser/tabbrowser.css                      (content/tabbrowser.css)

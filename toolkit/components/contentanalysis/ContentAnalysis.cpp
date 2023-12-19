@@ -557,6 +557,11 @@ void ContentAnalysisResponse::SetOwner(RefPtr<ContentAnalysis> aOwner) {
   mOwner = std::move(aOwner);
 }
 
+void ContentAnalysisResponse::ResolveWarnAction(bool aAllowContent) {
+  MOZ_ASSERT(mAction == Action::eWarn);
+  mAction = aAllowContent ? Action::eAllow : Action::eBlock;
+}
+
 ContentAnalysisAcknowledgement::ContentAnalysisAcknowledgement(
     Result aResult, FinalAction aFinalAction)
     : mResult(aResult), mFinalAction(aFinalAction) {}
@@ -616,7 +621,8 @@ ContentAnalysis::ContentAnalysis()
     : mCaClientPromise(
           new ClientPromise::Private("ContentAnalysis::ContentAnalysis")),
       mClientCreationAttempted(false),
-      mCallbackMap("ContentAnalysis::mCallbackMap") {}
+      mCallbackMap("ContentAnalysis::mCallbackMap"),
+      mWarnResponseDataMap("ContentAnalysis::mWarnResponseDataMap") {}
 
 ContentAnalysis::~ContentAnalysis() {
   // Accessing mClientCreationAttempted so need to be on the main thread
@@ -872,12 +878,22 @@ void ContentAnalysis::DoAnalyzeRequest(
             "Content analysis resolving response promise for "
             "token %s",
             responseRequestToken.get());
+        nsIContentAnalysisResponse::Action action = response->GetAction();
         nsCOMPtr<nsIObserverService> obsServ =
             mozilla::services::GetObserverService();
+        if (action == nsIContentAnalysisResponse::Action::eWarn) {
+          {
+            auto warnResponseDataMap = owner->mWarnResponseDataMap.Lock();
+            warnResponseDataMap->InsertOrUpdate(
+                responseRequestToken,
+                WarnResponseData(std::move(*maybeCallbackData), response));
+          }
+          obsServ->NotifyObservers(response, "dlp-response", nullptr);
+          return;
+        }
 
         obsServ->NotifyObservers(response, "dlp-response", nullptr);
         if (maybeCallbackData->AutoAcknowledge()) {
-          nsIContentAnalysisResponse::Action action = response->GetAction();
           auto acknowledgement = MakeRefPtr<ContentAnalysisAcknowledgement>(
               nsIContentAnalysisAcknowledgement::Result::eSuccess,
               ConvertResult(action));
@@ -957,6 +973,59 @@ ContentAnalysis::CancelContentAnalysisRequest(const nsACString& aRequestToken) {
         } else {
           LOGD("Content analysis request not found when trying to cancel %s",
                requestToken.get());
+        }
+      }));
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+ContentAnalysis::RespondToWarnDialog(const nsACString& aRequestToken,
+                                     bool aAllowContent) {
+  nsCString requestToken(aRequestToken);
+  NS_DispatchToMainThread(NS_NewCancelableRunnableFunction(
+      "RespondToWarnDialog",
+      [aAllowContent, requestToken = std::move(requestToken)]() {
+        RefPtr<ContentAnalysis> self = GetContentAnalysisFromService();
+        if (!self) {
+          // May be shutting down
+          return;
+        }
+
+        LOGD("Content analysis getting warn response %d for request %s",
+             aAllowContent ? 1 : 0, requestToken.get());
+        Maybe<WarnResponseData> entry;
+        {
+          auto warnResponseDataMap = self->mWarnResponseDataMap.Lock();
+          entry = warnResponseDataMap->Extract(requestToken);
+        }
+        if (!entry) {
+          LOGD(
+              "Content analysis request not found when trying to send warn "
+              "response for request %s",
+              requestToken.get());
+          return;
+        }
+        entry->mResponse->ResolveWarnAction(aAllowContent);
+        auto action = entry->mResponse->GetAction();
+        if (entry->mCallbackData.AutoAcknowledge()) {
+          RefPtr<ContentAnalysisAcknowledgement> acknowledgement =
+              new ContentAnalysisAcknowledgement(
+                  nsIContentAnalysisAcknowledgement::Result::eSuccess,
+                  ConvertResult(action));
+          entry->mResponse->Acknowledge(acknowledgement);
+        }
+        nsMainThreadPtrHandle<nsIContentAnalysisCallback> callbackHolder =
+            entry->mCallbackData.TakeCallbackHolder();
+        if (callbackHolder) {
+          RefPtr<ContentAnalysisResponse> response =
+              ContentAnalysisResponse::FromAction(action, requestToken);
+          response->SetOwner(self);
+          callbackHolder.get()->ContentResult(response.get());
+        } else {
+          LOGD(
+              "Content analysis had no callback to send warn final response "
+              "to for request %s",
+              requestToken.get());
         }
       }));
   return NS_OK;

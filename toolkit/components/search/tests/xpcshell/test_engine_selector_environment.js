@@ -1,6 +1,11 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+/**
+ * This tests the SearchEngineSelector's functionality in correctly filtering the
+ * engines from the config based on the user's environment.
+ */
+
 "use strict";
 
 ChromeUtils.defineESModuleGetters(this, {

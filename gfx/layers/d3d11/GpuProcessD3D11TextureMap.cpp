@@ -344,6 +344,11 @@ RefPtr<ID3D11Texture2D> GpuProcessD3D11TextureMap::UpdateTextureData(
   D3D11MTAutoEnter mtAutoEnter(mt.forget());
 
   AutoLockD3D11Texture lockSt(stagingTexture);
+  if (NS_WARN_IF(!lockSt.Succeeded())) {
+    gfxCriticalNote
+        << "GpuProcessD3D11TextureMap::UpdateTextureData lock failed";
+    return nullptr;
+  }
 
   D3D11_MAP mapType = D3D11_MAP_WRITE;
   D3D11_MAPPED_SUBRESOURCE mappedResource;

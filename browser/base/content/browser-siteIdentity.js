@@ -787,13 +787,7 @@ var gIdentityHandler = {
    * built-in (returns false) or imported (returns true).
    */
   _hasCustomRoot() {
-    let issuerCert = null;
-    issuerCert =
-      this._secInfo.succeededCertChain[
-        this._secInfo.succeededCertChain.length - 1
-      ];
-
-    return !issuerCert.isBuiltInRoot;
+    return !this._secInfo.isBuiltCertChainRootBuiltInRoot;
   },
 
   /**

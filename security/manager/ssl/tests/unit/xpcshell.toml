@@ -11,7 +11,6 @@ support-files = [
   "test_broken_fips/**",
   "test_cert_eku/**",
   "test_cert_embedded_null/**",
-  "test_cert_isBuiltInRoot_reload/**",
   "test_cert_keyUsage/**",
   "test_cert_overrides_read_only/**",
   "test_cert_sha1/**",
@@ -97,10 +96,6 @@ run-sequentially = "hardcoded ports"
 
 ["test_cert_expiration_canary.js"]
 run-if = ["nightly_build"]
-
-["test_cert_isBuiltInRoot.js"]
-
-["test_cert_isBuiltInRoot_reload.js"]
 
 ["test_cert_keyUsage.js"]
 

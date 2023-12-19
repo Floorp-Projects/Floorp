@@ -25,14 +25,6 @@ skip-if = ["(debug && os == 'linux' && bits == 64 && os_version == '18.04')"] # 
 
 ["browser_PageActions_newWindow.js"]
 
-["browser_PartnerLinkAttribution.js"]
-support-files = [
-  "search-engines/basic/manifest.json",
-  "search-engines/simple/manifest.json",
-  "search-engines/engines.json",
-]
-fail-if = ["a11y_checks"] # Bug 1854506 clicked searchbar-engine-one-off-item button may not be focusable
-
 ["browser_PermissionUI.js"]
 
 ["browser_PermissionUI_prompts.js"]

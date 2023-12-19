@@ -139,7 +139,6 @@ EXTRA_JS_MODULES += [
     "PageActions.sys.mjs",
     "PartnerLinkAttribution.sys.mjs",
     "PermissionUI.sys.mjs",
-    "PingCentre.sys.mjs",
     "ProcessHangMonitor.sys.mjs",
     "Sanitizer.sys.mjs",
     "SelectionChangedMenulist.sys.mjs",
