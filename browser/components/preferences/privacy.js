@@ -118,8 +118,6 @@ Preferences.addAll([
 
   // Button prefs
   { id: "pref.privacy.disable_button.cookie_exceptions", type: "bool" },
-  { id: "pref.privacy.disable_button.view_cookies", type: "bool" },
-  { id: "pref.privacy.disable_button.change_blocklist", type: "bool" },
   {
     id: "pref.privacy.disable_button.tracking_protection_exceptions",
     type: "bool",
