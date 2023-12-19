@@ -52,6 +52,10 @@
 #  include "mozilla/WindowsVersion.h"
 #endif  // XP_WIN
 
+#ifdef MOZ_WIDGET_ANDROID
+#  include "mozilla/jni/Utils.h"
+#endif
+
 #define IS_ADDR_TYPE(_type) ((_type) == nsIDNSService::RESOLVE_TYPE_DEFAULT)
 #define IS_OTHER_TYPE(_type) ((_type) != nsIDNSService::RESOLVE_TYPE_DEFAULT)
 
@@ -232,11 +236,13 @@ nsresult nsHostResolver::Init() MOZ_NO_THREAD_SAFETY_ANALYSIS {
   // It returns a success code, but no records. We only allow
   // native HTTPS records on Win 11 for now.
   sNativeHTTPSSupported = mozilla::IsWin11OrLater();
-#elif defined(XP_LINUX) && !defined(ANDROID)
-  sNativeHTTPSSupported = true;
-#elif defined(XP_MACOSX)
+#elif defined(MOZ_WIDGET_ANDROID)
+  // android_res_nquery only got added in API level 29
+  sNativeHTTPSSupported = jni::GetAPIVersion() >= 29;
+#elif defined(XP_LINUX) || defined(XP_MACOSX)
   sNativeHTTPSSupported = true;
 #endif
+  LOG(("Native HTTPS records supported=%d", bool(sNativeHTTPSSupported)));
 
   nsCOMPtr<nsIThreadPool> threadPool = new nsThreadPool();
   MOZ_ALWAYS_SUCCEEDS(threadPool->SetThreadLimit(MaxResolverThreads()));

@@ -64,6 +64,8 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
 elif CONFIG["OS_TARGET"] == "Linux" or CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
     SOURCES += ["PlatformDNSUnix.cpp"]
     OS_LIBS += ["resolv"]
+elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "android":
+    SOURCES += ["PlatformDNSAndroid.cpp"]
 else:
     DEFINES["MOZ_NO_HTTPS_IMPL"] = 1
 

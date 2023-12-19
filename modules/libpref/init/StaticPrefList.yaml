@@ -11912,6 +11912,13 @@
   value: false
   mirror: always
 
+# When resolving a native HTTPS query with native APIs
+# the Android implementation has a max timeout
+- name: network.dns.native_https_timeout_android
+  type: RelaxedAtomicInt32
+  value: 20000
+  mirror: always
+
 # When this pref is true, we copy the host name to a fresh string before
 # calling into getaddrinfo.
 - name: network.dns.copy_string_before_call
