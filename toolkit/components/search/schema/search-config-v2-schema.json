@@ -455,7 +455,6 @@
             }
           }
         },
-        "additionalProperties": false,
         "required": ["recordType", "orders"]
       }
     }
