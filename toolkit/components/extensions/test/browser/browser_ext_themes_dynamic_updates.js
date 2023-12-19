@@ -41,27 +41,15 @@ function validateTheme(backgroundImage, accentColor, textColor, isLWT) {
   if (textColor.startsWith("#")) {
     textColor = hexToRGB(textColor);
   }
-  if (backgroundColorSetOnRoot()) {
-    Assert.ok(
-      rootCS.backgroundImage.includes(backgroundImage),
-      "Expected correct background image"
-    );
-    Assert.equal(
-      rootCS.backgroundColor,
-      accentColor,
-      "Expected correct accent color"
-    );
-  } else {
-    Assert.ok(
-      toolboxCS.backgroundImage.includes(backgroundImage),
-      "Expected correct background image"
-    );
-    Assert.equal(
-      toolboxCS.backgroundColor,
-      accentColor,
-      "Expected correct accent color"
-    );
-  }
+  Assert.ok(
+    toolboxCS.backgroundImage.includes(backgroundImage),
+    "Expected correct background image"
+  );
+  Assert.equal(
+    toolboxCS.backgroundColor,
+    accentColor,
+    "Expected correct accent color"
+  );
 
   Assert.equal(rootCS.color, textColor, "Expected correct text color");
 }
@@ -132,10 +120,6 @@ add_task(async function test_dynamic_theme_updates() {
 
   let { color } = rootCS;
   let { backgroundImage, backgroundColor } = toolboxCS;
-  if (backgroundColorSetOnRoot()) {
-    backgroundImage = rootCS.backgroundImage;
-    backgroundColor = rootCS.backgroundColor;
-  }
   validateTheme(backgroundImage, backgroundColor, color, false);
 
   await extension.unload();
@@ -204,10 +188,6 @@ add_task(async function test_dynamic_theme_updates_with_data_url() {
 
   let { color } = rootCS;
   let { backgroundImage, backgroundColor } = toolboxCS;
-  if (backgroundColorSetOnRoot()) {
-    backgroundImage = rootCS.backgroundImage;
-    backgroundColor = rootCS.backgroundColor;
-  }
   validateTheme(backgroundImage, backgroundColor, color, false);
 
   await extension.unload();
