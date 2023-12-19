@@ -24,6 +24,7 @@ class NetworkEventRecord {
   addResponseCache() {}
   addResponseContent() {}
   addServerTimings() {}
+  addServiceWorkerTimings() {}
 }
 
 class NetworkThrottler {

@@ -229,6 +229,18 @@ export class NetworkEventRecord {
    */
   addServerTimings(serverTimings) {}
 
+  /**
+   * Add service worker timings.
+   *
+   * Required API for a NetworkObserver event owner.
+   *
+   * Not used for RemoteAgent.
+   *
+   * @param {object} serviceWorkerTimings
+   *     The server timings.
+   */
+  addServiceWorkerTimings(serviceWorkerTimings) {}
+
   onAuthPrompt(authDetails, authCallbacks) {
     this.#emitAuthRequired(authCallbacks);
   }

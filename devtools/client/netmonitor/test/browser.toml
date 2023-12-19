@@ -441,6 +441,8 @@ fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and
 ["browser_net_service-worker-status.js"]
 skip-if = ["verify && !debug && os == 'linux'"]
 
+["browser_net_service-worker-timings.js"]
+
 ["browser_net_set-cookie-same-site.js"]
 
 ["browser_net_simple-request-data.js"]

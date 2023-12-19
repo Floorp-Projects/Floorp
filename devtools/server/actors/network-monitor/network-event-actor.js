@@ -402,6 +402,7 @@ class NetworkEventActor extends Actor {
       totalTime: this._totalTime,
       offsets: this._offsets,
       serverTimings: this._serverTimings,
+      serviceWorkerTimings: this._serviceWorkerTimings,
     };
   }
 
@@ -606,6 +607,22 @@ class NetworkEventActor extends Actor {
       return;
     }
     this._serverTimings = serverTimings;
+  }
+
+  /**
+   * Store service worker timing information. They are merged together
+   * with network event timing data when they are available and
+   * notification sent to the client.
+   * See `addEventTimnings`` above for more information.
+   *
+   * @param object serviceWorkerTimings
+   *        Timing details extracted from the Timed Channel.
+   */
+  addServiceWorkerTimings(serviceWorkerTimings) {
+    if (!serviceWorkerTimings || this.isDestroyed()) {
+      return;
+    }
+    this._serviceWorkerTimings = serviceWorkerTimings;
   }
 
   _createLongStringActor(string) {
