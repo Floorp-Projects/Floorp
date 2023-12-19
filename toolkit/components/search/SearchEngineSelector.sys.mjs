@@ -198,12 +198,11 @@ export class SearchEngineSelector {
         continue;
       }
 
-      let engine = this.#copyObject({}, config.base);
+      let engine = structuredClone(config.base);
       engine.identifier = config.identifier;
 
-      // Variants are applied to the base engine cumulatively.
       for (let variant of variants) {
-        engine = this.#copyObject(engine, variant);
+        engine = this.#deepCopyObject(engine, variant);
       }
 
       engines.push(engine);
@@ -270,31 +269,29 @@ export class SearchEngineSelector {
   }
 
   /**
-   * Object.assign but ignore some keys
+   * Deep copies an object to the target object and ignores some keys.
    *
    * @param {object} target - Object to copy to.
    * @param {object} source - Object to copy from.
    * @returns {object} - The source object.
    */
-  #copyObject(target, source) {
-    for (let sourceKey in source) {
-      if (["environment"].includes(sourceKey)) {
+  #deepCopyObject(target, source) {
+    for (let key in source) {
+      if (["environment"].includes(key)) {
         continue;
       }
 
-      if (
-        typeof source[sourceKey] == "object" &&
-        !Array.isArray(source[sourceKey])
-      ) {
-        if (sourceKey in target) {
-          this.#copyObject(target[sourceKey], source[sourceKey]);
+      if (typeof source[key] == "object" && !Array.isArray(source[key])) {
+        if (key in target) {
+          this.#deepCopyObject(target[key], source[key]);
         } else {
-          target[sourceKey] = { ...source[sourceKey] };
+          target[key] = structuredClone(source[key]);
         }
       } else {
-        target[sourceKey] = source[sourceKey];
+        target[key] = structuredClone(source[key]);
       }
     }
+
     return target;
   }
 
