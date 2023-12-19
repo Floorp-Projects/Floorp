@@ -234,6 +234,8 @@ nsresult nsHostResolver::Init() MOZ_NO_THREAD_SAFETY_ANALYSIS {
   sNativeHTTPSSupported = mozilla::IsWin11OrLater();
 #elif defined(XP_LINUX) && !defined(ANDROID)
   sNativeHTTPSSupported = true;
+#elif defined(XP_MACOSX)
+  sNativeHTTPSSupported = true;
 #endif
 
   nsCOMPtr<nsIThreadPool> threadPool = new nsThreadPool();

@@ -31,9 +31,17 @@ nsresult ResolveHTTPSRecordImpl(const nsACString& aHost, uint16_t aFlags,
   // Perform the query
   rv = packet.FillBuffer(
       [&](unsigned char response[DNSPacket::MAX_SIZE]) -> int {
-        int len = res_nquery(&_res, host.get(), ns_c_in,
-                             nsIDNSService::RESOLVE_TYPE_HTTPSSVC, response,
-                             DNSPacket::MAX_SIZE);
+        int len = 0;
+#if defined(XP_LINUX)
+        len = res_nquery(&_res, host.get(), ns_c_in,
+                         nsIDNSService::RESOLVE_TYPE_HTTPSSVC, response,
+                         DNSPacket::MAX_SIZE);
+#elif defined(XP_MACOSX)
+        len =
+            res_query(host.get(), ns_c_in, nsIDNSService::RESOLVE_TYPE_HTTPSSVC,
+                      response, DNSPacket::MAX_SIZE);
+#endif
+
         if (len < 0) {
           LOG("DNS query failed");
         }
