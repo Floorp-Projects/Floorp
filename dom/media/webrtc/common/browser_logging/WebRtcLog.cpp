@@ -45,6 +45,23 @@ static rtc::LoggingSeverity LevelToSeverity(mozilla::LogLevel aLevel) {
   return rtc::LoggingSeverity::LS_NONE;
 }
 
+static LogLevel SeverityToLevel(rtc::LoggingSeverity aSeverity) {
+  switch (aSeverity) {
+    case rtc::LoggingSeverity::LS_VERBOSE:
+      return mozilla::LogLevel::Verbose;
+    case rtc::LoggingSeverity::LS_INFO:
+      return mozilla::LogLevel::Debug;
+    case rtc::LoggingSeverity::LS_WARNING:
+      return mozilla::LogLevel::Warning;
+    case rtc::LoggingSeverity::LS_ERROR:
+      return mozilla::LogLevel::Error;
+    case rtc::LoggingSeverity::LS_NONE:
+      return mozilla::LogLevel::Disabled;
+  }
+  MOZ_ASSERT_UNREACHABLE("Unexpected severity");
+  return LogLevel::Disabled;
+}
+
 /**
  * Implementation of rtc::LogSink that forwards RTC_LOG() to MOZ_LOG().
  */
@@ -108,8 +125,14 @@ class LogSinkImpl : public WebrtcLogSinkHandle, public rtc::LogSink {
     rtc::LogMessage::AddLogToStream(this, LevelToSeverity(mLevel));
   }
 
-  void OnLogMessage(const std::string& message) override {
-    MOZ_LOG(sWebRtcLog, LogLevel::Debug, ("%s", message.data()));
+  void OnLogMessage(const rtc::LogLineRef& aLogLine) override {
+    MOZ_LOG(sWebRtcLog, SeverityToLevel(aLogLine.severity()),
+            ("%s", aLogLine.DefaultLogLine().data()));
+  }
+
+  void OnLogMessage(const std::string&) override {
+    MOZ_CRASH(
+        "Called overriden OnLogMessage that is inexplicably pure virtual");
   }
 
   static LogSinkImpl* sSingleton MOZ_GUARDED_BY(mozilla::sMainThreadCapability);
