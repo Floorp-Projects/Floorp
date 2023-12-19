@@ -133,7 +133,7 @@ thumb[orient="vertical"] {
   -moz-default-appearance: scrollbarthumb-vertical;
 }
 
-scrollbar[disabled] thumb {
+scrollbar[disabled="true"] thumb {
   visibility: hidden;
 }
 
@@ -153,20 +153,14 @@ scrollbar[orient="vertical"] {
   -moz-default-appearance: scrollbar-vertical;
 }
 
-scrollbar[root] {
+scrollbar[root="true"] {
   position: relative;
   z-index: 2147483647; /* largest positive value of a signed 32-bit integer */
 }
 
 @media (-moz-overlay-scrollbars) {
-  scrollbar {
-    opacity: 1;
-    will-change: opacity;
-    transition-property: opacity;
-    transition-duration: env(-moz-overlay-scrollbar-fade-duration);
-  }
-  scrollbar:not([active]),
-  scrollbar[disabled] {
+  scrollbar:not([active="true"]),
+  scrollbar[disabled="true"] {
     pointer-events: none;
     opacity: 0;
   }

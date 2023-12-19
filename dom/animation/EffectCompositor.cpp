@@ -6,6 +6,9 @@
 
 #include "EffectCompositor.h"
 
+#include <bitset>
+#include <initializer_list>
+
 #include "mozilla/dom/Animation.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/KeyframeEffect.h"
@@ -25,11 +28,14 @@
 #include "mozilla/StaticPrefs_layers.h"
 #include "mozilla/StyleAnimationValue.h"
 #include "nsContentUtils.h"
+#include "nsCSSPseudoElements.h"
 #include "nsCSSPropertyIDSet.h"
 #include "nsCSSProps.h"
 #include "nsDisplayItemTypes.h"
+#include "nsAtom.h"
 #include "nsLayoutUtils.h"
 #include "nsTArray.h"
+#include "PendingAnimationTracker.h"
 
 using mozilla::dom::Animation;
 using mozilla::dom::Element;
@@ -122,6 +128,19 @@ bool FindAnimationsForCompositor(
     return false;
   }
 
+  // First check for newly-started transform animations that should be
+  // synchronized with geometric animations. We need to do this before any
+  // other early returns (the one above is ok) since we can only check this
+  // state when the animation is newly-started.
+  if (aPropertySet.Intersects(LayerAnimationInfo::GetCSSPropertiesFor(
+          DisplayItemType::TYPE_TRANSFORM))) {
+    PendingAnimationTracker* tracker =
+        aFrame->PresContext()->Document()->GetPendingAnimationTracker();
+    if (tracker) {
+      tracker->MarkAnimationsThatMightNeedSynchronization();
+    }
+  }
+
   AnimationPerformanceWarning::Type warning =
       AnimationPerformanceWarning::Type::None;
   if (!EffectCompositor::AllowCompositorAnimationsOnFrame(aFrame, warning)) {
@@ -150,7 +169,8 @@ bool FindAnimationsForCompositor(
 
   bool foundRunningAnimations = false;
   for (KeyframeEffect* effect : *effects) {
-    auto effectWarning = AnimationPerformanceWarning::Type::None;
+    AnimationPerformanceWarning::Type effectWarning =
+        AnimationPerformanceWarning::Type::None;
     KeyframeEffect::MatchForCompositor matchResult =
         effect->IsMatchForCompositor(aPropertySet, aFrame, *effects,
                                      effectWarning);

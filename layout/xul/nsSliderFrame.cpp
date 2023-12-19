@@ -1215,6 +1215,14 @@ nsresult nsSliderFrame::StopDrag() {
 
   UnsuppressDisplayport();
 
+#ifdef MOZ_WIDGET_GTK
+  nsIFrame* thumbFrame = mFrames.FirstChild();
+  if (thumbFrame) {
+    RefPtr<dom::Element> thumb = thumbFrame->GetContent()->AsElement();
+    thumb->UnsetAttr(kNameSpaceID_None, nsGkAtoms::active, true);
+  }
+#endif
+
   if (mRepeatDirection) {
     StopRepeat();
     mRepeatDirection = 0;
@@ -1554,6 +1562,11 @@ void nsSliderFrame::PageScroll(bool aClickAndHold) {
 
 void nsSliderFrame::SetupDrag(WidgetGUIEvent* aEvent, nsIFrame* aThumbFrame,
                               nscoord aPos, bool aIsHorizontal) {
+#ifdef MOZ_WIDGET_GTK
+  RefPtr<dom::Element> thumb = aThumbFrame->GetContent()->AsElement();
+  thumb->SetAttr(kNameSpaceID_None, nsGkAtoms::active, u"true"_ns, true);
+#endif
+
   if (aIsHorizontal) {
     mThumbStart = aThumbFrame->GetPosition().x;
   } else {

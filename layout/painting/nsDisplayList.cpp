@@ -72,6 +72,7 @@
 #include "mozilla/HashTable.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/OperatorNewExtensions.h"
+#include "mozilla/PendingAnimationTracker.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ProfilerLabels.h"
 #include "mozilla/ProfilerMarkers.h"
@@ -268,13 +269,11 @@ static uint64_t AddAnimationsForWebRender(
       aManager->CommandBuilder()
           .CreateOrRecycleWebRenderUserData<WebRenderAnimationData>(aItem);
   AnimationInfo& animationInfo = animationData->GetAnimationInfo();
-  nsIFrame* frame = aItem->Frame();
   animationInfo.AddAnimationsForDisplayItem(
-      frame, aDisplayListBuilder, aItem, aItem->GetType(),
+      aItem->Frame(), aDisplayListBuilder, aItem, aItem->GetType(),
       aManager->LayerManager(), aPosition);
   animationInfo.StartPendingAnimations(
-      frame->PresContext()->RefreshDriver()->MostRecentRefresh(
-          /* aEnsureTimerStarted = */ false));
+      aManager->LayerManager()->GetAnimationReadyTime());
 
   // Note that animationsId can be 0 (uninitialized in AnimationInfo) if there
   // are no active animations.
@@ -2128,6 +2127,26 @@ nsRect nsDisplayList::GetBuildingRect() const {
   return result;
 }
 
+static void TriggerPendingAnimations(Document& aDoc,
+                                     const TimeStamp& aReadyTime) {
+  MOZ_ASSERT(!aReadyTime.IsNull(),
+             "Animation ready time is not set. Perhaps we're using a layer"
+             " manager that doesn't update it");
+  if (PendingAnimationTracker* tracker = aDoc.GetPendingAnimationTracker()) {
+    PresShell* presShell = aDoc.GetPresShell();
+    // If paint-suppression is in effect then we haven't finished painting
+    // this document yet so we shouldn't start animations
+    if (!presShell || !presShell->IsPaintingSuppressed()) {
+      tracker->TriggerPendingAnimationsOnNextTick(aReadyTime);
+    }
+  }
+  auto recurse = [&aReadyTime](Document& aDoc) {
+    TriggerPendingAnimations(aDoc, aReadyTime);
+    return CallState::Continue;
+  };
+  aDoc.EnumerateSubDocuments(recurse);
+}
+
 WindowRenderer* nsDisplayListBuilder::GetWidgetWindowRenderer(nsView** aView) {
   if (aView) {
     *aView = RootReferenceFrame()->GetView();
@@ -2293,6 +2312,11 @@ void nsDisplayList::PaintRoot(nsDisplayListBuilder* aBuilder, gfxContext* aCtx,
     }
 
     aBuilder->SetIsCompositingCheap(prevIsCompositingCheap);
+    if (document && widgetTransaction) {
+      TriggerPendingAnimations(*document,
+                               layerManager->GetAnimationReadyTime());
+    }
+
     if (presContext->RefreshDriver()->HasScheduleFlush()) {
       presContext->NotifyInvalidation(layerManager->GetLastTransactionId(),
                                       frame->GetRect());
@@ -2317,6 +2341,10 @@ void nsDisplayList::PaintRoot(nsDisplayListBuilder* aBuilder, gfxContext* aCtx,
                                    WindowRenderer::END_DEFAULT);
 
   aBuilder->SetIsCompositingCheap(temp);
+
+  if (document && widgetTransaction) {
+    TriggerPendingAnimations(*document, renderer->GetAnimationReadyTime());
+  }
 }
 
 void nsDisplayList::DeleteAll(nsDisplayListBuilder* aBuilder) {
