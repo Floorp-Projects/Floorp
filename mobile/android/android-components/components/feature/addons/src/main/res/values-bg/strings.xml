@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:tools="http://schemas.android.com/tools">
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://schemas.android.com/apk/res-auto">
     <!-- Description for privacy add-on permission. -->
     <string name="mozac_feature_addons_permissions_privacy_description">Четене и промяна на настройките за поверителност</string>
     <!-- Description for all_urls add-on permission. -->
@@ -72,8 +72,10 @@
     <string name="mozac_feature_addons_permissions_devtools_description">Разширяване на развойните инструменти с достъп до данните ви от отворените раздели</string>
     <!-- The version on of add-on. -->
     <string name="mozac_feature_addons_version">Издание</string>
+    <!-- The author of an add-on. -->
+    <string name="mozac_feature_addons_author">Автор</string>
     <!-- The authors of an add-on. -->
-    <string name="mozac_feature_addons_authors">Автори</string>
+    <string name="mozac_feature_addons_authors" moz:removedIn="120" tools:ignore="UnusedResources">Автори</string>
     <!-- The last date that the add-on was updated. -->
     <string name="mozac_feature_addons_last_updated">Последно обновяване</string>
     <!-- The developer website (Homepage) of the add-on. -->
@@ -82,6 +84,8 @@
     <string name="mozac_feature_addons_learn_more">Научете повече за правата</string>
     <!-- The rating of the add-on. -->
     <string name="mozac_feature_addons_rating">Оценка</string>
+    <!-- A link that points to the detail page of the add-on. -->
+    <string name="mozac_feature_addons_more_info_link">Повече за добавката</string>
     <!-- The settings of the add-on. -->
     <string name="mozac_feature_addons_settings">Настройки</string>
     <!-- Indicates the add-on is enabled. -->
@@ -110,14 +114,24 @@
     <string name="mozac_feature_addons_details">Подробности</string>
     <!-- Displays a page with all the permissions of an add-on. -->
     <string name="mozac_feature_addons_permissions">Права</string>
-    <!-- This is button that remove (uninstall an add-on). -->
+    <!-- This is a button to remove (i.e. uninstall) an add-on. -->
     <string name="mozac_feature_addons_remove">Премахване</string>
+    <!-- This is a button to report an add-on. -->
+    <string name="mozac_feature_addons_report">Докладване</string>
     <!-- This is the title of a dialog that asks the users if they to install or not an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_permissions_dialog_title">Добавяне на „%1$s“?</string>
+    <!-- This is the title of a dialog that asks the users to grant optional permissions. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_optional_permissions_dialog_title">Добавката „%1$s“ иска допълнителни права.</string>
     <!-- This is the subtitle of a dialog that asks the users if they want to install or not an add-on, the subtitle lists the permissions that this add-on requires, the permissions will dynamically be listed after the ":". -->
     <string name="mozac_feature_addons_permissions_dialog_subtitle">Добавката иска следните права:</string>
+    <!-- This is the subtitle of a dialog that asks the users to grant optional permissions, the subtitle lists the permissions that this add-on requests, the permissions will dynamically be listed after the ":". -->
+    <string name="mozac_feature_addons_optional_permissions_dialog_subtitle">Иска права за:</string>
     <!-- This is a button to add (install) an add-on . -->
     <string name="mozac_feature_addons_permissions_dialog_add">Добавяне</string>
+    <!-- This is a button to allow the optional permissions requested by an add-on . -->
+    <string name="mozac_feature_addons_permissions_dialog_allow">Разрешаване</string>
+    <!-- This is a button to deny the optional permissions requested by an add-on . -->
+    <string name="mozac_feature_addons_permissions_dialog_deny">Забраняване</string>
     <!-- This is a button to cancel the add-on installation . -->
     <string name="mozac_feature_addons_permissions_dialog_cancel">Отказ</string>
     <!-- Accessibility content description to install add-on button. -->
@@ -132,6 +146,14 @@
     <string name="mozac_feature_addons_addons">Добавки</string>
     <!-- Label for add-ons sub menu item for add-ons manager-->
     <string name="mozac_feature_addons_addons_manager">Управление на добавки</string>
+    <!-- The title of the "crash" notification in the add-ons manager -->
+    <string name="mozac_feature_addons_manager_notification_title_text">Добавките са временно изключени</string>
+    <!-- The content of the "crash" notification in the add-ons manager -->
+    <string name="mozac_feature_addons_manager_notification_content_text">Една или повече добавки са спрели да работят, като намаляват стабилността на системата.</string>
+    <!-- Button to re-enable the add-ons in the "crash" notification -->
+    <string name="mozac_feature_addons_manager_notification_restart_button">Рестарт на добавките</string>
+    <!-- Button in the add-ons manager that opens AMO in a tab -->
+    <string name="mozac_feature_addons_find_more_addons_button_text">Намерете още добавки</string>
     <!-- The label of the allow button, this will be shown to the user when an add-on needs new permissions, with the button the user will indicate that they want to accept the new permissions and update the add-on-->
     <string name="mozac_feature_addons_updater_notification_allow_button">Разрешаване</string>
     <!-- The label of the deny button on a notification, this will be shown to the user when an add-on needs new permissions. Indicates the user denies the new permissions and prevents the add-on from be updated-->
@@ -170,6 +192,18 @@
     <string name="mozac_feature_addons_successfully_installed">Добавката „%1$s“ е инсталирана</string>
     <!-- Text shown after failed to install an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_failed_to_install">Добавката „%1$s“ не е инсталирана</string>
+    <!-- Text shown after failing to install an add-on for which we don't have its name. -->
+    <string name="mozac_feature_addons_failed_to_install_generic">Добавката не е инсталирана.</string>
+    <!-- Text shown when attempting to install an add-on and a network error happened. -->
+    <string name="mozac_feature_addons_failed_to_install_network_error">Добавката не може да бъде изтеглена поради неуспешно установена връзка.</string>
+    <!-- Text shown when attempting to install an add-on and the downloaded file is corrupted. -->
+    <string name="mozac_feature_addons_failed_to_install_corrupt_error">Добавката не може да бъде инсталирана, защото изглежда е повредена.</string>
+    <!-- Text shown when attempting to install an add-on and an error occurred because the extension was not signed. -->
+    <string name="mozac_feature_addons_failed_to_install_not_signed_error">Добавката не може да бъде инсталирана, защото не е проверена.</string>
+    <!-- Text shown when attempting to install an add-on and an error occurred because the extension was incompatible. %1$s is the add-on name, %2$s is the app name and %3$s is the app version. -->
+    <string name="mozac_feature_addons_failed_to_install_incompatible_error">Добавката %1$s не може да бъде инсталирана, защото е несъвместима с %2$s %3$s.</string>
+    <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_blocklisted_1">Добавката %1$s не може да бъде инсталирана, защото носи висок риск от причиняване на проблеми със стабилността или сигурността.</string>
     <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_successfully_enabled">Добавката „%1$s“ е включена</string>
     <!-- Text shown after failed to enable an add-on. %1$s is the add-on name. -->
@@ -212,4 +246,12 @@
     <string name="mozac_feature_addons_installed_dialog_description">Отворете я от менюто</string>
     <!-- Confirmation button text for the dialog when add-on installation is completed. -->
     <string name="mozac_feature_addons_installed_dialog_okay_button">Да, разбрах</string>
+    <!-- "Learn more" link displayed below an add-on status message. -->
+    <string name="mozac_feature_addons_status_learn_more">Научете повече</string>
+    <!-- Status message below an add-on in the add-ons manager when this add-on has been blocklisted. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_status_blocklisted">Добавката %1$s е изключена поради съображения за сигурност или стабилност.</string>
+    <!-- Status message below an add-on in the add-ons manager when this add-on hasn't been signed correctly. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_status_unsigned">Добавката %1$s не може да бъде проверена и е изключена.</string>
+    <!-- Status message below an add-on in the add-ons manager when this add-on isn't compatible with the application version. %1$s is the add-on name, %2$s is the app name and %3$s is the app version. -->
+    <string name="mozac_feature_addons_status_incompatible">Добавката %1$s е несъвместима с изданието на %2$s (издание %3$s).</string>
 </resources>

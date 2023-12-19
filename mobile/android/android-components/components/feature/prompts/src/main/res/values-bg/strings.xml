@@ -126,4 +126,20 @@
     <string name="mozac_feature_prompts_collapse_address_content_description">Свиване на предложени адреси</string>
     <!-- Text for the manage addresses button. -->
     <string name="mozac_feature_prompts_manage_address">Управление на адреси</string>
+
+    <!-- Federated Credential Management prompts -->
+    <!--Content description for the Account picture in the Select Account FedCM prompt -->
+    <string name="mozac_feature_prompts_account_picture">Профилна снимка</string>
+    <!-- Title of the Identity Credential provider dialog chooser. -->
+    <string name="mozac_feature_prompts_identity_credentials_choose_provider">Изберете доставчик на вход</string>
+    <!-- Title of an account picker dialog for identity credentials. The %1$s will be replaced with the name of the provider -->
+    <string name="mozac_feature_prompts_identity_credentials_choose_account_for_provider">Вход в профила на %1$s</string>
+    <!-- Title of the Identity Credential privacy policy dialog title. The %1$s will be replaced with the name of the provider. -->
+    <string name="mozac_feature_prompts_identity_credentials_privacy_policy_title">Използвайте %1$s като доставчик на вход</string>
+    <!-- Title of the Identity Credential privacy policy dialog description. The %1$s will be replaced with the name of the provider, %2$s will be replaced with the account, %3$s will be replaced with the privacy policy url and  %4$s will be replaced with the terms of service. -->
+    <string name="mozac_feature_prompts_identity_credentials_privacy_policy_description"><![CDATA[Входът в профила на %1$s с/ъс %2$s е предмет на тяхната <a href="%3$s">Политика за поверителност</a> и техните <a href="%4$s">Общи условия</a>]]></string>
+    <!-- Text for the positive button of the Identity Credential dialogs. -->
+    <string name="mozac_feature_prompts_identity_credentials_continue">Продължаване</string>
+    <!-- Text for the cancel button of the Identity Credential dialogs. -->
+    <string name="mozac_feature_prompts_identity_credentials_cancel">Отказ</string>
 </resources>
