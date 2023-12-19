@@ -5,13 +5,19 @@
 #ifndef WEBRTCLOG_H_
 #define WEBRTCLOG_H_
 
-#include "mozilla/Logging.h"
+#include "nsISupports.h"
 #include "nsStringFwd.h"
 
 nsCString StartAecLog();
 void StopAecLog();
-void EnableWebRtcLog();
-void StartWebRtcLog(mozilla::LogLevel level);
-void StopWebRtcLog();
+
+class WebrtcLogSinkHandle {
+  NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
+
+ protected:
+  virtual ~WebrtcLogSinkHandle() = default;
+};
+
+already_AddRefed<WebrtcLogSinkHandle> EnsureWebrtcLogging();
 
 #endif
