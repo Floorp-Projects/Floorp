@@ -53,8 +53,9 @@ add_task(async function () {
     content.wrappedJSObject.main();
   });
 
-  // Assert that we also see the custom prefix
-  await waitFor(() => findConsoleAPIMessage(hud, "foo: —interpreter⟶λ main"));
+  await waitFor(
+    () => !!findTracerMessages(hud, `foo: interpreter⟶λ main`).length
+  );
 
   info("Test toggling the tracer OFF");
   msg = await evaluateExpressionInConsole(hud, ":trace", "console-api");
@@ -62,7 +63,9 @@ add_task(async function () {
 
   info("Clear past traces");
   hud.ui.clearOutput();
-  await waitFor(() => !findConsoleAPIMessage(hud, "foo: —interpreter⟶λ main"));
+  await waitFor(
+    () => !findTracerMessages(hud, `foo: interpreter⟶λ main("arg", 2)`).length
+  );
   ok("Console was cleared");
 
   info("Trigger some code again");
@@ -74,7 +77,7 @@ add_task(async function () {
   await wait(1000);
 
   ok(
-    !findConsoleAPIMessage(hud, "foo: —interpreter⟶λ main"),
+    !findTracerMessages(hud, `foo: interpreter⟶λ main("arg", 2)`).length,
     "We really stopped recording traces, and no trace appear in the console"
   );
 });

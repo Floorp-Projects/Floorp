@@ -276,7 +276,7 @@ add_task(async function testPageKeyShortcutWithoutDebugger() {
   const { resourceCommand } = toolbox.commands;
   const { onResource: onTracingStateEnabled } =
     await resourceCommand.waitForNextResource(
-      resourceCommand.TYPES.TRACING_STATE,
+      resourceCommand.TYPES.JSTRACER_STATE,
       {
         ignoreExistingResources: true,
         predicate(resource) {
@@ -297,7 +297,7 @@ add_task(async function testPageKeyShortcutWithoutDebugger() {
   info("Toggle it back off, with the same shortcut");
   const { onResource: onTracingStateDisabled } =
     await resourceCommand.waitForNextResource(
-      resourceCommand.TYPES.TRACING_STATE,
+      resourceCommand.TYPES.JSTRACER_STATE,
       {
         ignoreExistingResources: true,
         predicate(resource) {

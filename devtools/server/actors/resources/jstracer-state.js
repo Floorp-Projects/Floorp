@@ -5,7 +5,7 @@
 "use strict";
 
 const {
-  TYPES: { TRACING_STATE },
+  TYPES: { JSTRACER_STATE },
 } = require("resource://devtools/server/actors/resources/index.js");
 
 // Bug 1827382, as this module can be used from the worker thread,
@@ -46,7 +46,7 @@ class TracingStateWatcher {
     removeTracingListener(this.tracingListener);
   }
 
-  // Emit a TRACING_STATE resource with:
+  // Emit a JSTRACER_STATE resource with:
   //   enabled = true|false
   // When Javascript tracing is enabled or disabled.
   onTracingToggled(enabled) {
@@ -54,7 +54,7 @@ class TracingStateWatcher {
     const logMethod = tracerActor?.getLogMethod();
     this.onAvailable([
       {
-        resourceType: TRACING_STATE,
+        resourceType: JSTRACER_STATE,
         enabled,
         logMethod,
         profile:
