@@ -178,10 +178,8 @@ export class NetworkEventRecord {
    *     The har-like timings.
    * @param {object} offsets
    *     The har-like timings, but as offset from the request start.
-   * @param {Array} serverTimings
-   *     The server timings.
    */
-  addEventTimings(total, timings, offsets, serverTimings) {}
+  addEventTimings(total, timings, offsets) {}
 
   /**
    * Add response cache entry.
