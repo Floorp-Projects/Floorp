@@ -219,7 +219,7 @@ export class SearchEngineSelector {
       let environment = orderData.environment;
 
       if (this.#matchesUserEnvironment({ environment }, userEnv)) {
-        this.#setEngineOrders(engines, orderData.order, userEnv);
+        this.#setEngineOrders(engines, orderData.order);
       }
     }
 
@@ -586,25 +586,19 @@ export class SearchEngineSelector {
    *   private engine identifer for the environment.
    * @param {string} [engineType]
    *   A string to identify default engine or default private engine.
-   * @returns {object}
-   *   The default engine or default private engine.
+   * @returns {object|undefined}
+   *   The default engine or default private engine. Undefined if none can be
+   *   found.
    */
   #findDefault(engines, config, engineType = "default") {
     let defaultMatch =
       engineType == "default" ? config.default : config.defaultPrivate;
 
-    let startsWith =
-      engineType == "default"
-        ? config.defaultStartsWith
-        : config.defaultPrivateStartsWith;
+    if (!defaultMatch) {
+      return undefined;
+    }
 
-    let engine = engines.find(
-      e =>
-        (defaultMatch && e.identifier == defaultMatch) ||
-        (startsWith && e.identifier.startsWith(startsWith))
-    );
-
-    return engine;
+    return this.#findEngineWithMatch(engines, defaultMatch);
   }
 
   /**
@@ -615,26 +609,35 @@ export class SearchEngineSelector {
    * @param {Array} orderedEngines
    *  The ordering of engines. Engines in the beginning of the list get a higher
    *  orderHint number.
-   * @param {object} userEnv
-   *   The user's environment.
    */
-  #setEngineOrders(engines, orderedEngines, userEnv) {
+  #setEngineOrders(engines, orderedEngines) {
     let orderNumber = orderedEngines.length;
 
     for (const engine of orderedEngines) {
-      let foundEngine;
-
-      if (engine.endsWith("*")) {
-        let match = engine.slice(0, -1);
-        foundEngine = engines.find(e => e.identifier.startsWith(match));
-      } else {
-        foundEngine = engines.find(e => e.identifier == engine);
-      }
-
+      let foundEngine = this.#findEngineWithMatch(engines, engine);
       if (foundEngine) {
         foundEngine.orderHint = orderNumber;
         orderNumber -= 1;
       }
     }
+  }
+
+  /**
+   * Finds an engine with the given match.
+   *
+   * @param {object[]} engines
+   *   An array of search engine configurations.
+   * @param {string} match
+   *   A string to match against the engine identifier. This will be an exact
+   *   match, unless the string ends with `*`, in which case it will use a
+   *   startsWith match.
+   * @returns {object|undefined}
+   */
+  #findEngineWithMatch(engines, match) {
+    if (match.endsWith("*")) {
+      let matchNoStar = match.slice(0, -1);
+      return engines.find(e => e.identifier.startsWith(matchNoStar));
+    }
+    return engines.find(e => e.identifier == match);
   }
 }
