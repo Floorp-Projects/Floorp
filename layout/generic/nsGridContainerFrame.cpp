@@ -9323,7 +9323,7 @@ nsFrameState nsGridContainerFrame::ComputeSelfSubgridMasonryBits() const {
     // is itself a grid item.
     const auto* parentDisplay = parent->StyleDisplay();
     if (parentDisplay->IsContainLayout() || parentDisplay->IsContainPaint()) {
-      return nsFrameState(0);
+      return bits;
     }
     outerFrame = parent;
     parent = parent->GetParent();
