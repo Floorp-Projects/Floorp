@@ -553,20 +553,20 @@ Some guidelines for handling OOM that lead to failures when they are not followe
 
 ### Debugging GC marking/rooting
 
-The **js::debug** namespace contains some functions that are useful for watching mark bits for an individual JSObject* (or any Cell*). **js/src/gc/Heap.h** contains a comment describing an example usage. Reproduced here:
+The **js::debug** namespace contains some functions that are useful for watching mark bits for an individual JSObject* (or any Cell*). [js/src/gc/Heap.h](https://searchfox.org/mozilla-central/rev/dc5027f02e5ea1d6b56cfbd10f4d3a0830762115/js/src/gc/Heap.h#817-835) contains a comment describing an example usage. Reproduced here:
 
     // Sample usage from gdb:
     //
-    // (gdb) p $word = js::debug::GetMarkWordAddress(obj)
+    //   (gdb) p $word = js::debug::GetMarkWordAddress(obj)
     //   $1 = (uintptr_t *) 0x7fa56d5fe360
     //   (gdb) p/x $mask = js::debug::GetMarkMask(obj, js::gc::GRAY)
     //   $2 = 0x200000000
     //   (gdb) watch *$word
-    // Hardware watchpoint 7: _$word
-    // (gdb) cond 7 _$word & $mask
-    // (gdb) cont
+    //   Hardware watchpoint 7: *$word
+    //   (gdb) cond 7 *$word & $mask
+    //   (gdb) cont
     //
-    // Note that this is _not_ a watchpoint on a single bit. It is a watchpoint on
+    // Note that this is *not* a watchpoint on a single bit. It is a watchpoint on
     // the whole word, which will trigger whenever the word changes and the
     // selected bit is set after the change.
     //
