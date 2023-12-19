@@ -54,9 +54,9 @@ import org.mozilla.fenix.nimbus.FxNimbus
 class ThreeDotMenuMainRobot {
     fun verifyShareAllTabsButton() = assertShareAllTabsButton()
     fun verifySettingsButton() = assertUIObjectExists(settingsButton())
-    fun verifyHistoryButton() = assertUIObjectExists(historyButton)
+    fun verifyHistoryButton() = assertUIObjectExists(historyButton())
     fun verifyThreeDotMenuExists() = threeDotMenuRecyclerViewExists()
-    fun verifyAddBookmarkButton() = assertUIObjectExists(addBookmarkButton)
+    fun verifyAddBookmarkButton() = assertUIObjectExists(addBookmarkButton())
     fun verifyEditBookmarkButton() = assertEditBookmarkButton()
     fun verifyCloseAllTabsButton() = assertCloseAllTabsButton()
     fun verifyReaderViewAppearance(visible: Boolean) = assertReaderViewAppearanceButton(visible)
@@ -76,9 +76,9 @@ class ThreeDotMenuMainRobot {
     fun verifyShareTabButton() = assertShareTabButton()
     fun verifySelectTabs() = assertSelectTabsButton()
 
-    fun verifyFindInPageButton() = assertUIObjectExists(findInPageButton)
+    fun verifyFindInPageButton() = assertUIObjectExists(findInPageButton())
     fun verifyAddToShortcutsButton(shouldExist: Boolean) =
-        assertUIObjectExists(addToShortcutsButton, exists = shouldExist)
+        assertUIObjectExists(addToShortcutsButton(), exists = shouldExist)
     fun verifyRemoveFromShortcutsButton() = assertRemoveFromShortcutsButton()
     fun verifyShareTabsOverlay() = assertShareTabsOverlay()
 
@@ -90,19 +90,19 @@ class ThreeDotMenuMainRobot {
     fun verifyPageThreeDotMainMenuItems(isRequestDesktopSiteEnabled: Boolean) {
         expandMenu()
         assertUIObjectExists(
-            normalBrowsingNewTabButton,
-            bookmarksButton,
-            historyButton,
-            downloadsButton,
-            addOnsButton,
-            syncAndSaveDataButton,
-            findInPageButton,
-            desktopSiteButton,
-            reportSiteIssueButton,
-            addToHomeScreenButton,
-            addToShortcutsButton,
-            saveToCollectionButton,
-            addBookmarkButton,
+            normalBrowsingNewTabButton(),
+            bookmarksButton(),
+            historyButton(),
+            downloadsButton(),
+            addOnsButton(),
+            syncAndSaveDataButton(),
+            findInPageButton(),
+            desktopSiteButton(),
+            reportSiteIssueButton(),
+            addToHomeScreenButton(),
+            addToShortcutsButton(),
+            saveToCollectionButton(),
+            addBookmarkButton(),
             desktopSiteToggle(isRequestDesktopSiteEnabled),
         )
         // Swipe to second part of menu
@@ -111,28 +111,28 @@ class ThreeDotMenuMainRobot {
             settingsButton(),
         )
         if (FxNimbus.features.print.value().browserPrintEnabled) {
-            assertUIObjectExists(printContentButton)
+            assertUIObjectExists(printContentButton())
         }
         assertUIObjectExists(
-            backButton,
-            forwardButton,
-            shareButton,
-            refreshButton,
+            backButton(),
+            forwardButton(),
+            shareButton(),
+            refreshButton(),
         )
     }
 
     fun verifyHomeThreeDotMainMenuItems(isRequestDesktopSiteEnabled: Boolean) {
         assertUIObjectExists(
-            bookmarksButton,
-            historyButton,
-            downloadsButton,
-            addOnsButton,
+            bookmarksButton(),
+            historyButton(),
+            downloadsButton(),
+            addOnsButton(),
             // Disabled step due to https://github.com/mozilla-mobile/fenix/issues/26788
             // syncAndSaveDataButton,
-            desktopSiteButton,
-            whatsNewButton,
-            helpButton,
-            customizeHomeButton,
+            desktopSiteButton(),
+            whatsNewButton(),
+            helpButton(),
+            customizeHomeButton(),
             settingsButton(),
             desktopSiteToggle(isRequestDesktopSiteEnabled),
         )
@@ -202,7 +202,7 @@ class ThreeDotMenuMainRobot {
         fun openDownloadsManager(interact: DownloadRobot.() -> Unit): DownloadRobot.Transition {
             threeDotMenuRecyclerView().perform(swipeDown())
             Log.i(TAG, "openDownloadsManager: Swiped up main menu")
-            downloadsButton.click()
+            downloadsButton().click()
             Log.i(TAG, "openDownloadsManager: Clicked main menu \"DOWNLOADS\" button")
 
             DownloadRobot().interact()
@@ -212,7 +212,7 @@ class ThreeDotMenuMainRobot {
         fun openSyncSignIn(interact: SyncSignInRobot.() -> Unit): SyncSignInRobot.Transition {
             threeDotMenuRecyclerView().perform(swipeDown())
             mDevice.waitNotNull(Until.findObject(By.text("Sync and save data")), waitingTime)
-            syncAndSaveDataButton.click()
+            syncAndSaveDataButton().click()
 
             SyncSignInRobot().interact()
             return SyncSignInRobot.Transition()
@@ -222,7 +222,7 @@ class ThreeDotMenuMainRobot {
             threeDotMenuRecyclerView().perform(swipeDown())
             mDevice.waitNotNull(Until.findObject(By.text("Bookmarks")), waitingTime)
 
-            bookmarksButton.click()
+            bookmarksButton().click()
             assertUIObjectExists(itemWithResId("$packageName:id/bookmark_list"))
 
             BookmarksRobot().interact()
@@ -230,7 +230,7 @@ class ThreeDotMenuMainRobot {
         }
 
         fun clickNewTabButton(interact: SearchRobot.() -> Unit): SearchRobot.Transition {
-            normalBrowsingNewTabButton.click()
+            normalBrowsingNewTabButton().click()
 
             SearchRobot().interact()
             return SearchRobot.Transition()
@@ -239,7 +239,7 @@ class ThreeDotMenuMainRobot {
         fun openHistory(interact: HistoryRobot.() -> Unit): HistoryRobot.Transition {
             threeDotMenuRecyclerView().perform(swipeDown())
             mDevice.waitNotNull(Until.findObject(By.text("History")), waitingTime)
-            historyButton.click()
+            historyButton().click()
 
             HistoryRobot().interact()
             return HistoryRobot.Transition()
@@ -247,7 +247,7 @@ class ThreeDotMenuMainRobot {
 
         fun bookmarkPage(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
             mDevice.waitNotNull(Until.findObject(By.text("Bookmarks")), waitingTime)
-            addBookmarkButton.click()
+            addBookmarkButton().click()
 
             BrowserRobot().interact()
             return BrowserRobot.Transition()
@@ -263,7 +263,7 @@ class ThreeDotMenuMainRobot {
 
         fun openHelp(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
             mDevice.waitNotNull(Until.findObject(By.text("Help")), waitingTime)
-            helpButton.click()
+            helpButton().click()
 
             BrowserRobot().interact()
             return BrowserRobot.Transition()
@@ -278,7 +278,7 @@ class ThreeDotMenuMainRobot {
                 waitingTime,
             )
 
-            customizeHomeButton.click()
+            customizeHomeButton().click()
 
             mDevice.findObject(
                 UiSelector().resourceId("$packageName:id/recycler_view"),
@@ -289,21 +289,21 @@ class ThreeDotMenuMainRobot {
         }
 
         fun goForward(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
-            forwardButton.click()
+            forwardButton().click()
 
             BrowserRobot().interact()
             return BrowserRobot.Transition()
         }
 
         fun goToPreviousPage(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
-            backButton.click()
+            backButton().click()
 
             BrowserRobot().interact()
             return BrowserRobot.Transition()
         }
 
         fun clickShareButton(interact: ShareOverlayRobot.() -> Unit): ShareOverlayRobot.Transition {
-            shareButton.click()
+            shareButton().click()
             Log.i(TAG, "clickShareButton: Clicked main menu share button")
             mDevice.waitNotNull(Until.findObject(By.text("ALL ACTIONS")), waitingTime)
 
@@ -320,7 +320,7 @@ class ThreeDotMenuMainRobot {
         }
 
         fun refreshPage(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
-            refreshButton.also {
+            refreshButton().also {
                 Log.i(TAG, "refreshPage: Looking for refresh button")
                 it.waitForExists(waitingTime)
                 it.click()
@@ -349,7 +349,7 @@ class ThreeDotMenuMainRobot {
         fun openReportSiteIssue(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
             threeDotMenuRecyclerView().perform(swipeUp())
             threeDotMenuRecyclerView().perform(swipeUp())
-            reportSiteIssueButton.click()
+            reportSiteIssueButton().click()
 
             BrowserRobot().interact()
             return BrowserRobot.Transition()
@@ -359,7 +359,7 @@ class ThreeDotMenuMainRobot {
             threeDotMenuRecyclerView().perform(swipeUp())
             threeDotMenuRecyclerView().perform(swipeUp())
             mDevice.waitNotNull(Until.findObject(By.text("Find in page")), waitingTime)
-            findInPageButton.click()
+            findInPageButton().click()
 
             FindInPageRobot().interact()
             return FindInPageRobot.Transition()
@@ -367,7 +367,7 @@ class ThreeDotMenuMainRobot {
 
         fun openWhatsNew(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
             mDevice.waitNotNull(Until.findObject(By.text("What’s new")), waitingTime)
-            whatsNewButton.click()
+            whatsNewButton().click()
 
             BrowserRobot().interact()
             return BrowserRobot.Transition()
@@ -385,7 +385,7 @@ class ThreeDotMenuMainRobot {
         fun addToFirefoxHome(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
             for (i in 1..RETRY_COUNT) {
                 try {
-                    addToShortcutsButton.also {
+                    addToShortcutsButton().also {
                         it.waitForExists(waitingTime)
                         it.click()
                     }
@@ -416,7 +416,7 @@ class ThreeDotMenuMainRobot {
         }
 
         fun openAddToHomeScreen(interact: AddToHomeScreenRobot.() -> Unit): AddToHomeScreenRobot.Transition {
-            addToHomeScreenButton.clickAndWaitForNewWindow(waitingTime)
+            addToHomeScreenButton().clickAndWaitForNewWindow(waitingTime)
 
             AddToHomeScreenRobot().interact()
             return AddToHomeScreenRobot.Transition()
@@ -437,7 +437,7 @@ class ThreeDotMenuMainRobot {
             threeDotMenuRecyclerView().perform(swipeUp())
 
             mDevice.waitNotNull(Until.findObject(By.text("Save to collection")), waitingTime)
-            saveToCollectionButton.click()
+            saveToCollectionButton().click()
             CollectionRobot().interact()
             return CollectionRobot.Transition()
         }
@@ -465,7 +465,7 @@ class ThreeDotMenuMainRobot {
         fun switchDesktopSiteMode(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
             threeDotMenuRecyclerView().perform(swipeUp())
             threeDotMenuRecyclerView().perform(swipeUp())
-            desktopSiteButton.click()
+            desktopSiteButton().click()
 
             BrowserRobot().interact()
             return BrowserRobot.Transition()
@@ -481,8 +481,8 @@ class ThreeDotMenuMainRobot {
         fun clickPrintButton(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
             threeDotMenuRecyclerView().perform(swipeUp())
             threeDotMenuRecyclerView().perform(swipeUp())
-            printButton.waitForExists(waitingTime)
-            printButton.click()
+            printButton().waitForExists(waitingTime)
+            printButton().click()
 
             BrowserRobot().interact()
             return BrowserRobot.Transition()
@@ -558,7 +558,7 @@ private fun openInAppButton() =
 
 private fun clickAddonsManagerButton() {
     onView(withId(R.id.mozac_browser_menu_menuView)).perform(swipeDown())
-    addOnsButton.click()
+    addOnsButton().click()
 }
 
 private fun shareAllTabsButton() =
@@ -571,15 +571,15 @@ private fun assertShareAllTabsButton() {
         )
 }
 
-private val bookmarksButton =
+private fun bookmarksButton() =
     itemContainingText(getStringResource(R.string.library_bookmarks))
-private val historyButton =
+private fun historyButton() =
     itemContainingText(getStringResource(R.string.library_history))
-private val downloadsButton =
+private fun downloadsButton() =
     itemContainingText(getStringResource(R.string.library_downloads))
-private val addOnsButton =
+private fun addOnsButton() =
     itemContainingText(getStringResource(R.string.browser_menu_add_ons))
-private val desktopSiteButton =
+private fun desktopSiteButton() =
     itemContainingText(getStringResource(R.string.browser_menu_desktop_site))
 private fun desktopSiteToggle(state: Boolean) =
     checkedItemWithResIdAndText(
@@ -587,31 +587,31 @@ private fun desktopSiteToggle(state: Boolean) =
         getStringResource(R.string.browser_menu_desktop_site),
         state,
     )
-private val whatsNewButton =
+private fun whatsNewButton() =
     itemContainingText(getStringResource(R.string.browser_menu_whats_new))
-private val helpButton =
+private fun helpButton() =
     itemContainingText(getStringResource(R.string.browser_menu_help))
-private val customizeHomeButton =
+private fun customizeHomeButton() =
     itemContainingText(getStringResource(R.string.browser_menu_customize_home_1))
 private fun settingsButton(localizedText: String = getStringResource(R.string.browser_menu_settings)) =
     itemContainingText(localizedText)
-private val syncAndSaveDataButton =
+private fun syncAndSaveDataButton() =
     itemContainingText(getStringResource(R.string.sync_menu_sync_and_save_data))
-private val normalBrowsingNewTabButton =
+private fun normalBrowsingNewTabButton() =
     itemContainingText(getStringResource(R.string.library_new_tab))
-private val addBookmarkButton =
+private fun addBookmarkButton() =
     itemWithResIdAndText(
         "$packageName:id/checkbox",
         getStringResource(R.string.browser_menu_add),
     )
-private val findInPageButton = itemContainingText(getStringResource(R.string.browser_menu_find_in_page))
-private val reportSiteIssueButton = itemContainingText("Report Site Issue")
-private val addToHomeScreenButton = itemContainingText(getStringResource(R.string.browser_menu_add_to_homescreen))
-private val addToShortcutsButton = itemContainingText(getStringResource(R.string.browser_menu_add_to_shortcuts))
-private val saveToCollectionButton = itemContainingText(getStringResource(R.string.browser_menu_save_to_collection_2))
-private val printContentButton = itemContainingText(getStringResource(R.string.menu_print))
-private val backButton = itemWithDescription(getStringResource(R.string.browser_menu_back))
-private val forwardButton = itemWithDescription(getStringResource(R.string.browser_menu_forward))
-private val shareButton = itemWithDescription(getStringResource(R.string.share_button_content_description))
-private val refreshButton = itemWithDescription(getStringResource(R.string.browser_menu_refresh))
-private val printButton = itemWithText("Print")
+private fun findInPageButton() = itemContainingText(getStringResource(R.string.browser_menu_find_in_page))
+private fun reportSiteIssueButton() = itemContainingText("Report Site Issue")
+private fun addToHomeScreenButton() = itemContainingText(getStringResource(R.string.browser_menu_add_to_homescreen))
+private fun addToShortcutsButton() = itemContainingText(getStringResource(R.string.browser_menu_add_to_shortcuts))
+private fun saveToCollectionButton() = itemContainingText(getStringResource(R.string.browser_menu_save_to_collection_2))
+private fun printContentButton() = itemContainingText(getStringResource(R.string.menu_print))
+private fun backButton() = itemWithDescription(getStringResource(R.string.browser_menu_back))
+private fun forwardButton() = itemWithDescription(getStringResource(R.string.browser_menu_forward))
+private fun shareButton() = itemWithDescription(getStringResource(R.string.share_button_content_description))
+private fun refreshButton() = itemWithDescription(getStringResource(R.string.browser_menu_refresh))
+private fun printButton() = itemWithText("Print")

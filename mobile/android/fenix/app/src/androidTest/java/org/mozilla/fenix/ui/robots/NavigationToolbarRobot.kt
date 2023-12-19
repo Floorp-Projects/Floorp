@@ -273,6 +273,16 @@ class NavigationToolbarRobot {
             return HomeScreenRobot.Transition()
         }
 
+        fun goBackToBrowserScreen(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
+            mDevice.pressBack()
+            Log.i(TAG, "goBackToBrowserScreen: Dismiss awesome bar using device back button")
+            mDevice.waitForWindowUpdate(packageName, waitingTimeShort)
+            Log.i(TAG, "goBackToBrowserScreen: Waited $waitingTimeShort for window update")
+
+            BrowserRobot().interact()
+            return BrowserRobot.Transition()
+        }
+
         fun openTabButtonShortcutsMenu(interact: NavigationToolbarRobot.() -> Unit): Transition {
             mDevice.waitNotNull(Until.findObject(By.res("$packageName:id/counter_root")))
             tabsCounter().perform(longClick())
