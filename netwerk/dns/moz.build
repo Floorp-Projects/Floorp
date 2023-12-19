@@ -59,6 +59,11 @@ SOURCES += [
     "nsEffectiveTLDService.cpp",  # Excluded from UNIFIED_SOURCES due to special build flags.
 ]
 
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
+    SOURCES += ["PlatformDNSWin.cpp"]
+else:
+    DEFINES["MOZ_NO_HTTPS_IMPL"] = 1
+
 UNIFIED_SOURCES += [
     "ChildDNSService.cpp",
     "DNS.cpp",

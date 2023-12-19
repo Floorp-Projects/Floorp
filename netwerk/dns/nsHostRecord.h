@@ -228,6 +228,23 @@ class nsHostRecord : public mozilla::LinkedListElement<RefPtr<nsHostRecord>>,
 
   // Whether this is resolved by native resolver successfully or not.
   bool mNativeSuccess = false;
+
+  // When the lookups of this record started and their durations
+  mozilla::TimeStamp mNativeStart;
+  mozilla::TimeDuration mNativeDuration;
+
+  // clang-format off
+  MOZ_ATOMIC_BITFIELDS(mAtomicBitfields, 8, (
+    // true if this record is being resolved "natively", which means that
+    // it is either on the pending queue or owned by one of the worker threads.
+    (uint16_t, Native, 1),
+    (uint16_t, NativeUsed, 1),
+    // true if off queue and contributing to mActiveAnyThreadCount
+    (uint16_t, UsingAnyThread, 1),
+    (uint16_t, GetTtl, 1),
+    (uint16_t, ResolveAgain, 1)
+  ))
+  // clang-format on
 };
 
 // b020e996-f6ab-45e5-9bf5-1da71dd0053a
@@ -321,25 +338,8 @@ class AddrHostRecord final : public nsHostRecord {
 
   void ResolveComplete() override;
 
-  // When the lookups of this record started and their durations
-  mozilla::TimeStamp mNativeStart;
-  mozilla::TimeDuration mNativeDuration;
-
   // TRR was used on this record
   mozilla::Atomic<DNSResolverType> mResolverType{DNSResolverType::Native};
-
-  // clang-format off
-  MOZ_ATOMIC_BITFIELDS(mAtomicBitfields, 8, (
-    // true if this record is being resolved "natively", which means that
-    // it is either on the pending queue or owned by one of the worker threads.
-    (uint16_t, Native, 1),
-    (uint16_t, NativeUsed, 1),
-    // true if off queue and contributing to mActiveAnyThreadCount
-    (uint16_t, UsingAnyThread, 1),
-    (uint16_t, GetTtl, 1),
-    (uint16_t, ResolveAgain, 1)
-  ))
-  // clang-format on
 
   // The number of times ReportUnusable() has been called in the record's
   // lifetime.

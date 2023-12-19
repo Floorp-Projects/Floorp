@@ -255,7 +255,7 @@ class nsHostResolver : public nsISupports, public AHostResolver {
 
   // Kick-off a name resolve operation, using native resolver and/or TRR
   nsresult NameLookup(nsHostRecord* aRec, const mozilla::MutexAutoLock& aLock);
-  bool GetHostToLookup(AddrHostRecord** result);
+  bool GetHostToLookup(nsHostRecord** result);
   void MaybeRenewHostRecordLocked(nsHostRecord* aRec,
                                   const mozilla::MutexAutoLock& aLock)
       MOZ_REQUIRES(mLock);

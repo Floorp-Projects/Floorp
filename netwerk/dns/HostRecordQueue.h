@@ -50,8 +50,8 @@ class HostRecordQueue final {
   // Returning the first record from one of the pending queue. When |aHighQOnly|
   // is true, returning the record from mHighQ only. When false, return the
   // record from mMediumQ or mLowQ.
-  already_AddRefed<AddrHostRecord> Dequeue(bool aHighQOnly,
-                                           const MutexAutoLock& aProofOfLock);
+  already_AddRefed<nsHostRecord> Dequeue(bool aHighQOnly,
+                                         const MutexAutoLock& aProofOfLock);
   // Clear all queues and is called only during shutdown. |aCallback| is invoked
   // when a record is removed from a queue.
   void ClearAll(const std::function<void(nsHostRecord*)>& aCallback,

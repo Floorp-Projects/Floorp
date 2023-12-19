@@ -48,6 +48,10 @@
 // Put DNSLogging.h at the end to avoid LOG being overwritten by other headers.
 #include "DNSLogging.h"
 
+#ifdef XP_WIN
+#  include "mozilla/WindowsVersion.h"
+#endif  // XP_WIN
+
 #define IS_ADDR_TYPE(_type) ((_type) == nsIDNSService::RESOLVE_TYPE_DEFAULT)
 #define IS_OTHER_TYPE(_type) ((_type) != nsIDNSService::RESOLVE_TYPE_DEFAULT)
 
@@ -137,6 +141,7 @@ static const char kPrefThreadIdleTime[] =
     "network.dns.resolver-thread-extra-idle-time-seconds";
 static bool sGetTtlEnabled = false;
 mozilla::Atomic<bool, mozilla::Relaxed> gNativeIsLocalhost;
+mozilla::Atomic<bool, mozilla::Relaxed> sNativeHTTPSSupported{false};
 
 static void DnsPrefChanged(const char* aPref, void* aSelf) {
   MOZ_ASSERT(NS_IsMainThread(),
@@ -221,6 +226,13 @@ nsresult nsHostResolver::Init() MOZ_NO_THREAD_SAFETY_ANALYSIS {
     poolTimeoutMs =
         mozilla::clamped<uint32_t>(poolTimeoutSecs * 1000, 0, 3600 * 1000);
   }
+
+#if defined(XP_WIN)
+  // For some reason, the DNSQuery_A API doesn't work on Windows 10.
+  // It returns a success code, but no records. We only allow
+  // native HTTPS records on Win 11 for now.
+  sNativeHTTPSSupported = mozilla::IsWin11OrLater();
+#endif
 
   nsCOMPtr<nsIThreadPool> threadPool = new nsThreadPool();
   MOZ_ALWAYS_SUCCEEDS(threadPool->SetThreadLimit(MaxResolverThreads()));
@@ -411,6 +423,13 @@ already_AddRefed<nsHostRecord> nsHostResolver::InitLoopbackRecord(
   return rec.forget();
 }
 
+static bool IsNativeHTTPSEnabled() {
+  if (!StaticPrefs::network_dns_native_https_query()) {
+    return false;
+  }
+  return sNativeHTTPSSupported;
+}
+
 nsresult nsHostResolver::ResolveHost(const nsACString& aHost,
                                      const nsACString& aTrrServer,
                                      int32_t aPort, uint16_t type,
@@ -432,9 +451,9 @@ nsresult nsHostResolver::ResolveHost(const nsACString& aHost,
     return NS_ERROR_UNKNOWN_HOST;
   }
 
-  // By-Type requests use only TRR. If TRR is disabled we can return
-  // immediately.
-  if (IS_OTHER_TYPE(type) && Mode() == nsIDNSService::MODE_TRROFF) {
+  // If TRR is disabled we can return immediately if the native API is disabled
+  if (!IsNativeHTTPSEnabled() && IS_OTHER_TYPE(type) &&
+      Mode() == nsIDNSService::MODE_TRROFF) {
     return NS_ERROR_UNKNOWN_HOST;
   }
 
@@ -949,6 +968,7 @@ nsresult nsHostResolver::TrrLookup(nsHostRecord* aRec,
 
   rec->mResolving++;
   rec->mTrrAttempts++;
+  rec->StoreNative(false);
   return NS_OK;
 }
 
@@ -959,25 +979,22 @@ nsresult nsHostResolver::NativeLookup(nsHostRecord* aRec,
   }
   LOG(("NativeLookup host:%s af:%" PRId16, aRec->host.get(), aRec->af));
 
-  // Only A/AAAA request are resolve natively.
-  MOZ_ASSERT(aRec->IsAddrRecord());
+  // If this is not a A/AAAA request, make sure native HTTPS is enabled.
+  MOZ_ASSERT(aRec->IsAddrRecord() || IsNativeHTTPSEnabled());
   mLock.AssertCurrentThreadOwns();
 
   RefPtr<nsHostRecord> rec(aRec);
-  RefPtr<AddrHostRecord> addrRec;
-  addrRec = do_QueryObject(rec);
-  MOZ_ASSERT(addrRec);
 
-  addrRec->mNativeStart = TimeStamp::Now();
+  rec->mNativeStart = TimeStamp::Now();
 
   // Add rec to one of the pending queues, possibly removing it from mEvictionQ.
   MaybeRenewHostRecordLocked(aRec, aLock);
 
   mQueue.InsertRecord(rec, rec->flags, aLock);
 
-  addrRec->StoreNative(true);
-  addrRec->StoreNativeUsed(true);
-  addrRec->mResolving++;
+  rec->StoreNative(true);
+  rec->StoreNativeUsed(true);
+  rec->mResolving++;
 
   nsresult rv = ConditionallyCreateThread(rec);
 
@@ -1136,7 +1153,7 @@ nsresult nsHostResolver::NameLookup(nsHostRecord* rec,
       (rec->mEffectiveTRRMode == nsIRequest::TRR_FIRST_MODE &&
        (rec->flags & nsIDNSService::RESOLVE_DISABLE_TRR || serviceNotReady ||
         NS_FAILED(rv)))) {
-    if (!rec->IsAddrRecord()) {
+    if (!IsNativeHTTPSEnabled() && !rec->IsAddrRecord()) {
       return rv;
     }
 
@@ -1145,7 +1162,7 @@ nsresult nsHostResolver::NameLookup(nsHostRecord* rec,
     // Even if we did call TrrLookup above, the fact that it failed sync-ly
     // means that we didn't actually succeed in opening the channel.
     RefPtr<AddrHostRecord> addrRec = do_QueryObject(rec);
-    MOZ_ASSERT(addrRec && addrRec->mResolverType == DNSResolverType::Native);
+    MOZ_ASSERT_IF(addrRec, addrRec->mResolverType == DNSResolverType::Native);
 #endif
 
     // We did not lookup via TRR - don't fallback to native if the
@@ -1204,7 +1221,7 @@ nsresult nsHostResolver::ConditionallyRefreshRecord(
   return NS_OK;
 }
 
-bool nsHostResolver::GetHostToLookup(AddrHostRecord** result) {
+bool nsHostResolver::GetHostToLookup(nsHostRecord** result) {
   bool timedOut = false;
   TimeDuration timeout;
   TimeStamp epoch, now;
@@ -1222,15 +1239,16 @@ bool nsHostResolver::GetHostToLookup(AddrHostRecord** result) {
 
 #define SET_GET_TTL(var, val) (var)->StoreGetTtl(sGetTtlEnabled && (val))
 
-    RefPtr<AddrHostRecord> addrRec = mQueue.Dequeue(true, lock);
-    if (addrRec) {
-      SET_GET_TTL(addrRec, false);
-      addrRec.forget(result);
+    RefPtr<nsHostRecord> rec = mQueue.Dequeue(true, lock);
+    if (rec) {
+      SET_GET_TTL(rec, false);
+      rec.forget(result);
       return true;
     }
 
     if (mActiveAnyThreadCount < MaxResolverThreadsAnyPriority()) {
-      addrRec = mQueue.Dequeue(false, lock);
+      rec = mQueue.Dequeue(false, lock);
+      RefPtr<AddrHostRecord> addrRec = do_QueryObject(rec);
       if (addrRec) {
         MOZ_ASSERT(IsMediumPriority(addrRec->flags) ||
                    IsLowPriority(addrRec->flags));
@@ -1664,8 +1682,10 @@ nsHostResolver::LookupStatus nsHostResolver::CompleteLookupByTypeLocked(
     typeRec->mResults = aResult;
     typeRec->SetExpiration(TimeStamp::NowLoRes(), aTtl, mDefaultGracePeriod);
     typeRec->negative = false;
-    typeRec->mTRRSuccess = true;
-    typeRec->RecordReason(TRRSkippedReason::TRR_OK);
+    typeRec->mTRRSuccess = !rec->LoadNative();
+    typeRec->mNativeSuccess = rec->LoadNative();
+    MOZ_ASSERT(aReason != TRRSkippedReason::TRR_UNSET);
+    typeRec->RecordReason(aReason);
   }
 
   mozilla::LinkedList<RefPtr<nsResolveHostCallback>> cbs =
@@ -1762,12 +1782,12 @@ void nsHostResolver::ThreadFunc() {
 #if defined(RES_RETRY_ON_FAILURE)
   nsResState rs;
 #endif
-  RefPtr<AddrHostRecord> rec;
+  RefPtr<nsHostRecord> rec;
   RefPtr<AddrInfo> ai;
 
   do {
     if (!rec) {
-      RefPtr<AddrHostRecord> tmpRec;
+      RefPtr<nsHostRecord> tmpRec;
       if (!GetHostToLookup(getter_AddRefs(tmpRec))) {
         break;  // thread shutdown signal
       }
@@ -1784,6 +1804,18 @@ void nsHostResolver::ThreadFunc() {
     TimeDuration inQueue = startTime - rec->mNativeStart;
     uint32_t ms = static_cast<uint32_t>(inQueue.ToMilliseconds());
     Telemetry::Accumulate(Telemetry::DNS_NATIVE_QUEUING, ms);
+
+    if (!rec->IsAddrRecord()) {
+      LOG(("byType on DNS thread"));
+      TypeRecordResultType result = AsVariant(mozilla::Nothing());
+      uint32_t ttl = UINT32_MAX;
+      nsresult status = ResolveHTTPSRecord(rec->host, rec->flags, result, ttl);
+      CompleteLookupByType(rec, status, result, rec->mTRRSkippedReason, ttl,
+                           rec->pb);
+      rec = nullptr;
+      continue;
+    }
+
     nsresult status =
         GetAddrInfo(rec->host, rec->af, rec->flags, getter_AddRefs(ai), getTtl);
 #if defined(RES_RETRY_ON_FAILURE)
@@ -1793,13 +1825,14 @@ void nsHostResolver::ThreadFunc() {
     }
 #endif
 
-    {  // obtain lock to check shutdown and manage inter-module telemetry
+    if (RefPtr<AddrHostRecord> addrRec = do_QueryObject(rec)) {
+      // obtain lock to check shutdown and manage inter-module telemetry
       MutexAutoLock lock(mLock);
 
       if (!mShutdown) {
         TimeDuration elapsed = TimeStamp::Now() - startTime;
         if (NS_SUCCEEDED(status)) {
-          if (!rec->addr_info_gencnt) {
+          if (!addrRec->addr_info_gencnt) {
             // Time for initial lookup.
             glean::networking::dns_lookup_time.AccumulateRawDuration(elapsed);
           } else if (!getTtl) {
