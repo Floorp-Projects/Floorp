@@ -75,7 +75,7 @@ class GpuProcessD3D11TextureMap {
     gfx::IntSize mSize;
     RefPtr<IMFSampleUsageInfo> mIMFSampleUsageInfo;
     RefPtr<ID3D11Texture2D> mCopiedTexture;
-    Maybe<HANDLE> mCopiedTextureSharedHandle;
+    RefPtr<gfx::FileHandleWrapper> mCopiedTextureSharedHandle;
   };
 
   struct UpdatingTextureHolder {

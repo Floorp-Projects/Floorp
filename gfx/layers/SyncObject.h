@@ -7,6 +7,7 @@
 #ifndef MOZILLA_GFX_LAYERS_SYNCOBJECT_H
 #define MOZILLA_GFX_LAYERS_SYNCOBJECT_H
 
+#include "mozilla/gfx/FileHandleWrapper.h"
 #include "mozilla/RefCounted.h"
 
 struct ID3D11Device;
@@ -15,7 +16,7 @@ namespace mozilla {
 namespace layers {
 
 #ifdef XP_WIN
-typedef void* SyncHandle;
+typedef RefPtr<gfx::FileHandleWrapper> SyncHandle;
 #else
 typedef uintptr_t SyncHandle;
 #endif  // XP_WIN
