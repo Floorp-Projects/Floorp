@@ -806,10 +806,15 @@ TextureData* CanvasTranslator::LookupTextureData(int64_t aTextureId) {
 }
 
 bool CanvasTranslator::LockTexture(int64_t aTextureId, OpenMode aMode,
-                                   RemoteTextureId aId) {
+                                   RemoteTextureId aId,
+                                   RemoteTextureId aObsoleteId) {
   auto result = mTextureInfo.find(aTextureId);
   if (result == mTextureInfo.end()) {
     return false;
+  }
+  RemoteTextureOwnerId ownerId = result->second.mRemoteTextureOwnerId;
+  if (ownerId.IsValid() && aObsoleteId.IsValid()) {
+    RemoteTextureMap::Get()->RemoveTexture(aObsoleteId, ownerId, mOtherPid);
   }
   if (result->second.mDrawTarget &&
       result->second.mDrawTarget->GetBackendType() == gfx::BackendType::WEBGL) {

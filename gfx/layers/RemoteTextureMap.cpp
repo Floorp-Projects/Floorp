@@ -346,6 +346,29 @@ void RemoteTextureMap::PushTexture(
   }
 }
 
+bool RemoteTextureMap::RemoveTexture(const RemoteTextureId aTextureId,
+                                     const RemoteTextureOwnerId aOwnerId,
+                                     const base::ProcessId aForPid) {
+  MonitorAutoLock lock(mMonitor);
+
+  auto* owner = GetTextureOwner(lock, aOwnerId, aForPid);
+  if (!owner) {
+    return false;
+  }
+
+  for (auto it = owner->mWaitingTextureDataHolders.begin();
+       it != owner->mWaitingTextureDataHolders.end(); it++) {
+    auto& data = *it;
+    if (data->mTextureId == aTextureId) {
+      owner->mReleasingTextureDataHolders.push_back(std::move(data));
+      owner->mWaitingTextureDataHolders.erase(it);
+      return true;
+    }
+  }
+
+  return false;
+}
+
 void RemoteTextureMap::GetLatestBufferSnapshot(
     const RemoteTextureOwnerId aOwnerId, const base::ProcessId aForPid,
     const mozilla::ipc::Shmem& aDestShmem, const gfx::IntSize& aSize) {
