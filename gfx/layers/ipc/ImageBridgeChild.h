@@ -20,6 +20,7 @@
 #include "mozilla/layers/PImageBridgeChild.h"
 #include "mozilla/layers/TextureForwarder.h"
 #include "mozilla/Mutex.h"
+#include "mozilla/UniquePtr.h"
 #include "mozilla/webrender/WebRenderTypes.h"
 #include "nsRegion.h"  // for nsIntRegion
 #include "mozilla/gfx/Rect.h"
@@ -153,6 +154,8 @@ class ImageBridgeChild final : public PImageBridgeChild,
 
   void BeginTransaction();
   void EndTransaction();
+
+  FixedSizeSmallShmemSectionAllocator* GetTileLockAllocator() override;
 
   /**
    * Returns the ImageBridgeChild's thread.
@@ -342,8 +345,9 @@ class ImageBridgeChild final : public PImageBridgeChild,
   uint32_t mNamespace;
 
   CompositableTransaction* mTxn;
+  UniquePtr<FixedSizeSmallShmemSectionAllocator> mSectionAllocator;
 
-  bool mCanSend;
+  mozilla::Atomic<bool> mCanSend;
   mozilla::Atomic<bool> mDestroyed;
 
   /**
