@@ -973,13 +973,6 @@ void nsContainerFrame::PositionChildViews(nsIFrame* aFrame) {
   }
 }
 
-/**
- * De-optimize function to work around a VC2017 15.5+ compiler bug:
- * https://bugzil.la/1424281#c12
- */
-#if defined(_MSC_VER) && !defined(__clang__) && defined(_M_AMD64)
-#  pragma optimize("g", off)
-#endif
 void nsContainerFrame::FinishReflowChild(
     nsIFrame* aKidFrame, nsPresContext* aPresContext,
     const ReflowOutput& aDesiredSize, const ReflowInput* aReflowInput,
