@@ -57,17 +57,36 @@ class TestSessionRestoreManually(SessionStoreTestCase):
             2,
             msg="Should have 3 windows open.",
         )
-        self.marionette.execute_script(
+        self.marionette.execute_async_script(
             """
-            const lazy = {};
-            ChromeUtils.defineESModuleGetters(lazy, {
-                SessionStore: "resource:///modules/sessionstore/SessionStore.sys.mjs",
-            });
             function getAllBrowserWindows() {
                 return Array.from(Services.wm.getEnumerator("navigator:browser"));
             }
+            function promiseResize(value, win) {
+                let deferred = PromiseUtils.defer();
+                let id;
+                function listener() {
+                    win.clearTimeout(id);
+                    if (win.innerWidth <= value) {
+                        id = win.setTimeout(() => {
+                            win.removeEventListener("resize", listener);
+                            deferred.resolve()
+                        }, 100);
+                    }
+                }
+                if (win.innerWidth > value) {
+                    win.addEventListener("resize", listener);
+                    win.resizeTo(value, value);
+                } else {
+                    deferred.resolve()
+                }
+                return deferred.promise;
+            }
+
+            let resolve = arguments[0];
             let windows = getAllBrowserWindows();
-            windows[1].resizeTo(500, 500)
+            let value = 500;
+            promiseResize(value, windows[1]).then(resolve);
             """
         )
 
