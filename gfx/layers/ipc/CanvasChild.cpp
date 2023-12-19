@@ -7,6 +7,10 @@
 #include "CanvasChild.h"
 
 #include "MainThreadUtils.h"
+#include "mozilla/dom/WorkerCommon.h"
+#include "mozilla/dom/WorkerPrivate.h"
+#include "mozilla/dom/WorkerRef.h"
+#include "mozilla/dom/WorkerRunnable.h"
 #include "mozilla/gfx/CanvasManagerChild.h"
 #include "mozilla/gfx/DrawTargetRecording.h"
 #include "mozilla/gfx/Tools.h"
@@ -160,7 +164,10 @@ class SourceSurfaceCanvasRecording final : public gfx::SourceSurface {
   bool mDetached = false;
 };
 
-CanvasChild::CanvasChild() = default;
+CanvasChild::CanvasChild(dom::ThreadSafeWorkerRef* aWorkerRef)
+    : mMutex("CanvasChild::mMutex"),
+      mWorkerRef(aWorkerRef),
+      mIsOnWorker(!!aWorkerRef){};
 
 CanvasChild::~CanvasChild() = default;
 
@@ -219,6 +226,7 @@ void CanvasChild::EnsureRecorder(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
   MOZ_RELEASE_ASSERT(mRecorder->GetTextureType() == aTextureType,
                      "We only support one remote TextureType currently.");
 
+  MutexAutoLock lock(mMutex);
   EnsureDataSurfaceShmem(aSize, aFormat);
 }
 
@@ -228,6 +236,9 @@ void CanvasChild::ActorDestroy(ActorDestroyReason aWhy) {
   if (mRecorder) {
     mRecorder->DetachResources();
   }
+
+  MutexAutoLock lock(mMutex);
+  mWorkerRef = nullptr;
 }
 
 void CanvasChild::Destroy() {
@@ -236,6 +247,9 @@ void CanvasChild::Destroy() {
   if (CanSend()) {
     Send__delete__(this);
   }
+
+  MutexAutoLock lock(mMutex);
+  mWorkerRef = nullptr;
 }
 
 void CanvasChild::OnTextureWriteLock() {
@@ -246,6 +260,40 @@ void CanvasChild::OnTextureWriteLock() {
 }
 
 void CanvasChild::OnTextureForwarded() {
+  if (mIsOnWorker) {
+    MutexAutoLock lock(mMutex);
+    if (NS_WARN_IF(!mWorkerRef)) {
+      // We have begun shutdown or destroyed the actor.
+      return;
+    }
+
+    if (!mWorkerRef->Private()->IsOnCurrentThread()) {
+      class ForwardedRunnable final : public dom::WorkerRunnable {
+       public:
+        ForwardedRunnable(dom::WorkerPrivate* aWorkerPrivate,
+                          CanvasChild* aCanvasChild)
+            : dom::WorkerRunnable(aWorkerPrivate), mCanvasChild(aCanvasChild) {}
+
+        bool WorkerRun(JSContext*, dom::WorkerPrivate*) override {
+          mCanvasChild->OnTextureForwarded();
+          return true;
+        }
+
+       private:
+        RefPtr<CanvasChild> mCanvasChild;
+      };
+
+      auto task = MakeRefPtr<ForwardedRunnable>(mWorkerRef->Private(), this);
+      task->Dispatch();
+      return;
+    }
+  } else if (!NS_IsMainThread()) {
+    NS_DispatchToMainThread(NS_NewRunnableFunction(
+        "CanvasChild::OnTextureForwarded",
+        [self = RefPtr{this}]() { self->OnTextureForwarded(); }));
+    return;
+  }
+
   NS_ASSERT_OWNINGTHREAD(CanvasChild);
 
   if (mHasOutstandingWriteLock) {
@@ -441,11 +489,19 @@ already_AddRefed<gfx::DataSourceSurface> CanvasChild::GetDataSurface(
 
   gfx::IntSize ssSize = aSurface->GetSize();
   gfx::SurfaceFormat ssFormat = aSurface->GetFormat();
-  if (!EnsureDataSurfaceShmem(ssSize, ssFormat)) {
-    return nullptr;
+
+  RefPtr<ipc::SharedMemoryBasic> shmem;
+
+  {
+    MutexAutoLock lock(mMutex);
+    if (!EnsureDataSurfaceShmem(ssSize, ssFormat)) {
+      return nullptr;
+    }
+
+    shmem = mDataSurfaceShmem;
+    mDataSurfaceShmemAvailable = false;
   }
 
-  mDataSurfaceShmemAvailable = false;
   RecordEvent(RecordedGetDataForSurface(aSurface));
   auto checkpoint = CreateCheckpoint();
   struct DataShmemHolder {
@@ -453,8 +509,8 @@ already_AddRefed<gfx::DataSourceSurface> CanvasChild::GetDataSurface(
     RefPtr<CanvasChild> canvasChild;
   };
 
-  auto* data = static_cast<uint8_t*>(mDataSurfaceShmem->memory());
-  auto* closure = new DataShmemHolder{do_AddRef(mDataSurfaceShmem), this};
+  auto* data = static_cast<uint8_t*>(shmem->memory());
+  auto* closure = new DataShmemHolder{std::move(shmem), this};
   auto stride = ImageDataSerializer::ComputeRGBStride(ssFormat, ssSize.width);
 
   RefPtr<gfx::DataSourceSurface> dataSurface =
@@ -486,6 +542,8 @@ already_AddRefed<gfx::SourceSurface> CanvasChild::WrapSurface(
 
 void CanvasChild::ReturnDataSurfaceShmem(
     already_AddRefed<ipc::SharedMemoryBasic> aDataSurfaceShmem) {
+  MutexAutoLock lock(mMutex);
+
   RefPtr<ipc::SharedMemoryBasic> data = aDataSurfaceShmem;
   // We can only reuse the latest data surface shmem.
   if (data == mDataSurfaceShmem) {

@@ -11,9 +11,14 @@
 #include "mozilla/ipc/CrossProcessSemaphore.h"
 #include "mozilla/layers/PCanvasChild.h"
 #include "mozilla/layers/SourceSurfaceSharedData.h"
+#include "mozilla/Mutex.h"
 #include "mozilla/WeakPtr.h"
 
 namespace mozilla {
+
+namespace dom {
+class ThreadSafeWorkerRef;
+}
 
 namespace gfx {
 class SourceSurface;
@@ -24,9 +29,15 @@ class CanvasDrawEventRecorder;
 
 class CanvasChild final : public PCanvasChild, public SupportsWeakPtr {
  public:
-  NS_INLINE_DECL_REFCOUNTING(CanvasChild)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CanvasChild)
+  NS_DECL_OWNINGTHREAD
 
-  CanvasChild();
+  explicit CanvasChild(dom::ThreadSafeWorkerRef* aWorkerRef);
+
+  /**
+   * @returns true if initialization was successful.
+   */
+  bool Init();
 
   /**
    * @returns true if remote canvas has been deactivated due to failure.
@@ -156,7 +167,8 @@ class CanvasChild final : public PCanvasChild, public SupportsWeakPtr {
 
   ~CanvasChild() final;
 
-  bool EnsureDataSurfaceShmem(gfx::IntSize aSize, gfx::SurfaceFormat aFormat);
+  bool EnsureDataSurfaceShmem(gfx::IntSize aSize, gfx::SurfaceFormat aFormat)
+      MOZ_REQUIRES(mMutex);
 
   void ReturnDataSurfaceShmem(
       already_AddRefed<ipc::SharedMemoryBasic> aDataSurfaceShmem);
@@ -167,10 +179,12 @@ class CanvasChild final : public PCanvasChild, public SupportsWeakPtr {
 
   static bool mDeactivated;
 
+  Mutex mMutex;
+  RefPtr<dom::ThreadSafeWorkerRef> mWorkerRef MOZ_GUARDED_BY(mMutex);
   RefPtr<CanvasDrawEventRecorder> mRecorder;
 
-  RefPtr<ipc::SharedMemoryBasic> mDataSurfaceShmem;
-  bool mDataSurfaceShmemAvailable = false;
+  RefPtr<ipc::SharedMemoryBasic> mDataSurfaceShmem MOZ_GUARDED_BY(mMutex);
+  bool mDataSurfaceShmemAvailable MOZ_GUARDED_BY(mMutex) = false;
   int64_t mLastWriteLockCheckpoint = 0;
   uint32_t mTransactionsSinceGetDataSurface = kCacheDataSurfaceThreshold;
   std::vector<RefPtr<gfx::SourceSurface>> mLastTransactionExternalSurfaces;
@@ -182,6 +196,7 @@ class CanvasChild final : public PCanvasChild, public SupportsWeakPtr {
   bool mIsInTransaction = false;
   bool mHasOutstandingWriteLock = false;
   bool mDormant = false;
+  bool mIsOnWorker = false;
 };
 
 }  // namespace layers
