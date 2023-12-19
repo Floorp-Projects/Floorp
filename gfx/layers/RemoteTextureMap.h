@@ -184,6 +184,11 @@ class RemoteTextureMap {
                    RefPtr<TextureHost>& aTextureHost,
                    UniquePtr<SharedResourceWrapper>&& aResourceWrapper);
 
+  // Remove waiting texture that will not be used.
+  bool RemoveTexture(const RemoteTextureId aTextureId,
+                     const RemoteTextureOwnerId aOwnerId,
+                     const base::ProcessId aForPid);
+
   void GetLatestBufferSnapshot(const RemoteTextureOwnerId aOwnerId,
                                const base::ProcessId aForPid,
                                const mozilla::ipc::Shmem& aDestShmem,
