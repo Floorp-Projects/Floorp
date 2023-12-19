@@ -97,6 +97,7 @@
 #include "mozilla/gfx/DataSurfaceHelpers.h"
 #include "mozilla/gfx/PatternHelpers.h"
 #include "mozilla/gfx/Swizzle.h"
+#include "mozilla/layers/ImageBridgeChild.h"
 #include "mozilla/layers/PersistentBufferProvider.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Preferences.h"
@@ -117,6 +118,7 @@
 #include "mozilla/dom/SVGImageElement.h"
 #include "mozilla/dom/TextMetrics.h"
 #include "mozilla/FloatingPoint.h"
+#include "mozilla/Logging.h"
 #include "nsGlobalWindowInner.h"
 #include "nsDeviceContext.h"
 #include "nsFontMetrics.h"
@@ -1680,15 +1682,27 @@ bool CanvasRenderingContext2D::TryAcceleratedTarget(
     return false;
   }
 
-  if (!mCanvasElement) {
-    return false;
+  if (mCanvasElement) {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    WindowRenderer* renderer = WindowRendererFromCanvasElement(mCanvasElement);
+    if (NS_WARN_IF(!renderer)) {
+      return false;
+    }
+
+    aOutProvider = PersistentBufferProviderAccelerated::Create(
+        GetSize(), GetSurfaceFormat(), renderer->AsKnowsCompositor());
+  } else if (mOffscreenCanvas &&
+             StaticPrefs::gfx_canvas_remote_allow_offscreen()) {
+    RefPtr<ImageBridgeChild> imageBridge = ImageBridgeChild::GetSingleton();
+    if (NS_WARN_IF(!imageBridge)) {
+      return false;
+    }
+
+    aOutProvider = PersistentBufferProviderAccelerated::Create(
+        GetSize(), GetSurfaceFormat(), imageBridge);
   }
-  WindowRenderer* renderer = WindowRendererFromCanvasElement(mCanvasElement);
-  if (!renderer) {
-    return false;
-  }
-  aOutProvider = PersistentBufferProviderAccelerated::Create(
-      GetSize(), GetSurfaceFormat(), renderer->AsKnowsCompositor());
+
   if (!aOutProvider) {
     return false;
   }
@@ -1703,10 +1717,6 @@ bool CanvasRenderingContext2D::TrySharedTarget(
   aOutDT = nullptr;
   aOutProvider = nullptr;
 
-  if (!mCanvasElement) {
-    return false;
-  }
-
   if (mBufferProvider && mBufferProvider->IsShared()) {
     // we are already using a shared buffer provider, we are allocating a new
     // one because the current one failed so let's just fall back to the basic
@@ -1715,15 +1725,28 @@ bool CanvasRenderingContext2D::TrySharedTarget(
     return false;
   }
 
-  WindowRenderer* renderer = WindowRendererFromCanvasElement(mCanvasElement);
+  if (mCanvasElement) {
+    MOZ_ASSERT(NS_IsMainThread());
 
-  if (!renderer) {
-    return false;
+    WindowRenderer* renderer = WindowRendererFromCanvasElement(mCanvasElement);
+    if (NS_WARN_IF(!renderer)) {
+      return false;
+    }
+
+    aOutProvider = renderer->CreatePersistentBufferProvider(
+        GetSize(), GetSurfaceFormat(),
+        !mAllowAcceleration || GetEffectiveWillReadFrequently());
+  } else if (mOffscreenCanvas &&
+             StaticPrefs::gfx_canvas_remote_allow_offscreen()) {
+    RefPtr<ImageBridgeChild> imageBridge = ImageBridgeChild::GetSingleton();
+    if (NS_WARN_IF(!imageBridge)) {
+      return false;
+    }
+
+    aOutProvider = PersistentBufferProviderShared::Create(
+        GetSize(), GetSurfaceFormat(), imageBridge,
+        !mAllowAcceleration || GetEffectiveWillReadFrequently());
   }
-
-  aOutProvider = renderer->CreatePersistentBufferProvider(
-      GetSize(), GetSurfaceFormat(),
-      !mAllowAcceleration || GetEffectiveWillReadFrequently());
 
   if (!aOutProvider) {
     return false;

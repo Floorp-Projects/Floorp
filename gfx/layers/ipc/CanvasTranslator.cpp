@@ -13,6 +13,7 @@
 #include "mozilla/gfx/DrawTargetWebgl.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/GPUParent.h"
+#include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/ipc/Endpoint.h"
 #include "mozilla/layers/BufferTexture.h"
@@ -648,9 +649,15 @@ bool CanvasTranslator::CheckForFreshCanvasDevice(int aLineNumber) {
     NotifyDeviceChanged();
   }
 
-  RefPtr<Runnable> runnable = NS_NewRunnableFunction(
-      "CanvasTranslator NotifyDeviceReset",
-      []() { gfx::GPUParent::GetSingleton()->NotifyDeviceReset(); });
+  RefPtr<Runnable> runnable =
+      NS_NewRunnableFunction("CanvasTranslator NotifyDeviceReset", []() {
+        if (XRE_IsGPUProcess()) {
+          gfx::GPUParent::GetSingleton()->NotifyDeviceReset();
+        } else {
+          gfx::GPUProcessManager::Get()->OnInProcessDeviceReset(
+              /* aTrackThreshold */ false);
+        }
+      });
 
   // It is safe to wait here because only the Compositor thread waits on us and
   // the main thread doesn't wait on the compositor thread in the GPU process.

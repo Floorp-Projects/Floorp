@@ -5734,6 +5734,12 @@
   value: false
   mirror: once
 
+# Whether OffscreenCanvas can use remote canvas
+- name: gfx.canvas.remote.allow-offscreen
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 # How long to wait in milliseconds for a texture to be resolved
 - name: gfx.canvas.remote.texture-timeout-ms
   type: RelaxedAtomicUint32
