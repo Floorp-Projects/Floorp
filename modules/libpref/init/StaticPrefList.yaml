@@ -11956,7 +11956,7 @@
 # Whether the SOCKS proxy should be in charge of DNS resolution.
 - name: network.proxy.socks_remote_dns
   type: RelaxedAtomicBool
-  value: false
+  value: true
   mirror: always
 
 # When receiving a network change event, the time (in ms) we wait to reload the
