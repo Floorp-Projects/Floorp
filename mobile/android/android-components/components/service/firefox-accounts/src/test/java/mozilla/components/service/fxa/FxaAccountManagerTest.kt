@@ -681,7 +681,7 @@ class FxaAccountManagerTest {
         verify(accountObserver, never()).onAuthenticated(any(), any())
 
         reset(accountObserver)
-        assertEquals(testAuthFlowUrl(entrypoint = "home-menu").url, manager.beginAuthentication(entrypoint = mock()))
+        assertEquals(testAuthFlowUrl(entrypoint = "home-menu").url, manager.beginAuthentication(entrypoint = entryPoint))
         assertNull(manager.authenticatedAccount())
         assertNull(manager.accountProfile())
 
@@ -726,7 +726,7 @@ class FxaAccountManagerTest {
         verify(accountObserver, never()).onAuthenticated(any(), any())
 
         reset(accountObserver)
-        assertEquals(testAuthFlowUrl(entrypoint = "home-menu").url, manager.beginAuthentication(entrypoint = mock()))
+        assertEquals(testAuthFlowUrl(entrypoint = "home-menu").url, manager.beginAuthentication(entrypoint = entryPoint))
         assertNull(manager.authenticatedAccount())
         assertNull(manager.accountProfile())
 
@@ -764,7 +764,7 @@ class FxaAccountManagerTest {
         }
 
         manager.start()
-        manager.beginAuthentication("http://pairing.com", mock())
+        manager.beginAuthentication("http://pairing.com", entryPoint)
         fail()
     }
 
@@ -783,7 +783,7 @@ class FxaAccountManagerTest {
         verify(accountObserver, never()).onAuthenticated(any(), any())
 
         reset(accountObserver)
-        assertEquals(testAuthFlowUrl(entrypoint = "home-menu").url, manager.beginAuthentication(pairingUrl = "auth://pairing", mock()))
+        assertEquals(testAuthFlowUrl(entrypoint = "home-menu").url, manager.beginAuthentication(pairingUrl = "auth://pairing", entryPoint))
         assertNull(manager.authenticatedAccount())
         assertNull(manager.accountProfile())
 
@@ -825,7 +825,7 @@ class FxaAccountManagerTest {
             testAuthFlowUrl(entrypoint = "home-menu").url,
             manager.beginAuthentication(
                 pairingUrl = "auth://pairing",
-                entrypoint = mock(),
+                entrypoint = entryPoint,
             ),
         )
         assertNull(manager.authenticatedAccount())
@@ -836,7 +836,7 @@ class FxaAccountManagerTest {
             testAuthFlowUrl(entrypoint = "home-menu").url,
             manager.beginAuthentication(
                 pairingUrl = "auth://pairing",
-                entrypoint = mock(),
+                entrypoint = entryPoint,
             ),
         )
         assertNull(manager.authenticatedAccount())
@@ -879,7 +879,7 @@ class FxaAccountManagerTest {
 
         reset(accountObserver)
 
-        assertNull(manager.beginAuthentication(entrypoint = mock()))
+        assertNull(manager.beginAuthentication(entrypoint = entryPoint))
 
         // Confirm that account state observable doesn't receive authentication errors.
         assertNull(manager.authenticatedAccount())
@@ -889,7 +889,7 @@ class FxaAccountManagerTest {
         `when`(mockAccount.beginOAuthFlow(any(), any())).thenReturn(testAuthFlowUrl())
         `when`(constellation.finalizeDevice(any(), any())).thenReturn(ServiceResult.Ok)
 
-        assertEquals(testAuthFlowUrl().url, manager.beginAuthentication(entrypoint = mock()))
+        assertEquals(testAuthFlowUrl().url, manager.beginAuthentication(entrypoint = entryPoint))
 
         assertNull(manager.authenticatedAccount())
         assertNull(manager.accountProfile())
@@ -927,7 +927,7 @@ class FxaAccountManagerTest {
 
         reset(accountObserver)
 
-        assertNull(manager.beginAuthentication(pairingUrl = "auth://pairing", entrypoint = mock()))
+        assertNull(manager.beginAuthentication(pairingUrl = "auth://pairing", entrypoint = entryPoint))
 
         // Confirm that account state observable doesn't receive authentication errors.
         assertNull(manager.authenticatedAccount())
@@ -947,7 +947,7 @@ class FxaAccountManagerTest {
             testAuthFlowUrl().url,
             manager.beginAuthentication(
                 pairingUrl = "auth://pairing",
-                entrypoint = mock(),
+                entrypoint = entryPoint,
             ),
         )
 
@@ -984,7 +984,7 @@ class FxaAccountManagerTest {
         verify(accountObserver, never()).onAuthenticated(any(), any())
 
         reset(accountObserver)
-        assertEquals(testAuthFlowUrl(entrypoint = "home-menu").url, manager.beginAuthentication(entrypoint = mock()))
+        assertEquals(testAuthFlowUrl(entrypoint = "home-menu").url, manager.beginAuthentication(entrypoint = entryPoint))
         assertNull(manager.authenticatedAccount())
         assertNull(manager.accountProfile())
 
@@ -1013,7 +1013,7 @@ class FxaAccountManagerTest {
 
         // Able to re-authenticate.
         reset(accountObserver)
-        assertEquals(testAuthFlowUrl(entrypoint = "home-menu").url, manager.beginAuthentication(entrypoint = mock()))
+        assertEquals(testAuthFlowUrl(entrypoint = "home-menu").url, manager.beginAuthentication(entrypoint = entryPoint))
 
         manager.finishAuthentication(FxaAuthData(AuthType.Pairing, "dummyCode", EXPECTED_AUTH_STATE))
         assertTrue(manager.authenticatedAccount() != null)
@@ -1048,7 +1048,7 @@ class FxaAccountManagerTest {
         verify(accountObserver, never()).onAuthenticated(any(), any())
 
         reset(accountObserver)
-        assertEquals(testAuthFlowUrl(entrypoint = "home-menu").url, manager.beginAuthentication(entrypoint = mock()))
+        assertEquals(testAuthFlowUrl(entrypoint = "home-menu").url, manager.beginAuthentication(entrypoint = entryPoint))
         assertNull(manager.authenticatedAccount())
         assertNull(manager.accountProfile())
 
@@ -1096,7 +1096,7 @@ class FxaAccountManagerTest {
         verify(accountObserver, never()).onAuthenticated(any(), any())
 
         reset(accountObserver)
-        assertEquals(testAuthFlowUrl(entrypoint = "home-menu").url, manager.beginAuthentication(entrypoint = mock()))
+        assertEquals(testAuthFlowUrl(entrypoint = "home-menu").url, manager.beginAuthentication(entrypoint = entryPoint))
         assertNull(manager.authenticatedAccount())
         assertNull(manager.accountProfile())
 
@@ -1195,7 +1195,7 @@ class FxaAccountManagerTest {
         verify(accountObserver, never()).onAuthenticated(any(), any())
 
         reset(accountObserver)
-        assertEquals(testAuthFlowUrl().url, manager.beginAuthentication(entrypoint = mock()))
+        assertEquals(testAuthFlowUrl().url, manager.beginAuthentication(entrypoint = entryPoint))
         assertNull(manager.authenticatedAccount())
         assertNull(manager.accountProfile())
 
@@ -1277,7 +1277,7 @@ class FxaAccountManagerTest {
         assertFalse(manager.accountNeedsReauth())
 
         reset(accountObserver)
-        assertEquals(testAuthFlowUrl().url, manager.beginAuthentication(entrypoint = mock()))
+        assertEquals(testAuthFlowUrl().url, manager.beginAuthentication(entrypoint = entryPoint))
         assertNull(manager.authenticatedAccount())
         assertNull(manager.accountProfile())
 
@@ -1337,7 +1337,7 @@ class FxaAccountManagerTest {
         assertFalse(manager.accountNeedsReauth())
 
         reset(accountObserver)
-        assertEquals(testAuthFlowUrl().url, manager.beginAuthentication(entrypoint = mock()))
+        assertEquals(testAuthFlowUrl().url, manager.beginAuthentication(entrypoint = entryPoint))
         assertNull(manager.authenticatedAccount())
         assertNull(manager.accountProfile())
 
@@ -1415,7 +1415,7 @@ class FxaAccountManagerTest {
         assertFalse(manager.accountNeedsReauth())
 
         reset(accountObserver)
-        assertEquals(testAuthFlowUrl().url, manager.beginAuthentication(entrypoint = mock()))
+        assertEquals(testAuthFlowUrl().url, manager.beginAuthentication(entrypoint = entryPoint))
         assertNull(manager.authenticatedAccount())
         assertNull(manager.accountProfile())
 
@@ -1473,7 +1473,7 @@ class FxaAccountManagerTest {
         assertFalse(manager.accountNeedsReauth())
 
         reset(accountObserver)
-        assertEquals(testAuthFlowUrl().url, manager.beginAuthentication(entrypoint = mock()))
+        assertEquals(testAuthFlowUrl().url, manager.beginAuthentication(entrypoint = entryPoint))
         assertNull(manager.authenticatedAccount())
         assertNull(manager.accountProfile())
 

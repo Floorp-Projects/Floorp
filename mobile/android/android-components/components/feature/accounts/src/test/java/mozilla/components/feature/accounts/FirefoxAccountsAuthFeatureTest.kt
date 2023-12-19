@@ -16,6 +16,7 @@ import mozilla.components.concept.sync.AuthFlowUrl
 import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.DeviceConfig
 import mozilla.components.concept.sync.DeviceType
+import mozilla.components.concept.sync.FxAEntryPoint
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.Profile
 import mozilla.components.service.fxa.FxaAuthData
@@ -26,6 +27,7 @@ import mozilla.components.support.base.observer.ObserverRegistry
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
@@ -71,6 +73,10 @@ class TestableFxaAccountManager(
 
 @RunWith(AndroidJUnit4::class)
 class FirefoxAccountsAuthFeatureTest {
+    val mockEntryPoint: FxAEntryPoint = mock<FxAEntryPoint>().apply {
+        whenever(entryName).thenReturn("home-menu")
+    }
+
     // Note that tests that involve secure storage specify API=21, because of issues testing secure storage on
     // 23+ API levels. See https://github.com/mozilla-mobile/android-components/issues/4956
 
@@ -88,7 +94,7 @@ class FirefoxAccountsAuthFeatureTest {
         ) { _, url ->
             authUrl.complete(url)
         }
-        feature.beginAuthentication(testContext, mock())
+        feature.beginAuthentication(testContext, mockEntryPoint)
         authUrl.await()
         assertEquals("auth://url", authUrl.getCompleted())
     }
@@ -107,7 +113,7 @@ class FirefoxAccountsAuthFeatureTest {
         ) { _, url ->
             authUrl.complete(url)
         }
-        feature.beginPairingAuthentication(testContext, "auth://pair", mock())
+        feature.beginPairingAuthentication(testContext, "auth://pair", mockEntryPoint)
         authUrl.await()
         assertEquals("auth://url", authUrl.getCompleted())
     }
@@ -127,7 +133,7 @@ class FirefoxAccountsAuthFeatureTest {
         ) { _, url ->
             authUrl.complete(url)
         }
-        feature.beginAuthentication(testContext, mock())
+        feature.beginAuthentication(testContext, mockEntryPoint)
         authUrl.await()
         // Fallback url is invoked.
         assertEquals("https://accounts.firefox.com/signin", authUrl.getCompleted())
@@ -148,7 +154,7 @@ class FirefoxAccountsAuthFeatureTest {
         ) { _, url ->
             authUrl.complete(url)
         }
-        feature.beginPairingAuthentication(testContext, "auth://pair", mock())
+        feature.beginPairingAuthentication(testContext, "auth://pair", mockEntryPoint)
         authUrl.await()
         // Fallback url is invoked.
         assertEquals("https://accounts.firefox.com/signin", authUrl.getCompleted())
