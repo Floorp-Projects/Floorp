@@ -407,6 +407,30 @@ void ImageBridgeChild::FlushAllImages(ImageClient* aClient,
   task.Wait();
 }
 
+void ImageBridgeChild::FlushEventsSync(SynchronousTask* aTask) {
+  AutoCompleteTask complete(aTask);
+}
+
+void ImageBridgeChild::FlushEvents() {
+  MOZ_ASSERT(!InImageBridgeChildThread());
+
+  if (InImageBridgeChildThread()) {
+    NS_ERROR(
+        "ImageBridgeChild::FlushEvents() is called on ImageBridge thread.");
+    return;
+  }
+
+  SynchronousTask task("FlushEvents Lock");
+
+  // RefPtrs on arguments are not needed since this dispatches synchronously.
+  RefPtr<Runnable> runnable =
+      WrapRunnable(RefPtr<ImageBridgeChild>(this),
+                   &ImageBridgeChild::FlushEventsSync, &task);
+  GetThread()->Dispatch(runnable.forget());
+
+  task.Wait();
+}
+
 void ImageBridgeChild::BeginTransaction() {
   MOZ_ASSERT(CanSend());
   MOZ_ASSERT(mTxn->Finished(), "uncommitted txn?");

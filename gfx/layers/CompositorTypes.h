@@ -96,9 +96,11 @@ enum class TextureFlags : uint32_t {
   DUMMY_TEXTURE = 1 << 22,
   // Software decoded video
   SOFTWARE_DECODED_VIDEO = 1 << 23,
+  // Forget/Deallocate deletes the texture data.
+  DATA_SELF_DELETING = 1 << 24,
 
   // OR union of all valid bits
-  ALL_BITS = (1 << 24) - 1,
+  ALL_BITS = (1 << 25) - 1,
   // the default flags
   DEFAULT = NO_FLAGS
 };

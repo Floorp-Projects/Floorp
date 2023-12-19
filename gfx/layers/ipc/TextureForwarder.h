@@ -79,11 +79,6 @@ class TextureForwarder : public LayersIPCChannel {
       LayersBackend aLayersBackend, TextureFlags aFlags,
       const dom::ContentParentId& aContentId, uint64_t aSerial,
       wr::MaybeExternalImageId& aExternalImageId) = 0;
-
-  /**
-   * Returns the CanvasChild for this TextureForwarder.
-   */
-  virtual already_AddRefed<CanvasChild> GetCanvasChild() { return nullptr; };
 };
 
 }  // namespace layers
