@@ -178,10 +178,12 @@ class nsCaret final : public nsISelectionListener {
    */
   static nsIFrame* GetGeometry(const mozilla::dom::Selection* aSelection,
                                nsRect* aRect);
+  enum class ForceEditableRegion { No, Yes };
   static nsIFrame* GetCaretFrameForNodeOffset(
       nsFrameSelection* aFrameSelection, nsIContent* aContentNode,
       int32_t aOffset, CaretAssociationHint aFrameHint,
       mozilla::intl::BidiEmbeddingLevel aBidiLevel,
+      ForceEditableRegion aForceEditableRegion,
       nsIFrame** aReturnUnadjustedFrame, int32_t* aReturnOffset);
   static nsRect GetGeometryForFrame(nsIFrame* aFrame, int32_t aFrameOffset,
                                     nscoord* aBidiIndicatorSize);
