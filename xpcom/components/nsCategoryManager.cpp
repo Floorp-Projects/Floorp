@@ -379,6 +379,7 @@ nsCategoryManager::CollectReports(nsIHandleReportCallback* aHandleReport,
 
 size_t nsCategoryManager::SizeOfIncludingThis(
     mozilla::MallocSizeOf aMallocSizeOf) {
+  MOZ_ASSERT(NS_IsMainThread());
   MutexAutoLock lock(mLock);
   size_t n = aMallocSizeOf(this);
 
@@ -492,6 +493,7 @@ void nsCategoryManager::AddCategoryEntry(const nsACString& aCategoryName,
                                          const nsACString& aEntryName,
                                          const nsACString& aValue,
                                          bool aReplace, nsACString& aOldValue) {
+  MOZ_ASSERT(NS_IsMainThread());
   aOldValue.SetIsVoid(true);
 
   // Before we can insert a new entry, we'll need to
