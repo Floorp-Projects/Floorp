@@ -15,11 +15,11 @@ add_task(async function () {
   info("Enable the tracing");
   await clickElement(dbg, "trace");
 
-  const topLevelThreadActorID =
+  const topLevelThread =
     dbg.toolbox.commands.targetCommand.targetFront.threadFront.actorID;
   info("Wait for tracing to be enabled");
   await waitForState(dbg, state => {
-    return dbg.selectors.getIsThreadCurrentlyTracing(topLevelThreadActorID);
+    return dbg.selectors.getIsThreadCurrentlyTracing(topLevelThread);
   });
 
   ok(
@@ -89,7 +89,7 @@ add_task(async function () {
   await clickElement(dbg, "trace");
   info("Wait for tracing to be disabled");
   await waitForState(dbg, state => {
-    return !dbg.selectors.getIsThreadCurrentlyTracing(topLevelThreadActorID);
+    return !dbg.selectors.getIsThreadCurrentlyTracing(topLevelThread);
   });
 
   invokeInTab("inline_script2");
@@ -179,10 +179,10 @@ add_task(async function testPageKeyShortcut() {
 
   const dbg = await initDebuggerWithAbsoluteURL("data:text/html,key-shortcut");
 
-  const topLevelThreadActorID =
+  const topLevelThread =
     dbg.toolbox.commands.targetCommand.targetFront.threadFront.actorID;
   ok(
-    !dbg.selectors.getIsThreadCurrentlyTracing(topLevelThreadActorID),
+    !dbg.selectors.getIsThreadCurrentlyTracing(topLevelThread),
     "Tracing is disabled on debugger opening"
   );
 
@@ -212,7 +212,7 @@ add_task(async function testPageKeyShortcut() {
 
   info("Wait for tracing to be enabled");
   await waitForState(dbg, state => {
-    return dbg.selectors.getIsThreadCurrentlyTracing(topLevelThreadActorID);
+    return dbg.selectors.getIsThreadCurrentlyTracing(topLevelThread);
   });
 
   is(
@@ -232,7 +232,7 @@ add_task(async function testPageKeyShortcut() {
 
   info("Wait for tracing to be disabled");
   await waitForState(dbg, state => {
-    return !dbg.selectors.getIsThreadCurrentlyTracing(topLevelThreadActorID);
+    return !dbg.selectors.getIsThreadCurrentlyTracing(topLevelThread);
   });
 });
 
@@ -276,7 +276,7 @@ add_task(async function testPageKeyShortcutWithoutDebugger() {
   const { resourceCommand } = toolbox.commands;
   const { onResource: onTracingStateEnabled } =
     await resourceCommand.waitForNextResource(
-      resourceCommand.TYPES.JSTRACER_STATE,
+      resourceCommand.TYPES.TRACING_STATE,
       {
         ignoreExistingResources: true,
         predicate(resource) {
@@ -297,7 +297,7 @@ add_task(async function testPageKeyShortcutWithoutDebugger() {
   info("Toggle it back off, with the same shortcut");
   const { onResource: onTracingStateDisabled } =
     await resourceCommand.waitForNextResource(
-      resourceCommand.TYPES.JSTRACER_STATE,
+      resourceCommand.TYPES.TRACING_STATE,
       {
         ignoreExistingResources: true,
         predicate(resource) {
@@ -315,45 +315,4 @@ add_task(async function testPageKeyShortcutWithoutDebugger() {
 
   info("Wait for tracing to be disabled");
   await onTracingStateDisabled;
-});
-
-add_task(async function testTracingValues() {
-  await pushPref("devtools.debugger.features.javascript-tracing", true);
-  // Cover tracing function argument values
-  const jsCode = `function foo() { bar(1, ["array"], { attribute: 3 }, BigInt(4), Infinity, Symbol("6"), "7"); }; function bar(a, b, c) {}`;
-  const dbg = await initDebuggerWithAbsoluteURL(
-    "data:text/html," + encodeURIComponent(`<script>${jsCode}</script>`)
-  );
-
-  await openContextMenuInDebugger(dbg, "trace", 4);
-  const toggled = waitForDispatch(
-    dbg.store,
-    "TOGGLE_JAVASCRIPT_TRACING_VALUES"
-  );
-  selectContextMenuItem(dbg, `#debugger-trace-menu-item-log-values`);
-  await toggled;
-  ok(true, "Toggled the log values setting");
-
-  await clickElement(dbg, "trace");
-
-  const topLevelThreadActorID =
-    dbg.toolbox.commands.targetCommand.targetFront.threadFront.actorID;
-  info("Wait for tracing to be enabled");
-  await waitForState(dbg, state => {
-    return dbg.selectors.getIsThreadCurrentlyTracing(topLevelThreadActorID);
-  });
-
-  invokeInTab("foo");
-
-  await hasConsoleMessage(dbg, "λ foo()");
-  await hasConsoleMessage(dbg, "λ bar");
-  const { value } = await findConsoleMessage(dbg, "λ bar");
-  is(
-    value,
-    `interpreter⟶λ bar(1, \nArray [ "array" ]\n, \nObject { attribute: 3 }\n, 4n, Infinity, Symbol("6"), "7")`,
-    "The argument were printed for bar()"
-  );
-
-  // Reset the log values setting
-  Services.prefs.clearUserPref("devtools.debugger.javascript-tracing-values");
 });

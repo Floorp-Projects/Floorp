@@ -668,9 +668,9 @@ Toolbox.prototype = {
   },
 
   /**
-   * Called on each new JSTRACER_STATE resource
+   * Called on each new TRACING_STATE resource
    *
-   * @param {Object} resource The JSTRACER_STATE resource
+   * @param {Object} resource The TRACING_STATE resource
    */
   async _onTracingStateChanged(resource) {
     const { profile } = resource;
@@ -926,7 +926,7 @@ Toolbox.prototype = {
           false
         )
       ) {
-        watchedResources.push(this.resourceCommand.TYPES.JSTRACER_STATE);
+        watchedResources.push(this.resourceCommand.TYPES.TRACING_STATE);
       }
 
       if (!this.isBrowserToolbox) {
@@ -4744,7 +4744,7 @@ Toolbox.prototype = {
       if (resourceType == TYPES.THREAD_STATE) {
         this._onThreadStateChanged(resource);
       }
-      if (resourceType == TYPES.JSTRACER_STATE) {
+      if (resourceType == TYPES.TRACING_STATE) {
         this._onTracingStateChanged(resource);
       }
     }

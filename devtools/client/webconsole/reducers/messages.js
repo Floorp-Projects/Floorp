@@ -1436,9 +1436,7 @@ function passSearchFilters(message, filters) {
     // Look for a match in notes.
     isTextInNotes(matchStr, message.notes) ||
     // Look for a match in prefix.
-    isTextInPrefix(matchStr, message.prefix) ||
-    // Look for a match in displayName.
-    isTextInDisplayName(matchStr, message.displayName);
+    isTextInPrefix(matchStr, message.prefix);
 
   return matched ? !exclude : exclude;
 }
@@ -1563,13 +1561,6 @@ function isTextInMessageText(matchStr, messageText) {
   }
 
   return true;
-}
-
-/**
- * Returns true if given text is included in JS Trace display name.
- */
-function isTextInDisplayName(matchStr, displayName) {
-  return displayName && matchStr(displayName);
 }
 
 /**

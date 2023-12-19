@@ -43,20 +43,18 @@ add_task(async function () {
   // Instead the frontend log a message as a console API message.
   msg = await evaluateExpressionInConsole(
     hud,
-    ":trace --logMethod console --prefix foo --values",
+    ":trace --logMethod console --prefix foo",
     "console-api"
   );
   is(msg.textContent.trim(), "Started tracing to Web Console");
 
   info("Trigger some code to log some traces");
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
-    content.wrappedJSObject.main("arg", 2);
+    content.wrappedJSObject.main();
   });
 
-  // Assert that we also see the custom prefix, as well as function arguments
-  await waitFor(
-    () => !!findTracerMessages(hud, `foo: interpreter⟶λ main("arg", 2)`).length
-  );
+  // Assert that we also see the custom prefix
+  await waitFor(() => findConsoleAPIMessage(hud, "foo: —interpreter⟶λ main"));
 
   info("Test toggling the tracer OFF");
   msg = await evaluateExpressionInConsole(hud, ":trace", "console-api");
@@ -64,9 +62,7 @@ add_task(async function () {
 
   info("Clear past traces");
   hud.ui.clearOutput();
-  await waitFor(
-    () => !findTracerMessages(hud, `foo: interpreter⟶λ main("arg", 2)`).length
-  );
+  await waitFor(() => !findConsoleAPIMessage(hud, "foo: —interpreter⟶λ main"));
   ok("Console was cleared");
 
   info("Trigger some code again");
@@ -78,7 +74,7 @@ add_task(async function () {
   await wait(1000);
 
   ok(
-    !findTracerMessages(hud, `foo: interpreter⟶λ main("arg", 2)`).length,
+    !findConsoleAPIMessage(hud, "foo: —interpreter⟶λ main"),
     "We really stopped recording traces, and no trace appear in the console"
   );
 });

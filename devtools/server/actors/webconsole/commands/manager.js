@@ -16,7 +16,7 @@ loader.lazyGetter(this, "l10n", () => {
 });
 const USAGE_STRING_MAPPING = {
   block: "webconsole-commands-usage-block",
-  trace: "webconsole-commands-usage-trace2",
+  trace: "webconsole-commands-usage-trace",
   unblock: "webconsole-commands-usage-unblock",
 };
 
@@ -871,7 +871,6 @@ WebConsoleCommandsManager.register({
     const enabled = tracerActor.toggleTracing({
       logMethod,
       prefix: args.prefix || null,
-      traceValues: !!args.values,
     });
 
     owner.helperResult = {
@@ -880,5 +879,5 @@ WebConsoleCommandsManager.register({
       logMethod,
     };
   },
-  validArguments: ["logMethod", "prefix", "values"],
+  validArguments: ["logMethod", "prefix"],
 });

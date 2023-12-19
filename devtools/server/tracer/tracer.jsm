@@ -83,15 +83,9 @@ const customLazy = {
  *        Optional spidermonkey's Debugger instance.
  *        This allows devtools to pass a custom instance and ease worker support
  *        where we can't load jsdebugger.sys.mjs.
- * @param {Boolean} options.loggingMethod
- *        Optional setting to use something else than `dump()` to log traces to stdout.
- *        This is mostly used by tests.
  * @param {Boolean} options.traceDOMEvents
  *        Optional setting to enable tracing all the DOM events being going through
  *        dom/events/EventListenerManager.cpp's `EventListenerManager`.
- * @param {Boolean} options.traceValues
- *        Optional setting to enable tracing all function call values as well,
- *        as returned values (when we do log returned frames).
  */
 class JavaScriptTracer {
   constructor(options) {
@@ -109,24 +103,12 @@ class JavaScriptTracer {
     this.depth = 0;
     this.prefix = options.prefix ? `${options.prefix}: ` : "";
 
-    this.loggingMethod = options.loggingMethod;
-    if (!this.loggingMethod) {
-      // On workers, `dump` can't be called with JavaScript on another object,
-      // so bind it.
-      this.loggingMethod =
-        globalThis.constructor.name == "WorkerDebuggerGlobalScope"
-          ? // eslint-disable-next-line mozilla/reject-globalThis-modification
-            dump.bind(globalThis)
-          : dump;
-    }
-
     this.dbg.onEnterFrame = this.onEnterFrame;
 
     this.traceDOMEvents = !!options.traceDOMEvents;
     if (this.traceDOMEvents) {
       this.startTracingDOMEvents();
     }
-    this.traceValues = !!options.traceValues;
 
     this.notifyToggle(true);
   }
@@ -240,9 +222,9 @@ class JavaScriptTracer {
     }
     if (shouldLogToStdout) {
       if (state) {
-        this.loggingMethod(this.prefix + "Start tracing JavaScript\n");
+        dump(this.prefix + "Start tracing JavaScript\n");
       } else {
-        this.loggingMethod(this.prefix + "Stop tracing JavaScript\n");
+        dump(this.prefix + "Stop tracing JavaScript\n");
       }
     }
   }
@@ -259,7 +241,7 @@ class JavaScriptTracer {
       }
     }
     if (shouldLogToStdout) {
-      this.loggingMethod(
+      dump(
         this.prefix +
           "Looks like an infinite recursion? We stopped the JavaScript tracer, but code may still be running!\n"
       );
@@ -318,9 +300,7 @@ class JavaScriptTracer {
         // and are logging the topmost frame,
         // then log a preliminary dedicated line to mention that event type.
         if (this.currentDOMEvent && this.depth == 0) {
-          this.loggingMethod(
-            this.prefix + padding + this.currentDOMEvent + "\n"
-          );
+          dump(this.prefix + padding + this.currentDOMEvent + "\n");
         }
 
         // Use a special URL, including line and column numbers which Firefox
@@ -331,38 +311,11 @@ class JavaScriptTracer {
         // See https://gist.github.com/egmontkob/eb114294efbcd5adb1944c9f3cb5feda
         const urlLink = `\x1B]8;;${href}\x1B\\${href}\x1B]8;;\x1B\\`;
 
-        let message = `${padding}[${
+        const message = `${padding}[${
           frame.implementation
         }]—> ${urlLink} - ${formatDisplayName(frame)}`;
 
-        // Log arguments, but only when this feature is enabled as it introduces
-        // some significant performance and visual overhead.
-        // Also prevent trying to log function call arguments if we aren't logging a frame
-        // with arguments (e.g. Debugger evaluation frames, when executing from the console)
-        if (this.traceValues && frame.arguments) {
-          message += "(";
-          for (let i = 0, l = frame.arguments.length; i < l; i++) {
-            const arg = frame.arguments[i];
-            // Debugger.Frame.arguments contains either a Debugger.Object or primitive object
-            if (arg?.unsafeDereference) {
-              // Special case classes as they can't be easily differentiated in pure JavaScript
-              if (arg.isClassConstructor) {
-                message += "class " + arg.name;
-              } else {
-                message += objectToString(arg.unsafeDereference());
-              }
-            } else {
-              message += primitiveToString(arg);
-            }
-
-            if (i < l - 1) {
-              message += ", ";
-            }
-          }
-          message += ")";
-        }
-
-        this.loggingMethod(this.prefix + message + "\n");
+        dump(this.prefix + message + "\n");
       }
 
       this.depth++;
@@ -373,55 +326,6 @@ class JavaScriptTracer {
       console.error("Exception while tracing javascript", e);
     }
   }
-}
-
-/**
- * Return a string description for any arbitrary JS value.
- * Used when logging to stdout.
- *
- * @param {Object} obj
- *        Any JavaScript object to describe.
- * @return String
- *         User meaningful descriptor for the object.
- */
-function objectToString(obj) {
-  if (Element.isInstance(obj)) {
-    let message = `<${obj.tagName}`;
-    if (obj.id) {
-      message += ` #${obj.id}`;
-    }
-    if (obj.className) {
-      message += ` .${obj.className}`;
-    }
-    message += ">";
-    return message;
-  } else if (Array.isArray(obj)) {
-    return `Array(${obj.length})`;
-  } else if (Event.isInstance(obj)) {
-    return `Event(${obj.type}) target=${objectToString(obj.target)}`;
-  } else if (typeof obj === "function") {
-    return `function ${obj.name || "anonymous"}()`;
-  }
-  return obj;
-}
-
-function primitiveToString(value) {
-  const type = typeof value;
-  if (type === "string") {
-    // Use stringify to escape special characters and display in enclosing quotes.
-    return JSON.stringify(value);
-  } else if (value === 0 && 1 / value === -Infinity) {
-    // -0 is very special and need special threatment.
-    return "-0";
-  } else if (type === "bigint") {
-    return `BigInt(${value})`;
-  } else if (value && typeof value.toString === "function") {
-    // Use toString as it allows to stringify Symbols. Converting them to string throws.
-    return value.toString();
-  }
-
-  // For all other types/cases, rely on native convertion to string
-  return value;
 }
 
 /**
