@@ -1599,6 +1599,8 @@ nsIFrame* Selection::GetPrimaryOrCaretFrameForNodeOffset(nsIContent* aContent,
 
     return nsCaret::GetCaretFrameForNodeOffset(
         mFrameSelection, aContent, aOffset, hint, caretBidiLevel,
+        aContent && aContent->IsEditable() ? nsCaret::ForceEditableRegion::Yes
+                                           : nsCaret::ForceEditableRegion::No,
         /* aReturnUnadjustedFrame = */ nullptr, aOffsetUsed);
   }
 
