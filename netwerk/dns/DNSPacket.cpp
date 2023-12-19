@@ -46,6 +46,7 @@ nsresult DNSPacket::FillBuffer(
     std::function<int(unsigned char response[MAX_SIZE])>&& aPredicate) {
   int response_length = aPredicate(mResponse);
   if (response_length < 0) {
+    LOG(("FillBuffer response len < 0"));
     mBodySize = 0;
     mStatus = NS_ERROR_UNEXPECTED;
     return mStatus;
