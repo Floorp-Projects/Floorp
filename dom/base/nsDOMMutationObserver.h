@@ -21,8 +21,6 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsGlobalWindowInner.h"
 #include "nsIAnimationObserver.h"
-#include "nsIScriptContext.h"
-#include "nsIVariant.h"
 #include "nsPIDOMWindow.h"
 #include "nsStubAnimationObserver.h"
 #include "nsTArray.h"
