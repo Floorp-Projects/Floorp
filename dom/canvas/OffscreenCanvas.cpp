@@ -66,15 +66,11 @@ OffscreenCanvas::OffscreenCanvas(
       mDisplay(aDisplay) {}
 
 OffscreenCanvas::~OffscreenCanvas() {
-  Destroy();
-  NS_ReleaseOnMainThread("OffscreenCanvas::mExpandedReader",
-                         mExpandedReader.forget());
-}
-
-void OffscreenCanvas::Destroy() {
   if (mDisplay) {
     mDisplay->DestroyCanvas();
   }
+  NS_ReleaseOnMainThread("OffscreenCanvas::mExpandedReader",
+                         mExpandedReader.forget());
 }
 
 JSObject* OffscreenCanvas::WrapObject(JSContext* aCx,
@@ -274,9 +270,6 @@ already_AddRefed<nsICanvasRenderingContextInternal>
 OffscreenCanvas::CreateContext(CanvasContextType aContextType) {
   RefPtr<nsICanvasRenderingContextInternal> ret =
       CanvasRenderingContextHelper::CreateContext(aContextType);
-  if (NS_WARN_IF(!ret)) {
-    return nullptr;
-  }
 
   ret->SetOffscreenCanvas(this);
   return ret.forget();
