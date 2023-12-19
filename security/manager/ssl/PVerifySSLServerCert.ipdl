@@ -12,7 +12,6 @@ using mozilla::OriginAttributes from "mozilla/ipc/BackgroundUtils.h";
 namespace mozilla {
 namespace psm {
 
-[ChildProc=Socket]
 protocol PVerifySSLServerCert
 {
 child:

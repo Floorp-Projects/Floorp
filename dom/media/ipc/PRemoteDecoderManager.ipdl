@@ -38,7 +38,7 @@ union RemoteDecoderInfoIPDL
   VideoDecoderInfoIPDL;
 };
 
-[NeedsOtherPid, ParentProc=any, ChildProc=anydom]
+[NeedsOtherPid]
 sync protocol PRemoteDecoderManager
 {
   manages PRemoteDecoder;

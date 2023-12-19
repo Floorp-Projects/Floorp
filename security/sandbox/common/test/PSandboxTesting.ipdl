@@ -6,7 +6,6 @@
 
 namespace mozilla {
 
-[ChildProc=anychild]
 sync protocol PSandboxTesting {
 parent:
   async ReportTestResults(nsCString testName, bool passed, nsCString message);

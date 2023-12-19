@@ -6,7 +6,6 @@ namespace mozilla {
 namespace dom {
 namespace quota {
 
-[ChildProc=Content]
 sync protocol PRemoteQuotaObject
 {
  parent:

@@ -21,7 +21,6 @@ namespace ipc {
 
 // This protocol allows to run media audio decoding infrastructure on top
 // of the Utility process
-[ParentProc=Utility, ChildProc=Parent]
 protocol PUtilityAudioDecoder
 {
 parent:

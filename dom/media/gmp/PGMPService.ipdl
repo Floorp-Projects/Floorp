@@ -23,7 +23,7 @@ struct GMPLaunchResult {
   nsCString errorDescription;
 };
 
-[NeedsOtherPid, ChildImpl=virtual, ParentImpl=virtual, ChildProc=Content]
+[NeedsOtherPid, ChildImpl=virtual, ParentImpl=virtual]
 async protocol PGMPService
 {
 parent:

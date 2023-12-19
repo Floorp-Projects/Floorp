@@ -1,6 +1,5 @@
 //error: protocol `undeclared', managed by `undeclProtocol', has not been declared
 
-[ChildProc=any]
 protocol undeclProtocol {
     manages undeclared;
 

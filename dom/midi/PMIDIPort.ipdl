@@ -9,7 +9,6 @@ include MIDITypes;
 namespace mozilla {
 namespace dom {
 
-[ChildProc=anydom]
 async protocol PMIDIPort
 {
 parent:

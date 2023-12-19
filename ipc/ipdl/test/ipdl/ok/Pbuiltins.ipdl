@@ -1,4 +1,3 @@
-[ChildProc=any]
 protocol Pbuiltins {
 
     // sanity-check that "essential" builtins are being declared

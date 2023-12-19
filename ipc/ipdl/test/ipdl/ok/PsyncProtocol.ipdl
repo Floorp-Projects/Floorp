@@ -1,4 +1,3 @@
-[ChildProc=any]
 sync protocol PsyncProtocol {
 
     // sanity check of sync protocols

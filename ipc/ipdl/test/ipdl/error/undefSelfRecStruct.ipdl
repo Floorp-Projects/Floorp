@@ -2,7 +2,6 @@
 
 struct X { X x; };
 
-[ChildProc=any]
 protocol undefSelfRecStruct {
 child: async __delete__(X x);
 };
