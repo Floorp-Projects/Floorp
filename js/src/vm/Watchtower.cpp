@@ -260,6 +260,36 @@ bool Watchtower::watchPropertyChangeSlow(JSContext* cx,
 }
 
 // static
+template <AllowGC allowGC>
+bool Watchtower::watchPropertyModificationSlow(
+    JSContext* cx, typename MaybeRooted<NativeObject*, allowGC>::HandleType obj,
+    typename MaybeRooted<PropertyKey, allowGC>::HandleType id) {
+  MOZ_ASSERT(watchesPropertyModification(obj));
+
+  // If we cannot GC, we can't manipulate the log, but we need to be able to
+  // call this in places we cannot GC.
+  if constexpr (allowGC == AllowGC::CanGC) {
+    if (MOZ_UNLIKELY(obj->useWatchtowerTestingLog())) {
+      RootedValue val(cx, IdToValue(id));
+      if (!AddToWatchtowerLog(cx, "modify-prop", obj, val)) {
+        return false;
+      }
+    }
+  }
+
+  return true;
+}
+
+template bool Watchtower::watchPropertyModificationSlow<AllowGC::CanGC>(
+    JSContext* cx,
+    typename MaybeRooted<NativeObject*, AllowGC::CanGC>::HandleType obj,
+    typename MaybeRooted<PropertyKey, AllowGC::CanGC>::HandleType id);
+template bool Watchtower::watchPropertyModificationSlow<AllowGC::NoGC>(
+    JSContext* cx,
+    typename MaybeRooted<NativeObject*, AllowGC::NoGC>::HandleType obj,
+    typename MaybeRooted<PropertyKey, AllowGC::NoGC>::HandleType id);
+
+// static
 bool Watchtower::watchFreezeOrSealSlow(JSContext* cx,
                                        Handle<NativeObject*> obj) {
   MOZ_ASSERT(watchesFreezeOrSeal(obj));
