@@ -302,6 +302,20 @@ This gdb instrumentation is supposed to work with debug builds, or with optimize
 
 Enabling GDB instrumentation may require launching a JS shell executable that shares a directory with a file name "js-gdb.py". If js/src/js does not provide the "iongraph" command, try js/src/shell/js. GDB may complain that ~/.gdbinit requires modification to authorize user scripts, and if so will print out directions.
 
+### Finding the code that generated a JIT instruction (from rr)
+
+If you are looking at a JIT instruction and need to know what code generated it, you can use [jitsrc.py](https://searchfox.org/mozilla-central/source/js/src/gdb/mozilla/jitsrc.py). This script adds a `jitsrc` command to rr that will trace backwards from the JIT instruction to the code that generated it.
+
+To use the `jitsrc` command, add the following line to your .gdbinit file, or run it manually:
+
+    source js/src/gdb/mozilla/jitsrc.py
+
+And you use the command like this: `jitsrc <address of JIT instruction>`.
+
+Running the command will leave the application at the point of execution where that JIT instruction was originally emitted. For example, the backtrace might contain a frame at [js::jit::MacroAssemblerX64::loadPtr](https://searchfox.org/mozilla-central/rev/ddde3bbcafabe0fc8a36c660b3b673507d3e3874/js/src/jit/x64/MacroAssembler-x64.h#575).
+
+The way this works is by setting a watchpoint on the JIT instruction and `reverse-continue`ing the program execution to reach the point when that memory address was assigned to. JIT instruction memory can be copied or moved, so the `jitsrc` command automates updating the watchpoint across the copy/move to continue back to the original source of the JIT instruction.
+
 ### Break on valgrind errors
 
 Sometimes, a bug can be reproduced under valgrind but with great difficulty under gdb.  One way to investigate is to let valgrind start gdb for you; the other way documented here is to let valgrind act as a gdb server which can be manipulated from the gdb remote.
