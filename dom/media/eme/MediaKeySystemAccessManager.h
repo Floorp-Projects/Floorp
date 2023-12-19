@@ -85,6 +85,18 @@ class TestGMPVideoDecoder;
  *
  */
 
+struct MediaKeySystemAccessRequest {
+  MediaKeySystemAccessRequest(
+      const nsAString& aKeySystem,
+      const Sequence<MediaKeySystemConfiguration>& aConfigs)
+      : mKeySystem(aKeySystem), mConfigs(aConfigs) {}
+  virtual ~MediaKeySystemAccessRequest() = default;
+  // The KeySystem passed for this request.
+  const nsString mKeySystem;
+  // The config(s) passed for this request.
+  const Sequence<MediaKeySystemConfiguration> mConfigs;
+};
+
 class MediaKeySystemAccessManager final : public nsIObserver, public nsINamed {
  public:
   explicit MediaKeySystemAccessManager(nsPIDOMWindowInner* aWindow);
@@ -104,7 +116,7 @@ class MediaKeySystemAccessManager final : public nsIObserver, public nsINamed {
  private:
   // Encapsulates the information for a Navigator.requestMediaKeySystemAccess()
   // request that is being processed.
-  struct PendingRequest {
+  struct PendingRequest : public MediaKeySystemAccessRequest {
     enum class RequestType { Initial, Subsequent };
 
     PendingRequest(DetailedPromise* aPromise, const nsAString& aKeySystem,
@@ -113,10 +125,6 @@ class MediaKeySystemAccessManager final : public nsIObserver, public nsINamed {
 
     // The JS promise associated with this request.
     RefPtr<DetailedPromise> mPromise;
-    // The KeySystem passed for this request.
-    const nsString mKeySystem;
-    // The config(s) passed for this request.
-    const Sequence<MediaKeySystemConfiguration> mConfigs;
 
     // If the request is
     // - A first attempt request from JS: RequestType::Initial.

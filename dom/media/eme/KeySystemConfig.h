@@ -121,6 +121,7 @@ struct KeySystemConfig {
     nsTArray<EMECodecString> mCodecsDecrypted;
   };
 
+  // Return true if given key system is supported on the current device.
   static bool Supports(const nsAString& aKeySystem);
   static bool CreateKeySystemConfigs(const nsAString& aKeySystem,
                                      nsTArray<KeySystemConfig>& aOutConfigs);
