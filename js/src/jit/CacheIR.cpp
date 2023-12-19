@@ -4167,6 +4167,10 @@ static bool CanAttachNativeSetSlot(JSOp op, JSObject* obj, PropertyKey id,
     return false;
   }
 
+  if (Watchtower::watchesPropertyModification(&obj->as<NativeObject>())) {
+    return false;
+  }
+
   *prop = LookupShapeForSetSlot(op, &obj->as<NativeObject>(), id);
   return prop->isSome();
 }
