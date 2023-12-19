@@ -1,0 +1,150 @@
+# This file is part of ICU4X. For terms of use, please see the file
+# called LICENSE at the top level of the ICU4X source tree
+# (online at: https://github.com/unicode-org/icu4x/blob/main/LICENSE ).
+
+[package]
+name = "icu_capi"
+description = "C interface to ICU4X"
+license-file = "LICENSE"
+include = [
+    "js/**/*",
+    "c/**/*",
+    "cpp/**/*",
+    "src/**/*",
+    "tests/**/*",
+    "Cargo.toml",
+    "LICENSE",
+    "README.md"
+]
+
+authors.workspace = true
+categories.workspace = true
+edition.workspace = true
+homepage.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+version.workspace = true
+
+[package.metadata.docs.rs]
+all-features = true
+
+[package.metadata.cargo-all-features]
+# Bench feature gets tested separately and is only relevant for CI.
+# logging enables a feature of a dependency that has no externally visible API changes
+denylist = ["bench", "cpp_default", "wasm_default", "provider_test"]
+# This has a lot of features, run a reduced test that is likely to catch 99% of bugs
+max_combination_size = 2
+
+# Please keep the features list in sync with the icu_capi_staticlib/icu_capi_cdylib crates (except for components features)
+[features]
+default = ["compiled_data", "default_components", "logging", "simple_logger"]
+any_provider = []
+buffer_provider = [
+    "dep:icu_provider_blob",
+    "dep:serde",
+    "icu_calendar?/serde",
+    "icu_casemap?/serde",
+    "icu_collator?/serde",
+    "icu_datetime?/serde",
+    "icu_decimal?/serde",
+    "icu_displaynames?/serde",
+    "icu_list?/serde",
+    "icu_locid_transform?/serde",
+    "icu_locid/serde",
+    "icu_normalizer?/serde",
+    "icu_plurals?/serde",
+    "icu_properties?/serde",
+    "icu_provider/serde",
+    "icu_provider_adapters/serde",
+    "icu_segmenter?/serde",
+    "icu_timezone?/serde",
+]
+provider_fs = ["dep:icu_provider_fs", "buffer_provider"]
+logging = ["icu_provider/logging", "dep:log", "diplomat-runtime/log"]
+simple_logger = ["dep:simple_logger", "logging"]
+
+# Legacy features
+provider_test = ["compiled_data"]
+cpp_default = ["logging"]
+wasm_default = ["logging"]
+
+# Components
+default_components = ["icu_calendar", "icu_casemap", "icu_collator", "icu_datetime", "icu_decimal",
+                      "icu_list", "icu_locid_transform",
+                      "icu_normalizer", "icu_plurals", "icu_properties",
+                      "icu_segmenter", "icu_timezone"]
+# icu_displaynames is experimental, not included by default
+
+icu_calendar = ["dep:icu_calendar"]
+icu_casemap = ["dep:icu_casemap"]
+icu_collator = ["dep:icu_collator"]
+# icu_collections = ["dep:icu_collections"] # Not useful on its own: use icu_properties
+icu_datetime = ["dep:icu_datetime", "dep:icu_calendar", "dep:icu_timezone", "dep:icu_decimal", "dep:icu_plurals"]
+icu_decimal = ["dep:icu_decimal", "dep:fixed_decimal"]
+icu_displaynames = ["dep:icu_displaynames"]
+icu_list = ["dep:icu_list"]
+icu_locid_transform = ["dep:icu_locid_transform"]
+icu_normalizer = ["dep:icu_normalizer"]
+icu_plurals = ["dep:icu_plurals", "dep:fixed_decimal"]
+icu_properties = ["dep:icu_properties", "dep:icu_collections", "dep:unicode-bidi"]
+icu_segmenter = ["dep:icu_segmenter"]
+icu_timezone = ["dep:icu_timezone", "dep:icu_calendar"]
+
+compiled_data = [
+    "icu_calendar?/compiled_data",
+    "icu_casemap?/compiled_data",
+    "icu_collator?/compiled_data",
+    "icu_datetime?/compiled_data",
+    "icu_decimal?/compiled_data",
+    "icu_displaynames?/compiled_data",
+    "icu_list?/compiled_data",
+    "icu_locid_transform?/compiled_data",
+    "icu_normalizer?/compiled_data",
+    "icu_plurals?/compiled_data",
+    "icu_properties?/compiled_data",
+    "icu_segmenter?/compiled_data",
+    "icu_timezone?/compiled_data",
+]
+
+[dependencies]
+# Mandatory ICU4X components and utils
+icu_locid.workspace = true
+icu_provider.workspace = true
+icu_provider_adapters.workspace = true
+
+tinystr.workspace = true
+writeable.workspace = true
+
+# Diplomat
+diplomat.workspace = true
+diplomat-runtime.workspace = true
+
+# Optional ICU4X components and their dependent utils
+fixed_decimal = { workspace = true, features = ["ryu"] , optional = true}
+icu_calendar = { workspace = true, optional = true }
+icu_casemap = { workspace = true, optional = true }
+icu_collator = { workspace = true, optional = true }
+icu_collections = { workspace = true, optional = true }
+icu_datetime = { workspace = true, optional = true }
+icu_decimal = { workspace = true, optional = true }
+icu_displaynames = { workspace = true, optional = true }
+icu_list = { workspace = true, optional = true }
+icu_locid_transform = { workspace = true, optional = true }
+icu_normalizer = { workspace = true, optional = true }
+icu_plurals = { workspace = true, optional = true }
+icu_properties = { workspace = true, features = ["bidi"], optional = true }
+icu_segmenter = { workspace = true, features = ["auto"], optional = true }
+icu_timezone = { workspace = true, optional = true }
+
+# Optional ICU4X features (not components)
+icu_provider_blob = { workspace = true, optional = true }
+serde = { version = "1.0", default-features = false, optional = true }
+unicode-bidi = { version = "0.3.13", default-features = false, optional = true }
+log = { version = "0.4", optional = true }
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+# Logging uses diplomat_runtime bindings in wasm, we only need this for native
+simple_logger = { version = "4.1.0", optional = true }
+
+[target.'cfg(not(any(target_arch = "wasm32", target_os = "none")))'.dependencies]
+icu_provider_fs = { workspace = true, optional = true }
