@@ -101,6 +101,29 @@ static void InvalidateMegamorphicCache(JSContext* cx,
   cx->caches().megamorphicSetPropCache->bumpGeneration();
 }
 
+void MaybePopReturnFuses(JSContext* cx, Handle<NativeObject*> nobj) {
+  JSObject* objectProto = &cx->global()->getObjectPrototype();
+  if (nobj == objectProto) {
+    nobj->realm()->realmFuses.objectPrototypeHasNoReturnProperty.popFuse(
+        cx, nobj->realm()->realmFuses);
+    return;
+  }
+
+  JSObject* iteratorProto = cx->global()->maybeGetIteratorPrototype();
+  if (nobj == iteratorProto) {
+    nobj->realm()->realmFuses.iteratorPrototypeHasNoReturnProperty.popFuse(
+        cx, nobj->realm()->realmFuses);
+    return;
+  }
+
+  JSObject* arrayIterProto = cx->global()->maybeGetArrayIteratorPrototype();
+  if (nobj == arrayIterProto) {
+    cx->realm()->realmFuses.arrayIteratorPrototypeHasNoReturnProperty.popFuse(
+        cx, nobj->realm()->realmFuses);
+    return;
+  }
+}
+
 // static
 bool Watchtower::watchPropertyAddSlow(JSContext* cx, Handle<NativeObject*> obj,
                                       HandleId id) {
@@ -112,6 +135,10 @@ bool Watchtower::watchPropertyAddSlow(JSContext* cx, Handle<NativeObject*> obj,
     }
     if (!id.isInt()) {
       InvalidateMegamorphicCache(cx, obj);
+    }
+
+    if (id == NameToId(cx->names().return_)) {
+      MaybePopReturnFuses(cx, obj);
     }
   }
 
@@ -179,7 +206,19 @@ static bool WatchProtoChangeImpl(JSContext* cx, HandleObject obj) {
   }
   if (obj->is<NativeObject>()) {
     InvalidateMegamorphicCache(cx, obj.as<NativeObject>());
+
+    NativeObject* nobj = &obj->as<NativeObject>();
+    if (nobj == cx->global()->maybeGetArrayIteratorPrototype()) {
+      nobj->realm()->realmFuses.arrayIteratorPrototypeHasIteratorProto.popFuse(
+          cx, nobj->realm()->realmFuses);
+    }
+
+    if (nobj == cx->global()->maybeGetIteratorPrototype()) {
+      nobj->realm()->realmFuses.iteratorPrototypeHasObjectProto.popFuse(
+          cx, nobj->realm()->realmFuses);
+    }
   }
+
   return true;
 }
 
