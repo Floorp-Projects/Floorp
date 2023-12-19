@@ -4,6 +4,7 @@ pluginManagement {
     includeBuild("${rootProject.projectDir.absolutePath}/mobile/android/android-components/plugins/publicsuffixlist")
     includeBuild("${rootProject.projectDir.absolutePath}/mobile/android/fenix/plugins/apksize")
     includeBuild("${rootProject.projectDir.absolutePath}/mobile/android/fenix/plugins/fenixdependencies")
+    includeBuild("${rootProject.projectDir.absolutePath}/mobile/android/focus-android/plugins/focusdependencies")
 }
 
 plugins {
@@ -11,6 +12,7 @@ plugins {
     id 'mozac.DependenciesPlugin'
     id 'ApkSizePlugin'
     id 'FenixDependenciesPlugin'
+    id 'FocusDependenciesPlugin'
 }
 
 // You might think topsrcdir is '.', but that's not true when the Gradle build
@@ -35,6 +37,8 @@ include ':android-components'
 include ':samples-browser'
 include ':fenix'
 include ':mozilla-lint-rules'
+include ':focus-android'
+include ':service-telemetry'
 
 project(':annotations').projectDir = new File("${gradle.mozconfig.topsrcdir}/mobile/android/annotations")
 project(':geckoview').projectDir = new File("${gradle.mozconfig.topsrcdir}/mobile/android/geckoview")
@@ -44,6 +48,8 @@ project(':exoplayer2').projectDir = new File("${gradle.mozconfig.topsrcdir}/mobi
 project(':android-components').projectDir = new File("${gradle.mozconfig.topsrcdir}/mobile/android/android-components")
 project(':samples-browser').projectDir = new File("${gradle.mozconfig.topsrcdir}/mobile/android/android-components/samples/browser")
 project(':fenix').projectDir = new File("${gradle.mozconfig.topsrcdir}/mobile/android/fenix/app")
+project(':service-telemetry').projectDir = new File("${gradle.mozconfig.topsrcdir}/mobile/android/focus-android/service-telemetry")
+project(':focus-android').projectDir = new File("${gradle.mozconfig.topsrcdir}/mobile/android/focus-android/app")
 
 if (hasProperty("androidFormatLintTest")) {
     include ':androidFormatLintTest'
