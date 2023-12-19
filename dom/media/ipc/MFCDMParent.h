@@ -143,9 +143,10 @@ class MFCDMParent final : public PMFCDMParent {
   MediaEventListener mExpirationListener;
 };
 
-// A helper class to display CDM capabilites in `about:support`.
-class MFCDMCapabilities {
+// A helper class only used in the chrome process to handle CDM related tasks.
+class MFCDMService {
  public:
+  // This is used to display CDM capabilites in `about:support`.
   static void GetAllKeySystemsCapabilities(dom::Promise* aPromise);
 
  private:

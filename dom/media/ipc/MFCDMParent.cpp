@@ -1099,7 +1099,8 @@ already_AddRefed<MFCDMProxy> MFCDMParent::GetMFCDMProxy() {
 }
 
 /* static */
-void MFCDMCapabilities::GetAllKeySystemsCapabilities(dom::Promise* aPromise) {
+void MFCDMService::GetAllKeySystemsCapabilities(dom::Promise* aPromise) {
+  MOZ_ASSERT(XRE_IsParentProcess());
   const static auto kSandboxKind = ipc::SandboxingKind::MF_MEDIA_ENGINE_CDM;
   LaunchMFCDMProcessIfNeeded(kSandboxKind)
       ->Then(
@@ -1119,8 +1120,9 @@ void MFCDMCapabilities::GetAllKeySystemsCapabilities(dom::Promise* aPromise) {
 }
 
 /* static */
-RefPtr<GenericNonExclusivePromise>
-MFCDMCapabilities::LaunchMFCDMProcessIfNeeded(ipc::SandboxingKind aSandbox) {
+RefPtr<GenericNonExclusivePromise> MFCDMService::LaunchMFCDMProcessIfNeeded(
+    ipc::SandboxingKind aSandbox) {
+  MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(aSandbox == ipc::SandboxingKind::MF_MEDIA_ENGINE_CDM);
   RefPtr<ipc::UtilityProcessManager> utilityProc =
       ipc::UtilityProcessManager::GetSingleton();
