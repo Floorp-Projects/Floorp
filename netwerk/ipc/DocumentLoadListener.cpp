@@ -933,7 +933,7 @@ auto DocumentLoadListener::OpenDocument(
     nsDocShellLoadState* aLoadState, uint32_t aCacheKey,
     const Maybe<uint64_t>& aChannelId, const TimeStamp& aAsyncOpenTime,
     nsDOMNavigationTiming* aTiming, Maybe<dom::ClientInfo>&& aInfo,
-    Maybe<bool> aUriModified, Maybe<bool> aIsXFOError,
+    Maybe<bool> aUriModified, Maybe<bool> aIsEmbeddingBlockedError,
     dom::ContentParent* aContentParent, nsresult* aRv) -> RefPtr<OpenPromise> {
   LOG(("DocumentLoadListener [%p] OpenDocument [uri=%s]", this,
        aLoadState->URI()->GetSpecOrDefault().get()));
@@ -950,7 +950,8 @@ auto DocumentLoadListener::OpenDocument(
       CreateDocumentLoadInfo(browsingContext, aLoadState);
 
   nsLoadFlags loadFlags = aLoadState->CalculateChannelLoadFlags(
-      browsingContext, std::move(aUriModified), std::move(aIsXFOError));
+      browsingContext, std::move(aUriModified),
+      std::move(aIsEmbeddingBlockedError));
 
   // Keep track of navigation for the Bounce Tracking Protection.
   if (browsingContext->IsTopContent()) {

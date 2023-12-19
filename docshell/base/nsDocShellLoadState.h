@@ -363,10 +363,12 @@ class nsDocShellLoadState final {
   void CalculateLoadURIFlags();
 
   // Compute the load flags to be used by creating channel.  aUriModified and
-  // aIsXFOError are expected to be Nothing when called from Parent process.
+  // aIsEmbeddingBlockedError are expected to be Nothing when called from parent
+  // process.
   nsLoadFlags CalculateChannelLoadFlags(
       mozilla::dom::BrowsingContext* aBrowsingContext,
-      mozilla::Maybe<bool> aUriModified, mozilla::Maybe<bool> aIsXFOError);
+      mozilla::Maybe<bool> aUriModified,
+      mozilla::Maybe<bool> aIsEmbeddingBlockedError);
 
   mozilla::dom::DocShellLoadStateInit Serialize(
       mozilla::ipc::IProtocol* aActor);

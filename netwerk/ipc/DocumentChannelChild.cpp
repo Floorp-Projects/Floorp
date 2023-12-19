@@ -48,9 +48,10 @@ DocumentChannelChild::DocumentChannelChild(nsDocShellLoadState* aLoadState,
                                            net::LoadInfo* aLoadInfo,
                                            nsLoadFlags aLoadFlags,
                                            uint32_t aCacheKey,
-                                           bool aUriModified, bool aIsXFOError)
+                                           bool aUriModified,
+                                           bool aIsEmbeddingBlockedError)
     : DocumentChannel(aLoadState, aLoadInfo, aLoadFlags, aCacheKey,
-                      aUriModified, aIsXFOError) {
+                      aUriModified, aIsEmbeddingBlockedError) {
   mLoadingContext = nullptr;
   LOG(("DocumentChannelChild ctor [this=%p, uri=%s]", this,
        aLoadState->URI()->GetSpecOrDefault().get()));
@@ -119,7 +120,7 @@ DocumentChannelChild::AsyncOpen(nsIStreamListener* aListener) {
     case ExtContentPolicy::TYPE_SUBDOCUMENT: {
       DocumentCreationArgs docArgs;
       docArgs.uriModified() = mUriModified;
-      docArgs.isXFOError() = mIsXFOError;
+      docArgs.isEmbeddingBlockedError() = mIsEmbeddingBlockedError;
 
       ipcElementCreationArgs = docArgs;
       break;
