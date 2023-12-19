@@ -30,12 +30,14 @@
 
 #include "mozilla/Logging.h"
 #include "mozilla/StaticPrefs_network.h"
+#include "mozilla/net/DNSPacket.h"
+#include "nsIDNSService.h"
 
 namespace mozilla::net {
 
 static StaticRefPtr<NativeDNSResolverOverride> gOverrideService;
 
-static LazyLogModule gGetAddrInfoLog("GetAddrInfo");
+LazyLogModule gGetAddrInfoLog("GetAddrInfo");
 #define LOG(msg, ...) \
   MOZ_LOG(gGetAddrInfoLog, LogLevel::Debug, ("[DNS]: " msg, ##__VA_ARGS__))
 #define LOG_WARNING(msg, ...) \
@@ -404,6 +406,13 @@ nsresult GetAddrInfo(const nsACString& aHost, uint16_t aAddressFamily,
   return rv;
 }
 
+nsresult ResolveHTTPSRecord(const nsACString& aHost, uint16_t aFlags,
+                            TypeRecordResultType& aResult, uint32_t& aTTL) {
+  // TODO: handle overrides here then proceed to call platform specific impl.
+
+  return ResolveHTTPSRecordImpl(aHost, aFlags, aResult, aTTL);
+}
+
 // static
 already_AddRefed<nsINativeDNSResolverOverride>
 NativeDNSResolverOverride::GetSingleton() {
@@ -475,5 +484,17 @@ NS_IMETHODIMP NativeDNSResolverOverride::ClearOverrides() {
   mCnames.Clear();
   return NS_OK;
 }
+
+#ifdef MOZ_NO_HTTPS_IMPL
+
+// If there is no platform specific implementation of ResolveHTTPSRecordImpl
+// we link a dummy implementation here.
+// Otherwise this is implemented in GetAddrInfoWin/Linux/etc
+nsresult ResolveHTTPSRecordImpl(const nsACString& aHost, uint16_t aFlags,
+                                TypeRecordResultType& aResult, uint32_t& aTTL) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+#endif  // MOZ_NO_HTTPS_IMPL
 
 }  // namespace mozilla::net

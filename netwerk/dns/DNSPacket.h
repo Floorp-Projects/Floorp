@@ -7,8 +7,6 @@
 
 #include "mozilla/Maybe.h"
 #include "mozilla/Result.h"
-#include "pk11pub.h"
-#include "ScopedNSSTypes.h"
 #include "nsClassHashtable.h"
 #include "nsIDNSService.h"
 #include "DNS.h"
