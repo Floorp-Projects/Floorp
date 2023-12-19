@@ -822,7 +822,8 @@ var gHomePane = {
   },
 
   imagePathInputSet(){
-    let folderPath = Services.prefs.getStringPref("browser.newtabpage.activity-stream.floorp.background.image.path","")
+    let folderPath = Services.prefs.getStringPref("browser.newtabpage.activity-stream.floorp.background.image.path") || PathUtils.join(Services.dirsvc.get("ProfD", Ci.nsIFile).path, "newtabImages","wallpaper.png")
+    console.log(folderPath)
     document.querySelector("#picturePath").value = folderPath
     document.querySelector("#picturePath").style.backgroundImage = `url(moz-icon://${Services.io.newFileURI(FileUtils.File(folderPath)).asciiSpec})`
   }

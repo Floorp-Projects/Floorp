@@ -273,7 +273,7 @@ class PrefsFeed {
 
       }
     }else if(Services.prefs.getIntPref("browser.newtabpage.activity-stream.floorp.background.type") == 4){
-      const tmpPath = Services.prefs.getStringPref("browser.newtabpage.activity-stream.floorp.background.image.path")
+      const tmpPath = Services.prefs.getStringPref("browser.newtabpage.activity-stream.floorp.background.image.path") || PathUtils.join(Services.dirsvc.get("ProfD", Ci.nsIFile).path, "newtabImages","wallpaper.png")
       const fetchPath = Services.io.newFileURI(FileUtils.File(tmpPath)).asciiSpec
       if(tmpPath != this.oneImageData.url){
         this.oneImageData = {"url":tmpPath,data:"","extension":"",notExist:false}
