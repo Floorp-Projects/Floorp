@@ -65,11 +65,9 @@ The errors reported as "raw" `LoginsApiException` are things like Rust panics, e
 
 Just create a `DatabaseLoginsStorage` with the path `:memory:`, and it will work. You may also use a [SQLite URI filename](https://www.sqlite.org/uri.html) with the parameter `mode=memory`. See https://www.sqlite.org/inmemorydb.html for more options and further information.
 
-### What's the difference between `wipe` and `wipeLocal`?
+### What's `wipeLocal`?
 
-- `wipe` deletes all records, but remembers that it has deleted them. The next time we sync, we'll delete the remote versions of the deleted records too (e.g. if you wipe, then another client uploads a record, and then you sync, the other clients record will not be deleted).
-- `wipeLocal` deletes all local data from the database, bringing us back to the state prior to the first local write (or sync). That is, it returns it to an empty database.
-- Previous versions of this library offered a third variant, `reset`, which deletes last sync timestamps, and what the database believes is stored remotely. This is almost never what you want, and so it was removed, we mention it only to assist when updating this library.
+`wipeLocal` deletes all local data from the database, bringing us back to the state prior to the first local write (or sync). That is, it returns it to an empty database.
 
 ## License
 

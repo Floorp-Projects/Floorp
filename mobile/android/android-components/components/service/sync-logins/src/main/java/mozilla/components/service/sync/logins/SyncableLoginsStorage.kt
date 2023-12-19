@@ -118,15 +118,6 @@ class SyncableLoginsStorage(
      *              errors (IO failure, rust panics, etc)
      */
     @Throws(LoginsApiException::class)
-    override suspend fun wipe() = withContext(coroutineContext) {
-        conn.getStorage().wipe()
-    }
-
-    /**
-     * @throws [LoginsApiException] if the storage is locked, and on unexpected
-     *              errors (IO failure, rust panics, etc)
-     */
-    @Throws(LoginsApiException::class)
     override suspend fun wipeLocal() = withContext(coroutineContext) {
         conn.getStorage().wipeLocal()
     }

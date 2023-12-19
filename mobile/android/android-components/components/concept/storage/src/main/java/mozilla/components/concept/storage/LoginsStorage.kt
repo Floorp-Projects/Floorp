@@ -124,11 +124,6 @@ data class EncryptedLogin(
  */
 interface LoginsStorage : AutoCloseable {
     /**
-     * Deletes all login records. These deletions will be synced to the server on the next call to sync.
-     */
-    suspend fun wipe()
-
-    /**
      * Clears out all local state, bringing us back to the state before the first write (or sync).
      */
     suspend fun wipeLocal()
