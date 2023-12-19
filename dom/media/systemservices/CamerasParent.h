@@ -18,6 +18,7 @@
 #include "modules/video_capture/video_capture_defines.h"
 #include "video/render/incoming_video_stream.h"
 
+class WebrtcLogSinkHandle;
 class nsIThread;
 
 namespace mozilla {
@@ -175,6 +176,10 @@ class CamerasParent final : public PCamerasParent,
 
   std::map<nsCString, std::map<uint32_t, webrtc::VideoCaptureCapability>>
       mAllCandidateCapabilities;
+
+  // While alive, ensure webrtc logging is hooked up to MOZ_LOG. Main thread
+  // only.
+  nsMainThreadPtrHandle<WebrtcLogSinkHandle> mLogHandle;
 };
 
 }  // namespace mozilla::camera
