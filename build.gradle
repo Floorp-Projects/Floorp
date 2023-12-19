@@ -368,10 +368,23 @@ afterEvaluate {
                 // Classfile, because javac has a bug with MethodParameters attributes
                 // with Java 7. https://bugs.openjdk.java.net/browse/JDK-8190452
                 "-Xlint:-classfile"]
-                // Turn all remaining warnings into errors,
-                // unless marked by @SuppressWarnings.
-                //"-Werror"]
+
+            // In GeckoView java projects only, turn all remaining warnings
+            // into errors unless marked by @SuppressWarnings.
+            def projectName = project.getName()
+            if (projectName.startsWith('geckoview')
+                || projectName == 'annotations'
+                || projectName == 'exoplayer2'
+                || projectName == 'messaging_example'
+                || projectName == 'port_messaging_example'
+                || projectName == 'test_runner'
+            ) {
+                options.compilerArgs += [
+                        "-Werror"
+                ]
+            }
         }
+
     }
 }
 
