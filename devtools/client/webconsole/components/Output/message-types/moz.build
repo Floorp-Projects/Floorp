@@ -9,7 +9,6 @@ DevToolsModules(
     "CSSWarning.js",
     "DefaultRenderer.js",
     "EvaluationResult.js",
-    "JSTracerTrace.js",
     "NavigationMarker.js",
     "NetworkEventMessage.js",
     "PageError.js",

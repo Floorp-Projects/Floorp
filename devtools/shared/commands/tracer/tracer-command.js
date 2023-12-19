@@ -33,11 +33,6 @@ class TracerCommand {
       );
     }
 
-    const traceValues = Services.prefs.getBoolPref(
-      "devtools.debugger.javascript-tracing-values",
-      false
-    );
-
     const targets = this.#targetCommand.getAllTargets(
       this.#targetCommand.ALL_TYPES
     );
@@ -51,7 +46,7 @@ class TracerCommand {
         }
 
         if (this.#isTracing) {
-          return tracerFront.startTracing(logMethod, { traceValues });
+          return tracerFront.startTracing(logMethod);
         }
         return tracerFront.stopTracing();
       })

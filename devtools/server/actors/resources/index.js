@@ -21,8 +21,7 @@ const TYPES = {
   SOURCE: "source",
   STYLESHEET: "stylesheet",
   THREAD_STATE: "thread-state",
-  JSTRACER_TRACE: "jstracer-trace",
-  JSTRACER_STATE: "jstracer-state",
+  TRACING_STATE: "tracing-state",
   WEBSOCKET: "websocket",
 
   // storage types
@@ -73,12 +72,6 @@ const FrameTargetResources = augmentResourceDictionary({
   [TYPES.ERROR_MESSAGE]: {
     path: "devtools/server/actors/resources/error-messages",
   },
-  [TYPES.JSTRACER_STATE]: {
-    path: "devtools/server/actors/resources/jstracer-state",
-  },
-  [TYPES.JSTRACER_TRACE]: {
-    path: "devtools/server/actors/resources/jstracer-trace",
-  },
   [TYPES.LOCAL_STORAGE]: {
     path: "devtools/server/actors/resources/storage-local-storage",
   },
@@ -106,6 +99,9 @@ const FrameTargetResources = augmentResourceDictionary({
   [TYPES.THREAD_STATE]: {
     path: "devtools/server/actors/resources/thread-states",
   },
+  [TYPES.TRACING_STATE]: {
+    path: "devtools/server/actors/resources/tracing-state",
+  },
   [TYPES.SERVER_SENT_EVENT]: {
     path: "devtools/server/actors/resources/server-sent-events",
   },
@@ -122,12 +118,6 @@ const ProcessTargetResources = augmentResourceDictionary({
   [TYPES.CONSOLE_MESSAGE]: {
     path: "devtools/server/actors/resources/console-messages",
   },
-  [TYPES.JSTRACER_TRACE]: {
-    path: "devtools/server/actors/resources/jstracer-trace",
-  },
-  [TYPES.JSTRACER_STATE]: {
-    path: "devtools/server/actors/resources/jstracer-state",
-  },
   [TYPES.ERROR_MESSAGE]: {
     path: "devtools/server/actors/resources/error-messages",
   },
@@ -139,6 +129,9 @@ const ProcessTargetResources = augmentResourceDictionary({
   },
   [TYPES.THREAD_STATE]: {
     path: "devtools/server/actors/resources/thread-states",
+  },
+  [TYPES.TRACING_STATE]: {
+    path: "devtools/server/actors/resources/tracing-state",
   },
 });
 
@@ -155,17 +148,14 @@ const WorkerTargetResources = augmentResourceDictionary({
   [TYPES.CONSOLE_MESSAGE]: {
     path: "devtools/server/actors/resources/console-messages",
   },
-  [TYPES.JSTRACER_TRACE]: {
-    path: "devtools/server/actors/resources/jstracer-trace",
-  },
-  [TYPES.JSTRACER_STATE]: {
-    path: "devtools/server/actors/resources/jstracer-state",
-  },
   [TYPES.SOURCE]: {
     path: "devtools/server/actors/resources/sources",
   },
   [TYPES.THREAD_STATE]: {
     path: "devtools/server/actors/resources/thread-states",
+  },
+  [TYPES.TRACING_STATE]: {
+    path: "devtools/server/actors/resources/tracing-state",
   },
 });
 

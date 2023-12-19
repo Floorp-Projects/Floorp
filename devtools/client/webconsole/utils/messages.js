@@ -10,13 +10,6 @@ const {
   isSupportedByConsoleTable,
 } = require("resource://devtools/shared/webconsole/messages.js");
 
-loader.lazyRequireGetter(
-  this,
-  "getAdHocFrontOrPrimitiveGrip",
-  "resource://devtools/client/fronts/object.js",
-  true
-);
-
 // URL Regex, common idioms:
 //
 // Lead-in (URL):
@@ -120,10 +113,6 @@ function transformResource(resource, persistLogs) {
 
     case ResourceCommand.TYPES.NETWORK_EVENT: {
       return transformNetworkEventResource(resource);
-    }
-
-    case ResourceCommand.TYPES.JSTRACER_TRACE: {
-      return transformTraceResource(resource);
     }
 
     case "will-navigate": {
@@ -355,58 +344,6 @@ function transformCSSMessageResource(cssMessageResource) {
 
 function transformNetworkEventResource(networkEventResource) {
   return new NetworkEventMessage(networkEventResource);
-}
-
-function transformTraceResource(traceResource) {
-  const { targetFront, prefix, timeStamp } = traceResource;
-  if (traceResource.eventName) {
-    const { eventName } = traceResource;
-
-    return new ConsoleMessage({
-      targetFront,
-      source: MESSAGE_SOURCE.JSTRACER,
-      depth: 0,
-      eventName,
-      timeStamp,
-      prefix,
-      allowRepeating: false,
-    });
-  }
-  const {
-    depth,
-    implementation,
-    displayName,
-    filename,
-    lineNumber,
-    columnNumber,
-    args,
-    sourceId,
-  } = traceResource;
-
-  const frame = {
-    source: filename,
-    sourceId,
-    line: lineNumber,
-    column: columnNumber,
-  };
-
-  return new ConsoleMessage({
-    targetFront,
-    source: MESSAGE_SOURCE.JSTRACER,
-    frame,
-    depth,
-    implementation,
-    displayName,
-    parameters: args
-      ? args.map(p => (p ? getAdHocFrontOrPrimitiveGrip(p, targetFront) : p))
-      : null,
-    messageText: null,
-    timeStamp,
-    prefix,
-    // Allow the identical frames to be coallesced into a unique message
-    // with a repeatition counter so that we keep the output short in case of loops.
-    allowRepeating: true,
-  });
 }
 
 function transformEvaluationResultPacket(packet) {

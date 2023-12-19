@@ -72,10 +72,6 @@ export function getJavascriptTracingLogMethod(state) {
   return state.ui.javascriptTracingLogMethod;
 }
 
-export function getJavascriptTracingValues(state) {
-  return state.ui.javascriptTracingValues;
-}
-
 export function getSearchOptions(state, searchKey) {
   return state.ui.mutableSearchOptions[searchKey];
 }
