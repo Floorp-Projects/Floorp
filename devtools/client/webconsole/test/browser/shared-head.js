@@ -512,3 +512,6 @@ function findNetworkMessage(hud, text, extraSelector = "") {
 function findNetworkMessages(hud, text, extraSelector = "") {
   return findMessagesByType(hud, text, ".network" + extraSelector);
 }
+function findTracerMessages(hud, text, extraSelector = "") {
+  return findMessagesByType(hud, text, ".jstracer" + extraSelector);
+}

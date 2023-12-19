@@ -1209,7 +1209,8 @@ ResourceCommand.TYPES = ResourceCommand.prototype.TYPES = {
   REFLOW: "reflow",
   SOURCE: "source",
   THREAD_STATE: "thread-state",
-  TRACING_STATE: "tracing-state",
+  JSTRACER_TRACE: "jstracer-trace",
+  JSTRACER_STATE: "jstracer-state",
   SERVER_SENT_EVENT: "server-sent-event",
   LAST_PRIVATE_CONTEXT_EXIT: "last-private-context-exit",
 };
