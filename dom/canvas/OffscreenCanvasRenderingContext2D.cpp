@@ -8,35 +8,10 @@
 #include "mozilla/CycleCollectedJSRuntime.h"
 #include "mozilla/dom/OffscreenCanvasRenderingContext2DBinding.h"
 #include "mozilla/dom/OffscreenCanvas.h"
-#include "mozilla/dom/WorkerCommon.h"
-#include "mozilla/dom/WorkerRef.h"
 
 using namespace mozilla;
 
 namespace mozilla::dom {
-
-class OffscreenCanvasShutdownObserver final {
-  NS_INLINE_DECL_REFCOUNTING(OffscreenCanvasShutdownObserver)
-
- public:
-  explicit OffscreenCanvasShutdownObserver(
-      OffscreenCanvasRenderingContext2D* aOwner)
-      : mOwner(aOwner) {}
-
-  void OnShutdown() {
-    if (mOwner) {
-      mOwner->OnShutdown();
-      mOwner = nullptr;
-    }
-  }
-
-  void ClearOwner() { mOwner = nullptr; }
-
- private:
-  ~OffscreenCanvasShutdownObserver() = default;
-
-  OffscreenCanvasRenderingContext2D* mOwner;
-};
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(OffscreenCanvasRenderingContext2D,
                                    CanvasRenderingContext2D)
@@ -89,45 +64,6 @@ nsIGlobalObject* OffscreenCanvasRenderingContext2D::GetParentObject() const {
 NS_IMETHODIMP OffscreenCanvasRenderingContext2D::InitializeWithDrawTarget(
     nsIDocShell* aShell, NotNull<gfx::DrawTarget*> aTarget) {
   return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-void OffscreenCanvasRenderingContext2D::AddShutdownObserver() {
-  WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
-  if (!workerPrivate) {
-    // We may be using OffscreenCanvas on the main thread.
-    CanvasRenderingContext2D::AddShutdownObserver();
-    return;
-  }
-
-  mOffscreenShutdownObserver =
-      MakeAndAddRef<OffscreenCanvasShutdownObserver>(this);
-  mWorkerRef = WeakWorkerRef::Create(
-      workerPrivate,
-      [observer = mOffscreenShutdownObserver] { observer->OnShutdown(); });
-}
-
-void OffscreenCanvasRenderingContext2D::RemoveShutdownObserver() {
-  WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
-  if (!workerPrivate) {
-    // We may be using OffscreenCanvas on the main thread.
-    CanvasRenderingContext2D::RemoveShutdownObserver();
-    return;
-  }
-
-  if (mOffscreenShutdownObserver) {
-    mOffscreenShutdownObserver->ClearOwner();
-  }
-  mOffscreenShutdownObserver = nullptr;
-  mWorkerRef = nullptr;
-}
-
-void OffscreenCanvasRenderingContext2D::OnShutdown() {
-  if (mOffscreenShutdownObserver) {
-    mOffscreenShutdownObserver->ClearOwner();
-    mOffscreenShutdownObserver = nullptr;
-  }
-
-  CanvasRenderingContext2D::OnShutdown();
 }
 
 void OffscreenCanvasRenderingContext2D::Commit(ErrorResult& aRv) {
