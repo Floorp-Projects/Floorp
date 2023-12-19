@@ -9,6 +9,16 @@ This is archived here because it captures valuable documentation that even if po
 
 This page lists a few tips to help you investigate issues related to SpiderMonkey. All tips listed here are dealing with the JavaScript shell obtained at the end of the [build documentation of SpiderMonkey](build.rst). It is separated in 2 parts, one section related to debugging and another section related to drafting optimizations. Many of these tips only apply to debug builds of the JS shell; they will not function in a release build.
 
+## Tools
+
+Here are some debugging tools above and beyond your standard debugger that might help you:
+
+* [rr](https://rr-project.org/) is a record-and-replay deterministic debugger for Linux
+* [Pernosco](https://pernos.co/) takes an rr recording and adds omniscient debugging tools to help you
+  * It is a paid service with a free trial
+  * Mozilla has a license for internal developers; you can contact Matthew Gaudet <mgaudet@mozilla.com> for details
+
+
 ## Debugging Tips
 
 ### Getting help (from JS shell)
