@@ -14,6 +14,11 @@ struct IDXGIKeyedMutex;
 struct ID3D11Texture2D;
 
 namespace mozilla {
+
+namespace gfx {
+class FileHandleWrapper;
+}  // namespace gfx
+
 namespace gl {
 
 class GLContext;
@@ -23,7 +28,7 @@ class SharedSurface_ANGLEShareHandle final : public SharedSurface {
  public:
   const std::weak_ptr<EglDisplay> mEGL;
   const EGLSurface mPBuffer;
-  const HANDLE mShareHandle;
+  const RefPtr<gfx::FileHandleWrapper> mSharedHandle;
   const RefPtr<IDXGIKeyedMutex> mKeyedMutex;
 
   static UniquePtr<SharedSurface_ANGLEShareHandle> Create(
@@ -32,7 +37,8 @@ class SharedSurface_ANGLEShareHandle final : public SharedSurface {
  private:
   SharedSurface_ANGLEShareHandle(const SharedSurfaceDesc&,
                                  const std::weak_ptr<EglDisplay>& egl,
-                                 EGLSurface pbuffer, HANDLE shareHandle,
+                                 EGLSurface pbuffer,
+                                 RefPtr<gfx::FileHandleWrapper>&& aSharedHandle,
                                  const RefPtr<IDXGIKeyedMutex>& keyedMutex);
 
  public:

@@ -418,7 +418,8 @@ already_AddRefed<TextureClient> DXGIYCbCrTextureAllocationHelper::Allocate(
                                     ? DXGI_FORMAT_R8_UNORM
                                     : DXGI_FORMAT_R16_UNORM,
                                 ySize.width, ySize.height, 1, 1);
-  newDesc.MiscFlags = D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX;
+  newDesc.MiscFlags = D3D11_RESOURCE_MISC_SHARED_NTHANDLE |
+                      D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX;
 
   RefPtr<ID3D10Multithread> mt;
   HRESULT hr = mDevice->QueryInterface((ID3D10Multithread**)getter_AddRefs(mt));

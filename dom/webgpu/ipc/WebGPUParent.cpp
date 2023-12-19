@@ -50,12 +50,24 @@ extern void* wgpu_server_get_external_texture_handle(void* aParam,
                                                      WGPUTextureId aId) {
   auto* parent = static_cast<WebGPUParent*>(aParam);
 
-  auto externalTexture = parent->GetExternalTexture(aId);
-  if (!externalTexture) {
+  auto texture = parent->GetExternalTexture(aId);
+  if (!texture) {
     MOZ_ASSERT_UNREACHABLE("unexpected to be called");
     return nullptr;
   }
-  return externalTexture->GetExternalTextureHandle();
+
+  void* sharedHandle = nullptr;
+#ifdef XP_WIN
+  sharedHandle = texture->GetExternalTextureHandle();
+  if (!sharedHandle) {
+    MOZ_ASSERT_UNREACHABLE("unexpected to be called");
+    gfxCriticalNoteOnce << "Failed to get shared handle";
+    return nullptr;
+  }
+#else
+  MOZ_ASSERT_UNREACHABLE("unexpected to be called");
+#endif
+  return sharedHandle;
 }
 
 }  // namespace ffi
@@ -1459,13 +1471,6 @@ std::shared_ptr<ExternalTexture> WebGPUParent::CreateExternalTexture(
       ExternalTexture::Create(aWidth, aHeight, aFormat, aUsage);
   if (!texture) {
     MOZ_ASSERT_UNREACHABLE("unexpected to be called");
-    return nullptr;
-  }
-
-  auto* sharedHandle = texture->GetExternalTextureHandle();
-  if (!sharedHandle) {
-    MOZ_ASSERT_UNREACHABLE("unexpected to be called");
-    gfxCriticalNoteOnce << "Failed to get shared handle";
     return nullptr;
   }
 

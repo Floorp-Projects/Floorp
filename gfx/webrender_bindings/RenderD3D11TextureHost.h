@@ -27,7 +27,8 @@ namespace wr {
 class RenderDXGITextureHost final : public RenderTextureHostSWGL {
  public:
   RenderDXGITextureHost(
-      HANDLE aHandle, Maybe<layers::GpuProcessTextureId>& aGpuProcessTextureId,
+      RefPtr<gfx::FileHandleWrapper> aHandle,
+      Maybe<layers::GpuProcessTextureId>& aGpuProcessTextureId,
       uint32_t aArrayIndex, gfx::SurfaceFormat aFormat, gfx::ColorSpace2,
       gfx::ColorRange aColorRange, gfx::IntSize aSize, bool aHasKeyedMutex,
       gfx::FenceInfo& aAcquireFenceInfo);
@@ -99,7 +100,7 @@ class RenderDXGITextureHost final : public RenderTextureHostSWGL {
 
   RefPtr<gl::GLContext> mGL;
 
-  HANDLE mHandle;
+  RefPtr<gfx::FileHandleWrapper> mHandle;
   Maybe<layers::GpuProcessTextureId> mGpuProcessTextureId;
   RefPtr<ID3D11Texture2D> mTexture;
   uint32_t mArrayIndex = 0;
@@ -135,12 +136,10 @@ class RenderDXGITextureHost final : public RenderTextureHostSWGL {
 
 class RenderDXGIYCbCrTextureHost final : public RenderTextureHostSWGL {
  public:
-  explicit RenderDXGIYCbCrTextureHost(HANDLE (&aHandles)[3],
-                                      gfx::YUVColorSpace aYUVColorSpace,
-                                      gfx::ColorDepth aColorDepth,
-                                      gfx::ColorRange aColorRange,
-                                      gfx::IntSize aSizeY,
-                                      gfx::IntSize aSizeCbCr);
+  explicit RenderDXGIYCbCrTextureHost(
+      RefPtr<gfx::FileHandleWrapper> (&aHandles)[3],
+      gfx::YUVColorSpace aYUVColorSpace, gfx::ColorDepth aColorDepth,
+      gfx::ColorRange aColorRange, gfx::IntSize aSizeY, gfx::IntSize aSizeCbCr);
 
   RenderDXGIYCbCrTextureHost* AsRenderDXGIYCbCrTextureHost() override {
     return this;
@@ -198,7 +197,7 @@ class RenderDXGIYCbCrTextureHost final : public RenderTextureHostSWGL {
 
   RefPtr<gl::GLContext> mGL;
 
-  HANDLE mHandles[3];
+  RefPtr<gfx::FileHandleWrapper> mHandles[3];
   RefPtr<ID3D11Texture2D> mTextures[3];
   RefPtr<IDXGIKeyedMutex> mKeyedMutexs[3];
 

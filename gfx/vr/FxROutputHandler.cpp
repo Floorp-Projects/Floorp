@@ -27,7 +27,8 @@ bool FxROutputHandler::TryInitialize(IDXGISwapChain* aSwapChain,
     // Create shareable texture, which will be copied to
     D3D11_TEXTURE2D_DESC descOrig = {0};
     texOrig->GetDesc(&descOrig);
-    descOrig.MiscFlags |= D3D11_RESOURCE_MISC_SHARED;
+    descOrig.MiscFlags |=
+        D3D11_RESOURCE_MISC_SHARED_NTHANDLE | D3D11_RESOURCE_MISC_SHARED;
     hr = aDevice->CreateTexture2D(&descOrig, nullptr,
                                   mTexCopy.StartAssignment());
     if (hr != S_OK) {
@@ -37,14 +38,16 @@ bool FxROutputHandler::TryInitialize(IDXGISwapChain* aSwapChain,
     // Now, share the texture to a handle that can be marshaled to another
     // process
     HANDLE hCopy = nullptr;
-    RefPtr<IDXGIResource> texResource;
-    hr = mTexCopy->QueryInterface(IID_IDXGIResource,
+    RefPtr<IDXGIResource1> texResource;
+    hr = mTexCopy->QueryInterface(IID_IDXGIResource1,
                                   getter_AddRefs(texResource));
     if (hr != S_OK) {
       return false;
     }
 
-    hr = texResource->GetSharedHandle(&hCopy);
+    hr = texResource->CreateSharedHandle(
+        nullptr, DXGI_SHARED_RESOURCE_READ | DXGI_SHARED_RESOURCE_WRITE,
+        nullptr, &hCopy);
     if (hr != S_OK) {
       return false;
     }
