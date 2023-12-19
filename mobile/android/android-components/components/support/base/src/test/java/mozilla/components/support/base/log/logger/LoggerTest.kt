@@ -7,23 +7,21 @@ package mozilla.components.support.base.log.logger
 import android.os.SystemClock
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.support.base.log.Log
-import mozilla.components.support.base.log.sink.LogSink
-import mozilla.components.support.test.mock
+import mozilla.components.support.base.log.fake.FakeLogSink
 import org.junit.After
+import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito.verify
-import org.mockito.Mockito.verifyNoMoreInteractions
 
 @RunWith(AndroidJUnit4::class)
 class LoggerTest {
 
-    lateinit var sink: LogSink
+    private lateinit var sink: FakeLogSink
 
     @Before
     fun setUp() {
-        sink = mock()
+        sink = FakeLogSink()
         Log.addSink(sink)
     }
 
@@ -37,11 +35,14 @@ class LoggerTest {
         val exception = RuntimeException()
         logger.debug(message = "Hello", throwable = exception)
 
-        verify(sink).log(
-            priority = Log.Priority.DEBUG,
-            tag = "Tag",
-            throwable = exception,
-            message = "Hello",
+        assertEquals(
+            FakeLogSink.Entry(
+                priority = Log.Priority.DEBUG,
+                tag = "Tag",
+                throwable = exception,
+                message = "Hello",
+            ),
+            sink.logs.first(),
         )
     }
 
@@ -52,11 +53,14 @@ class LoggerTest {
         val exception = RuntimeException()
         logger.info(message = "Hello", throwable = exception)
 
-        verify(sink).log(
-            priority = Log.Priority.INFO,
-            tag = "Tag",
-            throwable = exception,
-            message = "Hello",
+        assertEquals(
+            FakeLogSink.Entry(
+                priority = Log.Priority.INFO,
+                tag = "Tag",
+                throwable = exception,
+                message = "Hello",
+            ),
+            sink.logs.first(),
         )
     }
 
@@ -67,11 +71,14 @@ class LoggerTest {
         val exception = RuntimeException()
         logger.warn(message = "Hello", throwable = exception)
 
-        verify(sink).log(
-            priority = Log.Priority.WARN,
-            tag = "Tag",
-            throwable = exception,
-            message = "Hello",
+        assertEquals(
+            FakeLogSink.Entry(
+                priority = Log.Priority.WARN,
+                tag = "Tag",
+                throwable = exception,
+                message = "Hello",
+            ),
+            sink.logs.first(),
         )
     }
 
@@ -82,11 +89,14 @@ class LoggerTest {
         val exception = RuntimeException()
         logger.error(message = "Hello", throwable = exception)
 
-        verify(sink).log(
-            priority = Log.Priority.ERROR,
-            tag = "Tag",
-            throwable = exception,
-            message = "Hello",
+        assertEquals(
+            FakeLogSink.Entry(
+                priority = Log.Priority.ERROR,
+                tag = "Tag",
+                throwable = exception,
+                message = "Hello",
+            ),
+            sink.logs.first(),
         )
     }
 
@@ -95,65 +105,55 @@ class LoggerTest {
         val debugException = RuntimeException()
         Logger.debug("debug message", debugException)
 
-        verify(sink).log(
+        val infoException = RuntimeException()
+        Logger.info("info message", infoException)
+
+        val warnException = RuntimeException()
+        Logger.warn("warn message", warnException)
+
+        val errorException = RuntimeException()
+        Logger.error("error message", errorException)
+
+        val debugLog = FakeLogSink.Entry(
             priority = Log.Priority.DEBUG,
             tag = null,
             throwable = debugException,
             message = "debug message",
         )
-
-        val infoException = RuntimeException()
-        Logger.info("info message", infoException)
-
-        verify(sink).log(
-            priority = Log.Priority.INFO,
-            tag = null,
-            throwable = infoException,
+        val infoLog = debugLog.copy(
             message = "info message",
+            throwable = infoException,
+            priority = Log.Priority.INFO,
         )
-
-        val warnException = RuntimeException()
-        Logger.warn("warn message", warnException)
-
-        verify(sink).log(
-            priority = Log.Priority.WARN,
-            tag = null,
-            throwable = warnException,
+        val warnLog = debugLog.copy(
             message = "warn message",
+            throwable = warnException,
+            priority = Log.Priority.WARN,
         )
-
-        val errorException = RuntimeException()
-        Logger.error("error message", errorException)
-
-        verify(sink).log(
-            priority = Log.Priority.ERROR,
-            tag = null,
-            throwable = errorException,
+        val errorLog = debugLog.copy(
             message = "error message",
+            throwable = errorException,
+            priority = Log.Priority.ERROR,
         )
+        val expectedLogs = listOf(debugLog, infoLog, warnLog, errorLog)
 
-        verifyNoMoreInteractions(sink)
+        assertEquals(expectedLogs, sink.logs)
     }
 
     @Test
     fun `measure call logs two messages`() {
         Logger.measure("testing") { /* do nothing */ }
 
-        verify(sink).log(
+        val firstLog = FakeLogSink.Entry(
             priority = Log.Priority.DEBUG,
             tag = null,
             throwable = null,
             message = "⇢ testing",
         )
+        val secondLog = firstLog.copy(message = "⇠ testing [0ms]")
+        val expectedLogs = listOf(firstLog, secondLog)
 
-        verify(sink).log(
-            priority = Log.Priority.DEBUG,
-            tag = null,
-            throwable = null,
-            message = "⇠ testing [0ms]",
-        )
-
-        verifyNoMoreInteractions(sink)
+        assertEquals(expectedLogs, sink.logs)
     }
 
     @Test
@@ -165,20 +165,15 @@ class LoggerTest {
             SystemClock.sleep(10)
         }
 
-        verify(sink).log(
+        val firstLog = FakeLogSink.Entry(
             priority = Log.Priority.DEBUG,
             tag = "WithTag",
             throwable = null,
             message = "⇢ testing",
         )
+        val secondLog = firstLog.copy(message = "⇠ testing [10ms]")
+        val expectedLogs = listOf(firstLog, secondLog)
 
-        verify(sink).log(
-            priority = Log.Priority.DEBUG,
-            tag = "WithTag",
-            throwable = null,
-            message = "⇠ testing [10ms]",
-        )
-
-        verifyNoMoreInteractions(sink)
+        assertEquals(expectedLogs, sink.logs)
     }
 }
