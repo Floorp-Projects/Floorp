@@ -63,17 +63,23 @@ class DNSPacket {
 
   void SetOriginHost(const Maybe<nsCString>& aHost) { mOriginHost = aHost; }
 
+  static nsresult ParseHTTPS(uint16_t aRDLen, struct SVCB& aParsed,
+                             unsigned int aIndex, const unsigned char* aBuffer,
+                             unsigned int aBodySize,
+                             const nsACString& aOriginHost);
+
  protected:
   // Never accept larger DOH responses than this as that would indicate
   // something is wrong. Typical ones are much smaller.
   static const unsigned int MAX_SIZE = 3200;
 
   nsresult PassQName(unsigned int& index, const unsigned char* aBuffer);
-  nsresult GetQname(nsACString& aQname, unsigned int& aIndex,
-                    const unsigned char* aBuffer);
-  nsresult ParseSvcParam(unsigned int svcbIndex, uint16_t key,
-                         SvcFieldValue& field, uint16_t length,
-                         const unsigned char* aBuffer);
+  static nsresult GetQname(nsACString& aQname, unsigned int& aIndex,
+                           const unsigned char* aBuffer,
+                           unsigned int aBodySize);
+  static nsresult ParseSvcParam(unsigned int svcbIndex, uint16_t key,
+                                SvcFieldValue& field, uint16_t length,
+                                const unsigned char* aBuffer);
   nsresult DecodeInternal(
       nsCString& aHost, enum TrrType aType, nsCString& aCname,
       bool aAllowRFC1918, DOHresp& aResp, TypeRecordResultType& aTypeResult,
