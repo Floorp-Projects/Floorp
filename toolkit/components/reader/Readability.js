@@ -61,6 +61,7 @@ function Readability(doc, options) {
     return el.innerHTML;
   };
   this._disableJSONLD = !!options.disableJSONLD;
+  this._allowedVideoRegex = options.allowedVideoRegex || this.REGEXPS.videos;
 
   // Start with all flags set
   this._flags = this.FLAG_STRIP_UNLIKELYS |
@@ -80,12 +81,7 @@ function Readability(doc, options) {
       return `<${node.localName} ${attrPairs}>`;
     };
     this.log = function () {
-      if (typeof dump !== "undefined") {
-        var msg = Array.prototype.map.call(arguments, function(x) {
-          return (x && x.nodeName) ? logNode(x) : x;
-        }).join(" ");
-        dump("Reader: (Readability) " + msg + "\n");
-      } else if (typeof console !== "undefined") {
+      if (typeof console !== "undefined") {
         let args = Array.from(arguments, arg => {
           if (arg && arg.nodeType == this.ELEMENT_NODE) {
             return logNode(arg);
@@ -94,6 +90,12 @@ function Readability(doc, options) {
         });
         args.unshift("Reader: (Readability)");
         console.log.apply(console, args);
+      } else if (typeof dump !== "undefined") {
+        /* global dump */
+        var msg = Array.prototype.map.call(arguments, function(x) {
+          return (x && x.nodeName) ? logNode(x) : x;
+        }).join(" ");
+        dump("Reader: (Readability) " + msg + "\n");
       }
     };
   } else {
@@ -147,6 +149,9 @@ Readability.prototype = {
     hashUrl: /^#.+/,
     srcsetUrl: /(\S+)(\s+[\d.]+[xw])?(\s*(?:,|$))/g,
     b64DataUrl: /^data:\s*([^\s;,]+)\s*;\s*base64\s*,/i,
+    // Commas as used in Latin, Sindhi, Chinese and various other scripts.
+    // see: https://en.wikipedia.org/wiki/Comma#Comma_variants
+    commas: /\u002C|\u060C|\uFE50|\uFE10|\uFE11|\u2E41|\u2E34|\u2E32|\uFF0C/g,
     // See: https://schema.org/Article
     jsonLdArticleTypes: /^Article|AdvertiserContentArticle|NewsArticle|AnalysisNewsArticle|AskPublicNewsArticle|BackgroundNewsArticle|OpinionNewsArticle|ReportageNewsArticle|ReviewNewsArticle|Report|SatiricalArticle|ScholarlyArticle|MedicalScholarlyArticle|SocialMediaPosting|BlogPosting|LiveBlogPosting|DiscussionForumPosting|TechArticle|APIReference$/
   },
@@ -916,6 +921,12 @@ Readability.prototype = {
           continue;
         }
 
+        // User is not able to see elements applied with both "aria-modal = true" and "role = dialog"
+        if (node.getAttribute("aria-modal") == "true" && node.getAttribute("role") == "dialog") {
+          node = this._removeAndGetNext(node);
+          continue;
+        }
+
         // Check to see if this node is a byline, and remove it if it is.
         if (this._checkByline(node, matchString)) {
           node = this._removeAndGetNext(node);
@@ -1030,7 +1041,7 @@ Readability.prototype = {
         contentScore += 1;
 
         // Add points for any commas within this paragraph.
-        contentScore += innerText.split(",").length;
+        contentScore += innerText.split(this.REGEXPS.commas).length;
 
         // For every 100 characters in this paragraph, add another point. Up to 3 points.
         contentScore += Math.min(Math.floor(innerText.length / 100), 3);
@@ -1444,6 +1455,9 @@ Readability.prototype = {
           ) {
             metadata.siteName = parsed.publisher.name.trim();
           }
+          if (typeof parsed.datePublished === "string") {
+            metadata.datePublished = parsed.datePublished.trim();
+          }
           return;
         } catch (err) {
           this.log(err.message);
@@ -1467,7 +1481,7 @@ Readability.prototype = {
     var metaElements = this._doc.getElementsByTagName("meta");
 
     // property is a space-separated list of values
-    var propertyPattern = /\s*(dc|dcterm|og|twitter)\s*:\s*(author|creator|description|title|site_name)\s*/gi;
+    var propertyPattern = /\s*(article|dc|dcterm|og|twitter)\s*:\s*(author|creator|description|published_time|title|site_name)\s*/gi;
 
     // name is a single value
     var namePattern = /^\s*(?:(dc|dcterm|og|twitter|weibo:(article|webpage))\s*[\.:]\s*)?(author|creator|description|title|site_name)\s*$/i;
@@ -1538,12 +1552,17 @@ Readability.prototype = {
     metadata.siteName = jsonld.siteName ||
                         values["og:site_name"];
 
+    // get article published time
+    metadata.publishedTime = jsonld.datePublished ||
+      values["article:published_time"] || null;
+
     // in many sites the meta value is escaped with HTML entities,
     // so here we need to unescape it
     metadata.title = this._unescapeHtmlEntities(metadata.title);
     metadata.byline = this._unescapeHtmlEntities(metadata.byline);
     metadata.excerpt = this._unescapeHtmlEntities(metadata.excerpt);
     metadata.siteName = this._unescapeHtmlEntities(metadata.siteName);
+    metadata.publishedTime = this._unescapeHtmlEntities(metadata.publishedTime);
 
     return metadata;
   },
@@ -1649,12 +1668,7 @@ Readability.prototype = {
    * @param Element
   **/
   _removeScripts: function(doc) {
-    this._removeNodes(this._getAllNodesWithTag(doc, ["script"]), function(scriptNode) {
-      scriptNode.nodeValue = "";
-      scriptNode.removeAttribute("src");
-      return true;
-    });
-    this._removeNodes(this._getAllNodesWithTag(doc, ["noscript"]));
+    this._removeNodes(this._getAllNodesWithTag(doc, ["script", "noscript"]));
   },
 
   /**
@@ -1844,13 +1858,13 @@ Readability.prototype = {
       if (isEmbed) {
         // First, check the elements attributes to see if any of them contain youtube or vimeo
         for (var i = 0; i < element.attributes.length; i++) {
-          if (this.REGEXPS.videos.test(element.attributes[i].value)) {
+          if (this._allowedVideoRegex.test(element.attributes[i].value)) {
             return false;
           }
         }
 
         // For embed with <object> tag, check inner HTML as well.
-        if (element.tagName === "object" && this.REGEXPS.videos.test(element.innerHTML)) {
+        if (element.tagName === "object" && this._allowedVideoRegex.test(element.innerHTML)) {
           return false;
         }
       }
@@ -2119,13 +2133,13 @@ Readability.prototype = {
         for (var i = 0; i < embeds.length; i++) {
           // If this embed has attribute that matches video regex, don't delete it.
           for (var j = 0; j < embeds[i].attributes.length; j++) {
-            if (this.REGEXPS.videos.test(embeds[i].attributes[j].value)) {
+            if (this._allowedVideoRegex.test(embeds[i].attributes[j].value)) {
               return false;
             }
           }
 
           // For embed with <object> tag, check inner HTML as well.
-          if (embeds[i].tagName === "object" && this.REGEXPS.videos.test(embeds[i].innerHTML)) {
+          if (embeds[i].tagName === "object" && this._allowedVideoRegex.test(embeds[i].innerHTML)) {
             return false;
           }
 
@@ -2143,6 +2157,21 @@ Readability.prototype = {
           (!isList && weight < 25 && linkDensity > 0.2) ||
           (weight >= 25 && linkDensity > 0.5) ||
           ((embedCount === 1 && contentLength < 75) || embedCount > 1);
+        // Allow simple lists of images to remain in pages
+        if (isList && haveToRemove) {
+          for (var x = 0; x < node.children.length; x++) {
+            let child = node.children[x];
+            // Don't filter in lists with li's that contain more than one child
+            if (child.children.length > 1) {
+              return haveToRemove;
+            }
+          }
+          let li_count = node.getElementsByTagName("li").length;
+          // Only allow the list to remain if every li contains an image
+          if (img == li_count) {
+            return false;
+          }
+        }
         return haveToRemove;
       }
       return false;
@@ -2212,6 +2241,7 @@ Readability.prototype = {
   _isProbablyVisible: function(node) {
     // Have to null-check node.style and node.className.indexOf to deal with SVG and MathML nodes.
     return (!node.style || node.style.display != "none")
+      && (!node.style || node.style.visibility != "hidden")
       && !node.hasAttribute("hidden")
       //check for "fallback-image" so that wikimedia math images are displayed
       && (!node.hasAttribute("aria-hidden") || node.getAttribute("aria-hidden") != "true" || (node.className && node.className.indexOf && node.className.indexOf("fallback-image") !== -1));
@@ -2280,11 +2310,13 @@ Readability.prototype = {
       textContent: textContent,
       length: textContent.length,
       excerpt: metadata.excerpt,
-      siteName: metadata.siteName || this._articleSiteName
+      siteName: metadata.siteName || this._articleSiteName,
+      publishedTime: metadata.publishedTime
     };
   }
 };
 
 if (typeof module === "object") {
+  /* global module */
   module.exports = Readability;
 }
