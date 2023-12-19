@@ -94,6 +94,9 @@ class WebRenderBridgeChild final : public PWebRenderBridgeChild,
   TextureForwarder* GetTextureForwarder() override;
   LayersIPCActor* GetLayersIPCActor() override;
   void SyncWithCompositor() override;
+  ActiveResourceTracker* GetActiveResourceTracker() override {
+    return mActiveResourceTracker.get();
+  }
 
   void AddPipelineIdForCompositable(const wr::PipelineId& aPipelineId,
                                     const CompositableHandle& aHandle,
@@ -254,6 +257,8 @@ class WebRenderBridgeChild final : public PWebRenderBridgeChild,
 
   uint32_t mFontInstanceKeysDeleted;
   nsTHashMap<ScaledFontHashKey, wr::FontInstanceKey> mFontInstanceKeys;
+
+  UniquePtr<ActiveResourceTracker> mActiveResourceTracker;
 
   RefCountedShmem mResourceShm;
 };

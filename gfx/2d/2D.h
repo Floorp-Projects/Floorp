@@ -1987,7 +1987,7 @@ class DrawTarget : public external::AtomicRefCounted<DrawTarget> {
   SurfaceFormat mFormat;
 };
 
-class DrawEventRecorder : public external::AtomicRefCounted<DrawEventRecorder> {
+class DrawEventRecorder : public RefCounted<DrawEventRecorder> {
  public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(DrawEventRecorder)
   // returns true if there were any items in the recording

@@ -15,6 +15,8 @@ class nsIGlobalObject;
 
 namespace mozilla::dom {
 class OffscreenCanvas;
+class OffscreenCanvasShutdownObserver;
+class WeakWorkerRef;
 
 class OffscreenCanvasRenderingContext2D final
     : public CanvasRenderingContext2D {
@@ -37,15 +39,27 @@ class OffscreenCanvasRenderingContext2D final
 
   void Commit(ErrorResult& aRv);
 
+  void OnShutdown() override;
+
   NS_IMETHOD InitializeWithDrawTarget(
       nsIDocShell* aShell, NotNull<gfx::DrawTarget*> aTarget) override;
 
  private:
+  void AddShutdownObserver() override;
+  void RemoveShutdownObserver() override;
+  bool AlreadyShutDown() const override {
+    return !mOffscreenShutdownObserver &&
+           CanvasRenderingContext2D::AlreadyShutDown();
+  }
+
   void AddZoneWaitingForGC() override;
   void AddAssociatedMemory() override;
   void RemoveAssociatedMemory() override;
 
   ~OffscreenCanvasRenderingContext2D() override;
+
+  RefPtr<OffscreenCanvasShutdownObserver> mOffscreenShutdownObserver;
+  RefPtr<WeakWorkerRef> mWorkerRef;
 };
 
 size_t BindingJSObjectMallocBytes(OffscreenCanvasRenderingContext2D* aContext);

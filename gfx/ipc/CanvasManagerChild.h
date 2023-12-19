@@ -10,18 +10,15 @@
 #include "mozilla/gfx/PCanvasManagerChild.h"
 #include "mozilla/gfx/Types.h"
 #include "mozilla/ThreadLocal.h"
-#include <set>
 
 namespace mozilla {
 namespace dom {
-class CanvasRenderingContext2D;
-class ThreadSafeWorkerRef;
+class IPCWorkerRef;
 class WorkerPrivate;
 }  // namespace dom
 
 namespace layers {
 class CanvasChild;
-class ActiveResourceTracker;
 }  // namespace layers
 
 namespace webgpu {
@@ -44,13 +41,9 @@ class CanvasManagerChild final : public PCanvasManagerChild {
   void ActorDestroy(ActorDestroyReason aReason) override;
 
   static CanvasManagerChild* Get();
-  static CanvasManagerChild* MaybeGet();
   static void Shutdown();
   static bool CreateParent(
       mozilla::ipc::Endpoint<PCanvasManagerParent>&& aEndpoint);
-
-  void AddShutdownObserver(dom::CanvasRenderingContext2D* aCanvas);
-  void RemoveShutdownObserver(dom::CanvasRenderingContext2D* aCanvas);
 
   bool IsCanvasActive() { return mActive; }
   void EndCanvasTransaction();
@@ -62,18 +55,13 @@ class CanvasManagerChild final : public PCanvasManagerChild {
 
   RefPtr<webgpu::WebGPUChild> GetWebGPUChild();
 
-  layers::ActiveResourceTracker* GetActiveResourceTracker();
-
  private:
   ~CanvasManagerChild();
-  void DestroyInternal();
   void Destroy();
 
-  RefPtr<mozilla::dom::ThreadSafeWorkerRef> mWorkerRef;
+  RefPtr<mozilla::dom::IPCWorkerRef> mWorkerRef;
   RefPtr<layers::CanvasChild> mCanvasChild;
   RefPtr<webgpu::WebGPUChild> mWebGPUChild;
-  UniquePtr<layers::ActiveResourceTracker> mActiveResourceTracker;
-  std::set<dom::CanvasRenderingContext2D*> mActiveCanvas;
   const uint32_t mId;
   bool mActive = true;
   bool mBlocked = false;

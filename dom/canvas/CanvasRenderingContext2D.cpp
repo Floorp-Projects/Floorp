@@ -24,7 +24,6 @@
 #include "mozilla/dom/HTMLCanvasElement.h"
 #include "mozilla/dom/GeneratePlaceholderCanvasData.h"
 #include "mozilla/dom/VideoFrame.h"
-#include "mozilla/gfx/CanvasManagerChild.h"
 #include "nsPresContext.h"
 
 #include "nsIInterfaceRequestorUtils.h"
@@ -97,7 +96,6 @@
 #include "mozilla/gfx/DataSurfaceHelpers.h"
 #include "mozilla/gfx/PatternHelpers.h"
 #include "mozilla/gfx/Swizzle.h"
-#include "mozilla/layers/ImageBridgeChild.h"
 #include "mozilla/layers/PersistentBufferProvider.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Preferences.h"
@@ -118,7 +116,6 @@
 #include "mozilla/dom/SVGImageElement.h"
 #include "mozilla/dom/TextMetrics.h"
 #include "mozilla/FloatingPoint.h"
-#include "mozilla/Logging.h"
 #include "nsGlobalWindowInner.h"
 #include "nsDeviceContext.h"
 #include "nsFontMetrics.h"
@@ -1133,13 +1130,7 @@ CanvasRenderingContext2D::~CanvasRenderingContext2D() {
   }
 }
 
-nsresult CanvasRenderingContext2D::Initialize() {
-  if (NS_WARN_IF(!AddShutdownObserver())) {
-    return NS_ERROR_FAILURE;
-  }
-
-  return NS_OK;
-}
+void CanvasRenderingContext2D::Initialize() { AddShutdownObserver(); }
 
 JSObject* CanvasRenderingContext2D::WrapObject(
     JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
@@ -1227,6 +1218,8 @@ void CanvasRenderingContext2D::ResetBitmap(bool aFreeBuffer) {
 }
 
 void CanvasRenderingContext2D::OnShutdown() {
+  mShutdownObserver = nullptr;
+
   RefPtr<PersistentBufferProvider> provider = mBufferProvider;
 
   ResetBitmap();
@@ -1234,44 +1227,21 @@ void CanvasRenderingContext2D::OnShutdown() {
   if (provider) {
     provider->OnShutdown();
   }
-
-  if (mOffscreenCanvas) {
-    mOffscreenCanvas->Destroy();
-  }
-
-  mHasShutdown = true;
 }
 
-bool CanvasRenderingContext2D::AddShutdownObserver() {
-  auto* const canvasManager = CanvasManagerChild::Get();
-  if (NS_WARN_IF(!canvasManager)) {
-    if (NS_IsMainThread()) {
-      mShutdownObserver = new CanvasShutdownObserver(this);
-      nsContentUtils::RegisterShutdownObserver(mShutdownObserver);
-      return true;
-    }
+void CanvasRenderingContext2D::AddShutdownObserver() {
+  MOZ_ASSERT(!mShutdownObserver);
+  MOZ_ASSERT(NS_IsMainThread());
 
-    mHasShutdown = true;
-    return false;
-  }
-
-  canvasManager->AddShutdownObserver(this);
-  return true;
+  mShutdownObserver = new CanvasShutdownObserver(this);
+  nsContentUtils::RegisterShutdownObserver(mShutdownObserver);
 }
 
 void CanvasRenderingContext2D::RemoveShutdownObserver() {
   if (mShutdownObserver) {
     mShutdownObserver->OnShutdown();
     mShutdownObserver = nullptr;
-    return;
   }
-
-  auto* const canvasManager = CanvasManagerChild::MaybeGet();
-  if (!canvasManager) {
-    return;
-  }
-
-  canvasManager->RemoveShutdownObserver(this);
 }
 
 void CanvasRenderingContext2D::SetStyleFromString(const nsACString& aStr,
@@ -1682,27 +1652,15 @@ bool CanvasRenderingContext2D::TryAcceleratedTarget(
     return false;
   }
 
-  if (mCanvasElement) {
-    MOZ_ASSERT(NS_IsMainThread());
-
-    WindowRenderer* renderer = WindowRendererFromCanvasElement(mCanvasElement);
-    if (NS_WARN_IF(!renderer)) {
-      return false;
-    }
-
-    aOutProvider = PersistentBufferProviderAccelerated::Create(
-        GetSize(), GetSurfaceFormat(), renderer->AsKnowsCompositor());
-  } else if (mOffscreenCanvas &&
-             StaticPrefs::gfx_canvas_remote_allow_offscreen()) {
-    RefPtr<ImageBridgeChild> imageBridge = ImageBridgeChild::GetSingleton();
-    if (NS_WARN_IF(!imageBridge)) {
-      return false;
-    }
-
-    aOutProvider = PersistentBufferProviderAccelerated::Create(
-        GetSize(), GetSurfaceFormat(), imageBridge);
+  if (!mCanvasElement) {
+    return false;
   }
-
+  WindowRenderer* renderer = WindowRendererFromCanvasElement(mCanvasElement);
+  if (!renderer) {
+    return false;
+  }
+  aOutProvider = PersistentBufferProviderAccelerated::Create(
+      GetSize(), GetSurfaceFormat(), renderer->AsKnowsCompositor());
   if (!aOutProvider) {
     return false;
   }
@@ -1717,6 +1675,10 @@ bool CanvasRenderingContext2D::TrySharedTarget(
   aOutDT = nullptr;
   aOutProvider = nullptr;
 
+  if (!mCanvasElement) {
+    return false;
+  }
+
   if (mBufferProvider && mBufferProvider->IsShared()) {
     // we are already using a shared buffer provider, we are allocating a new
     // one because the current one failed so let's just fall back to the basic
@@ -1725,28 +1687,15 @@ bool CanvasRenderingContext2D::TrySharedTarget(
     return false;
   }
 
-  if (mCanvasElement) {
-    MOZ_ASSERT(NS_IsMainThread());
+  WindowRenderer* renderer = WindowRendererFromCanvasElement(mCanvasElement);
 
-    WindowRenderer* renderer = WindowRendererFromCanvasElement(mCanvasElement);
-    if (NS_WARN_IF(!renderer)) {
-      return false;
-    }
-
-    aOutProvider = renderer->CreatePersistentBufferProvider(
-        GetSize(), GetSurfaceFormat(),
-        !mAllowAcceleration || GetEffectiveWillReadFrequently());
-  } else if (mOffscreenCanvas &&
-             StaticPrefs::gfx_canvas_remote_allow_offscreen()) {
-    RefPtr<ImageBridgeChild> imageBridge = ImageBridgeChild::GetSingleton();
-    if (NS_WARN_IF(!imageBridge)) {
-      return false;
-    }
-
-    aOutProvider = PersistentBufferProviderShared::Create(
-        GetSize(), GetSurfaceFormat(), imageBridge,
-        !mAllowAcceleration || GetEffectiveWillReadFrequently());
+  if (!renderer) {
+    return false;
   }
+
+  aOutProvider = renderer->CreatePersistentBufferProvider(
+      GetSize(), GetSurfaceFormat(),
+      !mAllowAcceleration || GetEffectiveWillReadFrequently());
 
   if (!aOutProvider) {
     return false;
@@ -1915,10 +1864,6 @@ void CanvasRenderingContext2D::ReturnTarget(bool aForceReset) {
 NS_IMETHODIMP
 CanvasRenderingContext2D::InitializeWithDrawTarget(
     nsIDocShell* aShell, NotNull<gfx::DrawTarget*> aTarget) {
-  if (NS_WARN_IF(!AddShutdownObserver())) {
-    return NS_ERROR_FAILURE;
-  }
-
   RemovePostRefreshObserver();
   mDocShell = aShell;
   AddPostRefreshObserverIfNecessary();
