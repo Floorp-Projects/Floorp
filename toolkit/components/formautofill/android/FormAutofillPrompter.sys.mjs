@@ -33,24 +33,28 @@ export let FormAutofillPrompter = {
     };
   },
 
-  async promptToSaveAddress(browser, type, description) {
+  async promptToSaveAddress(
+    browser,
+    storage,
+    flowId,
+    { oldRecord, newRecord }
+  ) {
     throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
   },
 
-  async promptToSaveCreditCard(browser, storage, record, flowId) {
-    const prompt = new lazy.GeckoViewPrompter(browser.ownerGlobal);
-
-    const duplicateRecord = (await storage.getDuplicateRecords(record).next())
-      .value;
-    let newCreditCard;
-    if (duplicateRecord) {
-      newCreditCard = { ...duplicateRecord, ...record };
-    } else {
-      newCreditCard = record;
+  async promptToSaveCreditCard(
+    browser,
+    storage,
+    flowId,
+    { oldRecord, newRecord }
+  ) {
+    if (oldRecord) {
+      newRecord = { ...oldRecord, ...newRecord };
     }
 
+    const prompt = new lazy.GeckoViewPrompter(browser.ownerGlobal);
     prompt.asyncShowPrompt(
-      this._createMessage([lazy.CreditCard.fromGecko(newCreditCard)]),
+      this._createMessage([lazy.CreditCard.fromGecko(newRecord)]),
       result => {
         const selectedCreditCard = result?.selection?.value;
 
