@@ -7,10 +7,6 @@
 #include "CanvasChild.h"
 
 #include "MainThreadUtils.h"
-#include "mozilla/dom/WorkerCommon.h"
-#include "mozilla/dom/WorkerPrivate.h"
-#include "mozilla/dom/WorkerRef.h"
-#include "mozilla/dom/WorkerRunnable.h"
 #include "mozilla/gfx/CanvasManagerChild.h"
 #include "mozilla/gfx/DrawTargetRecording.h"
 #include "mozilla/gfx/Tools.h"
@@ -30,17 +26,10 @@ namespace layers {
 
 class RecorderHelpers final : public CanvasDrawEventRecorder::Helpers {
  public:
-  NS_DECL_OWNINGTHREAD
-
-  explicit RecorderHelpers(CanvasChild* aCanvasChild)
+  explicit RecorderHelpers(const RefPtr<CanvasChild>& aCanvasChild)
       : mCanvasChild(aCanvasChild) {}
 
-  ~RecorderHelpers() override { MOZ_ASSERT(!mCanvasChild); }
-
-  void Destroy() override {
-    NS_ASSERT_OWNINGTHREAD(RecorderHelpers);
-    mCanvasChild = nullptr;
-  }
+  ~RecorderHelpers() override = default;
 
   bool InitTranslator(TextureType aTextureType, gfx::BackendType aBackendType,
                       Handle&& aReadHandle, nsTArray<Handle>&& aBufferHandles,
@@ -48,8 +37,7 @@ class RecorderHelpers final : public CanvasDrawEventRecorder::Helpers {
                       CrossProcessSemaphoreHandle&& aReaderSem,
                       CrossProcessSemaphoreHandle&& aWriterSem,
                       bool aUseIPDLThread) override {
-    NS_ASSERT_OWNINGTHREAD(RecorderHelpers);
-    if (NS_WARN_IF(!mCanvasChild)) {
+    if (!mCanvasChild) {
       return false;
     }
     return mCanvasChild->SendInitTranslator(
@@ -59,7 +47,6 @@ class RecorderHelpers final : public CanvasDrawEventRecorder::Helpers {
   }
 
   bool AddBuffer(Handle&& aBufferHandle, uint64_t aBufferSize) override {
-    NS_ASSERT_OWNINGTHREAD(RecorderHelpers);
     if (!mCanvasChild) {
       return false;
     }
@@ -67,7 +54,6 @@ class RecorderHelpers final : public CanvasDrawEventRecorder::Helpers {
   }
 
   bool ReaderClosed() override {
-    NS_ASSERT_OWNINGTHREAD(RecorderHelpers);
     if (!mCanvasChild) {
       return false;
     }
@@ -75,7 +61,6 @@ class RecorderHelpers final : public CanvasDrawEventRecorder::Helpers {
   }
 
   bool RestartReader() override {
-    NS_ASSERT_OWNINGTHREAD(RecorderHelpers);
     if (!mCanvasChild) {
       return false;
     }
@@ -83,23 +68,97 @@ class RecorderHelpers final : public CanvasDrawEventRecorder::Helpers {
   }
 
  private:
-  CanvasChild* MOZ_NON_OWNING_REF mCanvasChild;
+  const WeakPtr<CanvasChild> mCanvasChild;
 };
 
-CanvasChild::CanvasChild(dom::ThreadSafeWorkerRef* aWorkerRef)
-    : mMutex("CanvasChild::mMutex"),
-      mWorkerRef(aWorkerRef),
-      mIsOnWorker(!!aWorkerRef){};
+class SourceSurfaceCanvasRecording final : public gfx::SourceSurface {
+ public:
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(SourceSurfaceCanvasRecording, final)
+
+  SourceSurfaceCanvasRecording(
+      int64_t aTextureId, const RefPtr<gfx::SourceSurface>& aRecordedSuface,
+      CanvasChild* aCanvasChild,
+      const RefPtr<CanvasDrawEventRecorder>& aRecorder)
+      : mTextureId(aTextureId),
+        mRecordedSurface(aRecordedSuface),
+        mCanvasChild(aCanvasChild),
+        mRecorder(aRecorder) {
+    // It's important that AddStoredObject is called first because that will
+    // run any pending processing required by recorded objects that have been
+    // deleted off the main thread.
+    mRecorder->AddStoredObject(this);
+    mRecorder->RecordEvent(RecordedAddSurfaceAlias(this, aRecordedSuface));
+  }
+
+  ~SourceSurfaceCanvasRecording() {
+    ReferencePtr surfaceAlias = this;
+    if (NS_IsMainThread()) {
+      ReleaseOnMainThread(std::move(mRecorder), surfaceAlias,
+                          std::move(mRecordedSurface), std::move(mCanvasChild));
+      return;
+    }
+
+    mRecorder->AddPendingDeletion(
+        [recorder = std::move(mRecorder), surfaceAlias,
+         aliasedSurface = std::move(mRecordedSurface),
+         canvasChild = std::move(mCanvasChild)]() mutable -> void {
+          ReleaseOnMainThread(std::move(recorder), surfaceAlias,
+                              std::move(aliasedSurface),
+                              std::move(canvasChild));
+        });
+  }
+
+  gfx::SurfaceType GetType() const final { return mRecordedSurface->GetType(); }
+
+  gfx::IntSize GetSize() const final { return mRecordedSurface->GetSize(); }
+
+  gfx::SurfaceFormat GetFormat() const final {
+    return mRecordedSurface->GetFormat();
+  }
+
+  already_AddRefed<gfx::DataSourceSurface> GetDataSurface() final {
+    EnsureDataSurfaceOnMainThread();
+    return do_AddRef(mDataSourceSurface);
+  }
+
+  void DrawTargetWillChange() { mDetached = true; }
+
+ private:
+  void EnsureDataSurfaceOnMainThread() {
+    // The data can only be retrieved on the main thread.
+    if (!mDataSourceSurface && NS_IsMainThread()) {
+      mDataSourceSurface =
+          mCanvasChild->GetDataSurface(mTextureId, mRecordedSurface, mDetached);
+    }
+  }
+
+  // Used to ensure that clean-up that requires it is done on the main thread.
+  static void ReleaseOnMainThread(RefPtr<CanvasDrawEventRecorder> aRecorder,
+                                  ReferencePtr aSurfaceAlias,
+                                  RefPtr<gfx::SourceSurface> aAliasedSurface,
+                                  RefPtr<CanvasChild> aCanvasChild) {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    aRecorder->RemoveStoredObject(aSurfaceAlias);
+    aRecorder->RecordEvent(RecordedRemoveSurfaceAlias(aSurfaceAlias));
+    aAliasedSurface = nullptr;
+    aCanvasChild = nullptr;
+    aRecorder = nullptr;
+  }
+
+  int64_t mTextureId;
+  RefPtr<gfx::SourceSurface> mRecordedSurface;
+  RefPtr<CanvasChild> mCanvasChild;
+  RefPtr<CanvasDrawEventRecorder> mRecorder;
+  RefPtr<gfx::DataSourceSurface> mDataSourceSurface;
+  bool mDetached = false;
+};
+
+CanvasChild::CanvasChild() = default;
 
 CanvasChild::~CanvasChild() = default;
 
 static void NotifyCanvasDeviceReset() {
-  if (!NS_IsMainThread()) {
-    NS_DispatchToMainThread(
-        NewRunnableFunction(__func__, &NotifyCanvasDeviceReset));
-    return;
-  }
-
   nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
   if (obs) {
     obs->NotifyObservers(nullptr, "canvas-device-reset", nullptr);
@@ -107,8 +166,6 @@ static void NotifyCanvasDeviceReset() {
 }
 
 ipc::IPCResult CanvasChild::RecvNotifyDeviceChanged() {
-  NS_ASSERT_OWNINGTHREAD(CanvasChild);
-
   NotifyCanvasDeviceReset();
   mRecorder->RecordEvent(RecordedDeviceChangeAcknowledged());
   return IPC_OK();
@@ -117,8 +174,6 @@ ipc::IPCResult CanvasChild::RecvNotifyDeviceChanged() {
 /* static */ bool CanvasChild::mDeactivated = false;
 
 ipc::IPCResult CanvasChild::RecvDeactivate() {
-  NS_ASSERT_OWNINGTHREAD(CanvasChild);
-
   RefPtr<CanvasChild> self(this);
   mDeactivated = true;
   if (auto* cm = gfx::CanvasManagerChild::Get()) {
@@ -135,22 +190,15 @@ ipc::IPCResult CanvasChild::RecvBlockCanvas() {
   return IPC_OK();
 }
 
-RefPtr<CanvasDrawEventRecorder> CanvasChild::EnsureRecorder(
-    gfx::IntSize aSize, gfx::SurfaceFormat aFormat, TextureType aTextureType) {
-  NS_ASSERT_OWNINGTHREAD(CanvasChild);
-
+void CanvasChild::EnsureRecorder(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
+                                 TextureType aTextureType) {
   if (!mRecorder) {
     gfx::BackendType backendType =
         gfxPlatform::GetPlatform()->GetPreferredCanvasBackend();
-    RefPtr<CanvasDrawEventRecorder> recorder;
-    {
-      MutexAutoLock lock(mMutex);
-      recorder = MakeAndAddRef<CanvasDrawEventRecorder>(mWorkerRef);
-    }
+    auto recorder = MakeRefPtr<CanvasDrawEventRecorder>();
     if (!recorder->Init(aTextureType, backendType,
                         MakeUnique<RecorderHelpers>(this))) {
-      recorder->DetachResources();
-      return nullptr;
+      return;
     }
 
     mRecorder = recorder.forget();
@@ -159,77 +207,27 @@ RefPtr<CanvasDrawEventRecorder> CanvasChild::EnsureRecorder(
   MOZ_RELEASE_ASSERT(mRecorder->GetTextureType() == aTextureType,
                      "We only support one remote TextureType currently.");
 
-  MutexAutoLock lock(mMutex);
   EnsureDataSurfaceShmem(aSize, aFormat);
-  return mRecorder;
 }
 
 void CanvasChild::ActorDestroy(ActorDestroyReason aWhy) {
-  NS_ASSERT_OWNINGTHREAD(CanvasChild);
-
   if (mRecorder) {
     mRecorder->DetachResources();
   }
-
-  MutexAutoLock lock(mMutex);
-  mWorkerRef = nullptr;
 }
 
 void CanvasChild::Destroy() {
-  NS_ASSERT_OWNINGTHREAD(CanvasChild);
-
   if (CanSend()) {
     Send__delete__(this);
   }
-
-  MutexAutoLock lock(mMutex);
-  mWorkerRef = nullptr;
 }
 
 void CanvasChild::OnTextureWriteLock() {
-  NS_ASSERT_OWNINGTHREAD(CanvasChild);
-
   mHasOutstandingWriteLock = true;
   mLastWriteLockCheckpoint = mRecorder->CreateCheckpoint();
 }
 
 void CanvasChild::OnTextureForwarded() {
-  if (mIsOnWorker) {
-    MutexAutoLock lock(mMutex);
-    if (NS_WARN_IF(!mWorkerRef)) {
-      // We have begun shutdown or destroyed the actor.
-      return;
-    }
-
-    if (!mWorkerRef->Private()->IsOnCurrentThread()) {
-      class ForwardedRunnable final : public dom::WorkerRunnable {
-       public:
-        ForwardedRunnable(dom::WorkerPrivate* aWorkerPrivate,
-                          CanvasChild* aCanvasChild)
-            : dom::WorkerRunnable(aWorkerPrivate), mCanvasChild(aCanvasChild) {}
-
-        bool WorkerRun(JSContext*, dom::WorkerPrivate*) override {
-          mCanvasChild->OnTextureForwarded();
-          return true;
-        }
-
-       private:
-        RefPtr<CanvasChild> mCanvasChild;
-      };
-
-      auto task = MakeRefPtr<ForwardedRunnable>(mWorkerRef->Private(), this);
-      task->Dispatch();
-      return;
-    }
-  } else if (!NS_IsMainThread()) {
-    NS_DispatchToMainThread(NS_NewRunnableFunction(
-        "CanvasChild::OnTextureForwarded",
-        [self = RefPtr{this}]() { self->OnTextureForwarded(); }));
-    return;
-  }
-
-  NS_ASSERT_OWNINGTHREAD(CanvasChild);
-
   if (mHasOutstandingWriteLock) {
     mRecorder->RecordEvent(RecordedCanvasFlush());
     if (!mRecorder->WaitForCheckpoint(mLastWriteLockCheckpoint)) {
@@ -248,8 +246,6 @@ void CanvasChild::OnTextureForwarded() {
 }
 
 bool CanvasChild::EnsureBeginTransaction() {
-  NS_ASSERT_OWNINGTHREAD(CanvasChild);
-
   if (!mIsInTransaction) {
     RecordEvent(RecordedCanvasBeginTransaction());
     mIsInTransaction = true;
@@ -259,8 +255,6 @@ bool CanvasChild::EnsureBeginTransaction() {
 }
 
 void CanvasChild::EndTransaction() {
-  NS_ASSERT_OWNINGTHREAD(CanvasChild);
-
   if (mIsInTransaction) {
     RecordEvent(RecordedCanvasEndTransaction());
     mIsInTransaction = false;
@@ -280,7 +274,6 @@ void CanvasChild::EndTransaction() {
 }
 
 void CanvasChild::DropFreeBuffersWhenDormant() {
-  NS_ASSERT_OWNINGTHREAD(CanvasChild);
   // Drop any free buffers if we have not had any non-empty transactions.
   if (mDormant && mRecorder) {
     mRecorder->DropFreeBuffers();
@@ -288,15 +281,12 @@ void CanvasChild::DropFreeBuffersWhenDormant() {
 }
 
 void CanvasChild::ClearCachedResources() {
-  NS_ASSERT_OWNINGTHREAD(CanvasChild);
   if (mRecorder) {
     mRecorder->DropFreeBuffers();
   }
 }
 
 bool CanvasChild::ShouldBeCleanedUp() const {
-  NS_ASSERT_OWNINGTHREAD(CanvasChild);
-
   // Always return true if we've been deactivated.
   if (Deactivated()) {
     return true;
@@ -308,8 +298,6 @@ bool CanvasChild::ShouldBeCleanedUp() const {
 
 already_AddRefed<gfx::DrawTarget> CanvasChild::CreateDrawTarget(
     int64_t aTextureId, gfx::IntSize aSize, gfx::SurfaceFormat aFormat) {
-  NS_ASSERT_OWNINGTHREAD(CanvasChild);
-
   if (!mRecorder) {
     return nullptr;
   }
@@ -326,8 +314,6 @@ already_AddRefed<gfx::DrawTarget> CanvasChild::CreateDrawTarget(
 
 bool CanvasChild::EnsureDataSurfaceShmem(gfx::IntSize aSize,
                                          gfx::SurfaceFormat aFormat) {
-  NS_ASSERT_OWNINGTHREAD(CanvasChild);
-
   if (!mRecorder) {
     return false;
   }
@@ -365,8 +351,6 @@ bool CanvasChild::EnsureDataSurfaceShmem(gfx::IntSize aSize,
 }
 
 void CanvasChild::RecordEvent(const gfx::RecordedEvent& aEvent) {
-  NS_ASSERT_OWNINGTHREAD(CanvasChild);
-
   // We drop mRecorder in ActorDestroy to break the reference cycle.
   if (!mRecorder) {
     return;
@@ -376,13 +360,12 @@ void CanvasChild::RecordEvent(const gfx::RecordedEvent& aEvent) {
 }
 
 int64_t CanvasChild::CreateCheckpoint() {
-  NS_ASSERT_OWNINGTHREAD(CanvasChild);
   return mRecorder->CreateCheckpoint();
 }
 
 already_AddRefed<gfx::DataSourceSurface> CanvasChild::GetDataSurface(
     int64_t aTextureId, const gfx::SourceSurface* aSurface, bool aDetached) {
-  NS_ASSERT_OWNINGTHREAD(CanvasChild);
+  MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aSurface);
 
   // mTransactionsSinceGetDataSurface is used to determine if we want to prepare
@@ -423,19 +406,11 @@ already_AddRefed<gfx::DataSourceSurface> CanvasChild::GetDataSurface(
 
   gfx::IntSize ssSize = aSurface->GetSize();
   gfx::SurfaceFormat ssFormat = aSurface->GetFormat();
-
-  RefPtr<ipc::SharedMemoryBasic> shmem;
-
-  {
-    MutexAutoLock lock(mMutex);
-    if (!EnsureDataSurfaceShmem(ssSize, ssFormat)) {
-      return nullptr;
-    }
-
-    shmem = mDataSurfaceShmem;
-    mDataSurfaceShmemAvailable = false;
+  if (!EnsureDataSurfaceShmem(ssSize, ssFormat)) {
+    return nullptr;
   }
 
+  mDataSurfaceShmemAvailable = false;
   RecordEvent(RecordedGetDataForSurface(aSurface));
   auto checkpoint = CreateCheckpoint();
   struct DataShmemHolder {
@@ -443,8 +418,8 @@ already_AddRefed<gfx::DataSourceSurface> CanvasChild::GetDataSurface(
     RefPtr<CanvasChild> canvasChild;
   };
 
-  auto* data = static_cast<uint8_t*>(shmem->memory());
-  auto* closure = new DataShmemHolder{std::move(shmem), this};
+  auto* data = static_cast<uint8_t*>(mDataSurfaceShmem->memory());
+  auto* closure = new DataShmemHolder{do_AddRef(mDataSurfaceShmem), this};
   auto stride = ImageDataSerializer::ComputeRGBStride(ssFormat, ssSize.width);
 
   RefPtr<gfx::DataSourceSurface> dataSurface =
@@ -464,22 +439,16 @@ already_AddRefed<gfx::DataSourceSurface> CanvasChild::GetDataSurface(
 
 already_AddRefed<gfx::SourceSurface> CanvasChild::WrapSurface(
     const RefPtr<gfx::SourceSurface>& aSurface, int64_t aTextureId) {
-  NS_ASSERT_OWNINGTHREAD(CanvasChild);
-
   if (!aSurface) {
     return nullptr;
   }
 
-  auto wrapper = MakeRefPtr<SourceSurfaceCanvasRecording>(aTextureId, aSurface,
-                                                          this, mRecorder);
-  wrapper->Init();
-  return wrapper.forget();
+  return MakeAndAddRef<SourceSurfaceCanvasRecording>(aTextureId, aSurface, this,
+                                                     mRecorder);
 }
 
 void CanvasChild::ReturnDataSurfaceShmem(
     already_AddRefed<ipc::SharedMemoryBasic> aDataSurfaceShmem) {
-  MutexAutoLock lock(mMutex);
-
   RefPtr<ipc::SharedMemoryBasic> data = aDataSurfaceShmem;
   // We can only reuse the latest data surface shmem.
   if (data == mDataSurfaceShmem) {
@@ -533,16 +502,6 @@ ipc::IPCResult CanvasChild::RecvSnapshotShmem(
 
 void CanvasChild::CleanupTexture(int64_t aTextureId) {
   mTextureInfo.erase(aTextureId);
-}
-
-bool CanvasChild::IsOnOwningThread() const {
-  if (!mIsOnWorker) {
-    return NS_IsMainThread();
-  }
-
-  MutexAutoLock lock(mMutex);
-  MOZ_RELEASE_ASSERT(mWorkerRef);
-  return mWorkerRef->Private()->IsOnCurrentThread();
 }
 
 }  // namespace layers

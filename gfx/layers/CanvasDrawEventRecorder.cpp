@@ -8,13 +8,6 @@
 
 #include <string.h>
 
-#include "mozilla/dom/WorkerCommon.h"
-#include "mozilla/dom/WorkerPrivate.h"
-#include "mozilla/dom/WorkerRef.h"
-#include "mozilla/dom/WorkerRunnable.h"
-#include "mozilla/layers/CanvasChild.h"
-#include "mozilla/layers/ImageBridgeChild.h"
-#include "mozilla/layers/TextureRecorded.h"
 #include "mozilla/layers/SharedSurfacesChild.h"
 #include "mozilla/StaticPrefs_gfx.h"
 #include "RecordedCanvasEventImpl.h"
@@ -41,9 +34,7 @@ static Maybe<ShmemAndHandle> CreateAndMapShmem(size_t aSize) {
   return Some(ShmemAndHandle{shmem.forget(), std::move(shmemHandle)});
 }
 
-CanvasDrawEventRecorder::CanvasDrawEventRecorder(
-    dom::ThreadSafeWorkerRef* aWorkerRef)
-    : mWorkerRef(aWorkerRef), mIsOnWorker(!!aWorkerRef) {
+CanvasDrawEventRecorder::CanvasDrawEventRecorder() {
   mDefaultBufferSize = ipc::SharedMemory::PageAlignedSize(
       StaticPrefs::gfx_canvas_remote_default_buffer_size());
   mMaxSpinCount = StaticPrefs::gfx_canvas_remote_max_spin_count();
@@ -51,16 +42,9 @@ CanvasDrawEventRecorder::CanvasDrawEventRecorder(
   mDropBufferOnZero = mDropBufferLimit;
 }
 
-CanvasDrawEventRecorder::~CanvasDrawEventRecorder() {
-  MOZ_ASSERT(!mWorkerRef);
-  MOZ_ASSERT(mRecordedTextures.IsEmpty());
-}
-
 bool CanvasDrawEventRecorder::Init(TextureType aTextureType,
                                    gfx::BackendType aBackendType,
                                    UniquePtr<Helpers> aHelpers) {
-  NS_ASSERT_OWNINGTHREAD(CanvasDrawEventRecorder);
-
   mHelpers = std::move(aHelpers);
 
   MOZ_ASSERT(mTextureType == TextureType::Unknown);
@@ -97,22 +81,22 @@ bool CanvasDrawEventRecorder::Init(TextureType aTextureType,
   mWriterSemaphore.reset(CrossProcessSemaphore::Create("CanvasRecorder", 0));
   auto writerSem = mWriterSemaphore->CloneHandle();
   mWriterSemaphore->CloseHandle();
-  if (NS_WARN_IF(!IsHandleValid(writerSem))) {
+  if (!IsHandleValid(writerSem)) {
     return false;
   }
 
   mReaderSemaphore.reset(CrossProcessSemaphore::Create("CanvasTranslator", 0));
   auto readerSem = mReaderSemaphore->CloneHandle();
   mReaderSemaphore->CloseHandle();
-  if (NS_WARN_IF(!IsHandleValid(readerSem))) {
+  if (!IsHandleValid(readerSem)) {
     return false;
   }
 
-  if (NS_WARN_IF(!mHelpers->InitTranslator(
-          aTextureType, aBackendType, std::move(header->handle),
-          std::move(bufferHandles), mDefaultBufferSize, std::move(readerSem),
-          std::move(writerSem),
-          /* aUseIPDLThread */ false))) {
+  if (!mHelpers->InitTranslator(aTextureType, aBackendType,
+                                std::move(header->handle),
+                                std::move(bufferHandles), mDefaultBufferSize,
+                                std::move(readerSem), std::move(writerSem),
+                                /* aUseIPDLThread */ false)) {
     return false;
   }
 
@@ -122,20 +106,16 @@ bool CanvasDrawEventRecorder::Init(TextureType aTextureType,
 }
 
 void CanvasDrawEventRecorder::RecordEvent(const gfx::RecordedEvent& aEvent) {
-  NS_ASSERT_OWNINGTHREAD(CanvasDrawEventRecorder);
   aEvent.RecordToStream(*this);
 }
 
 int64_t CanvasDrawEventRecorder::CreateCheckpoint() {
-  NS_ASSERT_OWNINGTHREAD(CanvasDrawEventRecorder);
   int64_t checkpoint = mHeader->eventCount;
   RecordEvent(RecordedCheckpoint());
   return checkpoint;
 }
 
 bool CanvasDrawEventRecorder::WaitForCheckpoint(int64_t aCheckpoint) {
-  NS_ASSERT_OWNINGTHREAD(CanvasDrawEventRecorder);
-
   uint32_t spinCount = mMaxSpinCount;
   do {
     if (mHeader->processedCount >= aCheckpoint) {
@@ -312,160 +292,16 @@ void CanvasDrawEventRecorder::CheckAndSignalReader() {
   } while (true);
 }
 
-void CanvasDrawEventRecorder::DetachResources() {
-  NS_ASSERT_OWNINGTHREAD(CanvasDrawEventRecorder);
-
-  nsTHashSet<RecordedTextureData*> recordedTextures =
-      std::move(mRecordedTextures);
-  for (const auto& texture : recordedTextures) {
-    texture->DestroyOnOwningThread();
-  }
-
-  nsTHashMap<void*, ThreadSafeWeakPtr<SourceSurfaceCanvasRecording>>
-      recordedSurfaces = std::move(mRecordedSurfaces);
-  for (const auto& entry : recordedSurfaces) {
-    RefPtr<SourceSurfaceCanvasRecording> surface(entry.GetData());
-    if (surface) {
-      surface->DestroyOnOwningThread();
-    }
-  }
-
-  // There may be pending deletions waiting on the ImageBridgeChild thread for
-  // this recorder. Let's make sure we handle any outstanding events before
-  // destroying our worker reference.
-  if (mIsOnWorker) {
-    if (RefPtr<ImageBridgeChild> imageBridge =
-            ImageBridgeChild::GetSingleton()) {
-      imageBridge->FlushEvents();
-    }
-  }
-
-  DrawEventRecorderPrivate::DetachResources();
-
-  {
-    auto lockedPendingDeletions = mPendingDeletions.Lock();
-    mWorkerRef = nullptr;
-  }
-
-  if (mHelpers) {
-    mHelpers->Destroy();
-  }
-}
-
-bool CanvasDrawEventRecorder::IsOnOwningThread() {
-  auto lockedPendingDeletions = mPendingDeletions.Lock();
-
-  if (mWorkerRef) {
-    return mWorkerRef->Private()->IsOnCurrentThread();
-  }
-
-  MOZ_RELEASE_ASSERT(!mIsOnWorker, "Worker already shutdown!");
-  return NS_IsMainThread();
-}
-
-void CanvasDrawEventRecorder::QueueProcessPendingDeletionsLocked(
-    RefPtr<CanvasDrawEventRecorder>&& aRecorder) {
-  if (!mWorkerRef) {
-    MOZ_RELEASE_ASSERT(
-        !mIsOnWorker,
-        "QueueProcessPendingDeletionsLocked called after worker shutdown!");
-
-    NS_DispatchToMainThread(NS_NewRunnableFunction(
-        "CanvasDrawEventRecorder::QueueProcessPendingDeletionsLocked",
-        [self = std::move(aRecorder)]() { self->ProcessPendingDeletions(); }));
-    return;
-  }
-
-  if (!NS_IsMainThread()) {
-    NS_DispatchToMainThread(NS_NewRunnableFunction(
-        "CanvasDrawEventRecorder::QueueProcessPendingDeletionsLocked",
-        [self = std::move(aRecorder)]() mutable {
-          self->QueueProcessPendingDeletions(std::move(self));
-        }));
-    return;
-  }
-
-  class ProcessPendingRunnable final : public dom::WorkerRunnable {
-   public:
-    ProcessPendingRunnable(dom::WorkerPrivate* aWorkerPrivate,
-                           RefPtr<CanvasDrawEventRecorder>&& aRecorder)
-        : dom::WorkerRunnable(aWorkerPrivate),
-          mRecorder(std::move(aRecorder)) {}
-
-    bool WorkerRun(JSContext*, dom::WorkerPrivate*) override {
-      RefPtr<CanvasDrawEventRecorder> recorder = std::move(mRecorder);
-      recorder->ProcessPendingDeletions();
-      return true;
-    }
-
-   private:
-    RefPtr<CanvasDrawEventRecorder> mRecorder;
-  };
-
-  auto task = MakeRefPtr<ProcessPendingRunnable>(mWorkerRef->Private(),
-                                                 std::move(aRecorder));
-  if (NS_WARN_IF(!task->Dispatch())) {
-    MOZ_CRASH("ProcessPendingRunnable leaked!");
-  }
-}
-
-void CanvasDrawEventRecorder::QueueProcessPendingDeletions(
-    RefPtr<CanvasDrawEventRecorder>&& aRecorder) {
-  auto lockedPendingDeletions = mPendingDeletions.Lock();
-  if (lockedPendingDeletions->empty()) {
-    // We raced to handle the deletions, and something got there first.
-    return;
-  }
-
-  QueueProcessPendingDeletionsLocked(std::move(aRecorder));
-}
-
-void CanvasDrawEventRecorder::AddPendingDeletion(
-    std::function<void()>&& aPendingDeletion) {
-  PendingDeletionsVector pendingDeletions;
-
-  {
-    auto lockedPendingDeletions = mPendingDeletions.Lock();
-    bool wasEmpty = lockedPendingDeletions->empty();
-    lockedPendingDeletions->emplace_back(std::move(aPendingDeletion));
-
-    MOZ_RELEASE_ASSERT(!mIsOnWorker || mWorkerRef,
-                       "AddPendingDeletion called after worker shutdown!");
-
-    // If we are not on the owning thread, we must queue an event to run the
-    // deletions, if we transitioned from empty to non-empty.
-    if ((mWorkerRef && !mWorkerRef->Private()->IsOnCurrentThread()) ||
-        (!mWorkerRef && !NS_IsMainThread())) {
-      if (wasEmpty) {
-        RefPtr<CanvasDrawEventRecorder> self(this);
-        QueueProcessPendingDeletionsLocked(std::move(self));
-      }
-      return;
-    }
-
-    // Otherwise, we can just run all of them right now.
-    pendingDeletions.swap(*lockedPendingDeletions);
-  }
-
-  for (const auto& pendingDeletion : pendingDeletions) {
-    pendingDeletion();
-  }
-}
-
 void CanvasDrawEventRecorder::StoreSourceSurfaceRecording(
     gfx::SourceSurface* aSurface, const char* aReason) {
-  NS_ASSERT_OWNINGTHREAD(CanvasDrawEventRecorder);
-
-  if (NS_IsMainThread()) {
-    wr::ExternalImageId extId{};
-    nsresult rv = layers::SharedSurfacesChild::Share(aSurface, extId);
-    if (NS_SUCCEEDED(rv)) {
-      StoreExternalSurfaceRecording(aSurface, wr::AsUint64(extId));
-      return;
-    }
+  wr::ExternalImageId extId{};
+  nsresult rv = layers::SharedSurfacesChild::Share(aSurface, extId);
+  if (NS_FAILED(rv)) {
+    DrawEventRecorderPrivate::StoreSourceSurfaceRecording(aSurface, aReason);
+    return;
   }
 
-  DrawEventRecorderPrivate::StoreSourceSurfaceRecording(aSurface, aReason);
+  StoreExternalSurfaceRecording(aSurface, wr::AsUint64(extId));
 }
 
 }  // namespace layers

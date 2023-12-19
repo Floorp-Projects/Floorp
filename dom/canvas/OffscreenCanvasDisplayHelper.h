@@ -67,9 +67,10 @@ class OffscreenCanvasDisplayHelper final {
   void MaybeQueueInvalidateElement() MOZ_REQUIRES(mMutex);
   void InvalidateElement();
 
-  already_AddRefed<gfx::SourceSurface> TransformSurface(
-      gfx::SourceSurface* aSurface, bool aHasAlpha, bool aIsAlphaPremult,
-      gl::OriginPos aOriginPos) const;
+  bool TransformSurface(const gfx::DataSourceSurface::ScopedMap& aSrcMap,
+                        const gfx::DataSourceSurface::ScopedMap& aDstMap,
+                        gfx::SurfaceFormat aFormat, const gfx::IntSize& aSize,
+                        bool aNeedsPremult, gl::OriginPos aOriginPos) const;
 
   mutable Mutex mMutex;
   HTMLCanvasElement* MOZ_NON_OWNING_REF mCanvasElement MOZ_GUARDED_BY(mMutex);

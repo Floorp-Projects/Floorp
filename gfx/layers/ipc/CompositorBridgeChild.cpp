@@ -516,6 +516,20 @@ PTextureChild* CompositorBridgeChild::CreateTexture(
       LayersId{0} /* FIXME? */, aSerial, aExternalImageId);
 }
 
+already_AddRefed<CanvasChild> CompositorBridgeChild::GetCanvasChild() {
+  MOZ_ASSERT(gfxPlatform::UseRemoteCanvas());
+  if (auto* cm = gfx::CanvasManagerChild::Get()) {
+    return cm->GetCanvasChild().forget();
+  }
+  return nullptr;
+}
+
+void CompositorBridgeChild::EndCanvasTransaction() {
+  if (auto* cm = gfx::CanvasManagerChild::Get()) {
+    cm->EndCanvasTransaction();
+  }
+}
+
 void CompositorBridgeChild::ClearCachedResources() {
   if (auto* cm = gfx::CanvasManagerChild::Get()) {
     cm->ClearCachedResources();

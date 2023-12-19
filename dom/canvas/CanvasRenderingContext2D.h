@@ -464,7 +464,7 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
    * Gets the pres shell from either the canvas element or the doc shell
    */
   PresShell* GetPresShell() final;
-  nsresult Initialize() override;
+  void Initialize() override;
   NS_IMETHOD SetDimensions(int32_t aWidth, int32_t aHeight) override;
   NS_IMETHOD InitializeWithDrawTarget(
       nsIDocShell* aShell, NotNull<gfx::DrawTarget*> aTarget) override;
@@ -565,7 +565,7 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
   virtual UniquePtr<uint8_t[]> GetImageBuffer(
       int32_t* out_format, gfx::IntSize* out_imageSize) override;
 
-  void OnShutdown();
+  virtual void OnShutdown();
 
   /**
    * Update CurrentState().filter with the filter description for
@@ -831,13 +831,11 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
   // Whether the application expects to use operations that perform poorly with
   // acceleration.
   bool mWillReadFrequently = false;
-  // Whether or not we have already shutdown.
-  bool mHasShutdown = false;
 
   RefPtr<CanvasShutdownObserver> mShutdownObserver;
-  bool AddShutdownObserver();
-  void RemoveShutdownObserver();
-  bool AlreadyShutDown() const { return mHasShutdown; }
+  virtual void AddShutdownObserver();
+  virtual void RemoveShutdownObserver();
+  virtual bool AlreadyShutDown() const { return !mShutdownObserver; }
 
   /**
    * Flag to avoid duplicate calls to InvalidateFrame. Set to true whenever

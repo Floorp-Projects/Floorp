@@ -79,8 +79,6 @@ class OffscreenCanvas final : public DOMEventTargetHelper,
                   layers::TextureType aTextureType,
                   already_AddRefed<OffscreenCanvasDisplayHelper> aDisplay);
 
-  void Destroy();
-
   nsIGlobalObject* GetParentObject() const { return GetOwnerGlobal(); }
 
   virtual JSObject* WrapObject(JSContext* aCx,

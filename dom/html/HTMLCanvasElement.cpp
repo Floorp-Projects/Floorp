@@ -535,9 +535,6 @@ HTMLCanvasElement::CreateContext(CanvasContextType aContextType) {
   // Note that the compositor backend will be LAYERS_NONE if there is no widget.
   RefPtr<nsICanvasRenderingContextInternal> ret =
       CreateContextHelper(aContextType, GetCompositorBackendType());
-  if (NS_WARN_IF(!ret)) {
-    return nullptr;
-  }
 
   // Add Observer for webgl canvas.
   if (aContextType == CanvasContextType::WebGL1 ||
