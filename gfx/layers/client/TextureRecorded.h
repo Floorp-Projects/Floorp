@@ -62,6 +62,7 @@ class RecordedTextureData final : public TextureData {
   OpenMode mLockedMode;
   layers::RemoteTextureId mLastRemoteTextureId;
   layers::RemoteTextureOwnerId mRemoteTextureOwnerId;
+  bool mUsedRemoteTexture = false;
 };
 
 }  // namespace layers

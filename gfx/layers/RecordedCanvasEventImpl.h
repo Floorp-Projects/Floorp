@@ -140,11 +140,13 @@ class RecordedTextureLock final
     : public RecordedEventDerived<RecordedTextureLock> {
  public:
   RecordedTextureLock(int64_t aTextureId, const OpenMode aMode,
-                      RemoteTextureId aId)
+                      RemoteTextureId aId,
+                      RemoteTextureId aObsoleteId = RemoteTextureId())
       : RecordedEventDerived(TEXTURE_LOCK),
         mTextureId(aTextureId),
         mMode(aMode),
-        mLastRemoteTextureId(aId) {}
+        mLastRemoteTextureId(aId),
+        mObsoleteRemoteTextureId(aObsoleteId) {}
 
   template <class S>
   MOZ_IMPLICIT RecordedTextureLock(S& aStream);
@@ -160,11 +162,13 @@ class RecordedTextureLock final
   int64_t mTextureId;
   OpenMode mMode;
   RemoteTextureId mLastRemoteTextureId;
+  RemoteTextureId mObsoleteRemoteTextureId;
 };
 
 inline bool RecordedTextureLock::PlayCanvasEvent(
     CanvasTranslator* aTranslator) const {
-  if (!aTranslator->LockTexture(mTextureId, mMode, mLastRemoteTextureId)) {
+  if (!aTranslator->LockTexture(mTextureId, mMode, mLastRemoteTextureId,
+                                mObsoleteRemoteTextureId)) {
     return false;
   }
   return true;
@@ -175,6 +179,7 @@ void RecordedTextureLock::Record(S& aStream) const {
   WriteElement(aStream, mTextureId);
   WriteElement(aStream, mMode);
   WriteElement(aStream, mLastRemoteTextureId.mId);
+  WriteElement(aStream, mObsoleteRemoteTextureId.mId);
 }
 
 template <class S>
@@ -184,6 +189,7 @@ RecordedTextureLock::RecordedTextureLock(S& aStream)
   ReadElementConstrained(aStream, mMode, OpenMode::OPEN_NONE,
                          OpenMode::OPEN_READ_WRITE_ASYNC);
   ReadElement(aStream, mLastRemoteTextureId.mId);
+  ReadElement(aStream, mObsoleteRemoteTextureId.mId);
 }
 
 class RecordedTextureUnlock final
