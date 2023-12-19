@@ -147,6 +147,7 @@ already_AddRefed<TextureClient> ImageClient::CreateTextureClientForImage(
       if (!dt) {
         gfxWarning()
             << "ImageClientSingle::UpdateImage failed in BorrowDrawTarget";
+        texture->Unlock();
         return nullptr;
       }
       MOZ_ASSERT(surface.get());
