@@ -16,6 +16,7 @@ import {
   getIsCurrentThreadPaused,
   getIsThreadCurrentlyTracing,
   getJavascriptTracingLogMethod,
+  getJavascriptTracingValues,
 } from "../../selectors";
 import { formatKeyShortcut } from "../../utils/text";
 import actions from "../../actions";
@@ -117,6 +118,7 @@ class CommandBar extends Component {
       topFrameSelected: PropTypes.bool.isRequired,
       toggleTracing: PropTypes.func.isRequired,
       logMethod: PropTypes.string.isRequired,
+      logValues: PropTypes.bool.isRequired,
       setJavascriptTracingLogMethod: PropTypes.func.isRequired,
       setHideOrShowIgnoredSources: PropTypes.func.isRequired,
       toggleSourceMapIgnoreList: PropTypes.func.isRequired,
@@ -240,6 +242,16 @@ class CommandBar extends Component {
             checked: this.props.logMethod == LOG_METHODS.STDOUT,
             click: () => {
               this.props.setJavascriptTracingLogMethod(LOG_METHODS.STDOUT);
+            },
+          },
+          { type: "separator" },
+          {
+            id: "debugger-trace-menu-item-log-values",
+            label: L10N.getStr("traceValues"),
+            type: "checkbox",
+            checked: this.props.logValues,
+            click: () => {
+              this.props.toggleJavascriptTracingValues();
             },
           },
         ];
@@ -410,11 +422,13 @@ const mapStateToProps = state => ({
   isPaused: getIsCurrentThreadPaused(state),
   isTracingEnabled: getIsThreadCurrentlyTracing(state, getCurrentThread(state)),
   logMethod: getJavascriptTracingLogMethod(state),
+  logValues: getJavascriptTracingValues(state),
 });
 
 export default connect(mapStateToProps, {
   toggleTracing: actions.toggleTracing,
   setJavascriptTracingLogMethod: actions.setJavascriptTracingLogMethod,
+  toggleJavascriptTracingValues: actions.toggleJavascriptTracingValues,
   resume: actions.resume,
   stepIn: actions.stepIn,
   stepOut: actions.stepOut,
