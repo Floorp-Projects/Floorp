@@ -803,6 +803,23 @@ a.learn-more-link.webconsole-learn-more-link {
   color: var(--theme-comment);
 }
 
+/* Styles for JavaScript Tracer messages */
+.webconsole-app .jstracer-dom-event {
+  padding-inline: 4px;
+  margin-inline: 2px;
+  background-color: var(--toolbarbutton-checked-background);
+  color: var(--toolbarbutton-checked-color);
+}
+.webconsole-app .jstracer-implementation {
+  padding-inline: 4px;
+  margin-inline: 2px;
+  background-color: var(--theme-toolbarbutton-checked-hover-background);
+  color: var(--theme-toolbarbutton-checked-hover-color);
+}
+.webconsole-app .jstracer-display-name {
+  color: var(--theme-highlight-blue);
+  margin-inline: 2px;
+}
 
 /* console.table() */
 .message .consoletable-wrapper {
