@@ -5,7 +5,6 @@
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  PartnerLinkAttribution: "resource:///modules/PartnerLinkAttribution.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
   SearchSERPTelemetry: "resource:///modules/SearchSERPTelemetry.sys.mjs",
   UrlbarSearchUtils: "resource:///modules/UrlbarSearchUtils.sys.mjs",
@@ -208,10 +207,10 @@ class BrowserSearchTelemetryHandler {
           break;
         case "abouthome":
         case "newtab":
-          this._recordSearch(browser, engine, details.url, source, "enter");
+          this._recordSearch(browser, engine, source, "enter");
           break;
         default:
-          this._recordSearch(browser, engine, details.url, source);
+          this._recordSearch(browser, engine, source);
           break;
       }
       if (["urlbar-handoff", "abouthome", "newtab"].includes(source)) {
@@ -258,16 +257,10 @@ class BrowserSearchTelemetryHandler {
       action = "alias";
     }
 
-    this._recordSearch(browser, engine, details.url, source, action);
+    this._recordSearch(browser, engine, source, action);
   }
 
-  _recordSearch(browser, engine, url, source, action = null) {
-    if (url) {
-      lazy.PartnerLinkAttribution.makeSearchEngineRequest(engine, url).catch(
-        console.error
-      );
-    }
-
+  _recordSearch(browser, engine, source, action = null) {
     let scalarSource = KNOWN_SEARCH_SOURCES.get(source);
 
     lazy.SearchSERPTelemetry.recordBrowserSource(browser, scalarSource);

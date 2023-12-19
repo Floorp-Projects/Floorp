@@ -153,7 +153,7 @@ void SVGSwitchFrame::AlwaysReflowSVGTextFrameDoForOneKid(nsIFrame* aKid) {
 
 void SVGSwitchFrame::ReflowAllSVGTextFramesInsideNonActiveChildren(
     nsIFrame* aActiveChild) {
-  for (nsIFrame* kid = mFrames.FirstChild(); kid; kid = kid->GetNextSibling()) {
+  for (auto* kid : mFrames) {
     if (aActiveChild == kid) {
       continue;
     }
@@ -248,8 +248,7 @@ nsIFrame* SVGSwitchFrame::GetActiveChildFrame() {
       static_cast<dom::SVGSwitchElement*>(GetContent())->GetActiveChild();
 
   if (activeChild) {
-    for (nsIFrame* kid = mFrames.FirstChild(); kid;
-         kid = kid->GetNextSibling()) {
+    for (auto* kid : mFrames) {
       if (activeChild == kid->GetContent()) {
         return kid;
       }

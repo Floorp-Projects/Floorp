@@ -53,6 +53,10 @@ add_setup(async function () {
     await blankSlate();
     await PlacesTestUtils.promiseAsyncUpdates();
   });
+
+  await SpecialPowers.pushPrefEnv({
+    set: [["privacy.sanitize.useOldClearHistoryDialog", true]],
+  });
 });
 
 /**

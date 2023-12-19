@@ -4,6 +4,8 @@
 
 #include "WebrtcMediaDataEncoderCodec.h"
 
+#include <utility>
+
 #include "AnnexB.h"
 #include "api/video_codecs/h264_profile_level_id.h"
 #include "ImageContainer.h"
@@ -72,17 +74,31 @@ static const char* PacketModeStr(const webrtc::CodecSpecificInfo& aInfo) {
   }
 }
 
-static H264_PROFILE ConvertProfileLevel(
+static std::pair<H264_PROFILE, H264_LEVEL> ConvertProfileLevel(
     const webrtc::SdpVideoFormat::Parameters& aParameters) {
   const absl::optional<webrtc::H264ProfileLevelId> profileLevel =
       webrtc::ParseSdpForH264ProfileLevelId(aParameters);
-  if (profileLevel &&
+
+  if (!profileLevel) {
+    // TODO: Eveluate if there is a better default setting.
+    return std::make_pair(H264_PROFILE::H264_PROFILE_MAIN,
+                          H264_LEVEL::H264_LEVEL_3_1);
+  }
+
+  H264_PROFILE profile =
       (profileLevel->profile == webrtc::H264Profile::kProfileBaseline ||
        profileLevel->profile ==
-           webrtc::H264Profile::kProfileConstrainedBaseline)) {
-    return H264_PROFILE::H264_PROFILE_BASE;
-  }
-  return H264_PROFILE::H264_PROFILE_MAIN;
+           webrtc::H264Profile::kProfileConstrainedBaseline)
+          ? H264_PROFILE::H264_PROFILE_BASE
+          : H264_PROFILE::H264_PROFILE_MAIN;
+  // H264Level::kLevel1_b cannot be mapped to H264_LEVEL::H264_LEVEL_1_b by
+  // value directly since their values are different.
+  H264_LEVEL level =
+      profileLevel->level == webrtc::H264Level::kLevel1_b
+          ? H264_LEVEL::H264_LEVEL_1_b
+          : static_cast<H264_LEVEL>(static_cast<int>(profileLevel->level));
+
+  return std::make_pair(profile, level);
 }
 
 static VPXComplexity MapComplexity(webrtc::VideoCodecComplexity aComplexity) {
@@ -237,7 +253,10 @@ already_AddRefed<MediaDataEncoder> WebrtcMediaDataEncoder::CreateEncoder(
   switch (aCodecSettings->codecType) {
     case webrtc::VideoCodecType::kVideoCodecH264: {
       type = CodecType::H264;
-      specific.emplace(H264Specific(ConvertProfileLevel(mFormatParams)));
+      std::pair<H264_PROFILE, H264_LEVEL> profileLevel =
+          ConvertProfileLevel(mFormatParams);
+      specific.emplace(H264Specific(profileLevel.first, profileLevel.second,
+                                    H264BitStreamFormat::ANNEXB));
       break;
     }
     case webrtc::VideoCodecType::kVideoCodecVP8: {

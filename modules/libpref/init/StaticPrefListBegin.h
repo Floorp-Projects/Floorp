@@ -22,11 +22,6 @@ namespace StaticPrefs {
 #define ALWAYS_PREF(name, base_id, full_id, cpp_type, default_value)          \
   extern cpp_type sMirror_##full_id;                                          \
   inline StripAtomic<cpp_type> full_id() {                                    \
-    if (IsString<cpp_type>::value && sCrashOnBlocklistedPref) {               \
-      MOZ_DIAGNOSTIC_ASSERT(!IsPreferenceSanitized(name),                     \
-                            "Should not access the preference '" name         \
-                            "' in Content Processes");                        \
-    }                                                                         \
     MOZ_DIAGNOSTIC_ASSERT(IsAtomic<cpp_type>::value || NS_IsMainThread(),     \
                           "Non-atomic static pref '" name                     \
                           "' being accessed on background thread by getter"); \
@@ -39,27 +34,17 @@ namespace StaticPrefs {
 #define ALWAYS_DATAMUTEX_PREF(name, base_id, full_id, cpp_type, default_value) \
   extern cpp_type sMirror_##full_id;                                           \
   inline cpp_type::ConstAutoLock full_id() {                                   \
-    if (IsString<cpp_type>::value && sCrashOnBlocklistedPref) {                \
-      MOZ_DIAGNOSTIC_ASSERT(!IsPreferenceSanitized(name),                      \
-                            "Should not access the preference '" name          \
-                            "' in Content Processes");                         \
-    }                                                                          \
     return sMirror_##full_id.ConstLock();                                      \
   }                                                                            \
   inline const char* GetPrefName_##base_id() { return name; }                  \
   inline StripAtomic<cpp_type> GetPrefDefault_##base_id() {                    \
     return default_value;                                                      \
   }
-#define ONCE_PREF(name, base_id, full_id, cpp_type, default_value)    \
-  extern cpp_type sMirror_##full_id;                                  \
-  inline cpp_type full_id() {                                         \
-    MaybeInitOncePrefs();                                             \
-    if (IsString<cpp_type>::value && sCrashOnBlocklistedPref) {       \
-      MOZ_DIAGNOSTIC_ASSERT(!IsPreferenceSanitized(name),             \
-                            "Should not access the preference '" name \
-                            "' in Content Processes");                \
-    }                                                                 \
-    return sMirror_##full_id;                                         \
-  }                                                                   \
-  inline const char* GetPrefName_##base_id() { return name; }         \
+#define ONCE_PREF(name, base_id, full_id, cpp_type, default_value) \
+  extern cpp_type sMirror_##full_id;                               \
+  inline cpp_type full_id() {                                      \
+    MaybeInitOncePrefs();                                          \
+    return sMirror_##full_id;                                      \
+  }                                                                \
+  inline const char* GetPrefName_##base_id() { return name; }      \
   inline cpp_type GetPrefDefault_##base_id() { return default_value; }

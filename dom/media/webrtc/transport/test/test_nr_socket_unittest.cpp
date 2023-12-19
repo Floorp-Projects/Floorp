@@ -117,6 +117,7 @@ class TestNrSocketTest : public MtransportTest {
     MOZ_ASSERT(from);
 
     if (!WaitForWriteable(from)) {
+      std::cerr << "WaitForWriteable failed" << std::endl;
       return false;
     }
 
@@ -124,10 +125,12 @@ class TestNrSocketTest : public MtransportTest {
     SyncDispatchToSTS(WrapRunnableRet(
         &result, this, &TestNrSocketTest::SendData_s, from, via));
     if (result) {
+      std::cerr << "SendData_s failed" << std::endl;
       return false;
     }
 
     if (!WaitForReadable(to)) {
+      std::cerr << "WaitForReadable failed" << std::endl;
       return false;
     }
 
@@ -140,7 +143,9 @@ class TestNrSocketTest : public MtransportTest {
     SyncDispatchToSTS(WrapRunnableRet(&result, this,
                                       &TestNrSocketTest::RecvData_s, to,
                                       sender_external_address));
-
+    if (!result) {
+      std::cerr << "RecvData_s failed" << std::endl;
+    }
     return !result;
   }
 
@@ -731,7 +736,7 @@ TEST_F(TestNrSocketTest, FullConeTimeout) {
   RefPtr<TestNat> nat(CreatePrivateAddrs(1));
   nat->filtering_type_ = TestNat::ENDPOINT_INDEPENDENT;
   nat->mapping_type_ = TestNat::ENDPOINT_INDEPENDENT;
-  nat->mapping_timeout_ = 200;
+  nat->mapping_timeout_ = 400;
   CreatePublicAddrs(2);
 
   nr_transport_addr sender_external_address;
@@ -743,7 +748,7 @@ TEST_F(TestNrSocketTest, FullConeTimeout) {
   ASSERT_TRUE(CheckConnectivityVia(public_addrs_[0], private_addrs_[0],
                                    sender_external_address));
 
-  PR_Sleep(201);
+  PR_Sleep(401);
 
   // Verify that return traffic does not work
   ASSERT_FALSE(CheckConnectivityVia(public_addrs_[0], private_addrs_[0],

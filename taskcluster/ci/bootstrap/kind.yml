@@ -94,7 +94,7 @@ jobs:
     archlinux:
         image: archlinux
         pre-commands:
-            - pacman -Sy --noconfirm mercurial python-pip
+            - pacman -Syu --noconfirm mercurial python-pip
     voidlinux:
         image: voidlinux/voidlinux
         pre-commands:

@@ -2501,17 +2501,6 @@ MOZ_ALWAYS_INLINE const nsTSubstring<CharT>& NonNullHelper(
 void UpdateReflectorGlobal(JSContext* aCx, JS::Handle<JSObject*> aObj,
                            ErrorResult& aError);
 
-/**
- * Used to implement the Symbol.hasInstance property of an interface object.
- */
-bool InterfaceHasInstance(JSContext* cx, unsigned argc, JS::Value* vp);
-
-bool InterfaceHasInstance(JSContext* cx, int prototypeID, int depth,
-                          JS::Handle<JSObject*> instance, bool* bp);
-
-// Used to implement the cross-context <Interface>.isInstance static method.
-bool InterfaceIsInstance(JSContext* cx, unsigned argc, JS::Value* vp);
-
 // Helper for lenient getters/setters to report to console.  If this
 // returns false, we couldn't even get a global.
 bool ReportLenientThisUnwrappingFailure(JSContext* cx, JSObject* obj);

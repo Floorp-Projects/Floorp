@@ -167,7 +167,6 @@
   "resource:///modules/PageActions.jsm": "browser/modules/PageActions.jsm",
   "resource:///modules/PanelMultiView.jsm": "browser/components/customizableui/PanelMultiView.jsm",
   "resource:///modules/PartnerLinkAttribution.jsm": "browser/modules/PartnerLinkAttribution.jsm",
-  "resource:///modules/PingCentre.jsm": "browser/modules/PingCentre.jsm",
   "resource:///modules/PinnedGroupBuilder.jsm": "browser/components/places/PinnedGroupBuilder.jsm",
   "resource:///modules/PlacesUIUtils.jsm": "browser/components/places/PlacesUIUtils.jsm",
   "resource:///modules/ProcessHangMonitor.jsm": "browser/modules/ProcessHangMonitor.jsm",

@@ -2469,7 +2469,7 @@ async function fetchBookmarksByTags(info, options = {}) {
               h.url AS url, b.id AS _id, b.parent AS _parentId,
               NULL AS _childCount,
               p.parent AS _grandParentId, b.syncStatus AS _syncStatus,
-              (SELECT group_concat(pp.title)
+              (SELECT group_concat(pp.title ORDER BY pp.title)
                FROM moz_bookmarks bb
                JOIN moz_bookmarks pp ON pp.id = bb.parent
                JOIN moz_bookmarks gg ON gg.id = pp.parent
@@ -2548,7 +2548,7 @@ async function fetchBookmarksByURL(info, options = {}) {
               h.url AS url, b.id AS _id, b.parent AS _parentId,
               NULL AS _childCount, /* Unused for now */
               p.parent AS _grandParentId, b.syncStatus AS _syncStatus,
-              (SELECT group_concat(pp.title)
+              (SELECT group_concat(pp.title ORDER BY pp.title)
                FROM moz_bookmarks bb
                JOIN moz_bookmarks pp ON bb.parent = pp.id
                JOIN moz_bookmarks gg ON pp.parent = gg.id
@@ -3343,7 +3343,7 @@ async function getBookmarkDetailMap(aGuids) {
             IFNULL(h.visit_count, 0),
             h.last_visit_date,
             (
-              SELECT group_concat(pp.title)
+              SELECT group_concat(pp.title ORDER BY pp.title)
               FROM moz_bookmarks bb
               JOIN moz_bookmarks pp ON pp.id = bb.parent
               JOIN moz_bookmarks gg ON gg.id = pp.parent
@@ -3374,7 +3374,7 @@ async function getBookmarkDetailMap(aGuids) {
               lastVisitDate: lastVisitDate
                 ? lazy.PlacesUtils.toDate(lastVisitDate).getTime()
                 : null,
-              tags: row.getResultByIndex(7) ?? "",
+              tags: row.getResultByIndex(7),
               targetFolderGuid: row.getResultByIndex(8),
               targetFolderItemId: row.getResultByIndex(9),
               targetFolderTitle: row.getResultByIndex(10),

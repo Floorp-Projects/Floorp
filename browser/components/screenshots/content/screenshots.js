@@ -38,6 +38,8 @@ class ScreenshotsUI extends HTMLElement {
     this._copyButton.addEventListener("click", this);
     this._downloadButton = this.querySelector("#download");
     this._downloadButton.addEventListener("click", this);
+
+    this.focusDefault({ focusVisible: true });
   }
 
   close() {
@@ -70,6 +72,10 @@ class ScreenshotsUI extends HTMLElement {
       ScreenshotsUtils.scheduleRetry(this.openerBrowser, "preview_retry");
       this.close();
     }
+  }
+
+  focusDefault(focusOptions) {
+    this._downloadButton.focus(focusOptions);
   }
 
   async saveToFile(dataUrl) {

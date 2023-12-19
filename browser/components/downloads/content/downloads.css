@@ -90,7 +90,6 @@
 
 #downloadsPanel-blockedSubview,
 #downloadsPanel-mainView {
-  font: caption;
   min-width: 37em;
   padding: 0.62em;
 }

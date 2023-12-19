@@ -105,6 +105,7 @@ export const SecurityInfo = {
       if (options.certificateChain && securityInfo.failedCertChain) {
         info.certificates = this.getCertificateChain(
           securityInfo.failedCertChain,
+          false,
           options
         );
       }
@@ -186,11 +187,12 @@ export const SecurityInfo = {
     if (options.certificateChain && securityInfo.succeededCertChain) {
       info.certificates = this.getCertificateChain(
         securityInfo.succeededCertChain,
+        securityInfo.isBuiltCertChainRootBuiltInRoot,
         options
       );
     } else {
       info.certificates = [
-        this.parseCertificateInfo(securityInfo.serverCert, options),
+        this.parseCertificateInfo(securityInfo.serverCert, false, options),
       ];
     }
 
@@ -221,10 +223,19 @@ export const SecurityInfo = {
     return info;
   },
 
-  getCertificateChain(certChain, options = {}) {
+  getCertificateChain(certChain, isRootBuiltInRoot, options = {}) {
     let certificates = [];
-    for (let cert of certChain) {
-      certificates.push(this.parseCertificateInfo(cert, options));
+    // The end-entity and intermediates aren't built-in roots.
+    for (let cert of certChain.slice(0, -1)) {
+      certificates.push(this.parseCertificateInfo(cert, false, options));
+    }
+    // The last in the chain may be the root (for successful chains), which may
+    // be a built-in root.
+    let rootCert = certChain.at(-1);
+    if (rootCert) {
+      certificates.push(
+        this.parseCertificateInfo(rootCert, isRootBuiltInRoot, options)
+      );
     }
     return certificates;
   },
@@ -234,6 +245,8 @@ export const SecurityInfo = {
    *
    * @param {nsIX509Cert} cert
    *        The certificate to extract the information from.
+   * @param {boolean} isBuiltInRoot
+   *        Whether or not this certificate is a built-in root.
    * @param {object} options
    * @returns {object}
    *         An object with following format:
@@ -244,7 +257,7 @@ export const SecurityInfo = {
    *             fingerprint: { sha1, sha256 }
    *           }
    */
-  parseCertificateInfo(cert, options = {}) {
+  parseCertificateInfo(cert, isBuiltInRoot, options = {}) {
     if (!cert) {
       return {};
     }
@@ -265,7 +278,7 @@ export const SecurityInfo = {
         sha256: cert.sha256Fingerprint,
       },
       serialNumber: cert.serialNumber,
-      isBuiltInRoot: cert.isBuiltInRoot,
+      isBuiltInRoot,
       subjectPublicKeyInfoDigest: {
         sha256: cert.sha256SubjectPublicKeyInfoDigest,
       },

@@ -8,6 +8,7 @@
 #define nsCSSRenderingGradients_h__
 
 #include "gfxRect.h"
+#include "gfxUtils.h"
 #include "nsStyleStruct.h"
 #include "Units.h"
 #include "mozilla/Maybe.h"
@@ -36,6 +37,50 @@ struct ColorStop {
   double mPosition;  // along the gradient line; 0=start, 1=end
   bool mIsMidpoint;
   StyleAbsoluteColor mColor;
+};
+
+template <class T>
+class MOZ_STACK_CLASS ColorStopInterpolator {
+ public:
+  ColorStopInterpolator(
+      const nsTArray<ColorStop>& aStops,
+      const StyleColorInterpolationMethod& aStyleColorInterpolationMethod)
+      : mStyleColorInterpolationMethod(aStyleColorInterpolationMethod),
+        mStops(aStops) {}
+
+  void CreateStops() {
+    for (uint32_t i = 0; i < mStops.Length() - 1; i++) {
+      const auto& start = mStops[i];
+      const auto& end = mStops[i + 1];
+      uint32_t extraStops =
+          (uint32_t)(floor(end.mPosition * kFullRangeExtraStops) -
+                     floor(start.mPosition * kFullRangeExtraStops));
+      extraStops = clamped(extraStops, 1U, kFullRangeExtraStops);
+      float step = 1.0f / (float)extraStops;
+      for (uint32_t extraStop = 0; extraStop <= extraStops; extraStop++) {
+        auto progress = (float)extraStop * step;
+        auto position =
+            start.mPosition + progress * (end.mPosition - start.mPosition);
+        StyleAbsoluteColor color =
+            Servo_InterpolateColor(mStyleColorInterpolationMethod, &end.mColor,
+                                   &start.mColor, progress);
+        static_cast<T*>(this)->CreateStop(float(position),
+                                          gfx::ToDeviceColor(color));
+      }
+    }
+  }
+
+ protected:
+  StyleColorInterpolationMethod mStyleColorInterpolationMethod;
+  const nsTArray<ColorStop>& mStops;
+
+  // this could be made tunable, but at 1.0/128 the error is largely
+  // irrelevant, as WebRender re-encodes it to 128 pairs of stops.
+  //
+  // note that we don't attempt to place the positions of these stops
+  // precisely at intervals, we just add this many extra stops across the
+  // range where it is convenient.
+  inline static const uint32_t kFullRangeExtraStops = 128;
 };
 
 class nsCSSGradientRenderer final {

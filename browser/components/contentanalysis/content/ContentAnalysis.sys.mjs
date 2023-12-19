@@ -301,8 +301,8 @@ export const ContentAnalysis = {
           );
         }
         const responseResult =
-          request?.action ?? Ci.nsIContentAnalysisResponse.ACTION_UNSPECIFIED;
-        this._showCAResult(
+          request?.action ?? Ci.nsIContentAnalysisResponse.eUnspecified;
+        await this._showCAResult(
           windowAndResourceNameOrL10NId.resourceNameOrL10NId,
           windowAndResourceNameOrL10NId.browsingContext,
           request.requestToken,
@@ -395,8 +395,8 @@ export const ContentAnalysis = {
 
   _shouldShowBlockingNotification(aOperation) {
     return !(
-      aOperation == Ci.nsIContentAnalysisRequest.FILE_DOWNLOADED ||
-      aOperation == Ci.nsIContentAnalysisRequest.PRINT
+      aOperation == Ci.nsIContentAnalysisRequest.eFileDownloaded ||
+      aOperation == Ci.nsIContentAnalysisRequest.ePrint
     );
   },
 
@@ -413,16 +413,16 @@ export const ContentAnalysis = {
   _getResourceNameOrL10NIdFromRequest(aRequest) {
     if (
       aRequest.operationTypeForDisplay ==
-      Ci.nsIContentAnalysisRequest.OPERATION_CUSTOMDISPLAYSTRING
+      Ci.nsIContentAnalysisRequest.eCustomDisplayString
     ) {
       return { name: aRequest.operationDisplayString };
     }
     let l10nId;
     switch (aRequest.operationTypeForDisplay) {
-      case Ci.nsIContentAnalysisRequest.OPERATION_CLIPBOARD:
+      case Ci.nsIContentAnalysisRequest.eClipboard:
         l10nId = "contentanalysis-operationtype-clipboard";
         break;
-      case Ci.nsIContentAnalysisRequest.OPERATION_DROPPEDTEXT:
+      case Ci.nsIContentAnalysisRequest.eDroppedText:
         l10nId = "contentanalysis-operationtype-dropped-text";
         break;
     }
@@ -535,7 +535,7 @@ export const ContentAnalysis = {
    *
    * @returns {object} a notification object (if shown)
    */
-  _showCAResult(
+  async _showCAResult(
     aResourceNameOrL10NId,
     aBrowsingContext,
     aRequestToken,
@@ -545,11 +545,11 @@ export const ContentAnalysis = {
     let timeoutMs = 0;
 
     switch (aCAResult) {
-      case Ci.nsIContentAnalysisResponse.ALLOW:
+      case Ci.nsIContentAnalysisResponse.eAllow:
         // We don't need to show anything
         return null;
-      case Ci.nsIContentAnalysisResponse.REPORT_ONLY:
-        message = this.l10n.formatValueSync(
+      case Ci.nsIContentAnalysisResponse.eReportOnly:
+        message = await this.l10n.formatValue(
           "contentanalysis-genericresponse-message",
           {
             content: this._getResourceNameFromNameOrL10NId(
@@ -560,32 +560,56 @@ export const ContentAnalysis = {
         );
         timeoutMs = this._RESULT_NOTIFICATION_FAST_TIMEOUT_MS;
         break;
-      case Ci.nsIContentAnalysisResponse.WARN:
-        message = this.l10n.formatValueSync(
-          "contentanalysis-genericresponse-message",
-          {
+      case Ci.nsIContentAnalysisResponse.eWarn:
+        const result = await Services.prompt.asyncConfirmEx(
+          aBrowsingContext,
+          Ci.nsIPromptService.MODAL_TYPE_TAB,
+          await this.l10n.formatValue("contentanalysis-warndialogtitle"),
+          await this.l10n.formatValue("contentanalysis-warndialogtext", {
             content: this._getResourceNameFromNameOrL10NId(
               aResourceNameOrL10NId
             ),
-            response: "WARN",
-          }
+          }),
+          Ci.nsIPromptService.BUTTON_POS_0 *
+            Ci.nsIPromptService.BUTTON_TITLE_IS_STRING +
+            Ci.nsIPromptService.BUTTON_POS_1 *
+              Ci.nsIPromptService.BUTTON_TITLE_IS_STRING +
+            Ci.nsIPromptService.BUTTON_POS_1_DEFAULT,
+          await this.l10n.formatValue(
+            "contentanalysis-warndialog-response-allow"
+          ),
+          await this.l10n.formatValue(
+            "contentanalysis-warndialog-response-deny"
+          ),
+          null,
+          null,
+          {}
         );
-        timeoutMs = this._RESULT_NOTIFICATION_TIMEOUT_MS;
-        break;
-      case Ci.nsIContentAnalysisResponse.BLOCK:
-        message = this.l10n.formatValueSync("contentanalysis-block-message", {
+        const allow = result.get("buttonNumClicked") === 0;
+        lazy.gContentAnalysis.respondToWarnDialog(aRequestToken, allow);
+        return null;
+      case Ci.nsIContentAnalysisResponse.eBlock:
+        message = await this.l10n.formatValue("contentanalysis-block-message", {
           content: this._getResourceNameFromNameOrL10NId(aResourceNameOrL10NId),
         });
         timeoutMs = this._RESULT_NOTIFICATION_TIMEOUT_MS;
         break;
-      case Ci.nsIContentAnalysisResponse.ACTION_UNSPECIFIED:
-        message = this.l10n.formatValueSync("contentanalysis-error-message", {
+      case Ci.nsIContentAnalysisResponse.eUnspecified:
+        message = await this.l10n.formatValue("contentanalysis-error-message", {
           content: this._getResourceNameFromNameOrL10NId(aResourceNameOrL10NId),
         });
         timeoutMs = this._RESULT_NOTIFICATION_TIMEOUT_MS;
         break;
       default:
         throw new Error("Unexpected CA result value: " + aCAResult);
+    }
+
+    if (!message) {
+      console.error(
+        "_showCAResult did not get a message populated for result value " +
+          aCAResult
+      );
+      return null;
     }
 
     return this._showMessage(message, aBrowsingContext, timeoutMs);

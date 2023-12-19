@@ -93,7 +93,35 @@ const EXPRESSIONS_BY_FILE = {
     ],
   ]),
   "undefined.js": new Map([["Undefined", `undefined`]]),
-  "window.js": new Map([["Window", `window`]]),
+  "window.js": new Map([
+    ["Window", `window`],
+    [
+      "CrossOriginIframeContentWindow",
+      {
+        expression: `
+        (async function() {
+          const iframe = document.createElement("iframe");
+          const onLoaded = new Promise(resolve =>
+            iframe.addEventListener("load", resolve, {once: true})
+          );
+          iframe.src = "http://example.org/document-builder.sjs?html=example.org";
+          document.body.append(iframe);
+          await onLoaded;
+          return iframe.contentWindow;
+        })()
+  `,
+        async: true,
+      },
+    ],
+    [
+      "CrossOriginIframeTopWindow",
+      {
+        expression: `window.top`,
+        iframeUrlForExecution:
+          "https://example.net/document-builder.sjs?html=example.net",
+      },
+    ],
+  ]),
   // XXX: File a bug blocking Bug 1671400 for enabling automatic generation for one of
   // the following file.
   // "accessible.js",
@@ -181,6 +209,37 @@ async function generateStubs(commands, stubFile) {
     const executeOptions = {};
     if (options.async === true) {
       executeOptions.mapped = { await: true };
+    }
+    if (options.iframeUrlForExecution) {
+      const { promise: onIframeTargetCreated, resolve } =
+        Promise.withResolvers();
+      const onTargetAvailable = ({ targetFront }) => {
+        if (targetFront.url === options.iframeUrlForExecution) {
+          resolve(targetFront);
+        }
+      };
+      await commands.targetCommand.watchTargets({
+        types: [commands.targetCommand.TYPES.FRAME],
+        onAvailable: onTargetAvailable,
+      });
+
+      await SpecialPowers.spawn(
+        gBrowser.selectedBrowser,
+        [options.iframeUrlForExecution],
+        url => {
+          const iframe = content.document.createElement("iframe");
+          iframe.src = url;
+          content.document.body.append(iframe);
+        }
+      );
+
+      const targetFront = await onIframeTargetCreated;
+      executeOptions.selectedTargetFront = targetFront;
+
+      await commands.targetCommand.unwatchTargets({
+        types: [commands.targetCommand.TYPES.FRAME],
+        onAvailable: onTargetAvailable,
+      });
     }
     const { result } = await commands.scriptCommand.execute(
       expression,

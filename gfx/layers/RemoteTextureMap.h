@@ -213,7 +213,8 @@ class RemoteTextureMap {
   // return true when aReadyCallback will be called.
   bool GetRemoteTextureForDisplayList(
       RemoteTextureHostWrapper* aTextureHostWrapper,
-      std::function<void(const RemoteTextureInfo&)>&& aReadyCallback);
+      std::function<void(const RemoteTextureInfo&)>&& aReadyCallback,
+      bool aWaitForRemoteTextureOwner = false);
 
   // Get ExternalImageId of remote texture for WebRender rendering.
   wr::MaybeExternalImageId GetExternalImageIdOfRemoteTexture(
@@ -297,6 +298,7 @@ class RemoteTextureMap {
     std::deque<UniquePtr<TextureDataHolder>> mWaitingTextureDataHolders;
     // Holds TextureDataHolders that are used for building wr display list.
     std::deque<UniquePtr<TextureDataHolder>> mUsingTextureDataHolders;
+    std::deque<UniquePtr<TextureDataHolder>> mReleasingTextureDataHolders;
     // Holds async RemoteTexture ready callbacks.
     std::deque<UniquePtr<RenderingReadyCallbackHolder>>
         mRenderingReadyCallbackHolders;

@@ -212,8 +212,6 @@ void SVGPatternFrame::PaintChildren(DrawTarget* aDrawTarget,
                                     SVGPatternFrame* aPatternWithChildren,
                                     nsIFrame* aSource, float aGraphicOpacity,
                                     imgDrawingParams& aImgParams) {
-  nsIFrame* firstKid = aPatternWithChildren->mFrames.FirstChild();
-
   gfxContext ctx(aDrawTarget);
   gfxGroupForBlendAutoSaveRestore autoGroupForBlend(&ctx);
 
@@ -235,7 +233,7 @@ void SVGPatternFrame::PaintChildren(DrawTarget* aDrawTarget,
   // give back a clear surface if there's a loop
   if (!aPatternWithChildren->HasAnyStateBits(NS_FRAME_DRAWING_AS_PAINTSERVER)) {
     AutoSetRestorePaintServerState paintServer(aPatternWithChildren);
-    for (nsIFrame* kid = firstKid; kid; kid = kid->GetNextSibling()) {
+    for (auto* kid : aPatternWithChildren->mFrames) {
       gfxMatrix tm = *(aPatternWithChildren->mCTM);
 
       // The CTM of each frame referencing us can be different

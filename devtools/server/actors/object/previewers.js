@@ -902,7 +902,15 @@ previewers.Object = [
 
     let url;
     if (isWindow && rawObj.location) {
-      url = rawObj.location.href;
+      try {
+        url = rawObj.location.href;
+      } catch(e) {
+        // This can happen when we have a cross-process window.
+        // In such case, let's retrieve the url from the iframe.
+        // For window.top from a remote iframe, there's no way we can't retrieve the URL,
+        // so return a label that help user know what's going on.
+        url = rawObj.browsingContext?.embedderElement?.src || "Restricted";
+      }
     } else if (rawObj.href) {
       url = rawObj.href;
     } else {

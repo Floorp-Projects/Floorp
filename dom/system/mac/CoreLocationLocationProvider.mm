@@ -65,12 +65,6 @@ static const CLLocationAccuracy kDEFAULT_ACCURACY =
 
   console->LogStringMessage(NS_ConvertUTF8toUTF16([message UTF8String]).get());
 
-  if ([aError code] == kCLErrorDenied) {
-    mProvider->NotifyError(
-        dom::GeolocationPositionError_Binding::PERMISSION_DENIED);
-    return;
-  }
-
   // The CL provider does not fallback to GeoIP, so use
   // NetworkGeolocationProvider for this. The concept here is: on error, hand
   // off geolocation to MLS, which will then report back a location or error.

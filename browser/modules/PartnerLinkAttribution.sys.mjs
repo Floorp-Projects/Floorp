@@ -60,59 +60,6 @@ export var PartnerLinkAttribution = {
     let result = await sendRequest(attributionUrl, source, targetURL);
     record("attribution", result ? "success" : "failure");
   },
-
-  /**
-   * Makes a request to the attribution URL for a search engine search.
-   *
-   * @param {nsISearchEngine} engine
-   *   The search engine to save the attribution for.
-   * @param {nsIURI} targetUrl
-   *   The target URL to filter and include in the attribution.
-   */
-  async makeSearchEngineRequest(engine, targetUrl) {
-    let cid;
-    if (engine.attribution?.cid) {
-      cid = engine.attribution.cid;
-    } else if (engine.sendAttributionRequest) {
-      cid = Services.prefs.getStringPref(
-        "browser.partnerlink.campaign.topsites"
-      );
-    } else {
-      return;
-    }
-
-    let searchUrlQueryParamName = engine.searchUrlQueryParamName;
-    if (!searchUrlQueryParamName) {
-      console.error("makeSearchEngineRequest can't find search terms key");
-      return;
-    }
-
-    let url = targetUrl;
-    if (typeof url == "string") {
-      url = Services.io.newURI(url);
-    }
-
-    let targetParams = new URLSearchParams(url.query);
-    if (!targetParams.has(searchUrlQueryParamName)) {
-      console.error("makeSearchEngineRequest can't remove target search terms");
-      return;
-    }
-
-    let attributionUrl = Services.prefs.getStringPref(
-      "browser.partnerlink.attributionURL",
-      ""
-    );
-    attributionUrl = attributionUrl + cid;
-
-    targetParams.delete(searchUrlQueryParamName);
-    let strippedTargetUrl = `${url.prePath}${url.filePath}`;
-    let newParams = targetParams.toString();
-    if (newParams) {
-      strippedTargetUrl += "?" + newParams;
-    }
-
-    await sendRequest(attributionUrl, "searchurl", strippedTargetUrl);
-  },
 };
 
 async function sendRequest(attributionUrl, source, targetURL) {

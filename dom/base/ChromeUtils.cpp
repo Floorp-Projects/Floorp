@@ -61,6 +61,7 @@
 #include "mozJSModuleLoader.h"
 #include "mozilla/ProfilerLabels.h"
 #include "mozilla/ProfilerMarkers.h"
+#include "nsDocShell.h"
 #include "nsIException.h"
 #include "VsyncSource.h"
 
@@ -1895,13 +1896,28 @@ bool ChromeUtils::ShouldResistFingerprinting(
       MOZ_CRASH("Unhandled JSRFPTarget enum value");
   }
 
+  bool isPBM = false;
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
+  if (global) {
+    nsPIDOMWindowInner* win = global->GetAsInnerWindow();
+    if (win) {
+      nsIDocShell* docshell = win->GetDocShell();
+      if (docshell) {
+        nsDocShell::Cast(docshell)->GetUsePrivateBrowsing(&isPBM);
+      }
+    }
+  }
+
   Maybe<RFPTarget> overriddenFingerprintingSettings;
   if (!aOverriddenFingerprintingSettings.IsNull()) {
     overriddenFingerprintingSettings.emplace(
         RFPTarget(aOverriddenFingerprintingSettings.Value()));
   }
 
-  return nsRFPService::IsRFPEnabledFor(target,
+  // This global object appears to be the global window, not for individual
+  // sites so to exempt individual sites (instead of just PBM/Not-PBM windows)
+  // more work would be needed to get the correct context.
+  return nsRFPService::IsRFPEnabledFor(isPBM, target,
                                        overriddenFingerprintingSettings);
 }
 

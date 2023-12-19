@@ -197,6 +197,18 @@ PermuteSummer(xsimd::batch<int32_t, Arch> pack0123,
   __m256i blended = _mm256_blend_epi32(pack0123, pack4567, 0xf0);
   return _mm256_add_epi32(rev, blended);
 }
+
+#ifdef __AVXVNNI__
+
+template <class Arch>
+inline xsimd::batch<int32_t, Arch>
+maddw(xsimd::batch<uint8_t, Arch> x, xsimd::batch<int8_t, Arch> y,
+      xsimd::batch<int32_t, Arch> z,
+      xsimd::kernel::requires_arch<xsimd::avxvnni>) {
+  return _mm256_dpbusd_avx_epi32(z, x, y);
+}
+#endif
+
 #endif
 
 #ifdef __SSSE3__
@@ -552,6 +564,7 @@ madd(xsimd::batch<uint8_t, Arch> x, xsimd::batch<int8_t, Arch> y,
 template <class Arch>
 inline xsimd::batch<int32_t, Arch>
 maddw(xsimd::batch<uint8_t, Arch> x, xsimd::batch<int8_t, Arch> y,
+      xsimd::batch<int32_t, Arch> z,
       xsimd::kernel::requires_arch<xsimd::neon64>) {
 
   int16x8_t tl = vmulq_s16(vreinterpretq_s16_u16(vmovl_u8(vget_low_u8(x))),
@@ -560,7 +573,7 @@ maddw(xsimd::batch<uint8_t, Arch> x, xsimd::batch<int8_t, Arch> y,
                            vmovl_s8(vget_high_s8(y)));
   int32x4_t pl = vpaddlq_s16(tl);
   int32x4_t ph = vpaddlq_s16(th);
-  return vpaddq_s32(pl, ph);
+  return vpaddq_s32(z, vpaddq_s32(pl, ph));
 }
 
 template <class Arch>
@@ -576,8 +589,9 @@ madd(xsimd::batch<int8_t, Arch> x, xsimd::batch<int8_t, Arch> y,
 template <class Arch>
 inline xsimd::batch<int32_t, Arch>
 maddw(xsimd::batch<uint8_t, Arch> x, xsimd::batch<int8_t, Arch> y,
+      xsimd::batch<int32_t, Arch> z,
       xsimd::kernel::requires_arch<xsimd::generic>) {
-  return madd(xsimd::batch<int16_t, Arch>(1), madd(x, y, Arch{}), Arch{});
+  return z + madd(xsimd::batch<int16_t, Arch>(1), madd(x, y, Arch{}), Arch{});
 }
 
 } // namespace kernel
@@ -620,8 +634,16 @@ inline xsimd::batch<int16_t, Arch> madd(xsimd::batch<uint8_t, Arch> x,
 }
 template <class Arch>
 inline xsimd::batch<int32_t, Arch> maddw(xsimd::batch<uint8_t, Arch> x,
-                                         xsimd::batch<int8_t, Arch> y) {
-  return kernel::maddw(x, y, Arch{});
+                                         xsimd::batch<int8_t, Arch> y,
+                                         xsimd::batch<int32_t, Arch> z
+                                         ) {
+  return kernel::maddw(x, y, z, Arch{});
+}
+template <class Arch>
+inline xsimd::batch<int32_t, Arch> maddw(xsimd::batch<uint8_t, Arch> x,
+                                         xsimd::batch<int8_t, Arch> y
+                                         ) {
+  return maddw(x, y, xsimd::batch<int32_t, Arch>((int32_t)0));
 }
 
 template <class Arch>
@@ -1241,23 +1263,14 @@ void Engine<Arch>::Shift::Multiply(const uint8_t *A, const int8_t *B,
         a = *(A_row + k);
         /* Multiply 8-bit, horizontally add to packed 16-bit integers.*/
         /* Upcast to 32-bit and horizontally add.*/
-        batch32 imult0 = maddw(a, *(B0_col + k * 8));
-        batch32 imult1 = maddw(a, *(B0_col + k * 8 + 1));
-        batch32 imult2 = maddw(a, *(B0_col + k * 8 + 2));
-        batch32 imult3 = maddw(a, *(B0_col + k * 8 + 3));
-        batch32 imult4 = maddw(a, *(B0_col + k * 8 + 4));
-        batch32 imult5 = maddw(a, *(B0_col + k * 8 + 5));
-        batch32 imult6 = maddw(a, *(B0_col + k * 8 + 6));
-        batch32 imult7 = maddw(a, *(B0_col + k * 8 + 7));
-        /*Add in 32bit*/
-        isum0 += imult0;
-        isum1 += imult1;
-        isum2 += imult2;
-        isum3 += imult3;
-        isum4 += imult4;
-        isum5 += imult5;
-        isum6 += imult6;
-        isum7 += imult7;
+        isum0 = maddw(a, *(B0_col + k * 8 + 0), isum0);
+        isum1 = maddw(a, *(B0_col + k * 8 + 1), isum1);
+        isum2 = maddw(a, *(B0_col + k * 8 + 2), isum2);
+        isum3 = maddw(a, *(B0_col + k * 8 + 3), isum3);
+        isum4 = maddw(a, *(B0_col + k * 8 + 4), isum4);
+        isum5 = maddw(a, *(B0_col + k * 8 + 5), isum5);
+        isum6 = maddw(a, *(B0_col + k * 8 + 6), isum6);
+        isum7 = maddw(a, *(B0_col + k * 8 + 7), isum7);
       }
       /* Reduce sums within 128-bit lanes.*/
       auto pack0123 = Pack0123(isum0, isum1, isum2, isum3);
@@ -1299,14 +1312,14 @@ void Engine<Arch>::Shift::PrepareBias(const int8_t *B, size_t width,
     B_j += 8 * batch8::size;
 
     for (size_t k = 1; k < simd_width; ++k, B_j += 8 * batch8::size) {
-      isum0 += maddw(a, batch8::load_aligned(&B_j[0 * batch8::size]));
-      isum1 += maddw(a, batch8::load_aligned(&B_j[1 * batch8::size]));
-      isum2 += maddw(a, batch8::load_aligned(&B_j[2 * batch8::size]));
-      isum3 += maddw(a, batch8::load_aligned(&B_j[3 * batch8::size]));
-      isum4 += maddw(a, batch8::load_aligned(&B_j[4 * batch8::size]));
-      isum5 += maddw(a, batch8::load_aligned(&B_j[5 * batch8::size]));
-      isum6 += maddw(a, batch8::load_aligned(&B_j[6 * batch8::size]));
-      isum7 += maddw(a, batch8::load_aligned(&B_j[7 * batch8::size]));
+      isum0 = maddw(a, batch8::load_aligned(&B_j[0 * batch8::size]), isum0);
+      isum1 = maddw(a, batch8::load_aligned(&B_j[1 * batch8::size]), isum1);
+      isum2 = maddw(a, batch8::load_aligned(&B_j[2 * batch8::size]), isum2);
+      isum3 = maddw(a, batch8::load_aligned(&B_j[3 * batch8::size]), isum3);
+      isum4 = maddw(a, batch8::load_aligned(&B_j[4 * batch8::size]), isum4);
+      isum5 = maddw(a, batch8::load_aligned(&B_j[5 * batch8::size]), isum5);
+      isum6 = maddw(a, batch8::load_aligned(&B_j[6 * batch8::size]), isum6);
+      isum7 = maddw(a, batch8::load_aligned(&B_j[7 * batch8::size]), isum7);
     }
 
     auto pack0123 = Pack0123(isum0, isum1, isum2, isum3);

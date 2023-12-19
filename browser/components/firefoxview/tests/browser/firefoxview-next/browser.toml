@@ -12,6 +12,9 @@ fail-if = ["a11y_checks"] # Bug 1854625 clicked button and fxview-tab-row-second
 ["browser_firefoxview_next_navigation.js"]
 fail-if = ["a11y_checks"] # Bugs 1854625 and 1867378 clicked FXVIEW-CATEGORY-BUTTON may not be focusable
 
+["browser_firefoxview_virtual_list.js"]
+fail-if = ["a11y_checks"] # Bugs 1854625 and 1867378 clicked FXVIEW-CATEGORY-BUTTON may not be focusable
+
 ["browser_history_firefoxview_next.js"]
 fail-if = ["a11y_checks"] # Bug 1854625 clicked button may not be focusable
 

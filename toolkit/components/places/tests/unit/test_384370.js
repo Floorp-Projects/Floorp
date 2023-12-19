@@ -7,10 +7,10 @@ var tagData = [
 ];
 
 var bookmarkData = [
-  { uri: uri("http://slint.us"), title: "indie, kentucky, music" },
+  { uri: uri("http://slint.us"), title: "indie,kentucky,music" },
   {
     uri: uri("http://en.wikipedia.org/wiki/Diplodocus"),
-    title: "dinosaur, dj, rad word",
+    title: "dinosaur,dj,rad word",
   },
 ];
 

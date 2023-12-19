@@ -591,10 +591,10 @@ struct DOMIfaceAndProtoJSClass {
 
 // Special JSClass for DOM interface objects.
 struct DOMIfaceJSClass : public DOMIfaceAndProtoJSClass {
-  // Boolean indicating whether this object wants a @@hasInstance property
-  // pointing to InterfaceHasInstance defined on it.  Only ever true for the
+  // Boolean indicating whether this object wants an isInstance property
+  // pointing to InterfaceIsInstance defined on it.  Only ever true for the
   // eInterface case.
-  bool wantsInterfaceHasInstance;
+  bool wantsInterfaceIsInstance;
 
   // The value to return for Function.prototype.toString on this interface
   // object.

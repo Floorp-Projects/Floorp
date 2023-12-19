@@ -20,18 +20,13 @@ In order to see all active messages for a current provider such as `cfr`, use th
 
 The messages on the page should now be filtered to include only the provider you selected.
 
-## How to test telemetry pings
+## How to test data collection
 
-To test telemetry pings, complete the the following steps:
+All of Messaging System, including ASRouter, is instrumented in Glean.
+To test this instrumentation, please consult [this guide](/toolkit/components/glean/user/instrumentation_tests.md), and:
 
 - In about:config, set:
   - `browser.newtabpage.activity-stream.telemetry` to `true`
-  - `browser.ping-centre.log` to `true`
 - To view additional debug logs for messaging system or about:welcome, set:
   - `messaging-system.log` to `debug`
   - `browser.aboutwelcome.log` to `debug`
-- Open the Browser Toolbox devtools (Tools > Web Developer > Browser Toolbox) and switch to the console tab. Add a filter for for `activity-stream` to only display relevant pings:
-
-![Devtools telemetry ping](./telemetry-screenshot.png)
-
-You should now see pings show up as you view/interact with ASR messages/templates.

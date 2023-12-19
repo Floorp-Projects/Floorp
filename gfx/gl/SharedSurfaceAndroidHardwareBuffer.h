@@ -39,7 +39,7 @@ class SharedSurface_AndroidHardwareBuffer final : public SharedSurface {
   void LockProdImpl() override {}
   void UnlockProdImpl() override {}
 
-  void ProducerAcquireImpl() override {}
+  bool ProducerAcquireImpl() override { return true; }
   void ProducerReleaseImpl() override;
 
   Maybe<layers::SurfaceDescriptor> ToSurfaceDescriptor() override;

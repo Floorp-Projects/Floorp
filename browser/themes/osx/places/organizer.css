@@ -3,7 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 :root {
-  background-color: transparent;
+  -moz-default-appearance: -moz-mac-unified-toolbar-window;
+  appearance: auto;
 }
 
 /* Places Organizer Sidebars */
@@ -34,7 +35,6 @@
 
 #placesView {
   border-top: none !important;
-  background-color: -moz-dialog;
 }
 
 #placesView > splitter {

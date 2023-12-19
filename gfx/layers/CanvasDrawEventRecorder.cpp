@@ -43,6 +43,7 @@ CanvasDrawEventRecorder::CanvasDrawEventRecorder() {
 }
 
 bool CanvasDrawEventRecorder::Init(TextureType aTextureType,
+                                   gfx::BackendType aBackendType,
                                    UniquePtr<Helpers> aHelpers) {
   mHelpers = std::move(aHelpers);
 
@@ -91,7 +92,8 @@ bool CanvasDrawEventRecorder::Init(TextureType aTextureType,
     return false;
   }
 
-  if (!mHelpers->InitTranslator(aTextureType, std::move(header->handle),
+  if (!mHelpers->InitTranslator(aTextureType, aBackendType,
+                                std::move(header->handle),
                                 std::move(bufferHandles), mDefaultBufferSize,
                                 std::move(readerSem), std::move(writerSem),
                                 /* aUseIPDLThread */ false)) {
@@ -231,7 +233,11 @@ gfx::ContiguousBuffer& CanvasDrawEventRecorder::GetContiguousBuffer(
 void CanvasDrawEventRecorder::DropFreeBuffers() {
   while (mRecycledBuffers.size() > 1 &&
          mRecycledBuffers.front().eventCount < mHeader->processedCount) {
-    WriteInternalEvent(DROP_BUFFER);
+    // If we encountered an error, we may have invalidated mCurrentBuffer in
+    // GetContiguousBuffer. No need to write the DROP_BUFFER event.
+    if (mCurrentBuffer.IsValid()) {
+      WriteInternalEvent(DROP_BUFFER);
+    }
     mCurrentBuffer = CanvasBuffer(std::move(mRecycledBuffers.front().shmem));
     mRecycledBuffers.pop();
   }

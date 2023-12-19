@@ -26,4 +26,40 @@ stubs.set(`Window`, {
   "actorID": "server0.conn0.windowGlobal2147483651/obj35"
 });
 
+stubs.set(`CrossOriginIframeContentWindow`, {
+  "_grip": {
+    "type": "object",
+    "actor": "server0.conn0.windowGlobal10737418241/obj59",
+    "class": "Window",
+    "ownPropertyLength": 14,
+    "extensible": true,
+    "frozen": false,
+    "sealed": false,
+    "isError": false,
+    "preview": {
+      "kind": "ObjectWithURL",
+      "url": "http://example.org/document-builder.sjs?html=example.org"
+    }
+  },
+  "actorID": "server0.conn0.windowGlobal10737418241/obj59"
+});
+
+stubs.set(`CrossOriginIframeTopWindow`, {
+  "_grip": {
+    "type": "object",
+    "actor": "server0.conn0.windowGlobal12884901889/obj20",
+    "class": "Window",
+    "ownPropertyLength": 16,
+    "extensible": true,
+    "frozen": false,
+    "sealed": false,
+    "isError": false,
+    "preview": {
+      "kind": "ObjectWithURL",
+      "url": "Restricted"
+    }
+  },
+  "actorID": "server0.conn0.windowGlobal12884901889/obj20"
+});
+
 module.exports = stubs;

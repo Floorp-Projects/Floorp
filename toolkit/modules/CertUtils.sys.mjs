@@ -161,19 +161,8 @@ function checkCert(aChannel, aAllowNonBuiltInCerts, aCerts) {
   if (aAllowNonBuiltInCerts === true) {
     return;
   }
-
-  let issuerCert = null;
-  if (secInfo.succeededCertChain.length) {
-    issuerCert =
-      secInfo.succeededCertChain[secInfo.succeededCertChain.length - 1];
-  }
-
   const certNotBuiltInErr = "Certificate issuer is not built-in.";
-  if (!issuerCert) {
-    throw new Ce(certNotBuiltInErr, Cr.NS_ERROR_ABORT);
-  }
-
-  if (!issuerCert.isBuiltInRoot) {
+  if (!secInfo.isBuiltCertChainRootBuiltInRoot) {
     throw new Ce(certNotBuiltInErr, Cr.NS_ERROR_ABORT);
   }
 }

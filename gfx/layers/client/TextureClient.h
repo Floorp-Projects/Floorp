@@ -70,6 +70,7 @@ class SharedSurfaceTextureData;
 class TextureClientPool;
 #endif
 class TextureForwarder;
+struct RemoteTextureOwnerId;
 
 /**
  * TextureClient is the abstraction that allows us to share data between the
@@ -99,6 +100,9 @@ enum TextureAllocationFlags {
 
   // Do not use an accelerated texture type.
   ALLOC_DO_NOT_ACCELERATE = 1 << 8,
+
+  // Force allocation of remote/recorded texture, or fail if not possible.
+  ALLOC_FORCE_REMOTE = 1 << 9,
 };
 
 enum class BackendSelector { Content, Canvas };
@@ -223,6 +227,10 @@ class TextureData {
           canConcurrentlyReadLock(true) {}
   };
 
+  static TextureData* Create(
+      TextureType aTextureType, gfx::SurfaceFormat aFormat,
+      const gfx::IntSize& aSize, TextureAllocationFlags aAllocFlags,
+      gfx::BackendType aBackendType = gfx::BackendType::NONE);
   static TextureData* Create(TextureForwarder* aAllocator,
                              gfx::SurfaceFormat aFormat, gfx::IntSize aSize,
                              KnowsCompositor* aKnowsCompositor,
@@ -254,6 +262,8 @@ class TextureData {
   virtual already_AddRefed<gfx::SourceSurface> BorrowSnapshot() {
     return nullptr;
   }
+
+  virtual void ReturnSnapshot(already_AddRefed<gfx::SourceSurface> aSnapshot) {}
 
   virtual bool BorrowMappedData(MappedTextureData&) { return false; }
 
@@ -311,6 +321,10 @@ class TextureData {
   virtual mozilla::ipc::FileDescriptor GetAcquireFence() {
     return mozilla::ipc::FileDescriptor();
   }
+
+  virtual void SetRemoteTextureOwnerId(RemoteTextureOwnerId) {}
+
+  virtual bool RequiresRefresh() const { return false; }
 
  protected:
   MOZ_COUNTED_DEFAULT_CTOR(TextureData)
@@ -446,6 +460,8 @@ class TextureClient : public AtomicRefCountedWithFinalize<TextureClient> {
   void EndDraw();
 
   already_AddRefed<gfx::SourceSurface> BorrowSnapshot();
+
+  void ReturnSnapshot(already_AddRefed<gfx::SourceSurface> aSnapshot);
 
   /**
    * Similar to BorrowDrawTarget but provides direct access to the texture's
@@ -703,6 +719,7 @@ class TextureClient : public AtomicRefCountedWithFinalize<TextureClient> {
 
   TextureData* mData;
   RefPtr<gfx::DrawTarget> mBorrowedDrawTarget;
+  bool mBorrowedSnapshot = false;
 
   TextureFlags mFlags;
 
