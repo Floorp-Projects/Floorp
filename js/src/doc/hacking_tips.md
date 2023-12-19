@@ -15,6 +15,8 @@ This page lists a few tips to help you investigate issues related to SpiderMonke
 
 Use the **help** function to get the list of all primitive functions of the shell with their description. Note that some functions have been moved under an 'os' object, and **help(os)** will give brief help on just the members of that "namespace".
 
+You can also use **help(/Regex/)** to get help for members of the global namespace that match the given regular expression.
+
 ### Getting the bytecode of a function (from JS shell)
 
 The shell has a small function named **dis** to dump the bytecode of a function with its source notes.  Without arguments, it will dump the bytecode of its caller.
