@@ -3046,7 +3046,7 @@ void gfxPlatform::InitWebGLConfig() {
   gfxVars::SetUseCanvasRenderThread(feature.IsEnabled());
 
   bool webglOopAsyncPresentForceSync =
-      !gfxVars::UseCanvasRenderThread() ||
+      (threadsafeGL && !gfxVars::UseCanvasRenderThread()) ||
       StaticPrefs::webgl_out_of_process_async_present_force_sync();
   gfxVars::SetWebglOopAsyncPresentForceSync(webglOopAsyncPresentForceSync);
 
