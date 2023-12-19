@@ -137,3 +137,35 @@ add_task(async function testTracingJSMGlobal() {
 
   removeTracingListener(listenerSandbox.listener);
 });
+
+add_task(async function testTracingValues() {
+  // Test the `traceValues` flag
+  const sandbox = Cu.Sandbox("https://example.com");
+  Cu.evalInSandbox(
+    `function foo() { bar(-0, 1, ["array"], { attribute: 3 }, "4", BigInt(5), Symbol("6"), Infinity, undefined, null, false, NaN, function foo() {}, function () {}, class MyClass {}); }; function bar(a, b, c) {}`,
+    sandbox
+  );
+
+  // Pass an override method to catch all strings tentatively logged to stdout
+  const logs = [];
+  function loggingMethod(str) {
+    logs.push(str);
+  }
+
+  info("Start tracing");
+  startTracing({ global: sandbox, traceValues: true, loggingMethod });
+
+  info("Call some code");
+  sandbox.foo();
+
+  Assert.equal(logs.length, 3);
+  Assert.equal(logs[0], "Start tracing JavaScript\n");
+  Assert.stringContains(logs[1], "λ foo()");
+  Assert.stringContains(
+    logs[2],
+    `λ bar(-0, 1, Array(1), [object Object], "4", BigInt(5), Symbol(6), Infinity, undefined, null, false, NaN, function foo(), function anonymous(), class MyClass)`
+  );
+
+  info("Stop tracing");
+  stopTracing();
+});
