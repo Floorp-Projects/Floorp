@@ -29,7 +29,6 @@ $property_ids
   // Extra values for use in the values of the 'transition-property'
   // property.
   eCSSPropertyExtra_no_properties,
-  eCSSPropertyExtra_all_properties,
 
   // Extra value to represent custom properties (--*).
   eCSSPropertyExtra_variable,

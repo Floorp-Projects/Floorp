@@ -4,9 +4,8 @@
 
 //! Specified types for properties related to animations and transitions.
 
-use crate::custom_properties::Name as CustomPropertyName;
 use crate::parser::{Parse, ParserContext};
-use crate::properties::{LonghandId, PropertyDeclarationId, PropertyId, ShorthandId};
+use crate::properties::{NonCustomPropertyId, PropertyId, ShorthandId};
 use crate::values::generics::animation as generics;
 use crate::values::specified::{LengthPercentage, NonNegativeNumber};
 use crate::values::{CustomIdent, KeyframesName, TimelineName};
@@ -23,12 +22,10 @@ use style_traits::{
     Clone, Debug, Eq, Hash, MallocSizeOf, PartialEq, ToComputedValue, ToResolvedValue, ToShmem,
 )]
 pub enum TransitionProperty {
-    /// A shorthand.
-    Shorthand(ShorthandId),
-    /// A longhand transitionable property.
-    Longhand(LonghandId),
+    /// A non-custom property.
+    NonCustom(NonCustomPropertyId),
     /// A custom property.
-    Custom(CustomPropertyName),
+    Custom(Atom),
     /// Unrecognized property which could be any non-transitionable, custom property, or
     /// unknown property.
     Unsupported(CustomIdent),
@@ -41,8 +38,7 @@ impl ToCss for TransitionProperty {
     {
         use crate::values::serialize_atom_name;
         match *self {
-            TransitionProperty::Shorthand(ref s) => s.to_css(dest),
-            TransitionProperty::Longhand(ref l) => l.to_css(dest),
+            TransitionProperty::NonCustom(ref id) => id.to_css(dest),
             TransitionProperty::Custom(ref name) => {
                 dest.write_str("--")?;
                 serialize_atom_name(name, dest)
@@ -71,12 +67,9 @@ impl Parse for TransitionProperty {
             },
         };
 
-        Ok(match id.as_shorthand() {
-            Ok(s) => TransitionProperty::Shorthand(s),
-            Err(longhand_or_custom) => match longhand_or_custom {
-                PropertyDeclarationId::Longhand(id) => TransitionProperty::Longhand(id),
-                PropertyDeclarationId::Custom(custom) => TransitionProperty::Custom(custom.clone()),
-            },
+        Ok(match id {
+            PropertyId::NonCustom(id) => TransitionProperty::NonCustom(id.unaliased()),
+            PropertyId::Custom(name) => TransitionProperty::Custom(name),
         })
     }
 }
@@ -94,22 +87,7 @@ impl TransitionProperty {
     /// Returns `all`.
     #[inline]
     pub fn all() -> Self {
-        TransitionProperty::Shorthand(ShorthandId::All)
-    }
-
-    /// Convert TransitionProperty to nsCSSPropertyID.
-    #[cfg(feature = "gecko")]
-    pub fn to_nscsspropertyid(
-        &self,
-    ) -> Result<crate::gecko_bindings::structs::nsCSSPropertyID, ()> {
-        Ok(match *self {
-            TransitionProperty::Shorthand(ShorthandId::All) => {
-                crate::gecko_bindings::structs::nsCSSPropertyID::eCSSPropertyExtra_all_properties
-            },
-            TransitionProperty::Shorthand(ref id) => id.to_nscsspropertyid(),
-            TransitionProperty::Longhand(ref id) => id.to_nscsspropertyid(),
-            TransitionProperty::Custom(..) | TransitionProperty::Unsupported(..) => return Err(()),
-        })
+        TransitionProperty::NonCustom(NonCustomPropertyId::from_shorthand(ShorthandId::All))
     }
 }
 
