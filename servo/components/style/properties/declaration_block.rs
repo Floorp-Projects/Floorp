@@ -6,13 +6,12 @@
 
 #![deny(missing_docs)]
 
-use super::generated::{
-    shorthands, AllShorthand, ComputedValues, LogicalGroupSet, LonghandIdSet,
-    NonCustomPropertyIdSet, PropertyDeclaration, PropertyId, ShorthandId,
-    SourcePropertyDeclaration, SourcePropertyDeclarationDrain, SubpropertiesVec,
+use super::{
+    property_counts, AllShorthand, ComputedValues, LogicalGroupSet, LonghandIdSet,
+    LonghandIdSetIterator, NonCustomPropertyIdSet, PropertyDeclaration, PropertyDeclarationId,
+    PropertyId, ShorthandId, SourcePropertyDeclaration, SourcePropertyDeclarationDrain,
+    SubpropertiesVec,
 };
-use super::property_declaration::PropertyDeclarationId;
-use super::LonghandIdSetIterator;
 use crate::context::QuirksMode;
 use crate::custom_properties;
 use crate::error_reporting::{ContextualParseError, ParseErrorReporter};
@@ -332,11 +331,8 @@ impl<'a, 'cx, 'cx_a: 'cx> Iterator for AnimationValueIterator<'a, 'cx, 'cx_a> {
                 continue;
             }
 
-            let animation = AnimationValue::from_declaration(
-                decl,
-                &mut self.context,
-                self.default_values,
-            );
+            let animation =
+                AnimationValue::from_declaration(decl, &mut self.context, self.default_values);
 
             if let Some(anim) = animation {
                 return Some(anim);
@@ -584,7 +580,7 @@ impl PropertyDeclarationBlock {
         let all_shorthand_len = match drain.all_shorthand {
             AllShorthand::NotSet => 0,
             AllShorthand::CSSWideKeyword(_) | AllShorthand::WithVariables(_) => {
-                shorthands::ALL_SHORTHAND_MAX_LEN
+                property_counts::ALL_SHORTHAND_EXPANDED
             },
         };
         let push_calls_count = drain.declarations.len() + all_shorthand_len;
