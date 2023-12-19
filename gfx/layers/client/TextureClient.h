@@ -17,6 +17,7 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"  // for override
 #include "mozilla/DebugOnly.h"
+#include "mozilla/Mutex.h"
 #include "mozilla/RefPtr.h"  // for RefPtr, RefCounted
 #include "mozilla/dom/ipc/IdType.h"
 #include "mozilla/gfx/2D.h"  // for DrawTarget
@@ -190,9 +191,6 @@ class TextureReadLock {
   virtual LockType GetType() = 0;
 
   virtual NonBlockingTextureReadLock* AsNonBlockingLock() { return nullptr; }
-
- protected:
-  NS_DECL_OWNINGTHREAD
 };
 
 class NonBlockingTextureReadLock : public TextureReadLock {
@@ -639,9 +637,28 @@ class TextureClient : public AtomicRefCountedWithFinalize<TextureClient> {
 
   uint64_t GetLastFwdTransactionId() { return mFwdTransactionId; }
 
-  TextureReadLock* GetReadLock() { return mReadLock; }
+  bool HasReadLock() const {
+    MutexAutoLock lock(mMutex);
+    return !!mReadLock;
+  }
 
-  bool IsReadLocked() const;
+  int32_t GetNonBlockingReadLockCount() {
+    MutexAutoLock lock(mMutex);
+    if (NS_WARN_IF(!mReadLock)) {
+      MOZ_ASSERT_UNREACHABLE("No read lock created yet?");
+      return 0;
+    }
+    MOZ_ASSERT(mReadLock->AsNonBlockingLock(),
+               "Can only check locked for non-blocking locks!");
+    return mReadLock->AsNonBlockingLock()->GetReadCount();
+  }
+
+  bool IsReadLocked();
+
+  bool ShouldReadLock() const {
+    return bool(mFlags & (TextureFlags::NON_BLOCKING_READ_LOCK |
+                          TextureFlags::BLOCKING_READ_LOCK));
+  }
 
   bool TryReadLock();
   void ReadUnlock();
@@ -682,8 +699,9 @@ class TextureClient : public AtomicRefCountedWithFinalize<TextureClient> {
       LayersBackend aLayersBackend, TextureFlags aTextureFlags,
       TextureAllocationFlags flags = ALLOC_DEFAULT);
 
-  void EnableReadLock();
-  void EnableBlockingReadLock();
+  void EnsureHasReadLock() MOZ_REQUIRES(mMutex);
+  void EnableReadLock() MOZ_REQUIRES(mMutex);
+  void EnableBlockingReadLock() MOZ_REQUIRES(mMutex);
 
   /**
    * Called once, during the destruction of the Texture, on the thread in which
@@ -711,11 +729,12 @@ class TextureClient : public AtomicRefCountedWithFinalize<TextureClient> {
   void UnlockActor() const;
 
   TextureData::Info mInfo;
+  mutable Mutex mMutex;
 
   RefPtr<LayersIPCChannel> mAllocator;
   RefPtr<TextureChild> mActor;
   RefPtr<ITextureClientRecycleAllocator> mRecycleAllocator;
-  RefPtr<TextureReadLock> mReadLock;
+  RefPtr<TextureReadLock> mReadLock MOZ_GUARDED_BY(mMutex);
 
   TextureData* mData;
   RefPtr<gfx::DrawTarget> mBorrowedDrawTarget;
@@ -730,7 +749,7 @@ class TextureClient : public AtomicRefCountedWithFinalize<TextureClient> {
   uint32_t mExpectedDtRefs;
 #endif
   bool mIsLocked;
-  bool mIsReadLocked;
+  bool mIsReadLocked MOZ_GUARDED_BY(mMutex);
   // This member tracks that the texture was written into until the update
   // is sent to the compositor. We need this remember to lock mReadLock on
   // behalf of the compositor just before sending the notification.
