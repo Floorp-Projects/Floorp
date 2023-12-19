@@ -193,21 +193,23 @@ nsresult DNSPacket::PassQName(unsigned int& index,
 
 // GetQname: retrieves the qname (stores in 'aQname') and stores the index
 // after qname was parsed into the 'aIndex'.
+// static
 nsresult DNSPacket::GetQname(nsACString& aQname, unsigned int& aIndex,
-                             const unsigned char* aBuffer) {
+                             const unsigned char* aBuffer,
+                             unsigned int aBodySize) {
   uint8_t clength = 0;
   unsigned int cindex = aIndex;
   unsigned int loop = 128;    // a valid DNS name can never loop this much
   unsigned int endindex = 0;  // index position after this data
   do {
-    if (cindex >= mBodySize) {
+    if (cindex >= aBodySize) {
       LOG(("TRR: bad Qname packet\n"));
       return NS_ERROR_ILLEGAL_VALUE;
     }
     clength = static_cast<uint8_t>(aBuffer[cindex]);
     if ((clength & 0xc0) == 0xc0) {
       // name pointer, get the new offset (14 bits)
-      if ((cindex + 1) >= mBodySize) {
+      if ((cindex + 1) >= aBodySize) {
         return NS_ERROR_ILLEGAL_VALUE;
       }
       // extract the new index position for the next label
@@ -231,7 +233,7 @@ nsresult DNSPacket::GetQname(nsACString& aQname, unsigned int& aIndex,
       if (!aQname.IsEmpty()) {
         aQname.Append(".");
       }
-      if ((cindex + clength) > mBodySize) {
+      if ((cindex + clength) > aBodySize) {
         return NS_ERROR_ILLEGAL_VALUE;
       }
       aQname.Append((const char*)(&aBuffer[cindex]), clength);
@@ -458,6 +460,104 @@ nsresult DNSPacket::EncodeRequest(nsCString& aBody, const nsACString& aHost,
   return NS_OK;
 }
 
+// static
+nsresult DNSPacket::ParseHTTPS(uint16_t aRDLen, struct SVCB& aParsed,
+                               unsigned int aIndex,
+                               const unsigned char* aBuffer,
+                               unsigned int aBodySize,
+                               const nsACString& aOriginHost) {
+  int32_t lastSvcParamKey = -1;
+  nsresult rv = NS_OK;
+  unsigned int svcbIndex = aIndex;
+  CheckedInt<uint16_t> available = aRDLen;
+
+  // Should have at least 2 bytes for the priority and one for the
+  // qname length.
+  if (available.value() < 3) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  aParsed.mSvcFieldPriority = get16bit(aBuffer, svcbIndex);
+  svcbIndex += 2;
+
+  rv = GetQname(aParsed.mSvcDomainName, svcbIndex, aBuffer, aBodySize);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  if (aParsed.mSvcDomainName.IsEmpty()) {
+    if (aParsed.mSvcFieldPriority == 0) {
+      // For AliasMode SVCB RRs, a TargetName of "." indicates that
+      // the service is not available or does not exist.
+      return NS_OK;
+    }
+
+    // For ServiceMode SVCB RRs, if TargetName has the value ".",
+    // then the owner name of this record MUST be used as
+    // the effective TargetName.
+    // When the qname is port prefix name, we need to use the
+    // original host name as TargetName.
+    aParsed.mSvcDomainName = aOriginHost;
+  }
+
+  available -= (svcbIndex - aIndex);
+  if (!available.isValid()) {
+    return NS_ERROR_UNEXPECTED;
+  }
+  while (available.value() >= 4) {
+    // Every SvcFieldValues must have at least 4 bytes for the
+    // SvcParamKey (2 bytes) and length of SvcParamValue (2 bytes)
+    // If the length ever goes above the available data, meaning if
+    // available ever underflows, then that is an error.
+    struct SvcFieldValue value;
+    uint16_t key = get16bit(aBuffer, svcbIndex);
+    svcbIndex += 2;
+
+    // 2.2 Clients MUST consider an RR malformed if SvcParamKeys are
+    // not in strictly increasing numeric order.
+    if (key <= lastSvcParamKey) {
+      LOG(("SvcParamKeys not in increasing order"));
+      return NS_ERROR_UNEXPECTED;
+    }
+    lastSvcParamKey = key;
+
+    uint16_t len = get16bit(aBuffer, svcbIndex);
+    svcbIndex += 2;
+
+    available -= 4 + len;
+    if (!available.isValid()) {
+      return NS_ERROR_UNEXPECTED;
+    }
+
+    rv = ParseSvcParam(svcbIndex, key, value, len, aBuffer);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    svcbIndex += len;
+
+    // If this is an unknown key, we will simply ignore it.
+    // We also don't need to record SvcParamKeyMandatory
+    if (key == SvcParamKeyMandatory || !IsValidSvcParamKey(key)) {
+      continue;
+    }
+
+    if (value.mValue.is<SvcParamIpv4Hint>() ||
+        value.mValue.is<SvcParamIpv6Hint>()) {
+      aParsed.mHasIPHints = true;
+    }
+    if (value.mValue.is<SvcParamEchConfig>()) {
+      aParsed.mHasEchConfig = true;
+      aParsed.mEchConfig = value.mValue.as<SvcParamEchConfig>().mValue;
+    }
+    if (value.mValue.is<SvcParamODoHConfig>()) {
+      aParsed.mODoHConfig = value.mValue.as<SvcParamODoHConfig>().mValue;
+    }
+    aParsed.mSvcFieldValue.AppendElement(value);
+  }
+
+  return NS_OK;
+}
+
 Result<uint8_t, nsresult> DNSPacket::GetRCode() const {
   if (mBodySize < 12) {
     LOG(("DNSPacket::GetRCode - packet too small"));
@@ -548,7 +648,7 @@ nsresult DNSPacket::DecodeInternal(
 
   while (answerRecords) {
     nsAutoCString qname;
-    rv = GetQname(qname, index, aBuffer);
+    rv = GetQname(qname, index, aBuffer, mBodySize);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -650,7 +750,7 @@ nsresult DNSPacket::DecodeInternal(
           if (aCname.IsEmpty()) {
             nsAutoCString qname;
             unsigned int qnameindex = index;
-            rv = GetQname(qname, qnameindex, aBuffer);
+            rv = GetQname(qname, qnameindex, aBuffer, mBodySize);
             if (NS_FAILED(rv)) {
               return rv;
             }
@@ -705,103 +805,23 @@ nsresult DNSPacket::DecodeInternal(
         }
         case TRRTYPE_HTTPSSVC: {
           struct SVCB parsed;
-          int32_t lastSvcParamKey = -1;
-
-          unsigned int svcbIndex = index;
-          CheckedInt<uint16_t> available = RDLENGTH;
-
-          // Should have at least 2 bytes for the priority and one for the
-          // qname length.
-          if (available.value() < 3) {
-            return NS_ERROR_UNEXPECTED;
-          }
-
-          parsed.mSvcFieldPriority = get16bit(aBuffer, svcbIndex);
-          svcbIndex += 2;
-
-          rv = GetQname(parsed.mSvcDomainName, svcbIndex, aBuffer);
-          if (NS_FAILED(rv)) {
-            return rv;
-          }
-
-          if (parsed.mSvcDomainName.IsEmpty()) {
-            if (parsed.mSvcFieldPriority == 0) {
-              // For AliasMode SVCB RRs, a TargetName of "." indicates that the
-              // service is not available or does not exist.
-              continue;
-            }
-
-            // For ServiceMode SVCB RRs, if TargetName has the value ".",
-            // then the owner name of this record MUST be used as
-            // the effective TargetName.
-            // When the qname is port prefix name, we need to use the
-            // original host name as TargetName.
-            if (mOriginHost) {
-              parsed.mSvcDomainName = *mOriginHost;
-            } else {
-              parsed.mSvcDomainName = qname;
-            }
-          }
-
-          available -= (svcbIndex - index);
-          if (!available.isValid()) {
-            return NS_ERROR_UNEXPECTED;
-          }
-          aTTL = TTL;
-          while (available.value() >= 4) {
-            // Every SvcFieldValues must have at least 4 bytes for the
-            // SvcParamKey (2 bytes) and length of SvcParamValue (2 bytes)
-            // If the length ever goes above the available data, meaning if
-            // available ever underflows, then that is an error.
-            struct SvcFieldValue value;
-            uint16_t key = get16bit(aBuffer, svcbIndex);
-            svcbIndex += 2;
-
-            // 2.2 Clients MUST consider an RR malformed if SvcParamKeys are
-            // not in strictly increasing numeric order.
-            if (key <= lastSvcParamKey) {
-              LOG(("SvcParamKeys not in increasing order"));
-              return NS_ERROR_UNEXPECTED;
-            }
-            lastSvcParamKey = key;
-
-            uint16_t len = get16bit(aBuffer, svcbIndex);
-            svcbIndex += 2;
-
-            available -= 4 + len;
-            if (!available.isValid()) {
-              return NS_ERROR_UNEXPECTED;
-            }
-
-            rv = ParseSvcParam(svcbIndex, key, value, len, aBuffer);
-            if (NS_FAILED(rv)) {
-              return rv;
-            }
-            svcbIndex += len;
-
-            // If this is an unknown key, we will simply ignore it.
-            // We also don't need to record SvcParamKeyMandatory
-            if (key == SvcParamKeyMandatory || !IsValidSvcParamKey(key)) {
-              continue;
-            }
-
-            if (value.mValue.is<SvcParamIpv4Hint>() ||
-                value.mValue.is<SvcParamIpv6Hint>()) {
-              parsed.mHasIPHints = true;
-            }
-            if (value.mValue.is<SvcParamEchConfig>()) {
-              parsed.mHasEchConfig = true;
-              parsed.mEchConfig = value.mValue.as<SvcParamEchConfig>().mValue;
-            }
-            if (value.mValue.is<SvcParamODoHConfig>()) {
-              parsed.mODoHConfig = value.mValue.as<SvcParamODoHConfig>().mValue;
-            }
-            parsed.mSvcFieldValue.AppendElement(value);
-          }
 
           if (aType != TRRTYPE_HTTPSSVC) {
             // Ignore the entry that we just parsed if we didn't ask for it.
             break;
+          }
+
+          rv = ParseHTTPS(RDLENGTH, parsed, index, aBuffer, mBodySize,
+                          mOriginHost ? *mOriginHost : qname);
+          if (NS_FAILED(rv)) {
+            return rv;
+          }
+
+          if (parsed.mSvcDomainName.IsEmpty() &&
+              parsed.mSvcFieldPriority == 0) {
+            // For AliasMode SVCB RRs, a TargetName of "." indicates that the
+            // service is not available or does not exist.
+            continue;
           }
 
           // Check for AliasForm
@@ -818,6 +838,8 @@ nsresult DNSPacket::DecodeInternal(
                  host.get(), aCname.get()));
             break;
           }
+
+          aTTL = TTL;
 
           if (!aTypeResult.is<TypeRecordHTTPSSVC>()) {
             aTypeResult = mozilla::AsVariant(CopyableTArray<SVCB>());
@@ -881,7 +903,7 @@ nsresult DNSPacket::DecodeInternal(
 
   while (arRecords) {
     nsAutoCString qname;
-    rv = GetQname(qname, index, aBuffer);
+    rv = GetQname(qname, index, aBuffer, mBodySize);
     if (NS_FAILED(rv)) {
       LOG(("Bad qname for additional record"));
       return rv;
