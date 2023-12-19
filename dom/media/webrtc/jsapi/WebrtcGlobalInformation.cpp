@@ -535,27 +535,8 @@ void WebrtcGlobalInformation::GetLogging(
   aRv = NS_OK;
 }
 
-static int32_t sLastSetLevel = 0;
 static bool sLastAECDebug = false;
 static Maybe<nsCString> sAecDebugLogDir;
-
-void WebrtcGlobalInformation::SetDebugLevel(const GlobalObject& aGlobal,
-                                            int32_t aLevel) {
-  if (aLevel) {
-    StartWebRtcLog(mozilla::LogLevel(aLevel));
-  } else {
-    StopWebRtcLog();
-  }
-  sLastSetLevel = aLevel;
-
-  for (const auto& cp : WebrtcContentParents::GetAll()) {
-    Unused << cp->SendSetDebugMode(aLevel);
-  }
-}
-
-int32_t WebrtcGlobalInformation::DebugLevel(const GlobalObject& aGlobal) {
-  return sLastSetLevel;
-}
 
 void WebrtcGlobalInformation::SetAecDebug(const GlobalObject& aGlobal,
                                           bool aEnable) {
@@ -789,17 +770,6 @@ mozilla::ipc::IPCResult WebrtcGlobalChild::RecvSetAecLogging(
       StartAecLog();
     } else {
       StopAecLog();
-    }
-  }
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult WebrtcGlobalChild::RecvSetDebugMode(const int& aLevel) {
-  if (!mShutdown) {
-    if (aLevel) {
-      StartWebRtcLog(mozilla::LogLevel(aLevel));
-    } else {
-      StopWebRtcLog();
     }
   }
   return IPC_OK();
