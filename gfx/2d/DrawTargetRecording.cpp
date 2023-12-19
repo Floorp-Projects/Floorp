@@ -35,12 +35,6 @@ static void RecordingSourceSurfaceUserDataFunc(void* aUserData) {
   RecordingSourceSurfaceUserData* userData =
       static_cast<RecordingSourceSurfaceUserData*>(aUserData);
 
-  if (NS_IsMainThread()) {
-    userData->recorder->RecordSourceSurfaceDestruction(userData->refPtr);
-    delete userData;
-    return;
-  }
-
   userData->recorder->AddPendingDeletion([userData]() -> void {
     userData->recorder->RecordSourceSurfaceDestruction(userData->refPtr);
     delete userData;

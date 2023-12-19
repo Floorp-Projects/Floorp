@@ -12,6 +12,8 @@
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/WorkerRef.h"
 #include "mozilla/dom/WorkerRunnable.h"
+#include "mozilla/layers/CanvasChild.h"
+#include "mozilla/layers/ImageBridgeChild.h"
 #include "mozilla/layers/TextureRecorded.h"
 #include "mozilla/layers/SharedSurfacesChild.h"
 #include "mozilla/StaticPrefs_gfx.h"
@@ -49,7 +51,10 @@ CanvasDrawEventRecorder::CanvasDrawEventRecorder(
   mDropBufferOnZero = mDropBufferLimit;
 }
 
-CanvasDrawEventRecorder::~CanvasDrawEventRecorder() { MOZ_ASSERT(!mWorkerRef); }
+CanvasDrawEventRecorder::~CanvasDrawEventRecorder() {
+  MOZ_ASSERT(!mWorkerRef);
+  MOZ_ASSERT(mRecordedTextures.IsEmpty());
+}
 
 bool CanvasDrawEventRecorder::Init(TextureType aTextureType,
                                    gfx::BackendType aBackendType,
@@ -92,22 +97,22 @@ bool CanvasDrawEventRecorder::Init(TextureType aTextureType,
   mWriterSemaphore.reset(CrossProcessSemaphore::Create("CanvasRecorder", 0));
   auto writerSem = mWriterSemaphore->CloneHandle();
   mWriterSemaphore->CloseHandle();
-  if (!IsHandleValid(writerSem)) {
+  if (NS_WARN_IF(!IsHandleValid(writerSem))) {
     return false;
   }
 
   mReaderSemaphore.reset(CrossProcessSemaphore::Create("CanvasTranslator", 0));
   auto readerSem = mReaderSemaphore->CloneHandle();
   mReaderSemaphore->CloseHandle();
-  if (!IsHandleValid(readerSem)) {
+  if (NS_WARN_IF(!IsHandleValid(readerSem))) {
     return false;
   }
 
-  if (!mHelpers->InitTranslator(aTextureType, aBackendType,
-                                std::move(header->handle),
-                                std::move(bufferHandles), mDefaultBufferSize,
-                                std::move(readerSem), std::move(writerSem),
-                                /* aUseIPDLThread */ false)) {
+  if (NS_WARN_IF(!mHelpers->InitTranslator(
+          aTextureType, aBackendType, std::move(header->handle),
+          std::move(bufferHandles), mDefaultBufferSize, std::move(readerSem),
+          std::move(writerSem),
+          /* aUseIPDLThread */ false))) {
     return false;
   }
 
@@ -310,12 +315,52 @@ void CanvasDrawEventRecorder::CheckAndSignalReader() {
 void CanvasDrawEventRecorder::DetachResources() {
   NS_ASSERT_OWNINGTHREAD(CanvasDrawEventRecorder);
 
+  nsTHashSet<RecordedTextureData*> recordedTextures =
+      std::move(mRecordedTextures);
+  for (const auto& texture : recordedTextures) {
+    texture->DestroyOnOwningThread();
+  }
+
+  nsTHashMap<void*, ThreadSafeWeakPtr<SourceSurfaceCanvasRecording>>
+      recordedSurfaces = std::move(mRecordedSurfaces);
+  for (const auto& entry : recordedSurfaces) {
+    RefPtr<SourceSurfaceCanvasRecording> surface(entry.GetData());
+    if (surface) {
+      surface->DestroyOnOwningThread();
+    }
+  }
+
+  // There may be pending deletions waiting on the ImageBridgeChild thread for
+  // this recorder. Let's make sure we handle any outstanding events before
+  // destroying our worker reference.
+  if (mIsOnWorker) {
+    if (RefPtr<ImageBridgeChild> imageBridge =
+            ImageBridgeChild::GetSingleton()) {
+      imageBridge->FlushEvents();
+    }
+  }
+
   DrawEventRecorderPrivate::DetachResources();
 
   {
     auto lockedPendingDeletions = mPendingDeletions.Lock();
     mWorkerRef = nullptr;
   }
+
+  if (mHelpers) {
+    mHelpers->Destroy();
+  }
+}
+
+bool CanvasDrawEventRecorder::IsOnOwningThread() {
+  auto lockedPendingDeletions = mPendingDeletions.Lock();
+
+  if (mWorkerRef) {
+    return mWorkerRef->Private()->IsOnCurrentThread();
+  }
+
+  MOZ_RELEASE_ASSERT(!mIsOnWorker, "Worker already shutdown!");
+  return NS_IsMainThread();
 }
 
 void CanvasDrawEventRecorder::QueueProcessPendingDeletionsLocked(

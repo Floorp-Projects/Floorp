@@ -6,10 +6,14 @@
 
 #include "TextureRecorded.h"
 
+#include "mozilla/Atomics.h"
+#include "mozilla/dom/WorkerCommon.h"
+#include "mozilla/gfx/CanvasManagerChild.h"
+#include "mozilla/layers/CanvasChild.h"
+#include "mozilla/layers/CanvasDrawEventRecorder.h"
 #include "RecordedCanvasEventImpl.h"
 
-namespace mozilla {
-namespace layers {
+namespace mozilla::layers {
 
 // The texture ID is used in the GPU process both to lookup the real texture in
 // the canvas threads and to lookup the SurfaceDescriptor for that texture in
@@ -17,21 +21,99 @@ namespace layers {
 // recording process), otherwise an old descriptor can be picked up. This means
 // we can't use the pointer in the recording process as an ID like we do for
 // other objects.
-static int64_t sNextRecordedTextureId = 0;
+static Atomic<int64_t> sNextRecordedTextureId(0);
 
-RecordedTextureData::RecordedTextureData(
-    already_AddRefed<CanvasChild> aCanvasChild, gfx::IntSize aSize,
-    gfx::SurfaceFormat aFormat, TextureType aTextureType)
-    : mCanvasChild(aCanvasChild), mSize(aSize), mFormat(aFormat) {
-  mCanvasChild->EnsureRecorder(aSize, aFormat, aTextureType);
+RecordedTextureData::RecordedTextureData(gfx::IntSize aSize,
+                                         gfx::SurfaceFormat aFormat)
+    : mMutex("RecordedTextureData::mMutex"), mSize(aSize), mFormat(aFormat) {}
+
+RecordedTextureData::~RecordedTextureData() = default;
+
+bool RecordedTextureData::Init(TextureType aTextureType) {
+  if (NS_WARN_IF(!NS_IsMainThread() && !dom::GetCurrentThreadWorkerPrivate())) {
+    MOZ_ASSERT_UNREACHABLE(
+        "RecordedTextureData must be created on main or DOM worker threads!");
+    return false;
+  }
+
+  auto* cm = gfx::CanvasManagerChild::Get();
+  if (NS_WARN_IF(!cm)) {
+    return false;
+  }
+
+  RefPtr<CanvasChild> canvasChild = cm->GetCanvasChild();
+  if (NS_WARN_IF(!canvasChild)) {
+    return false;
+  }
+
+  RefPtr<CanvasDrawEventRecorder> recorder =
+      canvasChild->EnsureRecorder(mSize, mFormat, aTextureType);
+  if (NS_WARN_IF(!recorder)) {
+    return false;
+  }
+
+  recorder->TrackRecordedTexture(this);
+
+  MutexAutoLock lock(mMutex);
+  mRecorder = std::move(recorder);
+  mCanvasChild = std::move(canvasChild);
+  return true;
 }
 
-RecordedTextureData::~RecordedTextureData() {
+void RecordedTextureData::DestroyOnOwningThreadLocked() {
   // We need the translator to drop its reference for the DrawTarget first,
   // because the TextureData might need to destroy its DrawTarget within a lock.
+  if (RefPtr<gfx::SourceSurface> wrapper = do_AddRef(mSnapshotWrapper)) {
+    MOZ_ASSERT(mCanvasChild);
+    mCanvasChild->DetachSurface(wrapper);
+    mSnapshotWrapper = nullptr;
+  }
+  mSnapshot = nullptr;
   mDT = nullptr;
-  mCanvasChild->CleanupTexture(mTextureId);
-  mCanvasChild->RecordEvent(RecordedTextureDestruction(mTextureId));
+  if (mRecorder) {
+    mRecorder->UntrackRecordedTexture(this);
+    mRecorder = nullptr;
+  }
+  if (mCanvasChild) {
+    mCanvasChild->CleanupTexture(mTextureId);
+    mCanvasChild->RecordEvent(RecordedTextureDestruction(mTextureId));
+    mCanvasChild->RecordEvent(RecordedTextureDestruction(mTextureId));
+    mCanvasChild = nullptr;
+  }
+}
+
+void RecordedTextureData::DestroyOnOwningThread() {
+  MutexAutoLock lock(mMutex);
+  DestroyOnOwningThreadLocked();
+}
+
+void RecordedTextureData::Deallocate(LayersIPCChannel* aAllocator) {
+  // When we are deallocating, we know this is our only reference, and this is
+  // effectively the destructor. This will either happen on the main thread (for
+  // main thread recording) or the ImageBridgeChild thread (for DOM worker
+  // recordings). The only method we can race with is DestroyOnOwningThread
+  // which may be called on the DOM worker thread during worker shutdown. As
+  // such, the mutex is only necessary for these two methods.
+  mMutex.Lock();
+
+  if (!mRecorder) {
+    mMutex.Unlock();
+    delete this;
+    return;
+  }
+
+  if (mRecorder->IsOnOwningThread()) {
+    DestroyOnOwningThreadLocked();
+    mMutex.Unlock();
+    delete this;
+    return;
+  }
+
+  mRecorder->AddPendingDeletion([self = this]() -> void {
+    self->DestroyOnOwningThread();
+    delete self;
+  });
+  mMutex.Unlock();
 }
 
 void RecordedTextureData::FillInfo(TextureData::Info& aInfo) const {
@@ -47,6 +129,11 @@ void RecordedTextureData::SetRemoteTextureOwnerId(
 }
 
 bool RecordedTextureData::Lock(OpenMode aMode) {
+  if (NS_WARN_IF(!mCanvasChild)) {
+    MOZ_ASSERT_UNREACHABLE("Lock after shutdown?");
+    return false;
+  }
+
   if (!mCanvasChild->EnsureBeginTransaction()) {
     return false;
   }
@@ -80,6 +167,14 @@ bool RecordedTextureData::Lock(OpenMode aMode) {
 }
 
 void RecordedTextureData::Unlock() {
+  if (NS_WARN_IF(mLockedMode == OpenMode::OPEN_NONE)) {
+    return;
+  }
+
+  if (NS_WARN_IF(!mCanvasChild)) {
+    return;
+  }
+
   if ((mLockedMode == OpenMode::OPEN_READ_WRITE) &&
       mCanvasChild->ShouldCacheDataSurface()) {
     mSnapshot = mDT->Snapshot();
@@ -103,6 +198,11 @@ already_AddRefed<gfx::DrawTarget> RecordedTextureData::BorrowDrawTarget() {
 }
 
 void RecordedTextureData::EndDraw() {
+  if (NS_WARN_IF(!mCanvasChild)) {
+    MOZ_ASSERT_UNREACHABLE("Draw interrupted by shutdown?");
+    return;
+  }
+
   MOZ_ASSERT(mDT->hasOneRef());
   MOZ_ASSERT(mLockedMode == OpenMode::OPEN_READ_WRITE);
 
@@ -119,7 +219,7 @@ already_AddRefed<gfx::SourceSurface> RecordedTextureData::BorrowSnapshot() {
 
   // There are some failure scenarios where we have no DrawTarget and
   // BorrowSnapshot is called in an attempt to copy to a new texture.
-  if (!mDT) {
+  if (!mDT || !mCanvasChild) {
     return nullptr;
   }
 
@@ -137,8 +237,6 @@ void RecordedTextureData::ReturnSnapshot(
   }
 }
 
-void RecordedTextureData::Deallocate(LayersIPCChannel* aAllocator) {}
-
 bool RecordedTextureData::Serialize(SurfaceDescriptor& aDescriptor) {
   if (mRemoteTextureOwnerId.IsValid()) {
     aDescriptor = SurfaceDescriptorRemoteTexture(mLastRemoteTextureId,
@@ -150,18 +248,19 @@ bool RecordedTextureData::Serialize(SurfaceDescriptor& aDescriptor) {
 }
 
 void RecordedTextureData::OnForwardedToHost() {
-  mCanvasChild->OnTextureForwarded();
+  if (mCanvasChild) {
+    mCanvasChild->OnTextureForwarded();
+  }
 }
 
 TextureFlags RecordedTextureData::GetTextureFlags() const {
   // With WebRender, resource open happens asynchronously on RenderThread.
   // Use WAIT_HOST_USAGE_END to keep TextureClient alive during host side usage.
-  return TextureFlags::WAIT_HOST_USAGE_END;
+  return TextureFlags::WAIT_HOST_USAGE_END | TextureFlags::DATA_SELF_DELETING;
 }
 
 bool RecordedTextureData::RequiresRefresh() const {
   return mCanvasChild->RequiresRefresh(mTextureId);
 }
 
-}  // namespace layers
-}  // namespace mozilla
+}  // namespace mozilla::layers

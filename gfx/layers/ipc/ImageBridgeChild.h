@@ -207,6 +207,11 @@ class ImageBridgeChild final : public PImageBridgeChild,
    */
   void FlushAllImages(ImageClient* aClient, ImageContainer* aContainer);
 
+  /**
+   * Ensure all pending events to the ImageBridge thread have been processed.
+   */
+  void FlushEvents();
+
   bool IPCOpen() const override { return mCanSend; }
 
  private:
@@ -224,6 +229,8 @@ class ImageBridgeChild final : public PImageBridgeChild,
 
   void FlushAllImagesSync(SynchronousTask* aTask, ImageClient* aClient,
                           ImageContainer* aContainer);
+
+  void FlushEventsSync(SynchronousTask* aTask);
 
   void ProxyAllocShmemNow(SynchronousTask* aTask, size_t aSize,
                           mozilla::ipc::Shmem* aShmem, bool aUnsafe,

@@ -12,7 +12,6 @@
 #include "mozilla/layers/PCanvasChild.h"
 #include "mozilla/layers/SourceSurfaceSharedData.h"
 #include "mozilla/Mutex.h"
-#include "mozilla/WeakPtr.h"
 
 namespace mozilla {
 
@@ -27,8 +26,9 @@ class SourceSurface;
 namespace layers {
 class CanvasDrawEventRecorder;
 
-class CanvasChild final : public PCanvasChild, public SupportsWeakPtr {
+class CanvasChild final : public PCanvasChild {
  public:
+  MOZ_DECLARE_REFCOUNTED_TYPENAME(CanvasChild)
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CanvasChild)
   NS_DECL_OWNINGTHREAD
 
@@ -66,8 +66,9 @@ class CanvasChild final : public PCanvasChild, public SupportsWeakPtr {
    *
    * @params aTextureType the TextureType to create in the CanvasTranslator.
    */
-  void EnsureRecorder(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
-                      TextureType aTextureType);
+  RefPtr<CanvasDrawEventRecorder> EnsureRecorder(gfx::IntSize aSize,
+                                                 gfx::SurfaceFormat aFormat,
+                                                 TextureType aTextureType);
 
   /**
    * Clean up IPDL actor.
@@ -159,6 +160,8 @@ class CanvasChild final : public PCanvasChild, public SupportsWeakPtr {
 
   void CleanupTexture(int64_t aTextureId);
 
+  bool IsOnOwningThread() const;
+
  protected:
   void ActorDestroy(ActorDestroyReason aWhy) final;
 
@@ -179,7 +182,7 @@ class CanvasChild final : public PCanvasChild, public SupportsWeakPtr {
 
   static bool mDeactivated;
 
-  Mutex mMutex;
+  mutable Mutex mMutex;
   RefPtr<dom::ThreadSafeWorkerRef> mWorkerRef MOZ_GUARDED_BY(mMutex);
   RefPtr<CanvasDrawEventRecorder> mRecorder;
 

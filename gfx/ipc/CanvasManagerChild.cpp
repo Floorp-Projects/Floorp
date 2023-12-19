@@ -214,6 +214,8 @@ void CanvasManagerChild::DeactivateCanvas() {
 void CanvasManagerChild::BlockCanvas() { mBlocked = true; }
 
 RefPtr<layers::CanvasChild> CanvasManagerChild::GetCanvasChild() {
+  MOZ_ASSERT(gfxPlatform::UseRemoteCanvas());
+
   if (mBlocked) {
     return nullptr;
   }
