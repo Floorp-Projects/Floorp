@@ -42,6 +42,18 @@ bool hardFail(uint16_t code) {
   return false;
 }
 
+nsresult DNSPacket::FillBuffer(
+    std::function<int(unsigned char response[MAX_SIZE])>&& aPredicate) {
+  int response_length = aPredicate(mResponse);
+  if (response_length < 0) {
+    mBodySize = 0;
+    mStatus = NS_ERROR_UNEXPECTED;
+    return mStatus;
+  }
+
+  mBodySize = response_length;
+  return NS_OK;
+}
 // static
 nsresult DNSPacket::ParseSvcParam(unsigned int svcbIndex, uint16_t key,
                                   SvcFieldValue& field, uint16_t length,
@@ -604,10 +616,16 @@ nsresult DNSPacket::DecodeInternal(
 
   aCname.Truncate();
 
-  if (aLen < 12 || aBuffer[0] || aBuffer[1]) {
+  if (aLen < 12) {
     LOG(("TRR bad incoming DOH, eject!\n"));
     return NS_ERROR_ILLEGAL_VALUE;
   }
+
+  if (!mNativePacket && (aBuffer[0] || aBuffer[1])) {
+    LOG(("Packet ID is unexpectedly non-zero"));
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+
   uint8_t rcode = mResponse[3] & 0x0F;
   LOG(("TRR Decode %s RCODE %d\n", PromiseFlatCString(aHost).get(), rcode));
 

@@ -232,6 +232,8 @@ nsresult nsHostResolver::Init() MOZ_NO_THREAD_SAFETY_ANALYSIS {
   // It returns a success code, but no records. We only allow
   // native HTTPS records on Win 11 for now.
   sNativeHTTPSSupported = mozilla::IsWin11OrLater();
+#elif defined(XP_LINUX) && !defined(ANDROID)
+  sNativeHTTPSSupported = true;
 #endif
 
   nsCOMPtr<nsIThreadPool> threadPool = new nsThreadPool();
