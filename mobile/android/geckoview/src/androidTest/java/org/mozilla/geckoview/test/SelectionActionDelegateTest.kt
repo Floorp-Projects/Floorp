@@ -381,6 +381,8 @@ class SelectionActionDelegateTest : BaseSessionTest() {
 
         sessionRule.setPrefsUntilTestEnd(mapOf("dom.events.asyncClipboard.readText" to true))
 
+        withClipboard("clipboardReadAllow") {} // Reset clipboard data
+
         val url = createTestUrl(CLIPBOARD_READ_HTML_PATH)
         mainSession.loadUri(url)
         mainSession.waitForPageStop()
@@ -426,6 +428,8 @@ class SelectionActionDelegateTest : BaseSessionTest() {
 
         sessionRule.setPrefsUntilTestEnd(mapOf("dom.events.asyncClipboard.readText" to true))
 
+        withClipboard("clipboardReadDeny") {} // Reset clipboard data
+
         val url = createTestUrl(CLIPBOARD_READ_HTML_PATH)
         mainSession.loadUri(url)
         mainSession.waitForPageStop()
@@ -469,6 +473,8 @@ class SelectionActionDelegateTest : BaseSessionTest() {
         assumeThat("Unnecessary to run multiple times", id, equalTo("#text"))
 
         sessionRule.setPrefsUntilTestEnd(mapOf("dom.events.asyncClipboard.readText" to true))
+
+        withClipboard("clipboardReadDeactivate") {} // Reset clipboard data
 
         val url = createTestUrl(CLIPBOARD_READ_HTML_PATH)
         mainSession.loadUri(url)
