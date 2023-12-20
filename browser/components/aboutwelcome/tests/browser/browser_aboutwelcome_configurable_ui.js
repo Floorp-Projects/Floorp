@@ -5,7 +5,7 @@ const { ExperimentFakes } = ChromeUtils.importESModule(
 );
 
 const { AboutWelcomeTelemetry } = ChromeUtils.import(
-  "resource://activity-stream/aboutwelcome/lib/AboutWelcomeTelemetry.jsm"
+  "resource:///modules/aboutwelcome/AboutWelcomeTelemetry.jsm"
 );
 
 const BASE_SCREEN_CONTENT = {

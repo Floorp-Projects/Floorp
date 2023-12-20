@@ -17,3 +17,9 @@ FINAL_TARGET_FILES.actors += [
 ]
 
 JAR_MANIFESTS += ["jar.mn"]
+
+EXTRA_JS_MODULES.aboutwelcome += [
+    "modules/AboutWelcomeDefaults.jsm",
+    "modules/AboutWelcomeTelemetry.jsm",
+    "modules/AWScreenUtils.jsm",
+]

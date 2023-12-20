@@ -46,7 +46,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 const PREF_ABOUT_HOME_CACHE_TESTING =
   "browser.startup.homepage.abouthome_cache.testing";
 const ABOUT_WELCOME_URL =
-  "resource://activity-stream/aboutwelcome/aboutwelcome.html";
+  "chrome://browser/content/aboutwelcome/aboutwelcome.html";
 
 const CACHE_WORKER_URL = "resource://activity-stream/lib/cache.worker.js";
 

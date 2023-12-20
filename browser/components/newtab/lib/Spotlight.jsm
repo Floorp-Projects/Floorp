@@ -11,7 +11,7 @@ const lazy = {};
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   AboutWelcomeTelemetry:
-    "resource://activity-stream/aboutwelcome/lib/AboutWelcomeTelemetry.jsm",
+    "resource:///modules/aboutwelcome/AboutWelcomeTelemetry.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(

@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const BUNDLE_SRC =
-  "resource://activity-stream/aboutwelcome/aboutwelcome.bundle.js";
+  "chrome://browser/content/aboutwelcome/aboutwelcome.bundle.js";
 
 class Onboarding {
   constructor({ win } = {}) {
@@ -22,9 +22,7 @@ class Onboarding {
       link.rel = "stylesheet";
       link.href = href;
     };
-    addStylesheet(
-      "chrome://activity-stream/content/aboutwelcome/aboutwelcome.css"
-    );
+    addStylesheet("chrome://browser/content/aboutwelcome/aboutwelcome.css");
     const reactSrc = "resource://activity-stream/vendor/react.js";
     const domSrc = "resource://activity-stream/vendor/react-dom.js";
     // Add React script

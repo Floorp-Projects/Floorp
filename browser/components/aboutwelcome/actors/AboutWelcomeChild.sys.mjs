@@ -13,7 +13,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   AboutWelcomeDefaults:
-    "resource://activity-stream/aboutwelcome/lib/AboutWelcomeDefaults.jsm",
+    "resource:///modules/aboutwelcome/AboutWelcomeDefaults.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "log", () => {

@@ -20,7 +20,7 @@ const TRANSITION_MS = 500;
 const CONTAINER_ID = "feature-callout";
 const CONTENT_BOX_ID = "multi-stage-message-root";
 const BUNDLE_SRC =
-  "resource://activity-stream/aboutwelcome/aboutwelcome.bundle.js";
+  "chrome://browser/content/aboutwelcome/aboutwelcome.bundle.js";
 
 XPCOMUtils.defineLazyGetter(lazy, "log", () => {
   const { Logger } = ChromeUtils.importESModule(
@@ -435,7 +435,7 @@ export class FeatureCallout {
     };
     // Update styling to be compatible with about:welcome bundle
     await addStylesheet(
-      "chrome://activity-stream/content/aboutwelcome/aboutwelcome.css"
+      "chrome://browser/content/aboutwelcome/aboutwelcome.css"
     );
   }
 

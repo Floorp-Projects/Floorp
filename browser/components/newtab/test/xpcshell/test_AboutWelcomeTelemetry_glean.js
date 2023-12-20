@@ -5,7 +5,7 @@
 "use strict";
 
 const { AboutWelcomeTelemetry } = ChromeUtils.import(
-  "resource://activity-stream/aboutwelcome/lib/AboutWelcomeTelemetry.jsm"
+  "resource:///modules/aboutwelcome/AboutWelcomeTelemetry.jsm"
 );
 const TELEMETRY_PREF = "browser.newtabpage.activity-stream.telemetry";
 
