@@ -101,7 +101,7 @@ class nsICanvasRenderingContextInternal : public nsISupports,
   NS_IMETHOD SetDimensions(int32_t width, int32_t height) = 0;
 
   // Initializes the canvas after the object is constructed.
-  virtual void Initialize() {}
+  virtual nsresult Initialize() { return NS_OK; }
 
   // Initializes with an nsIDocShell and DrawTarget. The size is taken from the
   // DrawTarget.

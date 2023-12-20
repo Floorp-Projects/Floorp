@@ -24,6 +24,7 @@
 #include "mozilla/dom/HTMLCanvasElement.h"
 #include "mozilla/dom/GeneratePlaceholderCanvasData.h"
 #include "mozilla/dom/VideoFrame.h"
+#include "mozilla/gfx/CanvasManagerChild.h"
 #include "nsPresContext.h"
 
 #include "nsIInterfaceRequestorUtils.h"
@@ -1130,7 +1131,13 @@ CanvasRenderingContext2D::~CanvasRenderingContext2D() {
   }
 }
 
-void CanvasRenderingContext2D::Initialize() { AddShutdownObserver(); }
+nsresult CanvasRenderingContext2D::Initialize() {
+  if (NS_WARN_IF(!AddShutdownObserver())) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
+}
 
 JSObject* CanvasRenderingContext2D::WrapObject(
     JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
@@ -1218,8 +1225,6 @@ void CanvasRenderingContext2D::ResetBitmap(bool aFreeBuffer) {
 }
 
 void CanvasRenderingContext2D::OnShutdown() {
-  mShutdownObserver = nullptr;
-
   RefPtr<PersistentBufferProvider> provider = mBufferProvider;
 
   ResetBitmap();
@@ -1227,21 +1232,44 @@ void CanvasRenderingContext2D::OnShutdown() {
   if (provider) {
     provider->OnShutdown();
   }
+
+  if (mOffscreenCanvas) {
+    mOffscreenCanvas->Destroy();
+  }
+
+  mHasShutdown = true;
 }
 
-void CanvasRenderingContext2D::AddShutdownObserver() {
-  MOZ_ASSERT(!mShutdownObserver);
-  MOZ_ASSERT(NS_IsMainThread());
+bool CanvasRenderingContext2D::AddShutdownObserver() {
+  auto* const canvasManager = CanvasManagerChild::Get();
+  if (NS_WARN_IF(!canvasManager)) {
+    if (NS_IsMainThread()) {
+      mShutdownObserver = new CanvasShutdownObserver(this);
+      nsContentUtils::RegisterShutdownObserver(mShutdownObserver);
+      return true;
+    }
 
-  mShutdownObserver = new CanvasShutdownObserver(this);
-  nsContentUtils::RegisterShutdownObserver(mShutdownObserver);
+    mHasShutdown = true;
+    return false;
+  }
+
+  canvasManager->AddShutdownObserver(this);
+  return true;
 }
 
 void CanvasRenderingContext2D::RemoveShutdownObserver() {
   if (mShutdownObserver) {
     mShutdownObserver->OnShutdown();
     mShutdownObserver = nullptr;
+    return;
   }
+
+  auto* const canvasManager = CanvasManagerChild::MaybeGet();
+  if (!canvasManager) {
+    return;
+  }
+
+  canvasManager->RemoveShutdownObserver(this);
 }
 
 void CanvasRenderingContext2D::SetStyleFromString(const nsACString& aStr,
@@ -1864,6 +1892,10 @@ void CanvasRenderingContext2D::ReturnTarget(bool aForceReset) {
 NS_IMETHODIMP
 CanvasRenderingContext2D::InitializeWithDrawTarget(
     nsIDocShell* aShell, NotNull<gfx::DrawTarget*> aTarget) {
+  if (NS_WARN_IF(!AddShutdownObserver())) {
+    return NS_ERROR_FAILURE;
+  }
+
   RemovePostRefreshObserver();
   mDocShell = aShell;
   AddPostRefreshObserverIfNecessary();
