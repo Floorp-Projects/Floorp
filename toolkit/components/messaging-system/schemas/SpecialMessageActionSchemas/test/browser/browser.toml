@@ -33,6 +33,8 @@ support-files = [
 
 ["browser_sma_open_firefox_view.js"]
 
+["browser_sma_open_firefoxview.js"]
+
 ["browser_sma_open_private_browser_window.js"]
 
 ["browser_sma_open_protection_panel.js"]
