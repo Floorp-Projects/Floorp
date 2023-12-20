@@ -207,10 +207,6 @@
 /* Bookmarks toolbar */
 
 #PersonalToolbar {
-  /* Make the toolbar not take any vertical space when it's empty, before
-     bookmarks load. Otherwise, showing the toolbar might resize the content
-     area twice. */
-  min-height: 0;
   padding-inline: 6px;
 
   :root[uidensity=compact] & {
@@ -231,6 +227,7 @@
   }
 
   &[collapsed=true] {
+    min-height: 0;
     max-height: 0;
 
     &.instant {
@@ -269,8 +266,11 @@
   &[customizing] {
     outline: 1px dashed;
     outline-offset: -3px;
-    /* Avoid the toolbar having no height when there's no items in it */
-    min-height: 22px;
+
+    &:empty {
+      /* Avoid the toolbar having no height when there's no items in it */
+      min-height: 22px;
+    }
   }
 }
 
