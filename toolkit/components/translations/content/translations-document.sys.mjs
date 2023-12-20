@@ -881,26 +881,27 @@ export class TranslationsDocument {
    */
   updateNodesWithTranslationsAttributes() {
     // Stop the mutations so that the updates won't trigger observations.
-    this.stopMutationObserver();
-    for (const { node, translation, attribute } of this
-      .#nodesWithTranslatedAttributes) {
-      if (Cu.isDeadWrapper(node)) {
-        // The node is no longer alive.
-        ChromeUtils.addProfilerMarker(
-          "Translations",
-          { innerWindowId: this.innerWindowId },
-          "Node is no long alive."
-        );
-        continue;
+
+    this.pauseMutationObserverAndRun(() => {
+      for (const { node, translation, attribute } of this
+        .#nodesWithTranslatedAttributes) {
+        if (Cu.isDeadWrapper(node)) {
+          // The node is no longer alive.
+          ChromeUtils.addProfilerMarker(
+            "Translations",
+            { innerWindowId: this.innerWindowId },
+            "Node is no long alive."
+          );
+          continue;
+        }
+        // Update the attribute of the node with translated attribute
+        if (attribute) {
+          node.setAttribute(attribute, translation);
+        }
       }
-      // Update the attribute of the node with translated attribute
-      if (attribute) {
-        node.setAttribute(attribute, translation);
-      }
-    }
-    this.#nodesWithTranslatedAttributes.clear();
-    this.#attributeUpdateTimeout = null;
-    this.startMutationObserver();
+      this.#nodesWithTranslatedAttributes.clear();
+      this.#attributeUpdateTimeout = null;
+    });
   }
 
   /**
@@ -1034,44 +1035,52 @@ export class TranslationsDocument {
    */
   updateNodesWithTranslations() {
     // Stop the mutations so that the updates won't trigger observations.
-    this.stopMutationObserver();
-
-    for (const { node, translatedHTML } of this.#nodesWithTranslatedHTML) {
-      if (Cu.isDeadWrapper(node)) {
-        // The node is no longer alive.
-        ChromeUtils.addProfilerMarker(
-          "Translations",
-          { innerWindowId: this.innerWindowId },
-          "Node is no long alive."
-        );
-        continue;
-      }
-      switch (node.nodeType) {
-        case Node.TEXT_NODE: {
-          if (translatedHTML.trim().length !== 0) {
-            // Only update the node if there is new text.
-            node.textContent = translatedHTML;
-          }
-          break;
-        }
-        case Node.ELEMENT_NODE: {
-          // TODO (Bug 1820625) - This is slow compared to the original implementation
-          // in the addon which set the innerHTML directly. We can't set the innerHTML
-          // here, but perhaps there is another way to get back some of the performance.
-          const translationsDocument = this.domParser.parseFromString(
-            `<!DOCTYPE html><div>${translatedHTML}</div>`,
-            "text/html"
+    this.pauseMutationObserverAndRun(() => {
+      for (const { node, translatedHTML } of this.#nodesWithTranslatedHTML) {
+        if (Cu.isDeadWrapper(node)) {
+          // The node is no longer alive.
+          ChromeUtils.addProfilerMarker(
+            "Translations",
+            { innerWindowId: this.innerWindowId },
+            "Node is no long alive."
           );
-          updateElement(translationsDocument, node);
-          break;
+          continue;
+        }
+        switch (node.nodeType) {
+          case Node.TEXT_NODE: {
+            if (translatedHTML.trim().length !== 0) {
+              // Only update the node if there is new text.
+              node.textContent = translatedHTML;
+            }
+            break;
+          }
+          case Node.ELEMENT_NODE: {
+            // TODO (Bug 1820625) - This is slow compared to the original implementation
+            // in the addon which set the innerHTML directly. We can't set the innerHTML
+            // here, but perhaps there is another way to get back some of the performance.
+            const translationsDocument = this.domParser.parseFromString(
+              `<!DOCTYPE html><div>${translatedHTML}</div>`,
+              "text/html"
+            );
+            updateElement(translationsDocument, node);
+            break;
+          }
         }
       }
-    }
 
-    this.#nodesWithTranslatedHTML.clear();
-    this.#updateTimeout = null;
+      this.#nodesWithTranslatedHTML.clear();
+      this.#updateTimeout = null;
+    });
+  }
 
-    // Done mutating the DOM.
+  /**
+   * Stop the mutations so that the updates of the translations
+   * in the nodes won't trigger observations.
+   * @param {Function} run The function to update translations
+   */
+  pauseMutationObserverAndRun(run) {
+    this.stopMutationObserver();
+    run();
     this.startMutationObserver();
   }
 
