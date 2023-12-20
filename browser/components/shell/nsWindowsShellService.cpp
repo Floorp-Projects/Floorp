@@ -1477,7 +1477,7 @@ static nsresult PinCurrentAppToTaskbarWin10(bool aCheckOnly,
   // The behavior here is identical if we're only checking or if we try to pin
   // but the app is already pinned so we update the variable accordingly.
   if (!aCheckOnly) {
-    aCheckOnly = !IsCurrentAppPinnedToTaskbarSync(aAppUserModelId);
+    aCheckOnly = IsCurrentAppPinnedToTaskbarSync(aAppUserModelId);
   }
   const bool pinType = true;  // true means pin
   return ManageShortcutTaskbarPins(aCheckOnly, pinType, aShortcutPath);
