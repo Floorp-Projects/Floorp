@@ -372,7 +372,7 @@ const OPTIN_DEFAULT = {
             type: "text",
             text: {
               string_id:
-                "shopping-onboarding-opt-in-privacy-policy-and-terms-of-use2",
+                "shopping-onboarding-opt-in-privacy-policy-and-terms-of-use3",
             },
             link_keys: ["privacy_policy", "terms_of_use"],
             font_styles: "legal",
@@ -391,7 +391,7 @@ const OPTIN_DEFAULT = {
           action: {
             type: "OPEN_URL",
             data: {
-              args: "https://www.fakespot.com/privacy-policy?utm_source=review-checker&utm_campaign=privacy-policy&utm_medium=in-product",
+              args: "https://www.mozilla.org/privacy/firefox?utm_source=review-checker&utm_campaign=privacy-policy&utm_medium=in-product&utm_term=opt-in-screen",
               where: "tab",
             },
           },
