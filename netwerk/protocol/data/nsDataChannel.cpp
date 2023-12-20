@@ -12,6 +12,8 @@
 #include "nsIInputStream.h"
 #include "nsEscape.h"
 #include "nsStringStream.h"
+#include "nsIObserverService.h"
+#include "mozilla/dom/ContentParent.h"
 
 using namespace mozilla;
 
@@ -103,7 +105,42 @@ nsresult nsDataChannel::OpenContentStream(bool async, nsIInputStream** result,
   SetContentCharset(contentCharset);
   mContentLength = contentLen;
 
+  // notify "data-channel-opened" observers
+  MaybeSendDataChannelOpenNotification();
+
   bufInStream.forget(result);
 
+  return NS_OK;
+}
+
+nsresult nsDataChannel::MaybeSendDataChannelOpenNotification() {
+  nsCOMPtr<nsIObserverService> obsService = services::GetObserverService();
+  if (!obsService) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsILoadInfo> loadInfo;
+  nsresult rv = GetLoadInfo(getter_AddRefs(loadInfo));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  bool isTopLevel;
+  rv = loadInfo->GetIsTopLevelLoad(&isTopLevel);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  uint64_t browsingContextID;
+  rv = loadInfo->GetBrowsingContextID(&browsingContextID);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  if ((browsingContextID != 0 && isTopLevel) ||
+      !loadInfo->TriggeringPrincipal()->IsSystemPrincipal()) {
+    obsService->NotifyObservers(static_cast<nsIChannel*>(this),
+                                "data-channel-opened", nullptr);
+  }
   return NS_OK;
 }

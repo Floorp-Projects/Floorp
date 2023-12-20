@@ -167,6 +167,8 @@ skip-if = ["socketprocess_networking"] # Bug 1772209
 
 ["browser_speculative_connection_link_header.js"]
 
+["browser_test_data_channel_observer.js"]
+
 ["browser_test_favicon.js"]
 skip-if = ["verify && (os == 'linux' || os == 'mac')"]
 support-files = [
