@@ -25,7 +25,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.mozilla.fenix.R
-import org.mozilla.fenix.compose.Divider
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.theme.Theme
@@ -43,8 +42,6 @@ fun NavigationBar(actionItems: List<ActionItem>) {
             .height(48.dp)
             .fillMaxWidth(),
     ) {
-        Divider()
-
         Row(
             modifier = Modifier
                 .align(Alignment.Center)

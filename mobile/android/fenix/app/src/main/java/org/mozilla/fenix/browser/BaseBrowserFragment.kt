@@ -128,13 +128,13 @@ import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.FindInPageIntegration
 import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.components.metrics.MetricsUtils
+import org.mozilla.fenix.components.toolbar.BottomToolbarContainerView
 import org.mozilla.fenix.components.toolbar.BrowserFragmentState
 import org.mozilla.fenix.components.toolbar.BrowserFragmentStore
 import org.mozilla.fenix.components.toolbar.BrowserToolbarView
 import org.mozilla.fenix.components.toolbar.DefaultBrowserToolbarController
 import org.mozilla.fenix.components.toolbar.DefaultBrowserToolbarMenuController
 import org.mozilla.fenix.components.toolbar.IncompleteRedesignToolbarFeature
-import org.mozilla.fenix.components.toolbar.NavigationBarView
 import org.mozilla.fenix.components.toolbar.ToolbarIntegration
 import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.components.toolbar.interactor.BrowserToolbarInteractor
@@ -452,9 +452,19 @@ abstract class BaseBrowserFragment :
         )
 
         if (IncompleteRedesignToolbarFeature(context.settings()).isEnabled) {
-            NavigationBarView(
+            val toolbarView = if (context.components.settings.toolbarPosition == ToolbarPosition.BOTTOM) {
+                // Should refactor this so there is no added view to remove to begin with
+                // https://bugzilla.mozilla.org/show_bug.cgi?id=1870976
+                binding.browserLayout.removeView(browserToolbarView.view)
+                browserToolbarView.view
+            } else {
+                null
+            }
+
+            BottomToolbarContainerView(
                 context = context,
                 container = binding.browserLayout,
+                androidToolbarView = toolbarView,
             )
         }
 

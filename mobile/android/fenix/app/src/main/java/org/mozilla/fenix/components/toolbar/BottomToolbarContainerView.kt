@@ -6,9 +6,13 @@ package org.mozilla.fenix.components.toolbar
 
 import android.content.Context
 import android.view.Gravity
+import android.view.View
 import android.view.ViewGroup
+import androidx.compose.foundation.layout.Column
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.coordinatorlayout.widget.CoordinatorLayout
+import org.mozilla.fenix.compose.Divider
 import org.mozilla.fenix.theme.FirefoxTheme
 
 /**
@@ -17,19 +21,29 @@ import org.mozilla.fenix.theme.FirefoxTheme
  * @param context The Context the view is running in.
  * @param container The ViewGroup into which the NavigationBar composable will be added.
  * @param navigationItems A list of [ActionItem] objects representing the items to be displayed in the navigation bar.
+ * @param androidToolbarView An option toolbar view that will be added atop of the navigation bar.
  * Defaults to [NavigationItems.defaultItems] which provides a standard set of navigation items.
  */
-class NavigationBarView(
+class BottomToolbarContainerView(
     context: Context,
     container: ViewGroup,
     navigationItems: List<ActionItem> = NavigationItems.defaultItems,
+    androidToolbarView: View? = null,
 ) {
 
     init {
         val composeView = ComposeView(context).apply {
             setContent {
                 FirefoxTheme {
-                    NavigationBar(navigationItems)
+                    Column {
+                        if (androidToolbarView != null) {
+                            AndroidView(factory = { _ -> androidToolbarView })
+                        } else {
+                            Divider()
+                        }
+
+                        NavigationBar(actionItems = navigationItems)
+                    }
                 }
             }
         }
