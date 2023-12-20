@@ -87,7 +87,7 @@ AgileReference& AgileReference::operator=(AgileReference&& aOther) noexcept {
 }
 
 HRESULT
-AgileReference::Resolve(REFIID aIid, void** aOutInterface) const {
+AgileReference::ResolveRaw(REFIID aIid, void** aOutInterface) const {
   MOZ_ASSERT(aOutInterface);
   MOZ_ASSERT(mAgileRef);
   MOZ_ASSERT(IsCOMInitializedOnCurrentThread());
