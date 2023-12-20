@@ -28,6 +28,10 @@ job-defaults:
                 by-project:
                     mozilla-(central|beta|esr.*): "1"
                     default: ""
+            DO_MOBILE_EXPERIMENTS:
+                by-project:
+                    mozilla-central: ""  # TODO: enable after firefox-android merge
+                    default: ""
             USE_MOZILLA_CENTRAL:
                 by-project:
                     mozilla-central: "1"
@@ -65,6 +69,9 @@ jobs:
                   type: file
                 - name: 'public/build/remote-settings.diff'
                   path: '/home/worker/artifacts/remote-settings.diff'
+                  type: file
+                - name: 'public/build/initial_experiments.diff'
+                  path: '/home/worker/artifacts/initial_experiments.diff'
                   type: file
         scopes:
             - secrets:get:project/releng/gecko/build/level-{level}/arc-phabricator-token
