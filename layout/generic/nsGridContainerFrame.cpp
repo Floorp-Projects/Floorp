@@ -9311,8 +9311,7 @@ nsFrameState nsGridContainerFrame::ComputeSelfSubgridMasonryBits() const {
   // which prevents us from being a subgrid in this case (but not always).
   // We will also need to check our containing scroll frame for this property.
   // https://drafts.csswg.org/css-display-3/#establish-an-independent-formatting-context
-  const auto* display = StyleDisplay();
-  if (display->IsContainLayout() || display->IsContainPaint()) {
+  if (ShouldInhibitSubgridDueToIFC(this)) {
     return bits;
   }
 
@@ -9325,8 +9324,7 @@ nsFrameState nsGridContainerFrame::ComputeSelfSubgridMasonryBits() const {
     // If we find our containing frame has 'contain:layout/paint' we can't be
     // subgrid, for the same reasons as above. This can happen when this frame
     // is itself a grid item.
-    const auto* parentDisplay = parent->StyleDisplay();
-    if (parentDisplay->IsContainLayout() || parentDisplay->IsContainPaint()) {
+    if (ShouldInhibitSubgridDueToIFC(parent)) {
       return bits;
     }
     outerFrame = parent;
@@ -9961,6 +9959,16 @@ bool nsGridContainerFrame::GridItemShouldStretch(const nsIFrame* aChild,
                              : pos->UsedAlignSelf(Style())._0;
   return alignment == StyleAlignFlags::NORMAL ||
          alignment == StyleAlignFlags::STRETCH;
+}
+
+bool nsGridContainerFrame::ShouldInhibitSubgridDueToIFC(
+    const nsIFrame* aFrame) {
+  // Just checking for things that make us establish an independent formatting
+  // context (IFC) and hence prevent us from being a subgrid:
+  // * contain:layout and contain:paint each make us establish an IFC.
+  // XXXdholbert We should also check whether we're out-of-flow (bug 1800563).
+  const auto* display = aFrame->StyleDisplay();
+  return display->IsContainLayout() || display->IsContainPaint();
 }
 
 nsGridContainerFrame* nsGridContainerFrame::GetGridContainerFrame(
