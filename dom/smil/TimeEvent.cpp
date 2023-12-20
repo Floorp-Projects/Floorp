@@ -53,6 +53,5 @@ using namespace mozilla::dom;
 already_AddRefed<TimeEvent> NS_NewDOMTimeEvent(EventTarget* aOwner,
                                                nsPresContext* aPresContext,
                                                InternalSMILTimeEvent* aEvent) {
-  RefPtr<TimeEvent> it = new TimeEvent(aOwner, aPresContext, aEvent);
-  return it.forget();
+  return do_AddRef(new TimeEvent(aOwner, aPresContext, aEvent));
 }

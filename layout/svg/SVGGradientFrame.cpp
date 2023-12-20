@@ -481,8 +481,7 @@ already_AddRefed<gfxPattern> SVGLinearGradientFrame::CreateGradient() {
   float x2 = GetLengthValue(dom::SVGLinearGradientElement::ATTR_X2);
   float y2 = GetLengthValue(dom::SVGLinearGradientElement::ATTR_Y2);
 
-  RefPtr<gfxPattern> pattern = new gfxPattern(x1, y1, x2, y2);
-  return pattern.forget();
+  return do_AddRef(new gfxPattern(x1, y1, x2, y2));
 }
 
 // -------------------------------------------------------------------------
@@ -591,8 +590,7 @@ already_AddRefed<gfxPattern> SVGRadialGradientFrame::CreateGradient() {
   float fy = GetLengthValue(dom::SVGRadialGradientElement::ATTR_FY, cy);
   float fr = GetLengthValue(dom::SVGRadialGradientElement::ATTR_FR);
 
-  RefPtr<gfxPattern> pattern = new gfxPattern(fx, fy, fr, cx, cy, r);
-  return pattern.forget();
+  return do_AddRef(new gfxPattern(fx, fy, fr, cx, cy, r));
 }
 
 }  // namespace mozilla

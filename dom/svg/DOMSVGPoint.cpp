@@ -126,8 +126,7 @@ already_AddRefed<DOMSVGPoint> DOMSVGPoint::MatrixTransform(
     return nullptr;
   }
   auto pt = matrix2D->TransformPoint(InternalItem());
-  RefPtr<DOMSVGPoint> newPoint = new DOMSVGPoint(ToPoint(pt));
-  return newPoint.forget();
+  return do_AddRef(new DOMSVGPoint(ToPoint(pt)));
 }
 
 void DOMSVGPoint::InsertingIntoList(DOMSVGPointList* aList, uint32_t aListIndex,

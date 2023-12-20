@@ -238,9 +238,8 @@ already_AddRefed<DOMSVGPoint> SVGGeometryElement::GetPointAtLength(
     return nullptr;
   }
 
-  RefPtr<DOMSVGPoint> point = new DOMSVGPoint(path->ComputePointAtLength(
-      clamped(distance, 0.f, path->ComputeLength())));
-  return point.forget();
+  return do_AddRef(new DOMSVGPoint(path->ComputePointAtLength(
+      clamped(distance, 0.f, path->ComputeLength()))));
 }
 
 float SVGGeometryElement::GetPathLengthScale(PathLengthScaleForType aFor) {
