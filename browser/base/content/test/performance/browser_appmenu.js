@@ -34,6 +34,7 @@ const EXPECTED_APPMENU_OPEN_REFLOWS = [
 
 add_task(async function () {
   await ensureNoPreloadedBrowser();
+  await ensureAnimationsFinished();
   await disableFxaBadge();
 
   let textBoxRect = gURLBar

@@ -24,28 +24,15 @@ add_task(async function () {
     let frame = frames[i],
       previousFrame = frames[i - 1];
     let rects = compareFrames(frame, previousFrame);
-
-    if (!alreadyFocused) {
-      // The first screenshot we get shows an unfocused browser window for some
-      // reason. See bug 1445161.
-      //
-      // We'll assume the changes we are seeing are due to this focus change if
-      // there are at least 5 areas that changed near the top of the screen,
-      // but will only ignore this once (hence the alreadyFocused variable).
-      //
-      // On Linux we expect just one rect because we don't draw titlebar
-      // buttons in the tab bar, so we just get a whole-tab-bar color-switch.
-      const minRects = AppConstants.platform == "linux" ? 0 : 5;
-      if (rects.length > minRects && rects.every(r => r.y2 < 100)) {
-        alreadyFocused = true;
-        todo(
-          false,
-          "bug 1445161 - the window should be focused at first paint, " +
-            rects.toSource()
-        );
-        continue;
-      }
+    if (!alreadyFocused && isLikelyFocusChange(rects, frame)) {
+      todo(
+        false,
+        "bug 1445161 - the window should be focused at first paint, " +
+          rects.toSource()
+      );
+      continue;
     }
+    alreadyFocused = true;
 
     rects = rects.filter(rect => {
       let width = frame.width;
