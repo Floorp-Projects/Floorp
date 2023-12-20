@@ -774,7 +774,7 @@ class XPCShellTestThread(Thread):
         expect_pass = self.test_object["expected"] == "pass"
 
         # By default self.appPath will equal the gre dir. If specified in the
-        # xpcshell.ini file, set a different app dir for this test.
+        # xpcshell.toml file, set a different app dir for this test.
         if self.app_dir_key and self.app_dir_key in self.test_object:
             rel_app_dir = self.test_object[self.app_dir_key]
             rel_app_dir = os.path.join(self.xrePath, rel_app_dir)
@@ -1033,16 +1033,16 @@ class XPCShellTests(object):
             if os.path.isfile(manifest):
                 return TestManifest([manifest], strict=True)
             else:
-                ini_path = os.path.join(manifest, "xpcshell.ini")
+                toml_path = os.path.join(manifest, "xpcshell.toml")
         else:
-            ini_path = os.path.join(SCRIPT_DIR, "tests", "xpcshell.ini")
+            toml_path = os.path.join(SCRIPT_DIR, "tests", "xpcshell.toml")
 
-        if os.path.exists(ini_path):
-            return TestManifest([ini_path], strict=True)
+        if os.path.exists(toml_path):
+            return TestManifest([toml_path], strict=True)
         else:
             self.log.error(
                 "Failed to find manifest at %s; use --manifest "
-                "to set path explicitly." % ini_path
+                "to set path explicitly." % toml_path
             )
             sys.exit(1)
 
@@ -1066,7 +1066,7 @@ class XPCShellTests(object):
         return test_object
 
     def buildTestList(self, test_tags=None, test_paths=None, verify=False):
-        """Reads the xpcshell.ini manifest and set self.alltests to an array.
+        """Reads the xpcshell.toml manifest and set self.alltests to an array.
 
         Given the parameters, this method compiles a list of tests to be run
         that matches the criteria set by parameters.
@@ -1704,7 +1704,7 @@ class XPCShellTests(object):
         if options.get("rerun_failures"):
             if os.path.exists(options.get("failure_manifest")):
                 rerun_manifest = os.path.join(
-                    os.path.dirname(options["failure_manifest"]), "rerun.ini"
+                    os.path.dirname(options["failure_manifest"]), "rerun.toml"
                 )
                 shutil.copyfile(options["failure_manifest"], rerun_manifest)
                 os.remove(options["failure_manifest"])

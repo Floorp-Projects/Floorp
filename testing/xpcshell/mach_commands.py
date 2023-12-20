@@ -96,11 +96,11 @@ class XPCShellRunner(MozbuildObject):
             kwargs["utility_path"] = self.bindir
 
         if kwargs["manifest"] is None:
-            kwargs["manifest"] = os.path.join(tests_dir, "xpcshell.ini")
+            kwargs["manifest"] = os.path.join(tests_dir, "xpcshell.toml")
 
         if kwargs["failure_manifest"] is None:
             kwargs["failure_manifest"] = os.path.join(
-                self.statedir, "xpcshell.failures.ini"
+                self.statedir, "xpcshell.failures.toml"
             )
 
         # Use the object directory for the temp directory to minimize the chance
@@ -158,7 +158,7 @@ class AndroidXPCShellRunner(MozbuildObject):
 
         if not kwargs["manifest"]:
             kwargs["manifest"] = os.path.join(
-                self.topobjdir, "_tests/xpcshell/xpcshell.ini"
+                self.topobjdir, "_tests/xpcshell/xpcshell.toml"
             )
 
         if not kwargs["symbolsPath"]:
