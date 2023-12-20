@@ -214,7 +214,7 @@ shopping-onboarding-dynamic-subtitle-1 = See how reliable product reviews are on
 shopping-onboarding-single-subtitle = See how reliable product reviews are on <b>{ $currentSite }</b> before you buy. Review Checker, an experimental feature from { -brand-product-name }, is built right into the browser.
 
 shopping-onboarding-body = Using the power of { -fakespot-brand-full-name }, we help you avoid biased and inauthentic reviews. Our AI model is always improving to protect you as you shop. <a data-l10n-name="learn_more">Learn more</a>
-shopping-onboarding-opt-in-privacy-policy-and-terms-of-use2 = By selecting “{ shopping-onboarding-opt-in-button }“ you agree to { -fakespot-brand-name }’s <a data-l10n-name="privacy_policy">privacy policy</a> and <a data-l10n-name="terms_of_use">terms of use.</a>
+shopping-onboarding-opt-in-privacy-policy-and-terms-of-use3 = By selecting “{ shopping-onboarding-opt-in-button }“ you agree to { -brand-product-name }’s <a data-l10n-name="privacy_policy">privacy policy</a> and { -fakespot-brand-name }’s <a data-l10n-name="terms_of_use">terms of use.</a>
 shopping-onboarding-opt-in-button = Yes, try it
 shopping-onboarding-not-now-button = Not now
 shopping-onboarding-dialog-close-button =
