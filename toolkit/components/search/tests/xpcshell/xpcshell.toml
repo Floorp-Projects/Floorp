@@ -156,8 +156,6 @@ tags = "remotesettings searchmain"
 
 ["test_missing_engine.js"]
 
-["test_multipleIcons.js"]
-
 ["test_nodb_pluschanges.js"]
 
 ["test_notifications.js"]
