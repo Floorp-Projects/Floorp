@@ -8,7 +8,7 @@ const { PanelTestProvider } = ChromeUtils.importESModule(
 );
 
 const { AboutWelcomeTelemetry } = ChromeUtils.import(
-  "resource://activity-stream/aboutwelcome/lib/AboutWelcomeTelemetry.jsm"
+  "resource:///modules/aboutwelcome/AboutWelcomeTelemetry.jsm"
 );
 
 async function waitForClick(selector, win) {

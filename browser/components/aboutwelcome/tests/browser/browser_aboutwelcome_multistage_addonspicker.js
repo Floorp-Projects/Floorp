@@ -5,10 +5,10 @@ const { AboutWelcomeParent } = ChromeUtils.importESModule(
 );
 
 const { AboutWelcomeTelemetry } = ChromeUtils.import(
-  "resource://activity-stream/aboutwelcome/lib/AboutWelcomeTelemetry.jsm"
+  "resource:///modules/aboutwelcome/AboutWelcomeTelemetry.jsm"
 );
 const { AWScreenUtils } = ChromeUtils.import(
-  "resource://activity-stream/aboutwelcome/lib/AWScreenUtils.jsm"
+  "resource:///modules/aboutwelcome/AWScreenUtils.jsm"
 );
 const { InternalTestingProfileMigrator } = ChromeUtils.importESModule(
   "resource:///modules/InternalTestingProfileMigrator.sys.mjs"

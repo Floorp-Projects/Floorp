@@ -8,7 +8,7 @@
  */
 
 const { AboutWelcomeTelemetry } = ChromeUtils.import(
-  "resource://activity-stream/aboutwelcome/lib/AboutWelcomeTelemetry.jsm"
+  "resource:///modules/aboutwelcome/AboutWelcomeTelemetry.jsm"
 );
 
 const TEST_DEFAULT_CONTENT = [

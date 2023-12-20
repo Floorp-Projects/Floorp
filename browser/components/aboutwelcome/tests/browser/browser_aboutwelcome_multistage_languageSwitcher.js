@@ -5,7 +5,7 @@ const { getAddonAndLocalAPIsMocker } = ChromeUtils.importESModule(
 );
 
 const { AWScreenUtils } = ChromeUtils.import(
-  "resource://activity-stream/aboutwelcome/lib/AWScreenUtils.jsm"
+  "resource:///modules/aboutwelcome/AWScreenUtils.jsm"
 );
 
 const sandbox = sinon.createSandbox();

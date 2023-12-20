@@ -45,9 +45,7 @@ function renderMultistage(ready) {
   window.AWEvaluateScreenTargeting = receive("EVALUATE_SCREEN_TARGETING");
 
   // Update styling to be compatible with about:welcome.
-  addStylesheet(
-    "chrome://activity-stream/content/aboutwelcome/aboutwelcome.css"
-  );
+  addStylesheet("chrome://browser/content/aboutwelcome/aboutwelcome.css");
 
   document.body.classList.add("onboardingContainer");
   document.body.id = "multi-stage-message-root";
@@ -70,7 +68,7 @@ function renderMultistage(ready) {
 
   // Load the bundle to render the content as configured.
   document.head.appendChild(document.createElement("script")).src =
-    "resource://activity-stream/aboutwelcome/aboutwelcome.bundle.js";
+    "chrome://browser/content/aboutwelcome/aboutwelcome.bundle.js";
   ready();
 }
 
