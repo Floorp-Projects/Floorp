@@ -6,7 +6,6 @@ import React, { PureComponent } from "react";
 import { div, button, span } from "react-dom-factories";
 import PropTypes from "prop-types";
 import { connect } from "../../utils/connect";
-import { createLocation } from "../../utils/location";
 import actions from "../../actions";
 import {
   getSelectedSource,
@@ -14,12 +13,12 @@ import {
   getSelectedSourceTextContent,
   getPrettySource,
   getPaneCollapse,
-  getGeneratedSource,
   isSourceBlackBoxed,
   canPrettyPrintSource,
   getPrettyPrintMessage,
   isSourceOnSourceMapIgnoreList,
   isSourceMapIgnoreListEnabled,
+  getSelectedMappedSource,
 } from "../../selectors";
 
 import { isPretty, getFilename, shouldBlackbox } from "../../utils/source";
@@ -169,30 +168,32 @@ class SourceFooter extends PureComponent {
   }
 
   renderSourceSummary() {
-    const { mappedSource, jumpToMappedLocation, selectedSource } = this.props;
+    const { mappedSource, jumpToMappedLocation, selectedLocation } = this.props;
 
-    if (!mappedSource || !selectedSource || !selectedSource.isOriginal) {
+    if (!mappedSource) {
       return null;
     }
 
-    const filename = getFilename(mappedSource);
     const tooltip = L10N.getFormatStr(
-      "sourceFooter.mappedSourceTooltip",
+      mappedSource.isOriginal
+        ? "sourceFooter.mappedOriginalSource.tooltip"
+        : "sourceFooter.mappedGeneratedSource.tooltip",
+      mappedSource.url
+    );
+    const filename = getFilename(mappedSource);
+    const label = L10N.getFormatStr(
+      mappedSource.isOriginal
+        ? "sourceFooter.mappedOriginalSource.title"
+        : "sourceFooter.mappedGeneratedSource.title",
       filename
     );
-    const title = L10N.getFormatStr("sourceFooter.mappedSource", filename);
-    const mappedSourceLocation = createLocation({
-      source: selectedSource,
-      line: 1,
-      column: 1,
-    });
     return button(
       {
         className: "mapped-source",
-        onClick: () => jumpToMappedLocation(mappedSourceLocation),
+        onClick: () => jumpToMappedLocation(selectedLocation),
         title: tooltip,
       },
-      span(null, title)
+      span(null, label)
     );
   }
 
@@ -262,7 +263,7 @@ const mapStateToProps = state => {
       isSourceMapIgnoreListEnabled(state) &&
       isSourceOnSourceMapIgnoreList(state, selectedSource),
     sourceLoaded: !!sourceTextContent,
-    mappedSource: getGeneratedSource(state, selectedSource),
+    mappedSource: getSelectedMappedSource(state),
     prettySource: getPrettySource(
       state,
       selectedSource ? selectedSource.id : null

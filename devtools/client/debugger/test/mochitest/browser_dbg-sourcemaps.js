@@ -99,10 +99,33 @@ add_task(async function () {
   );
 
   info("Click on jump to generated source link from editor's footer");
-  findElement(dbg, "sourceMapLink").click();
+  let mappedSourceLink = findElement(dbg, "mappedSourceLink");
+  is(
+    mappedSourceLink.textContent,
+    "To bundle.js",
+    "The link to mapped source mentions the bundle"
+  );
+  mappedSourceLink.click();
 
   await waitForSelectedSource(dbg, bundleSrc);
   assertPausedAtSourceAndLine(dbg, bundleSrc.id, 62);
+  // The mapped source link is computed asynchronously when we are on the bundle
+  mappedSourceLink = await waitFor(() => findElement(dbg, "mappedSourceLink"));
+  mappedSourceLink = findElement(dbg, "mappedSourceLink");
+  is(
+    mappedSourceLink.textContent,
+    "From entry.js",
+    "The link to mapped source mentions the original source"
+  );
+
+  info("Move the cursor within the bundle to another original source");
+  getCM(dbg).setCursor({ line: 70, ch: 0 });
+  mappedSourceLink = await waitFor(() => findElement(dbg, "mappedSourceLink"));
+  is(
+    mappedSourceLink.textContent,
+    "From times2.js",
+    "The link to mapped source updates to the newly selected original source within the bundle"
+  );
 });
 
 function assertBreakpointExists(dbg, source, line) {

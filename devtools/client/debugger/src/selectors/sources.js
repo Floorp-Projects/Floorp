@@ -11,6 +11,7 @@ import { isFulfilled } from "../utils/async-value";
 
 import { originalToGeneratedId } from "devtools/client/shared/source-map-loader/index";
 import { prefs } from "../utils/prefs";
+import { UNDEFINED_LOCATION, NO_LOCATION } from "../reducers/sources";
 
 import {
   hasSourceActor,
@@ -108,6 +109,58 @@ export function getSourceCount(state) {
 
 export function getSelectedLocation(state) {
   return state.sources.selectedLocation;
+}
+
+/**
+ * Return the "mapped" location for the currently selected location:
+ * - When selecting a location in an original source, returns
+ *   the related location in the bundle source.
+ *
+ * - When selecting a location in a bundle source, returns
+ *   the related location in the original source. This may return undefined
+ *   while we are still computing this information. (we need to query the asynchronous SourceMap service)
+ *
+ * - Otherwise, when selecting a location in a source unrelated to source map
+ *   or a pretty printed source, returns null.
+ */
+export function getSelectedMappedSource(state) {
+  const selectedLocation = getSelectedLocation(state);
+  if (!selectedLocation) {
+    return null;
+  }
+
+  // Don't map pretty printed to its related compressed source
+  if (selectedLocation.source.isPrettyPrinted) {
+    return null;
+  }
+
+  // If we are on a bundle with a functional source-map,
+  // the `selectLocation` action should compute the `selectedOriginalLocation` field.
+  if (
+    !selectedLocation.source.isOriginal &&
+    isSourceActorWithSourceMap(state, selectedLocation.sourceActor.id)
+  ) {
+    const { selectedOriginalLocation } = state.sources;
+    // Return undefined if we are still loading the source map.
+    // `selectedOriginalLocation` will be set to undefined instead of null
+    if (
+      selectedOriginalLocation &&
+      selectedOriginalLocation != UNDEFINED_LOCATION &&
+      selectedOriginalLocation != NO_LOCATION
+    ) {
+      return selectedOriginalLocation.source;
+    }
+    return null;
+  }
+
+  const mappedSource = getGeneratedSource(state, selectedLocation.source);
+  // getGeneratedSource will return the exact same source object on sources
+  // that don't map to any original source. In this case, return null
+  // as that's most likely a regular source, not using source maps.
+  if (mappedSource == selectedLocation.source) {
+    return null;
+  }
+  return mappedSource || null;
 }
 
 export const getSelectedSource = createSelector(

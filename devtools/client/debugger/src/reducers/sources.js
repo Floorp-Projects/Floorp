@@ -11,6 +11,9 @@ import { originalToGeneratedId } from "devtools/client/shared/source-map-loader/
 import { prefs } from "../utils/prefs";
 import { createPendingSelectedLocation } from "../utils/location";
 
+export const UNDEFINED_LOCATION = Symbol("Undefined location");
+export const NO_LOCATION = Symbol("No location");
+
 export function initialSourcesState(state) {
   /* eslint sort-keys: "error" */
   return {
@@ -98,6 +101,15 @@ export function initialSourcesState(state) {
     selectedLocation: undefined,
 
     /**
+     * When selectedLocation refers to a generated source mapping to an original source
+     * via a source-map, refers to the related original location.
+     *
+     * This is UNDEFINED_LOCATION by default and will switch to NO_LOCATION asynchronously after location
+     * selection if there is no valid original location to map to.
+     */
+    selectedOriginalLocation: UNDEFINED_LOCATION,
+
+    /**
      * By default, if we have a source-mapped source, we would automatically try
      * to select and show the content of the original source. But, if we explicitly
      * select a generated source, we remember this choice. That, until we explicitly
@@ -134,6 +146,7 @@ function update(state = initialSourcesState(), action) {
       return {
         ...state,
         selectedLocation: action.location,
+        selectedOriginalLocation: UNDEFINED_LOCATION,
         pendingSelectedLocation,
         shouldSelectOriginalLocation: action.shouldSelectOriginalLocation,
       };
@@ -146,7 +159,18 @@ function update(state = initialSourcesState(), action) {
       return {
         ...state,
         selectedLocation: null,
+        selectedOriginalLocation: UNDEFINED_LOCATION,
         pendingSelectedLocation,
+      };
+    }
+
+    case "SET_ORIGINAL_SELECTED_LOCATION": {
+      if (action.location != state.selectedLocation) {
+        return state;
+      }
+      return {
+        ...state,
+        selectedOriginalLocation: action.originalLocation,
       };
     }
 
@@ -295,6 +319,7 @@ function removeSourcesAndActors(state, action) {
 
     if (newState.selectedLocation?.source == removedSource) {
       newState.selectedLocation = null;
+      newState.selectedOriginalLocation = UNDEFINED_LOCATION;
     }
   }
 
@@ -319,6 +344,7 @@ function removeSourcesAndActors(state, action) {
 
     if (newState.selectedLocation?.sourceActor == removedActor) {
       newState.selectedLocation = null;
+      newState.selectedOriginalLocation = UNDEFINED_LOCATION;
     }
   }
 

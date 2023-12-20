@@ -1770,7 +1770,7 @@ const selectors = {
   stepIn: ".stepIn.active",
   trace: ".debugger-trace-menu-button",
   prettyPrintButton: ".source-footer .prettyPrint",
-  sourceMapLink: ".source-footer .mapped-source",
+  mappedSourceLink: ".source-footer .mapped-source",
   sourcesFooter: ".sources-panel .source-footer",
   editorFooter: ".editor-pane .source-footer",
   sourceNode: i => `.sources-list .tree-node:nth-child(${i}) .node`,

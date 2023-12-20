@@ -44,8 +44,10 @@ export function createLocation({
 export function debuggerToSourceMapLocation(location) {
   return {
     sourceId: location.source.id,
-    line: location.line,
-    column: location.column,
+    // In case of errors loading the source, we might not have a precise location.
+    // Defaults to first line and column.
+    line: location.line || 1,
+    column: location.column || 0,
   };
 }
 
