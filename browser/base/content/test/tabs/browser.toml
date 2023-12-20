@@ -315,6 +315,8 @@ skip-if = ["true"] # Bug 1616418 Bug 1549985
 
 ["browser_tab_play.js"]
 
+["browser_tab_preview.js"]
+
 ["browser_tab_tooltips.js"]
 
 ["browser_tabswitch_contextmenu.js"]
