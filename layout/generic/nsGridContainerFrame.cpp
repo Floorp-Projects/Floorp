@@ -9315,28 +9315,29 @@ nsFrameState nsGridContainerFrame::ComputeSelfSubgridMasonryBits() const {
     return bits;
   }
 
-  // Skip our scroll frame and such if we have it.
-  // This will store the outermost frame that shares our content node:
-  const nsIFrame* outerFrame = this;
-  // ...and this will store that frame's parent:
+  // Skip over our scroll frame and such if we have it, to find our "parent
+  // grid", if we have one.
+
+  // After this loop, 'parent' will represent the parent of the outermost frame
+  // that shares our content node. (Normally this is just our parent frame, but
+  // if we're e.g. a scrolled frame, then this will be the parent of our
+  // wrapper-scrollable-frame.) If 'parent' turns out to be a grid container,
+  // then it's our "parent grid", and we could potentially be a subgrid of it.
   auto* parent = GetParent();
   while (parent && parent->GetContent() == GetContent()) {
-    // If we find our containing frame has 'contain:layout/paint' we can't be
-    // subgrid, for the same reasons as above. This can happen when this frame
-    // is itself a grid item.
+    // If we find our containing frame (e.g. our scroll frame) can't be a
+    // subgrid, then we can't be a subgrid, for the same reasons as above. This
+    // can happen when this frame is itself a grid item with "overflow:scroll"
+    // or similar.
     if (ShouldInhibitSubgridDueToIFC(parent)) {
       return bits;
     }
-    outerFrame = parent;
     parent = parent->GetParent();
   }
-  const nsGridContainerFrame* gridParent = do_QueryFrame(parent);
-  if (gridParent) {
+  const nsGridContainerFrame* parentGrid = do_QueryFrame(parent);
+  if (parentGrid) {
     bool isOrthogonal =
         GetWritingMode().IsOrthogonalTo(parent->GetWritingMode());
-    // NOTE: our NS_FRAME_OUT_OF_FLOW isn't set yet so we check our style.
-    bool isOutOfFlow =
-        outerFrame->StyleDisplay()->IsAbsolutelyPositionedStyle();
     bool isColSubgrid = pos->mGridTemplateColumns.IsSubgrid();
     // Subgridding a parent masonry axis makes us use masonry layout too,
     // unless our other axis is a masonry axis.
@@ -9346,15 +9347,6 @@ nsFrameState nsGridContainerFrame::ComputeSelfSubgridMasonryBits() const {
       isColSubgrid = false;
       if (!HasAnyStateBits(NS_STATE_GRID_IS_ROW_MASONRY)) {
         bits |= NS_STATE_GRID_IS_COL_MASONRY;
-      }
-    }
-    // OOF subgrids don't create tracks in the parent, so we need to check that
-    // it has one anyway. Otherwise we refuse to subgrid that axis since we
-    // can't place grid items inside a subgrid without at least one track.
-    if (isColSubgrid && isOutOfFlow) {
-      auto parentAxis = isOrthogonal ? eLogicalAxisBlock : eLogicalAxisInline;
-      if (!gridParent->WillHaveAtLeastOneTrackInAxis(parentAxis)) {
-        isColSubgrid = false;
       }
     }
     if (isColSubgrid) {
@@ -9370,46 +9362,11 @@ nsFrameState nsGridContainerFrame::ComputeSelfSubgridMasonryBits() const {
         bits |= NS_STATE_GRID_IS_ROW_MASONRY;
       }
     }
-    if (isRowSubgrid && isOutOfFlow) {
-      auto parentAxis = isOrthogonal ? eLogicalAxisInline : eLogicalAxisBlock;
-      if (!gridParent->WillHaveAtLeastOneTrackInAxis(parentAxis)) {
-        isRowSubgrid = false;
-      }
-    }
     if (isRowSubgrid) {
       bits |= NS_STATE_GRID_IS_ROW_SUBGRID;
     }
   }
   return bits;
-}
-
-bool nsGridContainerFrame::WillHaveAtLeastOneTrackInAxis(
-    LogicalAxis aAxis) const {
-  if (IsSubgrid(aAxis)) {
-    // This is enforced by refusing to be a subgrid unless our parent has
-    // at least one track in aAxis by ComputeSelfSubgridMasonryBits above.
-    return true;
-  }
-  if (IsMasonry(aAxis)) {
-    return false;
-  }
-  const auto* pos = StylePosition();
-  const auto& gridTemplate = aAxis == eLogicalAxisBlock
-                                 ? pos->mGridTemplateRows
-                                 : pos->mGridTemplateColumns;
-  if (gridTemplate.IsTrackList()) {
-    return true;
-  }
-  for (nsIFrame* child : PrincipalChildList()) {
-    if (!child->IsPlaceholderFrame()) {
-      // A grid item triggers at least one implicit track in each axis.
-      return true;
-    }
-  }
-  if (!pos->mGridTemplateAreas.IsNone()) {
-    return true;
-  }
-  return false;
 }
 
 void nsGridContainerFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
@@ -9965,10 +9922,12 @@ bool nsGridContainerFrame::ShouldInhibitSubgridDueToIFC(
     const nsIFrame* aFrame) {
   // Just checking for things that make us establish an independent formatting
   // context (IFC) and hence prevent us from being a subgrid:
+  // * Out-of-flow (e.g. abspos) frames also establish an IFC.  Note, our
+  // NS_FRAME_OUT_OF_FLOW bit potentially isn't set yet, so we check our style.
   // * contain:layout and contain:paint each make us establish an IFC.
-  // XXXdholbert We should also check whether we're out-of-flow (bug 1800563).
   const auto* display = aFrame->StyleDisplay();
-  return display->IsContainLayout() || display->IsContainPaint();
+  return display->IsAbsolutelyPositionedStyle() || display->IsContainLayout() ||
+         display->IsContainPaint();
 }
 
 nsGridContainerFrame* nsGridContainerFrame::GetGridContainerFrame(
