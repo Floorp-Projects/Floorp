@@ -1,9 +1,5 @@
 [DEFAULT]
-# The Screenshots extension is disabled by default in Mochitests. We re-enable it here, since it's a more realistic configuration.
-prefs = [
- "extensions.screenshots.disabled=false",
- "screenshots.browser.component.enabled=false",
-]
+prefs = ["extensions.screenshots.disabled=false",] # The Screenshots extension is disabled by default in Mochitests. We re-enable it here, since it's a more realistic configuration.
 
 ["browser_screenshot_button.js"]
 
