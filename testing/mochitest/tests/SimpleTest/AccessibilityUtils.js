@@ -318,6 +318,22 @@ this.AccessibilityUtils = (function () {
   }
 
   /**
+   * XUL treecol elements currently aren't focusable, making them inaccessible.
+   * For now, we don't flag these as a failure to avoid breaking multiple tests.
+   * ToDo: We should remove this exception after this is fixed in bug 1848397.
+   */
+  function isInaccessibleXulTreecol(node) {
+    if (!node || !node.ownerGlobal) {
+      return false;
+    }
+    const listheader = node.flattenedTreeParentNode;
+    if (listheader.tagName !== "listheader" || node.tagName !== "treecol") {
+      return false;
+    }
+    return true;
+  }
+
+  /**
    * Determine if a node is a XUL element for which tabIndex should be ignored.
    * Some XUL elements report -1 for the .tabIndex property, even though they
    * are in fact keyboard focusable.
@@ -717,6 +733,9 @@ this.AccessibilityUtils = (function () {
       // node might be the image.
       const acc = findInteractiveAccessible(node);
       if (!acc) {
+        if (isInaccessibleXulTreecol(node)) {
+          return;
+        }
         if (gEnv.mustHaveAccessibleRule) {
           a11yFail("Node is not accessible via accessibility API", {
             DOMNode: node,
