@@ -13,8 +13,8 @@
 #include "ImageContainer.h"
 #include "MediaResult.h"
 #include "TimeUnits.h"
-#include "aom/aom_image.h"
-#include "aom/aomdx.h"
+#include <aom/aom_image.h>
+#include <aom/aomdx.h>
 #include "gfx2DGlue.h"
 #include "gfxUtils.h"
 #include "mozilla/PodOperations.h"
