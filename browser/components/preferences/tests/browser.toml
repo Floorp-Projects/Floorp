@@ -18,7 +18,6 @@ skip-if = ["!updater"]
 fail-if = ["a11y_checks"] # Bug 1854636 clicked menulist.actionsMenu may not be labeled
 
 ["browser_applications_selection.js"]
-fail-if = ["a11y_checks"] # Bug 1854636 clicked treecol#typeColumn and treecol#actionColumn may not be focusable
 
 ["browser_basic_rebuild_fonts_test.js"]
 
@@ -76,7 +75,6 @@ skip-if = ["socketprocess_networking"]
 ["browser_cookie_exceptions_addRemove.js"]
 
 ["browser_cookies_exceptions.js"]
-fail-if = ["a11y_checks"] # Bug 1854636 clicked treecol#siteCol may not be focusable
 
 ["browser_defaultbrowser_alwayscheck.js"]
 
@@ -165,7 +163,6 @@ skip-if = ["true"]
 ["browser_permissions_checkPermissionsWereAdded.js"]
 
 ["browser_permissions_dialog.js"]
-fail-if = ["a11y_checks"] # Bug 1854636 clicked treecol#statusCol, treecol#siteCol may not be focusable
 
 ["browser_permissions_dialog_default_perm.js"]
 
