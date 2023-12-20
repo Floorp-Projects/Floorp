@@ -138,19 +138,14 @@ inline size_t Arena::finalize(JS::GCContext* gcx, AllocKind thingKind,
     }
   }
 
-  if constexpr (std::is_same_v<T, JSObject>) {
+  if constexpr (std::is_same_v<T, JSObject> || std::is_same_v<T, JSString> ||
+                std::is_same_v<T, JS::BigInt>) {
     if (isNewlyCreated_) {
       zone->pretenuring.updateCellCountsInNewlyCreatedArenas(
           nmarked + nfinalized, nmarked);
     }
   }
   isNewlyCreated_ = 0;
-
-  if (thingKind == AllocKind::STRING ||
-      thingKind == AllocKind::FAT_INLINE_STRING) {
-    zone->markedStrings += nmarked;
-    zone->finalizedStrings += nfinalized;
-  }
 
   if (nmarked == 0) {
     // Do nothing. The caller will update the arena appropriately.

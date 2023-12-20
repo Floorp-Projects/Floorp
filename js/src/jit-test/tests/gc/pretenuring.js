@@ -34,9 +34,17 @@ for (let i = 1; i < 500000; i++) {
 }
 gc();
 assertEq(nurseryStringsEnabled(), false);
-
-// When a large number of strings are collected by major GC nursery allocation
-// is enabled again.
 a = undefined;
+
+// When a large number of tenured strings die very soon after allocation,
+// pretenuring for that zone is reset and nursery allocation enabled again.
+
 gc();
+assertEq(nurseryStringsEnabled(), false);
+let initGCNumber = gcparam('majorGCNumber');
+while (!nurseryStringsEnabled() && gcparam('majorGCNumber') < initGCNumber + 3) {
+  for (let i = 1; i < 100000; i++) {
+    a = i.toString();
+  }
+}
 assertEq(nurseryStringsEnabled(), true);

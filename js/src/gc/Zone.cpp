@@ -159,8 +159,6 @@ JS::Zone::Zone(JSRuntime* rt, Kind kind)
     : ZoneAllocator(rt, kind),
       arenas(this),
       data(nullptr),
-      markedStrings(0),
-      finalizedStrings(0),
       suppressAllocationMetadataBuilder(false),
       allocNurseryObjects_(true),
       allocNurseryStrings_(true),

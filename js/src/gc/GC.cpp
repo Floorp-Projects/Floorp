@@ -2707,9 +2707,6 @@ void GCRuntime::endPreparePhase(JS::GCReason reason) {
      */
     zone->arenas.clearFreeLists();
 
-    zone->markedStrings = 0;
-    zone->finalizedStrings = 0;
-
     zone->setPreservingCode(false);
 
 #ifdef JS_GC_ZEAL
@@ -3295,19 +3292,37 @@ void GCRuntime::checkGCStateNotInUse() {
 void GCRuntime::maybeStopPretenuring() {
   nursery().maybeStopPretenuring(this);
 
-  for (GCZonesIter zone(this); !zone.done(); zone.next()) {
-    if (!zone->nurseryStringsDisabled) {
-      continue;
-    }
+  size_t zonesWhereStringsEnabled = 0;
+  size_t zonesWhereBigIntsEnabled = 0;
 
-    // Count the number of strings before the major GC.
-    size_t numStrings = zone->markedStrings + zone->finalizedStrings;
-    double rate = double(zone->finalizedStrings) / double(numStrings);
-    if (rate > tunables.stopPretenureStringThreshold()) {
-      zone->markedStrings = 0;
-      zone->finalizedStrings = 0;
-      zone->nurseryStringsDisabled = false;
-      nursery().updateAllocFlagsForZone(zone);
+  for (GCZonesIter zone(this); !zone.done(); zone.next()) {
+    if (zone->nurseryStringsDisabled || zone->nurseryBigIntsDisabled) {
+      // We may need to reset allocation sites and discard JIT code to recover
+      // if we find object lifetimes have changed.
+      if (zone->pretenuring.shouldResetPretenuredAllocSites()) {
+        zone->unknownAllocSite(JS::TraceKind::String)->maybeResetState();
+        zone->unknownAllocSite(JS::TraceKind::BigInt)->maybeResetState();
+        if (zone->nurseryStringsDisabled) {
+          zone->nurseryStringsDisabled = false;
+          zonesWhereStringsEnabled++;
+        }
+        if (zone->nurseryBigIntsDisabled) {
+          zone->nurseryBigIntsDisabled = false;
+          zonesWhereBigIntsEnabled++;
+        }
+        nursery().updateAllocFlagsForZone(zone);
+      }
+    }
+  }
+
+  if (nursery().reportPretenuring()) {
+    if (zonesWhereStringsEnabled) {
+      fprintf(stderr, "GC re-enabled nursery string allocation in %zu zones\n",
+              zonesWhereStringsEnabled);
+    }
+    if (zonesWhereBigIntsEnabled) {
+      fprintf(stderr, "GC re-enabled nursery big int allocation in %zu zones\n",
+              zonesWhereBigIntsEnabled);
     }
   }
 }
