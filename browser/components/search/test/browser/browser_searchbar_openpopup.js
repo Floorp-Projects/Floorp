@@ -116,7 +116,7 @@ add_task(async function open_empty() {
   let image = searchPopup.querySelector(".searchbar-engine-image");
   Assert.equal(
     image.src,
-    engine.getIconURLBySize(16, 16),
+    engine.getIconURL(16),
     "Should have the correct icon"
   );
 

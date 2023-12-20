@@ -463,7 +463,7 @@ var currentStateObj = async function (isPrivateWindowValue, hiddenEngine = "") {
     ),
   };
   for (let engine of await Services.search.getVisibleEngines()) {
-    let uri = engine.getIconURLBySize(16, 16);
+    let uri = engine.getIconURL(16);
     state.engines.push({
       name: engine.name,
       iconData: await iconDataFromURI(uri),
@@ -479,7 +479,7 @@ var currentStateObj = async function (isPrivateWindowValue, hiddenEngine = "") {
 };
 
 async function constructEngineObj(engine) {
-  let uriFavicon = engine.getIconURLBySize(16, 16);
+  let uriFavicon = engine.getIconURL(16);
   return {
     name: engine.name,
     iconData: await iconDataFromURI(uriFavicon),
