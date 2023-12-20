@@ -3,7 +3,7 @@ import pytest
 from ... import any_string, recursive_compare
 
 
-@pytest.mark.parametrize("type,value,max,expected", [
+@pytest.mark.parametrize("type,value,max_count,expected", [
     ("css", "div", 1, [
         {
             "type": "node",
@@ -124,7 +124,7 @@ from ... import any_string, recursive_compare
     "inner_text_multiple"
 ])
 @pytest.mark.asyncio
-async def test_find_by_css_limit_return_count(bidi_session, inline, top_context, type, value, max_count, expected):
+async def test_find_by_locator_limit_return_count(bidi_session, inline, top_context, type, value, max_count, expected):
     url = inline("""<div data-class="one">foo</div><div data-class="two">foo</div>""")
     await bidi_session.browsing_context.navigate(
         context=top_context["context"], url=url, wait="complete"
