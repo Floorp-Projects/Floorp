@@ -48,10 +48,6 @@ ChromeUtils.defineESModuleGetters(this, {
 
 const MOBILE_PROMO_DISMISSED_PREF =
   "browser.tabs.firefox-view.mobilePromo.dismissed";
-const RECENTLY_CLOSED_STATE_PREF =
-  "browser.tabs.firefox-view.ui-state.recently-closed-tabs.open";
-const TAB_PICKUP_STATE_PREF =
-  "browser.tabs.firefox-view.ui-state.tab-pickup.open";
 
 const calloutId = "feature-callout";
 const calloutSelector = `#${calloutId}.featureCallout`;
@@ -564,7 +560,6 @@ function clearHistory() {
 function cleanup_tab_pickup() {
   Services.prefs.clearUserPref("services.sync.engine.tabs");
   Services.prefs.clearUserPref("services.sync.lastTabFetch");
-  Services.prefs.clearUserPref(TAB_PICKUP_STATE_PREF);
 }
 
 function isFirefoxViewTabSelected(win = window) {
