@@ -170,6 +170,12 @@ skip-if = [
   "os == 'android'", # Containers are not exposed to android.
 ]
 
+["test_ext_contextual_identities_move.js"]
+skip-if = [
+  "appname == 'thunderbird'",
+  "os == 'android'", # Containers are not exposed to android.
+]
+
 ["test_ext_cookieBehaviors.js"]
 skip-if = [
   "appname == 'thunderbird'",

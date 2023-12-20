@@ -121,6 +121,90 @@ add_task(function () {
   );
 });
 
+// Reorder identities
+add_task(function () {
+  equal(cis.getPublicIdentities().length, 4, "By default, 4 containers.");
+  // Get whatever the initial order is
+  const [id0, id1, id2, id3] = cis.getPublicUserContextIds();
+
+  ok(cis.move([id3], 0), "Moving one valid id");
+  Assert.deepEqual(
+    cis.getPublicUserContextIds(),
+    [id3, id0, id1, id2],
+    "Moving one valid ID works"
+  );
+
+  ok(cis.move([id1, id2], 1), "Moving several valid ids");
+  Assert.deepEqual(
+    cis.getPublicUserContextIds(),
+    [id3, id1, id2, id0],
+    "Moving several valid IDs works"
+  );
+
+  ok(!cis.move([100], 0), "Moving non-existing ids");
+  Assert.deepEqual(
+    cis.getPublicUserContextIds(),
+    [id3, id1, id2, id0],
+    "Moving only non-existing IDs leaves list unchanged"
+  );
+
+  ok(cis.move([100, id1], 1), "Moving non-existing and existing ids");
+  Assert.deepEqual(
+    cis.getPublicUserContextIds(),
+    [id3, id1, id2, id0],
+    "Moving existing and non-existing IDs ignores non-existing ones"
+  );
+
+  ok(cis.move([id1, 100], 1), "Moving existing and non-existing ids");
+  Assert.deepEqual(
+    cis.getPublicUserContextIds(),
+    [id3, id1, id2, id0],
+    "Moving existing and non-existing IDs ignores non-existing ones"
+  );
+
+  ok(cis.move([id2], -1), "Moving to -1");
+  Assert.deepEqual(
+    cis.getPublicUserContextIds(),
+    [id3, id1, id0, id2],
+    "Moving to -1 works"
+  );
+
+  ok(!cis.move([id3], -10), "Moving to other negative positions");
+  Assert.deepEqual(
+    cis.getPublicUserContextIds(),
+    [id3, id1, id0, id2],
+    "Moving to other negative positions leaves list unchanged"
+  );
+
+  ok(cis.move([id3], 3), "Moving to last public position");
+  Assert.deepEqual(
+    cis.getPublicUserContextIds(),
+    [id1, id0, id2, id3],
+    "Moving to last position correctly skips private context ids"
+  );
+
+  ok(cis.move([id1, id2], 1), "Moving past current position");
+  Assert.deepEqual(
+    cis.getPublicUserContextIds(),
+    [id0, id1, id2, id3],
+    "Target position is index in resulting list"
+  );
+
+  ok(cis.move([id2, id2], 2), "Moving duplicate ids");
+  Assert.deepEqual(
+    cis.getPublicUserContextIds(),
+    [id0, id1, id2, id3],
+    "Resulting list does not contain duplicate ids"
+  );
+
+  ok(!cis.move([], 2), "Moving empty list");
+  Assert.deepEqual(
+    cis.getPublicUserContextIds(),
+    [id0, id1, id2, id3],
+    "Resulting list does not contain duplicate ids"
+  );
+});
+
 // Update an identity
 add_task(function () {
   ok(!!cis.getPublicIdentityFromId(2), "Identity 2 exists");

@@ -264,6 +264,47 @@ this.contextualIdentities = class extends ExtensionAPIPersistent {
           return convertIdentity(identity);
         },
 
+        async move(cookieStoreIds, position) {
+          checkAPIEnabled();
+          if (!Array.isArray(cookieStoreIds)) {
+            cookieStoreIds = [cookieStoreIds];
+          }
+
+          if (!cookieStoreIds.length) {
+            return;
+          }
+
+          const totalIds =
+            ContextualIdentityService.getPublicIdentities().length;
+          if (position < -1 || position > totalIds - cookieStoreIds.length) {
+            throw new ExtensionError(`Moving to invalid position ${position}`);
+          }
+
+          let userContextIds = [];
+          cookieStoreIds.forEach((cookieStoreId, index) => {
+            if (cookieStoreIds.indexOf(cookieStoreId) !== index) {
+              throw new ExtensionError(
+                `Duplicate contextual identity: ${cookieStoreId}`
+              );
+            }
+
+            let containerId = getContainerForCookieStoreId(cookieStoreId);
+            if (!containerId) {
+              throw new ExtensionError(
+                `Invalid contextual identity: ${cookieStoreId}`
+              );
+            }
+
+            userContextIds.push(containerId);
+          });
+
+          if (!ContextualIdentityService.move(userContextIds, position)) {
+            throw new ExtensionError(
+              `Contextual identities failed to move: ${cookieStoreIds}`
+            );
+          }
+        },
+
         async remove(cookieStoreId) {
           checkAPIEnabled();
           let containerId = getContainerForCookieStoreId(cookieStoreId);

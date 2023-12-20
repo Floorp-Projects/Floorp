@@ -325,6 +325,38 @@ _ContextualIdentityService.prototype = {
     return !!identity;
   },
 
+  move(userContextIds, position) {
+    this.ensureDataReady();
+
+    if (position < -1) {
+      return false;
+    }
+    let movedIdentities = this._identities.filter(
+      identity =>
+        identity.public && userContextIds.includes(identity.userContextId)
+    );
+
+    if (movedIdentities.length) {
+      if (position === -1) {
+        position = this._identities.length;
+      }
+      // Shift position by preceding non-public identities
+      position = this._identities.reduce(
+        (dest, identity, idx) =>
+          dest + (!identity.public && dest >= idx ? 1 : 0),
+        position
+      );
+      this._identities = this._identities.filter(
+        identity =>
+          !identity.public || !userContextIds.includes(identity.userContextId)
+      );
+      this._identities.splice(position, 0, ...movedIdentities);
+      this.saveSoon();
+    }
+
+    return !!movedIdentities.length;
+  },
+
   remove(userContextId) {
     this.ensureDataReady();
 
