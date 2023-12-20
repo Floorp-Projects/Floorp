@@ -13,38 +13,7 @@
 
 #include <objidl.h>
 
-namespace mozilla {
-namespace mscom {
-namespace detail {
-
-class MOZ_HEAP_CLASS GlobalInterfaceTableCookie final {
- public:
-  GlobalInterfaceTableCookie(IUnknown* aObject, REFIID aIid,
-                             HRESULT& aOutHResult);
-
-  bool IsValid() const { return !!mCookie; }
-  HRESULT GetInterface(REFIID aIid, void** aOutInterface) const;
-
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GlobalInterfaceTableCookie)
-
-  GlobalInterfaceTableCookie(const GlobalInterfaceTableCookie&) = delete;
-  GlobalInterfaceTableCookie(GlobalInterfaceTableCookie&&) = delete;
-
-  GlobalInterfaceTableCookie& operator=(const GlobalInterfaceTableCookie&) =
-      delete;
-  GlobalInterfaceTableCookie& operator=(GlobalInterfaceTableCookie&&) = delete;
-
- private:
-  ~GlobalInterfaceTableCookie();
-
- private:
-  DWORD mCookie;
-
- private:
-  static IGlobalInterfaceTable* ObtainGit();
-};
-
-}  // namespace detail
+namespace mozilla::mscom {
 
 /**
  * This class encapsulates an "agile reference." These are references that
@@ -56,13 +25,13 @@ class MOZ_HEAP_CLASS GlobalInterfaceTableCookie final {
  * Sample usage:
  *
  * // In the multithreaded apartment, foo is an IFoo*
- * auto myAgileRef = MakeUnique<AgileReference>(IID_IFoo, foo);
+ * auto myAgileRef = AgileReference(IID_IFoo, foo);
  *
  * // myAgileRef is passed to our main thread, which runs in a single-threaded
  * // apartment:
  *
  * RefPtr<IFoo> foo;
- * HRESULT hr = myAgileRef->Resolve(IID_IFoo, getter_AddRefs(foo));
+ * HRESULT hr = myAgileRef.Resolve(IID_IFoo, getter_AddRefs(foo));
  * // Now foo may be called from the main thread
  */
 class AgileReference final {
@@ -76,13 +45,11 @@ class AgileReference final {
   AgileReference(REFIID aIid, IUnknown* aObject);
 
   AgileReference(const AgileReference& aOther) = default;
-  AgileReference(AgileReference&& aOther);
+  AgileReference(AgileReference&& aOther) noexcept;
 
   ~AgileReference();
 
-  explicit operator bool() const {
-    return mAgileRef || (mGitCookie && mGitCookie->IsValid());
-  }
+  explicit operator bool() const { return !!mAgileRef; }
 
   HRESULT GetHResult() const { return mHResult; }
 
@@ -100,7 +67,7 @@ class AgileReference final {
   HRESULT Resolve(REFIID aIid, void** aOutInterface) const;
 
   AgileReference& operator=(const AgileReference& aOther);
-  AgileReference& operator=(AgileReference&& aOther);
+  AgileReference& operator=(AgileReference&& aOther) noexcept;
 
   AgileReference& operator=(decltype(nullptr)) {
     Clear();
@@ -114,14 +81,15 @@ class AgileReference final {
   void AssignInternal(IUnknown* aObject);
 
  private:
+  // The interface ID with which this reference was constructed.
   IID mIid;
   RefPtr<IAgileReference> mAgileRef;
-  RefPtr<detail::GlobalInterfaceTableCookie> mGitCookie;
+  // The result associated with this reference's construction. May be modified
+  // when mAgileRef changes, but is explicitly not touched by `Resolve`.
   HRESULT mHResult;
 };
 
-}  // namespace mscom
-}  // namespace mozilla
+}  // namespace mozilla::mscom
 
 template <typename T>
 RefPtr<T>::RefPtr(const mozilla::mscom::AgileReference& aAgileRef)
