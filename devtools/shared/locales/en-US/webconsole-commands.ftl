@@ -22,15 +22,3 @@ webconsole-commands-usage-unblock =
   Stop blocking network requests
 
     It accepts only one argument, the exact same string previously passed to :block.
-
-# Usage string for :trace command
-webconsole-commands-usage-trace2 =
-  :trace
-
-  Toggles the JavaScript tracer
-
-    It supports the following arguments:
-      --logMethod to be set to ‘console’ for logging to the web console (the default), or ‘stdout’ for logging to the standard output,
-      --values Optional flag to be passed to log function call arguments as well as returned values (when returned frames are enabled).
-      --prefix Optional string which will be logged in front of all the trace logs,
-      --help or --usage to show this message.

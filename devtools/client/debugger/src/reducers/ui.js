@@ -37,6 +37,7 @@ export const initialUIState = ({ supportsDebuggerStatementIgnore } = {}) => ({
   javascriptEnabled: true,
   javascriptTracingLogMethod: prefs.javascriptTracingLogMethod,
   javascriptTracingValues: prefs.javascriptTracingValues,
+  javascriptTracingOnNextInteraction: prefs.javascriptTracingOnNextInteraction,
   mutableSearchOptions: prefs.searchOptions || {
     [searchKeys.FILE_SEARCH]: {
       regexMatch: false,
@@ -170,6 +171,16 @@ function update(state = initialUIState(), action) {
       return {
         ...state,
         javascriptTracingValues: prefs.javascriptTracingValues,
+      };
+    }
+
+    case "TOGGLE_JAVASCRIPT_TRACING_ON_NEXT_INTERACTION": {
+      prefs.javascriptTracingOnNextInteraction =
+        !prefs.javascriptTracingOnNextInteraction;
+      return {
+        ...state,
+        javascriptTracingOnNextInteraction:
+          prefs.javascriptTracingOnNextInteraction,
       };
     }
 

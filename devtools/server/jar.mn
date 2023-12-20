@@ -1,0 +1,8 @@
+#filter substitution
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+[localization] @AB_CD@.jar:
+    # This is a workaround to ship a fluent file not visible to localizers for experimental features.
+    devtools/server/actors/webconsole/commands/experimental-commands.ftl (actors/webconsole/commands/experimental-commands.ftl)

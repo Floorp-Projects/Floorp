@@ -12,6 +12,7 @@ const TEST_URI = `data:text/html;charset=utf-8,<!DOCTYPE html>
     <h1>Testing trace command</h1>
     <script>
     function main() {}
+    function someNoise() {}
     </script>
   </div>
   <div><p></p></div>
@@ -43,10 +44,18 @@ add_task(async function () {
   // Instead the frontend log a message as a console API message.
   msg = await evaluateExpressionInConsole(
     hud,
-    ":trace --logMethod console --prefix foo --values",
+    ":trace --logMethod console --prefix foo --values --on-next-interaction",
     "console-api"
   );
   is(msg.textContent.trim(), "Started tracing to Web Console");
+
+  info("Trigger some code before the user interaction");
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
+    content.wrappedJSObject.someNoise();
+  });
+
+  info("Simulate a user interaction by trigerring a key event on the page");
+  await BrowserTestUtils.synthesizeKey("a", {}, gBrowser.selectedBrowser);
 
   info("Trigger some code to log some traces");
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
@@ -56,6 +65,19 @@ add_task(async function () {
   // Assert that we also see the custom prefix, as well as function arguments
   await waitFor(
     () => !!findTracerMessages(hud, `foo: interpreter⟶λ main("arg", 2)`).length
+  );
+  is(
+    findTracerMessages(hud, `someNoise`).length,
+    0,
+    "The code running before the key press should not be traced"
+  );
+
+  // But now that the tracer is active, we will be able to log this call to someNoise
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
+    content.wrappedJSObject.someNoise();
+  });
+  await waitFor(
+    () => !!findTracerMessages(hud, `foo: interpreter⟶λ someNoise()`).length
   );
 
   info("Test toggling the tracer OFF");

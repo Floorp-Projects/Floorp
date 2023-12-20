@@ -132,6 +132,8 @@ class TracerActor extends Actor {
       traceDOMEvents: true,
       // Enable tracing function arguments as well as returned values
       traceValues: !!options.traceValues,
+      // Enable tracing only on next user interaction
+      traceOnNextInteraction: !!options.traceOnNextInteraction,
     });
   }
 

@@ -325,7 +325,7 @@ add_task(async function testTracingValues() {
     "data:text/html," + encodeURIComponent(`<script>${jsCode}</script>`)
   );
 
-  await openContextMenuInDebugger(dbg, "trace", 4);
+  await openContextMenuInDebugger(dbg, "trace");
   const toggled = waitForDispatch(
     dbg.store,
     "TOGGLE_JAVASCRIPT_TRACING_VALUES"
@@ -356,4 +356,68 @@ add_task(async function testTracingValues() {
 
   // Reset the log values setting
   Services.prefs.clearUserPref("devtools.debugger.javascript-tracing-values");
+});
+
+add_task(async function testTracingOnNextInteraction() {
+  await pushPref("devtools.debugger.features.javascript-tracing", true);
+  // Cover tracing only on next user interaction
+  const jsCode = `function foo() {}; window.addEventListener("mousedown", function onmousedown(){}, { capture: true }); window.onclick = function onclick() {};`;
+  const dbg = await initDebuggerWithAbsoluteURL(
+    "data:text/html," +
+      encodeURIComponent(`<script>${jsCode}</script><body></body>`)
+  );
+
+  await openContextMenuInDebugger(dbg, "trace");
+  const toggled = waitForDispatch(
+    dbg.store,
+    "TOGGLE_JAVASCRIPT_TRACING_ON_NEXT_INTERACTION"
+  );
+  selectContextMenuItem(dbg, `#debugger-trace-menu-item-next-interaction`);
+  await toggled;
+  ok(true, "Toggled the trace on next interaction");
+
+  await clickElement(dbg, "trace");
+
+  const topLevelThreadActorID =
+    dbg.toolbox.commands.targetCommand.targetFront.threadFront.actorID;
+  info("Wait for tracing to be enabled");
+  await waitForState(dbg, state => {
+    return dbg.selectors.getIsThreadCurrentlyTracing(topLevelThreadActorID);
+  });
+
+  invokeInTab("foo");
+
+  // Let a change to have the tracer to regress and log foo call
+  await wait(500);
+
+  is(
+    (await findConsoleMessages(dbg.toolbox, "λ foo")).length,
+    0,
+    "The tracer did not log the function call before trigerring the click event"
+  );
+
+  await BrowserTestUtils.synthesizeMouseAtCenter(
+    "body",
+    {},
+    gBrowser.selectedBrowser
+  );
+
+  await hasConsoleMessage(dbg, "λ onmousedown");
+  await hasConsoleMessage(dbg, "λ onclick");
+
+  is(
+    (await findConsoleMessages(dbg.toolbox, "λ foo")).length,
+    0,
+    "Even after the click, the code called before the click is still not logged"
+  );
+
+  // But if we call this code again, now it should be logged
+  invokeInTab("foo");
+  await hasConsoleMessage(dbg, "λ foo");
+  ok(true, "foo was traced as expected");
+
+  // Reset the trace on next interaction setting
+  Services.prefs.clearUserPref(
+    "devtools.debugger.javascript-tracing-on-next-interaction"
+  );
 });
