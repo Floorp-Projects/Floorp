@@ -851,6 +851,87 @@ messaging_system:
     send_in_pings:
       - messaging-system
 
+  event_screen_family:
+    type: text
+    lifetime: ping
+    description: |
+      A string identifier of the message family derived from the message id
+      (e.g. MR_WELCOME_DEFAULT).
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1867627
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1825863
+    data_sensitivity:
+      - web_activity
+    notification_emails:
+      - pmcmanis@mozilla.com
+      - dmosedale@mozilla.com
+      - nsauermann@mozilla.com
+    expires: never
+    send_in_pings:
+      - messaging-system
+
+  event_screen_id:
+    type: text
+    lifetime: ping
+    description: |
+      A string identifier of the message screen id
+      (e.g. AW_MOBILE_DOWNLOAD).
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1867627
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1825863
+    data_sensitivity:
+      - web_activity
+    notification_emails:
+      - pmcmanis@mozilla.com
+      - dmosedale@mozilla.com
+      - nsauermann@mozilla.com
+    expires: never
+    send_in_pings:
+      - messaging-system
+
+  event_screen_initials:
+    type: text
+    lifetime: ping
+    description: |
+      A string identifier of the message screen initials
+      (e.g. 'EMAG' for EASY_SETUP, MOBILE_DOWNLOADS, AMO, GRATITUDE).
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1867627
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1825863
+    data_sensitivity:
+      - web_activity
+    notification_emails:
+      - pmcmanis@mozilla.com
+      - dmosedale@mozilla.com
+      - nsauermann@mozilla.com
+    expires: never
+    send_in_pings:
+      - messaging-system
+
+  event_screen_index:
+    type: quantity
+    unit: integer
+    lifetime: ping
+    description: |
+      A number identifier of the screen index in a sequence of screens
+      (e.g. 0 for first message).
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1825863
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1825863
+    data_sensitivity:
+      - web_activity
+    notification_emails:
+      - pmcmanis@mozilla.com
+      - dmosedale@mozilla.com
+      - nsauermann@mozilla.com
+    expires: never
+    send_in_pings:
+      - messaging-system
+
   message_id:
     type: text
     lifetime: ping

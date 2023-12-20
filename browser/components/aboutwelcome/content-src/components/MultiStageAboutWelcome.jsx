@@ -67,9 +67,15 @@ export const MultiStageAboutWelcome = props => {
       // Send impression ping when respective screen first renders
       filteredScreens.forEach((screen, order) => {
         if (index === order) {
-          AboutWelcomeUtils.sendImpressionTelemetry(
-            `${props.message_id}_${order}_${screen.id}_${screenInitials}`
-          );
+          const messageId = `${props.message_id}_${order}_${screen.id}_${screenInitials}`;
+
+          AboutWelcomeUtils.sendImpressionTelemetry(messageId, {
+            screen_family: props.message_id,
+            screen_index: order,
+            screen_id: screen.id,
+            screen_initials: screenInitials,
+          });
+
           window.AWAddScreenImpression?.(screen);
         }
       });
