@@ -38,6 +38,11 @@ class TracerCommand {
       false
     );
 
+    const traceOnNextInteraction = Services.prefs.getBoolPref(
+      "devtools.debugger.javascript-tracing-on-next-interaction",
+      false
+    );
+
     const targets = this.#targetCommand.getAllTargets(
       this.#targetCommand.ALL_TYPES
     );
@@ -51,7 +56,10 @@ class TracerCommand {
         }
 
         if (this.#isTracing) {
-          return tracerFront.startTracing(logMethod, { traceValues });
+          return tracerFront.startTracing(logMethod, {
+            traceValues,
+            traceOnNextInteraction,
+          });
         }
         return tracerFront.stopTracing();
       })
