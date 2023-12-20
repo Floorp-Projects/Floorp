@@ -201,8 +201,8 @@ class AllocSite {
 
   // Called for every active alloc site after minor GC.
   enum SiteResult { NoChange, WasPretenured, WasPretenuredAndInvalidated };
-  SiteResult processSite(GCRuntime* gc, bool reportInfo,
-                         size_t reportThreshold);
+  SiteResult processSite(GCRuntime* gc, size_t attentionThreshold,
+                         bool reportInfo, size_t reportThreshold);
   void processCatchAllSite(bool reportInfo, size_t reportThreshold);
 
   void updateStateOnMinorGC(double promotionRate);
