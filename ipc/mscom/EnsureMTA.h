@@ -73,7 +73,69 @@ class MOZ_STACK_CLASS EnsureMTA final {
     SyncDispatch(std::move(runnable), aOpt);
   }
 
+  using CreateInstanceAgileRefPromise =
+      MozPromise<AgileReference, HRESULT, false>;
+
+  /**
+   *       *** A MSCOM PEER SHOULD REVIEW ALL NEW USES OF THIS API! ***
+   *
+   * Asynchronously instantiate a new COM object from a MTA thread, unless the
+   * current thread is already living inside the multithreaded apartment, in
+   * which case the object is immediately instantiated.
+   *
+   * This function only supports the most common configurations for creating
+   * a new object, so it only supports in-process servers. Furthermore, this
+   * function does not support aggregation (ie. the |pUnkOuter| parameter to
+   * CoCreateInstance).
+   *
+   * Given that attempting to instantiate an Apartment-threaded COM object
+   * inside the MTA results in a *loss* of performance, we assert when that
+   * situation arises.
+   *
+   * The resulting promise, once resolved, provides an AgileReference that may
+   * be passed between any COM-initialized thread in the current process.
+   *
+   *       *** A MSCOM PEER SHOULD REVIEW ALL NEW USES OF THIS API! ***
+   *
+   * WARNING:
+   * Some COM objects do not support creation in the multithreaded apartment,
+   * in which case this function is not available as an option. In this case,
+   * the promise will always be rejected. In debug builds we will assert.
+   *
+   *       *** A MSCOM PEER SHOULD REVIEW ALL NEW USES OF THIS API! ***
+   *
+   * WARNING:
+   * Any in-process COM objects whose interfaces accept HWNDs are probably
+   * *not* safe to instantiate in the multithreaded apartment! Even if this
+   * function succeeds when creating such an object, you *MUST NOT* do so, as
+   * these failures might not become apparent until your code is running out in
+   * the wild on the release channel!
+   *
+   *       *** A MSCOM PEER SHOULD REVIEW ALL NEW USES OF THIS API! ***
+   *
+   * WARNING:
+   * When you obtain an interface from the AgileReference, it may or may not be
+   * a proxy to the real object. This depends entirely on the implementation of
+   * the underlying class and the multithreading capabilities that the class
+   * declares to the COM runtime. If the interface is proxied, it might be
+   * expensive to invoke methods on that interface! *Always* test the
+   * performance of your method calls when calling interfaces that are resolved
+   * via this function!
+   *
+   *       *** A MSCOM PEER SHOULD REVIEW ALL NEW USES OF THIS API! ***
+   *
+   * (Despite this myriad of warnings, it is still *much* safer to use this
+   * function to asynchronously create COM objects than it is to roll your own!)
+   *
+   *       *** A MSCOM PEER SHOULD REVIEW ALL NEW USES OF THIS API! ***
+   */
+  static RefPtr<CreateInstanceAgileRefPromise> CreateInstance(REFCLSID aClsid,
+                                                              REFIID aIid);
+
  private:
+  static RefPtr<CreateInstanceAgileRefPromise> CreateInstanceInternal(
+      REFCLSID aClsid, REFIID aIid);
+
   static nsCOMPtr<nsIThread> GetPersistentMTAThread();
 
   static void SyncDispatch(nsCOMPtr<nsIRunnable>&& aRunnable, Option aOpt);
