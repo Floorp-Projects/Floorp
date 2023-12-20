@@ -3252,33 +3252,22 @@ bool nsDocumentViewer::ShouldAttachToTopLevel() {
     return false;
   }
 
-  if (!mContainer) {
-    return false;
-  }
-
   // We always attach when using puppet widgets
   if (nsIWidget::UsePuppetWidgets()) {
     return true;
   }
 
-#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK) || \
-    defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WIDGET_UIKIT)
-  if (!mPresContext) {
-    return false;
-  }
-
-  // On windows, in the parent process we also attach, but just to
-  // chrome items
-  auto winType = mParentWidget->GetWindowType();
-  if ((winType == widget::WindowType::TopLevel ||
-       winType == widget::WindowType::Dialog ||
-       winType == widget::WindowType::Invisible) &&
-      mPresContext->IsChrome()) {
-    return true;
-  }
-#endif
-
+  // FIXME(emilio): Can we unify this between macOS and aother platforms?
+#ifdef XP_MACOSX
   return false;
+#else
+#  ifdef DEBUG
+  nsIWidgetListener* parentListener = mParentWidget->GetWidgetListener();
+  MOZ_ASSERT(!parentListener || !parentListener->GetView(),
+             "Expect a top level widget");
+#  endif
+  return true;
+#endif
 }
 
 //------------------------------------------------------------
