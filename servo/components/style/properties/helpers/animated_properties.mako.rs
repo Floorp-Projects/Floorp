@@ -47,6 +47,14 @@ impl From<nsCSSPropertyID> for TransitionProperty {
 /// composed for each TransitionProperty.
 pub type AnimationValueMap = FxHashMap<OwnedPropertyDeclarationId, AnimationValue>;
 
+/// An animated value for custom property.
+#[derive(Clone, Debug, MallocSizeOf, PartialEq)]
+pub struct CustomAnimatedValue {
+    /// The name of the custom property.
+    name: crate::custom_properties::Name,
+    /// The specified value of the custom property.
+    value: SpecifiedCustomPropertyValue,
+}
 /// An enum to represent a single computed value belonging to an animated
 /// property in order to be interpolated with another one. When interpolating,
 /// both values need to belong to the same property.
@@ -62,8 +70,7 @@ pub enum AnimationValue {
     % endif
     % endfor
     /// A custom property.
-    /// TODO(zrhoffman, bug 1869472): The Custom variant should hold only a single struct.
-    Custom(crate::custom_properties::Name, SpecifiedCustomPropertyValue),
+    Custom(CustomAnimatedValue),
 }
 
 <%
@@ -83,6 +90,15 @@ pub enum AnimationValue {
 struct AnimationValueVariantRepr<T> {
     tag: u16,
     value: T
+}
+
+impl CustomAnimatedValue {
+    fn as_custom_declaration(&self) -> CustomDeclaration {
+        CustomDeclaration {
+            name: self.name.clone(),
+            value: CustomDeclarationValue::Value(self.value.clone().into()),
+        }
+    }
 }
 
 impl Clone for AnimationValue {
@@ -135,7 +151,7 @@ impl Clone for AnimationValue {
                 % endif
             }
             % endfor
-            Custom(ref name, ref value) => { Custom(name.clone(), value.clone()) },
+            Custom(ref animated_value) => Custom(animated_value.clone()),
             _ => unsafe { debug_unreachable!() }
         }
     }
@@ -147,8 +163,8 @@ impl PartialEq for AnimationValue {
         use self::AnimationValue::*;
 
         match (self, other) {
-            (Custom(name1, value1), Custom(name2, value2)) => {
-                name1 == name2 && value1 == value2
+            (Custom(animated_value1), Custom(animated_value2)) => {
+                *animated_value1 == *animated_value2
             },
             _ => {
                 unsafe {
@@ -181,8 +197,8 @@ impl AnimationValue {
     /// Returns the longhand id this animated value corresponds to.
     #[inline]
     pub fn id(&self) -> PropertyDeclarationId {
-        if let AnimationValue::Custom(name, _) = self {
-            return PropertyDeclarationId::Custom(name);
+        if let AnimationValue::Custom(animated_value) = self {
+            return PropertyDeclarationId::Custom(&animated_value.name);
         }
 
         let id = unsafe { *(self as *const _ as *const LonghandId) };
@@ -244,12 +260,7 @@ impl AnimationValue {
             ${" |\n".join("{}(void)".format(prop.camel_case) for prop in unanimated)} => {
                 void::unreachable(void)
             },
-            Custom(ref name, ref value) => {
-                PropertyDeclaration::Custom(CustomDeclaration {
-                    name: name.clone(),
-                    value: CustomDeclarationValue::Value(value.clone().into()),
-                })
-            },
+            Custom(ref animated_value) => PropertyDeclaration::Custom(animated_value.as_custom_declaration()),
         }
     }
 
@@ -388,7 +399,7 @@ impl AnimationValue {
             },
             PropertyDeclaration::Custom(ref declaration) => {
               match &declaration.value {
-                CustomDeclarationValue::Value(value) => AnimationValue::Custom(declaration.name.clone(), (**value).clone()),
+                CustomDeclarationValue::Value(value) => AnimationValue::Custom(CustomAnimatedValue { name: declaration.name.clone(), value: (**value).clone() }),
                 _ => return None,
               }
             },
@@ -411,7 +422,7 @@ impl AnimationValue {
                 let p = &style.custom_properties();
                 return p.inherited.as_ref().and_then(|map| map.get(*name))
                     .or_else(|| p.non_inherited.as_ref().and_then(|map| map.get(*name)))
-                    .map(|value| AnimationValue::Custom((*name).clone(), (**value).clone()));
+                    .map(|value| AnimationValue::Custom(CustomAnimatedValue { name: (*name).clone(), value: (**value).clone() }));
             }
         };
 
