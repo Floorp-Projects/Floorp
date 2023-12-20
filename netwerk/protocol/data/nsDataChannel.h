@@ -23,6 +23,9 @@ class nsDataChannel : public nsBaseChannel {
       bool async, nsIInputStream** result, nsIChannel** channel) override;
 
   nsCString mMimeType;
+
+ private:
+  nsresult MaybeSendDataChannelOpenNotification();
 };
 
 #endif /* nsDataChannel_h___ */
