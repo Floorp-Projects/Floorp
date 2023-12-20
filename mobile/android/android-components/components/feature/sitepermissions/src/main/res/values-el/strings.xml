@@ -37,7 +37,7 @@
     <string name="mozac_feature_sitepermissions_media_key_system_access_title">Να επιτρέπεται στο %1$s η αναπαραγωγή περιεχομένου με έλεγχο DRM;</string>
     <!-- Title of a dialog to use cross origin storage permission. %1$s is the name of the site URL (www.site1.example) trying to track the user's activity.
      %2$s is the name of the site URL (www.site2.example) that the user is visiting.  This is the same domain name displayed in the address bar -->
-    <string name="mozac_feature_sitepermissions_storage_access_title">Να επιτρέπεται στο %1$s να χρησιμοποιεί τα cookies του στο %2$s;</string>
+    <string name="mozac_feature_sitepermissions_storage_access_title">Να επιτρέπεται στο %1$s να χρησιμοποιεί τα cookie του στο %2$s;</string>
     <!-- Message of a dialog offering more context about the cross origin storage permission.
     %s is the name of the site URL (www.site1.example) trying to track the user's activity. -->
     <string name="mozac_feature_sitepermissions_storage_access_message">Ίσως θελήσετε να αποκλείσετε την πρόσβαση εάν δεν είναι σαφές το γιατί το %s χρειάζεται αυτά τα δεδομένα.</string>

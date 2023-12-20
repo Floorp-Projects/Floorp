@@ -33,7 +33,7 @@
     <!-- Description for browser_setting permission. -->
     <string name="mozac_feature_addons_permissions_browser_setting_description">Ανάγνωση και τροποποίηση ρυθμίσεων προγράμματος περιήγησης</string>
     <!-- Description for browser_data permission. -->
-    <string name="mozac_feature_addons_permissions_browser_data_description">Απαλοιφή πρόσφατου ιστορικού περιήγησης, cookies και σχετικών δεδομένων</string>
+    <string name="mozac_feature_addons_permissions_browser_data_description">Απαλοιφή πρόσφατου ιστορικού περιήγησης, cookie και σχετικών δεδομένων</string>
     <!-- Description for clipboard_read permission. -->
     <string name="mozac_feature_addons_permissions_clipboard_read_description">Λήψη δεδομένων από το πρόχειρο</string>
     <!-- Description for clipboard_write permission. -->

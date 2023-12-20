@@ -78,12 +78,12 @@
         private mode in our new Total Private Browsing mode.
         The first parameter is the name of the app defined in app_name (for example: Firefox Nightly)
         The second parameter is the clickable link text in felt_privacy_info_card_subtitle_link_text -->
-    <string name="felt_privacy_info_card_subtitle" moz:removedIn="120" tools:ignore="UnusedResources">Το %1$s διαγράφει τα cookies, το ιστορικό και τα δεδομένα ιστοτόπων σας όταν κλείνετε όλα τα ιδιωτικά σας παράθυρα. %2$s</string>
+    <string name="felt_privacy_info_card_subtitle" moz:removedIn="120" tools:ignore="UnusedResources">Το %1$s διαγράφει τα cookie, το ιστορικό και τα δεδομένα ιστοτόπων σας όταν κλείνετε όλα τα ιδιωτικά σας παράθυρα. %2$s</string>
     <!-- Explanation for private browsing displayed to users on home view when they first enable
         private mode in our new Total Private Browsing mode.
         The first parameter is the name of the app defined in app_name (for example: Firefox Nightly)
         The second parameter is the clickable link text in felt_privacy_info_card_subtitle_link_text -->
-    <string name="felt_privacy_info_card_subtitle_2">Το %1$s διαγράφει τα cookies, το ιστορικό και τα δεδομένα ιστοτόπων σας όταν κλείνετε όλες τις ιδιωτικές σας καρτέλες. %2$s</string>
+    <string name="felt_privacy_info_card_subtitle_2">Το %1$s διαγράφει τα cookie, το ιστορικό και τα δεδομένα ιστοτόπων σας όταν κλείνετε όλες τις ιδιωτικές σας καρτέλες. %2$s</string>
     <!-- Clickable portion of the explanation for private browsing that links the user to our
         about privacy page.
         This string is used in felt_privacy_info_card_subtitle as the second parameter.-->
@@ -114,7 +114,7 @@
 
     <!-- Private browsing erase action "contextual feature recommendation" (CFR) -->
     <!-- Text for the message displayed in the contextual feature recommendation popup promoting the erase private browsing feature. -->
-    <string name="erase_action_cfr_message">Πατήστε εδώ για να ξεκινήσετε μια νέα ιδιωτική συνεδρία. Διαγράψτε το ιστορικό σας, τα cookies… τα πάντα.</string>
+    <string name="erase_action_cfr_message">Πατήστε εδώ για να ξεκινήσετε μια νέα ιδιωτική συνεδρία. Διαγράψτε το ιστορικό σας, τα cookie… τα πάντα.</string>
 
 
     <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
@@ -468,20 +468,20 @@
     <string name="preferences_https_only_title">Λειτουργία «Μόνο HTTPS»</string>
 
     <!-- Preference for removing cookie/consent banners from sites automatically. See reduce_cookie_banner_summary for additional context. -->
-    <string name="preferences_cookie_banner_reduction" moz:RemovedIn="121" tools:ignore="UnusedResources">Μείωση μηνυμάτων για cookies</string>
+    <string name="preferences_cookie_banner_reduction" moz:RemovedIn="121" tools:ignore="UnusedResources">Μείωση μηνυμάτων για cookie</string>
     <!-- Label for cookie banner section in quick settings panel. -->
     <string name="cookie_banner_blocker">Αποκλεισμός μηνυμάτων για cookie</string>
     <!-- Preference for removing cookie/consent banners from sites automatically in private mode. See reduce_cookie_banner_summary for additional context. -->
     <string name="preferences_cookie_banner_reduction_private_mode">Αποκλεισμός μηνυμάτων για cookie σε ιδιωτική περιήγηση</string>
     <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
-    <string name="reduce_cookie_banner_option" moz:RemovedIn="121" tools:ignore="UnusedResources">Μείωση μηνυμάτων για cookies</string>
+    <string name="reduce_cookie_banner_option" moz:RemovedIn="121" tools:ignore="UnusedResources">Μείωση μηνυμάτων για cookie</string>
     <!-- Summary of cookie banner handling preference if the setting disabled is set to off -->
     <string name="reduce_cookie_banner_option_off" moz:RemovedIn="121" tools:ignore="UnusedResources">Ανενεργή</string>
     <!-- Summary of cookie banner handling preference if the setting enabled is set to on -->
     <string name="reduce_cookie_banner_option_on" moz:RemovedIn="121" tools:ignore="UnusedResources">Ενεργή</string>
 
     <!-- Summary for the preference for rejecting all cookies whenever possible. The first parameter is the application name -->
-    <string name="reduce_cookie_banner_summary_1" moz:RemovedIn="121" tools:ignore="UnusedResources">Το %1$s προσπαθεί να απορρίπτει αυτόματα τα μηνύματα αιτημάτων για cookies.</string>
+    <string name="reduce_cookie_banner_summary_1" moz:RemovedIn="121" tools:ignore="UnusedResources">Το %1$s προσπαθεί να απορρίπτει αυτόματα τα μηνύματα αιτημάτων για cookie.</string>
     <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_off_for_site">Ανενεργή για αυτόν τον ιστότοπο</string>
     <!-- Text for cancel button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
@@ -499,33 +499,33 @@
     <!-- Text for indicating cookie banner handling is currently not supported for this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_unsupported_site">Ο ιστότοπος δεν υποστηρίζεται</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
-    <string name="reduce_cookie_banner_details_panel_title_on_for_site" moz:RemovedIn="121" tools:ignore="UnusedResources">Ενεργοποίηση μείωσης μηνυμάτων για cookies στο %1$s;</string>
+    <string name="reduce_cookie_banner_details_panel_title_on_for_site" moz:RemovedIn="121" tools:ignore="UnusedResources">Ενεργοποίηση μείωσης μηνυμάτων για cookie στο %1$s;</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
     <string name="reduce_cookie_banner_details_panel_title_on_for_site_1">Ενεργοποίηση αποκλεισμού μηνυμάτων για cookie για το %1$s;</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
-    <string name="reduce_cookie_banner_details_panel_title_off_for_site" moz:RemovedIn="121" tools:ignore="UnusedResources">Απενεργοποίηση μείωσης μηνυμάτων για cookies στο %1$s;</string>
+    <string name="reduce_cookie_banner_details_panel_title_off_for_site" moz:RemovedIn="121" tools:ignore="UnusedResources">Απενεργοποίηση μείωσης μηνυμάτων για cookie στο %1$s;</string>
 
     <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
     <string name="reduce_cookie_banner_details_panel_title_off_for_site_1">Απενεργοποίηση αποκλεισμού μηνυμάτων για cookie για το %1$s;</string>
     <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name-->
-    <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request_2">Το %1$s δεν μπορεί να απορρίψει αυτόματα τα αιτήματα για cookies σε αυτόν τον ιστότοπο. Μπορείτε να στείλετε ένα αίτημα για υποστήριξη αυτού του ιστοτόπου στο μέλλον.</string>
+    <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request_2">Το %1$s δεν μπορεί να απορρίψει αυτόματα τα αιτήματα για cookie σε αυτόν τον ιστότοπο. Μπορείτε να στείλετε ένα αίτημα για υποστήριξη αυτού του ιστοτόπου στο μέλλον.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
-    <string name="reduce_cookie_banner_details_panel_description_off_for_site" moz:RemovedIn="121" tools:ignore="UnusedResources">Το %1$s θα απαλείψει τα cookies του ιστοτόπου και θα ανανεώσει τη σελίδα. Η απαλοιφή όλων των cookies ενδέχεται να σας αποσυνδέσει ή να αδειάσει τα καλάθια αγορών.</string>
+    <string name="reduce_cookie_banner_details_panel_description_off_for_site" moz:RemovedIn="121" tools:ignore="UnusedResources">Το %1$s θα απαλείψει τα cookie του ιστοτόπου και θα ανανεώσει τη σελίδα. Η απαλοιφή όλων των cookie ενδέχεται να σας αποσυνδέσει ή να αδειάσει τα καλάθια αγορών.</string>
 
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_off_for_site_1">Απενεργοποιήστε το και το %1$s θα διαγράψει τα cookie και θα φορτώσει ξανά αυτόν τον ιστότοπο. Μπορεί να αποσυνδεθείτε ή να αδειάσουν τα καλάθια αγορών σας.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
-    <string name="reduce_cookie_banner_details_panel_description_on_for_site_2" moz:RemovedIn="121" tools:ignore="UnusedResources">Το %1$s προσπαθεί να απορρίψει αυτόματα όλα τα αιτήματα για cookies σε υποστηριζόμενους ιστότοπους.</string>
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site_2" moz:RemovedIn="121" tools:ignore="UnusedResources">Το %1$s προσπαθεί να απορρίψει αυτόματα όλα τα αιτήματα για cookie σε υποστηριζόμενους ιστοτόπους.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_on_for_site_3">Ενεργοποιήστε το και το %1$s θα προσπαθεί να απορρίπτει αυτόματα όλα τα μηνύματα για cookie σε αυτόν τον ιστότοπο.</string>
     <!-- Title text for the cookie banner re-engagement dialog. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_dialog_title" moz:RemovedIn="121" tools:ignore="UnusedResources">Να επιτρέπεται στο %1$s η απόρριψη μηνυμάτων για cookies;</string>
+    <string name="reduce_cookie_banner_dialog_title" moz:RemovedIn="121" tools:ignore="UnusedResources">Να επιτρέπεται στο %1$s η απόρριψη μηνυμάτων για cookie;</string>
     <!-- Body text for the cookie banner re-engagement dialog use. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_dialog_body" moz:RemovedIn="121" tools:ignore="UnusedResources">Το %1$s μπορεί να απορρίπτει αυτόματα πολλά μηνύματα αιτημάτων για cookies.</string>
+    <string name="reduce_cookie_banner_dialog_body" moz:RemovedIn="121" tools:ignore="UnusedResources">Το %1$s μπορεί να απορρίπτει αυτόματα πολλά μηνύματα αιτημάτων για cookie.</string>
     <!-- Remind me later text button for the onboarding dialog -->
     <string name="reduce_cookie_banner_dialog_not_now_button" moz:RemovedIn="121" tools:ignore="UnusedResources">Όχι τώρα</string>
     <!-- Snack text for the cookie banner dialog, after user hit the dismiss banner button -->
-    <string name="reduce_cookie_banner_dialog_snackbar_text" moz:RemovedIn="121" tools:ignore="UnusedResources">Θα βλέπετε λιγότερα αιτήματα για cookies</string>
+    <string name="reduce_cookie_banner_dialog_snackbar_text" moz:RemovedIn="121" tools:ignore="UnusedResources">Θα βλέπετε λιγότερα αιτήματα για cookie</string>
 
     <!-- Change setting text button, for the cookie banner re-engagement dialog -->
     <string name="reduce_cookie_banner_dialog_change_setting_button" moz:RemovedIn="121" tools:ignore="UnusedResources">Αποδοχή</string>
@@ -1217,7 +1217,7 @@
     <!-- Preference for altering the persistent storage access for all websites -->
     <string name="preference_phone_feature_persistent_storage">Μόνιμη αποθήκευση</string>
     <!-- Preference for altering the storage access setting for all websites -->
-    <string name="preference_phone_feature_cross_origin_storage_access">Cookies μεταξύ ιστοτόπων</string>
+    <string name="preference_phone_feature_cross_origin_storage_access">Cookie μεταξύ ιστοτόπων</string>
     <!-- Preference for altering the EME access for all websites -->
     <string name="preference_phone_feature_media_key_system_access">Περιεχόμενο με έλεγχο DRM</string>
     <!-- Label that indicates that a permission must be asked always -->
@@ -1359,7 +1359,7 @@
     <!-- Confirmation dialog button -->
     <string name="sync_confirmation_button">Το κατάλαβα</string>
     <!-- Share error message -->
-    <string name="share_error_snackbar">Αδυναμία κοινοποίησης σε αυτή την εφαρμογή</string>
+    <string name="share_error_snackbar">Δεν είναι δυνατή η κοινοποίηση σε αυτήν την εφαρμογή</string>
     <!-- Add new device screen title -->
     <string name="sync_add_new_device_title">Αποστολή σε συσκευή</string>
 
@@ -1387,7 +1387,7 @@
     <string name="notification_re_engagement_title">Δοκιμάστε την ιδιωτική περιήγηση</string>
     <!-- Text shown in the notification that pops up to re-engage the user.
     %1$s is a placeholder that will be replaced by the app name. -->
-    <string name="notification_re_engagement_text">Περιηγηθείτε χωρίς αποθηκευμένα cookies ή ιστορικό στο %1$s</string>
+    <string name="notification_re_engagement_text">Περιηγηθείτε χωρίς αποθηκευμένα cookie ή ιστορικό στο %1$s</string>
 
     <!-- Title A shown in the notification that pops up to re-engage the user -->
     <string name="notification_re_engagement_A_title">Περιηγηθείτε χωρίς να αφήσετε ίχνη</string>
@@ -1481,7 +1481,7 @@
         number of history items the user has -->
     <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d διευθύνσεις</string>
     <!-- Title for the cookies and site data items in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_cookies_and_site_data">Cookies και δεδομένα ιστοτόπων</string>
+    <string name="preferences_delete_browsing_data_cookies_and_site_data">Cookie και δεδομένα ιστοτόπων</string>
     <!-- Subtitle for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies_subtitle">Θα αποσυνδεθείτε από τους περισσότερους ιστοτόπους</string>
     <!-- Title for the cached images and files item in Delete browsing data -->
@@ -1504,7 +1504,7 @@
     <!-- Title text of a delete browsing data dialog. -->
     <string name="delete_history_prompt_title">Χρονικό διάστημα διαγραφής</string>
     <!-- Body text of a delete browsing data dialog. -->
-    <string name="delete_history_prompt_body" moz:RemovedIn="130" tools:ignore="UnusedResources">Διαγράφει το ιστορικό (και το συγχρονισμένο ιστορικό άλλων συσκευών), τα cookies και άλλα δεδομένα περιήγησης.</string>
+    <string name="delete_history_prompt_body" moz:RemovedIn="130" tools:ignore="UnusedResources">Διαγράφει το ιστορικό (και το συγχρονισμένο ιστορικό άλλων συσκευών), τα cookie και άλλα δεδομένα περιήγησης.</string>
     <!-- Body text of a delete browsing data dialog. -->
     <string name="delete_history_prompt_body_2">Διαγράφει το ιστορικό (καθώς και το συγχρονισμένο ιστορικό από άλλες συσκευές)</string>
     <!-- Radio button in the delete browsing data dialog to delete history items for the last hour. -->
@@ -1602,17 +1602,17 @@
     <string name="preference_enhanced_tracking_protection_custom_info_button">Τι αποκλείει η προσαρμοσμένη προστασία από καταγραφή</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
     <!-- Preference for enhanced tracking protection for the custom protection settings for cookies-->
-    <string name="preference_enhanced_tracking_protection_custom_cookies">Cookies</string>
+    <string name="preference_enhanced_tracking_protection_custom_cookies">Cookie</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies_1">Ιχνηλάτες μεταξύ ιστοτόπων και κοινωνικών δικτύων</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
-    <string name="preference_enhanced_tracking_protection_custom_cookies_2">Cookies από ιστοτόπους που δεν έχετε επισκεφθεί</string>
+    <string name="preference_enhanced_tracking_protection_custom_cookies_2">Cookie από ιστοτόπους που δεν έχετε επισκεφθεί</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
-    <string name="preference_enhanced_tracking_protection_custom_cookies_3">Όλα τα cookies τρίτων (πιθανή δυσλειτουργία ιστοτόπων)</string>
+    <string name="preference_enhanced_tracking_protection_custom_cookies_3">Όλα τα τρίτα cookie (πιθανή δυσλειτουργία ιστοτόπων)</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
-    <string name="preference_enhanced_tracking_protection_custom_cookies_4">Όλα τα cookies (προκαλεί δυσλειτουργία ιστοτόπων)</string>
+    <string name="preference_enhanced_tracking_protection_custom_cookies_4">Όλα τα cookie (προκαλεί δυσλειτουργία ιστοτόπων)</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
-    <string name="preference_enhanced_tracking_protection_custom_cookies_5">Απομόνωση cookies μεταξύ ιστοτόπων</string>
+    <string name="preference_enhanced_tracking_protection_custom_cookies_5">Απομόνωση cookie μεταξύ ιστοτόπων</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content">Περιεχόμενο καταγραφής</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
@@ -1634,13 +1634,13 @@
     <!-- Description of social media trackers that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_social_media_trackers_description">Περιορίζει την ικανότητα των κοινωνικών δικτύων να παρακολουθούν τη δραστηριότητά σας στο διαδίκτυο.</string>
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_cookies_title">Cookies καταγραφής μεταξύ ιστοτόπων</string>
+    <string name="etp_cookies_title">Cookie καταγραφής μεταξύ ιστοτόπων</string>
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_cookies_title_2">Cookies μεταξύ ιστοτόπων</string>
+    <string name="etp_cookies_title_2">Cookie μεταξύ ιστοτόπων</string>
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_cookies_description">Αποκλείει τα cookies που χρησιμοποιούν οι εταιρείες διαφημίσεων και ανάλυσης για τη συλλογή δεδομένων περιήγησης σε πολλαπλούς ιστοτόπους.</string>
+    <string name="etp_cookies_description">Αποκλείει τα cookie που χρησιμοποιούν οι εταιρείες διαφημίσεων και ανάλυσης για τη συλλογή δεδομένων περιήγησης σε πολλαπλούς ιστοτόπους.</string>
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_cookies_description_2">Η Ολική προστασία cookie απομονώνει τα cookies στον ιστότοπο που βρίσκεστε, ώστε να μην μπορούν να χρησιμοποιηθούν από ιχνηλάτες, όπως δίκτυα διαφημίσεων, για την καταγραφή της δραστηριότητάς σας.</string>
+    <string name="etp_cookies_description_2">Η Ολική προστασία cookie απομονώνει τα cookie στον ιστότοπο που βρίσκεστε, ώστε να μην μπορούν να χρησιμοποιηθούν από ιχνηλάτες, όπως δίκτυα διαφημίσεων, για την καταγραφή της δραστηριότητάς σας.</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_title">Cryptominer</string>
     <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
@@ -1673,7 +1673,7 @@
     <string name="etp_redirect_trackers_title">Ανακατεύθυνση ιχνηλατών</string>
 
     <!-- Description of redirect tracker cookies that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_redirect_trackers_description">Διαγράφει τα cookies από ανακατευθύνσεις σε γνωστούς ιστοτόπους καταγραφής.</string>
+    <string name="etp_redirect_trackers_description">Διαγράφει τα cookie από ανακατευθύνσεις σε γνωστούς ιστοτόπους καταγραφής.</string>
 
     <!-- Description of the SmartBlock Enhanced Tracking Protection feature. The * symbol is intentionally hardcoded here,
          as we use it on the UI to indicate which trackers have been partially unblocked.  -->
@@ -1996,9 +1996,9 @@
     <string name="search_custom_engine_save_button">Αποθήκευση</string>
 
     <!-- Text shown when a user leaves the name field empty -->
-    <string name="search_add_custom_engine_error_empty_name">Εισάγετε όνομα μηχανής αναζήτησης</string>
+    <string name="search_add_custom_engine_error_empty_name">Εισαγάγετε όνομα μηχανής αναζήτησης</string>
     <!-- Text shown when a user leaves the search string field empty -->
-    <string name="search_add_custom_engine_error_empty_search_string">Εισάγετε νήμα αναζήτησης</string>
+    <string name="search_add_custom_engine_error_empty_search_string">Εισαγάγετε νήμα αναζήτησης</string>
     <!-- Text shown when a user leaves out the required template string -->
     <string name="search_add_custom_engine_error_missing_template">Βεβαιωθείτε ότι το νήμα αναζήτησης συμφωνεί με την μορφή του παραδείγματος</string>
     <!-- Text shown when we aren't able to validate the custom search query. The first parameter is the url of the custom search engine -->
@@ -2026,9 +2026,9 @@
     <!-- Label that indicates a site is using a insecure connection -->
     <string name="quick_settings_sheet_insecure_connection_2">Η σύνδεση δεν είναι ασφαλής</string>
     <!-- Label to clear site data -->
-    <string name="clear_site_data">Απαλοιφή cookies και δεδομένων ιστοτόπων</string>
+    <string name="clear_site_data">Απαλοιφή cookie και δεδομένων ιστοτόπων</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all data for current site -->
-    <string name="confirm_clear_site_data"><![CDATA[Θέλετε σίγουρα να διαγράψετε όλα τα cookies και τα δεδομένα για τον ιστότοπο <b>%s</b>;]]></string>
+    <string name="confirm_clear_site_data"><![CDATA[Θέλετε σίγουρα να διαγράψετε όλα τα cookie και τα δεδομένα για τον ιστότοπο <b>%s</b>;]]></string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for all sites-->
     <string name="confirm_clear_permissions_on_all_sites">Θέλετε σίγουρα να διαγράψετε όλα τα δικαιώματα για όλους τους ιστοτόπους;</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for a site-->
@@ -2038,7 +2038,7 @@
     <!-- label shown when there are not site exceptions to show in the site exception settings -->
     <string name="no_site_exceptions">Καμία εξαίρεση ιστοτόπων</string>
     <!-- Bookmark deletion confirmation -->
-    <string name="bookmark_deletion_confirmation">Θέλετε σίγουρα να διαγράψετε αυτό το σελιδοδείκτη;</string>
+    <string name="bookmark_deletion_confirmation">Θέλετε σίγουρα να διαγράψετε αυτόν τον σελιδοδείκτη;</string>
     <!-- Browser menu button that adds a shortcut to the home fragment -->
     <string name="browser_menu_add_to_shortcuts">Προσθήκη συντόμευσης</string>
     <!-- Browser menu button that removes a shortcut from the home fragment -->

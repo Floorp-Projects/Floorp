@@ -123,7 +123,7 @@
     <!-- This is the title of a dialog that asks the users to grant optional permissions. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_optional_permissions_dialog_title">%1$s 要求更多權限。</string>
     <!-- This is the subtitle of a dialog that asks the users if they want to install or not an add-on, the subtitle lists the permissions that this add-on requires, the permissions will dynamically be listed after the ":". -->
-    <string name="mozac_feature_addons_permissions_dialog_subtitle">要求下列權限:</string>
+    <string name="mozac_feature_addons_permissions_dialog_subtitle">本套件要求下列權限：</string>
     <!-- This is the subtitle of a dialog that asks the users to grant optional permissions, the subtitle lists the permissions that this add-on requests, the permissions will dynamically be listed after the ":". -->
     <string name="mozac_feature_addons_optional_permissions_dialog_subtitle">它想要：</string>
     <!-- This is a button to add (install) an add-on . -->
