@@ -660,10 +660,6 @@ class nsWindow final : public nsBaseWidget {
   bool mPanInProgress : 1;
   // Draw titlebar with :backdrop css state (inactive/unfocused).
   bool mTitlebarBackdropState : 1;
-  // It's undecorated popup utility window, without resizers/titlebar,
-  // movable by mouse. Used on Wayland for popups without
-  // parent (for instance WebRTC sharing indicator, notifications).
-  bool mIsWaylandPanelWindow : 1;
   // It's child window, i.e. window which is nested in parent window.
   // This is obsoleted and should not be used.
   // We use GdkWindow hierarchy for such windows.
