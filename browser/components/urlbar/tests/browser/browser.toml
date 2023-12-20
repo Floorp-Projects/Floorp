@@ -281,9 +281,6 @@ support-files = [
 
 ["browser_locationBarCommand.js"]
 https_first_disabled = true
-skip-if = [
-  "os == 'linux' && bits == 64 && !debug", # Bug 1787020
-]
 
 ["browser_locationBarExternalLoad.js"]
 
