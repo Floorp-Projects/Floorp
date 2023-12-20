@@ -6,6 +6,16 @@ const HTTPS_ONLY_PERMISSION = "https-only-load-insecure";
 const WEBSITE = scheme => `${scheme}://example.com`;
 
 add_task(async function () {
+  info("Running regular tests");
+  await runTests();
+  info("Running tests with view-source: uri");
+  await runTests({ outerScheme: "view-source" });
+});
+
+async function runTests(options = {}) {
+  const { outerScheme = "" } = options;
+  const outerSchemePrefix = outerScheme ? outerScheme + ":" : "";
+
   await SpecialPowers.pushPrefEnv({
     set: [["dom.security.https_only_mode", true]],
   });
@@ -13,7 +23,7 @@ add_task(async function () {
   // Site is already HTTPS, so the UI should not be visible.
   await runTest({
     name: "No HTTPS-Only UI",
-    initialScheme: "https",
+    initialScheme: outerSchemePrefix + "https",
     initialPermission: 0,
     isUiVisible: false,
   });
@@ -23,12 +33,12 @@ add_task(async function () {
   // set the permission accordingly.
   await runTest({
     name: "Add HTTPS-Only exemption",
-    initialScheme: "http",
+    initialScheme: outerSchemePrefix + "http",
     initialPermission: 0,
     isUiVisible: true,
     selectPermission: 1,
     expectReload: true,
-    finalScheme: "https",
+    finalScheme: outerScheme || "https",
   });
 
   // HTTPS-Only Mode is disabled for this site, so the UI should be visible.
@@ -36,12 +46,12 @@ add_task(async function () {
   // but set the permission accordingly.
   await runTest({
     name: "Switch between HTTPS-Only exemption modes",
-    initialScheme: "http",
+    initialScheme: outerSchemePrefix + "http",
     initialPermission: 1,
     isUiVisible: true,
     selectPermission: 2,
     expectReload: false,
-    finalScheme: "http",
+    finalScheme: outerScheme || "http",
   });
 
   // HTTPS-Only Mode is disabled for this site, so the UI should be visible.
@@ -49,13 +59,13 @@ add_task(async function () {
   // page and set the permission accordingly.
   await runTest({
     name: "Remove HTTPS-Only exemption again",
-    initialScheme: "http",
+    initialScheme: outerSchemePrefix + "http",
     initialPermission: 2,
     permissionScheme: "http",
     isUiVisible: true,
     selectPermission: 0,
     expectReload: true,
-    finalScheme: "https",
+    finalScheme: outerScheme || "https",
   });
 
   await SpecialPowers.flushPrefEnv();
@@ -66,7 +76,7 @@ add_task(async function () {
   // Site is already HTTPS, so the UI should not be visible.
   await runTest({
     name: "No HTTPS-Only UI",
-    initialScheme: "https",
+    initialScheme: outerSchemePrefix + "https",
     initialPermission: 0,
     permissionScheme: "https",
     isUiVisible: false,
@@ -77,13 +87,13 @@ add_task(async function () {
   // set the permission accordingly.
   await runTest({
     name: "Add HTTPS-Only exemption",
-    initialScheme: "http",
+    initialScheme: outerSchemePrefix + "http",
     initialPermission: 0,
     permissionScheme: "https",
     isUiVisible: true,
     selectPermission: 1,
     expectReload: true,
-    finalScheme: "https",
+    finalScheme: outerScheme || "https",
   });
 
   // HTTPS-First Mode is disabled for this site, so the UI should be visible.
@@ -91,13 +101,13 @@ add_task(async function () {
   // but set the permission accordingly.
   await runTest({
     name: "Switch between HTTPS-Only exemption modes",
-    initialScheme: "http",
+    initialScheme: outerSchemePrefix + "http",
     initialPermission: 1,
     permissionScheme: "http",
     isUiVisible: true,
     selectPermission: 2,
     expectReload: false,
-    finalScheme: "http",
+    finalScheme: outerScheme || "http",
   });
 
   // HTTPS-First Mode is disabled for this site, so the UI should be visible.
@@ -105,14 +115,14 @@ add_task(async function () {
   // page and set the permission accordingly.
   await runTest({
     name: "Remove HTTPS-Only exemption again",
-    initialScheme: "http",
+    initialScheme: outerSchemePrefix + "http",
     initialPermission: 2,
     isUiVisible: true,
     selectPermission: 0,
     expectReload: true,
-    finalScheme: "https",
+    finalScheme: outerScheme || "https",
   });
-});
+}
 
 async function runTest(options) {
   // Set the initial permission
