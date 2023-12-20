@@ -16,6 +16,7 @@ async protocol PNativeDNSResolverOverride
 child:
   async __delete__();
   async AddIPOverride(nsCString aHost, nsCString aIPLiteral);
+  async AddHTTPSRecordOverride(nsCString aHost, uint8_t[] aData);
   async SetCnameOverride(nsCString aHost, nsCString aCNAME);
   async ClearHostOverride(nsCString aHost);
   async ClearOverrides();

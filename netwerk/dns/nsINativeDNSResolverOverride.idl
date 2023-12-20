@@ -13,6 +13,14 @@ interface nsINativeDNSResolverOverride : nsISupports
   void addIPOverride(in AUTF8String aHost, in ACString aIPLiteral);
 
   /**
+   * Adds an HTTPS record override for this specific host.
+   * The input needs to be the raw bytes of a DNS answer.
+   */
+  void addHTTPSRecordOverride(in AUTF8String aHost,
+                              [array, size_is(aLength), const] in uint8_t aData,
+                              in unsigned long aLength);
+
+  /**
    * Sets a CNAME override for this specific host.
    */
   void setCnameOverride(in AUTF8String aHost, in ACString aCNAME);
