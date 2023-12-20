@@ -861,12 +861,8 @@ void ContentAnalysis::DoAnalyzeRequest(
               "because it was already cancelled for token %s",
               responseRequestToken.get());
           // Note that we always acknowledge here, even if
-          // autoAcknowledge isn't set. From the caller's perspective
-          // the request has already been
-          // cancelled and the caller isn't going to get any
-          // notification that the DLP agent sent a response, so
-          // the caller wouldn't be able to send an
-          // acknowledgment.
+          // autoAcknowledge isn't set, since we raise an exception
+          // at the caller on cancellation.
           auto acknowledgement = MakeRefPtr<ContentAnalysisAcknowledgement>(
               nsIContentAnalysisAcknowledgement::Result::eTooLate,
               nsIContentAnalysisAcknowledgement::FinalAction::eBlock);
@@ -944,37 +940,26 @@ ContentAnalysis::AnalyzeContentRequestCallback(
 
 NS_IMETHODIMP
 ContentAnalysis::CancelContentAnalysisRequest(const nsACString& aRequestToken) {
-  NS_DispatchToMainThread(NS_NewCancelableRunnableFunction(
-      "CancelContentAnalysisRequest",
-      [requestToken = nsCString{aRequestToken}]() {
-        RefPtr<ContentAnalysis> self = GetContentAnalysisFromService();
-        if (!self) {
-          // May be shutting down
-          return;
-        }
+  MOZ_ASSERT(NS_IsMainThread());
+  nsCString requestToken(aRequestToken);
 
-        auto callbackMap = self->mCallbackMap.Lock();
-        auto entry = callbackMap->Lookup(requestToken);
-        LOGD("Content analysis cancelling request %s", requestToken.get());
-        // Make sure the entry hasn't been cancelled already
-        if (entry && !entry->Canceled()) {
-          RefPtr<ContentAnalysisResponse> cancelResponse =
-              ContentAnalysisResponse::FromAction(
-                  nsIContentAnalysisResponse::Action::eCanceled, requestToken);
-          cancelResponse->SetOwner(self);
-          nsMainThreadPtrHandle<nsIContentAnalysisCallback> callbackHolder =
-              entry->TakeCallbackHolder();
-          entry->SetCanceled();
-          // Should only be called once
-          MOZ_ASSERT(callbackHolder);
-          if (callbackHolder) {
-            callbackHolder->ContentResult(cancelResponse.get());
-          }
-        } else {
-          LOGD("Content analysis request not found when trying to cancel %s",
-               requestToken.get());
-        }
-      }));
+  auto callbackMap = mCallbackMap.Lock();
+  auto entry = callbackMap->Lookup(requestToken);
+  LOGD("Content analysis cancelling request %s", requestToken.get());
+  // Make sure the entry hasn't been cancelled already
+  if (entry && !entry->Canceled()) {
+    nsMainThreadPtrHandle<nsIContentAnalysisCallback> callbackHolder =
+        entry->TakeCallbackHolder();
+    entry->SetCanceled();
+    // Should only be called once
+    MOZ_ASSERT(callbackHolder);
+    if (callbackHolder) {
+      callbackHolder->Error(NS_ERROR_ABORT);
+    }
+  } else {
+    LOGD("Content analysis request not found when trying to cancel %s",
+         requestToken.get());
+  }
   return NS_OK;
 }
 
