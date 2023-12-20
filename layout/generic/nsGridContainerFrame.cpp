@@ -7484,33 +7484,10 @@ void nsGridContainerFrame::ReflowInFlowChild(
   ReflowOutput childSize(childRI);
   const nsSize dummyContainerSize;
 
-  // XXXdholbert The childPos that we use for ReflowChild shouldn't matter,
-  // since we finalize it in FinishReflowChild. However, it does matter if the
-  // child happens to be XUL (which sizes menu popup frames based on the
-  // position within the viewport, during this ReflowChild call). So we make an
-  // educated guess that the child will be at the origin of its containing
-  // block, and then use align/justify to correct that as-needed further
-  // down. (If the child has a different writing mode than its parent, though,
-  // then we can't express the CB origin until we've reflowed the child and
-  // determined its size. In that case, we throw up our hands and don't bother
-  // trying to guess the position up-front after all.)
-  // XXXdholbert We'll remove this special case in bug 1600542, and then we can
-  // go back to just setting childPos in a single call after ReflowChild.
-  LogicalPoint childPos(childWM);
-  if (MOZ_LIKELY(childWM == wm)) {
-    // Initially, assume the child will be at the containing block origin.
-    // (This may get corrected during alignment/justification below.)
-    childPos = cb.Origin(wm);
-  }
-  ReflowChild(aChild, pc, childSize, childRI, childWM, childPos,
+  ReflowChild(aChild, pc, childSize, childRI, childWM, LogicalPoint(childWM),
               dummyContainerSize, ReflowChildFlags::Default, aStatus);
-  if (MOZ_UNLIKELY(childWM != wm)) {
-    // As above: assume the child will be at the containing block origin.
-    // (which we can now compute in terms of the childWM, now that we know the
-    // child's size).
-    childPos = cb.Origin(wm).ConvertTo(
-        childWM, wm, aContainerSize - childSize.PhysicalSize());
-  }
+  LogicalPoint childPos = cb.Origin(wm).ConvertTo(
+      childWM, wm, aContainerSize - childSize.PhysicalSize());
   // Apply align/justify-self and reflow again if that affects the size.
   if (MOZ_LIKELY(isGridItem)) {
     LogicalSize size = childSize.Size(childWM);  // from the ReflowChild()

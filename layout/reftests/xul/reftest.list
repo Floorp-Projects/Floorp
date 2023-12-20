@@ -1,5 +1,4 @@
 == chrome://reftest/content/xul/css-flex-1.xhtml css-flex-1-ref.html
-fuzzy-if(cocoaWidget,0-7,0-2) == chrome://reftest/content/xul/css-grid-with-xul-item-1.xhtml chrome://reftest/content/xul/css-grid-with-xul-item-1-ref.xhtml
 
 == chrome://reftest/content/xul/menuitem-key.xhtml chrome://reftest/content/xul/menuitem-key-ref.xhtml
 # accesskeys are not normally displayed on Mac, so set a pref to enable them
