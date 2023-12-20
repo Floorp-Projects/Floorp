@@ -641,8 +641,10 @@ class FedCMProtocolPart(ProtocolPart):
         pass
 
     @abstractmethod
-    def confirm_idp_login(self):
-        """Confirm IDP login"""
+    def click_fedcm_dialog_button(self, dialog_button):
+        """Click a button on the FedCM dialog
+
+        :param str dialog_button: The dialog button to click"""
         pass
 
     @abstractmethod
