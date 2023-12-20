@@ -453,9 +453,6 @@ class nsGridContainerFrame final : public nsContainerFrame,
    */
   nsFrameState ComputeSelfSubgridMasonryBits() const;
 
-  /** Helper for ComputeSelfSubgridMasonryBits(). */
-  bool WillHaveAtLeastOneTrackInAxis(LogicalAxis aAxis) const;
-
  private:
   // Helpers for ReflowChildren
   struct Fragmentainer {
