@@ -83,6 +83,10 @@ exclude = [
 include = [
   "AnimationTimeline",
   "AnimationIterationCount",
+  "AnimationDirection",
+  "AnimationFillMode",
+  "AnimationPlayState",
+  "AnimationComposition",
   "Appearance",
   "Au",
   "BreakBetween",
@@ -721,7 +725,8 @@ renaming_overrides_prefixing = true
   inline void Release();
 
  public:
-  inline explicit StyleAtom(already_AddRefed<nsAtom> aAtom);
+  inline explicit StyleAtom(already_AddRefed<nsAtom>);
+  inline explicit StyleAtom(nsStaticAtom*);
   inline StyleAtom(const StyleAtom& aOther);
   inline StyleAtom& operator=(const StyleAtom&);
   inline ~StyleAtom();
@@ -977,7 +982,7 @@ renaming_overrides_prefixing = true
 
 "AnimationName" = """
  public:
-  StyleAnimationName(): _0(RefPtr<nsAtom>(nsGkAtoms::_empty).forget()) {}
+  StyleAnimationName() : _0(nsGkAtoms::_empty) {}
 """
 
 "GenericViewTimelineInset" = """

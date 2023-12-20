@@ -497,21 +497,6 @@ bool Gecko_StyleViewTimelinesEquals(
   return *aA == *aB;
 }
 
-void Gecko_CopyAnimationNames(nsStyleAutoArray<StyleAnimation>* aDest,
-                              const nsStyleAutoArray<StyleAnimation>* aSrc) {
-  size_t srcLength = aSrc->Length();
-  aDest->EnsureLengthAtLeast(srcLength);
-
-  for (size_t index = 0; index < srcLength; index++) {
-    (*aDest)[index].SetName((*aSrc)[index].GetName());
-  }
-}
-
-void Gecko_SetAnimationName(StyleAnimation* aStyleAnimation, nsAtom* aAtom) {
-  MOZ_ASSERT(aStyleAnimation);
-  aStyleAnimation->SetName(already_AddRefed<nsAtom>(aAtom));
-}
-
 void Gecko_UpdateAnimations(const Element* aElement,
                             const ComputedStyle* aOldComputedData,
                             const ComputedStyle* aComputedData,
@@ -1044,7 +1029,6 @@ void Gecko_EnsureImageLayersLength(nsStyleImageLayers* aLayers, size_t aLen,
 
 template <typename StyleType>
 static void EnsureStyleAutoArrayLength(StyleType* aArray, size_t aLen) {
-  size_t oldLength = aArray->Length();
   aArray->EnsureLengthAtLeast(aLen);
 }
 

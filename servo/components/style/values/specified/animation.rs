@@ -105,7 +105,7 @@ impl TransitionProperty {
 }
 
 /// https://drafts.csswg.org/css-animations/#animation-iteration-count
-#[derive(Clone, Debug, MallocSizeOf, PartialEq, Parse, SpecifiedValueInfo, ToCss, ToShmem)]
+#[derive(Copy, Clone, Debug, MallocSizeOf, PartialEq, Parse, SpecifiedValueInfo, ToCss, ToShmem)]
 pub enum AnimationIterationCount {
     /// A `<number>` value.
     Number(NonNegativeNumber),
@@ -173,10 +173,52 @@ impl Parse for AnimationName {
     }
 }
 
+/// https://drafts.csswg.org/css-animations/#propdef-animation-direction
+#[derive(Copy, Clone, Debug, MallocSizeOf, Parse, PartialEq, SpecifiedValueInfo, ToComputedValue, ToCss, ToResolvedValue, ToShmem)]
+#[repr(u8)]
+#[allow(missing_docs)]
+pub enum AnimationDirection {
+    Normal,
+    Reverse,
+    Alternate,
+    AlternateReverse,
+}
+
+/// https://drafts.csswg.org/css-animations/#animation-play-state
+#[derive(Copy, Clone, Debug, MallocSizeOf, Parse, PartialEq, SpecifiedValueInfo, ToComputedValue, ToCss, ToResolvedValue, ToShmem)]
+#[repr(u8)]
+#[allow(missing_docs)]
+pub enum AnimationPlayState {
+    Running,
+    Paused,
+}
+
+/// https://drafts.csswg.org/css-animations/#propdef-animation-fill-mode
+#[derive(Copy, Clone, Debug, MallocSizeOf, Parse, PartialEq, SpecifiedValueInfo, ToComputedValue, ToCss, ToResolvedValue, ToShmem)]
+#[repr(u8)]
+#[allow(missing_docs)]
+pub enum AnimationFillMode {
+    None,
+    Forwards,
+    Backwards,
+    Both,
+}
+
+/// https://drafts.csswg.org/css-animations-2/#animation-composition
+#[derive(Copy, Clone, Debug, MallocSizeOf, Parse, PartialEq, SpecifiedValueInfo, ToComputedValue, ToCss, ToResolvedValue, ToShmem)]
+#[repr(u8)]
+#[allow(missing_docs)]
+pub enum AnimationComposition {
+    Replace,
+    Add,
+    Accumulate,
+}
+
 /// A value for the <Scroller> used in scroll().
 ///
 /// https://drafts.csswg.org/scroll-animations-1/rewrite#typedef-scroller
 #[derive(
+    Copy,
     Clone,
     Debug,
     Eq,
@@ -221,6 +263,7 @@ impl Default for Scroller {
 /// https://drafts.csswg.org/scroll-animations-1/#scroll-timeline-axis
 /// https://drafts.csswg.org/scroll-animations-1/#view-timeline-axis
 #[derive(
+    Copy,
     Clone,
     Debug,
     Eq,
@@ -263,6 +306,7 @@ impl Default for ScrollAxis {
 /// The scroll() notation.
 /// https://drafts.csswg.org/scroll-animations-1/#scroll-notation
 #[derive(
+    Copy,
     Clone,
     Debug,
     MallocSizeOf,

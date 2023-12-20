@@ -312,6 +312,9 @@ inline StyleAtom::StyleAtom(already_AddRefed<nsAtom> aAtom) {
   MOZ_ASSERT(AsAtom() == atom);
 }
 
+inline StyleAtom::StyleAtom(nsStaticAtom* aAtom)
+    : StyleAtom(do_AddRef(static_cast<nsAtom*>(aAtom))) {}
+
 inline StyleAtom::StyleAtom(const StyleAtom& aOther) : _0(aOther._0) {
   AddRef();
 }
@@ -475,9 +478,7 @@ StyleGradient::ColorInterpolationMethod() const {
 
 template <typename Integer>
 inline StyleGenericGridLine<Integer>::StyleGenericGridLine()
-    : ident{StyleAtom(do_AddRef(static_cast<nsAtom*>(nsGkAtoms::_empty)))},
-      line_num(0),
-      is_span(false) {}
+    : ident{StyleAtom(nsGkAtoms::_empty)}, line_num(0), is_span(false) {}
 
 template <>
 inline nsAtom* StyleGridLine::LineName() const {

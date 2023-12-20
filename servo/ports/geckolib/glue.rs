@@ -6487,7 +6487,7 @@ pub unsafe extern "C" fn Servo_StyleSet_GetKeyframesForName(
     keyframes: &mut nsTArray<structs::Keyframe>,
 ) -> bool {
     use style::gecko_bindings::structs::CompositeOperationOrAuto;
-    use style::properties::longhands::animation_composition::single_value::computed_value::T as Composition;
+    use style::values::computed::AnimationComposition;
 
     debug_assert!(keyframes.len() == 0, "keyframes should be initially empty");
 
@@ -6531,9 +6531,9 @@ pub unsafe extern "C" fn Servo_StyleSet_GetKeyframesForName(
         let composition =
             step.get_animation_composition(&guard)
                 .map_or(CompositeOperationOrAuto::Auto, |val| match val {
-                    Composition::Replace => CompositeOperationOrAuto::Replace,
-                    Composition::Add => CompositeOperationOrAuto::Add,
-                    Composition::Accumulate => CompositeOperationOrAuto::Accumulate,
+                    AnimationComposition::Replace => CompositeOperationOrAuto::Replace,
+                    AnimationComposition::Add => CompositeOperationOrAuto::Add,
+                    AnimationComposition::Accumulate => CompositeOperationOrAuto::Accumulate,
                 });
 
         // Look for an existing keyframe with the same offset, timing function, and compsition, or
