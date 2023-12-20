@@ -1785,7 +1785,7 @@ void LibvpxVp9Encoder::GetEncodedLayerFrame(const vpx_codec_cx_pkt* pkt) {
   UpdateReferenceBuffers(*pkt, pics_since_key_);
 
   TRACE_COUNTER1("webrtc", "EncodedFrameSize", encoded_image_.size());
-  encoded_image_.SetTimestamp(input_image_->timestamp());
+  encoded_image_.SetRtpTimestamp(input_image_->timestamp());
   encoded_image_.SetCaptureTimeIdentifier(
       input_image_->capture_time_identifier());
   encoded_image_.SetColorSpace(input_image_->color_space());
@@ -1820,7 +1820,7 @@ void LibvpxVp9Encoder::DeliverBufferedFrame(bool end_of_picture) {
     if (codec_.mode == VideoCodecMode::kScreensharing) {
       const uint8_t spatial_idx = encoded_image_.SpatialIndex().value_or(0);
       const uint32_t frame_timestamp_ms =
-          1000 * encoded_image_.Timestamp() / kVideoPayloadTypeFrequency;
+          1000 * encoded_image_.RtpTimestamp() / kVideoPayloadTypeFrequency;
       framerate_controller_[spatial_idx].AddFrame(frame_timestamp_ms);
 
       const size_t steady_state_size = SteadyStateSize(

@@ -10,7 +10,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/1387b2c480b55ecca
  2 files changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/modules/video_coding/codecs/vp8/libvpx_vp8_decoder.cc b/modules/video_coding/codecs/vp8/libvpx_vp8_decoder.cc
-index 01cedb5316..92d123866d 100644
+index 5afd105949..9b77388f10 100644
 --- a/modules/video_coding/codecs/vp8/libvpx_vp8_decoder.cc
 +++ b/modules/video_coding/codecs/vp8/libvpx_vp8_decoder.cc
 @@ -46,7 +46,7 @@ const char kVp8PostProcArmFieldTrial[] = "WebRTC-VP8-Postproc-Config-Arm";
@@ -23,10 +23,10 @@ index 01cedb5316..92d123866d 100644
  #else
  constexpr bool kIsArm = false;
 diff --git a/modules/video_coding/codecs/vp8/libvpx_vp8_encoder.cc b/modules/video_coding/codecs/vp8/libvpx_vp8_encoder.cc
-index 5457402542..bceb321951 100644
+index 1ff3f09bd1..daaa9fff49 100644
 --- a/modules/video_coding/codecs/vp8/libvpx_vp8_encoder.cc
 +++ b/modules/video_coding/codecs/vp8/libvpx_vp8_encoder.cc
-@@ -693,7 +693,7 @@ int LibvpxVp8Encoder::InitEncode(const VideoCodec* inst,
+@@ -745,7 +745,7 @@ int LibvpxVp8Encoder::InitEncode(const VideoCodec* inst,
  
  int LibvpxVp8Encoder::GetCpuSpeed(int width, int height) {
  #if defined(WEBRTC_ARCH_ARM) || defined(WEBRTC_ARCH_ARM64) || \
@@ -35,7 +35,7 @@ index 5457402542..bceb321951 100644
    // On mobile platform, use a lower speed setting for lower resolutions for
    // CPUs with 4 or more cores.
    RTC_DCHECK_GT(number_of_cores_, 0);
-@@ -726,7 +726,7 @@ int LibvpxVp8Encoder::GetCpuSpeed(int width, int height) {
+@@ -778,7 +778,7 @@ int LibvpxVp8Encoder::GetCpuSpeed(int width, int height) {
  }
  
  int LibvpxVp8Encoder::NumberOfThreads(int width, int height, int cpus) {
@@ -44,7 +44,7 @@ index 5457402542..bceb321951 100644
    if (width * height >= 320 * 180) {
      if (cpus >= 4) {
        // 3 threads for CPUs with 4 and more cores since most of times only 4
-@@ -800,7 +800,7 @@ int LibvpxVp8Encoder::InitAndSetControlSettings() {
+@@ -852,7 +852,7 @@ int LibvpxVp8Encoder::InitAndSetControlSettings() {
    // multi-res encoding feature?
    denoiserState denoiser_state = kDenoiserOnYOnly;
  #if defined(WEBRTC_ARCH_ARM) || defined(WEBRTC_ARCH_ARM64) || \

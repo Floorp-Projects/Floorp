@@ -108,7 +108,7 @@ TEST_F(GenericDecoderTest, FrameDroppedIfTooManyFramesInFlight) {
   decoder_.SetDelayedDecoding(10);
   for (int i = 0; i < kMaxFramesInFlight + 1; ++i) {
     EncodedFrame encoded_frame;
-    encoded_frame.SetTimestamp(90000 * i);
+    encoded_frame.SetRtpTimestamp(90000 * i);
     generic_decoder_.Decode(encoded_frame, clock_->CurrentTime());
   }
 

@@ -32,10 +32,10 @@ namespace webrtc {
 // TODO(bugs.webrtc.org/11993): OnSendPacket and OnSentPacket will eventually
 // be called consistently on the same thread. Once we're there, we should be
 // able to avoid locking (at least for the fast path).
-class SendDelayStats : public SendPacketObserver {
+class SendDelayStats {
  public:
   explicit SendDelayStats(Clock* clock);
-  ~SendDelayStats() override;
+  ~SendDelayStats();
 
   // Adds the configured ssrcs for the rtp streams.
   // Stats will be calculated for these streams.
@@ -44,12 +44,8 @@ class SendDelayStats : public SendPacketObserver {
   // Called when a packet is sent (leaving socket).
   bool OnSentPacket(int packet_id, Timestamp time);
 
- protected:
-  // From SendPacketObserver.
   // Called when a packet is sent to the transport.
-  void OnSendPacket(uint16_t packet_id,
-                    Timestamp capture_time,
-                    uint32_t ssrc) override;
+  void OnSendPacket(uint16_t packet_id, Timestamp capture_time, uint32_t ssrc);
 
  private:
   // Map holding sent packets (mapped by sequence number).

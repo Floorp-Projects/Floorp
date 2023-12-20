@@ -135,7 +135,9 @@ bool RequiresEncoderReset(const VideoCodec& prev_send_codec,
         return true;
       }
       break;
-
+    case kVideoCodecH265:
+      // TODO(bugs.webrtc.org/13485): Implement new send codec H265
+      [[fallthrough]];
     default:
       break;
   }
@@ -1351,6 +1353,7 @@ void VideoStreamEncoder::ReconfigureEncoder() {
     // TODO(sprang): Add a better way to disable frame dropping.
     num_layers = codec.simulcastStream[0].numberOfTemporalLayers;
   } else {
+    // TODO(bugs.webrtc.org/13485): Implement H265 temporal layer
     num_layers = 1;
   }
 
@@ -2130,7 +2133,7 @@ EncodedImageCallback::Result VideoStreamEncoder::OnEncodedImage(
     const EncodedImage& encoded_image,
     const CodecSpecificInfo* codec_specific_info) {
   TRACE_EVENT_INSTANT1("webrtc", "VCMEncodedFrameCallback::Encoded",
-                       "timestamp", encoded_image.Timestamp());
+                       "timestamp", encoded_image.RtpTimestamp());
 
   const size_t simulcast_index = encoded_image.SimulcastIndex().value_or(0);
   const VideoCodecType codec_type = codec_specific_info

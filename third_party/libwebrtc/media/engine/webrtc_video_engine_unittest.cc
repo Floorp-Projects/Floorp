@@ -382,7 +382,9 @@ class WebRtcVideoEngineTest : public ::testing::Test {
   // Find the codec in the engine with the given name. The codec must be
   // present.
   cricket::VideoCodec GetEngineCodec(const std::string& name) const;
-  void AddSupportedVideoCodecType(const std::string& name);
+  void AddSupportedVideoCodecType(
+      const std::string& name,
+      const std::vector<webrtc::ScalabilityMode>& scalability_modes = {});
   std::unique_ptr<VideoMediaSendChannelInterface>
   SetSendParamsWithAllSupportedCodecs();
 
@@ -720,16 +722,17 @@ TEST_F(WebRtcVideoEngineTest, RtxCodecAddedForH264Codec) {
   // Now search for RTX codecs for them. Expect that they all have associated
   // RTX codecs.
   EXPECT_TRUE(HasRtxCodec(
-      codecs, FindMatchingCodec(
+      codecs, FindMatchingVideoCodec(
                   codecs, cricket::CreateVideoCodec(h264_constrained_baseline))
                   ->id));
   EXPECT_TRUE(HasRtxCodec(
-      codecs, FindMatchingCodec(
+      codecs, FindMatchingVideoCodec(
                   codecs, cricket::CreateVideoCodec(h264_constrained_high))
                   ->id));
   EXPECT_TRUE(HasRtxCodec(
       codecs,
-      FindMatchingCodec(codecs, cricket::CreateVideoCodec(h264_high))->id));
+      FindMatchingVideoCodec(codecs, cricket::CreateVideoCodec(h264_high))
+          ->id));
 }
 
 #if defined(RTC_ENABLE_VP9)
@@ -855,8 +858,9 @@ cricket::VideoCodec WebRtcVideoEngineTest::GetEngineCodec(
 }
 
 void WebRtcVideoEngineTest::AddSupportedVideoCodecType(
-    const std::string& name) {
-  encoder_factory_->AddSupportedVideoCodecType(name);
+    const std::string& name,
+    const std::vector<webrtc::ScalabilityMode>& scalability_modes) {
+  encoder_factory_->AddSupportedVideoCodecType(name, scalability_modes);
   decoder_factory_->AddSupportedVideoCodecType(name);
 }
 
@@ -2645,6 +2649,8 @@ class WebRtcVideoChannelTest : public WebRtcVideoEngineTest {
   void SetUp() override {
     AddSupportedVideoCodecType("VP8");
     AddSupportedVideoCodecType("VP9");
+    AddSupportedVideoCodecType(
+        "AV1", {ScalabilityMode::kL1T3, ScalabilityMode::kL2T3});
 #if defined(WEBRTC_USE_H264)
     AddSupportedVideoCodecType("H264");
 #endif
@@ -3660,6 +3666,42 @@ TEST_F(WebRtcVideoChannelTest, VerifyVp8SpecificSettings) {
   EXPECT_FALSE(vp8_settings.denoisingOn);
   EXPECT_FALSE(vp8_settings.automaticResizeOn);
   EXPECT_TRUE(stream->GetEncoderConfig().frame_drop_enabled);
+
+  EXPECT_TRUE(send_channel_->SetVideoSend(last_ssrc_, nullptr, nullptr));
+}
+
+TEST_F(WebRtcVideoChannelTest, VerifyAv1SpecificSettings) {
+  cricket::VideoSenderParameters parameters;
+  parameters.codecs.push_back(GetEngineCodec("AV1"));
+  ASSERT_TRUE(send_channel_->SetSenderParameters(parameters));
+  webrtc::test::FrameForwarder frame_forwarder;
+  webrtc::VideoCodecAV1 settings;
+
+  // Single-stream settings should apply with RTX as well (verifies that we
+  // check number of regular SSRCs and not StreamParams::ssrcs which contains
+  // both RTX and regular SSRCs).
+  FakeVideoSendStream* stream = SetUpSimulcast(false, /*with_rtx=*/true);
+  EXPECT_TRUE(
+      send_channel_->SetVideoSend(last_ssrc_, nullptr, &frame_forwarder));
+  send_channel_->SetSend(true);
+  frame_forwarder.IncomingCapturedFrame(frame_source_.GetFrame());
+
+  ASSERT_TRUE(stream->GetAv1Settings(&settings)) << "No AV1 config set.";
+  EXPECT_TRUE(settings.automatic_resize_on);
+
+  webrtc::RtpParameters rtp_parameters =
+      send_channel_->GetRtpSendParameters(last_ssrc_);
+  EXPECT_THAT(
+      rtp_parameters.encodings,
+      ElementsAre(Field(&webrtc::RtpEncodingParameters::scalability_mode,
+                        absl::nullopt)));
+  rtp_parameters.encodings[0].scalability_mode = "L2T3";
+  EXPECT_TRUE(
+      send_channel_->SetRtpSendParameters(last_ssrc_, rtp_parameters).ok());
+  frame_forwarder.IncomingCapturedFrame(frame_source_.GetFrame());
+
+  ASSERT_TRUE(stream->GetAv1Settings(&settings)) << "No AV1 config set.";
+  EXPECT_FALSE(settings.automatic_resize_on);
 
   EXPECT_TRUE(send_channel_->SetVideoSend(last_ssrc_, nullptr, nullptr));
 }

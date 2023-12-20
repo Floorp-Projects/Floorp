@@ -192,7 +192,7 @@ Port::~Port() {
   DestroyAllConnections();
 }
 
-const std::string& Port::Type() const {
+const absl::string_view Port::Type() const {
   return type_;
 }
 const rtc::Network* Port::Network() const {

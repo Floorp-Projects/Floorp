@@ -464,7 +464,7 @@ class TestSimulcastEncoderAdapterFake : public ::testing::Test,
     last_encoded_image_height_ = encoded_image._encodedHeight;
     last_encoded_image_simulcast_index_ = encoded_image.SimulcastIndex();
 
-    return Result(Result::OK, encoded_image.Timestamp());
+    return Result(Result::OK, encoded_image.RtpTimestamp());
   }
 
   bool GetLastEncodedImageInfo(absl::optional<int>* out_width,

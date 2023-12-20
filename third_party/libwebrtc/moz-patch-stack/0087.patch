@@ -18,7 +18,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/2f1a0ba74bf71cfa0
  6 files changed, 24 insertions(+), 4 deletions(-)
 
 diff --git a/api/frame_transformer_interface.h b/api/frame_transformer_interface.h
-index bd9ea2d67a..62a955c508 100644
+index 40d2f3655e..5b90057dc5 100644
 --- a/api/frame_transformer_interface.h
 +++ b/api/frame_transformer_interface.h
 @@ -59,6 +59,7 @@ class TransformableVideoFrameInterface : public TransformableFrameInterface {
@@ -45,10 +45,10 @@ index a398f16d46..8136730e4c 100644
      return flexfec_ssrc_;
    }
 diff --git a/modules/rtp_rtcp/source/rtp_sender_video.cc b/modules/rtp_rtcp/source/rtp_sender_video.cc
-index b846f7f7ea..6cc9938847 100644
+index 4d819a80a9..2a6e7a235c 100644
 --- a/modules/rtp_rtcp/source/rtp_sender_video.cc
 +++ b/modules/rtp_rtcp/source/rtp_sender_video.cc
-@@ -154,6 +154,7 @@ RTPSenderVideo::RTPSenderVideo(const Config& config)
+@@ -158,6 +158,7 @@ RTPSenderVideo::RTPSenderVideo(const Config& config)
                      this,
                      config.frame_transformer,
                      rtp_sender_->SSRC(),
@@ -149,7 +149,7 @@ index a333db235a..3379ead364 100644
    // happen if a hardware encoder was used.
    std::unique_ptr<TaskQueueBase, TaskQueueDeleter> transformation_queue_;
 diff --git a/modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate.cc b/modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate.cc
-index 79a3238522..99fc711579 100644
+index abca496973..a609a65102 100644
 --- a/modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate.cc
 +++ b/modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate.cc
 @@ -56,6 +56,11 @@ class TransformableVideoReceiverFrame

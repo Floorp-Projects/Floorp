@@ -105,6 +105,7 @@ rtc_source_set("channel") {
     "../rtc_base/third_party/sigslot",
   ]
   absl_deps = [
+    "//third_party/abseil-cpp/absl/algorithm:container",
     "//third_party/abseil-cpp/absl/strings",
     "//third_party/abseil-cpp/absl/types:optional",
   ]
@@ -764,11 +765,11 @@ rtc_source_set("peerconnection") {
     ":rtp_transmission_manager",
     ":sctp_data_channel",
     ":sdp_offer_answer",
-    ":sdp_serializer",
     ":sdp_state_provider",
     ":sdp_utils",
     ":session_description",
     ":simulcast_description",
+    ":simulcast_sdp_serializer",
     ":stream_collection",
     ":track_media_info_map",
     ":transceiver_list",
@@ -1108,6 +1109,7 @@ rtc_source_set("sdp_offer_answer") {
     ":stream_collection",
     ":transceiver_list",
     ":usage_pattern",
+    ":used_ids",
     ":webrtc_session_description_factory",
     "../api:array_view",
     "../api:audio_options_api",
@@ -1259,11 +1261,11 @@ rtc_source_set("peer_connection") {
   ]
 }
 
-rtc_source_set("sdp_serializer") {
+rtc_source_set("simulcast_sdp_serializer") {
   visibility = [ ":*" ]
   sources = [
-    "sdp_serializer.cc",
-    "sdp_serializer.h",
+    "simulcast_sdp_serializer.cc",
+    "simulcast_sdp_serializer.h",
   ]
   deps = [
     ":session_description",
@@ -1383,9 +1385,9 @@ rtc_source_set("webrtc_sdp") {
   deps = [
     ":media_protocol_names",
     ":media_session",
-    ":sdp_serializer",
     ":session_description",
     ":simulcast_description",
+    ":simulcast_sdp_serializer",
     "../api:candidate",
     "../api:libjingle_peerconnection_api",
     "../api:rtc_error",
@@ -2341,7 +2343,7 @@ if (rtc_include_tests && !build_with_chromium) {
       "rtp_transceiver_unittest.cc",
       "sctp_utils_unittest.cc",
       "sdp_offer_answer_unittest.cc",
-      "sdp_serializer_unittest.cc",
+      "simulcast_sdp_serializer_unittest.cc",
       "test/fake_audio_capture_module_unittest.cc",
       "test/test_sdp_strings.h",
       "track_media_info_map_unittest.cc",
@@ -2383,10 +2385,10 @@ if (rtc_include_tests && !build_with_chromium) {
       ":sctp_data_channel",
       ":sctp_transport",
       ":sctp_utils",
-      ":sdp_serializer",
       ":sdp_utils",
       ":session_description",
       ":simulcast_description",
+      ":simulcast_sdp_serializer",
       ":stream_collection",
       ":track_media_info_map",
       ":transport_stats",

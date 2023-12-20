@@ -11,7 +11,6 @@
 #ifndef MODULES_CONGESTION_CONTROLLER_GOOG_CC_LOSS_BASED_BWE_V2_H_
 #define MODULES_CONGESTION_CONTROLLER_GOOG_CC_LOSS_BASED_BWE_V2_H_
 
-#include <cstddef>
 #include <deque>
 #include <vector>
 
@@ -58,19 +57,23 @@ class LossBasedBweV2 {
   // initialized with a BWE and then has received enough `PacketResult`s.
   bool IsReady() const;
 
+  // Returns true if loss based BWE is ready to be used in the start phase.
+  bool ReadyToUseInStartPhase() const;
+
   // Returns `DataRate::PlusInfinity` if no BWE can be calculated.
   Result GetLossBasedResult() const;
 
   void SetAcknowledgedBitrate(DataRate acknowledged_bitrate);
-  void SetBandwidthEstimate(DataRate bandwidth_estimate);
   void SetMinMaxBitrate(DataRate min_bitrate, DataRate max_bitrate);
   void UpdateBandwidthEstimate(
       rtc::ArrayView<const PacketResult> packet_results,
       DataRate delay_based_estimate,
       BandwidthUsage delay_detector_state,
       absl::optional<DataRate> probe_bitrate,
-      DataRate upper_link_capacity,
       bool in_alr);
+
+  // For unit testing only.
+  void SetBandwidthEstimate(DataRate bandwidth_estimate);
 
  private:
   struct ChannelParameters {
@@ -115,8 +118,8 @@ class LossBasedBweV2 {
     double slope_of_bwe_high_loss_func = 1000.0;
     bool probe_integration_enabled = false;
     TimeDelta probe_expiration = TimeDelta::Zero();
-    bool bound_by_upper_link_capacity_when_loss_limited = false;
     bool not_use_acked_rate_in_alr = false;
+    bool use_in_start_phase = false;
   };
 
   struct Derivatives {
@@ -201,7 +204,6 @@ class LossBasedBweV2 {
   LossBasedState current_state_ = LossBasedState::kDelayBasedEstimate;
   DataRate probe_bitrate_ = DataRate::PlusInfinity();
   DataRate delay_based_estimate_ = DataRate::PlusInfinity();
-  DataRate upper_link_capacity_ = DataRate::PlusInfinity();
   Timestamp last_probe_timestamp_ = Timestamp::MinusInfinity();
 };
 

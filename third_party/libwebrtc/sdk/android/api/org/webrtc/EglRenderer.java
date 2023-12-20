@@ -273,6 +273,8 @@ public class EglRenderer implements VideoSink {
         bitmapTextureFramebuffer.release();
 
         if (eglBase != null) {
+          logD("eglBase detach and release.");
+          eglBase.detachCurrent();
           eglBase.release();
           eglBase = null;
         }
@@ -509,6 +511,7 @@ public class EglRenderer implements VideoSink {
         eglThread.getHandler().removeCallbacks(eglSurfaceCreationRunnable);
         eglThread.getHandler().postAtFrontOfQueue(() -> {
           if (eglBase != null) {
+            eglBase.detachCurrent();
             eglBase.releaseSurface();
           }
           completionCallback.run();

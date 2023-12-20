@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "pc/sdp_serializer.h"
+#include "pc/simulcast_sdp_serializer.h"
 
 #include <map>
 #include <string>
@@ -181,7 +181,7 @@ webrtc::RTCError ParseRidPayloadList(const std::string& payload_list,
 
 }  // namespace
 
-std::string SdpSerializer::SerializeSimulcastDescription(
+std::string SimulcastSdpSerializer::SerializeSimulcastDescription(
     const cricket::SimulcastDescription& simulcast) const {
   rtc::StringBuilder sb;
   std::string delimiter;
@@ -210,7 +210,8 @@ std::string SdpSerializer::SerializeSimulcastDescription(
 // sc-id-paused = "~"
 // sc-id        = [sc-id-paused] rid-id
 // rid-id       = 1*(alpha-numeric / "-" / "_") ; see: I-D.ietf-mmusic-rid
-RTCErrorOr<SimulcastDescription> SdpSerializer::DeserializeSimulcastDescription(
+RTCErrorOr<SimulcastDescription>
+SimulcastSdpSerializer::DeserializeSimulcastDescription(
     absl::string_view string) const {
   std::vector<std::string> tokens;
   rtc::tokenize(std::string(string), kDelimiterSpaceChar, &tokens);
@@ -264,7 +265,7 @@ RTCErrorOr<SimulcastDescription> SdpSerializer::DeserializeSimulcastDescription(
   return std::move(simulcast);
 }
 
-std::string SdpSerializer::SerializeRidDescription(
+std::string SimulcastSdpSerializer::SerializeRidDescription(
     const RidDescription& rid_description) const {
   RTC_DCHECK(!rid_description.rid.empty());
   RTC_DCHECK(rid_description.direction == RidDirection::kSend ||
@@ -319,7 +320,7 @@ std::string SdpSerializer::SerializeRidDescription(
 // rid-param          = 1*(alpha-numeric / "-") [ "=" param-val ]
 // param-val          = *( %x20-58 / %x60-7E )
 //                      ; Any printable character except semicolon
-RTCErrorOr<RidDescription> SdpSerializer::DeserializeRidDescription(
+RTCErrorOr<RidDescription> SimulcastSdpSerializer::DeserializeRidDescription(
     absl::string_view string) const {
   std::vector<std::string> tokens;
   rtc::tokenize(std::string(string), kDelimiterSpaceChar, &tokens);

@@ -11,18 +11,23 @@
 #include "modules/congestion_controller/goog_cc/probe_controller.h"
 
 #include <algorithm>
+#include <cstdint>
 #include <initializer_list>
 #include <memory>
-#include <string>
+#include <vector>
 
 #include "absl/strings/match.h"
 #include "absl/types/optional.h"
+#include "api/field_trials_view.h"
+#include "api/rtc_event_log/rtc_event_log.h"
+#include "api/transport/network_types.h"
 #include "api/units/data_rate.h"
 #include "api/units/data_size.h"
 #include "api/units/time_delta.h"
 #include "api/units/timestamp.h"
 #include "logging/rtc_event_log/events/rtc_event_probe_cluster_created.h"
 #include "rtc_base/checks.h"
+#include "rtc_base/experiments/field_trial_parser.h"
 #include "rtc_base/logging.h"
 #include "system_wrappers/include/metrics.h"
 
@@ -510,16 +515,15 @@ std::vector<ProbeClusterConfig> ProbeController::InitiateProbing(
       RTC_LOG(LS_INFO) << "Not sending probe, Network state estimate is zero";
       return {};
     }
-    estimate_capped_bitrate =
-        std::min({estimate_capped_bitrate, max_probe_bitrate,
-                  network_estimate_->link_capacity_upper *
-                      config_.network_state_probe_scale});
+    estimate_capped_bitrate = std::min(
+        {estimate_capped_bitrate, max_probe_bitrate,
+         std::max(estimated_bitrate_, network_estimate_->link_capacity_upper *
+                                          config_.network_state_probe_scale)});
   }
 
   std::vector<ProbeClusterConfig> pending_probes;
   for (DataRate bitrate : bitrates_to_probe) {
     RTC_DCHECK(!bitrate.IsZero());
-
     bitrate = std::min(bitrate, estimate_capped_bitrate);
     if (bitrate > max_probe_bitrate) {
       bitrate = max_probe_bitrate;

@@ -113,11 +113,7 @@ class RtpSenderEgress {
   void AddPacketToTransportFeedback(uint16_t packet_id,
                                     const RtpPacketToSend& packet,
                                     const PacedPacketInfo& pacing_info);
-  void UpdateDelayStatistics(Timestamp capture_time,
-                             Timestamp now,
-                             uint32_t ssrc);
-  void RecomputeMaxSendDelay();
-  void UpdateOnSendPacket(int packet_id, Timestamp capture_time, uint32_t ssrc);
+
   // Sends packet on to `transport_`, leaving the RTP module.
   bool SendPacketToNetwork(const RtpPacketToSend& packet,
                            const PacketOptions& options,
@@ -151,7 +147,6 @@ class RtpSenderEgress {
   absl::optional<uint16_t> last_sent_rtx_seq_ RTC_GUARDED_BY(worker_queue_);
 
   TransportFeedbackObserver* const transport_feedback_observer_;
-  SendSideDelayObserver* const send_side_delay_observer_;
   SendPacketObserver* const send_packet_observer_;
   StreamDataCountersCallback* const rtp_stats_callback_;
   BitrateStatisticsObserver* const bitrate_callback_;
@@ -160,13 +155,6 @@ class RtpSenderEgress {
   bool force_part_of_allocation_ RTC_GUARDED_BY(worker_queue_);
   uint32_t timestamp_offset_ RTC_GUARDED_BY(worker_queue_);
 
-  // Maps capture time to send-side delay. Send-side delay is the difference
-  // between transmission time and capture time.
-  std::map<Timestamp, TimeDelta> send_delays_ RTC_GUARDED_BY(worker_queue_);
-  std::map<Timestamp, TimeDelta>::const_iterator max_delay_it_
-      RTC_GUARDED_BY(worker_queue_);
-  // The sum of delays over a kSendSideDelayWindowMs sliding window.
-  TimeDelta sum_delays_ RTC_GUARDED_BY(worker_queue_);
   StreamDataCounters rtp_stats_ RTC_GUARDED_BY(worker_queue_);
   StreamDataCounters rtx_rtp_stats_ RTC_GUARDED_BY(worker_queue_);
   // One element per value in RtpPacketMediaType, with index matching value.

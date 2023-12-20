@@ -255,6 +255,10 @@ struct Metrics {
   // peers.
   bool uses_message_interleaving = false;
 
+  // Indicates if draft-tuexen-tsvwg-sctp-zero-checksum-00 has been negotiated
+  // by both peers.
+  bool uses_zero_checksum = false;
+
   // The number of negotiated incoming and outgoing streams, which is configured
   // locally as `DcSctpOptions::announced_maximum_incoming_streams` and
   // `DcSctpOptions::announced_maximum_outgoing_streams`, and which will be

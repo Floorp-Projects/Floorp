@@ -1,41 +1,20 @@
-From: Andreas Pehrson <apehrson@mozilla.com>
-Date: Wed, 18 Oct 2023 17:21:00 +0000
-Subject: Bug 1859786 - Fix lock annotation warning in Mozilla-specific edit on
- top of video_capture_impl.cc. r=webrtc-reviewers,mjf
+From: Michael Froman <mfroman@mozilla.com>
+Date: Wed, 7 Dec 2022 17:09:00 +0000
+Subject: Bug 1744645 - pt1 - add a couple empty gni files to help with
+ BUILD.gn corrections. r=ng
 
-The annotations were added in M116:
-https://hg.mozilla.org/mozilla-central/rev/9cd372df013948ad822ae936752d725d77474fb5
-
-Note that this was never unsafe, since _dataCallbacks is only written on the
-same thread that we are patching here. This patch however, adds helpful static
-analysis.
-
-Differential Revision: https://phabricator.services.mozilla.com/D191301
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/56ff441b644400f09d2d0453dbd8991ea25db7b1
+Differential Revision: https://phabricator.services.mozilla.com/D163991
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/81d86382ee468f3b36deed00d0c9d59eb85524be
 ---
- modules/video_capture/video_capture_impl.cc | 11 +++++++----
- 1 file changed, 7 insertions(+), 4 deletions(-)
+ tools/generate_stubs/rules.gni | 2 ++
+ 1 file changed, 2 insertions(+)
+ create mode 100644 tools/generate_stubs/rules.gni
 
-diff --git a/modules/video_capture/video_capture_impl.cc b/modules/video_capture/video_capture_impl.cc
-index 02404697ad..1bddaf824d 100644
---- a/modules/video_capture/video_capture_impl.cc
-+++ b/modules/video_capture/video_capture_impl.cc
-@@ -119,11 +119,14 @@ void VideoCaptureImpl::DeRegisterCaptureDataCallback(
- }
- 
- int32_t VideoCaptureImpl::StopCaptureIfAllClientsClose() {
--  if (_dataCallBacks.empty()) {
--    return StopCapture();
--  } else {
--    return 0;
-+  RTC_DCHECK_RUN_ON(&api_checker_);
-+  {
-+    MutexLock lock(&api_lock_);
-+    if (!_dataCallBacks.empty()) {
-+      return 0;
-+    }
-   }
-+  return StopCapture();
- }
- 
- int32_t VideoCaptureImpl::DeliverCapturedFrame(VideoFrame& captureFrame) {
+diff --git a/tools/generate_stubs/rules.gni b/tools/generate_stubs/rules.gni
+new file mode 100644
+index 0000000000..1d9f36eb72
+--- /dev/null
++++ b/tools/generate_stubs/rules.gni
+@@ -0,0 +1,2 @@
++# "empty" file in place of importing new tools/generate_stubs
++# to allow BUILD.gn imports to succeed.

@@ -1,20 +1,36 @@
 From: Michael Froman <mfroman@mozilla.com>
-Date: Wed, 7 Dec 2022 17:09:00 +0000
-Subject: Bug 1744645 - pt1 - add a couple empty gni files to help with
- BUILD.gn corrections. r=ng
+Date: Mon, 4 Dec 2023 12:57:00 -0600
+Subject: Bug 1867099 - (fix-66b7275561) disable wgc capture yellow-line
+ removal. r?ng!
 
-Differential Revision: https://phabricator.services.mozilla.com/D163991
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/81d86382ee468f3b36deed00d0c9d59eb85524be
+This code won't build until we support building with
+Win 10 SDK v10.0.20348.0 or newer.
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/0aac94794aad2ddb637f5076bc08706a11866737
 ---
- tools/generate_stubs/rules.gni | 2 ++
- 1 file changed, 2 insertions(+)
- create mode 100644 tools/generate_stubs/rules.gni
+ modules/desktop_capture/win/wgc_capture_session.cc | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/tools/generate_stubs/rules.gni b/tools/generate_stubs/rules.gni
-new file mode 100644
-index 0000000000..1d9f36eb72
---- /dev/null
-+++ b/tools/generate_stubs/rules.gni
-@@ -0,0 +1,2 @@
-+# "empty" file in place of importing new tools/generate_stubs
-+# to allow BUILD.gn imports to succeed.
+diff --git a/modules/desktop_capture/win/wgc_capture_session.cc b/modules/desktop_capture/win/wgc_capture_session.cc
+index 827f257717..3c13d3609a 100644
+--- a/modules/desktop_capture/win/wgc_capture_session.cc
++++ b/modules/desktop_capture/win/wgc_capture_session.cc
+@@ -187,6 +187,11 @@ HRESULT WgcCaptureSession::StartCapture(const DesktopCaptureOptions& options) {
+     }
+   }
+ 
++// Until Mozilla builds with Win 10 SDK v10.0.20348.0 or newer, this
++// code will not build.  Once we support the newer SDK, Bug 1868198
++// exists to decide if we ever want to use this code since it is
++// removing an indicator that capture is happening.
++#if !defined(WEBRTC_MOZILLA_BUILD)
+   // By default, the WGC capture API adds a yellow border around the captured
+   // window or display to indicate that a capture is in progress. The section
+   // below is an attempt to remove this yellow border to make the capture
+@@ -198,6 +203,7 @@ HRESULT WgcCaptureSession::StartCapture(const DesktopCaptureOptions& options) {
+           &session3))) {
+     session3->put_IsBorderRequired(false);
+   }
++#endif
+ 
+   allow_zero_hertz_ = options.allow_wgc_zero_hertz();
+ 

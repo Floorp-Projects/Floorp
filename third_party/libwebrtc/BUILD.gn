@@ -30,6 +30,7 @@ if (rtc_enable_protobuf) {
 if (is_android) {
   import("//build/config/android/config.gni")
   import("//build/config/android/rules.gni")
+  import("//third_party/jni_zero/jni_zero.gni")
 }
 
 if (!build_with_chromium && !build_with_mozilla) {
@@ -308,6 +309,10 @@ config("common_config") {
     defines += [ "RTC_ENABLE_VP9" ]
   }
 
+  if (rtc_use_h265) {
+    defines += [ "RTC_ENABLE_H265" ]
+  }
+
   if (rtc_include_dav1d_in_internal_decoder_factory) {
     defines += [ "RTC_DAV1D_IN_INTERNAL_DECODER_FACTORY" ]
   }
@@ -469,7 +474,7 @@ config("common_config") {
     ]
   }
 
-  if (use_fuzzing_engine && optimize_for_fuzzing) {
+  if (use_fuzzing_engine) {
     # Used in Chromium's overrides to disable logging
     defines += [ "WEBRTC_UNSAFE_FUZZER_MODE" ]
   }

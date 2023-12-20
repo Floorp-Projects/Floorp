@@ -29,6 +29,7 @@
             }
           ],
           "dimensions": {
+            "device_status": "available",
             "os": "iOS-16.6",
             "pool": "chrome.tests"
           },
@@ -68,6 +69,7 @@
             }
           ],
           "dimensions": {
+            "device_status": "available",
             "os": "iOS-16.6",
             "pool": "chrome.tests"
           },
@@ -108,6 +110,7 @@
             }
           ],
           "dimensions": {
+            "device_status": "available",
             "os": "iOS-16.6",
             "pool": "chrome.tests"
           },
@@ -150,6 +153,7 @@
             }
           ],
           "dimensions": {
+            "device_status": "available",
             "os": "iOS-16.6",
             "pool": "chrome.tests"
           },
@@ -190,6 +194,7 @@
             }
           ],
           "dimensions": {
+            "device_status": "available",
             "os": "iOS-16.6",
             "pool": "chrome.tests"
           },
@@ -229,6 +234,7 @@
             }
           ],
           "dimensions": {
+            "device_status": "available",
             "os": "iOS-16.6",
             "pool": "chrome.tests"
           },
@@ -268,6 +274,7 @@
             }
           ],
           "dimensions": {
+            "device_status": "available",
             "os": "iOS-16.6",
             "pool": "chrome.tests"
           },
@@ -307,6 +314,7 @@
             }
           ],
           "dimensions": {
+            "device_status": "available",
             "os": "iOS-16.6",
             "pool": "chrome.tests"
           },
@@ -346,6 +354,7 @@
             }
           ],
           "dimensions": {
+            "device_status": "available",
             "os": "iOS-16.6",
             "pool": "chrome.tests"
           },
@@ -385,6 +394,7 @@
             }
           ],
           "dimensions": {
+            "device_status": "available",
             "os": "iOS-16.6",
             "pool": "chrome.tests"
           },
@@ -424,6 +434,7 @@
             }
           ],
           "dimensions": {
+            "device_status": "available",
             "os": "iOS-16.6",
             "pool": "chrome.tests"
           },
@@ -447,7 +458,7 @@
           "--write_perf_output_on_ios",
           "--xctest",
           "--xcode-build-version",
-          "13c100",
+          "14c18",
           "--out-dir",
           "${ISOLATED_OUTDIR}",
           "--nologs"
@@ -474,8 +485,9 @@
             }
           ],
           "dimensions": {
+            "device_status": "available",
             "id": "mac-254-e504",
-            "os": "iOS-12.4.1",
+            "os": "iOS-15.7.8",
             "pool": "WebRTC"
           },
           "hard_timeout": 10800,
@@ -483,7 +495,7 @@
           "io_timeout": 10800,
           "named_caches": [
             {
-              "name": "xcode_ios_13c100",
+              "name": "xcode_ios_14c18",
               "path": "Xcode.app"
             }
           ],
@@ -521,6 +533,7 @@
             }
           ],
           "dimensions": {
+            "device_status": "available",
             "os": "iOS-16.6",
             "pool": "chrome.tests"
           },
@@ -560,6 +573,7 @@
             }
           ],
           "dimensions": {
+            "device_status": "available",
             "os": "iOS-16.6",
             "pool": "chrome.tests"
           },
@@ -600,6 +614,7 @@
             }
           ],
           "dimensions": {
+            "device_status": "available",
             "os": "iOS-16.6",
             "pool": "chrome.tests"
           },
@@ -642,6 +657,7 @@
             }
           ],
           "dimensions": {
+            "device_status": "available",
             "os": "iOS-16.6",
             "pool": "chrome.tests"
           },
@@ -682,6 +698,7 @@
             }
           ],
           "dimensions": {
+            "device_status": "available",
             "os": "iOS-16.6",
             "pool": "chrome.tests"
           },
@@ -721,6 +738,7 @@
             }
           ],
           "dimensions": {
+            "device_status": "available",
             "os": "iOS-16.6",
             "pool": "chrome.tests"
           },
@@ -760,6 +778,7 @@
             }
           ],
           "dimensions": {
+            "device_status": "available",
             "os": "iOS-16.6",
             "pool": "chrome.tests"
           },
@@ -799,6 +818,7 @@
             }
           ],
           "dimensions": {
+            "device_status": "available",
             "os": "iOS-16.6",
             "pool": "chrome.tests"
           },
@@ -838,6 +858,7 @@
             }
           ],
           "dimensions": {
+            "device_status": "available",
             "os": "iOS-16.6",
             "pool": "chrome.tests"
           },
@@ -877,6 +898,7 @@
             }
           ],
           "dimensions": {
+            "device_status": "available",
             "os": "iOS-16.6",
             "pool": "chrome.tests"
           },
@@ -916,6 +938,7 @@
             }
           ],
           "dimensions": {
+            "device_status": "available",
             "os": "iOS-16.6",
             "pool": "chrome.tests"
           },

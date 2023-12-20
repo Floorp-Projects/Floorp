@@ -414,23 +414,12 @@ class BitrateStatisticsObserver {
                       uint32_t ssrc) = 0;
 };
 
-// Callback, used to notify an observer whenever the send-side delay is updated.
-class SendSideDelayObserver {
- public:
-  virtual ~SendSideDelayObserver() {}
-  virtual void SendSideDelayUpdated(int avg_delay_ms,
-                                    int max_delay_ms,
-                                    uint32_t ssrc) = 0;
-};
-
 // Callback, used to notify an observer whenever a packet is sent to the
 // transport.
-// TODO(asapersson): This class will remove the need for SendSideDelayObserver.
-// Remove SendSideDelayObserver once possible.
 class SendPacketObserver {
  public:
   virtual ~SendPacketObserver() = default;
-  virtual void OnSendPacket(uint16_t packet_id,
+  virtual void OnSendPacket(absl::optional<uint16_t> packet_id,
                             Timestamp capture_time,
                             uint32_t ssrc) = 0;
 };

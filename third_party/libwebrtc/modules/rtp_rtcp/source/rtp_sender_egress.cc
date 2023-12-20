@@ -23,7 +23,6 @@
 namespace webrtc {
 namespace {
 constexpr uint32_t kTimestampTicksPerMs = 90;
-constexpr TimeDelta kSendSideDelayWindow = TimeDelta::Seconds(1);
 constexpr TimeDelta kBitrateStatisticsWindow = TimeDelta::Seconds(1);
 constexpr size_t kRtpSequenceNumberMapMaxEntries = 1 << 13;
 constexpr TimeDelta kUpdateInterval = kBitrateStatisticsWindow;
@@ -96,15 +95,12 @@ RtpSenderEgress::RtpSenderEgress(const RtpRtcpInterface::Configuration& config,
       need_rtp_packet_infos_(config.need_rtp_packet_infos),
       fec_generator_(config.fec_generator),
       transport_feedback_observer_(config.transport_feedback_callback),
-      send_side_delay_observer_(config.send_side_delay_observer),
       send_packet_observer_(config.send_packet_observer),
       rtp_stats_callback_(config.rtp_stats_callback),
       bitrate_callback_(config.send_bitrate_observer),
       media_has_been_sent_(false),
       force_part_of_allocation_(false),
       timestamp_offset_(0),
-      max_delay_it_(send_delays_.end()),
-      sum_delays_(TimeDelta::Zero()),
       send_rates_(kNumMediaTypes, BitrateTracker(kBitrateStatisticsWindow)),
       rtp_sequence_number_map_(need_rtp_packet_infos_
                                    ? std::make_unique<RtpSequenceNumberMap>(
@@ -252,7 +248,9 @@ void RtpSenderEgress::CompleteSendPacket(const Packet& compound_packet,
   // Downstream code actually uses this flag to distinguish between media and
   // everything else.
   options.is_retransmit = !is_media;
-  if (auto packet_id = packet->GetExtension<TransportSequenceNumber>()) {
+  absl::optional<uint16_t> packet_id =
+      packet->GetExtension<TransportSequenceNumber>();
+  if (packet_id.has_value()) {
     options.packet_id = *packet_id;
     options.included_in_feedback = true;
     options.included_in_allocation = true;
@@ -261,11 +259,11 @@ void RtpSenderEgress::CompleteSendPacket(const Packet& compound_packet,
 
   options.additional_data = packet->additional_data();
 
-  const uint32_t packet_ssrc = packet->Ssrc();
   if (packet->packet_type() != RtpPacketMediaType::kPadding &&
-      packet->packet_type() != RtpPacketMediaType::kRetransmission) {
-    UpdateDelayStatistics(packet->capture_time(), now, packet_ssrc);
-    UpdateOnSendPacket(options.packet_id, packet->capture_time(), packet_ssrc);
+      packet->packet_type() != RtpPacketMediaType::kRetransmission &&
+      send_packet_observer_ != nullptr && packet->capture_time().IsFinite()) {
+    send_packet_observer_->OnSendPacket(packet_id, packet->capture_time(),
+                                        packet->Ssrc());
   }
   options.batchable = enable_send_packet_batching_ && !is_audio_;
   options.last_packet_in_batch = last_in_batch;
@@ -292,8 +290,8 @@ void RtpSenderEgress::CompleteSendPacket(const Packet& compound_packet,
     RTC_DCHECK(packet->packet_type().has_value());
     RtpPacketMediaType packet_type = *packet->packet_type();
     RtpPacketCounter counter(*packet);
-    size_t size = packet->size();
-    UpdateRtpStats(now, packet_ssrc, packet_type, std::move(counter), size);
+    UpdateRtpStats(now, packet->Ssrc(), packet_type, std::move(counter),
+                   packet->size());
   }
 }
 
@@ -437,83 +435,6 @@ void RtpSenderEgress::AddPacketToTransportFeedback(
 
     transport_feedback_observer_->OnAddPacket(packet_info);
   }
-}
-
-void RtpSenderEgress::UpdateDelayStatistics(Timestamp capture_time,
-                                            Timestamp now,
-                                            uint32_t ssrc) {
-  RTC_DCHECK_RUN_ON(worker_queue_);
-  if (!send_side_delay_observer_ || capture_time.IsInfinite())
-    return;
-
-  TimeDelta avg_delay = TimeDelta::Zero();
-  TimeDelta max_delay = TimeDelta::Zero();
-  {
-    // Compute the max and average of the recent capture-to-send delays.
-    // The time complexity of the current approach depends on the distribution
-    // of the delay values. This could be done more efficiently.
-
-    // Remove elements older than kSendSideDelayWindowMs.
-    auto lower_bound = send_delays_.lower_bound(now - kSendSideDelayWindow);
-    for (auto it = send_delays_.begin(); it != lower_bound; ++it) {
-      if (max_delay_it_ == it) {
-        max_delay_it_ = send_delays_.end();
-      }
-      sum_delays_ -= it->second;
-    }
-    send_delays_.erase(send_delays_.begin(), lower_bound);
-    if (max_delay_it_ == send_delays_.end()) {
-      // Removed the previous max. Need to recompute.
-      RecomputeMaxSendDelay();
-    }
-
-    // Add the new element.
-    TimeDelta new_send_delay = now - capture_time;
-    auto [it, inserted] = send_delays_.emplace(now, new_send_delay);
-    if (!inserted) {
-      // TODO(terelius): If we have multiple delay measurements during the same
-      // millisecond then we keep the most recent one. It is not clear that this
-      // is the right decision, but it preserves an earlier behavior.
-      TimeDelta previous_send_delay = it->second;
-      sum_delays_ -= previous_send_delay;
-      it->second = new_send_delay;
-      if (max_delay_it_ == it && new_send_delay < previous_send_delay) {
-        RecomputeMaxSendDelay();
-      }
-    }
-    if (max_delay_it_ == send_delays_.end() ||
-        it->second >= max_delay_it_->second) {
-      max_delay_it_ = it;
-    }
-    sum_delays_ += new_send_delay;
-
-    size_t num_delays = send_delays_.size();
-    RTC_DCHECK(max_delay_it_ != send_delays_.end());
-    max_delay = max_delay_it_->second;
-    avg_delay = sum_delays_ / num_delays;
-  }
-  send_side_delay_observer_->SendSideDelayUpdated(avg_delay.ms(),
-                                                  max_delay.ms(), ssrc);
-}
-
-void RtpSenderEgress::RecomputeMaxSendDelay() {
-  RTC_DCHECK_RUN_ON(worker_queue_);
-  max_delay_it_ = send_delays_.begin();
-  for (auto it = send_delays_.begin(); it != send_delays_.end(); ++it) {
-    if (it->second >= max_delay_it_->second) {
-      max_delay_it_ = it;
-    }
-  }
-}
-
-void RtpSenderEgress::UpdateOnSendPacket(int packet_id,
-                                         Timestamp capture_time,
-                                         uint32_t ssrc) {
-  if (!send_packet_observer_ || capture_time.IsInfinite() || packet_id == -1) {
-    return;
-  }
-
-  send_packet_observer_->OnSendPacket(packet_id, capture_time, ssrc);
 }
 
 bool RtpSenderEgress::SendPacketToNetwork(const RtpPacketToSend& packet,

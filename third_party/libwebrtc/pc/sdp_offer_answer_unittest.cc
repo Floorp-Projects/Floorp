@@ -304,9 +304,6 @@ TEST_F(SdpOfferAnswerTest, BundleMeasuresHeaderExtensionIdCollision) {
   RTCError error;
   pc->SetRemoteDescription(std::move(desc), &error);
   EXPECT_TRUE(error.ok());
-  EXPECT_METRIC_EQ(1,
-                   webrtc::metrics::NumEvents(
-                       "WebRTC.PeerConnection.ValidBundledExtensionIds", true));
 }
 
 // extmap:3 is used with two different URIs which is not allowed.
@@ -345,9 +342,6 @@ TEST_F(SdpOfferAnswerTest, BundleRejectsHeaderExtensionIdCollision) {
   pc->SetRemoteDescription(std::move(desc), &error);
   EXPECT_FALSE(error.ok());
   EXPECT_EQ(error.type(), RTCErrorType::INVALID_PARAMETER);
-  EXPECT_METRIC_EQ(
-      1, webrtc::metrics::NumEvents(
-             "WebRTC.PeerConnection.ValidBundledExtensionIds", false));
 }
 
 // transport-wide cc is negotiated with two different ids 3 and 4.
@@ -388,9 +382,6 @@ TEST_F(SdpOfferAnswerTest, BundleAcceptsDifferentIdsForSameExtension) {
   RTCError error;
   pc->SetRemoteDescription(std::move(desc), &error);
   EXPECT_TRUE(error.ok());
-  EXPECT_METRIC_EQ(1,
-                   webrtc::metrics::NumEvents(
-                       "WebRTC.PeerConnection.ValidBundledExtensionIds", true));
 }
 
 TEST_F(SdpOfferAnswerTest, LargeMidsAreRejected) {
@@ -958,5 +949,112 @@ TEST_F(SdpOfferAnswerTest, OfferWithRtxAndNoMsidIsNotRejected) {
   auto offer = CreateSessionDescription(SdpType::kOffer, sdp);
   EXPECT_TRUE(pc->SetRemoteDescription(std::move(offer)));
 }
+
+TEST_F(SdpOfferAnswerTest, RejectsAnswerWithInvalidTransport) {
+  auto pc1 = CreatePeerConnection();
+  pc1->AddAudioTrack("audio_track", {});
+  auto pc2 = CreatePeerConnection();
+  pc2->AddAudioTrack("anotheraudio_track", {});
+
+  auto initial_offer = pc1->CreateOfferAndSetAsLocal();
+  ASSERT_EQ(initial_offer->description()->contents().size(), 1u);
+  auto mid = initial_offer->description()->contents()[0].mid();
+
+  EXPECT_TRUE(pc2->SetRemoteDescription(std::move(initial_offer)));
+  auto initial_answer = pc2->CreateAnswerAndSetAsLocal();
+
+  std::string sdp;
+  initial_answer->ToString(&sdp);
+  EXPECT_TRUE(pc1->SetRemoteDescription(std::move(initial_answer)));
+
+  auto transceivers = pc1->pc()->GetTransceivers();
+  ASSERT_EQ(transceivers.size(), 1u);
+  // This stops the only transport.
+  transceivers[0]->StopStandard();
+
+  auto subsequent_offer = pc1->CreateOfferAndSetAsLocal();
+  // But the remote answers with a non-rejected m-line which is not valid.
+  auto bad_answer = CreateSessionDescription(
+      SdpType::kAnswer,
+      absl::StrReplaceAll(sdp, {{"a=group:BUNDLE " + mid + "\r\n", ""}}));
+
+  RTCError error;
+  pc1->SetRemoteDescription(std::move(bad_answer), &error);
+  EXPECT_FALSE(error.ok());
+  EXPECT_EQ(error.type(), RTCErrorType::INVALID_PARAMETER);
+}
+
+TEST_F(SdpOfferAnswerTest, SdpMungingWithInvalidPayloadTypeIsRejected) {
+  auto pc = CreatePeerConnection();
+  pc->AddAudioTrack("audio_track", {});
+
+  auto offer = pc->CreateOffer();
+  ASSERT_EQ(offer->description()->contents().size(), 1u);
+  auto* audio =
+      offer->description()->contents()[0].media_description()->as_audio();
+  ASSERT_GT(audio->codecs().size(), 0u);
+  EXPECT_TRUE(audio->rtcp_mux());
+  auto codecs = audio->codecs();
+  for (int invalid_payload_type = 64; invalid_payload_type < 96;
+       invalid_payload_type++) {
+    codecs[0].id =
+        invalid_payload_type;  // The range [64-95] is disallowed with rtcp_mux.
+    audio->set_codecs(codecs);
+    // ASSERT to avoid getting into a bad state.
+    ASSERT_FALSE(pc->SetLocalDescription(offer->Clone()));
+    ASSERT_FALSE(pc->SetRemoteDescription(offer->Clone()));
+  }
+}
+
+// Test variant with boolean order for audio-video and video-audio.
+class SdpOfferAnswerShuffleMediaTypes
+    : public SdpOfferAnswerTest,
+      public testing::WithParamInterface<bool> {
+ public:
+  SdpOfferAnswerShuffleMediaTypes() : SdpOfferAnswerTest() {}
+};
+
+TEST_P(SdpOfferAnswerShuffleMediaTypes,
+       RecyclingWithDifferentKindAndSameMidFails) {
+  bool audio_first = GetParam();
+  auto pc1 = CreatePeerConnection();
+  auto pc2 = CreatePeerConnection();
+  if (audio_first) {
+    pc1->AddAudioTrack("audio_track", {});
+    pc2->AddVideoTrack("video_track", {});
+  } else {
+    pc2->AddAudioTrack("audio_track", {});
+    pc1->AddVideoTrack("video_track", {});
+  }
+
+  auto initial_offer = pc1->CreateOfferAndSetAsLocal();
+  ASSERT_EQ(initial_offer->description()->contents().size(), 1u);
+  auto mid1 = initial_offer->description()->contents()[0].mid();
+  std::string rejected_answer_sdp =
+      "v=0\r\n"
+      "o=- 8621259572628890423 2 IN IP4 127.0.0.1\r\n"
+      "s=-\r\n"
+      "t=0 0\r\n"
+      "m=" +
+      std::string(audio_first ? "audio" : "video") +
+      " 0 UDP/TLS/RTP/SAVPF 111\r\n"
+      "c=IN IP4 0.0.0.0\r\n";
+  auto rejected_answer =
+      CreateSessionDescription(SdpType::kAnswer, rejected_answer_sdp);
+  EXPECT_TRUE(pc1->SetRemoteDescription(std::move(rejected_answer)));
+
+  auto offer =
+      pc2->CreateOfferAndSetAsLocal();  // This will generate a mid=0 too
+  ASSERT_EQ(offer->description()->contents().size(), 1u);
+  auto mid2 = offer->description()->contents()[0].mid();
+  EXPECT_EQ(mid1, mid2);  // Check that the mids collided.
+  EXPECT_TRUE(pc1->SetRemoteDescription(std::move(offer)));
+  auto answer = pc1->CreateAnswer();
+  EXPECT_FALSE(pc1->SetLocalDescription(std::move(answer)));
+}
+
+INSTANTIATE_TEST_SUITE_P(SdpOfferAnswerShuffleMediaTypes,
+                         SdpOfferAnswerShuffleMediaTypes,
+                         ::testing::Values(true, false));
 
 }  // namespace webrtc

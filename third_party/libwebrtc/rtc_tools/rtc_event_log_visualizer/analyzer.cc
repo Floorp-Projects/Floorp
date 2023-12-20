@@ -1364,16 +1364,15 @@ void EventLogAnalyzer::CreateSendSideBweSimulationGraph(Plot* plot) {
 
   RateStatistics raw_acked_bitrate(750, 8000);
   test::ExplicitKeyValueConfig throughput_config(
-      "WebRTC-Bwe-RobustThroughputEstimatorSettings/"
-      "enabled:true,required_packets:10,"
-      "window_packets:25,window_duration:1000ms,unacked_weight:1.0/");
+      "WebRTC-Bwe-RobustThroughputEstimatorSettings/enabled:true/");
   std::unique_ptr<AcknowledgedBitrateEstimatorInterface>
       robust_throughput_estimator(
           AcknowledgedBitrateEstimatorInterface::Create(&throughput_config));
-  FieldTrialBasedConfig field_trial_config;
+  test::ExplicitKeyValueConfig acked_bitrate_config(
+      "WebRTC-Bwe-RobustThroughputEstimatorSettings/enabled:false/");
   std::unique_ptr<AcknowledgedBitrateEstimatorInterface>
       acknowledged_bitrate_estimator(
-          AcknowledgedBitrateEstimatorInterface::Create(&field_trial_config));
+          AcknowledgedBitrateEstimatorInterface::Create(&acked_bitrate_config));
   int64_t time_us =
       std::min({NextRtpTime(), NextRtcpTime(), NextProcessTime()});
   int64_t last_update_us = 0;

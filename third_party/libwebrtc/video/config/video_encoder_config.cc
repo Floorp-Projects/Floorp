@@ -68,8 +68,7 @@ VideoEncoderConfig::~VideoEncoderConfig() = default;
 std::string VideoEncoderConfig::ToString() const {
   char buf[1024];
   rtc::SimpleStringBuilder ss(buf);
-  ss << "{codec_type: ";
-  ss << CodecTypeToPayloadString(codec_type);
+  ss << "{codec_type: " << CodecTypeToPayloadString(codec_type);
   ss << ", content_type: ";
   switch (content_type) {
     case ContentType::kRealtimeVideo:
@@ -96,6 +95,8 @@ void VideoEncoderConfig::EncoderSpecificSettings::FillEncoderSpecificSettings(
     FillVideoCodecVp8(codec->VP8());
   } else if (codec->codecType == kVideoCodecVP9) {
     FillVideoCodecVp9(codec->VP9());
+  } else if (codec->codecType == kVideoCodecAV1) {
+    FillVideoCodecAv1(codec->AV1());
   } else {
     RTC_DCHECK_NOTREACHED()
         << "Encoder specifics set/used for unknown codec type.";
@@ -109,6 +110,11 @@ void VideoEncoderConfig::EncoderSpecificSettings::FillVideoCodecVp8(
 
 void VideoEncoderConfig::EncoderSpecificSettings::FillVideoCodecVp9(
     VideoCodecVP9* vp9_settings) const {
+  RTC_DCHECK_NOTREACHED();
+}
+
+void VideoEncoderConfig::EncoderSpecificSettings::FillVideoCodecAv1(
+    VideoCodecAV1* av1_settings) const {
   RTC_DCHECK_NOTREACHED();
 }
 
@@ -128,6 +134,15 @@ VideoEncoderConfig::Vp9EncoderSpecificSettings::Vp9EncoderSpecificSettings(
 void VideoEncoderConfig::Vp9EncoderSpecificSettings::FillVideoCodecVp9(
     VideoCodecVP9* vp9_settings) const {
   *vp9_settings = specifics_;
+}
+
+VideoEncoderConfig::Av1EncoderSpecificSettings::Av1EncoderSpecificSettings(
+    const VideoCodecAV1& specifics)
+    : specifics_(specifics) {}
+
+void VideoEncoderConfig::Av1EncoderSpecificSettings::FillVideoCodecAv1(
+    VideoCodecAV1* av1_settings) const {
+  *av1_settings = specifics_;
 }
 
 }  // namespace webrtc

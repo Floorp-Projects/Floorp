@@ -103,6 +103,10 @@ class RetransmissionQueue {
   // Returns the next TSN that will be allocated for sent DATA chunks.
   TSN next_tsn() const { return outstanding_data_.next_tsn().Wrap(); }
 
+  TSN last_assigned_tsn() const {
+    return UnwrappedTSN::AddTo(outstanding_data_.next_tsn(), -1).Wrap();
+  }
+
   // Returns the size of the congestion window, in bytes. This is the number of
   // bytes that may be in-flight.
   size_t cwnd() const { return cwnd_; }
@@ -148,9 +152,7 @@ class RetransmissionQueue {
   // to stream resetting.
   void PrepareResetStream(StreamID stream_id);
   bool HasStreamsReadyToBeReset() const;
-  std::vector<StreamID> GetStreamsReadyToBeReset() const {
-    return send_queue_.GetStreamsReadyToBeReset();
-  }
+  std::vector<StreamID> BeginResetStreams();
   void CommitResetStreams();
   void RollbackResetStreams();
 

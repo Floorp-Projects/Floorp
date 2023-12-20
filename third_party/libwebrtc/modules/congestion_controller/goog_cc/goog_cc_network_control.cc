@@ -10,30 +10,40 @@
 
 #include "modules/congestion_controller/goog_cc/goog_cc_network_control.h"
 
-#include <inttypes.h>
 #include <stdio.h>
 
 #include <algorithm>
 #include <cstdint>
 #include <memory>
 #include <numeric>
-#include <string>
 #include <utility>
 #include <vector>
 
 #include "absl/strings/match.h"
+#include "absl/strings/string_view.h"
+#include "absl/types/optional.h"
+#include "api/field_trials_view.h"
 #include "api/network_state_predictor.h"
+#include "api/transport/network_control.h"
+#include "api/transport/network_types.h"
 #include "api/units/data_rate.h"
+#include "api/units/data_size.h"
 #include "api/units/time_delta.h"
 #include "api/units/timestamp.h"
 #include "logging/rtc_event_log/events/rtc_event_remote_estimate.h"
+#include "modules/congestion_controller/goog_cc/acknowledged_bitrate_estimator_interface.h"
 #include "modules/congestion_controller/goog_cc/alr_detector.h"
+#include "modules/congestion_controller/goog_cc/congestion_window_pushback_controller.h"
+#include "modules/congestion_controller/goog_cc/delay_based_bwe.h"
 #include "modules/congestion_controller/goog_cc/loss_based_bwe_v2.h"
+#include "modules/congestion_controller/goog_cc/probe_bitrate_estimator.h"
 #include "modules/congestion_controller/goog_cc/probe_controller.h"
 #include "modules/congestion_controller/goog_cc/send_side_bandwidth_estimation.h"
 #include "modules/remote_bitrate_estimator/include/bwe_defines.h"
 #include "modules/remote_bitrate_estimator/test/bwe_test_logging.h"
 #include "rtc_base/checks.h"
+#include "rtc_base/experiments/field_trial_parser.h"
+#include "rtc_base/experiments/rate_control_settings.h"
 #include "rtc_base/logging.h"
 
 namespace webrtc {
@@ -230,7 +240,7 @@ NetworkControlUpdate GoogCcNetworkController::OnProcessInterval(
                                       probes.begin(), probes.end());
 
   if (rate_control_settings_.UseCongestionWindow() &&
-      last_packet_received_time_.IsFinite() && !feedback_max_rtts_.empty()) {
+      !feedback_max_rtts_.empty()) {
     UpdateCongestionWindowSize();
   }
   if (congestion_window_pushback_controller_ && current_data_window_) {
@@ -296,7 +306,6 @@ NetworkControlUpdate GoogCcNetworkController::OnSentPacket(
 
 NetworkControlUpdate GoogCcNetworkController::OnReceivedPacket(
     ReceivedPacket received_packet) {
-  last_packet_received_time_ = received_packet.receive_time;
   return NetworkControlUpdate();
 }
 
@@ -566,7 +575,6 @@ NetworkControlUpdate GoogCcNetworkController::OnTransportPacketsFeedback(
   }
   bandwidth_estimation_->UpdateLossBasedEstimator(
       report, result.delay_detector_state, probe_bitrate,
-      estimate_ ? estimate_->link_capacity_upper : DataRate::PlusInfinity(),
       alr_start_time.has_value());
   if (result.updated) {
     // Update the estimate in the ProbeController, in case we want to probe.

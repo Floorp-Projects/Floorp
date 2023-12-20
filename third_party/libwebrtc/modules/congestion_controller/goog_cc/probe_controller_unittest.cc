@@ -10,12 +10,14 @@
 #include "modules/congestion_controller/goog_cc/probe_controller.h"
 
 #include <memory>
+#include <vector>
 
+#include "absl/strings/string_view.h"
+#include "api/transport/network_types.h"
 #include "api/units/data_rate.h"
 #include "api/units/time_delta.h"
 #include "api/units/timestamp.h"
 #include "logging/rtc_event_log/mock/mock_rtc_event_log.h"
-#include "rtc_base/logging.h"
 #include "system_wrappers/include/clock.h"
 #include "test/explicit_key_value_config.h"
 #include "test/gmock.h"
@@ -1101,12 +1103,14 @@ TEST(ProbeControllerTest, SendsProbeIfNetworkStateEstimateLowerThanMaxProbe) {
   EXPECT_FALSE(probes.empty());
 }
 
-TEST(ProbeControllerTest, DontSendProbeIfNetworkStateEstimateIsZero) {
+TEST(ProbeControllerTest,
+     ProbeNotLimitedByNetworkStateEsimateIfLowerThantCurrent) {
   ProbeControllerFixture fixture(
       "WebRTC-Bwe-ProbingConfiguration/"
       "network_state_interval:5s,limit_probe_target_rate_to_loss_bwe:true/");
   std::unique_ptr<ProbeController> probe_controller =
       fixture.CreateController();
+  probe_controller->EnablePeriodicAlrProbing(true);
   auto probes = probe_controller->SetBitrates(
       kMinBitrate, kStartBitrate, kMaxBitrate, fixture.CurrentTime());
   probes = probe_controller->SetEstimatedBitrate(
@@ -1119,13 +1123,13 @@ TEST(ProbeControllerTest, DontSendProbeIfNetworkStateEstimateIsZero) {
   probes = probe_controller->Process(fixture.CurrentTime());
   ASSERT_TRUE(probes.empty());
 
+  probe_controller->SetAlrStartTimeMs(fixture.CurrentTime().ms());
   probe_controller->SetNetworkStateEstimate(
-      {.link_capacity_upper = DataRate::Zero()});
-  probes = probe_controller->Process(fixture.CurrentTime());
-  EXPECT_TRUE(probes.empty());
+      {.link_capacity_upper = kStartBitrate / 2});
   fixture.AdvanceTime(TimeDelta::Seconds(6));
   probes = probe_controller->Process(fixture.CurrentTime());
-  EXPECT_TRUE(probes.empty());
+  ASSERT_FALSE(probes.empty());
+  EXPECT_EQ(probes[0].target_data_rate, kStartBitrate);
 }
 
 TEST(ProbeControllerTest, DontProbeIfDelayIncreased) {
