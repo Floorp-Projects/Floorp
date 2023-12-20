@@ -301,9 +301,16 @@ async function getBookmarksToolbarRect() {
   return bookmarksToolbarRect;
 }
 
+async function ensureAnimationsFinished(win = window) {
+  let animations = win.document.getAnimations();
+  info(`Waiting for ${animations.length} animations`);
+  await Promise.allSettled(animations.map(a => a.finished));
+}
+
 async function prepareSettledWindow() {
   let win = await BrowserTestUtils.openNewBrowserWindow();
   await ensureNoPreloadedBrowser(win);
+  await ensureAnimationsFinished(win);
   return win;
 }
 
@@ -965,4 +972,24 @@ async function checkLoadedScripts({
 
     await checkAllExist(scriptType, forbidden[scriptType], "forbidden");
   }
+}
+
+// The first screenshot we get in OSX / Windows shows an unfocused browser
+// window for some reason. See bug 1445161. This function allows to deal with
+// that in a central place.
+function isLikelyFocusChange(rects, frame) {
+  if (rects.length > 3 && rects.every(r => r.y2 < 100)) {
+    // There are at least 4 areas that changed near the top of the screen.
+    // Note that we need a bit more leeway than the titlebar height, because on
+    // OSX other toolbarbuttons in the navigation toolbar also get disabled
+    // state.
+    return true;
+  }
+  if (
+    rects.every(r => r.y1 == 0 && r.x1 == 0 && r.w == frame.width && r.y2 < 100)
+  ) {
+    // Full-width rect in the top of the titlebar.
+    return true;
+  }
+  return false;
 }
