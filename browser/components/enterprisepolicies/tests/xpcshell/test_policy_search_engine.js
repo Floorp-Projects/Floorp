@@ -189,7 +189,7 @@ add_task(async function test_install_and_remove() {
   Assert.notEqual(engine, null, "Specified search engine should be installed");
 
   Assert.equal(
-    engine.wrappedJSObject.iconURI.spec,
+    engine.wrappedJSObject.getIconURL(),
     iconURL,
     "Icon should be present"
   );

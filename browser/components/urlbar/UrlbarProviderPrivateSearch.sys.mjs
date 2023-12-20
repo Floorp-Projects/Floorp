@@ -120,7 +120,7 @@ class ProviderPrivateSearch extends UrlbarProvider {
       ...lazy.UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
         engine: [engine.name, UrlbarUtils.HIGHLIGHT.TYPED],
         query: [searchString, UrlbarUtils.HIGHLIGHT.NONE],
-        icon: engine.iconURI?.spec,
+        icon: engine.getIconURL(),
         inPrivateWindow: true,
         isPrivateEngine,
       })

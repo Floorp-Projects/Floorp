@@ -99,7 +99,7 @@ interface nsISearchEngine : nsISupports
    *   Width of the requested icon. If not specified, it is assumed that
    *   16x16 is desired.
    */
-  AString getIconURL([optional] in unsigned short preferredWidth);
+  jsval getIconURL([optional] in unsigned short preferredWidth);
 
   /**
    * Opens a speculative connection to the engine's search URI
@@ -141,11 +141,6 @@ interface nsISearchEngine : nsISupports
    * Whether the associated one off button should be hidden from the user.
    */
   attribute boolean hideOneOffButton;
-
-  /**
-   * A nsIURI corresponding to the engine's icon, stored locally. May be null.
-   */
-  readonly attribute nsIURI iconURI;
 
   /**
    * The display name of the search engine. This is a unique identifier.

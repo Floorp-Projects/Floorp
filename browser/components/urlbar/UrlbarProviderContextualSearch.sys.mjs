@@ -154,7 +154,7 @@ class ProviderContextualSearch extends UrlbarProvider {
       let result = this.makeResult({
         url,
         engine: engine.name,
-        icon: engine.iconURI?.spec,
+        icon: engine.getIconURL(),
         input: queryContext.searchString,
         shouldNavigate: true,
       });

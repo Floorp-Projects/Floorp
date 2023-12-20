@@ -78,7 +78,7 @@ add_task(async function test() {
         makeSearchResult(context, {
           heuristic: true,
           engineName: engine.name,
-          engineIconUri: engine.iconURI?.spec,
+          engineIconUri: engine.getIconURL(),
         }),
       ];
       if (shouldAppear) {

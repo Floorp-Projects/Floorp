@@ -188,7 +188,7 @@ async function heuristicIsRestyled(
   if (engine) {
     Assert.equal(
       resultDetails.image,
-      engine.iconURI?.spec || UrlbarUtils.ICON.SEARCH_GLASS,
+      engine.getIconURL() || UrlbarUtils.ICON.SEARCH_GLASS,
       "The restyled result's icon should be the engine's icon."
     );
   } else if (source) {

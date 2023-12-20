@@ -54,9 +54,9 @@ add_task(async function test_icon_types() {
     let engine = await promiseEngineAdded;
     await promiseEngineChanged;
 
-    Assert.ok(engine.iconURI, `${test.name} engine has an icon`);
+    Assert.ok(engine.getIconURL(), `${test.name} engine has an icon`);
     Assert.ok(
-      engine.iconURI.spec.startsWith(test.expected),
+      engine.getIconURL().startsWith(test.expected),
       `${test.name} iconURI starts with the expected information`
     );
   }
@@ -67,9 +67,7 @@ add_task(async function test_multiple_icons_in_file() {
     url: `${gDataUrl}engineImages.xml`,
   });
 
-  info("The default should be the 16x16 icon");
-  Assert.ok(engine.iconURI.spec.includes("ico16"));
-
+  Assert.ok(engine.getIconURL().includes("ico16"));
   Assert.ok(engine.getIconURL(16).includes("ico16"));
   Assert.ok(engine.getIconURL(32).includes("ico32"));
   Assert.ok(engine.getIconURL(74).includes("ico74"));
@@ -87,6 +85,5 @@ add_task(async function test_icon_not_in_opensearch_file() {
 
   // Even though the icon wasn't specified inside the XML file, it should be
   // available both in the iconURI attribute and with getIconURLBySize.
-  Assert.ok(engine.iconURI.spec.includes("ico16"));
   Assert.ok(engine.getIconURL(16).includes("ico16"));
 });

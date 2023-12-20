@@ -232,9 +232,9 @@
         }
       }
 
-      let uri = engine.iconURI;
+      let uri = engine.getIconURL();
       if (uri) {
-        this.setAttribute("src", uri.spec);
+        this.setAttribute("src", uri);
       } else {
         // If the default has just been changed to a provider without icon,
         // avoid showing the icon of the previous default provider.

@@ -1274,13 +1274,6 @@ export class SearchEngine {
     }
   }
 
-  get iconURI() {
-    if (this._iconURI) {
-      return this._iconURI;
-    }
-    return null;
-  }
-
   get _iconURL() {
     if (!this._iconURI) {
       return "";
@@ -1642,7 +1635,7 @@ export class SearchEngine {
     }
 
     if (preferredWidth == 16) {
-      return this._iconURL;
+      return this._iconURL || undefined;
     }
 
     if (!this._iconMapObj) {
