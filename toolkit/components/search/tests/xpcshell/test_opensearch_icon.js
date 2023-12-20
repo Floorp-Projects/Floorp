@@ -76,24 +76,6 @@ add_task(async function test_multiple_icons_in_file() {
 
   info("Invalid dimensions should return null until bug 1655070 is fixed.");
   Assert.equal(null, engine.getIconURLBySize(50, 50));
-
-  let allIcons = engine.getIcons();
-
-  info("Check that allIcons contains expected icon sizes");
-  Assert.equal(allIcons.length, 3);
-  let expectedWidths = [16, 32, 74];
-  Assert.ok(
-    allIcons.every(item => {
-      let width = item.width;
-      Assert.notEqual(expectedWidths.indexOf(width), -1);
-      Assert.equal(width, item.height);
-
-      let icon = item.url.split(",").pop();
-      Assert.equal(icon, "ico" + width);
-
-      return true;
-    })
-  );
 });
 
 add_task(async function test_icon_not_in_opensearch_file() {

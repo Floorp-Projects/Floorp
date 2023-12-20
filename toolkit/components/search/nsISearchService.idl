@@ -103,14 +103,6 @@ interface nsISearchEngine : nsISupports
   AString getIconURLBySize(in long width, in long height);
 
   /**
-   * Gets an array of all available icons. Each entry is an object with
-   * width, height and url properties. width and height are numeric and
-   * represent the icon's dimensions. url is a string with the URL for
-   * the icon.
-   */
-  jsval getIcons();
-
-  /**
    * Opens a speculative connection to the engine's search URI
    * (and suggest URI, if different) to reduce request latency
    *
