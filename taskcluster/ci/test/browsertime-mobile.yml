@@ -416,7 +416,8 @@ browsertime-benchmark-unity-webgl-mobile:
             refbrow: []
             geckoview:
                 by-test-platform:
-                    android-hw-a51-.*aarch64-shippable-qr.*: [trunk-only]
+                    # Disabled on autoland due to bug 1720063, and bug 1795826
+                    android-hw-a51-.*aarch64-shippable-qr.*: [mozilla-central]
                     default: []
             default:
                 by-test-platform:

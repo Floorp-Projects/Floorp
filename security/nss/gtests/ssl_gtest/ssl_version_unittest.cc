@@ -49,6 +49,20 @@ TEST_P(TlsConnectGeneric, ServerNegotiateTls12) {
   Connect();
 }
 
+TEST_P(TlsConnectGeneric,
+       ClientOfferTls11_Tls13ServerNegotiateEachVersionOneByOne) {
+  // DTLS does not support 1.0
+  if (variant_ == ssl_variant_datagram) {
+    client_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_1,
+                             SSL_LIBRARY_VERSION_TLS_1_3);
+  } else {
+    client_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_0,
+                             SSL_LIBRARY_VERSION_TLS_1_3);
+  }
+  server_->SetVersionRange(version_, version_);
+  Connect();
+}
+
 // Test the ServerRandom version hack from
 // [draft-ietf-tls-tls13-11 Section 6.3.1.1].
 // The first three tests test for active tampering. The next
@@ -361,7 +375,7 @@ TEST_F(DtlsConnectTest, DtlsSupportedVersionsEncoding) {
   ASSERT_EQ(7U, capture->extension().len());
   uint32_t version = 0;
   ASSERT_TRUE(capture->extension().Read(1, 2, &version));
-  EXPECT_EQ(0x7f00 | DTLS_1_3_DRAFT_VERSION, static_cast<int>(version));
+  EXPECT_EQ(SSL_LIBRARY_VERSION_DTLS_1_3_WIRE, static_cast<int>(version));
   ASSERT_TRUE(capture->extension().Read(3, 2, &version));
   EXPECT_EQ(SSL_LIBRARY_VERSION_DTLS_1_2_WIRE, static_cast<int>(version));
   ASSERT_TRUE(capture->extension().Read(5, 2, &version));
@@ -371,7 +385,7 @@ TEST_F(DtlsConnectTest, DtlsSupportedVersionsEncoding) {
 // Verify the DTLS 1.3 supported_versions interop workaround.
 TEST_F(DtlsConnectTest, Dtls13VersionWorkaround) {
   static const uint16_t kExpectVersionsWorkaround[] = {
-      0x7f00 | DTLS_1_3_DRAFT_VERSION, SSL_LIBRARY_VERSION_DTLS_1_2_WIRE,
+      SSL_LIBRARY_VERSION_DTLS_1_3_WIRE, SSL_LIBRARY_VERSION_DTLS_1_2_WIRE,
       SSL_LIBRARY_VERSION_TLS_1_2, SSL_LIBRARY_VERSION_DTLS_1_0_WIRE,
       SSL_LIBRARY_VERSION_TLS_1_1};
   const int min_ver = SSL_LIBRARY_VERSION_TLS_1_1,

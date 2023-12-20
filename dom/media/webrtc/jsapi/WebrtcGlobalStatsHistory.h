@@ -4,16 +4,13 @@
 
 #pragma once
 
-#include <memory>
 #include "domstubs.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/dom/BindingDeclarations.h"
-#include "mozilla/dom/DOMString.h"
 #include "mozilla/dom/RTCStatsReportBinding.h"
 #include "nsDOMNavigationTiming.h"
 #include "nsHashKeys.h"
-#include "nsTHashMap.h"
 
 namespace mozilla::dom {
 class WebrtcGlobalStatisticsHistoryCallback;

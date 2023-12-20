@@ -22,6 +22,7 @@
 #include "mozilla/dom/KeySystemNames.h"
 #include "mozilla/dom/MediaKeySession.h"
 #include "mozilla/dom/MediaKeySystemAccessBinding.h"
+#include "mozilla/dom/MediaKeySystemAccessManager.h"
 #include "mozilla/dom/MediaSource.h"
 #include "nsDOMString.h"
 #include "nsIObserverService.h"
@@ -39,6 +40,9 @@
 
 namespace mozilla::dom {
 
+#define LOG(msg, ...) \
+  EME_LOG("MediaKeySystemAccess::%s " msg, __func__, ##__VA_ARGS__)
+
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(MediaKeySystemAccess, mParent)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(MediaKeySystemAccess)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(MediaKeySystemAccess)
@@ -53,9 +57,9 @@ MediaKeySystemAccess::MediaKeySystemAccess(
     nsPIDOMWindowInner* aParent, const nsAString& aKeySystem,
     const MediaKeySystemConfiguration& aConfig)
     : mParent(aParent), mKeySystem(aKeySystem), mConfig(aConfig) {
-  EME_LOG("Created MediaKeySystemAccess for keysystem=%s config=%s",
-          NS_ConvertUTF16toUTF8(mKeySystem).get(),
-          mozilla::dom::ToCString(mConfig).get());
+  LOG("Created MediaKeySystemAccess for keysystem=%s config=%s",
+      NS_ConvertUTF16toUTF8(mKeySystem).get(),
+      mozilla::dom::ToCString(mConfig).get());
 }
 
 MediaKeySystemAccess::~MediaKeySystemAccess() = default;
@@ -84,37 +88,78 @@ already_AddRefed<Promise> MediaKeySystemAccess::CreateMediaKeys(
   return keys->Init(aRv);
 }
 
+enum class SecureLevel {
+  Software,
+  Hardware,
+};
+
 static MediaKeySystemStatus EnsureCDMInstalled(const nsAString& aKeySystem,
+                                               const SecureLevel aSecure,
                                                nsACString& aOutMessage) {
-  if (!KeySystemConfig::Supports(aKeySystem)) {
+  if (aSecure == SecureLevel::Software &&
+      !KeySystemConfig::Supports(aKeySystem)) {
     aOutMessage = "CDM is not installed"_ns;
     return MediaKeySystemStatus::Cdm_not_installed;
   }
+
+#ifdef MOZ_WMF_CDM
+  if (aSecure == SecureLevel::Hardware) {
+    // Ensure we check the hardware key system name.
+    nsAutoString hardwareKeySystem;
+    if (IsWidevineKeySystem(aKeySystem) ||
+        IsWidevineExperimentKeySystemAndSupported(aKeySystem)) {
+      hardwareKeySystem =
+          NS_ConvertUTF8toUTF16(kWidevineExperimentKeySystemName);
+    } else if (IsPlayReadyKeySystemAndSupported(aKeySystem)) {
+      hardwareKeySystem = NS_ConvertUTF8toUTF16(kPlayReadyKeySystemHardware);
+    } else {
+      MOZ_ASSERT_UNREACHABLE("Not supported key system for HWDRM!");
+    }
+    if (!KeySystemConfig::Supports(hardwareKeySystem)) {
+      aOutMessage = "CDM is not installed"_ns;
+      return MediaKeySystemStatus::Cdm_not_installed;
+    }
+  }
+#endif
 
   return MediaKeySystemStatus::Available;
 }
 
 /* static */
 MediaKeySystemStatus MediaKeySystemAccess::GetKeySystemStatus(
-    const nsAString& aKeySystem, nsACString& aOutMessage) {
-  MOZ_ASSERT(StaticPrefs::media_eme_enabled() ||
-             IsClearkeyKeySystem(aKeySystem));
+    const MediaKeySystemAccessRequest& aRequest, nsACString& aOutMessage) {
+  const nsString& keySystem = aRequest.mKeySystem;
 
-  if (IsClearkeyKeySystem(aKeySystem)) {
-    return EnsureCDMInstalled(aKeySystem, aOutMessage);
+  MOZ_ASSERT(StaticPrefs::media_eme_enabled() ||
+             IsClearkeyKeySystem(keySystem));
+
+  LOG("checking if CDM is installed or disabled for %s",
+      NS_ConvertUTF16toUTF8(keySystem).get());
+  if (IsClearkeyKeySystem(keySystem)) {
+    return EnsureCDMInstalled(keySystem, SecureLevel::Software, aOutMessage);
   }
 
-  if (IsWidevineKeySystem(aKeySystem)) {
+  // This is used to determine if we need to download Widevine L1.
+  bool shouldCheckL1Installation = false;
+#ifdef MOZ_WMF_CDM
+  if (StaticPrefs::media_eme_widevine_experiment_enabled()) {
+    shouldCheckL1Installation =
+        CheckIfHarewareDRMConfigExists(aRequest.mConfigs) ||
+        IsWidevineExperimentKeySystemAndSupported(keySystem);
+  }
+#endif
+
+  // Check Widevine L3
+  if (IsWidevineKeySystem(keySystem) && !shouldCheckL1Installation) {
     if (Preferences::GetBool("media.gmp-widevinecdm.visible", false)) {
       if (!Preferences::GetBool("media.gmp-widevinecdm.enabled", false)) {
         aOutMessage = "Widevine EME disabled"_ns;
         return MediaKeySystemStatus::Cdm_disabled;
       }
-      return EnsureCDMInstalled(aKeySystem, aOutMessage);
+      return EnsureCDMInstalled(keySystem, SecureLevel::Software, aOutMessage);
 #ifdef MOZ_WIDGET_ANDROID
     } else if (Preferences::GetBool("media.mediadrm-widevinecdm.visible",
                                     false)) {
-      nsCString keySystem = NS_ConvertUTF16toUTF8(aKeySystem);
       bool supported =
           mozilla::java::MediaDrmProxy::IsSchemeSupported(keySystem);
       if (!supported) {
@@ -128,10 +173,24 @@ MediaKeySystemStatus MediaKeySystemAccess::GetKeySystemStatus(
   }
 
 #ifdef MOZ_WMF_CDM
-  if ((IsPlayReadyKeySystemAndSupported(aKeySystem) ||
-       IsWidevineExperimentKeySystemAndSupported(aKeySystem)) &&
-      KeySystemConfig::Supports(aKeySystem)) {
+  // Check PlayReady, which is a built-in CDM on most Windows versions.
+  if (IsPlayReadyKeySystemAndSupported(keySystem) &&
+      KeySystemConfig::Supports(keySystem)) {
     return MediaKeySystemStatus::Available;
+  }
+
+  // Check Widevine L1. This can be a request for experimental key systems, or
+  // for a normal key system with hardware robustness.
+  if ((IsWidevineExperimentKeySystemAndSupported(keySystem) ||
+       IsWidevineKeySystem(keySystem)) &&
+      shouldCheckL1Installation) {
+    // TODO : if L3 hasn't been installed as well, should we fallback to install
+    // L3?
+    if (!Preferences::GetBool("media.gmp-widevinecdm-l1.enabled", false)) {
+      aOutMessage = "Widevine L1 EME disabled"_ns;
+      return MediaKeySystemStatus::Cdm_disabled;
+    }
+    return EnsureCDMInstalled(keySystem, SecureLevel::Hardware, aOutMessage);
   }
 #endif
 
@@ -1096,5 +1155,7 @@ nsCString MediaKeySystemAccess::ToCString(
     const Sequence<MediaKeySystemConfiguration>& aConfig) {
   return mozilla::dom::ToCString(aConfig);
 }
+
+#undef LOG
 
 }  // namespace mozilla::dom

@@ -432,18 +432,6 @@ class SVGObserverUtils {
    * invalidation changes for background-clip:text.
    */
   static Element* GetAndObserveBackgroundClip(nsIFrame* aFrame);
-
-  /**
-   * Return a baseURL for resolving a local-ref URL.
-   *
-   * @param aContent an element which uses a local-ref property. Here are some
-   *                 examples:
-   *                   <rect fill=url(#foo)>
-   *                   <circle clip-path=url(#foo)>
-   *                   <use xlink:href="#foo">
-   */
-  static already_AddRefed<nsIURI> GetBaseURLForLocalRef(nsIContent* aContent,
-                                                        nsIURI* aDocURI);
 };
 
 }  // namespace mozilla

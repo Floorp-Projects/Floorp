@@ -34,9 +34,9 @@ NS_IMPL_ISUPPORTS_INHERITED(ParentProcessDocumentChannel, DocumentChannel,
 ParentProcessDocumentChannel::ParentProcessDocumentChannel(
     nsDocShellLoadState* aLoadState, class LoadInfo* aLoadInfo,
     nsLoadFlags aLoadFlags, uint32_t aCacheKey, bool aUriModified,
-    bool aIsXFOError)
+    bool aIsEmbeddingBlockedError)
     : DocumentChannel(aLoadState, aLoadInfo, aLoadFlags, aCacheKey,
-                      aUriModified, aIsXFOError) {
+                      aUriModified, aIsEmbeddingBlockedError) {
   LOG(("ParentProcessDocumentChannel ctor [this=%p]", this));
 }
 
@@ -176,8 +176,8 @@ NS_IMETHODIMP ParentProcessDocumentChannel::AsyncOpen(
   if (isDocumentLoad) {
     promise = mDocumentLoadListener->OpenDocument(
         mLoadState, mCacheKey, Some(mChannelId), TimeStamp::Now(), mTiming,
-        std::move(initialClientInfo), Some(mUriModified), Some(mIsXFOError),
-        nullptr /* ContentParent */, &rv);
+        std::move(initialClientInfo), Some(mUriModified),
+        Some(mIsEmbeddingBlockedError), nullptr /* ContentParent */, &rv);
   } else {
     promise = mDocumentLoadListener->OpenObject(
         mLoadState, mCacheKey, Some(mChannelId), TimeStamp::Now(), mTiming,

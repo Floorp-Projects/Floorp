@@ -28,7 +28,6 @@ class WebrtcGlobalChild : public PWebrtcGlobalChild {
   virtual mozilla::ipc::IPCResult RecvClearLog() override;
   virtual mozilla::ipc::IPCResult RecvSetAecLogging(
       const bool& aEnable) override;
-  virtual mozilla::ipc::IPCResult RecvSetDebugMode(const int& aLevel) override;
 
   static WebrtcGlobalChild* GetOrSet(const Maybe<WebrtcGlobalChild*>& aChild);
 

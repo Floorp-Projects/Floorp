@@ -1764,7 +1764,8 @@ void KeyframeEffect::SetPerformanceWarning(
     const AnimationPerformanceWarning& aWarning) {
   nsCSSPropertyIDSet curr = aPropertySet;
   for (AnimationProperty& property : mProperties) {
-    if (!curr.HasProperty(property.mProperty.mID)) {
+    if (property.mProperty.IsCustom() ||
+        !curr.HasProperty(property.mProperty.mID)) {
       continue;
     }
     property.SetPerformanceWarning(aWarning, mTarget.mElement);

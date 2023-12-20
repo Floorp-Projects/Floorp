@@ -538,13 +538,11 @@ NS_IMETHODIMP
 nsClipboard::GetNativeClipboardData(nsITransferable* aTransferable,
                                     int32_t aWhichClipboard) {
   MOZ_DIAGNOSTIC_ASSERT(aTransferable);
+  MOZ_DIAGNOSTIC_ASSERT(
+      nsIClipboard::IsClipboardTypeSupported(aWhichClipboard));
 
   LOGCLIP("nsClipboard::GetNativeClipboardData (%s)\n",
           aWhichClipboard == kSelectionClipboard ? "primary" : "clipboard");
-
-  if (NS_WARN_IF(!nsIClipboard::IsClipboardTypeSupported(aWhichClipboard))) {
-    return NS_ERROR_FAILURE;
-  }
 
   // TODO: Ensure we don't re-enter here.
   if (!mContext) {

@@ -9,7 +9,6 @@
 #endif
 #include <string.h>
 
-#include "nspr.h"
 #include "YuvStamper.h"
 #include "mozilla/Sprintf.h"
 

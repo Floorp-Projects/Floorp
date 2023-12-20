@@ -127,7 +127,8 @@ bool IsHardwareDecryptionSupported(
   }
   for (const auto& capabilities : aConfig.mVideoCapabilities) {
     if (capabilities.mRobustness.EqualsLiteral("3000") ||
-        capabilities.mRobustness.EqualsLiteral("HW_SECURE_ALL")) {
+        capabilities.mRobustness.EqualsLiteral("HW_SECURE_ALL") ||
+        capabilities.mRobustness.EqualsLiteral("HW_SECURE_DECODE")) {
       supportHardwareDecryption = true;
       break;
     }
@@ -204,6 +205,18 @@ bool DoesKeySystemSupportClearLead(const nsAString& aKeySystem) {
   }
 #endif
   return aKeySystem.EqualsLiteral(kWidevineKeySystemName);
+}
+
+bool CheckIfHarewareDRMConfigExists(
+    const nsTArray<dom::MediaKeySystemConfiguration>& aConfigs) {
+  bool foundHWDRMconfig = false;
+  for (const auto& config : aConfigs) {
+    if (IsHardwareDecryptionSupported(config)) {
+      foundHWDRMconfig = true;
+      break;
+    }
+  }
+  return foundHWDRMconfig;
 }
 
 }  // namespace mozilla

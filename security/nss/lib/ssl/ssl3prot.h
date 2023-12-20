@@ -13,9 +13,6 @@
 typedef PRUint16 SSL3ProtocolVersion;
 /* version numbers are defined in sslproto.h */
 
-/* DTLS 1.3 is still a draft. */
-#define DTLS_1_3_DRAFT_VERSION 43
-
 typedef PRUint16 ssl3CipherSuite;
 /* The cipher suites are defined in sslproto.h */
 

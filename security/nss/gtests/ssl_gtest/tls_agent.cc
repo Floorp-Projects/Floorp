@@ -15,9 +15,6 @@
 #include "tls_filter.h"
 #include "tls_parser.h"
 
-// This is an internal header, used to get DTLS_1_3_DRAFT_VERSION.
-#include "ssl3prot.h"
-
 extern "C" {
 // This is not something that should make you happy.
 #include "libssl_internals.h"
@@ -1116,8 +1113,11 @@ void TlsAgent::Handshake() {
     return;
   }
 
-  LOG("Handshake failed with error " << PORT_ErrorToName(err) << ": "
-                                     << PORT_ErrorToString(err));
+  if (err != 0) {
+    LOG("Handshake failed with error " << PORT_ErrorToName(err) << ": "
+                                       << PORT_ErrorToString(err));
+  }
+
   error_code_ = err;
   SetState(STATE_ERROR);
 }
@@ -1236,9 +1236,14 @@ void TlsAgent::ReadBytes(size_t amount) {
       PRErrorCode err = 0;
       if (rv < 0) {
         err = PR_GetError();
-        LOG("Read error " << PORT_ErrorToName(err) << ": "
-                          << PORT_ErrorToString(err));
+        if (err != 0) {
+          LOG("Read error " << PORT_ErrorToName(err) << ": "
+                            << PORT_ErrorToString(err));
+        }
         if (err != PR_WOULD_BLOCK_ERROR && expect_readwrite_error_) {
+          if (ErrorIsFatal(err)) {
+            SetState(STATE_ERROR);
+          }
           error_code_ = err;
           expect_readwrite_error_ = false;
         }
@@ -1424,7 +1429,7 @@ DataBuffer TlsAgentTestBase::MakeCannedTls13ServerHello() {
     uint32_t v;
     EXPECT_TRUE(sh.Read(sh.len() - 2, 2, &v));
     EXPECT_EQ(static_cast<uint32_t>(SSL_LIBRARY_VERSION_TLS_1_3), v);
-    sh.Write(sh.len() - 2, 0x7f00 | DTLS_1_3_DRAFT_VERSION, 2);
+    sh.Write(sh.len() - 2, SSL_LIBRARY_VERSION_DTLS_1_3_WIRE, 2);
   }
   return sh;
 }

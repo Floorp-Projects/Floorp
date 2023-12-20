@@ -3244,3 +3244,8 @@ set_config("SSSE3_FLAGS", ["-mssse3"])
 set_config("SSE4_2_FLAGS", ["-msse4.2"])
 set_config("FMA_FLAGS", ["-mfma"])
 set_config("AVX2_FLAGS", ["-mavx2"])
+set_config(
+    "AVXVNNI_FLAGS",
+    ["-mavxvnni"],
+    try_compile(check_msg="for -mavxvnni support", flags=["-mavxvnni"]),
+)

@@ -482,3 +482,33 @@ addAccessibleTask(
   },
   { chrome: true, topLevel: true, remoteIframe: true }
 );
+
+/**
+ * Test caching of the expanded state for popover target element.
+ */
+addAccessibleTask(
+  `
+  <button id="show-popover-btn" popovertarget="mypopover" popovertargetaction="show">Show popover</button>
+  <button id="hide-popover-btn" popovertarget="mypopover" popovertargetaction="hide">Hide popover</button>
+  <div id="mypopover" popover>Popover content</div>
+  `,
+  async function (browser, docAcc) {
+    const show = findAccessibleChildByID(docAcc, "show-popover-btn");
+    const hide = findAccessibleChildByID(docAcc, "hide-popover-btn");
+    testStates(show, STATE_COLLAPSED, 0);
+    testStates(hide, STATE_COLLAPSED, 0);
+
+    info("Expanding popover");
+    let onShowing = waitForEvent(EVENT_STATE_CHANGE, show);
+    await show.doAction(0);
+    let showingEvent = await onShowing;
+    testStates(showingEvent.accessible, STATE_EXPANDED, 0);
+
+    info("Collapsing popover");
+    let onHiding = waitForEvent(EVENT_STATE_CHANGE, hide);
+    await hide.doAction(0);
+    let hidingEvent = await onHiding;
+    testStates(hidingEvent.accessible, STATE_COLLAPSED, 0);
+  },
+  { chrome: true, topLevel: true, remoteIframe: true }
+);

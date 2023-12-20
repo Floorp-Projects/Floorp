@@ -817,7 +817,6 @@ class CanvasCaptureTrackSource : public MediaStreamTrackSource {
 
   void Stop() override {
     if (!mCaptureStream) {
-      NS_ERROR("No stream");
       return;
     }
 

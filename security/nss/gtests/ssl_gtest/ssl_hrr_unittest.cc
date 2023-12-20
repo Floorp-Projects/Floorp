@@ -9,9 +9,6 @@
 #include "sslerr.h"
 #include "sslproto.h"
 
-// This is internal, just to get DTLS_1_3_DRAFT_VERSION.
-#include "ssl3prot.h"
-
 #include "gtest_utils.h"
 #include "nss_scoped_ptrs.h"
 #include "tls_connect.h"
@@ -1153,7 +1150,7 @@ class HelloRetryRequestAgentTest : public TlsAgentTestClient {
     i = hrr_data.Write(i, 2, 2);
     i = hrr_data.Write(i,
                        (variant_ == ssl_variant_datagram)
-                           ? (0x7f00 | DTLS_1_3_DRAFT_VERSION)
+                           ? SSL_LIBRARY_VERSION_DTLS_1_3_WIRE
                            : SSL_LIBRARY_VERSION_TLS_1_3,
                        2);
     if (len) {

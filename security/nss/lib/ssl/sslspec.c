@@ -123,7 +123,6 @@ ssl_FindCipherSpecByEpoch(sslSocket *ss, SSLSecretDirection direction,
          cur_p != &ss->ssl3.hs.cipherSpecs;
          cur_p = PR_NEXT_LINK(cur_p)) {
         ssl3CipherSpec *spec = (ssl3CipherSpec *)cur_p;
-
         if (spec->epoch != epoch) {
             continue;
         }

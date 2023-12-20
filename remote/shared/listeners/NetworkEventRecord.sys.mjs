@@ -178,10 +178,8 @@ export class NetworkEventRecord {
    *     The har-like timings.
    * @param {object} offsets
    *     The har-like timings, but as offset from the request start.
-   * @param {Array} serverTimings
-   *     The server timings.
    */
-  addEventTimings(total, timings, offsets, serverTimings) {}
+  addEventTimings(total, timings, offsets) {}
 
   /**
    * Add response cache entry.
@@ -230,6 +228,18 @@ export class NetworkEventRecord {
    *     The server timings.
    */
   addServerTimings(serverTimings) {}
+
+  /**
+   * Add service worker timings.
+   *
+   * Required API for a NetworkObserver event owner.
+   *
+   * Not used for RemoteAgent.
+   *
+   * @param {object} serviceWorkerTimings
+   *     The server timings.
+   */
+  addServiceWorkerTimings(serviceWorkerTimings) {}
 
   onAuthPrompt(authDetails, authCallbacks) {
     this.#emitAuthRequired(authCallbacks);

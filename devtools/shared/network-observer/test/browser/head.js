@@ -75,6 +75,9 @@ class NetworkEventOwner {
   addServerTimings() {
     this.hasServerTimings = true;
   }
+  addServiceWorkerTimings() {
+    this.hasServiceWorkerTimings = true;
+  }
 }
 
 /**

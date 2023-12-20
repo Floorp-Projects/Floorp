@@ -2019,6 +2019,9 @@ static bool TryAddOrSetPlainObjectProperty(JSContext* cx,
       return true;
     }
     obj->setSlot(prop.slot(), value);
+    if (!Watchtower::watchPropertyModification<AllowGC::NoGC>(cx, obj, key)) {
+      return false;
+    }
     *optimized = true;
 
     if constexpr (UseCache) {

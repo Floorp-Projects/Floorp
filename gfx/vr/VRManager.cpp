@@ -1389,9 +1389,10 @@ bool VRManager::SubmitFrame(const layers::SurfaceDescriptor& aTexture,
     case SurfaceDescriptor::TSurfaceDescriptorD3D10: {
       const SurfaceDescriptorD3D10& surf =
           aTexture.get_SurfaceDescriptorD3D10();
+      auto handle = surf.handle()->ClonePlatformHandle();
       layer.textureType =
           VRLayerTextureType::LayerTextureType_D3D10SurfaceDescriptor;
-      layer.textureHandle = (void*)surf.handle();
+      layer.textureHandle = (void*)handle.release();
       layer.textureSize.width = surf.size().width;
       layer.textureSize.height = surf.size().height;
     } break;

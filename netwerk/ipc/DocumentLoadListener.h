@@ -163,7 +163,7 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
       nsDocShellLoadState* aLoadState, uint32_t aCacheKey,
       const Maybe<uint64_t>& aChannelId, const TimeStamp& aAsyncOpenTime,
       nsDOMNavigationTiming* aTiming, Maybe<dom::ClientInfo>&& aInfo,
-      Maybe<bool> aUriModified, Maybe<bool> aIsXFOError,
+      Maybe<bool> aUriModified, Maybe<bool> aIsEmbeddingBlockedError,
       dom::ContentParent* aContentParent, nsresult* aRv);
 
   RefPtr<OpenPromise> OpenObject(

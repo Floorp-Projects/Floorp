@@ -398,34 +398,21 @@
                 },
                 "default": {
                   "title": "Default",
-                  "description": "The identifier of the engine that will be used as the application default for the associated environment.",
+                  "description": "The identifier of the engine that will be used as the application default for the associated environment. If the entry is suffixed with a star, matching is applied on a \"starts with\" basis.",
                   "type": "string",
-                  "pattern": "^[a-zA-Z0-9-_]*$"
-                },
-                "defaultStartsWith": {
-                  "title": "Default (Starts With)",
-                  "description": "This is the start of the identifier of engines that will be used as the application default for the associated environment. The configuration should ensure that any matching engines are unique in the particular environments.",
-                  "type": "string",
-                  "pattern": "^[a-zA-Z0-9-_]*$"
+                  "pattern": "^[a-zA-Z0-9-_]*\\*?$"
                 },
                 "defaultPrivate": {
                   "title": "Default - Private Mode",
-                  "description": "The identifier of the engine that will be used as the application default in private mode for the associated environment.",
+                  "description": "The identifier of the engine that will be used as the application default in private mode for the associated environment. If the entry is suffixed with a star, matching is applied on a \"starts with\" basis.",
                   "type": "string",
-                  "pattern": "^[a-zA-Z0-9-_]*$"
-                },
-                "defaultPrivateStartsWith": {
-                  "title": "Default - Private Mode (Starts With)",
-                  "description": "This is the start of the identifier of engines that will be used as the application default in private mode for the associated environment. The configuration should ensure that any matching engines are unique in the particular environments.",
-                  "type": "string",
-                  "pattern": "^[a-zA-Z0-9-_]*$"
+                  "pattern": "^[a-zA-Z0-9-_]*\\*?$"
                 }
               },
               "oneOf": [
                 { "required": ["environment", "default"] },
-                { "required": ["environment", "defaultStartsWith"] },
                 { "required": ["environment", "defaultPrivate"] },
-                { "required": ["environment", "defaultPrivateStartsWith"] }
+                { "required": ["environment", "default", "defaultPrivate"] }
               ]
             }
           }
@@ -468,7 +455,6 @@
             }
           }
         },
-        "additionalProperties": false,
         "required": ["recordType", "orders"]
       }
     }

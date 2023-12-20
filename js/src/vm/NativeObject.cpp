@@ -23,6 +23,7 @@
 #include "vm/Interpreter.h"         // js::CallGetter, js::CallSetter
 #include "vm/PlainObject.h"         // js::PlainObject
 #include "vm/TypedArrayObject.h"
+#include "vm/Watchtower.h"
 
 #ifdef ENABLE_RECORD_TUPLE
 #  include "builtin/RecordObject.h"
@@ -2375,6 +2376,10 @@ static bool NativeSetExistingDataProperty(JSContext* cx,
                                           ObjectOpResult& result) {
   MOZ_ASSERT(obj->is<NativeObject>());
   MOZ_ASSERT(prop.isDataDescriptor());
+
+  if (!Watchtower::watchPropertyModification<AllowGC::CanGC>(cx, obj, id)) {
+    return false;
+  }
 
   if (prop.isDataProperty()) {
     // The common path. Standard data property.

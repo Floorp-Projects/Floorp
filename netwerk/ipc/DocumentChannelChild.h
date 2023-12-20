@@ -27,7 +27,8 @@ class DocumentChannelChild final : public DocumentChannel,
  public:
   DocumentChannelChild(nsDocShellLoadState* aLoadState,
                        class LoadInfo* aLoadInfo, nsLoadFlags aLoadFlags,
-                       uint32_t aCacheKey, bool aUriModified, bool aIsXFOError);
+                       uint32_t aCacheKey, bool aUriModified,
+                       bool aIsEmbeddingBlockedError);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIASYNCVERIFYREDIRECTCALLBACK

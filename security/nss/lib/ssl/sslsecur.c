@@ -786,8 +786,7 @@ tls13_CheckKeyUpdate(sslSocket *ss, SSLSecretDirection dir)
     tls13KeyUpdateRequest keyUpdateRequest;
     SECStatus rv = SECSuccess;
 
-    /* Bug 1413368: enable for DTLS */
-    if (ss->version < SSL_LIBRARY_VERSION_TLS_1_3 || IS_DTLS(ss)) {
+    if (ss->version < SSL_LIBRARY_VERSION_TLS_1_3) {
         return SECSuccess;
     }
 
@@ -822,8 +821,8 @@ tls13_CheckKeyUpdate(sslSocket *ss, SSLSecretDirection dir)
     keyUpdateRequest = (dir == ssl_secret_read) ? update_requested : update_not_requested;
     ssl_GetSSL3HandshakeLock(ss);
     if (ss->ssl3.clientCertRequested) {
-        ss->ssl3.keyUpdateDeferred = PR_TRUE;
-        ss->ssl3.deferredKeyUpdateRequest = keyUpdateRequest;
+        ss->ssl3.hs.keyUpdateDeferred = PR_TRUE;
+        ss->ssl3.hs.deferredKeyUpdateRequest = keyUpdateRequest;
     } else {
         rv = tls13_SendKeyUpdate(ss, keyUpdateRequest,
                                  dir == ssl_secret_write /* buffer */);

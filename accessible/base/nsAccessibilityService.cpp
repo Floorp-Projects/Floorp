@@ -716,6 +716,19 @@ void nsAccessibilityService::TableLayoutGuessMaybeChanged(
   }
 }
 
+void nsAccessibilityService::PopovertargetMaybeChanged(PresShell* aPresShell,
+                                                       nsIContent* aContent) {
+  DocAccessible* document = GetDocAccessible(aPresShell);
+  if (!document) {
+    return;
+  }
+  if (LocalAccessible* acc = document->GetAccessible(aContent)) {
+    RefPtr<AccEvent> expandedChangeEvent =
+        new AccStateChangeEvent(acc, states::EXPANDED);
+    document->FireDelayedEvent(expandedChangeEvent);
+  }
+}
+
 void nsAccessibilityService::ComboboxOptionMaybeChanged(
     PresShell* aPresShell, nsIContent* aMutatingNode) {
   DocAccessible* document = GetDocAccessible(aPresShell);

@@ -7,7 +7,6 @@
 #ifndef timecard_h__
 #define timecard_h__
 
-#include <stdlib.h>
 #include "prtime.h"
 
 #ifdef __cplusplus

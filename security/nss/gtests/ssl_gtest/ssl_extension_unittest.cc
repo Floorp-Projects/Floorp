@@ -9,9 +9,6 @@
 #include "sslerr.h"
 #include "sslproto.h"
 
-// This is only to get DTLS_1_3_DRAFT_VERSION
-#include "ssl3prot.h"
-
 #include <memory>
 
 #include "tls_connect.h"
@@ -175,11 +172,7 @@ class TlsExtensionTest13
     if (variant_ == ssl_variant_datagram) {
       switch (version) {
         case SSL_LIBRARY_VERSION_TLS_1_3:
-#ifdef DTLS_1_3_DRAFT_VERSION
-          version = 0x7f00 | DTLS_1_3_DRAFT_VERSION;
-#else
           version = SSL_LIBRARY_VERSION_DTLS_1_3_WIRE;
-#endif
           break;
         case SSL_LIBRARY_VERSION_TLS_1_2:
           version = SSL_LIBRARY_VERSION_DTLS_1_2_WIRE;
@@ -1097,27 +1090,12 @@ TEST_P(TlsExtensionTest13, RemoveTls13FromVersionListBothV12) {
                            SSL_LIBRARY_VERSION_TLS_1_3);
   server_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_2,
                            SSL_LIBRARY_VERSION_TLS_1_3);
-// The downgrade check is disabled in DTLS 1.3, so all that happens when we
-// tamper with the supported versions is that the Finished check fails.
-#ifdef DTLS_1_3_DRAFT_VERSION
-  if (variant_ == ssl_variant_datagram) {
-    ExpectAlert(server_, kTlsAlertDecryptError);
-  } else
-#endif
-  {
-    ExpectAlert(client_, kTlsAlertIllegalParameter);
-  }
+  // The downgrade check is disabled in DTLS 1.3, so all that happens when we
+  // tamper with the supported versions is that the Finished check fails.
+  ExpectAlert(client_, kTlsAlertIllegalParameter);
   ConnectWithReplacementVersionList(SSL_LIBRARY_VERSION_TLS_1_2);
-#ifdef DTLS_1_3_DRAFT_VERSION
-  if (variant_ == ssl_variant_datagram) {
-    client_->CheckErrorCode(SSL_ERROR_DECRYPT_ERROR_ALERT);
-    server_->CheckErrorCode(SSL_ERROR_BAD_HANDSHAKE_HASH_VALUE);
-  } else
-#endif
-  {
-    client_->CheckErrorCode(SSL_ERROR_RX_MALFORMED_SERVER_HELLO);
-    server_->CheckErrorCode(SSL_ERROR_ILLEGAL_PARAMETER_ALERT);
-  }
+  client_->CheckErrorCode(SSL_ERROR_RX_MALFORMED_SERVER_HELLO);
+  server_->CheckErrorCode(SSL_ERROR_ILLEGAL_PARAMETER_ALERT);
 }
 
 TEST_P(TlsExtensionTest13, HrrThenRemoveSignatureAlgorithms) {

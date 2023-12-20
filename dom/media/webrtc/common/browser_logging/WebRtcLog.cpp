@@ -4,110 +4,147 @@
 
 #include "WebRtcLog.h"
 
+#include "nsThreadUtils.h"
 #include "mozilla/Logging.h"
-#include "mozilla/StaticPtr.h"
-#include "prenv.h"
 #include "rtc_base/logging.h"
 
 #include "nscore.h"
-#include "nsString.h"
+#include "nsStringFwd.h"
 #include "nsXULAppAPI.h"
 #include "mozilla/Preferences.h"
 
 #include "nsIFile.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsDirectoryServiceDefs.h"
-#include "nsNativeCharsetUtils.h"
+
+#ifdef XP_WIN
+#  include "nsNativeCharsetUtils.h"
+#endif
 
 using mozilla::LogLevel;
 
-static mozilla::LazyLogModule sWebRtcLog("webrtc_trace");
-static mozilla::LazyLogModule sLogAEC("AEC");
+#define WEBRTC_LOG_MODULE_NAME "webrtc_trace"
+#define WEBRTC_LOG_PREF "logging." WEBRTC_LOG_MODULE_NAME
+static mozilla::LazyLogModule sWebRtcLog(WEBRTC_LOG_MODULE_NAME);
 
-class LogSinkImpl : public rtc::LogSink {
- public:
-  LogSinkImpl() {}
-
- private:
-  void OnLogMessage(const std::string& message) override {
-    MOZ_LOG(sWebRtcLog, LogLevel::Debug, ("%s", message.data()));
-  }
-};
-
-// For RTC_LOG()
-static mozilla::StaticAutoPtr<LogSinkImpl> sSink;
-
-mozilla::LogLevel CheckOverrides() {
-  mozilla::LogModule* log_info = sWebRtcLog;
-  mozilla::LogLevel log_level = log_info->Level();
-
-  log_info = sLogAEC;
-  if (sLogAEC && (log_info->Level() != mozilla::LogLevel::Disabled)) {
-    rtc::LogMessage::set_aec_debug(true);
-  }
-
-  return log_level;
-}
-
-void ConfigWebRtcLog(mozilla::LogLevel level) {
-  rtc::LoggingSeverity log_level;
-  switch (level) {
+static rtc::LoggingSeverity LevelToSeverity(mozilla::LogLevel aLevel) {
+  switch (aLevel) {
     case mozilla::LogLevel::Verbose:
-      log_level = rtc::LoggingSeverity::LS_VERBOSE;
-      break;
+      return rtc::LoggingSeverity::LS_VERBOSE;
     case mozilla::LogLevel::Debug:
     case mozilla::LogLevel::Info:
-      log_level = rtc::LoggingSeverity::LS_INFO;
-      break;
+      return rtc::LoggingSeverity::LS_INFO;
     case mozilla::LogLevel::Warning:
-      log_level = rtc::LoggingSeverity::LS_WARNING;
-      break;
+      return rtc::LoggingSeverity::LS_WARNING;
     case mozilla::LogLevel::Error:
-      log_level = rtc::LoggingSeverity::LS_ERROR;
-      break;
+      return rtc::LoggingSeverity::LS_ERROR;
     case mozilla::LogLevel::Disabled:
-      log_level = rtc::LoggingSeverity::LS_NONE;
-      break;
-    default:
-      MOZ_ASSERT(false);
-      break;
+      return rtc::LoggingSeverity::LS_NONE;
   }
-  rtc::LogMessage::LogToDebug(log_level);
-  if (level != mozilla::LogLevel::Disabled) {
-    // always capture LOG(...) << ... logging in webrtc.org code to nspr logs
-    if (!sSink) {
-      sSink = new LogSinkImpl();
-      rtc::LogMessage::AddLogToStream(sSink, log_level);
-      // it's ok if this leaks to program end
+  MOZ_ASSERT_UNREACHABLE("Unexpected log level");
+  return rtc::LoggingSeverity::LS_NONE;
+}
+
+static LogLevel SeverityToLevel(rtc::LoggingSeverity aSeverity) {
+  switch (aSeverity) {
+    case rtc::LoggingSeverity::LS_VERBOSE:
+      return mozilla::LogLevel::Verbose;
+    case rtc::LoggingSeverity::LS_INFO:
+      return mozilla::LogLevel::Debug;
+    case rtc::LoggingSeverity::LS_WARNING:
+      return mozilla::LogLevel::Warning;
+    case rtc::LoggingSeverity::LS_ERROR:
+      return mozilla::LogLevel::Error;
+    case rtc::LoggingSeverity::LS_NONE:
+      return mozilla::LogLevel::Disabled;
+  }
+  MOZ_ASSERT_UNREACHABLE("Unexpected severity");
+  return LogLevel::Disabled;
+}
+
+/**
+ * Implementation of rtc::LogSink that forwards RTC_LOG() to MOZ_LOG().
+ */
+class LogSinkImpl : public WebrtcLogSinkHandle, public rtc::LogSink {
+  NS_INLINE_DECL_REFCOUNTING(LogSinkImpl, override)
+
+ public:
+  static already_AddRefed<WebrtcLogSinkHandle> EnsureLogSink() {
+    mozilla::AssertIsOnMainThread();
+    if (sSingleton) {
+      return do_AddRef(sSingleton);
     }
-  } else if (sSink) {
-    rtc::LogMessage::RemoveLogToStream(sSink);
-    sSink = nullptr;
-  }
-}
-
-void StartWebRtcLog(mozilla::LogLevel log_level) {
-  if (log_level == mozilla::LogLevel::Disabled) {
-    return;
+    return mozilla::MakeAndAddRef<LogSinkImpl>();
   }
 
-  mozilla::LogLevel level = CheckOverrides();
+  static void OnPrefChanged(const char* aPref, void* aData) {
+    mozilla::AssertIsOnMainThread();
+    MOZ_ASSERT(strcmp(aPref, WEBRTC_LOG_PREF) == 0);
+    MOZ_ASSERT(aData == sSingleton);
 
-  ConfigWebRtcLog(level);
-}
-
-void EnableWebRtcLog() {
-  mozilla::LogLevel level = CheckOverrides();
-  ConfigWebRtcLog(level);
-}
-
-// Called when we destroy the singletons from PeerConnectionCtx or if the
-// user changes logging in about:webrtc
-void StopWebRtcLog() {
-  if (sSink) {
-    rtc::LogMessage::RemoveLogToStream(sSink);
-    sSink = nullptr;
+    // Bounce to main thread again so the LogModule can settle on the new level
+    // via its own observer.
+    NS_DispatchToMainThread(mozilla::NewRunnableMethod(
+        __func__, sSingleton, &LogSinkImpl::UpdateLogLevels));
   }
+
+  LogSinkImpl() {
+    mozilla::AssertIsOnMainThread();
+    MOZ_RELEASE_ASSERT(!sSingleton);
+
+    rtc::LogMessage::AddLogToStream(this, LevelToSeverity(mLevel));
+    sSingleton = this;
+
+    mozilla::Preferences::RegisterCallbackAndCall(&LogSinkImpl::OnPrefChanged,
+                                                  WEBRTC_LOG_PREF, this);
+  }
+
+ private:
+  ~LogSinkImpl() {
+    mozilla::AssertIsOnMainThread();
+    MOZ_RELEASE_ASSERT(sSingleton == this);
+
+    mozilla::Preferences::UnregisterCallback(&LogSinkImpl::OnPrefChanged,
+                                             WEBRTC_LOG_PREF, this);
+    rtc::LogMessage::RemoveLogToStream(this);
+    sSingleton = nullptr;
+  }
+
+  void UpdateLogLevels() {
+    mozilla::AssertIsOnMainThread();
+    mozilla::LogModule* webrtcModule = sWebRtcLog;
+    mozilla::LogLevel webrtcLevel = webrtcModule->Level();
+
+    if (webrtcLevel == mLevel) {
+      return;
+    }
+
+    mLevel = webrtcLevel;
+
+    rtc::LogMessage::RemoveLogToStream(this);
+    rtc::LogMessage::AddLogToStream(this, LevelToSeverity(mLevel));
+  }
+
+  void OnLogMessage(const rtc::LogLineRef& aLogLine) override {
+    MOZ_LOG(sWebRtcLog, SeverityToLevel(aLogLine.severity()),
+            ("%s", aLogLine.DefaultLogLine().data()));
+  }
+
+  void OnLogMessage(const std::string&) override {
+    MOZ_CRASH(
+        "Called overriden OnLogMessage that is inexplicably pure virtual");
+  }
+
+  static LogSinkImpl* sSingleton MOZ_GUARDED_BY(mozilla::sMainThreadCapability);
+  LogLevel mLevel MOZ_GUARDED_BY(mozilla::sMainThreadCapability) =
+      LogLevel::Disabled;
+};
+
+LogSinkImpl* LogSinkImpl::sSingleton = nullptr;
+
+already_AddRefed<WebrtcLogSinkHandle> EnsureWebrtcLogging() {
+  mozilla::AssertIsOnMainThread();
+  return LogSinkImpl::EnsureLogSink();
 }
 
 nsCString ConfigAecLog() {
@@ -143,7 +180,6 @@ nsCString StartAecLog() {
     return ""_ns;
   }
 
-  CheckOverrides();
   aecLogDir = ConfigAecLog();
 
   rtc::LogMessage::set_aec_debug(true);

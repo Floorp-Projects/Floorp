@@ -151,7 +151,9 @@ tests.push({
       engines,
       "GMX Search",
       "https://go.gmx.co.uk/br/moz_search_web/?enc=UTF-8&q=test",
-      "https://suggestplugin.gmx.co.uk/s?q=test&brand=gmxcouk&origin=moz_splugin_ff&enc=UTF-8"
+      SearchUtils.newSearchConfigEnabled
+        ? "https://suggestplugin.gmx.co.uk/s?brand=gmxcouk&origin=moz_splugin_ff&enc=UTF-8&q=test"
+        : "https://suggestplugin.gmx.co.uk/s?q=test&brand=gmxcouk&origin=moz_splugin_ff&enc=UTF-8"
     ) &&
     hasDefault(engines, "GMX Search") &&
     hasEnginesFirst(engines, ["GMX Search"]),
@@ -172,7 +174,9 @@ tests.push({
       engines,
       "GMX - Búsqueda web",
       "https://go.gmx.es/br/moz_search_web/?enc=UTF-8&q=test",
-      "https://suggestplugin.gmx.es/s?q=test&brand=gmxes&origin=moz_splugin_ff&enc=UTF-8"
+      SearchUtils.newSearchConfigEnabled
+        ? "https://suggestplugin.gmx.es/s?brand=gmxes&origin=moz_splugin_ff&enc=UTF-8&q=test"
+        : "https://suggestplugin.gmx.es/s?q=test&brand=gmxes&origin=moz_splugin_ff&enc=UTF-8"
     ) &&
     hasDefault(engines, "GMX Search") &&
     hasEnginesFirst(engines, ["GMX Search"]),
@@ -193,7 +197,9 @@ tests.push({
       engines,
       "GMX - Recherche web",
       "https://go.gmx.fr/br/moz_search_web/?enc=UTF-8&q=test",
-      "https://suggestplugin.gmx.fr/s?q=test&brand=gmxfr&origin=moz_splugin_ff&enc=UTF-8"
+      SearchUtils.newSearchConfigEnabled
+        ? "https://suggestplugin.gmx.fr/s?brand=gmxfr&origin=moz_splugin_ff&enc=UTF-8&q=test"
+        : "https://suggestplugin.gmx.fr/s?q=test&brand=gmxfr&origin=moz_splugin_ff&enc=UTF-8"
     ) &&
     hasDefault(engines, "GMX Search") &&
     hasEnginesFirst(engines, ["GMX Search"]),
@@ -331,11 +337,18 @@ add_task(async function test_expected_distribution_engines() {
     });
     let engines = await SearchTestUtils.searchConfigToEngines(config.engines);
     searchService._engines = engines;
-    searchService._searchDefault = {
-      id: config.engines[0].webExtension.id,
-      locale:
-        config.engines[0]?.webExtension?.locale ?? SearchUtils.DEFAULT_TAG,
-    };
+    if (SearchUtils.newSearchConfigEnabled) {
+      searchService._searchDefault = {
+        id: config.engines[0].identifier,
+        locale: "default",
+      };
+    } else {
+      searchService._searchDefault = {
+        id: config.engines[0].webExtension.id,
+        locale:
+          config.engines[0]?.webExtension?.locale ?? SearchUtils.DEFAULT_TAG,
+      };
+    }
     engines = searchService._sortEnginesByDefaults(engines);
     test(engines);
   }

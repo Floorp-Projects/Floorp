@@ -2031,7 +2031,7 @@ void StyleTransition::SetInitialValues() {
       StyleComputedTimingFunction::Keyword(StyleTimingKeyword::Ease);
   mDuration = {0.0};
   mDelay = {0.0};
-  mProperty = eCSSPropertyExtra_all_properties;
+  mProperty = eCSSProperty_all;
 }
 
 bool StyleTransition::operator==(const StyleTransition& aOther) const {

@@ -343,9 +343,9 @@ struct sslGatherStr {
     ** MAC is checked!!
     */
     unsigned int readOffset; /* Spot where DATA reader (e.g. application
-                               ** or handshake code) will read next.
-                               ** Always zero for SSl3 application data.
-                               */
+                              ** or handshake code) will read next.
+                              ** Always zero for SSl3 application data.
+                              */
     /* offset in buf/inbuf/hdr into which new data will be read from socket. */
     unsigned int writeOffset;
 
@@ -708,24 +708,29 @@ typedef struct SSL3HandshakeStateStr {
 
     /* This group of values is used for DTLS */
     PRUint16 sendMessageSeq;   /* The sending message sequence
-                                    * number */
+                                * number */
     PRCList lastMessageFlight; /* The last message flight we
-                                    * sent */
+                                * sent */
     PRUint16 maxMessageSent;   /* The largest message we sent */
     PRUint16 recvMessageSeq;   /* The receiving message sequence
-                                    * number */
+                                * number */
     sslBuffer recvdFragments;  /* The fragments we have received in
-                                    * a bitmask */
+                                * a bitmask */
     PRInt32 recvdHighWater;    /* The high water mark for fragments
-                                    * received. -1 means no reassembly
-                                    * in progress. */
+                                * received. -1 means no reassembly
+                                * in progress. */
     SECItem cookie;            /* The Hello(Retry|Verify)Request cookie. */
     dtlsTimer timers[3];       /* Holder for timers. */
     dtlsTimer *rtTimer;        /* Retransmit timer. */
     dtlsTimer *ackTimer;       /* Ack timer (DTLS 1.3 only). */
     dtlsTimer *hdTimer;        /* Read cipher holddown timer (DLTS 1.3 only) */
-    PRUint32 rtRetries;        /* The retry counter */
-    SECItem srvVirtName;       /* for server: name that was negotiated
+
+    /* KeyUpdate state machines */
+    PRBool isKeyUpdateInProgress; /* The status of KeyUpdate -: {true == started, false == finished}. */
+    PRBool allowPreviousEpoch;    /* The flag whether the previous epoch messages are allowed or not: {true == allowed, false == forbidden}. */
+
+    PRUint32 rtRetries;  /* The retry counter */
+    SECItem srvVirtName; /* for server: name that was negotiated
                                     * with a client. For client - is
                                     * always set to NULL.*/
 
@@ -778,7 +783,7 @@ typedef struct SSL3HandshakeStateStr {
     PRBool echDecided;
     HpkeContext *echHpkeCtx;    /* Client/Server: HPKE context for ECH. */
     const char *echPublicName;  /* Client: If rejected, the ECHConfig.publicName to
-                                * use for certificate verification. */
+                                 * use for certificate verification. */
     sslBuffer greaseEchBuf;     /* Client: Remember GREASE ECH, as advertised, for CH2 (HRR case).
                                   Server: Remember HRR Grease Value, for transcript calculations */
     PRBool echInvalidExtension; /* Client: True if the server offered an invalid extension for the ClientHelloInner */
@@ -786,8 +791,20 @@ typedef struct SSL3HandshakeStateStr {
     /* TLS 1.3 GREASE state. */
     tls13ClientGrease *grease;
 
+    /*
+        KeyUpdate variables:
+        This is true if we deferred sending a key update as
+     * post-handshake auth is in progress. */
+    PRBool keyUpdateDeferred;
+    tls13KeyUpdateRequest deferredKeyUpdateRequest;
+    /* The identifier of the keyUpdate message that is sent but not yet acknowledged */
+    PRUint64 dtlsHandhakeKeyUpdateMessage;
+
     /* ClientHello Extension Permutation state. */
     sslExtensionBuilder *chExtensionPermutation;
+
+    /* Used by client to store a message that's to be hashed during the HandleServerHello. */
+    sslBuffer dtls13ClientMessageBuffer;
 } SSL3HandshakeState;
 
 #define SSL_ASSERT_HASHES_EMPTY(ss)                                  \
@@ -819,11 +836,6 @@ struct ssl3StateStr {
     /* This is true after the peer requests a key update; false after a key
      * update is initiated locally. */
     PRBool peerRequestedKeyUpdate;
-
-    /* This is true if we deferred sending a key update as
-     * post-handshake auth is in progress. */
-    PRBool keyUpdateDeferred;
-    tls13KeyUpdateRequest deferredKeyUpdateRequest;
 
     /* This is true after the server requests client certificate;
      * false after the client certificate is received.  Used by the
@@ -872,6 +884,8 @@ struct ssl3StateStr {
  * so slightly larger than expected */
 #define DTLS_MAX_MTU 1500U
 #define IS_DTLS(ss) (ss->protocolVariant == ssl_variant_datagram)
+#define IS_DTLS_1_OR_12(ss) (IS_DTLS(ss) && ss->version < SSL_LIBRARY_VERSION_TLS_1_3)
+#define IS_DTLS_13_OR_ABOVE(ss) (IS_DTLS(ss) && ss->version >= SSL_LIBRARY_VERSION_TLS_1_3)
 
 typedef struct {
     /* |seqNum| eventually contains the reconstructed sequence number. */

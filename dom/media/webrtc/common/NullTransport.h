@@ -5,8 +5,6 @@
 #ifndef NULL_TRANSPORT_H_
 #define NULL_TRANSPORT_H_
 
-#include "mozilla/Attributes.h"
-
 #include "api/call/transport.h"
 
 namespace mozilla {

@@ -137,24 +137,11 @@ add_task(async function test_sanitization_transparent_frame_color() {
 
   await extension.startup();
 
-  let toolbox = document.querySelector("#navigator-toolbox");
-  let toolboxCS = window.getComputedStyle(toolbox);
-
-  if (backgroundColorSetOnRoot()) {
-    let docEl = document.documentElement;
-    let rootCS = window.getComputedStyle(docEl);
-    Assert.equal(
-      rootCS.backgroundColor,
-      "rgb(255, 255, 255)",
-      "Accent color should be white"
-    );
-  } else {
-    Assert.equal(
-      toolboxCS.backgroundColor,
-      "rgb(255, 255, 255)",
-      "Accent color should be white"
-    );
-  }
+  Assert.equal(
+    getToolboxBackgroundColor(),
+    "rgb(255, 255, 255)",
+    "Accent color should be white"
+  );
 
   await extension.unload();
 });

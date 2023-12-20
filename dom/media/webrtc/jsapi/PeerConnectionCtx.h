@@ -8,16 +8,15 @@
 #include <map>
 #include <string>
 
-#include "WebrtcGlobalChild.h"
 #include "api/field_trials_view.h"
-#include "api/scoped_refptr.h"
 #include "call/audio_state.h"
 #include "MediaTransportHandler.h"  // Mostly for IceLogPromise
 #include "mozIGeckoMediaPluginService.h"
-#include "mozilla/Attributes.h"
 #include "mozilla/StaticPtr.h"
 #include "nsIRunnable.h"
 #include "PeerConnectionImpl.h"
+
+class WebrtcLogSinkHandle;
 
 namespace webrtc {
 class AudioDecoderFactory;
@@ -139,10 +138,7 @@ class PeerConnectionCtx {
  private:
   std::map<const std::string, PeerConnectionImpl*> mPeerConnections;
 
-  PeerConnectionCtx()
-      : mGMPReady(false),
-        mTransportHandler(
-            MediaTransportHandler::Create(GetMainThreadSerialEventTarget())) {}
+  PeerConnectionCtx();
 
   // This is a singleton, so don't copy construct it, etc.
   PeerConnectionCtx(const PeerConnectionCtx& other) = delete;
@@ -172,6 +168,8 @@ class PeerConnectionCtx {
   nsCOMPtr<mozIGeckoMediaPluginService> mGMPService;
   bool mGMPReady;
   nsTArray<nsCOMPtr<nsIRunnable>> mQueuedJSEPOperations;
+
+  const RefPtr<WebrtcLogSinkHandle> mLogHandle;
 
   // Not initted, just for ICE logging stuff
   RefPtr<MediaTransportHandler> mTransportHandler;
