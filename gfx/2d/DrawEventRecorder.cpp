@@ -16,14 +16,22 @@ namespace gfx {
 
 DrawEventRecorderPrivate::DrawEventRecorderPrivate() : mExternalFonts(false) {}
 
+DrawEventRecorderPrivate::~DrawEventRecorderPrivate() {
+  NS_ASSERT_OWNINGTHREAD(DrawEventRecorderPrivate);
+}
+
 void DrawEventRecorderPrivate::StoreExternalSurfaceRecording(
     SourceSurface* aSurface, uint64_t aKey) {
+  NS_ASSERT_OWNINGTHREAD(DrawEventRecorderPrivate);
+
   RecordEvent(RecordedExternalSurfaceCreation(aSurface, aKey));
   mExternalSurfaces.push_back(aSurface);
 }
 
 void DrawEventRecorderPrivate::StoreSourceSurfaceRecording(
     SourceSurface* aSurface, const char* aReason) {
+  NS_ASSERT_OWNINGTHREAD(DrawEventRecorderPrivate);
+
   RefPtr<DataSourceSurface> dataSurf = aSurface->GetDataSurface();
   IntSize surfaceSize = aSurface->GetSize();
   Maybe<DataSourceSurface::ScopedMap> map;
@@ -64,6 +72,8 @@ void DrawEventRecorderPrivate::StoreSourceSurfaceRecording(
 }
 
 void DrawEventRecorderPrivate::RecordSourceSurfaceDestruction(void* aSurface) {
+  NS_ASSERT_OWNINGTHREAD(DrawEventRecorderPrivate);
+
   RemoveSourceSurface(static_cast<SourceSurface*>(aSurface));
   RemoveStoredObject(aSurface);
   RecordEvent(RecordedSourceSurfaceDestruction(ReferencePtr(aSurface)));
@@ -71,6 +81,8 @@ void DrawEventRecorderPrivate::RecordSourceSurfaceDestruction(void* aSurface) {
 
 void DrawEventRecorderPrivate::DecrementUnscaledFontRefCount(
     const ReferencePtr aUnscaledFont) {
+  NS_ASSERT_OWNINGTHREAD(DrawEventRecorderPrivate);
+
   auto element = mUnscaledFontRefs.Lookup(aUnscaledFont);
   MOZ_DIAGNOSTIC_ASSERT(element,
                         "DecrementUnscaledFontRefCount calls should balance "
@@ -82,14 +94,17 @@ void DrawEventRecorderPrivate::DecrementUnscaledFontRefCount(
 }
 
 void DrawEventRecorderMemory::RecordEvent(const RecordedEvent& aEvent) {
+  NS_ASSERT_OWNINGTHREAD(DrawEventRecorderMemory);
   aEvent.RecordToStream(mOutputStream);
 }
 
 void DrawEventRecorderMemory::AddDependentSurface(uint64_t aDependencyId) {
+  NS_ASSERT_OWNINGTHREAD(DrawEventRecorderMemory);
   mDependentSurfaces.Insert(aDependencyId);
 }
 
 nsTHashSet<uint64_t>&& DrawEventRecorderMemory::TakeDependentSurfaces() {
+  NS_ASSERT_OWNINGTHREAD(DrawEventRecorderMemory);
   return std::move(mDependentSurfaces);
 }
 
@@ -104,9 +119,13 @@ DrawEventRecorderMemory::DrawEventRecorderMemory(
   WriteHeader(mOutputStream);
 }
 
-void DrawEventRecorderMemory::Flush() {}
+void DrawEventRecorderMemory::Flush() {
+  NS_ASSERT_OWNINGTHREAD(DrawEventRecorderMemory);
+}
 
 void DrawEventRecorderMemory::FlushItem(IntRect aRect) {
+  NS_ASSERT_OWNINGTHREAD(DrawEventRecorderMemory);
+
   MOZ_RELEASE_ASSERT(!aRect.IsEmpty());
   // Detaching our existing resources will add some
   // destruction events to our stream so we need to do that
@@ -131,6 +150,8 @@ void DrawEventRecorderMemory::FlushItem(IntRect aRect) {
 }
 
 bool DrawEventRecorderMemory::Finish() {
+  NS_ASSERT_OWNINGTHREAD(DrawEventRecorderMemory);
+
   // this length might be 0, and things should still work.
   // for example if there are no items in a particular area
   size_t indexOffset = mOutputStream.mLength;
@@ -145,10 +166,13 @@ bool DrawEventRecorderMemory::Finish() {
 }
 
 size_t DrawEventRecorderMemory::RecordingSize() {
+  NS_ASSERT_OWNINGTHREAD(DrawEventRecorderMemory);
   return mOutputStream.mLength;
 }
 
 void DrawEventRecorderMemory::WipeRecording() {
+  NS_ASSERT_OWNINGTHREAD(DrawEventRecorderMemory);
+
   mOutputStream.reset();
   mIndex.reset();
 

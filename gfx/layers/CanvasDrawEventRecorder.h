@@ -99,7 +99,7 @@ class CanvasDrawEventRecorder final : public gfx::DrawEventRecorderPrivate,
   void StoreSourceSurfaceRecording(gfx::SourceSurface* aSurface,
                                    const char* aReason) final;
 
-  void Flush() final {}
+  void Flush() final { NS_ASSERT_OWNINGTHREAD(CanvasDrawEventRecorder); }
 
   int64_t CreateCheckpoint();
 

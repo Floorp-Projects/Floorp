@@ -45,6 +45,8 @@ CanvasDrawEventRecorder::CanvasDrawEventRecorder() {
 bool CanvasDrawEventRecorder::Init(TextureType aTextureType,
                                    gfx::BackendType aBackendType,
                                    UniquePtr<Helpers> aHelpers) {
+  NS_ASSERT_OWNINGTHREAD(CanvasDrawEventRecorder);
+
   mHelpers = std::move(aHelpers);
 
   MOZ_ASSERT(mTextureType == TextureType::Unknown);
@@ -106,16 +108,20 @@ bool CanvasDrawEventRecorder::Init(TextureType aTextureType,
 }
 
 void CanvasDrawEventRecorder::RecordEvent(const gfx::RecordedEvent& aEvent) {
+  NS_ASSERT_OWNINGTHREAD(CanvasDrawEventRecorder);
   aEvent.RecordToStream(*this);
 }
 
 int64_t CanvasDrawEventRecorder::CreateCheckpoint() {
+  NS_ASSERT_OWNINGTHREAD(CanvasDrawEventRecorder);
   int64_t checkpoint = mHeader->eventCount;
   RecordEvent(RecordedCheckpoint());
   return checkpoint;
 }
 
 bool CanvasDrawEventRecorder::WaitForCheckpoint(int64_t aCheckpoint) {
+  NS_ASSERT_OWNINGTHREAD(CanvasDrawEventRecorder);
+
   uint32_t spinCount = mMaxSpinCount;
   do {
     if (mHeader->processedCount >= aCheckpoint) {
@@ -294,14 +300,18 @@ void CanvasDrawEventRecorder::CheckAndSignalReader() {
 
 void CanvasDrawEventRecorder::StoreSourceSurfaceRecording(
     gfx::SourceSurface* aSurface, const char* aReason) {
-  wr::ExternalImageId extId{};
-  nsresult rv = layers::SharedSurfacesChild::Share(aSurface, extId);
-  if (NS_FAILED(rv)) {
-    DrawEventRecorderPrivate::StoreSourceSurfaceRecording(aSurface, aReason);
-    return;
+  NS_ASSERT_OWNINGTHREAD(CanvasDrawEventRecorder);
+
+  if (NS_IsMainThread()) {
+    wr::ExternalImageId extId{};
+    nsresult rv = layers::SharedSurfacesChild::Share(aSurface, extId);
+    if (NS_SUCCEEDED(rv)) {
+      StoreExternalSurfaceRecording(aSurface, wr::AsUint64(extId));
+      return;
+    }
   }
 
-  StoreExternalSurfaceRecording(aSurface, wr::AsUint64(extId));
+  DrawEventRecorderPrivate::StoreSourceSurfaceRecording(aSurface, aReason);
 }
 
 }  // namespace layers
