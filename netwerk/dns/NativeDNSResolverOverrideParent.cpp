@@ -60,6 +60,17 @@ NS_IMETHODIMP NativeDNSResolverOverrideParent::AddIPOverride(
   return NS_OK;
 }
 
+NS_IMETHODIMP NativeDNSResolverOverrideParent::AddHTTPSRecordOverride(
+    const nsACString& aHost, const uint8_t* aData, uint32_t aLength) {
+  nsCString host(aHost);
+  CopyableTArray<uint8_t> data(aData, aLength);
+  auto task = [self = RefPtr{this}, host, data = std::move(data)]() {
+    Unused << self->SendAddHTTPSRecordOverride(host, data);
+  };
+  gIOService->CallOrWaitForSocketProcess(std::move(task));
+  return NS_OK;
+}
+
 NS_IMETHODIMP NativeDNSResolverOverrideParent::SetCnameOverride(
     const nsACString& aHost, const nsACString& aCNAME) {
   if (aCNAME.IsEmpty()) {
