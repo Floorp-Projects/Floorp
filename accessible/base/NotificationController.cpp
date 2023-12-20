@@ -946,7 +946,7 @@ void NotificationController::WillRefresh(mozilla::TimeStamp aTime) {
   }
 
   if (mDocument) {
-    mDocument->ClearMovedAccessibles();
+    mDocument->ClearMutationData();
   }
 
   if (ipc::ProcessChild::ExpectingShutdown()) {
