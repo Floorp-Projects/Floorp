@@ -61,6 +61,7 @@ DIRS += [
     "shell",
     "shopping",
     "syncedtabs",
+    "tabpreview",
     "tabunloader",
     "textrecognition",
     "translations",
