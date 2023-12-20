@@ -234,6 +234,7 @@ class CommandBar extends Component {
             id: "debugger-trace-menu-item-console",
             label: L10N.getStr("traceInWebConsole"),
             checked: this.props.logMethod == LOG_METHODS.CONSOLE,
+            type: "radio",
             click: () => {
               this.props.setJavascriptTracingLogMethod(LOG_METHODS.CONSOLE);
             },
@@ -241,6 +242,7 @@ class CommandBar extends Component {
           {
             id: "debugger-trace-menu-item-stdout",
             label: L10N.getStr("traceInStdout"),
+            type: "radio",
             checked: this.props.logMethod == LOG_METHODS.STDOUT,
             click: () => {
               this.props.setJavascriptTracingLogMethod(LOG_METHODS.STDOUT);
