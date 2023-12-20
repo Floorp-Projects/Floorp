@@ -8,7 +8,6 @@
  */
 
 ChromeUtils.defineESModuleGetters(this, {
-  SearchSERPCategorization: "resource:///modules/SearchSERPTelemetry.sys.mjs",
   SearchUtils: "resource://gre/modules/SearchUtils.sys.mjs",
 });
 

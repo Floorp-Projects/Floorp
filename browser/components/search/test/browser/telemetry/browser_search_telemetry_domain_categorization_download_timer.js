@@ -13,11 +13,9 @@ ChromeUtils.defineESModuleGetters(this, {
   TELEMETRY_CATEGORIZATION_DOWNLOAD_SETTINGS:
     "resource:///modules/SearchSERPTelemetry.sys.mjs",
   RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
-  SearchSERPCategorization: "resource:///modules/SearchSERPTelemetry.sys.mjs",
   SearchSERPDomainToCategoriesMap:
     "resource:///modules/SearchSERPTelemetry.sys.mjs",
   SearchUtils: "resource://gre/modules/SearchUtils.sys.mjs",
-  sinon: "resource://testing-common/Sinon.sys.mjs",
   TELEMETRY_CATEGORIZATION_KEY:
     "resource:///modules/SearchSERPTelemetry.sys.mjs",
 });
@@ -79,7 +77,6 @@ function waitForDownloadError() {
 const client = RemoteSettings(TELEMETRY_CATEGORIZATION_KEY);
 const db = client.db;
 
-let stub;
 // Shorten the timer so that tests don't have to wait too long.
 const TIMEOUT_IN_MS = 250;
 add_setup(async function () {
@@ -105,11 +102,9 @@ add_setup(async function () {
   TELEMETRY_CATEGORIZATION_DOWNLOAD_SETTINGS.minAdjust = 0;
   TELEMETRY_CATEGORIZATION_DOWNLOAD_SETTINGS.maxAdjust = 0;
 
-  stub = sinon.stub(SearchSERPCategorization, "dummyLogger");
   await db.clear();
 
   registerCleanupFunction(async () => {
-    stub.restore();
     SearchSERPTelemetry.overrideSearchTelemetryForTests();
     resetTelemetry();
     await db.clear();
@@ -140,25 +135,29 @@ add_task(async function test_download_after_failure() {
   await TestUtils.topicObserved("domain-to-categories-map-update-complete");
 
   let url = getSERPUrl("searchTelemetryDomainCategorizationReporting.html");
-  info("Load a sample SERP with organic results.");
+  info("Load a sample SERP with organic and sponsored results.");
   let promise = waitForPageWithCategorizedDomains();
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
   await promise;
 
-  Assert.deepEqual(
-    Array.from(stub.getCall(0).args[0]),
-    ["foobar.org"],
-    "Categorization of non-ads should match."
-  );
-
-  Assert.deepEqual(
-    Array.from(stub.getCall(1).args[0]),
-    ["abc.org", "def.org"],
-    "Categorization of ads should match."
-  );
+  await BrowserTestUtils.removeTab(tab);
+  assertCategorizationValues([
+    {
+      organic_category: "3",
+      organic_num_domains: "1",
+      organic_num_inconclusive: "0",
+      organic_num_unknown: "0",
+      sponsored_category: "4",
+      sponsored_num_domains: "2",
+      sponsored_num_inconclusive: "0",
+      sponsored_num_unknown: "0",
+      mappings_version: "1",
+      num_ads_visible: "2",
+      num_ads_clicked: "0",
+    },
+  ]);
 
   // Clean up.
-  BrowserTestUtils.removeTab(tab);
   await SpecialPowers.popPrefEnv();
   await db.clear();
   await client.attachments.cacheImpl.delete(record.id);

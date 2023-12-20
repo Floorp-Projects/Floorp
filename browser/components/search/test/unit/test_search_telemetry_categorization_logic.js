@@ -12,6 +12,7 @@ ChromeUtils.defineESModuleGetters(this, {
   SearchSERPCategorization: "resource:///modules/SearchSERPTelemetry.sys.mjs",
   SearchSERPDomainToCategoriesMap:
     "resource:///modules/SearchSERPTelemetry.sys.mjs",
+  SearchSERPTelemetryUtils: "resource:///modules/SearchSERPTelemetry.sys.mjs",
 });
 
 const TEST_DOMAIN_TO_CATEGORIES_MAP_SIMPLE = {
@@ -131,7 +132,7 @@ add_task(async function test_categorization_inconclusive() {
   Assert.deepEqual(
     resultsToReport,
     {
-      category: "inconclusive",
+      category: SearchSERPTelemetryUtils.CATEGORIZATION.INCONCLUSIVE,
       num_domains: 10,
       num_inconclusive: 10,
       num_unknown: 0,
@@ -166,7 +167,7 @@ add_task(async function test_categorization_unknown() {
   Assert.deepEqual(
     resultsToReport,
     {
-      category: "inconclusive",
+      category: SearchSERPTelemetryUtils.CATEGORIZATION.INCONCLUSIVE,
       num_domains: 10,
       num_inconclusive: 0,
       num_unknown: 10,
@@ -199,7 +200,7 @@ add_task(async function test_categorization_unknown_and_inconclusive() {
   Assert.deepEqual(
     resultsToReport,
     {
-      category: "inconclusive",
+      category: SearchSERPTelemetryUtils.CATEGORIZATION.INCONCLUSIVE,
       num_domains: 10,
       num_inconclusive: 5,
       num_unknown: 5,
@@ -266,7 +267,7 @@ add_task(async function test_categorization_tie() {
     SearchSERPCategorization.applyCategorizationLogic(domains);
 
   Assert.equal(
-    ["1", "2"].includes(resultsToReport.category),
+    [1, 2].includes(resultsToReport.category),
     true,
     "Category should be one of the 2 categories with the max score."
   );

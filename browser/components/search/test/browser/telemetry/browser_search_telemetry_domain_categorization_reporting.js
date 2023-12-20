@@ -8,12 +8,8 @@
  */
 
 ChromeUtils.defineESModuleGetters(this, {
+  CATEGORIZATION_SETTINGS: "resource:///modules/SearchSERPTelemetry.sys.mjs",
   RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
-  SearchSERPCategorization: "resource:///modules/SearchSERPTelemetry.sys.mjs",
-  SearchSERPDomainToCategoriesMap:
-    "resource:///modules/SearchSERPTelemetry.sys.mjs",
-  SearchUtils: "resource://gre/modules/SearchUtils.sys.mjs",
-  sinon: "resource://testing-common/Sinon.sys.mjs",
   TELEMETRY_CATEGORIZATION_KEY:
     "resource:///modules/SearchSERPTelemetry.sys.mjs",
 });
@@ -27,8 +23,11 @@ const TEST_PROVIDER_INFO = [
     codeParamName: "abc",
     taggedCodes: ["ff"],
     adServerAttributes: ["mozAttr"],
-    nonAdsLinkRegexps: [/^https:\/\/example.com/],
-    extraAdServersRegexps: [/^https:\/\/example\.com\/ad/],
+    nonAdsLinkRegexps: [],
+    extraAdServersRegexps: [
+      /^https:\/\/example\.com\/ad/,
+      /^https:\/\/www\.test(1[3456789]|2[01234])\.com/,
+    ],
     // The search telemetry entry responsible for targeting the specific results.
     domainExtraction: {
       ads: [
@@ -66,7 +65,6 @@ const TEST_PROVIDER_INFO = [
 const client = RemoteSettings(TELEMETRY_CATEGORIZATION_KEY);
 const db = client.db;
 
-let stub;
 add_setup(async function () {
   SearchSERPTelemetry.overrideSearchTelemetryForTests(TEST_PROVIDER_INFO);
   await waitForIdle();
@@ -75,10 +73,7 @@ add_setup(async function () {
     set: [["browser.search.log", true]],
   });
 
-  stub = sinon.stub(SearchSERPCategorization, "dummyLogger");
-
   registerCleanupFunction(async () => {
-    stub.restore();
     SearchSERPTelemetry.overrideSearchTelemetryForTests();
     resetTelemetry();
     await db.clear();
@@ -108,30 +103,34 @@ add_task(async function test_categorization_reporting() {
   await promise;
 
   let url = getSERPUrl("searchTelemetryDomainCategorizationReporting.html");
-  info("Load a sample SERP with organic results.");
+  info("Load a sample SERP with organic and sponsored results.");
   promise = waitForPageWithCategorizedDomains();
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
   await promise;
 
-  // TODO: This needs to be refactored to actually test the reporting of the
-  // categorization. (Bug 1854692)
-  Assert.deepEqual(
-    Array.from(stub.getCall(0).args[0]),
-    ["foobar.org"],
-    "Categorization of non-ads should match."
-  );
+  await BrowserTestUtils.removeTab(tab);
+  assertCategorizationValues([
+    {
+      organic_category: "3",
+      organic_num_domains: "1",
+      organic_num_inconclusive: "0",
+      organic_num_unknown: "0",
+      sponsored_category: "4",
+      sponsored_num_domains: "2",
+      sponsored_num_inconclusive: "0",
+      sponsored_num_unknown: "0",
+      mappings_version: "1",
+      num_ads_clicked: "0",
+      num_ads_visible: "2",
+    },
+  ]);
 
-  Assert.deepEqual(
-    Array.from(stub.getCall(1).args[0]),
-    ["abc.org", "def.org"],
-    "Categorization of ads should match."
-  );
-
-  BrowserTestUtils.removeTab(tab);
   await client.attachments.cacheImpl.delete(record.id);
 });
 
 add_task(async function test_no_reporting_if_download_failure() {
+  resetTelemetry();
+
   await db.clear();
   let { record } = await mockRecordWithAttachment({
     id: "example_id",
@@ -166,16 +165,13 @@ add_task(async function test_no_reporting_if_download_failure() {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
   await promise;
 
-  Assert.equal(
-    stub.getCall(2),
-    null,
-    "dummyLogger should not have been called if attachments weren't downloaded."
-  );
-
-  BrowserTestUtils.removeTab(tab);
+  await BrowserTestUtils.removeTab(tab);
+  assertCategorizationValues([]);
 });
 
 add_task(async function test_no_reporting_if_no_records() {
+  resetTelemetry();
+
   const payload = {
     current: [],
     created: [],
@@ -199,21 +195,14 @@ add_task(async function test_no_reporting_if_no_records() {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
   await promise;
 
-  Assert.equal(
-    stub.getCall(2),
-    null,
-    "dummyLogger should not have been called if there are no records."
-  );
-
-  stub.restore();
-  BrowserTestUtils.removeTab(tab);
+  await BrowserTestUtils.removeTab(tab);
+  assertCategorizationValues([]);
 });
 
 // Per a request from Data Science, we need to limit the number of domains
 // categorized to 10 non ad domains and 10 ad domains.
 add_task(async function test_reporting_limited_to_10_domains_of_each_kind() {
   resetTelemetry();
-  stub = sinon.stub(SearchSERPCategorization, "applyCategorizationLogic");
 
   await db.clear();
   let { record, attachment } = await mockRecordWithAttachment({
@@ -240,44 +229,30 @@ add_task(async function test_reporting_limited_to_10_domains_of_each_kind() {
   let url = getSERPUrl(
     "searchTelemetryDomainCategorizationCapProcessedDomains.html"
   );
-  info("Load a sample SERP with organic results.");
+  info(
+    "Load a sample SERP with more than 10 organic results and more than 10 sponsored results."
+  );
   let domainsCategorizedPromise = waitForPageWithCategorizedDomains();
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
   await domainsCategorizedPromise;
 
-  Assert.deepEqual(
-    Array.from(stub.getCall(0).args[0]),
-    [
-      "test1.com",
-      "test2.com",
-      "test3.com",
-      "test4.com",
-      "test5.com",
-      "test6.com",
-      "test7.com",
-      "test8.com",
-      "test9.com",
-      "test10.com",
-    ],
-    "First call to applyCategorizationLogic should pass in 10 non-ad domains."
-  );
+  await BrowserTestUtils.removeTab(tab);
 
-  Assert.deepEqual(
-    Array.from(stub.getCall(1).args[0]),
-    [
-      "foo.com",
-      "bar.com",
-      "baz.com",
-      "qux.com",
-      "abc.com",
-      "def.com",
-      "ghi.org",
-      "jkl.org",
-      "mno.org",
-      "pqr.org",
-    ],
-    "Second call to applyCategorizationLogic should pass in 10 ad domains."
-  );
-
-  BrowserTestUtils.removeTab(tab);
+  assertCategorizationValues([
+    {
+      organic_category: "0",
+      organic_num_domains:
+        CATEGORIZATION_SETTINGS.MAX_DOMAINS_TO_CATEGORIZE.toString(),
+      organic_num_inconclusive: "0",
+      organic_num_unknown: "10",
+      sponsored_category: "2",
+      sponsored_num_domains:
+        CATEGORIZATION_SETTINGS.MAX_DOMAINS_TO_CATEGORIZE.toString(),
+      sponsored_num_inconclusive: "0",
+      sponsored_num_unknown: "8",
+      mappings_version: "1",
+      num_ads_clicked: "0",
+      num_ads_visible: "12",
+    },
+  ]);
 });
