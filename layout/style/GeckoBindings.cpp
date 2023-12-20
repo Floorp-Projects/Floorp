@@ -1649,6 +1649,10 @@ bool Gecko_ComputeBoolPrefMediaQuery(nsAtom* aPref) {
   // controlled by us so it's not expected to be big.
   static StaticAutoPtr<nsTHashMap<RefPtr<nsAtom>, bool>> sRegisteredPrefs;
   if (!sRegisteredPrefs) {
+    if (PastShutdownPhase(ShutdownPhase::XPCOMShutdownFinal)) {
+      // Styling doesn't really matter much at this point, don't bother.
+      return false;
+    }
     sRegisteredPrefs = new nsTHashMap<RefPtr<nsAtom>, bool>();
     ClearOnShutdown(&sRegisteredPrefs);
   }
