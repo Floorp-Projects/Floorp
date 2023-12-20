@@ -538,12 +538,12 @@ class DocAccessible : public HyperTextAccessible,
 
   /**
    * Called from NotificationController after all mutation events have been
-   * processed to clear our data about Accessibles that were moved during this
-   * tick.
+   * processed to clear our data about mutations during this tick.
    */
-  void ClearMovedAccessibles() {
+  void ClearMutationData() {
     mMovedAccessibles.Clear();
     mInsertedAccessibles.Clear();
+    mRemovedNodes.Clear();
   }
 
   /**
@@ -808,6 +808,9 @@ class DocAccessible : public HyperTextAccessible,
   // processes. This is needed to prevent insertions + moves of the same
   // Accessible in the same tick from being tracked as moves.
   nsTHashSet<RefPtr<LocalAccessible>> mInsertedAccessibles;
+  // A set of DOM nodes removed during this tick. This avoids a lot of pointless
+  // recursive DOM traversals.
+  nsTHashSet<nsIContent*> mRemovedNodes;
 };
 
 inline DocAccessible* LocalAccessible::AsDoc() {
