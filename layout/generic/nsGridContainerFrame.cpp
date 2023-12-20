@@ -165,17 +165,31 @@ static nscoord ResolveToDefiniteSize(const StyleTrackBreadth& aBreadth,
 // https://drafts.csswg.org/css-align-3/#synthesize-baseline
 // For a 'first baseline' the measure is from the border-box start edge and
 // for a 'last baseline' the measure is from the border-box end edge.
+//
+// The 'LogicalAxis aAxis' represents the axis (in terms of aWM) that the
+// baseline corresponds to.  (Typically, baselines are a measurement in the
+// block axis; e.g. for English horizontal-tb text, a traditional baseline
+// would be a y-axis measurement.  But in some cases (e.g. orthogonal WMs), we
+// may need to synthesize a baseline in a child's inline axis, which is when
+// this function might receive an aAxis of eLogicalAxisInline. In that case, we
+// assume that the writing mode's preference for central vs. alphabetic
+// baselines is irrelevant, since that's a choice about its block-axis
+// baselines, and we just unconditionally use the alphabetic baseline
+// (e.g. border-box bottom edge).
 static nscoord SynthesizeBaselineFromBorderBox(BaselineSharingGroup aGroup,
                                                WritingMode aWM,
+                                               LogicalAxis aAxis,
                                                nscoord aBorderBoxSize) {
+  const bool useAlphabeticBaseline =
+      (aAxis == eLogicalAxisInline) ? true : aWM.IsAlphabeticalBaseline();
+
   if (aGroup == BaselineSharingGroup::First) {
-    return aWM.IsAlphabeticalBaseline() ? aBorderBoxSize : aBorderBoxSize / 2;
+    return useAlphabeticBaseline ? aBorderBoxSize : aBorderBoxSize / 2;
   }
   MOZ_ASSERT(aGroup == BaselineSharingGroup::Last);
   // Round up for central baseline offset, to be consistent with eFirst.
-  return aWM.IsAlphabeticalBaseline()
-             ? 0
-             : (aBorderBoxSize / 2) + (aBorderBoxSize % 2);
+  return useAlphabeticBaseline ? 0
+                               : (aBorderBoxSize / 2) + (aBorderBoxSize % 2);
 }
 
 // The input sizes for calculating the number of repeat(auto-fill/fit) tracks.
@@ -9590,7 +9604,7 @@ nscoord nsGridContainerFrame::SynthesizeBaseline(
     WritingMode aCBWM) {
   if (MOZ_UNLIKELY(!aGridOrderItem.mItem)) {
     // No item in this fragment - synthesize a baseline from our border-box.
-    return ::SynthesizeBaselineFromBorderBox(aGroup, aCBWM, aCBSize);
+    return ::SynthesizeBaselineFromBorderBox(aGroup, aCBWM, aAxis, aCBSize);
   }
   auto GetBBaseline = [](BaselineSharingGroup aGroup, WritingMode aWM,
                          const nsIFrame* aFrame, nscoord* aBaseline) {
@@ -9602,6 +9616,7 @@ nscoord nsGridContainerFrame::SynthesizeBaseline(
   nsGridContainerFrame* grid = do_QueryFrame(child);
   auto childWM = child->GetWritingMode();
   bool isOrthogonal = aCBWM.IsOrthogonalTo(childWM);
+  const LogicalAxis childAxis = isOrthogonal ? GetOrthogonalAxis(aAxis) : aAxis;
   nscoord baseline;
   nscoord start;
   nscoord size;
@@ -9612,6 +9627,15 @@ nscoord nsGridContainerFrame::SynthesizeBaseline(
       baseline = isOrthogonal ? grid->GetIBaseline(aGroup)
                               : grid->GetBBaseline(aGroup);
     } else if (!isOrthogonal && aGridOrderItem.mIsInEdgeTrack) {
+      // This assertion is mostly for documentation purposes; it must hold,
+      // given the checks in our 'if' statements. (We know aAxis is
+      // eLogicalAxisBlock, and isOrthogonal is false, which means childAxis
+      // must be eLogicalAxisBlock). If instead we got here with a childAxis of
+      // eLogicalAxisInline, then our call to
+      // Baseline::SynthesizeBaselineFromBorderBox might incorrectly think
+      // it makes sense to use a central baseline, in an axis where that
+      // doesn't make sense.
+      MOZ_ASSERT(childAxis == eLogicalAxisBlock, "unexpected childAxis");
       baseline = child
                      ->GetNaturalBaselineBOffset(childWM, aGroup,
                                                  BaselineExportContext::Other)
@@ -9620,7 +9644,8 @@ nscoord nsGridContainerFrame::SynthesizeBaseline(
                            child, childWM, aGroup);
                      });
     } else {
-      baseline = ::SynthesizeBaselineFromBorderBox(aGroup, childWM, size);
+      baseline =
+          ::SynthesizeBaselineFromBorderBox(aGroup, childWM, childAxis, size);
     }
   } else {
     start = child->GetLogicalNormalPosition(aCBWM, aCBPhysicalSize).I(aCBWM);
@@ -9634,7 +9659,8 @@ nscoord nsGridContainerFrame::SynthesizeBaseline(
         baseline = size - baseline;  // convert to distance from border-box end
       }
     } else {
-      baseline = ::SynthesizeBaselineFromBorderBox(aGroup, childWM, size);
+      baseline =
+          ::SynthesizeBaselineFromBorderBox(aGroup, childWM, childAxis, size);
     }
   }
   return aGroup == BaselineSharingGroup::First
@@ -9653,7 +9679,7 @@ void nsGridContainerFrame::CalculateBaselines(
   if (!(aBaselineSet & BaselineSet::eFirst)) {
     mBaseline[axis][BaselineSharingGroup::First] =
         ::SynthesizeBaselineFromBorderBox(BaselineSharingGroup::First, aWM,
-                                          aCBSize);
+                                          axis, aCBSize);
   } else if (firstBaseline == NS_INTRINSIC_ISIZE_UNKNOWN) {
     FindItemInGridOrderResult gridOrderFirstItem = FindFirstItemInGridOrder(
         *aIter, *aGridItems,
@@ -9679,7 +9705,7 @@ void nsGridContainerFrame::CalculateBaselines(
   auto lastBaseline = aTracks.mBaseline[BaselineSharingGroup::Last];
   if (!(aBaselineSet & BaselineSet::eLast)) {
     mBaseline[axis][BaselineSharingGroup::Last] =
-        ::SynthesizeBaselineFromBorderBox(BaselineSharingGroup::Last, aWM,
+        ::SynthesizeBaselineFromBorderBox(BaselineSharingGroup::Last, aWM, axis,
                                           aCBSize);
   } else if (lastBaseline == NS_INTRINSIC_ISIZE_UNKNOWN) {
     // For finding items for the 'last baseline' we need to create a reverse
