@@ -93,14 +93,13 @@ interface nsISearchEngine : nsISupports
 
   /**
    * Returns a string with the URL to an engine's icon matching both width and
-   * height. Returns null if icon with specified dimensions is not found.
+   * height. Returns undefined if icon with specified dimensions is not found.
    *
-   * @param width
-   *        Width of the requested icon.
-   * @param height
-   *        Height of the requested icon.
+   * @param preferredWidth
+   *   Width of the requested icon. If not specified, it is assumed that
+   *   16x16 is desired.
    */
-  AString getIconURLBySize(in long width, in long height);
+  AString getIconURL([optional] in unsigned short preferredWidth);
 
   /**
    * Opens a speculative connection to the engine's search URI

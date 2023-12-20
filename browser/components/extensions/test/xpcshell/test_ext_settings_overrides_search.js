@@ -61,13 +61,13 @@ add_task(async function test_extension_adding_engine() {
   let { baseURI } = ext1.extension;
   equal(engine.iconURI.spec, baseURI.resolve("foo.ico"), "icon path matches");
   equal(
-    engine.getIconURLBySize(16, 16),
+    engine.getIconURL(16),
     baseURI.resolve("foo.ico"),
     "16x16 icon path matches"
   );
   // TODO: This is broken and will be fixed by a later patch.
   // equal(
-  //   engine.getIconURLBySize(32, 32),
+  //   engine.getIconURL(32),
   //   baseURI.resolve("foo32.ico"),
   //   "32x32 icon path matches"
   // );
