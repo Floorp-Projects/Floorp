@@ -921,6 +921,9 @@ TEST_P(TlsConnectClientAuth, ClientAuthEcdsa) {
 }
 
 TEST_P(TlsConnectClientAuth, ClientAuthWithEch) {
+  if (variant_ == ssl_variant_datagram) {
+    GTEST_SKIP();
+  }
   Reset(TlsAgent::kServerEcdsa256);
   EnsureTlsSetup();
   SetupEch(client_, server_);

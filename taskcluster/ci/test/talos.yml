@@ -653,13 +653,17 @@ talos-tabswitch:
         by-variant:
             webrender-sw:
                 by-test-platform:
-                    (linux1804|windows10|macosx.*)-64-shippable-qr.*: [mozilla-beta, trunk]
+                    # Disable on linux due to bug 1856401
+                    linux.*: []
+                    (windows10|macosx.*)-64-shippable-qr.*: [mozilla-beta, trunk]
                     default: []
             default:
                 by-test-platform:
                     windows.*-32.*: []
-                    (linux|windows10-64|macos)(?!.*shippable).*: []
-                    (linux|windows10-64|macosx1015)(?!.*-qr).*: []
+                    # Disable on linux due to bug 1856401
+                    linux.*: []
+                    (windows10-64|macos)(?!.*shippable).*: []
+                    (windows10-64|macosx1015)(?!.*-qr).*: []
                     default: [mozilla-beta, trunk]
     max-run-time: 1800
     mozharness:

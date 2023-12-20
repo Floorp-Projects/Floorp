@@ -222,6 +222,17 @@ SECStatus SSLInt_ShiftDtlsTimers(PRFileDesc *fd, PRIntervalTime shift) {
   return SECSuccess;
 }
 
+/* Instead of waiting the ACK timer to expire, we send the ack immediately*/
+SECStatus SSLInt_SendImmediateACK(PRFileDesc *fd) {
+  sslSocket *ss = ssl_FindSocket(fd);
+  if (!ss) {
+    return SECFailure;
+  }
+  PORT_Assert(IS_DTLS(ss));
+  dtls13_SendAck(ss);
+  return SECSuccess;
+}
+
 #define CHECK_SECRET(secret)                  \
   if (ss->ssl3.hs.secret) {                   \
     fprintf(stderr, "%s != NULL\n", #secret); \
@@ -397,8 +408,8 @@ SECStatus SSLInt_AdvanceWriteSeqNum(PRFileDesc *fd, PRUint64 to) {
       pk11ctxt->ivFixedBits = cipher_def->iv_size * BPB;
       pk11ctxt->ivGen = CKG_GENERATE_COUNTER;
     }
-    /* DTLS included the epoch in the fixed portion of the IV */
-    if (IS_DTLS(ss)) {
+    /* DTLS1.2 and below included the epoch in the fixed portion of the IV */
+    if (IS_DTLS_1_OR_12(ss)) {
       pk11ctxt->ivFixedBits += 2 * BPB;
     }
   }
@@ -407,6 +418,50 @@ SECStatus SSLInt_AdvanceWriteSeqNum(PRFileDesc *fd, PRUint64 to) {
   pk11ctxt->ivCounter = to;
 
   ssl_ReleaseSpecWriteLock(ss);
+  return SECSuccess;
+}
+
+/* The next two functions are responsible for replacing the epoch count with the
+  one given as the parameter. Important: It does not modify any other data, i.e.
+  keys. Used in ssl_keyupdate_unittests.cc,
+  DTLSKeyUpdateClient_KeyUpdateMaxEpoch TV.
+   */
+SECStatus SSLInt_AdvanceWriteEpochNum(PRFileDesc *fd, PRUint64 to) {
+  sslSocket *ss;
+  ss = ssl_FindSocket(fd);
+  if (!ss) {
+    return SECFailure;
+  }
+  // As currently the epoch is presented as a uint16, the max_epoch is the
+  // maximum value of the type
+  PRUint64 max_epoch = UINT16_MAX;
+  if (to > max_epoch) {
+    PORT_SetError(SEC_ERROR_INVALID_ARGS);
+    return SECFailure;
+  }
+
+  ssl_GetSpecWriteLock(ss);
+  ss->ssl3.cwSpec->epoch = to;
+  ssl_ReleaseSpecWriteLock(ss);
+  return SECSuccess;
+}
+
+SECStatus SSLInt_AdvanceReadEpochNum(PRFileDesc *fd, PRUint64 to) {
+  sslSocket *ss;
+  ss = ssl_FindSocket(fd);
+  if (!ss) {
+    return SECFailure;
+  }
+
+  PRUint64 max_epoch = UINT16_MAX;
+  if (to > max_epoch) {
+    PORT_SetError(SEC_ERROR_INVALID_ARGS);
+    return SECFailure;
+  }
+
+  ssl_GetSpecReadLock(ss);
+  ss->ssl3.crSpec->epoch = to;
+  ssl_ReleaseSpecReadLock(ss);
   return SECSuccess;
 }
 

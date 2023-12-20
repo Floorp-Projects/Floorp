@@ -9,13 +9,11 @@
 #include "mozilla/StaticPtr.h"
 #include "mozilla/dom/PWebrtcGlobal.h"
 #include "mozilla/dom/PWebrtcGlobalChild.h"
-#include "mozilla/media/webrtc/WebrtcGlobal.h"
 #include "WebrtcGlobalChild.h"
 #include "WebrtcGlobalParent.h"
 
 #include <algorithm>
 #include <vector>
-#include <type_traits>
 
 #include "mozilla/dom/WebrtcGlobalInformationBinding.h"
 #include "mozilla/dom/RTCStatsReportBinding.h"  // for RTCStatsReportInternal
@@ -30,7 +28,6 @@
 #include "nsXULAppAPI.h"
 #include "mozilla/ErrorResult.h"
 #include "nsProxyRelease.h"  // nsMainThreadPtrHolder
-#include "mozilla/Telemetry.h"
 #include "mozilla/Unused.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/ClearOnShutdown.h"
@@ -535,27 +532,8 @@ void WebrtcGlobalInformation::GetLogging(
   aRv = NS_OK;
 }
 
-static int32_t sLastSetLevel = 0;
 static bool sLastAECDebug = false;
 static Maybe<nsCString> sAecDebugLogDir;
-
-void WebrtcGlobalInformation::SetDebugLevel(const GlobalObject& aGlobal,
-                                            int32_t aLevel) {
-  if (aLevel) {
-    StartWebRtcLog(mozilla::LogLevel(aLevel));
-  } else {
-    StopWebRtcLog();
-  }
-  sLastSetLevel = aLevel;
-
-  for (const auto& cp : WebrtcContentParents::GetAll()) {
-    Unused << cp->SendSetDebugMode(aLevel);
-  }
-}
-
-int32_t WebrtcGlobalInformation::DebugLevel(const GlobalObject& aGlobal) {
-  return sLastSetLevel;
-}
 
 void WebrtcGlobalInformation::SetAecDebug(const GlobalObject& aGlobal,
                                           bool aEnable) {
@@ -789,17 +767,6 @@ mozilla::ipc::IPCResult WebrtcGlobalChild::RecvSetAecLogging(
       StartAecLog();
     } else {
       StopAecLog();
-    }
-  }
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult WebrtcGlobalChild::RecvSetDebugMode(const int& aLevel) {
-  if (!mShutdown) {
-    if (aLevel) {
-      StartWebRtcLog(mozilla::LogLevel(aLevel));
-    } else {
-      StopWebRtcLog();
     }
   }
   return IPC_OK();

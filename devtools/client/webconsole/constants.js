@@ -144,11 +144,14 @@ const chromeRDPEnums = {
     SECURITY: "security",
     OTHER: "other",
     DEPRECATION: "deprecation",
+    // Related to JavaScript Tracer
+    JSTRACER: "jstracer",
   },
   MESSAGE_TYPE: {
     LOG: "log",
     DIR: "dir",
     TABLE: "table",
+    // Related to console.trace() (and not the JavaScript Tracer)
     TRACE: "trace",
     CLEAR: "clear",
     START_GROUP: "startGroup",

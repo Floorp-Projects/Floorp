@@ -313,19 +313,6 @@ class XPCStringConvert {
     return true;
   }
 
-  static inline bool DynamicAtomToJSVal(JSContext* cx, nsDynamicAtom* atom,
-                                        JS::MutableHandle<JS::Value> rval) {
-    bool shared = false;
-    nsStringBuffer* buf = atom->StringBuffer();
-    if (!UCStringBufferToJSVal(cx, buf, atom->GetLength(), rval, &shared)) {
-      return false;
-    }
-    if (shared) {
-      buf->AddRef();
-    }
-    return true;
-  }
-
  private:
   static MOZ_ALWAYS_INLINE bool MaybeGetExternalStringChars(
       JSString* str, const JSExternalStringCallbacks** callbacks,
@@ -470,10 +457,6 @@ inline bool NonVoidStringToJsval(JSContext* cx, mozilla::dom::DOMString& str,
   if (str.HasLiteral()) {
     return XPCStringConvert::StringLiteralToJSVal(cx, str.Literal(),
                                                   str.LiteralLength(), rval);
-  }
-
-  if (str.HasAtom()) {
-    return XPCStringConvert::DynamicAtomToJSVal(cx, str.Atom(), rval);
   }
 
   // It's an actual XPCOM string

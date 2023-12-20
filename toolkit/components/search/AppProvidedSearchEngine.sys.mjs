@@ -250,7 +250,11 @@ export class AppProvidedSearchEngine extends SearchEngine {
             for (const [key, value] of Object.entries(
               param.searchAccessPoint
             )) {
-              engineURL.addParam(param.name, value, key);
+              engineURL.addParam(
+                param.name,
+                value,
+                key == "addressbar" ? "keyword" : key
+              );
             }
             break;
         }

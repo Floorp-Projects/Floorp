@@ -935,8 +935,6 @@ fn get_animation_rule(
     element: &GeckoElement,
     cascade_level: CascadeLevel,
 ) -> Option<Arc<Locked<PropertyDeclarationBlock>>> {
-    use crate::properties::longhands::ANIMATABLE_PROPERTY_COUNT;
-
     // There's a very rough correlation between the number of effects
     // (animations) on an element and the number of properties it is likely to
     // animate, so we use that as an initial guess for the size of the
@@ -944,7 +942,7 @@ fn get_animation_rule(
     let effect_count = unsafe { Gecko_GetAnimationEffectCount(element.0) };
     // Also, we should try to reuse the PDB, to avoid creating extra rule nodes.
     let mut animation_values = AnimationValueMap::with_capacity_and_hasher(
-        effect_count.min(ANIMATABLE_PROPERTY_COUNT),
+        effect_count.min(crate::properties::property_counts::ANIMATABLE),
         Default::default(),
     );
     if unsafe { Gecko_GetAnimationRule(element.0, cascade_level, &mut animation_values) } {

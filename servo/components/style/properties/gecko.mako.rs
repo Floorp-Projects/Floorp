@@ -1761,8 +1761,10 @@ mask-mode mask-repeat mask-clip mask-origin mask-composite mask-position-x mask-
                     TransitionProperty::Custom(name) => {
                         gecko.mProperty = eCSSPropertyExtra_variable;
                         gecko.mUnknownProperty.mRawPtr = name.into_addrefed();
-                    }
-                    _ => gecko.mProperty = servo.to_nscsspropertyid().unwrap(),
+                    },
+                    TransitionProperty::NonCustom(id) => {
+                        gecko.mProperty = id.to_nscsspropertyid();
+                    },
                 }
             }
         } else {
@@ -1774,9 +1776,9 @@ mask-mode mask-repeat mask-clip mask-origin mask-composite mask-position-x mask-
 
     /// Returns whether there are any transitions specified.
     pub fn specifies_transitions(&self) -> bool {
-        use crate::gecko_bindings::structs::nsCSSPropertyID::eCSSPropertyExtra_all_properties;
+        use crate::gecko_bindings::structs::nsCSSPropertyID::eCSSProperty_all;
         if self.mTransitionPropertyCount == 1 &&
-            self.mTransitions[0].mProperty == eCSSPropertyExtra_all_properties &&
+            self.mTransitions[0].mProperty == eCSSProperty_all &&
             self.transition_combined_duration_at(0).seconds() <= 0.0f32 {
             return false;
         }

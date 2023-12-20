@@ -40,6 +40,10 @@
 class AudioDeviceInfo;
 class nsIPrefBranch;
 
+#ifdef MOZ_WEBRTC
+class WebrtcLogSinkHandle;
+#endif
+
 namespace mozilla {
 class MediaEngine;
 class MediaEngineSource;
@@ -390,6 +394,9 @@ class MediaManager final : public nsIMediaManagerService,
   nsRefPtrHashtable<nsStringHashKey, GetUserMediaTask> mActiveCallbacks;
   nsClassHashtable<nsUint64HashKey, nsTArray<nsString>> mCallIds;
   nsTArray<RefPtr<dom::GetUserMediaRequest>> mPendingGUMRequest;
+#ifdef MOZ_WEBRTC
+  RefPtr<WebrtcLogSinkHandle> mLogHandle;
+#endif
   // non-null if a device enumeration is in progress and was started after the
   // last device-change invalidation
   RefPtr<media::Refcountable<nsTArray<MozPromiseHolder<ConstDeviceSetPromise>>>>

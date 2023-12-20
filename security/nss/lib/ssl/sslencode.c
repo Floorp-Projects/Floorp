@@ -342,7 +342,7 @@ ssl3_AppendHandshake(sslSocket *ss, const void *void_src, unsigned int bytes)
 }
 
 SECStatus
-ssl3_AppendHandshakeNumber(sslSocket *ss, PRUint64 num, unsigned int lenSize)
+ssl3_AppendHandshakeNumberSuppressHash(sslSocket *ss, PRUint64 num, unsigned int lenSize, PRBool suppressHash)
 {
     if ((lenSize > 8) || ((lenSize < 8) && (num >= (1ULL << (8 * lenSize))))) {
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
@@ -352,7 +352,13 @@ ssl3_AppendHandshakeNumber(sslSocket *ss, PRUint64 num, unsigned int lenSize)
     PRUint8 b[sizeof(num)];
     SSL_TRC(60, ("%d: number:", SSL_GETPID()));
     ssl_EncodeUintX(b, num, lenSize);
-    return ssl3_AppendHandshake(ss, b, lenSize);
+    return ssl3_AppendHandshakeInternal(ss, b, lenSize, suppressHash);
+}
+
+SECStatus
+ssl3_AppendHandshakeNumber(sslSocket *ss, PRUint64 num, unsigned int lenSize)
+{
+    return ssl3_AppendHandshakeNumberSuppressHash(ss, num, lenSize, PR_FALSE);
 }
 
 SECStatus
@@ -385,4 +391,44 @@ ssl3_AppendBufferToHandshakeVariable(sslSocket *ss, sslBuffer *buf,
                                      unsigned int lenSize)
 {
     return ssl3_AppendHandshakeVariable(ss, buf->buf, buf->len, lenSize);
+}
+
+SECStatus
+ssl3_MaybeUpdateHashWithSavedRecord(sslSocket *ss)
+{
+    SECStatus rv;
+    /* dtls13ClientMessageBuffer is not empty if ClientHello has sent DTLS1.3 */
+    if (ss->ssl3.hs.dtls13ClientMessageBuffer.len == 0) {
+        return SECSuccess;
+    }
+
+    size_t offset = 0;
+
+    /* the first clause checks the version that was received in ServerHello:
+     * only if it's DTLS1.3, we remove the necessary fields. 
+     * the second clause checks if we send 0rtt (see TestTls13ZeroRttDowngrade).
+     */
+    if ((ss->version == ss->ssl3.cwSpec->version || ss->ssl3.hs.zeroRttState == ssl_0rtt_sent)) {
+        if (ss->ssl3.hs.dtls13ClientMessageBuffer.len < 12) {
+            PORT_SetError(SEC_ERROR_INVALID_ARGS);
+            return SECFailure;
+        }
+
+        rv = ssl3_UpdateHandshakeHashes(ss, ss->ssl3.hs.dtls13ClientMessageBuffer.buf, 4);
+        if (rv != SECSuccess) {
+            return SECFailure;
+        }
+        offset = 12;
+    }
+
+    PORT_Assert(offset < ss->ssl3.hs.dtls13ClientMessageBuffer.len);
+    rv = ssl3_UpdateHandshakeHashes(ss, ss->ssl3.hs.dtls13ClientMessageBuffer.buf + offset,
+                                    ss->ssl3.hs.dtls13ClientMessageBuffer.len - offset);
+    if (rv != SECSuccess) {
+        return SECFailure;
+    }
+
+    sslBuffer_Clear(&ss->ssl3.hs.dtls13ClientMessageBuffer);
+    ss->ssl3.hs.dtls13ClientMessageBuffer.len = 0;
+    return SECSuccess;
 }

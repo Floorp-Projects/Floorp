@@ -455,7 +455,7 @@ struct CookieStruct
 
 struct DocumentCreationArgs {
   bool uriModified;
-  bool isXFOError;
+  bool isEmbeddingBlockedError;
 };
 
 struct ObjectCreationArgs {

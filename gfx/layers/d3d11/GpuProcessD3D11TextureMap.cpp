@@ -99,8 +99,8 @@ Maybe<HANDLE> GpuProcessD3D11TextureMap::GetSharedHandleOfCopiedTexture(
       return Nothing();
     }
 
-    if (it->second.mCopiedTextureSharedHandle.isSome()) {
-      return it->second.mCopiedTextureSharedHandle;
+    if (it->second.mCopiedTextureSharedHandle) {
+      return Some(it->second.mCopiedTextureSharedHandle->GetHandle());
     }
 
     holder = it->second;
@@ -121,7 +121,8 @@ Maybe<HANDLE> GpuProcessD3D11TextureMap::GetSharedHandleOfCopiedTexture(
   CD3D11_TEXTURE2D_DESC newDesc(
       DXGI_FORMAT_NV12, holder.mSize.width, holder.mSize.height, 1, 1,
       D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE);
-  newDesc.MiscFlags = D3D11_RESOURCE_MISC_SHARED;
+  newDesc.MiscFlags =
+      D3D11_RESOURCE_MISC_SHARED_NTHANDLE | D3D11_RESOURCE_MISC_SHARED;
 
   RefPtr<ID3D11Texture2D> copiedTexture;
   HRESULT hr =
@@ -143,17 +144,22 @@ Maybe<HANDLE> GpuProcessD3D11TextureMap::GetSharedHandleOfCopiedTexture(
   context->CopySubresourceRegion(copiedTexture, 0, 0, 0, 0, holder.mTexture,
                                  holder.mArrayIndex, &srcBox);
 
-  RefPtr<IDXGIResource> resource;
-  copiedTexture->QueryInterface((IDXGIResource**)getter_AddRefs(resource));
+  RefPtr<IDXGIResource1> resource;
+  copiedTexture->QueryInterface((IDXGIResource1**)getter_AddRefs(resource));
   if (!resource) {
     return Nothing();
   }
 
   HANDLE sharedHandle;
-  hr = resource->GetSharedHandle(&sharedHandle);
+  hr = resource->CreateSharedHandle(
+      nullptr, DXGI_SHARED_RESOURCE_READ | DXGI_SHARED_RESOURCE_WRITE, nullptr,
+      &sharedHandle);
   if (FAILED(hr)) {
     return Nothing();
   }
+
+  RefPtr<gfx::FileHandleWrapper> handle =
+      new gfx::FileHandleWrapper(UniqueFileHandle(sharedHandle));
 
   RefPtr<ID3D11Query> query;
   CD3D11_QUERY_DESC desc(D3D11_QUERY_EVENT);
@@ -187,10 +193,10 @@ Maybe<HANDLE> GpuProcessD3D11TextureMap::GetSharedHandleOfCopiedTexture(
     }
 
     it->second.mCopiedTexture = copiedTexture;
-    it->second.mCopiedTextureSharedHandle = Some(sharedHandle);
+    it->second.mCopiedTextureSharedHandle = handle;
   }
 
-  return Some(sharedHandle);
+  return Some(handle->GetHandle());
 }
 
 size_t GpuProcessD3D11TextureMap::GetWaitingTextureCount() const {

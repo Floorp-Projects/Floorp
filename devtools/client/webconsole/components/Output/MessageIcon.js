@@ -19,6 +19,7 @@ const l10nLevels = {
   info: "level.info",
   log: "level.log",
   debug: "level.debug",
+  jstracer: "level.jstracer",
 };
 
 // Store common icons so they can be used without recreating the element
@@ -38,15 +39,14 @@ function getIconElement(level, type, title) {
   if (type === "logPoint") {
     title = l10n.getStr("logpoint.title");
     classnames.push("logpoint");
-  } else if (type === "logTrace") {
-    title = l10n.getStr("logtrace.title");
-    classnames.push("logtrace");
   } else if (type === "blockedReason") {
     title = l10n.getStr("blockedrequest.label");
   } else if (type === MESSAGE_TYPE.COMMAND) {
     title = l10n.getStr("command.title");
   } else if (type === MESSAGE_TYPE.RESULT) {
     title = l10n.getStr("result.title");
+  } else if (level == "level.jstracer") {
+    classnames.push("logtrace");
   }
 
   return dom.span({

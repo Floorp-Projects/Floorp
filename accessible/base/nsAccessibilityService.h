@@ -181,6 +181,12 @@ class nsAccessibilityService final : public mozilla::a11y::DocManager,
                                     nsIContent* aContent);
 
   /**
+   * Notifies when an element's popovertarget shows/hides.
+   */
+  void PopovertargetMaybeChanged(mozilla::PresShell* aPresShell,
+                                 nsIContent* aContent);
+
+  /**
    * Notifies when a combobox <option> text or label changes.
    */
   void ComboboxOptionMaybeChanged(mozilla::PresShell*,

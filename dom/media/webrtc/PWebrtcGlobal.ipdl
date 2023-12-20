@@ -31,7 +31,6 @@ child: // parent -> child messages
   async GetLog() returns (WebrtcGlobalLog logs);
   async ClearLog();
   async SetAecLogging(bool aEnable);
-  async SetDebugMode(int aLevel);
 #endif
 };
 

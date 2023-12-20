@@ -68,6 +68,12 @@ h3.device-header:not([slot="header"]):not(:first-child) {
   justify-content: center;
 }
 
+.search-results-empty {
+  height: unset;
+  min-height: 70px;
+  overflow-wrap: anywhere;
+}
+
 button.primary {
   white-space: nowrap;
   min-width: fit-content;

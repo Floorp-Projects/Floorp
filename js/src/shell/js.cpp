@@ -752,6 +752,7 @@ bool shell::enableSymbolsAsWeakMapKeys = false;
 
 bool shell::enableArrayBufferTransfer = true;
 bool shell::enableImportAssertions = false;
+bool shell::enableDestructuringFuse = false;
 #ifdef JS_GC_ZEAL
 uint32_t shell::gZealBits = 0;
 uint32_t shell::gZealFrequency = 0;
@@ -11691,6 +11692,8 @@ bool InitOptionParser(OptionParser& op) {
                         "(no-op) Enable class static blocks") ||
       !op.addBoolOption('\0', "enable-import-assertions",
                         "Enable import assertions") ||
+      !op.addBoolOption('\0', "enable-destructuring-fuse",
+                        "Enable Destructuring Fuse") ||
       !op.addStringOption('\0', "shared-memory", "on/off",
                           "SharedArrayBuffer and Atomics "
 #if SHARED_MEMORY_DEFAULT
@@ -12208,13 +12211,15 @@ bool SetContextOptions(JSContext* cx, const OptionParser& op) {
 #endif
   enableArrayBufferTransfer = !op.getBoolOption("disable-arraybuffer-transfer");
   enableImportAssertions = op.getBoolOption("enable-import-assertions");
+  enableDestructuringFuse = op.getBoolOption("enable-destructuring-fuse");
   useFdlibmForSinCosTan = op.getBoolOption("use-fdlibm-for-sin-cos-tan");
 
   JS::ContextOptionsRef(cx)
       .setSourcePragmas(enableSourcePragmas)
       .setAsyncStack(enableAsyncStacks)
       .setAsyncStackCaptureDebuggeeOnly(enableAsyncStackCaptureDebuggeeOnly)
-      .setImportAssertions(enableImportAssertions);
+      .setImportAssertions(enableImportAssertions)
+      .setEnableDestructuringFuse(enableDestructuringFuse);
 
   JS::SetUseFdlibmForSinCosTan(useFdlibmForSinCosTan);
 

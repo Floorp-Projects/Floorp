@@ -6070,6 +6070,11 @@ nsReflowStatus nsFlexContainerFrame::ReflowFlexItem(
     if (!aReflowInput.IsInFragmentedContext()) {
       return false;
     }
+    if (aItem.Frame()->IsReplaced()) {
+      // Disallow fragmentation-imposed block-size growth for replaced elements
+      // since they are monolithic, and cannot be fragmented.
+      return false;
+    }
     if (aItem.HasAspectRatio()) {
       // Aspect-ratio's automatic content-based minimum size doesn't work
       // properly in a fragmented context (Bug 1868284) when we use 'auto'

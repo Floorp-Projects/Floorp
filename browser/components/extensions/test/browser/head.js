@@ -28,8 +28,9 @@
  *          awaitEvent BrowserWindowIterator
  *          navigateTab historyPushState promiseWindowRestored
  *          getIncognitoWindow startIncognitoMonitorExtension
- *          loadTestSubscript awaitBrowserLoaded backgroundColorSetOnRoot
+ *          loadTestSubscript awaitBrowserLoaded
  *          getScreenAt roundCssPixcel getCssAvailRect isRectContained
+ *          getToolboxBackgroundColor
  */
 
 // There are shutdown issues for which multiple rejections are left uncaught.
@@ -56,9 +57,6 @@ const { AppUiTestDelegate, AppUiTestInternals } = ChromeUtils.importESModule(
 
 const { Preferences } = ChromeUtils.importESModule(
   "resource://gre/modules/Preferences.sys.mjs"
-);
-const { ClientEnvironmentBase } = ChromeUtils.importESModule(
-  "resource://gre/modules/components-utils/ClientEnvironment.sys.mjs"
 );
 
 ChromeUtils.defineESModuleGetters(this, {
@@ -986,22 +984,6 @@ async function getIncognitoWindow(url = "about:privatebrowsing") {
   return { win, details };
 }
 
-/**
- * Windows 7 and 8 set the window's background-color on :root instead of
- * #navigator-toolbox to avoid bug 1695280. When that bug is fixed, this
- * function and the assertions it gates can be removed.
- *
- * @returns {boolean} True if the window's background-color is set on :root
- *   rather than #navigator-toolbox.
- */
-function backgroundColorSetOnRoot() {
-  const os = ClientEnvironmentBase.os;
-  if (!os.isWindows) {
-    return false;
-  }
-  return os.windowsVersion < 10;
-}
-
 function getScreenAt(left, top, width, height) {
   const screenManager = Cc["@mozilla.org/gfx/screenmanager;1"].getService(
     Ci.nsIScreenManager
@@ -1052,4 +1034,13 @@ function isRectContained(actualRect, maxRect) {
     "top=true,bottom=true,left=true,right=true",
     `Dimension must be inside, top:${actualRect.top}>=${maxRect.top}, bottom:${actualRect.bottom}<=${maxRect.bottom}, left:${actualRect.left}>=${maxRect.left}, right:${actualRect.right}<=${maxRect.right}`
   );
+}
+
+function getToolboxBackgroundColor() {
+  let toolbox = document.getElementById("navigator-toolbox");
+  // Ignore any potentially ongoing transition.
+  toolbox.style.transitionProperty = "none";
+  let color = window.getComputedStyle(toolbox).backgroundColor;
+  toolbox.style.transitionProperty = "";
+  return color;
 }

@@ -98,13 +98,13 @@ const CONFIG = [
       },
       {
         environment: { locales: ["en-US"], regions: ["CA"] },
-        defaultStartsWith: "default-starts-with",
-        defaultPrivateStartsWith: "default-starts-with",
+        default: "default-starts-with*",
+        defaultPrivate: "default-starts-with*",
       },
       {
         environment: { locales: ["en-US"], regions: ["US"] },
-        defaultStartsWith: "default-starts-with",
-        defaultPrivateStartsWith: "default-starts-with",
+        default: "default-starts-with*",
+        defaultPrivate: "default-starts-with*",
       },
     ],
   },

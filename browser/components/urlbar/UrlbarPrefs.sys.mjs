@@ -474,9 +474,6 @@ const PREF_URLBAR_DEFAULTS = new Map([
 
   // We only show recent searches within the past 31 days by default.
   ["recentsearches.expirationDays", 31],
-
-  // The last time (as ISO string) the user used the search bar.
-  ["browser.search.widget.lastUsed", ""],
 ]);
 
 const PREF_OTHER_DEFAULTS = new Map([

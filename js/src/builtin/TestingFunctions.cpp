@@ -121,6 +121,7 @@
 #include "vm/PlainObject.h"    // js::PlainObject
 #include "vm/PromiseObject.h"  // js::PromiseObject, js::PromiseSlot_*
 #include "vm/ProxyObject.h"
+#include "vm/RealmFuses.h"
 #include "vm/SavedStacks.h"
 #include "vm/ScopeKind.h"
 #include "vm/Stack.h"
@@ -8234,6 +8235,69 @@ static bool GetEnvironmentObjectType(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+static bool AssertRealmFuseInvariants(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  // Note: This will crash if any invariant isn't held, so it's sufficient to
+  // simply return true always.
+  cx->realm()->realmFuses.assertInvariants(cx);
+  args.rval().setUndefined();
+  return true;
+}
+
+static bool GetFuseState(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  cx->realm()->realmFuses.assertInvariants(cx);
+
+  RootedObject returnObj(cx, JS_NewPlainObject(cx));
+  if (!returnObj) {
+    return false;
+  }
+
+  RootedObject fuseObj(cx);
+  RootedString intactStr(cx, NewStringCopyZ<CanGC>(cx, "intact"));
+  if (!intactStr) {
+    return false;
+  }
+
+  RootedValue intactValue(cx);
+
+#define FUSE(Name, LowerName)                                                \
+  fuseObj = JS_NewPlainObject(cx);                                           \
+  if (!fuseObj) {                                                            \
+    return false;                                                            \
+  }                                                                          \
+  intactValue.setBoolean(cx->realm()->realmFuses.LowerName.intact());        \
+  if (!JS_DefineProperty(cx, fuseObj, "intact", intactValue,                 \
+                         JSPROP_ENUMERATE)) {                                \
+    return false;                                                            \
+  }                                                                          \
+  if (!JS_DefineProperty(cx, returnObj, #Name, fuseObj, JSPROP_ENUMERATE)) { \
+    return false;                                                            \
+  }
+
+  FOR_EACH_REALM_FUSE(FUSE)
+#undef FUSE
+
+  args.rval().setObject(*returnObj);
+  return true;
+}
+
+static bool PopAllFusesInRealm(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  MOZ_ASSERT(cx->realm());
+
+  RealmFuses& realmFuses = cx->realm()->realmFuses;
+
+#define FUSE(Name, LowerName) realmFuses.LowerName.popFuse(cx, realmFuses);
+  FOR_EACH_REALM_FUSE(FUSE)
+#undef FUSE
+
+  args.rval().setUndefined();
+  return true;
+}
+
 static bool GetErrorNotes(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   if (!args.requireAtLeast(cx, "getErrorNotes", 1)) {
@@ -9967,7 +10031,16 @@ JS_FN_HELP("isSmallFunction", IsSmallFunction, 1, 0,
 "nukeCCW(wrapper)",
 "  Nuke a CrossCompartmentWrapper, which turns it into a DeadProxyObject."),
 
-    JS_FS_HELP_END
+  JS_FN_HELP("assertRealmFuseInvariants", AssertRealmFuseInvariants, 0, 0,
+  "assertRealmFuseInvariants()",
+  " Runs the realm's fuse invariant checks -- these will crash on failure. "
+  " Only available in fuzzing or debug builds, so usage should be guarded. "),
+
+  JS_FN_HELP("popAllFusesInRealm", PopAllFusesInRealm, 0, 0,
+  "popAllFusesInRealm()",
+  " Pops all the fuses in the current realm"),
+
+  JS_FS_HELP_END
 };
 // clang-format on
 
@@ -10019,6 +10092,10 @@ JS_FN_HELP("getEnvironmentObjectType", GetEnvironmentObjectType, 1, 0,
       "      (default 3).\n"
       "    start: The object to start all paths from. If not given, then\n"
       "      the starting point will be the set of GC roots."),
+
+    JS_FN_HELP("getFuseState", GetFuseState, 0, 0,
+"getFuseState()",
+"  Return an object describing the calling realm's fuse state"),
 
 
     JS_FS_HELP_END

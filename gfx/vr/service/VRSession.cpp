@@ -8,6 +8,8 @@
 
 #include "moz_external_vr.h"
 
+#include "mozilla/ipc/FileDescriptor.h"
+
 #if defined(XP_WIN)
 #  include <d3d11.h>
 #endif  // defined(XP_WIN)
@@ -104,8 +106,10 @@ bool VRSession::SubmitFrame(
   if (aLayer.textureType ==
       VRLayerTextureType::LayerTextureType_D3D10SurfaceDescriptor) {
     ID3D11Texture2D* dxTexture = nullptr;
-    HRESULT hr = mDevice->OpenSharedResource((HANDLE)aLayer.textureHandle,
-                                             IID_PPV_ARGS(&dxTexture));
+    mozilla::ipc::FileDescriptor::UniquePlatformHandle handle(
+        aLayer.textureHandle);
+    HRESULT hr =
+        mDevice->OpenSharedResource1(handle.get(), IID_PPV_ARGS(&dxTexture));
     if (SUCCEEDED(hr) && dxTexture != nullptr) {
       // Similar to LockD3DTexture in TextureD3D11.cpp
       IDXGIKeyedMutex* mutex = nullptr;

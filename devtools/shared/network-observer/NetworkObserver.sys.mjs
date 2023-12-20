@@ -446,13 +446,16 @@ export class NetworkObserver {
         // There also is never any timing events, so we can fire this
         // event with zeroed out values.
         const timings = this.#setupHarTimings(httpActivity);
-
         const serverTimings = this.#extractServerTimings(httpActivity.channel);
+        const serviceWorkerTimings =
+          this.#extractServiceWorkerTimings(httpActivity);
+
+        httpActivity.owner.addServerTimings(serverTimings);
+        httpActivity.owner.addServiceWorkerTimings(serviceWorkerTimings);
         httpActivity.owner.addEventTimings(
           timings.total,
           timings.timings,
-          timings.offsets,
-          serverTimings
+          timings.offsets
         );
       } else if (topic === "http-on-failed-opening-request") {
         const { blockedReason } = lazy.NetworkUtils.getBlockedReason(
@@ -706,7 +709,8 @@ export class NetworkObserver {
       },
       channel
     );
-    httpActivity.fromCache = fromCache || fromServiceWorker;
+    httpActivity.fromCache = fromCache;
+    httpActivity.fromServiceWorker = fromServiceWorker;
 
     // Bug 1489217 - Avoid watching for response content for blocked or in-progress requests
     // as it can't be observed and would throw if we try.
@@ -993,11 +997,11 @@ export class NetworkObserver {
       const result = this.#setupHarTimings(httpActivity);
       const serverTimings = this.#extractServerTimings(httpActivity.channel);
 
+      httpActivity.owner.addServerTimings(serverTimings);
       httpActivity.owner.addEventTimings(
         result.total,
         result.timings,
-        result.offsets,
-        serverTimings
+        result.offsets
       );
     }
   }
@@ -1306,6 +1310,25 @@ export class NetworkObserver {
     }
 
     return serverTimings;
+  }
+
+  #extractServiceWorkerTimings({ fromServiceWorker, channel }) {
+    if (!fromServiceWorker) {
+      return null;
+    }
+    const timedChannel = channel.QueryInterface(Ci.nsITimedChannel);
+
+    return {
+      launchServiceWorker:
+        timedChannel.launchServiceWorkerEndTime -
+        timedChannel.launchServiceWorkerStartTime,
+      requestToServiceWorker:
+        timedChannel.dispatchFetchEventEndTime -
+        timedChannel.dispatchFetchEventStartTime,
+      handledByServiceWorker:
+        timedChannel.handleFetchEventEndTime -
+        timedChannel.handleFetchEventStartTime,
+    };
   }
 
   #convertTimeToMs(timing) {

@@ -2963,7 +2963,7 @@ RefPtr<MediaManager::StreamPromise> MediaManager::GetUserMedia(
               }
             }
 #ifdef MOZ_WEBRTC
-            EnableWebRtcLog();
+            self->mLogHandle = EnsureWebrtcLogging();
 #endif
             return p;
           },
@@ -3439,7 +3439,7 @@ void MediaManager::Shutdown() {
   mCallIds.Clear();
   mPendingGUMRequest.Clear();
 #ifdef MOZ_WEBRTC
-  StopWebRtcLog();
+  mLogHandle = nullptr;
 #endif
 
   // From main thread's point of view, shutdown is now done.

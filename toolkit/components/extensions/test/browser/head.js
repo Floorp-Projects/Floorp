@@ -1,12 +1,8 @@
 /* exported ACCENT_COLOR, BACKGROUND, ENCODED_IMAGE_DATA, FRAME_COLOR, TAB_TEXT_COLOR,
    TEXT_COLOR, TAB_BACKGROUND_TEXT_COLOR, imageBufferFromDataURI, hexToCSS, hexToRGB, testBorderColor,
-   waitForTransition, loadTestSubscript, backgroundColorSetOnRoot, assertPersistentListeners */
+   waitForTransition, loadTestSubscript, assertPersistentListeners, getToolboxBackgroundColor */
 
 "use strict";
-
-const { ClientEnvironmentBase } = ChromeUtils.importESModule(
-  "resource://gre/modules/components-utils/ClientEnvironment.sys.mjs"
-);
 
 const BACKGROUND =
   "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0" +
@@ -78,6 +74,15 @@ function waitForTransition(element, propertyName) {
   );
 }
 
+function getToolboxBackgroundColor() {
+  let toolbox = document.getElementById("navigator-toolbox");
+  // Ignore any potentially ongoing transition.
+  toolbox.style.transitionProperty = "none";
+  let color = window.getComputedStyle(toolbox).backgroundColor;
+  toolbox.style.transitionProperty = "";
+  return color;
+}
+
 function testBorderColor(element, expected) {
   let computedStyle = window.getComputedStyle(element);
   Assert.equal(
@@ -104,22 +109,6 @@ function testBorderColor(element, expected) {
 
 function loadTestSubscript(filePath) {
   Services.scriptloader.loadSubScript(new URL(filePath, gTestPath).href, this);
-}
-
-/**
- * Windows 7 and 8 set the window's background-color on :root instead of
- * #navigator-toolbox to avoid bug 1695280. When that bug is fixed, this
- * function and the assertions it gates can be removed.
- *
- * @returns {boolean} True if the window's background-color is set on :root
- *   rather than #navigator-toolbox.
- */
-function backgroundColorSetOnRoot() {
-  const os = ClientEnvironmentBase.os;
-  if (!os.isWindows) {
-    return false;
-  }
-  return os.windowsVersion < 10;
 }
 
 // Persistent Listener test functionality

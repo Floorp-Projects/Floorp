@@ -1362,10 +1362,8 @@ fn get_channel_count(
         // but it is impossible to distinguish an output-only device from an input+output
         // device. There have also been corner cases observed, where the device does NOT have
         // a Tap enabled, but it still has the extra input channels from the Tap.
-        // We can check the terminal type of the input stream instead -- if it is
-        // INPUT_UNDEFINED (reported to be the VPIO type according to Chromium) or any
-        // non-input-only terminal type, we ignore it when counting channels (and thereby
-        // determining whether we are dealing with an input device).
+        // We can check the terminal type of the input stream instead, the VPIO type is
+        // INPUT_UNDEFINED or an output type, we explicitly ignore those and keep all other cases.
         streams.retain(|stream| {
             let terminal_type = get_stream_terminal_type(*stream);
             if terminal_type.is_err() {
@@ -1377,15 +1375,34 @@ fn get_channel_count(
                 kAudioStreamTerminalTypeMicrophone
                 | kAudioStreamTerminalTypeHeadsetMicrophone
                 | kAudioStreamTerminalTypeReceiverMicrophone => true,
-                t if t > INPUT_UNDEFINED && t < OUTPUT_UNDEFINED => true,
-                t if t > BIDIRECTIONAL_UNDEFINED && t < TELEPHONY_UNDEFINED => true,
-                t if t > TELEPHONY_UNDEFINED && t < EXTERNAL_UNDEFINED => true,
-                t => {
+                t if [
+                    kAudioStreamTerminalTypeSpeaker,
+                    kAudioStreamTerminalTypeHeadphones,
+                    kAudioStreamTerminalTypeLFESpeaker,
+                    kAudioStreamTerminalTypeReceiverSpeaker,
+                ]
+                .contains(&t) =>
+                {
                     cubeb_log!(
-                        "Unexpected TerminalType {:06X} for input stream. Ignoring its channels.",
+                        "Output TerminalType {:#06X} for input stream. Ignoring its channels.",
                         t
                     );
                     false
+                }
+                INPUT_UNDEFINED => {
+                    cubeb_log!(
+                        "INPUT_UNDEFINED TerminalType for input stream. Ignoring its channels."
+                    );
+                    false
+                }
+                // Note INPUT_UNDEFINED is 0x200 and INPUT_MICROPHONE is 0x201
+                t if (INPUT_MICROPHONE..OUTPUT_UNDEFINED).contains(&t) => true,
+                t if (OUTPUT_UNDEFINED..BIDIRECTIONAL_UNDEFINED).contains(&t) => false,
+                t if (BIDIRECTIONAL_UNDEFINED..TELEPHONY_UNDEFINED).contains(&t) => true,
+                t if (TELEPHONY_UNDEFINED..EXTERNAL_UNDEFINED).contains(&t) => true,
+                t => {
+                    cubeb_log!("Unknown TerminalType {:#06X} for input stream.", t);
+                    true
                 }
             }
         });

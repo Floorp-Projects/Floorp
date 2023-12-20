@@ -38,7 +38,8 @@ UniquePtr<ExternalTextureD3D11> ExternalTextureD3D11::Create(
     desc.BindFlags |= D3D11_BIND_UNORDERED_ACCESS;
   }
 
-  desc.MiscFlags = D3D11_RESOURCE_MISC_SHARED;
+  desc.MiscFlags =
+      D3D11_RESOURCE_MISC_SHARED_NTHANDLE | D3D11_RESOURCE_MISC_SHARED;
 
   RefPtr<ID3D11Texture2D> texture;
   HRESULT hr =
@@ -47,41 +48,55 @@ UniquePtr<ExternalTextureD3D11> ExternalTextureD3D11::Create(
     gfxCriticalNoteOnce << "CreateTexture2D failed:  " << gfx::hexa(hr);
     return nullptr;
   }
-  return MakeUnique<ExternalTextureD3D11>(aWidth, aHeight, aFormat, aUsage,
-                                          texture);
-}
 
-ExternalTextureD3D11::ExternalTextureD3D11(
-    const uint32_t aWidth, const uint32_t aHeight,
-    const struct ffi::WGPUTextureFormat aFormat,
-    const ffi::WGPUTextureUsages aUsage, RefPtr<ID3D11Texture2D> aTexture)
-    : ExternalTexture(aWidth, aHeight, aFormat, aUsage), mTexture(aTexture) {
-  MOZ_ASSERT(mTexture);
-}
-
-ExternalTextureD3D11::~ExternalTextureD3D11() {}
-
-void* ExternalTextureD3D11::GetExternalTextureHandle() {
-  RefPtr<IDXGIResource> resource;
-  mTexture->QueryInterface((IDXGIResource**)getter_AddRefs(resource));
+  RefPtr<IDXGIResource1> resource;
+  texture->QueryInterface((IDXGIResource1**)getter_AddRefs(resource));
   if (!resource) {
     gfxCriticalNoteOnce << "Failed to get IDXGIResource";
     return 0;
   }
 
   HANDLE sharedHandle;
-  HRESULT hr = resource->GetSharedHandle(&sharedHandle);
+  hr = resource->CreateSharedHandle(
+      nullptr, DXGI_SHARED_RESOURCE_READ | DXGI_SHARED_RESOURCE_WRITE, nullptr,
+      &sharedHandle);
   if (FAILED(hr)) {
     gfxCriticalNoteOnce << "GetSharedHandle failed: " << gfx::hexa(hr);
     return 0;
   }
-  return sharedHandle;
+
+  RefPtr<gfx::FileHandleWrapper> handle =
+      new gfx::FileHandleWrapper(UniqueFileHandle(sharedHandle));
+
+  return MakeUnique<ExternalTextureD3D11>(aWidth, aHeight, aFormat, aUsage,
+                                          texture, std::move(handle));
+}
+
+ExternalTextureD3D11::ExternalTextureD3D11(
+    const uint32_t aWidth, const uint32_t aHeight,
+    const struct ffi::WGPUTextureFormat aFormat,
+    const ffi::WGPUTextureUsages aUsage, const RefPtr<ID3D11Texture2D> aTexture,
+    RefPtr<gfx::FileHandleWrapper>&& aSharedHandle)
+    : ExternalTexture(aWidth, aHeight, aFormat, aUsage),
+      mTexture(aTexture),
+      mSharedHandle(std::move(aSharedHandle)) {
+  MOZ_ASSERT(mTexture);
+}
+
+ExternalTextureD3D11::~ExternalTextureD3D11() {}
+
+void* ExternalTextureD3D11::GetExternalTextureHandle() {
+  if (!mSharedHandle) {
+    return nullptr;
+  }
+
+  return mSharedHandle->GetHandle();
 }
 
 Maybe<layers::SurfaceDescriptor> ExternalTextureD3D11::ToSurfaceDescriptor() {
   const auto format = gfx::SurfaceFormat::B8G8R8A8;
   return Some(layers::SurfaceDescriptorD3D10(
-      (WindowsHandle)GetExternalTextureHandle(),
+      mSharedHandle,
       /* gpuProcessTextureId */ Nothing(),
       /* arrayIndex */ 0, format, gfx::IntSize(mWidth, mHeight),
       gfx::ColorSpace2::SRGB, gfx::ColorRange::FULL,

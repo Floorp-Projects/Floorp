@@ -23,7 +23,6 @@ function makeFilePickerService() {
 const WGI = WebrtcGlobalInformation;
 
 const LOGFILE_NAME_DEFAULT = "aboutWebrtc.html";
-const WEBRTC_TRACE_ALL = 65535;
 
 class Renderer {
   // Long function names preserved until code can be uniformly moved to new names
@@ -268,7 +267,6 @@ class EnableLogging extends Control {
   }
 
   onClick() {
-    WGI.debugLevel = WEBRTC_TRACE_ALL;
     this.update();
     window.open("about:logging?preset=webrtc");
   }

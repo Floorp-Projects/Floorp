@@ -127,7 +127,7 @@ add_task(async function test_browser_settings() {
       proxyType: "none",
       autoConfigUrl: "",
       autoLogin: false,
-      proxyDNS: false,
+      proxyDNS: true,
       httpProxyAll: false,
       socksVersion: 5,
       passthrough: "",

@@ -881,10 +881,11 @@
 
   JSDOMParser.prototype = {
     error: function(m) {
-      if (typeof dump !== "undefined") {
-        dump("JSDOMParser error: " + m + "\n");
-      } else if (typeof console !== "undefined") {
+      if (typeof console !== "undefined") {
         console.log("JSDOMParser error: " + m + "\n");
+      } else if (typeof dump !== "undefined") {
+        /* global dump */
+        dump("JSDOMParser error: " + m + "\n");
       }
       this.errorState += m + "\n";
     },
@@ -1199,5 +1200,6 @@
 })(this);
 
 if (typeof module === "object") {
+  /* global module */
   module.exports = this.JSDOMParser;
 }

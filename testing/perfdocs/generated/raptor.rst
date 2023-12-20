@@ -5400,7 +5400,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - ❌
       * - **browsertime-benchmark-unity-webgl-mobile-geckoview-nofis**
         - ✅
-        - ✅
+        - ❌
         - ❌
         - ❌
 
@@ -5469,8 +5469,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - ❌
       * - **browsertime-benchmark-firefox-unity-webgl**
         - ✅
-        - ✅
-        - ✅
+        - ❌
+        - ❌
         - ❌
 
 
@@ -5522,8 +5522,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - ❌
       * - **browsertime-benchmark-firefox-unity-webgl**
         - ✅
-        - ✅
-        - ✅
+        - ❌
+        - ❌
         - ❌
       * - **browsertime-benchmark-safari-unity-webgl**
         - ❌
@@ -5617,8 +5617,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - ❌
       * - **browsertime-benchmark-firefox-unity-webgl**
         - ✅
-        - ✅
-        - ✅
+        - ❌
+        - ❌
         - ❌
 
 
@@ -5683,7 +5683,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - ❌
       * - **browsertime-benchmark-unity-webgl-mobile-geckoview-nofis**
         - ✅
-        - ✅
+        - ❌
         - ❌
         - ❌
 
@@ -5752,8 +5752,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - ❌
       * - **browsertime-benchmark-firefox-unity-webgl**
         - ✅
-        - ✅
-        - ✅
+        - ❌
+        - ❌
         - ❌
 
 
@@ -5805,8 +5805,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - ❌
       * - **browsertime-benchmark-firefox-unity-webgl**
         - ✅
-        - ✅
-        - ✅
+        - ❌
+        - ❌
         - ❌
       * - **browsertime-benchmark-safari-unity-webgl**
         - ❌
@@ -5900,8 +5900,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - ❌
       * - **browsertime-benchmark-firefox-unity-webgl**
         - ✅
-        - ✅
-        - ✅
+        - ❌
+        - ❌
         - ❌
 
 

@@ -18,21 +18,16 @@
 #include "modules/audio_processing/include/audio_processing.h"
 #include "modules/audio_processing/include/aec_dump.h"
 #include "mozilla/UniquePtr.h"
-#include "mozilla/dom/RTCPeerConnectionBinding.h"
-#include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Telemetry.h"
-#include "mozilla/Types.h"
 #include "mozilla/dom/RTCStatsReportBinding.h"
 #include "nsCRTGlue.h"
 #include "nsIIOService.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
-#include "nsNetCID.h"               // NS_SOCKETTRANSPORTSERVICE_CONTRACTID
 #include "nsServiceManagerUtils.h"  // do_GetService
 #include "PeerConnectionImpl.h"
-#include "prcvar.h"
 #include "transport/runnable_utils.h"
 #include "WebrtcGlobalChild.h"
 #include "WebrtcGlobalInformation.h"
@@ -270,7 +265,6 @@ nsresult PeerConnectionCtx::InitializeGlobal() {
     }
   }
 
-  EnableWebRtcLog();
   return NS_OK;
 }
 
@@ -292,8 +286,6 @@ void PeerConnectionCtx::Destroy() {
     instance->Cleanup();
     delete instance;
   }
-
-  StopWebRtcLog();
 }
 
 template <typename T>
@@ -531,6 +523,12 @@ void PeerConnectionCtx::ClearClosedStats() {
     }
   }
 }
+
+PeerConnectionCtx::PeerConnectionCtx()
+    : mGMPReady(false),
+      mLogHandle(EnsureWebrtcLogging()),
+      mTransportHandler(
+          MediaTransportHandler::Create(GetMainThreadSerialEventTarget())) {}
 
 nsresult PeerConnectionCtx::Initialize() {
   MOZ_ASSERT(NS_IsMainThread());

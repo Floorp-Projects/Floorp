@@ -33,8 +33,6 @@ const MDNLink = require("resource://devtools/client/shared/components/MdnLink.js
 
 const { div, span } = dom;
 
-const TIMINGS_END_PADDING = "80px";
-
 /**
  * Timings panel component
  * Display timeline bars that shows the total wait time for various stages
@@ -57,6 +55,64 @@ class TimingsPanel extends Component {
   UNSAFE_componentWillReceiveProps(nextProps) {
     const { connector, request } = nextProps;
     fetchNetworkUpdatePacket(connector.requestData, request, ["eventTimings"]);
+  }
+
+  renderServiceWorkerTimings() {
+    const { serviceWorkerTimings } = this.props.request.eventTimings;
+
+    if (!serviceWorkerTimings) {
+      return null;
+    }
+
+    const totalTime = Object.values(serviceWorkerTimings).reduce(
+      (acc, value) => acc + value,
+      0
+    );
+
+    let offset = 0;
+    let preValue = 0;
+
+    return div(
+      {},
+      div(
+        { className: "label-separator" },
+        L10N.getStr("netmonitor.timings.serviceWorkerTiming")
+      ),
+      Object.entries(serviceWorkerTimings).map(([key, value], index) => {
+        if (preValue > 0) {
+          offset += preValue / totalTime;
+        }
+        preValue = value;
+        return div(
+          {
+            key,
+            className:
+              "tabpanel-summary-container timings-container service-worker",
+          },
+          span(
+            { className: "tabpanel-summary-label timings-label" },
+            L10N.getStr(`netmonitor.timings.${key}`)
+          ),
+          div(
+            { className: "requests-list-timings-container" },
+            span({
+              className: `requests-list-timings-box serviceworker-timings-color-${key.replace(
+                "ServiceWorker",
+                ""
+              )}`,
+              style: {
+                "--current-timing-offset": offset > 0 ? offset : 0,
+                "--current-timing-width": value / totalTime,
+              },
+            }),
+            span(
+              { className: "requests-list-timings-total" },
+              getFormattedTime(value)
+            )
+          )
+        );
+      })
+    );
   }
 
   renderServerTimings() {
@@ -87,19 +143,10 @@ class TimingsPanel extends Component {
           div(
             { className: "requests-list-timings-container" },
             span({
-              className: "requests-list-timings-offset",
-              style: {
-                width: `calc(${
-                  (totalTime - duration) / totalTime
-                } * (100% - ${TIMINGS_END_PADDING})`,
-              },
-            }),
-            span({
               className: `requests-list-timings-box server-timings-color-${color}`,
               style: {
-                width: `calc(${
-                  duration / totalTime
-                } * (100% - ${TIMINGS_END_PADDING}))`,
+                "--current-timing-offset": (totalTime - duration) / totalTime,
+                "--current-timing-width": duration / totalTime,
               },
             }),
             span(
@@ -164,15 +211,10 @@ class TimingsPanel extends Component {
         div(
           { className: "requests-list-timings-container" },
           span({
-            className: "requests-list-timings-offset",
-            style: {
-              width: `calc(${offsetScale} * (100% - ${TIMINGS_END_PADDING})`,
-            },
-          }),
-          span({
             className: `requests-list-timings-box ${type}`,
             style: {
-              width: `calc(${timelineScale} * (100% - ${TIMINGS_END_PADDING}))`,
+              "--current-timing-offset": offsetScale,
+              "--current-timing-width": timelineScale,
             },
           }),
           span(
@@ -215,6 +257,7 @@ class TimingsPanel extends Component {
         L10N.getStr("netmonitor.timings.requestTiming")
       ),
       timelines,
+      this.renderServiceWorkerTimings(),
       this.renderServerTimings(),
       MDNLink({
         url: getNetMonitorTimingsURL(),
