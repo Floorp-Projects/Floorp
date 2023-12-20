@@ -1045,12 +1045,7 @@ void Gecko_EnsureImageLayersLength(nsStyleImageLayers* aLayers, size_t aLen,
 template <typename StyleType>
 static void EnsureStyleAutoArrayLength(StyleType* aArray, size_t aLen) {
   size_t oldLength = aArray->Length();
-
   aArray->EnsureLengthAtLeast(aLen);
-
-  for (size_t i = oldLength; i < aLen; ++i) {
-    (*aArray)[i].SetInitialValues();
-  }
 }
 
 void Gecko_EnsureStyleAnimationArrayLength(void* aArray, size_t aLen) {

@@ -35,17 +35,15 @@ macro_rules! try_parse_one {
         input: &mut Parser<'i, 't>,
     ) -> Result<Longhands, ParseError<'i>> {
         struct SingleTransition {
-            % for prop in "duration timing_function delay".split():
+            % for prop in "property duration timing_function delay".split():
             transition_${prop}: transition_${prop}::SingleSpecifiedValue,
             % endfor
-            // Unlike other properties, transition-property uses an Option<> to
-            // represent 'none' as `None`.
-            transition_property: Option<TransitionProperty>,
         }
 
         fn parse_one_transition<'i, 't>(
             context: &ParserContext,
             input: &mut Parser<'i, 't>,
+            first: bool,
         ) -> Result<SingleTransition,ParseError<'i>> {
             % for prop in "property duration timing_function delay".split():
             let mut ${prop} = None;
@@ -62,14 +60,14 @@ macro_rules! try_parse_one {
                 // 'transition-property' accepts any keyword.
                 if property.is_none() {
                     if let Ok(value) = input.try_parse(|i| TransitionProperty::parse(context, i)) {
-                        property = Some(Some(value));
+                        property = Some(value);
                         continue;
                     }
 
-                    if input.try_parse(|i| i.expect_ident_matching("none")).is_ok() {
-                        // 'none' is not a valid value for <single-transition-property>,
-                        // so it's not acceptable in the function above.
-                        property = Some(None);
+                    // 'none' is not a valid value for <single-transition-property>,
+                    // so it's only acceptable as the first item.
+                    if first && input.try_parse(|i| i.expect_ident_matching("none")).is_ok() {
+                        property = Some(TransitionProperty::none());
                         continue;
                     }
                 }
@@ -80,12 +78,10 @@ macro_rules! try_parse_one {
 
             if parsed != 0 {
                 Ok(SingleTransition {
-                    % for prop in "duration timing_function delay".split():
+                    % for prop in "property duration timing_function delay".split():
                     transition_${prop}: ${prop}.unwrap_or_else(transition_${prop}::single_value
                                                                                  ::get_initial_specified_value),
                     % endfor
-                    transition_property: property.unwrap_or(
-                        Some(transition_property::single_value::get_initial_specified_value())),
                 })
             } else {
                 Err(input.new_custom_error(StyleParseErrorKind::UnspecifiedError))
@@ -96,19 +92,20 @@ macro_rules! try_parse_one {
         let mut ${prop}s = Vec::new();
         % endfor
 
-        let results = input.parse_comma_separated(|i| parse_one_transition(context, i))?;
-        let multiple_items = results.len() >= 2;
-        for result in results {
-            if let Some(value) = result.transition_property {
-                propertys.push(value);
-            } else if multiple_items {
-                // If there is more than one item, and any of transitions has 'none',
-                // then it's invalid. Othersize, leave propertys to be empty (which
-                // means "transition-property: none");
-                return Err(input.new_custom_error(StyleParseErrorKind::UnspecifiedError));
+        let mut first = true;
+        let mut has_transition_property_none = false;
+        let results = input.parse_comma_separated(|i| {
+            if has_transition_property_none {
+                // If you specify transition-property: none, multiple items are invalid.
+                return Err(i.new_custom_error(StyleParseErrorKind::UnspecifiedError))
             }
-
-            % for prop in "duration timing_function delay".split():
+            let transition = parse_one_transition(context, i, first)?;
+            first = false;
+            has_transition_property_none = transition.transition_property.is_none();
+            Ok(transition)
+        })?;
+        for result in results {
+            % for prop in "property duration timing_function delay".split():
             ${prop}s.push(result.transition_${prop});
             % endfor
         }

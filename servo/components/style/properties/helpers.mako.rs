@@ -9,8 +9,8 @@
 %>
 
 <%def name="predefined_type(name, type, initial_value, parse_method='parse',
-            vector=False, initial_specified_value=None,
-            allow_quirks='No', allow_empty=False, **kwargs)">
+            vector=False, none_value=None, initial_specified_value=None,
+            allow_quirks='No', **kwargs)">
     <%def name="predefined_type_inner(name, type, initial_value, parse_method)">
         #[allow(unused_imports)]
         use app_units::Au;
@@ -47,7 +47,7 @@
     </%def>
     % if vector:
         <%call
-            expr="vector_longhand(name, predefined_type=type, allow_empty=allow_empty or not initial_value, **kwargs)"
+            expr="vector_longhand(name, predefined_type=type, allow_empty=not initial_value, none_value=none_value, **kwargs)"
         >
             ${predefined_type_inner(name, type, initial_value, parse_method)}
             % if caller:
@@ -64,17 +64,6 @@
     % endif
 </%def>
 
-// FIXME (Manishearth): Add computed_value_as_specified argument
-// and handle the empty case correctly
-<%doc>
-    To be used in cases where we have a grammar like "<thing> [ , <thing> ]*".
-
-    Setting allow_empty to False allows for cases where the vector
-    is empty. The grammar for these is usually "none | <thing> [ , <thing> ]*".
-    We assume that the default/initial value is an empty vector for these.
-    `initial_value` need not be defined for these.
-</%doc>
-
 // The setup here is roughly:
 //
 //  * UnderlyingList is the list that is stored in the computed value. This may
@@ -89,6 +78,7 @@
 // longhand.
 <%def name="vector_longhand(name, animation_value_type=None,
                             vector_animation_type=None, allow_empty=False,
+                            none_value=None,
                             simple_vector_bindings=False,
                             separator='Comma',
                             **kwargs)">
@@ -123,13 +113,13 @@
             use crate::values::resolved::ToResolvedValue;
             pub use super::single_value::computed_value as single_value;
             pub use self::single_value::T as SingleComputedValue;
-            % if not allow_empty or allow_empty == "NotInitial":
+            % if not allow_empty:
             use smallvec::SmallVec;
             % endif
             use crate::values::computed::ComputedVecIter;
 
             <%
-                is_shared_list = allow_empty and allow_empty != "NotInitial" and \
+                is_shared_list = allow_empty and \
                     data.longhands_by_name[name].style_struct.inherited
             %>
 
@@ -137,7 +127,7 @@
             // something for transition-name, which is the only remaining user
             // of NotInitial.
             pub type UnderlyingList<T> =
-                % if allow_empty and allow_empty != "NotInitial":
+                % if allow_empty:
                 % if data.longhands_by_name[name].style_struct.inherited:
                     crate::ArcSlice<T>;
                 % else:
@@ -148,7 +138,7 @@
                 % endif
 
             pub type UnderlyingOwnedList<T> =
-                % if allow_empty and allow_empty != "NotInitial":
+                % if allow_empty:
                     crate::OwnedSlice<T>;
                 % else:
                     SmallVec<[T; 1]>;
@@ -328,7 +318,7 @@
         );
 
         pub fn get_initial_value() -> computed_value::T {
-            % if allow_empty and allow_empty != "NotInitial":
+            % if allow_empty:
                 computed_value::List(Default::default())
             % else:
                 let mut v = SmallVec::new();
@@ -343,9 +333,13 @@
         ) -> Result<SpecifiedValue, ParseError<'i>> {
             use style_traits::Separator;
 
-            % if allow_empty:
+            % if allow_empty or none_value:
             if input.try_parse(|input| input.expect_ident_matching("none")).is_ok() {
+                % if allow_empty:
                 return Ok(SpecifiedValue(Default::default()))
+                % else:
+                return Ok(SpecifiedValue(crate::OwnedSlice::from(vec![${none_value}])))
+                % endif
             }
             % endif
 

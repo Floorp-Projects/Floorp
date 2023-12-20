@@ -192,6 +192,7 @@ impl fmt::Debug for PropertyDeclaration {
 
 /// A longhand or shorthand property.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, ToComputedValue, ToResolvedValue, ToShmem, MallocSizeOf)]
+#[repr(C)]
 pub struct NonCustomPropertyId(u16);
 
 impl ToCss for NonCustomPropertyId {

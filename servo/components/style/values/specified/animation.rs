@@ -21,6 +21,7 @@ use style_traits::{
 #[derive(
     Clone, Debug, Eq, Hash, MallocSizeOf, PartialEq, ToComputedValue, ToResolvedValue, ToShmem,
 )]
+#[repr(u8)]
 pub enum TransitionProperty {
     /// A non-custom property.
     NonCustom(NonCustomPropertyId),
@@ -36,12 +37,11 @@ impl ToCss for TransitionProperty {
     where
         W: Write,
     {
-        use crate::values::serialize_atom_name;
         match *self {
             TransitionProperty::NonCustom(ref id) => id.to_css(dest),
             TransitionProperty::Custom(ref name) => {
                 dest.write_str("--")?;
-                serialize_atom_name(name, dest)
+                crate::values::serialize_atom_name(name, dest)
             },
             TransitionProperty::Unsupported(ref i) => i.to_css(dest),
         }
@@ -59,6 +59,7 @@ impl Parse for TransitionProperty {
         let id = match PropertyId::parse_ignoring_rule_type(&ident, context) {
             Ok(id) => id,
             Err(..) => {
+                // None is not acceptable as a single transition-property.
                 return Ok(TransitionProperty::Unsupported(CustomIdent::from_ident(
                     location,
                     ident,
@@ -84,6 +85,18 @@ impl SpecifiedValueInfo for TransitionProperty {
 }
 
 impl TransitionProperty {
+    /// Returns the `none` value.
+    #[inline]
+    pub fn none() -> Self {
+        TransitionProperty::Unsupported(CustomIdent(atom!("none")))
+    }
+
+    /// Returns whether we're the `none` value.
+    #[inline]
+    pub fn is_none(&self) -> bool {
+        matches!(*self, TransitionProperty::Unsupported(ref ident) if ident.0 == atom!("none"))
+    }
+
     /// Returns `all`.
     #[inline]
     pub fn all() -> Self {

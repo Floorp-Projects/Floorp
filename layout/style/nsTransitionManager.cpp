@@ -62,29 +62,30 @@ bool nsTransitionManager::UpdateTransitions(dom::Element* aElement,
 // transition-property, and then execute |aHandler| on the expanded longhand.
 // |aHandler| should be a lamda function which accepts nsCSSPropertyID.
 template <typename T>
-static void ExpandTransitionProperty(nsCSSPropertyID aProperty,
-                                     nsAtom* aCustomName, T aHandler) {
-  if (aProperty == eCSSPropertyExtra_no_properties ||
-      aProperty == eCSSProperty_UNKNOWN) {
-    // Nothing to do.
-    return;
-  }
-
-  if (aProperty == eCSSPropertyExtra_variable) {
-    AnimatedPropertyID property(aCustomName);
-    aHandler(property);
-    return;
-  }
-
-  if (nsCSSProps::IsShorthand(aProperty)) {
-    CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(subprop, aProperty,
-                                         CSSEnabledState::ForAllContent) {
-      AnimatedPropertyID property(*subprop);
+static void ExpandTransitionProperty(
+    const StyleTransitionProperty& aProperty, T aHandler) {
+  switch (aProperty.tag) {
+    case StyleTransitionProperty::Tag::Unsupported:
+      break;
+    case StyleTransitionProperty::Tag::Custom: {
+      AnimatedPropertyID property(aProperty.AsCustom().AsAtom());
       aHandler(property);
+      break;
     }
-  } else {
-    AnimatedPropertyID property(aProperty);
-    aHandler(property);
+    case StyleTransitionProperty::Tag::NonCustom: {
+      nsCSSPropertyID id = nsCSSPropertyID(aProperty.AsNonCustom()._0);
+      if (nsCSSProps::IsShorthand(id)) {
+        CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(subprop, id,
+                                             CSSEnabledState::ForAllContent) {
+          AnimatedPropertyID property(*subprop);
+          aHandler(property);
+        }
+      } else {
+        AnimatedPropertyID property(id);
+        aHandler(property);
+      }
+      break;
+    }
   }
 }
 
@@ -108,15 +109,16 @@ bool nsTransitionManager::DoUpdateTransitions(
       continue;
     }
 
-    ExpandTransitionProperty(
-        aStyle.GetTransitionProperty(i), aStyle.GetTransitionUnknownProperty(i),
-        [&](const AnimatedPropertyID& aProperty) {
-          // We might have something to transition.  See if any of the
-          // properties in question changed and are animatable.
-          startedAny |= ConsiderInitiatingTransition(
-              aProperty, aStyle, i, aElement, aPseudoType, aElementTransitions,
-              aOldStyle, aNewStyle, propertiesChecked);
-        });
+    ExpandTransitionProperty(aStyle.GetTransitionProperty(i),
+                             [&](const AnimatedPropertyID& aProperty) {
+                               // We might have something to transition.  See if
+                               // any of the properties in question changed and
+                               // are animatable.
+                               startedAny |= ConsiderInitiatingTransition(
+                                   aProperty, aStyle, i, aElement, aPseudoType,
+                                   aElementTransitions, aOldStyle, aNewStyle,
+                                   propertiesChecked);
+                             });
   }
 
   // Stop any transitions for properties that are no longer in
@@ -127,13 +129,11 @@ bool nsTransitionManager::DoUpdateTransitions(
   // transition.  This can happen delay and duration are both zero, or
   // because the new value is not interpolable.
   if (aElementTransitions) {
-    const bool checkProperties =
-        aStyle.GetTransitionProperty(0) != eCSSProperty_all;
+    const bool checkProperties = !aStyle.GetTransitionProperty(0).IsAll();
     AnimatedPropertyIDSet allTransitionProperties;
     if (checkProperties) {
       for (uint32_t i = aStyle.mTransitionPropertyCount; i-- != 0;) {
         ExpandTransitionProperty(aStyle.GetTransitionProperty(i),
-                                 aStyle.GetTransitionUnknownProperty(i),
                                  [&](const AnimatedPropertyID& aProperty) {
                                    allTransitionProperties.AddProperty(
                                        aProperty.ToPhysical(aNewStyle));
