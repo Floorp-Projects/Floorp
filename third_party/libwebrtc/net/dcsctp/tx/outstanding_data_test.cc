@@ -27,11 +27,14 @@ namespace {
 using ::testing::MockFunction;
 using State = ::dcsctp::OutstandingData::State;
 using ::testing::_;
+using ::testing::AllOf;
 using ::testing::ElementsAre;
 using ::testing::IsEmpty;
 using ::testing::Pair;
+using ::testing::Property;
 using ::testing::Return;
 using ::testing::StrictMock;
+using ::testing::UnorderedElementsAre;
 
 constexpr TimeMs kNow(42);
 
@@ -587,5 +590,97 @@ TEST_F(OutstandingDataTest, LifecycleReturnsAbandonedAfterT3rtxExpired) {
   EXPECT_FALSE(ack2.has_packet_loss);
   EXPECT_THAT(ack2.abandoned_lifecycle_ids, ElementsAre(LifecycleId(42)));
 }
+
+TEST_F(OutstandingDataTest, GeneratesForwardTsnUntilNextStreamResetTsn) {
+  // This test generates:
+  // * Stream 1: TSN 10, 11, 12 <RESET>
+  // * Stream 2: TSN 13, 14 <RESET>
+  // * Stream 3: TSN 15, 16
+  //
+  // Then it expires chunk 12-15, and ensures that the generated FORWARD-TSN
+  // only includes up till TSN 12 until the cum ack TSN has reached 12, and then
+  // 13 and 14 are included, and then after the cum ack TSN has reached 14, then
+  // 15 is included.
+  //
+  // What it shouldn't do, is to generate a FORWARD-TSN directly at the start
+  // with new TSN=15, and setting [(sid=1, ssn=44), (sid=2, ssn=46),
+  // (sid=3, ssn=47)], because that will confuse the receiver at TSN=17,
+  // receiving SID=1, SSN=0 (it's reset!), expecting SSN to be 45.
+  constexpr DataGeneratorOptions kStream1 = {.stream_id = StreamID(1)};
+  constexpr DataGeneratorOptions kStream2 = {.stream_id = StreamID(2)};
+  constexpr DataGeneratorOptions kStream3 = {.stream_id = StreamID(3)};
+  EXPECT_CALL(on_discard_, Call).WillRepeatedly(Return(false));
+
+  // TSN 10-12
+  buf_.Insert(gen_.Ordered({1}, "BE", kStream1), kNow);
+  buf_.Insert(gen_.Ordered({1}, "BE", kStream1), kNow);
+  buf_.Insert(gen_.Ordered({1}, "BE", kStream1), kNow, MaxRetransmits(0));
+
+  buf_.BeginResetStreams();
+
+  // TSN 13, 14
+  buf_.Insert(gen_.Ordered({1}, "BE", kStream2), kNow, MaxRetransmits(0));
+  buf_.Insert(gen_.Ordered({1}, "BE", kStream2), kNow, MaxRetransmits(0));
+
+  buf_.BeginResetStreams();
+
+  // TSN 15, 16
+  buf_.Insert(gen_.Ordered({1}, "BE", kStream3), kNow, MaxRetransmits(0));
+  buf_.Insert(gen_.Ordered({1}, "BE", kStream3), kNow);
+
+  EXPECT_FALSE(buf_.ShouldSendForwardTsn());
+
+  buf_.HandleSack(unwrapper_.Unwrap(TSN(11)), {}, false);
+  buf_.NackAll();
+  EXPECT_THAT(buf_.GetChunkStatesForTesting(),
+              ElementsAre(Pair(TSN(11), State::kAcked),      //
+                          Pair(TSN(12), State::kAbandoned),  //
+                          Pair(TSN(13), State::kAbandoned),  //
+                          Pair(TSN(14), State::kAbandoned),  //
+                          Pair(TSN(15), State::kAbandoned),  //
+                          Pair(TSN(16), State::kToBeRetransmitted)));
+
+  EXPECT_TRUE(buf_.ShouldSendForwardTsn());
+  EXPECT_THAT(
+      buf_.CreateForwardTsn(),
+      AllOf(Property(&ForwardTsnChunk::new_cumulative_tsn, TSN(12)),
+            Property(&ForwardTsnChunk::skipped_streams,
+                     UnorderedElementsAre(ForwardTsnChunk::SkippedStream(
+                         StreamID(1), SSN(44))))));
+
+  // Ack 12, allowing a FORWARD-TSN that spans to TSN=14 to be created.
+  buf_.HandleSack(unwrapper_.Unwrap(TSN(12)), {}, false);
+  EXPECT_TRUE(buf_.ShouldSendForwardTsn());
+  EXPECT_THAT(
+      buf_.CreateForwardTsn(),
+      AllOf(Property(&ForwardTsnChunk::new_cumulative_tsn, TSN(14)),
+            Property(&ForwardTsnChunk::skipped_streams,
+                     UnorderedElementsAre(ForwardTsnChunk::SkippedStream(
+                         StreamID(2), SSN(46))))));
+
+  // Ack 13, allowing a FORWARD-TSN that spans to TSN=14 to be created.
+  buf_.HandleSack(unwrapper_.Unwrap(TSN(13)), {}, false);
+  EXPECT_TRUE(buf_.ShouldSendForwardTsn());
+  EXPECT_THAT(
+      buf_.CreateForwardTsn(),
+      AllOf(Property(&ForwardTsnChunk::new_cumulative_tsn, TSN(14)),
+            Property(&ForwardTsnChunk::skipped_streams,
+                     UnorderedElementsAre(ForwardTsnChunk::SkippedStream(
+                         StreamID(2), SSN(46))))));
+
+  // Ack 14, allowing a FORWARD-TSN that spans to TSN=15 to be created.
+  buf_.HandleSack(unwrapper_.Unwrap(TSN(14)), {}, false);
+  EXPECT_TRUE(buf_.ShouldSendForwardTsn());
+  EXPECT_THAT(
+      buf_.CreateForwardTsn(),
+      AllOf(Property(&ForwardTsnChunk::new_cumulative_tsn, TSN(15)),
+            Property(&ForwardTsnChunk::skipped_streams,
+                     UnorderedElementsAre(ForwardTsnChunk::SkippedStream(
+                         StreamID(3), SSN(47))))));
+
+  buf_.HandleSack(unwrapper_.Unwrap(TSN(15)), {}, false);
+  EXPECT_FALSE(buf_.ShouldSendForwardTsn());
+}
+
 }  // namespace
 }  // namespace dcsctp

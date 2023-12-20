@@ -218,7 +218,7 @@ TEST_F(AudioEgressTest, SkipAudioEncodingAfterStopSend) {
 
   // It should be safe to exit the test case while encoder_queue_ has
   // outstanding data to process. We are making sure that this doesn't
-  // result in crahses or sanitizer errors due to remaining data.
+  // result in crashes or sanitizer errors due to remaining data.
   for (size_t i = 0; i < kExpected * 2; i++) {
     egress_->SendAudioData(GetAudioFrame(i));
     time_controller_.AdvanceTime(TimeDelta::Millis(10));

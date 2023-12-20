@@ -159,6 +159,9 @@ void OutstandingData::RemoveAcked(UnwrappedTSN cumulative_tsn_ack,
 
   outstanding_data_.erase(outstanding_data_.begin(), first_unacked);
   last_cumulative_tsn_ack_ = cumulative_tsn_ack;
+  stream_reset_breakpoint_tsns_.erase(stream_reset_breakpoint_tsns_.begin(),
+                                      stream_reset_breakpoint_tsns_.upper_bound(
+                                          cumulative_tsn_ack.next_value()));
 }
 
 void OutstandingData::AckGapBlocks(
@@ -487,7 +490,8 @@ ForwardTsnChunk OutstandingData::CreateForwardTsn() const {
   UnwrappedTSN new_cumulative_ack = last_cumulative_tsn_ack_;
 
   for (const auto& [tsn, item] : outstanding_data_) {
-    if ((tsn != new_cumulative_ack.next_value()) || !item.is_abandoned()) {
+    if (stream_reset_breakpoint_tsns_.contains(tsn) ||
+        (tsn != new_cumulative_ack.next_value()) || !item.is_abandoned()) {
       break;
     }
     new_cumulative_ack = tsn;
@@ -510,7 +514,8 @@ IForwardTsnChunk OutstandingData::CreateIForwardTsn() const {
   UnwrappedTSN new_cumulative_ack = last_cumulative_tsn_ack_;
 
   for (const auto& [tsn, item] : outstanding_data_) {
-    if ((tsn != new_cumulative_ack.next_value()) || !item.is_abandoned()) {
+    if (stream_reset_breakpoint_tsns_.contains(tsn) ||
+        (tsn != new_cumulative_ack.next_value()) || !item.is_abandoned()) {
       break;
     }
     new_cumulative_ack = tsn;
@@ -539,5 +544,9 @@ void OutstandingData::ResetSequenceNumbers(UnwrappedTSN next_tsn,
   RTC_DCHECK(next_tsn == last_cumulative_tsn.next_value());
   next_tsn_ = next_tsn;
   last_cumulative_tsn_ack_ = last_cumulative_tsn;
+}
+
+void OutstandingData::BeginResetStreams() {
+  stream_reset_breakpoint_tsns_.insert(next_tsn_);
 }
 }  // namespace dcsctp

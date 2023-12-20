@@ -97,11 +97,12 @@ void MediaSessionConduit::UpdateRtpSources(
     // These timestamps are always **rounded** to milliseconds. That means they
     // can jump up to half a millisecond into the future. We compensate for that
     // here so that things seem consistent to js.
-    domEntry.mTimestamp = dom::RTCStatsTimestamp::FromRealtime(
-                              GetTimestampMaker(),
-                              webrtc::Timestamp::Millis(source.timestamp_ms()) -
-                                  webrtc::TimeDelta::Micros(500))
-                              .ToDom();
+    domEntry.mTimestamp =
+        dom::RTCStatsTimestamp::FromRealtime(
+            GetTimestampMaker(),
+            webrtc::Timestamp::Millis(source.timestamp().ms()) -
+                webrtc::TimeDelta::Micros(500))
+            .ToDom();
     domEntry.mRtpTimestamp = source.rtp_timestamp();
     mSourcesCache[key] = domEntry;
   }

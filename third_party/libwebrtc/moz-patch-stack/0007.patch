@@ -65,10 +65,10 @@ index 59e0258df5..e748b257e8 100644
    absl::optional<TimeDelta> AverageRtt() const;
    absl::optional<TimeDelta> LastRtt() const;
 diff --git a/modules/rtp_rtcp/source/rtp_rtcp_impl.cc b/modules/rtp_rtcp/source/rtp_rtcp_impl.cc
-index 8ca6b7ecb5..83690f160c 100644
+index 98c37c8d28..18508a4554 100644
 --- a/modules/rtp_rtcp/source/rtp_rtcp_impl.cc
 +++ b/modules/rtp_rtcp/source/rtp_rtcp_impl.cc
-@@ -501,8 +501,10 @@ void ModuleRtpRtcpImpl::GetSendStreamDataCounters(
+@@ -500,8 +500,10 @@ void ModuleRtpRtcpImpl::GetSendStreamDataCounters(
  
  // Received RTCP report.
  void ModuleRtpRtcpImpl::RemoteRTCPSenderInfo(uint32_t* packet_count,
@@ -127,10 +127,10 @@ index 663b28af3e..a9d18ec44a 100644
    // A snapshot of the most recent Report Block with additional data of
    // interest to statistics. Used to implement RTCRemoteInboundRtpStreamStats.
 diff --git a/modules/rtp_rtcp/source/rtp_rtcp_interface.h b/modules/rtp_rtcp/source/rtp_rtcp_interface.h
-index 5ad7680d61..dc86f92bf5 100644
+index 8df810a95e..0bdd389795 100644
 --- a/modules/rtp_rtcp/source/rtp_rtcp_interface.h
 +++ b/modules/rtp_rtcp/source/rtp_rtcp_interface.h
-@@ -389,9 +389,10 @@ class RtpRtcpInterface : public RtcpFeedbackSenderInterface {
+@@ -388,9 +388,10 @@ class RtpRtcpInterface : public RtcpFeedbackSenderInterface {
        StreamDataCounters* rtx_counters) const = 0;
  
  

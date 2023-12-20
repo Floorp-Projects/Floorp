@@ -162,7 +162,10 @@ rtc_library("candidate") {
     "../rtc_base:stringutils",
     "../rtc_base/system:rtc_export",
   ]
-  absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/base:core_headers",
+    "//third_party/abseil-cpp/absl/strings",
+  ]
 }
 
 rtc_source_set("turn_customizer") {

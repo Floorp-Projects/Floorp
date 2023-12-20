@@ -74,6 +74,9 @@ class EncoderBitrateAdjuster {
   // Minimum bitrates allowed, per spatial layer.
   uint32_t min_bitrates_bps_[kMaxSpatialLayers];
 
+  // Size in pixels of each spatial layer.
+  uint32_t frame_size_pixels_[kMaxSpatialLayers];
+
   // Codec type used for encoding.
   VideoCodecType codec_;
 

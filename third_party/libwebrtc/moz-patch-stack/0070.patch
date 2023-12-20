@@ -23,7 +23,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/8e9a326a99cd5eaa6
  4 files changed, 55 insertions(+)
 
 diff --git a/api/video/frame_buffer.cc b/api/video/frame_buffer.cc
-index 8267b8e6cb..f5d93f5f76 100644
+index 09ca53ac94..8d61025912 100644
 --- a/api/video/frame_buffer.cc
 +++ b/api/video/frame_buffer.cc
 @@ -16,6 +16,7 @@
@@ -49,7 +49,7 @@ index 8267b8e6cb..f5d93f5f76 100644
      return false;
 @@ -78,23 +84,35 @@ bool FrameBuffer::InsertFrame(std::unique_ptr<EncodedFrame> frame) {
      if (legacy_frame_id_jump_behavior_ && frame->is_keyframe() &&
-         AheadOf(frame->Timestamp(),
+         AheadOf(frame->RtpTimestamp(),
                  *decoded_frame_history_.GetLastDecodedFrameTimestamp())) {
 +      TRACE_EVENT2("webrtc",
 +                   "FrameBuffer::InsertFrame Frames dropped (OOO + PicId jump)",
@@ -166,7 +166,7 @@ index a0f19999d8..1764308c0a 100644
  }
  
 diff --git a/video/rtp_video_stream_receiver2.cc b/video/rtp_video_stream_receiver2.cc
-index d906b0b2df..80fc4e8c68 100644
+index 12e777c58f..a07dad5d4b 100644
 --- a/video/rtp_video_stream_receiver2.cc
 +++ b/video/rtp_video_stream_receiver2.cc
 @@ -44,6 +44,7 @@
@@ -177,7 +177,7 @@ index d906b0b2df..80fc4e8c68 100644
  #include "system_wrappers/include/metrics.h"
  #include "system_wrappers/include/ntp_time.h"
  
-@@ -1217,6 +1218,9 @@ void RtpVideoStreamReceiver2::FrameDecoded(int64_t picture_id) {
+@@ -1223,6 +1224,9 @@ void RtpVideoStreamReceiver2::FrameDecoded(int64_t picture_id) {
                          packet_infos_.upper_bound(unwrapped_rtp_seq_num));
      uint32_t num_packets_cleared = packet_buffer_.ClearTo(seq_num);
      if (num_packets_cleared > 0) {
@@ -188,7 +188,7 @@ index d906b0b2df..80fc4e8c68 100644
      }
      reference_finder_->ClearTo(seq_num);
 diff --git a/video/video_stream_buffer_controller.cc b/video/video_stream_buffer_controller.cc
-index 20588fbcad..9da894ab95 100644
+index e6e16db752..8d880ca0ee 100644
 --- a/video/video_stream_buffer_controller.cc
 +++ b/video/video_stream_buffer_controller.cc
 @@ -31,6 +31,7 @@

@@ -46,17 +46,17 @@ class RTC_EXPORT VCMEncodedFrame : public EncodedImage {
   using EncodedImage::GetEncodedData;
   using EncodedImage::NtpTimeMs;
   using EncodedImage::PacketInfos;
+  using EncodedImage::RtpTimestamp;
   using EncodedImage::set_size;
   using EncodedImage::SetColorSpace;
   using EncodedImage::SetEncodedData;
   using EncodedImage::SetPacketInfos;
+  using EncodedImage::SetRtpTimestamp;
   using EncodedImage::SetSpatialIndex;
   using EncodedImage::SetSpatialLayerFrameSize;
-  using EncodedImage::SetTimestamp;
   using EncodedImage::size;
   using EncodedImage::SpatialIndex;
   using EncodedImage::SpatialLayerFrameSize;
-  using EncodedImage::Timestamp;
 
   /**
    *   Get render time in milliseconds

@@ -104,6 +104,7 @@ rtc_library("outstanding_data") {
     "../../../api:array_view",
     "../../../rtc_base:checks",
     "../../../rtc_base:logging",
+    "../../../rtc_base/containers:flat_set",
     "../common:math",
     "../common:sequence_numbers",
     "../common:str_join",

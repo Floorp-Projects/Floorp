@@ -255,7 +255,7 @@ class TestEncoder : public VideoCodecTester::Encoder,
   Result OnEncodedImage(const EncodedImage& encoded_image,
                         const CodecSpecificInfo* codec_specific_info) override {
     MutexLock lock(&mutex_);
-    auto cb = callbacks_.find(encoded_image.Timestamp());
+    auto cb = callbacks_.find(encoded_image.RtpTimestamp());
     RTC_CHECK(cb != callbacks_.end());
     cb->second(encoded_image);
 
@@ -352,7 +352,7 @@ class TestDecoder : public VideoCodecTester::Decoder,
   void Decode(const EncodedImage& frame, DecodeCallback callback) override {
     {
       MutexLock lock(&mutex_);
-      callbacks_[frame.Timestamp()] = std::move(callback);
+      callbacks_[frame.RtpTimestamp()] = std::move(callback);
     }
 
     decoder_->Decode(frame, /*render_time_ms=*/0);

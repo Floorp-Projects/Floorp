@@ -12,11 +12,9 @@
 
 #include <algorithm>
 #include <cmath>
-#include <complex>
 #include <cstddef>
 #include <cstdlib>
 #include <limits>
-#include <utility>
 #include <vector>
 
 #include "absl/algorithm/container.h"
@@ -138,6 +136,10 @@ bool LossBasedBweV2::IsReady() const {
          num_observations_ > 0;
 }
 
+bool LossBasedBweV2::ReadyToUseInStartPhase() const {
+  return IsReady() && config_->use_in_start_phase;
+}
+
 LossBasedBweV2::Result LossBasedBweV2::GetLossBasedResult() const {
   Result result;
   result.state = current_state_;
@@ -219,10 +221,8 @@ void LossBasedBweV2::UpdateBandwidthEstimate(
     DataRate delay_based_estimate,
     BandwidthUsage delay_detector_state,
     absl::optional<DataRate> probe_bitrate,
-    DataRate upper_link_capacity,
     bool in_alr) {
   delay_based_estimate_ = delay_based_estimate;
-  upper_link_capacity_ = upper_link_capacity;
   if (!IsEnabled()) {
     RTC_LOG(LS_WARNING)
         << "The estimator must be enabled before it can be used.";
@@ -242,9 +242,12 @@ void LossBasedBweV2::UpdateBandwidthEstimate(
   SetProbeBitrate(probe_bitrate);
 
   if (!IsValid(current_estimate_.loss_limited_bandwidth)) {
-    RTC_LOG(LS_VERBOSE)
-        << "The estimator must be initialized before it can be used.";
-    return;
+    if (!IsValid(delay_based_estimate)) {
+      RTC_LOG(LS_WARNING) << "The delay based estimate must be finite: "
+                        << ToString(delay_based_estimate);
+      return;
+    }
+    current_estimate_.loss_limited_bandwidth = delay_based_estimate;
   }
 
   ChannelParameters best_candidate = current_estimate_;
@@ -418,10 +421,9 @@ absl::optional<LossBasedBweV2::Config> LossBasedBweV2::CreateConfig(
                                                       false);
   FieldTrialParameter<TimeDelta> probe_expiration("ProbeExpiration",
                                                   TimeDelta::Seconds(10));
-  FieldTrialParameter<bool> bound_by_upper_link_capacity_when_loss_limited(
-      "BoundByUpperLinkCapacityWhenLossLimited", true);
   FieldTrialParameter<bool> not_use_acked_rate_in_alr("NotUseAckedRateInAlr",
                                                       false);
+  FieldTrialParameter<bool> use_in_start_phase("UseInStartPhase", false);
   if (key_value_config) {
     ParseFieldTrial({&enabled,
                      &bandwidth_rampup_upper_bound_factor,
@@ -459,8 +461,8 @@ absl::optional<LossBasedBweV2::Config> LossBasedBweV2::CreateConfig(
                      &high_loss_rate_threshold,
                      &bandwidth_cap_at_high_loss_rate,
                      &slope_of_bwe_high_loss_func,
-                     &bound_by_upper_link_capacity_when_loss_limited,
-                     &not_use_acked_rate_in_alr},
+                     &not_use_acked_rate_in_alr,
+                     &use_in_start_phase},
                     key_value_config->Lookup("WebRTC-Bwe-LossBasedBweV2"));
   }
 
@@ -522,9 +524,8 @@ absl::optional<LossBasedBweV2::Config> LossBasedBweV2::CreateConfig(
   config->slope_of_bwe_high_loss_func = slope_of_bwe_high_loss_func.Get();
   config->probe_integration_enabled = probe_integration_enabled.Get();
   config->probe_expiration = probe_expiration.Get();
-  config->bound_by_upper_link_capacity_when_loss_limited =
-      bound_by_upper_link_capacity_when_loss_limited.Get();
   config->not_use_acked_rate_in_alr = not_use_acked_rate_in_alr.Get();
+  config->use_in_start_phase = use_in_start_phase.Get();
 
   return config;
 }
@@ -967,12 +968,6 @@ void LossBasedBweV2::CalculateInstantUpperBound() {
     }
   }
 
-  if (IsBandwidthLimitedDueToLoss()) {
-    if (IsValid(upper_link_capacity_) &&
-        config_->bound_by_upper_link_capacity_when_loss_limited) {
-      instant_limit = std::min(instant_limit, upper_link_capacity_);
-    }
-  }
   cached_instant_upper_bound_ = instant_limit;
 }
 

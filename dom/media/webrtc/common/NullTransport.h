@@ -14,17 +14,15 @@ namespace mozilla {
  */
 class NullTransport : public webrtc::Transport {
  public:
-  virtual bool SendRtp(const uint8_t* packet, size_t length,
-                       const webrtc::PacketOptions& options) override {
+  virtual bool SendRtp(rtc::ArrayView<const uint8_t> packet,
+                       const webrtc::PacketOptions& options) {
     (void)packet;
-    (void)length;
     (void)options;
     return true;
   }
 
-  virtual bool SendRtcp(const uint8_t* packet, size_t length) override {
+  virtual bool SendRtcp(rtc::ArrayView<const uint8_t> packet) {
     (void)packet;
-    (void)length;
     return true;
   }
 #if 0

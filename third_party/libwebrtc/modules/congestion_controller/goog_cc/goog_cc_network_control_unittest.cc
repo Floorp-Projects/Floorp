@@ -8,20 +8,34 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include <algorithm>
+#include <cstddef>
+#include <cstdint>
+#include <memory>
 #include <queue>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include "absl/strings/string_view.h"
+#include "absl/types/optional.h"
 #include "api/test/network_emulation/create_cross_traffic.h"
 #include "api/test/network_emulation/cross_traffic.h"
 #include "api/transport/goog_cc_factory.h"
+#include "api/transport/network_control.h"
 #include "api/transport/network_types.h"
 #include "api/units/data_rate.h"
+#include "api/units/data_size.h"
 #include "api/units/time_delta.h"
 #include "api/units/timestamp.h"
+#include "call/video_receive_stream.h"
 #include "logging/rtc_event_log/mock/mock_rtc_event_log.h"
 #include "test/field_trial.h"
 #include "test/gtest.h"
+#include "test/scenario/call_client.h"
+#include "test/scenario/column_printer.h"
 #include "test/scenario/scenario.h"
+#include "test/scenario/scenario_config.h"
 
 using ::testing::IsEmpty;
 using ::testing::NiceMock;

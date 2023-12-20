@@ -212,7 +212,7 @@ class MediaSessionConduit {
   class SourceKey {
    public:
     explicit SourceKey(const webrtc::RtpSource& aSource)
-        : SourceKey(aSource.timestamp_ms(), aSource.source_id()) {}
+        : SourceKey(aSource.timestamp().ms(), aSource.source_id()) {}
 
     SourceKey(uint32_t aTimestamp, uint32_t aSrc)
         : mLibwebrtcTimestampMs(aTimestamp), mSrc(aSrc) {}
@@ -245,12 +245,12 @@ class WebrtcSendTransport : public webrtc::Transport {
  public:
   explicit WebrtcSendTransport(MediaSessionConduit* aConduit)
       : mConduit(aConduit) {}
-  bool SendRtp(const uint8_t* aPacket, size_t aLength,
-               const webrtc::PacketOptions& aOptions) override {
-    return mConduit->SendRtp(aPacket, aLength, aOptions);
+  bool SendRtp(rtc::ArrayView<const uint8_t> aPacket,
+               const webrtc::PacketOptions& aOptions) {
+    return mConduit->SendRtp(aPacket.data(), aPacket.size(), aOptions);
   }
-  bool SendRtcp(const uint8_t* aPacket, size_t aLength) override {
-    return mConduit->SendSenderRtcp(aPacket, aLength);
+  bool SendRtcp(rtc::ArrayView<const uint8_t> aPacket) {
+    return mConduit->SendSenderRtcp(aPacket.data(), aPacket.size());
   }
 };
 
@@ -261,12 +261,12 @@ class WebrtcReceiveTransport : public webrtc::Transport {
  public:
   explicit WebrtcReceiveTransport(MediaSessionConduit* aConduit)
       : mConduit(aConduit) {}
-  bool SendRtp(const uint8_t* aPacket, size_t aLength,
-               const webrtc::PacketOptions& aOptions) override {
+  bool SendRtp(rtc::ArrayView<const uint8_t> aPacket,
+               const webrtc::PacketOptions& aOptions) {
     MOZ_CRASH("Unexpected RTP packet");
   }
-  bool SendRtcp(const uint8_t* aPacket, size_t aLength) override {
-    return mConduit->SendReceiverRtcp(aPacket, aLength);
+  bool SendRtcp(rtc::ArrayView<const uint8_t> aPacket) {
+    return mConduit->SendReceiverRtcp(aPacket.data(), aPacket.size());
   }
 };
 

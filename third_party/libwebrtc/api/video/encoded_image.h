@@ -79,17 +79,22 @@ class RTC_EXPORT EncodedImage {
   EncodedImage& operator=(EncodedImage&&);
   EncodedImage& operator=(const EncodedImage&);
 
-  // TODO(bugs.webrtc.org/9378): Change style to timestamp(), set_timestamp(),
-  // for consistency with the VideoFrame class. Set frame timestamp (90kHz).
-  void SetTimestamp(uint32_t timestamp) { timestamp_rtp_ = timestamp; }
+  // Frame capture time in RTP timestamp representation (90kHz).
+  void SetRtpTimestamp(uint32_t timestamp) { timestamp_rtp_ = timestamp; }
+  uint32_t RtpTimestamp() const { return timestamp_rtp_; }
 
-  // Get frame timestamp (90kHz).
-  uint32_t Timestamp() const { return timestamp_rtp_; }
+  // TODO(bugs.webrtc.org/9378): Delete two functions below after 2023-10-12
+  [[deprecated]] void SetTimestamp(uint32_t timestamp) {
+    SetRtpTimestamp(timestamp);
+  }
+  [[deprecated]] uint32_t Timestamp() const { return RtpTimestamp(); }
 
   void SetEncodeTime(int64_t encode_start_ms, int64_t encode_finish_ms);
 
+  // Frame capture time in local time.
   webrtc::Timestamp CaptureTime() const;
 
+  // Frame capture time in ntp epoch time, i.e. time since 1st Jan 1900
   int64_t NtpTimeMs() const { return ntp_time_ms_; }
 
   // Every simulcast layer (= encoding) has its own encoder and RTP stream.

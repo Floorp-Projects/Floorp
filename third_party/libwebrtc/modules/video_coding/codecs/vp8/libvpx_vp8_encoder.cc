@@ -66,6 +66,13 @@ constexpr uint32_t kVp832ByteAlign = 32u;
 constexpr int kRtpTicksPerSecond = 90000;
 constexpr int kRtpTicksPerMs = kRtpTicksPerSecond / 1000;
 
+// If internal frame dropping is enabled, force the encoder to output a frame
+// on an encode request after this timeout even if this causes some
+// bitrate overshoot compared to the nominal target. Otherwise we risk the
+// receivers incorrectly identifying the gap as a fault and they may needlessly
+// send keyframe requests to recover.
+constexpr TimeDelta kDefaultMaxFrameDropInterval = TimeDelta::Seconds(2);
+
 // VP8 denoiser states.
 enum denoiserState : uint32_t {
   kDenoiserOff,
@@ -210,6 +217,46 @@ void SetRawImagePlanes(vpx_image_t* raw_image, VideoFrameBuffer* buffer) {
   }
 }
 
+// Helper class used to temporarily change the frame drop threshold for an
+// encoder. Returns the setting to the previous value when upon destruction.
+class FrameDropConfigOverride {
+ public:
+  FrameDropConfigOverride(LibvpxInterface* libvpx,
+                          vpx_codec_ctx_t* encoder,
+                          vpx_codec_enc_cfg_t* config,
+                          uint32_t temporary_frame_drop_threshold)
+      : libvpx_(libvpx),
+        encoder_(encoder),
+        config_(config),
+        original_frame_drop_threshold_(config->rc_dropframe_thresh) {
+    config_->rc_dropframe_thresh = temporary_frame_drop_threshold;
+    libvpx_->codec_enc_config_set(encoder_, config_);
+  }
+  ~FrameDropConfigOverride() {
+    config_->rc_dropframe_thresh = original_frame_drop_threshold_;
+    libvpx_->codec_enc_config_set(encoder_, config_);
+  }
+
+ private:
+  LibvpxInterface* const libvpx_;
+  vpx_codec_ctx_t* const encoder_;
+  vpx_codec_enc_cfg_t* const config_;
+  const uint32_t original_frame_drop_threshold_;
+};
+
+absl::optional<TimeDelta> ParseFrameDropInterval() {
+  FieldTrialFlag disabled = FieldTrialFlag("Disabled");
+  FieldTrialParameter<TimeDelta> interval("interval",
+                                          kDefaultMaxFrameDropInterval);
+  ParseFieldTrial({&disabled, &interval},
+                  field_trial::FindFullName("WebRTC-VP8-MaxFrameInterval"));
+  if (disabled.Get()) {
+    // Kill switch set, don't use any max frame interval.
+    return absl::nullopt;
+  }
+  return interval.Get();
+}
+
 }  // namespace
 
 std::unique_ptr<VideoEncoder> VP8Encoder::Create() {
@@ -260,9 +307,12 @@ LibvpxVp8Encoder::LibvpxVp8Encoder(std::unique_ptr<LibvpxInterface> interface,
           std::move(settings.frame_buffer_controller_factory)),
       resolution_bitrate_limits_(std::move(settings.resolution_bitrate_limits)),
       key_frame_request_(kMaxSimulcastStreams, false),
+      last_encoder_output_time_(kMaxSimulcastStreams,
+                                Timestamp::MinusInfinity()),
       variable_framerate_experiment_(ParseVariableFramerateConfig(
           "WebRTC-VP8VariableFramerateScreenshare")),
-      framerate_controller_(variable_framerate_experiment_.framerate_limit) {
+      framerate_controller_(variable_framerate_experiment_.framerate_limit),
+      max_frame_drop_interval_(ParseFrameDropInterval()) {
   // TODO(eladalon/ilnik): These reservations might be wasting memory.
   // InitEncode() is resizing to the actual size, which might be smaller.
   raw_images_.reserve(kMaxSimulcastStreams);
@@ -505,6 +555,8 @@ int LibvpxVp8Encoder::InitEncode(const VideoCodec* inst,
   send_stream_[0] = true;  // For non-simulcast case.
   cpu_speed_.resize(number_of_streams);
   std::fill(key_frame_request_.begin(), key_frame_request_.end(), false);
+  std::fill(last_encoder_output_time_.begin(), last_encoder_output_time_.end(),
+            Timestamp::MinusInfinity());
 
   int idx = number_of_streams - 1;
   for (int i = 0; i < (number_of_streams - 1); ++i, --idx) {
@@ -953,10 +1005,28 @@ int LibvpxVp8Encoder::Encode(const VideoFrame& frame,
     }
   }
 
+  // Check if any encoder risks timing out and force a frame in that case.
+  std::vector<FrameDropConfigOverride> frame_drop_overrides_;
+  if (max_frame_drop_interval_.has_value()) {
+    Timestamp now = Timestamp::Micros(frame.timestamp_us());
+    for (size_t i = 0; i < send_stream_.size(); ++i) {
+      if (send_stream_[i] && FrameDropThreshold(i) > 0 &&
+          last_encoder_output_time_[i].IsFinite() &&
+          (now - last_encoder_output_time_[i]) >= *max_frame_drop_interval_) {
+        RTC_LOG(LS_INFO) << "Forcing frame to avoid timeout for stream " << i;
+        size_t encoder_idx = encoders_.size() - 1 - i;
+        frame_drop_overrides_.emplace_back(libvpx_.get(),
+                                           &encoders_[encoder_idx],
+                                           &vpx_configs_[encoder_idx], 0);
+      }
+    }
+  }
+
   if (frame.update_rect().IsEmpty() && num_steady_state_frames_ >= 3 &&
       !key_frame_requested) {
     if (variable_framerate_experiment_.enabled &&
-        framerate_controller_.DropFrame(frame.timestamp() / kRtpTicksPerMs)) {
+        framerate_controller_.DropFrame(frame.timestamp() / kRtpTicksPerMs) &&
+        frame_drop_overrides_.empty()) {
       return WEBRTC_VIDEO_CODEC_OK;
     }
     framerate_controller_.AddFrame(frame.timestamp() / kRtpTicksPerMs);
@@ -1179,7 +1249,7 @@ int LibvpxVp8Encoder::GetEncodedPartitions(const VideoFrame& input_image,
         break;
       }
     }
-    encoded_images_[encoder_idx].SetTimestamp(input_image.timestamp());
+    encoded_images_[encoder_idx].SetRtpTimestamp(input_image.timestamp());
     encoded_images_[encoder_idx].SetCaptureTimeIdentifier(
         input_image.capture_time_identifier());
     encoded_images_[encoder_idx].SetColorSpace(input_image.color_space());
@@ -1198,6 +1268,9 @@ int LibvpxVp8Encoder::GetEncodedPartitions(const VideoFrame& input_image,
         libvpx_->codec_control(&encoders_[encoder_idx], VP8E_GET_LAST_QUANTIZER,
                                &qp_128);
         encoded_images_[encoder_idx].qp_ = qp_128;
+        last_encoder_output_time_[stream_idx] =
+            Timestamp::Micros(input_image.timestamp_us());
+
         encoded_complete_callback_->OnEncodedImage(encoded_images_[encoder_idx],
                                                    &codec_specific);
         const size_t steady_state_size = SteadyStateSize(

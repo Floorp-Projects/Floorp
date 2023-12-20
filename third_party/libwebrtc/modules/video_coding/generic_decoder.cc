@@ -293,9 +293,9 @@ int32_t VCMGenericDecoder::Decode(const EncodedImage& frame,
                                   Timestamp now,
                                   int64_t render_time_ms) {
   TRACE_EVENT1("webrtc", "VCMGenericDecoder::Decode", "timestamp",
-               frame.Timestamp());
+               frame.RtpTimestamp());
   FrameInfo frame_info;
-  frame_info.rtp_timestamp = frame.Timestamp();
+  frame_info.rtp_timestamp = frame.RtpTimestamp();
   frame_info.decode_start = now;
   frame_info.render_time =
       render_time_ms >= 0
@@ -335,7 +335,7 @@ int32_t VCMGenericDecoder::Decode(const EncodedImage& frame,
             ? absl::make_optional(frame_info.packet_infos[0].ssrc())
             : absl::nullopt;
     RTC_LOG(LS_WARNING) << "Failed to decode frame with timestamp "
-                        << frame.Timestamp() << ", ssrc "
+                        << frame.RtpTimestamp() << ", ssrc "
                         << (ssrc ? rtc::ToString(*ssrc) : "<not set>")
                         << ", error code: " << ret;
     _callback->ClearTimestampMap();

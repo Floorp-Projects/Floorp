@@ -57,7 +57,6 @@ struct RtpSenderObservers {
   BitrateStatisticsObserver* bitrate_observer;
   FrameCountObserver* frame_count_observer;
   RtcpPacketTypeCounterObserver* rtcp_type_observer;
-  SendSideDelayObserver* send_delay_observer;
   SendPacketObserver* send_packet_observer;
 };
 

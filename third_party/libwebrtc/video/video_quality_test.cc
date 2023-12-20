@@ -246,7 +246,7 @@ class QualityTestVideoEncoder : public VideoEncoder,
       RTC_DCHECK_GE(simulcast_index, 0);
       if (analyzer_) {
         analyzer_->PostEncodeOnFrame(simulcast_index,
-                                     encoded_image.Timestamp());
+                                     encoded_image.RtpTimestamp());
       }
       if (static_cast<size_t>(simulcast_index) < writers_.size()) {
         writers_[simulcast_index]->WriteFrame(encoded_image,

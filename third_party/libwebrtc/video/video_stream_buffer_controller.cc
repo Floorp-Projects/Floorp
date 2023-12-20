@@ -57,7 +57,7 @@ struct FrameMetadata {
         size(frame.size()),
         contentType(frame.contentType()),
         delayed_by_retransmission(frame.delayed_by_retransmission()),
-        rtp_timestamp(frame.Timestamp()),
+        rtp_timestamp(frame.RtpTimestamp()),
         receive_time(frame.ReceivedTimestamp()) {}
 
   const bool is_last_spatial_layer;
@@ -231,10 +231,10 @@ void VideoStreamBufferController::OnFrameReady(
       TargetVideoDelayIsTooLarge(timing_->TargetVideoDelay())) {
     RTC_LOG(LS_WARNING) << "Resetting jitter estimator and timing module due "
                            "to bad render timing for rtp_timestamp="
-                        << first_frame.Timestamp();
+                        << first_frame.RtpTimestamp();
     jitter_estimator_.Reset();
     timing_->Reset();
-    render_time = timing_->RenderTime(first_frame.Timestamp(), now);
+    render_time = timing_->RenderTime(first_frame.RtpTimestamp(), now);
   }
 
   for (std::unique_ptr<EncodedFrame>& frame : frames) {
@@ -248,7 +248,8 @@ void VideoStreamBufferController::OnFrameReady(
 
   if (!superframe_delayed_by_retransmission) {
     absl::optional<TimeDelta> inter_frame_delay_variation =
-        ifdv_calculator_.Calculate(first_frame.Timestamp(), max_receive_time);
+        ifdv_calculator_.Calculate(first_frame.RtpTimestamp(),
+                                   max_receive_time);
     if (inter_frame_delay_variation) {
       jitter_estimator_.UpdateEstimate(*inter_frame_delay_variation,
                                        superframe_size);
@@ -399,7 +400,7 @@ void VideoStreamBufferController::ForceKeyFrameReleaseImmediately()
     }
     // Found keyframe - decode right away.
     if (next_frame.front()->is_keyframe()) {
-      auto render_time = timing_->RenderTime(next_frame.front()->Timestamp(),
+      auto render_time = timing_->RenderTime(next_frame.front()->RtpTimestamp(),
                                              clock_->CurrentTime());
       OnFrameReady(std::move(next_frame), render_time);
       return;

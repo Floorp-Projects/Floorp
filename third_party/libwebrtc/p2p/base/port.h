@@ -18,6 +18,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/base/attributes.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "api/candidate.h"
@@ -185,14 +186,14 @@ class RTC_EXPORT Port : public PortInterface, public sigslot::has_slots<> {
   // 30 seconds.
   enum class State { INIT, KEEP_ALIVE_UNTIL_PRUNED, PRUNED };
   Port(webrtc::TaskQueueBase* thread,
-       absl::string_view type,
+       absl::string_view type ABSL_ATTRIBUTE_LIFETIME_BOUND,
        rtc::PacketSocketFactory* factory,
        const rtc::Network* network,
        absl::string_view username_fragment,
        absl::string_view password,
        const webrtc::FieldTrialsView* field_trials = nullptr);
   Port(webrtc::TaskQueueBase* thread,
-       absl::string_view type,
+       absl::string_view type ABSL_ATTRIBUTE_LIFETIME_BOUND,
        rtc::PacketSocketFactory* factory,
        const rtc::Network* network,
        uint16_t min_port,
@@ -207,7 +208,7 @@ class RTC_EXPORT Port : public PortInterface, public sigslot::has_slots<> {
   // uniquely identify subclasses. Whenever a new subclass of Port introduces a
   // conflit in the value of the 2-tuple, make sure that the implementation that
   // relies on this 2-tuple for RTTI is properly changed.
-  const std::string& Type() const override;
+  const absl::string_view Type() const override;
   const rtc::Network* Network() const override;
 
   // Methods to set/get ICE role and tiebreaker values.
@@ -394,8 +395,6 @@ class RTC_EXPORT Port : public PortInterface, public sigslot::has_slots<> {
  protected:
   virtual void UpdateNetworkCost();
 
-  void set_type(absl::string_view type) { type_ = std::string(type); }
-
   rtc::WeakPtr<Port> NewWeakPtr() { return weak_factory_.GetWeakPtr(); }
 
   void AddAddress(const rtc::SocketAddress& address,
@@ -484,7 +483,7 @@ class RTC_EXPORT Port : public PortInterface, public sigslot::has_slots<> {
 
   webrtc::TaskQueueBase* const thread_;
   rtc::PacketSocketFactory* const factory_;
-  std::string type_;
+  const absl::string_view type_;
   bool send_retransmit_count_attribute_;
   const rtc::Network* network_;
   uint16_t min_port_;

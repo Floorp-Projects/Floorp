@@ -232,7 +232,7 @@ TEST_F(AudioChannelTest, TestChannelStatistics) {
   EXPECT_CALL(transport_, SendRtp).WillRepeatedly(Invoke(loop_rtp));
   EXPECT_CALL(transport_, SendRtcp).WillRepeatedly(Invoke(loop_rtcp));
 
-  // Simulate microphone giving audio frame (10 ms). This will trigger tranport
+  // Simulate microphone giving audio frame (10 ms). This will trigger transport
   // to send RTP as handled in loop_rtp above.
   auto audio_sender = audio_channel_->GetAudioSender();
   audio_sender->SendAudioData(GetAudioFrame(0));
@@ -245,7 +245,7 @@ TEST_F(AudioChannelTest, TestChannelStatistics) {
   audio_mixer_->Mix(/*number_of_channels=*/1, &audio_frame);
 
   // Force sending RTCP SR report in order to have remote_rtcp field available
-  // in channel statistics. This will trigger tranport to send RTCP as handled
+  // in channel statistics. This will trigger transport to send RTCP as handled
   // in loop_rtcp above.
   audio_channel_->SendRTCPReportForTesting(kRtcpSr);
 

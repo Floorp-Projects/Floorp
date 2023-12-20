@@ -23,7 +23,6 @@
 namespace webrtc {
 namespace {
 constexpr uint32_t kTimestampTicksPerMs = 90;
-constexpr int kSendSideDelayWindowMs = 1000;
 constexpr TimeDelta kBitrateStatisticsWindow = TimeDelta::Seconds(1);
 constexpr size_t kRtpSequenceNumberMapMaxEntries = 1 << 13;
 
@@ -73,15 +72,12 @@ DEPRECATED_RtpSenderEgress::DEPRECATED_RtpSenderEgress(
       is_audio_(config.audio),
       need_rtp_packet_infos_(config.need_rtp_packet_infos),
       transport_feedback_observer_(config.transport_feedback_callback),
-      send_side_delay_observer_(config.send_side_delay_observer),
       send_packet_observer_(config.send_packet_observer),
       rtp_stats_callback_(config.rtp_stats_callback),
       bitrate_callback_(config.send_bitrate_observer),
       media_has_been_sent_(false),
       force_part_of_allocation_(false),
       timestamp_offset_(0),
-      max_delay_it_(send_delays_.end()),
-      sum_delays_ms_(0),
       send_rates_(kNumMediaTypes, BitrateTracker(kBitrateStatisticsWindow)),
       rtp_sequence_number_map_(need_rtp_packet_infos_
                                    ? std::make_unique<RtpSequenceNumberMap>(
@@ -180,7 +176,6 @@ void DEPRECATED_RtpSenderEgress::SendPacket(
 
   if (packet->packet_type() != RtpPacketMediaType::kPadding &&
       packet->packet_type() != RtpPacketMediaType::kRetransmission) {
-    UpdateDelayStatistics(packet->capture_time().ms(), now_ms, packet_ssrc);
     UpdateOnSendPacket(options.packet_id, packet->capture_time().ms(),
                        packet_ssrc);
   }
@@ -314,88 +309,6 @@ void DEPRECATED_RtpSenderEgress::AddPacketToTransportFeedback(
     packet_info.pacing_info = pacing_info;
     packet_info.packet_type = packet.packet_type();
     transport_feedback_observer_->OnAddPacket(packet_info);
-  }
-}
-
-void DEPRECATED_RtpSenderEgress::UpdateDelayStatistics(int64_t capture_time_ms,
-                                                       int64_t now_ms,
-                                                       uint32_t ssrc) {
-  if (!send_side_delay_observer_ || capture_time_ms <= 0)
-    return;
-
-  int avg_delay_ms = 0;
-  int max_delay_ms = 0;
-  {
-    MutexLock lock(&lock_);
-    // Compute the max and average of the recent capture-to-send delays.
-    // The time complexity of the current approach depends on the distribution
-    // of the delay values. This could be done more efficiently.
-
-    // Remove elements older than kSendSideDelayWindowMs.
-    auto lower_bound =
-        send_delays_.lower_bound(now_ms - kSendSideDelayWindowMs);
-    for (auto it = send_delays_.begin(); it != lower_bound; ++it) {
-      if (max_delay_it_ == it) {
-        max_delay_it_ = send_delays_.end();
-      }
-      sum_delays_ms_ -= it->second;
-    }
-    send_delays_.erase(send_delays_.begin(), lower_bound);
-    if (max_delay_it_ == send_delays_.end()) {
-      // Removed the previous max. Need to recompute.
-      RecomputeMaxSendDelay();
-    }
-
-    // Add the new element.
-    RTC_DCHECK_GE(now_ms, 0);
-    RTC_DCHECK_LE(now_ms, std::numeric_limits<int64_t>::max() / 2);
-    RTC_DCHECK_GE(capture_time_ms, 0);
-    RTC_DCHECK_LE(capture_time_ms, std::numeric_limits<int64_t>::max() / 2);
-    int64_t diff_ms = now_ms - capture_time_ms;
-    RTC_DCHECK_GE(diff_ms, static_cast<int64_t>(0));
-    RTC_DCHECK_LE(diff_ms, std::numeric_limits<int>::max());
-    int new_send_delay = rtc::dchecked_cast<int>(now_ms - capture_time_ms);
-    SendDelayMap::iterator it;
-    bool inserted;
-    std::tie(it, inserted) =
-        send_delays_.insert(std::make_pair(now_ms, new_send_delay));
-    if (!inserted) {
-      // TODO(terelius): If we have multiple delay measurements during the same
-      // millisecond then we keep the most recent one. It is not clear that this
-      // is the right decision, but it preserves an earlier behavior.
-      int previous_send_delay = it->second;
-      sum_delays_ms_ -= previous_send_delay;
-      it->second = new_send_delay;
-      if (max_delay_it_ == it && new_send_delay < previous_send_delay) {
-        RecomputeMaxSendDelay();
-      }
-    }
-    if (max_delay_it_ == send_delays_.end() ||
-        it->second >= max_delay_it_->second) {
-      max_delay_it_ = it;
-    }
-    sum_delays_ms_ += new_send_delay;
-
-    size_t num_delays = send_delays_.size();
-    RTC_DCHECK(max_delay_it_ != send_delays_.end());
-    max_delay_ms = rtc::dchecked_cast<int>(max_delay_it_->second);
-    int64_t avg_ms = (sum_delays_ms_ + num_delays / 2) / num_delays;
-    RTC_DCHECK_GE(avg_ms, static_cast<int64_t>(0));
-    RTC_DCHECK_LE(avg_ms,
-                  static_cast<int64_t>(std::numeric_limits<int>::max()));
-    avg_delay_ms =
-        rtc::dchecked_cast<int>((sum_delays_ms_ + num_delays / 2) / num_delays);
-  }
-  send_side_delay_observer_->SendSideDelayUpdated(avg_delay_ms, max_delay_ms,
-                                                  ssrc);
-}
-
-void DEPRECATED_RtpSenderEgress::RecomputeMaxSendDelay() {
-  max_delay_it_ = send_delays_.begin();
-  for (auto it = send_delays_.begin(); it != send_delays_.end(); ++it) {
-    if (it->second >= max_delay_it_->second) {
-      max_delay_it_ = it;
-    }
   }
 }
 

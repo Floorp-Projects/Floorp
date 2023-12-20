@@ -187,6 +187,24 @@ HRESULT WgcCaptureSession::StartCapture(const DesktopCaptureOptions& options) {
     }
   }
 
+// Until Mozilla builds with Win 10 SDK v10.0.20348.0 or newer, this
+// code will not build.  Once we support the newer SDK, Bug 1868198
+// exists to decide if we ever want to use this code since it is
+// removing an indicator that capture is happening.
+#if !defined(WEBRTC_MOZILLA_BUILD)
+  // By default, the WGC capture API adds a yellow border around the captured
+  // window or display to indicate that a capture is in progress. The section
+  // below is an attempt to remove this yellow border to make the capture
+  // experience more inline with the DXGI capture path.
+  // This requires 10.0.20348.0 or later, which practically means Windows 11.
+  ComPtr<ABI::Windows::Graphics::Capture::IGraphicsCaptureSession3> session3;
+  if (SUCCEEDED(session_->QueryInterface(
+          ABI::Windows::Graphics::Capture::IID_IGraphicsCaptureSession3,
+          &session3))) {
+    session3->put_IsBorderRequired(false);
+  }
+#endif
+
   allow_zero_hertz_ = options.allow_wgc_zero_hertz();
 
   hr = session_->StartCapture();
