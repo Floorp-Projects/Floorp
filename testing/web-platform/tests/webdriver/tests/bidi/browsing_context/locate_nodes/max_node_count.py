@@ -137,3 +137,45 @@ async def test_find_by_locator_limit_return_count(bidi_session, inline, top_cont
     )
 
     recursive_compare(expected, result["nodes"])
+
+
+@pytest.mark.asyncio
+async def test_several_context_nodes(bidi_session, inline, top_context):
+    url = inline(
+        """
+        <div class="context-node">
+            <div>should be returned</div>
+        </div>
+        <div class="context-node">
+            <div>should not be returned</div>
+            <div>should not be returned</div>
+            <div>should not be returned</div>
+            <div>should not be returned</div>
+            <div>should not be returned</div>
+            <div>should not be returned</div>
+            <div>should not be returned</div>
+            <div>should not be returned</div>
+            <div>should not be returned</div>
+        </div>
+    """
+    )
+    await bidi_session.browsing_context.navigate(
+        context=top_context["context"], url=url, wait="complete"
+    )
+
+    result_context_nodes = await bidi_session.browsing_context.locate_nodes(
+        context=top_context["context"],
+        locator={"type": "css", "value": ".context-node"},
+    )
+
+    result = await bidi_session.browsing_context.locate_nodes(
+        context=top_context["context"],
+        locator={"type": "css", "value": "div"},
+        max_node_count=1,
+        start_nodes=[
+            {"sharedId": result_context_nodes["nodes"][0]["sharedId"]},
+            {"sharedId": result_context_nodes["nodes"][1]["sharedId"]},
+        ],
+    )
+
+    assert len(result["nodes"]) == 1
