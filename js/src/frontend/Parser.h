@@ -1282,6 +1282,11 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
                                   DefaultHandling defaultHandling);
 
   struct ClassInitializedMembers {
+#ifdef ENABLE_DECORATORS
+    // Whether a non-static field has decorators or not.
+    bool hasInstanceDecorators = false;
+#endif
+
     // The number of instance class fields.
     size_t instanceFields = 0;
 
