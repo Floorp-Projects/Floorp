@@ -80,6 +80,10 @@ add_task(function test_event_context() {
     page: "page",
     source: "source",
     something_else: "not specifically handled",
+    screen_family: "family",
+    screen_id: "screen_id",
+    screen_index: 0,
+    screen_initlals: "screen_initials",
   };
   const stringifiedEC = JSON.stringify(eventContext);
 
@@ -101,6 +105,27 @@ add_task(function test_event_context() {
       eventContext.source,
       "event_context.source also in own metric."
     );
+    Assert.equal(
+      Glean.messagingSystem.eventScreenFamily.testGetValue(),
+      eventContext.screen_family,
+      "event_context.screen_family also in own metric."
+    );
+    Assert.equal(
+      Glean.messagingSystem.eventScreenId.testGetValue(),
+      eventContext.screen_id,
+      "event_context.screen_id also in own metric."
+    );
+    Assert.equal(
+      Glean.messagingSystem.eventScreenIndex.testGetValue(),
+      eventContext.screen_index,
+      "event_context.screen_index also in own metric."
+    );
+    Assert.equal(
+      Glean.messagingSystem.eventScreenInitials.testGetValue(),
+      eventContext.screen_initials,
+      "event_context.screen_initials also in own metric."
+    );
+
     Assert.equal(
       Glean.messagingSystem.eventContext.testGetValue(),
       stringifiedEC,
@@ -130,6 +155,27 @@ add_task(function test_event_context() {
       eventContext.source,
       "event_context.source also in own metric."
     );
+    Assert.equal(
+      Glean.messagingSystem.eventScreenFamily.testGetValue(),
+      eventContext.screen_family,
+      "event_context.screen_family also in own metric."
+    );
+    Assert.equal(
+      Glean.messagingSystem.eventScreenId.testGetValue(),
+      eventContext.screen_id,
+      "event_context.screen_id also in own metric."
+    );
+    Assert.equal(
+      Glean.messagingSystem.eventScreenIndex.testGetValue(),
+      eventContext.screen_index,
+      "event_context.screen_index also in own metric."
+    );
+    Assert.equal(
+      Glean.messagingSystem.eventScreenInitials.testGetValue(),
+      eventContext.screen_initials,
+      "event_context.screen_initials also in own metric."
+    );
+
     Assert.equal(
       Glean.messagingSystem.eventContext.testGetValue(),
       stringifiedEC,

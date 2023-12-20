@@ -231,7 +231,13 @@ const MultiStageAboutWelcome = props => {
       filteredScreens.forEach((screen, order) => {
         if (index === order) {
           var _window$AWAddScreenIm, _window;
-          _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_2__.AboutWelcomeUtils.sendImpressionTelemetry(`${props.message_id}_${order}_${screen.id}_${screenInitials}`);
+          const messageId = `${props.message_id}_${order}_${screen.id}_${screenInitials}`;
+          _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_2__.AboutWelcomeUtils.sendImpressionTelemetry(messageId, {
+            screen_family: props.message_id,
+            screen_index: order,
+            screen_id: screen.id,
+            screen_initials: screenInitials
+          });
           (_window$AWAddScreenIm = (_window = window).AWAddScreenImpression) === null || _window$AWAddScreenIm === void 0 ? void 0 : _window$AWAddScreenIm.call(_window, screen);
         }
       });
