@@ -30,17 +30,17 @@ namespace mozilla {
 
 /* static */
 bool KeySystemConfig::Supports(const nsAString& aKeySystem) {
+#ifdef MOZ_WIDGET_ANDROID
+  // No GMP on Android, check if we can use MediaDrm for this keysystem.
+  if (mozilla::java::MediaDrmProxy::IsSchemeSupported(
+          NS_ConvertUTF16toUTF8(aKeySystem))) {
+    return true;
+  }
+#else
   // Check if Widevine L3 or Clearkey has been downloaded via GMP downloader.
   if (IsWidevineKeySystem(aKeySystem) || IsClearkeyKeySystem(aKeySystem)) {
     return HaveGMPFor(nsCString(CHROMIUM_CDM_API),
                       {NS_ConvertUTF16toUTF8(aKeySystem)});
-  }
-
-#ifdef MOZ_WIDGET_ANDROID
-  // Check if we can use MediaDrm for this keysystem.
-  if (mozilla::java::MediaDrmProxy::IsSchemeSupported(
-          NS_ConvertUTF16toUTF8(aKeySystem))) {
-    return true;
   }
 #endif
 
