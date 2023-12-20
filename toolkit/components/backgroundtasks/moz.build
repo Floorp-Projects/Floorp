@@ -91,11 +91,11 @@ if CONFIG["MOZ_BUILD_APP"] == "browser":
         "tests/BackgroundTask_targeting.sys.mjs",
     ]
 
-    FINAL_TARGET_FILES.browser.defaults.backgroundtasks += [
+    FINAL_TARGET_PP_FILES.browser.defaults.backgroundtasks += [
         "defaults/backgroundtasks_browser.js",
     ]
 
-FINAL_TARGET_FILES.defaults.backgroundtasks += [
+FINAL_TARGET_PP_FILES.defaults.backgroundtasks += [
     "defaults/backgroundtasks.js",
 ]
 

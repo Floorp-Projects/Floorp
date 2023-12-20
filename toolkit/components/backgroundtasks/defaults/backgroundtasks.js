@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#filter substitution;
+
 // These preferences override Gecko preferences in `greprefs.js`.  Use
 // `backgroundtasks_browser.js` to override browser/-specific preferences in
 // `firefox.js`.
@@ -45,3 +47,10 @@ pref("security.nocertdb", true);
 
 // Prevent asynchronous preference writes.
 pref("preferences.allow.omt-write", false);
+
+// Enable automatic restarts during background updates for Nightly builds.
+#ifdef NIGHTLY_BUILD
+pref("app.update.background.automaticRestartEnabled", true);
+#else
+pref("app.update.background.automaticRestartEnabled", false);
+#endif

@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#filter substitution;
+
 // These preferences override override browser/-specific preferences in
 // `firefox.js`.  Use `backgroundtasks.js` to override general Gecko preferences
 // in `greprefs.js`.
