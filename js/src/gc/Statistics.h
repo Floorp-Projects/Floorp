@@ -573,9 +573,7 @@ struct StringStats {
     return *this;
   }
 
-  void noteTenured(size_t mallocBytes) {
-    tenuredBytes += mallocBytes;
-  }
+  void noteTenured(size_t mallocBytes) { tenuredBytes += mallocBytes; }
 
   void noteDeduplicated(size_t numChars, size_t mallocBytes) {
     deduplicatedStrings++;
