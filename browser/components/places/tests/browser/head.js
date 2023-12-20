@@ -131,6 +131,17 @@ function synthesizeClickOnSelectedTreeCell(aTree, aOptions) {
   var rect = aTree.getCoordsForCellItem(rowID, aTree.columns[0], "text");
   var x = rect.x + rect.width / 2;
   var y = rect.y + rect.height / 2;
+  if (aTree.id == "bookmarks-view" || aTree.id == "historyTree") {
+    // We are purposefully keeping the main <tree> element unlabeled, because in
+    // this specific case, the on-screen label for either "Bookmarks" or
+    // "History" sidebar is positioned closely to the tree, visually and in DOM.
+    // We want to avoid making a screen reader user to listen to a redundant
+    // announcement, therefore no accessible name is provided to the container
+    // and we account for this in a11y-checks:
+    AccessibilityUtils.setEnv({
+      labelRule: false,
+    });
+  }
   // Simulate the click.
   EventUtils.synthesizeMouse(
     aTree.body,
@@ -139,6 +150,7 @@ function synthesizeClickOnSelectedTreeCell(aTree, aOptions) {
     aOptions || {},
     aTree.ownerGlobal
   );
+  AccessibilityUtils.resetEnv();
 }
 
 /**

@@ -44,7 +44,6 @@ skip-if = ["os != 'mac'"] # Mac-only functionality
 ["browser_bookmarkProperties_speculativeConnection.js"]
 
 ["browser_bookmarkProperties_xulStore.js"]
-skip-if = ["a11y_checks"] # Bugs 1854443 and 1858041 to investigate intermittent a11y_checks results
 
 ["browser_bookmark_add_tags.js"]
 https_first_disabled = true
@@ -200,19 +199,14 @@ skip-if = ["verify && debug && os == 'win'"]
 ["browser_remove_bookmarks.js"]
 
 ["browser_sidebar_bookmarks_telemetry.js"]
-fail-if = ["a11y_checks"] # Bug 1854443 tree#bookmarks-view may not be labeled
 
 ["browser_sidebar_history_telemetry.js"]
-fail-if = ["a11y_checks"] # Bug 1854443 tree#historyTree may not be labeled
 
 ["browser_sidebar_on_customization.js"]
-fail-if = ["a11y_checks"] # Bug 1854443 tree#bookmarks-view may not be labeled
 
 ["browser_sidebar_open_bookmarks.js"]
-fail-if = ["a11y_checks"] # Bug 1854443 tree#bookmarks-view may not be labeled
 
 ["browser_sidebarpanels_click.js"]
-fail-if = ["a11y_checks"] # Bug 1854443 tree#bookmarks-view and tree#historyTree may not be labeled
 
 ["browser_sort_in_library.js"]
 
