@@ -14,6 +14,9 @@ permalink: /changelog/
   * Added `FileUploadsDirCleaner` deletes temporary stale uploaded files, see [Bug 1860472](https://bugzilla.mozilla.org/show_bug.cgi?id=1860472).
   * ⚠️ **This is a breaking change**: `PromptFeature` now requires a `FileUploadsDirCleaner` to be constructed
 
+* **browser-state**
+  * `BrowserStore` and the `TabListReducer` will no longer automatically select a normal tab when all private tabs are removed. [Bug 1861459](https://bugzilla.mozilla.org/show_bug.cgi?id=1861459)
+
 * **all components**
   * All new usages of the `concept-fetch` component to make fetch requests now have conservative-mode off by default. Current features will continue to use conservative mode until individually updated.
   

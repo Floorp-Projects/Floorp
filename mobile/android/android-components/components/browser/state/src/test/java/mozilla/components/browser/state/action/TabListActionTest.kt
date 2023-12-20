@@ -354,11 +354,6 @@ class TabListActionTest {
         // [a*, b, c, (e*)] -> [(a*), b, c]
         store.dispatch(TabListAction.RemoveTabAction("e")).joinBlocking()
         assertEquals("a", store.state.selectedTabId)
-
-        // After removing the last private tab a normal tab will be selected
-        // [(a*), b, c] -> [b, (c)]
-        store.dispatch(TabListAction.RemoveTabAction("a")).joinBlocking()
-        assertEquals("c", store.state.selectedTabId)
     }
 
     @Test
@@ -392,6 +387,56 @@ class TabListActionTest {
         // [(a), b*, c*] -> [b*, c*]
         store.dispatch(TabListAction.RemoveTabAction("a")).joinBlocking()
         assertNull(store.state.selectedTabId)
+    }
+
+    @Test
+    fun `GIVEN last normal tab WHEN removed THEN no new tab is selected`() {
+        val normalTab = createTab("normal", private = false)
+        val privateTab = createTab("private", private = true)
+        val initialState = BrowserState(tabs = listOf(normalTab, privateTab), selectedTabId = normalTab.id)
+        val store = BrowserStore(initialState)
+
+        store.dispatch(TabListAction.RemoveTabAction(normalTab.id)).joinBlocking()
+
+        assertNull(store.state.selectedTabId)
+        assertEquals(1, store.state.tabs.size)
+    }
+
+    @Test
+    fun `GIVEN last private tab WHEN removed THEN no new tab is selected`() {
+        val normalTab = createTab("normal", private = false)
+        val privateTab = createTab("private", private = true)
+        val initialState = BrowserState(tabs = listOf(normalTab, privateTab), selectedTabId = privateTab.id)
+        val store = BrowserStore(initialState)
+
+        store.dispatch(TabListAction.RemoveTabAction(privateTab.id)).joinBlocking()
+
+        assertNull(store.state.selectedTabId)
+        assertEquals(1, store.state.tabs.size)
+    }
+
+    @Test
+    fun `GIVEN normal tabs and one private tab WHEN all normal tabs are removed THEN no new tab is selected`() {
+        val tabs = List(5) { createTab("$it", private = false) } + createTab("private", private = true)
+        val initialState = BrowserState(tabs = tabs, selectedTabId = tabs.first().id)
+        val store = BrowserStore(initialState)
+
+        store.dispatch(TabListAction.RemoveAllNormalTabsAction).joinBlocking()
+
+        assertNull(store.state.selectedTabId)
+        assertEquals(1, store.state.tabs.size)
+    }
+
+    @Test
+    fun `GIVEN one normal tab and private tabs WHEN all private tabs are removed THEN no new tab is selected`() {
+        val tabs = List(5) { createTab("$it", private = true) } + createTab("normal", private = false)
+        val initialState = BrowserState(tabs = tabs, selectedTabId = tabs.first().id)
+        val store = BrowserStore(initialState)
+
+        store.dispatch(TabListAction.RemoveAllPrivateTabsAction).joinBlocking()
+
+        assertNull(store.state.selectedTabId)
+        assertEquals(1, store.state.tabs.size)
     }
 
     @Test
@@ -1022,7 +1067,7 @@ class TabListActionTest {
 
         assertEquals(1, store.state.tabs.size)
         assertEquals("a", store.state.tabs[0].id)
-        assertEquals("a", store.state.selectedTabId)
+        assertEquals(null, store.state.selectedTabId)
 
         assertEquals(1, store.state.customTabs.size)
         assertEquals("a1", store.state.customTabs.last().id)
@@ -1281,7 +1326,7 @@ class TabListActionTest {
 
         assertEquals(2, store.state.normalTabs.size)
         assertEquals(0, store.state.privateTabs.size)
-        assertEquals("c", store.state.selectedTabId)
+        assertEquals(null, store.state.selectedTabId)
     }
 
     @Test

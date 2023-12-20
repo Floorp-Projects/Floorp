@@ -5,10 +5,12 @@
 package org.mozilla.fenix.components.appstate
 
 import io.mockk.mockk
+import mozilla.components.browser.state.state.createTab
 import mozilla.components.lib.crash.Crash.NativeCodeCrash
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.components.appstate.AppAction.AddNonFatalCrash
 import org.mozilla.fenix.components.appstate.AppAction.RemoveAllNonFatalCrashes
 import org.mozilla.fenix.components.appstate.AppAction.RemoveNonFatalCrash
@@ -68,5 +70,50 @@ class AppStoreReducerTest {
         val updatedState = AppStoreReducer.reduce(initialState, RemoveAllNonFatalCrashes)
 
         assertTrue(updatedState.nonFatalCrashes.isEmpty())
+    }
+
+    @Test
+    fun `GIVEN mode is private WHEN selected tab changes to normal mode THEN state is updated to normal mode`() {
+        val initialState = AppState(
+            selectedTabId = null,
+            mode = BrowsingMode.Private,
+        )
+
+        val updatedState = AppStoreReducer.reduce(
+            initialState,
+            AppAction.SelectedTabChanged(createTab("", private = false)),
+        )
+
+        assertFalse(updatedState.mode.isPrivate)
+    }
+
+    @Test
+    fun `GIVEN mode is normal WHEN selected tab changes to private mode THEN state is updated to private mode`() {
+        val initialState = AppState(
+            selectedTabId = null,
+            mode = BrowsingMode.Normal,
+        )
+
+        val updatedState = AppStoreReducer.reduce(
+            initialState,
+            AppAction.SelectedTabChanged(createTab("", private = true)),
+        )
+
+        assertTrue(updatedState.mode.isPrivate)
+    }
+
+    @Test
+    fun `WHEN selected tab changes to a tab in the same mode THEN mode is unchanged`() {
+        val initialState = AppState(
+            selectedTabId = null,
+            mode = BrowsingMode.Normal,
+        )
+
+        val updatedState = AppStoreReducer.reduce(
+            initialState,
+            AppAction.SelectedTabChanged(createTab("", private = false)),
+        )
+
+        assertFalse(updatedState.mode.isPrivate)
     }
 }

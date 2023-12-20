@@ -27,8 +27,7 @@ class LastAccessMiddleware : Middleware<BrowserState, BrowserAction> {
         val selectionBeforeRemoval = when (action) {
             is TabListAction.RemoveTabAction,
             is TabListAction.RemoveTabsAction,
-            // NB: RemoveAllNormalTabsAction never updates tab selection
-            is TabListAction.RemoveAllPrivateTabsAction,
+            // NB: RemoveAllNormalTabsAction and RemoveAllPrivateTabsAction never update tab selection
             -> {
                 context.state.selectedTabId
             }
@@ -40,8 +39,7 @@ class LastAccessMiddleware : Middleware<BrowserState, BrowserAction> {
         when (action) {
             is TabListAction.RemoveTabAction,
             is TabListAction.RemoveTabsAction,
-            // NB: RemoveAllNormalTabsAction never updates tab selection
-            is TabListAction.RemoveAllPrivateTabsAction,
+            // NB: RemoveAllNormalTabsAction and RemoveAllPrivateTabsAction never updates tab selection
             -> {
                 // If the selected tab changed during removal we make sure to update
                 // the lastAccess state of the newly selected tab.

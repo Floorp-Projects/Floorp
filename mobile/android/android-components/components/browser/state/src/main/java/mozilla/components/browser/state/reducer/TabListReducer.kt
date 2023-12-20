@@ -211,8 +211,9 @@ internal object TabListReducer {
                 state.copy(
                     tabs = normalTabs,
                     selectedTabId = if (selectionAffected) {
-                        // If the selection is affected, select the last normal tab, if available.
-                        normalTabs.lastOrNull()?.id
+                        // If the selection is affected, we'll set it to null as there's no
+                        // normal tab left and NO normal tab should get selected instead.
+                        null
                     } else {
                         state.selectedTabId
                     },
@@ -287,10 +288,7 @@ private fun findNewSelectedTabId(
         // We found a nearby tab, let's select it.
         nearbyTab != null -> nearbyTab.id
 
-        // If there's no private tab to select anymore then just select the last regular tab
-        isPrivate -> tabs.last().id
-
-        // Removing the last normal tab should NOT cause a private tab to be selected
+        // We have run out of tabs of the same type of mode
         else -> null
     }
 }
