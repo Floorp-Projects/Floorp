@@ -35,7 +35,7 @@ use crate::selector_parser::PseudoElement;
 use servo_arc::{Arc, UniqueArc};
 use std::mem::{forget, MaybeUninit, ManuallyDrop};
 use std::{cmp, ops, ptr};
-use crate::values::{self, KeyframesName};
+use crate::values;
 use crate::values::computed::{BorderStyle, Percentage, Time, Zoom};
 use crate::values::computed::font::FontSize;
 use crate::values::generics::column::ColumnCount;
@@ -1052,50 +1052,6 @@ fn static_assert() {
     ${impl_coordinated_property_count(type, ident, gecko_ffi_name)}
 </%def>
 
-<%def name="impl_animation_keyword(ident, gecko_ffi_name, keyword, cast_type='u8')">
-    #[allow(non_snake_case)]
-    pub fn set_animation_${ident}<I>(&mut self, v: I)
-    where
-        I: IntoIterator<Item = longhands::animation_${ident}::computed_value::single_value::T>,
-        I::IntoIter: ExactSizeIterator + Clone
-    {
-        use crate::properties::longhands::animation_${ident}::single_value::computed_value::T as Keyword;
-
-        let v = v.into_iter();
-
-        debug_assert_ne!(v.len(), 0);
-        let input_len = v.len();
-        self.mAnimations.ensure_len(input_len);
-
-        self.mAnimation${gecko_ffi_name}Count = input_len as u32;
-
-        for (gecko, servo) in self.mAnimations.iter_mut().take(input_len as usize).zip(v) {
-            let result = match servo {
-                % for value in keyword.values_for("gecko"):
-                    Keyword::${to_camel_case(value)} =>
-                        structs::${keyword.gecko_constant(value)} ${keyword.maybe_cast(cast_type)},
-                % endfor
-            };
-            gecko.m${gecko_ffi_name} = result;
-        }
-    }
-    #[allow(non_snake_case)]
-    pub fn animation_${ident}_at(&self, index: usize)
-        -> longhands::animation_${ident}::computed_value::SingleComputedValue {
-        use crate::properties::longhands::animation_${ident}::single_value::computed_value::T as Keyword;
-        match self.mAnimations[index].m${gecko_ffi_name} ${keyword.maybe_cast("u32")} {
-            % for value in keyword.values_for("gecko"):
-                structs::${keyword.gecko_constant(value)} => Keyword::${to_camel_case(value)},
-            % endfor
-            % if keyword.gecko_inexhaustive:
-            _ => panic!("Found unexpected value for animation-${ident}"),
-            % endif
-        }
-    }
-    ${impl_coordinated_property_copy('animation', ident, gecko_ffi_name)}
-    ${impl_coordinated_property_count('animation', ident, gecko_ffi_name)}
-</%def>
-
 <% skip_box_longhands= """display contain""" %>
 <%self:impl_trait style_struct_name="Box" skip_longhands="${skip_box_longhands}">
     #[inline]
@@ -1759,48 +1715,13 @@ mask-mode mask-repeat mask-clip mask-origin mask-composite mask-position-x mask-
             && unsafe { bindings::Gecko_StyleAnimationsEquals(&self.mAnimations, &other.mAnimations) }
     }
 
-    pub fn set_animation_name<I>(&mut self, v: I)
-    where
-        I: IntoIterator<Item = longhands::animation_name::computed_value::single_value::T>,
-        I::IntoIter: ExactSizeIterator
-    {
-        let v = v.into_iter();
-        debug_assert_ne!(v.len(), 0);
-        self.mAnimations.ensure_len(v.len());
-
-        self.mAnimationNameCount = v.len() as u32;
-        for (servo, gecko) in v.zip(self.mAnimations.iter_mut()) {
-            let atom = servo.0.as_atom().clone();
-            unsafe { bindings::Gecko_SetAnimationName(gecko, atom.into_addrefed()); }
-        }
-    }
-    pub fn animation_name_at(&self, index: usize)
-        -> longhands::animation_name::computed_value::SingleComputedValue {
-        use crate::properties::longhands::animation_name::single_value::SpecifiedValue as AnimationName;
-
-        let atom = self.mAnimations[index].mName.mRawPtr;
-        AnimationName(KeyframesName::from_atom(unsafe { Atom::from_raw(atom) }))
-    }
-    pub fn copy_animation_name_from(&mut self, other: &Self) {
-        self.mAnimationNameCount = other.mAnimationNameCount;
-        unsafe { bindings::Gecko_CopyAnimationNames(&mut self.mAnimations, &other.mAnimations); }
-    }
-
-    pub fn reset_animation_name(&mut self, other: &Self) {
-        self.copy_animation_name_from(other)
-    }
-
-    ${impl_coordinated_property_count('animation', 'name', 'Name')}
+    ${impl_coordinated_property('animation', 'name', 'Name')}
     ${impl_coordinated_property('animation', 'delay', 'Delay')}
     ${impl_coordinated_property('animation', 'duration', 'Duration')}
-    ${impl_animation_keyword('direction', 'Direction',
-                             data.longhands_by_name["animation-direction"].keyword)}
-    ${impl_animation_keyword('fill_mode', 'FillMode',
-                             data.longhands_by_name["animation-fill-mode"].keyword)}
-    ${impl_animation_keyword('play_state', 'PlayState',
-                             data.longhands_by_name["animation-play-state"].keyword)}
-    ${impl_animation_keyword('composition', 'Composition',
-                             data.longhands_by_name["animation-composition"].keyword)}
+    ${impl_coordinated_property('animation', 'direction', 'Direction')}
+    ${impl_coordinated_property('animation', 'fill_mode', 'FillMode')}
+    ${impl_coordinated_property('animation', 'play_state', 'PlayState')}
+    ${impl_coordinated_property('animation', 'composition', 'Composition')}
     ${impl_coordinated_property('animation', 'iteration_count', 'IterationCount')}
     ${impl_coordinated_property('animation', 'timeline', 'Timeline')}
     ${impl_coordinated_property('animation', 'timing_function', 'TimingFunction')}

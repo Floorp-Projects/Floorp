@@ -149,8 +149,6 @@ function treatAsSafeArgument(entry, varName, csuName)
         // Various Servo binding out parameters. This is a mess and there needs
         // to be a way to indicate which params are out parameters, either using
         // an attribute or a naming convention.
-        ["Gecko_CopyAnimationNames", "aDest", null],
-        ["Gecko_SetAnimationName", "aStyleAnimation", null],
         ["Gecko_SetCounterStyleToName", "aPtr", null],
         ["Gecko_SetCounterStyleToSymbols", "aPtr", null],
         ["Gecko_SetCounterStyleToString", "aPtr", null],

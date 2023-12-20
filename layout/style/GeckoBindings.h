@@ -220,14 +220,6 @@ bool Gecko_StyleViewTimelinesEquals(
     const nsStyleAutoArray<mozilla::StyleViewTimeline>*,
     const nsStyleAutoArray<mozilla::StyleViewTimeline>*);
 
-void Gecko_CopyAnimationNames(
-    nsStyleAutoArray<mozilla::StyleAnimation>* aDest,
-    const nsStyleAutoArray<mozilla::StyleAnimation>* aSrc);
-
-// This function takes an already addrefed nsAtom
-void Gecko_SetAnimationName(mozilla::StyleAnimation* aStyleAnimation,
-                            nsAtom* aAtom);
-
 void Gecko_UpdateAnimations(const mozilla::dom::Element* aElementOrPseudo,
                             const mozilla::ComputedStyle* aOldComputedValues,
                             const mozilla::ComputedStyle* aComputedValues,

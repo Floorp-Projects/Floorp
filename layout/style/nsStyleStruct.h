@@ -1144,18 +1144,15 @@ struct StyleAnimation {
   const StyleComputedTimingFunction& GetTimingFunction() const {
     return mTimingFunction;
   }
-  const mozilla::StyleTime& GetDelay() const { return mDelay; }
-  const mozilla::StyleTime& GetDuration() const { return mDuration; }
-  nsAtom* GetName() const { return mName; }
-  dom::PlaybackDirection GetDirection() const { return mDirection; }
-  dom::FillMode GetFillMode() const { return mFillMode; }
+  const StyleTime& GetDelay() const { return mDelay; }
+  const StyleTime& GetDuration() const { return mDuration; }
+  nsAtom* GetName() const { return mName._0.AsAtom(); }
+  StyleAnimationDirection GetDirection() const { return mDirection; }
+  StyleAnimationFillMode GetFillMode() const { return mFillMode; }
   StyleAnimationPlayState GetPlayState() const { return mPlayState; }
   float GetIterationCount() const { return mIterationCount._0; }
-  dom::CompositeOperation GetComposition() const { return mComposition; }
+  StyleAnimationComposition GetComposition() const { return mComposition; }
   const StyleAnimationTimeline& GetTimeline() const { return mTimeline; }
-
-  void SetName(already_AddRefed<nsAtom> aName) { mName = aName; }
-  void SetName(nsAtom* aName) { mName = aName; }
 
   bool operator==(const StyleAnimation& aOther) const;
   bool operator!=(const StyleAnimation& aOther) const {
@@ -1167,12 +1164,12 @@ struct StyleAnimation {
       StyleComputedTimingFunction::Keyword(StyleTimingKeyword::Ease)};
   StyleTime mDuration{0.0f};
   StyleTime mDelay{0.0f};
-  RefPtr<nsAtom> mName{nsGkAtoms::_empty};  // nsGkAtoms::_empty for 'none'
-  dom::PlaybackDirection mDirection{0};     // PlaybackDirection::Normal
-  dom::FillMode mFillMode{0};               // FillMode::None
+  StyleAnimationName mName;
+  StyleAnimationDirection mDirection = StyleAnimationDirection::Normal;
+  StyleAnimationFillMode mFillMode = StyleAnimationFillMode::None;
   StyleAnimationPlayState mPlayState = StyleAnimationPlayState::Running;
   StyleAnimationIterationCount mIterationCount{1.0f};
-  dom::CompositeOperation mComposition{0};  // CompositeOperation::Replace
+  StyleAnimationComposition mComposition = StyleAnimationComposition::Replace;
   StyleAnimationTimeline mTimeline{StyleAnimationTimeline::Auto()};
 };
 
@@ -1663,10 +1660,11 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleUIReset {
   const mozilla::StyleTime& GetAnimationDuration(uint32_t aIndex) const {
     return mAnimations[aIndex % mAnimationDurationCount].GetDuration();
   }
-  mozilla::dom::PlaybackDirection GetAnimationDirection(uint32_t aIndex) const {
+  mozilla::StyleAnimationDirection GetAnimationDirection(
+      uint32_t aIndex) const {
     return mAnimations[aIndex % mAnimationDirectionCount].GetDirection();
   }
-  mozilla::dom::FillMode GetAnimationFillMode(uint32_t aIndex) const {
+  mozilla::StyleAnimationFillMode GetAnimationFillMode(uint32_t aIndex) const {
     return mAnimations[aIndex % mAnimationFillModeCount].GetFillMode();
   }
   mozilla::StyleAnimationPlayState GetAnimationPlayState(
@@ -1682,7 +1680,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleUIReset {
     return mAnimations[aIndex % mAnimationTimingFunctionCount]
         .GetTimingFunction();
   }
-  mozilla::dom::CompositeOperation GetAnimationComposition(
+  mozilla::StyleAnimationComposition GetAnimationComposition(
       uint32_t aIndex) const {
     return mAnimations[aIndex % mAnimationCompositionCount].GetComposition();
   }

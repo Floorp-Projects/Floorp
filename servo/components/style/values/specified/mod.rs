@@ -30,8 +30,11 @@ pub use self::align::{AlignContent, AlignItems, AlignSelf, AlignTracks, ContentD
 #[cfg(feature = "gecko")]
 pub use self::align::{JustifyContent, JustifyItems, JustifySelf, JustifyTracks, SelfAlignment};
 pub use self::angle::{AllowUnitlessZeroAngle, Angle};
-pub use self::animation::{AnimationIterationCount, AnimationName, AnimationTimeline};
-pub use self::animation::{ScrollAxis, ScrollTimelineName, TransitionProperty, ViewTimelineInset};
+pub use self::animation::{
+    AnimationIterationCount, AnimationName, AnimationTimeline, AnimationPlayState,
+    AnimationFillMode, AnimationComposition, AnimationDirection, ScrollAxis,
+    ScrollTimelineName, TransitionProperty, ViewTimelineInset
+};
 pub use self::background::{BackgroundRepeat, BackgroundSize};
 pub use self::basic_shape::FillRule;
 pub use self::border::{

@@ -263,61 +263,60 @@ ${helpers.predefined_type(
     affects="",
 )}
 
-<% animation_direction_custom_consts = { "alternate-reverse": "Alternate_reverse" } %>
-${helpers.single_keyword(
+${helpers.predefined_type(
     "animation-direction",
-    "normal reverse alternate alternate-reverse",
+    "AnimationDirection",
+    "computed::AnimationDirection::Normal",
     engines="gecko servo-2013 servo-2020",
+    initial_specified_value="specified::AnimationDirection::Normal",
+    vector=True,
     need_index=True,
     animation_value_type="none",
-    vector=True,
-    gecko_enum_prefix="PlaybackDirection",
-    custom_consts=animation_direction_custom_consts,
     extra_prefixes=animation_extra_prefixes,
-    gecko_inexhaustive=True,
     spec="https://drafts.csswg.org/css-animations/#propdef-animation-direction",
     rule_types_allowed=DEFAULT_RULES_EXCEPT_KEYFRAME,
     affects="",
 )}
 
-${helpers.single_keyword(
+${helpers.predefined_type(
     "animation-play-state",
-    "running paused",
+    "AnimationPlayState",
+    "computed::AnimationPlayState::Running",
     engines="gecko servo-2013 servo-2020",
+    initial_specified_value="computed::AnimationPlayState::Running",
+    vector=True,
     need_index=True,
     animation_value_type="none",
-    vector=True,
     extra_prefixes=animation_extra_prefixes,
-    gecko_enum_prefix="StyleAnimationPlayState",
     spec="https://drafts.csswg.org/css-animations/#propdef-animation-play-state",
     rule_types_allowed=DEFAULT_RULES_EXCEPT_KEYFRAME,
     affects="",
 )}
 
-${helpers.single_keyword(
+${helpers.predefined_type(
     "animation-fill-mode",
-    "none forwards backwards both",
+    "AnimationFillMode",
+    "computed::AnimationFillMode::None",
     engines="gecko servo-2013 servo-2020",
+    initial_specified_value="computed::AnimationFillMode::None",
+    vector=True,
     need_index=True,
     animation_value_type="none",
-    vector=True,
-    gecko_enum_prefix="FillMode",
     extra_prefixes=animation_extra_prefixes,
-    gecko_inexhaustive=True,
     spec="https://drafts.csswg.org/css-animations/#propdef-animation-fill-mode",
     rule_types_allowed=DEFAULT_RULES_EXCEPT_KEYFRAME,
     affects="",
 )}
 
-${helpers.single_keyword(
+${helpers.predefined_type(
     "animation-composition",
-    "replace add accumulate",
+    "AnimationComposition",
+    "computed::AnimationComposition::Replace",
     engines="gecko",
+    initial_specified_value="computed::AnimationComposition::Replace",
+    vector=True,
     need_index=True,
     animation_value_type="none",
-    vector=True,
-    gecko_enum_prefix="CompositeOperation",
-    gecko_inexhaustive=True,
     gecko_pref="layout.css.animation-composition.enabled",
     spec="https://drafts.csswg.org/css-animations-2/#animation-composition",
     affects="",

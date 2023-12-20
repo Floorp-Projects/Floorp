@@ -44,8 +44,11 @@ pub use self::align::{
 #[cfg(feature = "gecko")]
 pub use self::align::{AlignSelf, JustifySelf};
 pub use self::angle::Angle;
-pub use self::animation::{AnimationIterationCount, AnimationName, AnimationTimeline};
-pub use self::animation::{ScrollAxis, ScrollTimelineName, TransitionProperty, ViewTimelineInset};
+pub use self::animation::{
+    AnimationIterationCount, AnimationName, AnimationTimeline, AnimationPlayState,
+    AnimationFillMode, AnimationComposition, AnimationDirection, ScrollAxis,
+    ScrollTimelineName, TransitionProperty, ViewTimelineInset
+};
 pub use self::background::{BackgroundRepeat, BackgroundSize};
 pub use self::basic_shape::FillRule;
 pub use self::border::{

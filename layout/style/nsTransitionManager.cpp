@@ -384,7 +384,7 @@ bool nsTransitionManager::ConsiderInitiatingTransition(
 
   TimingParams timing = TimingParamsFromCSSParams(
       duration, delay, 1.0 /* iteration count */,
-      dom::PlaybackDirection::Normal, dom::FillMode::Backwards);
+      StyleAnimationDirection::Normal, StyleAnimationFillMode::Backwards);
 
   const StyleComputedTimingFunction& tf =
       aStyle.GetTransitionTimingFunction(transitionIdx);
