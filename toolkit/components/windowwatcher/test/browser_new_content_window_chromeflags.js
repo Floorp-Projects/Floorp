@@ -37,10 +37,6 @@ const DISALLOWED = {
   // "remote":
   //   checked manually, since its default value will
   //   depend on whether or not e10s is enabled by default.
-  popup: {
-    flag: Ci.nsIWebBrowserChrome.CHROME_WINDOW_POPUP,
-    defaults_to: false,
-  },
   alwaysLowered: {
     flag: Ci.nsIWebBrowserChrome.CHROME_WINDOW_LOWERED,
     defaults_to: false,
