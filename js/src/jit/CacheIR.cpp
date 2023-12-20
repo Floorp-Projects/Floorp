@@ -13560,6 +13560,8 @@ AttachDecision OptimizeGetIteratorIRGenerator::tryAttachArray() {
   writer.guardShape(objId, obj->shape());
   writer.guardArrayIsPacked(objId);
 
+  MOZ_ASSERT(obj->nonCCWRealm()->realmFuses.optimizeGetIteratorFuse.intact());
+
   if (!cx_->options().enableDestructuringFuse()) {
     // Guard on Array.prototype[@@iterator].
     ObjOperandId arrProtoId = writer.loadObject(arrProto);
