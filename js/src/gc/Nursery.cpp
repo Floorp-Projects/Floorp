@@ -1903,13 +1903,19 @@ size_t js::Nursery::targetSize(JS::GCOptions options, JS::GCReason reason) {
   double dutyGrowth = dutyFactor / DutyFactorGoal;
   double growthFactor = std::max(promotionGrowth, dutyGrowth);
 
-  // Decrease the growth factor to try to keep collections shorter than a target
-  // maximum time. Don't do this during page load.
+#ifndef DEBUG
+  // In optimized builds, decrease the growth factor to try to keep collections
+  // shorter than a target maximum time. Don't do this during page load.
+  //
+  // Debug builds are so much slower and more unpredictable that doing this
+  // would cause very different nursery behaviour to an equivalent release
+  // build.
   static const double MaxTimeGoalMs = 4.0;
   if (!gc->isInPageLoad() && !js::SupportDifferentialTesting()) {
     double timeGrowth = MaxTimeGoalMs / collectorTime.ToMilliseconds();
     growthFactor = std::min(growthFactor, timeGrowth);
   }
+#endif
 
   // Limit the range of the growth factor to prevent transient high promotion
   // rates from affecting the nursery size too far into the future.
