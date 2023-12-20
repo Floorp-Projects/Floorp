@@ -8,12 +8,20 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   AnimationFramePromise: "chrome://remote/content/shared/Sync.sys.mjs",
+  assert: "chrome://remote/content/shared/webdriver/Assert.sys.mjs",
   ClipRectangleType:
     "chrome://remote/content/webdriver-bidi/modules/root/browsingContext.sys.mjs",
+  error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
   LoadListener: "chrome://remote/content/shared/listeners/LoadListener.sys.mjs",
+  LocatorType:
+    "chrome://remote/content/webdriver-bidi/modules/root/browsingContext.sys.mjs",
   OriginType:
     "chrome://remote/content/webdriver-bidi/modules/root/browsingContext.sys.mjs",
 });
+
+const DOCUMENT_FRAGMENT_NODE = 11;
+const DOCUMENT_NODE = 9;
+const ELEMENT_NODE = 1;
 
 class BrowsingContextModule extends WindowGlobalBiDiModule {
   #loadListener;
@@ -142,6 +150,40 @@ class BrowsingContextModule extends WindowGlobalBiDiModule {
       this.emitEvent("browsingContext.load", this.#getNavigationInfo(data));
     }
   };
+
+  /**
+   * Locate nodes using css selector.
+   *
+   * @see https://w3c.github.io/webdriver-bidi/#locate-nodes-using-css
+   */
+  #locateNodesUsingCss(contextNodes, selector, maxReturnedNodeCount) {
+    const returnedNodes = [];
+
+    for (const contextNode of contextNodes) {
+      let elements;
+      try {
+        elements = contextNode.querySelectorAll(selector);
+      } catch (e) {
+        throw new lazy.error.InvalidSelectorError(
+          `${e.message}: "${selector}"`
+        );
+      }
+
+      if (maxReturnedNodeCount === null) {
+        returnedNodes.push(...elements);
+      } else {
+        for (const element of elements) {
+          returnedNodes.push(element);
+
+          if (returnedNodes.length === maxReturnedNodeCount) {
+            return returnedNodes;
+          }
+        }
+      }
+    }
+
+    return returnedNodes;
+  }
 
   /**
    * Normalize rectangle. This ensures that the resulting rect has
@@ -311,6 +353,69 @@ class BrowsingContextModule extends WindowGlobalBiDiModule {
     }
 
     return this.#rectangleIntersection(originRect, clipRect);
+  }
+
+  _locateNodes(params = {}) {
+    const {
+      locator,
+      maxNodeCount,
+      resultOwnership,
+      sandbox,
+      serializationOptions,
+      startNodes,
+    } = params;
+
+    const realm = this.messageHandler.getRealm({ sandboxName: sandbox });
+
+    const contextNodes = [];
+    if (startNodes === null) {
+      contextNodes.push(this.messageHandler.window.document.documentElement);
+    } else {
+      for (const serializedStartNode of startNodes) {
+        const startNode = this.deserialize(realm, serializedStartNode);
+        lazy.assert.that(
+          startNode =>
+            Node.isInstance(startNode) &&
+            [DOCUMENT_FRAGMENT_NODE, DOCUMENT_NODE, ELEMENT_NODE].includes(
+              startNode.nodeType
+            ),
+          `Expected an item of "startNodes" to be an Element, got ${startNode}`
+        )(startNode);
+
+        contextNodes.push(startNode);
+      }
+    }
+
+    let returnedNodes;
+    switch (locator.type) {
+      case lazy.LocatorType.css: {
+        returnedNodes = this.#locateNodesUsingCss(
+          contextNodes,
+          locator.value,
+          maxNodeCount
+        );
+        break;
+      }
+    }
+
+    const serializedNodes = [];
+    const seenNodeIds = new Map();
+    for (const returnedNode of returnedNodes) {
+      serializedNodes.push(
+        this.serialize(
+          returnedNode,
+          serializationOptions,
+          resultOwnership,
+          realm,
+          { seenNodeIds }
+        )
+      );
+    }
+
+    return {
+      serializedNodes,
+      _extraData: { seenNodeIds },
+    };
   }
 }
 

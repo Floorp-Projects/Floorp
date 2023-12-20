@@ -23,12 +23,15 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "chrome://remote/content/shared/NavigationManager.sys.mjs",
   NavigationListener:
     "chrome://remote/content/shared/listeners/NavigationListener.sys.mjs",
+  OwnershipModel: "chrome://remote/content/webdriver-bidi/RemoteValue.sys.mjs",
   PollPromise: "chrome://remote/content/shared/Sync.sys.mjs",
   pprint: "chrome://remote/content/shared/Format.sys.mjs",
   print: "chrome://remote/content/shared/PDF.sys.mjs",
   ProgressListener: "chrome://remote/content/shared/Navigate.sys.mjs",
   PromptListener:
     "chrome://remote/content/shared/listeners/PromptListener.sys.mjs",
+  setDefaultAndAssertSerializationOptions:
+    "chrome://remote/content/webdriver-bidi/RemoteValue.sys.mjs",
   TabManager: "chrome://remote/content/shared/TabManager.sys.mjs",
   waitForInitialNavigationCompleted:
     "chrome://remote/content/shared/Navigate.sys.mjs",
@@ -73,6 +76,22 @@ export const ClipRectangleType = {
 const CreateType = {
   tab: "tab",
   window: "window",
+};
+
+/**
+ * @typedef {string} LocatorType
+ */
+
+/**
+ * Enum of types supported by the browsingContext.locateNodes command.
+ *
+ * @readonly
+ * @enum {LocatorType}
+ */
+export const LocatorType = {
+  css: "css",
+  innerText: "innerText",
+  xpath: "xpath",
 };
 
 /**
@@ -702,6 +721,175 @@ class BrowsingContextModule extends Module {
   }
 
   /**
+   * Used as an argument for browsingContext.locateNodes command, as one of the available variants
+   * {CssLocator}, {InnerTextLocator} or {XPathLocator}, to represent a way of how lookup of nodes
+   * is going to be performed.
+   *
+   * @typedef Locator
+   */
+
+  /**
+   * Used as an argument for browsingContext.locateNodes command
+   * to represent a lookup by css selector.
+   *
+   * @typedef CssLocator
+   *
+   * @property {LocatorType} [type=LocatorType.css]
+   * @property {string} value
+   */
+
+  /**
+   * Used as an argument for browsingContext.locateNodes command
+   * to represent a lookup by inner text.
+   *
+   * @typedef InnerTextLocator
+   *
+   * @property {LocatorType} [type=LocatorType.innerText]
+   * @property {string} value
+   * @property {boolean=} ignoreCase
+   * @property {("full"|"partial")=} matchType
+   * @property {number=} maxDepth
+   */
+
+  /**
+   * Used as an argument for browsingContext.locateNodes command
+   * to represent a lookup by xpath.
+   *
+   * @typedef XPathLocator
+   *
+   * @property {LocatorType} [type=LocatorType.xpath]
+   * @property {string} value
+   */
+
+  /**
+   * Returns a list of all nodes matching
+   * the specified locator.
+   *
+   * @param {object} options
+   * @param {string} options.context
+   *     Id of the browsing context.
+   * @param {Locator} options.locator
+   *     The type of lookup which is going to be used.
+   * @param {number=} options.maxNodeCount
+   *     The maximum amount of nodes which is going to be returned.
+   *     Defaults to return all the found nodes.
+   * @param {OwnershipModel=} options.ownership
+   *     The ownership model to use for the serialization
+   *     of the DOM nodes. Defaults to `OwnershipModel.None`.
+   * @property {string=} sandbox
+   *     The name of the sandbox. If the value is null or empty
+   *     string, the default realm will be used.
+   * @property {SerializationOptions=} serializationOptions
+   *     An object which holds the information of how the DOM nodes
+   *     should be serialized.
+   * @property {Array<SharedReference>=} startNodes
+   *     A list of references to nodes, which are used as
+   *     starting points for lookup.
+   *
+   * @throws {InvalidArgumentError}
+   *     Raised if an argument is of an invalid type or value.
+   * @throws {InvalidSelectorError}
+   *     Raised if a locator value is invalid.
+   * @throws {NoSuchFrameError}
+   *     If the browsing context cannot be found.
+   * @throws {UnsupportedOperationError}
+   *     Raised when unsupported lookup types are used.
+   */
+  async locateNodes(options = {}) {
+    const {
+      context: contextId,
+      locator,
+      maxNodeCount = null,
+      ownership = lazy.OwnershipModel.None,
+      sandbox = null,
+      serializationOptions,
+      startNodes = null,
+    } = options;
+
+    lazy.assert.string(
+      contextId,
+      `Expected "context" to be a string, got ${contextId}`
+    );
+
+    const context = this.#getBrowsingContext(contextId);
+
+    lazy.assert.object(
+      locator,
+      `Expected "locator" to be an object, got ${locator}`
+    );
+
+    const locatorTypes = Object.values(LocatorType);
+
+    lazy.assert.that(
+      locatorType => locatorTypes.includes(locatorType),
+      `Expected "locator.type" to be one of ${locatorTypes}, got ${locator.type}`
+    )(locator.type);
+
+    if (locator.type !== LocatorType.css) {
+      throw new lazy.error.UnsupportedOperationError(
+        `"locator.type" argument with value: ${locator.type} is not supported yet.`
+      );
+    }
+
+    if (maxNodeCount != null) {
+      const maxNodeCountErrorMsg = `Expected "maxNodeCount" to be an integer and greater than 0, got ${maxNodeCount}`;
+      lazy.assert.that(maxNodeCount => {
+        lazy.assert.integer(maxNodeCount, maxNodeCountErrorMsg);
+        return maxNodeCount > 0;
+      }, maxNodeCountErrorMsg)(maxNodeCount);
+    }
+
+    const ownershipTypes = Object.values(lazy.OwnershipModel);
+    lazy.assert.that(
+      ownership => ownershipTypes.includes(ownership),
+      `Expected "ownership" to be one of ${ownershipTypes}, got ${ownership}`
+    )(ownership);
+
+    if (sandbox != null) {
+      lazy.assert.string(
+        sandbox,
+        `Expected "sandbox" to be a string, got ${sandbox}`
+      );
+    }
+
+    const serializationOptionsWithDefaults =
+      lazy.setDefaultAndAssertSerializationOptions(serializationOptions);
+
+    if (startNodes != null) {
+      lazy.assert.that(startNodes => {
+        lazy.assert.array(
+          startNodes,
+          `Expected "startNodes" to be an array, got ${startNodes}`
+        );
+        return !!startNodes.length;
+      }, `Expected "startNodes" to have at least one element, got ${startNodes}`)(
+        startNodes
+      );
+    }
+
+    const result = await this.messageHandler.forwardCommand({
+      moduleName: "browsingContext",
+      commandName: "_locateNodes",
+      destination: {
+        type: lazy.WindowGlobalMessageHandler.type,
+        id: context.id,
+      },
+      params: {
+        locator,
+        maxNodeCount,
+        resultOwnership: ownership,
+        sandbox,
+        serializationOptions: serializationOptionsWithDefaults,
+        startNodes,
+      },
+    });
+
+    return {
+      nodes: result.serializedNodes,
+    };
+  }
+
+  /**
    * An object that holds the WebDriver Bidi navigation information.
    *
    * @typedef BrowsingContextNavigateResult
@@ -1117,7 +1305,10 @@ class BrowsingContextModule extends Module {
 
     const context = this.#getBrowsingContext(contextId);
 
-    lazy.assert.integer(delta);
+    lazy.assert.integer(
+      delta,
+      `Expected "delta" to be an integer, got ${delta}`
+    );
 
     const sessionHistory = context.sessionHistory;
     const allSteps = sessionHistory.count;
