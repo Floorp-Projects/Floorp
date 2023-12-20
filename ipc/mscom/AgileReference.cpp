@@ -7,10 +7,7 @@
 #include "mozilla/mscom/AgileReference.h"
 
 #include <utility>
-
 #include "mozilla/Assertions.h"
-#include "mozilla/DebugOnly.h"
-#include "mozilla/DynamicallyLinkedFunctionPtr.h"
 #include "mozilla/mscom/Utils.h"
 
 #if defined(__MINGW32__)
@@ -28,81 +25,28 @@ HRESULT WINAPI RoGetAgileReference(AgileReferenceOptions options, REFIID riid,
 
 #endif  // defined(__MINGW32__)
 
-namespace mozilla::mscom {
+namespace mozilla::mscom::detail {
 
-AgileReference::AgileReference() : mIid(), mHResult(E_NOINTERFACE) {}
-
-AgileReference::AgileReference(REFIID aIid, IUnknown* aObject)
-    : mIid(aIid), mHResult(E_UNEXPECTED) {
-  AssignInternal(aObject);
-}
-
-AgileReference::AgileReference(AgileReference&& aOther) noexcept
-    : mIid(aOther.mIid),
-      mAgileRef(std::move(aOther.mAgileRef)),
-      mHResult(aOther.mHResult) {
-  aOther.mHResult = CO_E_RELEASED;
-}
-
-void AgileReference::Assign(REFIID aIid, IUnknown* aObject) {
-  Clear();
-  mIid = aIid;
-  AssignInternal(aObject);
-}
-
-void AgileReference::AssignInternal(IUnknown* aObject) {
-  // We expect mIid to already be set
-  DebugOnly<IID> zeroIid = {};
-  MOZ_ASSERT(mIid != zeroIid);
-
+HRESULT AgileReference_CreateImpl(RefPtr<IAgileReference>& aRefPtr, REFIID riid,
+                                  IUnknown* aObject) {
   MOZ_ASSERT(aObject);
-
-  mHResult = RoGetAgileReference(AGILEREFERENCE_DEFAULT, mIid, aObject,
-                                 getter_AddRefs(mAgileRef));
+  MOZ_ASSERT(IsCOMInitializedOnCurrentThread());
+  return ::RoGetAgileReference(AGILEREFERENCE_DEFAULT, riid, aObject,
+                               getter_AddRefs(aRefPtr));
 }
 
-AgileReference::~AgileReference() { Clear(); }
-
-void AgileReference::Clear() {
-  mIid = {};
-  mAgileRef = nullptr;
-  mHResult = E_NOINTERFACE;
-}
-
-AgileReference& AgileReference::operator=(const AgileReference& aOther) {
-  Clear();
-  mIid = aOther.mIid;
-  mAgileRef = aOther.mAgileRef;
-  mHResult = aOther.mHResult;
-  return *this;
-}
-
-AgileReference& AgileReference::operator=(AgileReference&& aOther) noexcept {
-  Clear();
-  mIid = aOther.mIid;
-  mAgileRef = std::move(aOther.mAgileRef);
-  mHResult = aOther.mHResult;
-  aOther.mHResult = CO_E_RELEASED;
-  return *this;
-}
-
-HRESULT
-AgileReference::ResolveRaw(REFIID aIid, void** aOutInterface) const {
+HRESULT AgileReference_ResolveImpl(RefPtr<IAgileReference> const& aRefPtr,
+                                   REFIID riid, void** aOutInterface) {
+  MOZ_ASSERT(aRefPtr);
   MOZ_ASSERT(aOutInterface);
-  MOZ_ASSERT(mAgileRef);
   MOZ_ASSERT(IsCOMInitializedOnCurrentThread());
 
-  if (!aOutInterface) {
+  if (!aRefPtr || !aOutInterface) {
     return E_INVALIDARG;
   }
 
   *aOutInterface = nullptr;
-
-  if (mAgileRef) {
-    return mAgileRef->Resolve(aIid, aOutInterface);
-  }
-
-  return E_NOINTERFACE;
+  return aRefPtr->Resolve(riid, aOutInterface);
 }
 
-}  // namespace mozilla::mscom
+}  // namespace mozilla::mscom::detail

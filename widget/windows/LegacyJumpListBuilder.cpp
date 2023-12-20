@@ -130,11 +130,6 @@ LegacyJumpListBuilder::LegacyJumpListBuilder()
     observerService->AddObserver(this, TOPIC_PROFILE_BEFORE_CHANGE, false);
     observerService->AddObserver(this, TOPIC_CLEAR_PRIVATE_DATA, false);
   }
-
-  RefPtr jumpListMgr = mJumpListMgr.Resolve<ICustomDestinationList>();
-  if (!jumpListMgr) {
-    return;
-  }
 }
 
 LegacyJumpListBuilder::~LegacyJumpListBuilder() {
@@ -146,7 +141,7 @@ NS_IMETHODIMP LegacyJumpListBuilder::SetAppUserModelID(
   ReentrantMonitorAutoEnter lock(mMonitor);
   if (!mJumpListMgr) return NS_ERROR_NOT_AVAILABLE;
 
-  RefPtr jumpListMgr = mJumpListMgr.Resolve<ICustomDestinationList>();
+  RefPtr<ICustomDestinationList> jumpListMgr = mJumpListMgr.Resolve();
   if (!jumpListMgr) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -187,7 +182,7 @@ NS_IMETHODIMP LegacyJumpListBuilder::GetMaxListItems(int16_t* aMaxItems) {
     return NS_OK;
   }
 
-  RefPtr jumpListMgr = mJumpListMgr.Resolve<ICustomDestinationList>();
+  RefPtr<ICustomDestinationList> jumpListMgr = mJumpListMgr.Resolve();
   if (!jumpListMgr) {
     return NS_ERROR_UNEXPECTED;
   }
@@ -260,7 +255,7 @@ void LegacyJumpListBuilder::DoInitListBuild(RefPtr<Promise>&& aPromise) {
         }));
   });
 
-  RefPtr jumpListMgr = mJumpListMgr.Resolve<ICustomDestinationList>();
+  RefPtr<ICustomDestinationList> jumpListMgr = mJumpListMgr.Resolve();
   if (!jumpListMgr) {
     return;
   }
@@ -335,7 +330,7 @@ NS_IMETHODIMP LegacyJumpListBuilder::AddListToBuild(int16_t aCatType,
   ReentrantMonitorAutoEnter lock(mMonitor);
   if (!mJumpListMgr) return NS_ERROR_NOT_AVAILABLE;
 
-  RefPtr jumpListMgr = mJumpListMgr.Resolve<ICustomDestinationList>();
+  RefPtr<ICustomDestinationList> jumpListMgr = mJumpListMgr.Resolve();
   if (!jumpListMgr) {
     return NS_ERROR_UNEXPECTED;
   }
@@ -459,7 +454,7 @@ NS_IMETHODIMP LegacyJumpListBuilder::AbortListBuild() {
   ReentrantMonitorAutoEnter lock(mMonitor);
   if (!mJumpListMgr) return NS_ERROR_NOT_AVAILABLE;
 
-  RefPtr jumpListMgr = mJumpListMgr.Resolve<ICustomDestinationList>();
+  RefPtr<ICustomDestinationList> jumpListMgr = mJumpListMgr.Resolve();
   if (!jumpListMgr) {
     return NS_ERROR_UNEXPECTED;
   }
@@ -508,7 +503,7 @@ void LegacyJumpListBuilder::DoCommitListBuild(
     Unused << NS_DispatchToMainThread(aCallback);
   });
 
-  RefPtr jumpListMgr = mJumpListMgr.Resolve<ICustomDestinationList>();
+  RefPtr<ICustomDestinationList> jumpListMgr = mJumpListMgr.Resolve();
   if (!jumpListMgr) {
     return;
   }
@@ -531,7 +526,7 @@ NS_IMETHODIMP LegacyJumpListBuilder::DeleteActiveList(bool* _retval) {
     AbortListBuild();
   }
 
-  RefPtr jumpListMgr = mJumpListMgr.Resolve<ICustomDestinationList>();
+  RefPtr<ICustomDestinationList> jumpListMgr = mJumpListMgr.Resolve();
   if (!jumpListMgr) {
     return NS_ERROR_UNEXPECTED;
   }
