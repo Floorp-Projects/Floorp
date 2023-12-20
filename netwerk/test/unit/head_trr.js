@@ -241,6 +241,44 @@ class TRRDNSListener {
   }
 }
 
+// This is for reteriiving the raw bytes from a DNS answer.
+function answerHandler(req, resp) {
+  let searchParams = new URL(req.url, "http://example.com").searchParams;
+  console.log("req.searchParams:" + searchParams);
+  if (!searchParams.get("host")) {
+    resp.writeHead(400);
+    resp.end("Missing search parameter");
+    return;
+  }
+
+  function processRequest(req1, resp1) {
+    let domain = searchParams.get("host");
+    let type = searchParams.get("type");
+    let response = global.dns_query_answers[`${domain}/${type}`] || {};
+    let buf = global.dnsPacket.encode({
+      type: "response",
+      id: 0,
+      flags: 0,
+      questions: [],
+      answers: response.answers || [],
+      additionals: response.additionals || [],
+    });
+    let writeResponse = (resp2, buf2, context) => {
+      try {
+        let data = buf2.toString("hex");
+        resp2.setHeader("Content-Length", data.length);
+        resp2.writeHead(200, { "Content-Type": "plain/text" });
+        resp2.write(data);
+        resp2.end("");
+      } catch (e) {}
+    };
+
+    writeResponse(resp1, buf, response);
+  }
+
+  processRequest(req, resp);
+}
+
 /// This is the default handler for /dns-query
 /// It implements basic functionality for parsing the DoH packet, then
 /// queries global.dns_query_answers for available answers for the DNS query.
@@ -364,6 +402,7 @@ class TRRServer extends NodeHTTP2Server {
       global.http2 = require("http2");
     })()`);
     await this.registerPathHandler("/dns-query", trrQueryHandler);
+    await this.registerPathHandler("/dnsAnswer", answerHandler);
     await this.execute(getRequestCount);
   }
 

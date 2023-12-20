@@ -20,6 +20,14 @@ mozilla::ipc::IPCResult NativeDNSResolverOverrideChild::RecvAddIPOverride(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult
+NativeDNSResolverOverrideChild::RecvAddHTTPSRecordOverride(
+    const nsCString& aHost, nsTArray<uint8_t>&& aData) {
+  Unused << mOverrideService->AddHTTPSRecordOverride(aHost, aData.Elements(),
+                                                     aData.Length());
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult NativeDNSResolverOverrideChild::RecvSetCnameOverride(
     const nsCString& aHost, const nsCString& aCNAME) {
   Unused << mOverrideService->SetCnameOverride(aHost, aCNAME);

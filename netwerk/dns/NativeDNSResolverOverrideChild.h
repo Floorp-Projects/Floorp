@@ -21,6 +21,8 @@ class NativeDNSResolverOverrideChild : public PNativeDNSResolverOverrideChild {
 
   mozilla::ipc::IPCResult RecvAddIPOverride(const nsCString& aHost,
                                             const nsCString& aIPLiteral);
+  mozilla::ipc::IPCResult RecvAddHTTPSRecordOverride(const nsCString& aHost,
+                                                     nsTArray<uint8_t>&& aData);
   mozilla::ipc::IPCResult RecvSetCnameOverride(const nsCString& aHost,
                                                const nsCString& aCNAME);
   mozilla::ipc::IPCResult RecvClearHostOverride(const nsCString& aHost);

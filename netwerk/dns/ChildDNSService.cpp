@@ -105,7 +105,8 @@ nsresult ChildDNSService::AsyncResolveInternal(
     resolveDNSInSocketProcess = true;
     if (type != nsIDNSService::RESOLVE_TYPE_DEFAULT &&
         (mTRRServiceParent->Mode() != nsIDNSService::MODE_TRRFIRST &&
-         mTRRServiceParent->Mode() != nsIDNSService::MODE_TRRONLY)) {
+         mTRRServiceParent->Mode() != nsIDNSService::MODE_TRRONLY) &&
+        !StaticPrefs::network_dns_native_https_query()) {
       return NS_ERROR_UNKNOWN_HOST;
     }
   }
