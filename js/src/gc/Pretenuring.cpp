@@ -118,12 +118,17 @@ size_t PretenuringNursery::doPretenuring(GCRuntime* gc, JS::GCReason reason,
     AllocSite* next = site->nextNurseryAllocated;
     site->nextNurseryAllocated = nullptr;
 
-    MOZ_ASSERT_IF(site->isNormal(),
-                  site->nurseryAllocCount >= site->nurseryTenuredCount);
-
     if (site->isNormal()) {
-      processSite(gc, site, sitesActive, sitesPretenured, sitesInvalidated,
-                  reportInfo, reportThreshold);
+      sitesActive++;
+      updateTotalAllocCounts(site);
+      auto result = site->processSite(gc, reportInfo, reportThreshold);
+      if (result == AllocSite::WasPretenured ||
+          result == AllocSite::WasPretenuredAndInvalidated) {
+        sitesPretenured++;
+      }
+      if (result == AllocSite::WasPretenuredAndInvalidated) {
+        sitesInvalidated++;
+      }
     }
 
     site = next;
@@ -133,10 +138,12 @@ size_t PretenuringNursery::doPretenuring(GCRuntime* gc, JS::GCReason reason,
   // optimized JIT code, so process them here.
   for (ZonesIter zone(gc, SkipAtoms); !zone.done(); zone.next()) {
     for (auto& site : zone->pretenuring.unknownAllocSites) {
-      processCatchAllSite(&site, reportInfo, reportThreshold);
+      updateTotalAllocCounts(&site);
+      site.processCatchAllSite(reportInfo, reportThreshold);
     }
-    processCatchAllSite(zone->optimizedAllocSite(), reportInfo,
-                        reportThreshold);
+    updateTotalAllocCounts(zone->optimizedAllocSite());
+    zone->optimizedAllocSite()->processCatchAllSite(reportInfo,
+                                                    reportThreshold);
   }
 
   if (reportInfo) {
@@ -153,65 +160,64 @@ size_t PretenuringNursery::doPretenuring(GCRuntime* gc, JS::GCReason reason,
   return sitesPretenured;
 }
 
-void PretenuringNursery::processSite(GCRuntime* gc, AllocSite* site,
-                                     size_t& sitesActive,
-                                     size_t& sitesPretenured,
-                                     size_t& sitesInvalidated, bool reportInfo,
-                                     size_t reportThreshold) {
-  sitesActive++;
+AllocSite::SiteResult AllocSite::processSite(GCRuntime* gc, bool reportInfo,
+                                             size_t reportThreshold) {
+  MOZ_ASSERT(isNormal());
+  MOZ_ASSERT(nurseryAllocCount >= nurseryTenuredCount);
 
-  updateAllocCounts(site);
+  SiteResult result = NoChange;
 
   bool hasPromotionRate = false;
   double promotionRate = 0.0;
   bool wasInvalidated = false;
-  if (site->nurseryAllocCount > AllocSiteAttentionThreshold) {
-    promotionRate =
-        double(site->nurseryTenuredCount) / double(site->nurseryAllocCount);
+
+  if (nurseryAllocCount > AllocSiteAttentionThreshold) {
+    promotionRate = double(nurseryTenuredCount) / double(nurseryAllocCount);
     hasPromotionRate = true;
 
-    AllocSite::State prevState = site->state();
-    site->updateStateOnMinorGC(promotionRate);
-    AllocSite::State newState = site->state();
+    AllocSite::State prevState = state();
+    updateStateOnMinorGC(promotionRate);
+    AllocSite::State newState = state();
 
     if (prevState == AllocSite::State::Unknown &&
         newState == AllocSite::State::LongLived) {
-      sitesPretenured++;
+      result = WasPretenured;
 
       // We can optimize JIT code before we realise that a site should be
       // pretenured. Make sure we invalidate any existing optimized code.
-      if (site->hasScript()) {
-        wasInvalidated = site->invalidateScript(gc);
+      if (hasScript()) {
+        wasInvalidated = invalidateScript(gc);
         if (wasInvalidated) {
-          sitesInvalidated++;
+          result = WasPretenuredAndInvalidated;
         }
       }
     }
   }
 
-  if (reportInfo && site->allocCount() >= reportThreshold) {
-    site->printInfo(hasPromotionRate, promotionRate, wasInvalidated);
+  if (reportInfo && allocCount() >= reportThreshold) {
+    printInfo(hasPromotionRate, promotionRate, wasInvalidated);
   }
 
-  site->resetNurseryAllocations();
+  resetNurseryAllocations();
+
+  return result;
 }
 
-void PretenuringNursery::processCatchAllSite(AllocSite* site, bool reportInfo,
-                                             size_t reportThreshold) {
-  if (!site->hasNurseryAllocations()) {
+void AllocSite::processCatchAllSite(bool reportInfo, size_t reportThreshold) {
+  MOZ_ASSERT(!isNormal());
+
+  if (!hasNurseryAllocations()) {
     return;
   }
 
-  updateAllocCounts(site);
-
-  if (reportInfo && site->allocCount() >= reportThreshold) {
-    site->printInfo(false, 0.0, false);
+  if (reportInfo && allocCount() >= reportThreshold) {
+    printInfo(false, 0.0, false);
   }
 
-  site->resetNurseryAllocations();
+  resetNurseryAllocations();
 }
 
-void PretenuringNursery::updateAllocCounts(AllocSite* site) {
+void PretenuringNursery::updateTotalAllocCounts(AllocSite* site) {
   JS::TraceKind kind = site->traceKind();
   totalAllocCount_ += site->nurseryAllocCount;
   PretenuringZone& zone = site->zone()->pretenuring;
