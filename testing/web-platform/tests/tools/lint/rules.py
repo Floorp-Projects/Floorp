@@ -339,6 +339,11 @@ class TentativeDirectoryName(Rule):
     to_fix = "rename directory to be called 'tentative'"
 
 
+class InvalidMetaFile(Rule):
+    name = "INVALID-META-FILE"
+    description = "The META.yml is not a YAML file with the expected structure"
+
+
 class Regexp(metaclass=abc.ABCMeta):
     @abc.abstractproperty
     def pattern(self) -> bytes:
