@@ -62,8 +62,8 @@ bool nsTransitionManager::UpdateTransitions(dom::Element* aElement,
 // transition-property, and then execute |aHandler| on the expanded longhand.
 // |aHandler| should be a lamda function which accepts nsCSSPropertyID.
 template <typename T>
-static void ExpandTransitionProperty(
-    const StyleTransitionProperty& aProperty, T aHandler) {
+static void ExpandTransitionProperty(const StyleTransitionProperty& aProperty,
+                                     T aHandler) {
   switch (aProperty.tag) {
     case StyleTransitionProperty::Tag::Unsupported:
       break;
