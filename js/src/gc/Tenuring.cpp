@@ -871,7 +871,6 @@ JS::BigInt* js::gc::TenuringTracer::moveToTenured(JS::BigInt* src) {
 
   AllocKind dstKind = src->getAllocKind();
   Zone* zone = src->nurseryZone();
-  zone->tenuredBigInts++;
 
   JS::BigInt* dst = allocTenured<JS::BigInt>(zone, dstKind);
   tenuredSize += moveBigIntToTenured(dst, src, dstKind);

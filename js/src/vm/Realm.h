@@ -404,6 +404,9 @@ class JS::Realm : public JS::shadow::Realm {
   // Counter for shouldCaptureStackForThrow.
   uint16_t numStacksCapturedForThrow_ = 0;
 
+  // Count the number of allocation sites pretenured, for testing purposes.
+  uint16_t numAllocSitesPretenured = 0;
+
 #ifdef DEBUG
   bool firedOnNewGlobalObject = false;
 #endif

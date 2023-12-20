@@ -1126,18 +1126,6 @@ inline bool js::Nursery::isUnderused() const {
   return timeSinceLastCollection > tunables().nurseryTimeoutForIdleCollection();
 }
 
-// typeReason is the gcReason for specified type, for example,
-// FULL_CELL_PTR_OBJ_BUFFER is the gcReason for JSObject.
-static inline bool IsFullStoreBufferReason(JS::GCReason reason,
-                                           JS::GCReason typeReason) {
-  return reason == typeReason ||
-         reason == JS::GCReason::FULL_WHOLE_CELL_BUFFER ||
-         reason == JS::GCReason::FULL_GENERIC_BUFFER ||
-         reason == JS::GCReason::FULL_VALUE_BUFFER ||
-         reason == JS::GCReason::FULL_SLOT_BUFFER ||
-         reason == JS::GCReason::FULL_SHAPE_BUFFER;
-}
-
 void js::Nursery::collect(JS::GCOptions options, JS::GCReason reason) {
   JSRuntime* rt = runtime();
   MOZ_ASSERT(!rt->mainContextFromOwnThread()->suppressGC);
@@ -1557,61 +1545,48 @@ size_t js::Nursery::doPretenuring(JSRuntime* rt, JS::GCReason reason,
       gc, reason, validPromotionRate, promotionRate, reportPretenuring_,
       reportPretenuringThreshold_);
 
-  bool highPromotionRate =
-      validPromotionRate && promotionRate > tunables().pretenureThreshold();
-
-  bool pretenureStr = false;
-  bool pretenureBigInt = false;
-  if (tunables().attemptPretenuring()) {
-    // Should we check for pretenuring regardless of GCReason?
-    // Use 3MB as the threshold so the pretenuring can be applied on Android.
-    bool pretenureAll =
-        highPromotionRate && previousGC.nurseryUsedBytes >= 3 * 1024 * 1024;
-
-    pretenureStr =
-        pretenureAll ||
-        IsFullStoreBufferReason(reason, JS::GCReason::FULL_CELL_PTR_STR_BUFFER);
-    pretenureBigInt =
-        pretenureAll || IsFullStoreBufferReason(
-                            reason, JS::GCReason::FULL_CELL_PTR_BIGINT_BUFFER);
-  }
+  size_t zonesWhereStringsDisabled = 0;
+  size_t zonesWhereBigIntsDisabled = 0;
 
   uint32_t numStringsTenured = 0;
   uint32_t numBigIntsTenured = 0;
   for (ZonesIter zone(gc, SkipAtoms); !zone.done(); zone.next()) {
-    // For some tests in JetStream2 and Kraken, the tenuredRate is high but the
-    // number of allocated strings is low. So we calculate the tenuredRate only
-    // if the number of string allocations is enough.
-    uint32_t zoneNurseryStrings =
-        zone->nurseryAllocCount(JS::TraceKind::String);
-    bool allocThreshold = zoneNurseryStrings > 30000;
-    uint64_t zoneTenuredStrings =
-        zone->stringStats.ref().liveNurseryStrings -
-        zone->previousGCStringStats.ref().liveNurseryStrings;
-    double tenuredRate =
-        allocThreshold ? double(zoneTenuredStrings) / double(zoneNurseryStrings)
-                       : 0.0;
     bool disableNurseryStrings =
-        pretenureStr && zone->allocNurseryStrings() &&
-        tenuredRate > tunables().pretenureStringThreshold();
-    bool disableNurseryBigInts = pretenureBigInt &&
-                                 zone->allocNurseryBigInts() &&
-                                 zone->tenuredBigInts >= 30 * 1000;
+        zone->allocNurseryStrings() &&
+        zone->unknownAllocSite(JS::TraceKind::String)->state() ==
+            AllocSite::State::LongLived;
+
+    bool disableNurseryBigInts =
+        zone->allocNurseryBigInts() &&
+        zone->unknownAllocSite(JS::TraceKind::BigInt)->state() ==
+            AllocSite::State::LongLived;
+
     if (disableNurseryStrings || disableNurseryBigInts) {
       if (disableNurseryStrings) {
         zone->nurseryStringsDisabled = true;
+        zonesWhereStringsDisabled++;
       }
       if (disableNurseryBigInts) {
         zone->nurseryBigIntsDisabled = true;
+        zonesWhereStringsDisabled++;
       }
       updateAllocFlagsForZone(zone);
     }
-    numStringsTenured += zoneTenuredStrings;
-    numBigIntsTenured += zone->tenuredBigInts;
-    zone->tenuredBigInts = 0;
   }
+
   stats().setStat(gcstats::STAT_STRINGS_TENURED, numStringsTenured);
   stats().setStat(gcstats::STAT_BIGINTS_TENURED, numBigIntsTenured);
+
+  if (reportPretenuring_ && zonesWhereStringsDisabled) {
+    fprintf(stderr,
+            "Pretenuring disabled nursery string allocation in %zu zones\n",
+            zonesWhereStringsDisabled);
+  }
+  if (reportPretenuring_ && zonesWhereBigIntsDisabled) {
+    fprintf(stderr,
+            "Pretenuring disabled nursery big int allocation in %zu zones\n",
+            zonesWhereBigIntsDisabled);
+  }
 
   return sitesPretenured;
 }

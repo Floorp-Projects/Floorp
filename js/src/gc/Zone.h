@@ -194,8 +194,6 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
   // Per-zone data for use by an embedder.
   js::MainThreadData<void*> data;
 
-  js::MainThreadData<uint32_t> tenuredBigInts;
-
   // Number of marked/finalized JSStrings/JSFatInlineStrings during major GC.
   js::MainThreadOrGCTaskData<size_t> markedStrings;
   js::MainThreadOrGCTaskData<size_t> finalizedStrings;

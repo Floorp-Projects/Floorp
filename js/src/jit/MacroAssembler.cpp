@@ -641,12 +641,11 @@ void MacroAssembler::bumpPointerAllocate(Register result, Register temp,
     storePtr(ImmWord(headerWord),
              Address(result, -js::Nursery::nurseryCellHeaderSize()));
 
-    // Update the catch all allocation site for strings or if the profiler is
-    // enabled. This is used to calculate the nursery allocation count. The
-    // string data is used to determine whether to disable nursery string
-    // allocation.
-    if (traceKind == JS::TraceKind::String ||
+    if (traceKind != JS::TraceKind::Object ||
         runtime()->geckoProfiler().enabled()) {
+      // Update the catch all allocation site, which his is used to calculate
+      // nursery allocation counts so we can determine whether to disable
+      // nursery allocation of strings and bigints.
       uint32_t* countAddress = site->nurseryAllocCountAddress();
       CheckedInt<int32_t> counterOffset =
           (CheckedInt<uintptr_t>(uintptr_t(countAddress)) -
