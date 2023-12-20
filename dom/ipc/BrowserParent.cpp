@@ -3236,13 +3236,8 @@ bool BrowserParent::SendInsertText(const nsString& aStringToInsert) {
              : PBrowserParent::SendNormalPriorityInsertText(aStringToInsert);
 }
 
-bool BrowserParent::SendPasteTransferable(
-    IPCTransferableData&& aTransferableData, const bool& aIsPrivateData,
-    nsIPrincipal* aRequestingPrincipal,
-    const nsContentPolicyType& aContentPolicyType) {
-  return PBrowserParent::SendPasteTransferable(
-      std::move(aTransferableData), aIsPrivateData, aRequestingPrincipal,
-      aContentPolicyType);
+bool BrowserParent::SendPasteTransferable(IPCTransferable&& aTransferable) {
+  return PBrowserParent::SendPasteTransferable(std::move(aTransferable));
 }
 
 /* static */

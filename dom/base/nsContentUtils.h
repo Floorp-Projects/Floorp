@@ -2898,12 +2898,6 @@ class nsContentUtils {
       bool aAddDataFlavor, nsITransferable* aTransferable,
       const bool aFilterUnknownFlavors);
 
-  static nsresult IPCTransferableDataToTransferable(
-      const mozilla::dom::IPCTransferableData& aTransferableData,
-      const bool& aIsPrivateData, nsIPrincipal* aRequestingPrincipal,
-      const nsContentPolicyType& aContentPolicyType, bool aAddDataFlavor,
-      nsITransferable* aTransferable, const bool aFilterUnknownFlavors);
-
   static nsresult IPCTransferableToTransferable(
       const mozilla::dom::IPCTransferable& aIPCTransferable,
       bool aAddDataFlavor, nsITransferable* aTransferable,

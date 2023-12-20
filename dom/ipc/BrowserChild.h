@@ -395,9 +395,7 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
 
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   mozilla::ipc::IPCResult RecvPasteTransferable(
-      const IPCTransferableData& aTransferableData, const bool& aIsPrivateData,
-      nsIPrincipal* aRequestingPrincipal,
-      const nsContentPolicyType& aContentPolicyType);
+      const IPCTransferable& aTransferable);
 
   mozilla::ipc::IPCResult RecvLoadRemoteScript(const nsAString& aURL,
                                                const bool& aRunInGlobalScope);

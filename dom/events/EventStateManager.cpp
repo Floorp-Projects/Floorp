@@ -6245,18 +6245,11 @@ nsresult EventStateManager::DoContentCommandEvent(
         case eContentCommandPasteTransferable: {
           BrowserParent* remote = BrowserParent::GetFocused();
           if (remote) {
-            nsCOMPtr<nsITransferable> transferable = aEvent->mTransferable;
-            IPCTransferableData ipcTransferableData;
-            nsContentUtils::TransferableToIPCTransferableData(
-                transferable, &ipcTransferableData, false, remote->Manager());
-            bool isPrivateData = transferable->GetIsPrivateData();
-            nsCOMPtr<nsIPrincipal> requestingPrincipal =
-                transferable->GetRequestingPrincipal();
-            nsContentPolicyType contentPolicyType =
-                transferable->GetContentPolicyType();
-            remote->SendPasteTransferable(std::move(ipcTransferableData),
-                                          isPrivateData, requestingPrincipal,
-                                          contentPolicyType);
+            IPCTransferable ipcTransferable;
+            nsContentUtils::TransferableToIPCTransferable(
+                aEvent->mTransferable, &ipcTransferable, false,
+                remote->Manager());
+            remote->SendPasteTransferable(std::move(ipcTransferable));
             rv = NS_OK;
           } else {
             nsCOMPtr<nsICommandController> commandController =

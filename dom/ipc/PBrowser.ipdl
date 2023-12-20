@@ -857,11 +857,7 @@ child:
      * Call PasteTransferable via a controller on the content process
      * to handle the command content event, "pasteTransferable".
      */
-    // XXX Do we really need data other than IPCTransferableData? See bug 1833172.
-    async PasteTransferable(IPCTransferableData aTransferableData,
-                            bool aIsPrivateData,
-                            nullable nsIPrincipal aRequestingPrincipal,
-                            nsContentPolicyType aContentPolicyType);
+    async PasteTransferable(IPCTransferable aTransferable);
 
     async LoadRemoteScript(nsString aURL, bool aRunInGlobalScope);
 
