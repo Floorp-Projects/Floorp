@@ -42,6 +42,11 @@ then
   PARAMS="${PARAMS} --suffix-list"
 fi
 
+if [ -n "${DO_MOBILE_EXPERIMENTS}" ]
+then
+  PARAMS="${PARAMS} --mobile-experiments"
+fi
+
 if [ -n "${DONTBUILD}" ]
 then
   PARAMS="${PARAMS} -d"
