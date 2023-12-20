@@ -20,6 +20,9 @@ using namespace phc;
 static const char kPHCEnabledPref[] = "memory.phc.enabled";
 static const char kPHCMinRamMBPref[] = "memory.phc.min_ram_mb";
 
+// True if PHC has ever been enabled for this process.
+static bool sWasPHCEnabled = false;
+
 static void UpdatePHCState() {
   size_t mem_size = PR_GetPhysicalMemorySize() / (1_MiB);
   size_t min_mem_size = StaticPrefs::memory_phc_min_ram_mb();
@@ -30,6 +33,7 @@ static void UpdatePHCState() {
   // reserve some.
   if (StaticPrefs::memory_phc_enabled() && mem_size >= min_mem_size) {
     SetPHCState(Enabled);
+    sWasPHCEnabled = true;
   } else {
     SetPHCState(OnlyFree);
   }
@@ -49,6 +53,10 @@ void InitPHCState() {
 }
 
 void ReportPHCTelemetry() {
+  if (!sWasPHCEnabled) {
+    return;
+  }
+
   MemoryUsage usage;
   PHCMemoryUsage(usage);
 
