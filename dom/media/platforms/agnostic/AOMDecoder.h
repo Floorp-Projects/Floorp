@@ -10,7 +10,7 @@
 
 #  include "PerformanceRecorder.h"
 #  include "PlatformDecoderModule.h"
-#  include "aom/aom_decoder.h"
+#  include <aom/aom_decoder.h>
 #  include "mozilla/Span.h"
 #  include "VideoUtils.h"
 

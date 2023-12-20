@@ -8,7 +8,7 @@
 
 #include "nsAVIFDecoder.h"
 
-#include "aom/aomdx.h"
+#include <aom/aomdx.h>
 
 #include "DAV1DDecoder.h"
 #include "gfxPlatform.h"
