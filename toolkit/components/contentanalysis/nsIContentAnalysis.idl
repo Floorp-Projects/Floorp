@@ -198,7 +198,7 @@ interface nsIContentAnalysis : nsISupports
    * @param aAutoAcknowledge
    *        Whether to send an acknowledge message to the agent after the agent sends a response.
    *        Passing false means that the caller is responsible for
-   *        calling nsIContentAnalysisResponse::acknowledge(), unless the request is cancelled.
+   *        calling nsIContentAnalysisResponse::acknowledge() if the Promise is resolved.
    */
   [implicit_jscontext]
   Promise analyzeContentRequest(in nsIContentAnalysisRequest aCar, in bool aAutoAcknowledge);
@@ -212,7 +212,8 @@ interface nsIContentAnalysis : nsISupports
    * @param aAutoAcknowledge
    *        Whether to send an acknowledge message to the agent after the agent sends a response.
    *        Passing false means that the caller is responsible for
-   *        calling nsIContentAnalysisResponse::acknowledge(), unless the request is cancelled.
+   *        calling nsIContentAnalysisResponse::acknowledge() if nsIContentAnalysisCallback::contentResult()
+   *        is called.
    * @param callback
    *        Callbacks to be called when the agent sends a response message (or when there is an error).
    */
