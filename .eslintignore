@@ -188,6 +188,8 @@ mobile/android/locales/
 modules/libpref/greprefs.js
 modules/libpref/init/all.js
 modules/libpref/test/unit/*data/
+toolkit/components/backgroundtasks/defaults/backgroundtasks.js
+toolkit/components/backgroundtasks/defaults/backgroundtasks_browser.js
 
 # Only contains non-standard test files.
 python/
