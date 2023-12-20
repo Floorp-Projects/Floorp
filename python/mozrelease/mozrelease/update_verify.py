@@ -6,8 +6,6 @@
 import os
 import re
 
-from six import string_types
-
 from .chunking import getChunk
 
 
@@ -187,9 +185,9 @@ class UpdateVerifyConfig(object):
                 "Couldn't add release identified by build_id '%s' and from_path '%s': "
                 "already exists in config" % (build_id, from_path)
             )
-        if isinstance(locales, string_types):
+        if isinstance(locales, str):
             locales = sorted(list(locales.split()))
-        if isinstance(patch_types, string_types):
+        if isinstance(patch_types, str):
             patch_types = list(patch_types.split())
         self.releases.append(
             {
