@@ -28,10 +28,6 @@ add_task(async function test_deprecated_LWT_properties_ignored() {
 
   let docEl = window.document.documentElement;
   let docStyle = window.getComputedStyle(docEl);
-  let navigatorStyle = window.getComputedStyle(
-    docEl.querySelector("#navigator-toolbox")
-  );
-
   Assert.ok(docEl.hasAttribute("lwtheme"), "LWT attribute should be set");
   Assert.ok(
     !docEl.hasAttribute("lwtheme-image"),
@@ -43,7 +39,7 @@ add_task(async function test_deprecated_LWT_properties_ignored() {
   );
 
   Assert.equal(
-    navigatorStyle.backgroundColor,
+    getToolboxBackgroundColor(),
     DEFAULT_THEME_BG_COLOR,
     "Expected default theme background color"
   );
