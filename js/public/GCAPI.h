@@ -316,15 +316,6 @@ typedef enum JSGCParamKey {
   JSGC_NURSERY_FREE_THRESHOLD_FOR_IDLE_COLLECTION = 27,
 
   /**
-   * If this percentage of the nursery is tenured and the nursery is at least
-   * 4MB, then proceed to examine which groups we should pretenure.
-   *
-   * Default: PretenureThreshold
-   * Pref: None
-   */
-  JSGC_PRETENURE_THRESHOLD = 28,
-
-  /**
    * Attempt to run a minor GC in the idle time if the free space falls
    * below this percentage (from 0 to 99).
    *
@@ -410,19 +401,6 @@ typedef enum JSGCParamKey {
    * JSGC_HELPER_THREAD_RATIO and JSGC_MAX_HELPER_THREADS parameters.
    */
   JSGC_HELPER_THREAD_COUNT = 41,
-
-  /**
-   * If the percentage of the tenured strings exceeds this threshold, string
-   * will be allocated in tenured heap instead. (Default is allocated in
-   * nursery.)
-   */
-  JSGC_PRETENURE_STRING_THRESHOLD = 42,
-
-  /**
-   * If the finalization rate of the tenured strings exceeds this threshold,
-   * string will be allocated in nursery.
-   */
-  JSGC_STOP_PRETENURE_STRING_THRESHOLD = 43,
 
   /**
    * A number that is incremented on every major GC slice.
