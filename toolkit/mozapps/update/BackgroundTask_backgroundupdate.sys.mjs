@@ -17,6 +17,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   AppUpdater: "resource://gre/modules/AppUpdater.sys.mjs",
   BackgroundTasksUtils: "resource://gre/modules/BackgroundTasksUtils.sys.mjs",
   ExtensionUtils: "resource://gre/modules/ExtensionUtils.sys.mjs",
+  NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
   UpdateUtils: "resource://gre/modules/UpdateUtils.sys.mjs",
 });
 
@@ -436,6 +437,9 @@ export async function runBackgroundTask(commandLine) {
   );
   // If a restart loop is occurring then automaticRestartFound will be true.
   if (
+    lazy.NimbusFeatures.backgroundUpdateAutomaticRestart.getVariable(
+      "enabled"
+    ) &&
     updateStatus === lazy.AppUpdater.STATUS.READY_FOR_RESTART &&
     !automaticRestartFound
   ) {
