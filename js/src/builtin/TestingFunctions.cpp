@@ -2418,6 +2418,13 @@ static bool GCZeal(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
+  if (args.length() == 0) {
+    uint32_t zealBits, unused1, unused2;
+    cx->runtime()->gc.getZealBits(&zealBits, &unused1, &unused2);
+    args.rval().setNumber(zealBits);
+    return true;
+  }
+
   uint8_t zeal;
   if (!ParseGCZealMode(cx, args, &zeal)) {
     return false;
@@ -7749,6 +7756,12 @@ static bool IsNurseryAllocated(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+static bool NumAllocSitesPretenured(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  args.rval().setInt32(cx->realm()->numAllocSitesPretenured);
+  return true;
+}
+
 static bool GetLcovInfo(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -9258,7 +9271,7 @@ JS_FN_HELP("rejectPromise", RejectPromise, 2, 0,
 
 #ifdef JS_GC_ZEAL
     JS_FN_HELP("gczeal", GCZeal, 2, 0,
-"gczeal(mode, [frequency])",
+"gczeal([mode, [frequency]])",
 gc::ZealModeHelpText),
 
     JS_FN_HELP("unsetgczeal", UnsetGCZeal, 2, 0,
@@ -9872,12 +9885,17 @@ JS_FOR_WASM_FEATURES(WASM_FEATURE)
 
     JS_FN_HELP("nurseryStringsEnabled", NurseryStringsEnabled, 0, 0,
 "nurseryStringsEnabled()",
-"  Return whether strings are currently allocated in the nursery for current\n"
+"  Return whether strings are currently allocated in the nursery for the current\n"
 "  global\n"),
 
     JS_FN_HELP("isNurseryAllocated", IsNurseryAllocated, 1, 0,
 "isNurseryAllocated(thing)",
 "  Return whether a GC thing is nursery allocated.\n"),
+
+    JS_FN_HELP("numAllocSitesPretenured", NumAllocSitesPretenured, 0, 0,
+"numAllocSitesPretenured()",
+"  Return the number of allocation sites that were pretenured for the current\n"
+"  global\n"),
 
     JS_FN_HELP("getLcovInfo", GetLcovInfo, 1, 0,
 "getLcovInfo(global)",

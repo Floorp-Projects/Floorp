@@ -387,6 +387,44 @@ SplayTree.Node.prototype.traverse_ = function(f) {
   }
 };
 
+// Check initial pretenuring state.
+gc();
+assertEq(nurseryStringsEnabled(), true);
+assertEq(numAllocSitesPretenured(), 0);
+
 SplaySetup();
 SplayRun();
 SplayTearDown();
+
+// Check our pretenuring system operates as expected if we are running in a
+// normal-ish build.
+//
+// Different build configurations can affect things in a few ways:
+//  - We need scripts to spend time in baseline for pretenuring to collect
+//    data on them.
+//  - Fuzzing builds change the nursery sizing heuristics.
+//  - Various sanitizer builds affect execution speed which affects nursery
+//    size.
+
+function canCheckPretenuringState() {
+  if (gczeal() !== 0) {
+    return false;
+  }
+
+  let jitOptions = getJitCompilerOptions();
+  if (!jitOptions['baseline.enable'] ||
+      jitOptions['ion.warmup.trigger'] <= jitOptions['baseline.warmup.trigger']) {
+    return false;
+  }
+
+  let buildConfig = getBuildConfiguration();
+  return !buildConfig['fuzzing-defined'] &&
+         !buildConfig['asan'] &&
+         !buildConfig['tsan'] &&
+         !buildConfig['ubsan'];
+}
+
+if (canCheckPretenuringState()) {
+  assertEq(nurseryStringsEnabled(), false);
+  assertEq(numAllocSitesPretenured() >= 3, true);
+}
