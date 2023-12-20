@@ -2106,18 +2106,15 @@ mozilla::ipc::IPCResult BrowserChild::RecvNormalPriorityInsertText(
 }
 
 mozilla::ipc::IPCResult BrowserChild::RecvPasteTransferable(
-    const IPCTransferableData& aTransferableData, const bool& aIsPrivateData,
-    nsIPrincipal* aRequestingPrincipal,
-    const nsContentPolicyType& aContentPolicyType) {
+    const IPCTransferable& aTransferable) {
   nsresult rv;
   nsCOMPtr<nsITransferable> trans =
       do_CreateInstance("@mozilla.org/widget/transferable;1", &rv);
   NS_ENSURE_SUCCESS(rv, IPC_OK());
   trans->Init(nullptr);
 
-  rv = nsContentUtils::IPCTransferableDataToTransferable(
-      aTransferableData, aIsPrivateData, aRequestingPrincipal,
-      aContentPolicyType, true /* aAddDataFlavor */, trans,
+  rv = nsContentUtils::IPCTransferableToTransferable(
+      aTransferable, true /* aAddDataFlavor */, trans,
       false /* aFilterUnknownFlavors */);
   NS_ENSURE_SUCCESS(rv, IPC_OK());
 

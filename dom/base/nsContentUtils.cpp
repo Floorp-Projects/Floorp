@@ -8150,32 +8150,16 @@ nsresult nsContentUtils::IPCTransferableDataToTransferable(
   return NS_OK;
 }
 
-nsresult nsContentUtils::IPCTransferableDataToTransferable(
-    const IPCTransferableData& aTransferableData, const bool& aIsPrivateData,
-    nsIPrincipal* aRequestingPrincipal,
-    const nsContentPolicyType& aContentPolicyType, bool aAddDataFlavor,
-    nsITransferable* aTransferable, const bool aFilterUnknownFlavors) {
-  // Note that we need to set privacy status of transferable before adding any
-  // data into it.
-  aTransferable->SetIsPrivateData(aIsPrivateData);
-
-  nsresult rv = IPCTransferableDataToTransferable(
-      aTransferableData, aAddDataFlavor, aTransferable, aFilterUnknownFlavors);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  aTransferable->SetRequestingPrincipal(aRequestingPrincipal);
-  aTransferable->SetContentPolicyType(aContentPolicyType);
-  return NS_OK;
-}
-
 nsresult nsContentUtils::IPCTransferableToTransferable(
     const IPCTransferable& aIPCTransferable, bool aAddDataFlavor,
     nsITransferable* aTransferable, const bool aFilterUnknownFlavors) {
-  nsresult rv = IPCTransferableDataToTransferable(
-      aIPCTransferable.data(), aIPCTransferable.isPrivateData(),
-      aIPCTransferable.requestingPrincipal(),
-      aIPCTransferable.contentPolicyType(), aAddDataFlavor, aTransferable,
-      aFilterUnknownFlavors);
+  // Note that we need to set privacy status of transferable before adding any
+  // data into it.
+  aTransferable->SetIsPrivateData(aIPCTransferable.isPrivateData());
+
+  nsresult rv =
+      IPCTransferableDataToTransferable(aIPCTransferable.data(), aAddDataFlavor,
+                                        aTransferable, aFilterUnknownFlavors);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (aIPCTransferable.cookieJarSettings().isSome()) {
@@ -8186,6 +8170,9 @@ nsresult nsContentUtils::IPCTransferableToTransferable(
     aTransferable->SetCookieJarSettings(cookieJarSettings);
   }
   aTransferable->SetReferrerInfo(aIPCTransferable.referrerInfo());
+  aTransferable->SetRequestingPrincipal(aIPCTransferable.requestingPrincipal());
+  aTransferable->SetContentPolicyType(aIPCTransferable.contentPolicyType());
+
   return NS_OK;
 }
 

@@ -607,10 +607,7 @@ class BrowserParent final : public PBrowserParent,
 
   bool SendInsertText(const nsString& aStringToInsert);
 
-  bool SendPasteTransferable(IPCTransferableData&& aTransferableData,
-                             const bool& aIsPrivateData,
-                             nsIPrincipal* aRequestingPrincipal,
-                             const nsContentPolicyType& aContentPolicyType);
+  bool SendPasteTransferable(IPCTransferable&& aTransferable);
 
   // Helper for transforming a point
   LayoutDeviceIntPoint TransformPoint(
