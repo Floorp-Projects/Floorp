@@ -73,29 +73,6 @@ long CreateStream(const uint8_t* aBuf, const uint32_t aBufLen,
 constexpr size_t kGuidRegFormatCharLenInclNul = 39;
 
 #if defined(MOZILLA_INTERNAL_API)
-/**
- * Checks the registry to see if |aClsid| is a thread-aware in-process server.
- *
- * In DCOM, an in-process server is a server that is implemented inside a DLL
- * that is loaded into the client's process for execution. If |aClsid| declares
- * itself to be a local server (that is, a server that resides in another
- * process), this function returns false.
- *
- * For the server to be thread-aware, its registry entry must declare a
- * ThreadingModel that is one of "Free", "Both", or "Neutral". If the threading
- * model is "Apartment" or some other, invalid value, the class is treated as
- * being single-threaded.
- *
- * NB: This function cannot check CLSIDs that were registered via manifests,
- * as unfortunately there is not a documented API available to query for those.
- * This should not be an issue for most CLSIDs that Gecko is interested in, as
- * we typically instantiate system CLSIDs which are available in the registry.
- *
- * @param aClsid The CLSID of the COM class to be checked.
- * @return true if the class meets the above criteria, otherwise false.
- */
-bool IsClassThreadAwareInprocServer(REFCLSID aClsid);
-
 void GUIDToString(REFGUID aGuid, nsAString& aOutString);
 
 /**
