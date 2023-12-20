@@ -317,7 +317,7 @@ class ProviderHeuristicFallback extends UrlbarProvider {
       UrlbarUtils.RESULT_SOURCE.SEARCH,
       ...lazy.UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
         engine: [engine.name, UrlbarUtils.HIGHLIGHT.TYPED],
-        icon: engine.iconURI?.spec,
+        icon: engine.getIconURL(),
         query: [query, UrlbarUtils.HIGHLIGHT.NONE],
         keyword: keyword ? [keyword, UrlbarUtils.HIGHLIGHT.NONE] : undefined,
       })

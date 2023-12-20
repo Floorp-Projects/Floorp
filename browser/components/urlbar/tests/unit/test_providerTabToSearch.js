@@ -87,7 +87,7 @@ add_task(async function noAutofill() {
     matches: [
       makeSearchResult(context, {
         engineName: Services.search.defaultEngine.name,
-        engineIconUri: Services.search.defaultEngine.iconURI?.spec,
+        engineIconUri: Services.search.defaultEngine.getIconURL(),
         heuristic: true,
         providerName: "HeuristicFallback",
       }),
@@ -423,7 +423,7 @@ add_task(async function test_publicSuffix() {
     matches: [
       makeSearchResult(context, {
         engineName: Services.search.defaultEngine.name,
-        engineIconUri: Services.search.defaultEngine.iconURI?.spec,
+        engineIconUri: Services.search.defaultEngine.getIconURL(),
         heuristic: true,
         providerName: "HeuristicFallback",
       }),

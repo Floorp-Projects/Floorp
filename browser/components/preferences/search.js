@@ -333,8 +333,8 @@ var gSearchPane = {
         "class",
         "menuitem-iconic searchengine-menuitem menuitem-with-favicon"
       );
-      if (e.iconURI) {
-        item.setAttribute("image", e.iconURI.spec);
+      if (e.iconURL) {
+        item.setAttribute("image", e.iconURL);
       }
       item.engine = e;
       if (e.name == currentEngine) {
@@ -715,8 +715,10 @@ EngineStore.prototype = {
   },
 
   _cloneEngine(aEngine) {
-    var clonedObj = {};
-    for (let i of ["id", "name", "alias", "iconURI", "hidden"]) {
+    var clonedObj = {
+      iconURL: aEngine.getIconURL(),
+    };
+    for (let i of ["id", "name", "alias", "hidden"]) {
       clonedObj[i] = aEngine[i];
     }
     clonedObj.originalEngine = aEngine;
@@ -974,8 +976,8 @@ EngineView.prototype = {
         return shortcut.icon;
       }
 
-      if (this._engineStore.engines[index].iconURI) {
-        return this._engineStore.engines[index].iconURI.spec;
+      if (this._engineStore.engines[index].iconURL) {
+        return this._engineStore.engines[index].iconURL;
       }
 
       if (window.devicePixelRatio > 1) {

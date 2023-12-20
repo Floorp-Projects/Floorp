@@ -94,7 +94,7 @@ add_task(async function localOneOff() {
   );
   Assert.equal(
     result.image,
-    oneOffButtons.selectedButton.engine.iconURI.spec,
+    oneOffButtons.selectedButton.engine.getIconURL(),
     "Check the heuristic icon"
   );
 

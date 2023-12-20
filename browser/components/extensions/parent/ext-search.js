@@ -40,22 +40,17 @@ this.search = class extends ExtensionAPI {
           let defaultEngine = await Services.search.getDefault();
           return Promise.all(
             visibleEngines.map(async engine => {
-              let favIconUrl;
-              if (engine.iconURI) {
-                // Convert moz-extension:-URLs to data:-URLs to make sure that
-                // extensions can see icons from other extensions, even if they
-                // are not web-accessible.
-                // Also prevents leakage of extension UUIDs to other extensions..
-                if (
-                  engine.iconURI.schemeIs("moz-extension") &&
-                  engine.iconURI.host !== context.extension.uuid
-                ) {
-                  favIconUrl = await ExtensionUtils.makeDataURI(
-                    engine.iconURI.spec
-                  );
-                } else {
-                  favIconUrl = engine.iconURI.spec;
-                }
+              let favIconUrl = engine.getIconURL();
+              // Convert moz-extension:-URLs to data:-URLs to make sure that
+              // extensions can see icons from other extensions, even if they
+              // are not web-accessible.
+              // Also prevents leakage of extension UUIDs to other extensions..
+              if (
+                favIconUrl &&
+                favIconUrl.startsWith("moz-extension:") &&
+                !favIconUrl.startsWith(context.extension.baseURL)
+              ) {
+                favIconUrl = await ExtensionUtils.makeDataURI(favIconUrl);
               }
 
               return {

@@ -197,7 +197,7 @@ class ProviderSearchTips extends UrlbarProvider {
       {
         type: tip,
         buttons: [{ l10n: { id: "urlbar-search-tips-confirm" } }],
-        icon: defaultEngine.iconURI?.spec,
+        icon: defaultEngine.getIconURL(),
       }
     );
 

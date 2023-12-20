@@ -71,10 +71,10 @@ async function testSearchBarChangeEngine(win, testPrivate, isPrivateWindow) {
 
   if (testPrivate == isPrivateWindow) {
     let expectedName = originalEngine.name;
-    let expectedImage = originalEngine.iconURI.spec;
+    let expectedImage = originalEngine.getIconURL();
     if (isPrivateWindow) {
       expectedName = originalPrivateEngine.name;
-      expectedImage = originalPrivateEngine.iconURI.spec;
+      expectedImage = originalPrivateEngine.getIconURL();
     }
 
     Assert.equal(

@@ -31,7 +31,9 @@ function promiseEngineIconLoaded(engineName) {
     (engine, verb) => {
       engine.QueryInterface(Ci.nsISearchEngine);
       return (
-        verb == "engine-changed" && engine.name == engineName && engine.iconURI
+        verb == "engine-changed" &&
+        engine.name == engineName &&
+        engine.getIconURL()
       );
     }
   );

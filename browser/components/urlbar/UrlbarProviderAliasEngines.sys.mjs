@@ -84,7 +84,7 @@ class ProviderAliasEngines extends UrlbarProvider {
         engine: engine.name,
         keyword: alias,
         query: query.trimStart(),
-        icon: engine.iconURI?.spec,
+        icon: engine.getIconURL(),
       })
     );
     result.heuristic = true;

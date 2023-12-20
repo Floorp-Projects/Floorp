@@ -3231,7 +3231,7 @@ export class UrlbarView {
       }
 
       // Update result favicons.
-      let iconOverride = localSearchMode?.icon || engine?.iconURI?.spec;
+      let iconOverride = localSearchMode?.icon || engine?.getIconURL();
       if (!iconOverride && (localSearchMode || engine)) {
         // For one-offs without an icon, do not allow restyled URL results to
         // use their own icons.

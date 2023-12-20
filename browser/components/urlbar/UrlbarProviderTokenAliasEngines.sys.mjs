@@ -139,7 +139,7 @@ class ProviderTokenAliasEngines extends UrlbarProvider {
             engine: [engine.name, UrlbarUtils.HIGHLIGHT.TYPED],
             keyword: [tokenAliases[0], UrlbarUtils.HIGHLIGHT.TYPED],
             query: ["", UrlbarUtils.HIGHLIGHT.TYPED],
-            icon: engine.iconURI?.spec,
+            icon: engine.getIconURL(),
             providesSearchMode: true,
           })
         );
@@ -206,7 +206,7 @@ class ProviderTokenAliasEngines extends UrlbarProvider {
                 engine: [engine.name, UrlbarUtils.HIGHLIGHT.TYPED],
                 keyword: [aliasPreservingUserCase, UrlbarUtils.HIGHLIGHT.TYPED],
                 query: ["", UrlbarUtils.HIGHLIGHT.TYPED],
-                icon: engine.iconURI?.spec,
+                icon: engine.getIconURL(),
                 providesSearchMode: true,
               }
             )
