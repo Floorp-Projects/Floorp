@@ -1016,9 +1016,6 @@ void DocAccessible::ContentRemoved(nsIContent* aChildNode,
     logging::MsgEnd();
   }
 #endif
-  // This one and content removal notification from layout may result in
-  // double processing of same subtrees. If it pops up in profiling, then
-  // consider reusing a document node cache to reject these notifications early.
   ContentRemoved(aChildNode);
 }
 
@@ -2176,6 +2173,10 @@ void DocAccessible::ContentRemoved(LocalAccessible* aChild) {
 }
 
 void DocAccessible::ContentRemoved(nsIContent* aContentNode) {
+  if (!mRemovedNodes.EnsureInserted(aContentNode)) {
+    return;
+  }
+
   // If child node is not accessible then look for its accessible children.
   LocalAccessible* acc = GetAccessible(aContentNode);
   if (acc) {
