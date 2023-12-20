@@ -47,7 +47,7 @@ async def test_params_locator_type_invalid_value(bidi_session, inline, top_conte
 @pytest.mark.parametrize("type,value", [
     ("css", "a*b"),
     ("xpath", ""),
-    ("xpath", "invalid-xpath")
+    ("xpath", "invalid-xpath"),
     ("innerText", "")
 ])
 async def test_params_locator_value_invalid_value(bidi_session, inline, top_context, type, value):
@@ -148,6 +148,6 @@ async def test_params_start_nodes_empty_list(bidi_session, inline, top_context):
     with pytest.raises(error.InvalidArgumentException):
         await bidi_session.browsing_context.locate_nodes(
             context=top_context["context"],
-            locator={ "type": "invalid", "value": "div" },
+            locator={ "type": "css", "value": "div" },
             start_nodes=[]
         )
