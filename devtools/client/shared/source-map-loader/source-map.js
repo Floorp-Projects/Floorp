@@ -255,16 +255,50 @@ async function getOriginalLocations(breakpointPositions, sourceId) {
   return breakpointPositions;
 }
 
-function getOriginalLocationSync(map, location) {
+/**
+ * Query the source map for a mapping from bundle location to original location.
+ *
+ * @param {SourceMapConsumer} map
+ *        The source map for the bundle source.
+ * @param {Object} location
+ *        A location within a bundle to map to an original location.
+ * @param {Object} options
+ * @param {Boolean} options.looseSearch
+ *        Optional, if true, will do a loose search on first column and next lines
+ *        until a mapping is found.
+ * @return {location}
+ *        The mapped location in the original source.
+ */
+function getOriginalLocationSync(map, location, { looseSearch = false } = {}) {
   // First check for an exact match
-  const {
-    source: sourceUrl,
-    line,
-    column,
-  } = map.originalPositionFor({
+  let match = map.originalPositionFor({
     line: location.line,
     column: location.column == null ? 0 : location.column,
   });
+
+  // Then check for a loose match by sliding to first column and next lines
+  if (match.sourceUrl == null && looseSearch) {
+    let line = location.line;
+    // if a non-0 column was passed, we want to do the search from the beginning of the line,
+    // otherwise, we can start looking into next lines
+    let firstLineChecked = (location.column || 0) !== 0;
+
+    // Avoid looping through the whole file and limit the sliding search to the next 10 lines.
+    while (match.sourceUrl === null && line < location.line + 10) {
+      if (firstLineChecked) {
+        line++;
+      } else {
+        firstLineChecked = true;
+      }
+      match = map.originalPositionFor({
+        line,
+        column: 0,
+        bias: SourceMapConsumer.LEAST_UPPER_BOUND,
+      });
+    }
+  }
+
+  const { source: sourceUrl, line, column } = match;
 
   if (sourceUrl == null) {
     // No url means the location didn't map.
@@ -279,7 +313,17 @@ function getOriginalLocationSync(map, location) {
   };
 }
 
-async function getOriginalLocation(location) {
+/**
+ * Map a bundle location to an original one.
+ *
+ * @param {Object} location
+ *        Bundle location
+ * @param {Object} options
+ *        See getORiginalLocationSync.
+ * @return {Object}
+ *        Original location
+ */
+async function getOriginalLocation(location, options) {
   if (!isGeneratedId(location.sourceId)) {
     return null;
   }
@@ -289,7 +333,7 @@ async function getOriginalLocation(location) {
     return null;
   }
 
-  return getOriginalLocationSync(map, location);
+  return getOriginalLocationSync(map, location, options);
 }
 
 async function getOriginalSourceText(originalSourceId) {

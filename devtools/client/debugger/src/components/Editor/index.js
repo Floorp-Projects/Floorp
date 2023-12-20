@@ -445,21 +445,19 @@ class Editor extends PureComponent {
   onCursorChange = event => {
     const { line, ch } = event.doc.getCursor();
     this.props.selectLocation(
-      createLocation(
-        {
-          source: this.props.selectedSource,
-          // CodeMirror cursor location is all 0-based.
-          // Whereast in DevTools frontend and backend,
-          // only colunm is 0-based, the line is 1 based.
-          line: line + 1,
-          column: ch,
-        },
-        {
-          // Reset the context, so that we don't switch to original
-          // while moving the cursor within a bundle
-          keepContext: false,
-        }
-      )
+      createLocation({
+        source: this.props.selectedSource,
+        // CodeMirror cursor location is all 0-based.
+        // Whereast in DevTools frontend and backend,
+        // only colunm is 0-based, the line is 1 based.
+        line: line + 1,
+        column: ch,
+      }),
+      {
+        // Reset the context, so that we don't switch to original
+        // while moving the cursor within a bundle
+        keepContext: false,
+      }
     );
   };
 
