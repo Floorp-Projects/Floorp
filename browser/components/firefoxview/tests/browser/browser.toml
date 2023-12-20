@@ -1,7 +1,6 @@
 [DEFAULT]
 support-files = ["head.js"]
 prefs = [
-  "browser.tabs.firefox-view-next=false",
   "browser.sessionstore.closedTabsFromAllWindows=true",
   "browser.sessionstore.closedTabsFromClosedWindows=true",
   "browser.tabs.firefox-view.logLevel=All",
@@ -24,47 +23,12 @@ skip-if = ["os == 'linux'"] # Bug 1784343
 
 ["browser_firefoxview.js"]
 
-["browser_firefoxview_accessibility.js"]
-
 ["browser_firefoxview_tab.js"]
 
-["browser_keyboard_focus.js"]
-
 ["browser_notification_dot.js"]
-skip-if = ["true"] # Bug 1851453
-
-["browser_recently_closed_tabs.js"]
-fail-if = ["a11y_checks"] # Bug 1854625 clicked a.closed-tab-li-title may not be focusable
-
-["browser_recently_closed_tabs_keyboard.js"]
-
-["browser_recently_closed_tabs_windows.js"]
-fail-if = ["a11y_checks"] # Bug 1854625 clicked a.closed-tab-li-title may not be focusable
 
 ["browser_reload_firefoxview.js"]
-
-["browser_setup_errors.js"]
-
-["browser_setup_primary_password.js"]
-
-["browser_setup_state.js"]
-
-["browser_setup_synced_tabs_loading.js"]
-
-["browser_sync_admin_disabled.js"]
 
 ["browser_tab_close_last_tab.js"]
 
 ["browser_tab_on_close_warning.js"]
-
-["browser_tab_pickup_device_added_telemetry.js"]
-
-["browser_tab_pickup_list.js"]
-skip-if = [
-  "os == 'linux'",  # Bug 1824273
-  "os == 'win'",  # Bug 1824273
-]
-
-["browser_tab_pickup_visibility.js"]
-
-["browser_ui_state.js"]
