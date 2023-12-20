@@ -11898,9 +11898,8 @@ bool BytecodeEmitter::emitClass(
       }
 
 #ifdef ENABLE_DECORATORS
-      // TODO: See bug 1868220 for support for static extra initializers. We
-      // should only call this code if we know decorators are present, see bug
-      // 1868461.
+      // TODO: See bug 1868220 for support for static extra initializers.
+
       if (!ce.prepareForExtraInitializers(
               TaggedParserAtomIndex::WellKnown::
                   dot_instanceExtraInitializers_())) {
@@ -11908,20 +11907,21 @@ bool BytecodeEmitter::emitClass(
       }
 
       DecoratorEmitter de(this);
-      if (!de.emitCreateAddInitializerFunction(
-              classNode->addInitializerFunction(),
-              TaggedParserAtomIndex::WellKnown::
-                  dot_instanceExtraInitializers_())) {
-        //            [stack] HOMEOBJ HERITAGE? ADDINIT
-        return false;
-      }
+      if (classNode->addInitializerFunction()) {
+        if (!de.emitCreateAddInitializerFunction(
+                classNode->addInitializerFunction(),
+                TaggedParserAtomIndex::WellKnown::
+                    dot_instanceExtraInitializers_())) {
+          //            [stack] HOMEOBJ HERITAGE? ADDINIT
+          return false;
+        }
+        if (!emitUnpickN(isDerived ? 2 : 1)) {
+          //            [stack] ADDINIT HOMEOBJ HERITAGE?
+          return false;
+        }
 
-      if (!emitUnpickN(isDerived ? 2 : 1)) {
-        //            [stack] ADDINIT HOMEOBJ HERITAGE?
-        return false;
+        extraInitializersPresent = true;
       }
-
-      extraInitializersPresent = true;
 #endif
 
       // Any class with field initializers will have a constructor
