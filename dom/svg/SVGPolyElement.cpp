@@ -21,17 +21,11 @@ SVGPolyElement::SVGPolyElement(
     : SVGPolyElementBase(std::move(aNodeInfo)) {}
 
 already_AddRefed<DOMSVGPointList> SVGPolyElement::Points() {
-  void* key = mPoints.GetBaseValKey();
-  RefPtr<DOMSVGPointList> points =
-      DOMSVGPointList::GetDOMWrapper(key, this, false);
-  return points.forget();
+  return DOMSVGPointList::GetDOMWrapper(mPoints.GetBaseValKey(), this, false);
 }
 
 already_AddRefed<DOMSVGPointList> SVGPolyElement::AnimatedPoints() {
-  void* key = mPoints.GetAnimValKey();
-  RefPtr<DOMSVGPointList> points =
-      DOMSVGPointList::GetDOMWrapper(key, this, true);
-  return points.forget();
+  return DOMSVGPointList::GetDOMWrapper(mPoints.GetAnimValKey(), this, true);
 }
 
 //----------------------------------------------------------------------
