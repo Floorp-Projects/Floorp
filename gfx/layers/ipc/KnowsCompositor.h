@@ -9,44 +9,14 @@
 
 #include "mozilla/layers/LayersTypes.h"  // for LayersBackend
 #include "mozilla/layers/CompositorTypes.h"
-#include "nsExpirationTracker.h"
 #include "mozilla/DataMutex.h"
 #include "mozilla/layers/SyncObject.h"
 
-namespace mozilla {
-namespace layers {
+namespace mozilla::layers {
 
 class TextureForwarder;
 class LayersIPCActor;
 class ImageBridgeChild;
-
-/**
- * See ActiveResourceTracker below.
- */
-class ActiveResource {
- public:
-  virtual void NotifyInactive() = 0;
-  nsExpirationState* GetExpirationState() { return &mExpirationState; }
-  bool IsActivityTracked() { return mExpirationState.IsTracked(); }
-
- private:
-  nsExpirationState mExpirationState;
-};
-
-/**
- * A convenience class on top of nsExpirationTracker
- */
-class ActiveResourceTracker : public nsExpirationTracker<ActiveResource, 3> {
- public:
-  ActiveResourceTracker(uint32_t aExpirationCycle, const char* aName,
-                        nsIEventTarget* aEventTarget)
-      : nsExpirationTracker(aExpirationCycle, aName, aEventTarget) {}
-
-  void NotifyExpired(ActiveResource* aResource) override {
-    RemoveObject(aResource);
-    aResource->NotifyInactive();
-  }
-};
 
 /**
  * An abstract interface for classes that are tied to a specific Compositor
@@ -212,10 +182,6 @@ class KnowsCompositor {
    */
   virtual TextureForwarder* GetTextureForwarder() = 0;
   virtual LayersIPCActor* GetLayersIPCActor() = 0;
-  virtual ActiveResourceTracker* GetActiveResourceTracker() {
-    MOZ_ASSERT_UNREACHABLE("Unimplemented");
-    return nullptr;
-  }
 
  protected:
   struct SharedData {
@@ -250,8 +216,6 @@ class KnowsCompositorMediaProxy : public KnowsCompositor {
 
   LayersIPCActor* GetLayersIPCActor() override;
 
-  ActiveResourceTracker* GetActiveResourceTracker() override;
-
   void SyncWithCompositor() override;
 
  protected:
@@ -260,7 +224,6 @@ class KnowsCompositorMediaProxy : public KnowsCompositor {
   RefPtr<ImageBridgeChild> mThreadSafeAllocator;
 };
 
-}  // namespace layers
-}  // namespace mozilla
+}  // namespace mozilla::layers
 
 #endif

@@ -143,6 +143,7 @@ EXPORTS.mozilla.layers += [
     "DirectionUtils.h",
     "Effects.h",
     "ImageDataSerializer.h",
+    "ipc/ActiveResource.h",
     "ipc/APZChild.h",
     "ipc/APZCTreeManagerChild.h",
     "ipc/APZCTreeManagerParent.h",
