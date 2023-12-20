@@ -1653,37 +1653,6 @@ export class SearchEngine {
   }
 
   /**
-   * Gets an array of all available icons. Each entry is an object with
-   * width, height and url properties. width and height are numeric and
-   * represent the icon's dimensions. url is a string with the URL for
-   * the icon.
-   *
-   * @returns {Array<object>}
-   *   An array of objects with width/height/url parameters.
-   */
-  getIcons() {
-    let result = [];
-    if (this._iconURL) {
-      result.push({ width: 16, height: 16, url: this._iconURL });
-    }
-
-    if (!this._iconMapObj) {
-      return result;
-    }
-
-    for (let key of Object.keys(this._iconMapObj)) {
-      let iconSize = JSON.parse(key);
-      result.push({
-        width: iconSize.width,
-        height: iconSize.height,
-        url: this._iconMapObj[key],
-      });
-    }
-
-    return result;
-  }
-
-  /**
    * Opens a speculative connection to the engine's search URI
    * (and suggest URI, if different) to reduce request latency
    *
