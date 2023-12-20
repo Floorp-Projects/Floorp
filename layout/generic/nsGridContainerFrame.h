@@ -269,6 +269,19 @@ class nsGridContainerFrame final : public nsContainerFrame,
   bool GridItemShouldStretch(const nsIFrame* aChild, LogicalAxis aAxis) const;
 
   /**
+   * Returns true if aFrame forms an independent formatting context and hence
+   * should be inhibited from being a subgrid (i.e. if the used value of
+   * 'grid-template-{rows,columns}:subgrid' should be 'none').
+   * https://drafts.csswg.org/css-grid-2/#subgrid-listing
+   *
+   * (Note this only makes sense to call if aFrame is itself either a grid
+   * container frame or a wrapper frame for a grid container frame, e.g. a
+   * scroll container frame for a scrollable grid.  Having said that, this is
+   * technically safe to call on any non-null frame.)
+   */
+  static bool ShouldInhibitSubgridDueToIFC(const nsIFrame* aFrame);
+
+  /**
    * Return a container grid frame for the supplied frame, if available.
    * @return nullptr if aFrame has no grid container.
    */
