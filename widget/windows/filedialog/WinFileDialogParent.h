@@ -79,6 +79,7 @@ class ProcessProxy {
 
    private:
     ~Contents();
+    void StopProcess();
   };
   // guaranteed nonnull
   RefPtr<Contents> data;
