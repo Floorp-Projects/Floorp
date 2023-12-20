@@ -907,10 +907,6 @@ pref("browser.tabs.tooltipsShowPidAndActiveness", true);
 pref("browser.tabs.tooltipsShowPidAndActiveness", false);
 #endif
 
-pref("browser.tabs.cardPreview.enabled", false);
-pref("browser.tabs.cardPreview.delayMs", 1000);
-pref("browser.tabs.cardPreview.showThumbnails", true);
-
 pref("browser.tabs.firefox-view", true);
 pref("browser.tabs.firefox-view-next", true);
 pref("browser.tabs.firefox-view-newIcon", true);
