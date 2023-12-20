@@ -9294,14 +9294,6 @@ void nsGridContainerFrame::UpdateSubgridFrameState() {
 }
 
 nsFrameState nsGridContainerFrame::ComputeSelfSubgridMasonryBits() const {
-  // 'contain:layout/paint' makes us an "independent formatting context",
-  // which prevents us from being a subgrid in this case (but not always).
-  // We will also need to check our containing scroll frame for this property.
-  // https://drafts.csswg.org/css-display-3/#establish-an-independent-formatting-context
-  const auto* display = StyleDisplay();
-  const bool inhibitSubgrid =
-      display->IsContainLayout() || display->IsContainPaint();
-
   nsFrameState bits = nsFrameState(0);
   const auto* pos = StylePosition();
 
@@ -9310,6 +9302,18 @@ nsFrameState nsGridContainerFrame::ComputeSelfSubgridMasonryBits() const {
     bits |= NS_STATE_GRID_IS_ROW_MASONRY;
   } else if (pos->mGridTemplateColumns.IsMasonry()) {
     bits |= NS_STATE_GRID_IS_COL_MASONRY;
+  }
+
+  // NOTE: The rest of this function is only relevant if we're a subgrid;
+  // hence, we return early as soon as we rule out that possibility.
+
+  // 'contain:layout/paint' makes us an "independent formatting context",
+  // which prevents us from being a subgrid in this case (but not always).
+  // We will also need to check our containing scroll frame for this property.
+  // https://drafts.csswg.org/css-display-3/#establish-an-independent-formatting-context
+  const auto* display = StyleDisplay();
+  if (display->IsContainLayout() || display->IsContainPaint()) {
+    return bits;
   }
 
   // Skip our scroll frame and such if we have it.
@@ -9335,8 +9339,7 @@ nsFrameState nsGridContainerFrame::ComputeSelfSubgridMasonryBits() const {
     // NOTE: our NS_FRAME_OUT_OF_FLOW isn't set yet so we check our style.
     bool isOutOfFlow =
         outerFrame->StyleDisplay()->IsAbsolutelyPositionedStyle();
-    bool isColSubgrid =
-        pos->mGridTemplateColumns.IsSubgrid() && !inhibitSubgrid;
+    bool isColSubgrid = pos->mGridTemplateColumns.IsSubgrid();
     // Subgridding a parent masonry axis makes us use masonry layout too,
     // unless our other axis is a masonry axis.
     if (isColSubgrid &&
@@ -9360,7 +9363,7 @@ nsFrameState nsGridContainerFrame::ComputeSelfSubgridMasonryBits() const {
       bits |= NS_STATE_GRID_IS_COL_SUBGRID;
     }
 
-    bool isRowSubgrid = pos->mGridTemplateRows.IsSubgrid() && !inhibitSubgrid;
+    bool isRowSubgrid = pos->mGridTemplateRows.IsSubgrid();
     if (isRowSubgrid &&
         parent->HasAnyStateBits(isOrthogonal ? NS_STATE_GRID_IS_COL_MASONRY
                                              : NS_STATE_GRID_IS_ROW_MASONRY)) {
