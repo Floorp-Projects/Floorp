@@ -88,6 +88,19 @@ const EXCLUDED_TAGS = new Set([
 ]);
 
 /**
+ * Attributes to be translated
+ */
+const TRANSLATABLE_ATTRIBUTES = ["title", "placeholder"];
+
+/**
+ * Selector to get all the attributes
+ *  ["[attribute1]", "[attribute2]", ...];
+ */
+const TRANSLATABLE_ATTRIBUTES_SELECTOR = TRANSLATABLE_ATTRIBUTES.map(
+  attribute => "[" + attribute + "]"
+);
+
+/**
  * Options used by the mutation observer
  */
 const MUTATION_OBSERVER_OPTIONS = {
@@ -120,6 +133,7 @@ export class TranslationsDocument {
    * with translations.
    */
   #updateTimeout = null;
+  #attributeUpdateTimeout = null;
 
   /**
    * The nodes that need translations. They are queued when the document tree is walked,
@@ -129,6 +143,15 @@ export class TranslationsDocument {
    * @type {Map<Node, NodeVisibility>}
    */
   #queuedNodes = new Map();
+
+  /**
+   * The nodes that need Attribute translations. They are queued when the document tree is walked,
+   * and then they are dispatched for translation based on their visibility. The viewport
+   * nodes are given the highest priority.
+   *
+   * @type  {Map<Node, { attributeList: string[], visibility: NodeVisibility }>}
+   */
+  #queuedAttributeNodes = new Map();
 
   /**
    * The count of how many pending translations have been sent to the translations
@@ -143,6 +166,14 @@ export class TranslationsDocument {
    * @type {Set<{ node: Node, translatedHTML: string }}
    */
   #nodesWithTranslatedHTML = new Set();
+
+  /**
+   * The list of nodes that need updating with the translated Attribute HTML. These are batched
+   * into an update.
+   *
+   * @type {Set<{ node: Node, translation: string, attribute: string }}
+   */
+  #nodesWithTranslatedAttributes = new Set();
 
   /**
    * The set of nodes that have been subdivided and processed for translation. They
@@ -290,6 +321,22 @@ export class TranslationsDocument {
   }
 
   /**
+   * Queue a node for translation of attributes.
+   * @param {Node} node
+   * @param {Array<String>}
+   */
+  queueAttributeNodeForTranslation(node, attributeList) {
+    /** @type {NodeVisibility} */
+    let visibility = "out-of-viewport";
+    if (isNodeHidden(node)) {
+      visibility = "hidden";
+    } else if (isNodeInViewport(node)) {
+      visibility = "in-viewport";
+    }
+    this.#queuedAttributeNodes.set(node, { attributeList, visibility });
+  }
+
+  /**
    * Start and stop the translator as the page is shown. For instance, this will
    * transition into "hidden" when the user tabs away from a document.
    */
@@ -377,10 +424,17 @@ export class TranslationsDocument {
 
     this.#rootNodes.add(node);
 
-    this.subdivideNodeForTranslations(node);
+    let viewportNodeTranslations = this.subdivideNodeForTranslations(node);
+    let viewportAttributeTranslations = this.translateAttributes(node);
+
+    if (!this.viewportTranslated) {
+      this.viewportTranslated = Promise.allSettled([
+        ...(viewportNodeTranslations ?? []),
+        ...(viewportAttributeTranslations ?? []),
+      ]);
+    }
 
     this.observer.observe(node, MUTATION_OBSERVER_OPTIONS);
-
     this.addShadowRootsToObserver(node);
   }
 
@@ -476,6 +530,31 @@ export class TranslationsDocument {
       this.reportWordsInViewport();
     }
     this.dispatchQueuedTranslations();
+  }
+
+  /**
+   * Get all the nodes which have selected attributes
+   * from the node/document and queue them.
+   * Call the translate function on these nodes
+   * @param {Node} node
+   * @returns {Array<Promise<void>> | null}
+   */
+  translateAttributes(node) {
+    const attributeList = getTranslatableAttributes(node);
+    if (attributeList.length) {
+      // Queue the root node if it has any attributes
+      // Because querySelectorAll searches only child nodes.
+      this.queueAttributeNodeForTranslation(node, attributeList);
+    }
+    // Get all attributes in child nodes at once
+    const nodesWithTranslatableAttributes = node.querySelectorAll(
+      TRANSLATABLE_ATTRIBUTES_SELECTOR
+    );
+    for (const node of nodesWithTranslatableAttributes) {
+      const attributeList = getTranslatableAttributes(node);
+      this.queueAttributeNodeForTranslation(node, attributeList);
+    }
+    return this.dispatchQueuedAttributeTranslations();
   }
 
   /**
@@ -624,13 +703,14 @@ export class TranslationsDocument {
 
   /**
    * Submit the translations giving priority to nodes in the viewport.
+   * @returns {Array<Promise<void>> | null}
    */
-  async dispatchQueuedTranslations() {
+  dispatchQueuedTranslations() {
     let inViewportCounts = 0;
     let outOfViewportCounts = 0;
     let hiddenCounts = 0;
 
-    let inViewportTranslations;
+    let inViewportTranslations = null;
     if (!this.viewportTranslated) {
       inViewportTranslations = [];
     }
@@ -667,12 +747,149 @@ export class TranslationsDocument {
     );
 
     this.#queuedNodes.clear();
+    return inViewportTranslations;
+  }
 
-    if (!this.viewportTranslated && inViewportTranslations) {
-      // Provide a promise that can be used to determine when the initial viewport has
-      // been translated. This is a key user-visible metric.
-      this.viewportTranslated = Promise.allSettled(inViewportTranslations);
+  /**
+   * Submit the Attribute translations giving priority to nodes in the viewport.
+   * @returns {Array<Promise<void>> | null}
+   */
+  dispatchQueuedAttributeTranslations() {
+    let inViewportCounts = 0;
+    let outOfViewportCounts = 0;
+    let hiddenCounts = 0;
+
+    let inViewportTranslations = null;
+    if (!this.viewportTranslated) {
+      inViewportTranslations = [];
     }
+    // Submit the nodes with attrbutes to be translated.
+    for (const [node, { attributeList, visibility }] of this
+      .#queuedAttributeNodes) {
+      if (visibility === "in-viewport") {
+        inViewportCounts++;
+        const promise = this.submitAttributeTranslation(node, attributeList);
+        if (inViewportTranslations) {
+          inViewportTranslations.push(promise);
+        }
+      }
+    }
+    for (const [node, { attributeList, visibility }] of this
+      .#queuedAttributeNodes) {
+      if (visibility === "out-of-viewport") {
+        outOfViewportCounts++;
+        this.submitAttributeTranslation(node, attributeList);
+      }
+    }
+    for (const [node, { attributeList, visibility }] of this
+      .#queuedAttributeNodes) {
+      if (visibility === "hidden") {
+        hiddenCounts++;
+        this.submitAttributeTranslation(node, attributeList);
+      }
+    }
+
+    ChromeUtils.addProfilerMarker(
+      "Attribute Translations",
+      { innerWindowId: this.innerWindowId },
+      `Attribute Translate ${this.#queuedAttributeNodes.size} nodes.\n\n` +
+        `In viewport: ${inViewportCounts}\n` +
+        `Out of viewport: ${outOfViewportCounts}\n` +
+        `Hidden: ${hiddenCounts}\n`
+    );
+
+    this.#queuedAttributeNodes.clear();
+
+    return inViewportTranslations;
+  }
+
+  /**
+   * Submit a node for Attribute translation to the translations engine.
+   *
+   * @param {Node} node
+   * @returns {Promise<void>}
+   */
+  async submitAttributeTranslation(node, attributeList) {
+    if (node.nodeType === Node.ELEMENT_NODE) {
+      for (const attribute of attributeList) {
+        const text = node.getAttribute(attribute);
+
+        if (text.trim().length === 0) {
+          continue;
+        }
+        const translation = await this.maybeTranslate(
+          node,
+          text,
+          false /*isHTML*/
+        );
+        if (translation != null) {
+          this.scheduleNodeUpdateWithTranslationAttribute(
+            node,
+            translation,
+            attribute
+          );
+        }
+      }
+    }
+  }
+
+  /**
+   * Schedule a node to be updated with a translation.
+   *
+   * @param {Node} node
+   * @param {string} translation
+   */
+  scheduleNodeUpdateWithTranslationAttribute(node, translation, attribute) {
+    // Add the nodes to be populated with the next translation update.
+    this.#nodesWithTranslatedAttributes.add({
+      node,
+      translation,
+      attribute,
+    });
+
+    if (this.#pendingTranslationsCount === 0) {
+      // No translations are pending, update the node.
+      this.updateNodesWithTranslationsAttributes();
+    } else if (!this.#attributeUpdateTimeout) {
+      // Schedule an update.
+      this.#attributeUpdateTimeout = lazy.setTimeout(
+        this.updateNodesWithTranslationsAttributes.bind(this),
+        DOM_UPDATE_INTERVAL_MS
+      );
+    } else {
+      // An update has been previously scheduled, do nothing here.
+    }
+  }
+
+  /**
+   * This is called every `DOM_UPDATE_INTERVAL_MS` ms with translations
+   * for attributes in the nodes.
+   *
+   * This function is called asynchronously, so nodes may already be dead. Before
+   * accessing a node make sure and run `Cu.isDeadWrapper` to check that it is alive.
+   */
+  updateNodesWithTranslationsAttributes() {
+    // Stop the mutations so that the updates won't trigger observations.
+    this.stopMutationObserver();
+    for (const { node, translation, attribute } of this
+      .#nodesWithTranslatedAttributes) {
+      if (Cu.isDeadWrapper(node)) {
+        // The node is no longer alive.
+        ChromeUtils.addProfilerMarker(
+          "Translations",
+          { innerWindowId: this.innerWindowId },
+          "Node is no long alive."
+        );
+        continue;
+      }
+      // Update the attribute of the node with translated attribute
+      if (attribute) {
+        node.setAttribute(attribute, translation);
+      }
+    }
+    this.#nodesWithTranslatedAttributes.clear();
+    this.#attributeUpdateTimeout = null;
+    this.startMutationObserver();
   }
 
   /**
@@ -744,24 +961,31 @@ export class TranslationsDocument {
     // Mark this node as not to be translated again unless the contents are changed
     // (which the observer will pick up on)
     this.#processedNodes.add(node);
+    const translatedHTML = await this.maybeTranslate(node, text, isHTML);
+    if (translatedHTML != null) {
+      this.scheduleNodeUpdateWithTranslation(node, translatedHTML);
+    }
+  }
 
+  /**
+   * A single function to update pendingTranslationsCount while
+   * calling the translate function
+   * @param {Node} node
+   * @param {string} text
+   * @prop {boolean} isHTML
+   * @returns {Promise<string | null>}
+   */
+  async maybeTranslate(node, text, isHTML) {
     this.#pendingTranslationsCount++;
     try {
-      const translatedHTML = await this.translator.translate(
-        node,
-        text,
-        isHTML
-      );
-      this.#pendingTranslationsCount--;
-      // The translatedHTML is null when the request is stale, for instance when multiple
-      // translations have been queued for the same node.
-      if (translatedHTML != null) {
-        this.scheduleNodeUpdateWithTranslation(node, translatedHTML);
-      }
+      const translation = await this.translator.translate(node, text, isHTML);
+      return translation;
     } catch (error) {
+      lazy.console.log("Translation failed", error);
+    } finally {
       this.#pendingTranslationsCount--;
-      lazy.console.error("Translation failed", error);
     }
+    return null;
   }
 
   /**
@@ -890,6 +1114,20 @@ export class TranslationsDocument {
       return false;
     }
   }
+}
+
+/**
+ * Get the list of attributes that need to be translated
+ * in a given node.
+ * @returns Array<string>
+ */
+function getTranslatableAttributes(node) {
+  if (node.nodeType !== Node.ELEMENT_NODE) {
+    return [];
+  }
+  return TRANSLATABLE_ATTRIBUTES.filter(attribute =>
+    node.hasAttribute(attribute)
+  );
 }
 
 /**
