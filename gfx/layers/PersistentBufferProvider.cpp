@@ -6,10 +6,12 @@
 
 #include "PersistentBufferProvider.h"
 
+#include "mozilla/layers/KnowsCompositor.h"
 #include "mozilla/layers/RemoteTextureMap.h"
 #include "mozilla/layers/TextureClient.h"
 #include "mozilla/layers/TextureForwarder.h"
 #include "mozilla/gfx/gfxVars.h"
+#include "mozilla/gfx/CanvasManagerChild.h"
 #include "mozilla/gfx/DrawTargetWebgl.h"
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/Maybe.h"
@@ -305,7 +307,11 @@ PersistentBufferProviderShared::~PersistentBufferProviderShared() {
   MOZ_COUNT_DTOR(PersistentBufferProviderShared);
 
   if (IsActivityTracked()) {
-    mKnowsCompositor->GetActiveResourceTracker()->RemoveObject(this);
+    if (auto* cm = CanvasManagerChild::Get()) {
+      cm->GetActiveResourceTracker()->RemoveObject(this);
+    } else {
+      MOZ_ASSERT_UNREACHABLE("Tracked but no CanvasManagerChild!");
+    }
   }
 
   Destroy();
@@ -325,7 +331,11 @@ bool PersistentBufferProviderShared::SetKnowsCompositor(
   }
 
   if (IsActivityTracked()) {
-    mKnowsCompositor->GetActiveResourceTracker()->RemoveObject(this);
+    if (auto* cm = CanvasManagerChild::Get()) {
+      cm->GetActiveResourceTracker()->RemoveObject(this);
+    } else {
+      MOZ_ASSERT_UNREACHABLE("Tracked but no CanvasManagerChild!");
+    }
   }
 
   if (mKnowsCompositor->GetTextureForwarder() !=
@@ -406,12 +416,17 @@ PersistentBufferProviderShared::BorrowDrawTarget(
     return nullptr;
   }
 
+  auto* cm = CanvasManagerChild::Get();
+  if (NS_WARN_IF(!cm)) {
+    return nullptr;
+  }
+
   MOZ_ASSERT(!mSnapshot);
 
   if (IsActivityTracked()) {
-    mKnowsCompositor->GetActiveResourceTracker()->MarkUsed(this);
+    cm->GetActiveResourceTracker()->MarkUsed(this);
   } else {
-    mKnowsCompositor->GetActiveResourceTracker()->AddObject(this);
+    cm->GetActiveResourceTracker()->AddObject(this);
   }
 
   if (mDrawTarget) {
