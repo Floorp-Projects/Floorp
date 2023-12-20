@@ -846,17 +846,6 @@ bool GCRuntime::init(uint32_t maxbytes) {
     if (!nursery().init(lock)) {
       return false;
     }
-
-    const char* pretenureThresholdStr = getenv("JSGC_PRETENURE_THRESHOLD");
-    if (pretenureThresholdStr && pretenureThresholdStr[0]) {
-      char* last;
-      long pretenureThreshold = strtol(pretenureThresholdStr, &last, 10);
-      if (last[0] || !tunables.setParameter(JSGC_PRETENURE_THRESHOLD,
-                                            pretenureThreshold)) {
-        fprintf(stderr, "Invalid value for JSGC_PRETENURE_THRESHOLD: %s\n",
-                pretenureThresholdStr);
-      }
-    }
   }
 
 #ifdef JS_GC_ZEAL

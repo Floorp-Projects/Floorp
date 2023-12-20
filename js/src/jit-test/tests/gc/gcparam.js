@@ -55,7 +55,6 @@ testChangeParam("minLastDitchGCPeriod");
 testChangeParam("nurseryFreeThresholdForIdleCollection");
 testChangeParam("nurseryFreeThresholdForIdleCollectionPercent");
 testChangeParam("nurseryTimeoutForIdleCollectionMS");
-testChangeParam("pretenureThreshold");
 testChangeParam("zoneAllocDelayKB");
 testChangeParam("mallocThresholdBase");
 testChangeParam("urgentThreshold");

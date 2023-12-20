@@ -476,36 +476,6 @@
     50.0)                                                                      \
                                                                                \
   /*                                                                           \
-   * JSGC_PRETENURE_THRESHOLD                                                  \
-   *                                                                           \
-   * Fraction of objects tenured to trigger pretenuring (between 0 and 1). If  \
-   * this fraction is met, the GC proceeds to calculate which objects will be  \
-   * tenured. If this is 1.0f (actually if it is not < 1.0f) then pretenuring  \
-   * is disabled.                                                              \
-   */                                                                          \
-  _(JSGC_PRETENURE_THRESHOLD, double, pretenureThreshold, ConvertTimes100,     \
-    CheckNonZeroUnitRange, 0.6)                                                \
-                                                                               \
-  /*                                                                           \
-   * JSGC_PRETENURE_STRING_THRESHOLD                                           \
-   *                                                                           \
-   * If the percentage of the tenured strings exceeds this threshold, string   \
-   * will be allocated in tenured heap instead. (Default is allocated in       \
-   * nursery.)                                                                 \
-   */                                                                          \
-  _(JSGC_PRETENURE_STRING_THRESHOLD, double, pretenureStringThreshold,         \
-    ConvertTimes100, CheckNonZeroUnitRange, 0.55)                              \
-                                                                               \
-  /*                                                                           \
-   * JSGC_STOP_PRETENURE_STRING_THRESHOLD                                      \
-   *                                                                           \
-   * If the finalization rate of the tenured strings exceeds this threshold,   \
-   * string will be allocated in nursery.                                      \
-   */                                                                          \
-  _(JSGC_STOP_PRETENURE_STRING_THRESHOLD, double,                              \
-    stopPretenureStringThreshold, ConvertTimes100, CheckNonZeroUnitRange, 0.9) \
-                                                                               \
-  /*                                                                           \
    * JSGC_MIN_LAST_DITCH_GC_PERIOD                                             \
    *                                                                           \
    * Last ditch GC is skipped if allocation failure occurs less than this many \
@@ -588,8 +558,6 @@ class GCSchedulingTunables {
   type name() const { return name##_; }
   FOR_EACH_GC_TUNABLE(DEFINE_TUNABLE_ACCESSOR)
 #undef DEFINE_TUNABLE_ACCESSOR
-
-  bool attemptPretenuring() const { return pretenureThreshold_ < 1.0; }
 
   uint32_t getParameter(JSGCParamKey key);
   [[nodiscard]] bool setParameter(JSGCParamKey key, uint32_t value);
