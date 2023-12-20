@@ -285,6 +285,7 @@ include = [
   "BeforeFlag",
   "XTextScale",
   "Zoom",
+  "TransitionProperty",
 ]
 item_types = ["enums", "structs", "unions", "typedefs", "functions", "constants"]
 renaming_overrides_prefixing = true
@@ -1052,4 +1053,11 @@ renaming_overrides_prefixing = true
   inline bool IsInternalRuby() const;
   inline bool IsInternalTable() const;
   inline bool IsInternalTableExceptCell() const;
+"""
+
+"TransitionProperty" = """
+  bool IsAll() const {
+    return IsNonCustom() &&
+           nsCSSPropertyID(AsNonCustom()._0) == eCSSProperty_all;
+  }
 """

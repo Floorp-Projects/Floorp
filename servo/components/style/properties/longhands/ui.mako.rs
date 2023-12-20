@@ -178,7 +178,7 @@ ${helpers.predefined_type(
     engines="gecko servo-2013 servo-2020",
     initial_specified_value="specified::TransitionProperty::all()",
     vector=True,
-    allow_empty="NotInitial",
+    none_value="computed::TransitionProperty::none()",
     need_index=True,
     animation_value_type="none",
     extra_prefixes=transition_extra_prefixes,

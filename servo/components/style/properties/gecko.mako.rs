@@ -25,7 +25,6 @@ use crate::gecko_bindings::bindings::Gecko_EnsureImageLayersLength;
 use crate::gecko_bindings::bindings::Gecko_nsStyleFont_SetLang;
 use crate::gecko_bindings::bindings::Gecko_nsStyleFont_CopyLangFrom;
 use crate::gecko_bindings::structs;
-use crate::gecko_bindings::structs::nsCSSPropertyID;
 use crate::gecko_bindings::structs::mozilla::PseudoStyleType;
 use crate::gecko::data::PerDocumentStyleData;
 use crate::logical_geometry::WritingMode;
@@ -36,8 +35,8 @@ use crate::selector_parser::PseudoElement;
 use servo_arc::{Arc, UniqueArc};
 use std::mem::{forget, MaybeUninit, ManuallyDrop};
 use std::{cmp, ops, ptr};
-use crate::values::{self, CustomIdent, KeyframesName};
-use crate::values::computed::{BorderStyle, Percentage, Time, TransitionProperty, Zoom};
+use crate::values::{self, KeyframesName};
+use crate::values::computed::{BorderStyle, Percentage, Time, Zoom};
 use crate::values::computed::font::FontSize;
 use crate::values::generics::column::ColumnCount;
 
@@ -1727,6 +1726,7 @@ mask-mode mask-repeat mask-clip mask-origin mask-composite mask-position-x mask-
     ${impl_coordinated_property('transition', 'delay', 'Delay')}
     ${impl_coordinated_property('transition', 'duration', 'Duration')}
     ${impl_coordinated_property('transition', 'timing_function', 'TimingFunction')}
+    ${impl_coordinated_property('transition', 'property', 'Property')}
 
     pub fn transition_combined_duration_at(&self, index: usize) -> Time {
         // https://drafts.csswg.org/css-transitions/#transition-combined-duration
@@ -1736,116 +1736,14 @@ mask-mode mask-repeat mask-clip mask-origin mask-composite mask-position-x mask-
         )
     }
 
-    pub fn set_transition_property<I>(&mut self, v: I)
-    where
-        I: IntoIterator<Item = longhands::transition_property::computed_value::single_value::T>,
-        I::IntoIter: ExactSizeIterator
-    {
-        use crate::gecko_bindings::structs::nsCSSPropertyID::eCSSPropertyExtra_no_properties;
-        use crate::gecko_bindings::structs::nsCSSPropertyID::eCSSPropertyExtra_variable;
-        use crate::gecko_bindings::structs::nsCSSPropertyID::eCSSProperty_UNKNOWN;
-
-        let v = v.into_iter();
-
-        if v.len() != 0 {
-            self.mTransitions.ensure_len(v.len());
-            self.mTransitionPropertyCount = v.len() as u32;
-            for (servo, gecko) in v.zip(self.mTransitions.iter_mut()) {
-                unsafe { gecko.mUnknownProperty.clear() };
-
-                match servo {
-                    TransitionProperty::Unsupported(ident) => {
-                        gecko.mProperty = eCSSProperty_UNKNOWN;
-                        gecko.mUnknownProperty.mRawPtr = ident.0.into_addrefed();
-                    },
-                    TransitionProperty::Custom(name) => {
-                        gecko.mProperty = eCSSPropertyExtra_variable;
-                        gecko.mUnknownProperty.mRawPtr = name.into_addrefed();
-                    },
-                    TransitionProperty::NonCustom(id) => {
-                        gecko.mProperty = id.to_nscsspropertyid();
-                    },
-                }
-            }
-        } else {
-            // In gecko |none| is represented by eCSSPropertyExtra_no_properties.
-            self.mTransitionPropertyCount = 1;
-            self.mTransitions[0].mProperty = eCSSPropertyExtra_no_properties;
-        }
-    }
-
     /// Returns whether there are any transitions specified.
     pub fn specifies_transitions(&self) -> bool {
-        use crate::gecko_bindings::structs::nsCSSPropertyID::eCSSProperty_all;
         if self.mTransitionPropertyCount == 1 &&
-            self.mTransitions[0].mProperty == eCSSProperty_all &&
             self.transition_combined_duration_at(0).seconds() <= 0.0f32 {
             return false;
         }
-
         self.mTransitionPropertyCount > 0
     }
-
-    pub fn transition_property_at(&self, index: usize)
-        -> longhands::transition_property::computed_value::SingleComputedValue {
-        use crate::gecko_bindings::structs::nsCSSPropertyID::eCSSPropertyExtra_no_properties;
-        use crate::gecko_bindings::structs::nsCSSPropertyID::eCSSPropertyExtra_variable;
-        use crate::gecko_bindings::structs::nsCSSPropertyID::eCSSProperty_UNKNOWN;
-
-        let property = self.mTransitions[index].mProperty;
-        if property == eCSSProperty_UNKNOWN {
-            let atom = self.mTransitions[index].mUnknownProperty.mRawPtr;
-            debug_assert!(!atom.is_null());
-            TransitionProperty::Unsupported(CustomIdent(unsafe{
-                Atom::from_raw(atom)
-            }))
-        } else if property == eCSSPropertyExtra_variable {
-            let atom = self.mTransitions[index].mUnknownProperty.mRawPtr;
-            debug_assert!(!atom.is_null());
-            TransitionProperty::Custom(unsafe{
-                Atom::from_raw(atom)
-            })
-        } else if property == eCSSPropertyExtra_no_properties {
-            // Actually, we don't expect TransitionProperty::Unsupported also
-            // represents "none", but if the caller wants to convert it, it is
-            // fine. Please use it carefully.
-            //
-            // FIXME(emilio): This is a hack, is this reachable?
-            TransitionProperty::Unsupported(CustomIdent(atom!("none")))
-        } else {
-            property.into()
-        }
-    }
-
-    pub fn transition_nscsspropertyid_at(&self, index: usize) -> nsCSSPropertyID {
-        self.mTransitions[index].mProperty
-    }
-
-    pub fn copy_transition_property_from(&mut self, other: &Self) {
-        use crate::gecko_bindings::structs::nsCSSPropertyID::eCSSPropertyExtra_variable;
-        use crate::gecko_bindings::structs::nsCSSPropertyID::eCSSProperty_UNKNOWN;
-        self.mTransitions.ensure_len(other.mTransitions.len());
-
-        let count = other.mTransitionPropertyCount;
-        self.mTransitionPropertyCount = count;
-
-        for (index, transition) in self.mTransitions.iter_mut().enumerate().take(count as usize) {
-            transition.mProperty = other.mTransitions[index].mProperty;
-            unsafe { transition.mUnknownProperty.clear() };
-            if transition.mProperty == eCSSProperty_UNKNOWN ||
-               transition.mProperty == eCSSPropertyExtra_variable {
-                let atom = other.mTransitions[index].mUnknownProperty.mRawPtr;
-                debug_assert!(!atom.is_null());
-                transition.mUnknownProperty.mRawPtr = unsafe { Atom::from_raw(atom) }.into_addrefed();
-            }
-        }
-    }
-
-    pub fn reset_transition_property(&mut self, other: &Self) {
-        self.copy_transition_property_from(other)
-    }
-
-    ${impl_coordinated_property_count('transition', 'property', 'Property')}
 
     pub fn animations_equals(&self, other: &Self) -> bool {
         return self.mAnimationNameCount == other.mAnimationNameCount

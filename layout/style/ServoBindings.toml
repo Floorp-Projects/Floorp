@@ -656,6 +656,7 @@ cbindgen-types = [
     { gecko = "StyleTime", servo = "crate::values::computed::Time" },
     { gecko = "StyleXTextScale", servo = "crate::values::computed::XTextScale" },
     { gecko = "StyleZoom", servo = "crate::values::computed::Zoom" },
+    { gecko = "StyleTransitionProperty", servo = "crate::values::computed::TransitionProperty" },
     { gecko = "StyleAnimationValueMap", servo = "crate::properties::animated_properties::AnimationValueMap" },
     { gecko = "StyleAuthorStyles", servo = "crate::gecko::data::AuthorStyles" },
     { gecko = "StyleUseCounters", servo = "crate::use_counters::UseCounters" },

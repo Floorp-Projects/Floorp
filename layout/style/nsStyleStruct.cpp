@@ -1856,8 +1856,6 @@ nsStyleImageLayers::Layer::~Layer() = default;
 
 void nsStyleImageLayers::Layer::Initialize(
     nsStyleImageLayers::LayerType aType) {
-  mRepeat.SetInitialValues();
-
   mPosition = Position::FromPercentage(0.);
 
   if (aType == LayerType::Background) {
@@ -2026,37 +2024,13 @@ bool nsStyleBackground::IsTransparent(const ComputedStyle* aStyle) const {
 
 StyleTransition::StyleTransition(const StyleTransition& aCopy) = default;
 
-void StyleTransition::SetInitialValues() {
-  mTimingFunction =
-      StyleComputedTimingFunction::Keyword(StyleTimingKeyword::Ease);
-  mDuration = {0.0};
-  mDelay = {0.0};
-  mProperty = eCSSProperty_all;
-}
-
 bool StyleTransition::operator==(const StyleTransition& aOther) const {
   return mTimingFunction == aOther.mTimingFunction &&
          mDuration == aOther.mDuration && mDelay == aOther.mDelay &&
-         mProperty == aOther.mProperty &&
-         (mProperty != eCSSProperty_UNKNOWN ||
-          mUnknownProperty == aOther.mUnknownProperty);
+         mProperty == aOther.mProperty;
 }
 
 StyleAnimation::StyleAnimation(const StyleAnimation& aCopy) = default;
-
-void StyleAnimation::SetInitialValues() {
-  mTimingFunction =
-      StyleComputedTimingFunction::Keyword(StyleTimingKeyword::Ease);
-  mDuration = {0.0};
-  mDelay = {0.0};
-  mName = nsGkAtoms::_empty;
-  mDirection = dom::PlaybackDirection::Normal;
-  mFillMode = dom::FillMode::None;
-  mPlayState = StyleAnimationPlayState::Running;
-  mIterationCount = {1.0f};
-  mComposition = dom::CompositeOperation::Replace;
-  mTimeline = StyleAnimationTimeline::Auto();
-}
 
 bool StyleAnimation::operator==(const StyleAnimation& aOther) const {
   return mTimingFunction == aOther.mTimingFunction &&
@@ -3124,8 +3098,6 @@ nsStyleUIReset::nsStyleUIReset()
       mViewTimelineAxisCount(1),
       mViewTimelineInsetCount(1) {
   MOZ_COUNT_CTOR(nsStyleUIReset);
-  mTransitions[0].SetInitialValues();
-  mAnimations[0].SetInitialValues();
 }
 
 nsStyleUIReset::nsStyleUIReset(const nsStyleUIReset& aSource)
