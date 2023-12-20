@@ -1,5 +1,5 @@
 ;
-; Copyright (c) 2018, Alliance for Open Media. All rights reserved
+; Copyright (c) 2023, Alliance for Open Media. All rights reserved
 ;
 ; This source code is subject to the terms of the BSD 2 Clause License and
 ; the Alliance for Open Media Patent License 1.0. If the BSD 2 Clause License
@@ -18,7 +18,7 @@ CONFIG_2PASS_PARTITION_SEARCH_LVL equ 1
 CONFIG_ACCOUNTING equ 0
 CONFIG_ANALYZER equ 0
 CONFIG_AV1_DECODER equ 1
-CONFIG_AV1_ENCODER equ 0
+CONFIG_AV1_ENCODER equ 1
 CONFIG_BIG_ENDIAN equ 0
 CONFIG_BITSTREAM_DEBUG equ 0
 CONFIG_COEFFICIENT_RANGE_CHECKING equ 0
