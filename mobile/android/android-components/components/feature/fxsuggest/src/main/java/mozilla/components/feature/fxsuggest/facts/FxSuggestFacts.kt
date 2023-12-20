@@ -31,6 +31,7 @@ class FxSuggestFacts {
         const val INTERACTION_INFO = "interaction_info"
         const val POSITION = "position"
         const val IS_CLICKED = "is_clicked"
+        const val ENGAGEMENT_ABANDONED = "engagement_abandoned"
     }
 }
 
@@ -70,6 +71,7 @@ internal fun emitSuggestionImpressedFact(
     interactionInfo: FxSuggestInteractionInfo,
     positionInAwesomeBar: Long,
     isClicked: Boolean,
+    engagementAbandoned: Boolean,
 ) {
     emitFxSuggestFact(
         Action.DISPLAY,
@@ -81,6 +83,7 @@ internal fun emitSuggestionImpressedFact(
             FxSuggestFacts.MetadataKeys.INTERACTION_INFO to interactionInfo,
             FxSuggestFacts.MetadataKeys.POSITION to positionInAwesomeBar,
             FxSuggestFacts.MetadataKeys.IS_CLICKED to isClicked,
+            FxSuggestFacts.MetadataKeys.ENGAGEMENT_ABANDONED to engagementAbandoned,
         ),
     )
 }

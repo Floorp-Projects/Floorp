@@ -75,7 +75,7 @@ class FxSuggestFactsMiddlewareTest {
     }
 
     @Test
-    fun `GIVEN 1 AMP suggestion is visible WHEN the engagement is abandoned THEN no facts are collected`() {
+    fun `GIVEN 1 AMP suggestion is visible WHEN the engagement is abandoned THEN 1 impression fact is collected`() {
         val provider: AwesomeBar.SuggestionProvider = mock()
         val providerGroup = AwesomeBar.SuggestionProviderGroup(listOf(provider))
         val providerGroupSuggestions = listOf(
@@ -106,7 +106,6 @@ class FxSuggestFactsMiddlewareTest {
                     visibilityState = AwesomeBar.VisibilityState(
                         visibleProviderGroups = mapOf(providerGroup to providerGroupSuggestions),
                     ),
-                    clickedSuggestion = providerGroupSuggestions[1],
                 ),
             ),
             middleware = listOf(FxSuggestFactsMiddleware()),
@@ -114,7 +113,38 @@ class FxSuggestFactsMiddlewareTest {
 
         store.dispatch(AwesomeBarAction.EngagementFinished(abandoned = true)).joinBlocking()
 
-        assertTrue(processor.facts.isEmpty())
+        assertEquals(1, processor.facts.size)
+        processor.facts[0].apply {
+            assertEquals(Component.FEATURE_FXSUGGEST, component)
+            assertEquals(Action.DISPLAY, action)
+            assertEquals(FxSuggestFacts.Items.AMP_SUGGESTION_IMPRESSED, item)
+
+            assertEquals(
+                setOf(
+                    FxSuggestFacts.MetadataKeys.INTERACTION_INFO,
+                    FxSuggestFacts.MetadataKeys.POSITION,
+                    FxSuggestFacts.MetadataKeys.IS_CLICKED,
+                    FxSuggestFacts.MetadataKeys.ENGAGEMENT_ABANDONED,
+                ),
+                metadata?.keys,
+            )
+
+            val impressionInfo = requireNotNull(metadata?.get(FxSuggestFacts.MetadataKeys.INTERACTION_INFO) as? FxSuggestInteractionInfo.Amp)
+            assertEquals(123, impressionInfo.blockId)
+            assertEquals("mozilla", impressionInfo.advertiser)
+            assertEquals("https://example.com/impression", impressionInfo.reportingUrl)
+            assertEquals("22 - Shopping", impressionInfo.iabCategory)
+            assertEquals("c303282d-f2e6-46ca-a04a-35d3d873712d", impressionInfo.contextId)
+
+            val position = requireNotNull(metadata?.get(FxSuggestFacts.MetadataKeys.POSITION) as? Long)
+            assertEquals(2, position)
+
+            val isClicked = requireNotNull(metadata?.get(FxSuggestFacts.MetadataKeys.IS_CLICKED) as? Boolean)
+            assertFalse(isClicked)
+
+            val engagementAbandoned = requireNotNull(metadata?.get(FxSuggestFacts.MetadataKeys.ENGAGEMENT_ABANDONED) as? Boolean)
+            assertTrue(engagementAbandoned)
+        }
     }
 
     @Test
@@ -162,7 +192,15 @@ class FxSuggestFactsMiddlewareTest {
             assertEquals(Action.DISPLAY, action)
             assertEquals(FxSuggestFacts.Items.AMP_SUGGESTION_IMPRESSED, item)
 
-            assertEquals(setOf(FxSuggestFacts.MetadataKeys.INTERACTION_INFO, FxSuggestFacts.MetadataKeys.POSITION, FxSuggestFacts.MetadataKeys.IS_CLICKED), metadata?.keys)
+            assertEquals(
+                setOf(
+                    FxSuggestFacts.MetadataKeys.INTERACTION_INFO,
+                    FxSuggestFacts.MetadataKeys.POSITION,
+                    FxSuggestFacts.MetadataKeys.IS_CLICKED,
+                    FxSuggestFacts.MetadataKeys.ENGAGEMENT_ABANDONED,
+                ),
+                metadata?.keys,
+            )
 
             val impressionInfo = requireNotNull(metadata?.get(FxSuggestFacts.MetadataKeys.INTERACTION_INFO) as? FxSuggestInteractionInfo.Amp)
             assertEquals(123, impressionInfo.blockId)
@@ -176,6 +214,9 @@ class FxSuggestFactsMiddlewareTest {
 
             val isClicked = requireNotNull(metadata?.get(FxSuggestFacts.MetadataKeys.IS_CLICKED) as? Boolean)
             assertFalse(isClicked)
+
+            val engagementAbandoned = requireNotNull(metadata?.get(FxSuggestFacts.MetadataKeys.ENGAGEMENT_ABANDONED) as? Boolean)
+            assertFalse(engagementAbandoned)
         }
     }
 
@@ -225,7 +266,15 @@ class FxSuggestFactsMiddlewareTest {
             assertEquals(Action.DISPLAY, action)
             assertEquals(FxSuggestFacts.Items.AMP_SUGGESTION_IMPRESSED, item)
 
-            assertEquals(setOf(FxSuggestFacts.MetadataKeys.INTERACTION_INFO, FxSuggestFacts.MetadataKeys.POSITION, FxSuggestFacts.MetadataKeys.IS_CLICKED), metadata?.keys)
+            assertEquals(
+                setOf(
+                    FxSuggestFacts.MetadataKeys.INTERACTION_INFO,
+                    FxSuggestFacts.MetadataKeys.POSITION,
+                    FxSuggestFacts.MetadataKeys.IS_CLICKED,
+                    FxSuggestFacts.MetadataKeys.ENGAGEMENT_ABANDONED,
+                ),
+                metadata?.keys,
+            )
 
             val impressionInfo = requireNotNull(metadata?.get(FxSuggestFacts.MetadataKeys.INTERACTION_INFO) as? FxSuggestInteractionInfo.Amp)
             assertEquals(123, impressionInfo.blockId)
@@ -239,6 +288,9 @@ class FxSuggestFactsMiddlewareTest {
 
             val isClicked = requireNotNull(metadata?.get(FxSuggestFacts.MetadataKeys.IS_CLICKED) as? Boolean)
             assertFalse(isClicked)
+
+            val engagementAbandoned = requireNotNull(metadata?.get(FxSuggestFacts.MetadataKeys.ENGAGEMENT_ABANDONED) as? Boolean)
+            assertFalse(engagementAbandoned)
         }
     }
 
@@ -288,7 +340,15 @@ class FxSuggestFactsMiddlewareTest {
             assertEquals(Action.DISPLAY, action)
             assertEquals(FxSuggestFacts.Items.AMP_SUGGESTION_IMPRESSED, item)
 
-            assertEquals(setOf(FxSuggestFacts.MetadataKeys.INTERACTION_INFO, FxSuggestFacts.MetadataKeys.POSITION, FxSuggestFacts.MetadataKeys.IS_CLICKED), metadata?.keys)
+            assertEquals(
+                setOf(
+                    FxSuggestFacts.MetadataKeys.INTERACTION_INFO,
+                    FxSuggestFacts.MetadataKeys.POSITION,
+                    FxSuggestFacts.MetadataKeys.IS_CLICKED,
+                    FxSuggestFacts.MetadataKeys.ENGAGEMENT_ABANDONED,
+                ),
+                metadata?.keys,
+            )
 
             val impressionInfo = requireNotNull(metadata?.get(FxSuggestFacts.MetadataKeys.INTERACTION_INFO) as? FxSuggestInteractionInfo.Amp)
             assertEquals(123, impressionInfo.blockId)
@@ -302,6 +362,9 @@ class FxSuggestFactsMiddlewareTest {
 
             val isClicked = requireNotNull(metadata?.get(FxSuggestFacts.MetadataKeys.IS_CLICKED) as? Boolean)
             assertTrue(isClicked)
+
+            val engagementAbandoned = requireNotNull(metadata?.get(FxSuggestFacts.MetadataKeys.ENGAGEMENT_ABANDONED) as? Boolean)
+            assertFalse(engagementAbandoned)
         }
         processor.facts[1].apply {
             assertEquals(Component.FEATURE_FXSUGGEST, component)
@@ -387,7 +450,15 @@ class FxSuggestFactsMiddlewareTest {
             assertEquals(Action.DISPLAY, action)
             assertEquals(FxSuggestFacts.Items.AMP_SUGGESTION_IMPRESSED, item)
 
-            assertEquals(setOf(FxSuggestFacts.MetadataKeys.INTERACTION_INFO, FxSuggestFacts.MetadataKeys.POSITION, FxSuggestFacts.MetadataKeys.IS_CLICKED), metadata?.keys)
+            assertEquals(
+                setOf(
+                    FxSuggestFacts.MetadataKeys.INTERACTION_INFO,
+                    FxSuggestFacts.MetadataKeys.POSITION,
+                    FxSuggestFacts.MetadataKeys.IS_CLICKED,
+                    FxSuggestFacts.MetadataKeys.ENGAGEMENT_ABANDONED,
+                ),
+                metadata?.keys,
+            )
 
             val impressionInfo = requireNotNull(metadata?.get(FxSuggestFacts.MetadataKeys.INTERACTION_INFO) as? FxSuggestInteractionInfo.Amp)
             assertEquals(123, impressionInfo.blockId)
@@ -401,13 +472,24 @@ class FxSuggestFactsMiddlewareTest {
 
             val isClicked = requireNotNull(metadata?.get(FxSuggestFacts.MetadataKeys.IS_CLICKED) as? Boolean)
             assertFalse(isClicked)
+
+            val engagementAbandoned = requireNotNull(metadata?.get(FxSuggestFacts.MetadataKeys.ENGAGEMENT_ABANDONED) as? Boolean)
+            assertFalse(engagementAbandoned)
         }
         processor.facts[1].apply {
             assertEquals(Component.FEATURE_FXSUGGEST, component)
             assertEquals(Action.DISPLAY, action)
             assertEquals(FxSuggestFacts.Items.AMP_SUGGESTION_IMPRESSED, item)
 
-            assertEquals(setOf(FxSuggestFacts.MetadataKeys.INTERACTION_INFO, FxSuggestFacts.MetadataKeys.POSITION, FxSuggestFacts.MetadataKeys.IS_CLICKED), metadata?.keys)
+            assertEquals(
+                setOf(
+                    FxSuggestFacts.MetadataKeys.INTERACTION_INFO,
+                    FxSuggestFacts.MetadataKeys.POSITION,
+                    FxSuggestFacts.MetadataKeys.IS_CLICKED,
+                    FxSuggestFacts.MetadataKeys.ENGAGEMENT_ABANDONED,
+                ),
+                metadata?.keys,
+            )
 
             val impressionInfo = requireNotNull(metadata?.get(FxSuggestFacts.MetadataKeys.INTERACTION_INFO) as? FxSuggestInteractionInfo.Amp)
             assertEquals(456, impressionInfo.blockId)
@@ -421,6 +503,9 @@ class FxSuggestFactsMiddlewareTest {
 
             val isClicked = requireNotNull(metadata?.get(FxSuggestFacts.MetadataKeys.IS_CLICKED) as? Boolean)
             assertFalse(isClicked)
+
+            val engagementAbandoned = requireNotNull(metadata?.get(FxSuggestFacts.MetadataKeys.ENGAGEMENT_ABANDONED) as? Boolean)
+            assertFalse(engagementAbandoned)
         }
     }
 
@@ -490,7 +575,15 @@ class FxSuggestFactsMiddlewareTest {
             assertEquals(Action.DISPLAY, action)
             assertEquals(FxSuggestFacts.Items.AMP_SUGGESTION_IMPRESSED, item)
 
-            assertEquals(setOf(FxSuggestFacts.MetadataKeys.INTERACTION_INFO, FxSuggestFacts.MetadataKeys.POSITION, FxSuggestFacts.MetadataKeys.IS_CLICKED), metadata?.keys)
+            assertEquals(
+                setOf(
+                    FxSuggestFacts.MetadataKeys.INTERACTION_INFO,
+                    FxSuggestFacts.MetadataKeys.POSITION,
+                    FxSuggestFacts.MetadataKeys.IS_CLICKED,
+                    FxSuggestFacts.MetadataKeys.ENGAGEMENT_ABANDONED,
+                ),
+                metadata?.keys,
+            )
 
             val impressionInfo = requireNotNull(metadata?.get(FxSuggestFacts.MetadataKeys.INTERACTION_INFO) as? FxSuggestInteractionInfo.Amp)
             assertEquals(123, impressionInfo.blockId)
@@ -504,13 +597,24 @@ class FxSuggestFactsMiddlewareTest {
 
             val isClicked = requireNotNull(metadata?.get(FxSuggestFacts.MetadataKeys.IS_CLICKED) as? Boolean)
             assertFalse(isClicked)
+
+            val engagementAbandoned = requireNotNull(metadata?.get(FxSuggestFacts.MetadataKeys.ENGAGEMENT_ABANDONED) as? Boolean)
+            assertFalse(engagementAbandoned)
         }
         processor.facts[1].apply {
             assertEquals(Component.FEATURE_FXSUGGEST, component)
             assertEquals(Action.DISPLAY, action)
             assertEquals(FxSuggestFacts.Items.AMP_SUGGESTION_IMPRESSED, item)
 
-            assertEquals(setOf(FxSuggestFacts.MetadataKeys.INTERACTION_INFO, FxSuggestFacts.MetadataKeys.POSITION, FxSuggestFacts.MetadataKeys.IS_CLICKED), metadata?.keys)
+            assertEquals(
+                setOf(
+                    FxSuggestFacts.MetadataKeys.INTERACTION_INFO,
+                    FxSuggestFacts.MetadataKeys.POSITION,
+                    FxSuggestFacts.MetadataKeys.IS_CLICKED,
+                    FxSuggestFacts.MetadataKeys.ENGAGEMENT_ABANDONED,
+                ),
+                metadata?.keys,
+            )
 
             val impressionInfo = requireNotNull(metadata?.get(FxSuggestFacts.MetadataKeys.INTERACTION_INFO) as? FxSuggestInteractionInfo.Amp)
             assertEquals(456, impressionInfo.blockId)
@@ -524,6 +628,9 @@ class FxSuggestFactsMiddlewareTest {
 
             val isClicked = requireNotNull(metadata?.get(FxSuggestFacts.MetadataKeys.IS_CLICKED) as? Boolean)
             assertFalse(isClicked)
+
+            val engagementAbandoned = requireNotNull(metadata?.get(FxSuggestFacts.MetadataKeys.ENGAGEMENT_ABANDONED) as? Boolean)
+            assertFalse(engagementAbandoned)
         }
     }
 
@@ -593,7 +700,15 @@ class FxSuggestFactsMiddlewareTest {
             assertEquals(Action.DISPLAY, action)
             assertEquals(FxSuggestFacts.Items.AMP_SUGGESTION_IMPRESSED, item)
 
-            assertEquals(setOf(FxSuggestFacts.MetadataKeys.INTERACTION_INFO, FxSuggestFacts.MetadataKeys.POSITION, FxSuggestFacts.MetadataKeys.IS_CLICKED), metadata?.keys)
+            assertEquals(
+                setOf(
+                    FxSuggestFacts.MetadataKeys.INTERACTION_INFO,
+                    FxSuggestFacts.MetadataKeys.POSITION,
+                    FxSuggestFacts.MetadataKeys.IS_CLICKED,
+                    FxSuggestFacts.MetadataKeys.ENGAGEMENT_ABANDONED,
+                ),
+                metadata?.keys,
+            )
 
             val impressionInfo = requireNotNull(metadata?.get(FxSuggestFacts.MetadataKeys.INTERACTION_INFO) as? FxSuggestInteractionInfo.Amp)
             assertEquals(123, impressionInfo.blockId)
@@ -607,13 +722,24 @@ class FxSuggestFactsMiddlewareTest {
 
             val isClicked = requireNotNull(metadata?.get(FxSuggestFacts.MetadataKeys.IS_CLICKED) as? Boolean)
             assertFalse(isClicked)
+
+            val engagementAbandoned = requireNotNull(metadata?.get(FxSuggestFacts.MetadataKeys.ENGAGEMENT_ABANDONED) as? Boolean)
+            assertFalse(engagementAbandoned)
         }
         processor.facts[1].apply {
             assertEquals(Component.FEATURE_FXSUGGEST, component)
             assertEquals(Action.DISPLAY, action)
             assertEquals(FxSuggestFacts.Items.AMP_SUGGESTION_IMPRESSED, item)
 
-            assertEquals(setOf(FxSuggestFacts.MetadataKeys.INTERACTION_INFO, FxSuggestFacts.MetadataKeys.POSITION, FxSuggestFacts.MetadataKeys.IS_CLICKED), metadata?.keys)
+            assertEquals(
+                setOf(
+                    FxSuggestFacts.MetadataKeys.INTERACTION_INFO,
+                    FxSuggestFacts.MetadataKeys.POSITION,
+                    FxSuggestFacts.MetadataKeys.IS_CLICKED,
+                    FxSuggestFacts.MetadataKeys.ENGAGEMENT_ABANDONED,
+                ),
+                metadata?.keys,
+            )
 
             val impressionInfo = requireNotNull(metadata?.get(FxSuggestFacts.MetadataKeys.INTERACTION_INFO) as? FxSuggestInteractionInfo.Amp)
             assertEquals(456, impressionInfo.blockId)
@@ -627,6 +753,9 @@ class FxSuggestFactsMiddlewareTest {
 
             val isClicked = requireNotNull(metadata?.get(FxSuggestFacts.MetadataKeys.IS_CLICKED) as? Boolean)
             assertTrue(isClicked)
+
+            val engagementAbandoned = requireNotNull(metadata?.get(FxSuggestFacts.MetadataKeys.ENGAGEMENT_ABANDONED) as? Boolean)
+            assertFalse(engagementAbandoned)
         }
         processor.facts[2].apply {
             assertEquals(Component.FEATURE_FXSUGGEST, component)
@@ -684,7 +813,15 @@ class FxSuggestFactsMiddlewareTest {
             assertEquals(Action.DISPLAY, action)
             assertEquals(FxSuggestFacts.Items.WIKIPEDIA_SUGGESTION_IMPRESSED, item)
 
-            assertEquals(setOf(FxSuggestFacts.MetadataKeys.INTERACTION_INFO, FxSuggestFacts.MetadataKeys.POSITION, FxSuggestFacts.MetadataKeys.IS_CLICKED), metadata?.keys)
+            assertEquals(
+                setOf(
+                    FxSuggestFacts.MetadataKeys.INTERACTION_INFO,
+                    FxSuggestFacts.MetadataKeys.POSITION,
+                    FxSuggestFacts.MetadataKeys.IS_CLICKED,
+                    FxSuggestFacts.MetadataKeys.ENGAGEMENT_ABANDONED,
+                ),
+                metadata?.keys,
+            )
 
             val impressionInfo = requireNotNull(metadata?.get(FxSuggestFacts.MetadataKeys.INTERACTION_INFO) as? FxSuggestInteractionInfo.Wikipedia)
             assertEquals("c303282d-f2e6-46ca-a04a-35d3d873712d", impressionInfo.contextId)
@@ -694,6 +831,9 @@ class FxSuggestFactsMiddlewareTest {
 
             val isClicked = requireNotNull(metadata?.get(FxSuggestFacts.MetadataKeys.IS_CLICKED) as? Boolean)
             assertFalse(isClicked)
+
+            val engagementAbandoned = requireNotNull(metadata?.get(FxSuggestFacts.MetadataKeys.ENGAGEMENT_ABANDONED) as? Boolean)
+            assertFalse(engagementAbandoned)
         }
     }
 
@@ -735,7 +875,15 @@ class FxSuggestFactsMiddlewareTest {
             assertEquals(Action.DISPLAY, action)
             assertEquals(FxSuggestFacts.Items.WIKIPEDIA_SUGGESTION_IMPRESSED, item)
 
-            assertEquals(setOf(FxSuggestFacts.MetadataKeys.INTERACTION_INFO, FxSuggestFacts.MetadataKeys.POSITION, FxSuggestFacts.MetadataKeys.IS_CLICKED), metadata?.keys)
+            assertEquals(
+                setOf(
+                    FxSuggestFacts.MetadataKeys.INTERACTION_INFO,
+                    FxSuggestFacts.MetadataKeys.POSITION,
+                    FxSuggestFacts.MetadataKeys.IS_CLICKED,
+                    FxSuggestFacts.MetadataKeys.ENGAGEMENT_ABANDONED,
+                ),
+                metadata?.keys,
+            )
 
             val impressionInfo = requireNotNull(metadata?.get(FxSuggestFacts.MetadataKeys.INTERACTION_INFO) as? FxSuggestInteractionInfo.Wikipedia)
             assertEquals("c303282d-f2e6-46ca-a04a-35d3d873712d", impressionInfo.contextId)
@@ -745,6 +893,9 @@ class FxSuggestFactsMiddlewareTest {
 
             val isClicked = requireNotNull(metadata?.get(FxSuggestFacts.MetadataKeys.IS_CLICKED) as? Boolean)
             assertTrue(isClicked)
+
+            val engagementAbandoned = requireNotNull(metadata?.get(FxSuggestFacts.MetadataKeys.ENGAGEMENT_ABANDONED) as? Boolean)
+            assertFalse(engagementAbandoned)
         }
         processor.facts[1].apply {
             assertEquals(Component.FEATURE_FXSUGGEST, component)

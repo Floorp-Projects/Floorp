@@ -11,6 +11,7 @@ import mozilla.components.support.base.Component
 import mozilla.components.support.base.facts.Action
 import mozilla.components.support.base.facts.processor.CollectionProcessor
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -72,6 +73,7 @@ class FxSuggestFactsTest {
                 ),
                 positionInAwesomeBar = 0,
                 isClicked = true,
+                engagementAbandoned = false,
             )
 
             assertEquals(1, facts.size)
@@ -85,6 +87,7 @@ class FxSuggestFactsTest {
                         FxSuggestFacts.MetadataKeys.INTERACTION_INFO,
                         FxSuggestFacts.MetadataKeys.POSITION,
                         FxSuggestFacts.MetadataKeys.IS_CLICKED,
+                        FxSuggestFacts.MetadataKeys.ENGAGEMENT_ABANDONED,
                     ),
                     metadata?.keys,
                 )
@@ -101,6 +104,9 @@ class FxSuggestFactsTest {
 
                 val isClicked = requireNotNull(metadata?.get(FxSuggestFacts.MetadataKeys.IS_CLICKED) as? Boolean)
                 assertTrue(isClicked)
+
+                val engagementAbandoned = requireNotNull(metadata?.get(FxSuggestFacts.MetadataKeys.ENGAGEMENT_ABANDONED) as? Boolean)
+                assertFalse(engagementAbandoned)
             }
         }
     }
@@ -149,6 +155,7 @@ class FxSuggestFactsTest {
                 ),
                 positionInAwesomeBar = 0,
                 isClicked = true,
+                engagementAbandoned = false,
             )
 
             assertEquals(1, facts.size)
@@ -162,6 +169,7 @@ class FxSuggestFactsTest {
                         FxSuggestFacts.MetadataKeys.INTERACTION_INFO,
                         FxSuggestFacts.MetadataKeys.POSITION,
                         FxSuggestFacts.MetadataKeys.IS_CLICKED,
+                        FxSuggestFacts.MetadataKeys.ENGAGEMENT_ABANDONED,
                     ),
                     metadata?.keys,
                 )
@@ -174,6 +182,9 @@ class FxSuggestFactsTest {
 
                 val isClicked = requireNotNull(metadata?.get(FxSuggestFacts.MetadataKeys.IS_CLICKED) as? Boolean)
                 assertTrue(isClicked)
+
+                val engagementAbandoned = requireNotNull(metadata?.get(FxSuggestFacts.MetadataKeys.ENGAGEMENT_ABANDONED) as? Boolean)
+                assertFalse(engagementAbandoned)
             }
         }
     }

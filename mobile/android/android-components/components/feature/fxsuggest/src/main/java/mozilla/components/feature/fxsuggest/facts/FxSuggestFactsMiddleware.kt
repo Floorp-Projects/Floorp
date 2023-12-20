@@ -19,12 +19,14 @@ import mozilla.components.support.base.facts.Fact
  * Reports [Fact]s for interactions with Firefox Suggest [AwesomeBar.Suggestion]s.
  *
  * We report two kinds of interactions: impressions and clicks. We report impressions for any Firefox Suggest
- * search suggestions that are still visible just before the user navigates to a destination: either a URL, a
- * search results page, or a suggestion. If the user navigates to one of those Firefox Suggest suggestions,
- * we also report a click.
+ * search suggestions that are visible when the user finishes interacting with the [AwesomeBar].
+ * If the user taps on one of those visible Firefox Suggest suggestions, we'll also report a click for that suggestion.
  *
- * We _don't_ report impressions for any suggestions that the user sees as they're still typing, or
- * if they dismiss the [AwesomeBar] without navigating to a destination.
+ * Each impression's [Fact.metadata] contains a [FxSuggestFacts.MetadataKeys.ENGAGEMENT_ABANDONED] key, whose value is
+ * `false` if the user navigated to a destination (like a URL, a search results page, or a suggestion), or
+ * `true` if the user dismissed the [AwesomeBar] without navigating to a destination.
+ *
+ * We _don't_ report impressions for any suggestions that the user sees as they're still typing.
  */
 class FxSuggestFactsMiddleware : Middleware<BrowserState, BrowserAction> {
     override fun invoke(
@@ -40,12 +42,14 @@ class FxSuggestFactsMiddleware : Middleware<BrowserState, BrowserAction> {
         context: MiddlewareContext<BrowserState, BrowserAction>,
         action: BrowserAction,
     ) = when (action) {
-        is AwesomeBarAction.EngagementFinished ->
-            if (action.abandoned) Unit else emitSuggestionFacts(context.state.awesomeBarState)
+        is AwesomeBarAction.EngagementFinished -> emitSuggestionFacts(
+            awesomeBarState = context.state.awesomeBarState,
+            engagementAbandoned = action.abandoned,
+        )
         else -> Unit
     }
 
-    private fun emitSuggestionFacts(awesomeBarState: AwesomeBarState) {
+    private fun emitSuggestionFacts(awesomeBarState: AwesomeBarState, engagementAbandoned: Boolean) {
         val visibilityState = awesomeBarState.visibilityState
         val clickedSuggestion = awesomeBarState.clickedSuggestion
         visibilityState.visibleProviderGroups.entries.forEachIndexed { groupIndex, (_, suggestions) ->
@@ -58,7 +62,12 @@ class FxSuggestFactsMiddleware : Middleware<BrowserState, BrowserAction> {
                     FxSuggestSuggestionProvider.MetadataKeys.IMPRESSION_INFO,
                 ) as? FxSuggestInteractionInfo
                 impressionInfo?.let {
-                    emitSuggestionImpressedFact(it, positionInGroup, isClicked = isClicked)
+                    emitSuggestionImpressedFact(
+                        interactionInfo = it,
+                        positionInAwesomeBar = positionInAwesomeBar,
+                        isClicked = isClicked,
+                        engagementAbandoned = engagementAbandoned,
+                    )
                 }
 
                 if (isClicked) {

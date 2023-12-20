@@ -283,12 +283,33 @@ internal class ReleaseMetricController(
         Component.FEATURE_FXSUGGEST to FxSuggestFacts.Items.AMP_SUGGESTION_CLICKED,
         Component.FEATURE_FXSUGGEST to FxSuggestFacts.Items.WIKIPEDIA_SUGGESTION_CLICKED,
         -> {
+            val clickInfo = metadata?.get(FxSuggestFacts.MetadataKeys.INTERACTION_INFO)
+
+            // Record an event for this click in the `events` ping. These events include the `client_id`.
+            when (clickInfo) {
+                is FxSuggestInteractionInfo.Amp -> {
+                    Awesomebar.sponsoredSuggestionClicked.record(
+                        Awesomebar.SponsoredSuggestionClickedExtra(
+                            provider = "amp",
+                        ),
+                    )
+                }
+                is FxSuggestInteractionInfo.Wikipedia -> {
+                    Awesomebar.nonSponsoredSuggestionClicked.record(
+                        Awesomebar.NonSponsoredSuggestionClickedExtra(
+                            provider = "wikipedia",
+                        ),
+                    )
+                }
+            }
+
+            // Submit a separate `fx-suggest` ping for this click. These pings do not include the `client_id`.
             FxSuggest.pingType.set("fxsuggest-click")
             FxSuggest.isClicked.set(true)
             (metadata?.get(FxSuggestFacts.MetadataKeys.POSITION) as? Long)?.let {
                 FxSuggest.position.set(it)
             }
-            when (val clickInfo = metadata?.get(FxSuggestFacts.MetadataKeys.INTERACTION_INFO)) {
+            when (clickInfo) {
                 is FxSuggestInteractionInfo.Amp -> {
                     FxSuggest.blockId.set(clickInfo.blockId)
                     FxSuggest.advertiser.set(clickInfo.advertiser)
@@ -307,27 +328,58 @@ internal class ReleaseMetricController(
         Component.FEATURE_FXSUGGEST to FxSuggestFacts.Items.AMP_SUGGESTION_IMPRESSED,
         Component.FEATURE_FXSUGGEST to FxSuggestFacts.Items.WIKIPEDIA_SUGGESTION_IMPRESSED,
         -> {
-            FxSuggest.pingType.set("fxsuggest-impression")
-            (metadata?.get(FxSuggestFacts.MetadataKeys.IS_CLICKED) as? Boolean)?.let {
-                FxSuggest.isClicked.set(it)
-            }
-            (metadata?.get(FxSuggestFacts.MetadataKeys.POSITION) as? Long)?.let {
-                FxSuggest.position.set(it)
-            }
-            when (val impressionInfo = metadata?.get(FxSuggestFacts.MetadataKeys.INTERACTION_INFO)) {
+            val impressionInfo = metadata?.get(FxSuggestFacts.MetadataKeys.INTERACTION_INFO)
+            val engagementAbandoned = metadata?.get(FxSuggestFacts.MetadataKeys.ENGAGEMENT_ABANDONED) as? Boolean
+                ?: false
+
+            // Record an event for this impression in the `events` ping. These events include the `client_id`, and
+            // we record them for engaged and abandoned search sessions.
+            when (impressionInfo) {
                 is FxSuggestInteractionInfo.Amp -> {
-                    FxSuggest.blockId.set(impressionInfo.blockId)
-                    FxSuggest.advertiser.set(impressionInfo.advertiser)
-                    FxSuggest.reportingUrl.set(impressionInfo.reportingUrl)
-                    FxSuggest.iabCategory.set(impressionInfo.iabCategory)
-                    FxSuggest.contextId.set(UUID.fromString(impressionInfo.contextId))
+                    Awesomebar.sponsoredSuggestionImpressed.record(
+                        Awesomebar.SponsoredSuggestionImpressedExtra(
+                            provider = "amp",
+                            engagementAbandoned = engagementAbandoned,
+                        ),
+                    )
                 }
                 is FxSuggestInteractionInfo.Wikipedia -> {
-                    FxSuggest.advertiser.set("wikipedia")
-                    FxSuggest.contextId.set(UUID.fromString(impressionInfo.contextId))
+                    Awesomebar.nonSponsoredSuggestionImpressed.record(
+                        Awesomebar.NonSponsoredSuggestionImpressedExtra(
+                            provider = "wikipedia",
+                            engagementAbandoned = engagementAbandoned,
+                        ),
+                    )
                 }
             }
-            Pings.fxSuggest.submit()
+
+            // Submit a separate `fx-suggest` ping for this impression. These pings do not include the `client_id`,
+            // and we submit them for engaged search sessions only.
+            if (!engagementAbandoned) {
+                FxSuggest.pingType.set("fxsuggest-impression")
+                (metadata?.get(FxSuggestFacts.MetadataKeys.IS_CLICKED) as? Boolean)?.let {
+                    FxSuggest.isClicked.set(it)
+                }
+                (metadata?.get(FxSuggestFacts.MetadataKeys.POSITION) as? Long)?.let {
+                    FxSuggest.position.set(it)
+                }
+                when (impressionInfo) {
+                    is FxSuggestInteractionInfo.Amp -> {
+                        FxSuggest.blockId.set(impressionInfo.blockId)
+                        FxSuggest.advertiser.set(impressionInfo.advertiser)
+                        FxSuggest.reportingUrl.set(impressionInfo.reportingUrl)
+                        FxSuggest.iabCategory.set(impressionInfo.iabCategory)
+                        FxSuggest.contextId.set(UUID.fromString(impressionInfo.contextId))
+                    }
+                    is FxSuggestInteractionInfo.Wikipedia -> {
+                        FxSuggest.advertiser.set("wikipedia")
+                        FxSuggest.contextId.set(UUID.fromString(impressionInfo.contextId))
+                    }
+                }
+                Pings.fxSuggest.submit()
+            }
+
+            Unit
         }
 
         Component.FEATURE_PWA to ProgressiveWebAppFacts.Items.HOMESCREEN_ICON_TAP -> {

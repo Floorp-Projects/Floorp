@@ -9161,6 +9161,104 @@ awesomebar:
     metadata:
       tags:
         - Search
+  sponsored_suggestion_clicked:
+    type: event
+    description: |
+      A sponsored suggestion in the awesomebar was clicked.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1871156
+    data_reviews:
+      - https://github.com/mozilla-mobile/firefox-android/pull/4914#issuecomment-1874271848
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+      - lina@mozilla.com
+      - ttran@mozilla.com
+      - najiang@mozilla.com
+    expires: never
+    extra_keys:
+      provider: &sponsored_suggestion_provider
+        description: |
+          The provider of the sponsored suggestion. Possible values: `amp` (for adMarketplace
+          suggestions).
+        type: string
+    metadata:
+      tags:
+        - Search
+  non_sponsored_suggestion_clicked:
+    type: event
+    description: |
+      A non-sponsored suggestion in the awesomebar was clicked.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1871156
+    data_reviews:
+      - https://github.com/mozilla-mobile/firefox-android/pull/4914#issuecomment-1874271848
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+      - lina@mozilla.com
+      - ttran@mozilla.com
+      - najiang@mozilla.com
+    expires: never
+    extra_keys:
+      provider: &non_sponsored_suggestion_provider
+        description: |
+          The provider of the non-sponsored suggestion. Possible values: `wikipedia`.
+        type: string
+    metadata:
+      tags:
+        - Search
+  sponsored_suggestion_impressed:
+    type: event
+    description: |
+      A sponsored suggestion was visible when the user finished interacting with the awesomebar.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1871156
+    data_reviews:
+      - https://github.com/mozilla-mobile/firefox-android/pull/4914#issuecomment-1874271848
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+      - lina@mozilla.com
+      - ttran@mozilla.com
+      - najiang@mozilla.com
+    expires: never
+    extra_keys:
+      provider: *sponsored_suggestion_provider
+      engagement_abandoned: &awesomebar_engagement_abandoned
+        description: |
+          If `true`, the user dismissed the awesomebar without navigating to a destination. If
+          `false`, the user finished engaging with the awesomebar by navigating to a destination,
+          like a URL, a search results page, or a suggestion.
+        type: boolean
+    metadata:
+      tags:
+        - Search
+  non_sponsored_suggestion_impressed:
+    type: event
+    description: |
+      A non-sponsored suggestion was visible when the user finished interacting with the awesomebar.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1871156
+    data_reviews:
+      - https://github.com/mozilla-mobile/firefox-android/pull/4914#issuecomment-1874271848
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+      - lina@mozilla.com
+      - ttran@mozilla.com
+      - najiang@mozilla.com
+    expires: never
+    extra_keys:
+      provider: *non_sponsored_suggestion_provider
+      engagement_abandoned: *awesomebar_engagement_abandoned
+    metadata:
+      tags:
+        - Search
 android_autofill:
   supported:
     type: boolean
