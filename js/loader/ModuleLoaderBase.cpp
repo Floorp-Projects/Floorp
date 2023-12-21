@@ -331,8 +331,8 @@ bool ModuleLoaderBase::HostImportModuleDynamically(
 
   // Create a new top-level load request.
   nsCOMPtr<nsIURI> uri = result.unwrap();
-  RefPtr<ModuleLoadRequest> request = loader->CreateDynamicImport(
-      aCx, uri, script, aReferencingPrivate, specifierString, aPromise);
+  RefPtr<ModuleLoadRequest> request =
+      loader->CreateDynamicImport(aCx, uri, script, specifierString, aPromise);
 
   if (!request) {
     // Throws TypeError if CreateDynamicImport returns nullptr.
@@ -381,9 +381,6 @@ LoadedScript* ModuleLoaderBase::GetLoadedScriptOrNull(
   }
 
   auto* script = static_cast<LoadedScript*>(aReferencingPrivate.toPrivate());
-  if (script->IsEventScript()) {
-    return nullptr;
-  }
 
   MOZ_ASSERT_IF(
       script->IsModuleScript(),
@@ -391,6 +388,14 @@ LoadedScript* ModuleLoaderBase::GetLoadedScriptOrNull(
           aReferencingPrivate);
 
   return script;
+}
+
+JS::Value PrivateFromLoadedScript(LoadedScript* aScript) {
+  if (!aScript) {
+    return JS::UndefinedValue();
+  }
+
+  return JS::PrivateValue(aScript);
 }
 
 nsresult ModuleLoaderBase::StartModuleLoad(ModuleLoadRequest* aRequest) {
@@ -769,7 +774,7 @@ ResolveResult ModuleLoaderBase::ResolveModuleSpecifier(
 
   // Get the document's base URL if we don't have a referencing script here.
   nsCOMPtr<nsIURI> baseURL;
-  if (aScript) {
+  if (aScript && !aScript->IsEventScript()) {
     baseURL = aScript->BaseURL();
   } else {
     baseURL = GetBaseURI();
@@ -1000,8 +1005,8 @@ void ModuleLoaderBase::FinishDynamicImport(
                               JSMSG_DYNAMIC_IMPORT_FAILED, url.get());
   }
 
-  JS::Rooted<JS::Value> referencingScript(aCx,
-                                          aRequest->mDynamicReferencingPrivate);
+  JS::Rooted<JS::Value> referencingScript(
+      aCx, PrivateFromLoadedScript(aRequest->mDynamicReferencingScript));
   JS::Rooted<JSString*> specifier(aCx, aRequest->mDynamicSpecifier);
   JS::Rooted<JSObject*> promise(aCx, aRequest->mDynamicPromise);
 
