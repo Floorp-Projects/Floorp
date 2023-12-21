@@ -1018,7 +1018,7 @@ class RulesetsStore {
     // TODO(Bug 1803369): consider also setting to true if the extension is installed temporarily.
     if (this.#hasInstallOrUpdateStartupReason(extension)) {
       // Reset the stored static rules on addon updates.
-      await StartupCache.delete(extension, "dnr", "hasEnabledStaticRules");
+      await StartupCache.delete(extension, ["dnr", "hasEnabledStaticRules"]);
     }
 
     const hasEnabledStaticRules = await StartupCache.get(
@@ -1151,7 +1151,7 @@ class RulesetsStore {
       // Reset the stored data if a data schema version downgrade has been
       // detected (this should only be hit on downgrades if the user have
       // also explicitly passed --allow-downgrade CLI option).
-      if (result && result.version > StoreData.VERSION) {
+      if (result && result.schemaVersion > StoreData.VERSION) {
         Cu.reportError(
           `Unsupport DNR store schema version downgrade: resetting stored data for ${extension.id}`
         );

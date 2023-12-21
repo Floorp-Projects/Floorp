@@ -103,7 +103,7 @@ export class ExtensionStorageSync {
             reject,
             (extId, changes) => this.notifyListeners(extId, changes)
           );
-          let sargs = args.map(JSON.stringify);
+          let sargs = args.map(val => JSON.stringify(val));
           lazy.storageSvc[fnName](extId, ...sargs, callback);
         });
       } catch (ex) {
