@@ -15470,7 +15470,7 @@
 # controls). Maybe it's just fine.
 - name: widget.non-native-theme.use-theme-accent
   type: RelaxedAtomicBool
-#ifdef XP_WIN
+#if defined(XP_WIN) && !defined(MOZ_THUNDERBIRD)
   value: false
 #else
   value: true
