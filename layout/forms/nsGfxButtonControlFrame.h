@@ -55,8 +55,6 @@ class nsGfxButtonControlFrame final : public nsHTMLButtonControlFrame,
 
   nsresult GetLabel(nsString& aLabel);
 
-  virtual bool IsInput() override { return true; }
-
  private:
   RefPtr<nsTextNode> mTextContent;
 };

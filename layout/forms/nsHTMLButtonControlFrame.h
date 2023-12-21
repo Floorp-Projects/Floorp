@@ -87,8 +87,6 @@ class nsHTMLButtonControlFrame : public nsContainerFrame,
   nsHTMLButtonControlFrame(ComputedStyle* aStyle, nsPresContext* aPresContext,
                            nsIFrame::ClassID aID);
 
-  virtual bool IsInput() { return false; }
-
   // Indicates whether we should clip our children's painting to our
   // border-box (either because of "overflow" or because of legacy reasons
   // about how <input>-flavored buttons work).
