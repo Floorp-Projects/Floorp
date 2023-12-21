@@ -24,6 +24,7 @@ enum class StackCaptureOptions {
 
 }
 
+#include "BaseProfileJSONWriter.h"
 #include "BaseProfilingCategory.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/ProfileChunkedBuffer.h"
@@ -684,6 +685,19 @@ class JSONWriter;
 // marker type definition, see Add/Set functions.
 class MarkerSchema {
  public:
+  // This is used to describe a C++ type that is expected to be specified to
+  // the marker and used in PayloadField. This type is the expected input type
+  // to the marker data.
+  enum class InputType {
+    Uint64,
+    Uint32,
+    Boolean,
+    CString,
+    String,
+    TimeStamp,
+    TimeDuration
+  };
+
   enum class Location : unsigned {
     MarkerChart,
     MarkerTable,
@@ -752,6 +766,34 @@ class MarkerSchema {
     // Do not use it for time information.
     // "Label: 52.23, 0.0054, 123,456.78"
     Decimal
+  };
+
+  // This represents groups of markers which MarkerTypes can expose to indicate
+  // what group they belong to (multiple groups are allowed combined in bitwise
+  // or). This is currently only used for ETW filtering. In the long run this
+  // should be generalized to gecko markers.
+  enum class ETWMarkerGroup : uint64_t {
+    Generic = 1,
+    UserMarkers = 1 << 1,
+    Memory = 1 << 2,
+    Scheduling = 1 << 3
+  };
+
+  // Flags which describe additional information for a PayloadField.
+  enum class PayloadFlags : uint32_t { None = 0, Searchable = 1 };
+
+  // This is one field of payload to be used for additional marker data.
+  struct PayloadField {
+    // Key identifying the marker.
+    const char* Key;
+    // Input type, this represents the data type specified.
+    InputType InputTy;
+    // Label, additional description.
+    const char* Label = nullptr;
+    // Format as written to the JSON.
+    Format Fmt = Format::String;
+    // Optional PayloadFlags.
+    PayloadFlags Flags = PayloadFlags::None;
   };
 
   enum class Searchable { NotSearchable, Searchable };

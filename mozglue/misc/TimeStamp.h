@@ -479,7 +479,7 @@ class TimeStamp {
 #endif
 
 #ifdef XP_WIN
-  Maybe<uint64_t> RawQueryPerformanceCounterValue() {
+  Maybe<uint64_t> RawQueryPerformanceCounterValue() const {
     // mQPC is stored in `mt` i.e. QueryPerformanceCounter * 1000
     // so divide out the 1000
     return mValue.mHasQPC ? Some(mValue.mQPC / 1000ULL) : Nothing();

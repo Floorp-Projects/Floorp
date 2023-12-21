@@ -267,6 +267,8 @@ void Await() {
       }));
 }
 
+// WinBase.h defines this.
+#undef Yield
 void Yield() { eventInProgress = false; }
 
 }  // namespace
