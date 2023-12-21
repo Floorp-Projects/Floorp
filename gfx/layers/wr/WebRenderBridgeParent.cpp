@@ -1431,7 +1431,7 @@ bool WebRenderBridgeParent::ProcessWebRenderParentCommands(
   // Transaction for async image pipeline that uses ImageBridge always need to
   // be non low priority.
   wr::TransactionBuilder txnForImageBridge(mApi->GetRootAPI());
-  wr::AutoTransactionSender sender(mApi, &txnForImageBridge);
+  wr::AutoTransactionSender sender(mApi->GetRootAPI(), &txnForImageBridge);
 
   bool success = true;
   for (nsTArray<WebRenderParentCommand>::index_type i = 0;
