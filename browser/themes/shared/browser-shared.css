@@ -84,6 +84,18 @@
 
   --ext-theme-background-transition: background-color 0.1s cubic-bezier(.17,.67,.83,.67);
   --inactive-window-transition: 0.2s ease;
+  --inactive-titlebar-opacity: .6;
+  /**
+   * On macOS and Linux, fading the whole titlebar is the native behavior.
+   *
+   * On Windows there's no particular standard, but the default .6 opacity
+   * feels like too much, specially because Windows "fades" the titlebar of
+   * unresponsive applications. Fade substantially less the titlebar on windows
+   * to account for this platform difference.
+   */
+  @media (-moz-platform: windows) {
+    --inactive-titlebar-opacity: .75;
+  }
 
   &:where([tabsintitlebar]) {
     --toolbox-non-lwt-bgcolor: ActiveCaption;
@@ -196,7 +208,7 @@
   transition: opacity var(--inactive-window-transition);
 
   &:-moz-window-inactive {
-    opacity: .6;
+    opacity: var(--inactive-titlebar-opacity);
   }
 }
 
