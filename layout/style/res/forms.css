@@ -505,6 +505,7 @@ input:is([type=color], [type=reset], [type=button], [type=submit]) {
   cursor: default;
   box-sizing: border-box;
   user-select: none;
+  overflow-clip-box: padding-box;
 }
 
 /* Text-related properties for buttons: these ones are not shared with
@@ -516,7 +517,6 @@ input:is([type=reset], [type=button], [type=submit]) {
   font: -moz-button;
   white-space: pre;
   text-align: center;
-  overflow-clip-box: padding-box;
   padding-inline: 4px;
 }
 
@@ -524,6 +524,12 @@ input[type=color] {
   inline-size: 64px;
   block-size: 32px;
   padding: 4px;
+}
+
+/* https://github.com/whatwg/html/issues/9976 */
+input:not([type=image i]) {
+  overflow: clip !important;
+  overflow-clip-margin: 0px !important;
 }
 
 button,
