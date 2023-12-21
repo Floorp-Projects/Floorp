@@ -1391,6 +1391,10 @@ class NormalAtom : public JSAtom {
   friend class gc::CellAllocator;
 
  protected:
+  static constexpr size_t ExtensionBytes =
+      js::gc::CellAlignBytes - sizeof(js::HashNumber);
+
+  char inlineStorage_[ExtensionBytes];
   HashNumber hash_;
 
   // For subclasses to call.
@@ -1407,7 +1411,9 @@ class NormalAtom : public JSAtom {
   static constexpr size_t offsetOfHash() { return offsetof(NormalAtom, hash_); }
 };
 
-static_assert(sizeof(NormalAtom) == sizeof(JSString) + sizeof(uint64_t),
+static_assert(sizeof(NormalAtom) ==
+                  js::RoundUp(sizeof(JSString) + sizeof(js::HashNumber),
+                              js::gc::CellAlignBytes),
               "NormalAtom must have size of a string + HashNumber, "
               "aligned to gc::CellAlignBytes");
 
@@ -1415,8 +1421,10 @@ class ThinInlineAtom : public NormalAtom {
   friend class gc::CellAllocator;
 
  public:
-  static constexpr size_t MAX_LENGTH_LATIN1 = NUM_INLINE_CHARS_LATIN1;
-  static constexpr size_t MAX_LENGTH_TWO_BYTE = NUM_INLINE_CHARS_TWO_BYTE;
+  static constexpr size_t MAX_LENGTH_LATIN1 =
+      NUM_INLINE_CHARS_LATIN1 + ExtensionBytes / sizeof(JS::Latin1Char);
+  static constexpr size_t MAX_LENGTH_TWO_BYTE =
+      NUM_INLINE_CHARS_TWO_BYTE + ExtensionBytes / sizeof(char16_t);
 
 #ifdef JS_64BIT
   // Fat and Thin inline atoms are the same size. Only use fat.
@@ -1452,20 +1460,16 @@ class ThinInlineAtom : public NormalAtom {
 class FatInlineAtom : public JSAtom {
   friend class gc::CellAllocator;
 
- public:
-  // The space consumed by the hash value in the Cell. Because it's a trailing
-  // field, it's the size of a hash rounded up to the Cell alignment.
-  static constexpr size_t HashBytes =
-      js::RoundUp(sizeof(HashNumber), js::gc::CellAlignBytes);
-
   // The space available for storing inline characters. It's the same amount of
   // space as a JSFatInlineString, except we take the hash value out of it.
-  static constexpr size_t InlineBytes =
-      sizeof(JSFatInlineString) - sizeof(JSString::Base) - HashBytes;
+  static constexpr size_t InlineBytes = sizeof(JSFatInlineString) -
+                                        sizeof(JSString::Base) -
+                                        sizeof(js::HashNumber);
 
   static constexpr size_t ExtensionBytes =
       InlineBytes - JSThinInlineString::InlineBytes;
 
+ public:
   static constexpr size_t MAX_LENGTH_LATIN1 =
       InlineBytes / sizeof(JS::Latin1Char);
   static constexpr size_t MAX_LENGTH_TWO_BYTE = InlineBytes / sizeof(char16_t);
@@ -1486,6 +1490,15 @@ class FatInlineAtom : public JSAtom {
   inline void finalize(JS::GCContext* gcx);
 
   static constexpr size_t offsetOfHash() {
+    static_assert(
+        sizeof(FatInlineAtom) ==
+            js::RoundUp(sizeof(JSThinInlineString) +
+                            FatInlineAtom::ExtensionBytes + sizeof(HashNumber),
+                        gc::CellAlignBytes),
+        "FatInlineAtom must have size of a thin inline string + "
+        "extension bytes if any + HashNumber, "
+        "aligned to gc::CellAlignBytes");
+
     return offsetof(FatInlineAtom, hash_);
   }
 
@@ -1495,14 +1508,6 @@ class FatInlineAtom : public JSAtom {
   }
 };
 
-static_assert(sizeof(FatInlineAtom) ==
-                  js::RoundUp(sizeof(JSThinInlineString) +
-                                  FatInlineAtom::ExtensionBytes +
-                                  sizeof(HashNumber),
-                              gc::CellAlignBytes),
-              "FatInlineAtom must have size of a thin inline string + "
-              "extension bytes if any + HashNumber, "
-              "aligned to gc::CellAlignBytes");
 static_assert(sizeof(FatInlineAtom) == sizeof(JSFatInlineString),
               "FatInlineAtom must be the same size as a fat inline string");
 
