@@ -74,6 +74,8 @@ panel {
      * causing overflow, see bug 1846050 */
     max-height: round(up, 100% - 2 * var(--panel-shadow-margin), 1px);
     max-width: round(up, 100% - 2 * var(--panel-shadow-margin), 1px);
+
+    overflow: clip; /* Don't let panel content overflow the border */
   }
 
   &[orient=vertical]::part(content) {
@@ -88,7 +90,6 @@ panel {
 
     &.panel-no-padding::part(content) {
       padding: 0;
-      overflow: hidden; /* Don't let panel content overflow the border */
     }
 
     @media (-moz-platform: macos) {
