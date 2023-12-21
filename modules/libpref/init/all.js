@@ -3994,8 +3994,9 @@ pref("extensions.formautofill.creditCards.heuristics.fathom.testConfidence", "0"
 
 pref("extensions.formautofill.loglevel", "Warn");
 
-// Temporary pref that we will remove when enabling capture on form removal in Fx122.
+// Temporary prefs that we will be removed when enabling capture on form removal and on page navigation in Fx123.
 pref("extensions.formautofill.heuristics.captureOnFormRemoval", false);
+pref("extensions.formautofill.heuristics.captureOnPageNavigation", false);
 // The interactivityCheckMode pref is only temporary.
 // It will be removed when we decide to only support the `focusability` mode
 pref("extensions.formautofill.heuristics.interactivityCheckMode", "focusability");

@@ -136,7 +136,7 @@ export var FormAutofillContent = {
    *
    * @param {HTMLElement} formElement Root element which receives submit event.
    * @param {string} formSubmissionReason Reason for invoking the form submission
-   *                 (see options for FORM_SUBMISSION_REASON in FormAutofillChild))
+   *                 (see options for FORM_SUBMISSION_REASON in FormAutofillUtils))
    * @param {Window} domWin Content window; passed for unit tests and when
    *                 invoked by the FormAutofillSection
    * @param {object} handler FormAutofillHander, if known by caller
