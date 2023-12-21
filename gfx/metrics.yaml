@@ -27,6 +27,70 @@ paint:
     expires: never
     telemetry_mirror: PAINT_BUILD_DISPLAYLIST_TIME
 
+gpu_process:
+  feature_status:
+    type: string
+    description: >
+      Current status of the GPU process feature
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1870021
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1870021
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - gfx-telemetry-alerts@mozilla.com
+      - jnicol@mozilla.com
+    expires: never
+  crash_fallbacks:
+    type: labeled_counter
+    description: >
+      How often we use different fallbacks when the GPU process crashes
+    labels:
+      - none
+      - decoding_disabled
+      - disabled
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1870021
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1870021
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - gfx-telemetry-alerts@mozilla.com
+      - jnicol@mozilla.com
+    expires: never
+  total_launch_attempts:
+    type: quantity
+    description: >
+      The number of total GPU process launch attempts.
+    unit: launches
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1870021
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1870021
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - gfx-telemetry-alerts@mozilla.com
+      - jnicol@mozilla.com
+    expires: never
+  unstable_launch_attempts:
+    type: quantity
+    description: >
+      The number of consecutive unstable launch attempts.
+    unit: launches
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1870021
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1870021
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - gfx-telemetry-alerts@mozilla.com
+      - jnicol@mozilla.com
+    expires: never
+
 wr:
   gpu_wait_time:
     type: timing_distribution
