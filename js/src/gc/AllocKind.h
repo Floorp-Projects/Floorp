@@ -31,6 +31,7 @@ namespace js {
 
 class CompactPropMap;
 class FatInlineAtom;
+class ThinInlineAtom;
 class NormalAtom;
 class NormalPropMap;
 class DictionaryPropMap;
@@ -237,6 +238,10 @@ struct MapTypeToAllocKind<JSLinearString> {
 template <>
 struct MapTypeToAllocKind<JSThinInlineString> {
   static const AllocKind kind = AllocKind::STRING;
+};
+template <>
+struct MapTypeToAllocKind<js::ThinInlineAtom> {
+  static const AllocKind kind = AllocKind::ATOM;
 };
 
 template <>
