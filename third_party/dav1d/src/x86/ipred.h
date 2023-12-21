@@ -137,7 +137,6 @@ static ALWAYS_INLINE void intra_pred_dsp_init_x86(Dav1dIntraPredDSPContext *cons
     init_angular_ipred_fn(LEFT_DC_PRED,  ipred_dc_left,  avx512icl);
     init_angular_ipred_fn(HOR_PRED,      ipred_h,        avx512icl);
     init_angular_ipred_fn(VERT_PRED,     ipred_v,        avx512icl);
-    init_angular_ipred_fn(Z1_PRED,       ipred_z1,       avx512icl);
     init_angular_ipred_fn(Z2_PRED,       ipred_z2,       avx512icl);
     init_angular_ipred_fn(Z3_PRED,       ipred_z3,       avx512icl);
 #endif
@@ -145,6 +144,7 @@ static ALWAYS_INLINE void intra_pred_dsp_init_x86(Dav1dIntraPredDSPContext *cons
     init_angular_ipred_fn(SMOOTH_PRED,   ipred_smooth,   avx512icl);
     init_angular_ipred_fn(SMOOTH_H_PRED, ipred_smooth_h, avx512icl);
     init_angular_ipred_fn(SMOOTH_V_PRED, ipred_smooth_v, avx512icl);
+    init_angular_ipred_fn(Z1_PRED,       ipred_z1,       avx512icl);
     init_angular_ipred_fn(FILTER_PRED,   ipred_filter,   avx512icl);
 
     c->pal_pred = BF(dav1d_pal_pred, avx512icl);

@@ -292,8 +292,11 @@ static ALWAYS_INLINE void mc_dsp_init_x86(Dav1dMCDSPContext *const c) {
     c->blend = BF(dav1d_blend, avx512icl);
     c->blend_v = BF(dav1d_blend_v, avx512icl);
     c->blend_h = BF(dav1d_blend_h, avx512icl);
-    c->warp8x8  = BF(dav1d_warp_affine_8x8, avx512icl);
-    c->warp8x8t = BF(dav1d_warp_affine_8x8t, avx512icl);
-    c->resize = BF(dav1d_resize, avx512icl);
+
+    if (!(flags & DAV1D_X86_CPU_FLAG_SLOW_GATHER)) {
+        c->resize = BF(dav1d_resize, avx512icl);
+        c->warp8x8  = BF(dav1d_warp_affine_8x8, avx512icl);
+        c->warp8x8t = BF(dav1d_warp_affine_8x8t, avx512icl);
+    }
 #endif
 }
