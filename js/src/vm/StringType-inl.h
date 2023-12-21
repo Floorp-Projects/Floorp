@@ -40,7 +40,7 @@ template <typename CharT>
 static MOZ_ALWAYS_INLINE JSAtom* AllocateInlineAtom(JSContext* cx, size_t len,
                                                     CharT** chars,
                                                     js::HashNumber hash) {
-  MOZ_ASSERT(js::FatInlineAtom::lengthFits<CharT>(len));
+  MOZ_ASSERT(JSAtom::lengthFitsInline<CharT>(len));
 
   if (js::ThinInlineAtom::lengthFits<CharT>(len)) {
     return cx->newCell<js::ThinInlineAtom, js::NoGC>(len, chars, hash);

@@ -1636,7 +1636,7 @@ static MOZ_ALWAYS_INLINE JSAtom* NewInlineAtomDeflated(JSContext* cx,
 
 static JSAtom* NewAtomDeflatedValidLength(JSContext* cx, const char16_t* s,
                                           size_t n, js::HashNumber hash) {
-  if (js::FatInlineAtom::lengthFits<Latin1Char>(n)) {
+  if (JSAtom::lengthFitsInline<Latin1Char>(n)) {
     return NewInlineAtomDeflated(cx, s, n, hash);
   }
 
