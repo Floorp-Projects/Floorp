@@ -8,6 +8,7 @@
 
 #include "mozilla/Baseline.h"
 #include "mozilla/PresShell.h"
+#include "nsIFrameInlines.h"
 #include "nsContainerFrame.h"
 #include "nsIFormControlFrame.h"
 #include "nsPresContext.h"
