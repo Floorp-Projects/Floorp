@@ -174,6 +174,7 @@ void qcms_data_from_unicode_path(const wchar_t *path, void **mem, size_t *size);
 
 qcms_CIE_xyY qcms_white_point_sRGB(void);
 qcms_profile* qcms_profile_sRGB(void);
+qcms_profile* qcms_profile_displayP3(void);
 
 void qcms_profile_release(qcms_profile *profile);
 
