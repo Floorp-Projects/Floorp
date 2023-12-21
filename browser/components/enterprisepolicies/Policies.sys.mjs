@@ -2330,6 +2330,11 @@ export var Policies = {
           param.FeatureRecommendations,
           param.Locked
         );
+        PoliciesUtils.setDefaultPref(
+          "browser.translations.panelShown",
+          !param.FeatureRecommendations,
+          param.Locked
+        );
       }
       if ("UrlbarInterventions" in param && !param.UrlbarInterventions) {
         manager.disallowFeature("urlbarinterventions");
