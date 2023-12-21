@@ -1840,22 +1840,163 @@ class DeviceAccessRequestPromiseHolderWithFallback
 
 }  // anonymous namespace
 
+MediaManager::DeviceEnumerationParams::DeviceEnumerationParams(
+    dom::MediaSourceEnum aInputType, DeviceType aType,
+    nsAutoCString aForcedDeviceName)
+    : mInputType(aInputType),
+      mType(aType),
+      mForcedDeviceName(std::move(aForcedDeviceName)) {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mInputType != dom::MediaSourceEnum::Other);
+  MOZ_ASSERT_IF(!mForcedDeviceName.IsEmpty(), mType == DeviceType::Real);
+}
+
+MediaManager::VideoDeviceEnumerationParams::VideoDeviceEnumerationParams(
+    dom::MediaSourceEnum aInputType, DeviceType aType,
+    nsAutoCString aForcedDeviceName, nsAutoCString aForcedMicrophoneName)
+    : DeviceEnumerationParams(aInputType, aType, std::move(aForcedDeviceName)),
+      mForcedMicrophoneName(std::move(aForcedMicrophoneName)) {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT_IF(!mForcedMicrophoneName.IsEmpty(),
+                mInputType == dom::MediaSourceEnum::Camera);
+  MOZ_ASSERT_IF(!mForcedMicrophoneName.IsEmpty(), mType == DeviceType::Real);
+}
+
+MediaManager::EnumerationParams::EnumerationParams(
+    EnumerationFlags aFlags, Maybe<VideoDeviceEnumerationParams> aVideo,
+    Maybe<DeviceEnumerationParams> aAudio)
+    : mFlags(aFlags), mVideo(std::move(aVideo)), mAudio(std::move(aAudio)) {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT_IF(mVideo, MediaEngineSource::IsVideo(mVideo->mInputType));
+  MOZ_ASSERT_IF(mVideo && !mVideo->mForcedDeviceName.IsEmpty(),
+                mVideo->mInputType == dom::MediaSourceEnum::Camera);
+  MOZ_ASSERT_IF(mVideo && mVideo->mType == DeviceType::Fake,
+                mVideo->mInputType == dom::MediaSourceEnum::Camera);
+  MOZ_ASSERT_IF(mAudio, MediaEngineSource::IsAudio(mAudio->mInputType));
+  MOZ_ASSERT_IF(mAudio && !mAudio->mForcedDeviceName.IsEmpty(),
+                mAudio->mInputType == dom::MediaSourceEnum::Microphone);
+  MOZ_ASSERT_IF(mAudio && mAudio->mType == DeviceType::Fake,
+                mAudio->mInputType == dom::MediaSourceEnum::Microphone);
+}
+
+bool MediaManager::EnumerationParams::HasFakeCams() const {
+  return mVideo
+      .map([](const auto& aDev) { return aDev.mType == DeviceType::Fake; })
+      .valueOr(false);
+}
+
+bool MediaManager::EnumerationParams::HasFakeMics() const {
+  return mAudio
+      .map([](const auto& aDev) { return aDev.mType == DeviceType::Fake; })
+      .valueOr(false);
+}
+
+bool MediaManager::EnumerationParams::RealDeviceRequested() const {
+  auto isReal = [](const auto& aDev) { return aDev.mType == DeviceType::Real; };
+  return mVideo.map(isReal).valueOr(false) ||
+         mAudio.map(isReal).valueOr(false) ||
+         mFlags.contains(EnumerationFlag::EnumerateAudioOutputs);
+}
+
+MediaSourceEnum MediaManager::EnumerationParams::VideoInputType() const {
+  return mVideo.map([](const auto& aDev) { return aDev.mInputType; })
+      .valueOr(MediaSourceEnum::Other);
+}
+
+MediaSourceEnum MediaManager::EnumerationParams::AudioInputType() const {
+  return mAudio.map([](const auto& aDev) { return aDev.mInputType; })
+      .valueOr(MediaSourceEnum::Other);
+}
+
+/* static */ MediaManager::EnumerationParams
+MediaManager::CreateEnumerationParams(dom::MediaSourceEnum aVideoInputType,
+                                      dom::MediaSourceEnum aAudioInputType,
+                                      EnumerationFlags aFlags) {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT_IF(!MediaEngineSource::IsVideo(aVideoInputType),
+                aVideoInputType == dom::MediaSourceEnum::Other);
+  MOZ_ASSERT_IF(!MediaEngineSource::IsAudio(aAudioInputType),
+                aAudioInputType == dom::MediaSourceEnum::Other);
+  const bool forceFakes = aFlags.contains(EnumerationFlag::ForceFakes);
+  const bool fakeByPref = Preferences::GetBool("media.navigator.streams.fake");
+  Maybe<VideoDeviceEnumerationParams> videoParams;
+  Maybe<DeviceEnumerationParams> audioParams;
+  nsAutoCString audioDev;
+  bool audioDevRead = false;
+  constexpr const char* VIDEO_DEV_NAME = "media.video_loopback_dev";
+  constexpr const char* AUDIO_DEV_NAME = "media.audio_loopback_dev";
+  const auto ensureDev = [](const char* aPref, nsAutoCString* aLoopDev,
+                            bool* aPrefRead) {
+    if (aPrefRead) {
+      if (*aPrefRead) {
+        return;
+      }
+      *aPrefRead = true;
+    }
+
+    if (NS_FAILED(Preferences::GetCString(aPref, *aLoopDev))) {
+      // Ensure we fall back to an empty string if reading the pref failed.
+      aLoopDev->SetIsVoid(true);
+    }
+  };
+  if (MediaEngineSource::IsVideo(aVideoInputType)) {
+    nsAutoCString videoDev;
+    DeviceType type = DeviceType::Real;
+    if (aVideoInputType == MediaSourceEnum::Camera) {
+      // Fake and loopback devices are supported for only Camera.
+      if (forceFakes) {
+        type = DeviceType::Fake;
+      } else {
+        ensureDev(VIDEO_DEV_NAME, &videoDev, nullptr);
+        // Loopback prefs take precedence over fake prefs
+        if (fakeByPref && videoDev.IsEmpty()) {
+          type = DeviceType::Fake;
+        } else {
+          // For groupId correlation we need the audio device name.
+          ensureDev(AUDIO_DEV_NAME, &audioDev, &audioDevRead);
+        }
+      }
+    }
+    videoParams = Some(VideoDeviceEnumerationParams(aVideoInputType, type,
+                                                    videoDev, audioDev));
+  }
+  if (MediaEngineSource::IsAudio(aAudioInputType)) {
+    nsAutoCString realAudioDev;
+    DeviceType type = DeviceType::Real;
+    if (aAudioInputType == MediaSourceEnum::Microphone) {
+      // Fake and loopback devices are supported for only Microphone.
+      if (forceFakes) {
+        type = DeviceType::Fake;
+      } else {
+        ensureDev(AUDIO_DEV_NAME, &audioDev, &audioDevRead);
+        // Loopback prefs take precedence over fake prefs
+        if (fakeByPref && audioDev.IsEmpty()) {
+          type = DeviceType::Fake;
+        } else {
+          realAudioDev = audioDev;
+        }
+      }
+    }
+    audioParams =
+        Some(DeviceEnumerationParams(aAudioInputType, type, realAudioDev));
+  }
+  return EnumerationParams(aFlags, videoParams, audioParams);
+}
+
 /**
  * EnumerateRawDevices - Enumerate a list of audio & video devices that
  * satisfy passed-in constraints. List contains raw id's.
  */
 
 RefPtr<DeviceSetPromise> MediaManager::EnumerateRawDevices(
-    MediaSourceEnum aVideoInputType, MediaSourceEnum aAudioInputType,
-    EnumerationFlags aFlags) {
+    EnumerationParams aParams) {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aVideoInputType != MediaSourceEnum::Other ||
-             aAudioInputType != MediaSourceEnum::Other ||
-             aFlags.contains(EnumerationFlag::EnumerateAudioOutputs));
+  MOZ_ASSERT(aParams.mVideo.isSome() || aParams.mAudio.isSome() ||
+             aParams.mFlags.contains(EnumerationFlag::EnumerateAudioOutputs));
 
   LOG("%s: aVideoInputType=%" PRIu8 ", aAudioInputType=%" PRIu8, __func__,
-      static_cast<uint8_t>(aVideoInputType),
-      static_cast<uint8_t>(aAudioInputType));
+      static_cast<uint8_t>(aParams.VideoInputType()),
+      static_cast<uint8_t>(aParams.AudioInputType()));
 
   DeviceSetPromiseHolderWithFallback holder;
   RefPtr<DeviceSetPromise> promise = holder.Ensure(__func__);
@@ -1865,34 +2006,12 @@ RefPtr<DeviceSetPromise> MediaManager::EnumerateRawDevices(
     return promise;
   }
 
-  const bool hasVideo = aVideoInputType != MediaSourceEnum::Other;
-  const bool hasAudio = aAudioInputType != MediaSourceEnum::Other;
+  const bool hasVideo = aParams.mVideo.isSome();
+  const bool hasAudio = aParams.mAudio.isSome();
   const bool hasAudioOutput =
-      aFlags.contains(EnumerationFlag::EnumerateAudioOutputs);
-  const bool forceFakes = aFlags.contains(EnumerationFlag::ForceFakes);
-  const bool fakeByPref = Preferences::GetBool("media.navigator.streams.fake");
-  // Fake and loopback devices are supported for only Camera and Microphone.
-  nsAutoCString videoLoopDev, audioLoopDev;
-  bool hasFakeCams = false;
-  bool hasFakeMics = false;
-  if (aVideoInputType == MediaSourceEnum::Camera) {
-    if (forceFakes) {
-      hasFakeCams = true;
-    } else {
-      Preferences::GetCString("media.video_loopback_dev", videoLoopDev);
-      // Loopback prefs take precedence over fake prefs
-      hasFakeCams = fakeByPref && videoLoopDev.IsEmpty();
-    }
-  }
-  if (aAudioInputType == MediaSourceEnum::Microphone) {
-    if (forceFakes) {
-      hasFakeMics = true;
-    } else {
-      Preferences::GetCString("media.audio_loopback_dev", audioLoopDev);
-      // Loopback prefs take precedence over fake prefs
-      hasFakeMics = fakeByPref && audioLoopDev.IsEmpty();
-    }
-  }
+      aParams.mFlags.contains(EnumerationFlag::EnumerateAudioOutputs);
+  const bool hasFakeCams = aParams.HasFakeCams();
+  const bool hasFakeMics = aParams.HasFakeMics();
   // True if at least one of video input or audio input is a real device
   // or there is audio output.
   const bool realDeviceRequested = (!hasFakeCams && hasVideo) ||
@@ -1903,15 +2022,15 @@ RefPtr<DeviceSetPromise> MediaManager::EnumerateRawDevices(
                  /* IsExclusive = */ true>;
   RefPtr<NativePromise> deviceAccessPromise;
   if (realDeviceRequested &&
-      aFlags.contains(EnumerationFlag::AllowPermissionRequest) &&
+      aParams.mFlags.contains(EnumerationFlag::AllowPermissionRequest) &&
       Preferences::GetBool("media.navigator.permission.device", false)) {
     // Need to ask permission to retrieve list of all devices;
     // notify frontend observer and wait for callback notification to post
     // task.
     const char16_t* const type =
-        (aVideoInputType != MediaSourceEnum::Camera)       ? u"audio"
-        : (aAudioInputType != MediaSourceEnum::Microphone) ? u"video"
-                                                           : u"all";
+        (aParams.VideoInputType() != MediaSourceEnum::Camera)       ? u"audio"
+        : (aParams.AudioInputType() != MediaSourceEnum::Microphone) ? u"video"
+                                                                    : u"all";
     nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
     DeviceAccessRequestPromiseHolderWithFallback deviceAccessPromiseHolder;
     deviceAccessPromise = deviceAccessPromiseHolder.Ensure(__func__);
@@ -1923,13 +2042,13 @@ RefPtr<DeviceSetPromise> MediaManager::EnumerateRawDevices(
     obs->NotifyObservers(static_cast<nsIRunnable*>(task),
                          "getUserMedia:ask-device-permission", type);
   } else if (realDeviceRequested && hasVideo &&
-             aVideoInputType == MediaSourceEnum::Camera) {
+             aParams.VideoInputType() == MediaSourceEnum::Camera) {
     ipc::PBackgroundChild* backgroundChild =
         ipc::BackgroundChild::GetOrCreateForCurrentThread();
     deviceAccessPromise = backgroundChild->SendRequestCameraAccess(
-        aFlags.contains(EnumerationFlag::AllowPermissionRequest));
+        aParams.mFlags.contains(EnumerationFlag::AllowPermissionRequest));
 
-    if (aFlags.contains(EnumerationFlag::AllowPermissionRequest)) {
+    if (aParams.mFlags.contains(EnumerationFlag::AllowPermissionRequest)) {
       deviceAccessPromise = deviceAccessPromise->Then(
           GetCurrentSerialEventTarget(), __func__,
           [this,
@@ -1954,9 +2073,7 @@ RefPtr<DeviceSetPromise> MediaManager::EnumerateRawDevices(
 
   deviceAccessPromise->Then(
       mMediaThread, __func__,
-      [holder = std::move(holder), aVideoInputType, aAudioInputType,
-       hasFakeCams, hasFakeMics, videoLoopDev, audioLoopDev, hasVideo, hasAudio,
-       hasAudioOutput, realDeviceRequested](
+      [holder = std::move(holder), aParams = std::move(aParams)](
           NativePromise::ResolveOrRejectValue&& aValue) mutable {
         if (aValue.IsReject()) {
           // IPC failure probably means we're in shutdown. Resolve with
@@ -1983,10 +2100,10 @@ RefPtr<DeviceSetPromise> MediaManager::EnumerateRawDevices(
 
         // Only enumerate what's asked for, and only fake cams and mics.
         RefPtr<MediaEngine> fakeBackend, realBackend;
-        if (hasFakeCams || hasFakeMics) {
+        if (aParams.HasFakeCams() || aParams.HasFakeMics()) {
           fakeBackend = new MediaEngineFake();
         }
-        if (realDeviceRequested) {
+        if (aParams.RealDeviceRequested()) {
           MediaManager* manager = MediaManager::GetIfExists();
           MOZ_RELEASE_ASSERT(manager, "Must exist while media thread is alive");
           realBackend = manager->GetBackend();
@@ -2000,30 +2117,30 @@ RefPtr<DeviceSetPromise> MediaManager::EnumerateRawDevices(
 
         // Enumerate microphones first, then cameras, then speakers, since the
         // enumerateDevices() algorithm expects them listed in that order.
-        if (hasAudio) {
-          audioBackend = hasFakeMics ? fakeBackend : realBackend;
+        if (const auto& audio = aParams.mAudio; audio.isSome()) {
+          audioBackend = aParams.HasFakeMics() ? fakeBackend : realBackend;
           MediaDeviceSet audios;
           LOG("EnumerateRawDevices Task: Getting audio sources with %s backend",
               audioBackend == fakeBackend ? "fake" : "real");
-          GetMediaDevices(audioBackend, aAudioInputType, audios,
-                          audioLoopDev.get());
-          if (aAudioInputType == MediaSourceEnum::Microphone &&
+          GetMediaDevices(audioBackend, audio->mInputType, audios,
+                          audio->mForcedDeviceName.get());
+          if (audio->mInputType == MediaSourceEnum::Microphone &&
               audioBackend == videoBackend) {
             micsOfVideoBackend = Some(MediaDeviceSet());
             micsOfVideoBackend->AppendElements(audios);
           }
           devices->AppendElements(audios);
         }
-        if (hasVideo) {
-          videoBackend = hasFakeCams ? fakeBackend : realBackend;
+        if (const auto& video = aParams.mVideo; video.isSome()) {
+          videoBackend = aParams.HasFakeCams() ? fakeBackend : realBackend;
           MediaDeviceSet videos;
           LOG("EnumerateRawDevices Task: Getting video sources with %s backend",
               videoBackend == fakeBackend ? "fake" : "real");
-          GetMediaDevices(videoBackend, aVideoInputType, videos,
-                          videoLoopDev.get());
+          GetMediaDevices(videoBackend, video->mInputType, videos,
+                          video->mForcedDeviceName.get());
           devices->AppendElements(videos);
         }
-        if (hasAudioOutput) {
+        if (aParams.mFlags.contains(EnumerationFlag::EnumerateAudioOutputs)) {
           MediaDeviceSet outputs;
           MOZ_ASSERT(realBackend);
           realBackend->EnumerateDevices(MediaSourceEnum::Other,
@@ -2032,11 +2149,10 @@ RefPtr<DeviceSetPromise> MediaManager::EnumerateRawDevices(
           speakers->AppendElements(outputs);
           devices->AppendElements(outputs);
         }
-        if (hasVideo && aVideoInputType == MediaSourceEnum::Camera) {
+        if (aParams.VideoInputType() == MediaSourceEnum::Camera) {
           MediaDeviceSet audios;
           LOG("EnumerateRawDevices Task: Getting audio sources with %s backend "
-              "for "
-              "groupId correlation",
+              "for groupId correlation",
               videoBackend == fakeBackend ? "fake" : "real");
           // We need to correlate cameras with audio groupIds. We use the
           // backend of the camera to always do correlation on devices in the
@@ -2046,10 +2162,12 @@ RefPtr<DeviceSetPromise> MediaManager::EnumerateRawDevices(
           if (micsOfVideoBackend.isSome()) {
             // Microphones from the same backend used for the cameras have
             // already been enumerated. Avoid doing it again.
+            MOZ_ASSERT(aParams.mVideo->mForcedMicrophoneName ==
+                       aParams.mAudio->mForcedDeviceName);
             audios.AppendElements(*micsOfVideoBackend);
           } else {
             GetMediaDevices(videoBackend, MediaSourceEnum::Microphone, audios,
-                            audioLoopDev.get());
+                            aParams.mVideo->mForcedMicrophoneName.get());
           }
           if (videoBackend == realBackend) {
             // When using the real backend for video, there could also be
@@ -2082,8 +2200,9 @@ RefPtr<ConstDeviceSetPromise> MediaManager::GetPhysicalDevices() {
   }
   mPendingDevicesPromises =
       new Refcountable<nsTArray<MozPromiseHolder<ConstDeviceSetPromise>>>;
-  EnumerateRawDevices(MediaSourceEnum::Camera, MediaSourceEnum::Microphone,
-                      EnumerationFlag::EnumerateAudioOutputs)
+  EnumerateRawDevices(CreateEnumerationParams(
+                          MediaSourceEnum::Camera, MediaSourceEnum::Microphone,
+                          EnumerationFlag::EnumerateAudioOutputs))
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
           [self = RefPtr(this), this, promises = mPendingDevicesPromises](
@@ -2849,7 +2968,8 @@ RefPtr<MediaManager::StreamPromise> MediaManager::GetUserMedia(
     flags += EnumerationFlag::ForceFakes;
   }
   RefPtr<MediaManager> self = this;
-  return EnumerateDevicesImpl(aWindow, videoType, audioType, flags)
+  return EnumerateDevicesImpl(
+             aWindow, CreateEnumerationParams(videoType, audioType, flags))
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
           [self, windowID, c, windowListener,
@@ -3033,15 +3153,14 @@ RefPtr<LocalDeviceSetPromise> MediaManager::AnonymizeDevices(
 }
 
 RefPtr<LocalDeviceSetPromise> MediaManager::EnumerateDevicesImpl(
-    nsPIDOMWindowInner* aWindow, MediaSourceEnum aVideoInputType,
-    MediaSourceEnum aAudioInputType, EnumerationFlags aFlags) {
+    nsPIDOMWindowInner* aWindow, EnumerationParams aParams) {
   MOZ_ASSERT(NS_IsMainThread());
 
   uint64_t windowId = aWindow->WindowID();
   LOG("%s: windowId=%" PRIu64 ", aVideoInputType=%" PRIu8
       ", aAudioInputType=%" PRIu8,
-      __func__, windowId, static_cast<uint8_t>(aVideoInputType),
-      static_cast<uint8_t>(aAudioInputType));
+      __func__, windowId, static_cast<uint8_t>(aParams.VideoInputType()),
+      static_cast<uint8_t>(aParams.AudioInputType()));
 
   // To get a device list anonymized for a particular origin, we must:
   // 1. Get the raw devices list
@@ -3057,7 +3176,7 @@ RefPtr<LocalDeviceSetPromise> MediaManager::EnumerateDevicesImpl(
   auto placeholderListener = MakeRefPtr<DeviceListener>();
   windowListener->Register(placeholderListener);
 
-  return EnumerateRawDevices(aVideoInputType, aAudioInputType, aFlags)
+  return EnumerateRawDevices(std::move(aParams))
       ->Then(
           GetMainThreadSerialEventTarget(), __func__,
           [self = RefPtr(this), this, window = nsCOMPtr(aWindow),
@@ -3122,10 +3241,11 @@ RefPtr<LocalDevicePromise> MediaManager::SelectAudioOutput(
   const bool resistFingerprinting =
       aWindow->AsGlobal()->ShouldResistFingerprinting(aCallerType,
                                                       RFPTarget::MediaDevices);
-  return EnumerateDevicesImpl(aWindow, MediaSourceEnum::Other,
-                              MediaSourceEnum::Other,
-                              {EnumerationFlag::EnumerateAudioOutputs,
-                               EnumerationFlag::AllowPermissionRequest})
+  return EnumerateDevicesImpl(
+             aWindow, CreateEnumerationParams(
+                          MediaSourceEnum::Other, MediaSourceEnum::Other,
+                          {EnumerationFlag::EnumerateAudioOutputs,
+                           EnumerationFlag::AllowPermissionRequest}))
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
           [self = RefPtr<MediaManager>(this), windowID, aOptions, aCallerType,
