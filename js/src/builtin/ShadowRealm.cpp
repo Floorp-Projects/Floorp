@@ -427,9 +427,6 @@ static JSObject* ShadowRealmImportValue(JSContext* cx,
 
     MOZ_ASSERT(script);
 
-    Rooted<Value> referencingPrivate(cx, script->sourceObject()->getPrivate());
-    cx->runtime()->addRefScriptPrivate(referencingPrivate);
-
     Rooted<JSAtom*> specifierAtom(cx, AtomizeString(cx, specifierString));
     if (!specifierAtom) {
       if (!RejectPromiseWithPendingError(cx, promise)) {
@@ -461,9 +458,8 @@ static JSObject* ShadowRealmImportValue(JSContext* cx,
     //
     // I have filed https://github.com/tc39/proposal-shadowrealm/issues/363 to
     // discuss this.
+    Rooted<Value> referencingPrivate(cx, script->sourceObject()->getPrivate());
     if (!importHook(cx, referencingPrivate, moduleRequest, promise)) {
-      cx->runtime()->releaseScriptPrivate(referencingPrivate);
-
       // If there's no exception pending then the script is terminating
       // anyway, so just return nullptr.
       if (!cx->isExceptionPending() ||
