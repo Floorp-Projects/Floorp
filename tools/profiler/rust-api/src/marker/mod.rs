@@ -197,7 +197,7 @@ pub trait ProfilerMarker: Serialize + DeserializeOwned {
     /// A static method that returns a `MarkerSchema`, which contains all the
     /// information needed to stream the display schema associated with a
     /// marker type.
-    fn marker_type_display() -> schema::MarkerSchema;
+    fn marker_type_display() -> MarkerSchema;
     /// A method that streams the marker payload data as JSON object properties.
     /// Please see the [JSONWriter] struct to see its methods.
     fn stream_json_marker_data(&self, json_writer: &mut JSONWriter);
@@ -270,7 +270,7 @@ impl ProfilerMarker for Tracing {
     // C++ side. This function will only get called when no Tracing markers are
     // generated from the C++ side. But, most of the time, this will not be called
     // when there is another C++ Tracing marker.
-    fn marker_type_display() -> schema::MarkerSchema {
+    fn marker_type_display() -> MarkerSchema {
         use crate::marker::schema::*;
         let mut schema = MarkerSchema::new(&[
             Location::MarkerChart,
