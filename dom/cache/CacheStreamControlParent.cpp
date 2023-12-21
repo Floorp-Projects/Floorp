@@ -80,21 +80,26 @@ void CacheStreamControlParent::AssertOwningThread() {
 }
 #endif
 
-void CacheStreamControlParent::ActorDestroy(ActorDestroyReason aReason) {
+void CacheStreamControlParent::LostIPCCleanup(
+    SafeRefPtr<StreamList> aStreamList) {
   NS_ASSERT_OWNINGTHREAD(CacheStreamControlParent);
   CloseAllReadStreamsWithoutReporting();
   // If the initial SendPStreamControlConstructor() fails we will
   // be called before mStreamList is set.
-  if (!mStreamList) {
+  if (!aStreamList) {
     return;
   }
-  mStreamList->GetManager().RemoveListener(this);
+  aStreamList->GetManager().RemoveListener(this);
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
-  mStreamList->GetManager().RecordHaveDeletedCSCP(Id());
+  aStreamList->GetManager().RecordHaveDeletedCSCP(Id());
 #endif
-  mStreamList->RemoveStreamControl(this);
-  mStreamList->NoteClosedAll();
+  aStreamList->RemoveStreamControl(this);
+  aStreamList->NoteClosedAll();
   mStreamList = nullptr;
+}
+
+void CacheStreamControlParent::ActorDestroy(ActorDestroyReason aReason) {
+  LostIPCCleanup(std::move(mStreamList));
 }
 
 void CacheStreamControlParent::AssertWillDelete() {
