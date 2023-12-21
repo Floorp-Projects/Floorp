@@ -40,7 +40,15 @@ const PREF_MAX_READ = "webextensions.native-messaging.max-input-message-bytes";
 const PREF_MAX_WRITE =
   "webextensions.native-messaging.max-output-message-bytes";
 
-export var NativeApp = class extends EventEmitter {
+XPCOMUtils.defineLazyPreferenceGetter(lazy, "maxRead", PREF_MAX_READ, MAX_READ);
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "maxWrite",
+  PREF_MAX_WRITE,
+  MAX_WRITE
+);
+
+export class NativeApp extends EventEmitter {
   /**
    * @param {BaseContext} context The context that initiated the native app.
    * @param {string} application The identifier of the native app.
@@ -153,7 +161,7 @@ export var NativeApp = class extends EventEmitter {
   static encodeMessage(context, message) {
     message = context.jsonStringify(message);
     let buffer = new TextEncoder().encode(message).buffer;
-    if (buffer.byteLength > NativeApp.maxWrite) {
+    if (buffer.byteLength > lazy.maxWrite) {
       throw new context.Error("Write too big");
     }
     return buffer;
@@ -174,9 +182,9 @@ export var NativeApp = class extends EventEmitter {
     this.readPromise = this.proc.stdout
       .readUint32()
       .then(len => {
-        if (len > NativeApp.maxRead) {
+        if (len > lazy.maxRead) {
           throw new ExtensionError(
-            `Native application tried to send a message of ${len} bytes, which exceeds the limit of ${NativeApp.maxRead} bytes.`
+            `Native application tried to send a message of ${len} bytes, which exceeds the limit of ${lazy.maxRead} bytes.`
           );
         }
         return this.proc.stdout.readJSON(len);
@@ -265,7 +273,7 @@ export var NativeApp = class extends EventEmitter {
 
     let buffer = msg;
 
-    if (buffer.byteLength > NativeApp.maxWrite) {
+    if (buffer.byteLength > lazy.maxWrite) {
       throw new ExtensionError("Write too big");
     }
 
@@ -380,17 +388,4 @@ export var NativeApp = class extends EventEmitter {
 
     return result;
   }
-};
-
-XPCOMUtils.defineLazyPreferenceGetter(
-  NativeApp,
-  "maxRead",
-  PREF_MAX_READ,
-  MAX_READ
-);
-XPCOMUtils.defineLazyPreferenceGetter(
-  NativeApp,
-  "maxWrite",
-  PREF_MAX_WRITE,
-  MAX_WRITE
-);
+}

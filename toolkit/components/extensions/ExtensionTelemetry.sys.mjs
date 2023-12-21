@@ -330,7 +330,7 @@ export var ExtensionTelemetry = new Proxy(metricsCache, {
     // telemetry histogram counterpart, we would need to change this check
     // accordingly.
     if (!(prop in HISTOGRAMS_IDS)) {
-      throw new Error(`Unknown metric ${prop}`);
+      throw new Error(`Unknown metric ${String(prop)}`);
     }
 
     // Lazily create and cache the metric result object.

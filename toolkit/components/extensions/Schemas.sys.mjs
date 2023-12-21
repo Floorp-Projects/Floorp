@@ -39,8 +39,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
   false
 );
 
-export let Schemas;
-
 const KEY_CONTENT_SCHEMAS = "extensions-framework/schemas/content";
 const KEY_PRIVILEGED_SCHEMAS = "extensions-framework/schemas/privileged";
 
@@ -378,9 +376,12 @@ class Context {
       localize(value, context) {
         return value;
       },
+      ...params.preprocessors,
     };
+
     this.postprocessors = POSTPROCESSORS;
-    this.isChromeCompat = false;
+    this.isChromeCompat = params.isChromeCompat ?? false;
+    this.manifestVersion = params.manifestVersion;
 
     this.currentChoices = new Set();
     this.choicePathIndex = 0;
@@ -388,17 +389,6 @@ class Context {
     for (let method of overridableMethods) {
       if (method in params) {
         this[method] = params[method].bind(params);
-      }
-    }
-
-    let props = ["isChromeCompat", "manifestVersion", "preprocessors"];
-    for (let prop of props) {
-      if (prop in params) {
-        if (prop in this && typeof this[prop] == "object") {
-          Object.assign(this[prop], params[prop]);
-        } else {
-          this[prop] = params[prop];
-        }
       }
     }
   }
@@ -1211,7 +1201,7 @@ const FORMATS = {
     // Our pattern just checks the format, we could still have invalid
     // values (e.g., month=99 or month=02 and day=31).  Let the Date
     // constructor do the dirty work of validating.
-    if (isNaN(new Date(string))) {
+    if (isNaN(Date.parse(string))) {
       throw new Error(`Invalid date string ${string}`);
     }
     return string;
@@ -2554,6 +2544,8 @@ class ValueProperty extends Entry {
 // Represents a "property" defined in a schema namespace that is not a
 // constant.
 class TypeProperty extends Entry {
+  unsupported = false;
+
   constructor(schema, path, name, type, writable, permissions) {
     super(schema);
     this.path = path;
@@ -2692,6 +2684,8 @@ class SubModuleProperty extends Entry {
 // care of validating parameter lists (i.e., handling of optional
 // parameters and parameter type checking).
 class CallEntry extends Entry {
+  hasAsyncCallback = false;
+
   constructor(schema, path, name, parameters, allowAmbiguousOptionalArguments) {
     super(schema);
     this.path = path;
@@ -3118,9 +3112,11 @@ class Namespace extends Map {
       this._lazySchemas.unshift(...this.superNamespace._lazySchemas);
     }
 
-    for (let type of Object.keys(LOADERS)) {
-      this[type] = new DefaultMap(() => []);
-    }
+    // Keep in sync with LOADERS above.
+    this.types = new DefaultMap(() => []);
+    this.properties = new DefaultMap(() => []);
+    this.functions = new DefaultMap(() => []);
+    this.events = new DefaultMap(() => []);
 
     for (let schema of this._lazySchemas) {
       for (let type of schema.types || []) {
@@ -3652,7 +3648,7 @@ export class SchemaRoot extends Namespace {
   }
 }
 
-Schemas = {
+export var Schemas = {
   initialized: false,
 
   REVOKE: Symbol("@@revoke"),

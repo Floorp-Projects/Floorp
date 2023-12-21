@@ -21,7 +21,7 @@ import {
 } from "resource://gre/modules/ExtensionPageChild.sys.mjs";
 import { ExtensionUtils } from "resource://gre/modules/ExtensionUtils.sys.mjs";
 
-const { BaseContext, defineLazyGetter } = ExtensionCommon;
+const { BaseContext, redefineGetter } = ExtensionCommon;
 
 const {
   ChildAPIManager,
@@ -154,14 +154,12 @@ class WorkerPort extends Port {
     api.portId = this.portId;
     return api;
   }
-}
 
-defineLazyGetter(WorkerPort.prototype, "api", function () {
-  // No need to clone the API object for the worker, because it runs
-  // on a different JSRuntime and doesn't have direct access to this
-  // object.
-  return this.getAPI();
-});
+  get api() {
+    // No need to clone this for the worker, it's on a separate JSRuntime.
+    return redefineGetter(this, "api", this.getAPI());
+  }
+}
 
 /**
  * A Messenger subclass specialized for the background service worker.
@@ -697,20 +695,19 @@ class WorkerContextChild extends BaseContext {
 
     super.unload();
   }
+
+  get childManager() {
+    const childManager = getContextChildManagerGetter(
+      { envType: "addon_parent" },
+      WebIDLChildAPIManager
+    ).call(this);
+    return redefineGetter(this, "childManager", childManager);
+  }
+
+  get messenger() {
+    return redefineGetter(this, "messenger", new WorkerMessenger(this));
+  }
 }
-
-defineLazyGetter(WorkerContextChild.prototype, "messenger", function () {
-  return new WorkerMessenger(this);
-});
-
-defineLazyGetter(
-  WorkerContextChild.prototype,
-  "childManager",
-  getContextChildManagerGetter(
-    { envType: "addon_parent" },
-    WebIDLChildAPIManager
-  )
-);
 
 export var ExtensionWorkerChild = {
   /** @type {Map<number, WorkerContextChild>} */
