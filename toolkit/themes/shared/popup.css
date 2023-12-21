@@ -91,13 +91,6 @@ panel {
     &.panel-no-padding::part(content) {
       padding: 0;
     }
-
-    @media (-moz-platform: macos) {
-      &::part(content) {
-        /* FIXME: why? */
-        margin: 1px;
-      }
-    }
   }
 }
 
