@@ -4,20 +4,6 @@
 
 @import "chrome://browser/skin/customizableui/panelUI-shared.css";
 
-#downloadsPanel,
-#widget-overflow,
-#appMenu-popup,
-#customizationui-widget-panel,
-#identity-popup,
-#permission-popup,
-#translations-panel,
-#protections-popup,
-#appMenu-notification-popup,
-#BMB_bookmarksPopup,
-#editBookmarkPanel {
-  margin-top: -1px;
-}
-
 .panel-subview-body {
   scrollbar-color: color-mix(in srgb, currentColor 26%, transparent) transparent;
 }
