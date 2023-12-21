@@ -5888,7 +5888,6 @@ void nsIFrame::MarkSubtreeDirty() {
   // Mark all descendants dirty, unless:
   // - Already dirty.
   // - TableColGroup
-  // - XULBox
   AutoTArray<nsIFrame*, 32> stack;
   for (const auto& childLists : ChildLists()) {
     for (nsIFrame* kid : childLists.mList) {
