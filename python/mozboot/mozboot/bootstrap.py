@@ -205,7 +205,7 @@ def check_for_hgrc_state_dir_mismatch(state_dir):
             state_dir_from_hgrc = Path(match.group(1))
             extension_suffix = match.group(2)
 
-            if state_dir != state_dir_from_hgrc:
+            if state_dir != state_dir_from_hgrc.expanduser():
                 expected_extension_path = state_dir / extension_suffix
 
                 mismatched_paths.append(
