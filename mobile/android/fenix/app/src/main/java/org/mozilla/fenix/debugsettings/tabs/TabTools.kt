@@ -14,37 +14,54 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.Snackbar
+import androidx.compose.material.SnackbarHost
+import androidx.compose.material.SnackbarHostState
 import androidx.compose.material.Text
+import androidx.compose.material.TextField
+import androidx.compose.material.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
+import androidx.core.text.isDigitsOnly
+import kotlinx.coroutines.launch
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.lib.state.ext.observeAsState
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.Divider
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
+import org.mozilla.fenix.compose.button.PrimaryButton
 import org.mozilla.fenix.ext.maxActiveTime
 import org.mozilla.fenix.tabstray.ext.isNormalTabInactive
 import org.mozilla.fenix.theme.FirefoxTheme
-import org.mozilla.fenix.utils.Settings
 
 /**
  * Tab Tools UI for [DebugDrawer] that displays the tab counts and allows easy bulk-opening of tabs.
  *
  * @param store [BrowserStore] used to obtain the tab counts and fire any tab creation actions.
- * @param settings Used to obtain whether the inactive tabs feature is enabled.
+ * @param inactiveTabsEnabled Whether the inactive tabs feature is enabled.
  */
 @Composable
 fun TabTools(
     store: BrowserStore,
-    settings: Settings,
+    inactiveTabsEnabled: Boolean,
 ) {
-    val inactiveTabsEnabled = settings.inactiveTabsAreEnabled
     val tabs by store.observeAsState(initialValue = emptyList()) { state -> state.tabs }
     val totalTabCount = remember(tabs) { tabs.size }
     val privateTabCount = remember(tabs) { tabs.filter { it.content.private }.size }
@@ -63,21 +80,29 @@ fun TabTools(
         privateTabCount = privateTabCount,
         totalTabCount = totalTabCount,
         inactiveTabsEnabled = inactiveTabsEnabled,
+        onAddTabsToActiveClick = {},
+        onAddTabsToInactiveClick = {},
+        onAddTabsToPrivateClick = {},
     )
 }
 
 @Composable
+@Suppress("LongParameterList")
 private fun TabToolsContent(
     activeTabCount: Int,
     inactiveTabCount: Int,
     privateTabCount: Int,
     totalTabCount: Int,
     inactiveTabsEnabled: Boolean,
+    onAddTabsToActiveClick: ((Int) -> Unit),
+    onAddTabsToInactiveClick: ((Int) -> Unit),
+    onAddTabsToPrivateClick: ((Int) -> Unit),
 ) {
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(all = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         TabCounter(
             activeTabCount = activeTabCount,
@@ -85,6 +110,13 @@ private fun TabToolsContent(
             privateTabCount = privateTabCount,
             totalTabCount = totalTabCount,
             inactiveTabsEnabled = inactiveTabsEnabled,
+        )
+
+        TabCreationTool(
+            inactiveTabsEnabled = inactiveTabsEnabled,
+            onAddTabsToActiveClick = onAddTabsToActiveClick,
+            onAddTabsToInactiveClick = onAddTabsToInactiveClick,
+            onAddTabsToPrivateClick = onAddTabsToPrivateClick,
         )
     }
 }
@@ -161,6 +193,97 @@ private fun TabCountRow(
     }
 }
 
+private const val DEFAULT_TABS_TO_ADD = "1"
+
+@OptIn(ExperimentalComposeUiApi::class)
+@Composable
+private fun TabCreationTool(
+    inactiveTabsEnabled: Boolean,
+    onAddTabsToActiveClick: ((Int) -> Unit),
+    onAddTabsToInactiveClick: ((Int) -> Unit),
+    onAddTabsToPrivateClick: ((Int) -> Unit),
+) {
+    var tabQuantityToCreate by rememberSaveable { mutableStateOf(DEFAULT_TABS_TO_ADD) }
+    var hasError by rememberSaveable { mutableStateOf(false) }
+    val keyboardController = LocalSoftwareKeyboardController.current
+
+    Column {
+        Text(
+            text = stringResource(R.string.debug_drawer_tab_tools_tab_creation_tool_title),
+            color = FirefoxTheme.colors.textPrimary,
+            style = FirefoxTheme.typography.headline5,
+        )
+
+        TextField(
+            value = tabQuantityToCreate,
+            onValueChange = {
+                tabQuantityToCreate = it
+                hasError = it.isEmpty() || !it.isDigitsOnly() || it.toInt() == 0
+            },
+            modifier = Modifier.fillMaxWidth(),
+            textStyle = FirefoxTheme.typography.subtitle1,
+            label = {
+                Text(
+                    text = stringResource(R.string.debug_drawer_tab_tools_tab_creation_tool_text_field_label),
+                    color = FirefoxTheme.colors.textPrimary,
+                    style = FirefoxTheme.typography.caption,
+                )
+            },
+            isError = hasError,
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Number,
+            ),
+            keyboardActions = KeyboardActions(
+                onDone = {
+                    keyboardController?.hide()
+                },
+            ),
+            singleLine = true,
+            colors = TextFieldDefaults.textFieldColors(
+                textColor = FirefoxTheme.colors.textPrimary,
+                backgroundColor = Color.Transparent,
+                cursorColor = FirefoxTheme.colors.borderFormDefault,
+                errorCursorColor = FirefoxTheme.colors.borderWarning,
+                focusedIndicatorColor = FirefoxTheme.colors.borderPrimary,
+                unfocusedIndicatorColor = FirefoxTheme.colors.borderPrimary,
+                errorIndicatorColor = FirefoxTheme.colors.borderWarning,
+            ),
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        PrimaryButton(
+            text = stringResource(id = R.string.debug_drawer_tab_tools_tab_creation_tool_button_text_active),
+            enabled = !hasError,
+            onClick = {
+                onAddTabsToActiveClick(tabQuantityToCreate.toInt())
+            },
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        if (inactiveTabsEnabled) {
+            PrimaryButton(
+                text = stringResource(id = R.string.debug_drawer_tab_tools_tab_creation_tool_button_text_inactive),
+                enabled = !hasError,
+                onClick = {
+                    onAddTabsToInactiveClick(tabQuantityToCreate.toInt())
+                },
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+        }
+
+        PrimaryButton(
+            text = stringResource(id = R.string.debug_drawer_tab_tools_tab_creation_tool_button_text_private),
+            enabled = !hasError,
+            onClick = {
+                onAddTabsToPrivateClick(tabQuantityToCreate.toInt())
+            },
+        )
+    }
+}
+
 private data class TabToolsPreviewModel(
     val activeTabCount: Int = 0,
     val inactiveTabCount: Int = 0,
@@ -197,6 +320,9 @@ private class TabToolsPreviewParameterProvider : PreviewParameterProvider<TabToo
 private fun TabToolsPreview(
     @PreviewParameter(TabToolsPreviewParameterProvider::class) model: TabToolsPreviewModel,
 ) {
+    val snackbarState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+
     with(model) {
         FirefoxTheme {
             Box(
@@ -208,7 +334,31 @@ private fun TabToolsPreview(
                     privateTabCount = privateTabCount,
                     totalTabCount = totalTabCount,
                     inactiveTabsEnabled = inactiveTabsEnabled,
+                    onAddTabsToActiveClick = {
+                        scope.launch {
+                            snackbarState.showSnackbar("Add $it tabs to active")
+                        }
+                    },
+                    onAddTabsToInactiveClick = {
+                        scope.launch {
+                            snackbarState.showSnackbar("Add $it tabs to inactive")
+                        }
+                    },
+                    onAddTabsToPrivateClick = {
+                        scope.launch {
+                            snackbarState.showSnackbar("Add $it tabs to private")
+                        }
+                    },
                 )
+
+                SnackbarHost(
+                    hostState = snackbarState,
+                    modifier = Modifier.align(Alignment.BottomCenter),
+                ) { snackbarData ->
+                    Snackbar(
+                        snackbarData = snackbarData,
+                    )
+                }
             }
         }
     }
