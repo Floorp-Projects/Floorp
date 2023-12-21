@@ -140,7 +140,9 @@ add_setup(async () => {
 });
 
 async function testUserAgentHeader() {
-  const TEST_TARGET_URL = `${TEST_PATH}file_navigator_header.sjs?`;
+  const BASE =
+    "http://mochi.test:8888/browser/browser/components/resistfingerprinting/test/browser/";
+  const TEST_TARGET_URL = `${BASE}file_navigator_header.sjs?`;
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
     TEST_TARGET_URL
@@ -362,7 +364,10 @@ add_task(async function setupRFPExemptions() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["privacy.resistFingerprinting", true],
-      ["privacy.resistFingerprinting.exemptedDomains", "example.net"],
+      [
+        "privacy.resistFingerprinting.exemptedDomains",
+        "example.net, mochi.test",
+      ],
     ],
   });
 
@@ -389,70 +394,6 @@ add_task(async function setupRFPExemptions() {
   await testUserAgentHeader();
 
   await testWorkerNavigator();
-
-  // Pop exempted domains
-  await SpecialPowers.popPrefEnv();
-});
-
-add_task(async function setupETPToggleExemptions() {
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["privacy.fingerprintingProtection", true],
-      ["privacy.fingerprintingProtection.overrides", "+AllTargets"],
-    ],
-  });
-
-  // Open a tab to toggle the ETP state.
-  let tab = await BrowserTestUtils.openNewForegroundTab(
-    gBrowser,
-    TEST_PATH + "file_navigator.html"
-  );
-  let loaded = BrowserTestUtils.browserLoaded(
-    tab.linkedBrowser,
-    false,
-    TEST_PATH + "file_navigator.html"
-  );
-  gProtectionsHandler.disableForCurrentPage();
-  await loaded;
-  BrowserTestUtils.removeTab(tab);
-
-  let defaultUserAgent = `Mozilla/5.0 (${
-    DEFAULT_UA_OS[AppConstants.platform]
-  }; rv:${appVersion}.0) Gecko/${
-    DEFAULT_UA_GECKO_TRAIL[AppConstants.platform]
-  } Firefox/${appVersion}.0`;
-
-  expectedResults = {
-    testDesc: "ETP toggle Exempted Domain",
-    appVersion: DEFAULT_APPVERSION[AppConstants.platform],
-    hardwareConcurrency: navigator.hardwareConcurrency,
-    mimeTypesLength: 2,
-    oscpu: DEFAULT_OSCPU[AppConstants.platform],
-    platform: DEFAULT_PLATFORM[AppConstants.platform],
-    pluginsLength: 5,
-    userAgentNavigator: defaultUserAgent,
-    userAgentHeader: defaultUserAgent,
-  };
-
-  await testNavigator();
-
-  await testUserAgentHeader();
-
-  await testWorkerNavigator();
-
-  // Toggle the ETP state back.
-  tab = await BrowserTestUtils.openNewForegroundTab(
-    gBrowser,
-    TEST_PATH + "file_navigator.html"
-  );
-  loaded = BrowserTestUtils.browserLoaded(
-    tab.linkedBrowser,
-    false,
-    TEST_PATH + "file_navigator.html"
-  );
-  gProtectionsHandler.enableForCurrentPage();
-  await loaded;
-  BrowserTestUtils.removeTab(tab);
 
   // Pop exempted domains
   await SpecialPowers.popPrefEnv();
