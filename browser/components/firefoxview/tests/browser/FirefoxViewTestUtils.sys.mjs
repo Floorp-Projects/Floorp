@@ -115,7 +115,7 @@ function closeFirefoxViewTab(win) {
  *   the task.
  * @param {Window} [options.win]
  *   The window in which to run the task.
- * @param {function(MozBrowser)} taskFn
+ * @param {(MozBrowser) => any} taskFn
  *   The task to run. It can be asynchronous.
  * @returns {any}
  *   The value returned by the task.
