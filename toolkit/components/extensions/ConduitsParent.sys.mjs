@@ -113,7 +113,7 @@ const Hub = {
   closeConduit({ id, address }) {
     this.conduits.delete(id);
     for (let name of address.recv || []) {
-      this.byMethod.remove(name);
+      this.byMethod.delete(name);
     }
   },
 
