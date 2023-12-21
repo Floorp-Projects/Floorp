@@ -46,7 +46,8 @@ class LegacyJumpListBuilder : public nsILegacyJumpListBuilder,
   static Atomic<bool> sBuildingList;
 
  private:
-  mscom::AgileReference mJumpListMgr MOZ_GUARDED_BY(mMonitor);
+  mscom::AgileReference<ICustomDestinationList> mJumpListMgr
+      MOZ_GUARDED_BY(mMonitor);
   uint32_t mMaxItems MOZ_GUARDED_BY(mMonitor);
   bool mHasCommit;
   RefPtr<LazyIdleThread> mIOThread;
