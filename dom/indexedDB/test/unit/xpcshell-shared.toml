@@ -93,9 +93,6 @@ skip-if = ["os == 'android'"] # bug 864843
 ["test_locale_aware_index_getAllObjects.js"]
 skip-if = ["os == 'android'"] # bug 864843
 
-["test_locale_aware_indexes.js"]
-skip-if = ["os == 'android'"] # bug 864843
-
 ["test_multientry.js"]
 
 ["test_names_sorted.js"]
