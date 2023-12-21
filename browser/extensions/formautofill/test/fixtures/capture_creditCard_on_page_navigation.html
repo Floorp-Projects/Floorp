@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>Form Autofill Credit Card Demo Page</title>
+    </head>
+    <body>
+        <h1>Form Autofill Credit Card Demo Page</h1>
+        <form id="form">
+            <p><label>Name: <input id="cc-name" autocomplete="cc-name"></label></p>
+            <p><label>Card Number: <input id="cc-number" autocomplete="cc-number"></label></p>
+            <p><label>Expiration month: <input id="cc-exp-month" autocomplete="cc-exp-month"></label></p>
+            <p><label>Expiration year: <input id="cc-exp-year" autocomplete="cc-exp-year"></label></p>
+            <p><label>CSC: <input id="cc-csc" autocomplete="cc-csc"></label></p>
+        </form>
+        <p><button id="historyPushState">history.pushState</button></p>
+        <p><button id="windowLocation">window.location.href</button></p>
+        <p><button id="windowOpen">Window.open</button></p>
+        <script>
+            const historyButton = document.getElementById("historyPushState")
+            historyButton.addEventListener("click", () => {
+                history.pushState({},"","")
+            })
+
+            const windowLocationButton = document.getElementById("windowLocation")
+            windowLocationButton.addEventListener("click", () => {
+                window.location.href = "about:blank"
+            })
+        </script>
+    </body>
+</html>

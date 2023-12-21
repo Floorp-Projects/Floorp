@@ -9,7 +9,11 @@ const CC_VALUES = {
 
 add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
-    set: [["extensions.formautofill.heuristics.captureOnFormRemoval", true]],
+    set: [
+      ["extensions.formautofill.creditCards.supported", "on"],
+      ["extensions.formautofill.creditCards.enabled", true],
+      ["extensions.formautofill.heuristics.captureOnFormRemoval", true],
+    ],
   });
   await removeAllRecords();
 });
