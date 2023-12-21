@@ -465,17 +465,17 @@ interface nsILoadInfo : nsISupports
   const unsigned long HTTPS_ONLY_UNINITIALIZED = (1 << 0);
 
   /**
-   * Indicates that the request will get upgraded, and the HTTPS-Only
-   * StreamListener got registered.
-   */
-  const unsigned long HTTPS_ONLY_UPGRADED_LISTENER_NOT_REGISTERED = (1 << 1);
-
-  /**
    * Indicates that this is the first time the request gets upgraded, and thus
    * the HTTPS-Only StreamListener hasn't been registered yet. Even though there
    * might be multiple channels per request that have to be upgraded (e.g.,
    * because of redirects), the StreamListener only has to be attached to one
    * channel.
+   */
+  const unsigned long HTTPS_ONLY_UPGRADED_LISTENER_NOT_REGISTERED = (1 << 1);
+
+  /**
+   * Indicates that the request will get upgraded, and the HTTPS-Only
+   * StreamListener got registered.
    */
   const unsigned long HTTPS_ONLY_UPGRADED_LISTENER_REGISTERED = (1 << 2);
 
