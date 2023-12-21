@@ -24,6 +24,7 @@
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/GPUChild.h"
+#include "mozilla/glean/GleanMetrics.h"
 #include "mozilla/ipc/Endpoint.h"
 #include "mozilla/ipc/ProcessChild.h"
 #include "mozilla/layers/APZCTreeManagerChild.h"
@@ -69,12 +70,6 @@ namespace mozilla {
 namespace gfx {
 
 using namespace mozilla::layers;
-
-enum class FallbackType : uint32_t {
-  NONE = 0,
-  DECODINGDISABLED,
-  DISABLED,
-};
 
 static StaticAutoPtr<GPUProcessManager> sSingleton;
 
@@ -223,8 +218,11 @@ bool GPUProcessManager::LaunchGPUProcess() {
   auto newTime = TimeStamp::Now();
   if (!IsProcessStable(newTime)) {
     mUnstableProcessAttempts++;
+    mozilla::glean::gpu_process::unstable_launch_attempts.Set(
+        mUnstableProcessAttempts);
   }
   mTotalProcessAttempts++;
+  mozilla::glean::gpu_process::total_launch_attempts.Set(mTotalProcessAttempts);
   mProcessAttemptLastTime = newTime;
   mProcessStable = false;
 
@@ -296,8 +294,11 @@ bool GPUProcessManager::MaybeDisableGPUProcess(const char* aMessage,
 
   gfxPlatform::DisableGPUProcess();
 
-  Telemetry::Accumulate(Telemetry::GPU_PROCESS_CRASH_FALLBACKS,
-                        uint32_t(FallbackType::DISABLED));
+  mozilla::glean::gpu_process::feature_status.Set(
+      gfxConfig::GetFeature(Feature::GPU_PROCESS)
+          .GetStatusAndFailureIdString());
+
+  mozilla::glean::gpu_process::crash_fallbacks.Get("disabled"_ns).Add(1);
 
   DestroyProcess();
   ShutdownVsyncIOThread();
@@ -808,12 +809,11 @@ void GPUProcessManager::OnProcessUnexpectedShutdown(GPUProcessHost* aHost) {
                               layers_gpu_process_max_restarts_with_decoder()) &&
              mDecodeVideoOnGpuProcess) {
     mDecodeVideoOnGpuProcess = false;
-    Telemetry::Accumulate(Telemetry::GPU_PROCESS_CRASH_FALLBACKS,
-                          uint32_t(FallbackType::DECODINGDISABLED));
+    mozilla::glean::gpu_process::crash_fallbacks.Get("decoding_disabled"_ns)
+        .Add(1);
     HandleProcessLost();
   } else {
-    Telemetry::Accumulate(Telemetry::GPU_PROCESS_CRASH_FALLBACKS,
-                          uint32_t(FallbackType::NONE));
+    mozilla::glean::gpu_process::crash_fallbacks.Get("none"_ns).Add(1);
     HandleProcessLost();
   }
 }

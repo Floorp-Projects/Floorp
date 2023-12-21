@@ -1434,20 +1434,6 @@
     "n_buckets": 100,
     "description": "GPU process initialization (excluding XPCOM and fork time) time in milliseconds"
   },
-  "GPU_PROCESS_CRASH_FALLBACKS": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
-    "alert_emails": [
-      "gfx-telemetry-alerts@mozilla.com",
-      "gsquelart@mozilla.com"
-    ],
-    "expires_in_version": "70",
-    "bug_numbers": [1338011],
-    "kind": "enumerated",
-    "releaseChannelCollection": "opt-out",
-    "n_values": 10,
-    "description": "Count how often we use different fallbacks when the GPU process crashes: None=0, GPUProcessDecodingDisabled=1, GPUProcessDisabled=2"
-  },
   "MEMORY_RESIDENT_FAST": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
