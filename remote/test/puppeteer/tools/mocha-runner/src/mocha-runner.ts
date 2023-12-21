@@ -1,4 +1,4 @@
-#! /usr/bin/env -S node
+#! /usr/bin/env node
 
 /**
  * Copyright 2022 Google Inc. All rights reserved.
