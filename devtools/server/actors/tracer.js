@@ -54,10 +54,10 @@ class TracerActor extends Actor {
     this.sourcesManager = this.targetActor.sourcesManager;
 
     this.throttledTraces = [];
-    this.throttleEmitTraces = throttle(
-      this.flushTraces.bind(this),
-      CONSOLE_THROTTLING_DELAY
-    );
+    // On workers, we don't have access to setTimeout and can't have throttling
+    this.throttleEmitTraces = isWorker
+      ? this.flushTraces.bind(this)
+      : throttle(this.flushTraces.bind(this), CONSOLE_THROTTLING_DELAY);
 
     this.geckoProfileCollector = new GeckoProfileCollector();
   }
