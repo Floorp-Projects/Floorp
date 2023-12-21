@@ -627,7 +627,7 @@ template <typename CharT>
 static MOZ_ALWAYS_INLINE JSAtom* MakeUTF8AtomHelperNonStaticValidLength(
     JSContext* cx, const AtomizeUTF8CharsWrapper* chars, size_t length,
     js::HashNumber hash) {
-  if (JSInlineString::lengthFits<CharT>(length)) {
+  if (JSAtom::lengthFitsInline<CharT>(length)) {
     CharT* storage;
     JSAtom* str = AllocateInlineAtom(cx, length, &storage, hash);
     if (!str) {
