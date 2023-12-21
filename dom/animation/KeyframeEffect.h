@@ -222,12 +222,12 @@ class KeyframeEffect : public AnimationEffect {
   // properties where an !important rule on another transform property may
   // cause all transform properties to be run on the main thread. That check is
   // performed by GetPropertiesForCompositor.
-  bool HasEffectiveAnimationOfProperty(nsCSSPropertyID aProperty,
+  bool HasEffectiveAnimationOfProperty(const AnimatedPropertyID& aProperty,
                                        const EffectSet& aEffect) const {
     return GetEffectiveAnimationOfProperty(aProperty, aEffect) != nullptr;
   }
   const AnimationProperty* GetEffectiveAnimationOfProperty(
-      nsCSSPropertyID aProperty, const EffectSet& aEffect) const;
+      const AnimatedPropertyID&, const EffectSet&) const;
 
   // Similar to HasEffectiveAnimationOfProperty, above, but for
   // an nsCSSPropertyIDSet. Returns true if this keyframe effect has at least
