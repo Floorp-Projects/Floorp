@@ -245,6 +245,12 @@ class Performance : public DOMEventTargetHelper {
       const Maybe<const nsAString&>& aStartMark,
       const Maybe<const PerformanceMeasureOptions&>& aOptions, ErrorResult& aRv,
       bool aReturnUnclamped);
+
+  std::pair<TimeStamp, TimeStamp> GetTimeStampsForMarker(
+      const Maybe<const nsAString&>& aStartMark,
+      const Optional<nsAString>& aEndMark,
+      const Maybe<const PerformanceMeasureOptions&>& aOptions,
+      ErrorResult& aRv);
 };
 
 }  // namespace dom
