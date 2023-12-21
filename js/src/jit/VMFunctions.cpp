@@ -1341,8 +1341,11 @@ void AssertValidStringPtr(JSContext* cx, JSString* str) {
 
   gc::AllocKind kind = str->getAllocKind();
   if (str->isFatInline()) {
-    MOZ_ASSERT(kind == gc::AllocKind::FAT_INLINE_STRING ||
-               kind == gc::AllocKind::FAT_INLINE_ATOM);
+    if (str->isAtom()) {
+      MOZ_ASSERT(kind == gc::AllocKind::FAT_INLINE_ATOM);
+    } else {
+      MOZ_ASSERT(kind == gc::AllocKind::FAT_INLINE_STRING);
+    }
   } else if (str->isExternal()) {
     MOZ_ASSERT(kind == gc::AllocKind::EXTERNAL_STRING);
   } else if (str->isAtom()) {

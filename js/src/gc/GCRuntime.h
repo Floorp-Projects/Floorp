@@ -1024,7 +1024,6 @@ class GCRuntime {
   // Arenas used for permanent things created at startup and shared by child
   // runtimes.
   MainThreadData<ArenaList> permanentAtoms;
-  MainThreadData<ArenaList> permanentFatInlineAtoms;
   MainThreadData<ArenaList> permanentWellKnownSymbols;
 
   // When chunks are empty, they reside in the emptyChunks pool and are

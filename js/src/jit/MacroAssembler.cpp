@@ -7686,6 +7686,10 @@ void MacroAssembler::prepareHashString(Register str, Register result,
   bind(&ok);
 #endif
 
+#ifdef JS_64BIT
+  static_assert(FatInlineAtom::offsetOfHash() == NormalAtom::offsetOfHash());
+  load32(Address(str, NormalAtom::offsetOfHash()), result);
+#else
   move32(Imm32(JSString::FAT_INLINE_MASK), temp);
   and32(Address(str, JSString::offsetOfFlags()), temp);
 
@@ -7711,6 +7715,7 @@ void MacroAssembler::prepareHashString(Register str, Register result,
     load32(BaseIndex(str, result, TimesOne, NormalAtom::offsetOfHash()),
            result);
   }
+#endif
 
   scrambleHashCode(result);
 }
