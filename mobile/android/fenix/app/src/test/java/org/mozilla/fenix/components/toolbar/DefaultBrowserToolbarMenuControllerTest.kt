@@ -823,6 +823,24 @@ class DefaultBrowserToolbarMenuControllerTest {
         verify { navController.navigate(turnOnSyncDirections, null) }
     }
 
+    @Test
+    fun `WHEN the Translations menu item is pressed THEN navigate to translations flow`() =
+        runTest {
+            val item = ToolbarMenu.Item.Translate
+
+            val controller = createController(scope = this, store = browserStore)
+
+            controller.handleToolbarItemInteraction(item)
+
+            verify {
+                navController.navigate(
+                    directionsEq(
+                        BrowserFragmentDirections.actionBrowserFragmentToTranslationsDialogFragment(),
+                    ),
+                )
+            }
+        }
+
     @Suppress("LongParameterList")
     private fun createController(
         scope: CoroutineScope,

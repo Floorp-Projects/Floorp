@@ -42,7 +42,6 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.nimbus.FxNimbus
 import org.mozilla.fenix.theme.ThemeManager
-import org.mozilla.fenix.utils.Settings
 
 /**
  * Builds the toolbar object used with the 3-dot menu in the browser fragment.
@@ -193,6 +192,14 @@ open class DefaultToolbarMenu(
     fun shouldShowReaderViewCustomization(): Boolean = selectedSession?.let {
         store.state.findTab(it.id)?.readerState?.active
     } ?: false
+
+    /**
+     * Should Translations menu item be visible?
+     */
+    @VisibleForTesting(otherwise = PRIVATE)
+    fun shouldShowTranslations(): Boolean = selectedSession?.let {
+        context.settings().enableTranslations
+    } ?: false
     // End of predicates //
 
     private val installToHomescreen = BrowserMenuHighlightableItem(
@@ -246,6 +253,14 @@ open class DefaultToolbarMenu(
         iconTintColorResource = primaryTextColor(),
     ) {
         onItemTapped.invoke(ToolbarMenu.Item.FindInPage)
+    }
+
+    private val translationsItem = BrowserMenuImageText(
+        label = context.getString(R.string.browser_menu_translations),
+        imageResource = R.drawable.mozac_ic_translate_24,
+        iconTintColorResource = primaryTextColor(),
+    ) {
+        onItemTapped.invoke(ToolbarMenu.Item.Translate)
     }
 
     private val desktopSiteItem = BrowserMenuImageSwitch(
@@ -405,6 +420,7 @@ open class DefaultToolbarMenu(
                 syncMenuItem(),
                 BrowserMenuDivider(),
                 findInPageItem,
+                translationsItem.apply { visible = ::shouldShowTranslations },
                 desktopSiteItem,
                 openInRegularTabItem.apply { visible = ::shouldShowOpenInRegularTab },
                 customizeReaderView.apply { visible = ::shouldShowReaderViewCustomization },

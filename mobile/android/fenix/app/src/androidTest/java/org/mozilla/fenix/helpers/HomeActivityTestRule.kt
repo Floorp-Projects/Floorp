@@ -165,6 +165,7 @@ class HomeActivityIntentTestRule internal constructor(
         etpPolicy: ETPPolicy = getETPPolicy(settings),
         tabsTrayRewriteEnabled: Boolean = false,
         composeTopSitesEnabled: Boolean = false,
+        translationsEnabled: Boolean = false,
     ) : this(initialTouchMode, launchActivity, skipOnboarding) {
         this.isHomeOnboardingDialogEnabled = isHomeOnboardingDialogEnabled
         this.isPocketEnabled = isPocketEnabled
@@ -179,6 +180,7 @@ class HomeActivityIntentTestRule internal constructor(
         this.etpPolicy = etpPolicy
         this.tabsTrayRewriteEnabled = tabsTrayRewriteEnabled
         this.composeTopSitesEnabled = composeTopSitesEnabled
+        this.isTranslationsEnabled = translationsEnabled
     }
 
     private val longTapUserPreference = getLongPressTimeout()
@@ -260,6 +262,7 @@ class HomeActivityIntentTestRule internal constructor(
             skipOnboarding: Boolean = false,
             tabsTrayRewriteEnabled: Boolean = false,
             composeTopSitesEnabled: Boolean = false,
+            translationsEnabled: Boolean = false,
         ) = HomeActivityIntentTestRule(
             initialTouchMode = initialTouchMode,
             launchActivity = launchActivity,
@@ -271,6 +274,7 @@ class HomeActivityIntentTestRule internal constructor(
             isWallpaperOnboardingEnabled = false,
             isOpenInAppBannerEnabled = false,
             composeTopSitesEnabled = composeTopSitesEnabled,
+            translationsEnabled = translationsEnabled,
         )
     }
 }

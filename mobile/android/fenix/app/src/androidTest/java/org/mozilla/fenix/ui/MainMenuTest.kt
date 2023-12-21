@@ -37,7 +37,8 @@ class MainMenuTest {
     private lateinit var mockWebServer: MockWebServer
 
     @get:Rule
-    val activityTestRule = HomeActivityIntentTestRule.withDefaultSettingsOverrides()
+    val activityTestRule =
+        HomeActivityIntentTestRule.withDefaultSettingsOverrides(translationsEnabled = true)
 
     @Before
     fun setUp() {

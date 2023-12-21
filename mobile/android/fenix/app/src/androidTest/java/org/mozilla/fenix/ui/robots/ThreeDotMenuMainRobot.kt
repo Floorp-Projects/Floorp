@@ -104,6 +104,7 @@ class ThreeDotMenuMainRobot {
             saveToCollectionButton(),
             addBookmarkButton(),
             desktopSiteToggle(isRequestDesktopSiteEnabled),
+            translateButton(),
         )
         // Swipe to second part of menu
         expandMenu()
@@ -605,6 +606,7 @@ private fun addBookmarkButton() =
         getStringResource(R.string.browser_menu_add),
     )
 private fun findInPageButton() = itemContainingText(getStringResource(R.string.browser_menu_find_in_page))
+private fun translateButton() = itemContainingText(getStringResource(R.string.browser_menu_translations))
 private fun reportSiteIssueButton() = itemContainingText("Report Site Issue")
 private fun addToHomeScreenButton() = itemContainingText(getStringResource(R.string.browser_menu_add_to_homescreen))
 private fun addToShortcutsButton() = itemContainingText(getStringResource(R.string.browser_menu_add_to_shortcuts))

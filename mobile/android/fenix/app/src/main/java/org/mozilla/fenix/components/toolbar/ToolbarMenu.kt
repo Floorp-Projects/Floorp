@@ -18,6 +18,11 @@ interface ToolbarMenu {
          */
         object OpenInRegularTab : Item()
         object FindInPage : Item()
+
+        /**
+         * Opens the translations flow.
+         */
+        object Translate : Item()
         object Share : Item()
         data class Back(val viewHistory: Boolean) : Item()
         data class Forward(val viewHistory: Boolean) : Item()

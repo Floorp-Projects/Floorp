@@ -140,7 +140,7 @@ events:
           find_in_page, forward, history, new_tab, open_in_app, open_in_fenix,
           quit, reader_mode_appearance, reload, remove_from_top_sites,
           save_to_collection, set_default_browser, settings, share, stop,
-          sync_account, and print_content.
+          sync_account, translate and print_content.
         type: string
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/1024
