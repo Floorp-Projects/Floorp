@@ -10,6 +10,8 @@
 #define MOZILLA_SSE_INCLUDE_HEADER_FOR_SSE2
 #include "mozilla/SSE.h"
 
+#include <xsimd/xsimd.hpp>
+
 /* static */
 bool gfxAlphaRecovery::RecoverAlpha(gfxImageSurface* blackSurf,
                                     const gfxImageSurface* whiteSurf) {
@@ -23,7 +25,14 @@ bool gfxAlphaRecovery::RecoverAlpha(gfxImageSurface* blackSurf,
     return false;
 
 #ifdef MOZILLA_MAY_SUPPORT_SSE2
-  if (mozilla::supports_sse2() && RecoverAlphaSSE2(blackSurf, whiteSurf)) {
+  if (mozilla::supports_sse2() &&
+      RecoverAlphaGeneric<xsimd::sse2>(blackSurf, whiteSurf)) {
+    return true;
+  }
+#endif
+#ifdef MOZILLA_MAY_SUPPORT_NEON
+  if (mozilla::supports_neon() &&
+      RecoverAlphaGeneric<xsimd::neon>(blackSurf, whiteSurf)) {
     return true;
   }
 #endif
