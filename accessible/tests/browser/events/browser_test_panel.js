@@ -6,7 +6,7 @@
 /* import-globals-from ../../mochitest/role.js */
 loadScripts({ name: "role.js", dir: MOCHITESTS_DIR });
 
-// Verify we recieve hide and show notifications when the chrome
+// Verify we receive hide and show notifications when the chrome
 // XUL alert is closed or opened. Mac expects both notifications to
 // properly communicate live region changes.
 async function runTests(browser) {
@@ -31,13 +31,9 @@ async function runTests(browser) {
   ok(isAccessible(PopupNotifications.panel), "Popup panel is accessible");
   testAccessibleTree(PopupNotifications.panel, {
     ALERT: [
-      {
-        TEXT_CONTAINER: [
-          { LABEL: [{ TEXT_LEAF: [] }] },
-          { PUSHBUTTON: [] },
-          { PUSHBUTTON: [] },
-        ],
-      },
+      { LABEL: [{ TEXT_LEAF: [] }] },
+      { PUSHBUTTON: [] },
+      { PUSHBUTTON: [] },
     ],
   });
   // Verify the popup panel is associated with the chrome window.

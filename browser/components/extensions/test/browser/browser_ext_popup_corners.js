@@ -45,11 +45,7 @@ add_task(async function testPopupBorderRadius() {
     let arrowContent = panel.panelContent;
 
     let panelStyle = getComputedStyle(arrowContent);
-    is(
-      panelStyle.overflow,
-      "hidden",
-      "overflow is not hidden, thus it doesn't clip"
-    );
+    is(panelStyle.overflow, "clip", "overflow is clipped");
 
     let stack = browser.parentNode;
     let viewNode = stack.parentNode === panel ? browser : stack.parentNode;
