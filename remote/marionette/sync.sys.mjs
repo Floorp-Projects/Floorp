@@ -367,7 +367,7 @@ export function IdlePromise(win) {
  * Note that it is not possible to use this synchronisation primitive
  * with `addEventListener(..., {once: true})`.
  *
- * @param {function(Event)} fn
+ * @param {function(Event): void} fn
  *     Callback function that is guaranteed to be invoked once only,
  *     after `timeout`.
  * @param {number=} [timeout = 250] timeout
@@ -411,7 +411,7 @@ export class DebounceCallback {
  *     The message to wait for.
  * @param {object=} options
  *     Extra options.
- * @param {function(Message)=} options.checkFn
+ * @param {function(Message): boolean=} options.checkFn
  *     Called with the ``Message`` object as argument, should return ``true``
  *     if the message is the expected one, or ``false`` if it should be
  *     ignored and listening should continue. If not specified, the first
@@ -461,7 +461,7 @@ export function waitForMessage(
  *     The topic to observe.
  * @param {object=} options
  *     Extra options.
- * @param {function(string, object)=} options.checkFn
+ * @param {function(string, object): boolean=} options.checkFn
  *     Called with ``subject``, and ``data`` as arguments, should return true
  *     if the notification is the expected one, or false if it should be
  *     ignored and listening should continue. If not specified, the first
