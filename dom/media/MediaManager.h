@@ -384,7 +384,11 @@ class MediaManager final : public nsIMediaManagerService,
   RefPtr<LocalDeviceSetPromise> EnumerateDevicesImpl(
       nsPIDOMWindowInner* aWindow, EnumerationParams aParams);
 
-  RefPtr<DeviceSetPromise> EnumerateRawDevices(EnumerationParams aParams);
+  RefPtr<DeviceSetPromise> MaybeRequestPermissionAndEnumerateRawDevices(
+      EnumerationParams aParams);
+
+  static RefPtr<MediaDeviceSetRefCnt> EnumerateRawDevices(
+      EnumerationParams aParams);
 
   RefPtr<LocalDeviceSetPromise> SelectSettings(
       const dom::MediaStreamConstraints& aConstraints,
