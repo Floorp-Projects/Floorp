@@ -349,7 +349,7 @@ def lib_path_for(host_or_target):
     )
     @imports("os")
     def lib_path(target, is_host, vc_path, windows_sdk_dir, ucrt_sdk_dir, compiler):
-        if not vc_path:
+        if not vc_path or target.os != "WINNT":
             return
         sdk_target = {
             "x86": "x86",
