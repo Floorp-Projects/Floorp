@@ -6121,6 +6121,15 @@ nsHttpChannel::AsyncOpen(nsIStreamListener* aListener) {
 
   AntiTrackingUtils::UpdateAntiTrackingInfoForChannel(this);
 
+  // Recalculate the userAgent header after the AntiTrackingInfo gets updated
+  // because we can only know whether the site is exempted from fingerprinting
+  // protection after we have the AntiTracking Info.
+  rv = mRequestHead.SetHeader(
+      nsHttp::User_Agent,
+      gHttpHandler->UserAgent(nsContentUtils::ShouldResistFingerprinting(
+          this, RFPTarget::HttpUserAgent)));
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
+
   if (WaitingForTailUnblock()) {
     // This channel is marked as Tail and is part of a request context
     // that has positive number of non-tailed requestst, hence this channel
