@@ -56,8 +56,22 @@ module.exports = {
       },
     ],
 
-    // No using variables before defined
-    "no-use-before-define": "error",
+    // No using things before they're defined.
+    "no-use-before-define": [
+      "error",
+      {
+        allowNamedExports: true,
+        classes: true,
+        // The next two being false allows idiomatic patterns which are more
+        // type-inference friendly.  Functions are hoisted, so this is safe.
+        functions: false,
+        // This flag is only meaningful for `var` declarations.
+        // When false, it still disallows use-before-define in the same scope.
+        // Since we only allow `var` at the global scope, this is no worse than
+        // how we currently declare an uninitialized `let` at the top of file.
+        variables: false,
+      },
+    ],
 
     // Disallow using variables outside the blocks they are defined (especially
     // since only let and const are used, see "no-var").

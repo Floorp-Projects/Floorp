@@ -54,8 +54,6 @@ function getConsole() {
   });
 }
 
-export var ExtensionCommon;
-
 // Run a function and report exceptions.
 function runSafeSyncWithoutClone(f, ...args) {
   try {
@@ -122,6 +120,8 @@ function withHandlingUserInput(window, callable) {
  * prototype will be invoked separately for each object instance that
  * it's accessed on.
  *
+ * Note: for better type inference, prefer redefineGetter() below.
+ *
  * @param {object} object
  *        The prototype object on which to define the getter.
  * @param {string | symbol} prop
@@ -131,28 +131,37 @@ function withHandlingUserInput(window, callable) {
  *        value.
  */
 function defineLazyGetter(object, prop, getter) {
-  let redefine = (obj, value) => {
-    Object.defineProperty(obj, prop, {
-      enumerable: true,
-      configurable: true,
-      writable: true,
-      value,
-    });
-    return value;
-  };
-
   Object.defineProperty(object, prop, {
     enumerable: true,
     configurable: true,
-
     get() {
-      return redefine(this, getter.call(this));
+      return redefineGetter(this, prop, getter.call(this), true);
     },
-
     set(value) {
-      redefine(this, value);
+      redefineGetter(this, prop, value, true);
     },
   });
+}
+
+/**
+ * A more type-inference friendly version of defineLazyGetter() above.
+ * Call it from a real getter (and setter) for your class or object.
+ * On first run, it will redefine the property with the final value.
+ *
+ * @template Value
+ * @param {object} object
+ * @param {string | symbol} key
+ * @param {Value} value
+ * @returns {Value}
+ */
+function redefineGetter(object, key, value, writable = false) {
+  Object.defineProperty(object, key, {
+    enumerable: true,
+    configurable: true,
+    writable,
+    value,
+  });
+  return value;
 }
 
 function checkLoadURI(uri, principal, options) {
@@ -292,11 +301,11 @@ class EventEmitter {
    *        The listener to call when events are emitted.
    */
   once(event, listener) {
-    let wrapper = (...args) => {
+    let wrapper = (event, ...args) => {
       this.off(event, wrapper);
       this[ONCE_MAP].delete(listener);
 
-      return listener(...args);
+      return listener(event, ...args);
     };
     this[ONCE_MAP].set(listener, wrapper);
 
@@ -360,11 +369,28 @@ class ExtensionAPI extends EventEmitter {
 
   destroy() {}
 
-  onManifestEntry(entry) {}
+  /** @param {string} entryName */
+  onManifestEntry(entryName) {}
 
+  /** @param {boolean} isAppShutdown */
+  onShutdown(isAppShutdown) {}
+
+  /** @param {BaseContext} context */
   getAPI(context) {
     throw new Error("Not Implemented");
   }
+
+  /** @param {string} id */
+  static onDisable(id) {}
+
+  /** @param {string} id */
+  static onUninstall(id) {}
+
+  /**
+   * @param {string} id
+   * @param {Record<string, JSONValue>} manifest
+   */
+  static onUpdate(id, manifest) {}
 }
 
 /**
@@ -374,6 +400,9 @@ class ExtensionAPI extends EventEmitter {
  * this.apiNamespace = class extends ExtensionAPIPersistent {};
  */
 class ExtensionAPIPersistent extends ExtensionAPI {
+  /** @type {Record<string, callback>} */
+  PERSISTENT_EVENTS;
+
   /**
    * Check for event entry.
    *
@@ -440,6 +469,11 @@ class ExtensionAPIPersistent extends ExtensionAPI {
  * @abstract
  */
 class BaseContext {
+  /** @type {boolean} */
+  isTopContext;
+  /** @type {string} */
+  viewType;
+
   constructor(envType, extension) {
     this.envType = envType;
     this.onClose = new Set();
@@ -1895,6 +1929,7 @@ class LazyAPIManager extends SchemaAPIManager {
   constructor(processType, moduleData, schemaURLs) {
     super(processType);
 
+    /** @type {Promise | boolean} */
     this.initialized = false;
 
     this.initModuleData(moduleData);
@@ -1979,7 +2014,7 @@ defineLazyGetter(MultiAPIManager.prototype, "schema", function () {
   return new lazy.SchemaRoot(bases, new Map());
 });
 
-function LocaleData(data) {
+export function LocaleData(data) {
   this.defaultLocale = data.defaultLocale;
   this.selectedLocale = data.selectedLocale;
   this.locales = data.locales || new Map();
@@ -2186,15 +2221,13 @@ LocaleData.prototype = {
   get uiLocale() {
     return Services.locale.appLocaleAsBCP47;
   },
-};
 
-defineLazyGetter(LocaleData.prototype, "availableLocales", function () {
-  return new Set(
-    [this.BUILTIN, this.selectedLocale, this.defaultLocale].filter(locale =>
-      this.messages.has(locale)
-    )
-  );
-});
+  get availableLocales() {
+    const locales = [this.BUILTIN, this.selectedLocale, this.defaultLocale];
+    const value = new Set(locales.filter(locale => this.messages.has(locale)));
+    return redefineGetter(this, "availableLocales", value);
+  },
+};
 
 /**
  * This is a generic class for managing event listeners.
@@ -3012,7 +3045,7 @@ function updateAllowedOrigins(policy, origins, isAdd) {
   policy.allowedOrigins = new MatchPatternSet(Array.from(patternMap.values()));
 }
 
-ExtensionCommon = {
+export var ExtensionCommon = {
   BaseContext,
   CanOfAPIs,
   EventManager,
@@ -3028,6 +3061,7 @@ ExtensionCommon = {
   checkLoadURI,
   checkLoadURL,
   defineLazyGetter,
+  redefineGetter,
   getConsole,
   ignoreEvent,
   instanceOf,

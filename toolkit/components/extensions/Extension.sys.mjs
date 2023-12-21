@@ -172,7 +172,7 @@ export { Management };
 
 const { getUniqueId, promiseTimeout } = ExtensionUtils;
 
-const { EventEmitter, updateAllowedOrigins } = ExtensionCommon;
+const { EventEmitter, redefineGetter, updateAllowedOrigins } = ExtensionCommon;
 
 ChromeUtils.defineLazyGetter(
   lazy,
@@ -869,6 +869,19 @@ const manifestTypes = new Map([
  * `loadManifest` has been called, and completed.
  */
 export class ExtensionData {
+  /**
+   * Note: These fields are only available and meant to be used on Extension
+   * instances, declared here because methods from this class reference them.
+   */
+  /** @type {object} TODO: move to the Extension class, bug 1871094. */
+  addonData;
+  /** @type {nsIURI} */
+  baseURI;
+  /** @type {nsIPrincipal} */
+  principal;
+  /** @type {boolean} */
+  temporarilyInstalled;
+
   constructor(rootURI, isPrivileged = false) {
     this.rootURI = rootURI;
     this.resourceURL = rootURI.spec;
@@ -2676,7 +2689,7 @@ class BootstrapScope {
     // APP_STARTED.  In some situations, such as background and
     // persisted listeners, we also need to know that the addon
     // was updated.
-    this.updateReason = this.BOOTSTRAP_REASON_TO_STRING_MAP[reason];
+    this.updateReason = BootstrapScope.BOOTSTRAP_REASON_MAP[reason];
     // Retain any previously granted permissions that may have migrated
     // into the optional list.
     if (data.oldPermissions) {
@@ -2703,7 +2716,7 @@ class BootstrapScope {
     // eslint-disable-next-line no-use-before-define
     this.extension = new Extension(
       data,
-      this.BOOTSTRAP_REASON_TO_STRING_MAP[reason],
+      BootstrapScope.BOOTSTRAP_REASON_MAP[reason],
       this.updateReason
     );
     return this.extension.startup();
@@ -2711,31 +2724,27 @@ class BootstrapScope {
 
   async shutdown(data, reason) {
     let result = await this.extension.shutdown(
-      this.BOOTSTRAP_REASON_TO_STRING_MAP[reason]
+      BootstrapScope.BOOTSTRAP_REASON_MAP[reason]
     );
     this.extension = null;
     return result;
   }
-}
 
-ChromeUtils.defineLazyGetter(
-  BootstrapScope.prototype,
-  "BOOTSTRAP_REASON_TO_STRING_MAP",
-  () => {
-    const { BOOTSTRAP_REASONS } = lazy.AddonManagerPrivate;
-
-    return Object.freeze({
-      [BOOTSTRAP_REASONS.APP_STARTUP]: "APP_STARTUP",
-      [BOOTSTRAP_REASONS.APP_SHUTDOWN]: "APP_SHUTDOWN",
-      [BOOTSTRAP_REASONS.ADDON_ENABLE]: "ADDON_ENABLE",
-      [BOOTSTRAP_REASONS.ADDON_DISABLE]: "ADDON_DISABLE",
-      [BOOTSTRAP_REASONS.ADDON_INSTALL]: "ADDON_INSTALL",
-      [BOOTSTRAP_REASONS.ADDON_UNINSTALL]: "ADDON_UNINSTALL",
-      [BOOTSTRAP_REASONS.ADDON_UPGRADE]: "ADDON_UPGRADE",
-      [BOOTSTRAP_REASONS.ADDON_DOWNGRADE]: "ADDON_DOWNGRADE",
+  static get BOOTSTRAP_REASON_MAP() {
+    const BR = lazy.AddonManagerPrivate.BOOTSTRAP_REASONS;
+    const value = Object.freeze({
+      [BR.APP_STARTUP]: "APP_STARTUP",
+      [BR.APP_SHUTDOWN]: "APP_SHUTDOWN",
+      [BR.ADDON_ENABLE]: "ADDON_ENABLE",
+      [BR.ADDON_DISABLE]: "ADDON_DISABLE",
+      [BR.ADDON_INSTALL]: "ADDON_INSTALL",
+      [BR.ADDON_UNINSTALL]: "ADDON_UNINSTALL",
+      [BR.ADDON_UPGRADE]: "ADDON_UPGRADE",
+      [BR.ADDON_DOWNGRADE]: "ADDON_DOWNGRADE",
     });
+    return redefineGetter(this, "BOOTSTRAP_REASON_TO_STRING_MAP", value);
   }
-);
+}
 
 class DictionaryBootstrapScope extends BootstrapScope {
   install(data, reason) {}
@@ -2744,11 +2753,11 @@ class DictionaryBootstrapScope extends BootstrapScope {
   startup(data, reason) {
     // eslint-disable-next-line no-use-before-define
     this.dictionary = new Dictionary(data);
-    return this.dictionary.startup(this.BOOTSTRAP_REASON_TO_STRING_MAP[reason]);
+    return this.dictionary.startup(BootstrapScope.BOOTSTRAP_REASON_MAP[reason]);
   }
 
-  shutdown(data, reason) {
-    this.dictionary.shutdown(this.BOOTSTRAP_REASON_TO_STRING_MAP[reason]);
+  async shutdown(data, reason) {
+    this.dictionary.shutdown(BootstrapScope.BOOTSTRAP_REASON_MAP[reason]);
     this.dictionary = null;
   }
 }
@@ -2756,16 +2765,16 @@ class DictionaryBootstrapScope extends BootstrapScope {
 class LangpackBootstrapScope extends BootstrapScope {
   install(data, reason) {}
   uninstall(data, reason) {}
-  update(data, reason) {}
+  async update(data, reason) {}
 
   startup(data, reason) {
     // eslint-disable-next-line no-use-before-define
     this.langpack = new Langpack(data);
-    return this.langpack.startup(this.BOOTSTRAP_REASON_TO_STRING_MAP[reason]);
+    return this.langpack.startup(BootstrapScope.BOOTSTRAP_REASON_MAP[reason]);
   }
 
-  shutdown(data, reason) {
-    this.langpack.shutdown(this.BOOTSTRAP_REASON_TO_STRING_MAP[reason]);
+  async shutdown(data, reason) {
+    this.langpack.shutdown(BootstrapScope.BOOTSTRAP_REASON_MAP[reason]);
     this.langpack = null;
   }
 }
@@ -2779,12 +2788,12 @@ class SitePermissionBootstrapScope extends BootstrapScope {
     // eslint-disable-next-line no-use-before-define
     this.sitepermission = new SitePermission(data);
     return this.sitepermission.startup(
-      this.BOOTSTRAP_REASON_TO_STRING_MAP[reason]
+      BootstrapScope.BOOTSTRAP_REASON_MAP[reason]
     );
   }
 
-  shutdown(data, reason) {
-    this.sitepermission.shutdown(this.BOOTSTRAP_REASON_TO_STRING_MAP[reason]);
+  async shutdown(data, reason) {
+    this.sitepermission.shutdown(BootstrapScope.BOOTSTRAP_REASON_MAP[reason]);
     this.sitepermission = null;
   }
 }
@@ -2800,6 +2809,9 @@ let pendingExtensions = new Map();
  * @augments ExtensionData
  */
 export class Extension extends ExtensionData {
+  /** @type {Map<string, Map<string, any>>} */
+  persistentListeners;
+
   constructor(addonData, startupReason, updateReason) {
     super(addonData.resourceURI, addonData.isPrivileged);
 
@@ -2832,6 +2844,7 @@ export class Extension extends ExtensionData {
     this.startupData = addonData.startupData || {};
     this.startupReason = startupReason;
     this.updateReason = updateReason;
+    this.temporarilyInstalled = !!addonData.temporarilyInstalled;
 
     if (
       updateReason ||
@@ -3075,10 +3088,6 @@ export class Extension extends ExtensionData {
 
   get manifestCacheKey() {
     return [this.id, this.version, Services.locale.appLocaleAsBCP47];
-  }
-
-  get temporarilyInstalled() {
-    return !!this.addonData.temporarilyInstalled;
   }
 
   saveStartupData() {

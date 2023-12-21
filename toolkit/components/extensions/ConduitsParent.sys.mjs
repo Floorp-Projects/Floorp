@@ -452,13 +452,13 @@ export class ConduitsParent extends JSWindowActorParent {
       return Hub.recvConduitOpened(arg, this);
     }
 
-    sender = Hub.remotes.get(sender);
-    if (!sender || sender.actor !== this) {
+    let remote = Hub.remotes.get(sender);
+    if (!remote || remote.actor !== this) {
       throw new Error(`Unknown sender or wrong actor for recv${name}`);
     }
 
     if (name === "ConduitClosed") {
-      return Hub.recvConduitClosed(sender);
+      return Hub.recvConduitClosed(remote);
     }
 
     let conduit = Hub.byMethod.get(name);
@@ -466,7 +466,7 @@ export class ConduitsParent extends JSWindowActorParent {
       throw new Error(`Parent conduit for recv${name} not found`);
     }
 
-    return conduit._recv(name, arg, { actor: this, query, sender });
+    return conduit._recv(name, arg, { actor: this, query, sender: remote });
   }
 
   /**

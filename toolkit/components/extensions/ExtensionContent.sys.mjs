@@ -59,6 +59,7 @@ const {
   CanOfAPIs,
   SchemaAPIManager,
   defineLazyGetter,
+  redefineGetter,
   runSafeSyncWithoutClone,
 } = ExtensionCommon;
 
@@ -142,7 +143,7 @@ class CacheMap extends DefaultMap {
       super.get(url).timer.cancel();
     }
 
-    super.delete(url);
+    return super.delete(url);
   }
 
   clear(timeout = SCRIPT_CLEAR_TIMEOUT_MS) {
@@ -160,16 +161,17 @@ class CacheMap extends DefaultMap {
 
 class ScriptCache extends CacheMap {
   constructor(options, extension) {
-    super(SCRIPT_EXPIRY_TIMEOUT_MS, null, extension);
-    this.options = options;
-  }
-
-  defaultConstructor(url) {
-    let promise = ChromeUtils.compileScript(url, this.options);
-    promise.then(script => {
-      promise.script = script;
-    });
-    return promise;
+    super(
+      SCRIPT_EXPIRY_TIMEOUT_MS,
+      url => {
+        let promise = ChromeUtils.compileScript(url, options);
+        promise.then(script => {
+          promise.script = script;
+        });
+        return promise;
+      },
+      extension
+    );
   }
 }
 
@@ -207,7 +209,7 @@ class BaseCSSCache extends CacheMap {
       }
     }
 
-    super.delete(key);
+    return super.delete(key);
   }
 }
 
@@ -907,13 +909,6 @@ class ContentScriptContextChild extends BaseContext {
 
     this.url = contentWindow.location.href;
 
-    defineLazyGetter(this, "chromeObj", () => {
-      let chromeObj = Cu.createObjectIn(this.sandbox);
-
-      this.childManager.inject(chromeObj);
-      return chromeObj;
-    });
-
     lazy.Schemas.exportLazyGetter(
       this.sandbox,
       "browser",
@@ -993,31 +988,28 @@ class ContentScriptContextChild extends BaseContext {
 
     this.sandbox = null;
   }
-}
 
-defineLazyGetter(ContentScriptContextChild.prototype, "messenger", function () {
-  return new Messenger(this);
-});
-
-defineLazyGetter(
-  ContentScriptContextChild.prototype,
-  "childManager",
-  function () {
+  get childManager() {
     apiManager.lazyInit();
-
-    let localApis = {};
-    let can = new CanOfAPIs(this, apiManager, localApis);
-
+    let can = new CanOfAPIs(this, apiManager, {});
     let childManager = new ChildAPIManager(this, this.messageManager, can, {
       envType: "content_parent",
       url: this.url,
     });
-
     this.callOnClose(childManager);
-
-    return childManager;
+    return redefineGetter(this, "childManager", childManager);
   }
-);
+
+  get chromeObj() {
+    let chromeObj = Cu.createObjectIn(this.sandbox);
+    this.childManager.inject(chromeObj);
+    return redefineGetter(this, "chromeObj", chromeObj);
+  }
+
+  get messenger() {
+    return redefineGetter(this, "messenger", new Messenger(this));
+  }
+}
 
 // Responsible for creating ExtensionContexts and injecting content
 // scripts into them when new documents are created.

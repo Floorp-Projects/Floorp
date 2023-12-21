@@ -32,6 +32,13 @@ let BASE_MANIFEST = Object.freeze({
 });
 
 class ExtensionWrapper {
+  /** @type {AddonWrapper} */
+  addon;
+  /** @type {Promise<AddonWrapper>} */
+  addonPromise;
+  /** @type {nsIFile[]} */
+  cleanupFiles;
+
   constructor(testScope, extension = null) {
     this.testScope = testScope;
 
@@ -447,20 +454,13 @@ class AOMExtensionWrapper extends ExtensionWrapper {
     return super.unload();
   }
 
-  async upgrade(data) {
-    this.startupPromise = new Promise(resolve => {
-      this.resolveStartup = resolve;
-    });
-    this.state = "restarting";
-
-    await this._flushCache();
-
-    let xpiFile = lazy.ExtensionTestCommon.generateXPI(data);
-
-    this.cleanupFiles.push(xpiFile);
-
-    return this._install(xpiFile);
-  }
+  /**
+   * Override for subclasses which don't set an ID in the constructor.
+   *
+   * @param {nsIURI} uri
+   * @param {string} id
+   */
+  maybeSetID(uri, id) {}
 }
 
 class InstallableWrapper extends AOMExtensionWrapper {
@@ -574,6 +574,21 @@ class InstallableWrapper extends AOMExtensionWrapper {
 
     return this._install(this.file);
   }
+
+  async upgrade(data) {
+    this.startupPromise = new Promise(resolve => {
+      this.resolveStartup = resolve;
+    });
+    this.state = "restarting";
+
+    await this._flushCache();
+
+    let xpiFile = lazy.ExtensionTestCommon.generateXPI(data);
+
+    this.cleanupFiles.push(xpiFile);
+
+    return this._install(xpiFile);
+  }
 }
 
 class ExternallyInstalledWrapper extends AOMExtensionWrapper {
@@ -587,8 +602,6 @@ class ExternallyInstalledWrapper extends AOMExtensionWrapper {
 
     this.state = "restarting";
   }
-
-  maybeSetID(uri, id) {}
 }
 
 export var ExtensionTestUtils = {
@@ -769,7 +782,7 @@ export var ExtensionTestUtils = {
    *
    * @returns {XPCShellContentUtils.ContentPage}
    */
-  loadContentPage(url, options, ...args) {
-    return XPCShellContentUtils.loadContentPage(url, options, ...args);
+  loadContentPage(url, options) {
+    return XPCShellContentUtils.loadContentPage(url, options);
   },
 };

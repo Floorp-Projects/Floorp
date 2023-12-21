@@ -373,6 +373,7 @@ async function storageSyncInit() {
   }
   return storageSyncInit.promise;
 }
+storageSyncInit.promise = undefined;
 
 // Kinto record IDs have two conditions:
 //

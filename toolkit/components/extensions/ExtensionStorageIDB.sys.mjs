@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-export let ExtensionStorageIDB;
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 import { IndexedDB } from "resource://gre/modules/IndexedDB.sys.mjs";
 
@@ -238,10 +237,7 @@ class ExtensionStorageLocalIDB extends IndexedDB {
     // Explicitly create a transaction, so that we can explicitly abort it
     // as soon as one of the put requests fails.
     const transaction = this.transaction(IDB_DATA_STORENAME, "readwrite");
-    const objectStore = transaction.objectStore(
-      IDB_DATA_STORENAME,
-      "readwrite"
-    );
+    const objectStore = transaction.objectStore(IDB_DATA_STORENAME);
     const transactionCompleted = transaction.promiseComplete();
 
     if (!serialize) {
@@ -585,7 +581,7 @@ async function migrateJSONFileData(extension, storagePrincipal) {
  * This ExtensionStorage class implements a backend for the storage.local API which
  * uses IndexedDB to store the data.
  */
-ExtensionStorageIDB = {
+export var ExtensionStorageIDB = {
   BACKEND_ENABLED_PREF,
   IDB_MIGRATED_PREF_BRANCH,
   IDB_MIGRATE_RESULT_HISTOGRAM,

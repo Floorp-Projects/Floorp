@@ -145,7 +145,7 @@ class RuleCondition {
   }
 }
 
-class Rule {
+export class Rule {
   constructor(rule) {
     this.id = rule.id;
     this.priority = rule.priority;
@@ -631,6 +631,24 @@ class ModifyHeadersBase {
    */
   constructor(channel) {
     this.channel = channel;
+  }
+
+  /**
+   * @param {MatchedRule} matchedRule
+   * @returns {object[]}
+   */
+  headerActionsFor(matchedRule) {
+    throw new Error("Not implemented.");
+  }
+
+  /**
+   * @param {MatchedRule} matchedrule
+   * @param {string} name
+   * @param {string} value
+   * @param {boolean} merge
+   */
+  setHeaderImpl(matchedrule, name, value, merge) {
+    throw new Error("Not implemented.");
   }
 
   /** @param {MatchedRule[]} matchedRules */
@@ -1190,7 +1208,7 @@ class RuleValidator {
   }
 }
 
-class RuleQuotaCounter {
+export class RuleQuotaCounter {
   constructor(isStaticRulesets) {
     this.isStaticRulesets = isStaticRulesets;
     this.ruleLimitName = isStaticRulesets

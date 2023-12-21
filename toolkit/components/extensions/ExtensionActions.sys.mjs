@@ -43,6 +43,7 @@ class PanelActionBase {
       enabled: true,
       title: options.default_title || extension.name,
       popup: options.default_popup || "",
+      icon: null,
     };
     this.globals = Object.create(this.defaults);
 

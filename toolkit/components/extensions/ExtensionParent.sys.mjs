@@ -46,7 +46,7 @@ const DUMMY_PAGE_URI = Services.io.newURI(
   "chrome://extensions/content/dummy.xhtml"
 );
 
-var { BaseContext, CanOfAPIs, SchemaAPIManager, SpreadArgs, defineLazyGetter } =
+var { BaseContext, CanOfAPIs, SchemaAPIManager, SpreadArgs, redefineGetter } =
   ExtensionCommon;
 
 var {
@@ -72,7 +72,6 @@ schemaURLs.add("chrome://extensions/content/schemas/experiments.json");
 
 let GlobalManager;
 let ParentAPIManager;
-let StartupCache;
 
 function verifyActorForContext(actor, context) {
   if (JSWindowActorParent.isInstance(actor)) {
@@ -664,26 +663,25 @@ class ProxyContextParent extends BaseContext {
     super.unload();
     apiManager.emit("proxy-context-unload", this);
   }
+
+  get apiCan() {
+    const apiCan = new CanOfAPIs(this, this.extension.apiManager, {});
+    return redefineGetter(this, "apiCan", apiCan);
+  }
+
+  get apiObj() {
+    return redefineGetter(this, "apiObj", this.apiCan.root);
+  }
+
+  get sandbox() {
+    // Note: Blob and URL globals are used in ext-contentScripts.js.
+    const sandbox = Cu.Sandbox(this.principal, {
+      sandboxName: this.uri.spec,
+      wantGlobalProperties: ["Blob", "URL"],
+    });
+    return redefineGetter(this, "sandbox", sandbox);
+  }
 }
-
-defineLazyGetter(ProxyContextParent.prototype, "apiCan", function () {
-  let obj = {};
-  let can = new CanOfAPIs(this, this.extension.apiManager, obj);
-  return can;
-});
-
-defineLazyGetter(ProxyContextParent.prototype, "apiObj", function () {
-  return this.apiCan.root;
-});
-
-defineLazyGetter(ProxyContextParent.prototype, "sandbox", function () {
-  // NOTE: the required Blob and URL globals are used in the ext-registerContentScript.js
-  // API module to convert JS and CSS data into blob URLs.
-  return Cu.Sandbox(this.principal, {
-    sandboxName: this.uri.spec,
-    wantGlobalProperties: ["Blob", "URL"],
-  });
-});
 
 /**
  * The parent side of proxied API context for extension content script
@@ -726,11 +724,6 @@ class ExtensionPageContextParent extends ProxyContextParent {
     if (data.tabId >= 0) {
       return data.tabId;
     }
-  }
-
-  onBrowserChange(browser) {
-    super.onBrowserChange(browser);
-    this.xulBrowser = browser;
   }
 
   unload() {
@@ -1404,7 +1397,7 @@ class HiddenXULWindow {
       }
     }
 
-    let awaitFrameLoader = Promise.resolve();
+    let awaitFrameLoader;
 
     if (browser.getAttribute("remote") === "true") {
       awaitFrameLoader = promiseEvent(browser, "XULFrameLoaderCreated");
@@ -2055,20 +2048,76 @@ let IconDetails = {
   },
 };
 
+class CacheStore {
+  constructor(storeName) {
+    this.storeName = storeName;
+  }
+
+  async getStore(path = null) {
+    let data = await StartupCache.dataPromise;
+
+    let store = data.get(this.storeName);
+    if (!store) {
+      store = new Map();
+      data.set(this.storeName, store);
+    }
+
+    let key = path;
+    if (Array.isArray(path)) {
+      for (let elem of path.slice(0, -1)) {
+        let next = store.get(elem);
+        if (!next) {
+          next = new Map();
+          store.set(elem, next);
+        }
+        store = next;
+      }
+      key = path[path.length - 1];
+    }
+
+    return [store, key];
+  }
+
+  async get(path, createFunc) {
+    let [store, key] = await this.getStore(path);
+
+    let result = store.get(key);
+
+    if (result === undefined) {
+      result = await createFunc(path);
+      store.set(key, result);
+      StartupCache.save();
+    }
+
+    return result;
+  }
+
+  async set(path, value) {
+    let [store, key] = await this.getStore(path);
+
+    store.set(key, value);
+    StartupCache.save();
+  }
+
+  async getAll() {
+    let [store] = await this.getStore();
+
+    return new Map(store);
+  }
+
+  async delete(path) {
+    let [store, key] = await this.getStore(path);
+
+    if (store.delete(key)) {
+      StartupCache.save();
+    }
+  }
+}
+
 // A cache to support faster initialization of extensions at browser startup.
 // All cached data is removed when the browser is updated.
 // Extension-specific data is removed when the add-on is updated.
-StartupCache = {
-  STORE_NAMES: Object.freeze([
-    "general",
-    "locales",
-    "manifests",
-    "other",
-    "permissions",
-    "schemas",
-    "menus",
-  ]),
-
+var StartupCache = {
   _ensureDirectoryPromise: null,
   _saveTask: null,
 
@@ -2179,79 +2228,17 @@ StartupCache = {
   delete(extension, path) {
     return this.general.delete([extension.id, extension.version, ...path]);
   },
+
+  general: new CacheStore("general"),
+  locales: new CacheStore("locales"),
+  manifests: new CacheStore("manifests"),
+  other: new CacheStore("other"),
+  permissions: new CacheStore("permissions"),
+  schemas: new CacheStore("schemas"),
+  menus: new CacheStore("menus"),
 };
 
 Services.obs.addObserver(StartupCache, "startupcache-invalidate");
-
-class CacheStore {
-  constructor(storeName) {
-    this.storeName = storeName;
-  }
-
-  async getStore(path = null) {
-    let data = await StartupCache.dataPromise;
-
-    let store = data.get(this.storeName);
-    if (!store) {
-      store = new Map();
-      data.set(this.storeName, store);
-    }
-
-    let key = path;
-    if (Array.isArray(path)) {
-      for (let elem of path.slice(0, -1)) {
-        let next = store.get(elem);
-        if (!next) {
-          next = new Map();
-          store.set(elem, next);
-        }
-        store = next;
-      }
-      key = path[path.length - 1];
-    }
-
-    return [store, key];
-  }
-
-  async get(path, createFunc) {
-    let [store, key] = await this.getStore(path);
-
-    let result = store.get(key);
-
-    if (result === undefined) {
-      result = await createFunc(path);
-      store.set(key, result);
-      StartupCache.save();
-    }
-
-    return result;
-  }
-
-  async set(path, value) {
-    let [store, key] = await this.getStore(path);
-
-    store.set(key, value);
-    StartupCache.save();
-  }
-
-  async getAll() {
-    let [store] = await this.getStore();
-
-    return new Map(store);
-  }
-
-  async delete(path) {
-    let [store, key] = await this.getStore(path);
-
-    if (store.delete(key)) {
-      StartupCache.save();
-    }
-  }
-}
-
-for (let name of StartupCache.STORE_NAMES) {
-  StartupCache[name] = new CacheStore(name);
-}
 
 export var ExtensionParent = {
   GlobalManager,

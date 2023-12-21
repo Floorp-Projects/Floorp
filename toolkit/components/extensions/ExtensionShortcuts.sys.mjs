@@ -108,16 +108,12 @@ export class ExtensionShortcutKeyMap extends DefaultMap {
   // Class internals.
 
   constructor() {
-    super();
+    super(() => new Set());
 
     // Overridden in some unit test to make it easier to cover some
     // platform specific behaviors (in particular the platform specific.
     // normalization of the shortcuts using the Ctrl modifier on macOS).
     this._os = lazy.ExtensionParent.PlatformInfo.os;
-  }
-
-  defaultConstructor() {
-    return new Set();
   }
 
   getPlatformShortcutString(shortcutString) {
@@ -150,7 +146,7 @@ export class ExtensionShortcutKeyMap extends DefaultMap {
 
   delete(shortcutString) {
     const platformShortcut = this.getPlatformShortcutString(shortcutString);
-    super.delete(platformShortcut);
+    return super.delete(platformShortcut);
   }
 }
 
@@ -397,7 +393,7 @@ export class ExtensionShortcuts {
       this.keysetsMap.get(window).remove();
     }
     let sidebarKey;
-    commands.forEach((command, name) => {
+    for (let [name, command] of commands) {
       if (command.shortcut) {
         let parts = command.shortcut.split("+");
 
@@ -419,7 +415,7 @@ export class ExtensionShortcuts {
           sidebarKey = keyElement;
         }
       }
-    });
+    }
     doc.documentElement.appendChild(keyset);
     if (sidebarKey) {
       window.SidebarUI.updateShortcut({ keyId: sidebarKey.id });

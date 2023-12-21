@@ -36,8 +36,6 @@ const { flushJarCache } = ExtensionUtils;
 
 const { instanceOf } = ExtensionCommon;
 
-export var ExtensionTestCommon;
-
 /**
  * A skeleton Extension-like object, used for testing, which installs an
  * add-on via the add-on manager when startup() is called, and
@@ -226,7 +224,7 @@ const ExtensionTestAssertions = {
 
     const { persistentListeners } = extension;
     if (
-      !persistentListeners?.size > 0 ||
+      !persistentListeners?.size ||
       !persistentListeners.get(apiNs)?.has(apiEvent)
     ) {
       return [];
@@ -283,7 +281,7 @@ const ExtensionTestAssertions = {
   },
 };
 
-ExtensionTestCommon = class ExtensionTestCommon {
+export var ExtensionTestCommon = class ExtensionTestCommon {
   static get testAssertions() {
     return ExtensionTestAssertions;
   }

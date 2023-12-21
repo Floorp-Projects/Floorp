@@ -148,7 +148,7 @@ class StoreData {
     if (!(extension instanceof lazy.Extension)) {
       throw new Error("Missing mandatory extension parameter");
     }
-    this.schemaVersion = schemaVersion || this.constructor.VERSION;
+    this.schemaVersion = schemaVersion || StoreData.VERSION;
     this.extVersion = extVersion ?? extension.version;
     this.#extUUID = extension.uuid;
     // Used to skip storing the data in the startupCache or storing the lastUpdateTag in
@@ -220,8 +220,8 @@ class StoreData {
   }
 
   #updateRulesets({
-    staticRulesets,
-    dynamicRuleset,
+    staticRulesets = null,
+    dynamicRuleset = null,
     lastUpdateTag = Services.uuid.generateUUID().toString(),
   } = {}) {
     if (staticRulesets) {
@@ -667,11 +667,7 @@ class RulesetsStore {
    * @returns {StoreData}
    */
   #getDefaults(extension) {
-    return new StoreData(extension, {
-      extUUID: extension.uuid,
-      extVersion: extension.version,
-      temporarilyInstalled: extension.temporarilyInstalled,
-    });
+    return new StoreData(extension, { extVersion: extension.version });
   }
 
   /**
