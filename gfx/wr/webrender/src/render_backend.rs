@@ -8,7 +8,7 @@
 //! See the comment at the top of the `renderer` module for a description of
 //! how these two pieces interact.
 
-use api::{DebugFlags, Parameter, BoolParameter, PrimitiveFlags};
+use api::{DebugFlags, Parameter, BoolParameter, PrimitiveFlags, MinimapData};
 use api::{DocumentId, ExternalScrollId, HitTestResult};
 use api::{IdNamespace, PipelineId, RenderNotifier, SampledScrollOffset};
 use api::{NotificationRequest, Checkpoint, QualitySettings};
@@ -368,6 +368,8 @@ struct Document {
     /// Retained frame-building version of the spatial tree
     spatial_tree: SpatialTree,
 
+    minimap_data: FastHashMap<ExternalScrollId, MinimapData>,
+
     /// Contains various vecs of data that is used only during frame building,
     /// where we want to recycle the memory each new display list, to avoid constantly
     /// re-allocating and moving memory around.
@@ -413,6 +415,7 @@ impl Document {
             has_built_scene: false,
             data_stores: DataStores::default(),
             spatial_tree: SpatialTree::new(),
+            minimap_data: FastHashMap::default(),
             scratch: ScratchBuffer::default(),
             #[cfg(feature = "replay")]
             loaded_scene: Scene::new(),
@@ -489,6 +492,9 @@ impl Document {
                     }
                 }
             }
+            FrameMsg::SetMinimapData(id, minimap_data) => {
+              self.minimap_data.insert(id, minimap_data);
+            }
         }
 
         DocumentOps::nop()
@@ -527,6 +533,10 @@ impl Document {
                 &mut self.spatial_tree,
                 self.dirty_rects_are_valid,
                 &mut self.profile,
+                // Consume the minimap data. If APZ wants a minimap rendered
+                // on the next frame, it will add new entries to the minimap
+                // data during sampling.
+                mem::take(&mut self.minimap_data)
             );
 
             frame
@@ -1881,6 +1891,7 @@ impl RenderBackend {
                         data_stores,
                         scratch: ScratchBuffer::default(),
                         spatial_tree: frame_spatial_tree,
+                        minimap_data: FastHashMap::default(),
                         loaded_scene: scene.clone(),
                         prev_composite_descriptor: CompositeDescriptor::empty(),
                         dirty_rects_are_valid: false,

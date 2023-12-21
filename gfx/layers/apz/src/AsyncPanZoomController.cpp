@@ -70,12 +70,14 @@
 #include "mozilla/layers/APZUtils.h"        // for AsyncTransform
 #include "mozilla/layers/CompositorController.h"  // for CompositorController
 #include "mozilla/layers/DirectionUtils.h"  // for GetAxis{Start,End,Length,Scale}
-#include "mozilla/layers/APZPublicUtils.h"  // for GetScrollMode
-#include "mozilla/mozalloc.h"               // for operator new, etc
-#include "mozilla/Unused.h"                 // for unused
-#include "nsAlgorithm.h"                    // for clamped
-#include "nsCOMPtr.h"                       // for already_AddRefed
-#include "nsDebug.h"                        // for NS_WARNING
+#include "mozilla/layers/APZPublicUtils.h"   // for GetScrollMode
+#include "mozilla/webrender/WebRenderAPI.h"  // for MinimapData
+#include "mozilla/mozalloc.h"                // for operator new, etc
+#include "mozilla/Unused.h"                  // for unused
+#include "mozilla/webrender/WebRenderTypes.h"
+#include "nsAlgorithm.h"  // for clamped
+#include "nsCOMPtr.h"     // for already_AddRefed
+#include "nsDebug.h"      // for NS_WARNING
 #include "nsLayoutUtils.h"
 #include "nsMathUtils.h"  // for NS_hypot
 #include "nsPoint.h"      // for nsIntPoint
@@ -5931,6 +5933,30 @@ GeckoViewMetrics AsyncPanZoomController::GetGeckoViewMetrics() const {
   RecursiveMutexAutoLock lock(mRecursiveMutex);
   return GeckoViewMetrics{GetEffectiveScrollOffset(eForCompositing, lock),
                           GetEffectiveZoom(eForCompositing, lock)};
+}
+
+wr::MinimapData AsyncPanZoomController::GetMinimapData() const {
+  RecursiveMutexAutoLock lock(mRecursiveMutex);
+  wr::MinimapData result;
+  result.is_root_content = IsRootContent();
+  // We want the minimap to reflect the scroll offset actually composited,
+  // which could be older than the latest one in Metrics() due to the frame
+  // delay.
+  CSSRect visualViewport = GetCurrentAsyncVisualViewport(eForCompositing);
+  result.visual_viewport = wr::ToLayoutRect(visualViewport.ToUnknownRect());
+  CSSRect layoutViewport = GetEffectiveLayoutViewport(eForCompositing, lock);
+  result.layout_viewport = wr::ToLayoutRect(layoutViewport.ToUnknownRect());
+  result.scrollable_rect =
+      wr::ToLayoutRect(Metrics().GetScrollableRect().ToUnknownRect());
+  // The display port is stored relative to the layout viewport origin.
+  // Translate it to be relative to the document origin, like the other rects.
+  CSSRect displayPort = mLastContentPaintMetrics.GetDisplayPort() +
+                        mLastContentPaintMetrics.GetLayoutScrollOffset();
+  result.displayport = wr::ToLayoutRect(displayPort.ToUnknownRect());
+  // Remaining fields (zoom_transform, root_content_scroll_id,
+  // root_content_pipeline_id) will be populated by the caller, since they
+  // require information from other APZCs to compute.
+  return result;
 }
 
 bool AsyncPanZoomController::UpdateRootFrameMetricsIfChanged(

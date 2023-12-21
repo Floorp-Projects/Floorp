@@ -10,6 +10,7 @@ use std::marker::PhantomData;
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::u32;
+use api::MinimapData;
 use time::precise_time_ns;
 use crate::api::channel::{Sender, single_msg_channel, unbounded_channel};
 use crate::api::{BuiltDisplayList, IdNamespace, ExternalScrollId, Parameter, BoolParameter};
@@ -342,6 +343,11 @@ impl Transaction {
     ///
     pub fn set_is_transform_async_zooming(&mut self, is_zooming: bool, animation_id: PropertyBindingId) {
         self.frame_ops.push(FrameMsg::SetIsTransformAsyncZooming(is_zooming, animation_id));
+    }
+
+    /// Specify data for APZ minimap debug overlay to be composited
+    pub fn set_minimap_data(&mut self, id: ExternalScrollId, minimap_data: MinimapData) {
+      self.frame_ops.push(FrameMsg::SetMinimapData(id, minimap_data));
     }
 
     /// Generate a new frame. When it's done and a RenderNotifier has been set
@@ -799,6 +805,8 @@ pub enum FrameMsg {
     AppendDynamicTransformProperties(Vec<PropertyValue<LayoutTransform>>),
     ///
     SetIsTransformAsyncZooming(bool, PropertyBindingId),
+    ///
+    SetMinimapData(ExternalScrollId, MinimapData)
 }
 
 impl fmt::Debug for SceneMsg {
@@ -825,6 +833,7 @@ impl fmt::Debug for FrameMsg {
             FrameMsg::AppendDynamicProperties(..) => "FrameMsg::AppendDynamicProperties",
             FrameMsg::AppendDynamicTransformProperties(..) => "FrameMsg::AppendDynamicTransformProperties",
             FrameMsg::SetIsTransformAsyncZooming(..) => "FrameMsg::SetIsTransformAsyncZooming",
+            FrameMsg::SetMinimapData(..) => "FrameMsg::SetMinimapData",
         })
     }
 }

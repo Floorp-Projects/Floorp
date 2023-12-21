@@ -319,6 +319,13 @@ void TransactionWrapper::UpdateIsTransformAsyncZooming(uint64_t aAnimationId,
   wr_transaction_set_is_transform_async_zooming(mTxn, aAnimationId, aIsZooming);
 }
 
+void TransactionWrapper::AddMinimapData(
+    const wr::WrPipelineId& aPipelineId,
+    const layers::ScrollableLayerGuid::ViewID& aScrollId,
+    const MinimapData& aMinimapData) {
+  wr_transaction_add_minimap_data(mTxn, aPipelineId, aScrollId, aMinimapData);
+}
+
 /*static*/
 already_AddRefed<WebRenderAPI> WebRenderAPI::Create(
     layers::CompositorBridgeParent* aBridge,

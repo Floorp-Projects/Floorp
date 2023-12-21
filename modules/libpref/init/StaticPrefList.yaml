@@ -654,6 +654,11 @@
   value: 1.0f
   mirror: always
 
+- name: apz.minimap.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 - name: apz.mvm.force-enabled
   type: RelaxedAtomicBool
   value: true
