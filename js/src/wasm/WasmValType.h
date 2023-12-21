@@ -302,7 +302,7 @@ enum class TableRepr { Ref, Func };
 
 // An enum that describes the different type hierarchies.
 
-enum class RefTypeHierarchy { Func, Extern, Exn, Any };
+enum class RefTypeHierarchy { Func, Extern, Any };
 
 // The RefType carries more information about types t for which t.isRefType()
 // is true.
@@ -312,7 +312,6 @@ class RefType {
   enum Kind {
     Func = uint8_t(TypeCode::FuncRef),
     Extern = uint8_t(TypeCode::ExternRef),
-    Exn = uint8_t(TypeCode::ExnRef),
     Any = uint8_t(TypeCode::AnyRef),
     NoFunc = uint8_t(TypeCode::NullFuncRef),
     NoExtern = uint8_t(TypeCode::NullExternRef),
@@ -365,7 +364,6 @@ class RefType {
     switch (ptc_.typeCode()) {
       case TypeCode::FuncRef:
       case TypeCode::ExternRef:
-      case TypeCode::ExnRef:
       case TypeCode::AnyRef:
       case TypeCode::EqRef:
       case TypeCode::I31Ref:
@@ -384,7 +382,6 @@ class RefType {
 
   static RefType func() { return RefType(Func, true); }
   static RefType extern_() { return RefType(Extern, true); }
-  static RefType exn() { return RefType(Exn, true); }
   static RefType any() { return RefType(Any, true); }
   static RefType nofunc() { return RefType(NoFunc, true); }
   static RefType noextern() { return RefType(NoExtern, true); }
@@ -467,7 +464,6 @@ class FieldTypeTraits {
 #endif
       case TypeCode::FuncRef:
       case TypeCode::ExternRef:
-      case TypeCode::ExnRef:
 #ifdef ENABLE_WASM_GC
       case TypeCode::AnyRef:
       case TypeCode::EqRef:
@@ -545,7 +541,6 @@ class ValTypeTraits {
 #endif
       case TypeCode::FuncRef:
       case TypeCode::ExternRef:
-      case TypeCode::ExnRef:
 #ifdef ENABLE_WASM_GC
       case TypeCode::AnyRef:
       case TypeCode::EqRef:
@@ -716,8 +711,6 @@ class PackedType : public T {
 
   bool isExternRef() const { return tc_.typeCode() == TypeCode::ExternRef; }
 
-  bool isExnRef() const { return tc_.typeCode() == TypeCode::ExnRef; }
-
   bool isAnyRef() const { return tc_.typeCode() == TypeCode::AnyRef; }
 
   bool isNoFunc() const { return tc_.typeCode() == TypeCode::NullFuncRef; }
@@ -744,9 +737,9 @@ class PackedType : public T {
   // Returns whether the type has a representation in JS.
   bool isExposable() const {
 #if defined(ENABLE_WASM_SIMD)
-    return kind() != Kind::V128 && !isExnRef();
+    return kind() != Kind::V128;
 #else
-    return !isExnRef();
+    return true;
 #endif
   }
 

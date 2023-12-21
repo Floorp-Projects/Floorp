@@ -282,10 +282,6 @@ OpKind wasm::Classify(OpBytes op) {
       return OpKind::Rethrow;
     case Op::Try:
       return OpKind::Try;
-    case Op::ThrowRef:
-      return OpKind::ThrowRef;
-    case Op::TryTable:
-      return OpKind::TryTable;
     case Op::MemorySize:
       return OpKind::MemorySize;
     case Op::MemoryGrow:

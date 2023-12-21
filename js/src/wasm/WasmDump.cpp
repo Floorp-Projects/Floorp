@@ -96,9 +96,6 @@ void wasm::Dump(RefType type, GenericPrinter& out) {
       case RefType::Array:
         literal = "arrayref";
         break;
-      case RefType::Exn:
-        literal = "exnref";
-        break;
       case RefType::TypeRef: {
         MOZ_CRASH("type ref should not be possible here");
       }
@@ -139,9 +136,6 @@ void wasm::Dump(RefType type, GenericPrinter& out) {
       break;
     case RefType::Array:
       heapType = "array";
-      break;
-    case RefType::Exn:
-      heapType = "exn";
       break;
     case RefType::TypeRef: {
       uintptr_t typeAddress = (uintptr_t)type.typeDef();

@@ -1347,8 +1347,6 @@ inline RefTypeHierarchy RefType::hierarchy() const {
     case RefType::Extern:
     case RefType::NoExtern:
       return RefTypeHierarchy::Extern;
-    case RefType::Exn:
-      return RefTypeHierarchy::Exn;
     case RefType::Any:
     case RefType::None:
     case RefType::I31:
@@ -1374,7 +1372,6 @@ inline TableRepr RefType::tableRepr() const {
   switch (hierarchy()) {
     case RefTypeHierarchy::Any:
     case RefTypeHierarchy::Extern:
-    case RefTypeHierarchy::Exn:
       return TableRepr::Ref;
     case RefTypeHierarchy::Func:
       return TableRepr::Func;
