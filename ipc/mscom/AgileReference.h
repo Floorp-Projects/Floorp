@@ -58,13 +58,22 @@ class AgileReference final {
     Assign(__uuidof(T), aOther);
   }
 
-  template <typename T>
-  AgileReference& operator=(const RefPtr<T>& aOther) {
-    Assign(aOther);
-    return *this;
+  // Raw version, and implementation, of Resolve(). Can be used directly if
+  // necessary, but in general, prefer one of the templated versions below
+  // (depending on whether or not you need the HRESULT).
+  HRESULT ResolveRaw(REFIID aIid, void** aOutInterface) const;
+
+  template <typename Interface>
+  HRESULT Resolve(RefPtr<Interface>& aOutInterface) const {
+    return this->ResolveRaw(__uuidof(Interface), getter_AddRefs(aOutInterface));
   }
 
-  HRESULT Resolve(REFIID aIid, void** aOutInterface) const;
+  template <typename T>
+  RefPtr<T> Resolve() {
+    RefPtr<T> p;
+    Resolve<T>(p);
+    return p;
+  }
 
   AgileReference& operator=(const AgileReference& aOther);
   AgileReference& operator=(AgileReference&& aOther) noexcept;
@@ -90,22 +99,5 @@ class AgileReference final {
 };
 
 }  // namespace mozilla::mscom
-
-template <typename T>
-RefPtr<T>::RefPtr(const mozilla::mscom::AgileReference& aAgileRef)
-    : mRawPtr(nullptr) {
-  (*this) = aAgileRef;
-}
-
-template <typename T>
-RefPtr<T>& RefPtr<T>::operator=(
-    const mozilla::mscom::AgileReference& aAgileRef) {
-  void* newRawPtr;
-  if (FAILED(aAgileRef.Resolve(__uuidof(T), &newRawPtr))) {
-    newRawPtr = nullptr;
-  }
-  assign_assuming_AddRef(static_cast<T*>(newRawPtr));
-  return *this;
-}
 
 #endif  // mozilla_mscom_AgileReference_h
