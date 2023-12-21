@@ -23,6 +23,10 @@ case "$ORIG_URL" in
 	unzip -d a a.zip
 	unzip -d b b.zip
 	;;
+*.tar.zst)
+	curl -L "$ORIG_URL" | tar -C a --zstd -xf -
+	curl -L "$NEW_URL" | tar -C b --zstd -xf -
+	;;
 *.tar.bz2)
 	curl -L "$ORIG_URL" | tar -C a -jxf -
 	curl -L "$NEW_URL" | tar -C b -jxf -
