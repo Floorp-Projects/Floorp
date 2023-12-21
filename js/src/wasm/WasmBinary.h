@@ -636,6 +636,7 @@ inline ValType Decoder::uncheckedReadValType(const TypeContext& types) {
   switch (code) {
     case uint8_t(TypeCode::FuncRef):
     case uint8_t(TypeCode::ExternRef):
+    case uint8_t(TypeCode::ExnRef):
       return RefType::fromTypeCode(TypeCode(code), true);
     case uint8_t(TypeCode::Ref):
     case uint8_t(TypeCode::NullableRef): {
@@ -680,6 +681,13 @@ inline bool Decoder::readPackedType(const TypeContext& types,
     }
     case uint8_t(TypeCode::FuncRef):
     case uint8_t(TypeCode::ExternRef): {
+      *type = RefType::fromTypeCode(TypeCode(code), true);
+      return true;
+    }
+    case uint8_t(TypeCode::ExnRef): {
+      if (!features.exnref) {
+        return fail("exnref not enabled");
+      }
       *type = RefType::fromTypeCode(TypeCode(code), true);
       return true;
     }
@@ -759,6 +767,13 @@ inline bool Decoder::readHeapType(const TypeContext& types,
       case uint8_t(TypeCode::ExternRef):
         *type = RefType::fromTypeCode(TypeCode(code), nullable);
         return true;
+      case uint8_t(TypeCode::ExnRef): {
+        if (!features.exnref) {
+          return fail("exnref not enabled");
+        }
+        *type = RefType::fromTypeCode(TypeCode(code), nullable);
+        return true;
+      }
 #ifdef ENABLE_WASM_GC
       case uint8_t(TypeCode::AnyRef):
       case uint8_t(TypeCode::I31Ref):
