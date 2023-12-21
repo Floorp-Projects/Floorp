@@ -11,10 +11,75 @@ ChromeUtils.defineESModuleGetters(lazy, {
   FormAutofillUtils: "resource://gre/modules/shared/FormAutofillUtils.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
 });
+
+const observer = {
+  QueryInterface: ChromeUtils.generateQI([
+    "nsIWebProgressListener",
+    "nsISupportsWeakReference",
+  ]),
+
+  onLocationChange(aWebProgress, aRequest, aLocation, aFlags) {
+    // Only handle pushState/replaceState here.
+    if (
+      !(aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT) ||
+      !(aWebProgress.loadType & Ci.nsIDocShell.LOAD_CMD_PUSHSTATE)
+    ) {
+      return;
+    }
+    const window = aWebProgress.DOMWindow;
+    const formAutofillChild = window.windowGlobalChild.getActor("FormAutofill");
+    formAutofillChild.onPageNavigation();
+  },
+
+  onStateChange(aWebProgress, aRequest, aStateFlags, aStatus) {
+    if (
+      // if restoring a previously-rendered presentation (bfcache)
+      aStateFlags & Ci.nsIWebProgressListener.STATE_RESTORING &&
+      aStateFlags & Ci.nsIWebProgressListener.STATE_STOP
+    ) {
+      return;
+    }
+
+    if (!(aStateFlags & Ci.nsIWebProgressListener.STATE_START)) {
+      return;
+    }
+
+    // We only care about when a page triggered a load, not the user. For example:
+    // clicking refresh/back/forward, typing a URL and hitting enter, and loading a bookmark aren't
+    // likely to be when a user wants to save a formautofill data.
+    let channel = aRequest.QueryInterface(Ci.nsIChannel);
+    let triggeringPrincipal = channel.loadInfo.triggeringPrincipal;
+    if (
+      triggeringPrincipal.isNullPrincipal ||
+      triggeringPrincipal.equals(
+        Services.scriptSecurityManager.getSystemPrincipal()
+      )
+    ) {
+      return;
+    }
+
+    // Don't handle history navigation, reload, or pushState not triggered via chrome UI.
+    // e.g. history.go(-1), location.reload(), history.replaceState()
+    if (!(aWebProgress.loadType & Ci.nsIDocShell.LOAD_CMD_NORMAL)) {
+      return;
+    }
+
+    const window = aWebProgress.DOMWindow;
+    const formAutofillChild = window.windowGlobalChild.getActor("FormAutofill");
+    formAutofillChild.onPageNavigation();
+  },
+};
+
 /**
  * Handles content's interactions for the frame.
  */
 export class FormAutofillChild extends JSWindowActorChild {
+  /**
+   * Cached weg progress associated with
+   * the highest accessible docShell for a window
+   */
+  #webProgress = null;
+
   constructor() {
     super();
 
@@ -88,10 +153,16 @@ export class FormAutofillChild extends JSWindowActorChild {
         lazy.FormAutofillContent.identifyAutofillFields(
           this._nextHandleElement
         );
-      if (isAnyFieldIdentified && lazy.FormAutofill.captureOnFormRemoval) {
-        this.registerDOMDocFetchSuccessEventListener(
-          this._nextHandleElement.ownerDocument
-        );
+      if (isAnyFieldIdentified) {
+        if (lazy.FormAutofill.captureOnFormRemoval) {
+          this.registerDOMDocFetchSuccessEventListener(
+            this._nextHandleElement.ownerDocument
+          );
+        }
+        if (lazy.FormAutofill.captureOnPageNavigation) {
+          const window = this.document.defaultView;
+          this.registerProgressListener(window);
+        }
       }
 
       this._hasPendingTask = false;
@@ -101,6 +172,58 @@ export class FormAutofillChild extends JSWindowActorChild {
       this.sendAsyncMessage("FormAutofill:FieldsIdentified");
       lazy.FormAutofillContent.updateActiveInput();
     });
+  }
+
+  /**
+   * Infer a form submission after document is navigated
+   */
+  onPageNavigation() {
+    const activeElement =
+      lazy.FormAutofillContent.activeFieldDetail?.elementWeakRef.deref();
+    const formSubmissionReason =
+      lazy.FormAutofillUtils.FORM_SUBMISSION_REASON.PAGE_NAVIGATION;
+
+    // We only capture the form of the active field right now,
+    // this means that we might miss some fields (see bug 1871356)
+    lazy.FormAutofillContent.formSubmitted(activeElement, formSubmissionReason);
+
+    // acted on page navigation, remove progress listener
+    this.#webProgress.removeProgressListener(observer);
+  }
+
+  /**
+   * After a focusin event and after we identified formautofill fields,
+   * we set up an nsIWebProgressListener that notifies of a request state
+   * change or window location change associated with the current progress
+   *
+   * @param {Window} window
+   */
+  registerProgressListener(window) {
+    if (!this.#webProgress) {
+      let docShell;
+      // Get the highest accessible docShell
+      for (
+        let browsingContext = BrowsingContext.getFromWindow(window);
+        browsingContext?.docShell;
+        browsingContext = browsingContext.parent
+      ) {
+        docShell = browsingContext.docShell;
+      }
+
+      this.#webProgress = docShell
+        .QueryInterface(Ci.nsIInterfaceRequestor)
+        .getInterface(Ci.nsIWebProgress);
+
+      const flags =
+        Ci.nsIWebProgress.NOTIFY_STATE_DOCUMENT |
+        Ci.nsIWebProgress.NOTIFY_LOCATION;
+      try {
+        this.#webProgress.addProgressListener(observer, flags);
+      } catch (ex) {
+        // Ignore NS_ERROR_FAILURE if the progress listener was already added
+        // We don't reset this.#webProgress since it would throw again
+      }
+    }
   }
 
   /**
