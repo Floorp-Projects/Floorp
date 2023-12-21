@@ -461,14 +461,11 @@ impl Events {
 }
 
 macro_rules! overlapped2arc {
-    ($e:expr, $t:ty, $($field:ident).+) => (
-        #[allow(deref_nullptr)]
-        {
-            let offset = offset_of!($t, $($field).+);
-            debug_assert!(offset < mem::size_of::<$t>());
-            FromRawArc::from_raw(($e as usize - offset) as *mut $t)
-        }
-    )
+    ($e:expr, $t:ty, $($field:ident).+) => ({
+        let offset = offset_of!($t, $($field).+);
+        debug_assert!(offset < mem::size_of::<$t>());
+        FromRawArc::from_raw(($e as usize - offset) as *mut $t)
+    })
 }
 
 macro_rules! offset_of {

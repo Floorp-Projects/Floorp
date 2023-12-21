@@ -50,8 +50,6 @@ unsafe fn sockaddr_un(path: &Path)
 }
 
 fn sun_path_offset() -> usize {
-    // Silence rustc 1.65 warning about mem::uninitialized.
-    #[allow(invalid_value)]
     unsafe {
         // Work with an actual instance of the type since using a null pointer is UB
         let addr: libc::sockaddr_un = mem::uninitialized();
@@ -189,7 +187,6 @@ impl UnixSocket {
                 iov_len: buf.len(),
             };
             struct Cmsg {
-                #[allow(dead_code)]
                 hdr: libc::cmsghdr,
                 data: [libc::c_int; 1],
             }

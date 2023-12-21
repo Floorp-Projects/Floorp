@@ -82,6 +82,7 @@ struct ListenerInner {
     iocp: ReadyBinding,
     accept: State<net::TcpStream, (net::TcpStream, SocketAddr)>,
     accept_buf: AcceptAddrsBuf,
+    instant_notify: bool,
 }
 
 enum State<T, U> {
@@ -666,6 +667,7 @@ impl TcpListener {
                         iocp: ReadyBinding::new(),
                         accept: State::Empty,
                         accept_buf: AcceptAddrsBuf::new(),
+                        instant_notify: false,
                     }),
                 }),
             },
@@ -806,6 +808,7 @@ impl Evented for TcpListener {
 
         unsafe {
             super::no_notify_on_instant_completion(self.imp.inner.socket.as_raw_socket() as HANDLE)?;
+            me.instant_notify = true;
         }
 
         self.imp.schedule_accept(&mut me);
