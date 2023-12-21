@@ -1372,6 +1372,9 @@ class JSAtom : public JSLinearString {
   inline js::HashNumber hash() const;
   inline void initHash(js::HashNumber hash);
 
+  template <typename CharT>
+  static bool lengthFitsInline(size_t length);
+
 #if defined(DEBUG) || defined(JS_JITSPEW) || defined(JS_CACHEIR_SPEW)
   void dump(js::GenericPrinter& out);
   void dump();
@@ -1430,8 +1433,13 @@ class ThinInlineAtom : public NormalAtom {
 class FatInlineAtom : public JSAtom {
   friend class gc::CellAllocator;
 
+  static constexpr size_t MAX_LENGTH_LATIN1 =
+      JSFatInlineString::MAX_LENGTH_LATIN1;
+  static constexpr size_t MAX_LENGTH_TWO_BYTE =
+      JSFatInlineString::MAX_LENGTH_TWO_BYTE;
+
  protected:  // Silence Clang unused-field warning.
-  char inlineStorage_[sizeof(JSFatInlineString) - sizeof(JSString)];
+  char inlineStorage_[sizeof(JSFatInlineString) - sizeof(JSAtom)];
   HashNumber hash_;
 
   // Mimicking JSFatInlineString constructors.
@@ -2036,6 +2044,40 @@ template <>
 MOZ_ALWAYS_INLINE bool JSInlineString::lengthFits<char16_t>(size_t length) {
   // If it fits in a fat inline string, it fits in any inline string.
   return JSFatInlineString::lengthFits<char16_t>(length);
+}
+
+template <>
+MOZ_ALWAYS_INLINE bool js::ThinInlineAtom::lengthFits<JS::Latin1Char>(
+    size_t length) {
+  return length <= MAX_LENGTH_LATIN1;
+}
+
+template <>
+MOZ_ALWAYS_INLINE bool js::ThinInlineAtom::lengthFits<char16_t>(size_t length) {
+  return length <= MAX_LENGTH_TWO_BYTE;
+}
+
+template <>
+MOZ_ALWAYS_INLINE bool js::FatInlineAtom::lengthFits<JS::Latin1Char>(
+    size_t length) {
+  return length <= MAX_LENGTH_LATIN1;
+}
+
+template <>
+MOZ_ALWAYS_INLINE bool js::FatInlineAtom::lengthFits<char16_t>(size_t length) {
+  return length <= MAX_LENGTH_TWO_BYTE;
+}
+
+template <>
+MOZ_ALWAYS_INLINE bool JSAtom::lengthFitsInline<JS::Latin1Char>(size_t length) {
+  // If it fits in a fat inline atom, it fits in any inline atom.
+  return js::FatInlineAtom::lengthFits<JS::Latin1Char>(length);
+}
+
+template <>
+MOZ_ALWAYS_INLINE bool JSAtom::lengthFitsInline<char16_t>(size_t length) {
+  // If it fits in a fat inline atom, it fits in any inline atom.
+  return js::FatInlineAtom::lengthFits<char16_t>(length);
 }
 
 template <>
