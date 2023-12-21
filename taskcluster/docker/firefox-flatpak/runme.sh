@@ -173,8 +173,6 @@ flatpak build-finish build                                      \
         --talk-name=org.freedesktop.FileManager1                \
         --system-talk-name=org.freedesktop.NetworkManager       \
         --talk-name=org.a11y.Bus                                \
-        --talk-name=org.gnome.SessionManager                    \
-        --talk-name=org.freedesktop.ScreenSaver                 \
         --talk-name="org.gtk.vfs.*"                             \
         --own-name="org.mpris.MediaPlayer2.firefox.*"           \
         --own-name="org.mozilla.firefox.*"                      \
