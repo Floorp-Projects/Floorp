@@ -108,6 +108,7 @@ if CONFIG["MOZ_GECKO_PROFILER"]:
                 "core/PowerCounters-win.cpp",
             ]
         SOURCES += [
+            "core/ETWTools.cpp",
             "core/ProfilerCPUFreq-win.cpp",
             "core/shared-libraries-win32.cc",
         ]
@@ -164,6 +165,7 @@ include("/ipc/chromium/chromium-config.mozbuild")
 
 EXPORTS += [
     "public/ChildProfilerController.h",
+    "public/ETWTools.h",
     "public/GeckoProfiler.h",
     "public/MicroGeckoProfiler.h",
     "public/ProfileAdditionalInformation.h",
