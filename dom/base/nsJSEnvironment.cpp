@@ -1110,23 +1110,28 @@ static void FinishAnyIncrementalGC() {
 }
 
 namespace geckoprofiler::markers {
-class CCSliceMarker {
+class CCSliceMarker : public BaseMarkerType<CCSliceMarker> {
  public:
-  static constexpr Span<const char> MarkerTypeName() {
-    return mozilla::MakeStringSpan("CCSlice");
-  }
+  static constexpr const char* Name = "CCSlice";
+  static constexpr const char* Description =
+      "Information for an individual CC slice.";
+
+  using MS = MarkerSchema;
+  static constexpr MS::PayloadField PayloadFields[] = {
+      {"idle", MS::InputType::Boolean, "Idle", MS::Format::Integer}};
+
+  static constexpr MS::Location Locations[] = {MS::Location::MarkerChart,
+                                               MS::Location::MarkerTable,
+                                               MS::Location::TimelineMemory};
+  static constexpr const char* AllLabels =
+      "{marker.name} (idle={marker.data.idle})";
+
+  static constexpr MS::ETWMarkerGroup Group = MS::ETWMarkerGroup::Memory;
+
   static void StreamJSONMarkerData(
       mozilla::baseprofiler::SpliceableJSONWriter& aWriter,
       bool aIsDuringIdle) {
-    aWriter.BoolProperty("idle", aIsDuringIdle);
-  }
-  static MarkerSchema MarkerTypeDisplay() {
-    using MS = MarkerSchema;
-    MS schema{MS::Location::MarkerChart, MS::Location::MarkerTable,
-              MS::Location::TimelineMemory};
-    schema.SetAllLabels("{marker.name} (idle={marker.data.idle})");
-    schema.AddKeyLabelFormat("idle", "Idle", MS::Format::Integer);
-    return schema;
+    StreamJSONMarkerDataImpl(aWriter, aIsDuringIdle);
   }
 };
 }  // namespace geckoprofiler::markers
