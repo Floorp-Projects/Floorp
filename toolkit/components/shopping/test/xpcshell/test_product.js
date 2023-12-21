@@ -311,6 +311,20 @@ add_task(async function test_product_requestAnalysis_invalid() {
   Assert.equal(analysis, undefined, "Analysis object is invalidated");
 });
 
+add_task(async function test_product_requestAnalysis_invalid_allowed() {
+  let uri = new URL("https://www.walmart.com/ip/926485654");
+  let product = new ShoppingProduct(uri, { allowValidationFailure: true });
+
+  Assert.ok(product.isProduct(), "Should recognize a valid product.");
+  let analysis = await product.requestAnalysis(undefined, {
+    url: ANALYSIS_API_MOCK_INVALID,
+    requestSchema: ANALYSIS_REQUEST_SCHEMA,
+    responseSchema: ANALYSIS_RESPONSE_SCHEMA,
+  });
+
+  Assert.equal(analysis.grade, 0.85, "Analysis is invalid but allowed");
+});
+
 add_task(async function test_product_requestAnalysis_broken_config() {
   let uri = new URL("https://www.walmart.com/ip/926485654");
   let product = new ShoppingProduct(uri, { allowValidationFailure: false });
@@ -357,6 +371,30 @@ add_task(async function test_product_requestAnalysis_invalid_ohttp() {
   });
 
   Assert.equal(analysis, undefined, "Analysis object is invalidated");
+
+  disableOHTTP();
+});
+
+add_task(async function test_product_requestAnalysis_invalid_allowed_ohttp() {
+  let uri = new URL("https://www.walmart.com/ip/926485654");
+  let product = new ShoppingProduct(uri, { allowValidationFailure: true });
+
+  Assert.ok(product.isProduct(), "Should recognize a valid product.");
+
+  gExpectedProductDetails = JSON.stringify({
+    product_id: "926485654",
+    website: "walmart.com",
+  });
+
+  enableOHTTP();
+
+  let analysis = await product.requestAnalysis(undefined, {
+    url: ANALYSIS_API_MOCK_INVALID,
+    requestSchema: ANALYSIS_REQUEST_SCHEMA,
+    responseSchema: ANALYSIS_RESPONSE_SCHEMA,
+  });
+
+  Assert.equal(analysis.grade, 0.85, "Analysis is invalid but allowed");
 
   disableOHTTP();
 });
