@@ -175,7 +175,7 @@ class WakeLockTopic {
 
   // mInhibitRequestID is received from success screen saver inhibit call
   // and it's needed for screen saver enablement.
-  uint32_t mInhibitRequestID = 0;
+  Maybe<uint32_t> mInhibitRequestID;
 
   RefPtr<GCancellable> mCancellable;
   // Used to uninhibit org.freedesktop.portal.Inhibit request
@@ -190,13 +190,13 @@ int WakeLockTopic::sWakeLockType = Initial;
 #ifdef MOZ_ENABLE_DBUS
 void WakeLockTopic::DBusInhibitSucceeded(uint32_t aInhibitRequestID) {
   mWaitingForDBusInhibit = false;
-  mInhibitRequestID = aInhibitRequestID;
+  mInhibitRequestID = Some(aInhibitRequestID);
   mInhibited = true;
 
   WAKE_LOCK_LOG(
       "WakeLockTopic::DBusInhibitSucceeded(), mInhibitRequestID %u "
       "mShouldInhibit %d",
-      mInhibitRequestID, mShouldInhibit);
+      *mInhibitRequestID, mShouldInhibit);
 
   // Uninhibit was requested before inhibit request was finished.
   // So ask for it now.
@@ -235,12 +235,12 @@ void WakeLockTopic::DBusUninhibitSucceeded() {
 void WakeLockTopic::DBusUninhibitFailed() {
   WAKE_LOCK_LOG("WakeLockTopic::DBusUninhibitFailed()");
   mWaitingForDBusUninhibit = false;
-  mInhibitRequestID = 0;
+  mInhibitRequestID = Nothing();
 }
 
 void WakeLockTopic::ClearDBusInhibitToken() {
   mRequestObjectPath.Truncate();
-  mInhibitRequestID = 0;
+  mInhibitRequestID = Nothing();
 }
 
 void WakeLockTopic::DBusInhibitScreensaver(const char* aName, const char* aPath,
@@ -330,8 +330,9 @@ void WakeLockTopic::DBusUninhibitScreensaver(const char* aName,
                                              const char* aMethod) {
   WAKE_LOCK_LOG(
       "WakeLockTopic::DBusUninhibitScreensaver() mWaitingForDBusInhibit %d "
-      "mWaitingForDBusUninhibit %d request id %u",
-      mWaitingForDBusInhibit, mWaitingForDBusUninhibit, mInhibitRequestID);
+      "mWaitingForDBusUninhibit %d request id %d",
+      mWaitingForDBusInhibit, mWaitingForDBusUninhibit,
+      mInhibitRequestID ? *mInhibitRequestID : -1);
 
   if (mWaitingForDBusUninhibit) {
     WAKE_LOCK_LOG("  already waiting to uninihibit, return");
@@ -344,7 +345,7 @@ void WakeLockTopic::DBusUninhibitScreensaver(const char* aName,
     mWaitingForDBusInhibit = false;
   }
 
-  if (!mInhibitRequestID) {
+  if (!mInhibitRequestID.isSome()) {
     WAKE_LOCK_LOG("  missing inihibit token, quit.");
     // missing uninhibit token, just quit.
     return;
@@ -352,7 +353,7 @@ void WakeLockTopic::DBusUninhibitScreensaver(const char* aName,
   mWaitingForDBusUninhibit = true;
 
   RefPtr<GVariant> variant =
-      dont_AddRef(g_variant_ref_sink(g_variant_new("(u)", mInhibitRequestID)));
+      dont_AddRef(g_variant_ref_sink(g_variant_new("(u)", *mInhibitRequestID)));
   nsCOMPtr<nsISerialEventTarget> target = GetCurrentSerialEventTarget();
   widget::CreateDBusProxyForBus(
       G_BUS_TYPE_SESSION,
