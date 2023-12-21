@@ -176,10 +176,6 @@
       background-color: hsl(355,82%,69%);
     }
   }
-
-  .titlebar-button:not(:hover) > .toolbarbutton-icon:-moz-window-inactive {
-    opacity: 0.5;
-  }
 }
 
 @media (prefers-contrast) {
