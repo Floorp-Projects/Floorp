@@ -253,9 +253,11 @@ export class BidiBrowser extends Browser {
     if (this.#connection.closed) {
       return;
     }
-    await this.#connection.send('browser.close', {});
-    this.#connection.dispose();
+
+    // `browser.close` can close connection before the response is received.
+    await this.#connection.send('browser.close', {}).catch(debugError);
     await this.#closeCallback?.call(null);
+    this.#connection.dispose();
   }
 
   override get connected(): boolean {
@@ -323,7 +325,13 @@ export class BidiBrowser extends Browser {
     return this.#browserTarget;
   }
 
-  override disconnect(): void {
-    this;
+  override async disconnect(): Promise<void> {
+    try {
+      // Fail silently if the session cannot be ended.
+      await this.#connection.send('session.end', {});
+    } catch (e) {
+      debugError(e);
+    }
+    this.#connection.dispose();
   }
 }

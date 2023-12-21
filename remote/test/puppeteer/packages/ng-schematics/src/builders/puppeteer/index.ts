@@ -1,4 +1,5 @@
 import {spawn} from 'child_process';
+import {normalize, join} from 'path';
 
 import {
   createBuilder,
@@ -69,10 +70,14 @@ function updateExecutablePath(command: string, root?: string) {
     path = `./${path}${command}`;
   }
 
-  return path;
+  return normalize(path);
 }
 
-async function executeCommand(context: BuilderContext, command: string[]) {
+async function executeCommand(
+  context: BuilderContext,
+  command: string[],
+  env: Record<string, any> = {}
+) {
   let project: JsonObject;
   if (context.target) {
     project = await context.getProjectMetadata(context.target.project);
@@ -84,12 +89,17 @@ async function executeCommand(context: BuilderContext, command: string[]) {
     const {executable, args, debugError, error} = getExecutable(command);
     let path = context.workspaceRoot;
     if (context.target) {
-      path = `${path}/${project['root']}`;
+      path = join(path, (project['root'] as string | undefined) ?? '');
     }
 
     const child = spawn(executable, args, {
       cwd: path,
       stdio: 'inherit',
+      shell: true,
+      env: {
+        ...process.env,
+        ...env,
+      },
     });
 
     child.on('error', message => {
@@ -164,10 +174,13 @@ async function executeE2ETest(
     await executeCommand(context, [`tsc`, '-p', 'e2e/tsconfig.json']);
 
     server = await startServer(options, context);
+    const result = await server.result;
 
     message('\n Running tests 🧪 ... \n', context);
     const testRunnerCommand = getCommandForRunner(options.testRunner);
-    await executeCommand(context, testRunnerCommand);
+    await executeCommand(context, testRunnerCommand, {
+      baseUrl: result['baseUrl'],
+    });
 
     message('\n 🚀 Test ran successfully! 🚀 ', context, 'success');
     return {success: true};

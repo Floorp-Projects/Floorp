@@ -34,7 +34,10 @@ const bidiServerLogger = (prefix: string, ...args: unknown[]): void => {
  * @internal
  */
 export async function connectBidiOverCdp(
-  cdp: CdpConnection
+  cdp: CdpConnection,
+  // TODO: replace with `BidiMapper.MapperOptions`, once it's exported in
+  //  https://github.com/puppeteer/puppeteer/pull/11415.
+  options: {acceptInsecureCerts: boolean}
 ): Promise<BidiConnection> {
   const transportBiDi = new NoOpTransport();
   const cdpConnectionAdapter = new CdpConnectionAdapter(cdp);
@@ -46,6 +49,7 @@ export async function connectBidiOverCdp(
     close(): void {
       bidiServer.close();
       cdpConnectionAdapter.close();
+      cdp.dispose();
     },
     onmessage(_message: string): void {
       // The method is overridden by the Connection.
@@ -62,6 +66,7 @@ export async function connectBidiOverCdp(
     // TODO: most likely need a little bit of refactoring
     cdpConnectionAdapter.browserClient(),
     '',
+    options,
     undefined,
     bidiServerLogger
   );
@@ -75,15 +80,15 @@ export async function connectBidiOverCdp(
 class CdpConnectionAdapter {
   #cdp: CdpConnection;
   #adapters = new Map<CDPSession, CDPClientAdapter<CDPSession>>();
-  #browser: CDPClientAdapter<CdpConnection>;
+  #browserCdpConnection: CDPClientAdapter<CdpConnection>;
 
   constructor(cdp: CdpConnection) {
     this.#cdp = cdp;
-    this.#browser = new CDPClientAdapter(cdp);
+    this.#browserCdpConnection = new CDPClientAdapter(cdp);
   }
 
   browserClient(): CDPClientAdapter<CdpConnection> {
-    return this.#browser;
+    return this.#browserCdpConnection;
   }
 
   getCdpClient(id: string) {
@@ -92,7 +97,11 @@ class CdpConnectionAdapter {
       throw new Error(`Unknown CDP session with id ${id}`);
     }
     if (!this.#adapters.has(session)) {
-      const adapter = new CDPClientAdapter(session, id, this.#browser);
+      const adapter = new CDPClientAdapter(
+        session,
+        id,
+        this.#browserCdpConnection
+      );
       this.#adapters.set(session, adapter);
       return adapter;
     }
@@ -100,7 +109,7 @@ class CdpConnectionAdapter {
   }
 
   close() {
-    this.#browser.close();
+    this.#browserCdpConnection.close();
     for (const adapter of this.#adapters.values()) {
       adapter.close();
     }

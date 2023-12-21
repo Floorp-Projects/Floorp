@@ -10,11 +10,7 @@ export const docsNgSchematicsTask = task({
   name: 'docs:ng-schematics',
   run: async () => {
     const readme = await readFile('packages/ng-schematics/README.md', 'utf-8');
-    const index = await readFile('docs/integrations/ng-schematics.md', 'utf-8');
-    await writeFile(
-      'docs/integrations/ng-schematics.md',
-      index.replace('# API Reference\n', readme)
-    );
+    await writeFile('docs/integrations/ng-schematics.md', readme);
   },
 });
 
@@ -45,7 +41,7 @@ export const docsChromiumSupportTask = task({
       }
       if (semver.gte(puppeteerVersion, '20.0.0')) {
         buffer.push(
-          `  * [Chrome for Testing](https://goo.gle/chrome-for-testing) ${chromiumVersion} - [Puppeteer ${puppeteerVersion}](${getApiUrl(
+          `  * [Chrome for Testing](https://developer.chrome.com/blog/chrome-for-testing/) ${chromiumVersion} - [Puppeteer ${puppeteerVersion}](${getApiUrl(
             puppeteerVersion
           )})`
         );

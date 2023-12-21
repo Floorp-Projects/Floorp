@@ -27,6 +27,7 @@ import {
   fromEvent,
   type Observable,
 } from '../../third_party/rxjs/rxjs.js';
+import type {ProtocolType} from '../common/ConnectOptions.js';
 import {EventEmitter, type EventType} from '../common/EventEmitter.js';
 import {debugError} from '../common/util.js';
 import {timeout} from '../common/util.js';
@@ -227,7 +228,7 @@ export interface BrowserEvents extends Record<EventType, unknown> {
  * // Store the endpoint to be able to reconnect to the browser.
  * const browserWSEndpoint = browser.wsEndpoint();
  * // Disconnect puppeteer from the browser.
- * browser.disconnect();
+ * await browser.disconnect();
  *
  * // Use the endpoint to reestablish a connection
  * const browser2 = await puppeteer.connect({browserWSEndpoint});
@@ -299,13 +300,13 @@ export abstract class Browser extends EventEmitter<BrowserEvents> {
    * This is usually used with {@link Puppeteer.connect}.
    *
    * You can find the debugger URL (`webSocketDebuggerUrl`) from
-   * `http://${host}:${port}/json/version`.
+   * `http://HOST:PORT/json/version`.
    *
    * See {@link
    * https://chromedevtools.github.io/devtools-protocol/#how-do-i-access-the-browser-target
    * | browser endpoint} for more information.
    *
-   * @remarks The format is always `ws://${host}:${port}/devtools/browser/<id>`.
+   * @remarks The format is always `ws://HOST:PORT/devtools/browser/<id>`.
    */
   abstract wsEndpoint(): string;
 
@@ -399,6 +400,7 @@ export abstract class Browser extends EventEmitter<BrowserEvents> {
    *
    * {@link Page | Pages} can override the user agent with
    * {@link Page.setUserAgent}.
+   *
    */
   abstract userAgent(): Promise<string>;
 
@@ -412,7 +414,7 @@ export abstract class Browser extends EventEmitter<BrowserEvents> {
    * Disconnects Puppeteer from this {@link Browser | browser}, but leaves the
    * process running.
    */
-  abstract disconnect(): void;
+  abstract disconnect(): Promise<void>;
 
   /**
    * Whether Puppeteer is connected to this {@link Browser | browser}.
@@ -441,5 +443,5 @@ export abstract class Browser extends EventEmitter<BrowserEvents> {
   /**
    * @internal
    */
-  abstract get protocol(): 'cdp' | 'webDriverBiDi';
+  abstract get protocol(): ProtocolType;
 }
