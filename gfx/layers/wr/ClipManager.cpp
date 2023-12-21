@@ -17,11 +17,8 @@
 #include "nsStyleStructInlines.h"
 #include "UnitTransforms.h"
 
-// clang-format off
-#define CLIP_LOG(...)
-//#define CLIP_LOG(s_, ...) printf_stderr("CLIP(%s): " s_, __func__, ## __VA_ARGS__)
-//#define CLIP_LOG(s_, ...) if (XRE_IsContentProcess()) printf_stderr("CLIP(%s): " s_, __func__, ## __VA_ARGS__)
-// clang-format on
+static mozilla::LazyLogModule sClipLog("wr.clip");
+#define CLIP_LOG(...) MOZ_LOG(sClipLog, LogLevel::Debug, (__VA_ARGS__))
 
 namespace mozilla {
 namespace layers {
@@ -73,7 +70,8 @@ void ClipManager::BeginList(const StackingContextHelper& aStackingContext) {
     }
   }
 
-  CLIP_LOG("  push: clip: %p, asr: %p, scroll = %zu, clip = %zu\n",
+  CLIP_LOG("  push: clip: %p, asr: %p, scroll =%" PRIuPTR ", clip =%" PRIu64
+           "\n",
            clips.mChain, clips.mASR, clips.mScrollId.id,
            clips.mClipChainId.valueOr(wr::WrClipChainId{0}).id);
 
@@ -274,7 +272,8 @@ wr::WrSpaceAndClipChain ClipManager::SwitchItem(nsDisplayListBuilder* aBuilder,
   clips.UpdateSeparateLeaf(*mBuilder, auPerDevPixel);
   auto spaceAndClipChain = clips.GetSpaceAndClipChain();
 
-  CLIP_LOG("  push: clip: %p, asr: %p, scroll = %zu, clip = %zu\n",
+  CLIP_LOG("  push: clip: %p, asr: %p, scroll = %" PRIuPTR ", clip = %" PRIu64
+           "\n",
            clips.mChain, clips.mASR, clips.mScrollId.id,
            clips.mClipChainId.valueOr(wr::WrClipChainId{0}).id);
 
