@@ -1037,6 +1037,33 @@ void CycleCollectedJSRuntime::GCCallback(JSContext* aContext,
   self->OnGC(aContext, aStatus, aReason);
 }
 
+struct GCMajorMarker : public BaseMarkerType<GCMajorMarker> {
+  static constexpr const char* Name = "GCMajor";
+  static constexpr const char* Description =
+      "Summary data for an entire major GC, encompassing a set of "
+      "incremental slices. The main thread is not blocked for the "
+      "entire major GC interval, only for the individual slices.";
+
+  using MS = MarkerSchema;
+  static constexpr MS::PayloadField PayloadFields[] = {
+      {"timings", MS::InputType::String, "GC timings"}};
+
+  static constexpr MS::Location Locations[] = {MS::Location::MarkerChart,
+                                               MS::Location::MarkerTable,
+                                               MS::Location::TimelineMemory};
+  static constexpr MS::ETWMarkerGroup Group = MS::ETWMarkerGroup::Memory;
+
+  static void StreamJSONMarkerData(
+      mozilla::baseprofiler::SpliceableJSONWriter& aWriter,
+      const mozilla::ProfilerString8View& aTimingJSON) {
+    if (aTimingJSON.Length() != 0) {
+      aWriter.SplicedJSONProperty("timings", aTimingJSON);
+    } else {
+      aWriter.NullProperty("timings");
+    }
+  }
+};
+
 /* static */
 void CycleCollectedJSRuntime::GCSliceCallback(JSContext* aContext,
                                               JS::GCProgress aProgress,
@@ -1046,34 +1073,6 @@ void CycleCollectedJSRuntime::GCSliceCallback(JSContext* aContext,
 
   if (profiler_thread_is_being_profiled_for_markers()) {
     if (aProgress == JS::GC_CYCLE_END) {
-      struct GCMajorMarker {
-        static constexpr mozilla::Span<const char> MarkerTypeName() {
-          return mozilla::MakeStringSpan("GCMajor");
-        }
-        static void StreamJSONMarkerData(
-            mozilla::baseprofiler::SpliceableJSONWriter& aWriter,
-            const mozilla::ProfilerString8View& aTimingJSON) {
-          if (aTimingJSON.Length() != 0) {
-            aWriter.SplicedJSONProperty("timings", aTimingJSON);
-          } else {
-            aWriter.NullProperty("timings");
-          }
-        }
-        static mozilla::MarkerSchema MarkerTypeDisplay() {
-          using MS = mozilla::MarkerSchema;
-          MS schema{MS::Location::MarkerChart, MS::Location::MarkerTable,
-                    MS::Location::TimelineMemory};
-          schema.AddStaticLabelValue(
-              "Description",
-              "Summary data for an entire major GC, encompassing a set of "
-              "incremental slices. The main thread is not blocked for the "
-              "entire major GC interval, only for the individual slices.");
-          // No display instructions here, there is special handling in the
-          // front-end.
-          return schema;
-        }
-      };
-
       profiler_add_marker("GCMajor", baseprofiler::category::GCCC,
                           MarkerTiming::Interval(aDesc.startTime(aContext),
                                                  aDesc.endTime(aContext)),
