@@ -2947,6 +2947,12 @@ void PeerConnectionImpl::DoSetDescriptionSuccessPostProcessing(
           }
         }
 
+        auto oldIceCredentials = mJsepSession->GetLocalIceCredentials();
+        auto newIceCredentials =
+            mUncommittedJsepSession->GetLocalIceCredentials();
+
+        bool iceRestartDetected = (oldIceCredentials != newIceCredentials);
+
         mJsepSession = std::move(mUncommittedJsepSession);
 
         auto newSignalingState = GetSignalingState();
@@ -2977,7 +2983,7 @@ void PeerConnectionImpl::DoSetDescriptionSuccessPostProcessing(
           // that state change.  We need to detect the ice restart here and
           // reset the PeerConnectionImpl's stun addresses so they are
           // regathered when PeerConnectionImpl::GatherIfReady is called.
-          if (mJsepSession->IsIceRestarting()) {
+          if (iceRestartDetected) {
             ResetStunAddrsForIceRestart();
           }
           EnsureTransports(*mJsepSession);
