@@ -489,21 +489,21 @@ add_task(async function search_synced_tabs() {
       () => syncedTabsComponent.fullyUpdated,
       "Synced Tabs component is done updating."
     );
+    cards = syncedTabsComponent.cardEls;
     await TestUtils.waitForCondition(
       () =>
-        syncedTabsComponent.cardEls[0].querySelector("fxview-tab-list") &&
-        syncedTabsComponent.cardEls[0].querySelector("fxview-tab-list").rowEls
-          .length,
+        cards[0].querySelector("fxview-tab-list") &&
+        cards[0].querySelector("fxview-tab-list").rowEls.length,
       "The tab list has loaded for the first card."
     );
+    deviceOneTabs = cards[0].querySelector("fxview-tab-list").rowEls;
+    deviceTwoTabs = cards[1].querySelector("fxview-tab-list");
     await TestUtils.waitForCondition(
-      () =>
-        syncedTabsComponent.cardEls[0].querySelector("fxview-tab-list").rowEls
-          .length === 1,
+      () => deviceOneTabs.length === 1,
       "There is one matching search result for the first device."
     );
     await TestUtils.waitForCondition(
-      () => !syncedTabsComponent.cardEls[1].querySelector("fxview-tab-list"),
+      () => !deviceTwoTabs,
       "There are no matching search results for the second device."
     );
 
@@ -552,21 +552,21 @@ add_task(async function search_synced_tabs() {
       () => syncedTabsComponent.fullyUpdated,
       "Synced Tabs component is done updating."
     );
+    cards = syncedTabsComponent.cardEls;
     await TestUtils.waitForCondition(
       () =>
-        syncedTabsComponent.cardEls[0].querySelector("fxview-tab-list") &&
-        syncedTabsComponent.cardEls[0].querySelector("fxview-tab-list").rowEls
-          .length,
+        cards[0].querySelector("fxview-tab-list") &&
+        cards[0].querySelector("fxview-tab-list").rowEls.length,
       "The tab list has loaded for the first card."
     );
-    await TestUtils.waitForCondition(() => {
-      return (
-        syncedTabsComponent.cardEls[0].querySelector("fxview-tab-list").rowEls
-          .length === 1
-      );
-    }, "There is one matching search result for the first device.");
+    deviceOneTabs = cards[0].querySelector("fxview-tab-list").rowEls;
+    deviceTwoTabs = cards[1].querySelector("fxview-tab-list");
     await TestUtils.waitForCondition(
-      () => !syncedTabsComponent.cardEls[1].querySelector("fxview-tab-list"),
+      () => deviceOneTabs.length === 1,
+      "There is one matching search result for the first device."
+    );
+    await TestUtils.waitForCondition(
+      () => !deviceTwoTabs,
       "There are no matching search results for the second device."
     );
 
