@@ -102,7 +102,6 @@ class SponsoredShortcutsTest {
     }
 
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/1729336
-    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1807268")
     @Test
     fun openSponsoredShortcutsSettingsOptionTest() {
         homeScreen {

@@ -26,6 +26,7 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions
 import androidx.test.espresso.action.ViewActions.click
+import androidx.test.espresso.action.ViewActions.longClick
 import androidx.test.espresso.assertion.PositionAssertions.isCompletelyAbove
 import androidx.test.espresso.assertion.PositionAssertions.isPartiallyBelow
 import androidx.test.espresso.assertion.ViewAssertions.matches
@@ -51,7 +52,6 @@ import org.junit.Assert
 import org.junit.Assert.assertTrue
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.Constants.LISTS_MAXSWIPES
-import org.mozilla.fenix.helpers.Constants.LONG_CLICK_DURATION
 import org.mozilla.fenix.helpers.Constants.TAG
 import org.mozilla.fenix.helpers.DataGenerationHelper.getStringResource
 import org.mozilla.fenix.helpers.HomeActivityComposeTestRule
@@ -557,7 +557,8 @@ class HomeScreenRobot {
         }
 
         fun openContextMenuOnSponsoredShortcut(sponsoredShortcutTitle: String, interact: HomeScreenRobot.() -> Unit): Transition {
-            sponsoredShortcut(sponsoredShortcutTitle).click(LONG_CLICK_DURATION)
+            sponsoredShortcut(sponsoredShortcutTitle).perform(longClick())
+            Log.i(TAG, "openContextMenuOnSponsoredShortcut: Long clicked to open context menu for $sponsoredShortcutTitle sponsored shortcut")
 
             HomeScreenRobot().interact()
             return Transition()
@@ -631,8 +632,10 @@ class HomeScreenRobot {
         }
 
         fun clickSponsoredShortcutsSettingsButton(interact: SettingsSubMenuHomepageRobot.() -> Unit): SettingsSubMenuHomepageRobot.Transition {
+            Log.i(TAG, "clickSponsoredShortcutsSettingsButton: Looking for: ${sponsoredShortcutsSettingsButton.selector}")
             sponsoredShortcutsSettingsButton.waitForExists(waitingTime)
             sponsoredShortcutsSettingsButton.clickAndWaitForNewWindow(waitingTime)
+            Log.i(TAG, "clickSponsoredShortcutsSettingsButton: Clicked ${sponsoredShortcutsSettingsButton.selector} and waiting for $waitingTime for a new window")
 
             SettingsSubMenuHomepageRobot().interact()
             return SettingsSubMenuHomepageRobot.Transition()
@@ -939,10 +942,11 @@ private fun saveTabsToCollectionButton() = onView(withId(R.id.add_tabs_to_collec
 private fun tabsCounter() = onView(withId(R.id.tab_button))
 
 private fun sponsoredShortcut(sponsoredShortcutTitle: String) =
-    mDevice.findObject(
-        By
-            .res("$packageName:id/top_site_title")
-            .textContains(sponsoredShortcutTitle),
+    onView(
+        allOf(
+            withId(R.id.top_site_title),
+            withText(sponsoredShortcutTitle),
+        ),
     )
 
 private fun storyByTopicItem(composeTestRule: ComposeTestRule, position: Int) =
