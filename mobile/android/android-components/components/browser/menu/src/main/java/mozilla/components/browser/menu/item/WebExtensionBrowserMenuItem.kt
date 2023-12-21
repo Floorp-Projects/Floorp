@@ -51,23 +51,8 @@ class WebExtensionBrowserMenuItem(
 
     @Suppress("TooGenericExceptionCaught")
     override fun bind(menu: BrowserMenu, view: View) {
-        val imageView = view.findViewById<ImageView>(R.id.action_image)
-        val labelView = view.findViewById<TextView>(R.id.action_label)
-        val badgeView = view.findViewById<TextView>(R.id.badge_text)
         val container = view.findViewById<View>(R.id.container)
-
-        container.isEnabled = action.enabled ?: true
-
-        action.title?.let {
-            imageView.contentDescription = it
-            labelView.text = it
-        }
-        badgeView.setBadgeText(action.badgeText)
-        action.badgeTextColor?.let { badgeView.setTextColor(it) }
-        action.badgeBackgroundColor?.let { badgeView.background?.setTint(it) }
-
-        setupIcon(view, imageView, iconTintColorResource)
-
+        updateItem(view)
         container.setOnClickListener {
             listener.invoke()
             menu.dismiss()
@@ -77,14 +62,42 @@ class WebExtensionBrowserMenuItem(
     override fun invalidate(view: View) {
         val labelView = view.findViewById<TextView>(R.id.action_label)
         val badgeView = view.findViewById<TextView>(R.id.badge_text)
+        val imageView = view.findViewById<ImageView>(R.id.action_image)
 
-        action.title?.let {
-            labelView.text = it
-        }
-        badgeView.setBadgeText(action.badgeText)
+        updateItem(view)
 
         labelView.invalidate()
         badgeView.invalidate()
+        imageView.invalidate()
+    }
+
+    @VisibleForTesting
+    internal fun updateItem(view: View) {
+        val imageView = view.findViewById<ImageView>(R.id.action_image)
+        val labelView = view.findViewById<TextView>(R.id.action_label)
+        val badgeView = view.findViewById<TextView>(R.id.badge_text)
+        val container = view.findViewById<View>(R.id.container)
+
+        container.isEnabled.updateIfChange(new = action.enabled ?: true) {
+            container.isEnabled = it
+        }
+
+        imageView.contentDescription.updateIfChange(action.title) {
+            imageView.contentDescription = it
+        }
+        labelView.text.updateIfChange(action.title) {
+            labelView.text = it
+        }
+        badgeView.setBadgeText(action.badgeText)
+        action.badgeTextColor?.let { badgeView.setTextColor(it) }
+        action.badgeBackgroundColor?.let { badgeView.background?.setTint(it) }
+        setupIcon(view, imageView, iconTintColorResource)
+    }
+
+    private inline fun <T> T.updateIfChange(new: T, setter: (T) -> Unit) {
+        if (this != new) {
+            setter(new)
+        }
     }
 
     override fun asCandidate(context: Context) = TextMenuCandidate(
