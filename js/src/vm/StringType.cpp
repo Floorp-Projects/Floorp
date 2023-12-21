@@ -1636,7 +1636,7 @@ static MOZ_ALWAYS_INLINE JSAtom* NewInlineAtomDeflated(JSContext* cx,
 
 static JSAtom* NewAtomDeflatedValidLength(JSContext* cx, const char16_t* s,
                                           size_t n, js::HashNumber hash) {
-  if (JSInlineString::lengthFits<Latin1Char>(n)) {
+  if (js::FatInlineAtom::lengthFits<Latin1Char>(n)) {
     return NewInlineAtomDeflated(cx, s, n, hash);
   }
 
@@ -1823,7 +1823,7 @@ JSAtom* NewAtomCopyNDontDeflateValidLength(JSContext* cx, const CharT* s,
     MOZ_ASSERT(!CanStoreCharsAsLatin1(s, n));
   }
 
-  if (JSInlineString::lengthFits<CharT>(n)) {
+  if (js::FatInlineAtom::lengthFits<CharT>(n)) {
     return NewInlineAtom(cx, s, n, hash);
   }
 
