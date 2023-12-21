@@ -255,19 +255,14 @@ void AudioSession::StopInternal(const MutexAutoLock& aProofOfLock,
   // IAudioSessionControl on the main thread instead.  In order to do that, we
   // need to marshall the object to the main thread's apartment with an
   // AgileReference.
-  const IID IID_IAudioSessionControl = __uuidof(IAudioSessionControl);
-  auto agileAsc = MakeUnique<mozilla::mscom::AgileReference>(
-      IID_IAudioSessionControl, mAudioSessionControl);
+  mscom::AgileReference agileAsc(mAudioSessionControl);
   mAudioSessionControl = nullptr;
   NS_DispatchToMainThread(NS_NewRunnableFunction(
-      "FreeAudioSession", [agileAsc = std::move(agileAsc),
-                           IID_IAudioSessionControl, shouldRestart] {
-        RefPtr<IAudioSessionControl> toDelete;
-        [[maybe_unused]] HRESULT hr = agileAsc->Resolve(
-            IID_IAudioSessionControl, getter_AddRefs(toDelete));
-        MOZ_ASSERT(SUCCEEDED(hr));
+      "FreeAudioSession",
+      [agileAsc = std::move(agileAsc), shouldRestart]() mutable {
         // Now release the AgileReference which holds our only reference to the
         // IAudioSessionControl, then maybe restart.
+        agileAsc = nullptr;
         if (shouldRestart) {
           NS_DispatchBackgroundTask(
               NS_NewCancelableRunnableFunction("RestartAudioSession", [] {
