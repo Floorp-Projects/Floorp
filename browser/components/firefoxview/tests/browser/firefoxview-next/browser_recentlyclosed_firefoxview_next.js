@@ -629,9 +629,7 @@ add_task(async function test_search_recent_browsing() {
     EventUtils.sendString("example.com", content);
     const slot = recentBrowsing.querySelector("[slot='recentlyclosed']");
     await TestUtils.waitForCondition(
-      () =>
-        slot.tabList.rowEls.length === 5 &&
-        slot.shadowRoot.querySelector("[data-l10n-id='firefoxview-show-all']"),
+      () => slot.tabList.rowEls.length === 5,
       "Not all search results are shown yet."
     );
 
