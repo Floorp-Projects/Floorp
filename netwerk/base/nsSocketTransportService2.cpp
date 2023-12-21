@@ -1831,8 +1831,8 @@ void nsSocketTransportService::StartPollWatchdog() {
         // Poll can hang sometimes. If we are in shutdown, we are going to start
         // a watchdog. If we do not exit poll within REPAIR_POLLABLE_EVENT_TIME
         // signal a pollable event again.
-        MOZ_ASSERT(gIOService->IsNetTearingDown());
-        if (self->mPolling && !self->mPollRepairTimer) {
+        if (gIOService->IsNetTearingDown() && self->mPolling &&
+            !self->mPollRepairTimer) {
           NS_NewTimerWithObserver(getter_AddRefs(self->mPollRepairTimer), self,
                                   REPAIR_POLLABLE_EVENT_TIME,
                                   nsITimer::TYPE_REPEATING_SLACK);
