@@ -386,8 +386,9 @@ class InChunkPointer {
     }
     // See if the last byte of the entry is still inside the buffer.
     pointer += entrySize - 1;
-    MOZ_ASSERT(!IsNull(), "ShouldPointAtValidBlock - past end of buffer");
-    return !IsNull();
+    MOZ_ASSERT(!pointer.IsNull(),
+               "ShouldPointAtValidBlock - past end of buffer");
+    return !pointer.IsNull();
   }
 
   const ProfileBufferChunk* mChunk;
