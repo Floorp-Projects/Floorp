@@ -47,10 +47,35 @@ int32_t TaskController::GetPoolThreadCount() {
 
 #if defined(MOZ_COLLECTING_RUNNABLE_TELEMETRY)
 
-struct TaskMarker {
-  static constexpr Span<const char> MarkerTypeName() {
-    return MakeStringSpan("Task");
+struct TaskMarker : BaseMarkerType<TaskMarker> {
+  static constexpr const char* Name = "Task";
+  static constexpr const char* Description =
+      "Marker representing a task being executed in TaskController.";
+
+  using MS = MarkerSchema;
+  static constexpr MS::PayloadField PayloadFields[] = {
+      {"name", MS::InputType::CString, "Task Name", MS::Format::String,
+       MS::PayloadFlags::Searchable},
+      {"priority", MS::InputType::Uint32, "Priority level",
+       MS::Format::Integer},
+      {"priorityName", MS::InputType::CString, "Priority Name"}};
+
+  static constexpr MS::Location Locations[] = {MS::Location::MarkerChart,
+                                               MS::Location::MarkerTable};
+  static constexpr const char* ChartLabel = "{marker.data.name}";
+  static constexpr const char* TableLabel =
+      "{marker.name} - {marker.data.name} - priority: "
+      "{marker.data.priorityName} ({marker.data.priority})";
+
+  static constexpr MS::ETWMarkerGroup Group = MS::ETWMarkerGroup::Scheduling;
+
+  static void TranslateMarkerInputToSchema(void* aContext,
+                                           const nsCString& aName,
+                                           uint32_t aPriority) {
+    ETW::OutputMarkerSchema(aContext, TaskMarker{}, aName, aPriority,
+                            ProfilerStringView(""));
   }
+
   static void StreamJSONMarkerData(baseprofiler::SpliceableJSONWriter& aWriter,
                                    const nsCString& aName, uint32_t aPriority) {
     aWriter.StringProperty("name", aName);
@@ -66,27 +91,13 @@ struct TaskMarker {
       aWriter.StringProperty("priorityName", "Invalid Value");
     }
   }
-  static MarkerSchema MarkerTypeDisplay() {
-    using MS = MarkerSchema;
-    MS schema{MS::Location::MarkerChart, MS::Location::MarkerTable};
-    schema.SetChartLabel("{marker.data.name}");
-    schema.SetTableLabel(
-        "{marker.name} - {marker.data.name} - priority: "
-        "{marker.data.priorityName} ({marker.data.priority})");
-    schema.AddKeyLabelFormatSearchable("name", "Task Name", MS::Format::String,
-                                       MS::Searchable::Searchable);
-    schema.AddKeyLabelFormat("priorityName", "Priority Name",
-                             MS::Format::String);
-    schema.AddKeyLabelFormat("priority", "Priority level", MS::Format::Integer);
-    return schema;
-  }
 };
 
 class MOZ_RAII AutoProfileTask {
  public:
   explicit AutoProfileTask(nsACString& aName, uint64_t aPriority)
       : mName(aName), mPriority(aPriority) {
-    if (profiler_is_active()) {
+    if (profiler_is_collecting_markers()) {
       mStartTime = TimeStamp::Now();
     }
   }
