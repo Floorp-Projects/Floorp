@@ -99,7 +99,7 @@ struct EncodedFrame {
     uint8_t y_;
     uint8_t u_;
     uint8_t v_;
-    uint32_t timestamp_;
+    uint64_t timestamp_;
   } idr_nalu;
 };
 #pragma pack(pop)
