@@ -240,6 +240,7 @@ static const char* const kPinset_google_root_pems_Data[] = {
   kCOMODO_ECC_Certification_AuthorityFingerprint,
   kDigiCert_Assured_ID_Root_G2Fingerprint,
   kCOMODO_Certification_AuthorityFingerprint,
+  kGlobalSign_ECC_Root_CA___R4Fingerprint,
   kDigiCert_Assured_ID_Root_G3Fingerprint,
   kStarfield_Class_2_CAFingerprint,
   kEntrust_net_Premium_2048_Secure_Server_CAFingerprint,
@@ -248,6 +249,8 @@ static const char* const kPinset_google_root_pems_Data[] = {
   kGlobalSign_Root_CAFingerprint,
   kGo_Daddy_Root_Certificate_Authority___G2Fingerprint,
   kAffirmTrust_Premium_ECCFingerprint,
+  kGTS_Root_R3Fingerprint,
+  kGTS_Root_R2Fingerprint,
   kGo_Daddy_Class_2_CAFingerprint,
   kDigiCert_Trusted_Root_G4Fingerprint,
   kDigiCert_High_Assurance_EV_Root_CAFingerprint,
@@ -260,8 +263,10 @@ static const char* const kPinset_google_root_pems_Data[] = {
   kGlobalSign_ECC_Root_CA___R5Fingerprint,
   kStarfield_Root_Certificate_Authority___G2Fingerprint,
   kCOMODO_RSA_Certification_AuthorityFingerprint,
+  kGTS_Root_R1Fingerprint,
   kDigiCert_Global_Root_G2Fingerprint,
   kAffirmTrust_NetworkingFingerprint,
+  kGTS_Root_R4Fingerprint,
   kDigiCert_Global_Root_CAFingerprint,
   kDigiCert_Global_Root_G3Fingerprint,
   kComodo_AAA_Services_rootFingerprint,
@@ -775,4 +780,4 @@ static const TransportSecurityPreload kPublicKeyPinningPreloadList[] = {
 
 static const int32_t kUnknownId = -1;
 
-static const PRTime kPreloadPKPinsExpirationTime = INT64_C(1711369575043000);
+static const PRTime kPreloadPKPinsExpirationTime = INT64_C(1711623175147000);
