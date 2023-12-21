@@ -44,7 +44,7 @@ export const ExtensionActivityLog = {
    * @param {string} type The type of the activity.
    * @param {string} name The API name or path.
    * @param {object} data Activity specific data.
-   * @param {string} timeStamp The timestamp for the activity.
+   * @param {Date} [timeStamp] The timestamp for the activity.
    */
   log(id, viewType, type, name, data, timeStamp) {
     if (!this.initialized) {

@@ -436,7 +436,7 @@ export class ExtensionShortcuts {
    * @param {string} shortcut The shortcut provided in the manifest.
    * @see https://developer.mozilla.org/en-US/docs/Mozilla/Tech/XUL/key
    *
-   * @returns {Document} The newly created Key element.
+   * @returns {Element} The newly created Key element.
    */
   buildKey(doc, name, shortcut) {
     let keyElement = this.buildKeyFromShortcut(doc, name, shortcut);
@@ -483,7 +483,7 @@ export class ExtensionShortcuts {
    * @param {string} shortcut The shortcut provided in the manifest.
    *
    * @see https://developer.mozilla.org/en-US/docs/Mozilla/Tech/XUL/key
-   * @returns {Document} The newly created Key element.
+   * @returns {Element} The newly created Key element.
    */
   buildKeyFromShortcut(doc, name, shortcut) {
     let keyElement = doc.createXULElement("key");

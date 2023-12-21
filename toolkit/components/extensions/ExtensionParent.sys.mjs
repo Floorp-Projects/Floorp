@@ -234,16 +234,19 @@ let apiManager = new (class extends SchemaAPIManager {
   }
 })();
 
+/**
+ * @typedef {object} ParentPort
+ * @property {boolean} [native]
+ * @property {string} [senderChildId]
+ * @property {function(StructuredCloneHolder): any} onPortMessage
+ * @property {Function} onPortDisconnect
+ */
+
 // Receives messages related to the extension messaging API and forwards them
 // to relevant child messengers.  Also handles Native messaging and GeckoView.
+/** @typedef {typeof ProxyMessenger} NativeMessenger */
 const ProxyMessenger = {
-  /**
-   * @typedef {object} ParentPort
-   * @property {function(StructuredCloneHolder)} onPortMessage
-   * @property {function()} onPortDisconnect
-   */
-
-  /** @type {Map<number, ParentPort>} */
+  /** @type {Map<number, ParentPort|Promise<ParentPort>>} */
   ports: new Map(),
 
   init() {
@@ -361,6 +364,7 @@ const ProxyMessenger = {
     }
 
     // PortMessages that follow will need to wait for the port to be opened.
+    /** @type {callback} */
     let resolvePort;
     this.ports.set(arg.portId, new Promise(res => (resolvePort = res)));
 
@@ -1779,7 +1783,7 @@ const DebugUtils = {
  * was received by the message manager. The promise is rejected if the message
  * manager was closed before a message was received.
  *
- * @param {MessageListenerManager} messageManager
+ * @param {nsIMessageListenerManager} messageManager
  *        The message manager on which to listen for messages.
  * @param {string} messageName
  *        The message to listen for.

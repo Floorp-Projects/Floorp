@@ -442,7 +442,7 @@ ExtensionPreferencesManager = {
    * @param {string} name
    *        The unique id of the setting.
    *
-   * @returns {object} The current setting object.
+   * @returns {Promise<object>} The current setting object.
    */
   async getSetting(name) {
     await lazy.ExtensionSettingsStore.initialize();

@@ -100,7 +100,7 @@ export var ExtensionStorage = {
    *
    * @param {string} extensionId
    *        The ID of the extension for which to return a file.
-   * @returns {Promise<JSONFile>}
+   * @returns {Promise<InstanceType<Lazy['JSONFile']>>}
    */
   async _readFile(extensionId) {
     await IOUtils.makeDirectory(this.getExtensionDir(extensionId));
@@ -124,7 +124,7 @@ export var ExtensionStorage = {
    *
    * @param {string} extensionId
    *        The ID of the extension for which to return a file.
-   * @returns {Promise<JSONFile>}
+   * @returns {Promise<InstanceType<Lazy['JSONFile']>>}
    */
   getFile(extensionId) {
     let promise = this.jsonFilePromises.get(extensionId);
@@ -155,7 +155,7 @@ export var ExtensionStorage = {
    * Sanitizes the given value, and returns a JSON-compatible
    * representation of it, based on the privileges of the given global.
    *
-   * @param {value} value
+   * @param {any} value
    *        The value to sanitize.
    * @param {Context} context
    *        The extension context in which to sanitize the value
@@ -499,6 +499,7 @@ export var extensionStorageSession = {
     let bucket = this.buckets.get(extension);
 
     let result = {};
+    /** @type {Iterable<string>} */
     let keys = [];
 
     if (!items) {

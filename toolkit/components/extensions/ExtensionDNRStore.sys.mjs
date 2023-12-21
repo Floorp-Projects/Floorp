@@ -117,7 +117,7 @@ class StoreData {
    * @param {Extension} extension
    *        The extension the StoreData is associated to.
    * @param {object} params
-   * @param {string} params.extVersion
+   * @param {string} [params.extVersion]
    *        extension version
    * @param {string} [params.lastUpdateTag]
    *        a tag associated to the data. It is only passed when we are loading the data
@@ -754,6 +754,8 @@ class RulesetsStore {
    * Reads the store file for the given extensions and all rules
    * for the enabled static ruleset ids listed in the store file.
    *
+   * @typedef {string} ruleset_id
+   *
    * @param {Extension} extension
    * @param {object} [options]
    * @param {Array<string>} [options.enabledRulesetIds]
@@ -768,7 +770,7 @@ class RulesetsStore {
    *        `enabledRulesetIds` contains the IDs of disabled rulesets that
    *        should be enabled. Already-enabled rulesets are not included in
    *        `enabledRulesetIds`.
-   * @param {RuleQuotaCounter} [options.ruleQuotaCounter]
+   * @param {import("ExtensionDNR.sys.mjs").RuleQuotaCounter} [options.ruleQuotaCounter]
    *        The counter of already-enabled rules that are not part of
    *        `enabledRulesetIds`. Set when `isUpdateEnabledRulesets` is true.
    *        This method may mutate its internal counters.
@@ -903,6 +905,8 @@ class RulesetsStore {
    * Returns an array of validated and normalized Rule instances given an array
    * of raw rules data (e.g. in form of plain objects read from the static rules
    * JSON files or the dynamicRuleset property from the extension DNR store data).
+   *
+   * @typedef {import("ExtensionDNR.sys.mjs").Rule} Rule
    *
    * @param   {Extension}     extension
    * @param   {string}        rulesetId

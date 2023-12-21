@@ -894,10 +894,10 @@ class InjectionContext extends Context {
    * @abstract
    * @param {string} namespace The namespace of the API. This may contain dots,
    *     e.g. in the case of "devtools.inspectedWindow".
-   * @param {string} [name] The name of the property in the namespace.
+   * @param {string?} name The name of the property in the namespace.
    *     `null` if we are checking whether the namespace should be injected.
-   * @param {Array<string>} allowedContexts A list of additional contexts in which
-   *     this API should be available. May include any of:
+   * @param {Array<string>} allowedContexts A list of additional contexts in
+   *      which this API should be available. May include any of:
    *         "main" - The main chrome browser process.
    *         "addon" - An addon process.
    *         "content" - A content process.
@@ -990,7 +990,7 @@ class InjectionContext extends Context {
    *        will be injected.
    * @param {Array<string>} path
    *        The full path from the root injection object to this entry.
-   * @param {Entry} parentEntry
+   * @param {Partial<Entry>} parentEntry
    *        The parent entry for this entry.
    *
    * @returns {object?}
@@ -1348,7 +1348,7 @@ class Entry {
    * its `deprecated` property.
    *
    * @param {Context} context
-   * @param {value} [value]
+   * @param {any} [value]
    */
   logDeprecation(context, value = null) {
     let message = "This property is deprecated";
@@ -1372,7 +1372,7 @@ class Entry {
    * deprecation message.
    *
    * @param {Context} context
-   * @param {value} [value]
+   * @param {any} [value]
    */
   checkDeprecated(context, value = null) {
     if (this.deprecated) {
@@ -1457,7 +1457,7 @@ class Type extends Entry {
    *        corresponding to the property names and array indices
    *        traversed during parsing in order to arrive at this schema
    *        object.
-   * @param {Array<string>} [extra]
+   * @param {Iterable<string>} [extra]
    *        An array of extra property names which are valid for this
    *        schema in the current context.
    * @throws {Error}
@@ -2785,6 +2785,7 @@ class CallEntry extends Entry {
 FunctionEntry = class FunctionEntry extends CallEntry {
   static parseSchema(root, schema, path) {
     // When not in DEBUG mode, we just need to know *if* this returns.
+    /** @type {boolean|object} */
     let returns = !!schema.returns;
     if (DEBUG && "returns" in schema) {
       returns = {

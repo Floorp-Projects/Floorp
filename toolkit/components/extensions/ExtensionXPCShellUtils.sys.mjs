@@ -743,6 +743,7 @@ export var ExtensionTestUtils = {
     XPCShellContentUtils.remoteContentScripts = val;
   },
 
+  /** @param {[origin: string, url: string, options: object]} args */
   async fetch(...args) {
     return XPCShellContentUtils.fetch(...args);
   },
@@ -765,10 +766,8 @@ export var ExtensionTestUtils = {
    * @param {string} [options.redirectUrl]
    *        An optional URL that the initial page is expected to
    *        redirect to.
-   * @param {...any} args
-   *        Extra parameters to ensure compatibility
    *
-   * @returns {ContentPage}
+   * @returns {XPCShellContentUtils.ContentPage}
    */
   loadContentPage(url, options, ...args) {
     return XPCShellContentUtils.loadContentPage(url, options, ...args);

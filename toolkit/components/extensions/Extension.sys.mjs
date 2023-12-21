@@ -900,12 +900,12 @@ export class ExtensionData {
    * @param {object} options
    * @param {nsIURI} options.rootURI
    *  The URI pointing to the extension root.
-   * @param {function(type, id)} options.checkPrivileged
+   * @param {function(type, id): boolean} options.checkPrivileged
    *  An (async) function that takes the addon type and addon ID and returns
    *  whether the given add-on is privileged.
    * @param {boolean} options.temporarilyInstalled
    *  whether the given add-on is installed as temporary.
-   * @returns {ExtensionData}
+   * @returns {Promise<ExtensionData>}
    */
   static async constructAsync({
     rootURI,
@@ -1017,7 +1017,7 @@ export class ExtensionData {
    *   The path to the directory or jar file to look at.
    * @param {boolean} [directoriesOnly]
    *   If true, this will return only the directories present within the directory.
-   * @returns {string[]}
+   * @returns {Promise<string[]>}
    *   An array of names of files/directories (only the name, not the path).
    */
   async _readDirectory(path, directoriesOnly = false) {
@@ -1400,7 +1400,7 @@ export class ExtensionData {
    * be initialized, and manifest parsed prior to calling.
    *
    * @param {string} locale to load, if necessary.
-   * @returns {object} normalized manifest.
+   * @returns {Promise<object>} normalized manifest.
    */
   async getLocalizedManifest(locale) {
     if (!this.type || !this.localeData) {
@@ -2025,6 +2025,7 @@ export class ExtensionData {
   }
 
   getAPIManager() {
+    /** @type {(InstanceType<typeof ExtensionCommon.LazyAPIManager>)[]} */
     let apiManagers = [Management];
 
     for (let id of this.dependencies) {
@@ -2334,10 +2335,10 @@ export class ExtensionData {
    *                 "sideload", "optional", or omitted for a regular
    *                 install prompt.
    * @param {object} options
-   * @param {boolean} options.collapseOrigins
+   * @param {boolean} [options.collapseOrigins]
    *                  Wether to limit the number of displayed host permissions.
    *                  Default is false.
-   * @param {boolean} options.buildOptionalOrigins
+   * @param {boolean} [options.buildOptionalOrigins]
    *                  Wether to build optional origins Maps for permission
    *                  controls.  Defaults to false.
    *
@@ -3361,7 +3362,7 @@ export class Extension extends ExtensionData {
   /**
    * Update site permissions as necessary.
    *
-   * @param {string|undefined} reason
+   * @param {string} [reason]
    *        If provided, this is a BOOTSTRAP_REASON string.  If reason is undefined,
    *        addon permissions are being added or removed that may effect the site permissions.
    */
@@ -3437,6 +3438,7 @@ export class Extension extends ExtensionData {
 
     // readyPromise is resolved with the policy upon success,
     // and with null if startup was interrupted.
+    /** @type {callback} */
     let resolveReadyPromise;
     let readyPromise = new Promise(resolve => {
       resolveReadyPromise = resolve;

@@ -313,6 +313,7 @@ class ExtensionTelemetryMetric {
 
 // Cache of the ExtensionTelemetryMetric instances that has been lazily created by the
 // Extension Telemetry Proxy.
+/** @type {Map<string|symbol, ExtensionTelemetryMetric>} */
 const metricsCache = new Map();
 
 /**

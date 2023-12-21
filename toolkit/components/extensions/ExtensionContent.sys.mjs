@@ -473,7 +473,7 @@ class Script {
    * Tries to inject this script into the given window and sandbox, if
    * there are pending operations for the window's current load state.
    *
-   * @param {BaseContext} context
+   * @param {ContentScriptContextChild} context
    *        The content script context into which to inject the scripts.
    * @param {boolean} reportExceptions
    *        Defaults to true and reports any exception directly to the console
@@ -606,7 +606,7 @@ class Script {
    *  Get the compiled scripts (if they are already precompiled and cached) or a promise which resolves
    *  to the precompiled scripts (once they have been compiled and cached).
    *
-   * @param {BaseContext} context
+   * @param {ContentScriptContextChild} context
    *        The document to block the parsing on, if the scripts are not yet precompiled and cached.
    *
    * @returns {Array<PreloadedScript> | Promise<Array<PreloadedScript>>}
@@ -1067,6 +1067,11 @@ DocumentManager = {
     },
   },
 
+  /**
+   * @param {object} subject
+   * @param {keyof typeof DocumentManager.observers} topic
+   * @param {any} data
+   */
   observe(subject, topic, data) {
     this.observers[topic].call(this, subject, topic, data);
   },

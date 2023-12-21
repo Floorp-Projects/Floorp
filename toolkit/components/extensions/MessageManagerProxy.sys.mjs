@@ -158,7 +158,7 @@ export class MessageManagerProxy {
   /**
    * Adds docShell swap listeners to the message manager owner.
    *
-   * @param {Element} target
+   * @param {Browser} target
    *        The target element.
    * @private
    */

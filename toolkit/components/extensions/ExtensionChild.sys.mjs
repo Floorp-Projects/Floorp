@@ -156,6 +156,7 @@ class SimpleEventAPI extends EventManager {
     super({ context, name, register });
     this.fires = fires;
   }
+  /** @returns {any} */
   emit(...args) {
     return [...this.fires].map(fire => fire.asyncWithoutClone(...args));
   }
@@ -479,6 +480,7 @@ class BrowserExtensionContent extends EventEmitter {
   }
 
   getAPIManager() {
+    /** @type {InstanceType<typeof ExtensionCommon.LazyAPIManager>[]} */
     let apiManagers = [lazy.ExtensionPageChild.apiManager];
 
     if (this.dependencies) {
@@ -870,8 +872,8 @@ class ChildAPIManager {
    *
    * @param {string} path The full name of the method, e.g. "tabs.create".
    * @param {Array} args The parameters for the function.
-   * @param {function(*)} [callback] The callback to be called when the function
-   *     completes.
+   * @param {callback} [callback] The callback to be called when the
+   *      function completes.
    * @param {object} [options] Extra options.
    * @returns {Promise|undefined} Must be void if `callback` is set, and a
    *     promise otherwise. The promise is resolved when the function completes.

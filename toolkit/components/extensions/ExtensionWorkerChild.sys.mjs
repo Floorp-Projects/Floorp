@@ -206,6 +206,12 @@ class WorkerMessenger extends Messenger {
     return this.portsById.get(portId);
   }
 
+  /**
+   * @typedef {object} ExtensionPortDescriptor
+   * https://phabricator.services.mozilla.com/D196385?id=801874#inline-1093734
+   *
+   * @returns {ExtensionPortDescriptor}
+   */
   connect({ name, native, ...args }) {
     let portId = getUniqueId();
     let port = new WorkerPort(this.context, portId, name, !!native);
@@ -444,7 +450,6 @@ class WebIDLChildAPIManager extends ChildAPIManager {
    * @returns {any}
    * @throws {Error | WorkerExtensionError}
    */
-
   handleForProxyAPIImplementation(request, impl) {
     const { requestType } = request;
     switch (requestType) {
@@ -708,7 +713,7 @@ defineLazyGetter(
 );
 
 export var ExtensionWorkerChild = {
-  // Map<serviceWorkerDescriptorId, ExtensionWorkerContextChild>
+  /** @type {Map<number, WorkerContextChild>} */
   extensionWorkerContexts: new Map(),
 
   apiManager: ExtensionPageChild.apiManager,
@@ -753,7 +758,7 @@ export var ExtensionWorkerChild = {
    *     The extension for which the context should be created.
    * @param {mozIExtensionServiceWorkerInfo} serviceWorkerInfo
    *
-   * @returns {ExtensionWorkerContextChild}
+   * @returns {WorkerContextChild}
    */
   getExtensionWorkerContext(extension, serviceWorkerInfo) {
     if (!serviceWorkerInfo) {
@@ -793,7 +798,7 @@ export var ExtensionWorkerChild = {
   },
 
   /**
-   * Close the ExtensionWorkerContextChild belonging to the given service worker, if any.
+   * Close the WorkerContextChild belonging to the given service worker, if any.
    *
    * @param {number} descriptorId The service worker descriptor ID of the destroyed context.
    */

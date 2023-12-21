@@ -43,6 +43,7 @@ const initializeBackgroundPage = context => {
   let alertDisplayedWarning = false;
   const innerWindowID = getInnerWindowID(context.contentWindow);
 
+  /** @param {{ text, filename, lineNumber?, columnNumber? }} options */
   function logWarningMessage({ text, filename, lineNumber, columnNumber }) {
     let consoleMsg = Cc["@mozilla.org/scripterror;1"].createInstance(
       Ci.nsIScriptError
@@ -196,6 +197,7 @@ class ExtensionBaseContextChild extends BaseContext {
    * @param {string} params.viewType One of "background", "popup", "tab",
    *   "sidebar", "devtools_page" or "devtools_panel".
    * @param {number} [params.tabId] This tab's ID, used if viewType is "tab".
+   * @param {nsIURI} [params.uri] The URI of the page.
    */
   constructor(extension, params) {
     if (!params.envType) {
@@ -304,6 +306,7 @@ class ExtensionPageContextChild extends ExtensionBaseContextChild {
    *     "popup" is only used internally to identify page action and browser
    *     action popups and options_ui pages.
    * @param {number} [params.tabId] This tab's ID, used if viewType is "tab".
+   * @param {nsIURI} [params.uri] The URI of the page.
    */
   constructor(extension, params) {
     super(extension, Object.assign(params, { envType: "addon_child" }));
@@ -339,6 +342,8 @@ class DevToolsContextChild extends ExtensionBaseContextChild {
    * @param {string} params.viewType One of "devtools_page" or "devtools_panel".
    * @param {object} [params.devtoolsToolboxInfo] This devtools toolbox's information,
    *   used if viewType is "devtools_page" or "devtools_panel".
+   * @param {number} [params.tabId] This tab's ID, used if viewType is "tab".
+   * @param {nsIURI} [params.uri] The URI of the page.
    */
   constructor(extension, params) {
     super(extension, Object.assign(params, { envType: "devtools_child" }));
@@ -394,6 +399,7 @@ ExtensionPageChild = {
       global,
       "DOMContentLoaded",
       true,
+      /** @param {{target: Window|any}} event */
       event =>
         event.target.location != "about:blank" &&
         // Ignore DOMContentLoaded bubbled from child frames:

@@ -121,8 +121,8 @@ export var NativeApp = class extends EventEmitter {
    * Open a connection to a native messaging host.
    *
    * @param {number} portId A unique internal ID that identifies the port.
-   * @param {NativeMessenger} port Parent NativeMessenger used to send messages.
-   * @returns {ParentPort}
+   * @param {import("ExtensionParent.sys.mjs").NativeMessenger} port Parent NativeMessenger used to send messages.
+   * @returns {import("ExtensionParent.sys.mjs").ParentPort}
    */
   onConnect(portId, port) {
     // eslint-disable-next-line

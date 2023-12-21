@@ -51,7 +51,7 @@ class Store {
    * Returns all the stored scripts for a given extension (ID).
    *
    * @param {string} extensionId An extension ID
-   * @returns {Array} An array of scripts
+   * @returns {Promise<Array>} An array of scripts
    */
   async getAll(extensionId) {
     await this.lazyInit();
@@ -119,7 +119,7 @@ class Store {
    * ```
    *
    * @param {string} extensionId An extension ID
-   * @returns {Array} An array of key/script pairs
+   * @returns {Promise<Array>} An array of key/script pairs
    */
   async getByExtensionId(extensionId) {
     await this.lazyInit();

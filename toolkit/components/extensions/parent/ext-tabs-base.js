@@ -1414,7 +1414,7 @@ class TabTrackerBase extends EventEmitter {
  * A browser progress listener instance which calls a given listener function
  * whenever the status of the given browser changes.
  *
- * @param {function(object)} listener
+ * @param {function(object): void} listener
  *        A function to be called whenever the status of a tab's top-level
  *        browser. It is passed an object with a `browser` property pointing to
  *        the XUL browser, and a `status` property with a string description of
@@ -1639,7 +1639,7 @@ class WindowTrackerBase extends EventEmitter {
    * Register the given listener function to be called whenever a new browser
    * window is opened.
    *
-   * @param {function(DOMWindow)} listener
+   * @param {function(DOMWindow): void} listener
    *        The listener function to register.
    */
   addOpenListener(listener) {
@@ -1660,7 +1660,7 @@ class WindowTrackerBase extends EventEmitter {
    * Unregister a listener function registered in a previous addOpenListener
    * call.
    *
-   * @param {function(DOMWindow)} listener
+   * @param {function(DOMWindow): void} listener
    *        The listener function to unregister.
    */
   removeOpenListener(listener) {
@@ -1675,7 +1675,7 @@ class WindowTrackerBase extends EventEmitter {
    * Register the given listener function to be called whenever a browser
    * window is closed.
    *
-   * @param {function(DOMWindow)} listener
+   * @param {function(DOMWindow): void} listener
    *        The listener function to register.
    */
   addCloseListener(listener) {
@@ -1690,7 +1690,7 @@ class WindowTrackerBase extends EventEmitter {
    * Unregister a listener function registered in a previous addCloseListener
    * call.
    *
-   * @param {function(DOMWindow)} listener
+   * @param {function(DOMWindow): void} listener
    *        The listener function to unregister.
    */
   removeCloseListener(listener) {
