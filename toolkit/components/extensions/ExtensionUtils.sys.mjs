@@ -126,7 +126,7 @@ function getInnerWindowID(window) {
  * @param {integer} [slop = limit * .25]
  *        The number of extra entries to allow in the set after it
  *        reaches the size limit, before it is truncated to the limit.
- * @param {iterable} [iterable]
+ * @param {Iterable} [iterable]
  *        An iterable of initial entries to add to the set.
  */
 class LimitedSet extends Set {
@@ -230,7 +230,7 @@ function promiseDocumentLoaded(doc) {
  * @param {boolean} [useCapture = true]
  *        If true, listen for the even in the capturing rather than
  *        bubbling phase.
- * @param {Event} [test]
+ * @param {function(Event): boolean} [test]
  *        An optional test function which, when called with the
  *        observer's subject and data, should return true if this is the
  *        expected event, false otherwise.
@@ -259,7 +259,7 @@ function promiseEvent(
  *
  * @param {string} topic
  *        The topic to observe.
- * @param {function(nsISupports, string)} [test]
+ * @param {function(nsISupports, string): boolean} [test]
  *        An optional test function which, when called with the
  *        observer's subject and data, should return true if this is the
  *        expected notification, false otherwise.

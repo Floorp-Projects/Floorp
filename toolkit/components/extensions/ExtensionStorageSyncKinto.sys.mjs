@@ -47,6 +47,13 @@ ChromeUtils.defineESModuleGetters(lazy, {
   Utils: "resource://services-sync/util.sys.mjs",
 });
 
+/**
+ * @typedef {any} Collection
+ * @typedef {any} CollectionKeyManager
+ * @typedef {any} FXAccounts
+ * @typedef {any} KeyBundle
+ * @typedef {any} SyncResultObject
+ */
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   Kinto: "resource://services-common/kinto-offline-client.js",
 });
@@ -127,7 +134,7 @@ export var extensionStorageSyncKinto = null;
  * @param {string}    id         The record ID to use when computing the HMAC
  * @param {string}    IV         The IV to use when computing the HMAC
  * @param {string}    ciphertext The ciphertext over which to compute the HMAC
- * @returns {string} The computed HMAC
+ * @returns {Promise<string>} The computed HMAC
  */
 async function ciphertextHMAC(keyBundle, id, IV, ciphertext) {
   const hmacKey = lazy.CommonUtils.byteStringToArrayBuffer(keyBundle.hmacKey);
@@ -144,7 +151,7 @@ async function ciphertextHMAC(keyBundle, id, IV, ciphertext) {
  *
  * @param {FXAccounts} fxaService  The service to use to get the
  *     current user.
- * @returns {string} sha256 of the user's kB as a hex string
+ * @returns {Promise<string>} sha256 of the user's kB as a hex string
  */
 const getKBHash = async function (fxaService) {
   const key = await fxaService.keys.getKeyForScope(STORAGE_SYNC_SCOPE);
@@ -242,7 +249,7 @@ class EncryptionRemoteTransformer {
   /**
    * Retrieve keys to use during encryption.
    *
-   * Returns a Promise<KeyBundle>.
+   * @returns {Promise<KeyBundle>}
    */
   getKeys() {
     throw new Error("override getKeys in a subclass");

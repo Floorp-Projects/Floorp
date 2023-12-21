@@ -43,6 +43,8 @@ export class FindContent {
    * @param {boolean} params.includeRangeData - whether to collect and return range data.
    * @param {boolean} params.matchDiacritics - whether diacritics must match.
    * @param {boolean} params.searchString - whether to collect and return rect data.
+   * @param {boolean} params.entireWord - whether to match entire words.
+   * @param {boolean} params.includeRectData - collect and return rect data.
    *
    * @returns {object} that includes:
    *   {number} count - number of results found.

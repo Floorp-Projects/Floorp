@@ -126,7 +126,7 @@ function withHandlingUserInput(window, callable) {
  *        The prototype object on which to define the getter.
  * @param {string | symbol} prop
  *        The property name for which to define the getter.
- * @param {Function} getter
+ * @param {callback} getter
  *        The function to call in order to generate the final property
  *        value.
  */
@@ -251,7 +251,7 @@ class EventEmitter {
    *
    * @param {string} event
    *       The name of the event to listen for.
-   * @param {function(string, ...any)} listener
+   * @param {function(string, ...any): any} listener
    *        The listener to call when events are emitted.
    */
   on(event, listener) {
@@ -269,7 +269,7 @@ class EventEmitter {
    *
    * @param {string} event
    *       The name of the event to stop listening for.
-   * @param {function(string, ...any)} listener
+   * @param {function(string, ...any): any} listener
    *        The listener function to remove.
    */
   off(event, listener) {
@@ -288,7 +288,7 @@ class EventEmitter {
    *
    * @param {string} event
    *       The name of the event to listen for.
-   * @param {function(string, ...any)} listener
+   * @param {function(string, ...any): any} listener
    *        The listener to call when events are emitted.
    */
   once(event, listener) {
@@ -521,7 +521,7 @@ class BaseContext {
    *
    * @param {object} subject
    * @param {ConduitAddress} address
-   * @returns {PointConduit}
+   * @returns {import("ConduitsChild.sys.mjs").PointConduit}
    */
   openConduit(subject, address) {
     let wgc = this.contentWindow.windowGlobalChild;
@@ -583,10 +583,12 @@ class BaseContext {
     throw new Error(`Not implemented for ${this.envType}`);
   }
 
+  /** @type {object} */
   get cloneScope() {
     throw new Error("Not implemented");
   }
 
+  /** @type {nsIPrincipal} */
   get principal() {
     throw new Error("Not implemented");
   }
@@ -743,7 +745,7 @@ class BaseContext {
    * Safely call JSON.stringify() on an object that comes from an
    * extension.
    *
-   * @param {Array<any>} args Arguments for JSON.stringify()
+   * @param {[any, callback?, number?]} args for JSON.stringify()
    * @returns {string} The stringified representation of obj
    */
   jsonStringify(...args) {
@@ -1027,7 +1029,7 @@ class SchemaAPIInterface {
    *
    * @abstract
    * @param {Array} args The parameters for the function.
-   * @param {function(*)} [callback] The callback to be called when the function
+   * @param {callback} [callback] The callback to be called when the function
    *     completes.
    * @param {boolean} [requireUserInput=false] If true, the function should
    *                  fail if the browser is not currently handling user input.
@@ -1446,7 +1448,7 @@ class SchemaAPIManager extends EventEmitter {
    *     "addon" - An addon process.
    *     "content" - A content process.
    *     "devtools" - A devtools process.
-   * @param {SchemaRoot} schema
+   * @param {import("Schemas.sys.mjs").SchemaRoot} [schema]
    */
   constructor(processType, schema) {
     super();
@@ -1695,8 +1697,7 @@ class SchemaAPIManager extends EventEmitter {
    *
    * @param {string} name
    *        The name of the module to load.
-   *
-   * @returns {class}
+   * @returns {typeof ExtensionAPI}
    */
   loadModule(name) {
     let module = this.modules.get(name);
@@ -1721,7 +1722,7 @@ class SchemaAPIManager extends EventEmitter {
    * @param {string} name
    *        The name of the module to load.
    *
-   * @returns {Promise<class>}
+   * @returns {Promise<typeof ExtensionAPI>}
    */
   asyncLoadModule(name) {
     let module = this.modules.get(name);

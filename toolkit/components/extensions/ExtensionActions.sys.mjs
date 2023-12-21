@@ -121,9 +121,9 @@ class PanelActionBase {
    * @param {XULElement|ChromeWindow|null} target
    *        A XULElement tab, a ChromeWindow, or null for the global data.
    * @param {string} prop
-   *        String property to retrieve. Should should be one of "icon", "title",
-   *        "badgeText", "popup", "badgeBackgroundColor" or "enabled".
-   * @returns {string} value
+   *        Name of property to retrieve. Should should be one of "icon",
+   *        "title", "badgeText", "popup", "badgeBackgroundColor" or "enabled".
+   * @returns {any} value
    *          Value of prop.
    */
   getProperty(target, prop) {

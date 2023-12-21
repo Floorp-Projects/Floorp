@@ -579,7 +579,6 @@ class CompiledUrlFilter {
 class RequestDataForUrlFilter {
   /**
    * @param {string} requestURIspec - The URL to match against.
-   * @returns {object} An object to p
    */
   constructor(requestURIspec) {
     // "^" is appended, see CompiledUrlFilter's #initializeUrlFilter.
@@ -634,6 +633,7 @@ class ModifyHeadersBase {
     this.channel = channel;
   }
 
+  /** @param {MatchedRule[]} matchedRules */
   applyModifyHeaders(matchedRules) {
     for (const matchedRule of matchedRules) {
       for (const headerAction of this.headerActionsFor(matchedRule)) {
@@ -714,6 +714,7 @@ class ModifyRequestHeaders extends ModifyHeadersBase {
     }
   }
 
+  /** @param {MatchedRule} matchedRule */
   headerActionsFor(matchedRule) {
     return matchedRule.rule.action.requestHeaders;
   }
@@ -1266,6 +1267,10 @@ function compareRule(ruleA, ruleB, rulesetA, rulesetB) {
 }
 
 class MatchedRule {
+  /**
+   * @param {Rule} rule
+   * @param {Ruleset} ruleset
+   */
   constructor(rule, ruleset) {
     this.rule = rule;
     this.ruleset = ruleset;
@@ -1673,6 +1678,7 @@ class RequestEvaluator {
     return matchedRules;
   }
 
+  /** @param {Ruleset} ruleset */
   #collectMatchInRuleset(ruleset) {
     for (let rule of ruleset.rules) {
       if (!this.#matchesRuleCondition(rule.condition)) {

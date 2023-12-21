@@ -90,15 +90,15 @@ var ErrorsTelemetry = {
    * @param {object} telemetryData
    * @param {string} telemetryData.backend
    *        The backend selected ("JSONFile" or "IndexedDB").
-   * @param {boolean} telemetryData.dataMigrated
+   * @param {boolean} [telemetryData.dataMigrated]
    *        Old extension data has been migrated successfully.
    * @param {string} telemetryData.extensionId
    *        The id of the extension migrated.
    * @param {Error | undefined} telemetryData.error
    *        The error raised during the data migration, if any.
-   * @param {boolean} telemetryData.hasJSONFile
+   * @param {boolean} [telemetryData.hasJSONFile]
    *        The extension has an existing JSONFile to migrate.
-   * @param {boolean} telemetryData.hasOldData
+   * @param {boolean} [telemetryData.hasOldData]
    *        The extension's JSONFile wasn't empty.
    * @param {string} telemetryData.histogramCategory
    *        The histogram category for the result ("success" or "failure").
@@ -221,7 +221,7 @@ class ExtensionStorageLocalIDB extends IndexedDB {
    *        said object. Any values which are StructuredCloneHolder
    *        instances are deserialized before being stored.
    * @param {object}  options
-   * @param {Function} options.serialize
+   * @param {callback} [options.serialize]
    *        Set to a function which will be used to serialize the values into
    *        a StructuredCloneHolder object (if appropriate) and being sent
    *        across the processes (it is also used to detect data cloning errors
@@ -651,7 +651,7 @@ ExtensionStorageIDB = {
    * child context is going to ask the main process only once per child process, and on the
    * main process side the backend selection and data migration will happen only once.
    *
-   * @param {BaseContext} context
+   * @param {import("ExtensionPageChild.sys.mjs").ExtensionBaseContextChild} context
    *        The extension context that is selecting the storage backend.
    *
    * @returns {Promise<object>}

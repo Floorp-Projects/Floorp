@@ -581,7 +581,7 @@ ExtensionTestCommon = class ExtensionTestCommon {
    * new |Extension| instance which will execute it.
    *
    * @param {object} data
-   * @returns {Extension}
+   * @returns {Partial<Extension>}
    */
   static generate(data) {
     if (data.useAddonManager === "android-only") {

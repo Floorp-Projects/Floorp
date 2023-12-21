@@ -362,7 +362,7 @@ export var ExtensionPermissions = {
    *
    * @param {string} extensionId The extension id
    * @param {object} perms Object with permissions and origins array.
-   * @param {EventEmitter} emitter optional object implementing emitter interfaces
+   * @param {EventEmitter} [emitter] optional object implementing emitter interfaces
    */
   async add(extensionId, perms, emitter) {
     let { permissions, origins } = await this._get(extensionId);
@@ -401,7 +401,7 @@ export var ExtensionPermissions = {
    *
    * @param {string} extensionId The extension id
    * @param {object} perms Object with permissions and origins array.
-   * @param {EventEmitter} emitter optional object implementing emitter interfaces
+   * @param {EventEmitter} [emitter] optional object implementing emitter interfaces
    */
   async remove(extensionId, perms, emitter) {
     let { permissions, origins } = await this._get(extensionId);
