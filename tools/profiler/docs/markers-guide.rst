@@ -52,10 +52,10 @@ Note: Most marker-related identifiers are in the ``mozilla`` namespace, to be ad
       static constexpr const char* ChartLabel = "Number: {marker.data.number}";
 
       // Data specific to this marker type, as passed to PROFILER_MARKER/profiler_add_marker.
-      static void StreamJSONMarkerData(SpliceableJSONWriter& aWriter, uint32_t aNumber) {
+      static void StreamJSONMarkerData(SpliceableJSONWriter& aWriter, uint32_t a number) {
         // Custom writer for marker fields, or using the default parent
         // implementation if the function arguments match the schema.
-        StreamJSONMarkerDataImpl(aWriter, aNumber);
+        StreamJSONMarkerDataImpl(aWriter, a number);
       }
     };
 
