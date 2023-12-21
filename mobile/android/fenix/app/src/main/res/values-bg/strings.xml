@@ -72,11 +72,6 @@
         private mode in our new Total Private Browsing mode.
         The first parameter is the name of the app defined in app_name (for example: Firefox Nightly)
         The second parameter is the clickable link text in felt_privacy_info_card_subtitle_link_text -->
-    <string name="felt_privacy_info_card_subtitle" moz:removedIn="120" tools:ignore="UnusedResources">%1$s изтрива бисквитките, историята и данни от разглеждането, когато затворите всички поверителни прозорци. %2$s</string>
-    <!-- Explanation for private browsing displayed to users on home view when they first enable
-        private mode in our new Total Private Browsing mode.
-        The first parameter is the name of the app defined in app_name (for example: Firefox Nightly)
-        The second parameter is the clickable link text in felt_privacy_info_card_subtitle_link_text -->
     <string name="felt_privacy_info_card_subtitle_2">%1$s изтрива бисквитките, историята и данни от разглеждането, когато затворите всички поверителни раздели. %2$s</string>
     <!-- Clickable portion of the explanation for private browsing that links the user to our
         about privacy page.
@@ -159,6 +154,8 @@
     <!-- Button text for showing all the tabs in the tabs tray -->
     <string name="recent_tabs_show_all">Показване на всички</string>
 
+    <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
+    <string name="recent_tabs_show_all_content_description_2">Бутон за показване на всички скорошни раздели</string>
     <!-- Text for button in synced tab card that opens synced tabs tray -->
     <string name="recent_tabs_see_all_synced_tabs_button_text">Всички синхронизирани раздели</string>
     <!-- Accessibility description for device icon used for recent synced tab -->
@@ -206,6 +203,8 @@
     <string name="browser_menu_library">Библиотека</string>
     <!-- Browser menu toggle that requests a desktop site -->
     <string name="browser_menu_desktop_site">Настолна версия</string>
+    <!-- Browser menu button that reopens a private tab as a regular tab -->
+    <string name="browser_menu_open_in_regular_tab">Отваряне в обикновен раздел</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
     <string name="browser_menu_add_to_homescreen">Добавяне към екрана</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
@@ -288,9 +287,20 @@
     <!-- Menu option in the search selector menu to open the search settings -->
     <string name="search_settings_menu_item">Настройки на търсене</string>
 
+    <!-- Header text for the search selector menu -->
+    <string name="search_header_menu_item_2">Търсене в:</string>
     <!-- Content description (not visible, for screen readers etc.): Search engine icon. The first parameter is the search engine name (for example: DuckDuckGo). -->
     <string name="search_engine_icon_content_description" tools:ignore="UnusedResources">Търсеща машина от %s</string>
 
+    <!-- Home onboarding -->
+    <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
+    <string name="onboarding_home_screen_jump_back_contextual_hint_2">Запознайте се с вашата персонализирана начална страница. Тук ще се покажат последните раздели, отметки и резултати от търсене.</string>
+    <!-- Home onboarding dialog welcome screen title text. -->
+    <string name="onboarding_home_welcome_title_2">Добре дошли в един по-личен интернет</string>
+    <!-- Home onboarding dialog welcome screen description text. -->
+    <string name="onboarding_home_welcome_description">По-шарен. С по-добра поверителност. Със същия ангажимент към хората, вместо към печалбата.</string>
+    <!-- Home onboarding dialog sign into sync screen title text. -->
+    <string name="onboarding_home_sync_title_3">Превключването на екрани е по-лесно от всякога</string>
     <!-- Text for the button to continue the onboarding on the home onboarding dialog. -->
     <string name="onboarding_home_get_started_button">Въведение</string>
 
@@ -344,16 +354,12 @@
     <string name="preferences_category_about">Относно</string>
     <!-- Preference category for settings related to changing the default search engine -->
     <string name="preferences_category_select_default_search_engine">Изберете</string>
-    <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
-    <string name="preferences_manage_search_shortcuts" moz:removedIn="120" tools:ignore="UnusedResources">Преки пътища за търсене</string>
     <!-- Preference for settings related to changing the default search engine -->
     <string name="preferences_default_search_engine">Стандартна търсеща машина</string>
     <!-- Preference for settings related to Search -->
     <string name="preferences_search">Търсене</string>
     <!-- Preference for settings related to Search engines -->
     <string name="preferences_search_engines">Търсещи машини</string>
-    <!-- Preference for settings related to Search address bar -->
-    <string name="preferences_search_address_bar" moz:removedIn="120" tools:ignore="UnusedResources">Адресна лента</string>
     <!-- Preference link to rating Fenix on the Play Store -->
     <string name="preferences_rate">Оценете в Google Play</string>
     <!-- Preference linking to about page for Fenix
@@ -417,12 +423,8 @@
     <string name="preferences_http_only_learn_more">Научете повече</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Достъпност</string>
-    <!-- Preference to override the Firefox Account server -->
-    <string name="preferences_override_fxa_server" moz:RemovedIn="120" tools:ignore="UnusedResources">Личен сървър за Firefox Account</string>
     <!-- Preference to override the Sync token server -->
     <string name="preferences_override_sync_tokenserver">Личен сървър за Sync</string>
-    <!-- Toast shown after updating the FxA/Sync server override preferences -->
-    <string name="toast_override_fxa_sync_server_done" moz:RemovedIn="120" tools:ignore="UnusedResources">Сървърът на Firefox Account/Sync е променен. Излизане от приложението за прилагане на промените…</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Профил</string>
     <!-- Preference for changing where the toolbar is positioned -->
@@ -435,8 +437,6 @@
     <string name="preferences_gestures">Жестове</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Външен вид</string>
-    <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
-    <string name="preferences_account_default_name" moz:RemovedIn="120" tools:ignore="UnusedResources">Firefox Account</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
     <string name="preferences_account_sync_error">Свържете повторно, за да бъде възобновено синхронизирането</string>
     <!-- Preference for language -->
@@ -447,8 +447,6 @@
     <string name="preferences_data_collection">Събирани данни</string>
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">Отдалечено отстраняване на дефекти през USB</string>
-    <!-- Preference title for switch preference to show search engines -->
-    <string name="preferences_show_search_engines" moz:RemovedIn="120" tools:ignore="UnusedResources">Показване на търсещи машини</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Показване на предложения</string>
     <!-- Preference title for switch preference to show voice search button -->
@@ -531,12 +529,6 @@
     <string name="wallpaper_learn_more">Научете повече</string>
     <!-- Text for classic wallpapers title. The first parameter is the Firefox name. -->
     <string name="wallpaper_classic_title">Класически %s</string>
-
-    <!-- Add-on Installation from AMO-->
-    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
-    <string name="addon_not_supported_error" moz:removedIn="120" tools:ignore="UnusedResources">Добавката не се поддържа</string>
-    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is already installed -->
-    <string name="addon_already_installed" moz:removedIn="120" tools:ignore="UnusedResources">Добавката вече е инсталирана</string>
 
     <!-- The first parameter is the application name. This is a message shown to the user when too many errors have occurred with the addons process and they have been disabled. The user can decide if they would like to continue trying to start add-ons or if they'd rather continue without them. -->
     <string name="addon_process_crash_dialog_message" tools:ignore="UnusedResources">Една или повече добавки са спрели да работят, като намаляват стабилността на системата. %1$s направи опит да ги рестартира, но без успех.\n\nТези добавки няма да работят в текущата сесия.\n\nПремахването или изключването на добавки може да реши този проблем.</string>
@@ -1715,28 +1707,18 @@
     <string name="search_engine_add_custom_search_engine_button_content_description">Добавяне на търсеща машина</string>
     <!-- Title of the Edit search engine screen -->
     <string name="search_engine_edit_custom_search_engine_title">Промяна на търсеща машина</string>
-    <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
-    <string name="search_engine_add_button_content_description" moz:RemovedIn="120" tools:ignore="UnusedResources">Добавяне</string>
-    <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
-    <string name="search_engine_add_custom_search_engine_edit_button_content_description" moz:RemovedIn="120" tools:ignore="UnusedResources">Запазване</string>
 
     <!-- Text for the menu button to edit a search engine -->
     <string name="search_engine_edit">Променяне</string>
     <!-- Text for the menu button to delete a search engine -->
     <string name="search_engine_delete">Премахване</string>
 
-    <!-- Text for the button to create a custom search engine on the Add search engine screen -->
-    <string name="search_add_custom_engine_label_other" moz:RemovedIn="120" tools:ignore="UnusedResources">Друга</string>
     <!-- Label for the TextField in which user enters custom search engine name -->
     <string name="search_add_custom_engine_name_label">Наименование</string>
-    <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
-    <string name="search_add_custom_engine_name_hint" moz:RemovedIn="120" tools:ignore="UnusedResources">Име</string>
     <!-- Placeholder text shown in the Search Engine Name text field before a user enters text -->
     <string name="search_add_custom_engine_name_hint_2">Име на търсеща машина</string>
     <!-- Label for the TextField in which user enters custom search engine URL -->
     <string name="search_add_custom_engine_url_label">Адрес на низа за търсене</string>
-    <!-- Placeholder text shown in the Search String TextField before a user enters text -->
-    <string name="search_add_custom_engine_search_string_hint" moz:RemovedIn="120" tools:ignore="UnusedResources">Низ за търсене, който да се използва</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint_2">Адресът, който да бъде използван при търсене</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
@@ -1911,5 +1893,7 @@
 
     <!-- Text for button from warning card informing the user that the current analysis is outdated. Clicking this should trigger the product's re-analysis. -->
     <string name="review_quality_check_outdated_analysis_warning_action" tools:ignore="UnusedResources">Проверяване</string>
+
+    <!-- Translations feature-->
 
     </resources>
