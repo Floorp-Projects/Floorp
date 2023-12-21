@@ -20,6 +20,7 @@ UNIFIED_SOURCES += [
     "TestPanning.cpp",
     "TestPinching.cpp",
     "TestPointerEventsConsumable.cpp",
+    "TestScrollbarDragging.cpp",
     "TestScrollHandoff.cpp",
     "TestSnapping.cpp",
     "TestSnappingOnMomentum.cpp",

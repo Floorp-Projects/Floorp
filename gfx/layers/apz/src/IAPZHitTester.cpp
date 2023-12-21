@@ -37,6 +37,8 @@ IAPZHitTester::HitTestResult IAPZHitTester::CloneHitTestResult(
   return result;
 }
 
+RecursiveMutex& IAPZHitTester::GetTreeLock() { return mTreeManager->mTreeLock; }
+
 LayersId IAPZHitTester::GetRootLayersId() const {
   return mTreeManager->mRootLayersId;
 }

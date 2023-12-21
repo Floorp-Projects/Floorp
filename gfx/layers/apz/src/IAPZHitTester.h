@@ -72,6 +72,7 @@ class IAPZHitTester {
   // We are a friend of APZCTreeManager but our derived classes
   // are not. Wrap a few private members of APZCTreeManager for
   // use by derived classes.
+  RecursiveMutex& GetTreeLock();
   LayersId GetRootLayersId() const;
   HitTestingTreeNode* GetRootNode() const;
   HitTestingTreeNode* FindRootNodeForLayersId(LayersId aLayersId) const;
