@@ -368,7 +368,6 @@ bool IndexedDatabaseManager::ResolveSandboxBinding(JSContext* aCx) {
       !IDBFactory_Binding::GetConstructorObject(aCx) ||
       !IDBIndex_Binding::GetConstructorObject(aCx) ||
       !IDBKeyRange_Binding::GetConstructorObject(aCx) ||
-      !IDBLocaleAwareKeyRange_Binding::GetConstructorObject(aCx) ||
       !IDBObjectStore_Binding::GetConstructorObject(aCx) ||
       !IDBOpenDBRequest_Binding::GetConstructorObject(aCx) ||
       !IDBRequest_Binding::GetConstructorObject(aCx) ||

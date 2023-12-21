@@ -303,7 +303,6 @@ module.exports = {
     IDBFileRequest: false,
     IDBIndex: false,
     IDBKeyRange: false,
-    IDBLocaleAwareKeyRange: false,
     IDBMutableFile: false,
     IDBObjectStore: false,
     IDBOpenDBRequest: false,

@@ -118,25 +118,6 @@ class IDBKeyRange : public nsISupports {
   virtual ~IDBKeyRange();
 };
 
-class IDBLocaleAwareKeyRange final : public IDBKeyRange {
-  IDBLocaleAwareKeyRange(nsISupports* aGlobal, bool aLowerOpen, bool aUpperOpen,
-                         bool aIsOnly);
-
-  ~IDBLocaleAwareKeyRange();
-
- public:
-  [[nodiscard]] static RefPtr<IDBLocaleAwareKeyRange> Bound(
-      const GlobalObject& aGlobal, JS::Handle<JS::Value> aLower,
-      JS::Handle<JS::Value> aUpper, bool aLowerOpen, bool aUpperOpen,
-      ErrorResult& aRv);
-
-  NS_INLINE_DECL_REFCOUNTING_INHERITED(IDBLocaleAwareKeyRange, IDBKeyRange)
-
-  // WebIDL
-  bool WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto,
-                  JS::MutableHandle<JSObject*> aReflector);
-};
-
 }  // namespace dom
 }  // namespace mozilla
 

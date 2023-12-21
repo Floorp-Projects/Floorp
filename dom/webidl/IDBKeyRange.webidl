@@ -32,10 +32,3 @@ interface IDBKeyRange {
   [NewObject, Throws]
   static IDBKeyRange bound (any lower, any upper, optional boolean lowerOpen = false, optional boolean upperOpen = false);
 };
-
-[Exposed=(Window,Worker),
- Pref="dom.indexedDB.experimental"]
-interface IDBLocaleAwareKeyRange : IDBKeyRange {
-  [NewObject, Throws]
-  static IDBLocaleAwareKeyRange bound (any lower, any upper, optional boolean lowerOpen = false, optional boolean upperOpen = false);
-};
