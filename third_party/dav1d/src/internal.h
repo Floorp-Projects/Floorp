@@ -142,7 +142,7 @@ struct Dav1dContext {
         atomic_uint reset_task_cur;
         atomic_int cond_signaled;
         struct {
-            int exec;
+            int exec, finished;
             pthread_cond_t cond;
             const Dav1dPicture *in;
             Dav1dPicture *out;

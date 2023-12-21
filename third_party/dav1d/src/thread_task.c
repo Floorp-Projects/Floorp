@@ -357,8 +357,11 @@ void dav1d_task_delayed_fg(Dav1dContext *const c, Dav1dPicture *const out,
     atomic_init(&ttd->delayed_fg.progress[1], 0);
     pthread_mutex_lock(&ttd->lock);
     ttd->delayed_fg.exec = 1;
+    ttd->delayed_fg.finished = 0;
     pthread_cond_signal(&ttd->cond);
-    pthread_cond_wait(&ttd->delayed_fg.cond, &ttd->lock);
+    do {
+        pthread_cond_wait(&ttd->delayed_fg.cond, &ttd->lock);
+    } while (!ttd->delayed_fg.finished);
     pthread_mutex_unlock(&ttd->lock);
 }
 
@@ -501,45 +504,44 @@ static inline void delayed_fg_task(const Dav1dContext *const c,
         int row = atomic_fetch_add(&ttd->delayed_fg.progress[0], 1);
         pthread_mutex_unlock(&ttd->lock);
         int progmax = (out->p.h + FG_BLOCK_SIZE - 1) / FG_BLOCK_SIZE;
-    fg_apply_loop:
-        if (row + 1 < progmax)
-            pthread_cond_signal(&ttd->cond);
-        else if (row + 1 >= progmax) {
-            pthread_mutex_lock(&ttd->lock);
-            ttd->delayed_fg.exec = 0;
-            if (row >= progmax) goto end_add;
-            pthread_mutex_unlock(&ttd->lock);
-        }
-        switch (out->p.bpc) {
+        while (row < progmax) {
+            if (row + 1 < progmax)
+                pthread_cond_signal(&ttd->cond);
+            else {
+                pthread_mutex_lock(&ttd->lock);
+                ttd->delayed_fg.exec = 0;
+                pthread_mutex_unlock(&ttd->lock);
+            }
+            switch (out->p.bpc) {
 #if CONFIG_8BPC
-        case 8:
-            dav1d_apply_grain_row_8bpc(&c->dsp[0].fg, out, in,
-                                       ttd->delayed_fg.scaling_8bpc,
-                                       ttd->delayed_fg.grain_lut_8bpc, row);
-            break;
+            case 8:
+                dav1d_apply_grain_row_8bpc(&c->dsp[0].fg, out, in,
+                                           ttd->delayed_fg.scaling_8bpc,
+                                           ttd->delayed_fg.grain_lut_8bpc, row);
+                break;
 #endif
 #if CONFIG_16BPC
-        case 10:
-        case 12:
-            dav1d_apply_grain_row_16bpc(&c->dsp[off].fg, out, in,
-                                        ttd->delayed_fg.scaling_16bpc,
-                                        ttd->delayed_fg.grain_lut_16bpc, row);
-            break;
+            case 10:
+            case 12:
+                dav1d_apply_grain_row_16bpc(&c->dsp[off].fg, out, in,
+                                            ttd->delayed_fg.scaling_16bpc,
+                                            ttd->delayed_fg.grain_lut_16bpc, row);
+                break;
 #endif
-        default: abort();
+            default: abort();
+            }
+            row = atomic_fetch_add(&ttd->delayed_fg.progress[0], 1);
+            atomic_fetch_add(&ttd->delayed_fg.progress[1], 1);
         }
-        row = atomic_fetch_add(&ttd->delayed_fg.progress[0], 1);
-        int done = atomic_fetch_add(&ttd->delayed_fg.progress[1], 1) + 1;
-        if (row < progmax) goto fg_apply_loop;
         pthread_mutex_lock(&ttd->lock);
         ttd->delayed_fg.exec = 0;
-    end_add:
-        done = atomic_fetch_add(&ttd->delayed_fg.progress[1], 1) + 1;
+        int done = atomic_fetch_add(&ttd->delayed_fg.progress[1], 1) + 1;
         progmax = atomic_load(&ttd->delayed_fg.progress[0]);
         // signal for completion only once the last runner reaches this
-        if (done < progmax)
-            break;
-        pthread_cond_signal(&ttd->delayed_fg.cond);
+        if (done >= progmax) {
+            ttd->delayed_fg.finished = 1;
+            pthread_cond_signal(&ttd->delayed_fg.cond);
+        }
         break;
     default: abort();
     }
