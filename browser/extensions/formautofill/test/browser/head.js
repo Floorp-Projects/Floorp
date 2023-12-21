@@ -61,6 +61,10 @@ const CREDITCARD_FORM_WITHOUT_AUTOCOMPLETE_URL =
   "https://example.org" +
   HTTP_TEST_PATH +
   "creditCard/without_autocomplete_creditcard_basic.html";
+const CREDITCARD_FORM_WITH_PAGE_NAVIGATION_BUTTONS =
+  "https://example.org" +
+  HTTP_TEST_PATH +
+  "creditCard/capture_creditCard_on_page_navigation.html";
 const EMPTY_URL = "https://example.org" + HTTP_TEST_PATH + "empty.html";
 
 const ENABLED_AUTOFILL_ADDRESSES_PREF =
