@@ -695,7 +695,7 @@ dictionary FileInfo {
 /**
  * The supported hash algorithms for |IOUtils.hashFile|.
  */
-enum HashAlgorithm { "sha256", "sha384", "sha512" };
+enum HashAlgorithm { "sha1", "sha256", "sha384", "sha512" };
 
 #ifdef XP_WIN
 /**
