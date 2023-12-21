@@ -17,7 +17,6 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   BrowserUtils: "resource://gre/modules/BrowserUtils.sys.mjs",
-  DeferredTask: "resource://gre/modules/DeferredTask.sys.mjs",
   FirefoxViewPlacesQuery:
     "resource:///modules/firefox-view-places-query.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
@@ -40,8 +39,6 @@ const HAS_IMPORTED_HISTORY_PREF = "browser.migrate.interactions.history";
 const IMPORT_HISTORY_DISMISSED_PREF =
   "browser.tabs.firefox-view.importHistory.dismissed";
 
-const SEARCH_DEBOUNCE_RATE_MS = 500;
-const SEARCH_DEBOUNCE_TIMEOUT_MS = 1000;
 const SEARCH_RESULTS_LIMIT = 300;
 
 class HistoryInView extends ViewPage {
@@ -69,12 +66,6 @@ class HistoryInView extends ViewPage {
 
     this.#updateAllHistoryItems();
     this.placesQuery.observeHistory(data => this.#updateAllHistoryItems(data));
-
-    this.searchTask = new lazy.DeferredTask(
-      () => this.#updateSearchResults(),
-      SEARCH_DEBOUNCE_RATE_MS,
-      SEARCH_DEBOUNCE_TIMEOUT_MS
-    );
 
     this.toggleVisibilityInCardContainer();
   }
@@ -116,9 +107,6 @@ class HistoryInView extends ViewPage {
     }
     this._started = false;
     this.placesQuery.close();
-    if (!this.searchTask.isFinalized) {
-      this.searchTask.finalize();
-    }
 
     this.toggleVisibilityInCardContainer();
   }
@@ -645,7 +633,7 @@ class HistoryInView extends ViewPage {
 
   async onSearchQuery(e) {
     this.searchQuery = e.detail.query;
-    this.searchTask.arm();
+    this.#updateSearchResults();
   }
 
   willUpdate(changedProperties) {
