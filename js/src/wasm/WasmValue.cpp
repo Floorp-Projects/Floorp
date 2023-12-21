@@ -128,9 +128,6 @@ bool wasm::CheckRefType(JSContext* cx, RefType targetType, HandleValue v,
       return CheckFuncRefValue(cx, v, fnval);
     case RefType::Extern:
       return AnyRef::fromJSValue(cx, v, refval);
-    case RefType::Exn:
-      // Break to the non-exposable case
-      break;
     case RefType::Any:
       return CheckAnyRefValue(cx, v, refval);
     case RefType::NoFunc:
@@ -683,9 +680,6 @@ bool wasm::ToWebAssemblyValue(JSContext* cx, HandleValue val, FieldType type,
         case RefType::Extern:
           return ToWebAssemblyValue_externref<Debug>(cx, val, (void**)loc,
                                                      mustWrite64);
-        case RefType::Exn:
-          // Break to the non-exposable case
-          break;
         case RefType::Any:
           return ToWebAssemblyValue_anyref<Debug>(cx, val, (void**)loc,
                                                   mustWrite64);
@@ -846,9 +840,6 @@ bool wasm::ToJSValue(JSContext* cx, const void* src, FieldType type,
         case RefTypeHierarchy::Func:
           return ToJSValue_funcref<Debug>(
               cx, *reinterpret_cast<void* const*>(src), dst);
-        case RefTypeHierarchy::Exn:
-          // Break to the non-exposable case
-          break;
         case RefTypeHierarchy::Extern:
           return ToJSValue_externref<Debug>(
               cx, *reinterpret_cast<void* const*>(src), dst);
