@@ -226,6 +226,9 @@ class TransactionWrapper final {
       const layers::ScrollableLayerGuid::ViewID& aScrollId,
       const nsTArray<wr::SampledScrollOffset>& aSampledOffsets);
   void UpdateIsTransformAsyncZooming(uint64_t aAnimationId, bool aIsZooming);
+  void AddMinimapData(const wr::WrPipelineId& aPipelineId,
+                      const layers::ScrollableLayerGuid::ViewID& aScrollId,
+                      const MinimapData& aMinimapData);
 
  private:
   Transaction* mTxn;

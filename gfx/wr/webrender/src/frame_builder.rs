@@ -2,12 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{ColorF, DebugFlags, FontRenderMode, PremultipliedColorF};
+use api::{ColorF, DebugFlags, FontRenderMode, PremultipliedColorF, ExternalScrollId, MinimapData};
 use api::units::*;
 use plane_split::BspSplitter;
 use crate::batch::{BatchBuilder, AlphaBatchBuilder, AlphaBatchContainer};
 use crate::clip::{ClipStore, ClipTree};
 use crate::command_buffer::{PrimitiveCommand, CommandBufferList, CommandBufferIndex};
+use crate::debug_colors;
+use crate::spatial_node::SpatialNodeType;
 use crate::spatial_tree::{SpatialTree, SpatialNodeIndex};
 use crate::composite::{CompositorKind, CompositeState, CompositeStatePreallocator};
 use crate::debug_item::DebugItem;
@@ -19,7 +21,7 @@ use crate::picture::{DirtyRegion, SliceId, TileCacheInstance};
 use crate::picture::{SurfaceInfo, SurfaceIndex};
 use crate::picture::{SubpixelMode, RasterConfig, PictureCompositeMode};
 use crate::prepare::{prepare_primitives};
-use crate::prim_store::{PictureIndex};
+use crate::prim_store::{PictureIndex, PrimitiveScratchBuffer};
 use crate::prim_store::{DeferredResolve, PrimitiveInstance};
 use crate::profiler::{self, TransactionProfile};
 use crate::render_backend::{DataStores, ScratchBuffer};
@@ -515,6 +517,7 @@ impl FrameBuilder {
         spatial_tree: &mut SpatialTree,
         dirty_rects_are_valid: bool,
         profile: &mut TransactionProfile,
+        minimap_data: FastHashMap<ExternalScrollId, MinimapData>
     ) -> Frame {
         profile_scope!("build");
         profile_marker!("BuildFrame");
@@ -576,6 +579,8 @@ impl FrameBuilder {
             &mut gpu_buffer_builder,
             profile,
         );
+
+        self.render_minimap(&mut scratch.primitive, &spatial_tree, minimap_data);
 
         profile.start_time(profiler::FRAME_BATCHING_TIME);
 
@@ -704,6 +709,135 @@ impl FrameBuilder {
             composite_state,
             gpu_buffer,
         }
+    }
+
+    fn render_minimap(
+        &self,
+        scratch: &mut PrimitiveScratchBuffer,
+        spatial_tree: &SpatialTree,
+        minimap_data_store: FastHashMap<ExternalScrollId, MinimapData>) {
+      // TODO: Replace minimap_data_store with Option<FastHastMap>?
+      if minimap_data_store.is_empty() {
+        return
+      }
+
+      // In our main walk over the spatial tree (below), for nodes inside a 
+      // subtree rooted at a root-content node, we need some information from
+      // that enclosing root-content node. To collect this information, do an
+      // preliminary walk over the spatial tree now and collect the root-content
+      // info in a HashMap.
+      struct RootContentInfo {
+        transform: LayoutToWorldTransform,
+        clip: LayoutRect
+      }
+      let mut root_content_info = FastHashMap::<ExternalScrollId, RootContentInfo>::default();
+      spatial_tree.visit_nodes(|index, node| {
+        if let SpatialNodeType::ScrollFrame(ref scroll_frame_info) = node.node_type {
+          if let Some(minimap_data) = minimap_data_store.get(&scroll_frame_info.external_id) {
+            if minimap_data.is_root_content {
+              let transform = spatial_tree.get_world_viewport_transform(index).into_transform();
+              root_content_info.insert(scroll_frame_info.external_id, RootContentInfo{
+                transform,
+                clip: scroll_frame_info.viewport_rect
+              });
+            }
+          }
+        }
+      });
+
+      // This is the main walk over the spatial tree. For every scroll frame node which
+      // has minimap data, compute the rects we want to render for that minimap in world
+      // coordinates and add them to `scratch.debug_items`.
+      spatial_tree.visit_nodes(|index, node| {
+        if let SpatialNodeType::ScrollFrame(ref scroll_frame_info) = node.node_type {
+          if let Some(minimap_data) = minimap_data_store.get(&scroll_frame_info.external_id) {
+            const HORIZONTAL_PADDING: f32 = 5.0;
+            const VERTICAL_PADDING: f32 = 10.0;
+            const PAGE_BORDER_COLOR: ColorF = debug_colors::BLACK;
+            const BACKGROUND_COLOR: ColorF = ColorF { r: 0.3, g: 0.3, b: 0.3, a: 0.3};
+            const DISPLAYPORT_BACKGROUND_COLOR: ColorF = ColorF { r: 1.0, g: 1.0, b: 1.0, a: 0.4};
+            const LAYOUT_PORT_COLOR: ColorF = debug_colors::RED;
+            const VISUAL_PORT_COLOR: ColorF = debug_colors::BLUE;
+            const DISPLAYPORT_COLOR: ColorF = debug_colors::LIME;
+            const NOTHING: ColorF = ColorF { r: 0.0, g: 0.0, b: 0.0, a: 0.0 };
+
+            let viewport = scroll_frame_info.viewport_rect;
+
+            // Scale the minimap to make it 100px wide (if there's space), and the full height
+            // of the scroll frame's viewport, minus some padding. Position it at the left edge
+            // of the scroll frame's viewport.
+            let scale_factor_x = 100f32.min(viewport.width() - (2.0 * HORIZONTAL_PADDING))
+                                   / minimap_data.scrollable_rect.width();
+            let scale_factor_y = (viewport.height() - (2.0 * VERTICAL_PADDING))
+                                / minimap_data.scrollable_rect.height();
+            if scale_factor_x <= 0.0 || scale_factor_y <= 0.0 {
+              return;
+            }
+            let transform = LayoutTransform::scale(scale_factor_x, scale_factor_y, 1.0)
+                .then_translate(LayoutVector3D::new(HORIZONTAL_PADDING, VERTICAL_PADDING, 0.0))
+                .then_translate(LayoutVector3D::new(viewport.min.x, viewport.min.y, 0.0));
+
+            // Transforms for transforming rects in this scroll frame's local coordintes, to world coordinates.
+            // For scroll frames inside a root-content subtree, we apply this transform in two parts
+            // (local to root-content, and root-content to world), so that we can make additional
+            // adjustments in root-content space. For scroll frames outside of a root-content subtree,
+            // the entire world transform will be in `local_to_root_content`.
+            let world_transform = spatial_tree
+                .get_world_viewport_transform(index)
+                .into_transform();
+            let mut local_to_root_content = 
+                world_transform.with_destination::<LayoutPixel>();
+            let mut root_content_to_world = LayoutToWorldTransform::default();
+            let mut root_content_clip = None;
+            if minimap_data.root_content_scroll_id != 0 {
+              if let Some(RootContentInfo{transform: root_content_transform, clip}) = root_content_info.get(&ExternalScrollId(minimap_data.root_content_scroll_id, minimap_data.root_content_pipeline_id)) {
+                // Exclude the root-content node's zoom transform from `local_to_root_content`.
+                // This ensures that the minimap remains unaffected by pinch-zooming
+                // (in essence, remaining attached to the *visual* viewport, rather than to
+                // the *layout* viewport which is what happens by default).
+                let zoom_transform = minimap_data.zoom_transform;
+                local_to_root_content = world_transform
+                  .then(&root_content_transform.inverse().unwrap())
+                  .then(&zoom_transform.inverse().unwrap());
+                root_content_to_world = root_content_transform.clone();
+                root_content_clip = Some(clip);
+              }
+            }
+
+            let mut add_rect = |rect, border, fill| -> Option<()> {
+              // Place rect in scroll frame's local coordinate space
+              let transformed_rect = transform.outer_transformed_box2d(&rect)?;
+              
+              // Transform to world coordinates, using root-content coords as an intermediate step.
+              let mut root_content_rect = local_to_root_content.outer_transformed_box2d(&transformed_rect)?;
+              // In root-content coords, apply the root content node's viewport clip.
+              // This prevents subframe minimaps from leaking into the chrome area when the root
+              // scroll frame is scrolled.
+              // TODO: The minimaps of nested subframes can still leak outside of the viewports of
+              // their containing subframes. Should have a more proper fix for this.
+              if let Some(clip) = root_content_clip {
+                root_content_rect = root_content_rect.intersection(clip)?;
+              }
+              let world_rect = root_content_to_world.outer_transformed_box2d(&root_content_rect)?;
+
+              // Add world coordinate rects to scratch.debug_items
+              // TODO: Add a parameter to control the border thickness of the rects, and make them a bit thicker. 
+              scratch.push_debug_rect(world_rect * DevicePixelScale::new(1.0), border, fill);
+
+              Some(())
+            };
+
+            add_rect(minimap_data.scrollable_rect, PAGE_BORDER_COLOR, BACKGROUND_COLOR);
+            add_rect(minimap_data.visual_viewport, VISUAL_PORT_COLOR, NOTHING);
+            add_rect(minimap_data.displayport, DISPLAYPORT_COLOR, DISPLAYPORT_BACKGROUND_COLOR);
+            // Only render a distinct layout viewport for the root content.
+            // For other scroll frames, the visual and layout viewports coincide.
+            if minimap_data.is_root_content {
+              add_rect(minimap_data.layout_viewport, LAYOUT_PORT_COLOR, NOTHING);
+            }
+          }
+        }
+      });
     }
 
     fn build_composite_pass(

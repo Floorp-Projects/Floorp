@@ -46,6 +46,7 @@ class SharedMemoryBasic;
 }  // namespace ipc
 
 namespace wr {
+struct MinimapData;
 struct SampledScrollOffset;
 }  // namespace wr
 
@@ -598,6 +599,8 @@ class AsyncPanZoomController {
    * Get the GeckoViewMetrics to be sent to Gecko for the current composite.
    */
   GeckoViewMetrics GetGeckoViewMetrics() const;
+
+  wr::MinimapData GetMinimapData() const;
 
   // Helper function to compare root frame metrics and update them
   // Returns true when the metrics have changed and were updated.
