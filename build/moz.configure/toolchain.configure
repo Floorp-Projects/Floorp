@@ -625,14 +625,15 @@ def vc_compiler_paths_for_version(host, env, vc_path, winsysroot):
         }
 
 
-@depends(target, vc_compiler_paths_for_version, when=is_windows)
-def vc_compiler_path(target, paths):
+@depends(target, host, vc_compiler_paths_for_version, when=is_windows)
+def vc_compiler_path(target, host, paths):
+    cpu = target.cpu if target.os == "WINNT" else host.cpu
     vc_target = {
         "x86": "x86",
         "x86_64": "x64",
         "arm": "arm",
         "aarch64": "arm64",
-    }.get(target.cpu)
+    }.get(cpu)
     if not paths:
         return
     return paths.get(vc_target)
