@@ -23,6 +23,11 @@ import type {ConnectionTransport} from './ConnectionTransport.js';
 import type {Viewport} from './Viewport.js';
 
 /**
+ * @public
+ */
+export type ProtocolType = 'cdp' | 'webDriverBiDi';
+
+/**
  * Generic browser options that can be passed when launching any browser or when
  * connecting to an existing browser instance.
  * @public
@@ -35,6 +40,8 @@ export interface BrowserConnectOptions {
   ignoreHTTPSErrors?: boolean;
   /**
    * Sets the viewport for each page.
+   *
+   * @defaultValue '\{width: 800, height: 600\}'
    */
   defaultViewport?: Viewport | null;
   /**
@@ -50,11 +57,12 @@ export interface BrowserConnectOptions {
    * @internal
    */
   _isPageTarget?: IsPageTargetCallback;
+
   /**
    * @defaultValue 'cdp'
-   * @internal
+   * @public
    */
-  protocol?: 'cdp' | 'webDriverBiDi';
+  protocol?: ProtocolType;
   /**
    * Timeout setting for individual protocol (CDP) calls.
    *

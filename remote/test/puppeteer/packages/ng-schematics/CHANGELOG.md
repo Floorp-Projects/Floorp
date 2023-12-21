@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.5.4](https://github.com/puppeteer/puppeteer/compare/ng-schematics-v0.5.3...ng-schematics-v0.5.4) (2023-12-06)
+
+
+### Bug Fixes
+
+* get port from created server ([#11495](https://github.com/puppeteer/puppeteer/issues/11495)) ([d2f4b9c](https://github.com/puppeteer/puppeteer/commit/d2f4b9ca53642ac9ccae9a22fd3138698990387b))
+
+## [0.5.3](https://github.com/puppeteer/puppeteer/compare/ng-schematics-v0.5.2...ng-schematics-v0.5.3) (2023-12-04)
+
+
+### Bug Fixes
+
+* ng-schematics install Windows ([#11487](https://github.com/puppeteer/puppeteer/issues/11487)) ([02af748](https://github.com/puppeteer/puppeteer/commit/02af7482d9bf2163b90dfe623b0af18c513d5a3b))
+
+## [0.5.2](https://github.com/puppeteer/puppeteer/compare/ng-schematics-v0.5.1...ng-schematics-v0.5.2) (2023-11-16)
+
+
+### Bug Fixes
+
+* run post-install hooks ([#11403](https://github.com/puppeteer/puppeteer/issues/11403)) ([3f6ca24](https://github.com/puppeteer/puppeteer/commit/3f6ca249ed898eee25015a6fd0ce7cf774ad31b2))
+
 ## [0.5.1](https://github.com/puppeteer/puppeteer/compare/ng-schematics-v0.5.0...ng-schematics-v0.5.1) (2023-11-13)
 
 

@@ -29,7 +29,9 @@ import {
   raceWith,
 } from '../../third_party/rxjs/rxjs.js';
 import type {CDPSession} from '../api/CDPSession.js';
+import type {BoundingBox} from '../api/ElementHandle.js';
 import type {WaitForOptions} from '../api/Frame.js';
+import type {HTTPResponse} from '../api/HTTPResponse.js';
 import {
   Page,
   PageEvent,
@@ -64,6 +66,7 @@ import type {Viewport} from '../common/Viewport.js';
 import {assert} from '../util/assert.js';
 import {Deferred} from '../util/Deferred.js';
 import {disposeSymbol} from '../util/disposable.js';
+import {isErrorLike} from '../util/ErrorLike.js';
 
 import type {BidiBrowser} from './Browser.js';
 import type {BidiBrowserContext} from './BrowserContext.js';
@@ -86,6 +89,7 @@ import type {BiDiNetworkIdle} from './lifecycle.js';
 import {getBiDiReadinessState, rewriteNavigationError} from './lifecycle.js';
 import {BidiNetworkManager} from './NetworkManager.js';
 import {createBidiHandle} from './Realm.js';
+import type {BiDiPageTarget} from './Target.js';
 
 /**
  * @internal
@@ -156,6 +160,7 @@ export class BidiPage extends Page {
   #keyboard: BidiKeyboard;
   #browsingContext: BrowsingContext;
   #browserContext: BidiBrowserContext;
+  #target: BiDiPageTarget;
 
   _client(): CDPSession {
     return this.mainFrame().context().cdpSession;
@@ -163,11 +168,13 @@ export class BidiPage extends Page {
 
   constructor(
     browsingContext: BrowsingContext,
-    browserContext: BidiBrowserContext
+    browserContext: BidiBrowserContext,
+    target: BiDiPageTarget
   ) {
     super();
     this.#browsingContext = browsingContext;
     this.#browserContext = browserContext;
+    this.#target = target;
     this.#connection = browsingContext.connection;
 
     for (const [event, subscriber] of this.#browsingContextEvents) {
@@ -473,7 +480,7 @@ export class BidiPage extends Page {
     return this.#closedDeferred.finished();
   }
 
-  override async close(): Promise<void> {
+  override async close(options?: {runBeforeUnload?: boolean}): Promise<void> {
     if (this.#closedDeferred.finished()) {
       return;
     }
@@ -483,6 +490,7 @@ export class BidiPage extends Page {
 
     await this.#connection.send('browsingContext.close', {
       context: this.mainFrame()._id,
+      promptUnload: options?.runBeforeUnload ?? false,
     });
 
     this.emit(PageEvent.Close, undefined);
@@ -646,13 +654,7 @@ export class BidiPage extends Page {
   override async _screenshot(
     options: Readonly<ScreenshotOptions>
   ): Promise<string> {
-    const {clip, type, captureBeyondViewport, allowViewportExpansion, quality} =
-      options;
-    if (captureBeyondViewport && !allowViewportExpansion) {
-      throw new UnsupportedOperation(
-        `BiDi does not support 'captureBeyondViewport'. Use 'allowViewportExpansion'.`
-      );
-    }
+    const {clip, type, captureBeyondViewport, quality} = options;
     if (options.omitBackground !== undefined && options.omitBackground) {
       throw new UnsupportedOperation(`BiDi does not support 'omitBackground'.`);
     }
@@ -670,18 +672,41 @@ export class BidiPage extends Page {
       );
     }
 
+    let box: BoundingBox | undefined;
+    if (clip) {
+      if (captureBeyondViewport) {
+        box = clip;
+      } else {
+        // The clip is always with respect to the document coordinates, so we
+        // need to convert this to viewport coordinates when we aren't capturing
+        // beyond the viewport.
+        const [pageLeft, pageTop] = await this.evaluate(() => {
+          if (!window.visualViewport) {
+            throw new Error('window.visualViewport is not supported.');
+          }
+          return [
+            window.visualViewport.pageLeft,
+            window.visualViewport.pageTop,
+          ] as const;
+        });
+        box = {
+          ...clip,
+          x: clip.x - pageLeft,
+          y: clip.y - pageTop,
+        };
+      }
+    }
+
     const {
       result: {data},
     } = await this.#connection.send('browsingContext.captureScreenshot', {
       context: this.mainFrame()._id,
+      origin: captureBeyondViewport ? 'document' : 'viewport',
       format: {
         type: `image/${type}`,
-        quality: quality ? quality / 100 : undefined,
+        ...(quality !== undefined ? {quality: quality / 100} : {}),
       },
-      clip: clip && {
-        type: 'box',
-        ...clip,
-      },
+      ...(box ? {clip: {type: 'box', ...box}} : {}),
     });
     return data;
   }
@@ -827,8 +852,8 @@ export class BidiPage extends Page {
     throw new UnsupportedOperation();
   }
 
-  override target(): never {
-    throw new UnsupportedOperation();
+  override target(): BiDiPageTarget {
+    return this.#target;
   }
 
   override waitForFileChooser(): never {
@@ -888,12 +913,40 @@ export class BidiPage extends Page {
     throw new UnsupportedOperation();
   }
 
-  override goBack(): never {
-    throw new UnsupportedOperation();
+  override async goBack(
+    options: WaitForOptions = {}
+  ): Promise<HTTPResponse | null> {
+    return await this.#go(-1, options);
   }
 
-  override goForward(): never {
-    throw new UnsupportedOperation();
+  override async goForward(
+    options: WaitForOptions = {}
+  ): Promise<HTTPResponse | null> {
+    return await this.#go(+1, options);
+  }
+
+  async #go(
+    delta: number,
+    options: WaitForOptions
+  ): Promise<HTTPResponse | null> {
+    try {
+      const result = await Promise.all([
+        this.waitForNavigation(options),
+        this.#connection.send('browsingContext.traverseHistory', {
+          delta,
+          context: this.mainFrame()._id,
+        }),
+      ]);
+      return result[0];
+    } catch (err) {
+      // TODO: waitForNavigation should be cancelled if an error happens.
+      if (isErrorLike(err)) {
+        if (err.message.includes('no such history entry')) {
+          return null;
+        }
+      }
+      throw err;
+    }
   }
 
   override waitForDevicePrompt(): never {

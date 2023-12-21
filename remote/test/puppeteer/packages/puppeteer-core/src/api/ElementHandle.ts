@@ -109,7 +109,7 @@ export interface Point {
  */
 export interface ElementScreenshotOptions extends ScreenshotOptions {
   /**
-   * @defaultValue true
+   * @defaultValue `true`
    */
   scrollIntoView?: boolean;
 }
@@ -962,7 +962,6 @@ export abstract class ElementHandle<
    * {@link https://nodejs.org/api/process.html#process_process_cwd | current working directory}.
    * For locals script connecting to remote chrome environments, paths must be
    * absolute.
-   *
    */
   abstract uploadFile(
     this: ElementHandle<HTMLInputElement>,
@@ -1346,21 +1345,11 @@ export abstract class ElementHandle<
     this: ElementHandle<Element>,
     options: Readonly<ElementScreenshotOptions> = {}
   ): Promise<string | Buffer> {
-    const {
-      scrollIntoView = true,
-      captureBeyondViewport = true,
-      allowViewportExpansion = captureBeyondViewport,
-    } = options;
+    const {scrollIntoView = true} = options;
 
     let clip = await this.#nonEmptyVisibleBoundingBox();
 
     const page = this.frame.page();
-
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    await using _ =
-      allowViewportExpansion && clip
-        ? await page._createTemporaryViewportContainingBox(clip)
-        : null;
 
     if (scrollIntoView) {
       await this.scrollIntoViewIfNeeded();
@@ -1381,11 +1370,7 @@ export abstract class ElementHandle<
     clip.x += pageLeft;
     clip.y += pageTop;
 
-    return await page.screenshot({
-      ...options,
-      captureBeyondViewport: false,
-      clip,
-    });
+    return await page.screenshot({...options, clip});
   }
 
   async #nonEmptyVisibleBoundingBox() {

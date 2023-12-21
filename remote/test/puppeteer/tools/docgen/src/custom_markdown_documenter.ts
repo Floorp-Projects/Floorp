@@ -24,7 +24,7 @@
 import * as path from 'path';
 
 import type {DocumenterConfig} from '@microsoft/api-documenter/lib/documenters/DocumenterConfig.js';
-import {CustomMarkdownEmitter} from '@microsoft/api-documenter/lib/markdown/CustomMarkdownEmitter.js';
+import {CustomMarkdownEmitter as ApiFormatterMarkdownEmitter} from '@microsoft/api-documenter/lib/markdown/CustomMarkdownEmitter.js';
 import {CustomDocNodes} from '@microsoft/api-documenter/lib/nodes/CustomDocNodeKind.js';
 import {DocEmphasisSpan} from '@microsoft/api-documenter/lib/nodes/DocEmphasisSpan.js';
 import {DocHeading} from '@microsoft/api-documenter/lib/nodes/DocHeading.js';
@@ -93,6 +93,32 @@ export interface IMarkdownDocumenterOptions {
   outputFolder: string;
 }
 
+export class CustomMarkdownEmitter extends ApiFormatterMarkdownEmitter {
+  protected override getEscapedText(text: string): string {
+    const textWithBackslashes: string = text
+      .replace(/\\/g, '\\\\') // first replace the escape character
+      .replace(/[*#[\]_|`~]/g, x => {
+        return '\\' + x;
+      }) // then escape any special characters
+      .replace(/---/g, '\\-\\-\\-') // hyphens only if it's 3 or more
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/\{/g, '&#123;')
+      .replace(/\}/g, '&#125;');
+    return textWithBackslashes;
+  }
+
+  protected override getTableEscapedText(text: string): string {
+    return text
+      .replace(/&/g, '&amp;')
+      .replace(/"/g, '&quot;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/\|/g, '&#124;');
+  }
+}
+
 /**
  * Renders API documentation in the Markdown file format.
  * For more info: https://en.wikipedia.org/wiki/Markdown
@@ -123,7 +149,6 @@ export class MarkdownDocumenter {
           outputFolder: this._outputFolder,
           documenter: new MarkdownDocumenterAccessor({
             getLinkForApiItem: (apiItem: ApiItem) => {
-              console.log(apiItem);
               return this._getLinkFilenameForApiItem(apiItem);
             },
           }),
@@ -131,7 +156,6 @@ export class MarkdownDocumenter {
       });
     }
 
-    console.log();
     this._deleteOldOutputFiles();
 
     this._writeApiItemPage(this._apiModel.members[0]!);
