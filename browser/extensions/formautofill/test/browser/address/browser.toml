@@ -6,11 +6,14 @@ prefs = [
 support-files = [
   "../head.js",
   "../../fixtures/autocomplete_address_basic.html",
+  "../../fixtures/capture_address_on_page_navigation.html",
   "../../fixtures/without_autocomplete_address_basic.html",
   "head_address.js",
 ]
 
 ["browser_address_capture_form_removal.js"]
+
+["browser_address_capture_page_navigation.js"]
 
 ["browser_address_doorhanger_display.js"]
 

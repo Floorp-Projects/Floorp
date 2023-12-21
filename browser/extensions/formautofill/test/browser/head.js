@@ -41,6 +41,10 @@ const ADDRESS_FORM_WITHOUT_AUTOCOMPLETE_URL =
   "https://example.org" +
   HTTP_TEST_PATH +
   "address/without_autocomplete_address_basic.html";
+const ADDRESS_FORM_WITH_PAGE_NAVIGATION_BUTTONS =
+  "https://example.org" +
+  HTTP_TEST_PATH +
+  "address/capture_address_on_page_navigation.html";
 const CREDITCARD_FORM_URL =
   "https://example.org" +
   HTTP_TEST_PATH +
