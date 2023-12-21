@@ -12800,12 +12800,6 @@
   value: true
   mirror: always
 
-  # If true, HTTP response content-type headers will be parsed using the standards-compliant MimeType parser
-- name: network.standard_content_type_parsing.response_headers
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
 # The maximum count that we allow socket prrocess to crash. If this count is
 # reached, we won't use networking over socket process.
 - name: network.max_socket_process_failed_count
