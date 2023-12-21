@@ -2126,10 +2126,10 @@ RefPtr<DeviceSetPromise> MediaManager::EnumerateRawDevices(
                           audio->mForcedDeviceName.get());
           if (audio->mInputType == MediaSourceEnum::Microphone &&
               audioBackend == videoBackend) {
-            micsOfVideoBackend = Some(MediaDeviceSet());
+            micsOfVideoBackend.emplace();
             micsOfVideoBackend->AppendElements(audios);
           }
-          devices->AppendElements(audios);
+          devices->AppendElements(std::move(audios));
         }
         if (const auto& video = aParams.mVideo; video.isSome()) {
           videoBackend = aParams.HasFakeCams() ? fakeBackend : realBackend;
@@ -2138,7 +2138,7 @@ RefPtr<DeviceSetPromise> MediaManager::EnumerateRawDevices(
               videoBackend == fakeBackend ? "fake" : "real");
           GetMediaDevices(videoBackend, video->mInputType, videos,
                           video->mForcedDeviceName.get());
-          devices->AppendElements(videos);
+          devices->AppendElements(std::move(videos));
         }
         if (aParams.mFlags.contains(EnumerationFlag::EnumerateAudioOutputs)) {
           MediaDeviceSet outputs;
@@ -2147,7 +2147,7 @@ RefPtr<DeviceSetPromise> MediaManager::EnumerateRawDevices(
                                         MediaSinkEnum::Speaker, &outputs);
           speakers = Some(MediaDeviceSet());
           speakers->AppendElements(outputs);
-          devices->AppendElements(outputs);
+          devices->AppendElements(std::move(outputs));
         }
         if (aParams.VideoInputType() == MediaSourceEnum::Camera) {
           MediaDeviceSet audios;
@@ -2164,7 +2164,7 @@ RefPtr<DeviceSetPromise> MediaManager::EnumerateRawDevices(
             // already been enumerated. Avoid doing it again.
             MOZ_ASSERT(aParams.mVideo->mForcedMicrophoneName ==
                        aParams.mAudio->mForcedDeviceName);
-            audios.AppendElements(*micsOfVideoBackend);
+            audios.AppendElements(micsOfVideoBackend.extract());
           } else {
             GetMediaDevices(videoBackend, MediaSourceEnum::Microphone, audios,
                             aParams.mVideo->mForcedMicrophoneName.get());
@@ -2174,7 +2174,7 @@ RefPtr<DeviceSetPromise> MediaManager::EnumerateRawDevices(
             // speakers to correlate with. There are no fake speakers.
             if (speakers.isSome()) {
               // Speakers have already been enumerated. Avoid doing it again.
-              audios.AppendElements(*speakers);
+              audios.AppendElements(speakers.extract());
             } else {
               realBackend->EnumerateDevices(MediaSourceEnum::Other,
                                             MediaSinkEnum::Speaker, &audios);
