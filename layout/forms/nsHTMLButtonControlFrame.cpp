@@ -10,12 +10,10 @@
 #include "mozilla/PresShell.h"
 #include "nsContainerFrame.h"
 #include "nsIFormControlFrame.h"
-#include "nsIFrameInlines.h"
 #include "nsPresContext.h"
+#include "nsLayoutUtils.h"
 #include "nsGkAtoms.h"
 #include "nsButtonFrameRenderer.h"
-#include "nsCSSAnonBoxes.h"
-#include "nsNameSpaceManager.h"
 #include "nsDisplayList.h"
 #include <algorithm>
 
@@ -69,7 +67,8 @@ nsresult nsHTMLButtonControlFrame::HandleEvent(nsPresContext* aPresContext,
 }
 
 bool nsHTMLButtonControlFrame::ShouldClipPaintingToBorderBox() {
-  return IsInput() || StyleDisplay()->mOverflowX != StyleOverflow::Visible;
+  // FIXME(emilio): probably should account for per-axis clipping...
+  return StyleDisplay()->mOverflowX != StyleOverflow::Visible;
 }
 
 void nsHTMLButtonControlFrame::BuildDisplayList(
