@@ -39,6 +39,8 @@ class CacheStreamControlParent final : public PCacheStreamControlParent,
 
   void AssertWillDelete();
 
+  void LostIPCCleanup(SafeRefPtr<StreamList> aStreamList);
+
  private:
   ~CacheStreamControlParent();
   virtual void NoteClosedAfterForget(const nsID& aId) override;

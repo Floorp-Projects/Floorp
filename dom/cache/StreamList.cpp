@@ -124,7 +124,7 @@ void StreamList::NoteClosedAll() {
 
 void StreamList::CloseAll() {
   NS_ASSERT_OWNINGTHREAD(StreamList);
-  if (mStreamControl) {
+  if (mStreamControl && mStreamControl->CanSend()) {
     auto* streamControl = std::exchange(mStreamControl, nullptr);
 
     streamControl->CloseAll();
@@ -132,6 +132,17 @@ void StreamList::CloseAll() {
     mStreamControl = std::exchange(streamControl, nullptr);
 
     mStreamControl->Shutdown();
+  } else {
+    // We cannot interact with the child, let's just clear our lists of
+    // streams to unblock shutdown.
+    if (NS_WARN_IF(mStreamControl)) {
+      // TODO: Check if this case is actually possible. We might see a late
+      // delivery of the CSCP::ActorDestroy? What would that mean for CanSend?
+      mStreamControl->LostIPCCleanup(SafeRefPtrFromThis());
+      mStreamControl = nullptr;
+    } else {
+      NoteClosedAll();
+    }
   }
 }
 
