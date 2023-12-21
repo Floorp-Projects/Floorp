@@ -8,6 +8,7 @@
 
 #include <sstream>
 
+#include "ETWTools.h"
 #include "GeckoProfiler.h"
 #include "nsRFPService.h"
 #include "PerformanceEntry.h"
@@ -278,47 +279,34 @@ void Performance::ClearUserEntries(const Optional<nsAString>& aEntryName,
 
 void Performance::ClearResourceTimings() { mResourceEntries.Clear(); }
 
-struct UserTimingMarker {
-  static constexpr Span<const char> MarkerTypeName() {
-    return MakeStringSpan("UserTiming");
-  }
+struct UserTimingMarker : public BaseMarkerType<UserTimingMarker> {
+  static constexpr const char* Name = "UserTiming";
+  static constexpr const char* Description =
+      "UserTimingMeasure is created using the DOM API performance.measure().";
+
+  using MS = MarkerSchema;
+  static constexpr MS::PayloadField PayloadFields[] = {
+      {"name", MS::InputType::String, "User Marker Name", MS::Format::String,
+       MS::PayloadFlags::Searchable},
+      {"entryType", MS::InputType::Boolean, "Entry Type"},
+      {"startMark", MS::InputType::String, "Start Mark"},
+      {"endMark", MS::InputType::String, "End Mark"}};
+
+  static constexpr MS::Location Locations[] = {MS::Location::MarkerChart,
+                                               MS::Location::MarkerTable};
+  static constexpr const char* AllLabels = "{marker.data.name}";
+
+  static constexpr MS::ETWMarkerGroup Group = MS::ETWMarkerGroup::UserMarkers;
+
   static void StreamJSONMarkerData(
       baseprofiler::SpliceableJSONWriter& aWriter,
       const ProfilerString16View& aName, bool aIsMeasure,
       const Maybe<ProfilerString16View>& aStartMark,
       const Maybe<ProfilerString16View>& aEndMark) {
-    aWriter.StringProperty("name", NS_ConvertUTF16toUTF8(aName));
-    if (aIsMeasure) {
-      aWriter.StringProperty("entryType", "measure");
-    } else {
-      aWriter.StringProperty("entryType", "mark");
-    }
-
-    if (aStartMark.isSome()) {
-      aWriter.StringProperty("startMark", NS_ConvertUTF16toUTF8(*aStartMark));
-    } else {
-      aWriter.NullProperty("startMark");
-    }
-    if (aEndMark.isSome()) {
-      aWriter.StringProperty("endMark", NS_ConvertUTF16toUTF8(*aEndMark));
-    } else {
-      aWriter.NullProperty("endMark");
-    }
-  }
-  static MarkerSchema MarkerTypeDisplay() {
-    using MS = MarkerSchema;
-    MS schema{MS::Location::MarkerChart, MS::Location::MarkerTable};
-    schema.SetAllLabels("{marker.data.name}");
-    schema.AddStaticLabelValue("Marker", "UserTiming");
-    schema.AddKeyLabelFormat("entryType", "Entry Type", MS::Format::String);
-    schema.AddKeyLabelFormatSearchable("name", "Name", MS::Format::String,
-                                       MS::Searchable::Searchable);
-    schema.AddKeyLabelFormat("startMark", "Start Mark", MS::Format::String);
-    schema.AddKeyLabelFormat("endMark", "End Mark", MS::Format::String);
-    schema.AddStaticLabelValue("Description",
-                               "UserTimingMeasure is created using the DOM API "
-                               "performance.measure().");
-    return schema;
+    StreamJSONMarkerDataImpl(
+        aWriter, aName,
+        aIsMeasure ? MakeStringSpan("measure") : MakeStringSpan("mark"),
+        aStartMark, aEndMark);
   }
 };
 
@@ -345,7 +333,7 @@ already_AddRefed<PerformanceMark> Performance::Mark(
 
   InsertUserEntry(performanceMark);
 
-  if (profiler_thread_is_being_profiled_for_markers()) {
+  if (profiler_is_collecting_markers()) {
     Maybe<uint64_t> innerWindowId;
     if (GetOwner()) {
       innerWindowId = Some(GetOwner()->WindowID());
@@ -584,12 +572,29 @@ static std::string GetMarkerFilename() {
   return s.str();
 }
 
+std::pair<TimeStamp, TimeStamp> Performance::GetTimeStampsForMarker(
+    const Maybe<const nsAString&>& aStartMark,
+    const Optional<nsAString>& aEndMark,
+    const Maybe<const PerformanceMeasureOptions&>& aOptions, ErrorResult& aRv) {
+  const DOMHighResTimeStamp unclampedStartTime = ResolveStartTimeForMeasure(
+      aStartMark, aOptions, aRv, /* aReturnUnclamped */ true);
+  const DOMHighResTimeStamp unclampedEndTime =
+      ResolveEndTimeForMeasure(aEndMark, aOptions, aRv, /* aReturnUnclamped */
+                               true);
+
+  TimeStamp startTimeStamp =
+      CreationTimeStamp() + TimeDuration::FromMilliseconds(unclampedStartTime);
+  TimeStamp endTimeStamp =
+      CreationTimeStamp() + TimeDuration::FromMilliseconds(unclampedEndTime);
+
+  return std::make_pair(startTimeStamp, endTimeStamp);
+}
+
 // This emits markers to an external marker-[pid].txt file for use by an
 // external profiler like samply or etw-gecko
 void Performance::MaybeEmitExternalProfilerMarker(
     const nsAString& aName, Maybe<const PerformanceMeasureOptions&> aOptions,
     Maybe<const nsAString&> aStartMark, const Optional<nsAString>& aEndMark) {
-  ErrorResult rv;
   static FILE* markerFile = getenv("MOZ_USE_PERFORMANCE_MARKER_FILE")
                                 ? fopen(GetMarkerFilename().c_str(), "w+")
                                 : nullptr;
@@ -597,22 +602,13 @@ void Performance::MaybeEmitExternalProfilerMarker(
     return;
   }
 
-  const DOMHighResTimeStamp unclampedStartTime = ResolveStartTimeForMeasure(
-      aStartMark, aOptions, rv, /* aReturnUnclamped */ true);
-  if (NS_WARN_IF(rv.Failed())) {
-    return;
-  }
-  const DOMHighResTimeStamp unclampedEndTime =
-      ResolveEndTimeForMeasure(aEndMark, aOptions, rv, /* aReturnUnclamped */
-                               true);
-  if (NS_WARN_IF(rv.Failed())) {
-    return;
-  }
+  ErrorResult rv;
+  auto [startTimeStamp, endTimeStamp] =
+      GetTimeStampsForMarker(aStartMark, aEndMark, aOptions, rv);
 
-  TimeStamp startTimeStamp =
-      CreationTimeStamp() + TimeDuration::FromMilliseconds(unclampedStartTime);
-  TimeStamp endTimeStamp =
-      CreationTimeStamp() + TimeDuration::FromMilliseconds(unclampedEndTime);
+  if (NS_WARN_IF(rv.Failed())) {
+    return;
+  }
 
 #ifdef XP_LINUX
   uint64_t rawStart = startTimeStamp.RawClockMonotonicNanosecondsSinceBoot();
@@ -715,19 +711,9 @@ already_AddRefed<PerformanceMeasure> Performance::Measure(
       GetParentObject(), aName, startTime, endTime, detail);
   InsertUserEntry(performanceMeasure);
 
-  MaybeEmitExternalProfilerMarker(aName, options, startMark, aEndMark);
-
-  if (profiler_thread_is_being_profiled_for_markers()) {
-    const DOMHighResTimeStamp unclampedStartTime = ResolveStartTimeForMeasure(
-        startMark, options, aRv, /* aReturnUnclamped */ true);
-    const DOMHighResTimeStamp unclampedEndTime =
-        ResolveEndTimeForMeasure(aEndMark, options, aRv, /* aReturnUnclamped */
-                                 true);
-    TimeStamp startTimeStamp =
-        CreationTimeStamp() +
-        TimeDuration::FromMilliseconds(unclampedStartTime);
-    TimeStamp endTimeStamp =
-        CreationTimeStamp() + TimeDuration::FromMilliseconds(unclampedEndTime);
+  if (profiler_is_collecting_markers()) {
+    auto [startTimeStamp, endTimeStamp] =
+        GetTimeStampsForMarker(startMark, aEndMark, options, aRv);
 
     Maybe<nsString> endMark;
     if (aEndMark.WasPassed()) {
