@@ -74,8 +74,7 @@ already_AddRefed<ModuleLoadRequest> ComponentModuleLoader::CreateStaticImport(
 
 already_AddRefed<ModuleLoadRequest> ComponentModuleLoader::CreateDynamicImport(
     JSContext* aCx, nsIURI* aURI, LoadedScript* aMaybeActiveScript,
-    JS::Handle<JS::Value> aReferencingPrivate, JS::Handle<JSString*> aSpecifier,
-    JS::Handle<JSObject*> aPromise) {
+    JS::Handle<JSString*> aSpecifier, JS::Handle<JSObject*> aPromise) {
   return nullptr;  // Not yet implemented.
 }
 

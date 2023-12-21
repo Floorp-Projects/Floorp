@@ -601,7 +601,7 @@ ResolveResult ImportMap::ResolveModuleSpecifier(ImportMap* aImportMap,
   LOG(("ImportMap::ResolveModuleSpecifier specifier: %s",
        NS_ConvertUTF16toUTF8(aSpecifier).get()));
   nsCOMPtr<nsIURI> baseURL;
-  if (aScript) {
+  if (aScript && !aScript->IsEventScript()) {
     baseURL = aScript->BaseURL();
   } else {
     baseURL = aLoader->GetBaseURI();

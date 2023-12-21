@@ -304,8 +304,7 @@ already_AddRefed<ModuleLoadRequest> ModuleLoader::CreateStaticImport(
 
 already_AddRefed<ModuleLoadRequest> ModuleLoader::CreateDynamicImport(
     JSContext* aCx, nsIURI* aURI, LoadedScript* aMaybeActiveScript,
-    JS::Handle<JS::Value> aReferencingPrivate, JS::Handle<JSString*> aSpecifier,
-    JS::Handle<JSObject*> aPromise) {
+    JS::Handle<JSString*> aSpecifier, JS::Handle<JSObject*> aPromise) {
   MOZ_ASSERT(aSpecifier);
   MOZ_ASSERT(aPromise);
 
@@ -357,7 +356,7 @@ already_AddRefed<ModuleLoadRequest> ModuleLoader::CreateDynamicImport(
       /* is top level */ true, /* is dynamic import */
       this, ModuleLoadRequest::NewVisitedSetForTopLevelImport(aURI), nullptr);
 
-  request->mDynamicReferencingPrivate = aReferencingPrivate;
+  request->mDynamicReferencingScript = aMaybeActiveScript;
   request->mDynamicSpecifier = aSpecifier;
   request->mDynamicPromise = aPromise;
 
