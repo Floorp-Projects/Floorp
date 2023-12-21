@@ -4135,7 +4135,16 @@ int32_t nsGridContainerFrame::Grid::ResolveLine(
       line = edgeLine + aNth;
     }
   }
-  return clamped(line, aNameMap.mClampMinLine, aNameMap.mClampMaxLine);
+  // Note: at this point, 'line' might be outside of aNameMap's allowed range,
+  // [mClampMinLin, mClampMaxLine]. This is fine; we'll clamp once we've
+  // resolved *both* the start and end line -- in particular, we clamp in
+  // ResolveLineRange(). If we clamped here, it'd be premature -- if one line
+  // is definite and the other is specified as a span to some named line
+  // (i.e. we need to perform a name-search that starts from the definite
+  // line), then it matters whether we clamp the definite line before or after
+  // that search. See https://bugzilla.mozilla.org/show_bug.cgi?id=1800566#c6
+  // for more.
+  return line;
 }
 
 nsGridContainerFrame::Grid::LinePair
@@ -4247,14 +4256,40 @@ nsGridContainerFrame::LineRange nsGridContainerFrame::Grid::ResolveLineRange(
     // http://dev.w3.org/csswg/css-grid/#overlarge-grids
     r.second = std::min(r.second, aNameMap.mClampMaxLine - 1);
   } else {
+    // Clamp the lines to be within our limits, per
+    // https://www.w3.org/TR/css-grid-2/#overlarge-grids
+    // Note that our limits here might come from the [kMinLine, kMaxLine]
+    // extremes; or, they might just be the bounds of a subgrid's explicit
+    // grid. We use the same clamping approach either way, per
+    // https://www.w3.org/TR/css-grid-2/#subgrid-implicit ("using the same
+    // procedure as for clamping placement in an overly-large grid").
+    //
+    // Note that these two clamped() assignments might collapse our range to
+    // have both edges pointing at the same line (spanning 0 tracks); this
+    // might happen here if e.g. r.first were mClampMaxLine, and r.second gets
+    // clamped from some higher number down to mClampMaxLine. We'll handle this
+    // by shifting the inner line (r.first in this hypothetical) inwards by 1,
+    // in the #grid-placement-errors section; that achieves the outcome of
+    // the #overlarge-grids clamping spec text that says "its span must be
+    // truncated to 1" when clamping an item that was completely outside the
+    // limits.
+    r.first = clamped(r.first, aNameMap.mClampMinLine, aNameMap.mClampMaxLine);
+    r.second =
+        clamped(r.second, aNameMap.mClampMinLine, aNameMap.mClampMaxLine);
+
+    // Handle grid placement errors.
     // http://dev.w3.org/csswg/css-grid/#grid-placement-errors
     if (r.first > r.second) {
       std::swap(r.first, r.second);
     } else if (r.first == r.second) {
+      // (This is #grid-placement-errors fixup, but it's also where we ensure
+      // that any #overlarge-grids fixup that we did above will end up
+      // truncating the range to a span of 1 rather than 0 -- i.e. sliding
+      // inwards if needed.)
       if (MOZ_UNLIKELY(r.first == aNameMap.mClampMaxLine)) {
         r.first = aNameMap.mClampMaxLine - 1;
       }
-      r.second = r.first + 1;  // XXX subgrid explicit size instead of 1?
+      r.second = r.first + 1;
     }
   }
   return LineRange(r.first, r.second);
