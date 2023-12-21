@@ -7,6 +7,7 @@
 /* API for getting a stack trace of the C/C++ stack on the current thread */
 
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/StackWalk.h"
 #ifdef XP_WIN
@@ -106,6 +107,9 @@ class FrameSkipper {
 #    error Too old imagehlp.h
 #  endif
 
+// DbgHelp functions are not thread-safe and should therefore be protected by
+// using this critical section. Only use the critical section after a
+// successful call to InitializeDbgHelp().
 CRITICAL_SECTION gDbgHelpCS;
 
 #  if defined(_M_AMD64) || defined(_M_ARM64)
@@ -182,16 +186,78 @@ static void PrintError(const char* aPrefix) {
   LocalFree(lpMsgBuf);
 }
 
-static bool EnsureDbgHelpInitialized() {
-  static bool sInitialized = []() {
-    // We ensure that the critical section is always initialized only once,
-    // which avoids undefined behavior.
+enum class DbgHelpInitFlags : bool {
+  BasicInit,
+  WithSymbolSupport,
+};
+
+// This function ensures that DbgHelp.dll is loaded in the current process,
+// and initializes the gDbgHelpCS critical section that we use to protect calls
+// to DbgHelp functions. If DbgHelpInitFlags::WithSymbolSupport is set, we
+// additionally call the symbol initialization functions from DbgHelp so that
+// symbol-related functions can be used.
+//
+// This function is thread-safe and reentrancy-safe. In debug and fuzzing
+// builds, MOZ_ASSERT and MOZ_CRASH walk the stack to print it before actually
+// crashing. Hence *any* MOZ_ASSERT or MOZ_CRASH failure reached from
+// InitializeDbgHelp() leads to rentrancy (see bug 1869997 for an example).
+// Such failures can occur indirectly when we load dbghelp.dll, because we
+// override various Microsoft-internal functions that are called upon DLL
+// loading.
+[[nodiscard]] static bool InitializeDbgHelp(
+    DbgHelpInitFlags aInitFlags = DbgHelpInitFlags::BasicInit) {
+  // In the code below, it is only safe to reach MOZ_ASSERT or MOZ_CRASH while
+  // sInitializationThreadId is set to the current thread id.
+  static Atomic<DWORD> sInitializationThreadId{0};
+  DWORD currentThreadId = ::GetCurrentThreadId();
+
+  // This code relies on Windows never giving us a current thread ID of zero.
+  // We make this assumption explicit, by failing if that should ever occur.
+  if (!currentThreadId) {
+    return false;
+  }
+
+  if (sInitializationThreadId == currentThreadId) {
+    // This is a reentrant call and we must abort here.
+    return false;
+  }
+
+  static const bool sHasInitializedDbgHelp = [currentThreadId]() {
+    sInitializationThreadId = currentThreadId;
+
     ::InitializeCriticalSection(&gDbgHelpCS);
-    auto success = static_cast<bool>(::LoadLibraryW(L"dbghelp.dll"));
-    MOZ_ASSERT(success);
-    return success;
+    bool dbgHelpLoaded = static_cast<bool>(::LoadLibraryW(L"dbghelp.dll"));
+
+    MOZ_ASSERT(dbgHelpLoaded);
+    sInitializationThreadId = 0;
+    return dbgHelpLoaded;
   }();
-  return sInitialized;
+
+  // If we don't need symbol initialization, we are done. If we need it, we
+  // can only proceed if DbgHelp initialization was successful.
+  if (aInitFlags == DbgHelpInitFlags::BasicInit || !sHasInitializedDbgHelp) {
+    return sHasInitializedDbgHelp;
+  }
+
+  static const bool sHasInitializedSymbols = [currentThreadId]() {
+    sInitializationThreadId = currentThreadId;
+
+    EnterCriticalSection(&gDbgHelpCS);
+    SymSetOptions(SYMOPT_LOAD_LINES | SYMOPT_UNDNAME);
+    bool symbolsInitialized = SymInitialize(GetCurrentProcess(), nullptr, TRUE);
+    /* XXX At some point we need to arrange to call SymCleanup */
+    LeaveCriticalSection(&gDbgHelpCS);
+
+    if (!symbolsInitialized) {
+      PrintError("SymInitialize");
+    }
+
+    MOZ_ASSERT(symbolsInitialized);
+    sInitializationThreadId = 0;
+    return symbolsInitialized;
+  }();
+
+  return sHasInitializedSymbols;
 }
 
 // Wrapper around a reference to a CONTEXT, to simplify access to main
@@ -256,7 +322,7 @@ static void DoMozStackWalkThread(MozWalkStackCallback aCallback,
                                  void* aClosure, HANDLE aThread,
                                  CONTEXT* aContext) {
 #  if defined(_M_IX86)
-  if (!EnsureDbgHelpInitialized()) {
+  if (!InitializeDbgHelp()) {
     return;
   }
 #  endif
@@ -552,28 +618,6 @@ BOOL SymGetModuleInfoEspecial64(HANDLE aProcess, DWORD64 aAddr,
   return retval;
 }
 
-static bool EnsureSymInitialized() {
-  static bool sInitialized = []() {
-    if (!EnsureDbgHelpInitialized()) {
-      return false;
-    }
-
-    EnterCriticalSection(&gDbgHelpCS);
-    SymSetOptions(SYMOPT_LOAD_LINES | SYMOPT_UNDNAME);
-    bool success = SymInitialize(GetCurrentProcess(), nullptr, TRUE);
-    /* XXX At some point we need to arrange to call SymCleanup */
-    LeaveCriticalSection(&gDbgHelpCS);
-
-    if (!success) {
-      PrintError("SymInitialize");
-    }
-
-    MOZ_ASSERT(success);
-    return success;
-  }();
-  return sInitialized;
-}
-
 MFBT_API bool MozDescribeCodeAddress(void* aPC,
                                      MozCodeAddressDetails* aDetails) {
   aDetails->library[0] = '\0';
@@ -583,7 +627,7 @@ MFBT_API bool MozDescribeCodeAddress(void* aPC,
   aDetails->function[0] = '\0';
   aDetails->foffset = 0;
 
-  if (!EnsureSymInitialized()) {
+  if (!InitializeDbgHelp(DbgHelpInitFlags::WithSymbolSupport)) {
     return false;
   }
 
