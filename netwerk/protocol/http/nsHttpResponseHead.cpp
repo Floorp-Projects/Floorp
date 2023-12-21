@@ -7,6 +7,7 @@
 // HttpLog.h should generally be included first
 #include "HttpLog.h"
 
+#include "mozilla/dom/MimeType.h"
 #include "mozilla/StaticPrefs_network.h"
 #include "mozilla/TextUtils.h"
 #include "mozilla/Unused.h"
@@ -475,9 +476,14 @@ nsresult nsHttpResponseHead::ParseHeaderLine_locked(
     }
 
   } else if (hdr == nsHttp::Content_Type) {
-    LOG(("ParseContentType [type=%s]\n", val.get()));
-    bool dummy;
-    net_ParseContentType(val, mContentType, mContentCharset, &dummy);
+    if (StaticPrefs::network_standard_content_type_parsing_response_headers() &&
+        CMimeType::Parse(val, mContentType, mContentCharset)) {
+    } else {
+      bool dummy;
+      net_ParseContentType(val, mContentType, mContentCharset, &dummy);
+    }
+    LOG(("ParseContentType [input=%s, type=%s, charset=%s]\n", val.get(),
+         mContentType.get(), mContentCharset.get()));
   } else if (hdr == nsHttp::Cache_Control) {
     ParseCacheControl(val.get());
   } else if (hdr == nsHttp::Pragma) {

@@ -814,3 +814,265 @@ TEST(MimeType, LegacyCommentSyntax2)
   ASSERT_TRUE(out.EqualsLiteral("text/html;x=\"(\";charset=gbk"))
   << "Legacy comment syntax #2";
 }
+
+TEST(MimeTypeParsing, contentTypes1)
+{
+  const nsAutoCString val(",text/plain");
+  nsCString contentType;
+  nsCString contentCharset;
+
+  bool parsed = CMimeType::Parse(val, contentType, contentCharset);
+
+  ASSERT_FALSE(parsed);
+  ASSERT_TRUE(contentType.EqualsLiteral(""));
+  ASSERT_TRUE(contentCharset.EqualsLiteral(""));
+}
+
+TEST(MimeTypeParsing, contentTypes2)
+{
+  const nsAutoCString val("text/plain,");
+  nsCString contentType;
+  nsCString contentCharset;
+
+  bool parsed = CMimeType::Parse(val, contentType, contentCharset);
+
+  ASSERT_TRUE(parsed);
+  ASSERT_TRUE(contentType.EqualsLiteral("text/plain"));
+  ASSERT_TRUE(contentCharset.EqualsLiteral(""));
+}
+
+TEST(MimeTypeParsing, contentTypes3)
+{
+  const nsAutoCString val("text/html,text/plain");
+  nsCString contentType;
+  nsCString contentCharset;
+
+  bool parsed = CMimeType::Parse(val, contentType, contentCharset);
+
+  ASSERT_TRUE(parsed);
+  ASSERT_TRUE(contentType.EqualsLiteral("text/plain"));
+  ASSERT_TRUE(contentCharset.EqualsLiteral(""));
+}
+
+TEST(MimeTypeParsing, contentTypes4)
+{
+  const nsAutoCString val("text/plain;charset=gbk,text/html");
+  nsCString contentType;
+  nsCString contentCharset;
+
+  bool parsed = CMimeType::Parse(val, contentType, contentCharset);
+
+  ASSERT_TRUE(parsed);
+  ASSERT_TRUE(contentType.EqualsLiteral("text/html"));
+  ASSERT_TRUE(contentCharset.EqualsLiteral(""));
+}
+
+TEST(MimeTypeParsing, contentTypes5)
+{
+  const nsAutoCString val(
+      "text/plain;charset=gbk,text/html;charset=windows-1254");
+  nsCString contentType;
+  nsCString contentCharset;
+
+  bool parsed = CMimeType::Parse(val, contentType, contentCharset);
+
+  ASSERT_TRUE(parsed);
+  ASSERT_TRUE(contentType.EqualsLiteral("text/html"));
+  ASSERT_TRUE(contentCharset.EqualsLiteral("windows-1254"));
+}
+
+TEST(MimeTypeParsing, contentTypes6)
+{
+  const nsAutoCString val("text/plain;charset=gbk,text/plain");
+  nsCString contentType;
+  nsCString contentCharset;
+
+  bool parsed = CMimeType::Parse(val, contentType, contentCharset);
+
+  ASSERT_TRUE(parsed);
+  ASSERT_TRUE(contentType.EqualsLiteral("text/plain"));
+  ASSERT_TRUE(contentCharset.EqualsLiteral("gbk"));
+}
+
+TEST(MimeTypeParsing, contentTypes7)
+{
+  const nsAutoCString val(
+      "text/plain;charset=gbk,text/plain;charset=windows-1252");
+  nsCString contentType;
+  nsCString contentCharset;
+
+  bool parsed = CMimeType::Parse(val, contentType, contentCharset);
+
+  ASSERT_TRUE(parsed);
+  ASSERT_TRUE(contentType.EqualsLiteral("text/plain"));
+  ASSERT_TRUE(contentCharset.EqualsLiteral("windows-1252"));
+}
+
+TEST(MimeTypeParsing, contentTypes8)
+{
+  const nsAutoCString val("text/html;charset=gbk,text/html;x=\",text/plain");
+  nsCString contentType;
+  nsCString contentCharset;
+
+  bool parsed = CMimeType::Parse(val, contentType, contentCharset);
+
+  ASSERT_TRUE(parsed);
+  ASSERT_TRUE(contentType.EqualsLiteral("text/html"));
+  ASSERT_TRUE(contentCharset.EqualsLiteral("gbk"));
+}
+
+TEST(MimeTypeParsing, contentTypes9)
+{
+  const nsAutoCString val("text/plain;charset=gbk;x=foo,text/plain");
+  nsCString contentType;
+  nsCString contentCharset;
+
+  bool parsed = CMimeType::Parse(val, contentType, contentCharset);
+
+  ASSERT_TRUE(parsed);
+  ASSERT_TRUE(contentType.EqualsLiteral("text/plain"));
+  ASSERT_TRUE(contentCharset.EqualsLiteral("gbk"));
+}
+
+TEST(MimeTypeParsing, contentTypes10)
+{
+  const nsAutoCString val("text/html;charset=gbk,text/plain,text/html");
+  nsCString contentType;
+  nsCString contentCharset;
+
+  bool parsed = CMimeType::Parse(val, contentType, contentCharset);
+
+  ASSERT_TRUE(parsed);
+  ASSERT_TRUE(contentType.EqualsLiteral("text/html"));
+  ASSERT_TRUE(contentCharset.EqualsLiteral(""));
+}
+
+TEST(MimeTypeParsing, contentTypes11)
+{
+  const nsAutoCString val("text/plain,*/*");
+  nsCString contentType;
+  nsCString contentCharset;
+
+  bool parsed = CMimeType::Parse(val, contentType, contentCharset);
+
+  ASSERT_TRUE(parsed);
+  ASSERT_TRUE(contentType.EqualsLiteral("text/plain"));
+  ASSERT_TRUE(contentCharset.EqualsLiteral(""));
+}
+
+TEST(MimeTypeParsing, contentTypes12)
+{
+  const nsAutoCString val("text/html,*/*");
+  nsCString contentType;
+  nsCString contentCharset;
+
+  bool parsed = CMimeType::Parse(val, contentType, contentCharset);
+
+  ASSERT_TRUE(parsed);
+  ASSERT_TRUE(contentType.EqualsLiteral("text/html"));
+  ASSERT_TRUE(contentCharset.EqualsLiteral(""));
+}
+
+TEST(MimeTypeParsing, contentTypes13)
+{
+  const nsAutoCString val("*/*,text/html");
+  nsCString contentType;
+  nsCString contentCharset;
+
+  bool parsed = CMimeType::Parse(val, contentType, contentCharset);
+
+  ASSERT_TRUE(parsed);
+  ASSERT_TRUE(contentType.EqualsLiteral("text/html"));
+  ASSERT_TRUE(contentCharset.EqualsLiteral(""));
+}
+
+TEST(MimeTypeParsing, contentTypes14)
+{
+  const nsAutoCString val("text/plain,*/*;charset=gbk");
+  nsCString contentType;
+  nsCString contentCharset;
+
+  bool parsed = CMimeType::Parse(val, contentType, contentCharset);
+
+  ASSERT_TRUE(parsed);
+  ASSERT_TRUE(contentType.EqualsLiteral("text/plain"));
+  ASSERT_TRUE(contentCharset.EqualsLiteral(""));
+}
+
+TEST(MimeTypeParsing, contentTypes15)
+{
+  const nsAutoCString val("text/html,*/*;charset=gbk");
+  nsCString contentType;
+  nsCString contentCharset;
+
+  bool parsed = CMimeType::Parse(val, contentType, contentCharset);
+
+  ASSERT_TRUE(parsed);
+  ASSERT_TRUE(contentType.EqualsLiteral("text/html"));
+  ASSERT_TRUE(contentCharset.EqualsLiteral(""));
+}
+
+TEST(MimeTypeParsing, contentTypes16)
+{
+  const nsAutoCString val("text/html;x=\",text/plain");
+  nsCString contentType;
+  nsCString contentCharset;
+
+  bool parsed = CMimeType::Parse(val, contentType, contentCharset);
+
+  ASSERT_TRUE(parsed);
+  ASSERT_TRUE(contentType.EqualsLiteral("text/html"));
+  ASSERT_TRUE(contentCharset.EqualsLiteral(""));
+}
+
+TEST(MimeTypeParsing, contentTypes17)
+{
+  const nsAutoCString val("text/html;\",text/plain");
+  nsCString contentType;
+  nsCString contentCharset;
+
+  bool parsed = CMimeType::Parse(val, contentType, contentCharset);
+
+  ASSERT_TRUE(parsed);
+  ASSERT_TRUE(contentType.EqualsLiteral("text/html"));
+  ASSERT_TRUE(contentCharset.EqualsLiteral(""));
+}
+
+TEST(MimeTypeParsing, contentTypes18)
+{
+  const nsAutoCString val("text/html;\",\\\",text/plain");
+  nsCString contentType;
+  nsCString contentCharset;
+
+  bool parsed = CMimeType::Parse(val, contentType, contentCharset);
+
+  ASSERT_TRUE(parsed);
+  ASSERT_TRUE(contentType.EqualsLiteral("text/html"));
+  ASSERT_TRUE(contentCharset.EqualsLiteral(""));
+}
+
+TEST(MimeTypeParsing, contentTypes19)
+{
+  const nsAutoCString val("text/html;\",\\\",text/plain,\";charset=GBK");
+  nsCString contentType;
+  nsCString contentCharset;
+
+  bool parsed = CMimeType::Parse(val, contentType, contentCharset);
+
+  ASSERT_TRUE(parsed);
+  ASSERT_TRUE(contentType.EqualsLiteral("text/html"));
+  ASSERT_TRUE(contentCharset.EqualsLiteral("GBK"));
+}
+
+TEST(MimeTypeParsing, contentTypes20)
+{
+  const nsAutoCString val("text/html;\",\",text/plain");
+  nsCString contentType;
+  nsCString contentCharset;
+
+  bool parsed = CMimeType::Parse(val, contentType, contentCharset);
+
+  ASSERT_TRUE(parsed);
+  ASSERT_TRUE(contentType.EqualsLiteral("text/plain"));
+  ASSERT_TRUE(contentCharset.EqualsLiteral(""));
+}
