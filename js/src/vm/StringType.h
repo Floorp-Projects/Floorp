@@ -1378,9 +1378,6 @@ class JSAtom : public JSLinearString {
 #endif
 };
 
-static_assert(sizeof(JSAtom) == sizeof(JSString),
-              "string subclasses must be binary-compatible with JSString");
-
 namespace js {
 
 class NormalAtom : public JSAtom {
