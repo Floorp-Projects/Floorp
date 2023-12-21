@@ -1489,6 +1489,7 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(
         FlushRepaintsToClearScreenToGeckoTransform();
       }
 
+      // TODO(botond): Is it necessary to do a hit test on every mouse-move?
       state.mHit = GetTargetAPZC(mouseInput.mOrigin);
       bool hitScrollbar = (bool)state.mHit.mScrollbarNode;
 
