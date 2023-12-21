@@ -33,11 +33,18 @@ const listeners = new Set();
 // Worker codepath in DevTools will pass a custom Debugger instance.
 const customLazy = {
   get Debugger() {
-    // When this code runs in the worker thread, this module runs within
-    // the WorkerDebuggerGlobalScope and have immediate access to Debugger class.
-    // (while we can't use ChromeUtils.importESModule)
+    // When this code runs in the worker thread, loaded via `loadSubScript`
+    // (ex: browser_worker_tracer.js and WorkerDebugger.tracer.js),
+    // this module runs within the WorkerDebuggerGlobalScope and have immediate access to Debugger class.
     if (globalThis.Debugger) {
       return globalThis.Debugger;
+    }
+    // When this code runs in the worker thread, loaded via `require`
+    // (ex: from tracer actor module),
+    // this module no longer has WorkerDebuggerGlobalScope as global,
+    // but has to use require() to pull Debugger.
+    if (typeof isWorker == "boolean") {
+      return require("Debugger");
     }
     const { addDebuggerToGlobal } = ChromeUtils.importESModule(
       "resource://gre/modules/jsdebugger.sys.mjs"
@@ -126,7 +133,8 @@ class JavaScriptTracer {
     this.traceDOMEvents = !!options.traceDOMEvents;
     this.traceValues = !!options.traceValues;
 
-    if (options.traceOnNextInteraction) {
+    // This feature isn't supported on Workers as they aren't involving user events
+    if (options.traceOnNextInteraction && typeof isWorker !== "boolean") {
       this.abortController = new AbortController();
       const listener = () => {
         this.abortController.abort();
@@ -196,7 +204,17 @@ class JavaScriptTracer {
     if (notification.phase == "pre") {
       // We get notified about "real" DOM event, but also when some particular callbacks are called like setTimeout.
       if (notification.type == "domEvent") {
-        this.currentDOMEvent = `DOM(${notification.event.type})`;
+        let { type } = notification.event;
+        if (!type) {
+          // In the Worker thread, `notification.event` is an opaque wrapper.
+          // In other threads it is a Xray wrapper.
+          // Because of this difference, we have to fallback to use the Debugger.Object API.
+          type = this.dbg
+            .makeGlobalObjectReference(notification.global)
+            .makeDebuggeeValue(notification.event)
+            .getProperty("type").return;
+        }
+        this.currentDOMEvent = `DOM(${type})`;
       } else {
         this.currentDOMEvent = notification.type;
       }

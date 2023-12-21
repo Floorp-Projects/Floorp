@@ -6,6 +6,6 @@ function timer() {
 
 setInterval(timer, 1000);
 
-self.onmessage = () => {
+self.onmessage = function onmessage() {
   console.log("hi");
 };
