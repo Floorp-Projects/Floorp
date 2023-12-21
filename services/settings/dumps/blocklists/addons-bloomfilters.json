@@ -3,6 +3,19 @@
     {
       "stash": {
         "blocked": [
+          "{c35c913f-cf7a-4663-94f9-bb850b15f612}:1.0.0"
+        ],
+        "unblocked": []
+      },
+      "schema": 1702901354887,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1702989304450,
+      "id": "9f52a928-085e-4444-a3cb-afb57580790d",
+      "last_modified": 1702989358799
+    },
+    {
+      "stash": {
+        "blocked": [
           "firefoxhpsureclicksecurebrowsing@bromium.com:4.1.4.99",
           "kpm_win_add_on_9.0@kaspersky:4.0.38",
           "firefoxhpsureclicksecurebrowsing@bromium.com:4.1.8.28",
@@ -3207,5 +3220,5 @@
       "last_modified": 1690223886167
     }
   ],
-  "timestamp": 1702470957419
+  "timestamp": 1702989358799
 }
