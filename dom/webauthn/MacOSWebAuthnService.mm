@@ -314,6 +314,8 @@ nsTArray<uint8_t> NSDataToArray(NSData* data) {
         }
       }
 #endif
+    } else {
+      authenticatorAttachment.emplace(u"cross-platform"_ns);
     }
     mCallback->FinishMakeCredential(rawAttestationObject, credentialId,
                                     transports, authenticatorAttachment);
@@ -354,6 +356,8 @@ nsTArray<uint8_t> NSDataToArray(NSData* data) {
         }
       }
 #endif
+    } else {
+      authenticatorAttachment.emplace(u"cross-platform"_ns);
     }
     mCallback->FinishGetAssertion(credentialId, signature, rawAuthenticatorData,
                                   userHandle, authenticatorAttachment);
