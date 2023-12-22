@@ -447,6 +447,34 @@ already_AddRefed<VideoData> VideoData::CreateFromImage(
   return v.forget();
 }
 
+nsCString VideoData::ToString() const {
+  std::array ImageFormatStrings = {
+    "PLANAR_YCBCR",
+    "NV_IMAGE",
+    "SHARED_RGB",
+    "MOZ2D_SURFACE",
+    "MAC_IOSURFACE",
+    "SURFACE_TEXTURE",
+    "D3D9_RGB32_TEXTURE",
+    "OVERLAY_IMAGE",
+    "D3D11_SHARE_HANDLE_TEXTURE",
+    "D3D11_TEXTURE_IMF_SAMPLE",
+    "TEXTURE_WRAPPER",
+    "D3D11_YCBCR_IMAGE",
+    "GPU_VIDEO",
+    "DMABUF",
+    "DCOMP_SURFACE",
+  };
+
+  nsCString rv;
+  rv.AppendPrintf(
+      "VideoFrame [%s,%s] [%dx%d] format: %s", mTime.ToString().get(),
+      mDuration.ToString().get(), mDisplay.Width(), mDisplay.Height(),
+      mImage ? ImageFormatStrings[static_cast<int>(mImage->GetFormat())]
+             : "null");
+  return rv;
+}
+
 MediaRawData::MediaRawData()
     : MediaData(Type::RAW_DATA), mCrypto(mCryptoInternal) {}
 
