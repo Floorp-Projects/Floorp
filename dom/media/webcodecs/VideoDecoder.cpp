@@ -154,7 +154,7 @@ UniquePtr<VideoDecoderConfigInternal> VideoDecoderConfigInternal::Create(
       OptionalToMaybe(aConfig.mOptimizeForLatency)));
 }
 
-nsString VideoDecoderConfigInternal::ToString() {
+nsString VideoDecoderConfigInternal::ToString() const {
   nsString rv;
 
   rv.Append(mCodec);
@@ -381,15 +381,67 @@ static VideoColorSpaceInternal GuessColorSpace(
   colorSpace.mFullRange = Some(ToFullRange(aData->mColorRange));
   if (Maybe<VideoMatrixCoefficients> m =
           ToMatrixCoefficients(aData->mYUVColorSpace)) {
-    colorSpace.mMatrix = Some(*m);
+    colorSpace.mMatrix = ToMatrixCoefficients(aData->mYUVColorSpace);
+    colorSpace.mPrimaries = ToPrimaries(aData->mColorPrimaries);
   }
-  if (Maybe<VideoColorPrimaries> p = ToPrimaries(aData->mColorPrimaries)) {
-    colorSpace.mPrimaries = Some(*p);
+  if (!colorSpace.mPrimaries) {
+    LOG("Missing primaries, guessing from colorspace");
+    // Make an educated guess based on the coefficients.
+    colorSpace.mPrimaries = colorSpace.mMatrix.map([](const auto& aMatrix) {
+      switch (aMatrix) {
+        case VideoMatrixCoefficients::EndGuard_:
+          MOZ_CRASH("This should not happen");
+        case VideoMatrixCoefficients::Bt2020_ncl:
+          return VideoColorPrimaries::Bt2020;
+        case VideoMatrixCoefficients::Rgb:
+        case VideoMatrixCoefficients::Bt470bg:
+        case VideoMatrixCoefficients::Smpte170m:
+          LOGW(
+              "Warning: Falling back to BT709 when attempting to determine the "
+              "primaries function of a YCbCr buffer");
+          [[fallthrough]];
+        case VideoMatrixCoefficients::Bt709:
+          return VideoColorPrimaries::Bt709;
+      }
+      MOZ_ASSERT_UNREACHABLE("Unexpected matrix coefficients");
+      LOGW(
+          "Warning: Falling back to BT709 due to unexpected matrix "
+          "coefficients "
+          "when attempting to determine the primaries function of a YCbCr "
+          "buffer");
+      return VideoColorPrimaries::Bt709;
+    });
   }
+
   if (Maybe<VideoTransferCharacteristics> c =
           ToTransferCharacteristics(aData->mTransferFunction)) {
     colorSpace.mTransfer = Some(*c);
   }
+  if (!colorSpace.mTransfer) {
+    LOG("Missing transfer characteristics, guessing from colorspace");
+    colorSpace.mTransfer = Some(([&] {
+      switch (aData->mYUVColorSpace) {
+        case gfx::YUVColorSpace::Identity:
+          return VideoTransferCharacteristics::Iec61966_2_1;
+        case gfx::YUVColorSpace::BT2020:
+          return VideoTransferCharacteristics::Pq;
+        case gfx::YUVColorSpace::BT601:
+          LOGW(
+              "Warning: Falling back to BT709 when attempting to determine the "
+              "transfer function of a MacIOSurface");
+          [[fallthrough]];
+        case gfx::YUVColorSpace::BT709:
+          return VideoTransferCharacteristics::Bt709;
+      }
+      MOZ_ASSERT_UNREACHABLE("Unexpected color space");
+      LOGW(
+          "Warning: Falling back to BT709 due to unexpected color space "
+          "when attempting to determine the transfer function of a "
+          "MacIOSurface");
+      return VideoTransferCharacteristics::Bt709;
+    })());
+  }
+
   return colorSpace;
 }
 
