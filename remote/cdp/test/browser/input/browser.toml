@@ -9,6 +9,9 @@ prefs = [ # Bug 1600054: Make CDP Fission compatible
   "fission.bfcacheInParent=false",
   "fission.webContentIsolationStrategy=0",
 ]
+skip-if = [
+  "display == 'wayland'" # Bug 1861933: Timestamp unreliable due to worker setup
+]
 support-files = [
   "!/remote/cdp/test/browser/chrome-remote-interface.js",
   "!/remote/cdp/test/browser/head.js",
