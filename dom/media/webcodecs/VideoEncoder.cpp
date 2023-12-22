@@ -250,13 +250,25 @@ EncoderConfig VideoEncoderConfigInternal::ToEncoderConfig() const {
 #endif
     specific.emplace(VP9Specific());
   }
+  MediaDataEncoder::ScalabilityMode scalabilityMode;
+  if (mScalabilityMode) {
+    if (mScalabilityMode->EqualsLiteral("L1T2")) {
+      scalabilityMode = MediaDataEncoder::ScalabilityMode::L1T2;
+    } else if (mScalabilityMode->EqualsLiteral("L1T3")) {
+      scalabilityMode = MediaDataEncoder::ScalabilityMode::L1T3;
+    } else {
+      scalabilityMode = MediaDataEncoder::ScalabilityMode::None;
+    }
+  } else {
+    scalabilityMode = MediaDataEncoder::ScalabilityMode::None;
+  }
   return EncoderConfig(
       codecType, {mWidth, mHeight}, usage, ImageBitmapFormat::RGBA32, ImageBitmapFormat::RGBA32,
       AssertedCast<uint8_t>(mFramerate.refOr(0.f)), 0, mBitrate.refOr(0),
       mBitrateMode == VideoEncoderBitrateMode::Constant
           ? MediaDataEncoder::BitrateMode::Constant
           : MediaDataEncoder::BitrateMode::Variable,
-      hwPref, specific);
+      hwPref, scalabilityMode, specific);
 }
 already_AddRefed<WebCodecsConfigurationChangeList>
 VideoEncoderConfigInternal::Diff(
@@ -343,8 +355,10 @@ static bool CanEncode(const RefPtr<VideoEncoderConfigInternal>& aConfig) {
 
   // Not supported
   if (aConfig->mScalabilityMode.isSome() &&
-      !aConfig->mScalabilityMode->IsEmpty()) {
-    LOGE("Scalability mode not supported");
+      !aConfig->mScalabilityMode->EqualsLiteral("L1T2") &&
+      !aConfig->mScalabilityMode->EqualsLiteral("L1T3")) {
+    LOGE("Scalability mode %s not supported",
+         NS_ConvertUTF16toUTF8(aConfig->mScalabilityMode.value()).get());
     return false;
   }
 

@@ -110,13 +110,11 @@ dictionary VideoEncoderSupport {
 
 dictionary EncodedVideoChunkMetadata {
   VideoDecoderConfig decoderConfig;
-  // Not implemented https://bugzilla.mozilla.org/show_bug.cgi?id=1867066
-  // SvcOutputMetadata svc;
+  SvcOutputMetadata svc;
   // Not implemented https://bugzilla.mozilla.org/show_bug.cgi?id=1867067
   // BufferSource alphaSideData;
 };
 
-// Not implemented https://bugzilla.mozilla.org/show_bug.cgi?id=1867066
-// dictionary SvcOutputMetadata {
-//   unsigned long temporalLayerId;
-// };
+dictionary SvcOutputMetadata {
+  unsigned long temporalLayerId;
+};
