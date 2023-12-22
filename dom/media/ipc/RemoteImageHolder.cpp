@@ -19,22 +19,32 @@ using namespace gfx;
 using namespace layers;
 
 RemoteImageHolder::RemoteImageHolder() = default;
-RemoteImageHolder::RemoteImageHolder(layers::IGPUVideoSurfaceManager* aManager,
-                                     layers::VideoBridgeSource aSource,
-                                     const gfx::IntSize& aSize,
-                                     const gfx::ColorDepth& aColorDepth,
-                                     const layers::SurfaceDescriptor& aSD)
+RemoteImageHolder::RemoteImageHolder(
+    layers::IGPUVideoSurfaceManager* aManager,
+    layers::VideoBridgeSource aSource, const gfx::IntSize& aSize,
+    const gfx::ColorDepth& aColorDepth, const layers::SurfaceDescriptor& aSD,
+    gfx::YUVColorSpace aYUVColorSpace, gfx::ColorSpace2 aColorPrimaries,
+    gfx::TransferFunction aTransferFunction, gfx::ColorRange aColorRange)
     : mSource(aSource),
       mSize(aSize),
       mColorDepth(aColorDepth),
       mSD(Some(aSD)),
-      mManager(aManager) {}
+      mManager(aManager),
+      mYUVColorSpace(aYUVColorSpace),
+      mColorPrimaries(aColorPrimaries),
+      mTransferFunction(aTransferFunction),
+      mColorRange(aColorRange) {}
+
 RemoteImageHolder::RemoteImageHolder(RemoteImageHolder&& aOther)
     : mSource(aOther.mSource),
       mSize(aOther.mSize),
       mColorDepth(aOther.mColorDepth),
       mSD(std::move(aOther.mSD)),
-      mManager(aOther.mManager) {
+      mManager(aOther.mManager),
+      mYUVColorSpace(aOther.mYUVColorSpace),
+      mColorPrimaries(aOther.mColorPrimaries),
+      mTransferFunction(aOther.mTransferFunction),
+      mColorRange(aOther.mColorRange) {
   aOther.mSD = Nothing();
 }
 
@@ -119,7 +129,9 @@ already_AddRefed<layers::Image> RemoteImageHolder::TransferToImage(
     SurfaceDescriptorRemoteDecoder remoteSD =
         static_cast<const SurfaceDescriptorGPUVideo&>(*mSD);
     remoteSD.source() = Some(mSource);
-    image = new GPUVideoImage(mManager, remoteSD, mSize, mColorDepth);
+    image = new GPUVideoImage(mManager, remoteSD, mSize, mColorDepth,
+                              mYUVColorSpace, mColorPrimaries,
+                              mTransferFunction, mColorRange);
   }
   mSD = Nothing();
   mManager = nullptr;
@@ -147,6 +159,10 @@ RemoteImageHolder::~RemoteImageHolder() {
   WriteIPDLParam(aWriter, aActor, aParam.mSize);
   WriteIPDLParam(aWriter, aActor, aParam.mColorDepth);
   WriteIPDLParam(aWriter, aActor, aParam.mSD);
+  WriteIPDLParam(aWriter, aActor, aParam.mYUVColorSpace);
+  WriteIPDLParam(aWriter, aActor, aParam.mColorPrimaries);
+  WriteIPDLParam(aWriter, aActor, aParam.mTransferFunction);
+  WriteIPDLParam(aWriter, aActor, aParam.mColorRange);
   // Empty this holder.
   aParam.mSD = Nothing();
   aParam.mManager = nullptr;
@@ -158,7 +174,11 @@ RemoteImageHolder::~RemoteImageHolder() {
   if (!ReadIPDLParam(aReader, aActor, &aResult->mSource) ||
       !ReadIPDLParam(aReader, aActor, &aResult->mSize) ||
       !ReadIPDLParam(aReader, aActor, &aResult->mColorDepth) ||
-      !ReadIPDLParam(aReader, aActor, &aResult->mSD)) {
+      !ReadIPDLParam(aReader, aActor, &aResult->mSD) ||
+      !ReadIPDLParam(aReader, aActor, &aResult->mYUVColorSpace) ||
+      !ReadIPDLParam(aReader, aActor, &aResult->mColorPrimaries) ||
+      !ReadIPDLParam(aReader, aActor, &aResult->mTransferFunction) ||
+      !ReadIPDLParam(aReader, aActor, &aResult->mColorRange)) {
     return false;
   }
 

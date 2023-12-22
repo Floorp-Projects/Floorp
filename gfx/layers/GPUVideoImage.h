@@ -39,10 +39,18 @@ class GPUVideoImage final : public Image {
  public:
   GPUVideoImage(IGPUVideoSurfaceManager* aManager,
                 const SurfaceDescriptorGPUVideo& aSD, const gfx::IntSize& aSize,
-                const gfx::ColorDepth& aColorDepth)
+                const gfx::ColorDepth& aColorDepth,
+                gfx::YUVColorSpace aYUVColorSpace,
+                gfx::ColorSpace2 aColorPrimaries,
+                gfx::TransferFunction aTransferFunction,
+                gfx::ColorRange aColorRange)
       : Image(nullptr, ImageFormat::GPU_VIDEO),
         mSize(aSize),
-        mColorDepth(aColorDepth) {
+        mColorDepth(aColorDepth),
+        mColorSpace(aColorPrimaries),
+        mYUVColorSpace(aYUVColorSpace),
+        mTransferFunction(aTransferFunction),
+        mColorRange(aColorRange) {
     // Create the TextureClient immediately since the GPUVideoTextureData
     // is responsible for deallocating the SurfaceDescriptor.
     //
@@ -62,6 +70,10 @@ class GPUVideoImage final : public Image {
   gfx::IntSize GetSize() const override { return mSize; }
 
   gfx::ColorDepth GetColorDepth() const override { return mColorDepth; }
+  gfx::ColorSpace2 GetColorPrimaries() const { return mColorSpace; }
+  gfx::YUVColorSpace GetYUVColorSpace() const { return mYUVColorSpace; }
+  gfx::TransferFunction GetTransferFunction() const { return mTransferFunction; }
+  gfx::ColorRange GetColorRange() const { return mColorRange; }
 
   Maybe<SurfaceDescriptor> GetDesc() override {
     return GetDescFromTexClient(mTextureClient);
@@ -97,7 +109,11 @@ class GPUVideoImage final : public Image {
  private:
   gfx::IntSize mSize;
   gfx::ColorDepth mColorDepth;
+  gfx::ColorSpace2 mColorSpace;
+  gfx::YUVColorSpace mYUVColorSpace;
   RefPtr<TextureClient> mTextureClient;
+  gfx::TransferFunction mTransferFunction;
+  gfx::ColorRange mColorRange;
 };
 
 }  // namespace layers
