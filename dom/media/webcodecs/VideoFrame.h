@@ -160,6 +160,7 @@ class VideoFrame final : public nsISupports, public nsWrapperCache {
   already_AddRefed<VideoFrame> Clone(ErrorResult& aRv);
 
   void Close();
+  bool IsClosed() const;
 
   // [Serializable] implementations: {Read, Write}StructuredClone
   static JSObject* ReadStructuredClone(JSContext* aCx, nsIGlobalObject* aGlobal,

@@ -1736,6 +1736,10 @@ void VideoFrame::Close() {
   mDisplaySize = gfx::IntSize();
 }
 
+bool VideoFrame::IsClosed() const {
+  return !mResource;
+}
+
 already_AddRefed<layers::Image> VideoFrame::GetImage() const {
   if (!mResource) {
     return nullptr;
