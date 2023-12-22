@@ -29,3 +29,7 @@ if CONFIG['CC_TYPE'] == 'gcc':
   ]
 
 FINAL_LIBRARY = 'xul'
+
+LOCAL_INCLUDES += [
+  "/media/libyuv/libyuv/include",
+]

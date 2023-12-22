@@ -23,3 +23,7 @@ if CONFIG['CC_TYPE'] == 'clang':
   CXXFLAGS += [
     '-Wno-unknown-attributes',
   ]
+
+LOCAL_INCLUDES += [
+  "/media/libyuv/libyuv/include",
+]

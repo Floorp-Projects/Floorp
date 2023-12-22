@@ -64,6 +64,7 @@ class FFmpegVideoEncoder<LIBAV_VER> final : public MediaDataEncoder {
   void CloseCodecContext() MOZ_EXCLUDES(sMutex);
   bool PrepareFrame();
   void DestroyFrame();
+  bool ScaleInputFrame();
 #if LIBAVCODEC_VERSION_MAJOR >= 58
   RefPtr<EncodePromise> EncodeWithModernAPIs(RefPtr<const VideoData> aSample);
   RefPtr<EncodePromise> DrainWithModernAPIs();
