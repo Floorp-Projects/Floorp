@@ -683,10 +683,11 @@ RefPtr<MediaDataEncoder::EncodePromise> FFmpegVideoEncoder<
       "Fill AVFrame with %s image data",
       dom::ImageBitmapFormatValues::GetString(imageUtils.GetFormat()).data());
 
-  // Set presentation timestamp of the AVFrame.
-  // The unit of pts is AVCodecContext's time_base, which is the reciprocal of
-  // the frame rate.
-  mFrame->pts = aSample->mTime.ToTicksAtRate(mConfig.mFramerate);
+  // Everything in microsecond for now: bug 1869560
+  mFrame->pts = aSample->mTime.ToMicroseconds();
+#if LIBAVCODEC_VERSION_MAJOR >= 59
+  mFrame->time_base = {1, USECS_PER_S};
+#endif
 
   // Initialize AVPacket.
   AVPacket* pkt = mLib->av_packet_alloc();
@@ -852,19 +853,10 @@ RefPtr<MediaRawData> FFmpegVideoEncoder<LIBAV_VER>::ToMediaRawData(
   }
 
   data->mKeyframe = (aPacket->flags & AV_PKT_FLAG_KEY) != 0;
-  // The unit of pts, dts, and duration is AVCodecContext's time_base, which is
-  // the reciprocal of the frame rate.
-  data->mTime =
-      media::TimeUnit(aPacket->pts, static_cast<int64_t>(mConfig.mFramerate));
-  data->mDuration = media::TimeUnit(aPacket->duration,
-                                    static_cast<int64_t>(mConfig.mFramerate));
-  data->mTimecode =
-      media::TimeUnit(aPacket->dts, static_cast<int64_t>(mConfig.mFramerate));
-
-  if (auto r = GetExtraData(aPacket); r.isOk()) {
-    data->mExtraData = r.unwrap();
-  }
-
+  // Everything in microseconds for now: bug 1869560
+  data->mTime = media::TimeUnit::FromMicroseconds(aPacket->pts);
+  data->mDuration = media::TimeUnit::FromMicroseconds(aPacket->duration);
+  data->mTimecode = media::TimeUnit::FromMicroseconds(aPacket->dts);
   return data;
 }
 
