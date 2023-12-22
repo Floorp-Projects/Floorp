@@ -1,42 +1,82 @@
 <!DOCTYPE html>
-<title>Test for bug 1772841</title>
+<title>Test for bugs 1772841 and 1865885</title>
 <script src="/tests/SimpleTest/SimpleTest.js"></script>
 <script src="/tests/SimpleTest/EventUtils.js"></script>
 <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
-<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1772841">Mozilla Bug 1772841</a>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1772841">Mozilla Bug 1772841</a> and <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1865885">Mozilla Bug 1865885</a>
 <div id="content">
+    <!-- Disabled -->
     <input type="date" id="date" disabled>
     <input type="time" id="time" disabled>
     <input type="datetime-local" id="datetime-local" disabled>
+    <fieldset id="fieldset" disabled>
+        <input type="date" id="fieldset-date">
+        <input type="time" id="fieldset-time">
+        <input type="datetime-local" id="fieldset-datetime-local">
+    </fieldset>
 
+    <!-- Dynamically disabled -->
     <input type="date" id="date1">
     <input type="time" id="time1">
     <input type="datetime-local" id="datetime-local1">
+    <fieldset id="fieldset1">
+        <input type="date" id="fieldset-date1">
+        <input type="time" id="fieldset-time1">
+        <input type="datetime-local" id="fieldset-datetime-local1">
+    </fieldset>
+
+    <!-- Dynamically enabled -->
+    <input type="date" id="date2" disabled>
+    <input type="time" id="time2" disabled>
+    <input type="datetime-local" id="datetime-local2" disabled>
+    <fieldset id="fieldset2" disabled>
+        <input type="date" id="fieldset-date2">
+        <input type="time" id="fieldset-time2">
+        <input type="datetime-local" id="fieldset-datetime-local2">
+    </fieldset>
 </div>
 <script>
     /*
-    *  Test for bug 1772841
-    *  This test checks that when a datetime input element is disabled,
-    *  it should not be focusable by click.
+    *  Test for bugs 1772841 and 1865885
+    *  This test checks that when a datetime input element is disabled by itself
+    *  or from its containing fieldset, it should not be focusable by click.
     **/
 
     add_task(async function() {
         await SimpleTest.promiseFocus(window);
-        for (let inputType of ["time", "date", "datetime-local"]) {
-            testFocusState(inputType);
-            testDynamicChange(inputType);
+        for (let inputId of ["time", "date", "datetime-local", "fieldset-time", "fieldset-date", "fieldset-datetime-local"]) {
+            testFocusState(inputId, /* isDisabled = */ true);
+            testDynamicChange(inputId, "1", /* isDisabling = */ true);
+            testDynamicChange(inputId, "2", /* isDisabling = */ false);
         }
     })
-    function testFocusState(inputType) {
-        let input = document.getElementById(inputType);
-        input.click();
-        isnot(document.activeElement, input, "disabled element should not be focusable by click");
+    function testFocusState(inputId, isDisabled) {
+        let input = document.getElementById(inputId);
 
+        document.getElementById("content").click();
+        input.click();
+        if (isDisabled) {
+            isnot(document.activeElement, input, `This disabled ${inputId} input should not be focusable by click`);
+        } else {
+            // The click method won't set the focus on clicked input, thus we
+            // only check that the state is changed to enabled here
+            ok(!input.disabled, `This ${inputId} input is not disabled`);
+        }
+
+        document.getElementById("content").click();
         synthesizeMouseAtCenter(input, {});
-        isnot(document.activeElement, input, "disabled element should not be focusable by click");
+        if (isDisabled) {
+            isnot(document.activeElement, input, `This disabled ${inputId} input should not be focusable by click`);
+        } else {
+            is(document.activeElement, input, `This enabled ${inputId} input should be focusable by click`);
+        }
     }
-    function testDynamicChange(inputType) {
-        document.getElementById(inputType + "1").disabled = true;
-        testFocusState(inputType + "1");
+    function testDynamicChange(inputId, index, isDisabling) {
+        if (inputId.split("-")[0] === "fieldset") {
+            document.getElementById("fieldset" + index).disabled = isDisabling;
+        } else {
+            document.getElementById(inputId + index).disabled = isDisabling;
+        }
+        testFocusState(inputId + index, /* isDisabled = */ isDisabling);
     }
 </script>

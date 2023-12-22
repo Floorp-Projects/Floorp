@@ -10,7 +10,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1479708
 <link rel="stylesheet" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
-Created for <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1479708">Mozilla Bug 1479708</a> and updated by <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1676068">Mozilla Bug 1676068</a>
+Created for <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1479708">Mozilla Bug 1479708</a> and updated by <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1676068">Mozilla Bug 1676068</a> and <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1865885">Mozilla Bug 1865885</a>
 <p id="display"></p>
 <div id="content">
 <input type="date" id="id_date" value="2017-06-08">
@@ -72,7 +72,7 @@ function test_disabled_field_disabled() {
 
     ok(input.disabled, `#${id} Should be disabled`);
     ok(
-      get_calendar_button(id).hidden,
+      is_calendar_button_hidden(id),
       `disabled's Calendar button is hidden (${id})`
     );
 
@@ -82,7 +82,7 @@ function test_disabled_field_disabled() {
       assert_calendar_hidden(id);
     } else {
       ok(
-        !get_calendar_button(id).hidden,
+        !is_calendar_button_hidden(id),
         `enabled field's Calendar button is not hidden (${id})`
       );
     }
@@ -97,7 +97,7 @@ function test_readonly_field_disabled() {
     const input = document.getElementById(id);
 
     ok(input.readOnly, `#${id} Should be read-only`);
-    ok(get_calendar_button(id).hidden, `readonly field's Calendar button is hidden (${id})`);
+    ok(is_calendar_button_hidden(id), `readonly field's Calendar button is hidden (${id})`);
 
     input.readOnly = false;
     ok(!input.readOnly, `#${id} Should not be read-only anymore`);
@@ -105,7 +105,7 @@ function test_readonly_field_disabled() {
       assert_calendar_hidden(id);
     } else {
       ok(
-        !get_calendar_button(id).hidden,
+        !is_calendar_button_hidden(id),
         `non-readonly field's Calendar button is not hidden (${id})`
       );
     }
@@ -150,8 +150,8 @@ function assert_calendar_visible_all(kind) {
   }
 }
 function assert_calendar_visible(id) {
-  const calendarButton = get_calendar_button(id);
-  is(calendarButton.hidden, false, `Calendar button is not hidden on #${id}`);
+  const isCalendarButtonHidden = is_calendar_button_hidden(id);
+  ok(!isCalendarButtonHidden, `Calendar button is not hidden on #${id}`);
 }
 
 function assert_calendar_hidden_all(kind) {
@@ -161,14 +161,16 @@ function assert_calendar_hidden_all(kind) {
 }
 
 function assert_calendar_hidden(id) {
-  const calendarButton = get_calendar_button(id);
-  is(calendarButton.hidden, true, `Calendar button is hidden on #${id}`);
+  const isCalendarButtonHidden = is_calendar_button_hidden(id);
+  ok(isCalendarButtonHidden, `Calendar button is hidden on #${id}`);
 }
 
-function get_calendar_button(id) {
+function is_calendar_button_hidden(id) {
   const input = document.getElementById(id);
   const shadowRoot = SpecialPowers.wrap(input).openOrClosedShadowRoot;
-  return shadowRoot.getElementById("calendar-button");
+  const calendarButton = shadowRoot.getElementById("calendar-button");
+  const calendarButtonDisplay = SpecialPowers.wrap(window).getComputedStyle(calendarButton).display;
+  return calendarButtonDisplay === "none";
 }
 
 </script>

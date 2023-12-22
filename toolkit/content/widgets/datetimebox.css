@@ -32,17 +32,12 @@
   margin: 0;
   ime-mode: disabled;
   outline: none;
-}
 
-.datetime-edit-field:not([disabled="true"]):focus {
-  background-color: Highlight;
-  color: HighlightText;
-  outline: none;
-}
-
-.datetime-edit-field[disabled="true"],
-.datetime-edit-field[readonly="true"] {
-  user-select: none;
+  &:focus {
+    background-color: Highlight;
+    color: HighlightText;
+    outline: none;
+  }
 }
 
 .datetime-calendar-button {
@@ -59,14 +54,38 @@
   margin-inline: 0.075em 0.15em;
   padding: 0 0.15em;
   line-height: 1;
-}
 
-.datetime-calendar-button:focus-visible {
-  outline: 0.15em solid SelectedItem;
-}
+  &:focus-visible {
+    outline: 0.15em solid SelectedItem;
+  }
 
-.datetime-calendar-button:is(:focus-visible, :hover) {
-  opacity: 1;
+  &:focus-visible,
+  &:hover {
+    opacity: 1;
+  }
+
+  @media (prefers-contrast) {
+    opacity: 1;
+    background-color: ButtonFace;
+    color: ButtonText;
+
+    > .datetime-calendar-button-svg {
+      background-color: ButtonFace;
+      -moz-context-properties: fill;
+      fill: ButtonText;
+    }
+
+    &:focus-visible,
+    &:hover {
+      background-color: SelectedItem;
+
+      > .datetime-calendar-button-svg {
+        background-color: SelectedItem;
+        -moz-context-properties: fill;
+        fill: SelectedItemText;
+      }
+    }
+  }
 }
 
 .datetime-calendar-button-svg {
@@ -77,28 +96,12 @@
   max-height: 1em;
 }
 
-@media (prefers-contrast) {
-  .datetime-calendar-button {
-    opacity: 1;
-    background-color: ButtonFace;
-    color: ButtonText;
-  }
+:host(:is(:disabled, :read-only, [type="time"])) .datetime-calendar-button {
+  display: none;
+}
 
-  .datetime-calendar-button:focus-visible,
-  .datetime-calendar-button:hover {
-    background-color: SelectedItem;
-  }
-
-  .datetime-calendar-button:focus-visible > .datetime-calendar-button-svg,
-  .datetime-calendar-button:hover > .datetime-calendar-button-svg {
-    background-color: SelectedItem;
-    -moz-context-properties: fill;
-    fill: SelectedItemText;
-  }
-
-  .datetime-calendar-button-svg {
-    background-color: ButtonFace;
-    -moz-context-properties: fill;
-    fill: ButtonText;
-  }
+:host(:is(:disabled, :read-only)) .datetime-edit-field {
+  user-select: none;
+  pointer-events: none;
+  -moz-user-focus: none;
 }
