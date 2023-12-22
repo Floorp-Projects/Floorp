@@ -493,6 +493,10 @@ addAccessibleTask(
   <div id="mypopover" popover>Popover content</div>
   `,
   async function (browser, docAcc) {
+    await SpecialPowers.pushPrefEnv({
+      set: [["dom.element.popover.enabled", true]],
+    });
+
     const show = findAccessibleChildByID(docAcc, "show-popover-btn");
     const hide = findAccessibleChildByID(docAcc, "hide-popover-btn");
     testStates(show, STATE_COLLAPSED, 0);
