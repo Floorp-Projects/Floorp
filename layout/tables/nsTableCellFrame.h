@@ -314,7 +314,7 @@ class nsBCTableCellFrame final : public nsTableCellFrame {
 
  private:
   // These are the entire width of the border (the cell edge contains only
-  // the inner half, per the macros in nsTablePainter.h).
+  // the inner half).
   BCPixelSize mBStartBorder;
   BCPixelSize mIEndBorder;
   BCPixelSize mBEndBorder;
