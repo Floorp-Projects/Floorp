@@ -407,16 +407,6 @@ void nsTableColGroupFrame::SetContinuousBCBorderWidth(LogicalSide aForSide,
   }
 }
 
-void nsTableColGroupFrame::GetContinuousBCBorderWidth(WritingMode aWM,
-                                                      LogicalMargin& aBorder) {
-  int32_t d2a = PresContext()->AppUnitsPerDevPixel();
-  nsTableColFrame* col =
-      GetTableFrame()->GetColFrame(mStartColIndex + mColCount - 1);
-  col->GetContinuousBCBorderWidth(aWM, aBorder);
-  aBorder.BStart(aWM) = BC_BORDER_END_HALF_COORD(d2a, mBStartContBorderWidth);
-  aBorder.BEnd(aWM) = BC_BORDER_START_HALF_COORD(d2a, mBEndContBorderWidth);
-}
-
 /* ----- global methods ----- */
 
 nsTableColGroupFrame* NS_NewTableColGroupFrame(PresShell* aPresShell,

@@ -92,16 +92,6 @@ class nsTableColFrame final : public nsSplittableFrame {
   void SetIEndBorderWidth(BCPixelSize aWidth) { mIEndBorderWidth = aWidth; }
 
   /**
-   * Gets inner border widths before collapsing with cell borders
-   * Caller must get istart border from previous column or from table
-   * GetContinuousBCBorderWidth will not overwrite aBorder.IStart
-   * see nsTablePainter about continuous borders
-   *
-   * @return outer iend border width (istart inner for next column)
-   */
-  nscoord GetContinuousBCBorderWidth(mozilla::WritingMode aWM,
-                                     mozilla::LogicalMargin& aBorder);
-  /**
    * Set full border widths before collapsing with cell borders
    * @param aForSide - side to set; only valid for bstart, iend, and bend
    */
@@ -302,15 +292,6 @@ inline int32_t nsTableColFrame::GetColIndex() const { return mColIndex; }
 
 inline void nsTableColFrame::SetColIndex(int32_t aColIndex) {
   mColIndex = aColIndex;
-}
-
-inline nscoord nsTableColFrame::GetContinuousBCBorderWidth(
-    mozilla::WritingMode aWM, mozilla::LogicalMargin& aBorder) {
-  int32_t d2a = PresContext()->AppUnitsPerDevPixel();
-  aBorder.BStart(aWM) = BC_BORDER_END_HALF_COORD(d2a, mBStartContBorderWidth);
-  aBorder.IEnd(aWM) = BC_BORDER_START_HALF_COORD(d2a, mIEndContBorderWidth);
-  aBorder.BEnd(aWM) = BC_BORDER_START_HALF_COORD(d2a, mBEndContBorderWidth);
-  return BC_BORDER_END_HALF_COORD(d2a, mIEndContBorderWidth);
 }
 
 #endif
