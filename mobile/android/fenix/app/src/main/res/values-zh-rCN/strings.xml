@@ -300,7 +300,7 @@
 
     <!-- Home onboarding -->
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
-    <string name="onboarding_home_screen_jump_back_contextual_hint_2">认识您的个性化主页。这里将显示最近的标签页、书签和搜索结果。</string>
+    <string name="onboarding_home_screen_jump_back_contextual_hint_2">这就是您的个性化主页。最近的标签页、书签、搜索结果会显示在这里。</string>
     <!-- Home onboarding dialog welcome screen title text. -->
     <string name="onboarding_home_welcome_title_2">欢迎进入更个性化的互联网</string>
     <!-- Home onboarding dialog welcome screen description text. -->
@@ -1728,7 +1728,7 @@
     <!-- Preference option for asking to save passwords in Fenix -->
     <string name="preferences_passwords_save_logins_ask_to_save">询问是否保存</string>
     <!-- Preference option for never saving passwords in Fenix -->
-    <string name="preferences_passwords_save_logins_never_save">总不保存</string>
+    <string name="preferences_passwords_save_logins_never_save">永不保存</string>
 
     <!-- Preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
     <string name="preferences_passwords_autofill2">在 %1$s 中自动填充</string>
@@ -1958,11 +1958,11 @@
     <!-- Placeholder text shown in the Search Engine Name text field before a user enters text -->
     <string name="search_add_custom_engine_name_hint_2">搜索引擎名称</string>
     <!-- Label for the TextField in which user enters custom search engine URL -->
-    <string name="search_add_custom_engine_url_label">搜索字符串 URL</string>
+    <string name="search_add_custom_engine_url_label">搜索字符串网址</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
-    <string name="search_add_custom_engine_search_string_hint_2">用于搜索的 URL</string>
+    <string name="search_add_custom_engine_search_string_hint_2">用于搜索的网址</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
-    <string name="search_add_custom_engine_search_string_example" formatted="false">用“%s”替换查询关键字。示例：\nhttps://www.google.com/search?q=%s</string>
+    <string name="search_add_custom_engine_search_string_example" formatted="false">用“%s”代表查询关键字。示例：\nhttps://www.google.com/search?q=%s</string>
 
     <!-- Accessibility description for the form in which details about the custom search engine are entered -->
     <string name="search_add_custom_engine_form_description">自定义搜索引擎信息</string>
@@ -1972,7 +1972,7 @@
     <!-- Placeholder text shown in the Search Suggestion String TextField before a user enters text -->
     <string name="search_add_custom_engine_suggest_string_hint">搜索建议 API 网址</string>
     <!-- Description text for the Search Suggestion String TextField. The %s is part of the string -->
-    <string name="search_add_custom_engine_suggest_string_example_2" formatted="false">用“%s”代表搜索词。示例：\nhttps://suggestqueries.google.com/complete/search?client=firefox&amp;q=%s</string>
+    <string name="search_add_custom_engine_suggest_string_example_2" formatted="false">用“%s”代表查询关键字。示例：\nhttps://suggestqueries.google.com/complete/search?client=firefox&amp;q=%s</string>
     <!-- The text for the "Save" button for saving a custom search engine -->
     <string name="search_custom_engine_save_button">保存</string>
 

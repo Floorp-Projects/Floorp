@@ -1558,7 +1558,7 @@
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies_5">Ynyswch cwcis traws-wefan</string>
     <!-- Preference for Global Privacy Control for the custom privacy settings for Global Privacy Control. '&amp;' is replaced with the ampersand symbol: &-->
-    <string name="preference_enhanced_tracking_protection_custom_global_privacy_control">Dywedwch wrth wefannau i beidio â rhannu a gwerthu data</string>
+    <string name="preference_enhanced_tracking_protection_custom_global_privacy_control">Dweud wrth wefannau i beidio â rhannu a gwerthu data</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content">Cynnwys tracio</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
@@ -2214,7 +2214,7 @@
     <!-- Title for warning card informing the user that the current product's analysis is still processing. -->
     <string name="review_quality_check_analysis_in_progress_warning_title" moz:RemovedIn="122">Yn gwirio ansawdd adolygiadau</string>
     <!-- Title for warning card informing the user that the current product's analysis is still processing. The parameter is the percentage progress (0-100%) of the analysis process (e.g. 56%). -->
-    <string name="review_quality_check_analysis_in_progress_warning_title_2">Gwirio ansawdd adolygu (%s)</string>
+    <string name="review_quality_check_analysis_in_progress_warning_title_2">Yn gwirio ansawdd adolygiadau (%s)</string>
     <!-- Text for body of warning card informing the user that the current product's analysis is still processing. -->
     <string name="review_quality_check_analysis_in_progress_warning_body">Gall hyn gymryd tua 60 eiliad.</string>
     <!-- Title for info card displayed after the user reports a product is back in stock. -->
@@ -2331,30 +2331,30 @@
     <!-- Title of the automatic translation preference screen that will appear on the toolbar.-->
     <string name="automatic_translation_toolbar_title_preference">Cyfieithu awtomatig</string>
     <!-- Screen header presenting the automatic translation preference feature. It will appear under the toolbar. -->
-    <string name="automatic_translation_header_preference">Dewiswch iaith i reoli dewisiadau &quot;cyfieithu bob amser&quot; a &quot;byth yn cyfieithu&quot;.</string>
+    <string name="automatic_translation_header_preference">Dewiswch iaith i reoli dewisiadau ”cyfieithu bob tro“ a ”peidio â chyfieithu“.</string>
 
     <!-- Automatic translation options preference screen -->
     <!-- Preference option for offering to translate. Radio button title text.-->
-    <string name="automatic_translation_option_offer_to_translate_title_preference">Cynnig i gyfieithu (diofyn)</string>
+    <string name="automatic_translation_option_offer_to_translate_title_preference">Cynnig i gyfieithu (rhagosodedig)</string>
     <!-- Preference option for offering to translate. Radio button summary text. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="automatic_translation_option_offer_to_translate_summary_preference">Bydd %1$s yn cynnig cyfieithu gwefannau yn yr iaith hon.</string>
     <!-- Preference option for always translate. Radio button title text. -->
-    <string name="automatic_translation_option_always_translate_title_preference">Cyfieithwch bob amser</string>
+    <string name="automatic_translation_option_always_translate_title_preference">Cyfieithu bob tro</string>
     <!-- Preference option for always translate. Radio button summary text. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="automatic_translation_option_always_translate_summary_preference">Bydd %1$s yn cyfieithu\'r iaith hon yn awtomatig pan fydd y dudalen yn llwytho.</string>
     <!-- Preference option for never translate. Radio button title text.-->
-    <string name="automatic_translation_option_never_translate_title_preference">Byth yn cyfieithu</string>
+    <string name="automatic_translation_option_never_translate_title_preference">Byth cyfieithu</string>
     <!-- Preference option for never translate. Radio button summary text. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
-    <string name="automatic_translation_option_never_translate_summary_preference">Ni fydd %1$s byth yn cynnig cyfieithu gwefannau yn yr iaith hon.</string>
+    <string name="automatic_translation_option_never_translate_summary_preference">Fydd %1$s byth yn cynnig cyfieithu gwefannau yn yr iaith hon.</string>
 
     <!-- Never translate site preference screen -->
     <!-- Title of the never translate site preference screen that will appear on the toolbar.-->
-    <string name="never_translate_site_toolbar_title_preference">Peidiwch byth â chyfieithu\'r gwefannau hyn</string>
+    <string name="never_translate_site_toolbar_title_preference">Peidio byth â chyfieithu\'r gwefannau hyn</string>
     <!-- Screen header presenting the never translate site preference feature. It will appear under the toolbar. -->
-    <string name="never_translate_site_header_preference">I ychwanegu gwefan newydd: Ymwelwch ag ef a dewiswch “Peidiwch byth â chyfieithu\'r wefan hon” o\'r ddewislen cyfieithu.</string>
+    <string name="never_translate_site_header_preference">I ychwanegu gwefan newydd: Ewch yno a dewis “Peidio byth â chyfieithu\'r wefan hon” o\'r ddewislen cyfieithu.</string>
     <!-- Content description (not visible, for screen readers etc.): For a never-translated site list item that is selected.
              The first parameter is web site url (for example:"wikipedia.com") -->
-    <string name="never_translate_site_item_list_content_description_preference">Dileu %1$s</string>
+    <string name="never_translate_site_item_list_content_description_preference">Tynnu %1$s</string>
     <!-- The Delete site dialogue title will appear when the user clicks on a list item.
              The first parameter is web site url (for example:"wikipedia.com") -->
     <string name="never_translate_site_dialog_title_preference">Dileu %1$s?</string>
@@ -2365,17 +2365,17 @@
 
     <!-- Download languages preference screen -->
     <!-- Title of the download languages preference screen toolbar.-->
-    <string name="download_languages_toolbar_title_preference">Lawrlwythwch Ieithoedd</string>
+    <string name="download_languages_toolbar_title_preference">Llwytho Ieithoedd i Lawr</string>
     <!-- Screen header presenting the download language preference feature. It will appear under the toolbar.The first parameter is "Learn More," a clickable text with a link. Talkback will append this to say "Double tap to open link to learn more". -->
-    <string name="download_languages_header_preference">Dadlwythwch ieithoedd cyflawn ar gyfer cyfieithiadau cyflymach ac i gyfieithu all-lein. %1$s</string>
+    <string name="download_languages_header_preference">Llwytho ieithoedd cyfan i lawr ar gyfer cyfieithiadau cyflymach ac i gyfieithu all-lein. %1$s</string>
     <!-- Clickable text from the screen header that links to a website. -->
-    <string name="download_languages_header_learn_more_preference">Dysgu rhagor</string>
+    <string name="download_languages_header_learn_more_preference">Darllen rhagor</string>
     <!-- The subhead of the download language preference screen will appear above the pivot language. -->
     <string name="download_languages_available_languages_preference">Ieithoedd ar gael</string>
     <!-- Text that will appear beside a core or pivot language package name to show that the language is necessary for the translation feature to function. -->
     <string name="download_languages_default_system_language_require_preference">angenrheidiol</string>
     <!-- The subhead of the download language preference screen will appear above the items that were not downloaded. -->
-    <string name="download_language_header_preference">Lawrlwythwch Ieithoedd</string>
+    <string name="download_language_header_preference">Llwytho Ieithoedd i Lawr</string>
     <!-- All languages list item. When the user presses this item, they can download or delete all languages. -->
     <string name="download_language_all_languages_item_preference">Pob iaith</string>
     <!-- Content description (not visible, for screen readers etc.): For a language list item that was downloaded, the user can now delete it. -->
