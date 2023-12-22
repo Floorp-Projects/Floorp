@@ -154,6 +154,37 @@ nsString VideoEncoderConfigInternal::ToString() const {
   return rv;
 }
 
+EncoderConfig VideoEncoderConfigInternal::ToEncoderConfig() const {
+  MediaDataEncoder::Usage usage;
+  if (mLatencyMode == LatencyMode::Quality) {
+    usage = MediaDataEncoder::Usage::Record;
+  } else {
+    usage = MediaDataEncoder::Usage::Realtime;
+  }
+  MediaDataEncoder::HardwarePreference hwPref =
+      MediaDataEncoder::HardwarePreference::None;
+  if (mHardwareAcceleration ==
+      mozilla::dom::HardwareAcceleration::Prefer_hardware) {
+    hwPref = MediaDataEncoder::HardwarePreference::RequireHardware;
+  } else if (mHardwareAcceleration ==
+             mozilla::dom::HardwareAcceleration::Prefer_software) {
+    hwPref = MediaDataEncoder::HardwarePreference::RequireSoftware;
+  }
+  CodecType codecType = CodecType::H264;
+  Maybe<EncoderConfig::CodecSpecific> specific;
+  if (codecType == CodecType::H264) {
+    uint8_t profile, constraints, level;
+    ExtractH264CodecDetails(mCodec, profile, constraints, level);
+    specific.emplace(H264Specific(static_cast<H264_PROFILE>(profile)));
+  }
+  return EncoderConfig(
+      codecType, {mWidth, mHeight}, usage, ImageBitmapFormat::RGBA32, ImageBitmapFormat::RGBA32,
+      AssertedCast<uint8_t>(mFramerate.refOr(0.f)), 0, mBitrate.refOr(0),
+      mBitrateMode == VideoEncoderBitrateMode::Constant
+          ? MediaDataEncoder::BitrateMode::Constant
+          : MediaDataEncoder::BitrateMode::Variable,
+      hwPref, specific);
+}
 /*
  * The followings are helpers for VideoEncoder methods
  */
