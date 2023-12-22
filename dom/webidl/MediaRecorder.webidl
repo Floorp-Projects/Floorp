@@ -10,6 +10,9 @@
  * liability, trademark and document use rules apply.
  */
 
+
+enum BitrateMode { "constant", "variable" };
+
 enum RecordingState { "inactive", "recording", "paused" };
 
 [Exposed=Window]
