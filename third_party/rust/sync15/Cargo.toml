@@ -13,7 +13,7 @@
 edition = "2021"
 name = "sync15"
 version = "0.1.0"
-authors = ["application-services@mozilla.com"]
+authors = ["Sync Team <sync-team@mozilla.com>"]
 exclude = [
     "/android",
     "/ios",
