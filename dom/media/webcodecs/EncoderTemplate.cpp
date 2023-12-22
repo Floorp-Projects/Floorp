@@ -307,6 +307,14 @@ void EncoderTemplate<EncoderType>::OutputEncodedData(
 
   RefPtr<typename EncoderType::OutputCallbackType> cb(mOutputCallback);
   for (auto& data : aData) {
+    // It's possible to have reset() called in between this task having been
+    // dispatched, and running -- no output callback should happen when that's
+    // the case.
+    // This is imprecise in the spec, but discussed in
+    // https://github.com/w3c/webcodecs/issues/755 and agreed upon.
+    if (!mActiveConfig) {
+      return;
+    }
     RefPtr<typename EncoderType::OutputType> encodedData =
         EncodedDataToOutputType(GetParentObject(), data);
     typename EncoderType::MetadataType metadata;
