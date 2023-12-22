@@ -1331,6 +1331,19 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
         uint32_t unusedDepth;
         CHECK(iter.readRethrow(&unusedDepth));
       }
+      case uint16_t(Op::ThrowRef): {
+        if (!env.exnrefEnabled()) {
+          return iter.unrecognizedOpcode(&op);
+        }
+        CHECK(iter.readThrowRef(&nothing));
+      }
+      case uint16_t(Op::TryTable): {
+        if (!env.exnrefEnabled()) {
+          return iter.unrecognizedOpcode(&op);
+        }
+        TryTableCatchVector catches;
+        CHECK(iter.readTryTable(&unusedType, &catches));
+      }
       case uint16_t(Op::ThreadPrefix): {
         // Though thread ops can be used on nonshared memories, we make them
         // unavailable if shared memory has been disabled in the prefs, for

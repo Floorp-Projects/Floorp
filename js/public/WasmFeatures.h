@@ -132,10 +132,21 @@ enum class WasmFeatureStage {
     /* compile predicate  */ true,                                      \
     /* compiler predicate */ AnyCompilerAvailable(cx),                  \
     /* flag predicate     */ true,                                      \
-    /* flag force enable  */ false,                                     \
+    /* flag force enable  */ WasmExnRefFlag(cx),                        \
     /* flag fuzz enable   */ true,                                      \
     /* shell flag         */ "exceptions",                              \
     /* preference name    */ "exceptions")                              \
+  FEATURE(                                                              \
+    /* capitalized name   */ ExnRef,                                    \
+    /* lower case name    */ exnref,                                    \
+    /* stage              */ WasmFeatureStage::Experimental,            \
+    /* compile predicate  */ true,                                      \
+    /* compiler predicate */ AnyCompilerAvailable(cx),                  \
+    /* flag predicate     */ true,                                      \
+    /* flag force enable  */ false,                                     \
+    /* flag fuzz enable   */ true,                                      \
+    /* shell flag         */ "exnref",                                  \
+    /* preference name    */ "exnref ")                                 \
   FEATURE(                                                              \
     /* capitalized name   */ FunctionReferences,                        \
     /* lower case name    */ functionReferences,                        \

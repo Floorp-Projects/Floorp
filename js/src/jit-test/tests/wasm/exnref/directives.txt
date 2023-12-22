@@ -1,0 +1,1 @@
+|jit-test| --wasm-exnref; test-also=--wasm-compiler=optimizing; test-also=--wasm-compiler=baseline; test-also=--wasm-test-serialization; test-also=--test-wasm-await-tier2; include:wasm.js; skip-if: !wasmExnRefEnabled()
