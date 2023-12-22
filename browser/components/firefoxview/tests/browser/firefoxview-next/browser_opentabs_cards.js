@@ -495,14 +495,16 @@ add_task(async function search_open_tabs_recent_browsing() {
     );
 
     info("Click the Show All link.");
-    const showAllLink = slot.viewCards[0].shadowRoot.querySelector(
-      "[data-l10n-id='firefoxview-show-all']"
-    );
-    EventUtils.synthesizeMouseAtCenter(showAllLink, {}, content);
-    await TestUtils.waitForCondition(
-      () => slot.viewCards[0].tabList.rowEls.length === NUMBER_OF_TABS,
-      "All search results are shown."
-    );
+    const showAllLink = await TestUtils.waitForCondition(() => {
+      const elt = slot.viewCards[0].shadowRoot.querySelector(
+        "[data-l10n-id='firefoxview-show-all']"
+      );
+      EventUtils.synthesizeMouseAtCenter(elt, {}, content);
+      if (slot.viewCards[0].tabList.rowEls.length === NUMBER_OF_TABS) {
+        return elt;
+      }
+      return false;
+    }, "All search results are shown.");
     ok(BrowserTestUtils.is_hidden(showAllLink), "The show all link is hidden.");
   });
   await SpecialPowers.popPrefEnv();
