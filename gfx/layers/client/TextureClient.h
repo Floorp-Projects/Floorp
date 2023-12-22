@@ -239,9 +239,13 @@ class TextureData {
                              TextureAllocationFlags aAllocFlags);
 
   static bool IsRemote(KnowsCompositor* aKnowsCompositor,
-                       BackendSelector aSelector);
+                       BackendSelector aSelector,
+                       gfx::SurfaceFormat aFormat = gfx::SurfaceFormat::UNKNOWN,
+                       gfx::IntSize aSize = gfx::IntSize(1, 1));
 
   MOZ_COUNTED_DTOR_VIRTUAL(TextureData)
+
+  virtual TextureType GetTextureType() const { return TextureType::Last; }
 
   virtual void FillInfo(TextureData::Info& aInfo) const = 0;
 

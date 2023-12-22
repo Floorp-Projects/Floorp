@@ -68,6 +68,8 @@ class MemoryTextureData : public BufferTextureData {
 
   virtual size_t GetBufferSize() override { return mBufferSize; }
 
+  TextureType GetTextureType() const override { return TextureType::Unknown; }
+
  protected:
   uint8_t* mBuffer;
   size_t mBufferSize;

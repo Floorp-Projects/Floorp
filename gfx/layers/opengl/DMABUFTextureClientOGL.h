@@ -32,6 +32,8 @@ class DMABUFTextureData : public TextureData {
       TextureFlags aFlags = TextureFlags::DEFAULT,
       TextureAllocationFlags aAllocFlags = ALLOC_DEFAULT) const override;
 
+  TextureType GetTextureType() const override { return TextureType::DMABUF; }
+
   void FillInfo(TextureData::Info& aInfo) const override;
 
   bool Lock(OpenMode) override;
