@@ -64,18 +64,17 @@ static bool SetAverageBitrate(VTCompressionSessionRef& aSession,
 
 static bool SetConstantBitrate(VTCompressionSessionRef& aSession,
                                uint32_t aBitsPerSec) {
-  int64_t bps(aBitsPerSec);
+  int32_t bps(aBitsPerSec);
   AutoCFRelease<CFNumberRef> bitrate(
-      CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt64Type, &bps));
-  // Not available before macOS 13 -- this will fail cleanly when not supported
-  // but the symbol kVTCompressionPropertyKey_ConstantBitRate isn't available
-  // return VTSessionSetProperty(aSession,
-  //                             bitrate) == noErr;
+      CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt32Type, &bps));
 
   if (__builtin_available(macos 13.0, *)) {
-    return VTSessionSetProperty(aSession,
-                                kVTCompressionPropertyKey_ConstantBitRate,
-                                bitrate) == noErr;
+    int rv = VTSessionSetProperty(aSession,
+                                  kVTCompressionPropertyKey_ConstantBitRate,
+                                  bitrate) == noErr;
+    if (rv == kVTPropertyNotSupportedErr) {
+      LOGE("Constant bitrate not supported.");
+    }
   }
   return false;
 }
