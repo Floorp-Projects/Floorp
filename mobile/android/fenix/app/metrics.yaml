@@ -376,6 +376,27 @@ events:
     metadata:
       tags:
         - PrivateBrowsing
+  opened_ext_pdf:
+    type: event
+    description: |
+      A user opened a PDF with Fenix from another app
+    extra_keys:
+      referrer_is_fenix:
+        description: |
+          If the PDF was opened from Fenix itself (for example from the Download notification)
+        type: boolean
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1871548
+    data_reviews:
+      - https://github.com/mozilla-mobile/firefox-android/pull/4940
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+      - mcastelluccio@mozilla.com
+      - calixte@mozilla.com
+      - sylvestre@mozilla.com
+    expires: never
   synced_tab_opened:
     type: event
     description: |

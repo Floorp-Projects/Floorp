@@ -113,3 +113,5 @@ fun Intent.toSafeIntent(): SafeIntent = SafeIntent(this)
 
 const val EXTRA_ACTIVITY_REFERRER_PACKAGE = "activity_referrer_package"
 const val EXTRA_ACTIVITY_REFERRER_CATEGORY = "activity_referrer_category"
+
+const val INTENT_TYPE_PDF = "application/pdf"

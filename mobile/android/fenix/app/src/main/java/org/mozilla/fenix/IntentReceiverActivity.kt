@@ -15,6 +15,7 @@ import mozilla.components.feature.intent.ext.sanitize
 import mozilla.components.feature.intent.processing.IntentProcessor
 import mozilla.components.support.utils.EXTRA_ACTIVITY_REFERRER_CATEGORY
 import mozilla.components.support.utils.EXTRA_ACTIVITY_REFERRER_PACKAGE
+import mozilla.components.support.utils.INTENT_TYPE_PDF
 import mozilla.components.support.utils.ext.getApplicationInfoCompat
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.HomeActivity.Companion.PRIVATE_BROWSING_MODE
@@ -72,6 +73,12 @@ class IntentReceiverActivity : Activity() {
         }
 
         addReferrerInformation(intent)
+
+        if (intent.type == INTENT_TYPE_PDF) {
+            val referrerIsFenix =
+                intent.getStringExtra(EXTRA_ACTIVITY_REFERRER_PACKAGE) == this.packageName
+            Events.openedExtPdf.record(Events.OpenedExtPdfExtra(referrerIsFenix))
+        }
 
         val processor = getIntentProcessors(private).firstOrNull { it.process(intent) }
         val intentProcessorType = components.intentProcessors.getType(processor)
