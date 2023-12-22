@@ -1714,7 +1714,7 @@ already_AddRefed<Promise> VideoFrame::CopyTo(
 }
 
 // https://w3c.github.io/webcodecs/#dom-videoframe-clone
-already_AddRefed<VideoFrame> VideoFrame::Clone(ErrorResult& aRv) {
+already_AddRefed<VideoFrame> VideoFrame::Clone(ErrorResult& aRv) const {
   AssertIsOnOwningThread();
 
   if (!mResource) {
