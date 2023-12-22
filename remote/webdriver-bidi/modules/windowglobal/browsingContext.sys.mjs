@@ -23,6 +23,8 @@ const DOCUMENT_FRAGMENT_NODE = 11;
 const DOCUMENT_NODE = 9;
 const ELEMENT_NODE = 1;
 
+const ORDERED_NODE_SNAPSHOT_TYPE = 7;
+
 class BrowsingContextModule extends WindowGlobalBiDiModule {
   #loadListener;
   #subscribedEvents;
@@ -178,6 +180,49 @@ class BrowsingContextModule extends WindowGlobalBiDiModule {
           if (returnedNodes.length === maxReturnedNodeCount) {
             return returnedNodes;
           }
+        }
+      }
+    }
+
+    return returnedNodes;
+  }
+
+  /**
+   * Locate nodes using XPath.
+   *
+   * @see https://w3c.github.io/webdriver-bidi/#locate-nodes-using-xpath
+   */
+  #locateNodesUsingXPath(contextNodes, selector, maxReturnedNodeCount) {
+    const returnedNodes = [];
+
+    for (const contextNode of contextNodes) {
+      let evaluationResult;
+      try {
+        evaluationResult = this.messageHandler.window.document.evaluate(
+          selector,
+          contextNode,
+          null,
+          ORDERED_NODE_SNAPSHOT_TYPE,
+          null
+        );
+      } catch (e) {
+        const errorMessage = `${e.message}: "${selector}"`;
+        if (DOMException.isInstance(e) && e.name === "SyntaxError") {
+          throw new lazy.error.InvalidSelectorError(errorMessage);
+        }
+
+        throw new lazy.error.UnknownError(errorMessage);
+      }
+
+      for (let index = 0; index < evaluationResult.snapshotLength; index++) {
+        const node = evaluationResult.snapshotItem(index);
+        returnedNodes.push(node);
+
+        if (
+          maxReturnedNodeCount !== null &&
+          returnedNodes.length === maxReturnedNodeCount
+        ) {
+          return returnedNodes;
         }
       }
     }
@@ -390,6 +435,14 @@ class BrowsingContextModule extends WindowGlobalBiDiModule {
     switch (locator.type) {
       case lazy.LocatorType.css: {
         returnedNodes = this.#locateNodesUsingCss(
+          contextNodes,
+          locator.value,
+          maxNodeCount
+        );
+        break;
+      }
+      case lazy.LocatorType.xpath: {
+        returnedNodes = this.#locateNodesUsingXPath(
           contextNodes,
           locator.value,
           maxNodeCount
