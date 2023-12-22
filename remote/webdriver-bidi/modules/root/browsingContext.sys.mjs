@@ -825,7 +825,7 @@ class BrowsingContextModule extends Module {
       `Expected "locator.type" to be one of ${locatorTypes}, got ${locator.type}`
     )(locator.type);
 
-    if (locator.type !== LocatorType.css) {
+    if (![LocatorType.css, LocatorType.xpath].includes(locator.type)) {
       throw new lazy.error.UnsupportedOperationError(
         `"locator.type" argument with value: ${locator.type} is not supported yet.`
       );
