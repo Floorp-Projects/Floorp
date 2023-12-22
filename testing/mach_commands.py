@@ -1249,6 +1249,36 @@ def manifest(_command_context):
 @CommandArgument(
     "-b", "--bugzilla", default=None, dest="bugzilla", help="Bugzilla instance"
 )
+@CommandArgument(
+    "-m", "--meta-bug-id", default=None, dest="meta_bug_id", help="Meta Bug id"
+)
+@CommandArgument(
+    "-s",
+    "--turbo",
+    action="store_true",
+    dest="turbo",
+    help="Skip all secondary failures",
+)
+@CommandArgument(
+    "-t", "--save-tasks", default=None, dest="save_tasks", help="Save tasks to file"
+)
+@CommandArgument(
+    "-T", "--use-tasks", default=None, dest="use_tasks", help="Use tasks from file"
+)
+@CommandArgument(
+    "-f",
+    "--save-failures",
+    default=None,
+    dest="save_failures",
+    help="Save failures to file",
+)
+@CommandArgument(
+    "-F",
+    "--use-failures",
+    default=None,
+    dest="use_failures",
+    help="Use failures from file",
+)
 @CommandArgument("-v", "--verbose", action="store_true", help="Verbose mode")
 @CommandArgument(
     "-d",
@@ -1256,7 +1286,31 @@ def manifest(_command_context):
     action="store_true",
     help="Determine manifest changes, but do not write them",
 )
-def skipfails(command_context, try_url, verbose=False, bugzilla=None, dry_run=False):
+def skipfails(
+    command_context,
+    try_url,
+    bugzilla=None,
+    meta_bug_id=None,
+    turbo=False,
+    save_tasks=None,
+    use_tasks=None,
+    save_failures=None,
+    use_failures=None,
+    verbose=False,
+    dry_run=False,
+):
     from skipfails import Skipfails
 
-    Skipfails(command_context, try_url, verbose, bugzilla, dry_run).run()
+    if meta_bug_id is not None:
+        try:
+            meta_bug_id = int(meta_bug_id)
+        except ValueError:
+            meta_bug_id = None
+
+    Skipfails(command_context, try_url, verbose, bugzilla, dry_run, turbo).run(
+        meta_bug_id,
+        save_tasks,
+        use_tasks,
+        save_failures,
+        use_failures,
+    )

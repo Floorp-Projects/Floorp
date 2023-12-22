@@ -4,7 +4,11 @@
 
 ["bug_3.js"]
 # This is a comment about Bug 3
-run-if = ["os == 'linux'"]
+# DO NOT ADD MORE TESTS HERE
+skip-if = [
+  "os == 'linux'",
+  "verify", # Bug 33333
+]
 
 ["bug_20.js"]
 skip-if = [
@@ -13,7 +17,18 @@ skip-if = [
 ]
 
 ["bug_100.js"]
-skip-if = ["debug"] # Bug 100
+skip-if = [
+  "debug", # Bug 100
+  "apple_catalina", # Bug 200
+]
+
+["test_bar.html"]
+skip-if = [
+  "os == 'mac'", #     Bug 111
+  "os == 'linux'", #   Bug 222
+  "os == 'win'", #     Bug 333
+  "tsan", # Bug 444
+]
 
 ["test_foo.html"]
 skip-if = [

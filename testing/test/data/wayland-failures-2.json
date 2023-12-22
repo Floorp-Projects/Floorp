@@ -1,18 +1,40 @@
-[
-  {
-    "classification": "disable_recommended",
-    "failures": 3,
-    "label": "test-linux1804-64-qr/opt-mochitest-browser-chrome-spi-nw-5",
-    "manifest": "browser/components/sessionstore/test/browser.toml",
-    "path": "browser/components/sessionstore/test/browser_closed_tabs_windows.js",
-    "totalruns": 3
-  },
-  {
-    "classification": "secondary",
-    "failures": 3,
-    "label": "test-linux1804-64-qr/opt-mochitest-browser-chrome-spi-nw-5",
-    "manifest": "browser/components/sessionstore/test/browser.toml",
-    "path": "browser/components/sessionstore/test/browser_firefoxView_selected_restore.js",
-    "totalruns": 3
+{
+  "browser/components/sessionstore/test/browser.toml": {
+    "path": {
+      "browser/components/sessionstore/test/browser_closed_tabs_windows.js": {
+        "test-linux1804-64-qr/opt-mochitest-browser-chrome-spi-nw-5": {
+          "classification": "disable_recommended",
+          "failed_runs": 3,
+          "runs": {
+            "X7r1q2xWSu-2bRAofEfeBw": false,
+            "Y7r1q2xWSu-2bRAofEfeBw": false,
+            "Z7r1q2xWSu-2bRAofEfeBw": false
+          },
+          "total_runs": 3
+        }
+      },
+      "browser/components/sessionstore/test/browser_firefoxView_selected_restore.js": {
+        "test-linux1804-64-qr/opt-mochitest-browser-chrome-spi-nw-5": {
+          "classification": "intermittent",
+          "failed_runs": 1,
+          "runs": {
+            "X7r1q2xWSu-2bRAofEfeBw": true,
+            "Y7r1q2xWSu-2bRAofEfeBw": false,
+            "Z7r1q2xWSu-2bRAofEfeBw": true
+          },
+          "total_runs": 3
+        }
+      }
+    },
+    "sum_by_label": {
+      "test-linux1804-64-qr/opt-mochitest-browser-chrome-spi-nw-5": {
+        "disable_manifest": 0,
+        "disable_recommended": 1,
+        "intermittent": 1,
+        "secondary": 0,
+        "success": 0,
+        "unknown": 0
+      }
+    }
   }
-]
+}

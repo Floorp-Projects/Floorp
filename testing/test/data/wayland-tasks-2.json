@@ -33,23 +33,79 @@
           "generic"
         ],
         [
+          "browser/components/sessionstore/test/browser_firefoxView_selected_restore.js",
+          "generic"
+        ]
+      ]
+    }
+  },
+  {
+    "id": "Z7r1q2xWSu-2bRAofEfeBw",
+    "label": "test-linux1804-64-qr/opt-mochitest-browser-chrome-spi-nw-5",
+    "duration": 4807915,
+    "result": "failed",
+    "state": "completed",
+    "classification": "not classified",
+    "classification_note": null,
+    "tags": {
+      "createdForUser": "ci@mozilla.org",
+      "kind": "test",
+      "label": "test-linux1804-64-qr/opt-mochitest-browser-chrome-spi-nw-5",
+      "os": "linux",
+      "retrigger": "true",
+      "test-type": "mochitest",
+      "tests_grouped": "1",
+      "worker-implementation": "docker-worker"
+    },
+    "tier": 1,
+    "results": [
+      {
+        "group": "browser/components/sessionstore/test/browser.toml",
+        "ok": false,
+        "duration": 1778154
+      }
+    ],
+    "errors": null,
+    "failure_types": {
+      "browser/components/sessionstore/test/browser.toml": [
+        [
           "browser/components/sessionstore/test/browser_closed_tabs_windows.js",
           "generic"
-        ],
+        ]
+      ]
+    }
+  },
+  {
+    "id": "X7r1q2xWSu-2bRAofEfeBw",
+    "label": "test-linux1804-64-qr/opt-mochitest-browser-chrome-spi-nw-5",
+    "duration": 4807915,
+    "result": "failed",
+    "state": "completed",
+    "classification": "not classified",
+    "classification_note": null,
+    "tags": {
+      "createdForUser": "ci@mozilla.org",
+      "kind": "test",
+      "label": "test-linux1804-64-qr/opt-mochitest-browser-chrome-spi-nw-5",
+      "os": "linux",
+      "retrigger": "true",
+      "test-type": "mochitest",
+      "tests_grouped": "1",
+      "worker-implementation": "docker-worker"
+    },
+    "tier": 1,
+    "results": [
+      {
+        "group": "browser/components/sessionstore/test/browser.toml",
+        "ok": false,
+        "duration": 1778154
+      }
+    ],
+    "errors": null,
+    "failure_types": {
+      "browser/components/sessionstore/test/browser.toml": [
         [
           "browser/components/sessionstore/test/browser_closed_tabs_windows.js",
-          "generic"
-        ],
-        [
-          "browser/components/sessionstore/test/browser_firefoxView_selected_restore.js",
-          "generic"
-        ],
-        [
-          "browser/components/sessionstore/test/browser_firefoxView_selected_restore.js",
-          "generic"
-        ],
-        [
-          "browser/components/sessionstore/test/browser_firefoxView_selected_restore.js",
           "generic"
         ]
       ]

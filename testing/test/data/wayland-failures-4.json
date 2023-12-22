@@ -1,0 +1,28 @@
+{
+  "toolkit/components/pdfjs/test/browser.toml": {
+    "path": {
+      "DEFAULT": {
+        "test-linux2204-64-wayland/debug-mochitest-browser-chrome-swr-1": {
+          "classification": "disable_manifest",
+          "failed_runs": 3,
+          "runs": {
+            "EDql3NKPR3W6OEU3mLeKbg": false,
+            "FDql3NKPR3W6OEU3mLeKbg": false,
+            "bxMVPbPMTru_bfAivc1sPA": false
+          },
+          "total_runs": 3
+        }
+      }
+    },
+    "sum_by_label": {
+      "test-linux2204-64-wayland/debug-mochitest-browser-chrome-swr-1": {
+        "disable_manifest": 1,
+        "disable_recommended": 0,
+        "intermittent": 0,
+        "secondary": 0,
+        "success": 0,
+        "unknown": 0
+      }
+    }
+  }
+}
