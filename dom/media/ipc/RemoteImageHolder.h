@@ -25,11 +25,12 @@ class RemoteImageHolder final {
 
  public:
   RemoteImageHolder();
-  RemoteImageHolder(layers::IGPUVideoSurfaceManager* aManager,
-                    layers::VideoBridgeSource aSource,
-                    const gfx::IntSize& aSize,
-                    const gfx::ColorDepth& aColorDepth,
-                    const layers::SurfaceDescriptor& aSD);
+  RemoteImageHolder(
+      layers::IGPUVideoSurfaceManager* aManager,
+      layers::VideoBridgeSource aSource, const gfx::IntSize& aSize,
+      const gfx::ColorDepth& aColorDepth, const layers::SurfaceDescriptor& aSD,
+      gfx::YUVColorSpace aYUVColorSpace, gfx::ColorSpace2 aColorPrimaries,
+      gfx::TransferFunction aTransferFunction, gfx::ColorRange aColorRange);
   RemoteImageHolder(RemoteImageHolder&& aOther);
   // Ensure we never copy this object.
   RemoteImageHolder(const RemoteImageHolder& aOther) = delete;
@@ -51,14 +52,18 @@ class RemoteImageHolder final {
   gfx::ColorDepth mColorDepth = gfx::ColorDepth::COLOR_8;
   Maybe<layers::SurfaceDescriptor> mSD;
   RefPtr<layers::IGPUVideoSurfaceManager> mManager;
+  gfx::YUVColorSpace mYUVColorSpace = {};
+  gfx::ColorSpace2 mColorPrimaries = {};
+  gfx::TransferFunction mTransferFunction = {};
+  gfx::ColorRange mColorRange = {};
 };
 
-template <>
-struct ipc::IPDLParamTraits<RemoteImageHolder> {
-  static void Write(IPC::MessageWriter* aWriter, IProtocol* aActor,
-                    RemoteImageHolder&& aParam);
-  static bool Read(IPC::MessageReader* aReader, IProtocol* aActor,
-                   RemoteImageHolder* aResult);
+  template <>
+  struct ipc::IPDLParamTraits<RemoteImageHolder> {
+    static void Write(IPC::MessageWriter* aWriter, IProtocol* aActor,
+                      RemoteImageHolder&& aParam);
+    static bool Read(IPC::MessageReader* aReader, IProtocol* aActor,
+                     RemoteImageHolder* aResult);
 };
 
 }  // namespace mozilla
