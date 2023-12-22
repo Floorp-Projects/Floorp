@@ -508,4 +508,28 @@ RefPtr<TaskQueue> GetWebCodecsEncoderTaskQueue() {
       GetMediaThreadPool(MediaThreadType::PLATFORM_ENCODER),
       "WebCodecs encoding", false);
 }
+
+VideoColorSpaceInit FallbackColorSpaceForVideoContent() {
+  // If we're unable to determine the color space, but we think this is video
+  // content (e.g. because it's in YUV or NV12 or something like that,
+  // consider it's in BT709).
+  // This is step 3 of https://w3c.github.io/webcodecs/#videoframe-pick-color-space
+  VideoColorSpaceInit colorSpace;
+  colorSpace.mFullRange = false;
+  colorSpace.mMatrix = VideoMatrixCoefficients::Bt709;
+  colorSpace.mTransfer = VideoTransferCharacteristics::Bt709;
+  colorSpace.mPrimaries = VideoColorPrimaries::Bt709;
+  return colorSpace;
+}
+VideoColorSpaceInit FallbackColorSpaceForWebContent() {
+  // If we're unable to determine the color space, but we think this is from
+  // Web content (canvas, image, svg, etc.), consider it's in sRGB.
+  // This is step 2 of https://w3c.github.io/webcodecs/#videoframe-pick-color-space
+  VideoColorSpaceInit colorSpace;
+  colorSpace.mFullRange = true;
+  colorSpace.mMatrix = VideoMatrixCoefficients::Rgb;
+  colorSpace.mTransfer = VideoTransferCharacteristics::Iec61966_2_1;
+  colorSpace.mPrimaries = VideoColorPrimaries::Bt709;
+  return colorSpace;
+}
 };  // namespace mozilla::dom

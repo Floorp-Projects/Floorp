@@ -345,6 +345,7 @@ static Maybe<VideoPixelFormat> GuessPixelFormat(layers::Image* aImage) {
 static VideoColorSpaceInternal GuessColorSpace(
     const layers::PlanarYCbCrData* aData) {
   if (!aData) {
+    LOGE("nullptr in GuessColorSpace");
     return {};
   }
 
@@ -370,7 +371,6 @@ static VideoColorSpaceInternal GuessColorSpace(const MacIOSurface* aSurface) {
     return {};
   }
   VideoColorSpaceInternal colorSpace;
-  // TODO: Could ToFullRange(aSurface->GetColorRange()) conflict with the below?
   colorSpace.mFullRange = Some(aSurface->IsFullRange());
   if (Maybe<dom::VideoMatrixCoefficients> m =
           ToMatrixCoefficients(aSurface->GetYUVColorSpace())) {
@@ -379,8 +379,20 @@ static VideoColorSpaceInternal GuessColorSpace(const MacIOSurface* aSurface) {
   if (Maybe<VideoColorPrimaries> p = ToPrimaries(aSurface->mColorPrimaries)) {
     colorSpace.mPrimaries = Some(*p);
   }
-  // TODO: Track gfx::TransferFunction setting in
-  // MacIOSurface::CreateNV12OrP010Surface to get colorSpace.mTransfer
+  // Make an educated guess based on the coefficients.
+  if (aSurface->GetYUVColorSpace() == gfx::YUVColorSpace::Identity) {
+    colorSpace.mTransfer = Some(VideoTransferCharacteristics::Iec61966_2_1);
+  } else if (aSurface->GetYUVColorSpace() == gfx::YUVColorSpace::BT709) {
+    colorSpace.mTransfer = Some(VideoTransferCharacteristics::Bt709);
+  } else if (aSurface->GetYUVColorSpace() == gfx::YUVColorSpace::BT2020) {
+    colorSpace.mTransfer = Some(VideoTransferCharacteristics::Pq);
+  } else {
+    LOGW(
+        "Warning: Falling back to BT709 when attempting to determine the "
+        "transfer function of a MacIOSurface");
+    colorSpace.mTransfer = Some(VideoTransferCharacteristics::Bt709);
+  }
+
   return colorSpace;
 }
 #endif
@@ -408,6 +420,10 @@ static VideoColorSpaceInternal GuessColorSpace(layers::Image* aImage) {
     }
     if (layers::NVImage* image = aImage->AsNVImage()) {
       return GuessColorSpace(image->GetData());
+    }
+    // GPUVideoImage is always sRGB
+    if (layers::GPUVideoImage* image = aImage->AsGPUVideoImage()) {
+      return VideoColorSpaceInternal(FallbackColorSpaceForWebContent());
     }
 #ifdef XP_MACOSX
     // TODO: Make sure VideoFrame can interpret its internal data in different
@@ -814,13 +830,22 @@ nsTArray<RefPtr<VideoFrame>> VideoDecoder::DecodedDataToOutputType(
   for (const RefPtr<MediaData>& data : aData) {
     MOZ_RELEASE_ASSERT(data->mType == MediaData::Type::VIDEO_DATA);
     RefPtr<const VideoData> d(data->As<const VideoData>());
-    VideoColorSpaceInternal colorSpace = GuessColorSpace(d->mImage.get());
+    VideoColorSpaceInternal colorSpace;
+    // Determine which color space to use: prefer the color space as configured
+    // at the decoder level, if it has one, otherwise look at the underlying
+    // image and make a guess.
+    if (aConfig.mColorSpace.isSome() &&
+        aConfig.mColorSpace->mPrimaries.isSome() &&
+        aConfig.mColorSpace->mTransfer.isSome() &&
+        aConfig.mColorSpace->mMatrix.isSome()) {
+      colorSpace = aConfig.mColorSpace.value();
+    } else {
+      colorSpace = GuessColorSpace(d->mImage.get());
+    }
     frames.AppendElement(CreateVideoFrame(
         aGlobalObject, d.get(), d->mTime.ToMicroseconds(),
         static_cast<uint64_t>(d->mDuration.ToMicroseconds()),
-        aConfig.mDisplayAspectWidth, aConfig.mDisplayAspectHeight,
-        aConfig.mColorSpace.isSome() ? aConfig.mColorSpace.value()
-                                     : colorSpace));
+        aConfig.mDisplayAspectWidth, aConfig.mDisplayAspectHeight, colorSpace));
   }
   return frames;
 }
