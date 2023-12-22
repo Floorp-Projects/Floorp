@@ -1035,6 +1035,9 @@ void Context::OnQuotaInit(
     RefPtr<CipherKeyManager> aCipherKeyManager) {
   NS_ASSERT_OWNINGTHREAD(Context);
 
+  MOZ_DIAGNOSTIC_ASSERT(mInitRunnable);
+  mInitRunnable = nullptr;
+
   MOZ_DIAGNOSTIC_ASSERT(!mDirectoryMetadata);
   mDirectoryMetadata = aDirectoryMetadata;
 
@@ -1045,9 +1048,6 @@ void Context::OnQuotaInit(
 
   MOZ_DIAGNOSTIC_ASSERT(!mCipherKeyManager);
   mCipherKeyManager = std::move(aCipherKeyManager);
-
-  MOZ_DIAGNOSTIC_ASSERT(mInitRunnable);
-  mInitRunnable = nullptr;
 
   // If we opening the context failed, but we were not explicitly canceled,
   // still treat the entire context as canceled.  We don't want to allow
