@@ -58,9 +58,8 @@ EncoderAgent::~EncoderAgent() {
   MOZ_ASSERT(!mEncoder, "encoder must be shutdown");
 }
 
-template <typename ConfigType>
 RefPtr<EncoderAgent::ConfigurePromise> EncoderAgent::Configure(
-    const ConfigType& aConfig) {
+    const EncoderConfig& aConfig) {
   MOZ_ASSERT(mOwnerThread->IsOnCurrentThread());
   MOZ_ASSERT(mState == State::Unconfigured || mState == State::Error);
   MOZ_ASSERT(mConfigurePromise.IsEmpty());
@@ -80,13 +79,11 @@ RefPtr<EncoderAgent::ConfigurePromise> EncoderAgent::Configure(
   SetState(State::Configuring);
 
   LOG("EncoderAgent #%zu (%p) is creating an encoder (%s)", mId, this,
-      NS_ConvertUTF16toUTF8(aConfig.ToString().get()).get());
+      GetCodecTypeString(aConfig.mCodec));
 
   RefPtr<ConfigurePromise> p = mConfigurePromise.Ensure(__func__);
 
-  EncoderConfig config = aConfig.ToEncoderConfig();
-
-  mPEMFactory->CreateEncoderAsync(config, dom::GetWebCodecsEncoderTaskQueue())
+  mPEMFactory->CreateEncoderAsync(aConfig, dom::GetWebCodecsEncoderTaskQueue())
       ->Then(
           mOwnerThread, __func__,
           [self = RefPtr{this}](RefPtr<MediaDataEncoder>&& aEncoder) {

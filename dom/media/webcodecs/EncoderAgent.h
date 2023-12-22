@@ -49,8 +49,7 @@ class EncoderAgent final {
 
   using ConfigurePromise = MozPromise<bool, MediaResult, true /* exclusive */>;
   using ReconfigurationPromise = MediaDataEncoder::ReconfigurationPromise;
-  template <typename ConfigType>
-  RefPtr<ConfigurePromise> Configure(const ConfigType& aConfig);
+  RefPtr<ConfigurePromise> Configure(const EncoderConfig& aConfig);
   RefPtr<ReconfigurationPromise> Reconfigure(
       const RefPtr<const EncoderConfigurationChangeList>& aConfigChange);
   RefPtr<ShutdownPromise> Shutdown();

@@ -787,9 +787,11 @@ void EncoderTemplate<EncoderType>::Configure(
   MOZ_ASSERT(mAgent);
   MOZ_ASSERT(mActiveConfig);
 
-  LOG("Real configuration with fresh config");
+  LOG("Real configuration with fresh config: %s",
+      NS_ConvertUTF16toUTF8(mActiveConfig->ToString().get()).get());
 
-  mAgent->Configure(*mActiveConfig)
+  EncoderConfig config = mActiveConfig->ToEncoderConfig();
+  mAgent->Configure(config)
       ->Then(GetCurrentSerialEventTarget(), __func__,
              [self = RefPtr{this}, id = mAgent->mId, aMessage](
                  const EncoderAgent::ConfigurePromise::ResolveOrRejectValue&
