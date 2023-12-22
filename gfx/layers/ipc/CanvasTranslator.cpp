@@ -38,18 +38,13 @@ namespace layers {
 TextureData* CanvasTranslator::CreateTextureData(TextureType aTextureType,
                                                  gfx::BackendType aBackendType,
                                                  const gfx::IntSize& aSize,
-                                                 gfx::SurfaceFormat aFormat,
-                                                 bool aClear) {
+                                                 gfx::SurfaceFormat aFormat) {
   TextureData* textureData = nullptr;
-  TextureAllocationFlags allocFlags =
-      aClear ? ALLOC_CLEAR_BUFFER : ALLOC_DEFAULT;
   switch (aTextureType) {
 #ifdef XP_WIN
     case TextureType::D3D11: {
-      allocFlags =
-          TextureAllocationFlags(allocFlags | ALLOC_MANUAL_SYNCHRONIZATION);
       textureData =
-          D3D11TextureData::Create(aSize, aFormat, allocFlags, mDevice);
+          D3D11TextureData::Create(aSize, aFormat, ALLOC_CLEAR_BUFFER, mDevice);
       break;
     }
 #endif
@@ -57,11 +52,11 @@ TextureData* CanvasTranslator::CreateTextureData(TextureType aTextureType,
       textureData = BufferTextureData::Create(
           aSize, aFormat, gfx::BackendType::SKIA, LayersBackend::LAYERS_WR,
           TextureFlags::DEALLOCATE_CLIENT | TextureFlags::REMOTE_TEXTURE,
-          allocFlags, nullptr);
+          ALLOC_CLEAR_BUFFER, nullptr);
       break;
     default:
       textureData = TextureData::Create(aTextureType, aFormat, aSize,
-                                        allocFlags, aBackendType);
+                                        ALLOC_CLEAR_BUFFER, aBackendType);
       break;
   }
 
@@ -355,6 +350,8 @@ void CanvasTranslator::FinishShutdown() {
   MOZ_ASSERT(gfx::CanvasRenderThread::IsInCanvasRenderThread());
 
   ClearTextureInfo();
+
+  gfx::CanvasManagerParent::RemoveReplayTextures(this);
 }
 
 bool CanvasTranslator::CheckDeactivated() {
@@ -382,6 +379,13 @@ void CanvasTranslator::Deactivate() {
   gfx::CanvasRenderThread::Dispatch(
       NewRunnableMethod("CanvasTranslator::SendDeactivate", this,
                         &CanvasTranslator::SendDeactivate));
+
+  // Unlock all of our textures.
+  for (auto const& entry : mTextureInfo) {
+    if (entry.second.mTextureData && entry.second.mTextureLocked) {
+      entry.second.mTextureData->Unlock();
+    }
+  }
 
   // Disable remote canvas for all.
   gfx::CanvasManagerParent::DisableRemoteCanvas();
@@ -588,16 +592,23 @@ void CanvasTranslator::EndTransaction() {
 
 void CanvasTranslator::DeviceChangeAcknowledged() {
   mDeviceResetInProgress = false;
-  if (mRemoteTextureOwner) {
-    mRemoteTextureOwner->NotifyContextRestored();
-  }
 }
 
 bool CanvasTranslator::CreateReferenceTexture() {
+  if (mReferenceTextureData) {
+    mReferenceTextureData->Unlock();
+  }
+
   mReferenceTextureData.reset(CreateTextureData(mTextureType, mBackendType,
                                                 gfx::IntSize(1, 1),
                                                 gfx::SurfaceFormat::B8G8R8A8));
   if (!mReferenceTextureData) {
+    return false;
+  }
+
+  if (NS_WARN_IF(!mReferenceTextureData->Lock(OpenMode::OPEN_READ_WRITE))) {
+    gfxCriticalNote << "CanvasTranslator::CreateReferenceTexture lock failed";
+    mReferenceTextureData.reset();
     return false;
   }
 
@@ -664,10 +675,6 @@ bool CanvasTranslator::CheckForFreshCanvasDevice(int aLineNumber) {
 }
 
 void CanvasTranslator::NotifyDeviceChanged() {
-  // Clear out any old recycled texture datas with the wrong device.
-  if (mRemoteTextureOwner) {
-    mRemoteTextureOwner->NotifyContextLost();
-  }
   mDeviceResetInProgress = true;
   gfx::CanvasRenderThread::Dispatch(
       NewRunnableMethod("CanvasTranslator::SendNotifyDeviceChanged", this,
@@ -736,8 +743,7 @@ already_AddRefed<gfx::DrawTarget> CanvasTranslator::CreateDrawTarget(
     gfx::SurfaceFormat aFormat) {
   MOZ_DIAGNOSTIC_ASSERT(mNextTextureId >= 0, "No texture ID set");
   RefPtr<gfx::DrawTarget> dt;
-  if (mNextRemoteTextureOwnerId.IsValid() &&
-      gfx::gfxVars::UseAcceleratedCanvas2D()) {
+  if (mNextRemoteTextureOwnerId.IsValid()) {
     if (EnsureSharedContextWebgl()) {
       mSharedContext->EnterTlsScope();
     }
@@ -765,13 +771,20 @@ already_AddRefed<gfx::DrawTarget> CanvasTranslator::CreateDrawTarget(
         continue;
       }
 
+      if (NS_WARN_IF(!textureData->Lock(OpenMode::OPEN_READ_WRITE))) {
+        gfxCriticalNote << "CanvasTranslator::CreateDrawTarget lock failed";
+        continue;
+      }
+
       dt = textureData->BorrowDrawTarget();
       if (NS_WARN_IF(!dt)) {
+        textureData->Unlock();
         continue;
       }
 
       TextureInfo& info = mTextureInfo[mNextTextureId];
       info.mTextureData = std::move(textureData);
+      info.mTextureLocked = true;
       info.mRemoteTextureOwnerId = mNextRemoteTextureOwnerId;
     } while (!dt && CheckForFreshCanvasDevice(__LINE__));
   }
@@ -784,12 +797,18 @@ already_AddRefed<gfx::DrawTarget> CanvasTranslator::CreateDrawTarget(
 }
 
 void CanvasTranslator::RemoveTexture(int64_t aTextureId) {
-  // Don't erase the texture if still in use
-  auto result = mTextureInfo.find(aTextureId);
-  if (result == mTextureInfo.end() || --result->second.mLocked > 0) {
-    return;
+  {
+    // Don't erase the texture if still in use
+    auto result = mTextureInfo.find(aTextureId);
+    if (result == mTextureInfo.end() || --result->second.mLocked > 0) {
+      return;
+    }
+    mTextureInfo.erase(result);
   }
-  mTextureInfo.erase(result);
+
+  // It is possible that the texture from the content process has never been
+  // forwarded from the GPU process, so make sure its descriptor is removed.
+  gfx::CanvasManagerParent::RemoveReplayTexture(this, aTextureId);
 }
 
 bool CanvasTranslator::LockTexture(int64_t aTextureId, OpenMode aMode,
@@ -808,8 +827,18 @@ bool CanvasTranslator::LockTexture(int64_t aTextureId, OpenMode aMode,
     gfx::DrawTargetWebgl* webgl =
         static_cast<gfx::DrawTargetWebgl*>(result->second.mDrawTarget.get());
     webgl->BeginFrame(webgl->GetRect());
-  } else if (!result->second.mTextureData) {
-    return false;
+  } else if (TextureData* data = result->second.mTextureData.get()) {
+    if (NS_WARN_IF(result->second.mTextureLocked)) {
+      MOZ_ASSERT_UNREACHABLE("Texture already locked?");
+      return true;
+    }
+
+    bool locked = data->Lock(aMode);
+    if (NS_WARN_IF(!locked)) {
+      gfxCriticalNote << "CanvasTranslator::LockTexture lock failed";
+    }
+    result->second.mTextureLocked = locked;
+    return locked;
   }
   return true;
 }
@@ -831,12 +860,23 @@ bool CanvasTranslator::UnlockTexture(int64_t aTextureId, RemoteTextureId aId) {
       NotifyRequiresRefresh(aTextureId);
     }
   } else if (TextureData* data = result->second.mTextureData.get()) {
-    PushRemoteTexture(aTextureId, data, aId, ownerId);
+    if (aId.IsValid()) {
+      PushRemoteTexture(data, aId, ownerId);
+    }
+    if (!NS_WARN_IF(!result->second.mTextureLocked)) {
+      data->Unlock();
+      result->second.mTextureLocked = false;
+    } else {
+      MOZ_ASSERT_UNREACHABLE("Texture not locked?");
+    }
+    if (!aId.IsValid()) {
+      gfx::CanvasManagerParent::AddReplayTexture(this, aTextureId, data);
+    }
   }
   return true;
 }
 
-bool CanvasTranslator::PushRemoteTexture(int64_t aTextureId, TextureData* aData,
+bool CanvasTranslator::PushRemoteTexture(TextureData* aData,
                                          RemoteTextureId aId,
                                          RemoteTextureOwnerId aOwnerId) {
   if (!mRemoteTextureOwner) {
@@ -847,34 +887,32 @@ bool CanvasTranslator::PushRemoteTexture(int64_t aTextureId, TextureData* aData,
         aOwnerId,
         /* aIsSyncMode */ gfx::gfxVars::WebglOopAsyncPresentForceSync());
   }
+  TextureData::Info info;
+  aData->FillInfo(info);
   UniquePtr<TextureData> dstData;
-  if (!mDeviceResetInProgress) {
-    TextureData::Info info;
-    aData->FillInfo(info);
-    if (mTextureType == TextureType::Unknown) {
-      dstData = mRemoteTextureOwner->CreateOrRecycleBufferTextureData(
-          aOwnerId, info.size, info.format);
-    } else {
-      dstData = mRemoteTextureOwner->GetRecycledTextureData(
-          aOwnerId, info.size, info.format, mTextureType);
-      if (!dstData) {
-        dstData.reset(CreateTextureData(mTextureType, mBackendType, info.size,
-                                        info.format, false));
-      }
-    }
+  if (mTextureType == TextureType::Unknown) {
+    dstData = mRemoteTextureOwner->CreateOrRecycleBufferTextureData(
+        aOwnerId, info.size, info.format);
+  } else {
+    dstData.reset(
+        CreateTextureData(mTextureType, mBackendType, info.size, info.format));
   }
   bool success = false;
   // Source data is already locked.
   if (dstData) {
-    if (RefPtr<gfx::DrawTarget> dstDT = dstData->BorrowDrawTarget()) {
-      if (RefPtr<gfx::DrawTarget> srcDT = aData->BorrowDrawTarget()) {
-        if (RefPtr<gfx::SourceSurface> snapshot = srcDT->Snapshot()) {
-          dstDT->CopySurface(snapshot, snapshot->GetRect(),
-                             gfx::IntPoint(0, 0));
-          dstDT->Flush();
-          success = true;
+    if (dstData->Lock(OpenMode::OPEN_WRITE)) {
+      if (RefPtr<gfx::DrawTarget> dstDT = dstData->BorrowDrawTarget()) {
+        if (RefPtr<gfx::DrawTarget> srcDT = aData->BorrowDrawTarget()) {
+          if (RefPtr<gfx::SourceSurface> snapshot = srcDT->Snapshot()) {
+            dstDT->CopySurface(snapshot, snapshot->GetRect(),
+                               gfx::IntPoint(0, 0));
+            success = true;
+          }
         }
       }
+      dstData->Unlock();
+    } else {
+      gfxCriticalNote << "CanvasTranslator::PushRemoteTexture lock failed";
     }
   }
   if (success) {
@@ -886,10 +924,18 @@ bool CanvasTranslator::PushRemoteTexture(int64_t aTextureId, TextureData* aData,
 }
 
 void CanvasTranslator::ClearTextureInfo() {
+  for (auto const& entry : mTextureInfo) {
+    if (entry.second.mTextureData && entry.second.mTextureLocked) {
+      entry.second.mTextureData->Unlock();
+    }
+  }
   mTextureInfo.clear();
   mDrawTargets.Clear();
   mSharedContext = nullptr;
   mBaseDT = nullptr;
+  if (mReferenceTextureData) {
+    mReferenceTextureData->Unlock();
+  }
   if (mRemoteTextureOwner) {
     mRemoteTextureOwner->UnregisterAllTextureOwners();
     mRemoteTextureOwner = nullptr;

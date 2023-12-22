@@ -70,13 +70,6 @@ void RemoteTextureOwnerClient::NotifyContextLost() {
   RemoteTextureMap::Get()->NotifyContextLost(mOwnerIds, mForPid);
 }
 
-void RemoteTextureOwnerClient::NotifyContextRestored() {
-  if (mOwnerIds.empty()) {
-    return;
-  }
-  RemoteTextureMap::Get()->NotifyContextRestored(mOwnerIds, mForPid);
-}
-
 void RemoteTextureOwnerClient::PushTexture(
     const RemoteTextureId aTextureId, const RemoteTextureOwnerId aOwnerId,
     UniquePtr<TextureData>&& aTextureData) {
@@ -166,19 +159,12 @@ void RemoteTextureOwnerClient::GetLatestBufferSnapshot(
                                                    aDestShmem, aSize);
 }
 
-UniquePtr<TextureData> RemoteTextureOwnerClient::GetRecycledTextureData(
-    const RemoteTextureOwnerId aOwnerId, gfx::IntSize aSize,
-    gfx::SurfaceFormat aFormat, TextureType aTextureType) {
-  return RemoteTextureMap::Get()->GetRecycledTextureData(
-      aOwnerId, mForPid, aSize, aFormat, aTextureType);
-}
-
 UniquePtr<TextureData>
 RemoteTextureOwnerClient::CreateOrRecycleBufferTextureData(
     const RemoteTextureOwnerId aOwnerId, gfx::IntSize aSize,
     gfx::SurfaceFormat aFormat) {
-  auto texture =
-      GetRecycledTextureData(aOwnerId, aSize, aFormat, TextureType::Unknown);
+  auto texture = RemoteTextureMap::Get()->GetRecycledBufferTextureData(
+      aOwnerId, mForPid, aSize, aFormat);
   if (texture) {
     return texture;
   }
@@ -239,8 +225,7 @@ void RemoteTextureMap::PushTexture(
     const RemoteTextureId aTextureId, const RemoteTextureOwnerId aOwnerId,
     const base::ProcessId aForPid, UniquePtr<TextureData>&& aTextureData,
     RefPtr<TextureHost>& aTextureHost,
-    UniquePtr<SharedResourceWrapper>&& aResourceWrapper,
-    TextureType aRecycleType) {
+    UniquePtr<SharedResourceWrapper>&& aResourceWrapper) {
   MOZ_RELEASE_ASSERT(aTextureHost);
 
   std::vector<RefPtr<TextureHost>>
@@ -348,8 +333,7 @@ void RemoteTextureMap::PushTexture(
       }
       // Recycle BufferTextureData
       if (!(front->mTextureHost->GetFlags() & TextureFlags::DUMMY_TEXTURE) &&
-          (front->mTextureData &&
-           front->mTextureData->GetTextureType() == aRecycleType)) {
+          (front->mTextureData && front->mTextureData->AsBufferTextureData())) {
         owner->mRecycledTextures.push(std::move(front->mTextureData));
       }
       owner->mReleasingTextureDataHolders.pop_front();
@@ -642,33 +626,8 @@ void RemoteTextureMap::NotifyContextLost(
     const std::unordered_set<RemoteTextureOwnerId,
                              RemoteTextureOwnerId::HashFn>& aOwnerIds,
     const base::ProcessId aForPid) {
-  std::vector<UniquePtr<TextureData>>
-      releasingTextures;  // Release outside the monitor
-  {
-    MonitorAutoLock lock(mMonitor);
+  MonitorAutoLock lock(mMonitor);
 
-    for (auto id : aOwnerIds) {
-      const auto key = std::pair(aForPid, id);
-      auto it = mTextureOwners.find(key);
-      if (it == mTextureOwners.end()) {
-        MOZ_ASSERT_UNREACHABLE("unexpected to be called");
-        continue;
-      }
-      auto& owner = it->second;
-      owner->mIsContextLost = true;
-      while (!owner->mRecycledTextures.empty()) {
-        releasingTextures.push_back(std::move(owner->mRecycledTextures.top()));
-        owner->mRecycledTextures.pop();
-      }
-    }
-    mMonitor.Notify();
-  }
-}
-
-void RemoteTextureMap::NotifyContextRestored(
-    const std::unordered_set<RemoteTextureOwnerId,
-                             RemoteTextureOwnerId::HashFn>& aOwnerIds,
-    const base::ProcessId aForPid) {
   for (auto id : aOwnerIds) {
     const auto key = std::pair(aForPid, id);
     auto it = mTextureOwners.find(key);
@@ -676,9 +635,9 @@ void RemoteTextureMap::NotifyContextRestored(
       MOZ_ASSERT_UNREACHABLE("unexpected to be called");
       continue;
     }
-    auto& owner = it->second;
-    owner->mIsContextLost = false;
+    it->second->mIsContextLost = true;
   }
+  mMonitor.Notify();
 }
 
 /* static */
@@ -1189,11 +1148,12 @@ void RemoteTextureMap::SuppressRemoteTextureReadyCheck(
   it->second->mReadyCheckSuppressed = true;
 }
 
-UniquePtr<TextureData> RemoteTextureMap::GetRecycledTextureData(
+UniquePtr<TextureData> RemoteTextureMap::GetRecycledBufferTextureData(
     const RemoteTextureOwnerId aOwnerId, const base::ProcessId aForPid,
-    gfx::IntSize aSize, gfx::SurfaceFormat aFormat, TextureType aTextureType) {
+    gfx::IntSize aSize, gfx::SurfaceFormat aFormat) {
   std::stack<UniquePtr<TextureData>>
       releasingTextures;  // Release outside the monitor
+  UniquePtr<TextureData> texture;
   {
     MonitorAutoLock lock(mMonitor);
 
@@ -1208,20 +1168,19 @@ UniquePtr<TextureData> RemoteTextureMap::GetRecycledTextureData(
 
     if (!owner->mRecycledTextures.empty()) {
       auto& top = owner->mRecycledTextures.top();
-      if (top->GetTextureType() == aTextureType) {
-        TextureData::Info info;
-        top->FillInfo(info);
-        if (info.size == aSize && info.format == aFormat) {
-          UniquePtr<TextureData> texture = std::move(top);
-          owner->mRecycledTextures.pop();
-          return texture;
-        }
+      auto* bufferTexture = top->AsBufferTextureData();
+
+      if (bufferTexture && bufferTexture->GetSize() == aSize &&
+          bufferTexture->GetFormat() == aFormat) {
+        texture = std::move(top);
+        owner->mRecycledTextures.pop();
+      } else {
+        // If size or format are different, release all textures.
+        owner->mRecycledTextures.swap(releasingTextures);
       }
-      // If size or format are different, release all textures.
-      owner->mRecycledTextures.swap(releasingTextures);
     }
   }
-  return nullptr;
+  return texture;
 }
 
 UniquePtr<SharedResourceWrapper> RemoteTextureMap::GetRecycledSharedTexture(

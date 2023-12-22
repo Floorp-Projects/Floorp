@@ -223,6 +223,8 @@ class PersistentBufferProviderShared : public PersistentBufferProvider,
 
   bool PreservesDrawingState() const override { return false; }
 
+  bool IsAccelerated() const override;
+
  protected:
   PersistentBufferProviderShared(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
                                  KnowsCompositor* aKnowsCompositor,

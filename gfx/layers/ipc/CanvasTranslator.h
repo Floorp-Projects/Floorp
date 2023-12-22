@@ -177,8 +177,8 @@ class CanvasTranslator final : public gfx::InlineTranslator,
                    RemoteTextureId aObsoleteId = RemoteTextureId());
   bool UnlockTexture(int64_t aTextureId, RemoteTextureId aId);
 
-  bool PushRemoteTexture(int64_t aTextureId, TextureData* aData,
-                         RemoteTextureId aId, RemoteTextureOwnerId aOwnerId);
+  bool PushRemoteTexture(TextureData* aData, RemoteTextureId aId,
+                         RemoteTextureOwnerId aOwnerId);
 
   /**
    * Overriden to remove any DataSourceSurfaces associated with the RefPtr.
@@ -293,8 +293,7 @@ class CanvasTranslator final : public gfx::InlineTranslator,
   TextureData* CreateTextureData(TextureType aTextureType,
                                  gfx::BackendType aBackendType,
                                  const gfx::IntSize& aSize,
-                                 gfx::SurfaceFormat aFormat,
-                                 bool aClear = false);
+                                 gfx::SurfaceFormat aFormat);
 
   void ClearTextureInfo();
 
@@ -352,6 +351,7 @@ class CanvasTranslator final : public gfx::InlineTranslator,
     UniquePtr<TextureData> mTextureData;
     RefPtr<gfx::DrawTarget> mDrawTarget;
     RemoteTextureOwnerId mRemoteTextureOwnerId;
+    bool mTextureLocked = false;
     bool mNotifiedRequiresRefresh = false;
     // Ref-count of how active uses of the DT. Avoids deletion when locked.
     int32_t mLocked = 1;

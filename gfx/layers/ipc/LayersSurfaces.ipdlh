@@ -189,6 +189,10 @@ namespace layers {
   ExternalImageId id;
 };
 
+[Comparable] struct SurfaceDescriptorRecorded {
+  int64_t textureId;
+};
+
 [Comparable] struct SurfaceDescriptorRemoteTexture {
   RemoteTextureId textureId;
   RemoteTextureOwnerId ownerId;
@@ -205,6 +209,7 @@ namespace layers {
   SurfaceDescriptorMacIOSurface;
   SurfaceDescriptorSharedGLTexture;
   SurfaceDescriptorGPUVideo;
+  SurfaceDescriptorRecorded;
   SurfaceDescriptorRemoteTexture;
   SurfaceDescriptorDcompSurface;
   SurfaceDescriptorExternalImage;

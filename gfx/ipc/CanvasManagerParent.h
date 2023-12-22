@@ -35,6 +35,18 @@ class CanvasManagerParent final : public PCanvasManagerParent {
 
   static void DisableRemoteCanvas();
 
+  static void AddReplayTexture(layers::CanvasTranslator* aOwner,
+                               int64_t aTextureId,
+                               layers::TextureData* aTextureData);
+
+  static void RemoveReplayTexture(layers::CanvasTranslator* aOwner,
+                                  int64_t aTextureId);
+
+  static void RemoveReplayTextures(layers::CanvasTranslator* aOwner);
+
+  static UniquePtr<layers::SurfaceDescriptor> WaitForReplayTexture(
+      layers::HostIPCAllocator* aAllocator, int64_t aTextureId);
+
   CanvasManagerParent(layers::SharedSurfacesHolder* aSharedSurfacesHolder,
                       const dom::ContentParentId& aContentId);
 
@@ -52,6 +64,10 @@ class CanvasManagerParent final : public PCanvasManagerParent {
       webgl::FrontBufferSnapshotIpc* aResult);
 
  private:
+  static UniquePtr<layers::SurfaceDescriptor> TakeReplayTexture(
+      const dom::ContentParentId& aContentId, int64_t aTextureId)
+      MOZ_REQUIRES(sReplayTexturesMonitor);
+
   static void ShutdownInternal();
   static void DisableRemoteCanvasInternal();
 
@@ -63,6 +79,18 @@ class CanvasManagerParent final : public PCanvasManagerParent {
 
   using ManagerSet = nsTHashSet<RefPtr<CanvasManagerParent>>;
   static ManagerSet sManagers;
+
+  struct ReplayTexture {
+    UniquePtr<layers::SurfaceDescriptor> mDesc;
+    dom::ContentParentId mContentId;
+    int64_t mTextureId;
+    uint32_t mManagerId;
+  };
+
+  static StaticMonitor sReplayTexturesMonitor;
+  static nsTArray<ReplayTexture> sReplayTextures
+      MOZ_GUARDED_BY(sReplayTexturesMonitor);
+  static bool sReplayTexturesEnabled MOZ_GUARDED_BY(sReplayTexturesMonitor);
 };
 
 }  // namespace gfx
