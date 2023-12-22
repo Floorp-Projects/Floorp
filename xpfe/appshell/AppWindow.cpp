@@ -490,11 +490,13 @@ NS_IMETHODIMP AppWindow::ShowModal() {
   nsCOMPtr<nsIAppWindow> tempRef = this;
 
 #ifdef USE_NATIVE_MENUS
-  // macOS only: For modals created early in startup.
-  // (e.g. ProfileManager/ProfileDowngrade) this creates a fallback menu for
-  // the menu bar which only contains a "Quit" menu item.
-  // This allows the user to quit the application in a regular way with cmd+Q.
-  widget::NativeMenuSupport::CreateNativeMenuBar(mWindow, nullptr);
+  if (!gfxPlatform::IsHeadless()) {
+    // macOS only: For modals created early in startup.
+    // (e.g. ProfileManager/ProfileDowngrade) this creates a fallback menu for
+    // the menu bar which only contains a "Quit" menu item.
+    // This allows the user to quit the application in a regular way with cmd+Q.
+    widget::NativeMenuSupport::CreateNativeMenuBar(mWindow, nullptr);
+  }
 #endif
 
   window->SetModal(true);
