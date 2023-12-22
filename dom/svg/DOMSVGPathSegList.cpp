@@ -12,6 +12,7 @@
 #include "SVGAttrTearoffTable.h"
 #include "SVGPathSegUtils.h"
 #include "mozilla/dom/SVGElement.h"
+#include "mozilla/dom/SVGPathElement.h"
 #include "mozilla/dom/SVGPathSegListBinding.h"
 #include "mozilla/RefPtr.h"
 
@@ -51,11 +52,12 @@ NS_INTERFACE_MAP_END
 
 /* static */
 already_AddRefed<DOMSVGPathSegList> DOMSVGPathSegList::GetDOMWrapper(
-    void* aList, SVGElement* aElement, bool aIsAnimValList) {
+    void* aList, SVGPathElement* aElement) {
   RefPtr<DOMSVGPathSegList> wrapper =
       SVGPathSegListTearoffTable().GetTearoff(aList);
   if (!wrapper) {
-    wrapper = new DOMSVGPathSegList(aElement, aIsAnimValList);
+    wrapper = new DOMSVGPathSegList(
+        aElement, aElement->GetAnimPathSegList()->GetAnimValKey() == aList);
     SVGPathSegListTearoffTable().AddTearoff(aList, wrapper);
   }
   return wrapper.forget();

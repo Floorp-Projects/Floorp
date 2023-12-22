@@ -24,6 +24,7 @@ class SVGAnimatedPathSegList;
 namespace dom {
 
 class DOMSVGPathSeg;
+class SVGPathElement;
 
 //----------------------------------------------------------------------
 // Helper class: AutoChangePathSegListNotifier
@@ -108,7 +109,7 @@ class DOMSVGPathSegList final : public nsISupports, public nsWrapperCache {
    * clearly SVGPathData* and a SVGPathData** are not the same type.
    */
   static already_AddRefed<DOMSVGPathSegList> GetDOMWrapper(
-      void* aList, dom::SVGElement* aElement, bool aIsAnimValList);
+      void* aList, dom::SVGPathElement* aElement);
 
   /**
    * This method returns the DOMSVGPathSegList wrapper for an internal

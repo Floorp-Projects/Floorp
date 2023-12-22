@@ -192,14 +192,14 @@ SVGPathElement::CreateSVGPathSegCurvetoQuadraticSmoothRel(float x, float y) {
 // preference is off by default in Bug 1388931, and will be dropped later.
 // So we are not planning to map d property for this API.
 already_AddRefed<DOMSVGPathSegList> SVGPathElement::PathSegList() {
-  return DOMSVGPathSegList::GetDOMWrapper(mD.GetBaseValKey(), this, false);
+  return DOMSVGPathSegList::GetDOMWrapper(mD.GetBaseValKey(), this);
 }
 
 // FIXME: This API is enabled only if dom.svg.pathSeg.enabled is true. This
 // preference is off by default in Bug 1388931, and will be dropped later.
 // So we are not planning to map d property for this API.
 already_AddRefed<DOMSVGPathSegList> SVGPathElement::AnimatedPathSegList() {
-  return DOMSVGPathSegList::GetDOMWrapper(mD.GetAnimValKey(), this, true);
+  return DOMSVGPathSegList::GetDOMWrapper(mD.GetAnimValKey(), this);
 }
 
 //----------------------------------------------------------------------
