@@ -675,7 +675,10 @@ support-files = [
 ]
 
 ["browser_view_selectionByMouse.js"]
-skip-if = ["os == 'linux' && asan"] # Bug 1789051
+skip-if = [
+  "os == 'linux' && asan", # Bug 1789051
+  "a11y_checks", # Bug 1789051,1867430
+]
 
 ["browser_waitForLoadStartOrTimeout.js"]
 https_first_disabled = true
