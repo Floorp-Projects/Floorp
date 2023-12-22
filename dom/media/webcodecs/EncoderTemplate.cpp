@@ -717,10 +717,14 @@ void EncoderTemplate<EncoderType>::Reconfigure(
                           nsLiteralCString("Flush before reconfigure"));
                     }
 
-                    // Destroy the agent, and finally create a fresh encoder
-                    // with the new configuration.
-                    self->DestroyEncoderAgentIfAny();
-                    self->Configure(message);
+                    NS_DispatchToCurrentThread(NS_NewRunnableFunction(
+                        "Destroy + recreate encoder after failed reconfigure",
+                        [self = RefPtr(self), message]() MOZ_CAN_RUN_SCRIPT_BOUNDARY {
+                          // Destroy the agent, and finally create a fresh
+                          // encoder with the new configuration.
+                          self->DestroyEncoderAgentIfAny();
+                          self->Configure(message);
+                        }));
                   });
               return;
             }
@@ -730,6 +734,8 @@ void EncoderTemplate<EncoderType>::Reconfigure(
                 EncoderType::Name.get(), self.get(), id,
                 message->ToString().get());
 
+            self->mOutputNewDecoderConfig = true;
+            self->mActiveConfig = message->Config();
             self->mProcessingMessage = nullptr;
             self->StopBlockingMessageQueue();
             self->ProcessControlMessageQueue();
@@ -743,6 +749,9 @@ void EncoderTemplate<EncoderType>::Configure(
 
   LOG("Configuring encoder: %s",
       NS_ConvertUTF16toUTF8(aMessage->Config()->ToString()).get());
+
+  mOutputNewDecoderConfig = true;
+  mActiveConfig = aMessage->Config();
 
   bool decoderAgentCreated =
       CreateEncoderAgent(aMessage->mMessageId, aMessage->Config());
@@ -1046,8 +1055,6 @@ bool EncoderTemplate<EncoderType>::CreateEncoderAgent(
   }
 
   mAgent = MakeRefPtr<EncoderAgent>(aId);
-  mActiveConfig = aConfig;
-  mOutputNewDecoderConfig = true;
 
   // ShutdownBlockingTicket requires an unique name to register its own
   // nsIAsyncShutdownBlocker since each blocker needs a distinct name.
