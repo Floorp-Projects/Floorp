@@ -18,9 +18,7 @@ function init(scope) {
 }
 
 function getFirefoxViewURL() {
-  return Services.prefs.getBoolPref("browser.tabs.firefox-view-next", true)
-    ? "about:firefoxview-next"
-    : "about:firefoxview";
+  return "about:firefoxview";
 }
 
 function assertFirefoxViewTab(win) {
