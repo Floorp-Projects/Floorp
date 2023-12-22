@@ -32,6 +32,7 @@ namespace dom {
 
 class DOMSVGPoint;
 class SVGElement;
+class SVGPolyElement;
 
 //----------------------------------------------------------------------
 // Helper class: AutoChangePointListNotifier
@@ -123,7 +124,7 @@ class DOMSVGPointList final : public nsISupports, public nsWrapperCache {
    * clearly SVGPointList* and a SVGPointList** are not the same type.
    */
   static already_AddRefed<DOMSVGPointList> GetDOMWrapper(
-      void* aList, dom::SVGElement* aElement, bool aIsAnimValList);
+      void* aList, dom::SVGPolyElement* aElement);
 
   /**
    * This method returns the DOMSVGPointList wrapper for an internal

@@ -11,6 +11,7 @@
 #include "nsError.h"
 #include "SVGAnimatedPointList.h"
 #include "SVGAttrTearoffTable.h"
+#include "SVGPolyElement.h"
 #include "mozilla/dom/SVGElement.h"
 #include "mozilla/dom/SVGPointListBinding.h"
 #include <algorithm>
@@ -68,11 +69,12 @@ NS_INTERFACE_MAP_END
 
 /* static */
 already_AddRefed<DOMSVGPointList> DOMSVGPointList::GetDOMWrapper(
-    void* aList, SVGElement* aElement, bool aIsAnimValList) {
+    void* aList, SVGPolyElement* aElement) {
   RefPtr<DOMSVGPointList> wrapper =
       SVGPointListTearoffTable().GetTearoff(aList);
   if (!wrapper) {
-    wrapper = new DOMSVGPointList(aElement, aIsAnimValList);
+    wrapper = new DOMSVGPointList(
+        aElement, aElement->GetAnimatedPointList()->GetAnimValKey() == aList);
     SVGPointListTearoffTable().AddTearoff(aList, wrapper);
   }
   return wrapper.forget();
