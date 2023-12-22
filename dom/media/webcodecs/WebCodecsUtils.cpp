@@ -235,12 +235,12 @@ Maybe<VideoTransferCharacteristics> ToTransferCharacteristics(
 Maybe<VideoColorPrimaries> ToPrimaries(const gfx::ColorSpace2& aColorSpace) {
   switch (aColorSpace) {
     case gfx::ColorSpace2::UNKNOWN:
-    case gfx::ColorSpace2::SRGB:
       return Nothing();
     case gfx::ColorSpace2::DISPLAY_P3:
       return Some(VideoColorPrimaries::Smpte432);
     case gfx::ColorSpace2::BT601_525:
       return Some(VideoColorPrimaries::Smpte170m);
+    case gfx::ColorSpace2::SRGB:
     case gfx::ColorSpace2::BT709:
       return Some(VideoColorPrimaries::Bt709);
     case gfx::ColorSpace2::BT2020:
