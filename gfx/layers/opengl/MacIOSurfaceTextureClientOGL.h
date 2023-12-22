@@ -25,6 +25,10 @@ class MacIOSurfaceTextureData : public TextureData {
 
   ~MacIOSurfaceTextureData();
 
+  TextureType GetTextureType() const override {
+    return TextureType::MacIOSurface;
+  }
+
   void FillInfo(TextureData::Info& aInfo) const override;
 
   bool Lock(OpenMode) override;

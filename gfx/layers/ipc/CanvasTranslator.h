@@ -177,8 +177,8 @@ class CanvasTranslator final : public gfx::InlineTranslator,
                    RemoteTextureId aObsoleteId = RemoteTextureId());
   bool UnlockTexture(int64_t aTextureId, RemoteTextureId aId);
 
-  bool PushRemoteTexture(TextureData* aData, RemoteTextureId aId,
-                         RemoteTextureOwnerId aOwnerId);
+  bool PushRemoteTexture(int64_t aTextureId, TextureData* aData,
+                         RemoteTextureId aId, RemoteTextureOwnerId aOwnerId);
 
   /**
    * Overriden to remove any DataSourceSurfaces associated with the RefPtr.
@@ -293,7 +293,8 @@ class CanvasTranslator final : public gfx::InlineTranslator,
   TextureData* CreateTextureData(TextureType aTextureType,
                                  gfx::BackendType aBackendType,
                                  const gfx::IntSize& aSize,
-                                 gfx::SurfaceFormat aFormat);
+                                 gfx::SurfaceFormat aFormat,
+                                 bool aClear = false);
 
   void ClearTextureInfo();
 

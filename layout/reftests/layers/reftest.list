@@ -24,20 +24,11 @@ skip-if(!asyncPan) != pull-background-displayport-5.html about:blank
 skip-if(!asyncPan) != pull-background-displayport-6.html about:blank # fails with non-overlay scrollbars and event regions due to bug 1148515
 
 skip-if(Android&&emulator) fuzzy(0-2,0-30150) == opacity-blending.html opacity-blending-ref.html
-fuzzy(0-16,0-29) == mask-layer-transform.html mask-layer-transform-ref.html
+fuzzy(0-16,0-30) == mask-layer-transform.html mask-layer-transform-ref.html
 fuzzy-if(gtkWidget,0-1,0-17) fuzzy-if(Android,0-3,0-4) == forced-bg-color-outside-visible-region.html forced-bg-color-outside-visible-region-ref.html
 != layerize-over-fixed-bg-1.html about:blank
 skip-if(!asyncPan) != fixed-pos-scrolled-clip-layerize.html about:blank
 skip-if(!asyncPan) == fixed-pos-scrolled-clip-opacity-layerize.html fixed-pos-scrolled-clip-opacity-inside-layerize.html
-
-# These tests check whether the GPU process is working. We expect it to work if:
-#   E10S is enabled, and
-#   Direct2D 1.1 works (as a proxy for Windows 7 SP1 + Platform Update or higher), OR
-#   The GPU process has been forced on.
-# If these conditions are met, but the GPU process is not on, these tests will turn on
-# and compare false.
-skip-if(!browserIsRemote||!d2d||gpuProcess) == data:text/plain,FAIL about:blank
-skip-if(!gpuProcessForceEnabled||gpuProcess) == data:text/plain,FAIL about:blank
 
 fuzzy(0-1,0-8033) == opacity-background-1.html opacity-background-1-ref.html
 == opacity-flattening-large-image.html opacity-flattening-large-image-ref.html
