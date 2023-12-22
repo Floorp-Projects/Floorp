@@ -1407,16 +1407,6 @@ static bool ParseDate(DateTimeInfo::ForceUTC forceUTC, const CharT* s,
 
     if (IsMonthName(s + start, index - start, &mon)) {
       seenMonthName = true;
-      // If the next digit is a number, we need to break so it
-      // gets parsed as mday
-      if (IsAsciiDigit(s[index])) {
-        break;
-      }
-    } else {
-      // Reject numbers directly after letters e.g. foo2
-      if (IsAsciiDigit(s[index]) && IsAsciiAlpha(s[index - 1])) {
-        return false;
-      }
     }
   }
 
@@ -1688,48 +1678,46 @@ static bool ParseDate(DateTimeInfo::ForceUTC forceUTC, const CharT* s,
         continue;
       }
 
-      // Record a month if it is a month name. Note that some numbers are
-      // initially treated as months; if a numeric field has already been
-      // interpreted as a month, store that value to the actually appropriate
-      // date component and set the month here.
-      int tryMonth;
-      if (IsMonthName(s + start, index - start, &tryMonth)) {
-        if (seenMonthName) {
-          // Overwrite the previous month name
-          mon = tryMonth;
-          prevc = 0;
-          continue;
-        }
-
-        seenMonthName = true;
-
-        if (mon < 0) {
-          mon = tryMonth;
-        } else if (mday < 0) {
-          mday = mon;
-          mon = tryMonth;
-        } else if (year < 0) {
-          if (mday > 0) {
-            // If the date is of the form f l month, then when month is
-            // reached we have f in mon and l in mday. In order to be
-            // consistent with the f month l and month f l forms, we need to
-            // swap so that f is in mday and l is in year.
-            year = mday;
-            mday = mon;
-          } else {
-            year = mon;
-          }
-          mon = tryMonth;
-        } else {
-          return false;
-        }
-
-        prevc = 0;
-        continue;
-      }
-
       size_t k = std::size(keywords);
       while (k-- > 0) {
+        // Record a month if it is a month name. Note that some numbers are
+        // initially treated as months; if a numeric field has already been
+        // interpreted as a month, store that value to the actually appropriate
+        // date component and set the month here.
+        int tryMonth;
+        if (IsMonthName(s + start, index - start, &tryMonth)) {
+          if (seenMonthName) {
+            // Overwrite the previous month name
+            mon = tryMonth;
+            break;
+          }
+
+          seenMonthName = true;
+
+          if (mon < 0) {
+            mon = tryMonth;
+          } else if (mday < 0) {
+            mday = mon;
+            mon = tryMonth;
+          } else if (year < 0) {
+            if (mday > 0) {
+              // If the date is of the form f l month, then when month is
+              // reached we have f in mon and l in mday. In order to be
+              // consistent with the f month l and month f l forms, we need to
+              // swap so that f is in mday and l is in year.
+              year = mday;
+              mday = mon;
+            } else {
+              year = mon;
+            }
+            mon = tryMonth;
+          } else {
+            return false;
+          }
+
+          break;
+        }
+
         const CharsAndAction& keyword = keywords[k];
 
         // If the field doesn't match the keyword, try the next one.
@@ -1778,26 +1766,6 @@ static bool ParseDate(DateTimeInfo::ForceUTC forceUTC, const CharT* s,
 
     // Any other character fails to parse.
     return false;
-  }
-
-  // Handle cases where the input is a single number. Single numbers >= 1000
-  // are handled by the spec (ParseISOStyleDate), so we don't need to account
-  // for that here.
-  if (mon != -1 && year < 0 && mday < 0) {
-    // Reject 13-31 for Chrome parity
-    if (mon >= 13 && mon <= 31) {
-      return false;
-    }
-
-    mday = 1;
-    if (mon >= 1 && mon <= 12) {
-      // 1-12 is parsed as a month with the year defaulted to 2001
-      // (again, for Chrome parity)
-      year = 2001;
-    } else {
-      year = FixupNonFullYear(mon);
-      mon = 1;
-    }
   }
 
   if (year < 0 || mon < 0 || mday < 0) {
