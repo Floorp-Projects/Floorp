@@ -7,16 +7,17 @@
 #ifndef MOZILLA_DOM_WEBCODECS_WEBCODECSUTILS_H
 #define MOZILLA_DOM_WEBCODECS_WEBCODECSUTILS_H
 
-#include <tuple>
-
 #include "ErrorList.h"
 #include "js/TypeDecls.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/MozPromise.h"
 #include "mozilla/Result.h"
-#include "mozilla/Span.h"
+#include "mozilla/TaskQueue.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/Nullable.h"
 #include "mozilla/dom/UnionTypes.h"
+#include "mozilla/dom/VideoEncoderBinding.h"
+#include "mozilla/dom/VideoFrameBinding.h"
 
 namespace mozilla {
 
@@ -27,6 +28,12 @@ enum class SurfaceFormat : int8_t;
 enum class TransferFunction : uint8_t;
 enum class YUVColorSpace : uint8_t;
 }  // namespace gfx
+
+using WebCodecsId = size_t;
+
+extern std::atomic<WebCodecsId> sNextId;
+
+struct EncoderConfigurationChangeList;
 
 namespace dom {
 
@@ -122,7 +129,31 @@ Maybe<VideoPixelFormat> SurfaceFormatToVideoPixelFormat(
 Maybe<VideoPixelFormat> ImageBitmapFormatToVideoPixelFormat(
     ImageBitmapFormat aFormat);
 
-}  // namespace dom
+template <typename T>
+class MessageRequestHolder {
+ public:
+  MessageRequestHolder() = default;
+  ~MessageRequestHolder() = default;
+
+  MozPromiseRequestHolder<T>& Request() { return mRequest; }
+  void Disconnect() {
+    mRequest.DisconnectIfExists();
+  }
+  void Complete() { mRequest.Complete(); }
+  bool Exists() const { return mRequest.Exists(); }
+
+ protected:
+  MozPromiseRequestHolder<T> mRequest{};
+};
+
+enum class MessageProcessedResult { NotProcessed, Processed };
+
+bool IsOnAndroid();
+bool IsOnMacOS();
+RefPtr<TaskQueue> GetWebCodecsEncoderTaskQueue();
+
+} // namespace dom
+
 }  // namespace mozilla
 
 #endif  // MOZILLA_DOM_WEBCODECS_WEBCODECSUTILS_H

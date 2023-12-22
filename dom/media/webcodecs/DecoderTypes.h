@@ -74,7 +74,7 @@ class VideoDecoderTraits {
   static bool IsSupported(const ConfigTypeInternal& aConfig);
   static Result<UniquePtr<TrackInfo>, nsresult> CreateTrackInfo(
       const ConfigTypeInternal& aConfig);
-  static bool Validate(const ConfigType& aConfig);
+  static bool Validate(const ConfigType& aConfig, nsCString& aErrorMessage);
   static UniquePtr<ConfigTypeInternal> CreateConfigInternal(
       const ConfigType& aConfig);
   static bool IsKeyChunk(const InputType& aInput);

@@ -121,8 +121,9 @@ VideoDecoderConfigInternal::VideoDecoderConfigInternal(
 /*static*/
 UniquePtr<VideoDecoderConfigInternal> VideoDecoderConfigInternal::Create(
     const VideoDecoderConfig& aConfig) {
-  if (!VideoDecoderTraits::Validate(aConfig)) {
-    LOGE("Failed to create VideoDecoderConfigInternal");
+  nsCString errorMessage;
+  if (!VideoDecoderTraits::Validate(aConfig, errorMessage)) {
+    LOGE("Failed to create VideoDecoderConfigInternal: %s", errorMessage.get());
     return nullptr;
   }
 
@@ -186,22 +187,6 @@ static nsTArray<nsCString> GuessMIMETypes(const MIMECreateParam& aParam) {
     types.AppendElement(mime);
   }
   return types;
-}
-
-static bool IsOnAndroid() {
-#if defined(ANDROID)
-  return true;
-#else
-  return false;
-#endif
-}
-
-static bool IsOnMacOS() {
-#if defined(XP_MACOSX)
-  return true;
-#else
-  return false;
-#endif
 }
 
 static bool IsSupportedCodec(const nsAString& aCodec) {
@@ -281,7 +266,8 @@ static Result<RefPtr<MediaByteBuffer>, nsresult> GetExtraData(
 static Result<Ok, nsresult> CloneConfiguration(
     RootedDictionary<VideoDecoderConfig>& aDest, JSContext* aCx,
     const VideoDecoderConfig& aConfig) {
-  MOZ_ASSERT(VideoDecoderTraits::Validate(aConfig));
+  DebugOnly<nsCString> str;
+  MOZ_ASSERT(VideoDecoderTraits::Validate(aConfig, str));
 
   aDest.mCodec = aConfig.mCodec;
   if (aConfig.mCodedHeight.WasPassed()) {
@@ -646,7 +632,8 @@ Result<UniquePtr<TrackInfo>, nsresult> VideoDecoderTraits::CreateTrackInfo(
 
 // https://w3c.github.io/webcodecs/#valid-videodecoderconfig
 /* static */
-bool VideoDecoderTraits::Validate(const VideoDecoderConfig& aConfig) {
+bool VideoDecoderTraits::Validate(const VideoDecoderConfig& aConfig,
+                                  nsCString& aErrorMessage) {
   Maybe<nsString> codec = ParseCodecString(aConfig.mCodec);
   if (!codec || codec->IsEmpty()) {
     LOGE("Invalid codec string");
@@ -753,8 +740,10 @@ already_AddRefed<Promise> VideoDecoder::IsConfigSupported(
     return p.forget();
   }
 
-  if (!VideoDecoderTraits::Validate(aConfig)) {
-    p->MaybeRejectWithTypeError("config is invalid");
+  nsCString errorMessage;
+  if (!VideoDecoderTraits::Validate(aConfig, errorMessage)) {
+    p->MaybeRejectWithTypeError(nsPrintfCString(
+        "VideoDecoderConfig is invalid: %s", errorMessage.get()));
     return p.forget();
   }
 
