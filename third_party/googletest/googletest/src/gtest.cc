@@ -43,6 +43,7 @@
 #include <algorithm>
 #include <chrono>  // NOLINT
 #include <cmath>
+#include <csignal>  // NOLINT: raise(3) is used on some platforms
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
@@ -6202,8 +6203,8 @@ void UnitTestImpl::ListTestsMatchingFilter() {
 #if GTEST_HAS_FILE_SYSTEM
   const std::string& output_format = UnitTestOptions::GetOutputFormat();
   if (output_format == "xml" || output_format == "json") {
-    FILE* fileout = OpenFileForWriting(
-        UnitTestOptions::GetAbsolutePathToOutputFile().c_str());
+    FILE* fileout =
+        OpenFileForWriting(UnitTestOptions::GetAbsolutePathToOutputFile());
     std::stringstream stream;
     if (output_format == "xml") {
       XmlUnitTestResultPrinter(
