@@ -23,11 +23,6 @@ namespace mozilla::gfx {
 
 CanvasManagerParent::ManagerSet CanvasManagerParent::sManagers;
 
-StaticMonitor CanvasManagerParent::sReplayTexturesMonitor;
-nsTArray<CanvasManagerParent::ReplayTexture>
-    CanvasManagerParent::sReplayTextures;
-bool CanvasManagerParent::sReplayTexturesEnabled(true);
-
 /* static */ void CanvasManagerParent::Init(
     Endpoint<PCanvasManagerParent>&& aEndpoint,
     layers::SharedSurfacesHolder* aSharedSurfacesHolder,
@@ -70,10 +65,6 @@ bool CanvasManagerParent::sReplayTexturesEnabled(true);
   for (auto const& actor : actors) {
     actor->Close();
   }
-
-  StaticMonitorAutoLock lock(sReplayTexturesMonitor);
-  sReplayTextures.Clear();
-  lock.NotifyAll();
 }
 
 /* static */ void CanvasManagerParent::DisableRemoteCanvas() {
@@ -106,121 +97,9 @@ bool CanvasManagerParent::sReplayTexturesEnabled(true);
     }
   }
 
-  {
-    StaticMonitorAutoLock lock(sReplayTexturesMonitor);
-    sReplayTexturesEnabled = false;
-    sReplayTextures.Clear();
-  }
-
   for (const auto& actor : actors) {
     Unused << NS_WARN_IF(!actor->SendDeactivate());
   }
-
-  {
-    StaticMonitorAutoLock lock(sReplayTexturesMonitor);
-    lock.NotifyAll();
-  }
-}
-
-/* static */ void CanvasManagerParent::AddReplayTexture(
-    layers::CanvasTranslator* aOwner, int64_t aTextureId,
-    layers::TextureData* aTextureData) {
-  auto desc = MakeUnique<layers::SurfaceDescriptor>();
-  if (!aTextureData->Serialize(*desc)) {
-    MOZ_CRASH("Failed to serialize");
-  }
-
-  StaticMonitorAutoLock lock(sReplayTexturesMonitor);
-  sReplayTextures.AppendElement(
-      ReplayTexture{std::move(desc), aOwner->GetContentId(), aTextureId,
-                    aOwner->GetManagerId()});
-  lock.NotifyAll();
-}
-
-/* static */ void CanvasManagerParent::RemoveReplayTexture(
-    layers::CanvasTranslator* aOwner, int64_t aTextureId) {
-  StaticMonitorAutoLock lock(sReplayTexturesMonitor);
-
-  auto i = sReplayTextures.Length();
-  while (i > 0) {
-    --i;
-    const auto& texture = sReplayTextures[i];
-    if (texture.mContentId == aOwner->GetContentId() &&
-        texture.mTextureId == aTextureId) {
-      MOZ_ASSERT(texture.mManagerId == aOwner->GetManagerId());
-      sReplayTextures.RemoveElementAt(i);
-      break;
-    }
-  }
-}
-
-/* static */ void CanvasManagerParent::RemoveReplayTextures(
-    layers::CanvasTranslator* aOwner) {
-  StaticMonitorAutoLock lock(sReplayTexturesMonitor);
-
-  auto i = sReplayTextures.Length();
-  while (i > 0) {
-    --i;
-    const auto& texture = sReplayTextures[i];
-    if (texture.mContentId == aOwner->GetContentId() &&
-        texture.mManagerId == aOwner->GetManagerId()) {
-      sReplayTextures.RemoveElementAt(i);
-    }
-  }
-}
-
-/* static */ UniquePtr<layers::SurfaceDescriptor>
-CanvasManagerParent::TakeReplayTexture(const dom::ContentParentId& aContentId,
-                                       int64_t aTextureId) {
-  // While in theory this could be relatively expensive, the array is most
-  // likely very small as the textures are removed during each composite.
-  auto i = sReplayTextures.Length();
-  while (i > 0) {
-    --i;
-    const auto& texture = sReplayTextures[i];
-    if (texture.mContentId == aContentId && texture.mTextureId == aTextureId) {
-      UniquePtr<layers::SurfaceDescriptor> desc =
-          std::move(sReplayTextures[i].mDesc);
-      sReplayTextures.RemoveElementAt(i);
-      return desc;
-    }
-  }
-  return nullptr;
-}
-
-/* static */ UniquePtr<layers::SurfaceDescriptor>
-CanvasManagerParent::WaitForReplayTexture(layers::HostIPCAllocator* aAllocator,
-                                          int64_t aTextureId) {
-  MOZ_ASSERT(!CanvasRenderThread::IsInCanvasRenderThread());
-
-  StaticMonitorAutoLock lock(sReplayTexturesMonitor);
-
-  dom::ContentParentId contentId = aAllocator->GetContentId();
-
-  UniquePtr<layers::SurfaceDescriptor> desc;
-  while (!(desc = TakeReplayTexture(contentId, aTextureId))) {
-    if (NS_WARN_IF(!sReplayTexturesEnabled)) {
-      return nullptr;
-    }
-
-    if (NS_WARN_IF(!aAllocator->IPCOpen())) {
-      // We don't know exactly which CanvasManagerParent/CanvasTranslator this
-      // is for, but we do know that the allocator points to the same process.
-      // Use this as a proxy to detect if the process was shutdown.
-      return nullptr;
-    }
-
-    TimeDuration timeout = TimeDuration::FromMilliseconds(
-        StaticPrefs::gfx_canvas_remote_texture_timeout_ms());
-    CVStatus status = lock.Wait(timeout);
-    if (status == CVStatus::Timeout) {
-      // If something has gone wrong and the texture has already been destroyed,
-      // it will have cleaned up its descriptor.
-      return nullptr;
-    }
-  }
-
-  return desc;
 }
 
 CanvasManagerParent::CanvasManagerParent(
