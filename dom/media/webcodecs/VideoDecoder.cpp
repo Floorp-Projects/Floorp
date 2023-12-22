@@ -599,12 +599,32 @@ Result<UniquePtr<TrackInfo>, nsresult> VideoDecoderTraits::CreateTrackInfo(
     if (colorSpace.mMatrix.isSome()) {
       vi->mColorSpace.emplace(ToColorSpace(colorSpace.mMatrix.value()));
     }
+    // Some decoders get their primaries and transfer function from the codec
+    // string, and it's already set here. This is the case for VP9 decoders.
     if (colorSpace.mPrimaries.isSome()) {
-      vi->mColorPrimaries.emplace(ToPrimaries(colorSpace.mPrimaries.value()));
+      auto primaries = ToPrimaries(colorSpace.mPrimaries.value());
+      if (vi->mColorPrimaries.isSome()) {
+        if (vi->mColorPrimaries.value() != primaries) {
+          LOG("Conflict between decoder config and codec string, keeping codec "
+              "string primaries of %d",
+              static_cast<int>(primaries));
+        }
+      } else {
+        vi->mColorPrimaries.emplace(primaries);
+      }
     }
     if (colorSpace.mTransfer.isSome()) {
-      vi->mTransferFunction.emplace(
-          ToTransferFunction(colorSpace.mTransfer.value()));
+      auto primaries = ToTransferFunction(colorSpace.mTransfer.value());
+      if (vi->mTransferFunction.isSome()) {
+        if (vi->mTransferFunction.value() != primaries) {
+          LOG("Conflict between decoder config and codec string, keeping codec "
+              "string transfer function of %d",
+              static_cast<int>(vi->mTransferFunction.value()));
+        }
+      } else {
+        vi->mTransferFunction.emplace(
+            ToTransferFunction(colorSpace.mTransfer.value()));
+      }
     }
   }
 
