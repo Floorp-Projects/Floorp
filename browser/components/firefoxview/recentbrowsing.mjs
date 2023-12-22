@@ -16,6 +16,10 @@ class RecentBrowsingInView extends ViewPage {
     searchTextbox: "fxview-search-textbox",
   };
 
+  static properties = {
+    ...ViewPage.properties,
+  };
+
   viewVisibleCallback() {
     for (let child of this.children) {
       let childView = child.firstElementChild;
@@ -49,6 +53,7 @@ class RecentBrowsingInView extends ViewPage {
             <fxview-search-textbox
               data-l10n-id="firefoxview-search-text-box-recentbrowsing"
               data-l10n-attrs="placeholder"
+              .size=${this.searchTextboxSize}
             ></fxview-search-textbox>
           </div>`
         )}
