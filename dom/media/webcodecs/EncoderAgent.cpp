@@ -429,8 +429,8 @@ void EncoderAgent::SetState(State aState) {
   };
 
   DebugOnly<bool> isValid = validateStateTransition(mState, aState);
-  LOG("EncoderAgent #%zu (%p) state change: %s -> %s", mId, this,
-      stateToString(mState), stateToString(aState));
+  LOGV("EncoderAgent #%zu (%p) state change: %s -> %s", mId, this,
+       stateToString(mState), stateToString(aState));
   MOZ_ASSERT(isValid);
   mState = aState;
 }
