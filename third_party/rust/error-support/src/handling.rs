@@ -99,7 +99,10 @@ where
     let handling = e.get_error_handling();
     let reporting = handling.reporting;
     if let Some(level) = reporting.log_level {
-        log::log!(level, "{}", e.to_string());
+        match &reporting.report_class {
+            Some(report_class) => log::log!(level, "{report_class}: {}", e.to_string()),
+            None => log::log!(level, "{}", e.to_string()),
+        }
     }
     if let Some(report_class) = reporting.report_class {
         // notify the error reporter if the feature is enabled.
