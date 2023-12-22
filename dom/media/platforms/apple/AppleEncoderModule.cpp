@@ -44,7 +44,8 @@ bool AppleEncoderModule::Supports(const EncoderConfig& aConfig) const {
       return false;
     }
     if (specific.mProfile != H264_PROFILE_BASE &&
-        specific.mProfile != H264_PROFILE_MAIN) {
+        specific.mProfile != H264_PROFILE_MAIN &&
+        specific.mProfile != H264_PROFILE_HIGH) {
       LOGE("Invalid profile of %d for h264", specific.mProfile);
       return false;
     }
