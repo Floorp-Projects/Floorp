@@ -596,7 +596,9 @@ class CueStyleBox extends StyleBoxBase {
 
   _applyDefaultStylesOnPseudoBackgroundNode() {
     // most of the properties have been defined in `::cue` in `html.css`, but
-    // there are some css variables we have to set them dynamically.
+    // there are some css properties we have to set them dynamically.
+    // FIXME(emilio): These are observable by content. Ideally the style
+    // attribute will work like for ::part() and we wouldn't need this.
     this.cueDiv.style.setProperty("--cue-font-size", this.fontSize, "important");
     this.cueDiv.style.setProperty("--cue-writing-mode", this._getCueWritingMode(), "important");
   }
