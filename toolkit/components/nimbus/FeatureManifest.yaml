@@ -1887,6 +1887,10 @@ firefoxViewNext:
   hasExposure: false
   isEarlyStartup: true
   variables:
+    enabled:
+      type: boolean
+      fallbackPref: "browser.tabs.firefox-view-next"
+      description: "Whether or not to enable the new Firefox View"
     newIcon:
       type: boolean
       fallbackPref: "browser.tabs.firefox-view-newIcon"

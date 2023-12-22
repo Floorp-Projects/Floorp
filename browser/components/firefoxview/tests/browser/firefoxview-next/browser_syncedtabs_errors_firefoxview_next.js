@@ -41,6 +41,7 @@ add_setup(async function () {
 
   await SpecialPowers.pushPrefEnv({
     set: [
+      ["browser.tabs.firefox-view-next", true],
       ["services.sync.engine.tabs", true],
       ["identity.fxaccounts.enabled", true],
     ],
