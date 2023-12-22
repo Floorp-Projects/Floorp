@@ -325,6 +325,7 @@ void DecoderTemplate<DecoderType>::OutputDecodedData(
       GetParentObject(), std::move(aData), *mActiveConfig);
   RefPtr<VideoFrameOutputCallback> cb(mOutputCallback);
   for (RefPtr<VideoFrame>& frame : frames) {
+    LOG("Outputing decoded data: ts: %" PRId64, frame->Timestamp());
     RefPtr<VideoFrame> f = frame;
     cb->Call((VideoFrame&)(*f));
   }
