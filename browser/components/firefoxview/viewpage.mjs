@@ -124,7 +124,6 @@ export class ViewPage extends ViewPageContent {
   static get properties() {
     return {
       selectedTab: { type: Boolean },
-      searchTextboxSize: { type: Number },
     };
   }
 

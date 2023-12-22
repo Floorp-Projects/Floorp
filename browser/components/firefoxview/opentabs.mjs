@@ -41,7 +41,6 @@ const TOPIC_CURRENT_BROWSER_CHANGED = "net:current-browser-id";
  */
 class OpenTabsInView extends ViewPage {
   static properties = {
-    ...ViewPage.properties,
     windows: { type: Map },
     searchQuery: { type: String },
   };
@@ -219,7 +218,6 @@ class OpenTabsInView extends ViewPage {
               data-l10n-id="firefoxview-search-text-box-opentabs"
               data-l10n-attrs="placeholder"
               @fxview-search-textbox-query=${this.onSearchQuery}
-              .size=${this.searchTextboxSize}
             ></fxview-search-textbox>
           </div>`
         )}
