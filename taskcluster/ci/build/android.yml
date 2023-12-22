@@ -18,6 +18,9 @@ job-defaults:
             - name: public/build/maven
               path: /builds/worker/workspace/obj-build/gradle/maven/
               type: directory
+            - name: public/build/target.maven.tar.xz
+              path: /builds/worker/workspace/obj-build/gradle/target.maven.tar.xz
+              type: file
             - name: public/build/geckoview-androidTest.apk
               path: /builds/worker/workspace/obj-build/gradle/build/mobile/android/geckoview/outputs/apk/androidTest/withGeckoBinaries/debug/geckoview-withGeckoBinaries-debug-androidTest.apk
               type: file
