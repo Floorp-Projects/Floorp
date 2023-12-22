@@ -291,7 +291,8 @@ already_AddRefed<MediaDataEncoder> WebrtcMediaDataEncoder::CreateEncoder(
       MediaDataEncoder::PixelFormat::YUV420P, aCodecSettings->maxFramerate,
       keyframeInterval, mBitrateAdjuster.GetTargetBitrateBps(),
       MediaDataEncoder::BitrateMode::Variable,
-      MediaDataEncoder::HardwarePreference::None, specific);
+      MediaDataEncoder::HardwarePreference::None,
+      MediaDataEncoder::ScalabilityMode::None, specific);
   return mFactory->CreateEncoder(config, mTaskQueue);
 }
 
