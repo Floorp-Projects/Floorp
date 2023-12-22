@@ -230,7 +230,7 @@ RefPtr<MediaDataEncoder::EncodePromise> FFmpegVideoEncoder<LIBAV_VER>::Encode(
 RefPtr<MediaDataEncoder::ReconfigurationPromise>
 FFmpegVideoEncoder<LIBAV_VER>::Reconfigure(
     const RefPtr<const EncoderConfigurationChangeList>& aConfigurationChanges) {
-  return InvokeAsync<const RefPtr<const EncoderConfigurationChangeList>&>(
+  return InvokeAsync<const RefPtr<const EncoderConfigurationChangeList>>(
       mTaskQueue, this, __func__,
       &FFmpegVideoEncoder<LIBAV_VER>::ProcessReconfigure,
       aConfigurationChanges);
@@ -299,43 +299,45 @@ FFmpegVideoEncoder<LIBAV_VER>::ProcessEncode(RefPtr<const MediaData> aSample) {
 
 RefPtr<MediaDataEncoder::ReconfigurationPromise>
 FFmpegVideoEncoder<LIBAV_VER>::ProcessReconfigure(
-    const RefPtr<const EncoderConfigurationChangeList>& aConfigurationChanges) {
+    const RefPtr<const EncoderConfigurationChangeList> aConfigurationChanges) {
   MOZ_ASSERT(mTaskQueue->IsOnCurrentThread());
 
   FFMPEGV_LOG("ProcessReconfigure");
 
-  bool ok = false;
-  for (const auto& confChange : aConfigurationChanges->mChanges) {
-    ok |= confChange.match(
-        // Not supported yet
-        [&](const DimensionsChange& aChange) -> bool { return false; },
-        [&](const DisplayDimensionsChange& aChange) -> bool { return false; },
-        [&](const BitrateModeChange& aChange) -> bool {
-          mConfig.mBitrateMode = aChange.get();
-          // TODO
-          return false;
-        },
-        [&](const BitrateChange& aChange) -> bool {
-          mConfig.mBitrate = aChange.get().refOr(0);
-          // TODO
-          return false;
-        },
-        [&](const FramerateChange& aChange) -> bool {
-          // TODO
-          return false;
-        },
-        [&](const UsageChange& aChange) -> bool {
-          // TODO
-          mConfig.mUsage = aChange.get();
-          return false;
-        },
-        [&](const ContentHintChange& aChange) -> bool { return false; });
-  };
+  // Tracked in bug 1869583 -- for now this encoder always reports it cannot be
+  // reconfigured on the fly
+  // bool ok = false;
+  // for (const auto& confChange : aConfigurationChanges->mChanges) {
+  //   ok |= confChange.match(
+  //       // Not supported yet
+  //       [&](const DimensionsChange& aChange) -> bool { return false; },
+  //       [&](const DisplayDimensionsChange& aChange) -> bool { return false; },
+  //       [&](const BitrateModeChange& aChange) -> bool {
+  //         mConfig.mBitrateMode = aChange.get();
+  //         // TODO
+  //         return false;
+  //       },
+  //       [&](const BitrateChange& aChange) -> bool {
+  //         mConfig.mBitrate = aChange.get().refOr(0);
+  //         // TODO
+  //         return false;
+  //       },
+  //       [&](const FramerateChange& aChange) -> bool {
+  //         // TODO
+  //         return false;
+  //       },
+  //       [&](const UsageChange& aChange) -> bool {
+  //         // TODO
+  //         mConfig.mUsage = aChange.get();
+  //         return false;
+  //       },
+  //       [&](const ContentHintChange& aChange) -> bool { return false; });
+  // };
   using P = MediaDataEncoder::ReconfigurationPromise;
-  if (ok) {
-    return P::CreateAndResolve(true, __func__);
-  }
-  return P::CreateAndReject(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__);
+  // if (ok) {
+  //   return P::CreateAndResolve(true, __func__);
+  // }
+  return P::CreateAndReject(NS_ERROR_NOT_IMPLEMENTED, __func__);
 }
 
 RefPtr<MediaDataEncoder::EncodePromise>
