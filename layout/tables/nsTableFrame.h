@@ -274,11 +274,6 @@ class nsTableFrame : public nsContainerFrame {
    */
   nsMargin GetDeflationForBackground(nsPresContext* aPresContext) const;
 
-  /** Get width of table + colgroup + col collapse: elements that
-   *  continue along the length of the whole iStart side.
-   *  see nsTablePainter about continuous borders
-   */
-  nscoord GetContinuousIStartBCBorderWidth() const;
   void SetContinuousIStartBCBorderWidth(nscoord aValue);
 
   friend class nsDelayedCalcBCBorders;
@@ -949,11 +944,6 @@ inline bool nsTableFrame::HasBCBorders() {
 
 inline void nsTableFrame::SetHasBCBorders(bool aValue) {
   mBits.mHasBCBorders = (unsigned)aValue;
-}
-
-inline nscoord nsTableFrame::GetContinuousIStartBCBorderWidth() const {
-  int32_t d2a = PresContext()->AppUnitsPerDevPixel();
-  return BC_BORDER_END_HALF_COORD(d2a, mBits.mIStartContBCBorder);
 }
 
 inline void nsTableFrame::SetContinuousIStartBCBorderWidth(nscoord aValue) {

@@ -177,14 +177,6 @@ class nsTableColGroupFrame final : public nsContainerFrame {
                               nsIFrame* aStartColFrame = nullptr);
 
   /**
-   * Gets inner border widths before collapsing with cell borders
-   * Caller must get istart border from previous column
-   * GetContinuousBCBorderWidth will not overwrite aBorder.IStart
-   * see nsTablePainter about continuous borders
-   */
-  void GetContinuousBCBorderWidth(mozilla::WritingMode aWM,
-                                  mozilla::LogicalMargin& aBorder);
-  /**
    * Set full border widths before collapsing with cell borders
    * @param aForSide - side to set; only accepts bstart and bend
    */

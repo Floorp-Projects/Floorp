@@ -150,15 +150,6 @@ class nsTableRowGroupFrame final : public nsContainerFrame,
   mozilla::LogicalMargin GetBCBorderWidth(mozilla::WritingMode aWM);
 
   /**
-   * Gets inner border widths before collapsing with cell borders
-   * Caller must get bstart border from previous row group or from table
-   * GetContinuousBCBorderWidth will not overwrite aBorder.BStart()
-   * see nsTablePainter about continuous borders
-   */
-  void GetContinuousBCBorderWidth(mozilla::WritingMode aWM,
-                                  mozilla::LogicalMargin& aBorder);
-
-  /**
    * Sets full border widths before collapsing with cell borders
    * @param aForSide - side to set; only IEnd, IStart, BEnd are valid
    */
@@ -395,11 +386,4 @@ inline void nsTableRowGroupFrame::SetHasStyleBSize(bool aValue) {
   }
 }
 
-inline void nsTableRowGroupFrame::GetContinuousBCBorderWidth(
-    mozilla::WritingMode aWM, mozilla::LogicalMargin& aBorder) {
-  int32_t d2a = PresContext()->AppUnitsPerDevPixel();
-  aBorder.IEnd(aWM) = BC_BORDER_START_HALF_COORD(d2a, mIEndContBorderWidth);
-  aBorder.BEnd(aWM) = BC_BORDER_START_HALF_COORD(d2a, mBEndContBorderWidth);
-  aBorder.IStart(aWM) = BC_BORDER_END_HALF_COORD(d2a, mIStartContBorderWidth);
-}
 #endif
