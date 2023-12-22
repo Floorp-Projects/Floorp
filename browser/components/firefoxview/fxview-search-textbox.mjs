@@ -18,11 +18,14 @@ import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
  *   The placeholder text for the search box.
  * @property {string} query
  *   The query that is currently in the search box.
+ * @property {number} size
+ *   The width (number of characters) of the search box.
  */
 export default class FxviewSearchTextbox extends MozLitElement {
   static properties = {
     placeholder: { type: String },
     query: { type: String },
+    size: { type: Number },
   };
 
   static queries = {
@@ -70,6 +73,7 @@ export default class FxviewSearchTextbox extends MozLitElement {
       <input
         type="search"
         .placeholder=${ifDefined(this.placeholder)}
+        .size=${ifDefined(this.size)}
         .value=${this.query}
         @input=${this.onInput}
       ></input>
