@@ -83,7 +83,7 @@ pub fn parse_property_block<'i, 't>(
         return Err(input.new_error(BasicParseErrorKind::AtRuleBodyInvalid));
     };
 
-    if PropertyRegistration::validate_initial_value(&syntax, descriptors.initial_value.as_deref())
+    if PropertyRegistration::validate_initial_value(&syntax, descriptors.initial_value.as_ref())
         .is_err()
     {
         return Err(input.new_error(BasicParseErrorKind::AtRuleBodyInvalid));
@@ -239,7 +239,7 @@ impl PropertyRegistration {
     /// https://drafts.css-houdini.org/css-properties-values-api-1/#initial-value-descriptor
     pub fn validate_initial_value(
         syntax: &Descriptor,
-        initial_value: Option<&SpecifiedValue>,
+        initial_value: Option<&InitialValue>,
     ) -> Result<(), PropertyRegistrationError> {
         use crate::properties::CSSWideKeyword;
         // If the value of the syntax descriptor is the universal syntax definition, then the
@@ -337,6 +337,6 @@ impl Parse for InitialValue {
         input: &mut Parser<'i, 't>,
     ) -> Result<Self, ParseError<'i>> {
         input.skip_whitespace();
-        Ok(Arc::new(SpecifiedValue::parse(input, &context.url_data)?))
+        SpecifiedValue::parse(input, &context.url_data)
     }
 }
