@@ -410,19 +410,32 @@ class FirefoxAndroid(BrowserSetup):
             device = mozdevice.ADBDeviceFactory(adb=kwargs["adb_binary"],
                                                 device=device_serial)
             self._logcat.start(device_serial)
+            max_retries = 5
+            last_exception = None
             if self.browser.apk_path:
                 device.uninstall_app(app)
-                # device.install_app(self.browser.apk_path, timeout=600)
-                # Temporarily replace mozdevice function with custom code
-                # that passes in the `--no-incremental` option
-                cmd = ["install", "--no-incremental", self.browser.apk_path]
-                data = device.command_output(cmd, timeout=600)
-                if data.find("Success") == -1:
-                    raise mozdevice.ADBError("install failed for %s. Got: %s" % (self.browser.apk_path,
-                                                                                 data))
+                for i in range(max_retries + 1):
+                    logger.info(f"Installing {app} on {device_serial} "
+                                f"attempt {i + 1}/{max_retries + 1}")
+                    try:
+                        # Temporarily replace mozdevice function with custom code
+                        # that passes in the `--no-incremental` option
+                        cmd = ["install", "--no-incremental", self.browser.apk_path]
+                        logger.debug(" ".join(cmd))
+                        data = device.command_output(cmd, timeout=120)
+                        if data.find("Success") == -1:
+                            raise mozdevice.ADBError(f"Install failed for {self.browser.apk_path}."
+                                                     f" Got: {data}")
+                    except Exception as e:
+                        last_exception = e
+                    else:
+                        break
+                else:
+                    assert last_exception is not None
+                    raise WptrunError(f"Failed to install {app} on device {device_serial} "
+                                      f"after {max_retries} retries") from last_exception
             elif not device.is_app_installed(app):
-                raise WptrunError("app %s not installed on device %s" %
-                                  (app, device_serial))
+                raise WptrunError(f"app {app} not installed on device {device_serial}")
 
         kwargs["enable_webtransport_h3"] = True
 
