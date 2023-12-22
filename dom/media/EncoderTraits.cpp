@@ -15,5 +15,3 @@ bool Supports(const EncoderConfig& aConfig) {
   return pem->Supports(aConfig);
 }
 }
-
-
