@@ -11,6 +11,7 @@
 #include "mozilla/dom/VideoFrame.h"
 
 #include "EncoderTraits.h"
+#include "ImageContainer.h"
 #include "VideoUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Logging.h"
