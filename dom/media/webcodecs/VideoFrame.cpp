@@ -1747,6 +1747,31 @@ already_AddRefed<layers::Image> VideoFrame::GetImage() const {
   return do_AddRef(mResource->mImage);
 }
 
+nsCString VideoFrame::ToString() const {
+  nsCString rv;
+
+  if (IsClosed()) {
+    rv.AppendPrintf("VideoFrame (closed)");
+    return rv;
+  }
+
+  rv.AppendPrintf(
+      "VideoFrame ts: %" PRId64
+      ", %s, coded[%dx%d] visible[%dx%d], display[%dx%d] color: %s",
+      mTimestamp,
+      dom::VideoPixelFormatValues::GetString(mResource->mFormat->PixelFormat())
+          .data(),
+      mCodedSize.width, mCodedSize.height, mVisibleRect.width,
+      mVisibleRect.height, mDisplaySize.width, mDisplaySize.height,
+      ColorSpaceInitToString(mColorSpace).get());
+
+  if (mDuration) {
+    rv.AppendPrintf(" dur: %" PRId64, mDuration.value());
+  }
+
+  return rv;
+}
+
 // https://w3c.github.io/webcodecs/#ref-for-deserialization-steps%E2%91%A0
 /* static */
 JSObject* VideoFrame::ReadStructuredClone(
