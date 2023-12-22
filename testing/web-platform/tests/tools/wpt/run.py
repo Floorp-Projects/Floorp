@@ -5,7 +5,7 @@ import os
 import platform
 import subprocess
 import sys
-from shutil import which
+from shutil import copyfile, which
 from typing import ClassVar, Tuple, Type
 
 wpt_root = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir))
@@ -388,14 +388,6 @@ class FirefoxAndroid(BrowserSetup):
                 logger.info("Unable to find or install geckodriver, skipping wdspec tests")
                 kwargs["test_types"].remove("wdspec")
 
-        for device_serial in kwargs["device_serial"]:
-            if device_serial.startswith("emulator-"):
-                # We're running on an emulator so ensure that's set up
-                android.start(logger,
-                              reinstall=False,
-                              device_serial=device_serial,
-                              prompt=kwargs["prompt"])
-
         if kwargs["adb_binary"] is None:
             if "ADB_PATH" not in os.environ:
                 adb_path = os.path.join(android.get_paths(None)["sdk"],
@@ -407,12 +399,27 @@ class FirefoxAndroid(BrowserSetup):
         self._logcat = AndroidLogcat(kwargs["adb_binary"], base_path=kwargs["logcat_dir"])
 
         for device_serial in kwargs["device_serial"]:
+            if device_serial.startswith("emulator-"):
+                # We're running on an emulator so ensure that's set up
+                android.start(logger,
+                              reinstall=False,
+                              device_serial=device_serial,
+                              prompt=kwargs["prompt"])
+
+        for device_serial in kwargs["device_serial"]:
             device = mozdevice.ADBDeviceFactory(adb=kwargs["adb_binary"],
                                                 device=device_serial)
             self._logcat.start(device_serial)
             if self.browser.apk_path:
                 device.uninstall_app(app)
-                device.install_app(self.browser.apk_path, timeout=600)
+                # device.install_app(self.browser.apk_path, timeout=600)
+                # Temporarily replace mozdevice function with custom code
+                # that passes in the `--no-incremental` option
+                cmd = ["install", "--no-incremental", self.browser.apk_path]
+                data = device.command_output(cmd, timeout=600)
+                if data.find("Success") == -1:
+                    raise mozdevice.ADBError("install failed for %s. Got: %s" % (self.browser.apk_path,
+                                                                                 data))
             elif not device.is_app_installed(app):
                 raise WptrunError("app %s not installed on device %s" %
                                   (app, device_serial))
@@ -420,7 +427,16 @@ class FirefoxAndroid(BrowserSetup):
         kwargs["enable_webtransport_h3"] = True
 
     def teardown(self):
+        from . import android
+
         if hasattr(self, "_logcat"):
+            emulator_log = os.path.join(android.get_paths(None)["sdk"],
+                                        ".android",
+                                        "emulator.log")
+            if os.path.exists(emulator_log):
+                dest_path = os.path.join(self._logcat.base_path, "emulator.log")
+                copyfile(emulator_log, dest_path)
+
             self._logcat.stop()
 
 
