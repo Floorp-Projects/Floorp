@@ -157,7 +157,7 @@ class VideoFrame final : public nsISupports, public nsWrapperCache {
       const MaybeSharedArrayBufferViewOrMaybeSharedArrayBuffer& aDestination,
       const VideoFrameCopyToOptions& aOptions, ErrorResult& aRv);
 
-  already_AddRefed<VideoFrame> Clone(ErrorResult& aRv);
+  already_AddRefed<VideoFrame> Clone(ErrorResult& aRv) const;
 
   void Close();
   bool IsClosed() const;
