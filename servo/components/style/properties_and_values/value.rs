@@ -220,9 +220,9 @@ impl SpecifiedValue {
         allow_computationally_dependent: AllowComputationallyDependent,
     ) -> Result<Self, StyleParseError<'i>> {
         if syntax.is_universal() {
-            return Ok(Self::Universal(ComputedPropertyValue::parse(
+            return Ok(Self::Universal(Arc::new(ComputedPropertyValue::parse(
                 &mut input, url_data,
-            )?));
+            )?)));
         }
 
         let mut values = SmallComponentVec::new();
