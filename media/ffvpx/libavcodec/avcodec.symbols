@@ -26,6 +26,7 @@ av_packet_shrink_side_data
 av_packet_side_data_name
 av_packet_unpack_dictionary
 av_packet_unref
+av_packet_free
 av_parser_close
 av_parser_init
 av_parser_parse2

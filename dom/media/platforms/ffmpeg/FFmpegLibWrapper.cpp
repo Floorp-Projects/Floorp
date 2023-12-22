@@ -176,6 +176,7 @@ FFmpegLibWrapper::LinkResult FFmpegLibWrapper::Link() {
                                         AV_FUNC_58 | AV_FUNC_59 | AV_FUNC_60))
   AV_FUNC(av_packet_alloc, (AV_FUNC_57 | AV_FUNC_58 | AV_FUNC_59 | AV_FUNC_60))
   AV_FUNC(av_packet_unref, (AV_FUNC_57 | AV_FUNC_58 | AV_FUNC_59 | AV_FUNC_60))
+  AV_FUNC(av_packet_free, (AV_FUNC_57 | AV_FUNC_58 | AV_FUNC_59 | AV_FUNC_60))
   AV_FUNC_OPTION(av_rdft_init, AV_FUNC_AVCODEC_ALL)
   AV_FUNC_OPTION(av_rdft_calc, AV_FUNC_AVCODEC_ALL)
   AV_FUNC_OPTION(av_rdft_end, AV_FUNC_AVCODEC_ALL)

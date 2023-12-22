@@ -140,6 +140,7 @@ struct MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS FFmpegLibWrapper {
   // libavcodec >= v57
   AVPacket* (*av_packet_alloc)(void);
   void (*av_packet_unref)(AVPacket* pkt);
+  void (*av_packet_free)(AVPacket** pkt);
 
   // libavcodec v58 and later only
   int (*avcodec_send_packet)(AVCodecContext* avctx, const AVPacket* avpkt);
