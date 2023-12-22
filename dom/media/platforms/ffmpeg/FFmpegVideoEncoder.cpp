@@ -401,8 +401,14 @@ MediaResult FFmpegVideoEncoder<LIBAV_VER>::InitInternal() {
       static_cast<ffmpeg::FFmpegBitRate>(mConfig.mBitrate);
   mCodecContext->width = static_cast<int>(mConfig.mSize.width);
   mCodecContext->height = static_cast<int>(mConfig.mSize.height);
-  mCodecContext->time_base =
-      AVRational{.num = 1, .den = static_cast<int>(mConfig.mFramerate)};
+  if (mConfig.mFramerate) {
+    mCodecContext->time_base =
+        AVRational{.num = 1, .den = static_cast<int>(mConfig.mFramerate)};
+  } else {
+    // Choose something typical if we don't know
+    mCodecContext->time_base =
+        AVRational{.num = 1, .den = 90000};
+  }
 #if LIBAVCODEC_VERSION_MAJOR >= 57
   mCodecContext->framerate =
       AVRational{.num = static_cast<int>(mConfig.mFramerate), .den = 1};
