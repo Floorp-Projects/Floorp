@@ -126,13 +126,22 @@ already_AddRefed<PersistentBufferProviderAccelerated>
 PersistentBufferProviderAccelerated::Create(gfx::IntSize aSize,
                                             gfx::SurfaceFormat aFormat,
                                             KnowsCompositor* aKnowsCompositor) {
-  if (!DrawTargetWebgl::CanCreate(aSize, aFormat)) {
-    return nullptr;
-  }
-
   if (!aKnowsCompositor || !aKnowsCompositor->GetTextureForwarder() ||
       !aKnowsCompositor->GetTextureForwarder()->IPCOpen()) {
     return nullptr;
+  }
+
+  if (!DrawTargetWebgl::CanCreate(aSize, aFormat)) {
+#ifdef XP_WIN
+    // Direct2D acceleration does not require DrawTargetWebgl, but still
+    // requires PersistentBufferProviderAccelerated.
+    if (!TextureData::IsRemote(aKnowsCompositor, BackendSelector::Canvas,
+                               aFormat, aSize)) {
+      return nullptr;
+    }
+#else
+    return nullptr;
+#endif
   }
 
   auto remoteTextureOwnerId = RemoteTextureOwnerId::GetNext();
@@ -261,12 +270,8 @@ PersistentBufferProviderShared::Create(gfx::IntSize aSize,
 
 #ifdef XP_WIN
   // Bug 1285271 - Disable shared buffer provider on Windows with D2D due to
-  // instability, unless we are remoting the canvas drawing to the GPU process.
-  if (gfxPlatform::GetPlatform()->GetPreferredCanvasBackend() ==
-          BackendType::DIRECT2D1_1 &&
-      !TextureData::IsRemote(aKnowsCompositor, BackendSelector::Canvas)) {
-    return nullptr;
-  }
+  // instability.
+  aWillReadFrequently = true;
 #endif
 
   RefPtr<TextureClient> texture =
@@ -753,20 +758,6 @@ void PersistentBufferProviderShared::Destroy() {
   }
 
   mTextures.clear();
-}
-
-bool PersistentBufferProviderShared::IsAccelerated() const {
-#ifdef XP_WIN
-  // Detect if we're using D2D canvas.
-  if (mWillReadFrequently || mTextures.empty() || !mTextures[0]) {
-    return false;
-  }
-  auto* data = mTextures[0]->GetInternalData();
-  if (data && data->AsD3D11TextureData()) {
-    return true;
-  }
-#endif
-  return false;
 }
 
 }  // namespace layers

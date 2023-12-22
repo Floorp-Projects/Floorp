@@ -78,6 +78,10 @@ class AndroidNativeWindowTextureData : public TextureData {
   static AndroidNativeWindowTextureData* Create(gfx::IntSize aSize,
                                                 gfx::SurfaceFormat aFormat);
 
+  TextureType GetTextureType() const override {
+    return TextureType::AndroidNativeWindow;
+  }
+
   void FillInfo(TextureData::Info& aInfo) const override;
 
   bool Serialize(SurfaceDescriptor& aOutDescriptor) override;
