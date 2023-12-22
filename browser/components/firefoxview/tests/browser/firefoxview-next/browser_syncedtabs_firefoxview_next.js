@@ -15,9 +15,6 @@ add_setup(async function () {
   registerCleanupFunction(async function () {
     await tearDown(gSandbox);
   });
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.tabs.firefox-view-next", true]],
-  });
 });
 
 add_task(async function test_unconfigured_initial_state() {

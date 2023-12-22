@@ -9,7 +9,6 @@ ChromeUtils.defineESModuleGetters(globalThis, {
   SessionStore: "resource:///modules/sessionstore/SessionStore.sys.mjs",
 });
 
-const FXVIEW_NEXT_ENABLED_PREF = "browser.tabs.firefox-view-next";
 const NEVER_REMEMBER_HISTORY_PREF = "browser.privatebrowsing.autostart";
 const SEARCH_ENABLED_PREF = "browser.firefox-view.search.enabled";
 const RECENTLY_CLOSED_EVENT = [
@@ -230,10 +229,7 @@ async function recentlyClosedDismissTelemetry() {
 
 add_setup(async () => {
   await SpecialPowers.pushPrefEnv({
-    set: [
-      [FXVIEW_NEXT_ENABLED_PREF, true],
-      [SEARCH_ENABLED_PREF, true],
-    ],
+    set: [[SEARCH_ENABLED_PREF, true]],
   });
   registerCleanupFunction(async () => {
     await SpecialPowers.popPrefEnv();
