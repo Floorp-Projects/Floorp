@@ -1,10 +1,28 @@
-[
-  {
-    "classification": "intermittent",
-    "failures": 1,
-    "label": "test-linux1804-64-qr/opt-mochitest-browser-chrome-spi-nw-7",
-    "manifest": "browser/components/urlbar/tests/browser-updateResults/browser.toml",
-    "path": "browser/components/urlbar/tests/browser-updateResults/browser_suggestedIndex_10_url_10_search.js",
-    "totalruns": 3
+{
+  "browser/components/urlbar/tests/browser-updateResults/browser.toml": {
+    "path": {
+      "browser/components/urlbar/tests/browser-updateResults/browser_suggestedIndex_10_url_10_search.js": {
+        "test-linux1804-64-qr/opt-mochitest-browser-chrome-spi-nw-7": {
+          "classification": "intermittent",
+          "failed_runs": 1,
+          "runs": {
+            "UOZUIVAaTZKmRwArq5WkDw": false,
+            "WVczuxkuSRKZg_jMiGyQsA": true,
+            "b7_ahjGtQ_-ZMNBG_hUZUw": true
+          },
+          "total_runs": 3
+        }
+      }
+    },
+    "sum_by_label": {
+      "test-linux1804-64-qr/opt-mochitest-browser-chrome-spi-nw-7": {
+        "disable_manifest": 0,
+        "disable_recommended": 0,
+        "intermittent": 1,
+        "secondary": 0,
+        "success": 0,
+        "unknown": 0
+      }
+    }
   }
-]
+}

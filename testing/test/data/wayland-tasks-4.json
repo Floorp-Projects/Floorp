@@ -1,0 +1,97 @@
+[
+  {
+    "id": "bxMVPbPMTru_bfAivc1sPA",
+    "label": "test-linux2204-64-wayland/debug-mochitest-browser-chrome-swr-1",
+    "duration": 4634186,
+    "result": "failed",
+    "state": "completed",
+    "tags": {
+      "os": "linux",
+      "kind": "test",
+      "label": "test-linux2204-64-wayland/debug-mochitest-browser-chrome-swr-1",
+      "retrigger": "true",
+      "test-type": "mochitest",
+      "tests_grouped": "1",
+      "createdForUser": "ci@mozilla.com",
+      "worker-implementation": "generic-worker"
+    },
+    "tier": 2,
+    "results": [
+      {
+        "group": "toolkit/components/pdfjs/test/browser.toml",
+        "ok": false,
+        "duration": 3904699
+      }
+    ],
+    "errors": null,
+    "failure_types": {
+      "toolkit/components/pdfjs/test/browser.toml": [
+        ["toolkit/components/pdfjs/test/browser.toml", "crash"],
+        ["toolkit/components/pdfjs/test/browser.toml", "crash"]
+      ]
+    }
+  },
+  {
+    "id": "EDql3NKPR3W6OEU3mLeKbg",
+    "label": "test-linux2204-64-wayland/debug-mochitest-browser-chrome-swr-1",
+    "duration": 5125999,
+    "result": "failed",
+    "state": "completed",
+    "tags": {
+      "os": "linux",
+      "kind": "test",
+      "label": "test-linux2204-64-wayland/debug-mochitest-browser-chrome-swr-1",
+      "retrigger": "true",
+      "test-type": "mochitest",
+      "tests_grouped": "1",
+      "createdForUser": "ci@mozilla.com",
+      "worker-implementation": "generic-worker"
+    },
+    "tier": 2,
+    "results": [
+      {
+        "group": "toolkit/components/pdfjs/test/browser.toml",
+        "ok": false,
+        "duration": 3904699
+      }
+    ],
+    "errors": null,
+    "failure_types": {
+      "toolkit/components/pdfjs/test/browser.toml": [
+        ["toolkit/components/pdfjs/test/browser.toml", "crash"],
+        ["toolkit/components/pdfjs/test/browser.toml", "crash"]
+      ]
+    }
+  },
+  {
+    "id": "FDql3NKPR3W6OEU3mLeKbg",
+    "label": "test-linux2204-64-wayland/debug-mochitest-browser-chrome-swr-1",
+    "duration": 5125999,
+    "result": "failed",
+    "state": "completed",
+    "tags": {
+      "os": "linux",
+      "kind": "test",
+      "label": "test-linux2204-64-wayland/debug-mochitest-browser-chrome-swr-1",
+      "retrigger": "true",
+      "test-type": "mochitest",
+      "tests_grouped": "1",
+      "createdForUser": "ci@mozilla.com",
+      "worker-implementation": "generic-worker"
+    },
+    "tier": 2,
+    "results": [
+      {
+        "group": "toolkit/components/pdfjs/test/browser.toml",
+        "ok": false,
+        "duration": 3904699
+      }
+    ],
+    "errors": null,
+    "failure_types": {
+      "toolkit/components/pdfjs/test/browser.toml": [
+        ["toolkit/components/pdfjs/test/browser.toml", "crash"]
+      ]
+    }
+  }
+]

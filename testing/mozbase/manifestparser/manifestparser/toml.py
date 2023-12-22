@@ -8,7 +8,37 @@ import re
 
 from .ini import combine_fields
 
-__all__ = ["read_toml"]
+__all__ = ["read_toml", "alphabetize_toml_str", "add_skip_if"]
+
+FILENAME_REGEX = r"^([A-Za-z0-9_./-]*)([Bb][Uu][Gg])([-_]*)([0-9]+)([A-Za-z0-9_./-]*)$"
+
+
+def sort_paths_keyfn(k):
+    sort_paths_keyfn.rx = getattr(sort_paths_keyfn, "rx", None)  # static
+    if sort_paths_keyfn.rx is None:
+        sort_paths_keyfn.rx = re.compile(FILENAME_REGEX)
+    name = str(k)
+    if name == "DEFAULT":
+        return ""
+    m = sort_paths_keyfn.rx.findall(name)
+    if len(m) == 1 and len(m[0]) == 5:
+        prefix = m[0][0]  # text before "Bug"
+        bug = m[0][1]  # the word "Bug"
+        underbar = m[0][2]  # underbar or dash (optional)
+        num = m[0][3]  # the bug id
+        suffix = m[0][4]  # text after the bug id
+        name = f"{prefix}{bug.lower()}{underbar}{int(num):09d}{suffix}"
+        return name
+    return name
+
+
+def sort_paths(paths):
+    """
+    Returns a list of paths (tests) in a manifest in alphabetical order.
+    Ensures DEFAULT is first and filenames with a bug number are
+    in the proper order.
+    """
+    return sorted(paths, key=sort_paths_keyfn)
 
 
 def parse_toml_str(contents):
@@ -144,7 +174,6 @@ def alphabetize_toml_str(manifest):
     from mp.source_documents[filename]) and return it as a string
     in sorted order by section (i.e. test file name, taking bug ids into consideration).
     """
-    import re
 
     from tomlkit import document, dumps, table
     from tomlkit.items import KeyType, SingleKey
@@ -160,24 +189,7 @@ def alphabetize_toml_str(manifest):
         new_manifest.add("DEFAULT", manifest["DEFAULT"])
     else:
         new_manifest.add("DEFAULT", table())
-    sections = [k for k in manifest.keys() if k != "DEFAULT"]
-    regex = r"^([A-Za-z0-9_./-]*)([Bb][Uu][Gg])([-_]*)([0-9]+)([A-Za-z0-9_./-]*)$"
-    rx = re.compile(regex)
-
-    def keyfn(k):
-        name: str = str(k)
-        m = rx.findall(name)
-        if len(m) == 1 and len(m[0]) == 5:
-            prefix = m[0][0]  # text before "Bug"
-            bug = m[0][1]  # the word "Bug"
-            underbar = m[0][2]  # underbar or dash (optional)
-            num = m[0][3]  # the bug id
-            suffix = m[0][4]  # text after the bug id
-            name = f"{prefix}{bug.lower()}{underbar}{int(num):09d}{suffix}"
-            return name
-        return name
-
-    sections = sorted(sections, key=keyfn)
+    sections = sort_paths([k for k in manifest.keys() if k != "DEFAULT"])
     for k in sections:
         if k.find('"') >= 0:
             section = k
@@ -192,6 +204,22 @@ def alphabetize_toml_str(manifest):
     return manifest_str
 
 
+def _simplify_comment(comment):
+    """Remove any leading #, but preserve leading whitespace in comment"""
+
+    length = len(comment)
+    i = 0
+    j = -1  # remove exactly one space
+    while i < length and comment[i] in " #":
+        i += 1
+        if comment[i] == " ":
+            j += 1
+    comment = comment[i:]
+    if j > 0:
+        comment = " " * j + comment
+    return comment.rstrip()
+
+
 def add_skip_if(manifest, filename, condition, bug=None):
     """
     Will take a TOMLkit manifest document (i.e. from a previous invocation
@@ -200,7 +228,7 @@ def add_skip_if(manifest, filename, condition, bug=None):
     in sorted order by section (i.e. test file name, taking bug ids into consideration).
     """
     from tomlkit import array
-    from tomlkit.items import Comment, String
+    from tomlkit.items import Comment, String, Whitespace
 
     if filename not in manifest:
         raise Exception(f"TOML manifest does not contain section: {filename}")
@@ -208,18 +236,20 @@ def add_skip_if(manifest, filename, condition, bug=None):
     first = None
     first_comment = ""
     skip_if = None
+    existing = False  # this condition is already present
     if "skip-if" in keyvals:
         skip_if = keyvals["skip-if"]
         if len(skip_if) == 1:
             for e in skip_if._iter_items():
                 if not first:
-                    first = e
+                    if not isinstance(e, Whitespace):
+                        first = e.as_string().strip('"')
                 else:
                     c = e.as_string()
                     if c != ",":
                         first_comment += c
             if skip_if.trivia is not None:
-                first_comment += skip_if.trivia.comment[2:]
+                first_comment += skip_if.trivia.comment
     mp_array = array()
     if skip_if is None:  # add the first one line entry to the table
         mp_array.add_line(condition, indent="", add_comma=False, newline=False)
@@ -229,8 +259,12 @@ def add_skip_if(manifest, filename, condition, bug=None):
         keyvals.update(skip_if)
     else:
         if first is not None:
+            if first == condition:
+                existing = True
             if first_comment is not None:
-                mp_array.add_line(first, indent="  ", comment=first_comment)
+                mp_array.add_line(
+                    first, indent="  ", comment=_simplify_comment(first_comment)
+                )
             else:
                 mp_array.add_line(first, indent="  ")
         if len(skip_if) > 1:
@@ -246,14 +280,23 @@ def add_skip_if(manifest, filename, condition, bug=None):
                             e_comment = None
                         else:
                             mp_array.add_line(e_condition, indent="  ")
+                        e_condition = None
                     if len(e) > 0:
-                        e_condition = e
+                        e_condition = e.as_string().strip('"')
+                        if e_condition == condition:
+                            existing = True
                 elif isinstance(e, Comment):
-                    e_comment = e.as_string()[3:]
-        if bug is not None:
-            mp_array.add_line(condition, indent="  ", comment=bug)
-        else:
-            mp_array.add_line(condition, indent="  ")
+                    e_comment = _simplify_comment(e.as_string())
+            if e_condition is not None:
+                if e_comment is not None:
+                    mp_array.add_line(e_condition, indent="  ", comment=e_comment)
+                else:
+                    mp_array.add_line(e_condition, indent="  ")
+        if not existing:
+            if bug is not None:
+                mp_array.add_line(condition, indent="  ", comment=bug)
+            else:
+                mp_array.add_line(condition, indent="  ")
         mp_array.add_line("", indent="")  # fixed in write_toml_str
         skip_if = {"skip-if": mp_array}
         del keyvals["skip-if"]

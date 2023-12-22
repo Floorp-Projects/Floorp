@@ -507,15 +507,15 @@ featuregates:
         files-changed:
             - 'toolkit/components/featuregates/**'
 
-skipfails:
-    description: testing/skipfails unit tests
+skip-fails:
+    description: testing/skip-fails unit tests
     always-target: false
     python-version: [3]
     treeherder:
         symbol: sf
     run:
         using: python-test
-        subsuite: skipfails
+        subsuite: skip-fails
     when:
         files-changed:
             - 'testing/skipfails.py'

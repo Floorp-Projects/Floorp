@@ -8,53 +8,9 @@ from pathlib import Path
 
 import pytest
 from mozunit import main
-from skipfails import Skipfails
+from skipfails import MockTask, Skipfails
 
 DATA_PATH = Path(__file__).with_name("data")
-
-
-class MockResult(object):
-    def __init__(self, result):
-        self.result = result
-
-    @property
-    def group(self):
-        return self.result["group"]
-
-    @property
-    def ok(self):
-        _ok = self.result["ok"]
-        return _ok
-
-
-class MockTask(object):
-    def __init__(self, task):
-        self.task = task
-        if "results" in self.task:
-            self.task["results"] = [
-                MockResult(result) for result in self.task["results"]
-            ]
-        else:
-            self.task["results"] = []
-
-    @property
-    def failure_types(self):
-        if "failure_types" in self.task:
-            return self.task["failure_types"]
-        else:  # note no failure_types in Task object
-            return {}
-
-    @property
-    def id(self):
-        return self.task["id"]
-
-    @property
-    def label(self):
-        return self.task["label"]
-
-    @property
-    def results(self):
-        return self.task["results"]
 
 
 def test_get_revision():
@@ -95,75 +51,118 @@ def test_get_tasks():
     assert push is not None
 
 
-def test_get_failures_1():
-    """Test get_failures 1"""
-
-    tasks_name = "wayland-tasks-1.json"
-    exp_f_name = "wayland-failures-1.json"
+def get_failures(tasks_name, exp_f_name):
+    """Runs Skipfails.get_failures on tasks to compare with failures"""
     sf = Skipfails()
     tasks_fp = DATA_PATH.joinpath(tasks_name).open("r", encoding="utf-8")
     tasks = json.load(tasks_fp)
     tasks = [MockTask(task) for task in tasks]
     exp_f_fp = DATA_PATH.joinpath(exp_f_name).open("r", encoding="utf-8")
-    expected_failures = json.load(exp_f_fp)
+    expected_failures = exp_f_fp.read().strip()
     failures = sf.get_failures(tasks)
-    assert len(failures) == len(expected_failures)
-    for i in range(len(expected_failures)):
-        assert failures[i]["manifest"] == expected_failures[i]["manifest"]
-        assert failures[i]["path"] == expected_failures[i]["path"]
-        assert failures[i]["classification"] == expected_failures[i]["classification"]
+    actual_failures = json.dumps(failures, indent=2, sort_keys=True).strip()
+    assert actual_failures == expected_failures
+
+
+def test_get_failures_1():
+    """Test get_failures 1"""
+    get_failures("wayland-tasks-1.json", "wayland-failures-1.json")
 
 
 def test_get_failures_2():
     """Test get_failures 2"""
-
-    tasks_name = "wayland-tasks-2.json"
-    exp_f_name = "wayland-failures-2.json"
-    sf = Skipfails()
-    tasks_fp = DATA_PATH.joinpath(tasks_name).open("r", encoding="utf-8")
-    tasks = json.load(tasks_fp)
-    tasks = [MockTask(task) for task in tasks]
-    exp_f_fp = DATA_PATH.joinpath(exp_f_name).open("r", encoding="utf-8")
-    expected_failures = json.load(exp_f_fp)
-    failures = sf.get_failures(tasks)
-    assert len(failures) == len(expected_failures)
-    for i in range(len(expected_failures)):
-        assert failures[i]["manifest"] == expected_failures[i]["manifest"]
-        assert failures[i]["path"] == expected_failures[i]["path"]
-        assert failures[i]["classification"] == expected_failures[i]["classification"]
+    get_failures("wayland-tasks-2.json", "wayland-failures-2.json")
 
 
 def test_get_failures_3():
     """Test get_failures 3"""
-
-    tasks_name = "wayland-tasks-3.json"
-    exp_f_name = "wayland-failures-3.json"
-    sf = Skipfails()
-    tasks_fp = DATA_PATH.joinpath(tasks_name).open("r", encoding="utf-8")
-    tasks = json.load(tasks_fp)
-    tasks = [MockTask(task) for task in tasks]
-    exp_f_fp = DATA_PATH.joinpath(exp_f_name).open("r", encoding="utf-8")
-    expected_failures = json.load(exp_f_fp)
-    failures = sf.get_failures(tasks)
-    assert len(failures) == len(expected_failures)
-    for i in range(len(expected_failures)):
-        assert failures[i]["manifest"] == expected_failures[i]["manifest"]
-        assert failures[i]["path"] == expected_failures[i]["path"]
-        assert failures[i]["classification"] == expected_failures[i]["classification"]
+    get_failures("wayland-tasks-3.json", "wayland-failures-3.json")
 
 
-def test_get_bug():
-    """Test get_bug"""
+def test_get_failures_4():
+    """Test get_failures 4"""
+    get_failures("wayland-tasks-4.json", "wayland-failures-4.json")
+
+
+def test_get_bug_by_id():
+    """Test get_bug_by_id"""
 
     sf = Skipfails()
     id = 1682371
-    bug = sf.get_bug(id)
+    bug = sf.get_bug_by_id(id)
     assert bug.id == id
     assert bug.product == "Testing"
     assert bug.component == "General"
     assert (
         bug.summary
         == "create tool to quickly parse and identify all failures from a try push and ideally annotate manifests"
+    )
+
+
+def test_get_variants():
+    """Test get_variants"""
+
+    sf = Skipfails()
+    variants = sf.get_variants()
+    assert "1proc" in variants
+    assert variants["1proc"] == "e10s"
+    assert "webrender-sw" in variants
+    assert variants["webrender-sw"] == "swgl"
+    assert "aab" in variants
+    assert variants["aab"] == "aab"
+
+
+def test_task_to_skip_if():
+    """Test task_to_skip_if"""
+
+    # preload task cache
+    task_id = "UP-t3xrGSDWvUNjFGIt_aQ"
+    task = {
+        "expires": "2024-01-09T16:05:56.825Z",
+        "extra": {
+            "suite": "mochitest-plain",
+            "test-setting": {
+                "build": {"type": "debug"},
+                "platform": {
+                    "arch": "32",
+                    "os": {"build": "2009", "name": "windows", "version": "11"},
+                },
+                "runtime": {},
+            },
+        },
+    }
+    sf = Skipfails()
+    sf.tasks[task_id] = task
+    # function under test
+    skip_if = sf.task_to_skip_if(task_id)
+    assert skip_if == "os == 'win' && os_version == '11' && bits == '32' && debug"
+
+
+def test_get_filename_in_manifest():
+    """Test get_filename_in_manifest"""
+
+    sf = Skipfails()
+
+    assert (
+        sf.get_filename_in_manifest(
+            "browser/components/sessionstore/test/browser.toml",
+            "browser/components/sessionstore/test/browser_closed_tabs_windows.js",
+        )
+        == "browser_closed_tabs_windows.js"
+    )
+    assert (
+        sf.get_filename_in_manifest(
+            "browser/base/content/test/webrtc/gracePeriod/browser.toml",
+            "browser/base/content/test/webrtc/browser_devices_get_user_media_grace.js",
+        )
+        == "../browser_devices_get_user_media_grace.js"
+    )
+    assert (
+        sf.get_filename_in_manifest(
+            "dom/animation/test/mochitest.toml",
+            "dom/animation/test/document-timeline/test_document-timeline.html",
+        )
+        == "document-timeline/test_document-timeline.html"
     )
 
 

@@ -1,2 +1,4 @@
 pypi:mozci==2.3.4
 pypi:python-bugzilla==3.2.0
+vendored:third_party/python/PyYAML/lib/
+vendored:third_party/python/requests
