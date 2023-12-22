@@ -27,6 +27,11 @@ struct VideoColorSpaceInternal {
   VideoColorSpaceInternal() = default;
   VideoColorSpaceInit ToColorSpaceInit() const;
 
+  bool operator==(const VideoColorSpaceInternal& aOther) const {
+    return mFullRange == aOther.mFullRange && mMatrix == aOther.mMatrix &&
+           mPrimaries == aOther.mPrimaries && mTransfer == aOther.mTransfer;
+  }
+
   Maybe<bool> mFullRange;
   Maybe<VideoMatrixCoefficients> mMatrix;
   Maybe<VideoColorPrimaries> mPrimaries;
@@ -38,6 +43,30 @@ class VideoDecoderConfigInternal {
   static UniquePtr<VideoDecoderConfigInternal> Create(
       const VideoDecoderConfig& aConfig);
   ~VideoDecoderConfigInternal() = default;
+
+
+  bool Equals(const VideoDecoderConfigInternal& aOther) const {
+    if (mDescription.isSome() != aOther.mDescription.isSome()) {
+        return false;
+    }
+    if (mDescription.isSome() && aOther.mDescription.isSome()) {
+        auto lhs = mDescription.value();
+        auto rhs = aOther.mDescription.value();
+        if (lhs->Length() != rhs->Length()) {
+            return false;
+        }
+        if (!ArrayEqual(lhs->Elements(), rhs->Elements(), lhs->Length())) {
+            return false;
+        }
+    }
+    return mCodec.Equals(aOther.mCodec) &&
+           mCodedHeight == aOther.mCodedHeight &&
+           mCodedWidth == aOther.mCodedWidth &&
+           mColorSpace == aOther.mColorSpace &&
+           mDisplayAspectHeight == aOther.mDisplayAspectWidth &&
+           mHardwareAcceleration == aOther.mHardwareAcceleration &&
+           mOptimizeForLatency == aOther.mOptimizeForLatency;
+  }
 
   nsString mCodec;
   Maybe<uint32_t> mCodedHeight;
