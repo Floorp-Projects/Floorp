@@ -20,6 +20,7 @@
 #include "mozilla/dom/ImageUtils.h"
 #include "nsPrintfCString.h"
 #include "ImageToI420.h"
+#include "libyuv.h"
 
 // The ffmpeg namespace is introduced to avoid the PixelFormat's name conflicts
 // with MediaDataEncoder::PixelFormat in MediaDataEncoder class scope.
@@ -606,6 +607,48 @@ void FFmpegVideoEncoder<LIBAV_VER>::DestroyFrame() {
   }
 }
 
+bool FFmpegVideoEncoder<LIBAV_VER>::ScaleInputFrame() {
+  AVFrame* source = mFrame;
+  mFrame = nullptr;
+  // Allocate AVFrame.
+  if (!PrepareFrame()) {
+    FFMPEGV_LOG("failed to allocate frame");
+    return false;
+  }
+
+  // Set AVFrame properties for its internal data allocation. For now, we always
+  // convert into ffmpeg's buffer.
+  mFrame->format = AV_PIX_FMT_YUV420P;
+  mFrame->width = static_cast<int>(mConfig.mSize.Width());
+  mFrame->height = static_cast<int>(mConfig.mSize.Height());
+
+  // Allocate AVFrame data.
+  if (int ret = mLib->av_frame_get_buffer(mFrame, 16); ret < 0) {
+    FFMPEGV_LOG("failed to allocate frame data: %s",
+                MakeErrorString(mLib, ret).get());
+    return false;
+  }
+
+  // Make sure AVFrame is writable.
+  if (int ret = mLib->av_frame_make_writable(mFrame); ret < 0) {
+    FFMPEGV_LOG("failed to make frame writable: %s",
+                MakeErrorString(mLib, ret).get());
+    return false;
+  }
+  int rv = I420Scale(source->data[0], source->linesize[0], source->data[1],
+                     source->linesize[1], source->data[2], source->linesize[2],
+                     source->width, source->height, mFrame->data[0],
+                     mFrame->linesize[0], mFrame->data[1], mFrame->linesize[1],
+                     mFrame->data[2], mFrame->linesize[2], mFrame->width,
+                     mFrame->height, libyuv::FilterMode::kFilterBox);
+  if (!rv) {
+    FFMPEGV_LOG("YUV scale error");
+  }
+  mLib->av_frame_unref(source);
+  mLib->av_frame_free(&source);
+  return true;
+}
+
 // avcodec_send_frame and avcodec_receive_packet were introduced in version 58.
 #if LIBAVCODEC_VERSION_MAJOR >= 58
 RefPtr<MediaDataEncoder::EncodePromise> FFmpegVideoEncoder<
@@ -687,6 +730,18 @@ RefPtr<MediaDataEncoder::EncodePromise> FFmpegVideoEncoder<
         MediaResult(NS_ERROR_ILLEGAL_INPUT,
                     RESULT_DETAIL("libyuv conversion error")),
         __func__);
+  }
+
+  // Scale the YUV input frame if needed -- the encoded frame will have the
+  // dimensions configured at encoded initialization.
+  if (mFrame->width != mConfig.mSize.Width() ||
+      mFrame->height != mConfig.mSize.Height()) {
+    if (!ScaleInputFrame()) {
+      return EncodePromise::CreateAndReject(
+          MediaResult(NS_ERROR_OUT_OF_MEMORY,
+                      RESULT_DETAIL("libyuv scaling error")),
+          __func__);
+    }
   }
 
   FFMPEGV_LOG(

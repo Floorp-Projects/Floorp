@@ -30,4 +30,8 @@ if CONFIG['CC_TYPE'] == 'gcc':
 
 include("/ipc/chromium/chromium-config.mozbuild")
 
+LOCAL_INCLUDES += [
+  "/media/libyuv/libyuv/include",
+]
+
 FINAL_LIBRARY = 'xul'
