@@ -3810,23 +3810,6 @@ struct BCMapCellInfo {
   void SetInfo(nsTableRowFrame* aNewRow, int32_t aColIndex,
                BCCellData* aCellData, BCMapCellIterator* aIter,
                nsCellMap* aCellMap = nullptr);
-  // The BCMapCellInfo has functions to set the continous
-  // border widths (see nsTablePainter.cpp for a description of the continous
-  // borders concept). The widths are computed inside these functions based on
-  // the current position inside the table and the cached frames that correspond
-  // to this position. The widths are stored in member variables of the internal
-  // table frames.
-  void SetTableBStartIStartContBCBorder();
-  void SetRowGroupIStartContBCBorder();
-  void SetRowGroupIEndContBCBorder();
-  void SetRowGroupBEndContBCBorder();
-  void SetRowIStartContBCBorder();
-  void SetRowIEndContBCBorder();
-  void SetColumnBStartIEndContBCBorder();
-  void SetColumnBEndContBCBorder();
-  void SetColGroupBEndContBCBorder();
-  void SetInnerRowGroupBEndContBCBorder(const nsIFrame* aNextRowGroup,
-                                        nsTableRowFrame* aNextRow);
 
   // functions to set the border widths on the table related frames, where the
   // knowledge about the current position in the table is used.
@@ -4853,156 +4836,6 @@ void nsTableFrame::ExpandBCDamageArea(TableArea& aArea) const {
 #define ADJACENT true
 #define INLINE_DIR true
 
-void BCMapCellInfo::SetTableBStartIStartContBCBorder() {
-  BCCellBorder currentBorder;
-  // calculate continuous top first row & rowgroup border: special case
-  // because it must include the table in the collapse
-  if (mStartRow) {
-    currentBorder =
-        CompareBorders(mTableFrame, nullptr, nullptr, mRowGroup, mStartRow,
-                       nullptr, mTableWM, eLogicalSideBStart, !ADJACENT);
-    mStartRow->SetContinuousBCBorderWidth(eLogicalSideBStart,
-                                          currentBorder.width);
-  }
-  if (mCgAtEnd && mColGroup) {
-    // calculate continuous top colgroup border once per colgroup
-    currentBorder =
-        CompareBorders(mTableFrame, mColGroup, nullptr, mRowGroup, mStartRow,
-                       nullptr, mTableWM, eLogicalSideBStart, !ADJACENT);
-    mColGroup->SetContinuousBCBorderWidth(eLogicalSideBStart,
-                                          currentBorder.width);
-  }
-  if (0 == mColIndex) {
-    currentBorder =
-        CompareBorders(mTableFrame, mColGroup, mStartCol, nullptr, nullptr,
-                       nullptr, mTableWM, eLogicalSideIStart, !ADJACENT);
-    mTableFrame->SetContinuousIStartBCBorderWidth(currentBorder.width);
-  }
-}
-
-void BCMapCellInfo::SetRowGroupIStartContBCBorder() {
-  BCCellBorder currentBorder;
-  // get row group continuous borders
-  if (mRgAtEnd && mRowGroup) {  // once per row group, so check for bottom
-    currentBorder =
-        CompareBorders(mTableFrame, mColGroup, mStartCol, mRowGroup, nullptr,
-                       nullptr, mTableWM, eLogicalSideIStart, !ADJACENT);
-    mRowGroup->SetContinuousBCBorderWidth(eLogicalSideIStart,
-                                          currentBorder.width);
-  }
-}
-
-void BCMapCellInfo::SetRowGroupIEndContBCBorder() {
-  BCCellBorder currentBorder;
-  // get row group continuous borders
-  if (mRgAtEnd && mRowGroup) {  // once per mRowGroup, so check for bottom
-    currentBorder =
-        CompareBorders(mTableFrame, mColGroup, mEndCol, mRowGroup, nullptr,
-                       nullptr, mTableWM, eLogicalSideIEnd, ADJACENT);
-    mRowGroup->SetContinuousBCBorderWidth(eLogicalSideIEnd,
-                                          currentBorder.width);
-  }
-}
-
-void BCMapCellInfo::SetColumnBStartIEndContBCBorder() {
-  BCCellBorder currentBorder;
-  // calculate column continuous borders
-  // we only need to do this once, so we'll do it only on the first row
-  currentBorder = CompareBorders(
-      mTableFrame, mCurrentColGroupFrame, mCurrentColFrame, mRowGroup,
-      mStartRow, nullptr, mTableWM, eLogicalSideBStart, !ADJACENT);
-  mCurrentColFrame->SetContinuousBCBorderWidth(eLogicalSideBStart,
-                                               currentBorder.width);
-  if (mNumTableCols == GetCellEndColIndex() + 1) {
-    currentBorder = CompareBorders(mTableFrame, mCurrentColGroupFrame,
-                                   mCurrentColFrame, nullptr, nullptr, nullptr,
-                                   mTableWM, eLogicalSideIEnd, !ADJACENT);
-  } else {
-    currentBorder = CompareBorders(nullptr, mCurrentColGroupFrame,
-                                   mCurrentColFrame, nullptr, nullptr, nullptr,
-                                   mTableWM, eLogicalSideIEnd, !ADJACENT);
-  }
-  mCurrentColFrame->SetContinuousBCBorderWidth(eLogicalSideIEnd,
-                                               currentBorder.width);
-}
-
-void BCMapCellInfo::SetColumnBEndContBCBorder() {
-  BCCellBorder currentBorder;
-  // get col continuous border
-  currentBorder = CompareBorders(mTableFrame, mCurrentColGroupFrame,
-                                 mCurrentColFrame, mRowGroup, mEndRow, nullptr,
-                                 mTableWM, eLogicalSideBEnd, ADJACENT);
-  mCurrentColFrame->SetContinuousBCBorderWidth(eLogicalSideBEnd,
-                                               currentBorder.width);
-}
-
-void BCMapCellInfo::SetColGroupBEndContBCBorder() {
-  BCCellBorder currentBorder;
-  if (mColGroup) {
-    currentBorder =
-        CompareBorders(mTableFrame, mColGroup, nullptr, mRowGroup, mEndRow,
-                       nullptr, mTableWM, eLogicalSideBEnd, ADJACENT);
-    mColGroup->SetContinuousBCBorderWidth(eLogicalSideBEnd,
-                                          currentBorder.width);
-  }
-}
-
-void BCMapCellInfo::SetRowGroupBEndContBCBorder() {
-  BCCellBorder currentBorder;
-  if (mRowGroup) {
-    currentBorder =
-        CompareBorders(mTableFrame, nullptr, nullptr, mRowGroup, mEndRow,
-                       nullptr, mTableWM, eLogicalSideBEnd, ADJACENT);
-    mRowGroup->SetContinuousBCBorderWidth(eLogicalSideBEnd,
-                                          currentBorder.width);
-  }
-}
-
-void BCMapCellInfo::SetInnerRowGroupBEndContBCBorder(
-    const nsIFrame* aNextRowGroup, nsTableRowFrame* aNextRow) {
-  BCCellBorder currentBorder, adjacentBorder;
-
-  const nsIFrame* rowgroup = mRgAtEnd ? mRowGroup : nullptr;
-  currentBorder = CompareBorders(nullptr, nullptr, nullptr, rowgroup, mEndRow,
-                                 nullptr, mTableWM, eLogicalSideBEnd, ADJACENT);
-
-  adjacentBorder =
-      CompareBorders(nullptr, nullptr, nullptr, aNextRowGroup, aNextRow,
-                     nullptr, mTableWM, eLogicalSideBStart, !ADJACENT);
-  currentBorder =
-      CompareBorders(false, currentBorder, adjacentBorder, INLINE_DIR);
-  if (aNextRow) {
-    aNextRow->SetContinuousBCBorderWidth(eLogicalSideBStart,
-                                         currentBorder.width);
-  }
-  if (mRgAtEnd && mRowGroup) {
-    mRowGroup->SetContinuousBCBorderWidth(eLogicalSideBEnd,
-                                          currentBorder.width);
-  }
-}
-
-void BCMapCellInfo::SetRowIStartContBCBorder() {
-  // get row continuous borders
-  if (mCurrentRowFrame) {
-    BCCellBorder currentBorder;
-    currentBorder = CompareBorders(mTableFrame, mColGroup, mStartCol, mRowGroup,
-                                   mCurrentRowFrame, nullptr, mTableWM,
-                                   eLogicalSideIStart, !ADJACENT);
-    mCurrentRowFrame->SetContinuousBCBorderWidth(eLogicalSideIStart,
-                                                 currentBorder.width);
-  }
-}
-
-void BCMapCellInfo::SetRowIEndContBCBorder() {
-  if (mCurrentRowFrame) {
-    BCCellBorder currentBorder;
-    currentBorder = CompareBorders(mTableFrame, mColGroup, mEndCol, mRowGroup,
-                                   mCurrentRowFrame, nullptr, mTableWM,
-                                   eLogicalSideIEnd, ADJACENT);
-    mCurrentRowFrame->SetContinuousBCBorderWidth(eLogicalSideIEnd,
-                                                 currentBorder.width);
-  }
-}
 void BCMapCellInfo::SetTableBStartBorderWidth(BCPixelSize aWidth) {
   mTableBCData->mBStartBorderWidth =
       std::max(mTableBCData->mBStartBorderWidth, aWidth);
@@ -5237,7 +5070,6 @@ void nsTableFrame::CalcBCBorders() {
                                 damageArea.StartCol());
   if (!lastBEndBorders.borders) ABORT0();
   bool startSeg;
-  bool gotRowBorder = false;
 
   BCMapCellInfo info(this), ajaInfo(this);
 
@@ -5251,7 +5083,6 @@ void nsTableFrame::CalcBCBorders() {
   for (iter.First(info); !iter.mAtEnd; iter.Next(info)) {
     // see if lastBStartBorder, lastBEndBorder need to be reset
     if (iter.IsNewRow()) {
-      gotRowBorder = false;
       lastBStartBorder.Reset(info.mRowIndex, info.mRowSpan);
       lastBEndBorder.Reset(info.GetCellEndRowIndex() + 1, info.mRowSpan);
     } else if (info.mColIndex > damageArea.StartCol()) {
@@ -5302,9 +5133,7 @@ void nsTableFrame::CalcBCBorders() {
 
         info.SetTableBStartBorderWidth(currentBorder.width);
         info.SetBStartBorderWidths(currentBorder.width);
-        info.SetColumnBStartIEndContBCBorder();
       }
-      info.SetTableBStartIStartContBCBorder();
     } else {
       // see if the bStart border needs to be the start of a segment due to a
       // block-dir border owning the corner
@@ -5352,9 +5181,7 @@ void nsTableFrame::CalcBCBorders() {
                                       currentBorder.width, startSeg);
         info.SetTableIStartBorderWidth(rowB, currentBorder.width);
         info.SetIStartBorderWidths(currentBorder.width);
-        info.SetRowIStartContBCBorder();
       }
-      info.SetRowGroupIStartContBCBorder();
     }
 
     // find the dominant border considering the cell's iEnd border, adjacent
@@ -5395,9 +5222,7 @@ void nsTableFrame::CalcBCBorders() {
             currentBorder.width, startSeg);
         info.SetTableIEndBorderWidth(rowB, currentBorder.width);
         info.SetIEndBorderWidths(currentBorder.width);
-        info.SetRowIEndContBCBorder();
       }
-      info.SetRowGroupIEndContBCBorder();
     } else {
       int32_t segLength = 0;
       BCMapCellInfo priorAjaInfo(this);
@@ -5526,10 +5351,7 @@ void nsTableFrame::CalcBCBorders() {
 
         info.SetBEndBorderWidths(currentBorder.width);
         info.SetTableBEndBorderWidth(currentBorder.width);
-        info.SetColumnBEndContBCBorder();
       }
-      info.SetRowGroupBEndContBCBorder();
-      info.SetColGroupBEndContBCBorder();
     } else {
       int32_t segLength = 0;
       for (int32_t colIdx = info.mColIndex; colIdx <= info.GetCellEndColIndex();
@@ -5611,17 +5433,6 @@ void nsTableFrame::CalcBCBorders() {
         // update bEnd-iEnd corner
         BCCornerInfo& brCorner = bEndCorners[colIdx + segLength];
         brCorner.Update(eLogicalSideIStart, currentBorder);
-      }
-      if (!gotRowBorder && 1 == info.mRowSpan &&
-          (ajaInfo.mStartRow || info.mRgAtEnd)) {
-        // get continuous row/row group border
-        // we need to check the row group's bEnd border if this is
-        // the last row in the row group, but only a cell with rowspan=1
-        // will know whether *this* row is at the bEnd
-        const nsIFrame* nextRowGroup =
-            ajaInfo.mRgAtStart ? ajaInfo.mRowGroup : nullptr;
-        info.SetInnerRowGroupBEndContBCBorder(nextRowGroup, ajaInfo.mStartRow);
-        gotRowBorder = true;
       }
     }
     // In the function, we try to join two cells' BEnd.

@@ -91,12 +91,6 @@ class nsTableColFrame final : public nsSplittableFrame {
   void SetIStartBorderWidth(BCPixelSize aWidth) { mIStartBorderWidth = aWidth; }
   void SetIEndBorderWidth(BCPixelSize aWidth) { mIEndBorderWidth = aWidth; }
 
-  /**
-   * Set full border widths before collapsing with cell borders
-   * @param aForSide - side to set; only valid for bstart, iend, and bend
-   */
-  void SetContinuousBCBorderWidth(mozilla::LogicalSide aForSide,
-                                  BCPixelSize aPixelValue);
 #ifdef DEBUG
   void Dump(int32_t aIndent);
 #endif
@@ -281,9 +275,6 @@ class nsTableColFrame final : public nsSplittableFrame {
   // border width in pixels of the inner half of the border only
   BCPixelSize mIStartBorderWidth;
   BCPixelSize mIEndBorderWidth;
-  BCPixelSize mBStartContBorderWidth;
-  BCPixelSize mIEndContBorderWidth;
-  BCPixelSize mBEndContBorderWidth;
 
   bool mHasSpecifiedCoord;
 };

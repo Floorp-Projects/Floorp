@@ -37,9 +37,6 @@ nsTableColFrame::nsTableColFrame(ComputedStyle* aStyle,
       mColIndex(0),
       mIStartBorderWidth(0),
       mIEndBorderWidth(0),
-      mBStartContBorderWidth(0),
-      mIEndContBorderWidth(0),
-      mBEndContBorderWidth(0),
       mHasSpecifiedCoord(false) {
   SetColType(eColContent);
   ResetIntrinsics();
@@ -76,23 +73,6 @@ void nsTableColFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle) {
       tableFrame->BCRecalcNeeded(aOldComputedStyle, Style())) {
     TableArea damageArea(GetColIndex(), 0, 1, tableFrame->GetRowCount());
     tableFrame->AddBCDamageArea(damageArea);
-  }
-}
-
-void nsTableColFrame::SetContinuousBCBorderWidth(LogicalSide aForSide,
-                                                 BCPixelSize aPixelValue) {
-  switch (aForSide) {
-    case eLogicalSideBStart:
-      mBStartContBorderWidth = aPixelValue;
-      return;
-    case eLogicalSideIEnd:
-      mIEndContBorderWidth = aPixelValue;
-      return;
-    case eLogicalSideBEnd:
-      mBEndContBorderWidth = aPixelValue;
-      return;
-    default:
-      NS_ERROR("invalid side arg");
   }
 }
 

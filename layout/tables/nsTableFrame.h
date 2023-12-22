@@ -274,8 +274,6 @@ class nsTableFrame : public nsContainerFrame {
    */
   nsMargin GetDeflationForBackground(nsPresContext* aPresContext) const;
 
-  void SetContinuousIStartBCBorderWidth(nscoord aValue);
-
   friend class nsDelayedCalcBCBorders;
 
   void AddBCDamageArea(const mozilla::TableArea& aValue);
@@ -838,7 +836,6 @@ class nsTableFrame : public nsContainerFrame {
     uint32_t mRowInserted : 1;
     uint32_t mNeedToCalcBCBorders : 1;
     uint32_t mGeometryDirty : 1;
-    uint32_t mIStartContBCBorder : 8;
     uint32_t mNeedToCollapse : 1;  // rows, cols that have visibility:collapse
                                    // need to be collapsed
     uint32_t mResizedColumns : 1;  // have we resized columns since last reflow?
@@ -944,10 +941,6 @@ inline bool nsTableFrame::HasBCBorders() {
 
 inline void nsTableFrame::SetHasBCBorders(bool aValue) {
   mBits.mHasBCBorders = (unsigned)aValue;
-}
-
-inline void nsTableFrame::SetContinuousIStartBCBorderWidth(nscoord aValue) {
-  mBits.mIStartContBCBorder = (unsigned)aValue;
 }
 
 #define ABORT0()                                       \

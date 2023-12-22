@@ -1634,23 +1634,6 @@ LogicalMargin nsTableRowGroupFrame::GetBCBorderWidth(WritingMode aWM) {
   return border;
 }
 
-void nsTableRowGroupFrame::SetContinuousBCBorderWidth(LogicalSide aForSide,
-                                                      BCPixelSize aPixelValue) {
-  switch (aForSide) {
-    case eLogicalSideIEnd:
-      mIEndContBorderWidth = aPixelValue;
-      return;
-    case eLogicalSideBEnd:
-      mBEndContBorderWidth = aPixelValue;
-      return;
-    case eLogicalSideIStart:
-      mIStartContBorderWidth = aPixelValue;
-      return;
-    default:
-      NS_ERROR("invalid LogicalSide argument");
-  }
-}
-
 // nsILineIterator methods
 int32_t nsTableRowGroupFrame::GetNumLines() const { return GetRowCount(); }
 
