@@ -17,6 +17,7 @@ support-files = [
 https_first_disabled = true
 skip-if = [
   "os == 'linux' && !debug && tsan", # Bug 1675107
+  "os == 'mac' && !debug", # Bug 1775855
 ]
 
 ["browser_protectionsUI_3.js"]
