@@ -122,6 +122,9 @@ static bool SetProfileLevel(VTCompressionSessionRef& aSession,
     case H264_PROFILE::H264_PROFILE_MAIN:
       profileLevel = kVTProfileLevel_H264_Main_AutoLevel;
       break;
+    case H264_PROFILE::H264_PROFILE_HIGH:
+      profileLevel = kVTProfileLevel_H264_High_AutoLevel;
+      break;
     default:
       LOGE("Profile %d not handled", static_cast<int>(aValue));
   }
