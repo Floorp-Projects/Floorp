@@ -196,11 +196,6 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme,
                   ? GetColorFromNSColor(NSColor.controlTextColor)
                   : NS_RGB(0xFF, 0xFF, 0xFF);
       break;
-    case ColorID::Menutext:
-    case ColorID::Infotext:
-    case ColorID::MozSidebartext:
-      color = GetColorFromNSColor(NSColor.textColor);
-      break;
     case ColorID::Windowtext:
       color = GetColorFromNSColor(NSColor.windowFrameTextColor);
       break;
@@ -269,11 +264,14 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme,
     case ColorID::MozComboboxtext:
     case ColorID::Buttontext:
     case ColorID::MozButtonhovertext:
+    case ColorID::Menutext:
+    case ColorID::Infotext:
     case ColorID::MozDialogtext:
     case ColorID::MozCellhighlighttext:
     case ColorID::MozColheadertext:
     case ColorID::MozColheaderhovertext:
     case ColorID::MozColheaderactivetext:
+    case ColorID::MozSidebartext:
       color = GetColorFromNSColor(NSColor.controlTextColor);
       break;
     case ColorID::MozMacFocusring:
