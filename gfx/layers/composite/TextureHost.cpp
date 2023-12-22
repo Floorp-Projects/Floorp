@@ -232,32 +232,6 @@ already_AddRefed<TextureHost> TextureHost::Create(
       break;
 #  endif
 #endif
-    case SurfaceDescriptor::TSurfaceDescriptorRecorded: {
-      const SurfaceDescriptorRecorded& desc =
-          aDesc.get_SurfaceDescriptorRecorded();
-      if (NS_WARN_IF(!aDeallocator)) {
-        gfxCriticalNote
-            << "Missing allocator to get descriptor for recorded texture.";
-        // Create a dummy to prevent any crashes due to missing IPDL actors.
-        result = CreateDummyBufferTextureHost(aBackend, aFlags);
-        break;
-      }
-
-      UniquePtr<SurfaceDescriptor> realDesc =
-          gfx::CanvasManagerParent::WaitForReplayTexture(aDeallocator,
-                                                         desc.textureId());
-      if (!realDesc) {
-        gfxCriticalNote << "Failed to get descriptor for recorded texture.";
-        // Create a dummy to prevent any crashes due to missing IPDL actors.
-        result = CreateDummyBufferTextureHost(aBackend, aFlags);
-        break;
-      }
-
-      result =
-          TextureHost::Create(*realDesc, std::move(aReadLock), aDeallocator,
-                              aBackend, aFlags, aExternalImageId);
-      return result.forget();
-    }
     default:
       MOZ_CRASH("GFX: Unsupported Surface type host");
   }
