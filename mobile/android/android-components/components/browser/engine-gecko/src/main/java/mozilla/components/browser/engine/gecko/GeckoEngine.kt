@@ -652,7 +652,7 @@ class GeckoEngine(
     ) {
         val flags = data.types.toLong()
         if (host != null) {
-            runtime.storageController.clearDataFromHost(host, flags)
+            runtime.storageController.clearDataFromBaseDomain(host, flags)
         } else {
             runtime.storageController.clearData(flags)
         }.then(

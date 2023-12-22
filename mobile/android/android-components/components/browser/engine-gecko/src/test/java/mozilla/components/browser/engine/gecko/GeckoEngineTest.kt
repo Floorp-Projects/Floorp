@@ -2215,7 +2215,7 @@ class GeckoEngineTest {
         val result = GeckoResult<Void>()
         whenever(runtime.storageController).thenReturn(storageController)
         whenever(
-            storageController.clearDataFromHost(
+            storageController.clearDataFromBaseDomain(
                 eq("mozilla.org"),
                 eq(Engine.BrowsingData.all().types.toLong()),
             ),
@@ -2242,7 +2242,7 @@ class GeckoEngineTest {
         val result = GeckoResult<Void>()
         whenever(runtime.storageController).thenReturn(storageController)
         whenever(
-            storageController.clearDataFromHost(
+            storageController.clearDataFromBaseDomain(
                 eq("mozilla.org"),
                 eq(Engine.BrowsingData.all().types.toLong()),
             ),
