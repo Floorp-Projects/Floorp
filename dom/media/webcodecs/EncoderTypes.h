@@ -55,6 +55,7 @@ class VideoEncoderConfigInternal {
   VideoEncoderBitrateMode mBitrateMode;
   LatencyMode mLatencyMode;
   Maybe<nsString> mContentHint;
+  Maybe<AvcEncoderConfig> mAvc;
 
  private:
   VideoEncoderConfigInternal(
