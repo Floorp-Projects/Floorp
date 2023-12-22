@@ -1739,6 +1739,7 @@ void VideoFrame::Close() {
   mCodedSize = gfx::IntSize();
   mVisibleRect = gfx::IntRect();
   mDisplaySize = gfx::IntSize();
+  mColorSpace = VideoColorSpaceInit();
 }
 
 bool VideoFrame::IsClosed() const {
