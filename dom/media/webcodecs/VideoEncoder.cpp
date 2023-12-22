@@ -234,8 +234,13 @@ EncoderConfig VideoEncoderConfigInternal::ToEncoderConfig() const {
     } else {
       format = H264BitStreamFormat::AVC;
     }
-    ExtractH264CodecDetails(mCodec, profile, constraints, level);
-    specific.emplace(H264Specific(static_cast<H264_PROFILE>(profile), format));
+    if (ExtractH264CodecDetails(mCodec, profile, constraints, level)) {
+      if (profile == H264_PROFILE_BASE || profile == H264_PROFILE_MAIN ||
+          profile == H264_PROFILE_EXTENDED || profile == H264_PROFILE_HIGH) {
+        specific.emplace(
+            H264Specific(static_cast<H264_PROFILE>(profile), static_cast<H264_LEVEL>(level), format));
+      }
+    }
   }
   // Only for vp9, not vp8
   if (codecType == CodecType::VP9) {
