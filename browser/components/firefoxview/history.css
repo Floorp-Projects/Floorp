@@ -11,10 +11,6 @@
   display: flex;
   align-items: center;
   gap: 8px;
-
-  & label {
-    white-space: nowrap;
-  }
 }
 
 .show-all-history-footer {

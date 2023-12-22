@@ -51,7 +51,6 @@ class RecentlyClosedTabsInView extends ViewPage {
   }
 
   static properties = {
-    ...ViewPage.properties,
     searchResults: { type: Array },
     showAll: { type: Boolean },
   };
@@ -349,7 +348,6 @@ class RecentlyClosedTabsInView extends ViewPage {
                 data-l10n-id="firefoxview-search-text-box-recentlyclosed"
                 data-l10n-attrs="placeholder"
                 @fxview-search-textbox-query=${this.onSearchQuery}
-                .size=${this.searchTextboxSize}
               ></fxview-search-textbox>
             </div>`
           )}

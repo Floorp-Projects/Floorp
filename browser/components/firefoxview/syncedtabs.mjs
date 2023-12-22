@@ -567,7 +567,6 @@ class SyncedTabsInView extends ViewPage {
                   data-l10n-id="firefoxview-search-text-box-syncedtabs"
                   data-l10n-attrs="placeholder"
                   @fxview-search-textbox-query=${this.onSearchQuery}
-                  .size=${this.searchTextboxSize}
                 ></fxview-search-textbox>
               </div>`
             )}
