@@ -892,6 +892,11 @@ RefPtr<MediaRawData> FFmpegVideoEncoder<LIBAV_VER>::ToMediaRawData(
   data->mTime = media::TimeUnit::FromMicroseconds(aPacket->pts);
   data->mDuration = media::TimeUnit::FromMicroseconds(aPacket->duration);
   data->mTimecode = media::TimeUnit::FromMicroseconds(aPacket->dts);
+
+  if (auto r = GetExtraData(aPacket); r.isOk()) {
+    data->mExtraData = r.unwrap();
+  }
+
   return data;
 }
 
