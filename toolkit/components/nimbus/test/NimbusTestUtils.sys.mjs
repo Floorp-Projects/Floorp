@@ -185,8 +185,8 @@ export const ExperimentFakes = {
     // We want calls to `store.addEnrollment` to implicitly validate the
     // enrollment before saving to store
     let origAddExperiment = manager.store.addEnrollment.bind(manager.store);
-    sandbox.stub(manager.store, "addEnrollment").callsFake(async enrollment => {
-      await ExperimentTestUtils.validateEnrollment(enrollment);
+    sandbox.stub(manager.store, "addEnrollment").callsFake(enrollment => {
+      ExperimentTestUtils.validateEnrollment(enrollment);
       return origAddExperiment(enrollment);
     });
 
