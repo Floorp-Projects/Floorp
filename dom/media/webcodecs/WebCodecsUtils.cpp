@@ -508,3 +508,4 @@ RefPtr<TaskQueue> GetWebCodecsEncoderTaskQueue() {
       GetMediaThreadPool(MediaThreadType::PLATFORM_ENCODER),
       "WebCodecs encoding", false);
 }
+};  // namespace mozilla::dom
