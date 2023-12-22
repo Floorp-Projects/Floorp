@@ -594,7 +594,7 @@ bool FFmpegVideoEncoder<LIBAV_VER>::ScaleInputFrame() {
 
   // Set AVFrame properties for its internal data allocation. For now, we always
   // convert into ffmpeg's buffer.
-  mFrame->format = AV_PIX_FMT_YUV420P;
+  mFrame->format = ffmpeg::FFMPEG_PIX_FMT_YUV420P;
   mFrame->width = static_cast<int>(mConfig.mSize.Width());
   mFrame->height = static_cast<int>(mConfig.mSize.Height());
 
