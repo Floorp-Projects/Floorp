@@ -81,6 +81,9 @@ struct Control {
         deadOnArrival(false),
         deadThenBranch(false),
         tryNoteIndex(0) {}
+
+  Control(Control&&) = default;
+  Control(const Control&) = delete;
 };
 
 // A vector of Nothing values, used for reading opcodes.
@@ -1394,10 +1397,12 @@ struct BaseCompiler final {
   [[nodiscard]] bool emitBodyDelegateThrowPad();
 
   [[nodiscard]] bool emitTry();
+  [[nodiscard]] bool emitTryTable();
   [[nodiscard]] bool emitCatch();
   [[nodiscard]] bool emitCatchAll();
   [[nodiscard]] bool emitDelegate();
   [[nodiscard]] bool emitThrow();
+  [[nodiscard]] bool emitThrowRef();
   [[nodiscard]] bool emitRethrow();
   [[nodiscard]] bool emitEnd();
   [[nodiscard]] bool emitBr();
@@ -1454,6 +1459,7 @@ struct BaseCompiler final {
   [[nodiscard]] bool endIfThen(ResultType type);
   [[nodiscard]] bool endIfThenElse(ResultType type);
   [[nodiscard]] bool endTryCatch(ResultType type);
+  [[nodiscard]] bool endTryTable(ResultType type);
 
   void doReturn(ContinuationKind kind);
   void pushReturnValueOfCall(const FunctionCall& call, MIRType type);

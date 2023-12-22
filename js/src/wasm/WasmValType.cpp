@@ -51,6 +51,8 @@ RefType RefType::topType() const {
     case RefType::Extern:
     case RefType::NoExtern:
       return RefType::extern_();
+    case RefType::Exn:
+      return RefType::exn();
     case RefType::TypeRef:
       switch (typeDef()->kind()) {
         case TypeDefKind::Array:
@@ -296,6 +298,9 @@ UniqueChars wasm::ToString(RefType type, const TypeContext* types) {
       case RefType::Extern:
         literal = "externref";
         break;
+      case RefType::Exn:
+        literal = "exnref";
+        break;
       case RefType::Any:
         literal = "anyref";
         break;
@@ -335,6 +340,9 @@ UniqueChars wasm::ToString(RefType type, const TypeContext* types) {
       break;
     case RefType::Extern:
       heapType = "extern";
+      break;
+    case RefType::Exn:
+      heapType = "exn";
       break;
     case RefType::Any:
       heapType = "any";
