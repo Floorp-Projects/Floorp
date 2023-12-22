@@ -299,23 +299,23 @@ void EncoderTemplate<EncoderType>::ReportError(const nsresult& aResult) {
 }
 
 template <typename EncoderType>
-void EncoderTemplate<EncoderType>::OutputEncodedData(nsTArray<RefPtr<MediaRawData>>&& aData) {
+void EncoderTemplate<EncoderType>::OutputEncodedData(
+    nsTArray<RefPtr<MediaRawData>>&& aData) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mState == CodecState::Configured);
   MOZ_ASSERT(mActiveConfig);
 
-  nsTArray<RefPtr<typename EncoderType::OutputType>> frames =
-      EncodedDataToOutputType(GetParentObject(), std::move(aData));
   RefPtr<typename EncoderType::OutputCallbackType> cb(mOutputCallback);
-  for (RefPtr<typename EncoderType::OutputType>& frame : frames) {
-    RefPtr<typename EncoderType::OutputType> f = frame;
+  for (auto& data : aData) {
+    RefPtr<typename EncoderType::OutputType> encodedData =
+        EncodedDataToOutputType(GetParentObject(), data);
     typename EncoderType::MetadataType metadata;
     if (mOutputNewDecoderConfig) {
       metadata.mDecoderConfig.Construct(EncoderConfigToDecoderConfig(
-          EncoderConfigToDecoderConfig(GetParentObject(), *mActiveConfig));
+          GetParentObject(), data, *mActiveConfig));
       mOutputNewDecoderConfig = false;
     }
-    cb->Call((typename EncoderType::OutputType&)(*f), metadata);
+    cb->Call((typename EncoderType::OutputType&)(*encodedData), metadata);
   }
 }
 
