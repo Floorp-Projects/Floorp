@@ -45,7 +45,7 @@ class VideoDecoderConfigInternal {
       const VideoDecoderConfig& aConfig);
   ~VideoDecoderConfigInternal() = default;
 
-  nsString ToString();
+  nsString ToString() const;
 
   bool Equals(const VideoDecoderConfigInternal& aOther) const {
     if (mDescription.isSome() != aOther.mDescription.isSome()) {

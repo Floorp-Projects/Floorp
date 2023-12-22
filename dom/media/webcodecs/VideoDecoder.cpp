@@ -592,7 +592,7 @@ bool VideoDecoderTraits::IsSupported(
 Result<UniquePtr<TrackInfo>, nsresult> VideoDecoderTraits::CreateTrackInfo(
     const VideoDecoderConfigInternal& aConfig) {
   LOG("Create a VideoInfo from %s config",
-      NS_ConvertUTF16toUTF8(aConfig.mCodec).get());
+      NS_ConvertUTF16toUTF8(aConfig.ToString()).get());
 
   nsTArray<UniquePtr<TrackInfo>> tracks = GetTracksInfo(aConfig);
   if (tracks.Length() != 1 || tracks[0]->GetType() != TrackInfo::kVideoTrack) {
@@ -738,10 +738,8 @@ Result<UniquePtr<TrackInfo>, nsresult> VideoDecoderTraits::CreateTrackInfo(
     LOGW("image height is set to %d compulsively", vi->mImage.height);
   }
 
-  LOG("Create a VideoInfo - image: %d x %d, display: %d x %d, with extra-data: "
-      "%s",
-      vi->mImage.width, vi->mImage.height, vi->mDisplay.width,
-      vi->mDisplay.height, vi->mExtraData ? "yes" : "no");
+  LOG("Created a VideoInfo for decoder - %s",
+      NS_ConvertUTF16toUTF8(vi->ToString()).get());
 
   return track;
 }
