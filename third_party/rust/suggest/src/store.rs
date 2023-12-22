@@ -838,7 +838,7 @@ mod tests {
 
     /// Tests re-ingesting suggestions from an updated attachment.
     #[test]
-    fn reingest_suggestions() -> anyhow::Result<()> {
+    fn reingest_amp_suggestions() -> anyhow::Result<()> {
         before_each();
 
         // Ingest suggestions from the initial snapshot.
@@ -1204,6 +1204,253 @@ mod tests {
                 providers: vec![SuggestionProvider::Amp],
                 limit: None,
             })?);
+            Ok(())
+        })?;
+
+        Ok(())
+    }
+
+    /// Tests re-ingesting AMO suggestions from an updated attachment.
+    #[test]
+    fn reingest_amo_suggestions() -> anyhow::Result<()> {
+        before_each();
+
+        // Ingest suggestions from the initial snapshot.
+        let initial_snapshot = Snapshot::with_records(json!([{
+            "id": "data-1",
+            "type": "amo-suggestions",
+            "last_modified": 15,
+            "attachment": {
+                "filename": "data-1.json",
+                "mimetype": "application/json",
+                "location": "data-1.json",
+                "hash": "",
+                "size": 0,
+            },
+        }, {
+            "id": "data-2",
+            "type": "amo-suggestions",
+            "last_modified": 15,
+            "attachment": {
+                "filename": "data-2.json",
+                "mimetype": "application/json",
+                "location": "data-2.json",
+                "hash": "",
+                "size": 0,
+            },
+        }]))?
+        .with_data(
+            "data-1.json",
+            json!({
+                "description": "First suggestion",
+                "url": "https://example.org/amo-suggestion-1",
+                "guid": "{b9db16a4-6edc-47ec-a1f4-b86292ed211d}",
+                "keywords": ["relay", "spam", "masking email", "alias"],
+                "title": "AMO suggestion",
+                "icon": "https://example.org/amo-suggestion-1/icon.png",
+                "rating": "4.9",
+                "number_of_ratings": 800,
+                "score": 0.25
+            }),
+        )?
+        .with_data(
+            "data-2.json",
+            json!([{
+                "description": "Second suggestion",
+                "url": "https://example.org/amo-suggestion-2",
+                "guid": "{6d24e3b8-1400-4d37-9440-c798f9b79b1a}",
+                "keywords": ["dark mode", "dark theme", "night mode"],
+                "title": "Another AMO suggestion",
+                "icon": "https://example.org/amo-suggestion-2/icon.png",
+                "rating": "4.6",
+                "number_of_ratings": 750,
+                "score": 0.25
+            }, {
+                "description": "Third suggestion",
+                "url": "https://example.org/amo-suggestion-3",
+                "guid": "{1e9d493b-0498-48bb-9b9a-8b45a44df146}",
+                "keywords": ["grammar", "spelling", "edit"],
+                "title": "Yet another AMO suggestion",
+                "icon": "https://example.org/amo-suggestion-3/icon.png",
+                "rating": "4.8",
+                "number_of_ratings": 900,
+                "score": 0.25
+            }]),
+        )?;
+
+        let store = unique_test_store(SnapshotSettingsClient::with_snapshot(initial_snapshot));
+
+        store.ingest(SuggestIngestionConstraints::default())?;
+
+        store.dbs()?.reader.read(|dao| {
+            assert_eq!(dao.get_meta(LAST_INGEST_META_KEY)?, Some(15u64));
+
+            expect![[r#"
+                [
+                    Amo {
+                        title: "AMO suggestion",
+                        url: "https://example.org/amo-suggestion-1",
+                        icon_url: "https://example.org/amo-suggestion-1/icon.png",
+                        description: "First suggestion",
+                        rating: Some(
+                            "4.9",
+                        ),
+                        number_of_ratings: 800,
+                        guid: "{b9db16a4-6edc-47ec-a1f4-b86292ed211d}",
+                        score: 0.25,
+                    },
+                ]
+            "#]]
+            .assert_debug_eq(&dao.fetch_suggestions(&SuggestionQuery {
+                keyword: "masking e".into(),
+                providers: vec![SuggestionProvider::Amo],
+                limit: None,
+            })?);
+
+            expect![[r#"
+                [
+                    Amo {
+                        title: "Another AMO suggestion",
+                        url: "https://example.org/amo-suggestion-2",
+                        icon_url: "https://example.org/amo-suggestion-2/icon.png",
+                        description: "Second suggestion",
+                        rating: Some(
+                            "4.6",
+                        ),
+                        number_of_ratings: 750,
+                        guid: "{6d24e3b8-1400-4d37-9440-c798f9b79b1a}",
+                        score: 0.25,
+                    },
+                ]
+            "#]]
+            .assert_debug_eq(&dao.fetch_suggestions(&SuggestionQuery {
+                keyword: "night".into(),
+                providers: vec![SuggestionProvider::Amo],
+                limit: None,
+            })?);
+
+            Ok(())
+        })?;
+
+        // Update the snapshot with new suggestions: update the second, drop the
+        // third, and add the fourth.
+        *store.settings_client.snapshot.borrow_mut() = Snapshot::with_records(json!([{
+            "id": "data-2",
+            "type": "amo-suggestions",
+            "last_modified": 30,
+            "attachment": {
+                "filename": "data-2-1.json",
+                "mimetype": "application/json",
+                "location": "data-2-1.json",
+                "hash": "",
+                "size": 0,
+            },
+        }]))?
+        .with_data(
+            "data-2-1.json",
+            json!([{
+                "description": "Updated second suggestion",
+                "url": "https://example.org/amo-suggestion-2",
+                "guid": "{6d24e3b8-1400-4d37-9440-c798f9b79b1a}",
+                "keywords": ["dark mode", "night mode"],
+                "title": "Another AMO suggestion",
+                "icon": "https://example.org/amo-suggestion-2/icon.png",
+                "rating": "4.7",
+                "number_of_ratings": 775,
+                "score": 0.25
+            }, {
+                "description": "Fourth suggestion",
+                "url": "https://example.org/amo-suggestion-4",
+                "guid": "{1ea82ebd-a1ba-4f57-b8bb-3824ead837bd}",
+                "keywords": ["image search", "visual search"],
+                "title": "New AMO suggestion",
+                "icon": "https://example.org/amo-suggestion-4/icon.png",
+                "rating": "5.0",
+                "number_of_ratings": 100,
+                "score": 0.25
+            }]),
+        )?;
+
+        store.ingest(SuggestIngestionConstraints::default())?;
+
+        store.dbs()?.reader.read(|dao| {
+            assert_eq!(dao.get_meta(LAST_INGEST_META_KEY)?, Some(30u64));
+
+            expect![[r#"
+                [
+                    Amo {
+                        title: "AMO suggestion",
+                        url: "https://example.org/amo-suggestion-1",
+                        icon_url: "https://example.org/amo-suggestion-1/icon.png",
+                        description: "First suggestion",
+                        rating: Some(
+                            "4.9",
+                        ),
+                        number_of_ratings: 800,
+                        guid: "{b9db16a4-6edc-47ec-a1f4-b86292ed211d}",
+                        score: 0.25,
+                    },
+                ]
+            "#]]
+            .assert_debug_eq(&dao.fetch_suggestions(&SuggestionQuery {
+                keyword: "masking e".into(),
+                providers: vec![SuggestionProvider::Amo],
+                limit: None,
+            })?);
+
+            expect![[r#"
+                []
+            "#]]
+            .assert_debug_eq(&dao.fetch_suggestions(&SuggestionQuery {
+                keyword: "dark t".into(),
+                providers: vec![SuggestionProvider::Amo],
+                limit: None,
+            })?);
+
+            expect![[r#"
+                [
+                    Amo {
+                        title: "Another AMO suggestion",
+                        url: "https://example.org/amo-suggestion-2",
+                        icon_url: "https://example.org/amo-suggestion-2/icon.png",
+                        description: "Updated second suggestion",
+                        rating: Some(
+                            "4.7",
+                        ),
+                        number_of_ratings: 775,
+                        guid: "{6d24e3b8-1400-4d37-9440-c798f9b79b1a}",
+                        score: 0.25,
+                    },
+                ]
+            "#]]
+            .assert_debug_eq(&dao.fetch_suggestions(&SuggestionQuery {
+                keyword: "night".into(),
+                providers: vec![SuggestionProvider::Amo],
+                limit: None,
+            })?);
+
+            expect![[r#"
+                [
+                    Amo {
+                        title: "New AMO suggestion",
+                        url: "https://example.org/amo-suggestion-4",
+                        icon_url: "https://example.org/amo-suggestion-4/icon.png",
+                        description: "Fourth suggestion",
+                        rating: Some(
+                            "5.0",
+                        ),
+                        number_of_ratings: 100,
+                        guid: "{1ea82ebd-a1ba-4f57-b8bb-3824ead837bd}",
+                        score: 0.25,
+                    },
+                ]
+            "#]]
+            .assert_debug_eq(&dao.fetch_suggestions(&SuggestionQuery {
+                keyword: "image search".into(),
+                providers: vec![SuggestionProvider::Amo],
+                limit: None,
+            })?);
+
             Ok(())
         })?;
 
@@ -2236,10 +2483,10 @@ mod tests {
                     UnparsableRecords(
                         {
                             "clippy-2": UnparsableRecord {
-                                schema_version: 8,
+                                schema_version: 9,
                             },
                             "fancy-new-suggestions-1": UnparsableRecord {
-                                schema_version: 8,
+                                schema_version: 9,
                             },
                         },
                     ),
@@ -2304,10 +2551,10 @@ mod tests {
                     UnparsableRecords(
                         {
                             "clippy-2": UnparsableRecord {
-                                schema_version: 8,
+                                schema_version: 9,
                             },
                             "fancy-new-suggestions-1": UnparsableRecord {
-                                schema_version: 8,
+                                schema_version: 9,
                             },
                         },
                     ),
@@ -2410,10 +2657,10 @@ mod tests {
                     UnparsableRecords(
                         {
                             "clippy-2": UnparsableRecord {
-                                schema_version: 8,
+                                schema_version: 9,
                             },
                             "fancy-new-suggestions-1": UnparsableRecord {
-                                schema_version: 8,
+                                schema_version: 9,
                             },
                         },
                     ),

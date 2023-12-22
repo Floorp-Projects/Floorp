@@ -205,13 +205,13 @@ warp = { git = "https://github.com/seanmonstar/warp", rev = "9d081461ae1167eb321
 malloc_size_of_derive = { path = "xpcom/rust/malloc_size_of_derive" }
 
 # application-services overrides to make updating them all simpler.
-interrupt-support = { git = "https://github.com/mozilla/application-services", rev = "5babdbc9756a879c906d12613bb764b3f99fe822" }
-sql-support = { git = "https://github.com/mozilla/application-services", rev = "5babdbc9756a879c906d12613bb764b3f99fe822" }
-suggest = { git = "https://github.com/mozilla/application-services", rev = "5babdbc9756a879c906d12613bb764b3f99fe822" }
-sync15 = { git = "https://github.com/mozilla/application-services", rev = "5babdbc9756a879c906d12613bb764b3f99fe822" }
-tabs = { git = "https://github.com/mozilla/application-services", rev = "5babdbc9756a879c906d12613bb764b3f99fe822" }
-viaduct = { git = "https://github.com/mozilla/application-services", rev = "5babdbc9756a879c906d12613bb764b3f99fe822" }
-webext-storage = { git = "https://github.com/mozilla/application-services", rev = "5babdbc9756a879c906d12613bb764b3f99fe822" }
+interrupt-support = { git = "https://github.com/mozilla/application-services", rev = "57ecda94fae3226cf67b3e12ce7d6b504e0e2417" }
+sql-support = { git = "https://github.com/mozilla/application-services", rev = "57ecda94fae3226cf67b3e12ce7d6b504e0e2417" }
+suggest = { git = "https://github.com/mozilla/application-services", rev = "57ecda94fae3226cf67b3e12ce7d6b504e0e2417" }
+sync15 = { git = "https://github.com/mozilla/application-services", rev = "57ecda94fae3226cf67b3e12ce7d6b504e0e2417" }
+tabs = { git = "https://github.com/mozilla/application-services", rev = "57ecda94fae3226cf67b3e12ce7d6b504e0e2417" }
+viaduct = { git = "https://github.com/mozilla/application-services", rev = "57ecda94fae3226cf67b3e12ce7d6b504e0e2417" }
+webext-storage = { git = "https://github.com/mozilla/application-services", rev = "57ecda94fae3226cf67b3e12ce7d6b504e0e2417" }
 
 # Patch mio 0.6 to use winapi 0.3 and miow 0.3, getting rid of winapi 0.2.
 # There is not going to be new version of mio 0.6, mio now being >= 0.7.11.
