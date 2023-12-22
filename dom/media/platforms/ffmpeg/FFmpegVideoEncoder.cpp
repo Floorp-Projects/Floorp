@@ -555,6 +555,9 @@ int FFmpegVideoEncoder<LIBAV_VER>::OpenCodecContext(const AVCodec* aCodec,
   // ffmpeg we use. Allow experimental codecs for now until we decide on an AV1
   // encoder.
   mCodecContext->strict_std_compliance = -2;
+#if LIBAVCODEC_VERSION_MAJOR >= 60
+  mCodecContext->flags |= AV_CODEC_FLAG_FRAME_DURATION;
+#endif
   return mLib->avcodec_open2(mCodecContext, aCodec, aOptions);
 }
 
@@ -692,6 +695,12 @@ RefPtr<MediaDataEncoder::EncodePromise> FFmpegVideoEncoder<
 
   // Everything in microsecond for now: bug 1869560
   mFrame->pts = aSample->mTime.ToMicroseconds();
+#if LIBAVCODEC_VERSION_MAJOR >= 60
+  mFrame->duration = aSample->mDuration.ToMicroseconds();
+  mFrame->pkt_duration = aSample->mDuration.ToMicroseconds();
+#else
+  mFrame->pkt_duration = aSample->mDuration.ToMicroseconds();
+#endif
 #if LIBAVCODEC_VERSION_MAJOR >= 59
   mFrame->time_base = {1, USECS_PER_S};
 #endif
