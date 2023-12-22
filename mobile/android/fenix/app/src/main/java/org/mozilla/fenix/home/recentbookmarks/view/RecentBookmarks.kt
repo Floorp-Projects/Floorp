@@ -5,7 +5,6 @@
 package org.mozilla.fenix.home.recentbookmarks.view
 
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -42,10 +41,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import mozilla.components.browser.icons.compose.Loader
 import mozilla.components.browser.icons.compose.Placeholder
-import mozilla.components.browser.icons.compose.WithIcon
 import mozilla.components.ui.colors.PhotonColors
 import org.mozilla.fenix.components.components
 import org.mozilla.fenix.compose.ContextualMenu
+import org.mozilla.fenix.compose.Favicon
 import org.mozilla.fenix.compose.Image
 import org.mozilla.fenix.compose.MenuItem
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
@@ -172,6 +171,11 @@ private fun RecentBookmarkImage(bookmark: RecentBookmark) {
                 modifier = imageModifier,
                 targetSize = imageWidth,
                 contentScale = ContentScale.Crop,
+                fallback = {
+                    if (!bookmark.url.isNullOrEmpty()) {
+                        FallbackBookmarkFaviconImage(url = bookmark.url)
+                    }
+                },
             )
         }
         !bookmark.url.isNullOrEmpty() && !inComposePreview -> {
@@ -180,23 +184,7 @@ private fun RecentBookmarkImage(bookmark: RecentBookmark) {
                     PlaceholderBookmarkImage()
                 }
 
-                WithIcon { icon ->
-                    Box(
-                        modifier = imageModifier.background(
-                            color = FirefoxTheme.colors.layer2,
-                        ),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Image(
-                            painter = icon.painter,
-                            contentDescription = null,
-                            modifier = Modifier
-                                .size(36.dp)
-                                .clip(cardShape),
-                            contentScale = ContentScale.Crop,
-                        )
-                    }
-                }
+                FallbackBookmarkFaviconImage(bookmark.url)
             }
         }
         inComposePreview -> {
@@ -215,6 +203,20 @@ private fun PlaceholderBookmarkImage() {
             },
         ),
     )
+}
+
+@Composable
+private fun FallbackBookmarkFaviconImage(
+    url: String,
+) {
+    Box(
+        modifier = imageModifier.background(
+            color = FirefoxTheme.colors.layer2,
+        ),
+        contentAlignment = Alignment.Center,
+    ) {
+        Favicon(url = url, size = 36.dp)
+    }
 }
 
 @Composable

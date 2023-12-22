@@ -240,6 +240,15 @@ fun RecentTabImage(
                 modifier = modifier,
                 targetSize = THUMBNAIL_SIZE.dp,
                 contentScale = ContentScale.Crop,
+                fallback = {
+                    TabThumbnail(
+                        tab = tab.state,
+                        size = LocalDensity.current.run { THUMBNAIL_SIZE.dp.toPx().toInt() },
+                        storage = storage,
+                        modifier = modifier,
+                        contentScale = contentScale,
+                    )
+                },
             )
         }
         else -> TabThumbnail(
