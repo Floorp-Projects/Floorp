@@ -36,6 +36,7 @@
 #include "mozilla/dom/UnionTypes.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Swizzle.h"
+#include "mozilla/layers/LayersSurfaces.h"
 #include "nsLayoutUtils.h"
 #include "nsIPrincipal.h"
 #include "nsIURI.h"
@@ -1022,8 +1023,12 @@ InitializeFrameWithResourceAndSize(
 
   Maybe<uint64_t> duration = OptionalToMaybe(aInit.mDuration);
 
-  // TODO: WPT will fail if we guess a VideoColorSpace here.
-  const VideoColorSpaceInit colorSpace{};
+  VideoColorSpaceInit colorSpace{};
+  if (IsYUVFormat(SurfaceFormatToVideoPixelFormat(surface->GetFormat()).ref())) {
+    colorSpace = FallbackColorSpaceForVideoContent();
+  } else {
+    colorSpace = FallbackColorSpaceForWebContent();
+  }
   return MakeAndAddRef<VideoFrame>(
       aGlobal, image, format ? Some(format->PixelFormat()) : Nothing(),
       image->GetSize(), visibleRect.value(), displaySize.value(), duration,
