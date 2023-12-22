@@ -176,13 +176,6 @@ class nsTableColGroupFrame final : public nsContainerFrame {
   static void ResetColIndices(nsIFrame* aFirstColGroup, int32_t aFirstColIndex,
                               nsIFrame* aStartColFrame = nullptr);
 
-  /**
-   * Set full border widths before collapsing with cell borders
-   * @param aForSide - side to set; only accepts bstart and bend
-   */
-  void SetContinuousBCBorderWidth(mozilla::LogicalSide aForSide,
-                                  BCPixelSize aPixelValue);
-
   void InvalidateFrame(uint32_t aDisplayItemKey = 0,
                        bool aRebuildDisplayItems = true) override;
   void InvalidateFrameWithRect(const nsRect& aRect,
@@ -201,10 +194,6 @@ class nsTableColGroupFrame final : public nsContainerFrame {
   int32_t mColCount;
   // the starting column index this col group represents. Must be >= 0.
   int32_t mStartColIndex;
-
-  // border width in pixels
-  BCPixelSize mBStartContBorderWidth;
-  BCPixelSize mBEndContBorderWidth;
 };
 
 inline nsTableColGroupFrame::nsTableColGroupFrame(ComputedStyle* aStyle,

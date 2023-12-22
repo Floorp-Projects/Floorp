@@ -1278,22 +1278,6 @@ nscoord nsTableRowFrame::GetUnpaginatedBSize() const {
   return GetProperty(TableRowUnpaginatedBSizeProperty());
 }
 
-void nsTableRowFrame::SetContinuousBCBorderWidth(LogicalSide aForSide,
-                                                 BCPixelSize aPixelValue) {
-  switch (aForSide) {
-    case eLogicalSideIEnd:
-      mIEndContBorderWidth = aPixelValue;
-      return;
-    case eLogicalSideBStart:
-      mBStartContBorderWidth = aPixelValue;
-      return;
-    case eLogicalSideIStart:
-      mIStartContBorderWidth = aPixelValue;
-      return;
-    default:
-      NS_ERROR("invalid LogicalSide arg");
-  }
-}
 #ifdef ACCESSIBILITY
 a11y::AccType nsTableRowFrame::AccessibleType() {
   return a11y::eHTMLTableRowType;

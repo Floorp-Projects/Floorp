@@ -150,12 +150,6 @@ class nsTableRowGroupFrame final : public nsContainerFrame,
   mozilla::LogicalMargin GetBCBorderWidth(mozilla::WritingMode aWM);
 
   /**
-   * Sets full border widths before collapsing with cell borders
-   * @param aForSide - side to set; only IEnd, IStart, BEnd are valid
-   */
-  void SetContinuousBCBorderWidth(mozilla::LogicalSide aForSide,
-                                  BCPixelSize aPixelValue);
-  /**
    * Adjust to the effect of visibility:collapse on the row group and
    * its children
    * @return              additional shift bstart-wards that should be applied
@@ -346,12 +340,6 @@ class nsTableRowGroupFrame final : public nsContainerFrame,
   void GetNextRowSibling(nsIFrame** aRowFrame);
 
   void UndoContinuedRow(nsPresContext* aPresContext, nsTableRowFrame* aRow);
-
- private:
-  // border widths in pixels in the collapsing border model
-  BCPixelSize mIEndContBorderWidth = 0;
-  BCPixelSize mBEndContBorderWidth = 0;
-  BCPixelSize mIStartContBorderWidth = 0;
 
  public:
   bool IsRepeatable() const;
