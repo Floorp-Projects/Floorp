@@ -187,9 +187,6 @@ namespace xsimd
         };
     } // namespace detail
 
-    struct unsupported
-    {
-    };
     using all_x86_architectures = arch_list<
         avx512vnni<avx512vbmi>, avx512vbmi, avx512ifma, avx512pf, avx512vnni<avx512bw>, avx512bw, avx512er, avx512dq, avx512cd, avx512f,
         avxvnni, fma3<avx2>, avx2, fma3<avx>, avx, fma4, fma3<sse4_2>,
@@ -221,7 +218,7 @@ namespace xsimd
         class dispatcher
         {
 
-            const unsigned best_arch_found;
+            const decltype(available_architectures()) availables_archs;
             F functor;
 
             template <class Arch, class... Tys>
@@ -234,7 +231,7 @@ namespace xsimd
             template <class Arch, class ArchNext, class... Archs, class... Tys>
             inline auto walk_archs(arch_list<Arch, ArchNext, Archs...>, Tys&&... args) noexcept -> decltype(functor(Arch {}, std::forward<Tys>(args)...))
             {
-                if (Arch::version() <= best_arch_found)
+                if (availables_archs.has(Arch {}))
                     return functor(Arch {}, std::forward<Tys>(args)...);
                 else
                     return walk_archs(arch_list<ArchNext, Archs...> {}, std::forward<Tys>(args)...);
@@ -242,7 +239,7 @@ namespace xsimd
 
         public:
             inline dispatcher(F f) noexcept
-                : best_arch_found(available_architectures().best)
+                : availables_archs(available_architectures())
                 , functor(f)
             {
             }
