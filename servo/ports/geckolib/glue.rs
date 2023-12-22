@@ -8763,7 +8763,7 @@ pub extern "C" fn Servo_RegisterCustomProperty(
             let parsed = Parser::new(&mut input)
                 .parse_entirely(|input| {
                     input.skip_whitespace();
-                    SpecifiedValue::parse(input, url_data).map(Arc::new)
+                    SpecifiedValue::parse(input, url_data)
                 })
                 .ok();
             if parsed.is_none() {
@@ -8775,7 +8775,7 @@ pub extern "C" fn Servo_RegisterCustomProperty(
     };
 
     if let Err(error) =
-        PropertyRegistration::validate_initial_value(&syntax, initial_value.as_deref())
+        PropertyRegistration::validate_initial_value(&syntax, initial_value.as_ref())
     {
         return match error {
             PropertyRegistrationError::InitialValueNotComputationallyIndependent => {
