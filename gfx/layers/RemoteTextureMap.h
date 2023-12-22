@@ -126,7 +126,6 @@ class RemoteTextureOwnerClient final {
   void UnregisterTextureOwner(const RemoteTextureOwnerId aOwnerId);
   void UnregisterAllTextureOwners();
   void NotifyContextLost();
-  void NotifyContextRestored();
   void PushTexture(const RemoteTextureId aTextureId,
                    const RemoteTextureOwnerId aOwnerId,
                    UniquePtr<TextureData>&& aTextureData);
@@ -143,9 +142,6 @@ class RemoteTextureOwnerClient final {
   void GetLatestBufferSnapshot(const RemoteTextureOwnerId aOwnerId,
                                const mozilla::ipc::Shmem& aDestShmem,
                                const gfx::IntSize& aSize);
-  UniquePtr<TextureData> GetRecycledTextureData(
-      const RemoteTextureOwnerId aOwnerId, gfx::IntSize aSize,
-      gfx::SurfaceFormat aFormat, TextureType aTextureType);
   UniquePtr<TextureData> CreateOrRecycleBufferTextureData(
       const RemoteTextureOwnerId aOwnerId, gfx::IntSize aSize,
       gfx::SurfaceFormat aFormat);
@@ -186,8 +182,7 @@ class RemoteTextureMap {
                    const base::ProcessId aForPid,
                    UniquePtr<TextureData>&& aTextureData,
                    RefPtr<TextureHost>& aTextureHost,
-                   UniquePtr<SharedResourceWrapper>&& aResourceWrapper,
-                   TextureType aRecycleType = TextureType::Unknown);
+                   UniquePtr<SharedResourceWrapper>&& aResourceWrapper);
 
   // Remove waiting texture that will not be used.
   bool RemoveTexture(const RemoteTextureId aTextureId,
@@ -211,10 +206,6 @@ class RemoteTextureMap {
       const base::ProcessId aForPid);
 
   void NotifyContextLost(
-      const std::unordered_set<RemoteTextureOwnerId,
-                               RemoteTextureOwnerId::HashFn>& aOwnerIds,
-      const base::ProcessId aForPid);
-  void NotifyContextRestored(
       const std::unordered_set<RemoteTextureOwnerId,
                                RemoteTextureOwnerId::HashFn>& aOwnerIds,
       const base::ProcessId aForPid);
@@ -264,9 +255,9 @@ class RemoteTextureMap {
   void SuppressRemoteTextureReadyCheck(const RemoteTextureId aTextureId,
                                        const base::ProcessId aForPid);
 
-  UniquePtr<TextureData> GetRecycledTextureData(
+  UniquePtr<TextureData> GetRecycledBufferTextureData(
       const RemoteTextureOwnerId aOwnerId, const base::ProcessId aForPid,
-      gfx::IntSize aSize, gfx::SurfaceFormat aFormat, TextureType aTextureType);
+      gfx::IntSize aSize, gfx::SurfaceFormat aFormat);
 
   UniquePtr<SharedResourceWrapper> GetRecycledSharedTexture(
       const RemoteTextureOwnerId aOwnerId, const base::ProcessId aForPid);

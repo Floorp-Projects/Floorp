@@ -252,11 +252,11 @@ static inline gfx::BackendType BackendTypeForBackendSelector(
   }
 };
 
-static TextureType ChooseTextureType(gfx::SurfaceFormat aFormat,
-                                     gfx::IntSize aSize,
-                                     KnowsCompositor* aKnowsCompositor,
-                                     BackendSelector aSelector,
-                                     TextureAllocationFlags aAllocFlags) {
+static TextureType GetTextureType(gfx::SurfaceFormat aFormat,
+                                  gfx::IntSize aSize,
+                                  KnowsCompositor* aKnowsCompositor,
+                                  BackendSelector aSelector,
+                                  TextureAllocationFlags aAllocFlags) {
   LayersBackend layersBackend = aKnowsCompositor->GetCompositorBackendType();
   gfx::BackendType moz2DBackend =
       BackendTypeForBackendSelector(layersBackend, aSelector);
@@ -299,9 +299,23 @@ static TextureType ChooseTextureType(gfx::SurfaceFormat aFormat,
 }
 
 TextureType PreferredCanvasTextureType(KnowsCompositor* aKnowsCompositor) {
-  return ChooseTextureType(gfx::SurfaceFormat::R8G8B8A8, {1, 1},
-                           aKnowsCompositor, BackendSelector::Canvas,
-                           TextureAllocationFlags::ALLOC_DEFAULT);
+  return GetTextureType(gfx::SurfaceFormat::R8G8B8A8, {1, 1}, aKnowsCompositor,
+                        BackendSelector::Canvas,
+                        TextureAllocationFlags::ALLOC_DEFAULT);
+}
+
+static bool ShouldRemoteTextureType(TextureType aTextureType,
+                                    BackendSelector aSelector) {
+  if (aSelector != BackendSelector::Canvas || !gfxPlatform::UseRemoteCanvas()) {
+    return false;
+  }
+
+  switch (aTextureType) {
+    case TextureType::D3D11:
+      return true;
+    default:
+      return false;
+  }
 }
 
 /* static */
@@ -341,18 +355,25 @@ TextureData* TextureData::Create(TextureForwarder* aAllocator,
                                  BackendSelector aSelector,
                                  TextureFlags aTextureFlags,
                                  TextureAllocationFlags aAllocFlags) {
-  TextureType textureType = ChooseTextureType(aFormat, aSize, aKnowsCompositor,
-                                              aSelector, aAllocFlags);
+  TextureType textureType =
+      GetTextureType(aFormat, aSize, aKnowsCompositor, aSelector, aAllocFlags);
 
-  if (aAllocFlags & ALLOC_FORCE_REMOTE) {
+  if ((aAllocFlags & ALLOC_FORCE_REMOTE) ||
+      ShouldRemoteTextureType(textureType, aSelector)) {
     RefPtr<CanvasChild> canvasChild = aAllocator->GetCanvasChild();
     if (canvasChild) {
       return new RecordedTextureData(canvasChild.forget(), aSize, aFormat,
                                      textureType);
     }
-    // If we must be remote, but there is no canvas child, then falling back
-    // is not possible.
-    return nullptr;
+    if (aAllocFlags & ALLOC_FORCE_REMOTE) {
+      // If we must be remote, but there is no canvas child, then falling back
+      // is not possible.
+      return nullptr;
+    }
+
+    // We don't have a CanvasChild, but are supposed to be remote.
+    // Fall back to software.
+    textureType = TextureType::Unknown;
   }
 
   gfx::BackendType moz2DBackend = gfx::BackendType::NONE;
@@ -368,22 +389,12 @@ TextureData* TextureData::Create(TextureForwarder* aAllocator,
 
 /* static */
 bool TextureData::IsRemote(KnowsCompositor* aKnowsCompositor,
-                           BackendSelector aSelector,
-                           gfx::SurfaceFormat aFormat, gfx::IntSize aSize) {
-  if (aSelector != BackendSelector::Canvas || !gfxPlatform::UseRemoteCanvas()) {
-    return false;
-  }
+                           BackendSelector aSelector) {
+  TextureType textureType = GetTextureType(
+      gfx::SurfaceFormat::UNKNOWN, gfx::IntSize(1, 1), aKnowsCompositor,
+      aSelector, TextureAllocationFlags::ALLOC_DEFAULT);
 
-  TextureType textureType =
-      ChooseTextureType(aFormat, aSize, aKnowsCompositor, aSelector,
-                        TextureAllocationFlags::ALLOC_DEFAULT);
-
-  switch (textureType) {
-    case TextureType::D3D11:
-      return true;
-    default:
-      return false;
-  }
+  return ShouldRemoteTextureType(textureType, aSelector);
 }
 
 static void DestroyTextureData(TextureData* aTextureData,
