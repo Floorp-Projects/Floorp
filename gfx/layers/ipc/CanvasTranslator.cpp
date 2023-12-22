@@ -353,8 +353,6 @@ void CanvasTranslator::FinishShutdown() {
   MOZ_ASSERT(gfx::CanvasRenderThread::IsInCanvasRenderThread());
 
   ClearTextureInfo();
-
-  gfx::CanvasManagerParent::RemoveReplayTextures(this);
 }
 
 bool CanvasTranslator::CheckDeactivated() {
@@ -808,18 +806,12 @@ already_AddRefed<gfx::DrawTarget> CanvasTranslator::CreateDrawTarget(
 }
 
 void CanvasTranslator::RemoveTexture(int64_t aTextureId) {
-  {
-    // Don't erase the texture if still in use
-    auto result = mTextureInfo.find(aTextureId);
-    if (result == mTextureInfo.end() || --result->second.mLocked > 0) {
-      return;
-    }
-    mTextureInfo.erase(result);
+  // Don't erase the texture if still in use
+  auto result = mTextureInfo.find(aTextureId);
+  if (result == mTextureInfo.end() || --result->second.mLocked > 0) {
+    return;
   }
-
-  // It is possible that the texture from the content process has never been
-  // forwarded from the GPU process, so make sure its descriptor is removed.
-  gfx::CanvasManagerParent::RemoveReplayTexture(this, aTextureId);
+  mTextureInfo.erase(result);
 }
 
 bool CanvasTranslator::LockTexture(int64_t aTextureId, OpenMode aMode,
@@ -871,17 +863,7 @@ bool CanvasTranslator::UnlockTexture(int64_t aTextureId, RemoteTextureId aId) {
       NotifyRequiresRefresh(aTextureId);
     }
   } else if (TextureData* data = result->second.mTextureData.get()) {
-    if (aId.IsValid()) {
-      PushRemoteTexture(aTextureId, data, aId, ownerId);
-    } else {
-      if (!NS_WARN_IF(!result->second.mTextureLocked)) {
-        data->Unlock();
-        result->second.mTextureLocked = false;
-      } else {
-        MOZ_ASSERT_UNREACHABLE("Texture not locked?");
-      }
-      gfx::CanvasManagerParent::AddReplayTexture(this, aTextureId, data);
-    }
+    PushRemoteTexture(aTextureId, data, aId, ownerId);
   }
   return true;
 }
