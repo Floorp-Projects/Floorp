@@ -32,6 +32,7 @@ enum class CodecType {
   H264,
   VP8,
   VP9,
+  AV1,
   _EndVideo_,
   _BeginAudio_ = _EndVideo_,
   Opus,
