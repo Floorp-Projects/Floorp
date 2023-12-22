@@ -314,7 +314,14 @@ void EncoderTemplate<EncoderType>::OutputEncodedData(
       metadata.mDecoderConfig.Construct(EncoderConfigToDecoderConfig(
           GetParentObject(), data, *mActiveConfig));
       mOutputNewDecoderConfig = false;
+      LOGE("New config passed to output callback: %s",
+           NS_ConvertUTF16toUTF8(ConfigToString(EncoderConfigToDecoderConfig(
+                                     GetParentObject(), data, *mActiveConfig)))
+               .get());
     }
+    LOG("EncoderTemplate:: output callback (ts: % " PRId64 " ), %s",
+        encodedData->Timestamp(),
+        metadata.mDecoderConfig.WasPassed() ? "new config" : "");
     cb->Call((typename EncoderType::OutputType&)(*encodedData), metadata);
   }
 }
@@ -403,8 +410,6 @@ void EncoderTemplate<EncoderType>::ScheduleOutputEncodedData(
     nsTArray<RefPtr<MediaRawData>>&& aData, const nsACString& aLabel) {
   MOZ_ASSERT(mState == CodecState::Configured);
   MOZ_ASSERT(mAgent);
-
-  LOG("Outputing %zu encoded data", aData.Length());
 
   MOZ_ALWAYS_SUCCEEDS(NS_DispatchToCurrentThread(MakeAndAddRef<OutputRunnable>(
       this, mAgent->mId, aLabel, std::move(aData))));
