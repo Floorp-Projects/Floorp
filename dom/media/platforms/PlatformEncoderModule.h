@@ -372,6 +372,12 @@ struct EncoderConfigurationChangeList {
   ~EncoderConfigurationChangeList() = default;
 };
 
+// Just by inspecting the configuration and before asking the PEM, it's
+// sometimes possible to know that a media won't be able to be encoded. For
+// example, VP8 encodes the frame size on 14 bits, so a resolution of more than
+// 16383x16383 pixels cannot work.
+bool CanLikelyEncode(const EncoderConfig& aConfig);
+
 }  // namespace mozilla
 
 #endif /* PlatformEncoderModule_h_ */

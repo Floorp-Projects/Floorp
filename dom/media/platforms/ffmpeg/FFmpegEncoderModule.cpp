@@ -16,30 +16,9 @@ namespace mozilla {
 
 template <int V>
 bool FFmpegEncoderModule<V>::Supports(const EncoderConfig& aConfig) const {
-  if (aConfig.mCodec == CodecType::H264) {
-    if (!aConfig.mCodecSpecific ||
-        !aConfig.mCodecSpecific->is<H264Specific>()) {
-      return false;
-    }
-    H264Specific specific = aConfig.mCodecSpecific->as<H264Specific>();
-    int width = aConfig.mSize.width;
-    int height = aConfig.mSize.height;
-    if (width % 2 || !width) {
-      return false;
-    }
-    if (height % 2 || !height) {
-      return false;
-    }
-    if (specific.mProfile != H264_PROFILE_BASE &&
-        specific.mProfile != H264_PROFILE_MAIN &&
-        specific.mProfile != H264_PROFILE_HIGH) {
-      return false;
-    }
-    if (width > 4096 || height > 4096) {
-      return false;
-    }
+  if (!CanLikelyEncode(aConfig)) {
+    return false;
   }
-  // TODO: add more checks for VP8/VP9/AV1 here , similar to the checks above.
   return SupportsCodec(aConfig.mCodec) != AV_CODEC_ID_NONE;
 }
 

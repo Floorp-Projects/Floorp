@@ -24,38 +24,10 @@ bool AppleEncoderModule::SupportsCodec(CodecType aCodec) const {
 }
 
 bool AppleEncoderModule::Supports(const EncoderConfig& aConfig) const {
-  if (aConfig.mCodec == CodecType::H264) {
-    if (!aConfig.mCodecSpecific ||
-        !aConfig.mCodecSpecific->is<H264Specific>()) {
-      LOGE(
-          "Asking for support codec for h264 without h264 specific config, "
-          "error.");
-      return false;
-    }
-    H264Specific specific = aConfig.mCodecSpecific->as<H264Specific>();
-    int width = aConfig.mSize.width;
-    int height = aConfig.mSize.height;
-    if (width % 2 || !width) {
-      LOGE("Invalid width of %d for h264", width);
-      return false;
-    }
-    if (height % 2 || !height) {
-      LOGE("Invalid height of %d for h264", height);
-      return false;
-    }
-    if (specific.mProfile != H264_PROFILE_BASE &&
-        specific.mProfile != H264_PROFILE_MAIN &&
-        specific.mProfile != H264_PROFILE_HIGH) {
-      LOGE("Invalid profile of %d for h264", specific.mProfile);
-      return false;
-    }
-    if (width > 4096 || height > 4096) {
-      LOGE("Invalid dimensions of %dx%d for h264 encoding", width, height);
-      return false;
-    }
-    return true;
+  if (!CanLikelyEncode(aConfig)) {
+    return false;
   }
-  return false;
+  return aConfig.mCodec == CodecType::H264;
 }
 
 already_AddRefed<MediaDataEncoder> AppleEncoderModule::CreateVideoEncoder(

@@ -10,6 +10,11 @@
 
 namespace mozilla {
 
+extern LazyLogModule sPEMLog;
+#define LOGD(fmt, ...)                       \
+  MOZ_LOG(sPEMLog, mozilla::LogLevel::Debug, \
+          ("PEM: %s: " fmt, __func__, ##__VA_ARGS__))
+
 // TODO: Automatically generate this (Bug 1865896)
 const char* GetCodecTypeString(const CodecType& aCodecType) {
   switch (aCodecType) {
@@ -122,4 +127,56 @@ nsString EncoderConfigurationChangeList::ToString() const {
   }
   return rv;
 }
+
+bool CanLikelyEncode(const EncoderConfig& aConfig) {
+  if (aConfig.mCodec == CodecType::H264) {
+    if (!aConfig.mCodecSpecific ||
+        !aConfig.mCodecSpecific->is<H264Specific>()) {
+      LOGD("Error: asking for support codec for h264 without h264 specific config.");
+      return false;
+    }
+    H264Specific specific = aConfig.mCodecSpecific->as<H264Specific>();
+    int width = aConfig.mSize.width;
+    int height = aConfig.mSize.height;
+    if (width % 2 || !width) {
+      LOGD("Invalid width of %d for h264", width);
+      return false;
+    }
+    if (height % 2 || !height) {
+      LOGD("Invalid height of %d for h264", height);
+      return false;
+    }
+    if (specific.mProfile != H264_PROFILE_BASE &&
+        specific.mProfile != H264_PROFILE_MAIN &&
+        specific.mProfile != H264_PROFILE_HIGH) {
+      LOGD("Invalid profile of %x for h264", specific.mProfile);
+      return false;
+    }
+    if (width > 4096 || height > 4096) {
+      LOGD("Invalid size of %dx%d for h264", width, height);
+      return false;
+    }
+  }
+  if (aConfig.mCodec == CodecType::VP8) {
+    int width = aConfig.mSize.width;
+    int height = aConfig.mSize.height;
+    if (width > 2 << 13 || height > 2 << 13) {
+      LOGD("Invalid size of %dx%d for VP8", width, height);
+      return false;
+    }
+  }
+  if (aConfig.mCodec == CodecType::VP9) {
+    int width = aConfig.mSize.width;
+    int height = aConfig.mSize.height;
+    if (width > 2 << 15 || height > 2 << 15) {
+      LOGD("Invalid size of %dx%d for VP9", width, height);
+      return false;
+    }
+  }
+
+  return true;
+}
+
 }  // namespace mozilla
+
+#undef LOGD

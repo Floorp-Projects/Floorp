@@ -16,13 +16,7 @@ bool WMFEncoderModule::SupportsCodec(CodecType aCodecType) const {
 }
 
 bool WMFEncoderModule::Supports(const EncoderConfig& aConfig) const {
-  if (aConfig.mCodec == CodecType::H264 &&
-      (aConfig.mCodecSpecific.isNothing() ||
-       !aConfig.mCodecSpecific->is<H264Specific>())) {
-    return false;
-  }
-  if (aConfig.mCodec == CodecType::H264 &&
-      (aConfig.mSize.width == 0 || aConfig.mSize.height == 0)) {
+  if (!CanLikelyEncode(aConfig)) {
     return false;
   }
   return SupportsCodec(aConfig.mCodec);
