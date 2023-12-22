@@ -584,3 +584,8 @@
   width: 100px;
   height: 100px;
 }
+
+:host::cue {
+  font-size: var(--cue-font-size);
+  writing-mode: var(--cue-writing-mode, inherit);
+}
