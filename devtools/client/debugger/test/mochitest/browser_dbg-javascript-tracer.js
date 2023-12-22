@@ -453,11 +453,18 @@ add_task(async function testTracingOnNextInteraction() {
     "The tracer did not log the function call before trigerring the click event"
   );
 
+  // We intentionally turn off this a11y check, because the following click
+  // is send on an empty <body> to to test the click event tracer performance,
+  // and not to activate any control, therefore this check can be ignored.
+  AccessibilityUtils.setEnv({
+    mustHaveAccessibleRule: false,
+  });
   await BrowserTestUtils.synthesizeMouseAtCenter(
     "body",
     {},
     gBrowser.selectedBrowser
   );
+  AccessibilityUtils.resetEnv();
 
   await hasConsoleMessage(dbg, "λ onmousedown");
   await hasConsoleMessage(dbg, "λ onclick");
