@@ -151,6 +151,7 @@ EXPORTS += [
     "DecoderTraits.h",
     "DOMMediaStream.h",
     "DriftCompensation.h",
+    "EncoderTraits.h",
     "ExternalEngineStateMachine.h",
     "FileBlockCache.h",
     "ForwardedInputTrack.h",
