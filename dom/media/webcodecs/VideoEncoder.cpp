@@ -154,6 +154,39 @@ nsString VideoEncoderConfigInternal::ToString() const {
   return rv;
 }
 
+template <typename T>
+bool MaybeAreEqual(const Maybe<T>& aLHS, const Maybe<T> aRHS) {
+  if (aLHS.isSome() && aRHS.isSome()) {
+    return aLHS.value() == aRHS.value();
+  }
+  if (aLHS.isNothing() && aRHS.isNothing()) {
+    return true;
+  }
+  return false;
+}
+
+bool VideoEncoderConfigInternal::Equals(
+    const VideoEncoderConfigInternal& aOther) const {
+  return mCodec.Equals(aOther.mCodec) && mWidth == aOther.mWidth &&
+         mHeight == aOther.mHeight &&
+         MaybeAreEqual(mDisplayWidth, aOther.mDisplayWidth) &&
+         MaybeAreEqual(mDisplayHeight, aOther.mDisplayHeight) &&
+         MaybeAreEqual(mBitrate, aOther.mBitrate) &&
+         MaybeAreEqual(mFramerate, aOther.mFramerate) &&
+         mHardwareAcceleration == aOther.mHardwareAcceleration &&
+         mAlpha == aOther.mAlpha &&
+         MaybeAreEqual(mScalabilityMode, aOther.mScalabilityMode) &&
+         mBitrateMode == aOther.mBitrateMode &&
+         mLatencyMode == aOther.mLatencyMode &&
+         MaybeAreEqual(mContentHint, aOther.mContentHint);
+}
+
+bool VideoEncoderConfigInternal::CanReconfigure(
+    const VideoEncoderConfigInternal& aOther) const {
+  return mCodec.Equals(aOther.mCodec) &&
+         mHardwareAcceleration == aOther.mHardwareAcceleration;
+}
+
 EncoderConfig VideoEncoderConfigInternal::ToEncoderConfig() const {
   MediaDataEncoder::Usage usage;
   if (mLatencyMode == LatencyMode::Quality) {
@@ -185,6 +218,56 @@ EncoderConfig VideoEncoderConfigInternal::ToEncoderConfig() const {
           : MediaDataEncoder::BitrateMode::Variable,
       hwPref, specific);
 }
+already_AddRefed<WebCodecsConfigurationChangeList>
+VideoEncoderConfigInternal::Diff(
+    const VideoEncoderConfigInternal& aOther) const {
+  auto list = MakeRefPtr<WebCodecsConfigurationChangeList>();
+  if (!mCodec.Equals(aOther.mCodec)) {
+    list->Push(CodecChange{aOther.mCodec});
+  }
+  // Both must always be present, when a `VideoEncoderConfig` is passed to
+  // `configure`.
+  if (mWidth != aOther.mWidth || mHeight != aOther.mHeight) {
+    list->Push(DimensionsChange{gfx::IntSize{aOther.mWidth, aOther.mHeight}});
+  }
+  // Similarly, both must always be present, when a `VideoEncoderConfig` is
+  // passed to `configure`.
+  if (!MaybeAreEqual(mDisplayWidth, aOther.mDisplayWidth) ||
+      !MaybeAreEqual(mDisplayHeight, aOther.mDisplayHeight)) {
+    Maybe<gfx::IntSize> displaySize =
+        aOther.mDisplayWidth.isSome()
+            ? Some(gfx::IntSize{aOther.mDisplayWidth.value(),
+                                aOther.mDisplayHeight.value()})
+            : Nothing();
+    list->Push(DisplayDimensionsChange{displaySize});
+  }
+  if (!MaybeAreEqual(mBitrate, aOther.mBitrate)) {
+    list->Push(BitrateChange{aOther.mBitrate});
+  }
+  if (!MaybeAreEqual(mFramerate, aOther.mFramerate)) {
+    list->Push(FramerateChange{aOther.mFramerate});
+  }
+  if (mHardwareAcceleration != aOther.mHardwareAcceleration) {
+    list->Push(HardwareAccelerationChange{aOther.mHardwareAcceleration});
+  }
+  if (mAlpha != aOther.mAlpha) {
+    list->Push(AlphaChange{aOther.mAlpha});
+  }
+  if (!MaybeAreEqual(mScalabilityMode, aOther.mScalabilityMode)) {
+    list->Push(ScalabilityModeChange{aOther.mScalabilityMode});
+  }
+  if (mBitrateMode != aOther.mBitrateMode) {
+    list->Push(BitrateModeChange{aOther.mBitrateMode});
+  }
+  if (mLatencyMode != aOther.mLatencyMode) {
+    list->Push(LatencyModeChange{aOther.mLatencyMode});
+  }
+  if (!MaybeAreEqual(mContentHint, aOther.mContentHint)) {
+    list->Push(ContentHintChange{aOther.mContentHint});
+  }
+  return list.forget();
+}
+
 /*
  * The followings are helpers for VideoEncoder methods
  */
