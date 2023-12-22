@@ -54,6 +54,11 @@ static bool IsUnrestrictedPrincipal(nsIPrincipal& aPrincipal) {
     return true;
   }
 
+  // Allow chrome: and resource: (this especially includes PDF.js)
+  if (aPrincipal.SchemeIs("chrome") || aPrincipal.SchemeIs("resource")) {
+    return true;
+  }
+
   // Allow extension principals.
   return aPrincipal.GetIsAddonOrExpandedAddonPrincipal();
 }
@@ -125,13 +130,6 @@ bool IsImageExtractionAllowed(dom::Document* aDocument, JSContext* aCx,
 
   // Allow local files to extract canvas data.
   if (docURI->SchemeIs("file")) {
-    return true;
-  }
-
-  // Don't show canvas prompt for PDF.js
-  JS::AutoFilename scriptFile;
-  if (JS::DescribeScriptedCaller(aCx, &scriptFile) && scriptFile.get() &&
-      strcmp(scriptFile.get(), "resource://pdf.js/build/pdf.js") == 0) {
     return true;
   }
 
