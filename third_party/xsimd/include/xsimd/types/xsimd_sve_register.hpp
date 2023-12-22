@@ -149,6 +149,8 @@ namespace xsimd
             using type = detail::sve_bool_simd_register;
         };
     } // namespace types
+#else
+    using sve = detail::sve<0xFFFFFFFF>;
 #endif
 } // namespace xsimd
 
