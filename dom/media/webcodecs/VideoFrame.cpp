@@ -2205,7 +2205,7 @@ bool VideoFrame::Resource::CopyTo(const Format::Plane& aPlane,
     }
 
     RefPtr<gfx::DataSourceSurface> dataSurface = surface->GetDataSurface();
-    if (NS_WARN_IF(!surface)) {
+    if (NS_WARN_IF(!dataSurface)) {
       return false;
     }
 
