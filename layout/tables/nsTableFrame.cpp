@@ -1220,16 +1220,6 @@ void nsTableFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   }
 }
 
-nsMargin nsTableFrame::GetDeflationForBackground(
-    nsPresContext* aPresContext) const {
-  if (eCompatibility_NavQuirks != aPresContext->CompatibilityMode() ||
-      !IsBorderCollapse())
-    return nsMargin(0, 0, 0, 0);
-
-  WritingMode wm = GetWritingMode();
-  return GetOuterBCBorder(wm).GetPhysicalMargin(wm);
-}
-
 LogicalSides nsTableFrame::GetLogicalSkipSides() const {
   LogicalSides skip(mWritingMode);
   if (MOZ_UNLIKELY(StyleBorder()->mBoxDecorationBreak ==
