@@ -8,6 +8,7 @@
 #include "mozilla/dom/VideoEncoderBinding.h"
 #include "mozilla/dom/VideoColorSpaceBinding.h"
 #include "mozilla/dom/VideoColorSpace.h"
+#include "mozilla/dom/VideoFrame.h"
 
 #include "EncoderTraits.h"
 #include "VideoUtils.h"
@@ -98,7 +99,8 @@ VideoEncoderConfigInternal::VideoEncoderConfigInternal(
       mScalabilityMode(aConfig.mScalabilityMode),
       mBitrateMode(aConfig.mBitrateMode),
       mLatencyMode(aConfig.mLatencyMode),
-      mContentHint(aConfig.mContentHint) {
+      mContentHint(aConfig.mContentHint),
+      mAvc(aConfig.mAvc) {
 }
 
 VideoEncoderConfigInternal::VideoEncoderConfigInternal(
@@ -115,7 +117,8 @@ VideoEncoderConfigInternal::VideoEncoderConfigInternal(
       mScalabilityMode(OptionalToMaybe(aConfig.mScalabilityMode)),
       mBitrateMode(aConfig.mBitrateMode),
       mLatencyMode(aConfig.mLatencyMode),
-      mContentHint(OptionalToMaybe(aConfig.mContentHint)) {
+      mContentHint(OptionalToMaybe(aConfig.mContentHint)),
+      mAvc(OptionalToMaybe(aConfig.mAvc)) {
 }
 
 nsString VideoEncoderConfigInternal::ToString() const {
@@ -150,6 +153,10 @@ nsString VideoEncoderConfigInternal::ToString() const {
     rv.AppendPrintf(", content hint: %s",
                     NS_ConvertUTF16toUTF8(mContentHint.value()).get());
   }
+  if (mAvc.isSome()) {
+    rv.AppendPrintf(", avc-specific: %s",
+                    AvcBitstreamFormatValues::GetString(mAvc->mFormat).data());
+  }
 
   return rv;
 }
@@ -167,6 +174,12 @@ bool MaybeAreEqual(const Maybe<T>& aLHS, const Maybe<T> aRHS) {
 
 bool VideoEncoderConfigInternal::Equals(
     const VideoEncoderConfigInternal& aOther) const {
+  bool sameCodecSpecific = true;
+  if ((mAvc.isSome() && aOther.mAvc.isSome() &&
+       mAvc->mFormat != aOther.mAvc->mFormat) ||
+      mAvc.isSome() != aOther.mAvc.isSome()) {
+    sameCodecSpecific = false;
+  }
   return mCodec.Equals(aOther.mCodec) && mWidth == aOther.mWidth &&
          mHeight == aOther.mHeight &&
          MaybeAreEqual(mDisplayWidth, aOther.mDisplayWidth) &&
@@ -178,7 +191,7 @@ bool VideoEncoderConfigInternal::Equals(
          MaybeAreEqual(mScalabilityMode, aOther.mScalabilityMode) &&
          mBitrateMode == aOther.mBitrateMode &&
          mLatencyMode == aOther.mLatencyMode &&
-         MaybeAreEqual(mContentHint, aOther.mContentHint);
+         MaybeAreEqual(mContentHint, aOther.mContentHint) && sameCodecSpecific;
 }
 
 bool VideoEncoderConfigInternal::CanReconfigure(
@@ -207,8 +220,16 @@ EncoderConfig VideoEncoderConfigInternal::ToEncoderConfig() const {
   Maybe<EncoderConfig::CodecSpecific> specific;
   if (codecType == CodecType::H264) {
     uint8_t profile, constraints, level;
+    H264BitStreamFormat format;
+    if (mAvc) {
+      format = mAvc->mFormat == AvcBitstreamFormat::Annexb
+                   ? H264BitStreamFormat::ANNEXB
+                   : H264BitStreamFormat::AVC;
+    } else {
+      format = H264BitStreamFormat::AVC;
+    }
     ExtractH264CodecDetails(mCodec, profile, constraints, level);
-    specific.emplace(H264Specific(static_cast<H264_PROFILE>(profile)));
+    specific.emplace(H264Specific(static_cast<H264_PROFILE>(profile), format));
   }
   return EncoderConfig(
       codecType, {mWidth, mHeight}, usage, ImageBitmapFormat::RGBA32, ImageBitmapFormat::RGBA32,
@@ -508,29 +529,27 @@ already_AddRefed<Promise> VideoEncoder::IsConfigSupported(
   return p.forget();
 }
 
-nsTArray<RefPtr<EncodedVideoChunk>> VideoEncoder::EncodedDataToOutputType(
-    nsIGlobalObject* aGlobalObject, nsTArray<RefPtr<MediaRawData>>&& aData) {
+RefPtr<EncodedVideoChunk> VideoEncoder::EncodedDataToOutputType(
+    nsIGlobalObject* aGlobalObject, RefPtr<MediaRawData>& aData) {
   AssertIsOnOwningThread();
 
-  nsTArray<RefPtr<EncodedVideoChunk>> chunks;
-  for (RefPtr<MediaRawData>& data : aData) {
-    MOZ_RELEASE_ASSERT(data->mType == MediaData::Type::RAW_DATA);
-    // Package into an EncodedVideoChunk
-    auto buffer = MakeRefPtr<MediaAlignedByteBuffer>(data->Data(), data->Size());
-    auto encodedVideoChunk = MakeRefPtr<EncodedVideoChunk>(
-        aGlobalObject, buffer.forget(),
-        data->mKeyframe ? EncodedVideoChunkType::Key
-                        : EncodedVideoChunkType::Delta,
-        data->mTime.ToMicroseconds(),
-        data->mDuration.IsZero() ? Nothing()
-                                 : Some(data->mDuration.ToMicroseconds()));
-    chunks.AppendElement(encodedVideoChunk);
-  }
-  return chunks;
+  MOZ_RELEASE_ASSERT(aData->mType == MediaData::Type::RAW_DATA);
+  // Package into an EncodedVideoChunk
+  auto buffer =
+      MakeRefPtr<MediaAlignedByteBuffer>(aData->Data(), aData->Size());
+  auto encodedVideoChunk = MakeRefPtr<EncodedVideoChunk>(
+      aGlobalObject, buffer.forget(),
+      aData->mKeyframe ? EncodedVideoChunkType::Key
+                       : EncodedVideoChunkType::Delta,
+      aData->mTime.ToMicroseconds(),
+      aData->mDuration.IsZero() ? Nothing()
+                                : Some(aData->mDuration.ToMicroseconds()));
+  return encodedVideoChunk;
 }
 
 VideoDecoderConfig VideoEncoder::EncoderConfigToDecoderConfig(
-    nsIGlobalObject* aGlobal, const VideoEncoderConfigInternal& mOutputConfig) const {
+    nsIGlobalObject* aGlobal, const RefPtr<MediaRawData>& aRawData,
+    const VideoEncoderConfigInternal& mOutputConfig) const {
   VideoDecoderConfig decoderConfig;
   decoderConfig.mCodec = mOutputConfig.mCodec;
   decoderConfig.mCodedWidth.Construct(mOutputConfig.mWidth);
@@ -550,6 +569,19 @@ VideoDecoderConfig VideoEncoder::EncoderConfigToDecoderConfig(
   init.mPrimaries = VideoColorPrimaries::Bt709;
   init.mTransfer = VideoTransferCharacteristics::Bt709;
   decoderConfig.mColorSpace.Construct(init);
+
+  if (aRawData->mExtraData) {
+    auto& abov = decoderConfig.mDescription.Construct();
+    AutoEntryScript aes(aGlobal, "EncoderConfigToDecoderConfig");
+    size_t lengthBytes = aRawData->mExtraData->Length();
+    UniquePtr<uint8_t[], JS::FreePolicy> extradata(new uint8_t[lengthBytes]);
+    PodCopy(extradata.get(), aRawData->mExtraData->Elements(), lengthBytes);
+    JS::Rooted<JSObject*> description(
+        aes.cx(), JS::NewArrayBufferWithContents(aes.cx(), lengthBytes,
+                                                 std::move(extradata)));
+    JS::Rooted<JS::Value> value(aes.cx(), JS::ObjectValue(*description));
+    DebugOnly<bool> rv = abov.Init(aes.cx(), value);
+  }
 
   return decoderConfig;
 }

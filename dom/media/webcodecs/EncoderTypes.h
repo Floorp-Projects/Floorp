@@ -92,6 +92,7 @@ class VideoEncoderTraits {
       const InputType& aInput, const VideoEncoderEncodeOptions& aOptions);
   static already_AddRefed<OutputConfigType> EncoderConfigToDecoderConfig(
     nsIGlobalObject* aGlobal,
+    const RefPtr<MediaRawData>& aData,
     const ConfigTypeInternal& mOutputConfig);
 };
 

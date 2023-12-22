@@ -64,12 +64,12 @@ class VideoEncoder final : public EncoderTemplate<VideoEncoderTraits> {
       ErrorResult& aRv);
 
  protected:
-  virtual nsTArray<RefPtr<EncodedVideoChunk>> EncodedDataToOutputType(
-      nsIGlobalObject* aGlobal,
-      nsTArray<RefPtr<MediaRawData>>&& aData) override;
+  virtual RefPtr<EncodedVideoChunk> EncodedDataToOutputType(
+      nsIGlobalObject* aGlobal, RefPtr<MediaRawData>& aData) override;
 
   virtual VideoDecoderConfig EncoderConfigToDecoderConfig(
       nsIGlobalObject* aGlobal,
+      const RefPtr<MediaRawData>& aRawData,
       const VideoEncoderConfigInternal& mOutputConfig) const override;
 };
 
