@@ -599,7 +599,11 @@ MessageProcessedResult EncoderTemplate<EncoderType>::ProcessConfigureMessage(
     return MessageProcessedResult::Processed;
   }
 
-  Configure(aMessage);
+  if (mAgent) {
+    Reconfigure(aMessage);
+  } else {
+    Configure(aMessage);
+  }
 
   return MessageProcessedResult::Processed;
 }
