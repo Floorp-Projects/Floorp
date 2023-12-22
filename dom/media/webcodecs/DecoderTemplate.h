@@ -18,6 +18,7 @@
 #include "mozilla/dom/WorkerRef.h"
 #include "mozilla/media/MediaUtils.h"
 #include "nsStringFwd.h"
+#include "WebCodecsUtils.h"
 
 namespace mozilla {
 
@@ -28,23 +29,6 @@ namespace dom {
 class WebCodecsErrorCallback;
 class Promise;
 enum class CodecState : uint8_t;
-
-template <typename T>
-class MessageRequestHolder {
- public:
-  MessageRequestHolder() = default;
-  ~MessageRequestHolder() = default;
-
-  MozPromiseRequestHolder<T>& Request() { return mRequest; }
-  void Disconnect() { mRequest.Disconnect(); }
-  void Complete() { mRequest.Complete(); }
-  bool Exists() const { return mRequest.Exists(); }
-
- protected:
-  MozPromiseRequestHolder<T> mRequest;
-};
-
-enum class MessageProcessedResult { NotProcessed, Processed };
 
 template <typename DecoderType>
 class DecoderTemplate : public DOMEventTargetHelper {

@@ -8,18 +8,14 @@
 #define mozilla_dom_VideoDecoder_h
 
 #include "js/TypeDecls.h"
-#include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"
-#include "mozilla/Maybe.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/DecoderTemplate.h"
 #include "mozilla/dom/DecoderTypes.h"
-#include "mozilla/dom/RootedDictionary.h"
 #include "mozilla/dom/VideoFrame.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsWrapperCache.h"
 
 class nsIGlobalObject;
 

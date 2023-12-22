@@ -137,8 +137,9 @@ void DecoderTemplate<DecoderType>::Configure(const ConfigType& aConfig,
   LOG("%s %p, Configure: codec %s", DecoderType::Name.get(), this,
       NS_ConvertUTF16toUTF8(aConfig.mCodec).get());
 
-  if (!DecoderType::Validate(aConfig)) {
-    aRv.ThrowTypeError("config is invalid");
+  nsCString errorMessage;
+  if (!DecoderType::Validate(aConfig, errorMessage)) {
+    aRv.ThrowTypeError(nsPrintfCString("config is invalid: %s", errorMessage.get()));
     return;
   }
 

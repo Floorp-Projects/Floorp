@@ -9,12 +9,29 @@
 #include "VideoUtils.h"
 #include "js/experimental/TypedData.h"
 #include "mozilla/Assertions.h"
-#include "mozilla/CheckedInt.h"
 #include "mozilla/dom/ImageBitmapBinding.h"
 #include "mozilla/dom/VideoColorSpaceBinding.h"
 #include "mozilla/dom/VideoFrameBinding.h"
 #include "mozilla/gfx/Types.h"
 #include "nsDebug.h"
+#include "PlatformEncoderModule.h"
+#include "PlatformEncoderModule.h"
+
+extern mozilla::LazyLogModule gWebCodecsLog;
+
+#ifdef LOG_INTERNAL
+#  undef LOG_INTERNAL
+#endif  // LOG_INTERNAL
+#define LOG_INTERNAL(level, msg, ...) \
+  MOZ_LOG(gWebCodecsLog, LogLevel::level, (msg, ##__VA_ARGS__))
+#ifdef LOG
+#  undef LOG
+#endif  // LOG
+#define LOG(msg, ...) LOG_INTERNAL(Debug, msg, ##__VA_ARGS__)
+
+namespace mozilla {
+std::atomic<WebCodecsId> sNextId = 0;
+};
 
 namespace mozilla::dom {
 
@@ -282,4 +299,28 @@ Maybe<VideoPixelFormat> ImageBitmapFormatToVideoPixelFormat(
   return Nothing();
 }
 
-}  // namespace mozilla::dom
+Result<RefPtr<MediaByteBuffer>, nsresult> GetExtraDataFromArrayBuffer(
+    const OwningMaybeSharedArrayBufferViewOrMaybeSharedArrayBuffer& aBuffer) {
+  RefPtr<MediaByteBuffer> data = MakeRefPtr<MediaByteBuffer>();
+  Unused << AppendTypedArrayDataTo(aBuffer, *data);
+  return data->Length() > 0 ? data : nullptr;
+}
+
+bool IsOnAndroid() {
+#if defined(ANDROID)
+  return true;
+#else
+  return false;
+#endif
+}
+
+bool IsOnMacOS() {
+#if defined(XP_MACOSX)
+  return true;
+#else
+  return false;
+#endif
+}
+
+} // namespace mozilla::dom
+
