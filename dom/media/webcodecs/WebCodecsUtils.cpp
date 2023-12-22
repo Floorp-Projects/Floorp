@@ -532,4 +532,21 @@ VideoColorSpaceInit FallbackColorSpaceForWebContent() {
   colorSpace.mPrimaries = VideoColorPrimaries::Bt709;
   return colorSpace;
 }
+
+Maybe<CodecType> CodecStringToCodecType(const nsAString& aCodecString) {
+  if (StringBeginsWith(aCodecString, u"av01"_ns)) {
+    return Some(CodecType::AV1);
+  }
+  if (StringBeginsWith(aCodecString, u"vp8"_ns)) {
+    return Some(CodecType::VP8);
+  }
+  if (StringBeginsWith(aCodecString, u"vp09"_ns)) {
+    return Some(CodecType::VP9);
+  }
+  if (StringBeginsWith(aCodecString, u"avc1"_ns)) {
+    return Some(CodecType::H264);
+  }
+  return Nothing();
+}
+
 };  // namespace mozilla::dom

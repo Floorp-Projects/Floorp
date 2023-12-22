@@ -21,6 +21,8 @@ const char* GetCodecTypeString(const CodecType& aCodecType) {
       return "VP8";
     case CodecType::VP9:
       return "VP9";
+    case CodecType::AV1:
+      return "AV1";
     case CodecType::_EndVideo_:  // CodecType::_BeginAudio_
       return "_EndVideo_/_BeginAudio_";
     case CodecType::Opus:

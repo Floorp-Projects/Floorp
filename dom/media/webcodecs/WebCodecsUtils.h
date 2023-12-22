@@ -18,6 +18,7 @@
 #include "mozilla/dom/UnionTypes.h"
 #include "mozilla/dom/VideoEncoderBinding.h"
 #include "mozilla/dom/VideoFrameBinding.h"
+#include "PlatformEncoderModule.h"
 
 namespace mozilla {
 
@@ -223,6 +224,8 @@ nsCString ColorSpaceInitToString(const dom::VideoColorSpaceInit& aColorSpaceInit
 RefPtr<TaskQueue> GetWebCodecsEncoderTaskQueue();
 VideoColorSpaceInit FallbackColorSpaceForVideoContent();
 VideoColorSpaceInit FallbackColorSpaceForWebContent();
+
+Maybe<CodecType> CodecStringToCodecType(const nsAString& aCodecString);
 
 } // namespace dom
 

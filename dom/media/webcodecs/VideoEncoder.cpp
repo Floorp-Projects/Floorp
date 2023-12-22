@@ -216,7 +216,13 @@ EncoderConfig VideoEncoderConfigInternal::ToEncoderConfig() const {
              mozilla::dom::HardwareAcceleration::Prefer_software) {
     hwPref = MediaDataEncoder::HardwarePreference::RequireSoftware;
   }
-  CodecType codecType = CodecType::H264;
+  CodecType codecType;
+  auto maybeCodecType = CodecStringToCodecType(mCodec);
+  if (maybeCodecType.isSome()) {
+    codecType = maybeCodecType.value();
+  } else {
+    MOZ_CRASH("The string should always contain a valid codec at this point.");
+  }
   Maybe<EncoderConfig::CodecSpecific> specific;
   if (codecType == CodecType::H264) {
     uint8_t profile, constraints, level;
@@ -230,6 +236,19 @@ EncoderConfig VideoEncoderConfigInternal::ToEncoderConfig() const {
     }
     ExtractH264CodecDetails(mCodec, profile, constraints, level);
     specific.emplace(H264Specific(static_cast<H264_PROFILE>(profile), format));
+  }
+  // Only for vp9, not vp8
+  if (codecType == CodecType::VP9) {
+    uint8_t profile, level, bitdepth, chromasubsampling;
+    mozilla::VideoColorSpace colorspace;
+    DebugOnly<bool> rv = ExtractVPXCodecDetails(
+        mCodec, profile, level, bitdepth, chromasubsampling, colorspace);
+#ifdef DEBUG
+    if (!rv) {
+      LOGE("Error extracting VPX codec details, non fatal");
+    }
+#endif
+    specific.emplace(VP9Specific());
   }
   return EncoderConfig(
       codecType, {mWidth, mHeight}, usage, ImageBitmapFormat::RGBA32, ImageBitmapFormat::RGBA32,
