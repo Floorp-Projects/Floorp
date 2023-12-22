@@ -6,7 +6,7 @@
 use rusqlite::{Connection, Transaction};
 use sql_support::open_database::{self, ConnectionInitializer};
 
-pub const VERSION: u32 = 8;
+pub const VERSION: u32 = 9;
 
 pub const SQL: &str = "
     CREATE TABLE meta(
@@ -26,8 +26,8 @@ pub const SQL: &str = "
         keyword_suffix TEXT NOT NULL DEFAULT '',
         confidence INTEGER NOT NULL DEFAULT 0,
         rank INTEGER NOT NULL,
-        suggestion_id INTEGER NOT NULL REFERENCES suggestions(id),
-        PRIMARY KEY (keyword_prefix, keyword_suffix, suggestion_id) 
+        suggestion_id INTEGER NOT NULL REFERENCES suggestions(id) ON DELETE CASCADE,
+        PRIMARY KEY (keyword_prefix, keyword_suffix, suggestion_id)
     ) WITHOUT ROWID;
 
     CREATE UNIQUE INDEX keywords_suggestion_id_rank ON keywords(suggestion_id, rank);
@@ -48,8 +48,7 @@ pub const SQL: &str = "
         impression_url TEXT NOT NULL,
         click_url TEXT NOT NULL,
         icon_id TEXT NOT NULL,
-        FOREIGN KEY(suggestion_id) REFERENCES suggestions(id)
-        ON DELETE CASCADE
+        FOREIGN KEY(suggestion_id) REFERENCES suggestions(id) ON DELETE CASCADE
     );
 
     CREATE TABLE pocket_custom_details(
@@ -70,8 +69,7 @@ pub const SQL: &str = "
         rating TEXT,
         number_of_ratings INTEGER NOT NULL,
         score REAL NOT NULL,
-        FOREIGN KEY(suggestion_id) REFERENCES suggestions(id)
-        ON DELETE CASCADE
+        FOREIGN KEY(suggestion_id) REFERENCES suggestions(id) ON DELETE CASCADE
     );
 
     CREATE INDEX suggestions_record_id ON suggestions(record_id);
@@ -110,7 +108,7 @@ impl ConnectionInitializer for SuggestConnectionInitializer {
 
     fn upgrade_from(&self, _db: &Transaction<'_>, version: u32) -> open_database::Result<()> {
         match version {
-            1..=7 => {
+            1..=8 => {
                 // These schema versions were used during development, and never
                 // shipped in any applications. Treat these databases as
                 // corrupt, so that they'll be replaced.
