@@ -18,7 +18,7 @@ class weak_ptr_printer(object):
             return "[(%s) 0x0]" % proxy.type
 
         ref_type = proxy.dynamic_type
-        weak_ptr = proxy.cast(ref_type).dereference()["mReferent"]
+        weak_ptr = proxy.cast(ref_type).dereference()["mObject"]
         if not weak_ptr:
             return "[(%s) %s]" % (weak_ptr.type, weak_ptr)
 
