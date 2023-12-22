@@ -989,6 +989,7 @@ WEBIDL_FILES = [
     "ValidityState.webidl",
     "VideoColorSpace.webidl",
     "VideoDecoder.webidl",
+    "VideoEncoder.webidl",
     "VideoFrame.webidl",
     "VideoPlaybackQuality.webidl",
     "VideoTrack.webidl",

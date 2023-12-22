@@ -27,6 +27,7 @@ EXPORTS.mozilla.dom += [
     "EncoderTypes.h",
     "VideoColorSpace.h",
     "VideoDecoder.h",
+    "VideoEncoder.h",
     "VideoFrame.h",
     "WebCodecsUtils.h",
 ]
@@ -37,6 +38,7 @@ UNIFIED_SOURCES += [
     "EncodedVideoChunk.cpp",
     "VideoColorSpace.cpp",
     "VideoDecoder.cpp",
+    "VideoEncoder.cpp",
     "VideoFrame.cpp",
     "WebCodecsUtils.cpp",
 ]
