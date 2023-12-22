@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_DecoderTypes_h
 #define mozilla_dom_DecoderTypes_h
 
+#include "MediaData.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/dom/EncodedVideoChunk.h"
 #include "mozilla/dom/VideoColorSpaceBinding.h"
@@ -44,6 +45,7 @@ class VideoDecoderConfigInternal {
       const VideoDecoderConfig& aConfig);
   ~VideoDecoderConfigInternal() = default;
 
+  nsString ToString();
 
   bool Equals(const VideoDecoderConfigInternal& aOther) const {
     if (mDescription.isSome() != aOther.mDescription.isSome()) {

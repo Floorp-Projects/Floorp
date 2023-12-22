@@ -154,6 +154,34 @@ UniquePtr<VideoDecoderConfigInternal> VideoDecoderConfigInternal::Create(
       OptionalToMaybe(aConfig.mOptimizeForLatency)));
 }
 
+nsString VideoDecoderConfigInternal::ToString() {
+  nsString rv;
+
+  rv.Append(mCodec);
+  if (mCodedWidth.isSome()) {
+    rv.AppendPrintf("coded: %dx%d", mCodedWidth.value(), mCodedHeight.value());
+  }
+  if (mDisplayAspectWidth.isSome()) {
+    rv.AppendPrintf("display %dx%d", mDisplayAspectWidth.value(),
+                    mDisplayAspectHeight.value());
+  }
+  if (mColorSpace.isSome()) {
+    rv.AppendPrintf("colorspace %s", "todo");
+  }
+  if (mDescription.isSome()) {
+    rv.AppendPrintf("extradata: %zu bytes", mDescription.value()->Length());
+  }
+  rv.AppendPrintf(
+      "hw accel: %s",
+      HardwareAccelerationValues::GetString(mHardwareAcceleration).data());
+  if (mOptimizeForLatency.isSome()) {
+    rv.AppendPrintf("optimize for latency: %s",
+                    mOptimizeForLatency.value() ? "true" : "false");
+  }
+
+  return rv;
+}
+
 /*
  * The followings are helpers for VideoDecoder methods
  */

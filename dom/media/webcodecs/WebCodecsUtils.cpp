@@ -6,6 +6,7 @@
 
 #include "WebCodecsUtils.h"
 
+#include "DecoderTypes.h"
 #include "VideoUtils.h"
 #include "js/experimental/TypedData.h"
 #include "mozilla/Assertions.h"
@@ -547,6 +548,14 @@ Maybe<CodecType> CodecStringToCodecType(const nsAString& aCodecString) {
     return Some(CodecType::H264);
   }
   return Nothing();
+}
+
+nsString ConfigToString(const VideoDecoderConfig& aConfig) {
+  nsString rv;
+
+  auto internal = VideoDecoderConfigInternal::Create(aConfig);
+
+  return internal->ToString();
 }
 
 };  // namespace mozilla::dom

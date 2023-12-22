@@ -227,6 +227,8 @@ VideoColorSpaceInit FallbackColorSpaceForWebContent();
 
 Maybe<CodecType> CodecStringToCodecType(const nsAString& aCodecString);
 
+nsString ConfigToString(const VideoDecoderConfig& aConfig);
+
 } // namespace dom
 
 }  // namespace mozilla
