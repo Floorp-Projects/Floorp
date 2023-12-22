@@ -124,38 +124,6 @@ const FFmpegPixelFormat FFMPEG_PIX_FMT_NV21 =
 
 // TODO: WebCodecs' I420A should map to MediaDataEncoder::PixelFormat and then
 // to AV_PIX_FMT_YUVA420P here.
-static FFmpegPixelFormat ToSupportedFFmpegPixelFormat(
-    const mozilla::dom::ImageBitmapFormat& aFormat) {
-  switch (aFormat) {
-    case mozilla::dom::ImageBitmapFormat::RGBA32:
-      return FFMPEG_PIX_FMT_RGBA;
-    case mozilla::dom::ImageBitmapFormat::BGRA32:
-      return FFMPEG_PIX_FMT_BGRA;
-    case mozilla::dom::ImageBitmapFormat::RGB24:
-      return FFMPEG_PIX_FMT_RGB24;
-    case mozilla::dom::ImageBitmapFormat::BGR24:
-      return FFMPEG_PIX_FMT_BGR24;
-    case mozilla::dom::ImageBitmapFormat::YUV444P:
-      return FFMPEG_PIX_FMT_YUV444P;
-    case mozilla::dom::ImageBitmapFormat::YUV422P:
-      return FFMPEG_PIX_FMT_YUV422P;
-    case mozilla::dom::ImageBitmapFormat::YUV420P:
-      return FFMPEG_PIX_FMT_YUV420P;
-    case mozilla::dom::ImageBitmapFormat::YUV420SP_NV12:
-      return FFMPEG_PIX_FMT_NV12;
-    case mozilla::dom::ImageBitmapFormat::YUV420SP_NV21:
-      return FFMPEG_PIX_FMT_NV21;
-    case mozilla::dom::ImageBitmapFormat::GRAY8:
-      // Although GRAY8 can be map to a AVPixelFormat, it's unsupported for now.
-    case mozilla::dom::ImageBitmapFormat::HSV:
-    case mozilla::dom::ImageBitmapFormat::Lab:
-    case mozilla::dom::ImageBitmapFormat::DEPTH:
-    case mozilla::dom::ImageBitmapFormat::EndGuard_:
-      break;
-  }
-  return FFMPEG_PIX_FMT_NONE;
-}
-
 static const char* GetPixelFormatString(FFmpegPixelFormat aFormat) {
   switch (aFormat) {
     case FFMPEG_PIX_FMT_NONE:
@@ -672,20 +640,6 @@ RefPtr<MediaDataEncoder::EncodePromise> FFmpegVideoEncoder<
         __func__);
   }
 
-  // Check image format.
-  const dom::ImageUtils imageUtils(aSample->mImage);
-  ffmpeg::FFmpegPixelFormat imgFmt =
-      ffmpeg::ToSupportedFFmpegPixelFormat(imageUtils.GetFormat());
-  if (imgFmt == ffmpeg::FFMPEG_PIX_FMT_NONE) {
-    FFMPEGV_LOG(
-        "image type %s is unsupported",
-        dom::ImageBitmapFormatValues::GetString(imageUtils.GetFormat()).data());
-    return EncodePromise::CreateAndReject(
-        MediaResult(NS_ERROR_DOM_MEDIA_NOT_SUPPORTED_ERR,
-                    RESULT_DETAIL("Unsupport image type")),
-        __func__);
-  }
-
   // Allocate AVFrame.
   if (!PrepareFrame()) {
     FFMPEGV_LOG("failed to allocate frame");
@@ -743,10 +697,6 @@ RefPtr<MediaDataEncoder::EncodePromise> FFmpegVideoEncoder<
           __func__);
     }
   }
-
-  FFMPEGV_LOG(
-      "Fill AVFrame with %s image data",
-      dom::ImageBitmapFormatValues::GetString(imageUtils.GetFormat()).data());
 
   // Everything in microsecond for now: bug 1869560
   mFrame->pts = aSample->mTime.ToMicroseconds();
