@@ -5300,7 +5300,6 @@ var SessionStoreInternal = {
 
       // workspaces Window Id
       if (aWindowId) {
-        console.log("SessionStore: restoring window with id " + aWindowId);
         aWindow.gWorkspaces._windowId = aWindowId;
       } else {
         aWindow.gWorkspaces._windowId = WorkspacesWindowUuidService.getGeneratedUuid();
