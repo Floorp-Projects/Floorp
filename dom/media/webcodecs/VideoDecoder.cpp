@@ -501,9 +501,39 @@ static VideoColorSpaceInternal GuessColorSpace(layers::Image* aImage) {
     if (layers::NVImage* image = aImage->AsNVImage()) {
       return GuessColorSpace(image->GetData());
     }
-    // GPUVideoImage is always sRGB
     if (layers::GPUVideoImage* image = aImage->AsGPUVideoImage()) {
-      return VideoColorSpaceInternal(FallbackColorSpaceForWebContent());
+      VideoColorSpaceInternal colorSpace;
+      colorSpace.mFullRange =
+          Some(image->GetColorRange() != gfx::ColorRange::LIMITED);
+      colorSpace.mMatrix = ToMatrixCoefficients(image->GetYUVColorSpace());
+      colorSpace.mPrimaries = ToPrimaries(image->GetColorPrimaries());
+      colorSpace.mTransfer =
+          ToTransferCharacteristics(image->GetTransferFunction());
+      // In some circumstances, e.g. on Linux software decoding when using
+      // VPXDecoder and RDD, the primaries aren't set correctly. Make a good
+      // guess based on the other params. Fixing this is tracked in
+      // https://bugzilla.mozilla.org/show_bug.cgi?id=1869825
+      if (!colorSpace.mPrimaries) {
+        if (colorSpace.mMatrix.isSome()) {
+          switch (colorSpace.mMatrix.value()) {
+            case VideoMatrixCoefficients::Rgb:
+            case VideoMatrixCoefficients::Bt709:
+              colorSpace.mPrimaries = Some(VideoColorPrimaries::Bt709);
+              break;
+            case VideoMatrixCoefficients::Bt470bg:
+            case VideoMatrixCoefficients::Smpte170m:
+              colorSpace.mPrimaries = Some(VideoColorPrimaries::Bt470bg);
+              break;
+            case VideoMatrixCoefficients::Bt2020_ncl:
+              colorSpace.mPrimaries = Some(VideoColorPrimaries::Bt2020);
+              break;
+            case VideoMatrixCoefficients::EndGuard_:
+              MOZ_ASSERT_UNREACHABLE("bad enum value");
+              break;
+          };
+        }
+      }
+      return colorSpace;
     }
 #ifdef XP_MACOSX
     // TODO: Make sure VideoFrame can interpret its internal data in different
