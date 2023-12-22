@@ -691,6 +691,7 @@ RefPtr<MediaDataEncoder::EncodePromise> FFmpegVideoEncoder<
 
   // Initialize AVPacket.
   AVPacket* pkt = mLib->av_packet_alloc();
+
   if (!pkt) {
     FFMPEGV_LOG("failed to allocate packet");
     return EncodePromise::CreateAndReject(
@@ -698,6 +699,9 @@ RefPtr<MediaDataEncoder::EncodePromise> FFmpegVideoEncoder<
                     RESULT_DETAIL("Unable to allocate packet")),
         __func__);
   }
+
+  auto freePacket =
+   MakeScopeExit( [this, &pkt] { mLib->av_packet_free(&pkt); } );
 
   // Send frame and receive packets.
 
@@ -768,6 +772,8 @@ FFmpegVideoEncoder<LIBAV_VER>::DrainWithModernAPIs() {
                     RESULT_DETAIL("Unable to allocate packet")),
         __func__);
   }
+  auto freePacket =
+   MakeScopeExit( [this, &pkt] { mLib->av_packet_free(&pkt); } );
 
   // Enter draining mode by sending NULL to the avcodec_send_frame(). Note that
   // this can leave the encoder in a permanent EOF state after draining. As a
