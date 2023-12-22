@@ -6806,25 +6806,17 @@ void nsGridContainerFrame::Tracks::AlignJustifyContent(
       nscoord roundingError = NSCoordDivRem(delta, 2, &halfDelta);
       auto newSize = sz.mBase - (halfDelta + roundingError) - lastHalfDelta;
       lastHalfDelta = halfDelta;
-      if (newSize >= 0) {
-        sz.mBase = newSize;
-        sz.mPosition = currentPos;
-        currentPos += newSize + mGridGap;
-      } else {
-        sz.mBase = nscoord(0);
-        sz.mPosition = currentPos + newSize;
-        currentPos = sz.mPosition + mGridGap;
-      }
+      // If the gap delta (in particular 'halfDelta + lastHalfDelta') is larger
+      // than the current track size, newSize can be negative. Don't let the new
+      // track size (mBase) be negative.
+      sz.mBase = std::max(newSize, 0);
+      sz.mPosition = currentPos;
+      currentPos += newSize + mGridGap;
     }
     auto& lastTrack = mSizes.LastElement();
     auto newSize = lastTrack.mBase - lastHalfDelta;
-    if (newSize >= 0) {
-      lastTrack.mBase = newSize;
-      lastTrack.mPosition = currentPos;
-    } else {
-      lastTrack.mBase = nscoord(0);
-      lastTrack.mPosition = currentPos + newSize;
-    }
+    lastTrack.mBase = std::max(newSize, 0);
+    lastTrack.mPosition = currentPos;
     return;
   }
 
