@@ -3221,12 +3221,12 @@ nsresult nsFocusManager::GetSelectionLocation(Document* aDocument,
       domSelection->IsCollapsed()) {
     nsIFrame* startFrame = start->GetPrimaryFrame();
     // Yes, indeed we were at the end of the last node
-    nsCOMPtr<nsIFrameEnumerator> frameTraversal;
+    RefPtr<nsFrameIterator> frameIterator;
     nsIFrame* limiter =
         domSelection && domSelection->GetAncestorLimiter()
             ? domSelection->GetAncestorLimiter()->GetPrimaryFrame()
             : nullptr;
-    MOZ_TRY(NS_NewFrameTraversal(getter_AddRefs(frameTraversal), presContext,
+    MOZ_TRY(NS_NewFrameTraversal(getter_AddRefs(frameIterator), presContext,
                                  startFrame, eLeaf,
                                  false,  // aVisual
                                  false,  // aLockInScrollView
@@ -3241,8 +3241,8 @@ nsresult nsFocusManager::GetSelectionLocation(Document* aDocument,
       // Continue getting the next frame until the primary content for the
       // frame we are on changes - we don't want to be stuck in the same
       // place
-      frameTraversal->Next();
-      newCaretFrame = static_cast<nsIFrame*>(frameTraversal->CurrentItem());
+      frameIterator->Next();
+      newCaretFrame = frameIterator->CurrentItem();
       if (!newCaretFrame) {
         break;
       }
@@ -4193,13 +4193,13 @@ nsresult nsFocusManager::GetNextTabbableContent(
       getNextFrame = false;
     }
 
-    nsCOMPtr<nsIFrameEnumerator> frameTraversal;
+    RefPtr<nsFrameIterator> frameIterator;
     if (frame) {
       // For tab navigation, pass false for aSkipPopupChecks so that we don't
       // iterate into or out of a popup. For document naviation pass true to
       // ignore these boundaries.
       nsresult rv = NS_NewFrameTraversal(
-          getter_AddRefs(frameTraversal), presContext, frame, ePreOrder,
+          getter_AddRefs(frameIterator), presContext, frame, ePreOrder,
           false,                  // aVisual
           false,                  // aLockInScrollView
           true,                   // aFollowOOFs
@@ -4209,18 +4209,18 @@ nsresult nsFocusManager::GetNextTabbableContent(
 
       if (iterStartContent == aRootContent) {
         if (!aForward) {
-          frameTraversal->Last();
+          frameIterator->Last();
         } else if (aRootContent->IsFocusableWithoutStyle()) {
-          frameTraversal->Next();
+          frameIterator->Next();
         }
-        frame = frameTraversal->CurrentItem();
+        frame = frameIterator->CurrentItem();
       } else if (getNextFrame &&
                  (!iterStartContent ||
                   !iterStartContent->IsHTMLElement(nsGkAtoms::area))) {
         // Need to do special check in case we're in an imagemap which has
         // multiple content nodes per frame, so don't skip over the starting
         // frame.
-        frame = frameTraversal->Traverse(aForward);
+        frame = frameIterator->Traverse(aForward);
       }
     }
 
@@ -4242,11 +4242,11 @@ nsresult nsFocusManager::GetNextTabbableContent(
         // We're within non-document scope, continue.
         do {
           if (aForward) {
-            frameTraversal->Next();
+            frameIterator->Next();
           } else {
-            frameTraversal->Prev();
+            frameIterator->Prev();
           }
-          frame = static_cast<nsIFrame*>(frameTraversal->CurrentItem());
+          frame = frameIterator->CurrentItem();
           // For the usage of GetPrevContinuation, see the comment
           // at the end of while (frame) loop.
         } while (frame && frame->GetPrevContinuation());
@@ -4506,11 +4506,11 @@ nsresult nsFocusManager::GetNextTabbableContent(
       // again.
       do {
         if (aForward) {
-          frameTraversal->Next();
+          frameIterator->Next();
         } else {
-          frameTraversal->Prev();
+          frameIterator->Prev();
         }
-        frame = static_cast<nsIFrame*>(frameTraversal->CurrentItem());
+        frame = frameIterator->CurrentItem();
       } while (frame && frame->GetPrevContinuation());
     }
 

@@ -8655,9 +8655,9 @@ static nsresult GetNextPrevLineFromBlockFrame(PeekOffsetStruct* aPos,
       // resultFrame is not a block frame
       result = NS_ERROR_FAILURE;
 
-      nsCOMPtr<nsIFrameEnumerator> frameTraversal;
+      RefPtr<nsFrameIterator> frameIterator;
       result = NS_NewFrameTraversal(
-          getter_AddRefs(frameTraversal), pc, resultFrame, ePostOrder,
+          getter_AddRefs(frameIterator), pc, resultFrame, ePostOrder,
           false,  // aVisual
           aPos->mOptions.contains(PeekOffsetOption::StopAtScroller),
           false,  // aFollowOOFs
@@ -8723,7 +8723,7 @@ static nsresult GetNextPrevLineFromBlockFrame(PeekOffsetStruct* aPos,
           break;
         }
         // always try previous on THAT line if that fails go the other way
-        resultFrame = frameTraversal->Traverse(/* aForward = */ false);
+        resultFrame = frameIterator->Traverse(/* aForward = */ false);
         if (!resultFrame) {
           return NS_ERROR_FAILURE;
         }
@@ -8733,7 +8733,7 @@ static nsresult GetNextPrevLineFromBlockFrame(PeekOffsetStruct* aPos,
         resultFrame = storeOldResultFrame;
 
         result = NS_NewFrameTraversal(
-            getter_AddRefs(frameTraversal), pc, resultFrame, eLeaf,
+            getter_AddRefs(frameIterator), pc, resultFrame, eLeaf,
             false,  // aVisual
             aPos->mOptions.contains(PeekOffsetOption::StopAtScroller),
             false,  // aFollowOOFs
@@ -8764,7 +8764,7 @@ static nsresult GetNextPrevLineFromBlockFrame(PeekOffsetStruct* aPos,
         if (aPos->mDirection == eDirNext && (resultFrame == farStoppingFrame))
           break;
         // previous didnt work now we try "next"
-        nsIFrame* tempFrame = frameTraversal->Traverse(/* aForward = */ true);
+        nsIFrame* tempFrame = frameIterator->Traverse(/* aForward = */ true);
         if (!tempFrame) break;
         resultFrame = tempFrame;
       }
@@ -9623,9 +9623,9 @@ nsIFrame::SelectablePeekReport nsIFrame::GetFrameFromDirection(
       aOptions.contains(PeekOffsetOption::Visual) && presContext->BidiEnabled();
   const bool followOofs =
       !aOptions.contains(PeekOffsetOption::StopAtPlaceholder);
-  nsCOMPtr<nsIFrameEnumerator> frameTraversal;
+  RefPtr<nsFrameIterator> frameIterator;
   MOZ_TRY(NS_NewFrameTraversal(
-      getter_AddRefs(frameTraversal), presContext, this, eLeaf,
+      getter_AddRefs(frameIterator), presContext, this, eLeaf,
       needsVisualTraversal, aOptions.contains(PeekOffsetOption::StopAtScroller),
       followOofs,
       false  // aSkipPopupChecks
@@ -9669,7 +9669,7 @@ nsIFrame::SelectablePeekReport nsIFrame::GetFrameFromDirection(
       }
     }
 
-    traversedFrame = frameTraversal->Traverse(aDirection == eDirNext);
+    traversedFrame = frameIterator->Traverse(aDirection == eDirNext);
     if (!traversedFrame) {
       return result;
     }
