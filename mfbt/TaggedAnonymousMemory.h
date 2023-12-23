@@ -55,8 +55,6 @@ MFBT_API void* MozTaggedAnonymousMmap(void* aAddr, size_t aLength, int aProt,
                                       int aFlags, int aFd, off_t aOffset,
                                       const char* aTag);
 
-MFBT_API int MozTaggedMemoryIsSupported(void);
-
 #    ifdef __cplusplus
 }  // extern "C"
 #    endif
@@ -76,8 +74,6 @@ static inline void* MozTaggedAnonymousMmap(void* aAddr, size_t aLength,
   return mmap(aAddr, aLength, aProt, aFlags, aFd, aOffset);
 #    endif
 }
-
-static inline int MozTaggedMemoryIsSupported(void) { return 0; }
 
 #  endif  // XP_LINUX
 
