@@ -6,6 +6,7 @@
 
 #include "nsFrameTraversal.h"
 
+#include "mozilla/Assertions.h"
 #include "nsCOMPtr.h"
 #include "nsGkAtoms.h"
 
@@ -19,59 +20,18 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-// Bidi visual iterator
-class nsVisualIterator : public nsFrameIterator {
- public:
-  nsVisualIterator(nsPresContext* aPresContext, nsIFrame* aStart, Type aType,
-                   bool aLockInScrollView, bool aFollowOOFs,
-                   bool aSkipPopupChecks, nsIFrame* aLimiter)
-      : nsFrameIterator(aPresContext, aStart, aType, aLockInScrollView,
-                        aFollowOOFs, aSkipPopupChecks, aLimiter) {}
-
- protected:
-  nsIFrame* GetFirstChildInner(nsIFrame* aFrame) override;
-  nsIFrame* GetLastChildInner(nsIFrame* aFrame) override;
-
-  nsIFrame* GetNextSiblingInner(nsIFrame* aFrame) override;
-  nsIFrame* GetPrevSiblingInner(nsIFrame* aFrame) override;
-};
-
-/************IMPLEMENTATIONS**************/
-
-// static
-already_AddRefed<nsFrameIterator> nsFrameIterator::Create(
-    nsPresContext* aPresContext, nsIFrame* aStart, Type aType, bool aVisual,
-    bool aLockInScrollView, bool aFollowOOFs, bool aSkipPopupChecks,
-    nsIFrame* aLimiter) {
-  MOZ_ASSERT(aStart);
-
-  if (aFollowOOFs) {
-    aStart = nsPlaceholderFrame::GetRealFrameFor(aStart);
-  }
-
-  RefPtr<nsFrameIterator> iterator;
-  if (aVisual) {
-    iterator =
-        new nsVisualIterator(aPresContext, aStart, aType, aLockInScrollView,
-                             aFollowOOFs, aSkipPopupChecks, aLimiter);
-  } else {
-    iterator =
-        new nsFrameIterator(aPresContext, aStart, aType, aLockInScrollView,
-                            aFollowOOFs, aSkipPopupChecks, aLimiter);
-  }
-  return iterator.forget();
-}
-
 nsFrameIterator::nsFrameIterator(nsPresContext* aPresContext, nsIFrame* aStart,
-                                 Type aType, bool aLockInScrollView,
-                                 bool aFollowOOFs, bool aSkipPopupChecks,
-                                 nsIFrame* aLimiter)
+                                 Type aType, bool aVisual,
+                                 bool aLockInScrollView, bool aFollowOOFs,
+                                 bool aSkipPopupChecks, nsIFrame* aLimiter)
     : mPresContext(aPresContext),
       mLockScroll(aLockInScrollView),
       mFollowOOFs(aFollowOOFs),
       mSkipPopupChecks(aSkipPopupChecks),
+      mVisual(aVisual),
       mType(aType),
-      mStart(aStart),
+      mStart(aFollowOOFs ? nsPlaceholderFrame::GetRealFrameFor(aStart)
+                         : aStart),
       mCurrent(aStart),
       mLast(aStart),
       mLimiter(aLimiter),
@@ -294,19 +254,31 @@ nsIFrame* nsFrameIterator::GetPrevSibling(nsIFrame* aFrame) {
 }
 
 nsIFrame* nsFrameIterator::GetFirstChildInner(nsIFrame* aFrame) {
-  return aFrame->PrincipalChildList().FirstChild();
+  return mVisual ? aFrame->PrincipalChildList().GetNextVisualFor(nullptr)
+                 : aFrame->PrincipalChildList().FirstChild();
 }
 
 nsIFrame* nsFrameIterator::GetLastChildInner(nsIFrame* aFrame) {
-  return aFrame->PrincipalChildList().LastChild();
+  return mVisual ? aFrame->PrincipalChildList().GetPrevVisualFor(nullptr)
+                 : aFrame->PrincipalChildList().LastChild();
 }
 
 nsIFrame* nsFrameIterator::GetNextSiblingInner(nsIFrame* aFrame) {
-  return aFrame->GetNextSibling();
+  if (!mVisual) {
+    return aFrame->GetNextSibling();
+  }
+  nsIFrame* parent = GetParentFrame(aFrame);
+  return parent ? parent->PrincipalChildList().GetNextVisualFor(aFrame)
+                : nullptr;
 }
 
 nsIFrame* nsFrameIterator::GetPrevSiblingInner(nsIFrame* aFrame) {
-  return aFrame->GetPrevSibling();
+  if (!mVisual) {
+    return aFrame->GetPrevSibling();
+  }
+  nsIFrame* parent = GetParentFrame(aFrame);
+  return parent ? parent->PrincipalChildList().GetPrevVisualFor(aFrame)
+                : nullptr;
 }
 
 nsIFrame* nsFrameIterator::GetPlaceholderFrame(nsIFrame* aFrame) {
@@ -333,26 +305,4 @@ bool nsFrameIterator::IsInvokerOpenPopoverFrame(nsIFrame* aFrame) {
     }
   }
   return false;
-}
-
-// nsVisualIterator implementation
-
-nsIFrame* nsVisualIterator::GetFirstChildInner(nsIFrame* aFrame) {
-  return aFrame->PrincipalChildList().GetNextVisualFor(nullptr);
-}
-
-nsIFrame* nsVisualIterator::GetLastChildInner(nsIFrame* aFrame) {
-  return aFrame->PrincipalChildList().GetPrevVisualFor(nullptr);
-}
-
-nsIFrame* nsVisualIterator::GetNextSiblingInner(nsIFrame* aFrame) {
-  nsIFrame* parent = GetParentFrame(aFrame);
-  if (!parent) return nullptr;
-  return parent->PrincipalChildList().GetNextVisualFor(aFrame);
-}
-
-nsIFrame* nsVisualIterator::GetPrevSiblingInner(nsIFrame* aFrame) {
-  nsIFrame* parent = GetParentFrame(aFrame);
-  if (!parent) return nullptr;
-  return parent->PrincipalChildList().GetPrevVisualFor(aFrame);
 }
