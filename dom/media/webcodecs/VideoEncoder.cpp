@@ -586,43 +586,29 @@ RefPtr<EncodedVideoChunk> VideoEncoder::EncodedDataToOutputType(
   return encodedVideoChunk;
 }
 
-VideoDecoderConfig VideoEncoder::EncoderConfigToDecoderConfig(
+VideoDecoderConfigInternal VideoEncoder::EncoderConfigToDecoderConfig(
     nsIGlobalObject* aGlobal, const RefPtr<MediaRawData>& aRawData,
     const VideoEncoderConfigInternal& mOutputConfig) const {
-  VideoDecoderConfig decoderConfig;
-  decoderConfig.mCodec = mOutputConfig.mCodec;
-  decoderConfig.mCodedWidth.Construct(mOutputConfig.mWidth);
-  decoderConfig.mCodedHeight.Construct(mOutputConfig.mHeight);
-  if (mOutputConfig.mDisplayWidth.isSome()) {
-    MOZ_ASSERT(mOutputConfig.mDisplayHeight.isSome());
-    decoderConfig.mDisplayAspectWidth.Construct(
-        mOutputConfig.mDisplayWidth.value());
-    decoderConfig.mDisplayAspectHeight.Construct(
-        mOutputConfig.mDisplayHeight.value());
-  }
-
   // Colorspace is mandatory when outputing a decoder config after encode
-  VideoColorSpaceInit init;
-  init.mFullRange = false;
-  init.mMatrix = VideoMatrixCoefficients::Bt709;
-  init.mPrimaries = VideoColorPrimaries::Bt709;
-  init.mTransfer = VideoTransferCharacteristics::Bt709;
-  decoderConfig.mColorSpace.Construct(init);
+  VideoColorSpaceInternal init;
+  init.mFullRange.emplace(false);
+  init.mMatrix.emplace(VideoMatrixCoefficients::Bt709);
+  init.mPrimaries.emplace(VideoColorPrimaries::Bt709);
+  init.mTransfer.emplace(VideoTransferCharacteristics::Bt709);
 
-  if (aRawData->mExtraData) {
-    auto& abov = decoderConfig.mDescription.Construct();
-    AutoEntryScript aes(aGlobal, "EncoderConfigToDecoderConfig");
-    size_t lengthBytes = aRawData->mExtraData->Length();
-    UniquePtr<uint8_t[], JS::FreePolicy> extradata(new uint8_t[lengthBytes]);
-    PodCopy(extradata.get(), aRawData->mExtraData->Elements(), lengthBytes);
-    JS::Rooted<JSObject*> description(
-        aes.cx(), JS::NewArrayBufferWithContents(aes.cx(), lengthBytes,
-                                                 std::move(extradata)));
-    JS::Rooted<JS::Value> value(aes.cx(), JS::ObjectValue(*description));
-    DebugOnly<bool> rv = abov.Init(aes.cx(), value);
-  }
-
-  return decoderConfig;
+  return VideoDecoderConfigInternal(
+      mOutputConfig.mCodec,        /* aCodec */
+      Some(mOutputConfig.mHeight), /* aCodedHeight */
+      Some(mOutputConfig.mWidth),  /* aCodedWidth */
+      Some(init),                  /* aColorSpace */
+      aRawData->mExtraData && !aRawData->mExtraData->IsEmpty()
+          ? Some(aRawData->mExtraData)
+          : Nothing(),                               /* aDescription*/
+      Maybe<uint32_t>(mOutputConfig.mDisplayHeight), /* aDisplayAspectHeight*/
+      Maybe<uint32_t>(mOutputConfig.mDisplayWidth),  /* aDisplayAspectWidth */
+      mOutputConfig.mHardwareAcceleration,           /* aHardwareAcceleration */
+      Nothing()                                      /*  aOptimizeForLatency */
+  );
 }
 
 #undef LOG

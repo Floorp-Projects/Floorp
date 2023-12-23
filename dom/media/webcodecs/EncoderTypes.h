@@ -77,7 +77,7 @@ class VideoEncoderTraits {
   using ConfigTypeInternal = VideoEncoderConfigInternal;
   using InputType = dom::VideoFrame;
   using InputTypeInternal = mozilla::VideoData;
-  using OutputConfigType = mozilla::dom::VideoDecoderConfig;
+  using OutputConfigType = mozilla::dom::VideoDecoderConfigInternal;
   using OutputType = EncodedVideoChunk;
   using OutputCallbackType = EncodedVideoChunkOutputCallback;
   using MetadataType = EncodedVideoChunkMetadata;
