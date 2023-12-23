@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifdef ANDROID
+#ifdef XP_LINUX
 
 #  include "mozilla/TaggedAnonymousMemory.h"
 
@@ -90,4 +90,4 @@ void* MozTaggedAnonymousMmap(void* aAddr, size_t aLength, int aProt, int aFlags,
   return mapped;
 }
 
-#endif  // ANDROID
+#endif  // XP_LINUX
