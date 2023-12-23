@@ -116,6 +116,8 @@ class CanvasDrawEventRecorder final : public gfx::DrawEventRecorderPrivate,
 
   void DropFreeBuffers();
 
+  void ClearProcessedExternalSurfaces();
+
  protected:
   gfx::ContiguousBuffer& GetContiguousBuffer(size_t aSize) final;
 

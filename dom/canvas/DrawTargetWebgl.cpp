@@ -297,10 +297,10 @@ void SharedContextWebgl::ExitTlsScope() {
 // Remove any SourceSurface user data associated with this TextureHandle.
 inline void SharedContextWebgl::UnlinkSurfaceTexture(
     const RefPtr<TextureHandle>& aHandle) {
-  if (SourceSurface* surface = aHandle->GetSurface()) {
+  if (RefPtr<SourceSurface> surface = aHandle->GetSurface()) {
     // Ensure any WebGL snapshot textures get unlinked.
     if (surface->GetType() == SurfaceType::WEBGL) {
-      static_cast<SourceSurfaceWebgl*>(surface)->OnUnlinkTexture(this);
+      static_cast<SourceSurfaceWebgl*>(surface.get())->OnUnlinkTexture(this);
     }
     surface->RemoveUserData(aHandle->IsShadow() ? &mShadowTextureKey
                                                 : &mTextureHandleKey);
@@ -1701,12 +1701,6 @@ static inline bool SupportsLayering(const DrawOptions& aOptions) {
   }
 }
 
-// When a texture handle is no longer referenced, it must mark itself unused
-// by unlinking its owning surface.
-static void ReleaseTextureHandle(void* aPtr) {
-  static_cast<TextureHandle*>(aPtr)->SetSurface(nullptr);
-}
-
 bool DrawTargetWebgl::DrawRect(const Rect& aRect, const Pattern& aPattern,
                                const DrawOptions& aOptions,
                                Maybe<DeviceColor> aMaskColor,
@@ -2369,7 +2363,7 @@ bool SharedContextWebgl::DrawRectAccel(
         } else {
           handle->SetSurface(surfacePattern.mSurface);
           surfacePattern.mSurface->AddUserData(&mTextureHandleKey, handle.get(),
-                                               ReleaseTextureHandle);
+                                               nullptr);
         }
       }
 

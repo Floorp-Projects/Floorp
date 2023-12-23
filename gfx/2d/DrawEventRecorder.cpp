@@ -25,7 +25,7 @@ void DrawEventRecorderPrivate::StoreExternalSurfaceRecording(
   NS_ASSERT_OWNINGTHREAD(DrawEventRecorderPrivate);
 
   RecordEvent(RecordedExternalSurfaceCreation(aSurface, aKey));
-  mExternalSurfaces.push_back(aSurface);
+  mExternalSurfaces.push_back({aSurface});
 }
 
 void DrawEventRecorderPrivate::StoreSourceSurfaceRecording(

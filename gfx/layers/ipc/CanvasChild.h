@@ -64,16 +64,6 @@ class CanvasChild final : public PCanvasChild, public SupportsWeakPtr {
   void Destroy();
 
   /**
-   * Called when a RecordedTextureData is write locked.
-   */
-  void OnTextureWriteLock();
-
-  /**
-   * Called when a RecordedTextureData is forwarded to the compositor.
-   */
-  void OnTextureForwarded();
-
-  /**
    * @returns true if we should be caching data surfaces in the GPU process.
    */
   bool ShouldCacheDataSurface() const {
@@ -173,14 +163,12 @@ class CanvasChild final : public PCanvasChild, public SupportsWeakPtr {
   bool mDataSurfaceShmemAvailable = false;
   int64_t mLastWriteLockCheckpoint = 0;
   uint32_t mTransactionsSinceGetDataSurface = kCacheDataSurfaceThreshold;
-  std::vector<RefPtr<gfx::SourceSurface>> mLastTransactionExternalSurfaces;
   struct TextureInfo {
     RefPtr<mozilla::ipc::SharedMemoryBasic> mSnapshotShmem;
     bool mRequiresRefresh = false;
   };
   std::unordered_map<int64_t, TextureInfo> mTextureInfo;
   bool mIsInTransaction = false;
-  bool mHasOutstandingWriteLock = false;
   bool mDormant = false;
 };
 

@@ -289,17 +289,17 @@ Maybe<BlobImageKeyData> BlobSurfaceProvider::RecordDrawing(
     return Nothing();
   }
 
-  std::vector<RefPtr<SourceSurface>> externalSurfaces;
+  DrawEventRecorderPrivate::ExternalSurfacesHolder externalSurfaces;
   recorder->TakeExternalSurfaces(externalSurfaces);
 
-  for (auto& surface : externalSurfaces) {
+  for (auto& entry : externalSurfaces) {
     // While we don't use the image key with the surface, because the blob image
     // renderer doesn't have easy access to the resource set, we still want to
     // ensure one is generated. That will ensure the surface remains alive until
     // at least the last epoch which the blob image could be used in.
     wr::ImageKey key = {};
-    DebugOnly<nsresult> rv =
-        SharedSurfacesChild::Share(surface, rootManager, aResources, key);
+    DebugOnly<nsresult> rv = SharedSurfacesChild::Share(
+        entry.mSurface, rootManager, aResources, key);
     MOZ_ASSERT(rv.value != NS_ERROR_NOT_IMPLEMENTED);
   }
 

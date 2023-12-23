@@ -202,8 +202,14 @@ class TextureHandle : public RefCounted<TextureHandle>,
   bool IsValid() const { return mValid; }
   void Invalidate() { mValid = false; }
 
-  void SetSurface(SourceSurface* aSurface) { mSurface = aSurface; }
-  SourceSurface* GetSurface() const { return mSurface; }
+  void ClearSurface() { mSurface = nullptr; }
+  void SetSurface(const RefPtr<SourceSurface>& aSurface) {
+    mSurface = aSurface;
+  }
+  already_AddRefed<SourceSurface> GetSurface() const {
+    RefPtr<SourceSurface> surface(mSurface);
+    return surface.forget();
+  }
 
   float GetSigma() const { return mSigma; }
   void SetSigma(float aSigma) { mSigma = aSigma; }
@@ -222,14 +228,14 @@ class TextureHandle : public RefCounted<TextureHandle>,
 
   // Note as used if there is corresponding surface or cache entry.
   bool IsUsed() const {
-    return mSurface || (mCacheEntry && mCacheEntry->IsValid());
+    return !mSurface.IsDead() || (mCacheEntry && mCacheEntry->IsValid());
   }
 
  private:
   bool mValid = true;
   // If applicable, weak pointer to the SourceSurface that is linked to this
   // TextureHandle.
-  SourceSurface* mSurface = nullptr;
+  ThreadSafeWeakPtr<SourceSurface> mSurface;
   // If this TextureHandle stores a cached shadow, then we need to remember the
   // blur sigma used to produce the shadow.
   float mSigma = -1.0f;
