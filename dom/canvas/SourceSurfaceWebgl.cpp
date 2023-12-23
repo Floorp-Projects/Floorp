@@ -28,7 +28,7 @@ SourceSurfaceWebgl::SourceSurfaceWebgl(
 SourceSurfaceWebgl::~SourceSurfaceWebgl() {
   if (mHandle) {
     // Signal that the texture handle is not being used now.
-    mHandle->SetSurface(nullptr);
+    mHandle->ClearSurface();
   }
 }
 

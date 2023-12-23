@@ -78,16 +78,12 @@ bool RecordedTextureData::Lock(OpenMode aMode) {
     }
 
     // We lock the TextureData when we create it to get the remote DrawTarget.
-    mCanvasChild->OnTextureWriteLock();
     mLockedMode = aMode;
     return true;
   }
 
   mCanvasChild->RecordEvent(RecordedTextureLock(
       mTextureId, aMode, mLastRemoteTextureId, obsoleteRemoteTextureId));
-  if (aMode & OpenMode::OPEN_WRITE) {
-    mCanvasChild->OnTextureWriteLock();
-  }
   mLockedMode = aMode;
   return true;
 }
@@ -165,7 +161,8 @@ bool RecordedTextureData::Serialize(SurfaceDescriptor& aDescriptor) {
 }
 
 void RecordedTextureData::OnForwardedToHost() {
-  mCanvasChild->OnTextureForwarded();
+  // Compositing with RecordedTextureData requires RemoteTextureMap.
+  MOZ_CRASH("OnForwardedToHost not supported!");
 }
 
 TextureFlags RecordedTextureData::GetTextureFlags() const {

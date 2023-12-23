@@ -238,33 +238,6 @@ void CanvasChild::Destroy() {
   }
 }
 
-void CanvasChild::OnTextureWriteLock() {
-  NS_ASSERT_OWNINGTHREAD(CanvasChild);
-
-  mHasOutstandingWriteLock = true;
-  mLastWriteLockCheckpoint = mRecorder->CreateCheckpoint();
-}
-
-void CanvasChild::OnTextureForwarded() {
-  NS_ASSERT_OWNINGTHREAD(CanvasChild);
-
-  if (mHasOutstandingWriteLock) {
-    mRecorder->RecordEvent(RecordedCanvasFlush());
-    if (!mRecorder->WaitForCheckpoint(mLastWriteLockCheckpoint)) {
-      gfxWarning() << "Timed out waiting for last write lock to be processed.";
-    }
-
-    mHasOutstandingWriteLock = false;
-  }
-
-  // We hold onto the last transaction's external surfaces until we have waited
-  // for the write locks in this transaction. This means we know that the
-  // surfaces have been picked up in the canvas threads and there is no race
-  // with them being removed from SharedSurfacesParent. Note this releases the
-  // current contents of mLastTransactionExternalSurfaces.
-  mRecorder->TakeExternalSurfaces(mLastTransactionExternalSurfaces);
-}
-
 bool CanvasChild::EnsureBeginTransaction() {
   NS_ASSERT_OWNINGTHREAD(CanvasChild);
 

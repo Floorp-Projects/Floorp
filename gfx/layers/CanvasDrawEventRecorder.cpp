@@ -116,6 +116,7 @@ int64_t CanvasDrawEventRecorder::CreateCheckpoint() {
   NS_ASSERT_OWNINGTHREAD(CanvasDrawEventRecorder);
   int64_t checkpoint = mHeader->eventCount;
   RecordEvent(RecordedCheckpoint());
+  ClearProcessedExternalSurfaces();
   return checkpoint;
 }
 
@@ -247,6 +248,8 @@ void CanvasDrawEventRecorder::DropFreeBuffers() {
     mCurrentBuffer = CanvasBuffer(std::move(mRecycledBuffers.front().shmem));
     mRecycledBuffers.pop();
   }
+
+  ClearProcessedExternalSurfaces();
 }
 
 void CanvasDrawEventRecorder::IncrementEventCount() {
@@ -307,11 +310,21 @@ void CanvasDrawEventRecorder::StoreSourceSurfaceRecording(
     nsresult rv = layers::SharedSurfacesChild::Share(aSurface, extId);
     if (NS_SUCCEEDED(rv)) {
       StoreExternalSurfaceRecording(aSurface, wr::AsUint64(extId));
+      mExternalSurfaces.back().mEventCount = mHeader->eventCount;
       return;
     }
   }
 
   DrawEventRecorderPrivate::StoreSourceSurfaceRecording(aSurface, aReason);
+}
+
+void CanvasDrawEventRecorder::ClearProcessedExternalSurfaces() {
+  while (!mExternalSurfaces.empty()) {
+    if (mExternalSurfaces.front().mEventCount > mHeader->processedCount) {
+      break;
+    }
+    mExternalSurfaces.pop_front();
+  }
 }
 
 }  // namespace layers

@@ -10,6 +10,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/SVGImageContext.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/gfx/DrawEventRecorder.h"
 #include "mozilla/layers/WebRenderLayerManager.h"
 #include "ImageRegion.h"
 #include "ISurfaceProvider.h"
@@ -21,10 +22,10 @@ namespace image {
 
 class BlobImageKeyData final {
  public:
-  BlobImageKeyData(layers::WebRenderLayerManager* aManager,
-                   const wr::BlobImageKey& aBlobKey,
-                   std::vector<RefPtr<gfx::ScaledFont>>&& aScaledFonts,
-                   std::vector<RefPtr<gfx::SourceSurface>>&& aExternalSurfaces)
+  BlobImageKeyData(
+      layers::WebRenderLayerManager* aManager, const wr::BlobImageKey& aBlobKey,
+      std::vector<RefPtr<gfx::ScaledFont>>&& aScaledFonts,
+      gfx::DrawEventRecorderPrivate::ExternalSurfacesHolder&& aExternalSurfaces)
       : mManager(aManager),
         mBlobKey(aBlobKey),
         mScaledFonts(std::move(aScaledFonts)),
@@ -53,7 +54,7 @@ class BlobImageKeyData final {
   RefPtr<layers::WebRenderLayerManager> mManager;
   wr::BlobImageKey mBlobKey;
   std::vector<RefPtr<gfx::ScaledFont>> mScaledFonts;
-  std::vector<RefPtr<gfx::SourceSurface>> mExternalSurfaces;
+  gfx::DrawEventRecorderPrivate::ExternalSurfacesHolder mExternalSurfaces;
   bool mDirty;
 };
 
