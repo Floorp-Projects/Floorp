@@ -112,6 +112,9 @@ unsigned int nsMenuUtilsX::MacModifiersForGeckoModifiers(
 }
 
 nsMenuBarX* nsMenuUtilsX::GetHiddenWindowMenuBar() {
+  if (gfxPlatform::IsHeadless()) {
+    return nullptr;
+  }
   nsIWidget* hiddenWindowWidgetNoCOMPtr = nsCocoaUtils::GetHiddenWindowWidget();
   if (hiddenWindowWidgetNoCOMPtr) {
     return static_cast<nsCocoaWindow*>(hiddenWindowWidgetNoCOMPtr)
