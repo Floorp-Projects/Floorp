@@ -305,6 +305,14 @@ void EncoderTemplate<EncoderType>::OutputEncodedData(
   MOZ_ASSERT(mState == CodecState::Configured);
   MOZ_ASSERT(mActiveConfig);
 
+  // Get JSContext for RootedDictionary.
+  // The EncoderType::MetadataType, VideoDecoderConfig, and VideoColorSpaceInit
+  // below are rooted to work around the JS hazard issues.
+  AutoJSAPI jsapi;
+  DebugOnly<bool> ok =
+      jsapi.Init(GetParentObject());  // TODO: check returned value?
+  JSContext* cx = jsapi.cx();
+
   RefPtr<typename EncoderType::OutputCallbackType> cb(mOutputCallback);
   for (auto& data : aData) {
     // It's possible to have reset() called in between this task having been
@@ -317,15 +325,69 @@ void EncoderTemplate<EncoderType>::OutputEncodedData(
     }
     RefPtr<typename EncoderType::OutputType> encodedData =
         EncodedDataToOutputType(GetParentObject(), data);
-    typename EncoderType::MetadataType metadata;
+
+    RootedDictionary<typename EncoderType::MetadataType> metadata(cx);
     if (mOutputNewDecoderConfig) {
-      metadata.mDecoderConfig.Construct(EncoderConfigToDecoderConfig(
-          GetParentObject(), data, *mActiveConfig));
+      VideoDecoderConfigInternal decoderConfigInternal =
+          EncoderConfigToDecoderConfig(GetParentObject(), data, *mActiveConfig);
+
+      // Convert VideoDecoderConfigInternal to VideoDecoderConfig
+      RootedDictionary<VideoDecoderConfig> decoderConfig(cx);
+      decoderConfig.mCodec = decoderConfigInternal.mCodec;
+      if (decoderConfigInternal.mCodedHeight) {
+        decoderConfig.mCodedHeight.Construct(
+            decoderConfigInternal.mCodedHeight.value());
+      }
+      if (decoderConfigInternal.mCodedWidth) {
+        decoderConfig.mCodedWidth.Construct(
+            decoderConfigInternal.mCodedWidth.value());
+      }
+      if (decoderConfigInternal.mColorSpace) {
+        RootedDictionary<VideoColorSpaceInit> colorSpace(cx);
+        colorSpace.mFullRange =
+            MaybeToNullable(decoderConfigInternal.mColorSpace->mFullRange);
+        colorSpace.mMatrix =
+            MaybeToNullable(decoderConfigInternal.mColorSpace->mMatrix);
+        colorSpace.mPrimaries =
+            MaybeToNullable(decoderConfigInternal.mColorSpace->mPrimaries);
+        colorSpace.mTransfer =
+            MaybeToNullable(decoderConfigInternal.mColorSpace->mTransfer);
+        decoderConfig.mColorSpace.Construct(std::move(colorSpace));
+      }
+      if (decoderConfigInternal.mDescription &&
+          !decoderConfigInternal.mDescription.value()->IsEmpty()) {
+        auto& abov = decoderConfig.mDescription.Construct();
+        AutoEntryScript aes(GetParentObject(), "EncoderConfigToDecoderConfig");
+        size_t lengthBytes =
+            decoderConfigInternal.mDescription.value()->Length();
+        UniquePtr<uint8_t[], JS::FreePolicy> extradata(
+            new uint8_t[lengthBytes]);
+        PodCopy(extradata.get(),
+                decoderConfigInternal.mDescription.value()->Elements(),
+                lengthBytes);
+        JS::Rooted<JSObject*> description(
+            aes.cx(), JS::NewArrayBufferWithContents(aes.cx(), lengthBytes,
+                                                     std::move(extradata)));
+        JS::Rooted<JS::Value> value(aes.cx(), JS::ObjectValue(*description));
+        DebugOnly<bool> rv = abov.Init(aes.cx(), value);
+      }
+      if (decoderConfigInternal.mDisplayAspectHeight) {
+        decoderConfig.mDisplayAspectHeight.Construct(
+            decoderConfigInternal.mDisplayAspectHeight.value());
+      }
+      if (decoderConfigInternal.mDisplayAspectWidth) {
+        decoderConfig.mDisplayAspectWidth.Construct(
+            decoderConfigInternal.mDisplayAspectWidth.value());
+      }
+      if (decoderConfigInternal.mOptimizeForLatency) {
+        decoderConfig.mOptimizeForLatency.Construct(
+            decoderConfigInternal.mOptimizeForLatency.value());
+      }
+
+      metadata.mDecoderConfig.Construct(std::move(decoderConfig));
       mOutputNewDecoderConfig = false;
       LOGE("New config passed to output callback: %s",
-           NS_ConvertUTF16toUTF8(ConfigToString(EncoderConfigToDecoderConfig(
-                                     GetParentObject(), data, *mActiveConfig)))
-               .get());
+           NS_ConvertUTF16toUTF8(decoderConfigInternal.ToString()).get());
     }
     LOG("EncoderTemplate:: output callback (ts: % " PRId64 " ), %s",
         encodedData->Timestamp(),
