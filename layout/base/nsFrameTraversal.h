@@ -8,9 +8,10 @@
 #define NSFRAMETRAVERSAL_H
 
 #include "mozilla/Attributes.h"
-#include "nsIFrameTraversal.h"
+#include "nsISupportsImpl.h"
 
 class nsIFrame;
+class nsPresContext;
 
 class nsFrameIterator {
   NS_INLINE_DECL_REFCOUNTING(nsFrameIterator)
@@ -33,11 +34,23 @@ class nsFrameIterator {
     return CurrentItem();
   };
 
-  nsFrameIterator(nsPresContext* aPresContext, nsIFrame* aStart,
-                  nsIteratorType aType, bool aLockScroll, bool aFollowOOFs,
-                  bool aSkipPopupChecks, nsIFrame* aLimiter);
+  enum class Type : uint8_t {
+    // only leaf nodes
+    Leaf,
+    // "open tag" order
+    PreOrder,
+    // "close tag" order
+    PostOrder,
+  };
+  static already_AddRefed<nsFrameIterator> Create(
+      nsPresContext* aPresContext, nsIFrame* aStart, Type aType, bool aVisual,
+      bool aLockInScrollView, bool aFollowOOFs, bool aSkipPopupChecks,
+      nsIFrame* aLimiter = nullptr);
 
  protected:
+  nsFrameIterator(nsPresContext* aPresContext, nsIFrame* aStart, Type aType,
+                  bool aLockInScrollView, bool aFollowOOFs,
+                  bool aSkipPopupChecks, nsIFrame* aLimiter);
   virtual ~nsFrameIterator() = default;
 
   void SetCurrent(nsIFrame* aFrame) { mCurrent = aFrame; }
@@ -102,7 +115,7 @@ class nsFrameIterator {
   const bool mLockScroll;
   const bool mFollowOOFs;
   const bool mSkipPopupChecks;
-  const nsIteratorType mType;
+  const Type mType;
 
  private:
   nsIFrame* const mStart;
@@ -110,32 +123,6 @@ class nsFrameIterator {
   nsIFrame* mLast;  // the last one that was in current;
   nsIFrame* mLimiter;
   int8_t mOffEdge;  // 0= no -1 to far prev, 1 to far next;
-};
-
-nsresult NS_NewFrameTraversal(nsFrameIterator** aEnumerator,
-                              nsPresContext* aPresContext, nsIFrame* aStart,
-                              nsIteratorType aType, bool aVisual,
-                              bool aLockInScrollView, bool aFollowOOFs,
-                              bool aSkipPopupChecks,
-                              nsIFrame* aLimiter = nullptr);
-
-nsresult NS_CreateFrameTraversal(nsIFrameTraversal** aResult);
-
-class nsFrameTraversal final : public nsIFrameTraversal {
- public:
-  nsFrameTraversal();
-
-  NS_DECL_ISUPPORTS
-
-  NS_IMETHOD NewFrameTraversal(nsFrameIterator** aEnumerator,
-                               nsPresContext* aPresContext, nsIFrame* aStart,
-                               int32_t aType, bool aVisual,
-                               bool aLockInScrollView, bool aFollowOOFs,
-                               bool aSkipPopupChecks,
-                               nsIFrame* aLimiter = nullptr) override;
-
- protected:
-  virtual ~nsFrameTraversal();
 };
 
 #endif  // NSFRAMETRAVERSAL_H
