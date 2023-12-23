@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
-    <string name="mozac_tab_counter_open_tab_tray_single">1 abrir pestaña. Presiona para cambiar de pestaña.</string>
+    <string name="mozac_tab_counter_open_tab_tray_single">1 pestaña abierta. Toca para cambiar de pestaña.</string>
     <!-- Message announced to the user when tab tray is selected with multiple tabs -->
     <string name="mozac_tab_counter_open_tab_tray_plural">%1$s pestañas abiertas. Toca para cambiar de pestaña.</string>
     <!-- Browser menu button that creates a new tab -->

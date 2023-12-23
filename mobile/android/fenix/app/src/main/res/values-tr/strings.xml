@@ -2343,14 +2343,27 @@
     <!-- Automatic translation options preference screen -->
     <!-- Preference option for offering to translate. Radio button title text.-->
     <string name="automatic_translation_option_offer_to_translate_title_preference">Çevirmeyi öner (varsayılan)</string>
+    <!-- Preference option for offering to translate. Radio button summary text. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="automatic_translation_option_offer_to_translate_summary_preference">%1$s bu dildeki siteleri çevirmeyi önerecek.</string>
     <!-- Preference option for always translate. Radio button title text. -->
     <string name="automatic_translation_option_always_translate_title_preference">Her zaman çevir</string>
+    <!-- Preference option for always translate. Radio button summary text. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="automatic_translation_option_always_translate_summary_preference">Sayfa yüklendiğinde %1$s bu dili otomatik olarak çevirecek.</string>
     <!-- Preference option for never translate. Radio button title text.-->
     <string name="automatic_translation_option_never_translate_title_preference">Asla çevirme</string>
+
+    <!-- Preference option for never translate. Radio button summary text. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="automatic_translation_option_never_translate_summary_preference">%1$s bu dildeki siteleri çevirmeyi asla önermeyecek.</string>
 
     <!-- Never translate site preference screen -->
     <!-- Title of the never translate site preference screen that will appear on the toolbar.-->
     <string name="never_translate_site_toolbar_title_preference">Bu siteleri asla çevirme</string>
+    <!-- Content description (not visible, for screen readers etc.): For a never-translated site list item that is selected.
+             The first parameter is web site url (for example:"wikipedia.com") -->
+    <string name="never_translate_site_item_list_content_description_preference">%1$s sitesini kaldır</string>
+    <!-- The Delete site dialogue title will appear when the user clicks on a list item.
+             The first parameter is web site url (for example:"wikipedia.com") -->
+    <string name="never_translate_site_dialog_title_preference">%1$s silinsin mi?</string>
     <!-- The Delete site dialogue positive button will appear when the user clicks on a list item. The site will be deleted. -->
     <string name="never_translate_site_dialog_confirm_delete_preference">Sil</string>
 

@@ -75,7 +75,7 @@
     <!-- The author of an add-on. -->
     <string name="mozac_feature_addons_author">Ameskar</string>
     <!-- The authors of an add-on. -->
-    <string name="mozac_feature_addons_authors" moz:removedIn="120" tools:ignore="UnusedResources">Imeskaren</string>
+    <string name="mozac_feature_addons_authors" moz:removedIn="123" tools:ignore="UnusedResources">Imeskaren</string>
     <!-- The last date that the add-on was updated. -->
     <string name="mozac_feature_addons_last_updated">Aleqqem aneggaru</string>
     <!-- The developer website (Homepage) of the add-on. -->
@@ -114,8 +114,10 @@
     <string name="mozac_feature_addons_details">Talqayt</string>
     <!-- Displays a page with all the permissions of an add-on. -->
     <string name="mozac_feature_addons_permissions">Tisirag</string>
-    <!-- This is button that remove (uninstall an add-on). -->
+    <!-- This is a button to remove (i.e. uninstall) an add-on. -->
     <string name="mozac_feature_addons_remove">Kkes</string>
+    <!-- This is a button to report an add-on. -->
+    <string name="mozac_feature_addons_report">Aneqqis</string>
     <!-- This is the title of a dialog that asks the users if they to install or not an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_permissions_dialog_title">Rnu %1$s?</string>
     <!-- This is the title of a dialog that asks the users to grant optional permissions. %1$s is the add-on name. -->

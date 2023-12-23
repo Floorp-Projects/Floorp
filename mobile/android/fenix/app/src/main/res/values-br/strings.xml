@@ -310,14 +310,8 @@
     <string name="onboarding_home_enable_notifications_negative_button">Ket bremañ</string>
 
     <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
-    <!-- Title for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
-        Note: The word "Firefox" should NOT be translated -->
-    <string name="juno_onboarding_default_browser_title_nimbus" moz:removedIn="120" tools:ignore="UnusedResources">Lakait Firefox da vezañ ho merdeer dre ziouer</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_title_nimbus_2">Ho surentez a zo talvoudus deomp</string>
-    <!-- Description for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
-        Note: The word "Firefox" should NOT be translated -->
-    <string name="juno_onboarding_default_browser_description_nimbus" moz:removedIn="120" tools:ignore="UnusedResources">Firefox a lak an dud a-raok an arc’hant ha difenn a ra ho puhez prevez en ur stankañ an heulierien etre al lec’hiennoù. \n\nDeskit hiroc’h en hor evezhiadennoù a-fet buhez prevez.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
     <string name="juno_onboarding_default_browser_description_link_text" tools:ignore="UnusedResources">evezhiadennoù a-fet buhez prevez</string>
@@ -325,23 +319,13 @@
     <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">Lakaat da verdeer dre ziouer</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
     <string name="juno_onboarding_default_browser_negative_button" tools:ignore="UnusedResources">Ket bremañ</string>
-    <!-- Title for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_title" moz:removedIn="120" tools:ignore="UnusedResources">Tremenit deus ar pellgomz d’an urzhiataer hezoug hag ar c’hontrol</string>
-    <!-- Description for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_description" moz:removedIn="120" tools:ignore="UnusedResources">Adtapit ivinelloù ha gerioù-tremen diouzh ho trevnadoù all evit distreiñ e-lec’h ma oac’h.</string>
     <!-- Text for the button to sign in to sync on the device -->
     <string name="juno_onboarding_sign_in_positive_button" tools:ignore="UnusedResources">Kennaskañ</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
     <string name="juno_onboarding_sign_in_negative_button" tools:ignore="UnusedResources">Ket bremañ</string>
     <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
-    <string name="juno_onboarding_enable_notifications_title_nimbus" moz:removedIn="120" tools:ignore="UnusedResources">Gant ar rebuzadurioù e c’hallit ober muioc’h a draoù gant Firefox</string>
-    <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
-        Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_enable_notifications_title_nimbus_2">Gant ar rebuzadurioù e c’hallit chom suroc\'h gant Firefox</string>
-    <!-- Description for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
-       Note: The word "Firefox" should NOT be translated -->
-    <string name="juno_onboarding_enable_notifications_description_nimbus" moz:removedIn="120" tools:ignore="UnusedResources">Kasit ivinelloù etre ho trevnadoù, merit pellgargadurioù, lennit alioù evit tapout seizh gwellañ gwarez buhez prevez Firefox.</string>
     <!-- Text for the button to request notification permission on the device -->
     <string name="juno_onboarding_enable_notifications_positive_button" tools:ignore="UnusedResources">Gweredekaat ar rebuzadurioù</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
@@ -369,8 +353,6 @@
     <string name="preferences_category_about">A-zivout</string>
     <!-- Preference category for settings related to changing the default search engine -->
     <string name="preferences_category_select_default_search_engine">Dibabit unan</string>
-    <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
-    <string name="preferences_manage_search_shortcuts" moz:removedIn="120" tools:ignore="UnusedResources">Merañ ar berradennoù klask</string>
     <!-- Summary for preference for settings related to managing search shortcuts for the quick search menu -->
     <string name="preferences_manage_search_shortcuts_summary">Embann al luskerioù a c’haller gwelet el lañser klask</string>
     <!-- Preference category for settings related to managing search shortcuts for the quick search menu -->
@@ -381,8 +363,6 @@
     <string name="preferences_search">Klask</string>
     <!-- Preference for settings related to Search engines -->
     <string name="preferences_search_engines">Luskerioù klask</string>
-    <!-- Preference for settings related to Search address bar -->
-    <string name="preferences_search_address_bar" moz:removedIn="120" tools:ignore="UnusedResources">Barrenn chomlecʼhioù</string>
     <!-- Preference Category for settings to Firefox Suggest -->
     <string name="preference_search_address_bar_fx_suggest">Barrenn chomlec\'hioù - Alioù Firefox</string>
     <!-- Preference link to Learn more about Firefox Suggest -->
@@ -484,14 +464,10 @@
     <string name="errorpage_httpsonly_message_summary">Posupl eo ivez e vefec’h taget, avat. Ma kendalc’hit war al lec’hienn e rankfec’h chom hep lakaat titouroù kizidik. Ma kendalc’hit e vo ivez diweredekaet ar mod HTTPS-hepken war al lec’hienn pad ur mare.</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Haezadusted</string>
-    <!-- Preference to override the Firefox Account server -->
-    <string name="preferences_override_fxa_server" moz:RemovedIn="120" tools:ignore="UnusedResources">Dafariad kont Firefox personelaet</string>
     <!-- Preference to override the Mozilla account server -->
     <string name="preferences_override_account_server">Dafariad kont Mozilla personelaet</string>
     <!-- Preference to override the Sync token server -->
     <string name="preferences_override_sync_tokenserver">Dafariad Sync personelaet</string>
-    <!-- Toast shown after updating the FxA/Sync server override preferences -->
-    <string name="toast_override_fxa_sync_server_done" moz:RemovedIn="120" tools:ignore="UnusedResources">Dafariad kont Firefox/Sync kemmet. Kuitaet e vo an arload evit arloañ ar cʼhemmoù…</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Kont</string>
     <!-- Preference for changing where the toolbar is positioned -->
@@ -507,8 +483,6 @@
     <!-- Preference description for banner about signing in -->
     <string name="preferences_sign_in_description_2">Kennaskit evit goubredañ an ivinelloù, sinedoù, gerioù-tremen ha muioc’h c’hoazh.</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
-    <string name="preferences_account_default_name" moz:RemovedIn="120" tools:ignore="UnusedResources">Kont Firefox</string>
-    <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name_2">Kont Mozilla</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
     <string name="preferences_account_sync_error">Adkennaskit evit kendercʼhel gant ar goubredañ</string>
@@ -520,8 +494,6 @@
     <string name="preferences_data_collection">Dastum roadennoù</string>
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">Diveugañ a-bell dre USB</string>
-    <!-- Preference title for switch preference to show search engines -->
-    <string name="preferences_show_search_engines" moz:RemovedIn="120" tools:ignore="UnusedResources">Diskouez al luskerioù klask</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Diskouez kinnigoù ar cʼhlask</string>
     <!-- Preference title for switch preference to show voice search button -->
@@ -643,13 +615,6 @@
     <!-- Add-ons general availability nimbus message-->
     <!-- Title of the Nimbus message for add-ons general availability-->
     <string name="addon_ga_message_title" tools:ignore="UnusedResources">Askouezhioù nevez zo da gaout</string>
-
-    <!-- Add-on Installation from AMO-->
-    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
-    <string name="addon_not_supported_error" moz:removedIn="120" tools:ignore="UnusedResources">Ne vez skoret an enlugellad-mañ</string>
-
-    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is already installed -->
-    <string name="addon_already_installed" moz:removedIn="120" tools:ignore="UnusedResources">An enlugellad-mañ a zo bet staliet endeo</string>
 
     <!-- Add-on process crash dialog to user -->
     <!-- Title of a dialog shown to the user when enough errors have occurred with addons and they need to be temporarily disabled -->
@@ -1849,27 +1814,17 @@
     <string name="search_engine_add_custom_search_engine_button_content_description">Ouzhpennañ ul lusker enklask nevez</string>
     <!-- Title of the Edit search engine screen -->
     <string name="search_engine_edit_custom_search_engine_title">Embann al lusker klask</string>
-    <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
-    <string name="search_engine_add_button_content_description" moz:RemovedIn="120" tools:ignore="UnusedResources">Ouzhpennañ</string>
-    <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
-    <string name="search_engine_add_custom_search_engine_edit_button_content_description" moz:RemovedIn="120" tools:ignore="UnusedResources">Enrollañ</string>
     <!-- Text for the menu button to edit a search engine -->
     <string name="search_engine_edit">Embann</string>
     <!-- Text for the menu button to delete a search engine -->
     <string name="search_engine_delete">Dilemel</string>
 
-    <!-- Text for the button to create a custom search engine on the Add search engine screen -->
-    <string name="search_add_custom_engine_label_other" moz:RemovedIn="120" tools:ignore="UnusedResources">All</string>
     <!-- Label for the TextField in which user enters custom search engine name -->
     <string name="search_add_custom_engine_name_label">Anv</string>
-    <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
-    <string name="search_add_custom_engine_name_hint" moz:RemovedIn="120" tools:ignore="UnusedResources">Anv</string>
     <!-- Placeholder text shown in the Search Engine Name text field before a user enters text -->
     <string name="search_add_custom_engine_name_hint_2">Anv ar c’heflusker enklask</string>
     <!-- Label for the TextField in which user enters custom search engine URL -->
     <string name="search_add_custom_engine_url_label">URL ar chadenn glask</string>
-    <!-- Placeholder text shown in the Search String TextField before a user enters text -->
-    <string name="search_add_custom_engine_search_string_hint" moz:RemovedIn="120" tools:ignore="UnusedResources">Testenn glask da implij</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint_2">URL da implij evit ar c’hlask</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
@@ -2097,8 +2052,6 @@
 
     <!-- Review quality check feature-->
     <!-- Name for the review quality check feature used as title for the panel. -->
-    <string name="review_quality_check_feature_name" moz:RemovedIn="120" tools:ignore="UnusedResources">Gwirier alioù</string>
-    <!-- Name for the review quality check feature used as title for the panel. -->
     <string name="review_quality_check_feature_name_2">Gwirier alioù</string>
     <!-- Summary for grades A and B for review quality check adjusted grading. -->
     <string name="review_quality_check_grade_a_b_description">Alioù fizius</string>
@@ -2109,13 +2062,9 @@
     <!-- Text for title presenting the reliability of a product's reviews. -->
     <string name="review_quality_check_grade_title">Pegen fizius eo an alioù-se?</string>
     <!-- Description for a product's adjusted star rating. The text presents that the product's reviews which were evaluated as unreliable were removed from the adjusted rating. -->
-    <string name="review_quality_check_adjusted_rating_description">Alioù disfizius dilamet</string>
+    <string name="review_quality_check_adjusted_rating_description" moz:RemovedIn="122" tools:ignore="UnusedResources">Alioù disfizius dilamet</string>
     <!-- Title for section explaining how we analyze the reliability of a product's reviews. -->
     <string name="review_quality_check_explanation_title">Penaos e termenomp perzhded an alioù</string>
-    <!-- Description explaining grades A and B for review quality check adjusted grading. -->
-    <string name="review_quality_check_info_grade_info_AB_2" moz:RemovedIn="120" tools:ignore="UnusedResources">D’hor soñj e c’haller kaout fiziañs en alioù-se.</string>
-    <!-- Description explaining grades D and F for review quality check adjusted grading. -->
-    <string name="review_quality_check_info_grade_info_DF_2" moz:RemovedIn="120" tools:ignore="UnusedResources">Ni a soñj deomp ez eo fizius an alioù-se.</string>
     <!-- Text for learn more caption presenting a link with information about review quality. First parameter is for clickable text defined in review_quality_check_info_learn_more_link. -->
     <string name="review_quality_check_info_learn_more">Gouzout muioc’h diwar-benn %s.</string>
     <!-- Clickable text that links to review quality check SuMo page. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
@@ -2141,15 +2090,15 @@
     <!-- Title for warning card informing the user that the current product does not have enough reviews for a review analysis. -->
     <string name="review_quality_check_no_reviews_warning_title">N\'eus ket a-walc’h a alioù c\'hoazh</string>
     <!-- Title for warning card informing the user that the current product is currently not available. -->
-    <string name="review_quality_check_product_availability_warning_title" tools:ignore="UnusedResources">Dihegerz eo ar produ-mañ</string>
+    <string name="review_quality_check_product_availability_warning_title">Dihegerz eo ar produ-mañ</string>
     <!-- Title for warning card informing the user that the current product's re-analysis is still processing. -->
-    <string name="review_quality_check_reanalysis_in_progress_warning_title">O wiriañ perzhded an ali</string>
+    <string name="review_quality_check_reanalysis_in_progress_warning_title" moz:RemovedIn="122">O wiriañ perzhded an ali</string>
     <!-- Title for warning card informing the user that the current product's analysis is still processing. -->
-    <string name="review_quality_check_analysis_in_progress_warning_title">O wiriañ perzhded an ali</string>
+    <string name="review_quality_check_analysis_in_progress_warning_title" moz:RemovedIn="122">O wiriañ perzhded an ali</string>
     <!-- Text for body of warning card informing the user that the current product's analysis is still processing. -->
     <string name="review_quality_check_analysis_in_progress_warning_body">Gallout a ra padout tro-dro 60 eilenn.</string>
     <!-- Title for info card displayed after the user reports a product is back in stock. -->
-    <string name="review_quality_check_analysis_requested_info_title" tools:ignore="UnusedResources">Trugarez da vezañ danevellet!</string>
+    <string name="review_quality_check_analysis_requested_info_title">Trugarez da vezañ danevellet!</string>
     <!-- Title for info card displayed when the user review checker while on a product that Fakespot does not analyze (e.g. gift cards, music). -->
     <string name="review_quality_check_not_analyzable_info_title">N’hallomp ket gwiriañ an alioù-mañ</string>
     <!-- Title for info card displayed when another user reported the displayed product is back in stock. -->
@@ -2220,4 +2169,28 @@
     <string name="a11y_action_label_read_article">lenn ar pennad</string>
     <!-- Action label for links to the Firefox Pocket website. Talkback will append this to say "Double tap to open link to learn more". -->
     <string name="a11y_action_label_pocket_learn_more">digeriñ an ere da c’houzout hiroc’h</string>
-    </resources>
+
+    <!-- Translations feature-->
+
+    <!-- Content description (not visible, for screen readers etc.): For a never-translated site list item that is selected.
+             The first parameter is web site url (for example:"wikipedia.com") -->
+    <string name="never_translate_site_item_list_content_description_preference">Lemel %1$s</string>
+    <!-- The Delete site dialogue title will appear when the user clicks on a list item.
+             The first parameter is web site url (for example:"wikipedia.com") -->
+    <string name="never_translate_site_dialog_title_preference">Dilemel %1$s?</string>
+    <!-- The Delete site dialogue positive button will appear when the user clicks on a list item. The site will be deleted. -->
+    <string name="never_translate_site_dialog_confirm_delete_preference">Dilemel</string>
+    <!-- The Delete site dialogue negative button will appear when the user clicks on a list item. The dialog will be dismissed. -->
+    <string name="never_translate_site_dialog_cancel_preference">Nullañ</string>
+
+    <!-- Clickable text from the screen header that links to a website. -->
+    <string name="download_languages_header_learn_more_preference">Gouzout hiroc’h</string>
+    <!-- All languages list item. When the user presses this item, they can download or delete all languages. -->
+    <string name="download_language_all_languages_item_preference">An holl yezhoù</string>
+    <!-- Content description (not visible, for screen readers etc.): For a language list item that was downloaded, the user can now delete it. -->
+    <string name="download_languages_item_content_description_downloaded_state">Dilemel</string>
+    <!-- Content description (not visible, for screen readers etc.): For a language list item that was not downloaded. -->
+    <string name="download_languages_item_content_description_not_downloaded_state">Pellgargañ</string>
+    <!-- Content description (not visible, for screen readers etc.): For a language list item that is selected. -->
+    <string name="download_languages_item_content_description_selected_state">Diuzet</string>
+</resources>

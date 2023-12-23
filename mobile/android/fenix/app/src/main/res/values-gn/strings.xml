@@ -2382,9 +2382,29 @@
     <!-- Title of the automatic translation preference screen that will appear on the toolbar.-->
     <string name="automatic_translation_toolbar_title_preference">Ñe’ẽasa ijeheguíva</string>
 
+    <!-- Screen header presenting the automatic translation preference feature. It will appear under the toolbar. -->
+    <string name="automatic_translation_header_preference">Eiporavo ñe’ẽ eñangareko hag̃ua umi erohoryvéva “emoñe’ẽasameme” y “ani emoñe’ẽasa”.</string>
+
+    <!-- Automatic translation options preference screen -->
+    <!-- Preference option for offering to translate. Radio button title text.-->
+    <string name="automatic_translation_option_offer_to_translate_title_preference">Eikuave’ẽ ñe’ẽasa (ypyguáva)</string>
+    <!-- Preference option for offering to translate. Radio button summary text. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="automatic_translation_option_offer_to_translate_summary_preference">%1$s oikuave’ẽta tenda moñe’ẽasa ko ñe’ẽme.</string>
+    <!-- Preference option for always translate. Radio button title text. -->
+    <string name="automatic_translation_option_always_translate_title_preference">Emoñe’ẽasameme</string>
+    <!-- Preference option for always translate. Radio button summary text. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="automatic_translation_option_always_translate_summary_preference">%1$s omoñe’ẽasáta ko ñe’ẽ ijeheguiete henyhẽ vove pe kuatiarogue.</string>
     <!-- Preference option for never translate. Radio button title text.-->
     <string name="automatic_translation_option_never_translate_title_preference">Ani emoñe’ẽasa</string>
 
+    <!-- Preference option for never translate. Radio button summary text. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="automatic_translation_option_never_translate_summary_preference">%1$s noikuave’ẽmo’ãi araka’eve omoñe’ẽasávo tenda ko ñe’ẽme.</string>
+
+    <!-- Never translate site preference screen -->
+    <!-- Title of the never translate site preference screen that will appear on the toolbar.-->
+    <string name="never_translate_site_toolbar_title_preference">Araka’eve ani emoñe’ẽasa ko’ã tenda</string>
+    <!-- Screen header presenting the never translate site preference feature. It will appear under the toolbar. -->
+    <string name="never_translate_site_header_preference">Embojuaju hag̃ua tenda pyahu: eike ha eiporavo “Ani emoñe’ẽasa ko tenda” moñe’ẽasa poravorãme.</string>
     <!-- Content description (not visible, for screen readers etc.): For a never-translated site list item that is selected.
              The first parameter is web site url (for example:"wikipedia.com") -->
     <string name="never_translate_site_item_list_content_description_preference">Emboguete %1$s</string>
@@ -2399,6 +2419,8 @@
     <!-- Download languages preference screen -->
     <!-- Title of the download languages preference screen toolbar.-->
     <string name="download_languages_toolbar_title_preference">Emboguejy Ñe’ẽ</string>
+    <!-- Screen header presenting the download language preference feature. It will appear under the toolbar.The first parameter is "Learn More," a clickable text with a link. Talkback will append this to say "Double tap to open link to learn more". -->
+    <string name="download_languages_header_preference">Emboguejy ñe’ẽnguéra tuichaháicha emoñe’ẽasa pya’eve hag̃ua ha ñanduti’ỹre. %1$s</string>
     <!-- Clickable text from the screen header that links to a website. -->
     <string name="download_languages_header_learn_more_preference">Kuaave</string>
     <!-- The subhead of the download language preference screen will appear above the pivot language. -->

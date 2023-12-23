@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:tools="http://schemas.android.com/tools">
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://schemas.android.com/apk/res-auto">
     <!-- Description for privacy add-on permission. -->
     <string name="mozac_feature_addons_permissions_privacy_description">Leer y modificar ajustes de privacidad</string>
     <!-- Description for all_urls add-on permission. -->
@@ -72,8 +72,10 @@
     <string name="mozac_feature_addons_permissions_devtools_description">Ampliar las herramientas para desarrolladores para acceder a tus datos en las pestañas abiertas</string>
     <!-- The version on of add-on. -->
     <string name="mozac_feature_addons_version">Versión</string>
+    <!-- The author of an add-on. -->
+    <string name="mozac_feature_addons_author">Autor</string>
     <!-- The authors of an add-on. -->
-    <string name="mozac_feature_addons_authors">Autores</string>
+    <string name="mozac_feature_addons_authors" moz:removedIn="123" tools:ignore="UnusedResources">Autores</string>
     <!-- The last date that the add-on was updated. -->
     <string name="mozac_feature_addons_last_updated">Última actualización</string>
     <!-- The developer website (Homepage) of the add-on. -->
@@ -82,6 +84,8 @@
     <string name="mozac_feature_addons_learn_more">Saber más sobre permisos</string>
     <!-- The rating of the add-on. -->
     <string name="mozac_feature_addons_rating">Clasificación</string>
+    <!-- A link that points to the detail page of the add-on. -->
+    <string name="mozac_feature_addons_more_info_link">Más sobre este complemento</string>
     <!-- The settings of the add-on. -->
     <string name="mozac_feature_addons_settings">Ajustes</string>
     <!-- Indicates the add-on is enabled. -->
@@ -110,14 +114,24 @@
     <string name="mozac_feature_addons_details">Detalles</string>
     <!-- Displays a page with all the permissions of an add-on. -->
     <string name="mozac_feature_addons_permissions">Permisos</string>
-    <!-- This is button that remove (uninstall an add-on). -->
+    <!-- This is a button to remove (i.e. uninstall) an add-on. -->
     <string name="mozac_feature_addons_remove">Eliminar</string>
+    <!-- This is a button to report an add-on. -->
+    <string name="mozac_feature_addons_report">Reportar</string>
     <!-- This is the title of a dialog that asks the users if they to install or not an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_permissions_dialog_title">¿Agregar %1$s?</string>
+    <!-- This is the title of a dialog that asks the users to grant optional permissions. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_optional_permissions_dialog_title">%1$s solicita permisos adicionales.</string>
     <!-- This is the subtitle of a dialog that asks the users if they want to install or not an add-on, the subtitle lists the permissions that this add-on requires, the permissions will dynamically be listed after the ":". -->
     <string name="mozac_feature_addons_permissions_dialog_subtitle">Se requiere tu permiso para:</string>
+    <!-- This is the subtitle of a dialog that asks the users to grant optional permissions, the subtitle lists the permissions that this add-on requests, the permissions will dynamically be listed after the ":". -->
+    <string name="mozac_feature_addons_optional_permissions_dialog_subtitle">Quiere:</string>
     <!-- This is a button to add (install) an add-on . -->
     <string name="mozac_feature_addons_permissions_dialog_add">Agregar</string>
+    <!-- This is a button to allow the optional permissions requested by an add-on . -->
+    <string name="mozac_feature_addons_permissions_dialog_allow">Permitir</string>
+    <!-- This is a button to deny the optional permissions requested by an add-on . -->
+    <string name="mozac_feature_addons_permissions_dialog_deny">Denegar</string>
     <!-- This is a button to cancel the add-on installation . -->
     <string name="mozac_feature_addons_permissions_dialog_cancel">Cancelar</string>
     <!-- Accessibility content description to install add-on button. -->
@@ -132,6 +146,14 @@
     <string name="mozac_feature_addons_addons">Complementos</string>
     <!-- Label for add-ons sub menu item for add-ons manager-->
     <string name="mozac_feature_addons_addons_manager">Administrador de complementos</string>
+    <!-- The title of the "crash" notification in the add-ons manager -->
+    <string name="mozac_feature_addons_manager_notification_title_text">Los complementos están desactivados temporalmente</string>
+    <!-- The content of the "crash" notification in the add-ons manager -->
+    <string name="mozac_feature_addons_manager_notification_content_text">Uno o más complementos dejaron de funcionar, lo que hizo que tu sistema fuera inestable.</string>
+    <!-- Button to re-enable the add-ons in the "crash" notification -->
+    <string name="mozac_feature_addons_manager_notification_restart_button">Reiniciar complementos</string>
+    <!-- Button in the add-ons manager that opens AMO in a tab -->
+    <string name="mozac_feature_addons_find_more_addons_button_text">Encontrar más complementos</string>
     <!-- The label of the allow button, this will be shown to the user when an add-on needs new permissions, with the button the user will indicate that they want to accept the new permissions and update the add-on-->
     <string name="mozac_feature_addons_updater_notification_allow_button">Permitir</string>
     <!-- The label of the deny button on a notification, this will be shown to the user when an add-on needs new permissions. Indicates the user denies the new permissions and prevents the add-on from be updated-->
@@ -170,6 +192,18 @@
     <string name="mozac_feature_addons_successfully_installed">%1$s instalado correctamente</string>
     <!-- Text shown after failed to install an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_failed_to_install">Fallo al instalar %1$s</string>
+    <!-- Text shown after failing to install an add-on for which we don't have its name. -->
+    <string name="mozac_feature_addons_failed_to_install_generic">No se pudo instalar este complemento.</string>
+    <!-- Text shown when attempting to install an add-on and a network error happened. -->
+    <string name="mozac_feature_addons_failed_to_install_network_error">No se pudo descargar este complemento debido a una falla en la conexión.</string>
+    <!-- Text shown when attempting to install an add-on and the downloaded file is corrupted. -->
+    <string name="mozac_feature_addons_failed_to_install_corrupt_error">Este complemento no pudo ser instalado porque parece estar dañado.</string>
+    <!-- Text shown when attempting to install an add-on and an error occurred because the extension was not signed. -->
+    <string name="mozac_feature_addons_failed_to_install_not_signed_error">Este complemento no pudo ser instalado porque no ha sido verificado.</string>
+    <!-- Text shown when attempting to install an add-on and an error occurred because the extension was incompatible. %1$s is the add-on name, %2$s is the app name and %3$s is the app version. -->
+    <string name="mozac_feature_addons_failed_to_install_incompatible_error">%1$s no pudo ser instalado porque no es compatible con %2$s %3$s.</string>
+    <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_blocklisted_1">%1$s no pudo ser instalado porque tiene un alto riesgo de causar problemas de estabilidad o seguridad.</string>
     <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_successfully_enabled">%1$s habilitado correctamente</string>
     <!-- Text shown after failed to enable an add-on. %1$s is the add-on name. -->
@@ -212,4 +246,12 @@
     <string name="mozac_feature_addons_installed_dialog_description">Abrir en el menú</string>
     <!-- Confirmation button text for the dialog when add-on installation is completed. -->
     <string name="mozac_feature_addons_installed_dialog_okay_button">Listo, lo tengo</string>
+    <!-- "Learn more" link displayed below an add-on status message. -->
+    <string name="mozac_feature_addons_status_learn_more">Saber más</string>
+    <!-- Status message below an add-on in the add-ons manager when this add-on has been blocklisted. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_status_blocklisted">%1$s ha sido deshabilitado debido a problemas de seguridad o estabilidad.</string>
+    <!-- Status message below an add-on in the add-ons manager when this add-on hasn't been signed correctly. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_status_unsigned">%1$s no pudo ser verificado como seguro y ha sido desactivado.</string>
+    <!-- Status message below an add-on in the add-ons manager when this add-on isn't compatible with the application version. %1$s is the add-on name, %2$s is the app name and %3$s is the app version. -->
+    <string name="mozac_feature_addons_status_incompatible">%1$s no es compatible con tu versión de %2$s (versión %3$s).</string>
 </resources>
