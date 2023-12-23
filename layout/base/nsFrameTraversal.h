@@ -7,15 +7,13 @@
 #ifndef NSFRAMETRAVERSAL_H
 #define NSFRAMETRAVERSAL_H
 
+#include <cstdint>
 #include "mozilla/Attributes.h"
-#include "nsISupportsImpl.h"
 
 class nsIFrame;
 class nsPresContext;
 
-class nsFrameIterator {
-  NS_INLINE_DECL_REFCOUNTING(nsFrameIterator)
-
+class MOZ_STACK_CLASS nsFrameIterator final {
  public:
   void First();
   void Next();
@@ -42,17 +40,12 @@ class nsFrameIterator {
     // "close tag" order
     PostOrder,
   };
-  static already_AddRefed<nsFrameIterator> Create(
-      nsPresContext* aPresContext, nsIFrame* aStart, Type aType, bool aVisual,
-      bool aLockInScrollView, bool aFollowOOFs, bool aSkipPopupChecks,
-      nsIFrame* aLimiter = nullptr);
+  nsFrameIterator(nsPresContext* aPresContext, nsIFrame* aStart, Type aType,
+                  bool aVisual, bool aLockInScrollView, bool aFollowOOFs,
+                  bool aSkipPopupChecks, nsIFrame* aLimiter = nullptr);
+  ~nsFrameIterator() = default;
 
  protected:
-  nsFrameIterator(nsPresContext* aPresContext, nsIFrame* aStart, Type aType,
-                  bool aLockInScrollView, bool aFollowOOFs,
-                  bool aSkipPopupChecks, nsIFrame* aLimiter);
-  virtual ~nsFrameIterator() = default;
-
   void SetCurrent(nsIFrame* aFrame) { mCurrent = aFrame; }
   nsIFrame* GetCurrent() { return mCurrent; }
   nsIFrame* GetStart() { return mStart; }
@@ -96,11 +89,11 @@ class nsFrameIterator {
    visual order".
   */
 
-  virtual nsIFrame* GetFirstChildInner(nsIFrame* aFrame);
-  virtual nsIFrame* GetLastChildInner(nsIFrame* aFrame);
+  nsIFrame* GetFirstChildInner(nsIFrame* aFrame);
+  nsIFrame* GetLastChildInner(nsIFrame* aFrame);
 
-  virtual nsIFrame* GetNextSiblingInner(nsIFrame* aFrame);
-  virtual nsIFrame* GetPrevSiblingInner(nsIFrame* aFrame);
+  nsIFrame* GetNextSiblingInner(nsIFrame* aFrame);
+  nsIFrame* GetPrevSiblingInner(nsIFrame* aFrame);
 
   /**
    * Return the placeholder frame for aFrame if it has one, otherwise return
@@ -115,6 +108,7 @@ class nsFrameIterator {
   const bool mLockScroll;
   const bool mFollowOOFs;
   const bool mSkipPopupChecks;
+  const bool mVisual;
   const Type mType;
 
  private:

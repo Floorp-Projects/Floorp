@@ -3226,14 +3226,13 @@ nsresult nsFocusManager::GetSelectionLocation(Document* aDocument,
         domSelection && domSelection->GetAncestorLimiter()
             ? domSelection->GetAncestorLimiter()->GetPrimaryFrame()
             : nullptr;
-    RefPtr<nsFrameIterator> frameIterator = nsFrameIterator::Create(
-        presContext, startFrame, nsFrameIterator::Type::Leaf,
-        false,  // aVisual
-        false,  // aLockInScrollView
-        true,   // aFollowOOFs
-        false,  // aSkipPopupChecks
-        limiter);
-    MOZ_ASSERT(frameIterator);
+    nsFrameIterator frameIterator(presContext, startFrame,
+                                  nsFrameIterator::Type::Leaf,
+                                  false,  // aVisual
+                                  false,  // aLockInScrollView
+                                  true,   // aFollowOOFs
+                                  false,  // aSkipPopupChecks
+                                  limiter);
 
     nsIFrame* newCaretFrame = nullptr;
     nsIContent* newCaretContent = start;
@@ -3242,8 +3241,8 @@ nsresult nsFocusManager::GetSelectionLocation(Document* aDocument,
       // Continue getting the next frame until the primary content for the
       // frame we are on changes - we don't want to be stuck in the same
       // place
-      frameIterator->Next();
-      newCaretFrame = frameIterator->CurrentItem();
+      frameIterator.Next();
+      newCaretFrame = frameIterator.CurrentItem();
       if (!newCaretFrame) {
         break;
       }
@@ -4194,17 +4193,16 @@ nsresult nsFocusManager::GetNextTabbableContent(
       getNextFrame = false;
     }
 
-    RefPtr<nsFrameIterator> frameIterator;
+    Maybe<nsFrameIterator> frameIterator;
     if (frame) {
       // For tab navigation, pass false for aSkipPopupChecks so that we don't
       // iterate into or out of a popup. For document naviation pass true to
       // ignore these boundaries.
-      frameIterator = nsFrameIterator::Create(
-          presContext, frame, nsFrameIterator::Type::PreOrder,
-          false,                  // aVisual
-          false,                  // aLockInScrollView
-          true,                   // aFollowOOFs
-          aForDocumentNavigation  // aSkipPopupChecks
+      frameIterator.emplace(presContext, frame, nsFrameIterator::Type::PreOrder,
+                            false,                  // aVisual
+                            false,                  // aLockInScrollView
+                            true,                   // aFollowOOFs
+                            aForDocumentNavigation  // aSkipPopupChecks
       );
       MOZ_ASSERT(frameIterator);
 
