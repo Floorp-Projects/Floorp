@@ -8652,14 +8652,14 @@ static nsresult GetNextPrevLineFromBlockFrame(PeekOffsetStruct* aPos,
         return NS_OK;
       }
       // resultFrame is not a block frame
-      RefPtr<nsFrameIterator> frameIterator = nsFrameIterator::Create(
+      Maybe<nsFrameIterator> frameIterator;
+      frameIterator.emplace(
           pc, resultFrame, nsFrameIterator::Type::PostOrder,
           false,  // aVisual
           aPos->mOptions.contains(PeekOffsetOption::StopAtScroller),
           false,  // aFollowOOFs
           false   // aSkipPopupChecks
       );
-      MOZ_ASSERT(frameIterator);
 
       auto FoundValidFrame = [aPos](const nsIFrame::ContentOffsets& aOffsets,
                                     const nsIFrame* aFrame) {
@@ -8725,7 +8725,8 @@ static nsresult GetNextPrevLineFromBlockFrame(PeekOffsetStruct* aPos,
 
       if (!found) {
         resultFrame = storeOldResultFrame;
-        frameIterator = nsFrameIterator::Create(
+        frameIterator.reset();
+        frameIterator.emplace(
             pc, resultFrame, nsFrameIterator::Type::Leaf,
             false,  // aVisual
             aPos->mOptions.contains(PeekOffsetOption::StopAtScroller),
@@ -9617,12 +9618,11 @@ nsIFrame::SelectablePeekReport nsIFrame::GetFrameFromDirection(
       aOptions.contains(PeekOffsetOption::Visual) && presContext->BidiEnabled();
   const bool followOofs =
       !aOptions.contains(PeekOffsetOption::StopAtPlaceholder);
-  RefPtr<nsFrameIterator> frameIterator = nsFrameIterator::Create(
+  nsFrameIterator frameIterator(
       presContext, this, nsFrameIterator::Type::Leaf, needsVisualTraversal,
       aOptions.contains(PeekOffsetOption::StopAtScroller), followOofs,
       false  // aSkipPopupChecks
   );
-  MOZ_ASSERT(frameIterator);
 
   // Find the prev/next selectable frame
   bool selectable = false;
@@ -9662,7 +9662,7 @@ nsIFrame::SelectablePeekReport nsIFrame::GetFrameFromDirection(
       }
     }
 
-    traversedFrame = frameIterator->Traverse(aDirection == eDirNext);
+    traversedFrame = frameIterator.Traverse(aDirection == eDirNext);
     if (!traversedFrame) {
       return result;
     }
