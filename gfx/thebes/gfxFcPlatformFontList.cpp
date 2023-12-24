@@ -1356,6 +1356,8 @@ gfxFcPlatformFontList::gfxFcPlatformFontList()
       mFcSubstituteCache(64),
       mLastConfig(nullptr),
       mAlwaysUseFontconfigGenerics(true) {
+  CheckFamilyList(kBaseFonts_Ubuntu_22_04);
+  CheckFamilyList(kLangFonts_Ubuntu_22_04);
   CheckFamilyList(kBaseFonts_Ubuntu_20_04);
   CheckFamilyList(kLangFonts_Ubuntu_20_04);
   CheckFamilyList(kBaseFonts_Fedora_39);
