@@ -3220,19 +3220,20 @@ nsresult nsFocusManager::GetSelectionLocation(Document* aDocument,
       text && text->TextDataLength() == domRange->StartOffset() &&
       domSelection->IsCollapsed()) {
     nsIFrame* startFrame = start->GetPrimaryFrame();
+    MOZ_ASSERT(startFrame);
     // Yes, indeed we were at the end of the last node
-    RefPtr<nsFrameIterator> frameIterator;
     nsIFrame* limiter =
         domSelection && domSelection->GetAncestorLimiter()
             ? domSelection->GetAncestorLimiter()->GetPrimaryFrame()
             : nullptr;
-    MOZ_TRY(NS_NewFrameTraversal(getter_AddRefs(frameIterator), presContext,
-                                 startFrame, eLeaf,
-                                 false,  // aVisual
-                                 false,  // aLockInScrollView
-                                 true,   // aFollowOOFs
-                                 false,  // aSkipPopupChecks
-                                 limiter));
+    RefPtr<nsFrameIterator> frameIterator = nsFrameIterator::Create(
+        presContext, startFrame, nsFrameIterator::Type::Leaf,
+        false,  // aVisual
+        false,  // aLockInScrollView
+        true,   // aFollowOOFs
+        false,  // aSkipPopupChecks
+        limiter);
+    MOZ_ASSERT(frameIterator);
 
     nsIFrame* newCaretFrame = nullptr;
     nsIContent* newCaretContent = start;
@@ -4198,14 +4199,14 @@ nsresult nsFocusManager::GetNextTabbableContent(
       // For tab navigation, pass false for aSkipPopupChecks so that we don't
       // iterate into or out of a popup. For document naviation pass true to
       // ignore these boundaries.
-      nsresult rv = NS_NewFrameTraversal(
-          getter_AddRefs(frameIterator), presContext, frame, ePreOrder,
+      frameIterator = nsFrameIterator::Create(
+          presContext, frame, nsFrameIterator::Type::PreOrder,
           false,                  // aVisual
           false,                  // aLockInScrollView
           true,                   // aFollowOOFs
           aForDocumentNavigation  // aSkipPopupChecks
       );
-      NS_ENSURE_SUCCESS(rv, rv);
+      MOZ_ASSERT(frameIterator);
 
       if (iterStartContent == aRootContent) {
         if (!aForward) {
@@ -4414,7 +4415,7 @@ nsresult nsFocusManager::GetNextTabbableContent(
             currentContent->IsHTMLElement(nsGkAtoms::img) &&
             currentContent->AsElement()->HasAttr(nsGkAtoms::usemap)) {
           // This is an image with a map. Image map areas are not traversed by
-          // nsIFrameTraversal so look for the next or previous area element.
+          // nsFrameIterator so look for the next or previous area element.
           nsIContent* areaContent = GetNextTabbableMapArea(
               aForward, aCurrentTabIndex, currentContent->AsElement(),
               iterStartContent);
