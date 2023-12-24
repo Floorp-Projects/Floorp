@@ -9387,12 +9387,43 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
               break;
           }
 
+          if (!method.isStatic()) {
+            bool hasKeyOnStack = key->isKind(ParseNodeKind::NumberExpr) ||
+                                 key->isKind(ParseNodeKind::ComputedName);
+            if (!emitDupAt(hasKeyOnStack ? 4 : 3)) {
+              //        [stack] ADDINIT OBJ KEY? VAL ADDINIT
+              return false;
+            }
+          } else {
+            // TODO: See bug 1868220 for support for static methods.
+            // Note: Key will be present if this has a private name.
+            if (!emit1(JSOp::Undefined)) {
+              //        [stack] CTOR OBJ CTOR KEY? VAL ADDINIT
+              return false;
+            }
+          }
+
+          if (!emit1(JSOp::Swap)) {
+            //        [stack] ADDINIT CTOR? OBJ CTOR? KEY? ADDINIT VAL
+            return false;
+          }
+
           // The decorators are applied to the current value on the stack,
           // possibly replacing it.
           DecoratorEmitter de(this);
           if (!de.emitApplyDecoratorsToElementDefinition(
                   kind, key, method.decorators(), method.isStatic())) {
-            //        [stack] CTOR? OBJ CTOR? KEY? VAL
+            //        [stack] ADDINIT CTOR? OBJ CTOR? KEY? ADDINIT VAL
+            return false;
+          }
+
+          if (!emit1(JSOp::Swap)) {
+            //        [stack] ADDINIT CTOR? OBJ CTOR? KEY? VAL ADDINIT
+            return false;
+          }
+
+          if (!emitPopN(1)) {
+            //        [stack] ADDINIT CTOR? OBJ CTOR? KEY? VAL
             return false;
           }
         }
@@ -11872,6 +11903,38 @@ bool BytecodeEmitter::emitClass(
         GetScopeDataTrailingNames(constructorScope->scopeBindings())[1]
             .name() ==
         TaggedParserAtomIndex::WellKnown::dot_instanceExtraInitializers_());
+
+    // We should only call this code if we know decorators are present, see bug
+    // 1871147.
+    lse.emplace(this);
+    if (!lse->emitScope(ScopeKind::Lexical,
+                        constructorScope->scopeBindings())) {
+      return false;
+    }
+
+    // TODO: See bug 1868220 for support for static extra initializers.
+    if (!ce.prepareForExtraInitializers(TaggedParserAtomIndex::WellKnown::
+                                            dot_instanceExtraInitializers_())) {
+      return false;
+    }
+
+    if (classNode->addInitializerFunction()) {
+      DecoratorEmitter de(this);
+      if (!de.emitCreateAddInitializerFunction(
+              classNode->addInitializerFunction(),
+              TaggedParserAtomIndex::WellKnown::
+                  dot_instanceExtraInitializers_())) {
+        //            [stack] HOMEOBJ HERITAGE? ADDINIT
+        return false;
+      }
+
+      if (!emitUnpickN(isDerived ? 2 : 1)) {
+        //            [stack] ADDINIT HOMEOBJ HERITAGE?
+        return false;
+      }
+
+      extraInitializersPresent = true;
+    }
 #else
     // The constructor scope should only contain the |.initializers| binding.
     MOZ_ASSERT(constructorScope->scopeBindings()->length == 1);
@@ -11891,39 +11954,13 @@ bool BytecodeEmitter::emitClass(
         std::any_of(classMembers->contents().begin(),
                     classMembers->contents().end(), needsInitializer);
     if (needsInitializers) {
+#ifndef ENABLE_DECORATORS
       lse.emplace(this);
       if (!lse->emitScope(ScopeKind::Lexical,
                           constructorScope->scopeBindings())) {
         return false;
       }
-
-#ifdef ENABLE_DECORATORS
-      // TODO: See bug 1868220 for support for static extra initializers.
-
-      if (!ce.prepareForExtraInitializers(
-              TaggedParserAtomIndex::WellKnown::
-                  dot_instanceExtraInitializers_())) {
-        return false;
-      }
-
-      DecoratorEmitter de(this);
-      if (classNode->addInitializerFunction()) {
-        if (!de.emitCreateAddInitializerFunction(
-                classNode->addInitializerFunction(),
-                TaggedParserAtomIndex::WellKnown::
-                    dot_instanceExtraInitializers_())) {
-          //            [stack] HOMEOBJ HERITAGE? ADDINIT
-          return false;
-        }
-        if (!emitUnpickN(isDerived ? 2 : 1)) {
-          //            [stack] ADDINIT HOMEOBJ HERITAGE?
-          return false;
-        }
-
-        extraInitializersPresent = true;
-      }
 #endif
-
       // Any class with field initializers will have a constructor
       if (!emitCreateMemberInitializers(ce, classMembers,
                                         FieldPlacement::Instance
@@ -11970,17 +12007,13 @@ bool BytecodeEmitter::emitClass(
   }
 
 #ifdef ENABLE_DECORATORS
-  if (!extraInitializersPresent) {
-    // TODO: See Bug 1868220 for support for static extra initializers. For now
-    // we'll just emit undefined here if we haven't emitted the addInitializer
-    // to ensure we have something on the stack.
-    if (!emit1(JSOp::Undefined)) {
-      //              [stack] CTOR HOMEOBJ ADDINIT
-      return false;
-    }
-    if (!emitUnpickN(2)) {
-      //              [stack] ADDINIT CTOR HOMEOBJ
-    }
+  // TODO: See Bug 1868220 for support for static extra initializers.
+  if (!emit1(JSOp::Undefined)) {
+    //              [stack] ADDINIT? CTOR HOMEOBJ UNDEFINED
+    return false;
+  }
+  if (!emitUnpickN(2)) {
+    //              [stack] ADDINIT? UNDEFINED CTOR HOMEOBJ
   }
 #endif
 
@@ -11993,6 +12026,17 @@ bool BytecodeEmitter::emitClass(
     return false;
   }
 
+#ifdef ENABLE_DECORATORS
+  if (!emitPickN(2)) {
+    //              [stack] ADDINIT? CTOR HOMEOBJ UNDEFINED
+    return false;
+  }
+  if (!emitPopN(1)) {
+    //              [stack] ADDINIT? CTOR HOMEOBJ
+    return false;
+  }
+#endif
+
   if (!emitCreateFieldKeys(classMembers, FieldPlacement::Static)) {
     return false;
   }
@@ -12003,13 +12047,15 @@ bool BytecodeEmitter::emitClass(
   }
 
 #ifdef ENABLE_DECORATORS
-  if (!emitPickN(2)) {
-    //              [stack] CTOR HOMEOBJ ADDINIT
-    return false;
-  }
-  if (!emitPopN(1)) {
-    //              [stack] CTOR HOMEOBJ
-    return false;
+  if (extraInitializersPresent) {
+    if (!emitPickN(2)) {
+      //              [stack] CTOR HOMEOBJ ADDINIT
+      return false;
+    }
+    if (!emitPopN(1)) {
+      //              [stack] CTOR HOMEOBJ
+      return false;
+    }
   }
 #endif
 
