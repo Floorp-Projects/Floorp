@@ -1359,6 +1359,7 @@ gfxFcPlatformFontList::gfxFcPlatformFontList()
   CheckFamilyList(kBaseFonts_Ubuntu_20_04);
   CheckFamilyList(kLangFonts_Ubuntu_20_04);
   CheckFamilyList(kBaseFonts_Fedora_39);
+  CheckFamilyList(kBaseFonts_Fedora_38);
   mLastConfig = FcConfigGetCurrent();
   if (XRE_IsParentProcess()) {
     // if the rescan interval is set, start the timer
@@ -1999,7 +2000,7 @@ gfxFcPlatformFontList::DistroID gfxFcPlatformFontList::GetDistroID() const {
           if (strncmp(buf + 3, "ubuntu", 6) == 0) {
             result = DistroID::Ubuntu_any;
           } else if (strncmp(buf + 3, "fedora", 6) == 0) {
-            result = DistroID::Fedora;
+            result = DistroID::Fedora_any;
           }
           if (versionMajor) {
             break;
@@ -2013,6 +2014,12 @@ gfxFcPlatformFontList::DistroID gfxFcPlatformFontList::GetDistroID() const {
         result = DistroID::Ubuntu_20;
       } else if (versionMajor == 22) {
         result = DistroID::Ubuntu_22;
+      }
+    } else if (result == DistroID::Fedora_any) {
+      if (versionMajor == 38) {
+        result = DistroID::Fedora_38;
+      } else if (versionMajor == 39) {
+        result = DistroID::Fedora_39;
       }
     }
     return result;
@@ -2048,8 +2055,19 @@ FontVisibility gfxFcPlatformFontList::GetVisibilityForFamily(
       }
       return FontVisibility::User;
 
-    case DistroID::Fedora:
+    case DistroID::Fedora_any:
+    case DistroID::Fedora_39:
       if (FamilyInList(aName, kBaseFonts_Fedora_39)) {
+        return FontVisibility::Base;
+      }
+      if (distro == DistroID::Fedora_39) {
+        return FontVisibility::User;
+      }
+      // For Fedora_any, fall through to also check Fedora 38 list.
+      [[fallthrough]];
+
+    case DistroID::Fedora_38:
+      if (FamilyInList(aName, kBaseFonts_Fedora_38)) {
         return FontVisibility::Base;
       }
       return FontVisibility::User;
