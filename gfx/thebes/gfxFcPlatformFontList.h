@@ -356,7 +356,9 @@ class gfxFcPlatformFontList final : public gfxPlatformFontList {
     Ubuntu_any,
     Ubuntu_20,
     Ubuntu_22,
-    Fedora,
+    Fedora_any,
+    Fedora_38,
+    Fedora_39,
     // To be extended with any distros that ship a useful base set of fonts
     // that we want to explicitly support.
   };
