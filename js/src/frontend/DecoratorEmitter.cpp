@@ -46,7 +46,7 @@ bool DecoratorEmitter::emitApplyDecoratorsToElementDefinition(
   // The DecoratorEmitter expects the value to be decorated to be at the top
   // of the stack prior to this call. It will apply the decorators to this
   // value, possibly replacing the value with a value returned by a decorator.
-  //          [stack] VAL
+  //          [stack] ADDINIT VAL
 
   // Decorators Proposal
   // https://arai-a.github.io/ecma262-compare/?pr=2417&id=sec-applydecoratorstoelementdefinition.
@@ -63,21 +63,20 @@ bool DecoratorEmitter::emitApplyDecoratorsToElementDefinition(
   // Step 3. Let key be elementRecord.[[Key]].
   // Step 4. Let kind be elementRecord.[[Kind]].
   // Step 5. For each element decorator of decorators, do
-  for (auto it = dec_vecs.begin(); it != dec_vecs.end(); it++) {
-    ParseNode* decorator = *it;
+  for (auto decorator : dec_vecs) {
     // Step 5.a. Let decorationState be the Record { [[Finished]]: false }.
     if (!emitDecorationState()) {
       return false;
     }
 
     // TODO: See Bug 1869000 to support addInitializer for methods.
-    if (!bce_->emit1(JSOp::Undefined)) {
-      //          [stack] VAL ADDINIT
+    if (!bce_->emitDupAt(1)) {
+      //          [stack] ADDINIT VAL ADDINIT
       return false;
     }
 
     if (!emitCallDecoratorForElement(kind, key, isStatic, decorator)) {
-      //          [stack] RETVAL
+      //          [stack] ADDINIT RETVAL
       return false;
     }
 
@@ -89,20 +88,20 @@ bool DecoratorEmitter::emitApplyDecoratorsToElementDefinition(
     // We need to check if the decorator returned undefined, a callable value,
     // or any other value.
     if (!emitCheckIsUndefined()) {
-      //          [stack] VAL RETVAL ISUNDEFINED
+      //          [stack] ADDINIT VAL RETVAL ISUNDEFINED
       return false;
     }
 
     InternalIfEmitter ie(bce_);
     if (!ie.emitThenElse()) {
-      //          [stack] VAL RETVAL
+      //          [stack] ADDINIT VAL RETVAL
       return false;
     }
 
     // Pop the undefined RETVAL from the stack, leaving the original value in
     // place.
     if (!bce_->emitPopN(1)) {
-      //          [stack] VAL
+      //          [stack] ADDINIT VAL
       return false;
     }
 
@@ -112,12 +111,12 @@ bool DecoratorEmitter::emitApplyDecoratorsToElementDefinition(
 
     // Step 5.l.i. If IsCallable(newValue) is true, then
     if (!bce_->emitCheckIsCallable()) {
-      //              [stack] VAL RETVAL ISCALLABLE_RESULT
+      //              [stack] ADDINIT VAL RETVAL ISCALLABLE_RESULT
       return false;
     }
 
     if (!ie.emitThenElse()) {
-      //          [stack] VAL RETVAL
+      //          [stack] ADDINIT VAL RETVAL
       return false;
     }
     // Step 5.l. Else,
@@ -126,11 +125,11 @@ bool DecoratorEmitter::emitApplyDecoratorsToElementDefinition(
     // which was an argument to the decorator, and leave the new method
     // returned by the decorator on the stack.
     if (!bce_->emit1(JSOp::Swap)) {
-      //          [stack] RETVAL VAL
+      //          [stack] ADDINIT RETVAL VAL
       return false;
     }
     if (!bce_->emitPopN(1)) {
-      //          [stack] RETVAL
+      //          [stack] ADDINIT RETVAL
       return false;
     }
     // Step 5.j.ii. Else if initializer is not undefined, throw a TypeError
@@ -142,7 +141,7 @@ bool DecoratorEmitter::emitApplyDecoratorsToElementDefinition(
     }
 
     if (!bce_->emitPopN(1)) {
-      //          [stack] RETVAL
+      //          [stack] ADDINIT RETVAL
       return false;
     }
 
@@ -157,6 +156,7 @@ bool DecoratorEmitter::emitApplyDecoratorsToElementDefinition(
   }
 
   return true;
+  //          [stack] ADDINIT RETVAL
 }
 
 bool DecoratorEmitter::emitApplyDecoratorsToFieldDefinition(

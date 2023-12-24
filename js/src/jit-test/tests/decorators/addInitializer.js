@@ -26,8 +26,14 @@ function checkDecoratorContext(kind, isPrivate, isStatic, name) {
 class C {
   @checkDecoratorContext("field", false, false, "x") x;
   @checkDecoratorContext("accessor", true, false, "y accessor storage") accessor y;
+  @checkDecoratorContext("method", false, false, "f") f() {};
+  @checkDecoratorContext("method", false, false, 1) 1() {};
+  @checkDecoratorContext("method", false, false, 2) 2n() {};
 }
 
 let c = new C();
 assertEq(extraInitializerCalled["x"], true);
 assertEq(extraInitializerCalled["y accessor storage"], true);
+assertEq(extraInitializerCalled["f"], true);
+assertEq(extraInitializerCalled["1"], true);
+assertEq(extraInitializerCalled["2"], true);
