@@ -581,7 +581,7 @@ void RemoteTextureMap::UnregisterTextureOwners(
   {
     MonitorAutoLock lock(mMonitor);
 
-    for (auto id : aOwnerIds) {
+    for (const auto& id : aOwnerIds) {
       const auto key = std::pair(aForPid, id);
       auto it = mTextureOwners.find(key);
       if (it == mTextureOwners.end()) {
@@ -647,7 +647,7 @@ void RemoteTextureMap::NotifyContextLost(
   {
     MonitorAutoLock lock(mMonitor);
 
-    for (auto id : aOwnerIds) {
+    for (const auto& id : aOwnerIds) {
       const auto key = std::pair(aForPid, id);
       auto it = mTextureOwners.find(key);
       if (it == mTextureOwners.end()) {
@@ -669,7 +669,7 @@ void RemoteTextureMap::NotifyContextRestored(
     const std::unordered_set<RemoteTextureOwnerId,
                              RemoteTextureOwnerId::HashFn>& aOwnerIds,
     const base::ProcessId aForPid) {
-  for (auto id : aOwnerIds) {
+  for (const auto& id : aOwnerIds) {
     const auto key = std::pair(aForPid, id);
     auto it = mTextureOwners.find(key);
     if (it == mTextureOwners.end()) {
