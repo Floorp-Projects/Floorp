@@ -10,6 +10,7 @@
 
 #include "nsFrameSelection.h"
 
+#include "ErrorList.h"
 #include "mozilla/intl/BidiEmbeddingLevel.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/AutoRestore.h"
@@ -49,7 +50,6 @@
 #include "nsLayoutUtils.h"
 #include "nsLayoutCID.h"
 #include "nsBidiPresUtils.h"
-static NS_DEFINE_CID(kFrameTraversalCID, NS_FRAMETRAVERSAL_CID);
 #include "nsTextFrame.h"
 
 #include "nsThreadUtils.h"
@@ -1015,29 +1015,26 @@ nsresult nsFrameSelection::GetFrameFromLevel(
     nsIFrame* aFrameIn, nsDirection aDirection,
     mozilla::intl::BidiEmbeddingLevel aBidiLevel, nsIFrame** aFrameOut) const {
   NS_ENSURE_STATE(mPresShell);
+
+  if (!aFrameIn) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
   mozilla::intl::BidiEmbeddingLevel foundLevel =
       mozilla::intl::BidiEmbeddingLevel::LTR();
   nsIFrame* foundFrame = aFrameIn;
 
-  RefPtr<nsFrameIterator> frameTraversal;
-  nsresult result;
-  nsCOMPtr<nsIFrameTraversal> trav(
-      do_CreateInstance(kFrameTraversalCID, &result));
-  if (NS_FAILED(result)) return result;
-
-  result =
-      trav->NewFrameTraversal(getter_AddRefs(frameTraversal),
-                              mPresShell->GetPresContext(), aFrameIn, eLeaf,
-                              false,  // aVisual
-                              false,  // aLockInScrollView
-                              false,  // aFollowOOFs
-                              false   // aSkipPopupChecks
-      );
-  if (NS_FAILED(result)) return result;
-
+  RefPtr<nsFrameIterator> frameIterator = nsFrameIterator::Create(
+      mPresShell->GetPresContext(), aFrameIn, nsFrameIterator::Type::Leaf,
+      false,  // aVisual
+      false,  // aLockInScrollView
+      false,  // aFollowOOFs
+      false   // aSkipPopupChecks
+  );
+  MOZ_ASSERT(frameIterator);
   do {
     *aFrameOut = foundFrame;
-    foundFrame = frameTraversal->Traverse(aDirection == eDirNext);
+    foundFrame = frameIterator->Traverse(aDirection == eDirNext);
     if (!foundFrame) return NS_ERROR_FAILURE;
     foundLevel = foundFrame->GetEmbeddingLevel();
 
