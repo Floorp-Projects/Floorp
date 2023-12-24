@@ -1854,7 +1854,7 @@
     <!-- Error message for credit card name on card validation -->
     <string name="credit_cards_name_on_card_validation_error_message">Se debe completar este campo</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
-    <string name="credit_cards_biometric_prompt_message">Desbloqueá para ver los inicios de sesión guardados</string>
+    <string name="credit_cards_biometric_prompt_message">Desbloqueá para ver las tarjetas guardadas</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_title">Asegurá tus tarjetas de crédito</string>
 

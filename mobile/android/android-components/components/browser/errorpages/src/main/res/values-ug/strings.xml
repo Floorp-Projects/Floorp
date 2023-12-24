@@ -84,6 +84,17 @@
     <!-- The document title and heading of the error page shown when a website takes too long to load. -->
     <string name="mozac_browser_errorpages_net_timeout_title">ۋاقتىدا ئۇلىنالمىدى</string>
 
+    <!-- The error message shown when a website took long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[
+      <p>ئىلتىماس قىلىنغان تور بېكەت ئۇلىنىش تەلىپىگە جاۋاب قايتۇرمىغاچقا توركۆرگۈ جاۋاب كۈتۈشنى توختاتتى.</p>
+      <ul>
+        <li> تور بېكەتنىڭ زىيارەتچىسى زىيادە كۆپ بولۇپ مۇلازىمېتىردا توسۇلۇش يۈز بەرگەن بولۇشى مۇمكىنمۇ؟ سەل تۇرۇپ قايتا سىناڭ.</li>
+        <li> باشقا تور بېكەتلەرنىمۇ كۆرەلمەيۋاتامسىز؟ ئۈسكۈنىنىڭ تور ئۇلىنىشىنى تەكشۈرۈڭ. </li>
+        <li> ئۈسكۈنىڭىز ياكى تورىڭىز مۇداپىئە تام ياكى ۋاكالەتچى تەرىپىدىن قوغدىلامدۇ؟ خاتا تەڭشەكلەر تور زىيارىتىگە دەخلى قىلىدۇ.</li>
+        <li> يەنىلا ھەل بولمىدىمۇ؟ تور باشقۇرغۇچى ياكى ئىنتېرنېت مۇلازىمىتى تەمىنلىگۈچى بىلەن ئالاقىلىشىپ ياردەم سوراڭ.</li>
+      </ul>
+       ]]></string>
+
     <!-- The document title and heading of the error page shown when a website could not be reached. -->
     <string name="mozac_browser_errorpages_connection_failure_title">ئۇلىنالمىدى</string>
 
@@ -135,6 +146,14 @@
 
     <!-- The document title and heading of the error page shown when a file cannot be loaded because of a detected data corruption. -->
     <string name="mozac_browser_errorpages_corrupted_content_title">بۇزۇلغان مەزمۇن خاتالىقى</string>
+
+    <!-- The error message shown when shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_message"><![CDATA[
+      <p> سىز كۆرمەكچى بولغان بەتنى كۆرسەتكىلى بولمايدۇ چۈنكى سانلىق مەلۇمات يوللاشتا خاتالىق بايقالدى.</p>
+      <ul>
+        <li> توربېكەت ئىگىلىرى بىلەن ئالاقىلىشىپ ئۇلارغا بۇ مەسىلىنى ئۇقتۇرۇڭ.</li>
+      </ul>
+    ]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_content_crashed_title">مەزمۇن بۇزۇلغان</string>
