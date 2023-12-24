@@ -7786,6 +7786,12 @@ bool GeneralParser<ParseHandler, Unit>::classMember(
     }
   }
 
+#ifdef ENABLE_DECORATORS
+  if (decorators) {
+    classInitializedMembers.hasInstanceDecorators = true;
+  }
+#endif
+
   Node method;
   MOZ_TRY_VAR_OR_RETURN(
       method,
