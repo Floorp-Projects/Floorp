@@ -10689,13 +10689,12 @@ Focusable nsIFrame::IsFocusable(bool aWithMouse, bool aCheckVisibility) {
     return {};
   }
 
-  const StyleUserFocus uf = StyleUI()->UserFocus();
-  if (uf == StyleUserFocus::None) {
+  const nsStyleUI& ui = *StyleUI();
+  if (ui.IsInert()) {
     return {};
   }
-  MOZ_ASSERT(!StyleUI()->IsInert(), "inert implies -moz-user-focus: none");
 
-  const PseudoStyleType pseudo = Style()->GetPseudoType();
+  PseudoStyleType pseudo = Style()->GetPseudoType();
   if (pseudo == PseudoStyleType::anonymousItem) {
     return {};
   }
@@ -10706,8 +10705,8 @@ Focusable nsIFrame::IsFocusable(bool aWithMouse, bool aCheckVisibility) {
     // tabability of XUL elements in some circumstances (which default to
     // -moz-user-focus: ignore).
     auto focusability = xul->GetXULFocusability(aWithMouse);
-    focusable.mFocusable =
-        focusability.mForcedFocusable.valueOr(uf == StyleUserFocus::Normal);
+    focusable.mFocusable = focusability.mForcedFocusable.valueOr(
+        ui.UserFocus() == StyleUserFocus::Normal);
     if (focusable) {
       focusable.mTabIndex = focusability.mForcedTabIndexIfFocusable.valueOr(0);
     }

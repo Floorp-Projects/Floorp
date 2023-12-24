@@ -2993,7 +2993,7 @@ nsStyleUI::nsStyleUI()
       mMozTheme(StyleMozTheme::Auto),
       mUserInput(StyleUserInput::Auto),
       mUserModify(StyleUserModify::ReadOnly),
-      mUserFocus(StyleUserFocus::Normal),
+      mUserFocus(StyleUserFocus::None),
       mPointerEvents(StylePointerEvents::Auto),
       mCursor{{}, StyleCursorKind::Auto},
       mAccentColor(StyleColorOrAuto::Auto()),
