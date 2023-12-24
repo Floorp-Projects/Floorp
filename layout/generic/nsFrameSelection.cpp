@@ -27,6 +27,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
+#include "nsFrameTraversal.h"
 #include "nsString.h"
 #include "nsISelectionListener.h"
 #include "nsContentCID.h"
@@ -45,7 +46,6 @@
 #include "nsCSSFrameConstructor.h"
 
 #include "nsGkAtoms.h"
-#include "nsIFrameTraversal.h"
 #include "nsLayoutUtils.h"
 #include "nsLayoutCID.h"
 #include "nsBidiPresUtils.h"
@@ -1019,7 +1019,7 @@ nsresult nsFrameSelection::GetFrameFromLevel(
       mozilla::intl::BidiEmbeddingLevel::LTR();
   nsIFrame* foundFrame = aFrameIn;
 
-  nsCOMPtr<nsIFrameEnumerator> frameTraversal;
+  RefPtr<nsFrameIterator> frameTraversal;
   nsresult result;
   nsCOMPtr<nsIFrameTraversal> trav(
       do_CreateInstance(kFrameTraversalCID, &result));
