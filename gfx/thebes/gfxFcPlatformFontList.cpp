@@ -1358,7 +1358,7 @@ gfxFcPlatformFontList::gfxFcPlatformFontList()
       mAlwaysUseFontconfigGenerics(true) {
   CheckFamilyList(kBaseFonts_Ubuntu_20_04);
   CheckFamilyList(kLangFonts_Ubuntu_20_04);
-  CheckFamilyList(kBaseFonts_Fedora_32);
+  CheckFamilyList(kBaseFonts_Fedora_39);
   mLastConfig = FcConfigGetCurrent();
   if (XRE_IsParentProcess()) {
     // if the rescan interval is set, start the timer
@@ -2049,7 +2049,7 @@ FontVisibility gfxFcPlatformFontList::GetVisibilityForFamily(
       return FontVisibility::User;
 
     case DistroID::Fedora:
-      if (FamilyInList(aName, kBaseFonts_Fedora_32)) {
+      if (FamilyInList(aName, kBaseFonts_Fedora_39)) {
         return FontVisibility::Base;
       }
       return FontVisibility::User;
