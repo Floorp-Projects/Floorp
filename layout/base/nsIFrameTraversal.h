@@ -8,39 +8,9 @@
 
 #include "nsISupports.h"
 
+class nsFrameIterator;
 class nsIFrame;
 class nsPresContext;
-
-#define NS_IFRAMEENUMERATOR_IID                      \
-  {                                                  \
-    0x7c633f5d, 0x91eb, 0x494e, {                    \
-      0xa1, 0x40, 0x17, 0x46, 0x17, 0x4c, 0x23, 0xd3 \
-    }                                                \
-  }
-
-class nsIFrameEnumerator : public nsISupports {
- public:
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IFRAMEENUMERATOR_IID)
-
-  virtual void First() = 0;
-  virtual void Next() = 0;
-  virtual nsIFrame* CurrentItem() = 0;
-  virtual bool IsDone() = 0;
-
-  virtual void Last() = 0;
-  virtual void Prev() = 0;
-
-  inline nsIFrame* Traverse(bool aForward) {
-    if (aForward) {
-      Next();
-    } else {
-      Prev();
-    }
-    return CurrentItem();
-  };
-};
-
-NS_DEFINE_STATIC_IID_ACCESSOR(nsIFrameEnumerator, NS_IFRAMEENUMERATOR_IID)
 
 enum nsIteratorType { eLeaf, ePreOrder, ePostOrder };
 
@@ -75,7 +45,7 @@ class nsIFrameTraversal : public nsISupports {
    * @param aLimiter [in] if this is non-null and an ancestor of aStart,
    *        iteration will be limited to just the descendants of this frame.
    */
-  NS_IMETHOD NewFrameTraversal(nsIFrameEnumerator** aEnumerator,
+  NS_IMETHOD NewFrameTraversal(nsFrameIterator** aEnumerator,
                                nsPresContext* aPresContext, nsIFrame* aStart,
                                int32_t aType, bool aVisual,
                                bool aLockInScrollView, bool aFollowOOFs,
