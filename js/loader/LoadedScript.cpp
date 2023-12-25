@@ -7,9 +7,12 @@
 #include "LoadedScript.h"
 
 #include "mozilla/HoldDropJSObjects.h"
+#include "mozilla/UniquePtr.h"  // mozilla::UniquePtr
 
+#include "mozilla/dom/ScriptLoadContext.h"  // ScriptLoadContext
 #include "jsfriendapi.h"
-#include "js/Modules.h"  // JS::{Get,Set}ModulePrivate
+#include "js/Modules.h"       // JS::{Get,Set}ModulePrivate
+#include "LoadContextBase.h"  // LoadContextBase
 
 namespace JS::loader {
 
@@ -37,24 +40,94 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(LoadedScript)
 
 LoadedScript::LoadedScript(ScriptKind aKind,
                            mozilla::dom::ReferrerPolicy aReferrerPolicy,
-                           ScriptFetchOptions* aFetchOptions, nsIURI* aBaseURL)
+                           ScriptFetchOptions* aFetchOptions, nsIURI* aURI)
     : mKind(aKind),
       mReferrerPolicy(aReferrerPolicy),
       mFetchOptions(aFetchOptions),
-      mBaseURL(aBaseURL) {
+      mURI(aURI),
+      mDataType(DataType::eUnknown),
+      mScriptTextLength(0),
+      mBytecodeOffset(0) {
   MOZ_ASSERT(mFetchOptions);
-  MOZ_ASSERT(mBaseURL);
+  MOZ_ASSERT(mURI);
 }
 
 LoadedScript::~LoadedScript() { mozilla::DropJSObjects(this); }
 
 void LoadedScript::AssociateWithScript(JSScript* aScript) {
+  // Verify that the rewritten URL is available when manipulating LoadedScript.
+  MOZ_ASSERT(mBaseURL);
+
   // Set a JSScript's private value to point to this object. The JS engine will
   // increment our reference count by calling HostAddRefTopLevelScript(). This
   // is decremented by HostReleaseTopLevelScript() below when the JSScript dies.
 
   MOZ_ASSERT(JS::GetScriptPrivate(aScript).isUndefined());
   JS::SetScriptPrivate(aScript, JS::PrivateValue(this));
+}
+
+nsresult LoadedScript::GetScriptSource(JSContext* aCx,
+                                       MaybeSourceText* aMaybeSource,
+                                       LoadContextBase* aMaybeLoadContext) {
+  // If there's no script text, we try to get it from the element
+  bool isWindowContext =
+      aMaybeLoadContext && aMaybeLoadContext->IsWindowContext();
+  if (isWindowContext && aMaybeLoadContext->AsWindowContext()->mIsInline) {
+    nsAutoString inlineData;
+    auto* scriptLoadContext = aMaybeLoadContext->AsWindowContext();
+    scriptLoadContext->GetScriptElement()->GetScriptText(inlineData);
+
+    size_t nbytes = inlineData.Length() * sizeof(char16_t);
+    JS::UniqueTwoByteChars chars(
+        static_cast<char16_t*>(JS_malloc(aCx, nbytes)));
+    if (!chars) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    memcpy(chars.get(), inlineData.get(), nbytes);
+
+    SourceText<char16_t> srcBuf;
+    if (!srcBuf.init(aCx, std::move(chars), inlineData.Length())) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    aMaybeSource->construct<SourceText<char16_t>>(std::move(srcBuf));
+    return NS_OK;
+  }
+
+  size_t length = ScriptTextLength();
+  if (IsUTF16Text()) {
+    JS::UniqueTwoByteChars chars;
+    chars.reset(ScriptText<char16_t>().extractOrCopyRawBuffer());
+    if (!chars) {
+      JS_ReportOutOfMemory(aCx);
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    SourceText<char16_t> srcBuf;
+    if (!srcBuf.init(aCx, std::move(chars), length)) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    aMaybeSource->construct<SourceText<char16_t>>(std::move(srcBuf));
+    return NS_OK;
+  }
+
+  MOZ_ASSERT(IsUTF8Text());
+  mozilla::UniquePtr<Utf8Unit[], JS::FreePolicy> chars;
+  chars.reset(ScriptText<Utf8Unit>().extractOrCopyRawBuffer());
+  if (!chars) {
+    JS_ReportOutOfMemory(aCx);
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  SourceText<Utf8Unit> srcBuf;
+  if (!srcBuf.init(aCx, std::move(chars), length)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  aMaybeSource->construct<SourceText<Utf8Unit>>(std::move(srcBuf));
+  return NS_OK;
 }
 
 inline void CheckModuleScriptPrivate(LoadedScript* script,
@@ -92,19 +165,21 @@ void HostReleaseTopLevelScript(const JS::Value& aPrivate) {
 //////////////////////////////////////////////////////////////
 
 EventScript::EventScript(mozilla::dom::ReferrerPolicy aReferrerPolicy,
-                         ScriptFetchOptions* aFetchOptions, nsIURI* aBaseURL)
-    : LoadedScript(ScriptKind::eEvent, aReferrerPolicy, aFetchOptions,
-                   aBaseURL) {}
+                         ScriptFetchOptions* aFetchOptions, nsIURI* aURI)
+    : LoadedScript(ScriptKind::eEvent, aReferrerPolicy, aFetchOptions, aURI) {
+  // EventScripts are not using ScriptLoadRequest, and mBaseURL and mURI are
+  // the same thing.
+  SetBaseURL(aURI);
+}
 
 //////////////////////////////////////////////////////////////
 // ClassicScript
 //////////////////////////////////////////////////////////////
 
 ClassicScript::ClassicScript(mozilla::dom::ReferrerPolicy aReferrerPolicy,
-                             ScriptFetchOptions* aFetchOptions,
-                             nsIURI* aBaseURL)
-    : LoadedScript(ScriptKind::eClassic, aReferrerPolicy, aFetchOptions,
-                   aBaseURL) {}
+                             ScriptFetchOptions* aFetchOptions, nsIURI* aURI)
+    : LoadedScript(ScriptKind::eClassic, aReferrerPolicy, aFetchOptions, aURI) {
+}
 
 //////////////////////////////////////////////////////////////
 // ModuleScript
@@ -130,9 +205,8 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(ModuleScript, LoadedScript)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 ModuleScript::ModuleScript(mozilla::dom::ReferrerPolicy aReferrerPolicy,
-                           ScriptFetchOptions* aFetchOptions, nsIURI* aBaseURL)
-    : LoadedScript(ScriptKind::eModule, aReferrerPolicy, aFetchOptions,
-                   aBaseURL),
+                           ScriptFetchOptions* aFetchOptions, nsIURI* aURI)
+    : LoadedScript(ScriptKind::eModule, aReferrerPolicy, aFetchOptions, aURI),
       mDebuggerDataInitialized(false) {
   MOZ_ASSERT(!ModuleRecord());
   MOZ_ASSERT(!HasParseError());

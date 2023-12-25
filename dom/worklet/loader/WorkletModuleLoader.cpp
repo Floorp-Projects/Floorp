@@ -74,6 +74,7 @@ already_AddRefed<ModuleLoadRequest> WorkletModuleLoader::CreateStaticImport(
       this, aParent->mVisitedSet, aParent->GetRootModule());
 
   request->mURL = request->mURI->GetSpecOrDefault();
+  request->NoCacheEntryFound();
   return request.forget();
 }
 
@@ -105,7 +106,8 @@ nsresult WorkletModuleLoader::CompileFetchedModule(
   MOZ_ASSERT(aRequest->IsTextSource());
 
   MaybeSourceText maybeSource;
-  nsresult rv = aRequest->GetScriptSource(aCx, &maybeSource);
+  nsresult rv = aRequest->GetScriptSource(aCx, &maybeSource,
+                                          aRequest->mLoadContext.get());
   NS_ENSURE_SUCCESS(rv, rv);
 
   auto compile = [&](auto& source) {
