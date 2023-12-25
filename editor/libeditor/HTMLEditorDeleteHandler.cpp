@@ -3778,7 +3778,8 @@ bool HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
     if (!content->IsElement() ||
         HTMLEditUtils::IsEmptyNode(
             *content->AsElement(),
-            {EmptyCheckOption::TreatSingleBRElementAsVisible})) {
+            {EmptyCheckOption::TreatSingleBRElementAsVisible,
+             EmptyCheckOption::TreatNonEditableContentAsInvisible})) {
       continue;
     }
     if (!HTMLEditUtils::IsInvisibleBRElement(*content)) {
@@ -5137,7 +5138,9 @@ HTMLEditor::AutoMoveOneLineHandler::CanMoveOrDeleteSomethingInLine(
                   *childContent->GetParent(),
                   HTMLEditUtils::ClosestBlockElement,
                   BlockInlineCheck::UseComputedDisplayOutsideStyle)) {
-        if (HTMLEditUtils::IsEmptyNode(*blockElement)) {
+        if (HTMLEditUtils::IsEmptyNode(
+                *blockElement,
+                {EmptyCheckOption::TreatNonEditableContentAsInvisible})) {
           return false;
         }
       }
@@ -5505,7 +5508,8 @@ Result<MoveNodeResult, nsresult> HTMLEditor::AutoMoveOneLineHandler::Run(
                    content,
                    {EmptyCheckOption::TreatSingleBRElementAsVisible,
                     EmptyCheckOption::TreatListItemAsVisible,
-                    EmptyCheckOption::TreatTableCellAsVisible},
+                    EmptyCheckOption::TreatTableCellAsVisible,
+                    EmptyCheckOption::TreatNonEditableContentAsInvisible},
                    BlockInlineCheck::UseComputedDisplayOutsideStyle)) {
         nsCOMPtr<nsIContent> emptyContent =
             HTMLEditUtils::GetMostDistantAncestorEditableEmptyInlineElement(
@@ -6201,10 +6205,12 @@ nsresult HTMLEditor::DeleteMostAncestorMailCiteElementIfEmpty(
     return NS_OK;
   }
   bool seenBR = false;
-  if (!HTMLEditUtils::IsEmptyNode(*mailCiteElement,
-                                  {EmptyCheckOption::TreatListItemAsVisible,
-                                   EmptyCheckOption::TreatTableCellAsVisible},
-                                  &seenBR)) {
+  if (!HTMLEditUtils::IsEmptyNode(
+          *mailCiteElement,
+          {EmptyCheckOption::TreatListItemAsVisible,
+           EmptyCheckOption::TreatTableCellAsVisible,
+           EmptyCheckOption::TreatNonEditableContentAsInvisible},
+          &seenBR)) {
     return NS_OK;
   }
   EditorDOMPoint atEmptyMailCiteElement(mailCiteElement);
@@ -6266,14 +6272,18 @@ Element* HTMLEditor::AutoDeleteRangesHandler::AutoEmptyBlockAncestorDeleter::
   while (editableBlockElement &&
          HTMLEditUtils::IsRemovableFromParentNode(*editableBlockElement) &&
          !HTMLEditUtils::IsAnyTableElement(editableBlockElement) &&
-         HTMLEditUtils::IsEmptyNode(*editableBlockElement)) {
+         HTMLEditUtils::IsEmptyNode(
+             *editableBlockElement,
+             {EmptyCheckOption::TreatNonEditableContentAsInvisible})) {
     // If the removable empty list item is a child of editing host list element,
     // we should not delete it.
     if (HTMLEditUtils::IsListItem(editableBlockElement)) {
       Element* const parentElement = editableBlockElement->GetParentElement();
       if (parentElement && HTMLEditUtils::IsAnyListElement(parentElement) &&
           !HTMLEditUtils::IsRemovableFromParentNode(*parentElement) &&
-          HTMLEditUtils::IsEmptyNode(*parentElement)) {
+          HTMLEditUtils::IsEmptyNode(
+              *parentElement,
+              {EmptyCheckOption::TreatNonEditableContentAsInvisible})) {
         break;
       }
     }
@@ -6571,7 +6581,9 @@ Result<EditActionResult, nsresult> HTMLEditor::AutoDeleteRangesHandler::
   RefPtr<Element> parentElement =
       mEmptyInclusiveAncestorBlockElement->GetParentElement();
   if (!parentElement || !HTMLEditUtils::IsAnyListElement(parentElement) ||
-      !HTMLEditUtils::IsEmptyNode(*parentElement)) {
+      !HTMLEditUtils::IsEmptyNode(
+          *parentElement,
+          {EmptyCheckOption::TreatNonEditableContentAsInvisible})) {
     return EditActionResult::IgnoredResult();
   }
 

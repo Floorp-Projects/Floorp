@@ -1008,7 +1008,8 @@ bool HTMLEditUtils::IsEmptyNode(nsPresContext* aPresContext,
   for (nsIContent* childContent = aNode.GetFirstChild(); childContent;
        childContent = childContent->GetNextSibling()) {
     // Is the child editable and non-empty?  if so, return false
-    if (!aOptions.contains(EmptyCheckOption::IgnoreEditableState) &&
+    if (aOptions.contains(
+            EmptyCheckOption::TreatNonEditableContentAsInvisible) &&
         !EditorUtils::IsEditableContent(*childContent, EditorType::HTML)) {
       continue;
     }

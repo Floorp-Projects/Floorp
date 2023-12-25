@@ -32,6 +32,8 @@ namespace mozilla {
 
 using namespace dom;
 
+using EmptyCheckOption = HTMLEditUtils::EmptyCheckOption;
+
 /******************************************************************************
  * mozilla::AutoRangeArray
  *****************************************************************************/
@@ -533,7 +535,9 @@ void AutoRangeArray::
     return;
   }
 
-  if (HTMLEditUtils::IsEmptyNode(*maybeNonEditableBlockElement)) {
+  if (HTMLEditUtils::IsEmptyNode(
+          *maybeNonEditableBlockElement,
+          {EmptyCheckOption::TreatNonEditableContentAsInvisible})) {
     aStartPoint.Set(maybeNonEditableBlockElement, 0u);
     aEndPoint.SetToEndOf(maybeNonEditableBlockElement);
   }
