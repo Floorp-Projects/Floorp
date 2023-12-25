@@ -6272,18 +6272,14 @@ Element* HTMLEditor::AutoDeleteRangesHandler::AutoEmptyBlockAncestorDeleter::
   while (editableBlockElement &&
          HTMLEditUtils::IsRemovableFromParentNode(*editableBlockElement) &&
          !HTMLEditUtils::IsAnyTableElement(editableBlockElement) &&
-         HTMLEditUtils::IsEmptyNode(
-             *editableBlockElement,
-             {EmptyCheckOption::TreatNonEditableContentAsInvisible})) {
+         HTMLEditUtils::IsEmptyNode(*editableBlockElement)) {
     // If the removable empty list item is a child of editing host list element,
     // we should not delete it.
     if (HTMLEditUtils::IsListItem(editableBlockElement)) {
       Element* const parentElement = editableBlockElement->GetParentElement();
       if (parentElement && HTMLEditUtils::IsAnyListElement(parentElement) &&
           !HTMLEditUtils::IsRemovableFromParentNode(*parentElement) &&
-          HTMLEditUtils::IsEmptyNode(
-              *parentElement,
-              {EmptyCheckOption::TreatNonEditableContentAsInvisible})) {
+          HTMLEditUtils::IsEmptyNode(*parentElement)) {
         break;
       }
     }
