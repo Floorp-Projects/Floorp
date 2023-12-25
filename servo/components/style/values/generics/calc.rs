@@ -948,7 +948,7 @@ impl<L: CalcNodeLeaf> CalcNode<L> {
                     return Err(());
                 }
 
-                let step = step.unitless_value();
+                let step = step.unitless_value().abs();
 
                 value.map(|value| {
                     // TODO(emilio): Seems like at least a few of these
