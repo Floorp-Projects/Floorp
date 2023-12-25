@@ -62,13 +62,15 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(ScriptLoadRequest)
 NS_IMPL_CYCLE_COLLECTION_CLASS(ScriptLoadRequest)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(ScriptLoadRequest)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mFetchOptions, mCacheInfo, mLoadContext)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mFetchOptions, mCacheInfo, mLoadContext,
+                                  mLoadedScript)
   tmp->mScriptForBytecodeEncoding = nullptr;
   tmp->DropBytecodeCacheReferences();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(ScriptLoadRequest)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFetchOptions, mCacheInfo, mLoadContext)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFetchOptions, mCacheInfo, mLoadContext,
+                                    mLoadedScript)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(ScriptLoadRequest)
@@ -81,15 +83,12 @@ ScriptLoadRequest::ScriptLoadRequest(
     ScriptFetchOptions* aFetchOptions, const SRIMetadata& aIntegrity,
     nsIURI* aReferrer, LoadContextBase* aContext)
     : mKind(aKind),
-      mState(State::Fetching),
+      mState(State::CheckingCache),
       mFetchSourceOnly(false),
-      mDataType(DataType::eUnknown),
       mReferrerPolicy(aReferrerPolicy),
       mFetchOptions(aFetchOptions),
       mIntegrity(aIntegrity),
       mReferrer(aReferrer),
-      mScriptTextLength(0),
-      mBytecodeOffset(0),
       mURI(aURI),
       mLoadContext(aContext),
       mEarlyHintPreloaderId(0) {
@@ -157,15 +156,25 @@ const ModuleLoadRequest* ScriptLoadRequest::AsModuleRequest() const {
   return static_cast<const ModuleLoadRequest*>(this);
 }
 
-void ScriptLoadRequest::SetBytecode() {
-  MOZ_ASSERT(IsUnknownDataType());
-  mDataType = DataType::eBytecode;
-}
-
-void ScriptLoadRequest::ClearScriptSource() {
-  if (IsTextSource()) {
-    ClearScriptText();
+void ScriptLoadRequest::NoCacheEntryFound() {
+  MOZ_ASSERT(IsCheckingCache());
+  MOZ_ASSERT(mURI);
+  // At the time where we check in the cache, the mBaseURL is not set, as this
+  // is resolved by the network. Thus we use the mURI, for checking the cache
+  // and later replace the mBaseURL using what the Channel->GetURI will provide.
+  switch (mKind) {
+    case ScriptKind::eClassic:
+    case ScriptKind::eImportMap:
+      mLoadedScript = new ClassicScript(mReferrerPolicy, mFetchOptions, mURI);
+      break;
+    case ScriptKind::eModule:
+      mLoadedScript = new ModuleScript(mReferrerPolicy, mFetchOptions, mURI);
+      break;
+    case ScriptKind::eEvent:
+      MOZ_ASSERT_UNREACHABLE("EventScripts are not using ScriptLoadRequest");
+      break;
   }
+  mState = State::Fetching;
 }
 
 void ScriptLoadRequest::MarkForBytecodeEncoding(JSScript* aScript) {
@@ -181,66 +190,6 @@ bool ScriptLoadRequest::IsMarkedForBytecodeEncoding() const {
   }
 
   return !!mScriptForBytecodeEncoding;
-}
-
-nsresult ScriptLoadRequest::GetScriptSource(JSContext* aCx,
-                                            MaybeSourceText* aMaybeSource) {
-  // If there's no script text, we try to get it from the element
-  if (HasScriptLoadContext() && GetScriptLoadContext()->mIsInline) {
-    nsAutoString inlineData;
-    GetScriptLoadContext()->GetScriptElement()->GetScriptText(inlineData);
-
-    size_t nbytes = inlineData.Length() * sizeof(char16_t);
-    JS::UniqueTwoByteChars chars(
-        static_cast<char16_t*>(JS_malloc(aCx, nbytes)));
-    if (!chars) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    memcpy(chars.get(), inlineData.get(), nbytes);
-
-    SourceText<char16_t> srcBuf;
-    if (!srcBuf.init(aCx, std::move(chars), inlineData.Length())) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    aMaybeSource->construct<SourceText<char16_t>>(std::move(srcBuf));
-    return NS_OK;
-  }
-
-  size_t length = ScriptTextLength();
-  if (IsUTF16Text()) {
-    JS::UniqueTwoByteChars chars;
-    chars.reset(ScriptText<char16_t>().extractOrCopyRawBuffer());
-    if (!chars) {
-      JS_ReportOutOfMemory(aCx);
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    SourceText<char16_t> srcBuf;
-    if (!srcBuf.init(aCx, std::move(chars), length)) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    aMaybeSource->construct<SourceText<char16_t>>(std::move(srcBuf));
-    return NS_OK;
-  }
-
-  MOZ_ASSERT(IsUTF8Text());
-  UniquePtr<Utf8Unit[], JS::FreePolicy> chars;
-  chars.reset(ScriptText<Utf8Unit>().extractOrCopyRawBuffer());
-  if (!chars) {
-    JS_ReportOutOfMemory(aCx);
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  SourceText<Utf8Unit> srcBuf;
-  if (!srcBuf.init(aCx, std::move(chars), length)) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  aMaybeSource->construct<SourceText<Utf8Unit>>(std::move(srcBuf));
-  return NS_OK;
 }
 
 //////////////////////////////////////////////////////////////
