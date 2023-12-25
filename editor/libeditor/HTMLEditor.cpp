@@ -1182,7 +1182,9 @@ nsresult HTMLEditor::MaybeCollapseSelectionAtFirstEditableNode(
     if (HTMLEditUtils::IsBlockElement(
             *leafContent, BlockInlineCheck::UseComputedDisplayStyle) &&
         !HTMLEditUtils::IsEmptyNode(
-            *leafContent, {EmptyCheckOption::TreatSingleBRElementAsVisible}) &&
+            *leafContent,
+            {EmptyCheckOption::TreatSingleBRElementAsVisible,
+             EmptyCheckOption::TreatNonEditableContentAsInvisible}) &&
         !HTMLEditUtils::IsNeverElementContentsEditableByUser(*leafContent)) {
       leafContent = HTMLEditUtils::GetFirstLeafContent(
           *leafContent,
@@ -3913,7 +3915,8 @@ nsresult HTMLEditor::RemoveEmptyInclusiveAncestorInlineElements(
     if (!editableBlockElement ||
         HTMLEditUtils::IsEmptyNode(
             *editableBlockElement,
-            {EmptyCheckOption::TreatSingleBRElementAsVisible})) {
+            {EmptyCheckOption::TreatSingleBRElementAsVisible,
+             EmptyCheckOption::TreatNonEditableContentAsInvisible})) {
       return NS_OK;
     }
   }
