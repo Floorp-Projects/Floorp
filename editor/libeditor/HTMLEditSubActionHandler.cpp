@@ -710,9 +710,7 @@ nsresult HTMLEditor::OnEndHandlingTopLevelEditSubActionInternal() {
         if (!ancestor->IsHTMLElement() ||
             !HTMLEditUtils::IsRemovableFromParentNode(*ancestor) ||
             !HTMLEditUtils::IsEmptyInlineContainer(
-                *ancestor,
-                {EmptyCheckOption::TreatSingleBRElementAsVisible,
-                 EmptyCheckOption::TreatNonEditableContentAsInvisible},
+                *ancestor, {EmptyCheckOption::TreatSingleBRElementAsVisible},
                 BlockInlineCheck::UseComputedDisplayStyle)) {
           break;
         }
