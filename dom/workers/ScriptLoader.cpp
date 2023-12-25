@@ -659,13 +659,11 @@ already_AddRefed<ScriptLoadRequest> WorkerScriptLoader::CreateScriptLoadRequest(
                 aIsMainScript && !mWorkerRef->Private()->GetParent());
   nsCOMPtr<nsIURI> baseURI = aIsMainScript ? GetInitialBaseURI() : GetBaseURI();
   nsCOMPtr<nsIURI> uri;
-  bool setErrorResult = false;
   nsresult rv =
       ConstructURI(aScriptURL, baseURI, aDocumentEncoding, getter_AddRefs(uri));
   // If we failed to construct the URI, handle it in the LoadContext so it is
   // thrown in the right order.
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    setErrorResult = true;
     loadContext->mLoadResult = rv;
   }
 
@@ -729,12 +727,6 @@ already_AddRefed<ScriptLoadRequest> WorkerScriptLoader::CreateScriptLoadRequest(
 
   // Set the mURL, it will be used for error handling and debugging.
   request->mURL = NS_ConvertUTF16toUTF8(aScriptURL);
-
-  if (setErrorResult) {
-    request->SkipCacheOnError();
-  } else {
-    request->NoCacheEntryFound();
-  }
 
   return request.forget();
 }
@@ -1225,8 +1217,7 @@ bool WorkerScriptLoader::EvaluateScript(JSContext* aCx,
 
   // Get the source text.
   ScriptLoadRequest::MaybeSourceText maybeSource;
-  rv = aRequest->GetScriptSource(aCx, &maybeSource,
-                                 aRequest->mLoadContext.get());
+  rv = aRequest->GetScriptSource(aCx, &maybeSource);
   if (NS_FAILED(rv)) {
     mRv.StealExceptionFromJSContext(aCx);
     return false;
@@ -1250,12 +1241,8 @@ bool WorkerScriptLoader::EvaluateScript(JSContext* aCx,
     } else {
       requestBaseURI = aRequest->mBaseURL;
     }
-
-    MOZ_ASSERT(aRequest->mLoadedScript->IsClassicScript());
-    MOZ_ASSERT(aRequest->mLoadedScript->GetFetchOptions() ==
-               aRequest->mFetchOptions);
-    aRequest->mLoadedScript->SetBaseURL(requestBaseURI);
-    classicScript = aRequest->mLoadedScript->AsClassicScript();
+    classicScript = new JS::loader::ClassicScript(
+        aRequest->ReferrerPolicy(), aRequest->mFetchOptions, requestBaseURI);
   }
 
   JS::Rooted<JSScript*> script(aCx);
