@@ -121,7 +121,6 @@ NS_IMETHODIMP StartModuleLoadRunnable::RunOnWorkletThread() {
       nullptr);
 
   request->mURL = request->mURI->GetSpecOrDefault();
-  request->NoCacheEntryFound();
 
   return request->StartModuleLoad();
 }
@@ -209,7 +208,7 @@ NS_IMETHODIMP FetchCompleteRunnable::RunOnWorkletThread() {
   MOZ_ASSERT(request);
 
   // Set the Source type to "text" for decoding.
-  request->SetTextSource(request->mLoadContext.get());
+  request->SetTextSource();
 
   nsresult rv;
   if (mScriptBuffer) {

@@ -141,7 +141,8 @@ class MOZ_STACK_CLASS JSExecutionContext final {
   nsresult Compile(const nsAString& aScript);
 
   // Decode a script contained in a buffer.
-  nsresult Decode(const JS::TranscodeRange& aBytecodeBuf);
+  nsresult Decode(mozilla::Vector<uint8_t>& aBytecodeBuf,
+                  size_t aBytecodeIndex);
 
   // Get a successfully compiled script.
   JSScript* GetScript();

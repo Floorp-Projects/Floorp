@@ -225,8 +225,7 @@ nsresult ModuleLoader::CompileFetchedModule(
   RefPtr<JS::Stencil> stencil;
   if (aRequest->IsTextSource()) {
     MaybeSourceText maybeSource;
-    nsresult rv = aRequest->GetScriptSource(aCx, &maybeSource,
-                                            aRequest->mLoadContext.get());
+    nsresult rv = aRequest->GetScriptSource(aCx, &maybeSource);
     NS_ENSURE_SUCCESS(rv, rv);
 
     auto compile = [&](auto& source) {
@@ -238,7 +237,12 @@ nsresult ModuleLoader::CompileFetchedModule(
     JS::DecodeOptions decodeOptions(aOptions);
     decodeOptions.borrowBuffer = true;
 
-    JS::TranscodeRange range = aRequest->Bytecode();
+    auto& bytecode = aRequest->mScriptBytecode;
+    auto& offset = aRequest->mBytecodeOffset;
+
+    JS::TranscodeRange range(bytecode.begin() + offset,
+                             bytecode.length() - offset);
+
     JS::TranscodeResult tr =
         JS::DecodeStencil(aCx, decodeOptions, range, getter_AddRefs(stencil));
     if (tr != JS::TranscodeResult::Ok) {
@@ -278,7 +282,6 @@ already_AddRefed<ModuleLoadRequest> ModuleLoader::CreateTopLevel(
       aLoader->GetModuleLoader(),
       ModuleLoadRequest::NewVisitedSetForTopLevelImport(aURI), nullptr);
 
-  request->NoCacheEntryFound();
   return request.forget();
 }
 
@@ -296,7 +299,6 @@ already_AddRefed<ModuleLoadRequest> ModuleLoader::CreateStaticImport(
       false,                            /* is dynamic import */
       aParent->mLoader, aParent->mVisitedSet, aParent->GetRootModule());
 
-  request->NoCacheEntryFound();
   return request.forget();
 }
 
@@ -360,7 +362,6 @@ already_AddRefed<ModuleLoadRequest> ModuleLoader::CreateDynamicImport(
 
   HoldJSObjects(request.get());
 
-  request->NoCacheEntryFound();
   return request.forget();
 }
 
