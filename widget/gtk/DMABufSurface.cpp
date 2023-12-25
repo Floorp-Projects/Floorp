@@ -672,6 +672,14 @@ bool DMABufSurfaceRGBA::CreateTexture(GLContext* aGLContext, int aPlane) {
   attribs.AppendElement(LOCAL_EGL_NONE);
 
   if (!aGLContext) return false;
+
+  if (!aGLContext->MakeCurrent()) {
+    LOGDMABUF(
+        ("DMABufSurfaceRGBA::CreateTexture(): failed to make GL context "
+         "current"));
+    return false;
+  }
+
   const auto& gle = gl::GLContextEGL::Cast(aGLContext);
   const auto& egl = gle->mEgl;
   mEGLImage =
@@ -685,12 +693,6 @@ bool DMABufSurfaceRGBA::CreateTexture(GLContext* aGLContext, int aPlane) {
     return false;
   }
 
-  if (!aGLContext->MakeCurrent()) {
-    LOGDMABUF(
-        ("DMABufSurfaceRGBA::CreateTexture(): failed to make GL context "
-         "current"));
-    return false;
-  }
   aGLContext->fGenTextures(1, &mTexture);
   const ScopedBindTexture savedTex(aGLContext, mTexture);
   aGLContext->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_S,
@@ -1485,11 +1487,11 @@ bool DMABufSurfaceYUV::CreateTexture(GLContext* aGLContext, int aPlane) {
   MOZ_ASSERT(!mTexture[aPlane], "Texture is already created!");
   MOZ_ASSERT(aGLContext, "Missing GLContext!");
 
-  if (!CreateEGLImage(aGLContext, aPlane)) {
-    return false;
-  }
   if (!aGLContext->MakeCurrent()) {
     LOGDMABUF(("  Failed to make GL context current."));
+    return false;
+  }
+  if (!CreateEGLImage(aGLContext, aPlane)) {
     return false;
   }
   aGLContext->fGenTextures(1, &mTexture[aPlane]);
