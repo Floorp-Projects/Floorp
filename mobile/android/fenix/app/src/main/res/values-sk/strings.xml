@@ -817,7 +817,7 @@
 
     <!-- Gestures Preferences-->
     <!-- Preferences for using pull to refresh in a webpage -->
-    <string name="preference_gestures_website_pull_to_refresh">Potiahnutím aktualizujete</string>
+    <string name="preference_gestures_website_pull_to_refresh">Potiahnutím obnoviť</string>
     <!-- Preference for using the dynamic toolbar -->
     <string name="preference_gestures_dynamic_toolbar">Skryť panel s nástrojmi posunutím stránky</string>
     <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
@@ -2342,6 +2342,11 @@
     <!-- Automatic translation preference screen -->
     <!-- Title of the automatic translation preference screen that will appear on the toolbar.-->
     <string name="automatic_translation_toolbar_title_preference">Automatický preklad</string>
+
+    <!-- Preference option for offering to translate. Radio button summary text. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="automatic_translation_option_offer_to_translate_summary_preference">%1$s ponúkne preklad stránok v tomto jazyku.</string>
+    <!-- Preference option for always translate. Radio button title text. -->
+    <string name="automatic_translation_option_always_translate_title_preference">Vždy prekladať</string>
 
     <!-- The Delete site dialogue negative button will appear when the user clicks on a list item. The dialog will be dismissed. -->
     <string name="never_translate_site_dialog_cancel_preference">Zrušiť</string>

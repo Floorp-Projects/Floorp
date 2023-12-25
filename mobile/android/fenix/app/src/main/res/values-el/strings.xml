@@ -1574,6 +1574,8 @@
     <string name="preference_enhanced_tracking_protection_custom_cookies_4">Όλα τα cookie (προκαλεί δυσλειτουργία ιστοτόπων)</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies_5">Απομόνωση cookie μεταξύ ιστοτόπων</string>
+    <!-- Preference for Global Privacy Control for the custom privacy settings for Global Privacy Control. '&amp;' is replaced with the ampersand symbol: &-->
+    <string name="preference_enhanced_tracking_protection_custom_global_privacy_control">Αποστολή αιτήματος μη πώλησης και κοινοποίησης των δεδομένων μου στους ιστοτόπους</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content">Περιεχόμενο καταγραφής</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
@@ -2354,6 +2356,29 @@
     <!-- Title of the automatic translation preference screen that will appear on the toolbar.-->
     <string name="automatic_translation_toolbar_title_preference">Αυτόματη μετάφραση</string>
 
+    <!-- Screen header presenting the automatic translation preference feature. It will appear under the toolbar. -->
+    <string name="automatic_translation_header_preference">Επιλέξτε μια γλώσσα για να διαχειριστείτε τις προτιμήσεις «πάντα μετάφραση» και «ποτέ μετάφραση».</string>
+
+    <!-- Automatic translation options preference screen -->
+    <!-- Preference option for offering to translate. Radio button title text.-->
+    <string name="automatic_translation_option_offer_to_translate_title_preference">Πρόταση για μετάφραση (προεπιλογή)</string>
+
+    <!-- Preference option for offering to translate. Radio button summary text. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="automatic_translation_option_offer_to_translate_summary_preference">Το %1$s θα προτείνει τη μετάφραση ιστοτόπων σε αυτήν τη γλώσσα.</string>
+    <!-- Preference option for always translate. Radio button title text. -->
+    <string name="automatic_translation_option_always_translate_title_preference">Πάντα μετάφραση</string>
+    <!-- Preference option for always translate. Radio button summary text. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="automatic_translation_option_always_translate_summary_preference">Το %1$s θα μεταφράσει αυτόματα αυτήν τη γλώσσα όταν φορτωθεί η σελίδα.</string>
+    <!-- Preference option for never translate. Radio button title text.-->
+    <string name="automatic_translation_option_never_translate_title_preference">Ποτέ μετάφραση</string>
+    <!-- Preference option for never translate. Radio button summary text. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="automatic_translation_option_never_translate_summary_preference">Το %1$s δεν θα προτείνει ποτέ τη μετάφραση ιστοτόπων σε αυτήν τη γλώσσα.</string>
+
+    <!-- Never translate site preference screen -->
+    <!-- Title of the never translate site preference screen that will appear on the toolbar.-->
+    <string name="never_translate_site_toolbar_title_preference">Να μη μεταφράζονται ποτέ αυτοί οι ιστότοποι</string>
+    <!-- Screen header presenting the never translate site preference feature. It will appear under the toolbar. -->
+    <string name="never_translate_site_header_preference">Για να προσθέσετε νέο ιστότοπο: Επισκεφτείτε τον και επιλέξτε «Να μη μεταφράζεται ποτέ αυτός ο ιστότοπος» από το μενού μετάφρασης.</string>
     <!-- Content description (not visible, for screen readers etc.): For a never-translated site list item that is selected.
              The first parameter is web site url (for example:"wikipedia.com") -->
     <string name="never_translate_site_item_list_content_description_preference">Αφαίρεση %1$s</string>
@@ -2368,6 +2393,8 @@
     <!-- Download languages preference screen -->
     <!-- Title of the download languages preference screen toolbar.-->
     <string name="download_languages_toolbar_title_preference">Λήψη γλωσσών</string>
+    <!-- Screen header presenting the download language preference feature. It will appear under the toolbar.The first parameter is "Learn More," a clickable text with a link. Talkback will append this to say "Double tap to open link to learn more". -->
+    <string name="download_languages_header_preference">Κάντε λήψη ολόκληρων των γλωσσών για πιο γρήγορες μεταφράσεις και εκτός σύνδεσης. %1$s</string>
     <!-- Clickable text from the screen header that links to a website. -->
     <string name="download_languages_header_learn_more_preference">Μάθετε περισσότερα</string>
     <!-- The subhead of the download language preference screen will appear above the pivot language. -->
