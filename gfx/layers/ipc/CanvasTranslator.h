@@ -352,6 +352,7 @@ class CanvasTranslator final : public gfx::InlineTranslator,
     UniquePtr<TextureData> mTextureData;
     RefPtr<gfx::DrawTarget> mDrawTarget;
     RemoteTextureOwnerId mRemoteTextureOwnerId;
+    bool mTextureLocked = false;
     bool mNotifiedRequiresRefresh = false;
     // Ref-count of how active uses of the DT. Avoids deletion when locked.
     int32_t mLocked = 1;
