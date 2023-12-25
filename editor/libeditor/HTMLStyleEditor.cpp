@@ -2347,8 +2347,7 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::ClearStyleAt(
           *unwrappedSplitNodeResult.GetPreviousContent(),
           {EmptyCheckOption::TreatSingleBRElementAsVisible,
            EmptyCheckOption::TreatListItemAsVisible,
-           EmptyCheckOption::TreatTableCellAsVisible,
-           EmptyCheckOption::TreatNonEditableContentAsInvisible})) {
+           EmptyCheckOption::TreatTableCellAsVisible})) {
     AutoTrackDOMPoint trackPointToPutCaret(RangeUpdaterRef(), &pointToPutCaret);
     // Delete previous node if it's empty.
     // MOZ_KnownLive(unwrappedSplitNodeResult.GetPreviousContent()):
@@ -2430,8 +2429,7 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::ClearStyleAt(
     if (HTMLEditUtils::IsEmptyNode(
             *unwrappedSplitResultAtStartOfNextNode.GetNextContent(),
             {EmptyCheckOption::TreatListItemAsVisible,
-             EmptyCheckOption::TreatTableCellAsVisible,
-             EmptyCheckOption::TreatNonEditableContentAsInvisible},
+             EmptyCheckOption::TreatTableCellAsVisible},
             &seenBR)) {
       if (seenBR && !brElement) {
         brElement = HTMLEditUtils::GetFirstBRElement(
@@ -2530,8 +2528,7 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::ClearStyleAt(
               *unwrappedSplitResultAtStartOfNextNode.GetNextContent(),
               {EmptyCheckOption::TreatSingleBRElementAsVisible,
                EmptyCheckOption::TreatListItemAsVisible,
-               EmptyCheckOption::TreatTableCellAsVisible,
-               EmptyCheckOption::TreatNonEditableContentAsInvisible})) {
+               EmptyCheckOption::TreatTableCellAsVisible})) {
         // MOZ_KnownLive because the result is grabbed by
         // unwrappedSplitResultAtStartOfNextNode.
         nsresult rv = DeleteNodeWithTransaction(MOZ_KnownLive(
@@ -2550,16 +2547,14 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::ClearStyleAt(
       else if (HTMLEditUtils::IsEmptyNode(
                    *unwrappedSplitResultAtStartOfNextNode.GetNextContent(),
                    {EmptyCheckOption::TreatListItemAsVisible,
-                    EmptyCheckOption::TreatTableCellAsVisible,
-                    EmptyCheckOption::TreatNonEditableContentAsInvisible})) {
+                    EmptyCheckOption::TreatTableCellAsVisible})) {
         AutoTArray<OwningNonNull<nsIContent>, 4> emptyInlineContainerElements;
         HTMLEditUtils::CollectEmptyInlineContainerDescendants(
             *unwrappedSplitResultAtStartOfNextNode.GetNextContentAs<Element>(),
             emptyInlineContainerElements,
             {EmptyCheckOption::TreatSingleBRElementAsVisible,
              EmptyCheckOption::TreatListItemAsVisible,
-             EmptyCheckOption::TreatTableCellAsVisible,
-             EmptyCheckOption::TreatNonEditableContentAsInvisible},
+             EmptyCheckOption::TreatTableCellAsVisible},
             BlockInlineCheck::UseComputedDisplayOutsideStyle);
         for (const OwningNonNull<nsIContent>& emptyInlineContainerElement :
              emptyInlineContainerElements) {
