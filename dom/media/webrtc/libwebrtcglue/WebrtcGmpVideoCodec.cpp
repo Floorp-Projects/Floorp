@@ -540,7 +540,7 @@ void WebrtcGmpVideoEncoder::Encoded(
 
   webrtc::VideoFrameType ft;
   GmpFrameTypeToWebrtcFrameType(aEncodedFrame->FrameType(), &ft);
-  uint32_t timestamp = (aEncodedFrame->TimeStamp() * 90ll + 999) / 1000;
+  uint64_t timestamp = (aEncodedFrame->TimeStamp() * 90ll + 999) / 1000;
 
   GMP_LOG_DEBUG("GMP Encoded: %" PRIu64 ", type %d, len %d",
                 aEncodedFrame->TimeStamp(), aEncodedFrame->BufferType(),
