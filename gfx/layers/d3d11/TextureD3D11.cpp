@@ -337,7 +337,8 @@ D3D11TextureData::~D3D11TextureData() {
 }
 
 bool D3D11TextureData::Lock(OpenMode aMode) {
-  if (!LockD3DTexture(mTexture.get(), SerializeWithMoz2D::Yes)) {
+  if (mHasKeyedMutex &&
+      !LockD3DTexture(mTexture.get(), SerializeWithMoz2D::Yes)) {
     return false;
   }
 
@@ -373,7 +374,9 @@ bool D3D11TextureData::PrepareDrawTargetInLock(OpenMode aMode) {
 }
 
 void D3D11TextureData::Unlock() {
-  UnlockD3DTexture(mTexture.get(), SerializeWithMoz2D::Yes);
+  if (mHasKeyedMutex) {
+    UnlockD3DTexture(mTexture.get(), SerializeWithMoz2D::Yes);
+  }
 }
 
 void D3D11TextureData::FillInfo(TextureData::Info& aInfo) const {
@@ -496,15 +499,17 @@ D3D11TextureData* D3D11TextureData::Create(IntSize aSize, SurfaceFormat aFormat,
 
   newDesc.MiscFlags =
       D3D11_RESOURCE_MISC_SHARED_NTHANDLE | D3D11_RESOURCE_MISC_SHARED;
+  bool useKeyedMutex = false;
   if (!NS_IsMainThread()) {
     // On the main thread we use the syncobject to handle synchronization.
     if (!(aFlags & ALLOC_MANUAL_SYNCHRONIZATION)) {
       newDesc.MiscFlags = D3D11_RESOURCE_MISC_SHARED_NTHANDLE |
                           D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX;
+      useKeyedMutex = true;
     }
   }
 
-  if (aSurface && newDesc.MiscFlags == D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX &&
+  if (aSurface && useKeyedMutex &&
       !DeviceManagerDx::Get()->CanInitializeKeyedMutexTextures()) {
     return nullptr;
   }
@@ -565,7 +570,7 @@ D3D11TextureData* D3D11TextureData::Create(IntSize aSize, SurfaceFormat aFormat,
   // on it to be synchronized using it. If we did an initial upload using
   // aSurface then bizarely this isn't covered, so we insert a manual
   // lock/unlock pair to force this.
-  if (aSurface && newDesc.MiscFlags == D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX) {
+  if (aSurface && useKeyedMutex) {
     if (!LockD3DTexture(texture11.get(), SerializeWithMoz2D::Yes)) {
       return nullptr;
     }
