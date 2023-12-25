@@ -644,10 +644,20 @@ export class UrlbarInput {
       result.payload.inPrivateWindow;
     let selectedPrivateEngineResult =
       selectedPrivateResult && result.payload.isPrivateEngine;
+    // Whether the user has been editing the value in the URL bar after selecting
+    // the result. However, if the result type is tip, pick as it is. The result
+    // heuristic is also kept the behavior as is for safety.
+    let safeToPickResult =
+      result &&
+      (result.heuristic ||
+        !this.valueIsTyped ||
+        result.type == lazy.UrlbarUtils.RESULT_TYPE.TIP ||
+        this.value == this._getValueFromResult(result));
     if (
       !isComposing &&
       element &&
-      (!oneOffParams?.engine || selectedPrivateEngineResult)
+      (!oneOffParams?.engine || selectedPrivateEngineResult) &&
+      safeToPickResult
     ) {
       this.pickElement(element, event);
       return;
