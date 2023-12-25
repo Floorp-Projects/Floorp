@@ -10186,8 +10186,7 @@ nsresult HTMLEditor::AdjustCaretPositionAndEnsurePaddingBRElement(
     if (editableBlockElement &&
         HTMLEditUtils::IsEmptyNode(
             *editableBlockElement,
-            {EmptyCheckOption::TreatSingleBRElementAsVisible,
-             EmptyCheckOption::TreatNonEditableContentAsInvisible}) &&
+            {EmptyCheckOption::TreatSingleBRElementAsVisible}) &&
         HTMLEditUtils::CanNodeContain(*point.GetContainer(), *nsGkAtoms::br)) {
       Element* bodyOrDocumentElement = GetRoot();
       if (NS_WARN_IF(!bodyOrDocumentElement)) {
