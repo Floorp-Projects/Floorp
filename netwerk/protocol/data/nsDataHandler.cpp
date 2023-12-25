@@ -201,7 +201,7 @@ nsresult nsDataHandler::ParsePathWithoutRef(const nsACString& aPath,
   // This is against the current spec, but we're doing it because we have
   // historically seen webcompat issues relying on this (see bug 781693).
   if (mozilla::UniquePtr<CMimeType> parsed = CMimeType::Parse(mimeType)) {
-    parsed->GetFullType(aContentType);
+    parsed->GetEssence(aContentType);
     if (aContentCharset) {
       parsed->GetParameterValue(kCharset, *aContentCharset);
     }
