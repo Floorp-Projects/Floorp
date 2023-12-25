@@ -61,6 +61,7 @@ already_AddRefed<ModuleLoadRequest> WorkerModuleLoader::CreateStaticImport(
       this, aParent->mVisitedSet, aParent->GetRootModule());
 
   request->mURL = request->mURI->GetSpecOrDefault();
+  request->NoCacheEntryFound();
   return request.forget();
 }
 
@@ -145,6 +146,7 @@ already_AddRefed<ModuleLoadRequest> WorkerModuleLoader::CreateDynamicImport(
   request->mDynamicReferencingScript = aMaybeActiveScript;
   request->mDynamicSpecifier = aSpecifier;
   request->mDynamicPromise = aPromise;
+  request->NoCacheEntryFound();
 
   HoldJSObjects(request.get());
 
@@ -169,7 +171,8 @@ nsresult WorkerModuleLoader::CompileFetchedModule(
   RefPtr<JS::Stencil> stencil;
   MOZ_ASSERT(aRequest->IsTextSource());
   MaybeSourceText maybeSource;
-  nsresult rv = aRequest->GetScriptSource(aCx, &maybeSource);
+  nsresult rv = aRequest->GetScriptSource(aCx, &maybeSource,
+                                          aRequest->mLoadContext.get());
   NS_ENSURE_SUCCESS(rv, rv);
 
   auto compile = [&](auto& source) {
