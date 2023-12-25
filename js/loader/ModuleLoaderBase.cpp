@@ -638,9 +638,13 @@ nsresult ModuleLoaderBase::CreateModuleScript(ModuleLoadRequest* aRequest) {
       }
     }
 
+    MOZ_ASSERT(aRequest->mLoadedScript->IsModuleScript());
+    MOZ_ASSERT(aRequest->mLoadedScript->GetFetchOptions() ==
+               aRequest->mFetchOptions);
+    MOZ_ASSERT(aRequest->mLoadedScript->GetURI() == aRequest->mURI);
+    aRequest->mLoadedScript->SetBaseURL(aRequest->mBaseURL);
     RefPtr<ModuleScript> moduleScript =
-        new ModuleScript(aRequest->ReferrerPolicy(), aRequest->mFetchOptions,
-                         aRequest->mBaseURL);
+        aRequest->mLoadedScript->AsModuleScript();
     aRequest->mModuleScript = moduleScript;
 
     if (!module) {
@@ -1349,7 +1353,8 @@ UniquePtr<ImportMap> ModuleLoaderBase::ParseImportMap(
 
   MOZ_ASSERT(aRequest->IsTextSource());
   MaybeSourceText maybeSource;
-  nsresult rv = aRequest->GetScriptSource(jsapi.cx(), &maybeSource);
+  nsresult rv = aRequest->GetScriptSource(jsapi.cx(), &maybeSource,
+                                          aRequest->mLoadContext.get());
   if (NS_FAILED(rv)) {
     return nullptr;
   }

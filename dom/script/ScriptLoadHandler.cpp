@@ -93,7 +93,6 @@ nsresult ScriptDecoder::DecodeRawDataHelper(
   MOZ_ASSERT(haveRead <= capacity.value(),
              "mDecoder produced more data than expected");
   MOZ_ALWAYS_TRUE(scriptText.resize(haveRead));
-  aRequest->mScriptTextLength = scriptText.length();
 
   return NS_OK;
 }
@@ -176,7 +175,7 @@ ScriptLoadHandler::OnIncrementalData(nsIIncrementalStreamLoader* aLoader,
     }
   } else {
     MOZ_ASSERT(mRequest->IsBytecode());
-    if (!mRequest->mScriptBytecode.append(aData, aDataLength)) {
+    if (!mRequest->SRIAndBytecode().append(aData, aDataLength)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
@@ -187,7 +186,7 @@ ScriptLoadHandler::OnIncrementalData(nsIIncrementalStreamLoader* aLoader,
       return channelRequest->Cancel(mScriptLoader->RestartLoad(mRequest));
     }
     if (sriLength) {
-      mRequest->mBytecodeOffset = JS::AlignTranscodingBytecodeOffset(sriLength);
+      mRequest->SetSRILength(sriLength);
     }
   }
 
@@ -288,13 +287,13 @@ nsresult ScriptLoadHandler::MaybeDecodeSRI(uint32_t* sriLength) {
   }
 
   // Skip until the content is large enough to be decoded.
-  if (mRequest->mScriptBytecode.length() <=
-      mSRIDataVerifier->DataSummaryLength()) {
+  JS::TranscodeRange receivedData = mRequest->Bytecode();
+  if (receivedData.length() <= mSRIDataVerifier->DataSummaryLength()) {
     return NS_OK;
   }
 
-  mSRIStatus = mSRIDataVerifier->ImportDataSummary(
-      mRequest->mScriptBytecode.length(), mRequest->mScriptBytecode.begin());
+  mSRIStatus = mSRIDataVerifier->ImportDataSummary(receivedData.length(),
+                                                   receivedData.begin().get());
 
   if (NS_FAILED(mSRIStatus)) {
     // We are unable to decode the hash contained in the alternate data which
@@ -321,7 +320,7 @@ nsresult ScriptLoadHandler::EnsureKnownDataType(
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (mRequest->mFetchSourceOnly) {
-    mRequest->SetTextSource();
+    mRequest->SetTextSource(mRequest->mLoadContext.get());
     TRACE_FOR_TEST(mRequest->GetScriptLoadContext()->GetScriptElement(),
                    "scriptloader_load_source");
     return NS_OK;
@@ -340,7 +339,7 @@ nsresult ScriptLoadHandler::EnsureKnownDataType(
     MOZ_ASSERT(altDataType.IsEmpty());
   }
 
-  mRequest->SetTextSource();
+  mRequest->SetTextSource(mRequest->mLoadContext.get());
   TRACE_FOR_TEST(mRequest->GetScriptLoadContext()->GetScriptElement(),
                  "scriptloader_load_source");
 
@@ -404,12 +403,13 @@ ScriptLoadHandler::OnStreamComplete(nsIIncrementalStreamLoader* aLoader,
       }
     } else {
       MOZ_ASSERT(mRequest->IsBytecode());
-      if (!mRequest->mScriptBytecode.append(aData, aDataLength)) {
+      JS::TranscodeBuffer& bytecode = mRequest->SRIAndBytecode();
+      if (!bytecode.append(aData, aDataLength)) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
 
       LOG(("ScriptLoadRequest (%p): Bytecode length = %u", mRequest.get(),
-           unsigned(mRequest->mScriptBytecode.length())));
+           unsigned(bytecode.length())));
 
       // If we abort while decoding the SRI, we fallback on explictly requesting
       // the source. Thus, we should not continue in
@@ -427,21 +427,19 @@ ScriptLoadHandler::OnStreamComplete(nsIIncrementalStreamLoader* aLoader,
       // is no SRI data verifier instance, we still want to skip the hash.
       uint32_t sriLength;
       rv = SRICheckDataVerifier::DataSummaryLength(
-          mRequest->mScriptBytecode.length(), mRequest->mScriptBytecode.begin(),
-          &sriLength);
+          bytecode.length(), bytecode.begin(), &sriLength);
       if (NS_FAILED(rv)) {
         return channelRequest->Cancel(mScriptLoader->RestartLoad(mRequest));
       }
 
-      mRequest->mBytecodeOffset = JS::AlignTranscodingBytecodeOffset(sriLength);
+      mRequest->SetSRILength(sriLength);
 
       Vector<uint8_t> compressedBytecode;
       // mRequest has the compressed bytecode, but will be filled with the
       // uncompressed bytecode
-      compressedBytecode.swap(mRequest->mScriptBytecode);
-      if (!JS::loader::ScriptBytecodeDecompress(compressedBytecode,
-                                                mRequest->mBytecodeOffset,
-                                                mRequest->mScriptBytecode)) {
+      compressedBytecode.swap(bytecode);
+      if (!JS::loader::ScriptBytecodeDecompress(
+              compressedBytecode, mRequest->GetSRILength(), bytecode)) {
         return NS_ERROR_UNEXPECTED;
       }
     }

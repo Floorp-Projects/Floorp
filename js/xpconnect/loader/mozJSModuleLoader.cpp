@@ -1823,6 +1823,7 @@ nsresult mozJSModuleLoader::ImportESModule(
       /* aIsTopLevel = */ true,
       /* aIsDynamicImport = */ false, mModuleLoader, visitedSet, nullptr);
 
+  request->NoCacheEntryFound();
   rv = request->StartModuleLoad();
   if (NS_FAILED(rv)) {
     mModuleLoader->MaybeReportLoadError(aCx);
