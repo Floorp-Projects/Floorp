@@ -1348,7 +1348,7 @@ class AutoClearFramePropsArray {
 };
 
 void RetainedDisplayListBuilder::ClearFramesWithProps() {
-  AutoClearFramePropsArray modifiedFrames;
+  AutoClearFramePropsArray modifiedFrames(Data()->GetModifiedFrameCount());
   AutoClearFramePropsArray framesWithProps;
   GetModifiedAndFramesWithProps(&modifiedFrames.Frames(),
                                 &framesWithProps.Frames());
@@ -1579,7 +1579,7 @@ PartialUpdateResult RetainedDisplayListBuilder::AttemptPartialUpdate(
   // We set the override dirty regions during ComputeRebuildRegion or in
   // DisplayPortUtils::InvalidateForDisplayPortChange. The display port change
   // also marks the frame modified, so those regions are cleared here as well.
-  AutoClearFramePropsArray modifiedFrames(64);
+  AutoClearFramePropsArray modifiedFrames(Data()->GetModifiedFrameCount());
   AutoClearFramePropsArray framesWithProps(64);
   GetModifiedAndFramesWithProps(&modifiedFrames.Frames(),
                                 &framesWithProps.Frames());
