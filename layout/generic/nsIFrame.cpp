@@ -7960,6 +7960,9 @@ bool nsIFrame::DoesClipChildrenInBothAxes() const {
     return true;
   }
   const nsStyleDisplay* display = StyleDisplay();
+  if (display->IsContainPaint() && SupportsContainLayoutAndPaint()) {
+    return true;
+  }
   return display->mOverflowX == StyleOverflow::Clip &&
          display->mOverflowY == StyleOverflow::Clip;
 }
