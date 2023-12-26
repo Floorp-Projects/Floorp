@@ -251,7 +251,10 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme,
                                            : NS_RGB(0xDA, 0xDA, 0xDA);
       break;
     case ColorID::Menu:
-      color = GetColorFromNSColor(NSColor.textBackgroundColor);
+      // Hand-picked from Sonoma because there doesn't seem to be any
+      // appropriate menu system color.
+      color = aScheme == ColorScheme::Dark ? NS_RGB(0x36, 0x36, 0x39)
+                                           : NS_RGB(0xeb, 0xeb, 0xeb);
       break;
     case ColorID::Windowframe:
       color = GetColorFromNSColor(NSColor.windowFrameColor);

@@ -29,7 +29,7 @@ panel {
 
   @media (-moz-platform: linux) {
     --panel-border-radius: 8px;
-    --panel-padding-block: max(0px, var(--panel-border-radius) / 2 - 1px);
+    --panel-padding-block: 3px;
 
     @media (prefers-contrast) {
       --panel-border-color: color-mix(in srgb, currentColor 60%, transparent);
@@ -52,6 +52,8 @@ panel {
     background-color: Menu;
     --panel-background: none;
     --panel-border-color: transparent;
+    /* This should be kept in sync with GetMenuMaskImage() */
+    --panel-border-radius: 8px;
   }
 
   &::part(content) {

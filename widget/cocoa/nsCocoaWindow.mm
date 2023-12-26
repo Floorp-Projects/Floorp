@@ -3592,21 +3592,20 @@ static NSMutableSet* gSwizzledFrameViewClasses = nil;
 
 // Returns an autoreleased NSImage.
 static NSImage* GetMenuMaskImage() {
-  CGFloat radius = 4.0f;
-  NSEdgeInsets insets = {5, 5, 5, 5};
-  NSSize maskSize = {12, 12};
-  NSImage* maskImage = [NSImage
-       imageWithSize:maskSize
-             flipped:YES
-      drawingHandler:^BOOL(NSRect dstRect) {
-        NSBezierPath* path = [NSBezierPath bezierPathWithRoundedRect:dstRect
-                                                             xRadius:radius
-                                                             yRadius:radius];
-        [[NSColor colorWithDeviceWhite:1.0 alpha:1.0] set];
-        [path fill];
-        return YES;
-      }];
-  [maskImage setCapInsets:insets];
+  const CGFloat radius = 8.0f;
+  const NSSize maskSize = {radius * 3.0f, radius * 3.0f};
+  NSImage* maskImage = [NSImage imageWithSize:maskSize
+                                      flipped:FALSE
+                               drawingHandler:^BOOL(NSRect dstRect) {
+                                 NSBezierPath* path = [NSBezierPath
+                                     bezierPathWithRoundedRect:dstRect
+                                                       xRadius:radius
+                                                       yRadius:radius];
+                                 [NSColor.blackColor set];
+                                 [path fill];
+                                 return YES;
+                               }];
+  maskImage.capInsets = NSEdgeInsetsMake(radius, radius, radius, radius);
   return maskImage;
 }
 
