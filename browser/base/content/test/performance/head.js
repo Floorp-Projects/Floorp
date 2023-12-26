@@ -636,26 +636,32 @@ function reportUnexpectedFlicker(frames, expectations) {
       previousFrame = frames[i - 1];
     let rects = compareFrames(frame, previousFrame);
 
+    let rectText = r => `${r.toSource()}, window width: ${frame.width}`;
+
+    rects = rects.filter(rect => {
+      for (let e of expectations.exceptions || []) {
+        if (e.condition(rect)) {
+          todo(false, e.name + ", " + rectText(rect));
+          return false;
+        }
+      }
+      return true;
+    });
+
     if (expectations.filter) {
       rects = expectations.filter(rects, frame, previousFrame);
     }
 
-    rects = rects.filter(rect => {
-      let rectText = `${rect.toSource()}, window width: ${frame.width}`;
-      for (let e of expectations.exceptions || []) {
-        if (e.condition(rect)) {
-          todo(false, e.name + ", " + rectText);
-          return false;
-        }
-      }
-
-      ok(false, "unexpected changed rect: " + rectText);
-      return true;
-    });
-
     if (!rects.length) {
       continue;
     }
+
+    ok(
+      false,
+      `unexpected ${rects.length} changed rects: ${rects
+        .map(rectText)
+        .join(", ")}`
+    );
 
     // Before dumping a frame with unexpected differences for the first time,
     // ensure at least one previous frame has been logged so that it's possible
