@@ -743,8 +743,7 @@ struct nsGridContainerFrame::GridItemInfo {
              (isInlineAxis ==
                   aContainerWM.IsOrthogonalTo(mFrame->GetWritingMode()) &&
               minSize.BehavesLikeInitialValueOnBlockAxis());
-    return isAuto &&
-           mFrame->StyleDisplay()->mOverflowX == StyleOverflow::Visible;
+    return isAuto && !mFrame->StyleDisplay()->IsScrollableOverflow();
   }
 
 #ifdef DEBUG
@@ -5598,7 +5597,7 @@ static nscoord MinSize(const GridItemInfo& aGridItem,
       style.IsAuto() ||
       (!inInlineAxis && style.BehavesLikeInitialValueOnBlockAxis());
   if ((inInlineAxis && nsIFrame::ToExtremumLength(style)) ||
-      (isAuto && child->StyleDisplay()->mOverflowX == StyleOverflow::Visible)) {
+      (isAuto && !child->StyleDisplay()->IsScrollableOverflow())) {
     // Now calculate the "content size" part and return whichever is smaller.
     MOZ_ASSERT(isAuto || sz == NS_UNCONSTRAINEDSIZE);
     sz = std::min(sz, ContentContribution(aGridItem, aState, aRC, aCBWM, aAxis,

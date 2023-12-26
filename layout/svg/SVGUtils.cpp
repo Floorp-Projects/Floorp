@@ -915,6 +915,7 @@ gfxRect SVGUtils::GetBBox(nsIFrame* aFrame, uint32_t aFlags,
     y = fillBBox.y;
     width = fillBBox.width;
     height = fillBBox.height;
+    // XXX Should probably check for overflow: clip too.
     bool hasClip = aFrame->StyleDisplay()->IsScrollableOverflow();
     if (hasClip) {
       clipRect = SVGUtils::GetClipRectForFrame(aFrame, x, y, width, height);

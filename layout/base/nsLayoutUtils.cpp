@@ -5184,7 +5184,12 @@ nscoord nsLayoutUtils::MinSizeContributionForAxis(
   nscoord minSize;
   nscoord* fixedMinSize = nullptr;
   if (size.IsAuto()) {
-    if (aFrame->StyleDisplay()->mOverflowX == StyleOverflow::Visible) {
+    if (aFrame->StyleDisplay()->IsScrollableOverflow()) {
+      // min-[width|height]:auto with scrollable overflow computes to
+      // zero.
+      minSize = 0;
+      fixedMinSize = &minSize;
+    } else {
       size = aAxis == eAxisHorizontal ? stylePos->mWidth : stylePos->mHeight;
       // This is same as above: keywords should behaves as property's initial
       // values in block axis.
@@ -5202,10 +5207,6 @@ nscoord nsLayoutUtils::MinSizeContributionForAxis(
         fixedMinSize = &minSize;
       }
       // fall through - the caller will have to deal with "transferred size"
-    } else {
-      // min-[width|height]:auto with overflow != visible computes to zero.
-      minSize = 0;
-      fixedMinSize = &minSize;
     }
   } else if (GetAbsoluteCoord(size, minSize)) {
     fixedMinSize = &minSize;

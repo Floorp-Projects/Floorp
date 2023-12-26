@@ -4590,6 +4590,14 @@ class nsIFrame : public nsQueryFrame {
     return HasAnyStateBits(NS_FRAME_IS_SVG_TEXT);
   }
 
+  // https://drafts.csswg.org/css-overflow-3/#scroll-container
+  bool IsScrollContainer() const {
+    const bool result = IsScrollFrame() || IsListControlFrame();
+    MOZ_ASSERT(result == !!GetAsScrollContainer());
+    return result;
+  }
+  nsIScrollableFrame* GetAsScrollContainer() const;
+
   /**
    * Returns true if the frame is an SVG Rendering Observer container.
    */

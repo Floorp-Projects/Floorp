@@ -119,7 +119,6 @@ fuzzy-if(winWidget,0-1,0-10) == grid-max-sizing-flex-003.html grid-max-sizing-fl
 == grid-item-overflow-stretch-002.html grid-item-overflow-stretch-002-ref.html
 == grid-item-overflow-stretch-003.html grid-item-overflow-stretch-003-ref.html
 == grid-item-overflow-stretch-004.html grid-item-overflow-stretch-004-ref.html
-== grid-item-overflow-stretch-005.html grid-item-overflow-stretch-005-ref.html
 == grid-item-overflow-stretch-006.html grid-item-overflow-stretch-006-ref.html
 == grid-item-canvas-001.html grid-item-canvas-001-ref.html
 == grid-item-button-001.html grid-item-button-001-ref.html
