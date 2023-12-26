@@ -344,7 +344,7 @@ impl<T: ?Sized> Arc<T> {
     /// allocation
     #[inline]
     pub fn ptr_eq(this: &Self, other: &Self) -> bool {
-        this.ptr() == other.ptr()
+        this.ptr() as *const () == other.ptr() as *const ()
     }
 
     fn ptr(&self) -> *mut ArcInner<T> {
