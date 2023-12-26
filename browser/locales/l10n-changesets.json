@@ -1983,7 +1983,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "7dbc8e46c10b6e31db5170facb7599894846e5c8"
+        "revision": "606e631ad4913af37ad7612bf7525673e60cf447"
     },
     "zh-TW": {
         "pin": false,
