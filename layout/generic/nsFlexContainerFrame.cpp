@@ -2306,6 +2306,9 @@ bool FlexItem::IsMinSizeAutoResolutionNeeded() const {
   // (b) the item is *not* a scroll container. (A scroll container's automatic
   //     minimum size is zero.)
   // https://drafts.csswg.org/css-flexbox-1/#min-size-auto
+  //
+  // Note that the scroll container case is redefined to be looking at the
+  // computed value instead, see https://github.com/w3c/csswg-drafts/issues/7714
   const auto& mainMinSize =
       Frame()->StylePosition()->MinSize(MainAxis(), ContainingBlockWM());
 
