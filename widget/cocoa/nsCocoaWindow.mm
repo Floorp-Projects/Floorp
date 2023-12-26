@@ -143,6 +143,7 @@ nsCocoaWindow::nsCocoaWindow()
       mPopupContentView(nil),
       mFullscreenTransitionAnimation(nil),
       mShadowStyle(StyleWindowShadow::Default),
+      mIsShadowStyleSet(NO),
       mBackingScaleFactor(0.0),
       mAnimationType(nsIWidget::eGenericWindowAnimation),
       mWindowMadeHere(false),
@@ -2684,6 +2685,10 @@ bool nsCocoaWindow::HasPendingInputEvent() {
 void nsCocoaWindow::SetWindowShadowStyle(StyleWindowShadow aStyle) {
   NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
+  if (mShadowStyle == aStyle && mIsShadowStyleSet) {
+    return;
+  }
+
   mShadowStyle = aStyle;
 
   if (!mWindow || mWindowType != WindowType::Popup) {
@@ -2691,8 +2696,9 @@ void nsCocoaWindow::SetWindowShadowStyle(StyleWindowShadow aStyle) {
   }
 
   mWindow.shadowStyle = mShadowStyle;
-  [mWindow setUseMenuStyle:mShadowStyle == StyleWindowShadow::Menu];
+  [mWindow setEffectViewWrapperForStyle:mShadowStyle];
   [mWindow setHasShadow:aStyle != StyleWindowShadow::None];
+  mIsShadowStyleSet = YES;
 
   NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
@@ -3577,7 +3583,6 @@ static NSMutableSet* gSwizzledFrameViewClasses = nil;
   mDirtyRect = NSZeroRect;
   mBeingShown = NO;
   mDrawTitle = NO;
-  mUseMenuStyle = NO;
   mTouchBar = nil;
   mIsAnimationSuppressed = NO;
   [self updateTrackingArea];
@@ -3614,22 +3619,27 @@ static NSImage* GetMenuMaskImage() {
   [super setContentView:aNewWrapper];
 }
 
-- (void)setUseMenuStyle:(BOOL)aValue {
-  if (aValue && !mUseMenuStyle) {
-    // Turn on rounded corner masking.
-    NSView* effectView =
-        VibrancyManager::CreateEffectView(VibrancyType::MENU, YES);
-    [effectView setMaskImage:GetMenuMaskImage()];
+- (void)setEffectViewWrapperForStyle:(StyleWindowShadow)aStyle {
+  if (aStyle == StyleWindowShadow::Menu ||
+      aStyle == StyleWindowShadow::Tooltip) {
+    // Add an effect view wrapper so that the OS draws the appropriate
+    // vibrancy effect and window border.
+    BOOL isMenu = aStyle == StyleWindowShadow::Menu;
+    NSView* effectView = VibrancyManager::CreateEffectView(
+        isMenu ? VibrancyType::MENU : VibrancyType::TOOLTIP, YES);
+    if (isMenu) {
+      // Turn on rounded corner masking.
+      [effectView setMaskImage:GetMenuMaskImage()];
+    }
     [self swapOutChildViewWrapper:effectView];
     [effectView release];
-  } else if (mUseMenuStyle && !aValue) {
-    // Turn off rounded corner masking.
+  } else {
+    // Remove the existing wrapper.
     NSView* wrapper = [[NSView alloc] initWithFrame:NSZeroRect];
     [wrapper setWantsLayer:YES];
     [self swapOutChildViewWrapper:wrapper];
     [wrapper release];
   }
-  mUseMenuStyle = aValue;
 }
 
 - (NSTouchBar*)makeTouchBar {

@@ -406,6 +406,12 @@ tooltip:not([position]) {
   }
 }
 
+@media (-moz-platform: macos) {
+  tooltip {
+    padding: 2px 6px; /* Matches native metrics. */
+  }
+}
+
 @media (-moz-platform: windows) {
   tooltip {
     appearance: none;
