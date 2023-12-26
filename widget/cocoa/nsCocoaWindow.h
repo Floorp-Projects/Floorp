@@ -55,7 +55,6 @@ typedef struct _nsCocoaWindowList {
 
   BOOL mBeingShown;
   BOOL mDrawTitle;
-  BOOL mUseMenuStyle;
   BOOL mIsAnimationSuppressed;
 
   nsTouchBar* mTouchBar;
@@ -108,7 +107,7 @@ typedef struct _nsCocoaWindowList {
 
 - (NSRect)getAndResetNativeDirtyRect;
 
-- (void)setUseMenuStyle:(BOOL)aValue;
+- (void)setEffectViewWrapperForStyle:(mozilla::StyleWindowShadow)aStyle;
 @property(nonatomic) mozilla::StyleWindowShadow shadowStyle;
 
 - (void)releaseJSObjects;
@@ -436,6 +435,7 @@ class nsCocoaWindow final : public nsBaseWidget, public nsPIWidgetCocoa {
   // transition, it is the animation object.
   NSAnimation* mFullscreenTransitionAnimation;
   mozilla::StyleWindowShadow mShadowStyle;
+  BOOL mIsShadowStyleSet;
 
   CGFloat mBackingScaleFactor;
   CGFloat mAspectRatio;
