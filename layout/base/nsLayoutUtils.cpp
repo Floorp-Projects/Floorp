@@ -3168,8 +3168,7 @@ void nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
   }
 
   builder->ClearHaveScrollableDisplayPort();
-  if (builder->IsPaintingToWindow() &&
-      nsLayoutUtils::AsyncPanZoomEnabled(aFrame)) {
+  if (builder->IsPaintingToWindow()) {
     DisplayPortUtils::MaybeCreateDisplayPortInFirstScrollFrameEncountered(
         aFrame, builder);
   }
