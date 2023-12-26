@@ -657,7 +657,8 @@ void RemoteTextureMap::NotifyContextLost(
       auto& owner = it->second;
       owner->mIsContextLost = true;
       while (!owner->mRecycledTextures.empty()) {
-        releasingTextures.push_back(std::move(owner->mRecycledTextures.top()));
+        releasingTextures.push_back(
+            std::move(owner->mRecycledTextures.front()));
         owner->mRecycledTextures.pop();
       }
     }
@@ -1192,7 +1193,7 @@ void RemoteTextureMap::SuppressRemoteTextureReadyCheck(
 UniquePtr<TextureData> RemoteTextureMap::GetRecycledTextureData(
     const RemoteTextureOwnerId aOwnerId, const base::ProcessId aForPid,
     gfx::IntSize aSize, gfx::SurfaceFormat aFormat, TextureType aTextureType) {
-  std::stack<UniquePtr<TextureData>>
+  std::queue<UniquePtr<TextureData>>
       releasingTextures;  // Release outside the monitor
   {
     MonitorAutoLock lock(mMonitor);
@@ -1207,12 +1208,12 @@ UniquePtr<TextureData> RemoteTextureMap::GetRecycledTextureData(
     }
 
     if (!owner->mRecycledTextures.empty()) {
-      auto& top = owner->mRecycledTextures.top();
-      if (top->GetTextureType() == aTextureType) {
+      auto& front = owner->mRecycledTextures.front();
+      if (front->GetTextureType() == aTextureType) {
         TextureData::Info info;
-        top->FillInfo(info);
+        front->FillInfo(info);
         if (info.size == aSize && info.format == aFormat) {
-          UniquePtr<TextureData> texture = std::move(top);
+          UniquePtr<TextureData> texture = std::move(front);
           owner->mRecycledTextures.pop();
           return texture;
         }
