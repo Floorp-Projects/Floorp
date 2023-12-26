@@ -3905,14 +3905,6 @@ var gCSSProperties = {
     other_values: ["preserve-3d"],
     invalid_values: [],
   },
-  "-moz-user-focus": {
-    domProp: "MozUserFocus",
-    inherited: true,
-    type: CSS_TYPE_LONGHAND,
-    initial_values: ["normal"],
-    other_values: ["none", "ignore"],
-    invalid_values: [],
-  },
   "-moz-user-input": {
     domProp: "MozUserInput",
     inherited: true,

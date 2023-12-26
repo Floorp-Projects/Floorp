@@ -103,6 +103,7 @@ const char* gInaccessibleProperties[] = {
     "-moz-min-font-size-ratio",           // parsed by UA sheets only
     "-moz-box-collapse",                  // chrome-only internal properties
     "-moz-subtree-hidden-only-visually",  // chrome-only internal properties
+    "-moz-user-focus",                    // chrome-only internal properties
     "-moz-window-input-region-margin",    // chrome-only internal properties
     "-moz-window-opacity",                // chrome-only internal properties
     "-moz-window-transform",              // chrome-only internal properties

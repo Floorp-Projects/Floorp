@@ -74,6 +74,7 @@ ${helpers.single_keyword(
     gecko_enum_prefix="StyleUserFocus",
     animation_value_type="discrete",
     spec="Nonstandard (https://developer.mozilla.org/en-US/docs/Web/CSS/-moz-user-focus)",
+    enabled_in="chrome",
     affects="",
 )}
 
