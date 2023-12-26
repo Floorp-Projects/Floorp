@@ -2156,6 +2156,8 @@
     <string name="review_quality_check_adjusted_rating_title">คะแนนที่ปรับแล้ว</string>
     <!-- Description for a product's adjusted star rating. The text presents that the product's reviews which were evaluated as unreliable were removed from the adjusted rating. -->
     <string name="review_quality_check_adjusted_rating_description" moz:RemovedIn="122" tools:ignore="UnusedResources">เอาบทวิจารณ์ที่ไม่น่าเชื่อถือออกแล้ว</string>
+    <!-- Description for a product's adjusted star rating. The text presents that the product's reviews which were evaluated as unreliable were removed from the adjusted rating. -->
+    <string name="review_quality_check_adjusted_rating_description_2">อ้างอิงจากบทวิจารณ์ที่เชื่อถือได้</string>
     <!-- Title for list of highlights from a product's review emphasizing a product's important traits. -->
     <string name="review_quality_check_highlights_title">ไฮไลต์จากบทวิจารณ์ล่าสุด</string>
     <!-- Title for section explaining how we analyze the reliability of a product's reviews. -->
@@ -2273,6 +2275,9 @@
     <!-- Text for highlights card competitiveness category header. Reviews shown under this header should refer the product's competitiveness. -->
     <string name="review_quality_check_highlights_type_competitiveness">ความสามารถในการแข่งขัน</string>
 
+    <!-- Text that is surrounded by quotes. The parameter is the actual text that is in quotes. An example of that text could be: Excellent craftsmanship, and that is displayed as “Excellent craftsmanship”. The text comes from a buyer's review that the feature is highlighting"   -->
+    <string name="surrounded_with_quotes">“%s”</string>
+
     <!-- Accessibility services actions labels. These will be appended to accessibility actions like "Double tap to.." but not by or applications but by services like Talkback. -->
     <!-- Action label for elements that can be collapsed if interacting with them. Talkback will append this to say "Double tap to collapse". -->
     <string name="a11y_action_label_collapse">ยุบ</string>
@@ -2306,6 +2311,12 @@
     <!-- Never translate site preference screen -->
     <!-- Title of the never translate site preference screen that will appear on the toolbar.-->
     <string name="never_translate_site_toolbar_title_preference">ไม่ต้องแปลไซต์เหล่านี้</string>
+    <!-- Content description (not visible, for screen readers etc.): For a never-translated site list item that is selected.
+             The first parameter is web site url (for example:"wikipedia.com") -->
+    <string name="never_translate_site_item_list_content_description_preference">เอา %1$s ออก</string>
+    <!-- The Delete site dialogue title will appear when the user clicks on a list item.
+             The first parameter is web site url (for example:"wikipedia.com") -->
+    <string name="never_translate_site_dialog_title_preference">ลบ %1$s หรือไม่?</string>
     <!-- The Delete site dialogue positive button will appear when the user clicks on a list item. The site will be deleted. -->
     <string name="never_translate_site_dialog_confirm_delete_preference">ลบ</string>
     <!-- The Delete site dialogue negative button will appear when the user clicks on a list item. The dialog will be dismissed. -->

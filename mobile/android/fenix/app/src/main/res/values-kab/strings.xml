@@ -2300,4 +2300,22 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Download languages preference screen -->
     <!-- Title of the download languages preference screen toolbar.-->
     <string name="download_languages_toolbar_title_preference">Sader tutlayin</string>
-    </resources>
+    <!-- Clickable text from the screen header that links to a website. -->
+    <string name="download_languages_header_learn_more_preference">Issin ugar</string>
+    <!-- The subhead of the download language preference screen will appear above the pivot language. -->
+    <string name="download_languages_available_languages_preference">Tutlayin yellan</string>
+    <!-- Text that will appear beside a core or pivot language package name to show that the language is necessary for the translation feature to function. -->
+    <string name="download_languages_default_system_language_require_preference">iţusra</string>
+    <!-- The subhead of the download language preference screen will appear above the items that were not downloaded. -->
+    <string name="download_language_header_preference">Sader tutlayin</string>
+    <!-- All languages list item. When the user presses this item, they can download or delete all languages. -->
+    <string name="download_language_all_languages_item_preference">Meṛṛa tutlayin</string>
+    <!-- Content description (not visible, for screen readers etc.): For a language list item that was downloaded, the user can now delete it. -->
+    <string name="download_languages_item_content_description_downloaded_state">Kkes</string>
+    <!-- Content description (not visible, for screen readers etc.): For a language list item, downloading is in progress. -->
+    <string name="download_languages_item_content_description_in_progress_state">Iteddu</string>
+    <!-- Content description (not visible, for screen readers etc.): For a language list item that was not downloaded. -->
+    <string name="download_languages_item_content_description_not_downloaded_state">Sader</string>
+    <!-- Content description (not visible, for screen readers etc.): For a language list item that is selected. -->
+    <string name="download_languages_item_content_description_selected_state">Yettwafran</string>
+</resources>
