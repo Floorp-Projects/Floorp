@@ -480,16 +480,20 @@ class BuildMonitor(MozbuildObject):
             cpu_percent=usage["cpu_percent"],
             io_read_bytes=usage["io"].read_bytes,
             io_write_bytes=usage["io"].write_bytes,
-            io_read_time=usage["io"].read_time,
-            io_write_time=usage["io"].write_time,
         )
 
         message = (
             "Overall system resources - Wall time: {duration:.0f}s; "
             "CPU: {cpu_percent:.0f}%; "
             "Read bytes: {io_read_bytes}; Write bytes: {io_write_bytes}; "
-            "Read time: {io_read_time}; Write time: {io_write_time}"
         )
+
+        if hasattr(usage["io"], "read_time") and hasattr(usage["io"], "write_time"):
+            params.update(
+                io_read_time=usage["io"].read_time,
+                io_write_time=usage["io"].write_time,
+            )
+            message += "Read time: {io_read_time}; Write time: {io_write_time}"
 
         self.log(logging.WARNING, "resource_usage", params, message)
 
