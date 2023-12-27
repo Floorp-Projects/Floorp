@@ -268,6 +268,19 @@ class Selection final : public nsSupportsWeakReference,
     // only when mFrame is not nullptr.
     CaretAssociationHint mHint{0};  // Before
   };
+
+  /**
+   * Get primary frame and some other data for putting caret or extending
+   * selection at the point.
+   */
+  static PrimaryFrameData GetPrimaryFrameForCaret(
+      nsIContent* aContent, uint32_t aOffset, bool aVisual,
+      CaretAssociationHint aHint, intl::BidiEmbeddingLevel aCaretBidiLevel);
+
+  /**
+   * Get primary frame and some other data for putting caret or extending
+   * selection at the focus point.
+   */
   PrimaryFrameData GetPrimaryFrameForCaretAtFocusNode(bool aVisual) const;
 
   UniquePtr<SelectionDetails> LookUpSelection(
@@ -737,10 +750,6 @@ class Selection final : public nsSupportsWeakReference,
   void AddRangeAndSelectFramesAndNotifyListenersInternal(nsRange& aRange,
                                                          Document* aDocument,
                                                          ErrorResult&);
-
-  static PrimaryFrameData GetPrimaryFrameForCaret(
-      nsIContent* aContent, uint32_t aOffset, bool aVisual,
-      CaretAssociationHint aHint, intl::BidiEmbeddingLevel aCaretBidiLevel);
 
   // This is helper method for GetPrimaryFrameForCaret.
   // If aVisual is true, this returns caret frame.

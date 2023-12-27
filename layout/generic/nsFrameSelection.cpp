@@ -761,6 +761,8 @@ nsresult nsFrameSelection::MoveCaret(nsDirection aDirection,
     return NS_ERROR_FAILURE;
   }
   if (visualMovement) {
+    // FYI: This was done during a call of GetPrimaryFrameForCaretAtFocusNode.
+    // Therefore, this may not be intended by the original author.
     SetHint(frameForFocus.mHint);
   }
 
@@ -901,26 +903,29 @@ Result<PeekOffsetStruct, nsresult> nsFrameSelection::PeekOffsetForCaretMove(
     nsDirection aDirection, bool aContinueSelection,
     const nsSelectionAmount aAmount, CaretMovementStyle aMovementStyle,
     const nsPoint& aDesiredCaretPos) const {
+  if (!mPresShell) {
+    return Err(NS_ERROR_NULL_POINTER);
+  }
+
   Selection* selection =
       mDomSelections[GetIndexFromSelectionType(SelectionType::eNormal)];
   if (!selection) {
     return Err(NS_ERROR_NULL_POINTER);
   }
 
+  nsIContent* content = nsIContent::FromNodeOrNull(selection->GetFocusNode());
+  if (!content) {
+    return Err(NS_ERROR_FAILURE);
+  }
+  MOZ_ASSERT(mPresShell->GetDocument() == content->GetComposedDoc());
+
   const bool visualMovement =
       mCaret.IsVisualMovement(aContinueSelection, aMovementStyle);
 
-  const Selection::PrimaryFrameData frameForFocus =
-      selection->GetPrimaryFrameForCaretAtFocusNode(visualMovement);
-  if (!frameForFocus.mFrame) {
-    return Err(NS_ERROR_FAILURE);
-  }
-
+  PeekOffsetOptions options;
   // set data using mLimiters.mLimiter to stop on scroll views.  If we have a
   // limiter then we stop peeking when we hit scrollable views.  If no limiter
   // then just let it go ahead
-  PeekOffsetOptions options{PeekOffsetOption::JumpLines,
-                            PeekOffsetOption::IsKeyboardSelect};
   if (mLimiters.mLimiter) {
     options += PeekOffsetOption::StopAtScroller;
   }
@@ -933,10 +938,33 @@ Result<PeekOffsetStruct, nsresult> nsFrameSelection::PeekOffsetForCaretMove(
   if (selection->IsEditorSelection()) {
     options += PeekOffsetOption::ForceEditableRegion;
   }
+
+  return nsFrameSelection::PeekOffsetForCaretMove(
+      content, selection->FocusOffset(), aDirection, GetHint(),
+      GetCaretBidiLevel(), aAmount, aDesiredCaretPos, options);
+}
+
+// static
+mozilla::Result<mozilla::PeekOffsetStruct, nsresult>
+nsFrameSelection::PeekOffsetForCaretMove(
+    nsIContent* aContent, uint32_t aOffset, nsDirection aDirection,
+    CaretAssociationHint aHint,
+    mozilla::intl::BidiEmbeddingLevel aCaretBidiLevel,
+    const nsSelectionAmount aAmount, const nsPoint& aDesiredCaretPos,
+    mozilla::PeekOffsetOptions aOptions) {
+  const Selection::PrimaryFrameData frameForFocus =
+      Selection::GetPrimaryFrameForCaret(
+          aContent, aOffset, aOptions.contains(PeekOffsetOption::Visual), aHint,
+          aCaretBidiLevel);
+  if (!frameForFocus.mFrame) {
+    return Err(NS_ERROR_FAILURE);
+  }
+
+  aOptions += {PeekOffsetOption::JumpLines, PeekOffsetOption::IsKeyboardSelect};
   PeekOffsetStruct pos(
       aAmount, aDirection,
       static_cast<int32_t>(frameForFocus.mOffsetInFrameContent),
-      aDesiredCaretPos, options);
+      aDesiredCaretPos, aOptions);
   nsresult rv = frameForFocus.mFrame->PeekOffset(&pos);
   if (NS_FAILED(rv)) {
     return Err(rv);
@@ -2155,7 +2183,11 @@ nsresult nsFrameSelection::PhysicalMove(int16_t aDirection, int16_t aAmount,
   const Selection::PrimaryFrameData frameForFocus =
       sel->GetPrimaryFrameForCaretAtFocusNode(true);
   if (frameForFocus.mFrame) {
+    // FYI: Setting the caret association hint was done during a call of
+    // GetPrimaryFrameForCaretAtFocusNode.  Therefore, this may not be intended
+    // by the original author.
     sel->GetFrameSelection()->SetHint(frameForFocus.mHint);
+
     if (!frameForFocus.mFrame->Style()->IsTextCombined()) {
       wm = frameForFocus.mFrame->GetWritingMode();
     } else {
