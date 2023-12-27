@@ -59,7 +59,6 @@
 #include "mozilla/layers/RemoteTextureMap.h"
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/layers/ImageBridgeChild.h"
-#include "mozilla/layers/TextureClientSharedSurface.h"
 #include "mozilla/layers/WebRenderUserData.h"
 #include "mozilla/layers/WebRenderCanvasRenderer.h"
 
@@ -1179,7 +1178,7 @@ bool WebGLContext::PushRemoteTexture(WebGLFramebuffer* fb,
     // If we can't serialize to a surface descriptor, then we need to create
     // a buffer to read back into that will become the remote texture.
     auto data = mRemoteTextureOwner->CreateOrRecycleBufferTextureData(
-        ownerId, size, surfaceFormat);
+        size, surfaceFormat, ownerId);
     if (!data) {
       gfxCriticalNoteOnce << "Failed to allocate BufferTextureData";
       return onFailure();
@@ -1235,11 +1234,10 @@ bool WebGLContext::PushRemoteTexture(WebGLFramebuffer* fb,
       break;
   }
 
-  auto data =
-      MakeUnique<layers::SharedSurfaceTextureData>(*desc, surfaceFormat, size);
-  mRemoteTextureOwner->PushTexture(textureId, ownerId, std::move(data),
-                                   keepAlive);
-  auto recycledSurface = mRemoteTextureOwner->GetRecycledSharedSurface(ownerId);
+  mRemoteTextureOwner->PushTexture(textureId, ownerId, keepAlive, size,
+                                   surfaceFormat, *desc);
+  auto recycledSurface = mRemoteTextureOwner->GetRecycledSharedSurface(
+      size, surfaceFormat, desc->type(), ownerId);
   if (recycledSurface) {
     swapChain.StoreRecycledSurface(recycledSurface);
   }

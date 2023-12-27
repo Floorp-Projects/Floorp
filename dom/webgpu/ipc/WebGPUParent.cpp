@@ -10,7 +10,6 @@
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/ImageDataSerializer.h"
 #include "mozilla/layers/RemoteTextureMap.h"
-#include "mozilla/layers/TextureClientSharedSurface.h"
 #include "mozilla/layers/TextureHost.h"
 #include "mozilla/layers/WebRenderImageHost.h"
 #include "mozilla/layers/WebRenderTextureHost.h"
@@ -1004,7 +1003,7 @@ static void ReadbackPresentCallback(ffi::WGPUBufferMapAsyncStatus status,
     MOZ_ASSERT(mapped.length >= bufferSize);
     auto textureData =
         req->mRemoteTextureOwner->CreateOrRecycleBufferTextureData(
-            req->mOwnerId, data->mDesc.size(), data->mDesc.format());
+            data->mDesc.size(), data->mDesc.format(), req->mOwnerId);
     if (!textureData) {
       gfxCriticalNoteOnce << "Failed to allocate BufferTextureData";
       return;
@@ -1081,16 +1080,13 @@ void WebGPUParent::PostExternalTexture(
     return;
   }
 
-  auto textureData =
-      MakeUnique<layers::SharedSurfaceTextureData>(*desc, surfaceFormat, size);
-
-  mRemoteTextureOwner->PushTexture(aRemoteTextureId, aOwnerId,
-                                   std::move(textureData), aExternalTexture);
+  mRemoteTextureOwner->PushTexture(aRemoteTextureId, aOwnerId, aExternalTexture,
+                                   size, surfaceFormat, *desc);
 
   RefPtr<PresentationData> data = lookup->second.get();
 
-  auto recycledTexture =
-      mRemoteTextureOwner->GetRecycledExternalTexture(aOwnerId);
+  auto recycledTexture = mRemoteTextureOwner->GetRecycledExternalTexture(
+      size, surfaceFormat, desc->type(), aOwnerId);
   if (recycledTexture) {
     data->mRecycledExternalTextures.push_back(recycledTexture);
   }

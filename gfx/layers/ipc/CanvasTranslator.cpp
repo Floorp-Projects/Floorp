@@ -35,15 +35,12 @@
 namespace mozilla {
 namespace layers {
 
-TextureData* CanvasTranslator::CreateTextureData(TextureType aTextureType,
-                                                 gfx::BackendType aBackendType,
-                                                 const gfx::IntSize& aSize,
-                                                 gfx::SurfaceFormat aFormat,
-                                                 bool aClear) {
+UniquePtr<TextureData> CanvasTranslator::CreateTextureData(
+    const gfx::IntSize& aSize, gfx::SurfaceFormat aFormat, bool aClear) {
   TextureData* textureData = nullptr;
   TextureAllocationFlags allocFlags =
       aClear ? ALLOC_CLEAR_BUFFER : ALLOC_DEFAULT;
-  switch (aTextureType) {
+  switch (mTextureType) {
 #ifdef XP_WIN
     case TextureType::D3D11: {
       textureData =
@@ -58,12 +55,12 @@ TextureData* CanvasTranslator::CreateTextureData(TextureType aTextureType,
           allocFlags, nullptr);
       break;
     default:
-      textureData = TextureData::Create(aTextureType, aFormat, aSize,
-                                        allocFlags, aBackendType);
+      textureData = TextureData::Create(mTextureType, aFormat, aSize,
+                                        allocFlags, mBackendType);
       break;
   }
 
-  return textureData;
+  return WrapUnique(textureData);
 }
 
 CanvasTranslator::CanvasTranslator(
@@ -603,9 +600,8 @@ bool CanvasTranslator::CreateReferenceTexture() {
     mReferenceTextureData->Unlock();
   }
 
-  mReferenceTextureData.reset(CreateTextureData(mTextureType, mBackendType,
-                                                gfx::IntSize(1, 1),
-                                                gfx::SurfaceFormat::B8G8R8A8));
+  mReferenceTextureData =
+      CreateTextureData(gfx::IntSize(1, 1), gfx::SurfaceFormat::B8G8R8A8, true);
   if (!mReferenceTextureData) {
     return false;
   }
@@ -682,6 +678,7 @@ void CanvasTranslator::NotifyDeviceChanged() {
   // Clear out any old recycled texture datas with the wrong device.
   if (mRemoteTextureOwner) {
     mRemoteTextureOwner->NotifyContextLost();
+    mRemoteTextureOwner->ClearRecycledTextures();
   }
   mDeviceResetInProgress = true;
   gfx::CanvasRenderThread::Dispatch(
@@ -774,8 +771,8 @@ already_AddRefed<gfx::DrawTarget> CanvasTranslator::CreateDrawTarget(
 
   if (!dt) {
     do {
-      UniquePtr<TextureData> textureData(
-          CreateTextureData(mTextureType, mBackendType, aSize, aFormat));
+      UniquePtr<TextureData> textureData =
+          CreateOrRecycleTextureData(aSize, aFormat);
       if (NS_WARN_IF(!textureData)) {
         continue;
       }
@@ -790,6 +787,8 @@ already_AddRefed<gfx::DrawTarget> CanvasTranslator::CreateDrawTarget(
         textureData->Unlock();
         continue;
       }
+      // Recycled buffer contents may be uninitialized.
+      dt->ClearRect(gfx::Rect(dt->GetRect()));
 
       TextureInfo& info = mTextureInfo[mNextTextureId];
       info.mTextureData = std::move(textureData);
@@ -868,32 +867,43 @@ bool CanvasTranslator::UnlockTexture(int64_t aTextureId, RemoteTextureId aId) {
   return true;
 }
 
-bool CanvasTranslator::PushRemoteTexture(int64_t aTextureId, TextureData* aData,
-                                         RemoteTextureId aId,
-                                         RemoteTextureOwnerId aOwnerId) {
+void CanvasTranslator::EnsureRemoteTextureOwner(RemoteTextureOwnerId aOwnerId) {
   if (!mRemoteTextureOwner) {
     mRemoteTextureOwner = new RemoteTextureOwnerClient(mOtherPid);
   }
   if (!mRemoteTextureOwner->IsRegistered(aOwnerId)) {
     mRemoteTextureOwner->RegisterTextureOwner(
         aOwnerId,
-        /* aIsSyncMode */ gfx::gfxVars::WebglOopAsyncPresentForceSync());
+        /* aIsSyncMode */ gfx::gfxVars::WebglOopAsyncPresentForceSync(),
+        /* aSharedRecycling */ true);
   }
+}
+
+UniquePtr<TextureData> CanvasTranslator::CreateOrRecycleTextureData(
+    const gfx::IntSize& aSize, gfx::SurfaceFormat aFormat) {
+  if (mRemoteTextureOwner) {
+    if (mTextureType == TextureType::Unknown) {
+      return mRemoteTextureOwner->CreateOrRecycleBufferTextureData(aSize,
+                                                                   aFormat);
+    }
+    if (UniquePtr<TextureData> data =
+            mRemoteTextureOwner->GetRecycledTextureData(aSize, aFormat,
+                                                        mTextureType)) {
+      return data;
+    }
+  }
+  return CreateTextureData(aSize, aFormat, false);
+}
+
+bool CanvasTranslator::PushRemoteTexture(int64_t aTextureId, TextureData* aData,
+                                         RemoteTextureId aId,
+                                         RemoteTextureOwnerId aOwnerId) {
+  EnsureRemoteTextureOwner(aOwnerId);
   UniquePtr<TextureData> dstData;
   if (!mDeviceResetInProgress) {
     TextureData::Info info;
     aData->FillInfo(info);
-    if (mTextureType == TextureType::Unknown) {
-      dstData = mRemoteTextureOwner->CreateOrRecycleBufferTextureData(
-          aOwnerId, info.size, info.format);
-    } else {
-      dstData = mRemoteTextureOwner->GetRecycledTextureData(
-          aOwnerId, info.size, info.format, mTextureType);
-      if (!dstData) {
-        dstData.reset(CreateTextureData(mTextureType, mBackendType, info.size,
-                                        info.format, false));
-      }
-    }
+    dstData = CreateOrRecycleTextureData(info.size, info.format);
   }
   bool success = false;
   // Source data is already locked.
