@@ -559,8 +559,12 @@ class TelemetryHandler {
           lazy.serpEventTelemetryCategorization &&
           telemetryState.categorizationInfo
         ) {
+          let impressionInfo = telemetryState.impressionInfo;
           SERPCategorizationRecorder.recordCategorizationTelemetry({
             ...telemetryState.categorizationInfo,
+            partner_code: impressionInfo.partnerCode,
+            provider: impressionInfo.provider,
+            tagged: impressionInfo.tagged,
             num_ads_clicked: telemetryState.adsClicked,
             num_ads_visible: telemetryState.adsVisible,
           });
