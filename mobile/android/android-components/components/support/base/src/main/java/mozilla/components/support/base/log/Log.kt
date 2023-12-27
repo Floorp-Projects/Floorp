@@ -6,6 +6,7 @@ package mozilla.components.support.base.log
 
 import androidx.annotation.VisibleForTesting
 import mozilla.components.support.base.log.sink.LogSink
+import mozilla.components.support.base.log.sink.TestModeLogSink
 
 /**
  * API for logging messages and exceptions.
@@ -23,9 +24,13 @@ object Log {
      */
     var logLevel: Priority = Priority.DEBUG
 
-    private val sinks = mutableListOf<LogSink>()
-
     private val testMode: Boolean = System.getProperty("logging.test-mode") == "true"
+
+    private val sinks = if (testMode) {
+        mutableListOf<LogSink>(TestModeLogSink())
+    } else {
+        mutableListOf()
+    }
 
     /**
      * Adds a sink that will receive log calls.
@@ -58,10 +63,6 @@ object Log {
                 }
             }
         }
-
-        if (testMode) {
-            printTestModeMessage(priority, tag, throwable, message)
-        }
     }
 
     // Only for testing
@@ -72,26 +73,6 @@ object Log {
         synchronized(sinks) {
             sinks.clear()
         }
-    }
-
-    private fun printTestModeMessage(
-        priority: Priority,
-        tag: String?,
-        throwable: Throwable?,
-        message: String?,
-    ) {
-        val printMessage = StringBuilder()
-        printMessage.append(priority.name[0])
-        printMessage.append(" ")
-        if (tag != null) {
-            printMessage.append("[$tag] ")
-        }
-        if (message != null) {
-            printMessage.append(message)
-        }
-
-        println(printMessage.toString())
-        throwable?.printStackTrace()
     }
 
     /**
