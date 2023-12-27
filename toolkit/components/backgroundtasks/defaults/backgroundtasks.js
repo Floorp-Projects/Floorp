@@ -54,3 +54,5 @@ pref("app.update.background.automaticRestartEnabled", true);
 #else
 pref("app.update.background.automaticRestartEnabled", false);
 #endif
+
+pref("defaultAgent.cppFallback.enabled", false);
