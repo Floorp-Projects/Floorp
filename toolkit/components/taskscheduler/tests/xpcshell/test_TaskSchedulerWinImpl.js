@@ -200,3 +200,92 @@ add_task(async function test_create() {
   );
   Assert.equal(WinSvc.validateTaskDefinition(basicXML), 0 /* S_OK */);
 });
+
+add_task(async function test_migrate() {
+  // Create task name with nameVersion1
+  const taskName = "test-task-1";
+  const rawTaskNameV1 = WinImpl._formatTaskName(taskName, { nameVersion: 1 });
+  const rawTaskNameV2 = WinImpl._formatTaskName(taskName, { nameVersion: 2 });
+  const folderName = WinImpl._taskFolderName();
+  const exePath = "C:\\Program Files\\XYZ\\123.exe";
+  const workingDir = "C:\\Program Files\\XYZ";
+  const argsIn = [
+    "x.txt",
+    "c:\\x.txt",
+    'C:\\"HELLO WORLD".txt',
+    "only space.txt",
+  ];
+  const expectedArgsOutStr = [
+    "x.txt",
+    "c:\\x.txt",
+    '"C:\\\\\\"HELLO WORLD\\".txt"',
+    '"only space.txt"',
+  ].join(" ");
+  const description = "Entities: < &. Non-ASCII: abc😀def.";
+  const intervalSecsIn = 2 * 60 * 60; // 2 hours
+  const expectedIntervalOut = "PT2H"; // 2 hours
+
+  const queries = [
+    ["Actions Exec Command", exePath],
+    ["Actions Exec WorkingDirectory", workingDir],
+    ["Actions Exec Arguments", expectedArgsOutStr],
+    ["RegistrationInfo Description", description],
+    ["RegistrationInfo Author", Services.appinfo.vendor],
+    ["Settings Enabled", "false"],
+    ["Triggers TimeTrigger Repetition Interval", expectedIntervalOut],
+  ];
+
+  await TaskScheduler.registerTask(taskName, exePath, intervalSecsIn, {
+    disabled: true,
+    args: argsIn,
+    description,
+    workingDirectory: workingDir,
+    nameVersion: 1,
+  });
+
+  ok(
+    WinImpl.taskExists(taskName, { nameVersion: 1 }),
+    "Task exists with nameVersion1"
+  );
+  const originalTaskXML = WinSvc.getTaskXML(folderName, rawTaskNameV1);
+  const parser = new DOMParser();
+  const docV1 = parser.parseFromString(originalTaskXML, "text/xml");
+
+  Assert.equal(docV1.documentElement.tagName, "Task");
+
+  // Check for the values set above
+  for (let [sel, expected] of queries) {
+    Assert.equal(
+      docV1.querySelector(sel).textContent,
+      expected,
+      `Task V1 ${sel} had expected textContent`
+    );
+  }
+
+  // Update task name format to nameVersion2
+  WinImpl._updateTaskNameFormat(taskName);
+  ok(
+    WinImpl.taskExists(taskName, { nameVersion: 2 }),
+    "Task exists with nameVersion2"
+  );
+  ok(
+    !WinImpl.taskExists(taskName, { nameVersion: 1 }),
+    "Task with nameVersion1 successfully deleted"
+  );
+
+  // Check that the new task XML is still valid
+  const newTaskXML = WinSvc.getTaskXML(folderName, rawTaskNameV2);
+  Assert.equal(WinSvc.validateTaskDefinition(newTaskXML), 0 /* S_OK */);
+  const docV2 = parser.parseFromString(newTaskXML, "text/xml");
+
+  Assert.equal(docV2.documentElement.tagName, "Task");
+
+  // Check that the updated values still match the provided ones.
+  for (let [sel, expected] of queries) {
+    Assert.equal(
+      docV2.querySelector(sel).textContent,
+      expected,
+      `Task V2 ${sel} had expected textContent`
+    );
+  }
+});

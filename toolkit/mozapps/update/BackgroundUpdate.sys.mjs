@@ -56,9 +56,30 @@ XPCOMUtils.defineLazyServiceGetters(lazy, {
 // by storing the installed version number of the task to a pref and comparing
 // that version number to the current version. If they aren't equal, we know
 // that we have to re-register the task.
-const TASK_DEF_CURRENT_VERSION = 3;
+const TASK_DEF_CURRENT_VERSION = 4;
 const TASK_INSTALLED_VERSION_PREF =
   "app.update.background.lastInstalledTaskVersion";
+
+// This returns the version of the task naming scheme being used which
+// is different from the task version used for the task definition.
+function taskNameVersion(taskVersion) {
+  if (AppConstants.platform != "win" || taskVersion < 4) {
+    return 1;
+  }
+  return 2;
+}
+
+async function deleteTasksInRange(installedVersion, currentVersion) {
+  for (
+    let taskVersion = installedVersion;
+    taskVersion <= currentVersion;
+    taskVersion++
+  ) {
+    await lazy.TaskScheduler.deleteTask(this.taskId, {
+      nameVersion: taskNameVersion(taskVersion),
+    });
+  }
+}
 
 export var BackgroundUpdate = {
   QueryInterface: ChromeUtils.generateQI([
@@ -558,7 +579,11 @@ export var BackgroundUpdate = {
         );
 
         if (!successfullyReadPrevious || previousEnabled) {
-          await lazy.TaskScheduler.deleteTask(this.taskId);
+          let installedVersion = Services.prefs.getIntPref(
+            TASK_INSTALLED_VERSION_PREF,
+            TASK_DEF_CURRENT_VERSION
+          );
+          await deleteTasksInRange(installedVersion, TASK_DEF_CURRENT_VERSION);
           lazy.log.debug(
             `${SLUG}: witnessed falling (enabled -> disabled) edge; deleted task ${this.taskId}.`
           );
@@ -587,7 +612,11 @@ export var BackgroundUpdate = {
             `Removing task so the new version can be registered`
         );
         try {
-          await lazy.TaskScheduler.deleteTask(this.taskId);
+          let installedVersion = Services.prefs.getIntPref(
+            TASK_INSTALLED_VERSION_PREF,
+            TASK_DEF_CURRENT_VERSION
+          );
+          await deleteTasksInRange(installedVersion, TASK_DEF_CURRENT_VERSION);
         } catch (e) {
           lazy.log.error(`${SLUG}: Error removing old task: ${e}`);
         }
