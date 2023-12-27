@@ -11,6 +11,7 @@
 #include <algorithm>
 
 #include "gfxUtils.h"
+#include "mozilla/CaretAssociationHint.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/intl/BidiEmbeddingLevel.h"
 #include "mozilla/StaticPrefs_bidi.h"
@@ -726,7 +727,7 @@ nsIFrame* nsCaret::GetCaretFrameForNodeOffset(
   }
 
   if (nsFrameSelection::AdjustFrameForLineStart(theFrame, theFrameOffset)) {
-    aFrameSelection->SetHint(CARET_ASSOCIATE_AFTER);
+    aFrameSelection->SetHint(CaretAssociationHint::After);
   } else {
     // if theFrame is after a text frame that's logically at the end of the line
     // (e.g. if theFrame is a <br> frame), then put the caret at the end of

@@ -13,10 +13,10 @@
 #include "nsIClipboard.h"
 #include "nsFrameSelection.h"
 
+#include "mozilla/CaretAssociationHint.h"
 #include "mozilla/EditorBase.h"
 
-namespace mozilla {
-namespace a11y {
+namespace mozilla::a11y {
 
 inline void HyperTextAccessible::SetCaretOffset(int32_t aOffset) {
   SetSelectionRange(aOffset, aOffset);
@@ -27,7 +27,8 @@ inline void HyperTextAccessible::SetCaretOffset(int32_t aOffset) {
 
 inline bool HyperTextAccessible::IsCaretAtEndOfLine() const {
   RefPtr<nsFrameSelection> frameSelection = FrameSelection();
-  return frameSelection && frameSelection->GetHint() == CARET_ASSOCIATE_BEFORE;
+  return frameSelection &&
+         frameSelection->GetHint() == CaretAssociationHint::Before;
 }
 
 inline already_AddRefed<nsFrameSelection> HyperTextAccessible::FrameSelection()
@@ -42,7 +43,6 @@ inline dom::Selection* HyperTextAccessible::DOMSelection() const {
                         : nullptr;
 }
 
-}  // namespace a11y
-}  // namespace mozilla
+}  // namespace mozilla::a11y
 
 #endif

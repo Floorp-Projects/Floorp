@@ -13,6 +13,7 @@
 #include "AccessibleCaretLogger.h"
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/AutoRestore.h"
+#include "mozilla/CaretAssociationHint.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/dom/NodeFilterBinding.h"
@@ -1066,14 +1067,14 @@ nsIFrame* AccessibleCaretManager::GetFrameForFirstRangeStartOrLastRangeEnd(
     startNode = range->GetStartContainer();
     endNode = range->GetEndContainer();
     nodeOffset = range->StartOffset();
-    hint = CARET_ASSOCIATE_AFTER;
+    hint = CaretAssociationHint::After;
   } else {
     MOZ_ASSERT(selection->RangeCount() > 0);
     range = selection->GetRangeAt(selection->RangeCount() - 1);
     startNode = range->GetEndContainer();
     endNode = range->GetStartContainer();
     nodeOffset = range->EndOffset();
-    hint = CARET_ASSOCIATE_BEFORE;
+    hint = CaretAssociationHint::Before;
   }
 
   nsCOMPtr<nsIContent> startContent = do_QueryInterface(startNode);

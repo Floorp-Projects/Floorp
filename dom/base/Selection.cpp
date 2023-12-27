@@ -19,6 +19,7 @@
 #include "mozilla/AutoCopyListener.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/BasePrincipal.h"
+#include "mozilla/CaretAssociationHint.h"
 #include "mozilla/ContentIterator.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/SelectionBinding.h"
@@ -542,8 +543,8 @@ nsresult Selection::SetInterlinePosition(InterlinePosition aInterlinePosition) {
 
   mFrameSelection->SetHint(aInterlinePosition ==
                                    InterlinePosition::StartOfNextLine
-                               ? CARET_ASSOCIATE_AFTER
-                               : CARET_ASSOCIATE_BEFORE);
+                               ? CaretAssociationHint::After
+                               : CaretAssociationHint::Before);
   return NS_OK;
 }
 
@@ -553,7 +554,7 @@ Selection::InterlinePosition Selection::GetInterlinePosition() const {
   if (!mFrameSelection) {
     return InterlinePosition::Undefined;
   }
-  return mFrameSelection->GetHint() == CARET_ASSOCIATE_AFTER
+  return mFrameSelection->GetHint() == CaretAssociationHint::After
              ? InterlinePosition::StartOfNextLine
              : InterlinePosition::EndOfLine;
 }
@@ -2424,7 +2425,7 @@ void Selection::CollapseInternal(InLimiter aInLimiter,
   frameSelection->ClearTableCellSelection();
 
   // Hack to display the caret on the right line (bug 1237236).
-  if (frameSelection->GetHint() != CARET_ASSOCIATE_AFTER &&
+  if (frameSelection->GetHint() == CaretAssociationHint::Before &&
       aPoint.Container()->IsContent()) {
     int32_t frameOffset;
     nsTextFrame* f = do_QueryFrame(nsCaret::GetFrameAndOffset(
@@ -2443,7 +2444,7 @@ void Selection::CollapseInternal(InLimiter aInLimiter,
                    RawRangeBoundary::OffsetFilter::kValidOffsets))) ||
           (aPoint.Container() == f->GetContent()->GetParentNode() &&
            f->GetContent() == aPoint.GetPreviousSiblingOfChildAtOffset())) {
-        frameSelection->SetHint(CARET_ASSOCIATE_AFTER);
+        frameSelection->SetHint(CaretAssociationHint::After);
       }
     }
   }
@@ -3244,7 +3245,8 @@ nsIFrame* Selection::GetSelectionEndPointGeometry(SelectionRegion aRegion,
     nsIFrame* childFrame = nullptr;
     frameOffset = 0;
     nsresult rv = frame->GetChildFrameContainingOffset(
-        nodeOffset, mFrameSelection->GetHint(), &frameOffset, &childFrame);
+        nodeOffset, mFrameSelection->GetHint() == CaretAssociationHint::After,
+        &frameOffset, &childFrame);
     if (NS_FAILED(rv)) return nullptr;
     if (!childFrame) return nullptr;
 

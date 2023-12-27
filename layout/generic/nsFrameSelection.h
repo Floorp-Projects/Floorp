@@ -11,6 +11,7 @@
 #include "mozilla/intl/BidiEmbeddingLevel.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/CaretAssociationHint.h"
 #include "mozilla/CompactPair.h"
 #include "mozilla/EnumSet.h"
 #include "mozilla/EventForwards.h"
@@ -25,7 +26,6 @@
 #include "nsISelectionListener.h"
 #include "nsITableCellLayout.h"
 #include "WordMovementType.h"
-#include "CaretAssociationHint.h"
 #include "nsBidiPresUtils.h"
 
 class nsRange;
@@ -64,15 +64,11 @@ struct SelectionCustomColors {
 
 namespace mozilla {
 class PresShell;
-}  // namespace mozilla
 
 /** PeekOffsetStruct is used to group various arguments (both input and output)
  *  that are passed to nsIFrame::PeekOffset(). See below for the description of
  *  individual arguments.
  */
-
-namespace mozilla {
-
 enum class PeekOffsetOption : uint16_t {
   // Whether to allow jumping across line boundaries.
   //
@@ -224,7 +220,7 @@ class nsIScrollableFrame;
 
 class nsFrameSelection final {
  public:
-  typedef mozilla::CaretAssociationHint CaretAssociateHint;
+  using CaretAssociationHint = mozilla::CaretAssociationHint;
 
   /*interfaces for addref and release and queryinterface*/
 
@@ -259,7 +255,7 @@ class nsFrameSelection final {
                                           uint32_t aContentOffset,
                                           uint32_t aContentEndOffset,
                                           FocusMode aFocusMode,
-                                          CaretAssociateHint aHint);
+                                          CaretAssociationHint aHint);
 
  public:
   /**
@@ -501,7 +497,7 @@ class nsFrameSelection final {
    * @param aReturnOffset will contain offset into frame.
    */
   static nsIFrame* GetFrameForNodeOffset(nsIContent* aNode, int32_t aOffset,
-                                         CaretAssociateHint aHint,
+                                         CaretAssociationHint aHint,
                                          int32_t* aReturnOffset);
 
   /**
@@ -533,8 +529,8 @@ class nsFrameSelection final {
                                        nsIFrame* aFrame,
                                        SelectionIntoView aSelectionIntoView);
 
-  void SetHint(CaretAssociateHint aHintRight) { mCaret.mHint = aHintRight; }
-  CaretAssociateHint GetHint() const { return mCaret.mHint; }
+  void SetHint(CaretAssociationHint aHintRight) { mCaret.mHint = aHintRight; }
+  CaretAssociationHint GetHint() const { return mCaret.mHint; }
 
   void SetCaretBidiLevelAndMaybeSchedulePaint(
       mozilla::intl::BidiEmbeddingLevel aLevel);
@@ -820,7 +816,7 @@ class nsFrameSelection final {
   // error, in other cases to runtime errors. This deserves to be cleaned up.
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
   TakeFocus(nsIContent& aNewFocus, uint32_t aContentOffset,
-            uint32_t aContentEndOffset, CaretAssociateHint aHint,
+            uint32_t aContentEndOffset, CaretAssociationHint aHint,
             FocusMode aFocusMode);
 
   /**
@@ -847,7 +843,7 @@ class nsFrameSelection final {
    */
   void BidiLevelFromMove(mozilla::PresShell* aPresShell, nsIContent* aNode,
                          uint32_t aContentOffset, nsSelectionAmount aAmount,
-                         CaretAssociateHint aHint);
+                         CaretAssociationHint aHint);
   /**
    * BidiLevelFromClick is called when the caret is repositioned by clicking the
    * mouse
@@ -859,7 +855,7 @@ class nsFrameSelection final {
 
   static nsPrevNextBidiLevels GetPrevNextBidiLevels(nsIContent* aNode,
                                                     uint32_t aContentOffset,
-                                                    CaretAssociateHint aHint,
+                                                    CaretAssociationHint aHint,
                                                     bool aJumpLines);
 
   /**
@@ -1119,7 +1115,7 @@ class nsFrameSelection final {
   struct Caret {
     // Hint to tell if the selection is at the end of this line or beginning of
     // next.
-    CaretAssociateHint mHint = mozilla::CARET_ASSOCIATE_BEFORE;
+    CaretAssociationHint mHint = CaretAssociationHint::Before;
     mozilla::intl::BidiEmbeddingLevel mBidiLevel = BIDI_LEVEL_UNDEFINED;
 
     bool IsVisualMovement(bool aContinueSelection,

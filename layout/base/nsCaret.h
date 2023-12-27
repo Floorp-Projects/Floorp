@@ -15,7 +15,6 @@
 #include "nsCoord.h"
 #include "nsISelectionListener.h"
 #include "nsIWeakReferenceUtils.h"
-#include "CaretAssociationHint.h"
 #include "nsPoint.h"
 #include "nsRect.h"
 
@@ -27,6 +26,7 @@ class nsITimer;
 
 namespace mozilla {
 class PresShell;
+enum class CaretAssociationHint;
 namespace gfx {
 class DrawTarget;
 }  // namespace gfx
@@ -45,7 +45,7 @@ class nsCaret final : public nsISelectionListener {
  public:
   NS_DECL_ISUPPORTS
 
-  typedef mozilla::CaretAssociationHint CaretAssociationHint;
+  using CaretAssociationHint = mozilla::CaretAssociationHint;
 
   nsresult Init(mozilla::PresShell* aPresShell);
   void Terminate();
