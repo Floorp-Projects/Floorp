@@ -40,7 +40,11 @@ internal object GlobalAccountManager {
         instance = null
     }
 
-    internal suspend fun authError(operation: String, @VisibleForTesting clock: Clock = systemClock) {
+    internal suspend fun authError(
+        operation: String,
+        forSync: Boolean = false,
+        @VisibleForTesting clock: Clock = systemClock,
+    ) {
         val authErrorCheckPoint: Long = clock.getTimeCheckPoint()
 
         val timeSinceLastAuthErrorMs: Long? = if (lastAuthErrorCheckPoint == 0L) {
@@ -54,6 +58,15 @@ internal object GlobalAccountManager {
             // First error, start our count.
             authErrorCountWithinWindow = 1
         } else if (timeSinceLastAuthErrorMs <= AUTH_CHECK_CIRCUIT_BREAKER_RESET_MS) {
+            // In general, skip additional checks inside the `AUTH_CHECK_CIRCUIT_BREAKER_RESET_MS`.
+            // This avoids queueing up multiple auth recovery checks when multiple operations run at
+            // the same time and result in auth errors.
+            //
+            // The one exception is sync, which retries on a successful recovery.  In that case we
+            // should to run through the recovery process to make sure the sync happens.
+            if (!forSync) {
+                return
+            }
             // Error within the reset time window, increment the count.
             authErrorCountWithinWindow += 1
         } else {
