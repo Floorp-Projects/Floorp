@@ -755,9 +755,13 @@ nsresult nsFrameSelection::MoveCaret(nsDirection aDirection,
 
   bool visualMovement =
       mCaret.IsVisualMovement(aContinueSelection, aMovementStyle);
-  nsIFrame* frame = sel->GetPrimaryFrameForFocusNode(visualMovement);
-  if (!frame) {
+  const Selection::PrimaryFrameData frameForFocus =
+      sel->GetPrimaryFrameForCaretAtFocusNode(visualMovement);
+  if (!frameForFocus.mFrame) {
     return NS_ERROR_FAILURE;
+  }
+  if (visualMovement) {
+    SetHint(frameForFocus.mHint);
   }
 
   Result<bool, nsresult> isIntraLineCaretMove = IsIntraLineCaretMove(aAmount);
@@ -769,7 +773,8 @@ nsresult nsFrameSelection::MoveCaret(nsDirection aDirection,
     // Forget old caret position for moving caret to different line since
     // caret position may be changed.
     mDesiredCaretPos.Invalidate();
-    direction = GetCaretDirection(*frame, aDirection, visualMovement);
+    direction =
+        GetCaretDirection(*frameForFocus.mFrame, aDirection, visualMovement);
   }
 
   if (doCollapse) {
@@ -777,7 +782,8 @@ nsresult nsFrameSelection::MoveCaret(nsDirection aDirection,
     if (anchorFocusRange) {
       RefPtr<nsINode> node;
       uint32_t offset;
-      if (visualMovement && nsBidiPresUtils::IsReversedDirectionFrame(frame)) {
+      if (visualMovement &&
+          nsBidiPresUtils::IsReversedDirectionFrame(frameForFocus.mFrame)) {
         direction = nsDirection(1 - direction);
       }
       if (direction == eDirPrevious) {
@@ -871,10 +877,10 @@ nsresult nsFrameSelection::MoveCaret(nsDirection aDirection,
     // Collapse selection if PeekOffset failed, we either
     //  1. bumped into the BRFrame, bug 207623
     //  2. had select-all in a text input (DIV range), bug 352759.
-    bool isBRFrame = frame->IsBrFrame();
+    bool isBRFrame = frameForFocus.mFrame->IsBrFrame();
     RefPtr<nsINode> node = sel->GetFocusNode();
     sel->CollapseInLimiter(node, sel->FocusOffset());
-    // Note: 'frame' might be dead here.
+    // Note: 'frameForFocus.mFrame' might be dead here.
     if (!isBRFrame) {
       mCaret.mHint = CaretAssociationHint::Before;  // We're now at the end of
                                                     // the frame to the left.
@@ -904,10 +910,9 @@ Result<PeekOffsetStruct, nsresult> nsFrameSelection::PeekOffsetForCaretMove(
   const bool visualMovement =
       mCaret.IsVisualMovement(aContinueSelection, aMovementStyle);
 
-  int32_t offsetused = 0;
-  nsIFrame* frame =
-      selection->GetPrimaryFrameForFocusNode(visualMovement, &offsetused);
-  if (!frame) {
+  const Selection::PrimaryFrameData frameForFocus =
+      selection->GetPrimaryFrameForCaretAtFocusNode(visualMovement);
+  if (!frameForFocus.mFrame) {
     return Err(NS_ERROR_FAILURE);
   }
 
@@ -928,9 +933,11 @@ Result<PeekOffsetStruct, nsresult> nsFrameSelection::PeekOffsetForCaretMove(
   if (selection->IsEditorSelection()) {
     options += PeekOffsetOption::ForceEditableRegion;
   }
-  PeekOffsetStruct pos(aAmount, aDirection, offsetused, aDesiredCaretPos,
-                       options);
-  nsresult rv = frame->PeekOffset(&pos);
+  PeekOffsetStruct pos(
+      aAmount, aDirection,
+      static_cast<int32_t>(frameForFocus.mOffsetInFrameContent),
+      aDesiredCaretPos, options);
+  nsresult rv = frameForFocus.mFrame->PeekOffset(&pos);
   if (NS_FAILED(rv)) {
     return Err(rv);
   }
@@ -2145,16 +2152,18 @@ nsresult nsFrameSelection::PhysicalMove(int16_t aDirection, int16_t aAmount,
       {eDirNext, blockNextAmount}};
 
   WritingMode wm;
-  nsIFrame* frame = sel->GetPrimaryFrameForFocusNode(true);
-  if (frame) {
-    if (!frame->Style()->IsTextCombined()) {
-      wm = frame->GetWritingMode();
+  const Selection::PrimaryFrameData frameForFocus =
+      sel->GetPrimaryFrameForCaretAtFocusNode(true);
+  if (frameForFocus.mFrame) {
+    sel->GetFrameSelection()->SetHint(frameForFocus.mHint);
+    if (!frameForFocus.mFrame->Style()->IsTextCombined()) {
+      wm = frameForFocus.mFrame->GetWritingMode();
     } else {
       // Using different direction for horizontal-in-vertical would
       // make it hard to navigate via keyboard. Inherit the moving
       // direction from its parent.
-      MOZ_ASSERT(frame->IsTextFrame());
-      wm = frame->GetParent()->GetWritingMode();
+      MOZ_ASSERT(frameForFocus.mFrame->IsTextFrame());
+      wm = frameForFocus.mFrame->GetParent()->GetWritingMode();
       MOZ_ASSERT(wm.IsVertical(),
                  "Text combined "
                  "can only appear in vertical text");

@@ -1545,11 +1545,11 @@ nsIFrame* Selection::GetPrimaryFrameForAnchorNode() const {
   return nullptr;
 }
 
-nsIFrame* Selection::GetPrimaryFrameForFocusNode(bool aVisual,
-                                                 int32_t* aOffsetUsed) const {
+Selection::PrimaryFrameData Selection::GetPrimaryFrameForCaretAtFocusNode(
+    bool aVisual) const {
   nsIContent* content = nsIContent::FromNodeOrNull(GetFocusNode());
   if (!content || !mFrameSelection || !mFrameSelection->GetPresShell()) {
-    return nullptr;
+    return {};
   }
 
   MOZ_ASSERT(mFrameSelection->GetPresShell()->GetDocument() ==
@@ -1558,47 +1558,41 @@ nsIFrame* Selection::GetPrimaryFrameForFocusNode(bool aVisual,
   CaretAssociationHint hint = mFrameSelection->GetHint();
   intl::BidiEmbeddingLevel caretBidiLevel =
       mFrameSelection->GetCaretBidiLevel();
+  return Selection::GetPrimaryFrameForCaret(content, FocusOffset(), aVisual,
+                                            hint, caretBidiLevel);
+}
+
+// static
+Selection::PrimaryFrameData Selection::GetPrimaryFrameForCaret(
+    nsIContent* aContent, uint32_t aOffset, bool aVisual,
+    CaretAssociationHint aHint, intl::BidiEmbeddingLevel aCaretBidiLevel) {
+  MOZ_ASSERT(aContent);
 
   {
     const PrimaryFrameData result = GetPrimaryOrCaretFrameForNodeOffset(
-        content, FocusOffset(), aVisual, hint, caretBidiLevel);
+        aContent, aOffset, aVisual, aHint, aCaretBidiLevel);
     if (result.mFrame) {
-      if (aVisual) {
-        mFrameSelection->SetHint(result.mHint);
-      }
-      if (aOffsetUsed) {
-        *aOffsetUsed = static_cast<int32_t>(result.mOffsetInFrameContent);
-      }
-      return result.mFrame;
+      return result;
     }
   }
 
-  // If content is whitespace only, we promote focus node to parent because
+  // If aContent is whitespace only, we promote focus node to parent because
   // whitespace only node might have no frame.
 
-  if (!content->TextIsOnlyWhitespace()) {
-    return nullptr;
+  if (!aContent->TextIsOnlyWhitespace()) {
+    return {};
   }
 
-  nsIContent* parent = content->GetParent();
+  nsIContent* parent = aContent->GetParent();
   if (NS_WARN_IF(!parent)) {
-    return nullptr;
+    return {};
   }
-  const Maybe<uint32_t> offset = parent->ComputeIndexOf(content);
+  const Maybe<uint32_t> offset = parent->ComputeIndexOf(aContent);
   if (NS_WARN_IF(offset.isNothing())) {
-    return nullptr;
+    return {};
   }
-  const PrimaryFrameData result = GetPrimaryOrCaretFrameForNodeOffset(
-      parent, *offset, aVisual, hint, caretBidiLevel);
-  if (result.mFrame) {
-    if (aVisual) {
-      mFrameSelection->SetHint(result.mHint);
-    }
-    if (aOffsetUsed) {
-      *aOffsetUsed = static_cast<int32_t>(result.mOffsetInFrameContent);
-    }
-  }
-  return result.mFrame;
+  return GetPrimaryOrCaretFrameForNodeOffset(parent, *offset, aVisual, aHint,
+                                             aCaretBidiLevel);
 }
 
 // static
@@ -3749,9 +3743,14 @@ void Selection::Modify(const nsAString& aAlter, const nsAString& aDirection,
 
   // If the paragraph direction of the focused frame is right-to-left,
   // we may have to swap the direction of movement.
-  if (nsIFrame* frame = GetPrimaryFrameForFocusNode(visual)) {
+  const PrimaryFrameData frameForFocus =
+      GetPrimaryFrameForCaretAtFocusNode(visual);
+  if (frameForFocus.mFrame) {
+    if (visual) {
+      mFrameSelection->SetHint(frameForFocus.mHint);
+    }
     mozilla::intl::BidiDirection paraDir =
-        nsBidiPresUtils::ParagraphDirection(frame);
+        nsBidiPresUtils::ParagraphDirection(frameForFocus.mFrame);
 
     if (paraDir == mozilla::intl::BidiDirection::RTL && visual) {
       if (amount == eSelectBeginLine) {
@@ -4001,19 +4000,20 @@ nsresult Selection::SelectionLanguageChange(bool aLangRTL) {
 
   frameSelection->mKbdBidiLevel = kbdBidiLevel;
 
-  nsIFrame* focusFrame = GetPrimaryFrameForFocusNode(false);
-  if (!focusFrame) {
+  PrimaryFrameData focusFrameData = GetPrimaryFrameForCaretAtFocusNode(false);
+  if (!focusFrameData.mFrame) {
     return NS_ERROR_FAILURE;
   }
 
-  auto [frameStart, frameEnd] = focusFrame->GetOffsets();
+  auto [frameStart, frameEnd] = focusFrameData.mFrame->GetOffsets();
   RefPtr<nsPresContext> context = GetPresContext();
   mozilla::intl::BidiEmbeddingLevel levelBefore, levelAfter;
   if (!context) {
     return NS_ERROR_FAILURE;
   }
 
-  mozilla::intl::BidiEmbeddingLevel level = focusFrame->GetEmbeddingLevel();
+  mozilla::intl::BidiEmbeddingLevel level =
+      focusFrameData.mFrame->GetEmbeddingLevel();
   int32_t focusOffset = static_cast<int32_t>(FocusOffset());
   if ((focusOffset != frameStart) && (focusOffset != frameEnd))
     // the cursor is not at a frame boundary, so the level of both the
