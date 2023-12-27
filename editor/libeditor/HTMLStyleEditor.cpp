@@ -2147,6 +2147,7 @@ HTMLEditor::SplitAncestorStyledInlineElementsAt(
   AutoTArray<OwningNonNull<Element>, 24> arrayOfParents;
   for (Element* element :
        aPointToSplit.GetContainer()->InclusiveAncestorsOfType<Element>()) {
+    // XXX Cannot we stop if we meet a non-splittable element like <button>?
     if (HTMLEditUtils::IsBlockElement(
             *element, BlockInlineCheck::UseComputedDisplayOutsideStyle) ||
         !element->GetParent() ||
@@ -2285,8 +2286,10 @@ HTMLEditor::SplitAncestorStyledInlineElementsAt(
     if (!unwrappedSplitNodeResult.Handled()) {
       continue;
     }
-    // Mark the final result as handled forcibly.
-    result = unwrappedSplitNodeResult.ToHandledResult();
+    // Respect the last split result which actually did it.
+    if (!result.DidSplit() || unwrappedSplitNodeResult.DidSplit()) {
+      result = unwrappedSplitNodeResult.ToHandledResult();
+    }
     MOZ_ASSERT(result.Handled());
   }
 
