@@ -287,7 +287,9 @@ static nsTArray<UniquePtr<TrackInfo>> GetTracksInfo(
 static Result<RefPtr<MediaByteBuffer>, nsresult> GetExtraData(
     const OwningMaybeSharedArrayBufferViewOrMaybeSharedArrayBuffer& aBuffer) {
   RefPtr<MediaByteBuffer> data = MakeRefPtr<MediaByteBuffer>();
-  Unused << AppendTypedArrayDataTo(aBuffer, *data);
+  if (!AppendTypedArrayDataTo(aBuffer, *data)) {
+    return Err(NS_ERROR_OUT_OF_MEMORY);
+  }
   return data->Length() > 0 ? data : nullptr;
 }
 
