@@ -71,6 +71,7 @@ var gSearchPane = {
     let privateSuggestsPref = Preferences.get(
       "browser.search.suggest.enabled.private"
     );
+
     let updateSuggestionCheckboxes =
       this._updateSuggestionCheckboxes.bind(this);
     suggestsPref.on("change", updateSuggestionCheckboxes);
@@ -83,8 +84,16 @@ var gSearchPane = {
     let suggestionsInSearchFieldsCheckbox = document.getElementById(
       "suggestionsInSearchFieldsCheckbox"
     );
+    // We only want to call _updateSuggestionCheckboxes once after updating
+    // all prefs.
     suggestionsInSearchFieldsCheckbox.addEventListener("command", () => {
-      urlbarSuggestsPref.value = suggestionsInSearchFieldsCheckbox.checked;
+      this._skipUpdateSuggestionCheckboxesFromPrefChanges = true;
+      if (!searchBarPref.value) {
+        urlbarSuggestsPref.value = suggestionsInSearchFieldsCheckbox.checked;
+      }
+      suggestsPref.value = suggestionsInSearchFieldsCheckbox.checked;
+      this._skipUpdateSuggestionCheckboxesFromPrefChanges = false;
+      this._updateSuggestionCheckboxes();
     });
     let privateWindowCheckbox = document.getElementById(
       "showSearchSuggestionsPrivateWindows"
@@ -185,6 +194,9 @@ var gSearchPane = {
   },
 
   _updateSuggestionCheckboxes() {
+    if (this._skipUpdateSuggestionCheckboxesFromPrefChanges) {
+      return;
+    }
     let suggestsPref = Preferences.get("browser.search.suggest.enabled");
     let permanentPB = Services.prefs.getBoolPref(
       "browser.privatebrowsing.autostart"
@@ -201,6 +213,10 @@ var gSearchPane = {
     );
     let urlbarSuggestsPref = Preferences.get("browser.urlbar.suggest.searches");
     let searchBarPref = Preferences.get("browser.search.widget.inNavBar");
+
+    suggestionsInSearchFieldsCheckbox.checked =
+      suggestsPref.value &&
+      (searchBarPref.value ? true : urlbarSuggestsPref.value);
 
     urlbarSuggests.disabled = !suggestsPref.value || permanentPB;
     urlbarSuggests.hidden = !searchBarPref.value;
