@@ -16,6 +16,7 @@
 #include "mozilla/WeakPtr.h"
 #include "mozilla/dom/Highlight.h"
 #include "mozilla/dom/StyledRange.h"
+#include "mozilla/intl/BidiEmbeddingLevel.h"
 #include "nsDirection.h"
 #include "nsISelectionController.h"
 #include "nsISelectionListener.h"
@@ -43,6 +44,7 @@ class AccessibleCaretEventHub;
 class ErrorResult;
 class HTMLEditor;
 class PostContentIterator;
+enum class CaretAssociationHint;
 enum class TableSelectionMode : uint32_t;
 struct AutoPrepareFocusRange;
 namespace dom {
@@ -725,13 +727,22 @@ class Selection final : public nsSupportsWeakReference,
                                                          Document* aDocument,
                                                          ErrorResult&);
 
+  struct MOZ_STACK_CLASS PrimaryFrameData final {
+    // The frame which should be used to layout the caret.
+    nsIFrame* mFrame = nullptr;
+    // The offset in content of mFrame.  This is valid only when mFrame is not
+    // nullptr.
+    uint32_t mOffsetInFrameContent = 0;
+    // Whether the caret should be put before or after the point. This is valid
+    // only when mFrame is not nullptr.
+    CaretAssociationHint mHint{0};
+  };
   // This is helper method for GetPrimaryFrameForFocusNode.
   // If aVisual is true, this returns caret frame.
   // If false, this returns primary frame.
-  nsIFrame* GetPrimaryOrCaretFrameForNodeOffset(nsIContent* aContent,
-                                                uint32_t aOffset,
-                                                int32_t* aOffsetUsed,
-                                                bool aVisual) const;
+  static PrimaryFrameData GetPrimaryOrCaretFrameForNodeOffset(
+      nsIContent* aContent, uint32_t aOffset, bool aVisual,
+      CaretAssociationHint aHint, intl::BidiEmbeddingLevel aCaretBidiLevel);
 
   // Get the cached value for nsTextFrame::GetPointFromOffset.
   nsresult GetCachedFrameOffset(nsIFrame* aFrame, int32_t inOffset,

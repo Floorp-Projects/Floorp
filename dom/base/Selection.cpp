@@ -28,6 +28,7 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/HTMLEditor.h"
 #include "mozilla/IntegerRange.h"
+#include "mozilla/intl/Bidi.h"
 #include "mozilla/intl/BidiEmbeddingLevel.h"
 #include "mozilla/Logging.h"
 #include "mozilla/PresShell.h"
@@ -1546,21 +1547,30 @@ nsIFrame* Selection::GetPrimaryFrameForAnchorNode() const {
 
 nsIFrame* Selection::GetPrimaryFrameForFocusNode(bool aVisual,
                                                  int32_t* aOffsetUsed) const {
-  nsINode* focusNode = GetFocusNode();
-  if (!focusNode || !focusNode->IsContent() || !mFrameSelection) {
+  nsIContent* content = nsIContent::FromNodeOrNull(GetFocusNode());
+  if (!content || !mFrameSelection || !mFrameSelection->GetPresShell()) {
     return nullptr;
   }
 
-  nsCOMPtr<nsIContent> content = focusNode->AsContent();
-  int32_t frameOffset = 0;
-  if (!aOffsetUsed) {
-    aOffsetUsed = &frameOffset;
-  }
+  MOZ_ASSERT(mFrameSelection->GetPresShell()->GetDocument() ==
+             content->GetComposedDoc());
 
-  nsIFrame* frame = GetPrimaryOrCaretFrameForNodeOffset(content, FocusOffset(),
-                                                        aOffsetUsed, aVisual);
-  if (frame) {
-    return frame;
+  CaretAssociationHint hint = mFrameSelection->GetHint();
+  intl::BidiEmbeddingLevel caretBidiLevel =
+      mFrameSelection->GetCaretBidiLevel();
+
+  {
+    const PrimaryFrameData result = GetPrimaryOrCaretFrameForNodeOffset(
+        content, FocusOffset(), aVisual, hint, caretBidiLevel);
+    if (result.mFrame) {
+      if (aVisual) {
+        mFrameSelection->SetHint(result.mHint);
+      }
+      if (aOffsetUsed) {
+        *aOffsetUsed = static_cast<int32_t>(result.mOffsetInFrameContent);
+      }
+      return result.mFrame;
+    }
   }
 
   // If content is whitespace only, we promote focus node to parent because
@@ -1570,49 +1580,45 @@ nsIFrame* Selection::GetPrimaryFrameForFocusNode(bool aVisual,
     return nullptr;
   }
 
-  nsCOMPtr<nsIContent> parent = content->GetParent();
+  nsIContent* parent = content->GetParent();
   if (NS_WARN_IF(!parent)) {
     return nullptr;
   }
   const Maybe<uint32_t> offset = parent->ComputeIndexOf(content);
-  if (MOZ_UNLIKELY(NS_WARN_IF(offset.isNothing()))) {
+  if (NS_WARN_IF(offset.isNothing())) {
     return nullptr;
   }
-  return GetPrimaryOrCaretFrameForNodeOffset(parent, *offset, aOffsetUsed,
-                                             aVisual);
-}
-
-nsIFrame* Selection::GetPrimaryOrCaretFrameForNodeOffset(nsIContent* aContent,
-                                                         uint32_t aOffset,
-                                                         int32_t* aOffsetUsed,
-                                                         bool aVisual) const {
-  MOZ_ASSERT(aOffsetUsed);
-
-  if (!mFrameSelection) {
-    return nullptr;
-  }
-
-  CaretAssociationHint hint = mFrameSelection->GetHint();
-
-  if (aVisual) {
-    mozilla::intl::BidiEmbeddingLevel caretBidiLevel =
-        mFrameSelection->GetCaretBidiLevel();
-
-    const nsCaret::CaretFrameData result = nsCaret::GetCaretFrameForNodeOffset(
-        mFrameSelection, aContent, aOffset, hint, caretBidiLevel,
-        aContent && aContent->IsEditable() ? nsCaret::ForceEditableRegion::Yes
-                                           : nsCaret::ForceEditableRegion::No);
-    if (result.mFrame) {
+  const PrimaryFrameData result = GetPrimaryOrCaretFrameForNodeOffset(
+      parent, *offset, aVisual, hint, caretBidiLevel);
+  if (result.mFrame) {
+    if (aVisual) {
       mFrameSelection->SetHint(result.mHint);
     }
     if (aOffsetUsed) {
-      *aOffsetUsed = result.mOffsetInFrameContent;
+      *aOffsetUsed = static_cast<int32_t>(result.mOffsetInFrameContent);
     }
-    return result.mFrame;
+  }
+  return result.mFrame;
+}
+
+// static
+Selection::PrimaryFrameData Selection::GetPrimaryOrCaretFrameForNodeOffset(
+    nsIContent* aContent, uint32_t aOffset, bool aVisual,
+    CaretAssociationHint aHint, intl::BidiEmbeddingLevel aCaretBidiLevel) {
+  if (aVisual) {
+    const nsCaret::CaretFrameData result = nsCaret::GetCaretFrameForNodeOffset(
+        nullptr, aContent, static_cast<int32_t>(aOffset), aHint,
+        aCaretBidiLevel,
+        aContent && aContent->IsEditable() ? nsCaret::ForceEditableRegion::Yes
+                                           : nsCaret::ForceEditableRegion::No);
+    return {result.mFrame, static_cast<uint32_t>(result.mOffsetInFrameContent),
+            result.mHint};
   }
 
-  return nsFrameSelection::GetFrameForNodeOffset(aContent, aOffset, hint,
-                                                 aOffsetUsed);
+  int32_t offset = 0;
+  nsIFrame* theFrame = nsFrameSelection::GetFrameForNodeOffset(
+      aContent, static_cast<int32_t>(aOffset), aHint, &offset);
+  return {theFrame, static_cast<uint32_t>(offset), aHint};
 }
 
 void Selection::SelectFramesOf(nsIContent* aContent, bool aSelected) const {
