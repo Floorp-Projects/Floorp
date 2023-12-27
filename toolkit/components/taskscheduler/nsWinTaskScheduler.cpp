@@ -7,6 +7,8 @@
 
 #include <windows.h>
 #include <comdef.h>
+#include <sddl.h>
+#include <securitybaseapi.h>
 #include <taskschd.h>
 
 #include "nsString.h"
@@ -112,6 +114,30 @@ nsWinTaskSchedulerService::GetTaskXML(const char16_t* aFolderName,
   }
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWinTaskSchedulerService::GetCurrentUserSid(nsAString& aUserSid) {
+#ifndef XP_WIN
+  return NS_ERROR_NOT_IMPLEMENTED;
+#else  // !XP_WIN
+  DWORD tokenLen;
+  LPWSTR stringSid;
+  BYTE tokenBuf[TOKEN_USER_MAX_SIZE];
+  PTOKEN_USER tokenInfo = reinterpret_cast<PTOKEN_USER>(tokenBuf);
+  BOOL success = GetTokenInformation(GetCurrentProcessToken(), TokenUser,
+                                     tokenInfo, sizeof(tokenBuf), &tokenLen);
+  if (!success) {
+    return NS_ERROR_FAILURE;
+  }
+  success = ConvertSidToStringSidW(tokenInfo->User.Sid, &stringSid);
+  if (!success) {
+    return NS_ERROR_ABORT;
+  }
+  aUserSid.Assign(stringSid);
+  LocalFree(stringSid);
+  return NS_OK;
+#endif
 }
 
 NS_IMETHODIMP

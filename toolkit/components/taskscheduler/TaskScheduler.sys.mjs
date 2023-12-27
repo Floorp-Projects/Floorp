@@ -76,32 +76,40 @@ export var TaskScheduler = {
    * @param intervalSeconds
    *        Interval at which to run the command, in seconds. Minimum 1800 (30 minutes).
    *
-   * @param options
+   * @param {Object} options
    *        Optional, as are all of its properties:
    *        {
-   *          args
+   *          options.args
    *            Array of arguments to pass on the command line. Does not include the command
    *            itself even if that is considered part of the command line. If missing, no
    *            argument list is generated.
    *
-   *          workingDirectory
+   *          options.workingDirectory
    *            Working directory for the command. If missing, no working directory is set.
    *
-   *          description
+   *          options.description
    *            A description string that will be visible to system administrators. This should
    *            be localized. If missing, no description is set.
    *
-   *          disabled
+   *          options.disabled
    *            If true the task will be created disabled, so that it will not be run.
    *            Ignored on macOS: see comments in TaskSchedulerMacOSImpl.jsm.
    *            Default false, intended for tests.
    *
-   *          executionTimeoutSec
+   *          options.executionTimeoutSec
    *            Specifies how long (in seconds) the scheduled task can execute for before it is
    *            automatically stopped by the task scheduler. If a value <= 0 is given, it will be
    *            ignored.
    *            This is not currently implemented on macOS.
    *            On Windows, the default timeout is 72 hours.
+   *
+   *          options.nameVersion
+   *            Over time, we have needed to change the name format that tasks are registered with.
+   *            When interacting with an up-to-date task, this value can be unspecified and the
+   *            current version of the name format will be used by default. When interacting with
+   *            an out-of-date task using an old naming format, this can be used to specify what
+   *            version of the name should be used. Since the precise naming format is platform
+   *            specific, these version numbers are also platform-specific.
    *        }
    * }
    */
@@ -122,14 +130,37 @@ export var TaskScheduler = {
   /**
    * Delete a scheduled task previously created with registerTask.
    *
+   * @param {Object} options
+   *        Optional, as are all of its properties:
+   *        {
+   *            options.nameVersion
+   *              Over time, we have needed to change the name format that tasks are registered with.
+   *              When interacting with an up-to-date task, this value can be unspecified and the
+   *              current version of the name format will be used by default. When interacting with
+   *              an out-of-date task using an old naming format, this can be used to specify what
+   *              version of the name should be used. Since the precise naming format is platform
+   *              specific, these version numbers are also platform-specific.
+   *        }
    * @throws NS_ERROR_FILE_NOT_FOUND if the task does not exist.
    */
-  async deleteTask(id) {
-    return lazy.gImpl.deleteTask(id);
+  async deleteTask(id, options) {
+    return lazy.gImpl.deleteTask(id, options);
   },
 
   /**
    * Delete all tasks registered by this application.
+   *
+   * @param {Object} options
+   *        Optional, as are all of its properties:
+   *        {
+   *            options.nameVersion
+   *              Over time, we have needed to change the name format that tasks are registered with.
+   *              When interacting with an up-to-date task, this value can be unspecified and the
+   *              current version of the name format will be used by default. When interacting with
+   *              an out-of-date task using an old naming format, this can be used to specify what
+   *              version of the name should be used. Since the precise naming format is platform
+   *              specific, these version numbers are also platform-specific.
+   *        }
    */
   async deleteAllTasks() {
     return lazy.gImpl.deleteAllTasks();
@@ -141,10 +172,22 @@ export var TaskScheduler = {
    * @param id
    *        A string representing the identifier of the task to look for.
    *
+   * @param {Object} options
+   *        Optional, as are all of its properties:
+   *        {
+   *            options.nameVersion
+   *              Over time, we have needed to change the name format that tasks are registered with.
+   *              When interacting with an up-to-date task, this value can be unspecified and the
+   *              current version of the name format will be used by default. When interacting with
+   *              an out-of-date task using an old naming format, this can be used to specify what
+   *              version of the name should be used. Since the precise naming format is platform
+   *              specific, these version numbers are also platform-specific.
+   *        }
+   *
    * @return
    *        true if the task exists, otherwise false.
    */
-  async taskExists(id) {
-    return lazy.gImpl.taskExists(id);
+  async taskExists(id, options) {
+    return lazy.gImpl.taskExists(id, options);
   },
 };
