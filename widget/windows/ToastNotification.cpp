@@ -464,13 +464,21 @@ ToastNotification::ShowAlert(nsIAlertNotification* aAlert,
   MOZ_TRY(aAlert->GetPrincipal(getter_AddRefs(principal)));
   bool isSystemPrincipal = principal && principal->IsSystemPrincipal();
 
+  bool handleActions = false;
+  if (isSystemPrincipal) {
+    nsCOMPtr<nsIWindowsAlertNotification> winAlert(do_QueryInterface(aAlert));
+    if (winAlert) {
+      MOZ_TRY(winAlert->GetHandleActions(&handleActions));
+    }
+  }
+
   RefPtr<ToastNotificationHandler> oldHandler = mActiveHandlers.Get(name);
 
   NS_ENSURE_TRUE(mAumid.isSome(), NS_ERROR_UNEXPECTED);
   RefPtr<ToastNotificationHandler> handler = new ToastNotificationHandler(
       this, mAumid.ref(), aAlertListener, name, cookie, title, text, hostPort,
       textClickable, requireInteraction, actions, isSystemPrincipal,
-      opaqueRelaunchData, inPrivateBrowsing, isSilent);
+      opaqueRelaunchData, inPrivateBrowsing, isSilent, handleActions);
   mActiveHandlers.InsertOrUpdate(name, RefPtr{handler});
 
   MOZ_LOG(sWASLog, LogLevel::Debug,
@@ -842,6 +850,21 @@ ToastNotification::RemoveAllNotificationsForInstall() {
     }
   }();
 
+  return NS_OK;
+}
+
+NS_IMPL_ISUPPORTS_INHERITED(WindowsAlertNotification, AlertNotification,
+                            nsIWindowsAlertNotification)
+
+NS_IMETHODIMP
+WindowsAlertNotification::GetHandleActions(bool* aHandleActions) {
+  *aHandleActions = mHandleActions;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+WindowsAlertNotification::SetHandleActions(bool aHandleActions) {
+  mHandleActions = aHandleActions;
   return NS_OK;
 }
 

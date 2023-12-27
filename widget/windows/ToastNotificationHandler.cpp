@@ -11,6 +11,7 @@
 #include "gfxUtils.h"
 #include "imgIContainer.h"
 #include "imgIRequest.h"
+#include "json/json.h"
 #include "mozilla/gfx/2D.h"
 #ifdef MOZ_BACKGROUNDTASKS
 #  include "mozilla/BackgroundTasks.h"
@@ -857,8 +858,6 @@ ToastNotificationHandler::OnActivate(
       }
     }
 
-    // TODO: extract `action` from `actionString`, which is now JSON.
-
     if (actionString.EqualsLiteral("settings")) {
       mAlertListener->Observe(nullptr, "alertsettingscallback", mCookie.get());
     } else if (actionString.EqualsLiteral("snooze")) {
@@ -881,6 +880,22 @@ ToastNotificationHandler::OnActivate(
           }
         }
       }
+
+      if (mHandleActions) {
+        Json::Value jsonData;
+        Json::Reader jsonReader;
+
+        if (jsonReader.parse(NS_ConvertUTF16toUTF8(actionString).get(),
+                             jsonData, false)) {
+          char actionKey[] = "action";
+          if (jsonData.isMember(actionKey) && jsonData[actionKey].isString()) {
+            mAlertListener->Observe(
+                nullptr, "alertactioncallback",
+                NS_ConvertUTF8toUTF16(jsonData[actionKey].asCString()).get());
+          }
+        }
+      }
+
       mAlertListener->Observe(nullptr, "alertclickcallback", mCookie.get());
     }
   }
@@ -983,6 +998,10 @@ ToastNotificationHandler::OnFail(const ComPtr<IToastNotification>& notification,
   aArgs->get_ErrorCode(&err);
   MOZ_LOG(sWASLog, LogLevel::Error,
           ("Error creating notification, error: %ld", err));
+
+  if (mHandleActions) {
+    mAlertListener->Observe(nullptr, "alerterror", mCookie.get());
+  }
 
   SendFinished();
   mBackend->RemoveHandler(mName, this);

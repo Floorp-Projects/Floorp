@@ -177,6 +177,7 @@ LOCAL_INCLUDES += [
     "/layout/generic",
     "/layout/style",
     "/layout/xul",
+    "/toolkit/components/jsoncpp/include",
     "/toolkit/xre",
     "/widget",
     "/widget/headless",
@@ -191,6 +192,10 @@ DEFINES["MOZ_TOAST_APP_NAME"] = '"%s"' % CONFIG["MOZ_APP_NAME"].title()
 for var in ("MOZ_ENABLE_D3D10_LAYER",):
     if CONFIG[var]:
         DEFINES[var] = True
+
+USE_LIBS += [
+    "jsoncpp",
+]
 
 OS_LIBS += [
     "ktmw32",

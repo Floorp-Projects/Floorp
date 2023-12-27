@@ -10,9 +10,9 @@
 #include <windows.data.xml.dom.h>
 #include <wrl.h>
 #include "nsCOMPtr.h"
-#include "nsIAlertsService.h"
 #include "nsICancelable.h"
 #include "nsIFile.h"
+#include "nsIWindowsAlertsService.h"
 #include "nsString.h"
 #include "mozilla/Result.h"
 
@@ -35,7 +35,8 @@ class ToastNotificationHandler final
                            const nsTArray<RefPtr<nsIAlertAction>>& aActions,
                            bool aIsSystemPrincipal,
                            const nsAString& aOpaqueRelaunchData,
-                           bool aInPrivateBrowsing, bool aIsSilent)
+                           bool aInPrivateBrowsing, bool aIsSilent,
+                           bool aHandlesActions = false)
       : mBackend(backend),
         mAumid(aumid),
         mHasImage(false),
@@ -52,7 +53,8 @@ class ToastNotificationHandler final
         mIsSystemPrincipal(aIsSystemPrincipal),
         mOpaqueRelaunchData(aOpaqueRelaunchData),
         mIsSilent(aIsSilent),
-        mSentFinished(!aAlertListener) {}
+        mSentFinished(!aAlertListener),
+        mHandleActions(aHandlesActions) {}
 
   nsresult InitAlertAsync(nsIAlertNotification* aAlert);
 
@@ -124,6 +126,7 @@ class ToastNotificationHandler final
   nsString mOpaqueRelaunchData;
   bool mIsSilent;
   bool mSentFinished;
+  bool mHandleActions;
 
   nsresult TryShowAlert();
   bool ShowAlert();

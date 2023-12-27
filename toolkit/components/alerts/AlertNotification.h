@@ -53,7 +53,7 @@ class AlertImageRequest final : public imgINotificationObserver,
   nsCOMPtr<imgIRequest> mRequest;
 };
 
-class AlertNotification final : public nsIAlertNotification {
+class AlertNotification : public nsIAlertNotification {
  public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIALERTNOTIFICATION
