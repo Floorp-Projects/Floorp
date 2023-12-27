@@ -105,7 +105,7 @@ if [[ $(uname -o) == "Msys" ]]; then
   pushd "$WINDOWSSDKDIR"
   mkdir -p Debuggers/x64/
   popd
-  mv $MOZ_FETCHES_DIR/VS/VC/Redist/MSVC/14.34.31931/x64/Microsoft.VC143.CRT/* chrome_dll/system32/
+  mv $MOZ_FETCHES_DIR/VS/VC/Redist/MSVC/14.38.33130/x64/Microsoft.VC143.CRT/* chrome_dll/system32/
   mv "$WINDOWSSDKDIR/App Certification Kit/"* "$WINDOWSSDKDIR"/Debuggers/x64/
   export WINDIR="$PWD/chrome_dll"
 
