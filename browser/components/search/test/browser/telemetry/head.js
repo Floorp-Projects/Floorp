@@ -40,6 +40,8 @@ ChromeUtils.defineLazyGetter(this, "SEARCH_AD_CLICK_SCALARS", () => {
 });
 
 // For use with categorization.
+const APP_VERSION = Services.appinfo.version;
+const CHANNEL = SearchUtils.MODIFIED_APP_CHANNEL;
 const REGION = Region.home;
 const LOCALE = Services.locale.appLocaleAsBCP47;
 
