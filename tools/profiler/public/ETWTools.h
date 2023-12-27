@@ -11,7 +11,7 @@
 #include "mozilla/TimeStamp.h"
 #include "nsString.h"
 
-#if defined(XP_WIN) && !defined(RUST_BINDGEN) && !defined(__MINGW__)
+#if defined(XP_WIN) && !defined(RUST_BINDGEN) && !defined(__MINGW32__)
 #  include "mozilla/ProfilerState.h"
 
 #  include <windows.h>
