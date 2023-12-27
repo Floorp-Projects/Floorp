@@ -16,6 +16,7 @@
 #include "mozilla/WeakPtr.h"
 #include "mozilla/dom/Highlight.h"
 #include "mozilla/dom/StyledRange.h"
+#include "mozilla/intl/Bidi.h"
 #include "mozilla/intl/BidiEmbeddingLevel.h"
 #include "nsDirection.h"
 #include "nsISelectionController.h"
@@ -256,8 +257,18 @@ class Selection final : public nsSupportsWeakReference,
   void AdjustAnchorFocusForMultiRange(nsDirection aDirection);
 
   nsIFrame* GetPrimaryFrameForAnchorNode() const;
-  nsIFrame* GetPrimaryFrameForFocusNode(bool aVisual,
-                                        int32_t* aOffsetUsed = nullptr) const;
+
+  struct MOZ_STACK_CLASS PrimaryFrameData final {
+    // The frame which should be used to layout the caret.
+    nsIFrame* mFrame = nullptr;
+    // The offset in content of mFrame.  This is valid only when mFrame is not
+    // nullptr.
+    uint32_t mOffsetInFrameContent = 0;
+    // Whether the caret should be put before or after the point. This is valid
+    // only when mFrame is not nullptr.
+    CaretAssociationHint mHint{0};  // Before
+  };
+  PrimaryFrameData GetPrimaryFrameForCaretAtFocusNode(bool aVisual) const;
 
   UniquePtr<SelectionDetails> LookUpSelection(
       nsIContent* aContent, uint32_t aContentOffset, uint32_t aContentLength,
@@ -727,17 +738,11 @@ class Selection final : public nsSupportsWeakReference,
                                                          Document* aDocument,
                                                          ErrorResult&);
 
-  struct MOZ_STACK_CLASS PrimaryFrameData final {
-    // The frame which should be used to layout the caret.
-    nsIFrame* mFrame = nullptr;
-    // The offset in content of mFrame.  This is valid only when mFrame is not
-    // nullptr.
-    uint32_t mOffsetInFrameContent = 0;
-    // Whether the caret should be put before or after the point. This is valid
-    // only when mFrame is not nullptr.
-    CaretAssociationHint mHint{0};
-  };
-  // This is helper method for GetPrimaryFrameForFocusNode.
+  static PrimaryFrameData GetPrimaryFrameForCaret(
+      nsIContent* aContent, uint32_t aOffset, bool aVisual,
+      CaretAssociationHint aHint, intl::BidiEmbeddingLevel aCaretBidiLevel);
+
+  // This is helper method for GetPrimaryFrameForCaret.
   // If aVisual is true, this returns caret frame.
   // If false, this returns primary frame.
   static PrimaryFrameData GetPrimaryOrCaretFrameForNodeOffset(
