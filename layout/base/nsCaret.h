@@ -178,13 +178,43 @@ class nsCaret final : public nsISelectionListener {
    */
   static nsIFrame* GetGeometry(const mozilla::dom::Selection* aSelection,
                                nsRect* aRect);
+
   enum class ForceEditableRegion { No, Yes };
-  static nsIFrame* GetCaretFrameForNodeOffset(
-      nsFrameSelection* aFrameSelection, nsIContent* aContentNode,
+
+  struct MOZ_STACK_CLASS CaretFrameData final {
+    // The frame which should be used to compute caret geometry when caret is
+    // put at a specific DOM point.
+    nsIFrame* mFrame = nullptr;
+    // The frame which is found only from a DOM point.  This frame becomes
+    // different from mFrame when the point is around end of a line or
+    // at a bidi text boundary.
+    nsIFrame* mUnadjustedFrame = nullptr;
+    // The content offset when caret is in the content of mFrame.  This is
+    // valid only when mFrame is not nullptr.
+    int32_t mOffsetInFrameContent = 0;
+    // Whether the caret should be put before or after the point.
+    CaretAssociationHint mHint{0};  // Before
+  };
+
+  /**
+   * Return a frame for considering caret geometry.
+   *
+   * @param aFrameSelection     [optional] If this is specified and selection in
+   *                            aContent is not managed by the specified
+   *                            instance, return nullptr.
+   * @param aContentNode        The content node where selection is collapsed.
+   * @param aOffset             Collapsed position in aContentNode
+   * @param aFrameHint          Caret association hint.
+   * @param aBidiLevel
+   * @param aForceEditableRegion    Whether selection should be limited in
+   *                                editable region or not.
+   */
+  static CaretFrameData GetCaretFrameForNodeOffset(
+      const nsFrameSelection* aFrameSelection, nsIContent* aContentNode,
       int32_t aOffset, CaretAssociationHint aFrameHint,
       mozilla::intl::BidiEmbeddingLevel aBidiLevel,
-      ForceEditableRegion aForceEditableRegion,
-      nsIFrame** aReturnUnadjustedFrame, int32_t* aReturnOffset);
+      ForceEditableRegion aForceEditableRegion);
+
   static nsRect GetGeometryForFrame(nsIFrame* aFrame, int32_t aFrameOffset,
                                     nscoord* aBidiIndicatorSize);
 
