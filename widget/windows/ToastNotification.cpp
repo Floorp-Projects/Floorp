@@ -465,10 +465,29 @@ ToastNotification::ShowAlert(nsIAlertNotification* aAlert,
   bool isSystemPrincipal = principal && principal->IsSystemPrincipal();
 
   bool handleActions = false;
+  auto imagePlacement = ImagePlacement::eInline;
   if (isSystemPrincipal) {
     nsCOMPtr<nsIWindowsAlertNotification> winAlert(do_QueryInterface(aAlert));
     if (winAlert) {
       MOZ_TRY(winAlert->GetHandleActions(&handleActions));
+
+      nsIWindowsAlertNotification::ImagePlacement placement;
+      MOZ_TRY(winAlert->GetImagePlacement(&placement));
+      switch (placement) {
+        case nsIWindowsAlertNotification::eHero:
+          imagePlacement = ImagePlacement::eHero;
+          break;
+        case nsIWindowsAlertNotification::eIcon:
+          imagePlacement = ImagePlacement::eIcon;
+          break;
+        case nsIWindowsAlertNotification::eInline:
+          imagePlacement = ImagePlacement::eInline;
+          break;
+        default:
+          MOZ_LOG(sWASLog, LogLevel::Error,
+                  ("Invalid image placement enum value: %hhu", placement));
+          return NS_ERROR_UNEXPECTED;
+      }
     }
   }
 
@@ -478,7 +497,8 @@ ToastNotification::ShowAlert(nsIAlertNotification* aAlert,
   RefPtr<ToastNotificationHandler> handler = new ToastNotificationHandler(
       this, mAumid.ref(), aAlertListener, name, cookie, title, text, hostPort,
       textClickable, requireInteraction, actions, isSystemPrincipal,
-      opaqueRelaunchData, inPrivateBrowsing, isSilent, handleActions);
+      opaqueRelaunchData, inPrivateBrowsing, isSilent, handleActions,
+      imagePlacement);
   mActiveHandlers.InsertOrUpdate(name, RefPtr{handler});
 
   MOZ_LOG(sWASLog, LogLevel::Debug,
@@ -865,6 +885,29 @@ WindowsAlertNotification::GetHandleActions(bool* aHandleActions) {
 NS_IMETHODIMP
 WindowsAlertNotification::SetHandleActions(bool aHandleActions) {
   mHandleActions = aHandleActions;
+  return NS_OK;
+}
+
+NS_IMETHODIMP WindowsAlertNotification::GetImagePlacement(
+    nsIWindowsAlertNotification::ImagePlacement* aImagePlacement) {
+  *aImagePlacement = mImagePlacement;
+  return NS_OK;
+}
+
+NS_IMETHODIMP WindowsAlertNotification::SetImagePlacement(
+    nsIWindowsAlertNotification::ImagePlacement aImagePlacement) {
+  switch (aImagePlacement) {
+    case eHero:
+    case eIcon:
+    case eInline:
+      mImagePlacement = aImagePlacement;
+      break;
+    default:
+      MOZ_LOG(sWASLog, LogLevel::Error,
+              ("Invalid image placement enum value: %hhu", aImagePlacement));
+      return NS_ERROR_INVALID_ARG;
+  }
+
   return NS_OK;
 }
 
