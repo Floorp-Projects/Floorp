@@ -13,6 +13,7 @@
 #include "nsIThread.h"
 #include "nsIWindowsAlertsService.h"
 #include "nsRefPtrHashtable.h"
+#include "mozilla/AlertNotification.h"
 
 namespace mozilla {
 namespace widget {
@@ -20,6 +21,20 @@ namespace widget {
 using ToastHandledPromise = MozPromise<bool, bool, true>;
 
 class ToastNotificationHandler;
+
+class WindowsAlertNotification final : public AlertNotification,
+                                       public nsIWindowsAlertNotification {
+ public:
+  NS_DECL_NSIWINDOWSALERTNOTIFICATION
+  NS_FORWARD_NSIALERTNOTIFICATION(AlertNotification::)
+  NS_DECL_ISUPPORTS_INHERITED
+
+  WindowsAlertNotification() = default;
+
+ protected:
+  virtual ~WindowsAlertNotification() = default;
+  bool mHandleActions = false;
+};
 
 class ToastNotification final : public nsIWindowsAlertsService,
                                 public nsIAlertsDoNotDisturb,
