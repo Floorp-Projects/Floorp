@@ -154,11 +154,11 @@ pub struct FirefoxRunner {
 }
 
 impl FirefoxRunner {
-    /// Initialise Firefox process runner.
+    /// Initialize Firefox process runner.
     ///
     /// On macOS, `path` can optionally point to an application bundle,
     /// i.e. _/Applications/Firefox.app_, as well as to an executable program
-    /// such as _/Applications/Firefox.app/Content/MacOS/firefox-bin_.
+    /// such as _/Applications/Firefox.app/Content/MacOS/firefox_.
     pub fn new(path: &Path, profile: Option<Profile>) -> FirefoxRunner {
         let mut envs: HashMap<OsString, OsString> = HashMap::new();
         envs.insert("MOZ_NO_REMOTE".into(), "1".into());
@@ -380,7 +380,7 @@ pub mod platform {
 
 #[cfg(target_os = "macos")]
 pub mod platform {
-    use crate::path::{find_binary, is_binary};
+    use crate::path::{find_binary, is_app_bundle, is_binary};
     use dirs;
     use plist::Value;
     use std::path::PathBuf;
@@ -406,30 +406,21 @@ pub mod platform {
         path
     }
 
-    /// Searches the system path for `firefox-bin`, then looks for
-    /// `Applications/Firefox.app/Contents/MacOS/firefox-bin` as well
-    /// as `Applications/Firefox Nightly.app/Contents/MacOS/firefox-bin`
+    /// Searches the system path for `firefox`, then looks for
+    /// `Applications/Firefox.app/Contents/MacOS/firefox` as well
+    /// as `Applications/Firefox Nightly.app/Contents/MacOS/firefox`
     /// under both `/` (system root) and the user home directory.
     pub fn firefox_default_path() -> Option<PathBuf> {
-        if let Some(path) = find_binary("firefox-bin") {
+        if let Some(path) = find_binary("firefox") {
             return Some(path);
         }
 
         let home = dirs::home_dir();
         for &(prefix_home, trial_path) in [
-            (
-                false,
-                "/Applications/Firefox.app/Contents/MacOS/firefox-bin",
-            ),
-            (true, "Applications/Firefox.app/Contents/MacOS/firefox-bin"),
-            (
-                false,
-                "/Applications/Firefox Nightly.app/Contents/MacOS/firefox-bin",
-            ),
-            (
-                true,
-                "Applications/Firefox Nightly.app/Contents/MacOS/firefox-bin",
-            ),
+            (false, "/Applications/Firefox.app"),
+            (true, "Applications/Firefox.app"),
+            (false, "/Applications/Firefox Nightly.app"),
+            (true, "Applications/Firefox Nightly.app"),
         ]
         .iter()
         {
@@ -438,7 +429,8 @@ pub mod platform {
                 (None, true) => continue,
                 (_, false) => PathBuf::from(trial_path),
             };
-            if is_binary(&path) {
+
+            if is_binary(&path) || is_app_bundle(&path) {
                 return Some(path);
             }
         }
