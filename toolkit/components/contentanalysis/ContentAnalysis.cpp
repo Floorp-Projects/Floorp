@@ -9,6 +9,7 @@
 #include "content_analysis/sdk/analysis_client.h"
 
 #include "base/process_util.h"
+#include "GMPUtils.h"  // ToHexString
 #include "mozilla/Components.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/Logging.h"
@@ -194,8 +195,8 @@ nsresult ContentAnalysis::CreateContentAnalysisClient(nsCString&& aPipePathName,
 }
 
 ContentAnalysisRequest::ContentAnalysisRequest(
-    AnalysisType aAnalysisType, nsString&& aString, bool aStringIsFilePath,
-    nsCString&& aSha256Digest, nsString&& aUrl, OperationType aOperationType,
+    AnalysisType aAnalysisType, nsString aString, bool aStringIsFilePath,
+    nsCString aSha256Digest, nsString aUrl, OperationType aOperationType,
     dom::WindowGlobalParent* aWindowGlobalParent)
     : mAnalysisType(aAnalysisType),
       mUrl(std::move(aUrl)),
@@ -216,6 +217,39 @@ ContentAnalysisRequest::ContentAnalysisRequest(
   }
 
   mRequestToken = GenerateRequestToken();
+}
+
+nsresult ContentAnalysisRequest::GetFileDigest(const nsAString& aFilePath,
+                                               nsCString& aDigestString) {
+  MOZ_ASSERT(!NS_IsMainThread(),
+             "ContentAnalysisRequest::GetFileDigest does file IO and should "
+             "not run on the main thread");
+  nsresult rv;
+  mozilla::Digest digest;
+  digest.Begin(SEC_OID_SHA256);
+  PRFileDesc* fd = nullptr;
+  nsCOMPtr<nsIFile> file = do_CreateInstance("@mozilla.org/file/local;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = file->InitWithPath(aFilePath);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = file->OpenNSPRFileDesc(PR_RDONLY | nsIFile::OS_READAHEAD, 0, &fd);
+  NS_ENSURE_SUCCESS(rv, rv);
+  auto closeFile = MakeScopeExit([fd]() { PR_Close(fd); });
+  uint8_t buffer[4096];
+  PRInt32 bytesRead;
+  bytesRead = PR_Read(fd, buffer, sizeof(buffer) / sizeof(uint8_t));
+  while (bytesRead != 0) {
+    if (bytesRead == -1) {
+      return NS_ERROR_DOM_FILE_NOT_READABLE_ERR;
+    }
+    digest.Update(mozilla::Span<const uint8_t>(buffer, bytesRead));
+    bytesRead = PR_Read(fd, buffer, sizeof(buffer) / sizeof(uint8_t));
+  }
+  nsTArray<uint8_t> digestResults;
+  rv = digest.End(digestResults);
+  NS_ENSURE_SUCCESS(rv, rv);
+  aDigestString = mozilla::ToHexString(digestResults);
+  return NS_OK;
 }
 
 static nsresult ConvertToProtobuf(
@@ -794,6 +828,25 @@ void ContentAnalysis::DoAnalyzeRequest(
     owner->CancelWithError(std::move(aRequestToken), NS_ERROR_NOT_AVAILABLE);
     return;
   }
+
+  if (aRequest.has_file_path() && !aRequest.file_path().empty() &&
+      (!aRequest.request_data().has_digest() ||
+       aRequest.request_data().digest().empty())) {
+    // Calculate the digest
+    nsCString digest;
+    nsCString fileCPath(aRequest.file_path().data(),
+                        aRequest.file_path().length());
+    nsString filePath = NS_ConvertUTF8toUTF16(fileCPath);
+    nsresult rv = ContentAnalysisRequest::GetFileDigest(filePath, digest);
+    if (NS_FAILED(rv)) {
+      owner->CancelWithError(std::move(aRequestToken), rv);
+      return;
+    }
+    if (!digest.IsEmpty()) {
+      aRequest.mutable_request_data()->set_digest(digest.get());
+    }
+  }
+
   {
     auto callbackMap = owner->mCallbackMap.Lock();
     if (!callbackMap->Contains(aRequestToken)) {

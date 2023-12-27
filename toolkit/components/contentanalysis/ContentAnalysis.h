@@ -29,10 +29,12 @@ class ContentAnalysisRequest final : public nsIContentAnalysisRequest {
   NS_DECL_ISUPPORTS
   NS_DECL_NSICONTENTANALYSISREQUEST
 
-  ContentAnalysisRequest(AnalysisType aAnalysisType, nsString&& aString,
-                         bool aStringIsFilePath, nsCString&& aSha256Digest,
-                         nsString&& aUrl, OperationType aOperationType,
+  ContentAnalysisRequest(AnalysisType aAnalysisType, nsString aString,
+                         bool aStringIsFilePath, nsCString aSha256Digest,
+                         nsString aUrl, OperationType aOperationType,
                          dom::WindowGlobalParent* aWindowGlobalParent);
+  static nsresult GetFileDigest(const nsAString& aFilePath,
+                                nsCString& aDigestString);
 
  private:
   ~ContentAnalysisRequest() = default;

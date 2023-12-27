@@ -134,7 +134,8 @@ interface nsIContentAnalysisRequest : nsISupports
   // being uploaded.
   readonly attribute AString url;
 
-  // Sha256 digest of file.
+  // Sha256 digest of file. Callers may pass in an empty string to have the
+  // content analysis code calculate this.
   readonly attribute ACString sha256Digest;
 
   // URLs involved in the download (empty for non-downloads).
