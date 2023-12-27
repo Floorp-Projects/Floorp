@@ -19,6 +19,12 @@
 namespace mozilla {
 namespace widget {
 
+enum class ImagePlacement {
+  eInline,
+  eHero,
+  eIcon,
+};
+
 class ToastNotification;
 
 class ToastNotificationHandler final
@@ -27,16 +33,15 @@ class ToastNotificationHandler final
   NS_DECL_ISUPPORTS
   NS_DECL_NSIALERTNOTIFICATIONIMAGELISTENER
 
-  ToastNotificationHandler(ToastNotification* backend, const nsAString& aumid,
-                           nsIObserver* aAlertListener, const nsAString& aName,
-                           const nsAString& aCookie, const nsAString& aTitle,
-                           const nsAString& aMsg, const nsAString& aHostPort,
-                           bool aClickable, bool aRequireInteraction,
-                           const nsTArray<RefPtr<nsIAlertAction>>& aActions,
-                           bool aIsSystemPrincipal,
-                           const nsAString& aOpaqueRelaunchData,
-                           bool aInPrivateBrowsing, bool aIsSilent,
-                           bool aHandlesActions = false)
+  ToastNotificationHandler(
+      ToastNotification* backend, const nsAString& aumid,
+      nsIObserver* aAlertListener, const nsAString& aName,
+      const nsAString& aCookie, const nsAString& aTitle, const nsAString& aMsg,
+      const nsAString& aHostPort, bool aClickable, bool aRequireInteraction,
+      const nsTArray<RefPtr<nsIAlertAction>>& aActions, bool aIsSystemPrincipal,
+      const nsAString& aOpaqueRelaunchData, bool aInPrivateBrowsing,
+      bool aIsSilent, bool aHandlesActions = false,
+      ImagePlacement aImagePlacement = ImagePlacement::eInline)
       : mBackend(backend),
         mAumid(aumid),
         mHasImage(false),
@@ -54,7 +59,8 @@ class ToastNotificationHandler final
         mOpaqueRelaunchData(aOpaqueRelaunchData),
         mIsSilent(aIsSilent),
         mSentFinished(!aAlertListener),
-        mHandleActions(aHandlesActions) {}
+        mHandleActions(aHandlesActions),
+        mImagePlacement(aImagePlacement) {}
 
   nsresult InitAlertAsync(nsIAlertNotification* aAlert);
 
@@ -127,6 +133,7 @@ class ToastNotificationHandler final
   bool mIsSilent;
   bool mSentFinished;
   bool mHandleActions;
+  ImagePlacement mImagePlacement;
 
   nsresult TryShowAlert();
   bool ShowAlert();

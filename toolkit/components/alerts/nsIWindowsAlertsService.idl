@@ -14,6 +14,23 @@ interface nsIWindowsAlertNotification : nsIAlertNotification
    * `aData` field.
    */
   attribute boolean handleActions;
+
+  /**
+   * Image placements corresponding to placements in Windows Toast
+   * Notification XML.
+   */
+  cenum ImagePlacement : 8 {
+    eInline,
+    eHero,
+    eIcon,
+  };
+
+  /**
+   * Enum to specify image placement we want in the notification. n.b. in the
+   * future we could extend this to instead allow multiple images in differing
+   * placements in the same notification.
+   */
+  attribute nsIWindowsAlertNotification_ImagePlacement imagePlacement;
 };
 
 [scriptable, uuid(e01c8066-fb4b-4304-b9c9-ab6ed4a8322c)]
