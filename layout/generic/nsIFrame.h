@@ -49,7 +49,6 @@
 #include <algorithm>
 #include <stdio.h>
 
-#include "CaretAssociationHint.h"
 #include "FrameProperties.h"
 #include "LayoutConstants.h"
 #include "mozilla/AspectRatio.h"
@@ -127,6 +126,7 @@ struct CharacterDataChangeInfo;
 
 namespace mozilla {
 
+enum class CaretAssociationHint;
 enum class PeekOffsetOption : uint16_t;
 enum class PseudoStyleType : uint8_t;
 enum class TableSelectionMode : uint32_t;
@@ -2234,10 +2234,7 @@ class nsIFrame : public nsQueryFrame {
   // that need the beginning and end of the object, the StartOffset and
   // EndOffset helpers can be used.
   struct MOZ_STACK_CLASS ContentOffsets {
-    ContentOffsets()
-        : offset(0),
-          secondaryOffset(0),
-          associate(mozilla::CARET_ASSOCIATE_BEFORE) {}
+    ContentOffsets() = default;
     bool IsNull() { return !content; }
     // Helpers for places that need the ends of the offsets and expect them in
     // numerical order, as opposed to wanting the primary and secondary offsets
@@ -2245,12 +2242,12 @@ class nsIFrame : public nsQueryFrame {
     int32_t EndOffset() { return std::max(offset, secondaryOffset); }
 
     nsCOMPtr<nsIContent> content;
-    int32_t offset;
-    int32_t secondaryOffset;
+    int32_t offset = 0;
+    int32_t secondaryOffset = 0;
     // This value indicates whether the associated content is before or after
     // the offset; the most visible use is to allow the caret to know which line
     // to display on.
-    mozilla::CaretAssociationHint associate;
+    mozilla::CaretAssociationHint associate{0};  // Before
   };
   enum {
     IGNORE_SELECTION_STYLE = 0x01,

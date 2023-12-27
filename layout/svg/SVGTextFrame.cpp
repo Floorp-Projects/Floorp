@@ -33,6 +33,7 @@
 #include "nsLayoutUtils.h"
 #include "nsFrameSelection.h"
 #include "nsStyleStructInlines.h"
+#include "mozilla/CaretAssociationHint.h"
 #include "mozilla/DisplaySVGItem.h"
 #include "mozilla/Likely.h"
 #include "mozilla/PresShell.h"
@@ -3500,7 +3501,7 @@ void SVGTextFrame::SelectSubString(nsIContent* aContent, uint32_t charnum,
 
   frameSelection->HandleClick(content, charnum, charnum + nchars,
                               nsFrameSelection::FocusMode::kCollapseToNewPoint,
-                              CARET_ASSOCIATE_BEFORE);
+                              CaretAssociationHint::Before);
 }
 
 /**

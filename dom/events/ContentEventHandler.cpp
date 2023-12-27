@@ -1121,7 +1121,7 @@ nsresult ContentEventHandler::ExpandToClusterBoundary(
   MOZ_DIAGNOSTIC_ASSERT(mDocument->GetPresShell());
   int32_t offsetInFrame;
   CaretAssociationHint hint =
-      aForward ? CARET_ASSOCIATE_BEFORE : CARET_ASSOCIATE_AFTER;
+      aForward ? CaretAssociationHint::Before : CaretAssociationHint::After;
   nsIFrame* frame = nsFrameSelection::GetFrameForNodeOffset(
       &aTextNode, int32_t(*aXPOffset), hint, &offsetInFrame);
   if (frame) {

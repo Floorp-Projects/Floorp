@@ -152,7 +152,7 @@ PeekOffsetStruct::PeekOffsetStruct(nsSelectionAmount aAmount,
       mOptions(aOptions),
       mResultFrame(nullptr),
       mContentOffset(0),
-      mAttach(CARET_ASSOCIATE_BEFORE) {}
+      mAttach(CaretAssociationHint::Before) {}
 
 }  // namespace mozilla
 
@@ -729,10 +729,10 @@ nsresult nsFrameSelection::MoveCaret(nsDirection aDirection,
   if (doCollapse) {
     if (aDirection == eDirPrevious) {
       SetChangeReasons(nsISelectionListener::COLLAPSETOSTART_REASON);
-      mCaret.mHint = CARET_ASSOCIATE_AFTER;
+      mCaret.mHint = CaretAssociationHint::After;
     } else {
       SetChangeReasons(nsISelectionListener::COLLAPSETOEND_REASON);
-      mCaret.mHint = CARET_ASSOCIATE_BEFORE;
+      mCaret.mHint = CaretAssociationHint::Before;
     }
   } else {
     SetChangeReasons(nsISelectionListener::KEYPRESS_REASON);
@@ -794,8 +794,9 @@ nsresult nsFrameSelection::MoveCaret(nsDirection aDirection,
     return NS_OK;
   }
 
-  CaretAssociateHint tHint(mCaret.mHint);  // temporary variable so we dont set
-                                           // mCaret.mHint until it is necessary
+  CaretAssociationHint tHint(
+      mCaret.mHint);  // temporary variable so we dont set
+                      // mCaret.mHint until it is necessary
 
   Result<PeekOffsetStruct, nsresult> result = PeekOffsetForCaretMove(
       direction, aContinueSelection, aAmount, aMovementStyle, desiredPos);
@@ -815,9 +816,9 @@ nsresult nsFrameSelection::MoveCaret(nsDirection aDirection,
       std::tie(frameStart, frameEnd) = theFrame->GetOffsets();
       currentOffset = pos.mContentOffset;
       if (frameEnd == currentOffset && !(frameStart == 0 && frameEnd == 0))
-        tHint = CARET_ASSOCIATE_BEFORE;
+        tHint = CaretAssociationHint::Before;
       else
-        tHint = CARET_ASSOCIATE_AFTER;
+        tHint = CaretAssociationHint::After;
     } else {
       // For up/down and home/end, pos.mResultFrame might not be set correctly,
       // or not at all. In these cases, get the frame based on the content and
@@ -875,8 +876,8 @@ nsresult nsFrameSelection::MoveCaret(nsDirection aDirection,
     sel->CollapseInLimiter(node, sel->FocusOffset());
     // Note: 'frame' might be dead here.
     if (!isBRFrame) {
-      mCaret.mHint = CARET_ASSOCIATE_BEFORE;  // We're now at the end of the
-                                              // frame to the left.
+      mCaret.mHint = CaretAssociationHint::Before;  // We're now at the end of
+                                                    // the frame to the left.
     }
     rv = NS_OK;
   } else {
@@ -943,7 +944,7 @@ nsPrevNextBidiLevels nsFrameSelection::GetPrevNextBidiLevels(
 
 // static
 nsPrevNextBidiLevels nsFrameSelection::GetPrevNextBidiLevels(
-    nsIContent* aNode, uint32_t aContentOffset, CaretAssociateHint aHint,
+    nsIContent* aNode, uint32_t aContentOffset, CaretAssociationHint aHint,
     bool aJumpLines) {
   // Get the level of the frames on each side
   nsIFrame* currentFrame;
@@ -1059,7 +1060,7 @@ void nsFrameSelection::BidiLevelFromMove(PresShell* aPresShell,
                                          nsIContent* aNode,
                                          uint32_t aContentOffset,
                                          nsSelectionAmount aAmount,
-                                         CaretAssociateHint aHint) {
+                                         CaretAssociationHint aHint) {
   switch (aAmount) {
     // Movement within the line: the new cursor Bidi level is the level of the
     // last character moved over
@@ -1073,9 +1074,9 @@ void nsFrameSelection::BidiLevelFromMove(PresShell* aPresShell,
       nsPrevNextBidiLevels levels =
           GetPrevNextBidiLevels(aNode, aContentOffset, aHint, false);
 
-      SetCaretBidiLevelAndMaybeSchedulePaint(aHint == CARET_ASSOCIATE_BEFORE
-                                                 ? levels.mLevelBefore
-                                                 : levels.mLevelAfter);
+      SetCaretBidiLevelAndMaybeSchedulePaint(
+          aHint == CaretAssociationHint::Before ? levels.mLevelBefore
+                                                : levels.mLevelAfter);
       break;
     }
       /*
@@ -1175,8 +1176,9 @@ void nsFrameSelection::MaintainedRange::AdjustContentOffsets(
     }
 
     int32_t offset;
-    nsIFrame* frame = GetFrameForNodeOffset(aOffsets.content, aOffsets.offset,
-                                            CARET_ASSOCIATE_AFTER, &offset);
+    nsIFrame* frame =
+        GetFrameForNodeOffset(aOffsets.content, aOffsets.offset,
+                              CaretAssociationHint::After, &offset);
 
     PeekOffsetOptions peekOffsetOptions{};
     if (aStopAtScroller == StopAtScroller::Yes) {
@@ -1221,7 +1223,7 @@ nsresult nsFrameSelection::HandleClick(nsIContent* aNewFocus,
                                        uint32_t aContentOffset,
                                        uint32_t aContentEndOffset,
                                        const FocusMode aFocusMode,
-                                       CaretAssociateHint aHint) {
+                                       CaretAssociationHint aHint) {
   if (!aNewFocus) return NS_ERROR_INVALID_ARG;
 
   if (MOZ_LOG_TEST(sFrameSelectionLog, LogLevel::Debug)) {
@@ -1371,7 +1373,7 @@ hard to go from nodes to frames, easy the other way!
 nsresult nsFrameSelection::TakeFocus(nsIContent& aNewFocus,
                                      uint32_t aContentOffset,
                                      uint32_t aContentEndOffset,
-                                     CaretAssociateHint aHint,
+                                     CaretAssociationHint aHint,
                                      const FocusMode aFocusMode) {
   NS_ENSURE_STATE(mPresShell);
 
@@ -1750,7 +1752,7 @@ bool nsFrameSelection::AdjustFrameForLineStart(nsIFrame*& aFrame,
 // static
 nsIFrame* nsFrameSelection::GetFrameForNodeOffset(nsIContent* aNode,
                                                   int32_t aOffset,
-                                                  CaretAssociateHint aHint,
+                                                  CaretAssociationHint aHint,
                                                   int32_t* aReturnOffset) {
   if (!aNode || !aReturnOffset) return nullptr;
 
@@ -1772,14 +1774,14 @@ nsIFrame* nsFrameSelection::GetFrameForNodeOffset(nsIContent* aNode,
       int32_t childIndex = 0;
       int32_t numChildren = theNode->GetChildCount();
 
-      if (aHint == CARET_ASSOCIATE_BEFORE) {
+      if (aHint == CaretAssociationHint::Before) {
         if (aOffset > 0) {
           childIndex = aOffset - 1;
         } else {
           childIndex = aOffset;
         }
       } else {
-        NS_ASSERTION(aHint == CARET_ASSOCIATE_AFTER, "unknown direction");
+        MOZ_ASSERT(aHint == CaretAssociationHint::After);
         if (aOffset >= numChildren) {
           if (numChildren > 0) {
             childIndex = numChildren - 1;
@@ -1825,7 +1827,7 @@ nsIFrame* nsFrameSelection::GetFrameForNodeOffset(nsIContent* aNode,
             }
           } else {
             int32_t numChildren = aNode->GetChildCount();
-            int32_t newChildIndex = aHint == CARET_ASSOCIATE_BEFORE
+            int32_t newChildIndex = aHint == CaretAssociationHint::Before
                                         ? childIndex - 1
                                         : childIndex + 1;
 
@@ -1837,8 +1839,9 @@ nsIFrame* nsFrameSelection::GetFrameForNodeOffset(nsIContent* aNode,
               }
 
               aNode = newChildNode;
-              aOffset =
-                  aHint == CARET_ASSOCIATE_BEFORE ? aNode->GetChildCount() : 0;
+              aOffset = aHint == CaretAssociationHint::Before
+                            ? aNode->GetChildCount()
+                            : 0;
               continue;
             } else {
               // newChildIndex is illegal which means we're at first or last
@@ -1859,7 +1862,7 @@ nsIFrame* nsFrameSelection::GetFrameForNodeOffset(nsIContent* aNode,
 
     returnFrame = theNode->GetPrimaryFrame();
     if (!returnFrame) {
-      if (aHint == CARET_ASSOCIATE_BEFORE) {
+      if (aHint == CaretAssociationHint::Before) {
         if (aOffset > 0) {
           --aOffset;
           continue;
@@ -1896,7 +1899,8 @@ nsIFrame* nsFrameSelection::GetFrameForNodeOffset(nsIContent* aNode,
 
   // find the child frame containing the offset we want
   returnFrame->GetChildFrameContainingOffset(
-      *aReturnOffset, aHint == CARET_ASSOCIATE_AFTER, &aOffset, &returnFrame);
+      *aReturnOffset, aHint == CaretAssociationHint::After, &aOffset,
+      &returnFrame);
   return returnFrame;
 }
 
@@ -2045,7 +2049,7 @@ nsresult nsFrameSelection::PageMove(bool aForward, bool aExtend,
         aExtend ? FocusMode::kExtendSelection : FocusMode::kCollapseToNewPoint;
     HandleClick(MOZ_KnownLive(offsets.content) /* bug 1636889 */,
                 offsets.offset, offsets.offset, focusMode,
-                CARET_ASSOCIATE_AFTER);
+                CaretAssociationHint::After);
 
     selectionChanged = selection->AnchorRef() != oldAnchor ||
                        selection->FocusRef() != oldFocus;
@@ -3216,8 +3220,9 @@ void nsFrameSelection::SetAncestorLimiter(nsIContent* aLimiter) {
       if (mLimiters.mAncestorLimiter) {
         SetChangeReasons(nsISelectionListener::NO_REASON);
         nsCOMPtr<nsIContent> limiter(mLimiters.mAncestorLimiter);
-        const nsresult rv = TakeFocus(*limiter, 0, 0, CARET_ASSOCIATE_BEFORE,
-                                      FocusMode::kCollapseToNewPoint);
+        const nsresult rv =
+            TakeFocus(*limiter, 0, 0, CaretAssociationHint::Before,
+                      FocusMode::kCollapseToNewPoint);
         Unused << NS_WARN_IF(NS_FAILED(rv));
         // TODO: in case of failure, propagate it to the callers.
       }

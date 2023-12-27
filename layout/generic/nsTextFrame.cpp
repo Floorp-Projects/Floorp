@@ -12,6 +12,7 @@
 
 #include "gfxUtils.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/CaretAssociationHint.h"
 #include "mozilla/ComputedStyle.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/gfx/2D.h"
@@ -7347,8 +7348,9 @@ nsIFrame::ContentOffsets nsTextFrame::GetCharacterOffsetAtFramePointInternal(
 
   offsets.content = GetContent();
   offsets.offset = offsets.secondaryOffset = selectedOffset;
-  offsets.associate = mContentOffset == offsets.offset ? CARET_ASSOCIATE_AFTER
-                                                       : CARET_ASSOCIATE_BEFORE;
+  offsets.associate = mContentOffset == offsets.offset
+                          ? CaretAssociationHint::After
+                          : CaretAssociationHint::Before;
   return offsets;
 }
 
