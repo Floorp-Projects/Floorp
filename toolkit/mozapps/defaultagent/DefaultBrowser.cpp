@@ -64,7 +64,7 @@ Browser GetBrowserFromString(const std::string& browserString) {
   return Browser::Unknown;
 }
 
-static BrowserResult GetDefaultBrowser() {
+BrowserResult TryGetDefaultBrowser() {
   RefPtr<IApplicationAssociationRegistration> pAAR;
   HRESULT hr = CoCreateInstance(
       CLSID_ApplicationAssociationRegistration, nullptr, CLSCTX_INPROC,
@@ -167,7 +167,7 @@ static BrowserResult GetDefaultBrowser() {
   return Browser::Unknown;
 }
 
-static BrowserResult GetPreviousDefaultBrowser(Browser currentDefault) {
+BrowserResult TryGetReplacePreviousDefaultBrowser(Browser currentDefault) {
   // This function uses a registry value which stores the current default
   // browser. It returns the data stored in that registry value and replaces the
   // stored string with the current default browser string that was passed in.
@@ -187,9 +187,10 @@ static BrowserResult GetPreviousDefaultBrowser(Browser currentDefault) {
 DefaultBrowserResult GetDefaultBrowserInfo() {
   DefaultBrowserInfo browserInfo;
 
-  MOZ_TRY_VAR(browserInfo.currentDefaultBrowser, GetDefaultBrowser());
-  MOZ_TRY_VAR(browserInfo.previousDefaultBrowser,
-              GetPreviousDefaultBrowser(browserInfo.currentDefaultBrowser));
+  MOZ_TRY_VAR(browserInfo.currentDefaultBrowser, TryGetDefaultBrowser());
+  MOZ_TRY_VAR(
+      browserInfo.previousDefaultBrowser,
+      TryGetReplacePreviousDefaultBrowser(browserInfo.currentDefaultBrowser));
 
   return browserInfo;
 }
@@ -226,6 +227,14 @@ void MaybeMigrateCurrentDefault() {
     mozilla::Unused << RegistrySetValueString(IsPrefixed::Unprefixed, valueName,
                                               value.c_str());
   }
+}
+
+Browser GetDefaultBrowser() {
+  return TryGetDefaultBrowser().unwrapOr(Browser::Error);
+}
+Browser GetReplacePreviousDefaultBrowser(Browser currentBrowser) {
+  return TryGetReplacePreviousDefaultBrowser(currentBrowser)
+      .unwrapOr(Browser::Error);
 }
 
 }  // namespace mozilla::default_agent

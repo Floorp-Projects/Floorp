@@ -49,6 +49,16 @@ std::string GetStringForPDFHandler(PDFHandler handler) {
   return std::string(kUnknownPdfString);
 }
 
+PDFHandler GetPDFHandlerFromString(const std::string& pdfHandlerString) {
+  for (const auto& [mapString, mapPdfHandler] : kStringPdfHandlerMap) {
+    if (pdfHandlerString == mapString) {
+      return mapPdfHandler;
+    }
+  }
+
+  return PDFHandler::Unknown;
+}
+
 using PdfResult = mozilla::WindowsErrorResult<PDFHandler>;
 
 static PdfResult GetDefaultPdf() {

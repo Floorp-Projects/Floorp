@@ -27,6 +27,7 @@ using DefaultPdfResult = mozilla::WindowsErrorResult<DefaultPdfInfo>;
 
 DefaultPdfResult GetDefaultPdfInfo();
 std::string GetStringForPDFHandler(PDFHandler handler);
+PDFHandler GetPDFHandlerFromString(const std::string& pdfHandlerString);
 
 }  // namespace mozilla::default_agent
 

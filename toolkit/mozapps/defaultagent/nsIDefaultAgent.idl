@@ -66,6 +66,33 @@ interface nsIDefaultAgent : nsISupports
   void doTask(in AString aUniqueToken, in boolean aForce);
 
   /**
+  * Returns a string for the default browser if known, binned to known browsers.
+  *
+  * @return {AString}
+  *         The current default browser.
+  */
+  AString getDefaultBrowser();
+
+  /**
+  * Gets and replaces the previously found default browser from the registry.
+  *
+  * @param {AString} aCurrentBrowser
+  *        The current known browser to save to the registry.
+  * @return {AString}
+  *         The previous known browser from the registry.
+  */
+  AString getReplacePreviousDefaultBrowser(in AString aCurrentBrowser);
+
+  /**
+  * Returns a string for the default PDF handler if known, binned to known
+  * PDF handlers.
+  *
+  * @return {AString}
+  *         The previous default PDF handler.
+  */
+  AString getDefaultPdfHandler();
+
+  /**
   * Set the default browser and optionally additional file extensions via the
   * UserChoice registry keys.
   *
