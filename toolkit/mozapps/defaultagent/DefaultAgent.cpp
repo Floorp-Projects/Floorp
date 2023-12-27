@@ -394,6 +394,33 @@ DefaultAgent::GetDefaultPdfHandler(nsAString& aDefaultPdfHandler) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+DefaultAgent::SendPing(const nsAString& aDefaultBrowser,
+                       const nsAString& aPreviousDefaultBrowser,
+                       const nsAString& aDefaultPdfHandler,
+                       const nsAString& aNotificationShown,
+                       const nsAString& aNotificationAction) {
+  DefaultBrowserInfo browserInfo = {
+      GetBrowserFromString(std::string(NS_ConvertUTF16toUTF8(aDefaultBrowser))),
+      GetBrowserFromString(
+          std::string(NS_ConvertUTF16toUTF8(aPreviousDefaultBrowser)))};
+
+  DefaultPdfInfo pdfInfo = {GetPDFHandlerFromString(
+      std::string(NS_ConvertUTF16toUTF8(aDefaultPdfHandler)))};
+
+  // The JS implementation has never supported the "two notification flow",
+  // i.e., displaying a followup notification.
+  NotificationShown shown = GetNotificationShownFromString(aNotificationShown);
+  NotificationAction action =
+      GetNotificationActionFromString(aNotificationAction);
+  NotificationActivities activitiesPerformed = {NotificationType::Initial,
+                                                shown, action};
+
+  HRESULT hr = SendDefaultAgentPing(browserInfo, pdfInfo, activitiesPerformed);
+  return SUCCEEDED(hr) ? NS_OK : NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
 DefaultAgent::SetDefaultBrowserUserChoice(
     const nsAString& aAumid, const nsTArray<nsString>& aExtraFileExtensions) {
   return default_agent::SetDefaultBrowserUserChoice(

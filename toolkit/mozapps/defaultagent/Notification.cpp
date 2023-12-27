@@ -637,6 +637,19 @@ std::string GetStringForNotificationShown(NotificationShown shown) {
   }
 }
 
+NotificationShown GetNotificationShownFromString(const nsAString& shown) {
+  if (shown == u"not-shown"_ns) {
+    return NotificationShown::NotShown;
+  } else if (shown == u"shown"_ns) {
+    return NotificationShown::Shown;
+  } else if (shown == u"error"_ns) {
+    return NotificationShown::Error;
+  } else {
+    // Catch all.
+    return NotificationShown::Error;
+  }
+}
+
 std::string GetStringForNotificationAction(NotificationAction action) {
   switch (action) {
     case NotificationAction::DismissedByTimeout:
@@ -655,6 +668,29 @@ std::string GetStringForNotificationAction(NotificationAction action) {
       return std::string("toast-clicked");
     case NotificationAction::NoAction:
       return std::string("no-action");
+  }
+}
+
+NotificationAction GetNotificationActionFromString(const nsAString& action) {
+  if (action == u"dismissed-by-timeout"_ns) {
+    return NotificationAction::DismissedByTimeout;
+  } else if (action == u"dismissed-to-action-center"_ns) {
+    return NotificationAction::DismissedToActionCenter;
+  } else if (action == u"dismissed-by-button"_ns) {
+    return NotificationAction::DismissedByButton;
+  } else if (action == u"dismissed-by-application-hidden"_ns) {
+    return NotificationAction::DismissedByApplicationHidden;
+  } else if (action == u"remind-me-later"_ns) {
+    return NotificationAction::RemindMeLater;
+  } else if (action == u"make-firefox-default-button"_ns) {
+    return NotificationAction::MakeFirefoxDefaultButton;
+  } else if (action == u"toast-clicked"_ns) {
+    return NotificationAction::ToastClicked;
+  } else if (action == u"no-action"_ns) {
+    return NotificationAction::NoAction;
+  } else {
+    // Catch all.
+    return NotificationAction::NoAction;
   }
 }
 

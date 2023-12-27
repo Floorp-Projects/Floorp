@@ -100,6 +100,25 @@ interface nsIDefaultAgent : nsISupports
   AString getDefaultPdfHandler();
 
   /**
+  * Sends a Default Agent telemetry ping.
+  *
+  * @param {AString} aCurrentBrowser
+  *        The current known browser.
+  * @param {AString} aPreviousBrowser
+  *        The previous known browser.
+  * @param {AString} aPdfHandler
+  *        The current known PDF handler.
+  * @param {AString} aNotificationShown
+  *        If the notification was or wasn't shown. See
+  *        `toolkit/mozapps/defaultagent/Notification.h` for valid values.
+  * @param {AString} aNotificationAction
+  *        The notification action taken by the user. See
+  *        `toolkit/mozapps/defaultagent/Notification.h` for valid values.
+  *
+  */
+  void sendPing(in AString aCurrentBrowser, in AString aPreviousBrowser, in AString aPdfHandler, in AString aNotificationShown, in AString aNotificationAction);
+
+  /**
   * Set the default browser and optionally additional file extensions via the
   * UserChoice registry keys.
   *
