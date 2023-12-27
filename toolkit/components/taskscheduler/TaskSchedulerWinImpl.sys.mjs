@@ -40,16 +40,16 @@ export var WinImpl = {
 
     lazy.WinTaskSvc.registerTask(
       this._taskFolderName(),
-      this._formatTaskName(id),
+      this._formatTaskName(id, options),
       xml,
       updateExisting
     );
   },
 
-  deleteTask(id) {
+  deleteTask(id, options) {
     lazy.WinTaskSvc.deleteTask(
       this._taskFolderName(),
-      this._formatTaskName(id)
+      this._formatTaskName(id, options)
     );
   },
 
@@ -112,7 +112,7 @@ export var WinImpl = {
     }
   },
 
-  taskExists(id) {
+  taskExists(id, options) {
     const taskFolderName = this._taskFolderName();
 
     let allTasks;
@@ -126,7 +126,7 @@ export var WinImpl = {
       throw ex;
     }
 
-    return allTasks.includes(this._formatTaskName(id));
+    return allTasks.includes(this._formatTaskName(id, options));
   },
 
   _formatTaskDefinitionXML(command, intervalSeconds, options) {
@@ -270,13 +270,47 @@ export var WinImpl = {
     };
   },
 
-  _formatTaskName(id) {
+  /**
+   * Formats a given task id according to one of two formats.
+   *
+   * @param id
+   *        A string representing the identifier of the task to format
+   *
+   * @param {Object} options
+   *        Optional, as are all of its properties:
+   *        {
+   *            options.nameVersion
+   *              Specifies whether to search for tasks using nameVersion 1
+   *              which is `${taskID} ${installHash}` or nameVersion 2 which is
+   *              `${taskID} ${currentUserSid} ${installHash}`. Defaults to nameVersion 2.
+   *        }
+   *
+   * @return
+   *        Formatted task name.
+   */
+  _formatTaskName(id, options) {
     const installHash = lazy.XreDirProvider.getInstallHash();
-    return `${id} ${installHash}`;
+    if (options?.nameVersion == 1) {
+      return `${id} ${installHash}`;
+    }
+    const currentUserSid = lazy.WinTaskSvc.getCurrentUserSid();
+    return `${id} ${currentUserSid} ${installHash}`;
   },
 
   _matchAppTaskName(name) {
     const installHash = lazy.XreDirProvider.getInstallHash();
     return name.endsWith(` ${installHash}`);
+  },
+
+  _updateTaskNameFormat(id) {
+    const taskFolderName = this._taskFolderName();
+    const allTasks = lazy.WinTaskSvc.getFolderTasks(taskFolderName);
+    const taskNameV1 = this._formatTaskName(id, { nameVersion: 1 });
+    const taskNameV2 = this._formatTaskName(id, { nameVersion: 2 });
+    if (allTasks.includes(taskNameV1)) {
+      const taskXML = lazy.WinTaskSvc.getTaskXML(taskFolderName, taskNameV1);
+      lazy.WinTaskSvc.registerTask(taskFolderName, taskNameV2, taskXML, true);
+      lazy.WinTaskSvc.deleteTask(taskFolderName, taskNameV1);
+    }
   },
 };

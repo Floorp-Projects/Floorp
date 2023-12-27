@@ -60,6 +60,17 @@ interface nsIWinTaskSchedulerService : nsISupports
   AString getTaskXML(in wstring aFolderName, in wstring aTaskName);
 
   /**
+   * Gets the sid of the current user.
+   *
+   * @throws NS_ERROR_NOT_IMPLEMENTED If called on a non-Windows OS.
+   * @throws NS_ERROR_FAILURE         If the user token cannot be found.
+   * @throws NS_ERROR_ABORT           If converting the sid to a string fails.
+   *
+   * @returns                         The sid of the current user.
+   */
+  AString getCurrentUserSid();
+
+  /**
    * Delete a task.
    *
    * @throws NS_ERROR_FILE_NOT_FOUND if the folder or task do not exist.
