@@ -6,6 +6,7 @@ ChromeUtils.defineESModuleGetters(this, {
     "resource:///actors/SearchSERPTelemetryChild.sys.mjs",
   CustomizableUITestUtils:
     "resource://testing-common/CustomizableUITestUtils.sys.mjs",
+  Region: "resource://gre/modules/Region.sys.mjs",
   SearchSERPTelemetry: "resource:///modules/SearchSERPTelemetry.sys.mjs",
   SearchSERPTelemetryUtils: "resource:///modules/SearchSERPTelemetry.sys.mjs",
   SearchTestUtils: "resource://testing-common/SearchTestUtils.sys.mjs",
@@ -37,6 +38,10 @@ ChromeUtils.defineLazyGetter(this, "SEARCH_AD_CLICK_SCALARS", () => {
     ...sources.map(v => `browser.search.adclicks.${v}`),
   ];
 });
+
+// For use with categorization.
+const REGION = Region.home;
+const LOCALE = Services.locale.appLocaleAsBCP47;
 
 let gCUITestUtils = new CustomizableUITestUtils(window);
 
