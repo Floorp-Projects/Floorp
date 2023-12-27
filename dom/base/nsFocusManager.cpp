@@ -3220,7 +3220,13 @@ nsresult nsFocusManager::GetSelectionLocation(Document* aDocument,
       text && text->TextDataLength() == domRange->StartOffset() &&
       domSelection->IsCollapsed()) {
     nsIFrame* startFrame = start->GetPrimaryFrame();
+    // FIXME: If the text node is empty or only collapsible white-spaces next
+    // to a block boundary, it may not have frame, however, we don't know how to
+    // reproduce this.
     MOZ_ASSERT(startFrame);
+    if (MOZ_UNLIKELY(!startFrame)) {
+      return NS_ERROR_FAILURE;
+    }
     // Yes, indeed we were at the end of the last node
     nsIFrame* limiter =
         domSelection && domSelection->GetAncestorLimiter()
