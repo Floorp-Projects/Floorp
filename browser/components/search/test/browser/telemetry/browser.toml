@@ -43,6 +43,9 @@ support-files = ["searchTelemetryDomainCategorizationReporting.html"]
 ["browser_search_telemetry_domain_categorization_extraction.js"]
 support-files = ["searchTelemetryDomainExtraction.html"]
 
+["browser_search_telemetry_domain_categorization_locale_and_region.js"]
+support-files = ["searchTelemetryDomainCategorizationReporting.html"]
+
 ["browser_search_telemetry_domain_categorization_reporting.js"]
 support-files = [
   "searchTelemetryDomainCategorizationReporting.html",

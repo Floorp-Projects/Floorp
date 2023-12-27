@@ -152,6 +152,8 @@ add_task(async function test_download_after_failure() {
       sponsored_num_inconclusive: "0",
       sponsored_num_unknown: "0",
       mappings_version: "1",
+      locale: LOCALE,
+      region: REGION,
       partner_code: "ff",
       provider: "example",
       tagged: "true",
