@@ -532,6 +532,8 @@ class TelemetryHandler {
         count: 1,
         source,
         newtabSessionId,
+        appVersion: Services.appinfo.version,
+        channel: lazy.SearchUtils.MODIFIED_APP_CHANNEL,
         locale: Services.locale.appLocaleAsBCP47,
         region: lazy.Region.home,
       });
@@ -565,6 +567,8 @@ class TelemetryHandler {
           let impressionInfo = telemetryState.impressionInfo;
           SERPCategorizationRecorder.recordCategorizationTelemetry({
             ...telemetryState.categorizationInfo,
+            app_version: item.appVersion,
+            channel: item.channel,
             locale: item.locale,
             region: item.region,
             partner_code: impressionInfo.partnerCode,

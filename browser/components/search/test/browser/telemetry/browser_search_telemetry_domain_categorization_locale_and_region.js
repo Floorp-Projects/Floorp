@@ -143,6 +143,8 @@ add_task(
         sponsored_num_inconclusive: "0",
         sponsored_num_unknown: "0",
         mappings_version: "1",
+        app_version: APP_VERSION,
+        channel: CHANNEL,
         locale: "de",
         region: "DE",
         partner_code: "ff",
