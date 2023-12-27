@@ -37,6 +37,7 @@
 #include "mozilla/dom/Selection.h"
 #include "nsIBidiKeyboard.h"
 #include "nsContentUtils.h"
+#include "SelectionMovementUtils.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -48,76 +49,6 @@ using BidiEmbeddingLevel = mozilla::intl::BidiEmbeddingLevel;
 // direction the typing is in. It needs to be at least 2x2 to avoid looking
 // like an insignificant dot
 static const int32_t kMinBidiIndicatorPixels = 2;
-
-/**
- * Find the first frame in an in-order traversal of the frame subtree rooted
- * at aFrame which is either a text frame logically at the end of a line,
- * or which is aStopAtFrame. Return null if no such frame is found. We don't
- * descend into the children of non-eLineParticipant frames.
- */
-static nsIFrame* CheckForTrailingTextFrameRecursive(nsIFrame* aFrame,
-                                                    nsIFrame* aStopAtFrame) {
-  if (aFrame == aStopAtFrame ||
-      ((aFrame->IsTextFrame() &&
-        (static_cast<nsTextFrame*>(aFrame))->IsAtEndOfLine()))) {
-    return aFrame;
-  }
-  if (!aFrame->IsLineParticipant()) {
-    return nullptr;
-  }
-
-  for (nsIFrame* f : aFrame->PrincipalChildList()) {
-    if (nsIFrame* r = CheckForTrailingTextFrameRecursive(f, aStopAtFrame)) {
-      return r;
-    }
-  }
-  return nullptr;
-}
-
-static nsLineBox* FindContainingLine(nsIFrame* aFrame) {
-  while (aFrame && aFrame->IsLineParticipant()) {
-    nsIFrame* parent = aFrame->GetParent();
-    nsBlockFrame* blockParent = do_QueryFrame(parent);
-    if (blockParent) {
-      bool isValid;
-      nsBlockInFlowLineIterator iter(blockParent, aFrame, &isValid);
-      return isValid ? iter.GetLine().get() : nullptr;
-    }
-    aFrame = parent;
-  }
-  return nullptr;
-}
-
-static void AdjustCaretFrameForLineEnd(nsIFrame** aFrame, int32_t* aOffset,
-                                       bool aEditableOnly) {
-  nsLineBox* line = FindContainingLine(*aFrame);
-  if (!line) {
-    return;
-  }
-  int32_t count = line->GetChildCount();
-  for (nsIFrame* f = line->mFirstChild; count > 0;
-       --count, f = f->GetNextSibling()) {
-    nsIFrame* r = CheckForTrailingTextFrameRecursive(f, *aFrame);
-    if (r == *aFrame) {
-      return;
-    }
-    if (!r) {
-      continue;
-    }
-    // If found text frame is non-editable but the start frame content is
-    // editable, we don't want to put caret into the non-editable text node.
-    // We should return the given frame as-is in this case.
-    if (aEditableOnly && !r->GetContent()->IsEditable()) {
-      return;
-    }
-    // We found our frame, but we may not be able to properly paint the caret
-    // if -moz-user-modify differs from our actual frame.
-    MOZ_ASSERT(r->IsTextFrame(), "Expected text frame");
-    *aFrame = r;
-    *aOffset = (static_cast<nsTextFrame*>(r))->GetContentEnd();
-    return;
-  }
-}
 
 nsCaret::nsCaret()
     : mOverrideOffset(0),
@@ -431,9 +362,10 @@ nsIFrame* nsCaret::GetFrameAndOffset(const Selection* aSelection,
   nsIContent* contentNode = focusNode->AsContent();
   nsFrameSelection* frameSelection = aSelection->GetFrameSelection();
   BidiEmbeddingLevel bidiLevel = frameSelection->GetCaretBidiLevel();
-  const nsCaret::CaretFrameData result = nsCaret::GetCaretFrameForNodeOffset(
-      frameSelection, contentNode, focusOffset, frameSelection->GetHint(),
-      bidiLevel, ForceEditableRegion::No);
+  const CaretFrameData result =
+      SelectionMovementUtils::GetCaretFrameForNodeOffset(
+          frameSelection, contentNode, focusOffset, frameSelection->GetHint(),
+          bidiLevel, ForceEditableRegion::No);
   // FIXME: It's odd to update nsFrameSelection within this method which is
   // named as a getter.
   if (result.mFrame) {
@@ -700,210 +632,6 @@ void nsCaret::StopBlinking() {
     mBlinkTimer->Cancel();
     mBlinkRate = 0;
   }
-}
-
-nsCaret::CaretFrameData nsCaret::GetCaretFrameForNodeOffset(
-    const nsFrameSelection* aFrameSelection, nsIContent* aContentNode,
-    int32_t aOffset, CaretAssociationHint aFrameHint,
-    BidiEmbeddingLevel aBidiLevel, ForceEditableRegion aForceEditableRegion) {
-  if (!aContentNode || !aContentNode->IsInComposedDoc()) {
-    return {};
-  }
-
-  CaretFrameData result;
-  result.mHint = aFrameHint;
-  if (aFrameSelection) {
-    PresShell* presShell = aFrameSelection->GetPresShell();
-    if (!presShell) {
-      return {};
-    }
-
-    if (presShell->GetDocument() != aContentNode->GetComposedDoc()) {
-      return {};
-    }
-
-    result.mHint = aFrameSelection->GetHint();
-  }
-
-  MOZ_ASSERT_IF(aForceEditableRegion == ForceEditableRegion::Yes,
-                aContentNode->IsEditable());
-
-  result.mFrame = result.mUnadjustedFrame =
-      nsFrameSelection::GetFrameForNodeOffset(aContentNode, aOffset, aFrameHint,
-                                              &result.mOffsetInFrameContent);
-  if (!result.mFrame) {
-    return {};
-  }
-
-  if (nsFrameSelection::AdjustFrameForLineStart(result.mFrame,
-                                                result.mOffsetInFrameContent)) {
-    result.mHint = CaretAssociationHint::After;
-  } else {
-    // if the frame is after a text frame that's logically at the end of the
-    // line (e.g. if the frame is a <br> frame), then put the caret at the end
-    // of that text frame instead. This way, the caret will be positioned as if
-    // trailing whitespace was not trimmed.
-    AdjustCaretFrameForLineEnd(
-        &result.mFrame, &result.mOffsetInFrameContent,
-        aForceEditableRegion == ForceEditableRegion::Yes);
-  }
-
-  // Mamdouh : modification of the caret to work at rtl and ltr with Bidi
-  //
-  // Direction Style from visibility->mDirection
-  // ------------------
-  if (result.mFrame->PresContext()->BidiEnabled()) {
-    // If there has been a reflow, take the caret Bidi level to be the level of
-    // the current frame
-    if (aBidiLevel & BIDI_LEVEL_UNDEFINED) {
-      aBidiLevel = result.mFrame->GetEmbeddingLevel();
-    }
-
-    nsIFrame* frameBefore;
-    nsIFrame* frameAfter;
-    BidiEmbeddingLevel
-        levelBefore;  // Bidi level of the character before the caret
-    BidiEmbeddingLevel
-        levelAfter;  // Bidi level of the character after the caret
-
-    auto [start, end] = result.mFrame->GetOffsets();
-    if (start == 0 || end == 0 || start == result.mOffsetInFrameContent ||
-        end == result.mOffsetInFrameContent) {
-      nsPrevNextBidiLevels levels = nsFrameSelection::GetPrevNextBidiLevels(
-          aContentNode, aOffset, result.mHint, false);
-
-      /* Boundary condition, we need to know the Bidi levels of the characters
-       * before and after the caret */
-      if (levels.mFrameBefore || levels.mFrameAfter) {
-        frameBefore = levels.mFrameBefore;
-        frameAfter = levels.mFrameAfter;
-        levelBefore = levels.mLevelBefore;
-        levelAfter = levels.mLevelAfter;
-
-        if ((levelBefore != levelAfter) || (aBidiLevel != levelBefore)) {
-          aBidiLevel = std::max(aBidiLevel,
-                                std::min(levelBefore, levelAfter));  // rule c3
-          aBidiLevel = std::min(aBidiLevel,
-                                std::max(levelBefore, levelAfter));  // rule c4
-          if (aBidiLevel == levelBefore ||                           // rule c1
-              (aBidiLevel > levelBefore && aBidiLevel < levelAfter &&
-               aBidiLevel.IsSameDirection(levelBefore)) ||  // rule c5
-              (aBidiLevel < levelBefore && aBidiLevel > levelAfter &&
-               aBidiLevel.IsSameDirection(levelBefore)))  // rule c9
-          {
-            if (result.mFrame != frameBefore) {
-              if (frameBefore) {  // if there is a frameBefore, move into it
-                result.mFrame = frameBefore;
-                std::tie(start, end) = result.mFrame->GetOffsets();
-                result.mOffsetInFrameContent = end;
-              } else {
-                // if there is no frameBefore, we must be at the beginning of
-                // the line so we stay with the current frame. Exception: when
-                // the first frame on the line has a different Bidi level from
-                // the paragraph level, there is no real frame for the caret to
-                // be in. We have to find the visually first frame on the line.
-                BidiEmbeddingLevel baseLevel = frameAfter->GetBaseLevel();
-                if (baseLevel != levelAfter) {
-                  PeekOffsetStruct pos(eSelectBeginLine, eDirPrevious, 0,
-                                       nsPoint(0, 0),
-                                       {PeekOffsetOption::StopAtScroller,
-                                        PeekOffsetOption::Visual});
-                  if (NS_SUCCEEDED(frameAfter->PeekOffset(&pos))) {
-                    result.mFrame = pos.mResultFrame;
-                    result.mOffsetInFrameContent = pos.mContentOffset;
-                  }
-                }
-              }
-            }
-          } else if (aBidiLevel == levelAfter ||  // rule c2
-                     (aBidiLevel > levelBefore && aBidiLevel < levelAfter &&
-                      aBidiLevel.IsSameDirection(levelAfter)) ||  // rule c6
-                     (aBidiLevel < levelBefore && aBidiLevel > levelAfter &&
-                      aBidiLevel.IsSameDirection(levelAfter)))  // rule c10
-          {
-            if (result.mFrame != frameAfter) {
-              if (frameAfter) {
-                // if there is a frameAfter, move into it
-                result.mFrame = frameAfter;
-                std::tie(start, end) = result.mFrame->GetOffsets();
-                result.mOffsetInFrameContent = start;
-              } else {
-                // if there is no frameAfter, we must be at the end of the line
-                // so we stay with the current frame.
-                // Exception: when the last frame on the line has a different
-                // Bidi level from the paragraph level, there is no real frame
-                // for the caret to be in. We have to find the visually last
-                // frame on the line.
-                BidiEmbeddingLevel baseLevel = frameBefore->GetBaseLevel();
-                if (baseLevel != levelBefore) {
-                  PeekOffsetStruct pos(eSelectEndLine, eDirNext, 0,
-                                       nsPoint(0, 0),
-                                       {PeekOffsetOption::StopAtScroller,
-                                        PeekOffsetOption::Visual});
-                  if (NS_SUCCEEDED(frameBefore->PeekOffset(&pos))) {
-                    result.mFrame = pos.mResultFrame;
-                    result.mOffsetInFrameContent = pos.mContentOffset;
-                  }
-                }
-              }
-            }
-          } else if (aBidiLevel > levelBefore &&
-                     aBidiLevel < levelAfter &&  // rule c7/8
-                     // before and after have the same parity
-                     levelBefore.IsSameDirection(levelAfter) &&
-                     // caret has different parity
-                     !aBidiLevel.IsSameDirection(levelAfter)) {
-            MOZ_ASSERT_IF(aFrameSelection && aFrameSelection->GetPresShell(),
-                          aFrameSelection->GetPresShell()->GetPresContext() ==
-                              frameAfter->PresContext());
-            Result<nsIFrame*, nsresult> frameOrError =
-                nsFrameSelection::GetFrameFromLevel(frameAfter, eDirNext,
-                                                    aBidiLevel);
-            if (MOZ_LIKELY(frameOrError.isOk())) {
-              result.mFrame = frameOrError.unwrap();
-              std::tie(start, end) = result.mFrame->GetOffsets();
-              levelAfter = result.mFrame->GetEmbeddingLevel();
-              if (aBidiLevel.IsRTL()) {
-                // c8: caret to the right of the rightmost character
-                result.mOffsetInFrameContent = levelAfter.IsRTL() ? start : end;
-              } else {
-                // c7: caret to the left of the leftmost character
-                result.mOffsetInFrameContent = levelAfter.IsRTL() ? end : start;
-              }
-            }
-          } else if (aBidiLevel < levelBefore &&
-                     aBidiLevel > levelAfter &&  // rule c11/12
-                     // before and after have the same parity
-                     levelBefore.IsSameDirection(levelAfter) &&
-                     // caret has different parity
-                     !aBidiLevel.IsSameDirection(levelAfter)) {
-            MOZ_ASSERT_IF(aFrameSelection && aFrameSelection->GetPresShell(),
-                          aFrameSelection->GetPresShell()->GetPresContext() ==
-                              frameBefore->PresContext());
-            Result<nsIFrame*, nsresult> frameOrError =
-                nsFrameSelection::GetFrameFromLevel(frameBefore, eDirPrevious,
-                                                    aBidiLevel);
-            if (MOZ_LIKELY(frameOrError.isOk())) {
-              result.mFrame = frameOrError.unwrap();
-              std::tie(start, end) = result.mFrame->GetOffsets();
-              levelBefore = result.mFrame->GetEmbeddingLevel();
-              if (aBidiLevel.IsRTL()) {
-                // c12: caret to the left of the leftmost character
-                result.mOffsetInFrameContent =
-                    levelBefore.IsRTL() ? end : start;
-              } else {
-                // c11: caret to the right of the rightmost character
-                result.mOffsetInFrameContent =
-                    levelBefore.IsRTL() ? start : end;
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-
-  return result;
 }
 
 size_t nsCaret::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const {

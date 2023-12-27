@@ -22,6 +22,7 @@
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/SelectionMovementUtils.h"
 #include "mozilla/StaticAnalysisFunctions.h"
 #include "mozilla/StaticPrefs_layout.h"
 #include "nsCaret.h"
@@ -656,9 +657,8 @@ nsresult AccessibleCaretManager::SelectWordOrShortcut(const nsPoint& aPoint) {
   if (offsets.content) {
     RefPtr<nsFrameSelection> frameSelection = GetFrameSelection();
     if (frameSelection) {
-      int32_t offset;
-      nsIFrame* theFrame = nsFrameSelection::GetFrameForNodeOffset(
-          offsets.content, offsets.offset, offsets.associate, &offset);
+      nsIFrame* theFrame = SelectionMovementUtils::GetFrameForNodeOffset(
+          offsets.content, offsets.offset, offsets.associate);
       if (theFrame && theFrame != ptFrame) {
         SetSelectionDragState(true);
         frameSelection->HandleClick(
@@ -1077,9 +1077,11 @@ nsIFrame* AccessibleCaretManager::GetFrameForFirstRangeStartOrLastRangeEnd(
     hint = CaretAssociationHint::Before;
   }
 
-  nsCOMPtr<nsIContent> startContent = do_QueryInterface(startNode);
-  nsIFrame* startFrame = nsFrameSelection::GetFrameForNodeOffset(
-      startContent, nodeOffset, hint, aOutOffset);
+  nsCOMPtr<nsIContent> startContent = nsIContent::FromNodeOrNull(startNode);
+  uint32_t outOffset = 0;
+  nsIFrame* startFrame = SelectionMovementUtils::GetFrameForNodeOffset(
+      startContent, nodeOffset, hint, &outOffset);
+  *aOutOffset = static_cast<int32_t>(outOffset);
 
   if (!startFrame) {
     ErrorResult err;

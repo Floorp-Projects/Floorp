@@ -16,8 +16,6 @@
 #include "mozilla/WeakPtr.h"
 #include "mozilla/dom/Highlight.h"
 #include "mozilla/dom/StyledRange.h"
-#include "mozilla/intl/Bidi.h"
-#include "mozilla/intl/BidiEmbeddingLevel.h"
 #include "nsDirection.h"
 #include "nsISelectionController.h"
 #include "nsISelectionListener.h"
@@ -48,6 +46,7 @@ class PostContentIterator;
 enum class CaretAssociationHint;
 enum class TableSelectionMode : uint32_t;
 struct AutoPrepareFocusRange;
+struct PrimaryFrameData;
 namespace dom {
 class DocGroup;
 }  // namespace dom
@@ -257,25 +256,6 @@ class Selection final : public nsSupportsWeakReference,
   void AdjustAnchorFocusForMultiRange(nsDirection aDirection);
 
   nsIFrame* GetPrimaryFrameForAnchorNode() const;
-
-  struct MOZ_STACK_CLASS PrimaryFrameData final {
-    // The frame which should be used to layout the caret.
-    nsIFrame* mFrame = nullptr;
-    // The offset in content of mFrame.  This is valid only when mFrame is not
-    // nullptr.
-    uint32_t mOffsetInFrameContent = 0;
-    // Whether the caret should be put before or after the point. This is valid
-    // only when mFrame is not nullptr.
-    CaretAssociationHint mHint{0};  // Before
-  };
-
-  /**
-   * Get primary frame and some other data for putting caret or extending
-   * selection at the point.
-   */
-  static PrimaryFrameData GetPrimaryFrameForCaret(
-      nsIContent* aContent, uint32_t aOffset, bool aVisual,
-      CaretAssociationHint aHint, intl::BidiEmbeddingLevel aCaretBidiLevel);
 
   /**
    * Get primary frame and some other data for putting caret or extending
@@ -750,13 +730,6 @@ class Selection final : public nsSupportsWeakReference,
   void AddRangeAndSelectFramesAndNotifyListenersInternal(nsRange& aRange,
                                                          Document* aDocument,
                                                          ErrorResult&);
-
-  // This is helper method for GetPrimaryFrameForCaret.
-  // If aVisual is true, this returns caret frame.
-  // If false, this returns primary frame.
-  static PrimaryFrameData GetPrimaryOrCaretFrameForNodeOffset(
-      nsIContent* aContent, uint32_t aOffset, bool aVisual,
-      CaretAssociationHint aHint, intl::BidiEmbeddingLevel aCaretBidiLevel);
 
   // Get the cached value for nsTextFrame::GetPointFromOffset.
   nsresult GetCachedFrameOffset(nsIFrame* aFrame, int32_t inOffset,

@@ -485,21 +485,6 @@ class nsFrameSelection final {
 
   bool IsValidSelectionPoint(nsINode* aNode) const;
 
-  static bool AdjustFrameForLineStart(nsIFrame*& aFrame, int32_t& aFrameOffset);
-
-  /**
-   * Given a node and its child offset, return the nsIFrame and the offset into
-   * that frame.
-   *
-   * @param aNode input parameter for the node to look at
-   *              TODO: Make this `const nsIContent*` for `ContentEventHandler`.
-   * @param aOffset offset into above node.
-   * @param aReturnOffset will contain offset into frame.
-   */
-  static nsIFrame* GetFrameForNodeOffset(nsIContent* aNode, int32_t aOffset,
-                                         CaretAssociationHint aHint,
-                                         int32_t* aReturnOffset);
-
   /**
    * GetFrameToPageSelect() returns a frame which is ancestor limit of
    * per-page selection.  The frame may not be scrollable.  E.g.,
@@ -740,24 +725,6 @@ class nsFrameSelection final {
   nsPrevNextBidiLevels GetPrevNextBidiLevels(nsIContent* aNode,
                                              uint32_t aContentOffset,
                                              bool aJumpLines) const;
-  static nsPrevNextBidiLevels GetPrevNextBidiLevels(nsIContent* aNode,
-                                                    uint32_t aContentOffset,
-                                                    CaretAssociationHint aHint,
-                                                    bool aJumpLines);
-
-  /**
-   * GetFrameFromLevel will scan in a given direction
-   * until it finds a frame with a Bidi level less than or equal to a given
-   * level. It will return the last frame before this.
-   *
-   * @param aPresContext is the context to use
-   * @param aFrameIn is the frame to start from
-   * @param aDirection is the direction to scan
-   * @param aBidiLevel is the level to search for
-   */
-  static mozilla::Result<nsIFrame*, nsresult> GetFrameFromLevel(
-      nsIFrame* aFrameIn, nsDirection aDirection,
-      mozilla::intl::BidiEmbeddingLevel aBidiLevel);
 
   /**
    * MaintainSelection will track the normal selection as being "sticky".
@@ -917,19 +884,6 @@ class nsFrameSelection final {
       const nsPoint& aDesiredCaretPos) const;
 
   /**
-   * PeekOffsetForCaretMove() only peek offset for caret move from the specified
-   * point of the normal selection.  I.e., won't change selection ranges nor
-   * bidi information.
-   */
-  static mozilla::Result<mozilla::PeekOffsetStruct, nsresult>
-  PeekOffsetForCaretMove(nsIContent* aContent, uint32_t aOffset,
-                         nsDirection aDirection, CaretAssociationHint aHint,
-                         mozilla::intl::BidiEmbeddingLevel aCaretBidiLevel,
-                         const nsSelectionAmount aAmount,
-                         const nsPoint& aDesiredCaretPos,
-                         mozilla::PeekOffsetOptions aOptions);
-
-  /**
    * CreateRangeExtendedToSomewhere() is common method to implement
    * CreateRangeExtendedTo*().  This method creates a range extended from
    * normal selection range.
@@ -939,29 +893,6 @@ class nsFrameSelection final {
   CreateRangeExtendedToSomewhere(nsDirection aDirection,
                                  const nsSelectionAmount aAmount,
                                  CaretMovementStyle aMovementStyle);
-
-  /**
-   * IsIntraLineCaretMove() is a helper method for PeekOffsetForCaretMove()
-   * and CreateRangeExtendedToSomwhereFromNormalSelection().  This returns
-   * whether aAmount is intra line move or is crossing hard line break.
-   * This returns error if aMount is not supported by the methods.
-   */
-  static mozilla::Result<bool, nsresult> IsIntraLineCaretMove(
-      nsSelectionAmount aAmount) {
-    switch (aAmount) {
-      case eSelectCharacter:
-      case eSelectCluster:
-      case eSelectWord:
-      case eSelectWordNoSpace:
-      case eSelectBeginLine:
-      case eSelectEndLine:
-        return true;
-      case eSelectLine:
-        return false;
-      default:
-        return mozilla::Err(NS_ERROR_FAILURE);
-    }
-  }
 
   void InvalidateDesiredCaretPos();  // do not listen to mDesiredCaretPos.mValue
                                      // you must get another.
