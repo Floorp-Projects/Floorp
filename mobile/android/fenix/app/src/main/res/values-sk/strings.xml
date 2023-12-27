@@ -244,7 +244,7 @@
     <string name="browser_menu_edit">Upraviť</string>
 
     <!-- Button shown on the home page that opens the Customize home settings -->
-    <string name="browser_menu_customize_home_1">Prispôsobiť domovskú stránku</string>
+    <string name="browser_menu_customize_home_1">Upraviť domovskú stránku</string>
     <!-- Browser Toolbar -->
     <!-- Content description for the Home screen button on the browser toolbar -->
     <string name="browser_toolbar_home">Úvodná obrazovka</string>
@@ -393,7 +393,7 @@
     <!-- Preference category for all links about Fenix -->
     <string name="preferences_category_about">O aplikácii</string>
     <!-- Preference category for settings related to changing the default search engine -->
-    <string name="preferences_category_select_default_search_engine">Zvoľte nejaký</string>
+    <string name="preferences_category_select_default_search_engine">Zvoľte vyhľadávač</string>
     <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
     <string name="preferences_manage_search_shortcuts_2">Spravovať alternatívne vyhľadávacie moduly</string>
     <!-- Summary for preference for settings related to managing search shortcuts for the quick search menu -->
@@ -413,7 +413,7 @@
     <!-- Preference Category for settings to Firefox Suggest -->
     <string name="preference_search_address_bar_fx_suggest">Panel s adresou – Návrhy Firefoxu</string>
     <!-- Preference link to Learn more about Firefox Suggest -->
-    <string name="preference_search_learn_about_fx_suggest">Prečítajte si viac o Návrhoch Firefoxu</string>
+    <string name="preference_search_learn_about_fx_suggest">Ďalšie informácie o Návrhoch Firefoxu</string>
     <!-- Preference link to rating Fenix on the Play Store -->
     <string name="preferences_rate">Ohodnoťte aplikáciu v Obchode Play</string>
     <!-- Preference linking to about page for Fenix
@@ -447,7 +447,7 @@
     <!-- Label for cookie banner section in quick settings panel. -->
     <string name="cookie_banner_blocker">Blokovanie bannerov k súborom cookie</string>
     <!-- Preference for removing cookie/consent banners from sites automatically in private mode. See reduce_cookie_banner_summary for additional context. -->
-    <string name="preferences_cookie_banner_reduction_private_mode">Blokovanie bannerov k súborom cookie v súkromnom prehliadaní</string>
+    <string name="preferences_cookie_banner_reduction_private_mode">Blokovať bannery k súborom cookie v súkromnom prehliadaní</string>
     <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
     <string name="reduce_cookie_banner_option" moz:RemovedIn="121" tools:ignore="UnusedResources">Znižovať počet bannerov k súborom cookie</string>
     <!-- Summary of cookie banner handling preference if the setting disabled is set to off -->
@@ -569,7 +569,7 @@
     <!-- Preference title for switch preference to show voice search button -->
     <string name="preferences_show_voice_search">Zobraziť hlasové vyhľadávanie</string>
     <!-- Preference title for switch preference to show search suggestions also in private mode -->
-    <string name="preferences_show_search_suggestions_in_private">Zobraziť v súkromnej relácii</string>
+    <string name="preferences_show_search_suggestions_in_private">Zobrazovať v súkromnom prehliadaní</string>
     <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
     <string name="preferences_show_clipboard_suggestions">Navrhovať skopírovaný text</string>
     <!-- Preference title for switch preference to suggest browsing history when searching -->
@@ -1306,7 +1306,7 @@
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">Prihlásiť sa k službe Sync</string>
      <!-- An option from the three dot menu to sync and save data -->
-    <string name="sync_menu_sync_and_save_data">Synchronizovať a uložiť údaje</string>
+    <string name="sync_menu_sync_and_save_data">Synchronizácia</string>
     <!-- An option from the share dialog to send link to all other sync devices -->
     <string name="sync_send_to_all">Odoslať do všetkých zariadení</string>
     <!-- An option from the share dialog to reconnect to sync -->
@@ -1788,7 +1788,7 @@
     <!-- Preference summary for saving and autofilling credit card data -->
     <string name="preferences_credit_cards_save_and_autofill_cards_summary">Údaje sú šifrované</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
-    <string name="preferences_credit_cards_sync_cards_across_devices">Synchronizovať karty naprieč zariadeniami</string>
+    <string name="preferences_credit_cards_sync_cards_across_devices">Synchronizovať platobné karty naprieč zariadeniami</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
     <string name="preferences_credit_cards_sync_cards">Synchronizovať platobné karty</string>
     <!-- Preference option for adding a credit card -->
@@ -2343,14 +2343,45 @@
     <!-- Title of the automatic translation preference screen that will appear on the toolbar.-->
     <string name="automatic_translation_toolbar_title_preference">Automatický preklad</string>
 
+    <!-- Screen header presenting the automatic translation preference feature. It will appear under the toolbar. -->
+    <string name="automatic_translation_header_preference">Vyberte jazyk, pre ktorý chcete spravovať predvoľby „vždy prekladať“ a „nikdy neprekladať“.</string>
+
+    <!-- Automatic translation options preference screen -->
+    <!-- Preference option for offering to translate. Radio button title text.-->
+    <string name="automatic_translation_option_offer_to_translate_title_preference">Ponúkať preklad (predvolené)</string>
     <!-- Preference option for offering to translate. Radio button summary text. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="automatic_translation_option_offer_to_translate_summary_preference">%1$s ponúkne preklad stránok v tomto jazyku.</string>
     <!-- Preference option for always translate. Radio button title text. -->
     <string name="automatic_translation_option_always_translate_title_preference">Vždy prekladať</string>
 
+    <!-- Preference option for always translate. Radio button summary text. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="automatic_translation_option_always_translate_summary_preference">%1$s automaticky preloží tento jazyk pri načítaní stránky.</string>
+    <!-- Preference option for never translate. Radio button title text.-->
+    <string name="automatic_translation_option_never_translate_title_preference">Nikdy neprekladať</string>
+    <!-- Preference option for never translate. Radio button summary text. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="automatic_translation_option_never_translate_summary_preference">%1$s nikdy neponúkne preklad stránok v tomto jazyku.</string>
+
+    <!-- Never translate site preference screen -->
+    <!-- Title of the never translate site preference screen that will appear on the toolbar.-->
+    <string name="never_translate_site_toolbar_title_preference">Nikdy neprekladať tieto stránky</string>
+    <!-- Screen header presenting the never translate site preference feature. It will appear under the toolbar. -->
+    <string name="never_translate_site_header_preference">Ak chcete pridať novú stránku: navštívte ju a v ponuke prekladov vyberte možnosť „Nikdy neprekladať túto stránku“.</string>
+    <!-- Content description (not visible, for screen readers etc.): For a never-translated site list item that is selected.
+             The first parameter is web site url (for example:"wikipedia.com") -->
+    <string name="never_translate_site_item_list_content_description_preference">Odstrániť %1$s</string>
+    <!-- The Delete site dialogue title will appear when the user clicks on a list item.
+             The first parameter is web site url (for example:"wikipedia.com") -->
+    <string name="never_translate_site_dialog_title_preference">Odstrániť %1$s?</string>
+    <!-- The Delete site dialogue positive button will appear when the user clicks on a list item. The site will be deleted. -->
+    <string name="never_translate_site_dialog_confirm_delete_preference">Odstrániť</string>
     <!-- The Delete site dialogue negative button will appear when the user clicks on a list item. The dialog will be dismissed. -->
     <string name="never_translate_site_dialog_cancel_preference">Zrušiť</string>
 
+    <!-- Download languages preference screen -->
+    <!-- Title of the download languages preference screen toolbar.-->
+    <string name="download_languages_toolbar_title_preference">Stiahnite si jazyky</string>
+    <!-- Screen header presenting the download language preference feature. It will appear under the toolbar.The first parameter is "Learn More," a clickable text with a link. Talkback will append this to say "Double tap to open link to learn more". -->
+    <string name="download_languages_header_preference">Stiahnite si kompletné jazyky pre rýchlejšie preklady a preklady offline. %1$s</string>
     <!-- Clickable text from the screen header that links to a website. -->
     <string name="download_languages_header_learn_more_preference">Ďalšie informácie</string>
     <!-- The subhead of the download language preference screen will appear above the pivot language. -->

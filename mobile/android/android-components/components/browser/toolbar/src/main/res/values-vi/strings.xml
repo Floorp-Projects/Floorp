@@ -4,13 +4,13 @@
     <string name="mozac_browser_toolbar_menu_button">Menu</string>
     <string name="mozac_clear_button_description">Dọn dẹp</string>
     <!-- Content description: For the tracking protection toolbar icon, it is set when the site has tracking protection enabled, but none trackers have been blocked or detected. -->
-    <string name="mozac_browser_toolbar_content_description_tracking_protection_on_no_trackers_blocked">Chống theo dõi đang bật</string>
+    <string name="mozac_browser_toolbar_content_description_tracking_protection_on_no_trackers_blocked">Trình chống theo dõi đang bật</string>
     <!-- Content description: For the tracking protection toolbar icon, it is set when the site has tracking protection enabled, and trackers have been blocked or detected.-->
     <string name="mozac_browser_toolbar_content_description_tracking_protection_on_trackers_blocked1">Trình chống theo dõi đã chặn trình theo dõi</string>
     <!-- Content description: For the tracking protection toolbar icon, it is set when the site has tracking protection disabled.-->
-    <string name="mozac_browser_toolbar_content_description_tracking_protection_off_for_a_site1">Trình chống theo dõi đã bị tắt cho trang web này.</string>
+    <string name="mozac_browser_toolbar_content_description_tracking_protection_off_for_a_site1">Đã tắt Trình chống theo dõi cho trang web này</string>
     <!-- Content description: For the site security information icon (the site security icon).-->
-    <string name="mozac_browser_toolbar_content_description_site_info">Thông tin trang web</string>
+    <string name="mozac_browser_toolbar_content_description_site_info">Thông tin về trang web</string>
     <!-- Announcement made by the screen reader when the progress bar is shown and a page is loading -->
     <string name="mozac_browser_toolbar_progress_loading">Đang tải</string>
     <!-- Content description: For the autoplay toolbar icon, it is set when the auto play permission is blocking content playing.-->

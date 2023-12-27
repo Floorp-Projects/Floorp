@@ -75,7 +75,7 @@
     <!-- The author of an add-on. -->
     <string name="mozac_feature_addons_author">Tác giả</string>
     <!-- The authors of an add-on. -->
-    <string name="mozac_feature_addons_authors" moz:removedIn="120" tools:ignore="UnusedResources">Tác giả</string>
+    <string name="mozac_feature_addons_authors" moz:removedIn="123" tools:ignore="UnusedResources">Tác giả</string>
     <!-- The last date that the add-on was updated. -->
     <string name="mozac_feature_addons_last_updated">Cập nhật lần cuối</string>
     <!-- The developer website (Homepage) of the add-on. -->
@@ -85,7 +85,7 @@
     <!-- The rating of the add-on. -->
     <string name="mozac_feature_addons_rating">Xếp hạng</string>
     <!-- A link that points to the detail page of the add-on. -->
-    <string name="mozac_feature_addons_more_info_link">Thông tin thêm về tiện ích</string>
+    <string name="mozac_feature_addons_more_info_link">Thông tin thêm về tiện ích này</string>
     <!-- The settings of the add-on. -->
     <string name="mozac_feature_addons_settings">Cài đặt</string>
     <!-- Indicates the add-on is enabled. -->
@@ -127,7 +127,7 @@
     <!-- This is the subtitle of a dialog that asks the users to grant optional permissions, the subtitle lists the permissions that this add-on requests, the permissions will dynamically be listed after the ":". -->
     <string name="mozac_feature_addons_optional_permissions_dialog_subtitle">Tiện ích này muốn:</string>
     <!-- This is a button to add (install) an add-on . -->
-    <string name="mozac_feature_addons_permissions_dialog_add">Thêm</string>
+    <string name="mozac_feature_addons_permissions_dialog_add">Cài đặt</string>
     <!-- This is a button to allow the optional permissions requested by an add-on . -->
     <string name="mozac_feature_addons_permissions_dialog_allow">Cho phép</string>
     <!-- This is a button to deny the optional permissions requested by an add-on . -->
@@ -143,7 +143,7 @@
     <!-- Accessibility content description for the amount of stars that add-on has, where %1$.02f will be the amount of stars and / separator and 5 the maximum number of stars e.g (2/5, 4.5/5 or 5/5)  . -->
     <string name="mozac_feature_addons_rating_content_description">%1$.02f/5</string>
     <!-- This is the title of page where all the add-ons are listed-->
-    <string name="mozac_feature_addons_addons">Tiện ích</string>
+    <string name="mozac_feature_addons_addons">Tiện ích mở rộng</string>
     <!-- Label for add-ons sub menu item for add-ons manager-->
     <string name="mozac_feature_addons_addons_manager">Quản lí tiện ích</string>
     <!-- The title of the "crash" notification in the add-ons manager -->

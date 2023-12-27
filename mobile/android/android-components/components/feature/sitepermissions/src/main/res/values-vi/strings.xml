@@ -34,7 +34,7 @@
     <!-- Title of a dialog to require to save data in persistent storage. %1$s will be replaced with the URL of the current page -->
     <string name="mozac_feature_sitepermissions_persistent_storage_title">Cho phép %1$s lưu trữ dữ liệu trong bộ nhớ liên tục?</string>
     <!-- Title of a dialog to use EME. %1$s will be replaced with the URL of the current page -->
-    <string name="mozac_feature_sitepermissions_media_key_system_access_title">Cho phép %1$s phát nội dung do DRM kiểm soát?</string>
+    <string name="mozac_feature_sitepermissions_media_key_system_access_title">Cho phép %1$s phát nội dung được DRM bảo vệ?</string>
     <!-- Title of a dialog to use cross origin storage permission. %1$s is the name of the site URL (www.site1.example) trying to track the user's activity.
      %2$s is the name of the site URL (www.site2.example) that the user is visiting.  This is the same domain name displayed in the address bar -->
     <string name="mozac_feature_sitepermissions_storage_access_title">Cho phép %1$s sử dụng cookie của nó trên %2$s?</string>

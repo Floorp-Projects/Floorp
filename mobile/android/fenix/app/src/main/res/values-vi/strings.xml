@@ -798,7 +798,7 @@
     <!-- Preference for using using dark or light theme automatically set by battery -->
     <string name="preference_auto_battery_theme">Đặt theo trình tiết kiệm pin</string>
     <!-- Preference for using following device theme -->
-    <string name="preference_follow_device_theme">Đặt theo chủ đề thiết bị</string>
+    <string name="preference_follow_device_theme">Theo chủ đề thiết bị</string>
 
     <!-- Gestures Preferences-->
     <!-- Preferences for using pull to refresh in a webpage -->
@@ -1550,6 +1550,8 @@
     <string name="preference_enhanced_tracking_protection_custom_cookies_4">Tất cả các cookie (có thể khiến các trang web bị hỏng)</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies_5">Cô lập cookie trên nhiều trang web</string>
+    <!-- Preference for Global Privacy Control for the custom privacy settings for Global Privacy Control. '&amp;' is replaced with the ampersand symbol: &-->
+    <string name="preference_enhanced_tracking_protection_custom_global_privacy_control">Yêu cầu trang web không bán hay chia sẻ dữ liệu cá nhân của tôi</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content">Trình theo dõi nội dung</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
@@ -2200,6 +2202,8 @@
     <string name="review_quality_check_reanalysis_in_progress_warning_title" moz:RemovedIn="122">Đang kiểm tra chất lượng đánh giá</string>
     <!-- Title for warning card informing the user that the current product's analysis is still processing. -->
     <string name="review_quality_check_analysis_in_progress_warning_title" moz:RemovedIn="122">Đang kiểm tra chất lượng đánh giá</string>
+    <!-- Title for warning card informing the user that the current product's analysis is still processing. The parameter is the percentage progress (0-100%) of the analysis process (e.g. 56%). -->
+    <string name="review_quality_check_analysis_in_progress_warning_title_2">Kiểm tra chất lượng đánh giá (%s)</string>
     <!-- Text for body of warning card informing the user that the current product's analysis is still processing. -->
     <string name="review_quality_check_analysis_in_progress_warning_body">Quá trình này có thể mất khoảng 60 giây.</string>
     <!-- Title for info card displayed after the user reports a product is back in stock. -->
@@ -2317,9 +2321,25 @@
     <!-- Title of the automatic translation preference screen that will appear on the toolbar.-->
     <string name="automatic_translation_toolbar_title_preference">Dịch tự động</string>
 
+    <!-- Screen header presenting the automatic translation preference feature. It will appear under the toolbar. -->
+    <string name="automatic_translation_header_preference">Hãy chọn một ngôn ngữ để quản lí các tùy chọn ”Luôn dịch“ và ”Không bao giờ dịch“.</string>
+
+    <!-- Automatic translation options preference screen -->
+    <!-- Preference option for offering to translate. Radio button title text.-->
+    <string name="automatic_translation_option_offer_to_translate_title_preference">Đề xuất dịch (mặc định)</string>
+    <!-- Preference option for offering to translate. Radio button summary text. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="automatic_translation_option_offer_to_translate_summary_preference">%1$s sẽ đề xuất dịch các trang web bằng ngôn ngữ này.</string>
+    <!-- Preference option for always translate. Radio button title text. -->
+    <string name="automatic_translation_option_always_translate_title_preference">Luôn dịch</string>
     <!-- Preference option for never translate. Radio button title text.-->
     <string name="automatic_translation_option_never_translate_title_preference">Không bao giờ dịch</string>
 
+    <!-- Never translate site preference screen -->
+    <!-- Title of the never translate site preference screen that will appear on the toolbar.-->
+    <string name="never_translate_site_toolbar_title_preference">Không bao giờ dịch các trang này</string>
+    <!-- Content description (not visible, for screen readers etc.): For a never-translated site list item that is selected.
+             The first parameter is web site url (for example:"wikipedia.com") -->
+    <string name="never_translate_site_item_list_content_description_preference">Xóa %1$s</string>
     <!-- The Delete site dialogue title will appear when the user clicks on a list item.
              The first parameter is web site url (for example:"wikipedia.com") -->
     <string name="never_translate_site_dialog_title_preference">Xóa %1$s?</string>
@@ -2338,6 +2358,8 @@
     <string name="download_language_all_languages_item_preference">Tất cả ngôn ngữ</string>
     <!-- Content description (not visible, for screen readers etc.): For a language list item that was downloaded, the user can now delete it. -->
     <string name="download_languages_item_content_description_downloaded_state">Xóa</string>
+    <!-- Content description (not visible, for screen readers etc.): For a language list item, downloading is in progress. -->
+    <string name="download_languages_item_content_description_in_progress_state">Trong tiến trình</string>
     <!-- Content description (not visible, for screen readers etc.): For a language list item that was not downloaded. -->
     <string name="download_languages_item_content_description_not_downloaded_state">Tải xuống</string>
     <!-- Content description (not visible, for screen readers etc.): For a language list item that is selected. -->

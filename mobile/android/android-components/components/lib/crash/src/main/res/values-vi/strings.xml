@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Title of the crash reporter dialog. %1$s will be replaced with the name of the app (e.g. Firefox Focus). -->
-    <string name="mozac_lib_crash_dialog_title">Rất tiếc. %1$s đã gặp sự cố và đã đổ vỡ.</string>
+    <string name="mozac_lib_crash_dialog_title">Rất tiếc. %1$s đã gặp sự cố và buộc phải đóng.</string>
 
     <!-- Label of the checkbox for sending crash reports in the crash reporter dialog. %1$s will be replaced with the name of the organization (e.g. Mozilla). -->
-    <string name="mozac_lib_crash_dialog_checkbox">Gửi báo cáo lỗi đến %1$s</string>
+    <string name="mozac_lib_crash_dialog_checkbox">Gửi báo cáo sự cố cho %1$s</string>
 
     <!-- Label of the button closing the crash reporter dialog. -->
     <string name="mozac_lib_crash_dialog_button_close">Đóng</string>

@@ -7,14 +7,14 @@
     <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
     <string name="mozac_browser_errorpages_generic_title">Không thể hoàn tất yêu cầu</string>
     <!-- The error message shown when a website cannot be loaded for an unknown reason. -->
-    <string name="mozac_browser_errorpages_generic_message"><![CDATA[<p>Thông tin bổ sung về vấn đề này hoặc lỗi này hiện không có sẵn.</p>]]></string>
+    <string name="mozac_browser_errorpages_generic_message"><![CDATA[<p>Hiện không có thông tin bổ sung về sự cố hay lỗi này.</p>]]></string>
 
     <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
     <string name="mozac_browser_errorpages_security_ssl_title">Kết nối bảo mật đã thất bại</string>
     <!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
     <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[      <ul>
-        <li>Trang bạn đang cố truy cập không thể được hiển thị vì không thể xác minh tính xác thực của dữ liệu nhận được.</li>
-        <li>Vui lòng liên hệ với các chủ sở hữu trang web để thông báo cho họ về vấn đề này.</li>
+        <li>Trang bạn đang cố gắng truy cập không thể hiển thị vì không thể xác minh tính xác thực của dữ liệu nhận được.</li>
+        <li>Bạn hãy liên hệ với chủ sở hữu trang web để thông báo về sự cố này nếu có thể.</li>
       </ul>
       ]]></string>
 
@@ -23,8 +23,8 @@
     <!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[
       <ul>
-        <li>Đây có thể là một vấn đề với cấu hình máy chủ, hoặc có thể ai đó đang cố gắng mạo danh máy chủ.</li>
-        <li>Nếu bạn đã kết nối với máy chủ này thành công trong quá khứ, lỗi có thể là tạm thời và bạn có thể thử lại sau.</li>
+        <li>Đây có thể là một vấn đề với cấu hình máy chủ, hoặc có thể ai đó đang cố gắng mạo danh máy chủ này.</li>
+        <li>Nếu trước đây bạn đã kết nối với máy chủ này thành công thì có khả năng lỗi này chỉ là tạm thời và bạn có thể thử lại sau.</li>
       </ul>
     ]]></string>
 
