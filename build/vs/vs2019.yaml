@@ -29,59 +29,59 @@
 - id: Microsoft.VisualCpp.CRT.ARM64.Desktop
   payloads:
   - fileName: Microsoft.VisualCpp.CRT.ARM64.Desktop.vsix
-    sha256: bad4469d9523a0bd30838f3f119e02a77500003a6d069b4374adef76f4be2668
+    sha256: e816df1935b5a01db94c2594482ce458cfd64cf9725a902c1672c3b8c06bcad0
     size: 1076
-    url: https://download.visualstudio.microsoft.com/download/pr/6bd9aa8c-916b-47c0-a30d-7f8d3e7d7423/bad4469d9523a0bd30838f3f119e02a77500003a6d069b4374adef76f4be2668/Microsoft.VisualCpp.CRT.ARM64.Desktop.vsix
+    url: https://download.visualstudio.microsoft.com/download/pr/ed573b12-f211-4911-834c-c3e3a87d7e58/e816df1935b5a01db94c2594482ce458cfd64cf9725a902c1672c3b8c06bcad0/Microsoft.VisualCpp.CRT.ARM64.Desktop.vsix
   type: Vsix
-  version: 14.29.30145
+  version: 14.29.30153
 - id: Microsoft.VC.14.29.16.11.CRT.ARM64.Desktop.base
   payloads:
   - fileName: Microsoft.VC.14.29.16.11.CRT.ARM64.Desktop.base.vsix
-    sha256: 7d83f5eb6c57ea817669c172293a4d0e1efd13e84f74c6f85eb963657729fff6
-    size: 53770390
-    url: https://download.visualstudio.microsoft.com/download/pr/6bd9aa8c-916b-47c0-a30d-7f8d3e7d7423/7d83f5eb6c57ea817669c172293a4d0e1efd13e84f74c6f85eb963657729fff6/Microsoft.VC.14.29.16.11.CRT.ARM64.Desktop.base.vsix
+    sha256: 136b8349982030489394e3ac1bdb490a2ba1fa93597d53d0da6fb94f4af10f62
+    size: 53888641
+    url: https://download.visualstudio.microsoft.com/download/pr/ed573b12-f211-4911-834c-c3e3a87d7e58/136b8349982030489394e3ac1bdb490a2ba1fa93597d53d0da6fb94f4af10f62/Microsoft.VC.14.29.16.11.CRT.ARM64.Desktop.base.vsix
   type: Vsix
-  version: 14.29.30145
+  version: 14.29.30153
 - id: Microsoft.VC.14.29.16.11.CRT.ARM64.Desktop.debug.base
   payloads:
   - fileName: Microsoft.VC.14.29.16.11.CRT.ARM64.Desktop.debug.base.vsix
-    sha256: 3ad7f25c90c695bcb6a9830d7d3b7f74252fbfda922f5f05571d3c7437a8e141
-    size: 47263118
-    url: https://download.visualstudio.microsoft.com/download/pr/6bd9aa8c-916b-47c0-a30d-7f8d3e7d7423/3ad7f25c90c695bcb6a9830d7d3b7f74252fbfda922f5f05571d3c7437a8e141/Microsoft.VC.14.29.16.11.CRT.ARM64.Desktop.debug.base.vsix
+    sha256: 9dd7bf94132ba11f2d88b01bac0463de8007e63deaed7623ccfe41b244bc068a
+    size: 47277534
+    url: https://download.visualstudio.microsoft.com/download/pr/ed573b12-f211-4911-834c-c3e3a87d7e58/9dd7bf94132ba11f2d88b01bac0463de8007e63deaed7623ccfe41b244bc068a/Microsoft.VC.14.29.16.11.CRT.ARM64.Desktop.debug.base.vsix
   type: Vsix
-  version: 14.29.30145
+  version: 14.29.30153
 - id: Microsoft.VC.14.29.16.11.Props.ARM64
   payloads:
   - fileName: Microsoft.VC.14.29.16.11.Props.ARM64.vsix
-    sha256: 6ca19c79ecfabf84c020eb69fdefa5110ba19767b5a6f6453c8c94aa3f90a5d9
+    sha256: 6c44879670d416a7298c860d61a3cfe2de5285164424e7036eb7d19f3a25ab93
     size: 2266
-    url: https://download.visualstudio.microsoft.com/download/pr/3d471c9b-1235-4444-9b18-015f78d43ca2/6ca19c79ecfabf84c020eb69fdefa5110ba19767b5a6f6453c8c94aa3f90a5d9/Microsoft.VC.14.29.16.11.Props.ARM64.vsix
+    url: https://download.visualstudio.microsoft.com/download/pr/ed573b12-f211-4911-834c-c3e3a87d7e58/6c44879670d416a7298c860d61a3cfe2de5285164424e7036eb7d19f3a25ab93/Microsoft.VC.14.29.16.11.Props.ARM64.vsix
   type: Vsix
-  version: 14.29.30148
+  version: 14.29.30153
 - id: Microsoft.VC.14.29.16.11.Props
   payloads:
   - fileName: Microsoft.VC.14.29.16.11.Props.vsix
-    sha256: 979723f61a394c5c3a51b3c14e5986ca9633edca2ce43b65528d42caed3b0702
+    sha256: 96323474b850886b125f1cfe70eb6cbe256480d86f7ec38b34e39064cd395869
     size: 3934
-    url: https://download.visualstudio.microsoft.com/download/pr/48ee919d-ab7d-45bc-a595-a2262643c3bc/979723f61a394c5c3a51b3c14e5986ca9633edca2ce43b65528d42caed3b0702/Microsoft.VC.14.29.16.11.Props.vsix
+    url: https://download.visualstudio.microsoft.com/download/pr/ed573b12-f211-4911-834c-c3e3a87d7e58/96323474b850886b125f1cfe70eb6cbe256480d86f7ec38b34e39064cd395869/Microsoft.VC.14.29.16.11.Props.vsix
   type: Vsix
-  version: 14.29.30149
+  version: 14.29.30153
 - id: Microsoft.VisualCpp.CRT.ARM64.Store
   payloads:
   - fileName: Microsoft.VisualCpp.CRT.ARM64.Store.vsix
-    sha256: b7b177ee070065a61c229909447b821bfae1a6bf77469b006444618edcfd86d6
+    sha256: c621e7db7b2cac7baa8d9f8a7e5066d3f55c4f09653846ff554fc3375dba95ab
     size: 1074
-    url: https://download.visualstudio.microsoft.com/download/pr/6bd9aa8c-916b-47c0-a30d-7f8d3e7d7423/b7b177ee070065a61c229909447b821bfae1a6bf77469b006444618edcfd86d6/Microsoft.VisualCpp.CRT.ARM64.Store.vsix
+    url: https://download.visualstudio.microsoft.com/download/pr/ed573b12-f211-4911-834c-c3e3a87d7e58/c621e7db7b2cac7baa8d9f8a7e5066d3f55c4f09653846ff554fc3375dba95ab/Microsoft.VisualCpp.CRT.ARM64.Store.vsix
   type: Vsix
-  version: 14.29.30145
+  version: 14.29.30153
 - id: Microsoft.VC.14.29.16.11.CRT.ARM64.Store.base
   payloads:
   - fileName: Microsoft.VC.14.29.16.11.CRT.ARM64.Store.base.vsix
-    sha256: 4ae5a8cb647ba2b8736b30f5a1605f8b38c28bdb84da48341aa0cd3d35e04571
-    size: 51719405
-    url: https://download.visualstudio.microsoft.com/download/pr/6bd9aa8c-916b-47c0-a30d-7f8d3e7d7423/4ae5a8cb647ba2b8736b30f5a1605f8b38c28bdb84da48341aa0cd3d35e04571/Microsoft.VC.14.29.16.11.CRT.ARM64.Store.base.vsix
+    sha256: 5eaee5eb9ecb82f7034ff868c482a8723bcc2138b9b1158605e0fb79ab5ef889
+    size: 51721919
+    url: https://download.visualstudio.microsoft.com/download/pr/ed573b12-f211-4911-834c-c3e3a87d7e58/5eaee5eb9ecb82f7034ff868c482a8723bcc2138b9b1158605e0fb79ab5ef889/Microsoft.VC.14.29.16.11.CRT.ARM64.Store.base.vsix
   type: Vsix
-  version: 14.29.30145
+  version: 14.29.30153
 - id: Microsoft.VisualCpp.CRT.Headers
   payloads:
   - fileName: Microsoft.VisualCpp.CRT.Headers.vsix
@@ -109,243 +109,243 @@
 - id: Microsoft.VC.14.29.16.11.Servicing
   payloads:
   - fileName: Microsoft.VC.14.29.16.11.Servicing.vsix
-    sha256: 1614faa6167a2131908e885d150f1fe3d082f24fc070686965ee86ea7aee21f8
+    sha256: 62ff045d0b9846003524f52f5cb769f0a763fd135c799b0ac3fd499c3747a58e
     size: 2204
-    url: https://download.visualstudio.microsoft.com/download/pr/48ee919d-ab7d-45bc-a595-a2262643c3bc/1614faa6167a2131908e885d150f1fe3d082f24fc070686965ee86ea7aee21f8/Microsoft.VC.14.29.16.11.Servicing.vsix
+    url: https://download.visualstudio.microsoft.com/download/pr/ed573b12-f211-4911-834c-c3e3a87d7e58/62ff045d0b9846003524f52f5cb769f0a763fd135c799b0ac3fd499c3747a58e/Microsoft.VC.14.29.16.11.Servicing.vsix
   type: Vsix
-  version: 14.29.30149
+  version: 14.29.30153
 - id: Microsoft.VisualCpp.CRT.Redist.ARM64
   payloads:
   - fileName: Microsoft.VisualCpp.CRT.Redist.ARM64.vsix
-    sha256: df42039cf7b00c7fd55f76827ae20fe4eb5658151e55e60ee137cd09f926b45b
-    size: 22513918
-    url: https://download.visualstudio.microsoft.com/download/pr/ac03a894-39e2-42c1-ba49-86d7028ce0e1/df42039cf7b00c7fd55f76827ae20fe4eb5658151e55e60ee137cd09f926b45b/Microsoft.VisualCpp.CRT.Redist.ARM64.vsix
+    sha256: e2e2b3b207a35122a7f9a27e94ff27583124fb1aa9639b7335da62aa24e6d225
+    size: 22526228
+    url: https://download.visualstudio.microsoft.com/download/pr/ed573b12-f211-4911-834c-c3e3a87d7e58/e2e2b3b207a35122a7f9a27e94ff27583124fb1aa9639b7335da62aa24e6d225/Microsoft.VisualCpp.CRT.Redist.ARM64.vsix
   type: Vsix
-  version: 14.29.30139
+  version: 14.29.30153
 - id: Microsoft.VC.14.29.16.11.CRT.Redist.ARM64.base
   payloads:
   - fileName: Microsoft.VC.14.29.16.11.CRT.Redist.ARM64.base.vsix
-    sha256: 3bd7813955b805c6dcb9dc4951f5313c06ce9d08d25b96072cabf6bd36ad7315
-    size: 5251275
-    url: https://download.visualstudio.microsoft.com/download/pr/ac03a894-39e2-42c1-ba49-86d7028ce0e1/3bd7813955b805c6dcb9dc4951f5313c06ce9d08d25b96072cabf6bd36ad7315/Microsoft.VC.14.29.16.11.CRT.Redist.ARM64.base.vsix
+    sha256: 83901070cdce1ed33d9f310993705b67c66a85a35f69cb15e338d9ecb160dd67
+    size: 5237346
+    url: https://download.visualstudio.microsoft.com/download/pr/ed573b12-f211-4911-834c-c3e3a87d7e58/83901070cdce1ed33d9f310993705b67c66a85a35f69cb15e338d9ecb160dd67/Microsoft.VC.14.29.16.11.CRT.Redist.ARM64.base.vsix
   type: Vsix
-  version: 14.29.30139
+  version: 14.29.30153
 - id: Microsoft.VisualCpp.CRT.Redist.Resources
   payloads:
   - fileName: Microsoft.VisualCpp.CRT.Redist.Resources.enu.vsix
-    sha256: 7b97628ff637383009238224b187bddf7a27f03ecb21c65a7f203b093970edb2
+    sha256: b55e0b3fdc55c1860799ba25acfe55e5c9c548f02bffc61adb247603969ce130
     size: 1059
-    url: https://download.visualstudio.microsoft.com/download/pr/ac03a894-39e2-42c1-ba49-86d7028ce0e1/7b97628ff637383009238224b187bddf7a27f03ecb21c65a7f203b093970edb2/Microsoft.VisualCpp.CRT.Redist.Resources.enu.vsix
+    url: https://download.visualstudio.microsoft.com/download/pr/ed573b12-f211-4911-834c-c3e3a87d7e58/b55e0b3fdc55c1860799ba25acfe55e5c9c548f02bffc61adb247603969ce130/Microsoft.VisualCpp.CRT.Redist.Resources.enu.vsix
   type: Vsix
-  version: 14.29.30139
+  version: 14.29.30153
 - id: Microsoft.VisualCpp.CRT.Redist.X64
   payloads:
   - fileName: Microsoft.VisualCpp.CRT.Redist.X64.vsix
-    sha256: 3c1fc9fbdc5d25cda539d629ec0e113c7ea1da59315fd06d177075d194bd5147
-    size: 99936026
-    url: https://download.visualstudio.microsoft.com/download/pr/ac03a894-39e2-42c1-ba49-86d7028ce0e1/3c1fc9fbdc5d25cda539d629ec0e113c7ea1da59315fd06d177075d194bd5147/Microsoft.VisualCpp.CRT.Redist.X64.vsix
+    sha256: db639a7aade3ce017be0159aefa111aca01b654574a43129e4873303d4317ef5
+    size: 100010996
+    url: https://download.visualstudio.microsoft.com/download/pr/ed573b12-f211-4911-834c-c3e3a87d7e58/db639a7aade3ce017be0159aefa111aca01b654574a43129e4873303d4317ef5/Microsoft.VisualCpp.CRT.Redist.X64.vsix
   type: Vsix
-  version: 14.29.30139
+  version: 14.29.30153
 - id: Microsoft.VC.14.29.16.11.CRT.Redist.X64.base
   payloads:
   - fileName: Microsoft.VC.14.29.16.11.CRT.Redist.X64.base.vsix
-    sha256: 45820147a7de7fb017dfc6d6b69a66029c16de63d0f678a3a15c6cc87933b453
-    size: 3448561
-    url: https://download.visualstudio.microsoft.com/download/pr/ac03a894-39e2-42c1-ba49-86d7028ce0e1/45820147a7de7fb017dfc6d6b69a66029c16de63d0f678a3a15c6cc87933b453/Microsoft.VC.14.29.16.11.CRT.Redist.X64.base.vsix
+    sha256: d8cb27a1086947db4256bcff101d0439d4ff8df2497dcac16d2fd2a27bf834fd
+    size: 3448811
+    url: https://download.visualstudio.microsoft.com/download/pr/ed573b12-f211-4911-834c-c3e3a87d7e58/d8cb27a1086947db4256bcff101d0439d4ff8df2497dcac16d2fd2a27bf834fd/Microsoft.VC.14.29.16.11.CRT.Redist.X64.base.vsix
   type: Vsix
-  version: 14.29.30139
+  version: 14.29.30153
 - id: Microsoft.VisualCpp.CRT.Redist.X86
   payloads:
   - fileName: Microsoft.VisualCpp.CRT.Redist.X86.vsix
-    sha256: 82c23e8108fa00b24c78b2b2e09cff1eb0f90f287738b2a3050473e56a203c89
-    size: 54164702
-    url: https://download.visualstudio.microsoft.com/download/pr/ac03a894-39e2-42c1-ba49-86d7028ce0e1/82c23e8108fa00b24c78b2b2e09cff1eb0f90f287738b2a3050473e56a203c89/Microsoft.VisualCpp.CRT.Redist.X86.vsix
+    sha256: 17b7645dc9bdb69d2953c0e39e77f9be465d99ce8ad8dfc373e78eb71feae428
+    size: 54297308
+    url: https://download.visualstudio.microsoft.com/download/pr/ed573b12-f211-4911-834c-c3e3a87d7e58/17b7645dc9bdb69d2953c0e39e77f9be465d99ce8ad8dfc373e78eb71feae428/Microsoft.VisualCpp.CRT.Redist.X86.vsix
   type: Vsix
-  version: 14.29.30139
+  version: 14.29.30153
 - id: Microsoft.VC.14.29.16.11.CRT.Redist.X86.base
   payloads:
   - fileName: Microsoft.VC.14.29.16.11.CRT.Redist.X86.base.vsix
-    sha256: 333689be6eee30eb33bd46fd0e1a32b8cbde24c8920914fc1f3e1fa55369da6b
-    size: 2944080
-    url: https://download.visualstudio.microsoft.com/download/pr/ac03a894-39e2-42c1-ba49-86d7028ce0e1/333689be6eee30eb33bd46fd0e1a32b8cbde24c8920914fc1f3e1fa55369da6b/Microsoft.VC.14.29.16.11.CRT.Redist.X86.base.vsix
+    sha256: 93427310e0b9cefb1c9fae1fd60fc0cc9e8d90f64c360e9483fe71e307f1a295
+    size: 2961562
+    url: https://download.visualstudio.microsoft.com/download/pr/ed573b12-f211-4911-834c-c3e3a87d7e58/93427310e0b9cefb1c9fae1fd60fc0cc9e8d90f64c360e9483fe71e307f1a295/Microsoft.VC.14.29.16.11.CRT.Redist.X86.base.vsix
   type: Vsix
-  version: 14.29.30139
+  version: 14.29.30153
 - id: Microsoft.VisualCpp.CRT.x64.Desktop
   payloads:
   - fileName: Microsoft.VisualCpp.CRT.x64.Desktop.vsix
-    sha256: b4849d0e1bb1657effe5f07dd0ff09e454f94151463313a8312f04d68248a538
+    sha256: 63d76f049bf86ee1c7e57d9c5568c2a16daf9ac8fa977e72c9c4443c40c57dbb
     size: 1073
-    url: https://download.visualstudio.microsoft.com/download/pr/6bd9aa8c-916b-47c0-a30d-7f8d3e7d7423/b4849d0e1bb1657effe5f07dd0ff09e454f94151463313a8312f04d68248a538/Microsoft.VisualCpp.CRT.x64.Desktop.vsix
+    url: https://download.visualstudio.microsoft.com/download/pr/ed573b12-f211-4911-834c-c3e3a87d7e58/63d76f049bf86ee1c7e57d9c5568c2a16daf9ac8fa977e72c9c4443c40c57dbb/Microsoft.VisualCpp.CRT.x64.Desktop.vsix
   type: Vsix
-  version: 14.29.30145
+  version: 14.29.30153
 - id: Microsoft.VC.14.29.16.11.CRT.x64.Desktop.base
   payloads:
   - fileName: Microsoft.VC.14.29.16.11.CRT.x64.Desktop.base.vsix
-    sha256: 0a291f9b706fa535d3720510374658027b6e9ca7082b021f3ce91cd1b8a3cae7
-    size: 42029901
-    url: https://download.visualstudio.microsoft.com/download/pr/6bd9aa8c-916b-47c0-a30d-7f8d3e7d7423/0a291f9b706fa535d3720510374658027b6e9ca7082b021f3ce91cd1b8a3cae7/Microsoft.VC.14.29.16.11.CRT.x64.Desktop.base.vsix
+    sha256: 87127c5d18c9359d3e6c950ac7fd84ac49e229d4a356d80ed7b198500cbd3d9b
+    size: 42021723
+    url: https://download.visualstudio.microsoft.com/download/pr/ed573b12-f211-4911-834c-c3e3a87d7e58/87127c5d18c9359d3e6c950ac7fd84ac49e229d4a356d80ed7b198500cbd3d9b/Microsoft.VC.14.29.16.11.CRT.x64.Desktop.base.vsix
   type: Vsix
-  version: 14.29.30145
+  version: 14.29.30153
 - id: Microsoft.VisualCpp.CRT.x64.Store
   payloads:
   - fileName: Microsoft.VisualCpp.CRT.x64.Store.vsix
-    sha256: b1b537f614d14162b20c05ae458f42f477e1d8f2363c5f4f255dfd32b25c96f6
+    sha256: 83e33550c9ed10ea116de26f6dc6b407fb3d330747e3721c7fba9d3704f81827
     size: 1071
-    url: https://download.visualstudio.microsoft.com/download/pr/6bd9aa8c-916b-47c0-a30d-7f8d3e7d7423/b1b537f614d14162b20c05ae458f42f477e1d8f2363c5f4f255dfd32b25c96f6/Microsoft.VisualCpp.CRT.x64.Store.vsix
+    url: https://download.visualstudio.microsoft.com/download/pr/ed573b12-f211-4911-834c-c3e3a87d7e58/83e33550c9ed10ea116de26f6dc6b407fb3d330747e3721c7fba9d3704f81827/Microsoft.VisualCpp.CRT.x64.Store.vsix
   type: Vsix
-  version: 14.29.30145
+  version: 14.29.30153
 - id: Microsoft.VC.14.29.16.11.CRT.x64.Store.base
   payloads:
   - fileName: Microsoft.VC.14.29.16.11.CRT.x64.Store.base.vsix
-    sha256: 9cdbf7ecbaebd9117677cdcd48d709aba52fb6fdae19e4b4ad72e033189f1e36
-    size: 19403126
-    url: https://download.visualstudio.microsoft.com/download/pr/6bd9aa8c-916b-47c0-a30d-7f8d3e7d7423/9cdbf7ecbaebd9117677cdcd48d709aba52fb6fdae19e4b4ad72e033189f1e36/Microsoft.VC.14.29.16.11.CRT.x64.Store.base.vsix
+    sha256: 9373ff18e5ae6a10a25defa380b5a73f1610766c3d6d44dc68bf4271ede3db44
+    size: 19404083
+    url: https://download.visualstudio.microsoft.com/download/pr/ed573b12-f211-4911-834c-c3e3a87d7e58/9373ff18e5ae6a10a25defa380b5a73f1610766c3d6d44dc68bf4271ede3db44/Microsoft.VC.14.29.16.11.CRT.x64.Store.base.vsix
   type: Vsix
-  version: 14.29.30145
+  version: 14.29.30153
 - id: Microsoft.VisualCpp.CRT.x86.Desktop
   payloads:
   - fileName: Microsoft.VisualCpp.CRT.x86.Desktop.vsix
-    sha256: 0d3c834043e1d6f2672620aa473c896fb95282d546d649096f5bb627d969076d
+    sha256: c3512f91f378566246d32249a175907a519aea8817c715a5269a31737bc25797
     size: 1073
-    url: https://download.visualstudio.microsoft.com/download/pr/6bd9aa8c-916b-47c0-a30d-7f8d3e7d7423/0d3c834043e1d6f2672620aa473c896fb95282d546d649096f5bb627d969076d/Microsoft.VisualCpp.CRT.x86.Desktop.vsix
+    url: https://download.visualstudio.microsoft.com/download/pr/ed573b12-f211-4911-834c-c3e3a87d7e58/c3512f91f378566246d32249a175907a519aea8817c715a5269a31737bc25797/Microsoft.VisualCpp.CRT.x86.Desktop.vsix
   type: Vsix
-  version: 14.29.30145
+  version: 14.29.30153
 - id: Microsoft.VC.14.29.16.11.CRT.x86.Desktop.base
   payloads:
   - fileName: Microsoft.VC.14.29.16.11.CRT.x86.Desktop.base.vsix
-    sha256: 77792f9885e30d2f9329f1eb061bb51f507296c053b48c4fa57fac7ea9127f43
-    size: 65470032
-    url: https://download.visualstudio.microsoft.com/download/pr/6bd9aa8c-916b-47c0-a30d-7f8d3e7d7423/77792f9885e30d2f9329f1eb061bb51f507296c053b48c4fa57fac7ea9127f43/Microsoft.VC.14.29.16.11.CRT.x86.Desktop.base.vsix
+    sha256: 9ef2053c99f876b2c52b55a2586c673436f775a1d8e634bf80a0b14b55b0cc58
+    size: 65528398
+    url: https://download.visualstudio.microsoft.com/download/pr/ed573b12-f211-4911-834c-c3e3a87d7e58/9ef2053c99f876b2c52b55a2586c673436f775a1d8e634bf80a0b14b55b0cc58/Microsoft.VC.14.29.16.11.CRT.x86.Desktop.base.vsix
   type: Vsix
-  version: 14.29.30145
+  version: 14.29.30153
 - id: Microsoft.VisualCpp.CRT.x86.Store
   payloads:
   - fileName: Microsoft.VisualCpp.CRT.x86.Store.vsix
-    sha256: 9ed9bd5efd1a840826ceae456e717ce95f66b0b98351b3487359a4471d28e592
+    sha256: 8150ce3d657baec4aeec201e9e1be51edf735bc80a2f8da7205afe9cc6a5179c
     size: 1072
-    url: https://download.visualstudio.microsoft.com/download/pr/5aa29bdc-6bb2-4c9c-b0e8-286fd4bd4cee/9ed9bd5efd1a840826ceae456e717ce95f66b0b98351b3487359a4471d28e592/Microsoft.VisualCpp.CRT.x86.Store.vsix
+    url: https://download.visualstudio.microsoft.com/download/pr/ed573b12-f211-4911-834c-c3e3a87d7e58/8150ce3d657baec4aeec201e9e1be51edf735bc80a2f8da7205afe9cc6a5179c/Microsoft.VisualCpp.CRT.x86.Store.vsix
   type: Vsix
-  version: 14.29.30145
+  version: 14.29.30153
 - id: Microsoft.VC.14.29.16.11.CRT.x86.Store.base
   payloads:
   - fileName: Microsoft.VC.14.29.16.11.CRT.x86.Store.base.vsix
-    sha256: a42022b056918afdae8effcb92728e44906275995ab4e47dbc9f5e9e8f452721
-    size: 18939558
-    url: https://download.visualstudio.microsoft.com/download/pr/6bd9aa8c-916b-47c0-a30d-7f8d3e7d7423/a42022b056918afdae8effcb92728e44906275995ab4e47dbc9f5e9e8f452721/Microsoft.VC.14.29.16.11.CRT.x86.Store.base.vsix
+    sha256: f5dfb9db88faaf6bc78b4b0cd25180daec08428e0ce21ab938136188d5631b11
+    size: 18939298
+    url: https://download.visualstudio.microsoft.com/download/pr/ed573b12-f211-4911-834c-c3e3a87d7e58/f5dfb9db88faaf6bc78b4b0cd25180daec08428e0ce21ab938136188d5631b11/Microsoft.VC.14.29.16.11.CRT.x86.Store.base.vsix
   type: Vsix
-  version: 14.29.30145
+  version: 14.29.30153
 - id: Microsoft.VisualCpp.DIA.SDK
   payloads:
   - fileName: Microsoft.VisualCpp.DIA.SDK.vsix
-    sha256: e747bbb08617b846f4f848d2d5415c8dd95fb0f51b1ab879e94593032a2ab5c7
-    size: 6428880
-    url: https://download.visualstudio.microsoft.com/download/pr/3d471c9b-1235-4444-9b18-015f78d43ca2/e747bbb08617b846f4f848d2d5415c8dd95fb0f51b1ab879e94593032a2ab5c7/Microsoft.VisualCpp.DIA.SDK.vsix
+    sha256: a231fc9d27492a57fd3730a5e6168e7ee2f5a90a48e07e66abfb5cb1c26656b2
+    size: 6487893
+    url: https://download.visualstudio.microsoft.com/download/pr/e4ed28b5-7428-4442-99c3-df5fa4ab6460/a231fc9d27492a57fd3730a5e6168e7ee2f5a90a48e07e66abfb5cb1c26656b2/Microsoft.VisualCpp.DIA.SDK.vsix
   type: Vsix
-  version: 14.29.30148
+  version: 14.29.30152
 - id: Microsoft.VisualCpp.Servicing.DIASDK
   payloads:
   - fileName: Microsoft.VisualCpp.Servicing.DIASDK.vsix
-    sha256: e4ccc6bd9de504be829137b9de1a278a7a1154464f6f3458299fba8eabfb7091
-    size: 2002
-    url: https://download.visualstudio.microsoft.com/download/pr/3d471c9b-1235-4444-9b18-015f78d43ca2/e4ccc6bd9de504be829137b9de1a278a7a1154464f6f3458299fba8eabfb7091/Microsoft.VisualCpp.Servicing.DIASDK.vsix
+    sha256: 29c52e5a4db48831f1bf24c56c6cc110ded8b43852fd47f83717f1631756b3ca
+    size: 2003
+    url: https://download.visualstudio.microsoft.com/download/pr/e4ed28b5-7428-4442-99c3-df5fa4ab6460/29c52e5a4db48831f1bf24c56c6cc110ded8b43852fd47f83717f1631756b3ca/Microsoft.VisualCpp.Servicing.DIASDK.vsix
   type: Vsix
-  version: 14.29.30148
+  version: 14.29.30152
 - id: Microsoft.VisualCpp.Tools.HostX64.TargetARM64
   payloads:
   - fileName: Microsoft.VisualCpp.Tools.HostX64.TargetARM64.vsix
-    sha256: cd219d148d940d7a95dd48a99f83213a64a9e66b973c74e853209a604338ccb2
+    sha256: f84c526cf9641f3d5d6a39a8e398c2397ff1ac1c86a5a7775f1b700f8618c440
     size: 2297
-    url: https://download.visualstudio.microsoft.com/download/pr/3d471c9b-1235-4444-9b18-015f78d43ca2/cd219d148d940d7a95dd48a99f83213a64a9e66b973c74e853209a604338ccb2/Microsoft.VisualCpp.Tools.HostX64.TargetARM64.vsix
+    url: https://download.visualstudio.microsoft.com/download/pr/ed573b12-f211-4911-834c-c3e3a87d7e58/f84c526cf9641f3d5d6a39a8e398c2397ff1ac1c86a5a7775f1b700f8618c440/Microsoft.VisualCpp.Tools.HostX64.TargetARM64.vsix
   type: Vsix
-  version: 14.29.30148
+  version: 14.29.30153
 - id: Microsoft.VC.14.29.16.11.Tools.HostX64.TargetARM64.base
   payloads:
   - fileName: Microsoft.VC.14.29.16.11.Tools.HostX64.TargetARM64.base.vsix
-    sha256: 8d1db696581d0b2913e95a25d9ee7e3a3645ad2d88f174e6ba64d31c47ff90d7
-    size: 17389713
-    url: https://download.visualstudio.microsoft.com/download/pr/3d471c9b-1235-4444-9b18-015f78d43ca2/8d1db696581d0b2913e95a25d9ee7e3a3645ad2d88f174e6ba64d31c47ff90d7/Microsoft.VC.14.29.16.11.Tools.HostX64.TargetARM64.base.vsix
+    sha256: ed76de1d4b4c48b088b6ce802e6690b7d7ea633078237e26db68fb68839b6c48
+    size: 17416238
+    url: https://download.visualstudio.microsoft.com/download/pr/ed573b12-f211-4911-834c-c3e3a87d7e58/ed76de1d4b4c48b088b6ce802e6690b7d7ea633078237e26db68fb68839b6c48/Microsoft.VC.14.29.16.11.Tools.HostX64.TargetARM64.base.vsix
   type: Vsix
-  version: 14.29.30148
+  version: 14.29.30153
 - id: Microsoft.VC.14.29.16.11.Tools.HostX64.TargetARM64.Res.base
   payloads:
   - fileName: Microsoft.VC.14.29.16.11.Tools.HostX64.TargetARM64.Res.base.enu.vsix
-    sha256: 43a289c7eb031c72b7f0e98afab81d0c913e1718032d378b46db34e95fa87f0f
-    size: 215290
-    url: https://download.visualstudio.microsoft.com/download/pr/3d471c9b-1235-4444-9b18-015f78d43ca2/43a289c7eb031c72b7f0e98afab81d0c913e1718032d378b46db34e95fa87f0f/Microsoft.VC.14.29.16.11.Tools.HostX64.TargetARM64.Res.base.enu.vsix
+    sha256: 31a0aacb7c0db031b0a6e5a1830a936a38511c7c9ea2e5723e663c5544225444
+    size: 216025
+    url: https://download.visualstudio.microsoft.com/download/pr/ed573b12-f211-4911-834c-c3e3a87d7e58/31a0aacb7c0db031b0a6e5a1830a936a38511c7c9ea2e5723e663c5544225444/Microsoft.VC.14.29.16.11.Tools.HostX64.TargetARM64.Res.base.enu.vsix
   type: Vsix
-  version: 14.29.30148
+  version: 14.29.30153
 - id: Microsoft.VC.14.29.16.11.Servicing.Compilers
   payloads:
   - fileName: Microsoft.VC.14.29.16.11.Servicing.Compilers.vsix
-    sha256: c1ecdea3a7d42cf08981e7a3b4c8ac92633b23a1ce3d3fbe80f47063af7ada8f
-    size: 2002
-    url: https://download.visualstudio.microsoft.com/download/pr/3d471c9b-1235-4444-9b18-015f78d43ca2/c1ecdea3a7d42cf08981e7a3b4c8ac92633b23a1ce3d3fbe80f47063af7ada8f/Microsoft.VC.14.29.16.11.Servicing.Compilers.vsix
+    sha256: ecc26a58b5673ed923fcd09ab585bde1ddf4336c4e3472e9b264bd2050dd710b
+    size: 2003
+    url: https://download.visualstudio.microsoft.com/download/pr/ed573b12-f211-4911-834c-c3e3a87d7e58/ecc26a58b5673ed923fcd09ab585bde1ddf4336c4e3472e9b264bd2050dd710b/Microsoft.VC.14.29.16.11.Servicing.Compilers.vsix
   type: Vsix
-  version: 14.29.30148
+  version: 14.29.30153
 - id: Microsoft.VisualCpp.Tools.HostX64.TargetX64
   payloads:
   - fileName: Microsoft.VisualCpp.Tools.HostX64.TargetX64.vsix
-    sha256: 5af55305cc158aaa5ecd96401b1053acf380f2ff48520b20fd911c835b20b2b8
-    size: 2247
-    url: https://download.visualstudio.microsoft.com/download/pr/3d471c9b-1235-4444-9b18-015f78d43ca2/5af55305cc158aaa5ecd96401b1053acf380f2ff48520b20fd911c835b20b2b8/Microsoft.VisualCpp.Tools.HostX64.TargetX64.vsix
+    sha256: b0a42f87830e1fc5569f2ba424105e90b30d6c5cff07295d4865694fa4c8af88
+    size: 2246
+    url: https://download.visualstudio.microsoft.com/download/pr/ed573b12-f211-4911-834c-c3e3a87d7e58/b0a42f87830e1fc5569f2ba424105e90b30d6c5cff07295d4865694fa4c8af88/Microsoft.VisualCpp.Tools.HostX64.TargetX64.vsix
   type: Vsix
-  version: 14.29.30148
+  version: 14.29.30153
 - id: Microsoft.VC.14.29.16.11.Tools.HostX64.TargetX64.base
   payloads:
   - fileName: Microsoft.VC.14.29.16.11.Tools.HostX64.TargetX64.base.vsix
-    sha256: 40ef50d5586c2c6e249b5e2bd49093d0c3a04dd4dbd9d290f29237ba593bec1a
-    size: 18217741
-    url: https://download.visualstudio.microsoft.com/download/pr/3d471c9b-1235-4444-9b18-015f78d43ca2/40ef50d5586c2c6e249b5e2bd49093d0c3a04dd4dbd9d290f29237ba593bec1a/Microsoft.VC.14.29.16.11.Tools.HostX64.TargetX64.base.vsix
+    sha256: c67458a1719d10f41750f58861241acd35d31d7732fdd94616ae31a25dab6beb
+    size: 18238717
+    url: https://download.visualstudio.microsoft.com/download/pr/ed573b12-f211-4911-834c-c3e3a87d7e58/c67458a1719d10f41750f58861241acd35d31d7732fdd94616ae31a25dab6beb/Microsoft.VC.14.29.16.11.Tools.HostX64.TargetX64.base.vsix
   type: Vsix
-  version: 14.29.30148
+  version: 14.29.30153
 - id: Microsoft.VC.14.29.16.11.Tools.HostX64.TargetX64.Res.base
   payloads:
   - fileName: Microsoft.VC.14.29.16.11.Tools.HostX64.TargetX64.Res.base.enu.vsix
-    sha256: 9bf9eff4596074591538e0a367934b4156c9b345708b8fbe261b536bce1e98a5
-    size: 215243
-    url: https://download.visualstudio.microsoft.com/download/pr/3d471c9b-1235-4444-9b18-015f78d43ca2/9bf9eff4596074591538e0a367934b4156c9b345708b8fbe261b536bce1e98a5/Microsoft.VC.14.29.16.11.Tools.HostX64.TargetX64.Res.base.enu.vsix
+    sha256: 5f9c8fdc7a0d74f791d698d55cda886839999c09790cc5564eb49b455012d836
+    size: 215951
+    url: https://download.visualstudio.microsoft.com/download/pr/ed573b12-f211-4911-834c-c3e3a87d7e58/5f9c8fdc7a0d74f791d698d55cda886839999c09790cc5564eb49b455012d836/Microsoft.VC.14.29.16.11.Tools.HostX64.TargetX64.Res.base.enu.vsix
   type: Vsix
-  version: 14.29.30148
+  version: 14.29.30153
 - id: Microsoft.VC.14.29.16.11.Props.x64
   payloads:
   - fileName: Microsoft.VC.14.29.16.11.Props.x64.vsix
-    sha256: 39e0cb5a5d60de90bb467e52f9aa3e5a24646ced3b82e222278de14d72b2e335
-    size: 2339
-    url: https://download.visualstudio.microsoft.com/download/pr/3d471c9b-1235-4444-9b18-015f78d43ca2/39e0cb5a5d60de90bb467e52f9aa3e5a24646ced3b82e222278de14d72b2e335/Microsoft.VC.14.29.16.11.Props.x64.vsix
+    sha256: b580af879ba68e692690b167eb232fdfd5da2f320c1d2360e669765dafe44492
+    size: 2340
+    url: https://download.visualstudio.microsoft.com/download/pr/ed573b12-f211-4911-834c-c3e3a87d7e58/b580af879ba68e692690b167eb232fdfd5da2f320c1d2360e669765dafe44492/Microsoft.VC.14.29.16.11.Props.x64.vsix
   type: Vsix
-  version: 14.29.30148
+  version: 14.29.30153
 - id: Microsoft.VisualCpp.Tools.HostX64.TargetX86
   payloads:
   - fileName: Microsoft.VisualCpp.Tools.HostX64.TargetX86.vsix
-    sha256: fcc305087c9e4a368744792681e956c5e746d3e47fd967e65cd31e0a0f550848
+    sha256: 16bc2966d85ea7bdb1f7054dfa6940e5b920b72fa3c6c3964aebe778944bf5ac
     size: 2283
-    url: https://download.visualstudio.microsoft.com/download/pr/3d471c9b-1235-4444-9b18-015f78d43ca2/fcc305087c9e4a368744792681e956c5e746d3e47fd967e65cd31e0a0f550848/Microsoft.VisualCpp.Tools.HostX64.TargetX86.vsix
+    url: https://download.visualstudio.microsoft.com/download/pr/ed573b12-f211-4911-834c-c3e3a87d7e58/16bc2966d85ea7bdb1f7054dfa6940e5b920b72fa3c6c3964aebe778944bf5ac/Microsoft.VisualCpp.Tools.HostX64.TargetX86.vsix
   type: Vsix
-  version: 14.29.30148
+  version: 14.29.30153
 - id: Microsoft.VC.14.29.16.11.Tools.HostX64.TargetX86.base
   payloads:
   - fileName: Microsoft.VC.14.29.16.11.Tools.HostX64.TargetX86.base.vsix
-    sha256: 0549f12435212034da3161fa11b56580fa595eba46cb65bfd16cf9efe303fa03
-    size: 18142601
-    url: https://download.visualstudio.microsoft.com/download/pr/3d471c9b-1235-4444-9b18-015f78d43ca2/0549f12435212034da3161fa11b56580fa595eba46cb65bfd16cf9efe303fa03/Microsoft.VC.14.29.16.11.Tools.HostX64.TargetX86.base.vsix
+    sha256: 58d29d6be41b28d2c46618cecbded76a4ea8808934cbabe9d2aedf8d90175ba3
+    size: 18170072
+    url: https://download.visualstudio.microsoft.com/download/pr/ed573b12-f211-4911-834c-c3e3a87d7e58/58d29d6be41b28d2c46618cecbded76a4ea8808934cbabe9d2aedf8d90175ba3/Microsoft.VC.14.29.16.11.Tools.HostX64.TargetX86.base.vsix
   type: Vsix
-  version: 14.29.30148
+  version: 14.29.30153
 - id: Microsoft.VC.14.29.16.11.Tools.HostX64.TargetX86.Res.base
   payloads:
   - fileName: Microsoft.VC.14.29.16.11.Tools.HostX64.TargetX86.Res.base.enu.vsix
-    sha256: 0f7275664012d70bc4e37588a8a68b1a9b9f83b33ff3e93d221f890d2ce4a99d
-    size: 215270
-    url: https://download.visualstudio.microsoft.com/download/pr/3d471c9b-1235-4444-9b18-015f78d43ca2/0f7275664012d70bc4e37588a8a68b1a9b9f83b33ff3e93d221f890d2ce4a99d/Microsoft.VC.14.29.16.11.Tools.HostX64.TargetX86.Res.base.enu.vsix
+    sha256: c13649dcc13e7d3ace9626be600b267779e1868c9a0b1dbefcd063a3e884ac17
+    size: 215953
+    url: https://download.visualstudio.microsoft.com/download/pr/ed573b12-f211-4911-834c-c3e3a87d7e58/c13649dcc13e7d3ace9626be600b267779e1868c9a0b1dbefcd063a3e884ac17/Microsoft.VC.14.29.16.11.Tools.HostX64.TargetX86.Res.base.enu.vsix
   type: Vsix
-  version: 14.29.30148
+  version: 14.29.30153
 - id: Microsoft.VC.14.29.16.11.Props.x86
   payloads:
   - fileName: Microsoft.VC.14.29.16.11.Props.x86.vsix
-    sha256: 9c9d62ab56e52e257da7fa6f9ea4266fc7258cb852aab729aa721dd06145c9d5
-    size: 2298
-    url: https://download.visualstudio.microsoft.com/download/pr/3d471c9b-1235-4444-9b18-015f78d43ca2/9c9d62ab56e52e257da7fa6f9ea4266fc7258cb852aab729aa721dd06145c9d5/Microsoft.VC.14.29.16.11.Props.x86.vsix
+    sha256: 4e3dda156cf57917961979934a35081bd375e07353378e2c241ac33b27eb8c07
+    size: 2299
+    url: https://download.visualstudio.microsoft.com/download/pr/ed573b12-f211-4911-834c-c3e3a87d7e58/4e3dda156cf57917961979934a35081bd375e07353378e2c241ac33b27eb8c07/Microsoft.VC.14.29.16.11.Props.x86.vsix
   type: Vsix
-  version: 14.29.30148
+  version: 14.29.30153
 - id: Microsoft.VisualCpp.ATL.ARM64
   payloads:
   - fileName: Microsoft.VisualCpp.ATL.ARM64.vsix
@@ -533,35 +533,35 @@
 - id: Microsoft.VisualCpp.MFC.Redist.X64
   payloads:
   - fileName: Microsoft.VisualCpp.MFC.Redist.X64.vsix
-    sha256: c2a25a4e625d31265811a8bb8ee5269a4c2ab8d6be103bae726e4830bfbce8bd
+    sha256: ebb38eb54877b36c9f3c92de9da555ad97ab94d635a99c5f858c99f3f32bd03d
     size: 1072
-    url: https://download.visualstudio.microsoft.com/download/pr/ac03a894-39e2-42c1-ba49-86d7028ce0e1/c2a25a4e625d31265811a8bb8ee5269a4c2ab8d6be103bae726e4830bfbce8bd/Microsoft.VisualCpp.MFC.Redist.X64.vsix
+    url: https://download.visualstudio.microsoft.com/download/pr/ed573b12-f211-4911-834c-c3e3a87d7e58/ebb38eb54877b36c9f3c92de9da555ad97ab94d635a99c5f858c99f3f32bd03d/Microsoft.VisualCpp.MFC.Redist.X64.vsix
   type: Vsix
-  version: 14.29.30139
+  version: 14.29.30153
 - id: Microsoft.VC.14.29.16.11.MFC.Redist.X64.base
   payloads:
   - fileName: Microsoft.VC.14.29.16.11.MFC.Redist.X64.base.vsix
-    sha256: 10f391a585c0b8f426ed0f87b2e01932210c87ab67e5434e455e9bca41dde037
-    size: 13722185
-    url: https://download.visualstudio.microsoft.com/download/pr/5aa29bdc-6bb2-4c9c-b0e8-286fd4bd4cee/10f391a585c0b8f426ed0f87b2e01932210c87ab67e5434e455e9bca41dde037/Microsoft.VC.14.29.16.11.MFC.Redist.X64.base.vsix
+    sha256: 5346236767c3554fb46a681d6bafce4fd580a017beafd1cd15d25ab36d971fb6
+    size: 13730780
+    url: https://download.visualstudio.microsoft.com/download/pr/ed573b12-f211-4911-834c-c3e3a87d7e58/5346236767c3554fb46a681d6bafce4fd580a017beafd1cd15d25ab36d971fb6/Microsoft.VC.14.29.16.11.MFC.Redist.X64.base.vsix
   type: Vsix
-  version: 14.29.30139
+  version: 14.29.30153
 - id: Microsoft.VisualCpp.MFC.Redist.X86
   payloads:
   - fileName: Microsoft.VisualCpp.MFC.Redist.X86.vsix
-    sha256: a98851836210e7dd4ac1d114f7ae62364a8d896add38a6176f3aef5192c0e593
-    size: 1072
-    url: https://download.visualstudio.microsoft.com/download/pr/ac03a894-39e2-42c1-ba49-86d7028ce0e1/a98851836210e7dd4ac1d114f7ae62364a8d896add38a6176f3aef5192c0e593/Microsoft.VisualCpp.MFC.Redist.X86.vsix
+    sha256: 8a288baeea2aedd94d4b251d4ca922673b5b8b78db6f180a78abe62d3d43ee16
+    size: 1073
+    url: https://download.visualstudio.microsoft.com/download/pr/ed573b12-f211-4911-834c-c3e3a87d7e58/8a288baeea2aedd94d4b251d4ca922673b5b8b78db6f180a78abe62d3d43ee16/Microsoft.VisualCpp.MFC.Redist.X86.vsix
   type: Vsix
-  version: 14.29.30139
+  version: 14.29.30153
 - id: Microsoft.VC.14.29.16.11.MFC.Redist.X86.base
   payloads:
   - fileName: Microsoft.VC.14.29.16.11.MFC.Redist.X86.base.vsix
-    sha256: b446b6da5c3d779c23106131c6c22bef252c5204913c47a3196967e43ec32e6e
-    size: 13252241
-    url: https://download.visualstudio.microsoft.com/download/pr/ac03a894-39e2-42c1-ba49-86d7028ce0e1/b446b6da5c3d779c23106131c6c22bef252c5204913c47a3196967e43ec32e6e/Microsoft.VC.14.29.16.11.MFC.Redist.X86.base.vsix
+    sha256: ef9b33522b54a914a7f0cb50d05843f42cd66f8457d9ba4059e008129de33b74
+    size: 13272352
+    url: https://download.visualstudio.microsoft.com/download/pr/ed573b12-f211-4911-834c-c3e3a87d7e58/ef9b33522b54a914a7f0cb50d05843f42cd66f8457d9ba4059e008129de33b74/Microsoft.VC.14.29.16.11.MFC.Redist.X86.base.vsix
   type: Vsix
-  version: 14.29.30139
+  version: 14.29.30153
 - id: Microsoft.VisualCpp.MFC.Source
   payloads:
   - fileName: Microsoft.VisualCpp.MFC.Source.vsix
@@ -693,19 +693,19 @@
 - id: Microsoft.VisualCpp.MFC.Redist.ARM64
   payloads:
   - fileName: Microsoft.VisualCpp.MFC.Redist.ARM64.vsix
-    sha256: eafa1422310ebeb899e7b7fb4c6d4b84633b60eb81e67c09e86c1c94f9211aec
-    size: 1074
-    url: https://download.visualstudio.microsoft.com/download/pr/ac03a894-39e2-42c1-ba49-86d7028ce0e1/eafa1422310ebeb899e7b7fb4c6d4b84633b60eb81e67c09e86c1c94f9211aec/Microsoft.VisualCpp.MFC.Redist.ARM64.vsix
+    sha256: 10414c0a3c96777dcfbfca4461c448733029eb55d8e224b00e70bdac0d84b1c6
+    size: 1075
+    url: https://download.visualstudio.microsoft.com/download/pr/ed573b12-f211-4911-834c-c3e3a87d7e58/10414c0a3c96777dcfbfca4461c448733029eb55d8e224b00e70bdac0d84b1c6/Microsoft.VisualCpp.MFC.Redist.ARM64.vsix
   type: Vsix
-  version: 14.29.30139
+  version: 14.29.30153
 - id: Microsoft.VC.14.29.16.11.MFC.Redist.ARM64.base
   payloads:
   - fileName: Microsoft.VC.14.29.16.11.MFC.Redist.ARM64.base.vsix
-    sha256: b9358bd2949634dba1b31854dd5a71701d40556942ff8518e6b4c187573d83dd
-    size: 22867567
-    url: https://download.visualstudio.microsoft.com/download/pr/ac03a894-39e2-42c1-ba49-86d7028ce0e1/b9358bd2949634dba1b31854dd5a71701d40556942ff8518e6b4c187573d83dd/Microsoft.VC.14.29.16.11.MFC.Redist.ARM64.base.vsix
+    sha256: 906929e3d2ccd1d7747cd3b93cbe65ad854ad804a9006c680e4e04cbf960735f
+    size: 22867984
+    url: https://download.visualstudio.microsoft.com/download/pr/ed573b12-f211-4911-834c-c3e3a87d7e58/906929e3d2ccd1d7747cd3b93cbe65ad854ad804a9006c680e4e04cbf960735f/Microsoft.VC.14.29.16.11.MFC.Redist.ARM64.base.vsix
   type: Vsix
-  version: 14.29.30139
+  version: 14.29.30153
 - id: Win10SDK_10.0.19041
   payloads:
   - fileName: Installers\e680f23450a21a27b2077dbdc08ca430.cab
