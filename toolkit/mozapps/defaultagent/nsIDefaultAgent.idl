@@ -66,6 +66,13 @@ interface nsIDefaultAgent : nsISupports
   void doTask(in AString aUniqueToken, in boolean aForce);
 
   /**
+  * Checks that the main app ran recently.
+  *
+  * @return {boolean} true if the app ran recently.
+  */
+  boolean AppRanRecently();
+
+  /**
   * Returns a string for the default browser if known, binned to known browsers.
   *
   * @return {AString}

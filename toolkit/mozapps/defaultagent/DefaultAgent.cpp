@@ -360,6 +360,13 @@ DefaultAgent::DoTask(const nsAString& aUniqueToken, const bool aForce) {
 }
 
 NS_IMETHODIMP
+DefaultAgent::AppRanRecently(bool* aRanRecently) {
+  bool ranRecently = false;
+  *aRanRecently = CheckIfAppRanRecently(&ranRecently) && ranRecently;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 DefaultAgent::GetDefaultBrowser(nsAString& aDefaultBrowser) {
   Browser browser = default_agent::GetDefaultBrowser();
   aDefaultBrowser = NS_ConvertUTF8toUTF16(GetStringForBrowser(browser));
