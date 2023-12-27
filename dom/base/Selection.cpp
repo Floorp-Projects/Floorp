@@ -3747,6 +3747,8 @@ void Selection::Modify(const nsAString& aAlter, const nsAString& aDirection,
       GetPrimaryFrameForCaretAtFocusNode(visual);
   if (frameForFocus.mFrame) {
     if (visual) {
+      // FYI: This was done during a call of GetPrimaryFrameForCaretAtFocusNode.
+      // Therefore, this may not be intended by the original author.
       mFrameSelection->SetHint(frameForFocus.mHint);
     }
     mozilla::intl::BidiDirection paraDir =

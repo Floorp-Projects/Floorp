@@ -907,13 +907,27 @@ class nsFrameSelection final {
                                         CaretMovementStyle aMovementStyle);
 
   /**
-   * PeekOffsetForCaretMove() only peek offset for caret move.  I.e., won't
-   * change selection ranges nor bidi information.
+   * PeekOffsetForCaretMove() only peek offset for caret move from the focus
+   * point of the normal selection.  I.e., won't change selection ranges nor
+   * bidi information.
    */
   mozilla::Result<mozilla::PeekOffsetStruct, nsresult> PeekOffsetForCaretMove(
       nsDirection aDirection, bool aContinueSelection,
       const nsSelectionAmount aAmount, CaretMovementStyle aMovementStyle,
       const nsPoint& aDesiredCaretPos) const;
+
+  /**
+   * PeekOffsetForCaretMove() only peek offset for caret move from the specified
+   * point of the normal selection.  I.e., won't change selection ranges nor
+   * bidi information.
+   */
+  static mozilla::Result<mozilla::PeekOffsetStruct, nsresult>
+  PeekOffsetForCaretMove(nsIContent* aContent, uint32_t aOffset,
+                         nsDirection aDirection, CaretAssociationHint aHint,
+                         mozilla::intl::BidiEmbeddingLevel aCaretBidiLevel,
+                         const nsSelectionAmount aAmount,
+                         const nsPoint& aDesiredCaretPos,
+                         mozilla::PeekOffsetOptions aOptions);
 
   /**
    * CreateRangeExtendedToSomewhere() is common method to implement
