@@ -290,12 +290,14 @@ class CanvasTranslator final : public gfx::InlineTranslator,
 
   void BlockCanvas();
 
-  TextureData* CreateTextureData(TextureType aTextureType,
-                                 gfx::BackendType aBackendType,
-                                 const gfx::IntSize& aSize,
-                                 gfx::SurfaceFormat aFormat,
-                                 bool aClear = false);
+  UniquePtr<TextureData> CreateTextureData(const gfx::IntSize& aSize,
+                                           gfx::SurfaceFormat aFormat,
+                                           bool aClear);
 
+  void EnsureRemoteTextureOwner(RemoteTextureOwnerId aOwnerId);
+
+  UniquePtr<TextureData> CreateOrRecycleTextureData(const gfx::IntSize& aSize,
+                                                    gfx::SurfaceFormat aFormat);
   void ClearTextureInfo();
 
   bool HandleExtensionEvent(int32_t aType);
