@@ -740,6 +740,10 @@ class nsFrameSelection final {
   nsPrevNextBidiLevels GetPrevNextBidiLevels(nsIContent* aNode,
                                              uint32_t aContentOffset,
                                              bool aJumpLines) const;
+  static nsPrevNextBidiLevels GetPrevNextBidiLevels(nsIContent* aNode,
+                                                    uint32_t aContentOffset,
+                                                    CaretAssociationHint aHint,
+                                                    bool aJumpLines);
 
   /**
    * GetFrameFromLevel will scan in a given direction
@@ -750,11 +754,10 @@ class nsFrameSelection final {
    * @param aFrameIn is the frame to start from
    * @param aDirection is the direction to scan
    * @param aBidiLevel is the level to search for
-   * @param aFrameOut will hold the frame returned
    */
-  nsresult GetFrameFromLevel(nsIFrame* aFrameIn, nsDirection aDirection,
-                             mozilla::intl::BidiEmbeddingLevel aBidiLevel,
-                             nsIFrame** aFrameOut) const;
+  static mozilla::Result<nsIFrame*, nsresult> GetFrameFromLevel(
+      nsIFrame* aFrameIn, nsDirection aDirection,
+      mozilla::intl::BidiEmbeddingLevel aBidiLevel);
 
   /**
    * MaintainSelection will track the normal selection as being "sticky".
@@ -852,11 +855,6 @@ class nsFrameSelection final {
    * @param aContentOffset is the new caret position, as an offset into aNode
    */
   void BidiLevelFromClick(nsIContent* aNewFocus, uint32_t aContentOffset);
-
-  static nsPrevNextBidiLevels GetPrevNextBidiLevels(nsIContent* aNode,
-                                                    uint32_t aContentOffset,
-                                                    CaretAssociationHint aHint,
-                                                    bool aJumpLines);
 
   /**
    * @param aReasons potentially multiple of the reasons defined in

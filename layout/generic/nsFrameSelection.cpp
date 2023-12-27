@@ -1012,37 +1012,39 @@ nsPrevNextBidiLevels nsFrameSelection::GetPrevNextBidiLevels(
   return levels;
 }
 
-nsresult nsFrameSelection::GetFrameFromLevel(
+// static
+Result<nsIFrame*, nsresult> nsFrameSelection::GetFrameFromLevel(
     nsIFrame* aFrameIn, nsDirection aDirection,
-    mozilla::intl::BidiEmbeddingLevel aBidiLevel, nsIFrame** aFrameOut) const {
-  NS_ENSURE_STATE(mPresShell);
-
+    mozilla::intl::BidiEmbeddingLevel aBidiLevel) {
   if (!aFrameIn) {
-    return NS_ERROR_NULL_POINTER;
+    return Err(NS_ERROR_NULL_POINTER);
   }
 
   mozilla::intl::BidiEmbeddingLevel foundLevel =
       mozilla::intl::BidiEmbeddingLevel::LTR();
-  nsIFrame* foundFrame = aFrameIn;
 
-  nsFrameIterator frameIterator(mPresShell->GetPresContext(), aFrameIn,
+  nsFrameIterator frameIterator(aFrameIn->PresContext(), aFrameIn,
                                 nsFrameIterator::Type::Leaf,
                                 false,  // aVisual
                                 false,  // aLockInScrollView
                                 false,  // aFollowOOFs
                                 false   // aSkipPopupChecks
   );
+
+  nsIFrame* foundFrame = aFrameIn;
+  nsIFrame* theFrame = nullptr;
   do {
-    *aFrameOut = foundFrame;
+    theFrame = foundFrame;
     foundFrame = frameIterator.Traverse(aDirection == eDirNext);
     if (!foundFrame) {
-      return NS_ERROR_FAILURE;
+      return Err(NS_ERROR_FAILURE);
     }
     foundLevel = foundFrame->GetEmbeddingLevel();
 
   } while (foundLevel > aBidiLevel);
 
-  return NS_OK;
+  MOZ_ASSERT(theFrame);
+  return theFrame;
 }
 
 nsresult nsFrameSelection::MaintainSelection(nsSelectionAmount aAmount) {

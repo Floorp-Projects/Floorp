@@ -1598,11 +1598,17 @@ nsIFrame* Selection::GetPrimaryOrCaretFrameForNodeOffset(nsIContent* aContent,
     mozilla::intl::BidiEmbeddingLevel caretBidiLevel =
         mFrameSelection->GetCaretBidiLevel();
 
-    return nsCaret::GetCaretFrameForNodeOffset(
+    const nsCaret::CaretFrameData result = nsCaret::GetCaretFrameForNodeOffset(
         mFrameSelection, aContent, aOffset, hint, caretBidiLevel,
         aContent && aContent->IsEditable() ? nsCaret::ForceEditableRegion::Yes
-                                           : nsCaret::ForceEditableRegion::No,
-        /* aReturnUnadjustedFrame = */ nullptr, aOffsetUsed);
+                                           : nsCaret::ForceEditableRegion::No);
+    if (result.mFrame) {
+      mFrameSelection->SetHint(result.mHint);
+    }
+    if (aOffsetUsed) {
+      *aOffsetUsed = result.mOffsetInFrameContent;
+    }
+    return result.mFrame;
   }
 
   return nsFrameSelection::GetFrameForNodeOffset(aContent, aOffset, hint,
