@@ -27,8 +27,11 @@ struct DefaultBrowserInfo {
 using DefaultBrowserResult = mozilla::WindowsErrorResult<DefaultBrowserInfo>;
 
 DefaultBrowserResult GetDefaultBrowserInfo();
+Browser GetDefaultBrowser();
+Browser GetReplacePreviousDefaultBrowser(Browser currentBrowser);
 
 std::string GetStringForBrowser(Browser browser);
+Browser GetBrowserFromString(const std::string& browserString);
 void MaybeMigrateCurrentDefault();
 
 }  // namespace mozilla::default_agent

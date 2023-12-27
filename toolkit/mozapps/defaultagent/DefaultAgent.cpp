@@ -360,6 +360,33 @@ DefaultAgent::DoTask(const nsAString& aUniqueToken, const bool aForce) {
 }
 
 NS_IMETHODIMP
+DefaultAgent::GetDefaultBrowser(nsAString& aDefaultBrowser) {
+  Browser browser = default_agent::GetDefaultBrowser();
+  aDefaultBrowser = NS_ConvertUTF8toUTF16(GetStringForBrowser(browser));
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+DefaultAgent::GetReplacePreviousDefaultBrowser(
+    const nsAString& aDefaultBrowser, nsAString& aPreviousDefaultBrowser) {
+  Browser browser =
+      GetBrowserFromString(std::string(NS_ConvertUTF16toUTF8(aDefaultBrowser)));
+  Browser previousBrowser =
+      default_agent::GetReplacePreviousDefaultBrowser(browser);
+  aPreviousDefaultBrowser =
+      NS_ConvertUTF8toUTF16(GetStringForBrowser(previousBrowser));
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+DefaultAgent::GetDefaultPdfHandler(nsAString& aDefaultPdfHandler) {
+  PDFHandler pdf = default_agent::GetDefaultPdfInfo()
+                       .unwrapOr({PDFHandler::Error})
+                       .currentDefaultPdf;
+  aDefaultPdfHandler = NS_ConvertUTF8toUTF16(GetStringForPDFHandler(pdf));
+  return NS_OK;
+}
+
 DefaultAgent::SetDefaultBrowserUserChoice(
     const nsAString& aAumid, const nsTArray<nsString>& aExtraFileExtensions) {
   return default_agent::SetDefaultBrowserUserChoice(
