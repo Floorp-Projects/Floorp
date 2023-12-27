@@ -35,6 +35,7 @@
 #include "mozilla/PresShell.h"
 #include "mozilla/PresShellInlines.h"
 #include "mozilla/ResultExtensions.h"
+#include "mozilla/SelectionMovementUtils.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/StaticAnalysisFunctions.h"
 #include "mozilla/StaticPrefs_layout.h"
@@ -4939,15 +4940,15 @@ nsresult nsIFrame::SelectByTypeAtPoint(nsPresContext* aPresContext,
     return NS_ERROR_FAILURE;
   }
 
-  int32_t offset;
-  nsIFrame* frame = nsFrameSelection::GetFrameForNodeOffset(
+  uint32_t offset;
+  nsIFrame* frame = SelectionMovementUtils::GetFrameForNodeOffset(
       offsets.content, offsets.offset, offsets.associate, &offset);
   if (!frame) {
     return NS_ERROR_FAILURE;
   }
-  return frame->PeekBackwardAndForward(aBeginAmountType, aEndAmountType, offset,
-                                       aBeginAmountType != eSelectWord,
-                                       aSelectFlags);
+  return frame->PeekBackwardAndForward(
+      aBeginAmountType, aEndAmountType, static_cast<int32_t>(offset),
+      aBeginAmountType != eSelectWord, aSelectFlags);
 }
 
 /**

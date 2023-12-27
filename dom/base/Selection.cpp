@@ -34,6 +34,7 @@
 #include "mozilla/PresShell.h"
 #include "mozilla/RangeBoundary.h"
 #include "mozilla/RangeUtils.h"
+#include "mozilla/SelectionMovementUtils.h"
 #include "mozilla/StackWalk.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/Telemetry.h"
@@ -1536,16 +1537,15 @@ nsresult Selection::StyledRanges::GetIndicesForInterval(
 nsIFrame* Selection::GetPrimaryFrameForAnchorNode() const {
   MOZ_ASSERT(mSelectionType == SelectionType::eNormal);
 
-  int32_t frameOffset = 0;
   nsCOMPtr<nsIContent> content = do_QueryInterface(GetAnchorNode());
   if (content && mFrameSelection) {
-    return nsFrameSelection::GetFrameForNodeOffset(
-        content, AnchorOffset(), mFrameSelection->GetHint(), &frameOffset);
+    return SelectionMovementUtils::GetFrameForNodeOffset(
+        content, AnchorOffset(), mFrameSelection->GetHint());
   }
   return nullptr;
 }
 
-Selection::PrimaryFrameData Selection::GetPrimaryFrameForCaretAtFocusNode(
+PrimaryFrameData Selection::GetPrimaryFrameForCaretAtFocusNode(
     bool aVisual) const {
   nsIContent* content = nsIContent::FromNodeOrNull(GetFocusNode());
   if (!content || !mFrameSelection || !mFrameSelection->GetPresShell()) {
@@ -1558,61 +1558,8 @@ Selection::PrimaryFrameData Selection::GetPrimaryFrameForCaretAtFocusNode(
   CaretAssociationHint hint = mFrameSelection->GetHint();
   intl::BidiEmbeddingLevel caretBidiLevel =
       mFrameSelection->GetCaretBidiLevel();
-  return Selection::GetPrimaryFrameForCaret(content, FocusOffset(), aVisual,
-                                            hint, caretBidiLevel);
-}
-
-// static
-Selection::PrimaryFrameData Selection::GetPrimaryFrameForCaret(
-    nsIContent* aContent, uint32_t aOffset, bool aVisual,
-    CaretAssociationHint aHint, intl::BidiEmbeddingLevel aCaretBidiLevel) {
-  MOZ_ASSERT(aContent);
-
-  {
-    const PrimaryFrameData result = GetPrimaryOrCaretFrameForNodeOffset(
-        aContent, aOffset, aVisual, aHint, aCaretBidiLevel);
-    if (result.mFrame) {
-      return result;
-    }
-  }
-
-  // If aContent is whitespace only, we promote focus node to parent because
-  // whitespace only node might have no frame.
-
-  if (!aContent->TextIsOnlyWhitespace()) {
-    return {};
-  }
-
-  nsIContent* parent = aContent->GetParent();
-  if (NS_WARN_IF(!parent)) {
-    return {};
-  }
-  const Maybe<uint32_t> offset = parent->ComputeIndexOf(aContent);
-  if (NS_WARN_IF(offset.isNothing())) {
-    return {};
-  }
-  return GetPrimaryOrCaretFrameForNodeOffset(parent, *offset, aVisual, aHint,
-                                             aCaretBidiLevel);
-}
-
-// static
-Selection::PrimaryFrameData Selection::GetPrimaryOrCaretFrameForNodeOffset(
-    nsIContent* aContent, uint32_t aOffset, bool aVisual,
-    CaretAssociationHint aHint, intl::BidiEmbeddingLevel aCaretBidiLevel) {
-  if (aVisual) {
-    const nsCaret::CaretFrameData result = nsCaret::GetCaretFrameForNodeOffset(
-        nullptr, aContent, static_cast<int32_t>(aOffset), aHint,
-        aCaretBidiLevel,
-        aContent && aContent->IsEditable() ? nsCaret::ForceEditableRegion::Yes
-                                           : nsCaret::ForceEditableRegion::No);
-    return {result.mFrame, static_cast<uint32_t>(result.mOffsetInFrameContent),
-            result.mHint};
-  }
-
-  int32_t offset = 0;
-  nsIFrame* theFrame = nsFrameSelection::GetFrameForNodeOffset(
-      aContent, static_cast<int32_t>(aOffset), aHint, &offset);
-  return {theFrame, static_cast<uint32_t>(offset), aHint};
+  return SelectionMovementUtils::GetPrimaryFrameForCaret(
+      content, FocusOffset(), aVisual, hint, caretBidiLevel);
 }
 
 void Selection::SelectFramesOf(nsIContent* aContent, bool aSelected) const {
@@ -3235,12 +3182,12 @@ nsIFrame* Selection::GetSelectionEndPointGeometry(SelectionRegion aRegion,
 
   nsCOMPtr<nsIContent> content = do_QueryInterface(node);
   NS_ENSURE_TRUE(content.get(), nullptr);
-  int32_t frameOffset = 0;
-  frame = nsFrameSelection::GetFrameForNodeOffset(
+  uint32_t frameOffset = 0;
+  frame = SelectionMovementUtils::GetFrameForNodeOffset(
       content, nodeOffset, mFrameSelection->GetHint(), &frameOffset);
   if (!frame) return nullptr;
 
-  nsFrameSelection::AdjustFrameForLineStart(frame, frameOffset);
+  SelectionMovementUtils::AdjustFrameForLineStart(frame, frameOffset);
 
   // Figure out what node type we have, then get the
   // appropriate rect for its nodeOffset.
@@ -3249,7 +3196,7 @@ nsIFrame* Selection::GetSelectionEndPointGeometry(SelectionRegion aRegion,
   nsPoint pt(0, 0);
   if (isText) {
     nsIFrame* childFrame = nullptr;
-    frameOffset = 0;
+    int32_t frameOffset = 0;
     nsresult rv = frame->GetChildFrameContainingOffset(
         nodeOffset, mFrameSelection->GetHint() == CaretAssociationHint::After,
         &frameOffset, &childFrame);

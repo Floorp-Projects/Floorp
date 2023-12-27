@@ -153,6 +153,7 @@ EXPORTS.mozilla += [
     "ScrollPositionUpdate.h",
     "ScrollSnapInfo.h",
     "ScrollSnapTargetId.h",
+    "SelectionMovementUtils.h",
     "ViewportFrame.h",
     "WritingModes.h",
 ]
@@ -227,6 +228,7 @@ UNIFIED_SOURCES += [
     "ScrollSnap.cpp",
     "ScrollSnapInfo.cpp",
     "ScrollVelocityQueue.cpp",
+    "SelectionMovementUtils.cpp",
     "StickyScrollContainer.cpp",
     "ViewportFrame.cpp",
     "WBRFrame.cpp",
