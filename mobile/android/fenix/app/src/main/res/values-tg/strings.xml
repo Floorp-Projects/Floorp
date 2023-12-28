@@ -414,7 +414,7 @@
     <string name="preferences_rate">Баҳодиҳӣ дар Google Play</string>
     <!-- Preference linking to about page for Fenix
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="preferences_about">Дар бораи %1$s</string>
+    <string name="preferences_about">Дар бораи «%1$s»</string>
 
     <!-- Preference for settings related to changing the default browser -->
     <string name="preferences_set_as_default_browser">Гузоштан ҳамчун браузери пешфарз</string>
@@ -1623,7 +1623,7 @@
     back from ETP details (Ex: Tracking content) -->
     <string name="etp_back_button_content_description">Ба қафо гузаштан</string>
     <!-- About page link text to open what's new link -->
-    <string name="about_whats_new">Дар %s чӣ нав аст</string>
+    <string name="about_whats_new">Дар «%s» чӣ нав аст</string>
     <!-- Open source licenses page title
     The first parameter is the app name -->
     <string name="open_source_licenses_title">%s | Китобхонаҳои OSS</string>

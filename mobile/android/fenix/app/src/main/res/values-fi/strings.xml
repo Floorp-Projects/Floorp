@@ -2174,6 +2174,8 @@
     <string name="review_quality_check_adjusted_rating_title">Oikaistu arvosana</string>
     <!-- Description for a product's adjusted star rating. The text presents that the product's reviews which were evaluated as unreliable were removed from the adjusted rating. -->
     <string name="review_quality_check_adjusted_rating_description" moz:RemovedIn="122" tools:ignore="UnusedResources">Epäluotettavat arvostelut poistettu</string>
+    <!-- Description for a product's adjusted star rating. The text presents that the product's reviews which were evaluated as unreliable were removed from the adjusted rating. -->
+    <string name="review_quality_check_adjusted_rating_description_2">Luotettavien arvostelujen pohjalta</string>
     <!-- Title for list of highlights from a product's review emphasizing a product's important traits. -->
     <string name="review_quality_check_highlights_title">Kohokohdat viimeaikaisista arvosteluista</string>
     <!-- Title for section explaining how we analyze the reliability of a product's reviews. -->
@@ -2317,17 +2319,29 @@
     <!-- Title of the automatic translation preference screen that will appear on the toolbar.-->
     <string name="automatic_translation_toolbar_title_preference">Automaattinen käännös</string>
 
+    <!-- Screen header presenting the automatic translation preference feature. It will appear under the toolbar. -->
+    <string name="automatic_translation_header_preference">Valitse kieli hallitaksesi &quot;käännä aina&quot;- ja &quot;älä käännä koskaan&quot;-asetuksia.</string>
+
     <!-- Automatic translation options preference screen -->
     <!-- Preference option for offering to translate. Radio button title text.-->
     <string name="automatic_translation_option_offer_to_translate_title_preference">Tarjoa käännöstä (oletus)</string>
+    <!-- Preference option for offering to translate. Radio button summary text. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="automatic_translation_option_offer_to_translate_summary_preference">%1$s tarjoaa tällä kielellä olevien sivustojen kääntämistä.</string>
     <!-- Preference option for always translate. Radio button title text. -->
     <string name="automatic_translation_option_always_translate_title_preference">Käännä aina</string>
+    <!-- Preference option for always translate. Radio button summary text. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="automatic_translation_option_always_translate_summary_preference">%1$s kääntää tämän kielen automaattisesti, kun sivu latautuu.</string>
     <!-- Preference option for never translate. Radio button title text.-->
     <string name="automatic_translation_option_never_translate_title_preference">Älä käännä koskaan</string>
 
+    <!-- Preference option for never translate. Radio button summary text. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="automatic_translation_option_never_translate_summary_preference">%1$s ei koskaan tarjoa tällä kielellä olevien sivustojen kääntämistä.</string>
+
     <!-- Never translate site preference screen -->
     <!-- Title of the never translate site preference screen that will appear on the toolbar.-->
-    <string name="never_translate_site_toolbar_title_preference">Älä koskaan käännä näitä sivustoja</string>
+    <string name="never_translate_site_toolbar_title_preference">Älä käännä koskaan näitä sivustoja</string>
+    <!-- Screen header presenting the never translate site preference feature. It will appear under the toolbar. -->
+    <string name="never_translate_site_header_preference">Uuden sivuston lisääminen: Käy sivustolla ja valitse käännösvalikosta “Älä käännä koskaan tätä sivustoa”.</string>
     <!-- Content description (not visible, for screen readers etc.): For a never-translated site list item that is selected.
              The first parameter is web site url (for example:"wikipedia.com") -->
     <string name="never_translate_site_item_list_content_description_preference">Poista %1$s</string>
