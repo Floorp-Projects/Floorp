@@ -6,6 +6,7 @@
 #ifndef _GFXALPHARECOVERY_H_
 #define _GFXALPHARECOVERY_H_
 
+#include "mozilla/SSE.h"
 #include "gfxTypes.h"
 #include "mozilla/gfx/Rect.h"
 
@@ -32,12 +33,33 @@ class gfxAlphaRecovery {
   static bool RecoverAlpha(gfxImageSurface* blackSurface,
                            const gfxImageSurface* whiteSurface);
 
-  /* This does the same as the previous function, but uses SIMD
-   * optimizations. Usually this should not be called directly.
+#ifdef MOZILLA_MAY_SUPPORT_SSE2
+  /* This does the same as the previous function, but uses SSE2
+   * optimizations. Usually this should not be called directly.  Be sure to
+   * check mozilla::supports_sse2() before calling this function.
    */
-  template <class Arch>
-  static bool RecoverAlphaGeneric(gfxImageSurface* blackSurface,
-                                  const gfxImageSurface* whiteSurface);
+  static bool RecoverAlphaSSE2(gfxImageSurface* blackSurface,
+                               const gfxImageSurface* whiteSurface);
+
+  /**
+   * A common use-case for alpha recovery is to paint into a
+   * temporary "white image", then paint onto a subrect of the
+   * surface, the "black image", into which alpha-recovered pixels
+   * are eventually to be written.  This function returns a rect
+   * aligned so that recovering alpha for that rect will hit SIMD
+   * fast-paths, if possible.  It's not always possible to align
+   * |aRect| so that fast-paths will be taken.
+   *
+   * The returned rect is always a superset of |aRect|.
+   */
+  static mozilla::gfx::IntRect AlignRectForSubimageRecovery(
+      const mozilla::gfx::IntRect& aRect, gfxImageSurface* aSurface);
+#else
+  static mozilla::gfx::IntRect AlignRectForSubimageRecovery(
+      const mozilla::gfx::IntRect& aRect, gfxImageSurface*) {
+    return aRect;
+  }
+#endif
 
   /** from cairo-xlib-utils.c, modified */
   /**
@@ -59,7 +81,7 @@ class gfxAlphaRecovery {
    * bits are likely to be the most accurate.
    *
    * This function needs to be in the header file since it's used by both
-   * gfxRecoverAlpha.cpp and gfxRecoverAlphaGeneric.hpp.
+   * gfxRecoverAlpha.cpp and gfxRecoverAlphaSSE2.cpp.
    */
 
   static inline uint32_t RecoverPixel(uint32_t black, uint32_t white) {
