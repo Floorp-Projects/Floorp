@@ -111,7 +111,7 @@ absl::optional<H265SpsParser::SpsState> H265SpsParser::ParseSps(
 }
 
 bool H265SpsParser::ParseScalingListData(BitstreamReader& reader) {
-  int32_t scaling_list_dc_coef_minus8[kMaxNumSizeIds][kMaxNumMatrixIds];
+  int32_t scaling_list_dc_coef_minus8[kMaxNumSizeIds][kMaxNumMatrixIds] = {};
   for (int size_id = 0; size_id < kMaxNumSizeIds; size_id++) {
     for (int matrix_id = 0; matrix_id < kMaxNumMatrixIds;
          matrix_id += (size_id == 3) ? 3 : 1) {
@@ -182,8 +182,8 @@ H265SpsParser::ParseShortTermRefPicSet(
         short_term_ref_pic_set[ref_rps_idx].num_delta_pocs;
     IN_RANGE_OR_RETURN_NULL(num_delta_pocs, 0, kMaxShortTermRefPicSets);
     const ShortTermRefPicSet& ref_set = short_term_ref_pic_set[ref_rps_idx];
-    bool used_by_curr_pic_flag[kMaxShortTermRefPicSets];
-    bool use_delta_flag[kMaxShortTermRefPicSets];
+    bool used_by_curr_pic_flag[kMaxShortTermRefPicSets] = {};
+    bool use_delta_flag[kMaxShortTermRefPicSets] = {};
     // 7.4.8 - use_delta_flag defaults to 1 if not present.
     std::fill_n(use_delta_flag, kMaxShortTermRefPicSets, true);
 
@@ -266,7 +266,7 @@ H265SpsParser::ParseShortTermRefPicSet(
 
     for (uint32_t i = 0; i < st_ref_pic_set.num_negative_pics; i++) {
       // delta_poc_s0_minus1: ue(v)
-      int delta_poc_s0_minus1;
+      int delta_poc_s0_minus1 = 0;
       delta_poc_s0_minus1 = reader.ReadExponentialGolomb();
       IN_RANGE_OR_RETURN_NULL(delta_poc_s0_minus1, 0, 0x7FFF);
       if (i == 0) {
@@ -281,7 +281,7 @@ H265SpsParser::ParseShortTermRefPicSet(
 
     for (uint32_t i = 0; i < st_ref_pic_set.num_positive_pics; i++) {
       // delta_poc_s1_minus1: ue(v)
-      int delta_poc_s1_minus1;
+      int delta_poc_s1_minus1 = 0;
       delta_poc_s1_minus1 = reader.ReadExponentialGolomb();
       IN_RANGE_OR_RETURN_NULL(delta_poc_s1_minus1, 0, 0x7FFF);
       if (i == 0) {
@@ -319,10 +319,8 @@ H265SpsParser::ParseProfileTierLevel(bool profile_present,
     reader.ConsumeBits(1);
     pf_tier_level.general_profile_idc = reader.ReadBits(5);
     IN_RANGE_OR_RETURN_NULL(pf_tier_level.general_profile_idc, 0, 11);
-    uint16_t general_profile_compatibility_flag_high16;
-    uint16_t general_profile_compatibility_flag_low16;
-    general_profile_compatibility_flag_high16 = reader.ReadBits(16);
-    general_profile_compatibility_flag_low16 = reader.ReadBits(16);
+    uint16_t general_profile_compatibility_flag_high16 = reader.ReadBits(16);
+    uint16_t general_profile_compatibility_flag_low16 = reader.ReadBits(16);
     pf_tier_level.general_profile_compatibility_flags =
         (general_profile_compatibility_flag_high16 << 16) +
         general_profile_compatibility_flag_low16;
@@ -344,8 +342,8 @@ H265SpsParser::ParseProfileTierLevel(bool profile_present,
     reader.ConsumeBits(1);
   }
   pf_tier_level.general_level_idc = reader.ReadBits(8);
-  bool sub_layer_profile_present_flag[8];
-  bool sub_layer_level_present_flag[8];
+  bool sub_layer_profile_present_flag[8] = {};
+  bool sub_layer_level_present_flag[8] = {};
   for (int i = 0; i < max_num_sub_layers_minus1; ++i) {
     sub_layer_profile_present_flag[i] = reader.ReadBits(1);
     sub_layer_level_present_flag[i] = reader.ReadBits(1);
@@ -443,7 +441,7 @@ absl::optional<H265SpsParser::SpsState> H265SpsParser::ParseSpsInternal(
 
   // Equation A-2: Calculate max_dpb_size.
   uint32_t max_luma_ps = GetMaxLumaPs(profile_tier_level->general_level_idc);
-  uint32_t max_dpb_size;
+  uint32_t max_dpb_size = 0;
   uint32_t pic_size_in_samples_y = pic_height_in_luma_samples;
   pic_size_in_samples_y *= pic_width_in_luma_samples;
   size_t max_dpb_pic_buf =
@@ -503,7 +501,7 @@ absl::optional<H265SpsParser::SpsState> H265SpsParser::ParseSpsInternal(
   uint32_t sps_sub_layer_ordering_info_present_flag = 0;
   // sps_sub_layer_ordering_info_present_flag: u(1)
   sps_sub_layer_ordering_info_present_flag = reader.Read<bool>();
-  uint32_t sps_max_num_reorder_pics[kMaxSubLayers];
+  uint32_t sps_max_num_reorder_pics[kMaxSubLayers] = {};
   for (uint32_t i = (sps_sub_layer_ordering_info_present_flag != 0)
                         ? 0
                         : sps_max_sub_layers_minus1;
@@ -552,8 +550,8 @@ absl::optional<H265SpsParser::SpsState> H265SpsParser::ParseSpsInternal(
   // log2_min_luma_transform_block_size_minus2: ue(v)
   int log2_min_luma_transform_block_size_minus2 =
       reader.ReadExponentialGolomb();
-  TRUE_OR_RETURN(log2_min_luma_transform_block_size_minus2 <
-                 min_cb_log2_size_y - 2);
+  IN_RANGE_OR_RETURN_NULL(log2_min_luma_transform_block_size_minus2, 0,
+                          min_cb_log2_size_y - 3);
   int min_tb_log2_size_y = log2_min_luma_transform_block_size_minus2 + 2;
   // log2_diff_max_min_luma_transform_block_size: ue(v)
   int log2_diff_max_min_luma_transform_block_size =
