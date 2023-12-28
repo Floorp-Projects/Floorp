@@ -1,6 +1,42 @@
 {
   "data": [
     {
+      "schema": 1703537607315,
+      "derHash": "ctcW97tr0QVwT0K5UkkjUQ3LhbLYcMDpraWuuclpBRo=",
+      "subject": "CN=ePKI Root Certification Authority - G2,O=Chunghwa Telecom Co.\\, Ltd.,C=TW",
+      "subjectDN": "MGMxCzAJBgNVBAYTAlRXMSMwIQYDVQQKDBpDaHVuZ2h3YSBUZWxlY29tIENvLiwgTHRkLjEvMC0GA1UEAwwmZVBLSSBSb290IENlcnRpZmljYXRpb24gQXV0aG9yaXR5IC0gRzI=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "aff986340dcc592a5eacd96a6044c07f55438a9b0214921ea5306a0ea997fed9",
+        "size": 2804,
+        "filename": "tInMsiS5prgd0nTOr1IJwlKZjJp2r0jk9MUKByhGGCU=.pem",
+        "location": "security-state-staging/intermediates/1cd7753f-d18c-4864-8129-0ea1a5092f75.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "tInMsiS5prgd0nTOr1IJwlKZjJp2r0jk9MUKByhGGCU=",
+      "crlite_enrolled": false,
+      "id": "4e467304-4cae-4b24-8542-fa721e586cfb",
+      "last_modified": 1703537823229
+    },
+    {
+      "schema": 1703537607030,
+      "derHash": "aAfJcjXF7GCQJppLX+36tGmG5C9NZ9Lt3c9uRc8N+oA=",
+      "subject": "CN=HiPKI Root CA - G1,O=Chunghwa Telecom Co.\\, Ltd.,C=TW",
+      "subjectDN": "ME8xCzAJBgNVBAYTAlRXMSMwIQYDVQQKDBpDaHVuZ2h3YSBUZWxlY29tIENvLiwgTHRkLjEbMBkGA1UEAwwSSGlQS0kgUm9vdCBDQSAtIEcx",
+      "whitelist": false,
+      "attachment": {
+        "hash": "c94a4c47c3048f75024cf6c844a614b253f7ee3823a41c0e39e567effea001fc",
+        "size": 2328,
+        "filename": "ecqvU0fm5KlMjniphJb8dAIPgJ7eE_Ig-rYQTI3tMp8=.pem",
+        "location": "security-state-staging/intermediates/24d59f73-321d-498a-8fa9-3f4111529687.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "ecqvU0fm5KlMjniphJb8dAIPgJ7eE/Ig+rYQTI3tMp8=",
+      "crlite_enrolled": false,
+      "id": "64de4f00-ad9d-48db-9d46-2c27c55f4337",
+      "last_modified": 1703537823226
+    },
+    {
       "schema": 1702979286308,
       "derHash": "hHQJ5jUm8WJ1OsSfdSGO+q+n1clK3pCVznLn9rbjrJk=",
       "subject": "CN=WE5,O=Google Trust Services,C=US",
@@ -29611,5 +29647,5 @@
       "last_modified": 1559865884636
     }
   ],
-  "timestamp": 1702979823409
+  "timestamp": 1703537823229
 }
