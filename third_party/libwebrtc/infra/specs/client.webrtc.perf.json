@@ -14,6 +14,7 @@
           ],
           "script": "//tools_webrtc/perf/process_perf_results.py"
         },
+        "name": "video_codec_perf_tests",
         "resultdb": {
           "enable": true,
           "has_native_resultdb_integration": true
@@ -47,6 +48,7 @@
           ],
           "script": "//tools_webrtc/perf/process_perf_results.py"
         },
+        "name": "webrtc_perf_tests",
         "resultdb": {
           "enable": true,
           "has_native_resultdb_integration": true
@@ -83,6 +85,7 @@
           ],
           "script": "//tools_webrtc/perf/process_perf_results.py"
         },
+        "name": "video_codec_perf_tests",
         "resultdb": {
           "enable": true,
           "has_native_resultdb_integration": true
@@ -116,6 +119,7 @@
           ],
           "script": "//tools_webrtc/perf/process_perf_results.py"
         },
+        "name": "webrtc_perf_tests",
         "resultdb": {
           "enable": true,
           "has_native_resultdb_integration": true
@@ -149,7 +153,6 @@
           "--test-arg=--undefok=test_launcher_summary_output",
           "--isolated-script-test-perf-output=${ISOLATED_OUTDIR}/perftest-output.pb"
         ],
-        "isolate_name": "video_codec_perf_tests",
         "merge": {
           "args": [
             "--test-suite",
@@ -174,6 +177,7 @@
           "idempotent": false,
           "io_timeout": 10800
         },
+        "test": "video_codec_perf_tests",
         "test_id_prefix": "ninja://modules/video_coding:video_codec_perf_tests/"
       },
       {
@@ -185,7 +189,6 @@
           "--isolated-script-test-perf-output=${ISOLATED_OUTDIR}/perftest-output.pb",
           "--nologs"
         ],
-        "isolate_name": "webrtc_perf_tests",
         "merge": {
           "args": [
             "--test-suite",
@@ -210,6 +213,7 @@
           "idempotent": false,
           "io_timeout": 10800
         },
+        "test": "webrtc_perf_tests",
         "test_id_prefix": "ninja://:webrtc_perf_tests/"
       }
     ]
@@ -220,7 +224,6 @@
         "args": [
           "--gtest_output=json:${ISOLATED_OUTDIR}/gtest_output.json"
         ],
-        "isolate_name": "video_codec_perf_tests",
         "merge": {
           "args": [
             "--test-suite",
@@ -244,6 +247,7 @@
           "idempotent": false,
           "io_timeout": 10800
         },
+        "test": "video_codec_perf_tests",
         "test_id_prefix": "ninja://modules/video_coding:video_codec_perf_tests/"
       },
       {
@@ -253,7 +257,6 @@
           "--gtest_output=json:${ISOLATED_OUTDIR}/gtest_output.json",
           "--nologs"
         ],
-        "isolate_name": "webrtc_perf_tests",
         "merge": {
           "args": [
             "--test-suite",
@@ -277,6 +280,7 @@
           "idempotent": false,
           "io_timeout": 10800
         },
+        "test": "webrtc_perf_tests",
         "test_id_prefix": "ninja://:webrtc_perf_tests/"
       }
     ]
@@ -287,7 +291,6 @@
         "args": [
           "--gtest_output=json:${ISOLATED_OUTDIR}/gtest_output.json"
         ],
-        "isolate_name": "video_codec_perf_tests",
         "merge": {
           "args": [
             "--test-suite",
@@ -312,6 +315,7 @@
           "idempotent": false,
           "io_timeout": 10800
         },
+        "test": "video_codec_perf_tests",
         "test_id_prefix": "ninja://modules/video_coding:video_codec_perf_tests/"
       },
       {
@@ -321,7 +325,6 @@
           "--gtest_output=json:${ISOLATED_OUTDIR}/gtest_output.json",
           "--nologs"
         ],
-        "isolate_name": "webrtc_perf_tests",
         "merge": {
           "args": [
             "--test-suite",
@@ -346,6 +349,7 @@
           "idempotent": false,
           "io_timeout": 10800
         },
+        "test": "webrtc_perf_tests",
         "test_id_prefix": "ninja://:webrtc_perf_tests/"
       }
     ]
@@ -356,7 +360,6 @@
         "args": [
           "--gtest_output=json:${ISOLATED_OUTDIR}/gtest_output.json"
         ],
-        "isolate_name": "video_codec_perf_tests",
         "merge": {
           "args": [
             "--test-suite",
@@ -381,6 +384,7 @@
           "idempotent": false,
           "io_timeout": 10800
         },
+        "test": "video_codec_perf_tests",
         "test_id_prefix": "ninja://modules/video_coding:video_codec_perf_tests/"
       },
       {
@@ -390,7 +394,6 @@
           "--gtest_output=json:${ISOLATED_OUTDIR}/gtest_output.json",
           "--nologs"
         ],
-        "isolate_name": "webrtc_perf_tests",
         "merge": {
           "args": [
             "--test-suite",
@@ -415,6 +418,7 @@
           "idempotent": false,
           "io_timeout": 10800
         },
+        "test": "webrtc_perf_tests",
         "test_id_prefix": "ninja://:webrtc_perf_tests/"
       }
     ]
@@ -425,7 +429,6 @@
         "args": [
           "--gtest_output=json:${ISOLATED_OUTDIR}/gtest_output.json"
         ],
-        "isolate_name": "video_codec_perf_tests",
         "merge": {
           "args": [
             "--test-suite",
@@ -449,6 +452,7 @@
           "idempotent": false,
           "io_timeout": 10800
         },
+        "test": "video_codec_perf_tests",
         "test_id_prefix": "ninja://modules/video_coding:video_codec_perf_tests/"
       },
       {
@@ -458,7 +462,6 @@
           "--gtest_output=json:${ISOLATED_OUTDIR}/gtest_output.json",
           "--nologs"
         ],
-        "isolate_name": "webrtc_perf_tests",
         "merge": {
           "args": [
             "--test-suite",
@@ -482,6 +485,7 @@
           "idempotent": false,
           "io_timeout": 10800
         },
+        "test": "webrtc_perf_tests",
         "test_id_prefix": "ninja://:webrtc_perf_tests/"
       }
     ]
