@@ -5460,7 +5460,7 @@ class nsDisplayOwnLayer : public nsDisplayWrapList {
   bool IsFixedPositionLayer() const;
   bool IsStickyPositionLayer() const;
   bool HasDynamicToolbar() const;
-  bool ShouldFixedAndStickyContentGetAnimationIds() const;
+  virtual bool ShouldGetFixedOrStickyAnimationId() { return false; }
 
   bool CreatesStackingContextHelper() override { return true; }
 
@@ -5560,6 +5560,7 @@ class nsDisplayStickyPosition : public nsDisplayOwnLayer {
 
   bool UpdateScrollData(layers::WebRenderScrollData* aData,
                         layers::WebRenderLayerScrollData* aLayerData) override;
+  bool ShouldGetFixedOrStickyAnimationId() override;
 
   const ActiveScrolledRoot* GetContainerASR() const { return mContainerASR; }
 
@@ -5645,6 +5646,7 @@ class nsDisplayFixedPosition : public nsDisplayOwnLayer {
       nsDisplayListBuilder* aDisplayListBuilder) override;
   bool UpdateScrollData(layers::WebRenderScrollData* aData,
                         layers::WebRenderLayerScrollData* aLayerData) override;
+  bool ShouldGetFixedOrStickyAnimationId() override;
   void WriteDebugInfo(std::stringstream& aStream) override;
 
  protected:
@@ -5652,7 +5654,7 @@ class nsDisplayFixedPosition : public nsDisplayOwnLayer {
   nsDisplayFixedPosition(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                          nsDisplayList* aList,
                          const ActiveScrolledRoot* aScrollTargetASR);
-  ViewID GetScrollTargetId();
+  ViewID GetScrollTargetId() const;
 
   RefPtr<const ActiveScrolledRoot> mScrollTargetASR;
   bool mIsFixedBackground;
