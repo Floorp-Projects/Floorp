@@ -72,7 +72,7 @@ void LogBasedNetworkControllerSimulation::OnPacketSent(
         packet.media_type == LoggedMediaType::kVideo) {
       auto& probe = pending_probes_.front();
       probe_info.probe_cluster_id = probe.event.id;
-      probe_info.send_bitrate_bps = probe.event.bitrate_bps;
+      probe_info.send_bitrate = DataRate::BitsPerSec(probe.event.bitrate_bps);
       probe_info.probe_cluster_min_bytes = probe.event.min_bytes;
       probe_info.probe_cluster_min_probes = probe.event.min_packets;
       probe.packets_sent++;
