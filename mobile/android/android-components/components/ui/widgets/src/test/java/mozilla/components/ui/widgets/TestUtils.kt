@@ -21,6 +21,8 @@ object TestUtils {
             pointerCount++
         } else if (action == MotionEvent.ACTION_DOWN) {
             pointerCount = 1
+        } else if (previousEvent?.action == MotionEvent.ACTION_POINTER_UP) {
+            pointerCount--
         }
 
         val properties = Array(

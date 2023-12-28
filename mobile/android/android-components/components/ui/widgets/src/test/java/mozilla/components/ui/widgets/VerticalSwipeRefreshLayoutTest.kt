@@ -9,6 +9,7 @@ import android.view.MotionEvent.ACTION_CANCEL
 import android.view.MotionEvent.ACTION_DOWN
 import android.view.MotionEvent.ACTION_MOVE
 import android.view.MotionEvent.ACTION_POINTER_DOWN
+import android.view.MotionEvent.ACTION_POINTER_UP
 import android.view.MotionEvent.ACTION_UP
 import android.view.View
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -42,6 +43,35 @@ class VerticalSwipeRefreshLayoutTest {
         swipeLayout.isEnabled = false
         assertFalse(swipeLayout.onInterceptTouchEvent(secondFingerEvent))
         verify(swipeLayout, times(0)).callSuperOnInterceptTouchEvent(secondFingerEvent)
+    }
+
+    @Test
+    fun `onInterceptTouchEvent should abort pull to refresh and return false if the motion was multitouch`() {
+        swipeLayout.isEnabled = true
+        swipeLayout.setOnChildScrollUpCallback { _, _ -> false }
+
+        val downEvent = TestUtils.getMotionEvent(ACTION_DOWN)
+        val moveEvent = TestUtils.getMotionEvent(ACTION_MOVE, x = 0f, y = 5f, previousEvent = downEvent)
+        val secondFingerEvent = TestUtils.getMotionEvent(ACTION_POINTER_DOWN, previousEvent = moveEvent)
+        val secondFingerNextEvent =
+            TestUtils.getMotionEvent(ACTION_MOVE, x = 0f, y = 5f, previousEvent = secondFingerEvent)
+        val secondFingerUp = TestUtils.getMotionEvent(ACTION_POINTER_UP, previousEvent = secondFingerNextEvent)
+        val upEvent = TestUtils.getMotionEvent(ACTION_UP, previousEvent = secondFingerUp)
+        val newDownEvent = TestUtils.getMotionEvent(ACTION_DOWN)
+
+        swipeLayout.onInterceptTouchEvent(downEvent)
+        assertFalse(swipeLayout.onInterceptTouchEvent(moveEvent))
+        assertFalse(swipeLayout.hadMultiTouch)
+        assertFalse(swipeLayout.onInterceptTouchEvent(secondFingerEvent))
+        assertTrue(swipeLayout.hadMultiTouch)
+        assertFalse(swipeLayout.onInterceptTouchEvent(secondFingerNextEvent))
+        assertTrue(swipeLayout.hadMultiTouch)
+        assertFalse(swipeLayout.onInterceptTouchEvent(secondFingerUp))
+        assertTrue(swipeLayout.hadMultiTouch)
+        assertFalse(swipeLayout.onInterceptTouchEvent(upEvent))
+        assertTrue(swipeLayout.hadMultiTouch)
+        assertFalse(swipeLayout.onInterceptTouchEvent(newDownEvent))
+        assertFalse(swipeLayout.hadMultiTouch)
     }
 
     @Test

@@ -40,6 +40,9 @@ class VerticalSwipeRefreshLayout @JvmOverloads constructor(
     private val doubleTapSlop = ViewConfiguration.get(context).scaledDoubleTapSlop
     private val doubleTapSlopSquare = doubleTapSlop * doubleTapSlop
 
+    @VisibleForTesting
+    internal var hadMultiTouch: Boolean = false
+
     @Suppress("ComplexMethod", "ReturnCount")
     override fun onInterceptTouchEvent(event: MotionEvent): Boolean {
         // Setting "isEnabled = false" is recommended for users of this ViewGroup
@@ -49,10 +52,15 @@ class VerticalSwipeRefreshLayout @JvmOverloads constructor(
             return false
         }
 
+        if (MotionEvent.ACTION_DOWN == event.action) {
+            hadMultiTouch = false
+        }
+
         // Layman's scale gesture (with two fingers) detector.
         // Allows for quick, serial inference as opposed to using ScaleGestureDetector
         // which uses callbacks and would be hard to synchronize in the little time we have.
-        if (event.pointerCount > 1) {
+        if (event.pointerCount > 1 || hadMultiTouch) {
+            hadMultiTouch = true
             return false
         }
 
