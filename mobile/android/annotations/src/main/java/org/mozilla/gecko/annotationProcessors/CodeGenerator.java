@@ -46,7 +46,10 @@ public class CodeGenerator {
             + ">\n"
             + "{\n"
             + "public:\n"
-            + "    static const char name[];\n"
+            + "    static constexpr char name[] =\n"
+            + "            \""
+            + cls.getName().replace('.', '/')
+            + "\";\n"
             + "\n"
             + "    explicit "
             + unqualifiedName
@@ -57,12 +60,9 @@ public class CodeGenerator {
 
     cpp.append(
         Utils.getIfdefHeader(annotatedClass.ifdef)
-            + "const char "
+            + "constexpr char "
             + clsName
-            + "::name[] =\n"
-            + "        \""
-            + cls.getName().replace('.', '/')
-            + "\";\n"
+            + "::name[];\n"
             + "\n");
 
     natives.append(
