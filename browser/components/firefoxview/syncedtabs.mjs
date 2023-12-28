@@ -464,6 +464,7 @@ class SyncedTabsInView extends ViewPage {
               @keydown=${this.enableShowAll}
               data-l10n-id="firefoxview-show-all"
               tabindex="0"
+              role="link"
             ></div>
           </div>`);
         }

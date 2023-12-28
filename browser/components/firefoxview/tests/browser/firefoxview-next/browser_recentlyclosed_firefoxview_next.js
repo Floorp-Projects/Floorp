@@ -639,6 +639,7 @@ add_task(async function test_search_recent_browsing() {
     const showAllLink = slot.shadowRoot.querySelector(
       "[data-l10n-id='firefoxview-show-all']"
     );
+    is(showAllLink.role, "link", "The show all control is a link.");
     EventUtils.synthesizeMouseAtCenter(showAllLink, {}, content);
     await TestUtils.waitForCondition(
       () => slot.tabList.rowEls.length === NUMBER_OF_TABS,

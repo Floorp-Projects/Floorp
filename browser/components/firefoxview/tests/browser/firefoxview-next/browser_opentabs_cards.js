@@ -505,6 +505,7 @@ add_task(async function search_open_tabs_recent_browsing() {
       }
       return false;
     }, "All search results are shown.");
+    is(showAllLink.role, "link", "The show all control is a link.");
     ok(BrowserTestUtils.is_hidden(showAllLink), "The show all link is hidden.");
   });
   await SpecialPowers.popPrefEnv();

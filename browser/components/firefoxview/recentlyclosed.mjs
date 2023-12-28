@@ -396,6 +396,7 @@ class RecentlyClosedTabsInView extends ViewPage {
               ?hidden=${!this.isShowAllLinkVisible()}
               slot="footer"
               tabindex="0"
+              role="link"
             ></div>`
           )}
         </card-container>

@@ -677,6 +677,7 @@ add_task(async function search_synced_tabs_recent_browsing() {
     const showAllLink = await TestUtils.waitForCondition(() =>
       slot.shadowRoot.querySelector("[data-l10n-id='firefoxview-show-all']")
     );
+    is(showAllLink.role, "link", "The show all control is a link.");
     showAllLink.click();
     await TestUtils.waitForCondition(
       () => slot.tabLists[0].rowEls.length === NUMBER_OF_TABS,
