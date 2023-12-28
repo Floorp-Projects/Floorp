@@ -25,7 +25,7 @@ macosx64-sdk-13.3:
     run:
         arguments:
             - https://swcdn.apple.com/content/downloads/15/62/032-84673-A_7A1TG1RF8Z/xpc8q44ggn2pkn82iwr0fi1zeb9cxi8ath/CLTools_macOSNMOS_SDK.pkg
-            - c33545d543a38911aee2a65d4bf7ff4932c12de1e6a042ae38e6415f65a10710
+            - 8de3306508dca31040b3b49ff370e96c94f4546bcf22cb4069abbb18e2d6bce8e20d40a6903f00ae75558175b624a979ea0444f54bc6d9d67e841f2000b0d863
             - Library/Developer/CommandLineTools/SDKs/MacOSX13.3.sdk
         toolchain-artifact: project/gecko/mac-sdk/MacOSX13.3.sdk.tar.zst
         toolchain-alias:
@@ -44,7 +44,7 @@ macosx64-sdk-14.2:
         arguments:
             - unpack-sdk.py
             - http://taskcluster/tooltool.mozilla-releng.net/sha512/22ce0acc9ab5c28845218b8c686d0208d6bf66bef64a369d3c0622247ba1258b438c9e44c64bb2bacf5e99eb398a6e7a337f2730cd4a969a7f0d2d5d3107306a
-            - 3765eade716c472a521e5b982e6932cdc6ba79df3fed4e765d0536039340b730
+            - 22ce0acc9ab5c28845218b8c686d0208d6bf66bef64a369d3c0622247ba1258b438c9e44c64bb2bacf5e99eb398a6e7a337f2730cd4a969a7f0d2d5d3107306a
             - Library/Developer/CommandLineTools/SDKs/MacOSX14.2.sdk
         toolchain-artifact: project/gecko/mac-sdk/MacOSX14.2.sdk.tar.zst
         toolchain-alias:
@@ -59,7 +59,7 @@ macosx64-sdk-14.2-public:
     run:
         arguments:
             - https://swcdn.apple.com/content/downloads/35/47/042-23550-A_M34N50O9N3/sua6ev7bjcexvorh4709vsgk64zgvsl42p/CLTools_macOSNMOS_SDK.pkg
-            - 3765eade716c472a521e5b982e6932cdc6ba79df3fed4e765d0536039340b730
+            - 22ce0acc9ab5c28845218b8c686d0208d6bf66bef64a369d3c0622247ba1258b438c9e44c64bb2bacf5e99eb398a6e7a337f2730cd4a969a7f0d2d5d3107306a
             - Library/Developer/CommandLineTools/SDKs/MacOSX14.2.sdk
         toolchain-artifact: project/gecko/mac-sdk/MacOSX14.2.sdk.tar.zst
         toolchain-alias:
