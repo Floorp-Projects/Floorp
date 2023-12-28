@@ -296,6 +296,18 @@ LoadInfo::LoadInfo(
       }
     }
 
+    if (!loadContext) {
+      // Things like svg documents being used as images don't have a load
+      // context or a docshell, in that case try to inherit private browsing
+      // from the documents channel (which is how we determine which imgLoader
+      // is used).
+      nsCOMPtr<nsIChannel> channel = aLoadingContext->OwnerDoc()->GetChannel();
+      if (channel) {
+        mOriginAttributes.SyncAttributesWithPrivateBrowsing(
+            NS_UsePrivateBrowsing(channel));
+      }
+    }
+
     // For chrome docshell, the mPrivateBrowsingId remains 0 even its
     // UsePrivateBrowsing() is true, so we only update the mPrivateBrowsingId in
     // origin attributes if the type of the docshell is content.
