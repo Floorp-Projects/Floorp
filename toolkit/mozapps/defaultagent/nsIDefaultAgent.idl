@@ -70,7 +70,7 @@ interface nsIDefaultAgent : nsISupports
   *
   * @return {boolean} true if the app ran recently.
   */
-  boolean AppRanRecently();
+  boolean appRanRecently();
 
   /**
   * Returns a string for the default browser if known, binned to known browsers.
