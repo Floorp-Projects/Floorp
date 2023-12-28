@@ -134,7 +134,7 @@ You can download the latest version of Floorp Browser from the official website:
 
 - [Official Floorp Twitter](https://twitter.com/Floorp_Browser) or [Official Ablaze Twitter](https://twitter.com/Ablaze_MIRAI)
 
-- [Official Ablaze Community Discord Server](https://discord.gg/qw3WX7pB)
+- [Official Ablaze Community Discord Server](https://discord.com/invite/NCYYwx2Enn)
 
 ### 📜 Privacy Policy
 
