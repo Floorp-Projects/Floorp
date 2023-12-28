@@ -6,7 +6,6 @@ ChromeUtils.defineESModuleGetters(this, {
   NetUtil: "resource://gre/modules/NetUtil.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
   SearchSERPTelemetry: "resource:///modules/SearchSERPTelemetry.sys.mjs",
-  SearchUtils: "resource://gre/modules/SearchUtils.sys.mjs",
   TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.sys.mjs",
   sinon: "resource://testing-common/Sinon.sys.mjs",
 });
@@ -263,7 +262,6 @@ async function testAdUrlClicked(serpUrl, adUrl, expectedAdKey) {
 do_get_profile();
 
 add_task(async function setup() {
-  Services.prefs.setBoolPref(SearchUtils.BROWSER_SEARCH_PREF + "log", true);
   await SearchSERPTelemetry.init();
   sinon.stub(BrowserSearchTelemetry, "shouldRecordSearchCount").returns(true);
   // There is no concept of browsing in unit tests, so assume in tests that we
