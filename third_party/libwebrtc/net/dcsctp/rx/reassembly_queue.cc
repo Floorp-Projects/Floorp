@@ -70,8 +70,8 @@ ReassemblyQueue::ReassemblyQueue(absl::string_view log_prefix,
 void ReassemblyQueue::Add(TSN tsn, Data data) {
   RTC_DCHECK(IsConsistent());
   RTC_DLOG(LS_VERBOSE) << log_prefix_ << "added tsn=" << *tsn
-                       << ", stream=" << *data.stream_id << ":"
-                       << *data.message_id << ":" << *data.fsn << ", type="
+                       << ", stream=" << *data.stream_id << ":" << *data.mid
+                       << ":" << *data.fsn << ", type="
                        << (data.is_beginning && data.is_end ? "complete"
                            : data.is_beginning              ? "first"
                            : data.is_end                    ? "last"

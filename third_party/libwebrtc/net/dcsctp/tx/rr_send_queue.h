@@ -76,9 +76,7 @@ class RRSendQueue : public SendQueue {
 
   // Implementation of `SendQueue`.
   absl::optional<DataToSend> Produce(TimeMs now, size_t max_size) override;
-  bool Discard(IsUnordered unordered,
-               StreamID stream_id,
-               MID message_id) override;
+  bool Discard(IsUnordered unordered, StreamID stream_id, MID mid) override;
   void PrepareResetStream(StreamID streams) override;
   bool HasStreamsReadyToBeReset() const override;
   std::vector<StreamID> GetStreamsReadyToBeReset() override;
@@ -163,7 +161,7 @@ class RRSendQueue : public SendQueue {
     ThresholdWatcher& buffered_amount() { return buffered_amount_; }
 
     // Discards a partially sent message, see `SendQueue::Discard`.
-    bool Discard(IsUnordered unordered, MID message_id);
+    bool Discard(IsUnordered unordered, MID mid);
 
     // Pauses this stream, which is used before resetting it.
     void Pause();
@@ -232,7 +230,7 @@ class RRSendQueue : public SendQueue {
       size_t remaining_size;
       // If set, an allocated Message ID and SSN. Will be allocated when the
       // first fragment is sent.
-      absl::optional<MID> message_id = absl::nullopt;
+      absl::optional<MID> mid = absl::nullopt;
       absl::optional<SSN> ssn = absl::nullopt;
       // The current Fragment Sequence Number, incremented for each fragment.
       FSN current_fsn = FSN(0);

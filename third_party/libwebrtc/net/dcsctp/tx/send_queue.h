@@ -54,7 +54,7 @@ class SendQueue {
   virtual absl::optional<DataToSend> Produce(TimeMs now, size_t max_size) = 0;
 
   // Discards a partially sent message identified by the parameters `unordered`,
-  // `stream_id` and `message_id`. The `message_id` comes from the returned
+  // `stream_id` and `mid`. The `mid` comes from the returned
   // information when having called `Produce`. A partially sent message means
   // that it has had at least one fragment of it returned when `Produce` was
   // called prior to calling this method).
@@ -67,9 +67,7 @@ class SendQueue {
   //
   // This function returns true if this message had unsent fragments still in
   // the queue that were discarded, and false if there were no such fragments.
-  virtual bool Discard(IsUnordered unordered,
-                       StreamID stream_id,
-                       MID message_id) = 0;
+  virtual bool Discard(IsUnordered unordered, StreamID stream_id, MID mid) = 0;
 
   // Prepares the stream to be reset. This is used to close a WebRTC data
   // channel and will be signaled to the other side.

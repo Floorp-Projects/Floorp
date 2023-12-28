@@ -1067,7 +1067,7 @@ TEST_F(RetransmissionQueueTest, ExpireFromSendQueueWhenPartiallySent) {
   RetransmissionQueue queue = CreateQueue();
   DataGeneratorOptions options;
   options.stream_id = StreamID(17);
-  options.message_id = MID(42);
+  options.mid = MID(42);
   TimeMs test_start = now_;
   EXPECT_CALL(producer_, Produce)
       .WillOnce([&](TimeMs, size_t) {

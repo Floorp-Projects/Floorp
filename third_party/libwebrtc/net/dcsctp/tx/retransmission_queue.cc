@@ -86,8 +86,8 @@ RetransmissionQueue::RetransmissionQueue(
           data_chunk_header_size_,
           tsn_unwrapper_.Unwrap(my_initial_tsn),
           tsn_unwrapper_.Unwrap(TSN(*my_initial_tsn - 1)),
-          [this](IsUnordered unordered, StreamID stream_id, MID message_id) {
-            return send_queue_.Discard(unordered, stream_id, message_id);
+          [this](IsUnordered unordered, StreamID stream_id, MID mid) {
+            return send_queue_.Discard(unordered, stream_id, mid);
           }) {}
 
 bool RetransmissionQueue::IsConsistent() const {

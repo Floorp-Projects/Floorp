@@ -290,10 +290,10 @@ TEST_F(StreamResetHandlerTest, ResetStreamsNotDeferred) {
 
 TEST_F(StreamResetHandlerTest, ResetStreamsDeferred) {
   DataGeneratorOptions opts;
-  opts.message_id = MID(0);
+  opts.mid = MID(0);
   reasm_->Add(kPeerInitialTsn, gen_.Ordered({1, 2, 3, 4}, "BE", opts));
 
-  opts.message_id = MID(1);
+  opts.mid = MID(1);
   reasm_->Add(AddTo(kPeerInitialTsn, 1),
               gen_.Ordered({1, 2, 3, 4}, "BE", opts));
 
@@ -314,25 +314,25 @@ TEST_F(StreamResetHandlerTest, ResetStreamsDeferred) {
   EXPECT_THAT(responses, SizeIs(1));
   EXPECT_EQ(responses[0].result(), ResponseResult::kInProgress);
 
-  opts.message_id = MID(1);
+  opts.mid = MID(1);
   opts.ppid = PPID(5);
   reasm_->Add(AddTo(kPeerInitialTsn, 5),
               gen_.Ordered({1, 2, 3, 4}, "BE", opts));
   reasm_->MaybeResetStreamsDeferred(AddTo(kPeerInitialTsn, 1));
 
-  opts.message_id = MID(0);
+  opts.mid = MID(0);
   opts.ppid = PPID(4);
   reasm_->Add(AddTo(kPeerInitialTsn, 4),
               gen_.Ordered({1, 2, 3, 4}, "BE", opts));
   reasm_->MaybeResetStreamsDeferred(AddTo(kPeerInitialTsn, 1));
 
-  opts.message_id = MID(3);
+  opts.mid = MID(3);
   opts.ppid = PPID(3);
   reasm_->Add(AddTo(kPeerInitialTsn, 3),
               gen_.Ordered({1, 2, 3, 4}, "BE", opts));
   reasm_->MaybeResetStreamsDeferred(AddTo(kPeerInitialTsn, 1));
 
-  opts.message_id = MID(2);
+  opts.mid = MID(2);
   opts.ppid = PPID(2);
   reasm_->Add(AddTo(kPeerInitialTsn, 2),
               gen_.Ordered({1, 2, 3, 4}, "BE", opts));
@@ -765,7 +765,7 @@ TEST_F(StreamResetHandlerTest, PerformCloseAfterOneFirstFailing) {
 
   // Let the socket receive the TSN.
   DataGeneratorOptions opts;
-  opts.message_id = MID(0);
+  opts.mid = MID(0);
   reasm_->Add(kPeerInitialTsn, gen_.Ordered({1, 2, 3, 4}, "BE", opts));
   reasm_->MaybeResetStreamsDeferred(kPeerInitialTsn);
   data_tracker_->Observe(kPeerInitialTsn);
