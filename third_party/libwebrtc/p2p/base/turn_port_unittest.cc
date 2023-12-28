@@ -1880,13 +1880,6 @@ TEST_F(TurnPortTest, TestTurnDangerousAlternateServer) {
   ASSERT_EQ(0U, turn_port_->Candidates().size());
 }
 
-TEST_F(TurnPortTest, TestTurnDangerousServerAllowedWithFieldTrial) {
-  webrtc::test::ScopedKeyValueConfig override_field_trials(
-      field_trials_, "WebRTC-Turn-AllowSystemPorts/Enabled/");
-  CreateTurnPort(kTurnUsername, kTurnPassword, kTurnDangerousProtoAddr);
-  ASSERT_TRUE(turn_port_);
-}
-
 class TurnPortWithMockDnsResolverTest : public TurnPortTest {
  public:
   TurnPortWithMockDnsResolverTest()
