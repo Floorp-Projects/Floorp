@@ -69,10 +69,6 @@ add_setup(async function () {
   SearchSERPTelemetry.overrideSearchTelemetryForTests(TEST_PROVIDER_INFO);
   await waitForIdle();
 
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.search.log", true]],
-  });
-
   await db.clear();
   let { record, attachment } = await mockRecordWithAttachment({
     id: "example_id",

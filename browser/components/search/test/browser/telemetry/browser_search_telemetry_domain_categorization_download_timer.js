@@ -83,10 +83,6 @@ add_setup(async function () {
   SearchSERPTelemetry.overrideSearchTelemetryForTests(TEST_PROVIDER_INFO);
   await waitForIdle();
 
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.search.log", true]],
-  });
-
   let defaultDownloadSettings = {
     ...TELEMETRY_CATEGORIZATION_DOWNLOAD_SETTINGS,
   };

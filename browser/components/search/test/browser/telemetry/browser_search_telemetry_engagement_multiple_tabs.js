@@ -64,7 +64,6 @@ add_setup(async function () {
   await waitForIdle();
   await SpecialPowers.pushPrefEnv({
     set: [
-      ["browser.search.log", true],
       ["browser.search.serpEventTelemetry.enabled", true],
       ["dom.ipc.processCount.webIsolated", MAX_IPC],
     ],
