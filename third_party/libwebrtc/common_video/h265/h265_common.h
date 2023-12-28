@@ -64,11 +64,11 @@ enum SliceType : uint8_t { kB = 0, kP = 1, kI = 2 };
 
 struct NaluIndex {
   // Start index of NALU, including start sequence.
-  size_t start_offset;
+  size_t start_offset = 0;
   // Start index of NALU payload, typically type header.
-  size_t payload_start_offset;
+  size_t payload_start_offset = 0;
   // Length of NALU payload, in bytes, counting from payload_start_offset.
-  size_t payload_size;
+  size_t payload_size = 0;
 };
 
 // Returns a vector of the NALU indices in the given buffer.

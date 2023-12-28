@@ -47,29 +47,29 @@ class H265SpsParser {
   struct ProfileTierLevel {
     ProfileTierLevel();
     // Syntax elements.
-    int general_profile_idc;
-    int general_level_idc;  // 30x the actual level.
-    uint32_t general_profile_compatibility_flags;
-    bool general_progressive_source_flag;
-    bool general_interlaced_source_flag;
-    bool general_non_packed_constraint_flag;
-    bool general_frame_only_constraint_flag;
-    bool general_one_picture_only_constraint_flag;
+    int general_profile_idc = 0;
+    int general_level_idc = 0;  // 30x the actual level.
+    uint32_t general_profile_compatibility_flags = 0;
+    bool general_progressive_source_flag = false;
+    bool general_interlaced_source_flag = false;
+    bool general_non_packed_constraint_flag = false;
+    bool general_frame_only_constraint_flag = false;
+    bool general_one_picture_only_constraint_flag = false;
   };
 
   struct ShortTermRefPicSet {
     ShortTermRefPicSet();
 
     // Syntax elements.
-    uint32_t num_negative_pics;
-    uint32_t num_positive_pics;
-    uint32_t delta_poc_s0[kMaxShortTermRefPicSets];
-    uint32_t used_by_curr_pic_s0[kMaxShortTermRefPicSets];
-    uint32_t delta_poc_s1[kMaxShortTermRefPicSets];
-    uint32_t used_by_curr_pic_s1[kMaxShortTermRefPicSets];
+    uint32_t num_negative_pics = 0;
+    uint32_t num_positive_pics = 0;
+    uint32_t delta_poc_s0[kMaxShortTermRefPicSets] = {};
+    uint32_t used_by_curr_pic_s0[kMaxShortTermRefPicSets] = {};
+    uint32_t delta_poc_s1[kMaxShortTermRefPicSets] = {};
+    uint32_t used_by_curr_pic_s1[kMaxShortTermRefPicSets] = {};
 
     // Calculated fields.
-    uint32_t num_delta_pocs;
+    uint32_t num_delta_pocs = 0;
   };
 
   // The parsed state of the SPS. Only some select values are stored.
