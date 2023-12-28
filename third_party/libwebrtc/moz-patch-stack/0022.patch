@@ -5,9 +5,9 @@ Subject: Bug 1579834 - [WebRTC] Add mips64 support; r=dminor
 Differential Revision: https://phabricator.services.mozilla.com/D45620
 Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/1387b2c480b55ecca3fbdf62bd7649dafc62438d
 ---
- modules/video_coding/codecs/vp8/libvpx_vp8_decoder.cc | 2 +-
- modules/video_coding/codecs/vp8/libvpx_vp8_encoder.cc | 6 +++---
- 2 files changed, 4 insertions(+), 4 deletions(-)
+ .../video_coding/codecs/vp8/libvpx_vp8_decoder.cc  |  2 +-
+ .../video_coding/codecs/vp8/libvpx_vp8_encoder.cc  | 14 +++++++++-----
+ 2 files changed, 10 insertions(+), 6 deletions(-)
 
 diff --git a/modules/video_coding/codecs/vp8/libvpx_vp8_decoder.cc b/modules/video_coding/codecs/vp8/libvpx_vp8_decoder.cc
 index 5afd105949..9b77388f10 100644
@@ -23,19 +23,35 @@ index 5afd105949..9b77388f10 100644
  #else
  constexpr bool kIsArm = false;
 diff --git a/modules/video_coding/codecs/vp8/libvpx_vp8_encoder.cc b/modules/video_coding/codecs/vp8/libvpx_vp8_encoder.cc
-index 1ff3f09bd1..daaa9fff49 100644
+index 52ef6231ea..c209b94911 100644
 --- a/modules/video_coding/codecs/vp8/libvpx_vp8_encoder.cc
 +++ b/modules/video_coding/codecs/vp8/libvpx_vp8_encoder.cc
-@@ -745,7 +745,7 @@ int LibvpxVp8Encoder::InitEncode(const VideoCodec* inst,
+@@ -44,9 +44,13 @@
+ #include "third_party/libyuv/include/libyuv/scale.h"
+ #include "vpx/vp8cx.h"
+ 
+-#if (defined(WEBRTC_ARCH_ARM) || defined(WEBRTC_ARCH_ARM64)) && \
+-    (defined(WEBRTC_ANDROID) || defined(WEBRTC_IOS))
++// #if (defined(WEBRTC_ARCH_ARM) || defined(WEBRTC_ARCH_ARM64)) && \
++//     (defined(WEBRTC_ANDROID) || defined(WEBRTC_IOS))
+ #define MOBILE_ARM
++// #endif
++
++#if defined(MOBILE_ARM)
++static_assert("test MJF static_assert")
+ #endif
+ 
+ namespace webrtc {
+@@ -749,7 +753,7 @@ int LibvpxVp8Encoder::InitEncode(const VideoCodec* inst,
+ }
  
  int LibvpxVp8Encoder::GetCpuSpeed(int width, int height) {
- #if defined(WEBRTC_ARCH_ARM) || defined(WEBRTC_ARCH_ARM64) || \
--    defined(WEBRTC_ANDROID)
-+    defined(WEBRTC_ANDROID) || defined(WEBRTC_ARCH_MIPS)
+-#ifdef MOBILE_ARM
++#if defined(MOBILE_ARM) || defined(WEBRTC_ARCH_MIPS)
    // On mobile platform, use a lower speed setting for lower resolutions for
    // CPUs with 4 or more cores.
    RTC_DCHECK_GT(number_of_cores_, 0);
-@@ -778,7 +778,7 @@ int LibvpxVp8Encoder::GetCpuSpeed(int width, int height) {
+@@ -782,7 +786,7 @@ int LibvpxVp8Encoder::GetCpuSpeed(int width, int height) {
  }
  
  int LibvpxVp8Encoder::NumberOfThreads(int width, int height, int cpus) {
@@ -44,12 +60,12 @@ index 1ff3f09bd1..daaa9fff49 100644
    if (width * height >= 320 * 180) {
      if (cpus >= 4) {
        // 3 threads for CPUs with 4 and more cores since most of times only 4
-@@ -852,7 +852,7 @@ int LibvpxVp8Encoder::InitAndSetControlSettings() {
+@@ -854,7 +858,7 @@ int LibvpxVp8Encoder::InitAndSetControlSettings() {
+   // for getting the denoised frame from the encoder and using that
+   // when encoding lower resolution streams. Would it work with the
    // multi-res encoding feature?
+-#ifdef MOBILE_ARM
++#if defined(MOBILE_ARM) || defined(WEBRTC_ARCH_MIPS)
    denoiserState denoiser_state = kDenoiserOnYOnly;
- #if defined(WEBRTC_ARCH_ARM) || defined(WEBRTC_ARCH_ARM64) || \
--    defined(WEBRTC_ANDROID)
-+    defined(WEBRTC_ANDROID) || defined(WEBRTC_ARCH_MIPS)
-   denoiser_state = kDenoiserOnYOnly;
  #else
-   denoiser_state = kDenoiserOnAdaptive;
+   denoiserState denoiser_state = kDenoiserOnAdaptive;
