@@ -20,6 +20,7 @@
 #include "absl/algorithm/container.h"
 #include "absl/types/optional.h"
 #include "api/array_view.h"
+#include "net/dcsctp/common/internal_types.h"
 #include "net/dcsctp/common/str_join.h"
 #include "net/dcsctp/packet/data.h"
 #include "net/dcsctp/public/dcsctp_message.h"
@@ -123,7 +124,10 @@ void RRSendQueue::OutgoingStream::Add(DcSctpMessage message,
   bool was_active = bytes_to_send_in_next_message() > 0;
   buffered_amount_.Increase(message.payload().size());
   parent_.total_buffered_amount_.Increase(message.payload().size());
-  items_.emplace_back(std::move(message), std::move(attributes));
+  OutgoingMessageId message_id = parent_.current_message_id;
+  parent_.current_message_id =
+      OutgoingMessageId(*parent_.current_message_id + 1);
+  items_.emplace_back(message_id, std::move(message), std::move(attributes));
 
   if (!was_active) {
     scheduler_stream_->MaybeMakeActive();
@@ -184,9 +188,10 @@ absl::optional<SendQueue::DataToSend> RRSendQueue::OutgoingStream::Produce(
     buffered_amount_.Decrease(payload.size());
     parent_.total_buffered_amount_.Decrease(payload.size());
 
-    SendQueue::DataToSend chunk(Data(
-        stream_id, item.ssn.value_or(SSN(0)), item.mid.value(), fsn, ppid,
-        std::move(payload), is_beginning, is_end, item.attributes.unordered));
+    SendQueue::DataToSend chunk(
+        item.message_id, Data(stream_id, item.ssn.value_or(SSN(0)), *item.mid,
+                              fsn, ppid, std::move(payload), is_beginning,
+                              is_end, item.attributes.unordered));
     chunk.max_retransmissions = item.attributes.max_retransmissions;
     chunk.expires_at = item.attributes.expires_at;
     chunk.lifecycle_id =
@@ -230,12 +235,11 @@ void RRSendQueue::OutgoingStream::HandleMessageExpired(
   }
 }
 
-bool RRSendQueue::OutgoingStream::Discard(IsUnordered unordered, MID mid) {
+bool RRSendQueue::OutgoingStream::Discard(OutgoingMessageId message_id) {
   bool result = false;
   if (!items_.empty()) {
     Item& item = items_.front();
-    if (item.attributes.unordered == unordered && item.mid.has_value() &&
-        *item.mid == mid) {
+    if (item.message_id == message_id) {
       HandleMessageExpired(item);
       items_.pop_front();
 
@@ -384,8 +388,8 @@ absl::optional<SendQueue::DataToSend> RRSendQueue::Produce(TimeMs now,
   return scheduler_.Produce(now, max_size);
 }
 
-bool RRSendQueue::Discard(IsUnordered unordered, StreamID stream_id, MID mid) {
-  bool has_discarded = GetOrCreateStreamInfo(stream_id).Discard(unordered, mid);
+bool RRSendQueue::Discard(StreamID stream_id, OutgoingMessageId message_id) {
+  bool has_discarded = GetOrCreateStreamInfo(stream_id).Discard(message_id);
 
   RTC_DCHECK(IsConsistent());
   return has_discarded;
