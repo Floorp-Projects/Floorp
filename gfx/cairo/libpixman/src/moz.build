@@ -49,17 +49,6 @@ LOCAL_INCLUDES += [
     '../../cairo/src',
 ]
 
-if CONFIG['ANDROID_NDK']:
-    # For cpu-features.h
-    LOCAL_INCLUDES += [
-        '%%%s/sources/android/cpufeatures' % CONFIG['ANDROID_NDK']
-    ]
-
-if CONFIG['OS_TARGET'] == 'Android':
-    SOURCES += [
-        '%%%s/sources/android/cpufeatures/cpu-features.c' % CONFIG['ANDROID_NDK'],
-    ]
-
 if CONFIG['MOZ_USE_PTHREADS']:
     DEFINES['HAVE_PTHREADS'] = True
 
@@ -103,6 +92,14 @@ elif CONFIG['TARGET_CPU'] == 'arm':
             'pixman-arm-simd-asm-scaled.S',
             'pixman-arm-simd-asm.S',
             'pixman-arm-simd.c',
+        ]
+    if CONFIG['OS_TARGET'] == 'Android':
+        # For cpu-features.h
+        LOCAL_INCLUDES += [
+            '%%%s/sources/android/cpufeatures' % CONFIG['ANDROID_NDK']
+        ]
+        SOURCES += [
+            '%%%s/sources/android/cpufeatures/cpu-features.c' % CONFIG['ANDROID_NDK'],
         ]
 elif CONFIG['TARGET_CPU'] in ('ppc', 'ppc64'):
     if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
