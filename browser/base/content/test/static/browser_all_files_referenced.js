@@ -253,12 +253,6 @@ var allowlist = [
   {
     file: "resource://gre/localization/en-US/toolkit/updates/backgroundupdate.ftl",
   },
-  // toolkit/mozapps/defaultagent/Notification.cpp
-  // toolkit/mozapps/defaultagent/ScheduledTask.cpp
-  // Bug 1854425 - referenced by default browser agent which is not detected
-  {
-    file: "resource://app/localization/en-US/browser/backgroundtasks/defaultagent.ftl",
-  },
 
   // Bug 1713242 - referenced by aboutThirdParty.html which is only for Windows
   {
@@ -290,12 +284,22 @@ var allowlist = [
   { file: "chrome://browser/content/screenshots/download-white.svg" },
 ];
 
-if (AppConstants.NIGHTLY_BUILD && AppConstants.platform != "win") {
-  // This path is refereneced in nsFxrCommandLineHandler.cpp, which is only
-  // compiled in Windows. This path is allowed so that non-Windows builds
-  // can access the FxR UI via --chrome rather than --fxr (which includes VR-
-  // specific functionality)
-  allowlist.push({ file: "chrome://fxr/content/fxrui.html" });
+if (AppConstants.platform != "win") {
+  // toolkit/mozapps/defaultagent/Notification.cpp
+  // toolkit/mozapps/defaultagent/ScheduledTask.cpp
+  // toolkit/mozapps/defaultagent/BackgroundTask_defaultagent.sys.mjs
+  // Bug 1854425 - referenced by default browser agent which is not detected
+  allowlist.push({
+    file: "resource://app/localization/en-US/browser/backgroundtasks/defaultagent.ftl",
+  });
+
+  if (AppConstants.NIGHTLY_BUILD) {
+    // This path is refereneced in nsFxrCommandLineHandler.cpp, which is only
+    // compiled in Windows. This path is allowed so that non-Windows builds
+    // can access the FxR UI via --chrome rather than --fxr (which includes VR-
+    // specific functionality)
+    allowlist.push({ file: "chrome://fxr/content/fxrui.html" });
+  }
 }
 
 if (AppConstants.platform == "android") {
