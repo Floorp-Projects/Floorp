@@ -347,8 +347,6 @@ void CanvasTranslator::ActorDestroy(ActorDestroyReason why) {
 }
 
 void CanvasTranslator::FinishShutdown() {
-  MOZ_ASSERT(gfx::CanvasRenderThread::IsInCanvasRenderThread());
-
   ClearTextureInfo();
 }
 
