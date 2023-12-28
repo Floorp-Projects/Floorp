@@ -1709,8 +1709,9 @@ void DcSctpSocket::HandleForwardTsnCommon(const AnyForwardTsnChunk& chunk) {
                        "Received a FORWARD_TSN without announced peer support");
     return;
   }
-  tcb_->data_tracker().HandleForwardTsn(chunk.new_cumulative_tsn());
-  tcb_->reassembly_queue().Handle(chunk);
+  if (tcb_->data_tracker().HandleForwardTsn(chunk.new_cumulative_tsn())) {
+    tcb_->reassembly_queue().Handle(chunk);
+  }
 
   // A forward TSN - for ordered streams - may allow messages to be
   // delivered.
