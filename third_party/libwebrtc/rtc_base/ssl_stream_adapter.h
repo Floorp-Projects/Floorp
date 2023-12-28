@@ -39,6 +39,10 @@ constexpr int kSrtpAeadAes128Gcm = 0x0007;
 constexpr int kSrtpAeadAes256Gcm = 0x0008;
 constexpr int kSrtpCryptoSuiteMaxValue = 0xFFFF;
 
+// Constants for SSL signature algorithms.
+constexpr int kSslSignatureAlgorithmUnknown = 0;
+constexpr int kSslSignatureAlgorithmMaxValue = 0xFFFF;
+
 // Names of SRTP profiles listed above.
 // 128-bit AES with 80-bit SHA-1 HMAC.
 extern const char kCsAesCm128HmacSha1_80[];
@@ -217,6 +221,9 @@ class SSLStreamAdapter : public StreamInterface {
                                     bool use_context,
                                     uint8_t* result,
                                     size_t result_len);
+
+  // Returns the signature algorithm or 0 if not applicable.
+  virtual uint16_t GetPeerSignatureAlgorithm() const = 0;
 
   // DTLS-SRTP interface
   virtual bool SetDtlsSrtpCryptoSuites(const std::vector<int>& crypto_suites);

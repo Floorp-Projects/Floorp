@@ -2885,6 +2885,36 @@ void PeerConnection::ReportNegotiatedCiphers(
       }
     }
   }
+
+  uint16_t ssl_peer_signature_algorithm =
+      stats.channel_stats[0].ssl_peer_signature_algorithm;
+  if (ssl_peer_signature_algorithm != rtc::kSslSignatureAlgorithmUnknown) {
+    for (cricket::MediaType media_type : media_types) {
+      switch (media_type) {
+        case cricket::MEDIA_TYPE_AUDIO:
+          RTC_HISTOGRAM_ENUMERATION_SPARSE(
+              "WebRTC.PeerConnection.SslPeerSignatureAlgorithm.Audio",
+              ssl_peer_signature_algorithm,
+              rtc::kSslSignatureAlgorithmMaxValue);
+          break;
+        case cricket::MEDIA_TYPE_VIDEO:
+          RTC_HISTOGRAM_ENUMERATION_SPARSE(
+              "WebRTC.PeerConnection.SslPeerSignatureAlgorithm.Video",
+              ssl_peer_signature_algorithm,
+              rtc::kSslSignatureAlgorithmMaxValue);
+          break;
+        case cricket::MEDIA_TYPE_DATA:
+          RTC_HISTOGRAM_ENUMERATION_SPARSE(
+              "WebRTC.PeerConnection.SslPeerSignatureAlgorithm.Data",
+              ssl_peer_signature_algorithm,
+              rtc::kSslSignatureAlgorithmMaxValue);
+          break;
+        default:
+          RTC_DCHECK_NOTREACHED();
+          continue;
+      }
+    }
+  }
 }
 
 bool PeerConnection::OnTransportChanged(
