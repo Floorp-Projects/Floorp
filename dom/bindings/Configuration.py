@@ -382,11 +382,12 @@ class Configuration(DescriptorProvider):
 
             def filterExtendedAttributes(extendedAttributes):
                 # These are the extended attributes that we allow to have
-                # different values among all atributes that use the same
+                # different values among all attributes that use the same
                 # template.
                 ignoredAttributes = {
                     "BindingTemplate",
                     "BindingAlias",
+                    "ChromeOnly",
                     "Pure",
                     "Pref",
                     "Func",

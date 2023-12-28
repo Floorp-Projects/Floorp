@@ -23,9 +23,6 @@ def generate(output, idlFilename, dataFile):
     propsData = runpy.run_path(dataFile)["data"]
     props = ""
     for p in propsData.values():
-        if "Internal" in p.flags:
-            continue
-
         # Skip properties which aren't valid in style rules.
         if "Style" not in p.rules:
             continue
@@ -46,6 +43,7 @@ def generate(output, idlFilename, dataFile):
         ]
 
         if p.pref != "":
+            assert "Internal" not in p.flags
             # BackdropFilter is a special case where we want WebIDL to check
             # a function instead of checking the pref directly.
             if p.method == "BackdropFilter":
@@ -54,6 +52,10 @@ def generate(output, idlFilename, dataFile):
             # see bug 1861828, 1865332, 1860424, 1864970, 1865332, 1869119.
             elif p.method not in ["MozTransform", "MozTransformOrigin"]:
                 extendedAttrs.append('Pref="%s"' % p.pref)
+        elif "EnabledInUASheetsAndChrome" in p.flags:
+            extendedAttrs.append("ChromeOnly")
+        elif "Internal" in p.flags:
+            continue
 
         def add_extra_accessors(p):
             prop = p.method

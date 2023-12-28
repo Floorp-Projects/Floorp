@@ -10051,13 +10051,10 @@ var FirefoxViewHandler = {
         this.button?.setAttribute("aria-pressed", selected);
         this._recordViewIfTabSelected();
         this._onTabForegrounded();
-        if (e.target == this.tab) {
-          // If Fx View is opened, add temporary style to make first available tab focusable
-          gBrowser.visibleTabs[0].style["-moz-user-focus"] = "normal";
-        } else {
-          // When Fx View is closed, remove temporary -moz-user-focus style from first available tab
-          gBrowser.visibleTabs[0].style.removeProperty("-moz-user-focus");
-        }
+        // If Fx View is opened, add temporary style to make first available tab focusable
+        // When Fx View is closed, remove temporary -moz-user-focus style from first available tab
+        gBrowser.visibleTabs[0].style.MozUserFocus =
+          e.target == this.tab ? "normal" : "";
         break;
       case "TabClose":
         this.tab = null;
