@@ -1,386 +1,248 @@
-From: =?UTF-8?q?Erik=20Spr=C3=A5ng?= <sprang@webrtc.org>
-Date: Thu, 5 Oct 2023 13:51:06 +0200
-Subject: (cherry-pick-branch-heads/6045) [M119 merge] Reland "Add mitigation
- for very long frame drop gaps with vp8"
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+From: Florent Castelli <orphis@webrtc.org>
+Date: Mon, 16 Oct 2023 09:07:35 +0000
+Subject: (cherry-pick-branch-heads/6045) [Merge M119] Return error when
+ requested codec is preferred but not negotiated
 
-This is a reland of commit 0d4b350006eae7dfeeb8c67f16f51b1c62351cee
+Because of our asymmetrical codec situation, it's possible to have
+send only codecs that we cannot negotiate even with ourselves.
+This means that we should not have a DCHECK, but just a plain error.
 
-Patchset 1 is the original CL. Patchset 2 contains a small tweak of the target bitrate in the unit test, in order to make in less susceptible to flakiness on runtime environments running a slightly different libvpx.
+(cherry picked from commit 1adea9806d7aec9b5f91181231ccc31fef3b115f)
 
-Original change's description:
-> Add mitigation for very long frame drop gaps with vp8
->
-> Bug: webrtc:15530
-> Change-Id: I11f5e3f31f71301700dbff3fc9285236160bee45
-> Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/322320
-> Reviewed-by: Sergey Silkin <ssilkin@webrtc.org>
-> Commit-Queue: Sergey Silkin <ssilkin@webrtc.org>
-> Auto-Submit: Erik Språng <sprang@webrtc.org>
-> Cr-Commit-Position: refs/heads/main@{#40866}
-
-(cherry picked from commit d7703d950536473627533ed6eab24c2d50054e70)
-
-Bug: webrtc:15530
-Change-Id: I096b7d952286f7f53852d1ca70aea398b2747784
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/322540
-Auto-Submit: Erik Språng <sprang@webrtc.org>
-Commit-Queue: Erik Språng <sprang@webrtc.org>
-Reviewed-by: Sergey Silkin <ssilkin@webrtc.org>
-Commit-Queue: Sergey Silkin <ssilkin@webrtc.org>
-Cr-Original-Commit-Position: refs/heads/main@{#40874}
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/322900
-Cr-Commit-Position: refs/branch-heads/6045@{#1}
+Bug: chromium:1442194, webrtc:15064
+Change-Id: I0c170e5c7f356197bcb04bcecb8259c344423ccb
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/323183
+Reviewed-by: Harald Alvestrand <hta@webrtc.org>
+Commit-Queue: Florent Castelli <orphis@webrtc.org>
+Cr-Original-Commit-Position: refs/heads/main@{#40939}
+No-Try: True
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/324044
+Reviewed-by: Guido Urdaneta <guidou@webrtc.org>
+Cr-Commit-Position: refs/branch-heads/6045@{#2}
 Cr-Branched-From: bce7ce7ba054ac0e79fed49b84ef52fb24c31778-refs/heads/main@{#40854}
 ---
- modules/video_coding/BUILD.gn                 |   2 +
- .../codecs/test/video_codec_unittest.cc       |   1 +
- .../codecs/vp8/libvpx_vp8_encoder.cc          |  77 +++++++++-
- .../codecs/vp8/libvpx_vp8_encoder.h           |   5 +
- .../codecs/vp8/test/vp8_impl_unittest.cc      | 141 ++++++++++++++++++
- 5 files changed, 224 insertions(+), 2 deletions(-)
+ media/engine/webrtc_video_engine.cc           |  15 ++-
+ media/engine/webrtc_voice_engine.cc           |  10 +-
+ ...er_connection_encodings_integrationtest.cc | 126 ++++++++++++++++++
+ 3 files changed, 147 insertions(+), 4 deletions(-)
 
-diff --git a/modules/video_coding/BUILD.gn b/modules/video_coding/BUILD.gn
-index 738d3d4edf..f0bce34e3e 100644
---- a/modules/video_coding/BUILD.gn
-+++ b/modules/video_coding/BUILD.gn
-@@ -583,6 +583,8 @@ rtc_library("webrtc_vp8") {
-     ":webrtc_vp8_temporal_layers",
-     "../../api:fec_controller_api",
-     "../../api:scoped_refptr",
-+    "../../api/units:time_delta",
-+    "../../api/units:timestamp",
-     "../../api/video:encoded_image",
-     "../../api/video:video_frame",
-     "../../api/video:video_rtp_headers",
-diff --git a/modules/video_coding/codecs/test/video_codec_unittest.cc b/modules/video_coding/codecs/test/video_codec_unittest.cc
-index a4a8b253fc..5ac589aaa5 100644
---- a/modules/video_coding/codecs/test/video_codec_unittest.cc
-+++ b/modules/video_coding/codecs/test/video_codec_unittest.cc
-@@ -111,6 +111,7 @@ VideoFrame VideoCodecUnitTest::NextInputFrame() {
-       last_input_frame_timestamp_ +
-       kVideoPayloadTypeFrequency / codec_settings_.maxFramerate;
-   input_frame.set_timestamp(timestamp);
-+  input_frame.set_timestamp_us(timestamp * (1000 / 90));
+diff --git a/media/engine/webrtc_video_engine.cc b/media/engine/webrtc_video_engine.cc
+index fad0f4fc55..91750b837b 100644
+--- a/media/engine/webrtc_video_engine.cc
++++ b/media/engine/webrtc_video_engine.cc
+@@ -29,6 +29,7 @@
+ #include "api/media_stream_interface.h"
+ #include "api/media_types.h"
+ #include "api/priority.h"
++#include "api/rtc_error.h"
+ #include "api/rtp_transceiver_direction.h"
+ #include "api/units/time_delta.h"
+ #include "api/units/timestamp.h"
+@@ -47,6 +48,7 @@
+ #include "common_video/frame_counts.h"
+ #include "common_video/include/quality_limitation_reason.h"
+ #include "media/base/codec.h"
++#include "media/base/media_channel.h"
+ #include "media/base/media_constants.h"
+ #include "media/base/rid_description.h"
+ #include "media/base/rtp_utils.h"
+@@ -1333,17 +1335,24 @@ webrtc::RTCError WebRtcVideoSendChannel::SetRtpSendParameters(
+         break;
+     }
  
-   last_input_frame_timestamp_ = timestamp;
-   return input_frame;
-diff --git a/modules/video_coding/codecs/vp8/libvpx_vp8_encoder.cc b/modules/video_coding/codecs/vp8/libvpx_vp8_encoder.cc
-index 435323b6fa..1ff3f09bd1 100644
---- a/modules/video_coding/codecs/vp8/libvpx_vp8_encoder.cc
-+++ b/modules/video_coding/codecs/vp8/libvpx_vp8_encoder.cc
-@@ -66,6 +66,13 @@ constexpr uint32_t kVp832ByteAlign = 32u;
- constexpr int kRtpTicksPerSecond = 90000;
- constexpr int kRtpTicksPerMs = kRtpTicksPerSecond / 1000;
++    // Since we validate that all layers have the same value, we can just check
++    // the first layer.
+     // TODO(orphis): Support mixed-codec simulcast
+     if (parameters.encodings[0].codec && send_codec_ &&
+         !send_codec_->codec.MatchesRtpCodec(*parameters.encodings[0].codec)) {
+-      RTC_LOG(LS_ERROR) << "Trying to change codec to "
+-                        << parameters.encodings[0].codec->name;
++      RTC_LOG(LS_VERBOSE) << "Trying to change codec to "
++                          << parameters.encodings[0].codec->name;
+       auto matched_codec =
+           absl::c_find_if(negotiated_codecs_, [&](auto negotiated_codec) {
+             return negotiated_codec.codec.MatchesRtpCodec(
+                 *parameters.encodings[0].codec);
+           });
+-      RTC_CHECK(matched_codec != negotiated_codecs_.end());
++      if (matched_codec == negotiated_codecs_.end()) {
++        return webrtc::InvokeSetParametersCallback(
++            callback, webrtc::RTCError(
++                          webrtc::RTCErrorType::INVALID_MODIFICATION,
++                          "Attempted to use an unsupported codec for layer 0"));
++      }
  
-+// If internal frame dropping is enabled, force the encoder to output a frame
-+// on an encode request after this timeout even if this causes some
-+// bitrate overshoot compared to the nominal target. Otherwise we risk the
-+// receivers incorrectly identifying the gap as a fault and they may needlessly
-+// send keyframe requests to recover.
-+constexpr TimeDelta kDefaultMaxFrameDropInterval = TimeDelta::Seconds(2);
+       ChangedSenderParameters params;
+       params.send_codec = *matched_codec;
+diff --git a/media/engine/webrtc_voice_engine.cc b/media/engine/webrtc_voice_engine.cc
+index f055a0000a..63abe1c93a 100644
+--- a/media/engine/webrtc_voice_engine.cc
++++ b/media/engine/webrtc_voice_engine.cc
+@@ -1870,6 +1870,8 @@ webrtc::RTCError WebRtcVoiceSendChannel::SetRtpSendParameters(
+     SetPreferredDscp(new_dscp);
+ 
+     absl::optional<cricket::Codec> send_codec = GetSendCodec();
++    // Since we validate that all layers have the same value, we can just check
++    // the first layer.
+     // TODO(orphis): Support mixed-codec simulcast
+     if (parameters.encodings[0].codec && send_codec &&
+         !send_codec->MatchesRtpCodec(*parameters.encodings[0].codec)) {
+@@ -1880,7 +1882,13 @@ webrtc::RTCError WebRtcVoiceSendChannel::SetRtpSendParameters(
+             return negotiated_codec.MatchesRtpCodec(
+                 *parameters.encodings[0].codec);
+           });
+-      RTC_DCHECK(matched_codec != send_codecs_.end());
 +
- // VP8 denoiser states.
- enum denoiserState : uint32_t {
-   kDenoiserOff,
-@@ -210,6 +217,46 @@ void SetRawImagePlanes(vpx_image_t* raw_image, VideoFrameBuffer* buffer) {
-   }
++      if (matched_codec == send_codecs_.end()) {
++        return webrtc::InvokeSetParametersCallback(
++            callback, webrtc::RTCError(
++                          webrtc::RTCErrorType::INVALID_MODIFICATION,
++                          "Attempted to use an unsupported codec for layer 0"));
++      }
+ 
+       SetSendCodecs(send_codecs_, *matched_codec);
+     }
+diff --git a/pc/peer_connection_encodings_integrationtest.cc b/pc/peer_connection_encodings_integrationtest.cc
+index 4e502f73d7..4a786e0733 100644
+--- a/pc/peer_connection_encodings_integrationtest.cc
++++ b/pc/peer_connection_encodings_integrationtest.cc
+@@ -1463,6 +1463,69 @@ TEST_F(PeerConnectionEncodingsIntegrationTest,
+   EXPECT_EQ(error.type(), RTCErrorType::INVALID_MODIFICATION);
  }
  
-+// Helper class used to temporarily change the frame drop threshold for an
-+// encoder. Returns the setting to the previous value when upon destruction.
-+class FrameDropConfigOverride {
-+ public:
-+  FrameDropConfigOverride(LibvpxInterface* libvpx,
-+                          vpx_codec_ctx_t* encoder,
-+                          vpx_codec_enc_cfg_t* config,
-+                          uint32_t temporary_frame_drop_threshold)
-+      : libvpx_(libvpx),
-+        encoder_(encoder),
-+        config_(config),
-+        original_frame_drop_threshold_(config->rc_dropframe_thresh) {
-+    config_->rc_dropframe_thresh = temporary_frame_drop_threshold;
-+    libvpx_->codec_enc_config_set(encoder_, config_);
-+  }
-+  ~FrameDropConfigOverride() {
-+    config_->rc_dropframe_thresh = original_frame_drop_threshold_;
-+    libvpx_->codec_enc_config_set(encoder_, config_);
-+  }
++TEST_F(PeerConnectionEncodingsIntegrationTest,
++       SetParametersRejectsNonRemotelyNegotiatedCodecParameterAudio) {
++  rtc::scoped_refptr<PeerConnectionTestWrapper> local_pc_wrapper = CreatePc();
++  rtc::scoped_refptr<PeerConnectionTestWrapper> remote_pc_wrapper = CreatePc();
++  ExchangeIceCandidates(local_pc_wrapper, remote_pc_wrapper);
 +
-+ private:
-+  LibvpxInterface* const libvpx_;
-+  vpx_codec_ctx_t* const encoder_;
-+  vpx_codec_enc_cfg_t* const config_;
-+  const uint32_t original_frame_drop_threshold_;
-+};
++  absl::optional<webrtc::RtpCodecCapability> opus =
++      local_pc_wrapper->FindFirstSendCodecWithName(cricket::MEDIA_TYPE_AUDIO,
++                                                   "opus");
++  ASSERT_TRUE(opus);
 +
-+absl::optional<TimeDelta> ParseFrameDropInterval() {
-+  FieldTrialFlag disabled = FieldTrialFlag("Disabled");
-+  FieldTrialParameter<TimeDelta> interval("interval",
-+                                          kDefaultMaxFrameDropInterval);
-+  ParseFieldTrial({&disabled, &interval},
-+                  field_trial::FindFullName("WebRTC-VP8-MaxFrameInterval"));
-+  if (disabled.Get()) {
-+    // Kill switch set, don't use any max frame interval.
-+    return absl::nullopt;
-+  }
-+  return interval.Get();
++  std::vector<webrtc::RtpCodecCapability> not_opus_codecs =
++      local_pc_wrapper->pc_factory()
++          ->GetRtpSenderCapabilities(cricket::MEDIA_TYPE_AUDIO)
++          .codecs;
++  not_opus_codecs.erase(
++      std::remove_if(not_opus_codecs.begin(), not_opus_codecs.end(),
++                     [&](const auto& codec) {
++                       return absl::EqualsIgnoreCase(codec.name, opus->name);
++                     }),
++      not_opus_codecs.end());
++
++  auto transceiver_or_error =
++      local_pc_wrapper->pc()->AddTransceiver(cricket::MEDIA_TYPE_AUDIO);
++  ASSERT_TRUE(transceiver_or_error.ok());
++  rtc::scoped_refptr<RtpTransceiverInterface> audio_transceiver =
++      transceiver_or_error.MoveValue();
++
++  // Negotiation, create offer and apply it
++  std::unique_ptr<SessionDescriptionInterface> offer =
++      CreateOffer(local_pc_wrapper);
++  rtc::scoped_refptr<MockSetSessionDescriptionObserver> p1 =
++      SetLocalDescription(local_pc_wrapper, offer.get());
++  rtc::scoped_refptr<MockSetSessionDescriptionObserver> p2 =
++      SetRemoteDescription(remote_pc_wrapper, offer.get());
++  EXPECT_TRUE(Await({p1, p2}));
++
++  // Update the remote transceiver to reject Opus
++  std::vector<rtc::scoped_refptr<RtpTransceiverInterface>> remote_transceivers =
++      remote_pc_wrapper->pc()->GetTransceivers();
++  ASSERT_TRUE(!remote_transceivers.empty());
++  rtc::scoped_refptr<RtpTransceiverInterface> remote_audio_transceiver =
++      remote_transceivers[0];
++  ASSERT_TRUE(
++      remote_audio_transceiver->SetCodecPreferences(not_opus_codecs).ok());
++
++  // Create answer and apply it
++  std::unique_ptr<SessionDescriptionInterface> answer =
++      CreateAnswer(remote_pc_wrapper);
++  p1 = SetLocalDescription(remote_pc_wrapper, answer.get());
++  p2 = SetRemoteDescription(local_pc_wrapper, answer.get());
++  EXPECT_TRUE(Await({p1, p2}));
++
++  local_pc_wrapper->WaitForConnection();
++  remote_pc_wrapper->WaitForConnection();
++
++  webrtc::RtpParameters parameters =
++      audio_transceiver->sender()->GetParameters();
++  parameters.encodings[0].codec = opus;
++  RTCError error = audio_transceiver->sender()->SetParameters(parameters);
++  EXPECT_EQ(error.type(), RTCErrorType::INVALID_MODIFICATION);
 +}
 +
- }  // namespace
- 
- std::unique_ptr<VideoEncoder> VP8Encoder::Create() {
-@@ -260,9 +307,12 @@ LibvpxVp8Encoder::LibvpxVp8Encoder(std::unique_ptr<LibvpxInterface> interface,
-           std::move(settings.frame_buffer_controller_factory)),
-       resolution_bitrate_limits_(std::move(settings.resolution_bitrate_limits)),
-       key_frame_request_(kMaxSimulcastStreams, false),
-+      last_encoder_output_time_(kMaxSimulcastStreams,
-+                                Timestamp::MinusInfinity()),
-       variable_framerate_experiment_(ParseVariableFramerateConfig(
-           "WebRTC-VP8VariableFramerateScreenshare")),
--      framerate_controller_(variable_framerate_experiment_.framerate_limit) {
-+      framerate_controller_(variable_framerate_experiment_.framerate_limit),
-+      max_frame_drop_interval_(ParseFrameDropInterval()) {
-   // TODO(eladalon/ilnik): These reservations might be wasting memory.
-   // InitEncode() is resizing to the actual size, which might be smaller.
-   raw_images_.reserve(kMaxSimulcastStreams);
-@@ -505,6 +555,8 @@ int LibvpxVp8Encoder::InitEncode(const VideoCodec* inst,
-   send_stream_[0] = true;  // For non-simulcast case.
-   cpu_speed_.resize(number_of_streams);
-   std::fill(key_frame_request_.begin(), key_frame_request_.end(), false);
-+  std::fill(last_encoder_output_time_.begin(), last_encoder_output_time_.end(),
-+            Timestamp::MinusInfinity());
- 
-   int idx = number_of_streams - 1;
-   for (int i = 0; i < (number_of_streams - 1); ++i, --idx) {
-@@ -953,10 +1005,28 @@ int LibvpxVp8Encoder::Encode(const VideoFrame& frame,
-     }
-   }
- 
-+  // Check if any encoder risks timing out and force a frame in that case.
-+  std::vector<FrameDropConfigOverride> frame_drop_overrides_;
-+  if (max_frame_drop_interval_.has_value()) {
-+    Timestamp now = Timestamp::Micros(frame.timestamp_us());
-+    for (size_t i = 0; i < send_stream_.size(); ++i) {
-+      if (send_stream_[i] && FrameDropThreshold(i) > 0 &&
-+          last_encoder_output_time_[i].IsFinite() &&
-+          (now - last_encoder_output_time_[i]) >= *max_frame_drop_interval_) {
-+        RTC_LOG(LS_INFO) << "Forcing frame to avoid timeout for stream " << i;
-+        size_t encoder_idx = encoders_.size() - 1 - i;
-+        frame_drop_overrides_.emplace_back(libvpx_.get(),
-+                                           &encoders_[encoder_idx],
-+                                           &vpx_configs_[encoder_idx], 0);
-+      }
-+    }
-+  }
-+
-   if (frame.update_rect().IsEmpty() && num_steady_state_frames_ >= 3 &&
-       !key_frame_requested) {
-     if (variable_framerate_experiment_.enabled &&
--        framerate_controller_.DropFrame(frame.timestamp() / kRtpTicksPerMs)) {
-+        framerate_controller_.DropFrame(frame.timestamp() / kRtpTicksPerMs) &&
-+        frame_drop_overrides_.empty()) {
-       return WEBRTC_VIDEO_CODEC_OK;
-     }
-     framerate_controller_.AddFrame(frame.timestamp() / kRtpTicksPerMs);
-@@ -1198,6 +1268,9 @@ int LibvpxVp8Encoder::GetEncodedPartitions(const VideoFrame& input_image,
-         libvpx_->codec_control(&encoders_[encoder_idx], VP8E_GET_LAST_QUANTIZER,
-                                &qp_128);
-         encoded_images_[encoder_idx].qp_ = qp_128;
-+        last_encoder_output_time_[stream_idx] =
-+            Timestamp::Micros(input_image.timestamp_us());
-+
-         encoded_complete_callback_->OnEncodedImage(encoded_images_[encoder_idx],
-                                                    &codec_specific);
-         const size_t steady_state_size = SteadyStateSize(
-diff --git a/modules/video_coding/codecs/vp8/libvpx_vp8_encoder.h b/modules/video_coding/codecs/vp8/libvpx_vp8_encoder.h
-index 74477eac7e..dad174ceff 100644
---- a/modules/video_coding/codecs/vp8/libvpx_vp8_encoder.h
-+++ b/modules/video_coding/codecs/vp8/libvpx_vp8_encoder.h
-@@ -16,6 +16,8 @@
- #include <vector>
- 
- #include "api/fec_controller_override.h"
-+#include "api/units/time_delta.h"
-+#include "api/units/timestamp.h"
- #include "api/video/encoded_image.h"
- #include "api/video/video_frame.h"
- #include "api/video_codecs/video_encoder.h"
-@@ -132,6 +134,7 @@ class LibvpxVp8Encoder : public VideoEncoder {
-   std::vector<vpx_codec_enc_cfg_t> vpx_configs_;
-   std::vector<Vp8EncoderConfig> config_overrides_;
-   std::vector<vpx_rational_t> downsampling_factors_;
-+  std::vector<Timestamp> last_encoder_output_time_;
- 
-   // Variable frame-rate screencast related fields and methods.
-   const struct VariableFramerateExperiment {
-@@ -152,6 +155,8 @@ class LibvpxVp8Encoder : public VideoEncoder {
-   FecControllerOverride* fec_controller_override_ = nullptr;
- 
-   const LibvpxVp8EncoderInfoSettings encoder_info_override_;
-+
-+  absl::optional<TimeDelta> max_frame_drop_interval_;
- };
- 
- }  // namespace webrtc
-diff --git a/modules/video_coding/codecs/vp8/test/vp8_impl_unittest.cc b/modules/video_coding/codecs/vp8/test/vp8_impl_unittest.cc
-index ac6cbcc5d0..a6f570f855 100644
---- a/modules/video_coding/codecs/vp8/test/vp8_impl_unittest.cc
-+++ b/modules/video_coding/codecs/vp8/test/vp8_impl_unittest.cc
-@@ -10,6 +10,7 @@
- 
- #include <stdio.h>
- 
-+#include <algorithm>
- #include <memory>
- 
- #include "api/test/create_frame_generator.h"
-@@ -837,6 +838,146 @@ TEST_F(TestVp8Impl, GetEncoderInfoFpsAllocationSimulcastVideo) {
-               ::testing::ElementsAreArray(expected_fps_allocation));
+ TEST_F(PeerConnectionEncodingsIntegrationTest,
+        SetParametersRejectsNonNegotiatedCodecParameterVideo) {
+   rtc::scoped_refptr<PeerConnectionTestWrapper> local_pc_wrapper = CreatePc();
+@@ -1503,6 +1566,69 @@ TEST_F(PeerConnectionEncodingsIntegrationTest,
+   EXPECT_EQ(error.type(), RTCErrorType::INVALID_MODIFICATION);
  }
  
-+class TestVp8ImplWithMaxFrameDropTrial
-+    : public TestVp8Impl,
-+      public ::testing::WithParamInterface<
-+          std::tuple<std::string, TimeDelta, TimeDelta>> {
-+ public:
-+  TestVp8ImplWithMaxFrameDropTrial()
-+      : TestVp8Impl(), trials_(std::get<0>(GetParam())) {}
++TEST_F(PeerConnectionEncodingsIntegrationTest,
++       SetParametersRejectsNonRemotelyNegotiatedCodecParameterVideo) {
++  rtc::scoped_refptr<PeerConnectionTestWrapper> local_pc_wrapper = CreatePc();
++  rtc::scoped_refptr<PeerConnectionTestWrapper> remote_pc_wrapper = CreatePc();
++  ExchangeIceCandidates(local_pc_wrapper, remote_pc_wrapper);
 +
-+ protected:
-+  test::ScopedFieldTrials trials_;
-+};
++  absl::optional<webrtc::RtpCodecCapability> vp8 =
++      local_pc_wrapper->FindFirstSendCodecWithName(cricket::MEDIA_TYPE_VIDEO,
++                                                   "vp8");
++  ASSERT_TRUE(vp8);
 +
-+TEST_P(TestVp8ImplWithMaxFrameDropTrial, EnforcesMaxFrameDropInterval) {
-+  static constexpr int kFps = 5;
-+  auto [trial_string, max_interval_config, min_expected_interval] = GetParam();
++  std::vector<webrtc::RtpCodecCapability> not_vp8_codecs =
++      local_pc_wrapper->pc_factory()
++          ->GetRtpSenderCapabilities(cricket::MEDIA_TYPE_VIDEO)
++          .codecs;
++  not_vp8_codecs.erase(
++      std::remove_if(not_vp8_codecs.begin(), not_vp8_codecs.end(),
++                     [&](const auto& codec) {
++                       return absl::EqualsIgnoreCase(codec.name, vp8->name);
++                     }),
++      not_vp8_codecs.end());
 +
-+  // Allow one frame interval over the configured max frame drop interval.
-+  TimeDelta max_frame_delta =
-+      max_interval_config + (TimeDelta::Seconds(1) / kFps);
-+  EXPECT_EQ(WEBRTC_VIDEO_CODEC_OK, encoder_->Release());
++  auto transceiver_or_error =
++      local_pc_wrapper->pc()->AddTransceiver(cricket::MEDIA_TYPE_VIDEO);
++  ASSERT_TRUE(transceiver_or_error.ok());
++  rtc::scoped_refptr<RtpTransceiverInterface> video_transceiver =
++      transceiver_or_error.MoveValue();
 +
-+  // Set up low-bitrate screenshare stream.
-+  codec_settings_.numberOfSimulcastStreams = 1;
-+  codec_settings_.legacy_conference_mode = false;
-+  codec_settings_.mode = VideoCodecMode::kScreensharing;
-+  codec_settings_.maxFramerate = kFps;
-+  codec_settings_.width = 2880;
-+  codec_settings_.height = 1800;
-+  codec_settings_.minBitrate = 30;
-+  codec_settings_.maxBitrate = 420;
-+  codec_settings_.SetFrameDropEnabled(true);
++  // Negotiation, create offer and apply it
++  std::unique_ptr<SessionDescriptionInterface> offer =
++      CreateOffer(local_pc_wrapper);
++  rtc::scoped_refptr<MockSetSessionDescriptionObserver> p1 =
++      SetLocalDescription(local_pc_wrapper, offer.get());
++  rtc::scoped_refptr<MockSetSessionDescriptionObserver> p2 =
++      SetRemoteDescription(remote_pc_wrapper, offer.get());
++  EXPECT_TRUE(Await({p1, p2}));
 +
-+  codec_settings_.simulcastStream[0].active = true;
-+  codec_settings_.simulcastStream[0].minBitrate = codec_settings_.minBitrate;
-+  codec_settings_.simulcastStream[0].targetBitrate = codec_settings_.maxBitrate;
-+  codec_settings_.simulcastStream[0].maxBitrate = codec_settings_.maxBitrate;
-+  codec_settings_.simulcastStream[0].numberOfTemporalLayers = 2;
-+  codec_settings_.simulcastStream[0].width = codec_settings_.width;
-+  codec_settings_.simulcastStream[0].height = codec_settings_.height;
-+  codec_settings_.simulcastStream[0].maxFramerate =
-+      codec_settings_.maxFramerate;
++  // Update the remote transceiver to reject VP8
++  std::vector<rtc::scoped_refptr<RtpTransceiverInterface>> remote_transceivers =
++      remote_pc_wrapper->pc()->GetTransceivers();
++  ASSERT_TRUE(!remote_transceivers.empty());
++  rtc::scoped_refptr<RtpTransceiverInterface> remote_video_transceiver =
++      remote_transceivers[0];
++  ASSERT_TRUE(
++      remote_video_transceiver->SetCodecPreferences(not_vp8_codecs).ok());
 +
-+  EXPECT_EQ(WEBRTC_VIDEO_CODEC_OK,
-+            encoder_->InitEncode(&codec_settings_, kSettings));
++  // Create answer and apply it
++  std::unique_ptr<SessionDescriptionInterface> answer =
++      CreateAnswer(remote_pc_wrapper);
++  p1 = SetLocalDescription(remote_pc_wrapper, answer.get());
++  p2 = SetRemoteDescription(local_pc_wrapper, answer.get());
++  EXPECT_TRUE(Await({p1, p2}));
 +
-+  // Allocate a very constained amount of bitrate to increase risk of frame
-+  // drops.
-+  VideoBitrateAllocation bitrate_allocation;
-+  bitrate_allocation.SetBitrate(0, 0, 50'000);
-+  bitrate_allocation.SetBitrate(0, 1, 50'000);
-+  encoder_->SetRates(
-+      VideoEncoder::RateControlParameters(bitrate_allocation, 5.0));
++  local_pc_wrapper->WaitForConnection();
++  remote_pc_wrapper->WaitForConnection();
 +
-+  EncodedImage encoded_frame;
-+  CodecSpecificInfo codec_specific_info;
-+  // Create a low-complexity 1 square test sequence.
-+  input_frame_generator_ = test::CreateSquareFrameGenerator(
-+      codec_settings_.width, codec_settings_.height,
-+      test::FrameGeneratorInterface::OutputType::kI420,
-+      /*num_squares=*/1);
-+
-+  class Callback : public EncodedImageCallback {
-+   public:
-+    Callback() : last_callback_(Timestamp::MinusInfinity()) {}
-+
-+    const std::vector<TimeDelta>& GetCallbackDeltas() const {
-+      return callback_deltas_;
-+    }
-+    void ClearCallbackDeltas() { callback_deltas_.clear(); }
-+
-+   protected:
-+    Result OnEncodedImage(const EncodedImage& encoded_image,
-+                          const CodecSpecificInfo* codec_specific_info) {
-+      Timestamp timestamp =
-+          Timestamp::Millis(encoded_image.RtpTimestamp() / 90);
-+      if (last_callback_.IsFinite()) {
-+        callback_deltas_.push_back(timestamp - last_callback_);
-+      }
-+      last_callback_ = timestamp;
-+      return Result(Result::Error::OK);
-+    }
-+
-+   private:
-+    std::vector<TimeDelta> callback_deltas_;
-+    Timestamp last_callback_;
-+  } callback;
-+
-+  encoder_->RegisterEncodeCompleteCallback(&callback);
-+  std::vector<VideoFrameType> frame_types = {VideoFrameType::kVideoFrameKey};
-+  EXPECT_EQ(encoder_->Encode(NextInputFrame(), &frame_types),
-+            WEBRTC_VIDEO_CODEC_OK);
-+  frame_types[0] = VideoFrameType::kVideoFrameDelta;
-+
-+  // Encode a couple of frames and verify reasonable frame spacing.
-+  for (uint32_t i = 0; i < codec_settings_.maxFramerate * 10; ++i) {
-+    EXPECT_EQ(encoder_->Encode(NextInputFrame(), &frame_types),
-+              WEBRTC_VIDEO_CODEC_OK);
-+  }
-+  auto deltas = callback.GetCallbackDeltas();
-+  ASSERT_FALSE(deltas.empty());
-+  EXPECT_LE(*std::max_element(deltas.begin(), deltas.end()), max_frame_delta);
-+
-+  // Switch to a much more complex input. Verify time deltas are still OK.
-+  input_frame_generator_ = test::CreateSquareFrameGenerator(
-+      codec_settings_.width, codec_settings_.height,
-+      test::FrameGeneratorInterface::OutputType::kI420,
-+      /*num_squares=*/5000);
-+  callback.ClearCallbackDeltas();
-+  for (uint32_t i = 0; i < codec_settings_.maxFramerate * 10; ++i) {
-+    EXPECT_EQ(encoder_->Encode(NextInputFrame(), &frame_types),
-+              WEBRTC_VIDEO_CODEC_OK);
-+  }
-+  deltas = callback.GetCallbackDeltas();
-+  ASSERT_FALSE(deltas.empty());
-+  EXPECT_LE(*std::max_element(deltas.begin(), deltas.end()), max_frame_delta);
-+
-+  // Check that encoder is causing the expected long frame drop intervals.
-+  EXPECT_GT(*std::max_element(deltas.begin(), deltas.end()),
-+            min_expected_interval);
-+
-+  EXPECT_EQ(WEBRTC_VIDEO_CODEC_OK, encoder_->Release());
++  webrtc::RtpParameters parameters =
++      video_transceiver->sender()->GetParameters();
++  parameters.encodings[0].codec = vp8;
++  RTCError error = video_transceiver->sender()->SetParameters(parameters);
++  EXPECT_EQ(error.type(), RTCErrorType::INVALID_MODIFICATION);
 +}
 +
-+INSTANTIATE_TEST_SUITE_P(
-+    All,
-+    TestVp8ImplWithMaxFrameDropTrial,
-+    ::testing::Values(
-+        // Tuple of {
-+        //  trial string,
-+        //  configured max frame interval,
-+        //  lower bound on expected frame drop intervals
-+        // }
-+        std::make_tuple("WebRTC-VP8-MaxFrameInterval/Disabled/",
-+                        TimeDelta::PlusInfinity(),
-+                        TimeDelta::Seconds(2)),
-+        std::make_tuple("WebRTC-VP8-MaxFrameInterval/interval:1s/",
-+                        TimeDelta::Seconds(1),
-+                        TimeDelta::Seconds(0)),
-+        std::make_tuple("", TimeDelta::Seconds(2), TimeDelta::Seconds(1))));
-+
- class TestVp8ImplForPixelFormat
-     : public TestVp8Impl,
-       public ::testing::WithParamInterface<VideoFrameBuffer::Type> {
+ TEST_F(PeerConnectionEncodingsIntegrationTest,
+        EncodingParametersCodecRemovedAfterNegotiationAudio) {
+   rtc::scoped_refptr<PeerConnectionTestWrapper> local_pc_wrapper = CreatePc();
