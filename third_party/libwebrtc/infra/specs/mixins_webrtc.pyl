@@ -35,6 +35,14 @@
       }
     }
   },
+  'crosshatch': {
+    'swarming': {
+      'dimensions': {
+        'device_type': 'crosshatch',
+        'os': 'Android',
+      },
+    },
+  },
   # Hack to use the test-launcher-summary-output flag + emulator folders for gtest-output
   # but it's currently the only way to get the file out of the emulator.
   'fuchsia-gtest-output': {
