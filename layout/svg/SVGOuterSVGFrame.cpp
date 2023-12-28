@@ -356,14 +356,12 @@ void SVGOuterSVGFrame::Reflow(nsPresContext* aPresContext,
   // If our SVG viewport has changed, update our content and notify.
   // http://www.w3.org/TR/SVG11/coords.html#ViewportSpace
 
-  svgFloatSize newViewportSize(
+  gfx::Size newViewportSize(
       nsPresContext::AppUnitsToFloatCSSPixels(aReflowInput.ComputedWidth()),
       nsPresContext::AppUnitsToFloatCSSPixels(aReflowInput.ComputedHeight()));
 
-  svgFloatSize oldViewportSize = svgElem->GetViewportSize();
-
   uint32_t changeBits = 0;
-  if (newViewportSize != oldViewportSize) {
+  if (newViewportSize != svgElem->GetViewportSize()) {
     // When our viewport size changes, we may need to update the overflow rects
     // of our child frames. This is the case if:
     //
