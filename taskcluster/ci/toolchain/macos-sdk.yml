@@ -35,13 +35,33 @@ macosx64-sdk-14.0:
     description: "MacOSX14.0 SDK"
     treeherder:
         symbol: TM(sdk14.0)
+    # Because it's using an internal tooltool artifact, it can't be used as a local-toolchain for
+    # bootstrap. But we still want to use the same script as local-toolchains.
+    attributes:
+        local-toolchain: false
     run:
+        script: private_local_toolchain.sh
         arguments:
-            - https://swcdn.apple.com/content/downloads/48/60/042-46120-A_N66A5VQ6BX/qoleua6b09wgn0qyb8ci301cmwe3q0r8i6/CLTools_macOSNMOS_SDK.pkg
-            - e2ebee6d2c9bc3beba96029cd52780447c4c25f7429a3c8cd8b49ccdace84f9d
+            - unpack-sdk.py
+            - http://taskcluster/tooltool.mozilla-releng.net/sha512/2fd9c9ae202ca961985b32deb1adcb07602361e0cc13a71e5e31726d70ef8f5b1828fdce3ddfaa20eac0b290bcff9a7adc806c2d63c47819a772f1918a372756
+            - 59f13dc8b765e85205934abd4b2b2f694761dbb003d337d9eeb312c1ae706aaa
             - Library/Developer/CommandLineTools/SDKs/MacOSX14.0.sdk
         toolchain-artifact: project/gecko/mac-sdk/MacOSX14.0.sdk.tar.zst
         toolchain-alias:
             - macosx64-sdk
             - macosx64-sdk-toolchain
+        tooltool-downloads: internal
+
+# Closest publically available to macosx64-sdk-14.0 for local builds.
+macosx64-sdk-14.0-beta:
+    description: "MacOSX14.0 SDK"
+    treeherder:
+        symbol: TM(sdk14.0beta)
+    run:
+        arguments:
+            - https://swcdn.apple.com/content/downloads/11/17/042-32697-A_1GOTVNQE4A/hy88qtn1sygbgxswlmbfdepd4pcg52xyrx/CLTools_macOSNMOS_SDK.pkg
+            - fa3eb19eceab6d27a3ff55860f6e7753bec8193845d03787fce9735e7efb7dc9
+            - Library/Developer/CommandLineTools/SDKs/MacOSX14.0.sdk
+        toolchain-artifact: project/gecko/mac-sdk/MacOSX14.0.sdk.tar.zst
+        toolchain-alias:
             - MacOSX14.0.sdk
