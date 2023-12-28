@@ -29,8 +29,8 @@ MATCHER_P(HasDataWithMid, mid, "") {
     return false;
   }
 
-  if (arg->data.message_id != mid) {
-    *result_listener << "the produced data had mid " << *arg->data.message_id
+  if (arg->data.mid != mid) {
+    *result_listener << "the produced data had mid " << *arg->data.mid
                      << " and not the expected " << *mid;
     return false;
   }

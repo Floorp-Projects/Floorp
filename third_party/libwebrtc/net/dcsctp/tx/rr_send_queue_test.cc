@@ -228,7 +228,7 @@ TEST_F(RRSendQueueTest, DiscardPartialPackets) {
   EXPECT_FALSE(chunk_one->data.is_end);
   EXPECT_EQ(chunk_one->data.stream_id, kStreamID);
   buf_.Discard(IsUnordered(false), chunk_one->data.stream_id,
-               chunk_one->data.message_id);
+               chunk_one->data.mid);
 
   absl::optional<SendQueue::DataToSend> chunk_two =
       buf_.Produce(kNow, kOneFragmentPacketSize);
@@ -245,7 +245,7 @@ TEST_F(RRSendQueueTest, DiscardPartialPackets) {
 
   // Calling it again shouldn't cause issues.
   buf_.Discard(IsUnordered(false), chunk_one->data.stream_id,
-               chunk_one->data.message_id);
+               chunk_one->data.mid);
   ASSERT_FALSE(buf_.Produce(kNow, kOneFragmentPacketSize));
 }
 
@@ -860,7 +860,7 @@ TEST_F(RRSendQueueTest, WillSendLifecycleExpireWhenDiscardingExplicitly) {
                                                     /*maybe_delivered=*/false));
   EXPECT_CALL(callbacks_, OnLifecycleEnd(LifecycleId(1)));
   buf_.Discard(IsUnordered(false), chunk_one->data.stream_id,
-               chunk_one->data.message_id);
+               chunk_one->data.mid);
 }
 }  // namespace
 }  // namespace dcsctp

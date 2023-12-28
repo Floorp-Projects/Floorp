@@ -281,9 +281,9 @@ TEST_F(ReassemblyQueueTest, NotReadyForHandoverWhenDeliveredTsnsHaveGap) {
 TEST_F(ReassemblyQueueTest, NotReadyForHandoverWhenResetStreamIsDeferred) {
   ReassemblyQueue reasm("log: ", TSN(10), kBufferSize);
   DataGeneratorOptions opts;
-  opts.message_id = MID(0);
+  opts.mid = MID(0);
   reasm.Add(TSN(10), gen_.Ordered({1, 2, 3, 4}, "BE", opts));
-  opts.message_id = MID(1);
+  opts.mid = MID(1);
   reasm.Add(TSN(11), gen_.Ordered({1, 2, 3, 4}, "BE", opts));
   EXPECT_THAT(reasm.FlushMessages(), SizeIs(2));
 
@@ -295,12 +295,12 @@ TEST_F(ReassemblyQueueTest, NotReadyForHandoverWhenResetStreamIsDeferred) {
             HandoverReadinessStatus().Add(
                 HandoverUnreadinessReason::kStreamResetDeferred));
 
-  opts.message_id = MID(3);
+  opts.mid = MID(3);
   opts.ppid = PPID(3);
   reasm.Add(TSN(13), gen_.Ordered({1, 2, 3, 4}, "BE", opts));
   reasm.MaybeResetStreamsDeferred(TSN(11));
 
-  opts.message_id = MID(2);
+  opts.mid = MID(2);
   opts.ppid = PPID(2);
   reasm.Add(TSN(13), gen_.Ordered({1, 2, 3, 4}, "BE", opts));
   reasm.MaybeResetStreamsDeferred(TSN(15));
