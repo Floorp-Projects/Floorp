@@ -1,73 +1,29 @@
 From: Michael Froman <mjfroman@mac.com>
-Date: Thu, 19 May 2022 15:32:32 -0500
-Subject: Bug 1772380 - Build 1766646 - (fix-c89fdd716c) fixes for the
- refactored PlatformThread API;r?mjf
+Date: Fri, 8 Apr 2022 11:36:36 -0500
+Subject: Bug 1766646 - (fix-b556b08668) avoid InlinedVector method that can
+ throw exception
 
 ---
- .../video_capture/linux/device_info_v4l2.cc   | 20 ++++++-------------
- .../video_capture/linux/device_info_v4l2.h    |  3 +--
- 2 files changed, 7 insertions(+), 16 deletions(-)
+ api/video_codecs/video_encoder.cc | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-diff --git a/modules/video_capture/linux/device_info_v4l2.cc b/modules/video_capture/linux/device_info_v4l2.cc
-index c5d33ff9a4..04caaea592 100644
---- a/modules/video_capture/linux/device_info_v4l2.cc
-+++ b/modules/video_capture/linux/device_info_v4l2.cc
-@@ -151,11 +151,6 @@ int DeviceInfoV4l2::ProcessInotifyEvents()
-     return 0;
- }
- 
--void DeviceInfoV4l2::InotifyEventThread(void* obj)
--{
--    static_cast<DeviceInfoLinux*> (obj)->InotifyProcess();
--}
--
- void DeviceInfoV4l2::InotifyProcess()
- {
-     _fd_v4l = inotify_init();
-@@ -181,16 +176,14 @@ void DeviceInfoV4l2::InotifyProcess()
- 
- DeviceInfoV4l2::DeviceInfoV4l2() : DeviceInfoImpl()
- #ifdef WEBRTC_LINUX
--    , _inotifyEventThread(new rtc::PlatformThread(
--                            InotifyEventThread, this, "InotifyEventThread"))
-     , _isShutdown(false)
- #endif
- {
- #ifdef WEBRTC_LINUX
--    if (_inotifyEventThread)
--    {
--        _inotifyEventThread->Start();
--    }
-+  _inotifyEventThread = rtc::PlatformThread::SpawnJoinable(
-+      [this] {
-+        InotifyProcess();
-+      }, "InotifyEventThread");
- #endif
- }
- 
-@@ -202,9 +195,8 @@ DeviceInfoV4l2::~DeviceInfoV4l2() {
- #ifdef WEBRTC_LINUX
-     _isShutdown = true;
- 
--    if (_inotifyEventThread) {
--        _inotifyEventThread->Stop();
--        _inotifyEventThread = nullptr;
-+    if (!_inotifyEventThread.empty()) {
-+      _inotifyEventThread.Finalize();
-     }
- #endif
- }
-diff --git a/modules/video_capture/linux/device_info_v4l2.h b/modules/video_capture/linux/device_info_v4l2.h
-index 119cb07ab8..0bec3eb765 100644
---- a/modules/video_capture/linux/device_info_v4l2.h
-+++ b/modules/video_capture/linux/device_info_v4l2.h
-@@ -60,8 +60,7 @@ class DeviceInfoV4l2 : public DeviceInfoImpl {
-   int EventCheck(int fd);
-   int HandleEvents(int fd);
-   int ProcessInotifyEvents();
--  std::unique_ptr<rtc::PlatformThread> _inotifyEventThread;
--  static void InotifyEventThread(void*);
-+  rtc::PlatformThread _inotifyEventThread;
-   void InotifyProcess();
-   int _fd_v4l, _fd_dev, _wd_v4l, _wd_dev; /* accessed on InotifyEventThread thread */
-   std::atomic<bool> _isShutdown;
+diff --git a/api/video_codecs/video_encoder.cc b/api/video_codecs/video_encoder.cc
+index b0fe078b37..d2de985d5c 100644
+--- a/api/video_codecs/video_encoder.cc
++++ b/api/video_codecs/video_encoder.cc
+@@ -180,7 +180,15 @@ std::string VideoEncoder::EncoderInfo::ToString() const {
+   for (size_t i = 0; i < preferred_pixel_formats.size(); ++i) {
+     if (i > 0)
+       oss << ", ";
++#if defined(WEBRTC_MOZILLA_BUILD)
++    // This could assert, as opposed to throw using the form in the
++    // else, but since we're in a for loop that uses .size() we can
++    // be fairly sure that this is safe without doing a further
++    // check to make sure 'i' is in-range.
++    oss << VideoFrameBufferTypeToString(preferred_pixel_formats[i]);
++#else
+     oss << VideoFrameBufferTypeToString(preferred_pixel_formats.at(i));
++#endif
+   }
+   oss << "]";
+   if (is_qp_trusted.has_value()) {

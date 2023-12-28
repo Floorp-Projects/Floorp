@@ -1,25 +1,26 @@
 From: Dan Minor <dminor@mozilla.com>
-Date: Tue, 11 Feb 2020 17:04:00 +0000
-Subject: Bug 1578073 - Fix warning: [cast] redundant cast to int; r=ng
+Date: Wed, 9 Oct 2019 20:12:00 +0000
+Subject: Bug 1587159 - Fix undefined shift in g722_encode.c; r=ng
 
-Differential Revision: https://phabricator.services.mozilla.com/D61852
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/82877c8a864072c03f45234c6649645ed609e098
+Left shifting a negative value results in undefined behaviour. It is safer to
+multiply in this case.
+
+Differential Revision: https://phabricator.services.mozilla.com/D48751
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/385d660fac359c907986e08d1d89ab5a353f30b2
 ---
- sdk/android/api/org/webrtc/TextureBufferImpl.java | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ modules/third_party/g722/g722_encode.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/sdk/android/api/org/webrtc/TextureBufferImpl.java b/sdk/android/api/org/webrtc/TextureBufferImpl.java
-index 7e2bed84fc..43470d6e39 100644
---- a/sdk/android/api/org/webrtc/TextureBufferImpl.java
-+++ b/sdk/android/api/org/webrtc/TextureBufferImpl.java
-@@ -136,8 +136,8 @@ public class TextureBufferImpl implements VideoFrame.TextureBuffer {
-     cropAndScaleMatrix.preScale(cropWidth / (float) width, cropHeight / (float) height);
+diff --git a/modules/third_party/g722/g722_encode.c b/modules/third_party/g722/g722_encode.c
+index 10a5bcfe7c..fedf9f5961 100644
+--- a/modules/third_party/g722/g722_encode.c
++++ b/modules/third_party/g722/g722_encode.c
+@@ -74,7 +74,7 @@ static void block4(G722EncoderState *s, int band, int d)
+     /* Block 4, UPPOL2 */
+     for (i = 0;  i < 3;  i++)
+         s->band[band].sg[i] = s->band[band].p[i] >> 15;
+-    wd1 = saturate(s->band[band].a[1] << 2);
++    wd1 = saturate(s->band[band].a[1] * 4);
  
-     return applyTransformMatrix(cropAndScaleMatrix,
--        (int) Math.round(unscaledWidth * cropWidth / (float) width),
--        (int) Math.round(unscaledHeight * cropHeight / (float) height), scaleWidth, scaleHeight);
-+        Math.round(unscaledWidth * cropWidth / (float) width),
-+        Math.round(unscaledHeight * cropHeight / (float) height), scaleWidth, scaleHeight);
-   }
- 
-   @Override
+     wd2 = (s->band[band].sg[0] == s->band[band].sg[1])  ?  -wd1  :  wd1;
+     if (wd2 > 32767)

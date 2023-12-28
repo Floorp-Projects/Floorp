@@ -1,24 +1,29 @@
-From: Michael Froman <mfroman@mozilla.com>
-Date: Wed, 5 Jul 2023 19:15:00 +0000
-Subject: Bug 1841864 - upstream commit 4baea5b07f should properly check size
- of encoder_config_.simulcast_layers. r=jib
+From: Jan-Ivar Bruaroey <jib@mozilla.com>
+Date: Wed, 28 Jun 2023 20:45:00 -0400
+Subject: Bug 1839451 - (fix-0f43da2248) Keep mozilla's
+ RTCPReceiver::RemoteRTCPSenderInfo function working.
 
-Differential Revision: https://phabricator.services.mozilla.com/D182813
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/a7179d8d75313b6c9c76a496e10d102da019ff4f
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/154c9cdb386d0f50c5e1549270e1af6ab4969602
 ---
- video/video_stream_encoder.cc | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ modules/rtp_rtcp/source/rtcp_receiver.cc | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/video/video_stream_encoder.cc b/video/video_stream_encoder.cc
-index 84f6108807..23026c0995 100644
---- a/video/video_stream_encoder.cc
-+++ b/video/video_stream_encoder.cc
-@@ -1390,7 +1390,7 @@ void VideoStreamEncoder::ReconfigureEncoder() {
+diff --git a/modules/rtp_rtcp/source/rtcp_receiver.cc b/modules/rtp_rtcp/source/rtcp_receiver.cc
+index 94de316421..bda6ad9a52 100644
+--- a/modules/rtp_rtcp/source/rtcp_receiver.cc
++++ b/modules/rtp_rtcp/source/rtcp_receiver.cc
+@@ -368,10 +368,10 @@ void RTCPReceiver::RemoteRTCPSenderInfo(uint32_t* packet_count,
+                                         int64_t* ntp_timestamp_ms,
+                                         int64_t* remote_ntp_timestamp_ms) const {
+   MutexLock lock(&rtcp_receiver_lock_);
+-  *packet_count = remote_sender_packet_count_;
+-  *octet_count = remote_sender_octet_count_;
+-  *ntp_timestamp_ms = last_received_sr_ntp_.ToMs();
+-  *remote_ntp_timestamp_ms = remote_sender_ntp_time_.ToMs();
++  *packet_count = remote_sender_.packets_sent;
++  *octet_count = remote_sender_.bytes_sent;
++  *ntp_timestamp_ms = remote_sender_.last_arrival_timestamp.ToMs();
++  *remote_ntp_timestamp_ms = remote_sender_.last_remote_timestamp.ToMs();
+ }
  
-   bool is_svc = false;
-   bool single_stream_or_non_first_inactive = true;
--  for (size_t i = 1; i < encoder_config_.number_of_streams; ++i) {
-+  for (size_t i = 1; i < encoder_config_.simulcast_layers.size(); ++i) {
-     if (encoder_config_.simulcast_layers[i].active) {
-       single_stream_or_non_first_inactive = false;
-       break;
+ std::vector<ReportBlockData> RTCPReceiver::GetLatestReportBlockData() const {

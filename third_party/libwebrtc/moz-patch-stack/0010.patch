@@ -1,23 +1,65 @@
 From: Dan Minor <dminor@mozilla.com>
-Date: Mon, 13 Aug 2018 08:34:00 -0400
-Subject: Bug 1376873 - Allow single channel opus; r=padenot
+Date: Tue, 31 Jul 2018 13:32:00 -0400
+Subject: Bug 1376873 - OS X desktop capture fixes; r=pehrsons
 
-Differential Revision: https://phabricator.services.mozilla.com/D7469
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/92a7c3eee9f0c80ffbf79fdab8f8f2b8f6bd7701
+Differential Revision: https://phabricator.services.mozilla.com/D7464
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/02c038eca65c1218b56fdf8937fdeab3d8767fe6
 ---
- modules/audio_coding/codecs/opus/audio_encoder_opus.cc | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ modules/desktop_capture/mac/screen_capturer_mac.h   | 7 +++++++
+ modules/desktop_capture/mac/screen_capturer_mac.mm  | 4 +++-
+ modules/desktop_capture/mouse_cursor_monitor_mac.mm | 2 +-
+ 3 files changed, 11 insertions(+), 2 deletions(-)
 
-diff --git a/modules/audio_coding/codecs/opus/audio_encoder_opus.cc b/modules/audio_coding/codecs/opus/audio_encoder_opus.cc
-index 51b0fcd492..17e0e33b1d 100644
---- a/modules/audio_coding/codecs/opus/audio_encoder_opus.cc
-+++ b/modules/audio_coding/codecs/opus/audio_encoder_opus.cc
-@@ -240,7 +240,7 @@ std::unique_ptr<AudioEncoder> AudioEncoderOpusImpl::MakeAudioEncoder(
- absl::optional<AudioEncoderOpusConfig> AudioEncoderOpusImpl::SdpToConfig(
-     const SdpAudioFormat& format) {
-   if (!absl::EqualsIgnoreCase(format.name, "opus") ||
--      format.clockrate_hz != kRtpTimestampRateHz || format.num_channels != 2) {
-+      format.clockrate_hz != kRtpTimestampRateHz) {
-     return absl::nullopt;
+diff --git a/modules/desktop_capture/mac/screen_capturer_mac.h b/modules/desktop_capture/mac/screen_capturer_mac.h
+index 7e38b5bd08..e4a2cc2fc9 100644
+--- a/modules/desktop_capture/mac/screen_capturer_mac.h
++++ b/modules/desktop_capture/mac/screen_capturer_mac.h
+@@ -113,6 +113,13 @@ class ScreenCapturerMac final : public DesktopCapturer {
+ 
+   // Start, CaptureFrame and destructor have to called in the same thread.
+   SequenceChecker thread_checker_;
++
++  // Used to force CaptureFrame to update it's screen configuration
++  // and reregister event handlers. This ensure that this
++  // occurs on the ScreenCapture thread. Read and written from
++  // both the VideoCapture thread and ScreenCapture thread.
++  // Protected by desktop_config_monitor_.
++  bool update_screen_configuration_ = false;
+ };
+ 
+ }  // namespace webrtc
+diff --git a/modules/desktop_capture/mac/screen_capturer_mac.mm b/modules/desktop_capture/mac/screen_capturer_mac.mm
+index 28cc410573..b082136e76 100644
+--- a/modules/desktop_capture/mac/screen_capturer_mac.mm
++++ b/modules/desktop_capture/mac/screen_capturer_mac.mm
+@@ -182,6 +182,7 @@ void ScreenCapturerMac::Start(Callback* callback) {
+       "webrtc", "ScreenCapturermac::Start", "target display id ", current_display_);
+ 
+   callback_ = callback;
++  update_screen_configuration_ = false;
+   // Start and operate CGDisplayStream handler all from capture thread.
+   if (!RegisterRefreshAndMoveHandlers()) {
+     RTC_LOG(LS_ERROR) << "Failed to register refresh and move handlers.";
+@@ -202,7 +203,8 @@ void ScreenCapturerMac::CaptureFrame() {
    }
  
+   MacDesktopConfiguration new_config = desktop_config_monitor_->desktop_configuration();
+-  if (!desktop_config_.Equals(new_config)) {
++  if (update_screen_configuration_ || !desktop_config_.Equals(new_config)) {
++    update_screen_configuration_ = false;
+     desktop_config_ = new_config;
+     // If the display configuraiton has changed then refresh capturer data
+     // structures. Occasionally, the refresh and move handlers are lost when
+diff --git a/modules/desktop_capture/mouse_cursor_monitor_mac.mm b/modules/desktop_capture/mouse_cursor_monitor_mac.mm
+index 3db4332cd1..512103ab5e 100644
+--- a/modules/desktop_capture/mouse_cursor_monitor_mac.mm
++++ b/modules/desktop_capture/mouse_cursor_monitor_mac.mm
+@@ -133,7 +133,7 @@ void MouseCursorMonitorMac::CaptureImage(float scale) {
+   NSSize nssize = [nsimage size];  // DIP size
+ 
+   // No need to caputre cursor image if it's unchanged since last capture.
+-  if ([[nsimage TIFFRepresentation] isEqual:[last_cursor_ TIFFRepresentation]]) return;
++  if (last_cursor_ && [[nsimage TIFFRepresentation] isEqual:[last_cursor_ TIFFRepresentation]]) return;
+   last_cursor_ = nsimage;
+ 
+   DesktopSize size(round(nssize.width * scale),

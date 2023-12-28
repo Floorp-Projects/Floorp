@@ -1,35 +1,62 @@
 From: Michael Froman <mfroman@mozilla.com>
-Date: Fri, 25 Jun 2021 15:12:00 -0500
-Subject: Bug 1654112 - Mirror Bug 1714577 - Part 3 - Register WebRTC threads
- with the Gecko Profiler. r=ng
+Date: Fri, 16 Apr 2021 17:35:00 -0500
+Subject: Bug 1654112 - General build fixes for paths and naming changes. r=ng
 
-Differential Revision: https://phabricator.services.mozilla.com/D119412
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/d881b16dd8a6813feb5ce1516c2a7ebe0270e72d
+Differential Revision: https://phabricator.services.mozilla.com/D113438
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/99b99cca6b7b2c2ebffb5472457a4f927bda11c4
 ---
- rtc_base/platform_thread.cc | 6 ++++++
- 1 file changed, 6 insertions(+)
+ modules/video_capture/video_capture_impl.h          | 6 ++++--
+ rtc_base/system/warn_current_thread_is_deadlocked.h | 2 +-
+ sdk/android/api/org/webrtc/VideoCodecInfo.java      | 2 +-
+ 3 files changed, 6 insertions(+), 4 deletions(-)
 
-diff --git a/rtc_base/platform_thread.cc b/rtc_base/platform_thread.cc
-index 556204ac89..71a9f1b224 100644
---- a/rtc_base/platform_thread.cc
-+++ b/rtc_base/platform_thread.cc
-@@ -19,6 +19,8 @@
- 
- #include "rtc_base/checks.h"
- 
-+#include "MicroGeckoProfiler.h"
+diff --git a/modules/video_capture/video_capture_impl.h b/modules/video_capture/video_capture_impl.h
+index e46e050609..dcc93fd3a0 100644
+--- a/modules/video_capture/video_capture_impl.h
++++ b/modules/video_capture/video_capture_impl.h
+@@ -97,6 +97,10 @@ class RTC_EXPORT VideoCaptureImpl : public VideoCaptureModule {
+   rtc::RaceChecker capture_checker_;
+   // current Device unique name;
+   char* _deviceUniqueId RTC_GUARDED_BY(api_checker_);
 +
- namespace rtc {
- namespace {
++  // moved DeliverCapturedFrame to protected for VideoCaptureAndroid (mjf)
++  int32_t DeliverCapturedFrame(VideoFrame& captureFrame)
++      RTC_EXCLUSIVE_LOCKS_REQUIRED(api_lock_);
+   Mutex api_lock_;
+   // Should be set by platform dependent code in StartCapture.
+   VideoCaptureCapability _requestedCapability RTC_GUARDED_BY(api_checker_);
+@@ -104,8 +108,6 @@ class RTC_EXPORT VideoCaptureImpl : public VideoCaptureModule {
+  private:
+   void UpdateFrameCount();
+   uint32_t CalculateFrameRate(int64_t now_ns);
+-  int32_t DeliverCapturedFrame(VideoFrame& captureFrame)
+-      RTC_EXCLUSIVE_LOCKS_REQUIRED(api_lock_);
+   void DeliverRawFrame(uint8_t* videoFrame,
+                        size_t videoFrameLength,
+                        const VideoCaptureCapability& frameInfo,
+diff --git a/rtc_base/system/warn_current_thread_is_deadlocked.h b/rtc_base/system/warn_current_thread_is_deadlocked.h
+index 4a0ba9dc09..eac12022ed 100644
+--- a/rtc_base/system/warn_current_thread_is_deadlocked.h
++++ b/rtc_base/system/warn_current_thread_is_deadlocked.h
+@@ -13,7 +13,7 @@
  
-@@ -181,6 +183,10 @@ PlatformThread PlatformThread::SpawnThread(
-       new std::function<void()>([thread_function = std::move(thread_function),
-                                  name = std::string(name), attributes] {
-         rtc::SetCurrentThreadName(name.c_str());
-+
-+        char stacktop;
-+        AutoRegisterProfiler profiler(name.c_str(), &stacktop);
-+
-         SetPriority(attributes.priority);
-         thread_function();
-       });
+ namespace webrtc {
+ 
+-#if defined(WEBRTC_ANDROID) && !defined(WEBRTC_CHROMIUM_BUILD)
++#if defined(WEBRTC_ANDROID) && !defined(WEBRTC_CHROMIUM_BUILD) && !defined(MOZ_WIDGET_ANDROID)
+ void WarnThatTheCurrentThreadIsProbablyDeadlocked();
+ #else
+ inline void WarnThatTheCurrentThreadIsProbablyDeadlocked() {}
+diff --git a/sdk/android/api/org/webrtc/VideoCodecInfo.java b/sdk/android/api/org/webrtc/VideoCodecInfo.java
+index 4f97cf74cf..363be347b5 100644
+--- a/sdk/android/api/org/webrtc/VideoCodecInfo.java
++++ b/sdk/android/api/org/webrtc/VideoCodecInfo.java
+@@ -80,7 +80,7 @@ public class VideoCodecInfo {
+   }
+ 
+   @CalledByNative
+-  Map getParams() {
++  Map<String, String> getParams() {
+     return params;
+   }
+ }

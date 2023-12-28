@@ -1,33 +1,25 @@
 From: Dan Minor <dminor@mozilla.com>
-Date: Wed, 12 Feb 2020 17:19:00 +0000
-Subject: Bug 1578073 - Suppress MissingPermission lint in Camera2Session;
- r=snorp
+Date: Tue, 11 Feb 2020 17:04:00 +0000
+Subject: Bug 1578073 - Fix warning: [cast] redundant cast to int; r=ng
 
-Depends on D61861
-
-Differential Revision: https://phabricator.services.mozilla.com/D62457
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/722c4a6d1dad867f9ce47fe96d71b5dedb4cbaa8
+Differential Revision: https://phabricator.services.mozilla.com/D61852
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/82877c8a864072c03f45234c6649645ed609e098
 ---
- sdk/android/src/java/org/webrtc/Camera2Session.java | 2 ++
- 1 file changed, 2 insertions(+)
+ sdk/android/api/org/webrtc/TextureBufferImpl.java | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/sdk/android/src/java/org/webrtc/Camera2Session.java b/sdk/android/src/java/org/webrtc/Camera2Session.java
-index dec97a2c25..d5ee80c73e 100644
---- a/sdk/android/src/java/org/webrtc/Camera2Session.java
-+++ b/sdk/android/src/java/org/webrtc/Camera2Session.java
-@@ -10,6 +10,7 @@
+diff --git a/sdk/android/api/org/webrtc/TextureBufferImpl.java b/sdk/android/api/org/webrtc/TextureBufferImpl.java
+index 7e2bed84fc..43470d6e39 100644
+--- a/sdk/android/api/org/webrtc/TextureBufferImpl.java
++++ b/sdk/android/api/org/webrtc/TextureBufferImpl.java
+@@ -136,8 +136,8 @@ public class TextureBufferImpl implements VideoFrame.TextureBuffer {
+     cropAndScaleMatrix.preScale(cropWidth / (float) width, cropHeight / (float) height);
  
- package org.webrtc;
- 
-+import android.annotation.SuppressLint;
- import android.content.Context;
- import android.hardware.camera2.CameraAccessException;
- import android.hardware.camera2.CameraCaptureSession;
-@@ -347,6 +348,7 @@ class Camera2Session implements CameraSession {
-     Logging.d(TAG, "Using capture format: " + captureFormat);
+     return applyTransformMatrix(cropAndScaleMatrix,
+-        (int) Math.round(unscaledWidth * cropWidth / (float) width),
+-        (int) Math.round(unscaledHeight * cropHeight / (float) height), scaleWidth, scaleHeight);
++        Math.round(unscaledWidth * cropWidth / (float) width),
++        Math.round(unscaledHeight * cropHeight / (float) height), scaleWidth, scaleHeight);
    }
  
-+  @SuppressLint("MissingPermission")
-   private void openCamera() {
-     checkIsOnCameraThread();
- 
+   @Override
