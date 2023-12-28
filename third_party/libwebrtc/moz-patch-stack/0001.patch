@@ -1,14 +1,14 @@
-From: =?UTF-8?q?Erik=20Spr=C3=A5ng?= <sprang@webrtc.org>
-Date: Thu, 5 Oct 2023 13:51:06 +0200
-Subject: (cherry-pick-branch-heads/6045) [M119 merge] Reland "Add mitigation
- for very long frame drop gaps with vp8"
+From: Michael Froman <mjfroman@mac.com>
+Date: Thu, 28 Dec 2023 16:05:07 -0600
+Subject: (tmp-cherry-pick) Revert "Add mitigation for very long frame drop
+ gaps with vp8" (bada9dd30c)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-This is a reland of commit 0d4b350006eae7dfeeb8c67f16f51b1c62351cee
+This reverts commit 0d4b350006eae7dfeeb8c67f16f51b1c62351cee.
 
-Patchset 1 is the original CL. Patchset 2 contains a small tweak of the target bitrate in the unit test, in order to make in less susceptible to flakiness on runtime environments running a slightly different libvpx.
+Reason for revert: Temporary revert to adjust thresholds for internal test
 
 Original change's description:
 > Add mitigation for very long frame drop gaps with vp8
@@ -21,366 +21,364 @@ Original change's description:
 > Auto-Submit: Erik Språng <sprang@webrtc.org>
 > Cr-Commit-Position: refs/heads/main@{#40866}
 
-(cherry picked from commit d7703d950536473627533ed6eab24c2d50054e70)
-
 Bug: webrtc:15530
-Change-Id: I096b7d952286f7f53852d1ca70aea398b2747784
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/322540
-Auto-Submit: Erik Språng <sprang@webrtc.org>
-Commit-Queue: Erik Språng <sprang@webrtc.org>
+Change-Id: I920661835f0e59c0543794222e42b5643017db24
+No-Presubmit: true
+No-Tree-Checks: true
+No-Try: true
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/322443
+Bot-Commit: rubber-stamper@appspot.gserviceaccount.com <rubber-stamper@appspot.gserviceaccount.com>
 Reviewed-by: Sergey Silkin <ssilkin@webrtc.org>
 Commit-Queue: Sergey Silkin <ssilkin@webrtc.org>
-Cr-Original-Commit-Position: refs/heads/main@{#40874}
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/322900
-Cr-Commit-Position: refs/branch-heads/6045@{#1}
-Cr-Branched-From: bce7ce7ba054ac0e79fed49b84ef52fb24c31778-refs/heads/main@{#40854}
+Auto-Submit: Erik Språng <sprang@webrtc.org>
+Cr-Commit-Position: refs/heads/main@{#40871}
 ---
- modules/video_coding/BUILD.gn                 |   2 +
- .../codecs/test/video_codec_unittest.cc       |   1 +
- .../codecs/vp8/libvpx_vp8_encoder.cc          |  77 +++++++++-
- .../codecs/vp8/libvpx_vp8_encoder.h           |   5 +
- .../codecs/vp8/test/vp8_impl_unittest.cc      | 141 ++++++++++++++++++
- 5 files changed, 224 insertions(+), 2 deletions(-)
+ modules/video_coding/BUILD.gn                 |   2 -
+ .../codecs/test/video_codec_unittest.cc       |   1 -
+ .../codecs/vp8/libvpx_vp8_encoder.cc          |  77 +---------
+ .../codecs/vp8/libvpx_vp8_encoder.h           |   5 -
+ .../codecs/vp8/test/vp8_impl_unittest.cc      | 141 ------------------
+ 5 files changed, 2 insertions(+), 224 deletions(-)
 
 diff --git a/modules/video_coding/BUILD.gn b/modules/video_coding/BUILD.gn
-index 738d3d4edf..f0bce34e3e 100644
+index f0bce34e3e..738d3d4edf 100644
 --- a/modules/video_coding/BUILD.gn
 +++ b/modules/video_coding/BUILD.gn
-@@ -583,6 +583,8 @@ rtc_library("webrtc_vp8") {
+@@ -583,8 +583,6 @@ rtc_library("webrtc_vp8") {
      ":webrtc_vp8_temporal_layers",
      "../../api:fec_controller_api",
      "../../api:scoped_refptr",
-+    "../../api/units:time_delta",
-+    "../../api/units:timestamp",
+-    "../../api/units:time_delta",
+-    "../../api/units:timestamp",
      "../../api/video:encoded_image",
      "../../api/video:video_frame",
      "../../api/video:video_rtp_headers",
 diff --git a/modules/video_coding/codecs/test/video_codec_unittest.cc b/modules/video_coding/codecs/test/video_codec_unittest.cc
-index a4a8b253fc..5ac589aaa5 100644
+index 5ac589aaa5..a4a8b253fc 100644
 --- a/modules/video_coding/codecs/test/video_codec_unittest.cc
 +++ b/modules/video_coding/codecs/test/video_codec_unittest.cc
-@@ -111,6 +111,7 @@ VideoFrame VideoCodecUnitTest::NextInputFrame() {
+@@ -111,7 +111,6 @@ VideoFrame VideoCodecUnitTest::NextInputFrame() {
        last_input_frame_timestamp_ +
        kVideoPayloadTypeFrequency / codec_settings_.maxFramerate;
    input_frame.set_timestamp(timestamp);
-+  input_frame.set_timestamp_us(timestamp * (1000 / 90));
+-  input_frame.set_timestamp_us(timestamp * (1000 / 90));
  
    last_input_frame_timestamp_ = timestamp;
    return input_frame;
 diff --git a/modules/video_coding/codecs/vp8/libvpx_vp8_encoder.cc b/modules/video_coding/codecs/vp8/libvpx_vp8_encoder.cc
-index 435323b6fa..1ff3f09bd1 100644
+index 1ff3f09bd1..435323b6fa 100644
 --- a/modules/video_coding/codecs/vp8/libvpx_vp8_encoder.cc
 +++ b/modules/video_coding/codecs/vp8/libvpx_vp8_encoder.cc
-@@ -66,6 +66,13 @@ constexpr uint32_t kVp832ByteAlign = 32u;
+@@ -66,13 +66,6 @@ constexpr uint32_t kVp832ByteAlign = 32u;
  constexpr int kRtpTicksPerSecond = 90000;
  constexpr int kRtpTicksPerMs = kRtpTicksPerSecond / 1000;
  
-+// If internal frame dropping is enabled, force the encoder to output a frame
-+// on an encode request after this timeout even if this causes some
-+// bitrate overshoot compared to the nominal target. Otherwise we risk the
-+// receivers incorrectly identifying the gap as a fault and they may needlessly
-+// send keyframe requests to recover.
-+constexpr TimeDelta kDefaultMaxFrameDropInterval = TimeDelta::Seconds(2);
-+
+-// If internal frame dropping is enabled, force the encoder to output a frame
+-// on an encode request after this timeout even if this causes some
+-// bitrate overshoot compared to the nominal target. Otherwise we risk the
+-// receivers incorrectly identifying the gap as a fault and they may needlessly
+-// send keyframe requests to recover.
+-constexpr TimeDelta kDefaultMaxFrameDropInterval = TimeDelta::Seconds(2);
+-
  // VP8 denoiser states.
  enum denoiserState : uint32_t {
    kDenoiserOff,
-@@ -210,6 +217,46 @@ void SetRawImagePlanes(vpx_image_t* raw_image, VideoFrameBuffer* buffer) {
+@@ -217,46 +210,6 @@ void SetRawImagePlanes(vpx_image_t* raw_image, VideoFrameBuffer* buffer) {
    }
  }
  
-+// Helper class used to temporarily change the frame drop threshold for an
-+// encoder. Returns the setting to the previous value when upon destruction.
-+class FrameDropConfigOverride {
-+ public:
-+  FrameDropConfigOverride(LibvpxInterface* libvpx,
-+                          vpx_codec_ctx_t* encoder,
-+                          vpx_codec_enc_cfg_t* config,
-+                          uint32_t temporary_frame_drop_threshold)
-+      : libvpx_(libvpx),
-+        encoder_(encoder),
-+        config_(config),
-+        original_frame_drop_threshold_(config->rc_dropframe_thresh) {
-+    config_->rc_dropframe_thresh = temporary_frame_drop_threshold;
-+    libvpx_->codec_enc_config_set(encoder_, config_);
-+  }
-+  ~FrameDropConfigOverride() {
-+    config_->rc_dropframe_thresh = original_frame_drop_threshold_;
-+    libvpx_->codec_enc_config_set(encoder_, config_);
-+  }
-+
-+ private:
-+  LibvpxInterface* const libvpx_;
-+  vpx_codec_ctx_t* const encoder_;
-+  vpx_codec_enc_cfg_t* const config_;
-+  const uint32_t original_frame_drop_threshold_;
-+};
-+
-+absl::optional<TimeDelta> ParseFrameDropInterval() {
-+  FieldTrialFlag disabled = FieldTrialFlag("Disabled");
-+  FieldTrialParameter<TimeDelta> interval("interval",
-+                                          kDefaultMaxFrameDropInterval);
-+  ParseFieldTrial({&disabled, &interval},
-+                  field_trial::FindFullName("WebRTC-VP8-MaxFrameInterval"));
-+  if (disabled.Get()) {
-+    // Kill switch set, don't use any max frame interval.
-+    return absl::nullopt;
-+  }
-+  return interval.Get();
-+}
-+
+-// Helper class used to temporarily change the frame drop threshold for an
+-// encoder. Returns the setting to the previous value when upon destruction.
+-class FrameDropConfigOverride {
+- public:
+-  FrameDropConfigOverride(LibvpxInterface* libvpx,
+-                          vpx_codec_ctx_t* encoder,
+-                          vpx_codec_enc_cfg_t* config,
+-                          uint32_t temporary_frame_drop_threshold)
+-      : libvpx_(libvpx),
+-        encoder_(encoder),
+-        config_(config),
+-        original_frame_drop_threshold_(config->rc_dropframe_thresh) {
+-    config_->rc_dropframe_thresh = temporary_frame_drop_threshold;
+-    libvpx_->codec_enc_config_set(encoder_, config_);
+-  }
+-  ~FrameDropConfigOverride() {
+-    config_->rc_dropframe_thresh = original_frame_drop_threshold_;
+-    libvpx_->codec_enc_config_set(encoder_, config_);
+-  }
+-
+- private:
+-  LibvpxInterface* const libvpx_;
+-  vpx_codec_ctx_t* const encoder_;
+-  vpx_codec_enc_cfg_t* const config_;
+-  const uint32_t original_frame_drop_threshold_;
+-};
+-
+-absl::optional<TimeDelta> ParseFrameDropInterval() {
+-  FieldTrialFlag disabled = FieldTrialFlag("Disabled");
+-  FieldTrialParameter<TimeDelta> interval("interval",
+-                                          kDefaultMaxFrameDropInterval);
+-  ParseFieldTrial({&disabled, &interval},
+-                  field_trial::FindFullName("WebRTC-VP8-MaxFrameInterval"));
+-  if (disabled.Get()) {
+-    // Kill switch set, don't use any max frame interval.
+-    return absl::nullopt;
+-  }
+-  return interval.Get();
+-}
+-
  }  // namespace
  
  std::unique_ptr<VideoEncoder> VP8Encoder::Create() {
-@@ -260,9 +307,12 @@ LibvpxVp8Encoder::LibvpxVp8Encoder(std::unique_ptr<LibvpxInterface> interface,
+@@ -307,12 +260,9 @@ LibvpxVp8Encoder::LibvpxVp8Encoder(std::unique_ptr<LibvpxInterface> interface,
            std::move(settings.frame_buffer_controller_factory)),
        resolution_bitrate_limits_(std::move(settings.resolution_bitrate_limits)),
        key_frame_request_(kMaxSimulcastStreams, false),
-+      last_encoder_output_time_(kMaxSimulcastStreams,
-+                                Timestamp::MinusInfinity()),
+-      last_encoder_output_time_(kMaxSimulcastStreams,
+-                                Timestamp::MinusInfinity()),
        variable_framerate_experiment_(ParseVariableFramerateConfig(
            "WebRTC-VP8VariableFramerateScreenshare")),
--      framerate_controller_(variable_framerate_experiment_.framerate_limit) {
-+      framerate_controller_(variable_framerate_experiment_.framerate_limit),
-+      max_frame_drop_interval_(ParseFrameDropInterval()) {
+-      framerate_controller_(variable_framerate_experiment_.framerate_limit),
+-      max_frame_drop_interval_(ParseFrameDropInterval()) {
++      framerate_controller_(variable_framerate_experiment_.framerate_limit) {
    // TODO(eladalon/ilnik): These reservations might be wasting memory.
    // InitEncode() is resizing to the actual size, which might be smaller.
    raw_images_.reserve(kMaxSimulcastStreams);
-@@ -505,6 +555,8 @@ int LibvpxVp8Encoder::InitEncode(const VideoCodec* inst,
+@@ -555,8 +505,6 @@ int LibvpxVp8Encoder::InitEncode(const VideoCodec* inst,
    send_stream_[0] = true;  // For non-simulcast case.
    cpu_speed_.resize(number_of_streams);
    std::fill(key_frame_request_.begin(), key_frame_request_.end(), false);
-+  std::fill(last_encoder_output_time_.begin(), last_encoder_output_time_.end(),
-+            Timestamp::MinusInfinity());
+-  std::fill(last_encoder_output_time_.begin(), last_encoder_output_time_.end(),
+-            Timestamp::MinusInfinity());
  
    int idx = number_of_streams - 1;
    for (int i = 0; i < (number_of_streams - 1); ++i, --idx) {
-@@ -953,10 +1005,28 @@ int LibvpxVp8Encoder::Encode(const VideoFrame& frame,
+@@ -1005,28 +953,10 @@ int LibvpxVp8Encoder::Encode(const VideoFrame& frame,
      }
    }
  
-+  // Check if any encoder risks timing out and force a frame in that case.
-+  std::vector<FrameDropConfigOverride> frame_drop_overrides_;
-+  if (max_frame_drop_interval_.has_value()) {
-+    Timestamp now = Timestamp::Micros(frame.timestamp_us());
-+    for (size_t i = 0; i < send_stream_.size(); ++i) {
-+      if (send_stream_[i] && FrameDropThreshold(i) > 0 &&
-+          last_encoder_output_time_[i].IsFinite() &&
-+          (now - last_encoder_output_time_[i]) >= *max_frame_drop_interval_) {
-+        RTC_LOG(LS_INFO) << "Forcing frame to avoid timeout for stream " << i;
-+        size_t encoder_idx = encoders_.size() - 1 - i;
-+        frame_drop_overrides_.emplace_back(libvpx_.get(),
-+                                           &encoders_[encoder_idx],
-+                                           &vpx_configs_[encoder_idx], 0);
-+      }
-+    }
-+  }
-+
+-  // Check if any encoder risks timing out and force a frame in that case.
+-  std::vector<FrameDropConfigOverride> frame_drop_overrides_;
+-  if (max_frame_drop_interval_.has_value()) {
+-    Timestamp now = Timestamp::Micros(frame.timestamp_us());
+-    for (size_t i = 0; i < send_stream_.size(); ++i) {
+-      if (send_stream_[i] && FrameDropThreshold(i) > 0 &&
+-          last_encoder_output_time_[i].IsFinite() &&
+-          (now - last_encoder_output_time_[i]) >= *max_frame_drop_interval_) {
+-        RTC_LOG(LS_INFO) << "Forcing frame to avoid timeout for stream " << i;
+-        size_t encoder_idx = encoders_.size() - 1 - i;
+-        frame_drop_overrides_.emplace_back(libvpx_.get(),
+-                                           &encoders_[encoder_idx],
+-                                           &vpx_configs_[encoder_idx], 0);
+-      }
+-    }
+-  }
+-
    if (frame.update_rect().IsEmpty() && num_steady_state_frames_ >= 3 &&
        !key_frame_requested) {
      if (variable_framerate_experiment_.enabled &&
--        framerate_controller_.DropFrame(frame.timestamp() / kRtpTicksPerMs)) {
-+        framerate_controller_.DropFrame(frame.timestamp() / kRtpTicksPerMs) &&
-+        frame_drop_overrides_.empty()) {
+-        framerate_controller_.DropFrame(frame.timestamp() / kRtpTicksPerMs) &&
+-        frame_drop_overrides_.empty()) {
++        framerate_controller_.DropFrame(frame.timestamp() / kRtpTicksPerMs)) {
        return WEBRTC_VIDEO_CODEC_OK;
      }
      framerate_controller_.AddFrame(frame.timestamp() / kRtpTicksPerMs);
-@@ -1198,6 +1268,9 @@ int LibvpxVp8Encoder::GetEncodedPartitions(const VideoFrame& input_image,
+@@ -1268,9 +1198,6 @@ int LibvpxVp8Encoder::GetEncodedPartitions(const VideoFrame& input_image,
          libvpx_->codec_control(&encoders_[encoder_idx], VP8E_GET_LAST_QUANTIZER,
                                 &qp_128);
          encoded_images_[encoder_idx].qp_ = qp_128;
-+        last_encoder_output_time_[stream_idx] =
-+            Timestamp::Micros(input_image.timestamp_us());
-+
+-        last_encoder_output_time_[stream_idx] =
+-            Timestamp::Micros(input_image.timestamp_us());
+-
          encoded_complete_callback_->OnEncodedImage(encoded_images_[encoder_idx],
                                                     &codec_specific);
          const size_t steady_state_size = SteadyStateSize(
 diff --git a/modules/video_coding/codecs/vp8/libvpx_vp8_encoder.h b/modules/video_coding/codecs/vp8/libvpx_vp8_encoder.h
-index 74477eac7e..dad174ceff 100644
+index dad174ceff..74477eac7e 100644
 --- a/modules/video_coding/codecs/vp8/libvpx_vp8_encoder.h
 +++ b/modules/video_coding/codecs/vp8/libvpx_vp8_encoder.h
-@@ -16,6 +16,8 @@
+@@ -16,8 +16,6 @@
  #include <vector>
  
  #include "api/fec_controller_override.h"
-+#include "api/units/time_delta.h"
-+#include "api/units/timestamp.h"
+-#include "api/units/time_delta.h"
+-#include "api/units/timestamp.h"
  #include "api/video/encoded_image.h"
  #include "api/video/video_frame.h"
  #include "api/video_codecs/video_encoder.h"
-@@ -132,6 +134,7 @@ class LibvpxVp8Encoder : public VideoEncoder {
+@@ -134,7 +132,6 @@ class LibvpxVp8Encoder : public VideoEncoder {
    std::vector<vpx_codec_enc_cfg_t> vpx_configs_;
    std::vector<Vp8EncoderConfig> config_overrides_;
    std::vector<vpx_rational_t> downsampling_factors_;
-+  std::vector<Timestamp> last_encoder_output_time_;
+-  std::vector<Timestamp> last_encoder_output_time_;
  
    // Variable frame-rate screencast related fields and methods.
    const struct VariableFramerateExperiment {
-@@ -152,6 +155,8 @@ class LibvpxVp8Encoder : public VideoEncoder {
+@@ -155,8 +152,6 @@ class LibvpxVp8Encoder : public VideoEncoder {
    FecControllerOverride* fec_controller_override_ = nullptr;
  
    const LibvpxVp8EncoderInfoSettings encoder_info_override_;
-+
-+  absl::optional<TimeDelta> max_frame_drop_interval_;
+-
+-  absl::optional<TimeDelta> max_frame_drop_interval_;
  };
  
  }  // namespace webrtc
 diff --git a/modules/video_coding/codecs/vp8/test/vp8_impl_unittest.cc b/modules/video_coding/codecs/vp8/test/vp8_impl_unittest.cc
-index ac6cbcc5d0..a6f570f855 100644
+index efeb28a29c..ac6cbcc5d0 100644
 --- a/modules/video_coding/codecs/vp8/test/vp8_impl_unittest.cc
 +++ b/modules/video_coding/codecs/vp8/test/vp8_impl_unittest.cc
-@@ -10,6 +10,7 @@
+@@ -10,7 +10,6 @@
  
  #include <stdio.h>
  
-+#include <algorithm>
+-#include <algorithm>
  #include <memory>
  
  #include "api/test/create_frame_generator.h"
-@@ -837,6 +838,146 @@ TEST_F(TestVp8Impl, GetEncoderInfoFpsAllocationSimulcastVideo) {
+@@ -838,146 +837,6 @@ TEST_F(TestVp8Impl, GetEncoderInfoFpsAllocationSimulcastVideo) {
                ::testing::ElementsAreArray(expected_fps_allocation));
  }
  
-+class TestVp8ImplWithMaxFrameDropTrial
-+    : public TestVp8Impl,
-+      public ::testing::WithParamInterface<
-+          std::tuple<std::string, TimeDelta, TimeDelta>> {
-+ public:
-+  TestVp8ImplWithMaxFrameDropTrial()
-+      : TestVp8Impl(), trials_(std::get<0>(GetParam())) {}
-+
-+ protected:
-+  test::ScopedFieldTrials trials_;
-+};
-+
-+TEST_P(TestVp8ImplWithMaxFrameDropTrial, EnforcesMaxFrameDropInterval) {
-+  static constexpr int kFps = 5;
-+  auto [trial_string, max_interval_config, min_expected_interval] = GetParam();
-+
-+  // Allow one frame interval over the configured max frame drop interval.
-+  TimeDelta max_frame_delta =
-+      max_interval_config + (TimeDelta::Seconds(1) / kFps);
-+  EXPECT_EQ(WEBRTC_VIDEO_CODEC_OK, encoder_->Release());
-+
-+  // Set up low-bitrate screenshare stream.
-+  codec_settings_.numberOfSimulcastStreams = 1;
-+  codec_settings_.legacy_conference_mode = false;
-+  codec_settings_.mode = VideoCodecMode::kScreensharing;
-+  codec_settings_.maxFramerate = kFps;
-+  codec_settings_.width = 2880;
-+  codec_settings_.height = 1800;
-+  codec_settings_.minBitrate = 30;
-+  codec_settings_.maxBitrate = 420;
-+  codec_settings_.SetFrameDropEnabled(true);
-+
-+  codec_settings_.simulcastStream[0].active = true;
-+  codec_settings_.simulcastStream[0].minBitrate = codec_settings_.minBitrate;
-+  codec_settings_.simulcastStream[0].targetBitrate = codec_settings_.maxBitrate;
-+  codec_settings_.simulcastStream[0].maxBitrate = codec_settings_.maxBitrate;
-+  codec_settings_.simulcastStream[0].numberOfTemporalLayers = 2;
-+  codec_settings_.simulcastStream[0].width = codec_settings_.width;
-+  codec_settings_.simulcastStream[0].height = codec_settings_.height;
-+  codec_settings_.simulcastStream[0].maxFramerate =
-+      codec_settings_.maxFramerate;
-+
-+  EXPECT_EQ(WEBRTC_VIDEO_CODEC_OK,
-+            encoder_->InitEncode(&codec_settings_, kSettings));
-+
-+  // Allocate a very constained amount of bitrate to increase risk of frame
-+  // drops.
-+  VideoBitrateAllocation bitrate_allocation;
-+  bitrate_allocation.SetBitrate(0, 0, 50'000);
-+  bitrate_allocation.SetBitrate(0, 1, 50'000);
-+  encoder_->SetRates(
-+      VideoEncoder::RateControlParameters(bitrate_allocation, 5.0));
-+
-+  EncodedImage encoded_frame;
-+  CodecSpecificInfo codec_specific_info;
-+  // Create a low-complexity 1 square test sequence.
-+  input_frame_generator_ = test::CreateSquareFrameGenerator(
-+      codec_settings_.width, codec_settings_.height,
-+      test::FrameGeneratorInterface::OutputType::kI420,
-+      /*num_squares=*/1);
-+
-+  class Callback : public EncodedImageCallback {
-+   public:
-+    Callback() : last_callback_(Timestamp::MinusInfinity()) {}
-+
-+    const std::vector<TimeDelta>& GetCallbackDeltas() const {
-+      return callback_deltas_;
-+    }
-+    void ClearCallbackDeltas() { callback_deltas_.clear(); }
-+
-+   protected:
-+    Result OnEncodedImage(const EncodedImage& encoded_image,
-+                          const CodecSpecificInfo* codec_specific_info) {
-+      Timestamp timestamp =
-+          Timestamp::Millis(encoded_image.RtpTimestamp() / 90);
-+      if (last_callback_.IsFinite()) {
-+        callback_deltas_.push_back(timestamp - last_callback_);
-+      }
-+      last_callback_ = timestamp;
-+      return Result(Result::Error::OK);
-+    }
-+
-+   private:
-+    std::vector<TimeDelta> callback_deltas_;
-+    Timestamp last_callback_;
-+  } callback;
-+
-+  encoder_->RegisterEncodeCompleteCallback(&callback);
-+  std::vector<VideoFrameType> frame_types = {VideoFrameType::kVideoFrameKey};
-+  EXPECT_EQ(encoder_->Encode(NextInputFrame(), &frame_types),
-+            WEBRTC_VIDEO_CODEC_OK);
-+  frame_types[0] = VideoFrameType::kVideoFrameDelta;
-+
-+  // Encode a couple of frames and verify reasonable frame spacing.
-+  for (uint32_t i = 0; i < codec_settings_.maxFramerate * 10; ++i) {
-+    EXPECT_EQ(encoder_->Encode(NextInputFrame(), &frame_types),
-+              WEBRTC_VIDEO_CODEC_OK);
-+  }
-+  auto deltas = callback.GetCallbackDeltas();
-+  ASSERT_FALSE(deltas.empty());
-+  EXPECT_LE(*std::max_element(deltas.begin(), deltas.end()), max_frame_delta);
-+
-+  // Switch to a much more complex input. Verify time deltas are still OK.
-+  input_frame_generator_ = test::CreateSquareFrameGenerator(
-+      codec_settings_.width, codec_settings_.height,
-+      test::FrameGeneratorInterface::OutputType::kI420,
-+      /*num_squares=*/5000);
-+  callback.ClearCallbackDeltas();
-+  for (uint32_t i = 0; i < codec_settings_.maxFramerate * 10; ++i) {
-+    EXPECT_EQ(encoder_->Encode(NextInputFrame(), &frame_types),
-+              WEBRTC_VIDEO_CODEC_OK);
-+  }
-+  deltas = callback.GetCallbackDeltas();
-+  ASSERT_FALSE(deltas.empty());
-+  EXPECT_LE(*std::max_element(deltas.begin(), deltas.end()), max_frame_delta);
-+
-+  // Check that encoder is causing the expected long frame drop intervals.
-+  EXPECT_GT(*std::max_element(deltas.begin(), deltas.end()),
-+            min_expected_interval);
-+
-+  EXPECT_EQ(WEBRTC_VIDEO_CODEC_OK, encoder_->Release());
-+}
-+
-+INSTANTIATE_TEST_SUITE_P(
-+    All,
-+    TestVp8ImplWithMaxFrameDropTrial,
-+    ::testing::Values(
-+        // Tuple of {
-+        //  trial string,
-+        //  configured max frame interval,
-+        //  lower bound on expected frame drop intervals
-+        // }
-+        std::make_tuple("WebRTC-VP8-MaxFrameInterval/Disabled/",
-+                        TimeDelta::PlusInfinity(),
-+                        TimeDelta::Seconds(2)),
-+        std::make_tuple("WebRTC-VP8-MaxFrameInterval/interval:1s/",
-+                        TimeDelta::Seconds(1),
-+                        TimeDelta::Seconds(0)),
-+        std::make_tuple("", TimeDelta::Seconds(2), TimeDelta::Seconds(1))));
-+
+-class TestVp8ImplWithMaxFrameDropTrial
+-    : public TestVp8Impl,
+-      public ::testing::WithParamInterface<
+-          std::tuple<std::string, TimeDelta, TimeDelta>> {
+- public:
+-  TestVp8ImplWithMaxFrameDropTrial()
+-      : TestVp8Impl(), trials_(std::get<0>(GetParam())) {}
+-
+- protected:
+-  test::ScopedFieldTrials trials_;
+-};
+-
+-TEST_P(TestVp8ImplWithMaxFrameDropTrial, EnforcesMaxFrameDropInterval) {
+-  static constexpr int kFps = 5;
+-  auto [trial_string, max_interval_config, min_expected_interval] = GetParam();
+-
+-  // Allow one frame interval over the configured max frame drop interval.
+-  TimeDelta max_frame_delta =
+-      max_interval_config + (TimeDelta::Seconds(1) / kFps);
+-  EXPECT_EQ(WEBRTC_VIDEO_CODEC_OK, encoder_->Release());
+-
+-  // Set up low-bitrate screenshare stream.
+-  codec_settings_.numberOfSimulcastStreams = 1;
+-  codec_settings_.legacy_conference_mode = false;
+-  codec_settings_.mode = VideoCodecMode::kScreensharing;
+-  codec_settings_.maxFramerate = kFps;
+-  codec_settings_.width = 2880;
+-  codec_settings_.height = 1800;
+-  codec_settings_.minBitrate = 30;
+-  codec_settings_.maxBitrate = 420;
+-  codec_settings_.SetFrameDropEnabled(true);
+-
+-  codec_settings_.simulcastStream[0].active = true;
+-  codec_settings_.simulcastStream[0].minBitrate = codec_settings_.minBitrate;
+-  codec_settings_.simulcastStream[0].targetBitrate = codec_settings_.maxBitrate;
+-  codec_settings_.simulcastStream[0].maxBitrate = codec_settings_.maxBitrate;
+-  codec_settings_.simulcastStream[0].numberOfTemporalLayers = 2;
+-  codec_settings_.simulcastStream[0].width = codec_settings_.width;
+-  codec_settings_.simulcastStream[0].height = codec_settings_.height;
+-  codec_settings_.simulcastStream[0].maxFramerate =
+-      codec_settings_.maxFramerate;
+-
+-  EXPECT_EQ(WEBRTC_VIDEO_CODEC_OK,
+-            encoder_->InitEncode(&codec_settings_, kSettings));
+-
+-  // Allocate a very constained amount of bitrate to increase risk of frame
+-  // drops.
+-  VideoBitrateAllocation bitrate_allocation;
+-  bitrate_allocation.SetBitrate(0, 0, 80'000);
+-  bitrate_allocation.SetBitrate(0, 1, 100'000);
+-  encoder_->SetRates(
+-      VideoEncoder::RateControlParameters(bitrate_allocation, 5.0));
+-
+-  EncodedImage encoded_frame;
+-  CodecSpecificInfo codec_specific_info;
+-  // Create a low-complexity 1 square test sequence.
+-  input_frame_generator_ = test::CreateSquareFrameGenerator(
+-      codec_settings_.width, codec_settings_.height,
+-      test::FrameGeneratorInterface::OutputType::kI420,
+-      /*num_squares=*/1);
+-
+-  class Callback : public EncodedImageCallback {
+-   public:
+-    Callback() : last_callback_(Timestamp::MinusInfinity()) {}
+-
+-    const std::vector<TimeDelta>& GetCallbackDeltas() const {
+-      return callback_deltas_;
+-    }
+-    void ClearCallbackDeltas() { callback_deltas_.clear(); }
+-
+-   protected:
+-    Result OnEncodedImage(const EncodedImage& encoded_image,
+-                          const CodecSpecificInfo* codec_specific_info) {
+-      Timestamp timestamp =
+-          Timestamp::Millis(encoded_image.RtpTimestamp() / 90);
+-      if (last_callback_.IsFinite()) {
+-        callback_deltas_.push_back(timestamp - last_callback_);
+-      }
+-      last_callback_ = timestamp;
+-      return Result(Result::Error::OK);
+-    }
+-
+-   private:
+-    std::vector<TimeDelta> callback_deltas_;
+-    Timestamp last_callback_;
+-  } callback;
+-
+-  encoder_->RegisterEncodeCompleteCallback(&callback);
+-  std::vector<VideoFrameType> frame_types = {VideoFrameType::kVideoFrameKey};
+-  EXPECT_EQ(encoder_->Encode(NextInputFrame(), &frame_types),
+-            WEBRTC_VIDEO_CODEC_OK);
+-  frame_types[0] = VideoFrameType::kVideoFrameDelta;
+-
+-  // Encode a couple of frames and verify reasonable frame spacing.
+-  for (uint32_t i = 0; i < codec_settings_.maxFramerate * 10; ++i) {
+-    EXPECT_EQ(encoder_->Encode(NextInputFrame(), &frame_types),
+-              WEBRTC_VIDEO_CODEC_OK);
+-  }
+-  auto deltas = callback.GetCallbackDeltas();
+-  ASSERT_FALSE(deltas.empty());
+-  EXPECT_LE(*std::max_element(deltas.begin(), deltas.end()), max_frame_delta);
+-
+-  // Switch to a much more complex input. Verify time deltas are still OK.
+-  input_frame_generator_ = test::CreateSquareFrameGenerator(
+-      codec_settings_.width, codec_settings_.height,
+-      test::FrameGeneratorInterface::OutputType::kI420,
+-      /*num_squares=*/5000);
+-  callback.ClearCallbackDeltas();
+-  for (uint32_t i = 0; i < codec_settings_.maxFramerate * 10; ++i) {
+-    EXPECT_EQ(encoder_->Encode(NextInputFrame(), &frame_types),
+-              WEBRTC_VIDEO_CODEC_OK);
+-  }
+-  deltas = callback.GetCallbackDeltas();
+-  ASSERT_FALSE(deltas.empty());
+-  EXPECT_LE(*std::max_element(deltas.begin(), deltas.end()), max_frame_delta);
+-
+-  // Check that encoder is causing the expected long frame drop intervals.
+-  EXPECT_GT(*std::max_element(deltas.begin(), deltas.end()),
+-            min_expected_interval);
+-
+-  EXPECT_EQ(WEBRTC_VIDEO_CODEC_OK, encoder_->Release());
+-}
+-
+-INSTANTIATE_TEST_SUITE_P(
+-    All,
+-    TestVp8ImplWithMaxFrameDropTrial,
+-    ::testing::Values(
+-        // Tuple of {
+-        //  trial string,
+-        //  configured max frame interval,
+-        //  lower bound on expected frame drop intervals
+-        // }
+-        std::make_tuple("WebRTC-VP8-MaxFrameInterval/Disabled/",
+-                        TimeDelta::PlusInfinity(),
+-                        TimeDelta::Seconds(2)),
+-        std::make_tuple("WebRTC-VP8-MaxFrameInterval/interval:1s/",
+-                        TimeDelta::Seconds(1),
+-                        TimeDelta::Seconds(0)),
+-        std::make_tuple("", TimeDelta::Seconds(2), TimeDelta::Seconds(1))));
+-
  class TestVp8ImplForPixelFormat
      : public TestVp8Impl,
        public ::testing::WithParamInterface<VideoFrameBuffer::Type> {

@@ -1,40 +1,25 @@
 From: Dan Minor <dminor@mozilla.com>
-Date: Tue, 11 Feb 2020 17:07:00 +0000
-Subject: Bug 1578073 - Remove native calls in Histogram.java; r=ng
+Date: Tue, 11 Feb 2020 17:04:00 +0000
+Subject: Bug 1578073 - Fix warning: [cast] redundant cast to int; r=ng
 
-Getting the JNI calls here to work requires a good amount of webrtc.org
-machinery. It might be worth setting that up the next time we do an upstream
-merge, but for now, it is a lot simpler to just remove the affected code,
-given that we are not interested in collecting this data anyway.
-
-Differential Revision: https://phabricator.services.mozilla.com/D61860
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/7a9b07dec9f9d435416b06829fa5063aca3a476e
+Differential Revision: https://phabricator.services.mozilla.com/D61852
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/82877c8a864072c03f45234c6649645ed609e098
 ---
- sdk/android/src/java/org/webrtc/Histogram.java | 9 ++-------
- 1 file changed, 2 insertions(+), 7 deletions(-)
+ sdk/android/api/org/webrtc/TextureBufferImpl.java | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/sdk/android/src/java/org/webrtc/Histogram.java b/sdk/android/src/java/org/webrtc/Histogram.java
-index 877986134a..c1d2d61a71 100644
---- a/sdk/android/src/java/org/webrtc/Histogram.java
-+++ b/sdk/android/src/java/org/webrtc/Histogram.java
-@@ -27,18 +27,13 @@ class Histogram {
+diff --git a/sdk/android/api/org/webrtc/TextureBufferImpl.java b/sdk/android/api/org/webrtc/TextureBufferImpl.java
+index 7e2bed84fc..43470d6e39 100644
+--- a/sdk/android/api/org/webrtc/TextureBufferImpl.java
++++ b/sdk/android/api/org/webrtc/TextureBufferImpl.java
+@@ -136,8 +136,8 @@ public class TextureBufferImpl implements VideoFrame.TextureBuffer {
+     cropAndScaleMatrix.preScale(cropWidth / (float) width, cropHeight / (float) height);
+ 
+     return applyTransformMatrix(cropAndScaleMatrix,
+-        (int) Math.round(unscaledWidth * cropWidth / (float) width),
+-        (int) Math.round(unscaledHeight * cropHeight / (float) height), scaleWidth, scaleHeight);
++        Math.round(unscaledWidth * cropWidth / (float) width),
++        Math.round(unscaledHeight * cropHeight / (float) height), scaleWidth, scaleHeight);
    }
  
-   static public Histogram createCounts(String name, int min, int max, int bucketCount) {
--    return new Histogram(nativeCreateCounts(name, min, max, bucketCount));
-+    return new Histogram(0);
-   }
- 
-   static public Histogram createEnumeration(String name, int max) {
--    return new Histogram(nativeCreateEnumeration(name, max));
-+    return new Histogram(0);
-   }
- 
-   public void addSample(int sample) {
--    nativeAddSample(handle, sample);
-   }
--
--  private static native long nativeCreateCounts(String name, int min, int max, int bucketCount);
--  private static native long nativeCreateEnumeration(String name, int max);
--  private static native void nativeAddSample(long handle, int sample);
- }
+   @Override
