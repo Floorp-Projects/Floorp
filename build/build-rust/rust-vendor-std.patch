@@ -13,8 +13,8 @@ to make -Zbuild-std work in a vendored environment.
 
 diff --git a/src/bootstrap/dist.rs b/src/bootstrap/dist.rs
 index 3cb0eccd324..a3b8154c024 100644
---- a/src/bootstrap/dist.rs
-+++ b/src/bootstrap/dist.rs
+--- a/src/bootstrap/src/core/build_steps/dist.rs
++++ b/src/bootstrap/src/core/build_steps/dist.rs
 @@ -905,6 +905,31 @@ fn run(self, builder: &Builder<'_>) -> GeneratedTarball {
              builder.copy(&builder.src.join(file), &dst_src.join(file));
          }
@@ -49,8 +49,8 @@ index 3cb0eccd324..a3b8154c024 100644
  }
 diff --git a/src/bootstrap/lib.rs b/src/bootstrap/lib.rs
 index 3ed53452309..1fc0d887748 100644
---- a/src/bootstrap/lib.rs
-+++ b/src/bootstrap/lib.rs
+--- a/src/bootstrap/src/lib.rs
++++ b/src/bootstrap/src/lib.rs
 @@ -1437,6 +1437,27 @@ fn read_stamp_file(&self, stamp: &Path) -> Vec<(PathBuf, DependencyType)> {
          paths
      }
