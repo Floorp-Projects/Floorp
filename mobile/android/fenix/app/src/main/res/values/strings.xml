@@ -2262,12 +2262,24 @@
     <string name="translations_bottom_sheet_translate_to">Translate to</string>
     <!-- Button text on the translations dialog to dismiss the dialog and return to the browser. -->
     <string name="translations_bottom_sheet_negative_button">Not now</string>
+    <!-- Button text on the translations dialog when a translation error appears, used to dismiss the dialog and return to the browser. -->
+    <string name="translations_bottom_sheet_negative_button_error">Done</string>
     <!-- Button text on the translations dialog to begin a translation of the website. -->
     <string name="translations_bottom_sheet_positive_button">Translate</string>
+    <!-- Button text on the translations dialog when a translation error appears. -->
+    <string name="translations_bottom_sheet_positive_button_error">Try again</string>
     <!-- Inactive button text on the translations dialog that indicates a translation is currently in progress. This button will be accompanied by a loading icon. -->
     <string name="translations_bottom_sheet_translating_in_progress">Translating</string>
     <!-- Button content description (not visible, for screen readers etc.) for the translations dialog translate button that indicates a translation is currently in progress. -->
     <string name="translations_bottom_sheet_translating_in_progress_content_description">Translating in Progress</string>
+    <!-- The title of the warning card informs the user that a translation could not be completed. -->
+    <string name="translation_error_could_not_translate_warning_text">There was a problem translating. Please try again.</string>
+    <!-- The title of the warning card informs the user that the list of languages cannot be loaded. -->
+    <string name="translation_error_could_not_load_languages_warning_text">Couldn’t load languages. Check your internet connection and try again.</string>
+    <!-- The title of the warning card informs the user that a language is not supported. The first parameter is the name of the language that is not supported. -->
+    <string name="translation_error_language_not_supported_warning_text">Sorry, we don’t support %1$s yet.</string>
+    <!-- Button text on the warning card when a language is not supported. The link will take the user to a page to a support page about translations. -->
+    <string name="translation_error_language_not_supported_learn_more">Learn more</string>
 
     <!-- Translations options dialog -->
     <!-- Title of the translation options dialog that allows a user to set their translation options for the site the user is currently on. -->

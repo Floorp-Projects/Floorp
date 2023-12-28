@@ -38,13 +38,17 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
+import mozilla.components.concept.engine.translate.TranslationError
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.BetaLabel
 import org.mozilla.fenix.compose.LinkText
 import org.mozilla.fenix.compose.LinkTextState
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
 import org.mozilla.fenix.compose.button.PrimaryButton
+import org.mozilla.fenix.compose.button.TertiaryButton
 import org.mozilla.fenix.compose.button.TextButton
+import org.mozilla.fenix.shopping.ui.ReviewQualityCheckInfoCard
+import org.mozilla.fenix.shopping.ui.ReviewQualityCheckInfoType
 import org.mozilla.fenix.theme.FirefoxTheme
 
 /**
@@ -54,6 +58,7 @@ import org.mozilla.fenix.theme.FirefoxTheme
 fun TranslationsDialogBottomSheet(
     learnMoreUrl: String,
     showFirstTimeTranslation: Boolean,
+    translationError: TranslationError? = null,
     onSettingClicked: () -> Unit,
     onLearnMoreClicked: () -> Unit,
     onTranslateButtonClick: () -> Unit,
@@ -83,22 +88,35 @@ fun TranslationsDialogBottomSheet(
             TranslationsDialogInfoMessage(onLearnMoreClicked, learnMoreUrl)
         }
 
+        translationError?.let {
+            TranslationErrorWarning(translationError)
+        }
+
         Spacer(modifier = Modifier.height(14.dp))
 
-        when (orientation) {
-            Configuration.ORIENTATION_LANDSCAPE -> {
-                TranslationsDialogContentInLandscapeMode(onTranslateButtonClick)
+        if (translationError !is TranslationError.CouldNotLoadLanguagesError) {
+            when (orientation) {
+                Configuration.ORIENTATION_LANDSCAPE -> {
+                    TranslationsDropdownsInLandscapeMode()
+                }
+
+                else -> {
+                    TranslationsDropdownsInPortraitMode()
+                }
             }
 
-            else -> {
-                TranslationsDialogContentInPortraitMode(onTranslateButtonClick)
-            }
+            Spacer(modifier = Modifier.height(16.dp))
         }
+
+        TranslationsDialogActionButtons(
+            onTranslateButtonClick = onTranslateButtonClick,
+            translationError = translationError,
+        )
     }
 }
 
 @Composable
-private fun TranslationsDialogContentInPortraitMode(onTranslateButtonClick: () -> Unit) {
+private fun TranslationsDropdownsInPortraitMode() {
     Column {
         TranslationsDropdown(
             header = stringResource(id = R.string.translations_bottom_sheet_translate_from),
@@ -109,15 +127,11 @@ private fun TranslationsDialogContentInPortraitMode(onTranslateButtonClick: () -
         TranslationsDropdown(
             header = stringResource(id = R.string.translations_bottom_sheet_translate_to),
         )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        TranslationsDialogActionButtons(onTranslateButtonClick)
     }
 }
 
 @Composable
-private fun TranslationsDialogContentInLandscapeMode(onTranslateButtonClick: () -> Unit) {
+private fun TranslationsDropdownsInLandscapeMode() {
     Column {
         Row {
             TranslationsDropdown(
@@ -131,10 +145,6 @@ private fun TranslationsDialogContentInLandscapeMode(onTranslateButtonClick: () 
                 header = stringResource(id = R.string.translations_bottom_sheet_translate_to),
             )
         }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        TranslationsDialogActionButtons(onTranslateButtonClick)
     }
 }
 
@@ -176,6 +186,51 @@ private fun TranslationsDialogHeader(
                 tint = FirefoxTheme.colors.iconPrimary,
             )
         }
+    }
+}
+
+@Composable
+private fun TranslationErrorWarning(translationError: TranslationError) {
+    val modifier = Modifier
+        .padding(top = 8.dp)
+        .fillMaxWidth()
+
+    when (translationError) {
+        is TranslationError.CouldNotTranslateError -> {
+            ReviewQualityCheckInfoCard(
+                title = stringResource(id = R.string.translation_error_could_not_translate_warning_text),
+                type = ReviewQualityCheckInfoType.Error,
+                modifier = modifier,
+            )
+        }
+
+        is TranslationError.CouldNotLoadLanguagesError -> {
+            ReviewQualityCheckInfoCard(
+                title = stringResource(id = R.string.translation_error_could_not_load_languages_warning_text),
+                type = ReviewQualityCheckInfoType.Error,
+                modifier = modifier,
+            )
+        }
+
+        is TranslationError.LanguageNotSupportedError -> {
+            ReviewQualityCheckInfoCard(
+                title = stringResource(
+                    id = R.string.translation_error_language_not_supported_warning_text,
+                    "Uzbek",
+                ),
+                type = ReviewQualityCheckInfoType.Info,
+                modifier = modifier,
+                footer = stringResource(
+                    id = R.string.translation_error_language_not_supported_learn_more,
+                ) to LinkTextState(
+                    text = stringResource(id = R.string.translation_error_language_not_supported_learn_more),
+                    url = "https://www.mozilla.org",
+                    onClick = {},
+                ),
+            )
+        }
+
+        else -> {}
     }
 }
 
@@ -241,7 +296,10 @@ private fun TranslationsDropdown(
 }
 
 @Composable
-private fun TranslationsDialogActionButtons(onTranslateButtonClick: () -> Unit) {
+private fun TranslationsDialogActionButtons(
+    onTranslateButtonClick: () -> Unit,
+    translationError: TranslationError? = null,
+) {
     val isTranslationInProgress = remember { mutableStateOf(false) }
 
     Row(
@@ -249,8 +307,15 @@ private fun TranslationsDialogActionButtons(onTranslateButtonClick: () -> Unit) 
         horizontalArrangement = Arrangement.End,
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        val negativeButtonTitle =
+            if (translationError is TranslationError.LanguageNotSupportedError) {
+                stringResource(id = R.string.translations_bottom_sheet_negative_button_error)
+            } else {
+                stringResource(id = R.string.translations_bottom_sheet_negative_button)
+            }
+
         TextButton(
-            text = stringResource(id = R.string.translations_bottom_sheet_negative_button),
+            text = negativeButtonTitle,
             modifier = Modifier,
             onClick = {},
         )
@@ -265,12 +330,30 @@ private fun TranslationsDialogActionButtons(onTranslateButtonClick: () -> Unit) 
                 icon = painterResource(id = R.drawable.mozac_ic_sync_24),
             )
         } else {
-            PrimaryButton(
-                text = stringResource(id = R.string.translations_bottom_sheet_positive_button),
-                modifier = Modifier.wrapContentSize(),
-            ) {
-                isTranslationInProgress.value = true
-                onTranslateButtonClick()
+            val positiveButtonTitle =
+                if (translationError is TranslationError.CouldNotLoadLanguagesError) {
+                    stringResource(id = R.string.translations_bottom_sheet_positive_button_error)
+                } else {
+                    stringResource(id = R.string.translations_bottom_sheet_positive_button)
+                }
+
+            if (translationError is TranslationError.LanguageNotSupportedError) {
+                TertiaryButton(
+                    text = positiveButtonTitle,
+                    enabled = false,
+                    modifier = Modifier.wrapContentSize(),
+                ) {
+                    isTranslationInProgress.value = true
+                    onTranslateButtonClick()
+                }
+            } else {
+                PrimaryButton(
+                    text = positiveButtonTitle,
+                    modifier = Modifier.wrapContentSize(),
+                ) {
+                    isTranslationInProgress.value = true
+                    onTranslateButtonClick()
+                }
             }
         }
     }
@@ -283,6 +366,7 @@ private fun TranslationsDialogBottomSheetPreview() {
         TranslationsDialogBottomSheet(
             learnMoreUrl = "",
             showFirstTimeTranslation = true,
+            translationError = TranslationError.LanguageNotSupportedError(null),
             onSettingClicked = {},
             onLearnMoreClicked = {},
             onTranslateButtonClick = {},

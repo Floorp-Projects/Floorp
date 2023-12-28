@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import mozilla.components.concept.engine.translate.TranslationError
 import org.mozilla.fenix.theme.FirefoxTheme
 
 private const val BOTTOM_SHEET_HANDLE_WIDTH_PERCENT = 0.1f
@@ -125,10 +126,12 @@ internal fun TranslationsOptionsAnimation(
     }
 }
 
+@Suppress("LongParameterList")
 @Composable
 internal fun TranslationsDialog(
     learnMoreUrl: String,
     showFirstTimeTranslation: Boolean,
+    translationError: TranslationError? = null,
     onSettingClicked: () -> Unit,
     onLearnMoreClicked: () -> Unit,
     onTranslateButtonClick: () -> Unit,
@@ -136,6 +139,7 @@ internal fun TranslationsDialog(
     TranslationsDialogBottomSheet(
         learnMoreUrl = learnMoreUrl,
         showFirstTimeTranslation = showFirstTimeTranslation,
+        translationError = translationError,
         onSettingClicked = onSettingClicked,
         onLearnMoreClicked = onLearnMoreClicked,
         onTranslateButtonClick = onTranslateButtonClick,
