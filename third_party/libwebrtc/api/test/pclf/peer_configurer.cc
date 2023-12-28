@@ -10,12 +10,40 @@
 
 #include "api/test/pclf/peer_configurer.h"
 
-#include <set>
+#include <cstdint>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include "absl/strings/string_view.h"
+#include "absl/types/optional.h"
+#include "api/async_dns_resolver.h"
+#include "api/audio/audio_mixer.h"
+#include "api/audio_codecs/audio_decoder_factory.h"
+#include "api/audio_codecs/audio_encoder_factory.h"
+#include "api/call/call_factory_interface.h"
+#include "api/fec_controller.h"
+#include "api/field_trials_view.h"
+#include "api/ice_transport_interface.h"
+#include "api/neteq/neteq_factory.h"
+#include "api/peer_connection_interface.h"
+#include "api/rtc_event_log/rtc_event_log_factory_interface.h"
+#include "api/scoped_refptr.h"
+#include "api/task_queue/task_queue_factory.h"
+#include "api/test/create_peer_connection_quality_test_frame_generator.h"
+#include "api/test/frame_generator_interface.h"
 #include "api/test/pclf/media_configuration.h"
 #include "api/test/pclf/media_quality_test_params.h"
 #include "api/test/peer_network_dependencies.h"
+#include "api/transport/bitrate_settings.h"
+#include "api/transport/network_control.h"
+#include "api/video_codecs/video_decoder_factory.h"
+#include "api/video_codecs/video_encoder_factory.h"
+#include "modules/audio_processing/include/audio_processing.h"
+#include "rtc_base/checks.h"
+#include "rtc_base/rtc_certificate_generator.h"
+#include "rtc_base/ssl_certificate.h"
 
 namespace webrtc {
 namespace webrtc_pc_e2e {
@@ -209,6 +237,12 @@ PeerConfigurer* PeerConfigurer::SetBitrateSettings(
 PeerConfigurer* PeerConfigurer::SetIceTransportFactory(
     std::unique_ptr<IceTransportFactory> factory) {
   components_->pc_dependencies->ice_transport_factory = std::move(factory);
+  return this;
+}
+
+PeerConfigurer* PeerConfigurer::SetFieldTrials(
+    std::unique_ptr<FieldTrialsView> field_trials) {
+  components_->pcf_dependencies->trials = std::move(field_trials);
   return this;
 }
 
