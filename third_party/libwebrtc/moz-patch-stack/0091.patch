@@ -1,56 +1,38 @@
-From: Michael Froman <mfroman@mozilla.com>
-Date: Thu, 28 Sep 2023 14:12:00 +0000
-Subject: Bug 1832465 - remove libXtst usage from libwebrtc.
- r=ng,webrtc-reviewers
+From: stransky <stransky@redhat.com>
+Date: Tue, 29 Aug 2023 12:43:00 +0000
+Subject: Bug 1821629 [DMABuf] Don't use DMABuf if it's disabled by Firefox gfx
+ config r=ng,webrtc-reviewers
 
-Differential Revision: https://phabricator.services.mozilla.com/D189386
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/0ec1b33b95dbb2d39355f28b2812fe25b4ad9f20
+Differential Revision: https://phabricator.services.mozilla.com/D172224
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/158a888cad8869a2f0026fa7cfaaa13ecbfcf2ed
 ---
- modules/desktop_capture/BUILD.gn                      | 3 +++
- modules/desktop_capture/linux/x11/shared_x_display.cc | 4 ++++
- 2 files changed, 7 insertions(+)
+ .../linux/wayland/shared_screencast_stream.cc            | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
 
-diff --git a/modules/desktop_capture/BUILD.gn b/modules/desktop_capture/BUILD.gn
-index dcc1b3c6ac..0634e0e9c4 100644
---- a/modules/desktop_capture/BUILD.gn
-+++ b/modules/desktop_capture/BUILD.gn
-@@ -384,6 +384,9 @@ rtc_library("desktop_capture") {
-       "Xrandr",
-       "Xtst",
-     ]
-+    if (build_with_mozilla) {
-+      libs -= [ "Xtst" ]
-+    }
-   }
+diff --git a/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc b/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
+index 0c26e7a7d5..22aa355e44 100644
+--- a/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
++++ b/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
+@@ -28,6 +28,13 @@
+ #include "rtc_base/synchronization/mutex.h"
+ #include "rtc_base/time_utils.h"
  
-   if (!is_win && !is_mac && !rtc_use_x11_extensions && !rtc_use_pipewire &&
-diff --git a/modules/desktop_capture/linux/x11/shared_x_display.cc b/modules/desktop_capture/linux/x11/shared_x_display.cc
-index d690b0e2ba..3f3617b074 100644
---- a/modules/desktop_capture/linux/x11/shared_x_display.cc
-+++ b/modules/desktop_capture/linux/x11/shared_x_display.cc
-@@ -11,7 +11,9 @@
- #include "modules/desktop_capture/linux/x11/shared_x_display.h"
++// Wrapper for gfxVars::UseDMABuf() as we can't include gfxVars here.
++// We don't want to use dmabuf of known broken systems.
++// See FEATURE_DMABUF for details.
++namespace mozilla::gfx {
++bool IsDMABufEnabled();
++}
++
+ namespace webrtc {
  
- #include <X11/Xlib.h>
-+#if !defined(WEBRTC_MOZILLA_BUILD)
- #include <X11/extensions/XTest.h>
-+#endif
+ const int kBytesPerPixel = 4;
+@@ -294,7 +301,7 @@ void SharedScreenCastStreamPrivate::OnStreamParamChanged(
+   that->modifier_ =
+       has_modifier ? that->spa_video_format_.modifier : DRM_FORMAT_MOD_INVALID;
+   std::vector<const spa_pod*> params;
+-  const int buffer_types = has_modifier
++  const int buffer_types = has_modifier && mozilla::gfx::IsDMABufEnabled()
+                                ? (1 << SPA_DATA_DmaBuf) | (1 << SPA_DATA_MemFd)
+                                : (1 << SPA_DATA_MemFd);
  
- #include <algorithm>
- 
-@@ -95,6 +97,7 @@ void SharedXDisplay::ProcessPendingXEvents() {
- }
- 
- void SharedXDisplay::IgnoreXServerGrabs() {
-+#if !defined(WEBRTC_MOZILLA_BUILD)
-   int test_event_base = 0;
-   int test_error_base = 0;
-   int major = 0;
-@@ -103,6 +106,7 @@ void SharedXDisplay::IgnoreXServerGrabs() {
-                           &minor)) {
-     XTestGrabControl(display(), true);
-   }
-+#endif
- }
- 
- }  // namespace webrtc

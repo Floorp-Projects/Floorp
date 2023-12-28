@@ -1,94 +1,44 @@
-From: Alex Chronopoulos <achronop@gmail.com>
-Date: Tue, 17 Sep 2019 14:31:00 +0000
-Subject: Bug 1581806 - Trigger devicechange event for audio and video input
- devices only. r=dminor
+From: Dan Minor <dminor@mozilla.com>
+Date: Fri, 29 Mar 2019 18:43:00 +0000
+Subject: Bug 1539220 - Prefer non-RGB24 capabilities when available;
+ r=pehrsons
 
-After Bug 1581193 devicechange notifications were triggered with any device change, not just video and audio devices. This patch limits down the notifications to only video and audio input devices change.
+We've hit a number of problems with handling of RGB24 video capture on
+Windows. This adds a check that will ignore any RGB24 capture capabilities
+when determining a best match if there are other capabilities available to
+workaround the problems.
 
-Differential Revision: https://phabricator.services.mozilla.com/D46147
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/1feec83ee6f92a35de0d4b27ebea04e68a0d7ef0
+Differential Revision: https://phabricator.services.mozilla.com/D25449
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/c12307f3817bec87712ab5930493c3135c76b0a0
 ---
- .../video_capture/windows/device_info_ds.cc   | 29 +++++++++++++++++--
- .../video_capture/windows/device_info_ds.h    |  1 +
- 2 files changed, 28 insertions(+), 2 deletions(-)
+ modules/video_capture/device_info_impl.cc | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
 
-diff --git a/modules/video_capture/windows/device_info_ds.cc b/modules/video_capture/windows/device_info_ds.cc
-index 460ef3b7b9..a7eca19bbf 100644
---- a/modules/video_capture/windows/device_info_ds.cc
-+++ b/modules/video_capture/windows/device_info_ds.cc
-@@ -20,6 +20,18 @@
- namespace webrtc {
- namespace videocapturemodule {
+diff --git a/modules/video_capture/device_info_impl.cc b/modules/video_capture/device_info_impl.cc
+index 7cccdb51a7..2a6afb3147 100644
+--- a/modules/video_capture/device_info_impl.cc
++++ b/modules/video_capture/device_info_impl.cc
+@@ -100,10 +100,23 @@ int32_t DeviceInfoImpl::GetBestMatchedCapability(
+   const int32_t numberOfCapabilies =
+       static_cast<int32_t>(_captureCapabilities.size());
  
-+BOOL isCaptureDevice(DEV_BROADCAST_HDR *pHdr)
-+{
-+  if (pHdr == NULL) {
-+    return FALSE;
++  bool hasNonRGB24Capability = false;
+   for (int32_t tmp = 0; tmp < numberOfCapabilies;
+        ++tmp)  // Loop through all capabilities
+   {
+     VideoCaptureCapability& capability = _captureCapabilities[tmp];
++    if (capability.videoType != VideoType::kRGB24) {
++      hasNonRGB24Capability = true;
++    }
 +  }
-+  if (pHdr->dbch_devicetype != DBT_DEVTYP_DEVICEINTERFACE) {
-+    return FALSE;
-+  }
-+  DEV_BROADCAST_DEVICEINTERFACE* pDi = (DEV_BROADCAST_DEVICEINTERFACE*)pHdr;
-+  return pDi->dbcc_classguid == KSCATEGORY_CAPTURE;
-+}
 +
- LRESULT CALLBACK WndProc(HWND hWnd, UINT uiMsg, WPARAM wParam, LPARAM lParam)
- {
-     DeviceInfoDS* pParent;
-@@ -35,7 +47,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uiMsg, WPARAM wParam, LPARAM lParam)
-     else if (uiMsg == WM_DEVICECHANGE)
-     {
-         pParent = (DeviceInfoDS*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
--        if (pParent)
-+        if (pParent && isCaptureDevice((PDEV_BROADCAST_HDR)lParam))
-         {
-             pParent->DeviceChange();
-         }
-@@ -56,7 +68,8 @@ DeviceInfoDS* DeviceInfoDS::Create() {
- DeviceInfoDS::DeviceInfoDS()
-     : _dsDevEnum(NULL),
-       _dsMonikerDevEnum(NULL),
--      _CoUninitializeIsRequired(true) {
-+      _CoUninitializeIsRequired(true),
-+      _hdevnotify(NULL) {
-   // 1) Initialize the COM library (make Windows load the DLLs).
-   //
-   // CoInitializeEx must be called at least once, and is usually called only
-@@ -111,6 +124,14 @@ DeviceInfoDS::DeviceInfoDS()
-     _hwnd = CreateWindow(_wndClass.lpszClassName, NULL, 0, CW_USEDEFAULT,
-                          CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, NULL,
-                          NULL, _hInstance, this);
-+
-+    DEV_BROADCAST_DEVICEINTERFACE di = { 0 };
-+    di.dbcc_size = sizeof(di);
-+    di.dbcc_devicetype  = DBT_DEVTYP_DEVICEINTERFACE;
-+    di.dbcc_classguid  = KSCATEGORY_CAPTURE;
-+
-+    _hdevnotify = RegisterDeviceNotification(_hwnd, &di,
-+                                             DEVICE_NOTIFY_WINDOW_HANDLE);
-   }
- }
- 
-@@ -120,6 +141,10 @@ DeviceInfoDS::~DeviceInfoDS() {
-   if (_CoUninitializeIsRequired) {
-     CoUninitialize();
-   }
-+  if (_hdevnotify)
++  for (int32_t tmp = 0; tmp < numberOfCapabilies;
++       ++tmp)  // Loop through all capabilities
 +  {
-+    UnregisterDeviceNotification(_hdevnotify);
-+  }
-   if (_hwnd != NULL) {
-     DestroyWindow(_hwnd);
-   }
-diff --git a/modules/video_capture/windows/device_info_ds.h b/modules/video_capture/windows/device_info_ds.h
-index dc7b9b1a24..ed2a726d6f 100644
---- a/modules/video_capture/windows/device_info_ds.h
-+++ b/modules/video_capture/windows/device_info_ds.h
-@@ -96,6 +96,7 @@ class DeviceInfoDS : public DeviceInfoImpl {
-   HWND _hwnd;
-   WNDCLASS _wndClass;
-   HINSTANCE _hInstance;
-+  HDEVNOTIFY _hdevnotify;
- };
- }  // namespace videocapturemodule
- }  // namespace webrtc
++    VideoCaptureCapability& capability = _captureCapabilities[tmp];
++    if (hasNonRGB24Capability && capability.videoType == VideoType::kRGB24) {
++      continue;
++    }
+ 
+     const int32_t diffWidth = capability.width - requested.width;
+     const int32_t diffHeight = capability.height - requested.height;

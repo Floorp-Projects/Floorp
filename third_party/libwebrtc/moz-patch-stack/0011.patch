@@ -1,42 +1,53 @@
-From: Dan Minor <dminor@mozilla.com>
-Date: Wed, 19 Sep 2018 15:06:00 -0400
-Subject: Bug 1376873 - Fix up rotation in video_capture_impl.cc; r=pehrsons
+From: "Byron Campen [:bwc]" <docfaraday@gmail.com>
+Date: Fri, 12 Feb 2021 14:27:00 +0000
+Subject: Bug 1654112 - Get OS X build working.
+ r=ng,firefox-build-system-reviewers,glandium
 
-This fixes a bug in the upstream code introduced when they removed the
-ConvertToI420 helper method from webrtc_libyuv.cc. The buffer size is
-passed into libyuv::ConvertI420 incorrectly when rotation is applied, which
-causes bad rendering and instabilities.
+* Pull in sdk/objc/base and sdk/objc/helpers
+* Add gclient_args.gni to keep build happy.
+* Add a missing include path for libyuv
+* Support .m files in build.
 
-Differential Revision: https://phabricator.services.mozilla.com/D7478
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/c56cb66f86518dfb046c642ebeb07cf51c23a3cb
+Differential Revision: https://phabricator.services.mozilla.com/D105015
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/9314046d89ebc0836a50ab7addece71abbf0b5e4
 ---
- modules/video_capture/video_capture_impl.cc | 11 ++++++++++-
- 1 file changed, 10 insertions(+), 1 deletion(-)
+ modules/desktop_capture/mac/screen_capturer_mac.mm | 3 ++-
+ modules/desktop_capture/mac/window_list_utils.cc   | 4 ++--
+ 2 files changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/modules/video_capture/video_capture_impl.cc b/modules/video_capture/video_capture_impl.cc
-index 66fd0a0ebe..7071776d0a 100644
---- a/modules/video_capture/video_capture_impl.cc
-+++ b/modules/video_capture/video_capture_impl.cc
-@@ -218,12 +218,21 @@ int32_t VideoCaptureImpl::IncomingFrame(uint8_t* videoFrame,
-     }
+diff --git a/modules/desktop_capture/mac/screen_capturer_mac.mm b/modules/desktop_capture/mac/screen_capturer_mac.mm
+index b082136e76..1f4a62f7cd 100644
+--- a/modules/desktop_capture/mac/screen_capturer_mac.mm
++++ b/modules/desktop_capture/mac/screen_capturer_mac.mm
+@@ -276,7 +276,8 @@ bool ScreenCapturerMac::GetSourceList(SourceList* screens) {
+   for (MacDisplayConfigurations::iterator it = desktop_config_.displays.begin();
+        it != desktop_config_.displays.end();
+        ++it) {
+-    screens->push_back({it->id, std::string()});
++    Source value = {it->id, 0, std::string()};
++    screens->push_back(value);
    }
- 
-+  int dst_width = buffer->width();
-+  int dst_height = buffer->height();
-+
-+  // LibYuv expects pre-rotation_mode values for dst.
-+  // Stride values should correspond to the destination values.
-+  if (rotation_mode == libyuv::kRotate90 || rotation_mode == libyuv::kRotate270) {
-+    std::swap(dst_width, dst_height);
-+  }
-+
-   const int conversionResult = libyuv::ConvertToI420(
-       videoFrame, videoFrameLength, buffer.get()->MutableDataY(),
-       buffer.get()->StrideY(), buffer.get()->MutableDataU(),
-       buffer.get()->StrideU(), buffer.get()->MutableDataV(),
-       buffer.get()->StrideV(), 0, 0,  // No Cropping
--      width, height, target_width, target_height, rotation_mode,
-+      width, height, dst_width, dst_height, rotation_mode,
-       ConvertVideoType(frameInfo.videoType));
-   if (conversionResult != 0) {
-     RTC_LOG(LS_ERROR) << "Failed to convert capture frame from type "
+   return true;
+ }
+diff --git a/modules/desktop_capture/mac/window_list_utils.cc b/modules/desktop_capture/mac/window_list_utils.cc
+index 5d881662ea..989ec7ea54 100644
+--- a/modules/desktop_capture/mac/window_list_utils.cc
++++ b/modules/desktop_capture/mac/window_list_utils.cc
+@@ -198,7 +198,7 @@ bool GetWindowList(DesktopCapturer::SourceList* windows,
+             // the check in the map. Also skip the window if owner name is
+             // empty too.
+             if (!owner_name.empty() && (itr == pid_itr_map.end())) {
+-              sources.push_back(DesktopCapturer::Source{window_id, owner_name});
++              sources.push_back(DesktopCapturer::Source{window_id, pid, owner_name});
+               RTC_DCHECK(!sources.empty());
+               // Get an iterator on the last valid element in the source list.
+               std::list<DesktopCapturer::Source>::const_iterator last_source =
+@@ -209,7 +209,7 @@ bool GetWindowList(DesktopCapturer::SourceList* windows,
+                       pid, last_source));
+             }
+           } else {
+-            sources.push_back(DesktopCapturer::Source{window_id, title});
++            sources.push_back(DesktopCapturer::Source{window_id, pid, title});
+             // Once the window with empty title has been removed no other empty
+             // windows are allowed for the same pid.
+             if (itr != pid_itr_map.end() && (itr->second != sources.end())) {

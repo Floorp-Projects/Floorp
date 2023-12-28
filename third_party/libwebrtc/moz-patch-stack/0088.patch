@@ -1,38 +1,66 @@
 From: Byron Campen <docfaraday@gmail.com>
 Date: Thu, 20 Jul 2023 14:24:00 +0000
-Subject: Bug 1838080: Ensure that last ref to transformation_queue_ is not
- released on itself. r=pehrsons,webrtc-reviewers
+Subject: Bug 1838080: Use the current TaskQueue, instead of the current
+ thread, to init this. r=pehrsons,webrtc-reviewers
 
-Differential Revision: https://phabricator.services.mozilla.com/D181699
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/91d9e8b6a5c430a73561ffd2330865f04fcb1a6d
+There are situations where the current thread is not set, but the current
+TaskQueue is (but not vice versa).
+
+Differential Revision: https://phabricator.services.mozilla.com/D180736
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/62e71a2f745c4b98d5ee7ce9e6386aa1b657be9b
 ---
- .../rtp_sender_video_frame_transformer_delegate.cc       | 9 +++++++++
- 1 file changed, 9 insertions(+)
+ .../rtp_video_stream_receiver_frame_transformer_delegate.cc  | 3 +--
+ .../rtp_video_stream_receiver_frame_transformer_delegate.h   | 5 ++---
+ video/rtp_video_stream_receiver2.cc                          | 2 +-
+ 3 files changed, 4 insertions(+), 6 deletions(-)
 
-diff --git a/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate.cc b/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate.cc
-index 1e9fececc6..9c411bbe54 100644
---- a/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate.cc
-+++ b/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate.cc
-@@ -17,6 +17,7 @@
- #include "api/task_queue/task_queue_factory.h"
- #include "modules/rtp_rtcp/source/rtp_descriptor_authentication.h"
- #include "rtc_base/checks.h"
-+#include "rtc_base/event.h"
+diff --git a/modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate.cc b/modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate.cc
+index 1b3cb7d9ab..abca496973 100644
+--- a/modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate.cc
++++ b/modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate.cc
+@@ -90,8 +90,7 @@ RtpVideoStreamReceiverFrameTransformerDelegate::
+         RtpVideoFrameReceiver* receiver,
+         Clock* clock,
+         rtc::scoped_refptr<FrameTransformerInterface> frame_transformer,
+-        rtc::Thread* network_thread,
+-        uint32_t ssrc)
++        TaskQueueBase* network_thread, uint32_t ssrc)
+     : receiver_(receiver),
+       frame_transformer_(std::move(frame_transformer)),
+       network_thread_(network_thread),
+diff --git a/modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate.h b/modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate.h
+index 62a42fdddf..20f9a5caa9 100644
+--- a/modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate.h
++++ b/modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate.h
+@@ -41,8 +41,7 @@ class RtpVideoStreamReceiverFrameTransformerDelegate
+       RtpVideoFrameReceiver* receiver,
+       Clock* clock,
+       rtc::scoped_refptr<FrameTransformerInterface> frame_transformer,
+-      rtc::Thread* network_thread,
+-      uint32_t ssrc);
++      TaskQueueBase* network_thread, uint32_t ssrc);
  
- namespace webrtc {
- namespace {
-@@ -224,6 +225,14 @@ void RTPSenderVideoFrameTransformerDelegate::Reset() {
-     MutexLock lock(&sender_lock_);
-     sender_ = nullptr;
+   void Init();
+   void Reset();
+@@ -67,7 +66,7 @@ class RtpVideoStreamReceiverFrameTransformerDelegate
+   RtpVideoFrameReceiver* receiver_ RTC_GUARDED_BY(network_sequence_checker_);
+   rtc::scoped_refptr<FrameTransformerInterface> frame_transformer_
+       RTC_GUARDED_BY(network_sequence_checker_);
+-  rtc::Thread* const network_thread_;
++  TaskQueueBase* const network_thread_;
+   const uint32_t ssrc_;
+   Clock* const clock_;
+ };
+diff --git a/video/rtp_video_stream_receiver2.cc b/video/rtp_video_stream_receiver2.cc
+index db0b87c736..c4a021d6c0 100644
+--- a/video/rtp_video_stream_receiver2.cc
++++ b/video/rtp_video_stream_receiver2.cc
+@@ -341,7 +341,7 @@ RtpVideoStreamReceiver2::RtpVideoStreamReceiver2(
+   if (frame_transformer) {
+     frame_transformer_delegate_ =
+         rtc::make_ref_counted<RtpVideoStreamReceiverFrameTransformerDelegate>(
+-            this, clock_, std::move(frame_transformer), rtc::Thread::Current(),
++            this, clock_, std::move(frame_transformer), TaskQueueBase::Current(),
+             config_.rtp.remote_ssrc);
+     frame_transformer_delegate_->Init();
    }
-+  // Wait until all pending tasks are executed, to ensure that the last ref
-+  // standing is not on the transformation queue.
-+  rtc::Event flush;
-+  transformation_queue_->PostTask([this, &flush]() {
-+    RTC_DCHECK_RUN_ON(transformation_queue_.get());
-+    flush.Set();
-+  });
-+  flush.Wait(rtc::Event::kForever);
- }
- 
- std::unique_ptr<TransformableVideoFrameInterface> CloneSenderVideoFrame(

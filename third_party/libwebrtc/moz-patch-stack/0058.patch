@@ -1,171 +1,67 @@
-From: Andreas Pehrson <apehrson@mozilla.com>
-Date: Mon, 18 Jan 2021 11:07:00 +0100
-Subject: Bug 1766646 - (fix-ae0d117d51) ifdef our Csrc impl vs upstream's
- impl, see Bug 1771332.
+From: Michael Froman <mjfroman@mac.com>
+Date: Thu, 28 Apr 2022 10:53:43 -0500
+Subject: Bug 1766646 - (fix-a0bb2ef2dc) add back VideoType enum values
 
 ---
- modules/rtp_rtcp/source/rtp_header_extensions.cc | 4 ++++
- modules/rtp_rtcp/source/rtp_header_extensions.h  | 4 ++++
- modules/rtp_rtcp/source/rtp_packet.cc            | 4 ++++
- modules/rtp_rtcp/source/rtp_sender.cc            | 4 ++++
- test/fuzzers/rtp_packet_fuzzer.cc                | 4 ++++
- 5 files changed, 20 insertions(+)
+ common_video/libyuv/include/webrtc_libyuv.h | 3 +++
+ common_video/libyuv/webrtc_libyuv.cc        | 9 +++++++++
+ 2 files changed, 12 insertions(+)
 
-diff --git a/modules/rtp_rtcp/source/rtp_header_extensions.cc b/modules/rtp_rtcp/source/rtp_header_extensions.cc
-index b86a7d775c..ea41226abf 100644
---- a/modules/rtp_rtcp/source/rtp_header_extensions.cc
-+++ b/modules/rtp_rtcp/source/rtp_header_extensions.cc
-@@ -181,6 +181,7 @@ bool AudioLevel::Write(rtc::ArrayView<uint8_t> data,
-   return true;
- }
- 
-+#if !defined(WEBRTC_MOZILLA_BUILD)
- // An RTP Header Extension for Mixer-to-Client Audio Level Indication
- //
- // https://tools.ietf.org/html/rfc6465
-@@ -230,6 +231,7 @@ bool CsrcAudioLevel::Write(rtc::ArrayView<uint8_t> data,
-   }
-   return true;
- }
-+#endif
- 
- // From RFC 5450: Transmission Time Offsets in RTP Streams.
- //
-@@ -423,6 +425,7 @@ bool PlayoutDelayLimits::Write(rtc::ArrayView<uint8_t> data,
-   return true;
- }
- 
-+#if defined(WEBRTC_MOZILLA_BUILD)
- // CSRCAudioLevel
- //  Sample Audio Level Encoding Using the One-Byte Header Format
- //  Note that the range of len is 1 to 15 which is encoded as 0 to 14
-@@ -461,6 +464,7 @@ bool CsrcAudioLevel::Write(rtc::ArrayView<uint8_t> data,
-   // This extension if used must have at least one audio level
-   return csrcAudioLevels.numAudioLevels;
- }
-+#endif
- 
- // Video Content Type.
- //
-diff --git a/modules/rtp_rtcp/source/rtp_header_extensions.h b/modules/rtp_rtcp/source/rtp_header_extensions.h
-index fff7db0294..09bd9912e1 100644
---- a/modules/rtp_rtcp/source/rtp_header_extensions.h
-+++ b/modules/rtp_rtcp/source/rtp_header_extensions.h
-@@ -94,6 +94,7 @@ class AudioLevel {
-                     uint8_t audio_level);
+diff --git a/common_video/libyuv/include/webrtc_libyuv.h b/common_video/libyuv/include/webrtc_libyuv.h
+index 68831c70ab..253a33294d 100644
+--- a/common_video/libyuv/include/webrtc_libyuv.h
++++ b/common_video/libyuv/include/webrtc_libyuv.h
+@@ -35,11 +35,14 @@ enum class VideoType {
+   kBGR24,
+   kARGB,
+   kABGR,
++  kARGB4444,
+   kRGB565,
++  kARGB1555,
+   kYUY2,
+   kYV12,
+   kUYVY,
+   kMJPEG,
++  kNV21,
+   kBGRA,
+   kNV12,
  };
- 
-+#if !defined(WEBRTC_MOZILLA_BUILD)
- class CsrcAudioLevel {
-  public:
-   static constexpr RTPExtensionType kId = kRtpExtensionCsrcAudioLevel;
-@@ -108,6 +109,7 @@ class CsrcAudioLevel {
-   static bool Write(rtc::ArrayView<uint8_t> data,
-                     rtc::ArrayView<const uint8_t> csrc_audio_levels);
- };
-+#endif
- 
- class TransmissionOffset {
-  public:
-@@ -298,6 +300,7 @@ class ColorSpaceExtension {
-   static size_t WriteLuminance(uint8_t* data, float f, int denominator);
- };
- 
-+#if defined(WEBRTC_MOZILLA_BUILD)
- class CsrcAudioLevel {
-  public:
-   static constexpr RTPExtensionType kId = kRtpExtensionCsrcAudioLevel;
-@@ -312,6 +315,7 @@ class CsrcAudioLevel {
-   static size_t ValueSize(const CsrcAudioLevelList& csrcAudioLevels);
-   static bool Write(rtc::ArrayView<uint8_t> data, const CsrcAudioLevelList& csrcAudioLevels);
- };
-+#endif
- 
- // Base extension class for RTP header extensions which are strings.
- // Subclasses must defined kId and kUri static constexpr members.
-diff --git a/modules/rtp_rtcp/source/rtp_packet.cc b/modules/rtp_rtcp/source/rtp_packet.cc
-index b152cdbd9e..7181b303e1 100644
---- a/modules/rtp_rtcp/source/rtp_packet.cc
-+++ b/modules/rtp_rtcp/source/rtp_packet.cc
-@@ -187,7 +187,9 @@ void RtpPacket::ZeroMutableExtensions() {
-         break;
-       }
-       case RTPExtensionType::kRtpExtensionAudioLevel:
-+#if !defined(WEBRTC_MOZILLA_BUILD)
-       case RTPExtensionType::kRtpExtensionCsrcAudioLevel:
-+#endif
-       case RTPExtensionType::kRtpExtensionAbsoluteCaptureTime:
-       case RTPExtensionType::kRtpExtensionColorSpace:
-       case RTPExtensionType::kRtpExtensionGenericFrameDescriptor:
-@@ -205,10 +207,12 @@ void RtpPacket::ZeroMutableExtensions() {
-         // Non-mutable extension. Don't change it.
-         break;
-       }
-+#if defined(WEBRTC_MOZILLA_BUILD)
-       case RTPExtensionType::kRtpExtensionCsrcAudioLevel: {
-         // TODO: This is a Mozilla addition, we need to add a handler for this.
-         RTC_CHECK(false);
-       }
-+#endif
-     }
-   }
- }
-diff --git a/modules/rtp_rtcp/source/rtp_sender.cc b/modules/rtp_rtcp/source/rtp_sender.cc
-index f4ba024444..4972aa0802 100644
---- a/modules/rtp_rtcp/source/rtp_sender.cc
-+++ b/modules/rtp_rtcp/source/rtp_sender.cc
-@@ -104,7 +104,9 @@ bool IsNonVolatile(RTPExtensionType type) {
+diff --git a/common_video/libyuv/webrtc_libyuv.cc b/common_video/libyuv/webrtc_libyuv.cc
+index 31ba1feca3..05a4b184c2 100644
+--- a/common_video/libyuv/webrtc_libyuv.cc
++++ b/common_video/libyuv/webrtc_libyuv.cc
+@@ -24,6 +24,7 @@ size_t CalcBufferSize(VideoType type, int width, int height) {
+   RTC_DCHECK_GE(height, 0);
    switch (type) {
-     case kRtpExtensionTransmissionTimeOffset:
-     case kRtpExtensionAudioLevel:
-+#if !defined(WEBRTC_MOZILLA_BUILD)
-     case kRtpExtensionCsrcAudioLevel:
-+#endif
-     case kRtpExtensionAbsoluteSendTime:
-     case kRtpExtensionTransportSequenceNumber:
-     case kRtpExtensionTransportSequenceNumber02:
-@@ -128,10 +130,12 @@ bool IsNonVolatile(RTPExtensionType type) {
-     case kRtpExtensionNumberOfExtensions:
-       RTC_DCHECK_NOTREACHED();
-       return false;
-+#if defined(WEBRTC_MOZILLA_BUILD)
-     case kRtpExtensionCsrcAudioLevel:
-       // TODO: Mozilla implement for CsrcAudioLevel
-       RTC_CHECK(false);
-       return false;
-+#endif
-   }
-   RTC_CHECK_NOTREACHED();
- }
-diff --git a/test/fuzzers/rtp_packet_fuzzer.cc b/test/fuzzers/rtp_packet_fuzzer.cc
-index 0e10a8fa3a..5d117529bb 100644
---- a/test/fuzzers/rtp_packet_fuzzer.cc
-+++ b/test/fuzzers/rtp_packet_fuzzer.cc
-@@ -77,11 +77,13 @@ void FuzzOneInput(const uint8_t* data, size_t size) {
-         uint8_t audio_level;
-         packet.GetExtension<AudioLevel>(&voice_activity, &audio_level);
-         break;
-+#if !defined(WEBRTC_MOZILLA_BUILD)
-       case kRtpExtensionCsrcAudioLevel: {
-         std::vector<uint8_t> audio_levels;
-         packet.GetExtension<CsrcAudioLevel>(&audio_levels);
-         break;
-       }
-+#endif
-       case kRtpExtensionAbsoluteSendTime:
-         uint32_t sendtime;
-         packet.GetExtension<AbsoluteSendTime>(&sendtime);
-@@ -164,11 +166,13 @@ void FuzzOneInput(const uint8_t* data, size_t size) {
-         // This extension requires state to read and so complicated that
-         // deserves own fuzzer.
-         break;
-+#if defined(WEBRTC_MOZILLA_BUILD)
-       case kRtpExtensionCsrcAudioLevel: {
-         CsrcAudioLevelList levels;
-         packet.GetExtension<CsrcAudioLevel>(&levels);
-         break;
-       }
-+#endif
+     case VideoType::kI420:
++    case VideoType::kNV21:
+     case VideoType::kIYUV:
+     case VideoType::kYV12:
+     case VideoType::kNV12: {
+@@ -31,7 +32,9 @@ size_t CalcBufferSize(VideoType type, int width, int height) {
+       int half_height = (height + 1) >> 1;
+       return width * height + half_width * half_height * 2;
      }
++    case VideoType::kARGB4444:
+     case VideoType::kRGB565:
++    case VideoType::kARGB1555:
+     case VideoType::kYUY2:
+     case VideoType::kUYVY:
+       return width * height * 2;
+@@ -104,10 +107,16 @@ int ConvertVideoType(VideoType video_type) {
+       return libyuv::FOURCC_UYVY;
+     case VideoType::kMJPEG:
+       return libyuv::FOURCC_MJPG;
++    case VideoType::kNV21:
++      return libyuv::FOURCC_NV21;
+     case VideoType::kARGB:
+       return libyuv::FOURCC_ARGB;
+     case VideoType::kBGRA:
+       return libyuv::FOURCC_BGRA;
++    case VideoType::kARGB4444:
++      return libyuv::FOURCC_R444;
++    case VideoType::kARGB1555:
++      return libyuv::FOURCC_RGBO;
+     case VideoType::kNV12:
+       return libyuv::FOURCC_NV12;
    }
- 
