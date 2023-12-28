@@ -83,6 +83,7 @@ class FFmpegVideoEncoder<LIBAV_VER> final : public MediaDataEncoder {
   EncoderConfig mConfig;
 
   // mTaskQueue only.
+  nsCString mCodecName;
   AVCodecContext* mCodecContext;
   AVFrame* mFrame;
 
