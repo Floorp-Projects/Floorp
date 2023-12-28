@@ -13,7 +13,7 @@ import lzma
 import os
 import struct
 import zlib
-from collections import namedtuple
+from collections import deque, namedtuple
 from xml.etree.ElementTree import XML
 
 
@@ -69,7 +69,10 @@ def unxar(fileobj):
     if len(toc) != uncompressed_toc_len:
         raise Exception("Corrupted XAR?")
     toc = XML(toc).find("toc")
-    for f in toc.findall("file"):
+    queue = deque(toc.findall("file"))
+    while queue:
+        f = queue.pop()
+        queue.extend(f.iterfind("file"))
         if f.find("type").text != "file":
             continue
         filename = f.find("name").text
