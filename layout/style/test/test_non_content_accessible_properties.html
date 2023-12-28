@@ -4,26 +4,30 @@
 <iframe></iframe>
 <iframe srcdoc="Foo"></iframe>
 <script>
-const NON_CONTENT_ACCESSIBLE_PROPERTIES = [
-  "-x-span",
-  "-x-lang",
-  "-x-text-scale",
+const CHROME_ONLY_PROPERTIES = [
   "-moz-window-input-region-margin",
   "-moz-window-shadow",
   "-moz-window-opacity",
   "-moz-window-transform",
   "-moz-window-transform-origin",
+  "-moz-default-appearance",
+  "-moz-user-focus",
+];
+
+const UA_ONLY_PROPERTIES = [
+  "-x-span",
+  "-x-lang",
+  "-x-text-scale",
+  "-moz-control-character-visibility",
   "-moz-top-layer",
   "-moz-script-level",
   "-moz-math-display",
   "-moz-math-variant",
-  "-moz-font-smoothing-background-color",
-  "-moz-min-font-size-ratio",
-  "-moz-default-appearance",
   "-moz-inert",
-  "-moz-control-character-visibility",
+  "-moz-min-font-size-ratio",
+  // TODO: This should ideally be in CHROME_ONLY_PROPERTIES, but due to how
+  // [Pref] and [ChromeOnly] interact in WebIDL, the former wins.
   "-moz-context-properties",
-  "-moz-user-focus",
 ];
 
 function testInWin(win) {
@@ -36,9 +40,14 @@ function testInWin(win) {
   sheet.textContent = `div { color: initial }`;
   assert_equals(sheet.sheet.cssRules[0].style.length, 1, `sanity: ${doc.documentURI}`);
 
-  for (const prop of NON_CONTENT_ACCESSIBLE_PROPERTIES) {
+  for (const prop of CHROME_ONLY_PROPERTIES.concat(UA_ONLY_PROPERTIES)) {
     sheet.textContent = `div { ${prop}: initial }`;
     let block = sheet.sheet.cssRules[0].style;
+    assert_false(prop in block, `${prop} shouldn't be exposed in CSS2Properties`);
+
+    let isUAOnly = UA_ONLY_PROPERTIES.includes(prop);
+    assert_equals(prop in SpecialPowers.wrap(block), !isUAOnly, `${prop} should be exposed to chrome code if needed`);
+
     assert_equals(
       block.length,
       0,
