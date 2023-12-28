@@ -72,6 +72,28 @@ const TEST_DOMAIN_TO_CATEGORIES_MAP_TIE = {
   "+gl+dBhWE0nx0AM69m2g5w==": [11, 50, 12, 50],
 };
 
+const TEST_DOMAIN_TO_CATEGORIES_MAP_RANK_PENALIZATION_1 = {
+  "VSXaqgDKYWrJ/yjsFomUdg==": [1, 45],
+  "6re74Kk34n2V6VCdLmCD5w==": [2, 45],
+  "s8gOGIaFnly5hHX7nPncnw==": [3, 45],
+  "zfRJyKV+2jd1RKNsSHm9pw==": [4, 45],
+  "zcW+KbRfLRO6Dljf5qnuwQ==": [5, 45],
+  "Rau9mfbBcIRiRQIliUxkow==": [6, 45],
+  "4AFhUOmLQ8804doOsI4jBA==": [7, 45],
+  "YZ3aEL73MR+Cjog0D7A24w==": [8, 45],
+  "crMclD9rwInEQ30DpZLg+g==": [9, 45],
+  "/r7oPRoE6LJAE95nuwmu7w==": [10, 45],
+};
+
+const TEST_DOMAIN_TO_CATEGORIES_MAP_RANK_PENALIZATION_2 = {
+  "sHWSmFwSYL3snycBZCY8Kg==": [1, 35, 2, 4],
+  "FZ5zPYh6ByI0KGWKkmpDoA==": [1, 5, 2, 94],
+};
+
+const TEST_DOMAIN_TO_CATEGORIES_MAP_RANK_PENALIZATION_3 = {
+  "WvodmXTKbmLPVwFSai5uMQ==": [0, 52, 3, 45],
+};
+
 add_setup(async () => {
   Services.prefs.setBoolPref("browser.search.log", true);
   Services.prefs.setBoolPref(
@@ -280,5 +302,72 @@ add_task(async function test_categorization_tie() {
       num_unknown: 0,
     },
     "Should report the correct counts for the various domain types."
+  );
+});
+
+add_task(async function test_rank_penalization_equal_scores() {
+  SearchSERPDomainToCategoriesMap.overrideMapForTests(
+    TEST_DOMAIN_TO_CATEGORIES_MAP_RANK_PENALIZATION_1
+  );
+
+  let domains = new Set([
+    "test51.com",
+    "test52.com",
+    "test53.com",
+    "test54.com",
+    "test55.com",
+    "test56.com",
+    "test57.com",
+    "test58.com",
+    "test59.com",
+    "test60.com",
+  ]);
+
+  let resultsToReport =
+    SearchSERPCategorization.applyCategorizationLogic(domains);
+
+  Assert.deepEqual(
+    resultsToReport,
+    { category: "1", num_domains: 10, num_inconclusive: 0, num_unknown: 0 },
+    "Should report the correct values for categorizing the SERP."
+  );
+});
+
+add_task(async function test_rank_penalization_highest_score_lower_on_page() {
+  SearchSERPDomainToCategoriesMap.overrideMapForTests(
+    TEST_DOMAIN_TO_CATEGORIES_MAP_RANK_PENALIZATION_2
+  );
+
+  let domains = new Set(["test61.com", "test62.com"]);
+
+  let resultsToReport =
+    SearchSERPCategorization.applyCategorizationLogic(domains);
+
+  Assert.deepEqual(
+    resultsToReport,
+    { category: "2", num_domains: 2, num_inconclusive: 0, num_unknown: 0 },
+    "Should report the correct values for categorizing the SERP."
+  );
+});
+
+add_task(async function test_high_inconclusive_causes_domain_to_be_ignored() {
+  SearchSERPDomainToCategoriesMap.overrideMapForTests(
+    TEST_DOMAIN_TO_CATEGORIES_MAP_RANK_PENALIZATION_3
+  );
+
+  let domains = new Set(["test63.com"]);
+
+  let resultsToReport =
+    SearchSERPCategorization.applyCategorizationLogic(domains);
+
+  Assert.deepEqual(
+    resultsToReport,
+    {
+      category: SearchSERPTelemetryUtils.CATEGORIZATION.INCONCLUSIVE,
+      num_domains: 1,
+      num_inconclusive: 1,
+      num_unknown: 0,
+    },
+    "Should report the correct values for categorizing the SERP."
   );
 });
