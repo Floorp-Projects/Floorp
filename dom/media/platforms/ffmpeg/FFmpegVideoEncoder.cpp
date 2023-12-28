@@ -34,55 +34,6 @@ using FFmpegBitRate = int;
 constexpr size_t FFmpegErrorMaxStringSize = 64;
 #endif
 
-struct H264Setting {
-  int mValue;
-  nsCString mString;
-};
-
-static const H264Setting H264Profiles[]{
-    {FF_PROFILE_H264_BASELINE, "baseline"_ns},
-    {FF_PROFILE_H264_MAIN, "main"_ns},
-    {FF_PROFILE_H264_EXTENDED, EmptyCString()},
-    {FF_PROFILE_H264_HIGH, "high"_ns}};
-
-static mozilla::Maybe<H264Setting> GetH264Profile(
-    const mozilla::H264_PROFILE& aProfile) {
-  switch (aProfile) {
-    case mozilla::H264_PROFILE::H264_PROFILE_UNKNOWN:
-      return mozilla::Nothing();
-    case mozilla::H264_PROFILE::H264_PROFILE_BASE:
-      return mozilla::Some(H264Profiles[0]);
-    case mozilla::H264_PROFILE::H264_PROFILE_MAIN:
-      return mozilla::Some(H264Profiles[1]);
-    case mozilla::H264_PROFILE::H264_PROFILE_EXTENDED:
-      return mozilla::Some(H264Profiles[2]);
-    case mozilla::H264_PROFILE::H264_PROFILE_HIGH:
-      return mozilla::Some(H264Profiles[3]);
-    default:
-      break;
-  }
-  MOZ_ASSERT_UNREACHABLE("undefined profile");
-  return mozilla::Nothing();
-}
-
-static mozilla::Maybe<H264Setting> GetH264Level(
-    const mozilla::H264_LEVEL& aLevel) {
-  int val = static_cast<int>(aLevel);
-  // Make sure value is in [10, 13] or [20, 22] or [30, 32] or [40, 42] or [50,
-  // 52].
-  if (val < 10 || val > 52) {
-    return mozilla::Nothing();
-  }
-  if ((val % 10) > 2) {
-    if (val != 13) {
-      return mozilla::Nothing();
-    }
-  }
-  nsPrintfCString str("%d", val);
-  str.Insert('.', 1);
-  return mozilla::Some(H264Setting{val, str});
-}
-
 #if LIBAVCODEC_VERSION_MAJOR < 54
 using FFmpegPixelFormat = enum PixelFormat;
 const FFmpegPixelFormat FFMPEG_PIX_FMT_NONE = FFmpegPixelFormat::PIX_FMT_NONE;
@@ -158,6 +109,53 @@ static const char* GetPixelFormatString(FFmpegPixelFormat aFormat) {
 };  // namespace ffmpeg
 
 namespace mozilla {
+
+struct H264Setting {
+  int mValue;
+  nsCString mString;
+};
+
+static const H264Setting H264Profiles[]{
+    {FF_PROFILE_H264_BASELINE, "baseline"_ns},
+    {FF_PROFILE_H264_MAIN, "main"_ns},
+    {FF_PROFILE_H264_EXTENDED, EmptyCString()},
+    {FF_PROFILE_H264_HIGH, "high"_ns}};
+
+static Maybe<H264Setting> GetH264Profile(const H264_PROFILE& aProfile) {
+  switch (aProfile) {
+    case H264_PROFILE::H264_PROFILE_UNKNOWN:
+      return Nothing();
+    case H264_PROFILE::H264_PROFILE_BASE:
+      return Some(H264Profiles[0]);
+    case H264_PROFILE::H264_PROFILE_MAIN:
+      return Some(H264Profiles[1]);
+    case H264_PROFILE::H264_PROFILE_EXTENDED:
+      return Some(H264Profiles[2]);
+    case H264_PROFILE::H264_PROFILE_HIGH:
+      return Some(H264Profiles[3]);
+    default:
+      break;
+  }
+  MOZ_ASSERT_UNREACHABLE("undefined profile");
+  return Nothing();
+}
+
+static Maybe<H264Setting> GetH264Level(const H264_LEVEL& aLevel) {
+  int val = static_cast<int>(aLevel);
+  // Make sure value is in [10, 13] or [20, 22] or [30, 32] or [40, 42] or [50,
+  // 52].
+  if (val < 10 || val > 52) {
+    return Nothing();
+  }
+  if ((val % 10) > 2) {
+    if (val != 13) {
+      return Nothing();
+    }
+  }
+  nsPrintfCString str("%d", val);
+  str.Insert('.', 1);
+  return Some(H264Setting{val, str});
+}
 
 static nsCString MakeErrorString(const FFmpegLibWrapper* aLib, int aErrNum) {
   MOZ_ASSERT(aLib);
@@ -430,8 +428,7 @@ MediaResult FFmpegVideoEncoder<LIBAV_VER>::InitInternal() {
       const H264Specific& specific = mConfig.mCodecSpecific->as<H264Specific>();
 
       // Set profile.
-      Maybe<ffmpeg::H264Setting> profile =
-          ffmpeg::GetH264Profile(specific.mProfile);
+      Maybe<H264Setting> profile = GetH264Profile(specific.mProfile);
       if (!profile) {
         FFMPEGV_LOG("failed to get h264 profile");
         return MediaResult(NS_ERROR_DOM_MEDIA_NOT_SUPPORTED_ERR,
@@ -448,7 +445,7 @@ MediaResult FFmpegVideoEncoder<LIBAV_VER>::InitInternal() {
       }
 
       // Set level.
-      Maybe<ffmpeg::H264Setting> level = ffmpeg::GetH264Level(specific.mLevel);
+      Maybe<H264Setting> level = GetH264Level(specific.mLevel);
       if (!level) {
         FFMPEGV_LOG("failed to get h264 level");
         return MediaResult(NS_ERROR_DOM_MEDIA_NOT_SUPPORTED_ERR,
