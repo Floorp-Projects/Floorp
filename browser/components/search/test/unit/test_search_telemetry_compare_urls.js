@@ -8,7 +8,6 @@
 
 ChromeUtils.defineESModuleGetters(this, {
   SearchSERPTelemetry: "resource:///modules/SearchSERPTelemetry.sys.mjs",
-  SearchUtils: "resource://gre/modules/SearchUtils.sys.mjs",
 });
 
 const TESTS = [
@@ -165,7 +164,6 @@ const TESTS = [
 ];
 
 add_setup(async function () {
-  Services.prefs.setBoolPref(SearchUtils.BROWSER_SEARCH_PREF + "log", true);
   await SearchSERPTelemetry.init();
 });
 

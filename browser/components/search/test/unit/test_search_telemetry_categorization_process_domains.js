@@ -51,7 +51,6 @@ const TESTS = [
 ];
 
 add_setup(async function () {
-  Services.prefs.setBoolPref(SearchUtils.BROWSER_SEARCH_PREF + "log", true);
   Services.prefs.setBoolPref(
     SearchUtils.BROWSER_SEARCH_PREF + "serpEventTelemetry.enabled",
     true

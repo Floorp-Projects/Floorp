@@ -95,7 +95,6 @@ const TEST_DOMAIN_TO_CATEGORIES_MAP_RANK_PENALIZATION_3 = {
 };
 
 add_setup(async () => {
-  Services.prefs.setBoolPref("browser.search.log", true);
   Services.prefs.setBoolPref(
     "browser.search.serpEventTelemetryCategorization.enabled",
     true

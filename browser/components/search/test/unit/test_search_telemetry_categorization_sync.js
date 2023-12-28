@@ -92,7 +92,6 @@ const RECORDS = {
 };
 
 add_setup(async () => {
-  Services.prefs.setBoolPref("browser.search.log", true);
   Services.prefs.setBoolPref(
     "browser.search.serpEventTelemetryCategorization.enabled",
     true
