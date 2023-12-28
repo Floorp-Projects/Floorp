@@ -38,10 +38,7 @@ add_setup(async function () {
   await waitForIdle();
   // Enable local telemetry recording for the duration of the tests.
   await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.search.log", true],
-      ["browser.search.serpEventTelemetry.enabled", true],
-    ],
+    set: [["browser.search.serpEventTelemetry.enabled", true]],
   });
 
   registerCleanupFunction(async () => {

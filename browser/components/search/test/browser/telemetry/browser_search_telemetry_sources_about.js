@@ -67,7 +67,6 @@ add_setup(async function () {
   // Enable local telemetry recording for the duration of the tests.
   let oldCanRecord = Services.telemetry.canRecordExtended;
   Services.telemetry.canRecordExtended = true;
-  Services.prefs.setBoolPref("browser.search.log", true);
 
   await SearchTestUtils.installSearchExtension(
     {
@@ -84,7 +83,6 @@ add_setup(async function () {
 
   registerCleanupFunction(async () => {
     gCUITestUtils.removeSearchBar();
-    Services.prefs.clearUserPref("browser.search.log");
     SearchSERPTelemetry.overrideSearchTelemetryForTests();
     Services.telemetry.canRecordExtended = oldCanRecord;
     resetTelemetry();
