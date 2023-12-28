@@ -103,10 +103,10 @@ index f055a0000a..63abe1c93a 100644
        SetSendCodecs(send_codecs_, *matched_codec);
      }
 diff --git a/pc/peer_connection_encodings_integrationtest.cc b/pc/peer_connection_encodings_integrationtest.cc
-index 5b25e293cd..ef4fe92974 100644
+index 4e502f73d7..4a786e0733 100644
 --- a/pc/peer_connection_encodings_integrationtest.cc
 +++ b/pc/peer_connection_encodings_integrationtest.cc
-@@ -1422,6 +1422,69 @@ TEST_F(PeerConnectionEncodingsIntegrationTest,
+@@ -1463,6 +1463,69 @@ TEST_F(PeerConnectionEncodingsIntegrationTest,
    EXPECT_EQ(error.type(), RTCErrorType::INVALID_MODIFICATION);
  }
  
@@ -176,7 +176,7 @@ index 5b25e293cd..ef4fe92974 100644
  TEST_F(PeerConnectionEncodingsIntegrationTest,
         SetParametersRejectsNonNegotiatedCodecParameterVideo) {
    rtc::scoped_refptr<PeerConnectionTestWrapper> local_pc_wrapper = CreatePc();
-@@ -1462,6 +1525,69 @@ TEST_F(PeerConnectionEncodingsIntegrationTest,
+@@ -1503,6 +1566,69 @@ TEST_F(PeerConnectionEncodingsIntegrationTest,
    EXPECT_EQ(error.type(), RTCErrorType::INVALID_MODIFICATION);
  }
  

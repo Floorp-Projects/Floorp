@@ -925,6 +925,47 @@ TEST_F(PeerConnectionEncodingsIntegrationTest, VP9_TargetBitrate_StandardL1T3) {
 }
 
 TEST_F(PeerConnectionEncodingsIntegrationTest,
+       SimulcastProducesUniqueSsrcAndRtxSsrcs) {
+  rtc::scoped_refptr<PeerConnectionTestWrapper> local_pc_wrapper = CreatePc();
+  rtc::scoped_refptr<PeerConnectionTestWrapper> remote_pc_wrapper = CreatePc();
+  ExchangeIceCandidates(local_pc_wrapper, remote_pc_wrapper);
+
+  std::vector<cricket::SimulcastLayer> layers =
+      CreateLayers({"f", "h", "q"}, /*active=*/true);
+  rtc::scoped_refptr<RtpTransceiverInterface> transceiver =
+      AddTransceiverWithSimulcastLayers(local_pc_wrapper, remote_pc_wrapper,
+                                        layers);
+  std::vector<RtpCodecCapability> codecs =
+      GetCapabilitiesAndRestrictToCodec(local_pc_wrapper, "VP8");
+  transceiver->SetCodecPreferences(codecs);
+
+  NegotiateWithSimulcastTweaks(local_pc_wrapper, remote_pc_wrapper);
+  local_pc_wrapper->WaitForConnection();
+  remote_pc_wrapper->WaitForConnection();
+
+  // Wait until media is flowing on all three layers.
+  // Ramp up time is needed before all three layers are sending.
+  ASSERT_TRUE_WAIT(HasOutboundRtpBytesSent(local_pc_wrapper, 3u),
+                   kLongTimeoutForRampingUp.ms());
+  // Verify SSRCs and RTX SSRCs.
+  rtc::scoped_refptr<const RTCStatsReport> report = GetStats(local_pc_wrapper);
+  std::vector<const RTCOutboundRtpStreamStats*> outbound_rtps =
+      report->GetStatsOfType<RTCOutboundRtpStreamStats>();
+  ASSERT_THAT(outbound_rtps, SizeIs(3u));
+
+  std::set<uint32_t> ssrcs;
+  std::set<uint32_t> rtx_ssrcs;
+  for (const auto& outbound_rtp : outbound_rtps) {
+    ASSERT_TRUE(outbound_rtp->ssrc.has_value());
+    ASSERT_TRUE(outbound_rtp->rtx_ssrc.has_value());
+    ssrcs.insert(*outbound_rtp->ssrc);
+    rtx_ssrcs.insert(*outbound_rtp->rtx_ssrc);
+  }
+  EXPECT_EQ(ssrcs.size(), 3u);
+  EXPECT_EQ(rtx_ssrcs.size(), 3u);
+}
+
+TEST_F(PeerConnectionEncodingsIntegrationTest,
        EncodingParameterCodecIsEmptyWhenCreatedAudio) {
   rtc::scoped_refptr<PeerConnectionTestWrapper> local_pc_wrapper = CreatePc();
 

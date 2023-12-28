@@ -839,7 +839,8 @@ CreateOutboundRTPStreamStatsFromVideoSenderInfo(
   }
   for (const auto& ssrc_group : video_sender_info.ssrc_groups) {
     if (ssrc_group.semantics == cricket::kFidSsrcGroupSemantics &&
-        ssrc_group.ssrcs.size() == 2) {
+        ssrc_group.ssrcs.size() == 2 &&
+        video_sender_info.ssrc() == ssrc_group.ssrcs[0]) {
       outbound_video->rtx_ssrc = ssrc_group.ssrcs[1];
     }
   }
