@@ -74,8 +74,9 @@ class DataTracker {
   // Called at the end of processing an SCTP packet.
   void ObservePacketEnd();
 
-  // Called for incoming FORWARD-TSN/I-FORWARD-TSN chunks
-  void HandleForwardTsn(TSN new_cumulative_ack);
+  // Called for incoming FORWARD-TSN/I-FORWARD-TSN chunks. Indicates if the
+  // chunk had any effect.
+  bool HandleForwardTsn(TSN new_cumulative_ack);
 
   // Indicates if a SACK should be sent. There may be other reasons to send a
   // SACK, but if this function indicates so, it should be sent as soon as

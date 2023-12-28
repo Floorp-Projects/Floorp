@@ -79,13 +79,6 @@ void ReassemblyQueue::Add(TSN tsn, Data data) {
 
   UnwrappedTSN unwrapped_tsn = tsn_unwrapper_.Unwrap(tsn);
 
-  if (unwrapped_tsn <= last_assembled_tsn_watermark_ ||
-      delivered_tsns_.find(unwrapped_tsn) != delivered_tsns_.end()) {
-    RTC_DLOG(LS_VERBOSE) << log_prefix_
-                         << "Chunk has already been delivered - skipping";
-    return;
-  }
-
   // If a stream reset has been received with a "sender's last assigned tsn" in
   // the future, the socket is in "deferred reset processing" mode and must
   // buffer chunks until it's exited.
@@ -218,15 +211,7 @@ void ReassemblyQueue::AddReassembledMessage(
                        << ", payload=" << message.payload().size() << " bytes";
 
   for (const UnwrappedTSN tsn : tsns) {
-    if (tsn <= last_assembled_tsn_watermark_) {
-      // This can be provoked by a misbehaving peer by sending FORWARD-TSN with
-      // invalid SSNs, allowing ordered messages to stay in the queue that
-      // should've been discarded.
-      RTC_DLOG(LS_VERBOSE)
-          << log_prefix_
-          << "Message is built from fragments already seen - skipping";
-      return;
-    } else if (tsn == last_assembled_tsn_watermark_.next_value()) {
+    if (tsn == last_assembled_tsn_watermark_.next_value()) {
       // Update watermark, or insert into delivered_tsns_
       last_assembled_tsn_watermark_.Increment();
     } else {
