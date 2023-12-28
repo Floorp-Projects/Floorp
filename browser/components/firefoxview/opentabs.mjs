@@ -533,6 +533,7 @@ class OpenTabsInViewCard extends ViewPageContent {
             ?hidden=${!this.isShowAllLinkVisible()}
             slot="footer"
             tabindex="0"
+            role="link"
           ></div>`,
           () =>
             html` <div
@@ -546,6 +547,7 @@ class OpenTabsInViewCard extends ViewPageContent {
                 OpenTabsInViewCard.MAX_TABS_FOR_COMPACT_HEIGHT}
               slot="footer"
               tabindex="0"
+              role="link"
             ></div>`
         )}
       </card-container>
