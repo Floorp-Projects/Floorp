@@ -16,8 +16,6 @@ class FakeReviewQualityCheckService(
     private val reanalysis: AnalysisStatusDto? = null,
     private val statusProgress: () -> AnalysisStatusProgressDto? = { null },
     private val productRecommendation: () -> ProductRecommendation? = { null },
-    private val recordClick: (String) -> Unit = {},
-    private val recordImpression: (String) -> Unit = {},
     private val report: ReportBackInStockStatusDto? = null,
 ) : ReviewQualityCheckService {
 
@@ -37,14 +35,6 @@ class FakeReviewQualityCheckService(
 
     override suspend fun productRecommendation(shouldRecordAvailableTelemetry: Boolean): ProductRecommendation? {
         return productRecommendation.invoke()
-    }
-
-    override suspend fun recordRecommendedProductClick(productAid: String) {
-        recordClick(productAid)
-    }
-
-    override suspend fun recordRecommendedProductImpression(productAid: String) {
-        recordImpression(productAid)
     }
 
     override suspend fun reportBackInStock(): ReportBackInStockStatusDto? = report

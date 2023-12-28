@@ -10,11 +10,27 @@ package org.mozilla.fenix.components.appstate.shopping
  * @property shoppingSheetExpanded Boolean indicating if the shopping sheet is expanded and visible.
  * @property productCardState Map of product url to [CardState] that contains the state of different
  * cards in the shopping sheet.
+ * @property recordedProductRecommendationImpressions Set of [ProductRecommendationImpressionKey]
+ * that contains the product recommendation impressions that have been recorded.
  */
 data class ShoppingState(
     val shoppingSheetExpanded: Boolean? = null,
     val productCardState: Map<String, CardState> = emptyMap(),
+    val recordedProductRecommendationImpressions: Set<ProductRecommendationImpressionKey> = emptySet(),
 ) {
+
+    /**
+     * Key for a product recommendation impression.
+     *
+     * @property tabId The id of the tab that the product and recommendation is displayed in.
+     * @property productUrl The url of the product.
+     * @property aid The id of the recommendation.
+     */
+    data class ProductRecommendationImpressionKey(
+        val tabId: String,
+        val productUrl: String,
+        val aid: String,
+    )
 
     /**
      * State for different cards in the shopping sheet for a product.

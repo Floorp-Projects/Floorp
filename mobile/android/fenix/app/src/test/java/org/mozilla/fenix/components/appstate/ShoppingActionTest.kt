@@ -203,4 +203,48 @@ class ShoppingActionTest {
 
         assertEquals(expected, store.state.shoppingState)
     }
+
+    @Test
+    fun `WHEN product recommendation impression is recorded THEN state should reflect that`() {
+        val store = AppStore(
+            initialState = AppState(
+                shoppingState = ShoppingState(
+                    recordedProductRecommendationImpressions = setOf(
+                        ShoppingState.ProductRecommendationImpressionKey(
+                            productUrl = "pdp",
+                            tabId = "1",
+                            aid = "aid",
+                        ),
+                    ),
+                ),
+            ),
+        )
+
+        store.dispatch(
+            AppAction.ShoppingAction.ProductRecommendationImpression(
+                key = ShoppingState.ProductRecommendationImpressionKey(
+                    productUrl = "pdp2",
+                    tabId = "2",
+                    aid = "aid2",
+                ),
+            ),
+        ).joinBlocking()
+
+        val expected = ShoppingState(
+            recordedProductRecommendationImpressions = setOf(
+                ShoppingState.ProductRecommendationImpressionKey(
+                    productUrl = "pdp",
+                    tabId = "1",
+                    aid = "aid",
+                ),
+                ShoppingState.ProductRecommendationImpressionKey(
+                    productUrl = "pdp2",
+                    tabId = "2",
+                    aid = "aid2",
+                ),
+            ),
+        )
+
+        assertEquals(expected, store.state.shoppingState)
+    }
 }

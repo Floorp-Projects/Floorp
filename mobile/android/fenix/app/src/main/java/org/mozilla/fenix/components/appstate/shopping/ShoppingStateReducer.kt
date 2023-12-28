@@ -64,6 +64,13 @@ internal object ShoppingStateReducer {
                     ),
                 )
             }
+
+            is ShoppingAction.ProductRecommendationImpression -> state.copy(
+                shoppingState = state.shoppingState.copy(
+                    recordedProductRecommendationImpressions =
+                    state.shoppingState.recordedProductRecommendationImpressions + action.key,
+                ),
+            )
         }
 
     private fun ShoppingState.updateProductCardState(key: String, value: CardState): ShoppingState =

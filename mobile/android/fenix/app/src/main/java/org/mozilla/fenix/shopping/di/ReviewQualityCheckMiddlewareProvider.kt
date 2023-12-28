@@ -13,6 +13,7 @@ import org.mozilla.fenix.shopping.DefaultShoppingExperienceFeature
 import org.mozilla.fenix.shopping.middleware.DefaultNetworkChecker
 import org.mozilla.fenix.shopping.middleware.DefaultReviewQualityCheckPreferences
 import org.mozilla.fenix.shopping.middleware.DefaultReviewQualityCheckService
+import org.mozilla.fenix.shopping.middleware.DefaultReviewQualityCheckTelemetryService
 import org.mozilla.fenix.shopping.middleware.DefaultReviewQualityCheckVendorsService
 import org.mozilla.fenix.shopping.middleware.GetReviewQualityCheckSumoUrl
 import org.mozilla.fenix.shopping.middleware.ReviewQualityCheckNavigationMiddleware
@@ -47,7 +48,7 @@ object ReviewQualityCheckMiddlewareProvider {
             providePreferencesMiddleware(settings, browserStore, appStore, scope),
             provideNetworkMiddleware(browserStore, context, scope),
             provideNavigationMiddleware(TabsUseCases.SelectOrAddUseCase(browserStore), context),
-            provideTelemetryMiddleware(),
+            provideTelemetryMiddleware(browserStore, appStore, scope),
         )
 
     private fun providePreferencesMiddleware(
@@ -81,6 +82,15 @@ object ReviewQualityCheckMiddlewareProvider {
         GetReviewQualityCheckSumoUrl(context),
     )
 
-    private fun provideTelemetryMiddleware() =
-        ReviewQualityCheckTelemetryMiddleware()
+    private fun provideTelemetryMiddleware(
+        browserStore: BrowserStore,
+        appStore: AppStore,
+        scope: CoroutineScope,
+    ) =
+        ReviewQualityCheckTelemetryMiddleware(
+            telemetryService = DefaultReviewQualityCheckTelemetryService(browserStore),
+            browserStore = browserStore,
+            appStore = appStore,
+            scope = scope,
+        )
 }

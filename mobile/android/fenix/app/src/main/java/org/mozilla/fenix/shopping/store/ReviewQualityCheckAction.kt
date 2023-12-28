@@ -147,7 +147,7 @@ sealed interface ReviewQualityCheckAction : Action {
     data class RecommendedProductClick(
         val productAid: String,
         val productUrl: String,
-    ) : NavigationMiddlewareAction, NetworkAction, TelemetryAction
+    ) : NavigationMiddlewareAction, TelemetryAction
 
     /**
      * Triggered when the user views the recommended product.
@@ -156,7 +156,7 @@ sealed interface ReviewQualityCheckAction : Action {
      */
     data class RecommendedProductImpression(
         val productAid: String,
-    ) : NetworkAction, TelemetryAction
+    ) : TelemetryAction
 
     /**
      * Triggered when the user clicks on learn more link on the explainer card.

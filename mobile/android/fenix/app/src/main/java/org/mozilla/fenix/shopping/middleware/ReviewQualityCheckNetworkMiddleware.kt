@@ -82,14 +82,6 @@ class ReviewQualityCheckNetworkMiddleware(
                         store.updateRecommendedProductState()
                     }
                 }
-
-                is ReviewQualityCheckAction.RecommendedProductClick -> {
-                    reviewQualityCheckService.recordRecommendedProductClick(action.productAid)
-                }
-
-                is ReviewQualityCheckAction.RecommendedProductImpression -> {
-                    reviewQualityCheckService.recordRecommendedProductImpression(action.productAid)
-                }
             }
         }
     }
