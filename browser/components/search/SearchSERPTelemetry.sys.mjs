@@ -45,7 +45,10 @@ export const SEARCH_TELEMETRY_SHARED = {
 const impressionIdsWithoutEngagementsSet = new Set();
 
 export const CATEGORIZATION_SETTINGS = {
+  HIGHEST_SCORE_THRESHOLD: 50,
   MAX_DOMAINS_TO_CATEGORIZE: 10,
+  MINIMUM_SCORE: 0,
+  STARTING_RANK: 2,
 };
 
 ChromeUtils.defineLazyGetter(lazy, "logConsole", () => {
@@ -1663,7 +1666,6 @@ class SERPCategorizer {
     return resultsToReport;
   }
 
-  // TODO: check with DS to get the final aggregation logic. (Bug 1854196)
   /**
    * Applies the logic for reducing extracted domains to a single category for
    * the SERP.
@@ -1675,13 +1677,13 @@ class SERPCategorizer {
    *   "num_unknown" and "num_inconclusive".
    */
   applyCategorizationLogic(domains) {
-    let totalScoresPerCategory = {};
+    let domainInfo = {};
     let domainsCount = 0;
     let unknownsCount = 0;
     let inconclusivesCount = 0;
 
     // Per a request from Data Science, we need to limit the number of domains
-    // categorized to 10 non ad domains and 10 ad domains.
+    // categorized to 10 non-ad domains and 10 ad domains.
     domains = new Set(
       [...domains].slice(0, CATEGORIZATION_SETTINGS.MAX_DOMAINS_TO_CATEGORIZE)
     );
@@ -1690,40 +1692,48 @@ class SERPCategorizer {
       domainsCount++;
 
       let categoryCandidates = SearchSERPDomainToCategoriesMap.get(domain);
+
       if (!categoryCandidates.length) {
         unknownsCount++;
         continue;
       }
 
-      for (let candidate of categoryCandidates) {
-        if (
-          candidate.category ==
-          SearchSERPTelemetryUtils.CATEGORIZATION.INCONCLUSIVE
-        ) {
-          inconclusivesCount++;
-          continue;
-        }
-
-        if (totalScoresPerCategory[candidate.category]) {
-          totalScoresPerCategory[candidate.category] += candidate.score;
-        } else {
-          totalScoresPerCategory[candidate.category] = candidate.score;
-        }
+      let isInconclusive =
+        (categoryCandidates.length == 1 &&
+          categoryCandidates[0].category ==
+            SearchSERPTelemetryUtils.CATEGORIZATION.INCONCLUSIVE) ||
+        categoryCandidates.some(
+          c =>
+            c.category ==
+              SearchSERPTelemetryUtils.CATEGORIZATION.INCONCLUSIVE &&
+            c.score >= CATEGORIZATION_SETTINGS.HIGHEST_SCORE_THRESHOLD
+        );
+      if (isInconclusive) {
+        inconclusivesCount++;
+        continue;
       }
+
+      domainInfo[domain] = categoryCandidates;
     }
 
     let finalCategory;
+    let topCategories = [];
     // Determine if all domains were unknown or inconclusive.
     if (unknownsCount + inconclusivesCount == domainsCount) {
       finalCategory = SearchSERPTelemetryUtils.CATEGORIZATION.INCONCLUSIVE;
     } else {
-      let maxScore = Math.max(...Object.values(totalScoresPerCategory));
-      // Handles ties by randomly returning one of the categories with the
-      // maximum score.
-      let topCategories = [];
-      for (let category in totalScoresPerCategory) {
-        if (totalScoresPerCategory[category] == maxScore) {
-          topCategories.push(Number(category));
+      let maxScore = CATEGORIZATION_SETTINGS.MINIMUM_SCORE;
+      let rank = CATEGORIZATION_SETTINGS.STARTING_RANK;
+      for (let categoryCandidates of Object.values(domainInfo)) {
+        for (let { category, score } of categoryCandidates) {
+          let adjustedScore = score / Math.log2(rank);
+          if (adjustedScore > maxScore) {
+            maxScore = adjustedScore;
+            topCategories = [category];
+          } else if (adjustedScore == maxScore) {
+            topCategories.push(Number(category));
+          }
+          rank++;
         }
       }
       finalCategory =
