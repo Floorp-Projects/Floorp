@@ -213,7 +213,7 @@ async function runWithRegistryLocked(aMutexGuardedFunction) {
 }
 
 async function doTask(defaultAgent, force) {
-  if (!defaultAgent.appRecentlyRan() && !force) {
+  if (!defaultAgent.appRanRecently() && !force) {
     lazy.log.warn("Main app has not ran recently, exiting without running.");
     throw new Error("App hasn't ran recently");
   }
