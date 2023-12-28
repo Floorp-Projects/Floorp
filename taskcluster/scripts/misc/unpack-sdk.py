@@ -15,6 +15,8 @@ from mozpack.macpkg import Pbzx, uncpio, unxar
 
 
 def unpack_sdk(url, sha512, extract_prefix, out_dir="."):
+    if "MOZ_AUTOMATION" in os.environ:
+        url = f"http://taskcluster/tooltool.mozilla-releng.net/sha512/{sha512}"
     with tempfile.TemporaryFile() as pkg:
         hash = hashlib.sha512()
         for attempt in range(3):

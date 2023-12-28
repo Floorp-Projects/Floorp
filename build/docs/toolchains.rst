@@ -218,6 +218,11 @@ and an output directory, and extracts the package in that directory.
 Both scripts should be run via ``mach python``. The latter is automatically
 invoked by the bootstrapping mechanism.
 
+On automation, the script will download the file from tooltool instead of the
+original url, so the file should also be uploaded to tooltool with `internal`
+visibility.
+See https://github.com/mozilla-releng/tooltool.
+
 Firefox for Android with Gradle
 ===============================
 

@@ -15,6 +15,7 @@ job-defaults:
         resources:
             - python/mozbuild/mozpack/macpkg.py
             - taskcluster/scripts/misc/unpack-sdk.py
+        tooltool-downloads: internal
     # Expiry similar to that of fetches
     expires-after: 1000 years
 
@@ -35,27 +36,6 @@ macosx64-sdk-14.2:
     description: "MacOSX14.2 SDK"
     treeherder:
         symbol: TM(sdk14.2)
-    # Because it's using an internal tooltool artifact, it can't be used as a local-toolchain for
-    # bootstrap. But we still want to use the same script as local-toolchains.
-    attributes:
-        local-toolchain: false
-    run:
-        script: private_local_toolchain.sh
-        arguments:
-            - unpack-sdk.py
-            - http://taskcluster/tooltool.mozilla-releng.net/sha512/22ce0acc9ab5c28845218b8c686d0208d6bf66bef64a369d3c0622247ba1258b438c9e44c64bb2bacf5e99eb398a6e7a337f2730cd4a969a7f0d2d5d3107306a
-            - 22ce0acc9ab5c28845218b8c686d0208d6bf66bef64a369d3c0622247ba1258b438c9e44c64bb2bacf5e99eb398a6e7a337f2730cd4a969a7f0d2d5d3107306a
-            - Library/Developer/CommandLineTools/SDKs/MacOSX14.2.sdk
-        toolchain-artifact: project/gecko/mac-sdk/MacOSX14.2.sdk.tar.zst
-        toolchain-alias:
-            - macosx64-sdk
-            - macosx64-sdk-toolchain
-        tooltool-downloads: internal
-
-macosx64-sdk-14.2-public:
-    description: "MacOSX14.2 SDK"
-    treeherder:
-        symbol: TM(sdk14.2pub)
     run:
         arguments:
             - https://swcdn.apple.com/content/downloads/35/47/042-23550-A_M34N50O9N3/sua6ev7bjcexvorh4709vsgk64zgvsl42p/CLTools_macOSNMOS_SDK.pkg
@@ -63,4 +43,6 @@ macosx64-sdk-14.2-public:
             - Library/Developer/CommandLineTools/SDKs/MacOSX14.2.sdk
         toolchain-artifact: project/gecko/mac-sdk/MacOSX14.2.sdk.tar.zst
         toolchain-alias:
+            - macosx64-sdk
+            - macosx64-sdk-toolchain
             - MacOSX14.2.sdk
