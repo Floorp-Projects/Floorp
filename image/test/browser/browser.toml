@@ -22,3 +22,6 @@ skip-if = ["true"] # Bug 987616
 ["browser_offscreen_image_in_out_of_process_iframe.js"]
 https_first_disabled = true
 support-files = ["empty.html"]
+
+["browser_bug1869938.js"]
+support-files = ["helper1869938.html"]
