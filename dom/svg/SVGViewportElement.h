@@ -31,16 +31,6 @@ class SVGAnimatedRect;
 class SVGViewElement;
 class SVGViewportElement;
 
-class svgFloatSize {
- public:
-  svgFloatSize(float aWidth, float aHeight) : width(aWidth), height(aHeight) {}
-  bool operator!=(const svgFloatSize& rhs) {
-    return width != rhs.width || height != rhs.height;
-  }
-  float width;
-  float height;
-};
-
 class SVGViewportElement : public SVGGraphicsElement {
   friend class mozilla::SVGOuterSVGFrame;
   friend class mozilla::SVGViewportFrame;
@@ -114,14 +104,9 @@ class SVGViewportElement : public SVGGraphicsElement {
 
   gfx::Matrix GetViewBoxTransform() const;
 
-  svgFloatSize GetViewportSize() const {
-    return svgFloatSize(mViewportWidth, mViewportHeight);
-  }
+  gfx::Size GetViewportSize() const { return mViewportSize; }
 
-  void SetViewportSize(const svgFloatSize& aSize) {
-    mViewportWidth = aSize.width;
-    mViewportHeight = aSize.height;
-  }
+  void SetViewportSize(const gfx::Size& aSize) { mViewportSize = aSize; }
 
   /**
    * Returns true if either this is an SVG <svg> element that is the child of
@@ -188,8 +173,8 @@ class SVGViewportElement : public SVGGraphicsElement {
   //
   // XXXjwatt Currently only used for outer <svg>, but maybe we could use -1 to
   // flag this as an inner <svg> to save the overhead of GetCtx calls?
-  // XXXjwatt our frame should probably reset these when it's destroyed.
-  float mViewportWidth, mViewportHeight;
+  // XXXjwatt our frame should probably reset this when it's destroyed.
+  gfx::Size mViewportSize;
 
   bool mHasChildrenOnlyTransform;
 };

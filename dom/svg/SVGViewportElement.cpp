@@ -53,8 +53,6 @@ SVGElement::LengthInfo SVGViewportElement::sLengthInfo[4] = {
 SVGViewportElement::SVGViewportElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
     : SVGGraphicsElement(std::move(aNodeInfo)),
-      mViewportWidth(0),
-      mViewportHeight(0),
       mHasChildrenOnlyTransform(false) {}
 
 //----------------------------------------------------------------------
@@ -160,8 +158,8 @@ gfx::Matrix SVGViewportElement::GetViewBoxTransform() const {
     viewportWidth = mLengthAttributes[ATTR_WIDTH].GetAnimValue(metrics);
     viewportHeight = mLengthAttributes[ATTR_HEIGHT].GetAnimValue(metrics);
   } else {
-    viewportWidth = mViewportWidth;
-    viewportHeight = mViewportHeight;
+    viewportWidth = mViewportSize.width;
+    viewportHeight = mViewportSize.height;
   }
 
   if (!std::isfinite(viewportWidth) || viewportWidth <= 0.0f ||
@@ -211,15 +209,15 @@ float SVGViewportElement::GetLength(uint8_t aCtxType) const {
   } else if (ShouldSynthesizeViewBox()) {
     if (shouldComputeWidth) {
       w = ComputeSynthesizedViewBoxDimension(mLengthAttributes[ATTR_WIDTH],
-                                             mViewportWidth, this);
+                                             mViewportSize.width, this);
     }
     if (shouldComputeHeight) {
       h = ComputeSynthesizedViewBoxDimension(mLengthAttributes[ATTR_HEIGHT],
-                                             mViewportHeight, this);
+                                             mViewportSize.height, this);
     }
   } else {
-    w = mViewportWidth;
-    h = mViewportHeight;
+    w = mViewportSize.width;
+    h = mViewportSize.height;
   }
 
   w = std::max(w, 0.0f);
@@ -328,9 +326,9 @@ SVGViewBox SVGViewportElement::GetViewBoxWithSynthesis(
     return SVGViewBox(
         0, 0,
         ComputeSynthesizedViewBoxDimension(mLengthAttributes[ATTR_WIDTH],
-                                           mViewportWidth, this),
+                                           mViewportSize.width, this),
         ComputeSynthesizedViewBoxDimension(mLengthAttributes[ATTR_HEIGHT],
-                                           mViewportHeight, this));
+                                           mViewportSize.height, this));
   }
 
   // No viewBox attribute, so we shouldn't auto-scale. This is equivalent
