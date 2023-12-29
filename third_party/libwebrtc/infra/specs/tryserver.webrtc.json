@@ -431,7 +431,7 @@
       },
       {
         "args": [
-          "--force_fieldtrials=WebRTC-QuickPerfTest/Enabled/",
+          "--webrtc_quick_perf_test",
           "--nologs"
         ],
         "merge": {
@@ -908,7 +908,7 @@
       },
       {
         "args": [
-          "--force_fieldtrials=WebRTC-QuickPerfTest/Enabled/",
+          "--webrtc_quick_perf_test",
           "--nologs"
         ],
         "merge": {
@@ -1385,7 +1385,7 @@
       },
       {
         "args": [
-          "--force_fieldtrials=WebRTC-QuickPerfTest/Enabled/",
+          "--webrtc_quick_perf_test",
           "--nologs"
         ],
         "merge": {
@@ -1887,7 +1887,7 @@
       },
       {
         "args": [
-          "--force_fieldtrials=WebRTC-QuickPerfTest/Enabled/",
+          "--webrtc_quick_perf_test",
           "--nologs"
         ],
         "merge": {
@@ -5962,7 +5962,7 @@
       },
       {
         "args": [
-          "--force_fieldtrials=WebRTC-QuickPerfTest/Enabled/",
+          "--webrtc_quick_perf_test",
           "--nologs",
           "--gtest_output=json:${ISOLATED_OUTDIR}/gtest_output.json"
         ],
@@ -6041,7 +6041,7 @@
       },
       {
         "args": [
-          "--force_fieldtrials=WebRTC-QuickPerfTest/Enabled/",
+          "--webrtc_quick_perf_test",
           "--nologs",
           "--gtest_output=json:${ISOLATED_OUTDIR}/gtest_output.json"
         ],
@@ -7437,7 +7437,7 @@
       },
       {
         "args": [
-          "--force_fieldtrials=WebRTC-QuickPerfTest/Enabled/",
+          "--webrtc_quick_perf_test",
           "--nologs",
           "--gtest_output=json:${ISOLATED_OUTDIR}/gtest_output.json"
         ],
@@ -7512,7 +7512,7 @@
       },
       {
         "args": [
-          "--force_fieldtrials=WebRTC-QuickPerfTest/Enabled/",
+          "--webrtc_quick_perf_test",
           "--nologs",
           "--gtest_output=json:${ISOLATED_OUTDIR}/gtest_output.json"
         ],
@@ -10572,7 +10572,7 @@
       },
       {
         "args": [
-          "--force_fieldtrials=WebRTC-QuickPerfTest/Enabled/",
+          "--webrtc_quick_perf_test",
           "--nologs",
           "--gtest_output=json:${ISOLATED_OUTDIR}/gtest_output.json"
         ],
@@ -10647,7 +10647,7 @@
       },
       {
         "args": [
-          "--force_fieldtrials=WebRTC-QuickPerfTest/Enabled/",
+          "--webrtc_quick_perf_test",
           "--nologs",
           "--gtest_output=json:${ISOLATED_OUTDIR}/gtest_output.json"
         ],
@@ -12638,7 +12638,7 @@
       },
       {
         "args": [
-          "--force_fieldtrials=WebRTC-QuickPerfTest/Enabled/",
+          "--webrtc_quick_perf_test",
           "--nologs",
           "--gtest_output=json:${ISOLATED_OUTDIR}/gtest_output.json"
         ],
@@ -12713,7 +12713,7 @@
       },
       {
         "args": [
-          "--force_fieldtrials=WebRTC-QuickPerfTest/Enabled/",
+          "--webrtc_quick_perf_test",
           "--nologs",
           "--gtest_output=json:${ISOLATED_OUTDIR}/gtest_output.json"
         ],
