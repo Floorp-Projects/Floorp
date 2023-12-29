@@ -139,7 +139,8 @@ void DecoderTemplate<DecoderType>::Configure(const ConfigType& aConfig,
 
   nsCString errorMessage;
   if (!DecoderType::Validate(aConfig, errorMessage)) {
-    aRv.ThrowTypeError(nsPrintfCString("config is invalid: %s", errorMessage.get()));
+    aRv.ThrowTypeError(
+        nsPrintfCString("config is invalid: %s", errorMessage.get()));
     return;
   }
 
