@@ -30,7 +30,6 @@ job-defaults:
         docker-image: {in-tree: snap-build-core22}
         max-run-time: 900
         env:
-            MACH_BUILD_PYTHON_NATIVE_PACKAGE_SOURCE: system
             UPLOAD_DIR: artifacts
             MOZ_STACKWALK_SYMBOLS_SERVER: '1'
     fetches:
