@@ -75,10 +75,10 @@ index b97e829f3e..fbf9226c4e 100644
        ChangedSenderParameters params;
        params.send_codec = *matched_codec;
 diff --git a/media/engine/webrtc_voice_engine.cc b/media/engine/webrtc_voice_engine.cc
-index f055a0000a..63abe1c93a 100644
+index e8d4435611..adf8b5c51d 100644
 --- a/media/engine/webrtc_voice_engine.cc
 +++ b/media/engine/webrtc_voice_engine.cc
-@@ -1870,6 +1870,8 @@ webrtc::RTCError WebRtcVoiceSendChannel::SetRtpSendParameters(
+@@ -1871,6 +1871,8 @@ webrtc::RTCError WebRtcVoiceSendChannel::SetRtpSendParameters(
      SetPreferredDscp(new_dscp);
  
      absl::optional<cricket::Codec> send_codec = GetSendCodec();
@@ -87,7 +87,7 @@ index f055a0000a..63abe1c93a 100644
      // TODO(orphis): Support mixed-codec simulcast
      if (parameters.encodings[0].codec && send_codec &&
          !send_codec->MatchesRtpCodec(*parameters.encodings[0].codec)) {
-@@ -1880,7 +1882,13 @@ webrtc::RTCError WebRtcVoiceSendChannel::SetRtpSendParameters(
+@@ -1881,7 +1883,13 @@ webrtc::RTCError WebRtcVoiceSendChannel::SetRtpSendParameters(
              return negotiated_codec.MatchesRtpCodec(
                  *parameters.encodings[0].codec);
            });
