@@ -38,7 +38,7 @@ module.exports = async function (context, commands) {
     await commands.measure.start(url);
 
     await commands.js.runAndWait(`
-        this.benchmarkClient.startBenchmark()
+        this.benchmarkClient.start()
     `);
 
     let data_exists = false;
