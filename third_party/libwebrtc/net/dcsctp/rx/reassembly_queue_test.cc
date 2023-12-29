@@ -34,6 +34,7 @@ namespace {
 using ::testing::ElementsAre;
 using ::testing::SizeIs;
 using ::testing::UnorderedElementsAre;
+using SkippedStream = AnyForwardTsnChunk::SkippedStream;
 
 // The default maximum size of the Reassembly Queue.
 static constexpr size_t kBufferSize = 10000;
@@ -194,7 +195,7 @@ TEST_F(ReassemblyQueueTest, ForwardTSNRemoveUnordered) {
 
   EXPECT_FALSE(reasm.HasMessages());
 
-  reasm.Handle(ForwardTsnChunk(TSN(13), {}));
+  reasm.HandleForwardTsn(TSN(13), std::vector<SkippedStream>());
   EXPECT_EQ(reasm.queued_bytes(), 3u);
 
   // The second lost chunk comes, message is assembled.
@@ -217,8 +218,8 @@ TEST_F(ReassemblyQueueTest, ForwardTSNRemoveOrdered) {
 
   EXPECT_FALSE(reasm.HasMessages());
 
-  reasm.Handle(ForwardTsnChunk(
-      TSN(13), {ForwardTsnChunk::SkippedStream(kStreamID, kSSN)}));
+  reasm.HandleForwardTsn(
+      TSN(13), std::vector<SkippedStream>({SkippedStream(kStreamID, kSSN)}));
   EXPECT_EQ(reasm.queued_bytes(), 0u);
 
   // The lost chunk comes, but too late.
@@ -241,8 +242,8 @@ TEST_F(ReassemblyQueueTest, ForwardTSNRemoveALotOrdered) {
 
   EXPECT_FALSE(reasm.HasMessages());
 
-  reasm.Handle(ForwardTsnChunk(
-      TSN(13), {ForwardTsnChunk::SkippedStream(kStreamID, kSSN)}));
+  reasm.HandleForwardTsn(
+      TSN(13), std::vector<SkippedStream>({SkippedStream(kStreamID, kSSN)}));
   EXPECT_EQ(reasm.queued_bytes(), 0u);
 
   // The lost chunk comes, but too late.
@@ -274,46 +275,24 @@ TEST_F(ReassemblyQueueTest, NotReadyForHandoverWhenDeliveredTsnsHaveGap) {
           .Add(
               HandoverUnreadinessReason::kUnorderedStreamHasUnassembledChunks));
 
-  reasm.Handle(ForwardTsnChunk(TSN(13), {}));
+  reasm.HandleForwardTsn(TSN(13), std::vector<SkippedStream>());
   EXPECT_EQ(reasm.GetHandoverReadiness(), HandoverReadinessStatus());
 }
 
 TEST_F(ReassemblyQueueTest, NotReadyForHandoverWhenResetStreamIsDeferred) {
   ReassemblyQueue reasm("log: ", TSN(10), kBufferSize);
-  DataGeneratorOptions opts;
-  opts.mid = MID(0);
-  reasm.Add(TSN(10), gen_.Ordered({1, 2, 3, 4}, "BE", opts));
-  opts.mid = MID(1);
-  reasm.Add(TSN(11), gen_.Ordered({1, 2, 3, 4}, "BE", opts));
+  reasm.Add(TSN(10), gen_.Ordered({1, 2, 3, 4}, "BE", {.mid = MID(0)}));
+  reasm.Add(TSN(11), gen_.Ordered({1, 2, 3, 4}, "BE", {.mid = MID(1)}));
   EXPECT_THAT(reasm.FlushMessages(), SizeIs(2));
 
-  reasm.ResetStreams(
-      OutgoingSSNResetRequestParameter(
-          ReconfigRequestSN(10), ReconfigRequestSN(3), TSN(13), {StreamID(1)}),
-      TSN(11));
+  reasm.EnterDeferredReset(TSN(12), std::vector<StreamID>({StreamID(1)}));
   EXPECT_EQ(reasm.GetHandoverReadiness(),
             HandoverReadinessStatus().Add(
                 HandoverUnreadinessReason::kStreamResetDeferred));
 
-  opts.mid = MID(3);
-  opts.ppid = PPID(3);
-  reasm.Add(TSN(13), gen_.Ordered({1, 2, 3, 4}, "BE", opts));
-  reasm.MaybeResetStreamsDeferred(TSN(11));
+  reasm.Add(TSN(12), gen_.Ordered({1, 2, 3, 4}, "BE", {.mid = MID(2)}));
 
-  opts.mid = MID(2);
-  opts.ppid = PPID(2);
-  reasm.Add(TSN(13), gen_.Ordered({1, 2, 3, 4}, "BE", opts));
-  reasm.MaybeResetStreamsDeferred(TSN(15));
-  EXPECT_EQ(reasm.GetHandoverReadiness(),
-            HandoverReadinessStatus().Add(
-                HandoverUnreadinessReason::kReassemblyQueueDeliveredTSNsGap));
-
-  EXPECT_THAT(reasm.FlushMessages(), SizeIs(2));
-  EXPECT_EQ(reasm.GetHandoverReadiness(),
-            HandoverReadinessStatus().Add(
-                HandoverUnreadinessReason::kReassemblyQueueDeliveredTSNsGap));
-
-  reasm.Handle(ForwardTsnChunk(TSN(15), {}));
+  reasm.ResetStreamsAndLeaveDeferredReset(std::vector<StreamID>({StreamID(1)}));
   EXPECT_EQ(reasm.GetHandoverReadiness(), HandoverReadinessStatus());
 }
 
@@ -427,9 +406,8 @@ TEST_F(ReassemblyQueueTest, IForwardTSNRemoveALotOrdered) {
   ASSERT_FALSE(reasm.HasMessages());
   EXPECT_EQ(reasm.queued_bytes(), 7u);
 
-  reasm.Handle(
-      IForwardTsnChunk(TSN(13), {IForwardTsnChunk::SkippedStream(
-                                    IsUnordered(false), kStreamID, MID(0))}));
+  reasm.HandleForwardTsn(TSN(13), std::vector<SkippedStream>({SkippedStream(
+                                      IsUnordered(false), kStreamID, MID(0))}));
   EXPECT_EQ(reasm.queued_bytes(), 0u);
 
   // The lost chunk comes, but too late.
