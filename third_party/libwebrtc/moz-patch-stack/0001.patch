@@ -27,7 +27,7 @@ Cr-Branched-From: bce7ce7ba054ac0e79fed49b84ef52fb24c31778-refs/heads/main@{#408
  3 files changed, 147 insertions(+), 4 deletions(-)
 
 diff --git a/media/engine/webrtc_video_engine.cc b/media/engine/webrtc_video_engine.cc
-index fad0f4fc55..91750b837b 100644
+index b97e829f3e..fbf9226c4e 100644
 --- a/media/engine/webrtc_video_engine.cc
 +++ b/media/engine/webrtc_video_engine.cc
 @@ -29,6 +29,7 @@
@@ -46,7 +46,7 @@ index fad0f4fc55..91750b837b 100644
  #include "media/base/media_constants.h"
  #include "media/base/rid_description.h"
  #include "media/base/rtp_utils.h"
-@@ -1333,17 +1335,24 @@ webrtc::RTCError WebRtcVideoSendChannel::SetRtpSendParameters(
+@@ -1336,17 +1338,24 @@ webrtc::RTCError WebRtcVideoSendChannel::SetRtpSendParameters(
          break;
      }
  

@@ -358,8 +358,11 @@ static bool ValidateStreamParams(const StreamParams& sp) {
     }
   }
   for (const auto& group : sp.ssrc_groups) {
-    if (group.semantics != kSimSsrcGroupSemantics)
+    if (!(group.semantics == kFidSsrcGroupSemantics ||
+          group.semantics == kSimSsrcGroupSemantics ||
+          group.semantics == kFecFrSsrcGroupSemantics)) {
       continue;
+    }
     for (uint32_t group_ssrc : group.ssrcs) {
       auto it = absl::c_find_if(sp.ssrcs, [&group_ssrc](uint32_t ssrc) {
         return ssrc == group_ssrc;
@@ -367,7 +370,7 @@ static bool ValidateStreamParams(const StreamParams& sp) {
       if (it == sp.ssrcs.end()) {
         RTC_LOG(LS_ERROR) << "SSRC '" << group_ssrc
                           << "' missing from StreamParams ssrcs with semantics "
-                          << kSimSsrcGroupSemantics << ": " << sp.ToString();
+                          << group.semantics << ": " << sp.ToString();
         return false;
       }
     }
