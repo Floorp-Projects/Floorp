@@ -201,10 +201,13 @@ macosx64-xz:
 macosx64-custom-car:
     description: "Custom chromium-as-release build for mac"
     worker-type: b-osx-1015
+    attributes:
+        cached_task: false
     treeherder:
         symbol: TM(custom-car)
     worker:
         max-run-time: 30000
+    run-on-projects: []
     run:
         script: build-custom-car.sh
         arguments: [
@@ -231,11 +234,14 @@ macosx64-custom-car:
 
 android-custom-car:
     description: "Custom chromium-as-release build for Android"
+    attributes:
+        cached_task: false
     treeherder:
         symbol: TL(custom-car-android)
     worker:
         docker-image: {in-tree: custom-car-android}
         max-run-time: 20000
+    run-on-projects: []
     run:
         script: build-custom-car.sh
         arguments: [
@@ -261,11 +267,14 @@ android-custom-car:
 
 linux64-custom-car:
     description: "Custom chromium-as-release build for Linux"
+    attributes:
+        cached_task: false
     treeherder:
         symbol: TL(custom-car)
     worker:
         docker-image: {in-tree: custom-car-linux}
         max-run-time: 16200
+    run-on-projects: []
     run:
         script: build-custom-car.sh
         arguments: [
@@ -288,6 +297,8 @@ linux64-custom-car:
 
 win64-custom-car:
     description: "Custom chromium-as-release build for Windows"
+    attributes:
+        cached_task: false
     treeherder:
         symbol: TW64(custom-car)
     worker-type: b-win2022
@@ -295,6 +306,7 @@ win64-custom-car:
         max-run-time: 16200
         env:
             MSYSTEM: "MINGW64"
+    run-on-projects: []
     run:
         script: build-custom-car.sh
         arguments: [
