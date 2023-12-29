@@ -4175,22 +4175,10 @@ const AppearanceChooser = {
       });
     }
 
-    // Forward the click to the "colors" button.
-    document
-      .getElementById("web-appearance-manage-colors-link")
-      .addEventListener("click", function (e) {
-        document.getElementById("colors").click();
-        e.preventDefault();
-      });
-
-    document
-      .getElementById("web-appearance-manage-themes-link")
-      .addEventListener("click", function (e) {
-        window.browsingContext.topChromeWindow.BrowserOpenAddonsMgr(
-          "addons://list/theme"
-        );
-        e.preventDefault();
-      });
+    let webAppearanceSettings = document.getElementById(
+      "webAppearanceSettings"
+    );
+    webAppearanceSettings.addEventListener("click", this);
 
     this.warning = document.getElementById("web-appearance-override-warning");
 
@@ -4206,6 +4194,23 @@ const AppearanceChooser = {
   },
 
   handleEvent(e) {
+    if (e.type == "click") {
+      switch (e.target.id) {
+        // Forward the click to the "colors" button.
+        case "web-appearance-manage-colors-link":
+          document.getElementById("colors").click();
+          e.preventDefault();
+          break;
+        case "web-appearance-manage-themes-link":
+          window.browsingContext.topChromeWindow.BrowserOpenAddonsMgr(
+            "addons://list/theme"
+          );
+          e.preventDefault();
+          break;
+        default:
+          break;
+      }
+    }
     this._update();
   },
 
