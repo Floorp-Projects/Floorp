@@ -527,7 +527,7 @@ input[type=color] {
 }
 
 /* https://github.com/whatwg/html/issues/9976 */
-input:not([type=image i]) {
+input:not([type=image i], [type=range i]) {
   overflow: clip !important;
   overflow-clip-margin: 0px !important;
 }
