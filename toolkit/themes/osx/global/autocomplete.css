@@ -13,10 +13,12 @@ html|input[nomatch="true"][highlightnonmatches="true"] {
 
 panel[type="autocomplete-richlistbox"] {
   appearance: none;
+  background-color: transparent;
   font: icon;
   --panel-padding: 0px;
   --panel-color: FieldText;
   --panel-background: Field;
+  --panel-border-color: ThreeDShadow;
 }
 
 /* ::::: richlistbox autocomplete ::::: */
