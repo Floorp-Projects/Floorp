@@ -199,6 +199,11 @@
       'shards': 6,
     },
   },
+  'shards-8': {
+    'swarming': {
+      'shards': 8,
+    },
+  },
   'timeout-2h': {
     'swarming': {
       'hard_timeout': 7200,
