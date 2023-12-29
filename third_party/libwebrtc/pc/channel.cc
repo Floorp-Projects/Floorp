@@ -78,12 +78,13 @@ struct StreamFinder {
 
 }  // namespace
 
-template <class Codec>
 void MediaChannelParametersFromMediaDescription(
-    const MediaContentDescriptionImpl<Codec>* desc,
+    const RtpMediaContentDescription* desc,
     const RtpHeaderExtensions& extensions,
     bool is_stream_active,
     MediaChannelParameters* params) {
+  RTC_DCHECK(desc->type() == MEDIA_TYPE_AUDIO ||
+             desc->type() == MEDIA_TYPE_VIDEO);
   params->is_stream_active = is_stream_active;
   params->codecs = desc->codecs();
   // TODO(bugs.webrtc.org/11513): See if we really need
@@ -95,9 +96,8 @@ void MediaChannelParametersFromMediaDescription(
   params->rtcp.remote_estimate = desc->remote_estimate();
 }
 
-template <class Codec>
 void RtpSendParametersFromMediaDescription(
-    const MediaContentDescriptionImpl<Codec>* desc,
+    const RtpMediaContentDescription* desc,
     webrtc::RtpExtension::Filter extensions_filter,
     SenderParameters* send_params) {
   RtpHeaderExtensions extensions =

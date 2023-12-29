@@ -200,14 +200,7 @@ Codec CreateVideoRtxCodec(int rtx_payload_type, int associated_payload_type);
 
 // Get the codec setting associated with `payload_type`. If there
 // is no codec associated with that payload type it returns nullptr.
-template <class Codec>
-const Codec* FindCodecById(const std::vector<Codec>& codecs, int payload_type) {
-  for (const auto& codec : codecs) {
-    if (codec.id == payload_type)
-      return &codec;
-  }
-  return nullptr;
-}
+const Codec* FindCodecById(const std::vector<Codec>& codecs, int payload_type);
 
 bool HasLntf(const Codec& codec);
 bool HasNack(const Codec& codec);

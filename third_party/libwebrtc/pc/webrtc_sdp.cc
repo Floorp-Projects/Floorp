@@ -2616,8 +2616,7 @@ void MaybeCreateStaticPayloadAudioCodecs(const std::vector<int>& fmts,
   }
 }
 
-template <class C>
-static std::unique_ptr<C> ParseContentDescription(
+static std::unique_ptr<MediaContentDescription> ParseContentDescription(
     absl::string_view message,
     const cricket::MediaType media_type,
     int mline_index,
@@ -2630,7 +2629,16 @@ static std::unique_ptr<C> ParseContentDescription(
     TransportDescription* transport,
     std::vector<std::unique_ptr<JsepIceCandidate>>* candidates,
     webrtc::SdpParseError* error) {
-  auto media_desc = std::make_unique<C>();
+  std::unique_ptr<MediaContentDescription> media_desc;
+  if (media_type == cricket::MediaType::MEDIA_TYPE_AUDIO) {
+    media_desc = std::make_unique<AudioContentDescription>();
+  } else if (media_type == cricket::MediaType::MEDIA_TYPE_VIDEO) {
+    media_desc = std::make_unique<VideoContentDescription>();
+  } else {
+    RTC_DCHECK_NOTREACHED();
+    return nullptr;
+  }
+
   media_desc->set_extmap_allow_mixed_enum(MediaContentDescription::kNo);
   if (!ParseContent(message, media_type, mline_index, protocol, payload_types,
                     pos, content_name, bundle_only, msid_signaling,
@@ -2725,12 +2733,12 @@ bool ParseMediaDescription(
       return ParseFailed(*mline, "Unsupported protocol for media type", error);
     }
     if (media_type == kMediaTypeVideo) {
-      content = ParseContentDescription<VideoContentDescription>(
+      content = ParseContentDescription(
           message, cricket::MEDIA_TYPE_VIDEO, mline_index, protocol,
           payload_types, pos, &content_name, &bundle_only,
           &section_msid_signaling, &transport, candidates, error);
     } else if (media_type == kMediaTypeAudio) {
-      content = ParseContentDescription<AudioContentDescription>(
+      content = ParseContentDescription(
           message, cricket::MEDIA_TYPE_AUDIO, mline_index, protocol,
           payload_types, pos, &content_name, &bundle_only,
           &section_msid_signaling, &transport, candidates, error);
