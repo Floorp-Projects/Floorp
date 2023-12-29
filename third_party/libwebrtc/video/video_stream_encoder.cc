@@ -650,7 +650,8 @@ VideoStreamEncoder::VideoStreamEncoder(
       sink_(nullptr),
       settings_(settings),
       allocation_cb_type_(allocation_cb_type),
-      rate_control_settings_(RateControlSettings::ParseFromFieldTrials()),
+      rate_control_settings_(
+          RateControlSettings::ParseFromKeyValueConfig(&field_trials)),
       encoder_selector_from_constructor_(encoder_selector),
       encoder_selector_from_factory_(
           encoder_selector_from_constructor_
@@ -1368,7 +1369,8 @@ void VideoStreamEncoder::ReconfigureEncoder() {
 
   const VideoEncoder::EncoderInfo info = encoder_->GetEncoderInfo();
   if (rate_control_settings_.UseEncoderBitrateAdjuster()) {
-    bitrate_adjuster_ = std::make_unique<EncoderBitrateAdjuster>(codec);
+    bitrate_adjuster_ =
+        std::make_unique<EncoderBitrateAdjuster>(codec, field_trials_);
     bitrate_adjuster_->OnEncoderInfo(info);
   }
 

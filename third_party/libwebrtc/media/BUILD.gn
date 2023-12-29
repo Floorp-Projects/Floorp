@@ -358,8 +358,10 @@ rtc_library("rtc_simulcast_encoder_adapter") {
   deps = [
     ":rtc_media_base",
     "../api:fec_controller_api",
+    "../api:field_trials_view",
     "../api:scoped_refptr",
     "../api:sequence_checker",
+    "../api/transport:field_trial_based_config",
     "../api/video:video_codec_constants",
     "../api/video:video_frame",
     "../api/video:video_rtp_headers",
@@ -376,7 +378,6 @@ rtc_library("rtc_simulcast_encoder_adapter") {
     "../rtc_base/system:no_unique_address",
     "../rtc_base/system:rtc_export",
     "../system_wrappers",
-    "../system_wrappers:field_trial",
   ]
   absl_deps = [
     "//third_party/abseil-cpp/absl/algorithm:container",
@@ -846,6 +847,7 @@ if (rtc_include_tests) {
         ":stream_params",
         ":turn_utils",
         "../api:create_simulcast_test_fixture_api",
+        "../api:field_trials_view",
         "../api:libjingle_peerconnection_api",
         "../api:mock_encoder_selector",
         "../api:mock_video_bitrate_allocator",
