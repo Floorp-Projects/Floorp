@@ -10,7 +10,7 @@ vars = {
   # chromium waterfalls. More info at: crbug.com/570091.
   'checkout_configuration': 'default',
   'checkout_instrumented_libraries': 'checkout_linux and checkout_configuration == "default"',
-  'chromium_revision': '262607b10f3a7ed63ee39c4b407884b323312419',
+  'chromium_revision': '55f6a9923a88f408f95ba8ebc929f84c9423e7a5',
 
   # Fetch the prebuilt binaries for llvm-cov and llvm-profdata. Needed to
   # process the raw profiles produced by instrumented targets (built with
@@ -50,9 +50,9 @@ vars = {
 deps = {
   # TODO(kjellander): Move this to be Android-only.
   'src/base':
-    'https://chromium.googlesource.com/chromium/src/base@bfab78336ae552687d5af5df0b03ec592a786ef0',
+    'https://chromium.googlesource.com/chromium/src/base@b5fe4a68163d2fe7128cb4119c6d0345a92e9adc',
   'src/build':
-    'https://chromium.googlesource.com/chromium/src/build@bc93fc04331624a96d91bc0c51eb9354d828ef93',
+    'https://chromium.googlesource.com/chromium/src/build@b1221f6f36a7e9a0b79ab782f8895f4e6904686c',
   'src/buildtools':
     'https://chromium.googlesource.com/chromium/src/buildtools@657ac241f85143f2815da3a5bb9fe08b6eb2c4b0',
   # Gradle 6.6.1. Used for testing Android Studio project generation for WebRTC.
@@ -61,13 +61,13 @@ deps = {
     'condition': 'checkout_android',
   },
   'src/ios': {
-    'url': 'https://chromium.googlesource.com/chromium/src/ios@cbbaf8f38fda8134cb3fc16d2c0b3cc1b7927ebd',
+    'url': 'https://chromium.googlesource.com/chromium/src/ios@55efea06787217e13b51a0345a3d352b4861030f',
     'condition': 'checkout_ios',
   },
   'src/testing':
-    'https://chromium.googlesource.com/chromium/src/testing@3e60a8be2a6ce825cfa21c8f67cbedfc16caf4d2',
+    'https://chromium.googlesource.com/chromium/src/testing@645b1e9cec8a9feb5918138e655a4f14f694e7f9',
   'src/third_party':
-    'https://chromium.googlesource.com/chromium/src/third_party@e59cb2530758860918316fd744ac9185777fd285',
+    'https://chromium.googlesource.com/chromium/src/third_party@39a60289a3b1463e0159c8fe4031c35a15d5740a',
 
   'src/buildtools/linux64': {
     'packages': [
@@ -344,7 +344,7 @@ deps = {
     'condition': 'checkout_android',
   },
   'src/tools':
-    'https://chromium.googlesource.com/chromium/src/tools@643b7e3d08e8db60dadebc5a8d41af3f757ded7f',
+    'https://chromium.googlesource.com/chromium/src/tools@348119af21abbaae158edfd1b9bebfa00e8f0991',
 
   'src/third_party/accessibility_test_framework': {
       'packages': [
@@ -416,7 +416,7 @@ deps = {
     'packages': [
       {
           'package': 'chromium/third_party/androidx',
-          'version': 's8VNlRsmChI1Ss2qzgFkIJ2B-5zvPGWBkY7OPnUyUjUC',
+          'version': 'zUlqegt7mTpkaIkH0An0OHhHMxUEu2Ocnd8D_a9WcmYC',
       },
     ],
     'condition': 'checkout_android',
