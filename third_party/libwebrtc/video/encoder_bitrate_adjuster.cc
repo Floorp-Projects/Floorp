@@ -14,6 +14,7 @@
 #include <memory>
 #include <vector>
 
+#include "api/field_trials_view.h"
 #include "rtc_base/experiments/rate_control_settings.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/time_utils.h"
@@ -43,9 +44,12 @@ constexpr int64_t EncoderBitrateAdjuster::kWindowSizeMs;
 constexpr size_t EncoderBitrateAdjuster::kMinFramesSinceLayoutChange;
 constexpr double EncoderBitrateAdjuster::kDefaultUtilizationFactor;
 
-EncoderBitrateAdjuster::EncoderBitrateAdjuster(const VideoCodec& codec_settings)
-    : utilize_bandwidth_headroom_(RateControlSettings::ParseFromFieldTrials()
-                                      .BitrateAdjusterCanUseNetworkHeadroom()),
+EncoderBitrateAdjuster::EncoderBitrateAdjuster(
+    const VideoCodec& codec_settings,
+    const FieldTrialsView& field_trials)
+    : utilize_bandwidth_headroom_(
+          RateControlSettings::ParseFromKeyValueConfig(&field_trials)
+              .BitrateAdjusterCanUseNetworkHeadroom()),
       frames_since_layout_change_(0),
       min_bitrates_bps_{},
       frame_size_pixels_{},

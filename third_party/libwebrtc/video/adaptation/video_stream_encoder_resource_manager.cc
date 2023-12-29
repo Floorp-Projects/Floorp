@@ -21,6 +21,7 @@
 #include "absl/algorithm/container.h"
 #include "absl/base/macros.h"
 #include "api/adaptation/resource.h"
+#include "api/field_trials_view.h"
 #include "api/sequence_checker.h"
 #include "api/task_queue/task_queue_base.h"
 #include "api/video/video_adaptation_reason.h"
@@ -116,9 +117,10 @@ absl::optional<DataRate> GetSingleActiveLayerMaxBitrate(
 class VideoStreamEncoderResourceManager::InitialFrameDropper {
  public:
   explicit InitialFrameDropper(
-      rtc::scoped_refptr<QualityScalerResource> quality_scaler_resource)
+      rtc::scoped_refptr<QualityScalerResource> quality_scaler_resource,
+      const FieldTrialsView& field_trials)
       : quality_scaler_resource_(quality_scaler_resource),
-        quality_scaler_settings_(QualityScalerSettings::ParseFromFieldTrials()),
+        quality_scaler_settings_(field_trials),
         has_seen_first_bwe_drop_(false),
         set_start_bitrate_(DataRate::Zero()),
         set_start_bitrate_time_ms_(0),
@@ -289,8 +291,10 @@ VideoStreamEncoderResourceManager::VideoStreamEncoderResourceManager(
       clock_(clock),
       experiment_cpu_load_estimator_(experiment_cpu_load_estimator),
       initial_frame_dropper_(
-          std::make_unique<InitialFrameDropper>(quality_scaler_resource_)),
-      quality_scaling_experiment_enabled_(QualityScalingExperiment::Enabled()),
+          std::make_unique<InitialFrameDropper>(quality_scaler_resource_,
+                                                field_trials)),
+      quality_scaling_experiment_enabled_(
+          QualityScalingExperiment::Enabled(field_trials_)),
       pixel_limit_resource_experiment_enabled_(
           field_trials.IsEnabled(kPixelLimitResourceFieldTrialName)),
       encoder_target_bitrate_bps_(absl::nullopt),
@@ -561,7 +565,8 @@ void VideoStreamEncoderResourceManager::UpdateQualityScalerSettings(
     if (quality_scaler_resource_->is_started()) {
       quality_scaler_resource_->SetQpThresholds(qp_thresholds.value());
     } else {
-      quality_scaler_resource_->StartCheckForOveruse(qp_thresholds.value());
+      quality_scaler_resource_->StartCheckForOveruse(qp_thresholds.value(),
+                                                     field_trials_);
       AddResource(quality_scaler_resource_, VideoAdaptationReason::kQuality);
     }
   } else if (quality_scaler_resource_->is_started()) {
@@ -615,7 +620,7 @@ void VideoStreamEncoderResourceManager::ConfigureQualityScaler(
       absl::optional<VideoEncoder::QpThresholds> experimental_thresholds;
       if (quality_scaling_experiment_enabled_) {
         experimental_thresholds = QualityScalingExperiment::GetQpThresholds(
-            GetVideoCodecTypeOrGeneric(encoder_settings_));
+            GetVideoCodecTypeOrGeneric(encoder_settings_), field_trials_);
       }
       UpdateQualityScalerSettings(experimental_thresholds.has_value()
                                       ? experimental_thresholds

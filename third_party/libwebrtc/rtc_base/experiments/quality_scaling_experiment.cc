@@ -13,8 +13,10 @@
 
 #include <string>
 
+#include "absl/strings/match.h"
+#include "api/field_trials_view.h"
+#include "api/transport/field_trial_based_config.h"
 #include "rtc_base/logging.h"
-#include "system_wrappers/include/field_trial.h"
 
 namespace webrtc {
 namespace {
@@ -42,17 +44,17 @@ absl::optional<VideoEncoder::QpThresholds> GetThresholds(int low,
 }
 }  // namespace
 
-bool QualityScalingExperiment::Enabled() {
+bool QualityScalingExperiment::Enabled(const FieldTrialsView& field_trials) {
 #if defined(WEBRTC_IOS)
-  return webrtc::field_trial::IsEnabled(kFieldTrial);
+  return absl::StartsWith(field_trials.Lookup(kFieldTrial), "Enabled");
 #else
-  return !webrtc::field_trial::IsDisabled(kFieldTrial);
+  return !absl::StartsWith(field_trials.Lookup(kFieldTrial), "Disabled");
 #endif
 }
 
 absl::optional<QualityScalingExperiment::Settings>
-QualityScalingExperiment::ParseSettings() {
-  std::string group = webrtc::field_trial::FindFullName(kFieldTrial);
+QualityScalingExperiment::ParseSettings(const FieldTrialsView& field_trials) {
+  std::string group = field_trials.Lookup(kFieldTrial);
   // TODO(http://crbug.com/webrtc/12401): Completely remove the experiment code
   // after few releases.
 #if !defined(WEBRTC_IOS)
@@ -71,8 +73,9 @@ QualityScalingExperiment::ParseSettings() {
 }
 
 absl::optional<VideoEncoder::QpThresholds>
-QualityScalingExperiment::GetQpThresholds(VideoCodecType codec_type) {
-  const auto settings = ParseSettings();
+QualityScalingExperiment::GetQpThresholds(VideoCodecType codec_type,
+                                          const FieldTrialsView& field_trials) {
+  const auto settings = ParseSettings(field_trials);
   if (!settings)
     return absl::nullopt;
 
@@ -93,8 +96,9 @@ QualityScalingExperiment::GetQpThresholds(VideoCodecType codec_type) {
   }
 }
 
-QualityScalingExperiment::Config QualityScalingExperiment::GetConfig() {
-  const auto settings = ParseSettings();
+QualityScalingExperiment::Config QualityScalingExperiment::GetConfig(
+    const FieldTrialsView& field_trials) {
+  const auto settings = ParseSettings(field_trials);
   if (!settings)
     return Config();
 
