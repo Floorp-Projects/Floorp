@@ -3592,7 +3592,7 @@ static NSMutableSet* gSwizzledFrameViewClasses = nil;
 
 // Returns an autoreleased NSImage.
 static NSImage* GetMenuMaskImage() {
-  const CGFloat radius = 8.0f;
+  const CGFloat radius = 6.0f;
   const NSSize maskSize = {radius * 3.0f, radius * 3.0f};
   NSImage* maskImage = [NSImage imageWithSize:maskSize
                                       flipped:FALSE
