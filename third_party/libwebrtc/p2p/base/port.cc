@@ -188,8 +188,8 @@ void Port::Construct() {
 
 Port::~Port() {
   RTC_DCHECK_RUN_ON(thread_);
-  CancelPendingTasks();
   DestroyAllConnections();
+  CancelPendingTasks();
 }
 
 const absl::string_view Port::Type() const {
