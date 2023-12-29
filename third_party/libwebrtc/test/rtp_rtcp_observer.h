@@ -15,6 +15,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/flags/flag.h"
 #include "api/array_view.h"
 #include "api/test/simulated_network.h"
 #include "api/units/time_delta.h"
@@ -25,10 +26,7 @@
 #include "system_wrappers/include/field_trial.h"
 #include "test/direct_transport.h"
 #include "test/gtest.h"
-
-namespace {
-constexpr webrtc::TimeDelta kShortTimeout = webrtc::TimeDelta::Millis(500);
-}
+#include "test/test_flags.h"
 
 namespace webrtc {
 namespace test {
@@ -45,8 +43,8 @@ class RtpRtcpObserver {
   virtual ~RtpRtcpObserver() {}
 
   virtual bool Wait() {
-    if (field_trial::IsEnabled("WebRTC-QuickPerfTest")) {
-      observation_complete_.Wait(kShortTimeout);
+    if (absl::GetFlag(FLAGS_webrtc_quick_perf_test)) {
+      observation_complete_.Wait(TimeDelta::Millis(500));
       return true;
     }
     return observation_complete_.Wait(timeout_);

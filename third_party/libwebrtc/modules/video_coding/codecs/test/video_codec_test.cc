@@ -15,6 +15,7 @@
 #include <string>
 #include <vector>
 
+#include "absl/flags/flag.h"
 #include "absl/functional/any_invocable.h"
 #include "api/test/create_video_codec_tester.h"
 #include "api/test/metrics/global_metrics_logger_and_exporter.h"
@@ -38,8 +39,8 @@
 #include "modules/video_coding/codecs/test/android_codec_factory_helper.h"
 #endif
 #include "rtc_base/logging.h"
-#include "system_wrappers/include/field_trial.h"
 #include "test/gtest.h"
+#include "test/test_flags.h"
 #include "test/testsupport/file_utils.h"
 #include "test/testsupport/frame_reader.h"
 
@@ -612,7 +613,7 @@ TEST_P(SpatialQualityTest, SpatialQuality) {
     std::vector<VideoCodecStats::Frame> frames = stats->Slice();
     SetTargetRates(frame_settings, frames);
     stream = stats->Aggregate(frames);
-    if (field_trial::IsEnabled("WebRTC-QuickPerfTest")) {
+    if (absl::GetFlag(FLAGS_webrtc_quick_perf_test)) {
       EXPECT_GE(stream.psnr.y.GetAverage(), psnr);
     }
   }
@@ -697,7 +698,7 @@ TEST_P(BitrateAdaptationTest, BitrateAdaptation) {
         stats->Slice(VideoCodecStats::Filter{.first_frame = first_frame});
     SetTargetRates(frame_settings, frames);
     stream = stats->Aggregate(frames);
-    if (field_trial::IsEnabled("WebRTC-QuickPerfTest")) {
+    if (absl::GetFlag(FLAGS_webrtc_quick_perf_test)) {
       EXPECT_NEAR(stream.bitrate_mismatch_pct.GetAverage(), 0, 10);
       EXPECT_NEAR(stream.framerate_mismatch_pct.GetAverage(), 0, 10);
     }
@@ -776,7 +777,7 @@ TEST_P(FramerateAdaptationTest, FramerateAdaptation) {
         stats->Slice(VideoCodecStats::Filter{.first_frame = first_frame});
     SetTargetRates(frame_settings, frames);
     stream = stats->Aggregate(frames);
-    if (field_trial::IsEnabled("WebRTC-QuickPerfTest")) {
+    if (absl::GetFlag(FLAGS_webrtc_quick_perf_test)) {
       EXPECT_NEAR(stream.bitrate_mismatch_pct.GetAverage(), 0, 10);
       EXPECT_NEAR(stream.framerate_mismatch_pct.GetAverage(), 0, 10);
     }

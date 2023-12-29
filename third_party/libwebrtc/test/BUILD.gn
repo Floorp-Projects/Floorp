@@ -596,16 +596,6 @@ if (rtc_include_tests) {
       absl_deps = [ "//third_party/abseil-cpp/absl/flags:flag" ]
     }
 
-    rtc_library("test_flags") {
-      visibility = [ "*" ]
-      testonly = true
-      sources = [
-        "test_flags.cc",
-        "test_flags.h",
-      ]
-      absl_deps = [ "//third_party/abseil-cpp/absl/flags:flag" ]
-    }
-
     rtc_library("test_main_lib") {
       visibility = [ "*" ]
       testonly = true
@@ -1253,6 +1243,16 @@ if (!build_with_chromium) {
     ]
   }
 
+  rtc_library("test_flags") {
+    visibility = [ "*" ]
+    testonly = true
+    sources = [
+      "test_flags.cc",
+      "test_flags.h",
+    ]
+    absl_deps = [ "//third_party/abseil-cpp/absl/flags:flag" ]
+  }
+
   rtc_library("test_common") {
     testonly = true
     sources = [
@@ -1274,6 +1274,7 @@ if (!build_with_chromium) {
       ":mock_transport",
       ":run_loop",
       ":scoped_key_value_config",
+      ":test_flags",
       ":test_support",
       ":test_video_capturer",
       ":video_test_common",
@@ -1320,7 +1321,10 @@ if (!build_with_chromium) {
       "../system_wrappers:field_trial",
       "../video/config:encoder_config",
     ]
-    absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+    absl_deps = [
+      "//third_party/abseil-cpp/absl/flags:flag",
+      "//third_party/abseil-cpp/absl/types:optional",
+    ]
     if (!is_android && !build_with_chromium) {
       deps += [ "../modules/video_capture:video_capture_internal_impl" ]
     }

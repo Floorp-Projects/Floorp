@@ -620,6 +620,7 @@ if (rtc_include_tests) {
         "../test:frame_generator_capturer",
         "../test:null_transport",
         "../test:test_common",
+        "../test:test_flags",
         "../test:test_support",
         "../test:video_test_common",
         "../test:video_test_constants",

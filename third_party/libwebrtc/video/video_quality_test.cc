@@ -48,6 +48,7 @@
 #include "rtc_base/strings/string_builder.h"
 #include "rtc_base/task_queue_for_test.h"
 #include "test/platform_video_capturer.h"
+#include "test/test_flags.h"
 #include "test/testsupport/file_utils.h"
 #include "test/video_renderer.h"
 #include "video/frame_dumping_decoder.h"
@@ -1262,7 +1263,7 @@ void VideoQualityTest::RunWithAnalyzer(const Params& params) {
   std::string graph_title = params_.analyzer.graph_title;
   if (graph_title.empty())
     graph_title = VideoQualityTest::GenerateGraphTitle();
-  bool is_quick_test_enabled = field_trial::IsEnabled("WebRTC-QuickPerfTest");
+  bool is_quick_test_enabled = absl::GetFlag(FLAGS_webrtc_quick_perf_test);
   analyzer_ = std::make_unique<VideoAnalyzer>(
       send_transport.get(), params_.analyzer.test_label,
       params_.analyzer.avg_psnr_threshold, params_.analyzer.avg_ssim_threshold,
