@@ -1,24 +1,46 @@
 # Messaging System & Onboarding Telemetry
 
+This document (combined with the [messaging system ping section of the Glean Dictionary](https://dictionary.telemetry.mozilla.org/apps/firefox_desktop/pings/messaging-system)), is now the place to look first for Messaging System and Onboarding telemetry information. For historical reasons, there is still some related documentation mixed in with the Activity Stream documentation. If you can't find what you need here, check [old metrics we collect](/browser/components/newtab/docs/v2-system-addon/data_events.md) and the
+[old data dictionary](/browser/components/newtab/docs/v2-system-addon/data_dictionary.md).
+
+## Collection with Glean
+
 Code all over the messaging system passes JSON ping objects up to a few
 central spots. It may be [annotated with
 attribution](https://searchfox.org/mozilla-central/search?q=symbol:AboutWelcomeTelemetry%23_maybeAttachAttribution&redirect=false)
 along the way, and/or adjusted by some [policy
 routines](https://searchfox.org/mozilla-central/search?q=symbol:TelemetryFeed%23createASRouterEvent&redirect=false)
-before it's sent. [A version of the JSON that's been transformed slightly further is sent to
-Glean](https://searchfox.org/mozilla-central/search?q=.submitGleanPingForPing&path=*.jsm&case=false&regexp=false).
+before it's sent. The JSON will be transformed slightly further before being [sent to
+Glean][submit-glean-for-glean].
+
+## Design of Messaging System Data Collections
+
+Data is sent in the
+[Messaging System Ping](https://dictionary.telemetry.mozilla.org/apps/firefox_desktop/pings/messaging-system).
+Which Messaging System Ping you get is recorded with
+[Ping Type](https://dictionary.telemetry.mozilla.org/apps/firefox_desktop/metrics/messaging_system_ping_type).
+If you wish to expand the collection of data,
+consider whether data belongs on the `messaging-system` ping
+(usually when data is timely to the ping itself)
+or if it's a more general collection,
+in which case the data can go on the default `send_in_pings` entry,
+which is the `metrics` ping.
+In either case, you can add a metric definition in the
+[metrics.yaml][metrics-yaml]
+file.
 
 ## Adding or changing telemetry
 
-Follow the [process in
-the Activity Stream telemetry
-document](/browser/components/newtab/docs/v2-system-addon/telemetry.md),
-and avoid adding any new nested objects, as these end up being flattened
-or stringified before being sent to Glean.  Note that when you need to add new metrics
-(i.e. JSON keys), they MUST to be
+A general process overview can be found in the
+[Activity Stream telemetry document](/browser/components/newtab/docs/v2-system-addon/telemetry.md).
+
+Note that when you need to add new metrics (i.e. JSON keys),
+they MUST to be
 [added](https://mozilla.github.io/glean/book/user/metrics/adding-new-metrics.html) to
-[browser/components/newtab/metrics.yaml](https://searchfox.org/mozilla-central/source/browser/components/newtab/metrics.yaml)
+[browser/components/newtab/metrics.yaml][metrics-yaml]
 in order to show up correctly in the Glean data.
+
+Avoid adding any new nested objects, because Glean can't handle these. In the best case, any such additions will end up being flattened or stringified before being sent.
 
 ## Monitoring FxMS Telemetry Health
 
@@ -63,3 +85,6 @@ before we can automatically act on them.
   Debug Ping Viewer which you can learn more about on `about:glean`.
 * If you have any questions, the Glean Team is available across a lot of
   timezones on the [`#glean:mozilla.org` channel](https://chat.mozilla.org/#/room/#glean:mozilla.org) on Matrix and Slack `#data-help`.
+
+  [submit-glean-for-glean]: https://searchfox.org/mozilla-central/search?q=.submitGleanPingForPing&path=*.jsm&case=false&regexp=false
+  [metrics-yaml]: https://searchfox.org/mozilla-central/source/browser/components/newtab/metrics.yaml
