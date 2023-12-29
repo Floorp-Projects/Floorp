@@ -102,10 +102,10 @@ index b8f8ae9f7a..382511daeb 100644
  #include <endian.h>
  #else
 diff --git a/rtc_base/physical_socket_server.cc b/rtc_base/physical_socket_server.cc
-index d42168249a..33ea941808 100644
+index b0af1c20ce..b13d1aa21b 100644
 --- a/rtc_base/physical_socket_server.cc
 +++ b/rtc_base/physical_socket_server.cc
-@@ -75,7 +75,10 @@ typedef void* SockOptArg;
+@@ -73,7 +73,10 @@ typedef void* SockOptArg;
  
  #endif  // WEBRTC_POSIX
  
@@ -117,7 +117,7 @@ index d42168249a..33ea941808 100644
  
  int64_t GetSocketRecvTimestamp(int socket) {
    struct timeval tv_ioctl;
-@@ -643,7 +646,7 @@ int PhysicalSocket::TranslateOption(Option opt, int* slevel, int* sopt) {
+@@ -641,7 +644,7 @@ int PhysicalSocket::TranslateOption(Option opt, int* slevel, int* sopt) {
        *slevel = IPPROTO_IP;
        *sopt = IP_DONTFRAGMENT;
        break;
