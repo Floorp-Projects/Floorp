@@ -10,7 +10,7 @@ vars = {
   # chromium waterfalls. More info at: crbug.com/570091.
   'checkout_configuration': 'default',
   'checkout_instrumented_libraries': 'checkout_linux and checkout_configuration == "default"',
-  'chromium_revision': '0e603da34a16746e6c743ac78bff817ea6ea5315',
+  'chromium_revision': 'f9691c6faf3cf2c8763e4356dd9c250d9d023daf',
 
   # Fetch the prebuilt binaries for llvm-cov and llvm-profdata. Needed to
   # process the raw profiles produced by instrumented targets (built with
@@ -50,24 +50,24 @@ vars = {
 deps = {
   # TODO(kjellander): Move this to be Android-only.
   'src/base':
-    'https://chromium.googlesource.com/chromium/src/base@ad4178be5f0cf7c20f5de23190f89cd86e5585a0',
+    'https://chromium.googlesource.com/chromium/src/base@f99a440717dfe648a0e6d9b1d6f6d230501c3d22',
   'src/build':
-    'https://chromium.googlesource.com/chromium/src/build@7f9fca99314e6b1ab0bf45dddbcbe1f1bd572bcd',
+    'https://chromium.googlesource.com/chromium/src/build@2dccc3874f8896439a54f81c51327dfb2e125d41',
   'src/buildtools':
-    'https://chromium.googlesource.com/chromium/src/buildtools@ab80d634ec750f40e3c30f5a207319cf9716ff11',
+    'https://chromium.googlesource.com/chromium/src/buildtools@67cee5ecfddaae62a36327815d8e9b3c466de7d0',
   # Gradle 6.6.1. Used for testing Android Studio project generation for WebRTC.
   'src/examples/androidtests/third_party/gradle': {
     'url': 'https://chromium.googlesource.com/external/github.com/gradle/gradle.git@f2d1fb54a951d8b11d25748e4711bec8d128d7e3',
     'condition': 'checkout_android',
   },
   'src/ios': {
-    'url': 'https://chromium.googlesource.com/chromium/src/ios@092658ad22aee4a32534881891fe7395a082b3ba',
+    'url': 'https://chromium.googlesource.com/chromium/src/ios@8268c9143f1f3e462c4cd04548d81e1a2a673aa3',
     'condition': 'checkout_ios',
   },
   'src/testing':
-    'https://chromium.googlesource.com/chromium/src/testing@2c0323c714f010764866b9da57868cae976dc08c',
+    'https://chromium.googlesource.com/chromium/src/testing@3d87dab4134d020a07f1f53d36060a85f4a66205',
   'src/third_party':
-    'https://chromium.googlesource.com/chromium/src/third_party@898664ec97c8262700c8ce5415b1ed1fc7bd1023',
+    'https://chromium.googlesource.com/chromium/src/third_party@d4888845595671f88597a550a1a0cf8eab81cfb2',
 
   'src/buildtools/linux64': {
     'packages': [
@@ -191,7 +191,7 @@ deps = {
   'src/third_party/crc32c/src':
     'https://chromium.googlesource.com/external/github.com/google/crc32c.git@fa5ade41ee480003d9c5af6f43567ba22e4e17e6',
   'src/third_party/depot_tools':
-    'https://chromium.googlesource.com/chromium/tools/depot_tools.git@456663282214a9b81f7299908f67d03beeb63845',
+    'https://chromium.googlesource.com/chromium/tools/depot_tools.git@aabd869daf9956514eba5f57d92da166f993ca47',
   'src/third_party/ffmpeg':
     'https://chromium.googlesource.com/chromium/third_party/ffmpeg.git@acb78dc0f416f6ef009192d94dc07c05effabfda',
   'src/third_party/flatbuffers/src':
@@ -227,7 +227,7 @@ deps = {
   'src/third_party/googletest/src':
     'https://chromium.googlesource.com/external/github.com/google/googletest.git@af29db7ec28d6df1c7f0f745186884091e602e07',
   'src/third_party/icu': {
-    'url': 'https://chromium.googlesource.com/chromium/deps/icu.git@985b9a6f70e13f3db741fed121e4dcc3046ad494',
+    'url': 'https://chromium.googlesource.com/chromium/deps/icu.git@995db880cff28a8b5d3a9978acd1b7cab9885edd',
   },
   'src/third_party/jdk': {
       'packages': [
@@ -344,7 +344,7 @@ deps = {
     'condition': 'checkout_android',
   },
   'src/tools':
-    'https://chromium.googlesource.com/chromium/src/tools@c828b4a078618914c8c5188180c7acd127ad2121',
+    'https://chromium.googlesource.com/chromium/src/tools@aaf8d9da7264d0d7d2ada20e109ccc4e9bb4b39c',
 
   'src/third_party/accessibility_test_framework': {
       'packages': [
@@ -416,7 +416,7 @@ deps = {
     'packages': [
       {
           'package': 'chromium/third_party/androidx',
-          'version': 'ubPprrWxHA0qqDaHt15loHyEFma5qJ5_nZ5SY4oHLewC',
+          'version': 'fT5pz2yH4irycAN03PGWg7WhP9YI8WplHi8GsnRTL0IC',
       },
     ],
     'condition': 'checkout_android',
