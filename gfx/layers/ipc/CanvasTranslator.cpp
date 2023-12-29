@@ -344,6 +344,7 @@ void CanvasTranslator::ActorDestroy(ActorDestroyReason why) {
   mTranslationTaskQueue->BeginShutdown()->Then(
       GetCurrentSerialEventTarget(), __func__, this,
       &CanvasTranslator::FinishShutdown, &CanvasTranslator::FinishShutdown);
+  mTranslationTaskQueue->AwaitShutdownAndIdle();
 }
 
 void CanvasTranslator::FinishShutdown() {
@@ -375,13 +376,6 @@ void CanvasTranslator::Deactivate() {
   gfx::CanvasRenderThread::Dispatch(
       NewRunnableMethod("CanvasTranslator::SendDeactivate", this,
                         &CanvasTranslator::SendDeactivate));
-
-  // Unlock all of our textures.
-  for (auto const& entry : mTextureInfo) {
-    if (entry.second.mTextureData) {
-      entry.second.mTextureData->Unlock();
-    }
-  }
 
   // Disable remote canvas for all.
   gfx::CanvasManagerParent::DisableRemoteCanvas();
