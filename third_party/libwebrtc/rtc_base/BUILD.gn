@@ -954,6 +954,7 @@ rtc_library("async_dns_resolver") {
     "../api:make_ref_counted",
     "../api:sequence_checker",
     "../api/task_queue:pending_task_safety_flag",
+    "system:rtc_export",
   ]
 }
 
