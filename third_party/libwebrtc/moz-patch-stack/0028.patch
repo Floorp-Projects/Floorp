@@ -1,33 +1,40 @@
 From: Dan Minor <dminor@mozilla.com>
-Date: Wed, 12 Feb 2020 17:19:00 +0000
-Subject: Bug 1578073 - Suppress MissingPermission lint in Camera2Session;
- r=snorp
+Date: Tue, 11 Feb 2020 17:07:00 +0000
+Subject: Bug 1578073 - Remove native calls in Histogram.java; r=ng
 
-Depends on D61861
+Getting the JNI calls here to work requires a good amount of webrtc.org
+machinery. It might be worth setting that up the next time we do an upstream
+merge, but for now, it is a lot simpler to just remove the affected code,
+given that we are not interested in collecting this data anyway.
 
-Differential Revision: https://phabricator.services.mozilla.com/D62457
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/722c4a6d1dad867f9ce47fe96d71b5dedb4cbaa8
+Differential Revision: https://phabricator.services.mozilla.com/D61860
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/7a9b07dec9f9d435416b06829fa5063aca3a476e
 ---
- sdk/android/src/java/org/webrtc/Camera2Session.java | 2 ++
- 1 file changed, 2 insertions(+)
+ sdk/android/src/java/org/webrtc/Histogram.java | 9 ++-------
+ 1 file changed, 2 insertions(+), 7 deletions(-)
 
-diff --git a/sdk/android/src/java/org/webrtc/Camera2Session.java b/sdk/android/src/java/org/webrtc/Camera2Session.java
-index dec97a2c25..d5ee80c73e 100644
---- a/sdk/android/src/java/org/webrtc/Camera2Session.java
-+++ b/sdk/android/src/java/org/webrtc/Camera2Session.java
-@@ -10,6 +10,7 @@
- 
- package org.webrtc;
- 
-+import android.annotation.SuppressLint;
- import android.content.Context;
- import android.hardware.camera2.CameraAccessException;
- import android.hardware.camera2.CameraCaptureSession;
-@@ -347,6 +348,7 @@ class Camera2Session implements CameraSession {
-     Logging.d(TAG, "Using capture format: " + captureFormat);
+diff --git a/sdk/android/src/java/org/webrtc/Histogram.java b/sdk/android/src/java/org/webrtc/Histogram.java
+index 877986134a..c1d2d61a71 100644
+--- a/sdk/android/src/java/org/webrtc/Histogram.java
++++ b/sdk/android/src/java/org/webrtc/Histogram.java
+@@ -27,18 +27,13 @@ class Histogram {
    }
  
-+  @SuppressLint("MissingPermission")
-   private void openCamera() {
-     checkIsOnCameraThread();
+   static public Histogram createCounts(String name, int min, int max, int bucketCount) {
+-    return new Histogram(nativeCreateCounts(name, min, max, bucketCount));
++    return new Histogram(0);
+   }
  
+   static public Histogram createEnumeration(String name, int max) {
+-    return new Histogram(nativeCreateEnumeration(name, max));
++    return new Histogram(0);
+   }
+ 
+   public void addSample(int sample) {
+-    nativeAddSample(handle, sample);
+   }
+-
+-  private static native long nativeCreateCounts(String name, int min, int max, int bucketCount);
+-  private static native long nativeCreateEnumeration(String name, int max);
+-  private static native void nativeAddSample(long handle, int sample);
+ }

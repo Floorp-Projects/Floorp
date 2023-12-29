@@ -1,248 +1,61 @@
-From: Florent Castelli <orphis@webrtc.org>
-Date: Mon, 16 Oct 2023 09:07:35 +0000
-Subject: (cherry-pick-branch-heads/6045) [Merge M119] Return error when
- requested codec is preferred but not negotiated
+From: Michael Froman <mjfroman@mac.com>
+Date: Fri, 29 Dec 2023 17:22:23 -0600
+Subject: (tmp-cherry-pick) Revert "Set optimize_for_size for iOS perf tests."
+ (573bb8552a)
 
-Because of our asymmetrical codec situation, it's possible to have
-send only codecs that we cannot negotiate even with ourselves.
-This means that we should not have a DCHECK, but just a plain error.
+This reverts commit f83da9dddddf0cfd421688cf68fa26bf3ecadd1d.
 
-(cherry picked from commit 1adea9806d7aec9b5f91181231ccc31fef3b115f)
+Reason for revert: Culprit has been found.
 
-Bug: chromium:1442194, webrtc:15064
-Change-Id: I0c170e5c7f356197bcb04bcecb8259c344423ccb
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/323183
-Reviewed-by: Harald Alvestrand <hta@webrtc.org>
-Commit-Queue: Florent Castelli <orphis@webrtc.org>
-Cr-Original-Commit-Position: refs/heads/main@{#40939}
-No-Try: True
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/324044
-Reviewed-by: Guido Urdaneta <guidou@webrtc.org>
-Cr-Commit-Position: refs/branch-heads/6045@{#2}
-Cr-Branched-From: bce7ce7ba054ac0e79fed49b84ef52fb24c31778-refs/heads/main@{#40854}
+Original change's description:
+> Set optimize_for_size for iOS perf tests.
+>
+> No-Try: True
+> Bug: webrtc:15524
+> Change-Id: I525f014f5c321000d520ef68a682f8ca1395bebd
+> Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/323002
+> Commit-Queue: Jeremy Leconte <jleconte@google.com>
+> Reviewed-by: Jeremy Leconte <jleconte@google.com>
+> Auto-Submit: Mirko Bonadei <mbonadei@webrtc.org>
+> Cr-Commit-Position: refs/heads/main@{#40915}
+
+Bug: webrtc:15524
+Change-Id: I6785bf448f62d39a9eafe04bce6c778ba638c9ac
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/323660
+Auto-Submit: Mirko Bonadei <mbonadei@webrtc.org>
+Commit-Queue: Jeremy Leconte <jleconte@google.com>
+Bot-Commit: rubber-stamper@appspot.gserviceaccount.com <rubber-stamper@appspot.gserviceaccount.com>
+Reviewed-by: Jeremy Leconte <jleconte@google.com>
+Cr-Commit-Position: refs/heads/main@{#40943}
 ---
- media/engine/webrtc_video_engine.cc           |  15 ++-
- media/engine/webrtc_voice_engine.cc           |  10 +-
- ...er_connection_encodings_integrationtest.cc | 126 ++++++++++++++++++
- 3 files changed, 147 insertions(+), 4 deletions(-)
+ tools_webrtc/mb/mb_config.pyl | 7 +------
+ 1 file changed, 1 insertion(+), 6 deletions(-)
 
-diff --git a/media/engine/webrtc_video_engine.cc b/media/engine/webrtc_video_engine.cc
-index b97e829f3e..fbf9226c4e 100644
---- a/media/engine/webrtc_video_engine.cc
-+++ b/media/engine/webrtc_video_engine.cc
-@@ -29,6 +29,7 @@
- #include "api/media_stream_interface.h"
- #include "api/media_types.h"
- #include "api/priority.h"
-+#include "api/rtc_error.h"
- #include "api/rtp_transceiver_direction.h"
- #include "api/units/time_delta.h"
- #include "api/units/timestamp.h"
-@@ -47,6 +48,7 @@
- #include "common_video/frame_counts.h"
- #include "common_video/include/quality_limitation_reason.h"
- #include "media/base/codec.h"
-+#include "media/base/media_channel.h"
- #include "media/base/media_constants.h"
- #include "media/base/rid_description.h"
- #include "media/base/rtp_utils.h"
-@@ -1336,17 +1338,24 @@ webrtc::RTCError WebRtcVideoSendChannel::SetRtpSendParameters(
-         break;
-     }
- 
-+    // Since we validate that all layers have the same value, we can just check
-+    // the first layer.
-     // TODO(orphis): Support mixed-codec simulcast
-     if (parameters.encodings[0].codec && send_codec_ &&
-         !send_codec_->codec.MatchesRtpCodec(*parameters.encodings[0].codec)) {
--      RTC_LOG(LS_ERROR) << "Trying to change codec to "
--                        << parameters.encodings[0].codec->name;
-+      RTC_LOG(LS_VERBOSE) << "Trying to change codec to "
-+                          << parameters.encodings[0].codec->name;
-       auto matched_codec =
-           absl::c_find_if(negotiated_codecs_, [&](auto negotiated_codec) {
-             return negotiated_codec.codec.MatchesRtpCodec(
-                 *parameters.encodings[0].codec);
-           });
--      RTC_CHECK(matched_codec != negotiated_codecs_.end());
-+      if (matched_codec == negotiated_codecs_.end()) {
-+        return webrtc::InvokeSetParametersCallback(
-+            callback, webrtc::RTCError(
-+                          webrtc::RTCErrorType::INVALID_MODIFICATION,
-+                          "Attempted to use an unsupported codec for layer 0"));
-+      }
- 
-       ChangedSenderParameters params;
-       params.send_codec = *matched_codec;
-diff --git a/media/engine/webrtc_voice_engine.cc b/media/engine/webrtc_voice_engine.cc
-index e8d4435611..adf8b5c51d 100644
---- a/media/engine/webrtc_voice_engine.cc
-+++ b/media/engine/webrtc_voice_engine.cc
-@@ -1871,6 +1871,8 @@ webrtc::RTCError WebRtcVoiceSendChannel::SetRtpSendParameters(
-     SetPreferredDscp(new_dscp);
- 
-     absl::optional<cricket::Codec> send_codec = GetSendCodec();
-+    // Since we validate that all layers have the same value, we can just check
-+    // the first layer.
-     // TODO(orphis): Support mixed-codec simulcast
-     if (parameters.encodings[0].codec && send_codec &&
-         !send_codec->MatchesRtpCodec(*parameters.encodings[0].codec)) {
-@@ -1881,7 +1883,13 @@ webrtc::RTCError WebRtcVoiceSendChannel::SetRtpSendParameters(
-             return negotiated_codec.MatchesRtpCodec(
-                 *parameters.encodings[0].codec);
-           });
--      RTC_DCHECK(matched_codec != send_codecs_.end());
-+
-+      if (matched_codec == send_codecs_.end()) {
-+        return webrtc::InvokeSetParametersCallback(
-+            callback, webrtc::RTCError(
-+                          webrtc::RTCErrorType::INVALID_MODIFICATION,
-+                          "Attempted to use an unsupported codec for layer 0"));
-+      }
- 
-       SetSendCodecs(send_codecs_, *matched_codec);
-     }
-diff --git a/pc/peer_connection_encodings_integrationtest.cc b/pc/peer_connection_encodings_integrationtest.cc
-index 4e502f73d7..4a786e0733 100644
---- a/pc/peer_connection_encodings_integrationtest.cc
-+++ b/pc/peer_connection_encodings_integrationtest.cc
-@@ -1463,6 +1463,69 @@ TEST_F(PeerConnectionEncodingsIntegrationTest,
-   EXPECT_EQ(error.type(), RTCErrorType::INVALID_MODIFICATION);
- }
- 
-+TEST_F(PeerConnectionEncodingsIntegrationTest,
-+       SetParametersRejectsNonRemotelyNegotiatedCodecParameterAudio) {
-+  rtc::scoped_refptr<PeerConnectionTestWrapper> local_pc_wrapper = CreatePc();
-+  rtc::scoped_refptr<PeerConnectionTestWrapper> remote_pc_wrapper = CreatePc();
-+  ExchangeIceCandidates(local_pc_wrapper, remote_pc_wrapper);
-+
-+  absl::optional<webrtc::RtpCodecCapability> opus =
-+      local_pc_wrapper->FindFirstSendCodecWithName(cricket::MEDIA_TYPE_AUDIO,
-+                                                   "opus");
-+  ASSERT_TRUE(opus);
-+
-+  std::vector<webrtc::RtpCodecCapability> not_opus_codecs =
-+      local_pc_wrapper->pc_factory()
-+          ->GetRtpSenderCapabilities(cricket::MEDIA_TYPE_AUDIO)
-+          .codecs;
-+  not_opus_codecs.erase(
-+      std::remove_if(not_opus_codecs.begin(), not_opus_codecs.end(),
-+                     [&](const auto& codec) {
-+                       return absl::EqualsIgnoreCase(codec.name, opus->name);
-+                     }),
-+      not_opus_codecs.end());
-+
-+  auto transceiver_or_error =
-+      local_pc_wrapper->pc()->AddTransceiver(cricket::MEDIA_TYPE_AUDIO);
-+  ASSERT_TRUE(transceiver_or_error.ok());
-+  rtc::scoped_refptr<RtpTransceiverInterface> audio_transceiver =
-+      transceiver_or_error.MoveValue();
-+
-+  // Negotiation, create offer and apply it
-+  std::unique_ptr<SessionDescriptionInterface> offer =
-+      CreateOffer(local_pc_wrapper);
-+  rtc::scoped_refptr<MockSetSessionDescriptionObserver> p1 =
-+      SetLocalDescription(local_pc_wrapper, offer.get());
-+  rtc::scoped_refptr<MockSetSessionDescriptionObserver> p2 =
-+      SetRemoteDescription(remote_pc_wrapper, offer.get());
-+  EXPECT_TRUE(Await({p1, p2}));
-+
-+  // Update the remote transceiver to reject Opus
-+  std::vector<rtc::scoped_refptr<RtpTransceiverInterface>> remote_transceivers =
-+      remote_pc_wrapper->pc()->GetTransceivers();
-+  ASSERT_TRUE(!remote_transceivers.empty());
-+  rtc::scoped_refptr<RtpTransceiverInterface> remote_audio_transceiver =
-+      remote_transceivers[0];
-+  ASSERT_TRUE(
-+      remote_audio_transceiver->SetCodecPreferences(not_opus_codecs).ok());
-+
-+  // Create answer and apply it
-+  std::unique_ptr<SessionDescriptionInterface> answer =
-+      CreateAnswer(remote_pc_wrapper);
-+  p1 = SetLocalDescription(remote_pc_wrapper, answer.get());
-+  p2 = SetRemoteDescription(local_pc_wrapper, answer.get());
-+  EXPECT_TRUE(Await({p1, p2}));
-+
-+  local_pc_wrapper->WaitForConnection();
-+  remote_pc_wrapper->WaitForConnection();
-+
-+  webrtc::RtpParameters parameters =
-+      audio_transceiver->sender()->GetParameters();
-+  parameters.encodings[0].codec = opus;
-+  RTCError error = audio_transceiver->sender()->SetParameters(parameters);
-+  EXPECT_EQ(error.type(), RTCErrorType::INVALID_MODIFICATION);
-+}
-+
- TEST_F(PeerConnectionEncodingsIntegrationTest,
-        SetParametersRejectsNonNegotiatedCodecParameterVideo) {
-   rtc::scoped_refptr<PeerConnectionTestWrapper> local_pc_wrapper = CreatePc();
-@@ -1503,6 +1566,69 @@ TEST_F(PeerConnectionEncodingsIntegrationTest,
-   EXPECT_EQ(error.type(), RTCErrorType::INVALID_MODIFICATION);
- }
- 
-+TEST_F(PeerConnectionEncodingsIntegrationTest,
-+       SetParametersRejectsNonRemotelyNegotiatedCodecParameterVideo) {
-+  rtc::scoped_refptr<PeerConnectionTestWrapper> local_pc_wrapper = CreatePc();
-+  rtc::scoped_refptr<PeerConnectionTestWrapper> remote_pc_wrapper = CreatePc();
-+  ExchangeIceCandidates(local_pc_wrapper, remote_pc_wrapper);
-+
-+  absl::optional<webrtc::RtpCodecCapability> vp8 =
-+      local_pc_wrapper->FindFirstSendCodecWithName(cricket::MEDIA_TYPE_VIDEO,
-+                                                   "vp8");
-+  ASSERT_TRUE(vp8);
-+
-+  std::vector<webrtc::RtpCodecCapability> not_vp8_codecs =
-+      local_pc_wrapper->pc_factory()
-+          ->GetRtpSenderCapabilities(cricket::MEDIA_TYPE_VIDEO)
-+          .codecs;
-+  not_vp8_codecs.erase(
-+      std::remove_if(not_vp8_codecs.begin(), not_vp8_codecs.end(),
-+                     [&](const auto& codec) {
-+                       return absl::EqualsIgnoreCase(codec.name, vp8->name);
-+                     }),
-+      not_vp8_codecs.end());
-+
-+  auto transceiver_or_error =
-+      local_pc_wrapper->pc()->AddTransceiver(cricket::MEDIA_TYPE_VIDEO);
-+  ASSERT_TRUE(transceiver_or_error.ok());
-+  rtc::scoped_refptr<RtpTransceiverInterface> video_transceiver =
-+      transceiver_or_error.MoveValue();
-+
-+  // Negotiation, create offer and apply it
-+  std::unique_ptr<SessionDescriptionInterface> offer =
-+      CreateOffer(local_pc_wrapper);
-+  rtc::scoped_refptr<MockSetSessionDescriptionObserver> p1 =
-+      SetLocalDescription(local_pc_wrapper, offer.get());
-+  rtc::scoped_refptr<MockSetSessionDescriptionObserver> p2 =
-+      SetRemoteDescription(remote_pc_wrapper, offer.get());
-+  EXPECT_TRUE(Await({p1, p2}));
-+
-+  // Update the remote transceiver to reject VP8
-+  std::vector<rtc::scoped_refptr<RtpTransceiverInterface>> remote_transceivers =
-+      remote_pc_wrapper->pc()->GetTransceivers();
-+  ASSERT_TRUE(!remote_transceivers.empty());
-+  rtc::scoped_refptr<RtpTransceiverInterface> remote_video_transceiver =
-+      remote_transceivers[0];
-+  ASSERT_TRUE(
-+      remote_video_transceiver->SetCodecPreferences(not_vp8_codecs).ok());
-+
-+  // Create answer and apply it
-+  std::unique_ptr<SessionDescriptionInterface> answer =
-+      CreateAnswer(remote_pc_wrapper);
-+  p1 = SetLocalDescription(remote_pc_wrapper, answer.get());
-+  p2 = SetRemoteDescription(local_pc_wrapper, answer.get());
-+  EXPECT_TRUE(Await({p1, p2}));
-+
-+  local_pc_wrapper->WaitForConnection();
-+  remote_pc_wrapper->WaitForConnection();
-+
-+  webrtc::RtpParameters parameters =
-+      video_transceiver->sender()->GetParameters();
-+  parameters.encodings[0].codec = vp8;
-+  RTCError error = video_transceiver->sender()->SetParameters(parameters);
-+  EXPECT_EQ(error.type(), RTCErrorType::INVALID_MODIFICATION);
-+}
-+
- TEST_F(PeerConnectionEncodingsIntegrationTest,
-        EncodingParametersCodecRemovedAfterNegotiationAudio) {
-   rtc::scoped_refptr<PeerConnectionTestWrapper> local_pc_wrapper = CreatePc();
+diff --git a/tools_webrtc/mb/mb_config.pyl b/tools_webrtc/mb/mb_config.pyl
+index ff37cd0812..6aea3c9cba 100644
+--- a/tools_webrtc/mb/mb_config.pyl
++++ b/tools_webrtc/mb/mb_config.pyl
+@@ -268,12 +268,10 @@
+       'ios', 'debug_bot', 'arm64', 'ios_code_signing_identity_description',
+       'xctest'
+     ],
+-    # TODO(bugs.webrtc.org/15524): Remove 'optimize_for_size' once the bug
+-    # has been resolved.
+     'ios_internal_pure_release_bot_arm64': [
+       'ios', 'pure_release_bot', 'arm64',
+       'ios_code_signing_identity_description', 'xctest',
+-      'rtc_objc_test_prefix', 'optimize_for_size',
++      'rtc_objc_test_prefix',
+     ],
+     'ios_internal_release_bot_arm64': [
+       'ios', 'release_bot', 'arm64', 'ios_code_signing_identity_description',
+@@ -450,9 +448,6 @@
+     'optimize_for_fuzzing': {
+       'gn_args': 'optimize_for_fuzzing=true',
+     },
+-    'optimize_for_size': {
+-      'gn_args': 'optimize_for_size=true',
+-    },
+     'partial_code_coverage_instrumentation': {
+       'gn_args':
+       'coverage_instrumentation_input_file="//.code-coverage/files_to_instrument.txt"'
