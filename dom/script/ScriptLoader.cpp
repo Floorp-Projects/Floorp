@@ -514,7 +514,8 @@ void ScriptLoader::RunScriptWhenSafe(ScriptLoadRequest* aRequest) {
 }
 
 nsresult ScriptLoader::RestartLoad(ScriptLoadRequest* aRequest) {
-  aRequest->DropBytecode();
+  MOZ_ASSERT(aRequest->IsBytecode());
+  aRequest->mScriptBytecode.clearAndFree();
   TRACE_FOR_TEST(aRequest->GetScriptLoadContext()->GetScriptElement(),
                  "scriptloader_fallback");
 
@@ -1012,7 +1013,6 @@ already_AddRefed<ScriptLoadRequest> ScriptLoader::CreateLoadRequest(
         new ScriptLoadRequest(aKind, aURI, aReferrerPolicy, fetchOptions,
                               aIntegrity, referrer, context);
 
-    aRequest->NoCacheEntryFound();
     return aRequest.forget();
   }
 
@@ -1369,7 +1369,7 @@ bool ScriptLoader::ProcessInlineScript(nsIScriptElement* aElement,
   request->GetScriptLoadContext()->mColumnNo =
       aElement->GetScriptColumnNumber();
   request->mFetchSourceOnly = true;
-  request->SetTextSource(request->mLoadContext.get());
+  request->SetTextSource();
   TRACE_FOR_TEST_BOOL(request->GetScriptLoadContext()->GetScriptElement(),
                       "scriptloader_load_source");
   CollectScriptTelemetry(request);
@@ -1761,9 +1761,10 @@ nsresult ScriptLoader::AttemptOffThreadScriptCompile(
   } else {
     MOZ_ASSERT(aRequest->IsBytecode());
 
-    JS::TranscodeRange bytecode = aRequest->Bytecode();
+    size_t length =
+        aRequest->mScriptBytecode.length() - aRequest->mBytecodeOffset;
     if (!StaticPrefs::javascript_options_parallel_parsing() ||
-        bytecode.length() < OffThreadMinimumBytecodeLength) {
+        length < OffThreadMinimumBytecodeLength) {
       return NS_OK;
     }
   }
@@ -2018,9 +2019,11 @@ nsresult ScriptLoader::CreateOffThreadTask(
     JSContext* aCx, ScriptLoadRequest* aRequest, JS::CompileOptions& aOptions,
     CompileOrDecodeTask** aCompileOrDecodeTask) {
   if (aRequest->IsBytecode()) {
-    JS::TranscodeRange bytecode = aRequest->Bytecode();
     JS::DecodeOptions decodeOptions(aOptions);
-    RefPtr<ScriptDecodeTask> decodeTask = new ScriptDecodeTask(bytecode);
+    JS::TranscodeRange range(
+        aRequest->mScriptBytecode.begin() + aRequest->mBytecodeOffset,
+        aRequest->mScriptBytecode.length() - aRequest->mBytecodeOffset);
+    RefPtr<ScriptDecodeTask> decodeTask = new ScriptDecodeTask(range);
     nsresult rv = decodeTask->Init(decodeOptions);
     NS_ENSURE_SUCCESS(rv, rv);
     decodeTask.forget(aCompileOrDecodeTask);
@@ -2028,8 +2031,7 @@ nsresult ScriptLoader::CreateOffThreadTask(
   }
 
   MaybeSourceText maybeSource;
-  nsresult rv = aRequest->GetScriptSource(aCx, &maybeSource,
-                                          aRequest->mLoadContext.get());
+  nsresult rv = aRequest->GetScriptSource(aCx, &maybeSource);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (ShouldApplyDelazifyStrategy(aRequest)) {
@@ -2263,7 +2265,7 @@ nsresult ScriptLoader::ProcessRequest(ScriptLoadRequest* aRequest) {
     // We received bytecode as input, thus we were decoding, and we will not be
     // encoding the bytecode once more. We can safely clear the content of this
     // buffer.
-    aRequest->DropBytecode();
+    aRequest->mScriptBytecode.clearAndFree();
   }
 
   return rv;
@@ -2461,7 +2463,7 @@ bool ScriptLoader::ShouldCacheBytecode(ScriptLoadRequest* aRequest) {
     size_t sourceLength;
     size_t minLength;
     MOZ_ASSERT(aRequest->IsTextSource());
-    sourceLength = aRequest->ScriptTextLength();
+    sourceLength = aRequest->mScriptTextLength;
     minLength = sourceLengthMin;
     if (sourceLength < minLength) {
       LOG(("ScriptLoadRequest (%p): Bytecode-cache: Script is too small.",
@@ -2606,7 +2608,7 @@ nsresult ScriptLoader::CompileOrDecodeClassicScript(
                                 MarkerInnerWindowIdFromJSContext(aCx),
                                 profilerLabelString);
 
-      rv = aExec.Decode(aRequest->Bytecode());
+      rv = aExec.Decode(aRequest->mScriptBytecode, aRequest->mBytecodeOffset);
     }
 
     // We do not expect to be saving anything when we already have some
@@ -2632,8 +2634,7 @@ nsresult ScriptLoader::CompileOrDecodeClassicScript(
     LOG(("ScriptLoadRequest (%p): Compile And Exec", aRequest));
     MOZ_ASSERT(aRequest->IsTextSource());
     MaybeSourceText maybeSource;
-    rv = aRequest->GetScriptSource(aCx, &maybeSource,
-                                   aRequest->mLoadContext.get());
+    rv = aRequest->GetScriptSource(aCx, &maybeSource);
     if (NS_SUCCEEDED(rv)) {
       AUTO_PROFILER_MARKER_TEXT("ScriptCompileMainThread", JS,
                                 MarkerInnerWindowIdFromJSContext(aCx),
@@ -2672,17 +2673,9 @@ nsresult ScriptLoader::MaybePrepareForBytecodeEncodingAfterExecute(
   if (aRequest->IsMarkedForBytecodeEncoding()) {
     TRACE_FOR_TEST(aRequest->GetScriptLoadContext()->GetScriptElement(),
                    "scriptloader_encode");
-
-    // Check that the TranscodeBuffer which is going to receive the encoded
-    // bytecode only contains the SRI, and nothing more.
-    //
     // NOTE: This assertion will fail once we start encoding more data after the
     //       first encode.
-#ifdef DEBUG
-    JS::TranscodeBuffer& bytecode = aRequest->SRIAndBytecode();
-    MOZ_ASSERT(aRequest->GetSRILength() == bytecode.length());
-#endif
-
+    MOZ_ASSERT(aRequest->mBytecodeOffset == aRequest->mScriptBytecode.length());
     RegisterForBytecodeEncoding(aRequest);
     MOZ_ASSERT(IsAlreadyHandledForBytecodeEncodingPreparation(aRequest));
 
@@ -2751,13 +2744,8 @@ nsresult ScriptLoader::EvaluateScript(nsIGlobalObject* aGlobalObject,
   aRequest->GetScriptLoadContext()->GetProfilerLabel(profilerLabelString);
 
   // Create a ClassicScript object and associate it with the JSScript.
-  MOZ_ASSERT(aRequest->mLoadedScript->IsClassicScript());
-  MOZ_ASSERT(aRequest->mLoadedScript->GetFetchOptions() ==
-             aRequest->mFetchOptions);
-  MOZ_ASSERT(aRequest->mLoadedScript->GetURI() == aRequest->mURI);
-  aRequest->mLoadedScript->SetBaseURL(aRequest->mBaseURL);
-  RefPtr<ClassicScript> classicScript =
-      aRequest->mLoadedScript->AsClassicScript();
+  RefPtr<ClassicScript> classicScript = new ClassicScript(
+      aRequest->ReferrerPolicy(), aRequest->mFetchOptions, aRequest->mBaseURL);
   JS::Rooted<JS::Value> classicScriptValue(cx, JS::PrivateValue(classicScript));
 
   JS::CompileOptions options(cx);
@@ -2941,7 +2929,7 @@ void ScriptLoader::EncodeBytecode() {
     MOZ_ASSERT(!IsWebExtensionRequest(request),
                "Bytecode for web extension content scrips is not cached");
     EncodeRequestBytecode(aes.cx(), request);
-    request->DropBytecode();
+    request->mScriptBytecode.clearAndFree();
     request->DropBytecodeCacheReferences();
   }
 }
@@ -2961,11 +2949,11 @@ void ScriptLoader::EncodeRequestBytecode(JSContext* aCx,
     ModuleScript* moduleScript = aRequest->AsModuleRequest()->mModuleScript;
     JS::Rooted<JSObject*> module(aCx, moduleScript->ModuleRecord());
     result =
-        JS::FinishIncrementalEncoding(aCx, module, aRequest->SRIAndBytecode());
+        JS::FinishIncrementalEncoding(aCx, module, aRequest->mScriptBytecode);
   } else {
     JS::Rooted<JSScript*> script(aCx, aRequest->mScriptForBytecodeEncoding);
     result =
-        JS::FinishIncrementalEncoding(aCx, script, aRequest->SRIAndBytecode());
+        JS::FinishIncrementalEncoding(aCx, script, aRequest->mScriptBytecode);
   }
   if (!result) {
     // Encoding can be aborted for non-supported syntax (e.g. asm.js), or
@@ -2979,8 +2967,8 @@ void ScriptLoader::EncodeRequestBytecode(JSContext* aCx,
 
   Vector<uint8_t> compressedBytecode;
   // TODO probably need to move this to a helper thread
-  if (!ScriptBytecodeCompress(aRequest->SRIAndBytecode(),
-                              aRequest->GetSRILength(), compressedBytecode)) {
+  if (!ScriptBytecodeCompress(aRequest->mScriptBytecode,
+                              aRequest->mBytecodeOffset, compressedBytecode)) {
     return;
   }
 
@@ -3071,7 +3059,7 @@ void ScriptLoader::GiveUpBytecodeEncoding() {
       }
     }
 
-    request->DropBytecode();
+    request->mScriptBytecode.clearAndFree();
     request->DropBytecodeCacheReferences();
   }
 }
@@ -3338,16 +3326,13 @@ nsresult ScriptLoader::OnStreamComplete(
     if (aRequest->IsSource()) {
       uint32_t sriLength = 0;
       rv = SaveSRIHash(aRequest, aSRIDataVerifier, &sriLength);
-      JS::TranscodeBuffer& bytecode = aRequest->SRIAndBytecode();
-      MOZ_ASSERT_IF(NS_SUCCEEDED(rv), bytecode.length() == sriLength);
+      MOZ_ASSERT_IF(NS_SUCCEEDED(rv),
+                    aRequest->mScriptBytecode.length() == sriLength);
 
-      // TODO: (Bug 1800896) This code should be moved into SaveSRIHash, and the
-      // SRI out-param can be removed.
-      aRequest->SetSRILength(sriLength);
-      if (aRequest->GetSRILength() != sriLength) {
-        // The bytecode is aligned in the bytecode buffer, and space might be
-        // reserved for padding after the SRI hash.
-        if (!bytecode.resize(aRequest->GetSRILength())) {
+      aRequest->mBytecodeOffset = JS::AlignTranscodingBytecodeOffset(sriLength);
+      if (aRequest->mBytecodeOffset != sriLength) {
+        // We need extra padding after SRI hash.
+        if (!aRequest->mScriptBytecode.resize(aRequest->mBytecodeOffset)) {
           return NS_ERROR_OUT_OF_MEMORY;
         }
       }
@@ -3416,45 +3401,44 @@ nsresult ScriptLoader::SaveSRIHash(ScriptLoadRequest* aRequest,
                                    SRICheckDataVerifier* aSRIDataVerifier,
                                    uint32_t* sriLength) const {
   MOZ_ASSERT(aRequest->IsSource());
-  JS::TranscodeBuffer& bytecode = aRequest->SRIAndBytecode();
-  MOZ_ASSERT(bytecode.empty());
+  MOZ_ASSERT(aRequest->mScriptBytecode.empty());
 
   uint32_t len;
 
   // If the integrity metadata does not correspond to a valid hash function,
   // IsComplete would be false.
   if (!aRequest->mIntegrity.IsEmpty() && aSRIDataVerifier->IsComplete()) {
-    MOZ_ASSERT(bytecode.length() == 0);
+    MOZ_ASSERT(aRequest->mScriptBytecode.length() == 0);
 
     // Encode the SRI computed hash.
     len = aSRIDataVerifier->DataSummaryLength();
 
-    if (!bytecode.resize(len)) {
+    if (!aRequest->mScriptBytecode.resize(len)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    DebugOnly<nsresult> res =
-        aSRIDataVerifier->ExportDataSummary(len, bytecode.begin());
+    DebugOnly<nsresult> res = aSRIDataVerifier->ExportDataSummary(
+        len, aRequest->mScriptBytecode.begin());
     MOZ_ASSERT(NS_SUCCEEDED(res));
   } else {
-    MOZ_ASSERT(bytecode.length() == 0);
+    MOZ_ASSERT(aRequest->mScriptBytecode.length() == 0);
 
     // Encode a dummy SRI hash.
     len = SRICheckDataVerifier::EmptyDataSummaryLength();
 
-    if (!bytecode.resize(len)) {
+    if (!aRequest->mScriptBytecode.resize(len)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    DebugOnly<nsresult> res =
-        SRICheckDataVerifier::ExportEmptyDataSummary(len, bytecode.begin());
+    DebugOnly<nsresult> res = SRICheckDataVerifier::ExportEmptyDataSummary(
+        len, aRequest->mScriptBytecode.begin());
     MOZ_ASSERT(NS_SUCCEEDED(res));
   }
 
   // Verify that the exported and predicted length correspond.
   DebugOnly<uint32_t> srilen{};
-  MOZ_ASSERT(NS_SUCCEEDED(
-      SRICheckDataVerifier::DataSummaryLength(len, bytecode.begin(), &srilen)));
+  MOZ_ASSERT(NS_SUCCEEDED(SRICheckDataVerifier::DataSummaryLength(
+      len, aRequest->mScriptBytecode.begin(), &srilen)));
   MOZ_ASSERT(srilen == len);
 
   *sriLength = len;
