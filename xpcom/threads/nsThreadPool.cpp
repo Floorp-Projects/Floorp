@@ -370,6 +370,7 @@ nsThreadPool::Dispatch(already_AddRefed<nsIRunnable> aEvent, uint32_t aFlags) {
   LOG(("THRD-P(%p) dispatch [%p %x]\n", this, /* XXX aEvent*/ nullptr, aFlags));
 
   if (NS_WARN_IF(mShutdown)) {
+    nsCOMPtr<nsIRunnable> event(aEvent);
     return NS_ERROR_NOT_AVAILABLE;
   }
 

@@ -437,6 +437,10 @@ bool RemoteTextureMap::RemoveTexture(const RemoteTextureId aTextureId,
        it != owner->mWaitingTextureDataHolders.end(); it++) {
     auto& data = *it;
     if (data->mTextureId == aTextureId) {
+      if (mRemoteTextureHostWrapperHolders.find(std::pair(
+              aForPid, aTextureId)) != mRemoteTextureHostWrapperHolders.end()) {
+        return false;
+      }
       if (!RecycleTexture(owner->mRecycleBin, *data, false)) {
         owner->mReleasingTextureDataHolders.push_back(std::move(data));
       }
