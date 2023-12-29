@@ -533,7 +533,6 @@ rtc_library("rate_limiter") {
     ":macromagic",
     ":rate_statistics",
     "../system_wrappers",
-    "../system_wrappers:field_trial",
     "synchronization:mutex",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
@@ -2002,7 +2001,6 @@ if (rtc_include_tests) {
         "../api/units:time_delta",
         "../api/units:timestamp",
         "../system_wrappers",
-        "../test:field_trial",
         "../test:fileutils",
         "../test:test_main",
         "../test:test_support",

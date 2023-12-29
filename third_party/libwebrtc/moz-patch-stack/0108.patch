@@ -19,10 +19,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/d92a578327f524ec3
  5 files changed, 23 insertions(+), 5 deletions(-)
 
 diff --git a/call/rtp_video_sender.cc b/call/rtp_video_sender.cc
-index c7907a0224..a40659c052 100644
+index 303a70b62a..0becda2b57 100644
 --- a/call/rtp_video_sender.cc
 +++ b/call/rtp_video_sender.cc
-@@ -508,6 +508,7 @@ void RtpVideoSender::SetActiveModulesLocked(
+@@ -510,6 +510,7 @@ void RtpVideoSender::SetActiveModulesLocked(
      const bool was_active = rtp_module.Sending();
      const bool should_be_active = active_modules[i];
  
