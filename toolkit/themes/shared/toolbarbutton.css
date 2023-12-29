@@ -15,12 +15,6 @@ toolbarbutton {
     padding-inline: 2px;
   }
 
-  @media not (prefers-contrast) {
-    :root[lwtheme-image] & {
-      text-shadow: none;
-    }
-  }
-
   @media (-moz-platform: windows) {
     &:focus-visible {
       outline: var(--default-focusring);
