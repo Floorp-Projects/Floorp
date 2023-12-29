@@ -53,7 +53,7 @@ panel {
     --panel-background: none;
     --panel-border-color: transparent;
     /* This should be kept in sync with GetMenuMaskImage() */
-    --panel-border-radius: 8px;
+    --panel-border-radius: 6px;
   }
 
   &::part(content) {
