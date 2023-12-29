@@ -362,6 +362,14 @@ Codec CreateVideoRtxCodec(int rtx_payload_type, int associated_payload_type) {
   return rtx_codec;
 }
 
+const Codec* FindCodecById(const std::vector<Codec>& codecs, int payload_type) {
+  for (const auto& codec : codecs) {
+    if (codec.id == payload_type)
+      return &codec;
+  }
+  return nullptr;
+}
+
 bool HasLntf(const Codec& codec) {
   return codec.HasFeedbackParam(
       FeedbackParam(kRtcpFbParamLntf, kParamValueEmpty));

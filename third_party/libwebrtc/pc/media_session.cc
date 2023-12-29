@@ -1029,13 +1029,12 @@ void MergeCodecs(const std::vector<Codec>& reference_codecs,
 // don't conflict with mappings of the other media type; `supported_codecs` is
 // a list filtered for the media section`s direction but with default payload
 // types.
-template <typename Codecs>
-Codecs MatchCodecPreference(
+std::vector<Codec> MatchCodecPreference(
     const std::vector<webrtc::RtpCodecCapability>& codec_preferences,
-    const Codecs& codecs,
-    const Codecs& supported_codecs,
+    const std::vector<Codec>& codecs,
+    const std::vector<Codec>& supported_codecs,
     const webrtc::FieldTrialsView* field_trials) {
-  Codecs filtered_codecs;
+  std::vector<Codec> filtered_codecs;
   bool want_rtx = false;
   bool want_red = false;
 
@@ -1048,8 +1047,7 @@ Codecs MatchCodecPreference(
   }
   for (const auto& codec_preference : codec_preferences) {
     auto found_codec = absl::c_find_if(
-        supported_codecs,
-        [&codec_preference](const typename Codecs::value_type& codec) {
+        supported_codecs, [&codec_preference](const Codec& codec) {
           webrtc::RtpCodecParameters codec_parameters =
               codec.ToCodecParameters();
           return codec_parameters.name == codec_preference.name &&
@@ -1061,9 +1059,8 @@ Codecs MatchCodecPreference(
         });
 
     if (found_codec != supported_codecs.end()) {
-      absl::optional<typename Codecs::value_type> found_codec_with_correct_pt =
-          FindMatchingCodec(supported_codecs, codecs, *found_codec,
-                            field_trials);
+      absl::optional<Codec> found_codec_with_correct_pt = FindMatchingCodec(
+          supported_codecs, codecs, *found_codec, field_trials);
       if (found_codec_with_correct_pt) {
         filtered_codecs.push_back(*found_codec_with_correct_pt);
         std::string id = rtc::ToString(found_codec_with_correct_pt->id);
@@ -1337,15 +1334,16 @@ void StripCNCodecs(AudioCodecs* audio_codecs) {
                       audio_codecs->end());
 }
 
-template <class C>
-bool SetCodecsInAnswer(const MediaContentDescriptionImpl<C>* offer,
-                       const std::vector<C>& local_codecs,
+bool SetCodecsInAnswer(const MediaContentDescription* offer,
+                       const std::vector<Codec>& local_codecs,
                        const MediaDescriptionOptions& media_description_options,
                        const MediaSessionOptions& session_options,
                        UniqueRandomIdGenerator* ssrc_generator,
                        StreamParamsVec* current_streams,
                        MediaContentDescription* answer,
                        const webrtc::FieldTrialsView& field_trials) {
+  RTC_DCHECK(offer->type() == MEDIA_TYPE_AUDIO ||
+             offer->type() == MEDIA_TYPE_VIDEO);
   std::vector<Codec> negotiated_codecs;
   NegotiateCodecs(local_codecs, offer->codecs(), &negotiated_codecs,
                   media_description_options.codec_preferences.empty(),
