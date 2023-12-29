@@ -1,64 +1,20 @@
-From: Nico Grunbaum <na-g@nostrum.com>
-Date: Wed, 15 Nov 2023 22:33:00 +0000
-Subject: Bug 1863041 - P0 - add device filter control to
- RTCCameraVideoCapturer;r=pehrsons,webrtc-reviewers
+From: Michael Froman <mfroman@mozilla.com>
+Date: Wed, 7 Dec 2022 17:09:00 +0000
+Subject: Bug 1744645 - pt1 - add a couple empty gni files to help with
+ BUILD.gn corrections. r=ng
 
-I have filed this bug upstream: https://bugs.chromium.org/p/webrtc/issues/detail?id=15639
-
-Differential Revision: https://phabricator.services.mozilla.com/D193172
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/91a763d768b74acc9cf4828f91a86df4a7b092ce
+Differential Revision: https://phabricator.services.mozilla.com/D163991
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/81d86382ee468f3b36deed00d0c9d59eb85524be
 ---
- .../capturer/RTCCameraVideoCapturer.h           |  5 ++++-
- .../capturer/RTCCameraVideoCapturer.m           | 17 +++++++++++++++--
- 2 files changed, 19 insertions(+), 3 deletions(-)
+ tools/generate_stubs/rules.gni | 2 ++
+ 1 file changed, 2 insertions(+)
+ create mode 100644 tools/generate_stubs/rules.gni
 
-diff --git a/sdk/objc/components/capturer/RTCCameraVideoCapturer.h b/sdk/objc/components/capturer/RTCCameraVideoCapturer.h
-index 370bfa70f0..b1f3f64f74 100644
---- a/sdk/objc/components/capturer/RTCCameraVideoCapturer.h
-+++ b/sdk/objc/components/capturer/RTCCameraVideoCapturer.h
-@@ -26,7 +26,10 @@ NS_EXTENSION_UNAVAILABLE_IOS("Camera not available in app extensions.")
- @property(readonly, nonatomic) AVCaptureSession *captureSession;
- 
- // Returns list of available capture devices that support video capture.
--+ (NSArray<AVCaptureDevice *> *)captureDevices;
-++ (NSArray<AVCaptureDevice *> *)captureDevicesWithDeviceTypes:
-+    (NSArray<AVCaptureDeviceType> *)deviceTypes;
-+// Returns list of default capture devices types
-++ (NSArray<AVCaptureDeviceType> *)defaultCaptureDeviceTypes;
- // Returns list of formats that are supported by this class for this device.
- + (NSArray<AVCaptureDeviceFormat *> *)supportedFormatsForDevice:(AVCaptureDevice *)device;
- 
-diff --git a/sdk/objc/components/capturer/RTCCameraVideoCapturer.m b/sdk/objc/components/capturer/RTCCameraVideoCapturer.m
-index e7c47b4e99..1361207faf 100644
---- a/sdk/objc/components/capturer/RTCCameraVideoCapturer.m
-+++ b/sdk/objc/components/capturer/RTCCameraVideoCapturer.m
-@@ -117,14 +117,27 @@ const int64_t kNanosecondsPerSecond = 1000000000;
-   [[NSNotificationCenter defaultCenter] removeObserver:self];
- }
- 
--+ (NSArray<AVCaptureDevice *> *)captureDevices {
-++ (NSArray<AVCaptureDevice *> *)captureDevicesWithDeviceTypes:
-+    (NSArray<AVCaptureDeviceType> *)deviceTypes {
-   AVCaptureDeviceDiscoverySession *session = [AVCaptureDeviceDiscoverySession
--      discoverySessionWithDeviceTypes:@[ AVCaptureDeviceTypeBuiltInWideAngleCamera ]
-+      discoverySessionWithDeviceTypes:deviceTypes
-                             mediaType:AVMediaTypeVideo
-                              position:AVCaptureDevicePositionUnspecified];
-   return session.devices;
- }
- 
-++ (NSArray<AVCaptureDeviceType> *)defaultCaptureDeviceTypes {
-+  NSArray *types = @[ AVCaptureDeviceTypeBuiltInWideAngleCamera ];
-+#if !defined(WEBRTC_IOS)
-+  if (@available(macOS 14.0, *)) {
-+    types = [types arrayByAddingObject:AVCaptureDeviceTypeExternal];
-+  } else {
-+    types = [types arrayByAddingObject:AVCaptureDeviceTypeExternalUnknown];
-+  }
-+#endif
-+  return types;
-+}
-+
- + (NSArray<AVCaptureDeviceFormat *> *)supportedFormatsForDevice:(AVCaptureDevice *)device {
-   // Support opening the device in any format. We make sure it's converted to a format we
-   // can handle, if needed, in the method `-setupVideoDataOutput`.
+diff --git a/tools/generate_stubs/rules.gni b/tools/generate_stubs/rules.gni
+new file mode 100644
+index 0000000000..1d9f36eb72
+--- /dev/null
++++ b/tools/generate_stubs/rules.gni
+@@ -0,0 +1,2 @@
++# "empty" file in place of importing new tools/generate_stubs
++# to allow BUILD.gn imports to succeed.
