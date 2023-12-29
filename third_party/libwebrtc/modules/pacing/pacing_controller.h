@@ -24,6 +24,7 @@
 #include "api/function_view.h"
 #include "api/transport/field_trial_based_config.h"
 #include "api/transport/network_types.h"
+#include "api/units/data_size.h"
 #include "modules/pacing/bitrate_prober.h"
 #include "modules/pacing/interval_budget.h"
 #include "modules/pacing/prioritized_packet_queue.h"
@@ -86,6 +87,11 @@ class PacingController {
   // set to 1ms as this is intended to allow times be rounded down to the
   // nearest millisecond.
   static const TimeDelta kMaxEarlyProbeProcessing;
+  // Max total size of packets expected to be sent in a burst in order to not
+  // risk loosing packets due to too small send socket buffers. It upper limits
+  // the send burst interval.
+  // Ex: max send burst interval = 63Kb / 10Mbit/s = 50ms.
+  static constexpr DataSize kMaxBurstSize = DataSize::Bytes(63 * 1000);
 
   PacingController(Clock* clock,
                    PacketSender* packet_sender,
