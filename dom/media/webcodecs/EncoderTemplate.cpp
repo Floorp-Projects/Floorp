@@ -789,12 +789,13 @@ void EncoderTemplate<EncoderType>::Reconfigure(
 
                     NS_DispatchToCurrentThread(NS_NewRunnableFunction(
                         "Destroy + recreate encoder after failed reconfigure",
-                        [self = RefPtr(self), message]() MOZ_CAN_RUN_SCRIPT_BOUNDARY {
-                          // Destroy the agent, and finally create a fresh
-                          // encoder with the new configuration.
-                          self->DestroyEncoderAgentIfAny();
-                          self->Configure(message);
-                        }));
+                        [self = RefPtr(self), message]()
+                            MOZ_CAN_RUN_SCRIPT_BOUNDARY {
+                              // Destroy the agent, and finally create a fresh
+                              // encoder with the new configuration.
+                              self->DestroyEncoderAgentIfAny();
+                              self->Configure(message);
+                            }));
                   });
               return;
             }
