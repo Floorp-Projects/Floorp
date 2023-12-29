@@ -25,7 +25,6 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import mozilla.components.feature.downloads.toMegabyteOrKilobyteString
@@ -73,7 +72,6 @@ fun DownloadLanguageFileDialog(
                     .semantics { heading() },
                 color = FirefoxTheme.colors.textPrimary,
                 style = FirefoxTheme.typography.headline7,
-                fontWeight = FontWeight.Bold,
             )
 
             if (isAllLanguagesItemType) {
