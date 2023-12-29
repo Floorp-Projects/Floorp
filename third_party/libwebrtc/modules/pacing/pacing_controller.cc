@@ -17,6 +17,8 @@
 
 #include "absl/cleanup/cleanup.h"
 #include "absl/strings/match.h"
+#include "api/units/data_size.h"
+#include "api/units/time_delta.h"
 #include "modules/pacing/bitrate_prober.h"
 #include "modules/pacing/interval_budget.h"
 #include "rtc_base/checks.h"
@@ -343,9 +345,13 @@ Timestamp PacingController::NextSendTime() const {
     // debt is allowed to grow up to one packet more than what can be sent
     // during 'send_burst_period_'.
     TimeDelta drain_time = media_debt_ / adjusted_media_rate_;
+    // Ensure that a burst of sent packet is not larger than kMaxBurstSize in
+    // order to not risk overfilling socket buffers at high bitrate.
+    TimeDelta send_burst_interval =
+        std::min(send_burst_interval_, kMaxBurstSize / adjusted_media_rate_);
     next_send_time =
         last_process_time_ +
-        ((send_burst_interval_ > drain_time) ? TimeDelta::Zero() : drain_time);
+        ((send_burst_interval > drain_time) ? TimeDelta::Zero() : drain_time);
   } else if (padding_rate_ > DataRate::Zero() && packet_queue_.Empty()) {
     // If we _don't_ have pending packets, check how long until we have
     // bandwidth for padding packets. Both media and padding debts must
