@@ -303,7 +303,7 @@
             "os": "Android"
           },
           "service_account": "chromium-tester@chops-service-accounts.iam.gserviceaccount.com",
-          "shards": 4
+          "shards": 8
         },
         "test": "svc_tests",
         "test_id_prefix": "ninja://pc:svc_tests/"
@@ -780,7 +780,7 @@
             "os": "Android"
           },
           "service_account": "chromium-tester@chops-service-accounts.iam.gserviceaccount.com",
-          "shards": 4
+          "shards": 8
         },
         "test": "svc_tests",
         "test_id_prefix": "ninja://pc:svc_tests/"
@@ -1257,7 +1257,7 @@
             "os": "Android"
           },
           "service_account": "chromium-tester@chops-service-accounts.iam.gserviceaccount.com",
-          "shards": 4
+          "shards": 8
         },
         "test": "svc_tests",
         "test_id_prefix": "ninja://pc:svc_tests/"
@@ -1759,7 +1759,7 @@
             "os": "Android"
           },
           "service_account": "chromium-tester@chops-service-accounts.iam.gserviceaccount.com",
-          "shards": 4
+          "shards": 8
         },
         "test": "svc_tests",
         "test_id_prefix": "ninja://pc:svc_tests/"
