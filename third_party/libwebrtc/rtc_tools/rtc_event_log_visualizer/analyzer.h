@@ -67,6 +67,7 @@ class EventLogAnalyzer {
   void CreateStreamBitrateGraph(PacketDirection direction, Plot* plot);
   void CreateBitrateAllocationGraph(PacketDirection direction, Plot* plot);
 
+  void CreateOutgoingTWCCLossRateGraph(Plot* plot);
   void CreateGoogCcSimulationGraph(Plot* plot);
   void CreateSendSideBweSimulationGraph(Plot* plot);
   void CreateReceiveSideBweSimulationGraph(Plot* plot);
