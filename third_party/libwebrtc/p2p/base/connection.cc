@@ -262,14 +262,17 @@ const Candidate& Connection::remote_candidate() const {
 }
 
 const rtc::Network* Connection::network() const {
+  RTC_DCHECK(port_) << ToDebugId() << ": port_ null in network()";
   return port()->Network();
 }
 
 int Connection::generation() const {
+  RTC_DCHECK(port_) << ToDebugId() << ": port_ null in generation()";
   return port()->generation();
 }
 
 uint64_t Connection::priority() const {
+  RTC_DCHECK(port_) << ToDebugId() << ": port_ null in priority()";
   if (!port_)
     return 0;
 
@@ -806,13 +809,14 @@ void Connection::Prune() {
 
 void Connection::Destroy() {
   RTC_DCHECK_RUN_ON(network_thread_);
-  RTC_DCHECK(port_) << "Calling Destroy() twice?";
+  RTC_DCHECK(port_) << ToDebugId() << ": port_ null in Destroy()";
   if (port_)
     port_->DestroyConnection(this);
 }
 
 bool Connection::Shutdown() {
   RTC_DCHECK_RUN_ON(network_thread_);
+  RTC_DCHECK(port_) << ToDebugId() << ": Calling Shutdown() twice?";
   if (!port_)
     return false;  // already shut down.
 
@@ -832,6 +836,9 @@ bool Connection::Shutdown() {
   // information required for logging needs access to `port_`.
   port_.reset();
 
+  // Clear any pending requests (or responses).
+  requests_.Clear();
+
   return true;
 }
 
@@ -846,6 +853,7 @@ void Connection::FailAndPrune() {
   // will be nulled.
   // In such a case, there's a chance that the Port object gets
   // deleted before the Connection object ends up being deleted.
+  RTC_DCHECK(port_) << ToDebugId() << ": port_ null in FailAndPrune()";
   if (!port_)
     return;
 
@@ -882,6 +890,7 @@ void Connection::set_selected(bool selected) {
 
 void Connection::UpdateState(int64_t now) {
   RTC_DCHECK_RUN_ON(network_thread_);
+  RTC_DCHECK(port_) << ToDebugId() << ": port_ null in UpdateState()";
   if (!port_)
     return;
 
@@ -958,6 +967,7 @@ int64_t Connection::last_ping_sent() const {
 void Connection::Ping(int64_t now,
                       std::unique_ptr<StunByteStringAttribute> delta) {
   RTC_DCHECK_RUN_ON(network_thread_);
+  RTC_DCHECK(port_) << ToDebugId() << ": port_ null in Ping()";
   if (!port_)
     return;
 
@@ -1251,11 +1261,13 @@ std::string Connection::ToDebugId() const {
 
 uint32_t Connection::ComputeNetworkCost() const {
   // TODO(honghaiz): Will add rtt as part of the network cost.
+  RTC_DCHECK(port_) << ToDebugId() << ": port_ null in ComputeNetworkCost()";
   return port()->network_cost() + remote_candidate_.network_cost();
 }
 
 std::string Connection::ToString() const {
   RTC_DCHECK_RUN_ON(network_thread_);
+  RTC_DCHECK(port_) << ToDebugId() << ": port_ null in ToString()";
   constexpr absl::string_view CONNECT_STATE_ABBREV[2] = {
       "-",  // not connected (false)
       "C",  // connected (true)
@@ -1457,6 +1469,8 @@ void Connection::OnConnectionRequestResponse(StunRequest* request,
 
 void Connection::OnConnectionRequestErrorResponse(ConnectionRequest* request,
                                                   StunMessage* response) {
+  RTC_DCHECK(port_) << ToDebugId()
+                    << ": port_ null in OnConnectionRequestErrorResponse";
   if (!port_)
     return;
 
@@ -1610,6 +1624,8 @@ ConnectionInfo Connection::stats() {
 
 void Connection::MaybeUpdateLocalCandidate(StunRequest* request,
                                            StunMessage* response) {
+  RTC_DCHECK(port_) << ToDebugId()
+                    << ": port_ null in MaybeUpdateLocalCandidate";
   if (!port_)
     return;
 
@@ -1754,6 +1770,7 @@ ProxyConnection::ProxyConnection(rtc::WeakPtr<Port> port,
 int ProxyConnection::Send(const void* data,
                           size_t size,
                           const rtc::PacketOptions& options) {
+  RTC_DCHECK(port_) << ToDebugId() << ": port_ null in Send()";
   if (!port_)
     return SOCKET_ERROR;
 
