@@ -184,11 +184,14 @@ AsyncResolverInterface* BasicPacketSocketFactory::CreateAsyncResolver() {
   return new AsyncResolver();
 }
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 std::unique_ptr<webrtc::AsyncDnsResolverInterface>
 BasicPacketSocketFactory::CreateAsyncDnsResolver() {
   return std::make_unique<webrtc::WrappingAsyncDnsResolver>(
       new AsyncResolver());
 }
+#pragma clang diagnostic pop
 
 int BasicPacketSocketFactory::BindSocket(Socket* socket,
                                          const SocketAddress& local_address,

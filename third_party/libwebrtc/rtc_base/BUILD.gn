@@ -1060,6 +1060,7 @@ rtc_library("threading") {
     "//third_party/abseil-cpp/absl/strings",
   ]
   deps = [
+    ":async_dns_resolver",
     ":async_resolver_interface",
     ":byte_order",
     ":checks",
@@ -1075,9 +1076,11 @@ rtc_library("threading") {
     ":refcount",
     ":rtc_event",
     ":rtc_task_queue",
+    ":socket",
     ":socket_address",
     ":socket_server",
     ":timeutils",
+    "../api:async_dns_resolver",
     "../api:function_view",
     "../api:location",
     "../api:refcountedbase",
