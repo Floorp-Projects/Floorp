@@ -1015,7 +1015,7 @@ class SdpOfferAnswerShuffleMediaTypes
 };
 
 TEST_P(SdpOfferAnswerShuffleMediaTypes,
-       RecyclingWithDifferentKindAndSameMidFails) {
+       RecyclingWithDifferentKindAndSameMidFailsAnswer) {
   bool audio_first = GetParam();
   auto pc1 = CreatePeerConnection();
   auto pc2 = CreatePeerConnection();
@@ -1051,6 +1051,46 @@ TEST_P(SdpOfferAnswerShuffleMediaTypes,
   EXPECT_TRUE(pc1->SetRemoteDescription(std::move(offer)));
   auto answer = pc1->CreateAnswer();
   EXPECT_FALSE(pc1->SetLocalDescription(std::move(answer)));
+}
+
+// Similar to the previous test but with implicit rollback and creating
+// an offer, triggering a different codepath.
+TEST_P(SdpOfferAnswerShuffleMediaTypes,
+       RecyclingWithDifferentKindAndSameMidFailsOffer) {
+  bool audio_first = GetParam();
+  auto pc1 = CreatePeerConnection();
+  auto pc2 = CreatePeerConnection();
+  if (audio_first) {
+    pc1->AddAudioTrack("audio_track", {});
+    pc2->AddVideoTrack("video_track", {});
+  } else {
+    pc2->AddAudioTrack("audio_track", {});
+    pc1->AddVideoTrack("video_track", {});
+  }
+
+  auto initial_offer = pc1->CreateOfferAndSetAsLocal();
+  ASSERT_EQ(initial_offer->description()->contents().size(), 1u);
+  auto mid1 = initial_offer->description()->contents()[0].mid();
+  std::string rejected_answer_sdp =
+      "v=0\r\n"
+      "o=- 8621259572628890423 2 IN IP4 127.0.0.1\r\n"
+      "s=-\r\n"
+      "t=0 0\r\n"
+      "m=" +
+      std::string(audio_first ? "audio" : "video") +
+      " 0 UDP/TLS/RTP/SAVPF 111\r\n"
+      "c=IN IP4 0.0.0.0\r\n";
+  auto rejected_answer =
+      CreateSessionDescription(SdpType::kAnswer, rejected_answer_sdp);
+  EXPECT_TRUE(pc1->SetRemoteDescription(std::move(rejected_answer)));
+
+  auto offer =
+      pc2->CreateOfferAndSetAsLocal();  // This will generate a mid=0 too
+  ASSERT_EQ(offer->description()->contents().size(), 1u);
+  auto mid2 = offer->description()->contents()[0].mid();
+  EXPECT_EQ(mid1, mid2);  // Check that the mids collided.
+  EXPECT_TRUE(pc1->SetRemoteDescription(std::move(offer)));
+  EXPECT_FALSE(pc1->CreateOffer());
 }
 
 INSTANTIATE_TEST_SUITE_P(SdpOfferAnswerShuffleMediaTypes,

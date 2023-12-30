@@ -1672,9 +1672,6 @@ MediaSessionDescriptionFactory::CreateOfferOrError(
         msection_index < current_description->contents().size()) {
       current_content = &current_description->contents()[msection_index];
       // Media type must match unless this media section is being recycled.
-      RTC_DCHECK(current_content->name != media_description_options.mid ||
-                 IsMediaContentOfType(current_content,
-                                      media_description_options.type));
     }
     RTCError error;
     switch (media_description_options.type) {
@@ -2284,8 +2281,7 @@ RTCError MediaSessionDescriptionFactory::AddAudioContentForOffer(
     if (current_content && !current_content->rejected &&
         current_content->name == media_description_options.mid) {
       if (!IsMediaContentOfType(current_content, MEDIA_TYPE_AUDIO)) {
-        // TODO(bugs.webrtc.org/15471): add a unit test for this since
-        // it is not clear how this can happen for offers.
+        // Can happen if the remote side re-uses a MID while recycling.
         LOG_AND_RETURN_ERROR(RTCErrorType::INTERNAL_ERROR,
                              "Media type for content with mid='" +
                                  current_content->name +
@@ -2384,8 +2380,7 @@ RTCError MediaSessionDescriptionFactory::AddVideoContentForOffer(
     if (current_content && !current_content->rejected &&
         current_content->name == media_description_options.mid) {
       if (!IsMediaContentOfType(current_content, MEDIA_TYPE_VIDEO)) {
-        // TODO(bugs.webrtc.org/15471): add a unit test for this since
-        // it is not clear how this can happen for offers.
+        // Can happen if the remote side re-uses a MID while recycling.
         LOG_AND_RETURN_ERROR(RTCErrorType::INTERNAL_ERROR,
                              "Media type for content with mid='" +
                                  current_content->name +
