@@ -1678,46 +1678,48 @@ static bool ParseDate(DateTimeInfo::ForceUTC forceUTC, const CharT* s,
         continue;
       }
 
-      size_t k = std::size(keywords);
-      while (k-- > 0) {
-        // Record a month if it is a month name. Note that some numbers are
-        // initially treated as months; if a numeric field has already been
-        // interpreted as a month, store that value to the actually appropriate
-        // date component and set the month here.
-        int tryMonth;
-        if (IsMonthName(s + start, index - start, &tryMonth)) {
-          if (seenMonthName) {
-            // Overwrite the previous month name
-            mon = tryMonth;
-            break;
-          }
-
-          seenMonthName = true;
-
-          if (mon < 0) {
-            mon = tryMonth;
-          } else if (mday < 0) {
-            mday = mon;
-            mon = tryMonth;
-          } else if (year < 0) {
-            if (mday > 0) {
-              // If the date is of the form f l month, then when month is
-              // reached we have f in mon and l in mday. In order to be
-              // consistent with the f month l and month f l forms, we need to
-              // swap so that f is in mday and l is in year.
-              year = mday;
-              mday = mon;
-            } else {
-              year = mon;
-            }
-            mon = tryMonth;
-          } else {
-            return false;
-          }
-
-          break;
+      // Record a month if it is a month name. Note that some numbers are
+      // initially treated as months; if a numeric field has already been
+      // interpreted as a month, store that value to the actually appropriate
+      // date component and set the month here.
+      int tryMonth;
+      if (IsMonthName(s + start, index - start, &tryMonth)) {
+        if (seenMonthName) {
+          // Overwrite the previous month name
+          mon = tryMonth;
+          prevc = 0;
+          continue;
         }
 
+        seenMonthName = true;
+
+        if (mon < 0) {
+          mon = tryMonth;
+        } else if (mday < 0) {
+          mday = mon;
+          mon = tryMonth;
+        } else if (year < 0) {
+          if (mday > 0) {
+            // If the date is of the form f l month, then when month is
+            // reached we have f in mon and l in mday. In order to be
+            // consistent with the f month l and month f l forms, we need to
+            // swap so that f is in mday and l is in year.
+            year = mday;
+            mday = mon;
+          } else {
+            year = mon;
+          }
+          mon = tryMonth;
+        } else {
+          return false;
+        }
+
+        prevc = 0;
+        continue;
+      }
+
+      size_t k = std::size(keywords);
+      while (k-- > 0) {
         const CharsAndAction& keyword = keywords[k];
 
         // If the field doesn't match the keyword, try the next one.
