@@ -78,6 +78,7 @@ UNIFIED_SOURCES += [
     "testIntlAvailableLocales.cpp",
     "testIntString.cpp",
     "testIsInsideNursery.cpp",
+    "testIsISOStyleDate.cpp",
     "testIteratorObject.cpp",
     "testJSEvaluateScript.cpp",
     "testJSON.cpp",

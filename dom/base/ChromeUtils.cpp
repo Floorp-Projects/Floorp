@@ -10,6 +10,7 @@
 #include "js/CallAndConstruct.h"  // JS::Call
 #include "js/ColumnNumber.h"  // JS::TaggedColumnNumberOneOrigin, JS::ColumnNumberOneOrigin
 #include "js/CharacterEncoding.h"
+#include "js/Date.h"                // JS::IsISOStyleDate
 #include "js/Object.h"              // JS::GetClass
 #include "js/PropertyAndElement.h"  // JS_DefineProperty, JS_DefinePropertyById, JS_Enumerate, JS_GetProperty, JS_GetPropertyById, JS_SetProperty, JS_SetPropertyById, JS::IdVector
 #include "js/PropertyDescriptor.h"  // JS::PropertyDescriptor, JS_GetOwnPropertyDescriptorById
@@ -364,6 +365,15 @@ bool ChromeUtils::IsDOMObject(GlobalObject& aGlobal, JS::Handle<JSObject*> aObj,
   }
 
   return mozilla::dom::IsDOMObject(obj);
+}
+
+/* static */
+bool ChromeUtils::IsISOStyleDate(GlobalObject& aGlobal,
+                                 const nsACString& aStr) {
+  // aStr is a UTF-8 string, however we can cast to JS::Latin1Chars
+  // because JS::IsISOStyleDate handles ASCII only
+  return JS::IsISOStyleDate(aGlobal.Context(),
+                            JS::Latin1Chars(aStr.Data(), aStr.Length()));
 }
 
 /* static */

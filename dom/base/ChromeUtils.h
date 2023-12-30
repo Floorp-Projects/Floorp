@@ -166,6 +166,8 @@ class ChromeUtils {
   static bool IsDOMObject(GlobalObject& aGlobal, JS::Handle<JSObject*> aObj,
                           bool aUnwrap);
 
+  static bool IsISOStyleDate(GlobalObject& aGlobal, const nsACString& aStr);
+
   static void ShallowClone(GlobalObject& aGlobal, JS::Handle<JSObject*> aObj,
                            JS::Handle<JSObject*> aTarget,
                            JS::MutableHandle<JSObject*> aRetval,

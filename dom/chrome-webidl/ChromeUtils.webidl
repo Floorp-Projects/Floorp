@@ -463,6 +463,11 @@ partial namespace ChromeUtils {
   boolean isDOMObject(object obj, optional boolean unwrap = true);
 
   /**
+   * Returns whether |str| follows the Date Time String Format.
+   */
+  boolean isISOStyleDate(UTF8String str);
+
+  /**
    * Clones the properties of the given object into a new object in the given
    * target compartment (or the caller compartment if no target is provided).
    * Property values themeselves are not cloned.
