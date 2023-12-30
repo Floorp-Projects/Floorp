@@ -3996,7 +3996,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **page cycles**: 5
    * **page timeout**: 600000
    * **repository**: https://github.com/WebKit/Speedometer
-   * **repository revision**: 208e1abee2916fe4404c4ac561d80ee92dfee059
+   * **repository revision**: 4173e4d8a945ebe7080eb43188f0441a19d0c70a
    * **subtest lower is better**: true
    * **subtest unit**: ms
    * **support class**: speedometer3.py
@@ -4326,7 +4326,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **page cycles**: 5
    * **page timeout**: 420000
    * **repository**: https://github.com/WebKit/Speedometer
-   * **repository revision**: 208e1abee2916fe4404c4ac561d80ee92dfee059
+   * **repository revision**: 4173e4d8a945ebe7080eb43188f0441a19d0c70a
    * **subtest lower is better**: true
    * **subtest unit**: ms
    * **support class**: speedometer3.py
