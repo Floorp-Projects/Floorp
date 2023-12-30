@@ -1,545 +1,61 @@
 From: Michael Froman <mjfroman@mac.com>
-Date: Fri, 29 Dec 2023 17:27:06 -0600
-Subject: (tmp-cherry-pick) Revert "Deprecate all classes related to
- AsyncResolver" (08d431ec34)
+Date: Fri, 29 Dec 2023 17:22:23 -0600
+Subject: (tmp-cherry-pick) Revert "Set optimize_for_size for iOS perf tests."
+ (573bb8552a)
 
-This reverts commit 61a442809cc06de93a613186084d2dfa9c934d81.
+This reverts commit f83da9dddddf0cfd421688cf68fa26bf3ecadd1d.
 
-Reason for revert: Breaks roll into Chromium
+Reason for revert: Culprit has been found.
 
 Original change's description:
-> Deprecate all classes related to AsyncResolver
+> Set optimize_for_size for iOS perf tests.
 >
-> and remove internal usage.
->
-> Bug: webrtc:12598
-> Change-Id: Ie208682bfa0163f6c7a8e805151cfbda76324496
-> Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/322860
-> Reviewed-by: Tomas Gunnarsson <tommi@webrtc.org>
-> Auto-Submit: Harald Alvestrand <hta@webrtc.org>
-> Commit-Queue: Harald Alvestrand <hta@webrtc.org>
-> Cr-Commit-Position: refs/heads/main@{#40919}
+> No-Try: True
+> Bug: webrtc:15524
+> Change-Id: I525f014f5c321000d520ef68a682f8ca1395bebd
+> Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/323002
+> Commit-Queue: Jeremy Leconte <jleconte@google.com>
+> Reviewed-by: Jeremy Leconte <jleconte@google.com>
+> Auto-Submit: Mirko Bonadei <mbonadei@webrtc.org>
+> Cr-Commit-Position: refs/heads/main@{#40915}
 
-Bug: webrtc:12598
-Change-Id: I8aef5e062e19a51baec75873eddfca2a10467d3c
-No-Presubmit: true
-No-Tree-Checks: true
-No-Try: true
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/322901
+Bug: webrtc:15524
+Change-Id: I6785bf448f62d39a9eafe04bce6c778ba638c9ac
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/323660
+Auto-Submit: Mirko Bonadei <mbonadei@webrtc.org>
+Commit-Queue: Jeremy Leconte <jleconte@google.com>
 Bot-Commit: rubber-stamper@appspot.gserviceaccount.com <rubber-stamper@appspot.gserviceaccount.com>
-Auto-Submit: Harald Alvestrand <hta@webrtc.org>
-Commit-Queue: Harald Alvestrand <hta@webrtc.org>
-Cr-Commit-Position: refs/heads/main@{#40927}
+Reviewed-by: Jeremy Leconte <jleconte@google.com>
+Cr-Commit-Position: refs/heads/main@{#40943}
 ---
- api/async_resolver_factory.h                  |  5 +-
- api/ice_transport_interface.h                 |  3 -
- api/packet_socket_factory.h                   |  5 +-
- api/peer_connection_interface.h               | 10 ++-
- api/wrapping_async_dns_resolver.h             |  8 +--
- p2p/BUILD.gn                                  |  1 -
- p2p/base/basic_async_resolver_factory.h       | 12 +---
- .../basic_async_resolver_factory_unittest.cc  |  5 --
- p2p/base/basic_packet_socket_factory.cc       |  7 ++-
- p2p/base/mock_async_resolver.h                | 11 +---
- p2p/base/turn_port.h                          |  2 +-
- p2p/stunprober/stun_prober.cc                 | 26 ++++----
- p2p/stunprober/stun_prober.h                  |  5 +-
- p2p/stunprober/stun_prober_unittest.cc        | 62 ++++---------------
- rtc_base/async_resolver.h                     |  7 +--
- rtc_base/async_resolver_interface.h           |  2 +-
- 16 files changed, 49 insertions(+), 122 deletions(-)
+ tools_webrtc/mb/mb_config.pyl | 7 +------
+ 1 file changed, 1 insertion(+), 6 deletions(-)
 
-diff --git a/api/async_resolver_factory.h b/api/async_resolver_factory.h
-index 997fe5ce57..ffa958268d 100644
---- a/api/async_resolver_factory.h
-+++ b/api/async_resolver_factory.h
-@@ -19,16 +19,13 @@ namespace webrtc {
- // client applications to provide WebRTC with their own mechanism for
- // performing DNS resolution.
- // TODO(bugs.webrtc.org/12598): Deprecate and remove.
--class [[deprecated("Use AsyncDnsResolverFactory")]] AsyncResolverFactory {
-+class AsyncResolverFactory {
-  public:
-   AsyncResolverFactory() = default;
-   virtual ~AsyncResolverFactory() = default;
- 
--#pragma clang diagnostic push
--#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-   // The caller should call Destroy on the returned object to delete it.
-   virtual rtc::AsyncResolverInterface* Create() = 0;
--#pragma clang diagnostic pop
- };
- 
- }  // namespace webrtc
-diff --git a/api/ice_transport_interface.h b/api/ice_transport_interface.h
-index 001395c215..431f3330a5 100644
---- a/api/ice_transport_interface.h
-+++ b/api/ice_transport_interface.h
-@@ -115,11 +115,8 @@ struct IceTransportInit final {
-  private:
-   cricket::PortAllocator* port_allocator_ = nullptr;
-   AsyncDnsResolverFactoryInterface* async_dns_resolver_factory_ = nullptr;
--#pragma clang diagnostic push
--#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-   // For backwards compatibility. Only one resolver factory can be set.
-   AsyncResolverFactory* async_resolver_factory_ = nullptr;
--#pragma clang diagnostic pop
-   RtcEventLog* event_log_ = nullptr;
-   cricket::IceControllerFactoryInterface* ice_controller_factory_ = nullptr;
-   cricket::ActiveIceControllerFactoryInterface* active_ice_controller_factory_ =
-diff --git a/api/packet_socket_factory.h b/api/packet_socket_factory.h
-index e389ccb2ff..29d2606b9b 100644
---- a/api/packet_socket_factory.h
-+++ b/api/packet_socket_factory.h
-@@ -76,9 +76,7 @@ class RTC_EXPORT PacketSocketFactory {
-   // to switch to the AsyncDnsResolverInterface.
-   // TODO(bugs.webrtc.org/12598): Remove once all downstream users
-   // are converted.
--#pragma clang diagnostic push
--#pragma clang diagnostic ignored "-Wdeprecated-declarations"
--  [[deprecated]] virtual AsyncResolverInterface* CreateAsyncResolver() {
-+  virtual AsyncResolverInterface* CreateAsyncResolver() {
-     // Default implementation, so that downstream users can remove this
-     // immediately after changing to CreateAsyncDnsResolver
-     RTC_DCHECK_NOTREACHED();
-@@ -91,7 +89,6 @@ class RTC_EXPORT PacketSocketFactory {
-     return std::make_unique<webrtc::WrappingAsyncDnsResolver>(
-         CreateAsyncResolver());
-   }
--#pragma clang diagnostic pop
- 
-  private:
-   PacketSocketFactory(const PacketSocketFactory&) = delete;
-diff --git a/api/peer_connection_interface.h b/api/peer_connection_interface.h
-index 08586f8d6c..e2f284e25e 100644
---- a/api/peer_connection_interface.h
-+++ b/api/peer_connection_interface.h
-@@ -1386,12 +1386,10 @@ struct RTC_EXPORT PeerConnectionDependencies final {
-   std::unique_ptr<webrtc::AsyncDnsResolverFactoryInterface>
-       async_dns_resolver_factory;
-   // Deprecated - use async_dns_resolver_factory
--#pragma clang diagnostic push
--#pragma clang diagnostic ignored "-Wdeprecated-declarations"
--  [[deprecated("Use async_dns_resolver_factory")]] std::unique_ptr<
--      webrtc::AsyncResolverFactory>
--      async_resolver_factory;
--#pragma clang diagnostic pop
-+  // Deprecation is in abeyance until Chromium is updated.
-+  // TODO(crbug.com/1475925): Deprecate once Chromium is updated
-+  // [[deprecated("Use async_dns_resolver_factory")]]
-+  std::unique_ptr<webrtc::AsyncResolverFactory> async_resolver_factory;
-   std::unique_ptr<webrtc::IceTransportFactory> ice_transport_factory;
-   std::unique_ptr<rtc::RTCCertificateGeneratorInterface> cert_generator;
-   std::unique_ptr<rtc::SSLCertificateVerifier> tls_cert_verifier;
-diff --git a/api/wrapping_async_dns_resolver.h b/api/wrapping_async_dns_resolver.h
-index b384f97652..d07f1464c5 100644
---- a/api/wrapping_async_dns_resolver.h
-+++ b/api/wrapping_async_dns_resolver.h
-@@ -33,10 +33,9 @@
- 
- namespace webrtc {
- 
--class [[deprecated("Use AsyncDnsResolver directly")]] WrappingAsyncDnsResolver;
-+class WrappingAsyncDnsResolver;
- 
--class [[deprecated(
--    "Use AsyncDnsResolver directly")]] RTC_EXPORT WrappingAsyncDnsResolverResult
-+class RTC_EXPORT WrappingAsyncDnsResolverResult
-     : public AsyncDnsResolverResult {
-  public:
-   explicit WrappingAsyncDnsResolverResult(WrappingAsyncDnsResolver* owner)
-@@ -55,8 +54,6 @@ class [[deprecated(
- class RTC_EXPORT WrappingAsyncDnsResolver : public AsyncDnsResolverInterface,
-                                             public sigslot::has_slots<> {
-  public:
--#pragma clang diagnostic push
--#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-   explicit WrappingAsyncDnsResolver(rtc::AsyncResolverInterface* wrapped)
-       : wrapped_(absl::WrapUnique(wrapped)), result_(this) {}
- 
-@@ -127,7 +124,6 @@ class RTC_EXPORT WrappingAsyncDnsResolver : public AsyncDnsResolverInterface,
-   State state_ RTC_GUARDED_BY(sequence_checker_) = State::kNotStarted;
-   WrappingAsyncDnsResolverResult result_ RTC_GUARDED_BY(sequence_checker_);
-   bool within_resolve_result_ RTC_GUARDED_BY(sequence_checker_) = false;
--#pragma clang diagnostic pop
- };
- 
- }  // namespace webrtc
-diff --git a/p2p/BUILD.gn b/p2p/BUILD.gn
-index 4e4924a841..b8dc0b03ad 100644
---- a/p2p/BUILD.gn
-+++ b/p2p/BUILD.gn
-@@ -393,7 +393,6 @@ rtc_library("libstunprober") {
- 
-   deps = [
-     ":rtc_p2p",
--    "../api:async_dns_resolver",
-     "../api:packet_socket_factory",
-     "../api:sequence_checker",
-     "../api/task_queue:pending_task_safety_flag",
-diff --git a/p2p/base/basic_async_resolver_factory.h b/p2p/base/basic_async_resolver_factory.h
-index 1a94fb9679..9c1af6a1e1 100644
---- a/p2p/base/basic_async_resolver_factory.h
-+++ b/p2p/base/basic_async_resolver_factory.h
-@@ -21,15 +21,10 @@
- 
- namespace webrtc {
- 
--#pragma clang diagnostic push
--#pragma clang diagnostic ignored "-Wdeprecated-declarations"
--class [[deprecated(
--    "Use BasicAsyncDnsResolverFactory")]] BasicAsyncResolverFactory final
--    : public AsyncResolverFactory {
-+class BasicAsyncResolverFactory final : public AsyncResolverFactory {
-  public:
-   rtc::AsyncResolverInterface* Create() override;
- };
--#pragma clang diagnostic pop
- 
- // A factory that vends AsyncDnsResolver instances.
- class BasicAsyncDnsResolverFactory final
-@@ -52,11 +47,9 @@ class BasicAsyncDnsResolverFactory final
- // This class wraps a factory using the older webrtc::AsyncResolverFactory API,
- // and produces webrtc::AsyncDnsResolver objects that contain an
- // rtc::AsyncResolver object.
--class [[deprecated]] WrappingAsyncDnsResolverFactory final
-+class WrappingAsyncDnsResolverFactory final
-     : public AsyncDnsResolverFactoryInterface {
-  public:
--#pragma clang diagnostic push
--#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-   explicit WrappingAsyncDnsResolverFactory(
-       std::unique_ptr<AsyncResolverFactory> wrapped_factory)
-       : owned_factory_(std::move(wrapped_factory)),
-@@ -65,7 +58,6 @@ class [[deprecated]] WrappingAsyncDnsResolverFactory final
-   explicit WrappingAsyncDnsResolverFactory(
-       AsyncResolverFactory* non_owned_factory)
-       : wrapped_factory_(non_owned_factory) {}
--#pragma clang diagnostic pop
- 
-   std::unique_ptr<webrtc::AsyncDnsResolverInterface> CreateAndResolve(
-       const rtc::SocketAddress& addr,
-diff --git a/p2p/base/basic_async_resolver_factory_unittest.cc b/p2p/base/basic_async_resolver_factory_unittest.cc
-index 313907abb9..77b97e75e6 100644
---- a/p2p/base/basic_async_resolver_factory_unittest.cc
-+++ b/p2p/base/basic_async_resolver_factory_unittest.cc
-@@ -22,9 +22,6 @@
- 
- namespace webrtc {
- 
--#pragma clang diagnostic push
--#pragma clang diagnostic ignored "-Wdeprecated-declarations"
--
- class BasicAsyncResolverFactoryTest : public ::testing::Test,
-                                       public sigslot::has_slots<> {
-  public:
-@@ -111,6 +108,4 @@ TEST(WrappingAsyncDnsResolverFactoryDeathTest, DestroyResolverInCallback) {
- }
- #endif
- 
--#pragma clang diagnostic pop
--
- }  // namespace webrtc
-diff --git a/p2p/base/basic_packet_socket_factory.cc b/p2p/base/basic_packet_socket_factory.cc
-index 7d87e12859..b07a407164 100644
---- a/p2p/base/basic_packet_socket_factory.cc
-+++ b/p2p/base/basic_packet_socket_factory.cc
-@@ -18,7 +18,6 @@
- #include "api/async_dns_resolver.h"
- #include "api/wrapping_async_dns_resolver.h"
- #include "p2p/base/async_stun_tcp_socket.h"
--#include "rtc_base/async_dns_resolver.h"
- #include "rtc_base/async_tcp_socket.h"
- #include "rtc_base/async_udp_socket.h"
- #include "rtc_base/checks.h"
-@@ -185,10 +184,14 @@ AsyncResolverInterface* BasicPacketSocketFactory::CreateAsyncResolver() {
-   return new AsyncResolver();
- }
- 
-+#pragma clang diagnostic push
-+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
- std::unique_ptr<webrtc::AsyncDnsResolverInterface>
- BasicPacketSocketFactory::CreateAsyncDnsResolver() {
--  return std::make_unique<webrtc::AsyncDnsResolver>();
-+  return std::make_unique<webrtc::WrappingAsyncDnsResolver>(
-+      new AsyncResolver());
- }
-+#pragma clang diagnostic pop
- 
- int BasicPacketSocketFactory::BindSocket(Socket* socket,
-                                          const SocketAddress& local_address,
-diff --git a/p2p/base/mock_async_resolver.h b/p2p/base/mock_async_resolver.h
-index 73ad1a4c34..44164716b2 100644
---- a/p2p/base/mock_async_resolver.h
-+++ b/p2p/base/mock_async_resolver.h
-@@ -20,10 +20,7 @@ namespace rtc {
- using ::testing::_;
- using ::testing::InvokeWithoutArgs;
- 
--#pragma clang diagnostic push
--#pragma clang diagnostic ignored "-Wdeprecated-declarations"
--class [[deprecated]] MockAsyncResolver : public AsyncResolverInterface {
--#pragma clang diagnostic pop
-+class MockAsyncResolver : public AsyncResolverInterface {
-  public:
-   MockAsyncResolver() {
-     ON_CALL(*this, Start(_)).WillByDefault(InvokeWithoutArgs([this] {
-@@ -50,13 +47,11 @@ class [[deprecated]] MockAsyncResolver : public AsyncResolverInterface {
- 
- namespace webrtc {
- 
--#pragma clang diagnostic push
--#pragma clang diagnostic ignored "-Wdeprecated-declarations"
--class [[deprecated]] MockAsyncResolverFactory : public AsyncResolverFactory {
-+class MockAsyncResolverFactory : public AsyncResolverFactory {
-  public:
-   MOCK_METHOD(rtc::AsyncResolverInterface*, Create, (), (override));
- };
--#pragma clang diagnostic pop
-+
- }  // namespace webrtc
- 
- #endif  // P2P_BASE_MOCK_ASYNC_RESOLVER_H_
-diff --git a/p2p/base/turn_port.h b/p2p/base/turn_port.h
-index 8fa4607e51..ac660d6599 100644
---- a/p2p/base/turn_port.h
-+++ b/p2p/base/turn_port.h
-@@ -267,7 +267,7 @@ class TurnPort : public Port {
-   void HandleRefreshError();
-   bool SetAlternateServer(const rtc::SocketAddress& address);
-   void ResolveTurnAddress(const rtc::SocketAddress& address);
--  void OnResolveResult(const webrtc::AsyncDnsResolverResult& result);
-+  void OnResolveResult(rtc::AsyncResolverInterface* resolver);
- 
-   void AddRequestAuthInfo(StunMessage* msg);
-   void OnSendStunPacket(const void* data, size_t size, StunRequest* request);
-diff --git a/p2p/stunprober/stun_prober.cc b/p2p/stunprober/stun_prober.cc
-index f5abf43beb..977ead4d72 100644
---- a/p2p/stunprober/stun_prober.cc
-+++ b/p2p/stunprober/stun_prober.cc
-@@ -329,12 +329,13 @@ bool StunProber::Start(StunProber::Observer* observer) {
- }
- 
- bool StunProber::ResolveServerName(const rtc::SocketAddress& addr) {
--  RTC_DCHECK(!resolver_);
--  resolver_ = socket_factory_->CreateAsyncDnsResolver();
--  if (!resolver_) {
-+  rtc::AsyncResolverInterface* resolver =
-+      socket_factory_->CreateAsyncResolver();
-+  if (!resolver) {
-     return false;
-   }
--  resolver_->Start(addr, [this] { OnServerResolved(resolver_->result()); });
-+  resolver->SignalDone.connect(this, &StunProber::OnServerResolved);
-+  resolver->Start(addr);
-   return true;
- }
- 
-@@ -346,17 +347,20 @@ void StunProber::OnSocketReady(rtc::AsyncPacketSocket* socket,
-   }
- }
- 
--void StunProber::OnServerResolved(
--    const webrtc::AsyncDnsResolverResult& result) {
-+void StunProber::OnServerResolved(rtc::AsyncResolverInterface* resolver) {
-   RTC_DCHECK(thread_checker_.IsCurrent());
--  rtc::SocketAddress received_address;
--  if (result.GetResolvedAddress(AF_INET, &received_address)) {
--    // Construct an address without the name in it.
--    rtc::SocketAddress addr(received_address.ipaddr(), received_address.port());
-+
-+  if (resolver->GetError() == 0) {
-+    rtc::SocketAddress addr(resolver->address().ipaddr(),
-+                            resolver->address().port());
-     all_servers_addrs_.push_back(addr);
-   }
--  resolver_.reset();
-+
-+  // Deletion of AsyncResolverInterface can't be done in OnResolveResult which
-+  // handles SignalDone.
-+  thread_->PostTask([resolver] { resolver->Destroy(false); });
-   servers_.pop_back();
-+
-   if (servers_.size()) {
-     if (!ResolveServerName(servers_.back())) {
-       ReportOnPrepared(RESOLVE_FAILED);
-diff --git a/p2p/stunprober/stun_prober.h b/p2p/stunprober/stun_prober.h
-index 3f0f4a2476..7d5094a3b9 100644
---- a/p2p/stunprober/stun_prober.h
-+++ b/p2p/stunprober/stun_prober.h
-@@ -11,12 +11,10 @@
- #ifndef P2P_STUNPROBER_STUN_PROBER_H_
- #define P2P_STUNPROBER_STUN_PROBER_H_
- 
--#include <memory>
- #include <set>
- #include <string>
- #include <vector>
- 
--#include "api/async_dns_resolver.h"
- #include "api/sequence_checker.h"
- #include "api/task_queue/pending_task_safety_flag.h"
- #include "rtc_base/byte_buffer.h"
-@@ -168,7 +166,7 @@ class RTC_EXPORT StunProber : public sigslot::has_slots<> {
-   };
- 
-   bool ResolveServerName(const rtc::SocketAddress& addr);
--  void OnServerResolved(const webrtc::AsyncDnsResolverResult& resolver);
-+  void OnServerResolved(rtc::AsyncResolverInterface* resolver);
- 
-   void OnSocketReady(rtc::AsyncPacketSocket* socket,
-                      const rtc::SocketAddress& addr);
-@@ -243,7 +241,6 @@ class RTC_EXPORT StunProber : public sigslot::has_slots<> {
-   ObserverAdapter observer_adapter_;
- 
-   const std::vector<const rtc::Network*> networks_;
--  std::unique_ptr<webrtc::AsyncDnsResolverInterface> resolver_;
- 
-   webrtc::ScopedTaskSafety task_safety_;
- };
-diff --git a/p2p/stunprober/stun_prober_unittest.cc b/p2p/stunprober/stun_prober_unittest.cc
-index ca20fccb6b..b57f93b634 100644
---- a/p2p/stunprober/stun_prober_unittest.cc
-+++ b/p2p/stunprober/stun_prober_unittest.cc
-@@ -51,23 +51,16 @@ class StunProberTest : public ::testing::Test {
-     rtc::InitializeSSL();
-   }
- 
--  static constexpr int pings_per_ip = 3;
--
-   void set_expected_result(int result) { result_ = result; }
- 
--  void CreateProber(rtc::PacketSocketFactory* socket_factory,
--                    std::vector<const rtc::Network*> networks) {
--    prober_ = std::make_unique<StunProber>(
--        socket_factory, rtc::Thread::Current(), std::move(networks));
--  }
--
-   void StartProbing(rtc::PacketSocketFactory* socket_factory,
-                     const std::vector<rtc::SocketAddress>& addrs,
-                     std::vector<const rtc::Network*> networks,
-                     bool shared_socket,
-                     uint16_t interval,
-                     uint16_t pings_per_ip) {
--    CreateProber(socket_factory, networks);
-+    prober_ = std::make_unique<StunProber>(
-+        socket_factory, rtc::Thread::Current(), std::move(networks));
-     prober_->Start(addrs, shared_socket, interval, pings_per_ip,
-                    100 /* timeout_ms */,
-                    [this](StunProber* prober, int result) {
-@@ -76,17 +69,13 @@ class StunProberTest : public ::testing::Test {
-   }
- 
-   void RunProber(bool shared_mode) {
-+    const int pings_per_ip = 3;
-     std::vector<rtc::SocketAddress> addrs;
-     addrs.push_back(kStunAddr1);
-     addrs.push_back(kStunAddr2);
-     // Add a non-existing server. This shouldn't pollute the result.
-     addrs.push_back(kFailedStunAddr);
--    RunProber(shared_mode, addrs, /* check_results= */ true);
--  }
- 
--  void RunProber(bool shared_mode,
--                 const std::vector<rtc::SocketAddress>& addrs,
--                 bool check_results) {
-     rtc::Network ipv4_network1("test_eth0", "Test Network Adapter 1",
-                                rtc::IPAddress(0x12345600U), 24);
-     ipv4_network1.AddIP(rtc::IPAddress(0x12345678));
-@@ -111,21 +100,17 @@ class StunProberTest : public ::testing::Test {
- 
-     WAIT(stopped_, 1000);
- 
--    EXPECT_TRUE(prober_->GetStats(&stats_));
--    if (check_results) {
--      EXPECT_EQ(stats_.success_percent, 100);
--      EXPECT_TRUE(stats_.nat_type > stunprober::NATTYPE_NONE);
--      EXPECT_EQ(stats_.srflx_addrs, srflx_addresses);
--      EXPECT_EQ(static_cast<uint32_t>(stats_.num_request_sent),
--                total_pings_reported);
--      EXPECT_EQ(static_cast<uint32_t>(stats_.num_response_received),
--                total_pings_reported);
--    }
-+    StunProber::Stats stats;
-+    EXPECT_TRUE(prober_->GetStats(&stats));
-+    EXPECT_EQ(stats.success_percent, 100);
-+    EXPECT_TRUE(stats.nat_type > stunprober::NATTYPE_NONE);
-+    EXPECT_EQ(stats.srflx_addrs, srflx_addresses);
-+    EXPECT_EQ(static_cast<uint32_t>(stats.num_request_sent),
-+              total_pings_reported);
-+    EXPECT_EQ(static_cast<uint32_t>(stats.num_response_received),
-+              total_pings_reported);
-   }
- 
--  StunProber* prober() { return prober_.get(); }
--  StunProber::Stats& stats() { return stats_; }
--
-  private:
-   void StopCallback(StunProber* prober, int result) {
-     EXPECT_EQ(result, result_);
-@@ -139,7 +124,6 @@ class StunProberTest : public ::testing::Test {
-   bool stopped_ = false;
-   std::unique_ptr<cricket::TestStunServer> stun_server_1_;
-   std::unique_ptr<cricket::TestStunServer> stun_server_2_;
--  StunProber::Stats stats_;
- };
- 
- TEST_F(StunProberTest, NonSharedMode) {
-@@ -150,26 +134,4 @@ TEST_F(StunProberTest, SharedMode) {
-   RunProber(true);
- }
- 
--TEST_F(StunProberTest, ResolveNonexistentHostname) {
--  std::vector<rtc::SocketAddress> addrs;
--  addrs.push_back(kStunAddr1);
--  // Add a non-existing server by name. This should cause a failed lookup.
--  addrs.push_back(rtc::SocketAddress("nonexistent.test", 3478));
--  RunProber(false, addrs, false);
--  // One server is pinged
--  EXPECT_EQ(stats().raw_num_request_sent, pings_per_ip);
--}
--
--TEST_F(StunProberTest, ResolveExistingHostname) {
--  std::vector<rtc::SocketAddress> addrs;
--  addrs.push_back(kStunAddr1);
--  // Add a non-existing server by name. This should cause a failed lookup.
--  addrs.push_back(rtc::SocketAddress("localhost", 3478));
--  RunProber(false, addrs, false);
--  // Two servers are pinged, only one responds.
--  // TODO(bugs.webrtc.org/15559): Figure out why this doesn't always work
--  // EXPECT_EQ(stats().raw_num_request_sent, pings_per_ip * 2);
--  EXPECT_EQ(stats().num_request_sent, pings_per_ip);
--}
--
- }  // namespace stunprober
-diff --git a/rtc_base/async_resolver.h b/rtc_base/async_resolver.h
-index 9de4d12fed..46be43860e 100644
---- a/rtc_base/async_resolver.h
-+++ b/rtc_base/async_resolver.h
-@@ -39,12 +39,7 @@ namespace rtc {
- // happen from the same rtc::Thread, except for Destroy which is allowed to
- // happen on another context provided it's not happening concurrently to another
- // public API call, and is the last access to the object.
--// TODO(bugs.webrtc.org/12598): Deprecate and remove
--#pragma clang diagnostic push
--#pragma clang diagnostic ignored "-Wstrict-aliasing"
--class [[deprecated("Use AsyncDnsResolver")]] RTC_EXPORT AsyncResolver
--    : public AsyncResolverInterface {
--#pragma clang diagnostic pop
-+class RTC_EXPORT AsyncResolver : public AsyncResolverInterface {
-  public:
-   AsyncResolver();
-   ~AsyncResolver() override;
-diff --git a/rtc_base/async_resolver_interface.h b/rtc_base/async_resolver_interface.h
-index a0bda2774a..851fa38ce1 100644
---- a/rtc_base/async_resolver_interface.h
-+++ b/rtc_base/async_resolver_interface.h
-@@ -20,7 +20,7 @@ namespace rtc {
- 
- // This interface defines the methods to resolve the address asynchronously.
- // TODO(bugs.webrtc.org/12598): Deprecate and remove.
--class [[deprecated("Use AsyncDnsResolver")]] RTC_EXPORT AsyncResolverInterface {
-+class RTC_EXPORT AsyncResolverInterface {
-  public:
-   AsyncResolverInterface();
-   virtual ~AsyncResolverInterface();
+diff --git a/tools_webrtc/mb/mb_config.pyl b/tools_webrtc/mb/mb_config.pyl
+index ff37cd0812..6aea3c9cba 100644
+--- a/tools_webrtc/mb/mb_config.pyl
++++ b/tools_webrtc/mb/mb_config.pyl
+@@ -268,12 +268,10 @@
+       'ios', 'debug_bot', 'arm64', 'ios_code_signing_identity_description',
+       'xctest'
+     ],
+-    # TODO(bugs.webrtc.org/15524): Remove 'optimize_for_size' once the bug
+-    # has been resolved.
+     'ios_internal_pure_release_bot_arm64': [
+       'ios', 'pure_release_bot', 'arm64',
+       'ios_code_signing_identity_description', 'xctest',
+-      'rtc_objc_test_prefix', 'optimize_for_size',
++      'rtc_objc_test_prefix',
+     ],
+     'ios_internal_release_bot_arm64': [
+       'ios', 'release_bot', 'arm64', 'ios_code_signing_identity_description',
+@@ -450,9 +448,6 @@
+     'optimize_for_fuzzing': {
+       'gn_args': 'optimize_for_fuzzing=true',
+     },
+-    'optimize_for_size': {
+-      'gn_args': 'optimize_for_size=true',
+-    },
+     'partial_code_coverage_instrumentation': {
+       'gn_args':
+       'coverage_instrumentation_input_file="//.code-coverage/files_to_instrument.txt"'
