@@ -870,8 +870,9 @@ bool DisplayPortUtils::MaybeCreateDisplayPortInFirstScrollFrameEncountered(
   }
   if (aFrame->IsPlaceholderFrame()) {
     nsPlaceholderFrame* placeholder = static_cast<nsPlaceholderFrame*>(aFrame);
-    if (MaybeCreateDisplayPortInFirstScrollFrameEncountered(
-            placeholder->GetOutOfFlowFrame(), aBuilder)) {
+    nsIFrame* oof = placeholder->GetOutOfFlowFrame();
+    if (oof && !nsLayoutUtils::IsPopup(oof) &&
+        MaybeCreateDisplayPortInFirstScrollFrameEncountered(oof, aBuilder)) {
       return true;
     }
   }
