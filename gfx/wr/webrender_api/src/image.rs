@@ -117,6 +117,10 @@ pub enum ImageBufferKind {
     /// understand, particularly YUV. See
     /// https://www.khronos.org/registry/OpenGL/extensions/OES/OES_EGL_image_external.txt
     TextureExternal = 2,
+    /// External texture which is forced to be converted from YUV to RGB using BT709 colorspace.
+    /// This maps to GL_TEXTURE_EXTERNAL_OES in OpenGL, using the EXT_YUV_TARGET extension.
+    /// https://registry.khronos.org/OpenGL/extensions/EXT/EXT_YUV_target.txt
+    TextureExternalBT709 = 3,
 }
 
 /// Storage format identifier for externally-managed images.

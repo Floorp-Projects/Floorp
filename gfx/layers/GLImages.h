@@ -54,6 +54,7 @@ class SurfaceTextureImage final : public GLImage {
   SurfaceTextureImage(AndroidSurfaceTextureHandle aHandle,
                       const gfx::IntSize& aSize, bool aContinuous,
                       gl::OriginPos aOriginPos, bool aHasAlpha,
+                      bool aForceBT709ColorSpace,
                       Maybe<gfx::Matrix4x4> aTransformOverride);
 
   gfx::IntSize GetSize() const override { return mSize; }
@@ -61,6 +62,7 @@ class SurfaceTextureImage final : public GLImage {
   bool GetContinuous() const { return mContinuous; }
   gl::OriginPos GetOriginPos() const { return mOriginPos; }
   bool GetHasAlpha() const { return mHasAlpha; }
+  bool GetForceBT709ColorSpace() const { return mForceBT709ColorSpace; }
   const Maybe<gfx::Matrix4x4>& GetTransformOverride() const {
     return mTransformOverride;
   }
@@ -102,6 +104,7 @@ class SurfaceTextureImage final : public GLImage {
   bool mContinuous;
   gl::OriginPos mOriginPos;
   const bool mHasAlpha;
+  const bool mForceBT709ColorSpace;
   const Maybe<gfx::Matrix4x4> mTransformOverride;
   UniquePtr<SetCurrentCallback> mSetCurrentCallback;
 };

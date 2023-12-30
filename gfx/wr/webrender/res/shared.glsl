@@ -15,6 +15,10 @@
 #extension GL_OES_EGL_image_external : require
 #endif
 
+#ifdef WR_FEATURE_TEXTURE_EXTERNAL_BT709
+#extension GL_EXT_YUV_target : require
+#endif
+
 #ifdef WR_FEATURE_ADVANCED_BLEND
 #extension GL_KHR_blend_equation_advanced : require
 #endif
@@ -31,6 +35,9 @@
 
 #if defined(WR_FEATURE_TEXTURE_EXTERNAL_ESSL1)
 #define TEX_SAMPLE(sampler, tex_coord) texture2D(sampler, tex_coord.xy)
+#elif defined(WR_FEATURE_TEXTURE_EXTERNAL_BT709)
+// Force conversion from yuv to rgb using BT709 colorspace
+#define TEX_SAMPLE(sampler, tex_coord) vec4(yuv_2_rgb(texture(sampler, tex_coord.xy).xyz, itu_709), 1.0)
 #else
 #define TEX_SAMPLE(sampler, tex_coord) texture(sampler, tex_coord.xy)
 #endif
@@ -207,6 +214,10 @@ uniform sampler2DRect sColor2;
 uniform samplerExternalOES sColor0;
 uniform samplerExternalOES sColor1;
 uniform samplerExternalOES sColor2;
+#elif defined(WR_FEATURE_TEXTURE_EXTERNAL_BT709)
+uniform __samplerExternal2DY2YEXT sColor0;
+uniform __samplerExternal2DY2YEXT sColor1;
+uniform __samplerExternal2DY2YEXT sColor2;
 #endif
 
 #ifdef WR_FEATURE_DITHERING
