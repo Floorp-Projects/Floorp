@@ -75,7 +75,7 @@ int32_t WebrtcMediaDataDecoder::Decode(const webrtc::EncodedImage& aInputImage,
   }
 
   compressedFrame->mTime =
-      media::TimeUnit::FromMicroseconds(aInputImage.Timestamp());
+      media::TimeUnit::FromMicroseconds(aInputImage.RtpTimestamp());
   compressedFrame->mTimecode =
       media::TimeUnit::FromMicroseconds(aRenderTimeMs * 1000);
   compressedFrame->mKeyframe =
@@ -102,7 +102,7 @@ int32_t WebrtcMediaDataDecoder::Decode(const webrtc::EncodedImage& aInputImage,
 
       auto videoFrame = webrtc::VideoFrame::Builder()
                             .set_video_frame_buffer(image)
-                            .set_timestamp_rtp(aInputImage.Timestamp())
+                            .set_timestamp_rtp(aInputImage.RtpTimestamp())
                             .set_rotation(aInputImage.rotation_)
                             .build();
       mCallback->Decoded(videoFrame);
