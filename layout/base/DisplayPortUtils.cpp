@@ -790,8 +790,8 @@ bool DisplayPortUtils::MaybeCreateDisplayPort(
   // async-scrollable frame (i.e. one that WantsAsyncScroll()) has a
   // displayport. If that's not the case yet, and we are async-scrollable, we
   // will get a displayport.
+  MOZ_ASSERT(nsLayoutUtils::AsyncPanZoomEnabled(aScrollFrame));
   if (!aBuilder->HaveScrollableDisplayPort() &&
-      nsLayoutUtils::AsyncPanZoomEnabled(aScrollFrame) &&
       aScrollFrameAsScrollable->WantAsyncScroll()) {
     bool haveDisplayPort = HasNonMinimalNonZeroDisplayPort(content);
     // If we don't already have a displayport, calculate and set one.
