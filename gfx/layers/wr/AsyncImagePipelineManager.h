@@ -109,10 +109,15 @@ class AsyncImagePipelineManager final {
                                 const wr::MixBlendMode& aMixBlendMode);
   void ApplyAsyncImagesOfImageBridge(wr::TransactionBuilder& aSceneBuilderTxn,
                                      wr::TransactionBuilder& aFastTxn);
+  void ApplyAsyncImageForPipeline(
+      const wr::PipelineId& aPipelineId, wr::TransactionBuilder& aTxn,
+      wr::TransactionBuilder& aTxnForImageBridge,
+      AsyncImagePipelineOps* aPendingOps,
+      RemoteTextureInfoList* aPendingRemoteTextures);
+
   void ApplyAsyncImageForPipeline(const wr::PipelineId& aPipelineId,
-                                  wr::TransactionBuilder& aTxn,
-                                  wr::TransactionBuilder& aTxnForImageBridge,
-                                  RemoteTextureInfoList* aList);
+                                  TextureHost* aTexture,
+                                  wr::TransactionBuilder& aTxn);
 
   void SetEmptyDisplayList(const wr::PipelineId& aPipelineId,
                            wr::TransactionBuilder& aTxn,
