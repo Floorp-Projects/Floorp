@@ -117,41 +117,6 @@ function buildSerialized(type, handle = null) {
 }
 
 /**
- * Helper to validate if a date string follows Date Time String format.
- *
- * @see https://tc39.es/ecma262/#sec-date-time-string-format
- *
- * @param {string} dateString
- *     String which needs to be validated.
- *
- * @throws {InvalidArgumentError}
- *     If <var>dateString</var> doesn't follow the format.
- */
-function checkDateTimeString(dateString) {
-  // Check if a date string follows a simplification of
-  // the ISO 8601 calendar date extended format.
-  const expandedYear = "[+-]\\d{6}";
-  const year = "\\d{4}";
-  const YYYY = `${expandedYear}|${year}`;
-  const MM = "\\d{2}";
-  const DD = "\\d{2}";
-  const date = `${YYYY}(?:-${MM})?(?:-${DD})?`;
-  const HH_mm = "\\d{2}:\\d{2}";
-  const SS = "\\d{2}";
-  const sss = "\\d{3}";
-  const TZ = `Z|[+-]${HH_mm}`;
-  const time = `T${HH_mm}(?::${SS}(?:\\.${sss})?(?:${TZ})?)?`;
-  const iso8601Format = new RegExp(`^${date}(?:${time})?$`);
-
-  // Check also if a date string is a valid date.
-  if (Number.isNaN(Date.parse(dateString)) || !iso8601Format.test(dateString)) {
-    throw new lazy.error.InvalidArgumentError(
-      `Expected "value" for Date to be a Date Time string, got ${dateString}`
-    );
-  }
-}
-
-/**
  * Helper to deserialize value list.
  *
  * @see https://w3c.github.io/webdriver-bidi/#deserialize-value-list
@@ -389,7 +354,11 @@ export function deserialize(realm, serializedValue, extraOptions) {
     case "date":
       // We want to support only Date Time String format,
       // check if the value follows it.
-      checkDateTimeString(value);
+      if (!ChromeUtils.isISOStyleDate(value)) {
+        throw new lazy.error.InvalidArgumentError(
+          `Expected "value" for Date to be a Date Time string, got ${value}`
+        );
+      }
 
       return realm.cloneIntoRealm(new Date(value));
     case "map":
