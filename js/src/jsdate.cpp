@@ -865,12 +865,6 @@ static bool ParseDigitsNOrLess(size_t n, size_t* result, const CharT* s,
   return false;
 }
 
-static int DaysInMonth(int year, int month) {
-  bool leap = IsLeapYear(year);
-  int result = int(DayFromMonth(month, leap) - DayFromMonth(month - 1, leap));
-  return result;
-}
-
 /*
  * Parse a string according to the formats specified in the standard:
  *
@@ -1036,9 +1030,8 @@ done_date:
 
 done:
   if (year > 275943  // ceil(1e8/365) + 1970
-      || (month == 0 || month > 12) ||
-      (day == 0 || day > size_t(DaysInMonth(year, month))) || hour > 24 ||
-      ((hour == 24) && (min > 0 || sec > 0 || msec > 0)) || min > 59 ||
+      || month == 0 || month > 12 || day == 0 || day > 31 || hour > 24 ||
+      (hour == 24 && (min > 0 || sec > 0 || msec > 0)) || min > 59 ||
       sec > 59 || tzHour > 23 || tzMin > 59) {
     return false;
   }

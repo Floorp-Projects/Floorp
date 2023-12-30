@@ -46,7 +46,7 @@ function TZInMonth(month, year){
 function test()
 {
   printBugNumber(BUGNUMBER);
- 
+
   Jan1970TZ = TZInMonth(1, 1970);
   Jan2009TZ = TZInMonth(1, 2009);
   Jul2009TZ = TZInMonth(7, 2009);
@@ -102,11 +102,11 @@ function test()
 
   // other month ends
   check("2009-06-30T19:53:21.001+12:00", dd(2009,6,30,7,53,21,1));
-  checkInvalid("2009-06-31T19:53:21.001+12:00");
+  check("2009-06-31T19:53:21.001+12:00", dd(2009,7,1,7,53,21,1));
   check("2009-02-28T19:53:21.001+12:00", dd(2009,2,28,7,53,21,1));
-  checkInvalid("2009-02-29T19:53:21.001+12:00");
+  check("2009-02-29T19:53:21.001+12:00", dd(2009,3,1,7,53,21,1));
   check("2008-02-29T19:53:21.001+12:00", dd(2008,2,29,7,53,21,1));
-  checkInvalid("2008-02-30T19:53:21.001+12:00");
+  check("2008-02-30T19:53:21.001+12:00", dd(2008,3,1,7,53,21,1));
 
   // limits of representation
   checkInvalid("-271821-04-19T23:59:59.999Z");
