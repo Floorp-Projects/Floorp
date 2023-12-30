@@ -130,9 +130,7 @@
     <!--Content description for the Account picture in the Select Account FedCM prompt -->
     <string name="mozac_feature_prompts_account_picture">Imagen de la cuenta</string>
     <!-- Title of the Identity Credential provider dialog chooser. -->
-    <string name="mozac_feature_prompts_identity_credentials_choose_provider">Elije un proveedor de inicio de sesión</string>
-    <!-- Title of an account picker dialog for identity credentials. -->
-    <string name="mozac_feature_prompts_identity_credentials_choose_account" moz:removedIn="119" tools:ignore="UnusedResources">Elige una cuenta</string>
+    <string name="mozac_feature_prompts_identity_credentials_choose_provider">Elige un proveedor de inicio de sesión</string>
     <!-- Title of an account picker dialog for identity credentials. The %1$s will be replaced with the name of the provider -->
     <string name="mozac_feature_prompts_identity_credentials_choose_account_for_provider">Conéctate con una cuenta de %1$s</string>
     <!-- Title of the Identity Credential privacy policy dialog title. The %1$s will be replaced with the name of the provider. -->

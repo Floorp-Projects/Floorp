@@ -473,12 +473,49 @@
     <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
     <string name="reduce_cookie_banner_details_panel_title_off_for_site" moz:RemovedIn="121" tools:ignore="UnusedResources">Изключване на намаляването на банерите за бисквитки за %1$s?</string>
 
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site_2" moz:RemovedIn="121" tools:ignore="UnusedResources">%1$s се опитва автоматично да отхвърли всички заявки за бисквитки на поддържаните сайтове.</string>
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site_3">Включете и %1$s ще се опита автоматично да откаже всички банери за бисквитки на този сайт.</string>
+    <!-- Title text for the cookie banner re-engagement dialog. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_dialog_title" moz:RemovedIn="121" tools:ignore="UnusedResources">Да се разреши ли на %1$s да отхвърля банери за бисквитки?</string>
+    <!-- Body text for the cookie banner re-engagement dialog use. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_dialog_body" moz:RemovedIn="121" tools:ignore="UnusedResources">%1$s може автоматично да отхвърли много заявки за банери за бисквитки.</string>
+    <!-- Remind me later text button for the onboarding dialog -->
+    <string name="reduce_cookie_banner_dialog_not_now_button" moz:RemovedIn="121" tools:ignore="UnusedResources">Не сега</string>
+    <!-- Snack text for the cookie banner dialog, after user hit the dismiss banner button -->
+    <string name="reduce_cookie_banner_dialog_snackbar_text" moz:RemovedIn="121" tools:ignore="UnusedResources">Ще виждате по-малко заявки за бисквитки</string>
+    <!-- Change setting text button, for the cookie banner re-engagement dialog -->
+    <string name="reduce_cookie_banner_dialog_change_setting_button" moz:RemovedIn="121" tools:ignore="UnusedResources">Разрешаване</string>
+    <!--Title for the cookie banner re-engagement CFR, the placeholder is replaced with app name -->
+    <string name="cookie_banner_cfr_title">%1$s току-що отказа бисквитки вместо вас</string>
+    <!--Message for the cookie banner re-engagement CFR -->
+    <string name="cookie_banner_cfr_message">По-малко разсейване, по-малко бисквитки, които ви проследяват на този сайт.</string>
+
+    <!-- Description of the preference to enable "HTTPS-Only" mode. -->
+    <string name="preferences_https_only_summary">Автоматично се опитва да се свърже със сайтове, използвайки HTTPS протокол за криптиране за повишена сигурност.</string>
     <!-- Summary of https only preference if https only is set to off -->
     <string name="preferences_https_only_off">Изключено</string>
+    <!-- Summary of https only preference if https only is set to on in all tabs -->
+    <string name="preferences_https_only_on_all">Във всички раздели</string>
+    <!-- Summary of https only preference if https only is set to on in private tabs only -->
+    <string name="preferences_https_only_on_private">Само в поверителни раздели</string>
     <!-- Text displayed that links to website containing documentation about "HTTPS-Only" mode -->
     <string name="preferences_http_only_learn_more">Научете повече</string>
+    <!-- Option for the https only setting -->
+    <string name="preferences_https_only_in_all_tabs">Активиране във всички раздели</string>
+    <!-- Option for the https only setting -->
+    <string name="preferences_https_only_in_private_tabs">Включване само в частни раздели</string>
+    <!-- Title shown in the error page for when trying to access a http website while https only mode is enabled. -->
+    <string name="errorpage_httpsonly_title">Сигурният сайт не е наличен</string>
+    <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the first. -->
+    <string name="errorpage_httpsonly_message_title">Най-вероятно страницата не се поддържа под HTTPS.</string>
+    <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the second. -->
+    <string name="errorpage_httpsonly_message_summary">Въпреки това е възможно също да е замесен нападател. Ако продължите към уебсайта, не трябва да въвеждате чувствителна информация. Ако продължите, режимът само HTTPS ще бъде изключен временно за сайта.</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Достъпност</string>
+    <!-- Preference to override the Mozilla account server -->
+    <string name="preferences_override_account_server">Персонализиран сървър за профили на Mozilla</string>
     <!-- Preference to override the Sync token server -->
     <string name="preferences_override_sync_tokenserver">Личен сървър за Sync</string>
     <!-- Preference category for account information -->
