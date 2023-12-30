@@ -22,6 +22,47 @@ const endsWithNullRx = /\0$/;
 const whitespaceRx = /\s+/g;
 const startsWithZeroRx = /^0/;
 const versionRx = /^([\w-]+-)?\d+\.\d+\.\d+$/;
+const numericDateRx = /^\d+[- /]\d+[- /]\d+$/;
+
+// If a string contains any of these, we'll try to parse it as a Date
+const dateKeywords = [
+  "mon",
+  "tues",
+  "wed",
+  "thur",
+  "fri",
+  "sat",
+  "sun",
+
+  "jan",
+  "feb",
+  "mar",
+  "apr",
+  "may",
+  "jun",
+  "jul",
+  "aug",
+  "sep",
+  "oct",
+  "nov",
+  "dec",
+];
+
+/**
+ * Figures whether a given string should be considered by naturalSort to be a
+ * Date, and returns the Date's timestamp if so. Some Date formats, like
+ * single numbers and MM.DD.YYYY, are not supported due to conflicts with things
+ * like version numbers.
+ */
+function tryParseDate(str) {
+  const lowerCaseStr = str.toLowerCase();
+  return (
+    !versionRx.test(str) &&
+    (numericDateRx.test(str) ||
+      dateKeywords.some(s => lowerCaseStr.includes(s))) &&
+    Date.parse(str)
+  );
+}
 
 /**
  * Sort numbers, strings, IP Addresses, Dates, Filenames, version numbers etc.
@@ -65,10 +106,8 @@ function naturalSort(a = "", b = "", sessionString, insensitive = false) {
     .split("\0");
 
   // Hex or date detection.
-  const aHexOrDate =
-    parseInt(a.match(hexRx), 16) || (!versionRx.test(a) && Date.parse(a));
-  const bHexOrDate =
-    parseInt(b.match(hexRx), 16) || (!versionRx.test(b) && Date.parse(b));
+  const aHexOrDate = parseInt(a.match(hexRx), 16) || tryParseDate(a);
+  const bHexOrDate = parseInt(b.match(hexRx), 16) || tryParseDate(b);
 
   if (
     (aHexOrDate || bHexOrDate) &&
