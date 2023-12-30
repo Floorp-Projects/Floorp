@@ -126,6 +126,8 @@ pub fn test_shaders() {
     }
     // glsl-lang crate fails to parse advanced blend shaders
     flags.remove(ShaderFeatureFlags::ADVANCED_BLEND_EQUATION);
+    // glsl-lang crate fails to parse texture external BT709 shaders
+    flags.remove(ShaderFeatureFlags::TEXTURE_EXTERNAL_BT709);
 
     for (shader, configs) in get_shader_features(flags) {
         for config in configs {
