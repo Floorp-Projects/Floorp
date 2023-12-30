@@ -13,7 +13,7 @@ lucicfg.check_version("1.30.9")
 WEBRTC_GIT = "https://webrtc.googlesource.com/src"
 WEBRTC_GERRIT = "https://webrtc-review.googlesource.com/src"
 WEBRTC_TROOPER_EMAIL = "webrtc-troopers-robots@google.com"
-WEBRTC_XCODE13 = "13c100"
+WEBRTC_XCODE14 = "14c18"
 DEFAULT_CPU = "x86-64"
 
 # Helpers:
@@ -677,10 +677,10 @@ def normal_builder_factory(**common_kwargs):
 # Mixins:
 
 ios_builder, ios_try_job = normal_builder_factory(
-    properties = {"xcode_build_version": WEBRTC_XCODE13},
+    properties = {"xcode_build_version": WEBRTC_XCODE14},
     caches = [swarming.cache(
-        name = "xcode_ios_" + WEBRTC_XCODE13,
-        path = "xcode_ios_" + WEBRTC_XCODE13 + ".app",
+        name = "xcode_ios_" + WEBRTC_XCODE14,
+        path = "xcode_ios_" + WEBRTC_XCODE14 + ".app",
     )],
 )
 
