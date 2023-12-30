@@ -198,6 +198,7 @@ skip-if = ["verify && os == 'mac'"]
 https_first_disabled = true
 
 ["browser_new_tab_bookmarks_toolbar_height.js"]
+skip-if = ["!verify && os == 'mac'"] # Bug 1872477
 support-files = ["file_observe_height_changes.html"]
 
 ["browser_new_tab_in_privilegedabout_process_pref.js"]
