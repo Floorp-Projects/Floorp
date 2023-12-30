@@ -217,11 +217,24 @@ class RemoveRenderer : public RendererEvent {
 TransactionBuilder::TransactionBuilder(WebRenderAPI* aApi,
                                        bool aUseSceneBuilderThread)
     : mUseSceneBuilderThread(aUseSceneBuilderThread),
-      mApiBackend(aApi->GetBackendType()) {
+      mApiBackend(aApi->GetBackendType()),
+      mOwnsData(true) {
   mTxn = wr_transaction_new(mUseSceneBuilderThread);
 }
 
-TransactionBuilder::~TransactionBuilder() { wr_transaction_delete(mTxn); }
+TransactionBuilder::TransactionBuilder(WebRenderAPI* aApi, Transaction* aTxn,
+                                       bool aUseSceneBuilderThread,
+                                       bool aOwnsData)
+    : mTxn(aTxn),
+      mUseSceneBuilderThread(aUseSceneBuilderThread),
+      mApiBackend(aApi->GetBackendType()),
+      mOwnsData(aOwnsData) {}
+
+TransactionBuilder::~TransactionBuilder() {
+  if (mOwnsData) {
+    wr_transaction_delete(mTxn);
+  }
+}
 
 void TransactionBuilder::SetLowPriority(bool aIsLowPriority) {
   wr_transaction_set_low_priority(mTxn, aIsLowPriority);
@@ -460,9 +473,17 @@ void WebRenderAPI::SendTransaction(TransactionBuilder& aTxn) {
             std::move(mPendingRemoteTextureInfoList)));
   }
 
+  if (mPendingAsyncImagePipelineOps &&
+      !mPendingAsyncImagePipelineOps->mList.empty()) {
+    mPendingWrTransactionEvents.emplace(
+        WrTransactionEvent::PendingAsyncImagePipelineOps(
+            std::move(mPendingAsyncImagePipelineOps), this, aTxn.Raw(),
+            aTxn.UseSceneBuilderThread()));
+  }
+
   if (!mPendingWrTransactionEvents.empty()) {
     mPendingWrTransactionEvents.emplace(WrTransactionEvent::Transaction(
-        aTxn.Take(), aTxn.UseSceneBuilderThread()));
+        this, aTxn.Take(), aTxn.UseSceneBuilderThread()));
     HandleWrTransactionEvents(RemoteTextureWaitType::AsyncWait);
   } else {
     wr_api_send_transaction(mDocHandle, aTxn.Raw(),
@@ -476,30 +497,40 @@ layers::RemoteTextureInfoList* WebRenderAPI::GetPendingRemoteTextureInfoList() {
     return nullptr;
   }
 
-  if (!gfx::gfxVars::UseCanvasRenderThread() ||
-      !StaticPrefs::webgl_out_of_process_async_present() ||
-      gfx::gfxVars::WebglOopAsyncPresentForceSync()) {
-    return nullptr;
-  }
-
-  // async remote texture is enabled
-  MOZ_ASSERT(gfx::gfxVars::UseCanvasRenderThread());
-  MOZ_ASSERT(StaticPrefs::webgl_out_of_process_async_present());
-  MOZ_ASSERT(!gfx::gfxVars::WebglOopAsyncPresentForceSync());
-
   if (!mPendingRemoteTextureInfoList) {
     mPendingRemoteTextureInfoList = MakeUnique<layers::RemoteTextureInfoList>();
   }
   return mPendingRemoteTextureInfoList.get();
 }
 
+layers::AsyncImagePipelineOps* WebRenderAPI::GetPendingAsyncImagePipelineOps(
+    TransactionBuilder& aTxn) {
+  if (!mRootApi) {
+    // root api does not support async wait RemoteTexture.
+    return nullptr;
+  }
+
+  if (!mPendingAsyncImagePipelineOps ||
+      mPendingAsyncImagePipelineOps->mTransaction != aTxn.Raw()) {
+    if (mPendingAsyncImagePipelineOps &&
+        !mPendingAsyncImagePipelineOps->mList.empty()) {
+      MOZ_ASSERT_UNREACHABLE("unexpected to be called");
+      gfxCriticalNoteOnce << "Invalid AsyncImagePipelineOps";
+    }
+    mPendingAsyncImagePipelineOps =
+        MakeUnique<layers::AsyncImagePipelineOps>(aTxn.Raw());
+  } else {
+    MOZ_RELEASE_ASSERT(mPendingAsyncImagePipelineOps->mTransaction ==
+                       aTxn.Raw());
+  }
+
+  return mPendingAsyncImagePipelineOps.get();
+}
+
 bool WebRenderAPI::CheckIsRemoteTextureReady(
     layers::RemoteTextureInfoList* aList, const TimeStamp& aTimeStamp) {
   MOZ_ASSERT(layers::CompositorThreadHolder::IsInCompositorThread());
   MOZ_ASSERT(aList);
-  MOZ_ASSERT(gfx::gfxVars::UseCanvasRenderThread());
-  MOZ_ASSERT(StaticPrefs::webgl_out_of_process_async_present());
-  MOZ_ASSERT(!gfx::gfxVars::WebglOopAsyncPresentForceSync());
 
   RefPtr<WebRenderAPI> self = this;
   auto callback = [self](const layers::RemoteTextureInfo&) {
@@ -541,9 +572,6 @@ void WebRenderAPI::WaitRemoteTextureReady(
     layers::RemoteTextureInfoList* aList) {
   MOZ_ASSERT(layers::CompositorThreadHolder::IsInCompositorThread());
   MOZ_ASSERT(aList);
-  MOZ_ASSERT(gfx::gfxVars::UseCanvasRenderThread());
-  MOZ_ASSERT(StaticPrefs::webgl_out_of_process_async_present());
-  MOZ_ASSERT(!gfx::gfxVars::WebglOopAsyncPresentForceSync());
 
   while (!aList->mList.empty()) {
     auto& front = aList->mList.front();
@@ -567,10 +595,10 @@ void WebRenderAPI::HandleWrTransactionEvents(RemoteTextureWaitType aType) {
     auto& front = events.front();
     switch (front.mTag) {
       case WrTransactionEvent::Tag::Transaction:
-        wr_api_send_transaction(mDocHandle, front.Transaction(),
+        wr_api_send_transaction(mDocHandle, front.TakeTransaction(),
                                 front.UseSceneBuilderThread());
         break;
-      case WrTransactionEvent::Tag::PendingRemoteTextures:
+      case WrTransactionEvent::Tag::PendingRemoteTextures: {
         bool isReady = true;
         if (aType == RemoteTextureWaitType::AsyncWait) {
           isReady = CheckIsRemoteTextureReady(front.RemoteTextureInfoList(),
@@ -591,6 +619,14 @@ void WebRenderAPI::HandleWrTransactionEvents(RemoteTextureWaitType aType) {
           return;
         }
         break;
+      }
+      case WrTransactionEvent::Tag::PendingAsyncImagePipelineOps: {
+        auto* list = front.AsyncImagePipelineOps();
+        TransactionBuilder& txn = *front.GetTransactionBuilder();
+
+        list->HandleOps(txn);
+        break;
+      }
     }
     events.pop();
   }
@@ -891,6 +927,10 @@ RefPtr<WebRenderAPI::EndRecordingPromise> WebRenderAPI::EndRecording() {
 void TransactionBuilder::Clear() { wr_resource_updates_clear(mTxn); }
 
 Transaction* TransactionBuilder::Take() {
+  if (!mOwnsData) {
+    MOZ_ASSERT_UNREACHABLE("unexpected to be called");
+    return nullptr;
+  }
   Transaction* txn = mTxn;
   mTxn = wr_transaction_new(mUseSceneBuilderThread);
   return txn;
