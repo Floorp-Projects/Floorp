@@ -220,19 +220,23 @@ FilterPrimitiveDescription SVGFEImageElement::GetPrimitiveDescription(
   }
 
   RefPtr<SourceSurface> image;
+  nsIntSize nativeSize;
   if (imageContainer) {
+    if (NS_FAILED(imageContainer->GetWidth(&nativeSize.width))) {
+      nativeSize.width = kFallbackIntrinsicWidthInPixels;
+    }
+    if (NS_FAILED(imageContainer->GetHeight(&nativeSize.height))) {
+      nativeSize.height = kFallbackIntrinsicHeightInPixels;
+    }
     uint32_t flags =
         imgIContainer::FLAG_SYNC_DECODE | imgIContainer::FLAG_ASYNC_NOTIFY;
-    image = imageContainer->GetFrame(imgIContainer::FRAME_CURRENT, flags);
+    image = imageContainer->GetFrameAtSize(nativeSize,
+                                           imgIContainer::FRAME_CURRENT, flags);
   }
 
   if (!image) {
     return FilterPrimitiveDescription();
   }
-
-  IntSize nativeSize;
-  imageContainer->GetWidth(&nativeSize.width);
-  imageContainer->GetHeight(&nativeSize.height);
 
   Matrix viewBoxTM = SVGContentUtils::GetViewBoxTransform(
       aFilterSubregion.width, aFilterSubregion.height, 0, 0, nativeSize.width,
