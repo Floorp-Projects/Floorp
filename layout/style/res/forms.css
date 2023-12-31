@@ -527,7 +527,7 @@ input[type=color] {
 }
 
 /* https://github.com/whatwg/html/issues/9976 */
-input:not([type=image i], [type=range i]) {
+input:not([type=image i], [type=range i], [type=checkbox i], [type=radio i]) {
   overflow: clip !important;
   overflow-clip-margin: 0px !important;
 }
@@ -620,7 +620,6 @@ select:is(:disabled, :disabled:active) > button {
 /* file selector */
 input[type=file] {
   white-space: nowrap !important;
-  overflow: hidden !important;
   overflow-clip-box: padding-box;
   color: unset;
 
@@ -913,7 +912,6 @@ input:-moz-value-empty::-moz-search-clear-button {
 }
 
 input:is([type=date], [type=time], [type=datetime-local]) {
-  overflow: hidden !important;
   font-family: -moz-fixed;
   cursor: default;
 }
