@@ -107,8 +107,8 @@ typedef struct _nsCocoaWindowList {
 
 - (NSRect)getAndResetNativeDirtyRect;
 
-- (void)setEffectViewWrapperForStyle:(mozilla::StyleWindowShadow)aStyle;
-@property(nonatomic) mozilla::StyleWindowShadow shadowStyle;
+- (void)setEffectViewWrapperForStyle:(mozilla::WindowShadow)aStyle;
+@property(nonatomic) mozilla::WindowShadow shadowStyle;
 
 - (void)releaseJSObjects;
 
@@ -316,7 +316,7 @@ class nsCocoaWindow final : public nsBaseWidget, public nsPIWidgetCocoa {
   virtual bool HasPendingInputEvent() override;
   virtual TransparencyMode GetTransparencyMode() override;
   virtual void SetTransparencyMode(TransparencyMode aMode) override;
-  virtual void SetWindowShadowStyle(mozilla::StyleWindowShadow aStyle) override;
+  virtual void SetWindowShadowStyle(mozilla::WindowShadow aStyle) override;
   virtual void SetWindowOpacity(float aOpacity) override;
   virtual void SetWindowTransform(
       const mozilla::gfx::Matrix& aTransform) override;
@@ -434,8 +434,7 @@ class nsCocoaWindow final : public nsBaseWidget, public nsPIWidgetCocoa {
   // if this is a toplevel window, and there is any ongoing fullscreen
   // transition, it is the animation object.
   NSAnimation* mFullscreenTransitionAnimation;
-  mozilla::StyleWindowShadow mShadowStyle;
-  BOOL mIsShadowStyleSet;
+  mozilla::WindowShadow mShadowStyle;
 
   CGFloat mBackingScaleFactor;
   CGFloat mAspectRatio;

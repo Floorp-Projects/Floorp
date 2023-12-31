@@ -3064,7 +3064,7 @@ nsStyleUIReset::nsStyleUIReset()
       mMozSubtreeHiddenOnlyVisually(false),
       mIMEMode(StyleImeMode::Auto),
       mWindowDragging(StyleWindowDragging::Default),
-      mWindowShadow(StyleWindowShadow::Default),
+      mWindowShadow(StyleWindowShadow::Auto),
       mWindowOpacity(1.0),
       mMozWindowInputRegionMargin(StyleLength::Zero()),
       mWindowTransformOrigin{LengthPercentage::FromPercentage(0.5),

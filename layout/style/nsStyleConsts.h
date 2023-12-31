@@ -475,18 +475,10 @@ enum class StyleImeMode : uint8_t {
 
 // See nsStyleSVG
 
-/*
- * -moz-window-shadow
- * Also used in widget code
- */
+// -moz-window-shadow
 enum class StyleWindowShadow : uint8_t {
+  Auto,
   None,
-  Default,
-
-  // These can't be specified in CSS, they get computed from the "default"
-  // value.
-  Menu,
-  Tooltip,
 };
 
 // dominant-baseline

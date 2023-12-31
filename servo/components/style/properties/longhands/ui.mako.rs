@@ -55,15 +55,14 @@ ${helpers.single_keyword(
     affects="paint",
 )}
 
-// TODO(emilio): Maybe make shadow behavior on macOS match Linux / Windows, and remove this
-// property.
+// TODO(emilio): Maybe make shadow behavior on macOS match Linux / Windows, and remove this? But
+// that requires making -moz-window-input-region-margin work there...
 ${helpers.single_keyword(
     "-moz-window-shadow",
-    "default none",
+    "auto none",
     engines="gecko",
     gecko_ffi_name="mWindowShadow",
     gecko_enum_prefix="StyleWindowShadow",
-    gecko_inexhaustive=True,
     animation_value_type="discrete",
     enabled_in="chrome",
     spec="None (Nonstandard internal property)",

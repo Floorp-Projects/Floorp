@@ -58,10 +58,14 @@ class WidgetGUIEvent;
 class WidgetInputEvent;
 class WidgetKeyboardEvent;
 struct FontRange;
-
-enum class StyleWindowShadow : uint8_t;
 enum class ColorScheme : uint8_t;
 enum class WindowButtonType : uint8_t;
+
+enum class WindowShadow : uint8_t {
+  None,
+  Menu,
+  Tooltip,
+};
 
 #if defined(MOZ_WIDGET_ANDROID)
 namespace ipc {
@@ -1046,7 +1050,7 @@ class nsIWidget : public nsISupports {
    *
    * Ignored on child widgets and on non-Mac platforms.
    */
-  virtual void SetWindowShadowStyle(mozilla::StyleWindowShadow aStyle) = 0;
+  virtual void SetWindowShadowStyle(mozilla::WindowShadow aStyle) = 0;
 
   /**
    * Set the opacity of the window.

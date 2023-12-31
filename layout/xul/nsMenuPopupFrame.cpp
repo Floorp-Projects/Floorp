@@ -369,19 +369,20 @@ bool nsMenuPopupFrame::IsMouseTransparent() const {
   return ::IsMouseTransparent(*Style());
 }
 
-StyleWindowShadow nsMenuPopupFrame::GetShadowStyle() const {
+WindowShadow nsMenuPopupFrame::GetShadowStyle() const {
   StyleWindowShadow shadow = StyleUIReset()->mWindowShadow;
-  if (shadow != StyleWindowShadow::Default) {
-    return shadow;
+  if (shadow != StyleWindowShadow::Auto) {
+    MOZ_ASSERT(shadow == StyleWindowShadow::None);
+    return WindowShadow::None;
   }
 
   switch (StyleDisplay()->EffectiveAppearance()) {
     case StyleAppearance::Tooltip:
-      return StyleWindowShadow::Tooltip;
+      return WindowShadow::Tooltip;
     case StyleAppearance::Menupopup:
-      return StyleWindowShadow::Menu;
+      return WindowShadow::Menu;
     default:
-      return StyleWindowShadow::Default;
+      return WindowShadow::Menu;
   }
 }
 
