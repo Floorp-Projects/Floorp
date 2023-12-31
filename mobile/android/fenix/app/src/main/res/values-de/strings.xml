@@ -2368,7 +2368,7 @@
     <!-- Title for the translation dialog that allows a user to translate the webpage when a user uses the translation feature the first time. The first parameter is the name of the application, for example, "Fenix". -->
     <string name="translations_bottom_sheet_title_first_time">Private Übersetzungen in %1$s ausprobieren</string>
     <!-- Additional information on the translation dialog that appears when a user uses the translation feature the first time. The first parameter is clickable text with a link, for example, "Learn more". -->
-    <string name="translations_bottom_sheet_info_message">Zu Ihrer Privatsphäre verlassen Übersetzungen niemals Ihr Gerät. Neue Sprachen und Verbesserungen folgen bald! %1$s</string>
+    <string name="translations_bottom_sheet_info_message">Zu Sicherstellung Ihrer Privatsphäre verlassen Übersetzungen niemals Ihr Gerät. Neue Sprachen und Verbesserungen folgen bald! %1$s</string>
     <!-- Text that links to additional information about the Firefox translations feature. -->
     <string name="translations_bottom_sheet_info_message_learn_more">Weitere Informationen</string>
     <!-- Label for the dropdown to select which language to translate from on the translations dialog. Usually the translate from language selected will be the same as the page language. -->
@@ -2382,7 +2382,7 @@
     <!-- Inactive button text on the translations dialog that indicates a translation is currently in progress. This button will be accompanied by a loading icon. -->
     <string name="translations_bottom_sheet_translating_in_progress">Übersetzen</string>
     <!-- Button content description (not visible, for screen readers etc.) for the translations dialog translate button that indicates a translation is currently in progress. -->
-    <string name="translations_bottom_sheet_translating_in_progress_content_description">Übersetzung wird durchgeführt</string>
+    <string name="translations_bottom_sheet_translating_in_progress_content_description">Übersetzung läuft</string>
 
     <!-- Translations options dialog -->
     <!-- Title of the translation options dialog that allows a user to set their translation options for the site the user is currently on. -->
@@ -2394,7 +2394,7 @@
     <!-- Toggle switch label that allows a user to set if they would like to never be offered a translation of the given language. The first parameter is the language name, for example, "Spanish". -->
     <string name="translation_option_bottom_sheet_never_translate_in_language">%1$s nie übersetzen</string>
     <!-- Toggle switch label that allows a user to set the setting if they would like the browser to never translate the site the user is currently visiting. -->
-    <string name="translation_option_bottom_sheet_never_translate_site">Diese Seite nie übersetzen</string>
+    <string name="translation_option_bottom_sheet_never_translate_site">Diese Website nie übersetzen</string>
     <!-- Button text for the button that will take the user to the translation settings dialog. -->
     <string name="translation_option_bottom_sheet_translation_settings">Einstellungen für die Übersetzung</string>
     <!-- Button text for the button that will take the user to a website to learn more about how translations works in the given app. The first parameter is the name of the application, for example, "Fenix". -->
@@ -2404,7 +2404,7 @@
     <!-- Title of the translation settings dialog that allows a user to set their preferred translation settings. -->
     <string name="translation_settings_toolbar_title">Übersetzungen</string>
     <!-- Toggle switch label that indicates that the browser should signal or indicate when a translation is possible for any page. -->
-    <string name="translation_settings_offer_to_translate">Biete nach Möglichkeit eine Übersetzung an</string>
+    <string name="translation_settings_offer_to_translate">Übersetzung nach Möglichkeit anbieten</string>
     <!-- Toggle switch label that indicates that downloading files required for translating is permitted when using data saver mode in Android. -->
     <string name="translation_settings_always_download">Sprachen immer im Datensparmodus herunterladen</string>
     <!-- Section header text that begins the section of a list of different options the user may select to adjust their translation preferences. -->

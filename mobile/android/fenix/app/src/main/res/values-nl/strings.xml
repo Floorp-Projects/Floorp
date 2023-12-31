@@ -2342,6 +2342,10 @@
 
     <!-- Translations feature-->
 
+    <!-- Translation request dialog -->
+    <!-- Title for the translation dialog that allows a user to translate the webpage. -->
+    <string name="translations_bottom_sheet_title">Deze pagina vertalen?</string>
+
     <!-- Automatic translation preference screen -->
     <!-- Title of the automatic translation preference screen that will appear on the toolbar.-->
     <string name="automatic_translation_toolbar_title_preference">Automatische vertaling</string>
@@ -2402,4 +2406,5 @@
     <string name="download_languages_item_content_description_not_downloaded_state">Downloaden</string>
     <!-- Content description (not visible, for screen readers etc.): For a language list item that is selected. -->
     <string name="download_languages_item_content_description_selected_state">Geselecteerd</string>
-</resources>
+
+    </resources>
