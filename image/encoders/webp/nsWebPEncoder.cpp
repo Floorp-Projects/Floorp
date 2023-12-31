@@ -10,6 +10,7 @@
 #include "nsString.h"
 #include "prprf.h"
 #include "mozilla/CheckedInt.h"
+#include "mozilla/UniquePtrExtensions.h"
 
 using namespace mozilla;
 
@@ -124,7 +125,11 @@ nsWebPEncoder::InitFromData(const uint8_t* aData,
                : WebPEncodeRGBA(aData, width.value(), height.value(),
                                 stride.value(), quality, &mImageBuffer);
   } else if (aInputFormat == INPUT_FORMAT_HOSTARGB) {
-    UniquePtr<uint8_t[]> aDest = MakeUnique<uint8_t[]>(aStride * aHeight);
+    UniquePtr<uint8_t[]> aDest =
+        MakeUniqueFallible<uint8_t[]>(aStride * aHeight);
+    if (NS_WARN_IF(!aDest)) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
 
     for (uint32_t y = 0; y < aHeight; y++) {
       for (uint32_t x = 0; x < aWidth; x++) {
