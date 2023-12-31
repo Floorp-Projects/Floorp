@@ -142,8 +142,7 @@ nsCocoaWindow::nsCocoaWindow()
       mSheetWindowParent(nil),
       mPopupContentView(nil),
       mFullscreenTransitionAnimation(nil),
-      mShadowStyle(StyleWindowShadow::Default),
-      mIsShadowStyleSet(NO),
+      mShadowStyle(WindowShadow::None),
       mBackingScaleFactor(0.0),
       mAnimationType(nsIWidget::eGenericWindowAnimation),
       mWindowMadeHere(false),
@@ -2682,10 +2681,10 @@ bool nsCocoaWindow::HasPendingInputEvent() {
   return nsChildView::DoHasPendingInputEvent();
 }
 
-void nsCocoaWindow::SetWindowShadowStyle(StyleWindowShadow aStyle) {
+void nsCocoaWindow::SetWindowShadowStyle(WindowShadow aStyle) {
   NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
-  if (mShadowStyle == aStyle && mIsShadowStyleSet) {
+  if (mShadowStyle == aStyle) {
     return;
   }
 
@@ -2697,8 +2696,7 @@ void nsCocoaWindow::SetWindowShadowStyle(StyleWindowShadow aStyle) {
 
   mWindow.shadowStyle = mShadowStyle;
   [mWindow setEffectViewWrapperForStyle:mShadowStyle];
-  [mWindow setHasShadow:aStyle != StyleWindowShadow::None];
-  mIsShadowStyleSet = YES;
+  [mWindow setHasShadow:aStyle != WindowShadow::None];
 
   NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
@@ -3618,12 +3616,11 @@ static NSImage* GetMenuMaskImage() {
   [super setContentView:aNewWrapper];
 }
 
-- (void)setEffectViewWrapperForStyle:(StyleWindowShadow)aStyle {
-  if (aStyle == StyleWindowShadow::Menu ||
-      aStyle == StyleWindowShadow::Tooltip) {
+- (void)setEffectViewWrapperForStyle:(WindowShadow)aStyle {
+  if (aStyle == WindowShadow::Menu || aStyle == WindowShadow::Tooltip) {
     // Add an effect view wrapper so that the OS draws the appropriate
     // vibrancy effect and window border.
-    BOOL isMenu = aStyle == StyleWindowShadow::Menu;
+    BOOL isMenu = aStyle == WindowShadow::Menu;
     NSView* effectView = VibrancyManager::CreateEffectView(
         isMenu ? VibrancyType::MENU : VibrancyType::TOOLTIP, YES);
     if (isMenu) {
@@ -4442,14 +4439,13 @@ static const NSUInteger kWindowShadowOptionsTooltip = 4;
   }
 
   switch (self.shadowStyle) {
-    case StyleWindowShadow::None:
+    case WindowShadow::None:
       return kWindowShadowOptionsNoShadow;
 
-    case StyleWindowShadow::Default:  // we treat "default" as "default panel"
-    case StyleWindowShadow::Menu:
+    case WindowShadow::Menu:
       return kWindowShadowOptionsMenu;
 
-    case StyleWindowShadow::Tooltip:
+    case WindowShadow::Tooltip:
       return kWindowShadowOptionsTooltip;
   }
 }

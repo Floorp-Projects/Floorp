@@ -16,7 +16,6 @@
 #include "mozilla/StaticPrefs_ui.h"
 #include "mozilla/TimeStamp.h"
 #include "nsAtom.h"
-#include "nsGkAtoms.h"
 #include "nsCOMPtr.h"
 #include "nsIDOMEventListener.h"
 #include "nsXULPopupManager.h"
@@ -29,6 +28,7 @@ class nsIWidget;
 
 namespace mozilla {
 class PresShell;
+enum class WindowShadow : uint8_t;
 namespace dom {
 class KeyboardEvent;
 class XULButtonElement;
@@ -219,7 +219,7 @@ class nsMenuPopupFrame final : public nsBlockFrame {
   MOZ_CAN_RUN_SCRIPT void EnsureActiveMenuListItemIsVisible();
 
   nsresult CreateWidgetForView(nsView* aView);
-  mozilla::StyleWindowShadow GetShadowStyle() const;
+  mozilla::WindowShadow GetShadowStyle() const;
 
   void DidSetComputedStyle(ComputedStyle* aOldStyle) override;
 
