@@ -249,6 +249,8 @@ class TextureData {
 
   virtual void FillInfo(TextureData::Info& aInfo) const = 0;
 
+  virtual void InvalidateContents() {}
+
   virtual bool Lock(OpenMode aMode) = 0;
 
   virtual void Unlock() = 0;

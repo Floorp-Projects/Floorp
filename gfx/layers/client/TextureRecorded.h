@@ -22,6 +22,8 @@ class RecordedTextureData final : public TextureData {
 
   void FillInfo(TextureData::Info& aInfo) const final;
 
+  void InvalidateContents() final;
+
   bool Lock(OpenMode aMode) final;
 
   void Unlock() final;
@@ -63,6 +65,7 @@ class RecordedTextureData final : public TextureData {
   layers::RemoteTextureId mLastRemoteTextureId;
   layers::RemoteTextureOwnerId mRemoteTextureOwnerId;
   bool mUsedRemoteTexture = false;
+  bool mInvalidContents = true;
 };
 
 }  // namespace layers

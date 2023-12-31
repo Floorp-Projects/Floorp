@@ -46,6 +46,8 @@ void RecordedTextureData::SetRemoteTextureOwnerId(
   mRemoteTextureOwnerId = aRemoteTextureOwnerId;
 }
 
+void RecordedTextureData::InvalidateContents() { mInvalidContents = true; }
+
 bool RecordedTextureData::Lock(OpenMode aMode) {
   if (!mCanvasChild->EnsureBeginTransaction()) {
     return false;
@@ -56,17 +58,10 @@ bool RecordedTextureData::Lock(OpenMode aMode) {
     return false;
   }
 
-  // By the time we allocate a new remote texture id, the previous texture id
-  // should have been used. Since we're overwriting its id, if it hasn't been
-  // used yet, then it is safe to preemptively remove it since nothing can
-  // actually composite it. This prevents accumulation of a series of canvas
-  // frames that never get shown.
-  RemoteTextureId obsoleteRemoteTextureId;
-  if (!mUsedRemoteTexture) {
-    obsoleteRemoteTextureId = mLastRemoteTextureId;
+  // If modifying the texture, then allocate a new remote texture id.
+  if (aMode & OpenMode::OPEN_WRITE) {
+    mUsedRemoteTexture = false;
   }
-  mLastRemoteTextureId = RemoteTextureId::GetNext();
-  mUsedRemoteTexture = false;
 
   if (!mDT) {
     mTextureId = sNextRecordedTextureId++;
@@ -82,9 +77,10 @@ bool RecordedTextureData::Lock(OpenMode aMode) {
     return true;
   }
 
-  mCanvasChild->RecordEvent(RecordedTextureLock(
-      mTextureId, aMode, mLastRemoteTextureId, obsoleteRemoteTextureId));
+  mCanvasChild->RecordEvent(
+      RecordedTextureLock(mTextureId, aMode, mInvalidContents));
   mLockedMode = aMode;
+  mInvalidContents = false;
   return true;
 }
 
@@ -96,8 +92,7 @@ void RecordedTextureData::Unlock() {
     mCanvasChild->RecordEvent(RecordedCacheDataSurface(mSnapshot.get()));
   }
 
-  mCanvasChild->RecordEvent(
-      RecordedTextureUnlock(mTextureId, mLastRemoteTextureId));
+  mCanvasChild->RecordEvent(RecordedTextureUnlock(mTextureId));
 
   mLockedMode = OpenMode::OPEN_NONE;
 }
@@ -149,14 +144,24 @@ void RecordedTextureData::ReturnSnapshot(
 void RecordedTextureData::Deallocate(LayersIPCChannel* aAllocator) {}
 
 bool RecordedTextureData::Serialize(SurfaceDescriptor& aDescriptor) {
-  if (!mRemoteTextureOwnerId.IsValid() || !mLastRemoteTextureId.IsValid()) {
-    MOZ_ASSERT_UNREACHABLE("Missing remote texture ids!");
+  if (!mRemoteTextureOwnerId.IsValid()) {
+    MOZ_ASSERT_UNREACHABLE("Missing remote texture owner id!");
     return false;
   }
+
+  // If something is querying the id, assume it is going to be composited.
+  if (!mUsedRemoteTexture) {
+    mLastRemoteTextureId = RemoteTextureId::GetNext();
+    mCanvasChild->RecordEvent(
+        RecordedPresentTexture(mTextureId, mLastRemoteTextureId));
+    mUsedRemoteTexture = true;
+  } else if (!mLastRemoteTextureId.IsValid()) {
+    MOZ_ASSERT_UNREACHABLE("Missing remote texture id!");
+    return false;
+  }
+
   aDescriptor = SurfaceDescriptorRemoteTexture(mLastRemoteTextureId,
                                                mRemoteTextureOwnerId);
-  // If something is querying the id, assume it is going to be composited.
-  mUsedRemoteTexture = true;
   return true;
 }
 
