@@ -185,15 +185,17 @@ already_AddRefed<gfx::DrawTarget>
 PersistentBufferProviderAccelerated::BorrowDrawTarget(
     const gfx::IntRect& aPersistedRect) {
   if (!mDrawTarget) {
+    if (aPersistedRect.IsEmpty()) {
+      mTexture->GetInternalData()->InvalidateContents();
+    }
     if (!mTexture->Lock(OpenMode::OPEN_READ_WRITE)) {
       return nullptr;
     }
     mDrawTarget = mTexture->BorrowDrawTarget();
-    if (mDrawTarget) {
-      mDrawTarget->ClearRect(Rect(0, 0, 0, 0));
-      if (!mDrawTarget->IsValid()) {
-        mDrawTarget = nullptr;
-      }
+    if (!mDrawTarget || !mDrawTarget->IsValid()) {
+      mDrawTarget = nullptr;
+      mTexture->Unlock();
+      return nullptr;
     }
   }
   return do_AddRef(mDrawTarget);

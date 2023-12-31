@@ -173,9 +173,11 @@ class CanvasTranslator final : public gfx::InlineTranslator,
    */
   void RemoveTexture(int64_t aTextureId);
 
-  bool LockTexture(int64_t aTextureId, OpenMode aMode, RemoteTextureId aId,
-                   RemoteTextureId aObsoleteId = RemoteTextureId());
-  bool UnlockTexture(int64_t aTextureId, RemoteTextureId aId);
+  bool LockTexture(int64_t aTextureId, OpenMode aMode,
+                   bool aInvalidContents = false);
+  bool UnlockTexture(int64_t aTextureId);
+
+  bool PresentTexture(int64_t aTextureId, RemoteTextureId aId);
 
   bool PushRemoteTexture(int64_t aTextureId, TextureData* aData,
                          RemoteTextureId aId, RemoteTextureOwnerId aOwnerId);
