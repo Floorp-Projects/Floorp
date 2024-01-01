@@ -128,6 +128,20 @@ void IDTracker::ResetToURIFragmentID(nsIContent* aFromContent, nsIURI* aURI,
   HaveNewDocumentOrShadowRoot(docOrShadow, aWatch, ref);
 }
 
+void IDTracker::ResetWithLocalRef(Element& aFrom, const nsAString& aLocalRef,
+                                  bool aWatch) {
+  MOZ_ASSERT(nsContentUtils::IsLocalRefURL(aLocalRef));
+
+  nsAutoCString ref;
+  if (!AppendUTF16toUTF8(Substring(aLocalRef, 1), ref, mozilla::fallible)) {
+    Unlink();
+    return;
+  }
+  NS_UnescapeURL(ref);
+  RefPtr<nsAtom> idAtom = NS_Atomize(ref);
+  ResetWithID(aFrom, idAtom, aWatch);
+}
+
 void IDTracker::ResetWithID(Element& aFrom, nsAtom* aID, bool aWatch) {
   MOZ_ASSERT(aID);
 
