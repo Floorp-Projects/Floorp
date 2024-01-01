@@ -344,8 +344,7 @@ bool SVGAnimationElement::IsEventAttributeNameInternal(nsAtom* aName) {
 
 void SVGAnimationElement::UpdateHrefTarget(const nsAString& aHrefStr) {
   if (nsContentUtils::IsLocalRefURL(aHrefStr)) {
-    RefPtr<nsAtom> idAtom = NS_AtomizeMainThread(Substring(aHrefStr, 1));
-    mHrefTarget.ResetWithID(*this, idAtom);
+    mHrefTarget.ResetWithLocalRef(*this, aHrefStr);
   } else {
     mHrefTarget.Unlink();
   }

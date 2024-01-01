@@ -72,6 +72,18 @@ class IDTracker {
 
   /**
    * A variation on ResetToURIFragmentID() to set up a reference that consists
+   * of a local reference of an element in the same document as aFrom.
+   * @param aFrom the source element for context
+   * @param aLocalRef the local reference of the element
+   * @param aWatch if false, then we do not set up the notifications to track
+   * changes, so ElementChanged won't fire and get() will always return the same
+   * value, the current element for the ID.
+   */
+  void ResetWithLocalRef(Element& aFrom, const nsAString& aLocalRef,
+                         bool aWatch = true);
+
+  /**
+   * A variation on ResetToURIFragmentID() to set up a reference that consists
    * of the ID of an element in the same document as aFrom.
    * @param aFrom the source element for context
    * @param aID the ID of the element
