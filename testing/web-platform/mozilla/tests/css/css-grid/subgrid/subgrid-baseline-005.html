@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<!-- TODO: Remove this test once bug 1871719 is addressed. This test is just a
+     modified copy of a more-robust WPT test, with several forms of padding
+     removed to provide test coverage while working around bug 1871719. -->
+<link rel="help" href="https://drafts.csswg.org/css-grid-2/">
+<style>
+.item {
+  inline-size: 40px;
+  box-sizing: border-box;
+  border: solid 5px hotpink;
+  line-height: 0;
+  margin-block-start: 3px;
+  margin-block-end: 5px;
+}
+.small {
+  width: 20px;
+  height: 20px;
+  border: solid 5px cyan;
+}
+.first {
+  align-self: baseline;
+}
+.last {
+  align-self: last baseline;
+}
+span {
+  width: 20px;
+  height: 20px;
+  box-sizing: border-box;
+  border: solid 5px orange;
+  display: inline-block;
+}
+</style>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<script src="/resources/check-layout-th.js"></script>
+<body onload="checkLayout('.item')">
+
+<div style="position: relative; display: grid; grid-template: 150px 150px 150px / 100px 100px 100px 100px;">
+  <div style="display: grid;
+              grid-column: 1 / span 2;
+              grid-row: 1 / span 3;
+              grid-template: subgrid / subgrid;">
+    <div style="display: grid;
+                grid-column: 1 / span 2;
+                grid-row: 1 / span 2;
+                grid-template: subgrid / subgrid;">
+      <div data-offset-y="3" class="item first">
+        <span></span><br><span></span>
+      </div>
+      <div data-offset-y="95" class="item last">
+        <span></span><br><span></span>
+      </div>
+      <div data-offset-y="153" class="item first">
+        <span></span><br><span></span>
+      </div>
+      <div data-offset-y="245" class="item last">
+        <span></span><br><span></span>
+      </div>
+    </div>
+    <div data-offset-y="303" class="item first">
+      <span></span><br><span></span>
+    </div>
+    <div data-offset-y="395" class="item last">
+      <span></span><br><span></span>
+    </div>
+  </div>
+  <div data-offset-y="8" class="item small first"></div>
+  <div data-offset-y="120" class="item small last"></div>
+  <div data-offset-y="158" class="item small first"></div>
+  <div data-offset-y="270" class="item small last"></div>
+  <div data-offset-y="308" class="item small first"></div>
+  <div data-offset-y="420" class="item small last"></div>
+</div>

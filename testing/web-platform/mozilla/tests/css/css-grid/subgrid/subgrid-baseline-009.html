@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<!-- TODO: Remove this test once bug 1871719 is addressed. This test is just a
+     modified copy of a more-robust WPT test, with several forms of padding
+     removed to provide test coverage while working around bug 1871719. -->
+<link rel="help" href="https://drafts.csswg.org/css-grid-2/">
+<style>
+.item {
+  writing-mode: vertical-rl;
+  block-size: 80px;
+  box-sizing: border-box;
+  border: solid 5px hotpink;
+  line-height: 0;
+  margin-block-start: 10px;
+  margin-block-end: 15px;
+}
+.small {
+  width: 20px;
+  height: 20px;
+  border: solid 5px cyan;
+}
+.first {
+  justify-self: baseline;
+}
+.last {
+  justify-self: last baseline;
+}
+span {
+  width: 20px;
+  height: 20px;
+  box-sizing: border-box;
+  border: solid 5px orange;
+  display: inline-block;
+}
+</style>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<script src="/resources/check-layout-th.js"></script>
+<body onload="checkLayout('.item')">
+
+<div style="width: 600px; position: relative; display: grid; grid-auto-flow: column; grid-template: 100px 100px 100px 100px / auto auto auto;">
+  <div style="display: grid;
+              grid-auto-flow: column;
+              grid-column: 1 / span 3;
+              grid-row: 1 / span 2;
+              grid-template: subgrid / subgrid;">
+    <div style="display: grid;
+                direction: rtl;
+                grid-auto-flow: column;
+                grid-column: 1 / span 2;
+                grid-row: 1 / span 2;
+                grid-template: subgrid / subgrid;">
+      <div data-offset-x="305" class="item first">
+        <span></span><br><span></span>
+      </div>
+      <div data-offset-x="215" class="item last">
+        <span></span><br><span></span>
+      </div>
+      <div data-offset-x="105" class="item first">
+        <span></span><br><span></span>
+      </div>
+      <div data-offset-x="15" class="item last">
+        <span></span><br><span></span>
+      </div>
+    </div>
+    <div data-offset-x="505" class="item first">
+      <span></span><br><span></span>
+    </div>
+    <div data-offset-x="415" class="item last">
+      <span></span><br><span></span>
+    </div>
+  </div>
+  <div data-offset-x="170" class="item small first"></div>
+  <div data-offset-x="60" class="item small last"></div>
+  <div data-offset-x="370" class="item small first"></div>
+  <div data-offset-x="260" class="item small last"></div>
+  <div data-offset-x="570" class="item small first"></div>
+  <div data-offset-x="460" class="item small last"></div>
+</div>
