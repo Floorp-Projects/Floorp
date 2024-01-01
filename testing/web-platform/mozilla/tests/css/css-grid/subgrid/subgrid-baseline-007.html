@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<!-- TODO: Remove this test once bug 1871719 is addressed. This test is just a
+     modified copy of a more-robust WPT test, with several forms of padding
+     removed to provide test coverage while working around bug 1871719. -->
+<link rel="help" href="https://drafts.csswg.org/css-grid-2/">
+<style>
+.item {
+  inline-size: 40px;
+  box-sizing: border-box;
+  border: solid 5px hotpink;
+  line-height: 0;
+  /* Note: the original test has margins here on every .item that we don't
+     handle properly for the items-in-the-subgrid for some reason, but we do
+     handle the margins properly on the items that aren't in a subgrid, so
+     I've just moved the margin declaration over to .small which
+     more-specifically-targets those items where we do handle things properly.
+  */
+}
+.small {
+  width: 20px;
+  height: 20px;
+  border: solid 5px cyan;
+  margin-block-start: 3px;
+  margin-block-end: 5px;
+}
+.first {
+  align-self: baseline;
+}
+.last {
+  align-self: last baseline;
+}
+.item.small.first {
+  block-size: 50px;
+}
+.item.small.last {
+  block-size: 100px;
+}
+span {
+  width: 20px;
+  height: 20px;
+  box-sizing: border-box;
+  border: solid 5px orange;
+  display: inline-block;
+}
+</style>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<script src="/resources/check-layout-th.js"></script>
+<body onload="checkLayout('.item')">
+
+<div style="position: relative; display: grid; grid-template: auto auto auto / 100px 100px 100px 100px;">
+  <div style="display: grid;
+              grid-column: 1 / span 2;
+              grid-row: 1 / span 3;
+              grid-template: subgrid / subgrid;">
+    <div style="display: grid;
+                grid-column: 1 / span 2;
+                grid-row: 1 / span 2;
+                grid-template: subgrid / subgrid;">
+      <div data-offset-y="28" class="item first">
+        <span></span><br><span></span>
+      </div>
+      <div data-offset-y="58" class="item last">
+        <span></span><br><span></span>
+      </div>
+      <div data-offset-y="136" class="item first">
+        <span></span><br><span></span>
+      </div>
+      <div data-offset-y="166" class="item last">
+        <span></span><br><span></span>
+      </div>
+    </div>
+    <div data-offset-y="244" class="item first">
+      <span></span><br><span></span>
+    </div>
+    <div data-offset-y="274" class="item last">
+      <span></span><br><span></span>
+    </div>
+  </div>
+  <div data-offset-y="3" class="item small first"></div>
+  <div data-offset-y="3" class="item small last"></div>
+  <div data-offset-y="111" class="item small first"></div>
+  <div data-offset-y="111" class="item small last"></div>
+  <div data-offset-y="219" class="item small first"></div>
+  <div data-offset-y="219" class="item small last"></div>
+</div>
