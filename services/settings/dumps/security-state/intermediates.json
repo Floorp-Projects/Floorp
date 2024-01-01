@@ -14653,24 +14653,6 @@
       "last_modified": 1666727867638
     },
     {
-      "schema": 1666727384915,
-      "derHash": "V2XGaWoOtcgWRFcyPcQbYSmWHuXFWMEeygKagGdd4to=",
-      "subject": "CN=InCommon IGTF Server CA,OU=InCommon,O=Internet2,C=US",
-      "subjectDN": "MFYxCzAJBgNVBAYTAlVTMRIwEAYDVQQKEwlJbnRlcm5ldDIxETAPBgNVBAsTCEluQ29tbW9uMSAwHgYDVQQDExdJbkNvbW1vbiBJR1RGIFNlcnZlciBDQQ==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "84bee3071007d8cacb31b71811506cc6d89340e7f698c79b47b57ee4ddb3916a",
-        "size": 2105,
-        "filename": "eKK5WQ3iY2Qjww9Titbu9ylESXstB780TnTJBT7c0zI=.pem",
-        "location": "security-state-staging/intermediates/2d51da9f-ff3c-4174-9e79-a98e40e238f5.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "eKK5WQ3iY2Qjww9Titbu9ylESXstB780TnTJBT7c0zI=",
-      "crlite_enrolled": false,
-      "id": "4a68831a-9470-4a77-aba6-70258fa43dbd",
-      "last_modified": 1666727867623
-    },
-    {
       "schema": 1666727364656,
       "derHash": "kdwogfatCgATs9ROmTYaE4YvnLe+YiD8395g5IvdMXo=",
       "subject": "CN=CerSign OV SSL CA,O=CerSign Technology Limited,C=CN",
@@ -29647,5 +29629,5 @@
       "last_modified": 1559865884636
     }
   ],
-  "timestamp": 1703537823229
+  "timestamp": 1704038223096
 }
