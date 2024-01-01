@@ -25,4 +25,39 @@ LayoutDeviceIntSize ThemeCocoa::GetMinimumWidgetSize(
   return Theme::GetMinimumWidgetSize(aPresContext, aFrame, aAppearance);
 }
 
+NS_IMETHODIMP
+ThemeCocoa::DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
+                                 StyleAppearance aAppearance,
+                                 const nsRect& aRect, const nsRect& aDirtyRect,
+                                 DrawOverflow aDrawOverflow) {
+  switch (aAppearance) {
+    case StyleAppearance::Tooltip:
+      // Cocoa tooltip background and border are already drawn by the
+      // OS window server.
+      return NS_OK;
+    default:
+      break;
+  }
+  return Theme::DrawWidgetBackground(aContext, aFrame, aAppearance, aRect,
+                                     aDirtyRect, aDrawOverflow);
+}
+
+bool ThemeCocoa::CreateWebRenderCommandsForWidget(
+    mozilla::wr::DisplayListBuilder& aBuilder,
+    mozilla::wr::IpcResourceUpdateQueue& aResources,
+    const mozilla::layers::StackingContextHelper& aSc,
+    mozilla::layers::RenderRootStateManager* aManager, nsIFrame* aFrame,
+    StyleAppearance aAppearance, const nsRect& aRect) {
+  switch (aAppearance) {
+    case StyleAppearance::Tooltip:
+      // Cocoa tooltip background and border are already drawn by the
+      // OS window server.
+      return true;
+    default:
+      break;
+  }
+  return Theme::CreateWebRenderCommandsForWidget(
+      aBuilder, aResources, aSc, aManager, aFrame, aAppearance, aRect);
+}
+
 }  // namespace mozilla::widget
