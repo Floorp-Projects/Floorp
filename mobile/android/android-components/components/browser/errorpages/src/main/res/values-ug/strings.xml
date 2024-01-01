@@ -158,6 +158,13 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_content_crashed_title">مەزمۇن بۇزۇلغان</string>
 
+    <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[
+      <p> سىز كۆرمەكچى بولغان بەتنى كۆرسەتكىلى بولمايدۇ چۈنكى سانلىق مەلۇمات يوللاشتا خاتالىق بايقالدى.</p>
+      <ul>
+        <li> توربېكەت ئىگىلىرى بىلەن ئالاقىلىشىپ ئۇلارغا بۇ مەسىلىنى ئۇقتۇرۇڭ.</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_invalid_content_encoding_title">مەزمۇن كودلاش خاتالىقى</string>
 
@@ -221,6 +228,11 @@
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_harmful_uri_title">زىيانلىق تور بېكەت مەسىلىسى</string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_message"><![CDATA[
+      <p>%1$s دىكى تور بېكەتنىڭ يۇشۇرۇن زىيانلىق تور بېكەت ئىكەنلىكى مەلۇم قىلىنغانلىقى ئۈچۈن بىخەتەرلىك مايىللىقىڭىزغا ئاساسەن توسۇۋېتىلدى. </p>
+    ]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_phishing_uri_title">ئالدامچىلىق تور بېكىتى مەسىلىسى</string>

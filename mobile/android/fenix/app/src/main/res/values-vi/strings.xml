@@ -1514,7 +1514,7 @@
     <!-- Preference title for enhanced tracking protection settings -->
     <string name="preference_enhanced_tracking_protection">Trình chống theo dõi nâng cao</string>
     <!-- Preference summary for enhanced tracking protection settings on/off switch -->
-    <string name="preference_enhanced_tracking_protection_summary">Hiện có tính năng Trình chống cookie chung, rào cản mạnh mẽ nhất của chúng tôi đối với các trình theo dõi trên nhiều trang web.</string>
+    <string name="preference_enhanced_tracking_protection_summary">Bây giờ với tính năng Trình chống cookie chung, hàng rào mạnh mẽ nhất của chúng tôi đối với các trình theo dõi trên nhiều trang web.</string>
     <!-- Description of enhanced tracking protection. The parameter is the name of the application (For example: Firefox Fenix) -->
     <string name="preference_enhanced_tracking_protection_explanation_2">%s bảo vệ bạn khỏi các trình theo dõi phổ biến nhất đang theo dõi những điều bạn làm trên internet.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
@@ -1579,7 +1579,7 @@
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_description">Chặn cookie mà các mạng quảng cáo và công ty phân tích sử dụng mà nó biên dịch dữ liệu duyệt web của bạn trên nhiều trang web.</string>
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_cookies_description_2">Trình chống cookie chung cô lập các cookie với trang web mà bạn đang truy cập, do đó, những người theo dõi như mạng quảng cáo không thể sử dụng chúng để theo dõi bạn trên các trang web.</string>
+    <string name="etp_cookies_description_2">Trình chống cookie chung cô lập các cookie với trang web mà bạn đang truy cập, do đó, các trình theo dõi như quảng cáo không thể sử dụng chúng để theo dõi bạn trên các trang web.</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_title">Tiền điện tử</string>
     <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
