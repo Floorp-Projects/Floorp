@@ -902,7 +902,7 @@ static BlobItemData* GetBlobItemDataForGroup(nsDisplayItem* aItem,
                                              DIGroup* aGroup) {
   BlobItemData* data = GetBlobItemData(aItem);
   if (data) {
-    MOZ_RELEASE_ASSERT(data->mGroup->mDisplayItems.Contains(data));
+    MOZ_ASSERT(data->mGroup->mDisplayItems.Contains(data));
     if (data->mGroup != aGroup) {
       GP("group don't match %p %p\n", data->mGroup, aGroup);
       data->ClearFrame();
