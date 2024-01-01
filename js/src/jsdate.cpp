@@ -1090,7 +1090,7 @@ template <typename CharT>
 bool MatchesKeyword(const CharT* s, size_t len, const char* keyword) {
   while (len > 0) {
     MOZ_ASSERT(IsAsciiAlpha(*s));
-    MOZ_ASSERT(IsAsciiLowercaseAlpha(*keyword));
+    MOZ_ASSERT(IsAsciiLowercaseAlpha(*keyword) || *keyword == '\0');
 
     if (unicode::ToLowerCase(static_cast<Latin1Char>(*s)) != *keyword) {
       return false;

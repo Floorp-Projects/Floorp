@@ -21,6 +21,7 @@ const rejected = [
   "Sep 26 1995 ES",
   "Sep 26 1995 10:00 a",
   "Sep 26 1995 10:00 p",
+  "0/zx",
 ];
 
 for (const [test, expected] of Object.entries(accepted)) {
