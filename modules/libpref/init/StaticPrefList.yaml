@@ -8523,6 +8523,13 @@
   mirror: always
   rust: true
 
+# Should we propagate baseline alignment information from a parent grid into
+# its subgrids?
+- name: layout.css.grid-subgrid-baselines.enabled
+  type: RelaxedAtomicBool
+  value: @IS_NIGHTLY_BUILD@
+  mirror: always
+
 # Is support for CSS masonry layout enabled?
 - name: layout.css.grid-template-masonry-value.enabled
   type: RelaxedAtomicBool

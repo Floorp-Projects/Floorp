@@ -3040,6 +3040,146 @@ struct MOZ_STACK_CLASS nsGridContainerFrame::GridReflowInput {
     }
   }
 
+  /**
+   * Recursive helper for CopyBaselineMetricsToSubgridItems().
+   *
+   * @param aAxis The LogicalAxis for the axis whose baseline metrics we're
+   *              copying here (with respect to the outermost parent grid's
+   *              writing mode).
+   * @param aContainerWM The writing mode of that outermost parent grid.
+   * @param aSubgridFrame The subgrid whose subgrid-items we're considering
+   *              in this recursive traversal (whose items we're copying over
+   *              baseline-alignment metrics for).
+   * @param aContainerGridItems The outermost parent grid's array of
+   *              GridItemInfo objects.  (The final portion of this array is
+   *              all for subgrid items, and that's the portion that we're
+   *              recursively iterating over.)
+   * @param aContainerGridItemsIdx [in/out] The index for the item that we're
+   *              currently considering in aContainerGridItemsIdx. When
+   *              this function returns, this will be the index just beyond the
+   *              last item that we handled here, i.e. the index of the next
+   *              item to be handled.
+   */
+  static void CopyBaselineMetricsToSubgridItemsHelper(
+      LogicalAxis aAxis, WritingMode aContainerWM, nsIFrame* aSubgridFrame,
+      const nsTArray<GridItemInfo>& aContainerGridItems,
+      size_t& aContainerGridItemsIdx) {
+    // Get the canonical GridItemInfo structs for the grid items that live
+    // inside of aSubgridFrame:
+    Subgrid* subgridProp = aSubgridFrame->GetProperty(Subgrid::Prop());
+    nsTArray<GridItemInfo>& subgridItems = subgridProp->mGridItems;
+
+    // Use aSubgridFrame's writing-mode to determine subgridAxis.
+    // Grids & subgrids store various data on a per-LogicalAxis basis, with
+    // respect to their own WritingMode.  Here, subgridAxis is aSubgridFrame's
+    // axis that maps to the same physical axis that aAxis does for the
+    // outermost parent grid.
+    auto subgridWM = aSubgridFrame->GetWritingMode();
+    bool isOrthogonal = subgridWM.IsOrthogonalTo(aContainerWM);
+    LogicalAxis subgridAxis = isOrthogonal ? GetOrthogonalAxis(aAxis) : aAxis;
+
+    // Do a parallel walk through (1) subgridItems and (2) the portion of
+    // aContainerGridItems that starts at offset aContainerGridItems,
+    // descending to traverse child subgrids own items as we encounter them in
+    // subgridItems.  We expect to have an exact correspondence, because this
+    // is precisely how we built up this portion of aContainerGridItems in
+    // CollectSubgridItemsForAxis. (But if we happen to overstep the end of an
+    // array, or find a GridItemInfo for a frame that we don't expect, we
+    // gracefully bail out.)
+    for (auto& subgridItem : subgridItems) {
+      if (MOZ_UNLIKELY(aContainerGridItemsIdx >=
+                       aContainerGridItems.Length())) {
+        // We failed to make the same traversal as CollectSubgridItemsForAxis;
+        // whoops! This shouldn't happen; but if it does, we gracefully bail
+        // out, instead of crashing.
+        MOZ_ASSERT_UNREACHABLE("Out-of-bounds aContainerGridItemsIdx");
+        return;
+      }
+      const auto& itemFromContainer =
+          aContainerGridItems[aContainerGridItemsIdx];
+      aContainerGridItemsIdx++;
+
+      if (MOZ_UNLIKELY(subgridItem.mFrame != itemFromContainer.mFrame)) {
+        // We failed to make the same traversal as CollectSubgridItemsForAxis;
+        // whoops! This shouldn't happen; but if it does, we gracefully bail
+        // out, instead of copying baseline-alignment data for the wrong frame.
+        MOZ_ASSERT_UNREACHABLE("Found unexpected frame during traversal");
+        return;
+      }
+
+      // This pattern of bits will be truthy if the item is baseline-aligned in
+      // this axis (in which case the exact pattern of bits will have some
+      // additional significance that doesn't matter here, but we do need to
+      // copy it over).
+      const auto baselineStateBits =
+          itemFromContainer.mState[aAxis] & ItemState::eAllBaselineBits;
+
+      if (subgridItem.IsSubgrid(subgridAxis)) {
+        // This item is in fact a nested subgrid. It shouldn't itself be
+        // baseline-aligned, but we need to make a recursive call to copy
+        // baseline metrics to its items.
+        MOZ_ASSERT(!baselineStateBits,
+                   "subgrids themselves can't be baseline-aligned "
+                   "(or self-aligned in any way) in their subgrid axis");
+        CopyBaselineMetricsToSubgridItemsHelper(
+            aAxis, aContainerWM, subgridItem.SubgridFrame(),
+            aContainerGridItems, aContainerGridItemsIdx);
+      } else if (baselineStateBits) {
+        // This item is a baseline-aligned grid item (in the subgrid that we're
+        // traversing). Copy over its baseline metrics.
+        subgridItem.mState[subgridAxis] |= baselineStateBits;
+        subgridItem.mBaselineOffset[subgridAxis] =
+            itemFromContainer.mBaselineOffset[aAxis];
+      }
+    }
+  }
+
+  /**
+   * This function here is responsible for propagating baseline-alignment
+   * metrics for subgrid-items from mGridItems over to the "canonical"
+   * GridItemInfo structs for those grid items (which live on the subgrid that
+   * owns them). The outermost parent grid *computes* those metrics as part of
+   * doing track sizing, but it does this using *temporary* GridItemInfo
+   * objects for any grid items that live in subgrids (aka subgrid items). So
+   * that's why we need to rescue this baseline-alignment information before
+   * those temporary objects are discarded.
+   *
+   * (The temporary subgrid-items all live at the end of mGridItems; they were
+   * appended there by CollectSubgridItemsForAxis().  So, it's important that
+   * we perform the exact same traversal that CollectSubgridItemsForAxis() did,
+   * in order to properly match up the temporary & canonical GridItemInfo
+   * objects for these subgrid items.)
+   */
+  // traversal that CollectSubgridItemsForAxis (and its recursive helper) does.
+  void CopyBaselineMetricsToSubgridItems(LogicalAxis aAxis,
+                                         size_t aOriginalLength) {
+    MOZ_ASSERT(aOriginalLength <= mGridItems.Length(),
+               "aOriginalLength is the length that mGridItems had *before* we "
+               "appended temporary copies of subgrid items to it, so it's not "
+               "possible for it to be more than the current length");
+
+    // This index 'subgridItemIdx' traverses the final portion of mGridItems,
+    // the portion that currently has temporary GridItemInfo structs that we
+    // built for the items that live in our subgrids.  (Our caller is about to
+    // discard this temporary portion of mGridItems, and we're trying to
+    // transfer some baseline-alignment data to the canonical GridItemInfo
+    // structs before that happens.)
+    //
+    // Our recursive helper updates subgridItemIdx internally. When this index
+    // reaches mGridItems.Length(), we can stop looping; that means we've
+    // finished copying out all the data from these temporary structs.
+    size_t subgridItemIdx = aOriginalLength;
+
+    for (size_t i = 0;
+         (i < aOriginalLength && subgridItemIdx < mGridItems.Length()); i++) {
+      const auto& item = mGridItems[i];
+      if (item.IsSubgrid(aAxis)) {
+        CopyBaselineMetricsToSubgridItemsHelper(aAxis, mWM, item.SubgridFrame(),
+                                                mGridItems, subgridItemIdx);
+      }
+    }
+  }
+
   Tracks& TracksFor(LogicalAxis aAxis) {
     return aAxis == eLogicalAxisBlock ? mRows : mCols;
   }
@@ -3731,7 +3871,8 @@ void nsGridContainerFrame::GridReflowInput::CalculateTrackSizesForAxis(
   // cases in a subgridded axis when our parent track sizes aren't resolved yet.
   if (MOZ_LIKELY(!isSubgriddedAxis) || fallbackTrackSizing.isSome()) {
     const size_t origGridItemCount = mGridItems.Length();
-    if (mFrame->HasSubgridItems(aAxis)) {
+    const bool hasSubgridItems = mFrame->HasSubgridItems(aAxis);
+    if (hasSubgridItems) {
       AutoTArray<GridItemInfo, 8> collectedItems;
       CollectSubgridItemsForAxis(aAxis, collectedItems);
       mGridItems.AppendElements(collectedItems);
@@ -3742,10 +3883,34 @@ void nsGridContainerFrame::GridReflowInput::CalculateTrackSizesForAxis(
         aContentBoxSize,
         aAxis == eLogicalAxisInline ? &GridArea::mCols : &GridArea::mRows,
         aConstraint);
-    // XXXmats we're losing the baseline state of subgrid descendants that
-    // CollectSubgridItemsForAxis added here.  We need to propagate that
-    // state into the subgrid's Reflow somehow...
+
+    if (hasSubgridItems &&
+        StaticPrefs::layout_css_grid_subgrid_baselines_enabled()) {
+      // If any of the subgrid items are baseline-aligned, we've just recorded
+      // their baseline-alignment offsets in our own copy of their GridItemInfo
+      // structs. Before we get rid of those copies (via TruncateLength), we
+      // have to copy these offsets back to the subgrids' versions of the
+      // GridItemInfo structs.
+      //
+      // XXXdholbert This new behavior is behind a pref due to bug 1871719.
+      CopyBaselineMetricsToSubgridItems(aAxis, origGridItemCount);
+    }
     mGridItems.TruncateLength(origGridItemCount);
+  }
+  if (isSubgriddedAxis) {
+    // XXXdholbert This is a bit hacky, but this is something that
+    // tracks.CalculateSizes does internally (unconditionally, if there are
+    // baseline-aligned items), and it seems like subgrids need to do it too,
+    // or else they hit the "unexpected baseline subtree alignment"
+    // fatal-assert when aligning their children with the baseline-alignment
+    // information that they received from the outer grid.
+    // (This might be entirely unnecessary? Aside from the default ::AUTO
+    // value, it looks like the ::First entry is always set to ::START and
+    // the ::Last entry is always set to ::END...)
+    tracks.mBaselineSubtreeAlign[BaselineSharingGroup::First] =
+        StyleAlignFlags::START;
+    tracks.mBaselineSubtreeAlign[BaselineSharingGroup::Last] =
+        StyleAlignFlags::END;
   }
 
   if (aContentBoxSize != NS_UNCONSTRAINEDSIZE) {
