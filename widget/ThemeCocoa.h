@@ -22,6 +22,17 @@ class ThemeCocoa : public Theme {
       nsPresContext* aPresContext, nsIFrame* aFrame,
       StyleAppearance aAppearance) override;
 
+  NS_IMETHOD DrawWidgetBackground(gfxContext* aContext, nsIFrame*,
+                                  StyleAppearance, const nsRect& aRect,
+                                  const nsRect& aDirtyRect,
+                                  DrawOverflow) override;
+
+  bool CreateWebRenderCommandsForWidget(
+      wr::DisplayListBuilder& aBuilder, wr::IpcResourceUpdateQueue& aResources,
+      const layers::StackingContextHelper& aSc,
+      layers::RenderRootStateManager* aManager, nsIFrame*, StyleAppearance,
+      const nsRect& aRect) override;
+
  protected:
   virtual ~ThemeCocoa() = default;
 };
