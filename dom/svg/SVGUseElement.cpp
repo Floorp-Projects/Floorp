@@ -550,8 +550,7 @@ void SVGUseElement::LookupHref() {
 
   Element* treeToWatch = mOriginal ? mOriginal.get() : this;
   if (nsContentUtils::IsLocalRefURL(href)) {
-    RefPtr<nsAtom> idAtom = NS_AtomizeMainThread(Substring(href, 1));
-    mReferencedElementTracker.ResetWithID(*treeToWatch, idAtom);
+    mReferencedElementTracker.ResetWithLocalRef(*treeToWatch, href);
     return;
   }
 
