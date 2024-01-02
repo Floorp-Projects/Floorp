@@ -334,8 +334,7 @@ void nsFontMetrics::DrawString(const char* aString, uint32_t aLength,
       pt.x += textRun->GetAdvanceWidth(range, &provider);
     }
   }
-  gfx::COLRFonts::PaletteCache paletteCache;
-  gfxTextRun::DrawParams params(aContext, paletteCache);
+  gfxTextRun::DrawParams params(aContext);
   params.provider = &provider;
   textRun->Draw(range, pt, params);
 }
@@ -360,8 +359,7 @@ void nsFontMetrics::DrawString(
       pt.x += textRun->GetAdvanceWidth(range, &provider);
     }
   }
-  gfx::COLRFonts::PaletteCache paletteCache;
-  gfxTextRun::DrawParams params(aContext, paletteCache);
+  gfxTextRun::DrawParams params(aContext);
   params.provider = &provider;
   textRun->Draw(range, pt, params);
 }
