@@ -3543,14 +3543,14 @@ static gfx::IntPoint GetIntegerDeltaForEvent(NSEvent* aEvent) {
 
   nsAutoRetainCocoaObject kungFuDeathGrip(self);
 
-  NSAttributedString* attrStr;
+  NSString* str;
   if ([aString isKindOfClass:[NSAttributedString class]]) {
-    attrStr = static_cast<NSAttributedString*>(aString);
+    str = [aString string];
   } else {
-    attrStr = [[[NSAttributedString alloc] initWithString:aString] autorelease];
+    str = aString;
   }
 
-  mTextInputHandler->InsertText(attrStr, &replacementRange);
+  mTextInputHandler->InsertText(str, &replacementRange);
 
   NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
