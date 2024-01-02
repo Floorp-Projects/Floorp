@@ -712,10 +712,8 @@ RefPtr<MediaDataEncoder::EncodePromise> FFmpegVideoEncoder<
   mFrame->pts = aSample->mTime.ToMicroseconds();
 #  if LIBAVCODEC_VERSION_MAJOR >= 60
   mFrame->duration = aSample->mDuration.ToMicroseconds();
-  mFrame->pkt_duration = aSample->mDuration.ToMicroseconds();
-#  else
-  mFrame->pkt_duration = aSample->mDuration.ToMicroseconds();
 #  endif
+  mFrame->pkt_duration = aSample->mDuration.ToMicroseconds();
 
   // Initialize AVPacket.
   AVPacket* pkt = mLib->av_packet_alloc();
