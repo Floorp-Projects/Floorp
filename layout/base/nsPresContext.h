@@ -39,7 +39,7 @@
 #include "nsGkAtoms.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsChangeHint.h"
-#include "gfxTypes.h"
+#include "gfxFont.h"
 #include "gfxRect.h"
 #include "nsTArray.h"
 #include "nsThreadUtils.h"
@@ -932,6 +932,10 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
   void FlushFontPaletteValues();
   void MarkFontPaletteValuesDirty() { mFontPaletteValuesDirty = true; }
 
+  mozilla::gfx::COLRFonts::PaletteCache& FontPaletteCache() {
+    return mFontPaletteCache;
+  }
+
   // Ensure that it is safe to hand out CSS rules outside the layout
   // engine by ensuring that all CSS style sheets have unique inners
   // and, if necessary, synchronously rebuilding all style data.
@@ -1199,6 +1203,8 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
   const nsStaticAtom* mMedium;
   RefPtr<gfxFontFeatureValueSet> mFontFeatureValuesLookup;
   RefPtr<mozilla::gfx::FontPaletteValueSet> mFontPaletteValueSet;
+
+  mozilla::gfx::COLRFonts::PaletteCache mFontPaletteCache;
 
   // TODO(emilio): Maybe lazily create and put under a UniquePtr if this grows a
   // lot?
