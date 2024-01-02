@@ -210,3 +210,21 @@ MOZ_EXPORT struct wl_proxy* wl_proxy_marshal_flags(
     ...) {
   return NULL;
 }
+
+MOZ_EXPORT struct wl_compositor* gdk_wayland_display_get_wl_compositor(
+    GdkDisplay* display) {
+  return NULL;
+}
+MOZ_EXPORT struct wl_surface* gdk_wayland_window_get_wl_surface(
+    GdkWindow* window) {
+  return NULL;
+}
+
+MOZ_EXPORT struct wl_pointer* gdk_wayland_device_get_wl_pointer(
+    GdkDevice* device) {
+  return NULL;
+}
+MOZ_EXPORT struct wl_display* gdk_wayland_display_get_wl_display(
+    GdkDisplay* display) {
+  return NULL;
+}
