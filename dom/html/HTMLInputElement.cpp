@@ -3174,6 +3174,10 @@ void HTMLInputElement::GetEventTargetParent(EventChainPreVisitor& aVisitor) {
 
   if (CheckActivationBehaviorPreconditions(aVisitor)) {
     aVisitor.mWantsActivationBehavior = true;
+    // XXXedgar: This is a temporary hack for elements, like <a>, which have not
+    // yet adopted the activation behavior defined in the specification. This
+    // should be removed after resolving bug 1851970.
+    aVisitor.mEvent->mFlags.mMultipleActivationPrevented = true;
   }
 
   // We must cache type because mType may change during JS event (bug 2369)
