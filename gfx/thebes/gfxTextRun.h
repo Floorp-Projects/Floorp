@@ -251,10 +251,10 @@ class gfxTextRun : public gfxShapedText {
 
   struct MOZ_STACK_CLASS DrawParams {
     gfxContext* context;
+    mozilla::gfx::COLRFonts::PaletteCache& paletteCache;
     DrawMode drawMode = DrawMode::GLYPH_FILL;
     nscolor textStrokeColor = 0;
     nsAtom* fontPalette = nullptr;
-    mozilla::gfx::FontPaletteValueSet* paletteValueSet = nullptr;
     gfxPattern* textStrokePattern = nullptr;
     const mozilla::gfx::StrokeOptions* strokeOpts = nullptr;
     const mozilla::gfx::DrawOptions* drawOpts = nullptr;
@@ -265,7 +265,9 @@ class gfxTextRun : public gfxShapedText {
     gfxTextRunDrawCallbacks* callbacks = nullptr;
     bool allowGDI = true;
     bool hasTextShadow = false;
-    explicit DrawParams(gfxContext* aContext) : context(aContext) {}
+    DrawParams(gfxContext* aContext,
+               mozilla::gfx::COLRFonts::PaletteCache& aPaletteCache)
+        : context(aContext), paletteCache(aPaletteCache) {}
   };
 
   /**
@@ -296,9 +298,10 @@ class gfxTextRun : public gfxShapedText {
    * from aProvider. The provided point is the baseline origin of the
    * line of emphasis marks.
    */
-  void DrawEmphasisMarks(gfxContext* aContext, gfxTextRun* aMark,
-                         gfxFloat aMarkAdvance, mozilla::gfx::Point aPt,
-                         Range aRange, const PropertyProvider* aProvider) const;
+  void DrawEmphasisMarks(
+      gfxContext* aContext, gfxTextRun* aMark, gfxFloat aMarkAdvance,
+      mozilla::gfx::Point aPt, Range aRange, const PropertyProvider* aProvider,
+      mozilla::gfx::COLRFonts::PaletteCache& aPaletteCache) const;
 
   /**
    * Computes the ReflowMetrics for a substring.

@@ -2948,6 +2948,8 @@ void nsPresContext::FlushFontPaletteValues() {
   mFontPaletteValueSet = styleSet->BuildFontPaletteValueSet();
   mFontPaletteValuesDirty = false;
 
+  mFontPaletteCache.SetPaletteValueSet(mFontPaletteValueSet);
+
   // Even if we're not reflowing anything, a change to the palette means we
   // need to repaint in order to show the new colors.
   InvalidatePaintedLayers();
