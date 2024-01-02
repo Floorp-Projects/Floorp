@@ -712,6 +712,9 @@ RefPtr<MediaDataEncoder::EncodePromise> FFmpegVideoEncoder<
   mFrame->pts = aSample->mTime.ToMicroseconds();
 #  if LIBAVCODEC_VERSION_MAJOR >= 60
   mFrame->duration = aSample->mDuration.ToMicroseconds();
+#  else
+  // Save duration in the time_base unit.
+  mDurationMap.Insert(mFrame->pts, aSample->mDuration.ToMicroseconds());
 #  endif
   mFrame->pkt_duration = aSample->mDuration.ToMicroseconds();
 
@@ -887,7 +890,16 @@ RefPtr<MediaRawData> FFmpegVideoEncoder<LIBAV_VER>::ToMediaRawData(
   // is recommended to be the reciprocal of the frame rate, but we set it to
   // microsecond for now.
   data->mTime = media::TimeUnit::FromMicroseconds(aPacket->pts);
+#if LIBAVCODEC_VERSION_MAJOR >= 60
   data->mDuration = media::TimeUnit::FromMicroseconds(aPacket->duration);
+#else
+  int64_t duration;
+  if (mDurationMap.Find(aPacket->pts, duration)) {
+    data->mDuration = media::TimeUnit::FromMicroseconds(duration);
+  } else {
+    data->mDuration = media::TimeUnit::FromMicroseconds(aPacket->duration);
+  }
+#endif
   data->mTimecode = media::TimeUnit::FromMicroseconds(aPacket->dts);
 
   if (auto r = GetExtraData(aPacket); r.isOk()) {
