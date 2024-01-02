@@ -41,7 +41,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   HomePage: "resource:///modules/HomePage.sys.mjs",
   Integration: "resource://gre/modules/Integration.sys.mjs",
   Interactions: "resource:///modules/Interactions.sys.mjs",
-  Log: "resource://gre/modules/Log.sys.mjs",
   LoginBreaches: "resource:///modules/LoginBreaches.sys.mjs",
   MigrationUtils: "resource:///modules/MigrationUtils.sys.mjs",
   NetUtil: "resource://gre/modules/NetUtil.sys.mjs",
@@ -5734,12 +5733,10 @@ export var AboutHomeStartupCache = {
       return;
     }
 
-    this.log = lazy.Log.repository.getLogger(this.LOG_NAME);
-    this.log.manageLevelFromPref(this.LOG_LEVEL_PREF);
-    this._appender = new lazy.Log.ConsoleAppender(
-      new lazy.Log.BasicFormatter()
-    );
-    this.log.addAppender(this._appender);
+    this.log = console.createInstance({
+      prefix: this.LOG_NAME,
+      maxLogLevelPref: this.LOG_LEVEL_PREF,
+    });
 
     this.log.trace("Initting.");
 
@@ -5841,7 +5838,6 @@ export var AboutHomeStartupCache = {
 
     if (this.log) {
       this.log.trace("Uninitialized.");
-      this.log.removeAppender(this._appender);
       this.log = null;
     }
 
