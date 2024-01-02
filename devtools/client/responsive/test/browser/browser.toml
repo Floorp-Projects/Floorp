@@ -123,7 +123,7 @@ skip-if = [
 ["browser_tab_close.js"]
 
 ["browser_tab_not_selected.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
+fail-if = ["a11y_checks"] # Bug 1849028 clicked button#device-pixel-ratio-menu element may not be focusable
 
 ["browser_tab_remoteness_change.js"]
 

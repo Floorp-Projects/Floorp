@@ -135,7 +135,6 @@ skip-if = [
 ["browser_net_brotli.js"]
 
 ["browser_net_cache_details.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_net_cached-status.js"]
 skip-if = [
@@ -192,14 +191,12 @@ skip-if = [
 ]
 
 ["browser_net_content-type.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 skip-if = ["!debug && os == 'mac'"]
 
 ["browser_net_cookies_sorted.js"]
 skip-if = ["verify && debug && os == 'win'"]
 
 ["browser_net_copy_as_curl.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_net_copy_as_fetch.js"]
 
@@ -462,7 +459,6 @@ skip-if = ["true"] #Bug 1667115
 ["browser_net_sse-basic.js"]
 
 ["browser_net_stacktraces-visibility.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_net_statistics-01.js"]
 skip-if = ["true"] # Bug 1373558
@@ -517,7 +513,6 @@ fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and
 ["browser_net_use_as_fetch.js"]
 
 ["browser_net_view-source-debugger.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_net_waterfall-click.js"]
 
