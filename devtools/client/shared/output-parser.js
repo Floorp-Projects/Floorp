@@ -376,6 +376,7 @@ class OutputParser {
       if (!token) {
         break;
       }
+      const lowerCaseTokenText = token.text?.toLowerCase();
 
       if (token.tokenType === "comment") {
         // This doesn't change spaceNeeded, because we didn't emit
@@ -385,12 +386,11 @@ class OutputParser {
 
       switch (token.tokenType) {
         case "function": {
-          const isColorTakingFunction = COLOR_TAKING_FUNCTIONS.includes(
-            token.text
-          );
+          const isColorTakingFunction =
+            COLOR_TAKING_FUNCTIONS.includes(lowerCaseTokenText);
           if (
             isColorTakingFunction ||
-            ANGLE_TAKING_FUNCTIONS.includes(token.text)
+            ANGLE_TAKING_FUNCTIONS.includes(lowerCaseTokenText)
           ) {
             // The function can accept a color or an angle argument, and we know
             // it isn't special in some other way. So, we let it
@@ -406,7 +406,7 @@ class OutputParser {
               colorFunctions.push({ parenDepth, functionName: token.text });
             }
             ++parenDepth;
-          } else if (token.text === "var" && options.getVariableValue) {
+          } else if (lowerCaseTokenText === "var" && options.getVariableValue) {
             const { node: variableNode, value } = this.#parseVariable(
               token,
               text,
@@ -451,11 +451,14 @@ class OutputParser {
               // to DOM accordingly.
               const functionText = functionName + functionData.join("") + ")";
 
-              if (options.expectCubicBezier && token.text === "cubic-bezier") {
+              if (
+                options.expectCubicBezier &&
+                lowerCaseTokenText === "cubic-bezier"
+              ) {
                 this.#appendCubicBezier(functionText, options);
               } else if (
                 options.expectLinearEasing &&
-                token.text === "linear"
+                lowerCaseTokenText === "linear"
               ) {
                 this.#appendLinear(functionText, options);
               } else if (
@@ -468,7 +471,7 @@ class OutputParser {
                 });
               } else if (
                 options.expectShape &&
-                BASIC_SHAPE_FUNCTIONS.includes(token.text)
+                BASIC_SHAPE_FUNCTIONS.includes(lowerCaseTokenText)
               ) {
                 this.#appendShape(functionText, options);
               } else {
@@ -482,10 +485,13 @@ class OutputParser {
         case "ident":
           if (
             options.expectCubicBezier &&
-            BEZIER_KEYWORDS.includes(token.text)
+            BEZIER_KEYWORDS.includes(lowerCaseTokenText)
           ) {
             this.#appendCubicBezier(token.text, options);
-          } else if (options.expectLinearEasing && token.text == "linear") {
+          } else if (
+            options.expectLinearEasing &&
+            lowerCaseTokenText == "linear"
+          ) {
             this.#appendLinear(token.text, options);
           } else if (this.#isDisplayFlex(text, token, options)) {
             this.#appendHighlighterToggle(token.text, options.flexClass);
@@ -805,8 +811,9 @@ class OutputParser {
       role: "button",
     });
 
+    const lowerCaseShape = shape.toLowerCase();
     for (const { prefix, coordParser } of shapeTypes) {
-      if (shape.includes(prefix)) {
+      if (lowerCaseShape.includes(prefix)) {
         const coordsBegin = prefix.length;
         const coordsEnd = shape.lastIndexOf(")");
         let valContainer = this.#createNode("span", {
