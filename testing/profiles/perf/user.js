@@ -33,6 +33,7 @@ user_pref("browser.safebrowsing.provider.mozilla.gethashURL", "http://127.0.0.1/
 user_pref("browser.safebrowsing.provider.mozilla.updateURL", "http://127.0.0.1/safebrowsing-dummy/update");
 user_pref("browser.shell.checkDefaultBrowser", false);
 user_pref("browser.startup.couldRestoreSession.count", -1);
+user_pref("browser.tabs.remote.autostart", true);
 user_pref("browser.warnOnQuit", false);
 user_pref("datareporting.healthreport.documentServerURI", "http://127.0.0.1/healthreport/");
 user_pref("devtools.chrome.enabled", false);
