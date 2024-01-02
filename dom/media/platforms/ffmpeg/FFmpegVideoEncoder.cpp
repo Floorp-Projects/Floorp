@@ -394,14 +394,12 @@ MediaResult FFmpegVideoEncoder<LIBAV_VER>::InitInternal() {
       static_cast<ffmpeg::FFmpegBitRate>(mConfig.mBitrate);
   mCodecContext->width = static_cast<int>(mConfig.mSize.width);
   mCodecContext->height = static_cast<int>(mConfig.mSize.height);
-  if (mConfig.mFramerate) {
-    mCodecContext->time_base =
-        AVRational{.num = 1, .den = static_cast<int>(mConfig.mFramerate)};
-  } else {
-    // Choose something typical if we don't know
-    mCodecContext->time_base = AVRational{.num = 1, .den = 90000};
-  }
+  // TODO(bug 1869560): The recommended time_base is the reciprocal of the frame
+  // rate, but we set it to microsecond for now.
+  mCodecContext->time_base =
+      AVRational{.num = 1, .den = static_cast<int>(USECS_PER_S)};
 #if LIBAVCODEC_VERSION_MAJOR >= 57
+  // Note that sometimes framerate can be zero (from webcodecs).
   mCodecContext->framerate =
       AVRational{.num = static_cast<int>(mConfig.mFramerate), .den = 1};
 #endif
@@ -703,16 +701,20 @@ RefPtr<MediaDataEncoder::EncodePromise> FFmpegVideoEncoder<
     }
   }
 
-  // Everything in microsecond for now: bug 1869560
+  // Set presentation timestamp and duration of the AVFrame. The unit of pts is
+  // time_base.
+  // TODO(bug 1869560): The recommended time_base is the reciprocal of the frame
+  // rate, but we set it to microsecond for now.
+#  if LIBAVCODEC_VERSION_MAJOR >= 59
+  mFrame->time_base =
+      AVRational{.num = 1, .den = static_cast<int>(USECS_PER_S)};
+#  endif
   mFrame->pts = aSample->mTime.ToMicroseconds();
 #  if LIBAVCODEC_VERSION_MAJOR >= 60
   mFrame->duration = aSample->mDuration.ToMicroseconds();
   mFrame->pkt_duration = aSample->mDuration.ToMicroseconds();
 #  else
   mFrame->pkt_duration = aSample->mDuration.ToMicroseconds();
-#  endif
-#  if LIBAVCODEC_VERSION_MAJOR >= 59
-  mFrame->time_base = {1, USECS_PER_S};
 #  endif
 
   // Initialize AVPacket.
@@ -883,7 +885,9 @@ RefPtr<MediaRawData> FFmpegVideoEncoder<LIBAV_VER>::ToMediaRawData(
   }
 
   data->mKeyframe = (aPacket->flags & AV_PKT_FLAG_KEY) != 0;
-  // Everything in microseconds for now: bug 1869560
+  // TODO(bug 1869560): The unit of pts, dts, and duration is time_base, which
+  // is recommended to be the reciprocal of the frame rate, but we set it to
+  // microsecond for now.
   data->mTime = media::TimeUnit::FromMicroseconds(aPacket->pts);
   data->mDuration = media::TimeUnit::FromMicroseconds(aPacket->duration);
   data->mTimecode = media::TimeUnit::FromMicroseconds(aPacket->dts);
