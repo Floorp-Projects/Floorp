@@ -429,6 +429,13 @@ function testParseShape(doc, parser) {
       spanCount: 18,
     },
     {
+      desc: "POLYGON()",
+      definition:
+        "POLYGON(evenodd, 0px 0px, 10%200px,30%30% , calc(250px - 10px) 0 ,\n " +
+        "12em var(--variable), 100% 100%) margin-box",
+      spanCount: 18,
+    },
+    {
       desc: "Invalid polygon shape",
       definition: "polygon(0px 0px 100px 20px, 20% 20%)",
       spanCount: 0,
@@ -464,6 +471,11 @@ function testParseShape(doc, parser) {
       spanCount: 4,
     },
     {
+      desc: "CIRCLE",
+      definition: "CIRCLE(12em)",
+      spanCount: 1,
+    },
+    {
       desc: "Invalid circle shape",
       definition: "circle(25%at30%30%)",
       spanCount: 0,
@@ -494,6 +506,11 @@ function testParseShape(doc, parser) {
       spanCount: 0,
     },
     {
+      desc: "ELLIPSE()",
+      definition: "ELLIPSE(200px 10em)",
+      spanCount: 2,
+    },
+    {
       desc: "Invalid ellipse shape",
       definition: "ellipse(200px100px at 30$ 20%)",
       spanCount: 0,
@@ -522,6 +539,11 @@ function testParseShape(doc, parser) {
       desc: "Inset shape with 0 arguments",
       definition: "inset()",
       spanCount: 0,
+    },
+    {
+      desc: "INSET()",
+      definition: "INSET(200px)",
+      spanCount: 1,
     },
     {
       desc: "offset-path property with inset shape value",

@@ -14,6 +14,7 @@ const COLOR_CLASS = "color-class";
 const URL_CLASS = "url-class";
 const CUBIC_BEZIER_CLASS = "bezier-class";
 const ANGLE_CLASS = "angle-class";
+const LINEAR_EASING_CLASS = "linear-easing-class";
 
 const TEST_DATA = [
   {
@@ -239,6 +240,14 @@ const TEST_DATA = [
     },
   },
   {
+    name: "animation-timing-function",
+    value: "CUBIC-BEZIER(.1, 0.55, .9, -3.45)",
+    test: fragment => {
+      is(countCubicBeziers(fragment), 1);
+      is(getCubicBezier(fragment), "CUBIC-BEZIER(.1, 0.55, .9, -3.45)");
+    },
+  },
+  {
     name: "animation",
     value: "move 3s cubic-bezier(.1, 0.55, .9, -3.45)",
     test: fragment => {
@@ -252,6 +261,22 @@ const TEST_DATA = [
     test: fragment => {
       is(countCubicBeziers(fragment), 1);
       is(getCubicBezier(fragment), "ease-in");
+    },
+  },
+  {
+    name: "animation-timing-function",
+    value: "linear(0, 1 50% 100%)",
+    test: fragment => {
+      is(countLinears(fragment), 1);
+      is(getLinear(fragment), "linear(0, 1 50% 100%)");
+    },
+  },
+  {
+    name: "animation-timing-function",
+    value: "LINEAR(0, 1 50% 100%)",
+    test: fragment => {
+      is(countLinears(fragment), 1);
+      is(getLinear(fragment), "LINEAR(0, 1 50% 100%)");
     },
   },
   {
@@ -319,6 +344,7 @@ add_task(async function () {
         urlClass: URL_CLASS,
         bezierClass: CUBIC_BEZIER_CLASS,
         angleClass: ANGLE_CLASS,
+        linearEasingClass: LINEAR_EASING_CLASS,
       })
     );
   }
@@ -336,6 +362,9 @@ function countUrls(fragment) {
 function countCubicBeziers(fragment) {
   return fragment.querySelectorAll("." + CUBIC_BEZIER_CLASS).length;
 }
+function countLinears(fragment) {
+  return fragment.querySelectorAll("." + LINEAR_EASING_CLASS).length;
+}
 function getColor(fragment, index) {
   return fragment.querySelectorAll("." + COLOR_CLASS)[index || 0].textContent;
 }
@@ -344,5 +373,9 @@ function getUrl(fragment, index) {
 }
 function getCubicBezier(fragment, index) {
   return fragment.querySelectorAll("." + CUBIC_BEZIER_CLASS)[index || 0]
+    .textContent;
+}
+function getLinear(fragment, index = 0) {
+  return fragment.querySelectorAll("." + LINEAR_EASING_CLASS)[index]
     .textContent;
 }
