@@ -52,8 +52,7 @@ class FFmpegVideoEncoder<LIBAV_VER> final : public MediaDataEncoder {
   RefPtr<InitPromise> ProcessInit();
   RefPtr<EncodePromise> ProcessEncode(RefPtr<const MediaData> aSample);
   RefPtr<ReconfigurationPromise> ProcessReconfigure(
-      const RefPtr<const EncoderConfigurationChangeList>
-          aConfigurationChanges);
+      const RefPtr<const EncoderConfigurationChangeList> aConfigurationChanges);
   RefPtr<EncodePromise> ProcessDrain();
   RefPtr<ShutdownPromise> ProcessShutdown();
   MediaResult InitInternal();
