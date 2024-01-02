@@ -740,6 +740,7 @@ already_AddRefed<gfx::DrawTarget> CanvasTranslator::CreateDrawTarget(
     gfx::SurfaceFormat aFormat) {
   MOZ_DIAGNOSTIC_ASSERT(mNextTextureId >= 0, "No texture ID set");
   RefPtr<gfx::DrawTarget> dt;
+  const OpenMode initMode = OpenMode::OPEN_READ_WRITE;
   if (mNextRemoteTextureOwnerId.IsValid() &&
       gfx::gfxVars::UseAcceleratedCanvas2D()) {
     if (EnsureSharedContextWebgl()) {
@@ -747,12 +748,13 @@ already_AddRefed<gfx::DrawTarget> CanvasTranslator::CreateDrawTarget(
     }
     if (RefPtr<gfx::DrawTargetWebgl> webgl =
             gfx::DrawTargetWebgl::Create(aSize, aFormat, mSharedContext)) {
-      webgl->BeginFrame(gfx::IntRect());
+      webgl->BeginFrame(true);
       dt = webgl.forget().downcast<gfx::DrawTarget>();
       if (dt) {
         TextureInfo& info = mTextureInfo[mNextTextureId];
         info.mDrawTarget = dt;
         info.mRemoteTextureOwnerId = mNextRemoteTextureOwnerId;
+        info.mTextureLockMode = initMode;
         CacheSnapshotShmem(mNextTextureId);
       }
     }
@@ -769,7 +771,7 @@ already_AddRefed<gfx::DrawTarget> CanvasTranslator::CreateDrawTarget(
         continue;
       }
 
-      if (NS_WARN_IF(!textureData->Lock(OpenMode::OPEN_READ_WRITE))) {
+      if (NS_WARN_IF(!textureData->Lock(initMode))) {
         gfxCriticalNote << "CanvasTranslator::CreateDrawTarget lock failed";
         continue;
       }
@@ -785,6 +787,7 @@ already_AddRefed<gfx::DrawTarget> CanvasTranslator::CreateDrawTarget(
       TextureInfo& info = mTextureInfo[mNextTextureId];
       info.mTextureData = std::move(textureData);
       info.mRemoteTextureOwnerId = mNextRemoteTextureOwnerId;
+      info.mTextureLockMode = initMode;
     } while (!dt && CheckForFreshCanvasDevice(__LINE__));
   }
 
@@ -817,18 +820,28 @@ void CanvasTranslator::RemoveTexture(int64_t aTextureId) {
 
 bool CanvasTranslator::LockTexture(int64_t aTextureId, OpenMode aMode,
                                    bool aInvalidContents) {
+  if (aMode == OpenMode::OPEN_NONE) {
+    return false;
+  }
   auto result = mTextureInfo.find(aTextureId);
   if (result == mTextureInfo.end()) {
     return false;
   }
-  if (result->second.mDrawTarget &&
-      result->second.mDrawTarget->GetBackendType() == gfx::BackendType::WEBGL) {
+  auto& info = result->second;
+  if (info.mTextureLockMode != OpenMode::OPEN_NONE) {
+    return (info.mTextureLockMode & aMode) == aMode;
+  }
+  if (info.mDrawTarget &&
+      info.mDrawTarget->GetBackendType() == gfx::BackendType::WEBGL) {
     gfx::DrawTargetWebgl* webgl =
-        static_cast<gfx::DrawTargetWebgl*>(result->second.mDrawTarget.get());
-    webgl->BeginFrame(aInvalidContents ? gfx::IntRect() : webgl->GetRect());
-  } else if (!result->second.mTextureData) {
+        static_cast<gfx::DrawTargetWebgl*>(info.mDrawTarget.get());
+    if (aMode & OpenMode::OPEN_WRITE) {
+      webgl->BeginFrame(aInvalidContents);
+    }
+  } else if (!info.mTextureData) {
     return false;
   }
+  info.mTextureLockMode = aMode;
   return true;
 }
 
@@ -837,18 +850,23 @@ bool CanvasTranslator::UnlockTexture(int64_t aTextureId) {
   if (result == mTextureInfo.end()) {
     return false;
   }
-  if (result->second.mDrawTarget &&
-      result->second.mDrawTarget->GetBackendType() == gfx::BackendType::WEBGL) {
-    gfx::DrawTargetWebgl* webgl =
-        static_cast<gfx::DrawTargetWebgl*>(result->second.mDrawTarget.get());
-    webgl->EndFrame();
-    if (!result->second.mNotifiedRequiresRefresh && webgl->RequiresRefresh()) {
-      result->second.mNotifiedRequiresRefresh = true;
-      NotifyRequiresRefresh(aTextureId);
-    }
-  } else if (!result->second.mTextureData) {
+  auto& info = result->second;
+  if (info.mTextureLockMode == OpenMode::OPEN_NONE) {
     return false;
   }
+  if (info.mDrawTarget &&
+      info.mDrawTarget->GetBackendType() == gfx::BackendType::WEBGL) {
+    gfx::DrawTargetWebgl* webgl =
+        static_cast<gfx::DrawTargetWebgl*>(info.mDrawTarget.get());
+    if (info.mTextureLockMode & OpenMode::OPEN_WRITE) {
+      webgl->EndFrame();
+      if (!info.mNotifiedRequiresRefresh && webgl->RequiresRefresh()) {
+        info.mNotifiedRequiresRefresh = true;
+        NotifyRequiresRefresh(aTextureId);
+      }
+    }
+  }
+  info.mTextureLockMode = OpenMode::OPEN_NONE;
   return true;
 }
 
@@ -857,13 +875,14 @@ bool CanvasTranslator::PresentTexture(int64_t aTextureId, RemoteTextureId aId) {
   if (result == mTextureInfo.end()) {
     return false;
   }
-  RemoteTextureOwnerId ownerId = result->second.mRemoteTextureOwnerId;
-  if (result->second.mDrawTarget &&
-      result->second.mDrawTarget->GetBackendType() == gfx::BackendType::WEBGL) {
+  auto& info = result->second;
+  RemoteTextureOwnerId ownerId = info.mRemoteTextureOwnerId;
+  if (info.mDrawTarget &&
+      info.mDrawTarget->GetBackendType() == gfx::BackendType::WEBGL) {
     gfx::DrawTargetWebgl* webgl =
-        static_cast<gfx::DrawTargetWebgl*>(result->second.mDrawTarget.get());
+        static_cast<gfx::DrawTargetWebgl*>(info.mDrawTarget.get());
     webgl->CopyToSwapChain(aId, ownerId, mOtherPid);
-  } else if (TextureData* data = result->second.mTextureData.get()) {
+  } else if (TextureData* data = info.mTextureData.get()) {
     PushRemoteTexture(aTextureId, data, aId, ownerId);
   }
   return true;

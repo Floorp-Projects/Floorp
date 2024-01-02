@@ -4614,22 +4614,19 @@ void SharedContextWebgl::CachePrefs() {
 }
 
 // For use within CanvasRenderingContext2D, called on BorrowDrawTarget.
-void DrawTargetWebgl::BeginFrame(const IntRect& aPersistedRect) {
-  if (mNeedsPresent) {
-    mNeedsPresent = false;
-    // If still rendering into the Skia target, switch back to the WebGL
-    // context.
-    if (!mWebglValid) {
-      if (aPersistedRect.IsEmpty()) {
-        // If nothing needs to persist, just mark the WebGL context valid.
-        mWebglValid = true;
-        // Even if the Skia framebuffer is marked clear, since the WebGL
-        // context is not valid, its contents may be out-of-date and not
-        // necessarily clear.
-        mIsClear = false;
-      } else {
-        FlushFromSkia();
-      }
+void DrawTargetWebgl::BeginFrame(bool aInvalidContents) {
+  // If still rendering into the Skia target, switch back to the WebGL
+  // context.
+  if (!mWebglValid) {
+    if (aInvalidContents) {
+      // If nothing needs to persist, just mark the WebGL context valid.
+      mWebglValid = true;
+      // Even if the Skia framebuffer is marked clear, since the WebGL
+      // context is not valid, its contents may be out-of-date and not
+      // necessarily clear.
+      mIsClear = false;
+    } else {
+      FlushFromSkia();
     }
   }
   // Check if we need to clear out any cached because of memory pressure.
@@ -4655,32 +4652,28 @@ void DrawTargetWebgl::EndFrame() {
   mSharedContext->mWebgl->EndOfFrame();
   // Check if we need to clear out any cached because of memory pressure.
   mSharedContext->ClearCachesIfNecessary();
-  // The framebuffer is dirty, so it needs to be copied to the swapchain.
-  mNeedsPresent = true;
 }
 
 void DrawTargetWebgl::CopyToSwapChain(layers::RemoteTextureId aId,
                                       layers::RemoteTextureOwnerId aOwnerId,
                                       base::ProcessId aPid) {
-  if (mNeedsPresent) {
-    mNeedsPresent = false;
-    if (mWebglValid || FlushFromSkia()) {
-      // Copy and swizzle the WebGL framebuffer to the swap chain front buffer.
-      webgl::SwapChainOptions options;
-      options.bgra = true;
-      // Allow async present to be toggled on for accelerated Canvas2D
-      // independent of WebGL via pref.
-      options.forceAsyncPresent =
-          StaticPrefs::gfx_canvas_accelerated_async_present();
-      options.remoteTextureId = aId;
-      options.remoteTextureOwnerId = aOwnerId;
-      const RefPtr<layers::ImageBridgeChild> imageBridge =
-          layers::ImageBridgeChild::GetSingleton();
-      auto texType = layers::TexTypeForWebgl(imageBridge);
-      mSharedContext->mWebgl->CopyToSwapChain(mFramebuffer, texType, options,
-                                              aPid);
-    }
+  if (!mWebglValid && !FlushFromSkia()) {
+    return;
   }
+
+  // Copy and swizzle the WebGL framebuffer to the swap chain front buffer.
+  webgl::SwapChainOptions options;
+  options.bgra = true;
+  // Allow async present to be toggled on for accelerated Canvas2D
+  // independent of WebGL via pref.
+  options.forceAsyncPresent =
+      StaticPrefs::gfx_canvas_accelerated_async_present();
+  options.remoteTextureId = aId;
+  options.remoteTextureOwnerId = aOwnerId;
+  const RefPtr<layers::ImageBridgeChild> imageBridge =
+      layers::ImageBridgeChild::GetSingleton();
+  auto texType = layers::TexTypeForWebgl(imageBridge);
+  mSharedContext->mWebgl->CopyToSwapChain(mFramebuffer, texType, options, aPid);
 }
 
 already_AddRefed<DrawTarget> DrawTargetWebgl::CreateSimilarDrawTarget(
