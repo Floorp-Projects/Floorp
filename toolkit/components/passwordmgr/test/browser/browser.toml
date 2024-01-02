@@ -146,7 +146,7 @@ support-files = [
 skip-if = ["a11y_checks"] # Bugs 1858041, 1854454 and 1824058 for causing intermittent crashes
 
 ["browser_doorhanger_submit_telemetry.js"]
-fail-if = ["a11y_checks"] # Bug 1854452 clicked image may not be focusable; clicked autocomplete-richlistitem may not be labeled
+fail-if = ["a11y_checks"] # Bug 1854452 clicked dropmaker may not be focusable
 skip-if = [
   "tsan", # Bug 1661305
   "os == 'linux' && debug", # Bug 1658056
