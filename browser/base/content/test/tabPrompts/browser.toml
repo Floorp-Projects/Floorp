@@ -21,7 +21,6 @@ support-files = [
   "redirect-sameDomain.html",
   "auth-route.sjs",
 ]
-fail-if = ["a11y_checks"] # Bug 1854233 urlbar-input-container may not be focusable
 
 ["browser_beforeunload_urlbar.js"]
 support-files = ["file_beforeunload_stop.html"]

@@ -42,7 +42,14 @@ add_task(async function test_readerModeURLDrag() {
       let urlEvent = new DragEvent("dragstart", { dataTransfer: dataTran });
       let oldUrl = TEST_PATH + "readerModeArticle.html";
       let urlBarContainer = document.getElementById("urlbar-input-container");
+      // We intentionally turn off a11y_checks for the following click, because
+      // it is send to prepare the URL Bar for the mouse-specific action - for a
+      // drag event, while there are other ways are accessible for users of
+      // assistive technology and keyboards, therefore this test can be excluded
+      // from the accessibility tests.
+      AccessibilityUtils.setEnv({ mustHaveAccessibleRule: false });
       urlBarContainer.click();
+      AccessibilityUtils.resetEnv();
       urlbar.dispatchEvent(urlEvent);
 
       let newUrl = urlEvent.dataTransfer.getData("text/plain");
