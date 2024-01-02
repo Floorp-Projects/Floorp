@@ -41,7 +41,6 @@ ChromeUtils.defineESModuleGetters(this, {
   isProductURL: "chrome://global/content/shopping/ShoppingProduct.mjs",
   LightweightThemeConsumer:
     "resource://gre/modules/LightweightThemeConsumer.sys.mjs",
-  Log: "resource://gre/modules/Log.sys.mjs",
   LoginHelper: "resource://gre/modules/LoginHelper.sys.mjs",
   LoginManagerParent: "resource://gre/modules/LoginManagerParent.sys.mjs",
   MigrationUtils: "resource:///modules/MigrationUtils.sys.mjs",
