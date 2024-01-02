@@ -11,6 +11,7 @@
 #include <cstddef>
 
 #include "lib/jxl/base/common.h"
+#include "lib/jxl/image.h"
 
 namespace jxl {
 // Some enums and typedefs used by more than one header file.
@@ -56,6 +57,30 @@ struct FrameDimensions {
     ysize_dc_groups = DivCeil(ysize_blocks, group_dim);
     num_groups = xsize_groups * ysize_groups;
     num_dc_groups = xsize_dc_groups * ysize_dc_groups;
+  }
+
+  Rect GroupRect(size_t group_index) const {
+    const size_t gx = group_index % xsize_groups;
+    const size_t gy = group_index / xsize_groups;
+    const Rect rect(gx * group_dim, gy * group_dim, group_dim, group_dim, xsize,
+                    ysize);
+    return rect;
+  }
+
+  Rect BlockGroupRect(size_t group_index) const {
+    const size_t gx = group_index % xsize_groups;
+    const size_t gy = group_index / xsize_groups;
+    const Rect rect(gx * (group_dim >> 3), gy * (group_dim >> 3),
+                    group_dim >> 3, group_dim >> 3, xsize_blocks, ysize_blocks);
+    return rect;
+  }
+
+  Rect DCGroupRect(size_t group_index) const {
+    const size_t gx = group_index % xsize_dc_groups;
+    const size_t gy = group_index / xsize_dc_groups;
+    const Rect rect(gx * group_dim, gy * group_dim, group_dim, group_dim,
+                    xsize_blocks, ysize_blocks);
+    return rect;
   }
 
   // Image size without any upsampling, i.e. original_size / upsampling.

@@ -6,13 +6,14 @@
 #ifndef LIB_JXL_MODULAR_ENCODING_ENCODING_H_
 #define LIB_JXL_MODULAR_ENCODING_ENCODING_H_
 
-#include <stddef.h>
-#include <stdint.h>
-
 #include <array>
+#include <cstddef>
+#include <cstdint>
 #include <vector>
 
-#include "lib/jxl/dec_ans.h"
+#include "lib/jxl/base/compiler_specific.h"
+#include "lib/jxl/base/status.h"
+#include "lib/jxl/field_encodings.h"
 #include "lib/jxl/image.h"
 #include "lib/jxl/modular/encoding/context_predict.h"
 #include "lib/jxl/modular/encoding/dec_ma.h"
@@ -21,6 +22,9 @@
 #include "lib/jxl/modular/transform/transform.h"
 
 namespace jxl {
+
+struct ANSCode;
+class BitReader;
 
 // Valid range of properties for using lookup tables instead of trees.
 constexpr int32_t kPropRangeFast = 512;

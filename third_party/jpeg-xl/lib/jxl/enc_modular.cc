@@ -16,7 +16,6 @@
 #include <vector>
 
 #include "lib/jxl/base/compiler_specific.h"
-#include "lib/jxl/base/padded_bytes.h"
 #include "lib/jxl/base/printf_macros.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/compressed_dc.h"
@@ -584,10 +583,8 @@ Status ModularFrameEncoder::ComputeEncodingData(
       } else {
         int bits = metadata.bit_depth.bits_per_sample;
         int exp_bits = metadata.bit_depth.exponent_bits_per_sample;
-        gi.channel[c_out].hshift =
-            enc_state->shared.frame_header.chroma_subsampling.HShift(c);
-        gi.channel[c_out].vshift =
-            enc_state->shared.frame_header.chroma_subsampling.VShift(c);
+        gi.channel[c_out].hshift = frame_header.chroma_subsampling.HShift(c);
+        gi.channel[c_out].vshift = frame_header.chroma_subsampling.VShift(c);
         size_t xsize_shifted = DivCeil(xsize, 1 << gi.channel[c_out].hshift);
         size_t ysize_shifted = DivCeil(ysize, 1 << gi.channel[c_out].vshift);
         gi.channel[c_out].shrink(xsize_shifted, ysize_shifted);
@@ -773,10 +770,8 @@ Status ModularFrameEncoder::ComputeEncodingData(
   }
   JXL_ASSERT(max_bitdepth <= level_max_bitdepth);
 
-  std::vector<uint32_t> quants;
-
   if (!cparams_.ModularPartIsLossless()) {
-    quants.resize(gi.channel.size(), 1);
+    quants_.resize(gi.channel.size(), 1);
     float quantizer = 0.25f;
     if (!cparams_.responsive) {
       JXL_DEBUG_V(1,
@@ -832,7 +827,7 @@ Status ModularFrameEncoder::ComputeEncodingData(
       }
       if (q < 1) q = 1;
       QuantizeChannel(gi.channel[i], q);
-      quants[i] = q;
+      quants_[i] = q;
     }
   }
 
@@ -903,7 +898,13 @@ Status ModularFrameEncoder::ComputeEncodingData(
     }
   }
 
-  if (!quants.empty()) {
+  JXL_RETURN_IF_ERROR(ValidateChannelDimensions(gi, stream_options_[0]));
+  return true;
+}
+
+Status ModularFrameEncoder::ComputeTree(ThreadPool* pool) {
+  std::vector<ModularMultiplierInfo> multiplier_info;
+  if (!quants_.empty()) {
     for (uint32_t stream_id = 0; stream_id < stream_images_.size();
          stream_id++) {
       // skip non-modular stream_ids
@@ -920,65 +921,48 @@ Status ModularFrameEncoder::ComputeEncodingData(
         size_t ch_id = stream_id == 0
                            ? i
                            : gi_channel_[stream_id][i - image.nb_meta_channels];
-        uint32_t q = quants[ch_id];
+        uint32_t q = quants_[ch_id];
         // Inform the tree splitting heuristics that each channel in each group
         // used this quantization factor. This will produce a tree with the
         // given multipliers.
-        if (multiplier_info_.empty() ||
-            multiplier_info_.back().range[1][0] != stream_id ||
-            multiplier_info_.back().multiplier != q) {
+        if (multiplier_info.empty() ||
+            multiplier_info.back().range[1][0] != stream_id ||
+            multiplier_info.back().multiplier != q) {
           StaticPropRange range;
           range[0] = {{i, i + 1}};
           range[1] = {{stream_id, stream_id + 1}};
-          multiplier_info_.push_back({range, (uint32_t)q});
+          multiplier_info.push_back({range, (uint32_t)q});
         } else {
           // Previous channel in the same group had the same quantization
           // factor. Don't provide two different ranges, as that creates
           // unnecessary nodes.
-          multiplier_info_.back().range[0][1] = i + 1;
+          multiplier_info.back().range[0][1] = i + 1;
         }
       }
     }
     // Merge group+channel settings that have the same channels and quantization
     // factors, to avoid unnecessary nodes.
-    std::sort(multiplier_info_.begin(), multiplier_info_.end(),
+    std::sort(multiplier_info.begin(), multiplier_info.end(),
               [](ModularMultiplierInfo a, ModularMultiplierInfo b) {
                 return std::make_tuple(a.range, a.multiplier) <
                        std::make_tuple(b.range, b.multiplier);
               });
     size_t new_num = 1;
-    for (size_t i = 1; i < multiplier_info_.size(); i++) {
-      ModularMultiplierInfo& prev = multiplier_info_[new_num - 1];
-      ModularMultiplierInfo& cur = multiplier_info_[i];
+    for (size_t i = 1; i < multiplier_info.size(); i++) {
+      ModularMultiplierInfo& prev = multiplier_info[new_num - 1];
+      ModularMultiplierInfo& cur = multiplier_info[i];
       if (prev.range[0] == cur.range[0] && prev.multiplier == cur.multiplier &&
           prev.range[1][1] == cur.range[1][0]) {
         prev.range[1][1] = cur.range[1][1];
       } else {
-        multiplier_info_[new_num++] = multiplier_info_[i];
+        multiplier_info[new_num++] = multiplier_info[i];
       }
     }
-    multiplier_info_.resize(new_num);
+    multiplier_info.resize(new_num);
   }
 
-  JXL_RETURN_IF_ERROR(ValidateChannelDimensions(gi, stream_options_[0]));
-
-  return PrepareEncoding(frame_header, pool, enc_state->heuristics.get(),
-                         aux_out);
-}
-
-Status ModularFrameEncoder::PrepareEncoding(const FrameHeader& frame_header,
-                                            ThreadPool* pool,
-                                            EncoderHeuristics* heuristics,
-                                            AuxOut* aux_out) {
-  if (!tree_.empty()) return true;
-
-  // Compute tree.
-  size_t num_streams = stream_images_.size();
-  stream_headers_.resize(num_streams);
-  tokens_.resize(num_streams);
-
-  if (heuristics->CustomFixedTreeLossless(frame_dim_, &tree_)) {
-    // Using a fixed tree.
+  if (!cparams_.custom_fixed_tree.empty()) {
+    tree_ = cparams_.custom_fixed_tree;
   } else if (cparams_.speed_tier < SpeedTier::kFalcon ||
              !cparams_.modular_mode) {
     // Avoid creating a tree with leaves that don't correspond to any pixels.
@@ -1011,7 +995,6 @@ Status ModularFrameEncoder::PrepareEncoding(const FrameHeader& frame_header,
           uint32_t stop = useful_splits[chunk + 1];
           while (start < stop && stream_images_[start].empty()) ++start;
           while (start < stop && stream_images_[stop - 1].empty()) --stop;
-          uint32_t max_c = 0;
           if (stream_options_[start].tree_kind !=
               ModularOptions::TreeKind::kLearn) {
             for (size_t i = start; i < stop; i++) {
@@ -1035,6 +1018,7 @@ Status ModularFrameEncoder::PrepareEncoding(const FrameHeader& frame_header,
             invalid_force_wp.test_and_set(std::memory_order_acq_rel);
             return;
           }
+          uint32_t max_c = 0;
           std::vector<pixel_type> pixel_samples;
           std::vector<pixel_type> diff_samples;
           std::vector<uint32_t> group_pixel_count;
@@ -1048,7 +1032,7 @@ Status ModularFrameEncoder::PrepareEncoding(const FrameHeader& frame_header,
           StaticPropRange range;
           range[0] = {{0, max_c}};
           range[1] = {{start, stop}};
-          auto local_multiplier_info = multiplier_info_;
+          auto local_multiplier_info = multiplier_info;
 
           tree_samples.PreQuantizeProperties(
               range, local_multiplier_info, group_pixel_count,
@@ -1105,7 +1089,13 @@ Status ModularFrameEncoder::PrepareEncoding(const FrameHeader& frame_header,
       PrintTree(tree_, aux_out->debug_prefix + "/global_tree");
     }
   } */
+  return true;
+}
 
+Status ModularFrameEncoder::ComputeTokens(ThreadPool* pool) {
+  size_t num_streams = stream_images_.size();
+  stream_headers_.resize(num_streams);
+  tokens_.resize(num_streams);
   image_widths_.resize(num_streams);
   JXL_RETURN_IF_ERROR(RunOnPool(
       pool, 0, num_streams, ThreadPool::NoInit,
@@ -1125,7 +1115,8 @@ Status ModularFrameEncoder::PrepareEncoding(const FrameHeader& frame_header,
   return true;
 }
 
-Status ModularFrameEncoder::EncodeGlobalInfo(BitWriter* writer,
+Status ModularFrameEncoder::EncodeGlobalInfo(bool streaming_mode,
+                                             BitWriter* writer,
                                              AuxOut* aux_out) {
   BitWriter::Allotment allotment(writer, 1);
   // If we are using brotli, or not using modular mode.
@@ -1178,10 +1169,17 @@ Status ModularFrameEncoder::EncodeGlobalInfo(BitWriter* writer,
     params.uint_method = HistogramParams::HybridUintMethod::k000;
     params.force_huffman = true;
   }
-  BuildAndEncodeHistograms(params, kNumTreeContexts, tree_tokens_, &code_,
-                           &context_map_, writer, kLayerModularTree, aux_out);
-  WriteTokens(tree_tokens_[0], code_, context_map_, writer, kLayerModularTree,
-              aux_out);
+  {
+    EntropyEncodingData tree_code;
+    std::vector<uint8_t> tree_context_map;
+    BuildAndEncodeHistograms(params, kNumTreeContexts, tree_tokens_, &tree_code,
+                             &tree_context_map, writer, kLayerModularTree,
+                             aux_out);
+    WriteTokens(tree_tokens_[0], tree_code, tree_context_map, 0, writer,
+                kLayerModularTree, aux_out);
+  }
+  params.streaming_mode = streaming_mode;
+  params.add_missing_symbols = streaming_mode;
   params.image_widths = image_widths_;
   // Write histograms.
   BuildAndEncodeHistograms(params, (tree_.size() + 1) / 2, tokens_, &code_,
@@ -1198,8 +1196,17 @@ Status ModularFrameEncoder::EncodeStream(BitWriter* writer, AuxOut* aux_out,
   }
   JXL_RETURN_IF_ERROR(
       Bundle::Write(stream_headers_[stream_id], writer, layer, aux_out));
-  WriteTokens(tokens_[stream_id], code_, context_map_, writer, layer, aux_out);
+  WriteTokens(tokens_[stream_id], code_, context_map_, 0, writer, layer,
+              aux_out);
   return true;
+}
+
+void ModularFrameEncoder::ClearStreamData(const ModularStreamId& stream) {
+  size_t stream_id = stream.ID(frame_dim_);
+  Image empty_image;
+  std::vector<Token> empty_tokens;
+  std::swap(stream_images_[stream_id], empty_image);
+  std::swap(tokens_[stream_id], empty_tokens);
 }
 
 namespace {
@@ -1502,10 +1509,11 @@ int QuantizeGradient(const int32_t* qrow, size_t onerow, size_t c, size_t x,
   return residual + pred.guess;
 }
 
-void ModularFrameEncoder::AddVarDCTDC(const Image3F& dc, size_t group_index,
-                                      bool nl_dc, PassesEncoderState* enc_state,
+void ModularFrameEncoder::AddVarDCTDC(const FrameHeader& frame_header,
+                                      const Image3F& dc, const Rect& r,
+                                      size_t group_index, bool nl_dc,
+                                      PassesEncoderState* enc_state,
                                       bool jpeg_transcode) {
-  const Rect r = enc_state->shared.DCGroupRect(group_index);
   extra_dc_precision[group_index] = nl_dc ? 1 : 0;
   float mul = 1 << extra_dc_precision[group_index];
 
@@ -1532,7 +1540,7 @@ void ModularFrameEncoder::AddVarDCTDC(const Image3F& dc, size_t group_index,
   stream_images_[stream_id] = Image(r.xsize(), r.ysize(), 8, 3);
   if (nl_dc && stream_options_[stream_id].tree_kind ==
                    ModularOptions::TreeKind::kGradientFixedDC) {
-    JXL_ASSERT(enc_state->shared.frame_header.chroma_subsampling.Is444());
+    JXL_ASSERT(frame_header.chroma_subsampling.Is444());
     for (size_t c : {1, 0, 2}) {
       float inv_factor = enc_state->shared.quantizer.GetInvDcStep(c) * mul;
       float y_factor = enc_state->shared.quantizer.GetDcStep(1) / mul;
@@ -1561,7 +1569,7 @@ void ModularFrameEncoder::AddVarDCTDC(const Image3F& dc, size_t group_index,
       }
     }
   } else if (nl_dc) {
-    JXL_ASSERT(enc_state->shared.frame_header.chroma_subsampling.Is444());
+    JXL_ASSERT(frame_header.chroma_subsampling.Is444());
     for (size_t c : {1, 0, 2}) {
       float inv_factor = enc_state->shared.quantizer.GetInvDcStep(c) * mul;
       float y_factor = enc_state->shared.quantizer.GetDcStep(1) / mul;
@@ -1593,7 +1601,7 @@ void ModularFrameEncoder::AddVarDCTDC(const Image3F& dc, size_t group_index,
         }
       }
     }
-  } else if (enc_state->shared.frame_header.chroma_subsampling.Is444()) {
+  } else if (frame_header.chroma_subsampling.Is444()) {
     for (size_t c : {1, 0, 2}) {
       float inv_factor = enc_state->shared.quantizer.GetInvDcStep(c) * mul;
       float y_factor = enc_state->shared.quantizer.GetDcStep(1) / mul;
@@ -1619,13 +1627,10 @@ void ModularFrameEncoder::AddVarDCTDC(const Image3F& dc, size_t group_index,
     }
   } else {
     for (size_t c : {1, 0, 2}) {
-      Rect rect(
-          r.x0() >> enc_state->shared.frame_header.chroma_subsampling.HShift(c),
-          r.y0() >> enc_state->shared.frame_header.chroma_subsampling.VShift(c),
-          r.xsize() >>
-              enc_state->shared.frame_header.chroma_subsampling.HShift(c),
-          r.ysize() >>
-              enc_state->shared.frame_header.chroma_subsampling.VShift(c));
+      Rect rect(r.x0() >> frame_header.chroma_subsampling.HShift(c),
+                r.y0() >> frame_header.chroma_subsampling.VShift(c),
+                r.xsize() >> frame_header.chroma_subsampling.HShift(c),
+                r.ysize() >> frame_header.chroma_subsampling.VShift(c));
       float inv_factor = enc_state->shared.quantizer.GetInvDcStep(c) * mul;
       size_t ys = rect.ysize();
       size_t xs = rect.xsize();
@@ -1646,13 +1651,12 @@ void ModularFrameEncoder::AddVarDCTDC(const Image3F& dc, size_t group_index,
   DequantDC(r, &enc_state->shared.dc_storage, &enc_state->shared.quant_dc,
             stream_images_[stream_id], enc_state->shared.quantizer.MulDC(),
             1.0 / mul, enc_state->shared.cmap.DCFactors(),
-            enc_state->shared.frame_header.chroma_subsampling,
-            enc_state->shared.block_ctx_map);
+            frame_header.chroma_subsampling, enc_state->shared.block_ctx_map);
 }
 
-void ModularFrameEncoder::AddACMetadata(size_t group_index, bool jpeg_transcode,
+void ModularFrameEncoder::AddACMetadata(const Rect& r, size_t group_index,
+                                        bool jpeg_transcode,
                                         PassesEncoderState* enc_state) {
-  const Rect r = enc_state->shared.DCGroupRect(group_index);
   size_t stream_id = ModularStreamId::ACMetadata(group_index).ID(frame_dim_);
   stream_options_[stream_id].max_chan_size = 0xFFFFFF;
   stream_options_[stream_id].wp_tree_mode = ModularOptions::TreeMode::kNoWP;

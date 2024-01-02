@@ -116,11 +116,11 @@ Status EncodeQuant(const QuantEncoding& encoding, size_t idx, size_t size_x,
 
 }  // namespace
 
-Status DequantMatricesEncode(const DequantMatrices* matrices, BitWriter* writer,
+Status DequantMatricesEncode(const DequantMatrices& matrices, BitWriter* writer,
                              size_t layer, AuxOut* aux_out,
                              ModularFrameEncoder* modular_frame_encoder) {
   bool all_default = true;
-  const std::vector<QuantEncoding>& encodings = matrices->encodings();
+  const std::vector<QuantEncoding>& encodings = matrices.encodings();
 
   for (size_t i = 0; i < encodings.size(); i++) {
     if (encodings[i].mode != QuantEncoding::kQuantModeLibrary ||
@@ -142,11 +142,11 @@ Status DequantMatricesEncode(const DequantMatrices* matrices, BitWriter* writer,
   return true;
 }
 
-Status DequantMatricesEncodeDC(const DequantMatrices* matrices,
+Status DequantMatricesEncodeDC(const DequantMatrices& matrices,
                                BitWriter* writer, size_t layer,
                                AuxOut* aux_out) {
   bool all_default = true;
-  const float* dc_quant = matrices->DCQuants();
+  const float* dc_quant = matrices.DCQuants();
   for (size_t c = 0; c < 3; c++) {
     if (dc_quant[c] != kDCQuant[c]) {
       all_default = false;
@@ -167,7 +167,7 @@ void DequantMatricesSetCustomDC(DequantMatrices* matrices, const float* dc) {
   matrices->SetDCQuant(dc);
   // Roundtrip encode/decode DC to ensure same values as decoder.
   BitWriter writer;
-  JXL_CHECK(DequantMatricesEncodeDC(matrices, &writer, 0, nullptr));
+  JXL_CHECK(DequantMatricesEncodeDC(*matrices, &writer, 0, nullptr));
   writer.ZeroPadToByte();
   BitReader br(writer.GetSpan());
   // Called only in the encoder: should fail only for programmer errors.
@@ -187,7 +187,7 @@ void DequantMatricesRoundtrip(DequantMatrices* matrices) {
   // Do not pass modular en/decoder, as they only change entropy and not
   // values.
   BitWriter writer;
-  JXL_CHECK(DequantMatricesEncode(matrices, &writer, 0, nullptr));
+  JXL_CHECK(DequantMatricesEncode(*matrices, &writer, 0, nullptr));
   writer.ZeroPadToByte();
   BitReader br(writer.GetSpan());
   // Called only in the encoder: should fail only for programmer errors.

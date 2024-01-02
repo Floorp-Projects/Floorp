@@ -75,7 +75,9 @@ information on using pull requests.
   functionality. Reviewers may ask you to split a Pull Request and it is
   easier to create a smaller change from the beginning.
 
-  * Describe your commits. Add a meaningful description to your commit message, explain what you are changing if it is not trivially obvious, but more importantly explain *why* you are making those changes. For example "Fix
+  * Describe your commits. Add a meaningful description to your commit message,
+  explain what you are changing if it is not trivially obvious, but more
+  importantly explain *why* you are making those changes. For example "Fix
   build" is not a good commit message, describe what build and if it makes sense
   why is this fixing it or why was it failing without this. It is very likely
   that people far in the future without any context you have right now will be
@@ -113,8 +115,7 @@ information on using pull requests.
 
   * Sign the CLA (only needed once per user, see above).
 
-  * AUTHORS: If this is your first contribution, add your name or your
-  company name to the [AUTHORS](AUTHORS) file for copyright tracking purposes.
+  * AUTHORS: You can add your name to the [AUTHORS](AUTHORS) file.
 
   * Style guide. Check `./ci.sh lint`.
 

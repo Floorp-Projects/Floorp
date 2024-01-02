@@ -5,10 +5,11 @@
 
 #undef HWY_TARGET_INCLUDE
 #define HWY_TARGET_INCLUDE "lib/jxl/fast_math_test.cc"
+#include <jxl/cms.h>
+
 #include <hwy/foreach_target.h>
 
 #include "lib/jxl/base/random.h"
-#include "lib/jxl/cms/jxl_cms.h"
 #include "lib/jxl/cms/transfer_functions-inl.h"
 #include "lib/jxl/dec_xyb-inl.h"
 #include "lib/jxl/enc_xyb.h"
@@ -138,39 +139,6 @@ HWY_NOINLINE void TestFastSRGB() {
   printf("max abs err %e\n", static_cast<double>(max_abs_err));
 }
 
-HWY_NOINLINE void TestFastPQEFD() {
-  constexpr size_t kNumTrials = 1 << 23;
-  Rng rng(1);
-  float max_abs_err = 0;
-  HWY_FULL(float) d;
-  TF_PQ tf_pq(/*display_intensity_target=*/11111.0);
-  for (size_t i = 0; i < kNumTrials; i++) {
-    const float f = rng.UniformF(0.0f, 1.0f);
-    const float actual = GetLane(tf_pq.EncodedFromDisplay(d, Set(d, f)));
-    const float expected = tf_pq.EncodedFromDisplay(f);
-    const float abs_err = std::abs(expected - actual);
-    EXPECT_LT(abs_err, 7e-7) << "f = " << f;
-    max_abs_err = std::max(max_abs_err, abs_err);
-  }
-  printf("max abs err %e\n", static_cast<double>(max_abs_err));
-}
-
-HWY_NOINLINE void TestFastHLGEFD() {
-  constexpr size_t kNumTrials = 1 << 23;
-  Rng rng(1);
-  float max_abs_err = 0;
-  HWY_FULL(float) d;
-  for (size_t i = 0; i < kNumTrials; i++) {
-    const float f = rng.UniformF(0.0f, 1.0f);
-    const float actual = GetLane(TF_HLG().EncodedFromDisplay(d, Set(d, f)));
-    const float expected = TF_HLG().EncodedFromDisplay(f);
-    const float abs_err = std::abs(expected - actual);
-    EXPECT_LT(abs_err, 5e-7) << "f = " << f;
-    max_abs_err = std::max(max_abs_err, abs_err);
-  }
-  printf("max abs err %e\n", static_cast<double>(max_abs_err));
-}
-
 HWY_NOINLINE void TestFast709EFD() {
   constexpr size_t kNumTrials = 1 << 23;
   Rng rng(1);
@@ -182,23 +150,6 @@ HWY_NOINLINE void TestFast709EFD() {
     const float expected = TF_709().EncodedFromDisplay(f);
     const float abs_err = std::abs(expected - actual);
     EXPECT_LT(abs_err, 2e-6) << "f = " << f;
-    max_abs_err = std::max(max_abs_err, abs_err);
-  }
-  printf("max abs err %e\n", static_cast<double>(max_abs_err));
-}
-
-HWY_NOINLINE void TestFastPQDFE() {
-  constexpr size_t kNumTrials = 1 << 23;
-  Rng rng(1);
-  float max_abs_err = 0;
-  HWY_FULL(float) d;
-  TF_PQ tf_pq(/*display_intensity_target=*/11111.0);
-  for (size_t i = 0; i < kNumTrials; i++) {
-    const float f = rng.UniformF(0.0f, 1.0f);
-    const float actual = GetLane(tf_pq.DisplayFromEncoded(d, Set(d, f)));
-    const float expected = tf_pq.DisplayFromEncoded(f);
-    const float abs_err = std::abs(expected - actual);
-    EXPECT_LT(abs_err, 3E-6) << "f = " << f;
     max_abs_err = std::max(max_abs_err, abs_err);
   }
   printf("max abs err %e\n", static_cast<double>(max_abs_err));
@@ -279,9 +230,6 @@ HWY_EXPORT_AND_TEST_P(FastMathTargetTest, TestFastCos);
 HWY_EXPORT_AND_TEST_P(FastMathTargetTest, TestFastErf);
 HWY_EXPORT_AND_TEST_P(FastMathTargetTest, TestCubeRoot);
 HWY_EXPORT_AND_TEST_P(FastMathTargetTest, TestFastSRGB);
-HWY_EXPORT_AND_TEST_P(FastMathTargetTest, TestFastPQDFE);
-HWY_EXPORT_AND_TEST_P(FastMathTargetTest, TestFastPQEFD);
-HWY_EXPORT_AND_TEST_P(FastMathTargetTest, TestFastHLGEFD);
 HWY_EXPORT_AND_TEST_P(FastMathTargetTest, TestFast709EFD);
 HWY_EXPORT_AND_TEST_P(FastMathTargetTest, TestFastXYB);
 

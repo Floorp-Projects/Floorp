@@ -54,20 +54,20 @@ Status DecodeContextMap(std::vector<uint8_t>* context_map, size_t* num_htrees,
   } else {
     bool use_mtf = input->ReadFixedBits<1>();
     ANSCode code;
-    std::vector<uint8_t> dummy_ctx_map;
+    std::vector<uint8_t> sink_ctx_map;
     // Usage of LZ77 is disallowed if decoding only two symbols. This doesn't
     // make sense in non-malicious bitstreams, and could cause a stack overflow
     // in malicious bitstreams by making every context map require its own
     // context map.
     JXL_RETURN_IF_ERROR(
-        DecodeHistograms(input, 1, &code, &dummy_ctx_map,
+        DecodeHistograms(input, 1, &code, &sink_ctx_map,
                          /*disallow_lz77=*/context_map->size() <= 2));
     ANSSymbolReader reader(&code, input);
     size_t i = 0;
     uint32_t maxsym = 0;
     while (i < context_map->size()) {
       uint32_t sym = reader.ReadHybridUintInlined</*uses_lz77=*/true>(
-          0, input, dummy_ctx_map);
+          0, input, sink_ctx_map);
       maxsym = sym > maxsym ? sym : maxsym;
       (*context_map)[i] = sym;
       i++;

@@ -3,10 +3,12 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+#include <jxl/cms.h>
 #include <jxl/cms_interface.h>
 #include <stdint.h>
 
 #include <algorithm>
+#include <cstdint>
 #include <new>
 #include <string>
 #include <utility>
@@ -14,11 +16,9 @@
 #include "lib/jxl/base/common.h"
 #include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/base/data_parallel.h"
-#include "lib/jxl/base/padded_bytes.h"
 #include "lib/jxl/base/random.h"
 #include "lib/jxl/base/span.h"
 #include "lib/jxl/cms/color_encoding_cms.h"
-#include "lib/jxl/cms/jxl_cms.h"
 #include "lib/jxl/cms/opsin_params.h"
 #include "lib/jxl/color_encoding_internal.h"
 #include "lib/jxl/enc_xyb.h"
@@ -232,10 +232,10 @@ TEST_F(ColorManagementTest, sRGBChromaticity) {
 }
 
 TEST_F(ColorManagementTest, D2700Chromaticity) {
-  PaddedBytes icc_data =
+  std::vector<uint8_t> icc_data =
       jxl::test::ReadTestData("jxl/color_management/sRGB-D2700.icc");
   IccBytes icc;
-  Span<const uint8_t>(icc_data).AppendTo(&icc);
+  Bytes(icc_data).AppendTo(&icc);
   ColorEncoding sRGB_D2700;
   ASSERT_TRUE(sRGB_D2700.SetICC(std::move(icc), JxlGetDefaultCms()));
 
@@ -249,10 +249,10 @@ TEST_F(ColorManagementTest, D2700Chromaticity) {
 }
 
 TEST_F(ColorManagementTest, D2700ToSRGB) {
-  PaddedBytes icc_data =
+  std::vector<uint8_t> icc_data =
       jxl::test::ReadTestData("jxl/color_management/sRGB-D2700.icc");
   IccBytes icc;
-  Span<const uint8_t>(icc_data).AppendTo(&icc);
+  Bytes(icc_data).AppendTo(&icc);
   ColorEncoding sRGB_D2700;
   ASSERT_TRUE(sRGB_D2700.SetICC(std::move(icc), JxlGetDefaultCms()));
 

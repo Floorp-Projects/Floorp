@@ -432,13 +432,8 @@ struct AdaptiveQuantizationImpl {
     size_t y_start = rect.y0() * 8;
     size_t y_end = y_start + rect.ysize() * 8;
 
-    size_t x0 = rect.x0() * 8;
-    size_t x1 = x0 + rect.xsize() * 8;
-    if (x0 != 0) x0 -= 4;
-    if (x1 != xyb.xsize()) x1 += 4;
-    if (y_start != 0) y_start -= 4;
-    if (y_end != xyb.ysize()) y_end += 4;
-    pre_erosion[thread].ShrinkTo((x1 - x0) / 4, (y_end - y_start) / 4);
+    size_t x_start = rect.x0() * 8;
+    size_t x_end = x_start + rect.xsize() * 8;
 
     // Computes image (padded to multiple of 8x8) of local pixel differences.
     // Subsample both directions by 4.
@@ -465,10 +460,17 @@ struct AdaptiveQuantizationImpl {
         static const float kOffset = 0.01;
         mask1x1_out[x] = kMul / (diff + kOffset);
       };
-      for (size_t x = x0; x < x1; ++x) {
+      for (size_t x = x_start; x < x_end; ++x) {
         scalar_pixel1x1(x);
       }
     }
+
+    if (x_start != 0) x_start -= 4;
+    if (x_end != xyb.xsize()) x_end += 4;
+    if (y_start != 0) y_start -= 4;
+    if (y_end != xyb.ysize()) y_end += 4;
+    pre_erosion[thread].ShrinkTo((x_end - x_start) / 4, (y_end - y_start) / 4);
+
     static const float limit = 0.2f;
     for (size_t y = y_start; y < y_end; ++y) {
       size_t y2 = y + 1 < ysize ? y + 1 : y;
@@ -493,22 +495,22 @@ struct AdaptiveQuantizationImpl {
         }
         diff = MaskingSqrt(diff);
         if ((y % 4) != 0) {
-          row_out[x - x0] += diff;
+          row_out[x - x_start] += diff;
         } else {
-          row_out[x - x0] = diff;
+          row_out[x - x_start] = diff;
         }
       };
 
-      size_t x = x0;
+      size_t x = x_start;
       // First pixel of the row.
-      if (x0 == 0) {
-        scalar_pixel(x0);
+      if (x_start == 0) {
+        scalar_pixel(x_start);
         ++x;
       }
       // SIMD
       const auto match_gamma_offset_v = Set(df, match_gamma_offset);
       const auto quarter = Set(df, 0.25f);
-      for (; x + 1 + Lanes(df) < x1; x += Lanes(df)) {
+      for (; x + 1 + Lanes(df) < x_end; x += Lanes(df)) {
         const auto in = LoadU(df, row_in + x);
         const auto in_r = LoadU(df, row_in + x + 1);
         const auto in_l = LoadU(df, row_in + x - 1);
@@ -523,24 +525,24 @@ struct AdaptiveQuantizationImpl {
         diff = Min(diff, Set(df, limit));
         diff = MaskingSqrt(df, diff);
         if ((y & 3) != 0) {
-          diff = Add(diff, LoadU(df, row_out + x - x0));
+          diff = Add(diff, LoadU(df, row_out + x - x_start));
         }
-        StoreU(diff, df, row_out + x - x0);
+        StoreU(diff, df, row_out + x - x_start);
       }
       // Scalar
-      for (; x < x1; ++x) {
+      for (; x < x_end; ++x) {
         scalar_pixel(x);
       }
       if (y % 4 == 3) {
         float* row_dout = pre_erosion[thread].Row((y - y_start) / 4);
-        for (size_t x = 0; x < (x1 - x0) / 4; x++) {
+        for (size_t x = 0; x < (x_end - x_start) / 4; x++) {
           row_dout[x] = (row_out[x * 4] + row_out[x * 4 + 1] +
                          row_out[x * 4 + 2] + row_out[x * 4 + 3]) *
                         0.25f;
         }
       }
     }
-    Rect from_rect(x0 % 8 == 0 ? 0 : 1, y_start % 8 == 0 ? 0 : 1,
+    Rect from_rect(x_start % 8 == 0 ? 0 : 1, y_start % 8 == 0 ? 0 : 1,
                    rect.xsize() * 2, rect.ysize() * 2);
     FuzzyErosion(butteraugli_target, from_rect, pre_erosion[thread], rect,
                  &aq_map);
@@ -751,7 +753,8 @@ static const float kDcQuant = 1.095924047623553f;
 static const float kAcQuant = 0.7381485255235064f;
 
 // Computes the decoded image for a given set of compression parameters.
-ImageBundle RoundtripImage(const Image3F& opsin, PassesEncoderState* enc_state,
+ImageBundle RoundtripImage(const FrameHeader& frame_header,
+                           const Image3F& opsin, PassesEncoderState* enc_state,
                            const JxlCmsInterface& cms, ThreadPool* pool) {
   std::unique_ptr<PassesDecoderState> dec_state =
       jxl::make_unique<PassesDecoderState>();
@@ -765,17 +768,15 @@ ImageBundle RoundtripImage(const Image3F& opsin, PassesEncoderState* enc_state,
   const size_t num_groups = xsize_groups * ysize_groups;
 
   size_t num_special_frames = enc_state->special_frames.size();
-
-  std::unique_ptr<ModularFrameEncoder> modular_frame_encoder =
-      jxl::make_unique<ModularFrameEncoder>(enc_state->shared.frame_header,
-                                            enc_state->cparams);
-  JXL_CHECK(InitializePassesEncoder(opsin, cms, pool, enc_state,
-                                    modular_frame_encoder.get(), nullptr));
-  JXL_CHECK(dec_state->Init());
-  JXL_CHECK(dec_state->InitForAC(pool));
+  size_t num_passes = enc_state->progressive_splitter.GetNumPasses();
+  ModularFrameEncoder modular_frame_encoder(frame_header, enc_state->cparams);
+  JXL_CHECK(InitializePassesEncoder(frame_header, opsin, cms, pool, enc_state,
+                                    &modular_frame_encoder, nullptr));
+  JXL_CHECK(dec_state->Init(frame_header));
+  JXL_CHECK(dec_state->InitForAC(num_passes, pool));
 
   ImageBundle decoded(&enc_state->shared.metadata->m);
-  decoded.origin = enc_state->shared.frame_header.frame_origin;
+  decoded.origin = frame_header.frame_origin;
   decoded.SetFromImage(Image3F(opsin.xsize(), opsin.ysize()),
                        dec_state->output_encoding_info.color_encoding);
 
@@ -785,10 +786,10 @@ ImageBundle RoundtripImage(const Image3F& opsin, PassesEncoderState* enc_state,
   options.render_spotcolors = false;
   options.render_noise = false;
 
-  // Same as dec_state->shared->frame_header.nonserialized_metadata->m
+  // Same as frame_header.nonserialized_metadata->m
   const ImageMetadata& metadata = *decoded.metadata();
 
-  JXL_CHECK(dec_state->PreparePipeline(&decoded, options));
+  JXL_CHECK(dec_state->PreparePipeline(frame_header, &decoded, options));
 
   hwy::AlignedUniquePtr<GroupDecCache[]> group_dec_caches;
   const auto allocate_storage = [&](const size_t num_threads) -> Status {
@@ -800,14 +801,15 @@ ImageBundle RoundtripImage(const Image3F& opsin, PassesEncoderState* enc_state,
   };
   const auto process_group = [&](const uint32_t group_index,
                                  const size_t thread) {
-    if (dec_state->shared->frame_header.loop_filter.epf_iters > 0) {
-      ComputeSigma(dec_state->shared->BlockGroupRect(group_index),
+    if (frame_header.loop_filter.epf_iters > 0) {
+      ComputeSigma(frame_header.loop_filter,
+                   dec_state->shared->frame_dim.BlockGroupRect(group_index),
                    dec_state.get());
     }
     RenderPipelineInput input =
         dec_state->render_pipeline->GetInputBuffers(group_index, thread);
     JXL_CHECK(DecodeGroupForRoundtrip(
-        enc_state->coeffs, group_index, dec_state.get(),
+        frame_header, enc_state->coeffs, group_index, dec_state.get(),
         &group_dec_caches[thread], thread, input, &decoded, nullptr));
     for (size_t c = 0; c < metadata.num_extra_channels; c++) {
       std::pair<ImageF*, Rect> ri = input.GetBuffer(3 + c);
@@ -826,7 +828,8 @@ ImageBundle RoundtripImage(const Image3F& opsin, PassesEncoderState* enc_state,
 
 constexpr int kMaxButteraugliIters = 4;
 
-void FindBestQuantization(const ImageBundle& linear, const Image3F& opsin,
+void FindBestQuantization(const FrameHeader& frame_header,
+                          const Image3F& linear, const Image3F& opsin,
                           PassesEncoderState* enc_state,
                           const JxlCmsInterface& cms, ThreadPool* pool,
                           AuxOut* aux_out) {
@@ -842,39 +845,12 @@ void FindBestQuantization(const ImageBundle& linear, const Image3F& opsin,
   ImageI& raw_quant_field = enc_state->shared.raw_quant_field;
   ImageF& quant_field = enc_state->initial_quant_field;
 
-  // TODO(veluca): this should really be rather handled on the
-  // ButteraugliComparator side.
-  struct TemporaryShrink {
-    TemporaryShrink(ImageBundle& bundle, size_t xsize, size_t ysize)
-        : bundle(bundle),
-          orig_xsize(bundle.xsize()),
-          orig_ysize(bundle.ysize()) {
-      bundle.ShrinkTo(xsize, ysize);
-    }
-    TemporaryShrink(const TemporaryShrink&) = delete;
-    TemporaryShrink(TemporaryShrink&&) = delete;
-
-    ~TemporaryShrink() { bundle.ShrinkTo(orig_xsize, orig_ysize); }
-
-    ImageBundle& bundle;
-    size_t orig_xsize;
-    size_t orig_ysize;
-  } t(const_cast<ImageBundle&>(linear),
-      enc_state->shared.frame_header.frame_size.xsize,
-      enc_state->shared.frame_header.frame_size.ysize);
-
   const float butteraugli_target = cparams.butteraugli_distance;
   const float original_butteraugli = cparams.original_butteraugli_distance;
   ButteraugliParams params;
-  params.intensity_target = linear.metadata()->IntensityTarget();
-  // Hack the default intensity target value to be 80.0, the intensity
-  // target of sRGB images and a more reasonable viewing default than
-  // JPEG XL file format's default.
-  if (fabs(params.intensity_target - 255.0f) < 1e-3) {
-    params.intensity_target = 80.0f;
-  }
+  params.intensity_target = 80.f;
   JxlButteraugliComparator comparator(params, cms);
-  JXL_CHECK(comparator.SetReferenceImage(linear));
+  JXL_CHECK(comparator.SetLinearReferenceImage(linear));
   bool lower_is_better =
       (comparator.GoodQualityScore() < comparator.BadQualityScore());
   const float initial_quant_dc = InitialQuantDC(butteraugli_target);
@@ -911,7 +887,8 @@ void FindBestQuantization(const ImageBundle& linear, const Image3F& opsin,
       }
     }
     quantizer.SetQuantField(initial_quant_dc, quant_field, &raw_quant_field);
-    ImageBundle dec_linear = RoundtripImage(opsin, enc_state, cms, pool);
+    ImageBundle dec_linear =
+        RoundtripImage(frame_header, opsin, enc_state, cms, pool);
     float score;
     ImageF diffmap;
     JXL_CHECK(comparator.CompareWith(dec_linear, &diffmap, &score));
@@ -1020,7 +997,8 @@ void FindBestQuantization(const ImageBundle& linear, const Image3F& opsin,
   quantizer.SetQuantField(initial_quant_dc, quant_field, &raw_quant_field);
 }
 
-void FindBestQuantizationMaxError(const Image3F& opsin,
+void FindBestQuantizationMaxError(const FrameHeader& frame_header,
+                                  const Image3F& opsin,
                                   PassesEncoderState* enc_state,
                                   const JxlCmsInterface& cms, ThreadPool* pool,
                                   AuxOut* aux_out) {
@@ -1045,7 +1023,8 @@ void FindBestQuantizationMaxError(const Image3F& opsin,
     if (JXL_DEBUG_ADAPTIVE_QUANTIZATION && aux_out) {
       DumpXybImage(cparams, ("ops" + ToString(i)).c_str(), opsin);
     }
-    ImageBundle decoded = RoundtripImage(opsin, enc_state, cms, pool);
+    ImageBundle decoded =
+        RoundtripImage(frame_header, opsin, enc_state, cms, pool);
     if (JXL_DEBUG_ADAPTIVE_QUANTIZATION && aux_out) {
       DumpXybImage(cparams, ("dec" + ToString(i)).c_str(), *decoded.color());
     }
@@ -1167,16 +1146,18 @@ ImageF InitialQuantField(const float butteraugli_target, const Image3F& opsin,
       mask1x1);
 }
 
-void FindBestQuantizer(const ImageBundle* linear, const Image3F& opsin,
-                       PassesEncoderState* enc_state,
+void FindBestQuantizer(const FrameHeader& frame_header, const Image3F* linear,
+                       const Image3F& opsin, PassesEncoderState* enc_state,
                        const JxlCmsInterface& cms, ThreadPool* pool,
                        AuxOut* aux_out, double rescale) {
   const CompressParams& cparams = enc_state->cparams;
   if (cparams.max_error_mode) {
-    FindBestQuantizationMaxError(opsin, enc_state, cms, pool, aux_out);
-  } else if (cparams.speed_tier <= SpeedTier::kKitten) {
+    FindBestQuantizationMaxError(frame_header, opsin, enc_state, cms, pool,
+                                 aux_out);
+  } else if (linear && cparams.speed_tier <= SpeedTier::kKitten) {
     // Normal encoding to a butteraugli score.
-    FindBestQuantization(*linear, opsin, enc_state, cms, pool, aux_out);
+    FindBestQuantization(frame_header, *linear, opsin, enc_state, cms, pool,
+                         aux_out);
   }
 }
 

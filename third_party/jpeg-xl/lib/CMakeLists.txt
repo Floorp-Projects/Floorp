@@ -4,7 +4,7 @@
 # license that can be found in the LICENSE file.
 
 set(JPEGXL_MAJOR_VERSION 0)
-set(JPEGXL_MINOR_VERSION 9)
+set(JPEGXL_MINOR_VERSION 10)
 set(JPEGXL_PATCH_VERSION 0)
 set(JPEGXL_LIBRARY_VERSION
     "${JPEGXL_MAJOR_VERSION}.${JPEGXL_MINOR_VERSION}.${JPEGXL_PATCH_VERSION}")
@@ -15,7 +15,7 @@ set(JPEGXL_LIBRARY_VERSION
 # It is important to update this value when making incompatible API/ABI changes
 # so that programs that depend on libjxl can update their dependencies. Semantic
 # versioning allows 0.y.z to have incompatible changes in minor versions.
-set(JPEGXL_SO_MINOR_VERSION 9)
+set(JPEGXL_SO_MINOR_VERSION 10)
 if (JPEGXL_MAJOR_VERSION EQUAL 0)
   set(JPEGXL_LIBRARY_SOVERSION
       "${JPEGXL_MAJOR_VERSION}.${JPEGXL_SO_MINOR_VERSION}")
@@ -124,20 +124,38 @@ else ()
   endif()  # WIN32
 endif()  #!MSVC
 
-# strips the -static suffix from all the elements in LIST
-function(strip_static OUTPUT_VAR LIB_LIST)
+if (JPEGXL_ENABLE_SKCMS)
+  list(APPEND JPEGXL_INTERNAL_FLAGS -DJPEGXL_ENABLE_SKCMS=1)
+endif ()
+
+# strips the -internal suffix from all the elements in LIST
+function(strip_internal OUTPUT_VAR LIB_LIST)
   foreach(lib IN LISTS ${LIB_LIST})
-    string(REGEX REPLACE "-static$" "" lib "${lib}")
+    string(REGEX REPLACE "-internal$" "" lib "${lib}")
     list(APPEND out_list "${lib}")
   endforeach()
   set(${OUTPUT_VAR} ${out_list} PARENT_SCOPE)
 endfunction()
 
+# set variables for jxl_cms.cmake and jxl.cmake
+if(IS_ABSOLUTE "${CMAKE_INSTALL_INCLUDEDIR}")
+    set(PKGCONFIG_TARGET_INCLUDES "${CMAKE_INSTALL_INCLUDEDIR}")
+else()
+    set(PKGCONFIG_TARGET_INCLUDES "\${prefix}/${CMAKE_INSTALL_INCLUDEDIR}")
+endif()
+if(IS_ABSOLUTE "${CMAKE_INSTALL_LIBDIR}")
+    set(PKGCONFIG_TARGET_LIBS "${CMAKE_INSTALL_LIBDIR}")
+else()
+    set(PKGCONFIG_TARGET_LIBS "\${exec_prefix}/${CMAKE_INSTALL_LIBDIR}")
+endif()
+
+# The jxl_cms library definition.
+include(jxl_cms.cmake)
 # The jxl library definition.
 include(jxl.cmake)
 
 # Other libraries outside the core jxl library.
-if(JPEGXL_ENABLE_TOOLS)
+if(JPEGXL_ENABLE_TOOLS OR BUILD_TESTING)
   include(jxl_extras.cmake)
 endif()
 include(jxl_threads.cmake)
@@ -154,7 +172,6 @@ install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include/jxl
   DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
 
 if(BUILD_TESTING)
-  cmake_policy(SET CMP0057 NEW)  # https://gitlab.kitware.com/cmake/cmake/issues/18198
   include(GoogleTest)
 endif()
 

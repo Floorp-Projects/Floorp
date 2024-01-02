@@ -28,9 +28,10 @@ class ToneMappingStage : public RenderPipelineStage {
       // No tone mapping requested.
       return;
     }
-    const auto& tf = output_encoding_info_.orig_color_encoding.Tf();
-    if (tf.IsPQ() && output_encoding_info_.desired_intensity_target <
-                         output_encoding_info_.orig_intensity_target) {
+    const auto& orig_tf = output_encoding_info_.orig_color_encoding.Tf();
+    const auto& dest_tf = output_encoding_info_.color_encoding.Tf();
+    if (orig_tf.IsPQ() && output_encoding_info_.desired_intensity_target <
+                              output_encoding_info_.orig_intensity_target) {
       tone_mapper_ = jxl::make_unique<ToneMapper>(
           /*source_range=*/std::pair<float, float>(
               0, output_encoding_info_.orig_intensity_target),
@@ -38,14 +39,14 @@ class ToneMappingStage : public RenderPipelineStage {
           std::pair<float, float>(
               0, output_encoding_info_.desired_intensity_target),
           output_encoding_info_.luminances);
-    } else if (tf.IsHLG() && !tf.IsHLG()) {
+    } else if (orig_tf.IsHLG() && !dest_tf.IsHLG()) {
       hlg_ootf_ = jxl::make_unique<HlgOOTF>(
           /*source_luminance=*/output_encoding_info_.orig_intensity_target,
           /*target_luminance=*/output_encoding_info_.desired_intensity_target,
           output_encoding_info_.luminances);
     }
 
-    if (tf.IsPQ() && (tone_mapper_ || hlg_ootf_)) {
+    if (dest_tf.IsPQ() && (tone_mapper_ || hlg_ootf_)) {
       to_intensity_target_ =
           10000.f / output_encoding_info_.orig_intensity_target;
       from_desired_intensity_target_ =

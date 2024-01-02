@@ -3,7 +3,6 @@
 # Use of this source code is governed by a BSD-style
 # license that can be found in the LICENSE file.
 
-include(compatibility.cmake)
 include(jxl_lists.cmake)
 
 # Object library for those parts of extras that do not depend on jxl internals
@@ -129,59 +128,42 @@ endforeach()
 
 # Define an extras library that does not have the image codecs, only the core
 # extras code. This is needed for some of the fuzzers.
-add_library(jxl_extras_nocodec-static STATIC EXCLUDE_FROM_ALL
+add_library(jxl_extras_nocodec-internal STATIC EXCLUDE_FROM_ALL
   $<TARGET_OBJECTS:jxl_extras_core_nocodec-obj>
   $<TARGET_OBJECTS:jxl_extras_internal-obj>
 )
-target_link_libraries(jxl_extras_nocodec-static PUBLIC
-  jxl-static
-  jxl_threads-static
-)
+target_link_libraries(jxl_extras_nocodec-internal PRIVATE jxl_threads)
+target_link_libraries(jxl_extras_nocodec-internal PUBLIC jxl-internal)
 
 # We only define a static library jxl_extras since it uses internal parts of
 # jxl library which are not accessible from outside the library in the
 # shared library case.
-add_library(jxl_extras-static STATIC EXCLUDE_FROM_ALL ${JXL_EXTRAS_OBJECTS})
-target_link_libraries(jxl_extras-static PUBLIC
+add_library(jxl_extras-internal STATIC EXCLUDE_FROM_ALL ${JXL_EXTRAS_OBJECTS})
+target_link_libraries(jxl_extras-internal PRIVATE
   ${JXL_EXTRAS_CODEC_INTERNAL_LIBRARIES}
-  jxl-static
-  jxl_threads-static
+  jxl_threads
 )
+target_link_libraries(jxl_extras-internal PUBLIC jxl-internal)
 if(JPEGXL_ENABLE_JPEGLI)
-  target_compile_definitions(jxl_extras-static PUBLIC -DJPEGXL_ENABLE_JPEGLI=1)
-  target_link_libraries(jxl_extras-static PRIVATE jpegli-static)
+  target_compile_definitions(jxl_extras-internal PUBLIC -DJPEGXL_ENABLE_JPEGLI=1)
+  target_link_libraries(jxl_extras-internal PRIVATE jpegli-static)
 endif()
 
-### Static library that does not depend on internal parts of jxl library.
-add_library(jxl_extras_codec-static STATIC
-  $<TARGET_OBJECTS:jxl_extras_core-obj>
-)
-target_link_libraries(jxl_extras_codec-static PRIVATE
-  ${JXL_EXTRAS_CODEC_INTERNAL_LIBRARIES}
-  jxl
-)
-
-### Shared library that does not depend on internal parts of jxl library.
+### Library that does not depend on internal parts of jxl library.
 ### Used by cjxl and djxl binaries.
-if (BUILD_SHARED_LIBS)
-add_library(jxl_extras_codec SHARED
+add_library(jxl_extras_codec
   $<TARGET_OBJECTS:jxl_extras_core-obj>
 )
 target_link_libraries(jxl_extras_codec PRIVATE
   ${JXL_EXTRAS_CODEC_INTERNAL_LIBRARIES}
-  jxl
 )
+target_link_libraries(jxl_extras_codec PUBLIC jxl)
 set_target_properties(jxl_extras_codec PROPERTIES
   VERSION ${JPEGXL_LIBRARY_VERSION}
   SOVERSION ${JPEGXL_LIBRARY_SOVERSION}
-  LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}"
-  RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}"
 )
 install(TARGETS jxl_extras_codec
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
-else()
-add_library(jxl_extras_codec ALIAS jxl_extras_codec-static)
-endif()  # BUILD_SHARED_LIBS

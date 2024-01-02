@@ -3,8 +3,12 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+#include <jxl/cms.h>
+
+#include <cstdint>
+#include <vector>
+
 #include "lib/extras/codec.h"
-#include "lib/jxl/cms/jxl_cms.h"
 #include "lib/jxl/enc_butteraugli_comparator.h"
 #include "lib/jxl/enc_params.h"
 #include "lib/jxl/image_test_utils.h"
@@ -14,12 +18,13 @@
 namespace jxl {
 namespace {
 
-using ::jxl::test::Roundtrip;
+using test::ReadTestData;
+using test::Roundtrip;
 
 TEST(PatchDictionaryTest, GrayscaleModular) {
-  const PaddedBytes orig = jxl::test::ReadTestData("jxl/grayscale_patches.png");
+  const std::vector<uint8_t> orig = ReadTestData("jxl/grayscale_patches.png");
   CodecInOut io;
-  ASSERT_TRUE(SetFromBytes(Span<const uint8_t>(orig), &io));
+  ASSERT_TRUE(SetFromBytes(Bytes(orig), &io));
 
   CompressParams cparams;
   cparams.SetLossless();
@@ -35,9 +40,9 @@ TEST(PatchDictionaryTest, GrayscaleModular) {
 }
 
 TEST(PatchDictionaryTest, GrayscaleVarDCT) {
-  const PaddedBytes orig = jxl::test::ReadTestData("jxl/grayscale_patches.png");
+  const std::vector<uint8_t> orig = ReadTestData("jxl/grayscale_patches.png");
   CodecInOut io;
-  ASSERT_TRUE(SetFromBytes(Span<const uint8_t>(orig), &io));
+  ASSERT_TRUE(SetFromBytes(Bytes(orig), &io));
 
   CompressParams cparams;
   cparams.patches = jxl::Override::kOn;

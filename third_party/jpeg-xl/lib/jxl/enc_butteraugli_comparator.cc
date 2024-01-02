@@ -32,6 +32,14 @@ Status JxlButteraugliComparator::SetReferenceImage(const ImageBundle& ref) {
   return true;
 }
 
+Status JxlButteraugliComparator::SetLinearReferenceImage(
+    const Image3F& linear) {
+  comparator_.reset(new ButteraugliComparator(linear, params_));
+  xsize_ = linear.xsize();
+  ysize_ = linear.ysize();
+  return true;
+}
+
 Status JxlButteraugliComparator::CompareWith(const ImageBundle& actual,
                                              ImageF* diffmap, float* score) {
   if (!comparator_) {

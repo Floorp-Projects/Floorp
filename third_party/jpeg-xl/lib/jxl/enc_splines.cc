@@ -86,7 +86,7 @@ void EncodeSplines(const Splines& splines, BitWriter* writer,
   std::vector<uint8_t> context_map;
   BuildAndEncodeHistograms(histogram_params, kNumSplineContexts, tokens, &codes,
                            &context_map, writer, layer, aux_out);
-  WriteTokens(tokens[0], codes, context_map, writer, layer, aux_out);
+  WriteTokens(tokens[0], codes, context_map, 0, writer, layer, aux_out);
 }
 
 Splines FindSplines(const Image3F& opsin) {

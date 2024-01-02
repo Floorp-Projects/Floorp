@@ -40,8 +40,8 @@ using hwy::HWY_NAMESPACE::Mul;
 using hwy::HWY_NAMESPACE::MulAdd;
 using hwy::HWY_NAMESPACE::Sqrt;
 
-void ProcessTile(const Image3F& opsin, PassesEncoderState* enc_state,
-                 const Rect& rect,
+void ProcessTile(const FrameHeader& frame_header, const Image3F& opsin,
+                 PassesEncoderState* enc_state, const Rect& rect,
                  ArControlFieldHeuristics::TempImages* temp_image) {
   constexpr size_t N = kBlockDim;
   ImageB* JXL_RESTRICT epf_sharpness = &enc_state->shared.epf_sharpness;
@@ -52,7 +52,7 @@ void ProcessTile(const Image3F& opsin, PassesEncoderState* enc_state,
 
   if (enc_state->cparams.butteraugli_distance < kMinButteraugliForDynamicAR ||
       enc_state->cparams.speed_tier > SpeedTier::kWombat ||
-      enc_state->shared.frame_header.loop_filter.epf_iters == 0) {
+      frame_header.loop_filter.epf_iters == 0) {
     FillPlane(static_cast<uint8_t>(4), epf_sharpness, rect);
     return;
   }
@@ -311,12 +311,13 @@ HWY_AFTER_NAMESPACE();
 namespace jxl {
 HWY_EXPORT(ProcessTile);
 
-void ArControlFieldHeuristics::RunRect(const Rect& block_rect,
+void ArControlFieldHeuristics::RunRect(const FrameHeader& frame_header,
+                                       const Rect& block_rect,
                                        const Image3F& opsin,
                                        PassesEncoderState* enc_state,
                                        size_t thread) {
   HWY_DYNAMIC_DISPATCH(ProcessTile)
-  (opsin, enc_state, block_rect, &temp_images[thread]);
+  (frame_header, opsin, enc_state, block_rect, &temp_images[thread]);
 }
 
 }  // namespace jxl

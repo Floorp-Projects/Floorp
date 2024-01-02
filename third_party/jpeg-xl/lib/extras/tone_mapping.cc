@@ -7,10 +7,11 @@
 
 #undef HWY_TARGET_INCLUDE
 #define HWY_TARGET_INCLUDE "lib/extras/tone_mapping.cc"
+#include <jxl/cms.h>
+
 #include <hwy/foreach_target.h>
 #include <hwy/highway.h>
 
-#include "lib/jxl/cms/jxl_cms.h"
 #include "lib/jxl/cms/tone_mapping-inl.h"
 #include "lib/jxl/image_bundle.h"
 

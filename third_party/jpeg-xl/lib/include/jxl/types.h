@@ -32,6 +32,8 @@ extern "C" {
 #define JXL_TRUE 1
 /** Portable @c false replacement. */
 #define JXL_FALSE 0
+/** Converts of bool-like value to either JXL_TRUE or JXL_FALSE. */
+#define TO_JXL_BOOL(C) (!!(C) ? JXL_TRUE : JXL_FALSE)
 
 /** Data type for the sample values per channel per pixel.
  */

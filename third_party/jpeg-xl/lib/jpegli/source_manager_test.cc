@@ -4,6 +4,7 @@
 // license that can be found in the LICENSE file.
 
 #include <cmath>
+#include <cstdint>
 #include <vector>
 
 #include "lib/jpegli/decode.h"

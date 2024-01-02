@@ -17,8 +17,30 @@
 #endif
 #endif
 
+#if !FJXL_STANDALONE
+#include <jxl/encode.h>
+#endif
+
 #ifdef __cplusplus
 extern "C" {
+#endif
+
+#if FJXL_STANDALONE
+// Simplified version of the streaming input source from jxl/encode.h
+// We only need this part to wrap the full image buffer in the standalone mode
+// and this way we don't need to depend on the jxl headers.
+struct JxlChunkedFrameInputSource {
+  void* opaque;
+  const void* (*get_color_channel_data_at)(void* opaque, size_t xpos,
+                                           size_t ypos, size_t xsize,
+                                           size_t ysize, size_t* row_offset);
+  void (*release_buffer)(void* opaque, const void* buf);
+};
+// The standalone version does not use this struct, but we define it here so
+// that we don't have to clutter all the function signatures with defines.
+struct JxlEncoderOutputProcessorWrapper {
+  int unused;
+};
 #endif
 
 // Simple encoding API.
@@ -46,9 +68,17 @@ struct JxlFastLosslessFrameState;
 // Returned JxlFastLosslessFrameState must be freed by calling
 // JxlFastLosslessFreeFrameState.
 JxlFastLosslessFrameState* JxlFastLosslessPrepareFrame(
-    const unsigned char* rgba, size_t width, size_t row_stride, size_t height,
-    size_t nb_chans, size_t bitdepth, int big_endian, int effort,
-    void* runner_opaque, FJxlParallelRunner runner);
+    JxlChunkedFrameInputSource input, size_t width, size_t height,
+    size_t nb_chans, size_t bitdepth, int big_endian, int effort);
+
+#if !FJXL_STANDALONE
+class JxlEncoderOutputProcessorWrapper;
+#endif
+
+void JxlFastLosslessProcessFrame(
+    JxlFastLosslessFrameState* frame_state, bool is_last, void* runner_opaque,
+    FJxlParallelRunner runner,
+    JxlEncoderOutputProcessorWrapper* output_processor);
 
 // Prepare the (image/frame) header. You may encode animations by concatenating
 // the output of multiple frames, of which the first one has add_image_header =
@@ -80,6 +110,12 @@ void JxlFastLosslessFreeFrameState(JxlFastLosslessFrameState* frame);
 
 #ifdef __cplusplus
 }  // extern "C"
+#endif
+
+#if !FJXL_STANDALONE
+void JxlFastLosslessOutputFrame(
+    JxlFastLosslessFrameState* frame_state,
+    JxlEncoderOutputProcessorWrapper* output_process);
 #endif
 
 #endif  // LIB_JXL_ENC_FAST_LOSSLESS_H_

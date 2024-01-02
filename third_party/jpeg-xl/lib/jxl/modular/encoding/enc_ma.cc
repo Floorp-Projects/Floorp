@@ -922,7 +922,7 @@ void CollectPixelSamples(const Image &image, const ModularOptions &options,
   Rng rng(group_id);
   // Sample 10% of the final number of samples for property quantization.
   float fraction = std::min(options.nb_repeats * 0.1, 0.99);
-  Rng::GeometricDistribution dist(fraction);
+  Rng::GeometricDistribution dist = Rng::MakeGeometric(fraction);
   size_t total_pixels = 0;
   std::vector<size_t> channel_ids;
   for (size_t i = 0; i < image.channel.size(); i++) {

@@ -73,7 +73,7 @@ struct OpHlg {
       HWY_ALIGN float vals[MaxLanes(d)];
       Store(*val, d, vals);
       for (size_t i = 0; i < Lanes(d); ++i) {
-        vals[i] = TF_HLG().DisplayFromEncoded(vals[i]);
+        vals[i] = TF_HLG_Base::DisplayFromEncoded(vals[i]);
       }
       *val = Load(d, vals);
     }

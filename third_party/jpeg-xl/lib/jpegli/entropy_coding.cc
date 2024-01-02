@@ -340,7 +340,7 @@ void TokenizeScan(j_compress_ptr cinfo, size_t scan_index, int ac_ctx_offset,
   const bool is_progressive = cinfo->progressive_mode;
   const int Ah = scan_info->Ah;
   const int Al = scan_info->Al;
-  HWY_ALIGN constexpr coeff_t kDummyBlock[DCTSIZE2] = {0};
+  HWY_ALIGN constexpr coeff_t kSinkBlock[DCTSIZE2] = {0};
 
   size_t restart_idx = 0;
   TokenArray* ta = &m->token_arrays[m->cur_token_array];
@@ -412,7 +412,7 @@ void TokenizeScan(j_compress_ptr cinfo, size_t scan_index, int ac_ctx_offset,
             const coeff_t* block;
             if (block_x >= comp->width_in_blocks ||
                 block_y >= comp->height_in_blocks) {
-              block = kDummyBlock;
+              block = kSinkBlock;
             } else {
               block = &ba[i][iy][block_x][0];
             }

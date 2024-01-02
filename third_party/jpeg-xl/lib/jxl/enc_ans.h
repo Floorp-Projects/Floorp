@@ -9,22 +9,14 @@
 // Library to encode the ANS population counts to the bit-stream and encode
 // symbols based on the respective distributions.
 
-#include <stddef.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <string.h>
-
-#include <algorithm>
+#include <cstddef>
+#include <cstdint>
 #include <vector>
 
-#include "lib/jxl/ans_common.h"
 #include "lib/jxl/ans_params.h"
-#include "lib/jxl/base/compiler_specific.h"
-#include "lib/jxl/base/status.h"
 #include "lib/jxl/dec_ans.h"
 #include "lib/jxl/enc_ans_params.h"
 #include "lib/jxl/enc_bit_writer.h"
-#include "lib/jxl/huffman_table.h"
 
 namespace jxl {
 
@@ -80,14 +72,14 @@ class ANSCoder {
   uint32_t state_;
 };
 
-// RebalanceHistogram requires a signed type.
-using ANSHistBin = int32_t;
+static const int kNumFixedHistograms = 1;
 
 struct EntropyEncodingData {
   std::vector<std::vector<ANSEncSymbolInfo>> encoding_info;
   bool use_prefix_code;
   std::vector<HybridUintConfig> uint_config;
   LZ77Params lz77;
+  std::vector<BitWriter> encoded_histograms;
 };
 
 // Integer to be encoded by an entropy coder, either ANS or Huffman.
@@ -104,6 +96,12 @@ struct Token {
 // histogram (header bits plus data bits).
 float ANSPopulationCost(const ANSHistBin* data, size_t alphabet_size);
 
+// Writes the context map to the bitstream and concatenates the individual
+// histogram bistreams in codes.encoded_histograms. Used in streaming mode.
+void EncodeHistograms(const std::vector<uint8_t>& context_map,
+                      const EntropyEncodingData& codes, BitWriter* writer,
+                      size_t layer, AuxOut* aux_out);
+
 // Apply context clustering, compute histograms and encode them. Returns an
 // estimate of the total bits used for encoding the stream. If `writer` ==
 // nullptr, the bit estimate will not take into account the context map (which
@@ -119,13 +117,14 @@ size_t BuildAndEncodeHistograms(const HistogramParams& params,
 // Write the tokens to a string.
 void WriteTokens(const std::vector<Token>& tokens,
                  const EntropyEncodingData& codes,
-                 const std::vector<uint8_t>& context_map, BitWriter* writer,
-                 size_t layer, AuxOut* aux_out);
+                 const std::vector<uint8_t>& context_map, size_t context_offset,
+                 BitWriter* writer, size_t layer, AuxOut* aux_out);
 
 // Same as above, but assumes allotment created by caller.
 size_t WriteTokens(const std::vector<Token>& tokens,
                    const EntropyEncodingData& codes,
-                   const std::vector<uint8_t>& context_map, BitWriter* writer);
+                   const std::vector<uint8_t>& context_map,
+                   size_t context_offset, BitWriter* writer);
 
 // Exposed for tests; to be used with Writer=BitWriter only.
 template <typename Writer>

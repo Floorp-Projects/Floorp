@@ -943,7 +943,7 @@ Status DecodeImageAPNG(const Span<const uint8_t> bytes,
         should_blend = false;
         ppf->frames.emplace_back(std::move(new_data));
       } else {
-        // If all else fails, insert a dummy blank frame with kReplace.
+        // If all else fails, insert a placeholder blank frame with kReplace.
         PackedImage blank(pxs, pys, frame.data.format);
         memset(blank.pixels(), 0, blank.pixels_size);
         ppf->frames.emplace_back(std::move(blank));

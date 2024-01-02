@@ -14,7 +14,6 @@
 #include <vector>
 
 #include "lib/jxl/base/compiler_specific.h"
-#include "lib/jxl/base/padded_bytes.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/dec_bit_reader.h"
 #include "lib/jxl/enc_bit_writer.h"
@@ -22,6 +21,7 @@
 namespace jxl {
 
 struct AuxOut;
+class PaddedBytes;
 
 // Should still be called if `icc.empty()` - if so, writes only 1 bit.
 Status WriteICC(const std::vector<uint8_t>& icc, BitWriter* JXL_RESTRICT writer,

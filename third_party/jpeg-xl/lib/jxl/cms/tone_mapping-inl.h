@@ -12,6 +12,7 @@
 
 #include <hwy/highway.h>
 
+#include "lib/jxl/cms/tone_mapping.h"
 #include "lib/jxl/cms/transfer_functions-inl.h"
 
 HWY_BEFORE_NAMESPACE();
@@ -25,19 +26,12 @@ using hwy::HWY_NAMESPACE::Max;
 using hwy::HWY_NAMESPACE::ZeroIfNegative;
 
 template <typename D>
-class Rec2408ToneMapper {
+class Rec2408ToneMapper : Rec2408ToneMapperBase {
  private:
   using V = hwy::HWY_NAMESPACE::Vec<D>;
 
  public:
-  explicit Rec2408ToneMapper(std::pair<float, float> source_range,
-                             std::pair<float, float> target_range,
-                             const float primaries_luminances[3])
-      : source_range_(source_range),
-        target_range_(target_range),
-        red_Y_(primaries_luminances[0]),
-        green_Y_(primaries_luminances[1]),
-        blue_Y_(primaries_luminances[2]) {}
+  using Rec2408ToneMapperBase::Rec2408ToneMapperBase;
 
   void ToneMap(V* red, V* green, V* blue) const {
     const V luminance = Mul(Set(df_, source_range_.second),
@@ -77,9 +71,6 @@ class Rec2408ToneMapper {
   V InvEOTF(const V luminance) const {
     return tf_pq_.EncodedFromDisplay(df_, luminance);
   }
-  float InvEOTF(const float luminance) const {
-    return tf_pq_.EncodedFromDisplay(luminance);
-  }
   V T(const V a) const {
     const V ks = Set(df_, ks_);
     const V inv_one_minus_ks = Set(df_, inv_one_minus_ks_);
@@ -101,39 +92,12 @@ class Rec2408ToneMapper {
   }
 
   D df_;
-  const std::pair<float, float> source_range_;
-  const std::pair<float, float> target_range_;
-  const float red_Y_;
-  const float green_Y_;
-  const float blue_Y_;
-
   const TF_PQ tf_pq_ = TF_PQ(/*display_intensity_target=*/1.0);
-
-  const float pq_mastering_min_ = InvEOTF(source_range_.first);
-  const float pq_mastering_max_ = InvEOTF(source_range_.second);
-  const float pq_mastering_range_ = pq_mastering_max_ - pq_mastering_min_;
-  const float inv_pq_mastering_range_ = 1.0f / pq_mastering_range_;
-  // TODO(eustas): divide instead of inverse-multiply?
-  const float min_lum_ = (InvEOTF(target_range_.first) - pq_mastering_min_) *
-                         inv_pq_mastering_range_;
-  // TODO(eustas): divide instead of inverse-multiply?
-  const float max_lum_ = (InvEOTF(target_range_.second) - pq_mastering_min_) *
-                         inv_pq_mastering_range_;
-  const float ks_ = 1.5f * max_lum_ - 0.5f;
-
-  const float inv_one_minus_ks_ = 1.0f / std::max(1e-6f, 1.0f - ks_);
-
-  const float normalizer_ = source_range_.second / target_range_.second;
-  const float inv_target_peak_ = 1.f / target_range_.second;
 };
 
-class HlgOOTF {
+class HlgOOTF : HlgOOTF_Base {
  public:
-  explicit HlgOOTF(float source_luminance, float target_luminance,
-                   const float primaries_luminances[3])
-      : HlgOOTF(/*gamma=*/std::pow(
-                    1.111f, std::log2(target_luminance / source_luminance)),
-                primaries_luminances) {}
+  using HlgOOTF_Base::HlgOOTF_Base;
 
   static HlgOOTF FromSceneLight(float display_luminance,
                                 const float primaries_luminances[3]) {
@@ -165,18 +129,6 @@ class HlgOOTF {
   }
 
   bool WarrantsGamutMapping() const { return apply_ootf_ && exponent_ < 0; }
-
- private:
-  explicit HlgOOTF(float gamma, const float luminances[3])
-      : exponent_(gamma - 1),
-        red_Y_(luminances[0]),
-        green_Y_(luminances[1]),
-        blue_Y_(luminances[2]) {}
-  const float exponent_;
-  const bool apply_ootf_ = exponent_ < -0.01f || 0.01f < exponent_;
-  const float red_Y_;
-  const float green_Y_;
-  const float blue_Y_;
 };
 
 template <typename V>

@@ -7,10 +7,12 @@
 
 #include <cstdint>
 #include <string>
+#include <vector>
 
 #include "lib/jxl/base/span.h"
 #include "lib/jxl/color_encoding_internal.h"
 #include "lib/jxl/enc_icc_codec.h"
+#include "lib/jxl/test_utils.h"
 #include "lib/jxl/testing.h"
 
 namespace jxl {
@@ -20,9 +22,9 @@ void TestProfile(const IccBytes& icc) {
   BitWriter writer;
   ASSERT_TRUE(WriteICC(icc, &writer, 0, nullptr));
   writer.ZeroPadToByte();
-  PaddedBytes dec;
+  std::vector<uint8_t> dec;
   BitReader reader(writer.GetSpan());
-  ASSERT_TRUE(ReadICC(&reader, &dec));
+  ASSERT_TRUE(test::ReadICC(&reader, &dec));
   ASSERT_TRUE(reader.Close());
   EXPECT_EQ(icc.size(), dec.size());
   if (icc.size() == dec.size()) {
@@ -35,7 +37,7 @@ void TestProfile(const IccBytes& icc) {
 
 void TestProfile(const std::string& icc) {
   IccBytes data;
-  Span<const uint8_t>(icc).AppendTo(&data);
+  Bytes(icc).AppendTo(&data);
   TestProfile(data);
 }
 
@@ -137,7 +139,7 @@ TEST(IccCodecTest, Icc) {
 
   {
     IccBytes profile;
-    Span<const uint8_t>(kTestProfile, sizeof(kTestProfile)).AppendTo(&profile);
+    Bytes(kTestProfile, sizeof(kTestProfile)).AppendTo(&profile);
     TestProfile(profile);
   }
 
@@ -190,10 +192,10 @@ static const unsigned char kEncodedTestProfile[] = {
 
 // Tests that the decoded kEncodedTestProfile matches kTestProfile.
 TEST(IccCodecTest, EncodedIccProfile) {
-  jxl::BitReader reader(jxl::Span<const uint8_t>(kEncodedTestProfile,
-                                                 sizeof(kEncodedTestProfile)));
-  jxl::PaddedBytes dec;
-  ASSERT_TRUE(ReadICC(&reader, &dec));
+  jxl::BitReader reader(
+      jxl::Bytes(kEncodedTestProfile, sizeof(kEncodedTestProfile)));
+  std::vector<uint8_t> dec;
+  ASSERT_TRUE(test::ReadICC(&reader, &dec));
   ASSERT_TRUE(reader.Close());
   EXPECT_EQ(sizeof(kTestProfile), dec.size());
   if (sizeof(kTestProfile) == dec.size()) {

@@ -9,7 +9,7 @@
 
 #include "lib/jxl/base/common.h"
 #include "lib/jxl/cms/color_encoding_cms.h"
-#include "lib/jxl/cms/color_management.h"  // MaybeCreateProfile
+#include "lib/jxl/cms/jxl_cms_internal.h"
 #include "lib/jxl/fields.h"
 #include "lib/jxl/pack_signed.h"
 
@@ -79,8 +79,8 @@ void ColorEncoding::DecideIfWantICC(const JxlCmsInterface& cms) {
   }
   if (cmyk) return;
 
-  IccBytes new_icc;
-  if (!MaybeCreateProfile(storage_, &new_icc)) return;
+  std::vector<uint8_t> icc;
+  if (!MaybeCreateProfile(c, &icc)) return;
 
   want_icc_ = false;
 }

@@ -15,7 +15,9 @@
 #include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/base/matrix_ops.h"
 #include "lib/jxl/base/status.h"
+#include "lib/jxl/cms/jxl_cms_internal.h"
 #include "lib/jxl/cms/opsin_params.h"
+#include "lib/jxl/color_encoding_internal.h"
 #include "lib/jxl/dec_group_border.h"
 #include "lib/jxl/dec_xyb-inl.h"
 #include "lib/jxl/fields.h"
@@ -250,6 +252,8 @@ Status OutputEncodingInfo::MaybeSetColorEncoding(
 
 Status OutputEncodingInfo::SetColorEncoding(const ColorEncoding& c_desired) {
   color_encoding = c_desired;
+  linear_color_encoding = color_encoding;
+  linear_color_encoding.Tf().SetTransferFunction(TransferFunction::kLinear);
   color_encoding_is_original = orig_color_encoding.SameColorEncoding(c_desired);
 
   // Compute the opsin inverse matrix and luminances based on primaries and
@@ -271,14 +275,17 @@ Status OutputEncodingInfo::SetColorEncoding(const ColorEncoding& c_desired) {
     float original_to_xyz[3][3];
     p = c_desired.GetPrimaries();
     w = c_desired.GetWhitePoint();
-    JXL_RETURN_IF_ERROR(PrimariesToXYZ(p.r.x, p.r.y, p.g.x, p.g.y, p.b.x, p.b.y,
-                                       w.x, w.y, &original_to_xyz[0][0]));
+    if (!PrimariesToXYZ(p.r.x, p.r.y, p.g.x, p.g.y, p.b.x, p.b.y, w.x, w.y,
+                        &original_to_xyz[0][0])) {
+      return JXL_FAILURE("PrimariesToXYZ failed");
+    }
     memcpy(luminances, original_to_xyz[1], sizeof luminances);
     if (xyb_encoded) {
       float adapt_to_d50[9];
-      JXL_RETURN_IF_ERROR(AdaptToXYZD50(c_desired.GetWhitePoint().x,
-                                        c_desired.GetWhitePoint().y,
-                                        adapt_to_d50));
+      if (!AdaptToXYZD50(c_desired.GetWhitePoint().x,
+                         c_desired.GetWhitePoint().y, adapt_to_d50)) {
+        return JXL_FAILURE("AdaptToXYZD50 failed");
+      }
       float xyzd50_to_original[9];
       Mul3x3Matrix(adapt_to_d50, &original_to_xyz[0][0], xyzd50_to_original);
       JXL_RETURN_IF_ERROR(Inv3x3Matrix(xyzd50_to_original));

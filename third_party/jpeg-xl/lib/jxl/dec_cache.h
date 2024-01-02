@@ -10,14 +10,19 @@
 #include <stdint.h>
 
 #include <atomic>
+#include <cmath>
 #include <hwy/base.h>  // HWY_ALIGN_MAX
 
 #include "lib/jxl/ac_strategy.h"
 #include "lib/jxl/base/common.h"  // kMaxNumPasses
+#include "lib/jxl/base/data_parallel.h"
+#include "lib/jxl/base/status.h"
 #include "lib/jxl/coeff_order.h"
 #include "lib/jxl/convolve.h"
+#include "lib/jxl/dec_ans.h"
 #include "lib/jxl/dec_group_border.h"
 #include "lib/jxl/dec_noise.h"
+#include "lib/jxl/frame_header.h"
 #include "lib/jxl/image.h"
 #include "lib/jxl/passes_state.h"
 #include "lib/jxl/quant_weights.h"
@@ -130,17 +135,16 @@ struct PassesDecoderState {
     bool render_noise;
   };
 
-  Status PreparePipeline(ImageBundle* decoded, PipelineOptions options);
+  Status PreparePipeline(const FrameHeader& frame_header, ImageBundle* decoded,
+                         PipelineOptions options);
 
   // Information for colour conversions.
   OutputEncodingInfo output_encoding_info;
 
   // Initializes decoder-specific structures using information from *shared.
-  Status Init() {
-    x_dm_multiplier =
-        std::pow(1 / (1.25f), shared->frame_header.x_qm_scale - 2.0f);
-    b_dm_multiplier =
-        std::pow(1 / (1.25f), shared->frame_header.b_qm_scale - 2.0f);
+  Status Init(const FrameHeader& frame_header) {
+    x_dm_multiplier = std::pow(1 / (1.25f), frame_header.x_qm_scale - 2.0f);
+    b_dm_multiplier = std::pow(1 / (1.25f), frame_header.b_qm_scale - 2.0f);
 
     main_output.callback = PixelCallback();
     main_output.buffer = nullptr;
@@ -153,7 +157,7 @@ struct PassesDecoderState {
     used_acs = 0;
 
     upsampler8x = GetUpsamplingStage(shared->metadata->transform_data, 0, 3);
-    if (shared->frame_header.loop_filter.epf_iters > 0) {
+    if (frame_header.loop_filter.epf_iters > 0) {
       sigma = ImageF(shared->frame_dim.xsize_blocks + 2 * kSigmaPadding,
                      shared->frame_dim.ysize_blocks + 2 * kSigmaPadding);
     }
@@ -161,7 +165,7 @@ struct PassesDecoderState {
   }
 
   // Initialize the decoder state after all of DC is decoded.
-  Status InitForAC(ThreadPool* pool) {
+  Status InitForAC(size_t num_passes, ThreadPool* pool) {
     shared_storage.coeff_order_size = 0;
     for (uint8_t o = 0; o < AcStrategy::kNumValidStrategies; ++o) {
       if (((1 << o) & used_acs) == 0) continue;
@@ -170,18 +174,12 @@ struct PassesDecoderState {
           std::max(kCoeffOrderOffset[3 * (ord + 1)] * kDCTBlockSize,
                    shared_storage.coeff_order_size);
     }
-    size_t sz = shared_storage.frame_header.passes.num_passes *
-                shared_storage.coeff_order_size;
+    size_t sz = num_passes * shared_storage.coeff_order_size;
     if (sz > shared_storage.coeff_orders.size()) {
       shared_storage.coeff_orders.resize(sz);
     }
     return true;
   }
-
-  // Fills the `state->filter_weights.sigma` image with the precomputed sigma
-  // values in the area inside `block_rect`. Accesses the AC strategy, quant
-  // field and epf_sharpness fields in the corresponding positions.
-  void ComputeSigma(const Rect& block_rect, PassesDecoderState* state);
 };
 
 // Temp images required for decoding a single group. Reduces memory allocations

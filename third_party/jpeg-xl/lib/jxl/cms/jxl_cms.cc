@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-#include "lib/jxl/cms/jxl_cms.h"
+#include <jxl/cms.h>
 
 #ifndef JPEGXL_ENABLE_SKCMS
 #define JPEGXL_ENABLE_SKCMS 0
@@ -29,11 +29,11 @@
 #include "lib/jxl/base/printf_macros.h"
 #include "lib/jxl/base/span.h"
 #include "lib/jxl/base/status.h"
-#include "lib/jxl/cms/color_management.h"  // MaybeCreateProfile CIEXYZFromWhiteCIExy ExtraTF
+#include "lib/jxl/cms/jxl_cms_internal.h"
 #include "lib/jxl/cms/transfer_functions-inl.h"
 #include "lib/jxl/color_encoding_internal.h"
 #if JPEGXL_ENABLE_SKCMS
-#include "lib/jxl/cms/jxl_skcms.h"
+#include "skcms.h"
 #else  // JPEGXL_ENABLE_SKCMS
 #include "lcms2.h"
 #include "lcms2_plugin.h"
@@ -121,7 +121,7 @@ Status BeforeTransform(JxlCms* t, const float* buf_src, float* xform_src,
     case ExtraTF::kHLG:
       for (size_t i = 0; i < buf_size; ++i) {
         xform_src[i] = static_cast<float>(
-            TF_HLG().DisplayFromEncoded(static_cast<double>(buf_src[i])));
+            TF_HLG_Base::DisplayFromEncoded(static_cast<double>(buf_src[i])));
       }
       if (t->apply_hlg_ootf) {
         JXL_RETURN_IF_ERROR(
@@ -178,7 +178,7 @@ Status AfterTransform(JxlCms* t, float* JXL_RESTRICT buf_dst, size_t buf_size) {
       }
       for (size_t i = 0; i < buf_size; ++i) {
         buf_dst[i] = static_cast<float>(
-            TF_HLG().EncodedFromDisplay(static_cast<double>(buf_dst[i])));
+            TF_HLG_Base::EncodedFromDisplay(static_cast<double>(buf_dst[i])));
       }
 #if JXL_CMS_VERBOSE >= 2
       printf("after HLG enc %.4f %.4f %.4f\n", buf_dst[3 * kX],
@@ -459,7 +459,8 @@ Status IdentifyPrimaries(const skcms_ICCProfile& profile,
          {-0.0085287, 0.0400428, 0.9684867}}};
     static constexpr float kWpD50XYZ[3] = {0.96420288, 1.0, 0.82490540};
     float wp_unadapted_XYZ[3];
-    JXL_RETURN_IF_ERROR(CIEXYZFromWhiteCIExy(wp_unadapted, wp_unadapted_XYZ));
+    JXL_RETURN_IF_ERROR(
+        CIEXYZFromWhiteCIExy(wp_unadapted.x, wp_unadapted.y, wp_unadapted_XYZ));
     float wp_D50_LMS[3], wp_unadapted_LMS[3];
     MatrixProduct(kLMSFromXYZ, kWpD50XYZ, wp_D50_LMS);
     MatrixProduct(kLMSFromXYZ, wp_unadapted_XYZ, wp_unadapted_LMS);
@@ -484,6 +485,25 @@ Status IdentifyPrimaries(const skcms_ICCProfile& profile,
     *chromaticities[i] = CIExyFromXYZ(unadapted_XYZ);
   }
   return c->SetPrimaries(primaries);
+}
+
+bool IsApproximatelyEqual(const skcms_ICCProfile& profile,
+                          const ColorEncoding& JXL_RESTRICT c) {
+  IccBytes bytes;
+  if (!MaybeCreateProfile(c.ToExternal(), &bytes)) {
+    return false;
+  }
+
+  skcms_ICCProfile profile_test;
+  if (!DecodeProfile(bytes.data(), bytes.size(), &profile_test)) {
+    return false;
+  }
+
+  if (!skcms_ApproximatelyEqualProfiles(&profile_test, &profile)) {
+    return false;
+  }
+
+  return true;
 }
 
 void DetectTransferFunction(const skcms_ICCProfile& profile,
@@ -516,29 +536,15 @@ void DetectTransferFunction(const skcms_ICCProfile& profile,
   if (gamma[0] != 0 && std::abs(gamma[0] - gamma[1]) < 1e-4f &&
       std::abs(gamma[1] - gamma[2]) < 1e-4f) {
     if (c->tf.SetGamma(gamma[0])) {
-      skcms_ICCProfile profile_test;
-      IccBytes bytes;
-      if (MaybeCreateProfile(*c, &bytes) &&
-          DecodeProfile(bytes.data(), bytes.size(), &profile_test) &&
-          skcms_ApproximatelyEqualProfiles(&profile, &profile_test)) {
-        return;
-      }
+      if (IsApproximatelyEqual(profile, *c)) return;
     }
   }
 
   for (TransferFunction tf : Values<TransferFunction>()) {
     // Can only create profile from known transfer function.
     if (tf == TransferFunction::kUnknown) continue;
-
     c->tf.SetTransferFunction(tf);
-
-    skcms_ICCProfile profile_test;
-    IccBytes bytes;
-    if (MaybeCreateProfile(*c, &bytes) &&
-        DecodeProfile(bytes.data(), bytes.size(), &profile_test) &&
-        skcms_ApproximatelyEqualProfiles(&profile, &profile_test)) {
-      return;
-    }
+    if (IsApproximatelyEqual(profile, *c)) return;
   }
 
   c->tf.SetTransferFunction(TransferFunction::kUnknown);
@@ -575,8 +581,7 @@ Status ProfileEquivalentToICC(const cmsContext context, const Profile& profile1,
   const uint32_t type_src = Type64(c);
 
   Profile profile2;
-  JXL_RETURN_IF_ERROR(
-      DecodeProfile(context, Span<const uint8_t>(icc), &profile2));
+  JXL_RETURN_IF_ERROR(DecodeProfile(context, Bytes(icc), &profile2));
 
   Profile profile_xyz;
   JXL_RETURN_IF_ERROR(CreateProfileXYZ(context, &profile_xyz));
@@ -758,7 +763,7 @@ void DetectTransferFunction(const cmsContext context, const Profile& profile,
 
   if (gamma != 0 && c->tf.SetGamma(gamma)) {
     IccBytes icc_test;
-    if (MaybeCreateProfile(*c, &icc_test) &&
+    if (MaybeCreateProfile(c->ToExternal(), &icc_test) &&
         ProfileEquivalentToICC(context, profile, icc_test, *c)) {
       return;
     }
@@ -771,7 +776,7 @@ void DetectTransferFunction(const cmsContext context, const Profile& profile,
     c->tf.SetTransferFunction(tf);
 
     IccBytes icc_test;
-    if (MaybeCreateProfile(*c, &icc_test) &&
+    if (MaybeCreateProfile(c->ToExternal(), &icc_test) &&
         ProfileEquivalentToICC(context, profile, icc_test, *c)) {
       return;
     }
@@ -825,8 +830,8 @@ Status GetPrimariesLuminances(const ColorEncoding& encoding,
   // that primary.
 
   float white_XYZ[3];
-  JXL_RETURN_IF_ERROR(
-      CIEXYZFromWhiteCIExy(encoding.GetWhitePoint(), white_XYZ));
+  CIExy wp = encoding.GetWhitePoint();
+  JXL_RETURN_IF_ERROR(CIEXYZFromWhiteCIExy(wp.x, wp.y, white_XYZ));
 
   const PrimariesCIExy primaries = encoding.GetPrimaries();
   double chromaticities[3][3] = {
@@ -980,7 +985,7 @@ JXL_BOOL JxlCmsSetFieldsFromICC(void* user_data, const uint8_t* icc_data,
                 profile.CICP.transfer_characteristics,
                 profile.CICP.matrix_coefficients,
                 profile.CICP.video_full_range_flag, &c_enc)) {
-    c_enc.ToExternal(c);
+    *c = c_enc.ToExternal();
     return true;
   }
 
@@ -1001,8 +1006,8 @@ JXL_BOOL JxlCmsSetFieldsFromICC(void* user_data, const uint8_t* icc_data,
   const cmsContext context = GetContext();
 
   Profile profile;
-  JXL_RETURN_IF_ERROR(DecodeProfile(
-      context, Span<const uint8_t>(icc_data, icc_size), &profile));
+  JXL_RETURN_IF_ERROR(
+      DecodeProfile(context, Bytes(icc_data, icc_size), &profile));
 
   const cmsUInt32Number rendering_intent32 =
       cmsGetHeaderRenderingIntent(profile.get());
@@ -1020,14 +1025,14 @@ JXL_BOOL JxlCmsSetFieldsFromICC(void* user_data, const uint8_t* icc_data,
           kCICPSize &&
       ApplyCICP(cicp_buffer[8], cicp_buffer[9], cicp_buffer[10],
                 cicp_buffer[11], &c_enc)) {
-    c_enc.ToExternal(c);
+    *c = c_enc.ToExternal();
     return true;
   }
 
   c_enc.color_space = ColorSpaceFromProfile(profile);
   if (cmsGetColorSpace(profile.get()) == cmsSigCmykData) {
     *cmyk = JXL_TRUE;
-    c_enc.ToExternal(c);
+    *c = c_enc.ToExternal();
     return true;
   }
 
@@ -1043,7 +1048,7 @@ JXL_BOOL JxlCmsSetFieldsFromICC(void* user_data, const uint8_t* icc_data,
 
 #endif  // JPEGXL_ENABLE_SKCMS
 
-  c_enc.ToExternal(c);
+  *c = c_enc.ToExternal();
   return true;
 }
 
@@ -1118,11 +1123,11 @@ void* JxlCmsInit(void* init_data, size_t num_threads, size_t xsize,
 #else   // JPEGXL_ENABLE_SKCMS
   const cmsContext context = GetContext();
   Profile profile_src, profile_dst;
-  if (!DecodeProfile(context, Span<const uint8_t>(c_src.icc), &profile_src)) {
+  if (!DecodeProfile(context, Bytes(c_src.icc), &profile_src)) {
     JXL_NOTIFY_ERROR("JxlCmsInit: lcms failed to parse input ICC");
     return nullptr;
   }
-  if (!DecodeProfile(context, Span<const uint8_t>(c_dst.icc), &profile_dst)) {
+  if (!DecodeProfile(context, Bytes(c_dst.icc), &profile_dst)) {
     JXL_NOTIFY_ERROR("JxlCmsInit: lcms failed to parse output ICC");
     return nullptr;
   }
@@ -1164,11 +1169,11 @@ void* JxlCmsInit(void* init_data, size_t num_threads, size_t xsize,
     Profile new_src;
 #endif  // JPEGXL_ENABLE_SKCMS
         // Only enable ExtraTF if profile creation succeeded.
-    if (MaybeCreateProfile(c_linear_src, &icc_src) &&
+    if (MaybeCreateProfile(c_linear_src.ToExternal(), &icc_src) &&
 #if JPEGXL_ENABLE_SKCMS
         DecodeProfile(icc_src.data(), icc_src.size(), &new_src)) {
 #else   // JPEGXL_ENABLE_SKCMS
-        DecodeProfile(context, Span<const uint8_t>(icc_src), &new_src)) {
+        DecodeProfile(context, Bytes(icc_src), &new_src)) {
 #endif  // JPEGXL_ENABLE_SKCMS
 #if JXL_CMS_VERBOSE
       printf("Special HLG/PQ/sRGB -> linear\n");
@@ -1205,11 +1210,11 @@ void* JxlCmsInit(void* init_data, size_t num_threads, size_t xsize,
     Profile new_dst;
 #endif  // JPEGXL_ENABLE_SKCMS
     // Only enable ExtraTF if profile creation succeeded.
-    if (MaybeCreateProfile(c_linear_dst, &icc_dst) &&
+    if (MaybeCreateProfile(c_linear_dst.ToExternal(), &icc_dst) &&
 #if JPEGXL_ENABLE_SKCMS
         DecodeProfile(icc_dst.data(), icc_dst.size(), &new_dst)) {
 #else   // JPEGXL_ENABLE_SKCMS
-        DecodeProfile(context, Span<const uint8_t>(icc_dst), &new_dst)) {
+        DecodeProfile(context, Bytes(icc_dst), &new_dst)) {
 #endif  // JPEGXL_ENABLE_SKCMS
 #if JXL_CMS_VERBOSE
       printf("Special linear -> HLG/PQ/sRGB\n");
@@ -1246,7 +1251,7 @@ void* JxlCmsInit(void* init_data, size_t num_threads, size_t xsize,
   if (!skcms_MakeUsableAsDestination(&t->profile_dst)) {
     JXL_NOTIFY_ERROR(
         "Failed to make %s usable as a color transform destination",
-        Description(c_dst).c_str());
+        ColorEncodingDescription(c_dst.ToExternal()).c_str());
     return nullptr;
   }
 #endif  // JPEGXL_ENABLE_SKCMS
@@ -1317,7 +1322,9 @@ float* JxlCmsGetDstBuf(void* cms_data, size_t thread) {
 
 }  // namespace
 
-extern "C" const JxlCmsInterface* JxlGetDefaultCms() {
+extern "C" {
+
+JXL_CMS_EXPORT const JxlCmsInterface* JxlGetDefaultCms() {
   static constexpr JxlCmsInterface kInterface = {
       /*set_fields_data=*/nullptr,
       /*set_fields_from_icc=*/&JxlCmsSetFieldsFromICC,
@@ -1329,6 +1336,8 @@ extern "C" const JxlCmsInterface* JxlGetDefaultCms() {
       /*destroy=*/&JxlCmsDestroy};
   return &kInterface;
 }
+
+}  // extern "C"
 
 }  // namespace jxl
 #endif  // HWY_ONCE

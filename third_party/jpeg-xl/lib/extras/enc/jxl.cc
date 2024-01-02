@@ -36,6 +36,78 @@ bool SetFrameOptions(const std::vector<JXLOption>& options, size_t frame_index,
   return true;
 }
 
+bool SetupFrame(JxlEncoder* enc, JxlEncoderFrameSettings* settings,
+                const JxlFrameHeader& frame_header,
+                const JXLCompressParams& params, const PackedPixelFile& ppf,
+                size_t frame_index, size_t num_alpha_channels,
+                size_t num_interleaved_alpha, size_t& option_idx) {
+  if (JXL_ENC_SUCCESS != JxlEncoderSetFrameHeader(settings, &frame_header)) {
+    fprintf(stderr, "JxlEncoderSetFrameHeader() failed.\n");
+    return false;
+  }
+  if (!SetFrameOptions(params.options, frame_index, &option_idx, settings)) {
+    return false;
+  }
+  if (num_alpha_channels > 0) {
+    JxlExtraChannelInfo extra_channel_info;
+    JxlEncoderInitExtraChannelInfo(JXL_CHANNEL_ALPHA, &extra_channel_info);
+    extra_channel_info.bits_per_sample = ppf.info.alpha_bits;
+    extra_channel_info.exponent_bits_per_sample = ppf.info.alpha_exponent_bits;
+    if (params.premultiply != -1) {
+      if (params.premultiply != 0 && params.premultiply != 1) {
+        fprintf(stderr, "premultiply must be one of: -1, 0, 1.\n");
+        return false;
+      }
+      extra_channel_info.alpha_premultiplied = params.premultiply;
+    }
+    if (JXL_ENC_SUCCESS !=
+        JxlEncoderSetExtraChannelInfo(enc, 0, &extra_channel_info)) {
+      fprintf(stderr, "JxlEncoderSetExtraChannelInfo() failed.\n");
+      return false;
+    }
+    // We take the extra channel blend info frame_info, but don't do
+    // clamping.
+    JxlBlendInfo extra_channel_blend_info = frame_header.layer_info.blend_info;
+    extra_channel_blend_info.clamp = JXL_FALSE;
+    JxlEncoderSetExtraChannelBlendInfo(settings, 0, &extra_channel_blend_info);
+  }
+  // Add extra channel info for the rest of the extra channels.
+  for (size_t i = 0; i < ppf.info.num_extra_channels; ++i) {
+    if (i < ppf.extra_channels_info.size()) {
+      const auto& ec_info = ppf.extra_channels_info[i].ec_info;
+      if (JXL_ENC_SUCCESS != JxlEncoderSetExtraChannelInfo(
+                                 enc, num_interleaved_alpha + i, &ec_info)) {
+        fprintf(stderr, "JxlEncoderSetExtraChannelInfo() failed.\n");
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+bool ReadCompressedOutput(JxlEncoder* enc, std::vector<uint8_t>* compressed) {
+  compressed->clear();
+  compressed->resize(4096);
+  uint8_t* next_out = compressed->data();
+  size_t avail_out = compressed->size() - (next_out - compressed->data());
+  JxlEncoderStatus result = JXL_ENC_NEED_MORE_OUTPUT;
+  while (result == JXL_ENC_NEED_MORE_OUTPUT) {
+    result = JxlEncoderProcessOutput(enc, &next_out, &avail_out);
+    if (result == JXL_ENC_NEED_MORE_OUTPUT) {
+      size_t offset = next_out - compressed->data();
+      compressed->resize(compressed->size() * 2);
+      next_out = compressed->data() + offset;
+      avail_out = compressed->size() - offset;
+    }
+  }
+  compressed->resize(next_out - compressed->data());
+  if (result != JXL_ENC_SUCCESS) {
+    fprintf(stderr, "JxlEncoderProcessOutput failed.\n");
+    return false;
+  }
+  return true;
+}
+
 bool EncodeImageJXL(const JXLCompressParams& params, const PackedPixelFile& ppf,
                     const std::vector<uint8_t>* jpeg_bytes,
                     std::vector<uint8_t>* compressed) {
@@ -50,6 +122,13 @@ bool EncodeImageJXL(const JXLCompressParams& params, const PackedPixelFile& ppf,
       JXL_ENC_SUCCESS != JxlEncoderSetParallelRunner(enc, params.runner,
                                                      params.runner_opaque)) {
     fprintf(stderr, "JxlEncoderSetParallelRunner failed\n");
+    return false;
+  }
+
+  if (params.HasOutputProcessor() &&
+      JXL_ENC_SUCCESS !=
+          JxlEncoderSetOutputProcessor(enc, params.output_processor)) {
+    fprintf(stderr, "JxlEncoderSetOutputProcessorfailed\n");
     return false;
   }
 
@@ -222,53 +301,11 @@ bool EncodeImageJXL(const JXLCompressParams& params, const PackedPixelFile& ppf,
       const jxl::extras::PackedFrame& pframe = ppf.frames[num_frame];
       const jxl::extras::PackedImage& pimage = pframe.color;
       JxlPixelFormat ppixelformat = pimage.format;
-      if (JXL_ENC_SUCCESS !=
-          JxlEncoderSetFrameHeader(settings, &pframe.frame_info)) {
-        fprintf(stderr, "JxlEncoderSetFrameHeader() failed.\n");
-        return false;
-      }
-      if (!SetFrameOptions(params.options, num_frame, &option_idx, settings)) {
-        return false;
-      }
-      if (num_alpha_channels > 0) {
-        JxlExtraChannelInfo extra_channel_info;
-        JxlEncoderInitExtraChannelInfo(JXL_CHANNEL_ALPHA, &extra_channel_info);
-        extra_channel_info.bits_per_sample = ppf.info.alpha_bits;
-        extra_channel_info.exponent_bits_per_sample =
-            ppf.info.alpha_exponent_bits;
-        if (params.premultiply != -1) {
-          if (params.premultiply != 0 && params.premultiply != 1) {
-            fprintf(stderr, "premultiply must be one of: -1, 0, 1.\n");
-            return false;
-          }
-          extra_channel_info.alpha_premultiplied = params.premultiply;
-        }
-        if (JXL_ENC_SUCCESS !=
-            JxlEncoderSetExtraChannelInfo(enc, 0, &extra_channel_info)) {
-          fprintf(stderr, "JxlEncoderSetExtraChannelInfo() failed.\n");
-          return false;
-        }
-        // We take the extra channel blend info frame_info, but don't do
-        // clamping.
-        JxlBlendInfo extra_channel_blend_info =
-            pframe.frame_info.layer_info.blend_info;
-        extra_channel_blend_info.clamp = JXL_FALSE;
-        JxlEncoderSetExtraChannelBlendInfo(settings, 0,
-                                           &extra_channel_blend_info);
-      }
       size_t num_interleaved_alpha =
           (ppixelformat.num_channels - ppf.info.num_color_channels);
-      // Add extra channel info for the rest of the extra channels.
-      for (size_t i = 0; i < ppf.info.num_extra_channels; ++i) {
-        if (i < ppf.extra_channels_info.size()) {
-          const auto& ec_info = ppf.extra_channels_info[i].ec_info;
-          if (JXL_ENC_SUCCESS !=
-              JxlEncoderSetExtraChannelInfo(enc, num_interleaved_alpha + i,
-                                            &ec_info)) {
-            fprintf(stderr, "JxlEncoderSetExtraChannelInfo() failed.\n");
-            return false;
-          }
-        }
+      if (!SetupFrame(enc, settings, pframe.frame_info, params, ppf, num_frame,
+                      num_alpha_channels, num_interleaved_alpha, option_idx)) {
+        return false;
       }
       if (JXL_ENC_SUCCESS != JxlEncoderAddImageFrame(settings, &ppixelformat,
                                                      pimage.pixels(),
@@ -289,26 +326,30 @@ bool EncodeImageJXL(const JXLCompressParams& params, const PackedPixelFile& ppf,
         }
       }
     }
-  }
-  JxlEncoderCloseInput(enc);
-  // Reading compressed output
-  compressed->clear();
-  compressed->resize(4096);
-  uint8_t* next_out = compressed->data();
-  size_t avail_out = compressed->size() - (next_out - compressed->data());
-  JxlEncoderStatus result = JXL_ENC_NEED_MORE_OUTPUT;
-  while (result == JXL_ENC_NEED_MORE_OUTPUT) {
-    result = JxlEncoderProcessOutput(enc, &next_out, &avail_out);
-    if (result == JXL_ENC_NEED_MORE_OUTPUT) {
-      size_t offset = next_out - compressed->data();
-      compressed->resize(compressed->size() * 2);
-      next_out = compressed->data() + offset;
-      avail_out = compressed->size() - offset;
+    for (size_t fi = 0; fi < ppf.chunked_frames.size(); ++fi) {
+      ChunkedPackedFrame& chunked_frame = ppf.chunked_frames[fi];
+      size_t num_interleaved_alpha =
+          (chunked_frame.format.num_channels - ppf.info.num_color_channels);
+      if (!SetupFrame(enc, settings, chunked_frame.frame_info, params, ppf, fi,
+                      num_alpha_channels, num_interleaved_alpha, option_idx)) {
+        return false;
+      }
+      const bool last_frame = fi + 1 == ppf.chunked_frames.size();
+      if (JXL_ENC_SUCCESS !=
+          JxlEncoderAddChunkedFrame(settings, last_frame,
+                                    chunked_frame.GetInputSource())) {
+        fprintf(stderr, "JxlEncoderAddChunkedFrame() failed.\n");
+        return false;
+      }
     }
   }
-  compressed->resize(next_out - compressed->data());
-  if (result != JXL_ENC_SUCCESS) {
-    fprintf(stderr, "JxlEncoderProcessOutput failed.\n");
+  JxlEncoderCloseInput(enc);
+  if (params.HasOutputProcessor()) {
+    if (JXL_ENC_SUCCESS != JxlEncoderFlushInput(enc)) {
+      fprintf(stderr, "JxlEncoderAddChunkedFrame() failed.\n");
+      return false;
+    }
+  } else if (!ReadCompressedOutput(enc, compressed)) {
     return false;
   }
   return true;

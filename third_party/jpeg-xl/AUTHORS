@@ -1,19 +1,33 @@
-# List of the project authors for copyright purposes. When contributing to the
-# project add your name or your organization's name to this list. See
-# CONTRIBUTING.md for details.
+# List of the project authors.
+# When contributing you can add your name to this list.
+# For a complete list of contributions made after the move
+# from gitlab to github, see
+# https://github.com/libjxl/libjxl/graphs/contributors.
+# See CONTRIBUTING.md for details.
 #
-# For organizations:
-#   Organization <email pattern: *@domain>
-#
-# For individuals:
-#   Name <email address>
 #
 # Please keep each list sorted. If you wish to change your email address please
 # send a pull request.
 
 # Organizations:
-Cloudinary Ltd. <*@cloudinary.com>
-Google LLC <*@google.com>
+
+# - Cloudinary Ltd.:
+Jon Sneyers <jon@cloudinary.com>
+
+# - Google:
+Evgenii Kliuchnikov <eustas@google.com>
+Iulia Comșa <iuliacomsa@google.com>
+Jan Wassenberg <janwas@google.com>
+Jyrki Alakuijala <jyrki@google.com>
+Lode Vandevenne <lode@google.com>
+Luca Versari <veluca@google.com>
+Marcin Kowalczyk <qrczak@google.com>
+Martin Bruse <zond@google.com>
+Moritz Firsching <firsching@google.com>
+Sami Boukortt <sboukortt@google.com>
+Sebastian Gomez <sggonzalez@google.com>
+Thomas Fischbacher <tfish@google.com>
+Zoltan Szabadka <szabadka@google.com>
 
 # Individuals:
 a-shvedov
@@ -32,8 +46,10 @@ David Burnett <vargolsoft@gmail.com>
 dependabot[bot]
 Diego Pino <dpino@igalia.com>
 Dirk Lemstra <dirk@lemstra.org>
+Dmitry Baryshev <dima8w@gmail.com>
 Don Olmstead <don.j.olmstead@gmail.com>
 Dong Xu <xdong181@gmail.com>
+estrogently <41487185+estrogently@users.noreply.github.com>
 Even Rouault <even.rouault@spatialys.com>
 Fred Brennan <copypaste@kittens.ph>
 gi-man
@@ -41,7 +57,6 @@ Gilles Devillers (GilDev) <gildev@gmail.com>
 Heiko Becker <heirecka@exherbo.org>
 Ivan Kokorev
 Jim Robinson <jimbo2150@gmail.com>
-Jon Sneyers <jon@cloudinary.com>
 Jonathan Brown (Jonnyawsom3) <jonathanbr30@gmail.com>
 Joshua Root <jmr@macports.org>
 Kai Hollberg <Schweinepriester@users.noreply.github.com>
@@ -69,6 +84,7 @@ Stephan T. Lavavej <stl@nuwen.net>
 StepSecurity Bot <bot@stepsecurity.io>
 Sylvestre Ledru <sylvestre@debian.org>
 Thomas Bonfort <thomas.bonfort@airbus.com>
+Timo Rothenpieler <timo@rothenpieler.org>
 tmkk <tmkkmac@gmail.com>
 Vincent Torri <vincent.torri@gmail.com>
 xiota

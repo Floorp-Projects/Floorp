@@ -10,9 +10,9 @@ origin:
 
   url: https://github.com/libjxl/libjxl
 
-  release: d3a69dbeef78f036969a2500f949f931df857e17 (2023-10-18T13:56:09Z).
+  release: 1d1006ce9dbe4224c1299992b57f28a4f62df9b7 (2023-12-29T13:36:27Z).
 
-  revision: d3a69dbeef78f036969a2500f949f931df857e17
+  revision: 1d1006ce9dbe4224c1299992b57f28a4f62df9b7
 
   license: Apache-2.0
 

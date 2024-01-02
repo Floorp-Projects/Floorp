@@ -44,10 +44,9 @@ Image3F GetColorImage(const PackedPixelFile& ppf) {
   const uint8_t* pixels = reinterpret_cast<const uint8_t*>(image.pixels());
   Image3F color(image.xsize, image.ysize);
   for (size_t c = 0; c < format.num_channels; ++c) {
-    JXL_CHECK(
-        ConvertFromExternal(Span<const uint8_t>(pixels, image.pixels_size),
-                            image.xsize, image.ysize, ppf.info.bits_per_sample,
-                            format, c, nullptr, &color.Plane(c)));
+    JXL_CHECK(ConvertFromExternal(pixels, image.pixels_size, image.xsize,
+                                  image.ysize, ppf.info.bits_per_sample, format,
+                                  c, nullptr, &color.Plane(c)));
   }
   return color;
 }

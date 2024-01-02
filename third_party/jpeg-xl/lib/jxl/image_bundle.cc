@@ -9,7 +9,6 @@
 #include <utility>
 
 #include "lib/jxl/base/byte_order.h"
-#include "lib/jxl/base/padded_bytes.h"
 #include "lib/jxl/base/printf_macros.h"
 #include "lib/jxl/fields.h"
 

@@ -16,6 +16,7 @@
 #include "lib/jxl/enc_aux_out.h"
 #include "lib/jxl/fields.h"
 #include "lib/jxl/icc_codec_common.h"
+#include "lib/jxl/padded_bytes.h"
 
 namespace jxl {
 namespace {
@@ -105,7 +106,8 @@ Status PredictICC(const uint8_t* icc, size_t size, PaddedBytes* result) {
   EncodeVarInt(size, result);
 
   // Header
-  PaddedBytes header = ICCInitialHeaderPrediction();
+  PaddedBytes header;
+  header.append(ICCInitialHeaderPrediction());
   EncodeUint32(0, size, &header);
   for (size_t i = 0; i < kICCHeaderSize && i < size; i++) {
     ICCPredictHeader(icc, size, header.data(), i);
@@ -422,7 +424,7 @@ Status WriteICC(const IccBytes& icc, BitWriter* JXL_RESTRICT writer,
   params.force_huffman = true;
   BuildAndEncodeHistograms(params, kNumICCContexts, tokens, &code, &context_map,
                            writer, layer, aux_out);
-  WriteTokens(tokens[0], code, context_map, writer, layer, aux_out);
+  WriteTokens(tokens[0], code, context_map, 0, writer, layer, aux_out);
   return true;
 }
 

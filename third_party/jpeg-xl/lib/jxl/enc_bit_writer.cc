@@ -43,7 +43,7 @@ void BitWriter::Allotment::FinishedHistogram(BitWriter* JXL_RESTRICT writer) {
 void BitWriter::Allotment::ReclaimAndCharge(BitWriter* JXL_RESTRICT writer,
                                             size_t layer,
                                             AuxOut* JXL_RESTRICT aux_out) {
-  size_t used_bits, unused_bits;
+  size_t used_bits = 0, unused_bits = 0;
   PrivateReclaim(writer, &used_bits, &unused_bits);
 
 #if 0
@@ -103,6 +103,20 @@ void BitWriter::AppendByteAligned(const BitWriter& other) {
   JXL_ASSERT(other.BitsWritten() / kBitsPerByte != 0);
 
   AppendByteAligned(other.GetSpan());
+}
+
+void BitWriter::AppendUnaligned(const BitWriter& other) {
+  Allotment allotment(this, other.BitsWritten());
+  size_t full_bytes = other.BitsWritten() / kBitsPerByte;
+  size_t remaining_bits = other.BitsWritten() % kBitsPerByte;
+  for (size_t i = 0; i < full_bytes; ++i) {
+    Write(8, other.storage_[i]);
+  }
+  if (remaining_bits > 0) {
+    Write(remaining_bits,
+          other.storage_[full_bytes] & ((1u << remaining_bits) - 1));
+  }
+  allotment.ReclaimAndCharge(this, 0, nullptr);
 }
 
 void BitWriter::AppendByteAligned(const std::vector<BitWriter>& others) {

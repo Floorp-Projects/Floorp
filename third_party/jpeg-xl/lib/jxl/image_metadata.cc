@@ -10,7 +10,6 @@
 
 #include "lib/jxl/alpha.h"
 #include "lib/jxl/base/byte_order.h"
-#include "lib/jxl/base/padded_bytes.h"
 #include "lib/jxl/cms/opsin_params.h"
 #include "lib/jxl/fields.h"
 #include "lib/jxl/frame_header.h"

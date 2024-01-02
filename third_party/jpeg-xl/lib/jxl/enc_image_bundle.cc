@@ -13,23 +13,22 @@
 
 #include "lib/jxl/alpha.h"
 #include "lib/jxl/base/byte_order.h"
-#include "lib/jxl/base/padded_bytes.h"
 #include "lib/jxl/color_encoding_internal.h"
 #include "lib/jxl/fields.h"
 #include "lib/jxl/image_bundle.h"
 
 namespace jxl {
 
-namespace {
-
-// Copies ib:rect, converts, and copies into out.
-Status CopyToT(const ImageMetadata* metadata, const ImageBundle* ib,
-               const Rect& rect, const ColorEncoding& c_desired,
-               const JxlCmsInterface& cms, ThreadPool* pool, Image3F* out) {
+Status ApplyColorTransform(const ColorEncoding& c_current,
+                           float intensity_target, const Image3F& color,
+                           const ImageF* black, const Rect& rect,
+                           const ColorEncoding& c_desired,
+                           const JxlCmsInterface& cms, ThreadPool* pool,
+                           Image3F* out) {
   ColorSpaceTransform c_transform(cms);
   // Changing IsGray is probably a bug.
-  JXL_CHECK(ib->IsGray() == c_desired.IsGray());
-  bool is_gray = ib->IsGray();
+  JXL_CHECK(c_current.IsGray() == c_desired.IsGray());
+  bool is_gray = c_current.IsGray();
   if (out->xsize() < rect.xsize() || out->ysize() < rect.ysize()) {
     *out = Image3F(rect.xsize(), rect.ysize());
   } else {
@@ -39,28 +38,24 @@ Status CopyToT(const ImageMetadata* metadata, const ImageBundle* ib,
   JXL_RETURN_IF_ERROR(RunOnPool(
       pool, 0, rect.ysize(),
       [&](const size_t num_threads) {
-        return c_transform.Init(ib->c_current(), c_desired,
-                                metadata->IntensityTarget(), rect.xsize(),
-                                num_threads);
+        return c_transform.Init(c_current, c_desired, intensity_target,
+                                rect.xsize(), num_threads);
       },
       [&](const uint32_t y, const size_t thread) {
         float* mutable_src_buf = c_transform.BufSrc(thread);
         const float* src_buf = mutable_src_buf;
         // Interleave input.
         if (is_gray) {
-          src_buf = rect.ConstPlaneRow(ib->color(), 0, y);
-        } else if (ib->c_current().IsCMYK()) {
-          if (!ib->HasBlack()) {
+          src_buf = rect.ConstPlaneRow(color, 0, y);
+        } else if (c_current.IsCMYK()) {
+          if (!black) {
             ok.store(false);
             return;
           }
-          const float* JXL_RESTRICT row_in0 =
-              rect.ConstPlaneRow(ib->color(), 0, y);
-          const float* JXL_RESTRICT row_in1 =
-              rect.ConstPlaneRow(ib->color(), 1, y);
-          const float* JXL_RESTRICT row_in2 =
-              rect.ConstPlaneRow(ib->color(), 2, y);
-          const float* JXL_RESTRICT row_in3 = rect.ConstRow(ib->black(), y);
+          const float* JXL_RESTRICT row_in0 = rect.ConstPlaneRow(color, 0, y);
+          const float* JXL_RESTRICT row_in1 = rect.ConstPlaneRow(color, 1, y);
+          const float* JXL_RESTRICT row_in2 = rect.ConstPlaneRow(color, 2, y);
+          const float* JXL_RESTRICT row_in3 = rect.ConstRow(*black, y);
           for (size_t x = 0; x < rect.xsize(); x++) {
             // CMYK convention in JXL: 0 = max ink, 1 = white
             mutable_src_buf[4 * x + 0] = row_in0[x];
@@ -69,12 +64,9 @@ Status CopyToT(const ImageMetadata* metadata, const ImageBundle* ib,
             mutable_src_buf[4 * x + 3] = row_in3[x];
           }
         } else {
-          const float* JXL_RESTRICT row_in0 =
-              rect.ConstPlaneRow(ib->color(), 0, y);
-          const float* JXL_RESTRICT row_in1 =
-              rect.ConstPlaneRow(ib->color(), 1, y);
-          const float* JXL_RESTRICT row_in2 =
-              rect.ConstPlaneRow(ib->color(), 2, y);
+          const float* JXL_RESTRICT row_in0 = rect.ConstPlaneRow(color, 0, y);
+          const float* JXL_RESTRICT row_in1 = rect.ConstPlaneRow(color, 1, y);
+          const float* JXL_RESTRICT row_in2 = rect.ConstPlaneRow(color, 2, y);
           for (size_t x = 0; x < rect.xsize(); x++) {
             mutable_src_buf[3 * x + 0] = row_in0[x];
             mutable_src_buf[3 * x + 1] = row_in1[x];
@@ -106,6 +98,17 @@ Status CopyToT(const ImageMetadata* metadata, const ImageBundle* ib,
       },
       "Colorspace transform"));
   return ok.load();
+}
+
+namespace {
+
+// Copies ib:rect, converts, and copies into out.
+Status CopyToT(const ImageMetadata* metadata, const ImageBundle* ib,
+               const Rect& rect, const ColorEncoding& c_desired,
+               const JxlCmsInterface& cms, ThreadPool* pool, Image3F* out) {
+  return ApplyColorTransform(
+      ib->c_current(), metadata->IntensityTarget(), ib->color(),
+      ib->HasBlack() ? &ib->black() : nullptr, rect, c_desired, cms, pool, out);
 }
 
 }  // namespace

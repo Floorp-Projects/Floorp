@@ -96,7 +96,6 @@ TEST(ColorEncodingTest, CustomGamma) {
 
 TEST(ColorEncodingTest, InternalExternalConversion) {
   ColorEncoding source_internal;
-  JxlColorEncoding external = {};
   ColorEncoding destination_internal;
 
   for (int i = 0; i < 100; i++) {
@@ -120,7 +119,7 @@ TEST(ColorEncodingTest, InternalExternalConversion) {
     source_internal.tf = tf;
     source_internal.rendering_intent = static_cast<RenderingIntent>(rand() % 4);
 
-    source_internal.ToExternal(&external);
+    JxlColorEncoding external = source_internal.ToExternal();
     EXPECT_TRUE(destination_internal.FromExternal(external));
 
     EXPECT_EQ(source_internal.color_space, destination_internal.color_space);

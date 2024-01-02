@@ -16,9 +16,12 @@
 
 #include "lib/jxl/base/override.h"
 #include "lib/jxl/butteraugli/butteraugli.h"
+#include "lib/jxl/enc_progressive_split.h"
 #include "lib/jxl/frame_header.h"
+#include "lib/jxl/modular/encoding/dec_ma.h"
 #include "lib/jxl/modular/options.h"
 #include "lib/jxl/modular/transform/transform.h"
+#include "lib/jxl/splines.h"
 
 namespace jxl {
 
@@ -193,8 +196,20 @@ struct CompressParams {
   // -1: don't care
   int level = -1;
 
+  // See JXL_ENC_FRAME_SETTING_BUFFERING option value.
+  int buffering = 0;
+
   std::vector<float> manual_noise;
   std::vector<float> manual_xyb_factors;
+
+  // If not empty, this tree will be used for dc global section.
+  // Used in jxl_from_tree tool.
+  Tree custom_fixed_tree;
+  // If not empty, these custom splines will be used instead of the computed
+  // ones. Used in jxl_from_tee tool.
+  Splines custom_splines;
+  // If not null, overrides progressive mode settings. Used in decode_test.
+  const ProgressiveMode* custom_progressive_mode = nullptr;
 
   JxlDebugImageCallback debug_image = nullptr;
   void* debug_image_opaque;

@@ -5,7 +5,7 @@
 # license that can be found in the LICENSE file.
 
 # This file downloads the dependencies needed to build JPEG XL into third_party.
-# These dependencies are normally pulled by gtest.
+# These dependencies are normally pulled by git.
 
 set -eu
 
@@ -15,10 +15,10 @@ MYDIR=$(dirname $(realpath "$0"))
 # update a git submodule.
 THIRD_PARTY_BROTLI="36533a866ed1ca4b75cf049f4521e4ec5fe24727"
 THIRD_PARTY_HIGHWAY="ba0900a4957b929390ab73827235557959234fea"
-THIRD_PARTY_SKCMS="b25b07b4b07990811de121c0356155b2ba0f4318"
+THIRD_PARTY_SKCMS="42030a771244ba67f86b1c1c76a6493f873c5f91"
 THIRD_PARTY_SJPEG="e5ab13008bb214deb66d5f3e17ca2f8dbff150bf"
 THIRD_PARTY_ZLIB="cacf7f1d4e3d44d871b605da3b647f07d718623f"
-THIRD_PARTY_LIBPNG="a40189cf881e9f0db80511c382292a5604c3c3d1"
+THIRD_PARTY_LIBPNG="f135775ad4e5d4408d2e12ffcc71bb36e6b48551" # v1.6.40
 THIRD_PARTY_LIBJPEG_TURBO="8ecba3647edb6dd940463fedf38ca33a8e2a73d1" # 2.1.5.1
 
 # Download the target revision from GitHub.
@@ -27,7 +27,7 @@ download_github() {
   local project="$2"
 
   local varname=`echo "$path" | tr '[:lower:]' '[:upper:]'`
-  varname="${varname/[\/-]/_}"
+  varname="${varname//[\/-]/_}"
   local sha
   eval "sha=\${${varname}}"
 

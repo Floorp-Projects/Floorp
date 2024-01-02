@@ -6,9 +6,22 @@
 #ifndef LIB_JXL_ENC_IMAGE_BUNDLE_H_
 #define LIB_JXL_ENC_IMAGE_BUNDLE_H_
 
+#include <jxl/cms_interface.h>
+
+#include "lib/jxl/base/data_parallel.h"
+#include "lib/jxl/base/status.h"
+#include "lib/jxl/color_encoding_internal.h"
+#include "lib/jxl/image.h"
 #include "lib/jxl/image_bundle.h"
 
 namespace jxl {
+
+Status ApplyColorTransform(const ColorEncoding& c_current,
+                           float intensity_target, const Image3F& color,
+                           const ImageF* black, const Rect& rect,
+                           const ColorEncoding& c_desired,
+                           const JxlCmsInterface& cms, ThreadPool* pool,
+                           Image3F* out);
 
 // Does color transformation from in.c_current() to c_desired if the color
 // encodings are different, or nothing if they are already the same.

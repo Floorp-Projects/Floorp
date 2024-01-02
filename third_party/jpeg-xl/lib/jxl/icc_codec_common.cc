@@ -13,6 +13,7 @@
 
 #include "lib/jxl/base/byte_order.h"
 #include "lib/jxl/fields.h"
+#include "lib/jxl/padded_bytes.h"
 
 namespace jxl {
 namespace {
@@ -93,29 +94,19 @@ Status CheckIs32Bit(uint64_t v) {
   return true;
 }
 
-PaddedBytes ICCInitialHeaderPrediction() {
-  PaddedBytes result(kICCHeaderSize);
-  for (size_t i = 0; i < kICCHeaderSize; i++) {
-    result[i] = 0;
-  }
-  result[8] = 4;
-  EncodeKeyword(kMntrTag, result.data(), result.size(), 12);
-  EncodeKeyword(kRgb_Tag, result.data(), result.size(), 16);
-  EncodeKeyword(kXyz_Tag, result.data(), result.size(), 20);
-  EncodeKeyword(kAcspTag, result.data(), result.size(), 36);
-  result[68] = 0;
-  result[69] = 0;
-  result[70] = 246;
-  result[71] = 214;
-  result[72] = 0;
-  result[73] = 1;
-  result[74] = 0;
-  result[75] = 0;
-  result[76] = 0;
-  result[77] = 0;
-  result[78] = 211;
-  result[79] = 45;
-  return result;
+const uint8_t kIccInitialHeaderPrediction[kICCHeaderSize] = {
+    0,   0,   0,   0,   0,   0,   0,   0,   4, 0, 0, 0, 'm', 'n', 't', 'r',
+    'R', 'G', 'B', ' ', 'X', 'Y', 'Z', ' ', 0, 0, 0, 0, 0,   0,   0,   0,
+    0,   0,   0,   0,   'a', 'c', 's', 'p', 0, 0, 0, 0, 0,   0,   0,   0,
+    0,   0,   0,   0,   0,   0,   0,   0,   0, 0, 0, 0, 0,   0,   0,   0,
+    0,   0,   0,   0,   0,   0,   246, 214, 0, 1, 0, 0, 0,   0,   211, 45,
+    0,   0,   0,   0,   0,   0,   0,   0,   0, 0, 0, 0, 0,   0,   0,   0,
+    0,   0,   0,   0,   0,   0,   0,   0,   0, 0, 0, 0, 0,   0,   0,   0,
+    0,   0,   0,   0,   0,   0,   0,   0,   0, 0, 0, 0, 0,   0,   0,   0,
+};
+
+const Span<const uint8_t> ICCInitialHeaderPrediction() {
+  return Bytes(kIccInitialHeaderPrediction);
 }
 
 void ICCPredictHeader(const uint8_t* icc, size_t size, uint8_t* header,

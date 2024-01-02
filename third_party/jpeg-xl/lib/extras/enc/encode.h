@@ -8,10 +8,17 @@
 
 // Facade for image encoders.
 
+#include <jxl/codestream_header.h>
+#include <jxl/types.h>
+
+#include <cstdint>
+#include <memory>
 #include <string>
 #include <unordered_map>
+#include <utility>
+#include <vector>
 
-#include "lib/extras/dec/decode.h"
+#include "lib/extras/packed_image.h"
 #include "lib/jxl/base/data_parallel.h"
 #include "lib/jxl/base/status.h"
 
@@ -20,7 +27,7 @@ namespace extras {
 
 struct EncodedImage {
   // One (if the format supports animations or the image has only one frame) or
-  // more sequential bitstreams.
+  // more 1quential bitstreams.
   std::vector<std::vector<uint8_t>> bitstreams;
 
   // For each extra channel one or more sequential bitstreams.
@@ -74,10 +81,6 @@ class Encoder {
  private:
   std::unordered_map<std::string, std::string> options_;
 };
-
-// TODO(sboukortt): consider exposing this as part of the C API.
-Status SelectFormat(const std::vector<JxlPixelFormat>& accepted_formats,
-                    const JxlBasicInfo& basic_info, JxlPixelFormat* format);
 
 }  // namespace extras
 }  // namespace jxl

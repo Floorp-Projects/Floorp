@@ -6,6 +6,8 @@
 #ifndef LIB_JXL_ENC_QUANT_WEIGHTS_H_
 #define LIB_JXL_ENC_QUANT_WEIGHTS_H_
 
+#include <cstddef>
+
 #include "lib/jxl/quant_weights.h"
 
 namespace jxl {
@@ -14,9 +16,9 @@ struct AuxOut;
 struct BitWriter;
 
 Status DequantMatricesEncode(
-    const DequantMatrices* matrices, BitWriter* writer, size_t layer,
+    const DequantMatrices& matrices, BitWriter* writer, size_t layer,
     AuxOut* aux_out, ModularFrameEncoder* modular_frame_encoder = nullptr);
-Status DequantMatricesEncodeDC(const DequantMatrices* matrices,
+Status DequantMatricesEncodeDC(const DequantMatrices& matrices,
                                BitWriter* writer, size_t layer,
                                AuxOut* aux_out);
 // For consistency with QuantEncoding, higher values correspond to more

@@ -15,6 +15,7 @@
 #include "lib/jxl/dec_ans.h"
 #include "lib/jxl/fields.h"
 #include "lib/jxl/icc_codec_common.h"
+#include "lib/jxl/padded_bytes.h"
 
 namespace jxl {
 namespace {
@@ -108,7 +109,8 @@ Status UnpredictICC(const uint8_t* enc, size_t size, PaddedBytes* result) {
   pos = commands_end;  // pos in data stream
 
   // Header
-  PaddedBytes header = ICCInitialHeaderPrediction();
+  PaddedBytes header;
+  header.append(ICCInitialHeaderPrediction());
   EncodeUint32(0, osize, &header);
   for (size_t i = 0; i <= kICCHeaderSize; i++) {
     if (result->size() == osize) {
@@ -388,14 +390,6 @@ Status ICCReader::CheckEOI(BitReader* reader) {
   if (reader->AllReadsWithinBounds()) return true;
   return JXL_STATUS(StatusCode::kNotEnoughBytes,
                     "Not enough bytes for reading ICC profile");
-}
-
-Status ReadICC(BitReader* JXL_RESTRICT reader, PaddedBytes* JXL_RESTRICT icc,
-               size_t output_limit) {
-  ICCReader icc_reader;
-  JXL_RETURN_IF_ERROR(icc_reader.Init(reader, output_limit));
-  JXL_RETURN_IF_ERROR(icc_reader.Process(reader, icc));
-  return true;
 }
 
 }  // namespace jxl

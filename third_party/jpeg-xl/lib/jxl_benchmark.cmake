@@ -5,10 +5,6 @@
 
 include(jxl_lists.cmake)
 
-# benchmark.h doesn't work in our MINGW set up since it ends up including the
-# wrong stdlib header. We don't run gbench on MINGW targets anyway.
-if(NOT MINGW)
-
 # This is the Google benchmark project (https://github.com/google/benchmark).
 find_package(benchmark QUIET)
 
@@ -27,10 +23,8 @@ if(benchmark_FOUND)
   target_compile_definitions(jxl_gbench PRIVATE
     -DTEST_DATA_PATH="${JPEGXL_TEST_DATA_PATH}")
   target_link_libraries(jxl_gbench
-    jxl_extras-static
-    jxl-static
+    jxl_extras-internal
+    jxl-internal
     benchmark::benchmark
   )
 endif() # benchmark_FOUND
-
-endif() # MINGW

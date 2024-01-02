@@ -24,7 +24,7 @@ TEST(EntropyCoderTest, PackUnpack) {
   }
 }
 
-struct DummyBitReader {
+struct MockBitReader {
   uint32_t nbits, bits;
   void Consume(uint32_t nbits) {}
   uint32_t PeekBits(uint32_t n) {
@@ -45,7 +45,7 @@ void HybridUintRoundtrip(HybridUintConfig config, size_t limit = 1 << 24) {
     config.Encode(integers[i], &token[i], &nbits[i], &bits[i]);
   }
   for (size_t i = 0; i < kNumIntegers; i++) {
-    DummyBitReader br{nbits[i], bits[i]};
+    MockBitReader br{nbits[i], bits[i]};
     EXPECT_EQ(integers[i],
               ANSSymbolReader::ReadHybridUintConfig(config, token[i], &br));
   }
