@@ -219,6 +219,7 @@ function createPlaybackElement(track) {
   elem.autoplay = true;
   elem.srcObject = new MediaStream([track]);
   elem.id = track.id;
+  document.body.appendChild(elem);
   return elem;
 }
 
