@@ -40,9 +40,6 @@ class TestPreferences(MarionetteTestCase):
         required_prefs = geckoinstance.DesktopInstance.desktop_prefs
 
         for key, value in six.iteritems(required_prefs):
-            if key in ["browser.tabs.remote.autostart"]:
-                return
-
             self.assertEqual(
                 self.marionette.get_pref(key),
                 value,
