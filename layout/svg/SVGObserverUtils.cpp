@@ -1775,6 +1775,10 @@ void SVGObserverUtils::AddRenderingObserver(Element* aElement,
   SVGRenderingObserverSet* observers = GetObserverSet(aElement);
   if (!observers) {
     observers = new SVGRenderingObserverSet();
+    // When we call cloneAndAdopt we keep the property. If the referenced
+    // element doesn't exist in the new document then the observer set and
+    // observers will be removed by ElementTracker::ElementChanged when we
+    // get the ChangeNotification.
     aElement->SetProperty(nsGkAtoms::renderingobserverset, observers,
                           nsINode::DeleteProperty<SVGRenderingObserverSet>,
                           /* aTransfer = */ true);
