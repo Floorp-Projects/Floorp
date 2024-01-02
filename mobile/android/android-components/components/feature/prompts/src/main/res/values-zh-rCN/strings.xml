@@ -124,7 +124,7 @@
     <!-- Text for the title of a save credit card dialog. -->
     <string name="mozac_feature_prompts_save_credit_card_prompt_title">安全地保存此卡片？</string>
     <!-- Text for the title of an update credit card dialog. -->
-    <string name="mozac_feature_prompts_update_credit_card_prompt_title">是否要更新卡片失效日期？</string>
+    <string name="mozac_feature_prompts_update_credit_card_prompt_title">是否要更新卡片有效期？</string>
     <!-- Subtitle text displayed under the title of the save credit card dialog. -->
     <string name="mozac_feature_prompts_save_credit_card_prompt_body">卡号将被加密，且不会保存安全码。</string>
 

@@ -168,6 +168,13 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_invalid_content_encoding_title">مەزمۇن كودلاش خاتالىقى</string>
 
+    <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[
+      <p> سىز كۆرمەكچى بولغان بەتنى كۆرسەتكىلى بولمايدۇ ، چۈنكى ئۇ ئىناۋەتسىز ياكى قوللىمايدىغان پىرىسلاش شەكلىنى قوللىنىدۇ. </p>
+      <ul>
+        <li> توربېكەت ئىگىلىرى بىلەن ئالاقىلىشىپ ، ئۇلارغا بۇ مەسىلىنى ئۇقتۇرۇڭ. </li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_host_title">ئادرېس تېپىلمىدى</string>
 
@@ -201,6 +208,14 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_file_not_found_title">ھۆججەت تېپىلمىدى</string>
 
+    <string name="mozac_browser_errorpages_file_not_found_message"><![CDATA[
+      <ul>
+        <li> بۇ تۈر نامى ئۆزگەرتىلگەن، ئۆچۈرۈلگەن ياكى كۆچۈرۈلگەنمۇ؟ </li>
+        <li> ئادرېسنىڭ ئىملاسىدا ياكى چوڭ-كىچىك يېزىلىشى ياكى باشقا يېزىق خاتالىقى بارمۇ؟ </li>
+        <li> تەلەپ قىلىنغان تۈرنى زىيارەت قىلىش ئۈچۈن يېتەرلىك ھوقۇقىڭىز بارمۇ؟ </li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_file_access_denied_title">ھۆججەتنى زىيارەت قىلىش رەت قىلىندى</string>
 
@@ -225,6 +240,11 @@
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">كېرەكسىز بېكەت مەسىلىسى</string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_message"><![CDATA[
+      <p>%1$s دىكى تور بېكەتنىڭ لۈكچەك يۇمتاللارغا مۇلازىمەت قىلىدىغانلىقى مەلۇم بولدى ۋە بىخەتەرلىك مايىللىقىڭىزغا ئاساسەن توسۇۋېتىلدى. </p>
+    ]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_harmful_uri_title">زىيانلىق تور بېكەت مەسىلىسى</string>
