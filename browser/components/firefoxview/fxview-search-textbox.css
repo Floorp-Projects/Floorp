@@ -9,6 +9,10 @@
   display: inline-flex;
   overflow: hidden;
   position: relative;
+
+  &:focus-within {
+    overflow: visible;
+  }
 }
 
 .search-icon {

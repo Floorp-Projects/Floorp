@@ -57,6 +57,24 @@ function recordNavigationTelemetry(source, eventTarget) {
   );
 }
 
+async function updateSearchTextboxSize() {
+  const msgs = [
+    { id: "firefoxview-search-text-box-recentbrowsing" },
+    { id: "firefoxview-search-text-box-opentabs" },
+    { id: "firefoxview-search-text-box-recentlyclosed" },
+    { id: "firefoxview-search-text-box-syncedtabs" },
+    { id: "firefoxview-search-text-box-history" },
+  ];
+  let maxLength = 0;
+  for (const msg of await document.l10n.formatMessages(msgs)) {
+    const placeholder = msg.attributes[0].value;
+    maxLength = Math.max(maxLength, placeholder.length);
+  }
+  for (const child of categoryPagesDeck.children) {
+    child.searchTextboxSize = maxLength;
+  }
+}
+
 window.addEventListener("DOMContentLoaded", async () => {
   recordEnteredTelemetry();
 
@@ -81,6 +99,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   // set the initial state
   onHashChange();
   onPagesDeckViewChange();
+  await updateSearchTextboxSize();
 
   if (Cu.isInAutomation) {
     Services.obs.notifyObservers(null, "firefoxview-entered");
@@ -118,11 +137,13 @@ window.addEventListener(
     // properly and all of the custom elements can cleanup.
     document.body.textContent = "";
     topChromeWindow.removeEventListener("command", onCommand);
+    Services.obs.removeObserver(onLocalesChanged, "intl:app-locales-changed");
   },
   { once: true }
 );
 
 topChromeWindow.addEventListener("command", onCommand);
+Services.obs.addObserver(onLocalesChanged, "intl:app-locales-changed");
 
 function onCommand(e) {
   if (document.hidden || !e.target.closest("#contentAreaContextMenu")) {
@@ -140,4 +161,8 @@ function onCommand(e) {
       page: location.hash?.substring(1) || "recentbrowsing",
     }
   );
+}
+
+function onLocalesChanged() {
+  requestIdleCallback(updateSearchTextboxSize);
 }
