@@ -1,0 +1,163 @@
+<!doctype html>
+
+<head>
+  <title>Test content script accessing certain [SecureContext] interfaces in non-secure contexts</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script src="head.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css" />
+</head>
+<script>
+  "use strict";
+
+  add_setup(async function setup() {
+    await SpecialPowers.pushPrefEnv({
+      "set": [
+        ["dom.w3c_pointer_events.getcoalescedevents_only_in_securecontext", true],
+      ]
+    });
+  });
+
+  add_task(async function test_contentscript_getCoalescedEvents_in_non_secure_context() {
+    let extension = ExtensionTestUtils.loadExtension({
+      manifest: {
+        content_scripts: [
+          {
+            // eslint-disable-next-line @microsoft/sdl/no-insecure-url
+            "matches": ["http://example.org/"],
+            "js": ["content_script.js"]
+          },
+        ]
+      },
+      files: {
+        "content_script.js"() {
+          // Make sure we're testing a non-secure context
+          browser.test.assertEq(window.isSecureContext, false, "window.isSecureContext === false")
+
+          // Make sure our content script can access getCoalescedEvents in non-secure context
+          browser.test.assertEq(typeof PointerEvent.prototype.getCoalescedEvents, "function", "Content script can access getCoalescedEvents in non-secure context")
+
+          // Make sure the page can't access getCoalescedEvents in non-secure context
+          browser.test.assertEq(typeof window.wrappedJSObject.PointerEvent.prototype.getCoalescedEvents, "undefined", "Page can't access getCoalescedEvents in non-secure context")
+
+          browser.test.sendMessage("done");
+        },
+      },
+    });
+    await extension.startup();
+    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
+    const win = window.open("http://example.org/");
+    await extension.awaitMessage("done");
+    win.close();
+    await extension.unload();
+  });
+
+  add_task(async function test_iframe_getCoalescedEvents_in_non_secure_context() {
+    let extension = ExtensionTestUtils.loadExtension({
+      manifest: {
+        content_scripts: [
+          {
+            // eslint-disable-next-line @microsoft/sdl/no-insecure-url
+            "matches": ["http://example.org/"],
+            "js": ["content_script.js"]
+          },
+        ]
+      },
+      files: {
+        "iframe_script.js"() {
+          // Make sure we're testing a non-secure context
+          browser.test.assertEq(window.isSecureContext, false, "window.isSecureContext === false")
+
+          // Make sure our iframe script can access getCoalescedEvents in non-secure context
+          browser.test.assertEq(typeof PointerEvent.prototype.getCoalescedEvents, "function", "iframe script can access getCoalescedEvents in non-secure context")
+
+          browser.test.sendMessage("done");
+        },
+        "content_script.js"() {
+          let iframe = document.createElement("iframe");
+          iframe.src = browser.runtime.getURL("iframe.html");
+          document.body.append(iframe);
+        },
+        "iframe.html": "<!DOCTYPE html><html><head><script src=\"./iframe_script.js\"><\/script></head><body></body></html>",
+      }
+    });
+    await extension.startup();
+    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
+    const win = window.open("http://example.org/");
+    await extension.awaitMessage("done");
+    win.close();
+    await extension.unload();
+  });
+
+  add_task(async function test_contentscript_crypto_in_non_secure_context() {
+    let extension = ExtensionTestUtils.loadExtension({
+      manifest: {
+        content_scripts: [
+          {
+            // eslint-disable-next-line @microsoft/sdl/no-insecure-url
+            "matches": ["http://example.org/"],
+            "js": ["content_script.js"]
+          },
+        ]
+      },
+      files: {
+        "content_script.js"() {
+          // Make sure we're testing a non-secure context
+          browser.test.assertEq(window.isSecureContext, false, "window.isSecureContext === false")
+
+          // Make sure our content script can't access window.crypto.randomUUID in non-secure context
+          browser.test.assertEq(typeof window.crypto.randomUUID, "undefined", "Content script can't access window.crypto.randomUUID in non-secure context")
+
+          // Make sure the page can't access window.crypto.randomUUID in non-secure context
+          browser.test.assertEq(typeof window.wrappedJSObject.crypto.randomUUID, "undefined", "Page can't access window.crypto.randomUUID in non-secure context")
+
+          browser.test.sendMessage("done");
+        },
+      },
+    });
+    await extension.startup();
+    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
+    const win = window.open("http://example.org/");
+    await extension.awaitMessage("done");
+    win.close();
+    await extension.unload();
+  });
+
+  add_task(async function test_iframe_crypto_in_non_secure_context() {
+    let extension = ExtensionTestUtils.loadExtension({
+      manifest: {
+        content_scripts: [
+          {
+            // eslint-disable-next-line @microsoft/sdl/no-insecure-url
+            "matches": ["http://example.org/"],
+            "js": ["content_script.js"]
+          },
+        ]
+      },
+      files: {
+        "iframe_script.js"() {
+          // Make sure we're testing a non-secure context
+          browser.test.assertEq(window.isSecureContext, false, "window.isSecureContext === false")
+
+          // Make sure our iframe script can't access window.crypto.randomUUID in non-secure context
+          browser.test.assertEq(typeof window.crypto.randomUUID, "undefined", "iframe script can't access window.crypto.randomUUID in non-secure context")
+
+          browser.test.sendMessage("done");
+        },
+        "content_script.js"() {
+          let iframe = document.createElement("iframe");
+          iframe.src = browser.runtime.getURL("iframe.html");
+          document.body.append(iframe);
+        },
+        "iframe.html": "<!DOCTYPE html><html><head><script src=\"./iframe_script.js\"><\/script></head><body></body></html>",
+      }
+    });
+    await extension.startup();
+    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
+    const win = window.open("http://example.org/");
+    await extension.awaitMessage("done");
+    win.close();
+    await extension.unload();
+  });
+
+</script>

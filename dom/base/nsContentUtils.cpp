@@ -7119,6 +7119,14 @@ bool nsContentUtils::IsSystemOrPDFJS(JSContext* aCx, JSObject*) {
   return principal && (principal->IsSystemPrincipal() || IsPDFJS(principal));
 }
 
+bool nsContentUtils::IsSecureContextOrWebExtension(JSContext* aCx,
+                                                   JSObject* aGlobal) {
+  nsIPrincipal* principal = SubjectPrincipal(aCx);
+  return mozilla::dom::IsSecureContextOrObjectIsFromSecureContext(aCx,
+                                                                  aGlobal) ||
+         (principal && principal->GetIsAddonOrExpandedAddonPrincipal());
+}
+
 already_AddRefed<nsIDocumentLoaderFactory>
 nsContentUtils::FindInternalDocumentViewer(const nsACString& aType,
                                            DocumentViewerType* aLoaderType) {
