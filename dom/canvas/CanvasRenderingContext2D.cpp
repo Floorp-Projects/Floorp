@@ -1491,7 +1491,8 @@ bool CanvasRenderingContext2D::BorrowTarget(const IntRect& aPersistedRect,
 bool CanvasRenderingContext2D::EnsureTarget(const gfx::Rect* aCoveredRect,
                                             bool aWillClear) {
   if (AlreadyShutDown()) {
-    gfxCriticalErrorOnce() << "Attempt to render into a Canvas2d after shutdown.";
+    gfxCriticalErrorOnce()
+        << "Attempt to render into a Canvas2d after shutdown.";
     SetErrorState();
     return false;
   }
@@ -4250,8 +4251,7 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor final
     : public nsBidiPresUtils::BidiProcessor {
   using Style = CanvasRenderingContext2D::Style;
 
-  explicit CanvasBidiProcessor(gfx::COLRFonts::PaletteCache& aPaletteCache)
-      : mPaletteCache(aPaletteCache) {
+  CanvasBidiProcessor() : nsBidiPresUtils::BidiProcessor() {
     if (StaticPrefs::gfx_missing_fonts_notify()) {
       mMissingFonts = MakeUnique<gfxMissingFontRecorder>();
     }
@@ -4496,7 +4496,7 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor final
     }
 
     gfxContext thebes(target, /* aPreserveTransform */ true);
-    gfxTextRun::DrawParams params(&thebes, mPaletteCache);
+    gfxTextRun::DrawParams params(&thebes);
 
     params.allowGDI = false;
 
@@ -4565,9 +4565,6 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor final
 
   // current font
   gfxFontGroup* mFontgrp = nullptr;
-
-  // palette cache for COLR font rendering
-  gfx::COLRFonts::PaletteCache& mPaletteCache;
 
   // spacing adjustments to be applied
   gfx::Float mLetterSpacing = 0.0f;
@@ -4690,7 +4687,7 @@ UniquePtr<TextMetrics> CanvasRenderingContext2D::DrawOrMeasureText(
     return nullptr;
   }
 
-  CanvasBidiProcessor processor(mPaletteCache);
+  CanvasBidiProcessor processor;
 
   // If we don't have a ComputedStyle, we can't set up vertical-text flags
   // (for now, at least; perhaps we need new Canvas API to control this).
