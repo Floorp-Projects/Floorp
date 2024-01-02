@@ -75,10 +75,7 @@ async function loadInitialState(commands, toolbox) {
   const breakpoints = initialBreakpointsState(xhrBreakpoints);
   const sourceBlackBox = initialSourceBlackBoxState({ blackboxedRanges });
   const sources = initialSourcesState();
-  const rootTraits = commands.client.mainRoot.traits;
-  const ui = initialUIState({
-    supportsDebuggerStatementIgnore: rootTraits.supportsDebuggerStatementIgnore,
-  });
+  const ui = initialUIState();
 
   return {
     pendingBreakpoints,

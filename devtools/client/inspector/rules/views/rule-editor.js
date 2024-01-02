@@ -253,13 +253,6 @@ RuleEditor.prototype = {
           selectorContainer.append(
             this.doc.createTextNode(`@import ${ancestorData.value}`)
           );
-        } else if (ancestorData.selectorText) {
-          // @backward-compat { version 121 } Newer server now send a `selectors` property
-          // (and no `selectorText` anymore), that we're using to display the selectors.
-          // This if block can be removed when 121 hits release.
-          selectorContainer.append(
-            this.doc.createTextNode(ancestorData.selectorText)
-          );
         } else if (ancestorData.selectors) {
           ancestorData.selectors.forEach((selector, i) => {
             if (i !== 0) {

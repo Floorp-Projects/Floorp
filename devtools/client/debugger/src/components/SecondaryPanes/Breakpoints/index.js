@@ -24,7 +24,6 @@ import {
   getShouldPauseOnDebuggerStatement,
   getShouldPauseOnExceptions,
   getShouldPauseOnCaughtExceptions,
-  supportsDebuggerStatementIgnore,
 } from "../../../selectors";
 
 const classnames = require("devtools/client/shared/classnames.js");
@@ -94,14 +93,12 @@ class Breakpoints extends Component {
           empty: isEmpty,
         }),
       },
-      this.props.supportsDebuggerStatementIgnore
-        ? React.createElement(ExceptionOption, {
-            className: "breakpoints-debugger-statement",
-            label: L10N.getStr("pauseOnDebuggerStatement"),
-            isChecked: shouldPauseOnDebuggerStatement,
-            onChange: this.togglePauseOnDebuggerStatement,
-          })
-        : null,
+      React.createElement(ExceptionOption, {
+        className: "breakpoints-debugger-statement",
+        label: L10N.getStr("pauseOnDebuggerStatement"),
+        isChecked: shouldPauseOnDebuggerStatement,
+        onChange: this.togglePauseOnDebuggerStatement,
+      }),
       React.createElement(ExceptionOption, {
         className: "breakpoints-exceptions",
         label: L10N.getStr("pauseOnExceptionsItem2"),
@@ -169,7 +166,6 @@ const mapStateToProps = state => ({
   shouldPauseOnDebuggerStatement: getShouldPauseOnDebuggerStatement(state),
   shouldPauseOnExceptions: getShouldPauseOnExceptions(state),
   shouldPauseOnCaughtExceptions: getShouldPauseOnCaughtExceptions(state),
-  supportsDebuggerStatementIgnore: supportsDebuggerStatementIgnore(state),
 });
 
 export default connect(mapStateToProps, {
