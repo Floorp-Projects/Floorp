@@ -540,14 +540,12 @@ skip-if = [
 ]
 
 ["browser_webconsole_network_messages_html_preview.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_webconsole_network_messages_openinnet.js"]
 
 ["browser_webconsole_network_messages_resend_request.js"]
 
 ["browser_webconsole_network_messages_stacktrace_console_initiated_request.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_webconsole_network_messages_status_code.js"]
 fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
