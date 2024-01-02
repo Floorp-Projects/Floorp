@@ -93,7 +93,7 @@ equivalent to calling [whereis(1)] and extracting the second column:
 firefox: /usr/bin/firefox /usr/local/firefox
 ```
 
-On macOS, the binary is found by looking for the first _firefox-bin_
+On macOS, the binary is found by looking for the first _firefox_
 binary in the same fashion as on Linux systems.  This means it is
 possible to also use `PATH` to control where geckodriver should
 find Firefox on macOS.  It will then look for _/Applications/Firefox.app_.
