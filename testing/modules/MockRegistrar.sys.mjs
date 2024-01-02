@@ -4,10 +4,6 @@
 
 const Cm = Components.manager;
 
-import { Log } from "resource://gre/modules/Log.sys.mjs";
-
-var logger = Log.repository.getLogger("MockRegistrar");
-
 export var MockRegistrar = Object.freeze({
   _registeredComponents: new Map(),
   _originalCIDs: new Map(),
@@ -65,7 +61,10 @@ export var MockRegistrar = Object.freeze({
             let genuine = originalFactory.createInstance(iid);
             wrappedMock._genuine = genuine;
           } catch (ex) {
-            logger.info("Creating original instance failed", ex);
+            console.error(
+              "MockRegistrar: Creating original instance failed",
+              ex
+            );
           }
         }
 
