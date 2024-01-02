@@ -2518,6 +2518,13 @@ class nsContentUtils {
   static bool IsSystemOrPDFJS(JSContext*, JSObject*);
 
   /**
+   * Checks if the given JSContext is secure or if the subject principal is
+   * either an addon principal or an expanded principal, which contains at least
+   * one addon principal.
+   */
+  static bool IsSecureContextOrWebExtension(JSContext*, JSObject*);
+
+  /**
    * Checks if internal SWF player is enabled.
    */
   static bool IsSWFPlayerEnabled();

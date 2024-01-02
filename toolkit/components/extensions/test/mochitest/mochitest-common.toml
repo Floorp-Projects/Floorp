@@ -213,6 +213,12 @@ skip-if = [
 ["test_ext_contentscript_permission.html"]
 skip-if = ["tsan"] # Times out on TSan, bug 1612707
 
+["test_ext_contentscript_securecontext.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
 ["test_ext_cookies.html"]
 skip-if = [
   "os == 'android'", # Bug 1845615
