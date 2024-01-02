@@ -1881,7 +1881,9 @@ void nsMathMLChar::PaintForeground(nsIFrame* aForFrame,
       if (mGlyphs[0]) {
         mGlyphs[0]->Draw(Range(mGlyphs[0].get()),
                          gfx::Point(0.0, mUnscaledAscent),
-                         gfxTextRun::DrawParams(&aRenderingContext));
+                         gfxTextRun::DrawParams(
+                             &aRenderingContext,
+                             aForFrame->PresContext()->FontPaletteCache()));
       }
       break;
     case DRAW_PARTS: {
@@ -1995,7 +1997,8 @@ nsresult nsMathMLChar::PaintVertically(nsPresContext* aPresContext,
       mBoundingMetrics.rightBearing - mBoundingMetrics.leftBearing;
   unionRect.Inflate(oneDevPixel);
 
-  gfxTextRun::DrawParams params(aThebesContext);
+  gfxTextRun::DrawParams params(aThebesContext,
+                                aPresContext->FontPaletteCache());
 
   /////////////////////////////////////
   // draw top, middle, bottom
@@ -2157,7 +2160,8 @@ nsresult nsMathMLChar::PaintHorizontally(nsPresContext* aPresContext,
   nsRect unionRect = aRect;
   unionRect.Inflate(oneDevPixel);
 
-  gfxTextRun::DrawParams params(aThebesContext);
+  gfxTextRun::DrawParams params(aThebesContext,
+                                aPresContext->FontPaletteCache());
 
   ///////////////////////////
   // draw left, middle, right
