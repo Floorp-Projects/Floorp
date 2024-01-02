@@ -25,9 +25,15 @@ add_task(async function test() {
       "Failed to move focus to search bar: button=" + button
     );
 
+    // We intentionally turn off this a11y check, because the following click
+    // is sent on an arbitrary web content that is not expected to be tested
+    // by itself with the browser mochitests, therefore this rule check shall
+    // be ignored by a11y-checks suite.
+    AccessibilityUtils.setEnv({ mustHaveAccessibleRule: false });
     // Synthesize mouse down event on browser object over the button, such that
     // the event propagates through both processes.
     EventUtils.synthesizeMouse(tab.linkedBrowser, 20, 20, { button });
+    AccessibilityUtils.resetEnv();
 
     isnot(
       fm.focusedElement,
