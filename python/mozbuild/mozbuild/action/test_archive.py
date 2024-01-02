@@ -109,7 +109,7 @@ ARCHIVE_FILES = {
             "source": buildconfig.topsrcdir,
             "base": "",
             "manifests": [
-                "testing/marionette/harness/marionette_harness/tests/unit-tests.ini"
+                "testing/marionette/harness/marionette_harness/tests/unit-tests.toml"
             ],
             # We also need the manifests and harness_unit tests
             "pattern": "testing/marionette/harness/marionette_harness/tests/**",
@@ -251,7 +251,7 @@ ARCHIVE_FILES = {
         {
             "source": buildconfig.topsrcdir,
             "base": "testing",
-            "pattern": "cppunittest.ini",
+            "pattern": "cppunittest.toml",
             "dest": "cppunittest",
         },
         {
@@ -709,7 +709,7 @@ if buildconfig.substs.get("commtopsrcdir"):
     marionette_comm = {
         "source": commtopsrcdir,
         "base": "",
-        "manifest": "testing/marionette/unit-tests.ini",
+        "manifest": "testing/marionette/unit-tests.toml",
         "dest": "marionette/tests/comm",
     }
     ARCHIVE_FILES["common"].append(marionette_comm)

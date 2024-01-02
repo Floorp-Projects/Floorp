@@ -72,7 +72,7 @@ def mach_parsed_kwargs(logger):
         "startup_timeout": 60,
         "symbols_path": None,
         "test_tags": None,
-        "tests": ["/path/to/unit-tests.ini"],
+        "tests": ["/path/to/unit-tests.toml"],
         "testvars": None,
         "this_chunk": None,
         "timeout": None,

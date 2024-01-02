@@ -87,7 +87,7 @@ class ManifestFixture:
         name="mock_manifest",
         tests=[{"path": "test_something.py", "expected": "pass"}],
     ):
-        self.filepath = "/path/to/fake/manifest.ini"
+        self.filepath = "/path/to/fake/manifest.toml"
         self.n_disabled = len([t for t in tests if "disabled" in t])
         self.n_enabled = len(tests) - self.n_disabled
         mock_manifest = Mock(
@@ -129,7 +129,7 @@ def test_args_passed_to_driverclass(mock_runner):
     built_kwargs = {"arg1": "value1", "arg2": "value2"}
     mock_runner._build_kwargs = Mock(return_value=built_kwargs)
     with pytest.raises(IOError):
-        mock_runner.run_tests(["fake_tests.ini"])
+        mock_runner.run_tests(["fake_tests.toml"])
     assert mock_runner.driverclass.call_args[1] == built_kwargs
 
 

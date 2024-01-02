@@ -267,8 +267,8 @@ class TelemetryTests(TestingMixin, VCSToolsScript, CodeCoverageMixin):
 class TelemetryClientTests(TelemetryTests):
     cli_script = "runtests.py"
     default_tests = [
-        os.path.join("client", "manifest.ini"),
-        os.path.join("unit", "manifest.ini"),
+        os.path.join("client", "manifest.toml"),
+        os.path.join("unit", "manifest.toml"),
     ]
 
 

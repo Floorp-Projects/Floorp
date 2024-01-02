@@ -1,0 +1,19 @@
+[DEFAULT]
+tags = "local"
+
+["test_persist_closed_tabs_restore_manually.py"]
+
+["test_restore_loading_tab.py"]
+
+["test_restore_manually.py"]
+
+["test_restore_manually_with_pinned_tabs.py"]
+
+["test_restore_windows_after_close_last_tabs.py"]
+skip-if = ["os == 'mac'"]
+
+["test_restore_windows_after_restart_and_quit.py"]
+
+["test_restore_windows_after_windows_shutdown.py"]
+run-if = ["os == 'win'"]
+skip-if = ["win11_2009"] # Bug 1727691

@@ -25,7 +25,7 @@ TASKBAR_AUTOHIDE_REG_PATH = {
 config = {
     # marionette options
     "marionette_address": "localhost:2828",
-    "test_manifest": "unit-tests.ini",
+    "test_manifest": "unit-tests.toml",
     "virtualenv_path": "venv",
     "exes": {
         "python": sys.executable,

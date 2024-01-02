@@ -279,7 +279,7 @@ def extract_unittests_from_args(args, environ, manifest_path):
         for p in args:
             if os.path.isdir(p):
                 try:
-                    mp.read(os.path.join(p, "cppunittest.ini"))
+                    mp.read(os.path.join(p, "cppunittest.toml"))
                 except IOError:
                     files = [os.path.abspath(os.path.join(p, x)) for x in os.listdir(p)]
                     tests.extend(

@@ -1,0 +1,5 @@
+[DEFAULT]
+support-files = ["quota_test_case.py"]
+
+["dummy.py"]
+skip-if = ["true"]

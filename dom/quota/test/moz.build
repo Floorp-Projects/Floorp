@@ -84,5 +84,5 @@ TESTING_JS_MODULES.dom.quota.test.modules.worker += [
 ]
 
 MARIONETTE_UNIT_MANIFESTS += [
-    "marionette/manifest.ini",
+    "marionette/manifest.toml",
 ]

@@ -1,0 +1,4 @@
+[DEFAULT]
+tags = "local"
+
+["test_no_errors_clean_profile.py"]

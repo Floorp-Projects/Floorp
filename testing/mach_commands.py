@@ -494,7 +494,7 @@ def run_cppunit_test(command_context, **params):
     if not tests:
         tests = [os.path.join(command_context.distdir, "cppunittests")]
         manifest_path = os.path.join(
-            command_context.topsrcdir, "testing", "cppunittest.ini"
+            command_context.topsrcdir, "testing", "cppunittest.toml"
         )
     else:
         manifest_path = None
