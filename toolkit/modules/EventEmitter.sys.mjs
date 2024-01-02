@@ -2,12 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const lazy = {};
-
-ChromeUtils.defineESModuleGetters(lazy, {
-  console: "resource://gre/modules/Console.sys.mjs",
-});
-
 export function EventEmitter() {}
 
 let loggingEnabled = Services.prefs.getBoolPref("toolkit.dump.emit");
@@ -153,12 +147,7 @@ EventEmitter.prototype = {
         try {
           listener.apply(null, arguments);
         } catch (ex) {
-          // Prevent a bad listener from interfering with the others.
-          let msg = ex + ": " + ex.stack;
-          lazy.console.error(msg);
-          if (loggingEnabled) {
-            dump(msg + "\n");
-          }
+          console.error(ex);
         }
       }
     }

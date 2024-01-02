@@ -751,5 +751,3 @@ ConsoleAPI.prototype = {
     return shouldLog(aLevel, this.maxLogLevel);
   },
 };
-
-export var console = new ConsoleAPI();
