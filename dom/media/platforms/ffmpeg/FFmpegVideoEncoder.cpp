@@ -34,6 +34,8 @@ using FFmpegBitRate = int;
 constexpr size_t FFmpegErrorMaxStringSize = 64;
 #endif
 
+// TODO: WebCodecs' I420A should map to MediaDataEncoder::PixelFormat and then
+// to AV_PIX_FMT_YUVA420P here.
 #if LIBAVCODEC_VERSION_MAJOR < 54
 using FFmpegPixelFormat = enum PixelFormat;
 const FFmpegPixelFormat FFMPEG_PIX_FMT_NONE = FFmpegPixelFormat::PIX_FMT_NONE;
@@ -73,8 +75,6 @@ const FFmpegPixelFormat FFMPEG_PIX_FMT_NV21 =
     FFmpegPixelFormat::AV_PIX_FMT_NV21;
 #endif
 
-// TODO: WebCodecs' I420A should map to MediaDataEncoder::PixelFormat and then
-// to AV_PIX_FMT_YUVA420P here.
 static const char* GetPixelFormatString(FFmpegPixelFormat aFormat) {
   switch (aFormat) {
     case FFMPEG_PIX_FMT_NONE:
