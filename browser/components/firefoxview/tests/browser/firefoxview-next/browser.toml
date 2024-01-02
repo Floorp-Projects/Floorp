@@ -13,7 +13,7 @@ fail-if = ["a11y_checks"] # Bug 1854625 clicked .fxview-tab-row-secondary-button
 ["browser_firefoxview_virtual_list.js"]
 
 ["browser_history_firefoxview_next.js"]
-skip-if = ["true"] # Bug 1872560
+fail-if = ["a11y_checks"] # Bug 1854625 clicked button may not be focusable
 
 ["browser_opentabs_firefoxview_next.js"]
 fail-if = ["a11y_checks"] # Bug 1854625 clicked .fxview-tab-row-secondary-button and panel-item may not be focusable
