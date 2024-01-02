@@ -27,9 +27,16 @@ const twoDaysAgo = new Date(Date.now() - DAY_MS * 2);
 const threeDaysAgo = new Date(Date.now() - DAY_MS * 3);
 const fourDaysAgo = new Date(Date.now() - DAY_MS * 4);
 const oneMonthAgo = new Date(today);
-oneMonthAgo.setMonth(
-  oneMonthAgo.getMonth() === 0 ? 11 : oneMonthAgo.getMonth() - 1
-);
+
+// Set the date for the first day of the last month
+oneMonthAgo.setDate(1);
+if (oneMonthAgo.getMonth() === 0) {
+  // If today's date is in January, use first day in December from the previous year
+  oneMonthAgo.setMonth(11);
+  oneMonthAgo.setFullYear(oneMonthAgo.getFullYear() - 1);
+} else {
+  oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+}
 
 function isElInViewport(element) {
   const boundingRect = element.getBoundingClientRect();
