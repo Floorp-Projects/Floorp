@@ -162,7 +162,7 @@ elif processor == "Power Macintosh":
 elif processor == "arm" and bits == "64bit":
     processor = "aarch64"
 
-bits = re.search("(\d+)bit", bits).group(1)
+bits = re.search(r"(\d+)bit", bits).group(1)
 info.update(
     {
         "processor": processor,

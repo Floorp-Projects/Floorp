@@ -98,26 +98,26 @@ class DeprecatedJarManifest(Exception):
 
 
 class JarManifestParser(object):
-    ignore = re.compile("\s*(\#.*)?$")
+    ignore = re.compile(r"\s*(#.*)?$")
     jarline = re.compile(
-        """
+        r"""
         (?:
-            (?:\[(?P<base>[\w\d.\-\_\\\/{}@]+)\]\s*)? # optional [base/path]
-            (?P<jarfile>[\w\d.\-\_\\\/{}]+).jar\:    # filename.jar:
+            (?:\[(?P<base>[\w\d.\-_\/{}@]+)\]\s*)? # optional [base/path]
+            (?P<jarfile>[\w\d.\-_\/{}]+)\.jar:     # filename.jar:
         |
-            (?:\s*(\#.*)?)                           # comment
-        )\s*$                                        # whitespaces
+            (?:\s*(\#.*)?)                         # comment
+        )\s*$                                      # whitespaces
         """,
         re.VERBOSE,
     )
-    relsrcline = re.compile("relativesrcdir\s+(?P<relativesrcdir>.+?):")
-    regline = re.compile("\%\s+(.*)$")
-    entryre = "(?P<optPreprocess>\*)?(?P<optOverwrite>\+?)\s+"
+    relsrcline = re.compile(r"relativesrcdir\s+(?P<relativesrcdir>.+?):")
+    regline = re.compile(r"%\s+(.*)$")
+    entryre = r"(?P<optPreprocess>\*)?(?P<optOverwrite>\+?)\s+"
     entryline = re.compile(
         entryre
         + (
-            "(?P<output>[\w\d.\-\_\\\/\+\@]+)\s*"
-            "(\((?P<locale>\%?)(?P<source>[\w\d.\-\_\\\/\@\*]+)\))?\s*$"
+            r"(?P<output>[\w\d.\-\_\/+@]+)\s*"
+            r"(\((?P<locale>%?)(?P<source>[\w\d.\-\_\/@*]+)\))?\s*$"
         )
     )
 
