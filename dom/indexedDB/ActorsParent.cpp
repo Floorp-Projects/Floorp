@@ -14196,10 +14196,14 @@ nsresult DatabaseOperationBase::DeleteObjectStoreDataTableRowsWithIndexes(
 
   const bool singleRowOnly = aKeyRange.isSome() && aKeyRange.ref().isOnly();
 
+  const auto keyRangeClause =
+      MaybeGetBindingClauseForKeyRange(aKeyRange, kColumnNameKey);
+
   Key objectStoreKey;
   QM_TRY_INSPECT(
       const auto& selectStmt,
-      ([singleRowOnly, &aConnection, &objectStoreKey, &aKeyRange]()
+      ([singleRowOnly, &aConnection, &objectStoreKey, &aKeyRange,
+        &keyRangeClause]()
            -> Result<CachingDatabaseConnection::BorrowedStatement, nsresult> {
         if (singleRowOnly) {
           QM_TRY_UNWRAP(auto selectStmt,
@@ -14217,9 +14221,6 @@ nsresult DatabaseOperationBase::DeleteObjectStoreDataTableRowsWithIndexes(
 
           return selectStmt;
         }
-
-        const auto keyRangeClause =
-            MaybeGetBindingClauseForKeyRange(aKeyRange, kColumnNameKey);
 
         QM_TRY_UNWRAP(
             auto selectStmt,
@@ -14243,15 +14244,9 @@ nsresult DatabaseOperationBase::DeleteObjectStoreDataTableRowsWithIndexes(
 
   QM_TRY(CollectWhileHasResult(
       *selectStmt,
-      [singleRowOnly, aObjectStoreId, &objectStoreKey, &aConnection,
-       &resultCountDEBUG, indexValues = IndexDataValuesAutoArray{},
-       deleteStmt = DatabaseConnection::LazyStatement{
-           *aConnection,
-           "DELETE FROM object_data "
-           "WHERE object_store_id = :"_ns +
-               kStmtParamNameObjectStoreId + " AND key = :"_ns +
-               kStmtParamNameKey +
-               ";"_ns}](auto& selectStmt) mutable -> Result<Ok, nsresult> {
+      [singleRowOnly, &objectStoreKey, &aConnection, &resultCountDEBUG,
+       indexValues = IndexDataValuesAutoArray{}](
+          auto& selectStmt) mutable -> Result<Ok, nsresult> {
         if (!singleRowOnly) {
           QM_TRY(
               MOZ_TO_RESULT(objectStoreKey.SetFromStatement(&selectStmt, 1)));
@@ -14264,20 +14259,28 @@ nsresult DatabaseOperationBase::DeleteObjectStoreDataTableRowsWithIndexes(
         QM_TRY(MOZ_TO_RESULT(DeleteIndexDataTableRows(
             aConnection, objectStoreKey, indexValues)));
 
-        QM_TRY_INSPECT(const auto& borrowedDeleteStmt, deleteStmt.Borrow());
-
-        QM_TRY(MOZ_TO_RESULT(borrowedDeleteStmt->BindInt64ByName(
-            kStmtParamNameObjectStoreId, aObjectStoreId)));
-        QM_TRY(MOZ_TO_RESULT(objectStoreKey.BindToStatement(
-            &*borrowedDeleteStmt, kStmtParamNameKey)));
-        QM_TRY(MOZ_TO_RESULT(borrowedDeleteStmt->Execute()));
-
         resultCountDEBUG++;
 
         return Ok{};
       }));
 
   MOZ_ASSERT_IF(singleRowOnly, resultCountDEBUG <= 1);
+
+  QM_TRY_UNWRAP(
+      auto deleteManyStmt,
+      aConnection->BorrowCachedStatement(
+          "DELETE FROM object_data "_ns + "WHERE object_store_id = :"_ns +
+          kStmtParamNameObjectStoreId + keyRangeClause + ";"_ns));
+
+  QM_TRY(MOZ_TO_RESULT(deleteManyStmt->BindInt64ByName(
+      kStmtParamNameObjectStoreId, aObjectStoreId)));
+
+  if (aKeyRange.isSome()) {
+    QM_TRY(MOZ_TO_RESULT(
+        BindKeyRangeToStatement(aKeyRange.ref(), &*deleteManyStmt)));
+  }
+
+  QM_TRY(MOZ_TO_RESULT(deleteManyStmt->Execute()));
 
   return NS_OK;
 }
