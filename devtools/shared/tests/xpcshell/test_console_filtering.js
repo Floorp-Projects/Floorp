@@ -3,7 +3,7 @@
 
 "use strict";
 
-const { console, ConsoleAPI } = ChromeUtils.importESModule(
+const { ConsoleAPI } = ChromeUtils.importESModule(
   "resource://gre/modules/Console.sys.mjs"
 );
 const {

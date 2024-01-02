@@ -75,9 +75,10 @@ var WindowListener = {
   // needs to happen in all navigator:browser windows should go here.
   setupWindow(win) {
     win.nativeConsole = win.console;
-    ChromeUtils.defineESModuleGetters(win, {
-      console: "resource://gre/modules/Console.sys.mjs",
-    });
+    let { ConsoleAPI } = ChromeUtils.importESModule(
+      "resource://gre/modules/Console.sys.mjs"
+    );
+    win.console = new ConsoleAPI();
   },
 
   tearDownWindow(win) {
