@@ -405,6 +405,9 @@ MediaResult FFmpegVideoEncoder<LIBAV_VER>::InitInternal() {
   mCodecContext->framerate =
       AVRational{.num = static_cast<int>(mConfig.mFramerate), .den = 1};
 #endif
+#if LIBAVCODEC_VERSION_MAJOR >= 60
+  mCodecContext->flags |= AV_CODEC_FLAG_FRAME_DURATION;
+#endif
   mCodecContext->gop_size = static_cast<int>(mConfig.mKeyframeInterval);
   if (mConfig.mUsage == MediaDataEncoder::Usage::Realtime) {
     mLib->av_opt_set(mCodecContext->priv_data, "deadline", "realtime", 0);
@@ -529,9 +532,6 @@ int FFmpegVideoEncoder<LIBAV_VER>::OpenCodecContext(const AVCodec* aCodec,
   MOZ_ASSERT(mCodecContext);
 
   StaticMutexAutoLock mon(sMutex);
-#if LIBAVCODEC_VERSION_MAJOR >= 60
-  mCodecContext->flags |= AV_CODEC_FLAG_FRAME_DURATION;
-#endif
   return mLib->avcodec_open2(mCodecContext, aCodec, aOptions);
 }
 
