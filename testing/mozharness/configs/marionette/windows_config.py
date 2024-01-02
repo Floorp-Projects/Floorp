@@ -6,7 +6,7 @@
 config = {
     # marionette options
     "marionette_address": "localhost:2828",
-    "test_manifest": "unit-tests.ini",
+    "test_manifest": "unit-tests.toml",
     "virtualenv_path": "venv",
     "exes": {
         "python": "c:/mozilla-build/python27/python",

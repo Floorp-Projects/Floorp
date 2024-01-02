@@ -1,0 +1,4 @@
+[DEFAULT]
+tags = "unit"
+
+["test_ping_server_received_ping.py"]

@@ -246,7 +246,7 @@ class FirefoxUIFunctionalTests(TestingMixin, VCSToolsScript, CodeCoverageMixin):
 
         # Add the tests to run
         cmd.append(
-            os.path.join(dirs["abs_fxui_manifest_dir"], "functional", "manifest.ini")
+            os.path.join(dirs["abs_fxui_manifest_dir"], "functional", "manifest.toml")
         )
 
         # Set further environment settings

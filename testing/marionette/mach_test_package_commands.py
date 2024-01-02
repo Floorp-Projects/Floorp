@@ -29,7 +29,7 @@ def run_marionette(context, **kwargs):
                 "harness",
                 "marionette_harness",
                 "tests",
-                "unit-tests.ini",
+                "unit-tests.toml",
             )
         ]
 

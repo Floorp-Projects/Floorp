@@ -1,0 +1,5 @@
+[DEFAULT]
+
+["include:safebrowsing/manifest.toml"]
+
+["include:security/manifest.toml"]

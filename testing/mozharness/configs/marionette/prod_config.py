@@ -13,7 +13,7 @@ ADJUST_MOUSE_AND_SCREEN = False
 config = {
     # marionette options
     "marionette_address": "localhost:2828",
-    "test_manifest": "unit-tests.ini",
+    "test_manifest": "unit-tests.toml",
     "vcs_share_base": HG_SHARE_BASE_DIR,
     "default_actions": [
         "clobber",

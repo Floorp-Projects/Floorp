@@ -1,0 +1,177 @@
+[DEFAULT]
+
+["ShowSSEConfig"]
+
+["TestAlgorithm"]
+
+["TestArray"]
+
+["TestArrayUtils"]
+
+["TestAtomicBitfields"]
+
+["TestAtomics"]
+
+["TestBaseProfiler"]
+skip-if = ["tsan"] # Bug 1804081
+
+["TestBinarySearch"]
+
+["TestBitSet"]
+
+["TestBloomFilter"]
+
+["TestBufferList"]
+
+["TestCasting"]
+
+["TestCeilingFloor"]
+
+["TestCheckedInt"]
+
+["TestCompactPair"]
+
+["TestCountPopulation"]
+
+["TestCountZeroes"]
+
+["TestCrossProcessWin"]
+run-if = ["os == 'win'"]
+
+["TestDefineEnum"]
+
+["TestDllBlocklistAssumptions"]
+run-if = ["os == 'win'"]
+
+["TestDllInterceptor"]
+run-if = ["os == 'win'"]
+
+["TestDoublyLinkedList"]
+
+["TestEndian"]
+
+["TestEnumSet"]
+
+["TestEnumTypeTraits"]
+
+["TestEnumeratedArray"]
+
+["TestFastBernoulliTrial"]
+
+["TestFloatingPoint"]
+
+["TestFunctionRef"]
+
+["TestFunctionTypeTraits"]
+
+["TestHashTable"]
+
+["TestIATPatcher"]
+run-if = ["os == 'win'"]
+skip-if = ["bits == 32"] # fails on windows10x32
+
+["TestIntegerPrintfMacros"]
+
+["TestIntegerRange"]
+
+["TestJSONWriter"]
+
+["TestLauncherRegistryInfo"]
+run-if = ["os == 'win'"]
+
+["TestLinkedList"]
+
+["TestMMPolicy"]
+run-if = ["os == 'win'"]
+
+["TestMacroArgs"]
+
+["TestMacroForEach"]
+
+["TestMathAlgorithms"]
+
+["TestMaybe"]
+
+["TestMemoryPressureWatcherLinux"]
+skip-if = ["os != 'linux'"]
+
+["TestMozJemallocUtils"]
+
+["TestNativeNt"]
+run-if = ["os == 'win'"]
+
+["TestNonDereferenceable"]
+
+["TestNotNull"]
+
+["TestPEExportSection"]
+run-if = ["os == 'win'"]
+
+["TestPoisonArea"]
+skip-if = ["asan || tsan"]  # Not built on sanitizer builds
+
+["TestPrintf"]
+
+["TestRandomNum"]
+
+["TestRange"]
+
+["TestRefPtr"]
+
+["TestResult"]
+
+["TestRollingMean"]
+
+["TestSHA1"]
+
+["TestSIMD"]
+
+["TestSPSCQueue"]
+
+["TestSafeThreadLocal"]
+run-if = ["os == 'win'"]
+
+["TestSameBinary"]
+run-if = ["os == 'win'"]
+
+["TestSaturate"]
+
+["TestScopeExit"]
+
+["TestSegmentedVector"]
+
+["TestSmallPointerArray"]
+
+["TestSplayTree"]
+
+["TestStackCookie"]
+run-if = ["os == 'win'"]
+
+["TestTextUtils"]
+
+["TestThreadSafeWeakPtr"]
+
+["TestTimeStampWin"]
+run-if = ["os == 'win'"]
+
+["TestTypedEnum"]
+
+["TestUniquePtr"]
+
+["TestUriValidation"]
+run-if = ["os == 'win'"]
+
+["TestUtf8"]
+
+["TestVariant"]
+
+["TestVector"]
+
+["TestWeakPtr"]
+
+["TestWinArchDefs"]
+run-if = ["os == 'win'"]
+
+["TestWrappingOperations"]
+
+["TestXorShift128PlusRNG"]

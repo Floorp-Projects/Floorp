@@ -75,7 +75,7 @@ class MarionetteTest(TestingMixin, MercurialScript, TransferMixin, CodeCoverageM
                 {
                     "action": "store",
                     "dest": "test_manifest",
-                    "default": "unit-tests.ini",
+                    "default": "unit-tests.toml",
                     "help": "Path to test manifest to run relative to the Marionette "
                     "tests directory",
                 },

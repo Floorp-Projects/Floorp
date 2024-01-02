@@ -1,0 +1,7 @@
+[DEFAULT]
+prefs = ["gfx.font_loader.delay=0"]
+run-if = ["buildapp == 'browser'"]
+
+["test_accessiblecaret_cursor_mode.py"]
+
+["test_accessiblecaret_selection_mode.py"]
