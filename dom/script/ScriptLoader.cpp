@@ -731,34 +731,49 @@ void AdjustPriorityForNonLinkPreloadScripts(nsIChannel* aChannel,
           do_QueryInterface(aChannel)) {
     LOG(("Is not <link rel=[module]preload"));
     const RequestPriority fetchPriority = aRequest->FetchPriority();
+
     // The spec defines the priority to be set in an implementation defined
     // manner (<https://fetch.spec.whatwg.org/#concept-fetch>, step 15 and
     // <https://html.spec.whatwg.org/#concept-script-fetch-options-fetch-priority>).
-    // For web-compatibility, the fetch priority mapping from
-    // <https://web.dev/articles/fetch-priority#browser_priority_and_fetchpriority>
-    // is taken.
-    const Maybe<int32_t> supportsPriorityValue = [&]() -> Maybe<int32_t> {
+    // <testing/web-platform/mozilla/tests/fetch/fetchpriority/support/script-tests-data.js>
+    // provides more context for the priority mapping.
+    const int32_t supportsPriorityValue = [&]() {
       switch (fetchPriority) {
-        case RequestPriority::Auto:
-          return Nothing{};
+        case RequestPriority::Auto: {
+          if (aRequest->IsModuleRequest()) {
+            return nsISupportsPriority::PRIORITY_HIGH;
+          }
+
+          const ScriptLoadContext* scriptLoadContext =
+              aRequest->GetScriptLoadContext();
+          if (scriptLoadContext->IsAsyncScript() ||
+              scriptLoadContext->IsDeferredScript()) {
+            return nsISupportsPriority::PRIORITY_LOW;
+          }
+
+          if (scriptLoadContext->mScriptFromHead) {
+            return nsISupportsPriority::PRIORITY_HIGH;
+          }
+
+          return nsISupportsPriority::PRIORITY_NORMAL;
+        }
         case RequestPriority::Low: {
-          return Some(nsISupportsPriority::PRIORITY_LOW);
+          return nsISupportsPriority::PRIORITY_LOW;
         }
         case RequestPriority::High: {
-          return Some(nsISupportsPriority::PRIORITY_HIGH);
+          return nsISupportsPriority::PRIORITY_HIGH;
         }
         default: {
           MOZ_ASSERT_UNREACHABLE();
-          return Nothing{};
+          return nsISupportsPriority::PRIORITY_NORMAL;
         }
       }
     }();
 
     if (supportsPriorityValue) {
       LogPriorityMapping(ScriptLoader::gScriptLoaderLog,
-                         ToFetchPriority(fetchPriority),
-                         *supportsPriorityValue);
-      supportsPriority->SetPriority(*supportsPriorityValue);
+                         ToFetchPriority(fetchPriority), supportsPriorityValue);
+      supportsPriority->SetPriority(supportsPriorityValue);
     }
   }
 }
