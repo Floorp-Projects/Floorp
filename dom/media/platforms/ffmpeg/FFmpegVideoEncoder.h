@@ -7,8 +7,8 @@
 #ifndef DOM_MEDIA_PLATFORMS_FFMPEG_FFMPEGVIDEOENCODER_H_
 #define DOM_MEDIA_PLATFORMS_FFMPEG_FFMPEGVIDEOENCODER_H_
 
-#include "PlatformEncoderModule.h"
 #include "FFmpegLibWrapper.h"
+#include "PlatformEncoderModule.h"
 #include "mozilla/ThreadSafety.h"
 
 // This must be the last header included
