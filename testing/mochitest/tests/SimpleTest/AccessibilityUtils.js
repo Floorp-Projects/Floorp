@@ -383,6 +383,50 @@ this.AccessibilityUtils = (function () {
   }
 
   /**
+   * Determine if an accessible is a combobox container of the url bar. We
+   * intentionally leave this element unlabeled, because its child is a search
+   * input that is the target and main control of this component. In general, we
+   * want to avoid duplication in the label announcement when a user focuses the
+   * input. Both NVDA and VO ignore the label on at least one of these controls
+   * if both have a label. But the bigger concern here is that it's very
+   * difficult to keep the accessible name synchronized between the combobox and
+   * the input. Thus, we need to special case the label check for this control.
+   */
+  function isUnlabeledUrlBarCombobox(accessible) {
+    const node = accessible.DOMNode;
+    if (!node || !node.ownerGlobal) {
+      return false;
+    }
+    const ariaRoles = getAriaRoles(accessible);
+    // There are only two cases of this pattern: <moz-input-box> and <searchbar>
+    const isMozInputBox =
+      node.tagName == "moz-input-box" &&
+      node.classList.contains("urlbar-input-box");
+    const isSearchbar = node.tagName == "searchbar" && node.id == "searchbar";
+    return (isMozInputBox || isSearchbar) && ariaRoles.includes("combobox");
+  }
+
+  /**
+   * Determine if an accessible is an option within the url bar. We know each
+   * url bar option is accessible, but it disappears as soon as it is clicked
+   * during tests and the a11y-checks do not have time to test the label,
+   * because the Fluent localization is not yet completed by then. Thus, we
+   * need to special case the label check for these controls.
+   */
+  function isUnlabeledUrlBarOption(accessible) {
+    const node = accessible.DOMNode;
+    if (!node || !node.ownerGlobal) {
+      return false;
+    }
+    const ariaRoles = getAriaRoles(accessible);
+    return (
+      node.tagName == "span" &&
+      ariaRoles.includes("option") &&
+      node.classList.contains("urlbarView-row-inner")
+    );
+  }
+
+  /**
    * Determine if a node is a XUL element for which tabIndex should be ignored.
    * Some XUL elements report -1 for the .tabIndex property, even though they
    * are in fact keyboard focusable.
@@ -590,6 +634,12 @@ this.AccessibilityUtils = (function () {
    */
   function assertLabelled(accessible, allowRecurse = true) {
     const { DOMNode } = accessible;
+    if (
+      isUnlabeledUrlBarCombobox(accessible) ||
+      isUnlabeledUrlBarOption(accessible)
+    ) {
+      return;
+    }
     let name = accessible.name;
     if (!name) {
       // If text has just been inserted into the tree, the a11y engine might not

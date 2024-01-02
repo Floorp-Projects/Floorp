@@ -228,7 +228,6 @@ support-files = [
   "searchSuggestionEngine.xml",
   "searchSuggestionEngine.sjs",
 ]
-fail-if = ["a11y_checks"] # Bug 1854660 clicked moz-input-box may not be labeled
 
 ["browser_handleCommand_fallback.js"]
 
