@@ -238,7 +238,7 @@ def uninstall(install_folder):
         if os.path.isfile(log_file):
             trbk = None
             try:
-                cmdArgs = ["%s\\uninstall\helper.exe" % install_folder, "/S"]
+                cmdArgs = ["%s\\uninstall\\helper.exe" % install_folder, "/S"]
                 result = subprocess.call(cmdArgs)
                 if result != 0:
                     raise Exception("Execution of uninstaller failed.")

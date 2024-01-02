@@ -120,7 +120,7 @@ DEPRECATED_VARIABLES_MESSAGE = (
 
 
 def make_quote(s):
-    return s.replace("#", "\#").replace("$", "$$")
+    return s.replace("#", r"\#").replace("$", "$$")
 
 
 class BackendMakeFile(object):
@@ -1002,7 +1002,7 @@ class RecursiveMakeBackend(MakeBackend):
                         if t not in content:
                             continue
                         if t == "tools" and not re.search(
-                            "(?:^|\s)tools.*::", content, re.M
+                            r"(?:^|\s)tools.*::", content, re.M
                         ):
                             continue
                         if objdir == self.environment.topobjdir:
@@ -1013,7 +1013,7 @@ class RecursiveMakeBackend(MakeBackend):
 
                     # Directories with a Makefile containing a check target
                     # can't be skipped and must run during the 'check' tier.
-                    if re.search("(?:^|\s)check.*::", content, re.M):
+                    if re.search(r"(?:^|\s)check.*::", content, re.M):
                         self._no_skip["check"].add(
                             mozpath.relpath(objdir, self.environment.topobjdir)
                         )

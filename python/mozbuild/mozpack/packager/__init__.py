@@ -106,7 +106,7 @@ class Component(object):
         component = splits[0].strip()
         if not component:
             raise ValueError("No component found")
-        if not re.match("[a-zA-Z0-9_\-]+$", component):
+        if not re.match("[a-zA-Z0-9_-]+$", component):
             raise ValueError("Bad component name " + component)
         options = Component._split_options(splits[1]) if len(splits) > 1 else {}
         return component, options

@@ -471,9 +471,9 @@ class ArtifactJob(object):
 
         if "esr" in version_display or "esr" in source_repo:
             return self.esr_candidate_trees
-        elif re.search("a\d+$", version_display):
+        elif re.search(r"a\d+$", version_display):
             return self.nightly_candidate_trees
-        elif re.search("b\d+$", version_display):
+        elif re.search(r"b\d+$", version_display):
             return self.beta_candidate_trees
 
         return self.default_candidate_trees
