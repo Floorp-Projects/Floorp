@@ -7,11 +7,13 @@
 #define COLR_FONTS_H
 
 #include "mozilla/gfx/2D.h"
+#include "mozilla/MruCache.h"
 #include "mozilla/UniquePtr.h"
 #include "nsAtom.h"
 #include "nsTArray.h"
 #include "nsTHashtable.h"
 
+class gfxFontEntry;
 struct hb_blob_t;
 struct hb_face_t;
 struct hb_font_t;
@@ -90,6 +92,37 @@ class FontPaletteValueSet {
 
 class COLRFonts {
  public:
+  // MRU cache used for resolved color-font palettes, to avoid reconstructing
+  // the palette for each glyph rendered with a given font.
+  using CacheKey = std::pair<RefPtr<gfxFontEntry>, RefPtr<nsAtom>>;
+  struct CacheData {
+    CacheKey mKey;
+    mozilla::UniquePtr<nsTArray<sRGBColor>> mPalette;
+  };
+
+  class PaletteCache : public MruCache<CacheKey, CacheData, PaletteCache> {
+   public:
+    PaletteCache() = default;
+
+    void SetPaletteValueSet(const FontPaletteValueSet* aSet) {
+      mPaletteValueSet = aSet;
+      Clear();
+    }
+
+    nsTArray<sRGBColor>* GetPaletteFor(gfxFontEntry* aFontEntry,
+                                       nsAtom* aPaletteName);
+
+    static HashNumber Hash(const CacheKey& aKey) {
+      return HashGeneric(aKey.first.get(), aKey.second.get());
+    }
+    static bool Match(const CacheKey& aKey, const CacheData& aVal) {
+      return aVal.mKey == aKey;
+    }
+
+   protected:
+    const FontPaletteValueSet* mPaletteValueSet = nullptr;
+  };
+
   static bool ValidateColorGlyphs(hb_blob_t* aCOLR, hb_blob_t* aCPAL);
 
   // COLRv0: color glyph is represented as a simple list of colored layers.

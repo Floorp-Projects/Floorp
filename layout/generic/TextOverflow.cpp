@@ -244,8 +244,9 @@ void nsDisplayTextOverflowMarker::PaintTextToContext(gfxContext* aCtx,
       NS_ASSERTION(!textRun->IsRightToLeft(),
                    "Ellipsis textruns should always be LTR!");
       gfx::Point gfxPt(pt.x, pt.y);
+      auto& paletteCache = mFrame->PresContext()->FontPaletteCache();
       textRun->Draw(gfxTextRun::Range(textRun), gfxPt,
-                    gfxTextRun::DrawParams(aCtx));
+                    gfxTextRun::DrawParams(aCtx, paletteCache));
     }
   } else {
     RefPtr<nsFontMetrics> fm =
