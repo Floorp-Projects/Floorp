@@ -241,7 +241,7 @@ RefPtr<MediaDataEncoder::EncodePromise> FFmpegVideoEncoder<LIBAV_VER>::Encode(
 
   FFMPEGV_LOG("Encode");
   return InvokeAsync(mTaskQueue, __func__,
-                     [self = RefPtr<FFmpegVideoEncoder<LIBAV_VER> >(this),
+                     [self = RefPtr<FFmpegVideoEncoder<LIBAV_VER>>(this),
                       sample = RefPtr<const MediaData>(aSample)]() {
                        return self->ProcessEncode(std::move(sample));
                      });
@@ -331,7 +331,8 @@ FFmpegVideoEncoder<LIBAV_VER>::ProcessReconfigure(
   //   ok |= confChange.match(
   //       // Not supported yet
   //       [&](const DimensionsChange& aChange) -> bool { return false; },
-  //       [&](const DisplayDimensionsChange& aChange) -> bool { return false; },
+  //       [&](const DisplayDimensionsChange& aChange) -> bool { return false;
+  //       },
   //       [&](const BitrateModeChange& aChange) -> bool {
   //         mConfig.mBitrateMode = aChange.get();
   //         // TODO
@@ -429,8 +430,7 @@ MediaResult FFmpegVideoEncoder<LIBAV_VER>::InitInternal() {
         AVRational{.num = 1, .den = static_cast<int>(mConfig.mFramerate)};
   } else {
     // Choose something typical if we don't know
-    mCodecContext->time_base =
-        AVRational{.num = 1, .den = 90000};
+    mCodecContext->time_base = AVRational{.num = 1, .den = 90000};
   }
 #if LIBAVCODEC_VERSION_MAJOR >= 57
   mCodecContext->framerate =
@@ -735,15 +735,15 @@ RefPtr<MediaDataEncoder::EncodePromise> FFmpegVideoEncoder<
 
   // Everything in microsecond for now: bug 1869560
   mFrame->pts = aSample->mTime.ToMicroseconds();
-#if LIBAVCODEC_VERSION_MAJOR >= 60
+#  if LIBAVCODEC_VERSION_MAJOR >= 60
   mFrame->duration = aSample->mDuration.ToMicroseconds();
   mFrame->pkt_duration = aSample->mDuration.ToMicroseconds();
-#else
+#  else
   mFrame->pkt_duration = aSample->mDuration.ToMicroseconds();
-#endif
-#if LIBAVCODEC_VERSION_MAJOR >= 59
+#  endif
+#  if LIBAVCODEC_VERSION_MAJOR >= 59
   mFrame->time_base = {1, USECS_PER_S};
-#endif
+#  endif
 
   // Initialize AVPacket.
   AVPacket* pkt = mLib->av_packet_alloc();
@@ -756,8 +756,7 @@ RefPtr<MediaDataEncoder::EncodePromise> FFmpegVideoEncoder<
         __func__);
   }
 
-  auto freePacket =
-   MakeScopeExit( [this, &pkt] { mLib->av_packet_free(&pkt); } );
+  auto freePacket = MakeScopeExit([this, &pkt] { mLib->av_packet_free(&pkt); });
 
   // Send frame and receive packets.
 
@@ -828,8 +827,7 @@ FFmpegVideoEncoder<LIBAV_VER>::DrainWithModernAPIs() {
                     RESULT_DETAIL("Unable to allocate packet")),
         __func__);
   }
-  auto freePacket =
-   MakeScopeExit( [this, &pkt] { mLib->av_packet_free(&pkt); } );
+  auto freePacket = MakeScopeExit([this, &pkt] { mLib->av_packet_free(&pkt); });
 
   // Enter draining mode by sending NULL to the avcodec_send_frame(). Note that
   // this can leave the encoder in a permanent EOF state after draining. As a
