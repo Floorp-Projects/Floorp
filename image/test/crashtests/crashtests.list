@@ -80,3 +80,4 @@ load 1814774.avif
 load 1817108.avif
 load 1848717-1.avif
 load 1852649.webp
+pref(widget.windows.window_occlusion_tracking.enabled,false) HTTP load 1862059-1.html
