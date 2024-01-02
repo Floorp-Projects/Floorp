@@ -1,26 +1,31 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<org.mozilla.fenix.perf.HomeActivityRootLinearLayout
+
+<!-- DO NOT INCLUDE ANYTHING ELSE INSIDE THIS FRAME LAYOUT -->
+<!-- This FrameLayout is solely to allow `debugOverlay` to be presented globally in Fenix. -->
+<!-- This is not to be used outside of the scope of the debug overlay and the Debug Drawer feature. -->
+<!-- PERFORMANCE NOTE: Anything outside of `HomeActivityRootLinearLayout` will not be measured for performance. -->
+<FrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:id="@+id/rootContainer"
-    tools:context=".HomeActivity">
+    android:layout_height="match_parent">
 
-    <ViewStub
-        android:id="@+id/navigationToolbarStub"
-        android:inflatedId="@id/navigationToolbar"
-        android:layout="@layout/navigation_toolbar"
+    <org.mozilla.fenix.perf.HomeActivityRootLinearLayout
         android:layout_width="match_parent"
-        android:layout_height="56dp" />
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:id="@+id/rootContainer"
+        tools:context=".HomeActivity">
 
-    <FrameLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        <ViewStub
+            android:id="@+id/navigationToolbarStub"
+            android:inflatedId="@id/navigationToolbar"
+            android:layout="@layout/navigation_toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="56dp" />
 
         <!--The navGraph is set dynamically in NavGraphProvider -->
         <androidx.fragment.app.FragmentContainerView
@@ -31,11 +36,12 @@
             app:defaultNavHost="true"
             app:navGraph="@navigation/nav_graph" />
 
-        <androidx.compose.ui.platform.ComposeView
-            android:id="@+id/debugOverlay"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:visibility="gone" />
+    </org.mozilla.fenix.perf.HomeActivityRootLinearLayout>
 
-    </FrameLayout>
-</org.mozilla.fenix.perf.HomeActivityRootLinearLayout>
+    <androidx.compose.ui.platform.ComposeView
+        android:id="@+id/debugOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone" />
+
+</FrameLayout>
