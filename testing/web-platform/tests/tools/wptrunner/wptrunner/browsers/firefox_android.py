@@ -64,6 +64,7 @@ def browser_kwargs(logger, test_type, run_info_data, config, **kwargs):
             "timeout_multiplier": get_timeout_multiplier(test_type,
                                                          run_info_data,
                                                          **kwargs),
+            "e10s": run_info_data["e10s"],
             "disable_fission": kwargs["disable_fission"],
             # desktop only
             "leak_check": False,
@@ -92,7 +93,8 @@ def env_extras(**kwargs):
 def run_info_extras(logger, **kwargs):
     rv = fx_run_info_extras(logger, **kwargs)
     package = kwargs["package_name"]
-    rv.update({"headless": False})
+    rv.update({"e10s": True if package is not None and "geckoview" in package else False,
+               "headless": False})
 
     if kwargs["browser_version"] is None:
         rv.update(run_info_browser_version(**kwargs))
@@ -148,7 +150,7 @@ class ProfileCreator(FirefoxProfileCreator):
     def __init__(self, logger, prefs_root, config, test_type, extra_prefs,
                  disable_fission, debug_test, browser_channel, certutil_binary, ca_certificate_path):
         super().__init__(logger, prefs_root, config, test_type, extra_prefs,
-                         disable_fission, debug_test, browser_channel, None,
+                         True, disable_fission, debug_test, browser_channel, None,
                          certutil_binary, ca_certificate_path)
 
     def _set_required_prefs(self, profile):
@@ -157,6 +159,7 @@ class ProfileCreator(FirefoxProfileCreator):
             "dom.disable_open_during_load": False,
             "places.history.enabled": False,
             "dom.send_after_paint_to_content": True,
+            "browser.tabs.remote.autostart": True,
         })
 
         if self.test_type == "reftest":
@@ -185,7 +188,7 @@ class FirefoxAndroidBrowser(Browser):
     def __init__(self, logger, prefs_root, test_type, package_name="org.mozilla.geckoview.test_runner",
                  device_serial=None, extra_prefs=None, debug_info=None,
                  symbols_path=None, stackwalk_binary=None, certutil_binary=None,
-                 ca_certificate_path=None, stackfix_dir=None,
+                 ca_certificate_path=None, e10s=False, stackfix_dir=None,
                  binary_args=None, timeout_multiplier=None, leak_check=False, asan=False,
                  chaos_mode_flags=None, config=None, browser_channel="nightly",
                  install_fonts=False, tests_root=None, specialpowers_path=None, adb_binary=None,
@@ -201,6 +204,7 @@ class FirefoxAndroidBrowser(Browser):
         self.stackwalk_binary = stackwalk_binary
         self.certutil_binary = certutil_binary
         self.ca_certificate_path = ca_certificate_path
+        self.e10s = True
         self.stackfix_dir = stackfix_dir
         self.binary_args = binary_args
         self.timeout_multiplier = timeout_multiplier
@@ -344,7 +348,7 @@ class FirefoxAndroidBrowser(Browser):
 class FirefoxAndroidWdSpecBrowser(FirefoxWdSpecBrowser):
     def __init__(self, logger, prefs_root, webdriver_binary, webdriver_args,
                  extra_prefs=None, debug_info=None, symbols_path=None, stackwalk_binary=None,
-                 certutil_binary=None, ca_certificate_path=None,
+                 certutil_binary=None, ca_certificate_path=None, e10s=False,
                  disable_fission=False, stackfix_dir=None, leak_check=False,
                  asan=False, chaos_mode_flags=None, config=None,
                  browser_channel="nightly", headless=None,
@@ -354,7 +358,7 @@ class FirefoxAndroidWdSpecBrowser(FirefoxWdSpecBrowser):
         super().__init__(logger, None, prefs_root, webdriver_binary, webdriver_args,
                          extra_prefs=extra_prefs, debug_info=debug_info, symbols_path=symbols_path,
                          stackwalk_binary=stackwalk_binary, certutil_binary=certutil_binary,
-                         ca_certificate_path=ca_certificate_path,
+                         ca_certificate_path=ca_certificate_path, e10s=e10s,
                          disable_fission=disable_fission, stackfix_dir=stackfix_dir,
                          leak_check=leak_check, asan=asan,
                          chaos_mode_flags=chaos_mode_flags, config=config,
@@ -382,7 +386,7 @@ class FirefoxAndroidWdSpecBrowser(FirefoxWdSpecBrowser):
             self.logger.warning("Failed to remove forwarded or reversed ports: %s" % e)
         super().stop(force=force)
 
-    def get_env(self, binary, debug_info, headless, chaos_mode_flags, e10s):
+    def get_env(self, binary, debug_info, headless, chaos_mode_flags):
         env = get_environ(chaos_mode_flags)
         env["RUST_BACKTRACE"] = "1"
         return env

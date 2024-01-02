@@ -1251,8 +1251,6 @@ class XPCShellTests(object):
             self.env["MOZ_CRASHREPORTER"] = "1"
         # Don't launch the crash reporter client
         self.env["MOZ_CRASHREPORTER_NO_REPORT"] = "1"
-        # Disable e10s
-        self.env["MOZ_FORCE_DISABLE_E10S"] = "1"
         # Don't permit remote connections by default.
         # MOZ_DISABLE_NONLOCAL_CONNECTIONS can be set to "0" to temporarily
         # enable non-local connections for the purposes of local testing.
