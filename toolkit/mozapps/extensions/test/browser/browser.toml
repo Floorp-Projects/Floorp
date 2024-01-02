@@ -76,13 +76,12 @@ skip-if = ["true"] # Bug 1626824
 ["browser_file_xpi_no_process_switch.js"]
 
 ["browser_globalwarnings.js"]
-fail-if = ["a11y_checks"] # Bug 1854646 clicked div.addon-name-container, button.category may not be focusable
+fail-if = ["a11y_checks"] # Bug 1854646 clicked div.addon-name-container may not be focusable
 
 ["browser_gmpProvider.js"]
-fail-if = ["a11y_checks"] # Bug 1854646 clicked div.addon-name-container, button.category, div.card.addon, div.container may not be focusable
+fail-if = ["a11y_checks"] # Bug 1854646 clicked div.addon-name-container and div.card.addon may not be focusable
 
 ["browser_history_navigation.js"]
-fail-if = ["a11y_checks"] # Bug 1854646 clicked button.category may not be focusable
 https_first_disabled = true
 
 ["browser_html_abuse_report.js"]
@@ -92,17 +91,15 @@ support-files = ["head_abuse_report.js"]
 support-files = ["head_abuse_report.js"]
 
 ["browser_html_detail_permissions.js"]
-fail-if = ["a11y_checks"] # Bug 1854646 clicked button#details-deck-button-permissions may not be focusable
 
 ["browser_html_detail_view.js"]
-fail-if = ["a11y_checks"] # Bug 1854646 clicked div.addon-name-container, button.category may not be focusable
+fail-if = ["a11y_checks"] # Bug 1854646 clicked div.addon-name-container may not be focusable
 
 ["browser_html_discover_view.js"]
 https_first_disabled = true
 support-files = ["head_disco.js"]
 
 ["browser_html_discover_view_clientid.js"]
-fail-if = ["a11y_checks"] # Bug 1854646 clicked button.category may not be focusable
 
 ["browser_html_discover_view_prefs.js"]
 
@@ -115,12 +112,11 @@ skip-if = ["a11y_checks"] # Bug 1858037 to investigate intermittent a11y_checks 
 ["browser_html_message_bar.js"]
 
 ["browser_html_options_ui.js"]
-fail-if = ["a11y_checks"] # Bug 1854646 clicked button.details-deck-button-details, button.details-deck-button-preferences may not be focusable
 
 ["browser_html_options_ui_in_tab.js"]
 
 ["browser_html_pending_updates.js"]
-fail-if = ["a11y_checks"] # Bug 1854646 clicked div.text-container, button.category may not be focusable
+fail-if = ["a11y_checks"] # Bug 1854646 clicked div.text-container may not be focusable
 
 ["browser_html_recent_updates.js"]
 
@@ -128,13 +124,12 @@ fail-if = ["a11y_checks"] # Bug 1854646 clicked div.text-container, button.categ
 https_first_disabled = true
 
 ["browser_html_scroll_restoration.js"]
-fail-if = ["a11y_checks"] # Bug 1854646 clicked button#details-deck-button-permissions may not be focusable
 skip-if = ["os == 'mac' && verify && debug"] # Bug 1850159
 
 ["browser_html_sitepermission_addons.js"]
 
 ["browser_html_updates.js"]
-fail-if = ["a11y_checks"] # Bug 1854646 clicked div, button.details-deck-button-details, button.details-deck-button-release-notes, button.category may not be focusable
+fail-if = ["a11y_checks"] # Bug 1854646 clicked div may not be focusable
 https_first_disabled = true
 
 ["browser_html_warning_messages.js"]
@@ -150,7 +145,7 @@ https_first_disabled = true
 ["browser_manage_shortcuts_hidden.js"]
 
 ["browser_manage_shortcuts_remove.js"]
-fail-if = ["a11y_checks"] # Bug 1854646 clicked element may not be focusable
+fail-if = ["a11y_checks"] # Bug 1854646 clicked button.shortcut-remove-button may not be labeled
 
 ["browser_menu_button_accessibility.js"]
 
