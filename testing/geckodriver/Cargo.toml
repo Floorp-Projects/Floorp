@@ -31,7 +31,7 @@ log = { version = "0.4", features = ["std"] }
 marionette = { path = "./marionette", version="0.4.0" }
 mozdevice = { path = "../mozbase/rust/mozdevice", version="0.5.2" }
 mozprofile = { path = "../mozbase/rust/mozprofile", version="0.9.2" }
-mozrunner = { path = "../mozbase/rust/mozrunner", version="0.15.0" }
+mozrunner = { path = "../mozbase/rust/mozrunner", version="0.15.2" }
 mozversion = { path = "../mozbase/rust/mozversion", version="0.5.0" }
 regex = { version="1.0", default-features = false, features = ["perf", "std"] }
 serde = "1.0"
