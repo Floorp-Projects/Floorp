@@ -21,8 +21,14 @@ add_task(async function testDismissHanger() {
   await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URI);
   await promisePanelShown;
 
+  // We intentionally turn off this a11y check, because the following click
+  // is sent on the <toolbar> to dismiss the Geolocation hanger using an
+  // alternative way of the popup dismissal, while the other way like `Esc` key
+  // is available for assistive technology users, thus this test can be ignored.
+  AccessibilityUtils.setEnv({ mustHaveAccessibleRule: false });
   // click outside the Geolocation hanger to dismiss it
   window.document.getElementById("nav-bar").click();
+  AccessibilityUtils.resetEnv();
   info("Clicked outside the Geolocation panel to dismiss it");
 
   let hasLocation = await SpecialPowers.spawn(
