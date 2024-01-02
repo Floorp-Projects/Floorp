@@ -376,8 +376,6 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
   // state may be overwritten and require a refresh later, even though it has
   // not changed.
   bool mRefreshClipState = true;
-  // The framebuffer has been modified and should be copied to the swap chain.
-  bool mNeedsPresent = true;
   // The number of layers currently pushed.
   int32_t mLayerDepth = 0;
 
@@ -457,7 +455,7 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
   already_AddRefed<SourceSurface> GetBackingSurface() override;
   void DetachAllSnapshots() override;
 
-  void BeginFrame(const IntRect& aPersistedRect);
+  void BeginFrame(bool aInvalidContents = false);
   void EndFrame();
   bool RequiresRefresh() const { return mProfile.RequiresRefresh(); }
 
