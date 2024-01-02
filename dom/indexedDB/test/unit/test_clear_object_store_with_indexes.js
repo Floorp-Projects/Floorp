@@ -78,9 +78,10 @@ async function testSteps() {
     };
 
     /**
-     * The deletion should be over in 20 seconds or less. With the regression,
-     * the operation can take more than 30 minutes. We use one minute to reduce
-     * intermittent failures due to the CI environment.
+     * The deletion should be over in 20 seconds or less on desktop. With the
+     * regression, the operation can take more than 30 minutes. We use one
+     * minute to reduce intermittent failures due to the CI environment.
+     * For android, the CI run should be over in 3 and a half minutes.
      *
      * Note that this is not a magical timeout for the completion of an
      * asynchronous request: we are testing a hang and using an explicit timeout
@@ -91,8 +92,10 @@ async function testSteps() {
      * intermittent failures, the timeout could be increased to two, even
      * three minutes or the test could be turned into a raptor performance test.
      */
-    const wait_a_minute = 60000;
-    do_timeout(wait_a_minute, () => {
+    const android = mozinfo.os == "android";
+    const minutes = 60 * 1000;
+    const performance_regression_cutoff = (android ? 6 : 1) * minutes;
+    do_timeout(performance_regression_cutoff, () => {
       if (!isDone) {
         rej(Error("Performance regression detected"));
       }
