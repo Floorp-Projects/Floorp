@@ -3,6 +3,72 @@
 
 All notable changes to this program are documented in this file.
 
+## 0.34.0
+
+### Known problems
+
+- _Startup hang with Firefox running in a container (e.g. snap, flatpak):_
+
+  When Firefox is packaged inside a container (like the default Firefox browser
+  shipped with Ubuntu 22.04), it may see a different filesystem to the host.
+  This can affect access to the generated profile directory, which may result
+  in a hang when starting Firefox. Workarounds are listed in the geckodriver
+  [usage documentation].
+
+### Added
+
+- Support for [Virtual Authenticators]
+
+  [Virtual Authenticators] serve as a WebDriver Extension designed to simulate
+  user authentication (WebAuthn) on web applications during automated testing.
+  This functionality encompasses a range of methods, including passwords,
+  biometrics, and security keys.
+
+  Geckodriver supports all available commands:
+
+  - [Add Virtual Authenticator]
+  - [Remove Virtual Authenticator]
+  - [Add Credential]
+  - [Get Credentials]
+  - [Remove Credential]
+  - [Remove All Credentials]
+  - [Set User Verified]
+
+- Support for using a page range as integer for the [Print] command.
+
+  Implemented by [Mitesh Gulecha].
+
+### Changed
+
+- The error handling has undergone refactoring, now utilizing the
+  [anyhow](https://docs.rs/anyhow) and [thiserror](https://docs.rs/thiserror)
+  crates.
+
+  Implemented by [James Hendry].
+
+- Specifying `--port=0` as an argument allows geckodriver to dynamically find
+  and use an available free port on the system.
+
+- Updated dependencies (base64, clap, rust-url)
+
+### Fixed
+
+- While searching for a default Firefox installation on the system, geckodriver
+  used the `Contents/MacOS/firefox-bin` executable instead of the binary
+  specified in the app bundle's `info.plist` file. This behavior resulted in a
+  malfunction due to a regression in Firefox, particularly affecting the Firefox 121 release.
+
+- The Firefox version check has been extended to enable the execution of
+  distributions with custom prefixes for the application name.
+
+  Implemented by [Razvan Cojocaru].
+
+### Removed
+
+- Removed the `unknown path` error which is not part of the WebDriver specification.
+
+  Implemented by [James Hendry].
+
 ## 0.33.0  (2023-04-03, `a80e5fd61076`)
 
 ### Known problems
@@ -1816,15 +1882,27 @@ and greater.
 [Take Element Screenshot]: https://w3c.github.io/webdriver/webdriver-spec.html#take-element-screenshot
 [WebDriver errors]: https://w3c.github.io/webdriver/webdriver-spec.html#handling-errors
 
+[Virtual Authenticators]: https://www.w3.org/TR/webauthn-2/#sctn-automation
+[Add Credential]: https://www.w3.org/TR/webauthn-2/#add-credential
+[Add Virtual Authenticator]: https://www.w3.org/TR/webauthn-2/#add-virtual-authenticator
+[Get Credentials]: https://www.w3.org/TR/webauthn-2/#get-credentials
+[Remove All Credentials]: https://www.w3.org/TR/webauthn-2/#remove-all-credentials
+[Remove Credential]: https://www.w3.org/TR/webauthn-2/#remove-credential
+[Remove Virtual Authenticator]: https://www.w3.org/TR/webauthn-2/#remove-virtual-authenticator
+[Set User Verified]: https://www.w3.org/TR/webauthn-2/#set-user-verified
+
 [Bastien Orivel]: https://github.com/Eijebong
 [David Burns]: https://github.com/AutomatedTester
+[James Hendry]: https://bugzilla.mozilla.org/user_profile?user_id=720249
 [Jason Juang]: https://github.com/juangj
 [Jeremy Lempereur]: https://github.com/o0Ignition0o
 [Kalpesh Krishna]: https://github.com/martiansideofthemoon
 [Kriti Singh]: https://github.com/kritisingh1
+[Mitesh Gulecha]: https://github.com/mickyg03
 [Mike Pennisi]: https://github.com/jugglinmike
 [Nupur Baghel]: https://github.com/nupurbaghel
 [Peter Major]: https://github.com/aldaris
+[Razvan Cojocaru]: https://github.com/rzvncj
 [Shivam Singhal]: https://github.com/championshuttler
 [Sven Jost]: https://github/mythsunwind
 [Vlad Filippov]: https://github.com/vladikoff

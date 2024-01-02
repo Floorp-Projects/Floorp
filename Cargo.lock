@@ -2053,7 +2053,7 @@ dependencies = [
 
 [[package]]
 name = "geckodriver"
-version = "0.33.0"
+version = "0.34.0"
 dependencies = [
  "anyhow",
  "base64 0.21.3",
