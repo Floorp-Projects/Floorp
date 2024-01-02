@@ -1,0 +1,15 @@
+<html class="reftest-wait">
+<img src="1862059-1.svg"></img>
+<script>
+let numTimes = 15;
+function doTest() {
+	numTimes--;
+	if (numTimes > 0) {
+		window.requestAnimationFrame(doTest);
+	} else {
+		document.documentElement.className = "";
+	}
+}
+window.addEventListener("MozReftestInvalidate", doTest);
+</script>
+</html>
