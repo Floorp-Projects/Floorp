@@ -360,7 +360,6 @@ void LowMemoryRenderPipeline::Init() {
 void LowMemoryRenderPipeline::PrepareForThreadsInternal(size_t num,
                                                         bool use_group_ids) {
   const auto& shifts = channel_shifts_[0];
-
   use_group_ids_ = use_group_ids;
   size_t num_buffers = use_group_ids_ ? frame_dimensions_.num_groups : num;
   for (size_t t = group_data_.size(); t < num_buffers; t++) {

@@ -306,72 +306,65 @@ void Image3FToXYB(const Image3F& in, const ColorEncoding& color_encoding,
 
 // This is different from Butteraugli's OpsinDynamicsImage() in the sense that
 // it does not contain a sensitivity multiplier based on the blurred image.
-const ImageBundle* ToXYB(const ImageBundle& in, ThreadPool* pool,
-                         Image3F* JXL_RESTRICT xyb, const JxlCmsInterface& cms,
-                         ImageBundle* const JXL_RESTRICT linear) {
-  const size_t xsize = in.xsize();
-  const size_t ysize = in.ysize();
-  JXL_ASSERT(SameSize(in, *xyb));
+void ToXYB(const Image3F& color, const ColorEncoding& c_current,
+           float intensity_target, const ImageF* black, ThreadPool* pool,
+           Image3F* JXL_RESTRICT xyb, const JxlCmsInterface& cms,
+           Image3F* const JXL_RESTRICT linear) {
+  JXL_ASSERT(SameSize(color, *xyb));
+  if (black) JXL_ASSERT(SameSize(color, *black));
+  if (linear) JXL_ASSERT(SameSize(color, *linear));
 
   const HWY_FULL(float) d;
   // Pre-broadcasted constants
   HWY_ALIGN float premul_absorb[MaxLanes(d) * 12];
-  ComputePremulAbsorb(in.metadata()->IntensityTarget(), premul_absorb);
+  ComputePremulAbsorb(intensity_target, premul_absorb);
 
   const bool want_linear = linear != nullptr;
 
-  const ColorEncoding& c_linear_srgb = ColorEncoding::LinearSRGB(in.IsGray());
+  const ColorEncoding& c_linear_srgb =
+      ColorEncoding::LinearSRGB(c_current.IsGray());
   // Linear sRGB inputs are rare but can be useful for the fastest encoders, for
   // which undoing the sRGB transfer function would be a large part of the cost.
-  if (c_linear_srgb.SameColorEncoding(in.c_current())) {
-    JXL_CHECK(LinearSRGBToXYB(in.color(), premul_absorb, pool, xyb));
+  if (c_linear_srgb.SameColorEncoding(c_current)) {
+    JXL_CHECK(LinearSRGBToXYB(color, premul_absorb, pool, xyb));
     // This only happens if kitten or slower, moving ImageBundle might be
     // possible but the encoder is much slower than this copy.
     if (want_linear) {
-      *linear = in.Copy();
-      return linear;
+      CopyImageTo(color, linear);
     }
-    return &in;
+    return;
   }
 
   // Common case: already sRGB, can avoid the color transform
-  if (in.IsSRGB()) {
+  if (c_current.IsSRGB()) {
     // Common case: can avoid allocating/copying
-    if (!want_linear) {
-      JXL_CHECK(SRGBToXYB(in.color(), premul_absorb, pool, xyb));
-      return &in;
+    if (want_linear) {
+      // Slow encoder also wants linear sRGB.
+      JXL_CHECK(SRGBToXYBAndLinear(color, premul_absorb, pool, xyb, linear));
+    } else {
+      JXL_CHECK(SRGBToXYB(color, premul_absorb, pool, xyb));
     }
-
-    // Slow encoder also wants linear sRGB.
-    linear->SetFromImage(Image3F(xsize, ysize), c_linear_srgb);
-    JXL_CHECK(SRGBToXYBAndLinear(in.color(), premul_absorb, pool, xyb,
-                                 linear->color()));
-    return linear;
+    return;
   }
 
   // General case: not sRGB, need color transform.
-  ImageBundle linear_storage;  // Local storage only used if !want_linear.
-
-  ImageBundle* linear_storage_ptr;
+  Image3F linear_storage;  // Local storage only used if !want_linear.
+  Image3F* linear_storage_ptr;
   if (want_linear) {
     // Caller asked for linear, use that storage directly.
     linear_storage_ptr = linear;
   } else {
     // Caller didn't ask for linear, create our own local storage
     // OK to reuse metadata, it will not be changed.
-    linear_storage = ImageBundle(const_cast<ImageMetadata*>(in.metadata()));
+    linear_storage = Image3F(color.xsize(), color.ysize());
     linear_storage_ptr = &linear_storage;
   }
 
-  const ImageBundle* ptr;
-  JXL_CHECK(TransformIfNeeded(in, c_linear_srgb, cms, pool, linear_storage_ptr,
-                              &ptr));
-  // If no transform was necessary, should have taken the above codepath.
-  JXL_ASSERT(ptr == linear_storage_ptr);
+  JXL_CHECK(ApplyColorTransform(c_current, intensity_target, color, black,
+                                Rect(color), c_linear_srgb, cms, pool,
+                                linear_storage_ptr));
 
-  JXL_CHECK(
-      LinearSRGBToXYB(*linear_storage_ptr->color(), premul_absorb, pool, xyb));
-  return want_linear ? linear : &in;
+  JXL_CHECK(LinearSRGBToXYB(*linear_storage_ptr, premul_absorb, pool, xyb));
 }
 
 // Transform RGB to YCbCr.
@@ -443,10 +436,18 @@ HWY_AFTER_NAMESPACE();
 #if HWY_ONCE
 namespace jxl {
 HWY_EXPORT(ToXYB);
-const ImageBundle* ToXYB(const ImageBundle& in, ThreadPool* pool,
-                         Image3F* JXL_RESTRICT xyb, const JxlCmsInterface& cms,
-                         ImageBundle* JXL_RESTRICT linear_storage) {
-  return HWY_DYNAMIC_DISPATCH(ToXYB)(in, pool, xyb, cms, linear_storage);
+void ToXYB(const Image3F& color, const ColorEncoding& c_current,
+           float intensity_target, const ImageF* black, ThreadPool* pool,
+           Image3F* JXL_RESTRICT xyb, const JxlCmsInterface& cms,
+           Image3F* const JXL_RESTRICT linear) {
+  HWY_DYNAMIC_DISPATCH(ToXYB)
+  (color, c_current, intensity_target, black, pool, xyb, cms, linear);
+}
+
+void ToXYB(const ImageBundle& in, ThreadPool* pool, Image3F* JXL_RESTRICT xyb,
+           const JxlCmsInterface& cms, Image3F* JXL_RESTRICT linear) {
+  ToXYB(in.color(), in.c_current(), in.metadata()->IntensityTarget(),
+        in.HasBlack() ? &in.black() : nullptr, pool, xyb, cms, linear);
 }
 
 HWY_EXPORT(LinearRGBRowToXYB);

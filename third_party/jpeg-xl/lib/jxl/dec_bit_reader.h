@@ -227,7 +227,7 @@ class BitReader {
     JXL_ASSERT(TotalBitsConsumed() % kBitsPerByte == 0);
     const size_t offset = TotalBitsConsumed() / kBitsPerByte;  // no remainder
     JXL_ASSERT(offset <= TotalBytes());
-    return Span<const uint8_t>(first_byte_ + offset, TotalBytes() - offset);
+    return Bytes(first_byte_ + offset, TotalBytes() - offset);
   }
 
   // Returns whether all the bits read so far have been within the input bounds.

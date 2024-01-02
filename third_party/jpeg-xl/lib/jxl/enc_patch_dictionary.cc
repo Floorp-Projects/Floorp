@@ -111,7 +111,7 @@ void PatchDictionaryEncoder::Encode(const PatchDictionary& pdic,
   BuildAndEncodeHistograms(HistogramParams(), kNumPatchDictionaryContexts,
                            tokens, &codes, &context_map, writer, layer,
                            aux_out);
-  WriteTokens(tokens[0], codes, context_map, writer, layer, aux_out);
+  WriteTokens(tokens[0], codes, context_map, 0, writer, layer, aux_out);
 }
 
 // static
@@ -213,6 +213,7 @@ std::vector<PatchInfo> FindTextLikePatches(
     const PassesEncoderState* JXL_RESTRICT state, ThreadPool* pool,
     AuxOut* aux_out, bool is_xyb) {
   if (state->cparams.patches == Override::kOff) return {};
+  const auto& frame_dim = state->shared.frame_dim;
 
   PatchColorspaceInfo pci(is_xyb);
   float kSimilarThreshold = 0.8f;
@@ -257,13 +258,13 @@ std::vector<PatchInfo> FindTextLikePatches(
 
   // Look for kPatchSide size squares, naturally aligned, that all have the same
   // pixel values.
-  ImageB is_screenshot_like(DivCeil(opsin.xsize(), kPatchSide),
-                            DivCeil(opsin.ysize(), kPatchSide));
+  ImageB is_screenshot_like(DivCeil(frame_dim.xsize, kPatchSide),
+                            DivCeil(frame_dim.ysize, kPatchSide));
   ZeroFillImage(&is_screenshot_like);
   uint8_t* JXL_RESTRICT screenshot_row = is_screenshot_like.Row(0);
   const size_t screenshot_stride = is_screenshot_like.PixelsPerRow();
   const auto process_row = [&](const uint32_t y, size_t /* thread */) {
-    for (uint64_t x = 0; x < opsin.xsize() / kPatchSide; x++) {
+    for (uint64_t x = 0; x < frame_dim.xsize / kPatchSide; x++) {
       bool all_same = true;
       for (size_t iy = 0; iy < static_cast<size_t>(kPatchSide); iy++) {
         for (size_t ix = 0; ix < static_cast<size_t>(kPatchSide); ix++) {
@@ -282,8 +283,8 @@ std::vector<PatchInfo> FindTextLikePatches(
         for (int64_t ix = -kExtraSide; ix < kExtraSide + kPatchSide; ix++) {
           int64_t cx = x * kPatchSide + ix;
           int64_t cy = y * kPatchSide + iy;
-          if (cx < 0 || static_cast<uint64_t>(cx) >= opsin.xsize() ||  //
-              cy < 0 || static_cast<uint64_t>(cy) >= opsin.ysize()) {
+          if (cx < 0 || static_cast<uint64_t>(cx) >= frame_dim.xsize ||  //
+              cy < 0 || static_cast<uint64_t>(cy) >= frame_dim.ysize) {
             continue;
           }
           num++;
@@ -296,7 +297,7 @@ std::vector<PatchInfo> FindTextLikePatches(
       has_screenshot_areas = true;
     }
   };
-  JXL_CHECK(RunOnPool(pool, 0, opsin.ysize() / kPatchSide, ThreadPool::NoInit,
+  JXL_CHECK(RunOnPool(pool, 0, frame_dim.ysize / kPatchSide, ThreadPool::NoInit,
                       process_row, "IsScreenshotLike"));
 
   // TODO(veluca): also parallelize the rest of this function.
@@ -311,9 +312,9 @@ std::vector<PatchInfo> FindTextLikePatches(
   }
 
   // Search for "similar enough" pixels near the screenshot-like areas.
-  ImageB is_background(opsin.xsize(), opsin.ysize());
+  ImageB is_background(frame_dim.xsize, frame_dim.ysize);
   ZeroFillImage(&is_background);
-  Image3F background(opsin.xsize(), opsin.ysize());
+  Image3F background(frame_dim.xsize, frame_dim.ysize);
   ZeroFillImage(&background);
   constexpr size_t kDistanceLimit = 50;
   float* JXL_RESTRICT background_rows[3] = {
@@ -328,8 +329,8 @@ std::vector<PatchInfo> FindTextLikePatches(
       std::pair<std::pair<uint32_t, uint32_t>, std::pair<uint32_t, uint32_t>>>
       queue;
   size_t queue_front = 0;
-  for (size_t y = 0; y < opsin.ysize(); y++) {
-    for (size_t x = 0; x < opsin.xsize(); x++) {
+  for (size_t y = 0; y < frame_dim.ysize; y++) {
+    for (size_t x = 0; x < frame_dim.xsize; x++) {
       if (!screenshot_row[screenshot_stride * (y / kPatchSide) +
                           (x / kPatchSide)])
         continue;
@@ -353,8 +354,8 @@ std::vector<PatchInfo> FindTextLikePatches(
         int next_first = cur.first + dx;
         int next_second = cur.second + dy;
         if (next_first < 0 || next_second < 0 ||
-            static_cast<uint32_t>(next_first) >= opsin.xsize() ||
-            static_cast<uint32_t>(next_second) >= opsin.ysize()) {
+            static_cast<uint32_t>(next_first) >= frame_dim.xsize ||
+            static_cast<uint32_t>(next_second) >= frame_dim.ysize) {
           continue;
         }
         if (static_cast<uint32_t>(
@@ -388,7 +389,7 @@ std::vector<PatchInfo> FindTextLikePatches(
     } else {
       DumpImage(cparams, "background", background);
     }
-    ccs = ImageF(opsin.xsize(), opsin.ysize());
+    ccs = ImageF(frame_dim.xsize, frame_dim.ysize);
     ZeroFillImage(&ccs);
     paint_ccs = true;
   }
@@ -410,14 +411,14 @@ std::vector<PatchInfo> FindTextLikePatches(
 
   // Find small CC outside the "similar enough" areas, compute bounding boxes,
   // and run heuristics to exclude some patches.
-  ImageB visited(opsin.xsize(), opsin.ysize());
+  ImageB visited(frame_dim.xsize, frame_dim.ysize);
   ZeroFillImage(&visited);
   uint8_t* JXL_RESTRICT visited_row = visited.Row(0);
   const size_t visited_stride = visited.PixelsPerRow();
   std::vector<std::pair<uint32_t, uint32_t>> cc;
   std::vector<std::pair<uint32_t, uint32_t>> stack;
-  for (size_t y = 0; y < opsin.ysize(); y++) {
-    for (size_t x = 0; x < opsin.xsize(); x++) {
+  for (size_t y = 0; y < frame_dim.ysize; y++) {
+    for (size_t x = 0; x < frame_dim.xsize; x++) {
       if (is_background_row[y * is_background_stride + x]) continue;
       cc.clear();
       stack.clear();
@@ -447,8 +448,8 @@ std::vector<PatchInfo> FindTextLikePatches(
             int next_first = static_cast<int32_t>(cur.first) + dx;
             int next_second = static_cast<int32_t>(cur.second) + dy;
             if (next_first < 0 || next_second < 0 ||
-                static_cast<uint32_t>(next_first) >= opsin.xsize() ||
-                static_cast<uint32_t>(next_second) >= opsin.ysize()) {
+                static_cast<uint32_t>(next_first) >= frame_dim.xsize ||
+                static_cast<uint32_t>(next_second) >= frame_dim.ysize) {
               continue;
             }
             std::pair<uint32_t, uint32_t> next{next_first, next_second};
@@ -476,10 +477,11 @@ std::vector<PatchInfo> FindTextLikePatches(
       bool has_similar = false;
       for (size_t iy = std::max<int>(
                static_cast<int32_t>(min_y) - kHasSimilarRadius, 0);
-           iy < std::min(max_y + kHasSimilarRadius + 1, opsin.ysize()); iy++) {
+           iy < std::min(max_y + kHasSimilarRadius + 1, frame_dim.ysize);
+           iy++) {
         for (size_t ix = std::max<int>(
                  static_cast<int32_t>(min_x) - kHasSimilarRadius, 0);
-             ix < std::min(max_x + kHasSimilarRadius + 1, opsin.xsize());
+             ix < std::min(max_x + kHasSimilarRadius + 1, frame_dim.xsize);
              ix++) {
           size_t opos = opsin_stride * iy + ix;
           float px[3] = {opsin_rows[0][opos], opsin_rows[1][opos],
@@ -760,9 +762,9 @@ void RoundtripPatchFrame(Image3F* reference_frame,
   ib.SetFromImage(std::move(*reference_frame),
                   state->shared.metadata->m.color_encoding);
   if (!ib.metadata()->extra_channel_info.empty()) {
-    // Add dummy extra channels to the patch image: patch encoding does not yet
-    // support extra channels, but the codec expects that the amount of extra
-    // channels in frames matches that in the metadata of the codestream.
+    // Add placeholder extra channels to the patch image: patch encoding does
+    // not yet support extra channels, but the codec expects that the amount of
+    // extra channels in frames matches that in the metadata of the codestream.
     std::vector<ImageF> extra_channels;
     extra_channels.reserve(ib.metadata()->extra_channel_info.size());
     for (size_t i = 0; i < ib.metadata()->extra_channel_info.size(); i++) {
@@ -774,11 +776,10 @@ void RoundtripPatchFrame(Image3F* reference_frame,
     }
     ib.SetExtraChannels(std::move(extra_channels));
   }
-  PassesEncoderState roundtrip_state;
   auto special_frame = std::unique_ptr<BitWriter>(new BitWriter());
   AuxOut patch_aux_out;
   JXL_CHECK(EncodeFrame(cparams, patch_frame_info, state->shared.metadata, ib,
-                        &roundtrip_state, cms, pool, special_frame.get(),
+                        cms, pool, special_frame.get(),
                         aux_out ? &patch_aux_out : nullptr));
   if (aux_out) {
     for (const auto& l : patch_aux_out.layers) {
@@ -794,7 +795,8 @@ void RoundtripPatchFrame(Image3F* reference_frame,
         *state->shared.metadata));
     const uint8_t* frame_start = encoded.data();
     size_t encoded_size = encoded.size();
-    JXL_CHECK(DecodeFrame(&dec_state, pool, frame_start, encoded_size, &decoded,
+    JXL_CHECK(DecodeFrame(&dec_state, pool, frame_start, encoded_size,
+                          /*frame_header=*/nullptr, &decoded,
                           *state->shared.metadata));
     frame_start += decoded.decoded_bytes();
     encoded_size -= decoded.decoded_bytes();
@@ -803,7 +805,8 @@ void RoundtripPatchFrame(Image3F* reference_frame,
     // if the frame itself uses patches, we need to decode another frame
     if (!ref_xsize) {
       JXL_CHECK(DecodeFrame(&dec_state, pool, frame_start, encoded_size,
-                            &decoded, *state->shared.metadata));
+                            /*frame_header=*/nullptr, &decoded,
+                            *state->shared.metadata));
     }
     JXL_CHECK(encoded_size == 0);
     state->shared.reference_frames[idx] =

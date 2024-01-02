@@ -15,7 +15,7 @@
 #include <vector>
 
 #include "lib/jxl/ans_params.h"
-#include "lib/jxl/enc_ans.h"
+#include "lib/jxl/enc_ans_params.h"
 
 namespace jxl {
 
@@ -44,9 +44,15 @@ struct Histogram {
     }
     total_count_ += other.total_count_;
   }
-  float PopulationCost() const {
-    return ANSPopulationCost(data_.data(), data_.size());
+  size_t alphabet_size() const {
+    for (int i = data_.size() - 1; i >= 0; --i) {
+      if (data_[i] > 0) {
+        return i + 1;
+      }
+    }
+    return 1;
   }
+  float PopulationCost() const;
   float ShannonEntropy() const;
 
   std::vector<ANSHistBin> data_;

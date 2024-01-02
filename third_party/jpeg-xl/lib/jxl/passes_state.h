@@ -33,11 +33,7 @@ struct ImageFeatures {
 // State common to both encoder and decoder.
 // NOLINTNEXTLINE(clang-analyzer-optin.performance.Padding)
 struct PassesSharedState {
-  PassesSharedState() : frame_header(nullptr) {}
-
-  // Headers and metadata.
   const CodecMetadata* metadata;
-  FrameHeader frame_header;
 
   FrameDimensions frame_dim;
 
@@ -81,45 +77,6 @@ struct PassesSharedState {
   // Number of pre-clustered set of histograms (with the same ctx map), per
   // pass. Encoded as num_histograms_ - 1.
   size_t num_histograms = 0;
-
-  bool IsGrayscale() const { return metadata->m.color_encoding.IsGray(); }
-
-  Rect GroupRect(size_t group_index) const {
-    const size_t gx = group_index % frame_dim.xsize_groups;
-    const size_t gy = group_index / frame_dim.xsize_groups;
-    const Rect rect(gx * frame_dim.group_dim, gy * frame_dim.group_dim,
-                    frame_dim.group_dim, frame_dim.group_dim, frame_dim.xsize,
-                    frame_dim.ysize);
-    return rect;
-  }
-
-  Rect PaddedGroupRect(size_t group_index) const {
-    const size_t gx = group_index % frame_dim.xsize_groups;
-    const size_t gy = group_index / frame_dim.xsize_groups;
-    const Rect rect(gx * frame_dim.group_dim, gy * frame_dim.group_dim,
-                    frame_dim.group_dim, frame_dim.group_dim,
-                    frame_dim.xsize_padded, frame_dim.ysize_padded);
-    return rect;
-  }
-
-  Rect BlockGroupRect(size_t group_index) const {
-    const size_t gx = group_index % frame_dim.xsize_groups;
-    const size_t gy = group_index / frame_dim.xsize_groups;
-    const Rect rect(gx * (frame_dim.group_dim >> 3),
-                    gy * (frame_dim.group_dim >> 3), frame_dim.group_dim >> 3,
-                    frame_dim.group_dim >> 3, frame_dim.xsize_blocks,
-                    frame_dim.ysize_blocks);
-    return rect;
-  }
-
-  Rect DCGroupRect(size_t group_index) const {
-    const size_t gx = group_index % frame_dim.xsize_dc_groups;
-    const size_t gy = group_index / frame_dim.xsize_dc_groups;
-    const Rect rect(gx * frame_dim.group_dim, gy * frame_dim.group_dim,
-                    frame_dim.group_dim, frame_dim.group_dim,
-                    frame_dim.xsize_blocks, frame_dim.ysize_blocks);
-    return rect;
-  }
 };
 
 // Initialized the state information that is shared between encoder and decoder.

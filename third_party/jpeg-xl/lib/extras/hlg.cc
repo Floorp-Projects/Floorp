@@ -5,9 +5,9 @@
 
 #include "lib/extras/hlg.h"
 
-#include <cmath>
+#include <jxl/cms.h>
 
-#include "lib/jxl/cms/jxl_cms.h"
+#include <cmath>
 
 namespace jxl {
 

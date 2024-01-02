@@ -8,14 +8,14 @@
 
 // Compressed representation of ICC profiles.
 
-#include <stddef.h>
-#include <stdint.h>
+#include <cstddef>
+#include <cstdint>
 
 #include "lib/jxl/base/compiler_specific.h"
-#include "lib/jxl/base/padded_bytes.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/dec_ans.h"
 #include "lib/jxl/dec_bit_reader.h"
+#include "lib/jxl/padded_bytes.h"
 
 namespace jxl {
 
@@ -38,13 +38,6 @@ struct ICCReader {
   ANSSymbolReader ans_reader_;
   PaddedBytes decompressed_;
 };
-
-// `icc` may be empty afterwards - if so, call CreateProfile. Does not append,
-// clears any original data that was in icc.
-// If `output_limit` is not 0, then returns error if resulting profile would be
-// longer than `output_limit`
-Status ReadICC(BitReader* JXL_RESTRICT reader, PaddedBytes* JXL_RESTRICT icc,
-               size_t output_limit = 0);
 
 // Exposed only for testing
 Status PredictICC(const uint8_t* icc, size_t size, PaddedBytes* result);

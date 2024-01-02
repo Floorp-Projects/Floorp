@@ -10,21 +10,20 @@
 
 namespace jxl {
 
-bool NeedsBlending(PassesDecoderState* dec_state) {
-  const PassesSharedState& state = *dec_state->shared;
-  if (!(state.frame_header.frame_type == FrameType::kRegularFrame ||
-        state.frame_header.frame_type == FrameType::kSkipProgressive)) {
+bool NeedsBlending(const FrameHeader& frame_header) {
+  if (!(frame_header.frame_type == FrameType::kRegularFrame ||
+        frame_header.frame_type == FrameType::kSkipProgressive)) {
     return false;
   }
-  const auto& info = state.frame_header.blending_info;
+  const auto& info = frame_header.blending_info;
   bool replace_all = (info.mode == BlendMode::kReplace);
-  for (const auto& ec_i : state.frame_header.extra_channel_blending_info) {
+  for (const auto& ec_i : frame_header.extra_channel_blending_info) {
     if (ec_i.mode != BlendMode::kReplace) {
       replace_all = false;
     }
   }
   // Replace the full frame: nothing to do.
-  if (!state.frame_header.custom_size_or_origin && replace_all) {
+  if (!frame_header.custom_size_or_origin && replace_all) {
     return false;
   }
   return true;

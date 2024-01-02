@@ -160,14 +160,16 @@ void DequantBlock(const AcStrategy& acs, float inv_global_scale, int quant,
   }
 }
 
-Status DecodeGroupImpl(GetBlock* JXL_RESTRICT get_block,
+Status DecodeGroupImpl(const FrameHeader& frame_header,
+                       GetBlock* JXL_RESTRICT get_block,
                        GroupDecCache* JXL_RESTRICT group_dec_cache,
                        PassesDecoderState* JXL_RESTRICT dec_state,
                        size_t thread, size_t group_idx,
                        RenderPipelineInput& render_pipeline_input,
                        ImageBundle* decoded, DrawMode draw) {
   // TODO(veluca): investigate cache usage in this function.
-  const Rect block_rect = dec_state->shared->BlockGroupRect(group_idx);
+  const Rect block_rect =
+      dec_state->shared->frame_dim.BlockGroupRect(group_idx);
   const AcStrategyImage& ac_strategy = dec_state->shared->ac_strategy;
 
   const size_t xsize_blocks = block_rect.xsize();
@@ -177,8 +179,7 @@ Status DecodeGroupImpl(GetBlock* JXL_RESTRICT get_block,
 
   const float inv_global_scale = dec_state->shared->quantizer.InvGlobalScale();
 
-  const YCbCrChromaSubsampling& cs =
-      dec_state->shared->frame_header.chroma_subsampling;
+  const YCbCrChromaSubsampling& cs = frame_header.chroma_subsampling;
 
   size_t idct_stride[3];
   for (size_t c = 0; c < 3; c++) {
@@ -206,8 +207,7 @@ Status DecodeGroupImpl(GetBlock* JXL_RESTRICT get_block,
       return JXL_FAILURE("The CfL map is not JPEG-compatible");
     }
     jpeg_is_gray = (decoded->jpeg_data->components.size() == 1);
-    jpeg_c_map = JpegOrder(dec_state->shared->frame_header.color_transform,
-                           jpeg_is_gray);
+    jpeg_c_map = JpegOrder(frame_header.color_transform, jpeg_is_gray);
     const std::vector<QuantEncoding>& qe =
         dec_state->shared->matrices.encodings();
     if (qe.empty() || qe[0].mode != QuantEncoding::Mode::kQuantModeRAW ||
@@ -216,8 +216,7 @@ Status DecodeGroupImpl(GetBlock* JXL_RESTRICT get_block,
           "Quantization table is not a JPEG quantization table.");
     }
     for (size_t c = 0; c < 3; c++) {
-      if (dec_state->shared->frame_header.color_transform ==
-          ColorTransform::kNone) {
+      if (frame_header.color_transform == ColorTransform::kNone) {
         dcoff[c] = 1024 / (*qe[0].qraw.qtable)[64 * c];
       }
       for (size_t i = 0; i < 64; i++) {
@@ -461,8 +460,10 @@ Status DecodeACVarBlock(size_t ctx_offset, size_t log2_covered_blocks,
 
   size_t nzeros =
       decoder->ReadHybridUintInlined<uses_lz77>(nzero_ctx, br, context_map);
-  if (nzeros + covered_blocks > size) {
-    return JXL_FAILURE("Invalid AC: nzeros too large");
+  if (nzeros > size - covered_blocks) {
+    return JXL_FAILURE("Invalid AC: nzeros %" PRIuS " too large for %" PRIuS
+                       " 8x8 blocks",
+                       nzeros, covered_blocks);
   }
   for (size_t y = 0; y < acs.covered_blocks_y(); y++) {
     for (size_t x = 0; x < acs.covered_blocks_x(); x++) {
@@ -496,9 +497,10 @@ Status DecodeACVarBlock(size_t ctx_offset, size_t log2_covered_blocks,
     nzeros -= prev;
   }
   if (JXL_UNLIKELY(nzeros != 0)) {
-    return JXL_FAILURE("Invalid AC: nzeros not 0. Block (%" PRIuS ", %" PRIuS
+    return JXL_FAILURE("Invalid AC: nzeros at end of block is %" PRIuS
+                       ", should be 0. Block (%" PRIuS ", %" PRIuS
                        "), channel %" PRIuS,
-                       bx, by, c);
+                       nzeros, bx, by, c);
   }
 
   return true;
@@ -554,13 +556,14 @@ struct GetBlockFromBitstream : public GetBlock {
     return true;
   }
 
-  Status Init(BitReader* JXL_RESTRICT* JXL_RESTRICT readers, size_t num_passes,
+  Status Init(const FrameHeader& frame_header,
+              BitReader* JXL_RESTRICT* JXL_RESTRICT readers, size_t num_passes,
               size_t group_idx, size_t histo_selector_bits, const Rect& rect,
               GroupDecCache* JXL_RESTRICT group_dec_cache,
               PassesDecoderState* dec_state, size_t first_pass) {
     for (size_t i = 0; i < 3; i++) {
-      hshift[i] = dec_state->shared->frame_header.chroma_subsampling.HShift(i);
-      vshift[i] = dec_state->shared->frame_header.chroma_subsampling.VShift(i);
+      hshift[i] = frame_header.chroma_subsampling.HShift(i);
+      vshift[i] = frame_header.chroma_subsampling.VShift(i);
     }
     this->coeff_order_size = dec_state->shared->coeff_order_size;
     this->coeff_orders =
@@ -568,8 +571,7 @@ struct GetBlockFromBitstream : public GetBlock {
     this->context_map = dec_state->context_map.data() + first_pass;
     this->readers = readers;
     this->num_passes = num_passes;
-    this->shift_for_pass =
-        dec_state->shared->frame_header.passes.shift + first_pass;
+    this->shift_for_pass = frame_header.passes.shift + first_pass;
     this->group_dec_cache = group_dec_cache;
     this->rect = rect;
     block_ctx_map = &dec_state->shared->block_ctx_map;
@@ -663,18 +665,18 @@ HWY_EXPORT(DecodeGroupImpl);
 
 }  // namespace
 
-Status DecodeGroup(BitReader* JXL_RESTRICT* JXL_RESTRICT readers,
+Status DecodeGroup(const FrameHeader& frame_header,
+                   BitReader* JXL_RESTRICT* JXL_RESTRICT readers,
                    size_t num_passes, size_t group_idx,
                    PassesDecoderState* JXL_RESTRICT dec_state,
                    GroupDecCache* JXL_RESTRICT group_dec_cache, size_t thread,
                    RenderPipelineInput& render_pipeline_input,
                    ImageBundle* JXL_RESTRICT decoded, size_t first_pass,
                    bool force_draw, bool dc_only, bool* should_run_pipeline) {
-  DrawMode draw = (num_passes + first_pass ==
-                   dec_state->shared->frame_header.passes.num_passes) ||
-                          force_draw
-                      ? kDraw
-                      : kDontDraw;
+  DrawMode draw =
+      (num_passes + first_pass == frame_header.passes.num_passes) || force_draw
+          ? kDraw
+          : kDontDraw;
 
   if (should_run_pipeline) {
     *should_run_pipeline = draw != kDontDraw;
@@ -682,13 +684,13 @@ Status DecodeGroup(BitReader* JXL_RESTRICT* JXL_RESTRICT readers,
 
   if (draw == kDraw && num_passes == 0 && first_pass == 0) {
     group_dec_cache->InitDCBufferOnce();
-    const YCbCrChromaSubsampling& cs =
-        dec_state->shared->frame_header.chroma_subsampling;
+    const YCbCrChromaSubsampling& cs = frame_header.chroma_subsampling;
     for (size_t c : {0, 1, 2}) {
       size_t hs = cs.HShift(c);
       size_t vs = cs.VShift(c);
       // We reuse filter_input_storage here as it is not currently in use.
-      const Rect src_rect_precs = dec_state->shared->BlockGroupRect(group_idx);
+      const Rect src_rect_precs =
+          dec_state->shared->frame_dim.BlockGroupRect(group_idx);
       const Rect src_rect =
           Rect(src_rect_precs.x0() >> hs, src_rect_precs.y0() >> vs,
                src_rect_precs.xsize() >> hs, src_rect_precs.ysize() >> vs);
@@ -751,14 +753,14 @@ Status DecodeGroup(BitReader* JXL_RESTRICT* JXL_RESTRICT readers,
   }
 
   auto get_block = jxl::make_unique<GetBlockFromBitstream>();
-  JXL_RETURN_IF_ERROR(
-      get_block->Init(readers, num_passes, group_idx, histo_selector_bits,
-                      dec_state->shared->BlockGroupRect(group_idx),
-                      group_dec_cache, dec_state, first_pass));
+  JXL_RETURN_IF_ERROR(get_block->Init(
+      frame_header, readers, num_passes, group_idx, histo_selector_bits,
+      dec_state->shared->frame_dim.BlockGroupRect(group_idx), group_dec_cache,
+      dec_state, first_pass));
 
   JXL_RETURN_IF_ERROR(HWY_DYNAMIC_DISPATCH(DecodeGroupImpl)(
-      get_block.get(), group_dec_cache, dec_state, thread, group_idx,
-      render_pipeline_input, decoded, draw));
+      frame_header, get_block.get(), group_dec_cache, dec_state, thread,
+      group_idx, render_pipeline_input, decoded, draw));
 
   for (size_t pass = 0; pass < num_passes; pass++) {
     if (!get_block->decoders[pass].CheckANSFinalState()) {
@@ -768,7 +770,8 @@ Status DecodeGroup(BitReader* JXL_RESTRICT* JXL_RESTRICT readers,
   return true;
 }
 
-Status DecodeGroupForRoundtrip(const std::vector<std::unique_ptr<ACImage>>& ac,
+Status DecodeGroupForRoundtrip(const FrameHeader& frame_header,
+                               const std::vector<std::unique_ptr<ACImage>>& ac,
                                size_t group_idx,
                                PassesDecoderState* JXL_RESTRICT dec_state,
                                GroupDecCache* JXL_RESTRICT group_dec_cache,
@@ -776,14 +779,13 @@ Status DecodeGroupForRoundtrip(const std::vector<std::unique_ptr<ACImage>>& ac,
                                RenderPipelineInput& render_pipeline_input,
                                ImageBundle* JXL_RESTRICT decoded,
                                AuxOut* aux_out) {
-  GetBlockFromEncoder get_block(ac, group_idx,
-                                dec_state->shared->frame_header.passes.shift);
+  GetBlockFromEncoder get_block(ac, group_idx, frame_header.passes.shift);
   group_dec_cache->InitOnce(
       /*num_passes=*/0,
       /*used_acs=*/(1u << AcStrategy::kNumValidStrategies) - 1);
 
   return HWY_DYNAMIC_DISPATCH(DecodeGroupImpl)(
-      &get_block, group_dec_cache, dec_state, thread, group_idx,
+      frame_header, &get_block, group_dec_cache, dec_state, thread, group_idx,
       render_pipeline_input, decoded, kDraw);
 }
 

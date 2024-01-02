@@ -10,11 +10,9 @@ set(JPEGXL_INTERNAL_BASE_SOURCES
   jxl/base/arch_macros.h
   jxl/base/bits.h
   jxl/base/byte_order.h
-  jxl/base/cache_aligned.cc
-  jxl/base/cache_aligned.h
+  jxl/base/c_callback_support.h
   jxl/base/common.h
   jxl/base/compiler_specific.h
-  jxl/base/data_parallel.cc
   jxl/base/data_parallel.h
   jxl/base/fast_math-inl.h
   jxl/base/float.h
@@ -22,16 +20,24 @@ set(JPEGXL_INTERNAL_BASE_SOURCES
   jxl/base/matrix_ops.h
   jxl/base/os_macros.h
   jxl/base/override.h
-  jxl/base/padded_bytes.cc
-  jxl/base/padded_bytes.h
   jxl/base/printf_macros.h
-  jxl/base/random.cc
   jxl/base/random.h
   jxl/base/rational_polynomial-inl.h
   jxl/base/sanitizer_definitions.h
   jxl/base/scope_guard.h
   jxl/base/span.h
   jxl/base/status.h
+)
+
+set(JPEGXL_INTERNAL_CMS_SOURCES
+  jxl/cms/color_encoding_cms.h
+  jxl/cms/jxl_cms.cc
+  jxl/cms/jxl_cms_internal.h
+  jxl/cms/opsin_params.h
+  jxl/cms/tone_mapping-inl.h
+  jxl/cms/tone_mapping.h
+  jxl/cms/transfer_functions-inl.h
+  jxl/cms/transfer_functions.h
 )
 
 set(JPEGXL_INTERNAL_CODEC_APNG_SOURCES
@@ -122,14 +128,10 @@ set(JPEGXL_INTERNAL_DEC_SOURCES
   jxl/ans_params.h
   jxl/blending.cc
   jxl/blending.h
+  jxl/cache_aligned.cc
+  jxl/cache_aligned.h
   jxl/chroma_from_luma.cc
   jxl/chroma_from_luma.h
-  jxl/cms/color_encoding_cms.h
-  jxl/cms/color_management.cc
-  jxl/cms/color_management.h
-  jxl/cms/opsin_params.h
-  jxl/cms/tone_mapping-inl.h
-  jxl/cms/transfer_functions-inl.h
   jxl/codec_in_out.h
   jxl/coeff_order.cc
   jxl/coeff_order.h
@@ -245,6 +247,7 @@ set(JPEGXL_INTERNAL_DEC_SOURCES
   jxl/opsin_params.cc
   jxl/opsin_params.h
   jxl/pack_signed.h
+  jxl/padded_bytes.h
   jxl/passes_state.cc
   jxl/passes_state.h
   jxl/patch_dictionary_internal.h
@@ -264,6 +267,8 @@ set(JPEGXL_INTERNAL_DEC_SOURCES
   jxl/render_pipeline/stage_blending.h
   jxl/render_pipeline/stage_chroma_upsampling.cc
   jxl/render_pipeline/stage_chroma_upsampling.h
+  jxl/render_pipeline/stage_cms.cc
+  jxl/render_pipeline/stage_cms.h
   jxl/render_pipeline/stage_epf.cc
   jxl/render_pipeline/stage_epf.h
   jxl/render_pipeline/stage_from_linear.cc
@@ -346,8 +351,6 @@ set(JPEGXL_INTERNAL_ENC_SOURCES
   jxl/enc_fast_lossless.h
   jxl/enc_fields.cc
   jxl/enc_fields.h
-  jxl/enc_file.cc
-  jxl/enc_file.h
   jxl/enc_frame.cc
   jxl/enc_frame.h
   jxl/enc_gaborish.cc
@@ -413,9 +416,6 @@ set(JPEGXL_INTERNAL_ENC_SOURCES
   jxl/modular/transform/enc_squeeze.h
   jxl/modular/transform/enc_transform.cc
   jxl/modular/transform/enc_transform.h
-  jxl/cms/jxl_cms.cc
-  jxl/cms/jxl_cms.h
-  jxl/cms/jxl_skcms.h
 )
 
 set(JPEGXL_INTERNAL_EXTRAS_FOR_TOOLS_SOURCES
@@ -434,6 +434,8 @@ set(JPEGXL_INTERNAL_EXTRAS_FOR_TOOLS_SOURCES
 set(JPEGXL_INTERNAL_EXTRAS_SOURCES
   extras/alpha_blend.cc
   extras/alpha_blend.h
+  extras/common.cc
+  extras/common.h
   extras/dec/color_description.cc
   extras/dec/color_description.h
   extras/dec/color_hints.cc
@@ -444,6 +446,8 @@ set(JPEGXL_INTERNAL_EXTRAS_SOURCES
   extras/enc/encode.h
   extras/exif.cc
   extras/exif.h
+  extras/mmap.cc
+  extras/mmap.h
   extras/packed_image.h
   extras/size_constraints.h
   extras/time.cc
@@ -545,6 +549,7 @@ set(JPEGXL_INTERNAL_JPEGLI_WRAPPER_SOURCES
 )
 
 set(JPEGXL_INTERNAL_PUBLIC_HEADERS
+  include/jxl/cms.h
   include/jxl/cms_interface.h
   include/jxl/codestream_header.h
   include/jxl/color_encoding.h
@@ -585,6 +590,8 @@ set(JPEGXL_INTERNAL_TESTS
   jxl/blending_test.cc
   jxl/butteraugli/butteraugli_test.cc
   jxl/byte_order_test.cc
+  jxl/cms/tone_mapping_test.cc
+  jxl/cms/transfer_functions_test.cc
   jxl/coeff_order_test.cc
   jxl/color_encoding_internal_test.cc
   jxl/color_management_test.cc

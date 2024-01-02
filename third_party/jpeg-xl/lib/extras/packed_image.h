@@ -19,11 +19,15 @@
 
 #include <algorithm>
 #include <cmath>
+#include <functional>
 #include <memory>
+#include <mutex>
+#include <set>
 #include <string>
 #include <vector>
 
 #include "lib/jxl/base/byte_order.h"
+#include "lib/jxl/base/c_callback_support.h"
 #include "lib/jxl/base/common.h"
 #include "lib/jxl/base/status.h"
 
@@ -190,6 +194,32 @@ class PackedFrame {
   std::vector<PackedImage> extra_channels;
 };
 
+class ChunkedPackedFrame {
+ public:
+  ChunkedPackedFrame(
+      size_t xsize, size_t ysize,
+      std::function<JxlChunkedFrameInputSource()> get_input_source)
+      : xsize(xsize),
+        ysize(ysize),
+        get_input_source_(std::move(get_input_source)) {
+    const auto input_source = get_input_source_();
+    input_source.get_color_channels_pixel_format(input_source.opaque, &format);
+  }
+
+  JxlChunkedFrameInputSource GetInputSource() { return get_input_source_(); }
+
+  // The Frame metadata.
+  JxlFrameHeader frame_info = {};
+  std::string name;
+
+  size_t xsize;
+  size_t ysize;
+  JxlPixelFormat format;
+
+ private:
+  std::function<JxlChunkedFrameInputSource()> get_input_source_;
+};
+
 // Optional metadata associated with a file
 class PackedMetadata {
  public:
@@ -222,9 +252,14 @@ class PackedPixelFile {
 
   std::unique_ptr<PackedFrame> preview_frame;
   std::vector<PackedFrame> frames;
+  mutable std::vector<ChunkedPackedFrame> chunked_frames;
 
   PackedMetadata metadata;
   PackedPixelFile() { JxlEncoderInitBasicInfo(&info); };
+
+  size_t num_frames() const {
+    return chunked_frames.empty() ? frames.size() : chunked_frames.size();
+  }
 };
 
 }  // namespace extras

@@ -295,10 +295,10 @@ void ModularFrameDecoder::MaybeDropFullImage() {
 }
 
 Status ModularFrameDecoder::DecodeGroup(
-    const Rect& rect, BitReader* reader, int minShift, int maxShift,
-    const ModularStreamId& stream, bool zerofill, PassesDecoderState* dec_state,
-    RenderPipelineInput* render_pipeline_input, bool allow_truncated,
-    bool* should_run_pipeline) {
+    const FrameHeader& frame_header, const Rect& rect, BitReader* reader,
+    int minShift, int maxShift, const ModularStreamId& stream, bool zerofill,
+    PassesDecoderState* dec_state, RenderPipelineInput* render_pipeline_input,
+    bool allow_truncated, bool* should_run_pipeline) {
   JXL_DEBUG_V(6, "Decoding %s with rect %s and shift bracket %d..%d %s",
               stream.DebugString().c_str(), Description(rect).c_str(), minShift,
               maxShift, zerofill ? "using zerofill" : "");
@@ -340,7 +340,6 @@ Status ModularFrameDecoder::DecodeGroup(
   // problems later (in ModularImageToDecodedRect).
   if (gi.channel.empty()) {
     if (dec_state && should_run_pipeline) {
-      const auto& frame_header = dec_state->shared->frame_header;
       const auto* metadata = frame_header.nonserialized_metadata;
       if (do_color || metadata->m.num_extra_channels > 0) {
         // Signal to FrameDecoder that we do not have some of the required input
@@ -365,9 +364,9 @@ Status ModularFrameDecoder::DecodeGroup(
     for (auto t : global_transform) {
       JXL_RETURN_IF_ERROR(t.Inverse(gi, global_header.wp_header));
     }
-    JXL_RETURN_IF_ERROR(ModularImageToDecodedRect(gi, dec_state, nullptr,
-                                                  *render_pipeline_input,
-                                                  Rect(0, 0, gi.w, gi.h)));
+    JXL_RETURN_IF_ERROR(ModularImageToDecodedRect(
+        frame_header, gi, dec_state, nullptr, *render_pipeline_input,
+        Rect(0, 0, gi.w, gi.h)));
     return true;
   }
   int gic = 0;
@@ -388,9 +387,11 @@ Status ModularFrameDecoder::DecodeGroup(
   return true;
 }
 
-Status ModularFrameDecoder::DecodeVarDCTDC(size_t group_id, BitReader* reader,
+Status ModularFrameDecoder::DecodeVarDCTDC(const FrameHeader& frame_header,
+                                           size_t group_id, BitReader* reader,
                                            PassesDecoderState* dec_state) {
-  const Rect r = dec_state->shared->DCGroupRect(group_id);
+  const Rect r = dec_state->shared->frame_dim.DCGroupRect(group_id);
+  JXL_DEBUG_V(6, "Decoding VarDCT DC with rect %s", Description(r).c_str());
   // TODO(eustas): investigate if we could reduce the impact of
   //               EvalRationalPolynomial; generally speaking, the limit is
   //               2**(128/(3*magic)), where 128 comes from IEEE 754 exponent,
@@ -405,27 +406,28 @@ Status ModularFrameDecoder::DecodeVarDCTDC(size_t group_id, BitReader* reader,
   ModularOptions options;
   for (size_t c = 0; c < 3; c++) {
     Channel& ch = image.channel[c < 2 ? c ^ 1 : c];
-    ch.w >>= dec_state->shared->frame_header.chroma_subsampling.HShift(c);
-    ch.h >>= dec_state->shared->frame_header.chroma_subsampling.VShift(c);
+    ch.w >>= frame_header.chroma_subsampling.HShift(c);
+    ch.h >>= frame_header.chroma_subsampling.VShift(c);
     ch.shrink();
   }
   if (!ModularGenericDecompress(
           reader, image, /*header=*/nullptr, stream_id, &options,
           /*undo_transforms=*/true, &tree, &code, &context_map)) {
-    return JXL_FAILURE("Failed to decode modular DC group");
+    return JXL_FAILURE("Failed to decode VarDCT DC group");
   }
   DequantDC(r, &dec_state->shared_storage.dc_storage,
             &dec_state->shared_storage.quant_dc, image,
             dec_state->shared->quantizer.MulDC(), mul,
             dec_state->shared->cmap.DCFactors(),
-            dec_state->shared->frame_header.chroma_subsampling,
-            dec_state->shared->block_ctx_map);
+            frame_header.chroma_subsampling, dec_state->shared->block_ctx_map);
   return true;
 }
 
-Status ModularFrameDecoder::DecodeAcMetadata(size_t group_id, BitReader* reader,
+Status ModularFrameDecoder::DecodeAcMetadata(const FrameHeader& frame_header,
+                                             size_t group_id, BitReader* reader,
                                              PassesDecoderState* dec_state) {
-  const Rect r = dec_state->shared->DCGroupRect(group_id);
+  const Rect r = dec_state->shared->frame_dim.DCGroupRect(group_id);
+  JXL_DEBUG_V(6, "Decoding AcMetadata with rect %s", Description(r).c_str());
   size_t upper_bound = r.xsize() * r.ysize();
   reader->Refill();
   size_t count = reader->ReadBits(CeilLog2Nonzero(upper_bound)) + 1;
@@ -448,7 +450,7 @@ Status ModularFrameDecoder::DecodeAcMetadata(size_t group_id, BitReader* reader,
   ConvertPlaneAndClamp(Rect(image.channel[1].plane), image.channel[1].plane, cr,
                        &dec_state->shared_storage.cmap.ytob_map);
   size_t num = 0;
-  bool is444 = dec_state->shared->frame_header.chroma_subsampling.Is444();
+  bool is444 = frame_header.chroma_subsampling.Is444();
   auto& ac_strategy = dec_state->shared_storage.ac_strategy;
   size_t xlim = std::min(ac_strategy.xsize(), r.x0() + r.xsize());
   size_t ylim = std::min(ac_strategy.ysize(), r.y0() + r.ysize());
@@ -502,16 +504,16 @@ Status ModularFrameDecoder::DecodeAcMetadata(size_t group_id, BitReader* reader,
     }
   }
   dec_state->used_acs |= local_used_acs;
-  if (dec_state->shared->frame_header.loop_filter.epf_iters > 0) {
-    ComputeSigma(r, dec_state);
+  if (frame_header.loop_filter.epf_iters > 0) {
+    ComputeSigma(frame_header.loop_filter, r, dec_state);
   }
   return true;
 }
 
 Status ModularFrameDecoder::ModularImageToDecodedRect(
-    Image& gi, PassesDecoderState* dec_state, jxl::ThreadPool* pool,
-    RenderPipelineInput& render_pipeline_input, Rect modular_rect) {
-  const auto& frame_header = dec_state->shared->frame_header;
+    const FrameHeader& frame_header, Image& gi, PassesDecoderState* dec_state,
+    jxl::ThreadPool* pool, RenderPipelineInput& render_pipeline_input,
+    Rect modular_rect) {
   const auto* metadata = frame_header.nonserialized_metadata;
   JXL_CHECK(gi.transform.empty());
 
@@ -679,7 +681,8 @@ Status ModularFrameDecoder::ModularImageToDecodedRect(
   return true;
 }
 
-Status ModularFrameDecoder::FinalizeDecoding(PassesDecoderState* dec_state,
+Status ModularFrameDecoder::FinalizeDecoding(const FrameHeader& frame_header,
+                                             PassesDecoderState* dec_state,
                                              jxl::ThreadPool* pool,
                                              bool inplace) {
   if (!use_full_image) return true;
@@ -705,7 +708,6 @@ Status ModularFrameDecoder::FinalizeDecoding(PassesDecoderState* dec_state,
   JXL_RETURN_IF_ERROR(RunOnPool(
       pool, 0, dec_state->shared->frame_dim.num_groups,
       [&](size_t num_threads) {
-        const auto& frame_header = dec_state->shared->frame_header;
         bool use_group_ids = (frame_header.encoding == FrameEncoding::kVarDCT ||
                               (frame_header.flags & FrameHeader::kNoise));
         return dec_state->render_pipeline->PrepareForThreads(num_threads,
@@ -714,8 +716,9 @@ Status ModularFrameDecoder::FinalizeDecoding(PassesDecoderState* dec_state,
       [&](const uint32_t group, size_t thread_id) {
         RenderPipelineInput input =
             dec_state->render_pipeline->GetInputBuffers(group, thread_id);
-        if (!ModularImageToDecodedRect(gi, dec_state, nullptr, input,
-                                       dec_state->shared->GroupRect(group))) {
+        if (!ModularImageToDecodedRect(
+                frame_header, gi, dec_state, nullptr, input,
+                dec_state->shared->frame_dim.GroupRect(group))) {
           has_error = true;
           return;
         }

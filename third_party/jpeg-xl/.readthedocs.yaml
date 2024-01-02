@@ -15,7 +15,9 @@ build:
    os: ubuntu-22.04
    tools:
       python: "3"
-
+   apt_packages:
+      - doxygen
+      - graphviz
 
 python:
    install:

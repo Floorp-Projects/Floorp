@@ -17,6 +17,7 @@
 #include "lib/jxl/base/common.h"
 #include "lib/jxl/base/span.h"
 #include "lib/jxl/base/status.h"
+#include "lib/jxl/padded_bytes.h"
 
 // JPEGXL_ENABLE_BOXES, JPEGXL_ENABLE_TRANSCODE_JPEG
 #include "lib/jxl/common.h"
@@ -208,7 +209,6 @@ enum class JpegReconStage : uint32_t {
   kNone,             // Not outputting
   kSettingMetadata,  // Ready to output, must set metadata to the jpeg_data
   kOutputting,       // Currently outputting the JPEG bytes
-  kFinished,         // JPEG reconstruction fully handled
 };
 
 /*
@@ -625,15 +625,15 @@ struct JxlDecoderStruct {
       if (avail_codestream == 0) {
         return RequestMoreInput();
       }
-      *span = jxl::Span<const uint8_t>(next_in, avail_codestream);
+      *span = jxl::Bytes(next_in, avail_codestream);
       return JXL_DEC_SUCCESS;
     } else {
       codestream_copy.insert(codestream_copy.end(),
                              next_in + codestream_unconsumed,
                              next_in + avail_codestream);
       codestream_unconsumed = avail_codestream;
-      *span = jxl::Span<const uint8_t>(codestream_copy.data() + codestream_pos,
-                                       codestream_copy.size() - codestream_pos);
+      *span = jxl::Bytes(codestream_copy.data() + codestream_pos,
+                         codestream_copy.size() - codestream_pos);
       return JXL_DEC_SUCCESS;
     }
   }
@@ -1075,7 +1075,7 @@ JxlDecoderStatus JxlDecoderReadAllHeaders(JxlDecoder* dec) {
       return JXL_DEC_ERROR;
     }
     IccBytes icc;
-    Span<const uint8_t>(decoded_icc).AppendTo(&icc);
+    Bytes(decoded_icc).AppendTo(&icc);
     dec->metadata.m.color_encoding.SetICCRaw(std::move(icc));
   }
 
@@ -1117,8 +1117,7 @@ JxlDecoderStatus JxlDecoderProcessSections(JxlDecoder* dec) {
     if (OutOfBounds(pos, size, span.size())) {
       break;
     }
-    auto br =
-        new jxl::BitReader(jxl::Span<const uint8_t>(span.data() + pos, size));
+    auto br = new jxl::BitReader(jxl::Bytes(span.data() + pos, size));
     section_info.emplace_back(jxl::FrameDecoder::SectionInfo{br, id, i});
     section_status.emplace_back();
     pos += size;
@@ -1595,14 +1594,14 @@ static JxlDecoderStatus ParseBoxHeader(const uint8_t* in, size_t size,
   // Box size, including this header itself.
   *box_size = LoadBE32(in + pos);
   pos += 4;
+  memcpy(type, in + pos, 4);
+  pos += 4;
   if (*box_size == 1) {
     *header_size = 16;
-    if (OutOfBounds(pos, 12, size)) return JXL_DEC_NEED_MORE_INPUT;
+    if (OutOfBounds(pos, 8, size)) return JXL_DEC_NEED_MORE_INPUT;
     *box_size = LoadBE64(in + pos);
     pos += 8;
   }
-  memcpy(type, in + pos, 4);
-  pos += 4;
   *header_size = pos - box_start;
   if (*box_size > 0 && *box_size < *header_size) {
     return JXL_INPUT_ERROR("invalid box size");
@@ -1704,7 +1703,7 @@ static JxlDecoderStatus HandleBoxes(JxlDecoder* dec) {
       JxlDecoderStatus status =
           dec->jpeg_decoder.WriteOutput(*dec->ib->jpeg_data);
       if (status != JXL_DEC_SUCCESS) return status;
-      dec->recon_output_jpeg = JpegReconStage::kFinished;
+      dec->recon_output_jpeg = JpegReconStage::kNone;
       dec->ib.reset();
       if (dec->events_wanted & JXL_DEC_FULL_IMAGE) {
         // Return the full image event here now, this may be delayed if this
@@ -2231,7 +2230,7 @@ JxlDecoderStatus JxlDecoderGetColorAsEncodedProfile(
     return JXL_DEC_ERROR;  // Indicate no encoded profile available.
 
   if (color_encoding) {
-    jxl_color_encoding->ToExternal(color_encoding);
+    *color_encoding = jxl_color_encoding->ToExternal();
   }
 
   return JXL_DEC_SUCCESS;
@@ -2335,6 +2334,16 @@ JxlDecoderStatus JxlDecoderFlushImage(JxlDecoder* dec) {
     return JXL_DEC_ERROR;
   }
 
+  return JXL_DEC_SUCCESS;
+}
+
+JXL_EXPORT JxlDecoderStatus JxlDecoderSetCms(JxlDecoder* dec,
+                                             const JxlCmsInterface cms) {
+  if (!dec->passes_state) {
+    dec->passes_state.reset(new jxl::PassesDecoderState());
+  }
+  dec->passes_state->output_encoding_info.color_management_system = cms;
+  dec->passes_state->output_encoding_info.cms_set = true;
   return JXL_DEC_SUCCESS;
 }
 
@@ -2539,8 +2548,8 @@ JxlDecoderStatus JxlDecoderSetMultithreadedImageOutCallback(
   }
 
   // Perform error checking for invalid format.
-  size_t bits_dummy;
-  JxlDecoderStatus status = PrepareSizeCheck(dec, format, &bits_dummy);
+  size_t bits_sink;
+  JxlDecoderStatus status = PrepareSizeCheck(dec, format, &bits_sink);
   if (status != JXL_DEC_SUCCESS) return status;
 
   dec->image_out_buffer_set = true;
@@ -2653,28 +2662,62 @@ JxlDecoderStatus JxlDecoderGetFrameName(const JxlDecoder* dec, char* name,
 
 JxlDecoderStatus JxlDecoderSetPreferredColorProfile(
     JxlDecoder* dec, const JxlColorEncoding* color_encoding) {
+  return JxlDecoderSetOutputColorProfile(dec, color_encoding,
+                                         /*icc_data=*/nullptr, /*icc_size=*/0);
+}
+
+JxlDecoderStatus JxlDecoderSetOutputColorProfile(
+    JxlDecoder* dec, const JxlColorEncoding* color_encoding,
+    const uint8_t* icc_data, size_t icc_size) {
+  if ((color_encoding != nullptr) && (icc_data != nullptr)) {
+    return JXL_API_ERROR("cannot set both color_encoding and icc_data");
+  }
+  if ((color_encoding == nullptr) && (icc_data == nullptr)) {
+    return JXL_API_ERROR("one of color_encoding and icc_data must be set");
+  }
   if (!dec->got_all_headers) {
     return JXL_API_ERROR("color info not yet available");
   }
   if (dec->post_headers) {
     return JXL_API_ERROR("too late to set the color encoding");
   }
-  if (dec->image_metadata.color_encoding.IsGray() &&
-      color_encoding->color_space != JXL_COLOR_SPACE_GRAY &&
-      dec->image_out_buffer_set && dec->image_out_format.num_channels < 3) {
-    return JXL_API_ERROR("Number of channels is too low for color output");
+  if ((!dec->passes_state->output_encoding_info.cms_set) &&
+      (icc_data != nullptr)) {
+    return JXL_API_ERROR(
+        "must set color management system via JxlDecoderSetCms");
   }
-  if (color_encoding->color_space == JXL_COLOR_SPACE_UNKNOWN) {
-    return JXL_API_ERROR("Unknown output colorspace");
-  }
-  jxl::ColorEncoding c_out;
-  JXL_API_RETURN_IF_ERROR(c_out.FromExternal(*color_encoding));
-  JXL_API_RETURN_IF_ERROR(!c_out.ICC().empty());
   auto& output_encoding = dec->passes_state->output_encoding_info;
-  if (!c_out.SameColorEncoding(output_encoding.color_encoding)) {
-    JXL_API_RETURN_IF_ERROR(output_encoding.MaybeSetColorEncoding(c_out));
-    dec->image_metadata.color_encoding = output_encoding.color_encoding;
+  if (color_encoding) {
+    if (dec->image_metadata.color_encoding.IsGray() &&
+        color_encoding->color_space != JXL_COLOR_SPACE_GRAY &&
+        dec->image_out_buffer_set && dec->image_out_format.num_channels < 3) {
+      return JXL_API_ERROR("Number of channels is too low for color output");
+    }
+    if (color_encoding->color_space == JXL_COLOR_SPACE_UNKNOWN) {
+      return JXL_API_ERROR("Unknown output colorspace");
+    }
+    jxl::ColorEncoding c_out;
+    JXL_API_RETURN_IF_ERROR(c_out.FromExternal(*color_encoding));
+    JXL_API_RETURN_IF_ERROR(!c_out.ICC().empty());
+    if (!c_out.SameColorEncoding(output_encoding.color_encoding)) {
+      JXL_API_RETURN_IF_ERROR(output_encoding.MaybeSetColorEncoding(c_out));
+      dec->image_metadata.color_encoding = output_encoding.color_encoding;
+    }
+    return JXL_DEC_SUCCESS;
   }
+  // icc_data != nullptr
+  // TODO(firsching): implement setting output color profile from icc_data.
+  jxl::ColorEncoding c_dst;
+  std::vector<uint8_t> padded_icc;
+  padded_icc.assign(icc_data, icc_data + icc_size);
+  if (!c_dst.SetICC(std::move(padded_icc),
+                    &output_encoding.color_management_system)) {
+    return JXL_API_ERROR(
+        "setting output color profile from icc_data not yet implemented.");
+  }
+  JXL_API_RETURN_IF_ERROR(
+      (int)output_encoding.MaybeSetColorEncoding(std::move(c_dst)));
+
   return JXL_DEC_SUCCESS;
 }
 

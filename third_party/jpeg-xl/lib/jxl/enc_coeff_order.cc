@@ -10,7 +10,6 @@
 #include <vector>
 
 #include "lib/jxl/ans_params.h"
-#include "lib/jxl/base/padded_bytes.h"
 #include "lib/jxl/base/span.h"
 #include "lib/jxl/coeff_order.h"
 #include "lib/jxl/coeff_order_fwd.h"
@@ -30,6 +29,7 @@ struct AuxOut;
 std::pair<uint32_t, uint32_t> ComputeUsedOrders(
     const SpeedTier speed, const AcStrategyImage& ac_strategy,
     const Rect& rect) {
+  // No coefficient reordering in Falcon or faster.
   // Only uses DCT8 = 0, so bitfield = 1.
   if (speed >= SpeedTier::kFalcon) return {1, 1};
 
@@ -57,20 +57,22 @@ std::pair<uint32_t, uint32_t> ComputeUsedOrders(
 
 void ComputeCoeffOrder(SpeedTier speed, const ACImage& acs,
                        const AcStrategyImage& ac_strategy,
-                       const FrameDimensions& frame_dim, uint32_t& used_orders,
-                       uint16_t used_acs, coeff_order_t* JXL_RESTRICT order) {
+                       const FrameDimensions& frame_dim,
+                       uint32_t& all_used_orders, uint32_t prev_used_acs,
+                       uint32_t current_used_acs, uint32_t current_used_orders,
+                       coeff_order_t* JXL_RESTRICT order) {
   std::vector<int32_t> num_zeros(kCoeffOrderMaxSize);
   // If compressing at high speed and only using 8x8 DCTs, only consider a
   // subset of blocks.
   double block_fraction = 1.0f;
   // TODO(veluca): figure out why sampling blocks if non-8x8s are used makes
   // encoding significantly less dense.
-  if (speed >= SpeedTier::kSquirrel && used_orders == 1) {
+  if (speed >= SpeedTier::kSquirrel && current_used_orders == 1) {
     block_fraction = 0.5f;
   }
   // No need to compute number of zero coefficients if all orders are the
   // default.
-  if (used_orders != 0) {
+  if (current_used_orders != 0) {
     uint64_t threshold =
         (std::numeric_limits<uint64_t>::max() >> 32) * block_fraction;
     uint64_t s[2] = {static_cast<uint64_t>(0x94D049BB133111EBull),
@@ -157,14 +159,18 @@ void ComputeCoeffOrder(SpeedTier speed, const ACImage& acs,
     size_t sz = kDCTBlockSize * acs.covered_blocks_x() * acs.covered_blocks_y();
 
     // Do nothing for transforms that don't appear.
-    if ((1 << ord) & ~used_acs) continue;
+    if ((1 << ord) & ~current_used_acs) continue;
+
+    // Do nothing if we already committed to this custom order previously.
+    if ((1 << ord) & prev_used_acs) continue;
+    if ((1 << ord) & all_used_orders) continue;
 
     if (natural_order_buffer.size() < sz) natural_order_buffer.resize(sz);
     acs.ComputeNaturalCoeffOrder(natural_order_buffer.data());
 
     // Ensure natural coefficient order is not permuted if the order is
     // not transmitted.
-    if ((1 << ord) & ~used_orders) {
+    if ((1 << ord) & ~current_used_orders) {
       for (size_t c = 0; c < 3; c++) {
         size_t offset = CoeffOrderOffset(ord, c);
         JXL_DASSERT(CoeffOrderOffset(ord, c + 1) - offset == sz);
@@ -203,9 +209,10 @@ void ComputeCoeffOrder(SpeedTier speed, const ACImage& acs,
       }
     }
     if (!is_nondefault) {
-      used_orders &= ~(1 << ord);
+      current_used_orders &= ~(1 << ord);
     }
   }
+  all_used_orders |= current_used_orders;
 }
 
 namespace {
@@ -238,7 +245,7 @@ void EncodePermutation(const coeff_order_t* JXL_RESTRICT order, size_t skip,
   EntropyEncodingData codes;
   BuildAndEncodeHistograms(HistogramParams(), kPermutationContexts, tokens,
                            &codes, &context_map, writer, layer, aux_out);
-  WriteTokens(tokens[0], codes, context_map, writer, layer, aux_out);
+  WriteTokens(tokens[0], codes, context_map, 0, writer, layer, aux_out);
 }
 
 namespace {
@@ -283,7 +290,7 @@ void EncodeCoeffOrders(uint16_t used_orders,
     EntropyEncodingData codes;
     BuildAndEncodeHistograms(HistogramParams(), kPermutationContexts, tokens,
                              &codes, &context_map, writer, layer, aux_out);
-    WriteTokens(tokens[0], codes, context_map, writer, layer, aux_out);
+    WriteTokens(tokens[0], codes, context_map, 0, writer, layer, aux_out);
   }
 }
 

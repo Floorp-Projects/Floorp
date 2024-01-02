@@ -3,6 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+#include <jxl/cms.h>
 #include <jxl/codestream_header.h>
 #include <jxl/decode.h>
 #include <jxl/decode_cxx.h>
@@ -18,7 +19,7 @@
 
 #include "lib/extras/codec.h"
 #include "lib/jxl/base/span.h"
-#include "lib/jxl/cms/jxl_cms.h"
+#include "lib/jxl/dec_bit_reader.h"
 #include "lib/jxl/dec_external_image.h"
 #include "lib/jxl/enc_butteraugli_comparator.h"
 #include "lib/jxl/enc_comparator.h"
@@ -37,7 +38,7 @@ namespace {
 jxl::CodecInOut ConvertTestImage(const std::vector<uint8_t>& buf,
                                  const size_t xsize, const size_t ysize,
                                  const JxlPixelFormat& pixel_format,
-                                 const jxl::PaddedBytes& icc_profile) {
+                                 const jxl::Bytes& icc_profile) {
   jxl::CodecInOut io;
   io.SetSize(xsize, ysize);
 
@@ -88,7 +89,7 @@ jxl::CodecInOut ConvertTestImage(const std::vector<uint8_t>& buf,
   jxl::ColorEncoding color_encoding;
   if (!icc_profile.empty()) {
     jxl::IccBytes icc_profile_copy;
-    jxl::Span<const uint8_t>(icc_profile).AppendTo(&icc_profile_copy);
+    icc_profile.AppendTo(&icc_profile_copy);
     EXPECT_TRUE(
         color_encoding.SetICC(std::move(icc_profile_copy), JxlGetDefaultCms()));
   } else if (pixel_format.data_type == JXL_TYPE_FLOAT) {
@@ -96,11 +97,9 @@ jxl::CodecInOut ConvertTestImage(const std::vector<uint8_t>& buf,
   } else {
     color_encoding = jxl::ColorEncoding::SRGB(is_gray);
   }
-  EXPECT_TRUE(
-      ConvertFromExternal(jxl::Span<const uint8_t>(buf.data(), buf.size()),
-                          xsize, ysize, color_encoding,
-                          /*bits_per_sample=*/bitdepth, pixel_format,
-                          /*pool=*/nullptr, &io.Main()));
+  EXPECT_TRUE(ConvertFromExternal(jxl::Bytes(buf), xsize, ysize, color_encoding,
+                                  /*bits_per_sample=*/bitdepth, pixel_format,
+                                  /*pool=*/nullptr, &io.Main()));
   return io;
 }
 
@@ -231,9 +230,8 @@ void VerifyRoundtripCompression(
   if (alpha_in_extra_channels_vector && !has_interleaved_alpha) {
     jxl::ImageF alpha_channel(xsize, ysize);
     EXPECT_TRUE(jxl::ConvertFromExternal(
-        jxl::Span<const uint8_t>(extra_channel_bytes.data(),
-                                 extra_channel_bytes.size()),
-        xsize, ysize, basic_info.bits_per_sample, extra_channel_pixel_format, 0,
+        extra_channel_bytes.data(), extra_channel_bytes.size(), xsize, ysize,
+        basic_info.bits_per_sample, extra_channel_pixel_format, 0,
         /*pool=*/nullptr, &alpha_channel));
 
     original_io.metadata.m.SetAlphaBits(basic_info.bits_per_sample);
@@ -299,10 +297,6 @@ void VerifyRoundtripCompression(
             JxlEncoderAddImageFrame(frame_settings, &input_pixel_format,
                                     (void*)original_bytes.data(),
                                     original_bytes.size()));
-  EXPECT_EQ(frame_settings->enc->input_queue.back()
-                .frame->frame.extra_channels()
-                .size(),
-            has_interleaved_alpha + extra_channels.size());
   EXPECT_EQ(frame_settings->enc->input_queue.empty(), false);
   for (size_t index = 0; index < channel_infos.size(); index++) {
     EXPECT_EQ(JXL_ENC_SUCCESS,
@@ -312,10 +306,6 @@ void VerifyRoundtripCompression(
                   index + has_interleaved_alpha));
   }
   JxlEncoderCloseInput(enc);
-  EXPECT_EQ(frame_settings->enc->input_queue.back()
-                .frame->frame.extra_channels()
-                .size(),
-            has_interleaved_alpha + extra_channels.size());
   std::vector<uint8_t> compressed;
   EncodeWithEncoder(enc, &compressed);
   JxlEncoderDestroy(enc);
@@ -356,7 +346,7 @@ void VerifyRoundtripCompression(
   EXPECT_EQ(JXL_DEC_SUCCESS,
             JxlDecoderGetICCProfileSize(dec, JXL_COLOR_PROFILE_TARGET_DATA,
                                         &icc_profile_size));
-  jxl::PaddedBytes icc_profile(icc_profile_size);
+  std::vector<uint8_t> icc_profile(icc_profile_size);
   EXPECT_EQ(JXL_DEC_SUCCESS, JxlDecoderGetColorAsICCProfile(
                                  dec, JXL_COLOR_PROFILE_TARGET_DATA,
                                  icc_profile.data(), icc_profile.size()));
@@ -413,7 +403,7 @@ void VerifyRoundtripCompression(
 
   jxl::CodecInOut decoded_io = ConvertTestImage(
       decoded_bytes, xsize, ysize, output_pixel_format_with_extra_channel_alpha,
-      icc_profile);
+      jxl::Bytes(icc_profile));
 
   if (already_downsampled) {
     jxl::Image3F* color = decoded_io.Main().color();
@@ -650,7 +640,7 @@ TEST(RoundtripTest, ExtraBoxesTest) {
   EXPECT_EQ(JXL_DEC_SUCCESS,
             JxlDecoderGetICCProfileSize(dec, JXL_COLOR_PROFILE_TARGET_DATA,
                                         &icc_profile_size));
-  jxl::PaddedBytes icc_profile(icc_profile_size);
+  std::vector<uint8_t> icc_profile(icc_profile_size);
   EXPECT_EQ(JXL_DEC_SUCCESS, JxlDecoderGetColorAsICCProfile(
                                  dec, JXL_COLOR_PROFILE_TARGET_DATA,
                                  icc_profile.data(), icc_profile.size()));
@@ -667,8 +657,8 @@ TEST(RoundtripTest, ExtraBoxesTest) {
 
   JxlDecoderDestroy(dec);
 
-  jxl::CodecInOut decoded_io =
-      ConvertTestImage(decoded_bytes, xsize, ysize, pixel_format, icc_profile);
+  jxl::CodecInOut decoded_io = ConvertTestImage(
+      decoded_bytes, xsize, ysize, pixel_format, jxl::Bytes(icc_profile));
 
   jxl::ButteraugliParams ba;
   float butteraugli_score = ButteraugliDistance(
@@ -785,7 +775,7 @@ TEST(RoundtripTest, MultiFrameTest) {
     EXPECT_EQ(JXL_DEC_SUCCESS,
               JxlDecoderGetICCProfileSize(dec, JXL_COLOR_PROFILE_TARGET_DATA,
                                           &icc_profile_size));
-    jxl::PaddedBytes icc_profile(icc_profile_size);
+    std::vector<uint8_t> icc_profile(icc_profile_size);
     EXPECT_EQ(JXL_DEC_SUCCESS, JxlDecoderGetColorAsICCProfile(
                                    dec, JXL_COLOR_PROFILE_TARGET_DATA,
                                    icc_profile.data(), icc_profile.size()));
@@ -803,8 +793,9 @@ TEST(RoundtripTest, MultiFrameTest) {
       EXPECT_EQ(JXL_DEC_FULL_IMAGE, JxlDecoderProcessInput(dec));
     }
     JxlDecoderDestroy(dec);
-    jxl::CodecInOut decoded_io = ConvertTestImage(
-        decoded_bytes, xsize, ysize * nb_frames, pixel_format, icc_profile);
+    jxl::CodecInOut decoded_io =
+        ConvertTestImage(decoded_bytes, xsize, ysize * nb_frames, pixel_format,
+                         jxl::Bytes(icc_profile));
 
     jxl::ButteraugliParams ba;
     float butteraugli_score = ButteraugliDistance(
@@ -853,10 +844,10 @@ static const unsigned char kEncodedTestProfile[] = {
 TEST(RoundtripTest, TestICCProfile) {
   // JxlEncoderSetICCProfile parses the ICC profile, so a valid profile is
   // needed. The profile should be passed correctly through the roundtrip.
-  jxl::BitReader reader(jxl::Span<const uint8_t>(kEncodedTestProfile,
-                                                 sizeof(kEncodedTestProfile)));
-  jxl::PaddedBytes icc;
-  ASSERT_TRUE(ReadICC(&reader, &icc));
+  jxl::BitReader reader(
+      jxl::Bytes(kEncodedTestProfile, sizeof(kEncodedTestProfile)));
+  std::vector<uint8_t> icc;
+  ASSERT_TRUE(jxl::test::ReadICC(&reader, &icc));
   ASSERT_TRUE(reader.Close());
 
   JxlPixelFormat format =
@@ -921,7 +912,7 @@ TEST(RoundtripTest, TestICCProfile) {
             JxlDecoderGetICCProfileSize(dec, JXL_COLOR_PROFILE_TARGET_ORIGINAL,
                                         &dec_icc_size));
   EXPECT_EQ(icc.size(), dec_icc_size);
-  jxl::PaddedBytes dec_icc(dec_icc_size);
+  std::vector<uint8_t> dec_icc(dec_icc_size);
   EXPECT_EQ(JXL_DEC_SUCCESS, JxlDecoderGetColorAsICCProfile(
                                  dec, JXL_COLOR_PROFILE_TARGET_ORIGINAL,
                                  dec_icc.data(), dec_icc.size()));
@@ -944,10 +935,9 @@ TEST(RoundtripTest, TestICCProfile) {
 TEST(RoundtripTest, JXL_TRANSCODE_JPEG_TEST(TestJPEGReconstruction)) {
   TEST_LIBJPEG_SUPPORT();
   const std::string jpeg_path = "jxl/flower/flower.png.im_q85_420.jpg";
-  const jxl::PaddedBytes orig = jxl::test::ReadTestData(jpeg_path);
+  const std::vector<uint8_t> orig = jxl::test::ReadTestData(jpeg_path);
   jxl::CodecInOut orig_io;
-  ASSERT_TRUE(
-      SetFromBytes(jxl::Span<const uint8_t>(orig), &orig_io, /*pool=*/nullptr));
+  ASSERT_TRUE(SetFromBytes(jxl::Bytes(orig), &orig_io, /*pool=*/nullptr));
 
   JxlEncoderPtr enc = JxlEncoderMake(nullptr);
   JxlEncoderFrameSettings* frame_settings =

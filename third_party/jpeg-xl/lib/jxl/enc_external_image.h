@@ -13,20 +13,39 @@
 #include <stdint.h>
 
 #include "lib/jxl/base/data_parallel.h"
-#include "lib/jxl/base/padded_bytes.h"
+#include "lib/jxl/base/span.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/color_encoding_internal.h"
 #include "lib/jxl/image.h"
 #include "lib/jxl/image_bundle.h"
 
 namespace jxl {
-Status ConvertFromExternal(Span<const uint8_t> bytes, size_t xsize,
+Status ConvertFromExternalNoSizeCheck(const uint8_t* data, size_t xsize,
+                                      size_t ysize, size_t stride,
+                                      size_t bits_per_sample,
+                                      JxlPixelFormat format, size_t c,
+                                      ThreadPool* pool, ImageF* channel);
+
+Status ConvertFromExternalNoSizeCheck(const uint8_t* data, size_t xsize,
+                                      size_t ysize, size_t stride,
+                                      const ColorEncoding& c_current,
+                                      size_t color_channels,
+                                      size_t bits_per_sample,
+                                      JxlPixelFormat format, ThreadPool* pool,
+                                      ImageBundle* ib);
+
+Status ConvertFromExternal(const uint8_t* data, size_t size, size_t xsize,
                            size_t ysize, size_t bits_per_sample,
                            JxlPixelFormat format, size_t c, ThreadPool* pool,
                            ImageF* channel);
 
 // Convert an interleaved pixel buffer to the internal ImageBundle
 // representation. This is the opposite of ConvertToExternal().
+Status ConvertFromExternal(Span<const uint8_t> bytes, size_t xsize,
+                           size_t ysize, const ColorEncoding& c_current,
+                           size_t color_channels, size_t bits_per_sample,
+                           JxlPixelFormat format, ThreadPool* pool,
+                           ImageBundle* ib);
 Status ConvertFromExternal(Span<const uint8_t> bytes, size_t xsize,
                            size_t ysize, const ColorEncoding& c_current,
                            size_t bits_per_sample, JxlPixelFormat format,

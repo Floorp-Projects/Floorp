@@ -6,14 +6,11 @@
 #ifndef LIB_JXL_ENC_AC_STRATEGY_H_
 #define LIB_JXL_ENC_AC_STRATEGY_H_
 
-#include <stdint.h>
+#include <cstddef>
 
-#include "lib/jxl/ac_strategy.h"
-#include "lib/jxl/base/data_parallel.h"
+#include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/base/status.h"
-#include "lib/jxl/dec_ans.h"
 #include "lib/jxl/enc_cache.h"
-#include "lib/jxl/enc_params.h"
 #include "lib/jxl/image.h"
 #include "lib/jxl/quant_weights.h"
 

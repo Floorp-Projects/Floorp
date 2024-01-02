@@ -26,16 +26,16 @@ TEST(ExternalImageTest, InvalidSize) {
 
   JxlPixelFormat format = {4, JXL_TYPE_UINT16, JXL_BIG_ENDIAN, 0};
   const uint8_t buf[10 * 100 * 8] = {};
+  EXPECT_FALSE(ConvertFromExternal(Bytes(buf, 10), /*xsize=*/10, /*ysize=*/100,
+                                   /*c_current=*/ColorEncoding::SRGB(),
+                                   /*bits_per_sample=*/16, format, nullptr,
+                                   &ib));
   EXPECT_FALSE(ConvertFromExternal(
-      Span<const uint8_t>(buf, 10), /*xsize=*/10, /*ysize=*/100,
-      /*c_current=*/ColorEncoding::SRGB(),
-      /*bits_per_sample=*/16, format, nullptr, &ib));
-  EXPECT_FALSE(ConvertFromExternal(
-      Span<const uint8_t>(buf, sizeof(buf) - 1), /*xsize=*/10, /*ysize=*/100,
+      Bytes(buf, sizeof(buf) - 1), /*xsize=*/10, /*ysize=*/100,
       /*c_current=*/ColorEncoding::SRGB(),
       /*bits_per_sample=*/16, format, nullptr, &ib));
   EXPECT_TRUE(
-      ConvertFromExternal(Span<const uint8_t>(buf, sizeof(buf)), /*xsize=*/10,
+      ConvertFromExternal(Bytes(buf, sizeof(buf)), /*xsize=*/10,
                           /*ysize=*/100, /*c_current=*/ColorEncoding::SRGB(),
                           /*bits_per_sample=*/16, format, nullptr, &ib));
 }
@@ -53,8 +53,7 @@ TEST(ExternalImageTest, AlphaMissing) {
   JxlPixelFormat format = {4, JXL_TYPE_UINT8, JXL_BIG_ENDIAN, 0};
   // has_alpha is true but the ImageBundle has no alpha. Alpha channel should
   // be ignored.
-  EXPECT_TRUE(ConvertFromExternal(Span<const uint8_t>(buf, sizeof(buf)), xsize,
-                                  ysize,
+  EXPECT_TRUE(ConvertFromExternal(Bytes(buf, sizeof(buf)), xsize, ysize,
                                   /*c_current=*/ColorEncoding::SRGB(),
                                   /*bits_per_sample=*/8, format, nullptr, &ib));
   EXPECT_FALSE(ib.HasAlpha());

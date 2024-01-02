@@ -5,13 +5,13 @@
 
 #include "lib/extras/packed_image_convert.h"
 
+#include <jxl/cms.h>
 #include <jxl/color_encoding.h>
 #include <jxl/types.h>
 
 #include <cstdint>
 
 #include "lib/jxl/base/status.h"
-#include "lib/jxl/cms/jxl_cms.h"
 #include "lib/jxl/color_encoding_internal.h"
 #include "lib/jxl/dec_external_image.h"
 #include "lib/jxl/enc_external_image.h"
@@ -244,7 +244,7 @@ Status ConvertCodecInOutToPackedPixelFile(const CodecInOut& io,
 
   // Convert the color encoding
   ppf->icc.assign(c_desired.ICC().begin(), c_desired.ICC().end());
-  c_desired.ToExternal(&ppf->color_encoding);
+  ppf->color_encoding = c_desired.ToExternal();
 
   // Convert the extra blobs
   ppf->metadata.exif = io.blobs.exif;

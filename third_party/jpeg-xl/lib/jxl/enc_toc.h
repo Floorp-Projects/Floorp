@@ -20,10 +20,10 @@ namespace jxl {
 
 struct AuxOut;
 
-// Writes the group offsets. If the permutation vector is nullptr, the identity
+// Writes the group offsets. If the permutation vector is empty, the identity
 // permutation will be used.
 Status WriteGroupOffsets(const std::vector<BitWriter>& group_codes,
-                         const std::vector<coeff_order_t>* permutation,
+                         const std::vector<coeff_order_t>& permutation,
                          BitWriter* JXL_RESTRICT writer, AuxOut* aux_out);
 
 }  // namespace jxl

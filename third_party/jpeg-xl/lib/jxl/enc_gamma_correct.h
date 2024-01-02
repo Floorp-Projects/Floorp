@@ -6,7 +6,7 @@
 #ifndef LIB_JXL_ENC_GAMMA_CORRECT_H_
 #define LIB_JXL_ENC_GAMMA_CORRECT_H_
 
-// Deprecated: sRGB transfer function. Use color_management.h instead.
+// Deprecated: sRGB transfer function. Use JxlCms instead.
 
 #include <cmath>
 

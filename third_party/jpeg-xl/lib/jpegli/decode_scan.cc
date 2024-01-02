@@ -471,7 +471,7 @@ int ProcessScan(j_decompress_ptr cinfo, const uint8_t* const data,
     }
 
     // Decode one MCU.
-    HWY_ALIGN_MAX coeff_t dummy_block[DCTSIZE2];
+    HWY_ALIGN_MAX coeff_t sink_block[DCTSIZE2];
     bool scan_ok = true;
     for (int i = 0; i < cinfo->comps_in_scan; ++i) {
       const jpeg_component_info* comp = cinfo->cur_comp_info[i];
@@ -488,11 +488,11 @@ int ProcessScan(j_decompress_ptr cinfo, const uint8_t* const data,
           coeff_t* coeffs;
           if (block_x >= comp->width_in_blocks ||
               block_y >= comp->height_in_blocks) {
-            // Note that it is OK that dummy_block is uninitialized because
+            // Note that it is OK that sink_block is uninitialized because
             // it will never be used in any branches, even in the RefineDCTBlock
             // case, because only DC scans can be interleaved and we don't use
             // the zero-ness of the DC coeff in the DC refinement code-path.
-            coeffs = dummy_block;
+            coeffs = sink_block;
           } else {
             coeffs = &m->coeff_rows[c][biy][block_x][0];
           }

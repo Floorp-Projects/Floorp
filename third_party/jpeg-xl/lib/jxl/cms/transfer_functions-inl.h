@@ -20,6 +20,7 @@
 #include "lib/jxl/base/fast_math-inl.h"
 #include "lib/jxl/base/rational_polynomial-inl.h"
 #include "lib/jxl/base/status.h"
+#include "lib/jxl/cms/transfer_functions.h"
 
 HWY_BEFORE_NAMESPACE();
 namespace jxl {
@@ -48,18 +49,8 @@ using hwy::HWY_NAMESPACE::TableLookupBytes;
 // and extend the function domains above 1.
 
 // Hybrid Log-Gamma.
-class TF_HLG {
+class TF_HLG : TF_HLG_Base {
  public:
-  // EOTF. e = encoded.
-  JXL_INLINE double DisplayFromEncoded(const double e) const {
-    return OOTF(InvOETF(e));
-  }
-
-  // Inverse EOTF. d = display.
-  JXL_INLINE double EncodedFromDisplay(const double d) const {
-    return OETF(InvOOTF(d));
-  }
-
   // Maximum error 5e-7.
   template <class D, class V>
   JXL_INLINE V EncodedFromDisplay(D d, V x) const {
@@ -74,54 +65,6 @@ class TF_HLG {
     const V magnitude = IfThenElse(Le(x, Set(d, kDiv12)), below_div12, e);
     return Or(AndNot(kSign, magnitude), original_sign);
   }
-
- private:
-  // OETF (defines the HLG approach). s = scene, returns encoded.
-  JXL_INLINE double OETF(double s) const {
-    if (s == 0.0) return 0.0;
-    const double original_sign = s;
-    s = std::abs(s);
-
-    if (s <= kDiv12) return copysignf(std::sqrt(3.0 * s), original_sign);
-
-    const double e = kA * std::log(12 * s - kB) + kC;
-    JXL_ASSERT(e > 0.0);
-    return copysignf(e, original_sign);
-  }
-
-  // e = encoded, returns scene.
-  JXL_INLINE double InvOETF(double e) const {
-    if (e == 0.0) return 0.0;
-    const double original_sign = e;
-    e = std::abs(e);
-
-    if (e <= 0.5) return copysignf(e * e * (1.0 / 3), original_sign);
-
-    const double s = (std::exp((e - kC) * kRA) + kB) * kDiv12;
-    JXL_ASSERT(s >= 0);
-    return copysignf(s, original_sign);
-  }
-
-  // s = scene, returns display.
-  JXL_INLINE double OOTF(const double s) const {
-    // The actual (red channel) OOTF is RD = alpha * YS^(gamma-1) * RS, where
-    // YS = 0.2627 * RS + 0.6780 * GS + 0.0593 * BS. Let alpha = 1 so we return
-    // "display" (normalized [0, 1]) instead of nits. Our transfer function
-    // interface does not allow a dependency on YS. Fortunately, the system
-    // gamma at 334 nits is 1.0, so this reduces to RD = RS.
-    return s;
-  }
-
-  // d = display, returns scene.
-  JXL_INLINE double InvOOTF(const double d) const {
-    return d;  // see OOTF().
-  }
-
-  static constexpr double kA = 0.17883277;
-  static constexpr double kRA = 1.0 / kA;
-  static constexpr double kB = 1 - 4 * kA;
-  static constexpr double kC = 0.5599107295;
-  static constexpr double kDiv12 = 1.0 / 12;
 };
 
 class TF_709 {
@@ -163,29 +106,13 @@ class TF_709 {
 };
 
 // Perceptual Quantization
-class TF_PQ {
+class TF_PQ : TF_PQ_Base {
  public:
   explicit TF_PQ(float display_intensity_target = kDefaultIntensityTarget)
       : display_scaling_factor_to_10000_nits_(display_intensity_target *
                                               (1.0f / 10000.0f)),
         display_scaling_factor_from_10000_nits_(10000.0f /
                                                 display_intensity_target) {}
-
-  // EOTF (defines the PQ approach). e = encoded.
-  JXL_INLINE double DisplayFromEncoded(double e) const {
-    if (e == 0.0) return 0.0;
-    const double original_sign = e;
-    e = std::abs(e);
-
-    const double xp = std::pow(e, 1.0 / kM2);
-    const double num = std::max(xp - kC1, 0.0);
-    const double den = kC2 - kC3 * xp;
-    JXL_DASSERT(den != 0.0);
-    const double d = std::pow(num / den, 1.0 / kM1);
-    JXL_DASSERT(d >= 0.0);  // Equal for e ~= 1E-9
-    return copysignf(d * display_scaling_factor_from_10000_nits_,
-                     original_sign);
-  }
 
   // Maximum error 3e-6
   template <class D, class V>
@@ -212,20 +139,6 @@ class TF_PQ {
         AndNot(kSign,
                Mul(magnitude, Set(d, display_scaling_factor_from_10000_nits_))),
         original_sign);
-  }
-
-  // Inverse EOTF. d = display.
-  JXL_INLINE double EncodedFromDisplay(double d) const {
-    if (d == 0.0) return 0.0;
-    const double original_sign = d;
-    d = std::abs(d);
-
-    const double xp = std::pow(d * display_scaling_factor_to_10000_nits_, kM1);
-    const double num = kC1 + xp * kC2;
-    const double den = 1.0 + xp * kC3;
-    const double e = std::pow(num / den, kM2);
-    JXL_DASSERT(e > 0.0);
-    return copysignf(e, original_sign);
   }
 
   // Maximum error 7e-7.
@@ -268,12 +181,6 @@ class TF_PQ {
   }
 
  private:
-  static constexpr double kM1 = 2610.0 / 16384;
-  static constexpr double kM2 = (2523.0 / 4096) * 128;
-  static constexpr double kC1 = 3424.0 / 4096;
-  static constexpr double kC2 = (2413.0 / 4096) * 32;
-  static constexpr double kC3 = (2392.0 / 4096) * 32;
-
   const float display_scaling_factor_to_10000_nits_;
   const float display_scaling_factor_from_10000_nits_;
 };

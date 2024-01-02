@@ -3,16 +3,18 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+#include <jxl/cms.h>
+
+#include <cstdint>
 #include <string>
+#include <vector>
 
 #include "lib/extras/codec.h"
 #include "lib/jxl/base/data_parallel.h"
-#include "lib/jxl/base/padded_bytes.h"
-#include "lib/jxl/cms/jxl_cms.h"
+#include "lib/jxl/base/span.h"
 #include "lib/jxl/codec_in_out.h"
 #include "lib/jxl/enc_butteraugli_comparator.h"
 #include "lib/jxl/enc_cache.h"
-#include "lib/jxl/enc_file.h"
 #include "lib/jxl/enc_params.h"
 #include "lib/jxl/image.h"
 #include "lib/jxl/image_test_utils.h"
@@ -80,11 +82,11 @@ JXL_GTEST_INSTANTIATE_TEST_SUITE_P(
                                         /*shrink8=*/true}));
 
 TEST_P(SpeedTierTest, Roundtrip) {
-  const PaddedBytes orig = jxl::test::ReadTestData(
+  const std::vector<uint8_t> orig = jxl::test::ReadTestData(
       "external/wesaturate/500px/u76c0g_bliznaca_srgb8.png");
   CodecInOut io;
   test::ThreadPoolForTests pool(8);
-  ASSERT_TRUE(SetFromBytes(Span<const uint8_t>(orig), &io, &pool));
+  ASSERT_TRUE(SetFromBytes(Bytes(orig), &io, &pool));
 
   const SpeedTierTestParams& params = GetParam();
 

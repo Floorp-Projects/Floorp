@@ -6,6 +6,7 @@
 #ifndef LIB_JXL_ENC_CACHE_H_
 #define LIB_JXL_ENC_CACHE_H_
 
+#include <jxl/cms_interface.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -13,11 +14,11 @@
 
 #include "lib/jxl/ac_strategy.h"
 #include "lib/jxl/base/data_parallel.h"
+#include "lib/jxl/base/status.h"
 #include "lib/jxl/coeff_order.h"
 #include "lib/jxl/coeff_order_fwd.h"
 #include "lib/jxl/dct_util.h"
 #include "lib/jxl/enc_ans.h"
-#include "lib/jxl/enc_heuristics.h"
 #include "lib/jxl/enc_params.h"
 #include "lib/jxl/enc_progressive_split.h"
 #include "lib/jxl/frame_header.h"
@@ -34,6 +35,10 @@ struct AuxOut;
 // Contains encoder state.
 struct PassesEncoderState {
   PassesSharedState shared;
+
+  bool streaming_mode = false;
+  bool initialize_global_state = true;
+  size_t dc_group_index = 0;
 
   ImageF initial_quant_field;    // Invalid in Falcon mode.
   ImageF initial_quant_masking;  // Invalid in Falcon mode.
@@ -59,34 +64,24 @@ struct PassesEncoderState {
   std::vector<PassData> passes;
   std::vector<uint8_t> histogram_idx;
 
+  // Block sizes seen so far.
+  uint32_t used_acs = 0;
   // Coefficient orders that are non-default.
   std::vector<uint32_t> used_orders;
 
   // Multiplier to be applied to the quant matrices of the x channel.
   float x_qm_multiplier = 1.0f;
   float b_qm_multiplier = 1.0f;
-
-  // Heuristics to be used by the encoder.
-  std::unique_ptr<EncoderHeuristics> heuristics =
-      make_unique<DefaultEncoderHeuristics>();
 };
 
 // Initialize per-frame information.
 class ModularFrameEncoder;
-Status InitializePassesEncoder(const Image3F& opsin, const JxlCmsInterface& cms,
+Status InitializePassesEncoder(const FrameHeader& frame_header,
+                               const Image3F& opsin, const JxlCmsInterface& cms,
                                ThreadPool* pool,
                                PassesEncoderState* passes_enc_state,
                                ModularFrameEncoder* modular_frame_encoder,
                                AuxOut* aux_out);
-
-// Working area for ComputeCoefficients (per-group!)
-struct EncCache {
-  // Allocates memory when first called, shrinks images to current group size.
-  void InitOnce();
-
-  // TokenizeCoefficients
-  Image3I num_nzeroes;
-};
 
 }  // namespace jxl
 

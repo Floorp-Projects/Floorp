@@ -28,16 +28,14 @@ size_t MaxBits(const size_t num_sizes);
 
 // TODO(veluca): move these to FrameDimensions.
 static JXL_INLINE size_t AcGroupIndex(size_t pass, size_t group,
-                                      size_t num_groups, size_t num_dc_groups,
-                                      bool has_ac_global) {
-  return 1 + num_dc_groups + static_cast<size_t>(has_ac_global) +
-         pass * num_groups + group;
+                                      size_t num_groups, size_t num_dc_groups) {
+  return 2 + num_dc_groups + pass * num_groups + group;
 }
 
 static JXL_INLINE size_t NumTocEntries(size_t num_groups, size_t num_dc_groups,
-                                       size_t num_passes, bool has_ac_global) {
+                                       size_t num_passes) {
   if (num_groups == 1 && num_passes == 1) return 1;
-  return AcGroupIndex(0, 0, num_groups, num_dc_groups, has_ac_global) +
+  return AcGroupIndex(0, 0, num_groups, num_dc_groups) +
          num_groups * num_passes;
 }
 

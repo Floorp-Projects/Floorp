@@ -9,13 +9,13 @@
 #include <jxl/codestream_header.h>
 #include <jxl/types.h>
 #include <stddef.h>
-#include <stdint.h>
 
+#include <cstdint>
 #include <string>
 #include <vector>
 
 #include "lib/extras/packed_image.h"
-#include "lib/jxl/base/padded_bytes.h"
+#include "lib/jxl/base/span.h"
 
 namespace jxl {
 namespace test {
@@ -32,7 +32,7 @@ class TestImage {
 
   extras::PackedPixelFile& ppf() { return ppf_; }
 
-  TestImage& DecodeFromBytes(const PaddedBytes& bytes);
+  TestImage& DecodeFromBytes(const std::vector<uint8_t>& bytes);
 
   TestImage& ClearMetadata();
 
@@ -47,6 +47,8 @@ class TestImage {
   TestImage& SetDataType(JxlDataType data_type);
 
   TestImage& SetEndianness(JxlEndianness endianness);
+
+  TestImage& SetRowAlignment(size_t align);
 
   TestImage& SetColorEncoding(const std::string& description);
 

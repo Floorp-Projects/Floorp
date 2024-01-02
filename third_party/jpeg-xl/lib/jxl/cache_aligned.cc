@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-#include "lib/jxl/base/cache_aligned.h"
+#include "lib/jxl/cache_aligned.h"
 
 #include <stdio.h>
 #include <stdlib.h>

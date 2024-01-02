@@ -5,13 +5,13 @@
 
 #include "lib/extras/enc/jpegli.h"
 
+#include <jxl/cms.h>
 #include <jxl/codestream_header.h>
 #include <setjmp.h>
 #include <stdint.h>
 
 #include "lib/extras/enc/encode.h"
 #include "lib/jpegli/encode.h"
-#include "lib/jxl/cms/jxl_cms.h"
 #include "lib/jxl/enc_xyb.h"
 
 namespace jxl {

@@ -10,8 +10,10 @@
 #include <jxl/color_encoding.h>
 #include <stdint.h>
 
+#include <cstdint>
 #include <memory>
 #include <string>
+#include <vector>
 
 #include "lib/extras/dec/color_hints.h"
 #include "lib/extras/dec/decode.h"
@@ -36,14 +38,14 @@ using test::ButteraugliDistance;
 using test::TestImage;
 
 Status ReadTestImage(const std::string& pathname, PackedPixelFile* ppf) {
-  const PaddedBytes encoded = jxl::test::ReadTestData(pathname);
+  const std::vector<uint8_t> encoded = jxl::test::ReadTestData(pathname);
   ColorHints color_hints;
   if (pathname.find(".ppm") != std::string::npos) {
     color_hints.Add("color_space", "RGB_D65_SRG_Rel_SRG");
   } else if (pathname.find(".pgm") != std::string::npos) {
     color_hints.Add("color_space", "Gra_D65_Rel_SRG");
   }
-  return DecodeBytes(Span<const uint8_t>(encoded), color_hints, ppf);
+  return DecodeBytes(Bytes(encoded), color_hints, ppf);
 }
 
 std::vector<uint8_t> GetAppData(const std::vector<uint8_t>& compressed) {
@@ -67,7 +69,7 @@ std::vector<uint8_t> GetAppData(const std::vector<uint8_t>& compressed) {
 Status DecodeWithLibjpeg(const std::vector<uint8_t>& compressed,
                          PackedPixelFile* ppf,
                          const JPGDecompressParams* dparams = nullptr) {
-  return DecodeImageJPG(Span<const uint8_t>(compressed), ColorHints(), ppf,
+  return DecodeImageJPG(Bytes(compressed), ColorHints(), ppf,
                         /*constraints=*/nullptr, dparams);
 }
 

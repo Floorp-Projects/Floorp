@@ -460,12 +460,12 @@ Status MetaSqueeze(Image &image, std::vector<SqueezeParams> *parameters) {
         h = h - (h + 1) / 2;
       }
       image.channel[c].shrink();
-      Channel dummy(w, h);
-      dummy.hshift = image.channel[c].hshift;
-      dummy.vshift = image.channel[c].vshift;
+      Channel placeholder(w, h);
+      placeholder.hshift = image.channel[c].hshift;
+      placeholder.vshift = image.channel[c].vshift;
 
       image.channel.insert(image.channel.begin() + offset + (c - beginc),
-                           std::move(dummy));
+                           std::move(placeholder));
       JXL_DEBUG_V(8, "MetaSqueeze applied, current image: %s",
                   image.DebugString().c_str());
     }

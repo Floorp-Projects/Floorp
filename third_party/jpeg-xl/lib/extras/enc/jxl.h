@@ -62,6 +62,7 @@ struct JXLCompressParams {
   // If runner_opaque is set, the decoder uses this parallel runner.
   JxlParallelRunner runner = JxlThreadParallelRunner;
   void* runner_opaque = nullptr;
+  JxlEncoderOutputProcessor output_processor = {};
   JxlDebugImageCallback debug_image = nullptr;
   void* debug_image_opaque = nullptr;
   JxlEncoderStats* stats = nullptr;
@@ -72,6 +73,11 @@ struct JXLCompressParams {
   }
   void AddFloatOption(JxlEncoderFrameSettingId id, float val) {
     options.emplace_back(JXLOption(id, val, 0));
+  }
+  bool HasOutputProcessor() const {
+    return (output_processor.get_buffer != nullptr &&
+            output_processor.release_buffer != nullptr &&
+            output_processor.set_finalized_position != nullptr);
   }
 };
 

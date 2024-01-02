@@ -8,12 +8,14 @@
 
 // Metadata for color space conversions.
 
+#include <jxl/cms.h>
 #include <jxl/cms_interface.h>
 #include <jxl/color_encoding.h>
 #include <stddef.h>
 #include <stdint.h>
 
 #include <array>
+#include <cstdlib>  // free
 #include <ostream>
 #include <string>
 #include <utility>
@@ -21,6 +23,7 @@
 #include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/cms/color_encoding_cms.h"
+#include "lib/jxl/cms/jxl_cms_internal.h"
 #include "lib/jxl/field_encodings.h"
 
 namespace jxl {
@@ -126,7 +129,15 @@ struct ColorEncoding : public Fields {
 
   // Returns true if an ICC profile was successfully created from fields.
   // Must be called after modifying fields. Defined in color_management.cc.
-  Status CreateICC() { return storage_.CreateICC(); }
+  Status CreateICC() {
+    storage_.icc.clear();
+    const JxlColorEncoding external = ToExternal();
+    if (!MaybeCreateProfile(external, &storage_.icc)) {
+      storage_.icc.clear();
+      return JXL_FAILURE("Failed to create ICC profile");
+    }
+    return true;
+  }
 
   // Returns non-empty and valid ICC profile, unless:
   // - WantICC() == true and SetICC() was not yet called;
@@ -249,11 +260,11 @@ struct ColorEncoding : public Fields {
 
   mutable bool all_default;
 
-  void ToExternal(JxlColorEncoding* external) const {
-    storage_.ToExternal(external);
-  }
+  JxlColorEncoding ToExternal() const { return storage_.ToExternal(); }
   Status FromExternal(const JxlColorEncoding& external) {
-    return storage_.FromExternal(external);
+    JXL_RETURN_IF_ERROR(storage_.FromExternal(external));
+    (void)CreateICC();
+    return true;
   }
   const jxl::cms::ColorEncoding& View() const { return storage_; }
   std::string Description() const;
@@ -280,8 +291,10 @@ struct ColorEncoding : public Fields {
 };
 
 static inline std::string Description(const ColorEncoding& c) {
-  return Description(c.View());
+  const JxlColorEncoding external = c.View().ToExternal();
+  return ColorEncodingDescription(external);
 }
+
 static inline std::ostream& operator<<(std::ostream& os,
                                        const ColorEncoding& c) {
   return os << Description(c);
@@ -307,13 +320,13 @@ class ColorSpaceTransform {
     icc_src_ = c_src.ICC();
     input_profile.icc.data = icc_src_.data();
     input_profile.icc.size = icc_src_.size();
-    c_src.ToExternal(&input_profile.color_encoding);
+    input_profile.color_encoding = c_src.ToExternal();
     input_profile.num_channels = c_src.IsCMYK() ? 4 : c_src.Channels();
     JxlColorProfile output_profile;
     icc_dst_ = c_dst.ICC();
     output_profile.icc.data = icc_dst_.data();
     output_profile.icc.size = icc_dst_.size();
-    c_dst.ToExternal(&output_profile.color_encoding);
+    output_profile.color_encoding = c_dst.ToExternal();
     if (c_dst.IsCMYK())
       return JXL_FAILURE("Conversion to CMYK is not supported");
     output_profile.num_channels = c_dst.Channels();

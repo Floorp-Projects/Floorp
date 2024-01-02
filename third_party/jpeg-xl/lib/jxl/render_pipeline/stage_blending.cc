@@ -19,17 +19,19 @@ namespace HWY_NAMESPACE {
 
 class BlendingStage : public RenderPipelineStage {
  public:
-  explicit BlendingStage(const PassesDecoderState* dec_state,
+  explicit BlendingStage(const FrameHeader& frame_header,
+                         const PassesDecoderState* dec_state,
                          const ColorEncoding& frame_color_encoding)
       : RenderPipelineStage(RenderPipelineStage::Settings()),
+        frame_header_(frame_header),
         state_(*dec_state->shared) {
-    image_xsize_ = state_.frame_header.nonserialized_metadata->xsize();
-    image_ysize_ = state_.frame_header.nonserialized_metadata->ysize();
+    image_xsize_ = frame_header_.nonserialized_metadata->xsize();
+    image_ysize_ = frame_header_.nonserialized_metadata->ysize();
     extra_channel_info_ =
-        &state_.frame_header.nonserialized_metadata->m.extra_channel_info;
-    info_ = state_.frame_header.blending_info;
+        &frame_header_.nonserialized_metadata->m.extra_channel_info;
+    info_ = frame_header_.blending_info;
     const std::vector<BlendingInfo>& ec_info =
-        state_.frame_header.extra_channel_blending_info;
+        frame_header_.extra_channel_blending_info;
     const ImageBundle& bg = state_.reference_frames[info_.source].frame;
     bg_ = &bg;
     if (bg.xsize() == 0 || bg.ysize() == 0) {
@@ -119,7 +121,7 @@ class BlendingStage : public RenderPipelineStage {
                   size_t xextra, size_t xsize, size_t xpos, size_t ypos,
                   size_t thread_id) const final {
     JXL_ASSERT(initialized_);
-    const FrameOrigin& frame_origin = state_.frame_header.frame_origin;
+    const FrameOrigin& frame_origin = frame_header_.frame_origin;
     ssize_t bg_xpos = frame_origin.x0 + static_cast<ssize_t>(xpos);
     ssize_t bg_ypos = frame_origin.y0 + static_cast<ssize_t>(ypos);
     int offset = 0;
@@ -149,9 +151,8 @@ class BlendingStage : public RenderPipelineStage {
       } else {
         const ImageBundle& ec_bg =
             state_
-                .reference_frames[state_.frame_header
-                                      .extra_channel_blending_info[c - 3]
-                                      .source]
+                .reference_frames
+                    [frame_header_.extra_channel_blending_info[c - 3].source]
                 .frame;
         bg_row_ptrs_[c] =
             ec_bg.xsize() != 0 && ec_bg.ysize() != 0
@@ -174,7 +175,7 @@ class BlendingStage : public RenderPipelineStage {
                           FrameOrigin* frame_origin) const override {
     *xsize = image_xsize_;
     *ysize = image_ysize_;
-    *frame_origin = state_.frame_header.frame_origin;
+    *frame_origin = frame_header_.frame_origin;
   }
 
   void ProcessPaddingRow(const RowInfo& output_rows, size_t xsize, size_t xpos,
@@ -193,8 +194,8 @@ class BlendingStage : public RenderPipelineStage {
     for (size_t ec = 0; ec < extra_channel_info_->size(); ++ec) {
       const ImageBundle& ec_bg =
           state_
-              .reference_frames
-                  [state_.frame_header.extra_channel_blending_info[ec].source]
+              .reference_frames[frame_header_.extra_channel_blending_info[ec]
+                                    .source]
               .frame;
       if (ec_bg.xsize() == 0 || ec_bg.ysize() == 0) {
         memset(GetInputRow(output_rows, 3 + ec, 0), 0, xsize * sizeof(float));
@@ -209,6 +210,7 @@ class BlendingStage : public RenderPipelineStage {
   const char* GetName() const override { return "Blending"; }
 
  private:
+  const FrameHeader& frame_header_;
   const PassesSharedState& state_;
   BlendingInfo info_;
   const ImageBundle* bg_;
@@ -221,9 +223,10 @@ class BlendingStage : public RenderPipelineStage {
 };
 
 std::unique_ptr<RenderPipelineStage> GetBlendingStage(
-    const PassesDecoderState* dec_state,
+    const FrameHeader& frame_header, const PassesDecoderState* dec_state,
     const ColorEncoding& frame_color_encoding) {
-  return jxl::make_unique<BlendingStage>(dec_state, frame_color_encoding);
+  return jxl::make_unique<BlendingStage>(frame_header, dec_state,
+                                         frame_color_encoding);
 }
 
 // NOLINTNEXTLINE(google-readability-namespace-comments)
@@ -237,9 +240,9 @@ namespace jxl {
 HWY_EXPORT(GetBlendingStage);
 
 std::unique_ptr<RenderPipelineStage> GetBlendingStage(
-    const PassesDecoderState* dec_state,
+    const FrameHeader& frame_header, const PassesDecoderState* dec_state,
     const ColorEncoding& frame_color_encoding) {
-  return HWY_DYNAMIC_DISPATCH(GetBlendingStage)(dec_state,
+  return HWY_DYNAMIC_DISPATCH(GetBlendingStage)(frame_header, dec_state,
                                                 frame_color_encoding);
 }
 

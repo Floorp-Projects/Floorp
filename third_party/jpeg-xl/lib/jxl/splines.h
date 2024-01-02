@@ -6,21 +6,21 @@
 #ifndef LIB_JXL_SPLINES_H_
 #define LIB_JXL_SPLINES_H_
 
-#include <stddef.h>
-#include <stdint.h>
-
+#include <cmath>
+#include <cstddef>
+#include <cstdint>
 #include <utility>
 #include <vector>
 
-#include "lib/jxl/ans_params.h"
+#include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/chroma_from_luma.h"
-#include "lib/jxl/dec_ans.h"
-#include "lib/jxl/dec_bit_reader.h"
-#include "lib/jxl/entropy_coder.h"
 #include "lib/jxl/image.h"
 
 namespace jxl {
+
+class ANSSymbolReader;
+class BitReader;
 
 static constexpr float kDesiredRenderingDistance = 1.f;
 

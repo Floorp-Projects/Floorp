@@ -341,6 +341,9 @@ Status DecodeHistograms(BitReader* br, size_t num_contexts, ANSCode* code,
   if (num_contexts > 1) {
     JXL_RETURN_IF_ERROR(DecodeContextMap(context_map, &num_histograms, br));
   }
+  JXL_DEBUG_V(
+      4, "Decoded context map of size %" PRIuS " and %" PRIuS " histograms",
+      num_contexts, num_histograms);
   code->lz77.nonserialized_distance_context = context_map->back();
   code->use_prefix_code = br->ReadFixedBits<1>();
   if (code->use_prefix_code) {
@@ -354,17 +357,6 @@ Status DecodeHistograms(BitReader* br, size_t num_contexts, ANSCode* code,
   const size_t max_alphabet_size = 1 << code->log_alpha_size;
   JXL_RETURN_IF_ERROR(
       DecodeANSCodes(num_histograms, max_alphabet_size, br, code));
-  // When using LZ77, flat codes might result in valid codestreams with
-  // histograms that potentially allow very large bit counts.
-  // TODO(veluca): in principle, a valid codestream might contain a histogram
-  // that could allow very large numbers of bits that is never used during ANS
-  // decoding. There's no benefit to doing that, though.
-  if (!code->lz77.enabled && code->max_num_bits > 32) {
-    // Just emit a warning as there are many opportunities for false positives.
-    JXL_WARNING("Histogram can represent numbers that are too large: %" PRIuS
-                "\n",
-                code->max_num_bits);
-  }
   return true;
 }
 

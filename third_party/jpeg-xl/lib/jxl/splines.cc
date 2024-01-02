@@ -15,6 +15,8 @@
 #include "lib/jxl/chroma_from_luma.h"
 #include "lib/jxl/common.h"  // JXL_HIGH_PRECISION
 #include "lib/jxl/dct_scales.h"
+#include "lib/jxl/dec_ans.h"
+#include "lib/jxl/dec_bit_reader.h"
 #include "lib/jxl/pack_signed.h"
 
 #undef HWY_TARGET_INCLUDE
@@ -507,6 +509,9 @@ Status QuantizedSpline::Decode(const std::vector<uint8_t>& context_map,
                                size_t* total_num_control_points) {
   const size_t num_control_points =
       decoder->ReadHybridUint(kNumControlPointsContext, br, context_map);
+  if (num_control_points > max_control_points) {
+    return JXL_FAILURE("Too many control points: %" PRIuS, num_control_points);
+  }
   *total_num_control_points += num_control_points;
   if (*total_num_control_points > max_control_points) {
     return JXL_FAILURE("Too many control points: %" PRIuS,
@@ -563,13 +568,15 @@ Status Splines::Decode(jxl::BitReader* br, const size_t num_pixels) {
   JXL_RETURN_IF_ERROR(
       DecodeHistograms(br, kNumSplineContexts, &code, &context_map));
   ANSSymbolReader decoder(&code, br);
-  const size_t num_splines =
-      1 + decoder.ReadHybridUint(kNumSplinesContext, br, context_map);
+  size_t num_splines =
+      decoder.ReadHybridUint(kNumSplinesContext, br, context_map);
   size_t max_control_points = std::min(
       kMaxNumControlPoints, num_pixels / kMaxNumControlPointsPerPixelRatio);
-  if (num_splines > max_control_points) {
+  if (num_splines > max_control_points ||
+      num_splines + 1 > max_control_points) {
     return JXL_FAILURE("Too many splines: %" PRIuS, num_splines);
   }
+  num_splines++;
   JXL_RETURN_IF_ERROR(DecodeAllStartingPoints(&starting_points_, br, &decoder,
                                               context_map, num_splines));
 

@@ -16,9 +16,9 @@
 #include <initializer_list>
 #include <utility>  // swap
 
-#include "lib/jxl/base/cache_aligned.h"
 #include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/base/status.h"
+#include "lib/jxl/cache_aligned.h"
 
 namespace jxl {
 
@@ -32,20 +32,18 @@ class PaddedBytes {
   PaddedBytes() : size_(0), capacity_(0) {}
 
   explicit PaddedBytes(size_t size) : size_(size), capacity_(0) {
-    if (size != 0) IncreaseCapacityTo(size);
+    reserve(size);
   }
 
   PaddedBytes(size_t size, uint8_t value) : size_(size), capacity_(0) {
-    if (size != 0) {
-      IncreaseCapacityTo(size);
-    }
+    reserve(size);
     if (size_ != 0) {
       memset(data(), value, size);
     }
   }
 
   PaddedBytes(const PaddedBytes& other) : size_(other.size_), capacity_(0) {
-    if (size_ != 0) IncreaseCapacityTo(size_);
+    reserve(size_);
     if (data() != nullptr) memcpy(data(), other.data(), size_);
   }
   PaddedBytes& operator=(const PaddedBytes& other) {
@@ -79,8 +77,38 @@ class PaddedBytes {
     std::swap(data_, other.data_);
   }
 
+  // If current capacity is greater than requested, then no-op. Otherwise
+  // copies existing data to newly allocated "data_". If allocation fails,
+  // data() == nullptr and size_ = capacity_ = 0.
+  // The new capacity will be at least 1.5 times the old capacity. This ensures
+  // that we avoid quadratic behaviour.
   void reserve(size_t capacity) {
-    if (capacity > capacity_) IncreaseCapacityTo(capacity);
+    if (capacity <= capacity_) return;
+
+    size_t new_capacity = std::max(capacity, 3 * capacity_ / 2);
+    new_capacity = std::max<size_t>(64, new_capacity);
+
+    // BitWriter writes up to 7 bytes past the end.
+    CacheAlignedUniquePtr new_data = AllocateArray(new_capacity + 8);
+    if (new_data == nullptr) {
+      // Allocation failed, discard all data to ensure this is noticed.
+      size_ = capacity_ = 0;
+      return;
+    }
+
+    if (data_ == nullptr) {
+      // First allocation: ensure first byte is initialized (won't be copied).
+      new_data[0] = 0;
+    } else {
+      // Subsequent resize: copy existing data to new location.
+      memcpy(new_data.get(), data_.get(), size_);
+      // Ensure that the first new byte is initialized, to allow write_bits to
+      // safely append to the newly-resized PaddedBytes.
+      new_data[size_] = 0;
+    }
+
+    capacity_ = new_capacity;
+    std::swap(new_data, data_);
   }
 
   // NOTE: unlike vector, this does not initialize the new data!
@@ -88,7 +116,7 @@ class PaddedBytes {
   // the resize, as we zero-initialize the first new byte of data.
   // If size < capacity(), does not invalidate the memory.
   void resize(size_t size) {
-    if (size > capacity_) IncreaseCapacityTo(size);
+    reserve(size);
     size_ = (data() == nullptr) ? 0 : size;
   }
 
@@ -104,7 +132,7 @@ class PaddedBytes {
   // Amortized constant complexity due to exponential growth.
   void push_back(uint8_t x) {
     if (size_ == capacity_) {
-      IncreaseCapacityTo(capacity_ + 1);
+      reserve(capacity_ + 1);
       if (data() == nullptr) return;
     }
 
@@ -126,9 +154,6 @@ class PaddedBytes {
     resize(il.size());
     memcpy(data(), il.begin(), il.size());
   }
-
-  // Replaces data() with [new_begin, new_end); potentially reallocates.
-  void assign(const uint8_t* new_begin, const uint8_t* new_end);
 
   uint8_t* begin() { return data(); }
   const uint8_t* begin() const { return data(); }
@@ -172,12 +197,6 @@ class PaddedBytes {
     // <= is safe due to padding and required by BitWriter.
     JXL_ASSERT(i <= size());
   }
-
-  // Copies existing data to newly allocated "data_". If allocation fails,
-  // data() == nullptr and size_ = capacity_ = 0.
-  // The new capacity will be at least 1.5 times the old capacity. This ensures
-  // that we avoid quadratic behaviour.
-  void IncreaseCapacityTo(size_t capacity);
 
   size_t size_;
   size_t capacity_;

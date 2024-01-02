@@ -26,6 +26,7 @@ if(BUILD_TESTING)
 if (EXISTS "${SOURCE_DIR}/googletest/CMakeLists.txt" AND
     NOT JPEGXL_FORCE_SYSTEM_GTEST)
   add_subdirectory(third_party/googletest EXCLUDE_FROM_ALL)
+  include(GoogleTest)
 
   set(GTEST_ROOT "${SOURCE_DIR}/googletest/googletest")
   set(GTEST_INCLUDE_DIR "$<TARGET_PROPERTY:INCLUDE_DIRECTORIES,gtest>"
@@ -33,10 +34,6 @@ if (EXISTS "${SOURCE_DIR}/googletest/CMakeLists.txt" AND
   set(GMOCK_INCLUDE_DIR "$<TARGET_PROPERTY:INCLUDE_DIRECTORIES,gmock>")
   set(GTEST_LIBRARY "$<TARGET_FILE:gtest>")
   set(GTEST_MAIN_LIBRARY "$<TARGET_FILE:gtest_main>")
-  add_library(GTest::gtest ALIAS gtest)
-  add_library(GTest::GTest ALIAS gtest)
-  add_library(GTest::gtest_main ALIAS gtest_main)
-  add_library(GTest::Main ALIAS gtest_main)
 
   set_target_properties(gtest PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
   set_target_properties(gmock PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
@@ -57,29 +54,7 @@ else()
     configure_file("${JPEGXL_DEP_LICENSE_DIR}/googletest/copyright"
                    ${PROJECT_BINARY_DIR}/LICENSE.googletest COPYONLY)
   endif()  # JPEGXL_DEP_LICENSE_DIR
+  find_package(GTest REQUIRED)
 endif()
-find_package(GTest)
-if (NOT GTEST_FOUND)
-  set(BUILD_TESTING OFF CACHE BOOL "Build tests" FORCE)
-  message(SEND_ERROR "GTest not found. Install googletest package "
-          "(libgtest-dev) in the system or download googletest to "
-          "third_party/googletest from https://github.com/google/googletest ."
-          "To disable tests instead re-run cmake with -DBUILD_TESTING=OFF.")
-endif()  # NOT GTEST_FOUND
 
-# Look for gmock in the system too.
-if (NOT DEFINED GMOCK_INCLUDE_DIR)
-  find_path(
-      GMOCK_INCLUDE_DIR "gmock/gmock.h"
-      HINTS ${GTEST_INCLUDE_DIRS})
-  if (NOT GMOCK_INCLUDE_DIR)
-    set(BUILD_TESTING OFF CACHE BOOL "Build tests" FORCE)
-    message(SEND_ERROR "GMock not found. Install googletest package "
-            "(libgmock-dev) in the system or download googletest to "
-            "third_party/googletest from https://github.com/google/googletest ."
-            "To disable tests instead re-run cmake with -DBUILD_TESTING=OFF.")
-  else()
-    message(STATUS "Found GMock: ${GMOCK_INCLUDE_DIR}")
-  endif()  # NOT GMOCK_INCLUDE_DIR
-endif()  # NOT DEFINED GMOCK_INCLUDE_DIR
 endif()  # BUILD_TESTING

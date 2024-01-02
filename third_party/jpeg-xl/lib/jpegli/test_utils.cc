@@ -6,6 +6,7 @@
 #include "lib/jpegli/test_utils.h"
 
 #include <cmath>
+#include <cstdint>
 #include <fstream>
 
 #include "lib/jpegli/decode.h"

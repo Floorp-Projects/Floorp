@@ -358,8 +358,9 @@ void QuantizeRoundtripYBlockAC(PassesEncoderState* enc_state, const size_t size,
 
 void ComputeCoefficients(size_t group_idx, PassesEncoderState* enc_state,
                          const Image3F& opsin, Image3F* dc) {
-  const Rect block_group_rect = enc_state->shared.BlockGroupRect(group_idx);
-  const Rect group_rect = enc_state->shared.GroupRect(group_idx);
+  const Rect block_group_rect =
+      enc_state->shared.frame_dim.BlockGroupRect(group_idx);
+  const Rect group_rect = enc_state->shared.frame_dim.GroupRect(group_idx);
   const Rect cmap_rect(
       block_group_rect.x0() / kColorTileDimInBlocks,
       block_group_rect.y0() / kColorTileDimInBlocks,
@@ -523,10 +524,12 @@ Status EncodeGroupTokenizedCoefficients(size_t group_idx, size_t pass_idx,
     writer->Write(histo_selector_bits, histogram_idx);
     allotment.ReclaimAndCharge(writer, kLayerAC, aux_out);
   }
+  size_t context_offset =
+      histogram_idx * enc_state.shared.block_ctx_map.NumACContexts();
   WriteTokens(enc_state.passes[pass_idx].ac_tokens[group_idx],
               enc_state.passes[pass_idx].codes,
-              enc_state.passes[pass_idx].context_map, writer, kLayerACTokens,
-              aux_out);
+              enc_state.passes[pass_idx].context_map, context_offset, writer,
+              kLayerACTokens, aux_out);
 
   return true;
 }

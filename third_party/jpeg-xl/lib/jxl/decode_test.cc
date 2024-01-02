@@ -3,33 +3,37 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+#include <jxl/cms.h>
+#include <jxl/color_encoding.h>
 #include <jxl/decode.h>
 #include <jxl/decode_cxx.h>
 #include <jxl/resizable_parallel_runner_cxx.h>
 #include <jxl/thread_parallel_runner_cxx.h>
 #include <jxl/types.h>
-#include <stdint.h>
-#include <stdlib.h>
 
+#include <cstdint>
+#include <cstdio>
+#include <cstdlib>
 #include <sstream>
 #include <string>
+#include <tuple>
 #include <utility>
 #include <vector>
 
 #include "lib/extras/codec.h"
 #include "lib/extras/dec/color_description.h"
 #include "lib/jxl/base/byte_order.h"
-#include "lib/jxl/base/padded_bytes.h"
 #include "lib/jxl/base/span.h"
 #include "lib/jxl/base/status.h"
-#include "lib/jxl/cms/jxl_cms.h"
+#include "lib/jxl/cms/color_encoding_cms.h"
 #include "lib/jxl/color_encoding_internal.h"
+#include "lib/jxl/dec_bit_reader.h"
 #include "lib/jxl/dec_external_image.h"
 #include "lib/jxl/enc_aux_out.h"
 #include "lib/jxl/enc_butteraugli_comparator.h"
 #include "lib/jxl/enc_external_image.h"
 #include "lib/jxl/enc_fields.h"
-#include "lib/jxl/enc_file.h"
+#include "lib/jxl/enc_frame.h"
 #include "lib/jxl/enc_icc_codec.h"
 #include "lib/jxl/enc_progressive_split.h"
 #include "lib/jxl/encode_internal.h"
@@ -40,6 +44,7 @@
 #include "lib/jxl/icc_codec.h"
 #include "lib/jxl/image_metadata.h"
 #include "lib/jxl/jpeg/enc_jpeg_data.h"
+#include "lib/jxl/padded_bytes.h"
 #include "lib/jxl/test_image.h"
 #include "lib/jxl/test_utils.h"
 #include "lib/jxl/testing.h"
@@ -48,7 +53,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 namespace {
-void AppendU32BE(uint32_t u32, jxl::PaddedBytes* bytes) {
+void AppendU32BE(uint32_t u32, std::vector<uint8_t>* bytes) {
   bytes->push_back(u32 >> 24);
   bytes->push_back(u32 >> 16);
   bytes->push_back(u32 >> 8);
@@ -161,14 +166,14 @@ namespace jxl {
 namespace {
 
 void AppendTestBox(const char* type, const char* contents, size_t contents_size,
-                   bool unbounded, PaddedBytes* bytes) {
+                   bool unbounded, std::vector<uint8_t>* bytes) {
   AppendU32BE(contents_size + 8, bytes);
   bytes->push_back(type[0]);
   bytes->push_back(type[1]);
   bytes->push_back(type[2]);
   bytes->push_back(type[3]);
   const uint8_t* contents_u = reinterpret_cast<const uint8_t*>(contents);
-  bytes->append(contents_u, contents_u + contents_size);
+  Bytes(contents_u, contents_size).AppendTo(bytes);
 }
 
 enum PreviewMode {
@@ -215,8 +220,7 @@ struct TestCodestreamParams {
   bool add_icc_profile = false;
   float intensity_target = 0.0;
   std::string color_space;
-  PaddedBytes* jpeg_codestream = nullptr;
-  const ProgressiveMode* progressive_mode = nullptr;
+  std::vector<uint8_t>* jpeg_codestream = nullptr;
 };
 
 // Input pixels always given as 16-bit RGBA, 8 bytes per pixel.
@@ -229,9 +233,9 @@ struct TestCodestreamParams {
 // Providing jpeg_codestream will populate the jpeg_codestream with compressed
 // JPEG bytes, and make it possible to reconstruct those exact JPEG bytes using
 // the return value _if_ add_container indicates a box format.
-PaddedBytes CreateTestJXLCodestream(Span<const uint8_t> pixels, size_t xsize,
-                                    size_t ysize, size_t num_channels,
-                                    const TestCodestreamParams& params) {
+std::vector<uint8_t> CreateTestJXLCodestream(
+    Span<const uint8_t> pixels, size_t xsize, size_t ysize, size_t num_channels,
+    const TestCodestreamParams& params) {
   // Compress the pixels with JPEG XL.
   bool grayscale = (num_channels <= 2);
   bool include_alpha = !(num_channels & 1) && params.jpeg_codestream == nullptr;
@@ -252,7 +256,6 @@ PaddedBytes CreateTestJXLCodestream(Span<const uint8_t> pixels, size_t xsize,
   } else {
     color_encoding = jxl::ColorEncoding::SRGB(/*is_gray=*/grayscale);
   }
-  ThreadPool pool(nullptr, nullptr);
   io.metadata.m.SetUintSamples(bitdepth);
   if (include_alpha) {
     io.metadata.m.SetAlphaBits(bitdepth);
@@ -266,19 +269,18 @@ PaddedBytes CreateTestJXLCodestream(Span<const uint8_t> pixels, size_t xsize,
   // image match.
   io.metadata.m.color_encoding = color_encoding;
   EXPECT_TRUE(ConvertFromExternal(pixels, xsize, ysize, color_encoding,
-                                  /*bits_per_sample=*/16, format, &pool,
-                                  &io.Main()));
-  jxl::PaddedBytes jpeg_data;
+                                  /*bits_per_sample=*/16, format,
+                                  /* pool */ nullptr, &io.Main()));
+  std::vector<uint8_t> jpeg_data;
   if (params.jpeg_codestream != nullptr) {
     if (jxl::extras::CanDecode(jxl::extras::Codec::kJPG)) {
       std::vector<uint8_t> jpeg_bytes;
       io.jpeg_quality = 70;
       EXPECT_TRUE(Encode(io, extras::Codec::kJPG, io.metadata.m.color_encoding,
-                         /*bits_per_sample=*/8, &jpeg_bytes, &pool));
-      params.jpeg_codestream->append(jpeg_bytes.data(),
-                                     jpeg_bytes.data() + jpeg_bytes.size());
+                         /*bits_per_sample=*/8, &jpeg_bytes));
+      Bytes(jpeg_bytes).AppendTo(params.jpeg_codestream);
       EXPECT_TRUE(jxl::jpeg::DecodeImageJPG(
-          jxl::Span<const uint8_t>(jpeg_bytes.data(), jpeg_bytes.size()), &io));
+          jxl::Bytes(jpeg_bytes.data(), jpeg_bytes.size()), &io));
       EXPECT_TRUE(
           EncodeJPEGData(*io.Main().jpeg_data, &jpeg_data, params.cparams));
       io.metadata.m.xyb_encoded = false;
@@ -298,14 +300,8 @@ PaddedBytes CreateTestJXLCodestream(Span<const uint8_t> pixels, size_t xsize,
     EXPECT_TRUE(io.metadata.m.intrinsic_size.Set(xsize / 3, ysize / 3));
   }
   io.metadata.m.orientation = params.orientation;
-  AuxOut aux_out;
-  PaddedBytes compressed;
-  PassesEncoderState enc_state;
-  if (params.progressive_mode) {
-    enc_state.progressive_splitter.SetProgressiveMode(*params.progressive_mode);
-  }
-  EXPECT_TRUE(EncodeFile(params.cparams, &io, &enc_state, &compressed,
-                         *JxlGetDefaultCms(), &aux_out, &pool));
+  std::vector<uint8_t> compressed;
+  EXPECT_TRUE(test::EncodeFile(params.cparams, &io, &compressed));
   CodeStreamBoxFormat add_container = params.box_format;
   if (add_container != kCSBF_None) {
     // Header with signature box and ftyp box.
@@ -330,16 +326,16 @@ PaddedBytes CreateTestJXLCodestream(Span<const uint8_t> pixels, size_t xsize,
       std::vector<uint8_t> compressed2(compressed.data() + 2 * third,
                                        compressed.data() + compressed.size());
 
-      PaddedBytes c;
-      c.append(header, header + sizeof(header));
+      std::vector<uint8_t> c;
+      Bytes(header).AppendTo(&c);
       if (params.jpeg_codestream != nullptr) {
         jxl::AppendBoxHeader(jxl::MakeBoxType("jbrd"), jpeg_data.size(), false,
                              &c);
-        c.append(jpeg_data.data(), jpeg_data.data() + jpeg_data.size());
+        Bytes(jpeg_data).AppendTo(&c);
       }
       uint32_t jxlp_index = 0;
       if (add_container == kCSBF_Multi_First_Empty) {
-        // Dummy (empty) codestream part
+        // Empty placeholder codestream part
         AppendU32BE(12, &c);
         c.push_back('j');
         c.push_back('x');
@@ -354,11 +350,11 @@ PaddedBytes CreateTestJXLCodestream(Span<const uint8_t> pixels, size_t xsize,
       c.push_back('l');
       c.push_back('p');
       AppendU32BE(jxlp_index++, &c);
-      c.append(compressed0.data(), compressed0.data() + compressed0.size());
+      Bytes(compressed0).AppendTo(&c);
       // A few non-codestream boxes in between
       AppendTestBox(unk1_box_type, unk1_box_contents, unk1_box_size, false, &c);
       AppendTestBox(unk2_box_type, unk2_box_contents, unk2_box_size, false, &c);
-      // Dummy (empty) codestream part
+      // Empty placeholder codestream part
       AppendU32BE(12, &c);
       c.push_back('j');
       c.push_back('x');
@@ -372,7 +368,7 @@ PaddedBytes CreateTestJXLCodestream(Span<const uint8_t> pixels, size_t xsize,
       c.push_back('l');
       c.push_back('p');
       AppendU32BE(jxlp_index++, &c);
-      c.append(compressed1.data(), compressed1.data() + compressed1.size());
+      Bytes(compressed1).AppendTo(&c);
       // Third (last) codestream part
       AppendU32BE(add_container == kCSBF_Multi_Zero_Terminated
                       ? 0
@@ -387,9 +383,9 @@ PaddedBytes CreateTestJXLCodestream(Span<const uint8_t> pixels, size_t xsize,
       } else {
         AppendU32BE(jxlp_index++, &c);
       }
-      c.append(compressed2.data(), compressed2.data() + compressed2.size());
+      Bytes(compressed2).AppendTo(&c);
       if (add_container == kCSBF_Multi_Last_Empty_Other) {
-        // Dummy (empty) codestream part
+        // Empty placeholder codestream part
         AppendU32BE(12, &c);
         c.push_back('j');
         c.push_back('x');
@@ -409,15 +405,15 @@ PaddedBytes CreateTestJXLCodestream(Span<const uint8_t> pixels, size_t xsize,
       }
       compressed.swap(c);
     } else {
-      PaddedBytes c;
-      c.append(header, header + sizeof(header));
+      std::vector<uint8_t> c;
+      Bytes(header).AppendTo(&c);
       if (params.jpeg_codestream != nullptr) {
         jxl::AppendBoxHeader(jxl::MakeBoxType("jbrd"), jpeg_data.size(), false,
                              &c);
-        c.append(jpeg_data.data(), jpeg_data.data() + jpeg_data.size());
+        Bytes(jpeg_data).AppendTo(&c);
       }
       if (add_container == kCSBF_Brob_Exif) {
-        c.append(box_brob_exif, box_brob_exif + box_brob_exif_size);
+        Bytes(box_brob_exif, box_brob_exif_size).AppendTo(&c);
       }
       AppendU32BE(add_container == kCSBF_Single_Zero_Terminated
                       ? 0
@@ -427,7 +423,7 @@ PaddedBytes CreateTestJXLCodestream(Span<const uint8_t> pixels, size_t xsize,
       c.push_back('x');
       c.push_back('l');
       c.push_back('c');
-      c.append(compressed.data(), compressed.data() + compressed.size());
+      Bytes(compressed).AppendTo(&c);
       if (add_container == kCSBF_Single_Other) {
         AppendTestBox(unk1_box_type, unk1_box_contents, unk1_box_size, false,
                       &c);
@@ -454,7 +450,7 @@ std::vector<uint8_t> DecodeWithAPI(JxlDecoder* dec,
                                    bool use_callback, bool set_buffer_early,
                                    bool use_resizable_runner,
                                    bool require_boxes, bool expect_success,
-                                   PaddedBytes* icc = nullptr) {
+                                   std::vector<uint8_t>* icc = nullptr) {
   JxlThreadParallelRunnerPtr runner_fixed;
   JxlResizableParallelRunnerPtr runner_resizable;
   JxlParallelRunner runner_fn;
@@ -1105,8 +1101,7 @@ TEST(DecodeTest, IccProfileTestXybEncoded) {
   // Test after setting the preferred color profile to non-linear sRGB:
   // for XYB images with ICC profile, this setting is expected to take effect.
   jxl::ColorEncoding temp_jxl_srgb = jxl::ColorEncoding::SRGB(false);
-  JxlColorEncoding pixel_encoding_srgb;
-  temp_jxl_srgb.ToExternal(&pixel_encoding_srgb);
+  JxlColorEncoding pixel_encoding_srgb = temp_jxl_srgb.ToExternal();
   EXPECT_EQ(JXL_DEC_SUCCESS,
             JxlDecoderSetPreferredColorProfile(dec, &pixel_encoding_srgb));
   EXPECT_EQ(JXL_DEC_SUCCESS,
@@ -1139,8 +1134,7 @@ TEST(DecodeTest, IccProfileTestXybEncoded) {
   // updated.
 
   jxl::ColorEncoding temp_jxl_linear = jxl::ColorEncoding::LinearSRGB(false);
-  JxlColorEncoding pixel_encoding_linear;
-  temp_jxl_linear.ToExternal(&pixel_encoding_linear);
+  JxlColorEncoding pixel_encoding_linear = temp_jxl_linear.ToExternal();
 
   EXPECT_EQ(JXL_DEC_SUCCESS,
             JxlDecoderSetPreferredColorProfile(dec, &pixel_encoding_linear));
@@ -1289,9 +1283,9 @@ TEST_P(DecodeTestParam, PixelTest) {
   params.orientation = config.orientation;
   params.preview_mode = config.preview_mode;
   params.add_intrinsic_size = config.add_intrinsic_size;
-  jxl::PaddedBytes compressed = jxl::CreateTestJXLCodestream(
-      jxl::Span<const uint8_t>(pixels.data(), pixels.size()), config.xsize,
-      config.ysize, orig_channels, params);
+  std::vector<uint8_t> compressed = jxl::CreateTestJXLCodestream(
+      jxl::Bytes(pixels.data(), pixels.size()), config.xsize, config.ysize,
+      orig_channels, params);
 
   JxlPixelFormat format = {config.output_channels, config.data_type,
                            config.endianness, 0};
@@ -1300,11 +1294,11 @@ TEST_P(DecodeTestParam, PixelTest) {
   size_t xsize = swap_xy ? config.ysize : config.xsize;
   size_t ysize = swap_xy ? config.xsize : config.ysize;
 
-  std::vector<uint8_t> pixels2 = jxl::DecodeWithAPI(
-      dec, jxl::Span<const uint8_t>(compressed.data(), compressed.size()),
-      format, config.use_callback, config.set_buffer_early,
-      config.use_resizable_runner, /*require_boxes=*/false,
-      /*expect_success=*/true);
+  std::vector<uint8_t> pixels2 =
+      jxl::DecodeWithAPI(dec, jxl::Bytes(compressed.data(), compressed.size()),
+                         format, config.use_callback, config.set_buffer_early,
+                         config.use_resizable_runner, /*require_boxes=*/false,
+                         /*expect_success=*/true);
   JxlDecoderReset(dec);
   EXPECT_EQ(num_pixels * config.output_channels *
                 jxl::test::GetDataBits(config.data_type) / jxl::kBitsPerByte,
@@ -1563,17 +1557,16 @@ TEST(DecodeTest, PixelTestWithICCProfileLossless) {
   params.add_icc_profile = true;
   // For variation: some have container and no preview, others have preview
   // and no container.
-  jxl::PaddedBytes compressed = jxl::CreateTestJXLCodestream(
-      jxl::Span<const uint8_t>(pixels.data(), pixels.size()), xsize, ysize, 4,
-      params);
+  std::vector<uint8_t> compressed = jxl::CreateTestJXLCodestream(
+      jxl::Bytes(pixels.data(), pixels.size()), xsize, ysize, 4, params);
 
   for (uint32_t channels = 3; channels <= 4; ++channels) {
     {
       JxlPixelFormat format = {channels, JXL_TYPE_UINT8, JXL_LITTLE_ENDIAN, 0};
 
       std::vector<uint8_t> pixels2 = jxl::DecodeWithAPI(
-          dec, jxl::Span<const uint8_t>(compressed.data(), compressed.size()),
-          format, /*use_callback=*/false, /*set_buffer_early=*/false,
+          dec, jxl::Bytes(compressed.data(), compressed.size()), format,
+          /*use_callback=*/false, /*set_buffer_early=*/false,
           /*use_resizable_runner=*/false, /*require_boxes=*/false,
           /*expect_success=*/true);
       JxlDecoderReset(dec);
@@ -1587,8 +1580,8 @@ TEST(DecodeTest, PixelTestWithICCProfileLossless) {
 
       // Test with the container for one of the pixel formats.
       std::vector<uint8_t> pixels2 = jxl::DecodeWithAPI(
-          dec, jxl::Span<const uint8_t>(compressed.data(), compressed.size()),
-          format, /*use_callback=*/true, /*set_buffer_early=*/true,
+          dec, jxl::Bytes(compressed.data(), compressed.size()), format,
+          /*use_callback=*/true, /*set_buffer_early=*/true,
           /*use_resizable_runner=*/false, /*require_boxes=*/false,
           /*expect_success=*/true);
       JxlDecoderReset(dec);
@@ -1602,8 +1595,8 @@ TEST(DecodeTest, PixelTestWithICCProfileLossless) {
       JxlPixelFormat format = {channels, JXL_TYPE_FLOAT, JXL_LITTLE_ENDIAN, 0};
 
       std::vector<uint8_t> pixels2 = jxl::DecodeWithAPI(
-          dec, jxl::Span<const uint8_t>(compressed.data(), compressed.size()),
-          format, /*use_callback=*/false, /*set_buffer_early=*/false,
+          dec, jxl::Bytes(compressed.data(), compressed.size()), format,
+          /*use_callback=*/false, /*set_buffer_early=*/false,
           /*use_resizable_runner=*/false, /*require_boxes=*/false,
           /*expect_success=*/true);
       JxlDecoderReset(dec);
@@ -1626,17 +1619,16 @@ TEST(DecodeTest, PixelTestWithICCProfileLossy) {
   JxlPixelFormat format_orig = {3, JXL_TYPE_UINT16, JXL_BIG_ENDIAN, 0};
   jxl::TestCodestreamParams params;
   params.add_icc_profile = true;
-  jxl::PaddedBytes compressed = jxl::CreateTestJXLCodestream(
-      jxl::Span<const uint8_t>(pixels.data(), pixels.size()), xsize, ysize, 3,
-      params);
+  std::vector<uint8_t> compressed = jxl::CreateTestJXLCodestream(
+      jxl::Bytes(pixels.data(), pixels.size()), xsize, ysize, 3, params);
   uint32_t channels = 3;
 
   JxlPixelFormat format = {channels, JXL_TYPE_FLOAT, JXL_LITTLE_ENDIAN, 0};
 
-  jxl::PaddedBytes icc_data;
+  std::vector<uint8_t> icc_data;
   std::vector<uint8_t> pixels2 = jxl::DecodeWithAPI(
-      dec, jxl::Span<const uint8_t>(compressed.data(), compressed.size()),
-      format, /*use_callback=*/false, /*set_buffer_early=*/true,
+      dec, jxl::Bytes(compressed.data(), compressed.size()), format,
+      /*use_callback=*/false, /*set_buffer_early=*/true,
       /*use_resizable_runner=*/false, /*require_boxes=*/false,
       /*expect_success=*/true, /*icc=*/&icc_data);
   JxlDecoderReset(dec);
@@ -1655,7 +1647,7 @@ TEST(DecodeTest, PixelTestWithICCProfileLossy) {
 
   jxl::ColorEncoding color_encoding1;
   jxl::IccBytes icc;
-  jxl::Span<const uint8_t>(icc_data).AppendTo(&icc);
+  jxl::Bytes(icc_data).AppendTo(&icc);
   EXPECT_TRUE(color_encoding1.SetICC(std::move(icc), JxlGetDefaultCms()));
   jxl::Span<const uint8_t> span1(pixels2.data(), pixels2.size());
   jxl::CodecInOut io1;
@@ -1708,8 +1700,7 @@ double ButteraugliDistance(size_t xsize, size_t ysize,
   JxlPixelFormat format_in = {static_cast<uint32_t>(color_in.Channels()),
                               JXL_TYPE_UINT16, JXL_BIG_ENDIAN, 0};
   EXPECT_TRUE(jxl::ConvertFromExternal(
-      jxl::Span<const uint8_t>(pixels_in.data(), pixels_in.size()), xsize,
-      ysize, color_in,
+      jxl::Bytes(pixels_in.data(), pixels_in.size()), xsize, ysize, color_in,
       /*bits_per_sample=*/16, format_in,
       /*pool=*/nullptr, &in.Main()));
   jxl::CodecInOut out;
@@ -1718,8 +1709,7 @@ double ButteraugliDistance(size_t xsize, size_t ysize,
   JxlPixelFormat format_out = {static_cast<uint32_t>(color_out.Channels()),
                                JXL_TYPE_UINT16, JXL_BIG_ENDIAN, 0};
   EXPECT_TRUE(jxl::ConvertFromExternal(
-      jxl::Span<const uint8_t>(pixels_out.data(), pixels_out.size()), xsize,
-      ysize, color_out,
+      jxl::Bytes(pixels_out.data(), pixels_out.size()), xsize, ysize, color_out,
       /*bits_per_sample=*/16, format_out,
       /*pool=*/nullptr, &out.Main()));
   return ButteraugliDistance(in.frames, out.frames, jxl::ButteraugliParams(),
@@ -1745,9 +1735,8 @@ TEST_P(DecodeAllEncodingsTest, PreserveOriginalProfileTest) {
   jxl::TestCodestreamParams params;
   params.color_space = color_space_in;
   params.intensity_target = intensity_in;
-  jxl::PaddedBytes data = jxl::CreateTestJXLCodestream(
-      jxl::Span<const uint8_t>(pixels.data(), pixels.size()), xsize, ysize, 3,
-      params);
+  std::vector<uint8_t> data = jxl::CreateTestJXLCodestream(
+      jxl::Bytes(pixels.data(), pixels.size()), xsize, ysize, 3, params);
   JxlDecoder* dec = JxlDecoderCreate(nullptr);
   EXPECT_EQ(JXL_DEC_SUCCESS, JxlDecoderSubscribeEvents(dec, events));
   EXPECT_EQ(JXL_DEC_SUCCESS, JxlDecoderSetInput(dec, data.data(), data.size()));
@@ -1774,7 +1763,8 @@ TEST_P(DecodeAllEncodingsTest, PreserveOriginalProfileTest) {
 
 namespace {
 void SetPreferredColorProfileTest(
-    const jxl::test::ColorEncodingDescriptor& from) {
+    const jxl::test::ColorEncodingDescriptor& from, bool icc_dst,
+    bool use_cms) {
   size_t xsize = 123, ysize = 77;
   int events = JXL_DEC_BASIC_INFO | JXL_DEC_COLOR_ENCODING | JXL_DEC_FULL_IMAGE;
   jxl::ColorEncoding c_in = jxl::test::ColorEncodingFromDescriptor(from);
@@ -1783,19 +1773,23 @@ void SetPreferredColorProfileTest(
   uint32_t num_channels = c_in.Channels();
   std::vector<uint8_t> pixels =
       jxl::test::GetSomeTestImage(xsize, ysize, num_channels, 0);
+
   JxlPixelFormat format = {num_channels, JXL_TYPE_UINT16, JXL_BIG_ENDIAN, 0};
   std::string color_space_in = Description(c_in);
   float intensity_in = c_in.Tf().IsPQ() ? 10000 : 255;
   jxl::TestCodestreamParams params;
   params.color_space = color_space_in;
   params.intensity_target = intensity_in;
-  jxl::PaddedBytes data = jxl::CreateTestJXLCodestream(
-      jxl::Span<const uint8_t>(pixels.data(), pixels.size()), xsize, ysize,
-      num_channels, params);
+  std::vector<uint8_t> data =
+      jxl::CreateTestJXLCodestream(jxl::Bytes(pixels.data(), pixels.size()),
+                                   xsize, ysize, num_channels, params);
   auto all_encodings = jxl::test::AllEncodings();
-  all_encodings.push_back(
-      {jxl::ColorSpace::kXYB, jxl::WhitePoint::kD65, jxl::Primaries::kCustom,
-       jxl::TransferFunction::kUnknown, jxl::RenderingIntent::kPerceptual});
+  // TODO(firsching): understand why XYB does not work together with icc_dst.
+  if (!icc_dst) {
+    all_encodings.push_back(
+        {jxl::ColorSpace::kXYB, jxl::WhitePoint::kD65, jxl::Primaries::kCustom,
+         jxl::TransferFunction::kUnknown, jxl::RenderingIntent::kPerceptual});
+  }
   for (const auto& c1 : all_encodings) {
     jxl::ColorEncoding c_out = jxl::test::ColorEncodingFromDescriptor(c1);
     float intensity_out = intensity_in;
@@ -1807,7 +1801,7 @@ void SetPreferredColorProfileTest(
            c_out.GetPrimariesType() != jxl::Primaries::k2100) ||
           (c_in.GetPrimariesType() == jxl::Primaries::kP3 &&
            c_out.GetPrimariesType() == jxl::Primaries::kSRGB)) {
-        // Converting to a narrower gamut does not work without gammut mapping.
+        // Converting to a narrower gamut does not work without gamut mapping.
         continue;
       }
     }
@@ -1833,7 +1827,6 @@ void SetPreferredColorProfileTest(
     EXPECT_FALSE(info.uses_original_profile);
     EXPECT_EQ(JXL_DEC_COLOR_ENCODING, JxlDecoderProcessInput(dec));
     EXPECT_EQ(GetOrigProfile(dec), color_space_in);
-    EXPECT_EQ(GetDataProfile(dec), color_space_in);
     JxlColorEncoding encoding_out;
     EXPECT_TRUE(jxl::ParseDescription(color_space_out, &encoding_out));
     if (c_out.GetColorSpace() == jxl::ColorSpace::kXYB &&
@@ -1844,10 +1837,32 @@ void SetPreferredColorProfileTest(
       JxlDecoderDestroy(dec);
       continue;
     }
-    EXPECT_EQ(JXL_DEC_SUCCESS,
-              JxlDecoderSetPreferredColorProfile(dec, &encoding_out));
+    if (use_cms) {
+      JxlDecoderSetCms(dec, *JxlGetDefaultCms());
+    }
+    if (icc_dst) {
+      jxl::ColorEncoding internal_encoding_out;
+      EXPECT_TRUE(internal_encoding_out.FromExternal(encoding_out));
+      EXPECT_TRUE(internal_encoding_out.CreateICC());
+      std::vector<uint8_t> rewritten_icc = internal_encoding_out.ICC();
+
+      EXPECT_EQ(use_cms ? JXL_DEC_SUCCESS : JXL_DEC_ERROR,
+                JxlDecoderSetOutputColorProfile(
+                    dec, nullptr, rewritten_icc.data(), rewritten_icc.size()));
+      if (!use_cms) {
+        // continue if we don't have a cms here
+        JxlDecoderDestroy(dec);
+        continue;
+      }
+    } else {
+      EXPECT_EQ(JXL_DEC_SUCCESS,
+                JxlDecoderSetPreferredColorProfile(dec, &encoding_out));
+    }
     EXPECT_EQ(GetOrigProfile(dec), color_space_in);
-    EXPECT_EQ(GetDataProfile(dec), color_space_out);
+    if (icc_dst) {
+    } else {
+      EXPECT_EQ(GetDataProfile(dec), color_space_out);
+    }
     EXPECT_EQ(JXL_DEC_NEED_IMAGE_OUT_BUFFER, JxlDecoderProcessInput(dec));
     size_t buffer_size;
     JxlPixelFormat out_format = format;
@@ -1860,6 +1875,7 @@ void SetPreferredColorProfileTest(
     EXPECT_EQ(JXL_DEC_FULL_IMAGE, JxlDecoderProcessInput(dec));
     double dist = ButteraugliDistance(xsize, ysize, pixels, c_in, intensity_in,
                                       out, c_out, intensity_out);
+
     if (c_in.GetWhitePointType() == c_out.GetWhitePointType()) {
       EXPECT_LT(dist, 1.29);
     } else {
@@ -1875,12 +1891,123 @@ TEST(DecodeTest, SetPreferredColorProfileTestFromGray) {
   jxl::test::ColorEncodingDescriptor gray = {
       jxl::ColorSpace::kGray, jxl::WhitePoint::kD65, jxl::Primaries::kSRGB,
       jxl::TransferFunction::kSRGB, jxl::RenderingIntent::kRelative};
-  SetPreferredColorProfileTest(gray);
+  SetPreferredColorProfileTest(gray, true, true);
+  SetPreferredColorProfileTest(gray, false, true);
+  SetPreferredColorProfileTest(gray, true, false);
+  SetPreferredColorProfileTest(gray, false, false);
 }
 
-TEST_P(DecodeAllEncodingsTest, SetPreferredColorProfileTest) {
-  const auto& from = GetParam();
-  SetPreferredColorProfileTest(from);
+static std::string DecodeAllEncodingsVariantsTestName(
+    const ::testing::TestParamInfo<
+        std::tuple<jxl::test::ColorEncodingDescriptor, bool, bool>>& info) {
+  const auto& encoding = std::get<0>(info.param);
+  bool icc_dst = std::get<1>(info.param);
+  bool use_cms = std::get<2>(info.param);
+
+  std::string encoding_name =
+      Description(ColorEncodingFromDescriptor(encoding));
+
+  return "From_" + encoding_name +
+         (icc_dst ? "_with_icc_dst" : "_without_icc_dst") +
+         (use_cms ? "_with_cms" : "_without_cms");
+}
+
+class DecodeAllEncodingsVariantsTest
+    : public ::testing::TestWithParam<
+          std::tuple<jxl::test::ColorEncodingDescriptor, bool, bool>> {};
+JXL_GTEST_INSTANTIATE_TEST_SUITE_P(
+    DecodeAllEncodingsVariantsTestInstantiation, DecodeAllEncodingsVariantsTest,
+    ::testing::Combine(::testing::ValuesIn(jxl::test::AllEncodings()),
+                       ::testing::Bool(), ::testing::Bool()),
+    DecodeAllEncodingsVariantsTestName);
+TEST_P(DecodeAllEncodingsVariantsTest, SetPreferredColorProfileTest) {
+  const auto& from = std::get<0>(GetParam());
+  bool icc_dst = std::get<1>(GetParam());
+  bool use_cms = std::get<2>(GetParam());
+  SetPreferredColorProfileTest(from, icc_dst, use_cms);
+}
+
+void DecodeImageWithColorEncoding(const std::vector<uint8_t>& compressed,
+                                  jxl::ColorEncoding& color_encoding,
+                                  bool with_cms, std::vector<uint8_t>& out,
+                                  JxlBasicInfo& info) {
+  JxlDecoder* dec = JxlDecoderCreate(nullptr);
+  int events = JXL_DEC_BASIC_INFO | JXL_DEC_COLOR_ENCODING | JXL_DEC_FULL_IMAGE;
+  EXPECT_EQ(JXL_DEC_SUCCESS, JxlDecoderSubscribeEvents(dec, events));
+  EXPECT_EQ(JXL_DEC_SUCCESS,
+            JxlDecoderSetInput(dec, compressed.data(), compressed.size()));
+  EXPECT_EQ(JXL_DEC_BASIC_INFO, JxlDecoderProcessInput(dec));
+  EXPECT_EQ(JXL_DEC_SUCCESS, JxlDecoderGetBasicInfo(dec, &info));
+  EXPECT_EQ(JXL_DEC_COLOR_ENCODING, JxlDecoderProcessInput(dec));
+  std::string color_space_in = GetOrigProfile(dec);
+  if (with_cms) {
+    JxlDecoderSetCms(dec, *JxlGetDefaultCms());
+    EXPECT_TRUE(color_encoding.CreateICC());
+    std::vector<uint8_t> rewritten_icc = color_encoding.ICC();
+    EXPECT_EQ(JXL_DEC_SUCCESS,
+              JxlDecoderSetOutputColorProfile(
+                  dec, nullptr, rewritten_icc.data(), rewritten_icc.size()));
+  } else {
+    JxlColorEncoding external_color_encoding = color_encoding.ToExternal();
+    EXPECT_EQ(JXL_DEC_SUCCESS, JxlDecoderSetOutputColorProfile(
+                                   dec, &external_color_encoding, nullptr, 0));
+  }
+  EXPECT_EQ(JXL_DEC_NEED_IMAGE_OUT_BUFFER, JxlDecoderProcessInput(dec));
+
+  size_t buffer_size;
+  JxlPixelFormat format = {3, JXL_TYPE_UINT16, JXL_BIG_ENDIAN, 0};
+
+  JxlPixelFormat out_format = format;
+  out_format.num_channels = color_encoding.Channels();
+  EXPECT_EQ(JXL_DEC_SUCCESS,
+            JxlDecoderImageOutBufferSize(dec, &out_format, &buffer_size));
+  out.resize(buffer_size);
+  EXPECT_EQ(JXL_DEC_SUCCESS, JxlDecoderSetImageOutBuffer(
+                                 dec, &out_format, out.data(), out.size()));
+  EXPECT_EQ(JXL_DEC_FULL_IMAGE, JxlDecoderProcessInput(dec));
+  JxlDecoderDestroy(dec);
+}
+
+class DecodeAllEncodingsWithCMSTest
+    : public ::testing::TestWithParam<jxl::test::ColorEncodingDescriptor> {};
+
+JXL_GTEST_INSTANTIATE_TEST_SUITE_P(
+    AllEncodings, DecodeAllEncodingsWithCMSTest,
+    testing::ValuesIn(jxl::test::AllEncodings()));
+
+TEST_P(DecodeAllEncodingsWithCMSTest, DecodeWithCMS) {
+  auto all_encodings = jxl::test::AllEncodings();
+  uint32_t num_channels = 3;
+  size_t xsize = 177, ysize = 123;
+  std::vector<uint8_t> pixels =
+      jxl::test::GetSomeTestImage(xsize, ysize, num_channels, 0);
+  jxl::TestCodestreamParams params;
+  std::vector<uint8_t> data =
+      jxl::CreateTestJXLCodestream(jxl::Bytes(pixels.data(), pixels.size()),
+                                   xsize, ysize, num_channels, params);
+
+  jxl::ColorEncoding color_encoding =
+      jxl::test::ColorEncodingFromDescriptor(GetParam());
+  fprintf(stderr, "color_description: %s\n",
+          Description(color_encoding).c_str());
+
+  std::vector<uint8_t> out_with_cms;
+  JxlBasicInfo info_with_cms;
+  DecodeImageWithColorEncoding(data, color_encoding, true, out_with_cms,
+                               info_with_cms);
+
+  std::vector<uint8_t> out_without_cms;
+  JxlBasicInfo info_without_cms;
+  DecodeImageWithColorEncoding(data, color_encoding, false, out_without_cms,
+                               info_without_cms);
+
+  EXPECT_EQ(info_with_cms.xsize, info_without_cms.xsize);
+  EXPECT_EQ(info_with_cms.ysize, info_without_cms.ysize);
+  EXPECT_EQ(out_with_cms.size(), out_without_cms.size());
+  double dist = ButteraugliDistance(xsize, ysize, out_with_cms, color_encoding,
+                                    255, out_without_cms, color_encoding, 255);
+
+  EXPECT_LT(dist, .1);
 }
 
 // Tests the case of lossy sRGB image without alpha channel, decoded to RGB8
@@ -1894,15 +2021,15 @@ TEST(DecodeTest, PixelTestOpaqueSrgbLossy) {
     std::vector<uint8_t> pixels =
         jxl::test::GetSomeTestImage(xsize, ysize, 3, 0);
     JxlPixelFormat format_orig = {3, JXL_TYPE_UINT16, JXL_BIG_ENDIAN, 0};
-    jxl::PaddedBytes compressed = jxl::CreateTestJXLCodestream(
-        jxl::Span<const uint8_t>(pixels.data(), pixels.size()), xsize, ysize, 3,
+    std::vector<uint8_t> compressed = jxl::CreateTestJXLCodestream(
+        jxl::Bytes(pixels.data(), pixels.size()), xsize, ysize, 3,
         jxl::TestCodestreamParams());
 
     JxlPixelFormat format = {channels, JXL_TYPE_UINT8, JXL_LITTLE_ENDIAN, 0};
 
     std::vector<uint8_t> pixels2 = jxl::DecodeWithAPI(
-        dec, jxl::Span<const uint8_t>(compressed.data(), compressed.size()),
-        format, /*use_callback=*/true, /*set_buffer_early=*/false,
+        dec, jxl::Bytes(compressed.data(), compressed.size()), format,
+        /*use_callback=*/true, /*set_buffer_early=*/false,
         /*use_resizable_runner=*/false, /*require_boxes=*/false,
         /*expect_success*/ true);
     JxlDecoderReset(dec);
@@ -1945,15 +2072,14 @@ TEST(DecodeTest, PixelTestOpaqueSrgbLossyNoise) {
     JxlPixelFormat format_orig = {3, JXL_TYPE_UINT16, JXL_BIG_ENDIAN, 0};
     jxl::TestCodestreamParams params;
     params.cparams.noise = jxl::Override::kOn;
-    jxl::PaddedBytes compressed = jxl::CreateTestJXLCodestream(
-        jxl::Span<const uint8_t>(pixels.data(), pixels.size()), xsize, ysize, 3,
-        params);
+    std::vector<uint8_t> compressed = jxl::CreateTestJXLCodestream(
+        jxl::Bytes(pixels.data(), pixels.size()), xsize, ysize, 3, params);
 
     JxlPixelFormat format = {channels, JXL_TYPE_UINT8, JXL_LITTLE_ENDIAN, 0};
 
     std::vector<uint8_t> pixels2 = jxl::DecodeWithAPI(
-        dec, jxl::Span<const uint8_t>(compressed.data(), compressed.size()),
-        format, /*use_callback=*/false, /*set_buffer_early=*/true,
+        dec, jxl::Bytes(compressed.data(), compressed.size()), format,
+        /*use_callback=*/false, /*set_buffer_early=*/true,
         /*use_resizable_runner=*/false, /*require_boxes=*/false,
         /*expect_success=*/true);
     JxlDecoderReset(dec);
@@ -1995,9 +2121,8 @@ TEST(DecodeTest, ProcessEmptyInputWithBoxes) {
     jxl::TestCodestreamParams params;
     params.box_format = (CodeStreamBoxFormat)i;
     printf("Testing empty input with box format %d\n", (int)params.box_format);
-    jxl::PaddedBytes compressed = jxl::CreateTestJXLCodestream(
-        jxl::Span<const uint8_t>(pixels.data(), pixels.size()), xsize, ysize, 3,
-        params);
+    std::vector<uint8_t> compressed = jxl::CreateTestJXLCodestream(
+        jxl::Bytes(pixels.data(), pixels.size()), xsize, ysize, 3, params);
     const int events =
         JXL_DEC_BASIC_INFO | JXL_DEC_FULL_IMAGE | JXL_DEC_COLOR_ENCODING;
     EXPECT_EQ(JXL_DEC_SUCCESS, JxlDecoderSubscribeEvents(dec, events));
@@ -2039,9 +2164,8 @@ TEST(DecodeTest, ExtraBytesAfterCompressedStream) {
     }
     jxl::TestCodestreamParams params;
     params.box_format = box_format;
-    jxl::PaddedBytes compressed = jxl::CreateTestJXLCodestream(
-        jxl::Span<const uint8_t>(pixels.data(), pixels.size()), xsize, ysize, 3,
-        params);
+    std::vector<uint8_t> compressed = jxl::CreateTestJXLCodestream(
+        jxl::Bytes(pixels.data(), pixels.size()), xsize, ysize, 3, params);
     // Add some more bytes after compressed data.
     compressed.push_back(0);
     compressed.push_back(1);
@@ -2050,8 +2174,8 @@ TEST(DecodeTest, ExtraBytesAfterCompressedStream) {
     uint32_t channels = 3;
     JxlPixelFormat format = {channels, JXL_TYPE_FLOAT, JXL_LITTLE_ENDIAN, 0};
     std::vector<uint8_t> pixels2 = jxl::DecodeWithAPI(
-        dec, jxl::Span<const uint8_t>(compressed.data(), compressed.size()),
-        format, /*use_callback=*/false, /*set_buffer_early=*/true,
+        dec, jxl::Bytes(compressed.data(), compressed.size()), format,
+        /*use_callback=*/false, /*set_buffer_early=*/true,
         /*use_resizable_runner=*/false, /*require_boxes=*/false,
         /*expect_success=*/true);
     size_t unconsumed_bytes = JxlDecoderReleaseInput(dec);
@@ -2075,9 +2199,8 @@ TEST(DecodeTest, ExtraBytesAfterCompressedStreamRequireBoxes) {
                            box_format == kCSBF_Multi_Zero_Terminated);
     jxl::TestCodestreamParams params;
     params.box_format = box_format;
-    jxl::PaddedBytes compressed = jxl::CreateTestJXLCodestream(
-        jxl::Span<const uint8_t>(pixels.data(), pixels.size()), xsize, ysize, 3,
-        params);
+    std::vector<uint8_t> compressed = jxl::CreateTestJXLCodestream(
+        jxl::Bytes(pixels.data(), pixels.size()), xsize, ysize, 3, params);
     // Add some more bytes after compressed data.
     compressed.push_back(0);
     compressed.push_back(1);
@@ -2086,8 +2209,8 @@ TEST(DecodeTest, ExtraBytesAfterCompressedStreamRequireBoxes) {
     uint32_t channels = 3;
     JxlPixelFormat format = {channels, JXL_TYPE_FLOAT, JXL_LITTLE_ENDIAN, 0};
     std::vector<uint8_t> pixels2 = jxl::DecodeWithAPI(
-        dec, jxl::Span<const uint8_t>(compressed.data(), compressed.size()),
-        format, /*use_callback=*/false, /*set_buffer_early=*/true,
+        dec, jxl::Bytes(compressed.data(), compressed.size()), format,
+        /*use_callback=*/false, /*set_buffer_early=*/true,
         /*use_resizable_runner=*/false, /*require_boxes=*/true, expect_success);
     size_t unconsumed_bytes = JxlDecoderReleaseInput(dec);
     EXPECT_EQ(3, unconsumed_bytes);
@@ -2106,9 +2229,8 @@ TEST(DecodeTest, ConcatenatedCompressedStreams) {
     if (first_box_format == kCSBF_Multi_Other_Zero_Terminated) continue;
     jxl::TestCodestreamParams params1;
     params1.box_format = first_box_format;
-    jxl::PaddedBytes compressed1 = jxl::CreateTestJXLCodestream(
-        jxl::Span<const uint8_t>(pixels.data(), pixels.size()), xsize, ysize, 3,
-        params1);
+    std::vector<uint8_t> compressed1 = jxl::CreateTestJXLCodestream(
+        jxl::Bytes(pixels.data(), pixels.size()), xsize, ysize, 3, params1);
     for (int j = 0; j < kCSBF_NUM_ENTRIES; ++j) {
       CodeStreamBoxFormat second_box_format = (CodeStreamBoxFormat)j;
       if (second_box_format == kCSBF_Multi_Other_Zero_Terminated) continue;
@@ -2116,12 +2238,11 @@ TEST(DecodeTest, ConcatenatedCompressedStreams) {
              (int)second_box_format);
       jxl::TestCodestreamParams params2;
       params2.box_format = second_box_format;
-      jxl::PaddedBytes compressed2 = jxl::CreateTestJXLCodestream(
-          jxl::Span<const uint8_t>(pixels.data(), pixels.size()), xsize, ysize,
-          3, params2);
-      jxl::PaddedBytes concat;
-      concat.append(compressed1);
-      concat.append(compressed2);
+      std::vector<uint8_t> compressed2 = jxl::CreateTestJXLCodestream(
+          jxl::Bytes(pixels.data(), pixels.size()), xsize, ysize, 3, params2);
+      std::vector<uint8_t> concat;
+      jxl::Bytes(compressed1).AppendTo(&concat);
+      jxl::Bytes(compressed2).AppendTo(&concat);
       uint32_t channels = 3;
       JxlPixelFormat format = {channels, JXL_TYPE_FLOAT, JXL_LITTLE_ENDIAN, 0};
       size_t remaining = concat.size();
@@ -2134,8 +2255,8 @@ TEST(DecodeTest, ConcatenatedCompressedStreams) {
              second_box_format == kCSBF_Single_Zero_Terminated ||
              second_box_format == kCSBF_Multi_Zero_Terminated);
         std::vector<uint8_t> pixels2 = jxl::DecodeWithAPI(
-            dec, jxl::Span<const uint8_t>(concat.data() + pos, remaining),
-            format, /*use_callback=*/false, /*set_buffer_early=*/true,
+            dec, jxl::Bytes(concat.data() + pos, remaining), format,
+            /*use_callback=*/false, /*set_buffer_early=*/true,
             /*use_resizable_runner=*/false, /*require_boxes=*/true,
             expect_success);
         EXPECT_EQ(num_pixels * channels * 4, pixels2.size());
@@ -2167,19 +2288,19 @@ void TestPartialStream(bool reconstructible_jpeg) {
   std::vector<uint8_t> pixels2;
   pixels2.resize(pixels.size());
 
-  jxl::PaddedBytes jpeg_output(64);
+  std::vector<uint8_t> jpeg_output(64);
   size_t used_jpeg_output = 0;
 
-  std::vector<jxl::PaddedBytes> codestreams(kCSBF_NUM_ENTRIES);
-  std::vector<jxl::PaddedBytes> jpeg_codestreams(kCSBF_NUM_ENTRIES);
+  std::vector<std::vector<uint8_t>> codestreams(kCSBF_NUM_ENTRIES);
+  std::vector<std::vector<uint8_t>> jpeg_codestreams(kCSBF_NUM_ENTRIES);
   for (size_t i = 0; i < kCSBF_NUM_ENTRIES; ++i) {
     params.box_format = (CodeStreamBoxFormat)i;
     if (reconstructible_jpeg) {
       params.jpeg_codestream = &jpeg_codestreams[i];
     }
-    codestreams[i] = jxl::CreateTestJXLCodestream(
-        jxl::Span<const uint8_t>(pixels.data(), pixels.size()), xsize, ysize,
-        channels, params);
+    codestreams[i] =
+        jxl::CreateTestJXLCodestream(jxl::Bytes(pixels.data(), pixels.size()),
+                                     xsize, ysize, channels, params);
   }
 
   // Test multiple step sizes, to test different combinations of the streaming
@@ -2192,7 +2313,7 @@ void TestPartialStream(bool reconstructible_jpeg) {
           (CodeStreamBoxFormat)i == CodeStreamBoxFormat::kCSBF_None) {
         continue;
       }
-      const jxl::PaddedBytes& data = codestreams[i];
+      const std::vector<uint8_t>& data = codestreams[i];
       const uint8_t* next_in = data.data();
       size_t avail_in = 0;
 
@@ -2342,9 +2463,8 @@ TEST(DecodeTest, PreviewTest) {
     jxl::TestCodestreamParams params;
     params.preview_mode = mode;
 
-    jxl::PaddedBytes compressed = jxl::CreateTestJXLCodestream(
-        jxl::Span<const uint8_t>(pixels.data(), pixels.size()), xsize, ysize, 3,
-        params);
+    std::vector<uint8_t> compressed = jxl::CreateTestJXLCodestream(
+        jxl::Bytes(pixels.data(), pixels.size()), xsize, ysize, 3, params);
 
     JxlPixelFormat format = {3, JXL_TYPE_UINT8, JXL_LITTLE_ENDIAN, 0};
 
@@ -2367,9 +2487,8 @@ TEST(DecodeTest, PreviewTest) {
     jxl::ColorEncoding c_srgb = jxl::ColorEncoding::SRGB(false);
     jxl::CodecInOut io0;
     EXPECT_TRUE(jxl::ConvertFromExternal(
-        jxl::Span<const uint8_t>(pixels.data(), pixels.size()), xsize, ysize,
-        c_srgb, /*bits_per_sample=*/16, format_orig, /*pool=*/nullptr,
-        &io0.Main()));
+        jxl::Bytes(pixels.data(), pixels.size()), xsize, ysize, c_srgb,
+        /*bits_per_sample=*/16, format_orig, /*pool=*/nullptr, &io0.Main()));
     GeneratePreview(params.preview_mode, &io0.Main());
 
     size_t xsize_preview = io0.Main().xsize();
@@ -2388,11 +2507,11 @@ TEST(DecodeTest, PreviewTest) {
     EXPECT_EQ(JXL_DEC_PREVIEW_IMAGE, JxlDecoderProcessInput(dec));
 
     jxl::CodecInOut io1;
-    EXPECT_TRUE(jxl::ConvertFromExternal(
-        jxl::Span<const uint8_t>(preview.data(), preview.size()), xsize_preview,
-        ysize_preview, c_srgb,
-        /*bits_per_sample=*/8, format,
-        /*pool=*/nullptr, &io1.Main()));
+    EXPECT_TRUE(
+        jxl::ConvertFromExternal(jxl::Bytes(preview.data(), preview.size()),
+                                 xsize_preview, ysize_preview, c_srgb,
+                                 /*bits_per_sample=*/8, format,
+                                 /*pool=*/nullptr, &io1.Main()));
 
     jxl::ButteraugliParams ba;
     // TODO(lode): this ButteraugliDistance silently returns 0 (dangerous for
@@ -2419,9 +2538,8 @@ TEST(DecodeTest, AlignTest) {
   // Lossless to verify pixels exactly after roundtrip.
   params.cparams.SetLossless();
   params.cparams.speed_tier = jxl::SpeedTier::kThunder;
-  jxl::PaddedBytes compressed = jxl::CreateTestJXLCodestream(
-      jxl::Span<const uint8_t>(pixels.data(), pixels.size()), xsize, ysize, 4,
-      params);
+  std::vector<uint8_t> compressed = jxl::CreateTestJXLCodestream(
+      jxl::Bytes(pixels.data(), pixels.size()), xsize, ysize, 4, params);
 
   size_t align = 17;
   JxlPixelFormat format = {3, JXL_TYPE_UINT8, JXL_LITTLE_ENDIAN, align};
@@ -2430,8 +2548,8 @@ TEST(DecodeTest, AlignTest) {
 
   for (int use_callback = 0; use_callback <= 1; ++use_callback) {
     std::vector<uint8_t> pixels2 = jxl::DecodeWithAPI(
-        jxl::Span<const uint8_t>(compressed.data(), compressed.size()), format,
-        use_callback, /*set_buffer_early=*/false,
+        jxl::Bytes(compressed.data(), compressed.size()), format, use_callback,
+        /*set_buffer_early=*/false,
         /*use_resizable_runner=*/false, /*require_boxes=*/false,
         /*expect_success=*/true);
     EXPECT_EQ(expected_line_bytes * ysize, pixels2.size());
@@ -2466,8 +2584,8 @@ TEST(DecodeTest, AnimationTest) {
     jxl::ImageBundle bundle(&io.metadata.m);
 
     EXPECT_TRUE(ConvertFromExternal(
-        jxl::Span<const uint8_t>(frames[i].data(), frames[i].size()), xsize,
-        ysize, jxl::ColorEncoding::SRGB(/*is_gray=*/false),
+        jxl::Bytes(frames[i].data(), frames[i].size()), xsize, ysize,
+        jxl::ColorEncoding::SRGB(/*is_gray=*/false),
         /*bits_per_sample=*/16, format,
         /*pool=*/nullptr, &bundle));
     bundle.duration = frame_durations[i];
@@ -2477,11 +2595,8 @@ TEST(DecodeTest, AnimationTest) {
   jxl::CompressParams cparams;
   cparams.SetLossless();  // Lossless to verify pixels exactly after roundtrip.
   cparams.speed_tier = jxl::SpeedTier::kThunder;
-  jxl::AuxOut aux_out;
-  jxl::PaddedBytes compressed;
-  jxl::PassesEncoderState enc_state;
-  EXPECT_TRUE(jxl::EncodeFile(cparams, &io, &enc_state, &compressed,
-                              *JxlGetDefaultCms(), &aux_out, nullptr));
+  std::vector<uint8_t> compressed;
+  EXPECT_TRUE(jxl::test::EncodeFile(cparams, &io, &compressed));
 
   // Decode and test the animation frames
 
@@ -2569,8 +2684,8 @@ TEST(DecodeTest, AnimationTestStreaming) {
     jxl::ImageBundle bundle(&io.metadata.m);
 
     EXPECT_TRUE(ConvertFromExternal(
-        jxl::Span<const uint8_t>(frames[i].data(), frames[i].size()), xsize,
-        ysize, jxl::ColorEncoding::SRGB(/*is_gray=*/false),
+        jxl::Bytes(frames[i].data(), frames[i].size()), xsize, ysize,
+        jxl::ColorEncoding::SRGB(/*is_gray=*/false),
         /*bits_per_sample=*/16, format,
         /*pool=*/nullptr, &bundle));
     bundle.duration = frame_durations[i];
@@ -2580,11 +2695,8 @@ TEST(DecodeTest, AnimationTestStreaming) {
   jxl::CompressParams cparams;
   cparams.SetLossless();  // Lossless to verify pixels exactly after roundtrip.
   cparams.speed_tier = jxl::SpeedTier::kThunder;
-  jxl::AuxOut aux_out;
-  jxl::PaddedBytes compressed;
-  jxl::PassesEncoderState enc_state;
-  EXPECT_TRUE(jxl::EncodeFile(cparams, &io, &enc_state, &compressed,
-                              *JxlGetDefaultCms(), &aux_out, nullptr));
+  std::vector<uint8_t> compressed;
+  EXPECT_TRUE(jxl::test::EncodeFile(cparams, &io, &compressed));
 
   // Decode and test the animation frames
 
@@ -2687,9 +2799,8 @@ TEST(DecodeTest, ExtraChannelTest) {
   // Lossless to verify pixels exactly after roundtrip.
   params.cparams.SetLossless();
   params.cparams.speed_tier = jxl::SpeedTier::kThunder;
-  jxl::PaddedBytes compressed = jxl::CreateTestJXLCodestream(
-      jxl::Span<const uint8_t>(pixels.data(), pixels.size()), xsize, ysize, 4,
-      params);
+  std::vector<uint8_t> compressed = jxl::CreateTestJXLCodestream(
+      jxl::Bytes(pixels.data(), pixels.size()), xsize, ysize, 4, params);
 
   size_t align = 17;
   JxlPixelFormat format = {3, JXL_TYPE_UINT8, JXL_LITTLE_ENDIAN, align};
@@ -2787,8 +2898,8 @@ TEST(DecodeTest, SkipCurrentFrameTest) {
     }
 
     EXPECT_TRUE(ConvertFromExternal(
-        jxl::Span<const uint8_t>(frames[i].data(), frames[i].size()), xsize,
-        ysize, jxl::ColorEncoding::SRGB(/*is_gray=*/false),
+        jxl::Bytes(frames[i].data(), frames[i].size()), xsize, ysize,
+        jxl::ColorEncoding::SRGB(/*is_gray=*/false),
         /*bits_per_sample=*/16, format,
         /*pool=*/nullptr, &bundle));
     bundle.duration = frame_durations[i];
@@ -2797,14 +2908,11 @@ TEST(DecodeTest, SkipCurrentFrameTest) {
 
   jxl::CompressParams cparams;
   cparams.speed_tier = jxl::SpeedTier::kThunder;
-  jxl::AuxOut aux_out;
-  jxl::PaddedBytes compressed;
-  jxl::PassesEncoderState enc_state;
+  std::vector<uint8_t> compressed;
   jxl::PassDefinition passes[] = {{2, 0, 4}, {4, 0, 4}, {8, 2, 2}, {8, 0, 1}};
   jxl::ProgressiveMode progressive_mode{passes};
-  enc_state.progressive_splitter.SetProgressiveMode(progressive_mode);
-  EXPECT_TRUE(jxl::EncodeFile(cparams, &io, &enc_state, &compressed,
-                              *JxlGetDefaultCms(), &aux_out, nullptr));
+  cparams.custom_progressive_mode = &progressive_mode;
+  EXPECT_TRUE(jxl::test::EncodeFile(cparams, &io, &compressed));
 
   JxlDecoder* dec = JxlDecoderCreate(NULL);
   const uint8_t* next_in = compressed.data();
@@ -2901,8 +3009,8 @@ TEST(DecodeTest, SkipFrameTest) {
     }
 
     EXPECT_TRUE(ConvertFromExternal(
-        jxl::Span<const uint8_t>(frames[i].data(), frames[i].size()), xsize,
-        ysize, jxl::ColorEncoding::SRGB(/*is_gray=*/false),
+        jxl::Bytes(frames[i].data(), frames[i].size()), xsize, ysize,
+        jxl::ColorEncoding::SRGB(/*is_gray=*/false),
         /*bits_per_sample=*/16, format,
         /*pool=*/nullptr, &bundle));
     bundle.duration = frame_durations[i];
@@ -2912,11 +3020,8 @@ TEST(DecodeTest, SkipFrameTest) {
   jxl::CompressParams cparams;
   cparams.SetLossless();  // Lossless to verify pixels exactly after roundtrip.
   cparams.speed_tier = jxl::SpeedTier::kThunder;
-  jxl::AuxOut aux_out;
-  jxl::PaddedBytes compressed;
-  jxl::PassesEncoderState enc_state;
-  EXPECT_TRUE(jxl::EncodeFile(cparams, &io, &enc_state, &compressed,
-                              *JxlGetDefaultCms(), &aux_out, nullptr));
+  std::vector<uint8_t> compressed;
+  EXPECT_TRUE(jxl::test::EncodeFile(cparams, &io, &compressed));
 
   // Decode and test the animation frames
 
@@ -3035,9 +3140,8 @@ TEST(DecodeTest, SkipFrameWithBlendingTest) {
       // rendered frames depend
       jxl::ImageBundle bundle_internal(&io.metadata.m);
       EXPECT_TRUE(ConvertFromExternal(
-          jxl::Span<const uint8_t>(frame_internal.data(),
-                                   frame_internal.size()),
-          xsize, ysize, jxl::ColorEncoding::SRGB(/*is_gray=*/false),
+          jxl::Bytes(frame_internal.data(), frame_internal.size()), xsize,
+          ysize, jxl::ColorEncoding::SRGB(/*is_gray=*/false),
           /*bits_per_sample=*/16, format,
           /*pool=*/nullptr, &bundle_internal));
       bundle_internal.duration = 0;
@@ -3050,11 +3154,11 @@ TEST(DecodeTest, SkipFrameWithBlendingTest) {
     // Actual rendered frame
     frame_durations[i] = 5 + i;
     jxl::ImageBundle bundle(&io.metadata.m);
-    EXPECT_TRUE(ConvertFromExternal(
-        jxl::Span<const uint8_t>(frame.data(), frame.size()), xsize, ysize,
-        jxl::ColorEncoding::SRGB(/*is_gray=*/false),
-        /*bits_per_sample=*/16, format,
-        /*pool=*/nullptr, &bundle));
+    EXPECT_TRUE(ConvertFromExternal(jxl::Bytes(frame.data(), frame.size()),
+                                    xsize, ysize,
+                                    jxl::ColorEncoding::SRGB(/*is_gray=*/false),
+                                    /*bits_per_sample=*/16, format,
+                                    /*pool=*/nullptr, &bundle));
     bundle.duration = frame_durations[i];
     // Create some variation in which frames depend on which.
     if (i != 3 && i != 9 && i != 10) {
@@ -3072,11 +3176,8 @@ TEST(DecodeTest, SkipFrameWithBlendingTest) {
   jxl::CompressParams cparams;
   cparams.SetLossless();  // Lossless to verify pixels exactly after roundtrip.
   cparams.speed_tier = jxl::SpeedTier::kThunder;
-  jxl::AuxOut aux_out;
-  jxl::PaddedBytes compressed;
-  jxl::PassesEncoderState enc_state;
-  EXPECT_TRUE(jxl::EncodeFile(cparams, &io, &enc_state, &compressed,
-                              *JxlGetDefaultCms(), &aux_out, nullptr));
+  std::vector<uint8_t> compressed;
+  EXPECT_TRUE(jxl::test::EncodeFile(cparams, &io, &compressed));
 
   // Independently decode all frames without any skipping, to create the
   // expected blended frames, for the actual tests below to compare with.
@@ -3259,9 +3360,8 @@ TEST(DecodeTest, SkipFrameWithAlphaBlendingTest) {
       // which the rendered frames depend
       jxl::ImageBundle bundle_internal(&io.metadata.m);
       EXPECT_TRUE(ConvertFromExternal(
-          jxl::Span<const uint8_t>(frame_internal.data(),
-                                   frame_internal.size()),
-          xsize / 2, ysize / 2, jxl::ColorEncoding::SRGB(/*is_gray=*/false),
+          jxl::Bytes(frame_internal.data(), frame_internal.size()), xsize / 2,
+          ysize / 2, jxl::ColorEncoding::SRGB(/*is_gray=*/false),
           /*bits_per_sample=*/16, format,
           /*pool=*/nullptr, &bundle_internal));
       bundle_internal.duration = 0;
@@ -3279,11 +3379,11 @@ TEST(DecodeTest, SkipFrameWithAlphaBlendingTest) {
         jxl::test::GetSomeTestImage(cropxsize, cropysize, 4, i * 2);
     // Actual rendered frame
     jxl::ImageBundle bundle(&io.metadata.m);
-    EXPECT_TRUE(ConvertFromExternal(
-        jxl::Span<const uint8_t>(frame.data(), frame.size()), cropxsize,
-        cropysize, jxl::ColorEncoding::SRGB(/*is_gray=*/false),
-        /*bits_per_sample=*/16, format,
-        /*pool=*/nullptr, &bundle));
+    EXPECT_TRUE(ConvertFromExternal(jxl::Bytes(frame.data(), frame.size()),
+                                    cropxsize, cropysize,
+                                    jxl::ColorEncoding::SRGB(/*is_gray=*/false),
+                                    /*bits_per_sample=*/16, format,
+                                    /*pool=*/nullptr, &bundle));
     bundle.duration = 5 + i;
     frame_durations_nc.push_back(5 + i);
     frame_durations_c.push_back(5 + i);
@@ -3306,11 +3406,8 @@ TEST(DecodeTest, SkipFrameWithAlphaBlendingTest) {
   jxl::CompressParams cparams;
   cparams.SetLossless();  // Lossless to verify pixels exactly after roundtrip.
   cparams.speed_tier = jxl::SpeedTier::kThunder;
-  jxl::AuxOut aux_out;
-  jxl::PaddedBytes compressed;
-  jxl::PassesEncoderState enc_state;
-  EXPECT_TRUE(jxl::EncodeFile(cparams, &io, &enc_state, &compressed,
-                              *JxlGetDefaultCms(), &aux_out, nullptr));
+  std::vector<uint8_t> compressed;
+  EXPECT_TRUE(jxl::test::EncodeFile(cparams, &io, &compressed));
   // try both with and without coalescing
   for (auto coalescing : {JXL_TRUE, JXL_FALSE}) {
     // Independently decode all frames without any skipping, to create the
@@ -3542,8 +3639,8 @@ TEST(DecodeTest, OrientedCroppedFrameTest) {
           jxl::test::GetSomeTestImage(cropxsize, cropysize, 4, i * 2);
       jxl::ImageBundle bundle(&io.metadata.m);
       EXPECT_TRUE(ConvertFromExternal(
-          jxl::Span<const uint8_t>(frame.data(), frame.size()), cropxsize,
-          cropysize, jxl::ColorEncoding::SRGB(/*is_gray=*/false),
+          jxl::Bytes(frame.data(), frame.size()), cropxsize, cropysize,
+          jxl::ColorEncoding::SRGB(/*is_gray=*/false),
           /*bits_per_sample=*/16, format,
           /*pool=*/nullptr, &bundle));
       bundle.origin = {cropx0, cropy0};
@@ -3556,11 +3653,8 @@ TEST(DecodeTest, OrientedCroppedFrameTest) {
         .SetLossless();  // Lossless to verify pixels exactly after roundtrip.
     cparams.speed_tier = jxl::SpeedTier::kThunder;
     cparams.resampling = resampling;
-    jxl::AuxOut aux_out;
-    jxl::PaddedBytes compressed;
-    jxl::PassesEncoderState enc_state;
-    EXPECT_TRUE(jxl::EncodeFile(cparams, &io, &enc_state, &compressed,
-                                *JxlGetDefaultCms(), &aux_out, nullptr));
+    std::vector<uint8_t> compressed;
+    EXPECT_TRUE(jxl::test::EncodeFile(cparams, &io, &compressed));
 
     // 0 is merged frame as decoded with coalescing enabled (default)
     // 1-3 are non-coalesced frames as decoded with coalescing disabled
@@ -3675,7 +3769,7 @@ struct StreamPositions {
   std::vector<FramePositions> frames;
 };
 
-void AnalyzeCodestream(const jxl::PaddedBytes& data,
+void AnalyzeCodestream(const std::vector<uint8_t>& data,
                        StreamPositions* streampos) {
   // Unbox data to codestream and mark where it is broken up by boxes.
   std::vector<uint8_t> codestream;
@@ -3727,8 +3821,7 @@ void AnalyzeCodestream(const jxl::PaddedBytes& data,
     return pos + offset;
   };
   // Analyze the unboxed codestream.
-  jxl::BitReader br(
-      jxl::Span<const uint8_t>(codestream.data(), codestream.size()));
+  jxl::BitReader br(jxl::Bytes(codestream.data(), codestream.size()));
   ASSERT_EQ(br.ReadFixedBits<16>(), 0x0AFF);
   jxl::CodecMetadata metadata;
   ASSERT_TRUE(ReadSizeHeader(&br, &metadata.size));
@@ -3738,10 +3831,8 @@ void AnalyzeCodestream(const jxl::PaddedBytes& data,
   metadata.transform_data.nonserialized_xyb_encoded = metadata.m.xyb_encoded;
   ASSERT_TRUE(jxl::Bundle::Read(&br, &metadata.transform_data));
   if (metadata.m.color_encoding.WantICC()) {
-    jxl::PaddedBytes icc_data;
-    ASSERT_TRUE(jxl::ReadICC(&br, &icc_data));
-    jxl::IccBytes icc;
-    jxl::Span<const uint8_t>(icc_data).AppendTo(&icc);
+    std::vector<uint8_t> icc;
+    ASSERT_TRUE(jxl::test::ReadICC(&br, &icc));
     ASSERT_TRUE(!icc.empty());
     metadata.m.color_encoding.SetICCRaw(std::move(icc));
   }
@@ -3760,9 +3851,9 @@ void AnalyzeCodestream(const jxl::PaddedBytes& data,
         add_offset(jxl::DivCeil(br.TotalBitsConsumed(), jxl::kBitsPerByte));
     jxl::FrameDimensions frame_dim = frame_header.ToFrameDimensions();
     uint64_t groups_total_size;
-    const size_t toc_entries = jxl::NumTocEntries(
-        frame_dim.num_groups, frame_dim.num_dc_groups,
-        frame_header.passes.num_passes, /*has_ac_global=*/true);
+    const size_t toc_entries =
+        jxl::NumTocEntries(frame_dim.num_groups, frame_dim.num_dc_groups,
+                           frame_header.passes.num_passes);
     std::vector<uint64_t> section_offsets;
     std::vector<uint32_t> section_sizes;
     ASSERT_TRUE(ReadGroupOffsets(toc_entries, &br, &section_offsets,
@@ -3790,7 +3881,7 @@ struct Breakpoint {
 
 void VerifyProgression(size_t xsize, size_t ysize, uint32_t num_channels,
                        const std::vector<uint8_t>& pixels,
-                       const jxl::PaddedBytes& data,
+                       const std::vector<uint8_t>& data,
                        std::vector<Breakpoint> breakpoints) {
   // Size large enough for multiple groups, required to have progressive stages.
   ASSERT_LT(256, xsize);
@@ -3870,9 +3961,9 @@ TEST(DecodeTest, ProgressionTest) {
   jxl::TestCodestreamParams params;
   params.cparams.progressive_dc = 1;
   params.preview_mode = jxl::kSmallPreview;
-  jxl::PaddedBytes data = jxl::CreateTestJXLCodestream(
-      jxl::Span<const uint8_t>(pixels.data(), pixels.size()), xsize, ysize,
-      num_channels, params);
+  std::vector<uint8_t> data =
+      jxl::CreateTestJXLCodestream(jxl::Bytes(pixels.data(), pixels.size()),
+                                   xsize, ysize, num_channels, params);
   StreamPositions streampos;
   AnalyzeCodestream(data, &streampos);
   const std::vector<FramePositions>& fp = streampos.frames;
@@ -3906,9 +3997,9 @@ TEST(DecodeTest, ProgressionTestLosslessAlpha) {
   params.cparams.SetLossless();
   params.cparams.speed_tier = jxl::SpeedTier::kThunder;
   params.cparams.responsive = 1;
-  jxl::PaddedBytes data = jxl::CreateTestJXLCodestream(
-      jxl::Span<const uint8_t>(pixels.data(), pixels.size()), xsize, ysize,
-      num_channels, params);
+  std::vector<uint8_t> data =
+      jxl::CreateTestJXLCodestream(jxl::Bytes(pixels.data(), pixels.size()),
+                                   xsize, ysize, num_channels, params);
   StreamPositions streampos;
   AnalyzeCodestream(data, &streampos);
   const std::vector<FramePositions>& fp = streampos.frames;
@@ -3931,7 +4022,7 @@ TEST(DecodeTest, ProgressionTestLosslessAlpha) {
   VerifyProgression(xsize, ysize, num_channels, pixels, data, breakpoints);
 }
 
-void VerifyFilePosition(size_t expected_pos, const jxl::PaddedBytes& data,
+void VerifyFilePosition(size_t expected_pos, const std::vector<uint8_t>& data,
                         JxlDecoder* dec) {
   size_t remaining = JxlDecoderReleaseInput(dec);
   size_t pos = data.size() - remaining;
@@ -3951,9 +4042,9 @@ TEST(DecodeTest, InputHandlingTestOneShot) {
     params.cparams.progressive_dc = 1;
     params.preview_mode = jxl::kSmallPreview;
     params.box_format = (CodeStreamBoxFormat)i;
-    jxl::PaddedBytes data = jxl::CreateTestJXLCodestream(
-        jxl::Span<const uint8_t>(pixels.data(), pixels.size()), xsize, ysize,
-        num_channels, params);
+    std::vector<uint8_t> data =
+        jxl::CreateTestJXLCodestream(jxl::Bytes(pixels.data(), pixels.size()),
+                                     xsize, ysize, num_channels, params);
     JxlPixelFormat format = {num_channels, JXL_TYPE_UINT16, JXL_BIG_ENDIAN, 0};
     StreamPositions streampos;
     AnalyzeCodestream(data, &streampos);
@@ -4040,15 +4131,15 @@ TEST(DecodeTest, JXL_TRANSCODE_JPEG_TEST(InputHandlingTestJPEGOneshot)) {
       jxl::test::GetSomeTestImage(xsize, ysize, channels, /*seed=*/0);
   for (int i = 1; i < kCSBF_NUM_ENTRIES; ++i) {
     printf("Testing with box format %d\n", i);
-    jxl::PaddedBytes jpeg_codestream;
+    std::vector<uint8_t> jpeg_codestream;
     jxl::TestCodestreamParams params;
     params.cparams.color_transform = jxl::ColorTransform::kNone;
     params.jpeg_codestream = &jpeg_codestream;
     params.preview_mode = jxl::kSmallPreview;
     params.box_format = (CodeStreamBoxFormat)i;
-    jxl::PaddedBytes data = jxl::CreateTestJXLCodestream(
-        jxl::Span<const uint8_t>(pixels.data(), pixels.size()), xsize, ysize,
-        channels, params);
+    std::vector<uint8_t> data =
+        jxl::CreateTestJXLCodestream(jxl::Bytes(pixels.data(), pixels.size()),
+                                     xsize, ysize, channels, params);
     JxlPixelFormat format = {3, JXL_TYPE_UINT16, JXL_BIG_ENDIAN, 0};
     StreamPositions streampos;
     AnalyzeCodestream(data, &streampos);
@@ -4135,9 +4226,9 @@ TEST(DecodeTest, InputHandlingTestStreaming) {
     params.cparams.progressive_dc = 1;
     params.box_format = (CodeStreamBoxFormat)i;
     params.preview_mode = jxl::kSmallPreview;
-    jxl::PaddedBytes data = jxl::CreateTestJXLCodestream(
-        jxl::Span<const uint8_t>(pixels.data(), pixels.size()), xsize, ysize,
-        num_channels, params);
+    std::vector<uint8_t> data =
+        jxl::CreateTestJXLCodestream(jxl::Bytes(pixels.data(), pixels.size()),
+                                     xsize, ysize, num_channels, params);
     JxlPixelFormat format = {num_channels, JXL_TYPE_UINT16, JXL_BIG_ENDIAN, 0};
     StreamPositions streampos;
     AnalyzeCodestream(data, &streampos);
@@ -4230,9 +4321,9 @@ TEST(DecodeTest, FlushTest) {
       jxl::test::GetSomeTestImage(xsize, ysize, num_channels, 0);
   jxl::TestCodestreamParams params;
   params.preview_mode = jxl::kSmallPreview;
-  jxl::PaddedBytes data = jxl::CreateTestJXLCodestream(
-      jxl::Span<const uint8_t>(pixels.data(), pixels.size()), xsize, ysize,
-      num_channels, params);
+  std::vector<uint8_t> data =
+      jxl::CreateTestJXLCodestream(jxl::Bytes(pixels.data(), pixels.size()),
+                                   xsize, ysize, num_channels, params);
   JxlPixelFormat format = {num_channels, JXL_TYPE_UINT16, JXL_BIG_ENDIAN, 0};
 
   std::vector<uint8_t> pixels2;
@@ -4305,9 +4396,9 @@ TEST(DecodeTest, FlushTestImageOutCallback) {
       jxl::test::GetSomeTestImage(xsize, ysize, num_channels, 0);
   jxl::TestCodestreamParams params;
   params.preview_mode = jxl::kSmallPreview;
-  jxl::PaddedBytes data = jxl::CreateTestJXLCodestream(
-      jxl::Span<const uint8_t>(pixels.data(), pixels.size()), xsize, ysize,
-      num_channels, params);
+  std::vector<uint8_t> data =
+      jxl::CreateTestJXLCodestream(jxl::Bytes(pixels.data(), pixels.size()),
+                                   xsize, ysize, num_channels, params);
   JxlPixelFormat format = {num_channels, JXL_TYPE_UINT16, JXL_BIG_ENDIAN, 0};
 
   std::vector<uint8_t> pixels2;
@@ -4391,9 +4482,9 @@ TEST(DecodeTest, FlushTestLossyProgressiveAlpha) {
       jxl::test::GetSomeTestImage(xsize, ysize, num_channels, 0);
   jxl::TestCodestreamParams params;
   params.preview_mode = jxl::kSmallPreview;
-  jxl::PaddedBytes data = jxl::CreateTestJXLCodestream(
-      jxl::Span<const uint8_t>(pixels.data(), pixels.size()), xsize, ysize,
-      num_channels, params);
+  std::vector<uint8_t> data =
+      jxl::CreateTestJXLCodestream(jxl::Bytes(pixels.data(), pixels.size()),
+                                   xsize, ysize, num_channels, params);
   JxlPixelFormat format = {num_channels, JXL_TYPE_UINT16, JXL_BIG_ENDIAN, 0};
 
   std::vector<uint8_t> pixels2;
@@ -4463,9 +4554,9 @@ TEST(DecodeTest, FlushTestLossyProgressiveAlphaUpsampling) {
   params.cparams.resampling = 2;
   params.cparams.ec_resampling = 4;
   params.preview_mode = jxl::kSmallPreview;
-  jxl::PaddedBytes data = jxl::CreateTestJXLCodestream(
-      jxl::Span<const uint8_t>(pixels.data(), pixels.size()), xsize, ysize,
-      num_channels, params);
+  std::vector<uint8_t> data =
+      jxl::CreateTestJXLCodestream(jxl::Bytes(pixels.data(), pixels.size()),
+                                   xsize, ysize, num_channels, params);
   JxlPixelFormat format = {num_channels, JXL_TYPE_UINT16, JXL_BIG_ENDIAN, 0};
 
   std::vector<uint8_t> pixels2;
@@ -4539,9 +4630,9 @@ TEST(DecodeTest, FlushTestLosslessProgressiveAlpha) {
   params.cparams.responsive = 1;
   params.cparams.modular_group_size_shift = 1;
   params.preview_mode = jxl::kSmallPreview;
-  jxl::PaddedBytes data = jxl::CreateTestJXLCodestream(
-      jxl::Span<const uint8_t>(pixels.data(), pixels.size()), xsize, ysize,
-      num_channels, params);
+  std::vector<uint8_t> data =
+      jxl::CreateTestJXLCodestream(jxl::Bytes(pixels.data(), pixels.size()),
+                                   xsize, ysize, num_channels, params);
   JxlPixelFormat format = {num_channels, JXL_TYPE_UINT16, JXL_BIG_ENDIAN, 0};
 
   std::vector<uint8_t> pixels2;
@@ -4634,8 +4725,7 @@ TEST_P(DecodeProgressiveTest, ProgressiveEventTest) {
     jxl::ColorEncoding color_encoding = jxl::ColorEncoding::SRGB(false);
     jxl::CodecInOut io;
     EXPECT_TRUE(jxl::ConvertFromExternal(
-        jxl::Span<const uint8_t>(pixels.data(), pixels.size()), xsize, ysize,
-        color_encoding,
+        jxl::Bytes(pixels.data(), pixels.size()), xsize, ysize, color_encoding,
         /*bits_per_sample=*/16, format,
         /*pool=*/nullptr, &io.Main()));
     jxl::TestCodestreamParams params;
@@ -4648,10 +4738,10 @@ TEST_P(DecodeProgressiveTest, ProgressiveEventTest) {
         {2, 0, 4}, {4, 0, 4}, {8, 2, 2}, {8, 1, 2}, {8, 0, 1}};
     const int kNumPasses = 5;
     jxl::ProgressiveMode progressive_mode{passes};
-    params.progressive_mode = &progressive_mode;
-    jxl::PaddedBytes data = jxl::CreateTestJXLCodestream(
-        jxl::Span<const uint8_t>(pixels.data(), pixels.size()), xsize, ysize,
-        num_channels, params);
+    params.cparams.custom_progressive_mode = &progressive_mode;
+    std::vector<uint8_t> data =
+        jxl::CreateTestJXLCodestream(jxl::Bytes(pixels.data(), pixels.size()),
+                                     xsize, ysize, num_channels, params);
 
     for (size_t increment : {(size_t)1, data.size()}) {
       printf(
@@ -4751,8 +4841,8 @@ TEST_P(DecodeProgressiveTest, ProgressiveEventTest) {
       for (int p = 0;; p = next_pass(p)) {
         jxl::CodecInOut io1;
         EXPECT_TRUE(jxl::ConvertFromExternal(
-            jxl::Span<const uint8_t>(passes[p].data(), passes[p].size()), xsize,
-            ysize, color_encoding,
+            jxl::Bytes(passes[p].data(), passes[p].size()), xsize, ysize,
+            color_encoding,
             /*bits_per_sample=*/16, format,
             /*pool=*/nullptr, &io1.Main()));
         distances[p] = ButteraugliDistance(
@@ -4775,8 +4865,8 @@ TEST_P(DecodeProgressiveTest, ProgressiveEventTest) {
   }
 }
 
-void VerifyJPEGReconstruction(const jxl::PaddedBytes& container,
-                              const jxl::PaddedBytes& jpeg_bytes) {
+void VerifyJPEGReconstruction(jxl::Span<const uint8_t> container,
+                              jxl::Span<const uint8_t> jpeg_bytes) {
   JxlDecoderPtr dec = JxlDecoderMake(nullptr);
   EXPECT_EQ(JXL_DEC_SUCCESS,
             JxlDecoderSubscribeEvents(
@@ -4811,56 +4901,53 @@ TEST(DecodeTest, JXL_TRANSCODE_JPEG_TEST(JPEGReconstructTestCodestream)) {
   size_t channels = 3;
   std::vector<uint8_t> pixels =
       jxl::test::GetSomeTestImage(xsize, ysize, channels, /*seed=*/0);
-  jxl::PaddedBytes jpeg_codestream;
+  std::vector<uint8_t> jpeg_codestream;
   jxl::TestCodestreamParams params;
   params.cparams.color_transform = jxl::ColorTransform::kNone;
   params.box_format = kCSBF_Single;
   params.jpeg_codestream = &jpeg_codestream;
   params.preview_mode = jxl::kSmallPreview;
-  jxl::PaddedBytes compressed = jxl::CreateTestJXLCodestream(
-      jxl::Span<const uint8_t>(pixels.data(), pixels.size()), xsize, ysize,
-      channels, params);
-  VerifyJPEGReconstruction(compressed, jpeg_codestream);
+  std::vector<uint8_t> compressed = jxl::CreateTestJXLCodestream(
+      jxl::Bytes(pixels.data(), pixels.size()), xsize, ysize, channels, params);
+  VerifyJPEGReconstruction(jxl::Bytes(compressed), jxl::Bytes(jpeg_codestream));
 }
 
 TEST(DecodeTest, JXL_TRANSCODE_JPEG_TEST(JPEGReconstructionTest)) {
   const std::string jpeg_path = "jxl/flower/flower.png.im_q85_420.jpg";
-  const jxl::PaddedBytes orig = jxl::test::ReadTestData(jpeg_path);
+  const std::vector<uint8_t> orig = jxl::test::ReadTestData(jpeg_path);
   jxl::CodecInOut orig_io;
-  ASSERT_TRUE(
-      jxl::jpeg::DecodeImageJPG(jxl::Span<const uint8_t>(orig), &orig_io));
+  ASSERT_TRUE(jxl::jpeg::DecodeImageJPG(jxl::Bytes(orig), &orig_io));
   orig_io.metadata.m.xyb_encoded = false;
   jxl::BitWriter writer;
   ASSERT_TRUE(WriteCodestreamHeaders(&orig_io.metadata, &writer, nullptr));
   writer.ZeroPadToByte();
-  jxl::PassesEncoderState enc_state;
   jxl::CompressParams cparams;
   cparams.color_transform = jxl::ColorTransform::kNone;
   ASSERT_TRUE(jxl::EncodeFrame(cparams, jxl::FrameInfo{}, &orig_io.metadata,
-                               orig_io.Main(), &enc_state, *JxlGetDefaultCms(),
+                               orig_io.Main(), *JxlGetDefaultCms(),
                                /*pool=*/nullptr, &writer,
                                /*aux_out=*/nullptr));
 
-  jxl::PaddedBytes jpeg_data;
+  std::vector<uint8_t> jpeg_data;
   ASSERT_TRUE(
       EncodeJPEGData(*orig_io.Main().jpeg_data.get(), &jpeg_data, cparams));
-  jxl::PaddedBytes container;
-  container.append(jxl::kContainerHeader.begin(), jxl::kContainerHeader.end());
+  std::vector<uint8_t> container;
+  jxl::Bytes(jxl::kContainerHeader).AppendTo(&container);
   jxl::AppendBoxHeader(jxl::MakeBoxType("jbrd"), jpeg_data.size(), false,
                        &container);
-  container.append(jpeg_data.data(), jpeg_data.data() + jpeg_data.size());
+  jxl::Bytes(jpeg_data).AppendTo(&container);
   jxl::AppendBoxHeader(jxl::MakeBoxType("jxlc"), 0, true, &container);
   jxl::PaddedBytes codestream = std::move(writer).TakeBytes();
-  container.append(codestream.data(), codestream.data() + codestream.size());
-  VerifyJPEGReconstruction(container, orig);
+  jxl::Bytes(codestream).AppendTo(&container);
+  VerifyJPEGReconstruction(jxl::Bytes(container), jxl::Bytes(orig));
 }
 
 TEST(DecodeTest, JXL_TRANSCODE_JPEG_TEST(JPEGReconstructionMetadataTest)) {
   const std::string jpeg_path = "jxl/jpeg_reconstruction/1x1_exif_xmp.jpg";
   const std::string jxl_path = "jxl/jpeg_reconstruction/1x1_exif_xmp.jxl";
-  const jxl::PaddedBytes jpeg = jxl::test::ReadTestData(jpeg_path);
-  const jxl::PaddedBytes jxl = jxl::test::ReadTestData(jxl_path);
-  VerifyJPEGReconstruction(jxl, jpeg);
+  const std::vector<uint8_t> jpeg = jxl::test::ReadTestData(jpeg_path);
+  const std::vector<uint8_t> jxl = jxl::test::ReadTestData(jxl_path);
+  VerifyJPEGReconstruction(jxl::Bytes(jxl), jxl::Bytes(jpeg));
 }
 
 TEST(DecodeTest, ContinueFinalNonEssentialBoxTest) {
@@ -4869,9 +4956,8 @@ TEST(DecodeTest, ContinueFinalNonEssentialBoxTest) {
   jxl::TestCodestreamParams params;
   params.box_format = kCSBF_Multi_Other_Terminated;
   params.add_icc_profile = true;
-  jxl::PaddedBytes compressed = jxl::CreateTestJXLCodestream(
-      jxl::Span<const uint8_t>(pixels.data(), pixels.size()), xsize, ysize, 4,
-      params);
+  std::vector<uint8_t> compressed = jxl::CreateTestJXLCodestream(
+      jxl::Bytes(pixels.data(), pixels.size()), xsize, ysize, 4, params);
   StreamPositions streampos;
   AnalyzeCodestream(compressed, &streampos);
 
@@ -4930,7 +5016,7 @@ bool BoxTypeEquals(const std::string& type_string, JxlBoxType type) {
 
 TEST(DecodeTest, ExtentedBoxSizeTest) {
   const std::string jxl_path = "jxl/boxes/square-extended-size-container.jxl";
-  const jxl::PaddedBytes orig = jxl::test::ReadTestData(jxl_path);
+  const std::vector<uint8_t> orig = jxl::test::ReadTestData(jxl_path);
   JxlDecoder* dec = JxlDecoderCreate(nullptr);
 
   EXPECT_EQ(JXL_DEC_SUCCESS, JxlDecoderSubscribeEvents(dec, JXL_DEC_BOX));
@@ -4963,9 +5049,8 @@ TEST(DecodeTest, JXL_BOXES_TEST(BoxTest)) {
   jxl::TestCodestreamParams params;
   params.box_format = kCSBF_Multi_Other_Terminated;
   params.add_icc_profile = true;
-  jxl::PaddedBytes compressed = jxl::CreateTestJXLCodestream(
-      jxl::Span<const uint8_t>(pixels.data(), pixels.size()), xsize, ysize, 4,
-      params);
+  std::vector<uint8_t> compressed = jxl::CreateTestJXLCodestream(
+      jxl::Bytes(pixels.data(), pixels.size()), xsize, ysize, 4, params);
 
   JxlDecoder* dec = JxlDecoderCreate(nullptr);
 
@@ -5038,9 +5123,8 @@ TEST(DecodeTest, JXL_BOXES_TEST(ExifBrobBoxTest)) {
   params.cparams.SetLossless();
   params.box_format = kCSBF_Brob_Exif;
   params.add_icc_profile = true;
-  jxl::PaddedBytes compressed = jxl::CreateTestJXLCodestream(
-      jxl::Span<const uint8_t>(pixels.data(), pixels.size()), xsize, ysize, 4,
-      params);
+  std::vector<uint8_t> compressed = jxl::CreateTestJXLCodestream(
+      jxl::Bytes(pixels.data(), pixels.size()), xsize, ysize, 4, params);
 
   // Test raw brob box, not brotli-decompressing
   for (int streaming = 0; streaming < 2; ++streaming) {
@@ -5222,9 +5306,8 @@ TEST(DecodeTest, JXL_BOXES_TEST(PartialCodestreamBoxTest)) {
   params.cparams.speed_tier = jxl::SpeedTier::kThunder;
   params.box_format = kCSBF_Multi;
   params.add_icc_profile = true;
-  jxl::PaddedBytes compressed = jxl::CreateTestJXLCodestream(
-      jxl::Span<const uint8_t>(pixels.data(), pixels.size()), xsize, ysize, 4,
-      params);
+  std::vector<uint8_t> compressed = jxl::CreateTestJXLCodestream(
+      jxl::Bytes(pixels.data(), pixels.size()), xsize, ysize, 4, params);
 
   std::vector<uint8_t> extracted_codestream;
 
@@ -5367,7 +5450,6 @@ TEST(DecodeTest, JXL_BOXES_TEST(PartialCodestreamBoxTest)) {
 }
 
 TEST(DecodeTest, SpotColorTest) {
-  jxl::ThreadPool* pool = nullptr;
   jxl::CodecInOut io;
   size_t xsize = 55, ysize = 257;
   io.metadata.m.color_encoding = jxl::ColorEncoding::LinearSRGB();
@@ -5405,11 +5487,8 @@ TEST(DecodeTest, SpotColorTest) {
   cparams.color_transform = jxl::ColorTransform::kNone;
   cparams.butteraugli_distance = 0.f;
 
-  jxl::PaddedBytes compressed;
-  std::unique_ptr<jxl::PassesEncoderState> enc_state =
-      jxl::make_unique<jxl::PassesEncoderState>();
-  EXPECT_TRUE(jxl::EncodeFile(cparams, &io, enc_state.get(), &compressed,
-                              *JxlGetDefaultCms(), nullptr, pool));
+  std::vector<uint8_t> compressed;
+  EXPECT_TRUE(jxl::test::EncodeFile(cparams, &io, &compressed));
 
   for (size_t render_spot = 0; render_spot < 2; render_spot++) {
     JxlPixelFormat format = {3, JXL_TYPE_UINT8, JXL_LITTLE_ENDIAN, 0};

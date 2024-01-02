@@ -23,13 +23,13 @@ if (HWY_INCLUDE_DIR AND NOT HWY_VERSION)
   if (EXISTS "${HWY_INCLUDE_DIR}/hwy/highway.h")
     file(READ "${HWY_INCLUDE_DIR}/hwy/highway.h" HWY_VERSION_CONTENT)
 
-    string(REGEX MATCH "#define HWY_MAJOR +([0-9]+)" _dummy "${HWY_VERSION_CONTENT}")
+    string(REGEX MATCH "#define HWY_MAJOR +([0-9]+)" _sink "${HWY_VERSION_CONTENT}")
     set(HWY_VERSION_MAJOR "${CMAKE_MATCH_1}")
 
-    string(REGEX MATCH "#define +HWY_MINOR +([0-9]+)" _dummy "${HWY_VERSION_CONTENT}")
+    string(REGEX MATCH "#define +HWY_MINOR +([0-9]+)" _sink "${HWY_VERSION_CONTENT}")
     set(HWY_VERSION_MINOR "${CMAKE_MATCH_1}")
 
-    string(REGEX MATCH "#define +HWY_PATCH +([0-9]+)" _dummy "${HWY_VERSION_CONTENT}")
+    string(REGEX MATCH "#define +HWY_PATCH +([0-9]+)" _sink "${HWY_VERSION_CONTENT}")
     set(HWY_VERSION_PATCH "${CMAKE_MATCH_1}")
 
     set(HWY_VERSION "${HWY_VERSION_MAJOR}.${HWY_VERSION_MINOR}.${HWY_VERSION_PATCH}")

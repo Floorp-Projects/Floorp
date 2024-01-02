@@ -5,7 +5,7 @@
 
 # Extra build variables.
 
-libjxl_root_package = "__main__"
+libjxl_root_package = "libjxl"
 
 libjxl_deps_brotli = ["@brotli//:brotlidec", "@brotli//:brotlienc"]
 libjxl_deps_gif = ["@gif//:gif"]
@@ -14,9 +14,8 @@ libjxl_deps_hwy = ["@highway//:hwy"]
 libjxl_deps_hwy_nanobenchmark = ["@highway//:nanobenchmark"]
 libjxl_deps_hwy_test_util = ["@highway//:hwy_test_util"]
 libjxl_deps_jpeg = ["@libjpeg_turbo//:jpeg"]
-libjxl_deps_jxl_box = ["//tools:box"]
 libjxl_deps_exr = ["@openexr//:OpenEXR"]
-libjxl_deps_png = ["@png//:png"]
+libjxl_deps_png = ["@libpng//:png"]
 libjxl_deps_runfiles = ["@bazel_tools//tools/cpp/runfiles"]
 libjxl_deps_skcms = ["@skcms//:skcms"]
 libjxl_deps_testdata = ["//:testdata"]

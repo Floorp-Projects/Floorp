@@ -15,7 +15,6 @@ Status InitializePassesSharedState(const FrameHeader& frame_header,
                                    PassesSharedState* JXL_RESTRICT shared,
                                    bool encoder) {
   JXL_ASSERT(frame_header.nonserialized_metadata != nullptr);
-  shared->frame_header = frame_header;
   shared->metadata = frame_header.nonserialized_metadata;
   shared->frame_dim = frame_header.ToFrameDimensions();
   shared->image_features.patches.SetPassesSharedState(shared);

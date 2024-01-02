@@ -92,9 +92,10 @@ void FillPackedImage(size_t bits_per_sample, uint16_t seed,
 
   // Create pixel content to test, actual content does not matter as long as it
   // can be compared after roundtrip.
-  uint8_t* out = reinterpret_cast<uint8_t*>(image->pixels());
   const float imul16 = 1.0f / 65536.0f;
   for (size_t y = 0; y < ysize; y++) {
+    uint8_t* out =
+        reinterpret_cast<uint8_t*>(image->pixels()) + y * image->stride;
     for (size_t x = 0; x < xsize; x++) {
       float r = r0 * (ysize - y - 1) / ysize + r1 * y / ysize;
       float g = g0 * (ysize - y - 1) / ysize + g1 * y / ysize;
@@ -219,13 +220,12 @@ TestImage::TestImage() {
   SetColorEncoding("RGB_D65_SRG_Rel_SRG");
 }
 
-TestImage& TestImage::DecodeFromBytes(const PaddedBytes& bytes) {
+TestImage& TestImage::DecodeFromBytes(const std::vector<uint8_t>& bytes) {
   ColorEncoding c_enc;
   JXL_CHECK(c_enc.FromExternal(ppf_.color_encoding));
   extras::ColorHints color_hints;
   color_hints.Add("color_space", Description(c_enc));
-  JXL_CHECK(
-      extras::DecodeBytes(Span<const uint8_t>(bytes), color_hints, &ppf_));
+  JXL_CHECK(extras::DecodeBytes(Bytes(bytes), color_hints, &ppf_));
   return *this;
 }
 
@@ -307,12 +307,17 @@ TestImage& TestImage::SetEndianness(JxlEndianness endianness) {
   return *this;
 }
 
+TestImage& TestImage::SetRowAlignment(size_t align) {
+  format_.align = align;
+  return *this;
+}
+
 TestImage& TestImage::SetColorEncoding(const std::string& description) {
   JXL_CHECK(ParseDescription(description, &ppf_.color_encoding));
   ColorEncoding c_enc;
   JXL_CHECK(c_enc.FromExternal(ppf_.color_encoding));
-  JXL_CHECK(c_enc.CreateICC());
   IccBytes icc = c_enc.ICC();
+  JXL_CHECK(!icc.empty());
   ppf_.icc.assign(icc.begin(), icc.end());
   return *this;
 }

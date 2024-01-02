@@ -406,7 +406,7 @@ class JXL_MUST_USE_RESULT StatusOr {
 
  private:
   union Storage {
-    char dummy_;
+    char placeholder_;
     T data_;
     Storage() {}
     ~Storage() {}

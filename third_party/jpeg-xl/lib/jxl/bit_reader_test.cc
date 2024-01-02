@@ -27,7 +27,7 @@ TEST(BitReaderTest, ExtendsWithZeroes) {
     std::vector<uint8_t> data(size, 0xff);
 
     for (size_t n_bytes = 0; n_bytes < size; n_bytes++) {
-      BitReader br(Span<const uint8_t>(data.data(), n_bytes));
+      BitReader br(Bytes(data.data(), n_bytes));
       // Read all the bits
       for (size_t i = 0; i < n_bytes * kBitsPerByte; i++) {
         ASSERT_EQ(br.ReadBits(1), 1u) << "n_bytes=" << n_bytes << " i=" << i;
@@ -214,7 +214,7 @@ TEST(BitReaderTest, TestOrder) {
 
 TEST(BitReaderTest, TotalCountersTest) {
   uint8_t buf[8] = {1, 2, 3, 4};
-  BitReader reader(Span<const uint8_t>(buf, sizeof(buf)));
+  BitReader reader(Bytes(buf, sizeof(buf)));
 
   EXPECT_EQ(sizeof(buf), reader.TotalBytes());
   EXPECT_EQ(0u, reader.TotalBitsConsumed());
@@ -240,7 +240,7 @@ TEST(BitReaderTest, MoveTest) {
   uint8_t buf[8] = {1, 2, 3, 4};
   BitReader reader2;
   {
-    BitReader reader1(Span<const uint8_t>(buf, sizeof(buf)));
+    BitReader reader1(Bytes(buf, sizeof(buf)));
 
     EXPECT_EQ(0u, reader1.TotalBitsConsumed());
     reader1.ReadFixedBits<16>();

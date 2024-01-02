@@ -86,7 +86,11 @@ Status PatchDictionary::Decode(BitReader* br, size_t xsize, size_t ysize,
     if (ref_pos.y0 + ref_pos.ysize > ib.ysize()) {
       return JXL_FAILURE("Invalid position specified in reference frame");
     }
-    size_t id_count = read_num(kPatchCountContext) + 1;
+    size_t id_count = read_num(kPatchCountContext);
+    if (id_count > max_patches) {
+      return JXL_FAILURE("Too many patches in dictionary");
+    }
+    id_count++;
     total_patches += id_count;
     if (total_patches > max_patches) {
       return JXL_FAILURE("Too many patches in dictionary");

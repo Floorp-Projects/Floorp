@@ -3,9 +3,10 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-#include <stdint.h>
+#include <jxl/cms.h>
 
 #include <array>
+#include <cstdint>
 #include <string>
 #include <utility>
 #include <vector>
@@ -16,15 +17,13 @@
 #include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/base/data_parallel.h"
 #include "lib/jxl/base/override.h"
-#include "lib/jxl/base/padded_bytes.h"
-#include "lib/jxl/cms/jxl_cms.h"
+#include "lib/jxl/base/span.h"
 #include "lib/jxl/codec_in_out.h"
 #include "lib/jxl/color_encoding_internal.h"
 #include "lib/jxl/enc_aux_out.h"
 #include "lib/jxl/enc_butteraugli_comparator.h"
 #include "lib/jxl/enc_cache.h"
 #include "lib/jxl/enc_fields.h"
-#include "lib/jxl/enc_file.h"
 #include "lib/jxl/enc_params.h"
 #include "lib/jxl/enc_toc.h"
 #include "lib/jxl/image.h"
@@ -34,15 +33,18 @@
 #include "lib/jxl/modular/encoding/enc_encoding.h"
 #include "lib/jxl/modular/encoding/encoding.h"
 #include "lib/jxl/modular/encoding/ma_common.h"
+#include "lib/jxl/padded_bytes.h"
 #include "lib/jxl/test_utils.h"
 #include "lib/jxl/testing.h"
 
 namespace jxl {
 namespace {
+
+using test::ReadTestData;
 using test::Roundtrip;
 
 void TestLosslessGroups(size_t group_size_shift) {
-  const PaddedBytes orig = jxl::test::ReadTestData("jxl/flower/flower.png");
+  const std::vector<uint8_t> orig = ReadTestData("jxl/flower/flower.png");
   CompressParams cparams;
   cparams.SetLossless();
   cparams.modular_group_size_shift = group_size_shift;
@@ -50,7 +52,7 @@ void TestLosslessGroups(size_t group_size_shift) {
   CodecInOut io_out;
 
   CodecInOut io;
-  ASSERT_TRUE(SetFromBytes(Span<const uint8_t>(orig), &io));
+  ASSERT_TRUE(SetFromBytes(Bytes(orig), &io));
   io.ShrinkTo(io.xsize() / 4, io.ysize() / 4);
 
   size_t compressed_size;
@@ -70,8 +72,8 @@ TEST(ModularTest, JXL_TSAN_SLOW_TEST(RoundtripLosslessGroups1024)) {
 }
 
 TEST(ModularTest, RoundtripLosslessCustomWP_PermuteRCT) {
-  const PaddedBytes orig = jxl::test::ReadTestData(
-      "external/wesaturate/500px/u76c0g_bliznaca_srgb8.png");
+  const std::vector<uint8_t> orig =
+      ReadTestData("external/wesaturate/500px/u76c0g_bliznaca_srgb8.png");
   CompressParams cparams;
   cparams.SetLossless();
   // 9 = permute to GBR, to test the special case of permutation-only
@@ -83,7 +85,7 @@ TEST(ModularTest, RoundtripLosslessCustomWP_PermuteRCT) {
   CodecInOut io_out;
 
   CodecInOut io;
-  ASSERT_TRUE(SetFromBytes(Span<const uint8_t>(orig), &io));
+  ASSERT_TRUE(SetFromBytes(Bytes(orig), &io));
   io.ShrinkTo(100, 100);
 
   size_t compressed_size;
@@ -93,8 +95,8 @@ TEST(ModularTest, RoundtripLosslessCustomWP_PermuteRCT) {
 }
 
 TEST(ModularTest, RoundtripLossyDeltaPalette) {
-  const PaddedBytes orig = jxl::test::ReadTestData(
-      "external/wesaturate/500px/u76c0g_bliznaca_srgb8.png");
+  const std::vector<uint8_t> orig =
+      ReadTestData("external/wesaturate/500px/u76c0g_bliznaca_srgb8.png");
   CompressParams cparams;
   cparams.modular_mode = true;
   cparams.color_transform = jxl::ColorTransform::kNone;
@@ -104,7 +106,7 @@ TEST(ModularTest, RoundtripLossyDeltaPalette) {
   CodecInOut io_out;
 
   CodecInOut io;
-  ASSERT_TRUE(SetFromBytes(Span<const uint8_t>(orig), &io));
+  ASSERT_TRUE(SetFromBytes(Bytes(orig), &io));
   io.ShrinkTo(300, 100);
 
   size_t compressed_size;
@@ -116,8 +118,8 @@ TEST(ModularTest, RoundtripLossyDeltaPalette) {
               IsSlightlyBelow(1.5));
 }
 TEST(ModularTest, RoundtripLossyDeltaPaletteWP) {
-  const PaddedBytes orig = jxl::test::ReadTestData(
-      "external/wesaturate/500px/u76c0g_bliznaca_srgb8.png");
+  const std::vector<uint8_t> orig =
+      ReadTestData("external/wesaturate/500px/u76c0g_bliznaca_srgb8.png");
   CompressParams cparams;
   cparams.SetLossless();
   cparams.lossy_palette = true;
@@ -127,7 +129,7 @@ TEST(ModularTest, RoundtripLossyDeltaPaletteWP) {
   CodecInOut io_out;
 
   CodecInOut io;
-  ASSERT_TRUE(SetFromBytes(Span<const uint8_t>(orig), &io));
+  ASSERT_TRUE(SetFromBytes(Bytes(orig), &io));
   io.ShrinkTo(300, 100);
 
   size_t compressed_size;
@@ -140,8 +142,8 @@ TEST(ModularTest, RoundtripLossyDeltaPaletteWP) {
 }
 
 TEST(ModularTest, RoundtripLossy) {
-  const PaddedBytes orig = jxl::test::ReadTestData(
-      "external/wesaturate/500px/u76c0g_bliznaca_srgb8.png");
+  const std::vector<uint8_t> orig =
+      ReadTestData("external/wesaturate/500px/u76c0g_bliznaca_srgb8.png");
   CompressParams cparams;
   cparams.modular_mode = true;
   cparams.butteraugli_distance = 2.f;
@@ -150,7 +152,7 @@ TEST(ModularTest, RoundtripLossy) {
   CodecInOut io_out;
 
   CodecInOut io;
-  ASSERT_TRUE(SetFromBytes(Span<const uint8_t>(orig), &io));
+  ASSERT_TRUE(SetFromBytes(Bytes(orig), &io));
 
   size_t compressed_size;
   JXL_EXPECT_OK(Roundtrip(&io, cparams, {}, &io_out, _, &compressed_size));
@@ -162,8 +164,8 @@ TEST(ModularTest, RoundtripLossy) {
 }
 
 TEST(ModularTest, RoundtripLossy16) {
-  const PaddedBytes orig = jxl::test::ReadTestData(
-      "external/raw.pixls/DJI-FC6310-16bit_709_v4_krita.png");
+  const std::vector<uint8_t> orig =
+      ReadTestData("external/raw.pixls/DJI-FC6310-16bit_709_v4_krita.png");
   CompressParams cparams;
   cparams.modular_mode = true;
   cparams.butteraugli_distance = 2.f;
@@ -171,7 +173,7 @@ TEST(ModularTest, RoundtripLossy16) {
   CodecInOut io_out;
 
   CodecInOut io;
-  ASSERT_TRUE(SetFromBytes(Span<const uint8_t>(orig), &io));
+  ASSERT_TRUE(SetFromBytes(Bytes(orig), &io));
   JXL_CHECK(!io.metadata.m.have_preview);
   JXL_CHECK(io.frames.size() == 1);
   JXL_CHECK(
@@ -230,10 +232,10 @@ TEST(ModularTest, RoundtripExtraProperties) {
 }
 
 TEST(ModularTest, RoundtripLosslessCustomSqueeze) {
-  const PaddedBytes orig = jxl::test::ReadTestData(
-      "external/wesaturate/500px/tmshre_riaphotographs_srgb8.png");
+  const std::vector<uint8_t> orig =
+      ReadTestData("external/wesaturate/500px/tmshre_riaphotographs_srgb8.png");
   CodecInOut io;
-  ASSERT_TRUE(SetFromBytes(Span<const uint8_t>(orig), &io));
+  ASSERT_TRUE(SetFromBytes(Bytes(orig), &io));
 
   CompressParams cparams;
   cparams.modular_mode = true;
@@ -297,10 +299,10 @@ TEST_P(ModularTestParam, RoundtripLossless) {
 
   ThreadPool* pool = nullptr;
   Rng generator(123);
-  const PaddedBytes orig = jxl::test::ReadTestData(
-      "external/wesaturate/500px/u76c0g_bliznaca_srgb8.png");
+  const std::vector<uint8_t> orig =
+      ReadTestData("external/wesaturate/500px/u76c0g_bliznaca_srgb8.png");
   CodecInOut io1;
-  ASSERT_TRUE(SetFromBytes(Span<const uint8_t>(orig), &io1, pool));
+  ASSERT_TRUE(SetFromBytes(Bytes(orig), &io1, pool));
 
   // vary the dimensions a bit, in case of bugs related to
   // even vs odd width or height.
@@ -467,7 +469,7 @@ TEST(ModularTest, PredictorIntegerOverflow) {
     bw->ZeroPadToByte();
     allotment.ReclaimAndCharge(bw, 0, nullptr);
   }
-  EXPECT_TRUE(WriteGroupOffsets(group_codes, nullptr, &writer, nullptr));
+  EXPECT_TRUE(WriteGroupOffsets(group_codes, {}, &writer, nullptr));
   writer.AppendByteAligned(group_codes);
 
   PaddedBytes compressed = std::move(writer).TakeBytes();
@@ -515,7 +517,7 @@ TEST(ModularTest, UnsqueezeIntegerOverflow) {
     bw->ZeroPadToByte();
     allotment.ReclaimAndCharge(bw, 0, nullptr);
   }
-  EXPECT_TRUE(WriteGroupOffsets(group_codes, nullptr, &writer, nullptr));
+  EXPECT_TRUE(WriteGroupOffsets(group_codes, {}, &writer, nullptr));
   writer.AppendByteAligned(group_codes);
 
   PaddedBytes compressed = std::move(writer).TakeBytes();

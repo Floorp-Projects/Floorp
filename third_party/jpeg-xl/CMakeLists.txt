@@ -3,41 +3,21 @@
 # Use of this source code is governed by a BSD-style
 # license that can be found in the LICENSE file.
 
-# Ubuntu bionic ships with cmake 3.10.
-cmake_minimum_required(VERSION 3.10)
+# Ubuntu focal ships with cmake 3.16.
+cmake_minimum_required(VERSION 3.16...3.27)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
-
-# Honor VISIBILITY_INLINES_HIDDEN on all types of targets.
-if(POLICY CMP0063)
-  cmake_policy(SET CMP0063 NEW)
-endif()
-# Pass CMAKE_EXE_LINKER_FLAGS to CC and CXX compilers when testing if they work.
-if(POLICY CMP0065)
-  cmake_policy(SET CMP0065 NEW)
-endif()
-
-# Set PIE flags for POSITION_INDEPENDENT_CODE targets, added in 3.14.
-if(POLICY CMP0083)
-  cmake_policy(SET CMP0083 NEW)
-endif()
 
 project(LIBJXL LANGUAGES C CXX)
 
-include(CheckCXXSourceCompiles)
-check_cxx_source_compiles(
-   "int main() {
-      #if !defined(__EMSCRIPTEN__)
-      static_assert(false, \"__EMSCRIPTEN__ is not defined\");
-      #endif
-      return 0;
-    }"
-  JPEGXL_EMSCRIPTEN
-)
+# TODO(sboukortt): remove once oss-fuzz passes -DBUILD_SHARED_LIBS=OFF
+if(JPEGXL_ENABLE_FUZZERS)
+  message(INFO "Fuzzer build detected, building static libs")
+  set(BUILD_SHARED_LIBS OFF)
+endif()
 
 message(STATUS "CMAKE_SYSTEM_PROCESSOR is ${CMAKE_SYSTEM_PROCESSOR}")
 include(CheckCXXCompilerFlag)
 check_cxx_compiler_flag("-fsanitize=fuzzer-no-link" CXX_FUZZERS_SUPPORTED)
-check_cxx_compiler_flag("-Xclang -mconstructor-aliases" CXX_CONSTRUCTOR_ALIASES_SUPPORTED)
 check_cxx_compiler_flag("-fmacro-prefix-map=OLD=NEW" CXX_MACRO_PREFIX_MAP)
 check_cxx_compiler_flag("-fno-rtti" CXX_NO_RTTI_SUPPORTED)
 
@@ -95,12 +75,17 @@ check_cxx_source_compiles(
   JXL_HWY_DISABLED_TARGETS_FORCED
 )
 
-set(WARNINGS_AS_ERRORS_DEFAULT false)
-
-if((SANITIZER STREQUAL "msan") OR JPEGXL_EMSCRIPTEN)
+if((SANITIZER STREQUAL "msan") OR EMSCRIPTEN)
   set(BUNDLE_LIBPNG_DEFAULT YES)
 else()
   set(BUNDLE_LIBPNG_DEFAULT NO)
+endif()
+
+
+if(EXISTS "${PROJECT_SOURCE_DIR}/third_party/libjpeg-turbo/jconfig.h.in")
+  set(ENABLE_JPEGLI_DEFAULT YES)
+else()
+  set(ENABLE_JPEGLI_DEFAULT NO)
 endif()
 
 # Standard cmake naming for building shared libraries.
@@ -113,7 +98,7 @@ set(JPEGXL_ENABLE_DEVTOOLS false CACHE BOOL
     "Build JPEGXL developer tools.")
 set(JPEGXL_ENABLE_TOOLS true CACHE BOOL
     "Build JPEGXL user tools: cjxl and djxl.")
-set(JPEGXL_ENABLE_JPEGLI true CACHE BOOL
+set(JPEGXL_ENABLE_JPEGLI ${ENABLE_JPEGLI_DEFAULT} CACHE BOOL
     "Build jpegli library.")
 set(JPEGXL_ENABLE_JPEGLI_LIBJPEG true CACHE BOOL
     "Build libjpeg.so shared library based on jpegli.")
@@ -141,8 +126,6 @@ set(JPEGXL_ENABLE_OPENEXR true CACHE BOOL
     "Build JPEGXL with support for OpenEXR if available.")
 set(JPEGXL_ENABLE_SKCMS true CACHE BOOL
     "Build with skcms instead of lcms2.")
-set(JPEGXL_BUNDLE_SKCMS true CACHE BOOL
-    "When building with skcms, bundle it into libjxl.a.")
 set(JPEGXL_ENABLE_VIEWERS false CACHE BOOL
     "Build JPEGXL viewer tools for evaluation.")
 set(JPEGXL_ENABLE_TCMALLOC ${ENABLE_TCMALLOC_DEFAULT} CACHE BOOL
@@ -163,7 +146,7 @@ set(JPEGXL_ENABLE_BOXES true CACHE BOOL
  (default enabled)")
 set(JPEGXL_STATIC false CACHE BOOL
     "Build tools as static binaries.")
-set(JPEGXL_WARNINGS_AS_ERRORS ${WARNINGS_AS_ERRORS_DEFAULT} CACHE BOOL
+set(JPEGXL_WARNINGS_AS_ERRORS false CACHE BOOL
     "Treat warnings as errors during compilation.")
 set(JPEGXL_DEP_LICENSE_DIR "" CACHE STRING
     "Directory where to search for system dependencies \"copyright\" files.")
@@ -194,24 +177,11 @@ if (NOT CMAKE_C_COMPILER_ID STREQUAL CMAKE_CXX_COMPILER_ID)
   message(FATAL_ERROR "Different C/C++ compilers set: "
           "${CMAKE_C_COMPILER_ID} vs ${CMAKE_CXX_COMPILER_ID}")
 endif()
-if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  # Android NDK's toolchain.cmake fakes the clang version in
-  # CMAKE_CXX_COMPILER_VERSION with an incorrect number, so ignore this.
-  if (NOT CMAKE_ANDROID_NDK_TOOLCHAIN_VERSION MATCHES "clang"
-      AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5)
-    message(FATAL_ERROR
-      "Minimum Clang version required is Clang 5, please update.")
-  endif()
-elseif (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
-  if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 7)
-    message(FATAL_ERROR
-      "Minimum GCC version required is 7, please update.")
-  endif()
-endif()
 
 message(STATUS
     "Compiled IDs C:${CMAKE_C_COMPILER_ID}, C++:${CMAKE_CXX_COMPILER_ID}")
 
+set(JXL_HWY_INCLUDE_DIRS "$<BUILD_INTERFACE:$<TARGET_PROPERTY:$<IF:$<TARGET_EXISTS:hwy::hwy>,hwy::hwy,hwy>,INTERFACE_INCLUDE_DIRECTORIES>>")
 # Always disable SSSE3 since it is rare to have SSSE3 but not SSE4
 set(HWY_DISABLED_TARGETS "HWY_SSSE3")
 if (NOT JPEGXL_ENABLE_AVX512)
@@ -293,7 +263,7 @@ if(JPEGXL_STATIC)
   endif()
 endif()  # JPEGXL_STATIC
 
-if (JPEGXL_EMSCRIPTEN)
+if (EMSCRIPTEN)
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pthread")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pthread")
@@ -331,23 +301,19 @@ else ()
     add_definitions(-DHWY_DISABLED_TARGETS=\(${HWY_DISABLED_TARGETS}\))
   endif()
 
-  # In CMake before 3.12 it is problematic to pass repeated flags like -Xclang.
-  # For this reason we place them in CMAKE_CXX_FLAGS instead.
-  # See https://gitlab.kitware.com/cmake/cmake/issues/15826
-
   # Machine flags.
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -funwind-tables")
+  add_compile_options(-funwind-tables)
   if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Xclang -mrelax-all")
+    add_compile_options("SHELL:-Xclang -mrelax-all")
   endif()
   if (CXX_CONSTRUCTOR_ALIASES_SUPPORTED)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Xclang -mconstructor-aliases")
+    add_compile_options("SHELL:-Xclang -mconstructor-aliases")
   endif()
 
   if(WIN32)
     # Not supported by clang-cl, but frame pointers are default on Windows
   else()
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-omit-frame-pointer")
+    add_compile_options(-fno-omit-frame-pointer)
   endif()
 
   # CPU flags - remove once we have NEON dynamic dispatch
@@ -356,17 +322,8 @@ else ()
   if(CMAKE_SYSTEM_PROCESSOR MATCHES "arm")
     if(JPEGXL_FORCE_NEON)
       # GCC requires these flags, otherwise __ARM_NEON is undefined.
-      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} \
-        -mfpu=neon-vfpv4 -mfloat-abi=hard")
+      add_compile_options(-mfpu=neon-vfpv4 -mfloat-abi=hard)
     endif()
-  endif()
-
-  # Force build with optimizations in release mode.
-  set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O2")
-  # Also optimize debug build; this is "unofficial", so it goes through ENV
-  if(DEFINED ENV{JPEGXL_OPT_DBG})
-    # Not the same thing as release_with_debug
-    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O2")
   endif()
 
   add_compile_options(
@@ -430,7 +387,6 @@ if(JPEGXL_ENABLE_DOXYGEN)
     set(DOXYGEN_GENERATE_HTML "YES")
     set(DOXYGEN_GENERATE_XML "YES")
     set(DOXYGEN_STRIP_FROM_PATH "${CMAKE_CURRENT_SOURCE_DIR}/lib/include")
-    set(DOXYGEN_USE_MDFILE_AS_MAINPAGE "README.md")
     if(JPEGXL_WARNINGS_AS_ERRORS)
       set(DOXYGEN_WARN_AS_ERROR "YES")
     endif()
@@ -554,5 +510,7 @@ endmacro()
 set(all_tests_list)
 list_test_targets(all_tests_list ${CMAKE_CURRENT_SOURCE_DIR})
 
-add_custom_target(all_tests)
-add_dependencies(all_tests ${all_tests_list})
+if(all_tests_list)
+  add_custom_target(all_tests)
+  add_dependencies(all_tests ${all_tests_list})
+endif()

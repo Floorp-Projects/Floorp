@@ -342,13 +342,15 @@ typedef enum {
   /** Control what kind of buffering is used, when using chunked image frames.
    * 0 = buffers everything, basically the same as non-streamed code path
    (mainly for testing)
-   * 1 = can buffer internal data (the tokens)
-   * 2 = can buffer the output
-   * 3 = minimize buffer usage: streamed input and chunked output, writing TOC
-   last (will not work with progressive)
-
-   When the image dimensions is smaller than 2048 x 2048 all the options are the
-   same. Using 1, 2 or 3 can result increasingly in less compression density.
+   * 1 = buffers everything for images that are smaller than 2048 x 2048, and
+   *     uses streaming input and output for larger images
+   * 2 = uses streaming input and output for all images that are larger than
+   *     one group, i.e. 256 x 256 pixels by default
+   * 3 = currently same as 2
+   *
+   * When using streaming input and output the encoder minimizes memory usage at
+   * the cost of compression density. Also note that images produced with
+   * streaming mode might can not be decoded progressively.
    */
   JXL_ENC_FRAME_SETTING_BUFFERING = 34,
 
@@ -1394,7 +1396,7 @@ JXL_EXPORT JxlEncoderStatus JxlEncoderSetFrameLossless(
 
 /**
  * Sets the distance level for lossy compression: target max butteraugli
- * distance, lower = higher quality. Range: 0 .. 15.
+ * distance, lower = higher quality. Range: 0 .. 25.
  * 0.0 = mathematically lossless (however, use JxlEncoderSetFrameLossless
  * instead to use true lossless, as setting distance to 0 alone is not the only
  * requirement). 1.0 = visually lossless. Recommended range: 0.5 .. 3.0. Default
@@ -1424,6 +1426,44 @@ JXL_EXPORT JxlEncoderStatus JxlEncoderSetFrameDistance(
  */
 JXL_EXPORT JxlEncoderStatus JxlEncoderSetExtraChannelDistance(
     JxlEncoderFrameSettings* frame_settings, size_t index, float distance);
+
+/**
+ * Maps JPEG-style quality factor to distance.
+ *
+ * This function takes in input a JPEG-style quality factor `quality` and
+ * produces as output a `distance` value suitable to be used with @ref
+ * JxlEncoderSetFrameDistance and
+ * @ref JxlEncoderSetExtraChannelDistance.
+ *
+ * The `distance` value influences the level of compression, with lower values
+ * indicating higher quality:
+ * - 0.0 implies lossless compression (however, note that calling @ref
+ * JxlEncoderSetFrameLossless is required).
+ * - 1.0 represents a visually lossy compression, which is also the default
+ * setting.
+ *
+ * The `quality` parameter, ranging up to 100, is inversely related to
+ * 'distance':
+ * - A `quality` of 100.0 maps to a `distance` of 0.0 (lossless).
+ * - A `quality` of 90.0 corresponds to a `distance` of 1.0.
+ *
+ * Recommended Range:
+ * - `distance`: 0.5 to 3.0.
+ * - corresponding `quality`: approximately 96 to 68.
+ *
+ * Allowed Range:
+ * - `distance`: 0.0 to 25.0.
+ * - corresponding `quality`: 100.0 to 0.0.
+ *
+ * Note: the `quality` parameter has no consistent psychovisual meaning
+ * across different codecs and libraries. Using the mapping defined by @ref
+ * JxlEncoderDistanceFromQuality will result in a visual quality roughly
+ * equivalent to what would be obtained with `libjpeg-turbo` with the same
+ * `quality` parameter, but that is by no means guaranteed; do not assume that
+ * the same quality value will result in similar file sizes and image quality
+ * across different codecs.
+ */
+JXL_EXPORT float JxlEncoderDistanceFromQuality(float quality);
 
 /**
  * Create a new set of encoder options, with all values initially copied from
