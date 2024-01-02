@@ -1,6 +1,6 @@
 [package]
 name = "marionette"
-version = "0.4.0"
+version = "0.5.0"
 authors = ["Mozilla"]
 description = "Library implementing the client side of Gecko's Marionette remote automation protocol."
 edition = "2018"
