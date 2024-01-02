@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<script>
+  document.addEventListener('DOMContentLoaded', async () => {
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+    const filter = document.createElementNS('http://www.w3.org/2000/svg', 'filter')
+    filter.setAttribute('id', 'id_0')
+    svg.appendChild(filter)
+    document.documentElement.appendChild(svg)
+    const doc = new Document()
+    const canvas = document.createElement('canvas')
+    const context = canvas.getContext('2d')
+    context.filter = 'url(#id_0)'
+    doc.adoptNode(document.documentElement)
+    SpecialPowers.gc()
+    setTimeout('self.close()', 2000)
+  })
+</script>
