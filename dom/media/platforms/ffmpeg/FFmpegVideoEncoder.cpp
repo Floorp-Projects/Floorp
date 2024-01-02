@@ -326,39 +326,8 @@ FFmpegVideoEncoder<LIBAV_VER>::ProcessReconfigure(
 
   // Tracked in bug 1869583 -- for now this encoder always reports it cannot be
   // reconfigured on the fly
-  // bool ok = false;
-  // for (const auto& confChange : aConfigurationChanges->mChanges) {
-  //   ok |= confChange.match(
-  //       // Not supported yet
-  //       [&](const DimensionsChange& aChange) -> bool { return false; },
-  //       [&](const DisplayDimensionsChange& aChange) -> bool { return false;
-  //       },
-  //       [&](const BitrateModeChange& aChange) -> bool {
-  //         mConfig.mBitrateMode = aChange.get();
-  //         // TODO
-  //         return false;
-  //       },
-  //       [&](const BitrateChange& aChange) -> bool {
-  //         mConfig.mBitrate = aChange.get().refOr(0);
-  //         // TODO
-  //         return false;
-  //       },
-  //       [&](const FramerateChange& aChange) -> bool {
-  //         // TODO
-  //         return false;
-  //       },
-  //       [&](const UsageChange& aChange) -> bool {
-  //         // TODO
-  //         mConfig.mUsage = aChange.get();
-  //         return false;
-  //       },
-  //       [&](const ContentHintChange& aChange) -> bool { return false; });
-  // };
-  using P = MediaDataEncoder::ReconfigurationPromise;
-  // if (ok) {
-  //   return P::CreateAndResolve(true, __func__);
-  // }
-  return P::CreateAndReject(NS_ERROR_NOT_IMPLEMENTED, __func__);
+  return MediaDataEncoder::ReconfigurationPromise::CreateAndReject(
+      NS_ERROR_NOT_IMPLEMENTED, __func__);
 }
 
 RefPtr<MediaDataEncoder::EncodePromise>
