@@ -2387,7 +2387,7 @@ void TextInputHandler::DispatchKeyEventForFlagsChanged(NSEvent* aNativeEvent,
   NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
-void TextInputHandler::InsertText(NSAttributedString* aAttrString,
+void TextInputHandler::InsertText(NSString* aString,
                                   NSRange* aReplacementRange) {
   NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
@@ -2399,13 +2399,13 @@ void TextInputHandler::InsertText(NSAttributedString* aAttrString,
 
   MOZ_LOG_KEY_OR_IME(
       LogLevel::Info,
-      ("%p TextInputHandler::InsertText, aAttrString=\"%s\", "
+      ("%p TextInputHandler::InsertText, aString=\"%s\", "
        "aReplacementRange=%p { location=%lu, length=%lu }, "
        "IsIMEComposing()=%s, "
        "keyevent=%p, keydownDispatched=%s, "
        "keydownHandled=%s, keypressDispatched=%s, "
        "causedOtherKeyEvents=%s, compositionDispatched=%s",
-       this, GetCharacters([aAttrString string]), aReplacementRange,
+       this, GetCharacters(aString), aReplacementRange,
        static_cast<unsigned long>(
            aReplacementRange ? aReplacementRange->location : 0),
        static_cast<unsigned long>(aReplacementRange ? aReplacementRange->length
@@ -2428,7 +2428,7 @@ void TextInputHandler::InsertText(NSAttributedString* aAttrString,
   NSRange selectedRange = SelectedRange();
 
   nsAutoString str;
-  nsCocoaUtils::GetStringForNSString([aAttrString string], str);
+  nsCocoaUtils::GetStringForNSString(aString, str);
 
   AutoInsertStringClearer clearer(currentKeyEvent);
   if (currentKeyEvent) {
@@ -2504,7 +2504,7 @@ void TextInputHandler::InsertText(NSAttributedString* aAttrString,
   //     calls and flush later.
   if (!currentKeyEvent || currentKeyEvent->mCompositionDispatched ||
       IsIMEComposing() || isReplacingSpecifiedRange) {
-    InsertTextAsCommittingComposition(aAttrString, aReplacementRange);
+    InsertTextAsCommittingComposition(aString, aReplacementRange);
     if (currentKeyEvent) {
       currentKeyEvent->mCompositionDispatched = true;
     }
@@ -2654,13 +2654,10 @@ bool TextInputHandler::HandleCommand(Command aCommand) {
         // speaking, we should dispatch keypress event as-is if it's handling
         // NSEventTypeKeyDown event or should insert it with committing
         // composition.
-        NSAttributedString* lineBreaker =
-            [[NSAttributedString alloc] initWithString:@"\n"];
-        InsertTextAsCommittingComposition(lineBreaker, nullptr);
+        InsertTextAsCommittingComposition(@"\n", nullptr);
         if (currentKeyEvent) {
           currentKeyEvent->mCompositionDispatched = true;
         }
-        [lineBreaker release];
         return true;
       }
       case Command::DeleteCharBackward:
@@ -3008,13 +3005,10 @@ bool TextInputHandler::HandleCommand(Command aCommand) {
   // using composition events.
   if (aCommand == Command::InsertLineBreak ||
       aCommand == Command::InsertParagraph) {
-    NSAttributedString* lineBreaker =
-        [[NSAttributedString alloc] initWithString:@"\n"];
-    InsertTextAsCommittingComposition(lineBreaker, nullptr);
+    InsertTextAsCommittingComposition(@"\n", nullptr);
     if (currentKeyEvent) {
       currentKeyEvent->mCompositionDispatched = true;
     }
-    [lineBreaker release];
     return true;
   }
 
@@ -3982,7 +3976,7 @@ bool IMEInputHandler::MaybeDispatchCurrentKeydownEvent(bool aIsProcessedByIME) {
 }
 
 void IMEInputHandler::InsertTextAsCommittingComposition(
-    NSAttributedString* aAttrString, NSRange* aReplacementRange) {
+    NSString* aString, NSRange* aReplacementRange) {
   NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   MOZ_LOG(
@@ -3991,7 +3985,7 @@ void IMEInputHandler::InsertTextAsCommittingComposition(
        "aAttrString=\"%s\", aReplacementRange=%p { location=%lu, length=%lu }, "
        "Destroyed()=%s, IsIMEComposing()=%s, "
        "mMarkedRange={ location=%lu, length=%lu }",
-       this, GetCharacters([aAttrString string]), aReplacementRange,
+       this, GetCharacters(aString), aReplacementRange,
        static_cast<unsigned long>(
            aReplacementRange ? aReplacementRange->location : 0),
        static_cast<unsigned long>(aReplacementRange ? aReplacementRange->length
@@ -4043,7 +4037,7 @@ void IMEInputHandler::InsertTextAsCommittingComposition(
   }
 
   nsString str;
-  nsCocoaUtils::GetStringForNSString([aAttrString string], str);
+  nsCocoaUtils::GetStringForNSString(aString, str);
 
   if (!IsIMEComposing()) {
     MOZ_DIAGNOSTIC_ASSERT(!str.IsEmpty());
@@ -4711,12 +4705,10 @@ void IMEInputHandler::SendCommittedText(NSString* aString) {
     return;
   }
 
-  NSAttributedString* attrStr =
-      [[NSAttributedString alloc] initWithString:aString];
   if ([mView conformsToProtocol:@protocol(NSTextInputClient)]) {
     NSObject<NSTextInputClient>* textInputClient =
         static_cast<NSObject<NSTextInputClient>*>(mView);
-    [textInputClient insertText:attrStr
+    [textInputClient insertText:aString
                replacementRange:NSMakeRange(NSNotFound, 0)];
   }
 
@@ -4729,11 +4721,9 @@ void IMEInputHandler::SendCommittedText(NSString* aString) {
              "directly "
              "due to IME not calling our InsertText()",
              this));
-    static_cast<TextInputHandler*>(this)->InsertText(attrStr);
+    static_cast<TextInputHandler*>(this)->InsertText(aString);
     MOZ_ASSERT(!mIsIMEComposing);
   }
-
-  [attrStr release];
 
   NS_OBJC_END_TRY_IGNORE_BLOCK;
 }

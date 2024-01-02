@@ -1072,11 +1072,11 @@ class IMEInputHandler : public TextInputHandlerBase {
    * InsertTextAsCommittingComposition() commits current composition.  If there
    * is no composition, this starts a composition and commits it immediately.
    *
-   * @param aAttrString           A string which is committed.
+   * @param aString               A string which is committed.
    * @param aReplacementRange     The range which will be replaced with the
    *                              aAttrString instead of current selection.
    */
-  void InsertTextAsCommittingComposition(NSAttributedString* aAttrString,
+  void InsertTextAsCommittingComposition(NSString* aString,
                                          NSRange* aReplacementRange);
 
   /**
@@ -1259,12 +1259,11 @@ class TextInputHandler : public IMEInputHandler {
    * eKeyPress event.  If this is called during composition, this commits
    * the composition by the aAttrString.
    *
-   * @param aAttrString           An inserted string.
+   * @param aString               An inserted string.
    * @param aReplacementRange     The range which will be replaced with the
    *                              aAttrString instead of current selection.
    */
-  void InsertText(NSAttributedString* aAttrString,
-                  NSRange* aReplacementRange = nullptr);
+  void InsertText(NSString* aString, NSRange* aReplacementRange = nullptr);
 
   /**
    * Handles aCommand.  This may cause dispatching an eKeyPress event.
