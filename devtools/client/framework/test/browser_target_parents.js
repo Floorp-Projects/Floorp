@@ -117,6 +117,11 @@ add_task(async function () {
       }
       throw e;
     }
+    // Bug 1767760: name might be null on some worker which are probably initializing or destroying.
+    if (!workerDescriptorFront.name) {
+      info("Failed to connect to " + workerDescriptorFront.url);
+      continue;
+    }
 
     is(
       workerDescriptorFront,
