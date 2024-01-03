@@ -902,9 +902,8 @@ with modules["SECURITY"]:
     errors["NS_ERROR_XFO_VIOLATION"] = FAILURE(96)
 
     # Error code for CSP
-    errors["NS_ERROR_CSP_NAVIGATE_TO_VIOLATION"] = FAILURE(97)
-    errors["NS_ERROR_CSP_FORM_ACTION_VIOLATION"] = FAILURE(98)
-    errors["NS_ERROR_CSP_FRAME_ANCESTOR_VIOLATION"] = FAILURE(99)
+    errors["NS_ERROR_CSP_FORM_ACTION_VIOLATION"] = FAILURE(97)
+    errors["NS_ERROR_CSP_FRAME_ANCESTOR_VIOLATION"] = FAILURE(98)
 
     # Error code for Sub-Resource Integrity
     errors["NS_ERROR_SRI_CORRUPT"] = FAILURE(200)

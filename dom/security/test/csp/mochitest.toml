@@ -576,16 +576,6 @@ skip-if = [
   "http2",
 ]
 
-["test_navigate_to.html"]
-support-files = [
-  "file_navigate_to.sjs",
-  "file_navigate_to_request.html",
-]
-skip-if = [
-  "http3",
-  "http2",
-]
-
 ["test_nonce_redirects.html"]
 
 ["test_nonce_snapshot.html"]

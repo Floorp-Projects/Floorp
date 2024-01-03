@@ -3475,8 +3475,7 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI* aURI,
     CopyUTF8toUTF16(host, *formatStrs.AppendElement());
     error = "netTimeout";
   } else if (NS_ERROR_CSP_FRAME_ANCESTOR_VIOLATION == aError ||
-             NS_ERROR_CSP_FORM_ACTION_VIOLATION == aError ||
-             NS_ERROR_CSP_NAVIGATE_TO_VIOLATION == aError) {
+             NS_ERROR_CSP_FORM_ACTION_VIOLATION == aError) {
     // CSP error
     cssClass.AssignLiteral("neterror");
     error = "cspBlocked";
@@ -10558,22 +10557,6 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
   // This is important for correct error page/session history interaction
   if (aRequest) {
     NS_ADDREF(*aRequest = channel);
-  }
-
-  nsCOMPtr<nsIContentSecurityPolicy> csp = aLoadState->Csp();
-  if (csp) {
-    // Check CSP navigate-to
-    bool allowsNavigateTo = false;
-    rv = csp->GetAllowsNavigateTo(aLoadState->URI(),
-                                  aLoadState->IsFormSubmission(),
-                                  false, /* aWasRedirected */
-                                  false, /* aEnforceWhitelist */
-                                  &allowsNavigateTo);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (!allowsNavigateTo) {
-      return NS_ERROR_CSP_NAVIGATE_TO_VIOLATION;
-    }
   }
 
   const nsACString& typeHint = aLoadState->TypeHint();

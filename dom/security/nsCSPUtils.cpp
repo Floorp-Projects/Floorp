@@ -358,7 +358,6 @@ CSPDirective CSP_ContentTypeToDirective(nsContentPolicyType aType) {
       return nsIContentSecurityPolicy::NO_DIRECTIVE;
 
     // Fall through to error for all other directives
-    // Note that we should never end up here for navigate-to
     case nsIContentPolicy::TYPE_INVALID:
     case nsIContentPolicy::TYPE_END:
       MOZ_ASSERT(false, "Can not map nsContentPolicyType to CSPDirective");
@@ -1674,31 +1673,6 @@ bool nsCSPPolicy::hasDirective(CSPDirective aDir) const {
     }
   }
   return false;
-}
-
-bool nsCSPPolicy::allowsNavigateTo(nsIURI* aURI, bool aWasRedirected,
-                                   bool aEnforceAllowlist) const {
-  bool allowsNavigateTo = true;
-
-  for (unsigned long i = 0; i < mDirectives.Length(); i++) {
-    if (mDirectives[i]->equals(
-            nsIContentSecurityPolicy::NAVIGATE_TO_DIRECTIVE)) {
-      // Early return if we can skip the allowlist AND 'unsafe-allow-redirects'
-      // is present.
-      if (!aEnforceAllowlist &&
-          mDirectives[i]->allows(CSP_UNSAFE_ALLOW_REDIRECTS, u""_ns)) {
-        return true;
-      }
-      // Otherwise, check against the allowlist.
-      if (!mDirectives[i]->permits(
-              nsIContentSecurityPolicy::NAVIGATE_TO_DIRECTIVE, nullptr, aURI,
-              aWasRedirected, false, false)) {
-        allowsNavigateTo = false;
-      }
-    }
-  }
-
-  return allowsNavigateTo;
 }
 
 bool nsCSPPolicy::allowsAllInlineBehavior(CSPDirective aDir) const {
