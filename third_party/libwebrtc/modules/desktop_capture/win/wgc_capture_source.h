@@ -33,6 +33,7 @@ class WgcCaptureSource {
   virtual ~WgcCaptureSource();
 
   virtual DesktopVector GetTopLeft() = 0;
+  virtual bool ShouldBeCapturable();
   virtual bool IsCapturable();
   virtual bool FocusOnSource();
   virtual ABI::Windows::Graphics::SizeInt32 GetSize();
@@ -99,6 +100,7 @@ class WgcWindowSource final : public WgcCaptureSource {
 
   DesktopVector GetTopLeft() override;
   ABI::Windows::Graphics::SizeInt32 GetSize() override;
+  bool ShouldBeCapturable() override;
   bool IsCapturable() override;
   bool FocusOnSource() override;
 

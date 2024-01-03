@@ -262,10 +262,16 @@ void WgcCaptureSession::EnsureFrame() {
       << "Unable to process a valid frame even after trying 10 times.";
 }
 
-bool WgcCaptureSession::GetFrame(std::unique_ptr<DesktopFrame>* output_frame) {
+bool WgcCaptureSession::GetFrame(std::unique_ptr<DesktopFrame>* output_frame,
+                                 bool source_should_be_capturable) {
   RTC_DCHECK_RUN_ON(&sequence_checker_);
 
-  EnsureFrame();
+  // Try to process the captured frame and wait some if needed. Avoid trying
+  // if we know that the source will not be capturable. This can happen e.g.
+  // when captured window is minimized and if EnsureFrame() was called in this
+  // state a large amount of kFrameDropped errors would be logged.
+  if (source_should_be_capturable)
+    EnsureFrame();
 
   // Return a NULL frame and false as `result` if we still don't have a valid
   // frame. This will lead to a DesktopCapturer::Result::ERROR_PERMANENT being

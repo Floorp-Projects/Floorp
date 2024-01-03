@@ -11,7 +11,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/0aac94794aad2ddb6
  1 file changed, 6 insertions(+)
 
 diff --git a/modules/desktop_capture/win/wgc_capture_session.cc b/modules/desktop_capture/win/wgc_capture_session.cc
-index 827f257717..3c13d3609a 100644
+index 2f7fac9f02..865cdb5acb 100644
 --- a/modules/desktop_capture/win/wgc_capture_session.cc
 +++ b/modules/desktop_capture/win/wgc_capture_session.cc
 @@ -187,6 +187,11 @@ HRESULT WgcCaptureSession::StartCapture(const DesktopCaptureOptions& options) {
