@@ -20,8 +20,6 @@ add_task(async () => {
  * to make sure we reject bad ones and accept good ones.
  */
 add_task(async function testValidAttrCodes() {
-  let msixCampaignIdStub = sinon.stub(AttributionCode, "msixCampaignId");
-
   let currentCode = null;
   for (let entry of validAttrCodes) {
     currentCode = entry.code;
@@ -38,13 +36,14 @@ add_task(async function testValidAttrCodes() {
       // In real life, the attribution codes returned from Microsoft APIs
       // are not URI encoded, and the AttributionCode code that deals with
       // them expects that - so we have to simulate that as well.
-      msixCampaignIdStub.callsFake(async () => decodeURIComponent(currentCode));
+      sinon
+        .stub(AttributionCode, "msixCampaignId")
+        .get(() => decodeURIComponent(currentCode));
     } else {
       await AttributionCode.writeAttributionFile(currentCode);
     }
     AttributionCode._clearCache();
     let result = await AttributionCode.getAttrDataAsync();
-
     Assert.deepEqual(
       result,
       entry.parsed,
@@ -52,18 +51,13 @@ add_task(async function testValidAttrCodes() {
     );
   }
   AttributionCode._clearCache();
-
-  // Restore the msixCampaignId stub so that other tests don't fail stubbing it
-  msixCampaignIdStub.restore();
 });
 
 /**
  * Make sure codes with various formatting errors are not seen as valid.
  */
 add_task(async function testInvalidAttrCodes() {
-  let msixCampaignIdStub = sinon.stub(AttributionCode, "msixCampaignId");
   let currentCode = null;
-
   for (let code of invalidAttrCodes) {
     currentCode = code;
 
@@ -79,7 +73,9 @@ add_task(async function testInvalidAttrCodes() {
         continue;
       }
 
-      msixCampaignIdStub.callsFake(async () => decodeURIComponent(currentCode));
+      sinon
+        .stub(AttributionCode, "msixCampaignId")
+        .get(() => decodeURIComponent(currentCode));
     } else {
       await AttributionCode.writeAttributionFile(currentCode);
     }
@@ -92,9 +88,6 @@ add_task(async function testInvalidAttrCodes() {
     );
   }
   AttributionCode._clearCache();
-
-  // Restore the msixCampaignId stub so that other tests don't fail stubbing it
-  msixCampaignIdStub.restore();
 });
 
 /**
