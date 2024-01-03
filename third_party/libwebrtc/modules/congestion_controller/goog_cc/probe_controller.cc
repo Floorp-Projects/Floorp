@@ -150,7 +150,7 @@ ProbeControllerConfig::~ProbeControllerConfig() = default;
 
 ProbeController::ProbeController(const FieldTrialsView* key_value_config,
                                  RtcEventLog* event_log)
-    : network_available_(true),
+    : network_available_(false),
       enable_periodic_alr_probing_(false),
       in_rapid_recovery_experiment_(absl::StartsWith(
           key_value_config->Lookup(kBweRapidRecoveryExperiment),
