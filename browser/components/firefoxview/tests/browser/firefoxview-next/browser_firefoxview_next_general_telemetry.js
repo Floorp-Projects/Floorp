@@ -3,6 +3,7 @@
 
 /* import-globals-from ../head.js */
 
+const FXVIEW_NEXT_ENABLED_PREF = "browser.tabs.firefox-view-next";
 const CARD_COLLAPSED_EVENT = [
   ["firefoxview_next", "card_collapsed", "card_container", undefined],
 ];
@@ -25,6 +26,7 @@ let enteredTelemetry = [
 ];
 
 add_setup(async () => {
+  await SpecialPowers.pushPrefEnv({ set: [[FXVIEW_NEXT_ENABLED_PREF, true]] });
   registerCleanupFunction(async () => {
     await SpecialPowers.popPrefEnv();
     clearHistory();
@@ -37,7 +39,7 @@ add_task(async function firefox_view_entered_telemetry() {
     const { document } = browser.contentWindow;
     is(
       document.location.href,
-      "about:firefoxview",
+      "about:firefoxview-next",
       "The Recent browsing page is showing."
     );
     let enteredAndTabSelectedEvents = [tabSelectedTelemetry, enteredTelemetry];
@@ -69,7 +71,7 @@ add_task(async function test_collapse_and_expand_card() {
     const { document } = browser.contentWindow;
     is(
       document.location.href,
-      "about:firefoxview",
+      "about:firefoxview-next",
       "The Recent browsing page is showing."
     );
 
@@ -111,7 +113,7 @@ add_task(async function test_change_page_telemetry() {
     const { document } = browser.contentWindow;
     is(
       document.location.href,
-      "about:firefoxview",
+      "about:firefoxview-next",
       "The Recent browsing page is showing."
     );
     let changePageEvent = [
@@ -150,12 +152,13 @@ add_task(async function test_change_page_telemetry() {
 });
 
 add_task(async function test_browser_context_menu_telemetry() {
+  await SpecialPowers.pushPrefEnv({ set: [[FXVIEW_NEXT_ENABLED_PREF, true]] });
   const menu = document.getElementById("contentAreaContextMenu");
   await withFirefoxView({}, async browser => {
     const { document } = browser.contentWindow;
     is(
       document.location.href,
-      "about:firefoxview",
+      "about:firefoxview-next",
       "The Recent browsing page is showing."
     );
     await clearAllParentTelemetryEvents();
@@ -206,7 +209,7 @@ add_task(async function test_context_menu_new_window_telemetry() {
     const { document } = browser.contentWindow;
     is(
       document.location.href,
-      "about:firefoxview",
+      "about:firefoxview-next",
       "The Recent browsing page is showing."
     );
 
@@ -262,7 +265,7 @@ add_task(async function test_context_menu_private_window_telemetry() {
     const { document } = browser.contentWindow;
     is(
       document.location.href,
-      "about:firefoxview",
+      "about:firefoxview-next",
       "The Recent browsing page is showing."
     );
 
@@ -330,7 +333,7 @@ add_task(async function test_context_menu_delete_from_history_telemetry() {
     const { document } = browser.contentWindow;
     is(
       document.location.href,
-      "about:firefoxview",
+      "about:firefoxview-next",
       "The Recent browsing page is showing."
     );
 
