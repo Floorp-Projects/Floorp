@@ -10,7 +10,7 @@ vars = {
   # chromium waterfalls. More info at: crbug.com/570091.
   'checkout_configuration': 'default',
   'checkout_instrumented_libraries': 'checkout_linux and checkout_configuration == "default"',
-  'chromium_revision': '917876224ac264692702fff190448aaa15e72df1',
+  'chromium_revision': 'c9f4372044af37772d10d916babe3c73c7c9b283',
 
   # Fetch the prebuilt binaries for llvm-cov and llvm-profdata. Needed to
   # process the raw profiles produced by instrumented targets (built with
@@ -50,24 +50,24 @@ vars = {
 deps = {
   # TODO(kjellander): Move this to be Android-only.
   'src/base':
-    'https://chromium.googlesource.com/chromium/src/base@6732bf03f76d883035bff15485b07659481000ec',
+    'https://chromium.googlesource.com/chromium/src/base@79369f92cfabbee3a9eaf2dad38285bc35b08764',
   'src/build':
-    'https://chromium.googlesource.com/chromium/src/build@cc1dedc3ffe8a4e883d9188805974b01a374fe74',
+    'https://chromium.googlesource.com/chromium/src/build@ea53f71ce9ff5d3ca275fc47d7425dca3e229eba',
   'src/buildtools':
-    'https://chromium.googlesource.com/chromium/src/buildtools@7bbf5da8161b8b3fe7b919134358241189682c22',
+    'https://chromium.googlesource.com/chromium/src/buildtools@28e95cc11185c8bf780044517a67b3eab7fd37e1',
   # Gradle 6.6.1. Used for testing Android Studio project generation for WebRTC.
   'src/examples/androidtests/third_party/gradle': {
     'url': 'https://chromium.googlesource.com/external/github.com/gradle/gradle.git@f2d1fb54a951d8b11d25748e4711bec8d128d7e3',
     'condition': 'checkout_android',
   },
   'src/ios': {
-    'url': 'https://chromium.googlesource.com/chromium/src/ios@b915f348d1704fa21405206398c503de672c01ef',
+    'url': 'https://chromium.googlesource.com/chromium/src/ios@3edb551063bb2a3ca90e1c5d1f878c3fc25b7c9c',
     'condition': 'checkout_ios',
   },
   'src/testing':
-    'https://chromium.googlesource.com/chromium/src/testing@ba6866fddacc7967e396c89ba81767f58795e746',
+    'https://chromium.googlesource.com/chromium/src/testing@14baeadac2f7e4f7c350b6e1b84e48b1a661b653',
   'src/third_party':
-    'https://chromium.googlesource.com/chromium/src/third_party@30390e5d6128e845bbd1211184f210e065ecaf2c',
+    'https://chromium.googlesource.com/chromium/src/third_party@f31e26e31812ce8eb94c6421784dd6d6a4245c2c',
 
   'src/buildtools/linux64': {
     'packages': [
@@ -205,7 +205,7 @@ deps = {
       'condition': 'checkout_linux',
   },
   'src/third_party/freetype/src':
-    'https://chromium.googlesource.com/chromium/src/third_party/freetype2.git@749b8f9d344105357b82766f8c555586a4b84e7c',
+    'https://chromium.googlesource.com/chromium/src/third_party/freetype2.git@3fa5c84565f2431a13247f055623508137dc5739',
   'src/third_party/harfbuzz-ng/src':
     'https://chromium.googlesource.com/external/github.com/harfbuzz/harfbuzz.git@f26fd69d858642d76413b8f4068eaf9b57c40a5f',
   'src/third_party/google_benchmark/src': {
@@ -289,7 +289,7 @@ deps = {
       'condition': 'checkout_android',
   },
   'src/third_party/perfetto':
-    'https://android.googlesource.com/platform/external/perfetto.git@2b538edb675527611fdd503210e5b9943627844c',
+    'https://android.googlesource.com/platform/external/perfetto.git@43f878eaee4f5cd96b7404f6830af679a283ebce',
   'src/third_party/libvpx/source/libvpx':
     'https://chromium.googlesource.com/webm/libvpx.git@3fbd1dca6a4d2dad332a2110d646e4ffef36d590',
   'src/third_party/libyuv':
@@ -338,7 +338,7 @@ deps = {
     'condition': 'checkout_android',
   },
   'src/tools':
-    'https://chromium.googlesource.com/chromium/src/tools@36269b619a27d2a8f07c004896b0f6c64c02921c',
+    'https://chromium.googlesource.com/chromium/src/tools@4e117933cb88ce0132ba7e6d2e02f4c8a8a8e058',
 
   'src/third_party/accessibility_test_framework': {
       'packages': [
@@ -410,7 +410,7 @@ deps = {
     'packages': [
       {
           'package': 'chromium/third_party/androidx',
-          'version': 'avY_4u6_uyMeQTVkfPcTOqgPZmFAReslPIg10t8ejM4C',
+          'version': '_i7u9FvhJhwRUkGaNmG9XnlMwHxAidtYKEGeD_Q8rJoC',
       },
     ],
     'condition': 'checkout_android',
