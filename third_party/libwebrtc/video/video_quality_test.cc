@@ -1247,8 +1247,8 @@ void VideoQualityTest::RunWithAnalyzer(const Params& params) {
   }
 
   SendTask(task_queue(), [this, &params, &send_transport, &recv_transport]() {
-    Call::Config send_call_config(send_event_log_.get());
-    Call::Config recv_call_config(recv_event_log_.get());
+    CallConfig send_call_config(send_event_log_.get());
+    CallConfig recv_call_config(recv_event_log_.get());
     send_call_config.bitrate_config = params.call.call_bitrate_config;
     recv_call_config.bitrate_config = params.call.call_bitrate_config;
     if (params_.audio.enabled)
@@ -1366,8 +1366,8 @@ rtc::scoped_refptr<AudioDeviceModule> VideoQualityTest::CreateAudioDevice() {
 #endif
 }
 
-void VideoQualityTest::InitializeAudioDevice(Call::Config* send_call_config,
-                                             Call::Config* recv_call_config,
+void VideoQualityTest::InitializeAudioDevice(CallConfig* send_call_config,
+                                             CallConfig* recv_call_config,
                                              bool use_real_adm) {
   rtc::scoped_refptr<AudioDeviceModule> audio_device;
   if (use_real_adm) {
@@ -1473,11 +1473,11 @@ void VideoQualityTest::RunWithRenderers(const Params& params) {
     params_ = params;
     CheckParamsAndInjectionComponents();
 
-    // TODO(ivica): Remove bitrate_config and use the default Call::Config(), to
+    // TODO(ivica): Remove bitrate_config and use the default CallConfig(), to
     // match the full stack tests.
-    Call::Config send_call_config(send_event_log_.get());
+    CallConfig send_call_config(send_event_log_.get());
     send_call_config.bitrate_config = params_.call.call_bitrate_config;
-    Call::Config recv_call_config(recv_event_log_.get());
+    CallConfig recv_call_config(recv_event_log_.get());
 
     if (params_.audio.enabled)
       InitializeAudioDevice(&send_call_config, &recv_call_config,
