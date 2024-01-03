@@ -2660,7 +2660,6 @@ TEST_F(WebRtcVideoChannelBaseTest, SendCodecIsMovedToFrontInRtpParameters) {
   parameters.codecs.push_back(GetEngineCodec("VP9"));
   parameters.codecs.push_back(GetEngineCodec("VP8"));
   EXPECT_TRUE(send_channel_->SetSenderParameters(parameters));
-  send_channel_->SetVideoCodecSwitchingEnabled(true);
 
   auto send_codecs = send_channel_->GetRtpSendParameters(kSsrc).codecs;
   ASSERT_EQ(send_codecs.size(), 2u);

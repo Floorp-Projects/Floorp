@@ -741,7 +741,6 @@ class FakeVideoMediaSendChannel
   void SetSsrcListChangedCallback(
       absl::AnyInvocable<void(const std::set<uint32_t>&)> callback) override {}
 
-  void SetVideoCodecSwitchingEnabled(bool enabled) override {}
   bool SendCodecHasLntf() const override { return false; }
   bool SendCodecHasNack() const override { return false; }
   absl::optional<int> SendCodecRtxTime() const override {

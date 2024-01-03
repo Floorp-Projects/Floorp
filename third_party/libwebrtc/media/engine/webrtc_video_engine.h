@@ -225,8 +225,6 @@ class WebRtcVideoSendChannel : public MediaChannelUtil,
                           webrtc::VideoEncoderFactory::EncoderSelectorInterface*
                               encoder_selector) override;
 
-  void SetVideoCodecSwitchingEnabled(bool enabled) override;
-
   void SetSendCodecChangedCallback(
       absl::AnyInvocable<void()> callback) override {
     send_codec_changed_callback_ = std::move(callback);
@@ -548,11 +546,6 @@ class WebRtcVideoSendChannel : public MediaChannelUtil,
   // Optional frame transformer set on unsignaled streams.
   rtc::scoped_refptr<webrtc::FrameTransformerInterface>
       unsignaled_frame_transformer_ RTC_GUARDED_BY(thread_checker_);
-
-  // TODO(bugs.webrtc.org/11341): Remove this and relevant PC API. Presence
-  // of multiple negotiated codecs allows generic encoder fallback on failures.
-  // Presence of EncoderSelector allows switching to specific encoders.
-  bool allow_codec_switching_ = false;
 
   // RTP parameters that need to be set when creating a video receive stream.
   // Only used in Receiver mode - in Both mode, it reads those things from the
