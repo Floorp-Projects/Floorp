@@ -1388,6 +1388,38 @@ TEST_F(LossBasedBweV2Test, HasIncreaseStateBecauseOfLowerBound) {
             LossBasedState::kIncreasing);
 }
 
+TEST_F(LossBasedBweV2Test,
+       EstimateIncreaseSlowlyFromInstantUpperBoundInAlrIfFieldTrial) {
+  ExplicitKeyValueConfig key_value_config(
+      ShortObservationConfig("UpperBoundCandidateInAlr:true"));
+  LossBasedBweV2 loss_based_bandwidth_estimator(&key_value_config);
+  loss_based_bandwidth_estimator.SetBandwidthEstimate(
+      DataRate::KilobitsPerSec(1000));
+  loss_based_bandwidth_estimator.SetAcknowledgedBitrate(
+      DataRate::KilobitsPerSec(150));
+  loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
+      CreatePacketResultsWith50pLossRate(
+          /*first_packet_timestamp=*/Timestamp::Zero()),
+      /*delay_based_estimate=*/DataRate::PlusInfinity(),
+      /*in_alr=*/true);
+  LossBasedBweV2::Result result_after_loss =
+      loss_based_bandwidth_estimator.GetLossBasedResult();
+  ASSERT_EQ(result_after_loss.state, LossBasedState::kDecreasing);
+
+  for (int feedback_count = 1; feedback_count <= 3; ++feedback_count) {
+    loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
+        CreatePacketResultsWithReceivedPackets(
+            /*first_packet_timestamp=*/Timestamp::Zero() +
+            feedback_count * kObservationDurationLowerBound),
+        /*delay_based_estimate=*/DataRate::PlusInfinity(),
+        /*in_alr=*/true);
+  }
+  // Expect less than 100% increase.
+  EXPECT_LT(
+      loss_based_bandwidth_estimator.GetLossBasedResult().bandwidth_estimate,
+      2 * result_after_loss.bandwidth_estimate);
+}
+
 TEST_F(LossBasedBweV2Test, HasDelayBasedStateIfLossBasedBweIsMax) {
   ExplicitKeyValueConfig key_value_config(ShortObservationConfig(""));
   LossBasedBweV2 loss_based_bandwidth_estimator(&key_value_config);
