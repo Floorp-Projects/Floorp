@@ -2115,20 +2115,31 @@ void PeerConnection::OnSelectedCandidatePairChanged(
   Observer()->OnIceSelectedCandidatePairChanged(event);
 }
 
-absl::optional<std::string> PeerConnection::GetDataMid() const {
+bool PeerConnection::CreateDataChannelTransport(absl::string_view mid) {
   RTC_DCHECK_RUN_ON(signaling_thread());
-  return sctp_mid_s_;
-}
+  RTC_DCHECK(!sctp_mid().has_value() || mid == sctp_mid().value());
+  RTC_LOG(LS_INFO) << "Creating data channel, mid=" << mid;
 
-void PeerConnection::SetSctpDataInfo(absl::string_view mid,
-                                     absl::string_view transport_name) {
-  RTC_DCHECK_RUN_ON(signaling_thread());
+  absl::optional<std::string> transport_name =
+      network_thread()->BlockingCall([&] {
+        RTC_DCHECK_RUN_ON(network_thread());
+        return SetupDataChannelTransport_n(mid);
+      });
+  if (!transport_name)
+    return false;
+
   sctp_mid_s_ = std::string(mid);
-  SetSctpTransportName(std::string(transport_name));
+  SetSctpTransportName(transport_name.value());
+
+  return true;
 }
 
-void PeerConnection::ResetSctpDataInfo() {
+void PeerConnection::DestroyDataChannelTransport(RTCError error) {
   RTC_DCHECK_RUN_ON(signaling_thread());
+  network_thread()->BlockingCall([&] {
+    RTC_DCHECK_RUN_ON(network_thread());
+    TeardownDataChannelTransport_n(error);
+  });
   sctp_mid_s_.reset();
   SetSctpTransportName("");
 }
