@@ -167,13 +167,14 @@ class LossBasedBweV2 {
 
   // Returns false if no observation was created.
   bool PushBackObservation(rtc::ArrayView<const PacketResult> packet_results);
-  bool IsEstimateIncreasingWhenLossLimited(
-      const ChannelParameters& best_candidate);
-  bool IsBandwidthLimitedDueToLoss() const;
+  void UpdateResult();
+  bool IsEstimateIncreasingWhenLossLimited(DataRate old_estimate,
+                                           DataRate new_estimate);
+  bool IsInLossLimitedState() const;
 
   absl::optional<DataRate> acknowledged_bitrate_;
   absl::optional<Config> config_;
-  ChannelParameters current_estimate_;
+  ChannelParameters current_best_estimate_;
   int num_observations_ = 0;
   std::vector<Observation> observations_;
   PartialObservation partial_observation_;
@@ -187,8 +188,8 @@ class LossBasedBweV2 {
   DataRate bandwidth_limit_in_current_window_ = DataRate::PlusInfinity();
   DataRate min_bitrate_ = DataRate::KilobitsPerSec(1);
   DataRate max_bitrate_ = DataRate::PlusInfinity();
-  LossBasedState current_state_ = LossBasedState::kDelayBasedEstimate;
   DataRate delay_based_estimate_ = DataRate::PlusInfinity();
+  LossBasedBweV2::Result loss_based_result_ = LossBasedBweV2::Result();
 };
 
 }  // namespace webrtc
