@@ -214,7 +214,7 @@ class PacingController {
   const bool ignore_transport_overhead_;
   const bool fast_retransmissions_;
   const bool keyframe_flushing_;
-
+  DataRate max_rate = DataRate::BitsPerSec(100'000'000);
   DataSize transport_overhead_per_packet_;
   TimeDelta send_burst_interval_;
 

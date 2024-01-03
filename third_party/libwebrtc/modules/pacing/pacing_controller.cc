@@ -164,7 +164,6 @@ void PacingController::SetProbingEnabled(bool enabled) {
 
 void PacingController::SetPacingRates(DataRate pacing_rate,
                                       DataRate padding_rate) {
-  static constexpr DataRate kMaxRate = DataRate::KilobitsPerSec(100'000);
   RTC_CHECK_GT(pacing_rate, DataRate::Zero());
   RTC_CHECK_GE(padding_rate, DataRate::Zero());
   if (padding_rate > pacing_rate) {
@@ -174,11 +173,12 @@ void PacingController::SetPacingRates(DataRate pacing_rate,
     padding_rate = pacing_rate;
   }
 
-  if (pacing_rate > kMaxRate || padding_rate > kMaxRate) {
-    RTC_LOG(LS_WARNING) << "Very high pacing rates ( > " << kMaxRate.kbps()
+  if (pacing_rate > max_rate || padding_rate > max_rate) {
+    RTC_LOG(LS_WARNING) << "Very high pacing rates ( > " << max_rate.kbps()
                         << " kbps) configured: pacing = " << pacing_rate.kbps()
                         << " kbps, padding = " << padding_rate.kbps()
                         << " kbps.";
+    max_rate = std::max(pacing_rate, padding_rate) * 1.1;
   }
   pacing_rate_ = pacing_rate;
   padding_rate_ = padding_rate;
