@@ -8,8 +8,9 @@
 mod macros;
 
 use proc_macro2::{Delimiter, Group, Ident, Span, TokenStream, TokenTree};
-use quote::quote;
-use syn::Stmt;
+use quote::{quote, ToTokens as _};
+use syn::parse::Parser as _;
+use syn::{Block, Stmt};
 
 #[test]
 fn test_raw_operator() {
@@ -67,7 +68,6 @@ fn test_none_group() {
             TokenTree::Group(Group::new(Delimiter::Brace, TokenStream::new())),
         ]),
     ))]);
-
     snapshot!(tokens as Stmt, @r###"
     Stmt::Item(Item::Fn {
         vis: Visibility::Inherited,
@@ -77,8 +77,36 @@ fn test_none_group() {
             generics: Generics,
             output: ReturnType::Default,
         },
-        block: Block,
+        block: Block {
+            stmts: [],
+        },
     })
+    "###);
+
+    let tokens = Group::new(Delimiter::None, quote!(let None = None)).to_token_stream();
+    let stmts = Block::parse_within.parse2(tokens).unwrap();
+    snapshot!(stmts, @r###"
+    [
+        Stmt::Expr(
+            Expr::Group {
+                expr: Expr::Let {
+                    pat: Pat::Ident {
+                        ident: "None",
+                    },
+                    expr: Expr::Path {
+                        path: Path {
+                            segments: [
+                                PathSegment {
+                                    ident: "None",
+                                },
+                            ],
+                        },
+                    },
+                },
+            },
+            None,
+        ),
+    ]
     "###);
 }
 
@@ -232,5 +260,63 @@ fn test_macros() {
             ],
         },
     })
+    "###);
+}
+
+#[test]
+fn test_early_parse_loop() {
+    // The following is an Expr::Loop followed by Expr::Tuple. It is not an
+    // Expr::Call.
+    let tokens = quote! {
+        loop {}
+        ()
+    };
+
+    let stmts = Block::parse_within.parse2(tokens).unwrap();
+
+    snapshot!(stmts, @r###"
+    [
+        Stmt::Expr(
+            Expr::Loop {
+                body: Block {
+                    stmts: [],
+                },
+            },
+            None,
+        ),
+        Stmt::Expr(
+            Expr::Tuple,
+            None,
+        ),
+    ]
+    "###);
+
+    let tokens = quote! {
+        'a: loop {}
+        ()
+    };
+
+    let stmts = Block::parse_within.parse2(tokens).unwrap();
+
+    snapshot!(stmts, @r###"
+    [
+        Stmt::Expr(
+            Expr::Loop {
+                label: Some(Label {
+                    name: Lifetime {
+                        ident: "a",
+                    },
+                }),
+                body: Block {
+                    stmts: [],
+                },
+            },
+            None,
+        ),
+        Stmt::Expr(
+            Expr::Tuple,
+            None,
+        ),
+    ]
     "###);
 }

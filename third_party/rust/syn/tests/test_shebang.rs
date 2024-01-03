@@ -18,7 +18,9 @@ fn test_basic() {
                     generics: Generics,
                     output: ReturnType::Default,
                 },
-                block: Block,
+                block: Block {
+                    stmts: [],
+                },
             },
         ],
     }
@@ -55,7 +57,9 @@ fn test_comment() {
                     generics: Generics,
                     output: ReturnType::Default,
                 },
-                block: Block,
+                block: Block {
+                    stmts: [],
+                },
             },
         ],
     }

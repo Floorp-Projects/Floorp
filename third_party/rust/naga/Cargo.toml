@@ -13,7 +13,7 @@
 edition = "2021"
 rust-version = "1.65"
 name = "naga"
-version = "0.14.0"
+version = "0.14.2"
 authors = ["gfx-rs developers"]
 exclude = [
     "bin/**/*",
@@ -51,7 +51,7 @@ bitflags = "2.2"
 log = "0.4"
 num-traits = "0.2"
 rustc-hash = "1.1.0"
-thiserror = "1.0.21"
+thiserror = "1.0.52"
 
 [dependencies.arbitrary]
 version = "1.3"

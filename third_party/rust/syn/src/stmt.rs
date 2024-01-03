@@ -75,7 +75,7 @@ ast_struct! {
 #[cfg(feature = "parsing")]
 pub(crate) mod parsing {
     use super::*;
-    use crate::parse::discouraged::Speculative;
+    use crate::parse::discouraged::Speculative as _;
     use crate::parse::{Parse, ParseStream, Result};
     use proc_macro2::TokenStream;
 
@@ -200,7 +200,7 @@ pub(crate) mod parsing {
             }
         }
 
-        if input.peek(Token![let]) {
+        if input.peek(Token![let]) && !input.peek(token::Group) {
             stmt_local(input, attrs).map(Stmt::Local)
         } else if input.peek(Token![pub])
             || input.peek(Token![crate]) && !input.peek2(Token![::])

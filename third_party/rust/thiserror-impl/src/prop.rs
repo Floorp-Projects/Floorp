@@ -1,4 +1,6 @@
 use crate::ast::{Enum, Field, Struct, Variant};
+use crate::span::MemberSpan;
+use proc_macro2::Span;
 use syn::{Member, Type};
 
 impl Struct<'_> {
@@ -69,6 +71,16 @@ impl Variant<'_> {
 impl Field<'_> {
     pub(crate) fn is_backtrace(&self) -> bool {
         type_is_backtrace(self.ty)
+    }
+
+    pub(crate) fn source_span(&self) -> Span {
+        if let Some(source_attr) = &self.attrs.source {
+            source_attr.path().get_ident().unwrap().span()
+        } else if let Some(from_attr) = &self.attrs.from {
+            from_attr.path().get_ident().unwrap().span()
+        } else {
+            self.member.member_span()
+        }
     }
 }
 

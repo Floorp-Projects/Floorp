@@ -10,10 +10,10 @@
 # See Cargo.toml.orig for the original contents.
 
 [package]
-edition = "2018"
+edition = "2021"
 rust-version = "1.56"
 name = "thiserror"
-version = "1.0.40"
+version = "1.0.56"
 authors = ["David Tolnay <dtolnay@gmail.com>"]
 description = "derive(Error)"
 documentation = "https://docs.rs/thiserror"
@@ -28,20 +28,21 @@ license = "MIT OR Apache-2.0"
 repository = "https://github.com/dtolnay/thiserror"
 
 [package.metadata.docs.rs]
+rustdoc-args = ["--generate-link-to-definition"]
 targets = ["x86_64-unknown-linux-gnu"]
 
 [dependencies.thiserror-impl]
-version = "=1.0.40"
+version = "=1.0.56"
 
 [dev-dependencies.anyhow]
-version = "1.0.65"
+version = "1.0.73"
 
 [dev-dependencies.ref-cast]
-version = "1.0"
+version = "1.0.18"
 
 [dev-dependencies.rustversion]
-version = "1.0"
+version = "1.0.13"
 
 [dev-dependencies.trybuild]
-version = "1.0.66"
+version = "1.0.81"
 features = ["diff"]

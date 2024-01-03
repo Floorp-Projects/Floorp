@@ -1,34 +1,70 @@
 use std::env;
-use std::fs;
+use std::ffi::OsString;
 use std::path::Path;
-use std::process::{Command, ExitStatus, Stdio};
-use std::str;
-
-// This code exercises the surface area that we expect of the Provider API. If
-// the current toolchain is able to compile it, then thiserror is able to use
-// providers for backtrace support.
-const PROBE: &str = r#"
-    #![feature(provide_any)]
-
-    use std::any::{Demand, Provider};
-
-    fn _f<'a, P: Provider>(p: &'a P, demand: &mut Demand<'a>) {
-        p.provide(demand);
-    }
-"#;
+use std::process::{self, Command, Stdio};
 
 fn main() {
-    match compile_probe() {
-        Some(status) if status.success() => println!("cargo:rustc-cfg=provide_any"),
-        _ => {}
+    println!("cargo:rerun-if-changed=build/probe.rs");
+
+    let error_generic_member_access;
+    let consider_rustc_bootstrap;
+    if compile_probe(false) {
+        // This is a nightly or dev compiler, so it supports unstable features
+        // regardless of RUSTC_BOOTSTRAP. No need to rerun build script if
+        // RUSTC_BOOTSTRAP is changed.
+        error_generic_member_access = true;
+        consider_rustc_bootstrap = false;
+    } else if let Some(rustc_bootstrap) = env::var_os("RUSTC_BOOTSTRAP") {
+        if compile_probe(true) {
+            // This is a stable or beta compiler for which the user has set
+            // RUSTC_BOOTSTRAP to turn on unstable features. Rerun build script
+            // if they change it.
+            error_generic_member_access = true;
+            consider_rustc_bootstrap = true;
+        } else if rustc_bootstrap == "1" {
+            // This compiler does not support the generic member access API in
+            // the form that thiserror expects. No need to pay attention to
+            // RUSTC_BOOTSTRAP.
+            error_generic_member_access = false;
+            consider_rustc_bootstrap = false;
+        } else {
+            // This is a stable or beta compiler for which RUSTC_BOOTSTRAP is
+            // set to restrict the use of unstable features by this crate.
+            error_generic_member_access = false;
+            consider_rustc_bootstrap = true;
+        }
+    } else {
+        // Without RUSTC_BOOTSTRAP, this compiler does not support the generic
+        // member access API in the form that thiserror expects, but try again
+        // if the user turns on unstable features.
+        error_generic_member_access = false;
+        consider_rustc_bootstrap = true;
+    }
+
+    if error_generic_member_access {
+        println!("cargo:rustc-cfg=error_generic_member_access");
+    }
+
+    if consider_rustc_bootstrap {
+        println!("cargo:rerun-if-env-changed=RUSTC_BOOTSTRAP");
     }
 }
 
-fn compile_probe() -> Option<ExitStatus> {
-    let rustc = env::var_os("RUSTC")?;
-    let out_dir = env::var_os("OUT_DIR")?;
-    let probefile = Path::new(&out_dir).join("probe.rs");
-    fs::write(&probefile, PROBE).ok()?;
+fn compile_probe(rustc_bootstrap: bool) -> bool {
+    if env::var_os("RUSTC_STAGE").is_some() {
+        // We are running inside rustc bootstrap. This is a highly non-standard
+        // environment with issues such as:
+        //
+        //     https://github.com/rust-lang/cargo/issues/11138
+        //     https://github.com/rust-lang/rust/issues/114839
+        //
+        // Let's just not use nightly features here.
+        return false;
+    }
+
+    let rustc = cargo_env_var("RUSTC");
+    let out_dir = cargo_env_var("OUT_DIR");
+    let probefile = Path::new("build").join("probe.rs");
 
     // Make sure to pick up Cargo rustc configuration.
     let mut cmd = if let Some(wrapper) = env::var_os("RUSTC_WRAPPER") {
@@ -40,11 +76,15 @@ fn compile_probe() -> Option<ExitStatus> {
         Command::new(rustc)
     };
 
+    if !rustc_bootstrap {
+        cmd.env_remove("RUSTC_BOOTSTRAP");
+    }
+
     cmd.stderr(Stdio::null())
         .arg("--edition=2018")
-        .arg("--crate-name=thiserror_build")
+        .arg("--crate-name=thiserror")
         .arg("--crate-type=lib")
-        .arg("--emit=metadata")
+        .arg("--emit=dep-info,metadata")
         .arg("--out-dir")
         .arg(out_dir)
         .arg(probefile);
@@ -62,5 +102,18 @@ fn compile_probe() -> Option<ExitStatus> {
         }
     }
 
-    cmd.status().ok()
+    match cmd.status() {
+        Ok(status) => status.success(),
+        Err(_) => false,
+    }
+}
+
+fn cargo_env_var(key: &str) -> OsString {
+    env::var_os(key).unwrap_or_else(|| {
+        eprintln!(
+            "Environment variable ${} is not set during execution of build script",
+            key,
+        );
+        process::exit(1);
+    })
 }

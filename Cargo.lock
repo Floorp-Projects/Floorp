@@ -1157,7 +1157,7 @@ dependencies = [
 [[package]]
 name = "d3d12"
 version = "0.7.0"
-source = "git+https://github.com/gfx-rs/wgpu?rev=6dc9ccab8592645fda3204be1cfb5929fd7f924d#6dc9ccab8592645fda3204be1cfb5929fd7f924d"
+source = "git+https://github.com/gfx-rs/wgpu?rev=46757372cc02d6608124502104a0c225e1744fd7#46757372cc02d6608124502104a0c225e1744fd7"
 dependencies = [
  "bitflags 2.4.0",
  "libloading",
@@ -3795,8 +3795,8 @@ checksum = "a2983372caf4480544083767bf2d27defafe32af49ab4df3a0b7fc90793a3664"
 
 [[package]]
 name = "naga"
-version = "0.14.0"
-source = "git+https://github.com/gfx-rs/wgpu?rev=6dc9ccab8592645fda3204be1cfb5929fd7f924d#6dc9ccab8592645fda3204be1cfb5929fd7f924d"
+version = "0.14.2"
+source = "git+https://github.com/gfx-rs/wgpu?rev=46757372cc02d6608124502104a0c225e1744fd7#46757372cc02d6608124502104a0c225e1744fd7"
 dependencies = [
  "bit-set",
  "bitflags 2.4.0",
@@ -4420,9 +4420,9 @@ dependencies = [
 
 [[package]]
 name = "proc-macro2"
-version = "1.0.69"
+version = "1.0.74"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "134c189feb4956b20f6f547d2cf727d4c0fe06722b20a0eec87ed445a97f92da"
+checksum = "2de98502f212cfcea8d0bb305bd0f49d7ebdd75b64ba0a68f937d888f4e0d6db"
 dependencies = [
  "unicode-ident",
 ]
@@ -4540,9 +4540,9 @@ checksum = "a1d01941d82fa2ab50be1e79e6714289dd7cde78eba4c074bc5a4374f650dfe0"
 
 [[package]]
 name = "quote"
-version = "1.0.28"
+version = "1.0.35"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1b9ab9c7eadfd8df19006f1cf1a4aed13540ed5cbc047010ece5826e10825488"
+checksum = "291ec9ab5efd934aaf503a6466c5d5251535d108ee747472c3977cc5acc868ef"
 dependencies = [
  "proc-macro2",
 ]
@@ -5404,9 +5404,9 @@ dependencies = [
 
 [[package]]
 name = "syn"
-version = "2.0.39"
+version = "2.0.46"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "23e78b90f2fcf45d3e842032ce32e3f2d1545ba6636271dcbf24fa306d87be7a"
+checksum = "89456b690ff72fddcecf231caedbe615c59480c93358a93dfae7fc29e3ebbf0e"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -5512,18 +5512,18 @@ checksum = "aac81b6fd6beb5884b0cf3321b8117e6e5d47ecb6fc89f414cfdcca8b2fe2dd8"
 
 [[package]]
 name = "thiserror"
-version = "1.0.40"
+version = "1.0.56"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "978c9a314bd8dc99be594bc3c175faaa9794be04a5a5e153caba6915336cebac"
+checksum = "d54378c645627613241d077a3a79db965db602882668f9136ac42af9ecb730ad"
 dependencies = [
  "thiserror-impl",
 ]
 
 [[package]]
 name = "thiserror-impl"
-version = "1.0.40"
+version = "1.0.56"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f9456a42c5b0d803c8cd86e73dd7cc9edd429499f37a3550d286d5e86720569f"
+checksum = "fa0faa943b50f3db30a20aa7e265dbc66076993efed8463e8de414e5d06d3471"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -6412,7 +6412,7 @@ dependencies = [
 [[package]]
 name = "wgpu-core"
 version = "0.18.0"
-source = "git+https://github.com/gfx-rs/wgpu?rev=6dc9ccab8592645fda3204be1cfb5929fd7f924d#6dc9ccab8592645fda3204be1cfb5929fd7f924d"
+source = "git+https://github.com/gfx-rs/wgpu?rev=46757372cc02d6608124502104a0c225e1744fd7#46757372cc02d6608124502104a0c225e1744fd7"
 dependencies = [
  "arrayvec",
  "bit-vec",
@@ -6435,7 +6435,7 @@ dependencies = [
 [[package]]
 name = "wgpu-hal"
 version = "0.18.0"
-source = "git+https://github.com/gfx-rs/wgpu?rev=6dc9ccab8592645fda3204be1cfb5929fd7f924d#6dc9ccab8592645fda3204be1cfb5929fd7f924d"
+source = "git+https://github.com/gfx-rs/wgpu?rev=46757372cc02d6608124502104a0c225e1744fd7#46757372cc02d6608124502104a0c225e1744fd7"
 dependencies = [
  "android_system_properties",
  "arrayvec",
@@ -6472,7 +6472,7 @@ dependencies = [
 [[package]]
 name = "wgpu-types"
 version = "0.18.0"
-source = "git+https://github.com/gfx-rs/wgpu?rev=6dc9ccab8592645fda3204be1cfb5929fd7f924d#6dc9ccab8592645fda3204be1cfb5929fd7f924d"
+source = "git+https://github.com/gfx-rs/wgpu?rev=46757372cc02d6608124502104a0c225e1744fd7#46757372cc02d6608124502104a0c225e1744fd7"
 dependencies = [
  "bitflags 2.4.0",
  "js-sys",

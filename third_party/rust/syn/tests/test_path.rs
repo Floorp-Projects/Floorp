@@ -24,6 +24,7 @@ fn parse_interpolated_leading_component() {
                 PathSegment {
                     ident: "first",
                 },
+                Token![::],
                 PathSegment {
                     ident: "rest",
                 },
@@ -39,6 +40,7 @@ fn parse_interpolated_leading_component() {
                 PathSegment {
                     ident: "first",
                 },
+                Token![::],
                 PathSegment {
                     ident: "rest",
                 },

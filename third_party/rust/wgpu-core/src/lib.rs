@@ -1,7 +1,38 @@
-/*! This library safely implements WebGPU on native platforms.
- *  It is designed for integration into browsers, as well as wrapping
- *  into other language-specific user-friendly libraries.
- */
+//! This library safely implements WebGPU on native platforms.
+//! It is designed for integration into browsers, as well as wrapping
+//! into other language-specific user-friendly libraries.
+//!
+//! ## Feature flags
+// NOTE: feature docs. below should be kept in sync. with `Cargo.toml`!
+//!
+//! - **`api_log_info`** --- Log all API entry points at info instead of trace level.
+//! - **`resource_log_info`** --- Log resource lifecycle management at info instead of trace level.
+//! - **`link`** _(enabled by default)_ --- Use static linking for libraries. Disale to manually
+//!   link. Enabled by default.
+//! - **`renderdoc`** --- Support the Renderdoc graphics debugger:
+//!   [https://renderdoc.org/](https://renderdoc.org/)
+//! - **`strict_asserts`** --- Apply run-time checks, even in release builds. These are in addition
+//!   to the validation carried out at public APIs in all builds.
+//! - **`trace`** --- Enable API tracing.
+//! - **`replay`** --- Enable API replaying
+//! - **`serial-pass`** --- Enable serializable compute/render passes, and bundle encoders.
+//! - **`wgsl`** --- Enable `ShaderModuleSource::Wgsl`
+//! - **`fragile-send-sync-non-atomic-wasm`** --- Implement `Send` and `Sync` on Wasm, but only if
+//!   atomics are not enabled.
+//!
+//!   WebGL/WebGPU objects can not be shared between threads. However, it can be useful to
+//!   artificially mark them as `Send` and `Sync` anyways to make it easier to write cross-platform
+//!   code. This is technically _very_ unsafe in a multithreaded environment, but on a wasm binary
+//!   compiled without atomics we know we are definitely not in a multithreaded environment.
+//!
+//!  ### Backends, passed through to wgpu-hal
+//!
+//!  - **`metal`** --- Enable the `metal` backend.
+//!  - **`vulkan`** --- Enable the `vulkan` backend.
+//!  - **`gles`** --- Enable the `GLES` backend.
+//!
+//!    This is used for all of GLES, OpenGL, and WebGL.
+//!  - **`dx12`** --- Enable the `dx12` backend.
 
 // When we have no backends, we end up with a lot of dead or otherwise unreachable code.
 #![cfg_attr(
@@ -34,17 +65,15 @@
     // For some reason `rustc` can warn about these in const generics even
     // though they are required.
     unused_braces,
-    // Clashes with clippy::pattern_type_mismatch
-    clippy::needless_borrowed_reference,
+    // It gets in the way a lot and does not prevent bugs in practice.
+    clippy::pattern_type_mismatch,
 )]
 #![warn(
     trivial_casts,
     trivial_numeric_casts,
     unsafe_op_in_unsafe_fn,
     unused_extern_crates,
-    unused_qualifications,
-    // We don't match on a reference, unless required.
-    clippy::pattern_type_mismatch,
+    unused_qualifications
 )]
 
 pub mod any_surface;
@@ -64,6 +93,7 @@ pub mod pipeline;
 pub mod present;
 pub mod registry;
 pub mod resource;
+mod snatch;
 pub mod storage;
 mod track;
 // This is public for users who pre-compile shaders while still wanting to
@@ -221,6 +251,10 @@ define_backend_caller! { gfx_if_vulkan, gfx_if_vulkan_hidden, "vulkan" if all(fe
 define_backend_caller! { gfx_if_metal, gfx_if_metal_hidden, "metal" if all(feature = "metal", any(target_os = "macos", target_os = "ios")) }
 define_backend_caller! { gfx_if_dx12, gfx_if_dx12_hidden, "dx12" if all(feature = "dx12", windows) }
 define_backend_caller! { gfx_if_gles, gfx_if_gles_hidden, "gles" if feature = "gles" }
+define_backend_caller! { gfx_if_empty, gfx_if_empty_hidden, "empty" if all(
+    not(any(feature = "metal", feature = "vulkan", feature = "gles")),
+    any(target_os = "macos", target_os = "ios"),
+) }
 
 /// Dispatch on an [`Id`]'s backend to a backend-generic method.
 ///
@@ -275,6 +309,7 @@ macro_rules! gfx_select {
             wgt::Backend::Metal => $crate::gfx_if_metal!($global.$method::<$crate::api::Metal>( $($param),* )),
             wgt::Backend::Dx12 => $crate::gfx_if_dx12!($global.$method::<$crate::api::Dx12>( $($param),* )),
             wgt::Backend::Gl => $crate::gfx_if_gles!($global.$method::<$crate::api::Gles>( $($param),+ )),
+            wgt::Backend::Empty => $crate::gfx_if_empty!($global.$method::<$crate::api::Empty>( $($param),+ )),
             other => panic!("Unexpected backend {:?}", other),
         }
     };

@@ -6,6 +6,7 @@
 #![cfg_attr(not(syn_only), feature(rustc_private))]
 #![recursion_limit = "1024"]
 #![allow(
+    clippy::arc_with_non_send_sync,
     clippy::cast_lossless,
     clippy::let_underscore_untyped,
     clippy::manual_let_else,
@@ -53,7 +54,7 @@ mod librustc_parse {
 
     use rustc_data_structures::sync::Lrc;
     use rustc_error_messages::FluentBundle;
-    use rustc_errors::{emitter::Emitter, translation::Translate, Diagnostic, Handler};
+    use rustc_errors::{emitter::Emitter, translation::Translate, DiagCtxt, Diagnostic};
     use rustc_session::parse::ParseSess;
     use rustc_span::source_map::{FilePathMapping, SourceMap};
     use rustc_span::{edition::Edition, FileName};
@@ -78,10 +79,10 @@ mod librustc_parse {
         }
 
         rustc_span::create_session_if_not_set_then(Edition::Edition2018, |_| {
-            let cm = Lrc::new(SourceMap::new(FilePathMapping::empty()));
+            let source_map = Lrc::new(SourceMap::new(FilePathMapping::empty()));
             let emitter = Box::new(SilentEmitter);
-            let handler = Handler::with_emitter(emitter);
-            let sess = ParseSess::with_span_handler(handler, cm);
+            let handler = DiagCtxt::with_emitter(emitter);
+            let sess = ParseSess::with_dcx(handler, source_map);
             if let Err(diagnostic) = rustc_parse::parse_crate_from_source_str(
                 FileName::Custom("bench".to_owned()),
                 content.to_owned(),

@@ -29,8 +29,8 @@ fn test_pat_size() {
     assert_eq!(mem::size_of::<Pat>(), 184);
 }
 
-#[rustversion::attr(before(2022-09-09), ignore)]
+#[rustversion::attr(before(2023-12-20), ignore)]
 #[test]
 fn test_lit_size() {
-    assert_eq!(mem::size_of::<Lit>(), 32);
+    assert_eq!(mem::size_of::<Lit>(), 24);
 }

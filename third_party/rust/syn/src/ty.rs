@@ -264,7 +264,7 @@ ast_enum! {
 #[cfg(feature = "parsing")]
 pub(crate) mod parsing {
     use super::*;
-    use crate::ext::IdentExt;
+    use crate::ext::IdentExt as _;
     use crate::parse::{Parse, ParseStream, Result};
     use crate::path;
     use proc_macro2::Span;

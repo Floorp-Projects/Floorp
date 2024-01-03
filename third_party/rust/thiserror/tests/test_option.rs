@@ -1,7 +1,4 @@
-#![cfg_attr(
-    thiserror_nightly_testing,
-    feature(error_generic_member_access, provide_any)
-)]
+#![cfg_attr(thiserror_nightly_testing, feature(error_generic_member_access))]
 
 #[cfg(thiserror_nightly_testing)]
 pub mod structs {

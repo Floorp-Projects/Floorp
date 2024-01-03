@@ -89,7 +89,6 @@ fragile-send-sync-non-atomic-wasm = [
     "wgt/fragile-send-sync-non-atomic-wasm",
 ]
 gles = ["hal/gles"]
-id32 = []
 link = ["hal/link"]
 metal = ["hal/metal"]
 renderdoc = ["hal/renderdoc"]

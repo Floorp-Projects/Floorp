@@ -1,7 +1,6 @@
 use proc_macro2::{Delimiter, Group, Span, TokenStream, TokenTree};
 use quote::{format_ident, quote, ToTokens};
 use std::collections::BTreeSet as Set;
-use std::iter::FromIterator;
 use syn::parse::ParseStream;
 use syn::{
     braced, bracketed, parenthesized, token, Attribute, Error, Ident, Index, LitInt, LitStr, Meta,
@@ -57,13 +56,13 @@ pub fn get(input: &[Attribute]) -> Result<Attrs> {
         if attr.path().is_ident("error") {
             parse_error_attribute(&mut attrs, attr)?;
         } else if attr.path().is_ident("source") {
-            require_empty_attribute(attr)?;
+            attr.meta.require_path_only()?;
             if attrs.source.is_some() {
                 return Err(Error::new_spanned(attr, "duplicate #[source] attribute"));
             }
             attrs.source = Some(attr);
         } else if attr.path().is_ident("backtrace") {
-            require_empty_attribute(attr)?;
+            attr.meta.require_path_only()?;
             if attrs.backtrace.is_some() {
                 return Err(Error::new_spanned(attr, "duplicate #[backtrace] attribute"));
             }
@@ -193,24 +192,12 @@ fn parse_token_expr(input: ParseStream, mut begin_expr: bool) -> Result<TokenStr
     Ok(TokenStream::from_iter(tokens))
 }
 
-fn require_empty_attribute(attr: &Attribute) -> Result<()> {
-    let error_span = match &attr.meta {
-        Meta::Path(_) => return Ok(()),
-        Meta::List(meta) => meta.delimiter.span().open(),
-        Meta::NameValue(meta) => meta.eq_token.span,
-    };
-    Err(Error::new(
-        error_span,
-        "unexpected token in thiserror attribute",
-    ))
-}
-
 impl ToTokens for Display<'_> {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         let fmt = &self.fmt;
         let args = &self.args;
         tokens.extend(quote! {
-            write!(__formatter, #fmt #args)
+            ::core::write!(__formatter, #fmt #args)
         });
     }
 }
@@ -218,6 +205,6 @@ impl ToTokens for Display<'_> {
 impl ToTokens for Trait {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         let trait_name = format_ident!("{}", format!("{:?}", self));
-        tokens.extend(quote!(std::fmt::#trait_name));
+        tokens.extend(quote!(::core::fmt::#trait_name));
     }
 }

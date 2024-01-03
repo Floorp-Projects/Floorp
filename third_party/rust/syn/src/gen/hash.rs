@@ -440,7 +440,6 @@ impl Hash for Expr {
                 state.write_u8(22u8);
                 v0.hash(state);
             }
-            #[cfg(feature = "full")]
             Expr::MethodCall(v0) => {
                 state.write_u8(23u8);
                 v0.hash(state);
@@ -458,7 +457,6 @@ impl Hash for Expr {
                 state.write_u8(26u8);
                 v0.hash(state);
             }
-            #[cfg(feature = "full")]
             Expr::Reference(v0) => {
                 state.write_u8(27u8);
                 v0.hash(state);
@@ -473,7 +471,6 @@ impl Hash for Expr {
                 state.write_u8(29u8);
                 v0.hash(state);
             }
-            #[cfg(feature = "full")]
             Expr::Struct(v0) => {
                 state.write_u8(30u8);
                 v0.hash(state);
@@ -798,7 +795,7 @@ impl Hash for ExprMatch {
         self.arms.hash(state);
     }
 }
-#[cfg(feature = "full")]
+#[cfg(any(feature = "derive", feature = "full"))]
 #[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for ExprMethodCall {
     fn hash<H>(&self, state: &mut H)
@@ -848,7 +845,7 @@ impl Hash for ExprRange {
         self.end.hash(state);
     }
 }
-#[cfg(feature = "full")]
+#[cfg(any(feature = "derive", feature = "full"))]
 #[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for ExprReference {
     fn hash<H>(&self, state: &mut H)
@@ -883,7 +880,7 @@ impl Hash for ExprReturn {
         self.expr.hash(state);
     }
 }
-#[cfg(feature = "full")]
+#[cfg(any(feature = "derive", feature = "full"))]
 #[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for ExprStruct {
     fn hash<H>(&self, state: &mut H)
@@ -1020,7 +1017,7 @@ impl Hash for FieldPat {
         self.pat.hash(state);
     }
 }
-#[cfg(feature = "full")]
+#[cfg(any(feature = "derive", feature = "full"))]
 #[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for FieldValue {
     fn hash<H>(&self, state: &mut H)

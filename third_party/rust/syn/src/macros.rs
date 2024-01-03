@@ -4,14 +4,17 @@
 )]
 macro_rules! ast_struct {
     (
-        [$($attrs_pub:tt)*]
-        struct $name:ident #full $($rest:tt)*
+        $(#[$attr:meta])*
+        $pub:ident $struct:ident $name:ident #full $body:tt
     ) => {
+        check_keyword_matches!(pub $pub);
+        check_keyword_matches!(struct $struct);
+
         #[cfg(feature = "full")]
-        $($attrs_pub)* struct $name $($rest)*
+        $(#[$attr])* $pub $struct $name $body
 
         #[cfg(not(feature = "full"))]
-        $($attrs_pub)* struct $name {
+        $(#[$attr])* $pub $struct $name {
             _noconstruct: ::std::marker::PhantomData<::proc_macro2::Span>,
         }
 
@@ -24,35 +27,26 @@ macro_rules! ast_struct {
     };
 
     (
-        [$($attrs_pub:tt)*]
-        struct $name:ident $($rest:tt)*
+        $(#[$attr:meta])*
+        $pub:ident $struct:ident $name:ident $body:tt
     ) => {
-        $($attrs_pub)* struct $name $($rest)*
-    };
+        check_keyword_matches!(pub $pub);
+        check_keyword_matches!(struct $struct);
 
-    ($($t:tt)*) => {
-        strip_attrs_pub!(ast_struct!($($t)*));
+        $(#[$attr])* $pub $struct $name $body
     };
 }
 
+#[cfg(any(feature = "full", feature = "derive"))]
 macro_rules! ast_enum {
-    // Drop the `#no_visit` attribute, if present.
     (
-        [$($attrs_pub:tt)*]
-        enum $name:ident #no_visit $($rest:tt)*
-    ) => (
-        ast_enum!([$($attrs_pub)*] enum $name $($rest)*);
-    );
+        $(#[$enum_attr:meta])*
+        $pub:ident $enum:ident $name:ident $body:tt
+    ) => {
+        check_keyword_matches!(pub $pub);
+        check_keyword_matches!(enum $enum);
 
-    (
-        [$($attrs_pub:tt)*]
-        enum $name:ident $($rest:tt)*
-    ) => (
-        $($attrs_pub)* enum $name $($rest)*
-    );
-
-    ($($t:tt)*) => {
-        strip_attrs_pub!(ast_enum!($($t)*));
+        $(#[$enum_attr])* $pub $enum $name $body
     };
 }
 
@@ -60,16 +54,19 @@ macro_rules! ast_enum_of_structs {
     (
         $(#[$enum_attr:meta])*
         $pub:ident $enum:ident $name:ident $body:tt
-        $($remaining:tt)*
     ) => {
-        ast_enum!($(#[$enum_attr])* $pub $enum $name $body);
-        ast_enum_of_structs_impl!($pub $enum $name $body $($remaining)*);
+        check_keyword_matches!(pub $pub);
+        check_keyword_matches!(enum $enum);
+
+        $(#[$enum_attr])* $pub $enum $name $body
+
+        ast_enum_of_structs_impl!($name $body);
     };
 }
 
 macro_rules! ast_enum_of_structs_impl {
     (
-        $pub:ident $enum:ident $name:ident {
+        $name:ident {
             $(
                 $(#[cfg $cfg_attr:tt])*
                 $(#[doc $($doc_attr:tt)*])*
@@ -77,9 +74,6 @@ macro_rules! ast_enum_of_structs_impl {
             )*
         }
     ) => {
-        check_keyword_matches!(pub $pub);
-        check_keyword_matches!(enum $enum);
-
         $($(
             ast_enum_from_struct!($name::$variant, $($member)::+);
         )*)*
@@ -154,32 +148,29 @@ macro_rules! generate_to_tokens {
     };
 }
 
-macro_rules! strip_attrs_pub {
-    ($mac:ident!($(#[$m:meta])* $pub:ident $($t:tt)*)) => {
+// Rustdoc bug: does not respect the doc(hidden) on some items.
+#[cfg(all(doc, feature = "parsing"))]
+macro_rules! pub_if_not_doc {
+    ($(#[$m:meta])* $pub:ident $($item:tt)*) => {
         check_keyword_matches!(pub $pub);
 
-        $mac!([$(#[$m])* $pub] $($t)*);
+        $(#[$m])*
+        $pub(crate) $($item)*
+    };
+}
+
+#[cfg(all(not(doc), feature = "parsing"))]
+macro_rules! pub_if_not_doc {
+    ($(#[$m:meta])* $pub:ident $($item:tt)*) => {
+        check_keyword_matches!(pub $pub);
+
+        $(#[$m])*
+        $pub $($item)*
     };
 }
 
 macro_rules! check_keyword_matches {
     (enum enum) => {};
     (pub pub) => {};
-}
-
-// Rustdoc bug: does not respect the doc(hidden) on some items.
-#[cfg(all(doc, feature = "parsing"))]
-macro_rules! pub_if_not_doc {
-    ($(#[$m:meta])* pub $($item:tt)*) => {
-        $(#[$m])*
-        pub(crate) $($item)*
-    };
-}
-
-#[cfg(all(not(doc), feature = "parsing"))]
-macro_rules! pub_if_not_doc {
-    ($(#[$m:meta])* pub $($item:tt)*) => {
-        $(#[$m])*
-        pub $($item)*
-    };
+    (struct struct) => {};
 }
