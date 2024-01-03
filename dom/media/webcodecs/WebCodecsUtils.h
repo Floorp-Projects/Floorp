@@ -149,6 +149,7 @@ enum class MessageProcessedResult { NotProcessed, Processed };
 
 bool IsOnAndroid();
 bool IsOnMacOS();
+bool IsOnLinux();
 
 // Wrap a type to make it unique. This allows using ergonomically in the Variant
 // below. Simply aliasing with `using` isn't enough, because typedefs in C++
