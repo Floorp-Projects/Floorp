@@ -1060,11 +1060,6 @@ def target_tasks_chromium_update(full_task_graph, parameters, graph_config):
         "fetch-win64-chromium",
         "fetch-mac-chromium",
         "fetch-mac-chromium-arm",
-        "toolchain-linux64-custom-car",
-        "toolchain-win64-custom-car",
-        "toolchain-macosx64-custom-car",
-        "toolchain-macosx-arm64-custom-car",
-        "toolchain-android-custom-car",
     ]
 
 
