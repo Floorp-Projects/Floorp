@@ -566,10 +566,8 @@ PeerConnection::~PeerConnection() {
   if (sdp_handler_) {
     // Don't destroy BaseChannels until after stats has been cleaned up so that
     // the last stats request can still read from the channels.
-    sdp_handler_->DestroyAllChannels();
-
+    sdp_handler_->DestroyMediaChannels();
     RTC_LOG(LS_INFO) << "Session: " << session_id() << " is destroyed.";
-
     sdp_handler_->ResetSessionDescFactory();
   }
 
@@ -584,6 +582,8 @@ PeerConnection::~PeerConnection() {
     if (network_thread_safety_)
       network_thread_safety_->SetNotAlive();
   });
+  sctp_mid_s_.reset();
+  SetSctpTransportName("");
 
   // call_ and event_log_ must be destroyed on the worker thread.
   worker_thread()->BlockingCall([this] {
@@ -1899,7 +1899,12 @@ void PeerConnection::Close() {
 
   // Don't destroy BaseChannels until after stats has been cleaned up so that
   // the last stats request can still read from the channels.
-  sdp_handler_->DestroyAllChannels();
+  // TODO(tommi): The voice/video channels will be partially uninitialized on
+  // the network thread (see `RtpTransceiver::ClearChannel`), partially on the
+  // worker thread (see `PushNewMediaChannelAndDeleteChannel`) and then
+  // eventually freed on the signaling thread.
+  // It would be good to combine those steps with the teardown steps here.
+  sdp_handler_->DestroyMediaChannels();
 
   // The event log is used in the transport controller, which must be outlived
   // by the former. CreateOffer by the peer connection is implemented
@@ -1912,18 +1917,17 @@ void PeerConnection::Close() {
   }
 
   network_thread()->BlockingCall([this] {
-    // Data channels will already have been unset via the DestroyAllChannels()
-    // call above, which triggers a call to TeardownDataChannelTransport_n().
-    // TODO(tommi): ^^ That's not exactly optimal since this is yet another
-    // blocking hop to the network thread during Close(). Further still, the
-    // voice/video/data channels will be cleared on the worker thread.
     RTC_DCHECK_RUN_ON(network_thread());
+    TeardownDataChannelTransport_n({});
     transport_controller_.reset();
     port_allocator_->DiscardCandidatePool();
     if (network_thread_safety_) {
       network_thread_safety_->SetNotAlive();
     }
   });
+
+  sctp_mid_s_.reset();
+  SetSctpTransportName("");
 
   worker_thread()->BlockingCall([this] {
     RTC_DCHECK_RUN_ON(worker_thread());

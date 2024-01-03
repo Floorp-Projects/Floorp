@@ -166,8 +166,8 @@ class SdpOfferAnswerHandler : public SdpStateProvider {
   // See also `InternalDataChannelInit::fallback_ssl_role`.
   absl::optional<rtc::SSLRole> GuessSslRole() const;
 
-  // Destroys all BaseChannels and destroys the SCTP data channel, if present.
-  void DestroyAllChannels();
+  // Destroys all media BaseChannels.
+  void DestroyMediaChannels();
 
   rtc::scoped_refptr<StreamCollectionInterface> local_streams();
   rtc::scoped_refptr<StreamCollectionInterface> remote_streams();
