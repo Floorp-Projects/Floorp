@@ -23,7 +23,7 @@ interface nsIWindowsPackageManager : nsISupports
  */
     unsigned long long getInstalledDate();
 
-/* Retrieves the campaignId, if any, a user's Microsoft Store install is
+/* Asynchronously retrieves the campaignId, if any, a user's Microsoft Store install is
  * associated with. These are present if the user clicked a "ms-window-store://"
  * or "https://" link that included a "cid" query argument the very first time
  * they installed the app. (This value appears to be cached forever, so
@@ -37,5 +37,6 @@ interface nsIWindowsPackageManager : nsISupports
  * a non-packaged build.
  * @throw NS_ERROR_FAILURE for any other errors
  */
-    AString getCampaignId();
+    [implicit_jscontext]
+    Promise campaignId();
 };
