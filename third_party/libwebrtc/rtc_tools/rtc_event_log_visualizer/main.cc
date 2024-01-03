@@ -613,9 +613,8 @@ int main(int argc, char* argv[]) {
 
   for (const auto& plot : plots) {
     if (plot.enabled) {
-      Plot* output = collection.AppendNewPlot();
+      Plot* output = collection.AppendNewPlot(plot.label);
       plot.plot_func(output);
-      output->SetId(plot.label);
     }
   }
 

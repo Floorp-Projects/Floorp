@@ -76,43 +76,53 @@ void analyze_rtc_event_log(const char* log_contents,
 
   // Outgoing
   if (absl::StrContains(selection_view, "outgoing_packet_sizes")) {
-    analyzer.CreatePacketGraph(PacketDirection::kOutgoingPacket,
-                               collection.AppendNewPlot());
+    analyzer.CreatePacketGraph(
+        PacketDirection::kOutgoingPacket,
+        collection.AppendNewPlot("outgoing_packet_sizes"));
   }
   if (absl::StrContains(selection_view, "outgoing_stream_bitrate")) {
-    analyzer.CreateStreamBitrateGraph(PacketDirection::kOutgoingPacket,
-                                      collection.AppendNewPlot());
+    analyzer.CreateStreamBitrateGraph(
+        PacketDirection::kOutgoingPacket,
+        collection.AppendNewPlot("outgoing_stream_bitrate"));
   }
   if (absl::StrContains(selection_view, "outgoing_bitrate")) {
-    analyzer.CreateTotalOutgoingBitrateGraph(collection.AppendNewPlot(),
-                                             /*show_detector_state*/ true,
-                                             /*show_alr_state*/ false,
-                                             /*show_link_capacity*/ true);
+    analyzer.CreateTotalOutgoingBitrateGraph(
+        collection.AppendNewPlot("outgoing_bitrate"),
+        /*show_detector_state*/ true,
+        /*show_alr_state*/ false,
+        /*show_link_capacity*/ true);
   }
   if (absl::StrContains(selection_view, "network_delay_feedback")) {
-    analyzer.CreateNetworkDelayFeedbackGraph(collection.AppendNewPlot());
+    analyzer.CreateNetworkDelayFeedbackGraph(
+        collection.AppendNewPlot("network_delay_feedback"));
   }
   if (absl::StrContains(selection_view, "fraction_loss_feedback")) {
-    analyzer.CreateFractionLossGraph(collection.AppendNewPlot());
+    analyzer.CreateFractionLossGraph(
+        collection.AppendNewPlot("fraction_loss_feedback"));
   }
 
   // Incoming
   if (absl::StrContains(selection_view, "incoming_packet_sizes")) {
-    analyzer.CreatePacketGraph(PacketDirection::kIncomingPacket,
-                               collection.AppendNewPlot());
+    analyzer.CreatePacketGraph(
+        PacketDirection::kIncomingPacket,
+        collection.AppendNewPlot("incoming_packet_sizes"));
   }
   if (absl::StrContains(selection_view, "incoming_stream_bitrate")) {
-    analyzer.CreateStreamBitrateGraph(PacketDirection::kIncomingPacket,
-                                      collection.AppendNewPlot());
+    analyzer.CreateStreamBitrateGraph(
+        PacketDirection::kIncomingPacket,
+        collection.AppendNewPlot("incoming_stream_bitrate"));
   }
   if (absl::StrContains(selection_view, "incoming_bitrate")) {
-    analyzer.CreateTotalIncomingBitrateGraph(collection.AppendNewPlot());
+    analyzer.CreateTotalIncomingBitrateGraph(
+        collection.AppendNewPlot("incoming_bitrate"));
   }
   if (absl::StrContains(selection_view, "incoming_delay")) {
-    analyzer.CreateIncomingDelayGraph(collection.AppendNewPlot());
+    analyzer.CreateIncomingDelayGraph(
+        collection.AppendNewPlot("incoming_delay"));
   }
   if (absl::StrContains(selection_view, "incoming_loss_rate")) {
-    analyzer.CreateIncomingPacketLossGraph(collection.AppendNewPlot());
+    analyzer.CreateIncomingPacketLossGraph(
+        collection.AppendNewPlot("incoming_loss_rate"));
   }
 
   webrtc::analytics::ChartCollection proto_charts;

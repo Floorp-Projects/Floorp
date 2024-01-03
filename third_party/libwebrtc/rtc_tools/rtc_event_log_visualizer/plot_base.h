@@ -156,6 +156,7 @@ class Plot {
   // the title might change in future releases whereas the ID should be stable
   // over time.
   void SetId(const std::string& id);
+  void SetId(absl::string_view id);
 
   // Add a new TimeSeries to the plot.
   void AppendTimeSeries(TimeSeries&& time_series);
@@ -196,6 +197,8 @@ class PlotCollection {
   virtual void Draw() {}
 
   virtual Plot* AppendNewPlot();
+
+  virtual Plot* AppendNewPlot(absl::string_view);
 
   void SetCallTimeToUtcOffsetMs(int64_t calltime_to_utc_ms) {
     calltime_to_utc_ms_ = calltime_to_utc_ms;

@@ -65,4 +65,10 @@ TEST(RtcEventLogAnalyzerBindingsTest, ProducesCharts) {
               ::testing::UnorderedElementsAre(
                   "Outgoing RTP bitrate",
                   "Outgoing network delay (based on per-packet feedback)"));
+  std::vector<std::string> chart_ids;
+  for (const auto& chart : collection.charts()) {
+    chart_ids.push_back(chart.id());
+  }
+  EXPECT_THAT(chart_ids, ::testing::UnorderedElementsAre(
+                             "outgoing_bitrate", "network_delay_feedback"));
 }
