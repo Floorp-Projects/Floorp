@@ -43,4 +43,14 @@ public interface AudioDeviceModule {
   default boolean setNoiseSuppressorEnabled(boolean enabled) {
     return false;
   }
+
+  /**
+   * Sets the preferred field dimension for the built-in microphone. Returns
+   * true if setting was successful, otherwise false is returned.
+   * This functionality can be implemented with
+   * {@code android.media.MicrophoneDirection.setPreferredMicrophoneFieldDimension}.
+   */
+  default boolean setPreferredMicrophoneFieldDimension(float dimension) {
+    return false;
+  }
 }
