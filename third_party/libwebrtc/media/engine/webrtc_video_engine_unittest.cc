@@ -37,6 +37,7 @@
 #include "api/video/video_bitrate_allocation.h"
 #include "api/video_codecs/h264_profile_level_id.h"
 #include "api/video_codecs/sdp_video_format.h"
+#include "api/video_codecs/video_codec.h"
 #include "api/video_codecs/video_decoder_factory.h"
 #include "api/video_codecs/video_decoder_factory_template.h"
 #include "api/video_codecs/video_decoder_factory_template_dav1d_adapter.h"
@@ -110,7 +111,6 @@ using ::webrtc::Timestamp;
 using ::webrtc::test::RtcpPacketParser;
 
 namespace {
-static const int kDefaultQpMax = 56;
 
 static const uint8_t kRedRtxPayloadType = 125;
 
@@ -4866,7 +4866,7 @@ TEST_F(WebRtcVideoChannelFlexfecSendRecvTest,
 TEST_F(WebRtcVideoChannelTest, SetSendCodecsChangesExistingStreams) {
   cricket::VideoSenderParameters parameters;
   cricket::VideoCodec codec = cricket::CreateVideoCodec(100, "VP8");
-  codec.SetParam(kCodecParamMaxQuantization, kDefaultQpMax);
+  codec.SetParam(kCodecParamMaxQuantization, kDefaultVideoMaxQpVpx);
   parameters.codecs.push_back(codec);
 
   ASSERT_TRUE(send_channel_->SetSenderParameters(parameters));
@@ -4878,14 +4878,14 @@ TEST_F(WebRtcVideoChannelTest, SetSendCodecsChangesExistingStreams) {
       send_channel_->SetVideoSend(last_ssrc_, nullptr, &frame_forwarder));
 
   std::vector<webrtc::VideoStream> streams = stream->GetVideoStreams();
-  EXPECT_EQ(kDefaultQpMax, streams[0].max_qp);
+  EXPECT_EQ(kDefaultVideoMaxQpVpx, streams[0].max_qp);
 
   parameters.codecs.clear();
-  codec.SetParam(kCodecParamMaxQuantization, kDefaultQpMax + 1);
+  codec.SetParam(kCodecParamMaxQuantization, kDefaultVideoMaxQpVpx + 1);
   parameters.codecs.push_back(codec);
   ASSERT_TRUE(send_channel_->SetSenderParameters(parameters));
   streams = fake_call_->GetVideoSendStreams()[0]->GetVideoStreams();
-  EXPECT_EQ(kDefaultQpMax + 1, streams[0].max_qp);
+  EXPECT_EQ(kDefaultVideoMaxQpVpx + 1, streams[0].max_qp);
   EXPECT_TRUE(send_channel_->SetVideoSend(last_ssrc_, nullptr, nullptr));
 }
 
@@ -9772,8 +9772,9 @@ class WebRtcVideoChannelSimulcastTest : public ::testing::Test {
     if (num_configured_streams > 1 || conference_mode) {
       expected_streams = GetSimulcastConfig(
           /*min_layers=*/1, num_configured_streams, capture_width,
-          capture_height, webrtc::kDefaultBitratePriority, kDefaultQpMax,
-          screenshare && conference_mode, true, field_trials_);
+          capture_height, webrtc::kDefaultBitratePriority,
+          kDefaultVideoMaxQpVpx, screenshare && conference_mode, true,
+          field_trials_);
       if (screenshare && conference_mode) {
         for (const webrtc::VideoStream& stream : expected_streams) {
           // Never scale screen content.
@@ -9789,7 +9790,7 @@ class WebRtcVideoChannelSimulcastTest : public ::testing::Test {
       stream.min_bitrate_bps = webrtc::kDefaultMinVideoBitrateBps;
       stream.target_bitrate_bps = stream.max_bitrate_bps =
           GetMaxDefaultBitrateBps(capture_width, capture_height);
-      stream.max_qp = kDefaultQpMax;
+      stream.max_qp = kDefaultVideoMaxQpVpx;
       expected_streams.push_back(stream);
     }
 

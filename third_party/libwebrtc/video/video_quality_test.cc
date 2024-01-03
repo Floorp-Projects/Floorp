@@ -77,8 +77,6 @@ constexpr int kFramesSentInQuickTest = 1;
 constexpr uint32_t kThumbnailSendSsrcStart = 0xE0000;
 constexpr uint32_t kThumbnailRtxSsrcStart = 0xF0000;
 
-constexpr int kDefaultMaxQp = cricket::WebRtcVideoSendChannel::kDefaultQpMax;
-
 const VideoEncoder::Capabilities kCapabilities(false);
 
 std::pair<uint32_t, uint32_t> GetMinMaxBitratesBps(const VideoCodec& codec,
@@ -579,7 +577,7 @@ VideoStream VideoQualityTest::DefaultVideoStream(const Params& params,
   stream.min_bitrate_bps = params.video[video_idx].min_bitrate_bps;
   stream.target_bitrate_bps = params.video[video_idx].target_bitrate_bps;
   stream.max_bitrate_bps = params.video[video_idx].max_bitrate_bps;
-  stream.max_qp = kDefaultMaxQp;
+  stream.max_qp = cricket::kDefaultVideoMaxQpVpx;
   stream.num_temporal_layers = params.video[video_idx].num_temporal_layers;
   stream.active = true;
   return stream;
@@ -594,7 +592,7 @@ VideoStream VideoQualityTest::DefaultThumbnailStream() {
   stream.min_bitrate_bps = 7500;
   stream.target_bitrate_bps = 37500;
   stream.max_bitrate_bps = 50000;
-  stream.max_qp = kDefaultMaxQp;
+  stream.max_qp = cricket::kDefaultVideoMaxQpVpx;
   return stream;
 }
 
@@ -627,7 +625,7 @@ void VideoQualityTest::FillScalabilitySettings(
     encoder_config.simulcast_layers = std::vector<VideoStream>(num_streams);
     encoder_config.video_stream_factory =
         rtc::make_ref_counted<cricket::EncoderStreamFactory>(
-            params->video[video_idx].codec, kDefaultMaxQp,
+            params->video[video_idx].codec, cricket::kDefaultVideoMaxQpVpx,
             params->screenshare[video_idx].enabled, true, encoder_info);
     params->ss[video_idx].streams =
         encoder_config.video_stream_factory->CreateEncoderStreams(

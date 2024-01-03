@@ -16,6 +16,7 @@
 #include "api/test/frame_generator_interface.h"
 #include "api/video/builtin_video_bitrate_allocator_factory.h"
 #include "api/video_codecs/builtin_video_encoder_factory.h"
+#include "media/base/media_constants.h"
 #include "modules/video_coding/codecs/av1/av1_svc_config.h"
 #include "modules/video_coding/include/video_codec_interface.h"
 #include "modules/video_coding/svc/scalability_mode_util.h"
@@ -71,9 +72,6 @@ ABSL_FLAG(bool, verbose, false, "Verbose logs to stderr");
 
 namespace webrtc {
 namespace {
-
-// See `WebRtcVideoSendChannel::kDefaultQpMax`.
-constexpr unsigned int kDefaultQpMax = 56;
 
 [[maybe_unused]] const char* InterLayerPredModeToString(
     const InterLayerPredMode& inter_layer_pred_mode) {
@@ -257,8 +255,6 @@ class TestVideoEncoderFactoryWrapper final {
 
     video_codec.active = true;
 
-    video_codec.qpMax = kDefaultQpMax;
-
     // Simulcast is not implemented at this moment.
     video_codec.numberOfSimulcastStreams = 0;
 
@@ -270,6 +266,7 @@ class TestVideoEncoderFactoryWrapper final {
 
         *(video_codec.VP8()) = VideoEncoder::GetDefaultVp8Settings();
         video_codec.VP8()->numberOfTemporalLayers = temporal_layers;
+        video_codec.qpMax = cricket::kDefaultVideoMaxQpVpx;
         break;
 
       case kVideoCodecVP9:
@@ -277,6 +274,7 @@ class TestVideoEncoderFactoryWrapper final {
         video_codec.VP9()->numberOfSpatialLayers = spatial_layers;
         video_codec.VP9()->numberOfTemporalLayers = temporal_layers;
         video_codec.VP9()->interLayerPred = inter_layer_pred_mode;
+        video_codec.qpMax = cricket::kDefaultVideoMaxQpVpx;
         break;
 
       case kVideoCodecH264:
@@ -284,6 +282,7 @@ class TestVideoEncoderFactoryWrapper final {
 
         *(video_codec.H264()) = VideoEncoder::GetDefaultH264Settings();
         video_codec.H264()->numberOfTemporalLayers = temporal_layers;
+        video_codec.qpMax = cricket::kDefaultVideoMaxQpH26x;
         break;
 
       case kVideoCodecAV1:
@@ -294,9 +293,11 @@ class TestVideoEncoderFactoryWrapper final {
         } else {
           RTC_LOG(LS_WARNING) << "Failed to configure svc bitrates for av1.";
         }
+        video_codec.qpMax = cricket::kDefaultVideoMaxQpVpx;
         break;
       case kVideoCodecH265:
         // TODO(bugs.webrtc.org/13485)
+        video_codec.qpMax = cricket::kDefaultVideoMaxQpH26x;
         break;
       default:
         RTC_CHECK_NOTREACHED();
