@@ -248,6 +248,94 @@ const CONFIG_DISTRIBUTION = [
   },
 ];
 
+const CONFIG_CHANNEL_APPLICATION = [
+  {
+    recordType: "engine",
+    identifier: "engine-channel",
+    base: {},
+    variants: [
+      {
+        environment: {
+          allRegionsAndLocales: true,
+          channels: ["esr"],
+        },
+      },
+    ],
+  },
+  {
+    recordType: "engine",
+    identifier: "engine-application",
+    base: {},
+    variants: [
+      {
+        environment: {
+          allRegionsAndLocales: true,
+          applications: ["firefox"],
+        },
+      },
+    ],
+  },
+  {
+    recordType: "defaultEngines",
+    specificDefaults: [],
+  },
+  {
+    recordType: "engineOrders",
+    orders: [],
+  },
+];
+
+const CONFIG_VERSIONS = [
+  {
+    recordType: "engine",
+    identifier: "engine-min-1",
+    base: {},
+    variants: [
+      {
+        environment: {
+          allRegionsAndLocales: true,
+          minVersion: "1",
+        },
+      },
+    ],
+  },
+  {
+    recordType: "engine",
+    identifier: "engine-max-20",
+    base: {},
+    variants: [
+      {
+        environment: {
+          allRegionsAndLocales: true,
+          maxVersion: "20",
+        },
+      },
+    ],
+  },
+  {
+    recordType: "engine",
+    identifier: "engine-min-max-1-10",
+    base: {},
+    variants: [
+      {
+        environment: {
+          allRegionsAndLocales: true,
+          minVersion: "1",
+          maxVersion: "10",
+        },
+      },
+    ],
+  },
+  {
+    recordType: "defaultEngines",
+    specificDefaults: [],
+  },
+  {
+    recordType: "engineOrders",
+    orders: [],
+  },
+];
+
 const engineSelector = new SearchEngineSelector();
 let settings;
 let configStub;
@@ -539,5 +627,97 @@ add_task(async function test_selector_match_distribution() {
     },
     [],
     "Should not match any engines with excluded distribution."
+  );
+});
+
+add_task(async function test_engine_selector_match_applications() {
+  assertActualEnginesEqualsExpected(
+    CONFIG_CHANNEL_APPLICATION,
+    {
+      locale: "en-CA",
+      region: "CA",
+      channel: "esr",
+    },
+    ["engine-channel"],
+    "Should match engine for esr channel."
+  );
+
+  assertActualEnginesEqualsExpected(
+    CONFIG_CHANNEL_APPLICATION,
+    {
+      locale: "en-CA",
+      region: "CA",
+      appName: "firefox",
+    },
+    ["engine-application"],
+    "Should match engine for application."
+  );
+});
+
+add_task(async function test_engine_selector_match_version() {
+  assertActualEnginesEqualsExpected(
+    CONFIG_VERSIONS,
+    {
+      locale: "en-CA",
+      region: "CA",
+      version: "1",
+    },
+    ["engine-min-1", "engine-max-20", "engine-min-max-1-10"],
+    "Should match engines with that support versions equal or above the minimum."
+  );
+
+  assertActualEnginesEqualsExpected(
+    CONFIG_VERSIONS,
+    {
+      locale: "en-CA",
+      region: "CA",
+      version: "30",
+    },
+    ["engine-min-1"],
+    "Should match engines with that support versions above the minimum."
+  );
+
+  assertActualEnginesEqualsExpected(
+    CONFIG_VERSIONS,
+    {
+      locale: "en-CA",
+      region: "CA",
+      version: "20",
+    },
+    ["engine-min-1", "engine-max-20"],
+    "Should match engines with that support versions equal or below the maximum."
+  );
+
+  assertActualEnginesEqualsExpected(
+    CONFIG_VERSIONS,
+    {
+      locale: "en-CA",
+      region: "CA",
+      version: "5",
+    },
+    ["engine-min-1", "engine-max-20", "engine-min-max-1-10"],
+    "Should match engines with that support the versions above the minimum and below the maximum."
+  );
+
+  assertActualEnginesEqualsExpected(
+    CONFIG_VERSIONS,
+    {
+      locale: "en-CA",
+      region: "CA",
+      version: "15",
+    },
+    ["engine-min-1", "engine-max-20"],
+    "Should match engines with that support the versions above the minimum and below the maximum."
+  );
+
+  assertActualEnginesEqualsExpected(
+    CONFIG_VERSIONS,
+    {
+      locale: "en-CA",
+      region: "CA",
+      version: "",
+    },
+    [],
+    "Should match no engines with no matching versions."
   );
 });
