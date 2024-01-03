@@ -13,10 +13,10 @@
 
     <!-- Default Search Engine -->
     <groupbox id="defaultEngineGroup" data-category="paneSearch" hidden="true">
-      <label><html:h2 data-l10n-id="search-engine-default-header" /></label>
-      <description class="section-description" data-l10n-id="search-engine-default-desc-2" />
+      <label><html:h2 data-l10n-id="search-engine-default-header" id="search-engine-default-header" /></label>
+      <description class="section-description" data-l10n-id="search-engine-default-desc-2" id="search-engine-default-desc-2" />
       <hbox>
-        <menulist id="defaultEngine">
+        <menulist id="defaultEngine" aria-labelledby="search-engine-default-header" aria-describedby="search-engine-default-desc-2">
           <menupopup/>
         </menulist>
       </hbox>
@@ -28,9 +28,9 @@
                 data-l10n-id="search-separate-default-engine"
                 hidden="true"/>
       <vbox id="browserPrivateEngineSelection" class="indent" hidden="true">
-        <description data-l10n-id="search-engine-default-private-desc-2" />
+        <description data-l10n-id="search-engine-default-private-desc-2" id="search-engine-default-private-desc-2" />
         <hbox>
-          <menulist id="defaultPrivateEngine">
+          <menulist id="defaultPrivateEngine" aria-labelledby="search-engine-default-private-desc-2">
             <menupopup/>
           </menulist>
         </hbox>
