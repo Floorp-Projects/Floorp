@@ -11,13 +11,11 @@
 #ifndef MODULES_CONGESTION_CONTROLLER_GOOG_CC_LOSS_BASED_BWE_V2_H_
 #define MODULES_CONGESTION_CONTROLLER_GOOG_CC_LOSS_BASED_BWE_V2_H_
 
-#include <deque>
 #include <vector>
 
 #include "absl/types/optional.h"
 #include "api/array_view.h"
 #include "api/field_trials_view.h"
-#include "api/network_state_predictor.h"
 #include "api/transport/network_types.h"
 #include "api/units/data_rate.h"
 #include "api/units/data_size.h"
@@ -68,8 +66,6 @@ class LossBasedBweV2 {
   void UpdateBandwidthEstimate(
       rtc::ArrayView<const PacketResult> packet_results,
       DataRate delay_based_estimate,
-      BandwidthUsage delay_detector_state,
-      absl::optional<DataRate> probe_bitrate,
       bool in_alr);
 
   // For unit testing only.
@@ -107,8 +103,6 @@ class LossBasedBweV2 {
     double instant_upper_bound_loss_offset = 0.0;
     double temporal_weight_factor = 0.0;
     double bandwidth_backoff_lower_bound_factor = 0.0;
-    bool trendline_integration_enabled = false;
-    int trendline_observations_window_size = 0;
     double max_increase_factor = 0.0;
     TimeDelta delayed_increase_window = TimeDelta::Zero();
     bool use_acked_bitrate_only_when_overusing = false;
@@ -116,8 +110,6 @@ class LossBasedBweV2 {
     double high_loss_rate_threshold = 1.0;
     DataRate bandwidth_cap_at_high_loss_rate = DataRate::MinusInfinity();
     double slope_of_bwe_high_loss_func = 1000.0;
-    bool probe_integration_enabled = false;
-    TimeDelta probe_expiration = TimeDelta::Zero();
     bool not_use_acked_rate_in_alr = false;
     bool use_in_start_phase = false;
   };
@@ -165,25 +157,11 @@ class LossBasedBweV2 {
   void CalculateTemporalWeights();
   void NewtonsMethodUpdate(ChannelParameters& channel_parameters) const;
 
-  // Returns false if there exists a kBwOverusing or kBwUnderusing in the
-  // window.
-  bool TrendlineEsimateAllowBitrateIncrease() const;
-
-  // Returns true if there exists an overusing state in the window.
-  bool TrendlineEsimateAllowEmergencyBackoff() const;
-
   // Returns false if no observation was created.
-  bool PushBackObservation(rtc::ArrayView<const PacketResult> packet_results,
-                           BandwidthUsage delay_detector_state);
-  void UpdateTrendlineEstimator(
-      const std::vector<PacketResult>& packet_feedbacks,
-      Timestamp at_time);
-  void UpdateDelayDetector(BandwidthUsage delay_detector_state);
+  bool PushBackObservation(rtc::ArrayView<const PacketResult> packet_results);
   bool IsEstimateIncreasingWhenLossLimited(
       const ChannelParameters& best_candidate);
   bool IsBandwidthLimitedDueToLoss() const;
-  void SetProbeBitrate(absl::optional<DataRate> probe_bitrate);
-  bool IsRequestingProbe() const;
 
   absl::optional<DataRate> acknowledged_bitrate_;
   absl::optional<Config> config_;
@@ -196,15 +174,12 @@ class LossBasedBweV2 {
   absl::optional<DataRate> cached_instant_upper_bound_;
   std::vector<double> instant_upper_bound_temporal_weights_;
   std::vector<double> temporal_weights_;
-  std::deque<BandwidthUsage> delay_detector_states_;
   Timestamp recovering_after_loss_timestamp_ = Timestamp::MinusInfinity();
   DataRate bandwidth_limit_in_current_window_ = DataRate::PlusInfinity();
   DataRate min_bitrate_ = DataRate::KilobitsPerSec(1);
   DataRate max_bitrate_ = DataRate::PlusInfinity();
   LossBasedState current_state_ = LossBasedState::kDelayBasedEstimate;
-  DataRate probe_bitrate_ = DataRate::PlusInfinity();
   DataRate delay_based_estimate_ = DataRate::PlusInfinity();
-  Timestamp last_probe_timestamp_ = Timestamp::MinusInfinity();
 };
 
 }  // namespace webrtc
