@@ -1,28 +1,40 @@
 use std::fmt::Display;
 use std::path::{self, Path, PathBuf};
 
-pub trait DisplayAsDisplay {
-    fn as_display(&self) -> Self;
+#[doc(hidden)]
+pub trait AsDisplay<'a> {
+    // TODO: convert to generic associated type.
+    // https://github.com/dtolnay/thiserror/pull/253
+    type Target: Display;
+
+    fn as_display(&'a self) -> Self::Target;
 }
 
-impl<T: Display> DisplayAsDisplay for &T {
-    fn as_display(&self) -> Self {
-        self
+impl<'a, T> AsDisplay<'a> for &T
+where
+    T: Display + 'a,
+{
+    type Target = &'a T;
+
+    fn as_display(&'a self) -> Self::Target {
+        *self
     }
 }
 
-pub trait PathAsDisplay {
-    fn as_display(&self) -> path::Display<'_>;
-}
+impl<'a> AsDisplay<'a> for Path {
+    type Target = path::Display<'a>;
 
-impl PathAsDisplay for Path {
-    fn as_display(&self) -> path::Display<'_> {
+    #[inline]
+    fn as_display(&'a self) -> Self::Target {
         self.display()
     }
 }
 
-impl PathAsDisplay for PathBuf {
-    fn as_display(&self) -> path::Display<'_> {
+impl<'a> AsDisplay<'a> for PathBuf {
+    type Target = path::Display<'a>;
+
+    #[inline]
+    fn as_display(&'a self) -> Self::Target {
         self.display()
     }
 }

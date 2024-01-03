@@ -18,7 +18,9 @@ fn test_async_fn() {
             generics: Generics,
             output: ReturnType::Default,
         },
-        block: Block,
+        block: Block {
+            stmts: [],
+        },
     }
     "###);
 }
@@ -32,7 +34,9 @@ fn test_async_closure() {
         asyncness: Some,
         output: ReturnType::Default,
         body: Expr::Block {
-            block: Block,
+            block: Block {
+                stmts: [],
+            },
         },
     }
     "###);

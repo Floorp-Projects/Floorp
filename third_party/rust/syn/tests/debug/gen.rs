@@ -301,9 +301,7 @@ impl Debug for Lite<syn::BinOp> {
 impl Debug for Lite<syn::Block> {
     fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
         let mut formatter = formatter.debug_struct("Block");
-        if !self.value.stmts.is_empty() {
-            formatter.field("stmts", Lite(&self.value.stmts));
-        }
+        formatter.field("stmts", Lite(&self.value.stmts));
         formatter.finish()
     }
 }
@@ -4660,5 +4658,500 @@ impl Debug for Lite<syn::WherePredicate> {
             }
             _ => unreachable!(),
         }
+    }
+}
+impl Debug for Lite<syn::token::Abstract> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![abstract]")
+    }
+}
+impl Debug for Lite<syn::token::And> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![&]")
+    }
+}
+impl Debug for Lite<syn::token::AndAnd> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![&&]")
+    }
+}
+impl Debug for Lite<syn::token::AndEq> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![&=]")
+    }
+}
+impl Debug for Lite<syn::token::As> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![as]")
+    }
+}
+impl Debug for Lite<syn::token::Async> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![async]")
+    }
+}
+impl Debug for Lite<syn::token::At> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![@]")
+    }
+}
+impl Debug for Lite<syn::token::Auto> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![auto]")
+    }
+}
+impl Debug for Lite<syn::token::Await> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![await]")
+    }
+}
+impl Debug for Lite<syn::token::Become> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![become]")
+    }
+}
+impl Debug for Lite<syn::token::Box> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![box]")
+    }
+}
+impl Debug for Lite<syn::token::Break> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![break]")
+    }
+}
+impl Debug for Lite<syn::token::Caret> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![^]")
+    }
+}
+impl Debug for Lite<syn::token::CaretEq> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![^=]")
+    }
+}
+impl Debug for Lite<syn::token::Colon> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![:]")
+    }
+}
+impl Debug for Lite<syn::token::Comma> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![,]")
+    }
+}
+impl Debug for Lite<syn::token::Const> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![const]")
+    }
+}
+impl Debug for Lite<syn::token::Continue> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![continue]")
+    }
+}
+impl Debug for Lite<syn::token::Crate> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![crate]")
+    }
+}
+impl Debug for Lite<syn::token::Default> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![default]")
+    }
+}
+impl Debug for Lite<syn::token::Do> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![do]")
+    }
+}
+impl Debug for Lite<syn::token::Dollar> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![$]")
+    }
+}
+impl Debug for Lite<syn::token::Dot> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![.]")
+    }
+}
+impl Debug for Lite<syn::token::DotDot> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![..]")
+    }
+}
+impl Debug for Lite<syn::token::DotDotDot> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![...]")
+    }
+}
+impl Debug for Lite<syn::token::DotDotEq> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![..=]")
+    }
+}
+impl Debug for Lite<syn::token::Dyn> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![dyn]")
+    }
+}
+impl Debug for Lite<syn::token::Else> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![else]")
+    }
+}
+impl Debug for Lite<syn::token::Enum> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![enum]")
+    }
+}
+impl Debug for Lite<syn::token::Eq> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![=]")
+    }
+}
+impl Debug for Lite<syn::token::EqEq> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![==]")
+    }
+}
+impl Debug for Lite<syn::token::Extern> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![extern]")
+    }
+}
+impl Debug for Lite<syn::token::FatArrow> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![=>]")
+    }
+}
+impl Debug for Lite<syn::token::Final> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![final]")
+    }
+}
+impl Debug for Lite<syn::token::Fn> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![fn]")
+    }
+}
+impl Debug for Lite<syn::token::For> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![for]")
+    }
+}
+impl Debug for Lite<syn::token::Ge> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![>=]")
+    }
+}
+impl Debug for Lite<syn::token::Gt> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![>]")
+    }
+}
+impl Debug for Lite<syn::token::If> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![if]")
+    }
+}
+impl Debug for Lite<syn::token::Impl> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![impl]")
+    }
+}
+impl Debug for Lite<syn::token::In> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![in]")
+    }
+}
+impl Debug for Lite<syn::token::LArrow> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![<-]")
+    }
+}
+impl Debug for Lite<syn::token::Le> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![<=]")
+    }
+}
+impl Debug for Lite<syn::token::Let> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![let]")
+    }
+}
+impl Debug for Lite<syn::token::Loop> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![loop]")
+    }
+}
+impl Debug for Lite<syn::token::Lt> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![<]")
+    }
+}
+impl Debug for Lite<syn::token::Macro> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![macro]")
+    }
+}
+impl Debug for Lite<syn::token::Match> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![match]")
+    }
+}
+impl Debug for Lite<syn::token::Minus> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![-]")
+    }
+}
+impl Debug for Lite<syn::token::MinusEq> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![-=]")
+    }
+}
+impl Debug for Lite<syn::token::Mod> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![mod]")
+    }
+}
+impl Debug for Lite<syn::token::Move> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![move]")
+    }
+}
+impl Debug for Lite<syn::token::Mut> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![mut]")
+    }
+}
+impl Debug for Lite<syn::token::Ne> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![!=]")
+    }
+}
+impl Debug for Lite<syn::token::Not> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![!]")
+    }
+}
+impl Debug for Lite<syn::token::Or> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![|]")
+    }
+}
+impl Debug for Lite<syn::token::OrEq> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![|=]")
+    }
+}
+impl Debug for Lite<syn::token::OrOr> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![||]")
+    }
+}
+impl Debug for Lite<syn::token::Override> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![override]")
+    }
+}
+impl Debug for Lite<syn::token::PathSep> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![::]")
+    }
+}
+impl Debug for Lite<syn::token::Percent> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![%]")
+    }
+}
+impl Debug for Lite<syn::token::PercentEq> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![%=]")
+    }
+}
+impl Debug for Lite<syn::token::Plus> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![+]")
+    }
+}
+impl Debug for Lite<syn::token::PlusEq> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![+=]")
+    }
+}
+impl Debug for Lite<syn::token::Pound> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![#]")
+    }
+}
+impl Debug for Lite<syn::token::Priv> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![priv]")
+    }
+}
+impl Debug for Lite<syn::token::Pub> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![pub]")
+    }
+}
+impl Debug for Lite<syn::token::Question> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![?]")
+    }
+}
+impl Debug for Lite<syn::token::RArrow> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![->]")
+    }
+}
+impl Debug for Lite<syn::token::Ref> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![ref]")
+    }
+}
+impl Debug for Lite<syn::token::Return> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![return]")
+    }
+}
+impl Debug for Lite<syn::token::SelfType> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![Self]")
+    }
+}
+impl Debug for Lite<syn::token::SelfValue> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![self]")
+    }
+}
+impl Debug for Lite<syn::token::Semi> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![;]")
+    }
+}
+impl Debug for Lite<syn::token::Shl> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![<<]")
+    }
+}
+impl Debug for Lite<syn::token::ShlEq> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![<<=]")
+    }
+}
+impl Debug for Lite<syn::token::Shr> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![>>]")
+    }
+}
+impl Debug for Lite<syn::token::ShrEq> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![>>=]")
+    }
+}
+impl Debug for Lite<syn::token::Slash> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![/]")
+    }
+}
+impl Debug for Lite<syn::token::SlashEq> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![/=]")
+    }
+}
+impl Debug for Lite<syn::token::Star> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![*]")
+    }
+}
+impl Debug for Lite<syn::token::StarEq> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![*=]")
+    }
+}
+impl Debug for Lite<syn::token::Static> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![static]")
+    }
+}
+impl Debug for Lite<syn::token::Struct> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![struct]")
+    }
+}
+impl Debug for Lite<syn::token::Super> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![super]")
+    }
+}
+impl Debug for Lite<syn::token::Tilde> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![~]")
+    }
+}
+impl Debug for Lite<syn::token::Trait> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![trait]")
+    }
+}
+impl Debug for Lite<syn::token::Try> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![try]")
+    }
+}
+impl Debug for Lite<syn::token::Type> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![type]")
+    }
+}
+impl Debug for Lite<syn::token::Typeof> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![typeof]")
+    }
+}
+impl Debug for Lite<syn::token::Underscore> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![_]")
+    }
+}
+impl Debug for Lite<syn::token::Union> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![union]")
+    }
+}
+impl Debug for Lite<syn::token::Unsafe> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![unsafe]")
+    }
+}
+impl Debug for Lite<syn::token::Unsized> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![unsized]")
+    }
+}
+impl Debug for Lite<syn::token::Use> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![use]")
+    }
+}
+impl Debug for Lite<syn::token::Virtual> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![virtual]")
+    }
+}
+impl Debug for Lite<syn::token::Where> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![where]")
+    }
+}
+impl Debug for Lite<syn::token::While> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![while]")
+    }
+}
+impl Debug for Lite<syn::token::Yield> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("Token![yield]")
     }
 }

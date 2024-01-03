@@ -78,6 +78,7 @@ fn test_struct() {
                             },
                         },
                     },
+                    Token![,],
                     Field {
                         vis: Visibility::Public,
                         ident: Some("attrs"),
@@ -157,6 +158,7 @@ fn test_union() {
                         colon_token: Some,
                         ty: Type::Tuple,
                     },
+                    Token![,],
                     Field {
                         vis: Visibility::Inherited,
                         ident: Some("value"),
@@ -232,6 +234,7 @@ fn test_enum() {
                 GenericParam::Type(TypeParam {
                     ident: "T",
                 }),
+                Token![,],
                 GenericParam::Type(TypeParam {
                     ident: "E",
                 }),
@@ -259,6 +262,7 @@ fn test_enum() {
                         ],
                     },
                 },
+                Token![,],
                 Variant {
                     ident: "Err",
                     fields: Fields::Unnamed {
@@ -278,6 +282,7 @@ fn test_enum() {
                         ],
                     },
                 },
+                Token![,],
                 Variant {
                     ident: "Surprise",
                     fields: Fields::Unit,
@@ -285,6 +290,7 @@ fn test_enum() {
                         lit: 0isize,
                     }),
                 },
+                Token![,],
                 Variant {
                     ident: "ProcMacroHack",
                     fields: Fields::Unit,
@@ -294,6 +300,7 @@ fn test_enum() {
                                 Expr::Lit {
                                     lit: 0,
                                 },
+                                Token![,],
                                 Expr::Lit {
                                     lit: "data",
                                 },
@@ -363,6 +370,7 @@ fn test_attr_with_mod_style_path_with_self() {
                         PathSegment {
                             ident: "foo",
                         },
+                        Token![::],
                         PathSegment {
                             ident: "self",
                         },
@@ -386,6 +394,7 @@ fn test_attr_with_mod_style_path_with_self() {
             PathSegment {
                 ident: "foo",
             },
+            Token![::],
             PathSegment {
                 ident: "self",
             },
@@ -426,6 +435,7 @@ fn test_pub_restricted() {
                                     PathSegment {
                                         ident: "m",
                                     },
+                                    Token![::],
                                     PathSegment {
                                         ident: "n",
                                     },
@@ -589,6 +599,7 @@ fn test_fields_on_named_struct() {
                             },
                         },
                     },
+                    Token![,],
                     Field {
                         vis: Visibility::Public,
                         ident: Some("bar"),
@@ -603,6 +614,7 @@ fn test_fields_on_named_struct() {
                             },
                         },
                     },
+                    Token![,],
                 ],
             },
         },
@@ -674,6 +686,7 @@ fn test_fields_on_tuple_struct() {
                             },
                         },
                     },
+                    Token![,],
                     Field {
                         vis: Visibility::Public,
                         ty: Type::Path {
@@ -751,6 +764,7 @@ fn test_ambiguous_crate() {
                                     PathSegment {
                                         ident: "crate",
                                     },
+                                    Token![::],
                                     PathSegment {
                                         ident: "X",
                                     },

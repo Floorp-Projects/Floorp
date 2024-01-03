@@ -1264,9 +1264,12 @@ criteria = "safe-to-deploy"
 delta = "0.5.0 -> 0.7.0"
 
 [[audits.d3d12]]
-who = "Erich Gubler <egubler@mozilla.com>"
+who = [
+    "Erich Gubler <egubler@mozilla.com>",
+    "Nicolas Silva <nical@fastmail.com>",
+]
 criteria = "safe-to-deploy"
-delta = "0.7.0 -> 0.7.0@git:6dc9ccab8592645fda3204be1cfb5929fd7f924d"
+delta = "0.7.0 -> 0.7.0@git:46757372cc02d6608124502104a0c225e1744fd7"
 importable = false
 
 [[audits.darling]]
@@ -2536,9 +2539,9 @@ criteria = "safe-to-deploy"
 delta = "0.13.0 -> 0.14.0"
 
 [[audits.naga]]
-who = "Jim Blandy <jimb@red-bean.com>"
+who = ["Jim Blandy <jimb@red-bean.com>", "Nicolas Silva <nical@fastmail.com>"]
 criteria = "safe-to-deploy"
-delta = "0.14.0 -> 0.14.0@git:6dc9ccab8592645fda3204be1cfb5929fd7f924d"
+delta = "0.14.0 -> 0.14.2@git:46757372cc02d6608124502104a0c225e1744fd7"
 importable = false
 
 [[audits.net2]]
@@ -4303,9 +4306,9 @@ criteria = "safe-to-deploy"
 delta = "0.17.0 -> 0.18.0"
 
 [[audits.wgpu-core]]
-who = "Jim Blandy <jimb@red-bean.com>"
+who = ["Jim Blandy <jimb@red-bean.com>", "Nicolas Silva <nical@fastmail.com>"]
 criteria = "safe-to-deploy"
-delta = "0.18.0 -> 0.18.0@git:6dc9ccab8592645fda3204be1cfb5929fd7f924d"
+delta = "0.18.0 -> 0.18.0@git:46757372cc02d6608124502104a0c225e1744fd7"
 importable = false
 
 [[audits.wgpu-hal]]
@@ -4352,9 +4355,9 @@ criteria = "safe-to-deploy"
 delta = "0.17.0 -> 0.18.0"
 
 [[audits.wgpu-hal]]
-who = "Jim Blandy <jimb@red-bean.com>"
+who = ["Jim Blandy <jimb@red-bean.com>", "Nicolas Silva <nical@fastmail.com>"]
 criteria = "safe-to-deploy"
-delta = "0.18.0 -> 0.18.0@git:6dc9ccab8592645fda3204be1cfb5929fd7f924d"
+delta = "0.18.0 -> 0.18.0@git:46757372cc02d6608124502104a0c225e1744fd7"
 importable = false
 
 [[audits.wgpu-types]]
@@ -4401,9 +4404,9 @@ criteria = "safe-to-deploy"
 delta = "0.17.0 -> 0.18.0"
 
 [[audits.wgpu-types]]
-who = "Jim Blandy <jimb@red-bean.com>"
+who = ["Jim Blandy <jimb@red-bean.com>", "Nicolas Silva <nical@fastmail.com>"]
 criteria = "safe-to-deploy"
-delta = "0.18.0 -> 0.18.0@git:6dc9ccab8592645fda3204be1cfb5929fd7f924d"
+delta = "0.18.0 -> 0.18.0@git:46757372cc02d6608124502104a0c225e1744fd7"
 importable = false
 
 [[audits.whatsys]]

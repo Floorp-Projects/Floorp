@@ -639,18 +639,28 @@ pub(crate) enum Ident {
 }
 
 impl Ident {
-    pub fn new(string: &str, span: Span) -> Self {
+    #[track_caller]
+    pub fn new_checked(string: &str, span: Span) -> Self {
         match span {
             Span::Compiler(s) => Ident::Compiler(proc_macro::Ident::new(string, s)),
-            Span::Fallback(s) => Ident::Fallback(fallback::Ident::new(string, s)),
+            Span::Fallback(s) => Ident::Fallback(fallback::Ident::new_checked(string, s)),
         }
     }
 
-    pub fn new_raw(string: &str, span: Span) -> Self {
+    pub fn new_unchecked(string: &str, span: fallback::Span) -> Self {
+        Ident::Fallback(fallback::Ident::new_unchecked(string, span))
+    }
+
+    #[track_caller]
+    pub fn new_raw_checked(string: &str, span: Span) -> Self {
         match span {
             Span::Compiler(s) => Ident::Compiler(proc_macro::Ident::new_raw(string, s)),
-            Span::Fallback(s) => Ident::Fallback(fallback::Ident::new_raw(string, s)),
+            Span::Fallback(s) => Ident::Fallback(fallback::Ident::new_raw_checked(string, s)),
         }
+    }
+
+    pub fn new_raw_unchecked(string: &str, span: fallback::Span) -> Self {
+        Ident::Fallback(fallback::Ident::new_raw_unchecked(string, span))
     }
 
     pub fn span(&self) -> Span {
@@ -752,7 +762,7 @@ impl Literal {
         if inside_proc_macro() {
             Literal::Compiler(proc_macro::Literal::from_str(repr).expect("invalid literal"))
         } else {
-            Literal::Fallback(fallback::Literal::from_str_unchecked(repr))
+            Literal::Fallback(unsafe { fallback::Literal::from_str_unchecked(repr) })
         }
     }
 

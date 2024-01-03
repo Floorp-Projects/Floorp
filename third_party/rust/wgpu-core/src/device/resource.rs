@@ -26,6 +26,7 @@ use crate::{
         TextureViewNotRenderableReason,
     },
     resource_log,
+    snatch::{SnatchGuard, SnatchLock, Snatchable},
     storage::Storage,
     track::{BindGroupStates, TextureSelector, Tracker},
     validation::{self, check_buffer_usage, check_texture_usage},
@@ -94,6 +95,7 @@ pub struct Device<A: HalApi> {
     //Note: The submission index here corresponds to the last submission that is done.
     pub(crate) active_submission_index: AtomicU64, //SubmissionIndex,
     pub(crate) fence: RwLock<Option<A::Fence>>,
+    pub(crate) snatchable_lock: SnatchLock,
 
     /// Is this device valid? Valid is closely associated with "lose the device",
     /// which can be triggered by various methods, including at the end of device
@@ -117,7 +119,7 @@ pub struct Device<A: HalApi> {
     life_tracker: Mutex<LifetimeTracker<A>>,
     /// Temporary storage for resource management functions. Cleared at the end
     /// of every call (unless an error occurs).
-    pub(crate) temp_suspected: Mutex<Option<ResourceMaps>>,
+    pub(crate) temp_suspected: Mutex<Option<ResourceMaps<A>>>,
     pub(crate) alignments: hal::Alignments,
     pub(crate) limits: wgt::Limits,
     pub(crate) features: wgt::Features,
@@ -141,7 +143,7 @@ impl<A: HalApi> std::fmt::Debug for Device<A> {
 
 impl<A: HalApi> Drop for Device<A> {
     fn drop(&mut self) {
-        resource_log!("Destroy raw Device {}", self.info.label());
+        resource_log!("Destroy raw Device {:?}", self.info.label());
         let raw = self.raw.take().unwrap();
         let pending_writes = self.pending_writes.lock().take().unwrap();
         pending_writes.dispose(&raw);
@@ -254,10 +256,11 @@ impl<A: HalApi> Device<A> {
             command_allocator: Mutex::new(Some(com_alloc)),
             active_submission_index: AtomicU64::new(0),
             fence: RwLock::new(Some(fence)),
+            snatchable_lock: unsafe { SnatchLock::new() },
             valid: AtomicBool::new(true),
             trackers: Mutex::new(Tracker::new()),
             life_tracker: Mutex::new(life::LifetimeTracker::new()),
-            temp_suspected: Mutex::new(Some(life::ResourceMaps::new::<A>())),
+            temp_suspected: Mutex::new(Some(life::ResourceMaps::new())),
             #[cfg(feature = "trace")]
             trace: Mutex::new(trace_path.and_then(|path| match trace::Trace::new(path) {
                 Ok(mut trace) => {
@@ -321,7 +324,7 @@ impl<A: HalApi> Device<A> {
             let temp_suspected = self
                 .temp_suspected
                 .lock()
-                .replace(ResourceMaps::new::<A>())
+                .replace(ResourceMaps::new())
                 .unwrap();
 
             let mut life_tracker = self.lock_life();
@@ -378,15 +381,19 @@ impl<A: HalApi> Device<A> {
         // our caller. This will complete the steps for both destroy and for
         // "lose the device".
         let mut device_lost_invocations = SmallVec::new();
-        if !self.is_valid()
-            && life_tracker.queue_empty()
-            && life_tracker.device_lost_closure.is_some()
-        {
-            device_lost_invocations.push(DeviceLostInvocation {
-                closure: life_tracker.device_lost_closure.take().unwrap(),
-                reason: DeviceLostReason::Destroyed,
-                message: String::new(),
-            });
+        if !self.is_valid() && life_tracker.queue_empty() {
+            // We can release gpu resources associated with this device.
+            life_tracker.release_gpu_resources();
+
+            // If we have a DeviceLostClosure, build an invocation with the
+            // reason DeviceLostReason::Destroyed and no message.
+            if life_tracker.device_lost_closure.is_some() {
+                device_lost_invocations.push(DeviceLostInvocation {
+                    closure: life_tracker.device_lost_closure.take().unwrap(),
+                    reason: DeviceLostReason::Destroyed,
+                    message: String::new(),
+                });
+            }
         }
 
         let closures = UserClosures {
@@ -401,7 +408,7 @@ impl<A: HalApi> Device<A> {
         let mut temp_suspected = self
             .temp_suspected
             .lock()
-            .replace(ResourceMaps::new::<A>())
+            .replace(ResourceMaps::new())
             .unwrap();
         temp_suspected.clear();
         // As the tracker is cleared/dropped, we need to consider all the resources
@@ -409,42 +416,58 @@ impl<A: HalApi> Device<A> {
         {
             for resource in trackers.buffers.used_resources() {
                 if resource.is_unique() {
-                    temp_suspected.insert(resource.as_info().id(), resource.clone());
+                    temp_suspected
+                        .buffers
+                        .insert(resource.as_info().id(), resource.clone());
                 }
             }
             for resource in trackers.textures.used_resources() {
                 if resource.is_unique() {
-                    temp_suspected.insert(resource.as_info().id(), resource.clone());
+                    temp_suspected
+                        .textures
+                        .insert(resource.as_info().id(), resource.clone());
                 }
             }
             for resource in trackers.views.used_resources() {
                 if resource.is_unique() {
-                    temp_suspected.insert(resource.as_info().id(), resource.clone());
+                    temp_suspected
+                        .texture_views
+                        .insert(resource.as_info().id(), resource.clone());
                 }
             }
             for resource in trackers.bind_groups.used_resources() {
                 if resource.is_unique() {
-                    temp_suspected.insert(resource.as_info().id(), resource.clone());
+                    temp_suspected
+                        .bind_groups
+                        .insert(resource.as_info().id(), resource.clone());
                 }
             }
             for resource in trackers.samplers.used_resources() {
                 if resource.is_unique() {
-                    temp_suspected.insert(resource.as_info().id(), resource.clone());
+                    temp_suspected
+                        .samplers
+                        .insert(resource.as_info().id(), resource.clone());
                 }
             }
             for resource in trackers.compute_pipelines.used_resources() {
                 if resource.is_unique() {
-                    temp_suspected.insert(resource.as_info().id(), resource.clone());
+                    temp_suspected
+                        .compute_pipelines
+                        .insert(resource.as_info().id(), resource.clone());
                 }
             }
             for resource in trackers.render_pipelines.used_resources() {
                 if resource.is_unique() {
-                    temp_suspected.insert(resource.as_info().id(), resource.clone());
+                    temp_suspected
+                        .render_pipelines
+                        .insert(resource.as_info().id(), resource.clone());
                 }
             }
             for resource in trackers.query_sets.used_resources() {
                 if resource.is_unique() {
-                    temp_suspected.insert(resource.as_info().id(), resource.clone());
+                    temp_suspected
+                        .query_sets
+                        .insert(resource.as_info().id(), resource.clone());
                 }
             }
         }
@@ -538,7 +561,7 @@ impl<A: HalApi> Device<A> {
         let buffer = unsafe { self.raw().create_buffer(&hal_desc) }.map_err(DeviceError::from)?;
 
         Ok(Buffer {
-            raw: Some(buffer),
+            raw: Snatchable::new(buffer),
             device: self.clone(),
             usage: desc.usage,
             size: desc.size,
@@ -588,7 +611,7 @@ impl<A: HalApi> Device<A> {
         debug_assert_eq!(self.as_info().id().backend(), A::VARIANT);
 
         Buffer {
-            raw: Some(hal_buffer),
+            raw: Snatchable::new(hal_buffer),
             device: self.clone(),
             usage: desc.usage,
             size: desc.size,
@@ -1766,6 +1789,7 @@ impl<A: HalApi> Device<A> {
         used: &mut BindGroupStates<A>,
         storage: &'a Storage<Buffer<A>, id::BufferId>,
         limits: &wgt::Limits,
+        snatch_guard: &'a SnatchGuard<'a>,
     ) -> Result<hal::BufferBinding<'a, A>, binding_model::CreateBindGroupError> {
         use crate::binding_model::CreateBindGroupError as Error;
 
@@ -1818,7 +1842,7 @@ impl<A: HalApi> Device<A> {
         check_buffer_usage(buffer.usage, pub_usage)?;
         let raw_buffer = buffer
             .raw
-            .as_ref()
+            .get(snatch_guard)
             .ok_or(Error::InvalidBuffer(bb.buffer_id))?;
 
         let (bind_size, bind_end) = match bb.size {
@@ -1966,6 +1990,7 @@ impl<A: HalApi> Device<A> {
         let mut hal_buffers = Vec::new();
         let mut hal_samplers = Vec::new();
         let mut hal_textures = Vec::new();
+        let snatch_guard = self.snatchable_lock.read();
         for entry in desc.entries.iter() {
             let binding = entry.binding;
             // Find the corresponding declaration in the layout
@@ -1985,6 +2010,7 @@ impl<A: HalApi> Device<A> {
                         &mut used,
                         &*buffer_guard,
                         &self.limits,
+                        &snatch_guard,
                     )?;
 
                     let res_index = hal_buffers.len();
@@ -2007,6 +2033,7 @@ impl<A: HalApi> Device<A> {
                             &mut used,
                             &*buffer_guard,
                             &self.limits,
+                            &snatch_guard,
                         )?;
                         hal_buffers.push(bb);
                     }
@@ -2173,9 +2200,9 @@ impl<A: HalApi> Device<A> {
             layout: layout.clone(),
             info: ResourceInfo::new(desc.label.borrow_or_default()),
             used,
-            used_buffer_ranges: RwLock::new(used_buffer_ranges),
-            used_texture_ranges: RwLock::new(used_texture_ranges),
-            dynamic_binding_info: RwLock::new(dynamic_binding_info),
+            used_buffer_ranges,
+            used_texture_ranges,
+            dynamic_binding_info,
             // collect in the order of BGL iteration
             late_buffer_binding_sizes: layout
                 .entries
@@ -3066,7 +3093,7 @@ impl<A: HalApi> Device<A> {
         if validated_stages.contains(wgt::ShaderStages::FRAGMENT) {
             for (i, output) in io.iter() {
                 match color_targets.get(*i as usize) {
-                    Some(&Some(ref state)) => {
+                    Some(Some(state)) => {
                         validation::check_texture_format(state.format, &output.ty).map_err(
                             |pipeline| {
                                 pipeline::CreateRenderPipelineError::ColorState(
@@ -3339,9 +3366,13 @@ impl<A: HalApi> Device<A> {
         self.valid.store(false, Ordering::Release);
 
         // 1) Resolve the GPUDevice device.lost promise.
-        let closure = self.lock_life().device_lost_closure.take();
+        let mut life_lock = self.lock_life();
+        let closure = life_lock.device_lost_closure.take();
         if let Some(device_lost_closure) = closure {
+            // It's important to not hold the lock while calling the closure.
+            drop(life_lock);
             device_lost_closure.call(DeviceLostReason::Unknown, message.to_string());
+            life_lock = self.lock_life();
         }
 
         // 2) Complete any outstanding mapAsync() steps.
@@ -3351,6 +3382,9 @@ impl<A: HalApi> Device<A> {
         // since that will prevent any new work from being added to the queues.
         // Future calls to poll_devices will continue to check the work queues
         // until they are cleared, and then drop the device.
+
+        // Eagerly release GPU resources.
+        life_lock.release_gpu_resources();
     }
 }
 

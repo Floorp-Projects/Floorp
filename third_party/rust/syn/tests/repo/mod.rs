@@ -13,7 +13,7 @@ use std::path::{Path, PathBuf};
 use tar::Archive;
 use walkdir::{DirEntry, WalkDir};
 
-const REVISION: &str = "a2f5f9691b6ce64c1703feaf9363710dfd7a56cf";
+const REVISION: &str = "b10cfcd65fd7f7b1ab9beb34798b2108de003452";
 
 #[rustfmt::skip]
 static EXCLUDE_FILES: &[&str] = &[
@@ -49,6 +49,7 @@ static EXCLUDE_FILES: &[&str] = &[
 
     // TODO: gen blocks and functions
     // https://github.com/dtolnay/syn/issues/1526
+    "compiler/rustc_codegen_cranelift/example/gen_block_iterate.rs",
     "tests/ui/coroutine/gen_block_is_iter.rs",
     "tests/ui/coroutine/gen_block_iterate.rs",
 

@@ -12,7 +12,6 @@ pub enum Input<'a> {
 }
 
 pub struct Struct<'a> {
-    pub original: &'a DeriveInput,
     pub attrs: Attrs<'a>,
     pub ident: Ident,
     pub generics: &'a Generics,
@@ -20,7 +19,6 @@ pub struct Struct<'a> {
 }
 
 pub struct Enum<'a> {
-    pub original: &'a DeriveInput,
     pub attrs: Attrs<'a>,
     pub ident: Ident,
     pub generics: &'a Generics,
@@ -65,7 +63,6 @@ impl<'a> Struct<'a> {
             display.expand_shorthand(&fields);
         }
         Ok(Struct {
-            original: node,
             attrs,
             ident: node.ident.clone(),
             generics: &node.generics,
@@ -96,7 +93,6 @@ impl<'a> Enum<'a> {
             })
             .collect::<Result<_>>()?;
         Ok(Enum {
-            original: node,
             attrs,
             ident: node.ident.clone(),
             generics: &node.generics,

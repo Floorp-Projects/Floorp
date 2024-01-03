@@ -357,6 +357,7 @@ ast_struct! {
 
 ast_struct! {
     /// A const block: `const { ... }`.
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "full")))]
     pub struct ExprConst #full {
         pub attrs: Vec<Attribute>,
         pub const_token: Token![const],
@@ -443,6 +444,7 @@ ast_struct! {
 
 ast_struct! {
     /// The inferred value of a const generic argument, denoted `_`.
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "full")))]
     pub struct ExprInfer #full {
         pub attrs: Vec<Attribute>,
         pub underscore_token: Token![_],
@@ -483,6 +485,7 @@ ast_struct! {
 
 ast_struct! {
     /// A macro invocation expression: `format!("{}", q)`.
+    #[cfg_attr(doc_cfg, doc(cfg(any(feature = "full", feature = "derive"))))]
     pub struct ExprMacro {
         pub attrs: Vec<Attribute>,
         pub mac: Macro,
@@ -503,8 +506,8 @@ ast_struct! {
 
 ast_struct! {
     /// A method call expression: `x.foo::<T>(a, b)`.
-    #[cfg_attr(doc_cfg, doc(cfg(feature = "full")))]
-    pub struct ExprMethodCall #full {
+    #[cfg_attr(doc_cfg, doc(cfg(any(feature = "full", feature = "derive"))))]
+    pub struct ExprMethodCall {
         pub attrs: Vec<Attribute>,
         pub receiver: Box<Expr>,
         pub dot_token: Token![.],
@@ -551,8 +554,8 @@ ast_struct! {
 
 ast_struct! {
     /// A referencing operation: `&a` or `&mut a`.
-    #[cfg_attr(doc_cfg, doc(cfg(feature = "full")))]
-    pub struct ExprReference #full {
+    #[cfg_attr(doc_cfg, doc(cfg(any(feature = "full", feature = "derive"))))]
+    pub struct ExprReference {
         pub attrs: Vec<Attribute>,
         pub and_token: Token![&],
         pub mutability: Option<Token![mut]>,
@@ -587,8 +590,8 @@ ast_struct! {
     ///
     /// The `rest` provides the value of the remaining fields as in `S { a:
     /// 1, b: 1, ..rest }`.
-    #[cfg_attr(doc_cfg, doc(cfg(feature = "full")))]
-    pub struct ExprStruct #full {
+    #[cfg_attr(doc_cfg, doc(cfg(any(feature = "full", feature = "derive"))))]
+    pub struct ExprStruct {
         pub attrs: Vec<Attribute>,
         pub qself: Option<QSelf>,
         pub path: Path,
@@ -840,10 +843,9 @@ impl IdentFragment for Index {
     }
 }
 
-#[cfg(feature = "full")]
 ast_struct! {
     /// A field-value pair in a struct literal.
-    #[cfg_attr(doc_cfg, doc(cfg(feature = "full")))]
+    #[cfg_attr(doc_cfg, doc(cfg(any(feature = "full", feature = "derive"))))]
     pub struct FieldValue {
         pub attrs: Vec<Attribute>,
         pub member: Member,
@@ -955,31 +957,10 @@ pub(crate) fn requires_terminator(expr: &Expr) -> bool {
 }
 
 #[cfg(feature = "parsing")]
-pub(crate) mod parsing {
-    use super::*;
-    #[cfg(feature = "full")]
-    use crate::ext::IdentExt;
-    use crate::parse::discouraged::Speculative;
-    #[cfg(feature = "full")]
-    use crate::parse::ParseBuffer;
-    use crate::parse::{Parse, ParseStream, Result};
-    use crate::path;
-    use std::cmp::Ordering;
+mod precedence {
+    use super::BinOp;
 
-    mod kw {
-        crate::custom_keyword!(builtin);
-        crate::custom_keyword!(raw);
-    }
-
-    // When we're parsing expressions which occur before blocks, like in an if
-    // statement's condition, we cannot parse a struct literal.
-    //
-    // Struct literals are ambiguous in certain positions
-    // https://github.com/rust-lang/rfcs/pull/92
-    #[cfg(feature = "full")]
-    pub(crate) struct AllowStruct(bool);
-
-    enum Precedence {
+    pub(crate) enum Precedence {
         Any,
         Assign,
         Range,
@@ -996,7 +977,7 @@ pub(crate) mod parsing {
     }
 
     impl Precedence {
-        fn of(op: &BinOp) -> Self {
+        pub(crate) fn of(op: &BinOp) -> Self {
             match op {
                 BinOp::Add(_) | BinOp::Sub(_) => Precedence::Arithmetic,
                 BinOp::Mul(_) | BinOp::Div(_) | BinOp::Rem(_) => Precedence::Term,
@@ -1025,6 +1006,33 @@ pub(crate) mod parsing {
             }
         }
     }
+}
+
+#[cfg(feature = "parsing")]
+pub(crate) mod parsing {
+    use super::precedence::Precedence;
+    use super::*;
+    #[cfg(feature = "full")]
+    use crate::ext::IdentExt as _;
+    use crate::parse::discouraged::Speculative as _;
+    #[cfg(feature = "full")]
+    use crate::parse::ParseBuffer;
+    use crate::parse::{Parse, ParseStream, Result};
+    use crate::path;
+    use std::cmp::Ordering;
+
+    mod kw {
+        crate::custom_keyword!(builtin);
+        crate::custom_keyword!(raw);
+    }
+
+    // When we're parsing expressions which occur before blocks, like in an if
+    // statement's condition, we cannot parse a struct literal.
+    //
+    // Struct literals are ambiguous in certain positions
+    // https://github.com/rust-lang/rfcs/pull/92
+    #[cfg(feature = "full")]
+    pub(crate) struct AllowStruct(bool);
 
     #[cfg_attr(doc_cfg, doc(cfg(feature = "parsing")))]
     impl Parse for Expr {
@@ -1354,23 +1362,8 @@ pub(crate) mod parsing {
     #[cfg(feature = "full")]
     fn expr_attrs(input: ParseStream) -> Result<Vec<Attribute>> {
         let mut attrs = Vec::new();
-        loop {
-            if input.peek(token::Group) {
-                let ahead = input.fork();
-                let group = crate::group::parse_group(&ahead)?;
-                if !group.content.peek(Token![#]) || group.content.peek2(Token![!]) {
-                    break;
-                }
-                let attr = group.content.call(attr::parsing::single_parse_outer)?;
-                if !group.content.is_empty() {
-                    break;
-                }
-                attrs.push(attr);
-            } else if input.peek(Token![#]) {
-                attrs.push(input.call(attr::parsing::single_parse_outer)?);
-            } else {
-                break;
-            }
+        while !input.peek(token::Group) && input.peek(Token![#]) {
+            attrs.push(input.call(attr::parsing::single_parse_outer)?);
         }
         Ok(attrs)
     }
@@ -1383,6 +1376,10 @@ pub(crate) mod parsing {
     fn unary_expr(input: ParseStream, allow_struct: AllowStruct) -> Result<Expr> {
         let begin = input.fork();
         let attrs = input.call(expr_attrs)?;
+        if input.peek(token::Group) {
+            return trailer_expr(begin, attrs, input, allow_struct);
+        }
+
         if input.peek(Token![&]) {
             let and_token: Token![&] = input.parse()?;
             let raw: Option<kw::raw> = if input.peek(kw::raw)
@@ -1416,7 +1413,14 @@ pub(crate) mod parsing {
 
     #[cfg(not(feature = "full"))]
     fn unary_expr(input: ParseStream) -> Result<Expr> {
-        if input.peek(Token![*]) || input.peek(Token![!]) || input.peek(Token![-]) {
+        if input.peek(Token![&]) {
+            Ok(Expr::Reference(ExprReference {
+                attrs: Vec::new(),
+                and_token: input.parse()?,
+                mutability: input.parse()?,
+                expr: Box::new(unary_expr(input)?),
+            }))
+        } else if input.peek(Token![*]) || input.peek(Token![!]) || input.peek(Token![-]) {
             Ok(Expr::Unary(ExprUnary {
                 attrs: Vec::new(),
                 op: input.parse()?,
@@ -1560,17 +1564,45 @@ pub(crate) mod parsing {
                 && !input.peek2(Token![await])
             {
                 let mut dot_token: Token![.] = input.parse()?;
+
                 let float_token: Option<LitFloat> = input.parse()?;
                 if let Some(float_token) = float_token {
                     if multi_index(&mut e, &mut dot_token, float_token)? {
                         continue;
                     }
                 }
+
+                let member: Member = input.parse()?;
+                let turbofish = if member.is_named() && input.peek(Token![::]) {
+                    let colon2_token: Token![::] = input.parse()?;
+                    let turbofish =
+                        AngleBracketedGenericArguments::do_parse(Some(colon2_token), input)?;
+                    Some(turbofish)
+                } else {
+                    None
+                };
+
+                if turbofish.is_some() || input.peek(token::Paren) {
+                    if let Member::Named(method) = member {
+                        let content;
+                        e = Expr::MethodCall(ExprMethodCall {
+                            attrs: Vec::new(),
+                            receiver: Box::new(e),
+                            dot_token,
+                            method,
+                            turbofish,
+                            paren_token: parenthesized!(content in input),
+                            args: content.parse_terminated(Expr::parse, Token![,])?,
+                        });
+                        continue;
+                    }
+                }
+
                 e = Expr::Field(ExprField {
                     attrs: Vec::new(),
                     base: Box::new(e),
                     dot_token,
-                    member: input.parse()?,
+                    member,
                 });
             } else if input.peek(token::Bracket) {
                 let content;
@@ -1592,12 +1624,8 @@ pub(crate) mod parsing {
     // interactions, as they are fully contained.
     #[cfg(feature = "full")]
     fn atom_expr(input: ParseStream, allow_struct: AllowStruct) -> Result<Expr> {
-        if input.peek(token::Group)
-            && !input.peek2(Token![::])
-            && !input.peek2(Token![!])
-            && !input.peek2(token::Brace)
-        {
-            input.call(expr_group).map(Expr::Group)
+        if input.peek(token::Group) {
+            expr_group(input, allow_struct)
         } else if input.peek(Lit) {
             input.parse().map(Expr::Lit)
         } else if input.peek(Token![async])
@@ -1663,39 +1691,40 @@ pub(crate) mod parsing {
         } else if input.peek(Token![_]) {
             input.parse().map(Expr::Infer)
         } else if input.peek(Lifetime) {
-            let the_label: Label = input.parse()?;
-            let mut expr = if input.peek(Token![while]) {
-                Expr::While(input.parse()?)
-            } else if input.peek(Token![for]) {
-                Expr::ForLoop(input.parse()?)
-            } else if input.peek(Token![loop]) {
-                Expr::Loop(input.parse()?)
-            } else if input.peek(token::Brace) {
-                Expr::Block(input.parse()?)
-            } else {
-                return Err(input.error("expected loop or block expression"));
-            };
-            match &mut expr {
-                Expr::While(ExprWhile { label, .. })
-                | Expr::ForLoop(ExprForLoop { label, .. })
-                | Expr::Loop(ExprLoop { label, .. })
-                | Expr::Block(ExprBlock { label, .. }) => *label = Some(the_label),
-                _ => unreachable!(),
-            }
-            Ok(expr)
+            atom_labeled(input)
         } else {
             Err(input.error("expected an expression"))
         }
     }
 
+    #[cfg(feature = "full")]
+    fn atom_labeled(input: ParseStream) -> Result<Expr> {
+        let the_label: Label = input.parse()?;
+        let mut expr = if input.peek(Token![while]) {
+            Expr::While(input.parse()?)
+        } else if input.peek(Token![for]) {
+            Expr::ForLoop(input.parse()?)
+        } else if input.peek(Token![loop]) {
+            Expr::Loop(input.parse()?)
+        } else if input.peek(token::Brace) {
+            Expr::Block(input.parse()?)
+        } else {
+            return Err(input.error("expected loop or block expression"));
+        };
+        match &mut expr {
+            Expr::While(ExprWhile { label, .. })
+            | Expr::ForLoop(ExprForLoop { label, .. })
+            | Expr::Loop(ExprLoop { label, .. })
+            | Expr::Block(ExprBlock { label, .. }) => *label = Some(the_label),
+            _ => unreachable!(),
+        }
+        Ok(expr)
+    }
+
     #[cfg(not(feature = "full"))]
     fn atom_expr(input: ParseStream) -> Result<Expr> {
-        if input.peek(token::Group)
-            && !input.peek2(Token![::])
-            && !input.peek2(Token![!])
-            && !input.peek2(token::Brace)
-        {
-            input.call(expr_group).map(Expr::Group)
+        if input.peek(token::Group) {
+            expr_group(input)
         } else if input.peek(Lit) {
             input.parse().map(Expr::Lit)
         } else if input.peek(token::Paren) {
@@ -1746,7 +1775,21 @@ pub(crate) mod parsing {
         #[cfg(feature = "full")] allow_struct: AllowStruct,
     ) -> Result<Expr> {
         let (qself, path) = path::parsing::qpath(input, true)?;
+        rest_of_path_or_macro_or_struct(
+            qself,
+            path,
+            input,
+            #[cfg(feature = "full")]
+            allow_struct,
+        )
+    }
 
+    fn rest_of_path_or_macro_or_struct(
+        qself: Option<QSelf>,
+        path: Path,
+        input: ParseStream,
+        #[cfg(feature = "full")] allow_struct: AllowStruct,
+    ) -> Result<Expr> {
         if qself.is_none()
             && input.peek(Token![!])
             && !input.peek(Token![!=])
@@ -1765,7 +1808,8 @@ pub(crate) mod parsing {
             }));
         }
 
-        #[cfg(feature = "full")]
+        #[cfg(not(feature = "full"))]
+        let allow_struct = (true,);
         if allow_struct.0 && input.peek(token::Brace) {
             return expr_struct_helper(input, qself, path).map(Expr::Struct);
         }
@@ -1915,7 +1959,15 @@ pub(crate) mod parsing {
     #[cfg(feature = "full")]
     pub(crate) fn expr_early(input: ParseStream) -> Result<Expr> {
         let mut attrs = input.call(expr_attrs)?;
-        let mut expr = if input.peek(Token![if]) {
+        let mut expr = if input.peek(token::Group) {
+            let allow_struct = AllowStruct(true);
+            let atom = expr_group(input, allow_struct)?;
+            if continue_parsing_early(&atom) {
+                trailer_helper(input, atom)?
+            } else {
+                atom
+            }
+        } else if input.peek(Token![if]) {
             Expr::If(input.parse()?)
         } else if input.peek(Token![while]) {
             Expr::While(input.parse()?)
@@ -1935,15 +1987,20 @@ pub(crate) mod parsing {
             Expr::Const(input.parse()?)
         } else if input.peek(token::Brace) {
             Expr::Block(input.parse()?)
+        } else if input.peek(Lifetime) {
+            atom_labeled(input)?
         } else {
             let allow_struct = AllowStruct(true);
-            let mut expr = unary_expr(input, allow_struct)?;
+            unary_expr(input, allow_struct)?
+        };
 
+        if continue_parsing_early(&expr) {
             attrs.extend(expr.replace_attrs(Vec::new()));
             expr.replace_attrs(attrs);
 
+            let allow_struct = AllowStruct(true);
             return parse_expr(input, expr, allow_struct, Precedence::Any);
-        };
+        }
 
         if input.peek(Token![.]) && !input.peek(Token![..]) || input.peek(Token![?]) {
             expr = trailer_helper(input, expr)?;
@@ -1960,6 +2017,25 @@ pub(crate) mod parsing {
         Ok(expr)
     }
 
+    #[cfg(feature = "full")]
+    fn continue_parsing_early(mut expr: &Expr) -> bool {
+        while let Expr::Group(group) = expr {
+            expr = &group.expr;
+        }
+        match expr {
+            Expr::If(_)
+            | Expr::While(_)
+            | Expr::ForLoop(_)
+            | Expr::Loop(_)
+            | Expr::Match(_)
+            | Expr::TryBlock(_)
+            | Expr::Unsafe(_)
+            | Expr::Const(_)
+            | Expr::Block(_) => false,
+            _ => true,
+        }
+    }
+
     #[cfg_attr(doc_cfg, doc(cfg(feature = "parsing")))]
     impl Parse for ExprLit {
         fn parse(input: ParseStream) -> Result<Self> {
@@ -1970,13 +2046,38 @@ pub(crate) mod parsing {
         }
     }
 
-    fn expr_group(input: ParseStream) -> Result<ExprGroup> {
+    fn expr_group(
+        input: ParseStream,
+        #[cfg(feature = "full")] allow_struct: AllowStruct,
+    ) -> Result<Expr> {
         let group = crate::group::parse_group(input)?;
-        Ok(ExprGroup {
+        let mut inner: Expr = group.content.parse()?;
+
+        match inner {
+            Expr::Path(mut expr) if expr.attrs.is_empty() => {
+                let grouped_len = expr.path.segments.len();
+                Path::parse_rest(input, &mut expr.path, true)?;
+                match rest_of_path_or_macro_or_struct(
+                    expr.qself,
+                    expr.path,
+                    input,
+                    #[cfg(feature = "full")]
+                    allow_struct,
+                )? {
+                    Expr::Path(expr) if expr.path.segments.len() == grouped_len => {
+                        inner = Expr::Path(expr);
+                    }
+                    extended => return Ok(extended),
+                }
+            }
+            _ => {}
+        }
+
+        Ok(Expr::Group(ExprGroup {
             attrs: Vec::new(),
             group_token: group.token,
-            expr: group.content.parse()?,
-        })
+            expr: Box::new(inner),
+        }))
     }
 
     #[cfg(feature = "full")]
@@ -2517,7 +2618,6 @@ pub(crate) mod parsing {
         })
     }
 
-    #[cfg(feature = "full")]
     #[cfg_attr(doc_cfg, doc(cfg(feature = "parsing")))]
     impl Parse for FieldValue {
         fn parse(input: ParseStream) -> Result<Self> {
@@ -2547,7 +2647,6 @@ pub(crate) mod parsing {
         }
     }
 
-    #[cfg(feature = "full")]
     #[cfg_attr(doc_cfg, doc(cfg(feature = "parsing")))]
     impl Parse for ExprStruct {
         fn parse(input: ParseStream) -> Result<Self> {
@@ -2556,7 +2655,6 @@ pub(crate) mod parsing {
         }
     }
 
-    #[cfg(feature = "full")]
     fn expr_struct_helper(
         input: ParseStream,
         qself: Option<QSelf>,
@@ -2815,9 +2913,8 @@ pub(crate) mod parsing {
         Ok(!trailing_dot)
     }
 
-    #[cfg(feature = "full")]
     impl Member {
-        fn is_named(&self) -> bool {
+        pub(crate) fn is_named(&self) -> bool {
             match self {
                 Member::Named(_) => true,
                 Member::Unnamed(_) => false,
@@ -3163,7 +3260,6 @@ pub(crate) mod printing {
         }
     }
 
-    #[cfg(feature = "full")]
     #[cfg_attr(doc_cfg, doc(cfg(feature = "printing")))]
     impl ToTokens for ExprMethodCall {
         fn to_tokens(&self, tokens: &mut TokenStream) {
@@ -3207,7 +3303,6 @@ pub(crate) mod printing {
         }
     }
 
-    #[cfg(feature = "full")]
     #[cfg_attr(doc_cfg, doc(cfg(feature = "printing")))]
     impl ToTokens for ExprReference {
         fn to_tokens(&self, tokens: &mut TokenStream) {
@@ -3241,7 +3336,6 @@ pub(crate) mod printing {
         }
     }
 
-    #[cfg(feature = "full")]
     #[cfg_attr(doc_cfg, doc(cfg(feature = "printing")))]
     impl ToTokens for ExprStruct {
         fn to_tokens(&self, tokens: &mut TokenStream) {
@@ -3358,7 +3452,6 @@ pub(crate) mod printing {
         }
     }
 
-    #[cfg(feature = "full")]
     #[cfg_attr(doc_cfg, doc(cfg(feature = "printing")))]
     impl ToTokens for FieldValue {
         fn to_tokens(&self, tokens: &mut TokenStream) {

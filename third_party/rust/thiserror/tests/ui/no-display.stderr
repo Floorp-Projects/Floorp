@@ -9,7 +9,7 @@ error[E0599]: the method `as_display` exists for reference `&NoDisplay`, but its
   |
   = note: the following trait bounds were not satisfied:
           `NoDisplay: std::fmt::Display`
-          which is required by `&NoDisplay: DisplayAsDisplay`
+          which is required by `&NoDisplay: AsDisplay<'_>`
 note: the trait `std::fmt::Display` must be implemented
  --> $RUST/core/src/fmt/mod.rs
   |

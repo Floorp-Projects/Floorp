@@ -156,7 +156,9 @@ ast_struct! {
 #[cfg(feature = "parsing")]
 pub(crate) mod parsing {
     use super::*;
-    use crate::ext::IdentExt;
+    use crate::ext::IdentExt as _;
+    #[cfg(not(feature = "full"))]
+    use crate::parse::discouraged::Speculative as _;
     use crate::parse::{Parse, ParseStream, Result};
 
     #[cfg_attr(doc_cfg, doc(cfg(feature = "parsing")))]
@@ -174,7 +176,20 @@ pub(crate) mod parsing {
             };
             let discriminant = if input.peek(Token![=]) {
                 let eq_token: Token![=] = input.parse()?;
+                #[cfg(feature = "full")]
                 let discriminant: Expr = input.parse()?;
+                #[cfg(not(feature = "full"))]
+                let discriminant = {
+                    let begin = input.fork();
+                    let ahead = input.fork();
+                    let mut discriminant: Result<Expr> = ahead.parse();
+                    if discriminant.is_ok() {
+                        input.advance_to(&ahead);
+                    } else if scan_lenient_discriminant(input).is_ok() {
+                        discriminant = Ok(Expr::Verbatim(verbatim::between(&begin, input)));
+                    }
+                    discriminant?
+                };
                 Some((eq_token, discriminant))
             } else {
                 None
@@ -186,6 +201,79 @@ pub(crate) mod parsing {
                 discriminant,
             })
         }
+    }
+
+    #[cfg(not(feature = "full"))]
+    pub(crate) fn scan_lenient_discriminant(input: ParseStream) -> Result<()> {
+        use proc_macro2::Delimiter::{self, Brace, Bracket, Parenthesis};
+
+        let consume = |delimiter: Delimiter| {
+            Result::unwrap(input.step(|cursor| match cursor.group(delimiter) {
+                Some((_inside, _span, rest)) => Ok((true, rest)),
+                None => Ok((false, *cursor)),
+            }))
+        };
+
+        macro_rules! consume {
+            [$token:tt] => {
+                input.parse::<Option<Token![$token]>>().unwrap().is_some()
+            };
+        }
+
+        let mut initial = true;
+        let mut depth = 0usize;
+        loop {
+            if initial {
+                if consume![&] {
+                    input.parse::<Option<Token![mut]>>()?;
+                } else if consume![if] || consume![match] || consume![while] {
+                    depth += 1;
+                } else if input.parse::<Option<Lit>>()?.is_some()
+                    || (consume(Brace) || consume(Bracket) || consume(Parenthesis))
+                    || (consume![async] || consume![const] || consume![loop] || consume![unsafe])
+                        && (consume(Brace) || break)
+                {
+                    initial = false;
+                } else if consume![let] {
+                    while !consume![=] {
+                        if !((consume![|] || consume![ref] || consume![mut] || consume![@])
+                            || (consume![!] || input.parse::<Option<Lit>>()?.is_some())
+                            || (consume![..=] || consume![..] || consume![&] || consume![_])
+                            || (consume(Brace) || consume(Bracket) || consume(Parenthesis)))
+                        {
+                            path::parsing::qpath(input, true)?;
+                        }
+                    }
+                } else if input.parse::<Option<Lifetime>>()?.is_some() && !consume![:] {
+                    break;
+                } else if input.parse::<UnOp>().is_err() {
+                    path::parsing::qpath(input, true)?;
+                    initial = consume![!] || depth == 0 && input.peek(token::Brace);
+                }
+            } else if input.is_empty() || input.peek(Token![,]) {
+                return Ok(());
+            } else if depth > 0 && consume(Brace) {
+                if consume![else] && !consume(Brace) {
+                    initial = consume![if] || break;
+                } else {
+                    depth -= 1;
+                }
+            } else if input.parse::<BinOp>().is_ok() || (consume![..] | consume![=]) {
+                initial = true;
+            } else if consume![.] {
+                if input.parse::<Option<LitFloat>>()?.is_none()
+                    && (input.parse::<Member>()?.is_named() && consume![::])
+                {
+                    AngleBracketedGenericArguments::do_parse(None, input)?;
+                }
+            } else if consume![as] {
+                input.parse::<Type>()?;
+            } else if !(consume(Brace) || consume(Bracket) || consume(Parenthesis)) {
+                break;
+            }
+        }
+
+        Err(input.error("unsupported expression"))
     }
 
     #[cfg_attr(doc_cfg, doc(cfg(feature = "parsing")))]

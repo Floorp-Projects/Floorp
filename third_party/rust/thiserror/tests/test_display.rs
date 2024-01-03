@@ -1,3 +1,5 @@
+#![allow(clippy::uninlined_format_args)]
+
 use std::fmt::{self, Display};
 use thiserror::Error;
 

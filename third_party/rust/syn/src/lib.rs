@@ -249,8 +249,9 @@
 //!   dynamic library libproc_macro from rustc toolchain.
 
 // Syn types in rustdoc of other crates get linked to here.
-#![doc(html_root_url = "https://docs.rs/syn/2.0.39")]
+#![doc(html_root_url = "https://docs.rs/syn/2.0.46")]
 #![cfg_attr(doc_cfg, feature(doc_cfg))]
+#![deny(unsafe_op_in_unsafe_fn)]
 #![allow(non_camel_case_types)]
 #![allow(
     clippy::bool_to_int_with_if,
@@ -260,6 +261,7 @@
     clippy::cast_ptr_alignment,
     clippy::default_trait_access,
     clippy::derivable_impls,
+    clippy::diverging_sub_expression,
     clippy::doc_markdown,
     clippy::expl_impl_clone_on_copy,
     clippy::explicit_auto_deref,
@@ -290,6 +292,7 @@
     clippy::too_many_arguments,
     clippy::too_many_lines,
     clippy::trivially_copy_pass_by_ref,
+    clippy::uninhabited_references,
     clippy::uninlined_format_args,
     clippy::unnecessary_box_returns,
     clippy::unnecessary_unwrap,
@@ -313,6 +316,7 @@ pub mod token;
 #[cfg(any(feature = "full", feature = "derive"))]
 mod attr;
 #[cfg(any(feature = "full", feature = "derive"))]
+#[cfg_attr(doc_cfg, doc(cfg(any(feature = "full", feature = "derive"))))]
 pub use crate::attr::{AttrStyle, Attribute, Meta, MetaList, MetaNameValue};
 
 mod bigint;
@@ -328,11 +332,13 @@ mod custom_punctuation;
 #[cfg(any(feature = "full", feature = "derive"))]
 mod data;
 #[cfg(any(feature = "full", feature = "derive"))]
+#[cfg_attr(doc_cfg, doc(cfg(any(feature = "full", feature = "derive"))))]
 pub use crate::data::{Field, Fields, FieldsNamed, FieldsUnnamed, Variant};
 
 #[cfg(any(feature = "full", feature = "derive"))]
 mod derive;
 #[cfg(feature = "derive")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "derive")))]
 pub use crate::derive::{Data, DataEnum, DataStruct, DataUnion, DeriveInput};
 
 mod drops;
@@ -343,14 +349,21 @@ pub use crate::error::{Error, Result};
 #[cfg(any(feature = "full", feature = "derive"))]
 mod expr;
 #[cfg(feature = "full")]
-pub use crate::expr::{Arm, FieldValue, Label, RangeLimits};
+#[cfg_attr(doc_cfg, doc(cfg(feature = "full")))]
+pub use crate::expr::{Arm, Label, RangeLimits};
 #[cfg(any(feature = "full", feature = "derive"))]
+#[cfg_attr(doc_cfg, doc(cfg(any(feature = "full", feature = "derive"))))]
 pub use crate::expr::{
-    Expr, ExprArray, ExprAssign, ExprAsync, ExprAwait, ExprBinary, ExprBlock, ExprBreak, ExprCall,
-    ExprCast, ExprClosure, ExprConst, ExprContinue, ExprField, ExprForLoop, ExprGroup, ExprIf,
-    ExprIndex, ExprInfer, ExprLet, ExprLit, ExprLoop, ExprMacro, ExprMatch, ExprMethodCall,
-    ExprParen, ExprPath, ExprRange, ExprReference, ExprRepeat, ExprReturn, ExprStruct, ExprTry,
-    ExprTryBlock, ExprTuple, ExprUnary, ExprUnsafe, ExprWhile, ExprYield, Index, Member,
+    Expr, ExprBinary, ExprCall, ExprCast, ExprField, ExprIndex, ExprLit, ExprMacro, ExprMethodCall,
+    ExprParen, ExprPath, ExprReference, ExprStruct, ExprUnary, FieldValue, Index, Member,
+};
+#[cfg(any(feature = "full", feature = "derive"))]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "full")))]
+pub use crate::expr::{
+    ExprArray, ExprAssign, ExprAsync, ExprAwait, ExprBlock, ExprBreak, ExprClosure, ExprConst,
+    ExprContinue, ExprForLoop, ExprGroup, ExprIf, ExprInfer, ExprLet, ExprLoop, ExprMatch,
+    ExprRange, ExprRepeat, ExprReturn, ExprTry, ExprTryBlock, ExprTuple, ExprUnsafe, ExprWhile,
+    ExprYield,
 };
 
 #[cfg(feature = "parsing")]
@@ -360,17 +373,23 @@ pub mod ext;
 #[cfg(feature = "full")]
 mod file;
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "full")))]
 pub use crate::file::File;
 
 #[cfg(any(feature = "full", feature = "derive"))]
 mod generics;
 #[cfg(any(feature = "full", feature = "derive"))]
+#[cfg_attr(doc_cfg, doc(cfg(any(feature = "full", feature = "derive"))))]
 pub use crate::generics::{
     BoundLifetimes, ConstParam, GenericParam, Generics, LifetimeParam, PredicateLifetime,
     PredicateType, TraitBound, TraitBoundModifier, TypeParam, TypeParamBound, WhereClause,
     WherePredicate,
 };
 #[cfg(all(any(feature = "full", feature = "derive"), feature = "printing"))]
+#[cfg_attr(
+    doc_cfg,
+    doc(cfg(all(any(feature = "full", feature = "derive"), feature = "printing")))
+)]
 pub use crate::generics::{ImplGenerics, Turbofish, TypeGenerics};
 
 mod ident;
@@ -380,6 +399,7 @@ pub use crate::ident::Ident;
 #[cfg(feature = "full")]
 mod item;
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "full")))]
 pub use crate::item::{
     FnArg, ForeignItem, ForeignItemFn, ForeignItemMacro, ForeignItemStatic, ForeignItemType,
     ImplItem, ImplItemConst, ImplItemFn, ImplItemMacro, ImplItemType, ImplRestriction, Item,
@@ -394,10 +414,10 @@ mod lifetime;
 pub use crate::lifetime::Lifetime;
 
 mod lit;
+#[doc(hidden)] // https://github.com/dtolnay/syn/issues/1566
+pub use crate::lit::StrStyle;
 #[doc(inline)]
-pub use crate::lit::{
-    Lit, LitBool, LitByte, LitByteStr, LitChar, LitFloat, LitInt, LitStr, StrStyle,
-};
+pub use crate::lit::{Lit, LitBool, LitByte, LitByteStr, LitChar, LitFloat, LitInt, LitStr};
 
 #[cfg(feature = "parsing")]
 mod lookahead;
@@ -405,6 +425,7 @@ mod lookahead;
 #[cfg(any(feature = "full", feature = "derive"))]
 mod mac;
 #[cfg(any(feature = "full", feature = "derive"))]
+#[cfg_attr(doc_cfg, doc(cfg(any(feature = "full", feature = "derive"))))]
 pub use crate::mac::{Macro, MacroDelimiter};
 
 #[cfg(all(feature = "parsing", any(feature = "full", feature = "derive")))]
@@ -417,6 +438,7 @@ pub mod meta;
 #[cfg(any(feature = "full", feature = "derive"))]
 mod op;
 #[cfg(any(feature = "full", feature = "derive"))]
+#[cfg_attr(doc_cfg, doc(cfg(any(feature = "full", feature = "derive"))))]
 pub use crate::op::{BinOp, UnOp};
 
 #[cfg(feature = "parsing")]
@@ -432,11 +454,13 @@ mod parse_quote;
 #[cfg(feature = "full")]
 mod pat;
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "full")))]
 pub use crate::expr::{
     ExprConst as PatConst, ExprLit as PatLit, ExprMacro as PatMacro, ExprPath as PatPath,
     ExprRange as PatRange,
 };
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "full")))]
 pub use crate::pat::{
     FieldPat, Pat, PatIdent, PatOr, PatParen, PatReference, PatRest, PatSlice, PatStruct, PatTuple,
     PatTupleStruct, PatType, PatWild,
@@ -445,6 +469,7 @@ pub use crate::pat::{
 #[cfg(any(feature = "full", feature = "derive"))]
 mod path;
 #[cfg(any(feature = "full", feature = "derive"))]
+#[cfg_attr(doc_cfg, doc(cfg(any(feature = "full", feature = "derive"))))]
 pub use crate::path::{
     AngleBracketedGenericArguments, AssocConst, AssocType, Constraint, GenericArgument,
     ParenthesizedGenericArguments, Path, PathArguments, PathSegment, QSelf,
@@ -458,6 +483,7 @@ pub mod punctuated;
 #[cfg(any(feature = "full", feature = "derive"))]
 mod restriction;
 #[cfg(any(feature = "full", feature = "derive"))]
+#[cfg_attr(doc_cfg, doc(cfg(any(feature = "full", feature = "derive"))))]
 pub use crate::restriction::{FieldMutability, VisRestricted, Visibility};
 
 mod sealed;
@@ -471,6 +497,7 @@ pub mod spanned;
 #[cfg(feature = "full")]
 mod stmt;
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "full")))]
 pub use crate::stmt::{Block, Local, LocalInit, Stmt, StmtMacro};
 
 mod thread;
@@ -481,6 +508,7 @@ mod tt;
 #[cfg(any(feature = "full", feature = "derive"))]
 mod ty;
 #[cfg(any(feature = "full", feature = "derive"))]
+#[cfg_attr(doc_cfg, doc(cfg(any(feature = "full", feature = "derive"))))]
 pub use crate::ty::{
     Abi, BareFnArg, BareVariadic, ReturnType, Type, TypeArray, TypeBareFn, TypeGroup,
     TypeImplTrait, TypeInfer, TypeMacro, TypeNever, TypeParen, TypePath, TypePtr, TypeReference,
@@ -813,8 +841,17 @@ mod gen {
     mod helper;
 }
 
-#[cfg(any(feature = "fold", feature = "visit", feature = "visit-mut"))]
-pub use crate::gen::*;
+#[cfg(feature = "fold")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "fold")))]
+pub use crate::gen::fold;
+
+#[cfg(feature = "visit")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "visit")))]
+pub use crate::gen::visit;
+
+#[cfg(feature = "visit-mut")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "visit-mut")))]
+pub use crate::gen::visit_mut;
 
 // Not public API.
 #[doc(hidden)]

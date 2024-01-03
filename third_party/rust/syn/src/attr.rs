@@ -616,7 +616,7 @@ impl<'a> FilterAttrs<'a> for &'a [Attribute] {
 #[cfg(feature = "parsing")]
 pub(crate) mod parsing {
     use super::*;
-    use crate::parse::discouraged::Speculative;
+    use crate::parse::discouraged::Speculative as _;
     use crate::parse::{Parse, ParseStream, Result};
     use std::fmt::{self, Display};
 

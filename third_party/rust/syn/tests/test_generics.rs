@@ -28,6 +28,7 @@ fn test_split_for_impl() {
                         ident: "a",
                     },
                 }),
+                Token![,],
                 GenericParam::Lifetime(LifetimeParam {
                     lifetime: Lifetime {
                         ident: "b",
@@ -39,6 +40,7 @@ fn test_split_for_impl() {
                         },
                     ],
                 }),
+                Token![,],
                 GenericParam::Type(TypeParam {
                     attrs: [
                         Attribute {
@@ -227,6 +229,7 @@ fn test_fn_precedence_in_where_clause() {
                                         ],
                                     },
                                 }),
+                                Token![+],
                                 TypeParamBound::Trait(TraitBound {
                                     path: Path {
                                         segments: [
@@ -238,12 +241,15 @@ fn test_fn_precedence_in_where_clause() {
                                 }),
                             ],
                         }),
+                        Token![,],
                     ],
                 }),
             },
             output: ReturnType::Default,
         },
-        block: Block,
+        block: Block {
+            stmts: [],
+        },
     }
     "###);
 
