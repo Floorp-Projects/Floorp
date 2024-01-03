@@ -422,7 +422,7 @@ absl::optional<LossBasedBweV2::Config> LossBasedBweV2::CreateConfig(
   FieldTrialParameter<TimeDelta> probe_expiration("ProbeExpiration",
                                                   TimeDelta::Seconds(10));
   FieldTrialParameter<bool> not_use_acked_rate_in_alr("NotUseAckedRateInAlr",
-                                                      false);
+                                                      true);
   FieldTrialParameter<bool> use_in_start_phase("UseInStartPhase", false);
   if (key_value_config) {
     ParseFieldTrial({&enabled,

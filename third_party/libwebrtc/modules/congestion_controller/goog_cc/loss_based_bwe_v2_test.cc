@@ -1470,7 +1470,7 @@ TEST_P(LossBasedBweV2Test, NotBackOffToAckedRateInAlr) {
       "Enabled:true,CandidateFactors:1.1|1.0|0.9,AckedRateCandidate:true,"
       "ObservationWindowSize:2,"
       "DelayBasedCandidate:true,InstantUpperBoundBwBalance:100kbps,"
-      "ObservationDurationLowerBound:200ms,NotUseAckedRateInAlr:true/");
+      "ObservationDurationLowerBound:200ms/");
   LossBasedBweV2 loss_based_bandwidth_estimator(&key_value_config);
   loss_based_bandwidth_estimator.SetMinMaxBitrate(
       /*min_bitrate=*/DataRate::KilobitsPerSec(10),
@@ -1505,7 +1505,7 @@ TEST_P(LossBasedBweV2Test, BackOffToAckedRateIfNotInAlr) {
       "Enabled:true,CandidateFactors:1.1|1.0|0.9,AckedRateCandidate:true,"
       "ObservationWindowSize:2,"
       "DelayBasedCandidate:true,InstantUpperBoundBwBalance:100kbps,"
-      "ObservationDurationLowerBound:200ms,NotUseAckedRateInAlr:true/");
+      "ObservationDurationLowerBound:200ms/");
   LossBasedBweV2 loss_based_bandwidth_estimator(&key_value_config);
   loss_based_bandwidth_estimator.SetMinMaxBitrate(
       /*min_bitrate=*/DataRate::KilobitsPerSec(10),
