@@ -1715,7 +1715,8 @@ bool gfxFont::HasFeatureSet(uint32_t aFeature, bool& aFeatureOn) {
 
 already_AddRefed<mozilla::gfx::ScaledFont> gfxFont::GetScaledFont(
     mozilla::gfx::DrawTarget* aDrawTarget) {
-  TextRunDrawParams params;
+  mozilla::gfx::PaletteCache dummy;
+  TextRunDrawParams params(dummy);
   return GetScaledFont(params);
 }
 
@@ -2233,7 +2234,7 @@ void gfxFont::DrawEmphasisMarks(const gfxTextRun* aShapedText, gfx::Point* aPt,
                                 const EmphasisMarkDrawParams& aParams) {
   float& inlineCoord = aParams.isVertical ? aPt->y.value : aPt->x.value;
   gfxTextRun::Range markRange(aParams.mark);
-  gfxTextRun::DrawParams params(aParams.context);
+  gfxTextRun::DrawParams params(aParams.context, aParams.paletteCache);
 
   float clusterStart = -std::numeric_limits<float>::infinity();
   bool shouldDrawEmphasisMark = false;
@@ -2263,23 +2264,6 @@ void gfxFont::DrawEmphasisMarks(const gfxTextRun* aShapedText, gfx::Point* aPt,
       inlineCoord += aParams.direction * aParams.spacing[i].mAfter;
     }
   }
-}
-
-nsTArray<mozilla::gfx::sRGBColor>* TextRunDrawParams::GetPaletteFor(
-    const gfxFont* aFont) {
-  auto entry = mPaletteCache.Lookup(aFont);
-  if (!entry) {
-    CacheData newData;
-    newData.mKey = aFont;
-
-    gfxFontEntry* fe = aFont->GetFontEntry();
-    gfxFontEntry::AutoHBFace face = fe->GetHBFace();
-    newData.mPalette = COLRFonts::SetupColorPalette(
-        face, paletteValueSet, fontPalette, fe->FamilyName());
-
-    entry.Set(std::move(newData));
-  }
-  return entry.Data().mPalette.get();
 }
 
 void gfxFont::Draw(const gfxTextRun* aTextRun, uint32_t aStart, uint32_t aEnd,
@@ -2317,7 +2301,8 @@ void gfxFont::Draw(const gfxTextRun* aTextRun, uint32_t aStart, uint32_t aEnd,
     fontParams.currentColor = aRunParams.context->GetDeviceColor(ctxColor)
                                   ? sRGBColor::FromABGR(ctxColor.ToABGR())
                                   : sRGBColor::OpaqueBlack();
-    fontParams.palette = aRunParams.GetPaletteFor(this);
+    fontParams.palette = aRunParams.paletteCache.GetPaletteFor(
+        GetFontEntry(), aRunParams.fontPalette);
   }
 
   if (textDrawer) {
