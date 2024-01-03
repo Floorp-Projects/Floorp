@@ -424,6 +424,10 @@ class SettingsSearchTest {
     fun verifyShowSearchSuggestionsToggleTest() {
         homeScreen {
         }.openSearch {
+            // The Google related suggestions aren't always displayed on cold run
+            // Bugzilla ticket: https://bugzilla.mozilla.org/show_bug.cgi?id=1813587
+            clickSearchSelectorButton()
+            selectTemporarySearchMethod("DuckDuckGo")
             typeSearch("mozilla ")
             verifySearchEngineSuggestionResults(
                 activityTestRule,
@@ -438,6 +442,10 @@ class SettingsSearchTest {
         }.goBack {
         }.goBack {
         }.openSearch {
+            // The Google related suggestions aren't always displayed on cold run
+            // Bugzilla ticket: https://bugzilla.mozilla.org/show_bug.cgi?id=1813587
+            clickSearchSelectorButton()
+            selectTemporarySearchMethod("DuckDuckGo")
             typeSearch("mozilla")
             verifySuggestionsAreNotDisplayed(activityTestRule, "mozilla firefox")
         }
