@@ -215,7 +215,6 @@ struct nsTextFrame::PaintTextSelectionParams : nsTextFrame::PaintTextParams {
 
 struct nsTextFrame::DrawTextRunParams {
   gfxContext* context;
-  gfx::COLRFonts::PaletteCache& paletteCache;
   PropertyProvider* provider = nullptr;
   gfxFloat* advanceWidth = nullptr;
   mozilla::SVGContextPaint* contextPaint = nullptr;
@@ -223,12 +222,11 @@ struct nsTextFrame::DrawTextRunParams {
   nscolor textColor = NS_RGBA(0, 0, 0, 0);
   nscolor textStrokeColor = NS_RGBA(0, 0, 0, 0);
   nsAtom* fontPalette = nullptr;
+  gfx::FontPaletteValueSet* paletteValueSet = nullptr;
   float textStrokeWidth = 0.0f;
   bool drawSoftHyphen = false;
   bool hasTextShadow = false;
-  DrawTextRunParams(gfxContext* aContext,
-                    gfx::COLRFonts::PaletteCache& aPaletteCache)
-      : context(aContext), paletteCache(aPaletteCache) {}
+  explicit DrawTextRunParams(gfxContext* aContext) : context(aContext) {}
 };
 
 struct nsTextFrame::ClipEdges {
@@ -265,9 +263,7 @@ struct nsTextFrame::DrawTextParams : nsTextFrame::DrawTextRunParams {
   const ClipEdges* clipEdges = nullptr;
   const nscolor* decorationOverrideColor = nullptr;
   Range glyphRange;
-  DrawTextParams(gfxContext* aContext,
-                 gfx::COLRFonts::PaletteCache& aPaletteCache)
-      : DrawTextRunParams(aContext, aPaletteCache) {}
+  explicit DrawTextParams(gfxContext* aContext) : DrawTextRunParams(aContext) {}
 };
 
 struct nsTextFrame::PaintShadowParams {
@@ -5953,7 +5949,7 @@ void nsTextFrame::PaintOneShadow(const PaintShadowParams& aParams,
   // need to translate any coordinates to fit on the surface.
   gfxFloat advanceWidth;
   nsTextPaintStyle textPaintStyle(this);
-  DrawTextParams params(shadowContext, PresContext()->FontPaletteCache());
+  DrawTextParams params(shadowContext);
   params.advanceWidth = &advanceWidth;
   params.dirtyRect = aParams.dirtyRect;
   params.framePt = aParams.framePt + shadowGfxOffset;
@@ -5967,6 +5963,7 @@ void nsTextFrame::PaintOneShadow(const PaintShadowParams& aParams,
   // color.
   params.decorationOverrideColor = &params.textColor;
   params.fontPalette = StyleFont()->GetFontPaletteAtom();
+  params.paletteValueSet = PresContext()->GetFontPaletteValueSet();
 
   DrawText(aParams.range, aParams.textBaselinePt + shadowGfxOffset, params);
 
@@ -6255,7 +6252,7 @@ bool nsTextFrame::PaintTextWithSelectionColors(
   }
 
   gfxFloat advance;
-  DrawTextParams params(aParams.context, PresContext()->FontPaletteCache());
+  DrawTextParams params(aParams.context);
   params.dirtyRect = aParams.dirtyRect;
   params.framePt = aParams.framePt;
   params.provider = aParams.provider;
@@ -6265,6 +6262,7 @@ bool nsTextFrame::PaintTextWithSelectionColors(
   params.callbacks = aParams.callbacks;
   params.glyphRange = aParams.glyphRange;
   params.fontPalette = StyleFont()->GetFontPaletteAtom();
+  params.paletteValueSet = PresContext()->GetFontPaletteValueSet();
   params.hasTextShadow = !StyleText()->mTextShadow.IsEmpty();
 
   PaintShadowParams shadowParams(aParams);
@@ -6500,11 +6498,10 @@ void nsTextFrame::DrawEmphasisMarks(gfxContext* aContext, WritingMode aWM,
   }
   if (!isTextCombined) {
     mTextRun->DrawEmphasisMarks(aContext, info->textRun.get(), info->advance,
-                                pt, aRange, aProvider,
-                                PresContext()->FontPaletteCache());
+                                pt, aRange, aProvider);
   } else {
     pt.y += (GetSize().height - info->advance) / 2;
-    gfxTextRun::DrawParams params(aContext, PresContext()->FontPaletteCache());
+    gfxTextRun::DrawParams params(aContext);
     info->textRun->Draw(Range(info->textRun.get()), pt, params);
   }
 }
@@ -6837,7 +6834,7 @@ void nsTextFrame::PaintText(const PaintTextParams& aParams,
   }
 
   gfxFloat advanceWidth;
-  DrawTextParams params(aParams.context, PresContext()->FontPaletteCache());
+  DrawTextParams params(aParams.context);
   params.dirtyRect = aParams.dirtyRect;
   params.framePt = aParams.framePt;
   params.provider = &provider;
@@ -6852,6 +6849,7 @@ void nsTextFrame::PaintText(const PaintTextParams& aParams,
   params.callbacks = aParams.callbacks;
   params.glyphRange = range;
   params.fontPalette = StyleFont()->GetFontPaletteAtom();
+  params.paletteValueSet = PresContext()->GetFontPaletteValueSet();
   params.hasTextShadow = !StyleText()->mTextShadow.IsEmpty();
 
   DrawText(range, textBaselinePt, params);
@@ -6862,11 +6860,12 @@ static void DrawTextRun(const gfxTextRun* aTextRun,
                         gfxTextRun::Range aRange,
                         const nsTextFrame::DrawTextRunParams& aParams,
                         nsTextFrame* aFrame) {
-  gfxTextRun::DrawParams params(aParams.context, aParams.paletteCache);
+  gfxTextRun::DrawParams params(aParams.context);
   params.provider = aParams.provider;
   params.advanceWidth = aParams.advanceWidth;
   params.contextPaint = aParams.contextPaint;
   params.fontPalette = aParams.fontPalette;
+  params.paletteValueSet = aParams.paletteValueSet;
   params.callbacks = aParams.callbacks;
   params.hasTextShadow = aParams.hasTextShadow;
   if (aParams.callbacks) {
