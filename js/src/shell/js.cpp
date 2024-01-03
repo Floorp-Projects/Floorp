@@ -11761,10 +11761,6 @@ bool InitOptionParser(OptionParser& op) {
           "On-Stack Replacement (default: on, off to disable)") ||
       !op.addBoolOption('\0', "disable-bailout-loop-check",
                         "Turn off bailout loop check") ||
-      !op.addBoolOption('\0', "enable-watchtower",
-                        "Enable Watchtower optimizations") ||
-      !op.addBoolOption('\0', "disable-watchtower",
-                        "Disable Watchtower optimizations") ||
       !op.addBoolOption('\0', "enable-ic-frame-pointers",
                         "Use frame pointers in all IC stubs") ||
       !op.addBoolOption('\0', "scalar-replace-arguments",
@@ -12723,12 +12719,6 @@ bool SetContextJITOptions(JSContext* cx, const OptionParser& op) {
     jit::JitOptions.disableBailoutLoopCheck = true;
   }
 
-  if (op.getBoolOption("enable-watchtower")) {
-    jit::JitOptions.enableWatchtowerMegamorphic = true;
-  }
-  if (op.getBoolOption("disable-watchtower")) {
-    jit::JitOptions.enableWatchtowerMegamorphic = false;
-  }
   if (op.getBoolOption("only-inline-selfhosted")) {
     jit::JitOptions.onlyInlineSelfHosted = true;
   }

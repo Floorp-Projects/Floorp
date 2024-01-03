@@ -1,5 +1,3 @@
-// |jit-test| --enable-watchtower
-
 setJitCompilerOption("ic.force-megamorphic", 1);
 
 function testAddToIntermediate() {

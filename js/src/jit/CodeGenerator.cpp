@@ -4422,12 +4422,8 @@ void CodeGenerator::visitMegamorphicLoadSlot(LMegamorphicLoadSlot* lir) {
   ValueOperand output = ToOutValue(lir);
 
   Label bail, cacheHit;
-  if (JitOptions.enableWatchtowerMegamorphic) {
-    masm.emitMegamorphicCacheLookup(lir->mir()->name(), obj, temp0, temp1,
-                                    temp2, output, &cacheHit);
-  } else {
-    masm.xorPtr(temp2, temp2);
-  }
+  masm.emitMegamorphicCacheLookup(lir->mir()->name(), obj, temp0, temp1, temp2,
+                                  output, &cacheHit);
 
   masm.branchIfNonNativeObj(obj, temp0, &bail);
 
@@ -4466,12 +4462,8 @@ void CodeGenerator::visitMegamorphicLoadSlotByValue(
   ValueOperand output = ToOutValue(lir);
 
   Label bail, cacheHit;
-  if (JitOptions.enableWatchtowerMegamorphic) {
-    masm.emitMegamorphicCacheLookupByValue(idVal, obj, temp0, temp1, temp2,
-                                           output, &cacheHit);
-  } else {
-    masm.xorPtr(temp2, temp2);
-  }
+  masm.emitMegamorphicCacheLookupByValue(idVal, obj, temp0, temp1, temp2,
+                                         output, &cacheHit);
 
   masm.branchIfNonNativeObj(obj, temp0, &bail);
 
@@ -4519,21 +4511,19 @@ void CodeGenerator::visitMegamorphicStoreSlot(LMegamorphicStoreSlot* lir) {
 #endif
 
   Label cacheHit, done;
-  if (JitOptions.enableWatchtowerMegamorphic) {
 #ifdef JS_CODEGEN_X86
-    masm.emitMegamorphicCachedSetSlot(
-        lir->mir()->name(), obj, temp0, value, &cacheHit,
-        [](MacroAssembler& masm, const Address& addr, MIRType mirType) {
-          EmitPreBarrier(masm, addr, mirType);
-        });
+  masm.emitMegamorphicCachedSetSlot(
+      lir->mir()->name(), obj, temp0, value, &cacheHit,
+      [](MacroAssembler& masm, const Address& addr, MIRType mirType) {
+        EmitPreBarrier(masm, addr, mirType);
+      });
 #else
-    masm.emitMegamorphicCachedSetSlot(
-        lir->mir()->name(), obj, temp0, temp1, temp2, value, &cacheHit,
-        [](MacroAssembler& masm, const Address& addr, MIRType mirType) {
-          EmitPreBarrier(masm, addr, mirType);
-        });
+  masm.emitMegamorphicCachedSetSlot(
+      lir->mir()->name(), obj, temp0, temp1, temp2, value, &cacheHit,
+      [](MacroAssembler& masm, const Address& addr, MIRType mirType) {
+        EmitPreBarrier(masm, addr, mirType);
+      });
 #endif
-  }
 
   pushArg(Imm32(lir->mir()->strict()));
   pushArg(value);
@@ -4565,13 +4555,8 @@ void CodeGenerator::visitMegamorphicHasProp(LMegamorphicHasProp* lir) {
   Register output = ToRegister(lir->output());
 
   Label bail, cacheHit;
-  if (JitOptions.enableWatchtowerMegamorphic) {
-    masm.emitMegamorphicCacheLookupExists(idVal, obj, temp0, temp1, temp2,
-                                          output, &cacheHit,
-                                          lir->mir()->hasOwn());
-  } else {
-    masm.xorPtr(temp2, temp2);
-  }
+  masm.emitMegamorphicCacheLookupExists(idVal, obj, temp0, temp1, temp2, output,
+                                        &cacheHit, lir->mir()->hasOwn());
 
   masm.branchIfNonNativeObj(obj, temp0, &bail);
 
@@ -14617,21 +14602,19 @@ void CodeGenerator::visitMegamorphicSetElement(LMegamorphicSetElement* lir) {
 #endif
 
   Label cacheHit, done;
-  if (JitOptions.enableWatchtowerMegamorphic) {
 #ifdef JS_CODEGEN_X86
-    masm.emitMegamorphicCachedSetSlot(
-        idVal, obj, temp0, value, &cacheHit,
-        [](MacroAssembler& masm, const Address& addr, MIRType mirType) {
-          EmitPreBarrier(masm, addr, mirType);
-        });
+  masm.emitMegamorphicCachedSetSlot(
+      idVal, obj, temp0, value, &cacheHit,
+      [](MacroAssembler& masm, const Address& addr, MIRType mirType) {
+        EmitPreBarrier(masm, addr, mirType);
+      });
 #else
-    masm.emitMegamorphicCachedSetSlot(
-        idVal, obj, temp0, temp1, temp2, value, &cacheHit,
-        [](MacroAssembler& masm, const Address& addr, MIRType mirType) {
-          EmitPreBarrier(masm, addr, mirType);
-        });
+  masm.emitMegamorphicCachedSetSlot(
+      idVal, obj, temp0, temp1, temp2, value, &cacheHit,
+      [](MacroAssembler& masm, const Address& addr, MIRType mirType) {
+        EmitPreBarrier(masm, addr, mirType);
+      });
 #endif
-  }
 
   pushArg(Imm32(lir->mir()->strict()));
   pushArg(ToValue(lir, LMegamorphicSetElement::ValueIndex));
