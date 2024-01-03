@@ -4378,6 +4378,16 @@ bool jit::MarkLoadsUsedAsPropertyKeys(MIRGraph& graph) {
         idVal = ins->toIdToStringOrSymbol()->idVal();
       } else if (ins->isGuardSpecificAtom()) {
         idVal = ins->toGuardSpecificAtom()->input();
+      } else if (ins->isToHashableString()) {
+        idVal = ins->toToHashableString()->input();
+      } else if (ins->isToHashableValue()) {
+        idVal = ins->toToHashableValue()->input();
+      } else if (ins->isMapObjectHasValueVMCall()) {
+        idVal = ins->toMapObjectHasValueVMCall()->value();
+      } else if (ins->isMapObjectGetValueVMCall()) {
+        idVal = ins->toMapObjectGetValueVMCall()->value();
+      } else if (ins->isSetObjectHasValueVMCall()) {
+        idVal = ins->toSetObjectHasValueVMCall()->value();
       } else {
         continue;
       }
