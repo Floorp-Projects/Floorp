@@ -85,7 +85,7 @@ bool SetAv1SvcConfig(VideoCodec& video_codec,
     }
   }
 
-  bool configured_for_single_spatial_layer =
+  bool requested_single_spatial_layer =
       ScalabilityModeToNumSpatialLayers(*scalability_mode) == 1;
 
   if (ScalabilityMode reduced = LimitNumSpatialLayers(
@@ -121,7 +121,7 @@ bool SetAv1SvcConfig(VideoCodec& video_codec,
     spatial_layer.active = true;
   }
 
-  if (configured_for_single_spatial_layer) {
+  if (requested_single_spatial_layer) {
     SpatialLayer& spatial_layer = video_codec.spatialLayers[0];
     spatial_layer.minBitrate = video_codec.minBitrate;
     spatial_layer.maxBitrate = video_codec.maxBitrate;
