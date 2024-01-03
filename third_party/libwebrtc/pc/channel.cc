@@ -902,7 +902,7 @@ bool VoiceChannel::SetLocalContent_w(const MediaContentDescription* content,
 
   bool criteria_modified = false;
   if (webrtc::RtpTransceiverDirectionHasRecv(content->direction())) {
-    for (const AudioCodec& codec : content->as_audio()->codecs()) {
+    for (const Codec& codec : content->codecs()) {
       if (MaybeAddHandledPayloadType(codec.id)) {
         criteria_modified = true;
       }
@@ -911,7 +911,7 @@ bool VoiceChannel::SetLocalContent_w(const MediaContentDescription* content,
 
   last_recv_params_ = recv_params;
 
-  if (!UpdateLocalStreams_w(content->as_audio()->streams(), type, error_desc)) {
+  if (!UpdateLocalStreams_w(content->streams(), type, error_desc)) {
     RTC_DCHECK(!error_desc.empty());
     return false;
   }
@@ -1095,7 +1095,7 @@ bool VideoChannel::SetLocalContent_w(const MediaContentDescription* content,
 
   bool criteria_modified = false;
   if (webrtc::RtpTransceiverDirectionHasRecv(content->direction())) {
-    for (const VideoCodec& codec : content->as_video()->codecs()) {
+    for (const Codec& codec : content->codecs()) {
       if (MaybeAddHandledPayloadType(codec.id))
         criteria_modified = true;
     }

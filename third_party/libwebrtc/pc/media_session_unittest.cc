@@ -673,10 +673,7 @@ class MediaSessionDescriptionFactoryTest : public ::testing::Test {
   bool VerifyNoCNCodecs(const cricket::ContentInfo* content) {
     RTC_DCHECK(content);
     RTC_CHECK(content->media_description());
-    const cricket::AudioContentDescription* audio_desc =
-        content->media_description()->as_audio();
-    RTC_CHECK(audio_desc);
-    for (const cricket::AudioCodec& codec : audio_desc->codecs()) {
+    for (const cricket::Codec& codec : content->media_description()->codecs()) {
       if (codec.name == "CN") {
         return false;
       }
