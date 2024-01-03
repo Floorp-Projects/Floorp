@@ -80,6 +80,10 @@ void Plot::SetId(const std::string& id) {
   id_ = id;
 }
 
+void Plot::SetId(absl::string_view id) {
+  id_ = id;
+}
+
 void Plot::AppendTimeSeries(TimeSeries&& time_series) {
   series_list_.emplace_back(std::move(time_series));
 }
@@ -335,6 +339,12 @@ void PlotCollection::ExportProtobuf(
 
 Plot* PlotCollection::AppendNewPlot() {
   plots_.push_back(std::make_unique<Plot>());
+  return plots_.back().get();
+}
+
+Plot* PlotCollection::AppendNewPlot(absl::string_view chart_id) {
+  plots_.push_back(std::make_unique<Plot>());
+  plots_.back()->SetId(chart_id);
   return plots_.back().get();
 }
 
