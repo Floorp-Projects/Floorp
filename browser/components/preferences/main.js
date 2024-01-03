@@ -3706,7 +3706,7 @@ let gHandlerListItemFragment = MozXULElement.parseXULToFragment(`
       <label class="actionDescription" flex="1" crop="end"/>
     </hbox>
     <hbox class="actionsMenuContainer" flex="1">
-      <menulist class="actionsMenu" flex="1" crop="end" selectedIndex="1">
+      <menulist class="actionsMenu" flex="1" crop="end" selectedIndex="1" aria-labelledby="actionColumn">
         <menupopup/>
       </menulist>
     </hbox>
