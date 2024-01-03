@@ -2670,20 +2670,4 @@ FontPaletteValueSet::PaletteValues* FontPaletteValueSet::Insert(
   return &entry->mValue;
 }
 
-nsTArray<sRGBColor>* COLRFonts::PaletteCache::GetPaletteFor(
-    gfxFontEntry* aFontEntry, nsAtom* aPaletteName) {
-  auto entry = Lookup(std::pair(aFontEntry, aPaletteName));
-  if (!entry) {
-    CacheData newData;
-    newData.mKey = std::pair(aFontEntry, aPaletteName);
-
-    gfxFontEntry::AutoHBFace face = aFontEntry->GetHBFace();
-    newData.mPalette = COLRFonts::SetupColorPalette(
-        face, mPaletteValueSet, aPaletteName, aFontEntry->FamilyName());
-
-    entry.Set(std::move(newData));
-  }
-  return entry.Data().mPalette.get();
-}
-
 }  // end namespace mozilla::gfx

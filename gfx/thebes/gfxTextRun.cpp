@@ -611,7 +611,7 @@ void gfxTextRun::Draw(const Range aRange, const gfx::Point aPt,
 
   // Set up parameters that will be constant across all glyph runs we need
   // to draw, regardless of the font used.
-  TextRunDrawParams params(aParams.paletteCache);
+  TextRunDrawParams params;
   params.context = aParams.context;
   params.devPerApp = 1.0 / double(GetAppUnitsPerDevUnit());
   params.isVerticalRun = IsVertical();
@@ -620,6 +620,7 @@ void gfxTextRun::Draw(const Range aRange, const gfx::Point aPt,
   params.strokeOpts = aParams.strokeOpts;
   params.textStrokeColor = aParams.textStrokeColor;
   params.fontPalette = aParams.fontPalette;
+  params.paletteValueSet = aParams.paletteValueSet;
   params.textStrokePattern = aParams.textStrokePattern;
   params.drawOpts = aParams.drawOpts;
   params.drawMode = aParams.drawMode;
@@ -709,13 +710,14 @@ void gfxTextRun::Draw(const Range aRange, const gfx::Point aPt,
 }
 
 // This method is mostly parallel to Draw().
-void gfxTextRun::DrawEmphasisMarks(
-    gfxContext* aContext, gfxTextRun* aMark, gfxFloat aMarkAdvance,
-    gfx::Point aPt, Range aRange, const PropertyProvider* aProvider,
-    gfx::COLRFonts::PaletteCache& aPaletteCache) const {
+void gfxTextRun::DrawEmphasisMarks(gfxContext* aContext, gfxTextRun* aMark,
+                                   gfxFloat aMarkAdvance, gfx::Point aPt,
+                                   Range aRange,
+                                   const PropertyProvider* aProvider) const {
   MOZ_ASSERT(aRange.end <= GetLength());
 
-  EmphasisMarkDrawParams params(aContext, aPaletteCache);
+  EmphasisMarkDrawParams params;
+  params.context = aContext;
   params.mark = aMark;
   params.advance = aMarkAdvance;
   params.direction = GetDirection();
