@@ -2038,6 +2038,15 @@
     object: WordSized
   mir_op: LoadFixedSlot
 
+# Load a boxed value from an object's fixed slot.
+# If it is a non-atom string, atomize it and update the slot.
+- name: LoadFixedSlotAndAtomize
+  result_type: BoxedValue
+  operands:
+    object: WordSized
+  num_temps: 1
+  mir_op: LoadFixedSlot
+
 # Load a typed value from an object's fixed slot.
 - name: LoadFixedSlotT
   result_type: WordSized
@@ -2063,6 +2072,18 @@
     elements: WordSized
     index: WordSized
   mir_op: true
+
+- name: LoadFixedSlotUnboxAndAtomize
+  result_type: WordSized
+  operands:
+    object: WordSized
+  mir_op: LoadFixedSlotAndUnbox
+
+- name: LoadDynamicSlotUnboxAndAtomize
+  result_type: WordSized
+  operands:
+    slots: WordSized
+  mir_op: LoadDynamicSlotAndUnbox
 
 - name: AddAndStoreSlot
   operands:
@@ -2148,6 +2169,15 @@
   result_type: BoxedValue
   operands:
     in: WordSized
+  mir_op: LoadDynamicSlot
+
+# Load a value from an object's dslots or a slots vector.
+# If it is a non-atom string, atomize it and update the slot.
+- name: LoadDynamicSlotAndAtomize
+  result_type: BoxedValue
+  operands:
+    in: WordSized
+  num_temps: 1
   mir_op: LoadDynamicSlot
 
 # Store a value to an object's dslots or a slots vector.
