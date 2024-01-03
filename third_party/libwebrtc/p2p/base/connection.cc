@@ -13,6 +13,7 @@
 #include <math.h>
 
 #include <algorithm>
+#include <cstdint>
 #include <memory>
 #include <utility>
 #include <vector>
@@ -21,6 +22,9 @@
 #include "absl/strings/escaping.h"
 #include "absl/strings/match.h"
 #include "absl/strings/string_view.h"
+#include "absl/types/optional.h"
+#include "api/array_view.h"
+#include "api/units/timestamp.h"
 #include "p2p/base/port_allocator.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/crc32.h"
@@ -246,6 +250,7 @@ Connection::Connection(rtc::WeakPtr<Port> port,
 Connection::~Connection() {
   RTC_DCHECK_RUN_ON(network_thread_);
   RTC_DCHECK(!port_);
+  RTC_DCHECK(!received_packet_callback_);
 }
 
 webrtc::TaskQueueBase* Connection::network_thread() const {
@@ -445,6 +450,19 @@ void Connection::OnSendStunPacket(const void* data,
   }
 }
 
+void Connection::RegisterReceivedPacketCallback(
+    absl::AnyInvocable<void(Connection*, const rtc::ReceivedPacket&)>
+        received_packet_callback) {
+  RTC_DCHECK_RUN_ON(network_thread_);
+  RTC_CHECK(!received_packet_callback_);
+  received_packet_callback_ = std::move(received_packet_callback);
+}
+
+void Connection::DeregisterReceivedPacketCallback() {
+  RTC_DCHECK_RUN_ON(network_thread_);
+  received_packet_callback_ = nullptr;
+}
+
 void Connection::OnReadPacket(const char* data,
                               size_t size,
                               int64_t packet_time_us) {
@@ -459,8 +477,22 @@ void Connection::OnReadPacket(const char* data,
     UpdateReceiving(last_data_received_);
     recv_rate_tracker_.AddSamples(size);
     stats_.packets_received++;
-    SignalReadPacket(this, data, size, packet_time_us);
-
+    if (received_packet_callback_) {
+      RTC_DCHECK(packet_time_us == -1 || packet_time_us >= 0);
+      RTC_DCHECK(SignalReadPacket.is_empty());
+      received_packet_callback_(
+          this, rtc::ReceivedPacket(
+                    rtc::reinterpret_array_view<const uint8_t>(
+                        rtc::MakeArrayView(data, size)),
+                    (packet_time_us >= 0)
+                        ? absl::optional<webrtc::Timestamp>(
+                              webrtc::Timestamp::Micros(packet_time_us))
+                        : absl::nullopt));
+    } else {
+      // TODO(webrtc:11943): Remove SignalReadPacket once upstream projects have
+      // switched to use RegisterReceivedPacket.
+      SignalReadPacket(this, data, size, packet_time_us);
+    }
     // If timed out sending writability checks, start up again
     if (!pruned_ && (write_state_ == STATE_WRITE_TIMEOUT)) {
       RTC_LOG(LS_WARNING)
