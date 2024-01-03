@@ -126,10 +126,9 @@ class nsSiteSecurityService : public nsISiteSecurityService,
                               nsISiteSecurityService::ResetStateBy aScope);
   void ResetStateForExactDomain(const nsCString& aHostname,
                                 const OriginAttributes& aOriginAttributes);
-  bool HostHasHSTSEntry(const nsAutoCString& aHost,
-                        bool aRequireIncludeSubdomains,
-                        const OriginAttributes& aOriginAttributes,
-                        bool* aResult);
+  bool HostMatchesHSTSEntry(const nsAutoCString& aHost,
+                            bool aRequireIncludeSubdomains,
+                            const OriginAttributes& aOriginAttributes);
   bool GetPreloadStatus(
       const nsACString& aHost,
       /*optional out*/ bool* aIncludeSubdomains = nullptr) const;
