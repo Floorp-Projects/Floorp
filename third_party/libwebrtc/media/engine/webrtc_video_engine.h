@@ -891,6 +891,8 @@ class WebRtcVideoReceiveChannel : public MediaChannelUtil,
   // Callback invoked whenever the list of SSRCs changes.
   absl::AnyInvocable<void(const std::set<uint32_t>&)>
       ssrc_list_changed_callback_;
+
+  const int receive_buffer_size_;
 };
 
 // Keeping the old name "WebRtcVideoChannel" around because some external

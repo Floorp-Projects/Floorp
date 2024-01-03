@@ -745,6 +745,19 @@ void ExtractCodecInformation(
   }
 }
 
+int ParseReceiveBufferSize(const webrtc::FieldTrialsView& trials) {
+  webrtc::FieldTrialParameter<int> size_bytes("size_bytes",
+                                              kVideoRtpRecvBufferSize);
+  webrtc::ParseFieldTrial({&size_bytes},
+                          trials.Lookup("WebRTC-ReceiveBufferSize"));
+  if (size_bytes.Get() < 10'000 || size_bytes.Get() > 10'000'000) {
+    RTC_LOG(LS_WARNING) << "WebRTC-ReceiveBufferSize out of bounds: "
+                        << size_bytes.Get();
+    return kVideoRtpRecvBufferSize;
+  }
+  return size_bytes.Get();
+}
+
 }  // namespace
 // --------------- WebRtcVideoEngine ---------------------------
 
@@ -2585,7 +2598,8 @@ WebRtcVideoReceiveChannel::WebRtcVideoReceiveChannel(
       discard_unknown_ssrc_packets_(
           IsEnabled(call_->trials(),
                     "WebRTC-Video-DiscardPacketsWithUnknownSsrc")),
-      crypto_options_(crypto_options) {
+      crypto_options_(crypto_options),
+      receive_buffer_size_(ParseReceiveBufferSize(call_->trials())) {
   RTC_DCHECK_RUN_ON(&thread_checker_);
   rtcp_receiver_report_ssrc_ = kDefaultRtcpReceiverReportSsrc;
   recv_codecs_ = MapCodecs(GetPayloadTypesAndDefaultCodecs(
@@ -3182,7 +3196,7 @@ void WebRtcVideoReceiveChannel::SetInterface(
   MediaChannelUtil::SetInterface(iface);
   // Set the RTP recv/send buffer to a bigger size.
   MediaChannelUtil::SetOption(MediaChannelNetworkInterface::ST_RTP,
-                              rtc::Socket::OPT_RCVBUF, kVideoRtpRecvBufferSize);
+                              rtc::Socket::OPT_RCVBUF, receive_buffer_size_);
 }
 
 void WebRtcVideoReceiveChannel::SetFrameDecryptor(
