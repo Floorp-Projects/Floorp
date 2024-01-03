@@ -157,6 +157,94 @@ static Maybe<H264Setting> GetH264Level(const H264_LEVEL& aLevel) {
   return Some(H264Setting{val, str});
 }
 
+struct VPXSVCSetting {
+  uint8_t mLayeringMode;
+  size_t mNumberLayers;
+  uint8_t mPeriodicity;
+  nsTArray<uint8_t> mLayerIds;
+  nsTArray<uint8_t> mRateDecimators;
+  nsTArray<uint32_t> mTargetBitrates;
+};
+
+static Maybe<VPXSVCSetting> GetVPXSVCSetting(
+    const MediaDataEncoder::ScalabilityMode& aMode, uint32_t aBitPerSec) {
+  if (aMode == MediaDataEncoder::ScalabilityMode::None) {
+    return Nothing();
+  }
+
+  // TODO: Apply more sophisticated bitrate allocation, like SvcRateAllocator:
+  // https://searchfox.org/mozilla-central/rev/3bd65516eb9b3a9568806d846ba8c81a9402a885/third_party/libwebrtc/modules/video_coding/svc/svc_rate_allocator.h#26
+
+  uint8_t mode = 0;
+  size_t layers = 0;
+  uint32_t kbps = aBitPerSec / 1000;  // ts_target_bitrate requies kbps.
+
+  uint8_t periodicity;
+  nsTArray<uint8_t> layerIds;
+  nsTArray<uint8_t> rateDecimators;
+  nsTArray<uint32_t> bitrates;
+  if (aMode == MediaDataEncoder::ScalabilityMode::L1T2) {
+    // Two temporal layers. 0-1...
+    //
+    // Frame pattern:
+    // Layer 0: |0| |2| |4| |6| |8|
+    // Layer 1: | |1| |3| |5| |7| |
+
+    mode = 2;  // VP9E_TEMPORAL_LAYERING_MODE_0101
+    layers = 2;
+
+    // 2 frames per period.
+    periodicity = 2;
+
+    // Assign layer ids.
+    layerIds.AppendElement(0);
+    layerIds.AppendElement(1);
+
+    // Set rate decimators.
+    rateDecimators.AppendElement(2);
+    rateDecimators.AppendElement(1);
+
+    // Bitrate allocation: L0 - 60%, L1 - 40%.
+    bitrates.AppendElement(kbps * 3 / 5);
+    bitrates.AppendElement(kbps);
+  } else {
+    MOZ_ASSERT(aMode == MediaDataEncoder::ScalabilityMode::L1T3);
+    // Three temporal layers. 0-2-1-2...
+    //
+    // Frame pattern:
+    // Layer 0: |0| | | |4| | | |8| |  |  |12|
+    // Layer 1: | | |2| | | |6| | | |10|  |  |
+    // Layer 2: | |1| |3| |5| |7| |9|  |11|  |
+
+    mode = 3;  // VP9E_TEMPORAL_LAYERING_MODE_0212
+    layers = 3;
+
+    // 4 frames per period
+    periodicity = 4;
+
+    // Assign layer ids.
+    layerIds.AppendElement(0);
+    layerIds.AppendElement(2);
+    layerIds.AppendElement(1);
+    layerIds.AppendElement(2);
+
+    // Set rate decimators.
+    rateDecimators.AppendElement(4);
+    rateDecimators.AppendElement(2);
+    rateDecimators.AppendElement(1);
+
+    // Bitrate allocation: L0 - 50%, L1 - 20%, L2 - 30%.
+    bitrates.AppendElement(kbps / 2);
+    bitrates.AppendElement(kbps * 7 / 10);
+    bitrates.AppendElement(kbps);
+  }
+
+  MOZ_ASSERT(layers == bitrates.Length(),
+             "Bitrate must be assigned to each layer");
+  return Some(VPXSVCSetting{mode, layers, periodicity, std::move(layerIds),
+                            std::move(rateDecimators), std::move(bitrates)});
+}
+
 static nsCString MakeErrorString(const FFmpegLibWrapper* aLib, int aErrNum) {
   MOZ_ASSERT(aLib);
 
@@ -407,12 +495,63 @@ MediaResult FFmpegVideoEncoder<LIBAV_VER>::InitInternal() {
   mCodecContext->flags |= AV_CODEC_FLAG_FRAME_DURATION;
 #endif
   mCodecContext->gop_size = static_cast<int>(mConfig.mKeyframeInterval);
+  // TODO (bug 1872871): Move the following extra settings to some helpers
+  // instead.
   if (mConfig.mUsage == MediaDataEncoder::Usage::Realtime) {
     mLib->av_opt_set(mCodecContext->priv_data, "deadline", "realtime", 0);
     // Explicitly ask encoder do not keep in flight at any one time for
     // lookahead purposes.
     mLib->av_opt_set(mCodecContext->priv_data, "lag-in-frames", "0", 0);
   }
+  // Apply SVC settings.
+  if (Maybe<VPXSVCSetting> svc =
+          GetVPXSVCSetting(mConfig.mScalabilityMode, mConfig.mBitrate)) {
+    // For libvpx.
+    if (mCodecName == "libvpx" || mCodecName == "libvpx-vp9") {
+      // Show a warning if mScalabilityMode mismatches mNumTemporalLayers
+      if (mConfig.mCodecSpecific) {
+        if (mConfig.mCodecSpecific->is<VP8Specific>() ||
+            mConfig.mCodecSpecific->is<VP9Specific>()) {
+          const uint8_t numTemporalLayers =
+              mConfig.mCodecSpecific->is<VP8Specific>()
+                  ? mConfig.mCodecSpecific->as<VP8Specific>().mNumTemporalLayers
+                  : mConfig.mCodecSpecific->as<VP9Specific>()
+                        .mNumTemporalLayers;
+          if (numTemporalLayers != svc->mNumberLayers) {
+            FFMPEGV_LOG(
+                "Force using %zu layers defined in scalability mode instead of "
+                "the %u layers defined in VP8/9Specific",
+                svc->mNumberLayers, numTemporalLayers);
+          }
+        }
+      }
+
+      // Set ts_layering_mode.
+      nsPrintfCString parameters("ts_layering_mode=%u", svc->mLayeringMode);
+      // Set ts_target_bitrate.
+      parameters.Append(":ts_target_bitrate=");
+      for (size_t i = 0; i < svc->mTargetBitrates.Length(); ++i) {
+        if (i > 0) {
+          parameters.Append(",");
+        }
+        parameters.Append(nsPrintfCString("%d", svc->mTargetBitrates[i]));
+      }
+      // TODO: Set ts_number_layers, ts_periodicity, ts_layer_id and
+      // ts_rate_decimator if they are different from the preset values in
+      // ts_layering_mode.
+
+      // Set parameters into ts-parameters.
+      mLib->av_opt_set(mCodecContext->priv_data, "ts-parameters",
+                       parameters.get(), 0);
+
+      // TODO: layer settings should be changed dynamically when the frame's
+      // color space changed.
+    } else {
+      FFMPEGV_LOG("SVC setting is not implemented for %s codec",
+                  mCodecName.get());
+    }
+  }
+  // Apply codec specific settings.
   nsCString codecSpecificLog;
   if (mConfig.mCodecSpecific) {
     if (mConfig.mCodecSpecific->is<H264Specific>()) {
@@ -475,7 +614,6 @@ MediaResult FFmpegVideoEncoder<LIBAV_VER>::InitInternal() {
     }
   }
   // TODO: keyint_min, max_b_frame?
-  // TODO: VPX specific settings
   // - if mConfig.mDenoising is set: av_opt_set_int(mCodecContext->priv_data,
   // "noise_sensitivity", x, 0), where the x is from 0(disabled) to 6.
   // - if mConfig.mAdaptiveQp is set: av_opt_set_int(mCodecContext->priv_data,
