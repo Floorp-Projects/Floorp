@@ -141,6 +141,8 @@ bool PortAllocator::SetConfiguration(
     webrtc::PortPrunePolicy turn_port_prune_policy,
     webrtc::TurnCustomizer* turn_customizer,
     const absl::optional<int>& stun_candidate_keepalive_interval) {
+  RTC_DCHECK_GE(candidate_pool_size, 0);
+  RTC_DCHECK_LE(candidate_pool_size, static_cast<int>(UINT16_MAX));
   CheckRunOnValidThreadIfInitialized();
   // A positive candidate pool size would lead to the creation of a pooled
   // allocator session and starting getting ports, which we should only do on
@@ -151,20 +153,6 @@ bool PortAllocator::SetConfiguration(
   stun_servers_ = stun_servers;
   turn_servers_ = turn_servers;
   turn_port_prune_policy_ = turn_port_prune_policy;
-
-  if (candidate_pool_frozen_) {
-    if (candidate_pool_size != candidate_pool_size_) {
-      RTC_LOG(LS_ERROR)
-          << "Trying to change candidate pool size after pool was frozen.";
-      return false;
-    }
-    return true;
-  }
-
-  if (candidate_pool_size < 0) {
-    RTC_LOG(LS_ERROR) << "Can't set negative pool size.";
-    return false;
-  }
 
   candidate_pool_size_ = candidate_pool_size;
 
@@ -284,11 +272,6 @@ PortAllocator::FindPooledSession(const IceParameters* ice_credentials) const {
     }
   }
   return pooled_sessions_.end();
-}
-
-void PortAllocator::FreezeCandidatePool() {
-  CheckRunOnValidThreadAndInitialized();
-  candidate_pool_frozen_ = true;
 }
 
 void PortAllocator::DiscardCandidatePool() {
