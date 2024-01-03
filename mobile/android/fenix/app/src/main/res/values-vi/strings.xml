@@ -83,7 +83,7 @@
     <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
     <string name="private_mode_cfr_message_2">Khởi chạy thẻ riêng tư tiếp theo của bạn chỉ bằng một lần nhấn.</string>
     <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
-    <string name="private_mode_cfr_pos_button_text">Thêm vào màn hình chính</string>
+    <string name="private_mode_cfr_pos_button_text">Thêm vào Màn hình chính</string>
     <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
     <string name="cfr_neg_button_text">Không, cảm ơn</string>
 
@@ -156,7 +156,7 @@
     <string name="recent_tabs_show_all_content_description_2">Hiển thị nút tất cả các thẻ gần đây</string>
 
     <!-- Text for button in synced tab card that opens synced tabs tray -->
-    <string name="recent_tabs_see_all_synced_tabs_button_text">Xem các thẻ đã đồng bộ hóa</string>
+    <string name="recent_tabs_see_all_synced_tabs_button_text">Xem tất cả các thẻ đã đồng bộ hóa</string>
     <!-- Accessibility description for device icon used for recent synced tab -->
     <string name="recent_tabs_synced_device_icon_content_description">Thiết bị được đồng bộ hóa</string>
     <!-- Text for the dropdown menu to remove a recent synced tab from the homescreen -->
@@ -239,7 +239,7 @@
     <string name="browser_menu_edit">Chỉnh sửa</string>
 
     <!-- Button shown on the home page that opens the Customize home settings -->
-    <string name="browser_menu_customize_home_1">Tùy chỉnh trang chủ</string>
+    <string name="browser_menu_customize_home_1">Tùy biến trang chủ</string>
     <!-- Browser Toolbar -->
     <!-- Content description for the Home screen button on the browser toolbar -->
     <string name="browser_toolbar_home">Màn hình chính</string>
@@ -327,7 +327,8 @@
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_title_nimbus_2">Chúng tôi thích việc giữ an toàn cho bạn</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
-    <string name="juno_onboarding_default_browser_description_nimbus_2">Trình duyệt được hỗ trợ phi lợi nhuận của chúng tôi giúp ngăn chặn các công ty bí mật theo dõi bạn trên web.\n\nTìm hiểu thêm trong thông báo về quyền riêng tư của chúng tôi.</string>
+    <string name="juno_onboarding_default_browser_description_nimbus_2">Trình duyệt được tài trợ bởi tổ chức phi lợi nhuận của chúng tôi giúp ngăn các công ty bí mật theo dõi bạn trên web.\n\nTìm hiểu thêm về thông báo quyền riêng tư của chúng tôi.
+</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
     <string name="juno_onboarding_default_browser_description_link_text" tools:ignore="UnusedResources">thông báo bảo mật</string>
@@ -425,9 +426,9 @@
     <!-- Preference for opening links in a private tab-->
     <string name="preferences_open_links_in_a_private_tab">Mở liên kết trong thẻ riêng tư</string>
     <!-- Preference for allowing screenshots to be taken while in a private tab-->
-    <string name="preferences_allow_screenshots_in_private_mode">Cho phép chụp ảnh màn hình trong trình duyệt riêng tư</string>
+    <string name="preferences_allow_screenshots_in_private_mode">Cho phép chụp ảnh màn hình trong chế độ riêng tư</string>
     <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
-    <string name="preferences_screenshots_in_private_mode_disclaimer">Nếu được phép, các thẻ riêng tư cũng sẽ hiển thị khi nhiều ứng dụng đang mở</string>
+    <string name="preferences_screenshots_in_private_mode_disclaimer">Nếu bạn cho phép, các thẻ riêng tư cũng sẽ hiển thị trong danh sách ứng dụng đang mở</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Thêm lối tắt duyệt web riêng tư</string>
     <!-- Preference for enabling "HTTPS-Only" mode -->
@@ -498,7 +499,7 @@
     <!--Title for the cookie banner re-engagement CFR, the placeholder is replaced with app name -->
     <string name="cookie_banner_cfr_title">%1$s vừa từ chối cookie cho bạn</string>
     <!--Message for the cookie banner re-engagement CFR -->
-    <string name="cookie_banner_cfr_message">Ít phiền nhiễu hơn, ít cookie theo dõi bạn trên trang web này hơn.</string>
+    <string name="cookie_banner_cfr_message">Ít phiền nhiễu hơn, ít cookie theo dõi bạn hơn trên trang web này.</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Tự động cố gắng kết nối với các trang web bằng giao thức mã hóa HTTPS để tăng cường bảo mật.</string>
@@ -751,11 +752,11 @@
 
     <!-- Advanced Preferences -->
     <!-- Preference for tracking protection exceptions -->
-    <string name="preferences_tracking_protection_exceptions">Ngoại trừ</string>
+    <string name="preferences_tracking_protection_exceptions">Ngoại lệ</string>
     <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
     <string name="preferences_tracking_protection_exceptions_turn_on_for_all">Bật cho tất cả các trang web</string>
     <!-- Text displayed when there are no exceptions -->
-    <string name="exceptions_empty_message_description">Các ngoại trừ cho phép bạn vô hiệu hóa trình chống theo dõi cho các trang web được chọn.</string>
+    <string name="exceptions_empty_message_description">Các ngoại lệ cho phép bạn tắt trình chống theo dõi cho các trang web đã chọn.</string>
     <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
     <string name="exceptions_empty_message_learn_more_link">Tìm hiểu thêm</string>
 
@@ -786,9 +787,9 @@
 
     <!-- Toolbar Preferences -->
     <!-- Preference for using top toolbar -->
-    <string name="preference_top_toolbar">Trên cùng</string>
+    <string name="preference_top_toolbar">Phía trên</string>
     <!-- Preference for using bottom toolbar -->
-    <string name="preference_bottom_toolbar">Dưới cùng</string>
+    <string name="preference_bottom_toolbar">Phía dưới</string>
 
     <!-- Theme Preferences -->
     <!-- Preference for using light theme -->
@@ -802,7 +803,7 @@
 
     <!-- Gestures Preferences-->
     <!-- Preferences for using pull to refresh in a webpage -->
-    <string name="preference_gestures_website_pull_to_refresh">Kéo để làm mới</string>
+    <string name="preference_gestures_website_pull_to_refresh">Kéo trang để làm mới</string>
     <!-- Preference for using the dynamic toolbar -->
     <string name="preference_gestures_dynamic_toolbar">Cuộn trang để ẩn thanh công cụ</string>
     <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
@@ -916,7 +917,7 @@
     <!-- Category header of a preference that allows a user to enable or disable the inactive tabs feature -->
     <string name="preferences_inactive_tabs">Chuyển các thẻ cũ sang không hoạt động</string>
     <!-- Title of inactive tabs preference -->
-    <string name="preferences_inactive_tabs_title">Các thẻ bạn đã không xem trong hai tuần sẽ được chuyển sang phần không hoạt động.</string>
+    <string name="preferences_inactive_tabs_title">Các thẻ mà bạn chưa xem trong hai tuần sẽ được chuyển vào phần không hoạt động.</string>
 
     <!-- Studies -->
     <!-- Title of the remove studies button -->
@@ -1174,7 +1175,7 @@
     <!--Label that indicates a permission is by the Android OS-->
     <string name="phone_feature_blocked_by_android">Bị chặn bởi Android</string>
     <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
-    <string name="preference_exceptions">Ngoại trừ</string>
+    <string name="preference_exceptions">Ngoại lệ</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Tắt</string>
     <!-- Summary of tracking protection preference if tracking protection is set to standard -->
@@ -1577,7 +1578,7 @@
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_title_2">Cookie trên nhiều trang web</string>
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_cookies_description">Chặn cookie mà các mạng quảng cáo và công ty phân tích sử dụng mà nó biên dịch dữ liệu duyệt web của bạn trên nhiều trang web.</string>
+    <string name="etp_cookies_description">Chặn các cookie mà các mạng quảng cáo và công ty phân tích sử dụng để thu thập dữ liệu duyệt web của bạn trên nhiều trang web.</string>
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_description_2">Trình chống cookie chung cô lập các cookie với trang web mà bạn đang truy cập, do đó, các trình theo dõi như quảng cáo không thể sử dụng chúng để theo dõi bạn trên các trang web.</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
@@ -1591,7 +1592,7 @@
     <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_title">Trình theo dõi nội dung</string>
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_tracking_content_description">Dừng quảng cáo bên ngoài, video và nội dung khác từ tải có chứa mã theo dõi. Có thể ảnh hưởng đến một số chức năng trang web.</string>
+    <string name="etp_tracking_content_description">Chặn các trình theo dõi từ quảng cáo, video và nội dung khác từ bên ngoài. Có thể ảnh hưởng đến một số chức năng của trang web.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">Bảo vệ đã BẬT cho trang web này</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
@@ -1620,7 +1621,7 @@
 
     <!-- Content description (not visible, for screen readers etc.):
     Enhanced tracking protection exception preference icon for ETP settings. -->
-    <string name="preference_etp_exceptions_icon_description">Biểu tượng tùy chọn ngoại trừ trình chống theo dõi nâng cao</string>
+    <string name="preference_etp_exceptions_icon_description">Biểu tượng tùy chọn ngoại lệ trình chống theo dõi nâng cao</string>
 
     <!-- About page link text to open support link -->
     <string name="about_support">Hỗ trợ</string>
@@ -1695,13 +1696,13 @@
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Tìm hiểu thêm về đồng bộ hóa.</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions">Ngoại trừ</string>
+    <string name="preferences_passwords_exceptions">Ngoại lệ</string>
     <!-- Empty description of list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions_description_empty">Thông tin đăng nhập và mật khẩu không được lưu sẽ được hiển thị ở đây.</string>
     <!-- Description of list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions_description">Thông tin đăng nhập và mật khẩu sẽ không được lưu cho các trang web này.</string>
     <!-- Text on button to remove all saved login exceptions -->
-    <string name="preferences_passwords_exceptions_remove_all">Xóa tất cả các ngoại trừ</string>
+    <string name="preferences_passwords_exceptions_remove_all">Xóa tất cả ngoại lệ</string>
     <!-- Hint for search box in logins list -->
     <string name="preferences_passwords_saved_logins_search">Tìm thông tin đăng nhập</string>
     <!-- The header for the site that a login is for -->

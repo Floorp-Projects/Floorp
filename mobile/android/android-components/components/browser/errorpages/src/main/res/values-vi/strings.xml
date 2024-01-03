@@ -104,7 +104,7 @@
     ]]></string>
 
     <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
-    <string name="mozac_browser_errorpages_redirect_loop_title">Trang này không chuyển hướng đúng cách</string>
+    <string name="mozac_browser_errorpages_redirect_loop_title">Trang này chuyển hướng không đúng cách</string>
 
     <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
     <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[

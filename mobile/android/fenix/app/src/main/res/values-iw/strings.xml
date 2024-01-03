@@ -2013,6 +2013,8 @@
     <!-- Synced Tabs -->
     <!-- Text displayed to ask user to connect another device as no devices found with account -->
     <string name="synced_tabs_connect_another_device">נא לחבר מכשיר נוסף.</string>
+    <!-- Text displayed asking user to re-authenticate -->
+    <string name="synced_tabs_reauth">נא לאמת מחדש.</string>
     <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
     <string name="synced_tabs_enable_tab_syncing">נא להפעיל סנכרון לשוניות.</string>
     <!-- Text displayed when user has no tabs that have been synced -->

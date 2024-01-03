@@ -120,6 +120,8 @@
     <string name="mozac_feature_addons_report">ລາຍງານ</string>
     <!-- This is the title of a dialog that asks the users if they to install or not an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_permissions_dialog_title">ເພີ່ມ %1$s?</string>
+    <!-- This is the title of a dialog that asks the users to grant optional permissions. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_optional_permissions_dialog_title">%1$s ຮ້ອງຂໍການອະນຸຍາດເພີ່ມເຕີມ.</string>
     <!-- This is the subtitle of a dialog that asks the users if they want to install or not an add-on, the subtitle lists the permissions that this add-on requires, the permissions will dynamically be listed after the ":". -->
     <string name="mozac_feature_addons_permissions_dialog_subtitle">ຕ້ອງໄດ້ຮັບການອະນຸຍາດຈາກທ່ານເພື່ອ:</string>
     <!-- This is the subtitle of a dialog that asks the users to grant optional permissions, the subtitle lists the permissions that this add-on requests, the permissions will dynamically be listed after the ":". -->
@@ -192,6 +194,12 @@
     <string name="mozac_feature_addons_failed_to_install">ການຕິດຕັ້ງ %1$s ລົ້ມເຫລວ</string>
     <!-- Text shown after failing to install an add-on for which we don't have its name. -->
     <string name="mozac_feature_addons_failed_to_install_generic">ລົ້ມເຫລວໃນການຕິດຕັ້ງ add-on ນີ້.</string>
+    <!-- Text shown when attempting to install an add-on and a network error happened. -->
+    <string name="mozac_feature_addons_failed_to_install_network_error">ແອດອອນນີ້ບໍ່ສາມາດດາວໂຫຼດໄດ້ເນື່ອງຈາກການເຊື່ອມຕໍ່ລົ້ມເຫລວ.</string>
+    <!-- Text shown when attempting to install an add-on and the downloaded file is corrupted. -->
+    <string name="mozac_feature_addons_failed_to_install_corrupt_error">ໂປຣແກຣມເສີມນີ້ບໍ່ສາມາດຕິດຕັ້ງໄດ້ເພາະວ່າມັນເກີດມີຂໍ້ຜິດພາດ.</string>
+    <!-- Text shown when attempting to install an add-on and an error occurred because the extension was not signed. -->
+    <string name="mozac_feature_addons_failed_to_install_not_signed_error">ໂປຣແກຣມເສີມນີ້ບໍ່ສາມາດຕິດຕັ້ງໄດ້ເພາະວ່າມັນຍັງບໍ່ທັນໄດ້ຖືກກວດສອບ.</string>
     <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_successfully_enabled">ສຳເລັດການເປີດໃຊ້ງານ %1$s</string>
     <!-- Text shown after failed to enable an add-on. %1$s is the add-on name. -->
