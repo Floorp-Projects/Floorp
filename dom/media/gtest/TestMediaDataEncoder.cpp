@@ -158,6 +158,7 @@ template <typename T>
 already_AddRefed<MediaDataEncoder> CreateVideoEncoder(
     CodecType aCodec, MediaDataEncoder::Usage aUsage,
     MediaDataEncoder::PixelFormat aPixelFormat, int32_t aWidth, int32_t aHeight,
+    MediaDataEncoder::ScalabilityMode aScalabilityMode,
     const Maybe<T>& aSpecific) {
   RefPtr<PEMFactory> f(new PEMFactory());
 
@@ -182,7 +183,7 @@ already_AddRefed<MediaDataEncoder> CreateVideoEncoder(
                     aPixelFormat, FRAME_RATE /* FPS */,
                     KEYFRAME_INTERVAL /* keyframe interval */,
                     BIT_RATE /* bitrate */, BIT_RATE_MODE, pref,
-                    MediaDataEncoder::ScalabilityMode::None, aSpecific),
+                    aScalabilityMode, aSpecific),
       taskQueue);
 
   return e.forget();
@@ -193,9 +194,11 @@ static already_AddRefed<MediaDataEncoder> CreateH264Encoder(
     MediaDataEncoder::PixelFormat aPixelFormat =
         MediaDataEncoder::PixelFormat::YUV420P,
     int32_t aWidth = WIDTH, int32_t aHeight = HEIGHT,
+    MediaDataEncoder::ScalabilityMode aScalabilityMode =
+        MediaDataEncoder::ScalabilityMode::None,
     const Maybe<H264Specific>& aSpecific = Some(kH264SpecificAnnexB)) {
   return CreateVideoEncoder(CodecType::H264, aUsage, aPixelFormat, aWidth,
-                            aHeight, aSpecific);
+                            aHeight, aScalabilityMode, aSpecific);
 }
 
 void WaitForShutdown(const RefPtr<MediaDataEncoder>& aEncoder) {
@@ -242,9 +245,10 @@ static bool EnsureInit(const RefPtr<MediaDataEncoder>& aEncoder) {
 TEST_F(MediaDataEncoderTest, H264Inits) {
   RUN_IF_SUPPORTED(CodecType::H264, []() {
     // w/o codec specific: should fail for h264.
-    RefPtr<MediaDataEncoder> e = CreateH264Encoder(
-        MediaDataEncoder::Usage::Realtime,
-        MediaDataEncoder::PixelFormat::YUV420P, WIDTH, HEIGHT, Nothing());
+    RefPtr<MediaDataEncoder> e =
+        CreateH264Encoder(MediaDataEncoder::Usage::Realtime,
+                          MediaDataEncoder::PixelFormat::YUV420P, WIDTH, HEIGHT,
+                          MediaDataEncoder::ScalabilityMode::None, Nothing());
     EXPECT_FALSE(e);
 
     // w/ codec specific
@@ -317,6 +321,7 @@ TEST_F(MediaDataEncoderTest, H264Encodes) {
     // Encode one frame and output in avcC format.
     e = CreateH264Encoder(MediaDataEncoder::Usage::Record,
                           MediaDataEncoder::PixelFormat::YUV420P, WIDTH, HEIGHT,
+                          MediaDataEncoder::ScalabilityMode::None,
                           Some(kH264SpecificAVCC));
     EnsureInit(e);
     output = Encode(e, NUM_FRAMES, mData);
@@ -344,22 +349,22 @@ TEST_F(MediaDataEncoderTest, H264Duration) {
 
 TEST_F(MediaDataEncoderTest, InvalidSize) {
   RUN_IF_SUPPORTED(CodecType::H264, []() {
-    RefPtr<MediaDataEncoder> e0x0 =
-        CreateH264Encoder(MediaDataEncoder::Usage::Realtime,
-                          MediaDataEncoder::PixelFormat::YUV420P, 0, 0,
-                          Some(kH264SpecificAnnexB));
+    RefPtr<MediaDataEncoder> e0x0 = CreateH264Encoder(
+        MediaDataEncoder::Usage::Realtime,
+        MediaDataEncoder::PixelFormat::YUV420P, 0, 0,
+        MediaDataEncoder::ScalabilityMode::None, Some(kH264SpecificAnnexB));
     EXPECT_EQ(e0x0, nullptr);
 
-    RefPtr<MediaDataEncoder> e0x1 =
-        CreateH264Encoder(MediaDataEncoder::Usage::Realtime,
-                          MediaDataEncoder::PixelFormat::YUV420P, 0, 1,
-                          Some(kH264SpecificAnnexB));
+    RefPtr<MediaDataEncoder> e0x1 = CreateH264Encoder(
+        MediaDataEncoder::Usage::Realtime,
+        MediaDataEncoder::PixelFormat::YUV420P, 0, 1,
+        MediaDataEncoder::ScalabilityMode::None, Some(kH264SpecificAnnexB));
     EXPECT_EQ(e0x1, nullptr);
 
-    RefPtr<MediaDataEncoder> e1x0 =
-        CreateH264Encoder(MediaDataEncoder::Usage::Realtime,
-                          MediaDataEncoder::PixelFormat::YUV420P, 1, 0,
-                          Some(kH264SpecificAnnexB));
+    RefPtr<MediaDataEncoder> e1x0 = CreateH264Encoder(
+        MediaDataEncoder::Usage::Realtime,
+        MediaDataEncoder::PixelFormat::YUV420P, 1, 0,
+        MediaDataEncoder::ScalabilityMode::None, Some(kH264SpecificAnnexB));
     EXPECT_EQ(e1x0, nullptr);
   });
 }
@@ -367,10 +372,10 @@ TEST_F(MediaDataEncoderTest, InvalidSize) {
 #ifdef MOZ_WIDGET_ANDROID
 TEST_F(MediaDataEncoderTest, AndroidNotSupportedSize) {
   RUN_IF_SUPPORTED(CodecType::H264, []() {
-    RefPtr<MediaDataEncoder> e =
-        CreateH264Encoder(MediaDataEncoder::Usage::Realtime,
-                          MediaDataEncoder::PixelFormat::YUV420P, 1, 1,
-                          Some(kH264SpecificAnnexB));
+    RefPtr<MediaDataEncoder> e = CreateH264Encoder(
+        MediaDataEncoder::Usage::Realtime,
+        MediaDataEncoder::PixelFormat::YUV420P, 1, 1,
+        MediaDataEncoder::ScalabilityMode::None, Some(kH264SpecificAnnexB));
     EXPECT_NE(e, nullptr);
     EXPECT_FALSE(EnsureInit(e));
   });
@@ -411,9 +416,11 @@ static already_AddRefed<MediaDataEncoder> CreateVP8Encoder(
     MediaDataEncoder::PixelFormat aPixelFormat =
         MediaDataEncoder::PixelFormat::YUV420P,
     int32_t aWidth = WIDTH, int32_t aHeight = HEIGHT,
+    MediaDataEncoder::ScalabilityMode aScalabilityMode =
+        MediaDataEncoder::ScalabilityMode::None,
     const Maybe<VP8Specific>& aSpecific = Some(VP8Specific())) {
   return CreateVideoEncoder(CodecType::VP8, aUsage, aPixelFormat, aWidth,
-                            aHeight, aSpecific);
+                            aHeight, aScalabilityMode, aSpecific);
 }
 
 static already_AddRefed<MediaDataEncoder> CreateVP9Encoder(
@@ -421,9 +428,11 @@ static already_AddRefed<MediaDataEncoder> CreateVP9Encoder(
     MediaDataEncoder::PixelFormat aPixelFormat =
         MediaDataEncoder::PixelFormat::YUV420P,
     int32_t aWidth = WIDTH, int32_t aHeight = HEIGHT,
+    MediaDataEncoder::ScalabilityMode aScalabilityMode =
+        MediaDataEncoder::ScalabilityMode::None,
     const Maybe<VP9Specific>& aSpecific = Some(VP9Specific())) {
   return CreateVideoEncoder(CodecType::VP9, aUsage, aPixelFormat, aWidth,
-                            aHeight, aSpecific);
+                            aHeight, aScalabilityMode, aSpecific);
 }
 
 TEST_F(MediaDataEncoderTest, VP8Create) {
@@ -437,9 +446,10 @@ TEST_F(MediaDataEncoderTest, VP8Create) {
 TEST_F(MediaDataEncoderTest, VP8Inits) {
   RUN_IF_SUPPORTED(CodecType::VP8, []() {
     // w/o codec specific.
-    RefPtr<MediaDataEncoder> e = CreateVP8Encoder(
-        MediaDataEncoder::Usage::Realtime,
-        MediaDataEncoder::PixelFormat::YUV420P, WIDTH, HEIGHT, Nothing());
+    RefPtr<MediaDataEncoder> e =
+        CreateVP8Encoder(MediaDataEncoder::Usage::Realtime,
+                         MediaDataEncoder::PixelFormat::YUV420P, WIDTH, HEIGHT,
+                         MediaDataEncoder::ScalabilityMode::None, Nothing());
     EXPECT_TRUE(EnsureInit(e));
     WaitForShutdown(e);
 
@@ -545,9 +555,10 @@ TEST_F(MediaDataEncoderTest, VP9Create) {
 TEST_F(MediaDataEncoderTest, VP9Inits) {
   RUN_IF_SUPPORTED(CodecType::VP9, []() {
     // w/o codec specific.
-    RefPtr<MediaDataEncoder> e = CreateVP9Encoder(
-        MediaDataEncoder::Usage::Realtime,
-        MediaDataEncoder::PixelFormat::YUV420P, WIDTH, HEIGHT, Nothing());
+    RefPtr<MediaDataEncoder> e =
+        CreateVP9Encoder(MediaDataEncoder::Usage::Realtime,
+                         MediaDataEncoder::PixelFormat::YUV420P, WIDTH, HEIGHT,
+                         MediaDataEncoder::ScalabilityMode::None, Nothing());
     EXPECT_TRUE(EnsureInit(e));
     WaitForShutdown(e);
 
