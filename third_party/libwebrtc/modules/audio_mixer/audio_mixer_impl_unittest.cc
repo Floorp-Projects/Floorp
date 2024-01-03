@@ -142,6 +142,7 @@ void MixMonoAtGivenNativeRate(int native_sample_rate,
 }
 
 TEST(AudioMixer, UpdatesSourceCountHistogram) {
+  metrics::Reset();
   constexpr int kAudioSourcesGroup1 = 5;
   constexpr int kAudioSourcesGroup2 = 3;
 
