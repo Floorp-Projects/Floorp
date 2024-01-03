@@ -5077,3 +5077,27 @@ TEST_F(WebRtcSdpTest, RejectDuplicateSsrcInSsrcGroup) {
   JsepSessionDescription jdesc(kDummyType);
   EXPECT_FALSE(SdpDeserialize(sdp, &jdesc));
 }
+
+TEST_F(WebRtcSdpTest, ExpectsTLineBeforeAttributeLine) {
+  // https://www.rfc-editor.org/rfc/rfc4566#page-9
+  // says a= attributes must come last.
+  std::string sdp =
+      "v=0\r\n"
+      "o=- 0 3 IN IP4 127.0.0.1\r\n"
+      "s=-\r\n"
+      "a=thisisnottherightplace\r\n"
+      "t=0 0\r\n";
+  JsepSessionDescription jdesc(kDummyType);
+  EXPECT_FALSE(SdpDeserialize(sdp, &jdesc));
+}
+
+TEST_F(WebRtcSdpTest, IgnoresUnknownAttributeLines) {
+  std::string sdp =
+      "v=0\r\n"
+      "o=- 0 3 IN IP4 127.0.0.1\r\n"
+      "s=-\r\n"
+      "t=0 0\r\n"
+      "a=somethingthatisnotunderstood\r\n";
+  JsepSessionDescription jdesc(kDummyType);
+  EXPECT_TRUE(SdpDeserialize(sdp, &jdesc));
+}
