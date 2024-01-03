@@ -329,7 +329,6 @@ RTCErrorOr<PeerConnectionInterface::RTCConfiguration> ApplyConfiguration(
   modified_config.active_reset_srtp_params =
       configuration.active_reset_srtp_params;
   modified_config.turn_logging_id = configuration.turn_logging_id;
-  modified_config.allow_codec_switching = configuration.allow_codec_switching;
   modified_config.stable_writable_connection_ping_interval_ms =
       configuration.stable_writable_connection_ping_interval_ms;
   if (configuration != modified_config) {
@@ -458,7 +457,6 @@ bool PeerConnectionInterface::RTCConfiguration::operator==(
     bool offer_extmap_allow_mixed;
     std::string turn_logging_id;
     bool enable_implicit_rollback;
-    absl::optional<bool> allow_codec_switching;
     absl::optional<int> report_usage_pattern_delay_ms;
     absl::optional<int> stable_writable_connection_ping_interval_ms;
     webrtc::VpnPreference vpn_preference;
@@ -522,7 +520,6 @@ bool PeerConnectionInterface::RTCConfiguration::operator==(
          offer_extmap_allow_mixed == o.offer_extmap_allow_mixed &&
          turn_logging_id == o.turn_logging_id &&
          enable_implicit_rollback == o.enable_implicit_rollback &&
-         allow_codec_switching == o.allow_codec_switching &&
          report_usage_pattern_delay_ms == o.report_usage_pattern_delay_ms &&
          stable_writable_connection_ping_interval_ms ==
              o.stable_writable_connection_ping_interval_ms &&

@@ -661,10 +661,6 @@ class RTC_EXPORT PeerConnectionInterface : public rtc::RefCountInterface {
     // Added to be able to control rollout of this feature.
     bool enable_implicit_rollback = false;
 
-    // Whether network condition based codec switching is allowed.
-    // TODO(bugs.webrtc.org/11341): Remove this unsupported config value.
-    absl::optional<bool> allow_codec_switching;
-
     // The delay before doing a usage histogram report for long-lived
     // PeerConnections. Used for testing only.
     absl::optional<int> report_usage_pattern_delay_ms;

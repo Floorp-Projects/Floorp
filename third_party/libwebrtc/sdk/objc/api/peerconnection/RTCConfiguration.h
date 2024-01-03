@@ -184,12 +184,6 @@ RTC_OBJC_EXPORT
  */
 @property(nonatomic, assign) BOOL activeResetSrtpParams;
 
-/** If the remote side support mid-stream codec switches then allow encoder
- *  switching to be performed.
- */
-
-@property(nonatomic, assign) BOOL allowCodecSwitching;
-
 /**
  * Defines advanced optional cryptographic settings related to SRTP and
  * frame encryption for native WebRTC. Setting this will overwrite any
