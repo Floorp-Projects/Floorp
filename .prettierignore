@@ -212,7 +212,6 @@ devtools/client/styleeditor/test/test_private.html
 devtools/client/webconsole/test/browser/test-csp-violation.html
 devtools/client/webconsole/test/browser/test-external-script-errors.html
 devtools/client/webconsole/test/browser/test-mixedcontent-securityerrors.html
-devtools/client/webconsole/test/browser/test-navigate-to-parse-error.html
 devtools/client/webconsole/test/browser/test-network.html
 devtools/client/webconsole/test/browser/test_jsterm_screenshot_command.html
 devtools/server/tests/browser/animation-data.html

@@ -1019,19 +1019,6 @@ auto DocumentLoadListener::OpenInParent(nsDocShellLoadState* aLoadState,
     return nullptr;
   }
 
-  if (nsCOMPtr<nsIContentSecurityPolicy> csp = aLoadState->Csp()) {
-    // Check CSP navigate-to
-    bool allowsNavigateTo = false;
-    nsresult rv = csp->GetAllowsNavigateTo(aLoadState->URI(),
-                                           aLoadState->IsFormSubmission(),
-                                           false, /* aWasRedirected */
-                                           false, /* aEnforceWhitelist */
-                                           &allowsNavigateTo);
-    if (NS_FAILED(rv) || !allowsNavigateTo) {
-      return nullptr;
-    }
-  }
-
   // Clone because this mutates the load flags in the load state, which
   // breaks nsDocShells expectations of being able to do it.
   RefPtr<nsDocShellLoadState> loadState = new nsDocShellLoadState(*aLoadState);

@@ -3593,23 +3593,15 @@ nsresult Document::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
   rv = InitCOEP(aChannel);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Check CSP navigate-to
-  // We need to enforce the CSP of the document that initiated the load,
-  // which is the CSP to inherit.
+  // HACK: Calling EnsureIPCPoliciesRead() here will parse the CSP using the
+  // context's current mSelfURI (which is still the previous mSelfURI),
+  // bypassing some internal bugs with 'self' and iframe inheritance.
+  // Not calling it here results in the mSelfURI being the current mSelfURI and
+  // not the previous which breaks said inheritance.
+  // https://bugzilla.mozilla.org/show_bug.cgi?id=1793560#ch-8
   nsCOMPtr<nsIContentSecurityPolicy> cspToInherit = loadInfo->GetCspToInherit();
   if (cspToInherit) {
-    bool allowsNavigateTo = false;
-    rv = cspToInherit->GetAllowsNavigateTo(
-        mDocumentURI, loadInfo->GetIsFormSubmission(),
-        !loadInfo->RedirectChain().IsEmpty(), /* aWasRedirected */
-        true,                                 /* aEnforceWhitelist */
-        &allowsNavigateTo);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (!allowsNavigateTo) {
-      aChannel->Cancel(NS_ERROR_CSP_NAVIGATE_TO_VIOLATION);
-      return NS_OK;
-    }
+    cspToInherit->EnsureIPCPoliciesRead();
   }
 
   rv = InitCSP(aChannel);

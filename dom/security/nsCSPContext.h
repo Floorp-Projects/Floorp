@@ -149,8 +149,6 @@ class nsCSPContext : public nsIContentSecurityPolicy {
       nsTArray<mozilla::ipc::ContentSecurityPolicy>& aPolicies);
 
  private:
-  void EnsureIPCPoliciesRead();
-
   bool ShouldThrottleReport(
       const mozilla::dom::SecurityPolicyViolationEventInit&
           aViolationEventInit);

@@ -61,11 +61,10 @@ interface nsIContentSecurityPolicy : nsISerializable
     BLOCK_ALL_MIXED_CONTENT        = 18,
     SANDBOX_DIRECTIVE              = 19,
     WORKER_SRC_DIRECTIVE           = 20,
-    NAVIGATE_TO_DIRECTIVE          = 21,
-    SCRIPT_SRC_ELEM_DIRECTIVE      = 22,
-    SCRIPT_SRC_ATTR_DIRECTIVE      = 23,
-    STYLE_SRC_ELEM_DIRECTIVE       = 24,
-    STYLE_SRC_ATTR_DIRECTIVE       = 25,
+    SCRIPT_SRC_ELEM_DIRECTIVE      = 21,
+    SCRIPT_SRC_ATTR_DIRECTIVE      = 22,
+    STYLE_SRC_ELEM_DIRECTIVE       = 23,
+    STYLE_SRC_ATTR_DIRECTIVE       = 24,
   };
 
   /**
@@ -153,24 +152,6 @@ interface nsIContentSecurityPolicy : nsISerializable
                           in AString aContentOfPseudoScript,
                           in unsigned long aLineNumber,
                           in unsigned long aColumnNumber);
-
-  /*
-   * Whether this policy allows a navigation subject to the navigate-to
-   * policy.
-   * @param aURI The target URI
-   * @param aIsFormSubmission True if the navigation was initiated by a form submission. This
-   *        is important since the form-action directive overrides navigate-to in that case.
-   * @param aWasRedirect True if a redirect has happened. Important for path-sensitivity.
-   * @param aEnforceAllowlist True if the allowlist of allowed targets must be enforced. If
-   *        this is true, the allowlist must be enforced even if 'unsafe-allow-redirects' is
-   *        used. If 'unsafe-allow-redirects' is not used then the allowlist is always enforced
-   * @return
-   *     Whether or not the effects of the navigation is allowed
-   */
-  boolean getAllowsNavigateTo(in nsIURI aURI,
-                              in boolean aIsFormSubmission,
-                              in boolean aWasRedirected,
-                              in boolean aEnforceAllowlist);
 
   /**
    * Whether this policy allows eval and eval-like functions
@@ -358,6 +339,11 @@ interface nsIContentSecurityPolicy : nsISerializable
    * Returns the CSP in JSON notation.
    */
   AString toJSON();
+
+  /**
+   * Ensure policies from IPC are read/parsed.
+   */
+  [noscript] void EnsureIPCPoliciesRead();
 
 };
 
