@@ -4251,8 +4251,7 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor final
     : public nsBidiPresUtils::BidiProcessor {
   using Style = CanvasRenderingContext2D::Style;
 
-  explicit CanvasBidiProcessor(mozilla::gfx::PaletteCache& aPaletteCache)
-      : mPaletteCache(aPaletteCache) {
+  CanvasBidiProcessor() : nsBidiPresUtils::BidiProcessor() {
     if (StaticPrefs::gfx_missing_fonts_notify()) {
       mMissingFonts = MakeUnique<gfxMissingFontRecorder>();
     }
@@ -4497,7 +4496,7 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor final
     }
 
     gfxContext thebes(target, /* aPreserveTransform */ true);
-    gfxTextRun::DrawParams params(&thebes, mPaletteCache);
+    gfxTextRun::DrawParams params(&thebes);
 
     params.allowGDI = false;
 
@@ -4566,9 +4565,6 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor final
 
   // current font
   gfxFontGroup* mFontgrp = nullptr;
-
-  // palette cache for COLR font rendering
-  mozilla::gfx::PaletteCache& mPaletteCache;
 
   // spacing adjustments to be applied
   gfx::Float mLetterSpacing = 0.0f;
@@ -4691,7 +4687,7 @@ UniquePtr<TextMetrics> CanvasRenderingContext2D::DrawOrMeasureText(
     return nullptr;
   }
 
-  CanvasBidiProcessor processor(mPaletteCache);
+  CanvasBidiProcessor processor;
 
   // If we don't have a ComputedStyle, we can't set up vertical-text flags
   // (for now, at least; perhaps we need new Canvas API to control this).
