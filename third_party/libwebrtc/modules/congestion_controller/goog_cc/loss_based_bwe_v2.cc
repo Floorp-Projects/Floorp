@@ -380,6 +380,8 @@ absl::optional<LossBasedBweV2::Config> LossBasedBweV2::CreateConfig(
       "AckedRateCandidate", true);
   FieldTrialParameter<bool> append_delay_based_estimate_candidate(
       "DelayBasedCandidate", true);
+  FieldTrialParameter<bool> append_upper_bound_candidate_in_alr(
+      "UpperBoundCandidateInAlr", false);
   FieldTrialParameter<TimeDelta> observation_duration_lower_bound(
       "ObservationDurationLowerBound", TimeDelta::Millis(250));
   FieldTrialParameter<int> observation_window_size("ObservationWindowSize", 20);
@@ -433,6 +435,7 @@ absl::optional<LossBasedBweV2::Config> LossBasedBweV2::CreateConfig(
                      &newton_step_size,
                      &append_acknowledged_rate_candidate,
                      &append_delay_based_estimate_candidate,
+                     &append_upper_bound_candidate_in_alr,
                      &observation_duration_lower_bound,
                      &observation_window_size,
                      &sending_rate_smoothing_factor,
@@ -485,6 +488,8 @@ absl::optional<LossBasedBweV2::Config> LossBasedBweV2::CreateConfig(
       append_acknowledged_rate_candidate.Get();
   config->append_delay_based_estimate_candidate =
       append_delay_based_estimate_candidate.Get();
+  config->append_upper_bound_candidate_in_alr =
+      append_upper_bound_candidate_in_alr.Get();
   config->observation_duration_lower_bound =
       observation_duration_lower_bound.Get();
   config->observation_window_size = observation_window_size.Get();
@@ -774,6 +779,11 @@ std::vector<LossBasedBweV2::ChannelParameters> LossBasedBweV2::GetCandidates(
     if (delay_based_estimate_ > current_best_estimate_.loss_limited_bandwidth) {
       bandwidths.push_back(delay_based_estimate_);
     }
+  }
+
+  if (in_alr && config_->append_upper_bound_candidate_in_alr &&
+      current_best_estimate_.loss_limited_bandwidth > GetInstantUpperBound()) {
+    bandwidths.push_back(GetInstantUpperBound());
   }
 
   const DataRate candidate_bandwidth_upper_bound =

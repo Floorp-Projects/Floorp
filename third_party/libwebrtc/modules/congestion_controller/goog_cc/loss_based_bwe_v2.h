@@ -99,6 +99,7 @@ class LossBasedBweV2 {
     double newton_step_size = 0.0;
     bool append_acknowledged_rate_candidate = true;
     bool append_delay_based_estimate_candidate = false;
+    bool append_upper_bound_candidate_in_alr = false;
     TimeDelta observation_duration_lower_bound = TimeDelta::Zero();
     int observation_window_size = 0;
     double sending_rate_smoothing_factor = 0.0;
