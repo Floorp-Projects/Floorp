@@ -109,9 +109,6 @@ ABI::Windows::Graphics::SizeInt32 WgcWindowSource::GetSize() {
           window_rect.bottom - window_rect.top};
 }
 
-// Light-weight version of IsCapturable(). Avoids calling
-// WgcCaptureSource::IsCapturable() which allocates/deallocates a new COM object
-// for each call. Will return false when a window has been minimized.
 bool WgcWindowSource::ShouldBeCapturable() {
   return IsWindowValidAndVisible(reinterpret_cast<HWND>(GetSourceId()));
 }
