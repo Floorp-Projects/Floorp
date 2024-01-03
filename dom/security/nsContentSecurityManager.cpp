@@ -546,37 +546,18 @@ static nsresult DoContentSecurityChecks(nsIChannel* aChannel,
       break;
     }
 
-    case ExtContentPolicy::TYPE_FETCH: {
-      mimeTypeGuess.Truncate();
-      break;
-    }
-
-    case ExtContentPolicy::TYPE_IMAGESET: {
-      mimeTypeGuess.Truncate();
-      break;
-    }
-
     case ExtContentPolicy::TYPE_WEB_MANIFEST: {
       mimeTypeGuess = "application/manifest+json"_ns;
       break;
     }
 
-    case ExtContentPolicy::TYPE_SAVEAS_DOWNLOAD: {
-      mimeTypeGuess.Truncate();
-      break;
-    }
-
-    case ExtContentPolicy::TYPE_SPECULATIVE: {
-      mimeTypeGuess.Truncate();
-      break;
-    }
-
-    case ExtContentPolicy::TYPE_PROXIED_WEBRTC_MEDIA: {
-      mimeTypeGuess.Truncate();
-      break;
-    }
-
-    case ExtContentPolicy::TYPE_WEB_TRANSPORT: {
+    case ExtContentPolicy::TYPE_FETCH:
+    case ExtContentPolicy::TYPE_IMAGESET:
+    case ExtContentPolicy::TYPE_SAVEAS_DOWNLOAD:
+    case ExtContentPolicy::TYPE_SPECULATIVE:
+    case ExtContentPolicy::TYPE_PROXIED_WEBRTC_MEDIA:
+    case ExtContentPolicy::TYPE_WEB_TRANSPORT:
+    case ExtContentPolicy::TYPE_WEB_IDENTITY: {
       mimeTypeGuess.Truncate();
       break;
     }
