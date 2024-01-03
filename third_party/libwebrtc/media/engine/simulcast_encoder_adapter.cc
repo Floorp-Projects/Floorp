@@ -254,15 +254,6 @@ SimulcastEncoderAdapter::SimulcastEncoderAdapter(VideoEncoderFactory* factory,
 SimulcastEncoderAdapter::SimulcastEncoderAdapter(
     VideoEncoderFactory* primary_factory,
     VideoEncoderFactory* fallback_factory,
-    const SdpVideoFormat& format)
-    : SimulcastEncoderAdapter(primary_factory,
-                              fallback_factory,
-                              format,
-                              FieldTrialBasedConfig()) {}
-
-SimulcastEncoderAdapter::SimulcastEncoderAdapter(
-    VideoEncoderFactory* primary_factory,
-    VideoEncoderFactory* fallback_factory,
     const SdpVideoFormat& format,
     const FieldTrialsView& field_trials)
     : inited_(0),
