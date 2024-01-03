@@ -38,7 +38,7 @@ pub fn maximize(
     if let Some(l) = Into::<Option<u64>>::into(lang) {
         if let Some(r) = region {
             let result = tables::LANG_REGION
-                .binary_search_by_key(&(&l.into(), &r.into()), |(key_l, key_r, _)| (key_l, key_r))
+                .binary_search_by_key(&(&l, &r.into()), |(key_l, key_r, _)| (key_l, key_r))
                 .ok();
             if let Some(r) = result {
                 // safe because all table entries are well formed.
@@ -48,7 +48,7 @@ pub fn maximize(
 
         if let Some(s) = script {
             let result = tables::LANG_SCRIPT
-                .binary_search_by_key(&(&l.into(), &s.into()), |(key_l, key_s, _)| (key_l, key_s))
+                .binary_search_by_key(&(&l, &s.into()), |(key_l, key_s, _)| (key_l, key_s))
                 .ok();
             if let Some(r) = result {
                 // safe because all table entries are well formed.
@@ -57,7 +57,7 @@ pub fn maximize(
         }
 
         let result = tables::LANG_ONLY
-            .binary_search_by_key(&(&l.into()), |(key_l, _)| key_l)
+            .binary_search_by_key(&(&l), |(key_l, _)| key_l)
             .ok();
         if let Some(r) = result {
             // safe because all table entries are well formed.

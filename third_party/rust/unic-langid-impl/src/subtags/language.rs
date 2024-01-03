@@ -12,7 +12,7 @@ impl Language {
         let slen = v.len();
 
         let s = TinyStr8::from_bytes(v).map_err(|_| ParserError::InvalidLanguage)?;
-        if slen < 2 || slen > 8 || slen == 4 || !s.is_ascii_alphabetic() {
+        if !(2..=8).contains(&slen) || slen == 4 || !s.is_ascii_alphabetic() {
             return Err(ParserError::InvalidLanguage);
         }
 

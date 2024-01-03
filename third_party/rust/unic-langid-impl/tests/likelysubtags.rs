@@ -32,10 +32,10 @@ static STRINGS: &[(&str, Option<&str>)] = &[
     ("en-Latn-DE", None),
     ("pl-FR", Some("pl-Latn-FR")),
     ("de-CH", Some("de-Latn-CH")),
-    ("tuq", Some("tuq-Latn")),
+    ("tuq", Some("tuq-Latn-TD")),
     ("sr-ME", Some("sr-Latn-ME")),
     ("ng", Some("ng-Latn-NA")),
-    ("klx", Some("klx-Latn")),
+    ("klx", Some("klx-Latn-PG")),
     ("kk-Arab", Some("kk-Arab-CN")),
     ("en-Cyrl", Some("en-Cyrl-US")),
     ("und-Cyrl-UK", Some("ru-Cyrl-UK")),
@@ -95,7 +95,7 @@ fn maximize_test() {
 
 #[test]
 fn version_works() {
-    assert_eq!(CLDR_VERSION, "36");
+    assert_eq!(CLDR_VERSION, "44");
 }
 
 #[test]
