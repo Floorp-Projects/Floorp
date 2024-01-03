@@ -371,9 +371,9 @@ export class SearchEngineSelector {
   }
 
   /**
-   * @param {string} minVersion
+   * @param {string} min
    *  The minimum version supported.
-   * @param {string} maxVersion
+   * @param {string} max
    *  The maximum version supported.
    * @param {string} userVersion
    *  The user's version.
@@ -381,16 +381,36 @@ export class SearchEngineSelector {
    *  True if the user's version is within the range of the min and max versions
    *  supported.
    */
-  #matchesVersions(minVersion, maxVersion, userVersion) {
+  #matchesVersions(min, max, userVersion) {
     // If there's no versions for this engineConfig, ignore the check.
-    if (!minVersion && !maxVersion) {
+    if (!min && !max) {
       return true;
     }
 
+    if (!userVersion) {
+      return false;
+    }
+
+    if (min && !max) {
+      return this.#isAboveOrEqualMin(userVersion, min);
+    }
+
+    if (!min && max) {
+      return this.#isBelowOrEqualMax(userVersion, max);
+    }
+
     return (
-      (minVersion && Services.vc.compare(userVersion, minVersion) < 0) ||
-      (maxVersion && Services.vc.compare(userVersion, maxVersion) > 0)
+      this.#isAboveOrEqualMin(userVersion, min) &&
+      this.#isBelowOrEqualMax(userVersion, max)
     );
+  }
+
+  #isAboveOrEqualMin(userVersion, min) {
+    return Services.vc.compare(userVersion, min) >= 0;
+  }
+
+  #isBelowOrEqualMax(userVersion, max) {
+    return Services.vc.compare(userVersion, max) <= 0;
   }
 
   /**
