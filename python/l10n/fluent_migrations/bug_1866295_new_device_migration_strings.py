@@ -20,4 +20,3 @@ device-migration-fxa-spotlight-getting-new-device-primary-button = {COPY_PATTERN
             from_path=source,
         ),
     )
-
