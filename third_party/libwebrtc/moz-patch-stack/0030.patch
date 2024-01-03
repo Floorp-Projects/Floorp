@@ -1284,7 +1284,7 @@ index e7eaa09949..fead54f7b9 100644
  rtc_library("call_config_utils") {
    # TODO(bugs.webrtc.org/10814): Remove rtc_json_suppressions as soon as it
 diff --git a/video/BUILD.gn b/video/BUILD.gn
-index 9346175831..9477521f44 100644
+index 1722ad4f6e..e84b73a352 100644
 --- a/video/BUILD.gn
 +++ b/video/BUILD.gn
 @@ -17,7 +17,7 @@ rtc_library("video_stream_encoder_interface") {
@@ -1296,7 +1296,7 @@ index 9346175831..9477521f44 100644
      "../api:scoped_refptr",
      "../api/adaptation:resource_adaptation_api",
      "../api/units:data_rate",
-@@ -403,7 +403,7 @@ rtc_library("video_stream_encoder_impl") {
+@@ -404,7 +404,7 @@ rtc_library("video_stream_encoder_impl") {
      ":video_stream_encoder_interface",
      "../api:field_trials_view",
      "../api:rtp_parameters",
