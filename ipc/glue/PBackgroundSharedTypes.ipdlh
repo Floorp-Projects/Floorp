@@ -69,5 +69,10 @@ namespace ipc {
   bool skipAllowInlineStyleCheck;
 };
 
+[Comparable] struct WebTransportHash {
+  nsCString algorithm;
+  uint8_t[] value;
+};
+
 } // namespace ipc
 } // namespace mozilla

@@ -138,7 +138,7 @@ class BackgroundParentImpl : public PBackgroundParent {
       const nsAString& aURL, nsIPrincipal* aPrincipal,
       const mozilla::Maybe<IPCClientInfo>& aClientInfo, const bool& aDedicated,
       const bool& aRequireUnreliable, const uint32_t& aCongestionControl,
-      // Sequence<WebTransportHash>* aServerCertHashes,
+      nsTArray<WebTransportHash>&& aServerCertHashes,
       Endpoint<PWebTransportParent>&& aParentEndpoint,
       CreateWebTransportParentResolver&& aResolver) override;
 

@@ -12,6 +12,7 @@ interface nsIWebTransportStreamCallback;
 interface nsIWebTransportBidirectionalStream;
 interface nsIWebTransportSendStream;
 interface nsIWebTransportReceiveStream;
+interface nsIWebTransportHash;
 
 %{C++
 namespace mozilla::dom {
@@ -37,11 +38,13 @@ interface nsIWebTransport : nsISupports {
 
   // When called, perform steps in "Initialization WebTransport over HTTP".
   void asyncConnect(in nsIURI aURI,
+                    in Array<nsIWebTransportHash> aServerCertHashes,
                     in nsIPrincipal aLoadingPrincipal,
                     in unsigned long aSecurityFlags,
                     in WebTransportSessionEventListener aListener);
 
   void asyncConnectWithClient(in nsIURI aURI,
+                    in Array<nsIWebTransportHash> aServerCertHashes,
                     in nsIPrincipal aLoadingPrincipal,
                     in unsigned long aSecurityFlags,
                     in WebTransportSessionEventListener aListener,
@@ -120,4 +123,10 @@ interface nsIWebTransportStreamCallback : nsISupports {
   void onBidirectionalStreamReady(in nsIWebTransportBidirectionalStream aStream);
   void onUnidirectionalStreamReady(in nsIWebTransportSendStream aStream);
   void onError(in uint8_t aError);
+};
+
+[scriptable, uuid(2523a26e-94be-4de6-8c27-9b4ffff742f0)]
+interface nsIWebTransportHash : nsISupports {
+  readonly attribute ACString algorithm;
+  readonly attribute Array<uint8_t> value;
 };

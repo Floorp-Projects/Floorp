@@ -188,7 +188,7 @@ parent:
       bool aDedicated,
       bool aRequireUnreliable,
       uint32_t aCongestionControl,
-      /* Sequence<WebTransportHash>* aServerCertHashes, */
+      WebTransportHash[] aServerCertHashes,
       Endpoint<PWebTransportParent> aParentEndpoint)
       returns(nsresult rv, uint8_t aReliability); // Actually WebTransportReliabityMode enum
 

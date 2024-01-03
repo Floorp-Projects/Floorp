@@ -77,6 +77,7 @@ add_task(async function test_wt_datagram() {
 
   webTransport.asyncConnect(
     NetUtil.newURI(`https://${host}/success`),
+    [],
     Services.scriptSecurityManager.getSystemPrincipal(),
     Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
     listener
@@ -133,6 +134,7 @@ add_task(async function test_connect_wt() {
 
     webTransport.asyncConnect(
       NetUtil.newURI(`https://${host}/success`),
+      [],
       Services.scriptSecurityManager.getSystemPrincipal(),
       Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
       listener
@@ -154,6 +156,7 @@ add_task(async function test_redirect_wt() {
 
     webTransport.asyncConnect(
       NetUtil.newURI(`https://${host}/redirect`),
+      [],
       Services.scriptSecurityManager.getSystemPrincipal(),
       Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
       listener
@@ -172,6 +175,7 @@ add_task(async function test_reject() {
 
     webTransport.asyncConnect(
       NetUtil.newURI(`https://${host}/reject`),
+      [],
       Services.scriptSecurityManager.getSystemPrincipal(),
       Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
       listener
@@ -194,6 +198,7 @@ async function test_closed(path) {
   });
   webTransport.asyncConnect(
     NetUtil.newURI(`https://${host}${path}`),
+    [],
     Services.scriptSecurityManager.getSystemPrincipal(),
     Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
     listener
@@ -224,6 +229,7 @@ add_task(async function test_wt_stream_create() {
 
     webTransport.asyncConnect(
       NetUtil.newURI(`https://${host}/success`),
+      [],
       Services.scriptSecurityManager.getSystemPrincipal(),
       Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
       listener
@@ -249,6 +255,7 @@ add_task(async function test_wt_stream_send_and_stats() {
 
     webTransport.asyncConnect(
       NetUtil.newURI(`https://${host}/success`),
+      [],
       Services.scriptSecurityManager.getSystemPrincipal(),
       Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
       listener
@@ -288,6 +295,7 @@ add_task(async function test_wt_receive_stream_and_stats() {
   });
   webTransport.asyncConnect(
     NetUtil.newURI(`https://${host}/create_unidi_stream_and_hello`),
+    [],
     Services.scriptSecurityManager.getSystemPrincipal(),
     Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
     listener
@@ -329,6 +337,7 @@ add_task(async function test_wt_outgoing_bidi_stream() {
 
     webTransport.asyncConnect(
       NetUtil.newURI(`https://${host}/success`),
+      [],
       Services.scriptSecurityManager.getSystemPrincipal(),
       Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
       listener
@@ -379,6 +388,7 @@ add_task(async function test_wt_incoming_bidi_stream() {
   });
   webTransport.asyncConnect(
     NetUtil.newURI(`https://${host}/create_bidi_stream`),
+    [],
     Services.scriptSecurityManager.getSystemPrincipal(),
     Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
     listener
@@ -424,6 +434,7 @@ async function createWebTransportAndConnect() {
 
     webTransport.asyncConnect(
       NetUtil.newURI(`https://${host}/success`),
+      [],
       Services.scriptSecurityManager.getSystemPrincipal(),
       Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
       listener

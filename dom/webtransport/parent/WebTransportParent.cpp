@@ -12,6 +12,7 @@
 #include "mozilla/dom/ClientInfo.h"
 #include "mozilla/dom/WebTransportBinding.h"
 #include "mozilla/dom/WebTransportLog.h"
+#include "mozilla/net/WebTransportHash.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "nsIEventTarget.h"
 #include "nsIOService.h"
@@ -36,7 +37,7 @@ void WebTransportParent::Create(
     const nsAString& aURL, nsIPrincipal* aPrincipal,
     const mozilla::Maybe<IPCClientInfo>& aClientInfo, const bool& aDedicated,
     const bool& aRequireUnreliable, const uint32_t& aCongestionControl,
-    // Sequence<WebTransportHash>* aServerCertHashes,
+    nsTArray<WebTransportHash>&& aServerCertHashes,
     Endpoint<PWebTransportParent>&& aParentEndpoint,
     std::function<void(std::tuple<const nsresult&, const uint8_t&>)>&&
         aResolver) {
@@ -86,15 +87,24 @@ void WebTransportParent::Create(
     return;
   }
 
+  nsTArray<RefPtr<nsIWebTransportHash>> nsServerCertHashes;
+  for (const auto& hash : aServerCertHashes) {
+    nsCString alg = hash.algorithm();
+    nsServerCertHashes.AppendElement(
+        new net::WebTransportHash(alg, hash.value()));
+  }
+
   nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
       "WebTransport AsyncConnect",
       [self = RefPtr{this}, uri = std::move(uri),
+       nsServerCertHashes = std::move(nsServerCertHashes),
        principal = RefPtr{aPrincipal},
        flags = nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
        clientInfo = aClientInfo] {
         LOG(("WebTransport %p AsyncConnect", self.get()));
         if (NS_FAILED(self->mWebTransport->AsyncConnectWithClient(
-                uri, principal, flags, self, clientInfo))) {
+                uri, std::move(nsServerCertHashes), principal, flags, self,
+                clientInfo))) {
           LOG(("AsyncConnect failure; we should get OnSessionClosed"));
         }
       });

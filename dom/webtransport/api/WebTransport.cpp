@@ -214,12 +214,31 @@ void WebTransport::Init(const GlobalObject& aGlobal, const nsAString& aURL,
   // it exists, and null otherwise.
   // Step 8: If dedicated is false and serverCertificateHashes is non-null,
   // then throw a TypeError.
+  nsTArray<mozilla::ipc::WebTransportHash> aServerCertHashes;
   if (aOptions.mServerCertificateHashes.WasPassed()) {
-    // XXX bug 1806693
-    aError.ThrowNotSupportedError("No support for serverCertificateHashes yet");
-    // XXX if dedicated is false and serverCertificateHashes is non-null, then
-    // throw a TypeError. Also should enforce in parent
-    return;
+    if (!dedicated) {
+      aError.ThrowNotSupportedError(
+          "serverCertificateHashes not supported for non-dedicated "
+          "connections");
+      return;
+    }
+    for (const auto& hash : aOptions.mServerCertificateHashes.Value()) {
+      if (!hash.mAlgorithm.WasPassed() || !hash.mValue.WasPassed()) continue;
+
+      if (hash.mAlgorithm.Value() != u"sha-256") {
+        LOG(("Algorithms other than SHA-256 are not supported"));
+        continue;
+      }
+
+      nsTArray<uint8_t> data;
+      if (!AppendTypedArrayDataTo(hash.mValue.Value(), data)) {
+        aError.Throw(NS_ERROR_OUT_OF_MEMORY);
+        return;
+      }
+
+      nsCString alg = NS_ConvertUTF16toUTF8(hash.mAlgorithm.Value());
+      aServerCertHashes.EmplaceBack(alg, data);
+    }
   }
   // Step 9: Let requireUnreliable be options's requireUnreliable.
   bool requireUnreliable = aOptions.mRequireUnreliable;
@@ -342,11 +361,10 @@ void WebTransport::Init(const GlobalObject& aGlobal, const nsAString& aURL,
   // https://w3c.github.io/webtransport/#webtransport-constructor Spec 5.2
   mChild = child;
   backgroundChild
-      ->SendCreateWebTransportParent(aURL, principal, ipcClientInfo, dedicated,
-                                     requireUnreliable,
-                                     (uint32_t)congestionControl,
-                                     // XXX serverCertHashes,
-                                     std::move(parentEndpoint))
+      ->SendCreateWebTransportParent(
+          aURL, principal, ipcClientInfo, dedicated, requireUnreliable,
+          (uint32_t)congestionControl, std::move(aServerCertHashes),
+          std::move(parentEndpoint))
       ->Then(GetCurrentSerialEventTarget(), __func__,
              [self = RefPtr{this}](
                  PBackgroundChild::CreateWebTransportParentPromise::
