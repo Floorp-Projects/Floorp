@@ -423,6 +423,15 @@ if (!build_with_chromium) {
         "//third_party/abseil-cpp/absl/types:optional",
       ]
     }
+
+    rtc_library("event_log_visualizer_bindings") {
+      visibility = [ "*" ]
+      sources = [
+        "rtc_event_log_visualizer/analyzer_bindings.cc",
+        "rtc_event_log_visualizer/analyzer_bindings.h",
+      ]
+      deps = [ ":event_log_visualizer_utils" ]
+    }
   }
 
   rtc_executable("video_encoder") {
