@@ -109,7 +109,6 @@ class LossBasedBweV2 {
     double bandwidth_backoff_lower_bound_factor = 0.0;
     double max_increase_factor = 0.0;
     TimeDelta delayed_increase_window = TimeDelta::Zero();
-    bool use_acked_bitrate_only_when_overusing = false;
     bool not_increase_if_inherent_loss_less_than_average_loss = false;
     double high_loss_rate_threshold = 1.0;
     DataRate bandwidth_cap_at_high_loss_rate = DataRate::MinusInfinity();

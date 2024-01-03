@@ -394,8 +394,6 @@ absl::optional<LossBasedBweV2::Config> LossBasedBweV2::CreateConfig(
   FieldTrialParameter<double> max_increase_factor("MaxIncreaseFactor", 1.3);
   FieldTrialParameter<TimeDelta> delayed_increase_window(
       "DelayedIncreaseWindow", TimeDelta::Millis(300));
-  FieldTrialParameter<bool> use_acked_bitrate_only_when_overusing(
-      "UseAckedBitrateOnlyWhenOverusing", false);
   FieldTrialParameter<bool>
       not_increase_if_inherent_loss_less_than_average_loss(
           "NotIncreaseIfInherentLossLessThanAverageLoss", true);
@@ -439,7 +437,6 @@ absl::optional<LossBasedBweV2::Config> LossBasedBweV2::CreateConfig(
                      &bandwidth_backoff_lower_bound_factor,
                      &max_increase_factor,
                      &delayed_increase_window,
-                     &use_acked_bitrate_only_when_overusing,
                      &not_increase_if_inherent_loss_less_than_average_loss,
                      &high_loss_rate_threshold,
                      &bandwidth_cap_at_high_loss_rate,
@@ -496,8 +493,6 @@ absl::optional<LossBasedBweV2::Config> LossBasedBweV2::CreateConfig(
       bandwidth_backoff_lower_bound_factor.Get();
   config->max_increase_factor = max_increase_factor.Get();
   config->delayed_increase_window = delayed_increase_window.Get();
-  config->use_acked_bitrate_only_when_overusing =
-      use_acked_bitrate_only_when_overusing.Get();
   config->not_increase_if_inherent_loss_less_than_average_loss =
       not_increase_if_inherent_loss_less_than_average_loss.Get();
   config->high_loss_rate_threshold = high_loss_rate_threshold.Get();
