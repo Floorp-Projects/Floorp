@@ -563,9 +563,7 @@ TEST(ProbeControllerTest, ConfigurableProbingFieldTrial) {
 }
 
 TEST(ProbeControllerTest, LimitAlrProbeWhenLossBasedBweLimited) {
-  ProbeControllerFixture fixture(
-      "WebRTC-Bwe-ProbingConfiguration/"
-      "limit_probe_target_rate_to_loss_bwe:true/");
+  ProbeControllerFixture fixture;
   std::unique_ptr<ProbeController> probe_controller =
       fixture.CreateController();
   probe_controller->EnablePeriodicAlrProbing(true);
@@ -627,7 +625,7 @@ TEST(ProbeControllerTest,
      LimitProbeAtUpperNetworkStateEstimateIfLossBasedLimited) {
   ProbeControllerFixture fixture(
       "WebRTC-Bwe-ProbingConfiguration/"
-      "network_state_interval:5s,limit_probe_target_rate_to_loss_bwe:true/");
+      "network_state_interval:5s/");
   std::unique_ptr<ProbeController> probe_controller =
       fixture.CreateController();
 
@@ -706,9 +704,7 @@ TEST(ProbeControllerTest, CanSetLongerProbeDurationAfterNetworkStateEstimate) {
 }
 
 TEST(ProbeControllerTest, ProbeInAlrIfLossBasedIncreasing) {
-  ProbeControllerFixture fixture(
-      "WebRTC-Bwe-ProbingConfiguration/"
-      "limit_probe_target_rate_to_loss_bwe:true/");
+  ProbeControllerFixture fixture;
   std::unique_ptr<ProbeController> probe_controller =
       fixture.CreateController();
   auto probes = probe_controller->SetBitrates(
@@ -732,9 +728,7 @@ TEST(ProbeControllerTest, ProbeInAlrIfLossBasedIncreasing) {
 }
 
 TEST(ProbeControllerTest, ProbeFurtherInAlrIfLossBasedIncreasing) {
-  ProbeControllerFixture fixture(
-      "WebRTC-Bwe-ProbingConfiguration/"
-      "limit_probe_target_rate_to_loss_bwe:true/");
+  ProbeControllerFixture fixture;
   std::unique_ptr<ProbeController> probe_controller =
       fixture.CreateController();
   auto probes = probe_controller->SetBitrates(
@@ -764,16 +758,14 @@ TEST(ProbeControllerTest, ProbeFurtherInAlrIfLossBasedIncreasing) {
 }
 
 TEST(ProbeControllerTest, NotProbeWhenInAlrIfLossBasedDecreases) {
-  ProbeControllerFixture fixture(
-      "WebRTC-Bwe-ProbingConfiguration/"
-      "network_state_interval:5s,limit_probe_target_rate_to_loss_bwe:true/");
+  ProbeControllerFixture fixture;
   std::unique_ptr<ProbeController> probe_controller =
       fixture.CreateController();
   auto probes = probe_controller->SetBitrates(
       kMinBitrate, kStartBitrate, kMaxBitrate, fixture.CurrentTime());
   probe_controller->EnablePeriodicAlrProbing(true);
   probes = probe_controller->SetEstimatedBitrate(
-      kStartBitrate, BandwidthLimitedCause::kLossLimitedBweDecreasing,
+      kStartBitrate, BandwidthLimitedCause::kLossLimitedBwe,
       fixture.CurrentTime());
 
   // Wait long enough to time out exponential probing.
@@ -789,9 +781,7 @@ TEST(ProbeControllerTest, NotProbeWhenInAlrIfLossBasedDecreases) {
 }
 
 TEST(ProbeControllerTest, NotProbeIfLossBasedIncreasingOutsideAlr) {
-  ProbeControllerFixture fixture(
-      "WebRTC-Bwe-ProbingConfiguration/"
-      "limit_probe_target_rate_to_loss_bwe:true/");
+  ProbeControllerFixture fixture;
   std::unique_ptr<ProbeController> probe_controller =
       fixture.CreateController();
   auto probes = probe_controller->SetBitrates(
@@ -815,7 +805,7 @@ TEST(ProbeControllerTest, NotProbeIfLossBasedIncreasingOutsideAlr) {
 TEST(ProbeControllerTest, ProbeFurtherWhenLossBasedIsSameAsDelayBasedEstimate) {
   ProbeControllerFixture fixture(
       "WebRTC-Bwe-ProbingConfiguration/"
-      "network_state_interval:5s,limit_probe_target_rate_to_loss_bwe:true/");
+      "network_state_interval:5s/");
   std::unique_ptr<ProbeController> probe_controller =
       fixture.CreateController();
 
@@ -896,7 +886,7 @@ TEST(ProbeControllerTest, ProbeIfEstimateLowerThanNetworkStateEstimate) {
 TEST(ProbeControllerTest, DontProbeFurtherWhenLossLimited) {
   ProbeControllerFixture fixture(
       "WebRTC-Bwe-ProbingConfiguration/"
-      "network_state_interval:5s,limit_probe_target_rate_to_loss_bwe:true/");
+      "network_state_interval:5s/");
   std::unique_ptr<ProbeController> probe_controller =
       fixture.CreateController();
 
@@ -918,15 +908,15 @@ TEST(ProbeControllerTest, DontProbeFurtherWhenLossLimited) {
   EXPECT_LT(probes[0].target_data_rate, state_estimate.link_capacity_upper);
   // Expect that no more probes are sent immediately if BWE is loss limited.
   probes = probe_controller->SetEstimatedBitrate(
-      probes[0].target_data_rate,
-      BandwidthLimitedCause::kLossLimitedBweDecreasing, fixture.CurrentTime());
+      probes[0].target_data_rate, BandwidthLimitedCause::kLossLimitedBwe,
+      fixture.CurrentTime());
   EXPECT_TRUE(probes.empty());
 }
 
 TEST(ProbeControllerTest, ProbeFurtherWhenDelayBasedLimited) {
   ProbeControllerFixture fixture(
       "WebRTC-Bwe-ProbingConfiguration/"
-      "network_state_interval:5s,limit_probe_target_rate_to_loss_bwe:true/");
+      "network_state_interval:5s/");
   std::unique_ptr<ProbeController> probe_controller =
       fixture.CreateController();
 
@@ -958,7 +948,7 @@ TEST(ProbeControllerTest,
      ProbeFurtherIfNetworkStateEstimateIncreaseAfterProbeSent) {
   ProbeControllerFixture fixture(
       "WebRTC-Bwe-ProbingConfiguration/"
-      "network_state_interval:5s,limit_probe_target_rate_to_loss_bwe:true/");
+      "network_state_interval:5s/");
   std::unique_ptr<ProbeController> probe_controller =
       fixture.CreateController();
   auto probes = probe_controller->SetBitrates(
@@ -1107,7 +1097,7 @@ TEST(ProbeControllerTest,
      ProbeNotLimitedByNetworkStateEsimateIfLowerThantCurrent) {
   ProbeControllerFixture fixture(
       "WebRTC-Bwe-ProbingConfiguration/"
-      "network_state_interval:5s,limit_probe_target_rate_to_loss_bwe:true/");
+      "network_state_interval:5s/");
   std::unique_ptr<ProbeController> probe_controller =
       fixture.CreateController();
   probe_controller->EnablePeriodicAlrProbing(true);
@@ -1133,9 +1123,7 @@ TEST(ProbeControllerTest,
 }
 
 TEST(ProbeControllerTest, DontProbeIfDelayIncreased) {
-  ProbeControllerFixture fixture(
-      "WebRTC-Bwe-ProbingConfiguration/"
-      "network_state_interval:5s,not_probe_if_delay_increased:true/");
+  ProbeControllerFixture fixture;
   std::unique_ptr<ProbeController> probe_controller =
       fixture.CreateController();
 
@@ -1162,9 +1150,7 @@ TEST(ProbeControllerTest, DontProbeIfDelayIncreased) {
 }
 
 TEST(ProbeControllerTest, DontProbeIfHighRtt) {
-  ProbeControllerFixture fixture(
-      "WebRTC-Bwe-ProbingConfiguration/"
-      "network_state_interval:5s,not_probe_if_delay_increased:true/");
+  ProbeControllerFixture fixture;
   std::unique_ptr<ProbeController> probe_controller =
       fixture.CreateController();
 

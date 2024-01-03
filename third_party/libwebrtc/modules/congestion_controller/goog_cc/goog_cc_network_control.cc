@@ -73,22 +73,18 @@ bool IsNotDisabled(const FieldTrialsView* config, absl::string_view key) {
   return !absl::StartsWith(config->Lookup(key), "Disabled");
 }
 
-BandwidthLimitedCause GetBandwidthLimitedCause(
-    LossBasedState loss_based_state,
-    bool is_rtt_above_limit,
-    BandwidthUsage bandwidth_usage,
-    bool not_probe_if_delay_increased) {
-  if (not_probe_if_delay_increased) {
-    if (bandwidth_usage == BandwidthUsage::kBwOverusing ||
-        bandwidth_usage == BandwidthUsage::kBwUnderusing) {
-      return BandwidthLimitedCause::kDelayBasedLimitedDelayIncreased;
-    } else if (is_rtt_above_limit) {
-      return BandwidthLimitedCause::kRttBasedBackOffHighRtt;
-    }
+BandwidthLimitedCause GetBandwidthLimitedCause(LossBasedState loss_based_state,
+                                               bool is_rtt_above_limit,
+                                               BandwidthUsage bandwidth_usage) {
+  if (bandwidth_usage == BandwidthUsage::kBwOverusing ||
+      bandwidth_usage == BandwidthUsage::kBwUnderusing) {
+    return BandwidthLimitedCause::kDelayBasedLimitedDelayIncreased;
+  } else if (is_rtt_above_limit) {
+    return BandwidthLimitedCause::kRttBasedBackOffHighRtt;
   }
   switch (loss_based_state) {
     case LossBasedState::kDecreasing:
-      return BandwidthLimitedCause::kLossLimitedBweDecreasing;
+      return BandwidthLimitedCause::kLossLimitedBwe;
     case LossBasedState::kIncreasing:
       return BandwidthLimitedCause::kLossLimitedBweIncreasing;
     default:
@@ -698,11 +694,9 @@ void GoogCcNetworkController::MaybeTriggerOnNetworkChanged(
 
     auto probes = probe_controller_->SetEstimatedBitrate(
         loss_based_target_rate,
-        GetBandwidthLimitedCause(
-            bandwidth_estimation_->loss_based_state(),
-            bandwidth_estimation_->IsRttAboveLimit(),
-            delay_based_bwe_->last_state(),
-            probe_controller_->DontProbeIfDelayIncreased()),
+        GetBandwidthLimitedCause(bandwidth_estimation_->loss_based_state(),
+                                 bandwidth_estimation_->IsRttAboveLimit(),
+                                 delay_based_bwe_->last_state()),
         at_time);
     update->probe_cluster_configs.insert(update->probe_cluster_configs.end(),
                                          probes.begin(), probes.end());
