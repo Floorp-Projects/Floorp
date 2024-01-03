@@ -388,11 +388,6 @@ class Call final : public webrtc::Call,
 
   RTC_NO_UNIQUE_ADDRESS SequenceChecker receive_11993_checker_;
 
-  // TODO(bugs.webrtc.org/11993): Move receive_rtp_config_ over to the
-  // network thread.
-  std::map<uint32_t, ReceiveStreamInterface*> receive_rtp_config_
-      RTC_GUARDED_BY(&receive_11993_checker_);
-
   // Audio and Video send streams are owned by the client that creates them.
   // TODO(bugs.webrtc.org/11993): `audio_send_ssrcs_` and `video_send_ssrcs_`
   // should be accessed on the network thread.
@@ -835,11 +830,6 @@ webrtc::AudioReceiveStreamInterface* Call::CreateAudioReceiveStream(
   // to live on the network thread.
   receive_stream->RegisterWithTransport(&audio_receiver_controller_);
 
-  // TODO(bugs.webrtc.org/11993): Update the below on the network thread.
-  // We could possibly set up the audio_receiver_controller_ association up
-  // as part of the async setup.
-  RegisterReceiveStream(config.rtp.remote_ssrc, receive_stream);
-
   ConfigureSync(config.sync_group);
 
   auto it = audio_send_ssrcs_.find(config.rtp.local_ssrc);
@@ -873,8 +863,6 @@ void Call::DestroyAudioReceiveStream(
   // video streams or associate them with a different audio stream if one exists
   // for this sync_group.
   ConfigureSync(audio_receive_stream->sync_group());
-
-  UnregisterReceiveStream(ssrc);
 
   UpdateAggregateNetworkState();
   // TODO(bugs.webrtc.org/11993): Consider if deleting `audio_receive_stream`
@@ -1012,15 +1000,6 @@ webrtc::VideoReceiveStreamInterface* Call::CreateVideoReceiveStream(
   // TODO(bugs.webrtc.org/11993): Set this up asynchronously on the network
   // thread.
   receive_stream->RegisterWithTransport(&video_receiver_controller_);
-
-  if (receive_stream->rtx_ssrc()) {
-    // We record identical config for the rtx stream as for the main
-    // stream. Since the transport_send_cc negotiation is per payload
-    // type, we may get an incorrect value for the rtx stream, but
-    // that is unlikely to matter in practice.
-    RegisterReceiveStream(receive_stream->rtx_ssrc(), receive_stream);
-  }
-  RegisterReceiveStream(receive_stream->remote_ssrc(), receive_stream);
   video_receive_streams_.insert(receive_stream);
 
   ConfigureSync(receive_stream->sync_group());
@@ -1039,14 +1018,6 @@ void Call::DestroyVideoReceiveStream(
       static_cast<VideoReceiveStream2*>(receive_stream);
   // TODO(bugs.webrtc.org/11993): Unregister on the network thread.
   receive_stream_impl->UnregisterFromTransport();
-
-  // Remove all ssrcs pointing to a receive stream. As RTX retransmits on a
-  // separate SSRC there can be either one or two.
-  UnregisterReceiveStream(receive_stream_impl->remote_ssrc());
-
-  if (receive_stream_impl->rtx_ssrc()) {
-    UnregisterReceiveStream(receive_stream_impl->rtx_ssrc());
-  }
   video_receive_streams_.erase(receive_stream_impl);
   ConfigureSync(receive_stream_impl->sync_group());
 
@@ -1074,8 +1045,6 @@ FlexfecReceiveStream* Call::CreateFlexfecReceiveStream(
   // TODO(bugs.webrtc.org/11993): Set this up asynchronously on the network
   // thread.
   receive_stream->RegisterWithTransport(&video_receiver_controller_);
-  RegisterReceiveStream(receive_stream->remote_ssrc(), receive_stream);
-
   // TODO(brandtr): Store config in RtcEventLog here.
 
   return receive_stream;
@@ -1091,8 +1060,6 @@ void Call::DestroyFlexfecReceiveStream(FlexfecReceiveStream* receive_stream) {
   receive_stream_impl->UnregisterFromTransport();
 
   auto ssrc = receive_stream_impl->remote_ssrc();
-  UnregisterReceiveStream(ssrc);
-
   // Remove all SSRCs pointing to the FlexfecReceiveStreamImpl to be
   // destroyed.
   receive_side_cc_.RemoveStream(ssrc);
@@ -1454,26 +1421,6 @@ void Call::NotifyBweOfReceivedPacket(const RtpPacketReceived& packet,
   transport_send_->OnReceivedPacket(packet_msg);
 
   receive_side_cc_.OnReceivedPacket(packet, media_type);
-}
-
-bool Call::RegisterReceiveStream(uint32_t ssrc,
-                                 ReceiveStreamInterface* stream) {
-  RTC_DCHECK_RUN_ON(&receive_11993_checker_);
-  RTC_DCHECK(stream);
-  auto inserted = receive_rtp_config_.emplace(ssrc, stream);
-  if (!inserted.second) {
-    RTC_DLOG(LS_WARNING) << "ssrc already registered: " << ssrc;
-  }
-  return inserted.second;
-}
-
-bool Call::UnregisterReceiveStream(uint32_t ssrc) {
-  RTC_DCHECK_RUN_ON(&receive_11993_checker_);
-  size_t erased = receive_rtp_config_.erase(ssrc);
-  if (!erased) {
-    RTC_DLOG(LS_WARNING) << "ssrc wasn't registered: " << ssrc;
-  }
-  return erased != 0u;
 }
 
 }  // namespace internal
