@@ -430,10 +430,10 @@ index 527fac414b..392158b5ce 100644
  rtc_library("default_task_queue_factory") {
    visibility = [ "*" ]
 diff --git a/api/transport/BUILD.gn b/api/transport/BUILD.gn
-index 12a1f57066..d8f095c700 100644
+index 84a0968ee9..c0209bf0d0 100644
 --- a/api/transport/BUILD.gn
 +++ b/api/transport/BUILD.gn
-@@ -90,6 +90,7 @@ rtc_source_set("sctp_transport_factory_interface") {
+@@ -91,6 +91,7 @@ rtc_source_set("sctp_transport_factory_interface") {
  }
  
  rtc_source_set("stun_types") {
@@ -441,7 +441,7 @@ index 12a1f57066..d8f095c700 100644
    visibility = [ "*" ]
    sources = [
      "stun.cc",
-@@ -110,6 +111,7 @@ rtc_source_set("stun_types") {
+@@ -111,6 +112,7 @@ rtc_source_set("stun_types") {
    ]
    absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
  }
