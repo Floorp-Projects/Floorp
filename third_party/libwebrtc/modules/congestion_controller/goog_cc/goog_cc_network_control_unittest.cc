@@ -290,12 +290,15 @@ class NetworkControllerTestFixture {
   GoogCcNetworkControllerFactory factory_;
 };
 
-TEST(GoogCcNetworkControllerTest, InitializeTargetRateOnFirstProcessInterval) {
+TEST(GoogCcNetworkControllerTest,
+     InitializeTargetRateOnFirstProcessIntervalAfterNetworkAvailable) {
   NetworkControllerTestFixture fixture;
   std::unique_ptr<NetworkControllerInterface> controller =
       fixture.CreateController();
 
-  NetworkControlUpdate update =
+  NetworkControlUpdate update = controller->OnNetworkAvailability(
+      {.at_time = Timestamp::Millis(123456), .network_available = true});
+  update =
       controller->OnProcessInterval({.at_time = Timestamp::Millis(123456)});
 
   EXPECT_EQ(update.target_rate->target_rate, kInitialBitrate);
@@ -312,8 +315,9 @@ TEST(GoogCcNetworkControllerTest, ReactsToChangedNetworkConditions) {
   std::unique_ptr<NetworkControllerInterface> controller =
       fixture.CreateController();
   Timestamp current_time = Timestamp::Millis(123);
-  NetworkControlUpdate update =
-      controller->OnProcessInterval({.at_time = current_time});
+  NetworkControlUpdate update = controller->OnNetworkAvailability(
+      {.at_time = current_time, .network_available = true});
+  update = controller->OnProcessInterval({.at_time = current_time});
   update = controller->OnRemoteBitrateReport(
       {.receive_time = current_time, .bandwidth = kInitialBitrate * 2});
 
@@ -337,8 +341,11 @@ TEST(GoogCcNetworkControllerTest, OnNetworkRouteChanged) {
   std::unique_ptr<NetworkControllerInterface> controller =
       fixture.CreateController();
   Timestamp current_time = Timestamp::Millis(123);
+  NetworkControlUpdate update = controller->OnNetworkAvailability(
+      {.at_time = current_time, .network_available = true});
   DataRate new_bitrate = DataRate::BitsPerSec(200000);
-  NetworkControlUpdate update = controller->OnNetworkRouteChange(
+
+  update = controller->OnNetworkRouteChange(
       CreateRouteChange(current_time, new_bitrate));
   EXPECT_EQ(update.target_rate->target_rate, new_bitrate);
   EXPECT_EQ(update.pacer_config->data_rate(), new_bitrate * kDefaultPacingRate);
@@ -359,7 +366,11 @@ TEST(GoogCcNetworkControllerTest, ProbeOnRouteChange) {
   std::unique_ptr<NetworkControllerInterface> controller =
       fixture.CreateController();
   Timestamp current_time = Timestamp::Millis(123);
-  NetworkControlUpdate update = controller->OnNetworkRouteChange(
+  NetworkControlUpdate update = controller->OnNetworkAvailability(
+      {.at_time = current_time, .network_available = true});
+  current_time += TimeDelta::Seconds(3);
+
+  update = controller->OnNetworkRouteChange(
       CreateRouteChange(current_time, 2 * kInitialBitrate, DataRate::Zero(),
                         20 * kInitialBitrate));
 
@@ -404,6 +415,8 @@ TEST(GoogCcNetworkControllerTest, UpdatesDelayBasedEstimate) {
       fixture.CreateController();
   const int64_t kRunTimeMs = 6000;
   Timestamp current_time = Timestamp::Millis(123);
+  NetworkControlUpdate update = controller->OnNetworkAvailability(
+      {.at_time = current_time, .network_available = true});
 
   // The test must run and insert packets/feedback long enough that the
   // BWE computes a valid estimate. This is first done in an environment which
@@ -428,8 +441,9 @@ TEST(GoogCcNetworkControllerTest, PaceAtMaxOfLowerLinkCapacityAndBwe) {
   std::unique_ptr<NetworkControllerInterface> controller =
       fixture.CreateController();
   Timestamp current_time = Timestamp::Millis(123);
-  NetworkControlUpdate update =
-      controller->OnProcessInterval({.at_time = current_time});
+  NetworkControlUpdate update = controller->OnNetworkAvailability(
+      {.at_time = current_time, .network_available = true});
+  update = controller->OnProcessInterval({.at_time = current_time});
   current_time += TimeDelta::Millis(100);
   NetworkStateEstimate network_estimate = {.link_capacity_lower =
                                                10 * kInitialBitrate};

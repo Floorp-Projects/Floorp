@@ -343,12 +343,13 @@ void RtpTransportControllerSend::OnNetworkAvailability(bool network_available) {
   is_congested_ = false;
   pacer_.SetCongested(false);
 
+  if (!controller_) {
+    MaybeCreateControllers();
+  }
   if (controller_) {
     control_handler_->SetNetworkAvailability(network_available);
     PostUpdates(controller_->OnNetworkAvailability(msg));
     UpdateControlState();
-  } else {
-    MaybeCreateControllers();
   }
   for (auto& rtp_sender : video_rtp_senders_) {
     rtp_sender->OnNetworkAvailability(network_available);
