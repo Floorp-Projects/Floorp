@@ -68,6 +68,12 @@ class RTC_EXPORT PendingTaskSafetyFlag final
   // may be created on a different thread than the flag will be used on.
   static rtc::scoped_refptr<PendingTaskSafetyFlag> CreateDetached();
 
+  // Creates a flag, but with its SequenceChecker explicitly initialized for
+  // a given task queue and the `alive()` flag specified.
+  static rtc::scoped_refptr<PendingTaskSafetyFlag> CreateAttachedToTaskQueue(
+      bool alive,
+      TaskQueueBase* attached_queue);
+
   // Same as `CreateDetached()` except the initial state of the returned flag
   // will be `!alive()`.
   static rtc::scoped_refptr<PendingTaskSafetyFlag> CreateDetachedInactive();
@@ -95,6 +101,8 @@ class RTC_EXPORT PendingTaskSafetyFlag final
 
  protected:
   explicit PendingTaskSafetyFlag(bool alive) : alive_(alive) {}
+  PendingTaskSafetyFlag(bool alive, TaskQueueBase* attached_queue)
+      : alive_(alive), main_sequence_(attached_queue) {}
 
  private:
   static rtc::scoped_refptr<PendingTaskSafetyFlag> CreateInternal(bool alive);
