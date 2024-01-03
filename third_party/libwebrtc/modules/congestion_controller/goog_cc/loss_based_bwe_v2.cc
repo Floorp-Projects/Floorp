@@ -49,10 +49,13 @@ bool IsValid(Timestamp timestamp) {
   return timestamp.IsFinite();
 }
 
+double ToKiloBytes(DataSize datasize) { return datasize.bytes() / 1000.0; }
+
 struct PacketResultsSummary {
   int num_packets = 0;
   int num_lost_packets = 0;
   DataSize total_size = DataSize::Zero();
+  DataSize lost_size = DataSize::Zero();
   Timestamp first_send_time = Timestamp::PlusInfinity();
   Timestamp last_send_time = Timestamp::MinusInfinity();
 };
@@ -67,6 +70,7 @@ PacketResultsSummary GetPacketResultsSummary(
   for (const PacketResult& packet : packet_results) {
     if (!packet.IsReceived()) {
       packet_results_summary.num_lost_packets++;
+      packet_results_summary.lost_size += packet.sent_packet.size;
     }
     packet_results_summary.total_size += packet.sent_packet.size;
     packet_results_summary.first_send_time = std::min(
@@ -444,6 +448,8 @@ absl::optional<LossBasedBweV2::Config> LossBasedBweV2::CreateConfig(
   FieldTrialParameter<bool> use_padding_for_increase("UsePadding", false);
 
   FieldTrialParameter<double> hold_duration_factor("HoldDurationFactor", 0.0);
+  FieldTrialParameter<bool> use_byte_loss_rate("UseByteLossRate", false);
+
   if (key_value_config) {
     ParseFieldTrial({&enabled,
                      &bandwidth_rampup_upper_bound_factor,
@@ -482,7 +488,8 @@ absl::optional<LossBasedBweV2::Config> LossBasedBweV2::CreateConfig(
                      &min_num_observations,
                      &lower_bound_by_acked_rate_factor,
                      &use_padding_for_increase,
-                     &hold_duration_factor},
+                     &hold_duration_factor,
+                     &use_byte_loss_rate},
                     key_value_config->Lookup("WebRTC-Bwe-LossBasedBweV2"));
   }
 
@@ -546,6 +553,7 @@ absl::optional<LossBasedBweV2::Config> LossBasedBweV2::CreateConfig(
       lower_bound_by_acked_rate_factor.Get();
   config->use_padding_for_increase = use_padding_for_increase.Get();
   config->hold_duration_factor = hold_duration_factor.Get();
+  config->use_byte_loss_rate = use_byte_loss_rate.Get();
 
   return config;
 }
@@ -742,6 +750,11 @@ bool LossBasedBweV2::IsConfigValid() const {
 }
 
 double LossBasedBweV2::GetAverageReportedLossRatio() const {
+  return config_->use_byte_loss_rate ? GetAverageReportedByteLossRatio()
+                                     : GetAverageReportedPacketLossRatio();
+}
+
+double LossBasedBweV2::GetAverageReportedPacketLossRatio() const {
   if (num_observations_ <= 0) {
     return 0.0;
   }
@@ -761,6 +774,27 @@ double LossBasedBweV2::GetAverageReportedLossRatio() const {
   }
 
   return num_lost_packets / num_packets;
+}
+
+double LossBasedBweV2::GetAverageReportedByteLossRatio() const {
+  if (num_observations_ <= 0) {
+    return 0.0;
+  }
+
+  DataSize total_bytes = DataSize::Zero();
+  DataSize lost_bytes = DataSize::Zero();
+  for (const Observation& observation : observations_) {
+    if (!observation.IsInitialized()) {
+      continue;
+    }
+
+    double instant_temporal_weight =
+        instant_upper_bound_temporal_weights_[(num_observations_ - 1) -
+                                              observation.id];
+    total_bytes += instant_temporal_weight * observation.size;
+    lost_bytes += instant_temporal_weight * observation.lost_size;
+  }
+  return lost_bytes / total_bytes;
 }
 
 DataRate LossBasedBweV2::GetCandidateBandwidthUpperBound() const {
@@ -846,16 +880,29 @@ LossBasedBweV2::Derivatives LossBasedBweV2::GetDerivatives(
 
     double temporal_weight =
         temporal_weights_[(num_observations_ - 1) - observation.id];
-
-    derivatives.first +=
-        temporal_weight *
-        ((observation.num_lost_packets / loss_probability) -
-         (observation.num_received_packets / (1.0 - loss_probability)));
-    derivatives.second -=
-        temporal_weight *
-        ((observation.num_lost_packets / std::pow(loss_probability, 2)) +
-         (observation.num_received_packets /
-          std::pow(1.0 - loss_probability, 2)));
+    if (config_->use_byte_loss_rate) {
+      derivatives.first +=
+          temporal_weight *
+          ((ToKiloBytes(observation.lost_size) / loss_probability) -
+           (ToKiloBytes(observation.size - observation.lost_size) /
+            (1.0 - loss_probability)));
+      derivatives.second -=
+          temporal_weight *
+          ((ToKiloBytes(observation.lost_size) /
+            std::pow(loss_probability, 2)) +
+           (ToKiloBytes(observation.size - observation.lost_size) /
+            std::pow(1.0 - loss_probability, 2)));
+    } else {
+      derivatives.first +=
+          temporal_weight *
+          ((observation.num_lost_packets / loss_probability) -
+           (observation.num_received_packets / (1.0 - loss_probability)));
+      derivatives.second -=
+          temporal_weight *
+          ((observation.num_lost_packets / std::pow(loss_probability, 2)) +
+           (observation.num_received_packets /
+            std::pow(1.0 - loss_probability, 2)));
+    }
   }
 
   if (derivatives.second >= 0.0) {
@@ -927,13 +974,23 @@ double LossBasedBweV2::GetObjective(
 
     double temporal_weight =
         temporal_weights_[(num_observations_ - 1) - observation.id];
-
-    objective +=
-        temporal_weight *
-        ((observation.num_lost_packets * std::log(loss_probability)) +
-         (observation.num_received_packets * std::log(1.0 - loss_probability)));
-    objective +=
-        temporal_weight * high_bandwidth_bias * observation.num_packets;
+    if (config_->use_byte_loss_rate) {
+      objective +=
+          temporal_weight *
+          ((ToKiloBytes(observation.lost_size) * std::log(loss_probability)) +
+           (ToKiloBytes(observation.size - observation.lost_size) *
+            std::log(1.0 - loss_probability)));
+      objective +=
+          temporal_weight * high_bandwidth_bias * ToKiloBytes(observation.size);
+    } else {
+      objective +=
+          temporal_weight *
+          ((observation.num_lost_packets * std::log(loss_probability)) +
+           (observation.num_received_packets *
+            std::log(1.0 - loss_probability)));
+      objective +=
+          temporal_weight * high_bandwidth_bias * observation.num_packets;
+    }
   }
 
   return objective;
@@ -1036,6 +1093,7 @@ bool LossBasedBweV2::PushBackObservation(
   partial_observation_.num_lost_packets +=
       packet_results_summary.num_lost_packets;
   partial_observation_.size += packet_results_summary.total_size;
+  partial_observation_.lost_size += packet_results_summary.lost_size;
 
   // This is the first packet report we have received.
   if (!IsValid(last_send_time_most_recent_observation_)) {
@@ -1061,6 +1119,8 @@ bool LossBasedBweV2::PushBackObservation(
       observation.num_packets - observation.num_lost_packets;
   observation.sending_rate =
       GetSendingRate(partial_observation_.size / observation_duration);
+  observation.lost_size = partial_observation_.lost_size;
+  observation.size = partial_observation_.size;
   observation.id = num_observations_++;
   observations_[observation.id % config_->observation_window_size] =
       observation;

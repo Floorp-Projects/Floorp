@@ -120,6 +120,7 @@ class LossBasedBweV2 {
     double lower_bound_by_acked_rate_factor = 0.0;
     bool use_padding_for_increase = false;
     double hold_duration_factor = 0.0;
+    bool use_byte_loss_rate = false;
   };
 
   struct Derivatives {
@@ -134,6 +135,8 @@ class LossBasedBweV2 {
     int num_lost_packets = 0;
     int num_received_packets = 0;
     DataRate sending_rate = DataRate::MinusInfinity();
+    DataSize size = DataSize::Zero();
+    DataSize lost_size = DataSize::Zero();
     int id = -1;
   };
 
@@ -141,6 +144,7 @@ class LossBasedBweV2 {
     int num_packets = 0;
     int num_lost_packets = 0;
     DataSize size = DataSize::Zero();
+    DataSize lost_size = DataSize::Zero();
   };
 
   static absl::optional<Config> CreateConfig(
@@ -149,6 +153,8 @@ class LossBasedBweV2 {
 
   // Returns `0.0` if not enough loss statistics have been received.
   double GetAverageReportedLossRatio() const;
+  double GetAverageReportedPacketLossRatio() const;
+  double GetAverageReportedByteLossRatio() const;
   std::vector<ChannelParameters> GetCandidates(bool in_alr) const;
   DataRate GetCandidateBandwidthUpperBound() const;
   Derivatives GetDerivatives(const ChannelParameters& channel_parameters) const;
