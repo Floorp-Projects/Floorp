@@ -36,6 +36,7 @@ namespace webrtc {
 namespace {
 
 constexpr TimeDelta kInitHoldDuration = TimeDelta::Millis(300);
+constexpr TimeDelta kMaxHoldDuration = TimeDelta::Seconds(60);
 
 bool IsValid(DataRate datarate) {
   return datarate.IsFinite();
@@ -361,7 +362,8 @@ void LossBasedBweV2::UpdateResult() {
                        << ", duration: " << hold_duration_.seconds();
       last_hold_timestamp_ =
           last_send_time_most_recent_observation_ + hold_duration_;
-      hold_duration_ = hold_duration_ * config_->hold_duration_factor;
+      hold_duration_ = std::min(kMaxHoldDuration,
+                                hold_duration_ * config_->hold_duration_factor);
     }
     last_padding_info_ = PaddingInfo();
     loss_based_result_.state = LossBasedState::kDecreasing;
