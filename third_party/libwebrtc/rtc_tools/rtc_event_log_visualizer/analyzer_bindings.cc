@@ -15,12 +15,12 @@
 #include <iostream>
 #include <string>
 
+#include "absl/strings/match.h"
 #include "absl/strings/string_view.h"
 #include "api/units/time_delta.h"
 #include "logging/rtc_event_log/rtc_event_log_parser.h"
 #include "rtc_base/numerics/safe_conversions.h"
 #include "rtc_base/protobuf_utils.h"
-#include "rtc_base/system/unused.h"
 #include "rtc_tools/rtc_event_log_visualizer/analyzer.h"
 #include "rtc_tools/rtc_event_log_visualizer/analyzer_common.h"
 #include "rtc_tools/rtc_event_log_visualizer/plot_base.h"
@@ -31,15 +31,14 @@
 #include "rtc_tools/rtc_event_log_visualizer/proto/chart.pb.h"
 #endif
 
+using webrtc::PacketDirection;
+
 void analyze_rtc_event_log(const char* log_contents,
                            size_t log_size,
                            const char* selection,
                            size_t selection_size,
                            char* output,
                            uint32_t* output_size) {
-  RTC_UNUSED(selection);
-  RTC_UNUSED(selection_size);
-
   webrtc::ParsedRtcEventLog parsed_log(
       webrtc::ParsedRtcEventLog::UnconfiguredHeaderExtensions::kDontParse,
       /*allow_incomplete_logs*/ false);
@@ -70,16 +69,51 @@ void analyze_rtc_event_log(const char* log_contents,
     return;
   }
 
+  absl::string_view selection_view(selection, selection_size);
   webrtc::EventLogAnalyzer analyzer(parsed_log, config);
   webrtc::PlotCollection collection;
   collection.SetCallTimeToUtcOffsetMs(config.CallTimeToUtcOffsetMs());
 
-  analyzer.CreateTotalOutgoingBitrateGraph(collection.AppendNewPlot(),
-                                           /*show_detector_state*/ true,
-                                           /*show_alr_state*/ false,
-                                           /*show_link_capacity*/ true);
+  // Outgoing
+  if (absl::StrContains(selection_view, "outgoing_packet_sizes")) {
+    analyzer.CreatePacketGraph(PacketDirection::kOutgoingPacket,
+                               collection.AppendNewPlot());
+  }
+  if (absl::StrContains(selection_view, "outgoing_stream_bitrate")) {
+    analyzer.CreateStreamBitrateGraph(PacketDirection::kOutgoingPacket,
+                                      collection.AppendNewPlot());
+  }
+  if (absl::StrContains(selection_view, "outgoing_bitrate")) {
+    analyzer.CreateTotalOutgoingBitrateGraph(collection.AppendNewPlot(),
+                                             /*show_detector_state*/ true,
+                                             /*show_alr_state*/ false,
+                                             /*show_link_capacity*/ true);
+  }
+  if (absl::StrContains(selection_view, "network_delay_feedback")) {
+    analyzer.CreateNetworkDelayFeedbackGraph(collection.AppendNewPlot());
+  }
+  if (absl::StrContains(selection_view, "fraction_loss_feedback")) {
+    analyzer.CreateFractionLossGraph(collection.AppendNewPlot());
+  }
 
-  analyzer.CreateNetworkDelayFeedbackGraph(collection.AppendNewPlot());
+  // Incoming
+  if (absl::StrContains(selection_view, "incoming_packet_sizes")) {
+    analyzer.CreatePacketGraph(PacketDirection::kIncomingPacket,
+                               collection.AppendNewPlot());
+  }
+  if (absl::StrContains(selection_view, "incoming_stream_bitrate")) {
+    analyzer.CreateStreamBitrateGraph(PacketDirection::kIncomingPacket,
+                                      collection.AppendNewPlot());
+  }
+  if (absl::StrContains(selection_view, "incoming_bitrate")) {
+    analyzer.CreateTotalIncomingBitrateGraph(collection.AppendNewPlot());
+  }
+  if (absl::StrContains(selection_view, "incoming_delay")) {
+    analyzer.CreateIncomingDelayGraph(collection.AppendNewPlot());
+  }
+  if (absl::StrContains(selection_view, "incoming_loss_rate")) {
+    analyzer.CreateIncomingPacketLossGraph(collection.AppendNewPlot());
+  }
 
   webrtc::analytics::ChartCollection proto_charts;
   collection.ExportProtobuf(&proto_charts);
