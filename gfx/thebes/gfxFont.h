@@ -10,6 +10,7 @@
 #include <new>
 #include <utility>
 #include <functional>
+#include "FontPaletteCache.h"
 #include "PLDHashTable.h"
 #include "ThebesRLBoxTypes.h"
 #include "gfxFontVariations.h"
@@ -2299,6 +2300,10 @@ class gfxFont {
 // are dependent on the specific font, so they are set per GlyphRun.
 
 struct MOZ_STACK_CLASS TextRunDrawParams {
+  explicit TextRunDrawParams(mozilla::gfx::PaletteCache& aPaletteCache)
+      : paletteCache(aPaletteCache) {}
+
+  mozilla::gfx::PaletteCache& paletteCache;
   RefPtr<mozilla::gfx::DrawTarget> dt;
   gfxContext* context = nullptr;
   gfxFont::Spacing* spacing = nullptr;
@@ -2312,7 +2317,6 @@ struct MOZ_STACK_CLASS TextRunDrawParams {
   gfxPattern* textStrokePattern = nullptr;
   const mozilla::gfx::StrokeOptions* strokeOpts = nullptr;
   const mozilla::gfx::DrawOptions* drawOpts = nullptr;
-  const mozilla::gfx::FontPaletteValueSet* paletteValueSet = nullptr;
   nsAtom* fontPalette = nullptr;
   DrawMode drawMode = DrawMode::GLYPH_FILL;
   bool isVerticalRun = false;
@@ -2320,34 +2324,6 @@ struct MOZ_STACK_CLASS TextRunDrawParams {
   bool paintSVGGlyphs = true;
   bool allowGDI = true;
   bool hasTextShadow = false;
-
-  // MRU cache of color-font palettes being used by fonts in the run. We cache
-  // these in the TextRunDrawParams so that we can avoid re-creating a new
-  // palette (which can be quite expensive) for each individual glyph run.
-  using CacheKey = const gfxFont*;
-
-  struct CacheData {
-    CacheKey mKey;
-    mozilla::UniquePtr<nsTArray<mozilla::gfx::sRGBColor>> mPalette;
-  };
-
-  class PaletteCache
-      : public mozilla::MruCache<CacheKey, CacheData, PaletteCache> {
-   public:
-    static mozilla::HashNumber Hash(const CacheKey& aKey) {
-      return mozilla::HashGeneric(aKey);
-    }
-    static bool Match(const CacheKey& aKey, const CacheData& aVal) {
-      return aVal.mKey == aKey;
-    }
-  };
-
-  PaletteCache mPaletteCache;
-
-  // Returns a pointer to a palette owned by the PaletteCache. This is only
-  // valid until the next call to GetPaletteFor (which might evict it) or
-  // until the TextRunDrawParams goes out of scope.
-  nsTArray<mozilla::gfx::sRGBColor>* GetPaletteFor(const gfxFont* aFont);
 };
 
 struct MOZ_STACK_CLASS FontDrawParams {
@@ -2368,7 +2344,11 @@ struct MOZ_STACK_CLASS FontDrawParams {
 };
 
 struct MOZ_STACK_CLASS EmphasisMarkDrawParams {
+  EmphasisMarkDrawParams(gfxContext* aContext,
+                         mozilla::gfx::PaletteCache& aPaletteCache)
+      : context(aContext), paletteCache(aPaletteCache) {}
   gfxContext* context;
+  mozilla::gfx::PaletteCache& paletteCache;
   gfxFont::Spacing* spacing;
   gfxTextRun* mark;
   gfxFloat advance;
