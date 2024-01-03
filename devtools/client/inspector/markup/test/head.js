@@ -478,6 +478,7 @@ async function simulateNodeDrag(
     typeof selector === "string"
       ? await getContainerForSelector(selector, inspector)
       : selector;
+  container.elt.scrollIntoView(true);
   const rect = container.tagLine.getBoundingClientRect();
   const scrollX = inspector.markup.doc.documentElement.scrollLeft;
   const scrollY = inspector.markup.doc.documentElement.scrollTop;
