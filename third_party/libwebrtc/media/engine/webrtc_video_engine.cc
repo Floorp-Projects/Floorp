@@ -1674,14 +1674,6 @@ void WebRtcVideoSendChannel::SetEncoderSelector(
   }
 }
 
-void WebRtcVideoSendChannel::SetVideoCodecSwitchingEnabled(bool enabled) {
-  RTC_DCHECK_RUN_ON(&thread_checker_);
-  allow_codec_switching_ = enabled;
-  if (allow_codec_switching_) {
-    RTC_LOG(LS_INFO) << "Encoder switching enabled.";
-  }
-}
-
 WebRtcVideoSendChannel::WebRtcVideoSendStream::VideoSendStreamParameters::
     VideoSendStreamParameters(
         webrtc::VideoSendStream::Config config,

@@ -1676,27 +1676,6 @@ RTCError PeerConnection::SetConfiguration(
                          "Failed to apply configuration to PortAllocator.");
   }
 
-  if (modified_config.allow_codec_switching.has_value()) {
-    std::vector<cricket::VideoMediaSendChannelInterface*> channels;
-    for (const auto& transceiver : rtp_manager()->transceivers()->List()) {
-      if (transceiver->media_type() != cricket::MEDIA_TYPE_VIDEO)
-        continue;
-
-      auto* video_channel = transceiver->internal()->channel();
-      if (video_channel)
-        channels.push_back(
-            static_cast<cricket::VideoMediaSendChannelInterface*>(
-                video_channel->media_send_channel()));
-    }
-
-    worker_thread()->BlockingCall(
-        [channels = std::move(channels),
-         allow_codec_switching = *modified_config.allow_codec_switching]() {
-          for (auto* ch : channels)
-            ch->SetVideoCodecSwitchingEnabled(allow_codec_switching);
-        });
-  }
-
   configuration_ = modified_config;
   return RTCError::OK();
 }
