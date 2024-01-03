@@ -33,6 +33,7 @@ class MockTransformableAudioFrame : public TransformableAudioFrameInterface {
   MOCK_METHOD(uint32_t, GetTimestamp, (), (const, override));
   MOCK_METHOD(void, SetRTPTimestamp, (uint32_t), (override));
   MOCK_METHOD(Direction, GetDirection, (), (const, override));
+  MOCK_METHOD(std::string, GetMimeType, (), (const, override));
 };
 
 }  // namespace webrtc
