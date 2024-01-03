@@ -35,6 +35,8 @@ namespace webrtc {
 
 namespace {
 
+constexpr TimeDelta kInitHoldDuration = TimeDelta::Millis(300);
+
 bool IsValid(DataRate datarate) {
   return datarate.IsFinite();
 }
@@ -125,6 +127,7 @@ LossBasedBweV2::LossBasedBweV2(const FieldTrialsView* key_value_config)
   instant_upper_bound_temporal_weights_.resize(
       config_->observation_window_size);
   CalculateTemporalWeights();
+  hold_duration_ = kInitHoldDuration;
 }
 
 bool LossBasedBweV2::IsEnabled() const {
@@ -318,6 +321,16 @@ void LossBasedBweV2::UpdateResult() {
                           GetInstantUpperBound()));
   }
 
+  if (loss_based_result_.state == LossBasedState::kDecreasing &&
+      last_hold_timestamp_ > last_send_time_most_recent_observation_ &&
+      bounded_bandwidth_estimate < delay_based_estimate_) {
+    // BWE is not allowed to increase during the HOLD duration. The purpose of
+    // HOLD is to not immediately ramp up BWE to a rate that may cause loss.
+    loss_based_result_.bandwidth_estimate = std::min(
+        loss_based_result_.bandwidth_estimate, bounded_bandwidth_estimate);
+    return;
+  }
+
   if (IsEstimateIncreasingWhenLossLimited(
           /*old_estimate=*/loss_based_result_.bandwidth_estimate,
           /*new_estimate=*/bounded_bandwidth_estimate) &&
@@ -328,8 +341,21 @@ void LossBasedBweV2::UpdateResult() {
                                    : LossBasedState::kIncreasing;
   } else if (bounded_bandwidth_estimate < delay_based_estimate_ &&
              bounded_bandwidth_estimate < max_bitrate_) {
+    if (loss_based_result_.state != LossBasedState::kDecreasing &&
+        config_->hold_duration_factor > 0) {
+      RTC_LOG(LS_INFO) << this << " "
+                       << "Switch to HOLD. Bounded BWE: "
+                       << bounded_bandwidth_estimate.kbps()
+                       << ", duration: " << hold_duration_.seconds();
+      last_hold_timestamp_ =
+          last_send_time_most_recent_observation_ + hold_duration_;
+      hold_duration_ = hold_duration_ * config_->hold_duration_factor;
+    }
     loss_based_result_.state = LossBasedState::kDecreasing;
   } else {
+    // Reset the HOLD duration if delay based estimate works to avoid getting
+    // stuck in low bitrate.
+    hold_duration_ = kInitHoldDuration;
     loss_based_result_.state = LossBasedState::kDelayBasedEstimate;
   }
   loss_based_result_.bandwidth_estimate = bounded_bandwidth_estimate;
@@ -417,6 +443,7 @@ absl::optional<LossBasedBweV2::Config> LossBasedBweV2::CreateConfig(
       "LowerBoundByAckedRateFactor", 0.0);
   FieldTrialParameter<bool> use_padding_for_increase("UsePadding", false);
 
+  FieldTrialParameter<double> hold_duration_factor("HoldDurationFactor", 0.0);
   if (key_value_config) {
     ParseFieldTrial({&enabled,
                      &bandwidth_rampup_upper_bound_factor,
@@ -454,7 +481,8 @@ absl::optional<LossBasedBweV2::Config> LossBasedBweV2::CreateConfig(
                      &use_in_start_phase,
                      &min_num_observations,
                      &lower_bound_by_acked_rate_factor,
-                     &use_padding_for_increase},
+                     &use_padding_for_increase,
+                     &hold_duration_factor},
                     key_value_config->Lookup("WebRTC-Bwe-LossBasedBweV2"));
   }
 
@@ -517,6 +545,7 @@ absl::optional<LossBasedBweV2::Config> LossBasedBweV2::CreateConfig(
   config->lower_bound_by_acked_rate_factor =
       lower_bound_by_acked_rate_factor.Get();
   config->use_padding_for_increase = use_padding_for_increase.Get();
+  config->hold_duration_factor = hold_duration_factor.Get();
 
   return config;
 }
