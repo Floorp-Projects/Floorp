@@ -52,10 +52,12 @@ class WgcCaptureSession final {
     return is_capture_started_;
   }
 
-  // We only keep 1 buffer in the internal frame pool to reduce the latency as
-  // much as possible.
+  // We keep 2 buffers in the frame pool since it results in a good compromise
+  // between latency/capture-rate and the rate at which
+  // Direct3D11CaptureFramePool.TryGetNextFrame returns NULL and we have to fall
+  // back to providing a copy from our external queue instead.
   // We make this public for tests.
-  static constexpr int kNumBuffers = 1;
+  static constexpr int kNumBuffers = 2;
 
  private:
   // Initializes `mapped_texture_` with the properties of the `src_texture`,
