@@ -11,8 +11,14 @@
 #include "rtc_tools/rtc_event_log_visualizer/plot_base.h"
 
 #include <algorithm>
+#include <cstddef>
+#include <cstdio>
 #include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 
+#include "absl/strings/string_view.h"
 #include "rtc_base/checks.h"
 
 namespace webrtc {

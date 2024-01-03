@@ -10,6 +10,7 @@
 #ifndef RTC_TOOLS_RTC_EVENT_LOG_VISUALIZER_PLOT_BASE_H_
 #define RTC_TOOLS_RTC_EVENT_LOG_VISUALIZER_PLOT_BASE_H_
 
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <utility>
