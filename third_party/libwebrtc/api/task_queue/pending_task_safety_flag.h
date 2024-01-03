@@ -13,6 +13,7 @@
 
 #include <utility>
 
+#include "absl/base/nullability.h"
 #include "absl/functional/any_invocable.h"
 #include "api/ref_counted_base.h"
 #include "api/scoped_refptr.h"
@@ -72,7 +73,7 @@ class RTC_EXPORT PendingTaskSafetyFlag final
   // a given task queue and the `alive()` flag specified.
   static rtc::scoped_refptr<PendingTaskSafetyFlag> CreateAttachedToTaskQueue(
       bool alive,
-      TaskQueueBase* attached_queue);
+      absl::Nonnull<TaskQueueBase*> attached_queue);
 
   // Same as `CreateDetached()` except the initial state of the returned flag
   // will be `!alive()`.
@@ -101,7 +102,8 @@ class RTC_EXPORT PendingTaskSafetyFlag final
 
  protected:
   explicit PendingTaskSafetyFlag(bool alive) : alive_(alive) {}
-  PendingTaskSafetyFlag(bool alive, TaskQueueBase* attached_queue)
+  PendingTaskSafetyFlag(bool alive,
+                        absl::Nonnull<TaskQueueBase*> attached_queue)
       : alive_(alive), main_sequence_(attached_queue) {}
 
  private:
