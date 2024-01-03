@@ -2043,7 +2043,7 @@ class AnnotationEditorUIManager {
     this.#activeEditor = null;
     this.#selectedEditors.clear();
     this.#commandManager.destroy();
-    this.#altTextManager.destroy();
+    this.#altTextManager?.destroy();
     if (this.#focusMainContainerTimeoutId) {
       clearTimeout(this.#focusMainContainerTimeoutId);
       this.#focusMainContainerTimeoutId = null;
@@ -8260,7 +8260,7 @@ function getDocument(src) {
   }
   const fetchDocParams = {
     docId,
-    apiVersion: '4.0.347',
+    apiVersion: '4.0.381',
     data,
     password,
     disableAutoFetch,
@@ -9411,10 +9411,10 @@ class WorkerTransport {
     });
     messageHandler.on("commonobj", ([id, type, exportedData]) => {
       if (this.destroyed) {
-        return;
+        return null;
       }
       if (this.commonObjs.has(id)) {
-        return;
+        return null;
       }
       switch (type) {
         case "Font":
@@ -9443,6 +9443,24 @@ class WorkerTransport {
             this.commonObjs.resolve(id, font);
           });
           break;
+        case "CopyLocalImage":
+          const {
+            imageRef
+          } = exportedData;
+          assert(imageRef, "The imageRef must be defined.");
+          for (const pageProxy of this.#pageCache.values()) {
+            for (const [, data] of pageProxy.objs) {
+              if (data.ref !== imageRef) {
+                continue;
+              }
+              if (!data.dataLen) {
+                return null;
+              }
+              this.commonObjs.resolve(id, structuredClone(data));
+              return data.dataLen;
+            }
+          }
+          break;
         case "FontPath":
         case "Image":
         case "Pattern":
@@ -9451,6 +9469,7 @@ class WorkerTransport {
         default:
           throw new Error(`Got unknown common object type ${type}`);
       }
+      return null;
     });
     messageHandler.on("obj", ([id, pageIndex, type, imageData]) => {
       if (this.destroyed) {
@@ -9467,20 +9486,8 @@ class WorkerTransport {
       switch (type) {
         case "Image":
           pageProxy.objs.resolve(id, imageData);
-          if (imageData) {
-            let length;
-            if (imageData.bitmap) {
-              const {
-                width,
-                height
-              } = imageData;
-              length = width * height * 4;
-            } else {
-              length = imageData.data?.length || 0;
-            }
-            if (length > MAX_IMAGE_SIZE_TO_CACHE) {
-              pageProxy._maybeCleanupAfterRender = true;
-            }
+          if (imageData?.dataLen > MAX_IMAGE_SIZE_TO_CACHE) {
+            pageProxy._maybeCleanupAfterRender = true;
           }
           break;
         case "Pattern":
@@ -9708,7 +9715,7 @@ class PDFObjects {
   }
   has(objId) {
     const obj = this.#objs[objId];
-    return obj?.capability.settled || false;
+    return obj?.capability.settled ?? false;
   }
   resolve(objId, data = null) {
     const obj = this.#ensureObj(objId);
@@ -9723,6 +9730,18 @@ class PDFObjects {
       data?.bitmap?.close();
     }
     this.#objs = Object.create(null);
+  }
+  *[Symbol.iterator]() {
+    for (const objId in this.#objs) {
+      const {
+        capability,
+        data
+      } = this.#objs[objId];
+      if (!capability.settled) {
+        continue;
+      }
+      yield [objId, data];
+    }
   }
 }
 class RenderTask {
@@ -9884,8 +9903,8 @@ class InternalRenderTask {
     }
   }
 }
-const version = '4.0.347';
-const build = '76e3e5202';
+const version = '4.0.381';
+const build = '231c79800';
 
 ;// CONCATENATED MODULE: ./src/display/text_layer.js
 
@@ -16062,8 +16081,8 @@ class DrawLayer {
 
 
 
-const pdfjsVersion = '4.0.347';
-const pdfjsBuild = '76e3e5202';
+const pdfjsVersion = '4.0.381';
+const pdfjsBuild = '231c79800';
 
 var __webpack_exports__AbortException = __webpack_exports__.AbortException;
 var __webpack_exports__AnnotationEditorLayer = __webpack_exports__.AnnotationEditorLayer;
