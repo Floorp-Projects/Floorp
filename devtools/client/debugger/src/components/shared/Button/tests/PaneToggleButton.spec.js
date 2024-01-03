@@ -36,7 +36,7 @@ describe("PaneToggleButton", () => {
     expect(wrapper.hasClass("start")).toBe(true);
   });
 
-  it("toggles end position ", () => {
+  it("toggles end position", () => {
     wrapper.setProps({ position: "end" });
     expect(wrapper.hasClass("end")).toBe(true);
   });

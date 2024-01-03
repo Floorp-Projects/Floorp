@@ -369,4 +369,10 @@ module.exports = {
       ["-\\*-(.*)-\\*-", "eslint(.*)", "vim(.*)"],
     ],
   },
+  settings: {
+    jest: {
+      // Keep in sync with "jest" version from debugger's package.json
+      version: 27,
+    },
+  },
 };

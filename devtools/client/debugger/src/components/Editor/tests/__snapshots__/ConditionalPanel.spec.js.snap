@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`ConditionalPanel it should render at location of selected breakpoint 1`] = `
+exports[`ConditionalPanel should render at location of selected breakpoint 1`] = `
 <ConditionalPanel
   breakpoint={
     Object {
@@ -246,7 +246,7 @@ exports[`ConditionalPanel it should render at location of selected breakpoint 1`
 />
 `;
 
-exports[`ConditionalPanel it should render with condition at selected breakpoint location 1`] = `
+exports[`ConditionalPanel should render with condition at selected breakpoint location 1`] = `
 <ConditionalPanel
   breakpoint={
     Object {
@@ -496,7 +496,7 @@ exports[`ConditionalPanel it should render with condition at selected breakpoint
 />
 `;
 
-exports[`ConditionalPanel it should render with logpoint at selected breakpoint location 1`] = `
+exports[`ConditionalPanel should render with logpoint at selected breakpoint location 1`] = `
 <ConditionalPanel
   breakpoint={
     Object {

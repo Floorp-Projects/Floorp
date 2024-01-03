@@ -12,7 +12,7 @@ import {
 import { initialSourceBlackBoxState } from "../../../reducers/source-blackbox";
 
 describe("blackbox", () => {
-  it("should blackbox and unblackbox a source based on the current state of the source ", async () => {
+  it("should blackbox and unblackbox a source based on the current state of the source", async () => {
     const store = createStore({
       blackBox: async () => true,
       getSourceActorBreakableLines: async () => [],
