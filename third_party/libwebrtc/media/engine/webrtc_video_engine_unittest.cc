@@ -977,6 +977,45 @@ TEST_F(WebRtcVideoEngineTest, SendsFeedbackAfterUnsignaledRtxPacket) {
   receive_channel->SetInterface(nullptr);
 }
 
+TEST_F(WebRtcVideoEngineTest, ReceiveBufferSizeViaFieldTrial) {
+  webrtc::test::ScopedKeyValueConfig override_field_trials(
+      field_trials_, "WebRTC-ReceiveBufferSize/size_bytes:10000/");
+  std::unique_ptr<VideoMediaReceiveChannelInterface> receive_channel =
+      engine_.CreateReceiveChannel(call_.get(), GetMediaConfig(),
+                                   VideoOptions(), webrtc::CryptoOptions());
+  cricket::FakeNetworkInterface network;
+  receive_channel->SetInterface(&network);
+  EXPECT_EQ(10000, network.recvbuf_size());
+  receive_channel->SetInterface(nullptr);
+}
+
+TEST_F(WebRtcVideoEngineTest, TooLowReceiveBufferSizeViaFieldTrial) {
+  // 10000001 is too high, it will revert to the default
+  // kVideoRtpRecvBufferSize.
+  webrtc::test::ScopedKeyValueConfig override_field_trials(
+      field_trials_, "WebRTC-ReceiveBufferSize/size_bytes:10000001/");
+  std::unique_ptr<VideoMediaReceiveChannelInterface> receive_channel =
+      engine_.CreateReceiveChannel(call_.get(), GetMediaConfig(),
+                                   VideoOptions(), webrtc::CryptoOptions());
+  cricket::FakeNetworkInterface network;
+  receive_channel->SetInterface(&network);
+  EXPECT_EQ(kVideoRtpRecvBufferSize, network.recvbuf_size());
+  receive_channel->SetInterface(nullptr);
+}
+
+TEST_F(WebRtcVideoEngineTest, TooHighReceiveBufferSizeViaFieldTrial) {
+  // 9999 is too low, it will revert to the default kVideoRtpRecvBufferSize.
+  webrtc::test::ScopedKeyValueConfig override_field_trials(
+      field_trials_, "WebRTC-ReceiveBufferSize/size_bytes:9999/");
+  std::unique_ptr<VideoMediaReceiveChannelInterface> receive_channel =
+      engine_.CreateReceiveChannel(call_.get(), GetMediaConfig(),
+                                   VideoOptions(), webrtc::CryptoOptions());
+  cricket::FakeNetworkInterface network;
+  receive_channel->SetInterface(&network);
+  EXPECT_EQ(kVideoRtpRecvBufferSize, network.recvbuf_size());
+  receive_channel->SetInterface(nullptr);
+}
+
 TEST_F(WebRtcVideoEngineTest, UpdatesUnsignaledRtxSsrcAndRecoversPayload) {
   // Setup a channel with VP8, RTX and transport sequence number header
   // extension. Receive stream is not explicitly configured.
