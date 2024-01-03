@@ -16,11 +16,13 @@ import android.widget.FrameLayout
 import androidx.core.view.NestedScrollingChildHelper
 import androidx.core.view.ViewCompat.SCROLL_AXIS_VERTICAL
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import mozilla.components.concept.engine.INPUT_HANDLING_UNKNOWN
 import mozilla.components.support.test.any
 import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.mockMotionEvent
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -138,21 +140,26 @@ class NestedGeckoViewTest {
     @Test
     fun `verify onTouchEvent when ACTION_UP or ACTION_CANCEL`() {
         val nestedWebView = spy(NestedGeckoView(context))
-        nestedWebView.inputResultDetail = nestedWebView.inputResultDetail.copy(INPUT_RESULT_HANDLED)
+        val initialInputResultDetail = nestedWebView.inputResultDetail.copy(INPUT_RESULT_HANDLED)
+        nestedWebView.inputResultDetail = initialInputResultDetail
         val mockChildHelper: NestedScrollingChildHelper = mock()
         nestedWebView.childHelper = mockChildHelper
         doReturn(true).`when`(nestedWebView).callSuperOnTouchEvent(any())
 
+        assertEquals(INPUT_RESULT_HANDLED, nestedWebView.inputResultDetail.inputResult)
         nestedWebView.onTouchEvent(mockMotionEvent(ACTION_UP))
         verify(mockChildHelper).stopNestedScroll()
-        // ACTION_UP should not change the result.
-        assertTrue(nestedWebView.inputResultDetail.isTouchHandledByBrowser())
+        // ACTION_UP should reset nestedWebView.inputResultDetail.
+        assertNotEquals(initialInputResultDetail, nestedWebView.inputResultDetail)
+        assertEquals(INPUT_HANDLING_UNKNOWN, nestedWebView.inputResultDetail.inputResult)
 
-        nestedWebView.inputResultDetail = nestedWebView.inputResultDetail.copy(INPUT_RESULT_HANDLED)
+        nestedWebView.inputResultDetail = initialInputResultDetail
+        assertEquals(INPUT_RESULT_HANDLED, nestedWebView.inputResultDetail.inputResult)
         nestedWebView.onTouchEvent(mockMotionEvent(ACTION_CANCEL))
         verify(mockChildHelper, times(2)).stopNestedScroll()
-        // ACTION_CANCEL should not change the result.
-        assertTrue(nestedWebView.inputResultDetail.isTouchHandledByBrowser())
+        // ACTION_CANCEL should reset nestedWebView.inputResultDetail.
+        assertNotEquals(initialInputResultDetail, nestedWebView.inputResultDetail)
+        assertEquals(INPUT_HANDLING_UNKNOWN, nestedWebView.inputResultDetail.inputResult)
 
         // onTouchEventForResult should be called only for ACTION_DOWN
         verify(nestedWebView, times(0)).updateInputResult(any())

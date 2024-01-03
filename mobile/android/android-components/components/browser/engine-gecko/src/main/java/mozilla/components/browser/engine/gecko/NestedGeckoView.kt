@@ -82,7 +82,6 @@ open class NestedGeckoView(context: Context) : GeckoView(context), NestedScrolli
 
             MotionEvent.ACTION_DOWN -> {
                 // A new gesture started. Ask GV if it can handle this.
-                inputResultDetail = InputResultDetail.newInstance(false)
                 parent?.requestDisallowInterceptTouchEvent(true)
                 updateInputResult(event)
 
@@ -98,6 +97,12 @@ open class NestedGeckoView(context: Context) : GeckoView(context), NestedScrolli
 
             // We don't care about other touch events
             MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                // inputResultDetail needs to be reset here and not in the next ACTION_DOWN, because
+                // its value is used by other features that poll for the value via
+                // `EngineView.getInputResultDetail`. Not resetting this in ACTION_CANCEL/ACTION_UP
+                // would then mean we send stale information to those features from a previous
+                // gesture's result.
+                inputResultDetail = InputResultDetail.newInstance(true)
                 stopNestedScroll()
             }
         }
