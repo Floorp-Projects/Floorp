@@ -133,7 +133,23 @@ function parseJSONManifest(aId, aRequest, aManifestData) {
   }
 
   // The set of add-ons this manifest has updates for
-  let addons = getRequiredProperty(manifest, "addons", "object");
+  let addons = getProperty(manifest, "addons", "object");
+
+  if (!addons) {
+    let keys = Object.keys(manifest);
+    if (keys.length) {
+      // "addons" property is optional. The presence of other properties may be
+      // a sign of a mistake, so print a warning to help with debugging.
+      logger.warn(
+        `Update manifest for ${aId} is missing the "addons" property, found ${keys} instead.`
+      );
+    } else {
+      // If the add-on isn't listed, the update server may return an empty
+      // response.
+      logger.warn(`Received empty update manifest for ${aId}.`);
+    }
+    return [];
+  }
 
   // The entry for this particular add-on
   let addon = getProperty(addons, aId, "object");
@@ -260,7 +276,7 @@ function UpdateParser(aId, aUrl, aObserver) {
     this.request.addEventListener("timeout", () => this.onTimeout());
     this.request.send(null);
   } catch (e) {
-    logger.error("Failed to request update manifest", e);
+    logger.error(`Failed to request update manifest for ${this.id}`, e);
   }
 }
 
@@ -314,7 +330,10 @@ UpdateParser.prototype = {
       let json = JSON.parse(request.responseText);
       results = parseJSONManifest(this.id, request, json);
     } catch (e) {
-      logger.warn("onUpdateCheckComplete failed to parse update manifest", e);
+      logger.warn(
+        `onUpdateCheckComplete failed to parse update manifest for ${this.id}`,
+        e
+      );
       this.notifyError(lazy.AddonManager.ERROR_PARSE_ERROR);
       return;
     }
@@ -323,7 +342,10 @@ UpdateParser.prototype = {
       try {
         this.observer.onUpdateCheckComplete(results);
       } catch (e) {
-        logger.warn("onUpdateCheckComplete notification failed", e);
+        logger.warn(
+          `onUpdateCheckComplete notification failed for ${this.id}`,
+          e
+        );
       }
     } else {
       logger.warn(
