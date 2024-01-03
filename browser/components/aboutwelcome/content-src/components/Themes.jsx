@@ -19,6 +19,7 @@ export const Themes = props => {
                 key={theme + label}
                 text={typeof tooltip === "object" ? tooltip : {}}
               >
+                {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
                 <label className="theme" title={theme + label}>
                   <Localized
                     text={typeof description === "object" ? description : {}}
