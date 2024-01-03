@@ -191,7 +191,7 @@ static void FLOATING_POINT_RESTORE() {}
 vpx_codec_err_t vpx_codec_encode(vpx_codec_ctx_t *ctx, const vpx_image_t *img,
                                  vpx_codec_pts_t pts, unsigned long duration,
                                  vpx_enc_frame_flags_t flags,
-                                 unsigned long deadline) {
+                                 vpx_enc_deadline_t deadline) {
   vpx_codec_err_t res = VPX_CODEC_OK;
 
   if (!ctx || (img && !duration))

@@ -804,6 +804,11 @@ void vpx_scaled_horiz_c(const uint8_t *src, ptrdiff_t src_stride, uint8_t *dst, 
 void vpx_scaled_vert_c(const uint8_t *src, ptrdiff_t src_stride, uint8_t *dst, ptrdiff_t dst_stride, const InterpKernel *filter, int x0_q4, int x_step_q4, int y0_q4, int y_step_q4, int w, int h);
 #define vpx_scaled_vert vpx_scaled_vert_c
 
+int64_t vpx_sse_c(const uint8_t *src, int src_stride, const uint8_t *ref, int ref_stride, int width, int height);
+int64_t vpx_sse_sse4_1(const uint8_t *src, int src_stride, const uint8_t *ref, int ref_stride, int width, int height);
+int64_t vpx_sse_avx2(const uint8_t *src, int src_stride, const uint8_t *ref, int ref_stride, int width, int height);
+RTCD_EXTERN int64_t (*vpx_sse)(const uint8_t *src, int src_stride, const uint8_t *ref, int ref_stride, int width, int height);
+
 uint32_t vpx_sub_pixel_avg_variance16x16_c(const uint8_t *src_ptr, int src_stride, int x_offset, int y_offset, const uint8_t *ref_ptr, int ref_stride, uint32_t *sse, const uint8_t *second_pred);
 uint32_t vpx_sub_pixel_avg_variance16x16_sse2(const uint8_t *src_ptr, int src_stride, int x_offset, int y_offset, const uint8_t *ref_ptr, int ref_stride, uint32_t *sse, const uint8_t *second_pred);
 uint32_t vpx_sub_pixel_avg_variance16x16_ssse3(const uint8_t *src_ptr, int src_stride, int x_offset, int y_offset, const uint8_t *ref_ptr, int ref_stride, uint32_t *sse, const uint8_t *second_pred);
@@ -1444,6 +1449,9 @@ static void setup_rtcd_internal(void)
     if (flags & HAS_AVX2) vpx_satd = vpx_satd_avx2;
     vpx_scaled_2d = vpx_scaled_2d_c;
     if (flags & HAS_SSSE3) vpx_scaled_2d = vpx_scaled_2d_ssse3;
+    vpx_sse = vpx_sse_c;
+    if (flags & HAS_SSE4_1) vpx_sse = vpx_sse_sse4_1;
+    if (flags & HAS_AVX2) vpx_sse = vpx_sse_avx2;
     vpx_sub_pixel_avg_variance16x16 = vpx_sub_pixel_avg_variance16x16_c;
     if (flags & HAS_SSE2) vpx_sub_pixel_avg_variance16x16 = vpx_sub_pixel_avg_variance16x16_sse2;
     if (flags & HAS_SSSE3) vpx_sub_pixel_avg_variance16x16 = vpx_sub_pixel_avg_variance16x16_ssse3;

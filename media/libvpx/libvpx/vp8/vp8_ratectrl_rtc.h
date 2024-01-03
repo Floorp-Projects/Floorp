@@ -45,8 +45,10 @@ class VP8RateControlRTC {
   // GetLoopfilterLevel() needs to be called after ComputeQP() since loopfilter
   // level is calculated from frame qp.
   int GetLoopfilterLevel() const;
-  // int GetLoopfilterLevel() const;
-  void ComputeQP(const VP8FrameParamsQpRTC &frame_params);
+  // ComputeQP computes the QP if the frame is not dropped (kOk return),
+  // otherwise it returns kDrop and subsequent GetQP and PostEncodeUpdate
+  // are not to be called.
+  FrameDropDecision ComputeQP(const VP8FrameParamsQpRTC &frame_params);
   // Feedback to rate control with the size of current encoded frame
   void PostEncodeUpdate(uint64_t encoded_frame_size);
 

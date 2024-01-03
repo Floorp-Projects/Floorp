@@ -48,6 +48,7 @@
 #include "vp9/encoder/vp9_encodeframe.h"
 #include "vp9/encoder/vp9_encodemb.h"
 #include "vp9/encoder/vp9_encodemv.h"
+#include "vp9/encoder/vp9_encoder.h"
 #include "vp9/encoder/vp9_ethread.h"
 #include "vp9/encoder/vp9_extend.h"
 #include "vp9/encoder/vp9_multi_thread.h"
@@ -1301,6 +1302,13 @@ static int choose_partitioning(VP9_COMP *cpi, const TileInfo *const tile,
       (frame_is_intra_only(cm) ||
        (is_one_pass_svc(cpi) &&
         cpi->svc.layer_context[cpi->svc.temporal_layer_id].is_key_frame));
+
+  if (!is_key_frame) {
+    if (cm->frame_refs[LAST_FRAME - 1].sf.x_scale_fp == REF_INVALID_SCALE ||
+        cm->frame_refs[LAST_FRAME - 1].sf.y_scale_fp == REF_INVALID_SCALE)
+      is_key_frame = 1;
+  }
+
   // Always use 4x4 partition for key frame.
   const int use_4x4_partition = frame_is_intra_only(cm);
   const int low_res = (cm->width <= 352 && cm->height <= 288);
@@ -3052,14 +3060,12 @@ static void set_partition_range(VP9_COMMON *cm, MACROBLOCKD *xd, int mi_row,
   min_size = BLOCK_64X64;
   max_size = BLOCK_4X4;
 
-  if (prev_mi) {
-    for (idy = 0; idy < mi_height; ++idy) {
-      for (idx = 0; idx < mi_width; ++idx) {
-        mi = prev_mi[idy * cm->mi_stride + idx];
-        bs = mi ? mi->sb_type : bsize;
-        min_size = VPXMIN(min_size, bs);
-        max_size = VPXMAX(max_size, bs);
-      }
+  for (idy = 0; idy < mi_height; ++idy) {
+    for (idx = 0; idx < mi_width; ++idx) {
+      mi = prev_mi[idy * cm->mi_stride + idx];
+      bs = mi ? mi->sb_type : bsize;
+      min_size = VPXMIN(min_size, bs);
+      max_size = VPXMAX(max_size, bs);
     }
   }
 
@@ -3205,7 +3211,7 @@ static int ml_pruning_partition(VP9_COMMON *const cm, MACROBLOCKD *const xd,
       left_par = 1;
   }
 
-  if (prev_mi) {
+  if (prev_mi[0]) {
     context_size = prev_mi[0]->sb_type;
     if (context_size < bsize)
       last_par = 2;
@@ -3438,16 +3444,21 @@ static void simple_motion_search(const VP9_COMP *const cpi, MACROBLOCK *const x,
   MV ref_mv_full = { ref_mv.row >> 3, ref_mv.col >> 3 };
   MV best_mv = { 0, 0 };
   int cost_list[5];
+  struct buf_2d backup_pre[MAX_MB_PLANE] = { { 0, 0 } };
 
-  if (scaled_ref_frame)
+  if (scaled_ref_frame) {
     yv12 = scaled_ref_frame;
-  else
+    // As reported in b/311294795, the reference buffer pointer needs to be
+    // saved and restored after the search. Otherwise, it causes problems while
+    // the reference frame scaling happens.
+    for (int i = 0; i < MAX_MB_PLANE; i++) backup_pre[i] = xd->plane[i].pre[0];
+  } else {
     yv12 = get_ref_frame_buffer(cpi, ref);
+  }
 
   assert(yv12 != NULL);
   if (!yv12) return;
-  vp9_setup_pre_planes(xd, 0, yv12, mi_row, mi_col,
-                       &cm->frame_refs[ref - 1].sf);
+  vp9_setup_pre_planes(xd, 0, yv12, mi_row, mi_col, NULL);
   mi->ref_frame[0] = ref;
   mi->ref_frame[1] = NO_REF_FRAME;
   mi->sb_type = bsize;
@@ -3459,6 +3470,11 @@ static void simple_motion_search(const VP9_COMP *const cpi, MACROBLOCK *const x,
   best_mv.col *= 8;
   x->mv_limits = tmp_mv_limits;
   mi->mv[0].as_mv = best_mv;
+
+  // Restore reference buffer pointer.
+  if (scaled_ref_frame) {
+    for (int i = 0; i < MAX_MB_PLANE; i++) xd->plane[i].pre[0] = backup_pre[i];
+  }
 
   set_ref_ptrs(cm, xd, mi->ref_frame[0], mi->ref_frame[1]);
   xd->plane[0].dst.buf = pred_buf;
@@ -4709,6 +4725,8 @@ static void nonrd_pick_sb_modes(VP9_COMP *cpi, TileDataEnc *tile_data,
   set_offsets(cpi, tile_info, x, mi_row, mi_col, bsize);
 
   set_segment_index(cpi, x, mi_row, mi_col, bsize, 0);
+
+  x->skip_recode = 0;
 
   mi = xd->mi[0];
   mi->sb_type = bsize;
@@ -6137,6 +6155,15 @@ static void encode_frame_internal(VP9_COMP *cpi) {
 
     if (tpl_frame->is_valid)
       cpi->rd.r0 = (double)intra_cost_base / mc_dep_cost_base;
+  }
+
+  for (MV_REFERENCE_FRAME ref_frame = LAST_FRAME; ref_frame <= ALTREF_FRAME;
+       ++ref_frame) {
+    if (cpi->ref_frame_flags & ref_frame_to_flag(ref_frame)) {
+      if (cm->frame_refs[ref_frame - 1].sf.x_scale_fp == REF_INVALID_SCALE ||
+          cm->frame_refs[ref_frame - 1].sf.y_scale_fp == REF_INVALID_SCALE)
+        cpi->ref_frame_flags &= ~ref_frame_to_flag(ref_frame);
+    }
   }
 
   // Frame segmentation

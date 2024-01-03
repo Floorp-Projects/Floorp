@@ -22,14 +22,23 @@
 #include "vpx_ports/system_state.h"
 
 #include "vp9/common/vp9_alloccommon.h"
-#include "vp9/encoder/vp9_aq_cyclicrefresh.h"
+#include "vp9/common/vp9_blockd.h"
 #include "vp9/common/vp9_common.h"
 #include "vp9/common/vp9_entropymode.h"
+#include "vp9/common/vp9_onyxc_int.h"
 #include "vp9/common/vp9_quant_common.h"
 #include "vp9/common/vp9_seg_common.h"
 
+#include "vp9/encoder/vp9_aq_cyclicrefresh.h"
 #include "vp9/encoder/vp9_encodemv.h"
+#include "vp9/encoder/vp9_encoder.h"
+#include "vp9/encoder/vp9_ext_ratectrl.h"
+#include "vp9/encoder/vp9_firstpass.h"
 #include "vp9/encoder/vp9_ratectrl.h"
+
+#include "vpx/vpx_codec.h"
+#include "vpx/vpx_ext_ratectrl.h"
+#include "vpx/internal/vpx_codec_internal.h"
 
 // Max rate per frame for 1080P and below encodes if no level requirement given.
 // For larger formats limit to MAX_MB_RATE bits per MB
@@ -260,7 +269,7 @@ void vp9_update_buffer_level_preencode(VP9_COMP *cpi) {
 // for the layered rate control which involves cumulative buffer levels for
 // the temporal layers. Allow for using the timestamp(pts) delta for the
 // framerate when the set_ref_frame_config is used.
-static void update_buffer_level_svc_preencode(VP9_COMP *cpi) {
+void vp9_update_buffer_level_svc_preencode(VP9_COMP *cpi) {
   SVC *const svc = &cpi->svc;
   int i;
   // Set this to 1 to use timestamp delta for "framerate" under
@@ -680,7 +689,8 @@ static int adjust_q_cbr(const VP9_COMP *cpi, int q) {
     else
       q = qclamp;
   }
-  if (cpi->oxcf.content == VP9E_CONTENT_SCREEN)
+  if (cpi->oxcf.content == VP9E_CONTENT_SCREEN &&
+      cpi->oxcf.aq_mode == CYCLIC_REFRESH_AQ)
     vp9_cyclic_refresh_limit_q(cpi, &q);
   return VPXMAX(VPXMIN(q, cpi->rc.worst_quality), cpi->rc.best_quality);
 }
@@ -1679,9 +1689,41 @@ void vp9_estimate_qp_gop(VP9_COMP *cpi) {
     cpi->twopass.gf_group.index = idx;
     vp9_rc_set_frame_target(cpi, target_rate);
     vp9_configure_buffer_updates(cpi, idx);
-    tpl_frame->base_qindex =
-        rc_pick_q_and_bounds_two_pass(cpi, &bottom_index, &top_index, idx);
-    tpl_frame->base_qindex = VPXMAX(tpl_frame->base_qindex, 1);
+    if (cpi->tpl_with_external_rc) {
+      if (cpi->ext_ratectrl.ready &&
+          (cpi->ext_ratectrl.funcs.rc_type & VPX_RC_QP) != 0 &&
+          cpi->ext_ratectrl.funcs.get_encodeframe_decision != NULL) {
+        VP9_COMMON *cm = &cpi->common;
+        vpx_codec_err_t codec_status;
+        const GF_GROUP *gf_group = &cpi->twopass.gf_group;
+        vpx_rc_encodeframe_decision_t encode_frame_decision;
+        FRAME_UPDATE_TYPE update_type = gf_group->update_type[gf_group->index];
+        RefCntBuffer *ref_frame_bufs[MAX_INTER_REF_FRAMES];
+        const RefCntBuffer *curr_frame_buf =
+            get_ref_cnt_buffer(cm, cm->new_fb_idx);
+        // index 0 of a gf group is always KEY/OVERLAY/GOLDEN.
+        // index 1 refers to the first encoding frame in a gf group.
+        // Therefore if it is ARF_UPDATE, it means this gf group uses alt ref.
+        // See function define_gf_group_structure().
+        const int use_alt_ref = gf_group->update_type[1] == ARF_UPDATE;
+        const int frame_coding_index = cm->current_frame_coding_index + idx - 1;
+        get_ref_frame_bufs(cpi, ref_frame_bufs);
+        codec_status = vp9_extrc_get_encodeframe_decision(
+            &cpi->ext_ratectrl, curr_frame_buf->frame_index, frame_coding_index,
+            gf_group->index, update_type, gf_group->gf_group_size, use_alt_ref,
+            ref_frame_bufs, 0 /*ref_frame_flags is not used*/,
+            &encode_frame_decision);
+        if (codec_status != VPX_CODEC_OK) {
+          vpx_internal_error(&cm->error, codec_status,
+                             "vp9_extrc_get_encodeframe_decision() failed");
+        }
+        tpl_frame->base_qindex = encode_frame_decision.q_index;
+      }
+    } else {
+      tpl_frame->base_qindex =
+          rc_pick_q_and_bounds_two_pass(cpi, &bottom_index, &top_index, idx);
+      tpl_frame->base_qindex = VPXMAX(tpl_frame->base_qindex, 1);
+    }
   }
   // Reset the actual index and frame update
   cpi->twopass.gf_group.index = gf_index;
@@ -1991,6 +2033,7 @@ void vp9_rc_postencode_update(VP9_COMP *cpi, uint64_t bytes_used) {
   rc->last_avg_frame_bandwidth = rc->avg_frame_bandwidth;
   if (cpi->use_svc && svc->spatial_layer_id < svc->number_spatial_layers - 1)
     svc->lower_layer_qindex = cm->base_qindex;
+  cpi->deadline_mode_previous_frame = cpi->oxcf.mode;
 }
 
 void vp9_rc_postencode_update_drop_frame(VP9_COMP *cpi) {
@@ -2011,6 +2054,7 @@ void vp9_rc_postencode_update_drop_frame(VP9_COMP *cpi) {
     cpi->rc.buffer_level = cpi->rc.optimal_buffer_level;
     cpi->rc.bits_off_target = cpi->rc.optimal_buffer_level;
   }
+  cpi->deadline_mode_previous_frame = cpi->oxcf.mode;
 }
 
 int vp9_calc_pframe_target_size_one_pass_vbr(const VP9_COMP *cpi) {
@@ -2118,7 +2162,8 @@ void vp9_rc_get_one_pass_vbr_params(VP9_COMP *cpi) {
   int target;
   if (!cpi->refresh_alt_ref_frame &&
       (cm->current_video_frame == 0 || (cpi->frame_flags & FRAMEFLAGS_KEY) ||
-       rc->frames_to_key == 0)) {
+       rc->frames_to_key == 0 ||
+       (cpi->oxcf.mode != cpi->deadline_mode_previous_frame))) {
     cm->frame_type = KEY_FRAME;
     rc->this_key_frame_forced =
         cm->current_video_frame != 0 && rc->frames_to_key == 0;
@@ -2284,14 +2329,15 @@ void vp9_rc_get_svc_params(VP9_COMP *cpi) {
   // Periodic key frames is based on the super-frame counter
   // (svc.current_superframe), also only base spatial layer is key frame.
   // Key frame is set for any of the following: very first frame, frame flags
-  // indicates key, superframe counter hits key frequency, or (non-intra) sync
-  // flag is set for spatial layer 0.
+  // indicates key, superframe counter hits key frequency,(non-intra) sync
+  // flag is set for spatial layer 0, or deadline mode changes.
   if ((cm->current_video_frame == 0 && !svc->previous_frame_is_intra_only) ||
       (cpi->frame_flags & FRAMEFLAGS_KEY) ||
       (cpi->oxcf.auto_key &&
        (svc->current_superframe % cpi->oxcf.key_freq == 0) &&
        !svc->previous_frame_is_intra_only && svc->spatial_layer_id == 0) ||
-      (svc->spatial_layer_sync[0] == 1 && svc->spatial_layer_id == 0)) {
+      (svc->spatial_layer_sync[0] == 1 && svc->spatial_layer_id == 0) ||
+      (cpi->oxcf.mode != cpi->deadline_mode_previous_frame)) {
     cm->frame_type = KEY_FRAME;
     rc->source_alt_ref_active = 0;
     if (is_one_pass_svc(cpi)) {
@@ -2445,7 +2491,7 @@ void vp9_rc_get_svc_params(VP9_COMP *cpi) {
     vp9_cyclic_refresh_update_parameters(cpi);
 
   vp9_rc_set_frame_target(cpi, target);
-  if (cm->show_frame) update_buffer_level_svc_preencode(cpi);
+  if (cm->show_frame) vp9_update_buffer_level_svc_preencode(cpi);
 
   if (cpi->oxcf.resize_mode == RESIZE_DYNAMIC && svc->single_layer_svc == 1 &&
       svc->spatial_layer_id == svc->first_spatial_layer_to_encode &&
@@ -2490,7 +2536,8 @@ void vp9_rc_get_one_pass_cbr_params(VP9_COMP *cpi) {
   RATE_CONTROL *const rc = &cpi->rc;
   int target;
   if ((cm->current_video_frame == 0) || (cpi->frame_flags & FRAMEFLAGS_KEY) ||
-      (cpi->oxcf.auto_key && rc->frames_to_key == 0)) {
+      (cpi->oxcf.auto_key && rc->frames_to_key == 0) ||
+      (cpi->oxcf.mode != cpi->deadline_mode_previous_frame)) {
     cm->frame_type = KEY_FRAME;
     rc->frames_to_key = cpi->oxcf.key_freq;
     rc->kf_boost = DEFAULT_KF_BOOST;

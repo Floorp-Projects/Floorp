@@ -40,7 +40,7 @@ class CodecFactory {
                                  const vpx_codec_flags_t flags) const = 0;
 
   virtual Encoder *CreateEncoder(vpx_codec_enc_cfg_t cfg,
-                                 unsigned long deadline,
+                                 vpx_enc_deadline_t deadline,
                                  const unsigned long init_flags,
                                  TwopassStatsStore *stats) const = 0;
 
@@ -95,7 +95,7 @@ class VP8Decoder : public Decoder {
 
 class VP8Encoder : public Encoder {
  public:
-  VP8Encoder(vpx_codec_enc_cfg_t cfg, unsigned long deadline,
+  VP8Encoder(vpx_codec_enc_cfg_t cfg, vpx_enc_deadline_t deadline,
              const unsigned long init_flags, TwopassStatsStore *stats)
       : Encoder(cfg, deadline, init_flags, stats) {}
 
@@ -128,7 +128,7 @@ class VP8CodecFactory : public CodecFactory {
 #endif
   }
 
-  Encoder *CreateEncoder(vpx_codec_enc_cfg_t cfg, unsigned long deadline,
+  Encoder *CreateEncoder(vpx_codec_enc_cfg_t cfg, vpx_enc_deadline_t deadline,
                          const unsigned long init_flags,
                          TwopassStatsStore *stats) const override {
 #if CONFIG_VP8_ENCODER
@@ -190,7 +190,7 @@ class VP9Decoder : public Decoder {
 
 class VP9Encoder : public Encoder {
  public:
-  VP9Encoder(vpx_codec_enc_cfg_t cfg, unsigned long deadline,
+  VP9Encoder(vpx_codec_enc_cfg_t cfg, vpx_enc_deadline_t deadline,
              const unsigned long init_flags, TwopassStatsStore *stats)
       : Encoder(cfg, deadline, init_flags, stats) {}
 
@@ -223,7 +223,7 @@ class VP9CodecFactory : public CodecFactory {
 #endif
   }
 
-  Encoder *CreateEncoder(vpx_codec_enc_cfg_t cfg, unsigned long deadline,
+  Encoder *CreateEncoder(vpx_codec_enc_cfg_t cfg, vpx_enc_deadline_t deadline,
                          const unsigned long init_flags,
                          TwopassStatsStore *stats) const override {
 #if CONFIG_VP9_ENCODER

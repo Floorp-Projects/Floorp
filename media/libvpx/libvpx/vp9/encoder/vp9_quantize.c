@@ -156,10 +156,10 @@ void vp9_highbd_quantize_fp_32x32_c(
 #endif
 
 static void invert_quant(int16_t *quant, int16_t *shift, int d) {
-  unsigned t;
+  unsigned int t;
   int l, m;
-  t = d;
-  for (l = 0; t > 1; l++) t >>= 1;
+  t = (unsigned int)d;
+  l = get_msb(t);
   m = 1 + (1 << (16 + l)) / d;
   *quant = (int16_t)(m - (1 << 16));
   *shift = 1 << (16 - l);

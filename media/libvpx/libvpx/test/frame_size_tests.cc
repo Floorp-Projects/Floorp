@@ -18,8 +18,7 @@ namespace {
 
 class EncoderWithExpectedError : public ::libvpx_test::Encoder {
  public:
-  EncoderWithExpectedError(vpx_codec_enc_cfg_t cfg,
-                           unsigned long deadline,          // NOLINT
+  EncoderWithExpectedError(vpx_codec_enc_cfg_t cfg, vpx_enc_deadline_t deadline,
                            const unsigned long init_flags,  // NOLINT
                            ::libvpx_test::TwopassStatsStore *stats)
       : ::libvpx_test::Encoder(cfg, deadline, init_flags, stats) {}

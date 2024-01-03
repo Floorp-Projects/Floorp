@@ -186,7 +186,7 @@ DSP_SRCS-$(HAVE_LSX) += loongarch/vpx_convolve_lsx.h
 # loop filters
 DSP_SRCS-yes += loopfilter.c
 
-DSP_SRCS-$(HAVE_SSE2)  += x86/loopfilter_intrin_sse2.c
+DSP_SRCS-$(HAVE_SSE2)  += x86/loopfilter_sse2.c
 DSP_SRCS-$(HAVE_AVX2)  += x86/loopfilter_avx2.c
 
 ifeq ($(HAVE_NEON_ASM),yes)
@@ -339,7 +339,7 @@ DSP_SRCS-$(HAVE_AVX)    += x86/quantize_avx.c
 DSP_SRCS-$(HAVE_AVX2)   += x86/quantize_avx2.c
 DSP_SRCS-$(HAVE_NEON)   += arm/quantize_neon.c
 DSP_SRCS-$(HAVE_VSX)    += ppc/quantize_vsx.c
-DSP_SRCS-$(HAVE_LSX)    += loongarch/quantize_intrin_lsx.c
+DSP_SRCS-$(HAVE_LSX)    += loongarch/quantize_lsx.c
 ifeq ($(CONFIG_VP9_HIGHBITDEPTH),yes)
 DSP_SRCS-$(HAVE_SSE2)   += x86/highbd_quantize_intrin_sse2.c
 DSP_SRCS-$(HAVE_AVX2)   += x86/highbd_quantize_intrin_avx2.c

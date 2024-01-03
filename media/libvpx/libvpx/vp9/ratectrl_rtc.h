@@ -38,6 +38,7 @@ struct VP9RateControlRtcConfig : public VpxRateControlRtcConfig {
     scaling_factor_den[0] = 1;
     max_quantizers[0] = max_quantizer;
     min_quantizers[0] = min_quantizer;
+    max_consec_drop = INT_MAX;
   }
 
   // Number of spatial layers
@@ -46,6 +47,8 @@ struct VP9RateControlRtcConfig : public VpxRateControlRtcConfig {
   int min_quantizers[VPX_MAX_LAYERS];
   int scaling_factor_num[VPX_SS_MAX_LAYERS];
   int scaling_factor_den[VPX_SS_MAX_LAYERS];
+  // This is only for SVC for now.
+  int max_consec_drop;
 };
 
 struct VP9FrameParamsQpRTC {
@@ -92,7 +95,11 @@ class VP9RateControlRTC {
   int GetQP() const;
   int GetLoopfilterLevel() const;
   bool GetSegmentationData(VP9SegmentationData *segmentation_data) const;
-  void ComputeQP(const VP9FrameParamsQpRTC &frame_params);
+  // ComputeQP computes the QP if the frame is not dropped (kOk return),
+  // otherwise it returns kDrop and subsequent GetQP and PostEncodeUpdate
+  // are not to be called (vp9_rc_postencode_update_drop_frame is already
+  // called via ComputeQP if drop is decided).
+  FrameDropDecision ComputeQP(const VP9FrameParamsQpRTC &frame_params);
   // Feedback to rate control with the size of current encoded frame
   void PostEncodeUpdate(uint64_t encoded_frame_size,
                         const VP9FrameParamsQpRTC &frame_params);
