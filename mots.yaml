@@ -8,7 +8,7 @@
 # documentation and how to modify this file.
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2023-12-03T16:33:33.529743'
+updated_at: '2023-12-28T19:54:40.695003'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -724,6 +724,10 @@ people:
     bmo_id: 547538
     name: Miko Mynttinen
     nick: mikokm
+  - &mixedpuppy
+    bmo_id: 443354
+    name: Shane Caraveo
+    nick: mixedpuppy
   - &mkaply
     bmo_id: 7313
     name: Mike Kaply
@@ -888,10 +892,6 @@ people:
     bmo_id: 704132
     name: Alexandra Borovova
     nick: Sasha
-  - &scaraveo
-    bmo_id: 443354
-    name: ''
-    nick: scaraveo
   - &sclements
     bmo_id: 603840
     name: Sarah Clements
@@ -3218,7 +3218,7 @@ modules:
             - Andrew Swan
             - Kris Maglione
         owners:
-          - *scaraveo
+          - *mixedpuppy
           - *rpl
         peers:
           - *rpl
@@ -3236,7 +3236,7 @@ modules:
             - Robert Strong
             - Andrew Swan
         owners:
-          - *scaraveo
+          - *mixedpuppy
           - *mstriemer
         peers:
           - *rpl
@@ -4194,12 +4194,12 @@ modules:
         meta:
           peers_emeritus:
             - Andrew Swan
+            - Kris Maglione
         owners:
-          - *scaraveo
+          - *mixedpuppy
           - *zombie
         peers:
           - *rpl
-          - *kmag
           - *robwu
           - *willdurand
         machine_name: webextensions
@@ -4250,5 +4250,5 @@ modules:
         - Ryan Tilder
       group: dev-platform
 hashes:
-  config: 9233bf8edcdf9fce3658d3d765ee52de0001dc12
-  export: 2c2b8bcffc25f52ccc7da6ae9ad9465d113c5646
+  config: 59011c4f3e12e2579b4b9061c284ba1cf096b2c2
+  export: dbf9923c9edb3b8025ea33702ba9b29cecb27e33
