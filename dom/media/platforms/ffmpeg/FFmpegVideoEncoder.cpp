@@ -298,6 +298,14 @@ AVCodecID GetFFmpegEncoderCodecId<LIBAV_VER>(CodecType aCodec) {
   return AV_CODEC_ID_NONE;
 }
 
+uint8_t FFmpegVideoEncoder<LIBAV_VER>::SVCInfo::UpdateTemporalLayerId() {
+  MOZ_ASSERT(!mTemporalLayerIds.IsEmpty());
+
+  size_t currentIndex = mNextIndex % mTemporalLayerIds.Length();
+  mNextIndex += 1;
+  return static_cast<uint8_t>(mTemporalLayerIds[currentIndex]);
+}
+
 StaticMutex FFmpegVideoEncoder<LIBAV_VER>::sMutex;
 
 FFmpegVideoEncoder<LIBAV_VER>::FFmpegVideoEncoder(
@@ -309,7 +317,8 @@ FFmpegVideoEncoder<LIBAV_VER>::FFmpegVideoEncoder(
       mConfig(aConfig),
       mCodecName(EmptyCString()),
       mCodecContext(nullptr),
-      mFrame(nullptr) {
+      mFrame(nullptr),
+      mSVCInfo(Nothing()) {
   MOZ_ASSERT(mLib);
   MOZ_ASSERT(mTaskQueue);
 #if LIBAVCODEC_VERSION_MAJOR < 58
@@ -543,6 +552,11 @@ MediaResult FFmpegVideoEncoder<LIBAV_VER>::InitInternal() {
       // Set parameters into ts-parameters.
       mLib->av_opt_set(mCodecContext->priv_data, "ts-parameters",
                        parameters.get(), 0);
+
+      // FFmpegVideoEncoder would be reset after Drain(), so mSVCInfo should be
+      // reset() before emplace().
+      mSVCInfo.reset();
+      mSVCInfo.emplace(std::move(svc->mLayerIds));
 
       // TODO: layer settings should be changed dynamically when the frame's
       // color space changed.
@@ -1042,6 +1056,13 @@ RefPtr<MediaRawData> FFmpegVideoEncoder<LIBAV_VER>::ToMediaRawData(
 
   if (auto r = GetExtraData(aPacket); r.isOk()) {
     data->mExtraData = r.unwrap();
+  }
+
+  // TODO: Is it possible to retrieve temporal layer id from underlying codec
+  // instead?
+  if (mSVCInfo) {
+    uint8_t temporalLayerId = mSVCInfo->UpdateTemporalLayerId();
+    // TODO: Set to MediaRawData.
   }
 
   return data;
