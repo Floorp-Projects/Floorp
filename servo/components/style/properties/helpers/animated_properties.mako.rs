@@ -162,32 +162,29 @@ impl PartialEq for AnimationValue {
     fn eq(&self, other: &Self) -> bool {
         use self::AnimationValue::*;
 
-        match (self, other) {
-            (Custom(animated_value1), Custom(animated_value2)) => {
-                *animated_value1 == *animated_value2
-            },
-            _ => {
-                unsafe {
-                    let this_tag = *(self as *const _ as *const u16);
-                    let other_tag = *(other as *const _ as *const u16);
-                    if this_tag != other_tag {
-                        return false;
-                    }
+        unsafe {
+            let this_tag = *(self as *const _ as *const u16);
+            let other_tag = *(other as *const _ as *const u16);
+            if this_tag != other_tag {
+                return false;
+            }
 
-                    match *self {
-                        % for ty, props in groupby(animated, key=lambda x: x.animated_type()):
-                        ${" |\n".join("{}(ref this)".format(prop.camel_case) for prop in props)} => {
-                            let other_repr =
-                                &*(other as *const _ as *const AnimationValueVariantRepr<${ty}>);
-                            *this == other_repr.value
-                        }
-                        % endfor
-                        ${" |\n".join("{}(void)".format(prop.camel_case) for prop in unanimated)} => {
-                            void::unreachable(void)
-                        },
-                        AnimationValue::Custom(..) => { debug_unreachable!() },
-                    }
+            match *self {
+                % for ty, props in groupby(animated, key=lambda x: x.animated_type()):
+                ${" |\n".join("{}(ref this)".format(prop.camel_case) for prop in props)} => {
+                    let other_repr =
+                        &*(other as *const _ as *const AnimationValueVariantRepr<${ty}>);
+                    *this == other_repr.value
                 }
+                % endfor
+                ${" |\n".join("{}(void)".format(prop.camel_case) for prop in unanimated)} => {
+                    void::unreachable(void)
+                },
+                AnimationValue::Custom(ref this) => {
+                    let other_repr =
+                        &*(other as *const _ as *const AnimationValueVariantRepr<CustomAnimatedValue>);
+                    *this == other_repr.value
+                },
             }
         }
     }
