@@ -165,6 +165,7 @@ flatpak build-finish build                                      \
         --persist=.mozilla                                      \
         --filesystem=xdg-download:rw                            \
         --filesystem=/run/.heim_org.h5l.kcm-socket              \
+        --filesystem=xdg-run/speech-dispatcher:ro               \
         --device=all                                            \
         --talk-name=org.freedesktop.FileManager1                \
         --system-talk-name=org.freedesktop.NetworkManager       \
