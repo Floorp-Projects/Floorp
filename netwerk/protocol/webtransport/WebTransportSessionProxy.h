@@ -170,9 +170,11 @@ class WebTransportSessionProxy final : public nsIWebTransport,
   void OnMaxDatagramSizeInternal(uint64_t aSize);
   void OnOutgoingDatagramOutComeInternal(
       uint64_t aId, WebTransportSessionEventListener::DatagramOutcome aOutCome);
+  bool CheckServerCertificateIfNeeded();
 
   nsCOMPtr<nsIChannel> mChannel;
   nsCOMPtr<nsIChannel> mRedirectChannel;
+  nsTArray<RefPtr<nsIWebTransportHash>> mServerCertHashes;
   nsCOMPtr<WebTransportSessionEventListener> mListener MOZ_GUARDED_BY(mMutex);
   RefPtr<Http3WebTransportSession> mWebTransportSession MOZ_GUARDED_BY(mMutex);
   uint64_t mSessionId MOZ_GUARDED_BY(mMutex) = UINT64_MAX;

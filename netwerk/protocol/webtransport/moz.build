@@ -15,11 +15,13 @@ XPIDL_SOURCES += [
 XPIDL_MODULE = "necko_webtransport"
 
 EXPORTS.mozilla.net += [
+    "WebTransportHash.h",
     "WebTransportSessionProxy.h",
     "WebTransportStreamProxy.h",
 ]
 
 UNIFIED_SOURCES += [
+    "WebTransportHash.cpp",
     "WebTransportSessionProxy.cpp",
     "WebTransportStreamProxy.cpp",
 ]
