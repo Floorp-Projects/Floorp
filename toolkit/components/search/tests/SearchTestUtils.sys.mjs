@@ -120,37 +120,62 @@ export var SearchTestUtils = {
   },
 
   /**
-   * Load engines from test data located in particular folders.
+   * For xpcshell tests, configures loading engines from test data located in
+   * particular folders.
    *
    * @param {string} [folder]
    *   The folder name to use.
    * @param {string} [subFolder]
    *   The subfolder to use, if any.
-   * @param {Array} [config]
+   * @param {Array} [configData]
    *   An array which contains the configuration to set.
    * @returns {object}
    *   An object that is a sinon stub for the configuration getter.
    */
-  async useTestEngines(folder = "data", subFolder = null, config = null) {
-    let url = `resource://test/${folder}/`;
-    if (subFolder) {
-      url += `${subFolder}/`;
+  async useTestEngines(folder = "data", subFolder = null, configData = null) {
+    if (!lazy.SearchUtils.newSearchConfigEnabled) {
+      let url = `resource://test/${folder}/`;
+      if (subFolder) {
+        url += `${subFolder}/`;
+      }
+      let resProt = Services.io
+        .getProtocolHandler("resource")
+        .QueryInterface(Ci.nsIResProtocolHandler);
+      resProt.setSubstitution("search-extensions", Services.io.newURI(url));
     }
-    let resProt = Services.io
-      .getProtocolHandler("resource")
-      .QueryInterface(Ci.nsIResProtocolHandler);
-    resProt.setSubstitution("search-extensions", Services.io.newURI(url));
 
     const settings = await lazy.RemoteSettings(lazy.SearchUtils.SETTINGS_KEY);
-    if (config) {
-      return lazy.sinon.stub(settings, "get").returns(config);
+    if (configData) {
+      return lazy.sinon.stub(settings, "get").returns(configData);
     }
 
-    let response = await fetch(`resource://search-extensions/engines.json`);
+    let workDir = Services.dirsvc.get("CurWorkD", Ci.nsIFile);
+    let configFileName =
+      "file://" +
+      PathUtils.join(
+        workDir.path,
+        folder,
+        subFolder ?? "",
+        lazy.SearchUtils.newSearchConfigEnabled
+          ? "search-config-v2.json"
+          : "engines.json"
+      );
+
+    let response = await fetch(configFileName);
     let json = await response.json();
     return lazy.sinon.stub(settings, "get").returns(json.data);
   },
 
+  /**
+   * For mochitests, configures loading engines from test data located in
+   * particular folders. This will cleanup at the end of the test.
+   *
+   * This will be removed when the old configuration is removed
+   * (newSearchConfigEnabled = false).
+   *
+   * @param {nsIFile} testDir
+   *   The test directory to use.
+   */
   async useMochitestEngines(testDir) {
     // Replace the path we load search engines from with
     // the path to our test data.
