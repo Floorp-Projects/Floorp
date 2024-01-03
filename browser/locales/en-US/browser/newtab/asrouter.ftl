@@ -243,7 +243,14 @@ fxa-sync-cfr-secondary = Remind me later
 
 ## Device Migration FxA Spotlight
 
-device-migration-fxa-spotlight-header = Using an older device?
-device-migration-fxa-spotlight-body = Back up your data to make sure you don’t lose important info like bookmarks and passwords — especially if you switch to a new device.
-device-migration-fxa-spotlight-primary-button = How to back up my data
-device-migration-fxa-spotlight-link = Remind me later
+device-migration-fxa-spotlight-heavy-user-header = Don’t forget to back up your data
+device-migration-fxa-spotlight-heavy-user-body = Make sure important info — like bookmarks and passwords — is updated and protected across all your devices.
+device-migration-fxa-spotlight-heavy-user-primary-button = Get started
+
+device-migration-fxa-spotlight-older-device-header = Peace of mind, from { -brand-product-name }
+device-migration-fxa-spotlight-older-device-body = An account keeps your important info updated and protected on any device you connect.
+device-migration-fxa-spotlight-older-device-primary-button = Create an account
+
+device-migration-fxa-spotlight-getting-new-device-header = Hoping for a new device this season?
+device-migration-fxa-spotlight-getting-new-device-body = Back up your data now, so you’re ready to go when your device arrives.
+device-migration-fxa-spotlight-getting-new-device-primary-button = How to back up my data
