@@ -25,6 +25,7 @@
 #include "net/dcsctp/packet/chunk/sack_chunk.h"
 #include "net/dcsctp/packet/sctp_packet.h"
 #include "net/dcsctp/public/dcsctp_options.h"
+#include "net/dcsctp/public/types.h"
 #include "net/dcsctp/rx/data_tracker.h"
 #include "net/dcsctp/rx/reassembly_queue.h"
 #include "net/dcsctp/socket/capabilities.h"
@@ -63,7 +64,9 @@ TransmissionControlBlock::TransmissionControlBlock(
           TimerOptions(options.rto_initial,
                        TimerBackoffAlgorithm::kExponential,
                        /*max_restarts=*/absl::nullopt,
-                       options.max_timer_backoff_duration))),
+                       options.max_timer_backoff_duration.has_value()
+                           ? *options.max_timer_backoff_duration
+                           : DurationMs::InfiniteDuration()))),
       delayed_ack_timer_(timer_manager_.CreateTimer(
           "delayed-ack",
           absl::bind_front(&TransmissionControlBlock::OnDelayedAckTimerExpiry,
@@ -71,7 +74,7 @@ TransmissionControlBlock::TransmissionControlBlock(
           TimerOptions(options.delayed_ack_max_timeout,
                        TimerBackoffAlgorithm::kExponential,
                        /*max_restarts=*/0,
-                       /*max_backoff_duration=*/absl::nullopt,
+                       /*max_backoff_duration=*/DurationMs::InfiniteDuration(),
                        webrtc::TaskQueueBase::DelayPrecision::kHigh))),
       my_verification_tag_(my_verification_tag),
       my_initial_tsn_(my_initial_tsn),
