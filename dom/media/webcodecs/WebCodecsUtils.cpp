@@ -323,6 +323,14 @@ bool IsOnMacOS() {
 #endif
 }
 
+bool IsOnLinux() {
+#if defined(XP_LINUX)
+  return true;
+#else
+  return false;
+#endif
+}
+
 template <typename T>
 nsCString MaybeToString(const Maybe<T>& aMaybe) {
   return nsPrintfCString(
