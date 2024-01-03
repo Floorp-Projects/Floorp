@@ -21,10 +21,15 @@
 
 namespace webrtc {
 
-class BasicAsyncResolverFactory final : public AsyncResolverFactory {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+class [[deprecated(
+    "Use BasicAsyncDnsResolverFactory")]] BasicAsyncResolverFactory final
+    : public AsyncResolverFactory {
  public:
   rtc::AsyncResolverInterface* Create() override;
 };
+#pragma clang diagnostic pop
 
 // A factory that vends AsyncDnsResolver instances.
 class BasicAsyncDnsResolverFactory final
@@ -47,9 +52,11 @@ class BasicAsyncDnsResolverFactory final
 // This class wraps a factory using the older webrtc::AsyncResolverFactory API,
 // and produces webrtc::AsyncDnsResolver objects that contain an
 // rtc::AsyncResolver object.
-class WrappingAsyncDnsResolverFactory final
+class [[deprecated]] WrappingAsyncDnsResolverFactory final
     : public AsyncDnsResolverFactoryInterface {
  public:
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
   explicit WrappingAsyncDnsResolverFactory(
       std::unique_ptr<AsyncResolverFactory> wrapped_factory)
       : owned_factory_(std::move(wrapped_factory)),
@@ -58,6 +65,7 @@ class WrappingAsyncDnsResolverFactory final
   explicit WrappingAsyncDnsResolverFactory(
       AsyncResolverFactory* non_owned_factory)
       : wrapped_factory_(non_owned_factory) {}
+#pragma clang diagnostic pop
 
   std::unique_ptr<webrtc::AsyncDnsResolverInterface> CreateAndResolve(
       const rtc::SocketAddress& addr,
