@@ -394,15 +394,8 @@ class PeerConnection : public PeerConnectionInternal,
       const std::map<std::string, const cricket::ContentGroup*>&
           bundle_groups_by_mid) override;
 
-  // Returns the MID for the data section associated with the
-  // SCTP data channel, if it has been set. If no data
-  // channels are configured this will return nullopt.
-  absl::optional<std::string> GetDataMid() const override;
-
-  void SetSctpDataInfo(absl::string_view mid,
-                       absl::string_view transport_name) override;
-
-  void ResetSctpDataInfo() override;
+  bool CreateDataChannelTransport(absl::string_view mid) override;
+  void DestroyDataChannelTransport(RTCError error) override;
 
   // Asynchronously calls SctpTransport::Start() on the network thread for
   // `sctp_mid()` if set. Called as part of setting the local description.
@@ -430,9 +423,9 @@ class PeerConnection : public PeerConnectionInternal,
   // this session.
   bool SrtpRequired() const override;
 
-  absl::optional<std::string> SetupDataChannelTransport_n(
-      absl::string_view mid) override RTC_RUN_ON(network_thread());
-  void TeardownDataChannelTransport_n(RTCError error) override
+  absl::optional<std::string> SetupDataChannelTransport_n(absl::string_view mid)
+      RTC_RUN_ON(network_thread());
+  void TeardownDataChannelTransport_n(RTCError error)
       RTC_RUN_ON(network_thread());
 
   const FieldTrialsView& trials() const override { return *trials_; }
