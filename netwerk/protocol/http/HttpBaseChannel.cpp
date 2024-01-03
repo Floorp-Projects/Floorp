@@ -6350,13 +6350,24 @@ static void CollectORBBlockTelemetry(
       Telemetry::AccumulateCategorical(
           Telemetry::LABELS_ORB_BLOCK_INITIATOR::WEB_TRANSPORT);
       break;
-    default:
+    case ExtContentPolicy::TYPE_WEB_IDENTITY:
+      // Don't bother extending the telemetry for this.
+      Telemetry::AccumulateCategorical(
+          Telemetry::LABELS_ORB_BLOCK_INITIATOR::OTHER);
+      break;
+    case ExtContentPolicy::TYPE_DOCUMENT:
+    case ExtContentPolicy::TYPE_SUBDOCUMENT:
+    case ExtContentPolicy::TYPE_OBJECT:
+    case ExtContentPolicy::TYPE_OBJECT_SUBREQUEST:
+    case ExtContentPolicy::TYPE_WEBSOCKET:
+    case ExtContentPolicy::TYPE_SAVEAS_DOWNLOAD:
       MOZ_ASSERT_UNREACHABLE("Shouldn't block this type");
       // DOCUMENT, SUBDOCUMENT, OBJECT, OBJECT_SUBREQUEST,
       // WEBSOCKET and SAVEAS_DOWNLOAD are excluded from ORB
       Telemetry::AccumulateCategorical(
           Telemetry::LABELS_ORB_BLOCK_INITIATOR::EXCLUDED);
       break;
+      // Do not add default: so that compilers can catch the missing case.
   }
 }
 

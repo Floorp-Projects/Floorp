@@ -3642,9 +3642,43 @@ nsContentUtils::InternalContentPolicyTypeToExternal(nsContentPolicyType aType) {
     case nsIContentPolicy::TYPE_INTERNAL_FETCH_PRELOAD:
       return ExtContentPolicy::TYPE_FETCH;
 
-    default:
+    case nsIContentPolicy::TYPE_INVALID:
+    case nsIContentPolicy::TYPE_OTHER:
+    case nsIContentPolicy::TYPE_SCRIPT:
+    case nsIContentPolicy::TYPE_IMAGE:
+    case nsIContentPolicy::TYPE_STYLESHEET:
+    case nsIContentPolicy::TYPE_OBJECT:
+    case nsIContentPolicy::TYPE_DOCUMENT:
+    case nsIContentPolicy::TYPE_SUBDOCUMENT:
+    case nsIContentPolicy::TYPE_PING:
+    case nsIContentPolicy::TYPE_XMLHTTPREQUEST:
+    case nsIContentPolicy::TYPE_OBJECT_SUBREQUEST:
+    case nsIContentPolicy::TYPE_DTD:
+    case nsIContentPolicy::TYPE_FONT:
+    case nsIContentPolicy::TYPE_MEDIA:
+    case nsIContentPolicy::TYPE_WEBSOCKET:
+    case nsIContentPolicy::TYPE_CSP_REPORT:
+    case nsIContentPolicy::TYPE_XSLT:
+    case nsIContentPolicy::TYPE_BEACON:
+    case nsIContentPolicy::TYPE_FETCH:
+    case nsIContentPolicy::TYPE_IMAGESET:
+    case nsIContentPolicy::TYPE_WEB_MANIFEST:
+    case nsIContentPolicy::TYPE_SAVEAS_DOWNLOAD:
+    case nsIContentPolicy::TYPE_SPECULATIVE:
+    case nsIContentPolicy::TYPE_UA_FONT:
+    case nsIContentPolicy::TYPE_PROXIED_WEBRTC_MEDIA:
+    case nsIContentPolicy::TYPE_WEB_IDENTITY:
+    case nsIContentPolicy::TYPE_WEB_TRANSPORT:
+      // NOTE: When adding something here make sure the enumerator is defined!
       return static_cast<ExtContentPolicyType>(aType);
+
+    case nsIContentPolicy::TYPE_END:
+      break;
+      // Do not add default: so that compilers can catch the missing case.
   }
+
+  MOZ_ASSERT(false, "Unhandled nsContentPolicyType value");
+  return ExtContentPolicy::TYPE_INVALID;
 }
 
 namespace mozilla {
