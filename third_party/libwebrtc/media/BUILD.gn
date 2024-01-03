@@ -369,6 +369,7 @@ rtc_library("rtc_simulcast_encoder_adapter") {
     "../api/video_codecs:video_codecs_api",
     "../call:video_stream_api",
     "../common_video",
+    "../media:media_constants",
     "../modules/video_coding:video_codec_interface",
     "../modules/video_coding:video_coding_utility",
     "../rtc_base:checks",
