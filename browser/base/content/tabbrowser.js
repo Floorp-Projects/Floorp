@@ -4733,8 +4733,22 @@
           this.shouldActivateDocShell(ourBrowser);
       }
 
+      let ourBrowserContainer =
+        ourBrowser.ownerDocument.getElementById("browser");
+      let otherBrowserContainer =
+        aOtherBrowser.ownerDocument.getElementById("browser");
+      let ourBrowserContainerWasHidden = ourBrowserContainer.hidden;
+      let otherBrowserContainerWasHidden = otherBrowserContainer.hidden;
+
+      // #browser is hidden in Customize Mode; this breaks docshell swapping,
+      // so we need to toggle 'hidden' to make swapping work in this case.
+      ourBrowserContainer.hidden = otherBrowserContainer.hidden = false;
+
       // Swap the docshells
       ourBrowser.swapDocShells(aOtherBrowser);
+
+      ourBrowserContainer.hidden = ourBrowserContainerWasHidden;
+      otherBrowserContainer.hidden = otherBrowserContainerWasHidden;
 
       // Swap permanentKey properties.
       let ourPermanentKey = ourBrowser.permanentKey;
