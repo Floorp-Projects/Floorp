@@ -2032,13 +2032,11 @@ void MergeCodecsFromDescription(
     const webrtc::FieldTrialsView* field_trials) {
   for (const ContentInfo* content : current_active_contents) {
     if (IsMediaContentOfType(content, MEDIA_TYPE_AUDIO)) {
-      const AudioContentDescription* audio =
-          content->media_description()->as_audio();
-      MergeCodecs(audio->codecs(), audio_codecs, used_pltypes, field_trials);
+      MergeCodecs(content->media_description()->codecs(), audio_codecs,
+                  used_pltypes, field_trials);
     } else if (IsMediaContentOfType(content, MEDIA_TYPE_VIDEO)) {
-      const VideoContentDescription* video =
-          content->media_description()->as_video();
-      MergeCodecs(video->codecs(), video_codecs, used_pltypes, field_trials);
+      MergeCodecs(content->media_description()->codecs(), video_codecs,
+                  used_pltypes, field_trials);
     }
   }
 }
@@ -2093,23 +2091,21 @@ void MediaSessionDescriptionFactory::GetCodecsForAnswer(
   VideoCodecs filtered_offered_video_codecs;
   for (const ContentInfo& content : remote_offer.contents()) {
     if (IsMediaContentOfType(&content, MEDIA_TYPE_AUDIO)) {
-      const AudioContentDescription* audio =
-          content.media_description()->as_audio();
-      for (const AudioCodec& offered_audio_codec : audio->codecs()) {
-        if (!FindMatchingCodec(audio->codecs(), filtered_offered_audio_codecs,
+      std::vector<Codec> offered_codecs = content.media_description()->codecs();
+      for (const Codec& offered_audio_codec : offered_codecs) {
+        if (!FindMatchingCodec(offered_codecs, filtered_offered_audio_codecs,
                                offered_audio_codec, field_trials) &&
-            FindMatchingCodec(audio->codecs(), all_audio_codecs_,
+            FindMatchingCodec(offered_codecs, all_audio_codecs_,
                               offered_audio_codec, field_trials)) {
           filtered_offered_audio_codecs.push_back(offered_audio_codec);
         }
       }
     } else if (IsMediaContentOfType(&content, MEDIA_TYPE_VIDEO)) {
-      const VideoContentDescription* video =
-          content.media_description()->as_video();
-      for (const VideoCodec& offered_video_codec : video->codecs()) {
-        if (!FindMatchingCodec(video->codecs(), filtered_offered_video_codecs,
+      std::vector<Codec> offered_codecs = content.media_description()->codecs();
+      for (const Codec& offered_video_codec : offered_codecs) {
+        if (!FindMatchingCodec(offered_codecs, filtered_offered_video_codecs,
                                offered_video_codec, field_trials) &&
-            FindMatchingCodec(video->codecs(), all_video_codecs_,
+            FindMatchingCodec(offered_codecs, all_video_codecs_,
                               offered_video_codec, field_trials)) {
           filtered_offered_video_codecs.push_back(offered_video_codec);
         }
@@ -2151,17 +2147,13 @@ MediaSessionDescriptionFactory::GetOfferedRtpHeaderExtensionsWithIds(
   // type is added.
   for (const ContentInfo* content : current_active_contents) {
     if (IsMediaContentOfType(content, MEDIA_TYPE_AUDIO)) {
-      const AudioContentDescription* audio =
-          content->media_description()->as_audio();
-      MergeRtpHdrExts(audio->rtp_header_extensions(), &offered_extensions.audio,
-                      &all_regular_extensions, &all_encrypted_extensions,
-                      &used_ids);
+      MergeRtpHdrExts(content->media_description()->rtp_header_extensions(),
+                      &offered_extensions.audio, &all_regular_extensions,
+                      &all_encrypted_extensions, &used_ids);
     } else if (IsMediaContentOfType(content, MEDIA_TYPE_VIDEO)) {
-      const VideoContentDescription* video =
-          content->media_description()->as_video();
-      MergeRtpHdrExts(video->rtp_header_extensions(), &offered_extensions.video,
-                      &all_regular_extensions, &all_encrypted_extensions,
-                      &used_ids);
+      MergeRtpHdrExts(content->media_description()->rtp_header_extensions(),
+                      &offered_extensions.video, &all_regular_extensions,
+                      &all_encrypted_extensions, &used_ids);
     }
   }
 
