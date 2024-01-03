@@ -7,7 +7,7 @@
  *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
-#include "api/audio/echo_canceller3_config_json.h"
+#include "modules/audio_processing/test/echo_canceller3_config_json.h"
 
 #include <stddef.h>
 
@@ -427,13 +427,6 @@ void Aec3ConfigFromJsonString(absl::string_view json_string,
     ReadParam(section, "stereo_detection_hysteresis_seconds",
               &cfg.multi_channel.stereo_detection_hysteresis_seconds);
   }
-}
-
-EchoCanceller3Config Aec3ConfigFromJsonString(absl::string_view json_string) {
-  EchoCanceller3Config cfg;
-  bool not_used;
-  Aec3ConfigFromJsonString(json_string, &cfg, &not_used);
-  return cfg;
 }
 
 std::string Aec3ConfigToJsonString(const EchoCanceller3Config& config) {

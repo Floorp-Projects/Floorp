@@ -519,7 +519,7 @@ webrtc_fuzzer_test("aec3_config_json_fuzzer") {
   deps = [
     ":fuzz_data_helper",
     "../../api/audio:aec3_config",
-    "../../api/audio:aec3_config_json",
+    "../../modules/audio_processing:aec3_config_json",
   ]
   dict = "//testing/libfuzzer/fuzzers/dicts/json.dict"
   seed_corpus = "corpora/aec3-config-json-corpus"
