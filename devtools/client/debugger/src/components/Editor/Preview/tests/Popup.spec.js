@@ -29,14 +29,10 @@ describe("addHighlightToTargetSiblings", () => {
     addHighlightToTargetSiblings(target, props);
 
     const previous = target.previousElementSibling;
-    if (previous && previous.className) {
-      expect(previous.className.includes("preview-token")).toEqual(true);
-    }
+    expect(previous.className.includes("preview-token")).toEqual(true);
 
     const next = target.nextElementSibling;
-    if (next && next.className) {
-      expect(next.className.includes("preview-token")).toEqual(true);
-    }
+    expect(next.className.includes("preview-token")).toEqual(true);
   });
 
   it("should not add preview highlight class to target's related siblings after non-element nodes", () => {
@@ -95,13 +91,9 @@ describe("removeHighlightForTargetSiblings", () => {
     removeHighlightForTargetSiblings(target);
 
     const previous = target.previousElementSibling;
-    if (previous && previous.className) {
-      expect(previous.className.includes("preview-token")).toEqual(false);
-    }
+    expect(previous.className.includes("preview-token")).toEqual(false);
 
     const next = target.nextElementSibling;
-    if (next && next.className) {
-      expect(next.className.includes("preview-token")).toEqual(false);
-    }
+    expect(next.className.includes("preview-token")).toEqual(false);
   });
 });

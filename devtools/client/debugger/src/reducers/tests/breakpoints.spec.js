@@ -14,7 +14,7 @@ function initializeStateWith(data) {
 }
 
 describe("Breakpoints Selectors", () => {
-  it("it gets a breakpoint for an original source", () => {
+  it("gets a breakpoint for an original source", () => {
     const sourceId = "server1.conn1.child1/source1/originalSource";
     const source = makeMockSource(undefined, sourceId);
     const matchingBreakpoints = {
@@ -38,7 +38,7 @@ describe("Breakpoints Selectors", () => {
     expect(sourceBreakpoints[0] === allBreakpoints[0]).toBe(true);
   });
 
-  it("it gets a breakpoint for a generated source", () => {
+  it("gets a breakpoint for a generated source", () => {
     const generatedSourceId = "random-source";
     const generatedSource = makeMockSource(undefined, generatedSourceId);
     const matchingBreakpoints = {

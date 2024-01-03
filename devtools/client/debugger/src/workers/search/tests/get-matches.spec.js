@@ -50,7 +50,7 @@ describe("search", () => {
       expect(matchLocations).toHaveLength(4);
     });
 
-    it("it doesnt fail on empty data", () => {
+    it("doesnt fail on empty data", () => {
       const text = "";
       const query = "";
       const matchLocations = getMatches(query, text, {

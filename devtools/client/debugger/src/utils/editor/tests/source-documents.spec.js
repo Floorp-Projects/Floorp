@@ -24,7 +24,7 @@ const defaultSymbolDeclarations = {
 
 describe("source-documents", () => {
   describe("getMode", () => {
-    it("//     ", () => {
+    it("//", () => {
       const source = makeMockSourceWithContent(
         undefined,
         undefined,

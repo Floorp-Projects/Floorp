@@ -62,15 +62,15 @@ function render(log, line, column, condition, logValue, overrides = {}) {
 }
 
 describe("ConditionalPanel", () => {
-  it("it should render at location of selected breakpoint", () => {
+  it("should render at location of selected breakpoint", () => {
     const { wrapper } = render(false, 2, 2);
     expect(wrapper).toMatchSnapshot();
   });
-  it("it should render with condition at selected breakpoint location", () => {
+  it("should render with condition at selected breakpoint location", () => {
     const { wrapper } = render(false, 3, 3, "I'm a condition", "not a log");
     expect(wrapper).toMatchSnapshot();
   });
-  it("it should render with logpoint at selected breakpoint location", () => {
+  it("should render with logpoint at selected breakpoint location", () => {
     const { wrapper } = render(true, 4, 4, "not a condition", "I'm a log");
     expect(wrapper).toMatchSnapshot();
   });

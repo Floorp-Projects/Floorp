@@ -7,7 +7,7 @@ import { sortSelectedBreakpoints } from "../index";
 import { makeMockBreakpoint, makeMockSource } from "../../test-mockup";
 
 describe("breakpoint sorting", () => {
-  it("sortSelectedBreakpoints should sort by line number and column ", () => {
+  it("sortSelectedBreakpoints should sort by line number and column", () => {
     const sorted = sortSelectedBreakpoints(
       [
         makeMockBreakpoint(undefined, 100, 2),
