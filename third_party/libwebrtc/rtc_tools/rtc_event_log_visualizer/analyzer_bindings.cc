@@ -10,18 +10,87 @@
 
 #include "rtc_tools/rtc_event_log_visualizer/analyzer_bindings.h"
 
-#include <algorithm>
 #include <cstddef>
+#include <cstdint>
+#include <iostream>
+#include <string>
 
-void analyze_rtc_event_log(const char* log,
+#include "absl/strings/string_view.h"
+#include "api/units/time_delta.h"
+#include "logging/rtc_event_log/rtc_event_log_parser.h"
+#include "rtc_base/numerics/safe_conversions.h"
+#include "rtc_base/protobuf_utils.h"
+#include "rtc_base/system/unused.h"
+#include "rtc_tools/rtc_event_log_visualizer/analyzer.h"
+#include "rtc_tools/rtc_event_log_visualizer/analyzer_common.h"
+#include "rtc_tools/rtc_event_log_visualizer/plot_base.h"
+
+#ifdef WEBRTC_ANDROID_PLATFORM_BUILD
+#include "external/webrtc/webrtc/rtc_tools/rtc_event_log_visualizer/proto/chart.pb.h"
+#else
+#include "rtc_tools/rtc_event_log_visualizer/proto/chart.pb.h"
+#endif
+
+void analyze_rtc_event_log(const char* log_contents,
                            size_t log_size,
                            const char* selection,
                            size_t selection_size,
                            char* output,
-                           size_t* output_size) {
-  size_t size = std::min(log_size, *output_size);
-  for (size_t i = 0; i < size; ++i) {
-    output[i] = log[i];
+                           uint32_t* output_size) {
+  RTC_UNUSED(selection);
+  RTC_UNUSED(selection_size);
+
+  webrtc::ParsedRtcEventLog parsed_log(
+      webrtc::ParsedRtcEventLog::UnconfiguredHeaderExtensions::kDontParse,
+      /*allow_incomplete_logs*/ false);
+
+  absl::string_view log_view(log_contents, log_size);
+  auto status = parsed_log.ParseString(log_view);
+  if (!status.ok()) {
+    std::cerr << "Failed to parse log: " << status.message() << std::endl;
+    *output_size = 0;
+    return;
   }
-  *output_size = size;
+
+  webrtc::AnalyzerConfig config;
+  config.window_duration_ = webrtc::TimeDelta::Millis(250);
+  config.step_ = webrtc::TimeDelta::Millis(10);
+  if (!parsed_log.start_log_events().empty()) {
+    config.rtc_to_utc_offset_ = parsed_log.start_log_events()[0].utc_time() -
+                                parsed_log.start_log_events()[0].log_time();
+  }
+  config.normalize_time_ = true;
+  config.begin_time_ = parsed_log.first_timestamp();
+  config.end_time_ = parsed_log.last_timestamp();
+  if (config.end_time_ < config.begin_time_) {
+    std::cerr << "Log end time " << config.end_time_.ms()
+              << " not after begin time " << config.begin_time_.ms()
+              << ". Nothing to analyze. Is the log broken?";
+    *output_size = 0;
+    return;
+  }
+
+  webrtc::EventLogAnalyzer analyzer(parsed_log, config);
+  webrtc::PlotCollection collection;
+  collection.SetCallTimeToUtcOffsetMs(config.CallTimeToUtcOffsetMs());
+
+  analyzer.CreateTotalOutgoingBitrateGraph(collection.AppendNewPlot(),
+                                           /*show_detector_state*/ true,
+                                           /*show_alr_state*/ false,
+                                           /*show_link_capacity*/ true);
+
+  analyzer.CreateNetworkDelayFeedbackGraph(collection.AppendNewPlot());
+
+  webrtc::analytics::ChartCollection proto_charts;
+  collection.ExportProtobuf(&proto_charts);
+  std::string serialized_charts = proto_charts.SerializeAsString();
+  if (rtc::checked_cast<uint32_t>(serialized_charts.size()) > *output_size) {
+    std::cerr << "Serialized charts larger than available output buffer: "
+              << serialized_charts.size() << " vs " << *output_size;
+    *output_size = 0;
+    return;
+  }
+
+  memcpy(output, serialized_charts.data(), serialized_charts.size());
+  *output_size = rtc::checked_cast<uint32_t>(serialized_charts.size());
 }

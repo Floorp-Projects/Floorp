@@ -430,7 +430,29 @@ if (!build_with_chromium) {
         "rtc_event_log_visualizer/analyzer_bindings.cc",
         "rtc_event_log_visualizer/analyzer_bindings.h",
       ]
-      deps = [ ":event_log_visualizer_utils" ]
+      deps = [
+        ":chart_proto",
+        ":event_log_visualizer_utils",
+        "//api/units:time_delta",
+        "//logging:rtc_event_log_parser",
+        "//rtc_base:protobuf_utils",
+        "//rtc_base:safe_conversions",
+        "//rtc_base/system:unused",
+      ]
+      absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
+    }
+
+    rtc_library("event_log_visualizer_bindings_unittest") {
+      testonly = true
+      sources = [ "rtc_event_log_visualizer/analyzer_bindings_unittest.cc" ]
+      deps = [
+        ":chart_proto",
+        ":event_log_visualizer_bindings",
+        "//rtc_base:protobuf_utils",
+        "//rtc_base/system:file_wrapper",
+        "//test:fileutils",
+        "//test:test_support",
+      ]
     }
   }
 
@@ -531,6 +553,7 @@ if (rtc_include_tests) {
       "../resources/foreman_128x96.yuv",
       "../resources/foreman_cif.yuv",
       "../resources/reference_less_video_test_file.y4m",
+      "../resources/rtc_event_log/rtc_event_log_500kbps.binarypb",
     ]
 
     if (is_ios) {
@@ -582,7 +605,10 @@ if (rtc_include_tests) {
       }
 
       if (rtc_enable_protobuf) {
-        deps += [ "network_tester:network_tester_unittests" ]
+        deps += [
+          ":event_log_visualizer_bindings_unittest",
+          "network_tester:network_tester_unittests",
+        ]
       }
 
       data = tools_unittests_resources
