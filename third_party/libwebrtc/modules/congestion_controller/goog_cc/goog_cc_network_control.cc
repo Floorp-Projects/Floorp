@@ -108,8 +108,8 @@ GoogCcNetworkController::GoogCcNetworkController(NetworkControllerConfig config,
           key_value_config_,
           "WebRTC-Bwe-IgnoreProbesLowerThanNetworkStateEstimate")),
       limit_probes_lower_than_throughput_estimate_(
-          IsEnabled(key_value_config_,
-                    "WebRTC-Bwe-LimitProbesLowerThanThroughputEstimate")),
+          IsNotDisabled(key_value_config_,
+                        "WebRTC-Bwe-LimitProbesLowerThanThroughputEstimate")),
       rate_control_settings_(
           RateControlSettings::ParseFromKeyValueConfig(key_value_config_)),
       pace_at_max_of_bwe_and_lower_link_capacity_(
