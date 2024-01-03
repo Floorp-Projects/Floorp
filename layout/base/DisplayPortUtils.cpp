@@ -854,29 +854,36 @@ bool DisplayPortUtils::MaybeCreateDisplayPortInFirstScrollFrameEncountered(
       aFrame->GetContent()->GetID() == nsGkAtoms::tabbrowser_arrowscrollbox) {
     return false;
   }
-  if (nsIScrollableFrame* sf = do_QueryFrame(aFrame)) {
-    if (MaybeCreateDisplayPort(aBuilder, aFrame, sf, RepaintMode::Repaint)) {
-      // If this was the first displayport found in the first scroll frame
-      // encountered, mark the scroll frame with the current paint sequence
-      // number. This is used later to ensure the displayport created is
-      // never expired. When there is a scrollable frame with a first
-      // scrollable sequence number found that does not match the current
-      // paint sequence number (may occur if the dom was mutated in some way),
-      // the value will be reset.
-      sf->SetIsFirstScrollableFrameSequenceNumber(
-          Some(nsDisplayListBuilder::GetPaintSequenceNumber()));
-      return true;
+  // The do_QueryFrame call below is the most expensive part of this function.
+  // IsLeaf is a quick function we can call to avoid this in a lot of cases. It
+  // also neatly lines up with we check below (subdocument and placeholder
+  // frames are leaves, and leaves don't have child lists) so it speeds this
+  // function up whether it is true or false. Using IsScrollContainer is
+  // slightly less fast.
+  const bool isLeaf = aFrame->IsLeaf();
+  if (!isLeaf) {
+    if (nsIScrollableFrame* sf = do_QueryFrame(aFrame)) {
+      if (MaybeCreateDisplayPort(aBuilder, aFrame, sf, RepaintMode::Repaint)) {
+        // If this was the first displayport found in the first scroll frame
+        // encountered, mark the scroll frame with the current paint sequence
+        // number. This is used later to ensure the displayport created is
+        // never expired. When there is a scrollable frame with a first
+        // scrollable sequence number found that does not match the current
+        // paint sequence number (may occur if the dom was mutated in some way),
+        // the value will be reset.
+        sf->SetIsFirstScrollableFrameSequenceNumber(
+            Some(nsDisplayListBuilder::GetPaintSequenceNumber()));
+        return true;
+      }
     }
-  }
-  if (aFrame->IsPlaceholderFrame()) {
+  } else if (aFrame->IsPlaceholderFrame()) {
     nsPlaceholderFrame* placeholder = static_cast<nsPlaceholderFrame*>(aFrame);
     nsIFrame* oof = placeholder->GetOutOfFlowFrame();
     if (oof && !nsLayoutUtils::IsPopup(oof) &&
         MaybeCreateDisplayPortInFirstScrollFrameEncountered(oof, aBuilder)) {
       return true;
     }
-  }
-  if (aFrame->IsSubDocumentFrame()) {
+  } else if (aFrame->IsSubDocumentFrame()) {
     PresShell* presShell = static_cast<nsSubDocumentFrame*>(aFrame)
                                ->GetSubdocumentPresShellForPainting(0);
     if (nsIFrame* root = presShell ? presShell->GetRootFrame() : nullptr) {
@@ -889,9 +896,12 @@ bool DisplayPortUtils::MaybeCreateDisplayPortInFirstScrollFrameEncountered(
     // Only descend the visible card of deck / tabpanels
     return false;
   }
-  for (nsIFrame* child : aFrame->PrincipalChildList()) {
-    if (MaybeCreateDisplayPortInFirstScrollFrameEncountered(child, aBuilder)) {
-      return true;
+  if (!isLeaf) {
+    for (nsIFrame* child : aFrame->PrincipalChildList()) {
+      if (MaybeCreateDisplayPortInFirstScrollFrameEncountered(child,
+                                                              aBuilder)) {
+        return true;
+      }
     }
   }
   return false;
