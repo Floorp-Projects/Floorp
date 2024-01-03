@@ -1491,5 +1491,146 @@ TEST_F(LossBasedBweV2Test, IncreaseUsingPaddingStateIfFieldTrial) {
             LossBasedState::kIncreaseUsingPadding);
 }
 
+TEST_F(LossBasedBweV2Test, IncreaseEstimateIfNotHold) {
+  ExplicitKeyValueConfig key_value_config(
+      ShortObservationConfig("HoldDurationFactor:0"));
+  LossBasedBweV2 loss_based_bandwidth_estimator(&key_value_config);
+  loss_based_bandwidth_estimator.SetBandwidthEstimate(
+      DataRate::KilobitsPerSec(2500));
+  loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
+      CreatePacketResultsWith50pLossRate(
+          /*first_packet_timestamp=*/Timestamp::Zero()),
+      /*delay_based_estimate=*/DataRate::PlusInfinity(),
+      /*in_alr=*/false);
+  ASSERT_EQ(loss_based_bandwidth_estimator.GetLossBasedResult().state,
+            LossBasedState::kDecreasing);
+  DataRate estimate =
+      loss_based_bandwidth_estimator.GetLossBasedResult().bandwidth_estimate;
+
+  loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
+      CreatePacketResultsWithReceivedPackets(
+          /*first_packet_timestamp=*/Timestamp::Zero() +
+          kObservationDurationLowerBound),
+      /*delay_based_estimate=*/DataRate::PlusInfinity(),
+      /*in_alr=*/false);
+  EXPECT_EQ(loss_based_bandwidth_estimator.GetLossBasedResult().state,
+            LossBasedState::kIncreasing);
+  EXPECT_GT(
+      loss_based_bandwidth_estimator.GetLossBasedResult().bandwidth_estimate,
+      estimate);
+}
+
+TEST_F(LossBasedBweV2Test, IncreaseEstimateAfterHoldDuration) {
+  ExplicitKeyValueConfig key_value_config(
+      ShortObservationConfig("HoldDurationFactor:3"));
+  LossBasedBweV2 loss_based_bandwidth_estimator(&key_value_config);
+  loss_based_bandwidth_estimator.SetBandwidthEstimate(
+      DataRate::KilobitsPerSec(2500));
+  loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
+      CreatePacketResultsWith50pLossRate(
+          /*first_packet_timestamp=*/Timestamp::Zero()),
+      /*delay_based_estimate=*/DataRate::PlusInfinity(),
+      /*in_alr=*/false);
+  ASSERT_EQ(loss_based_bandwidth_estimator.GetLossBasedResult().state,
+            LossBasedState::kDecreasing);
+  DataRate estimate =
+      loss_based_bandwidth_estimator.GetLossBasedResult().bandwidth_estimate;
+
+  // During the hold duration, e.g. first 300ms, the estimate cannot increase.
+  loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
+      CreatePacketResultsWithReceivedPackets(
+          /*first_packet_timestamp=*/Timestamp::Zero() +
+          kObservationDurationLowerBound),
+      /*delay_based_estimate=*/DataRate::PlusInfinity(),
+      /*in_alr=*/false);
+  EXPECT_EQ(loss_based_bandwidth_estimator.GetLossBasedResult().state,
+            LossBasedState::kDecreasing);
+  EXPECT_EQ(
+      loss_based_bandwidth_estimator.GetLossBasedResult().bandwidth_estimate,
+      estimate);
+
+  // After the hold duration, the estimate can increase.
+  loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
+      CreatePacketResultsWithReceivedPackets(
+          /*first_packet_timestamp=*/Timestamp::Zero() +
+          kObservationDurationLowerBound * 2),
+      /*delay_based_estimate=*/DataRate::PlusInfinity(),
+      /*in_alr=*/false);
+  EXPECT_EQ(loss_based_bandwidth_estimator.GetLossBasedResult().state,
+            LossBasedState::kIncreasing);
+  EXPECT_GE(
+      loss_based_bandwidth_estimator.GetLossBasedResult().bandwidth_estimate,
+      estimate);
+
+  // Get another 50p packet loss.
+  loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
+      CreatePacketResultsWith50pLossRate(
+          /*first_packet_timestamp=*/Timestamp::Zero() +
+          kObservationDurationLowerBound * 3),
+      /*delay_based_estimate=*/DataRate::PlusInfinity(),
+      /*in_alr=*/false);
+  EXPECT_EQ(loss_based_bandwidth_estimator.GetLossBasedResult().state,
+            LossBasedState::kDecreasing);
+  estimate =
+      loss_based_bandwidth_estimator.GetLossBasedResult().bandwidth_estimate;
+
+  // During the hold duration, e.g. next 900ms, the estimate cannot increase.
+  for (int i = 4; i <= 6; ++i) {
+    loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
+        CreatePacketResultsWithReceivedPackets(
+            /*first_packet_timestamp=*/Timestamp::Zero() +
+            kObservationDurationLowerBound * i),
+        /*delay_based_estimate=*/DataRate::PlusInfinity(),
+        /*in_alr=*/false);
+    EXPECT_EQ(loss_based_bandwidth_estimator.GetLossBasedResult().state,
+              LossBasedState::kDecreasing);
+    EXPECT_EQ(
+        loss_based_bandwidth_estimator.GetLossBasedResult().bandwidth_estimate,
+        estimate);
+  }
+
+  // After the hold duration, the estimate can increase again.
+  loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
+      CreatePacketResultsWithReceivedPackets(
+          /*first_packet_timestamp=*/Timestamp::Zero() +
+          kObservationDurationLowerBound * 7),
+      /*delay_based_estimate=*/DataRate::PlusInfinity(),
+      /*in_alr=*/false);
+  EXPECT_EQ(loss_based_bandwidth_estimator.GetLossBasedResult().state,
+            LossBasedState::kIncreasing);
+  EXPECT_GE(
+      loss_based_bandwidth_estimator.GetLossBasedResult().bandwidth_estimate,
+      estimate);
+}
+
+TEST_F(LossBasedBweV2Test, EndHoldDurationIfDelayBasedEstimateWorks) {
+  ExplicitKeyValueConfig key_value_config(
+      ShortObservationConfig("HoldDurationFactor:3"));
+  LossBasedBweV2 loss_based_bandwidth_estimator(&key_value_config);
+  loss_based_bandwidth_estimator.SetBandwidthEstimate(
+      DataRate::KilobitsPerSec(2500));
+  loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
+      CreatePacketResultsWith50pLossRate(
+          /*first_packet_timestamp=*/Timestamp::Zero()),
+      /*delay_based_estimate=*/DataRate::PlusInfinity(),
+      /*in_alr=*/false);
+  ASSERT_EQ(loss_based_bandwidth_estimator.GetLossBasedResult().state,
+            LossBasedState::kDecreasing);
+  DataRate estimate =
+      loss_based_bandwidth_estimator.GetLossBasedResult().bandwidth_estimate;
+
+  loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
+      CreatePacketResultsWithReceivedPackets(
+          /*first_packet_timestamp=*/Timestamp::Zero() +
+          kObservationDurationLowerBound),
+      /*delay_based_estimate=*/estimate + DataRate::KilobitsPerSec(10),
+      /*in_alr=*/false);
+  EXPECT_EQ(loss_based_bandwidth_estimator.GetLossBasedResult().state,
+            LossBasedState::kDelayBasedEstimate);
+  EXPECT_EQ(
+      loss_based_bandwidth_estimator.GetLossBasedResult().bandwidth_estimate,
+      estimate + DataRate::KilobitsPerSec(10));
+}
+
 }  // namespace
 }  // namespace webrtc
