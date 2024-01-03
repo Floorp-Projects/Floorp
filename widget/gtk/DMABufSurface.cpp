@@ -471,8 +471,9 @@ bool DMABufSurfaceRGBA::Create(int aWidth, int aHeight,
   if (mBufferModifiers[0] != DRM_FORMAT_MOD_INVALID) {
     mBufferPlaneCount = GbmLib::GetPlaneCount(mGbmBufferObject[0]);
     if (mBufferPlaneCount > DMABUF_BUFFER_PLANES) {
-      LOGDMABUF(("    There's too many dmabuf planes!"));
-      ReleaseSurface();
+      LOGDMABUF(
+          ("    There's too many dmabuf planes! (%d)", mBufferPlaneCount));
+      mBufferPlaneCount = DMABUF_BUFFER_PLANES;
       return false;
     }
 
@@ -510,6 +511,7 @@ bool DMABufSurfaceRGBA::Create(mozilla::gl::GLContext* aGLContext,
   }
   if (mBufferPlaneCount > DMABUF_BUFFER_PLANES) {
     LOGDMABUF(("  wrong plane count %d, quit\n", mBufferPlaneCount));
+    mBufferPlaneCount = DMABUF_BUFFER_PLANES;
     return false;
   }
   if (!egl->fExportDMABUFImage(mEGLImage, mDmabufFds, mStrides, mOffsets)) {
