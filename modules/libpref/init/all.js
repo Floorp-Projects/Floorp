@@ -2898,7 +2898,7 @@ pref("font.size.monospace.x-math", 13);
 #if defined(ANDROID)
   // We use the bundled Charis SIL Compact as serif font for Firefox for Android
 
-  pref("font.name-list.emoji", "Noto Color Emoji");
+  pref("font.name-list.emoji", "SamsungColorEmoji, Noto Color Emoji");
 
   pref("font.name-list.serif.ar", "Noto Naskh Arabic, Noto Serif, Droid Serif");
   pref("font.name-list.sans-serif.ar", "Noto Naskh Arabic, Roboto, Google Sans, Droid Sans");
