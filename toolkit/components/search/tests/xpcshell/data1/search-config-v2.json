@@ -1,0 +1,101 @@
+{
+  "data": [
+    {
+      "base": {
+        "name": "engine1",
+        "urls": {
+          "search": {
+            "base": "https://1.example.com/search",
+            "searchTermParamName": "q"
+          }
+        },
+        "classification": "unknown"
+      },
+      "variants": [{ "environment": { "allRegionsAndLocales": true } }],
+      "identifier": "engine1",
+      "recordType": "engine"
+    },
+    {
+      "base": {
+        "name": "engine2",
+        "urls": {
+          "search": {
+            "base": "https://2.example.com/search",
+            "searchTermParamName": "q"
+          }
+        },
+        "classification": "unknown"
+      },
+      "variants": [{ "environment": { "allRegionsAndLocales": true } }],
+      "identifier": "engine2",
+      "recordType": "engine"
+    },
+    {
+      "base": {
+        "name": "exp2",
+        "urls": {
+          "search": {
+            "base": "https://2.example.com/searchexp",
+            "searchTermParamName": "q"
+          }
+        },
+        "classification": "unknown"
+      },
+      "variants": [
+        {
+          "environment": { "allRegionsAndLocales": true, "experiment": "exp2" }
+        }
+      ],
+      "identifier": "exp2",
+      "recordType": "engine"
+    },
+    {
+      "base": {
+        "name": "exp3",
+        "urls": {
+          "search": {
+            "base": "https://3.example.com/searchexp",
+            "searchTermParamName": "q"
+          }
+        },
+        "classification": "unknown"
+      },
+      "variants": [
+        {
+          "environment": { "allRegionsAndLocales": true, "experiment": "exp3" }
+        }
+      ],
+      "identifier": "exp3",
+      "recordType": "engine"
+    },
+    {
+      "recordType": "defaultEngines",
+      "globalDefault": "engine1",
+      "globalDefaultPrivate": "engine1",
+      "specificDefaults": [
+        {
+          "environment": { "experiment": "exp1" },
+          "default": "engine2"
+        },
+        {
+          "environment": { "experiment": "exp2" },
+          "defaultPrivate": "exp2"
+        },
+        {
+          "environment": { "experiment": "exp3" },
+          "default": "exp3"
+        }
+      ]
+    },
+    {
+      "recordType": "engineOrders",
+      "orders": [
+        {
+          "environment": { "allRegionsAndLocales": true },
+          "order": ["exp3", "engine1", "engine2", "exp2"]
+        }
+      ]
+    }
+  ],
+  "timestamp": 1704229342821
+}
