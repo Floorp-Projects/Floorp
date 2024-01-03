@@ -246,9 +246,8 @@ already_AddRefed<BindGroup> Device::CreateBindGroup(
   return object.forget();
 }
 
-MOZ_CAN_RUN_SCRIPT_FOR_DEFINITION already_AddRefed<ShaderModule>
-Device::CreateShaderModule(JSContext* aCx,
-                           const dom::GPUShaderModuleDescriptor& aDesc) {
+already_AddRefed<ShaderModule> Device::CreateShaderModule(
+    JSContext* aCx, const dom::GPUShaderModuleDescriptor& aDesc) {
   Unused << aCx;
 
   if (!mBridge->CanSend()) {
