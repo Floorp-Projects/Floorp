@@ -323,7 +323,9 @@ void LossBasedBweV2::UpdateResult() {
           /*new_estimate=*/bounded_bandwidth_estimate) &&
       bounded_bandwidth_estimate < delay_based_estimate_ &&
       bounded_bandwidth_estimate < max_bitrate_) {
-    loss_based_result_.state = LossBasedState::kIncreasing;
+    loss_based_result_.state = config_->use_padding_for_increase
+                                   ? LossBasedState::kIncreaseUsingPadding
+                                   : LossBasedState::kIncreasing;
   } else if (bounded_bandwidth_estimate < delay_based_estimate_ &&
              bounded_bandwidth_estimate < max_bitrate_) {
     loss_based_result_.state = LossBasedState::kDecreasing;
@@ -337,7 +339,9 @@ bool LossBasedBweV2::IsEstimateIncreasingWhenLossLimited(
     DataRate old_estimate, DataRate new_estimate) {
   return (old_estimate < new_estimate ||
           (old_estimate == new_estimate &&
-           loss_based_result_.state == LossBasedState::kIncreasing)) &&
+           (loss_based_result_.state == LossBasedState::kIncreasing ||
+            loss_based_result_.state ==
+                LossBasedState::kIncreaseUsingPadding))) &&
          IsInLossLimitedState();
 }
 
@@ -409,6 +413,8 @@ absl::optional<LossBasedBweV2::Config> LossBasedBweV2::CreateConfig(
   FieldTrialParameter<int> min_num_observations("MinNumObservations", 3);
   FieldTrialParameter<double> lower_bound_by_acked_rate_factor(
       "LowerBoundByAckedRateFactor", 0.0);
+  FieldTrialParameter<bool> use_padding_for_increase("UsePadding", false);
+
   if (key_value_config) {
     ParseFieldTrial({&enabled,
                      &bandwidth_rampup_upper_bound_factor,
@@ -444,7 +450,8 @@ absl::optional<LossBasedBweV2::Config> LossBasedBweV2::CreateConfig(
                      &not_use_acked_rate_in_alr,
                      &use_in_start_phase,
                      &min_num_observations,
-                     &lower_bound_by_acked_rate_factor},
+                     &lower_bound_by_acked_rate_factor,
+                     &use_padding_for_increase},
                     key_value_config->Lookup("WebRTC-Bwe-LossBasedBweV2"));
   }
 
@@ -504,6 +511,7 @@ absl::optional<LossBasedBweV2::Config> LossBasedBweV2::CreateConfig(
   config->min_num_observations = min_num_observations.Get();
   config->lower_bound_by_acked_rate_factor =
       lower_bound_by_acked_rate_factor.Get();
+  config->use_padding_for_increase = use_padding_for_increase.Get();
 
   return config;
 }

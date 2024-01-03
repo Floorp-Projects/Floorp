@@ -1435,5 +1435,29 @@ TEST_F(LossBasedBweV2Test, HasDelayBasedStateIfLossBasedBweIsMax) {
       DataRate::KilobitsPerSec(1000));
 }
 
+TEST_F(LossBasedBweV2Test, IncreaseUsingPaddingStateIfFieldTrial) {
+  ExplicitKeyValueConfig key_value_config(
+      ShortObservationConfig("UsePadding:true"));
+  LossBasedBweV2 loss_based_bandwidth_estimator(&key_value_config);
+  loss_based_bandwidth_estimator.SetBandwidthEstimate(
+      DataRate::KilobitsPerSec(2500));
+  loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
+      CreatePacketResultsWith50pLossRate(
+          /*first_packet_timestamp=*/Timestamp::Zero()),
+      /*delay_based_estimate=*/DataRate::PlusInfinity(),
+      /*in_alr=*/false);
+  ASSERT_EQ(loss_based_bandwidth_estimator.GetLossBasedResult().state,
+            LossBasedState::kDecreasing);
+
+  loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
+      CreatePacketResultsWithReceivedPackets(
+          /*first_packet_timestamp=*/Timestamp::Zero() +
+          kObservationDurationLowerBound),
+      /*delay_based_estimate=*/DataRate::PlusInfinity(),
+      /*in_alr=*/false);
+  EXPECT_EQ(loss_based_bandwidth_estimator.GetLossBasedResult().state,
+            LossBasedState::kIncreaseUsingPadding);
+}
+
 }  // namespace
 }  // namespace webrtc
