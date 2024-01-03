@@ -10,7 +10,7 @@ vars = {
   # chromium waterfalls. More info at: crbug.com/570091.
   'checkout_configuration': 'default',
   'checkout_instrumented_libraries': 'checkout_linux and checkout_configuration == "default"',
-  'chromium_revision': '9f3c24a6c612d60f78391b5b41518814d986baa6',
+  'chromium_revision': 'e95b1a535914fac13c6a628d15136b7328992870',
 
   # Fetch the prebuilt binaries for llvm-cov and llvm-profdata. Needed to
   # process the raw profiles produced by instrumented targets (built with
@@ -50,7 +50,7 @@ vars = {
 deps = {
   # TODO(kjellander): Move this to be Android-only.
   'src/base':
-    'https://chromium.googlesource.com/chromium/src/base@949b21255721298009e0f89d396fdf59f7a921fb',
+    'https://chromium.googlesource.com/chromium/src/base@70b48a4849f88bc2ccc7578825efc9b3041c4d32',
   'src/build':
     'https://chromium.googlesource.com/chromium/src/build@d1c8d9f9cc4f1326a09ae23910af79162f844c7f',
   'src/buildtools':
@@ -61,13 +61,13 @@ deps = {
     'condition': 'checkout_android',
   },
   'src/ios': {
-    'url': 'https://chromium.googlesource.com/chromium/src/ios@7e5e89104b711899004a2eb751413458ff5babef',
+    'url': 'https://chromium.googlesource.com/chromium/src/ios@7218dd6518ee3daab03833a97b602822d69c2a7f',
     'condition': 'checkout_ios',
   },
   'src/testing':
-    'https://chromium.googlesource.com/chromium/src/testing@5d6668c8f282f886d317c8cbc736e2603e088ccb',
+    'https://chromium.googlesource.com/chromium/src/testing@17f1759246bb74da41b850ef4fb8797cc1fc1709',
   'src/third_party':
-    'https://chromium.googlesource.com/chromium/src/third_party@a4d26b8ac8404f406b4e22ad0adb9bfc7bf4d7f1',
+    'https://chromium.googlesource.com/chromium/src/third_party@49b3fc26fc0b3b6b8c7bdc760cb005bc43d4947f',
 
   'src/buildtools/linux64': {
     'packages': [
@@ -289,7 +289,7 @@ deps = {
       'condition': 'checkout_android',
   },
   'src/third_party/perfetto':
-    'https://android.googlesource.com/platform/external/perfetto.git@34f1b98dca5071866b2f0778605dcea0a3d1fbef',
+    'https://android.googlesource.com/platform/external/perfetto.git@f5bcd0b0cb77003dfbde7451f90be1fe54cd3299',
   'src/third_party/libvpx/source/libvpx':
     'https://chromium.googlesource.com/webm/libvpx.git@3fbd1dca6a4d2dad332a2110d646e4ffef36d590',
   'src/third_party/libyuv':
@@ -338,7 +338,7 @@ deps = {
     'condition': 'checkout_android',
   },
   'src/tools':
-    'https://chromium.googlesource.com/chromium/src/tools@35d921f96554c0b4920d67ef3620dc5b9b5914ca',
+    'https://chromium.googlesource.com/chromium/src/tools@2d2e4c1613a6fbffb7090c75fb24075ac012243d',
 
   'src/third_party/accessibility_test_framework': {
       'packages': [
@@ -410,7 +410,7 @@ deps = {
     'packages': [
       {
           'package': 'chromium/third_party/androidx',
-          'version': 'mKlggNDsEv0JjWpi3rudjBg2bHFe469T00mjfL10gX0C',
+          'version': '96u2eitVGdsNUZ0Qhe7boO2KLmjPi7R8D8gI7_o7lRAC',
       },
     ],
     'condition': 'checkout_android',
