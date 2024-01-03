@@ -1358,6 +1358,16 @@ bool OptimizeMIR(MIRGenerator* mir) {
     }
   }
 
+  if (!mir->compilingWasm()) {
+    JitSpewCont(JitSpew_MarkLoadsUsedAsPropertyKeys, "\n");
+    if (!MarkLoadsUsedAsPropertyKeys(graph)) {
+      return false;
+    }
+    if (mir->shouldCancel("MarkLoadsUsedAsPropertyKeys")) {
+      return false;
+    }
+  }
+
   if (mir->optimizationInfo().instructionReorderingEnabled() &&
       !mir->outerInfo().hadReorderingBailout()) {
     if (!ReorderInstructions(graph)) {

@@ -80,6 +80,7 @@ class OutOfLineAbortingWasmTrap;
 class OutOfLineGuardNumberToIntPtrIndex;
 class OutOfLineBoxNonStrictThis;
 class OutOfLineArrayPush;
+class OutOfLineAtomizeSlot;
 class OutOfLineWasmCallPostWriteBarrier;
 class OutOfLineWasmNewStruct;
 
@@ -184,6 +185,8 @@ class CodeGenerator final : public CodeGeneratorSpecific {
 
   void visitOutOfLineArrayPush(OutOfLineArrayPush* ool);
 
+  void visitOutOfLineAtomizeSlot(OutOfLineAtomizeSlot* ool);
+
   void visitOutOfLineWasmCallPostWriteBarrier(
       OutOfLineWasmCallPostWriteBarrier* ool);
 
@@ -235,6 +238,9 @@ class CodeGenerator final : public CodeGeneratorSpecific {
   template <class GetInlinedArgument>
   void emitGetInlinedArgument(GetInlinedArgument* lir, Register index,
                               ValueOperand output);
+
+  void emitMaybeAtomizeSlot(LInstruction* ins, Register stringReg,
+                            Address slotAddr, TypedOrValueRegister dest);
 
   using RegisterOrInt32 = mozilla::Variant<Register, int32_t>;
 

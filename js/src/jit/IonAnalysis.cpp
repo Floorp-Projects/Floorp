@@ -4335,6 +4335,93 @@ bool jit::EliminateRedundantGCBarriers(MIRGraph& graph) {
   return true;
 }
 
+bool jit::MarkLoadsUsedAsPropertyKeys(MIRGraph& graph) {
+  // When a string is used as a property key, or as the key for a Map or Set, we
+  // require it to be atomized. To avoid repeatedly atomizing the same string,
+  // this analysis looks for cases where we are loading a value from the slot of
+  // an object (which includes access to global variables and global lexicals)
+  // and using it as a property key, and marks those loads. During codegen,
+  // marked loads will check whether the value loaded is a non-atomized string.
+  // If it is, we will atomize the string and update the stored value, ensuring
+  // that future loads from the same slot will not have to atomize again.
+  JitSpew(JitSpew_MarkLoadsUsedAsPropertyKeys, "Begin");
+
+  for (ReversePostorderIterator block = graph.rpoBegin();
+       block != graph.rpoEnd(); block++) {
+    for (MInstructionIterator insIter(block->begin());
+         insIter != block->end();) {
+      MInstruction* ins = *insIter;
+      insIter++;
+
+      MDefinition* idVal = nullptr;
+      if (ins->isGetPropertyCache()) {
+        idVal = ins->toGetPropertyCache()->idval();
+      } else if (ins->isHasOwnCache()) {
+        idVal = ins->toHasOwnCache()->idval();
+      } else if (ins->isSetPropertyCache()) {
+        idVal = ins->toSetPropertyCache()->idval();
+      } else if (ins->isGetPropSuperCache()) {
+        idVal = ins->toGetPropSuperCache()->idval();
+      } else if (ins->isMegamorphicLoadSlotByValue()) {
+        idVal = ins->toMegamorphicLoadSlotByValue()->idVal();
+      } else if (ins->isMegamorphicHasProp()) {
+        idVal = ins->toMegamorphicHasProp()->idVal();
+      } else if (ins->isMegamorphicSetElement()) {
+        idVal = ins->toMegamorphicSetElement()->index();
+      } else if (ins->isProxyGetByValue()) {
+        idVal = ins->toProxyGetByValue()->idVal();
+      } else if (ins->isProxyHasProp()) {
+        idVal = ins->toProxyHasProp()->idVal();
+      } else if (ins->isProxySetByValue()) {
+        idVal = ins->toProxySetByValue()->idVal();
+      } else if (ins->isIdToStringOrSymbol()) {
+        idVal = ins->toIdToStringOrSymbol()->idVal();
+      } else if (ins->isGuardSpecificAtom()) {
+        idVal = ins->toGuardSpecificAtom()->input();
+      } else {
+        continue;
+      }
+      JitSpew(JitSpew_MarkLoadsUsedAsPropertyKeys,
+              "Analyzing property access %s%d with idVal %s%d", ins->opName(),
+              ins->id(), idVal->opName(), idVal->id());
+
+      // Skip intermediate nodes.
+      do {
+        if (idVal->isLexicalCheck()) {
+          idVal = idVal->toLexicalCheck()->input();
+          JitSpew(JitSpew_MarkLoadsUsedAsPropertyKeys,
+                  "- Skipping lexical check. idVal is now %s%d",
+                  idVal->opName(), idVal->id());
+          continue;
+        }
+        if (idVal->isUnbox() && idVal->type() == MIRType::String) {
+          idVal = idVal->toUnbox()->input();
+          JitSpew(JitSpew_MarkLoadsUsedAsPropertyKeys,
+                  "- Skipping unbox. idVal is now %s%d", idVal->opName(),
+                  idVal->id());
+          continue;
+        }
+        break;
+      } while (true);
+
+      if (idVal->isLoadFixedSlot()) {
+        JitSpew(JitSpew_MarkLoadsUsedAsPropertyKeys,
+                "- SUCCESS: Marking fixed slot");
+        idVal->toLoadFixedSlot()->setUsedAsPropertyKey();
+      } else if (idVal->isLoadDynamicSlot()) {
+        JitSpew(JitSpew_MarkLoadsUsedAsPropertyKeys,
+                "- SUCCESS: Marking dynamic slot");
+        idVal->toLoadDynamicSlot()->setUsedAsPropertyKey();
+      } else {
+        JitSpew(JitSpew_MarkLoadsUsedAsPropertyKeys, "- SKIP: %s not supported",
+                idVal->opName());
+      }
+    }
+  }
+
+  return true;
+}
+
 static bool NeedsKeepAlive(MInstruction* slotsOrElements, MInstruction* use) {
   MOZ_ASSERT(slotsOrElements->type() == MIRType::Elements ||
              slotsOrElements->type() == MIRType::Slots);
@@ -4851,13 +4938,15 @@ bool jit::FoldLoadsWithUnbox(MIRGenerator* mir, MIRGraph& graph) {
         case MDefinition::Opcode::LoadFixedSlot: {
           auto* loadIns = load->toLoadFixedSlot();
           replacement = MLoadFixedSlotAndUnbox::New(
-              graph.alloc(), loadIns->object(), loadIns->slot(), mode, type);
+              graph.alloc(), loadIns->object(), loadIns->slot(), mode, type,
+              loadIns->usedAsPropertyKey());
           break;
         }
         case MDefinition::Opcode::LoadDynamicSlot: {
           auto* loadIns = load->toLoadDynamicSlot();
           replacement = MLoadDynamicSlotAndUnbox::New(
-              graph.alloc(), loadIns->slots(), loadIns->slot(), mode, type);
+              graph.alloc(), loadIns->slots(), loadIns->slot(), mode, type,
+              loadIns->usedAsPropertyKey());
           break;
         }
         case MDefinition::Opcode::LoadElement: {

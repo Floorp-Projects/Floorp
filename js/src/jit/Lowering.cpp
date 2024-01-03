@@ -3403,8 +3403,15 @@ void LIRGenerator::visitElements(MElements* ins) {
 
 void LIRGenerator::visitLoadDynamicSlot(MLoadDynamicSlot* ins) {
   MOZ_ASSERT(ins->type() == MIRType::Value);
-  defineBox(new (alloc()) LLoadDynamicSlotV(useRegisterAtStart(ins->slots())),
-            ins);
+  if (ins->usedAsPropertyKey()) {
+    auto* lir = new (alloc())
+        LLoadDynamicSlotAndAtomize(useRegister(ins->slots()), temp());
+    defineBox(lir, ins);
+    assignSafepoint(lir, ins);
+  } else {
+    defineBox(new (alloc()) LLoadDynamicSlotV(useRegisterAtStart(ins->slots())),
+              ins);
+  }
 }
 
 void LIRGenerator::visitFunctionEnvironment(MFunctionEnvironment* ins) {
@@ -4468,9 +4475,16 @@ void LIRGenerator::visitLoadFixedSlot(MLoadFixedSlot* ins) {
   MIRType type = ins->type();
 
   if (type == MIRType::Value) {
-    LLoadFixedSlotV* lir =
-        new (alloc()) LLoadFixedSlotV(useRegisterAtStart(obj));
-    defineBox(lir, ins);
+    if (ins->usedAsPropertyKey()) {
+      LLoadFixedSlotAndAtomize* lir =
+          new (alloc()) LLoadFixedSlotAndAtomize(useRegister(obj), temp());
+      defineBox(lir, ins);
+      assignSafepoint(lir, ins);
+    } else {
+      LLoadFixedSlotV* lir =
+          new (alloc()) LLoadFixedSlotV(useRegisterAtStart(obj));
+      defineBox(lir, ins);
+    }
   } else {
     LLoadFixedSlotT* lir =
         new (alloc()) LLoadFixedSlotT(useRegisterForTypedLoad(obj, type));
@@ -4482,23 +4496,44 @@ void LIRGenerator::visitLoadFixedSlotAndUnbox(MLoadFixedSlotAndUnbox* ins) {
   MDefinition* obj = ins->object();
   MOZ_ASSERT(obj->type() == MIRType::Object);
 
-  LLoadFixedSlotAndUnbox* lir =
-      new (alloc()) LLoadFixedSlotAndUnbox(useRegisterAtStart(obj));
-  if (ins->fallible()) {
-    assignSnapshot(lir, ins->bailoutKind());
+  if (ins->usedAsPropertyKey() && ins->type() == MIRType::String) {
+    LLoadFixedSlotUnboxAndAtomize* lir =
+        new (alloc()) LLoadFixedSlotUnboxAndAtomize(useRegister(obj));
+    if (ins->fallible()) {
+      assignSnapshot(lir, ins->bailoutKind());
+    }
+    define(lir, ins);
+    assignSafepoint(lir, ins);
+  } else {
+    LLoadFixedSlotAndUnbox* lir =
+        new (alloc()) LLoadFixedSlotAndUnbox(useRegisterAtStart(obj));
+    if (ins->fallible()) {
+      assignSnapshot(lir, ins->bailoutKind());
+    }
+    define(lir, ins);
   }
-  define(lir, ins);
 }
 
 void LIRGenerator::visitLoadDynamicSlotAndUnbox(MLoadDynamicSlotAndUnbox* ins) {
   MDefinition* slots = ins->slots();
   MOZ_ASSERT(slots->type() == MIRType::Slots);
 
-  auto* lir = new (alloc()) LLoadDynamicSlotAndUnbox(useRegisterAtStart(slots));
-  if (ins->fallible()) {
-    assignSnapshot(lir, ins->bailoutKind());
+  if (ins->usedAsPropertyKey() && ins->type() == MIRType::String) {
+    auto* lir =
+        new (alloc()) LLoadDynamicSlotUnboxAndAtomize(useRegister(slots));
+    if (ins->fallible()) {
+      assignSnapshot(lir, ins->bailoutKind());
+    }
+    define(lir, ins);
+    assignSafepoint(lir, ins);
+  } else {
+    auto* lir =
+        new (alloc()) LLoadDynamicSlotAndUnbox(useRegisterAtStart(slots));
+    if (ins->fallible()) {
+      assignSnapshot(lir, ins->bailoutKind());
+    }
+    define(lir, ins);
   }
-  define(lir, ins);
 }
 
 void LIRGenerator::visitLoadElementAndUnbox(MLoadElementAndUnbox* ins) {
