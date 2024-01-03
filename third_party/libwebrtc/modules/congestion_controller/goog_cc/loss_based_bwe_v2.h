@@ -112,6 +112,7 @@ class LossBasedBweV2 {
     double slope_of_bwe_high_loss_func = 1000.0;
     bool not_use_acked_rate_in_alr = false;
     bool use_in_start_phase = false;
+    int min_num_observations = 0;
   };
 
   struct Derivatives {

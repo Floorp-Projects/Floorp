@@ -132,7 +132,7 @@ bool LossBasedBweV2::IsEnabled() const {
 
 bool LossBasedBweV2::IsReady() const {
   return IsEnabled() && IsValid(current_estimate_.loss_limited_bandwidth) &&
-         num_observations_ > 0;
+         num_observations_ >= config_->min_num_observations;
 }
 
 bool LossBasedBweV2::ReadyToUseInStartPhase() const {
@@ -151,7 +151,7 @@ LossBasedBweV2::Result LossBasedBweV2::GetLossBasedResult() const {
         RTC_LOG(LS_WARNING)
             << "The estimator must be initialized before it can be used.";
       }
-      if (num_observations_ <= 0) {
+      if (num_observations_ <= config_->min_num_observations) {
         RTC_LOG(LS_WARNING) << "The estimator must receive enough loss "
                                "statistics before it can be used.";
       }
@@ -392,6 +392,7 @@ absl::optional<LossBasedBweV2::Config> LossBasedBweV2::CreateConfig(
   FieldTrialParameter<bool> not_use_acked_rate_in_alr("NotUseAckedRateInAlr",
                                                       true);
   FieldTrialParameter<bool> use_in_start_phase("UseInStartPhase", false);
+  FieldTrialParameter<int> min_num_observations("MinNumObservations", 3);
   if (key_value_config) {
     ParseFieldTrial({&enabled,
                      &bandwidth_rampup_upper_bound_factor,
@@ -426,7 +427,8 @@ absl::optional<LossBasedBweV2::Config> LossBasedBweV2::CreateConfig(
                      &bandwidth_cap_at_high_loss_rate,
                      &slope_of_bwe_high_loss_func,
                      &not_use_acked_rate_in_alr,
-                     &use_in_start_phase},
+                     &use_in_start_phase,
+                     &min_num_observations},
                     key_value_config->Lookup("WebRTC-Bwe-LossBasedBweV2"));
   }
 
@@ -485,6 +487,7 @@ absl::optional<LossBasedBweV2::Config> LossBasedBweV2::CreateConfig(
   config->slope_of_bwe_high_loss_func = slope_of_bwe_high_loss_func.Get();
   config->not_use_acked_rate_in_alr = not_use_acked_rate_in_alr.Get();
   config->use_in_start_phase = use_in_start_phase.Get();
+  config->min_num_observations = min_num_observations.Get();
 
   return config;
 }
@@ -663,6 +666,11 @@ bool LossBasedBweV2::IsConfigValid() const {
       config_->high_loss_rate_threshold > 1.0) {
     RTC_LOG(LS_WARNING) << "The high loss rate threshold must be in (0, 1]: "
                         << config_->high_loss_rate_threshold;
+    valid = false;
+  }
+  if (config_->min_num_observations <= 0) {
+    RTC_LOG(LS_WARNING) << "The min number of observations must be positive: "
+                        << config_->min_num_observations;
     valid = false;
   }
   return valid;
