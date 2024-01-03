@@ -695,6 +695,9 @@ class MediaRawData final : public MediaData {
 
   RefPtr<TrackInfoSharedPtr> mTrackInfo;
 
+  // Used to indicate the id of the temporal scalability layer.
+  Maybe<uint8_t> mTemporalLayerId;
+
   // May contain the original start time and duration of the frames.
   // mOriginalPresentationWindow.mStart would always be less or equal to mTime
   // and mOriginalPresentationWindow.mEnd equal or greater to mTime + mDuration.
