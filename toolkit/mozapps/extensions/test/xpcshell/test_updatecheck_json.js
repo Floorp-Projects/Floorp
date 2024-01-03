@@ -377,3 +377,47 @@ add_task(async function test_type_detection() {
     );
   }
 });
+
+add_task(async function test_empty_manifest() {
+  function checkUpdatesForUnlistedAddon(aData) {
+    // Registers an empty JSON update manifest with the test server to simulate
+    // the update server's actual response in the case of an unlisted add-on.
+
+    let path = `/updates/${aData.id}.json`;
+    let updateUrl = `http://localhost:${gPort}${path}`;
+
+    let manifestJSON = {};
+
+    mapManifest(path.replace(/\?.*/, ""), {
+      data: JSON.stringify(manifestJSON),
+      contentType: "application/json",
+    });
+
+    return new Promise((resolve, reject) => {
+      AddonUpdateChecker.checkForUpdates(aData.id, updateUrl, {
+        onUpdateCheckComplete: resolve,
+
+        onUpdateCheckError(status) {
+          reject(new Error("Update check failed with status " + status));
+        },
+      });
+    });
+  }
+
+  let { messages, result: updates } = await promiseConsoleOutput(() => {
+    return checkUpdatesForUnlistedAddon({
+      id: "unlisted@example.org",
+    });
+  });
+
+  equal(updates.length, 0, "no update could be found");
+
+  messages = messages.filter(msg =>
+    /Received empty update manifest for .*/.test(msg.message)
+  );
+  equal(
+    messages.length,
+    1,
+    "unlisted addon generated the expected console message"
+  );
+});
