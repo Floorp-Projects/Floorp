@@ -20,7 +20,7 @@ namespace rtc {
 
 // This interface defines the methods to resolve the address asynchronously.
 // TODO(bugs.webrtc.org/12598): Deprecate and remove.
-class RTC_EXPORT AsyncResolverInterface {
+class [[deprecated("Use AsyncDnsResolver")]] RTC_EXPORT AsyncResolverInterface {
  public:
   AsyncResolverInterface();
   virtual ~AsyncResolverInterface();

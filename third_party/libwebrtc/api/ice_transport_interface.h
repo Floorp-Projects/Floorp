@@ -115,8 +115,11 @@ struct IceTransportInit final {
  private:
   cricket::PortAllocator* port_allocator_ = nullptr;
   AsyncDnsResolverFactoryInterface* async_dns_resolver_factory_ = nullptr;
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
   // For backwards compatibility. Only one resolver factory can be set.
   AsyncResolverFactory* async_resolver_factory_ = nullptr;
+#pragma clang diagnostic pop
   RtcEventLog* event_log_ = nullptr;
   cricket::IceControllerFactoryInterface* ice_controller_factory_ = nullptr;
   cricket::ActiveIceControllerFactoryInterface* active_ice_controller_factory_ =
