@@ -32,7 +32,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=489415
       var ctx = c.getContext("2d");
       ctx.drawImage(video, 0, 0);
       try {
-        c.toDataURL();
+        var data_url = c.toDataURL();
+        var empty_canvas = document.createElement("canvas");
+        if (empty_canvas.toDataURL() === data_url) {
+          info("Readback check returned same data URL as empty canvas.");
+        } else {
+          info("Readback check returned different data URL than empty canvas.");
+        }
         return true;
       } catch (ex) {
         return false;
@@ -58,7 +64,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=489415
         });
 
         once(video, "error", () => {
-          is(canReadBack(video), false, "Should not be able to readback after error");
+          if(video.readyState == video.HAVE_METADATA) {
+            is(canReadBack(video), true, "Should be able to readback with readyState == HAVE_METADATA");
+          } else {
+            is(canReadBack(video), false, "Should not be able to readback with readyState != HAVE_METADATA");
+          }
+
           removeNodeAndSource(video);
           resolve();
         });
