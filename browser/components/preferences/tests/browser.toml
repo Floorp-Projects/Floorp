@@ -200,7 +200,6 @@ support-files = [
   "engine1/manifest.json",
   "engine2/manifest.json",
 ]
-fail-if = ["a11y_checks"] # Bug 1854636 clicked menulist#defaultEngine, menulist#defaultPrivateEngine may not be labeled
 
 ["browser_searchFindMoreLink.js"]
 
