@@ -49,8 +49,6 @@ WEBRTC_ONLY_DEPS = [
     'src/testing',
     'src/third_party',
     'src/third_party/clang_format/script',
-    # TODO(jleconte): Remove once Chromium is rolled in WebRTC.
-    'src/third_party/google-truth',
     'src/third_party/gtest-parallel',
     'src/third_party/pipewire/linux-amd64',
     'src/tools',
