@@ -542,6 +542,64 @@ TEST_F(MediaDataEncoderTest, VP8EncodeAfterDrain) {
     WaitForShutdown(e);
   });
 }
+
+TEST_F(MediaDataEncoderTest, VP8EncodeWithScalabilityModeL1T2) {
+  RUN_IF_SUPPORTED(CodecType::VP8, [this]() {
+    VP8Specific specific(VPXComplexity::Normal, /* mComplexity */
+                         true,                  /* mResilience */
+                         2,                     /* mNumTemporalLayers */
+                         true,                  /* mDenoising */
+                         false,                 /* mAutoResize */
+                         false                  /* mFrameDropping */
+    );
+    RefPtr<MediaDataEncoder> e = CreateVP8Encoder(
+        MediaDataEncoder::Usage::Realtime,
+        MediaDataEncoder::PixelFormat::YUV420P, WIDTH, HEIGHT,
+        MediaDataEncoder::ScalabilityMode::L1T2, Some(specific));
+    EnsureInit(e);
+
+    const nsTArray<uint8_t> pattern({0, 1});
+    MediaDataEncoder::EncodedData output = Encode(e, NUM_FRAMES, mData);
+    EXPECT_EQ(output.Length(), NUM_FRAMES);
+    for (size_t i = 0; i < output.Length(); ++i) {
+      const RefPtr<MediaRawData> frame = output[i];
+
+      EXPECT_TRUE(frame->mTemporalLayerId);
+      size_t idx = i % pattern.Length();
+      EXPECT_EQ(frame->mTemporalLayerId.value(), pattern[idx]);
+    }
+    WaitForShutdown(e);
+  });
+}
+
+TEST_F(MediaDataEncoderTest, VP8EncodeWithScalabilityModeL1T3) {
+  RUN_IF_SUPPORTED(CodecType::VP8, [this]() {
+    VP8Specific specific(VPXComplexity::Normal, /* mComplexity */
+                         true,                  /* mResilience */
+                         3,                     /* mNumTemporalLayers */
+                         true,                  /* mDenoising */
+                         false,                 /* mAutoResize */
+                         false                  /* mFrameDropping */
+    );
+    RefPtr<MediaDataEncoder> e = CreateVP8Encoder(
+        MediaDataEncoder::Usage::Realtime,
+        MediaDataEncoder::PixelFormat::YUV420P, WIDTH, HEIGHT,
+        MediaDataEncoder::ScalabilityMode::L1T3, Some(specific));
+    EnsureInit(e);
+
+    const nsTArray<uint8_t> pattern({0, 2, 1, 2});
+    MediaDataEncoder::EncodedData output = Encode(e, NUM_FRAMES, mData);
+    EXPECT_EQ(output.Length(), NUM_FRAMES);
+    for (size_t i = 0; i < output.Length(); ++i) {
+      const RefPtr<MediaRawData> frame = output[i];
+
+      EXPECT_TRUE(frame->mTemporalLayerId);
+      size_t idx = i % pattern.Length();
+      EXPECT_EQ(frame->mTemporalLayerId.value(), pattern[idx]);
+    }
+    WaitForShutdown(e);
+  });
+}
 #endif
 
 TEST_F(MediaDataEncoderTest, VP9Create) {
@@ -646,6 +704,70 @@ TEST_F(MediaDataEncoderTest, VP9EncodeAfterDrain) {
       }
     }
 
+    WaitForShutdown(e);
+  });
+}
+
+TEST_F(MediaDataEncoderTest, VP9EncodeWithScalabilityModeL1T2) {
+  RUN_IF_SUPPORTED(CodecType::VP9, [this]() {
+    VP9Specific specific(VPXComplexity::Normal, /* mComplexity */
+                         true,                  /* mResilience */
+                         2,                     /* mNumTemporalLayers */
+                         true,                  /* mDenoising */
+                         false,                 /* mAutoResize */
+                         false,                 /* mFrameDropping */
+                         true,                  /* mAdaptiveQp */
+                         1,                     /* mNumSpatialLayers */
+                         false                  /* mFlexible */
+    );
+
+    RefPtr<MediaDataEncoder> e = CreateVP9Encoder(
+        MediaDataEncoder::Usage::Realtime,
+        MediaDataEncoder::PixelFormat::YUV420P, WIDTH, HEIGHT,
+        MediaDataEncoder::ScalabilityMode::L1T2, Some(specific));
+    EnsureInit(e);
+
+    const nsTArray<uint8_t> pattern({0, 1});
+    MediaDataEncoder::EncodedData output = Encode(e, NUM_FRAMES, mData);
+    EXPECT_EQ(output.Length(), NUM_FRAMES);
+    for (size_t i = 0; i < output.Length(); ++i) {
+      const RefPtr<MediaRawData> frame = output[i];
+      EXPECT_TRUE(frame->mTemporalLayerId);
+      size_t idx = i % pattern.Length();
+      EXPECT_EQ(frame->mTemporalLayerId.value(), pattern[idx]);
+    }
+    WaitForShutdown(e);
+  });
+}
+
+TEST_F(MediaDataEncoderTest, VP9EncodeWithScalabilityModeL1T3) {
+  RUN_IF_SUPPORTED(CodecType::VP9, [this]() {
+    VP9Specific specific(VPXComplexity::Normal, /* mComplexity */
+                         true,                  /* mResilience */
+                         3,                     /* mNumTemporalLayers */
+                         true,                  /* mDenoising */
+                         false,                 /* mAutoResize */
+                         false,                 /* mFrameDropping */
+                         true,                  /* mAdaptiveQp */
+                         1,                     /* mNumSpatialLayers */
+                         false                  /* mFlexible */
+    );
+
+    RefPtr<MediaDataEncoder> e = CreateVP9Encoder(
+        MediaDataEncoder::Usage::Realtime,
+        MediaDataEncoder::PixelFormat::YUV420P, WIDTH, HEIGHT,
+        MediaDataEncoder::ScalabilityMode::L1T3, Some(specific));
+    EnsureInit(e);
+
+    const nsTArray<uint8_t> pattern({0, 2, 1, 2});
+    MediaDataEncoder::EncodedData output = Encode(e, NUM_FRAMES, mData);
+    EXPECT_EQ(output.Length(), NUM_FRAMES);
+    for (size_t i = 0; i < output.Length(); ++i) {
+      const RefPtr<MediaRawData> frame = output[i];
+      EXPECT_TRUE(frame->mTemporalLayerId);
+      size_t idx = i % pattern.Length();
+      EXPECT_EQ(frame->mTemporalLayerId.value(), pattern[idx]);
+    }
     WaitForShutdown(e);
   });
 }
