@@ -49,9 +49,6 @@ class RTC_EXPORT SimulcastEncoderAdapter : public VideoEncoder {
   // will be used if InitEncode() fails for the primary encoder.
   SimulcastEncoderAdapter(VideoEncoderFactory* primary_factory,
                           VideoEncoderFactory* fallback_factory,
-                          const SdpVideoFormat& format);
-  SimulcastEncoderAdapter(VideoEncoderFactory* primary_factory,
-                          VideoEncoderFactory* fallback_factory,
                           const SdpVideoFormat& format,
                           const FieldTrialsView& field_trials);
   ~SimulcastEncoderAdapter() override;
