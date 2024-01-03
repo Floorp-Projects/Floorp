@@ -7444,15 +7444,6 @@
   mirror: always
   do_not_use_directly: true
 
-# Whether the megamorphic property lookup cache is enabled.
-#
-# NOTE: This must match JitOptions defaults.
-- name: javascript.options.watchtower.megamorphic
-  type: bool
-  value: true
-  mirror: always  # LoadStartupJSPrefs
-  do_not_use_directly: true
-
 - name: javascript.options.compact_on_user_inactive
   type: bool
   value: true

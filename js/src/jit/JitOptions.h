@@ -79,7 +79,6 @@ struct DefaultJitOptions {
   bool wasmFoldOffsets;
   bool wasmDelayTier2;
   bool lessDebugCode;
-  bool enableWatchtowerMegamorphic;
   bool onlyInlineSelfHosted;
   bool enableICFramePointers;
   bool enableWasmJitExit;

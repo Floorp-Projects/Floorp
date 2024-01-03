@@ -7458,12 +7458,8 @@ bool CacheIRCompiler::emitMegamorphicLoadSlotByValueResult(ObjOperandId objId,
   masm.xorPtr(scratch2, scratch2);
 #else
   Label cacheHit;
-  if (JitOptions.enableWatchtowerMegamorphic) {
-    masm.emitMegamorphicCacheLookupByValue(
-        idVal, obj, scratch1, scratch3, scratch2, output.valueReg(), &cacheHit);
-  } else {
-    masm.xorPtr(scratch2, scratch2);
-  }
+  masm.emitMegamorphicCacheLookupByValue(
+      idVal, obj, scratch1, scratch3, scratch2, output.valueReg(), &cacheHit);
 #endif
 
   masm.branchIfNonNativeObj(obj, scratch1, failure->label());
@@ -7536,13 +7532,9 @@ bool CacheIRCompiler::emitMegamorphicHasPropResult(ObjOperandId objId,
 
 #ifndef JS_CODEGEN_X86
   Label cacheHit, done;
-  if (JitOptions.enableWatchtowerMegamorphic) {
-    masm.emitMegamorphicCacheLookupExists(idVal, obj, scratch1, scratch3,
-                                          scratch2, output.maybeReg(),
-                                          &cacheHit, hasOwn);
-  } else {
-    masm.xorPtr(scratch2, scratch2);
-  }
+  masm.emitMegamorphicCacheLookupExists(idVal, obj, scratch1, scratch3,
+                                        scratch2, output.maybeReg(), &cacheHit,
+                                        hasOwn);
 #else
   masm.xorPtr(scratch2, scratch2);
 #endif
@@ -7816,14 +7808,10 @@ bool CacheIRCompiler::emitMegamorphicLoadSlotResult(ObjOperandId objId,
   masm.xorPtr(scratch3, scratch3);
 #else
   Label cacheHit;
-  if (JitOptions.enableWatchtowerMegamorphic) {
-    emitLoadStubField(id, idReg);
-    masm.emitMegamorphicCacheLookupByValue(idReg.get(), obj, scratch1, scratch2,
-                                           scratch3, output.valueReg(),
-                                           &cacheHit);
-  } else {
-    masm.xorPtr(scratch3, scratch3);
-  }
+  emitLoadStubField(id, idReg);
+  masm.emitMegamorphicCacheLookupByValue(idReg.get(), obj, scratch1, scratch2,
+                                         scratch3, output.valueReg(),
+                                         &cacheHit);
 #endif
 
   masm.branchIfNonNativeObj(obj, scratch1, failure->label());
