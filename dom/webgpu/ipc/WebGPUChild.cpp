@@ -800,8 +800,7 @@ MOZ_CAN_RUN_SCRIPT void reportCompilationMessagesToConsole(
   console->GroupEnd(globalObj);
 }
 
-MOZ_CAN_RUN_SCRIPT_FOR_DEFINITION already_AddRefed<ShaderModule>
-WebGPUChild::DeviceCreateShaderModule(
+already_AddRefed<ShaderModule> WebGPUChild::DeviceCreateShaderModule(
     const RefPtr<Device>& aDevice, const dom::GPUShaderModuleDescriptor& aDesc,
     RefPtr<dom::Promise> aPromise) {
   RawId deviceId = aDevice->mId;
