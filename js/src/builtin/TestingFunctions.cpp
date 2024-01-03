@@ -6872,20 +6872,38 @@ static bool EvalReturningScope(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  RootedObject global(cx);
-  if (args.hasDefined(1)) {
-    global = ToObject(cx, args[1]);
-    if (!global) {
-      return false;
-    }
-  }
-
   JS::AutoFilename filename;
   uint32_t lineno;
 
   JS::DescribeScriptedCaller(cx, &filename, &lineno);
 
-  JS::CompileOptions options(cx);
+  // CompileOption should be created in the target global's realm.
+  RootedObject global(cx);
+  Maybe<JS::CompileOptions> maybeOptions;
+  if (args.hasDefined(1)) {
+    global = ToObject(cx, args[1]);
+    if (!global) {
+      return false;
+    }
+
+    global = CheckedUnwrapDynamic(global, cx, /* stopAtWindowProxy = */ false);
+    if (!global) {
+      JS_ReportErrorASCII(cx, "Permission denied to access global");
+      return false;
+    }
+    if (!global->is<GlobalObject>()) {
+      JS_ReportErrorASCII(cx, "Argument must be a global object");
+      return false;
+    }
+
+    JSAutoRealm ar(cx, global);
+    maybeOptions.emplace(cx);
+  } else {
+    global = JS::CurrentGlobalOrNull(cx);
+    maybeOptions.emplace(cx);
+  }
+
+  CompileOptions& options = maybeOptions.ref();
   options.setFileAndLine(filename.get(), lineno);
   options.setNoScriptRval(true);
   options.setNonSyntacticScope(true);
@@ -6897,20 +6915,6 @@ static bool EvalReturningScope(JSContext* cx, unsigned argc, Value* vp) {
   JS::SourceText<char16_t> srcBuf;
   if (!srcBuf.initMaybeBorrowed(cx, linearChars)) {
     return false;
-  }
-
-  if (global) {
-    global = CheckedUnwrapDynamic(global, cx, /* stopAtWindowProxy = */ false);
-    if (!global) {
-      JS_ReportErrorASCII(cx, "Permission denied to access global");
-      return false;
-    }
-    if (!global->is<GlobalObject>()) {
-      JS_ReportErrorASCII(cx, "Argument must be a global object");
-      return false;
-    }
-  } else {
-    global = JS::CurrentGlobalOrNull(cx);
   }
 
   RootedObject varObj(cx);
