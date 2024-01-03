@@ -1135,6 +1135,10 @@
             "Status": {
               "type": "string",
               "enum": ["default", "locked", "user", "clear"]
+            },
+            "Type": {
+              "type": "string",
+              "enum": ["number", "boolean", "string"]
             }
           }
         }
