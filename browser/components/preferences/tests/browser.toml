@@ -15,7 +15,6 @@ support-files = [
 skip-if = ["!updater"]
 
 ["browser_application_xml_handle_internally.js"]
-fail-if = ["a11y_checks"] # Bug 1854636 clicked menulist.actionsMenu may not be labeled
 
 ["browser_applications_selection.js"]
 
@@ -104,7 +103,6 @@ skip-if = [
 ]
 
 ["browser_filetype_dialog.js"]
-fail-if = ["a11y_checks"] # Bug 1854636 clicked menulist.actionsMenu may not be labeled
 
 ["browser_fluent.js"]
 
@@ -149,7 +147,6 @@ support-files = ["empty_pdf_file.pdf"]
 ["browser_password_management.js"]
 
 ["browser_pdf_disabled.js"]
-fail-if = ["a11y_checks"] # Bug 1854636 clicked menulist.actionsMenu may not be labeled
 
 ["browser_performance.js"]
 
