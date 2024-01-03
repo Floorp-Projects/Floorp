@@ -1045,6 +1045,7 @@ std::vector<Codec> MatchCodecPreference(
       want_red = true;
     }
   }
+  bool red_was_added = false;
   for (const auto& codec_preference : codec_preferences) {
     auto found_codec = absl::c_find_if(
         supported_codecs, [&codec_preference](const Codec& codec) {
@@ -1062,7 +1063,13 @@ std::vector<Codec> MatchCodecPreference(
       absl::optional<Codec> found_codec_with_correct_pt = FindMatchingCodec(
           supported_codecs, codecs, *found_codec, field_trials);
       if (found_codec_with_correct_pt) {
-        filtered_codecs.push_back(*found_codec_with_correct_pt);
+        // RED may already have been added if its primary codec is before RED
+        // in the codec list.
+        bool is_red_codec = IsRedCodec(*found_codec_with_correct_pt);
+        if (!is_red_codec || !red_was_added) {
+          filtered_codecs.push_back(*found_codec_with_correct_pt);
+          red_was_added = is_red_codec ? true : red_was_added;
+        }
         std::string id = rtc::ToString(found_codec_with_correct_pt->id);
         // Search for the matching rtx or red codec.
         if (want_red || want_rtx) {
@@ -1083,11 +1090,11 @@ std::vector<Codec> MatchCodecPreference(
               if (fmtp != codec.params.end()) {
                 std::vector<absl::string_view> redundant_payloads =
                     rtc::split(fmtp->second, '/');
-                if (redundant_payloads.size() > 0 &&
+                if (!redundant_payloads.empty() &&
                     redundant_payloads[0] == id) {
-                  if (std::find(filtered_codecs.begin(), filtered_codecs.end(),
-                                codec) == filtered_codecs.end()) {
+                  if (!red_was_added) {
                     filtered_codecs.push_back(codec);
+                    red_was_added = true;
                   }
                   break;
                 }
