@@ -282,7 +282,9 @@ mozilla::ipc::IPCResult FilePickerParent::RecvOpen(
 }
 
 mozilla::ipc::IPCResult FilePickerParent::RecvClose() {
-  mFilePicker->Close();
+  if (mFilePicker) {
+    mFilePicker->Close();
+  }
   return IPC_OK();
 }
 
