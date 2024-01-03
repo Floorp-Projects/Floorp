@@ -439,9 +439,11 @@ void LIRGeneratorARM::lowerModI(MMod* mod) {
     return;
   }
 
+  // The temp register must be preserved across a call to __aeabi_idivmod
+  MOZ_ASSERT(!GeneralRegisterSet(Registers::VolatileMask).hasRegisterIndex(r4));
   LSoftModI* lir =
       new (alloc()) LSoftModI(useFixedAtStart(mod->lhs(), r0),
-                              useFixedAtStart(mod->rhs(), r1), tempFixed(r2));
+                              useFixedAtStart(mod->rhs(), r1), tempFixed(r4));
 
   if (mod->fallible()) {
     assignSnapshot(lir, mod->bailoutKind());
