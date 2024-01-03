@@ -17,9 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -29,24 +27,34 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
+import mozilla.components.lib.state.ext.observeAsState
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
 import org.mozilla.fenix.compose.button.FloatingActionButton
+import org.mozilla.fenix.debugsettings.store.DebugDrawerAction
+import org.mozilla.fenix.debugsettings.store.DebugDrawerState
+import org.mozilla.fenix.debugsettings.store.DebugDrawerState.DrawerStatus
+import org.mozilla.fenix.debugsettings.store.DebugDrawerStore
 import org.mozilla.fenix.theme.FirefoxTheme
 
 /**
  * Overlay for presenting Fenix-wide debugging content.
+ *
+ * @param debugDrawerStore [DebugDrawerStore] used to listen for changes to [DebugDrawerState] and
+ * dispatch any [DebugDrawerAction]s.
  */
 @Composable
-fun DebugOverlay() {
+fun DebugOverlay(
+    debugDrawerStore: DebugDrawerStore,
+) {
+    val drawerStatus by debugDrawerStore.observeAsState(initialValue = DrawerStatus.Closed) { state ->
+        state.drawerStatus
+    }
     val snackbarState = remember { SnackbarHostState() }
-    // The separate boolean in conjunction with `drawerState` is to allow the drawer animations
-    // to still occur even with the show/hide logic documented below.
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
-    var drawerEnabled by remember { mutableStateOf(false) }
 
-    LaunchedEffect(drawerEnabled) {
-        if (drawerEnabled) {
+    LaunchedEffect(drawerStatus) {
+        if (drawerStatus == DrawerStatus.Open) {
             drawerState.open()
         }
     }
@@ -56,7 +64,7 @@ fun DebugOverlay() {
             .distinctUntilChanged()
             .filter { it == DrawerValue.Closed }
             .collect {
-                drawerEnabled = false
+                debugDrawerStore.dispatch(DebugDrawerAction.DrawerClosed)
             }
     }
 
@@ -69,14 +77,14 @@ fun DebugOverlay() {
                 .align(Alignment.CenterStart)
                 .padding(start = 16.dp),
             onClick = {
-                drawerEnabled = true
+                debugDrawerStore.dispatch(DebugDrawerAction.DrawerOpened)
             },
         )
 
         // ModalDrawer utilizes a Surface, which blocks ALL clicks behind it, preventing the app
         // from being interactable. This cannot be overridden in the Surface API, so we must hide
         // the entire drawer when it is closed.
-        if (drawerEnabled) {
+        if (drawerStatus == DrawerStatus.Open) {
             val currentLayoutDirection = LocalLayoutDirection.current
             val sheetLayoutDirection = when (currentLayoutDirection) {
                 LayoutDirection.Rtl -> LayoutDirection.Ltr
@@ -116,8 +124,8 @@ fun DebugOverlay() {
 @LightDarkPreview
 private fun DebugOverlayPreview() {
     FirefoxTheme {
-        Box(modifier = Modifier.fillMaxSize()) {
-            DebugOverlay()
-        }
+        DebugOverlay(
+            debugDrawerStore = DebugDrawerStore(),
+        )
     }
 }

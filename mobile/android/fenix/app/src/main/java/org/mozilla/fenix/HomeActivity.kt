@@ -102,6 +102,7 @@ import org.mozilla.fenix.components.metrics.GrowthDataWorker
 import org.mozilla.fenix.components.metrics.fonts.FontEnumerationWorker
 import org.mozilla.fenix.databinding.ActivityHomeBinding
 import org.mozilla.fenix.debugsettings.data.DefaultDebugSettingsRepository
+import org.mozilla.fenix.debugsettings.store.DebugDrawerStore
 import org.mozilla.fenix.debugsettings.ui.DebugOverlay
 import org.mozilla.fenix.exceptions.trackingprotection.TrackingProtectionExceptionsFragmentDirections
 import org.mozilla.fenix.experiments.ResearchSurfaceDialogFragment
@@ -301,7 +302,9 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
 
                                 setContent {
                                     FirefoxTheme(theme = Theme.getTheme(allowPrivateTheme = false)) {
-                                        DebugOverlay()
+                                        DebugOverlay(
+                                            debugDrawerStore = DebugDrawerStore(),
+                                        )
                                     }
                                 }
                             } else {
