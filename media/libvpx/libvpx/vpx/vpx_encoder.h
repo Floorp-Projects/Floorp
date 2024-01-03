@@ -29,7 +29,7 @@
 extern "C" {
 #endif
 
-#include "./vpx_codec.h"
+#include "./vpx_codec.h"  // IWYU pragma: export
 #include "./vpx_ext_ratectrl.h"
 #include "./vpx_tpl.h"
 
@@ -979,12 +979,18 @@ vpx_codec_err_t vpx_codec_enc_config_set(vpx_codec_ctx_t *ctx,
  */
 vpx_fixed_buf_t *vpx_codec_get_global_headers(vpx_codec_ctx_t *ctx);
 
+/*!\brief Encode Deadline
+ *
+ * This type indicates a deadline, in microseconds, to be passed to
+ * vpx_codec_encode().
+ */
+typedef unsigned long vpx_enc_deadline_t;
 /*!\brief deadline parameter analogous to VPx REALTIME mode. */
-#define VPX_DL_REALTIME (1)
+#define VPX_DL_REALTIME 1ul
 /*!\brief deadline parameter analogous to  VPx GOOD QUALITY mode. */
-#define VPX_DL_GOOD_QUALITY (1000000)
+#define VPX_DL_GOOD_QUALITY 1000000ul
 /*!\brief deadline parameter analogous to VPx BEST QUALITY mode. */
-#define VPX_DL_BEST_QUALITY (0)
+#define VPX_DL_BEST_QUALITY 0ul
 /*!\brief Encode a frame
  *
  * Encodes a video frame at the given "presentation time." The presentation
@@ -1024,7 +1030,7 @@ vpx_fixed_buf_t *vpx_codec_get_global_headers(vpx_codec_ctx_t *ctx);
 vpx_codec_err_t vpx_codec_encode(vpx_codec_ctx_t *ctx, const vpx_image_t *img,
                                  vpx_codec_pts_t pts, unsigned long duration,
                                  vpx_enc_frame_flags_t flags,
-                                 unsigned long deadline);
+                                 vpx_enc_deadline_t deadline);
 
 /*!\brief Set compressed data output buffer
  *

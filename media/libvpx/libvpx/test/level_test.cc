@@ -120,7 +120,7 @@ TEST_P(LevelTest, TestTargetLevel255) {
 
 TEST_P(LevelTest, TestTargetLevelApi) {
   ::libvpx_test::I420VideoSource video("hantro_odd.yuv", 208, 144, 30, 1, 0, 1);
-  static const vpx_codec_iface_t *codec = &vpx_codec_vp9_cx_algo;
+  static vpx_codec_iface_t *codec = &vpx_codec_vp9_cx_algo;
   vpx_codec_ctx_t enc;
   vpx_codec_enc_cfg_t cfg;
   EXPECT_EQ(VPX_CODEC_OK, vpx_codec_enc_config_default(codec, &cfg, 0));

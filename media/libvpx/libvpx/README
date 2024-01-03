@@ -66,6 +66,7 @@ COMPILING THE APPLICATIONS/LIBRARIES:
     arm64-darwin20-gcc
     arm64-darwin21-gcc
     arm64-darwin22-gcc
+    arm64-darwin23-gcc
     arm64-linux-gcc
     arm64-win64-gcc
     arm64-win64-vs15
@@ -81,6 +82,8 @@ COMPILING THE APPLICATIONS/LIBRARIES:
     armv7-win32-gcc
     armv7-win32-vs14
     armv7-win32-vs15
+    armv7-win32-vs16
+    armv7-win32-vs17
     armv7s-darwin-gcc
     armv8-linux-gcc
     loongarch32-linux-gcc
@@ -127,6 +130,7 @@ COMPILING THE APPLICATIONS/LIBRARIES:
     x86_64-darwin20-gcc
     x86_64-darwin21-gcc
     x86_64-darwin22-gcc
+    x86_64-darwin23-gcc
     x86_64-iphonesimulator-gcc
     x86_64-linux-gcc
     x86_64-linux-icc

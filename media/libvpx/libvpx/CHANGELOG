@@ -1,3 +1,8 @@
+20yy-mm-dd v1.14.0 "V Duck"
+  This release drops support for old C compilers, such as Visual Studio 2012
+  and older, that disallow mixing variable declarations and statements (a C99
+  feature).
+
 2023-09-29 v1.13.1 "Ugly Duckling"
   This release contains two security related fixes. One each for VP8 and VP9.
 
@@ -6,7 +11,7 @@
 
   - Bug fixes:
     https://crbug.com/1486441 (CVE-2023-5217)
-    Fix to a crash related to VP9 encoding (#1642)
+    Fix to a crash related to VP9 encoding (#1642, CVE-2023-6349)
 
 2023-01-31 v1.13.0 "Ugly Duckling"
   This release includes more Neon and AVX2 optimizations, adds a new codec

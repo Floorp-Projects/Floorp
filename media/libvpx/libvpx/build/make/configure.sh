@@ -792,7 +792,7 @@ process_common_toolchain() {
         tgt_isa=x86_64
         tgt_os=`echo $gcctarget | sed 's/.*\(darwin1[0-9]\).*/\1/'`
         ;;
-      *darwin2[0-2]*)
+      *darwin2[0-3]*)
         tgt_isa=`uname -m`
         tgt_os=`echo $gcctarget | sed 's/.*\(darwin2[0-9]\).*/\1/'`
         ;;
@@ -863,8 +863,14 @@ process_common_toolchain() {
       ;;
   esac
 
-  # PIC is probably what we want when building shared libs
+  # Position independent code (PIC) is probably what we want when building
+  # shared libs or position independent executable (PIE) targets.
   enabled shared && soft_enable pic
+  check_cpp << EOF || soft_enable pic
+#if !(__pie__ || __PIE__)
+#error Neither __pie__ or __PIE__ are set
+#endif
+EOF
 
   # Minimum iOS version for all target platforms (darwin and iphonesimulator).
   # Shared library framework builds are only possible on iOS 8 and later.

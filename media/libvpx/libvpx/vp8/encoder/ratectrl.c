@@ -719,7 +719,8 @@ static void calc_pframe_target_size(VP8_COMP *cpi) {
         }
 
         /* lower the target bandwidth for this frame. */
-        cpi->this_frame_target -= (cpi->this_frame_target * percent_low) / 200;
+        cpi->this_frame_target -=
+            (int)(((int64_t)cpi->this_frame_target * percent_low) / 200);
 
         /* Are we using allowing control of active_worst_allowed_q
          * according to buffer level.

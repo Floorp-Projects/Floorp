@@ -12,7 +12,7 @@
 #include "./vp8_rtcd.h"
 #include "./vpx_dsp_rtcd.h"
 #include "./vpx_scale_rtcd.h"
-#include "vpx/vpx_codec.h"
+#include "vpx/vpx_encoder.h"
 #include "vpx/internal/vpx_codec_internal.h"
 #include "vpx_version.h"
 #include "vpx_mem/vpx_mem.h"
@@ -95,13 +95,16 @@ struct vpx_codec_alg_priv {
   vpx_enc_frame_flags_t control_frame_flags;
 };
 
+// Called by vp8e_set_config() and vp8e_encode() only. Must not be called
+// by vp8e_init() because the `error` paramerer (cpi->common.error) will be
+// destroyed by vpx_codec_enc_init_ver() after vp8e_init() returns an error.
+// See the "IMPORTANT" comment in vpx_codec_enc_init_ver().
 static vpx_codec_err_t update_error_state(
     vpx_codec_alg_priv_t *ctx, const struct vpx_internal_error_info *error) {
-  vpx_codec_err_t res;
+  const vpx_codec_err_t res = error->error_code;
 
-  if ((res = error->error_code)) {
+  if (res != VPX_CODEC_OK)
     ctx->base.err_detail = error->has_detail ? error->detail : NULL;
-  }
 
   return res;
 }
@@ -624,10 +627,11 @@ static vpx_codec_err_t set_screen_content_mode(vpx_codec_alg_priv_t *ctx,
 static vpx_codec_err_t ctrl_set_rtc_external_ratectrl(vpx_codec_alg_priv_t *ctx,
                                                       va_list args) {
   VP8_COMP *cpi = ctx->cpi;
-  const unsigned int data = CAST(VP8E_SET_GF_CBR_BOOST_PCT, args);
+  const unsigned int data = CAST(VP8E_SET_RTC_EXTERNAL_RATECTRL, args);
   if (data) {
     cpi->cyclic_refresh_mode_enabled = 0;
     cpi->rt_always_update_correction_factor = 1;
+    cpi->rt_drop_recode_on_overshoot = 0;
   }
   return VPX_CODEC_OK;
 }
@@ -775,7 +779,7 @@ static vpx_codec_err_t image2yuvconfig(const vpx_image_t *img,
 
 static void pick_quickcompress_mode(vpx_codec_alg_priv_t *ctx,
                                     unsigned long duration,
-                                    unsigned long deadline) {
+                                    vpx_enc_deadline_t deadline) {
   int new_qc;
 
 #if !(CONFIG_REALTIME_ONLY)
@@ -865,7 +869,7 @@ static vpx_codec_err_t vp8e_encode(vpx_codec_alg_priv_t *ctx,
                                    const vpx_image_t *img, vpx_codec_pts_t pts,
                                    unsigned long duration,
                                    vpx_enc_frame_flags_t enc_flags,
-                                   unsigned long deadline) {
+                                   vpx_enc_deadline_t deadline) {
   volatile vpx_codec_err_t res = VPX_CODEC_OK;
   // Make a copy as volatile to avoid -Wclobbered with longjmp.
   volatile vpx_enc_frame_flags_t flags = enc_flags;
@@ -929,8 +933,9 @@ static vpx_codec_err_t vp8e_encode(vpx_codec_alg_priv_t *ctx,
 
     if (setjmp(ctx->cpi->common.error.jmp)) {
       ctx->cpi->common.error.setjmp = 0;
+      res = update_error_state(ctx, &ctx->cpi->common.error);
       vpx_clear_system_state();
-      return VPX_CODEC_CORRUPT_FRAME;
+      return res;
     }
     ctx->cpi->common.error.setjmp = 1;
 

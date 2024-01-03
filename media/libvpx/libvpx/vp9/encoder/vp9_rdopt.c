@@ -3606,7 +3606,7 @@ void vp9_rd_pick_inter_mode_sb(VP9_COMP *cpi, TileDataEnc *tile_data,
         mode_skip_mask[GOLDEN_FRAME] |= INTER_ALL;
   }
 
-  if (bsize > sf->max_intra_bsize) {
+  if (bsize > sf->max_intra_bsize && cpi->ref_frame_flags != 0) {
     ref_frame_skip_mask[0] |= (1 << INTRA_FRAME);
     ref_frame_skip_mask[1] |= (1 << INTRA_FRAME);
   }

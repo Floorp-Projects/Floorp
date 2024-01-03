@@ -187,7 +187,9 @@ void vp9_encode_free_mt_data(struct VP9_COMP *cpi) {
     }
   }
   vpx_free(cpi->tile_thr_data);
+  cpi->tile_thr_data = NULL;
   vpx_free(cpi->workers);
+  cpi->workers = NULL;
   cpi->num_workers = 0;
 }
 
