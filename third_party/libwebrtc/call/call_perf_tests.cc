@@ -223,12 +223,12 @@ void CallPerfTest::TestAudioVideoSync(FecMode fec,
     send_audio_state_config.audio_processing =
         AudioProcessingBuilder().Create();
     send_audio_state_config.audio_device_module = fake_audio_device;
-    Call::Config sender_config(send_event_log_.get());
+    CallConfig sender_config(send_event_log_.get());
 
     auto audio_state = AudioState::Create(send_audio_state_config);
     fake_audio_device->RegisterAudioCallback(audio_state->audio_transport());
     sender_config.audio_state = audio_state;
-    Call::Config receiver_config(recv_event_log_.get());
+    CallConfig receiver_config(recv_event_log_.get());
     receiver_config.audio_state = audio_state;
     CreateCalls(sender_config, receiver_config);
 

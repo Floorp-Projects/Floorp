@@ -301,7 +301,7 @@ std::unique_ptr<Call> PeerConnectionFactory::CreateCall_w(
     const PeerConnectionInterface::RTCConfiguration& configuration) {
   RTC_DCHECK_RUN_ON(worker_thread());
 
-  webrtc::Call::Config call_config(event_log, network_thread());
+  CallConfig call_config(event_log, network_thread());
   if (!media_engine() || !context_->call_factory()) {
     return nullptr;
   }
@@ -342,8 +342,7 @@ std::unique_ptr<Call> PeerConnectionFactory::CreateCall_w(
       transport_controller_send_factory_.get();
   call_config.metronome = metronome_.get();
   call_config.pacer_burst_interval = configuration.pacer_burst_interval;
-  return std::unique_ptr<Call>(
-      context_->call_factory()->CreateCall(call_config));
+  return context_->call_factory()->CreateCall(call_config);
 }
 
 bool PeerConnectionFactory::IsTrialEnabled(absl::string_view key) const {
