@@ -45,7 +45,7 @@ TEST(RtcEventLogAnalyzerBindingsTest, ProducesCharts) {
 
   // Call analyzer.
   uint32_t output_size = kOutputBufferSize;
-  char selection[] = "";
+  char selection[] = "outgoing_bitrate,network_delay_feedback";
   size_t selection_size = strlen(selection);
   analyze_rtc_event_log(input.get(), input_size, selection, selection_size,
                         output.get(), &output_size);
