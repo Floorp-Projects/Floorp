@@ -342,10 +342,7 @@ class RTC_EXPORT P2PTransportChannel : public IceTransportInternal,
   void OnRoleConflict(PortInterface* port);
 
   void OnConnectionStateChange(Connection* connection);
-  void OnReadPacket(Connection* connection,
-                    const char* data,
-                    size_t len,
-                    int64_t packet_time_us);
+  void OnReadPacket(Connection* connection, const rtc::ReceivedPacket& packet);
   void OnSentPacket(const rtc::SentPacket& sent_packet);
   void OnReadyToSend(Connection* connection);
   void OnConnectionDestroyed(Connection* connection);
