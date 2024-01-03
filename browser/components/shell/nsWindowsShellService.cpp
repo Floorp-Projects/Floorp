@@ -987,10 +987,6 @@ nsWindowsShellService::GetLaunchOnLoginShortcuts(
     if (NS_WARN_IF(FAILED(hr))) {
       continue;
     }
-    hr = link->Resolve(nullptr, SLR_NO_UI);
-    if (NS_WARN_IF(FAILED(hr))) {
-      continue;
-    }
     hr = link->GetPath(target.get(), MAX_PATH, nullptr, 0);
     if (NS_WARN_IF(FAILED(hr))) {
       continue;
