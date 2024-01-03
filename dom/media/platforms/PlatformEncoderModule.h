@@ -149,7 +149,7 @@ class MediaDataEncoder {
     Record
   };
   using PixelFormat = dom::ImageBitmapFormat;
-  enum BitrateMode { Constant, Variable };
+  enum class BitrateMode { Constant, Variable };
   enum ScalabilityMode { None, L1T2, L1T3 };
 
   enum class HardwarePreference { RequireHardware, RequireSoftware, None };
