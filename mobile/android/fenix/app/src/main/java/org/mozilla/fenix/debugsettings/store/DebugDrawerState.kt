@@ -13,20 +13,4 @@ import mozilla.components.lib.state.State
  */
 data class DebugDrawerState(
     val drawerStatus: DrawerStatus = DrawerStatus.Closed,
-) : State {
-
-    /**
-     * Possible values of [DebugDrawerState.drawerStatus].
-     */
-    enum class DrawerStatus {
-        /**
-         * The state of the drawer when it is closed.
-         */
-        Closed,
-
-        /**
-         * The state of the drawer when it is open.
-         */
-        Open,
-    }
-}
+) : State

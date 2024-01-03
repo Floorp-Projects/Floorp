@@ -17,7 +17,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -27,29 +29,25 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
-import mozilla.components.lib.state.ext.observeAsState
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
 import org.mozilla.fenix.compose.button.FloatingActionButton
-import org.mozilla.fenix.debugsettings.store.DebugDrawerAction
-import org.mozilla.fenix.debugsettings.store.DebugDrawerState
-import org.mozilla.fenix.debugsettings.store.DebugDrawerState.DrawerStatus
-import org.mozilla.fenix.debugsettings.store.DebugDrawerStore
+import org.mozilla.fenix.debugsettings.store.DrawerStatus
 import org.mozilla.fenix.theme.FirefoxTheme
 
 /**
- * Overlay for presenting Fenix-wide debugging content.
+ * Overlay for presenting app-wide debugging content.
  *
- * @param debugDrawerStore [DebugDrawerStore] used to listen for changes to [DebugDrawerState] and
- * dispatch any [DebugDrawerAction]s.
+ * @param drawerStatus The [DrawerStatus] indicating the physical state of the drawer.
+ * @param onDrawerOpen Invoked when the drawer is opened.
+ * @param onDrawerClose Invoked when the drawer is closed.
  */
 @Composable
 fun DebugOverlay(
-    debugDrawerStore: DebugDrawerStore,
+    drawerStatus: DrawerStatus,
+    onDrawerOpen: () -> Unit,
+    onDrawerClose: () -> Unit,
 ) {
-    val drawerStatus by debugDrawerStore.observeAsState(initialValue = DrawerStatus.Closed) { state ->
-        state.drawerStatus
-    }
     val snackbarState = remember { SnackbarHostState() }
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
 
@@ -64,7 +62,7 @@ fun DebugOverlay(
             .distinctUntilChanged()
             .filter { it == DrawerValue.Closed }
             .collect {
-                debugDrawerStore.dispatch(DebugDrawerAction.DrawerClosed)
+                onDrawerClose()
             }
     }
 
@@ -77,7 +75,7 @@ fun DebugOverlay(
                 .align(Alignment.CenterStart)
                 .padding(start = 16.dp),
             onClick = {
-                debugDrawerStore.dispatch(DebugDrawerAction.DrawerOpened)
+                onDrawerOpen()
             },
         )
 
@@ -123,9 +121,17 @@ fun DebugOverlay(
 @Composable
 @LightDarkPreview
 private fun DebugOverlayPreview() {
+    var drawerStatus by remember { mutableStateOf(DrawerStatus.Closed) }
+
     FirefoxTheme {
         DebugOverlay(
-            debugDrawerStore = DebugDrawerStore(),
+            drawerStatus = drawerStatus,
+            onDrawerOpen = {
+                drawerStatus = DrawerStatus.Open
+            },
+            onDrawerClose = {
+                drawerStatus = DrawerStatus.Closed
+            },
         )
     }
 }

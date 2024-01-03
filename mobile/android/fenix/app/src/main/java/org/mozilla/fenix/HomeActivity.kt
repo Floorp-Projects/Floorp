@@ -102,8 +102,7 @@ import org.mozilla.fenix.components.metrics.GrowthDataWorker
 import org.mozilla.fenix.components.metrics.fonts.FontEnumerationWorker
 import org.mozilla.fenix.databinding.ActivityHomeBinding
 import org.mozilla.fenix.debugsettings.data.DefaultDebugSettingsRepository
-import org.mozilla.fenix.debugsettings.store.DebugDrawerStore
-import org.mozilla.fenix.debugsettings.ui.DebugOverlay
+import org.mozilla.fenix.debugsettings.ui.FenixOverlay
 import org.mozilla.fenix.exceptions.trackingprotection.TrackingProtectionExceptionsFragmentDirections
 import org.mozilla.fenix.experiments.ResearchSurfaceDialogFragment
 import org.mozilla.fenix.ext.alreadyOnDestination
@@ -162,8 +161,6 @@ import org.mozilla.fenix.tabhistory.TabHistoryDialogFragment
 import org.mozilla.fenix.tabstray.TabsTrayFragment
 import org.mozilla.fenix.tabstray.TabsTrayFragmentDirections
 import org.mozilla.fenix.theme.DefaultThemeManager
-import org.mozilla.fenix.theme.FirefoxTheme
-import org.mozilla.fenix.theme.Theme
 import org.mozilla.fenix.theme.ThemeManager
 import org.mozilla.fenix.trackingprotection.TrackingProtectionPanelDialogFragmentDirections
 import org.mozilla.fenix.translations.TranslationsDialogFragmentDirections
@@ -301,11 +298,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
                                 visibility = View.VISIBLE
 
                                 setContent {
-                                    FirefoxTheme(theme = Theme.getTheme(allowPrivateTheme = false)) {
-                                        DebugOverlay(
-                                            debugDrawerStore = DebugDrawerStore(),
-                                        )
-                                    }
+                                    FenixOverlay()
                                 }
                             } else {
                                 setContent {}

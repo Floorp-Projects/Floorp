@@ -22,7 +22,7 @@ class DebugDrawerStore(
 
 private fun reduce(state: DebugDrawerState, action: DebugDrawerAction): DebugDrawerState {
     return when (action) {
-        is DebugDrawerAction.DrawerOpened -> state.copy(drawerStatus = DebugDrawerState.DrawerStatus.Open)
-        is DebugDrawerAction.DrawerClosed -> state.copy(drawerStatus = DebugDrawerState.DrawerStatus.Closed)
+        is DebugDrawerAction.DrawerOpened -> state.copy(drawerStatus = DrawerStatus.Open)
+        is DebugDrawerAction.DrawerClosed -> state.copy(drawerStatus = DrawerStatus.Closed)
     }
 }
