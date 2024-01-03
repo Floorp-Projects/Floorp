@@ -28,8 +28,12 @@ namespace webrtc {
 // when network is loss limited, or equal to the delay based estimate.
 enum class LossBasedState {
   kIncreasing = 0,
-  kDecreasing = 1,
-  kDelayBasedEstimate = 2
+  // TODO(bugs.webrtc.org/12707): Remove one of the increasing states once we
+  // have decided if padding is usefull for ramping up when BWE is loss
+  // limited.
+  kIncreaseUsingPadding = 1,
+  kDecreasing = 2,
+  kDelayBasedEstimate = 3
 };
 
 class LossBasedBweV2 {
