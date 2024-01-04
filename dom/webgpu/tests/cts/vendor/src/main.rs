@@ -79,8 +79,11 @@ fn run(args: CliArgs) -> miette::Result<()> {
         let find_up = |root_dir_name| {
             let err = || {
                 miette!(
-                    "failed to find a Mercurial repository ({root_dir_name:?}) in any of current \
-                    working directory and its parent directories"
+                    concat!(
+                        "failed to find a Mercurial repository ({:?}) in any of current ",
+                        "working directory and its parent directories",
+                    ),
+                    root_dir_name
                 )
             };
             find_up_with(root_dir_name, find_up_opts())
@@ -110,8 +113,10 @@ fn run(args: CliArgs) -> miette::Result<()> {
         ensure!(
             root.try_child(&orig_working_dir)
                 .map_or(false, |c| c.relative_path() == cts_vendor_dir),
-            "It is expected to run this tool from the root of its Cargo project, but this does \
-            not appear to have been done. Bailing."
+            concat!(
+                "It is expected to run this tool from the root of its Cargo project, ",
+                "but this does not appear to have been done. Bailing."
+            )
         );
 
         root
@@ -130,10 +135,10 @@ fn run(args: CliArgs) -> miette::Result<()> {
 
     let (cts_ckt_git_dir, cts_ckt) = {
         let failed_find_git_err = || {
-            miette!(
-                "failed to find a Git repository (`.git` directory) in the provided path and all \
-                of its parent directories"
-            )
+            miette!(concat!(
+                "failed to find a Git repository (`.git` directory) in the provided path ",
+                "and all of its parent directories"
+            ))
         };
         let git_dir = find_up_with(
             ".git",
@@ -175,14 +180,17 @@ fn run(args: CliArgs) -> miette::Result<()> {
                     .envs([("GIT_DIR", &*cts_ckt_git_dir), ("GIT_WORK_TREE", &*cts_ckt)])
             });
             log::info!(
-                "  …ensuring the working tree and index are clean with \
-                    {git_status_porcelain_cmd}…"
+                "  …ensuring the working tree and index are clean with {}…",
+                git_status_porcelain_cmd
             );
             let git_status_porcelain_output = git_status_porcelain_cmd.just_stdout_utf8()?;
             ensure!(
                 git_status_porcelain_output.is_empty(),
-                "expected a clean CTS working tree and index, but {}'s output was not empty; \
-                for reference, it was:\n\n{}",
+                concat!(
+                    "expected a clean CTS working tree and index, ",
+                    "but {}'s output was not empty; ",
+                    "for reference, it was:\n\n{}",
+                ),
                 git_status_porcelain_cmd,
                 git_status_porcelain_output,
             );
@@ -208,8 +216,10 @@ fn run(args: CliArgs) -> miette::Result<()> {
                         .collect::<Vec<_>>();
                     ensure!(
                         files_not_found.is_empty(),
-                        "the following files were returned by `git ls-files`, but do not \
-                        exist on disk: {:#?}",
+                        concat!(
+                            "the following files were returned by `git ls-files`, ",
+                            "but do not exist on disk: {:#?}",
+                        ),
                         files_not_found,
                     );
 
@@ -224,8 +234,10 @@ fn run(args: CliArgs) -> miette::Result<()> {
                     for path in files_to_actually_not_vendor {
                         ensure!(
                             files.remove(path),
-                            "failed to remove {} from list of files to vendor; does it still \
-                            exist?",
+                            concat!(
+                                "failed to remove {} from list of files to vendor; ",
+                                "does it still exist?"
+                            ),
                             cts_ckt.child(path)
                         );
                     }
@@ -313,9 +325,9 @@ fn run(args: CliArgs) -> miette::Result<()> {
                     #[diagnostic(severity("warning"))]
                     struct Oops {
                         #[label(
-                            "this character ({:?}) was expected to be a newline, so that the test \
-                            spec. following it is on its own line",
-                            source_code.chars().last().unwrap()
+                            "this character ({:?}) was expected to be a newline, so that {}",
+                            source_code.chars().last().unwrap(),
+                            "the test spec. following it is on its own line"
                         )]
                         span: SourceSpan,
                         #[source_code]
@@ -333,16 +345,19 @@ fn run(args: CliArgs) -> miette::Result<()> {
                 // NOTE: Adding `_mozilla` is necessary because [that's how it's mounted][source].
                 //
                 // [source]: https://searchfox.org/mozilla-central/rev/cd2121e7d83af1b421c95e8c923db70e692dab5f/testing/web-platform/mozilla/README#1-4]
-                log::info!(
-                    "  …fixing `script` paths in WPT boilerplate so they work as Mozilla-private \
-                    WPT tests…"
-                );
+                log::info!(concat!(
+                    "  …fixing `script` paths in WPT boilerplate ",
+                    "so they work as Mozilla-private WPT tests…"
+                ));
                 let expected_wpt_script_tag =
                     "<script type=module src=/webgpu/common/runtime/wpt.js></script>";
                 ensure!(
                     boilerplate.contains(expected_wpt_script_tag),
-                    "failed to find expected `script` tag for `wpt.js` \
-                    ({expected_wpt_script_tag:?}); did something change upstream?",
+                    concat!(
+                        "failed to find expected `script` tag for `wpt.js` ",
+                        "({:?}); did something change upstream?",
+                    ),
+                    expected_wpt_script_tag
                 );
                 let mut boilerplate = boilerplate.replacen(
                     expected_wpt_script_tag,
@@ -359,8 +374,8 @@ fn run(args: CliArgs) -> miette::Result<()> {
                     let meta_charset_utf8_idx =
                         boilerplate.find(meta_charset_utf8).ok_or_else(|| {
                             miette!(
-                                "could not find {meta_charset_utf8:?} in document; did something \
-                                change upstream?"
+                                "could not find {:?} in document; did something change upstream?",
+                                meta_charset_utf8
                             )
                         })?;
                     meta_charset_utf8_idx + meta_charset_utf8.len()
