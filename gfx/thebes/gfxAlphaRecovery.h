@@ -40,25 +40,6 @@ class gfxAlphaRecovery {
    */
   static bool RecoverAlphaSSE2(gfxImageSurface* blackSurface,
                                const gfxImageSurface* whiteSurface);
-
-  /**
-   * A common use-case for alpha recovery is to paint into a
-   * temporary "white image", then paint onto a subrect of the
-   * surface, the "black image", into which alpha-recovered pixels
-   * are eventually to be written.  This function returns a rect
-   * aligned so that recovering alpha for that rect will hit SIMD
-   * fast-paths, if possible.  It's not always possible to align
-   * |aRect| so that fast-paths will be taken.
-   *
-   * The returned rect is always a superset of |aRect|.
-   */
-  static mozilla::gfx::IntRect AlignRectForSubimageRecovery(
-      const mozilla::gfx::IntRect& aRect, gfxImageSurface* aSurface);
-#else
-  static mozilla::gfx::IntRect AlignRectForSubimageRecovery(
-      const mozilla::gfx::IntRect& aRect, gfxImageSurface*) {
-    return aRect;
-  }
 #endif
 
   /** from cairo-xlib-utils.c, modified */
