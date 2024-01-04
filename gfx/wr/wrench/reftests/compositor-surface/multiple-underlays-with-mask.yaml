@@ -1,0 +1,28 @@
+# Verify that we correctly handle multiple underlays where subsequent underlays have masks
+# Reference image is public-domain - https://en.wikipedia.org/wiki/File:Barn-yuv.png
+---
+root:
+  items:
+    - type: rect
+      color: white
+      bounds: [0, 0, 500, 500]
+    - type: clip
+      id: 3
+      complex:
+        - rect: [150, 150, 199, 199]
+          radius: 32
+    - type: yuv-image
+      format: planar
+      src-y: barn-y.png
+      src-u: barn-u.png
+      src-v: barn-v.png
+      bounds: [100, 100, 299, 299]
+      prefer-compositor-surface: true
+    - type: yuv-image
+      format: planar
+      src-y: barn-y.png
+      src-u: barn-u.png
+      src-v: barn-v.png
+      bounds: [150, 150, 199, 199]
+      prefer-compositor-surface: true
+      clip-chain: [3]
