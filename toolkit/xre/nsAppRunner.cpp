@@ -5453,10 +5453,6 @@ nsresult XREMain::XRE_mainRun() {
     appStartup = components::AppStartup::Service();
     NS_ENSURE_TRUE(appStartup, NS_ERROR_FAILURE);
 
-#ifdef XP_MACOSX
-    InitializeMacApp();
-#endif
-
     mDirProvider.DoStartup();
 
 #ifdef XP_WIN
