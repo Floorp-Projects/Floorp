@@ -18,7 +18,7 @@ mozilla::ipc::IPCResult WebGLParent::RecvInitialize(
   mHost = HostWebGLContext::Create({nullptr, this}, desc, out);
 
   if (!mHost) {
-    MOZ_ASSERT(!out->error.empty());
+    MOZ_ASSERT(!out->error->empty());
   }
 
   return IPC_OK();
