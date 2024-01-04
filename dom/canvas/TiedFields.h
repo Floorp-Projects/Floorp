@@ -62,6 +62,74 @@ constexpr bool AreAllBytesTiedFields() {
 
 // -
 
+template <class StructT, size_t FieldId, size_t PrevFieldBeginOffset,
+          class PrevFieldT, size_t PrevFieldEndOffset, class FieldT,
+          size_t FieldAlignment = alignof(FieldT)>
+struct FieldDebugInfoT {
+  static constexpr bool IsTightlyPacked() {
+    return PrevFieldEndOffset % FieldAlignment == 0;
+  }
+};
+
+template <class StructT, class TupleOfFields, size_t FieldId>
+struct TightlyPackedFieldEndOffsetT {
+  template <size_t I>
+  using FieldTAt = std::remove_reference_t<
+      typename std::tuple_element<I, TupleOfFields>::type>;
+
+  static constexpr size_t Fn() {
+    constexpr auto num_fields = std::tuple_size_v<TupleOfFields>;
+    static_assert(FieldId < num_fields);
+
+    using PrevFieldT = FieldTAt<FieldId - 1>;
+    using FieldT = FieldTAt<FieldId>;
+    constexpr auto prev_field_end_offset =
+        TightlyPackedFieldEndOffsetT<StructT, TupleOfFields, FieldId - 1>::Fn();
+    constexpr auto prev_field_begin_offset =
+        prev_field_end_offset - sizeof(PrevFieldT);
+
+    using FieldDebugInfoT =
+        FieldDebugInfoT<StructT, FieldId, prev_field_begin_offset, PrevFieldT,
+                        prev_field_end_offset, FieldT>;
+    static_assert(FieldDebugInfoT::IsTightlyPacked(),
+                  "This field was not tightly packed. Is there padding between "
+                  "it and its predecessor?");
+
+    return prev_field_end_offset + sizeof(FieldT);
+  }
+};
+
+template <class StructT, class TupleOfFields>
+struct TightlyPackedFieldEndOffsetT<StructT, TupleOfFields, 0> {
+  static constexpr size_t Fn() {
+    using FieldT = typename std::tuple_element<0, TupleOfFields>::type;
+    return sizeof(FieldT);
+  }
+};
+template <class StructT, class TupleOfFields>
+struct TightlyPackedFieldEndOffsetT<StructT, TupleOfFields, size_t(-1)> {
+  static constexpr size_t Fn() {
+    // -1 means tuple_size_v<TupleOfFields> -> 0.
+    static_assert(sizeof(StructT) == 0);
+    return 0;
+  }
+};
+
+template <class StructT>
+constexpr bool AssertTiedFieldsAreExhaustive() {
+  using TupleOfFields = decltype(std::declval<StructT>().MutTiedFields());
+  constexpr auto num_fields = std::tuple_size_v<TupleOfFields>;
+  constexpr auto end_offset_of_last_field =
+      TightlyPackedFieldEndOffsetT<StructT, TupleOfFields,
+                                   num_fields - 1>::Fn();
+  static_assert(
+      end_offset_of_last_field == sizeof(StructT),
+      "Incorrect field list in MutTiedFields()? (or not tightly-packed?)");
+  return true;  // Support `static_assert(AssertTiedFieldsAreExhaustive())`.
+}
+
+// -
+
 /**
  * Padding<T> can be used to pad out a struct so that it's not implicitly
  * padded by struct rules.

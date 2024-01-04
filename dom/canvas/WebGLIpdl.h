@@ -221,7 +221,7 @@ struct ParamTraits<gfxAlphaType>
 
 template <class T>
 struct ParamTraits_TiedFields {
-  static_assert(mozilla::AreAllBytesTiedFields<T>());
+  static_assert(mozilla::AssertTiedFieldsAreExhaustive<T>());
 
   static void Write(MessageWriter* const writer, const T& in) {
     const auto& fields = mozilla::TiedFields(in);
