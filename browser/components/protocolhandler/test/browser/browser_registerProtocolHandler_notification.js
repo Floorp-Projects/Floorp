@@ -40,9 +40,16 @@ add_task(async function () {
     "info",
     "We expect this notification to have the type of 'info'."
   );
-  is(
-    notification.messageImage.getAttribute("src"),
-    "chrome://global/skin/icons/info-filled.svg",
+
+  // Make sure the CSS is fully loaded...
+  ok(
+    await TestUtils.waitForCondition(
+      () =>
+        notification.ownerGlobal.getComputedStyle(
+          notification.messageImage,
+          "::after"
+        ).backgroundImage == 'url("chrome://global/skin/icons/info-filled.svg")'
+    ),
     "We expect this notification to have an icon."
   );
 

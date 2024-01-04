@@ -112,7 +112,7 @@ async function test_decoder_doctor_notification(
           label = await document.l10n.formatValue(label.l10nId);
         }
         if (isLink) {
-          let link = notification.supportLinkEls[0];
+          let link = notification.messageText.querySelector("a");
           if (link) {
             // Seems to be a Windows specific quirk, but without this
             // mutation observer the notification.messageText.textContent
@@ -126,13 +126,13 @@ async function test_decoder_doctor_notification(
           }
         }
         is(
-          notification.messageText.textContent.trim(),
-          notificationMessage,
+          notification.messageText.textContent,
+          notificationMessage + (isLink && label ? ` ${label}` : ""),
           "notification message should match expectation"
         );
 
         let button = notification.buttonContainer.querySelector("button");
-        let link = notification.supportLinkEls[0];
+        let link = notification.messageText.querySelector("a");
         if (!label) {
           ok(!button, "There should not be a button");
           ok(!link, "There should not be a link");
@@ -141,7 +141,7 @@ async function test_decoder_doctor_notification(
 
         if (isLink) {
           ok(!button, "There should not be a button");
-          is(link.textContent, label, `notification link should be '${label}'`);
+          is(link.innerText, label, `notification link should be '${label}'`);
           ok(
             !link.hasAttribute("accesskey"),
             "notification link should not have accesskey"
