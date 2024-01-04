@@ -434,6 +434,10 @@ MFCDMParent::~MFCDMParent() {
 
 /* static */
 LPCWSTR MFCDMParent::GetCDMLibraryName(const nsString& aKeySystem) {
+  if (IsWMFClearKeySystemAndSupported(aKeySystem) ||
+      StaticPrefs::media_eme_wmf_use_mock_cdm_for_external_cdms()) {
+    return L"wmfclearkey.dll";
+  }
   // PlayReady is a built-in CDM on Windows, no need to load external library.
   if (IsPlayReadyKeySystemAndSupported(aKeySystem)) {
     return L"";
@@ -441,9 +445,6 @@ LPCWSTR MFCDMParent::GetCDMLibraryName(const nsString& aKeySystem) {
   if (IsWidevineExperimentKeySystemAndSupported(aKeySystem) ||
       IsWidevineKeySystem(aKeySystem)) {
     return sWidevineL1Path ? sWidevineL1Path : L"L1-not-found";
-  }
-  if (IsWMFClearKeySystemAndSupported(aKeySystem)) {
-    return L"wmfclearkey.dll";
   }
   return L"Unknown";
 }
@@ -517,13 +518,14 @@ HRESULT MFCDMParent::LoadFactory(
   // "<key_system>.ContentDecryptionModuleFactory". In addition, when querying
   // factory, need to use original Widevine key system name.
   nsString stringId;
-  if (IsWidevineExperimentKeySystemAndSupported(aKeySystem) ||
-      IsWidevineKeySystem(aKeySystem)) {
+  if (StaticPrefs::media_eme_wmf_use_mock_cdm_for_external_cdms() ||
+      IsWMFClearKeySystemAndSupported(aKeySystem)) {
+    stringId.AppendLiteral("org.w3.clearkey");
+  } else if (IsWidevineExperimentKeySystemAndSupported(aKeySystem) ||
+             IsWidevineKeySystem(aKeySystem)) {
     // Widevine's DLL expects "<key_system>.ContentDecryptionModuleFactory" for
     // the class Id.
     stringId.AppendLiteral("com.widevine.alpha.ContentDecryptionModuleFactory");
-  } else if (IsWMFClearKeySystemAndSupported(aKeySystem)) {
-    stringId = aKeySystem;
   }
   MFCDM_PARENT_SLOG("Query factory by classId '%s",
                     NS_ConvertUTF16toUTF8(stringId).get());

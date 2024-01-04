@@ -37,6 +37,12 @@ bool KeySystemConfig::Supports(const nsAString& aKeySystem) {
     return true;
   }
 #else
+#  ifdef MOZ_WMF_CDM
+  // Test only, pretend we have already installed CDMs.
+  if (StaticPrefs::media_eme_wmf_use_mock_cdm_for_external_cdms()) {
+    return true;
+  }
+#  endif
   // Check if Widevine L3 or Clearkey has been downloaded via GMP downloader.
   if (IsWidevineKeySystem(aKeySystem) || IsClearkeyKeySystem(aKeySystem)) {
     return HaveGMPFor(nsCString(CHROMIUM_CDM_API),
