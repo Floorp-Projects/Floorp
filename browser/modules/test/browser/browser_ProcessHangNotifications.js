@@ -183,7 +183,7 @@ add_task(async function waitForScriptTest() {
   });
 
   // Click the "Close" button this time, we shouldn't get a callback at all.
-  notification.currentNotification.closeButton.click();
+  notification.currentNotification.closeButtonEl.click();
 
   // send another hang pulse, we should not get a notification here
   Services.obs.notifyObservers(hangReport, "process-hang-report");
