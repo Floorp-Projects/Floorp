@@ -21,9 +21,9 @@ add_task(async function () {
   // Add an element with an accesskey to the chrome and press its accesskey while the chrome is focused.
   let newButton = document.createXULElement("button");
   newButton.id = "chromebutton";
+  newButton.setAttribute("aria-label", "chromebutton");
   newButton.setAttribute("accesskey", "z");
   document.documentElement.appendChild(newButton);
-
   Services.focus.clearFocus(window);
 
   newButton.getBoundingClientRect(); // Accesskey registration happens during frame construction.
