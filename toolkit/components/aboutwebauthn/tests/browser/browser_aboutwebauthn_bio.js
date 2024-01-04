@@ -37,6 +37,23 @@ function check_bio_buttons_disabled(disabled) {
   return buttons;
 }
 
+function check_tab_buttons_aria(button_id) {
+  let button = doc.getElementById(button_id);
+  is(button.role, "tab", button_id + " in the sidebar is a tab");
+  ok(
+    button.hasAttribute("aria-controls"),
+    button_id + " in the sidebar is a tab with an assigned tablist"
+  );
+  ok(
+    button.hasAttribute("aria-selected"),
+    button_id + " in the sidebar is a tab that can be or is selected"
+  );
+  ok(
+    button.hasAttribute("tabindex"),
+    button_id + " in the sidebar is a tab with keyboard focusability provided"
+  );
+}
+
 async function send_authinfo_and_open_bio_section(ops) {
   reset_about_page(doc);
   send_auth_info_and_check_categories(doc, ops);
@@ -44,6 +61,7 @@ async function send_authinfo_and_open_bio_section(ops) {
   ["pin-tab-button", "credentials-tab-button"].forEach(button_id => {
     let button = doc.getElementById(button_id);
     is(button.style.display, "none", button_id + " in the sidebar not hidden");
+    check_tab_buttons_aria(button_id);
   });
 
   if (ops.bioEnroll !== null || ops.userVerificationMgmtPreview !== null) {
@@ -56,6 +74,7 @@ async function send_authinfo_and_open_bio_section(ops) {
       "none",
       "bio enrollment button in the sidebar not visible"
     );
+    check_tab_buttons_aria("bio-enrollments-tab-button");
 
     // Click the section and wait for it to open
     let bio_enrollment_section = doc.getElementById("bio-enrollment-section");
