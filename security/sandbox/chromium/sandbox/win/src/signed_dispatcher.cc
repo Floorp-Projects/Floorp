@@ -6,7 +6,6 @@
 
 #include <stdint.h>
 
-#include <cstdio>
 #include <string>
 
 #include "base/strings/string_util.h"
@@ -44,26 +43,13 @@ bool SignedDispatcher::CreateSection(IPCInfo* ipc, HANDLE file_handle) {
   if (!::DuplicateHandle((*ipc->client_info).process, file_handle,
                          ::GetCurrentProcess(), &local_file_handle,
                          FILE_MAP_EXECUTE, false, 0)) {
-#if defined(DEBUG)
-    fwprintf(stderr,
-             L"Prespawn CIG: SignedDispatcher::CreateSection did not complete "
-             L"(!::DuplicateHandle) (pid=%u)\n",
-             (*ipc->client_info).process_id);
-#endif  // DEBUG
     return false;
   }
 
   base::win::ScopedHandle local_handle(local_file_handle);
   std::wstring path;
-  if (!GetPathFromHandle(local_handle.Get(), &path)) {
-#if defined(DEBUG)
-    fwprintf(stderr,
-             L"Prespawn CIG: SignedDispatcher::CreateSection did not complete "
-             L"(!::GetPathFromHandle) (pid=%u)\n",
-             (*ipc->client_info).process_id);
-#endif  // DEBUG
+  if (!GetPathFromHandle(local_handle.Get(), &path))
     return false;
-  }
   const wchar_t* module_name = path.c_str();
   CountedParameterSet<NameBased> params;
   params[NameBased::NAME] = ParamPickerMake(module_name);
@@ -76,14 +62,6 @@ bool SignedDispatcher::CreateSection(IPCInfo* ipc, HANDLE file_handle) {
   ipc->return_info.nt_status = SignedPolicy::CreateSectionAction(
       result, *ipc->client_info, local_handle, &section_handle);
   ipc->return_info.handle = section_handle;
-
-#if defined(DEBUG)
-  fwprintf(stderr,
-           L"Prespawn CIG: SignedDispatcher::CreateSection completed (pid=%u, "
-           L"path=%s, result=0x%x, nt_status=0x%x)\n",
-           (*ipc->client_info).process_id, module_name, result,
-           ipc->return_info.nt_status);
-#endif  // DEBUG
   return true;
 }
 
