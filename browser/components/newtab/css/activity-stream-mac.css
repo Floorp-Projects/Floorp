@@ -1630,7 +1630,7 @@ main section {
   cursor: default;
 }
 @media (prefers-reduced-motion: no-preference) {
-  .customize-menu {
+  .customize-menu.customize-animate-enter, .customize-menu.customize-animate-exit, .customize-menu.customize-animate-enter-done, .customize-menu.customize-animate-exit-done {
     transition: transform 250ms cubic-bezier(0.46, 0.03, 0.52, 0.96), visibility 250ms;
   }
 }
