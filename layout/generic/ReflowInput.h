@@ -503,6 +503,11 @@ struct ReflowInput : public SizeComputationInput {
     // nsColumnSetFrame is balancing columns
     bool mIsColumnBalancing : 1;
 
+    // We have an ancestor nsColumnSetFrame performing the last column balancing
+    // reflow. The available block-size of the last column might become
+    // unconstrained.
+    bool mIsInLastColumnBalancingReflow : 1;
+
     // True if ColumnSetWrapperFrame has a constrained block-size, and is going
     // to consume all of its block-size in this fragment. This bit is passed to
     // nsColumnSetFrame to determine whether to give up balancing and create
