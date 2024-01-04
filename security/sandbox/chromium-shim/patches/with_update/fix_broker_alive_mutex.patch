@@ -1,0 +1,104 @@
+# HG changeset patch
+# User Yannis Juglaret <yjuglaret@mozilla.com>
+# Date 1704300086 -3600
+#      Wed Jan 03 17:41:26 2024 +0100
+# Node ID c08c4330fa141f5c7f8fa646ce179969e98cfd60
+# Parent  4a7e58fdaac86befe272259c2f603e2229080a5b
+Bug 1851889 - Create the broker alive mutex during sandbox initialization. r=bobowen
+
+The sandbox IPC client/server communication protocol relies on a mutex
+that clients can use to check if the broker process is still alive; e.g.
+when a response takes more than one second to come. This mutex is owned
+by a thread of the broker process and will be marked as abandoned when
+that thread dies.
+
+Clients assume that the broker alive mutex being abandoned means that
+the whole broker process crashed. Therefore it is necessary that the
+thread that owns the broker alive mutex lives as long as the whole
+broker process, since clients cannot distinguish between the death of
+this thread and the death of the whole broker process.
+
+In upstream code, the broker alive mutex gets created during the first
+call to SpawnTarget, which means that it is implicitly required that
+this call occurs from a thread that lives as long as the broker process
+will. Since we call SpawnTarget from the IPC launcher thread, which dies
+during XPCOM shutdown, we are breaking this implicit requirement.
+
+Therefore, this patch makes us create the broker alive mutex from the
+main thread, during sandbox initialization. This ensures that clients
+will not get disturbed by the death of the IPC launcher thread anymore.
+
+Differential Revision: https://phabricator.services.mozilla.com/D197423
+
+diff --git a/security/sandbox/chromium/sandbox/win/src/broker_services.cc b/security/sandbox/chromium/sandbox/win/src/broker_services.cc
+--- a/security/sandbox/chromium/sandbox/win/src/broker_services.cc
++++ b/security/sandbox/chromium/sandbox/win/src/broker_services.cc
+@@ -172,6 +172,9 @@ ResultCode BrokerServicesBase::Init() {
+   if (!job_thread_.IsValid())
+     return SBOX_ERROR_CANNOT_INIT_BROKERSERVICES;
+ 
++  if (!SharedMemIPCServer::CreateBrokerAliveMutex())
++    return SBOX_ERROR_CANNOT_INIT_BROKERSERVICES;
++
+   return SBOX_ALL_OK;
+ }
+ 
+diff --git a/security/sandbox/chromium/sandbox/win/src/sharedmem_ipc_server.cc b/security/sandbox/chromium/sandbox/win/src/sharedmem_ipc_server.cc
+--- a/security/sandbox/chromium/sandbox/win/src/sharedmem_ipc_server.cc
++++ b/security/sandbox/chromium/sandbox/win/src/sharedmem_ipc_server.cc
+@@ -24,6 +24,18 @@ volatile HANDLE g_alive_mutex = nullptr;
+ 
+ namespace sandbox {
+ 
++/* static */ bool SharedMemIPCServer::CreateBrokerAliveMutex() {
++  DCHECK(!g_alive_mutex);
++  // We create a initially owned mutex. If the server dies unexpectedly,
++  // the thread that owns it will fail to release the lock and windows will
++  // report to the target (when it tries to acquire it) that the wait was
++  // abandoned. Note: We purposely leak the local handle because we want it to
++  // be closed by Windows itself so it is properly marked as abandoned if the
++  // server dies.
++  g_alive_mutex = ::CreateMutexW(nullptr, true, nullptr);
++  return static_cast<bool>(g_alive_mutex);
++}
++
+ SharedMemIPCServer::ServerControl::ServerControl() {}
+ 
+ SharedMemIPCServer::ServerControl::~ServerControl() {}
+@@ -37,19 +49,7 @@ SharedMemIPCServer::SharedMemIPCServer(H
+       target_process_(target_process),
+       target_process_id_(target_process_id),
+       call_dispatcher_(dispatcher) {
+-  // We create a initially owned mutex. If the server dies unexpectedly,
+-  // the thread that owns it will fail to release the lock and windows will
+-  // report to the target (when it tries to acquire it) that the wait was
+-  // abandoned. Note: We purposely leak the local handle because we want it to
+-  // be closed by Windows itself so it is properly marked as abandoned if the
+-  // server dies.
+-  if (!g_alive_mutex) {
+-    HANDLE mutex = ::CreateMutexW(nullptr, true, nullptr);
+-    if (::InterlockedCompareExchangePointer(&g_alive_mutex, mutex, nullptr)) {
+-      // We lost the race to create the mutex.
+-      ::CloseHandle(mutex);
+-    }
+-  }
++  DCHECK(g_alive_mutex);
+ }
+ 
+ SharedMemIPCServer::~SharedMemIPCServer() {
+diff --git a/security/sandbox/chromium/sandbox/win/src/sharedmem_ipc_server.h b/security/sandbox/chromium/sandbox/win/src/sharedmem_ipc_server.h
+--- a/security/sandbox/chromium/sandbox/win/src/sharedmem_ipc_server.h
++++ b/security/sandbox/chromium/sandbox/win/src/sharedmem_ipc_server.h
+@@ -60,6 +60,12 @@ class SharedMemIPCServer {
+   // creates the kernels events used to signal the IPC.
+   bool Init(void* shared_mem, uint32_t shared_size, uint32_t channel_size);
+ 
++  // Create the mutex used by clients to check if the broker process crashed.
++  // This function must be called only once, from a thread that will live as
++  // long as the whole broker process will. This call must occur prior to any
++  // SharedMemIPCServer creation.
++  static bool CreateBrokerAliveMutex();
++
+  private:
+   // Allow tests to be marked DISABLED_. Note that FLAKY_ and FAILS_ prefixes
+   // do not work with sandbox tests.

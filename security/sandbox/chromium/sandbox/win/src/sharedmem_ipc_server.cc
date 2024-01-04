@@ -24,6 +24,18 @@ volatile HANDLE g_alive_mutex = nullptr;
 
 namespace sandbox {
 
+/* static */ bool SharedMemIPCServer::CreateBrokerAliveMutex() {
+  DCHECK(!g_alive_mutex);
+  // We create a initially owned mutex. If the server dies unexpectedly,
+  // the thread that owns it will fail to release the lock and windows will
+  // report to the target (when it tries to acquire it) that the wait was
+  // abandoned. Note: We purposely leak the local handle because we want it to
+  // be closed by Windows itself so it is properly marked as abandoned if the
+  // server dies.
+  g_alive_mutex = ::CreateMutexW(nullptr, true, nullptr);
+  return static_cast<bool>(g_alive_mutex);
+}
+
 SharedMemIPCServer::ServerControl::ServerControl() {}
 
 SharedMemIPCServer::ServerControl::~ServerControl() {}
@@ -37,19 +49,7 @@ SharedMemIPCServer::SharedMemIPCServer(HANDLE target_process,
       target_process_(target_process),
       target_process_id_(target_process_id),
       call_dispatcher_(dispatcher) {
-  // We create a initially owned mutex. If the server dies unexpectedly,
-  // the thread that owns it will fail to release the lock and windows will
-  // report to the target (when it tries to acquire it) that the wait was
-  // abandoned. Note: We purposely leak the local handle because we want it to
-  // be closed by Windows itself so it is properly marked as abandoned if the
-  // server dies.
-  if (!g_alive_mutex) {
-    HANDLE mutex = ::CreateMutexW(nullptr, true, nullptr);
-    if (::InterlockedCompareExchangePointer(&g_alive_mutex, mutex, nullptr)) {
-      // We lost the race to create the mutex.
-      ::CloseHandle(mutex);
-    }
-  }
+  DCHECK(g_alive_mutex);
 }
 
 SharedMemIPCServer::~SharedMemIPCServer() {

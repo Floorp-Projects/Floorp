@@ -172,6 +172,9 @@ ResultCode BrokerServicesBase::Init() {
   if (!job_thread_.IsValid())
     return SBOX_ERROR_CANNOT_INIT_BROKERSERVICES;
 
+  if (!SharedMemIPCServer::CreateBrokerAliveMutex())
+    return SBOX_ERROR_CANNOT_INIT_BROKERSERVICES;
+
   return SBOX_ALL_OK;
 }
 
