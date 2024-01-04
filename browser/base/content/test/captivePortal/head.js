@@ -77,11 +77,11 @@ async function focusWindowAndWaitForPortalUI(aLongRecheck, win) {
   }, "Waiting for CaptivePortalWatcher to trigger a recheck.");
   Services.obs.notifyObservers(null, "captive-portal-check-complete");
 
-  let notification = ensurePortalNotification(win);
+  let notification = await ensurePortalNotification(win);
 
   if (aLongRecheck) {
     ensureNoPortalTab(win);
-    testShowLoginPageButtonVisibility(notification, "visible");
+    await testShowLoginPageButtonVisibility(notification, "visible");
     return win;
   }
 
@@ -95,7 +95,7 @@ async function focusWindowAndWaitForPortalUI(aLongRecheck, win) {
     tab,
     "The captive portal tab should be open and selected in the new window."
   );
-  testShowLoginPageButtonVisibility(notification, "hidden");
+  await testShowLoginPageButtonVisibility(notification, "hidden");
   return win;
 }
 
@@ -109,7 +109,16 @@ function ensurePortalTab(win) {
   );
 }
 
-function ensurePortalNotification(win) {
+async function ensurePortalNotification(win) {
+  await BrowserTestUtils.waitForMutationCondition(
+    win.gNavToolbox,
+    { childList: true },
+    () =>
+      win.gNavToolbox
+        .querySelector("notification-message")
+        ?.getAttribute("value") == PORTAL_NOTIFICATION_VALUE
+  );
+
   let notification = win.gNotificationBox.getNotificationWithValue(
     PORTAL_NOTIFICATION_VALUE
   );
@@ -123,7 +132,8 @@ function ensurePortalNotification(win) {
 
 // Helper to test whether the "Show Login Page" is visible in the captive portal
 // notification (it should be hidden when the portal tab is selected).
-function testShowLoginPageButtonVisibility(notification, visibility) {
+async function testShowLoginPageButtonVisibility(notification, visibility) {
+  await notification.updateComplete;
   let showLoginPageButton = notification.buttonContainer.querySelector(
     "button.notification-button"
   );

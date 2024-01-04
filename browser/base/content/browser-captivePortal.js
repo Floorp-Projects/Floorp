@@ -264,12 +264,15 @@ var CaptivePortalWatcher = {
     }
   },
 
-  handleEvent(aEvent) {
+  async handleEvent(aEvent) {
     switch (aEvent.type) {
       case "activate":
         this._delayedCaptivePortalDetected();
         break;
       case "TabSelect":
+        if (this._notificationPromise) {
+          await this._notificationPromise;
+        }
         if (!this._captivePortalTab || !this._captivePortalNotification) {
           break;
         }
@@ -323,7 +326,7 @@ var CaptivePortalWatcher = {
       gBrowser.tabContainer.removeEventListener("TabSelect", this);
     };
 
-    gNotificationBox.appendNotification(
+    this._notificationPromise = gNotificationBox.appendNotification(
       this.PORTAL_NOTIFICATION_VALUE,
       {
         label: message,
