@@ -262,7 +262,7 @@ add_setup(async function () {
 });
 
 add_task(async function test_selector_match_engine_orders() {
-  assertActualEnginesEqualsExpected(
+  await assertActualEnginesEqualsExpected(
     ENGINE_ORDERS_CONFIG,
     {
       locale: "fr",
@@ -273,7 +273,7 @@ add_task(async function test_selector_match_engine_orders() {
     "Should match engine orders with the distro distribution."
   );
 
-  assertActualEnginesEqualsExpected(
+  await assertActualEnginesEqualsExpected(
     ENGINE_ORDERS_CONFIG,
     {
       locale: "en-CA",
@@ -284,7 +284,7 @@ add_task(async function test_selector_match_engine_orders() {
     "Should match engine orders with the distro distribution, en-CA locale and CA region."
   );
 
-  assertActualEnginesEqualsExpected(
+  await assertActualEnginesEqualsExpected(
     ENGINE_ORDERS_CONFIG,
     {
       locale: "en-CA",
@@ -295,7 +295,7 @@ add_task(async function test_selector_match_engine_orders() {
     "Should order the first two engines correctly for distro-2 distribution"
   );
 
-  assertActualEnginesEqualsExpected(
+  await assertActualEnginesEqualsExpected(
     ENGINE_ORDERS_CONFIG,
     {
       locale: "en-CA",
@@ -307,7 +307,7 @@ add_task(async function test_selector_match_engine_orders() {
 });
 
 add_task(async function test_selector_match_engine_orders_starts_with() {
-  assertActualEnginesEqualsExpected(
+  await assertActualEnginesEqualsExpected(
     STARTS_WITH_WIKI_CONFIG,
     {
       locale: "en-CA",
@@ -317,7 +317,7 @@ add_task(async function test_selector_match_engine_orders_starts_with() {
     "Should list the wiki-ca engine and other engines in correct orders with the en-CA and CA locale region environment."
   );
 
-  assertActualEnginesEqualsExpected(
+  await assertActualEnginesEqualsExpected(
     STARTS_WITH_WIKI_CONFIG,
     {
       locale: "en-GB",
@@ -329,7 +329,7 @@ add_task(async function test_selector_match_engine_orders_starts_with() {
 });
 
 add_task(async function test_selector_match_engine_orders_with_defaults() {
-  assertActualEnginesEqualsExpected(
+  await assertActualEnginesEqualsExpected(
     DEFAULTS_CONFIG,
     {
       locale: "en-CA",

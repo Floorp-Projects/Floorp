@@ -373,7 +373,7 @@ add_setup(async function () {
 });
 
 add_task(async function test_selector_match_experiment() {
-  assertActualEnginesEqualsExpected(
+  await assertActualEnginesEqualsExpected(
     CONFIG_EXPERIMENT,
     {
       locale: "en-CA",
@@ -384,7 +384,7 @@ add_task(async function test_selector_match_experiment() {
     "Should match engine with the same experiment."
   );
 
-  assertActualEnginesEqualsExpected(
+  await assertActualEnginesEqualsExpected(
     CONFIG_EXPERIMENT,
     {
       locale: "en-CA",
@@ -397,7 +397,7 @@ add_task(async function test_selector_match_experiment() {
 });
 
 add_task(async function test_everywhere_and_excluded_locale() {
-  assertActualEnginesEqualsExpected(
+  await assertActualEnginesEqualsExpected(
     CONFIG_EVERYWHERE,
     {
       locale: "en-GB",
@@ -412,7 +412,7 @@ add_task(async function test_everywhere_and_excluded_locale() {
     "Should match the engines for all locales and regions."
   );
 
-  assertActualEnginesEqualsExpected(
+  await assertActualEnginesEqualsExpected(
     CONFIG_EVERYWHERE,
     {
       locale: "en-US",
@@ -426,7 +426,7 @@ add_task(async function test_everywhere_and_excluded_locale() {
     "Should match engines that do not exclude user's locale."
   );
 
-  assertActualEnginesEqualsExpected(
+  await assertActualEnginesEqualsExpected(
     CONFIG_EVERYWHERE,
     {
       locale: "fi",
@@ -440,8 +440,8 @@ add_task(async function test_everywhere_and_excluded_locale() {
     "Should match engines that do not exclude user's region."
   );
 
-  assertActualEnginesEqualsExpected(
-    CONFIG_LOCALES_AND_REGIONS,
+  await assertActualEnginesEqualsExpected(
+    CONFIG_EVERYWHERE,
     {
       locale: "en-CA",
       region: "CA",
@@ -456,7 +456,7 @@ add_task(async function test_everywhere_and_excluded_locale() {
 });
 
 add_task(async function test_selector_locales_and_regions() {
-  assertActualEnginesEqualsExpected(
+  await assertActualEnginesEqualsExpected(
     CONFIG_LOCALES_AND_REGIONS,
     {
       locale: "en-CA",
@@ -466,7 +466,7 @@ add_task(async function test_selector_locales_and_regions() {
     "Should match engine with same locale and region."
   );
 
-  assertActualEnginesEqualsExpected(
+  await assertActualEnginesEqualsExpected(
     CONFIG_LOCALES_AND_REGIONS,
     {
       locale: "en-GB",
@@ -476,7 +476,7 @@ add_task(async function test_selector_locales_and_regions() {
     "Should not match any engines when region is excluded."
   );
 
-  assertActualEnginesEqualsExpected(
+  await assertActualEnginesEqualsExpected(
     CONFIG_LOCALES_AND_REGIONS,
     {
       locale: "en-US",
@@ -486,7 +486,7 @@ add_task(async function test_selector_locales_and_regions() {
     "Should match engine with specified locale in any region."
   );
 
-  assertActualEnginesEqualsExpected(
+  await assertActualEnginesEqualsExpected(
     CONFIG_LOCALES_AND_REGIONS,
     {
       locale: "en-US",
@@ -496,7 +496,7 @@ add_task(async function test_selector_locales_and_regions() {
     "Should match engine with specified locale in any region."
   );
 
-  assertActualEnginesEqualsExpected(
+  await assertActualEnginesEqualsExpected(
     CONFIG_LOCALES_AND_REGIONS,
     {
       locale: "fr",
@@ -506,7 +506,7 @@ add_task(async function test_selector_locales_and_regions() {
     "Should not match any engines when locale is excluded."
   );
 
-  assertActualEnginesEqualsExpected(
+  await assertActualEnginesEqualsExpected(
     CONFIG_LOCALES_AND_REGIONS,
     {
       locale: "fi",
@@ -516,7 +516,7 @@ add_task(async function test_selector_locales_and_regions() {
     "Should match engine with specified region with any locale."
   );
 
-  assertActualEnginesEqualsExpected(
+  await assertActualEnginesEqualsExpected(
     CONFIG_LOCALES_AND_REGIONS,
     {
       locale: "tlh",
@@ -528,7 +528,7 @@ add_task(async function test_selector_locales_and_regions() {
 });
 
 add_task(async function test_selector_match_distribution() {
-  assertActualEnginesEqualsExpected(
+  await assertActualEnginesEqualsExpected(
     CONFIG_DISTRIBUTION,
     {
       locale: "en-CA",
@@ -539,7 +539,7 @@ add_task(async function test_selector_match_distribution() {
     "Should match engine with the same distribution."
   );
 
-  assertActualEnginesEqualsExpected(
+  await assertActualEnginesEqualsExpected(
     CONFIG_DISTRIBUTION,
     {
       locale: "en-CA",
@@ -550,7 +550,7 @@ add_task(async function test_selector_match_distribution() {
     "Should match engine with multiple distributions."
   );
 
-  assertActualEnginesEqualsExpected(
+  await assertActualEnginesEqualsExpected(
     CONFIG_DISTRIBUTION,
     {
       locale: "en-CA",
@@ -561,7 +561,7 @@ add_task(async function test_selector_match_distribution() {
     "Should match engine with multiple distributions."
   );
 
-  assertActualEnginesEqualsExpected(
+  await assertActualEnginesEqualsExpected(
     CONFIG_DISTRIBUTION,
     {
       locale: "fi",
@@ -572,7 +572,7 @@ add_task(async function test_selector_match_distribution() {
     "Should match engine with distribution, specific region and locale."
   );
 
-  assertActualEnginesEqualsExpected(
+  await assertActualEnginesEqualsExpected(
     CONFIG_DISTRIBUTION,
     {
       locale: "en-CA",
@@ -583,7 +583,7 @@ add_task(async function test_selector_match_distribution() {
     "Should not match any engines with no matching distribution, region and locale."
   );
 
-  assertActualEnginesEqualsExpected(
+  await assertActualEnginesEqualsExpected(
     CONFIG_DISTRIBUTION,
     {
       locale: "en-CA",
@@ -595,7 +595,7 @@ add_task(async function test_selector_match_distribution() {
     "Should match engine with distribution and experiment."
   );
 
-  assertActualEnginesEqualsExpected(
+  await assertActualEnginesEqualsExpected(
     CONFIG_DISTRIBUTION,
     {
       locale: "en-CA",
@@ -607,7 +607,7 @@ add_task(async function test_selector_match_distribution() {
     "Should not match any engines with no matching distribution and experiment."
   );
 
-  assertActualEnginesEqualsExpected(
+  await assertActualEnginesEqualsExpected(
     CONFIG_DISTRIBUTION,
     {
       locale: "en-CA",
@@ -618,7 +618,7 @@ add_task(async function test_selector_match_distribution() {
     "Should match engines with included distributions."
   );
 
-  assertActualEnginesEqualsExpected(
+  await assertActualEnginesEqualsExpected(
     CONFIG_DISTRIBUTION,
     {
       locale: "en-CA",
@@ -631,7 +631,7 @@ add_task(async function test_selector_match_distribution() {
 });
 
 add_task(async function test_engine_selector_match_applications() {
-  assertActualEnginesEqualsExpected(
+  await assertActualEnginesEqualsExpected(
     CONFIG_CHANNEL_APPLICATION,
     {
       locale: "en-CA",
@@ -642,7 +642,7 @@ add_task(async function test_engine_selector_match_applications() {
     "Should match engine for esr channel."
   );
 
-  assertActualEnginesEqualsExpected(
+  await assertActualEnginesEqualsExpected(
     CONFIG_CHANNEL_APPLICATION,
     {
       locale: "en-CA",
@@ -655,7 +655,7 @@ add_task(async function test_engine_selector_match_applications() {
 });
 
 add_task(async function test_engine_selector_match_version() {
-  assertActualEnginesEqualsExpected(
+  await assertActualEnginesEqualsExpected(
     CONFIG_VERSIONS,
     {
       locale: "en-CA",
@@ -666,7 +666,7 @@ add_task(async function test_engine_selector_match_version() {
     "Should match engines with that support versions equal or above the minimum."
   );
 
-  assertActualEnginesEqualsExpected(
+  await assertActualEnginesEqualsExpected(
     CONFIG_VERSIONS,
     {
       locale: "en-CA",
@@ -677,7 +677,7 @@ add_task(async function test_engine_selector_match_version() {
     "Should match engines with that support versions above the minimum."
   );
 
-  assertActualEnginesEqualsExpected(
+  await assertActualEnginesEqualsExpected(
     CONFIG_VERSIONS,
     {
       locale: "en-CA",
@@ -688,7 +688,7 @@ add_task(async function test_engine_selector_match_version() {
     "Should match engines with that support versions equal or below the maximum."
   );
 
-  assertActualEnginesEqualsExpected(
+  await assertActualEnginesEqualsExpected(
     CONFIG_VERSIONS,
     {
       locale: "en-CA",
@@ -699,7 +699,7 @@ add_task(async function test_engine_selector_match_version() {
     "Should match engines with that support the versions above the minimum and below the maximum."
   );
 
-  assertActualEnginesEqualsExpected(
+  await assertActualEnginesEqualsExpected(
     CONFIG_VERSIONS,
     {
       locale: "en-CA",
@@ -710,7 +710,7 @@ add_task(async function test_engine_selector_match_version() {
     "Should match engines with that support the versions above the minimum and below the maximum."
   );
 
-  assertActualEnginesEqualsExpected(
+  await assertActualEnginesEqualsExpected(
     CONFIG_VERSIONS,
     {
       locale: "en-CA",

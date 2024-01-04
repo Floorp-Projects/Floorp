@@ -225,7 +225,7 @@ add_setup(async function () {
 });
 
 add_task(async function test_default_engines() {
-  assertActualEnginesEqualsExpected(
+  await assertActualEnginesEqualsExpected(
     CONFIG,
     {
       locale: "en-CA",
@@ -236,7 +236,7 @@ add_task(async function test_default_engines() {
     "Should use the global default engine and global default private when no specific defaults are matched."
   );
 
-  assertActualEnginesEqualsExpected(
+  await assertActualEnginesEqualsExpected(
     CONFIG,
     {
       locale: "zh-CN",
@@ -247,7 +247,7 @@ add_task(async function test_default_engines() {
     "Should use the matched locale and region default engine."
   );
 
-  assertActualEnginesEqualsExpected(
+  await assertActualEnginesEqualsExpected(
     CONFIG,
     {
       locale: "fi",
@@ -259,7 +259,7 @@ add_task(async function test_default_engines() {
     "Should use the matched distribution default engine."
   );
 
-  assertActualEnginesEqualsExpected(
+  await assertActualEnginesEqualsExpected(
     CONFIG,
     {
       locale: "en-US",
@@ -270,7 +270,7 @@ add_task(async function test_default_engines() {
     "Should use the matched default engine with specific suffix."
   );
 
-  assertActualEnginesEqualsExpected(
+  await assertActualEnginesEqualsExpected(
     CONFIG,
     {
       locale: "en-US",
@@ -283,7 +283,7 @@ add_task(async function test_default_engines() {
 });
 
 add_task(async function test_default_engines_override() {
-  assertActualEnginesEqualsExpected(
+  await assertActualEnginesEqualsExpected(
     CONFIG_DEFAULTS_OVERRIDE,
     {
       locale: "en-US",
@@ -294,7 +294,7 @@ add_task(async function test_default_engines_override() {
     "Should use the globalDefault for default when no specific defaults are matched. Private default should be undefined when no default private."
   );
 
-  assertActualEnginesEqualsExpected(
+  await assertActualEnginesEqualsExpected(
     CONFIG_DEFAULTS_OVERRIDE,
     {
       locale: "de",
@@ -305,7 +305,7 @@ add_task(async function test_default_engines_override() {
     "Should use the matched locale default engine."
   );
 
-  assertActualEnginesEqualsExpected(
+  await assertActualEnginesEqualsExpected(
     CONFIG_DEFAULTS_OVERRIDE,
     {
       locale: "de",
@@ -316,7 +316,7 @@ add_task(async function test_default_engines_override() {
     "Should use the matched locale default engine."
   );
 
-  assertActualEnginesEqualsExpected(
+  await assertActualEnginesEqualsExpected(
     CONFIG_DEFAULTS_OVERRIDE,
     {
       locale: "en-US",
@@ -328,7 +328,7 @@ add_task(async function test_default_engines_override() {
     "Should use the matched distro default engine."
   );
 
-  assertActualEnginesEqualsExpected(
+  await assertActualEnginesEqualsExpected(
     CONFIG_DEFAULTS_OVERRIDE,
     {
       locale: "de",
