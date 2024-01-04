@@ -41,7 +41,6 @@
     <ID>UndocumentedPublicClass:AccountSettingsInteractor.kt$AccountSettingsUserActions</ID>
     <ID>UndocumentedPublicClass:AccountUiView.kt$AccountUiView</ID>
     <ID>UndocumentedPublicClass:ActivationPing.kt$ActivationPing</ID>
-    <ID>UndocumentedPublicClass:AddSearchEngineFragment.kt$AddSearchEngineFragment : FragmentOnCheckedChangeListenerMenuProvider</ID>
     <ID>UndocumentedPublicClass:AddonDetailsBindingDelegate.kt$AddonDetailsInteractor</ID>
     <ID>UndocumentedPublicClass:AddonPermissionDetailsBindingDelegate.kt$AddonPermissionsDetailsInteractor</ID>
     <ID>UndocumentedPublicClass:AdjustMetricsService.kt$AdjustMetricsService : MetricsService</ID>
@@ -168,8 +167,6 @@
     <ID>UndocumentedPublicClass:FirstSessionPing.kt$FirstSessionPing</ID>
     <ID>UndocumentedPublicClass:GeckoProvider.kt$GeckoProvider</ID>
     <ID>UndocumentedPublicClass:GroupableRadioButton.kt$GroupableRadioButton</ID>
-    <ID>UndocumentedPublicClass:HistoryController.kt$DefaultHistoryController : HistoryController</ID>
-    <ID>UndocumentedPublicClass:HistoryController.kt$HistoryController</ID>
     <ID>UndocumentedPublicClass:HistoryFragment.kt$HistoryFragment : LibraryPageFragmentUserInteractionHandlerMenuProvider</ID>
     <ID>UndocumentedPublicClass:HistoryFragmentStore.kt$HistoryFragmentAction$AddItemForRemoval : HistoryFragmentAction</ID>
     <ID>UndocumentedPublicClass:HistoryFragmentStore.kt$HistoryFragmentAction$EnterDeletionMode : HistoryFragmentAction</ID>
@@ -191,9 +188,6 @@
     <ID>UndocumentedPublicClass:HistoryMetadataGroupFragmentStore.kt$HistoryMetadataGroupFragmentAction$Select : HistoryMetadataGroupFragmentAction</ID>
     <ID>UndocumentedPublicClass:HistoryMetadataGroupFragmentStore.kt$HistoryMetadataGroupFragmentAction$UpdateHistoryItems : HistoryMetadataGroupFragmentAction</ID>
     <ID>UndocumentedPublicClass:HistoryMetadataService.kt$DefaultHistoryMetadataService : HistoryMetadataService</ID>
-    <ID>UndocumentedPublicClass:HistorySearchController.kt$HistorySearchDialogController : HistorySearchController</ID>
-    <ID>UndocumentedPublicClass:HistorySearchDialogFragment.kt$HistorySearchDialogFragment : AppCompatDialogFragmentUserInteractionHandler</ID>
-    <ID>UndocumentedPublicClass:HistorySearchFragmentStore.kt$HistorySearchFragmentAction$UpdateQuery : HistorySearchFragmentAction</ID>
     <ID>UndocumentedPublicClass:HomeFragment.kt$HomeFragment : Fragment</ID>
     <ID>UndocumentedPublicClass:HomeMenu.kt$HomeMenu</ID>
     <ID>UndocumentedPublicClass:HomeMenu.kt$HomeMenu$Item</ID>
@@ -251,8 +245,6 @@
     <ID>UndocumentedPublicClass:MetricsService.kt$MetricServiceType</ID>
     <ID>UndocumentedPublicClass:MetricsService.kt$MetricsService</ID>
     <ID>UndocumentedPublicClass:MetricsUtils.kt$MetricsUtils</ID>
-    <ID>UndocumentedPublicClass:Mode.kt$Mode$Normal : Mode</ID>
-    <ID>UndocumentedPublicClass:Mode.kt$Mode$Private : Mode</ID>
     <ID>UndocumentedPublicClass:MozillaProductDetector.kt$MozillaProductDetector</ID>
     <ID>UndocumentedPublicClass:MozillaProductDetector.kt$MozillaProductDetector$MozillaProducts</ID>
     <ID>UndocumentedPublicClass:NewTabShortcutIntentProcessor.kt$NewTabShortcutIntentProcessor : IntentProcessor</ID>
@@ -439,7 +431,6 @@
     <ID>UndocumentedPublicClass:ToolbarMenu.kt$ToolbarMenu.Item$Share : Item</ID>
     <ID>UndocumentedPublicClass:ToolbarMenu.kt$ToolbarMenu.Item$Stop : Item</ID>
     <ID>UndocumentedPublicClass:ToolbarMenu.kt$ToolbarMenu.Item$SyncAccount : Item</ID>
-    <ID>UndocumentedPublicClass:ToolbarPopupWindow.kt$ToolbarPopupWindow</ID>
     <ID>UndocumentedPublicClass:TopSiteItemMenu.kt$TopSiteItemMenu$Item</ID>
     <ID>UndocumentedPublicClass:TopSiteItemMenu.kt$TopSiteItemMenu.Item$OpenInPrivateTab : Item</ID>
     <ID>UndocumentedPublicClass:TopSiteItemMenu.kt$TopSiteItemMenu.Item$RemoveTopSite : Item</ID>
@@ -480,7 +471,6 @@
     <ID>UndocumentedPublicFunction:AddonPermissionDetailsBindingDelegate.kt$AddonPermissionDetailsBindingDelegate$fun bind(addon: Addon)</ID>
     <ID>UndocumentedPublicFunction:AppRequestInterceptor.kt$AppRequestInterceptor$fun setNavigationController(navController: NavController)</ID>
     <ID>UndocumentedPublicFunction:AppViewHolder.kt$AppViewHolder$fun bind(item: AppShareOption)</ID>
-    <ID>UndocumentedPublicFunction:AwesomeBarView.kt$AwesomeBarView$fun update(state: HistorySearchFragmentState)</ID>
     <ID>UndocumentedPublicFunction:AwesomeBarView.kt$AwesomeBarView$fun update(state: SearchFragmentState)</ID>
     <ID>UndocumentedPublicFunction:AwesomeBarView.kt$AwesomeBarView$fun updateSuggestionProvidersVisibility( state: SearchProviderState, )</ID>
     <ID>UndocumentedPublicFunction:AwesomeBarView.kt$fun SearchFragmentState.toSearchProviderState()</ID>
@@ -620,22 +610,9 @@
     <ID>UndocumentedPublicFunction:GroupableRadioButton.kt$GroupableRadioButton$fun updateRadioValue(isChecked: Boolean)</ID>
     <ID>UndocumentedPublicFunction:GroupableRadioButton.kt$fun Iterable&lt;GroupableRadioButton&gt;.uncheckAll()</ID>
     <ID>UndocumentedPublicFunction:HistoryAdapter.kt$HistoryAdapter$fun updateMode(mode: HistoryFragmentState.Mode)</ID>
-    <ID>UndocumentedPublicFunction:HistoryController.kt$HistoryController$fun handleBackPressed(): Boolean</ID>
-    <ID>UndocumentedPublicFunction:HistoryController.kt$HistoryController$fun handleDeleteSome(items: Set&lt;History&gt;)</ID>
-    <ID>UndocumentedPublicFunction:HistoryController.kt$HistoryController$fun handleDeselect(item: History)</ID>
-    <ID>UndocumentedPublicFunction:HistoryController.kt$HistoryController$fun handleEnterRecentlyClosed()</ID>
-    <ID>UndocumentedPublicFunction:HistoryController.kt$HistoryController$fun handleModeSwitched()</ID>
-    <ID>UndocumentedPublicFunction:HistoryController.kt$HistoryController$fun handleOpen(item: History)</ID>
-    <ID>UndocumentedPublicFunction:HistoryController.kt$HistoryController$fun handleRequestSync()</ID>
-    <ID>UndocumentedPublicFunction:HistoryController.kt$HistoryController$fun handleSearch()</ID>
-    <ID>UndocumentedPublicFunction:HistoryController.kt$HistoryController$fun handleSelect(item: History)</ID>
     <ID>UndocumentedPublicFunction:HistoryItemTimeGroup.kt$HistoryItemTimeGroup$fun humanReadable(context: Context): String</ID>
     <ID>UndocumentedPublicFunction:HistoryMetadataGroupAdapter.kt$HistoryMetadataGroupAdapter$fun updateData(items: List&lt;History.Metadata&gt;)</ID>
     <ID>UndocumentedPublicFunction:HistoryMetadataService.kt$fun TabSessionState.toHistoryMetadataKey(searchTerms: String?, referrerUrl: String?): HistoryMetadataKey</ID>
-    <ID>UndocumentedPublicFunction:HistorySearchController.kt$HistorySearchController$fun handleEditingCancelled()</ID>
-    <ID>UndocumentedPublicFunction:HistorySearchController.kt$HistorySearchController$fun handleTextChanged(text: String)</ID>
-    <ID>UndocumentedPublicFunction:HistorySearchController.kt$HistorySearchController$fun handleUrlTapped(url: String, flags: LoadUrlFlags = LoadUrlFlags.none())</ID>
-    <ID>UndocumentedPublicFunction:HistorySearchFragmentStore.kt$fun createInitialHistorySearchFragmentState(): HistorySearchFragmentState</ID>
     <ID>UndocumentedPublicFunction:HistoryView.kt$HistoryView$fun update(state: HistoryFragmentState)</ID>
     <ID>UndocumentedPublicFunction:HomeActivity.kt$HomeActivity$@Suppress("SpreadOperator") fun setupNavigationToolbar(vararg topLevelDestinationIds: Int)</ID>
     <ID>UndocumentedPublicFunction:HomeActivity.kt$HomeActivity$fun finishActionMode()</ID>
@@ -683,7 +660,6 @@
     <ID>UndocumentedPublicFunction:MetricsService.kt$MetricsService$fun start()</ID>
     <ID>UndocumentedPublicFunction:MetricsService.kt$MetricsService$fun stop()</ID>
     <ID>UndocumentedPublicFunction:MetricsService.kt$MetricsService$fun track(event: Event)</ID>
-    <ID>UndocumentedPublicFunction:Mode.kt$Mode.Companion$fun fromBrowsingMode(browsingMode: BrowsingMode)</ID>
     <ID>UndocumentedPublicFunction:MozillaProductDetector.kt$MozillaProductDetector$fun getInstalledMozillaProducts(context: Context): List&lt;String&gt;</ID>
     <ID>UndocumentedPublicFunction:MozillaProductDetector.kt$MozillaProductDetector$fun packageIsInstalled(context: Context, packageName: String): Boolean</ID>
     <ID>UndocumentedPublicFunction:NavController.kt$fun NavController.alreadyOnDestination(@IdRes destId: Int?): Boolean</ID>
@@ -759,7 +735,6 @@
     <ID>UndocumentedPublicFunction:SearchDialogController.kt$SearchController$fun handleExistingSessionSelected(tabId: String)</ID>
     <ID>UndocumentedPublicFunction:SearchDialogController.kt$SearchController$fun handleSearchEngineSuggestionClicked(searchEngine: SearchEngine)</ID>
     <ID>UndocumentedPublicFunction:SearchDialogController.kt$SearchController$fun handleSearchShortcutEngineSelected(searchEngine: SearchEngine)</ID>
-    <ID>UndocumentedPublicFunction:SearchDialogController.kt$SearchController$fun handleSearchShortcutsButtonClicked()</ID>
     <ID>UndocumentedPublicFunction:SearchDialogController.kt$SearchController$fun handleSearchTermsTapped(searchTerms: String)</ID>
     <ID>UndocumentedPublicFunction:SearchDialogController.kt$SearchController$fun handleTextChanged(text: String)</ID>
     <ID>UndocumentedPublicFunction:SearchDialogController.kt$SearchController$fun handleUrlCommitted(url: String, fromHomeScreen: Boolean = false)</ID>
@@ -830,7 +805,6 @@
     <ID>UndocumentedPublicFunction:StartupTypeTelemetry.kt$StartupTypeTelemetry$fun attachOnHomeActivityOnCreate(lifecycle: Lifecycle)</ID>
     <ID>UndocumentedPublicFunction:StorageStatsMetrics.kt$StorageStatsMetrics$@OptIn(DelicateCoroutinesApi::class) // GlobalScope usage fun report(context: Context)</ID>
     <ID>UndocumentedPublicFunction:StorageStatsMetrics.kt$StorageStatsMetrics$@VisibleForTesting(otherwise = PRIVATE) @WorkerThread // queryStatsForUid fun reportSync(context: Context)</ID>
-    <ID>UndocumentedPublicFunction:StoreProvider.kt$StoreProvider.Companion$fun &lt;T : Store&lt;*, *&gt;&gt; get(owner: ViewModelStoreOwner, createStore: () -&gt; T): T</ID>
     <ID>UndocumentedPublicFunction:StudiesView.kt$StudiesView$@Suppress("TooGenericExceptionCaught", "ApplySharedPref") fun bind()</ID>
     <ID>UndocumentedPublicFunction:SupportUtils.kt$SupportUtils$fun createAuthCustomTabIntent(context: Context, url: String): Intent</ID>
     <ID>UndocumentedPublicFunction:SupportUtils.kt$SupportUtils$fun createCustomTabIntent(context: Context, url: String): Intent</ID>
@@ -863,7 +837,6 @@
     <ID>UndocumentedPublicFunction:ToolbarIntegration.kt$ToolbarIntegration$fun invalidateMenu()</ID>
     <ID>UndocumentedPublicFunction:ToolbarPopupWindow.kt$ToolbarPopupWindow$fun show( view: WeakReference&lt;View&gt;, customTabId: String? = null, handlePasteAndGo: (String) -&gt; Unit, handlePaste: (String) -&gt; Unit, copyVisible: Boolean = true, )</ID>
     <ID>UndocumentedPublicFunction:ToolbarView.kt$ToolbarView$fun update(searchState: SearchFragmentState)</ID>
-    <ID>UndocumentedPublicFunction:ToolbarView.kt$ToolbarView$fun update(state: HistorySearchFragmentState)</ID>
     <ID>UndocumentedPublicFunction:TopPlaceholderViewHolder.kt$TopPlaceholderViewHolder$fun bind()</ID>
     <ID>UndocumentedPublicFunction:TopSiteItemViewHolder.kt$TopSiteItemViewHolder$fun bind(topSite: TopSite, position: Int)</ID>
     <ID>UndocumentedPublicFunction:TopSitePagerViewHolder.kt$TopSitePagerViewHolder$fun bind(topSites: List&lt;TopSite&gt;)</ID>

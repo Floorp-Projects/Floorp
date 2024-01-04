@@ -290,7 +290,7 @@ If your build fails, you may find you get more instructive error messages by att
 # Coding Standards #
 
 ## Style ##
-We follow the style enforced by [ktlint](https://ktlint.github.io/) and [detekt](https://arturbosch.github.io/detekt/). See [how to configure Android Studio appropriately](https://github.com/pinterest/ktlint#option-1-recommended).
+We follow the style enforced by [ktlint](https://ktlint.github.io/) and [detekt](https://github.com/detekt/detekt). See [how to configure Android Studio appropriately](https://github.com/pinterest/ktlint#option-1-recommended).
 
 To check your style, run:
 

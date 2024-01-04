@@ -6,12 +6,12 @@
 <SmellBaseline>
   <ManuallySuppressedIssues></ManuallySuppressedIssues>
   <CurrentIssues>
+    <ID>AbsentOrWrongFileLicense:LocalesList.kt$org.mozilla.focus.generated.LocalesList.kt</ID>
     <ID>CollapsibleIfStatements:MainActivity.kt$MainActivity$if (!isTaskRoot) { if (intent.hasCategory(Intent.CATEGORY_LAUNCHER) &amp;&amp; Intent.ACTION_MAIN == intent.action) { finish() return } }</ID>
     <ID>CollapsibleIfStatements:UrlInputFragment.kt$UrlInputFragment.&lt;no name provided&gt;$if (reverse) { if (isOverlay) { dismiss() } }</ID>
     <ID>EmptyFunctionBlock:AutocompleteListFragment.kt$AutocompleteListFragment.&lt;no name provided&gt;${}</ID>
     <ID>EmptyFunctionBlock:ExceptionsListFragment.kt$ExceptionsListFragment.&lt;no name provided&gt;${}</ID>
     <ID>EmptyFunctionBlock:FirstrunFragment.kt$FirstrunFragment.&lt;no name provided&gt;${}</ID>
-    <ID>LongParameterList:FullScreenIntegration.kt$FullScreenIntegration$( val activity: Activity, val store: BrowserStore, tabId: String?, sessionUseCases: SessionUseCases, private val settings: Settings, private val toolbarView: BrowserToolbar, private val statusBar: View, private val engineView: EngineView, )</ID>
     <ID>MayBeConst:CrashReporterFragment.kt$CrashReporterFragment.Companion$val FRAGMENT_TAG = "crash-reporter"</ID>
     <ID>MayBeConst:IconGenerator.kt$IconGenerator.Companion$private val DEFAULT_ICON_CHAR = '?'</ID>
     <ID>MayBeConst:IconGenerator.kt$IconGenerator.Companion$private val TEXT_SIZE_DP = 36f</ID>
@@ -24,7 +24,6 @@
     <ID>OutdatedDocumentation:AppState.kt$AppState : State</ID>
     <ID>OutdatedDocumentation:AppState.kt$Screen</ID>
     <ID>OutdatedDocumentation:AppState.kt$Screen$Locked : Screen</ID>
-    <ID>OutdatedDocumentation:BlockedTrackersMiddleware.kt$BlockedTrackersMiddleware : Middleware</ID>
     <ID>OutdatedDocumentation:DefaultTopSitesStorage.kt$DefaultTopSitesStorage : TopSitesStorageObservable</ID>
     <ID>OutdatedDocumentation:FocusDialog.kt$@Suppress("LongParameterList") @Composable fun FocusDialog( dialogTitle: String, dialogTextComposable: @Composable (() -&gt; Unit)? = null, dialogText: String = "", onConfirmRequest: () -&gt; Unit, onDismissRequest: () -&gt; Unit, confirmButtonText: String = "null", dismissButtonText: String = "null", isConfirmButtonEnabled: Boolean = true, isDismissButtonEnabled: Boolean = true, isConfirmButtonVisible: Boolean = true, isDismissButtonVisible: Boolean = true, )</ID>
     <ID>OutdatedDocumentation:HtmlLoader.kt$HtmlLoader$fun loadResourceFile( context: Context, @RawRes resourceID: Int, substitutionTable: Map&lt;String, String&gt;, ): String</ID>

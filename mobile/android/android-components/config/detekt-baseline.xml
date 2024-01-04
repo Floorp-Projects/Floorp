@@ -56,7 +56,6 @@
     <ID>UndocumentedPublicClass:InlineAutocompleteEditText.kt$InlineAutocompleteEditText$AutocompleteResult</ID>
     <ID>UndocumentedPublicClass:IntentReceiverActivity.kt$IntentReceiverActivity : Activity</ID>
     <ID>UndocumentedPublicClass:Jexl.kt$Jexl</ID>
-    <ID>UndocumentedPublicClass:LogSink.kt$LogSink</ID>
     <ID>UndocumentedPublicClass:LoginFragment.kt$LoginFragment : Fragment</ID>
     <ID>UndocumentedPublicClass:LoginFragment.kt$LoginFragment$OnLoginCompleteListener</ID>
     <ID>UndocumentedPublicClass:MainActivity.kt$MainActivity : AppCompatActivity</ID>
@@ -245,7 +244,6 @@
     <ID>UndocumentedPublicFunction:JexlValue.kt$JexlValue$abstract operator fun plus(other: JexlValue): JexlValue</ID>
     <ID>UndocumentedPublicFunction:JexlValue.kt$JexlValue$abstract operator fun times(other: JexlValue): JexlValue</ID>
     <ID>UndocumentedPublicFunction:Log.kt$Log$@VisibleForTesting fun reset()</ID>
-    <ID>UndocumentedPublicFunction:LogSink.kt$LogSink$fun log( priority: Log.Priority = Log.Priority.DEBUG, tag: String? = null, throwable: Throwable? = null, message: String? = null, )</ID>
     <ID>UndocumentedPublicFunction:LoginFragment.kt$LoginFragment.Companion$fun create(authUrl: String, redirectUrl: String): LoginFragment</ID>
     <ID>UndocumentedPublicFunction:LoginFragment.kt$LoginFragment.OnLoginCompleteListener$fun onLoginComplete(code: String, state: String, action: String, fragment: LoginFragment)</ID>
     <ID>UndocumentedPublicFunction:LoginFragment.kt$LoginFragment.OnLoginCompleteListener$fun onLoginComplete(code: String, state: String, fragment: LoginFragment)</ID>
