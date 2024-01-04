@@ -1341,7 +1341,9 @@ class _ASRouter {
       message.skip_in_tests &&
       // `this.messagesEnabledInAutomation` should be stubbed in tests
       !this.messagesEnabledInAutomation?.includes(message.id) &&
-      (Cu.isInAutomation || Services.env.exists("XPCSHELL_TEST_PROFILE_DIR"))
+      (Cu.isInAutomation ||
+        Services.env.exists("XPCSHELL_TEST_PROFILE_DIR") ||
+        Services.env.get("MOZ_AUTOMATION"))
     ) {
       lazy.log.debug(
         `Skipping message ${message.id} because ${message.skip_in_tests}`
