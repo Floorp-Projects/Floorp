@@ -33,7 +33,7 @@
     <!-- Description for browser_setting permission. -->
     <string name="mozac_feature_addons_permissions_browser_setting_description">Të lexojë dhe ndryshojë rregullime shfletuesi</string>
     <!-- Description for browser_data permission. -->
-    <string name="mozac_feature_addons_permissions_browser_data_description">Të spastrojë historikun e shfletimeve së fundi, cookies dhe të dhënat përkatëse</string>
+    <string name="mozac_feature_addons_permissions_browser_data_description">Të spastrojë historikun e shfletimeve së fundi, “cookies” dhe të dhënat përkatëse</string>
     <!-- Description for clipboard_read permission. -->
     <string name="mozac_feature_addons_permissions_clipboard_read_description">Të marrë të dhëna nga e papastra</string>
     <!-- Description for clipboard_write permission. -->
@@ -75,7 +75,7 @@
     <!-- The author of an add-on. -->
     <string name="mozac_feature_addons_author">Autor</string>
     <!-- The authors of an add-on. -->
-    <string name="mozac_feature_addons_authors" moz:removedIn="120" tools:ignore="UnusedResources">Autorë</string>
+    <string name="mozac_feature_addons_authors" moz:removedIn="123" tools:ignore="UnusedResources">Autorë</string>
     <!-- The last date that the add-on was updated. -->
     <string name="mozac_feature_addons_last_updated">Përditësuar së fundi më</string>
     <!-- The developer website (Homepage) of the add-on. -->

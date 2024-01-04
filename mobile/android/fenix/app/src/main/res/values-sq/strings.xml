@@ -60,7 +60,7 @@
     <!-- Private Browsing -->
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="private_browsing_placeholder_description_2">%1$s e spastron historikun tuaj të kërkimeve dhe shfletimit prej skedash private, kur i mbyllni ato, ose dilni nga aplikacioni. Edhe pse kjo s’ju bën anonim përballë sajteve apo furnizuesit të shërbimit tuaj internet, e bën më të lehtë mbajtjen private të asaj çka bëni në internet, nga cilido tjetër që përdor këtë pajisje.</string>
+    <string name="private_browsing_placeholder_description_2">%1$s-u e spastron historikun tuaj të kërkimeve dhe shfletimit prej skedash private, kur i mbyllni ato, ose dilni nga aplikacioni. Edhe pse kjo s’ju bën anonim përballë sajteve apo furnizuesit të shërbimit tuaj internet, e bën më të lehtë mbajtjen private të asaj çka bëni në internet, nga cilido tjetër që përdor këtë pajisje.</string>
     <string name="private_browsing_common_myths">
        Mite të rëndomtë mbi shfletimin privat
     </string>
@@ -68,11 +68,6 @@
     <!-- True Private Browsing Mode -->
     <!-- Title for info card on private homescreen in True Private Browsing Mode. -->
     <string name="felt_privacy_desc_card_title">Mos lini gjurmë në këtë pajisje</string>
-    <!-- Explanation for private browsing displayed to users on home view when they first enable
-        private mode in our new Total Private Browsing mode.
-        The first parameter is the name of the app defined in app_name (for example: Firefox Nightly)
-        The second parameter is the clickable link text in felt_privacy_info_card_subtitle_link_text -->
-    <string name="felt_privacy_info_card_subtitle" moz:removedIn="120" tools:ignore="UnusedResources">%1$s fshin cookie-t, historikun dhe të dhëna sajti tuajat, kur mbyllni krejt dritaret tuaja private. %2$s</string>
     <!-- Explanation for private browsing displayed to users on home view when they first enable
         private mode in our new Total Private Browsing mode.
         The first parameter is the name of the app defined in app_name (for example: Firefox Nightly)
@@ -287,7 +282,7 @@
     <string name="search_settings_menu_item">Rregullime mbi kërkimin</string>
 
     <!-- Header text for the search selector menu -->
-    <string name="search_header_menu_item_2">Këtë herë kërko te:</string>
+    <string name="search_header_menu_item_2">Këtë herë kërko me:</string>
 
     <!-- Content description (not visible, for screen readers etc.): Search engine icon. The first parameter is the search engine name (for example: DuckDuckGo). -->
     <string name="search_engine_icon_content_description" tools:ignore="UnusedResources">Motor kërkimesh %s</string>
@@ -327,14 +322,8 @@
     <string name="onboarding_home_enable_notifications_negative_button">Jo tani</string>
 
     <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
-    <!-- Title for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
-        Note: The word "Firefox" should NOT be translated -->
-    <string name="juno_onboarding_default_browser_title_nimbus" moz:removedIn="120" tools:ignore="UnusedResources">Bëjeni Firefox-in shfletuesin tuaj të zemrës</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_title_nimbus_2">Duam fort t’ju mbajmë të parrezik</string>
-    <!-- Description for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
-        Note: The word "Firefox" should NOT be translated -->
-    <string name="juno_onboarding_default_browser_description_nimbus" moz:removedIn="120" tools:ignore="UnusedResources">Firefox-i vë njerëzit mbi fitimet dhe mbron privatësinë tuaj duke bllokuar gjurmues “nga sajti në sajt”.\n\nMësoni më tepër te shënimi ynë mbi privatësinë.</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_description_nimbus_2">Shfletuesi ynë, me entin jofitimprurës nga pas, ndihmon të ndalen shoqëri t’ju ndjekin fshehtazi nëpër internet.\n\nMësoni më tepër te shënimi ynë mbi privatësinë.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
@@ -344,13 +333,9 @@
     <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">Vëre si shfletuesin parazgjedhje</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
     <string name="juno_onboarding_default_browser_negative_button" tools:ignore="UnusedResources">Jo tani</string>
-    <!-- Title for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_title" moz:removedIn="120" tools:ignore="UnusedResources">Kaloni nga telefoni në portativ, ose anasjelltas</string>
 
     <!-- Title for sign in to sync screen. -->
     <string name="juno_onboarding_sign_in_title_2">Jini i fshehtëzuar, kur hidheni nga një pajisje në tjetrën</string>
-    <!-- Description for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_description" moz:removedIn="120" tools:ignore="UnusedResources">Merrni skeda dhe fjalëkalime nga pajisjet tuaja të tjera, për të vazhduar atje ku e latë.</string>
     <!-- Description for sign in to sync screen. Nimbus experiments do not support string placeholders.
      Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_sign_in_description_2">Kur keni bërë hyrjen në llogari dhe njëkohësim, jeni më të siguruar. Firefox-i fshehtëzon fjalëkalimet tuaja, faqerojtësit, etj.</string>
@@ -360,13 +345,7 @@
     <string name="juno_onboarding_sign_in_negative_button" tools:ignore="UnusedResources">Jo tani</string>
     <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
-    <string name="juno_onboarding_enable_notifications_title_nimbus" moz:removedIn="120" tools:ignore="UnusedResources">Njoftimet ju ndihmojnë të arrini më tepër gjëra me Firefox-in</string>
-    <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
-        Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_enable_notifications_title_nimbus_2">Njoftimet ju ndihmojnë të jini më të parrezik në Firefox</string>
-    <!-- Description for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
-       Note: The word "Firefox" should NOT be translated -->
-    <string name="juno_onboarding_enable_notifications_description_nimbus" moz:removedIn="120" tools:ignore="UnusedResources">Dërgoni skeda nga pajisje në pajisje, administroni shkarkime dhe merrni ndihmëza se si të përfitoni maksimumin nga Firefox-i.</string>
     <!-- Description for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
        Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_enable_notifications_description_nimbus_2">Dërgoni në mënyrë të siguruar skeda mes pajisjeve tuaja dhe zbuloni veçori të reja privatësie në Firefox.</string>
@@ -409,8 +388,6 @@
     <!-- Preference category for settings related to changing the default search engine -->
     <string name="preferences_category_select_default_search_engine">Përzgjidhni një</string>
     <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
-    <string name="preferences_manage_search_shortcuts" moz:removedIn="120" tools:ignore="UnusedResources">Administroni shkurtore kërkimi</string>
-    <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
     <string name="preferences_manage_search_shortcuts_2">Administroni motorë alternativë kërkimesh</string>
     <!-- Summary for preference for settings related to managing search shortcuts for the quick search menu -->
     <string name="preferences_manage_search_shortcuts_summary">Përpunoni dukshmëri motorësh te menuja e kërkimeve</string>
@@ -424,8 +401,6 @@
     <string name="preferences_search_engines">Motorë kërkimesh</string>
     <!-- Preference for settings related to Search engines suggestions-->
     <string name="preferences_search_engines_suggestions">Sugjerime prej motorësh kërkimi</string>
-    <!-- Preference for settings related to Search address bar -->
-    <string name="preferences_search_address_bar" moz:removedIn="120" tools:ignore="UnusedResources">Shtyllë adresash</string>
     <!-- Preference Category for settings related to Search address bar -->
     <string name="preferences_settings_address_bar">Parapëlqime shtylle adresash</string>
     <!-- Preference Category for settings to Firefox Suggest -->
@@ -452,7 +427,7 @@
     <!-- Preference for allowing screenshots to be taken while in a private tab-->
     <string name="preferences_allow_screenshots_in_private_mode">Lejo foto ekrani nën shfletim privat</string>
     <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
-    <string name="preferences_screenshots_in_private_mode_disclaimer">Në u lejoftë, skedat private do të jenë të dukshme edhe kur janë hapur aplikacione të shumtë</string>
+    <string name="preferences_screenshots_in_private_mode_disclaimer">Në u lejoftë, skedat private do të jenë të dukshme edhe kur janë të hapur aplikacione të shumtë</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Shtoni shkurtore shfletimi privat</string>
     <!-- Preference for enabling "HTTPS-Only" mode -->
@@ -548,14 +523,10 @@
     <string name="errorpage_httpsonly_message_summary">Por, është gjithashtu e mundshme që të jetë dora e ndonjë agresori. Nëse vazhdoni te sajti, s’duhet të jepni ndonjë të dhënë rezervat. Nëse vazhdoni, mënyra Vetëm-HTTPS do të çaktivizohet përkohësisht për sajtin.</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Përdorim nga persona me aftësi të kufizuara</string>
-    <!-- Preference to override the Firefox Account server -->
-    <string name="preferences_override_fxa_server" moz:RemovedIn="120" tools:ignore="UnusedResources">Shërbyes vetjak Llogarish Firefox</string>
     <!-- Preference to override the Mozilla account server -->
     <string name="preferences_override_account_server">Shërbyes vetjak llogarish Mozilla</string>
     <!-- Preference to override the Sync token server -->
     <string name="preferences_override_sync_tokenserver">Shërbyes vetjak Sync</string>
-    <!-- Toast shown after updating the FxA/Sync server override preferences -->
-    <string name="toast_override_fxa_sync_server_done" moz:RemovedIn="120" tools:ignore="UnusedResources">Shërbyesi Llogari Firefox/Sync u ndryshua. Po dilet nga aplikacioni për të zbatuar ndryshimet…</string>
     <!-- Toast shown after updating the Mozilla account/Sync server override preferences -->
     <string name="toast_override_account_sync_server_done">U ndryshua llogari Mozilla/shërbyes Njëkohësimesh. Po mbyllet aplikacioni, për të aplikuar ndryshimet…</string>
     <!-- Preference category for account information -->
@@ -573,8 +544,6 @@
     <!-- Preference description for banner about signing in -->
     <string name="preferences_sign_in_description_2">Bëni hyrjen, që të njëkohësoni skeda, faqerojtës, fjalëkalime, etj.</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
-    <string name="preferences_account_default_name" moz:RemovedIn="120" tools:ignore="UnusedResources">Llogari Firefox</string>
-    <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name_2">Llogari Mozilla</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
     <string name="preferences_account_sync_error">Rilidhuni për të vazhduar njëkohësimin</string>
@@ -586,8 +555,6 @@
     <string name="preferences_data_collection">Grumbullim të dhënash</string>
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">Diagnostikim së largëti përmes USB-je</string>
-    <!-- Preference title for switch preference to show search engines -->
-    <string name="preferences_show_search_engines" moz:RemovedIn="120" tools:ignore="UnusedResources">Shfaq motorë kërkimi</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Shfaq sugjerime kërkimi</string>
     <!-- Preference title for switch preference to show voice search button -->
@@ -642,9 +609,9 @@
     <string name="preferences_notifications">Njoftime</string>
 
     <!-- Summary for notification preference indicating notifications are allowed -->
-    <string name="notifications_allowed_summary">E lejuar</string>
+    <string name="notifications_allowed_summary">Të lejuar</string>
     <!-- Summary for notification preference indicating notifications are not allowed -->
-    <string name="notifications_not_allowed_summary">E palejuar</string>
+    <string name="notifications_not_allowed_summary">Nuk lejohen</string>
 
     <!-- Add-on Preferences -->
     <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
@@ -718,12 +685,6 @@
     <string name="addon_ga_message_body" tools:ignore="UnusedResources">Shihni mbi 100 zgjerime të reja që ju lejojnë ta bëni Firefox-in si e doni.</string>
     <!-- Button text of the Nimbus message for add-ons general availability. -->
     <string name="addon_ga_message_button" tools:ignore="UnusedResources">Eksploroni shtesa</string>
-
-    <!-- Add-on Installation from AMO-->
-    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
-    <string name="addon_not_supported_error" moz:removedIn="120" tools:ignore="UnusedResources">Shtesa nuk mbulohet</string>
-    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is already installed -->
-    <string name="addon_already_installed" moz:removedIn="120" tools:ignore="UnusedResources">Shtesa është tashmë e instaluar</string>
 
     <!-- Add-on process crash dialog to user -->
     <!-- Title of a dialog shown to the user when enough errors have occurred with addons and they need to be temporarily disabled -->
@@ -930,7 +891,7 @@
 
     <!-- Opening screen -->
     <!-- Title of a preference that allows a user to choose what screen to show after opening the app -->
-    <string name="preferences_opening_screen">Skenën hyrëse</string>
+    <string name="preferences_opening_screen">Skenë hyrëse</string>
     <!-- Option for always opening the homepage when re-opening the app -->
     <string name="opening_screen_homepage">Faqen hyrëse</string>
     <!-- Option for always opening the user's last-open tab when re-opening the app -->
@@ -938,7 +899,7 @@
     <!-- Option for always opening the homepage when re-opening the app after four hours of inactivity -->
     <string name="opening_screen_after_four_hours_of_inactivity">Faqe hyrëse pas katër orësh plogështie</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
-    <string name="close_tabs_manually_summary">Mbylleni dorazi</string>
+    <string name="close_tabs_manually_summary">Mbyllini dorazi</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
     <string name="close_tabs_after_one_day_summary">Mbylle pas një dite</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one week-->
@@ -1464,7 +1425,7 @@
         number of history items the user has -->
     <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d adresa</string>
     <!-- Title for the cookies and site data items in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_cookies_and_site_data">Cookies dhe të dhëna sajtesh</string>
+    <string name="preferences_delete_browsing_data_cookies_and_site_data">“Cookies” dhe të dhëna sajtesh</string>
     <!-- Subtitle for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies_subtitle">Do të bëhet dalja juaj nga shumica e sajteve</string>
     <!-- Title for the cached images and files item in Delete browsing data -->
@@ -1586,11 +1547,11 @@
     <string name="preference_enhanced_tracking_protection_custom_info_button">Ç’bllokohet nga mbrojtje vetjake kundër gjurmimit</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
     <!-- Preference for enhanced tracking protection for the custom protection settings for cookies-->
-    <string name="preference_enhanced_tracking_protection_custom_cookies">Cookies</string>
+    <string name="preference_enhanced_tracking_protection_custom_cookies">“Cookies”</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies_1">Gjurmues nga sajte në sajte dhe mediash shoqërore</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
-    <string name="preference_enhanced_tracking_protection_custom_cookies_2">Cookies nga sajte të pavizituar</string>
+    <string name="preference_enhanced_tracking_protection_custom_cookies_2">“Cookies” nga sajte të pavizituar</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies_3">Krejt cookie-t nga palë të treta (mund të shkaktojë mosfunksionim të disa sajteve)</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
@@ -1610,7 +1571,7 @@
     <!-- Button label for navigating to the Enhanced Tracking Protection details -->
     <string name="enhanced_tracking_protection_details">Hollësi</string>
     <!-- Header for categories that are being being blocked by current Enhanced Tracking Protection settings -->
-    <string name="enhanced_tracking_protection_blocked">Të bllokuara</string>
+    <string name="enhanced_tracking_protection_blocked">Të bllokuar</string>
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_allowed">Të lejuara</string>
     <!-- Category of trackers (social media trackers) that can be blocked by Enhanced Tracking Protection -->
@@ -1618,21 +1579,21 @@
     <!-- Description of social media trackers that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_social_media_trackers_description">Kufizon aftësinë e rrjeteve shoqërorë të gjurmojnë nëpër internet veprimtarinë tuaj të shfletimit.</string>
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_cookies_title">&lt;em&gt;Cookies&lt;/em&gt; Gjurmimi Nga Sajte Në Sajte</string>
+    <string name="etp_cookies_title">”Cookies” Gjurmimi Nga Sajte Në Sajte</string>
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_title_2">“Cookies” Nga Palë të Treta</string>
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_cookies_description">Bllokon &lt;em&gt;cookies&lt;/em&gt; të cilat rrjete reklamash dhe shoqëri analizimesh i përdorin për të përpiluar të dhëna tuajat të shfletimit nëpër mjaft sajte.</string>
+    <string name="etp_cookies_description">Bllokon ”cookies” të cilat rrjete reklamash dhe shoqëri analizimesh i përdorin për të përpiluar të dhëna tuajat të shfletimit nëpër mjaft sajte.</string>
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_description_2">Mbrojtja Tërësore Nga Cookie-t i izolon “cookies” te sajti ku gjendeni, që gjurmuesit të mos i përdorin dot për t’ju ndjekur nga një sajt te tjetri.</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_title">Nxjerrës kriptomonedhash</string>
     <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_cryptominers_description">Parandalon hyrjen në pajisjen tuaj të programtheve dashakeqe për qëllime nxjerrje monedhe dixhitale.</string>
+    <string name="etp_cryptominers_description">Parandalon hyrjen në pajisjen tuaj të programtheve dashakeqe për qëllime nxjerrje monedhash dixhitale.</string>
     <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_fingerprinters_title">Krijues shenja gishtash</string>
+    <string name="etp_fingerprinters_title">Krijues shenjash gishtash</string>
     <!-- Description of fingerprinters that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_fingerprinters_description">Ndal grumbullim të dhënash që lejojnë identifikim unik rreth pajisjes tuaj, që mund të përdoren për qëllime gjurmimi.</string>
+    <string name="etp_fingerprinters_description">Ndalon grumbullim të dhënash që lejojnë identifikim unik rreth pajisjes tuaj, të cilat mund të përdoren për qëllime gjurmimi.</string>
     <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_title">Lëndë Gjurmimi</string>
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
@@ -1656,7 +1617,7 @@
     <!-- Category of trackers (redirect trackers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_redirect_trackers_title">Gjurmues Ridrejtimesh</string>
     <!-- Description of redirect tracker cookies that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_redirect_trackers_description">Spastron cookies të depozituara nga ridrejtime për te sajte të njohur për gjurmim.</string>
+    <string name="etp_redirect_trackers_description">Spastron “cookies” të depozituara nga ridrejtime për te sajte të ditur se gjurmojnë.</string>
 
     <!-- Description of the SmartBlock Enhanced Tracking Protection feature. The * symbol is intentionally hardcoded here,
          as we use it on the UI to indicate which trackers have been partially unblocked.  -->
@@ -1811,7 +1772,7 @@
     <!-- Preference and title for managing the settings for credit cards -->
     <string name="preferences_credit_cards">Karta krediti</string>
     <!-- Preference for saving and autofilling credit cards -->
-    <string name="preferences_credit_cards_save_and_autofill_cards">Ruaj dhe plotësoni vetvetiu të dhëna kartash</string>
+    <string name="preferences_credit_cards_save_and_autofill_cards">Ruaj dhe plotëso vetvetiu të dhëna kartash</string>
     <!-- Preference summary for saving and autofilling credit card data -->
     <string name="preferences_credit_cards_save_and_autofill_cards_summary">Të dhënat janë të fshehtëzuara</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
@@ -1934,27 +1895,17 @@
     <string name="search_engine_add_custom_search_engine_button_content_description">Shtoni motor të ri kërkimesh</string>
     <!-- Title of the Edit search engine screen -->
     <string name="search_engine_edit_custom_search_engine_title">Përpunoni motor kërkimesh</string>
-    <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
-    <string name="search_engine_add_button_content_description" moz:RemovedIn="120" tools:ignore="UnusedResources">Shtoje</string>
-    <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
-    <string name="search_engine_add_custom_search_engine_edit_button_content_description" moz:RemovedIn="120" tools:ignore="UnusedResources">Ruaje</string>
     <!-- Text for the menu button to edit a search engine -->
     <string name="search_engine_edit">Përpunoni</string>
     <!-- Text for the menu button to delete a search engine -->
     <string name="search_engine_delete">Fshije</string>
 
-    <!-- Text for the button to create a custom search engine on the Add search engine screen -->
-    <string name="search_add_custom_engine_label_other" moz:RemovedIn="120" tools:ignore="UnusedResources">Tjetër</string>
     <!-- Label for the TextField in which user enters custom search engine name -->
     <string name="search_add_custom_engine_name_label">Emër</string>
-    <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
-    <string name="search_add_custom_engine_name_hint" moz:RemovedIn="120" tools:ignore="UnusedResources">Emër</string>
     <!-- Placeholder text shown in the Search Engine Name text field before a user enters text -->
     <string name="search_add_custom_engine_name_hint_2">Emër motori kërkimesh</string>
     <!-- Label for the TextField in which user enters custom search engine URL -->
     <string name="search_add_custom_engine_url_label">URL vargu kërkimi</string>
-    <!-- Placeholder text shown in the Search String TextField before a user enters text -->
-    <string name="search_add_custom_engine_search_string_hint" moz:RemovedIn="120" tools:ignore="UnusedResources">Varg kërkimi për t’u përdorur</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint_2">URL për t’u përdorur për kërkim</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
@@ -1997,7 +1948,7 @@
     <string name="phone_feature_blocked_step_feature"><![CDATA[3. Kalojeni <b>%1$s</b> si ON]]></string>
 
     <!-- Label that indicates a site is using a secure connection -->
-    <string name="quick_settings_sheet_secure_connection_2">Lidhja është e sigurt</string>
+    <string name="quick_settings_sheet_secure_connection_2">Lidhja është e siguruar</string>
     <!-- Label that indicates a site is using a insecure connection -->
     <string name="quick_settings_sheet_insecure_connection_2">Lidhja s’është e sigurt</string>
     <!-- Label to clear site data -->
@@ -2185,8 +2136,6 @@
 
     <!-- Review quality check feature-->
     <!-- Name for the review quality check feature used as title for the panel. -->
-    <string name="review_quality_check_feature_name" moz:RemovedIn="120" tools:ignore="UnusedResources">Kontrollor shqyrtimesh</string>
-    <!-- Name for the review quality check feature used as title for the panel. -->
     <string name="review_quality_check_feature_name_2">Kontrollor Shqyrtimesh</string>
     <!-- Summary for grades A and B for review quality check adjusted grading. -->
     <string name="review_quality_check_grade_a_b_description">Shqyrtime të besueshme</string>
@@ -2199,7 +2148,7 @@
     <!-- Title for when the rating has been updated by the review checker -->
     <string name="review_quality_check_adjusted_rating_title">Vlerësim i rregulluar</string>
     <!-- Description for a product's adjusted star rating. The text presents that the product's reviews which were evaluated as unreliable were removed from the adjusted rating. -->
-    <string name="review_quality_check_adjusted_rating_description">U hoqën shqyrtime jo të besueshme</string>
+    <string name="review_quality_check_adjusted_rating_description" moz:RemovedIn="122" tools:ignore="UnusedResources">U hoqën shqyrtime jo të besueshme</string>
     <!-- Title for list of highlights from a product's review emphasizing a product's important traits. -->
     <string name="review_quality_check_highlights_title">Gjëra në pah nga shqyrtimet së fundi</string>
     <!-- Title for section explaining how we analyze the reliability of a product's reviews. -->
@@ -2211,14 +2160,10 @@
     <string name="review_quality_check_info_review_grade_header"><![CDATA[I caktojmë çdo shqyrtimi produkti një <b>vlerësim me shkronjë</b> nga A në F.]]></string>
     <!-- Description explaining grades A and B for review quality check adjusted grading. -->
     <string name="review_quality_check_info_grade_info_AB">Shqyrtime të vlefshme. Besojmë se shqyrtimet janë, me gjasa, prej klientësh të njëmendtë, që lanë shqyrtime të ndershme, të paanshme.</string>
-    <!-- Description explaining grades A and B for review quality check adjusted grading. -->
-    <string name="review_quality_check_info_grade_info_AB_2" moz:RemovedIn="120" tools:ignore="UnusedResources">Besojmë se shqyrtimeve mund t’u zihet besë.</string>
     <!-- Description explaining grade C for review quality check adjusted grading. -->
     <string name="review_quality_check_info_grade_info_C">Besojmë se bëhet fjalë për një përzierje shqyrtimesh të besueshme dhe jo të besueshme.</string>
     <!-- Description explaining grades D and F for review quality check adjusted grading. -->
     <string name="review_quality_check_info_grade_info_DF">Shqyrtime jo të besueshme. Besojmë se shqyrtimet ka gjasa të jenë të rreme, ose prej shqyrtuesish të anshëm.</string>
-    <!-- Description explaining grades D and F for review quality check adjusted grading. -->
-    <string name="review_quality_check_info_grade_info_DF_2" moz:RemovedIn="120" tools:ignore="UnusedResources">Besojmë se shqyrtimeve s’mund t’u zihet besë.</string>
     <!-- Paragraph explaining how a product's adjusted grading is calculated. -->
     <string name="review_quality_check_explanation_body_adjusted_grading"><![CDATA[<b>Vlerësimi i rregulluar</b> bazohet vetëm në shqyrtime që besojmë se janë të besueshme.]]></string>
     <!-- Paragraph explaining product review highlights. First parameter is the name of the retailer (e.g. Amazon). -->
@@ -2233,8 +2178,6 @@
     <string name="review_quality_check_settings_title">Rregullime</string>
     <!-- Text for label for switch preference to show recommended products from review quality check settings section. -->
     <string name="review_quality_check_settings_recommended_products">Shfaq reklama te kontrollori i shqyrtimeve</string>
-    <!-- Description for switch preference to show recommended products from review quality check settings section. First parameter is for clickable text defined in review_quality_check_settings_recommended_products_learn_more.-->
-    <string name="review_quality_check_settings_recommended_products_description" moz:RemovedIn="120" tools:ignore="UnusedResources">Do të shihni, me raste, reklama për produkte të ngjashëm. Krejt reklamat duhet të plotësojnë standardet tona të cilësisë së shqyrtimeve. %s</string>
     <!-- Description for switch preference to show recommended products from review quality check settings section. First parameter is for clickable text defined in review_quality_check_settings_recommended_products_learn_more.-->
     <string name="review_quality_check_settings_recommended_products_description_2" tools:ignore="UnusedResources">Do të shihni, me raste, reklama për produkte të ngjashëm. Bëjmë reklamë vetëm për produkte me shqyrtime të besueshme. %s</string>
     <!-- Clickable text that links to review quality check recommended products support article. -->
@@ -2258,23 +2201,21 @@
     <!-- Text for body of warning card informing the user that the current product does not have enough reviews for a review analysis. -->
     <string name="review_quality_check_no_reviews_warning_body">Kur ky produkt të ketë më tepër shqyrtime, do të jemi në gjendje të kontrollojmë cilësinë e tyre.</string>
     <!-- Title for warning card informing the user that the current product is currently not available. -->
-    <string name="review_quality_check_product_availability_warning_title" tools:ignore="UnusedResources">Produkti s’është i passhëm</string>
+    <string name="review_quality_check_product_availability_warning_title">Produkti s’është i passhëm</string>
     <!-- Text for the body of warning card informing the user that the current product is currently not available. -->
-    <string name="review_quality_check_product_availability_warning_body" tools:ignore="UnusedResources">Nëse e shihni sërish në stok këtë produkt, raportojeni dhe do të merremi me kontrollin e shqyrtimeve.</string>
+    <string name="review_quality_check_product_availability_warning_body">Nëse e shihni sërish në stok këtë produkt, raportojeni dhe do të merremi me kontrollin e shqyrtimeve.</string>
     <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
-    <string name="review_quality_check_product_availability_warning_action" moz:RemovedIn="120" tools:ignore="UnusedResources">Njoftoni se për këtë produkt ka prapë stok</string>
-    <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
-    <string name="review_quality_check_product_availability_warning_action_2" tools:ignore="UnusedResources">Njoftoni se për produktin ka prapë stok</string>
+    <string name="review_quality_check_product_availability_warning_action_2">Njoftoni se për produktin ka prapë stok</string>
     <!-- Title for warning card informing the user that the current product's re-analysis is still processing. -->
-    <string name="review_quality_check_reanalysis_in_progress_warning_title">Kontroll cilësie shqyrtimesh</string>
+    <string name="review_quality_check_reanalysis_in_progress_warning_title" moz:RemovedIn="122">Kontroll cilësie shqyrtimesh</string>
     <!-- Title for warning card informing the user that the current product's analysis is still processing. -->
-    <string name="review_quality_check_analysis_in_progress_warning_title">Po kontrollohet cilësi shqyrtimesh</string>
+    <string name="review_quality_check_analysis_in_progress_warning_title" moz:RemovedIn="122">Po kontrollohet cilësi shqyrtimesh</string>
     <!-- Text for body of warning card informing the user that the current product's analysis is still processing. -->
     <string name="review_quality_check_analysis_in_progress_warning_body">Kjo mund të zgjasë rreth 60 sekonda.</string>
     <!-- Title for info card displayed after the user reports a product is back in stock. -->
-    <string name="review_quality_check_analysis_requested_info_title" tools:ignore="UnusedResources">Faleminderit për raportimin!</string>
+    <string name="review_quality_check_analysis_requested_info_title">Faleminderit për raportimin!</string>
     <!-- Text for body of info card displayed after the user reports a product is back in stock. -->
-    <string name="review_quality_check_analysis_requested_info_body" tools:ignore="UnusedResources">Brenda 24 orësh do të duhet të kemi informacion rreth shqyrtimeve të këtij produkti. Ju lutemi, rikontrolloni më vonë.</string>
+    <string name="review_quality_check_analysis_requested_info_body">Brenda 24 orësh do të duhet të kemi informacion rreth shqyrtimeve të këtij produkti. Ju lutemi, rikontrolloni më vonë.</string>
     <!-- Title for info card displayed when the user review checker while on a product that Fakespot does not analyze (e.g. gift cards, music). -->
     <string name="review_quality_check_not_analyzable_info_title">S’mund t’i kontrollojmë këto shqyrtime</string>
     <!-- Text for body of info card displayed when the user review checker while on a product that Fakespot does not analyze (e.g. gift cards, music). -->
@@ -2375,4 +2316,11 @@
     <string name="a11y_action_label_pocket_learn_more">që të mësoni më tepër, hapni lidhjen</string>
     <!-- Content description for headings announced by accessibility service. The first parameter is the text of the heading. Talkback will announce the first parameter and then speak the word "Heading" indicating to the user that this text is a heading for a section. -->
     <string name="a11y_heading">%s, Krye</string>
-</resources>
+
+    <!-- Translations feature-->
+
+    <!-- Translation request dialog -->
+    <!-- Title for the translation dialog that allows a user to translate the webpage. -->
+    <string name="translations_bottom_sheet_title">Të përkthehet kjo faqe?</string>
+
+    </resources>
