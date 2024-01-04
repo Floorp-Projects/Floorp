@@ -54,7 +54,6 @@ skip-if = ["a11y_checks"] # Bugs 1858041 and 1849179 for causing intermittent cr
 https_first_disabled = true
 
 ["browser_protectionsUI_milestones.js"]
-fail-if = ["a11y_checks"] # Bug 1854233 protections-popup-milestones-content may not be labeled
 
 ["browser_protectionsUI_open_preferences.js"]
 https_first_disabled = true
