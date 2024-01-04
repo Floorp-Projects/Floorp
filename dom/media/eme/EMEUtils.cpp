@@ -75,10 +75,27 @@ bool IsWidevineExperimentKeySystemAndSupported(const nsAString& aKeySystem) {
   return aKeySystem.EqualsLiteral(kWidevineExperimentKeySystemName) ||
          aKeySystem.EqualsLiteral(kWidevineExperiment2KeySystemName);
 }
+
+bool IsWMFClearKeySystemAndSupported(const nsAString& aKeySystem) {
+  if (!StaticPrefs::media_eme_wmf_clearkey_enabled()) {
+    return false;
+  }
+  // 1=enabled encrypted and clear, 2=enabled encrytped.
+  if (StaticPrefs::media_wmf_media_engine_enabled() != 1 &&
+      StaticPrefs::media_wmf_media_engine_enabled() != 2) {
+    return false;
+  }
+  return aKeySystem.EqualsLiteral(kClearKeyKeySystemName);
+}
 #endif
 
 nsString KeySystemToProxyName(const nsAString& aKeySystem) {
   if (IsClearkeyKeySystem(aKeySystem)) {
+#ifdef MOZ_WMF_CDM
+    if (StaticPrefs::media_eme_wmf_clearkey_enabled()) {
+      return u"mfcdm-clearkey"_ns;
+    }
+#endif
     return u"gmp-clearkey"_ns;
   }
   if (IsWidevineKeySystem(aKeySystem)) {

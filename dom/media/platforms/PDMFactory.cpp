@@ -801,7 +801,8 @@ void PDMFactory::SetCDMProxy(CDMProxy* aProxy) {
   if (IsPlayReadyKeySystemAndSupported(aProxy->KeySystem()) ||
       IsWidevineExperimentKeySystemAndSupported(aProxy->KeySystem()) ||
       (IsWidevineKeySystem(aProxy->KeySystem()) &&
-       aProxy->IsHardwareDecryptionSupported())) {
+       aProxy->IsHardwareDecryptionSupported()) ||
+      IsWMFClearKeySystemAndSupported(aProxy->KeySystem())) {
     mEMEPDM = RemoteDecoderModule::Create(
         RemoteDecodeIn::UtilityProcess_MFMediaEngineCDM);
     return;

@@ -64,6 +64,8 @@ bool IsWidevineKeySystem(const nsAString& aKeySystem);
 bool IsPlayReadyKeySystemAndSupported(const nsAString& aKeySystem);
 
 bool IsWidevineExperimentKeySystemAndSupported(const nsAString& aKeySystem);
+
+bool IsWMFClearKeySystemAndSupported(const nsAString& aKeySystem);
 #endif
 
 // Note: Primetime is now unsupported, but we leave it in the enum so

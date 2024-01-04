@@ -10278,6 +10278,12 @@
     value: 2
     mirror: always
 
+# [TEST-ONLY] Use Media Foundation Clearkey CDM for EME related testing.
+-   name: media.eme.wmf.clearkey.enabled
+    type: RelaxedAtomicBool
+    value: false
+    mirror: always
+
 # Enable PlayReady DRM for EME
 -   name: media.eme.playready.enabled
     type: RelaxedAtomicBool
