@@ -197,6 +197,23 @@ using Int32Vector = std::vector<int32_t>;
 
 namespace IPC {
 
+// -
+
+template <class U, size_t PaddedSize>
+struct ParamTraits<mozilla::webgl::Padded<U, PaddedSize>> final {
+  using T = mozilla::webgl::Padded<U, PaddedSize>;
+
+  static void Write(MessageWriter* const writer, const T& in) {
+    WriteParam(writer, *in);
+  }
+
+  static bool Read(MessageReader* const reader, T* const out) {
+    return ReadParam(reader, &**out);
+  }
+};
+
+// -
+
 template <>
 struct ParamTraits<mozilla::webgl::AttribBaseType>
     : public ContiguousEnumSerializerInclusive<

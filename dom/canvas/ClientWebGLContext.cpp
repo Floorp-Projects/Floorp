@@ -912,7 +912,7 @@ bool ClientWebGLContext::CreateHostContext(const uvec2& requestedSize) {
     }
     notLost.info.error = str;
   }
-  if (!notLost.info.error.empty()) {
+  if (!notLost.info.error->empty()) {
     ThrowEvent_WebGLContextCreationError(notLost.info.error);
     return false;
   }

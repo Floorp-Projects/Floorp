@@ -657,12 +657,35 @@ struct Limits final {
   uint32_t maxMultiviewLayers = 0;
 };
 
+// -
+
+template <class T, size_t PaddedSize>
+struct Padded {
+ private:
+  T val = {};
+  uint8_t padding[PaddedSize - sizeof(T)] = {};
+
+ public:
+  operator T&() { return val; }
+  operator const T&() const { return val; }
+
+  auto& operator=(const T& rhs) { return val = rhs; }
+  auto& operator=(T&& rhs) { return val = std::move(rhs); }
+
+  auto& operator*() { return val; }
+  auto& operator*() const { return val; }
+  auto operator->() { return &val; }
+  auto operator->() const { return &val; }
+};
+
+// -
+
 struct InitContextResult final {
-  std::string error;
+  Padded<std::string, 32> error;  // MINGW 32-bit needs this padding.
   WebGLContextOptions options;
   gl::GLVendor vendor;
   bool isRgb8Renderable;
-  uint8_t _padding;
+  uint8_t _padding = {};
   webgl::Limits limits;
   EnumMask<layers::SurfaceDescriptor::Type> uploadableSdTypes;
 
