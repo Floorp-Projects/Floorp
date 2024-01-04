@@ -157,8 +157,8 @@ this.DateTimeBoxWidget = class {
     this.mMinDay = 1;
     this.mMaxDay = 31;
     this.mMinYear = 1;
-    // Maximum year limited by ISO 8601.
-    this.mMaxYear = 9999;
+    // Maximum year limited by ECMAScript date object range, year <= 275760.
+    this.mMaxYear = 275760;
     this.mMonthDayLength = 2;
     this.mYearLength = 4;
     this.mMonthPageUpDownInterval = 3;
