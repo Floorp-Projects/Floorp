@@ -54,7 +54,16 @@
   cursor: default;
 
   @media (prefers-reduced-motion: no-preference) {
-    transition: transform 250ms $customize-menu-slide-bezier, visibility 250ms;
+    // We need customize-animate-enter and customize-animate-exit to fix bug 1868232
+    // These first 2 classes happen only while the element is animating.
+    &.customize-animate-enter,
+    &.customize-animate-exit,
+    // We only add these so the css is visible for inspecting while not animating.
+    // Otherwise it's difficult to see and inspect this css because the transition is so fast.
+    &.customize-animate-enter-done,
+    &.customize-animate-exit-done {
+      transition: transform 250ms $customize-menu-slide-bezier, visibility 250ms;
+    }
   }
 
   @media (forced-colors: active) {
