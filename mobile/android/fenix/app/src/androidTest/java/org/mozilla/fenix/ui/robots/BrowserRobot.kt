@@ -686,23 +686,28 @@ class BrowserRobot {
 
     fun verifyCookieBannerExists(exists: Boolean) {
         for (i in 1..RETRY_COUNT) {
+            Log.i(TAG, "verifyCookieBannerExists: For loop: $i")
             try {
-                assertUIObjectExists(cookieBanner(), exists = exists)
+                // Wait for the blocker to kick-in and make the cookie banner disappear
+                itemWithResId("CybotCookiebotDialog").waitUntilGone(waitingTime)
+                Log.i(TAG, "verifyCookieBannerExists: Waiting for window update")
+                // Assert that the blocker properly dismissed the cookie banner
+                assertUIObjectExists(itemWithResId("CybotCookiebotDialog"), exists = exists)
+
                 break
             } catch (e: AssertionError) {
                 if (i == RETRY_COUNT) {
                     throw e
-                } else {
-                    browserScreen {
-                    }.openThreeDotMenu {
-                    }.refreshPage {
-                        waitForPageToLoad()
-                    }
                 }
             }
         }
-        assertUIObjectExists(cookieBanner(), exists = exists)
     }
+
+    fun verifyCookieBannerBlockerCFRExists(exists: Boolean) =
+        assertUIObjectExists(
+            itemContainingText(getStringResource(R.string.cookie_banner_cfr_message)),
+            exists = exists,
+        )
 
     fun verifyOpenLinkInAnotherAppPrompt() {
         assertUIObjectExists(
@@ -1301,8 +1306,6 @@ fun clearTextFieldItem(item: UiObject) {
     item.waitForExists(waitingTime)
     item.clearTextField()
 }
-
-private fun cookieBanner() = itemWithResId("startsiden-gdpr-disclaimer")
 
 // Context menu items
 // Link URL

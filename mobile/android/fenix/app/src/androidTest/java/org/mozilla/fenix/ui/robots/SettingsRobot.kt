@@ -107,6 +107,27 @@ class SettingsRobot {
     fun verifyPrivacyHeading() = assertPrivacyHeading()
 
     fun verifyHTTPSOnlyModeButton() = assertHTTPSOnlyModeButton()
+
+    fun verifyCookieBannerBlockerButton(enabled: Boolean) {
+        scrollToElementByText(getStringResource(R.string.preferences_cookie_banner_reduction_private_mode))
+        onView(withText(R.string.preferences_cookie_banner_reduction_private_mode))
+            .check(
+                matches(
+                    hasCousin(
+                        CoreMatchers.allOf(
+                            withClassName(endsWith("Switch")),
+                            if (enabled) {
+                                isChecked()
+                            } else {
+                                isNotChecked()
+                            },
+                        ),
+                    ),
+                ),
+            )
+        Log.i(TAG, "verifyCookieBannerBlockerButton: Verified if cookie banner blocker toggle is enabled: $enabled")
+    }
+
     fun verifyEnhancedTrackingProtectionButton() = assertEnhancedTrackingProtectionButton()
     fun verifyLoginsAndPasswordsButton() = assertLoginsAndPasswordsButton()
     fun verifyPrivateBrowsingButton() = assertPrivateBrowsingButton()

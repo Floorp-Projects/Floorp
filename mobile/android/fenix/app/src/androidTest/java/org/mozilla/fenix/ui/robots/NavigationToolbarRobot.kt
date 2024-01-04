@@ -44,7 +44,6 @@ import org.mozilla.fenix.helpers.MatcherHelper.assertUIObjectExists
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResId
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResIdAndText
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResIdContainingText
-import org.mozilla.fenix.helpers.MatcherHelper.itemWithText
 import org.mozilla.fenix.helpers.SessionLoadedIdlingResource
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeShort
@@ -150,7 +149,7 @@ class NavigationToolbarRobot {
                 assertTrue(
                     itemWithResId("$packageName:id/browserLayout").waitForExists(waitingTime) ||
                         itemWithResId("$packageName:id/download_button").waitForExists(waitingTime) ||
-                        itemWithText(getStringResource(R.string.tcp_cfr_message)).waitForExists(waitingTime),
+                        itemWithResId("cfr.dismiss").waitForExists(waitingTime),
                 )
             }
 
