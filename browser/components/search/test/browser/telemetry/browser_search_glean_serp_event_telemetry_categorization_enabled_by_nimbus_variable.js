@@ -8,12 +8,6 @@ const lazy = {};
 const TELEMETRY_PREF =
   "browser.search.serpEventTelemetryCategorization.enabled";
 
-ChromeUtils.defineESModuleGetters(this, {
-  RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
-  TELEMETRY_CATEGORIZATION_KEY:
-    "resource:///modules/SearchSERPTelemetry.sys.mjs",
-});
-
 ChromeUtils.defineESModuleGetters(lazy, {
   ExperimentAPI: "resource://nimbus/ExperimentAPI.sys.mjs",
   ExperimentFakes: "resource://testing-common/NimbusTestUtils.sys.mjs",
@@ -73,9 +67,6 @@ const TEST_PROVIDER_INFO = [
   },
 ];
 
-const client = RemoteSettings(TELEMETRY_CATEGORIZATION_KEY);
-const db = client.db;
-
 add_setup(async function () {
   SearchSERPTelemetry.overrideSearchTelemetryForTests(TEST_PROVIDER_INFO);
 
@@ -83,26 +74,17 @@ add_setup(async function () {
   let oldCanRecord = Services.telemetry.canRecordExtended;
   Services.telemetry.canRecordExtended = true;
 
-  // Clear existing Remote Settings data.
-  await db.clear();
-  info("Create record with attachment.");
-  let { record, attachment } = await mockRecordWithAttachment({
-    id: Services.uuid.generateUUID().number.slice(1, -1),
-    version: 1,
-    filename: "domain_category_mappings.json",
-  });
-  client.attachments.cacheImpl.set(record.id, attachment);
-  await db.create(record);
-
-  info("Add data to Remote Settings DB.");
-  await db.importChanges({}, Date.now());
+  await insertRecordIntoCollectionAndSync();
+  // If the categorization preference is enabled, we should also wait for the
+  // sync event to update the domain to categories map.
+  if (lazy.serpEventsCategorizationEnabled) {
+    await waitForDomainToCategoriesUpdate();
+  }
 
   registerCleanupFunction(async () => {
     Services.telemetry.canRecordExtended = oldCanRecord;
     await SpecialPowers.popPrefEnv();
     resetTelemetry();
-    await db.clear();
-    client.attachments.cacheImpl.delete(record.id);
   });
 });
 
@@ -120,15 +102,13 @@ add_task(async function test_enable_experiment_when_pref_is_not_enabled() {
   Assert.equal(
     lazy.serpEventsCategorizationEnabled,
     false,
-    "serpEventsCategorizationEnabled should be false when not enrolled in experiment."
+    "serpEventsCategorizationEnabled should be false when not enrolled in experiment and the default value is false."
   );
 
   await lazy.ExperimentAPI.ready();
 
   info("Enroll in experiment.");
-  let updateComplete = TestUtils.topicObserved(
-    "domain-to-categories-map-update-complete"
-  );
+  let updateComplete = waitForDomainToCategoriesUpdate();
 
   let doExperimentCleanup = await lazy.ExperimentFakes.enrollWithFeatureConfig(
     {

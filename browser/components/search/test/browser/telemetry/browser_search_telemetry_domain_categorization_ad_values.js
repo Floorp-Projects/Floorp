@@ -11,10 +11,7 @@
  */
 
 ChromeUtils.defineESModuleGetters(this, {
-  RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
   SearchUtils: "resource://gre/modules/SearchUtils.sys.mjs",
-  TELEMETRY_CATEGORIZATION_KEY:
-    "resource:///modules/SearchSERPTelemetry.sys.mjs",
 });
 
 const TEST_PROVIDER_INFO = [
@@ -62,27 +59,12 @@ const TEST_PROVIDER_INFO = [
   },
 ];
 
-const client = RemoteSettings(TELEMETRY_CATEGORIZATION_KEY);
-const db = client.db;
-
 add_setup(async function () {
   SearchSERPTelemetry.overrideSearchTelemetryForTests(TEST_PROVIDER_INFO);
   await waitForIdle();
 
-  await db.clear();
-  let { record, attachment } = await mockRecordWithAttachment({
-    id: "example_id",
-    version: 1,
-    filename: "domain_category_mappings.json",
-  });
-  await db.create(record);
-  await client.attachments.cacheImpl.set(record.id, attachment);
-  await db.importChanges({}, Date.now());
-
-  let promise = TestUtils.topicObserved(
-    "domain-to-categories-map-update-complete"
-  );
-  // Enabling the preference will trigger filling the map.
+  let promise = waitForDomainToCategoriesUpdate();
+  await insertRecordIntoCollectionAndSync();
   await SpecialPowers.pushPrefEnv({
     set: [["browser.search.serpEventTelemetryCategorization.enabled", true]],
   });
@@ -91,8 +73,6 @@ add_setup(async function () {
   registerCleanupFunction(async () => {
     SearchSERPTelemetry.overrideSearchTelemetryForTests();
     resetTelemetry();
-    await client.attachments.cacheImpl.delete(record.id);
-    await db.clear();
   });
 });
 

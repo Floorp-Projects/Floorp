@@ -7,12 +7,15 @@ ChromeUtils.defineESModuleGetters(this, {
   CustomizableUITestUtils:
     "resource://testing-common/CustomizableUITestUtils.sys.mjs",
   Region: "resource://gre/modules/Region.sys.mjs",
+  RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
   SearchSERPTelemetry: "resource:///modules/SearchSERPTelemetry.sys.mjs",
   SearchSERPTelemetryUtils: "resource:///modules/SearchSERPTelemetry.sys.mjs",
   SearchTestUtils: "resource://testing-common/SearchTestUtils.sys.mjs",
   SearchUtils: "resource://gre/modules/SearchUtils.sys.mjs",
   SERPCategorizationRecorder: "resource:///modules/SearchSERPTelemetry.sys.mjs",
   sinon: "resource://testing-common/Sinon.sys.mjs",
+  TELEMETRY_CATEGORIZATION_KEY:
+    "resource:///modules/SearchSERPTelemetry.sys.mjs",
   TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.sys.mjs",
 });
 
@@ -438,6 +441,10 @@ function waitForPageWithCategorizedDomains() {
   return TestUtils.topicObserved("reported-page-with-categorized-domains");
 }
 
+function waitForDomainToCategoriesUpdate() {
+  return TestUtils.topicObserved("domain-to-categories-map-update-complete");
+}
+
 registerCleanupFunction(async () => {
   await PlacesUtils.history.clear();
 });
@@ -480,4 +487,50 @@ async function mockRecordWithAttachment({ id, version, filename }) {
   };
 
   return { record, attachment };
+}
+
+async function resetCategorizationCollection(record) {
+  const client = RemoteSettings(TELEMETRY_CATEGORIZATION_KEY);
+  await client.attachments.cacheImpl.delete(record.id);
+  await client.db.clear();
+  await client.db.importChanges({}, Date.now());
+}
+
+async function insertRecordIntoCollection() {
+  const client = RemoteSettings(TELEMETRY_CATEGORIZATION_KEY);
+  const db = client.db;
+
+  await db.clear();
+  let { record, attachment } = await mockRecordWithAttachment({
+    id: "example_id",
+    version: 1,
+    filename: "domain_category_mappings.json",
+  });
+  await db.create(record);
+  await client.attachments.cacheImpl.set(record.id, attachment);
+  await db.importChanges({}, Date.now());
+
+  return { record, attachment };
+}
+
+async function insertRecordIntoCollectionAndSync() {
+  let { record } = await insertRecordIntoCollection();
+
+  registerCleanupFunction(async () => {
+    await resetCategorizationCollection(record);
+  });
+
+  await syncCollection(record);
+}
+
+async function syncCollection(record) {
+  let arrayWithRecord = record ? [record] : [];
+  await RemoteSettings(TELEMETRY_CATEGORIZATION_KEY).emit("sync", {
+    data: {
+      current: arrayWithRecord,
+      created: arrayWithRecord,
+      updated: [],
+      deleted: [],
+    },
+  });
 }
