@@ -9700,7 +9700,7 @@
 
 # Are test specific clearkey key systems enabled and exposed?
 - name: media.clearkey.test-key-systems.enabled
-  type: bool
+  type: RelaxedAtomicBool
   value: false
   mirror: always
 
