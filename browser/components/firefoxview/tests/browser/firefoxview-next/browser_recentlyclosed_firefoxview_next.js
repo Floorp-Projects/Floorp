@@ -9,6 +9,7 @@ ChromeUtils.defineESModuleGetters(globalThis, {
   SessionStore: "resource:///modules/sessionstore/SessionStore.sys.mjs",
 });
 
+const FXVIEW_NEXT_ENABLED_PREF = "browser.tabs.firefox-view-next";
 const NEVER_REMEMBER_HISTORY_PREF = "browser.privatebrowsing.autostart";
 const SEARCH_ENABLED_PREF = "browser.firefox-view.search.enabled";
 const RECENTLY_CLOSED_EVENT = [
@@ -38,11 +39,11 @@ async function waitForRecentlyClosedTabsList(doc) {
 }
 
 async function click_tab_item(itemElem, itemProperty = "") {
-  // Make sure the firefoxview tab still has focus
+  // Make sure the firefoxview-next tab still has focus
   is(
     itemElem.ownerDocument.location.href,
-    "about:firefoxview#recentlyclosed",
-    "about:firefoxview is the selected tab and showing the Recently closed view page"
+    "about:firefoxview-next#recentlyclosed",
+    "about:firefoxview-next is the selected tab and showing the Recently closed view page"
   );
 
   // Scroll to the tab element to ensure dismiss button is visible
@@ -229,7 +230,10 @@ async function recentlyClosedDismissTelemetry() {
 
 add_setup(async () => {
   await SpecialPowers.pushPrefEnv({
-    set: [[SEARCH_ENABLED_PREF, true]],
+    set: [
+      [FXVIEW_NEXT_ENABLED_PREF, true],
+      [SEARCH_ENABLED_PREF, true],
+    ],
   });
   registerCleanupFunction(async () => {
     await SpecialPowers.popPrefEnv();
@@ -263,7 +267,7 @@ add_task(async function test_list_ordering() {
   let { cleanup, expectedURLs } = await prepareClosedTabs();
   await withFirefoxView({}, async browser => {
     const { document } = browser.contentWindow;
-    is(document.location.href, "about:firefoxview");
+    is(document.location.href, "about:firefoxview-next");
     await clearAllParentTelemetryEvents();
     navigateToCategory(document, "recentlyclosed");
     let [cardMainSlotNode, listItems] = await waitForRecentlyClosedTabsList(
@@ -293,7 +297,7 @@ add_task(async function test_list_updates() {
 
   await withFirefoxView({}, async browser => {
     const { document } = browser.contentWindow;
-    is(document.location.href, "about:firefoxview");
+    is(document.location.href, "about:firefoxview-next");
     navigateToCategory(document, "recentlyclosed");
 
     let [listElem, listItems] = await waitForRecentlyClosedTabsList(document);
@@ -367,7 +371,7 @@ add_task(async function test_restore_tab() {
 
   await withFirefoxView({}, async browser => {
     const { document } = browser.contentWindow;
-    is(document.location.href, "about:firefoxview");
+    is(document.location.href, "about:firefoxview-next");
     navigateToCategory(document, "recentlyclosed");
 
     let [listElem, listItems] = await waitForRecentlyClosedTabsList(document);
@@ -474,7 +478,7 @@ add_task(async function test_empty_states() {
 
   await withFirefoxView({}, async browser => {
     const { document } = browser.contentWindow;
-    is(document.location.href, "about:firefoxview");
+    is(document.location.href, "about:firefoxview-next");
 
     navigateToCategory(document, "recentlyclosed");
     let recentlyClosedComponent = document.querySelector(

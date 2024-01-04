@@ -679,7 +679,7 @@ class SyncedTabsInView extends ViewPage {
   sendTabTelemetry(numTabs) {
     /*
     Services.telemetry.recordEvent(
-      "firefoxview_next",
+      "firefoxview-next",
       "synced_tabs",
       "tabs",
       null,
