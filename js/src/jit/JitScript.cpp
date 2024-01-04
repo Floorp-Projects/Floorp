@@ -381,6 +381,9 @@ void ICScript::prepareForDestruction(Zone* zone) {
   // nursery can point to these alloc sites.
   JSRuntime* rt = zone->runtimeFromMainThread();
   rt->gc.queueAllLifoBlocksForFreeAfterMinorGC(&allocSitesSpace_);
+
+  // Trigger write barriers.
+  PreWriteBarrier(zone, this);
 }
 
 void JitScript::prepareForDestruction(Zone* zone) {
