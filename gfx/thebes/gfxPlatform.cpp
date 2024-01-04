@@ -935,9 +935,11 @@ void gfxPlatform::Init() {
   }
 #endif
 
-  mozilla::glean::gpu_process::feature_status.Set(
-      gfxConfig::GetFeature(Feature::GPU_PROCESS)
-          .GetStatusAndFailureIdString());
+  if (XRE_IsParentProcess()) {
+    mozilla::glean::gpu_process::feature_status.Set(
+        gfxConfig::GetFeature(Feature::GPU_PROCESS)
+            .GetStatusAndFailureIdString());
+  }
 
   if (gfxConfig::IsEnabled(Feature::GPU_PROCESS)) {
     GPUProcessManager* gpu = GPUProcessManager::Get();
