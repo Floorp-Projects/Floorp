@@ -16,7 +16,7 @@ add_task(async function test_firefox_suggest_with_policy() {
   });
 
   await BrowserTestUtils.withNewTab(
-    "about:preferences#privacy",
+    "about:preferences#search",
     async browser => {
       is(
         browser.contentDocument.getElementById("firefoxSuggestNonsponsored")
@@ -32,7 +32,7 @@ add_task(async function test_firefox_suggest_with_policy() {
       );
       is(
         browser.contentDocument.getElementById(
-          "firefoxSuggestDataCollectionToggle"
+          "firefoxSuggestDataCollectionSearchToggle"
         ).pressed,
         true,
         "Improve suggest is enabled"
@@ -51,7 +51,7 @@ add_task(async function test_firefox_suggest_with_policy() {
       );
       is(
         browser.contentDocument.getElementById(
-          "firefoxSuggestDataCollectionToggle"
+          "firefoxSuggestDataCollectionSearchToggle"
         ).disabled,
         true,
         "Improve suggest is enabled"

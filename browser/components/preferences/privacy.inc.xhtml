@@ -699,105 +699,6 @@
   </hbox>
 </groupbox>
 
-<!-- Address Bar -->
-<groupbox id="locationBarGroup"
-          data-category="panePrivacy"
-          hidden="true"
-          data-subcategory="locationBar">
-  <label><html:h2 id="locationBarGroupHeader" data-l10n-id="addressbar-header"/></label>
-  <label id="locationBarSuggestionLabel" class="section-description" data-l10n-id="addressbar-suggest"/>
-  <checkbox id="historySuggestion" data-l10n-id="addressbar-locbar-history-option"
-            preference="browser.urlbar.suggest.history"/>
-  <checkbox id="bookmarkSuggestion" data-l10n-id="addressbar-locbar-bookmarks-option"
-            preference="browser.urlbar.suggest.bookmark"/>
-  <checkbox id="clipboardSuggestion" data-l10n-id="addressbar-locbar-clipboard-option" hidden="true"
-            preference="browser.urlbar.suggest.clipboard"/>
-  <checkbox id="openpageSuggestion" data-l10n-id="addressbar-locbar-openpage-option"
-            preference="browser.urlbar.suggest.openpage"/>
-  <checkbox id="topSitesSuggestion"
-            data-l10n-id="addressbar-locbar-shortcuts-option"
-            preference="browser.urlbar.suggest.topsites"/>
-  <checkbox id="enginesSuggestion" data-l10n-id="addressbar-locbar-engines-option"
-            preference="browser.urlbar.suggest.engines"/>
-  <hbox id="quickActionsBox" align="center" hidden="true">
-    <checkbox id="enableQuickActions"
-              class="tail-with-learn-more"
-              data-l10n-id="addressbar-locbar-quickactions-option"
-              preference="browser.urlbar.suggest.quickactions" />
-    <html:a is="moz-support-link"
-            id="quickActionsLink"
-            data-l10n-id="addressbar-quickactions-learn-more"
-            support-page="quick-actions-firefox-search-bar"
-    />
-  </hbox>
-  <vbox id="firefoxSuggestContainer" hidden="true">
-    <checkbox id="firefoxSuggestNonsponsored"
-              data-l10n-id="addressbar-firefox-suggest-nonsponsored"
-              preference="browser.urlbar.suggest.quicksuggest.nonsponsored"
-    />
-    <description class="indent tip-caption"
-                  data-l10n-id="addressbar-firefox-suggest-nonsponsored-desc"
-    />
-    <checkbox id="firefoxSuggestSponsored"
-              data-l10n-id="addressbar-firefox-suggest-sponsored"
-              preference="browser.urlbar.suggest.quicksuggest.sponsored"
-    />
-    <description class="indent tip-caption"
-                  data-l10n-id="addressbar-firefox-suggest-sponsored-desc"
-    />
-    <vbox class="firefoxSuggestOptionBox">
-      <html:moz-toggle id="firefoxSuggestDataCollectionToggle"
-                       preference="browser.urlbar.quicksuggest.dataCollection.enabled"
-                       data-l10n-id="addressbar-firefox-suggest-data-collection"
-                       data-l10n-attrs="label, description">
-        <html:a slot="support-link"
-                is="moz-support-link"
-                id="firefoxSuggestDataCollectionLearnMore"
-                class="learnMore firefoxSuggestLearnMore"
-                data-l10n-id="addressbar-locbar-firefox-suggest-learn-more"
-                support-page="firefox-suggest"
-        />
-      </html:moz-toggle>
-    </vbox>
-    <hbox id="firefoxSuggestInfoBox" class="info-box-container smaller-font-size" align="start"
-          hidden="true">
-      <html:img class="info-icon"/>
-      <description flex="1">
-        <html:span id="firefoxSuggestInfoText" class="tail-with-learn-more"/>
-        <html:a is="moz-support-link"
-                id="firefoxSuggestInfoBoxLearnMore"
-                class="learnMore firefoxSuggestLearnMore"
-                data-l10n-id="addressbar-locbar-firefox-suggest-learn-more"
-                support-page="firefox-suggest"
-        />
-      </description>
-    </hbox>
-    <hbox id="dismissedSuggestions" align="center">
-      <vbox flex="1">
-        <label data-l10n-id="addressbar-dismissed-suggestions-label"/>
-        <description class="tip-caption">
-          <html:span id="dismissedSuggestionsDescription"
-                     class="tail-with-learn-more"
-                     data-l10n-id="addressbar-restore-dismissed-suggestions-description"/>
-          <html:a is="moz-support-link"
-                  id="dismissedSuggestionsLearnMore"
-                  class="learnMore firefoxSuggestLearnMore"
-                  data-l10n-id="addressbar-restore-dismissed-suggestions-learn-more"
-                  support-page="firefox-suggest"
-          />
-        </description>
-      </vbox>
-      <button id="restoreDismissedSuggestions"
-              is="highlightable-button"
-              class="accessory-button"
-              data-l10n-id="addressbar-restore-dismissed-suggestions-button"
-              aria-describedby="dismissedSuggestionsDescription"/>
-    </hbox>
-  </vbox>
-  <label id="openSearchEnginePreferences" is="text-link"
-         data-l10n-id="addressbar-suggestions-settings"/>
-</groupbox>
-
 <hbox id="permissionsCategory"
       class="subcategory"
       hidden="true"
@@ -1093,6 +994,20 @@
 #endif
   </vbox>
 #endif
+  <vbox class="firefoxSuggestOptionBox" id="firefoxSuggestPrivacyContainer" hidden="true">
+    <html:moz-toggle id="firefoxSuggestDataCollectionPrivacyToggle"
+                     preference="browser.urlbar.quicksuggest.dataCollection.enabled"
+                     data-l10n-id="addressbar-firefox-suggest-data-collection"
+                     data-l10n-attrs="label, description">
+      <html:a slot="support-link"
+              is="moz-support-link"
+              id="firefoxSuggestDataCollectionLearnMorePrivacy"
+              class="learnMore firefoxSuggestLearnMore"
+              data-l10n-id="addressbar-locbar-firefox-suggest-learn-more"
+              support-page="firefox-suggest"
+      />
+    </html:moz-toggle>
+  </vbox>
   <vbox id="privacySegmentationSection" data-subcategory="privacy-segmentation" hidden="true">
     <label>
       <html:h2 data-l10n-id="privacy-segmentation-section-header"/>

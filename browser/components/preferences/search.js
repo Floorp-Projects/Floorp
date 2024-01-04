@@ -11,6 +11,10 @@ ChromeUtils.defineESModuleGetters(lazy, {
   SearchUIUtils: "resource:///modules/SearchUIUtils.sys.mjs",
 });
 
+const PREF_URLBAR_QUICKSUGGEST_BLOCKLIST =
+  "browser.urlbar.quicksuggest.blockedDigests";
+const PREF_URLBAR_WEATHER_USER_ENABLED = "browser.urlbar.suggest.weather";
+
 Preferences.addAll([
   { id: "browser.search.suggest.enabled", type: "bool" },
   { id: "browser.urlbar.suggest.searches", type: "bool" },
@@ -107,21 +111,13 @@ var gSearchPane = {
       "command",
       this._onBrowserSeparateDefaultEngineChange.bind(this)
     );
-    setEventListener(
-      "openLocationBarPrivacyPreferences",
-      "click",
-      function (event) {
-        if (event.button == 0) {
-          gotoPref("privacy-locationBar");
-        }
-      }
-    );
 
     this._initDefaultEngines();
     this._initShowSearchTermsCheckbox();
     this._updateSuggestionCheckboxes();
     this._showAddEngineButton();
     this._initRecentSeachesCheckbox();
+    this._initAddressBar();
   },
 
   /**
@@ -319,6 +315,175 @@ var gSearchPane = {
         true
       );
     }
+  },
+
+  // ADDRESS BAR
+
+  /**
+   * Initializes the address bar section.
+   */
+  _initAddressBar() {
+    // Update the Firefox Suggest section when its Nimbus config changes.
+    let onNimbus = () => this._updateFirefoxSuggestSection();
+    NimbusFeatures.urlbar.onUpdate(onNimbus);
+    window.addEventListener("unload", () => {
+      NimbusFeatures.urlbar.offUpdate(onNimbus);
+    });
+
+    // The Firefox Suggest info box potentially needs updating when any of the
+    // toggles change.
+    let infoBoxPrefs = [
+      "browser.urlbar.suggest.quicksuggest.nonsponsored",
+      "browser.urlbar.suggest.quicksuggest.sponsored",
+      "browser.urlbar.quicksuggest.dataCollection.enabled",
+    ];
+    for (let pref of infoBoxPrefs) {
+      Preferences.get(pref).on("change", () =>
+        this._updateFirefoxSuggestInfoBox()
+      );
+    }
+
+    document.getElementById("clipboardSuggestion").hidden = !UrlbarPrefs.get(
+      "clipboard.featureGate"
+    );
+
+    this._updateFirefoxSuggestSection(true);
+    this._initQuickActionsSection();
+  },
+
+  /**
+   * Updates the Firefox Suggest section (in the address bar section) depending
+   * on whether the user is enrolled in a Firefox Suggest rollout.
+   *
+   * @param {boolean} [onInit]
+   *   Pass true when calling this when initializing the pane.
+   */
+  _updateFirefoxSuggestSection(onInit = false) {
+    let container = document.getElementById("firefoxSuggestContainer");
+
+    if (UrlbarPrefs.get("quickSuggestEnabled")) {
+      // Update the l10n IDs of text elements.
+      let l10nIdByElementId = {
+        locationBarGroupHeader: "addressbar-header-firefox-suggest",
+        locationBarSuggestionLabel: "addressbar-suggest-firefox-suggest",
+      };
+      for (let [elementId, l10nId] of Object.entries(l10nIdByElementId)) {
+        let element = document.getElementById(elementId);
+        element.dataset.l10nIdOriginal ??= element.dataset.l10nId;
+        element.dataset.l10nId = l10nId;
+      }
+
+      // Show the container.
+      this._updateFirefoxSuggestInfoBox();
+
+      this._updateDismissedSuggestionsStatus();
+      Preferences.get(PREF_URLBAR_QUICKSUGGEST_BLOCKLIST).on("change", () =>
+        this._updateDismissedSuggestionsStatus()
+      );
+      Preferences.get(PREF_URLBAR_WEATHER_USER_ENABLED).on("change", () =>
+        this._updateDismissedSuggestionsStatus()
+      );
+      setEventListener("restoreDismissedSuggestions", "command", () =>
+        this.restoreDismissedSuggestions()
+      );
+
+      container.removeAttribute("hidden");
+    } else if (!onInit) {
+      // Firefox Suggest is not enabled. This is the default, so to avoid
+      // accidentally messing anything up, only modify the doc if we're being
+      // called due to a change in the rollout-enabled status (!onInit).
+      container.setAttribute("hidden", "true");
+      let elementIds = ["locationBarGroupHeader", "locationBarSuggestionLabel"];
+      for (let id of elementIds) {
+        let element = document.getElementById(id);
+        element.dataset.l10nId = element.dataset.l10nIdOriginal;
+        delete element.dataset.l10nIdOriginal;
+        document.l10n.translateElements([element]);
+      }
+    }
+  },
+
+  /**
+   * Updates the Firefox Suggest info box (in the address bar section) depending
+   * on the states of the Firefox Suggest toggles.
+   */
+  _updateFirefoxSuggestInfoBox() {
+    let nonsponsored = Preferences.get(
+      "browser.urlbar.suggest.quicksuggest.nonsponsored"
+    ).value;
+    let sponsored = Preferences.get(
+      "browser.urlbar.suggest.quicksuggest.sponsored"
+    ).value;
+    let dataCollection = Preferences.get(
+      "browser.urlbar.quicksuggest.dataCollection.enabled"
+    ).value;
+
+    // Get the l10n ID of the appropriate text based on the values of the three
+    // prefs.
+    let l10nId;
+    if (nonsponsored && sponsored && dataCollection) {
+      l10nId = "addressbar-firefox-suggest-info-all";
+    } else if (nonsponsored && sponsored && !dataCollection) {
+      l10nId = "addressbar-firefox-suggest-info-nonsponsored-sponsored";
+    } else if (nonsponsored && !sponsored && dataCollection) {
+      l10nId = "addressbar-firefox-suggest-info-nonsponsored-data";
+    } else if (nonsponsored && !sponsored && !dataCollection) {
+      l10nId = "addressbar-firefox-suggest-info-nonsponsored";
+    } else if (!nonsponsored && sponsored && dataCollection) {
+      l10nId = "addressbar-firefox-suggest-info-sponsored-data";
+    } else if (!nonsponsored && sponsored && !dataCollection) {
+      l10nId = "addressbar-firefox-suggest-info-sponsored";
+    } else if (!nonsponsored && !sponsored && dataCollection) {
+      l10nId = "addressbar-firefox-suggest-info-data";
+    }
+
+    let instance = (this._firefoxSuggestInfoBoxInstance = {});
+    let infoBox = document.getElementById("firefoxSuggestInfoBox");
+    if (!l10nId) {
+      infoBox.hidden = true;
+    } else {
+      let infoText = document.getElementById("firefoxSuggestInfoText");
+      infoText.dataset.l10nId = l10nId;
+
+      // If the info box is currently hidden and we unhide it immediately, it
+      // will show its old text until the new text is asyncly fetched and shown.
+      // That's ugly, so wait for the fetch to finish before unhiding it.
+      document.l10n.translateElements([infoText]).then(() => {
+        if (instance == this._firefoxSuggestInfoBoxInstance) {
+          infoBox.hidden = false;
+        }
+      });
+    }
+  },
+
+  _initQuickActionsSection() {
+    let showPref = Preferences.get("browser.urlbar.quickactions.showPrefs");
+    let showQuickActionsGroup = () => {
+      document.getElementById("quickActionsBox").hidden = !showPref.value;
+    };
+    showPref.on("change", showQuickActionsGroup);
+    showQuickActionsGroup();
+  },
+
+  /**
+   * Enables/disables the "Restore" button for dismissed Firefox Suggest
+   * suggestions.
+   */
+  _updateDismissedSuggestionsStatus() {
+    document.getElementById("restoreDismissedSuggestions").disabled =
+      !Services.prefs.prefHasUserValue(PREF_URLBAR_QUICKSUGGEST_BLOCKLIST) &&
+      !(
+        Services.prefs.prefHasUserValue(PREF_URLBAR_WEATHER_USER_ENABLED) &&
+        !Services.prefs.getBoolPref(PREF_URLBAR_WEATHER_USER_ENABLED)
+      );
+  },
+
+  /**
+   * Restores Firefox Suggest suggestions dismissed by the user.
+   */
+  restoreDismissedSuggestions() {
+    Services.prefs.clearUserPref(PREF_URLBAR_QUICKSUGGEST_BLOCKLIST);
+    Services.prefs.clearUserPref(PREF_URLBAR_WEATHER_USER_ENABLED);
   },
 
   /**

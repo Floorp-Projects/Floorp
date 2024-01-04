@@ -42,7 +42,7 @@ add_task(async function test_show_prefs() {
 
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
-    "about:preferences#privacy"
+    "about:preferences#search"
   );
 
   Assert.ok(
@@ -81,7 +81,7 @@ add_task(async function test_prefs() {
 
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
-    "about:preferences#privacy"
+    "about:preferences#search"
   );
 
   Assert.ok(
