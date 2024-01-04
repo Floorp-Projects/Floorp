@@ -3161,7 +3161,6 @@ class DSDismiss extends (external_React_default()).PureComponent {
     }, this.props.children, /*#__PURE__*/external_React_default().createElement("button", {
       className: "ds-dismiss-button",
       "data-l10n-id": "newtab-dismiss-button-tooltip",
-      onHover: this.onHover,
       onClick: this.onDismissClick,
       onMouseEnter: this.onHover,
       onMouseLeave: this.offHover
@@ -9105,9 +9104,11 @@ class ContentSection extends (external_React_default()).PureComponent {
   }
 
   onPreferenceSelect(e) {
-    let prefName = e.target.getAttribute("preference");
-    const eventSource = e.target.getAttribute("eventSource"); // TOP_SITES, TOP_STORIES, HIGHLIGHTS
-
+    // eventSource: TOP_SITES | TOP_STORIES | HIGHLIGHTS
+    const {
+      preference,
+      eventSource
+    } = e.target.dataset;
     let value;
 
     if (e.target.nodeName === "SELECT") {
@@ -9126,7 +9127,7 @@ class ContentSection extends (external_React_default()).PureComponent {
       }
     }
 
-    this.props.setPref(prefName, value);
+    this.props.setPref(preference, value);
   }
 
   componentDidMount() {
@@ -9195,8 +9196,8 @@ class ContentSection extends (external_React_default()).PureComponent {
       id: "shortcuts-toggle",
       pressed: topSitesEnabled || null,
       onToggle: this.onPreferenceSelect,
-      preference: "feeds.topsites",
-      eventSource: "TOP_SITES",
+      "data-preference": "feeds.topsites",
+      "data-eventSource": "TOP_SITES",
       "data-l10n-id": "newtab-custom-shortcuts-toggle",
       "data-l10n-attrs": "label, description"
     }), /*#__PURE__*/external_React_default().createElement("div", null, /*#__PURE__*/external_React_default().createElement("div", {
@@ -9239,8 +9240,8 @@ class ContentSection extends (external_React_default()).PureComponent {
       checked: showSponsoredTopSitesEnabled,
       type: "checkbox",
       onChange: this.onPreferenceSelect,
-      preference: "showSponsoredTopSites",
-      eventSource: "SPONSORED_TOP_SITES"
+      "data-preference": "showSponsoredTopSites",
+      "data-eventSource": "SPONSORED_TOP_SITES"
     }), /*#__PURE__*/external_React_default().createElement("label", {
       className: "sponsored",
       htmlFor: "sponsored-shortcuts",
@@ -9254,9 +9255,9 @@ class ContentSection extends (external_React_default()).PureComponent {
       id: "pocket-toggle",
       pressed: pocketEnabled || null,
       onToggle: this.onPreferenceSelect,
-      preference: "feeds.section.topstories",
       "aria-describedby": "custom-pocket-subtitle",
-      eventSource: "TOP_STORIES",
+      "data-preference": "feeds.section.topstories",
+      "data-eventSource": "TOP_STORIES",
       "data-l10n-id": "newtab-custom-pocket-toggle",
       "data-l10n-attrs": "label, description"
     })), /*#__PURE__*/external_React_default().createElement("div", null, (mayHaveSponsoredStories || mayHaveRecentSaves) && /*#__PURE__*/external_React_default().createElement("div", {
@@ -9274,8 +9275,8 @@ class ContentSection extends (external_React_default()).PureComponent {
       checked: showSponsoredPocketEnabled,
       type: "checkbox",
       onChange: this.onPreferenceSelect,
-      preference: "showSponsored",
-      eventSource: "POCKET_SPOCS"
+      "data-preference": "showSponsored",
+      "data-eventSource": "POCKET_SPOCS"
     }), /*#__PURE__*/external_React_default().createElement("label", {
       className: "sponsored",
       htmlFor: "sponsored-pocket",
@@ -9290,8 +9291,8 @@ class ContentSection extends (external_React_default()).PureComponent {
       checked: showRecentSavesEnabled,
       type: "checkbox",
       onChange: this.onPreferenceSelect,
-      preference: "showRecentSaves",
-      eventSource: "POCKET_RECENT_SAVES"
+      "data-preference": "showRecentSaves",
+      "data-eventSource": "POCKET_RECENT_SAVES"
     }), /*#__PURE__*/external_React_default().createElement("label", {
       className: "sponsored",
       htmlFor: "recent-saves-pocket",
@@ -9305,8 +9306,8 @@ class ContentSection extends (external_React_default()).PureComponent {
       id: "highlights-toggle",
       pressed: highlightsEnabled || null,
       onToggle: this.onPreferenceSelect,
-      preference: "feeds.section.highlights",
-      eventSource: "HIGHLIGHTS",
+      "data-preference": "feeds.section.highlights",
+      "data-eventSource": "HIGHLIGHTS",
       "data-l10n-id": "newtab-custom-recent-toggle",
       "data-l10n-attrs": "label, description"
     }))), /*#__PURE__*/external_React_default().createElement("span", {

@@ -44,7 +44,6 @@ export class DSDismiss extends React.PureComponent {
         <button
           className="ds-dismiss-button"
           data-l10n-id="newtab-dismiss-button-tooltip"
-          onHover={this.onHover}
           onClick={this.onDismissClick}
           onMouseEnter={this.onHover}
           onMouseLeave={this.offHover}

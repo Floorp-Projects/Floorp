@@ -25,13 +25,12 @@ describe("ContentSection", () => {
     assert.ok(wrapper.exists());
   });
 
-  it("should look for an eventSource attribute and dispatch an event for INPUT", () => {
+  it("should look for a data-eventSource attribute and dispatch an event for INPUT", () => {
     wrapper.instance().onPreferenceSelect({
       target: {
         nodeName: "INPUT",
         checked: true,
-        getAttribute: eventSource =>
-          eventSource === "eventSource" ? "foo" : null,
+        dataset: { preference: "foo", eventSource: "bar" },
       },
     });
 
@@ -39,33 +38,34 @@ describe("ContentSection", () => {
       DEFAULT_PROPS.dispatch,
       ac.UserEvent({
         event: "PREF_CHANGED",
-        source: "foo",
+        source: "bar",
         value: { status: true, menu_source: "CUSTOMIZE_MENU" },
       })
     );
+    assert.calledWith(DEFAULT_PROPS.setPref, "foo", true);
     wrapper.unmount();
   });
 
-  it("should have eventSource attributes on relevent pref changing inputs", () => {
+  it("should have data-eventSource attributes on relevent pref changing inputs", () => {
     wrapper = mount(<ContentSection {...DEFAULT_PROPS} />);
     assert.equal(
-      wrapper.find("#shortcuts-toggle").prop("eventSource"),
+      wrapper.find("#shortcuts-toggle").prop("data-eventSource"),
       "TOP_SITES"
     );
     assert.equal(
-      wrapper.find("#sponsored-shortcuts").prop("eventSource"),
+      wrapper.find("#sponsored-shortcuts").prop("data-eventSource"),
       "SPONSORED_TOP_SITES"
     );
     assert.equal(
-      wrapper.find("#pocket-toggle").prop("eventSource"),
+      wrapper.find("#pocket-toggle").prop("data-eventSource"),
       "TOP_STORIES"
     );
     assert.equal(
-      wrapper.find("#sponsored-pocket").prop("eventSource"),
+      wrapper.find("#sponsored-pocket").prop("data-eventSource"),
       "POCKET_SPOCS"
     );
     assert.equal(
-      wrapper.find("#highlights-toggle").prop("eventSource"),
+      wrapper.find("#highlights-toggle").prop("data-eventSource"),
       "HIGHLIGHTS"
     );
   });

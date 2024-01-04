@@ -106,7 +106,20 @@ module.exports = {
     "react/no-did-update-set-state": "error",
     "react/no-direct-mutation-state": "error",
     "react/no-is-mounted": "error",
-    "react/no-unknown-property": "error",
+    "react/no-unknown-property": [
+      "error",
+      {
+        // Custom HTML properties used in aboutwelcome React components.
+        ignore: [
+          "flow",
+          "alignment",
+          "button-size",
+          "layout",
+          "pos",
+          "hide-secondary-section",
+        ],
+      },
+    ],
     "react/require-render-return": "error",
 
     "accessor-pairs": ["error", { setWithoutGet: true, getWithoutSet: false }],
