@@ -32,6 +32,13 @@ add_task(async function () {
     URL_ROOT_SSL + "doc_markup_tooltip.png"
   );
 
+  info("Check that simple click does not open a tab");
+  const onTabOpened = once(gBrowser.tabContainer, "TabOpen");
+  const onTimeout = wait(1000).then(() => "TIMEOUT");
+  EventUtils.synthesizeMouseAtCenter(linkEl, {}, linkEl.ownerGlobal);
+  const res = await Promise.race([onTabOpened, onTimeout]);
+  is(res, "TIMEOUT", "Tab was not opened on simple click");
+
   info("Select a node with a IDREF attribute");
   await selectNode("label", inspector);
 

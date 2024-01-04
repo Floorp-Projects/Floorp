@@ -596,7 +596,7 @@ MarkupContainer.prototype = {
 
   _onClick(event) {
     const { target } = event;
-    if (!target.nodeName === "button") {
+    if (target.nodeName !== "button") {
       return;
     }
 
