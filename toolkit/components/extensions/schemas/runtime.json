@@ -162,18 +162,6 @@
         "allowedContexts": ["content", "devtools"],
         "description": "The reason that the event is being dispatched. 'app_update' is used when the restart is needed because the application is updated to a newer version. 'os_update' is used when the restart is needed because the browser/OS is updated to a newer version. 'periodic' is used when the system runs for more than the permitted uptime set in the enterprise policy.",
         "enum": ["app_update", "os_update", "periodic"]
-      },
-      {
-        "id": "OnPerformanceWarningCategory",
-        "type": "string",
-        "enum": ["content_script"],
-        "description": "The performance warning event category, e.g. 'content_script'."
-      },
-      {
-        "id": "OnPerformanceWarningSeverity",
-        "type": "string",
-        "enum": ["low", "medium", "high"],
-        "description": "The performance warning event severity. Will be 'high' for serious and user-visible issues."
       }
     ],
     "properties": {
@@ -687,36 +675,6 @@
             "$ref": "OnRestartRequiredReason",
             "name": "reason",
             "description": "The reason that the event is being dispatched."
-          }
-        ]
-      },
-      {
-        "name": "onPerformanceWarning",
-        "type": "function",
-        "description": "Fired when a runtime performance issue is detected with the extension. Observe this event to be proactively notified of runtime performance problems with the extension.",
-        "parameters": [
-          {
-            "type": "object",
-            "name": "details",
-            "properties": {
-              "category": {
-                "$ref": "OnPerformanceWarningCategory",
-                "description": "The performance warning event category, e.g. 'content_script'."
-              },
-              "severity": {
-                "$ref": "OnPerformanceWarningSeverity",
-                "description": "The performance warning event severity, e.g. 'high'."
-              },
-              "tabId": {
-                "type": "integer",
-                "optional": true,
-                "description": "The $(ref:tabs.Tab) that the performance warning relates to, if any."
-              },
-              "description": {
-                "type": "string",
-                "description": "An explanation of what the warning means, and hopefully how to address it."
-              }
-            }
           }
         ]
       }
