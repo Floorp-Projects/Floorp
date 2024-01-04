@@ -501,7 +501,8 @@ HRESULT MFCDMParent::LoadFactory(
 
   HMODULE handle = LoadLibraryW(libraryName);
   if (!handle) {
-    MFCDM_PARENT_SLOG("Failed to load library %ls!", libraryName);
+    MFCDM_PARENT_SLOG("Failed to load library %ls! (error=%lx)", libraryName,
+                      GetLastError());
     return E_FAIL;
   }
   MFCDM_PARENT_SLOG("Loaded external library '%ls'", libraryName);
