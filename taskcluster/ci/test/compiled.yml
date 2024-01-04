@@ -31,7 +31,7 @@ job-defaults:
                     - unittests/win_unittest.py
     supports-artifact-builds: false
 
-cppunit:
+cppunittest:
     description: "CPP Unit Tests"
     suite: cppunittest
     treeherder-symbol: cppunit
