@@ -225,11 +225,18 @@ button.text-link .button-text {
   color: var(--button-color, inherit);
   background-color: var(--button-bgcolor, color-mix(in srgb, currentColor 13%, transparent));
   padding: .45em 1em;
-  min-height: 32px;
+  min-height: var(--size-item-large);
   font-weight: 600;
   min-width: 0;
   margin-inline: 8px 0;
   margin-bottom: 0;
+
+  &.small-button {
+    margin: 0;
+    min-height: var(--size-item-medium);
+    padding: .6em 1em;
+    font-size: var(--font-size-small);
+  }
 
   &[disabled] {
     opacity: 0.4;
@@ -247,7 +254,8 @@ button.text-link .button-text {
     &:hover:active {
       background-color: var(--button-active-bgcolor, color-mix(in srgb, currentColor 30%, transparent));
     }
-    &[default] {
+    &[default],
+    &.primary {
       color: var(--button-primary-color);
       background-color: var(--button-primary-bgcolor);
 

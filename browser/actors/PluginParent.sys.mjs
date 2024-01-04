@@ -178,11 +178,20 @@ export class PluginParent extends JSWindowActorParent {
       buttons.push(submitButton);
     }
 
+    // Add the "learn more" link.
+    let learnMoreLink = {
+      supportPage: "plugin-crashed-notificationbar",
+      label: lazy.gNavigatorBundle.GetStringFromName(
+        "crashedpluginsMessage.learnMore"
+      ),
+    };
+    buttons.push(learnMoreLink);
+
     let messageString = lazy.gNavigatorBundle.formatStringFromName(
       "crashedpluginsMessage.title",
       [report.pluginName]
     );
-    notification = notificationBox.appendNotification(
+    notificationBox.appendNotification(
       "plugin-crashed",
       {
         label: messageString,
@@ -191,21 +200,5 @@ export class PluginParent extends JSWindowActorParent {
       },
       buttons
     );
-
-    // Add the "learn more" link.
-    let link = notification.ownerDocument.createXULElement("label", {
-      is: "text-link",
-    });
-    link.setAttribute(
-      "value",
-      lazy.gNavigatorBundle.GetStringFromName("crashedpluginsMessage.learnMore")
-    );
-    let crashurl = Services.urlFormatter.formatURLPref("app.support.baseURL");
-    crashurl += "plugin-crashed-notificationbar";
-    link.href = crashurl;
-    // Append a blank text node to make sure we don't put
-    // the link right next to the end of the message text.
-    notification.messageText.appendChild(new Text(" "));
-    notification.messageText.appendChild(link);
   }
 }
