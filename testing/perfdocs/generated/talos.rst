@@ -1049,10 +1049,10 @@ For the sample commands found below, note that the capitalization used is import
         - mozilla-release
         - mozilla-beta
       * - **talos-bcv**
+        - ✅
+        - ✅
         - ❌
-        - ❌
-        - ❌
-        - ❌
+        - ✅
       * - **talos-bcv-swr**
         - ❌
         - ❌
@@ -1169,10 +1169,10 @@ For the sample commands found below, note that the capitalization used is import
         - mozilla-release
         - mozilla-beta
       * - **talos-bcv**
+        - ✅
+        - ✅
         - ❌
-        - ❌
-        - ❌
-        - ❌
+        - ✅
       * - **talos-bcv-swr**
         - ✅
         - ✅
@@ -10125,7 +10125,17 @@ For the sample commands found below, note that the capitalization used is import
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **talos-tabswitch**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
       * - **talos-tabswitch-profiling**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-tabswitch-swr**
         - ❌
         - ❌
         - ❌
@@ -10210,20 +10220,20 @@ For the sample commands found below, note that the capitalization used is import
         - mozilla-release
         - mozilla-beta
       * - **talos-tabswitch**
-        - ✅
-        - ✅
         - ❌
-        - ✅
+        - ❌
+        - ❌
+        - ❌
       * - **talos-tabswitch-profiling**
         - ❌
         - ❌
         - ❌
         - ❌
       * - **talos-tabswitch-swr**
-        - ✅
-        - ✅
         - ❌
-        - ✅
+        - ❌
+        - ❌
+        - ❌
 
 
 
