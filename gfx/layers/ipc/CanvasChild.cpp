@@ -295,6 +295,10 @@ already_AddRefed<gfx::DrawTarget> CanvasChild::CreateDrawTarget(
 
 bool CanvasChild::EnsureDataSurfaceShmem(gfx::IntSize aSize,
                                          gfx::SurfaceFormat aFormat) {
+  if (!mRecorder) {
+    return false;
+  }
+
   size_t dataFormatWidth = aSize.width * BytesPerPixel(aFormat);
   size_t sizeRequired =
       ipc::SharedMemory::PageAlignedSize(dataFormatWidth * aSize.height);
