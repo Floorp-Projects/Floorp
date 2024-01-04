@@ -73,7 +73,7 @@
 /* Heartbeat UI Rating Star Classes */
 #star-rating-container {
   display: flex;
-  margin-bottom: 4px;
+  margin-block: 4px;
 }
 
 #star-rating-container > #star5 {
