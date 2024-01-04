@@ -15,7 +15,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.browser.engine.gecko.ext.geckoTrackingProtectionPermission
 import mozilla.components.browser.engine.gecko.ext.isExcludedForTrackingProtection
 import mozilla.components.browser.engine.gecko.permission.geckoContentPermission
-import mozilla.components.browser.engine.gecko.translate.GeckoTranslationUtils
+import mozilla.components.browser.engine.gecko.translate.GeckoTranslationUtils.intoTranslationError
 import mozilla.components.browser.errorpages.ErrorType
 import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.EngineSession
@@ -3094,9 +3094,9 @@ class GeckoEngineSessionTest {
     fun `WHEN mapping a Gecko TranslationsException THEN it maps as expected to a TranslationError`() {
         // Specifically defined unknown error thrown by the translations engine
         val geckoUnknownError = TranslationsException(TranslationsException.ERROR_UNKNOWN)
-        val unknownError = GeckoTranslationUtils.fromGeckoErrorToTranslationError(geckoUnknownError)
+        val unknownError = geckoUnknownError.intoTranslationError()
         assertTrue(
-            GeckoTranslationUtils.fromGeckoErrorToTranslationError(geckoUnknownError) is TranslationError.UnknownError,
+            unknownError is TranslationError.UnknownError,
         )
         assertEquals(
             (unknownError as TranslationError.UnknownError).cause,
@@ -3117,7 +3117,7 @@ class GeckoEngineSessionTest {
 
         // Something really unexpected was thrown
         val unexpectedUnknownError = Exception("Something very unexpected")
-        val unexpectedUnknown = GeckoTranslationUtils.fromGeckoErrorToTranslationError(unexpectedUnknownError)
+        val unexpectedUnknown = unexpectedUnknownError.intoTranslationError()
         assertTrue(
             unexpectedUnknown is
             TranslationError.UnknownError,
@@ -3147,7 +3147,19 @@ class GeckoEngineSessionTest {
             false,
         )
 
-        val notSupported = GeckoTranslationUtils.fromGeckoErrorToTranslationError(TranslationsException(TranslationsException.ERROR_ENGINE_NOT_SUPPORTED))
+        // For manual use as a guard for when the engine is missing a session coordinator
+        val missingCoordinator = TranslationError.MissingSessionCoordinator()
+        assertEquals(
+            missingCoordinator.errorName,
+            "missing-session-coordinator",
+        )
+        assertEquals(
+            missingCoordinator.displayError,
+            false,
+        )
+
+        val notSupported =
+            TranslationsException(TranslationsException.ERROR_ENGINE_NOT_SUPPORTED).intoTranslationError()
         assertTrue(
             notSupported is
             TranslationError.EngineNotSupportedError,
@@ -3161,7 +3173,8 @@ class GeckoEngineSessionTest {
             false,
         )
 
-        val couldNotTranslate = GeckoTranslationUtils.fromGeckoErrorToTranslationError(TranslationsException(TranslationsException.ERROR_COULD_NOT_TRANSLATE))
+        val couldNotTranslate =
+            TranslationsException(TranslationsException.ERROR_COULD_NOT_TRANSLATE).intoTranslationError()
         assertTrue(
             couldNotTranslate is
             TranslationError.CouldNotTranslateError,
@@ -3175,7 +3188,8 @@ class GeckoEngineSessionTest {
             true,
         )
 
-        val couldNotRestore = GeckoTranslationUtils.fromGeckoErrorToTranslationError(TranslationsException(TranslationsException.ERROR_COULD_NOT_RESTORE))
+        val couldNotRestore =
+            TranslationsException(TranslationsException.ERROR_COULD_NOT_RESTORE).intoTranslationError()
         assertTrue(
             couldNotRestore is
             TranslationError.CouldNotRestoreError,
@@ -3189,7 +3203,8 @@ class GeckoEngineSessionTest {
             false,
         )
 
-        val couldNotLoadLanguages = GeckoTranslationUtils.fromGeckoErrorToTranslationError(TranslationsException(TranslationsException.ERROR_COULD_NOT_LOAD_LANGUAGES))
+        val couldNotLoadLanguages =
+            TranslationsException(TranslationsException.ERROR_COULD_NOT_LOAD_LANGUAGES).intoTranslationError()
         assertTrue(
             couldNotLoadLanguages is
             TranslationError.CouldNotLoadLanguagesError,
@@ -3203,7 +3218,8 @@ class GeckoEngineSessionTest {
             true,
         )
 
-        val languageNotSupported = GeckoTranslationUtils.fromGeckoErrorToTranslationError(TranslationsException(TranslationsException.ERROR_LANGUAGE_NOT_SUPPORTED))
+        val languageNotSupported =
+            TranslationsException(TranslationsException.ERROR_LANGUAGE_NOT_SUPPORTED).intoTranslationError()
         assertTrue(
             languageNotSupported is
             TranslationError.LanguageNotSupportedError,
@@ -3217,7 +3233,8 @@ class GeckoEngineSessionTest {
             true,
         )
 
-        val couldNotRetrieve = GeckoTranslationUtils.fromGeckoErrorToTranslationError(TranslationsException(TranslationsException.ERROR_MODEL_COULD_NOT_RETRIEVE))
+        val couldNotRetrieve =
+            TranslationsException(TranslationsException.ERROR_MODEL_COULD_NOT_RETRIEVE).intoTranslationError()
         assertTrue(
             couldNotRetrieve is
             TranslationError.ModelCouldNotRetrieveError,
@@ -3231,7 +3248,8 @@ class GeckoEngineSessionTest {
             false,
         )
 
-        val couldNotDelete = GeckoTranslationUtils.fromGeckoErrorToTranslationError(TranslationsException(TranslationsException.ERROR_MODEL_COULD_NOT_DELETE))
+        val couldNotDelete =
+            TranslationsException(TranslationsException.ERROR_MODEL_COULD_NOT_DELETE).intoTranslationError()
         assertTrue(
             couldNotDelete is
             TranslationError.ModelCouldNotDeleteError,
@@ -3245,7 +3263,8 @@ class GeckoEngineSessionTest {
             false,
         )
 
-        val couldNotDownload = GeckoTranslationUtils.fromGeckoErrorToTranslationError(TranslationsException(TranslationsException.ERROR_MODEL_COULD_NOT_DOWNLOAD))
+        val couldNotDownload =
+            TranslationsException(TranslationsException.ERROR_MODEL_COULD_NOT_DOWNLOAD).intoTranslationError()
         assertTrue(
             couldNotDownload is
             TranslationError.ModelCouldNotDownloadError,
@@ -3259,7 +3278,8 @@ class GeckoEngineSessionTest {
             false,
         )
 
-        val languageRequired = GeckoTranslationUtils.fromGeckoErrorToTranslationError(TranslationsException(TranslationsException.ERROR_MODEL_LANGUAGE_REQUIRED))
+        val languageRequired =
+            TranslationsException(TranslationsException.ERROR_MODEL_LANGUAGE_REQUIRED).intoTranslationError()
         assertTrue(
             languageRequired is
             TranslationError.ModelLanguageRequiredError,
@@ -3273,7 +3293,8 @@ class GeckoEngineSessionTest {
             false,
         )
 
-        val downloadRequired = GeckoTranslationUtils.fromGeckoErrorToTranslationError(TranslationsException(TranslationsException.ERROR_MODEL_DOWNLOAD_REQUIRED))
+        val downloadRequired =
+            TranslationsException(TranslationsException.ERROR_MODEL_DOWNLOAD_REQUIRED).intoTranslationError()
         assertTrue(
             downloadRequired is
             TranslationError.ModelDownloadRequiredError,

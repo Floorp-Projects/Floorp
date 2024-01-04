@@ -35,6 +35,12 @@ sealed class TranslationError(
         TranslationError(errorName = "unexpected-null", displayError = false, cause = null)
 
     /**
+     * Default error when a translation session coordinator is not available.
+     */
+    class MissingSessionCoordinator :
+        TranslationError(errorName = "missing-session-coordinator", displayError = false, cause = null)
+
+    /**
      * Translations engine does not work on the device architecture.
      *
      * @param cause The original throwable before it was converted into this error state.

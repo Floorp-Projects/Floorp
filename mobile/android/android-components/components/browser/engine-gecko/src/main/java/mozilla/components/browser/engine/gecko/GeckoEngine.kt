@@ -19,6 +19,7 @@ import mozilla.components.browser.engine.gecko.mediaquery.from
 import mozilla.components.browser.engine.gecko.mediaquery.toGeckoValue
 import mozilla.components.browser.engine.gecko.profiler.Profiler
 import mozilla.components.browser.engine.gecko.serviceworker.GeckoServiceWorkerDelegate
+import mozilla.components.browser.engine.gecko.translate.GeckoTranslationUtils.intoTranslationError
 import mozilla.components.browser.engine.gecko.util.SpeculativeSessionFactory
 import mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension
 import mozilla.components.browser.engine.gecko.webextension.GeckoWebExtensionException
@@ -46,6 +47,7 @@ import mozilla.components.concept.engine.translate.Language
 import mozilla.components.concept.engine.translate.LanguageModel
 import mozilla.components.concept.engine.translate.LanguageSetting
 import mozilla.components.concept.engine.translate.ModelManagementOptions
+import mozilla.components.concept.engine.translate.TranslationError
 import mozilla.components.concept.engine.translate.TranslationSupport
 import mozilla.components.concept.engine.translate.TranslationsRuntime
 import mozilla.components.concept.engine.utils.EngineVersion
@@ -669,16 +671,6 @@ class GeckoEngine(
     }
 
     /**
-     * Convenience method for handling unexpected null returns from GeckoView.
-     *
-     * @return A standard throwable for unexpected null values.
-     */
-    private fun translationsUnexpectedNull(): Throwable {
-        val errorMessage = "Unexpectedly returned a null value."
-        return IllegalStateException(errorMessage)
-    }
-
-    /**
      * See [Engine.isTranslationsEngineSupported].
      */
     override fun isTranslationsEngineSupported(
@@ -690,12 +682,12 @@ class GeckoEngine(
                 if (it != null) {
                     onSuccess(it)
                 } else {
-                    onError(translationsUnexpectedNull())
+                    onError(TranslationError.UnexpectedNull())
                 }
                 GeckoResult<Void>()
             },
             { throwable ->
-                onError(throwable)
+                onError(throwable.intoTranslationError())
                 GeckoResult<Void>()
             },
         )
@@ -715,12 +707,12 @@ class GeckoEngine(
                 if (it != null) {
                     onSuccess(it)
                 } else {
-                    onError(translationsUnexpectedNull())
+                    onError(TranslationError.UnexpectedNull())
                 }
                 GeckoResult<Void>()
             },
             { throwable ->
-                onError(throwable)
+                onError(throwable.intoTranslationError())
                 GeckoResult<Void>()
             },
         )
@@ -747,12 +739,12 @@ class GeckoEngine(
                     }
                     onSuccess(listOfModels)
                 } else {
-                    onError(translationsUnexpectedNull())
+                    onError(TranslationError.UnexpectedNull())
                 }
                 GeckoResult<Void>()
             },
             { throwable ->
-                onError(throwable)
+                onError(throwable.intoTranslationError())
                 GeckoResult<Void>()
             },
         )
@@ -785,12 +777,12 @@ class GeckoEngine(
 
                     onSuccess(TranslationSupport(listOfFromLanguages, listOfToLanguages))
                 } else {
-                    onError(translationsUnexpectedNull())
+                    onError(TranslationError.UnexpectedNull())
                 }
                 GeckoResult<Void>()
             },
             { throwable ->
-                onError(throwable)
+                onError(throwable.intoTranslationError())
                 GeckoResult<Void>()
             },
         )
@@ -817,7 +809,7 @@ class GeckoEngine(
                 GeckoResult<Void>()
             },
             { throwable ->
-                onError(throwable)
+                onError(throwable.intoTranslationError())
                 GeckoResult<Void>()
             },
         )
@@ -835,13 +827,13 @@ class GeckoEngine(
                 if (it != null) {
                     onSuccess(it)
                 } else {
-                    onError(translationsUnexpectedNull())
+                    onError(TranslationError.UnexpectedNull())
                 }
 
                 GeckoResult<Void>()
             },
             { throwable ->
-                onError(throwable)
+                onError(throwable.intoTranslationError())
                 GeckoResult<Void>()
             },
         )
@@ -875,16 +867,16 @@ class GeckoEngine(
                     try {
                         onSuccess(LanguageSetting.fromValue(it))
                     } catch (e: IllegalArgumentException) {
-                        onError(e)
+                        onError(e.intoTranslationError())
                     }
                 } else {
-                    onError(translationsUnexpectedNull())
+                    onError(TranslationError.UnexpectedNull())
                 }
 
                 GeckoResult<Void>()
             },
             { throwable ->
-                onError(throwable)
+                onError(throwable.intoTranslationError())
                 GeckoResult<Void>()
             },
         )
@@ -905,7 +897,7 @@ class GeckoEngine(
                 GeckoResult<Void>()
             },
             { throwable ->
-                onError(throwable)
+                onError(throwable.intoTranslationError())
                 GeckoResult<Void>()
             },
         )
@@ -928,15 +920,15 @@ class GeckoEngine(
                         }
                         onSuccess(result)
                     } catch (e: IllegalArgumentException) {
-                        onError(e)
+                        onError(e.intoTranslationError())
                     }
                 } else {
-                    onError(translationsUnexpectedNull())
+                    onError(TranslationError.UnexpectedNull())
                 }
                 GeckoResult<Void>()
             },
             { throwable ->
-                onError(throwable)
+                onError(throwable.intoTranslationError())
                 GeckoResult<Void>()
             },
         )
@@ -955,15 +947,15 @@ class GeckoEngine(
                     try {
                         onSuccess(it)
                     } catch (e: IllegalArgumentException) {
-                        onError(e)
+                        onError(e.intoTranslationError())
                     }
                 } else {
-                    onError(translationsUnexpectedNull())
+                    onError(TranslationError.UnexpectedNull())
                 }
                 GeckoResult<Void>()
             },
             { throwable ->
-                onError(throwable)
+                onError(throwable.intoTranslationError())
                 GeckoResult<Void>()
             },
         )
@@ -984,7 +976,7 @@ class GeckoEngine(
                 GeckoResult<Void>()
             },
             { throwable ->
-                onError(throwable)
+                onError(throwable.intoTranslationError())
                 GeckoResult<Void>()
             },
         )
