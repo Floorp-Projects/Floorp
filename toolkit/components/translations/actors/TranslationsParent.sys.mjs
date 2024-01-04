@@ -2715,6 +2715,10 @@ class TranslationsLanguageState {
   }
 
   set requestedTranslationPair(requestedTranslationPair) {
+    if (this.#requestedTranslationPair === requestedTranslationPair) {
+      return;
+    }
+
     this.#error = null;
     this.#isEngineReady = false;
     this.#requestedTranslationPair = requestedTranslationPair;
@@ -2732,6 +2736,10 @@ class TranslationsLanguageState {
   }
 
   set detectedLanguages(detectedLanguages) {
+    if (this.#detectedLanguages === detectedLanguages) {
+      return;
+    }
+
     this.#detectedLanguages = detectedLanguages;
     this.dispatch();
   }
@@ -2748,6 +2756,10 @@ class TranslationsLanguageState {
   }
 
   set locationChangeId(locationChangeId) {
+    if (this.#locationChangeId === locationChangeId) {
+      return;
+    }
+
     this.#locationChangeId = locationChangeId;
 
     // When the location changes remove the previous error.
@@ -2764,6 +2776,9 @@ class TranslationsLanguageState {
   }
 
   set error(error) {
+    if (this.#error === error) {
+      return;
+    }
     this.#error = error;
     // Setting an error invalidates the requested translation pair.
     this.#requestedTranslationPair = null;
@@ -2780,6 +2795,9 @@ class TranslationsLanguageState {
   }
 
   set isEngineReady(isEngineReady) {
+    if (this.#isEngineReady === isEngineReady) {
+      return;
+    }
     this.#isEngineReady = isEngineReady;
     this.dispatch();
   }
