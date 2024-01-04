@@ -42,7 +42,6 @@ EXPORTS += [
     "GLTextureImage.h",
     "GLTypes.h",
     "GLUploadHelpers.h",
-    "GLVendor.h",
     "HeapCopyOfStackArray.h",
     "MozFramebuffer.h",
     "ScopedGLHelpers.h",

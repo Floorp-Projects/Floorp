@@ -14,8 +14,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include "GLContextTypes.h"
 #include "GLDefs.h"
-#include "GLVendor.h"
 #include "ImageContainer.h"
 #include "mozilla/Casting.h"
 #include "mozilla/CheckedInt.h"
@@ -660,9 +660,16 @@ struct Limits final {
 struct InitContextResult final {
   std::string error;
   WebGLContextOptions options;
+  gl::GLVendor vendor;
+  bool isRgb8Renderable;
+  uint8_t _padding;
   webgl::Limits limits;
   EnumMask<layers::SurfaceDescriptor::Type> uploadableSdTypes;
-  gl::GLVendor vendor;
+
+  auto MutTiedFields() {
+    return std::tie(error, options, vendor, isRgb8Renderable, _padding, limits,
+                    uploadableSdTypes);
+  }
 };
 
 // -
