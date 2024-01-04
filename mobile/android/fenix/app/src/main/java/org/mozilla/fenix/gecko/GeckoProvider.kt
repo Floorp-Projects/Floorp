@@ -19,7 +19,6 @@ import mozilla.components.service.sync.logins.GeckoLoginStorageDelegate
 import org.mozilla.fenix.Config
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
-import org.mozilla.fenix.nimbus.FxNimbus
 import org.mozilla.geckoview.ContentBlocking
 import org.mozilla.geckoview.ContentBlocking.SafeBrowsingProvider
 import org.mozilla.geckoview.GeckoRuntime
@@ -134,7 +133,7 @@ object GeckoProvider {
             .consoleOutput(context.components.settings.enableGeckoLogs)
             .debugLogging(Config.channel.isDebug || context.components.settings.enableGeckoLogs)
             .aboutConfigEnabled(Config.channel.isBeta || Config.channel.isNightlyOrDebug)
-            .extensionsProcessEnabled(FxNimbus.features.extensionsProcess.value().enabled)
+            .extensionsProcessEnabled(true)
             .extensionsWebAPIEnabled(true)
             .build()
     }

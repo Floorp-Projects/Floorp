@@ -212,14 +212,6 @@ features:
         type: Boolean
         default: true
 
-  extensions-process:
-    description: A feature to rollout the extensions process.
-    variables:
-      enabled:
-        description: If true, the extensions process is enabled.
-        type: Boolean
-        default: true
-
   growth-data:
     description: A feature measuring campaign growth data
     variables:

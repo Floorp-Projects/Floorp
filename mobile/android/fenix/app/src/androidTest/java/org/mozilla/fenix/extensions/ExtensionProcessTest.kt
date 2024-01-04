@@ -6,19 +6,15 @@ package org.mozilla.fenix.extensions
 
 import android.content.Context
 import mozilla.components.concept.engine.EngineSession
-import org.json.JSONObject
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-import org.mozilla.experiments.nimbus.HardcodedNimbusFeatures
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.gecko.GeckoProvider
 import org.mozilla.fenix.helpers.TestHelper
-import org.mozilla.fenix.nimbus.FxNimbus
 
 /**
- * Instrumentation test for verifying that the extensions process can be controlled with Nimbus.
+ * Instrumentation test for verifying that the extensions process is enabled unconditionally.
  */
 class ExtensionProcessTest {
     private lateinit var context: Context
@@ -27,49 +23,12 @@ class ExtensionProcessTest {
     @Before
     fun setUp() {
         context = TestHelper.appContext
-        policy =
-            context.components.core.trackingProtectionPolicyFactory.createTrackingProtectionPolicy()
+        policy = context.components.core.trackingProtectionPolicyFactory.createTrackingProtectionPolicy()
     }
 
     @Test
-    fun test_extension_process_can_be_enabled_by_nimbus() {
-        val hardcodedNimbus = HardcodedNimbusFeatures(
-            context,
-            "extensions-process" to JSONObject(
-                """
-                  {
-                    "enabled": true
-                  }
-                """.trimIndent(),
-            ),
-        )
-
-        hardcodedNimbus.connectWith(FxNimbus)
-
+    fun test_extension_process_is_enabled() {
         val runtime = GeckoProvider.createRuntimeSettings(context, policy)
-
-        assertTrue(FxNimbus.features.extensionsProcess.value().enabled)
         assertTrue(runtime.extensionsProcessEnabled!!)
-    }
-
-    @Test
-    fun test_extension_process_can_be_disabled_by_nimbus() {
-        val hardcodedNimbus = HardcodedNimbusFeatures(
-            context,
-            "extensions-process" to JSONObject(
-                """
-                  {
-                    "enabled": false
-                  }
-                """.trimIndent(),
-            ),
-        )
-
-        hardcodedNimbus.connectWith(FxNimbus)
-
-        val runtime = GeckoProvider.createRuntimeSettings(context, policy)
-
-        assertFalse(FxNimbus.features.extensionsProcess.value().enabled)
-        assertFalse(runtime.extensionsProcessEnabled!!)
     }
 }
