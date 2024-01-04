@@ -71,6 +71,72 @@ Addons:
   type: string
   altname: Add-ons
 
+Android_Board:
+  description: >
+    The name of the underlying board used by the Android device. e.g. "k68v1_64"
+  type: string
+
+Android_Brand:
+  description: >
+    The consumer-visible brand associated with this Android device. e.g. "vivo"
+  type: string
+
+Android_CPU_ABI:
+  description: >
+    The Android primary CPU ABI being used. e.g. "arm64-v8a"
+  type: string
+
+Android_CPU_ABI2:
+  description: >
+    The Android secondary CPU ABI being used. e.g. "armeabi-v7a"
+  type: string
+
+Android_Device:
+  description: >
+    Android device name. e.g. "1907"
+  type: string
+
+Android_Display:
+  description: >
+    End-user visible display name of the build id for the Android build.
+    e.g. "SP1A.210812.003 release-keys"
+  type: string
+
+Android_Fingerprint:
+  description: >
+    A string that uniquely identifies the Android build. e.g.
+    "vivo/1907/1907:12/SP1A.210812.003/compiler03091510:user/release-keys"
+  type: string
+
+Android_Hardware:
+  description: >
+    The name of the Android hardware from "/proc". e.g. "mt6768"
+  type: string
+
+Android_Manufacturer:
+  description: >
+    Android device manufacturer. e.g. "vivo"
+  type: string
+
+Android_Model:
+  description: >
+    End-user visible Android device model name. e.g. "vivo 1907"
+  type: string
+
+Android_PackageName:
+  description: >
+    The package name of an Android application that uniquely identifies the
+    application on the device, Google Play Store, and third-party Android
+    stores. e.g. "com.example.referencebrowser"
+  type: string
+
+Android_Version:
+  description: >
+    The developer preview revision of a prerelease SDK plus The current
+    development codename, or the string "REL" if this is a release build.
+    e.g. "31 (REL)"
+  type: string
+
 AppInitDLLs:
   description: >
     List of DLLs loaded when launching any application on Windows, this
