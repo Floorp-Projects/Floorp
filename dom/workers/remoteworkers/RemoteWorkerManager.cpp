@@ -499,7 +499,7 @@ RemoteWorkerServiceParent* RemoteWorkerManager::SelectTargetActor(
   }
 
   // Extension principal workers are allowed to run on the parent process
-  // when "extension.webextensions.remote" pref is false.
+  // when "extensions.webextensions.remote" pref is false.
   if (aProcessId == base::GetCurrentProcId() &&
       aData.remoteType().Equals(NOT_REMOTE_TYPE) &&
       !StaticPrefs::extensions_webextensions_remote() &&
