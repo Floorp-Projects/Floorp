@@ -115,7 +115,7 @@ export class ShoppingProduct extends EventEmitter {
    * @param {URL} url
    *  URL to get the product info from.
    * @param {object} [options]
-   * @param {object} [options.allowValidationFailure=true]
+   * @param {boolean} [options.allowValidationFailure=true]
    *  Should validation failures be allowed or return null
    */
   constructor(url, options = { allowValidationFailure: true }) {
@@ -262,10 +262,12 @@ export class ShoppingProduct extends EventEmitter {
     };
 
     let { url, requestSchema, responseSchema } = options;
+    let { allowValidationFailure } = this;
 
     let result = await ShoppingProduct.request(url, requestOptions, {
       requestSchema,
       responseSchema,
+      allowValidationFailure,
     });
 
     return result;
@@ -300,9 +302,11 @@ export class ShoppingProduct extends EventEmitter {
       website: product.host,
     };
     let { url, requestSchema, responseSchema } = options;
+    let { allowValidationFailure } = this;
     let result = await ShoppingProduct.request(url, requestOptions, {
       requestSchema,
       responseSchema,
+      allowValidationFailure,
     });
 
     for (let ad of result) {
@@ -335,6 +339,8 @@ export class ShoppingProduct extends EventEmitter {
    *  Minimum time to wait.
    * @param {AbortSignal} [options.signal]
    *  Signal to check if the request needs to be aborted.
+   * @param {boolean} [options.allowValidationFailure=true]
+   *  Should validation failures be allowed.
    * @returns {object} result
    *  Parsed JSON API result or null.
    */
@@ -346,6 +352,7 @@ export class ShoppingProduct extends EventEmitter {
       maxRetries = API_RETRIES,
       retryTimeout = API_RETRY_TIMEOUT,
       signal = new AbortController().signal,
+      allowValidationFailure = true,
     } = options;
 
     if (signal.aborted) {
@@ -356,9 +363,9 @@ export class ShoppingProduct extends EventEmitter {
       let validRequest = await lazy.ProductValidator.validate(
         bodyObj,
         requestSchema,
-        this.allowValidationFailure
+        allowValidationFailure
       );
-      if (!validRequest && !this.allowValidationFailure) {
+      if (!validRequest && !allowValidationFailure) {
         return null;
       }
     }
@@ -420,9 +427,9 @@ export class ShoppingProduct extends EventEmitter {
         let validResponse = await lazy.ProductValidator.validate(
           result,
           responseSchema,
-          this.allowValidationFailure
+          allowValidationFailure
         );
-        if (!validResponse && !this.allowValidationFailure) {
+        if (!validResponse && !allowValidationFailure) {
           return null;
         }
       }
@@ -743,6 +750,7 @@ export class ShoppingProduct extends EventEmitter {
     let requestSchema = options?.requestSchema || ANALYZE_REQUEST_SCHEMA;
     let responseSchema = options?.responseSchema || ANALYZE_RESPONSE_SCHEMA;
     let signal = options?.signal || this._abortController.signal;
+    let allowValidationFailure = this.allowValidationFailure;
 
     if (!product) {
       return null;
@@ -757,6 +765,7 @@ export class ShoppingProduct extends EventEmitter {
       requestSchema,
       responseSchema,
       signal,
+      allowValidationFailure,
     });
 
     return result;
@@ -781,6 +790,7 @@ export class ShoppingProduct extends EventEmitter {
     let responseSchema =
       options?.responseSchema || ANALYSIS_STATUS_RESPONSE_SCHEMA;
     let signal = options?.signal || this._abortController.signal;
+    let allowValidationFailure = this.allowValidationFailure;
 
     if (!product) {
       return null;
@@ -795,6 +805,7 @@ export class ShoppingProduct extends EventEmitter {
       requestSchema,
       responseSchema,
       signal,
+      allowValidationFailure,
     });
 
     return result;
@@ -827,6 +838,7 @@ export class ShoppingProduct extends EventEmitter {
       requestSchema = ATTRIBUTION_REQUEST_SCHEMA,
       responseSchema = ATTRIBUTION_RESPONSE_SCHEMA,
       signal = new AbortController().signal,
+      allowValidationFailure = true,
     } = options;
 
     if (!eventName) {
@@ -857,6 +869,7 @@ export class ShoppingProduct extends EventEmitter {
       requestSchema,
       responseSchema,
       signal,
+      allowValidationFailure,
     });
 
     return result;
@@ -881,6 +894,7 @@ export class ShoppingProduct extends EventEmitter {
     let requestSchema = options?.requestSchema || REPORTING_REQUEST_SCHEMA;
     let responseSchema = options?.responseSchema || REPORTING_RESPONSE_SCHEMA;
     let signal = options?.signal || this._abortController.signal;
+    let allowValidationFailure = this.allowValidationFailure;
 
     let requestOptions = {
       product_id: product.id,
@@ -891,6 +905,7 @@ export class ShoppingProduct extends EventEmitter {
       requestSchema,
       responseSchema,
       signal,
+      allowValidationFailure,
     });
 
     return result;
