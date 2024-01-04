@@ -48,7 +48,6 @@ support-files = [
 # DO NOT ADD MORE TESTS HERE. USE A TOPICAL DIRECTORY INSTEAD.
 
 ["browser_accesskeys.js"]
-fail-if = ["a11y_checks"] # Bug 1854233 chromebutton may not be labeled
 # DO NOT ADD MORE TESTS HERE. USE A TOPICAL DIRECTORY INSTEAD.
 
 ["browser_addCertException.js"]
