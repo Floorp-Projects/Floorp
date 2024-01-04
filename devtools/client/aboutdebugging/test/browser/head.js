@@ -503,3 +503,24 @@ function clickOnAddonWidget(addonId) {
   info("Show the web extension popup");
   browserActionEl.firstElementChild.click();
 }
+
+// Create basic addon data as the DevToolsClient would return it.
+function createAddonData({
+  id,
+  name,
+  isSystem = false,
+  hidden = false,
+  temporary = false,
+}) {
+  return {
+    actor: `actorid-${id}`,
+    hidden,
+    iconURL: `moz-extension://${id}/icon-url.png`,
+    id,
+    manifestURL: `moz-extension://${id}/manifest-url.json`,
+    name,
+    isSystem,
+    temporarilyInstalled: temporary,
+    debuggable: true,
+  };
+}

@@ -260,3 +260,25 @@ async function createLocalClientWrapper() {
   return new ClientWrapper(client);
 }
 /* exported createLocalClientWrapper */
+
+// Create a basic mock for this-firefox client, and setup a runtime-client-factory mock
+// to return our mock client when needed.
+function setupThisFirefoxMock() {
+  const runtimeClientFactoryMock = createRuntimeClientFactoryMock();
+  const thisFirefoxClient = createThisFirefoxClientMock();
+  runtimeClientFactoryMock.createClientForRuntime = runtime => {
+    if (runtime.id === RUNTIMES.THIS_FIREFOX) {
+      return thisFirefoxClient;
+    }
+    throw new Error("Unexpected runtime id " + runtime.id);
+  };
+
+  info("Enable mocks");
+  enableRuntimeClientFactoryMock(runtimeClientFactoryMock);
+  registerCleanupFunction(() => {
+    disableRuntimeClientFactoryMock();
+  });
+
+  return thisFirefoxClient;
+}
+/* exported setupThisFirefoxMock */

@@ -258,8 +258,8 @@ function requestExtensions() {
 
       dispatch({
         type: REQUEST_EXTENSIONS_SUCCESS,
-        installedExtensions,
-        temporaryExtensions,
+        installedExtensions: sortTargetsByName(installedExtensions),
+        temporaryExtensions: sortTargetsByName(temporaryExtensions),
       });
     } catch (e) {
       dispatch({ type: REQUEST_EXTENSIONS_FAILURE, error: e });
@@ -310,9 +310,9 @@ function requestWorkers() {
 
       dispatch({
         type: REQUEST_WORKERS_SUCCESS,
-        otherWorkers,
-        serviceWorkers,
-        sharedWorkers,
+        otherWorkers: sortTargetsByName(otherWorkers),
+        serviceWorkers: sortTargetsByName(serviceWorkers),
+        sharedWorkers: sortTargetsByName(sharedWorkers),
       });
     } catch (e) {
       dispatch({ type: REQUEST_WORKERS_FAILURE, error: e });
@@ -328,6 +328,12 @@ function startServiceWorker(registrationFront) {
       console.error(e);
     }
   };
+}
+
+function sortTargetsByName(targets) {
+  return targets.sort((target1, target2) =>
+    target1.name.localeCompare(target2.name)
+  );
 }
 
 function unregisterServiceWorker(registrationFront) {
