@@ -9,9 +9,6 @@
 
 ChromeUtils.defineESModuleGetters(this, {
   CATEGORIZATION_SETTINGS: "resource:///modules/SearchSERPTelemetry.sys.mjs",
-  RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
-  TELEMETRY_CATEGORIZATION_KEY:
-    "resource:///modules/SearchSERPTelemetry.sys.mjs",
 });
 
 const TEST_PROVIDER_INFO = [
@@ -65,9 +62,24 @@ const TEST_PROVIDER_INFO = [
 const client = RemoteSettings(TELEMETRY_CATEGORIZATION_KEY);
 const db = client.db;
 
+let categorizationRecord;
+let categorizationAttachment;
+
 add_setup(async function () {
   SearchSERPTelemetry.overrideSearchTelemetryForTests(TEST_PROVIDER_INFO);
   await waitForIdle();
+
+  let { record, attachment } = await insertRecordIntoCollection();
+  categorizationRecord = record;
+  categorizationAttachment = attachment;
+
+  let promise = waitForDomainToCategoriesUpdate();
+  await syncCollection(record);
+  // Enable the preference since all tests rely on it to be turned on.
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.search.serpEventTelemetryCategorization.enabled", true]],
+  });
+  await promise;
 
   registerCleanupFunction(async () => {
     SearchSERPTelemetry.overrideSearchTelemetryForTests();
@@ -79,28 +91,9 @@ add_setup(async function () {
 add_task(async function test_categorization_reporting() {
   resetTelemetry();
 
-  await db.clear();
-  let { record, attachment } = await mockRecordWithAttachment({
-    id: "example_id",
-    version: 1,
-    filename: "domain_category_mappings.json",
-  });
-  await db.create(record);
-  await client.attachments.cacheImpl.set(record.id, attachment);
-  await db.importChanges({}, Date.now());
-
-  let promise = TestUtils.topicObserved(
-    "domain-to-categories-map-update-complete"
-  );
-  // Enabling the preference will trigger filling the map.
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.search.serpEventTelemetryCategorization.enabled", true]],
-  });
-  await promise;
-
   let url = getSERPUrl("searchTelemetryDomainCategorizationReporting.html");
   info("Load a sample SERP with organic and sponsored results.");
-  promise = waitForPageWithCategorizedDomains();
+  let promise = waitForPageWithCategorizedDomains();
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
   await promise;
 
@@ -127,28 +120,14 @@ add_task(async function test_categorization_reporting() {
       num_ads_visible: "2",
     },
   ]);
-
-  await client.attachments.cacheImpl.delete(record.id);
 });
 
 add_task(async function test_no_reporting_if_download_failure() {
   resetTelemetry();
 
-  await db.clear();
-  let { record } = await mockRecordWithAttachment({
-    id: "example_id",
-    version: 1,
-    filename: "domain_category_mappings.json",
-  });
-  await db.create(record);
-  await db.importChanges({}, Date.now());
-
-  const payload = {
-    current: [record],
-    created: [],
-    updated: [record],
-    deleted: [],
-  };
+  // Delete the attachment associated with the record so that syncing
+  // will cause an error.
+  await client.attachments.cacheImpl.delete(categorizationRecord.id);
 
   let observeDownloadError = TestUtils.consoleMessageObserved(msg => {
     return (
@@ -159,7 +138,7 @@ add_task(async function test_no_reporting_if_download_failure() {
   // Since the preference is already enabled, and the map is filled we trigger
   // the map to be updated via an RS sync. The download failure should cause the
   // map to remain empty.
-  await client.emit("sync", { data: payload });
+  await syncCollection(categorizationRecord);
   await observeDownloadError;
 
   let url = getSERPUrl("searchTelemetryDomainCategorizationReporting.html");
@@ -170,17 +149,17 @@ add_task(async function test_no_reporting_if_download_failure() {
 
   await BrowserTestUtils.removeTab(tab);
   assertCategorizationValues([]);
+
+  // Re-insert the attachment for other tests.
+  await client.attachments.cacheImpl.set(
+    categorizationRecord.id,
+    categorizationAttachment
+  );
 });
 
 add_task(async function test_no_reporting_if_no_records() {
   resetTelemetry();
 
-  const payload = {
-    current: [],
-    created: [],
-    updated: [],
-    deleted: [],
-  };
   let observeNoRecords = TestUtils.consoleMessageObserved(msg => {
     return (
       typeof msg.wrappedJSObject.arguments?.[0] == "string" &&
@@ -189,7 +168,7 @@ add_task(async function test_no_reporting_if_no_records() {
       )
     );
   });
-  await client.emit("sync", { data: payload });
+  await syncCollection();
   await observeNoRecords;
 
   let url = getSERPUrl("searchTelemetryDomainCategorizationReporting.html");
@@ -207,27 +186,7 @@ add_task(async function test_no_reporting_if_no_records() {
 add_task(async function test_reporting_limited_to_10_domains_of_each_kind() {
   resetTelemetry();
 
-  await db.clear();
-  let { record, attachment } = await mockRecordWithAttachment({
-    id: "example_id",
-    version: 1,
-    filename: "domain_category_mappings.json",
-  });
-  await db.create(record);
-  await client.attachments.cacheImpl.set(record.id, attachment);
-  await db.importChanges({}, Date.now());
-
-  let mapUpdatedPromise = TestUtils.topicObserved(
-    "domain-to-categories-map-update-complete"
-  );
-  const payload = {
-    current: [record],
-    created: [record],
-    updated: [],
-    deleted: [],
-  };
-  await client.emit("sync", { data: payload });
-  await mapUpdatedPromise;
+  await insertRecordIntoCollectionAndSync();
 
   let url = getSERPUrl(
     "searchTelemetryDomainCategorizationCapProcessedDomains.html"
