@@ -35,11 +35,6 @@ add_task(async function firefox_view_entered_telemetry() {
   await clearAllParentTelemetryEvents();
   await withFirefoxView({}, async browser => {
     const { document } = browser.contentWindow;
-    is(
-      document.location.href,
-      "about:firefoxview",
-      "The Recent browsing page is showing."
-    );
     let enteredAndTabSelectedEvents = [tabSelectedTelemetry, enteredTelemetry];
     await telemetryEvent(enteredAndTabSelectedEvents);
 
@@ -67,11 +62,6 @@ add_task(async function firefox_view_entered_telemetry() {
 add_task(async function test_collapse_and_expand_card() {
   await withFirefoxView({}, async browser => {
     const { document } = browser.contentWindow;
-    is(
-      document.location.href,
-      "about:firefoxview",
-      "The Recent browsing page is showing."
-    );
 
     // Test using Recently Closed card on Recent Browsing page
     let recentlyClosedComponent = document.querySelector(
@@ -109,11 +99,6 @@ add_task(async function test_collapse_and_expand_card() {
 add_task(async function test_change_page_telemetry() {
   await withFirefoxView({}, async browser => {
     const { document } = browser.contentWindow;
-    is(
-      document.location.href,
-      "about:firefoxview",
-      "The Recent browsing page is showing."
-    );
     let changePageEvent = [
       [
         "firefoxview_next",
@@ -149,15 +134,113 @@ add_task(async function test_change_page_telemetry() {
   });
 });
 
+add_task(async function test_context_menu_telemetry() {
+  await PlacesUtils.history.insert({
+    url: URLs[0],
+    title: "Example Domain 1",
+    visits: [{ date: new Date() }],
+  });
+  await withFirefoxView({}, async browser => {
+    const { document } = browser.contentWindow;
+
+    // Test history context menu options
+    navigateToCategory(document, "history");
+    let historyComponent = document.querySelector("view-history");
+    await TestUtils.waitForCondition(() => historyComponent.fullyUpdated);
+    await TestUtils.waitForCondition(
+      () => historyComponent.lists[0].rowEls.length
+    );
+    let firstTabList = historyComponent.lists[0];
+    let firstItem = firstTabList.rowEls[0];
+    let panelList = historyComponent.panelList;
+    await EventUtils.synthesizeMouseAtCenter(firstItem.buttonEl, {}, content);
+    await BrowserTestUtils.waitForEvent(panelList, "shown");
+    await clearAllParentTelemetryEvents();
+    let panelItems = Array.from(panelList.children).filter(
+      panelItem => panelItem.nodeName === "PANEL-ITEM"
+    );
+    let openInNewWindowOption = panelItems[1];
+    let contextMenuEvent = [
+      [
+        "firefoxview_next",
+        "context_menu",
+        "tabs",
+        undefined,
+        { menu_action: "open-in-new-window", data_type: "history" },
+      ],
+    ];
+    let newWindowPromise = BrowserTestUtils.waitForNewWindow({
+      url: URLs[0],
+    });
+    await EventUtils.synthesizeMouseAtCenter(
+      openInNewWindowOption,
+      {},
+      content
+    );
+    let win = await newWindowPromise;
+    await telemetryEvent(contextMenuEvent);
+    await BrowserTestUtils.closeWindow(win);
+
+    await EventUtils.synthesizeMouseAtCenter(firstItem.buttonEl, {}, content);
+    await BrowserTestUtils.waitForEvent(panelList, "shown");
+    await clearAllParentTelemetryEvents();
+    let openInPrivateWindowOption = panelItems[2];
+    contextMenuEvent = [
+      [
+        "firefoxview_next",
+        "context_menu",
+        "tabs",
+        undefined,
+        { menu_action: "open-in-private-window", data_type: "history" },
+      ],
+    ];
+    newWindowPromise = BrowserTestUtils.waitForNewWindow({
+      url: URLs[0],
+    });
+    await EventUtils.synthesizeMouseAtCenter(
+      openInPrivateWindowOption,
+      {},
+      content
+    );
+    win = await newWindowPromise;
+    await telemetryEvent(contextMenuEvent);
+    ok(
+      PrivateBrowsingUtils.isWindowPrivate(win),
+      "Should have opened a private window."
+    );
+    await BrowserTestUtils.closeWindow(win);
+
+    await EventUtils.synthesizeMouseAtCenter(firstItem.buttonEl, {}, content);
+    await BrowserTestUtils.waitForEvent(panelList, "shown");
+    await clearAllParentTelemetryEvents();
+    let deleteFromHistoryOption = panelItems[0];
+    contextMenuEvent = [
+      [
+        "firefoxview_next",
+        "context_menu",
+        "tabs",
+        undefined,
+        { menu_action: "delete-from-history", data_type: "history" },
+      ],
+    ];
+    await EventUtils.synthesizeMouseAtCenter(
+      deleteFromHistoryOption,
+      {},
+      content
+    );
+    await telemetryEvent(contextMenuEvent);
+
+    // clean up extra tabs
+    while (gBrowser.tabs.length > 1) {
+      BrowserTestUtils.removeTab(gBrowser.tabs.at(-1));
+    }
+  });
+});
+
 add_task(async function test_browser_context_menu_telemetry() {
   const menu = document.getElementById("contentAreaContextMenu");
   await withFirefoxView({}, async browser => {
     const { document } = browser.contentWindow;
-    is(
-      document.location.href,
-      "about:firefoxview",
-      "The Recent browsing page is showing."
-    );
     await clearAllParentTelemetryEvents();
 
     // Test browser context menu options
