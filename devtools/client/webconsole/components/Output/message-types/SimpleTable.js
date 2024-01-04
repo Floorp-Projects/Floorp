@@ -34,17 +34,14 @@ SimpleTable.propTypes = {
   items: PropTypes.array.isRequired,
   dispatch: PropTypes.func.isRequired,
   serviceContainer: PropTypes.object.isRequired,
+  message: PropTypes.object.isRequired,
+  timestampsVisible: PropTypes.bool.isRequired,
+  open: PropTypes.bool,
 };
 
 function SimpleTable(props) {
-  const {
-    dispatch,
-    message,
-    serviceContainer,
-    timestampsVisible,
-    badge,
-    open,
-  } = props;
+  const { dispatch, message, serviceContainer, timestampsVisible, open } =
+    props;
 
   const {
     source,
@@ -114,7 +111,6 @@ function SimpleTable(props) {
   const topLevelClasses = ["cm-s-mozilla"];
   return Message({
     attachment,
-    badge,
     dispatch,
     indent,
     level,

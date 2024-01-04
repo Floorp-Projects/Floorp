@@ -5,7 +5,7 @@
 
 const { actions } = require("resource://devtools/client/memory/constants.js");
 
-module.exports = function (filterString = null, action) {
+module.exports = function filterReducer(filterString = null, action) {
   if (action.type === actions.SET_FILTER_STRING) {
     return action.filter || null;
   }

@@ -42,7 +42,7 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
-  "JSPropertyProvider",
+  "jsPropertyProvider",
   "resource://devtools/shared/webconsole/js-property-provider.js",
   true
 );
@@ -1216,7 +1216,7 @@ class WebConsoleActor extends Actor {
         dbgObject = this.dbg.addDebuggee(this.evalGlobal);
       }
 
-      const result = JSPropertyProvider({
+      const result = jsPropertyProvider({
         dbgObject,
         environment,
         frameActorId,

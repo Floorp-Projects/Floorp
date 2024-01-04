@@ -88,6 +88,7 @@ NetworkDetailsBar.propTypes = {
   sourceMapURLService: PropTypes.object,
   toggleNetworkDetails: PropTypes.func.isRequired,
   openLink: PropTypes.func,
+  openNetworkDetails: PropTypes.func,
   targetSearchResult: PropTypes.object,
 };
 
