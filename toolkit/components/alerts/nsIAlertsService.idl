@@ -331,8 +331,8 @@ interface nsIAlertsIconData : nsISupports
    * |aIconSize| will be zero.
   */
   void showAlertWithIconData(in nsIAlertNotification aAlert,
-                             [optional] in nsIObserver aAlertListener,
-                             [optional] in uint32_t aIconSize,
+                             in nsIObserver aAlertListener,
+                             in uint32_t aIconSize,
                              [const, array, size_is(aIconSize)] in uint8_t
                                                                 aIconData);
 };
