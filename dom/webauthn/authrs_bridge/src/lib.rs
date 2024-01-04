@@ -20,8 +20,8 @@ use authenticator::{
     },
     errors::AuthenticatorError,
     statecallback::StateCallback,
-    AuthenticatorInfo, CredentialManagementResult, InteractiveRequest, ManageResult, Pin,
-    RegisterResult, SignResult, StateMachine, StatusPinUv, StatusUpdate,
+    AuthenticatorInfo, BioEnrollmentResult, CredentialManagementResult, InteractiveRequest,
+    ManageResult, Pin, RegisterResult, SignResult, StateMachine, StatusPinUv, StatusUpdate,
 };
 use base64::Engine;
 use cstr::cstr;
@@ -100,6 +100,9 @@ enum BrowserPromptType<'a> {
     },
     CredentialManagementUpdate {
         result: CredentialManagementResult,
+    },
+    BioEnrollmentUpdate {
+        result: BioEnrollmentResult,
     },
     UnknownError,
 }
@@ -1435,6 +1438,7 @@ impl AuthrsService {
                 RequestWrapper::CredentialManagement(c) => {
                     InteractiveRequest::CredentialManagement(c, puat)
                 }
+                RequestWrapper::BioEnrollment(c) => InteractiveRequest::BioEnrollment(c, puat),
             };
             match &guard.as_ref().unwrap().interactive_receiver {
                 Some(channel) => channel.send(command).or(Err(NS_ERROR_FAILURE)),

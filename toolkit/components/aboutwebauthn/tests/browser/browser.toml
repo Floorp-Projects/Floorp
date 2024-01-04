@@ -8,6 +8,8 @@ prefs = [
   "security.webauthn.ctap2=true",
 ]
 
+["browser_aboutwebauthn_bio.js"]
+
 ["browser_aboutwebauthn_credentials.js"]
 
 ["browser_aboutwebauthn_info.js"]
