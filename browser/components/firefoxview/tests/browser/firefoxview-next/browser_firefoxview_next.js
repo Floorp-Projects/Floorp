@@ -3,8 +3,6 @@
 
 /* import-globals-from ../head.js */
 
-const FXVIEW_ENABLED_PREF = "browser.tabs.firefox-view";
-
 add_task(async function test_aria_roles() {
   await withFirefoxView({}, async browser => {
     const { document } = browser.contentWindow;
