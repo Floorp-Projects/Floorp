@@ -37,7 +37,6 @@
 #include "GLConsts.h"
 #include "GLDefs.h"
 #include "GLTypes.h"
-#include "GLVendor.h"
 #include "nsRegionFwd.h"
 #include "nsString.h"
 #include "GLContextTypes.h"

@@ -13,6 +13,8 @@
 #include "mozilla/ipc/IPDLParamTraits.h"
 #include "mozilla/ipc/Shmem.h"
 #include "mozilla/layers/LayersSurfaces.h"
+#include "TiedFields.h"
+#include "TupleUtils.h"
 #include "WebGLTypes.h"
 
 namespace mozilla {
@@ -215,6 +217,34 @@ struct ParamTraits<gfxAlphaType>
           gfxAlphaType, gfxAlphaType::Opaque, gfxAlphaType::NonPremult> {};
 
 // -
+// ParamTraits_TiedFields
+
+template <class T>
+struct ParamTraits_TiedFields {
+  static_assert(mozilla::AreAllBytesTiedFields<T>());
+
+  static void Write(MessageWriter* const writer, const T& in) {
+    const auto& fields = mozilla::TiedFields(in);
+    MapTuple(fields, [&](const auto& field) {
+      WriteParam(writer, field);
+      return true;  // ignored
+    });
+  }
+
+  static bool Read(MessageReader* const reader, T* const out) {
+    const auto& fields = mozilla::TiedFields(*out);
+    bool ok = true;
+    MapTuple(fields, [&](auto& field) {
+      if (ok) {
+        ok &= ReadParam(reader, &field);
+      }
+      return true;  // ignored
+    });
+    return ok;
+  }
+};
+
+// -
 
 template <typename T>
 bool ValidateParam(const T& val) {
@@ -298,24 +328,8 @@ struct ParamTraits<mozilla::webgl::EnumMask<T>> final
     : public PlainOldDataSerializer<mozilla::webgl::EnumMask<T>> {};
 
 template <>
-struct ParamTraits<mozilla::webgl::InitContextResult> final {
-  using T = mozilla::webgl::InitContextResult;
-
-  static void Write(MessageWriter* const writer, const T& in) {
-    WriteParam(writer, in.error);
-    WriteParam(writer, in.options);
-    WriteParam(writer, in.limits);
-    WriteParam(writer, in.uploadableSdTypes);
-    WriteParam(writer, in.vendor);
-  }
-
-  static bool Read(MessageReader* const reader, T* const out) {
-    return ReadParam(reader, &out->error) && ReadParam(reader, &out->options) &&
-           ReadParam(reader, &out->limits) &&
-           ReadParam(reader, &out->uploadableSdTypes) &&
-           ReadParam(reader, &out->vendor);
-  }
-};
+struct ParamTraits<mozilla::webgl::InitContextResult> final
+    : public ParamTraits_TiedFields<mozilla::webgl::InitContextResult> {};
 
 template <>
 struct ParamTraits<mozilla::webgl::ExtensionBits> final
