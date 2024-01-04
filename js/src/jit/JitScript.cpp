@@ -717,6 +717,16 @@ static void MarkActiveICScriptsAndCopyStubs(
           ICCacheIRStub* stub = layout->maybeStubPtr()->toCacheIRStub();
           ICCacheIRStub* newStub = stub->clone(cx->runtime(), newStubSpace);
           layout->setStubPtr(newStub);
+
+          JSJitFrameIter parentFrame(frame);
+          ++parentFrame;
+          BaselineFrame* blFrame = parentFrame.baselineFrame();
+          jsbytecode* pc;
+          parentFrame.baselineScriptAndPc(nullptr, &pc);
+          uint32_t pcOffset = blFrame->script()->pcToOffset(pc);
+          if (blFrame->icScript()->hasInlinedChild(pcOffset)) {
+            blFrame->icScript()->findInlinedChild(pcOffset)->setActive();
+          }
         }
         break;
       }

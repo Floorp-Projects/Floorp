@@ -3386,7 +3386,6 @@ void BaselineCacheIRCompiler::createThis(Register argcReg, Register calleeReg,
   // Save live registers that don't have to be traced.
   LiveGeneralRegisterSet liveNonGCRegs;
   liveNonGCRegs.add(argcReg);
-  liveNonGCRegs.add(ICStubReg);
   masm.PushRegsInMask(liveNonGCRegs);
 
   // CreateThis takes two arguments: callee, and newTarget.
@@ -3423,6 +3422,8 @@ void BaselineCacheIRCompiler::createThis(Register argcReg, Register calleeReg,
 
   // Restore saved registers.
   masm.PopRegsInMask(liveNonGCRegs);
+  Address stubAddr(FramePointer, BaselineStubFrameLayout::ICStubOffsetFromFP);
+  masm.loadPtr(stubAddr, ICStubReg);
 
   // Save |this| value back into pushed arguments on stack.
   MOZ_ASSERT(!liveNonGCRegs.aliases(JSReturnOperand));
