@@ -59,7 +59,7 @@ def run_test(context, is_junit, **kwargs):
         "mochitest-chrome-gpu": "gpu",
         "mochitest-plain-gpu": "gpu",
         "mochitest-media": "media",
-        "mochitest-browser-chrome-screenshots": "screenshots",
+        "mochitest-browser-screenshots": "screenshots",
         "mochitest-webgl1-core": "webgl1-core",
         "mochitest-webgl1-ext": "webgl1-ext",
         "mochitest-webgl2-core": "webgl2-core",

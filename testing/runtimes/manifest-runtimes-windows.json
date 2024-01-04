@@ -300,7 +300,7 @@
     "uriloader/exthandler/tests/mochitest/browser.ini": 20.44,
     "widget/tests/browser/browser.ini": 18.18
   },
-  "mochitest-browser-chrome-screenshots": {
+  "mochitest-browser-screenshots": {
     "browser/tools/mozscreenshots/controlCenter/browser.ini": 67.17,
     "browser/tools/mozscreenshots/devtools/browser.ini": 12.01,
     "browser/tools/mozscreenshots/permissionPrompts/browser.ini": 32.27,
