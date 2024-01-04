@@ -3736,12 +3736,12 @@ BrowserGlue.prototype = {
    * Show the notificationBox for a locked places database.
    */
   _showPlacesLockedNotificationBox:
-    async function BG__showPlacesLockedNotificationBox() {
+    function BG__showPlacesLockedNotificationBox() {
       var win = lazy.BrowserWindowTracker.getTopWindow();
       var buttons = [{ supportPage: "places-locked" }];
 
       var notifyBox = win.gBrowser.getNotificationBox();
-      var notification = await notifyBox.appendNotification(
+      var notification = notifyBox.appendNotification(
         "places-locked",
         {
           label: { "l10n-id": "places-locked-prompt" },
@@ -4616,7 +4616,7 @@ BrowserGlue.prototype = {
     ];
 
     const notifyBox = win.gBrowser.getNotificationBox();
-    const notification = await notifyBox.appendNotification(
+    const notification = notifyBox.appendNotification(
       "startup-restore-session-suggestion",
       {
         label: messageFragment,

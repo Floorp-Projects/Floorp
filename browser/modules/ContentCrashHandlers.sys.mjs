@@ -370,7 +370,7 @@ export var TabCrashHandler = {
    * @param dumpID
    *        Minidump id of the crash.
    */
-  async showSubFrameNotification(browser, childID, dumpID) {
+  showSubFrameNotification(browser, childID, dumpID) {
     let gBrowser = browser.getTabBrowser();
     let notificationBox = gBrowser.getNotificationBox(browser);
 
@@ -417,7 +417,7 @@ export var TabCrashHandler = {
       },
     ];
 
-    notification = await notificationBox.appendNotification(
+    notification = notificationBox.appendNotification(
       value,
       {
         label: { "l10n-id": "crashed-subframe-message" },
@@ -956,12 +956,12 @@ export var UnsubmittedCrashHandler = {
    *        The Array of report IDs to offer the user to send.
    * @returns The <xul:notification> if one is shown. null otherwise.
    */
-  async showPendingSubmissionsNotification(reportIDs) {
+  showPendingSubmissionsNotification(reportIDs) {
     if (!reportIDs.length) {
       return null;
     }
 
-    let notification = await this.show({
+    let notification = this.show({
       notificationID: "pending-crash-reports",
       reportIDs,
       onAction: () => {

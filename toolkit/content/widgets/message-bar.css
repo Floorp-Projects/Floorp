@@ -13,6 +13,10 @@
   --close-icon-size: 28px;
 }
 
+:host([message-bar-type=infobar]) {
+  --close-icon-size: 28px;
+}
+
 :host {
   --message-bar-background-color: var(--in-content-box-info-background);
   --message-bar-text-color: var(--in-content-text-color);
@@ -24,7 +28,7 @@
   --message-bar-icon-url: var(--warn-icon-url);
 }
 
-:host([type=success]) {
+:host([type=success]:not([message-bar-type=infobar])) {
   --message-bar-icon-url: var(--success-icon-url);
 }
 
@@ -121,15 +125,18 @@
   min-height: auto;
   width: var(--close-icon-size);
   height: var(--close-icon-size);
+  margin: 0;
   padding: 0;
   flex-shrink: 0;
-  margin: 4px 8px;
-  background-size: 12px;
 }
 
 @media (prefers-contrast) {
   :host {
     border-color: CanvasText;
+  }
+
+  .container.infobar::before {
+    background-color: CanvasText;
   }
 }
 
@@ -137,7 +144,7 @@
   /* MessageBar colors by message type */
   /* Colors from: https://design.firefox.com/photon/components/message-bars.html#type-specific-style */
 
-  :host([type=warning]) {
+  :host([type=warning]:not([message-bar-type=infobar])) {
     /* Ensure colors within the bar are adjusted and controls are readable */
     color-scheme: light;
 
@@ -151,7 +158,7 @@
     --close-fill-color: var(--message-bar-text-color);
   }
 
-  :host([type=success]) {
+  :host([type=success]:not([message-bar-type=infobar])) {
     /* Ensure colors within the bar are adjusted and controls are readable */
     color-scheme: light;
 
@@ -163,7 +170,7 @@
     --in-content-button-background-active: var(--green-80);
   }
 
-  :host([type=error]) {
+  :host([type=error]:not([message-bar-type=infobar])) {
     --message-bar-background-color: var(--red-60);
     --message-bar-text-color: #ffffff;
 
@@ -184,6 +191,15 @@
     color: rgb(226,40,80);
   }
 
+  .container.infobar {
+    box-shadow: 0 1px 2px rgba(58, 57, 68, 0.1);
+    background: var(--in-content-page-background);
+  }
+
+  .container.infobar::before {
+    background-image: linear-gradient(0deg, #9059ff 0%, #ff4aa2 52.08%, #ffbd4f 100%);
+  }
+
   .close {
     fill: var(--close-fill-color);
   }
@@ -191,6 +207,10 @@
   @media (prefers-color-scheme: dark) {
     /* Don't set the background in prefers-contrast mode or macOS can end up
      * with black on black text. */
+    .container.infobar {
+      background: rgb(66,65,77);
+    }
+
     :host([type=info]) .icon {
       color: rgb(128,235,255);
     }
@@ -205,12 +225,101 @@
   }
 }
 
+:host([message-bar-type=infobar]:first-of-type) {
+  margin-top: 4px;
+}
+
+:host([message-bar-type=infobar]) {
+  margin: 0 4px 4px;
+}
+
+.container.infobar {
+  /* Don't let lwthemes set a text-shadow. */
+  text-shadow: none;
+  padding: 0;
+}
+
+.container.infobar::before {
+  content: "";
+  display: block;
+  width: 2px;
+  position: absolute;
+  top: 0;
+  inset-inline-start: 0;
+  height: 100%;
+  border-start-start-radius: 4px;
+  border-end-start-radius: 4px;
+}
+
+.container.infobar {
+  align-items: flex-start;
+}
+
+/* Infobars styling. */
+.notification-content {
+  margin: 0;
+  margin-inline-start: 8px;
+  padding-block: 3px;
+}
+
+.notification-message {
+  padding-block: 8px;
+  margin-inline-end: 20px;
+  /* Prevent misalignment issue in the infobar on Linux  */
+  @media (-moz-platform: linux) {
+    padding-block-start: 6px;
+  }
+}
+
+.notification-button-container,
+.notification-message {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.container.infobar > .notification-content > .notification-message img.inline-icon {
+  /* Align inline icon images in the message content */
+  vertical-align: middle;
+  /* Ensure they get the right fill color. */
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+
+.close {
+  margin: 4px 8px;
+  background-size: 12px;
+}
+
+.notification-button {
+  align-items: center;
+  margin: 0 4px;
+}
+
+.notification-button:first-of-type {
+  /* When the buttons wrap to their own line we want to match the 8px on the message. */
+  margin-inline-start: 0;
+}
+
 strong {
   font-weight: 600;
 }
 
 .text-link:hover {
   cursor: pointer;
+}
+
+.infobar > .icon {
+  padding: 0;
+  margin: 10px 0;
+}
+
+.infobar > .icon,
+:host([type=system]) .notification-content {
+  margin-inline-start: 16px;
+}
+
+:host([type=system]) .icon {
+  display: none;
 }
 
 @keyframes spin {
