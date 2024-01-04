@@ -4443,6 +4443,7 @@ static const NSUInteger kWindowShadowOptionsTooltip = 4;
       return kWindowShadowOptionsNoShadow;
 
     case WindowShadow::Menu:
+    case WindowShadow::Panel:
       return kWindowShadowOptionsMenu;
 
     case WindowShadow::Tooltip:
