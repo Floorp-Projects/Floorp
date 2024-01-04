@@ -64,6 +64,7 @@ enum class WindowButtonType : uint8_t;
 enum class WindowShadow : uint8_t {
   None,
   Menu,
+  Panel,
   Tooltip,
 };
 

@@ -382,7 +382,7 @@ WindowShadow nsMenuPopupFrame::GetShadowStyle() const {
     case StyleAppearance::Menupopup:
       return WindowShadow::Menu;
     default:
-      return WindowShadow::Menu;
+      return WindowShadow::Panel;
   }
 }
 
