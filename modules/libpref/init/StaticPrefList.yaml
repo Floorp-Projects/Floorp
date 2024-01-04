@@ -10284,6 +10284,14 @@
     value: false
     mirror: always
 
+# [TEST-ONLY] use Media Foundation clearkey CDM dll to mock as an external CDM,
+# external CDM like Widevine and PlayReady so that we won't be interfered by
+# unexpected behaviors caused by the external library.
+-   name: media.eme.wmf.use-mock-cdm-for-external-cdms
+    type: RelaxedAtomicBool
+    value: false
+    mirror: always
+
 # Enable PlayReady DRM for EME
 -   name: media.eme.playready.enabled
     type: RelaxedAtomicBool
