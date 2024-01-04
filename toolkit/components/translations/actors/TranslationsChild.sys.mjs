@@ -6,6 +6,8 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   TranslationsDocument:
     "chrome://global/content/translations/translations-document.sys.mjs",
+  LRUCache:
+    "chrome://global/content/translations/translations-document.sys.mjs",
   LanguageDetector:
     "resource://gre/modules/translation/LanguageDetector.sys.mjs",
 });
@@ -18,6 +20,13 @@ export class TranslationsChild extends JSWindowActorChild {
    * @type {TranslationsDocument | null}
    */
   #translatedDoc = null;
+
+  /**
+   * This cache is shared across TranslationsChild instances. This means
+   * that it will be shared across multiple page loads in the same origin.
+   * @type {LRUCache | null}
+   */
+  static #translationsCache = null;
 
   handleEvent(event) {
     switch (event.type) {
@@ -50,14 +59,29 @@ export class TranslationsChild extends JSWindowActorChild {
           return undefined;
         }
 
+        const { fromLanguage, toLanguage, port, translationsStart } = data;
+        if (
+          !TranslationsChild.#translationsCache ||
+          !TranslationsChild.#translationsCache.matches(
+            fromLanguage,
+            toLanguage
+          )
+        ) {
+          TranslationsChild.#translationsCache = new lazy.LRUCache(
+            fromLanguage,
+            toLanguage
+          );
+        }
+
         this.#translatedDoc = new lazy.TranslationsDocument(
           this.document,
-          data.fromLanguage,
+          fromLanguage,
           this.contentWindow.windowGlobalChild.innerWindowId,
-          data.port,
+          port,
           () => this.sendAsyncMessage("Translations:RequestPort"),
-          data.translationsStart,
-          () => this.docShell.now()
+          translationsStart,
+          () => this.docShell.now(),
+          TranslationsChild.#translationsCache
         );
 
         return undefined;
