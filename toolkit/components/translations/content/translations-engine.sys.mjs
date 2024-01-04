@@ -137,7 +137,6 @@ export class TranslationsEngine {
     TranslationsEngine.#cachedEngines.set(languagePairKey, enginePromise);
 
     enginePromise.catch(error => {
-      TE_reportEngineStatus(innerWindowId, "error");
       TE_logError(
         `The engine failed to load for translating "${fromLanguage}" to "${toLanguage}". Removing it from the cache.`,
         error
@@ -434,8 +433,6 @@ const ports = new Map();
  * @param {MessagePort} port
  */
 function listenForPortMessages(fromLanguage, toLanguage, innerWindowId, port) {
-  let isFirstLoad = true;
-
   async function handleMessage({ data }) {
     switch (data.type) {
       case "TranslationsPort:GetEngineStatusRequest": {
@@ -448,12 +445,17 @@ function listenForPortMessages(fromLanguage, toLanguage, innerWindowId, port) {
           innerWindowId
         ).then(
           () => {
+            TE_log("The engine is ready for translations.", {
+              innerWindowId,
+            });
+            TE_reportEngineStatus(innerWindowId, "ready");
             port.postMessage({
               type: "TranslationsPort:GetEngineStatusResponse",
               status: "ready",
             });
           },
           () => {
+            TE_reportEngineStatus(innerWindowId, "error");
             port.postMessage({
               type: "TranslationsPort:GetEngineStatusResponse",
               status: "error",
@@ -478,11 +480,6 @@ function listenForPortMessages(fromLanguage, toLanguage, innerWindowId, port) {
           isHTML,
           innerWindowId
         );
-        if (isFirstLoad) {
-          isFirstLoad = false;
-          TE_log("The engine is ready for translations.", { innerWindowId });
-          TE_reportEngineStatus(innerWindowId, "ready");
-        }
         port.postMessage({
           type: "TranslationsPort:TranslationResponse",
           messageId,
