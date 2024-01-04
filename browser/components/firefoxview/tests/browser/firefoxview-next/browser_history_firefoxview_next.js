@@ -18,7 +18,6 @@ const SHOW_ALL_HISTORY_EVENT = [
   ["firefoxview_next", "show_all_history", "tabs", undefined],
 ];
 
-const FXVIEW_NEXT_ENABLED_PREF = "browser.tabs.firefox-view-next";
 const NEVER_REMEMBER_HISTORY_PREF = "browser.privatebrowsing.autostart";
 const DAY_MS = 24 * 60 * 60 * 1000;
 const today = new Date();
@@ -153,10 +152,7 @@ async function addHistoryItems(dateAdded) {
 
 add_setup(async () => {
   await SpecialPowers.pushPrefEnv({
-    set: [
-      [FXVIEW_NEXT_ENABLED_PREF, true],
-      ["browser.firefox-view.search.enabled", true],
-    ],
+    set: [["browser.firefox-view.search.enabled", true]],
   });
   registerCleanupFunction(async () => {
     await SpecialPowers.popPrefEnv();
@@ -174,7 +170,7 @@ add_task(async function test_list_ordering() {
   await addHistoryItems(oneMonthAgo);
   await withFirefoxView({}, async browser => {
     const { document } = browser.contentWindow;
-    is(document.location.href, "about:firefoxview-next");
+    is(document.location.href, "about:firefoxview");
 
     await navigateToCategoryAndWait(document, "history");
 
@@ -268,7 +264,7 @@ add_task(async function test_empty_states() {
   await PlacesUtils.history.clear();
   await withFirefoxView({}, async browser => {
     const { document } = browser.contentWindow;
-    is(document.location.href, "about:firefoxview-next");
+    is(document.location.href, "about:firefoxview");
 
     await navigateToCategoryAndWait(document, "history");
 
@@ -406,7 +402,7 @@ add_task(async function test_show_all_history_telemetry() {
   await addHistoryItems(oneMonthAgo);
   await withFirefoxView({}, async browser => {
     const { document } = browser.contentWindow;
-    is(document.location.href, "about:firefoxview-next");
+    is(document.location.href, "about:firefoxview");
 
     await navigateToCategoryAndWait(document, "history");
 
