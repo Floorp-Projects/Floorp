@@ -767,10 +767,9 @@ void GPUProcessManager::OnInProcessDeviceReset(bool aTrackThreshold) {
 }
 
 void GPUProcessManager::OnRemoteProcessDeviceReset(GPUProcessHost* aHost) {
-  if (OnDeviceReset(/* aTrackThreshold */ true)) {
-    DestroyProcess();
-    DisableGPUProcess("GPU processed experienced too many device resets");
-    HandleProcessLost();
+  if (OnDeviceReset(/* aTrackThreshold */ true) &&
+      !DisableWebRenderConfig(wr::WebRenderError::EXCESSIVE_RESETS,
+                              nsCString())) {
     return;
   }
 
