@@ -1,0 +1,37 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+EXPORTS += [
+    "ArrayUtils.h",
+    "BigEndian.h",
+    "ClearKeyBase64.h",
+    "ClearKeyDecryptionManager.h",
+    "ClearKeyPersistence.h",
+    "ClearKeySession.h",
+    "ClearKeySessionManager.h",
+    "ClearKeyStorage.h",
+    "ClearKeyUtils.h",
+    "RefCounted.h",
+]
+
+UNIFIED_SOURCES += [
+    "ClearKeyBase64.cpp",
+    "ClearKeyDecryptionManager.cpp",
+    "ClearKeyPersistence.cpp",
+    "ClearKeySession.cpp",
+    "ClearKeySessionManager.cpp",
+    "ClearKeyStorage.cpp",
+    "ClearKeyUtils.cpp",
+]
+
+TEST_DIRS += [
+    "gtest",
+]
+
+USE_LIBS += [
+    "nss",
+    "psshparser",
+]
+
+Library("gecko-clearkey")

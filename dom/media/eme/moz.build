@@ -49,6 +49,8 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"] == "android":
 if CONFIG["MOZ_WMF_CDM"]:
     DIRS += ["mediafoundation"]
 
+DIRS += ["clearkey"]
+
 include("/ipc/chromium/chromium-config.mozbuild")
 
 FINAL_LIBRARY = "xul"
