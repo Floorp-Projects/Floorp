@@ -154,7 +154,7 @@ class CardContainer extends MozLitElement {
               <slot name="secondary-header"></slot>
             </span>
             <a
-              href="about:firefoxview-next#${this.shortPageName}"
+              href="about:firefoxview#${this.shortPageName}"
               @click=${this.viewAllClicked}
               class="view-all-link"
               data-l10n-id="firefoxview-view-all-link"
@@ -188,7 +188,7 @@ class CardContainer extends MozLitElement {
               <slot name="header"></slot>
             </summary>
             <a
-              href="about:firefoxview-next#${this.shortPageName}"
+              href="about:firefoxview#${this.shortPageName}"
               @click=${this.viewAllClicked}
               class="view-all-link"
               data-l10n-id="firefoxview-view-all-link"

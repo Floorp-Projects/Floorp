@@ -306,7 +306,7 @@ class RecentlyClosedTabsInView extends ViewPage {
         "firefoxview-recentlyclosed-empty-description-two",
       ];
       descriptionLink = {
-        url: "about:firefoxview-next#history",
+        url: "about:firefoxview#history",
         name: "history-url",
         sameTarget: "true",
       };
