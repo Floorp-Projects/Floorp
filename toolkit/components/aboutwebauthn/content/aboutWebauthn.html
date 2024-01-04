@@ -25,26 +25,56 @@
       ></label>
     </div>
 
-    <div hidden id="categories">
-      <div id="info-tab-button" class="category" selected="true">
+    <div hidden id="categories" role="tablist" aria-labelledby="info-text-div">
+      <div
+        id="info-tab-button"
+        class="category"
+        selected="true"
+        role="tab"
+        tabindex="0"
+        aria-selected="true"
+        aria-controls="token-info-section"
+      >
         <span
           class="tablinks"
           data-l10n-id="about-webauthn-info-section-title"
         ></span>
       </div>
-      <div hidden id="pin-tab-button" class="category">
+      <div
+        hidden
+        id="pin-tab-button"
+        class="category"
+        role="tab"
+        tabindex="-1"
+        aria-selected="false"
+        aria-controls="set-change-pin-section"
+      >
         <span
           class="tablinks"
           data-l10n-id="about-webauthn-pin-section-title"
         ></span>
       </div>
-      <div id="credentials-tab-button" class="category">
+      <div
+        id="credentials-tab-button"
+        class="category"
+        role="tab"
+        tabindex="-1"
+        aria-selected="false"
+        aria-controls="credential-management-section"
+      >
         <span
           class="tablinks"
           data-l10n-id="about-webauthn-credential-management-section-title"
         ></span>
       </div>
-      <div id="bio-enrollments-tab-button" class="category">
+      <div
+        id="bio-enrollments-tab-button"
+        class="category"
+        role="tab"
+        tabindex="-1"
+        aria-selected="false"
+        aria-controls="bio-enrollment-section"
+      >
         <span
           class="tablinks"
           data-l10n-id="about-webauthn-bio-enrollment-section-title"
@@ -57,7 +87,12 @@
         <label id="ctap-listen-result"></label>
       </div>
 
-      <div hidden class="tabcontent token-info-section" id="token-info-section">
+      <div
+        hidden
+        class="tabcontent token-info-section"
+        id="token-info-section"
+        role="tabpanel"
+      >
         <h2
           class="categoryTitle"
           data-l10n-id="about-webauthn-info-section-title"
@@ -74,7 +109,12 @@
         </div>
       </div>
 
-      <div hidden class="tabcontent pin-section" id="set-change-pin-section">
+      <div
+        hidden
+        class="tabcontent pin-section"
+        id="set-change-pin-section"
+        role="tabpanel"
+      >
         <h2
           class="categoryTitle"
           data-l10n-id="about-webauthn-pin-section-title"
@@ -120,6 +160,7 @@
         hidden
         class="tabcontent credential-management-section"
         id="credential-management-section"
+        role="tabpanel"
       >
         <h2
           class="categoryTitle"
@@ -152,6 +193,7 @@
         hidden
         class="tabcontent bio-enrollment-section"
         id="bio-enrollment-section"
+        role="tabpanel"
       >
         <h2
           class="categoryTitle"

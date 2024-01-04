@@ -697,9 +697,13 @@ function open_tab(evt, tabName) {
     tablinks = Array.from(document.getElementsByClassName("category"));
     tablinks.forEach(tablink => {
       tablink.removeAttribute("selected");
+      tablink.setAttribute("aria-selected", "false");
+      tablink.setAttribute("tabindex", "-1");
       tablink.disabled = false;
     });
     evt.currentTarget.setAttribute("selected", "true");
+    evt.currentTarget.setAttribute("tabindex", "0");
+    evt.currentTarget.setAttribute("aria-selected", "true");
   }
 
   if (!evt.detail.skip_results_clearing) {
