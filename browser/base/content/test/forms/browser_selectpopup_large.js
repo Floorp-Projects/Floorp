@@ -174,12 +174,18 @@ async function performLargePopupTests(win) {
   ok(true, "scroll position at drag up from option");
 
   scrollPos = getScrollPos();
+  // We intentionally turn off this a11y check, because the following click
+  // is sent on an arbitrary web content that is not expected to be tested
+  // by itself with the browser mochitests, therefore this rule check shall
+  // be ignored by a11y-checks suite.
+  AccessibilityUtils.setEnv({ labelRule: false });
   EventUtils.synthesizeMouseAtPoint(
     popupRect.left + 20,
     popupRect.bottom + 25,
     { type: "mouseup" },
     win
   );
+  AccessibilityUtils.resetEnv();
   is(
     getScrollPos(),
     scrollPos,
