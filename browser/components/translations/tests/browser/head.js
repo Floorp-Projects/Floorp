@@ -139,6 +139,7 @@ async function openTranslationsPanel({
   openFromAppMenu = false,
   openWithKeyboard = false,
 }) {
+  logAction();
   await closeTranslationsPanelIfOpen();
   if (openFromAppMenu) {
     await openTranslationsPanelViaAppMenu({ onOpenPanel, openWithKeyboard });
@@ -163,7 +164,7 @@ async function openTranslationsPanelViaTranslationsButton({
   onOpenPanel = null,
   openWithKeyboard = false,
 }) {
-  info("Opening the translations panel via the translations button");
+  logAction();
   const { button } = await assertTranslationsButton(
     { button: true },
     "The translations button is visible."
@@ -182,11 +183,34 @@ async function openTranslationsPanelViaTranslationsButton({
 }
 
 /**
+ * Provide a uniform way to log actions. This abuses the Error stack to get the callers
+ * of the action. This should help in test debugging.
+ */
+function logAction(...params) {
+  const error = new Error();
+  const stackLines = error.stack.split("\n");
+  const actionName = stackLines[1]?.split("@")[0] ?? "";
+  const taskFileLocation = stackLines[2]?.split("@")[1] ?? "";
+  if (taskFileLocation.includes("head.js")) {
+    // Only log actions that were done at the test level.
+    return;
+  }
+
+  info(`Action: ${actionName}(${params.join(", ")})`);
+  info(
+    `Source: ${taskFileLocation.replace(
+      "chrome://mochitests/content/browser/",
+      ""
+    )}`
+  );
+}
+
+/**
  * Opens the translations panel settings menu.
  * Requires that the translations panel is already open.
  */
 async function openTranslationsSettingsMenu() {
-  info("Opening the translations panel settings menu");
+  logAction();
   const gearIcons = getAllByL10nId("translations-panel-settings-button");
   for (const gearIcon of gearIcons) {
     if (gearIcon.hidden) {
@@ -218,7 +242,7 @@ async function openTranslationsPanelViaAppMenu({
   onOpenPanel = null,
   openWithKeyboard = false,
 }) {
-  info("Opening the translations panel via the app menu");
+  logAction();
   const appMenuButton = getById("PanelUI-menu-button");
   if (openWithKeyboard) {
     hitEnterKey(appMenuButton, "Opening the app-menu button with keyboard");
@@ -254,7 +278,7 @@ async function openTranslationsPanelViaAppMenu({
  * @param {string} langTag - A BCP-47 language tag.
  */
 function switchSelectedFromLanguage(langTag) {
-  info(`Switching the from-language to ${langTag}`);
+  logAction(langTag);
   const { fromMenuList } = TranslationsPanel.elements;
   fromMenuList.value = langTag;
   fromMenuList.dispatchEvent(new Event("command"));
@@ -281,7 +305,7 @@ function assertSelectedFromLanguage(langTag) {
  * @param {string} langTag - A BCP-47 language tag.
  */
 function switchSelectedToLanguage(langTag) {
-  info(`Switching the to-language to ${langTag}`);
+  logAction(langTag);
   const { toMenuList } = TranslationsPanel.elements;
   toMenuList.value = langTag;
   toMenuList.dispatchEvent(new Event("command"));
@@ -308,6 +332,7 @@ function assertSelectedToLanguage(langTag) {
  * otherwise the test will fail.
  */
 async function clickSettingsMenuItemByL10nId(l10nId) {
+  logAction(l10nId);
   info(`Toggling the "${l10nId}" settings menu item.`);
   click(getByL10nId(l10nId), `Clicking the "${l10nId}" settings menu item.`);
   await closeSettingsMenuIfOpen();
@@ -319,6 +344,7 @@ async function clickSettingsMenuItemByL10nId(l10nId) {
  * otherwise the test will fail.
  */
 async function clickAlwaysOfferTranslations() {
+  logAction();
   await clickSettingsMenuItemByL10nId(
     "translations-panel-settings-always-offer-translation"
   );
@@ -333,6 +359,7 @@ async function clickAlwaysTranslateLanguage({
   downloadHandler = null,
   pivotTranslation = false,
 } = {}) {
+  logAction();
   await clickSettingsMenuItemByL10nId(
     "translations-panel-settings-always-translate-language"
   );
@@ -351,6 +378,7 @@ async function clickAlwaysTranslateLanguage({
  * otherwise the test will fail.
  */
 async function clickNeverTranslateLanguage() {
+  logAction();
   await clickSettingsMenuItemByL10nId(
     "translations-panel-settings-never-translate-language"
   );
@@ -362,6 +390,7 @@ async function clickNeverTranslateLanguage() {
  * otherwise the test will fail.
  */
 async function clickNeverTranslateSite() {
+  logAction();
   await clickSettingsMenuItemByL10nId(
     "translations-panel-settings-never-translate-site"
   );
@@ -373,6 +402,7 @@ async function clickNeverTranslateSite() {
  * otherwise the test will fail.
  */
 async function clickManageLanguages() {
+  logAction();
   await clickSettingsMenuItemByL10nId(
     "translations-panel-settings-manage-languages"
   );
@@ -545,7 +575,7 @@ async function assertLangTagIsShownOnTranslationsButton(
  * Simulates clicking the cancel button.
  */
 async function clickCancelButton() {
-  info("Clicking the cancel button");
+  logAction();
   const { cancelButton } = TranslationsPanel.elements;
   ok(isVisible(cancelButton), "Expected the cancel button to be visible");
   await waitForTranslationsPopupEvent("popuphidden", () => {
@@ -557,7 +587,7 @@ async function clickCancelButton() {
  * Simulates clicking the restore-page button.
  */
 async function clickRestoreButton() {
-  info("Clicking the restore button");
+  logAction();
   const { restoreButton } = TranslationsPanel.elements;
   ok(isVisible(restoreButton), "Expect the restore-page button to be visible");
   await waitForTranslationsPopupEvent("popuphidden", () => {
@@ -569,7 +599,7 @@ async function clickRestoreButton() {
  * Simulates clicking the dismiss-error button.
  */
 async function clickDismissErrorButton() {
-  info("Clicking the dismiss-error button");
+  logAction();
   const { dismissErrorButton } = TranslationsPanel.elements;
   ok(
     isVisible(dismissErrorButton),
@@ -596,11 +626,11 @@ async function clickTranslateButton({
   downloadHandler = null,
   pivotTranslation = false,
 } = {}) {
-  info("Clicking the translate button");
+  logAction();
   const { translateButton } = TranslationsPanel.elements;
   ok(isVisible(translateButton), "Expect the translate button to be visible");
   await waitForTranslationsPopupEvent("popuphidden", () => {
-    click(translateButton, "Click the translate button");
+    click(translateButton);
   });
 
   if (downloadHandler) {
@@ -621,7 +651,7 @@ async function clickTranslateButton({
  *    False if the default view should be expected
  */
 async function clickChangeSourceLanguageButton({ firstShow = false } = {}) {
-  info("Clicking the change-source-language button");
+  logAction();
   const { changeSourceLanguageButton } = TranslationsPanel.elements;
   ok(
     isVisible(changeSourceLanguageButton),
@@ -834,6 +864,7 @@ async function navigate(
   message,
   { url, onOpenPanel = null, downloadHandler = null, pivotTranslation = false }
 ) {
+  logAction();
   // When the translations panel is open from the app menu,
   // it doesn't close on navigate the way that it does when it's
   // open from the translations button, so ensure that we always
@@ -877,6 +908,7 @@ async function navigate(
  * Fails if the reader-mode button is hidden.
  */
 async function toggleReaderMode() {
+  logAction();
   const readerButton = document.getElementById("reader-mode-button");
   await waitForCondition(() => readerButton.hidden === false);
 
@@ -901,7 +933,7 @@ async function toggleReaderMode() {
  * @param {string} url
  */
 async function addTab(url) {
-  info(`Adding tab for "${url}"`);
+  logAction(url);
   const tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
     url,
@@ -922,7 +954,7 @@ async function addTab(url) {
  * @param {string} name
  */
 async function switchTab(tab, name) {
-  info("Switching tabs to " + name);
+  logAction("tab", name);
   gBrowser.selectedTab = tab;
   await new Promise(resolve => setTimeout(resolve, 0));
 }
@@ -931,10 +963,10 @@ async function switchTab(tab, name) {
  * Simulates clicking an element with the mouse.
  *
  * @param {element} element - The element to click.
- * @param {string} message - A message to log to info.
+ * @param {string} [message] - A message to log to info.
  */
 function click(element, message) {
-  info(message);
+  logAction(message);
   return new Promise(resolve => {
     element.addEventListener(
       "click",
