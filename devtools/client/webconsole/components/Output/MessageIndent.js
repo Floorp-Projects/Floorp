@@ -5,6 +5,7 @@
 "use strict";
 
 const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
+const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
 
 const INDENT_WIDTH = 12;
 
@@ -34,6 +35,11 @@ function MessageIndent(props) {
 
   return CONSTANT_INDENTS[indent] || getIndentElement(indent);
 }
+
+MessageIndent.propTypes = {
+  indent: PropTypes.number,
+  inWarningGroup: PropTypes.bool,
+};
 
 module.exports.MessageIndent = MessageIndent;
 
