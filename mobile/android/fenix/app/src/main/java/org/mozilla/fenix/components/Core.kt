@@ -50,6 +50,8 @@ import mozilla.components.feature.media.MediaSessionFeature
 import mozilla.components.feature.media.middleware.LastMediaAccessMiddleware
 import mozilla.components.feature.media.middleware.RecordingDevicesMiddleware
 import mozilla.components.feature.prompts.PromptMiddleware
+import mozilla.components.feature.prompts.file.FileUploadsDirCleaner
+import mozilla.components.feature.prompts.file.FileUploadsDirCleanerMiddleware
 import mozilla.components.feature.pwa.ManifestStorage
 import mozilla.components.feature.pwa.WebAppShortcutManager
 import mozilla.components.feature.readerview.ReaderViewMiddleware
@@ -195,6 +197,10 @@ class Core(
         )
     }
 
+    val fileUploadsDirCleaner: FileUploadsDirCleaner by lazyMonitored {
+        FileUploadsDirCleaner { context.cacheDir }
+    }
+
     val geckoRuntime: GeckoRuntime by lazyMonitored {
         GeckoProvider.getOrCreateRuntime(
             context,
@@ -292,6 +298,7 @@ class Core(
                 SessionPrioritizationMiddleware(),
                 SaveToPDFMiddleware(context),
                 FxSuggestFactsMiddleware(),
+                FileUploadsDirCleanerMiddleware(fileUploadsDirCleaner),
             )
 
         BrowserStore(

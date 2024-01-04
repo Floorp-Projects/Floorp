@@ -92,6 +92,10 @@ open class FocusApplication : LocaleAwareApplication(), Provider, CoroutineScope
             components.startupActivityLog.registerInAppOnCreate(this)
 
             ProcessLifecycleOwner.get().lifecycle.addObserver(lockObserver)
+            GlobalScope.launch(Dispatchers.IO) {
+                // Remove stale temporary uploaded files.
+                components.fileUploadsDirCleaner.cleanUploadsDirectory()
+            }
         }
     }
 

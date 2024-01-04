@@ -696,6 +696,7 @@ abstract class BaseBrowserFragment :
                 fragmentManager = parentFragmentManager,
                 identityCredentialColorsProvider = colorsProvider,
                 tabsUseCases = requireComponents.useCases.tabsUseCases,
+                fileUploadsDirCleaner = requireComponents.core.fileUploadsDirCleaner,
                 creditCardValidationDelegate = DefaultCreditCardValidationDelegate(
                     context.components.core.lazyAutofillStorage,
                 ),

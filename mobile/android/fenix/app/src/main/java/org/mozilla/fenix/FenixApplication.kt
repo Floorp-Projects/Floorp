@@ -384,6 +384,7 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
                             components.fxSuggest.ingestionScheduler.stopPeriodicIngestion()
                         }
                     }
+                    components.core.fileUploadsDirCleaner.cleanUploadsDirectory()
                 }
                 // Account manager initialization needs to happen on the main thread.
                 GlobalScope.launch(Dispatchers.Main) {

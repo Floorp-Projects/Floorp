@@ -186,6 +186,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
                 customTabId = sessionId,
                 tabsUseCases = components.tabsUseCases,
                 fragmentManager = parentFragmentManager,
+                fileUploadsDirCleaner = components.fileUploadsDirCleaner,
                 onNeedToRequestPermissions = { permissions ->
                     requestInPlacePermissions(REQUEST_KEY_PROMPT_PERMISSIONS, permissions) { result ->
                         promptFeature.get()?.onPermissionsResult(

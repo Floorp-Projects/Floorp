@@ -25,6 +25,7 @@ import mozilla.components.support.base.feature.OnNeedToRequestPermissions
 import mozilla.components.support.base.feature.PermissionsFeature
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.android.content.isPermissionGranted
+import mozilla.components.support.ktx.android.net.getFileName
 import mozilla.components.support.ktx.android.net.isUnderPrivateAppDirectory
 import mozilla.components.support.utils.ext.getParcelableExtraCompat
 
@@ -40,6 +41,7 @@ internal var captureUri: Uri? = null
 /**
  * @property container The [Activity] or [Fragment] which hosts the file picker.
  * @property store The [BrowserStore] this feature should subscribe to.
+ * @property fileUploadsDirCleaner a [FileUploadsDirCleaner] to clean up temporary file uploads.
  * @property onNeedToRequestPermissions a callback invoked when permissions
  * need to be requested before a prompt (e.g. a file picker) can be displayed.
  * Once the request is completed, [onPermissionsResult] needs to be invoked.
@@ -48,6 +50,7 @@ internal class FilePicker(
     private val container: PromptContainer,
     private val store: BrowserStore,
     private var sessionId: String? = null,
+    private var fileUploadsDirCleaner: FileUploadsDirCleaner,
     override val onNeedToRequestPermissions: OnNeedToRequestPermissions,
 ) : PermissionsFeature {
 
@@ -72,7 +75,11 @@ internal class FilePicker(
             val hasPermission = container.context.isPermissionGranted(type.permission)
             // The captureMode attribute can be used if the accepted types are exactly for
             // image/*, video/*, or audio/*.
-            if (hasPermission && type.shouldCapture(promptRequest.mimeTypes, promptRequest.captureMode)) {
+            if (hasPermission && type.shouldCapture(
+                    promptRequest.mimeTypes,
+                    promptRequest.captureMode,
+                )
+            ) {
                 type.buildIntent(container.context, promptRequest)?.also {
                     saveCaptureUriIfPresent(it)
                     container.startActivityForResult(it, FILE_PICKER_ACTIVITY_REQUEST_CODE)
@@ -135,8 +142,7 @@ internal class FilePicker(
     }
 
     private fun getActivePromptRequest(): PromptRequest? =
-        store.state.findCustomTabOrSelectedTab(sessionId)?.content?.promptRequests?.lastOrNull {
-                prompt ->
+        store.state.findCustomTabOrSelectedTab(sessionId)?.content?.promptRequests?.lastOrNull { prompt ->
             prompt is File
         }
 
@@ -194,6 +200,9 @@ internal class FilePicker(
                 if (sanitizedUris.isEmpty()) {
                     request.onDismiss()
                 } else {
+                    sanitizedUris.map {
+                        enqueueForCleanup(container.context, it)
+                    }
                     request.onMultipleFilesSelected(container.context, sanitizedUris)
                 }
             }
@@ -202,6 +211,7 @@ internal class FilePicker(
             uri?.let {
                 // We want to verify that we are not exposing any private data
                 if (!it.isUnderPrivateAppDirectory(container.context)) {
+                    enqueueForCleanup(container.context, it)
                     request.onSingleFileSelected(container.context, it)
                 } else {
                     request.onDismiss()
@@ -219,6 +229,12 @@ internal class FilePicker(
     fun askAndroidPermissionsForRequest(permissions: Set<String>, request: File) {
         currentRequest = request
         onNeedToRequestPermissions(permissions.toTypedArray())
+    }
+
+    private fun enqueueForCleanup(context: Context, uri: Uri) {
+        val contentResolver = context.contentResolver
+        val fileName = uri.getFileName(contentResolver)
+        fileUploadsDirCleaner.enqueueForCleanup(fileName)
     }
 
     companion object {

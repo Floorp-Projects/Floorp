@@ -16,6 +16,7 @@ import mozilla.components.browser.engine.gecko.ext.toCreditCardEntry
 import mozilla.components.browser.engine.gecko.ext.toLoginEntry
 import mozilla.components.concept.engine.prompt.Choice
 import mozilla.components.concept.engine.prompt.PromptRequest
+import mozilla.components.concept.engine.prompt.PromptRequest.File.Companion.DEFAULT_UPLOADS_DIR_NAME
 import mozilla.components.concept.engine.prompt.PromptRequest.MenuChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.MultipleChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.SingleChoice
@@ -869,7 +870,7 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
 
     @VisibleForTesting
     internal fun toFileUri(uri: Uri, context: Context): Uri {
-        return uri.toFileUri(context, dirToCopy = "/uploads")
+        return uri.toFileUri(context, dirToCopy = DEFAULT_UPLOADS_DIR_NAME)
     }
 }
 

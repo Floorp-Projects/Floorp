@@ -302,6 +302,12 @@ sealed class PromptRequest(
         enum class FacingMode {
             NONE, ANY, FRONT_CAMERA, BACK_CAMERA
         }
+        companion object {
+            /**
+             * Default default directory name for temporary uploads.
+             */
+            const val DEFAULT_UPLOADS_DIR_NAME = "/uploads"
+        }
     }
 
     /**

@@ -324,6 +324,7 @@ class BrowserFragment :
                 tabsUseCases = components.tabsUseCases,
                 customTabId = tryGetCustomTabId(),
                 fragmentManager = parentFragmentManager,
+                fileUploadsDirCleaner = requireComponents.fileUploadsDirCleaner,
                 onNeedToRequestPermissions = { permissions ->
                     requestInPlacePermissions(REQUEST_KEY_PROMPT_PERMISSIONS, permissions) { result ->
                         promptFeature.get()?.onPermissionsResult(

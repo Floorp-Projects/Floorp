@@ -63,14 +63,20 @@ class FilePickerTest {
     private lateinit var store: BrowserStore
     private lateinit var state: BrowserState
     private lateinit var filePicker: FilePicker
+    private lateinit var fileUploadsDirCleaner: FileUploadsDirCleaner
 
     @Before
     fun setup() {
+        fileUploadsDirCleaner = mock()
         fragment = spy(PromptContainer.TestPromptContainer(testContext))
         state = mock()
         store = mock()
         whenever(store.state).thenReturn(state)
-        filePicker = FilePicker(fragment, store) { }
+        filePicker = FilePicker(
+            fragment,
+            store,
+            fileUploadsDirCleaner = fileUploadsDirCleaner,
+        ) { }
     }
 
     @Test
@@ -80,12 +86,21 @@ class FilePickerTest {
         val customTab = CustomTabSessionState(id = "custom-tab", content = customTabContent, trackingProtection = mock(), config = mock())
 
         whenever(state.customTabs).thenReturn(listOf(customTab))
-        filePicker = FilePicker(fragment, store, customTab.id) { }
+        filePicker = FilePicker(
+            fragment,
+            store,
+            customTab.id,
+            fileUploadsDirCleaner = mock(),
+        ) { }
         filePicker.onActivityResult(FILE_PICKER_ACTIVITY_REQUEST_CODE, 0, null)
         verify(store).dispatch(ContentAction.ConsumePromptRequestAction(customTab.id, request))
 
         val selected = prepareSelectedSession(request)
-        filePicker = FilePicker(fragment, store) { }
+        filePicker = FilePicker(
+            fragment,
+            store,
+            fileUploadsDirCleaner = mock(),
+        ) { }
         filePicker.onActivityResult(FILE_PICKER_ACTIVITY_REQUEST_CODE, 0, null)
         verify(store).dispatch(ContentAction.ConsumePromptRequestAction(selected.id, request))
     }
@@ -96,7 +111,11 @@ class FilePickerTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
 
         filePicker = spy(
-            FilePicker(fragment, store) {
+            FilePicker(
+                fragment,
+                store,
+                fileUploadsDirCleaner = mock(),
+            ) {
                 onRequestPermissionWasCalled = true
             },
         )
@@ -114,7 +133,11 @@ class FilePickerTest {
     fun `handleFilePickerRequest with the required permission will call startActivityForResult`() {
         var onRequestPermissionWasCalled = false
 
-        filePicker = FilePicker(fragment, store) {
+        filePicker = FilePicker(
+            fragment,
+            store,
+            fileUploadsDirCleaner = mock(),
+        ) {
             onRequestPermissionWasCalled = true
         }
 
@@ -283,7 +306,7 @@ class FilePickerTest {
         val permissions = setOf("PermissionA")
         var permissionsRequested = emptyArray<String>()
         filePicker = spy(
-            FilePicker(fragment, store, null) { requested ->
+            FilePicker(fragment, store, null, fileUploadsDirCleaner = mock()) { requested ->
                 permissionsRequested = requested
             },
         )
@@ -337,6 +360,7 @@ class FilePickerTest {
 
         filePicker.handleFilePickerIntentResult(intent, promptRequest)
 
+        verify(fileUploadsDirCleaner).enqueueForCleanup(any())
         assertNull(captureUri)
     }
 
@@ -376,6 +400,6 @@ class FilePickerTest {
     private fun stubContext() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         doReturn(context).`when`(fragment).context
-        filePicker = FilePicker(fragment, store) {}
+        filePicker = FilePicker(fragment, store, fileUploadsDirCleaner = fileUploadsDirCleaner) {}
     }
 }

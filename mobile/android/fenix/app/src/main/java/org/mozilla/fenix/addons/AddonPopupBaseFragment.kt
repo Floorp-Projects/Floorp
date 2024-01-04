@@ -43,6 +43,7 @@ abstract class AddonPopupBaseFragment : Fragment(), EngineSession.Observer, User
                     store = requireComponents.core.store,
                     customTabId = it.id,
                     fragmentManager = parentFragmentManager,
+                    fileUploadsDirCleaner = requireComponents.core.fileUploadsDirCleaner,
                     onNeedToRequestPermissions = { permissions ->
                         requestPermissions(permissions, REQUEST_CODE_PROMPT_PERMISSIONS)
                     },

@@ -27,6 +27,8 @@ import mozilla.components.feature.downloads.DownloadsUseCases
 import mozilla.components.feature.media.MediaSessionFeature
 import mozilla.components.feature.media.middleware.RecordingDevicesMiddleware
 import mozilla.components.feature.prompts.PromptMiddleware
+import mozilla.components.feature.prompts.file.FileUploadsDirCleaner
+import mozilla.components.feature.prompts.file.FileUploadsDirCleanerMiddleware
 import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.feature.search.middleware.AdsTelemetryMiddleware
 import mozilla.components.feature.search.middleware.SearchMiddleware
@@ -112,6 +114,10 @@ class Components(
 
     val settings by lazy { Settings(context) }
 
+    val fileUploadsDirCleaner: FileUploadsDirCleaner by lazy {
+        FileUploadsDirCleaner { context.cacheDir }
+    }
+
     val engineDefaultSettings by lazy {
         DefaultSettings(
             requestInterceptor = AppContentInterceptor(context),
@@ -167,6 +173,7 @@ class Components(
                 BlockedTrackersMiddleware(context),
                 RecordingDevicesMiddleware(context, notificationsDelegate),
                 CfrMiddleware(context),
+                FileUploadsDirCleanerMiddleware(fileUploadsDirCleaner),
             ) + EngineMiddleware.create(
                 engine,
                 // We are disabling automatic suspending of engine sessions under memory pressure.

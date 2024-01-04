@@ -38,8 +38,12 @@ class OnDeviceFilePickerTest {
     @Test
     fun unsafeUrisWillNotBeSelected() {
         val promptContainer = PromptContainer.TestPromptContainer(context)
-
-        val filePicker = FilePicker(promptContainer, BrowserStore()) { }
+        val fileUploadsDirCleaner = FileUploadsDirCleaner { context.cacheDir }
+        val filePicker = FilePicker(
+            container = promptContainer,
+            fileUploadsDirCleaner = fileUploadsDirCleaner,
+            store = BrowserStore(),
+        ) { }
         var onDismissWasExecuted = false
         var onSingleFileSelectedWasExecuted = false
         var onMultipleFilesSelectedWasExecuted = false
@@ -64,7 +68,12 @@ class OnDeviceFilePickerTest {
     @Test
     fun safeUrisWillBeSelected() {
         val promptContainer = PromptContainer.TestPromptContainer(context)
-        val filePicker = FilePicker(promptContainer, BrowserStore()) { }
+        val fileUploadsDirCleaner = FileUploadsDirCleaner { context.cacheDir }
+        val filePicker = FilePicker(
+            container = promptContainer,
+            fileUploadsDirCleaner = fileUploadsDirCleaner,
+            store = BrowserStore(),
+        ) { }
         var urisWereSelected = false
         var onDismissWasExecuted = false
         var onSingleFileSelectedWasExecuted = false
@@ -89,7 +98,12 @@ class OnDeviceFilePickerTest {
     @Test
     fun unsafeUriWillNotBeSelected() {
         val promptContainer = PromptContainer.TestPromptContainer(context)
-        val filePicker = FilePicker(promptContainer, BrowserStore()) { }
+        val fileUploadsDirCleaner = FileUploadsDirCleaner { context.cacheDir }
+        val filePicker = FilePicker(
+            container = promptContainer,
+            fileUploadsDirCleaner = fileUploadsDirCleaner,
+            store = BrowserStore(),
+        ) { }
         var onDismissWasExecuted = false
         var onSingleFileSelectedWasExecuted = false
         var onMultipleFilesSelectedWasExecuted = false
@@ -113,7 +127,12 @@ class OnDeviceFilePickerTest {
     @Test
     fun safeUriWillBeSelected() {
         val promptContainer = PromptContainer.TestPromptContainer(context)
-        val filePicker = FilePicker(promptContainer, BrowserStore()) { }
+        val fileUploadsDirCleaner = FileUploadsDirCleaner { context.cacheDir }
+        val filePicker = FilePicker(
+            container = promptContainer,
+            fileUploadsDirCleaner = fileUploadsDirCleaner,
+            store = BrowserStore(),
+        ) { }
         var onDismissWasExecuted = false
         var onSingleFileSelectedWasExecuted = false
         var onMultipleFilesSelectedWasExecuted = false

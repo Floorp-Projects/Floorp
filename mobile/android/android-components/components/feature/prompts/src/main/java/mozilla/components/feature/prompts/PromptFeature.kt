@@ -76,6 +76,7 @@ import mozilla.components.feature.prompts.facts.emitPromptDisplayedFact
 import mozilla.components.feature.prompts.facts.emitSuccessfulAddressAutofillFormDetectedFact
 import mozilla.components.feature.prompts.facts.emitSuccessfulCreditCardAutofillFormDetectedFact
 import mozilla.components.feature.prompts.file.FilePicker
+import mozilla.components.feature.prompts.file.FileUploadsDirCleaner
 import mozilla.components.feature.prompts.identitycredential.DialogColors
 import mozilla.components.feature.prompts.identitycredential.DialogColorsProvider
 import mozilla.components.feature.prompts.identitycredential.PrivacyPolicyDialogFragment
@@ -151,6 +152,7 @@ internal const val FRAGMENT_TAG = "mozac_feature_prompt_dialog"
  * generated strong password
  * @property creditCardDelegate Delegate for credit card picker.
  * @property addressDelegate Delegate for address picker.
+ * @property fileUploadsDirCleaner a [FileUploadsDirCleaner] to clean up temporary file uploads.
  * @property onNeedToRequestPermissions A callback invoked when permissions
  * need to be requested before a prompt (e.g. a file picker) can be displayed.
  * Once the request is completed, [onPermissionsResult] needs to be invoked.
@@ -180,6 +182,7 @@ class PromptFeature private constructor(
     private val onSaveLoginWithStrongPassword: (String, String) -> Unit = { _, _ -> },
     private val creditCardDelegate: CreditCardDelegate = object : CreditCardDelegate {},
     private val addressDelegate: AddressDelegate = DefaultAddressDelegate(),
+    private val fileUploadsDirCleaner: FileUploadsDirCleaner,
     onNeedToRequestPermissions: OnNeedToRequestPermissions,
 ) : LifecycleAwareFeature,
     PermissionsFeature,
@@ -227,6 +230,7 @@ class PromptFeature private constructor(
         onSaveLoginWithStrongPassword: (String, String) -> Unit = { _, _ -> },
         creditCardDelegate: CreditCardDelegate = object : CreditCardDelegate {},
         addressDelegate: AddressDelegate = DefaultAddressDelegate(),
+        fileUploadsDirCleaner: FileUploadsDirCleaner,
         onNeedToRequestPermissions: OnNeedToRequestPermissions,
     ) : this(
         container = PromptContainer.Activity(activity),
@@ -243,6 +247,7 @@ class PromptFeature private constructor(
         isCreditCardAutofillEnabled = isCreditCardAutofillEnabled,
         isAddressAutofillEnabled = isAddressAutofillEnabled,
         loginExceptionStorage = loginExceptionStorage,
+        fileUploadsDirCleaner = fileUploadsDirCleaner,
         onNeedToRequestPermissions = onNeedToRequestPermissions,
         loginDelegate = loginDelegate,
         suggestStrongPasswordDelegate = suggestStrongPasswordDelegate,
@@ -273,6 +278,7 @@ class PromptFeature private constructor(
         onSaveLoginWithStrongPassword: (String, String) -> Unit = { _, _ -> },
         creditCardDelegate: CreditCardDelegate = object : CreditCardDelegate {},
         addressDelegate: AddressDelegate = DefaultAddressDelegate(),
+        fileUploadsDirCleaner: FileUploadsDirCleaner,
         onNeedToRequestPermissions: OnNeedToRequestPermissions,
     ) : this(
         container = PromptContainer.Fragment(fragment),
@@ -288,6 +294,7 @@ class PromptFeature private constructor(
         isCreditCardAutofillEnabled = isCreditCardAutofillEnabled,
         isAddressAutofillEnabled = isAddressAutofillEnabled,
         loginExceptionStorage = loginExceptionStorage,
+        fileUploadsDirCleaner = fileUploadsDirCleaner,
         onNeedToRequestPermissions = onNeedToRequestPermissions,
         loginDelegate = loginDelegate,
         suggestStrongPasswordDelegate = suggestStrongPasswordDelegate,
@@ -297,7 +304,8 @@ class PromptFeature private constructor(
         addressDelegate = addressDelegate,
     )
 
-    private val filePicker = FilePicker(container, store, customTabId, onNeedToRequestPermissions)
+    private val filePicker =
+        FilePicker(container, store, customTabId, fileUploadsDirCleaner, onNeedToRequestPermissions)
 
     @VisibleForTesting(otherwise = PRIVATE)
     internal var loginPicker =
