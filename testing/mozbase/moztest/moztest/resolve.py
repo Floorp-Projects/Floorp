@@ -100,7 +100,7 @@ TEST_SUITES = {
             "test-verify($|.*(-1|[^0-9])$)",
         ],
     },
-    "mochitest-browser-chrome-screenshots": {
+    "mochitest-browser-screenshots": {
         "aliases": ("ss", "screenshots-chrome"),
         "build_flavor": "browser-chrome",
         "mach_command": "mochitest",
@@ -109,7 +109,7 @@ TEST_SUITES = {
             "subsuite": "screenshots",
             "test_paths": None,
         },
-        "task_regex": ["browser-screenshots($|.*(-1|[^0-9])$)"],
+        "task_regex": ["mochitest-browser-screenshots($|.*(-1|[^0-9])$)"],
     },
     "mochitest-chrome": {
         "aliases": ("mc",),
@@ -405,7 +405,7 @@ _test_subsuites = {
     ("browser-chrome", "devtools"): "mochitest-devtools-chrome",
     ("browser-chrome", "media"): "mochitest-browser-media",
     ("browser-chrome", "remote"): "mochitest-remote",
-    ("browser-chrome", "screenshots"): "mochitest-browser-chrome-screenshots",
+    ("browser-chrome", "screenshots"): "mochitest-browser-screenshots",
     ("chrome", "gpu"): "mochitest-chrome-gpu",
     ("mochitest", "gpu"): "mochitest-plain-gpu",
     ("mochitest", "media"): "mochitest-media",

@@ -136,7 +136,7 @@ mochitest-valgrind:
     - mochitest-valgrind
 
 desktop-screenshot-capture:
-    - browser-screenshots
+    - mochitest-browser-screenshots
 
 ### Specific platform test sets
 

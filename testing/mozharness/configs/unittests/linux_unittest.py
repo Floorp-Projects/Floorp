@@ -161,7 +161,7 @@ config = {
             "--chunk-by-runtime",
             "--timeout=1200",
         ],
-        "mochitest-browser-chrome-screenshots": [
+        "mochitest-browser-screenshots": [
             "--flavor=browser",
             "--subsuite=screenshots",
         ],

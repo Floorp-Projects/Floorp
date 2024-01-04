@@ -236,7 +236,7 @@ class SingleTestMixin(object):
                     "mochitest-browser-chrome",
                     "screenshots",
                     None,
-                ): "mochitest-browser-chrome-screenshots",  # noqa
+                ): "mochitest-browser-screenshots",  # noqa
                 ("mochitest-plain", "media", None): "mochitest-media",
                 # below should be on test-verify-gpu job
                 ("mochitest-chrome", "gpu", None): "mochitest-chrome-gpu",

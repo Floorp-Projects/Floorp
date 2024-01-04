@@ -375,10 +375,10 @@ mochitest-browser-media:
     allow-software-gl-layers: false
     virtualization: virtual
 
-browser-screenshots:
+mochitest-browser-screenshots:
     description: "Browser Screenshots"
     suite:
-        name: mochitest-browser-chrome-screenshots
+        name: mochitest-browser-screenshots
     treeherder-symbol: M(ss)
     loopback-video: true
     test-manifest-loader: null  # don't load tests in the taskgraph
