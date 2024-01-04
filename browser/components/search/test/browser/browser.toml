@@ -70,7 +70,6 @@ support-files = ["trendingSuggestionEngine.sjs"]
 ["browser_search_nimbus_reload.js"]
 
 ["browser_searchbar_addEngine.js"]
-fail-if = ["a11y_checks"] # Bug 1854660 clicked button#searchbar-engine-one-off-item-engine--1 may not be focusable
 
 ["browser_searchbar_context.js"]
 

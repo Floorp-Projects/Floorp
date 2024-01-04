@@ -339,17 +339,23 @@ this.AccessibilityUtils = (function () {
    * Url bar buttons aren't keyboard focusable in the usual way. Instead,
    * focus is managed by JS code which sets tabindex on a single button at a
    * time. Thus, we need to special case the focusable check for these buttons.
+   * This also applies to the search bar buttons that reuse the same pattern.
    */
   function isKeyboardFocusableUrlbarButton(accessible) {
     const node = accessible.DOMNode;
     if (!node || !node.ownerGlobal) {
       return false;
     }
-    const hbox = node.closest(".urlbarView > .search-one-offs");
-    if (!hbox || hbox.getAttribute("disabletab") != "true") {
-      return false;
-    }
+    const isUrlBar =
+      node
+        .closest(".urlbarView > .search-one-offs")
+        ?.getAttribute("disabletab") == "true";
+    const isSearchBar =
+      node
+        .closest("#PopupSearchAutoComplete > .search-one-offs")
+        ?.getAttribute("is_searchbar") == "true";
     return (
+      (isUrlBar || isSearchBar) &&
       node.getAttribute("tabindex") == "-1" &&
       node.tagName == "button" &&
       node.classList.contains("searchbar-engine-one-off-item")
