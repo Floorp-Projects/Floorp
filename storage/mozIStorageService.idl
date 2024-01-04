@@ -119,13 +119,13 @@ interface mozIStorageService : nsISupports {
    * string may be:
    * - "memory" to open an in-memory database.
    *
-   * @param [optional] aOpenFlags
+   * @param aOpenFlags
    *        A set of flags to open the database with optional features.
    *        Currently supports OPEN_SHARED, OPEN_READONLY and
    *        OPEN_IGNORE_LOCKING_MODE flags.
    *        For full details, please refer to the documentation of the flags.
    *
-   * @param [optional] aConnectionFlags
+   * @param aConnectionFlags
    *        A set of flags to enable optional features for the returned
    *        asynchronous connection object.
    *        Currently supports CONNECTION_INTERRUPTIBLE flag.
@@ -146,8 +146,8 @@ interface mozIStorageService : nsISupports {
    *         main thread.
    */
   void openAsyncDatabase(in nsIVariant aDatabaseStore,
-                         [optional] in unsigned long aOpenFlags,
-                         [optional] in unsigned long aConnectionFlags,
+                         in unsigned long aOpenFlags,
+                         in unsigned long aConnectionFlags,
                          in mozIStorageCompletionCallback aCallback);
 
   /**

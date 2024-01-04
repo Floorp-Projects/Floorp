@@ -103,7 +103,7 @@ interface nsITransfer : nsIWebProgressListener2 {
                                     in boolean aIsPrivate,
                                     in long aDownloadClassification,
                                     in nsIReferrerInfo aReferrerInfo,
-                                    [optional] in boolean aOpenDownloadsListOnStart,
+                                    in boolean aOpenDownloadsListOnStart,
                                     in BrowsingContext aBrowsingContext,
                                     in boolean aHandleInternally,
                                     in nsIHttpChannel aHttpChannel);
