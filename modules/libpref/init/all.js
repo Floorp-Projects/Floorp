@@ -3962,8 +3962,6 @@ pref("extensions.formautofill.available", "detect");
 pref("extensions.formautofill.addresses.supported", "detect");
 pref("extensions.formautofill.addresses.enabled", true);
 pref("extensions.formautofill.addresses.capture.enabled", false);
-// Whether address autofill is enabled or not ( this is set via Nimbus )
-pref("extensions.formautofill.addresses.experiments.enabled", false);
 // This preference should be removed entirely once address capture v2 developing is finished
 pref("extensions.formautofill.addresses.capture.v2.enabled", false);
 pref("extensions.formautofill.addresses.ignoreAutocompleteOff", true);
