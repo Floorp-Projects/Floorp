@@ -3,7 +3,7 @@
 
 /* import-globals-from ../head.js */
 
-const URL_BASE = "about:firefoxview#";
+const URL_BASE = "about:firefoxview-next#";
 
 function assertCorrectPage(document, name, event) {
   is(

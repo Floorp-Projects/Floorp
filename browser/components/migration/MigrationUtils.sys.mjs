@@ -167,7 +167,7 @@ class MigrationUtils {
         "about:preferences",
         "chrome://browser/content/migration/migration-dialog-window.html",
         "chrome://browser/content/spotlight.html",
-        "about:firefoxview",
+        "about:firefoxview-next",
       ],
     });
 
@@ -1107,7 +1107,7 @@ class MigrationUtils {
     /** Migration is being started from about:preferences */
     PREFERENCES: "preferences",
 
-    /** Migration is being started from about:firefoxview */
+    /** Migration is being started from about:firefoxview-next */
     FIREFOX_VIEW: "firefox_view",
   });
 
