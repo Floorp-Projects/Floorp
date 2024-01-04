@@ -434,6 +434,9 @@ bin/libfreebl_64int_3.so
 ; media
 @RESPATH@/gmp-clearkey/0.1/@DLL_PREFIX@clearkey@DLL_SUFFIX@
 @RESPATH@/gmp-clearkey/0.1/manifest.json
+#if defined(MOZ_WMF_CDM) && defined(ENABLE_TESTS)
+@BINPATH@/@DLL_PREFIX@wmfclearkey@DLL_SUFFIX@
+#endif
 
 #ifdef MOZ_DMD
 ; DMD

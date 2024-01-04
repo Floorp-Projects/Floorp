@@ -1,0 +1,43 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DEFINES["CDM_IMPLEMENTATION"] = True
+
+SOURCES += [
+    "dllmain.cpp",
+    "WMFClearKeyActivate.cpp",
+    "WMFClearKeyCDM.cpp",
+    "WMFClearKeyCDMAccess.cpp",
+    "WMFClearKeyCDMFactory.cpp",
+    "WMFClearKeyContentEnabler.cpp",
+    # TODO : enable decryptor in bug 1870722.
+    # "WMFClearKeyDecryptor.cpp",
+    "WMFClearKeyInputTrustAuthority.cpp",
+    "WMFClearKeyOutputPolicy.cpp",
+    "WMFClearKeySession.cpp",
+    "WMFClearKeyTrustedInput.cpp",
+    "WMFPMPServer.cpp",
+]
+
+OS_LIBS += [
+    "mf",
+    "mfplat",
+    "mfuuid",
+    "oleaut32",
+    "propsys",
+    "runtimeobject",
+]
+
+USE_LIBS += ["gecko-clearkey"]
+
+DEFFILE = "WMFClearKey.def"
+
+# Suppress warnings in platform headers, eg. wrl/module.h
+if CONFIG["CC_TYPE"] == "clang-cl":
+    CXXFLAGS += [
+        "-Wno-missing-braces",
+        "-Wunused-result",
+    ]
+
+GeckoSharedLibrary("wmfclearkey", linkage=None)
