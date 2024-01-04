@@ -1168,6 +1168,10 @@ class TestTranslationsTelemetry {
       TestTranslationsTelemetry.#previousFlowId = flowId;
     }
 
+    if (eventCount !== expectedEventCount) {
+      console.error("Actual events:", events);
+    }
+
     is(
       eventCount,
       expectedEventCount,
