@@ -5,8 +5,6 @@
 # This script generates ProfilingCategoryList.h and profiling_categories.rs
 # files from profiling_categories.yaml.
 
-from collections import OrderedDict
-
 import yaml
 
 CPP_HEADER_TEMPLATE = """\
@@ -104,21 +102,8 @@ def generate_rust_file(c_out, contents):
 
 
 def load_yaml(yaml_path):
-    # Load into an OrderedDict to ensure order is preserved. Note: Python 3.7+
-    # also preserves ordering for normal dictionaries.
-    # Code based on https://stackoverflow.com/a/21912744.
-    class OrderedLoader(yaml.Loader):
-        pass
-
-    def construct_mapping(loader, node):
-        loader.flatten_mapping(node)
-        return OrderedDict(loader.construct_pairs(node))
-
-    tag = yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG
-    OrderedLoader.add_constructor(tag, construct_mapping)
-
     file_handler = open(yaml_path)
-    return yaml.load(file_handler, OrderedLoader)
+    return yaml.safe_load(file_handler)
 
 
 def generate_category_macro(name, label, color, subcategories):
