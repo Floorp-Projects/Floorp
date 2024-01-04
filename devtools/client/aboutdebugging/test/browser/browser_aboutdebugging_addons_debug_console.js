@@ -16,7 +16,7 @@ PromiseTestUtils.allowMatchingRejectionsGlobally(/File closed/);
 requestLongerTimeout(2);
 
 const ADDON_ID = "test-devtools-webextension@mozilla.org";
-const ADDON_NAME = "test-devtools-webextension";
+const ADDON_NAME = "base-test-devtools-webextension";
 
 const OTHER_ADDON_ID = "other-test-devtools-webextension@mozilla.org";
 const OTHER_ADDON_NAME = "other-test-devtools-webextension";
