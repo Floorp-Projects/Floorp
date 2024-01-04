@@ -10,7 +10,6 @@
 
 #include <aclapi.h>
 #include <shlobj.h>
-#include <cstdio>
 #include <string>
 
 #include "base/win/windows_version.h"
@@ -464,18 +463,11 @@ static const Maybe<Vector<const wchar_t*>>& GetPrespawnCigExceptionModules() {
     RefPtr<DllServices> dllSvc(DllServices::Get());
     auto sharedSection = dllSvc->GetSharedSection();
     if (!sharedSection) {
-#  if defined(DEBUG)
-      fwprintf(stderr, L"Prespawn CIG: disabled (!sharedSection).\n");
-#  endif  // DEBUG
       return Nothing();
     }
 
     Span<const wchar_t> dependentModules = sharedSection->GetDependentModules();
     if (dependentModules.IsEmpty()) {
-#  if defined(DEBUG)
-      fwprintf(stderr,
-               L"Prespawn CIG: disabled (dependentModules.IsEmpty()).\n");
-#  endif  // DEBUG
       return Nothing();
     }
 
@@ -491,18 +483,6 @@ static const Maybe<Vector<const wchar_t*>>& GetPrespawnCigExceptionModules() {
       }
       ++p;
     }
-
-#  if defined(DEBUG)
-    fwprintf(stderr,
-             L"Prespawn CIG: enabled (%zd injected dependent modules).\n",
-             paths.length());
-    for (const auto& path : paths) {
-      fwprintf(
-          stderr,
-          L"Prespawn CIG: %s identified as an injected dependent module.\n",
-          path);
-    }
-#  endif  // DEBUG
 
     return Some(std::move(paths));
   }();
