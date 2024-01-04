@@ -3751,6 +3751,176 @@ synced_tabs:
       tab_pos: position of the tab clicked
       filter: was there a filter enabled
 
+firefoxview:
+  entered:
+    objects: ["firefoxview"]
+    description: >
+      Recorded when the Firefox View is selected
+    notification_emails:
+      - firefoxview@mozilla.com
+    products:
+      - "firefox"
+    record_in_processes:
+      - main
+    bug_numbers:
+      - 1779642
+    expiry_version: "never"
+    release_channel_collection: opt-out
+  synced_tabs:
+    objects: ["tabs"]
+    description: >
+      Recorded when the tabs list is updated
+    extra_keys:
+      count: The number of synbced tabs
+    notification_emails:
+      - firefoxview@mozilla.com
+    products:
+      - "firefox"
+    record_in_processes:
+      - main
+    bug_numbers:
+      - 1779642
+    expiry_version: "never"
+    release_channel_collection: opt-out
+  tab_pickup_open:
+    objects: ["tabs"]
+    description: >
+      Recorded when the tab pickup list is collasped or opened. True if the section is now open, false otherwise
+    notification_emails:
+      - firefoxview@mozilla.com
+    products:
+      - "firefox"
+    record_in_processes:
+      - main
+    bug_numbers:
+      - 1779642
+    expiry_version: "never"
+    release_channel_collection: opt-out
+  tab_pickup:
+    objects: ["tabs"]
+    description: >
+      Recorded when a tab pickup tab is clicked
+    extra_keys:
+      position: The position of the tab in the tab pickup list (starting at 1.)
+      deviceType: The type of device the tab came from. Will be "desktop", "phone", or "tablet"
+    notification_emails:
+      - firefoxview@mozilla.com
+    products:
+      - "firefox"
+    record_in_processes:
+      - main
+    bug_numbers:
+      - 1779642
+      - 1789641
+    expiry_version: "never"
+    release_channel_collection: opt-out
+  synced_tabs_empty:
+    objects: ["since_device_added"]
+    description: >
+      Records the time elapsed in seconds that the Tab Pickup empty message is displayed after a new device was added
+    notification_emails:
+      - firefox-view-engineers@mozilla.com
+    products:
+      - "firefox"
+    record_in_processes:
+      - main
+    bug_numbers:
+      - 1809661
+      - 1850885
+    expiry_version: "132"
+    release_channel_collection: opt-out
+  closed_tabs_open:
+    objects: ["tabs"]
+    description: >
+      Recorded when the recently closed tabs list is collapsed or opened. True if the section is now open, false otherwise
+    notification_emails:
+      - firefoxview@mozilla.com
+    products:
+      - "firefox"
+    record_in_processes:
+      - main
+    bug_numbers:
+      - 1779642
+    expiry_version: "never"
+    release_channel_collection: opt-out
+  recently_closed:
+    objects: ["tabs"]
+    description: >
+      Recorded when a recently closed tab is clicked
+    extra_keys:
+      delta: Time since the tab was closed
+      position: The position of the tab in the recently closed tab list (starting at 1.)
+    notification_emails:
+      - firefoxview@mozilla.com
+    products:
+      - "firefox"
+    record_in_processes:
+      - main
+    bug_numbers:
+      - 1779642
+    expiry_version: "never"
+    release_channel_collection: opt-out
+  dismiss_closed_tab:
+    objects: ["tabs"]
+    description: >
+      Recorded when a recently closed tab is dismissed
+    extra_keys:
+      delta: Time since the tab was closed to when dismissed
+    notification_emails:
+      - firefoxview@mozilla.com
+    products:
+      - "firefox"
+    record_in_processes:
+      - main
+    bug_numbers:
+      - 1804099
+    expiry_version: "never"
+    release_channel_collection: opt-out
+  fxa_continue:
+    objects: ["sync"]
+    description: >
+      Recorded when continue button to sign in is clicked
+    notification_emails:
+      - firefoxview@mozilla.com
+    products:
+      - "firefox"
+    record_in_processes:
+      - main
+    bug_numbers:
+      - 1779642
+    expiry_version: "never"
+    release_channel_collection: opt-out
+  fxa_mobile:
+    objects: ["sync"]
+    description: >
+      Recorded when get Firefox for mobile is clicked
+    extra_keys:
+      has_devices: True if user has other devices signed into sync
+    notification_emails:
+      - firefoxview@mozilla.com
+    products:
+      - "firefox"
+    record_in_processes:
+      - main
+    bug_numbers:
+      - 1779642
+    expiry_version: "never"
+    release_channel_collection: opt-out
+  tab_selected:
+    objects: ["toolbarbutton"]
+    description: >
+      Recorded when the Firefox View tab is clicked
+    notification_emails:
+      - firefoxview@mozilla.com
+    products:
+      - "firefox"
+    record_in_processes:
+      - main
+    bug_numbers:
+      - 1852989
+    expiry_version: "never"
+    release_channel_collection: opt-out
+
 firefoxview_next:
   recently_closed:
     objects: ["tabs"]

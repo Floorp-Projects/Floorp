@@ -73,7 +73,7 @@ async function historyTelemetry() {
       ).parent;
       return events && events.length >= 1;
     },
-    "Waiting for history firefoxview telemetry event.",
+    "Waiting for history firefoxview_next telemetry event.",
     200,
     100
   );
@@ -94,7 +94,7 @@ async function sortHistoryTelemetry(sortHistoryEvent) {
       ).parent;
       return events && events.length >= 1;
     },
-    "Waiting for sort_history firefoxview telemetry event.",
+    "Waiting for sort_history firefoxview_next telemetry event.",
     200,
     100
   );
@@ -115,7 +115,7 @@ async function showAllHistoryTelemetry() {
       ).parent;
       return events && events.length >= 1;
     },
-    "Waiting for show_all_history firefoxview telemetry event.",
+    "Waiting for show_all_history firefoxview_next telemetry event.",
     200,
     100
   );
@@ -170,6 +170,7 @@ add_task(async function test_list_ordering() {
   await addHistoryItems(oneMonthAgo);
   await withFirefoxView({}, async browser => {
     const { document } = browser.contentWindow;
+    is(document.location.href, "about:firefoxview");
 
     await navigateToCategoryAndWait(document, "history");
 
@@ -263,6 +264,7 @@ add_task(async function test_empty_states() {
   await PlacesUtils.history.clear();
   await withFirefoxView({}, async browser => {
     const { document } = browser.contentWindow;
+    is(document.location.href, "about:firefoxview");
 
     await navigateToCategoryAndWait(document, "history");
 
@@ -400,6 +402,7 @@ add_task(async function test_show_all_history_telemetry() {
   await addHistoryItems(oneMonthAgo);
   await withFirefoxView({}, async browser => {
     const { document } = browser.contentWindow;
+    is(document.location.href, "about:firefoxview");
 
     await navigateToCategoryAndWait(document, "history");
 

@@ -194,7 +194,7 @@ async function recentlyClosedTelemetry() {
       ).parent;
       return events && events.length >= 1;
     },
-    "Waiting for recently_closed firefoxview telemetry event.",
+    "Waiting for recently_closed firefoxview_next telemetry event.",
     200,
     100
   );
@@ -215,7 +215,7 @@ async function recentlyClosedDismissTelemetry() {
       ).parent;
       return events && events.length >= 1;
     },
-    "Waiting for dismiss_closed_tab firefoxview telemetry event.",
+    "Waiting for dismiss_closed_tab firefoxview_next telemetry event.",
     200,
     100
   );
@@ -263,6 +263,7 @@ add_task(async function test_list_ordering() {
   let { cleanup, expectedURLs } = await prepareClosedTabs();
   await withFirefoxView({}, async browser => {
     const { document } = browser.contentWindow;
+    is(document.location.href, "about:firefoxview");
     await clearAllParentTelemetryEvents();
     navigateToCategory(document, "recentlyclosed");
     let [cardMainSlotNode, listItems] = await waitForRecentlyClosedTabsList(
@@ -292,6 +293,7 @@ add_task(async function test_list_updates() {
 
   await withFirefoxView({}, async browser => {
     const { document } = browser.contentWindow;
+    is(document.location.href, "about:firefoxview");
     navigateToCategory(document, "recentlyclosed");
 
     let [listElem, listItems] = await waitForRecentlyClosedTabsList(document);
@@ -365,6 +367,7 @@ add_task(async function test_restore_tab() {
 
   await withFirefoxView({}, async browser => {
     const { document } = browser.contentWindow;
+    is(document.location.href, "about:firefoxview");
     navigateToCategory(document, "recentlyclosed");
 
     let [listElem, listItems] = await waitForRecentlyClosedTabsList(document);

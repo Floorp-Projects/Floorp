@@ -46,6 +46,9 @@ ChromeUtils.defineESModuleGetters(this, {
   TabStateFlusher: "resource:///modules/sessionstore/TabStateFlusher.sys.mjs",
 });
 
+const MOBILE_PROMO_DISMISSED_PREF =
+  "browser.tabs.firefox-view.mobilePromo.dismissed";
+
 const calloutId = "feature-callout";
 const calloutSelector = `#${calloutId}.featureCallout`;
 const CTASelector = `#${calloutId} :is(.primary, .secondary)`;
@@ -281,6 +284,37 @@ async function setupListState(browser) {
   info("tabsContainer isn't loading anymore, returning");
 }
 
+function checkMobilePromo(browser, expected = {}) {
+  const { document } = browser.contentWindow;
+  const promoElem = document.querySelector(
+    "#tab-pickup-container > .promo-box"
+  );
+  const successElem = document.querySelector(
+    "#tab-pickup-container > .confirmation-message-box"
+  );
+
+  info("checkMobilePromo: " + JSON.stringify(expected));
+  if (expected.mobilePromo) {
+    ok(BrowserTestUtils.is_visible(promoElem), "Mobile promo is visible");
+  } else {
+    ok(
+      !promoElem || BrowserTestUtils.is_hidden(promoElem),
+      "Mobile promo is hidden"
+    );
+  }
+  if (expected.mobileConfirmation) {
+    ok(
+      BrowserTestUtils.is_visible(successElem),
+      "Success confirmation is visible"
+    );
+  } else {
+    ok(
+      !successElem || BrowserTestUtils.is_hidden(successElem),
+      "Success confirmation is hidden"
+    );
+  }
+}
+
 async function touchLastTabFetch() {
   // lastTabFetch stores a timestamp in *seconds*.
   const nowSeconds = Math.floor(Date.now() / 1000);
@@ -328,6 +362,7 @@ function setupMocks({ fxaDevices = null, state, syncEnabled = true }) {
 async function tearDown(sandbox) {
   sandbox?.restore();
   Services.prefs.clearUserPref("services.sync.lastTabFetch");
+  Services.prefs.clearUserPref(MOBILE_PROMO_DISMISSED_PREF);
 }
 
 const featureTourPref = "browser.firefox-view.feature-tour";

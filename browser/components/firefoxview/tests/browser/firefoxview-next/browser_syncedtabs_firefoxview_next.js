@@ -50,7 +50,7 @@ add_task(async function test_unconfigured_initial_state() {
         Services.telemetry.snapshotEvents(
           Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS
         ).parent?.length >= 1,
-      "Waiting for fxa_continue firefoxview telemetry event.",
+      "Waiting for fxa_continue firefoxview_next telemetry event.",
       200,
       100
     );
@@ -106,7 +106,7 @@ add_task(async function test_signed_in() {
         Services.telemetry.snapshotEvents(
           Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS
         ).parent?.length >= 1,
-      "Waiting for fxa_mobile firefoxview telemetry event.",
+      "Waiting for fxa_mobile firefoxview_next telemetry event.",
       200,
       100
     );
@@ -317,7 +317,7 @@ add_task(async function test_tabs() {
         Services.telemetry.snapshotEvents(
           Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS
         ).parent?.length >= 1,
-      "Waiting for synced_tabs firefoxview telemetry event.",
+      "Waiting for synced_tabs firefoxview_next telemetry event.",
       200,
       100
     );

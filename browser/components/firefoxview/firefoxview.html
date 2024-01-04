@@ -1,0 +1,336 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src resource: chrome:; object-src 'none'; img-src data: chrome:;"
+    />
+    <meta name="color-scheme" content="light dark" />
+    <title data-l10n-id="firefoxview-page-title"></title>
+    <link
+      rel="icon"
+      type="image/png"
+      id="favicon"
+      href="chrome://branding/content/icon32.png"
+    />
+    <link rel="localization" href="branding/brand.ftl" />
+    <link rel="localization" href="browser/firefoxView.ftl" />
+    <link rel="localization" href="toolkit/branding/accounts.ftl" />
+    <link rel="localization" href="toolkit/branding/brandings.ftl" />
+    <link rel="stylesheet" href="chrome://global/skin/in-content/common.css" />
+    <link
+      rel="stylesheet"
+      href="chrome://browser/content/firefoxview/firefoxview.css"
+    />
+    <script
+      type="module"
+      src="chrome://browser/content/firefoxview/tab-pickup-container.mjs"
+    ></script>
+    <script
+      type="module"
+      src="chrome://browser/content/firefoxview/firefoxview.mjs"
+    ></script>
+    <script
+      type="module"
+      src="chrome://browser/content/firefoxview/recently-closed-tabs.mjs"
+    ></script>
+    <script
+      type="module"
+      src="chrome://browser/content/firefoxview/tab-pickup-list.mjs"
+    ></script>
+    <script src="chrome://browser/content/contentTheme.js"></script>
+  </head>
+
+  <body>
+    <div id="logo-container" class="content-container">
+      <div class="brand-logo">
+        <span
+          class="brand-feature-name"
+          data-l10n-id="firefoxview-page-title"
+        ></span>
+      </div>
+    </div>
+    <main>
+      <details
+        class="content-container"
+        is="tab-pickup-container"
+        id="tab-pickup-container"
+        open
+      >
+        <summary class="page-section-header">
+          <span
+            class="twisty icon"
+            data-l10n-id="firefoxview-collapse-button-hide"
+            aria-role="presentation"
+          ></span>
+          <h1
+            id="collapsible-synced-tabs-header"
+            data-l10n-id="firefoxview-tabpickup-header"
+          ></h1>
+          <h2
+            class="section-description"
+            data-l10n-id="firefoxview-tabpickup-description"
+          ></h2>
+        </summary>
+
+        <div
+          class="confirmation-message-box message-box card card-no-hover"
+          hidden
+        >
+          <div class="message-content">
+            <h2
+              data-l10n-id="firefoxview-mobile-confirmation-header"
+              class="message-header"
+            ></h2>
+            <span
+              class="message-description"
+              data-l10n-id="firefoxview-mobile-confirmation-description"
+            ></span>
+          </div>
+          <button
+            data-action="mobile-confirmation-dismiss"
+            class="close icon-button ghost-button"
+            data-l10n-id="firefoxview-close-button"
+          ></button>
+        </div>
+        <named-deck
+          class="sync-setup-container"
+          role="region"
+          aria-labelledby="collapsible-synced-tabs-header"
+          id="tabpickup-steps"
+        >
+          <div
+            name="sync-setup-view0"
+            id="tabpickup-steps-view0"
+            class="card card-no-hover error-state"
+            aria-labelledby="tabpickup-steps-view0-header"
+          >
+            <icon class="icon info primary"></icon>
+            <h3 id="tabpickup-steps-view0-header" class="card-header"></h3>
+            <section>
+              <p>
+                <span id="error-state-description"></span>
+                <a id="error-state-link" target="_blank" hidden></a>
+              </p>
+              <button id="error-state-button" class="primary"></button>
+            </section>
+          </div>
+          <div
+            name="sync-setup-view1"
+            id="tabpickup-steps-view1"
+            class="card card-no-hover zap-card setup-step"
+            aria-labelledby="tabpickup-steps-view1-header"
+          >
+            <h2
+              id="tabpickup-steps-view1-header"
+              data-l10n-id="firefoxview-tabpickup-step-signin-header"
+              class="card-header"
+            ></h2>
+            <section class="card-body">
+              <p
+                class="step-content"
+                data-l10n-id="firefoxview-tabpickup-step-signin-description"
+              ></p>
+              <button
+                id="firefoxview-tabpickup-step-signin-primarybutton"
+                class="primary"
+                data-action="view1-primary-action"
+                data-l10n-id="firefoxview-tabpickup-step-signin-primarybutton"
+              ></button>
+            </section>
+            <footer>
+              <progress
+                id="tabpickup-steps-view1-progress"
+                class="step-progress"
+                max="100"
+                value="11"
+              ></progress>
+              <label
+                for="tabpickup-steps-view1-progress"
+                data-l10n-id="firefoxview-tabpickup-progress-label"
+                data-l10n-args='{"percentValue":"11"}'
+              ></label>
+            </footer>
+          </div>
+          <div
+            name="sync-setup-view2"
+            id="tabpickup-steps-view2"
+            class="card card-no-hover zap-card setup-step"
+            aria-labelledby="tabpickup-steps-view2-header"
+          >
+            <h2
+              id="tabpickup-steps-view2-header"
+              data-l10n-id="firefoxview-tabpickup-adddevice-header"
+              class="card-header"
+            ></h2>
+            <section class="card-body">
+              <p class="step-content">
+                <span
+                  data-l10n-id="firefoxview-tabpickup-adddevice-description"
+                ></span>
+                <br />
+                <a
+                  target="_blank"
+                  data-support-url="tab-pickup-firefox-view"
+                  data-l10n-id="firefoxview-tabpickup-adddevice-learn-how"
+                ></a>
+              </p>
+              <button
+                class="primary"
+                data-action="view2-primary-action"
+                data-l10n-id="firefoxview-tabpickup-adddevice-primarybutton"
+              ></button>
+            </section>
+            <footer>
+              <progress
+                id="tabpickup-steps-view2-progress"
+                class="step-progress"
+                max="100"
+                value="33"
+              ></progress>
+              <label
+                for="tabpickup-steps-view2-progress"
+                data-l10n-id="firefoxview-tabpickup-progress-label"
+                data-l10n-args='{"percentValue":"33"}'
+              ></label>
+            </footer>
+          </div>
+          <div
+            name="sync-setup-view3"
+            id="tabpickup-steps-view3"
+            class="card card-no-hover zap-card setup-step"
+            aria-labelledby="tabpickup-steps-view3-header"
+          >
+            <h2
+              id="tabpickup-steps-view3-header"
+              data-l10n-id="firefoxview-tabpickup-synctabs-header"
+              class="card-header"
+            ></h2>
+            <section class="card-body">
+              <p class="step-content">
+                <span
+                  data-l10n-id="firefoxview-tabpickup-synctabs-description"
+                ></span>
+                <br />
+                <a
+                  target="_blank"
+                  data-support-url="tab-pickup-firefox-view"
+                  data-l10n-id="firefoxview-tabpickup-synctabs-learn-how"
+                ></a>
+              </p>
+              <button
+                class="primary"
+                data-action="view3-primary-action"
+                data-l10n-id="firefoxview-tabpickup-synctabs-primarybutton"
+              ></button>
+            </section>
+            <footer>
+              <progress
+                id="tabpickup-steps-view3-progress"
+                class="step-progress"
+                max="100"
+                value="66"
+              ></progress>
+              <label
+                for="tabpickup-steps-view3-progress"
+                data-l10n-id="firefoxview-tabpickup-progress-label"
+                data-l10n-args='{"percentValue":"66"}'
+              ></label>
+            </footer>
+          </div>
+        </named-deck>
+
+        <div
+          id="tabpickup-tabs-container"
+          role="region"
+          aria-labelledby="collapsible-synced-tabs-header"
+          class="synced-tabs-container"
+          hidden
+        >
+          <tab-pickup-list>
+            <ol hidden="true" class="synced-tabs-list"></ol>
+          </tab-pickup-list>
+          <div hidden id="synced-tabs-placeholder" class="placeholder-content">
+            <img
+              id="tab-pickup-empty-image"
+              src="chrome://browser/content/firefoxview/tab-pickup-empty.svg"
+              role="presentation"
+              alt=""
+            />
+            <div class="placeholder-text">
+              <h4
+                data-l10n-id="firefoxview-synced-tabs-placeholder-header"
+                class="placeholder-header"
+              ></h4>
+              <p
+                data-l10n-id="firefoxview-synced-tabs-placeholder-body"
+                class="placeholder-body"
+              ></p>
+            </div>
+          </div>
+          <div class="loading-content">
+            <icon class="icon sync"></icon>
+            <p data-l10n-id="firefoxview-tabpickup-syncing"></p>
+          </div>
+        </div>
+
+        <div class="promo-box message-box zap-card card-no-hover card" hidden>
+          <div class="card-body">
+            <div class="message-content">
+              <h2
+                data-l10n-id="firefoxview-mobile-promo-header"
+                class="message-header"
+              ></h2>
+              <p
+                class="message-description"
+                data-l10n-id="firefoxview-mobile-promo-description"
+              ></p>
+            </div>
+            <button
+              class="primary"
+              data-action="mobile-promo-primary-action"
+              data-l10n-id="firefoxview-mobile-promo-primarybutton"
+            ></button>
+          </div>
+          <button
+            data-action="mobile-promo-dismiss"
+            class="close icon-button ghost-button"
+            data-l10n-id="firefoxview-close-button"
+          ></button>
+        </div>
+      </details>
+
+      <details
+        class="content-container"
+        is="recently-closed-tabs-container"
+        id="recently-closed-tabs-container"
+        open
+      >
+        <summary
+          id="recently-closed-tabs-header-section"
+          class="page-section-header"
+          data-l10n-id="firefoxview-collapse-button-hide"
+        >
+          <span class="twisty icon" aria-role="presentation"></span>
+          <h1
+            id="recently-closed-tabs-header"
+            data-l10n-id="firefoxview-recently-closed-header"
+          ></h1>
+        </summary>
+        <div
+          id="collapsible-tabs-container"
+          id="recently-closed-tabs"
+          role="region"
+          aria-labelledby="recently-closed-tabs-header"
+        >
+          <recently-closed-tabs-list></recently-closed-tabs-list>
+        </div>
+      </details>
+    </main>
+  </body>
+</html>
