@@ -1485,7 +1485,11 @@ fxa_avatar_menu:
       "toolbar_icon",
       "unver_sync_settings",
       "open_monitor",
-      "open_send"
+      "open_send",
+      "monitor_cta",
+      "relay_cta",
+      "vpn_cta",
+      "sync_cta"
       ]
     methods: ["click"]
     release_channel_collection: opt-out
@@ -1493,7 +1497,7 @@ fxa_avatar_menu:
       - "firefox"
     record_in_processes: ["main"]
     description: This is recorded on interactions with the FxA avatar menu on the toolbar
-    bug_numbers: [1524665, 1585459, 1606203]
+    bug_numbers: [1524665, 1585459, 1606203, 1867098]
     notification_emails: ["vbudhram@mozilla.com", "loines@mozilla.com"]
     expiry_version: "never"
     extra_keys:
@@ -1516,7 +1520,11 @@ fxa_app_menu:
       "toolbar_icon",
       "unver_sync_settings",
       "open_monitor",
-      "open_send"
+      "open_send",
+      "monitor_cta",
+      "relay_cta",
+      "vpn_cta",
+      "sync_cta"
       ]
     methods: ["click"]
     release_channel_collection: opt-out
@@ -1524,7 +1532,7 @@ fxa_app_menu:
       - "firefox"
     record_in_processes: ["main"]
     description: This is recorded on interactions with the FxA menu in the app (hamburger) menu
-    bug_numbers: [1542334, 1606203]
+    bug_numbers: [1542334, 1606203, 1867098]
     notification_emails: ["vbudhram@mozilla.com", "loines@mozilla.com"]
     expiry_version: "never"
     extra_keys:

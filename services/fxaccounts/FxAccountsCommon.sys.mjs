@@ -95,6 +95,8 @@ export let DEPRECATED_SCOPE_ECOSYSTEM_TELEMETRY =
 // OAuth metadata for other Firefox-related services that we might need to know about
 // in order to provide an enhanced user experience.
 export let FX_MONITOR_OAUTH_CLIENT_ID = "802d56ef2a9af9fa";
+export let FX_RELAY_OAUTH_CLIENT_ID = "9ebfe2c2f9ea3c58";
+export let VPN_OAUTH_CLIENT_ID = "e6eb0d1e856335fc";
 
 // UI Requests.
 export let UI_REQUEST_SIGN_IN_FLOW = "signInFlow";
