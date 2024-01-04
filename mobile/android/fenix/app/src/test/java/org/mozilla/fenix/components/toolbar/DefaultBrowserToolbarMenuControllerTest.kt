@@ -312,7 +312,7 @@ class DefaultBrowserToolbarMenuControllerTest {
         assertNotNull(Events.browserMenuAction.testGetValue())
         val snapshot = Events.browserMenuAction.testGetValue()!!
         assertEquals(1, snapshot.size)
-        assertEquals("back", snapshot.single().extra?.getValue("item"))
+        assertEquals("back_long_press", snapshot.single().extra?.getValue("item"))
         val directions = BrowserFragmentDirections.actionGlobalTabHistoryDialogFragment(null)
 
         verify { navController.navigate(directions) }
@@ -347,7 +347,7 @@ class DefaultBrowserToolbarMenuControllerTest {
         assertNotNull(Events.browserMenuAction.testGetValue())
         val snapshot = Events.browserMenuAction.testGetValue()!!
         assertEquals(1, snapshot.size)
-        assertEquals("forward", snapshot.single().extra?.getValue("item"))
+        assertEquals("forward_long_press", snapshot.single().extra?.getValue("item"))
 
         val directions = BrowserFragmentDirections.actionGlobalTabHistoryDialogFragment(null)
 

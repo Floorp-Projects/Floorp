@@ -13,6 +13,7 @@ import mozilla.components.feature.toolbar.ToolbarAutocompleteFeature
 import mozilla.components.support.ktx.android.content.getColorFromAttr
 import mozilla.components.support.ktx.android.content.res.resolveAttribute
 import mozilla.components.support.ktx.android.view.hideKeyboard
+import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.search.SearchEngineSource
@@ -115,6 +116,10 @@ class ToolbarView(
                     override fun onTextChanged(text: String) {
                         url = text
                         interactor.onTextChanged(text)
+                    }
+
+                    override fun onInputCleared() {
+                        Events.browserToolbarInputCleared.record()
                     }
                 },
             )

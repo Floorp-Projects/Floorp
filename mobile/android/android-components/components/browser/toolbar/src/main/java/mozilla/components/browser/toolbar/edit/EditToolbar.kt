@@ -327,6 +327,7 @@ class EditToolbar internal constructor(
     private fun onClear() {
         // We set text to an empty string instead of using clear to avoid #3612.
         views.url.setText("")
+        editListener?.onInputCleared()
     }
 
     private fun setUrlGoneMargin(anchor: Int, dimen: Int) {

@@ -135,10 +135,10 @@ events:
         description: |
           A string containing the name of the item the user tapped. These items
           include:
-          add_to_homescreen, add_to_top_sites, addons_manager, back, bookmark,
-          bookmarks, desktop_view_off, desktop_view_on, downloads,
-          find_in_page, forward, history, new_tab, open_in_app, open_in_fenix,
-          quit, reader_mode_appearance, reload, remove_from_top_sites,
+          add_to_homescreen, add_to_top_sites, addons_manager, back, back_long_press,
+          bookmark, bookmarks, desktop_view_off, desktop_view_on, downloads,
+          find_in_page, forward, forward_long_press, history, new_tab, open_in_app, 
+          open_in_fenix, quit, reader_mode_appearance, reload, remove_from_top_sites,
           save_to_collection, set_default_browser, settings, share, stop,
           sync_account, translate and print_content.
         type: string
@@ -475,6 +475,23 @@ events:
     notification_emails:
       - android-probes@mozilla.com
     expires: never
+  browser_toolbar_security_indicator_tapped:
+    type: event
+    description: |
+      An event that indicates that a user has tapped
+      the security indicator icon (at the start of the domain name).
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1869664
+    data_reviews:
+      - https://github.com/mozilla-mobile/firefox-android/pull/5019#issuecomment-1876329933
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: never
+    metadata:
+      tags:
+        - Toolbar
   browser_toolbar_erase_tapped:
     type: event
     description: |
@@ -489,6 +506,22 @@ events:
     notification_emails:
       - android-probes@mozilla.com
     expires: never
+  browser_toolbar_input_cleared:
+    type: event
+    description: |
+      A user pressed the circle cross icon, clearing the input in the toolbar.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1869664
+    data_reviews:
+      - https://github.com/mozilla-mobile/firefox-android/pull/5019#issuecomment-1876329933
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: never
+    metadata:
+      tags:
+        - Toolbar
   browser_toolbar_qr_scan_tapped:
     type: event
     description: |
@@ -498,6 +531,22 @@ events:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1862096
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1862096
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: never
+    metadata:
+      tags:
+        - Toolbar
+  browser_toolbar_qr_scan_completed:
+    type: event
+    description: |
+      An event that indicates that a QR code has been scanned successfully.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1869664
+    data_reviews:
+      - https://github.com/mozilla-mobile/firefox-android/pull/5019#issuecomment-1876329933
     data_sensitivity:
       - interaction
     notification_emails:

@@ -247,6 +247,11 @@ interface Toolbar {
          * Fired whenever the user changes the text in the address bar.
          */
         fun onTextChanged(text: String) = Unit
+
+        /**
+         * Fired when user clears input by tapping the clear input button.
+         */
+        fun onInputCleared() = Unit
     }
 
     /**

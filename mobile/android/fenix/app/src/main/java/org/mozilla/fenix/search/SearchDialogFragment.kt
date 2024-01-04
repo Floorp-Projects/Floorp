@@ -672,6 +672,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
                         }.show()
                     }
                 }
+                Events.browserToolbarQrScanCompleted.record()
             },
         )
     }
