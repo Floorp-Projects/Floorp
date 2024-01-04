@@ -114,8 +114,7 @@ browsertime-tp6:
                         firefox:
                             by-test-platform:
                                 windows.*-32.*: []
-                                (linux|windows10-64).*shippable-qr.*: [trunk, mozilla-beta, mozilla-release]
-                                macosx1015.*shippable-qr.*: []
+                                (macosx1015|linux|windows10-64).*shippable-qr.*: [trunk, mozilla-beta, mozilla-release]
                                 default: []
                         default: []
                 default:
@@ -600,7 +599,7 @@ browsertime-tp6-live:
                     - [google-slides, gslides]
                     - imdb
                     # - imgur (see bugs 1825337 & 1817420)
-                    # - instagram (see bug 1736999)
+                    - instagram  # (see bug 1736999)
                     - linkedin
                     - microsoft
                     - netflix
@@ -627,7 +626,7 @@ browsertime-tp6-live:
                     - [google-slides, gslides]
                     - imdb
                     - imgur
-                    # - instagram (see bug 1736999)
+                    - instagram  # (see bug 1736999)
                     - linkedin
                     - microsoft
                     - netflix

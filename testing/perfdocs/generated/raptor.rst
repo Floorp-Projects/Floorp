@@ -21028,6 +21028,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
         - ❌
+      * - **browsertime-tp6-live-firefox-instagram**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
 
 
    .. list-table:: **test-linux1804-64-nightlyasrelease-qr/opt**
@@ -21049,6 +21054,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
         - ❌
+      * - **browsertime-tp6-live-firefox-instagram**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
 
 
    .. list-table:: **test-linux1804-64-qr/opt**
@@ -21066,6 +21076,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
       * - **browsertime-tp6-essential-firefox-instagram**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-live-firefox-instagram**
         - ❌
         - ❌
         - ❌
@@ -21101,6 +21116,16 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ✅
         - ✅
         - ✅
+      * - **browsertime-tp6-live-chrome-instagram**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-live-firefox-instagram**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
 
 
    .. list-table:: **test-macosx1015-64-nightlyasrelease-qr/opt**
@@ -21122,6 +21147,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
         - ❌
+      * - **browsertime-tp6-live-firefox-instagram**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
 
 
    .. list-table:: **test-macosx1015-64-qr/opt**
@@ -21139,6 +21169,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
       * - **browsertime-tp6-essential-firefox-instagram**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-live-firefox-instagram**
         - ❌
         - ❌
         - ❌
@@ -21174,6 +21209,16 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ✅
         - ✅
         - ✅
+      * - **browsertime-tp6-live-chrome-instagram**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-live-firefox-instagram**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
 
 
    .. list-table:: **test-windows10-32-qr/opt**
@@ -21191,6 +21236,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
       * - **browsertime-tp6-essential-firefox-instagram**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-live-firefox-instagram**
         - ❌
         - ❌
         - ❌
@@ -21221,6 +21271,16 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
         - ❌
+      * - **browsertime-tp6-live-chrome-instagram**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-live-firefox-instagram**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
 
 
    .. list-table:: **test-windows10-64-nightlyasrelease-qr/opt**
@@ -21242,6 +21302,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
         - ❌
+      * - **browsertime-tp6-live-firefox-instagram**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
 
 
    .. list-table:: **test-windows10-64-qr/opt**
@@ -21259,6 +21324,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
       * - **browsertime-tp6-essential-firefox-instagram**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-live-firefox-instagram**
         - ❌
         - ❌
         - ❌
@@ -21294,6 +21364,16 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ✅
         - ✅
         - ✅
+      * - **browsertime-tp6-live-chrome-instagram**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-live-firefox-instagram**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
 
 
 
@@ -22119,10 +22199,10 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
       * - **browsertime-tp6-firefox-netflix**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
+        - ✅
+        - ✅
+        - ✅
+        - ✅
       * - **browsertime-tp6-live-chrome-netflix**
         - ❌
         - ❌
@@ -33881,6 +33961,11 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
         - ❌
         - ❌
+      * - **browsertime-tp6-live-firefox-instagram**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
 
 
    .. list-table:: **test-linux1804-64-nightlyasrelease-qr/opt**
@@ -33902,6 +33987,11 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
         - ❌
         - ❌
+      * - **browsertime-tp6-live-firefox-instagram**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
 
 
    .. list-table:: **test-linux1804-64-qr/opt**
@@ -33919,6 +34009,11 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
         - ❌
       * - **browsertime-tp6-essential-firefox-instagram**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-live-firefox-instagram**
         - ❌
         - ❌
         - ❌
@@ -33954,6 +34049,16 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ✅
         - ✅
         - ✅
+      * - **browsertime-tp6-live-chrome-instagram**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-live-firefox-instagram**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
 
 
    .. list-table:: **test-macosx1015-64-nightlyasrelease-qr/opt**
@@ -33975,6 +34080,11 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
         - ❌
         - ❌
+      * - **browsertime-tp6-live-firefox-instagram**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
 
 
    .. list-table:: **test-macosx1015-64-qr/opt**
@@ -33992,6 +34102,11 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
         - ❌
       * - **browsertime-tp6-essential-firefox-instagram**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-live-firefox-instagram**
         - ❌
         - ❌
         - ❌
@@ -34027,6 +34142,16 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ✅
         - ✅
         - ✅
+      * - **browsertime-tp6-live-chrome-instagram**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-live-firefox-instagram**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
 
 
    .. list-table:: **test-windows10-32-qr/opt**
@@ -34044,6 +34169,11 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
         - ❌
       * - **browsertime-tp6-essential-firefox-instagram**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-live-firefox-instagram**
         - ❌
         - ❌
         - ❌
@@ -34074,6 +34204,16 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
         - ❌
         - ❌
+      * - **browsertime-tp6-live-chrome-instagram**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-live-firefox-instagram**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
 
 
    .. list-table:: **test-windows10-64-nightlyasrelease-qr/opt**
@@ -34095,6 +34235,11 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
         - ❌
         - ❌
+      * - **browsertime-tp6-live-firefox-instagram**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
 
 
    .. list-table:: **test-windows10-64-qr/opt**
@@ -34112,6 +34257,11 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
         - ❌
       * - **browsertime-tp6-essential-firefox-instagram**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-live-firefox-instagram**
         - ❌
         - ❌
         - ❌
@@ -34147,6 +34297,16 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ✅
         - ✅
         - ✅
+      * - **browsertime-tp6-live-chrome-instagram**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-live-firefox-instagram**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
 
 
 
