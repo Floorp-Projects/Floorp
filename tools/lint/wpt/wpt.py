@@ -22,6 +22,10 @@ def lint(files, config, **kwargs):
         try:
             data = json.loads(line)
         except ValueError:
+            print(
+                f"Got non-JSON output: {line}",
+                file=sys.stderr,
+            )
             return
 
         data["level"] = "error"
