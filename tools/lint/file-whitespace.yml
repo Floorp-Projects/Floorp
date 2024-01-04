@@ -18,6 +18,9 @@ file-whitespace:
         - devtools/client/inspector/markup/test
         - devtools/client/inspector/rules/test
         - devtools/client/inspector/test
+        # Excluded because of python json output.
+        - testing/talos/talos/unittests/test_talosconfig_browser_config.json
+        - testing/talos/talos/unittests/test_talosconfig_test_config.json
         # Excluded because tests were failing unexpectedly
         - devtools/client/styleeditor/test/sync_with_csp.css
         - devtools/client/webconsole/test/browser/test-message-categories-css-parser.css
@@ -154,6 +157,7 @@ file-whitespace:
         - .h
         - .html
         - .java
+        - .json
         - .kt
         - .md
         - .properties

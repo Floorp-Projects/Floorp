@@ -25,6 +25,7 @@ intl/unicharutil/util/nsUnicodePropertyData.cpp
 mobile/locales/l10n-changesets.json
 mobile/locales/l10n-onchange-changesets.json
 node_modules/
+python/mozperftest/mozperftest/tests/data/
 security/manager/tools/KnownRootHashes.json
 security/manager/tools/PreloadedHPKPins.json
 services/settings/dumps/

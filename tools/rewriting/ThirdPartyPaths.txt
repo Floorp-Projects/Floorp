@@ -96,6 +96,7 @@ js/src/dtoa.c
 js/src/editline/
 js/src/jit/arm64/vixl/
 js/src/octane/
+js/src/tests/test262/
 js/src/vtune/disable_warnings.h
 js/src/vtune/ittnotify_config.h
 js/src/vtune/ittnotify.h

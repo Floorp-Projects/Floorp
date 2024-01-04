@@ -1249,11 +1249,11 @@ toolkit/components/uniffi-bindgen-gecko-js/components/generated/*
 ##############################################################################
 
 browser/components/newtab/vendor/
+browser/components/pocket/content/panels/css/normalize.scss
 browser/components/pocket/content/panels/js/vendor/
 browser/components/storybook/node_modules/
 browser/extensions/formautofill/content/third-party/
 browser/extensions/formautofill/test/fixtures/third_party/
-browser/extensions/formautofill/test/unit/heuristics/
 devtools/client/inspector/markup/test/lib_*
 devtools/client/jsonview/lib/require.js
 devtools/client/shared/build/babel.js
@@ -1263,6 +1263,7 @@ devtools/client/shared/sourceeditor/test/cm_mode_ruby.js
 devtools/client/shared/sourceeditor/test/codemirror/
 devtools/client/shared/vendor/
 devtools/client/inspector/markup/test/helper_diff.js
+devtools/client/debugger/src/workers/parser/utils/parse-script-tags/
 devtools/shared/acorn/
 devtools/shared/compatibility/dataset/css-properties.json
 devtools/shared/heapsnapshot/CoreDump.pb.cc
@@ -1301,6 +1302,7 @@ dom/tests/mochitest/ajax/
 dom/tests/mochitest/dom-level1-core/
 dom/tests/mochitest/dom-level2-core/
 dom/tests/mochitest/dom-level2-html/
+dom/u2f/tests/pkijs/
 dom/webauthn/tests/pkijs/
 dom/webgpu/tests/cts/checkout/
 editor/libeditor/tests/browserscope/lib/richtext/
@@ -1344,6 +1346,7 @@ js/src/dtoa.c
 js/src/editline/
 js/src/jit/arm64/vixl/
 js/src/octane/
+js/src/tests/test262/
 js/src/vtune/disable_warnings.h
 js/src/vtune/ittnotify_config.h
 js/src/vtune/ittnotify.h
@@ -1413,6 +1416,8 @@ testing/mozbase/mozproxy/mozproxy/backends/mitm/scripts/catapult/
 testing/talos/talos/tests/devtools/addon/content/pages/
 testing/talos/talos/tests/dromaeo/
 testing/talos/talos/tests/kraken/
+testing/talos/talos/tests/offscreencanvas/benchmarks/video/demuxer_mp4.js
+testing/talos/talos/tests/offscreencanvas/benchmarks/video/mp4box.all.min.js
 testing/talos/talos/tests/v8_7/
 testing/web-platform/tests/resources/webidl2/
 testing/web-platform/tests/tools/third_party/
@@ -1451,7 +1456,11 @@ xpcom/io/crc32c.c
 ##############################################################################
 
 .gradle/
+build/vs/vs2019.yaml
+build/vs/vs2022.yaml
 browser/components/aboutwelcome/content/aboutwelcome.bundle.js
+browser/components/aboutwelcome/logs/
+browser/components/aboutwelcome/node_modules/
 browser/components/asrouter/node_modules/
 browser/components/asrouter/content/asrouter-admin.bundle.js
 browser/components/asrouter/logs/
@@ -1473,6 +1482,7 @@ intl/unicharutil/util/nsUnicodePropertyData.cpp
 mobile/locales/l10n-changesets.json
 mobile/locales/l10n-onchange-changesets.json
 node_modules/
+python/mozperftest/mozperftest/tests/data/
 security/manager/tools/KnownRootHashes.json
 security/manager/tools/PreloadedHPKPins.json
 services/settings/dumps/
