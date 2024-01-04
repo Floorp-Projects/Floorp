@@ -1881,17 +1881,6 @@ powerSaver:
       description: >-
         Limit how quickly the background tab timer budget regenerates.
 
-firefoxViewNext:
-  description: Next Iteration of Firefox View
-  owner: firefoxview@mozilla.com
-  hasExposure: false
-  isEarlyStartup: true
-  variables:
-    newIcon:
-      type: boolean
-      fallbackPref: "browser.tabs.firefox-view-newIcon"
-      description: "Whether or not use the new icon"
-
 backgroundUpdate:
   description: Prefs to control aspects of the background update process.
   owner: install-update@mozilla.com

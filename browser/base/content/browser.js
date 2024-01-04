@@ -9987,10 +9987,6 @@ var FirefoxViewHandler = {
       !this._enabled
     );
     document.getElementById("menu_openFirefoxView").hidden = !this._enabled;
-    document.getElementById("firefox-view-button").style.listStyleImage =
-      NimbusFeatures.firefoxViewNext.getVariable("newIcon")
-        ? ""
-        : 'url("chrome://branding/content/about-logo.png")';
   },
   onWidgetRemoved(aWidgetId) {
     if (aWidgetId == this.BUTTON_ID && this.tab) {
