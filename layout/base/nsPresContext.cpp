@@ -77,6 +77,7 @@
 #include "mozilla/Preferences.h"
 #include "gfxTextRun.h"
 #include "nsFontFaceUtils.h"
+#include "COLRFonts.h"
 #include "mozilla/ContentBlockingAllowList.h"
 #include "mozilla/GlobalStyleSheetCache.h"
 #include "mozilla/ServoBindings.h"
@@ -2948,9 +2949,20 @@ void nsPresContext::FlushFontPaletteValues() {
   mFontPaletteValueSet = styleSet->BuildFontPaletteValueSet();
   mFontPaletteValuesDirty = false;
 
+  if (mFontPaletteCache) {
+    mFontPaletteCache->SetPaletteValueSet(mFontPaletteValueSet);
+  }
+
   // Even if we're not reflowing anything, a change to the palette means we
   // need to repaint in order to show the new colors.
   InvalidatePaintedLayers();
+}
+
+gfx::PaletteCache& nsPresContext::FontPaletteCache() {
+  if (!mFontPaletteCache) {
+    mFontPaletteCache = MakeUnique<gfx::PaletteCache>(mFontPaletteValueSet);
+  }
+  return *mFontPaletteCache.get();
 }
 
 void nsPresContext::SetVisibleArea(const nsRect& r) {
