@@ -369,10 +369,10 @@ MFCDMParent::MFCDMParent(const nsAString& aKeySystem,
       mKeyMessageEvents(aManagerThread),
       mKeyChangeEvents(aManagerThread),
       mExpirationEvents(aManagerThread) {
-  // TODO : add ClearKey CDM support
   MOZ_ASSERT(IsPlayReadyKeySystemAndSupported(aKeySystem) ||
              IsWidevineExperimentKeySystemAndSupported(aKeySystem) ||
-             IsWidevineKeySystem(mKeySystem));
+             IsWidevineKeySystem(mKeySystem) ||
+             IsWMFClearKeySystemAndSupported(aKeySystem));
   MOZ_ASSERT(aManager);
   MOZ_ASSERT(aManagerThread);
   MOZ_ASSERT(XRE_IsUtilityProcess());
