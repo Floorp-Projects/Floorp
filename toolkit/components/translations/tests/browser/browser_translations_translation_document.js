@@ -6,7 +6,7 @@
 /**
  * @type {typeof import("../../content/translations-document.sys.mjs")}
  */
-const { TranslationsDocument } = ChromeUtils.importESModule(
+const { TranslationsDocument, LRUCache } = ChromeUtils.importESModule(
   "chrome://global/content/translations/translations-document.sys.mjs"
 );
 /**
@@ -42,7 +42,8 @@ async function createDoc(html, options) {
         throw new Error("Cannot request a new port");
       },
       performance.now(),
-      () => performance.now()
+      () => performance.now(),
+      new LRUCache()
     );
   };
 

@@ -6,6 +6,7 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
+  clearTimeout: "resource://gre/modules/Timer.sys.mjs",
 });
 
 ChromeUtils.defineLazyGetter(lazy, "console", () => {
@@ -38,6 +39,132 @@ const NodeStatus = {
  * @typedef {import("../translations").NodeVisibility} NodeVisibility
  * @typedef {(message: string) => Promise<string>} TranslationFunction
  */
+
+/**
+ * Create a translation cache with a limit. It implements a "least recently used" strategy
+ * to remove old translations. After `#cacheExpirationMS` the cache will be emptied.
+ * This cache is owned statically by the TranslationsChild. This means that it will be
+ * re-used on page reloads if the origin of the site does not change.
+ */
+export class LRUCache {
+  /** @type {Map<string, string>} */
+  #htmlCache = new Map();
+  /** @type {Map<string, string>} */
+  #textCache = new Map();
+  /** @type {string} */
+  #fromLanguage;
+  /** @type {string} */
+  #toLanguage;
+
+  /**
+   * This limit is used twice, once for Text translations, and once for HTML translations.
+   */
+  #cacheLimit = 5_000;
+
+  /**
+   * This cache will self-destruct after 10 minutes.
+   */
+  #cacheExpirationMS = 10 * 60_000;
+
+  /**
+   * @param {string} fromLanguage
+   * @param {string} toLanguage
+   */
+  constructor(fromLanguage, toLanguage) {
+    this.#fromLanguage = fromLanguage;
+    this.#toLanguage = toLanguage;
+  }
+
+  /**
+   * @param {boolean} isHTML
+   * @returns {boolean}
+   */
+  #getCache(isHTML) {
+    return isHTML ? this.#htmlCache : this.#textCache;
+  }
+
+  /**
+   * Get a translation if it exists from the cache, and move it to the end of the cache
+   * to keep it alive longer.
+   *
+   * @param {string} sourceString
+   * @param {boolean} isHTML
+   * @returns {string}
+   */
+  get(sourceString, isHTML) {
+    const cache = this.#getCache(isHTML);
+    const targetString = cache.get(sourceString);
+
+    if (targetString === undefined) {
+      return undefined;
+    }
+
+    // Maps are ordered, move this item to the end of the list so it will stay
+    // alive longer.
+    cache.delete(sourceString);
+    cache.set(sourceString, targetString);
+
+    this.keepAlive();
+
+    return targetString;
+  }
+
+  /**
+   * @param {string} sourceString
+   * @param {string} targetString
+   * @param {boolean} isHTML
+   */
+  set(sourceString, targetString, isHTML) {
+    const cache = this.#getCache(isHTML);
+    if (cache.size === this.#cacheLimit) {
+      // If the cache is at the limit, get the least recently used translation and
+      // remove it. This works since Maps have keys ordered by insertion order.
+      const key = cache.keys().next().value;
+      cache.delete(key);
+    }
+    cache.set(sourceString, targetString);
+    this.keepAlive();
+  }
+
+  /**
+   * @param {string} fromLanguage
+   * @param {string} toLanguage
+   */
+  matches(fromLanguage, toLanguage) {
+    return (
+      this.#fromLanguage === fromLanguage && this.#toLanguage === toLanguage
+    );
+  }
+
+  /**
+   * @type {number}
+   */
+  #timeoutId = 0;
+
+  #pendingKeepAlive = false;
+
+  /**
+   * Clear out the cache on a timer.
+   */
+  keepAlive() {
+    if (this.#timeoutId) {
+      lazy.clearTimeout(this.#timeoutId);
+    }
+    if (!this.#pendingKeepAlive) {
+      // Rather than continuously creating new functions in a tight loop, only schedule
+      // one keepAlive timeout on the next tick.
+      this.#pendingKeepAlive = true;
+
+      lazy.setTimeout(() => {
+        this.#pendingKeepAlive = false;
+        this.#timeoutId = lazy.setTimeout(() => {
+          this.#htmlCache = new Map();
+          this.#textCache = new Map();
+        }, this.#cacheExpirationMS);
+      }, 0);
+    }
+  }
+}
 
 /**
  * How often the DOM is updated with translations, in milliseconds.
@@ -217,6 +344,7 @@ export class TranslationsDocument {
    *                                      translation request comes in.
    * @param {number} translationsStart
    * @param {() => number} now
+   * @param {LRUCache} translationsCache
    */
   constructor(
     document,
@@ -225,7 +353,8 @@ export class TranslationsDocument {
     port,
     requestNewPort,
     translationsStart,
-    now
+    now,
+    translationsCache
   ) {
     /**
      * The language of the document. If elements are found that do not match this language,
@@ -252,6 +381,9 @@ export class TranslationsDocument {
 
     /** @type {Document} */
     this.document = document;
+
+    /** @type {LRUCache} */
+    this.translationsCache = translationsCache;
 
     /**
      * This selector runs to find child nodes that should be excluded. It should be
@@ -990,7 +1122,12 @@ export class TranslationsDocument {
   async maybeTranslate(node, text, isHTML) {
     this.#pendingTranslationsCount++;
     try {
-      const translation = await this.translator.translate(node, text, isHTML);
+      let translation = this.translationsCache.get(text, isHTML);
+      if (translation === undefined) {
+        translation = await this.translator.translate(node, text, isHTML);
+        this.translationsCache.set(text, translation, isHTML);
+      }
+
       return translation;
     } catch (error) {
       lazy.console.log("Translation failed", error);
