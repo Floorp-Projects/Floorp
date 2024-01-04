@@ -157,14 +157,14 @@ addressbar-suggest-firefox-suggest = Choose the type of suggestions that appear 
 # First Firefox Suggest checkbox main label and description. This checkbox
 # controls non-sponsored suggestions related to the user's search string.
 addressbar-firefox-suggest-nonsponsored =
-  .label = Suggestions from the web
-addressbar-firefox-suggest-nonsponsored-desc = Get suggestions from { -brand-product-name } related to your search.
+  .label = Suggestions from { -brand-short-name }
+addressbar-firefox-suggest-nonsponsored-desc = Get suggestions from the web related to your search.
 
 # Second Firefox Suggest checkbox main label and description. This checkbox
 # controls sponsored suggestions related to the user's search string.
 addressbar-firefox-suggest-sponsored =
   .label = Suggestions from sponsors
-addressbar-firefox-suggest-sponsored-desc = Support the development of { -brand-short-name } with occasional sponsored suggestions.
+addressbar-firefox-suggest-sponsored-desc = Support { -brand-short-name } with occasional sponsored suggestions.
 
 # An additional toggle button in the Firefox Suggest settings that controls
 # whether userdata-based suggestions like history and bookmarks should be
@@ -178,7 +178,7 @@ addressbar-firefox-suggest-private =
 # custom element code.
 addressbar-firefox-suggest-data-collection =
   .label = Improve the { -firefox-suggest-brand-name } experience
-  .description = Help create a richer search experience by allowing { -vendor-short-name } to process your search queries.
+  .description = Share search query data with { -vendor-short-name } to create a richer search experience.
 
 # The "Learn more" link shown in the Firefox Suggest preferences UI.
 addressbar-locbar-firefox-suggest-learn-more = Learn more
@@ -223,7 +223,7 @@ addressbar-firefox-suggest-info-sponsored = Based on your selection, you’ll re
 addressbar-firefox-suggest-info-data = Based on your selection, you won’t receive suggestions from the web or sponsored sites. We will process your search query data to develop the { -firefox-suggest-brand-name } feature.
 
 addressbar-dismissed-suggestions-label = Dismissed suggestions
-addressbar-restore-dismissed-suggestions-description = Restore dismissed suggestions from sponsors and the web.
+addressbar-restore-dismissed-suggestions-description = Restore dismissed suggestions from sponsors and { -brand-short-name }.
 addressbar-restore-dismissed-suggestions-button =
   .label = Restore
 addressbar-restore-dismissed-suggestions-learn-more = Learn more

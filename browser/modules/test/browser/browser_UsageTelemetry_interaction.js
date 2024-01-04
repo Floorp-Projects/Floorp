@@ -719,15 +719,6 @@ add_task(async function preferences() {
       gBrowser.selectedBrowser.browsingContext
     );
 
-    gBrowser.selectedBrowser.contentDocument
-      .getElementById("openLocationBarPrivacyPreferences")
-      .scrollIntoView();
-    await BrowserTestUtils.synthesizeMouseAtCenter(
-      "#openLocationBarPrivacyPreferences",
-      {},
-      gBrowser.selectedBrowser.browsingContext
-    );
-
     await BrowserTestUtils.synthesizeMouseAtCenter(
       "#category-privacy",
       {},
@@ -757,9 +748,6 @@ add_task(async function preferences() {
       },
       preferences_panePrivacy: {
         contentBlockingLearnMore: 1,
-      },
-      preferences_paneSearch: {
-        openLocationBarPrivacyPreferences: 1,
       },
     });
   });
