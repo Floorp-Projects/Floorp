@@ -134,6 +134,34 @@ add_task(async function () {
     "The privacy.spoof_english pref is set to 1."
   );
   acceptLanguagesSubdialog(win);
+  await SpecialPowers.popPrefEnv();
+
+  await SpecialPowers.pushPrefEnv({
+    set: [["intl.accept_languages", "en-US"]],
+  });
+  win = await languagesSubdialogOpened();
+  is(
+    win.document.getElementById("remove").disabled,
+    false,
+    "The Remove button is enabled when any language is selected on the list"
+  );
+
+  win.document.getElementById("remove").doCommand();
+  is(
+    win.Preferences.get("intl.accept_languages").value,
+    "",
+    "Accepted language has been removed from the preference"
+  );
+  is(
+    win.document.getElementById("activeLanguages").itemCount,
+    0,
+    "Accepted languages list is empty"
+  );
+  ok(
+    win.document.getElementById("remove").disabled,
+    "The Remove button is disabled when there is no language on the list"
+  );
+  acceptLanguagesSubdialog(win);
 
   gBrowser.removeCurrentTab();
 });

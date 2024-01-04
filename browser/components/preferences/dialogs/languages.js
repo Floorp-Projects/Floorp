@@ -155,6 +155,8 @@ var gLanguagesDialog = {
     var selectedIndex = 0;
     var preference = Preferences.get("intl.accept_languages");
     if (preference.value == "") {
+      this._activeLanguages.selectedIndex = -1;
+      this.onLanguageSelect();
       return;
     }
     var languages = preference.value.toLowerCase().split(/\s*,\s*/);
