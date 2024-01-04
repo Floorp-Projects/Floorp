@@ -360,7 +360,7 @@ add_task(async function test_change_default_engine_updates_placeholder() {
   );
 
   info("Show search engine removal info bar");
-  BrowserSearch.removalOfSearchEngineNotificationBox(
+  await BrowserSearch.removalOfSearchEngineNotificationBox(
     extraEngine.name,
     originalEngine.name
   );
