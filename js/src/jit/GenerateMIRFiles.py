@@ -5,8 +5,6 @@
 # This script generates jit/MIROpsGenerated.h (list of MIR instructions)
 # from MIROps.yaml, as well as MIR op definitions.
 
-from collections import OrderedDict
-
 import buildconfig
 import six
 import yaml
@@ -47,20 +45,7 @@ def load_yaml(yaml_path):
     pp.do_filter("substitution")
     pp.do_include(yaml_path)
     contents = pp.out.getvalue()
-
-    # Load into an OrderedDict to ensure order is preserved. Note: Python 3.7+
-    # also preserves ordering for normal dictionaries.
-    # Code based on https://stackoverflow.com/a/21912744.
-    class OrderedLoader(yaml.Loader):
-        pass
-
-    def construct_mapping(loader, node):
-        loader.flatten_mapping(node)
-        return OrderedDict(loader.construct_pairs(node))
-
-    tag = yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG
-    OrderedLoader.add_constructor(tag, construct_mapping)
-    return yaml.load(contents, OrderedLoader)
+    return yaml.safe_load(contents)
 
 
 type_policies = {
@@ -322,10 +307,10 @@ def generate_mir_header(c_out, yaml_path):
 
         if gen_boilerplate:
             operands = op.get("operands", None)
-            assert operands is None or isinstance(operands, OrderedDict)
+            assert operands is None or isinstance(operands, dict)
 
             arguments = op.get("arguments", None)
-            assert arguments is None or isinstance(arguments, OrderedDict)
+            assert arguments is None or isinstance(arguments, dict)
 
             no_type_policy = op.get("type_policy", None)
             assert no_type_policy in (None, "none")
