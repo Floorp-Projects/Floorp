@@ -4,6 +4,10 @@
 
 "use strict";
 
+// This file expects tabTracker to be defined in the global scope (e.g.
+// by ext-browser.js or ext-android.js).
+/* global tabTracker */
+
 var { ExtensionParent } = ChromeUtils.importESModule(
   "resource://gre/modules/ExtensionParent.sys.mjs"
 );
@@ -79,6 +83,43 @@ this.runtime = class extends ExtensionAPIPersistent {
           AddonManager.removeUpgradeListener(instanceID);
         },
         convert(_fire) {
+          fire = _fire;
+        },
+      };
+    },
+    onPerformanceWarning({ fire }) {
+      let { extension } = this;
+
+      let observer = (subject, topic) => {
+        let report = subject.QueryInterface(Ci.nsIHangReport);
+
+        if (report?.addonId !== extension.id) {
+          return;
+        }
+
+        const performanceWarningEventDetails = {
+          category: "content_script",
+          severity: "high",
+          description:
+            "Slow extension content script caused a page hang, user was warned.",
+        };
+
+        let scriptBrowser = report.scriptBrowser;
+        let nativeTab =
+          scriptBrowser?.ownerGlobal.gBrowser?.getTabForBrowser(scriptBrowser);
+        if (nativeTab) {
+          performanceWarningEventDetails.tabId = tabTracker.getId(nativeTab);
+        }
+
+        fire.async(performanceWarningEventDetails);
+      };
+
+      Services.obs.addObserver(observer, "process-hang-report");
+      return {
+        unregister: () => {
+          Services.obs.removeObserver(observer, "process-hang-report");
+        },
+        convert(_fire, context) {
           fire = _fire;
         },
       };
@@ -169,6 +210,13 @@ this.runtime = class extends ExtensionAPIPersistent {
               extension.off("background-script-suspend-canceled", listener);
             };
           },
+        }).api(),
+
+        onPerformanceWarning: new EventManager({
+          context,
+          module: "runtime",
+          event: "onPerformanceWarning",
+          extensionApi: this,
         }).api(),
 
         reload: async () => {
