@@ -54,9 +54,14 @@ bool ClearKeySession::Init(InitDataType aInitDataType, const uint8_t* aInitData,
   }
 
   if (mKeyIds.empty()) {
+    CK_LOGD("ClearKeySession::Init, failed to get keyId");
     return false;
   }
-
+#ifdef WMF_CLEARKEY_DEBUG
+  for (const auto& keyId : mKeyIds) {
+    CK_LOGARRAY("ClearKeySession::Init, KeyId : ", keyId.data(), keyId.size());
+  }
+#endif
   return true;
 }
 

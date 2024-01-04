@@ -494,7 +494,8 @@ HRESULT MFCDMParent::LoadFactory(
     MFCDM_RETURN_IF_FAILED(clsFactory->CreateContentDecryptionModuleFactory(
         MapKeySystem(aKeySystem).get(), IID_PPV_ARGS(&cdmFactory)));
     aFactoryOut.Swap(cdmFactory);
-    MFCDM_PARENT_SLOG("Loaded CDM from platform!");
+    MFCDM_PARENT_SLOG("Created factory for %s from platform!",
+                      NS_ConvertUTF16toUTF8(aKeySystem).get());
     return S_OK;
   }
 
@@ -503,6 +504,7 @@ HRESULT MFCDMParent::LoadFactory(
     MFCDM_PARENT_SLOG("Failed to load library %ls!", libraryName);
     return E_FAIL;
   }
+  MFCDM_PARENT_SLOG("Loaded external library '%ls'", libraryName);
 
   using DllGetActivationFactoryFunc =
       HRESULT(WINAPI*)(_In_ HSTRING, _COM_Outptr_ IActivationFactory**);
@@ -527,7 +529,7 @@ HRESULT MFCDMParent::LoadFactory(
     // the class Id.
     stringId.AppendLiteral("com.widevine.alpha.ContentDecryptionModuleFactory");
   }
-  MFCDM_PARENT_SLOG("Query factory by classId '%s",
+  MFCDM_PARENT_SLOG("Query factory by classId '%s'",
                     NS_ConvertUTF16toUTF8(stringId).get());
   ScopedHString classId(stringId);
   ComPtr<IActivationFactory> pFactory = NULL;
@@ -538,7 +540,8 @@ HRESULT MFCDMParent::LoadFactory(
   MFCDM_RETURN_IF_FAILED(pFactory->ActivateInstance(&pInspectable));
   MFCDM_RETURN_IF_FAILED(pInspectable.As(&cdmFactory));
   aFactoryOut.Swap(cdmFactory);
-  MFCDM_PARENT_SLOG("Loaded %ls CDM from external library!", libraryName);
+  MFCDM_PARENT_SLOG("Created factory for %s from external library!",
+                    NS_ConvertUTF16toUTF8(aKeySystem).get());
   return S_OK;
 }
 
