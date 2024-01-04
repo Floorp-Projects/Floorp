@@ -2546,11 +2546,6 @@ void gfxPlatform::InitGPUProcessPrefs() {
                          "FEATURE_FAILURE_HEADLESS_MODE"_ns);
     return;
   }
-  if (InSafeMode()) {
-    gpuProc.ForceDisable(FeatureStatus::Blocked, "Safe-mode is enabled",
-                         "FEATURE_FAILURE_SAFE_MODE"_ns);
-    return;
-  }
 
   InitPlatformGPUProcessPrefs();
 }
