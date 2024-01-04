@@ -243,8 +243,6 @@ skip-if = ["a11y_checks"] # Bug 1849028 and 1849179 for causing crashes
 
 ["browser_aboutdebugging_tab_zombietab.js"]
 
-["browser_aboutdebugging_targets_sorted.js"]
-
 ["browser_aboutdebugging_telemetry_basic.js"]
 
 ["browser_aboutdebugging_telemetry_connection_attempt.js"]
