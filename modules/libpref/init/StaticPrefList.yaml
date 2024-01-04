@@ -10305,7 +10305,7 @@
 # Use IsTypeSupportedEx for PlayReady
 -   name: media.eme.playready.istypesupportedex
     type: RelaxedAtomicBool
-    value: false
+    value: true
     mirror: always
 
 # Enable HEVC support via the windows media foundation
