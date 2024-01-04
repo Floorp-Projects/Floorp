@@ -6,7 +6,7 @@ use super::*;
 use authenticator::{
     ctap2::commands::{PinUvAuthResult, StatusCode},
     errors::{CommandError, HIDError},
-    CredManagementCmd, InteractiveRequest, InteractiveUpdate, PinError,
+    BioEnrollmentCmd, CredManagementCmd, InteractiveRequest, InteractiveUpdate, PinError,
 };
 use serde::{Deserialize, Serialize};
 
@@ -25,11 +25,13 @@ pub enum RequestWrapper {
     ChangePIN(Pin, Pin),
     SetPIN(Pin),
     CredentialManagement(CredManagementCmd),
+    BioEnrollment(BioEnrollmentCmd),
 }
 
 pub(crate) fn authrs_to_prompt<'a>(e: AuthenticatorError) -> BrowserPromptType<'a> {
     match e {
         AuthenticatorError::PinError(PinError::PinIsTooShort) => BrowserPromptType::PinIsTooShort,
+        AuthenticatorError::PinError(PinError::PinNotSet) => BrowserPromptType::PinNotSet,
         AuthenticatorError::PinError(PinError::PinRequired) => BrowserPromptType::PinRequired,
         AuthenticatorError::PinError(PinError::PinIsTooLong(_)) => BrowserPromptType::PinIsTooLong,
         AuthenticatorError::PinError(PinError::InvalidPin(r)) => {
@@ -85,6 +87,15 @@ pub(crate) fn interactive_status_callback(
             )) => {
                 cache_puat(transaction.clone(), puat_res); // We don't care if we fail here. Worst-case: User has to enter PIN more often.
                 let prompt = BrowserPromptType::CredentialManagementUpdate { result: cfg_result };
+                send_about_prompt(&prompt)?;
+                continue;
+            }
+            Ok(StatusUpdate::InteractiveManagement(InteractiveUpdate::BioEnrollmentUpdate((
+                bio_res,
+                puat_res,
+            )))) => {
+                cache_puat(transaction.clone(), puat_res); // We don't care if we fail here. Worst-case: User has to enter PIN more often.
+                let prompt = BrowserPromptType::BioEnrollmentUpdate { result: bio_res };
                 send_about_prompt(&prompt)?;
                 continue;
             }

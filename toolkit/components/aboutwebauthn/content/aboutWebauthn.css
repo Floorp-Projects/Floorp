@@ -15,15 +15,15 @@ body {
 }
 
 label {
-    display: block;
+  display: block;
 }
 
 #info-text-div {
-    padding: 20px;
+  padding: 20px;
 }
 
 #ctap-listen-div {
-    padding-top: 15px;
+  padding-top: 15px;
 }
 #ctap-listen-result {
   font-weight: 600;
@@ -62,15 +62,20 @@ label {
 }
 
 .token-info-flex-box {
-    display: flex;
+  display: flex;
 }
 
 .token-info-flex-child {
-    flex: 1;
+  flex: 1;
 }
 
 .token-info-flex-child#authenticator-options {
-    margin-inline-end: 2px;
+  margin-inline-end: 2px;
+}
+
+.bio-enrollment-sample {
+ display: flex;
+ gap: 0.5em;
 }
 
 .button-row {

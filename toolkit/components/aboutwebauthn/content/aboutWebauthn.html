@@ -44,6 +44,12 @@
           data-l10n-id="about-webauthn-credential-management-section-title"
         ></span>
       </div>
+      <div id="bio-enrollments-tab-button" class="category">
+        <span
+          class="tablinks"
+          data-l10n-id="about-webauthn-bio-enrollment-section-title"
+        ></span>
+      </div>
     </div>
 
     <div hidden id="main-content">
@@ -140,6 +146,69 @@
           id="list-credentials-button"
           data-l10n-id="about-webauthn-list-credentials-button"
         ></button>
+      </div>
+
+      <div
+        hidden
+        class="tabcontent bio-enrollment-section"
+        id="bio-enrollment-section"
+      >
+        <h2
+          class="categoryTitle"
+          data-l10n-id="about-webauthn-bio-enrollment-section-title"
+        ></h2>
+        <div
+          hidden
+          id="bio-enrollment-list-subsection"
+          class="token-info-flex-child"
+        >
+          <h3
+            data-l10n-id="about-webauthn-bio-enrollment-list-subsection-title"
+          ></h3>
+          <div hidden id="bio-enrollment-list-empty-label">
+            <label
+              hidden
+              data-l10n-id="about-webauthn-enrollment-list-empty"
+            ></label>
+          </div>
+          <table id="bio-enrollment-list"></table>
+        </div>
+        <button
+          class="bio-enrollment-button button-row"
+          id="list-bio-enrollments-button"
+          data-l10n-id="about-webauthn-list-bio-enrollments-button"
+        ></button>
+        <button
+          class="bio-enrollment-button button-row"
+          id="add-bio-enrollment-button"
+          data-l10n-id="about-webauthn-add-bio-enrollment-button"
+        ></button>
+      </div>
+      <div
+        hidden
+        class="tabcontent add-bio-enrollment-section"
+        id="add-bio-enrollment-section"
+      >
+        <h2
+          class="categoryTitle"
+          data-l10n-id="about-webauthn-add-bio-enrollment-section-title"
+        ></h2>
+        <label
+          for="enrollment-name"
+          data-l10n-id="about-webauthn-enrollment-name-label"
+        ></label>
+        <input id="enrollment-name" name="enrollment-name" autofocus />
+        <button
+          class="bio-enrollment-button button-row"
+          id="start-enrollment-button"
+          data-l10n-id="about-webauthn-start-enrollment-button"
+        ></button>
+        <button
+          id="cancel-enrollment-button"
+          class="button-row"
+          data-l10n-id="about-webauthn-cancel-button"
+        ></button>
+        <div id="enrollment-update"></div>
       </div>
 
       <div

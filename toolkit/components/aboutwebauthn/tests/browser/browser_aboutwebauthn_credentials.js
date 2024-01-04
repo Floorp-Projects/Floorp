@@ -53,8 +53,10 @@ async function send_authinfo_and_open_cred_section(ops) {
   reset_about_page(doc);
   send_auth_info_and_check_categories(doc, ops);
 
-  let button = doc.getElementById("pin-tab-button");
-  is(button.style.display, "none", "pin-tab-button in the sidebar not hidden");
+  ["pin-tab-button", "bio-enrollments-tab-button"].forEach(button_id => {
+    let button = doc.getElementById(button_id);
+    is(button.style.display, "none", button_id + " in the sidebar not hidden");
+  });
 
   if (ops.credMgmt !== null || ops.credentialMgmtPreview !== null) {
     let credentials_tab_button = doc.getElementById("credentials-tab-button");

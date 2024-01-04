@@ -10,6 +10,8 @@ var AboutWebauthnManagerJS = {
   _topic: "about-webauthn-prompt",
   _initialized: false,
   _l10n: null,
+  _bio_l10n: null,
+  _curr_data: null,
   _current_tab: "",
   _previous_tab: "",
 
@@ -18,6 +20,68 @@ var AboutWebauthnManagerJS = {
       return;
     }
     this._l10n = new Localization(["toolkit/about/aboutWebauthn.ftl"], true);
+    this._bio_l10n = new Map();
+    this._bio_l10n.set(
+      "Ctap2EnrollFeedbackFpGood",
+      "about-webauthn-ctap2-enroll-feedback-good"
+    );
+    this._bio_l10n.set(
+      "Ctap2EnrollFeedbackFpTooHigh",
+      "about-webauthn-ctap2-enroll-feedback-too-high"
+    );
+    this._bio_l10n.set(
+      "Ctap2EnrollFeedbackFpTooLow",
+      "about-webauthn-ctap2-enroll-feedback-too-low"
+    );
+    this._bio_l10n.set(
+      "Ctap2EnrollFeedbackFpTooLeft",
+      "about-webauthn-ctap2-enroll-feedback-too-left"
+    );
+    this._bio_l10n.set(
+      "Ctap2EnrollFeedbackFpTooRight",
+      "about-webauthn-ctap2-enroll-feedback-too-right"
+    );
+    this._bio_l10n.set(
+      "Ctap2EnrollFeedbackFpTooFast",
+      "about-webauthn-ctap2-enroll-feedback-too-fast"
+    );
+    this._bio_l10n.set(
+      "Ctap2EnrollFeedbackFpTooSlow",
+      "about-webauthn-ctap2-enroll-feedback-too-slow"
+    );
+    this._bio_l10n.set(
+      "Ctap2EnrollFeedbackFpPoorQuality",
+      "about-webauthn-ctap2-enroll-feedback-poor-quality"
+    );
+    this._bio_l10n.set(
+      "Ctap2EnrollFeedbackFpTooSkewed",
+      "about-webauthn-ctap2-enroll-feedback-too-skewed"
+    );
+    this._bio_l10n.set(
+      "Ctap2EnrollFeedbackFpTooShort",
+      "about-webauthn-ctap2-enroll-feedback-too-short"
+    );
+    this._bio_l10n.set(
+      "Ctap2EnrollFeedbackFpMergeFailure",
+      "about-webauthn-ctap2-enroll-feedback-merge-failure"
+    );
+    this._bio_l10n.set(
+      "Ctap2EnrollFeedbackFpExists",
+      "about-webauthn-ctap2-enroll-feedback-exists"
+    );
+    this._bio_l10n.set(
+      "Ctap2EnrollFeedbackNoUserActivity",
+      "about-webauthn-ctap2-enroll-feedback-no-user-activity"
+    );
+    this._bio_l10n.set(
+      "Ctap2EnrollFeedbackNoUserPresenceTransition",
+      "about-webauthn-ctap2-enroll-feedback-no-user-presence-transition"
+    );
+    this._bio_l10n.set(
+      "Ctap2EnrollFeedbackOther",
+      "about-webauthn-ctap2-enroll-feedback-other"
+    );
+
     Services.obs.addObserver(this, this._topic);
     this._initialized = true;
     reset_page();
@@ -32,6 +96,7 @@ var AboutWebauthnManagerJS = {
 
     // We have token
     if (data.type == "selected-device") {
+      this._curr_data = data.auth_info;
       fake_click_event_for_id("info-tab-button");
       this.show_ui_based_on_authenticator_info(data);
     } else if (data.type == "select-device") {
@@ -46,6 +111,58 @@ var AboutWebauthnManagerJS = {
         JSON.stringify({ retriesLeft: retries })
       );
       open_pin_required_tab();
+    } else if (data.type == "bio-enrollment-update") {
+      if (data.result.EnrollmentList) {
+        show_results_banner("success", "about-webauthn-results-success");
+        this.show_enrollment_list(data.result.EnrollmentList);
+        bio_enrollment_in_progress(false);
+      } else if (data.result.DeleteSuccess || data.result.AddSuccess) {
+        show_results_banner("success", "about-webauthn-results-success");
+        clear_bio_enrollment_samples();
+        // Update AuthenticatorInfo
+        this._curr_data = data.result.DeleteSuccess ?? data.result.AddSuccess;
+        fake_click_event_for_id("bio-enrollments-tab-button");
+        bio_enrollment_in_progress(false);
+        // If we still have some enrollments to show, update the list
+        // otherwise, remove it.
+        if (
+          this._curr_data.options.bioEnroll === true ||
+          this._curr_data.options.userVerificationMgmtPreview === true
+        ) {
+          list_bio_enrollments();
+        } else {
+          // Hide the list, because it's empty
+          document.getElementById(
+            "bio-enrollment-list-subsection"
+          ).hidden = true;
+        }
+      } else if (data.result.UpdateSuccess) {
+        fake_click_event_for_id("bio-enrollments-tab-button");
+        list_bio_enrollments();
+      } else if (data.result.SampleStatus) {
+        show_add_bio_enrollment_section();
+        let up = document.getElementById("enrollment-update");
+        let sample_update = document.createElement("div");
+        let new_line = document.createElement("label");
+        new_line.classList.add("sample");
+        new_line.setAttribute(
+          "data-l10n-id",
+          this._bio_l10n.get(data.result.SampleStatus[0])
+        );
+        sample_update.appendChild(new_line);
+        let samples_needed_line = document.createElement("label");
+        samples_needed_line.setAttribute(
+          "data-l10n-id",
+          "about-webauthn-samples-still-needed"
+        );
+        samples_needed_line.setAttribute(
+          "data-l10n-args",
+          JSON.stringify({ repeatCount: data.result.SampleStatus[1] })
+        );
+        sample_update.classList.add("bio-enrollment-sample");
+        sample_update.appendChild(samples_needed_line);
+        up.appendChild(sample_update);
+      }
     } else if (data.type == "credential-management-update") {
       credential_management_in_progress(false);
       if (data.result.CredentialList) {
@@ -71,6 +188,11 @@ var AboutWebauthnManagerJS = {
         show_results_banner(
           "error",
           "about-webauthn-results-pin-auth-blocked-error"
+        );
+      } else if (data.error.type == "pin-not-set") {
+        show_results_banner(
+          "error",
+          "about-webauthn-results-pin-not-set-error"
         );
       } else if (data.error.type == "device-blocked") {
         show_results_banner(
@@ -186,6 +308,17 @@ var AboutWebauthnManagerJS = {
         document.getElementById("credentials-tab-button").style.display =
           "none";
       }
+
+      if (
+        data.auth_info.options.bioEnroll != null ||
+        data.auth_info.options.userVerificationMgmtPreview != null
+      ) {
+        document.getElementById("bio-enrollments-tab-button").style.display =
+          "flex";
+      } else {
+        document.getElementById("bio-enrollments-tab-button").style.display =
+          "none";
+      }
     } else {
       // Currently auth-rs doesn't send this, because it filters out ctap2-devices.
       // U2F / CTAP1 tokens can't be managed
@@ -249,6 +382,50 @@ var AboutWebauthnManagerJS = {
       });
     });
   },
+
+  show_enrollment_list(enrollment_list) {
+    // We may have temporarily hidden the tab when asking the user for a PIN
+    // so we have to show it again.
+    fake_click_event_for_id("bio-enrollments-tab-button");
+    document.getElementById("bio-enrollment-list-subsection").hidden = false;
+    let table = document.getElementById("bio-enrollment-list");
+    var empty_table = document.createElement("table");
+    empty_table.id = "bio-enrollment-list";
+    table.parentNode.replaceChild(empty_table, table);
+    if (!enrollment_list.length) {
+      document.getElementById("bio-enrollment-list-empty-label").hidden = false;
+      return;
+    }
+    document.getElementById("bio-enrollment-list-empty-label").hidden = true;
+    table = document.getElementById("bio-enrollment-list");
+    enrollment_list.forEach(enrollment => {
+      let key_text = enrollment.template_friendly_name ?? "<unnamed>";
+      var row = table.insertRow(0);
+      var key_node = document.createTextNode(key_text);
+      row.insertCell(0).appendChild(key_node);
+      var delete_button = document.createElement("button");
+      delete_button.classList.add("delete-button");
+      delete_button.classList.add("bio-enrollment-button");
+      let garbage_icon = document.createElement("img");
+      garbage_icon.setAttribute("src", "chrome://global/skin/icons/delete.svg");
+      garbage_icon.classList.add("delete-icon");
+      delete_button.appendChild(garbage_icon);
+      let delete_text = document.createElement("span");
+      delete_text.setAttribute("data-l10n-id", "about-webauthn-delete-button");
+      delete_button.appendChild(delete_text);
+      delete_button.addEventListener("click", function () {
+        let context = document.getElementById("confirmation-context");
+        context.textContent = key_text;
+        bio_enrollment_in_progress(true);
+        let cmd = {
+          BioEnrollment: { DeleteEnrollment: enrollment.template_id },
+        };
+        context.setAttribute("data-ctap-command", JSON.stringify(cmd));
+        open_delete_confirmation_tab();
+      });
+      row.insertCell(1).appendChild(delete_button);
+    });
+  },
 };
 
 function set_info_text(l10nId) {
@@ -274,13 +451,28 @@ function hide_results_banner() {
   document.getElementById("ctap-listen-div").hidden = true;
 }
 
-function credential_management_in_progress(in_progress) {
-  let buttons = Array.from(
-    document.getElementsByClassName("credentials-button")
-  );
+function operation_in_progress(name, in_progress) {
+  let buttons = Array.from(document.getElementsByClassName(name));
   buttons.forEach(button => {
     button.disabled = in_progress;
   });
+}
+
+function credential_management_in_progress(in_progress) {
+  operation_in_progress("credentials-button", in_progress);
+}
+
+function bio_enrollment_in_progress(in_progress) {
+  operation_in_progress("bio-enrollment-button", in_progress);
+}
+
+function clear_bio_enrollment_samples() {
+  // Remove all previous status updates
+  let up = document.getElementById("enrollment-update");
+  while (up.firstChild) {
+    up.removeChild(up.lastChild);
+  }
+  document.getElementById("enrollment-name").value = "";
 }
 
 function fake_click_event_for_id(id) {
@@ -311,6 +503,11 @@ function reset_page() {
   // ListCredentials
   credential_management_in_progress(false);
   document.getElementById("credential-list-subsection").hidden = true;
+
+  // BioEnrollment
+  clear_bio_enrollment_samples();
+  document.getElementById("bio-enrollment-list-subsection").hidden = true;
+  bio_enrollment_in_progress(false);
 
   // Only display the "please connect a device" - text
   set_info_text("about-webauthn-text-connect-device");
@@ -379,8 +576,33 @@ function list_credentials() {
   AboutWebauthnService.runCommand(JSON.stringify(cmd));
 }
 
+function list_bio_enrollments() {
+  bio_enrollment_in_progress(true);
+  let cmd = { BioEnrollment: "GetEnrollments" };
+  AboutWebauthnService.runCommand(JSON.stringify(cmd));
+}
+
+function show_add_bio_enrollment_section() {
+  const evt = new CustomEvent("click", {
+    detail: { temporary_overlay: true },
+  });
+  open_tab(evt, "add-bio-enrollment-section");
+  document.getElementById("enrollment-name").focus();
+}
+
+function start_bio_enrollment() {
+  bio_enrollment_in_progress(true);
+  let name = document.getElementById("enrollment-name").value;
+  if (!name) {
+    name = null; // Empty means "Not set"
+  }
+  let cmd = { BioEnrollment: { StartNewEnrollment: name } };
+  AboutWebauthnService.runCommand(JSON.stringify(cmd));
+}
+
 function cancel_transaction() {
   credential_management_in_progress(false);
+  bio_enrollment_in_progress(false);
   AboutWebauthnService.cancel(0);
 }
 
@@ -392,6 +614,7 @@ function confirm_deletion() {
 
 function cancel_confirmation() {
   credential_management_in_progress(false);
+  bio_enrollment_in_progress(false);
   close_temporary_overlay_tab();
 }
 
@@ -412,6 +635,15 @@ async function onLoad() {
     .getElementById("list-credentials-button")
     .addEventListener("click", list_credentials);
   document
+    .getElementById("list-bio-enrollments-button")
+    .addEventListener("click", list_bio_enrollments);
+  document
+    .getElementById("add-bio-enrollment-button")
+    .addEventListener("click", show_add_bio_enrollment_section);
+  document
+    .getElementById("start-enrollment-button")
+    .addEventListener("click", start_bio_enrollment);
+  document
     .getElementById("new-pin")
     .addEventListener("input", check_pin_repeat_is_correct);
   document
@@ -430,10 +662,16 @@ async function onLoad() {
     .getElementById("credentials-tab-button")
     .addEventListener("click", open_credentials_tab);
   document
+    .getElementById("bio-enrollments-tab-button")
+    .addEventListener("click", open_bio_enrollments_tab);
+  document
     .getElementById("send-pin-button")
     .addEventListener("click", send_pin);
   document
     .getElementById("cancel-send-pin-button")
+    .addEventListener("click", cancel_transaction);
+  document
+    .getElementById("cancel-enrollment-button")
     .addEventListener("click", cancel_transaction);
   document
     .getElementById("cancel-confirmation-button")
@@ -480,6 +718,24 @@ function open_pin_tab(evt) {
 }
 function open_credentials_tab(evt) {
   open_tab(evt, "credential-management-section");
+}
+function open_bio_enrollments_tab(evt) {
+  // We can only list, if there are any registered already
+  if (
+    AboutWebauthnManagerJS._curr_data.options.bioEnroll === true ||
+    AboutWebauthnManagerJS._curr_data.options.userVerificationMgmtPreview ===
+      true
+  ) {
+    document.getElementById("list-bio-enrollments-button").style.display =
+      "inline-block";
+  } else {
+    document.getElementById("list-bio-enrollments-button").style.display =
+      "none";
+  }
+  open_tab(evt, "bio-enrollment-section");
+}
+function open_reset_tab(evt) {
+  open_tab(evt, "reset-token-section");
 }
 function open_pin_required_tab() {
   // Remove any old value we might have had
