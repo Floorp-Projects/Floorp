@@ -310,10 +310,6 @@ void ICScript::purgeInactiveICScripts() {
   // We have an active callee ICScript. This means the current ICScript must be
   // active too.
   MOZ_ASSERT(active());
-
-  for (CallSite& callsite : *inlinedChildren_) {
-    callsite.callee_->purgeInactiveICScripts();
-  }
 }
 
 void JitScript::resetWarmUpCount(uint32_t count) {
@@ -471,7 +467,7 @@ void JitScript::purgeInactiveICScripts() {
     return;
   }
 
-  icScript()->purgeInactiveICScripts();
+  forEachICScript([](ICScript* script) { script->purgeInactiveICScripts(); });
 
   inliningRoot()->purgeInactiveICScripts();
   if (inliningRoot()->numInlinedScripts() == 0) {
