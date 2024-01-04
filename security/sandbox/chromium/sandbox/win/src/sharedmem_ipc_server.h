@@ -60,6 +60,12 @@ class SharedMemIPCServer {
   // creates the kernels events used to signal the IPC.
   bool Init(void* shared_mem, uint32_t shared_size, uint32_t channel_size);
 
+  // Create the mutex used by clients to check if the broker process crashed.
+  // This function must be called only once, from a thread that will live as
+  // long as the whole broker process will. This call must occur prior to any
+  // SharedMemIPCServer creation.
+  static bool CreateBrokerAliveMutex();
+
  private:
   // Allow tests to be marked DISABLED_. Note that FLAKY_ and FAILS_ prefixes
   // do not work with sandbox tests.

@@ -31,3 +31,4 @@ allow_reparse_points.patch
 derive_sid_from_name.patch
 add_loongarch_defines.patch
 block_NtImpersonateAnonymousToken_before_LowerToken.patch
+fix_broker_alive_mutex.patch
