@@ -12,5 +12,5 @@
 }
 
 ::slotted(button:not(:first-child, .popup-notification-dropmarker)) {
-  margin-inline-start: 8px !important;
+  margin-inline-start: var(--spacing-small) !important;
 }
