@@ -207,10 +207,10 @@ static nsTArray<nsCString> GuessMIMETypes(const MIMECreateParam& aParam) {
   for (const nsCString& container : GuessContainers(aParam.mParsedCodec)) {
     nsPrintfCString mime("video/%s; codecs=%s", container.get(), codec.get());
     if (aParam.mWidth) {
-      mime.Append(nsPrintfCString("; width=%d", *aParam.mWidth));
+      mime.AppendPrintf("; width=%d", *aParam.mWidth);
     }
     if (aParam.mHeight) {
-      mime.Append(nsPrintfCString("; height=%d", *aParam.mHeight));
+      mime.AppendPrintf("; height=%d", *aParam.mHeight);
     }
     types.AppendElement(mime);
   }
