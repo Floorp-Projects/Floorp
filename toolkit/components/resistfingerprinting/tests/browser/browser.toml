@@ -28,6 +28,3 @@ support-files = [
 ["browser_fpiServiceWorkers_fingerprinting.js"]
 
 ["browser_serviceWorker_fingerprinting_webcompat.js"]
-
-["browser_rfp_canvasplaceholder_pdfjs.js"]
-support-files = ["file_pdf.pdf"]
