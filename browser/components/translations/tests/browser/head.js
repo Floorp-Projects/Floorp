@@ -577,7 +577,7 @@ async function assertLangTagIsShownOnTranslationsButton(
 async function clickCancelButton() {
   logAction();
   const { cancelButton } = TranslationsPanel.elements;
-  ok(isVisible(cancelButton), "Expected the cancel button to be visible");
+  assertIsVisible(true, { element: cancelButton });
   await waitForTranslationsPopupEvent("popuphidden", () => {
     click(cancelButton, "Clicking the cancel button");
   });
@@ -589,7 +589,7 @@ async function clickCancelButton() {
 async function clickRestoreButton() {
   logAction();
   const { restoreButton } = TranslationsPanel.elements;
-  ok(isVisible(restoreButton), "Expect the restore-page button to be visible");
+  assertIsVisible(true, { element: restoreButton });
   await waitForTranslationsPopupEvent("popuphidden", () => {
     click(restoreButton, "Click the restore-page button");
   });
@@ -601,10 +601,7 @@ async function clickRestoreButton() {
 async function clickDismissErrorButton() {
   logAction();
   const { dismissErrorButton } = TranslationsPanel.elements;
-  ok(
-    isVisible(dismissErrorButton),
-    "Expect the dismiss-error button to be visible"
-  );
+  assertIsVisible(true, { element: dismissErrorButton });
   await waitForTranslationsPopupEvent("popuphidden", () => {
     click(dismissErrorButton, "Click the dismiss-error button");
   });
@@ -628,7 +625,7 @@ async function clickTranslateButton({
 } = {}) {
   logAction();
   const { translateButton } = TranslationsPanel.elements;
-  ok(isVisible(translateButton), "Expect the translate button to be visible");
+  assertIsVisible(true, { element: translateButton });
   await waitForTranslationsPopupEvent("popuphidden", () => {
     click(translateButton);
   });
@@ -653,10 +650,7 @@ async function clickTranslateButton({
 async function clickChangeSourceLanguageButton({ firstShow = false } = {}) {
   logAction();
   const { changeSourceLanguageButton } = TranslationsPanel.elements;
-  ok(
-    isVisible(changeSourceLanguageButton),
-    "Expect the translate button to be visible"
-  );
+  assertIsVisible(true, { element: changeSourceLanguageButton });
   await waitForTranslationsPopupEvent(
     "popupshown",
     () => {
@@ -706,11 +700,9 @@ function assertPanelElementVisibility(expectations = {}) {
       `Expected translations panel elements to have property ${propertyName}`
     );
     if (finalExpectations.hasOwnProperty(propertyName)) {
-      is(
-        isVisible(elements[propertyName]),
-        finalExpectations[propertyName],
-        `The element "${propertyName}" visibility should match the expectation`
-      );
+      assertIsVisible(finalExpectations[propertyName], {
+        element: elements[propertyName],
+      });
     }
   }
 }
@@ -1003,6 +995,47 @@ function isVisible(element) {
 }
 
 /**
+ * Asserts the visibility state of an element retrieved by one of the three available options.
+ *
+ * @param {boolean} expected - The expected visibility state (true for visible, false for invisible).
+ * @param {object} options - The element retrieval options
+ * @param {Element} options.element - The HTML element to check visibility for.
+ * @param {string} options.id - The Id of the element to retrieve and check visibility for.
+ * @throws Throws if the visibility does not match the expected visibility state.
+ */
+function assertIsVisible(expected, { element, id }) {
+  if (id && element) {
+    throw new Error(
+      "assertIsVisible() expects either an element or an id, but both were specified."
+    );
+  }
+
+  if (element) {
+    return is(
+      isVisible(element),
+      expected,
+      `Expected element with id '${element.id}' to be ${
+        expected ? "visible" : "invisible"
+      }.`
+    );
+  }
+
+  if (id) {
+    return is(
+      maybeGetById(id) !== null,
+      expected,
+      `Expected element with id '${id}' to be ${
+        expected ? "visible" : "invisible"
+      }.`
+    );
+  }
+
+  throw new Error(
+    "assertIsVisible() was called with no specified element or id."
+  );
+}
+
+/**
  * Get an element by its l10n id, as this is a user-visible way to find an element.
  * The `l10nId` represents the text that a user would actually see.
  *
@@ -1040,21 +1073,45 @@ function getAllByL10nId(l10nId, doc = document) {
 }
 
 /**
- * Retrieves an element by its id.
+ * Retrieves an element by its Id.
  *
  * @param {string} id
  * @param {Document} [doc]
  * @returns {Element}
+ * @throws Throws if the element is not visible in the DOM.
  */
 function getById(id, doc = document) {
+  const element = maybeGetById(id, /* ensureIsVisible */ true, doc);
+  if (!element) {
+    throw new Error("The element is not visible in the DOM: #" + id);
+  }
+  return element;
+}
+
+/**
+ * Attempts to retrieve an element by its Id.
+ *
+ * @param {string} id - The Id of the element to retrieve.
+ * @param {boolean} [ensureIsVisible=true] - If set to true, the function will return null when the element is not visible.
+ * @param {Document} [doc=document] - The document from which to retrieve the element.
+ * @returns {Element | null} - The retrieved element.
+ * @throws Throws if no element was found by the given Id.
+ */
+function maybeGetById(id, ensureIsVisible = true, doc = document) {
   const element = doc.getElementById(id);
   if (!element) {
     throw new Error("Could not find the element by id: #" + id);
   }
+
+  if (!ensureIsVisible) {
+    return element;
+  }
+
   if (isVisible(element)) {
     return element;
   }
-  throw new Error("The element is not visible in the DOM: #" + id);
+
+  return null;
 }
 
 /**

@@ -50,7 +50,7 @@ add_task(async function test_preferred_language() {
       Assert.deepEqual(
         TranslationsParent.getPreferredLanguages(),
         ["en", "es"],
-        "When the operating system differs, it is added tot he end of the preferred languages."
+        "When the operating system differs, it is added to the end of the preferred languages."
       );
     },
   });
