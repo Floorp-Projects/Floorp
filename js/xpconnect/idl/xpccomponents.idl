@@ -482,7 +482,7 @@ interface nsIXPCComponents_Utils : nsISupports
     /*
      * To be called from JS only.
      *
-     * Call 'function', using the provided stack as the async stack responsible
+     * Call 'func', using the provided stack as the async stack responsible
      * for the call, and propagate its return value or the exception it throws.
      * The function is called with no arguments, and 'this' is 'undefined'.
      *
@@ -490,7 +490,7 @@ interface nsIXPCComponents_Utils : nsISupports
      * asyncCaller of its own stack frame, instead of the current caller.
      */
     [implicit_jscontext]
-    jsval callFunctionWithAsyncStack(in jsval function, in nsIStackFrame stack,
+    jsval callFunctionWithAsyncStack(in jsval func, in nsIStackFrame stack,
                                      in AString asyncCause);
 
     /*
