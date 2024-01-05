@@ -47,6 +47,12 @@ export function getSelectors() {
     getSpanishParagraph() {
       return content.document.getElementById("spanish-paragraph");
     },
+    getSpanishHyperlink() {
+      return content.document.getElementById("spanish-hyperlink");
+    },
+    getEnglishHyperlink() {
+      return content.document.getElementById("english-hyperlink");
+    },
   };
 }
 

@@ -15,3 +15,16 @@ main-context-menu-translate-selection =
 #   $language (string) - The localized display name of the target language
 main-context-menu-translate-selection-to-language =
     .label = Translate Selection to { $language }
+
+# Text displayed in the right-click context menu for translating
+# the text of a hyperlink to a yet-to-be-determined language.
+main-context-menu-translate-link-text =
+    .label = Translate Link Text…
+
+# Text displayed in the right-click context menu for translating
+# the text of a hyperlink to a target language.
+#
+# Variables:
+#   $language (string) - The localized display name of the target language
+main-context-menu-translate-link-text-to-language =
+    .label = Translate Link Text to { $language }

@@ -2464,7 +2464,10 @@ class nsContextMenu {
       "browser.translations.select.enable"
     );
 
-    const translatableText = this.selectedText.trim();
+    // Selected text takes precedence over link text.
+    const translatableText = this.isTextSelected
+      ? this.selectedText.trim()
+      : this.linkTextStr.trim();
 
     translateSelectionItem.hidden =
       // Only show the item if the feature is enabled.
@@ -2491,7 +2494,9 @@ class nsContextMenu {
           });
           document.l10n.setAttributes(
             translateSelectionItem,
-            "main-context-menu-translate-selection-to-language",
+            this.isTextSelected
+              ? "main-context-menu-translate-selection-to-language"
+              : "main-context-menu-translate-link-text-to-language",
             { language: dn.of(topPreferredLanguage) }
           );
           return;
@@ -2503,7 +2508,9 @@ class nsContextMenu {
 
     document.l10n.setAttributes(
       translateSelectionItem,
-      "main-context-menu-translate-selection"
+      this.isTextSelected
+        ? "main-context-menu-translate-selection"
+        : "main-context-menu-translate-link-text"
     );
   }
 

@@ -79,3 +79,36 @@ add_task(
     await cleanup();
   }
 );
+
+/**
+ * This test checks the availability of the translate-selection menu item in the context menu,
+ * ensuring it is not visible when the "browser.translations.select.enable" preference is set to false
+ * and the context menu is invoked on a hyperlink. This would result in the menu item being available
+ * if the pref were set to true.
+ */
+add_task(
+  async function test_translate_selection_menuitem_is_unavailable_with_feature_disabled_and_clicking_a_hyperlink() {
+    const { cleanup, runInPage } = await loadTestPage({
+      page: SPANISH_PAGE_URL,
+      languagePairs: LANGUAGE_PAIRS,
+      prefs: [["browser.translations.select.enable", false]],
+    });
+
+    await assertTranslationsButton(
+      { button: true, circleArrows: false, locale: false, icon: true },
+      "The button is available."
+    );
+
+    await assertContextMenuTranslateSelectionItem(
+      runInPage,
+      {
+        selectSpanishParagraph: false,
+        openAtSpanishHyperlink: true,
+        expectMenuItemVisible: false,
+      },
+      "The translate-selection context menu item should be unavailable when the feature is disabled."
+    );
+
+    await cleanup();
+  }
+);
