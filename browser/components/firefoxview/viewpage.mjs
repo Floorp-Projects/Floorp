@@ -227,7 +227,9 @@ export class ViewPage extends ViewPageContent {
           cardEl.visible = !this.paused;
         } else if (
           cardEl.isExpanded &&
-          tabLists[0].updatesPaused !== this.paused
+          Array.from(tabLists).some(
+            tabList => tabList.updatesPaused !== this.paused
+          )
         ) {
           // If card is already visible and expanded but tab-list has updatesPaused,
           // update the tab-list updatesPaused prop from here instead of card-container

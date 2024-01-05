@@ -638,6 +638,21 @@ add_task(async function search_synced_tabs_recent_browsing() {
         client: 1,
       }),
     },
+    {
+      id: 2,
+      type: "client",
+      name: "My iphone",
+      clientType: "phone",
+      tabs: [
+        {
+          type: "tab",
+          title: "Mount Everest - Wikipedia",
+          url: "https://en.wikipedia.org/wiki/Mount_Everest",
+          icon: "https://www.wikipedia.org/static/favicon/wikipedia.ico",
+          client: 2,
+        },
+      ],
+    },
   ];
   sandbox
     .stub(SyncedTabs, "getRecentTabs")
@@ -652,17 +667,70 @@ add_task(async function search_synced_tabs_recent_browsing() {
     await navigateToCategoryAndWait(document, "recentbrowsing");
     Services.obs.notifyObservers(null, UIState.ON_UPDATE);
 
-    info("Input a search query.");
     const recentBrowsing = document.querySelector("view-recentbrowsing");
+    const slot = recentBrowsing.querySelector("[slot='syncedtabs']");
+
+    // Test that all tab lists repopulate when clearing out searched terms (Bug 1869895 & Bug 1873212)
+    info("Input a search query");
     EventUtils.synthesizeMouseAtCenter(
       recentBrowsing.searchTextbox,
       {},
       content
     );
     EventUtils.sendString("Mozilla", content);
-    const slot = recentBrowsing.querySelector("[slot='syncedtabs']");
     await TestUtils.waitForCondition(
-      () => slot.fullyUpdated,
+      () =>
+        slot.fullyUpdated &&
+        slot.tabLists.length === 1 &&
+        Promise.all(
+          Array.from(slot.tabLists).map(tabList => tabList.updateComplete)
+        ),
+      "Synced Tabs component is done updating."
+    );
+    await TestUtils.waitForCondition(
+      () => slot.tabLists[0]?.rowEls.length === 5,
+      "Not all search results are shown yet."
+    );
+    EventUtils.synthesizeMouseAtCenter(
+      recentBrowsing.searchTextbox,
+      {},
+      content
+    );
+    EventUtils.synthesizeKey("KEY_Backspace", { repeat: 5 });
+    await TestUtils.waitForCondition(
+      () =>
+        slot.fullyUpdated &&
+        slot.tabLists.length === 2 &&
+        Promise.all(
+          Array.from(slot.tabLists).map(tabList => tabList.updateComplete)
+        ),
+      "Synced Tabs component is done updating."
+    );
+    info("Scroll synced tabs card into view.");
+    slot.tabLists[1].scrollIntoView();
+    await TestUtils.waitForCondition(
+      () =>
+        slot.tabLists[0].rowEls.length === 5 &&
+        slot.tabLists[1].rowEls.length === 1,
+      "Not all search results are shown yet."
+    );
+    info("Clear the search query.");
+    EventUtils.synthesizeKey("KEY_Backspace", { repeat: 2 });
+
+    info("Input a search query");
+    EventUtils.synthesizeMouseAtCenter(
+      recentBrowsing.searchTextbox,
+      {},
+      content
+    );
+    EventUtils.sendString("Mozilla", content);
+    await TestUtils.waitForCondition(
+      () =>
+        slot.fullyUpdated &&
+        slot.tabLists.length === 2 &&
+        Promise.all(
+          Array.from(slot.tabLists).map(tabList => tabList.updateComplete)
+        ),
       "Synced Tabs component is done updating."
     );
     await TestUtils.waitForCondition(
@@ -675,7 +743,7 @@ add_task(async function search_synced_tabs_recent_browsing() {
       slot.shadowRoot.querySelector("[data-l10n-id='firefoxview-show-all']")
     );
     is(showAllLink.role, "link", "The show all control is a link.");
-    showAllLink.click();
+    EventUtils.synthesizeMouseAtCenter(showAllLink, {}, content);
     await TestUtils.waitForCondition(
       () => slot.tabLists[0].rowEls.length === NUMBER_OF_TABS,
       "All search results are shown."
