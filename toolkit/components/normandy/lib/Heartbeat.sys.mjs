@@ -148,25 +148,6 @@ export var Heartbeat = class {
       });
     }
 
-    this.notificationBox = this.chromeWindow.gNotificationBox;
-    this.notice = this.notificationBox.appendNotification(
-      "heartbeat-" + this.options.flowId,
-      {
-        label: this.options.message,
-        image: "resource://normandy/skin/shared/heartbeat-icon.svg",
-        priority: this.notificationBox.PRIORITY_SYSTEM,
-        eventCallback: eventType => {
-          if (eventType !== "removed") {
-            return;
-          }
-          this.maybeNotifyHeartbeat("NotificationClosed");
-        },
-      },
-      this.buttons
-    );
-    this.notice.classList.add("heartbeat");
-    this.notice.messageText.classList.add("heartbeat");
-
     // Build the heartbeat stars
     if (!this.options.engagementButtonLabel) {
       const numStars = this.options.engagementButtonLabel ? 0 : 5;
@@ -197,9 +178,37 @@ export var Heartbeat = class {
 
         this.ratingContainer.appendChild(ratingElement);
       }
-
-      this.notice.buttonContainer.append(this.ratingContainer);
     }
+
+    this.notificationBox = this.chromeWindow.gNotificationBox;
+    this.noticePromise = new Promise(resolve => {
+      this.notificationBox
+        .appendNotification(
+          "heartbeat-" + this.options.flowId,
+          {
+            label: this.options.message,
+            image: "resource://normandy/skin/shared/heartbeat-icon.svg",
+            priority: this.notificationBox.PRIORITY_SYSTEM,
+            eventCallback: eventType => {
+              if (eventType !== "removed") {
+                return;
+              }
+              this.maybeNotifyHeartbeat("NotificationClosed");
+            },
+          },
+          this.buttons
+        )
+        .then(noticeEl => {
+          noticeEl.classList.add("heartbeat");
+          this.chromeWindow.requestAnimationFrame(() => {
+            noticeEl.messageText.classList.add("heartbeat");
+          });
+          if (this.ratingContainer) {
+            noticeEl.buttonContainer.append(this.ratingContainer);
+          }
+          resolve(noticeEl);
+        }, resolve);
+    });
 
     // Let the consumer know the notification was shown.
     this.maybeNotifyHeartbeat("NotificationOffered");
@@ -305,17 +314,20 @@ export var Heartbeat = class {
   }
 
   userEngaged(engagementParams) {
-    // Make the heartbeat icon pulse twice
-    this.notice.label = this.options.thanksMessage;
-    this.notice.messageImage.classList.remove("pulse-onshow");
-    this.notice.messageImage.classList.add("pulse-twice");
+    this.noticePromise.then(noticeEl => {
+      // Make the heartbeat icon pulse twice
+      noticeEl.label = this.options.thanksMessage;
+      noticeEl.messageImage?.classList.remove("pulse-onshow");
+      noticeEl.messageImage?.classList.add("pulse-twice");
+      // Remove the custom contents of the buttons
+      for (let button of noticeEl.buttonContainer.querySelectorAll("button")) {
+        button.remove();
+      }
+    });
 
-    // Remove the custom contents of the notice and the buttons
+    // Remove the custom contents of the notice
     if (this.ratingContainer) {
       this.ratingContainer.remove();
-    }
-    for (let button of this.notice.buttonContainer.querySelectorAll("button")) {
-      button.remove();
     }
 
     // Open the engagement tab if we have a valid engagement URL.
@@ -357,7 +369,9 @@ export var Heartbeat = class {
   }
 
   close() {
-    this.notificationBox.removeNotification(this.notice);
+    this.noticePromise.then(noticeEl =>
+      this.notificationBox.removeNotification(noticeEl)
+    );
   }
 
   cleanup() {
@@ -372,7 +386,7 @@ export var Heartbeat = class {
     // remove references for garbage collection
     this.chromeWindow = null;
     this.notificationBox = null;
-    this.notice = null;
+    this.noticePromise = null;
     this.ratingContainer = null;
     this.eventEmitter = null;
     // Ensure we don't re-enter and release the CleanupManager's reference to us:
