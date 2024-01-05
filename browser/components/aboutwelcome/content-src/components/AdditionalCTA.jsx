@@ -4,9 +4,16 @@
 
 import React from "react";
 import { Localized } from "./MSLocalized";
+import { SubmenuButton } from "./SubmenuButton";
 
 export const AdditionalCTA = ({ content, handleAction }) => {
   let buttonStyle = "";
+  const isSplitButton =
+    content.submenu_button?.attached_to === "additional_button";
+  let className = "additional-cta-box";
+  if (isSplitButton) {
+    className += " split-button-container";
+  }
 
   if (!content.additional_button?.style) {
     buttonStyle = "primary";
@@ -18,13 +25,18 @@ export const AdditionalCTA = ({ content, handleAction }) => {
   }
 
   return (
-    <Localized text={content.additional_button?.label}>
-      <button
-        className={`${buttonStyle} additional-cta`}
-        onClick={handleAction}
-        value="additional_button"
-        disabled={content.additional_button?.disabled === true}
-      />
-    </Localized>
+    <div className={className}>
+      <Localized text={content.additional_button?.label}>
+        <button
+          className={`${buttonStyle} additional-cta`}
+          onClick={handleAction}
+          value="additional_button"
+          disabled={content.additional_button?.disabled === true}
+        />
+      </Localized>
+      {isSplitButton ? (
+        <SubmenuButton content={content} handleAction={handleAction} />
+      ) : null}
+    </div>
   );
 };

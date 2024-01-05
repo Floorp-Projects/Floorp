@@ -366,6 +366,10 @@
         // add 4px of margin to the action buttons.
         margin-top: 4px;
 
+        .secondary-cta {
+          font-size: inherit;
+        }
+
         .primary,
         .secondary {
           padding: 4px 16px;
@@ -384,6 +388,43 @@
 
         .primary {
           background-color: var(--fc-primary-button-background);
+        }
+
+        .split-button-container {
+          align-items: stretch;
+
+          &:not([hidden]) {
+            display: flex;
+          }
+
+          .primary,
+          .secondary,
+          .additional-cta {
+            &:not(.submenu-button) {
+              border-start-end-radius: 0;
+              border-end-end-radius: 0;
+              margin-inline-end: 0;
+            }
+
+            &:focus-visible {
+              z-index: 2;
+            }
+          }
+
+          .submenu-button {
+            border-start-start-radius: 0;
+            border-end-start-radius: 0;
+            margin-inline-start: 1px;
+            padding: 8px;
+            min-width: 30px;
+            box-sizing: border-box;
+            background-image: url('chrome://global/skin/icons/arrow-down.svg');
+            background-repeat: no-repeat;
+            background-size: 16px;
+            background-position: center;
+            -moz-context-properties: fill;
+            fill: currentColor;
+          }
         }
       }
 
@@ -409,7 +450,8 @@
         border: 1px solid var(--fc-button-border);
         color: var(--fc-button-color);
 
-        &:hover:not(:disabled) {
+        &:hover:not(:disabled),
+        &[open] {
           background-color: var(--fc-button-background-hover);
           color: var(--fc-button-color-hover);
           border: 1px solid var(--fc-button-border-hover);
@@ -426,7 +468,8 @@
         border: 1px solid var(--fc-primary-button-border);
         color: var(--fc-primary-button-color);
 
-        &:hover:not(:disabled) {
+        &:hover:not(:disabled),
+        &[open] {
           background-color: var(--fc-primary-button-background-hover);
           color: var(--fc-primary-button-color-hover);
           border: 1px solid var(--fc-primary-button-border-hover);

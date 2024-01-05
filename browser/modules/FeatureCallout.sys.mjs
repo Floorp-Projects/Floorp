@@ -1665,13 +1665,13 @@ export class FeatureCallout {
     }
     return (
       this._container.querySelector(
-        ".primary:not(:disabled, [hidden], .text-link, .cta-link)"
+        ".primary:not(:disabled, [hidden], .text-link, .cta-link, .split-button)"
       ) ||
       this._container.querySelector(
-        ".secondary:not(:disabled, [hidden], .text-link, .cta-link)"
+        ".secondary:not(:disabled, [hidden], .text-link, .cta-link, .split-button)"
       ) ||
       this._container.querySelector(
-        "button:not(:disabled, [hidden], .text-link, .cta-link, .dismiss-button)"
+        "button:not(:disabled, [hidden], .text-link, .cta-link, .dismiss-button, .split-button)"
       ) ||
       this._container.querySelector("input:not(:disabled, [hidden])") ||
       this._container.querySelector(

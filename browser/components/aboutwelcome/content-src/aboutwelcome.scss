@@ -214,7 +214,8 @@ html {
     text-decoration: none;
     cursor: default;
 
-    &:hover {
+    &:hover,
+    &[open] {
       background-color: var(--in-content-button-background-hover);
       color: var(--in-content-button-text-color-hover);
 
@@ -604,8 +605,12 @@ html {
               }
             }
 
-            .additional-cta {
+            .additional-cta-box {
               margin: 8px 0;
+
+              .additional-cta {
+                margin: 0;
+              }
 
               &.cta-link {
                 @include text-link-styles;
@@ -615,7 +620,8 @@ html {
               }
 
               &.secondary {
-                &:hover {
+                &:hover,
+                &[open] {
                   background-color: var(--in-content-button-background-hover);
                 }
               }
@@ -1539,7 +1545,8 @@ html {
 
   .primary,
   .secondary,
-  .additional-cta {
+  .additional-cta,
+  .submenu-button {
     font-size: 13px;
     line-height: 16px;
     padding: 11px 15px;
@@ -1553,6 +1560,44 @@ html {
   .secondary {
     background-color: var(--in-content-button-background);
     color: var(--in-content-button-text-color);
+  }
+
+  .split-button-container,
+  .screen .action-buttons .split-button-container {
+    align-items: stretch;
+
+    &:not([hidden]) {
+      display: flex;
+    }
+
+    .primary,
+    .secondary,
+    .additional-cta {
+      &:not(.submenu-button) {
+        border-start-end-radius: 0;
+        border-end-end-radius: 0;
+        margin-inline-end: 0;
+      }
+
+      &:focus-visible {
+        z-index: 2;
+      }
+    }
+
+    .submenu-button {
+      border-start-start-radius: 0;
+      border-end-start-radius: 0;
+      margin-inline-start: 1px;
+      padding: 8px;
+      min-width: 30px;
+      box-sizing: border-box;
+      background-image: url('chrome://global/skin/icons/arrow-down.svg');
+      background-repeat: no-repeat;
+      background-size: 16px;
+      background-position: center;
+      -moz-context-properties: fill;
+      fill: currentColor;
+    }
   }
 
   // Styles specific to background noodles, with screen-by-screen positions

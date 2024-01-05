@@ -709,9 +709,45 @@ const MESSAGES = () => [
             position: "callout",
             title: { raw: "Panel Feature Callout" },
             subtitle: { raw: "Hello!" },
-            primary_button: {
+            secondary_button: {
               label: { raw: "Advance" },
               action: { navigate: true },
+            },
+            submenu_button: {
+              submenu: [
+                {
+                  type: "action",
+                  label: { raw: "Item 1" },
+                  action: { navigate: true },
+                  id: "item1",
+                },
+                {
+                  type: "action",
+                  label: { raw: "Item 2" },
+                  action: { navigate: true },
+                  id: "item2",
+                },
+                {
+                  type: "menu",
+                  label: { raw: "Menu 1" },
+                  submenu: [
+                    {
+                      type: "action",
+                      label: { raw: "Item 3" },
+                      action: { navigate: true },
+                      id: "item3",
+                    },
+                    {
+                      type: "action",
+                      label: { raw: "Item 4" },
+                      action: { navigate: true },
+                      id: "item4",
+                    },
+                  ],
+                  id: "menu1",
+                },
+              ],
+              attached_to: "secondary_button",
             },
             dismiss_button: {
               action: { dismiss: true },

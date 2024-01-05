@@ -217,3 +217,138 @@ add_task(async function panel_feature_callout_no_anchor_open_attr() {
     message
   );
 });
+
+add_task(async function feature_callout_split_dismiss_button() {
+  let message = getTestMessage();
+  message.content.screens[0].content.secondary_button = {
+    label: { raw: "Advance" },
+    action: { navigate: true },
+  };
+  message.content.screens[0].content.submenu_button = {
+    submenu: [
+      {
+        type: "action",
+        label: { raw: "Item 1" },
+        action: { navigate: true },
+        id: "item1",
+      },
+      {
+        type: "action",
+        label: { raw: "Item 2" },
+        action: { navigate: true },
+        id: "item2",
+      },
+      {
+        type: "menu",
+        label: { raw: "Menu 1" },
+        submenu: [
+          {
+            type: "action",
+            label: { raw: "Item 3" },
+            action: { navigate: true },
+            id: "item3",
+          },
+          {
+            type: "action",
+            label: { raw: "Item 4" },
+            action: { navigate: true },
+            id: "item4",
+          },
+        ],
+        id: "menu1",
+      },
+    ],
+    attached_to: "secondary_button",
+  };
+
+  await testCalloutHiddenIf(
+    async (win, calloutContainer) => {
+      let splitButtonContainer = calloutContainer.querySelector(
+        `#${calloutId} .split-button-container`
+      );
+      let secondaryButton = calloutContainer.querySelector(
+        `#${calloutId} .secondary:not(.submenu-button)`
+      );
+      let submenuButton = calloutContainer.querySelector(
+        `#${calloutId} .submenu-button`
+      );
+      let submenu = calloutContainer.querySelector(
+        `#${calloutId} .fxms-multi-stage-submenu`
+      );
+      ok(splitButtonContainer, "Callout should have a split button container");
+      ok(secondaryButton, "Callout should have a split secondary button");
+      ok(submenuButton, "Callout should have a split submenu button");
+      ok(submenu, "Callout should have a submenu");
+
+      // Click the submenu button and wait for the submenu (menupopup) to open.
+      let opened = BrowserTestUtils.waitForEvent(submenu, "popupshown");
+      submenuButton.click();
+      await opened;
+
+      // Assert that all the menu items are present and that the order and
+      // structure is correct.
+      async function recursiveTestMenuItems(items, popup) {
+        let children = [...popup.children];
+        for (let element of children) {
+          let index = children.indexOf(element);
+          let itemAtIndex = items[index];
+          switch (element.localName) {
+            case "menuitem":
+              is(
+                itemAtIndex.type,
+                "action",
+                `Menu item ${itemAtIndex.id} should be an action`
+              );
+              is(
+                JSON.stringify(element.config),
+                JSON.stringify(itemAtIndex),
+                `Menu item ${itemAtIndex.id} should have correct config`
+              );
+              is(
+                element.value,
+                itemAtIndex.id,
+                `Menu item ${itemAtIndex.id} should have correct value`
+              );
+              break;
+            case "menu":
+              is(
+                itemAtIndex.type,
+                "menu",
+                `Menu item ${itemAtIndex.id} should be a menu`
+              );
+              is(
+                element.value,
+                itemAtIndex.id,
+                `Menu item ${itemAtIndex.id} should have correct value`
+              );
+              info(`Testing submenu ${itemAtIndex.id}`);
+              await recursiveTestMenuItems(
+                itemAtIndex.submenu,
+                element.querySelector("menupopup")
+              );
+              break;
+            case "menuseparator":
+              is(
+                itemAtIndex.type,
+                "separator",
+                `Menu item ${index} should be a separator`
+              );
+              break;
+            default:
+              ok(false, "Child of unknown type in submenu");
+          }
+        }
+      }
+
+      info("Testing main menu");
+      await recursiveTestMenuItems(
+        message.content.screens[0].content.submenu_button.submenu,
+        submenu
+      );
+
+      submenu.querySelector(`menuitem[value="item1"]`).click();
+    },
+    null,
+    message
+  );
+});

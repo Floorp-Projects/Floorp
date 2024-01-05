@@ -111,6 +111,15 @@ module.exports = function (config) {
               functions: 0,
               branches: 0,
             },
+            "content-src/components/SubmenuButton.jsx": {
+              // Enzyme can't test this file because it relies on XUL elements
+              // and JS events, which Enzyme can't simulate. Browser tests are
+              // in browser_feature_callout_panel.js
+              statements: 0,
+              lines: 0,
+              functions: 0,
+              branches: 0,
+            },
             "content-src/**/*.jsx": {
               statements: 62,
               lines: 60,
