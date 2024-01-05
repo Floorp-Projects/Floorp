@@ -149,6 +149,13 @@ bool DebugFrame::updateReturnJSValue(JSContext* cx) {
   return ok;
 }
 
+void DebugFrame::discardReturnJSValue() {
+  MutableHandleValue rval =
+      MutableHandleValue::fromMarkedLocation(&cachedReturnJSValue_);
+  rval.setMagic(JS_OPTIMIZED_OUT);
+  flags_.hasCachedReturnJSValue = true;
+}
+
 HandleValue DebugFrame::returnValue() const {
   MOZ_ASSERT(flags_.hasCachedReturnJSValue);
   return HandleValue::fromMarkedLocation(&cachedReturnJSValue_);

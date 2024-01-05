@@ -1316,12 +1316,12 @@ void BaseCompiler::shuffleStackResultsBeforeBranch(StackHeight srcHeight,
   fr.popStackBeforeBranch(destHeight, stackResultBytes);
 }
 
-bool BaseCompiler::insertLeaveFrame() {
+bool BaseCompiler::insertDebugCollapseFrame() {
   if (!compilerEnv_.debugEnabled()) {
     return true;
   }
-  insertBreakablePoint(CallSiteDesc::LeaveFrame);
-  return createStackMap("debug: leave-frame breakpoint",
+  insertBreakablePoint(CallSiteDesc::CollapseFrame);
+  return createStackMap("debug: collapse-frame breakpoint",
                         HasDebugFrameWithLiveRefs::Maybe);
 }
 
@@ -5101,7 +5101,7 @@ bool BaseCompiler::emitReturnCall() {
   }
 
   sync();
-  if (!insertLeaveFrame()) {
+  if (!insertDebugCollapseFrame()) {
     return false;
   }
 
@@ -5221,7 +5221,7 @@ bool BaseCompiler::emitReturnCallIndirect() {
   }
 
   sync();
-  if (!insertLeaveFrame()) {
+  if (!insertDebugCollapseFrame()) {
     return false;
   }
 
@@ -5330,7 +5330,7 @@ bool BaseCompiler::emitReturnCallRef() {
   }
 
   sync();
-  if (!insertLeaveFrame()) {
+  if (!insertDebugCollapseFrame()) {
     return false;
   }
 

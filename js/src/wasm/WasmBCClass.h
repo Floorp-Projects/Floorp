@@ -879,7 +879,7 @@ struct BaseCompiler final {
                                        StackHeight destHeight, ResultType type);
 
   // If in debug mode, adds LeaveFrame breakpoint.
-  bool insertLeaveFrame();
+  bool insertDebugCollapseFrame();
 
   //////////////////////////////////////////////////////////////////////
   //
