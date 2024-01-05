@@ -1,7 +1,7 @@
 [DEFAULT]
 subsuite = "media"
 tags = "media-engine-compatible media-gpu"
-prefs = ["media.wmf.hevc.enabled=1"] # for test_hevc_playback
+prefs = ["media.wmf.hevc.enabled=1"] # for test_MediaSource_hevc_mp4
 support-files = [
   "mediasource.js",
   "seek.webm",
@@ -231,6 +231,10 @@ support-files = [
 
 ["test_AutoRevocation.html"]
 tags = "firstpartyisolation"
+
+["test_BufferedSeek.html"]
+
+["test_BufferedSeek_mp4.html"]
 
 ["test_DifferentStreamStartTimes.html"]
 
