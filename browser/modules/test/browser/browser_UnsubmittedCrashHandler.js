@@ -292,7 +292,7 @@ add_task(async function test_other_ignored() {
   Assert.ok(notification, "There should be a notification");
 
   // Dismiss notification, creating the .dmp.ignore file
-  notification.closeButton.click();
+  notification.closeButtonEl.click();
   gNotificationBox.removeNotification(notification, true);
   await waitForIgnoredReports(toIgnore);
 
@@ -525,7 +525,7 @@ add_task(async function test_can_ignore() {
   Assert.ok(notification, "There should be a notification");
 
   // Dismiss the notification by clicking on the "X" button.
-  notification.closeButton.click();
+  notification.closeButtonEl.click();
   // We'll not wait for the notification to finish its transition -
   // we'll just remove it right away.
   gNotificationBox.removeNotification(notification, true);
@@ -599,7 +599,7 @@ add_task(async function test_shutdown_while_not_showing() {
   Assert.ok(notification, "There should be a notification");
 
   // Dismiss the notification by clicking on the "X" button.
-  notification.closeButton.click();
+  notification.closeButtonEl.click();
   // We'll not wait for the notification to finish its transition -
   // we'll just remove it right away.
   gNotificationBox.removeNotification(notification, true);
