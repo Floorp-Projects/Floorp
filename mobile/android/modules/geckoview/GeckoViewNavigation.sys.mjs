@@ -280,7 +280,6 @@ export class GeckoViewNavigation extends GeckoViewModule {
       case "GeckoView:DotPrintFinish":
         var printActor = this.moduleManager.getActor("GeckoViewPrintDelegate");
         printActor.clearStaticClone();
-        printActor.telemetryDotPrintPdfCompleted(aData);
         break;
     }
   }
