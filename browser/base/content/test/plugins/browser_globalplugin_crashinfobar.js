@@ -54,7 +54,7 @@ add_task(async function () {
         "Correct priority."
       );
       is(
-        notification.messageText.textContent,
+        notification.messageText.textContent.trim(),
         "The GlobalTestPlugin plugin has crashed.",
         "Correct message."
       );
