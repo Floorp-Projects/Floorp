@@ -17,14 +17,12 @@ namespace CocoaFileUtils {
 nsresult RevealFileInFinder(CFURLRef url) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
-  if (NS_WARN_IF(!url)) {
-    return NS_ERROR_INVALID_ARG;
-  }
+  if (NS_WARN_IF(!url)) return NS_ERROR_INVALID_ARG;
 
-  nsAutoreleasePool localPool;
-
+  NSAutoreleasePool* ap = [[NSAutoreleasePool alloc] init];
   BOOL success = [[NSWorkspace sharedWorkspace] selectFile:[(NSURL*)url path]
                                   inFileViewerRootedAtPath:@""];
+  [ap release];
 
   return (success ? NS_OK : NS_ERROR_FAILURE);
 
@@ -34,13 +32,11 @@ nsresult RevealFileInFinder(CFURLRef url) {
 nsresult OpenURL(CFURLRef url) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
-  if (NS_WARN_IF(!url)) {
-    return NS_ERROR_INVALID_ARG;
-  }
+  if (NS_WARN_IF(!url)) return NS_ERROR_INVALID_ARG;
 
-  nsAutoreleasePool localPool;
-
+  NSAutoreleasePool* ap = [[NSAutoreleasePool alloc] init];
   BOOL success = [[NSWorkspace sharedWorkspace] openURL:(NSURL*)url];
+  [ap release];
 
   return (success ? NS_OK : NS_ERROR_FAILURE);
 
@@ -50,9 +46,7 @@ nsresult OpenURL(CFURLRef url) {
 nsresult GetFileCreatorCode(CFURLRef url, OSType* creatorCode) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
-  if (NS_WARN_IF(!url) || NS_WARN_IF(!creatorCode)) {
-    return NS_ERROR_INVALID_ARG;
-  }
+  if (NS_WARN_IF(!url) || NS_WARN_IF(!creatorCode)) return NS_ERROR_INVALID_ARG;
 
   nsAutoreleasePool localPool;
 
@@ -82,12 +76,9 @@ nsresult GetFileCreatorCode(CFURLRef url, OSType* creatorCode) {
 nsresult SetFileCreatorCode(CFURLRef url, OSType creatorCode) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
-  if (NS_WARN_IF(!url)) {
-    return NS_ERROR_INVALID_ARG;
-  }
+  if (NS_WARN_IF(!url)) return NS_ERROR_INVALID_ARG;
 
-  nsAutoreleasePool localPool;
-
+  NSAutoreleasePool* ap = [[NSAutoreleasePool alloc] init];
   NSDictionary* dict = [NSDictionary
       dictionaryWithObject:[NSNumber numberWithUnsignedLong:creatorCode]
                     forKey:NSFileHFSCreatorCode];
@@ -95,7 +86,7 @@ nsresult SetFileCreatorCode(CFURLRef url, OSType creatorCode) {
       [[NSFileManager defaultManager] setAttributes:dict
                                        ofItemAtPath:[(NSURL*)url path]
                                               error:nil];
-
+  [ap release];
   return (success ? NS_OK : NS_ERROR_FAILURE);
 
   NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
@@ -104,9 +95,7 @@ nsresult SetFileCreatorCode(CFURLRef url, OSType creatorCode) {
 nsresult GetFileTypeCode(CFURLRef url, OSType* typeCode) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
-  if (NS_WARN_IF(!url) || NS_WARN_IF(!typeCode)) {
-    return NS_ERROR_INVALID_ARG;
-  }
+  if (NS_WARN_IF(!url) || NS_WARN_IF(!typeCode)) return NS_ERROR_INVALID_ARG;
 
   nsAutoreleasePool localPool;
 
@@ -136,12 +125,9 @@ nsresult GetFileTypeCode(CFURLRef url, OSType* typeCode) {
 nsresult SetFileTypeCode(CFURLRef url, OSType typeCode) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
-  if (NS_WARN_IF(!url)) {
-    return NS_ERROR_INVALID_ARG;
-  }
+  if (NS_WARN_IF(!url)) return NS_ERROR_INVALID_ARG;
 
-  nsAutoreleasePool localPool;
-
+  NSAutoreleasePool* ap = [[NSAutoreleasePool alloc] init];
   NSDictionary* dict = [NSDictionary
       dictionaryWithObject:[NSNumber numberWithUnsignedLong:typeCode]
                     forKey:NSFileHFSTypeCode];
@@ -149,7 +135,7 @@ nsresult SetFileTypeCode(CFURLRef url, OSType typeCode) {
       [[NSFileManager defaultManager] setAttributes:dict
                                        ofItemAtPath:[(NSURL*)url path]
                                               error:nil];
-
+  [ap release];
   return (success ? NS_OK : NS_ERROR_FAILURE);
 
   NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
@@ -159,8 +145,6 @@ nsresult SetFileTypeCode(CFURLRef url, OSType typeCode) {
 void AddOriginMetadataToFile(const CFStringRef filePath,
                              const CFURLRef sourceURL,
                              const CFURLRef referrerURL) {
-  nsAutoreleasePool localPool;
-
   typedef OSStatus (*MDItemSetAttribute_type)(MDItemRef, CFStringRef,
                                               CFTypeRef);
   static MDItemSetAttribute_type mdItemSetAttributeFunc = NULL;
@@ -213,8 +197,6 @@ void AddOriginMetadataToFile(const CFStringRef filePath,
 // Can be called off of the main thread.
 static CFMutableDictionaryRef CreateQuarantineDictionary(
     const CFURLRef aFileURL, const bool aCreateProps) {
-  nsAutoreleasePool localPool;
-
   CFDictionaryRef quarantineProps = NULL;
   if (aCreateProps) {
     quarantineProps = ::CFDictionaryCreate(NULL, NULL, NULL, 0,
@@ -250,8 +232,6 @@ void AddQuarantineMetadataToFile(const CFStringRef filePath,
                                  const CFURLRef referrerURL,
                                  const bool isFromWeb,
                                  const bool createProps /* = false */) {
-  nsAutoreleasePool localPool;
-
   CFURLRef fileURL = ::CFURLCreateWithFileSystemPath(
       kCFAllocatorDefault, filePath, kCFURLPOSIXPathStyle, false);
 
@@ -293,8 +273,6 @@ void AddQuarantineMetadataToFile(const CFStringRef filePath,
 // Can be called off of the main thread.
 void CopyQuarantineReferrerUrl(const CFStringRef aFilePath,
                                nsAString& aReferrer) {
-  nsAutoreleasePool localPool;
-
   CFURLRef fileURL = ::CFURLCreateWithFileSystemPath(
       kCFAllocatorDefault, aFilePath, kCFURLPOSIXPathStyle, false);
 
@@ -318,8 +296,6 @@ void CopyQuarantineReferrerUrl(const CFStringRef aFilePath,
 }
 
 CFURLRef GetTemporaryFolderCFURLRef() {
-  nsAutoreleasePool localPool;
-
   NSString* tempDir = ::NSTemporaryDirectory();
   return tempDir == nil
              ? NULL
@@ -327,8 +303,6 @@ CFURLRef GetTemporaryFolderCFURLRef() {
 }
 
 CFURLRef GetProductDirectoryCFURLRef(bool aLocal) {
-  nsAutoreleasePool localPool;
-
   NSSearchPathDirectory folderType =
       aLocal ? NSCachesDirectory : NSLibraryDirectory;
   NSFileManager* manager = [NSFileManager defaultManager];
