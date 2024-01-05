@@ -4461,12 +4461,6 @@
   value: 0.05f
   mirror: always
 
-# Whether MouseEvent.region is exposed as a property.
-- name: dom.mouse_event.region.enabled
-  type: bool
-  value: false
-  mirror: always
-
 #ifdef XP_WIN
   # Control firing WidgetMouseEvent by handling Windows pointer messages or
   # mouse messages.
