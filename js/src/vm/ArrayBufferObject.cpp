@@ -2095,17 +2095,17 @@ bool ArrayBufferObject::addView(JSContext* cx, ArrayBufferViewObject* view) {
 constexpr size_t VIEW_LIST_MAX_LENGTH = 500;
 
 bool InnerViewTable::addView(JSContext* cx, ArrayBufferObject* buffer,
-                             JSObject* view) {
+                             ArrayBufferViewObject* view) {
   // ArrayBufferObject entries are only added when there are multiple views.
   MOZ_ASSERT(buffer->firstView());
 
-  Map::AddPtr p = map.lookupForAdd(buffer);
+  auto ptr = map.lookupForAdd(buffer);
 
   MOZ_ASSERT(!gc::IsInsideNursery(buffer));
   bool addToNursery = nurseryKeysValid && gc::IsInsideNursery(view);
 
-  if (p) {
-    ViewVector& views = p->value();
+  if (ptr) {
+    ViewVector& views = ptr->value();
     MOZ_ASSERT(!views.empty());
 
     if (addToNursery) {
@@ -2129,13 +2129,13 @@ bool InnerViewTable::addView(JSContext* cx, ArrayBufferObject* buffer,
       return false;
     }
   } else {
-    if (!map.add(p, buffer, ViewVector(cx->zone()))) {
+    if (!map.add(ptr, buffer, ViewVector(cx->zone()))) {
       ReportOutOfMemory(cx);
       return false;
     }
     // ViewVector has one inline element, so the first insertion is
     // guaranteed to succeed.
-    MOZ_ALWAYS_TRUE(p->value().append(view));
+    MOZ_ALWAYS_TRUE(ptr->value().append(view));
   }
 
   if (addToNursery && !nurseryKeys.append(buffer)) {
@@ -2147,18 +2147,18 @@ bool InnerViewTable::addView(JSContext* cx, ArrayBufferObject* buffer,
 
 InnerViewTable::ViewVector* InnerViewTable::maybeViewsUnbarriered(
     ArrayBufferObject* buffer) {
-  Map::Ptr p = map.lookup(buffer);
-  if (p) {
-    return &p->value();
+  auto ptr = map.lookup(buffer);
+  if (ptr) {
+    return &ptr->value();
   }
   return nullptr;
 }
 
 void InnerViewTable::removeViews(ArrayBufferObject* buffer) {
-  Map::Ptr p = map.lookup(buffer);
-  MOZ_ASSERT(p);
+  auto ptr = map.lookup(buffer);
+  MOZ_ASSERT(ptr);
 
-  map.remove(p);
+  map.remove(ptr);
 }
 
 bool InnerViewTable::traceWeak(JSTracer* trc) { return map.traceWeak(trc); }
@@ -2168,11 +2168,11 @@ void InnerViewTable::sweepAfterMinorGC(JSTracer* trc) {
 
   if (nurseryKeysValid) {
     for (size_t i = 0; i < nurseryKeys.length(); i++) {
-      JSObject* buffer = MaybeForwarded(nurseryKeys[i]);
-      Map::Ptr p = map.lookup(buffer);
-      if (p &&
-          !Map::EntryGCPolicy::traceWeak(trc, &p->mutableKey(), &p->value())) {
-        map.remove(p);
+      ArrayBufferObject* buffer = MaybeForwarded(nurseryKeys[i]);
+      auto ptr = map.lookup(buffer);
+      using Policy = ArrayBufferViewMap::EntryGCPolicy;
+      if (ptr && !Policy::traceWeak(trc, &ptr->mutableKey(), &ptr->value())) {
+        map.remove(ptr);
       }
     }
   } else {
@@ -2186,8 +2186,8 @@ void InnerViewTable::sweepAfterMinorGC(JSTracer* trc) {
 
 size_t InnerViewTable::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) {
   size_t vectorSize = 0;
-  for (Map::Enum e(map); !e.empty(); e.popFront()) {
-    vectorSize += e.front().value().sizeOfExcludingThis(mallocSizeOf);
+  for (auto r = map.all(); !r.empty(); r.popFront()) {
+    vectorSize += r.front().value().sizeOfExcludingThis(mallocSizeOf);
   }
 
   return vectorSize + map.shallowSizeOfExcludingThis(mallocSizeOf) +
