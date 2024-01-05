@@ -7810,7 +7810,7 @@ static GdkCursor* get_gtk_cursor(nsCursor aCursor) {
       gdkcursor = gdk_cursor_new_from_name(defaultDisplay, "text");
       break;
     case eCursor_hyperlink:
-      gdkcursor = gdk_cursor_new_from_name(defaultDisplay, "grab");
+      gdkcursor = gdk_cursor_new_from_name(defaultDisplay, "pointer");
       break;
     case eCursor_n_resize:
       gdkcursor = gdk_cursor_new_from_name(defaultDisplay, "n-resize");
