@@ -41,6 +41,9 @@ export function getSelectors() {
     getHeader() {
       return content.document.querySelector("header");
     },
+    getSpanishParagraph() {
+      return content.document.getElementById("spanish-paragraph");
+    },
   };
 }
 
@@ -82,4 +85,24 @@ export async function assertTranslationResult(message, getNode, translation) {
   }
 
   is(translation, getNode()?.innerText, message);
+}
+
+/**
+ * Simulates right-clicking an element with the mouse.
+ *
+ * @param {element} element - The element to right-click.
+ */
+export function rightClickContentElement(element) {
+  return new Promise(resolve => {
+    element.addEventListener(
+      "contextmenu",
+      function () {
+        resolve();
+      },
+      { once: true }
+    );
+
+    const EventUtils = ContentTaskUtils.getEventUtils(content);
+    EventUtils.sendMouseEvent({ type: "contextmenu" }, element, content.window);
+  });
 }

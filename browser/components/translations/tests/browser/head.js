@@ -1036,6 +1036,71 @@ function assertIsVisible(expected, { element, id }) {
 }
 
 /**
+ * Opens the context menu at a specified element on the page, based on the provided options.
+ *
+ * @param {Function} runInPage - A content-exposed function to run within the context of the page.
+ * @param {object} options - Options for opening the context menu.
+ * @param {boolean} options.openAtSpanishParagraph - Opens the context menu at the Spanish paragraph in the test page.
+ * @throws Throws an error if no valid option was provided for opening the menu.
+ */
+async function openContextMenu(runInPage, { openAtSpanishParagraph }) {
+  logAction();
+
+  if (openAtSpanishParagraph === true) {
+    await runInPage(async TranslationsTest => {
+      const { getSpanishParagraph } = TranslationsTest.getSelectors();
+      const paragraph = getSpanishParagraph();
+      await TranslationsTest.rightClickContentElement(paragraph);
+    });
+    return;
+  }
+
+  throw new Error(
+    "openContextMenu() was not provided a declaration for which element to open the menu at."
+  );
+}
+
+/**
+ * Opens the context menu then asserts properties of the translate-selection item in the context menu.
+ *
+ * @param {Function} runInPage - A content-exposed function to run within the context of the page.
+ * @param {object} options - Options for how to open the context menu and what properties to assert about the translate-selection item.
+ * @param {boolean} options.expectMenuItemVisible - Whether the translate-selection item is expected to be visible.
+ *                                                  Does not assert visibility if left undefined.
+ * @param {boolean} options.openAtSpanishParagraph - Opens the context menu at the Spanish paragraph in the test page.
+ *                                                   This is only available in SPANISH_TEST_PAGE.
+ * @param {string} [message] - A message to log to info.
+ * @throws Throws an error if the properties of the translate-selection item do not match the expected options.
+ */
+async function assertContextMenuTranslateSelectionItem(
+  runInPage,
+  { expectMenuItemVisible, openAtSpanishParagraph },
+  message
+) {
+  logAction();
+
+  if (message) {
+    info(message);
+  }
+
+  await closeTranslationsPanelIfOpen();
+  await closeContextMenuIfOpen();
+
+  await openContextMenu(runInPage, { openAtSpanishParagraph });
+
+  const menuItem = maybeGetById(
+    "context-translate-selection",
+    /* ensureIsVisible */ false
+  );
+
+  if (expectMenuItemVisible !== undefined) {
+    assertIsVisible(expectMenuItemVisible, { element: menuItem });
+  }
+
+  await closeContextMenuIfOpen();
+}
+
+/**
  * Get an element by its l10n id, as this is a user-visible way to find an element.
  * The `l10nId` represents the text that a user would actually see.
  *

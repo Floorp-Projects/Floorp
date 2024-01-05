@@ -15,6 +15,7 @@
   preview/shopping.ftl                             (../components/shopping/content/shopping.ftl)
   preview/onboarding.ftl                           (../components/aboutwelcome/content/onboarding.ftl)
   preview/appmenu.ftl                              (../../services/fxaccounts/content/appmenu.ftl)
+  preview/select-translations.ftl                  (../locales-preview/select-translations.ftl)
   browser                                          (%browser/**/*.ftl)
 
 @AB_CD@.jar:
