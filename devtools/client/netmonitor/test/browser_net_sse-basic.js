@@ -40,6 +40,25 @@ add_task(async function () {
     1
   );
 
+  // Test that 'Save Response As' is not in the context menu
+  EventUtils.sendMouseEvent({ type: "contextmenu" }, requests[0]);
+
+  ok(
+    !getContextMenuItem(monitor, "request-list-context-save-response-as"),
+    "The 'Save Response As' context menu item should be hidden"
+  );
+
+  // Close context menu.
+  const contextMenu = monitor.toolbox.topDoc.querySelector(
+    'popupset menupopup[menu-api="true"]'
+  );
+  const popupHiddenPromise = BrowserTestUtils.waitForEvent(
+    contextMenu,
+    "popuphidden"
+  );
+  contextMenu.hidePopup();
+  await popupHiddenPromise;
+
   // Click on the "Response" panel
   clickOnSidebarTab(document, "response");
   await wait;
