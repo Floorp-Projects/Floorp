@@ -408,6 +408,8 @@ skip-if = ["a11y_checks && os == 'linux' && !debug"] # bug 1732635
 ["browser_net_response_node-expanded.js"]
 fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
+["browser_net_save_response_as.js"]
+
 ["browser_net_search-results.js"]
 skip-if = ["os == 'linux' && a11y_checks"]  # Bug 1721160
 
