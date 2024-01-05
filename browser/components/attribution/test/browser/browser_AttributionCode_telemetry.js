@@ -80,9 +80,17 @@ add_task(async function test_read_error() {
     throw new Error("read_error");
   };
 
+  // On MSIX builds, AttributionIOUtils.read is not used; AttributionCode.msixCampaignId is.
+  // Ensure we override that as well.
+  let oldMsixCampaignId = AttributionCode.msixCampaignId;
+  AttributionCode.msixCampaignId = async () => {
+    throw new Error("read_error");
+  };
+
   registerCleanupFunction(() => {
     AttributionIOUtils.exists = oldExists;
     AttributionIOUtils.read = oldRead;
+    AttributionCode.msixCampaignId = oldMsixCampaignId;
   });
 
   // Try to read the file
