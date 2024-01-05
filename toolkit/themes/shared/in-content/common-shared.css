@@ -190,7 +190,7 @@
      * In theory, we shouldn't be conveying invalid state just with a colour
      * change... */
     --in-content-border-invalid: ThreeDShadow;
-    --in-content-border-color: ThreeDShadow;
+    --in-content-border-color: var(--border-color);
 
     --in-content-button-text-color: ButtonText;
     --in-content-button-text-color-hover: SelectedItemText;
