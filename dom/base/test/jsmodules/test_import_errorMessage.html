@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<title>Test module import error message</title>
+<script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<script>
+  SimpleTest.waitForExplicitFinish();
+
+  let count = 0;
+
+  window.onerror = function (event, src, lineno, colno, error) {
+    info("window.onerror :" + error.message);
+    ok(error instanceof SyntaxError, "Should be a SyntaxError.");
+
+    // import_no_indirect_export.mjs and import_ambiguous_indirect_export.mjs
+    // are related to indirect import/export.
+    if (count < 2) {
+      ok(error.message.match("indirect"), "Should contain 'indirect'");
+    }
+
+    // import_ambiguous_indirect_export.mjs and import_ambiguous.mjs both
+    // have ambiguous import/export.
+    if (count % 2 === 1) {
+      ok(error.message.match("ambiguous"), "Should contain 'ambiguous'");
+    }
+
+    if (count === 2) {
+      ok(!error.message.match("ambiguous") && !error.message.match("indirect"),
+         "Should NOT contain 'indirect' nor 'ambiguous'");
+    }
+    count++;
+  };
+
+  function testLoaded() {
+    ok(count === 4, "Should have 4 SynaxErrors thrown.");
+    SimpleTest.finish();
+  }
+</script>
+
+<!--
+In window.onerror will test the error messages, so if the order is changed,
+the code in window.onerror should be updated as well.
+-->
+<script type="module" src="import_no_indirect_export.mjs"></script>
+<script type="module" src="import_ambiguous_indirect_export.mjs"></script>
+<script type="module" src="import_no_export.mjs"></script>
+<script type="module" src="import_ambiguous.mjs"></script>
+<body onload='testLoaded()'></body>

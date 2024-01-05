@@ -1,5 +1,13 @@
 [DEFAULT]
 support-files = [
+  "ambiguous_export.mjs",
+  "import_ambiguous.mjs",
+  "import_ambiguous_indirect_export.mjs",
+  "import_no_export.mjs",
+  "import_no_indirect_export.mjs",
+  "exportA1.mjs",
+  "exportA2.mjs",
+  "export_ambiguous.mjs",
   "module_setRan.mjs",
   "module_testSyntax.mjs",
   "module_badSyntax.mjs",
@@ -14,6 +22,8 @@ support-files = [
   "module_cyclic3.mjs",
   "module_multiImports.mjs",
   "module_multiLargeImports.mjs",
+  "no_export.mjs",
+  "no_indirect_export.mjs",
   "script_simple2.js",
   "module_large1.mjs",
   "module_large2.mjs",
@@ -28,6 +38,8 @@ support-files = [
 ["test_cyclicImport.html"]
 
 ["test_dynamicImportErrorMessage.html"]
+
+["test_import_errorMessage.html"]
 
 ["test_importIntroType.html"]
 
