@@ -333,46 +333,6 @@ void DecoderTemplate<DecoderType>::OutputDecodedData(
 }
 
 template <typename DecoderType>
-class DecoderTemplate<DecoderType>::ErrorRunnable final
-    : public DiscardableRunnable {
- public:
-  ErrorRunnable(Self* aDecoder, const nsresult& aError)
-      : DiscardableRunnable("Decoder ErrorRunnable"),
-        mDecoder(aDecoder),
-        mError(aError) {
-    MOZ_ASSERT(mDecoder);
-  }
-  ~ErrorRunnable() = default;
-
-  // MOZ_CAN_RUN_SCRIPT_BOUNDARY until Runnable::Run is MOZ_CAN_RUN_SCRIPT.
-  // See bug 1535398.
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHOD Run() override {
-    nsCString error;
-    GetErrorName(mError, error);
-    LOGE("%s %p report error: %s", DecoderType::Name.get(), mDecoder.get(),
-         error.get());
-    RefPtr<Self> d = std::move(mDecoder);
-    d->ReportError(mError);
-    return NS_OK;
-  }
-
- private:
-  RefPtr<Self> mDecoder;
-  const nsresult mError;
-};
-
-template <typename DecoderType>
-void DecoderTemplate<DecoderType>::ScheduleReportError(
-    const nsresult& aResult) {
-  nsCString error;
-  GetErrorName(aResult, error);
-  LOGE("%s %p, schedule to report error: %s", DecoderType::Name.get(), this,
-       error.get());
-  MOZ_ALWAYS_SUCCEEDS(
-      NS_DispatchToCurrentThread(MakeAndAddRef<ErrorRunnable>(this, aResult)));
-}
-
-template <typename DecoderType>
 void DecoderTemplate<DecoderType>::ScheduleDequeueEventIfNeeded() {
   AssertIsOnOwningThread();
 
