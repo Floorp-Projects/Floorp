@@ -116,6 +116,15 @@ class SetWindowRectAction:
         rect = payload["rect"]
         self.protocol.window.set_rect(rect)
 
+class GetWindowRectAction:
+    name = "get_window_rect"
+
+    def __init__(self, logger, protocol):
+        self.logger = logger
+        self.protocol = protocol
+
+    def __call__(self, payload):
+        return self.protocol.window.get_rect()
 
 class ActionSequenceAction:
     name = "action_sequence"
@@ -444,6 +453,7 @@ actions = [ClickAction,
            SendKeysAction,
            MinimizeWindowAction,
            SetWindowRectAction,
+           GetWindowRectAction,
            ActionSequenceAction,
            GenerateTestReportAction,
            SetPermissionAction,

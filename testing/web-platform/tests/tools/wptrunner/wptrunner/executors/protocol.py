@@ -371,6 +371,11 @@ class WindowProtocolPart(ProtocolPart):
         pass
 
     @abstractmethod
+    def get_rect(self):
+        """Gets the current window rect."""
+        pass
+
+    @abstractmethod
     def minimize(self):
         """Minimizes the window and returns the previous rect."""
         pass
