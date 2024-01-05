@@ -284,10 +284,11 @@ cookie.banners.click:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1855495
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1855495#c3
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1871200#c4
     notification_emails:
       - pbz@mozilla.com
       - tihuang@mozilla.com
-    expires: 124
+    expires: 128
   query_selector_run_count_per_window_frame:
     type: custom_distribution
     bucket_count: 20
@@ -300,10 +301,11 @@ cookie.banners.click:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1855495
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1855495#c3
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1871200#c4
     notification_emails:
       - pbz@mozilla.com
       - tihuang@mozilla.com
-    expires: 124
+    expires: 128
   query_selector_run_duration_per_window_top_level:
     type: custom_distribution
     bucket_count: 8
@@ -316,10 +318,11 @@ cookie.banners.click:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1855495
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1855495#c3
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1871200#c4
     notification_emails:
       - pbz@mozilla.com
       - tihuang@mozilla.com
-    expires: 124
+    expires: 128
   query_selector_run_duration_per_window_frame:
     type: custom_distribution
     bucket_count: 8
@@ -332,10 +335,11 @@ cookie.banners.click:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1855495
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1855495#c3
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1871200#c4
     notification_emails:
       - pbz@mozilla.com
       - tihuang@mozilla.com
-    expires: 124
+    expires: 128
 cookie.banners.cmp:
   ratio_handled_by_cmp_rule:
     type: rate
