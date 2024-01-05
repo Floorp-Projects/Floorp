@@ -14,6 +14,26 @@ pub(crate) struct FileRoot {
     path: PathBuf,
 }
 
+impl Eq for FileRoot {}
+
+impl PartialEq for FileRoot {
+    fn eq(&self, other: &Self) -> bool {
+        self.path == other.path
+    }
+}
+
+impl Ord for FileRoot {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.path.cmp(&other.path)
+    }
+}
+
+impl PartialOrd for FileRoot {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
 impl FileRoot {
     pub(crate) fn new<P>(nickname: &'static str, path: P) -> miette::Result<Self>
     where
@@ -152,6 +172,7 @@ impl Display for FileRoot {
     }
 }
 
+#[derive(Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub(crate) struct Child<'a> {
     root: &'a FileRoot,
     /// NOTE: This is always an absolute path that is a child of the `root`.
