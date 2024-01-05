@@ -1179,7 +1179,7 @@ nsTArray<bool> RemoteAccessible::PreProcessRelations(AccAttributes* aFields) {
         newRelationTargets && newRelationTargets->Length();
 
     // Remove existing implicit relations if we need to perform an update, or
-    // if we've recieved a DeleteEntry(). Only do this if mCachedFields is
+    // if we've received a DeleteEntry(). Only do this if mCachedFields is
     // initialized. If mCachedFields is not initialized, we still need to
     // construct the update array so we correctly handle reverse rels in
     // PostProcessRelations.
