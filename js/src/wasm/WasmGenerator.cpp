@@ -466,6 +466,7 @@ bool ModuleGenerator::linkCallSites() {
       case CallSiteDesc::Breakpoint:
       case CallSiteDesc::EnterFrame:
       case CallSiteDesc::LeaveFrame:
+      case CallSiteDesc::CollapseFrame:
       case CallSiteDesc::FuncRef:
       case CallSiteDesc::FuncRefFast:
       case CallSiteDesc::ReturnStub:

@@ -522,9 +522,14 @@ static bool WasmHandleDebugTrap() {
     }
     return true;
   }
-  if (site->kind() == CallSite::LeaveFrame) {
-    if (!debugFrame->updateReturnJSValue(cx)) {
+  if (site->kind() == CallSite::LeaveFrame ||
+      site->kind() == CallSite::CollapseFrame) {
+    if (site->kind() == CallSite::LeaveFrame &&
+        !debugFrame->updateReturnJSValue(cx)) {
       return false;
+    }
+    if (site->kind() == CallSite::CollapseFrame) {
+      debugFrame->discardReturnJSValue();
     }
     bool ok = DebugAPI::onLeaveFrame(cx, debugFrame, nullptr, true);
     debugFrame->leave(cx);
