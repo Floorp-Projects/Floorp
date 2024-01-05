@@ -126,7 +126,7 @@ export class ContentSection extends React.PureComponent {
                   id="row-selector"
                   className="selector"
                   name="row-count"
-                  preference="topSitesRows"
+                  data-preference="topSitesRows"
                   value={topSitesRowsCount}
                   onChange={this.onPreferenceSelect}
                   disabled={!topSitesEnabled}

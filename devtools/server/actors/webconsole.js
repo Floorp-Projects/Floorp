@@ -860,7 +860,6 @@ class WebConsoleActor extends Actor {
           startTime,
           ...response,
         });
-        return;
       } catch (e) {
         const message = `Encountered error while waiting for Helper Result: ${e}\n${e.stack}`;
         DevToolsUtils.reportException("evaluateJSAsync", Error(message));

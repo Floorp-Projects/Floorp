@@ -47,7 +47,6 @@ add_task(async function overrideContext_with_context() {
           "Expected successful executeScript"
         );
         browser.test.sendMessage("testTabAccessDone", "executeScript_ok");
-        return;
       } catch (e) {
         browser.test.assertEq(
           "Missing host permission for the tab",
