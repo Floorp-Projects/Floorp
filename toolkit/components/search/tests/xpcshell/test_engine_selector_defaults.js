@@ -174,7 +174,9 @@ const CONFIG_DEFAULTS_OVERRIDE = [
 
 const engineSelector = new SearchEngineSelector();
 let settings;
+let settingOverrides;
 let configStub;
+let overrideStub;
 
 /**
  * This function asserts if the actual engine identifiers returned equals
@@ -222,6 +224,11 @@ async function assertActualEnginesEqualsExpected(
 add_setup(async function () {
   settings = await RemoteSettings(SearchUtils.NEW_SETTINGS_KEY);
   configStub = sinon.stub(settings, "get");
+  settingOverrides = await RemoteSettings(
+    SearchUtils.NEW_SETTINGS_OVERRIDES_KEY
+  );
+  overrideStub = sinon.stub(settingOverrides, "get");
+  overrideStub.returns([]);
 });
 
 add_task(async function test_default_engines() {

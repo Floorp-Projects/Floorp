@@ -1,0 +1,79 @@
+{
+  "title": "Search Engine Overrides Schema",
+  "description": "This schema contains the details for overriding application provided search engines defined in search-config-v2. The associated remote settings collection is search-config-overrides-v2.",
+  "definitions": {
+    "partnerCode": {
+      "title": "Partner Code",
+      "description": "The partner code for the engine or variant. This will be inserted into parameters which include '{partnerCode}'",
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9-_]*$"
+    },
+    "urls": {
+      "title": "URLs",
+      "description": "The URLs associated with the search engine.",
+      "type": "object",
+      "properties": {
+        "search": {
+          "title": "Search URL",
+          "description": "The URL to use for searches",
+          "$ref": "#/definitions/url"
+        }
+      }
+    },
+    "url": {
+      "type": "object",
+      "properties": {
+        "base": {
+          "title": "Base",
+          "description": "The PrePath and FilePath of the URL. May include variables for engines which have a variable FilePath, e.g. {searchTerm} for when a search term is within the path of the url.",
+          "type": "string"
+        },
+        "params": {
+          "title": "Parameters",
+          "description": "The parameters for this URL.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "title": "Parameter",
+            "properties": {
+              "name": {
+                "title": "Name",
+                "description": "The parameter name",
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9-_]*$"
+              },
+              "value": {
+                "title": "Value",
+                "description": "The parameter value, this may be a static value, or additionally contain a parameter replacement, e.g. {inputEncoding}. For the partner code parameter, this field should be {pc}.",
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9-_{}]*$"
+              }
+            },
+            "required": ["name", "value"]
+          }
+        }
+      }
+    }
+  },
+  "type": "object",
+  "properties": {
+    "identifier": {
+      "title": "Identifier",
+      "description": "This is the identifier of the search engine in search-config-v2 that this record will override. It may be extended by telemetrySuffix.",
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9-_]*$"
+    },
+    "partnerCode": {
+      "$ref": "#/definitions/partnerCode"
+    },
+    "telemetrySuffix": {
+      "title": "Telemetry Suffix",
+      "description": "Suffix that is appended to the search engine identifier following a dash, i.e. `<identifier>-<suffix>`. There should always be a suffix supplied if the partner code is different.",
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9-]*$"
+    },
+    "urls": {
+      "$ref": "#/definitions/urls"
+    }
+  }
+}

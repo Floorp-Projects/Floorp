@@ -119,6 +119,8 @@ support-files = [
 ["test_engine_selector_remote_settings.js"]
 tags = "remotesettings searchmain"
 
+["test_engine_selector_remote_override.js"]
+
 ["test_engine_set_alias.js"]
 
 ["test_getSubmission_encoding.js"]
