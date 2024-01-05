@@ -65,7 +65,6 @@ class MouseEvent : public UIEvent {
   int16_t Button();
   uint16_t Buttons();
   already_AddRefed<EventTarget> GetRelatedTarget();
-  void GetRegion(nsAString& aRegion);
   void InitMouseEvent(const nsAString& aType, bool aCanBubble, bool aCancelable,
                       nsGlobalWindowInner* aView, int32_t aDetail,
                       int32_t aScreenX, int32_t aScreenY, int32_t aClientX,
