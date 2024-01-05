@@ -5156,7 +5156,9 @@ mozilla::ipc::IPCResult ContentParent::RecvScriptErrorInternal(
     }
 
     JS::Rooted<JSObject*> stackObj(cx, &stack.toObject());
-    MOZ_ASSERT(JS::IsUnwrappedSavedFrame(stackObj));
+    if (!JS::IsUnwrappedSavedFrame(stackObj)) {
+      return IPC_FAIL(this, "Unexpected object");
+    }
 
     JS::Rooted<JSObject*> stackGlobal(cx, JS::GetNonCCWObjectGlobal(stackObj));
     msg = new nsScriptErrorWithStack(JS::NothingHandleValue, stackObj,
