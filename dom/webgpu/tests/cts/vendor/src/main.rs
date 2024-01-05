@@ -418,7 +418,7 @@ fn run(args: CliArgs) -> miette::Result<()> {
         log::info!("re-distributing tests into single file per test path…");
         let mut failed_writing = false;
         let cts_cases_by_spec_file_dir = {
-            let mut cts_cases_by_spec_file_dir = BTreeMap::<_, Vec<_>>::new();
+            let mut cts_cases_by_spec_file_dir = BTreeMap::<_, BTreeSet<_>>::new();
             for (path, meta) in cts_cases {
                 let case_dir = {
                     // Context: We want to mirror CTS upstream's `src/webgpu/**/*.spec.ts` paths as
@@ -454,10 +454,13 @@ fn run(args: CliArgs) -> miette::Result<()> {
                         .replace(|c| matches!(c, ':' | ','), "/");
                     cts_tests_dir.child(slashed)
                 };
-                cts_cases_by_spec_file_dir
+                if !cts_cases_by_spec_file_dir
                     .entry(case_dir)
                     .or_default()
-                    .push(meta);
+                    .insert(meta)
+                {
+                    log::warn!("duplicate entry {meta:?} detected")
+                }
             }
             cts_cases_by_spec_file_dir
         };
