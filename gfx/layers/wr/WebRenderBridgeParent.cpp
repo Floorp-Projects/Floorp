@@ -1459,23 +1459,31 @@ bool WebRenderBridgeParent::ProcessWebRenderParentCommands(
       case WebRenderParentCommand::TOpUpdateAsyncImagePipeline: {
         const OpUpdateAsyncImagePipeline& op =
             cmd.get_OpUpdateAsyncImagePipeline();
+
+        auto* pendingOps = mApi->GetPendingAsyncImagePipelineOps(aTxn);
+        auto* pendingRemotetextures = mApi->GetPendingRemoteTextureInfoList();
+
         mAsyncImageManager->UpdateAsyncImagePipeline(
             op.pipelineId(), op.scBounds(), op.rotation(), op.filter(),
             op.mixBlendMode());
-        auto* list = mApi->GetPendingRemoteTextureInfoList();
-        MOZ_ASSERT_IF(IsRootWebRenderBridgeParent(), !list);
-        mAsyncImageManager->ApplyAsyncImageForPipeline(op.pipelineId(), aTxn,
-                                                       txnForImageBridge, list);
+        MOZ_ASSERT_IF(IsRootWebRenderBridgeParent(), !pendingRemotetextures);
+        mAsyncImageManager->ApplyAsyncImageForPipeline(
+            op.pipelineId(), aTxn, txnForImageBridge, pendingOps,
+            pendingRemotetextures);
         break;
       }
       case WebRenderParentCommand::TOpUpdatedAsyncImagePipeline: {
         const OpUpdatedAsyncImagePipeline& op =
             cmd.get_OpUpdatedAsyncImagePipeline();
         aTxn.InvalidateRenderedFrame(wr::RenderReasons::ASYNC_IMAGE);
-        auto* list = mApi->GetPendingRemoteTextureInfoList();
-        MOZ_ASSERT_IF(IsRootWebRenderBridgeParent(), !list);
-        mAsyncImageManager->ApplyAsyncImageForPipeline(op.pipelineId(), aTxn,
-                                                       txnForImageBridge, list);
+
+        auto* pendingOps = mApi->GetPendingAsyncImagePipelineOps(aTxn);
+        auto* pendingRemotetextures = mApi->GetPendingRemoteTextureInfoList();
+
+        MOZ_ASSERT_IF(IsRootWebRenderBridgeParent(), !pendingRemotetextures);
+        mAsyncImageManager->ApplyAsyncImageForPipeline(
+            op.pipelineId(), aTxn, txnForImageBridge, pendingOps,
+            pendingRemotetextures);
         break;
       }
       case WebRenderParentCommand::TCompositableOperation: {

@@ -15,6 +15,7 @@
 
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/gfx/CompositorHitTestInfo.h"
+#include "mozilla/layers/AsyncImagePipelineOp.h"
 #include "mozilla/layers/IpcResourceUpdateQueue.h"
 #include "mozilla/layers/RemoteTextureMap.h"
 #include "mozilla/layers/ScrollableLayerGuid.h"
@@ -104,6 +105,9 @@ class TransactionBuilder final {
  public:
   explicit TransactionBuilder(WebRenderAPI* aApi,
                               bool aUseSceneBuilderThread = true);
+
+  TransactionBuilder(WebRenderAPI* aApi, Transaction* aTxn,
+                     bool aUseSceneBuilderThread, bool aOwnsData);
 
   ~TransactionBuilder();
 
@@ -206,9 +210,10 @@ class TransactionBuilder final {
   Transaction* Raw() { return mTxn; }
 
  protected:
+  Transaction* mTxn;
   bool mUseSceneBuilderThread;
   layers::WebRenderBackend mApiBackend;
-  Transaction* mTxn;
+  bool mOwnsData;
 };
 
 class TransactionWrapper final {
@@ -309,6 +314,8 @@ class WebRenderAPI final {
   RefPtr<EndRecordingPromise> EndRecording();
 
   layers::RemoteTextureInfoList* GetPendingRemoteTextureInfoList();
+  layers::AsyncImagePipelineOps* GetPendingAsyncImagePipelineOps(
+      TransactionBuilder& aTxn);
 
   void FlushPendingWrTransactionEventsWithoutWait();
   void FlushPendingWrTransactionEventsWithWait();
@@ -347,27 +354,14 @@ class WebRenderAPI final {
     enum class Tag {
       Transaction,
       PendingRemoteTextures,
+      PendingAsyncImagePipelineOps,
     };
     const Tag mTag;
     const TimeStamp mTimeStamp;
 
-    struct TransactionWrapper {
-      TransactionWrapper(wr::Transaction* aTxn, bool aUseSceneBuilderThread)
-          : mTxn(aTxn), mUseSceneBuilderThread(aUseSceneBuilderThread) {}
-
-      ~TransactionWrapper() {
-        if (mTxn) {
-          wr_transaction_delete(mTxn);
-        }
-      }
-
-      wr::Transaction* mTxn;
-      const bool mUseSceneBuilderThread;
-    };
-
    private:
     WrTransactionEvent(const Tag aTag,
-                       UniquePtr<TransactionWrapper>&& aTransaction)
+                       UniquePtr<TransactionBuilder>&& aTransaction)
         : mTag(aTag),
           mTimeStamp(TimeStamp::Now()),
           mTransaction(std::move(aTransaction)) {
@@ -381,15 +375,28 @@ class WebRenderAPI final {
           mPendingRemoteTextures(std::move(aPendingRemoteTextures)) {
       MOZ_ASSERT(mTag == Tag::PendingRemoteTextures);
     }
+    WrTransactionEvent(const Tag aTag,
+                       UniquePtr<layers::AsyncImagePipelineOps>&&
+                           aPendingAsyncImagePipelineOps,
+                       UniquePtr<TransactionBuilder>&& aTransaction)
+        : mTag(aTag),
+          mTimeStamp(TimeStamp::Now()),
+          mPendingAsyncImagePipelineOps(
+              std::move(aPendingAsyncImagePipelineOps)),
+          mTransaction(std::move(aTransaction)) {
+      MOZ_ASSERT(mTag == Tag::PendingAsyncImagePipelineOps);
+    }
 
-    UniquePtr<TransactionWrapper> mTransaction;
     UniquePtr<layers::RemoteTextureInfoList> mPendingRemoteTextures;
+    UniquePtr<layers::AsyncImagePipelineOps> mPendingAsyncImagePipelineOps;
+    UniquePtr<TransactionBuilder> mTransaction;
 
    public:
-    static WrTransactionEvent Transaction(wr::Transaction* aTxn,
+    static WrTransactionEvent Transaction(WebRenderAPI* aApi,
+                                          wr::Transaction* aTxn,
                                           bool aUseSceneBuilderThread) {
-      auto transaction =
-          MakeUnique<TransactionWrapper>(aTxn, aUseSceneBuilderThread);
+      auto transaction = MakeUnique<TransactionBuilder>(
+          aApi, aTxn, aUseSceneBuilderThread, /* aOwnsData */ true);
       return WrTransactionEvent(Tag::Transaction, std::move(transaction));
     }
 
@@ -399,17 +406,37 @@ class WebRenderAPI final {
                                 std::move(aPendingRemoteTextures));
     }
 
-    wr::Transaction* Transaction() {
+    static WrTransactionEvent PendingAsyncImagePipelineOps(
+        UniquePtr<layers::AsyncImagePipelineOps>&&
+            aPendingAsyncImagePipelineOps,
+        WebRenderAPI* aApi, wr::Transaction* aTxn,
+        bool aUseSceneBuilderThread) {
+      auto transaction = MakeUnique<TransactionBuilder>(
+          aApi, aTxn, aUseSceneBuilderThread, /* aOwnsData */ false);
+      return WrTransactionEvent(Tag::PendingAsyncImagePipelineOps,
+                                std::move(aPendingAsyncImagePipelineOps),
+                                std::move(transaction));
+    }
+
+    wr::Transaction* RawTransaction() {
       if (mTag == Tag::Transaction) {
-        return mTransaction->mTxn;
+        return mTransaction->Raw();
       }
       MOZ_ASSERT_UNREACHABLE("unexpected to be called");
       return nullptr;
     }
 
+    TransactionBuilder* GetTransactionBuilder() {
+      if (mTag == Tag::PendingAsyncImagePipelineOps) {
+        return mTransaction.get();
+      }
+      MOZ_CRASH("Should not be called");
+      return nullptr;
+    }
+
     bool UseSceneBuilderThread() {
       if (mTag == Tag::Transaction) {
-        return mTransaction->mUseSceneBuilderThread;
+        return mTransaction->UseSceneBuilderThread();
       }
       MOZ_ASSERT_UNREACHABLE("unexpected to be called");
       return true;
@@ -419,6 +446,15 @@ class WebRenderAPI final {
       if (mTag == Tag::PendingRemoteTextures) {
         MOZ_ASSERT(mPendingRemoteTextures);
         return mPendingRemoteTextures.get();
+      }
+      MOZ_ASSERT_UNREACHABLE("unexpected to be called");
+      return nullptr;
+    }
+
+    layers::AsyncImagePipelineOps* AsyncImagePipelineOps() {
+      if (mTag == Tag::PendingAsyncImagePipelineOps) {
+        MOZ_ASSERT(mPendingAsyncImagePipelineOps);
+        return mPendingAsyncImagePipelineOps.get();
       }
       MOZ_ASSERT_UNREACHABLE("unexpected to be called");
       return nullptr;
@@ -439,6 +475,7 @@ class WebRenderAPI final {
   bool mRendererDestroyed;
 
   UniquePtr<layers::RemoteTextureInfoList> mPendingRemoteTextureInfoList;
+  UniquePtr<layers::AsyncImagePipelineOps> mPendingAsyncImagePipelineOps;
   std::queue<WrTransactionEvent> mPendingWrTransactionEvents;
 
   // We maintain alive the root api to know when to shut the render backend

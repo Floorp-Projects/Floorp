@@ -353,17 +353,17 @@ void RemoteTextureMap::PushTexture(
 
     owner->mWaitingTextureDataHolders.push_back(std::move(textureData));
 
-    if (!owner->mIsSyncMode) {
+    {
       renderingReadyCallbacks =
           GetRenderingReadyCallbacks(lock, owner, aTextureId);
-      // Update mAsyncRemoteTextureHost for async mode.
+      // Update mRemoteTextureHost.
       // This happens when PushTexture() with RemoteTextureId is called after
       // GetRemoteTextureForDisplayList() with the RemoteTextureId.
       const auto key = std::pair(aForPid, aTextureId);
       auto it = mRemoteTextureHostWrapperHolders.find(key);
       if (it != mRemoteTextureHostWrapperHolders.end()) {
-        MOZ_ASSERT(!it->second->mAsyncRemoteTextureHost);
-        it->second->mAsyncRemoteTextureHost = aTextureHost;
+        MOZ_ASSERT(!it->second->mRemoteTextureHost);
+        it->second->mRemoteTextureHost = aTextureHost;
       }
     }
 
@@ -971,18 +971,17 @@ bool RemoteTextureMap::GetRemoteTextureForDisplayList(
         gfxCriticalNoteOnce << "remote texture does not exist";
         MOZ_ASSERT_UNREACHABLE("unexpected to be called");
       }
+    }
 
-      // Update mAsyncRemoteTextureHost for async mode
-      if (textureId == owner->mLatestTextureId) {
-        const auto key = std::pair(forPid, textureId);
-        auto it = mRemoteTextureHostWrapperHolders.find(key);
-        if (it != mRemoteTextureHostWrapperHolders.end() &&
-            !it->second->mAsyncRemoteTextureHost) {
-          it->second->mAsyncRemoteTextureHost = owner->mLatestTextureHost;
-        } else {
-          MOZ_ASSERT(it->second->mAsyncRemoteTextureHost ==
-                     owner->mLatestTextureHost);
-        }
+    // Update mRemoteTextureHost
+    if (textureId == owner->mLatestTextureId) {
+      const auto key = std::pair(forPid, textureId);
+      auto it = mRemoteTextureHostWrapperHolders.find(key);
+      if (it != mRemoteTextureHostWrapperHolders.end() &&
+          !it->second->mRemoteTextureHost) {
+        it->second->mRemoteTextureHost = owner->mLatestTextureHost;
+      } else {
+        MOZ_ASSERT(it->second->mRemoteTextureHost == owner->mLatestTextureHost);
       }
     }
 
@@ -1009,7 +1008,7 @@ wr::MaybeExternalImageId RemoteTextureMap::GetExternalImageIdOfRemoteTexture(
     return Nothing();
   }
 
-  TextureHost* remoteTexture = it->second->mAsyncRemoteTextureHost;
+  TextureHost* remoteTexture = it->second->mRemoteTextureHost;
 
   auto* owner = GetTextureOwner(lock, aOwnerId, aForPid);
   if (!owner) {
@@ -1109,8 +1108,8 @@ void RemoteTextureMap::UnregisterRemoteTextureHostWrapper(
       return;
     }
     releasingTextures.emplace_back(it->second->mRemoteTextureHostWrapper);
-    if (it->second->mAsyncRemoteTextureHost) {
-      releasingTextures.emplace_back(it->second->mAsyncRemoteTextureHost);
+    if (it->second->mRemoteTextureHost) {
+      releasingTextures.emplace_back(it->second->mRemoteTextureHost);
     }
 
     mRemoteTextureHostWrapperHolders.erase(it);
@@ -1208,10 +1207,10 @@ bool RemoteTextureMap::CheckRemoteTextureReady(
     return true;
   }
 
-  if (it->second->mAsyncRemoteTextureHost) {
+  if (it->second->mRemoteTextureHost) {
     return true;
   }
-  MOZ_ASSERT(!it->second->mAsyncRemoteTextureHost);
+  MOZ_ASSERT(!it->second->mRemoteTextureHost);
 
   // Check if RemoteTextureId is as expected.
   if (!owner->mRenderingReadyCallbackHolders.empty()) {
@@ -1247,7 +1246,7 @@ bool RemoteTextureMap::WaitRemoteTextureReady(const RemoteTextureInfo& aInfo) {
   }
 
   const TimeDuration timeout = TimeDuration::FromMilliseconds(1000);
-  TextureHost* remoteTexture = it->second->mAsyncRemoteTextureHost;
+  TextureHost* remoteTexture = it->second->mRemoteTextureHost;
 
   while (!remoteTexture) {
     CVStatus status = mMonitor.Wait(timeout);
@@ -1264,7 +1263,7 @@ bool RemoteTextureMap::WaitRemoteTextureReady(const RemoteTextureInfo& aInfo) {
       return false;
     }
 
-    remoteTexture = it->second->mAsyncRemoteTextureHost;
+    remoteTexture = it->second->mRemoteTextureHost;
     if (!remoteTexture) {
       auto* owner = GetTextureOwner(lock, aInfo.mOwnerId, aInfo.mForPid);
       // When owner is alreay unregistered, remote texture will not be pushed.
