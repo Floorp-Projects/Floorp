@@ -337,6 +337,7 @@ class MochiRemote(MochitestDesktop):
         detectShutdownLeaks=False,
         screenshotOnFail=False,
         bisectChunk=None,
+        restartAfterFailure=False,
         marionette_args=None,
         e10s=True,
         runFailures=False,

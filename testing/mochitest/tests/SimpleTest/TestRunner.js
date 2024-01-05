@@ -218,7 +218,10 @@ TestRunner._checkForHangs = function () {
 
       // If we have too many timeouts, give up. We don't want to wait hours
       // for results if some bug causes lots of tests to time out.
-      if (++TestRunner._numTimeouts >= TestRunner.maxTimeouts) {
+      if (
+        ++TestRunner._numTimeouts >= TestRunner.maxTimeouts ||
+        TestRunner.runUntilFailure
+      ) {
         TestRunner._haltTests = true;
 
         TestRunner.currentTestURL = "(SimpleTest/TestRunner.js)";

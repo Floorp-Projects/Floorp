@@ -2736,6 +2736,7 @@ toolbar#nav-bar {
         detectShutdownLeaks=False,
         screenshotOnFail=False,
         bisectChunk=None,
+        restartAfterFailure=False,
         marionette_args=None,
         e10s=True,
         runFailures=False,
@@ -2843,6 +2844,7 @@ toolbar#nav-bar {
                 shutdownLeaks=shutdownLeaks,
                 lsanLeaks=lsanLeaks,
                 bisectChunk=bisectChunk,
+                restartAfterFailure=restartAfterFailure,
             )
 
             def timeoutHandler():
@@ -3162,6 +3164,20 @@ toolbar#nav-bar {
 
             if options.bisectChunk:
                 status = bisect.post_test(options, self.expectedError, self.result)
+            elif options.restartAfterFailure:
+                # NOTE: ideally browser will halt on first failure, then this will always be the last test
+                if not self.expectedError:
+                    status = -1
+                else:
+                    firstFail = len(testsToRun)
+                    for key in self.expectedError:
+                        full_key = [x for x in testsToRun if key in x]
+                        if full_key:
+                            if testsToRun.index(full_key[0]) < firstFail:
+                                firstFail = testsToRun.index(full_key[0])
+                    testsToRun = testsToRun[firstFail + 1 :]
+                    if testsToRun == []:
+                        status = -1
             else:
                 status = -1
 
@@ -3757,6 +3773,7 @@ toolbar#nav-bar {
                     detectShutdownLeaks=detectShutdownLeaks,
                     screenshotOnFail=options.screenshotOnFail,
                     bisectChunk=options.bisectChunk,
+                    restartAfterFailure=options.restartAfterFailure,
                     marionette_args=marionette_args,
                     e10s=options.e10s,
                     runFailures=options.runFailures,
@@ -3920,6 +3937,7 @@ toolbar#nav-bar {
             shutdownLeaks=None,
             lsanLeaks=None,
             bisectChunk=None,
+            restartAfterFailure=None,
         ):
             """
             harness -- harness instance
@@ -3933,6 +3951,7 @@ toolbar#nav-bar {
             self.shutdownLeaks = shutdownLeaks
             self.lsanLeaks = lsanLeaks
             self.bisectChunk = bisectChunk
+            self.restartAfterFailure = restartAfterFailure
             self.browserProcessId = None
             self.stackFixerFunction = self.stackFixer()
 
@@ -3963,7 +3982,7 @@ toolbar#nav-bar {
                 self.trackLSANLeaks,
                 self.countline,
             ]
-            if self.bisectChunk:
+            if self.bisectChunk or self.restartAfterFailure:
                 handlers.append(self.record_result)
                 handlers.append(self.first_error)
 
@@ -4147,6 +4166,11 @@ def run_test_harness(parser, options):
     options.runByManifest = False
     if options.flavor in ("plain", "a11y", "browser", "chrome"):
         options.runByManifest = True
+
+    # run until failure, then loop until all tests have ran
+    # using looping similar to bisection code
+    if options.restartAfterFailure:
+        options.runUntilFailure = True
 
     if options.verify or options.verify_fission:
         result = runner.verifyTests(options)
