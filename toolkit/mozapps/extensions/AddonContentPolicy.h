@@ -4,11 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsIContentPolicy.h"
 #include "nsIAddonPolicyService.h"
 
-class AddonContentPolicy : public nsIContentPolicy,
-                           public nsIAddonContentPolicy {
+class AddonContentPolicy : public nsIAddonContentPolicy {
  protected:
   virtual ~AddonContentPolicy();
 
@@ -16,6 +14,5 @@ class AddonContentPolicy : public nsIContentPolicy,
   AddonContentPolicy();
 
   NS_DECL_ISUPPORTS
-  NS_DECL_NSICONTENTPOLICY
   NS_DECL_NSIADDONCONTENTPOLICY
 };

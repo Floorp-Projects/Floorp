@@ -9,18 +9,12 @@
 #include "mozilla/dom/nsCSPContext.h"
 #include "nsCOMPtr.h"
 #include "nsComponentManagerUtils.h"
-#include "nsContentPolicyUtils.h"
-#include "nsContentTypeParser.h"
-#include "nsContentUtils.h"
-#include "nsIConsoleService.h"
-#include "nsIContentSecurityPolicy.h"
 #include "nsIContent.h"
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/Components.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/intl/Localization.h"
 #include "nsIEffectiveTLDService.h"
-#include "nsIScriptError.h"
-#include "nsIStringBundle.h"
 #include "nsIUUIDGenerator.h"
 #include "nsIURI.h"
 #include "nsNetCID.h"
@@ -31,124 +25,17 @@ using namespace mozilla::intl;
 
 /* Enforces content policies for WebExtension scopes. Currently:
  *
- *  - Prevents loading scripts with a non-default JavaScript version.
  *  - Checks custom content security policies for sufficiently stringent
  *    script-src and other script-related directives.
  *  - We also used to validate object-src similarly to script-src, but that was
  *    dropped because NPAPI plugins are no longer supported (see bug 1766881).
  */
 
-#define VERSIONED_JS_BLOCKED_MESSAGE                                       \
-  u"Versioned JavaScript is a non-standard, deprecated extension, and is " \
-  u"not supported in WebExtension code. For alternatives, please see: "    \
-  u"https://developer.mozilla.org/Add-ons/WebExtensions/Tips"
-
 AddonContentPolicy::AddonContentPolicy() = default;
 
 AddonContentPolicy::~AddonContentPolicy() = default;
 
-NS_IMPL_ISUPPORTS(AddonContentPolicy, nsIContentPolicy, nsIAddonContentPolicy)
-
-static nsresult GetWindowIDFromContext(nsISupports* aContext,
-                                       uint64_t* aResult) {
-  NS_ENSURE_TRUE(aContext, NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsIContent> content = do_QueryInterface(aContext);
-  NS_ENSURE_TRUE(content, NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsPIDOMWindowInner> window = content->OwnerDoc()->GetInnerWindow();
-  NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
-
-  *aResult = window->WindowID();
-  return NS_OK;
-}
-
-static nsresult LogMessage(const nsAString& aMessage,
-                           const nsAString& aSourceName,
-                           const nsAString& aSourceSample,
-                           nsISupports* aContext) {
-  nsCOMPtr<nsIScriptError> error = do_CreateInstance(NS_SCRIPTERROR_CONTRACTID);
-  NS_ENSURE_TRUE(error, NS_ERROR_OUT_OF_MEMORY);
-
-  uint64_t windowID = 0;
-  GetWindowIDFromContext(aContext, &windowID);
-
-  nsresult rv = error->InitWithSanitizedSource(
-      aMessage, aSourceName, aSourceSample, 0, 0, nsIScriptError::errorFlag,
-      "JavaScript", windowID);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIConsoleService> console =
-      do_GetService(NS_CONSOLESERVICE_CONTRACTID);
-  NS_ENSURE_TRUE(console, NS_ERROR_OUT_OF_MEMORY);
-
-  console->LogMessage(error);
-  return NS_OK;
-}
-
-// Content policy enforcement:
-
-NS_IMETHODIMP
-AddonContentPolicy::ShouldLoad(nsIURI* aContentLocation, nsILoadInfo* aLoadInfo,
-                               const nsACString& aMimeTypeGuess,
-                               int16_t* aShouldLoad) {
-  if (!aContentLocation || !aLoadInfo) {
-    NS_SetRequestBlockingReason(
-        aLoadInfo, nsILoadInfo::BLOCKING_REASON_CONTENT_POLICY_WEBEXT);
-    *aShouldLoad = REJECT_REQUEST;
-    return NS_ERROR_FAILURE;
-  }
-
-  ExtContentPolicyType contentType = aLoadInfo->GetExternalContentPolicyType();
-
-  *aShouldLoad = nsIContentPolicy::ACCEPT;
-  nsCOMPtr<nsIPrincipal> loadingPrincipal = aLoadInfo->GetLoadingPrincipal();
-  if (!loadingPrincipal) {
-    return NS_OK;
-  }
-
-  // Only apply this policy to requests from documents loaded from
-  // moz-extension URLs, or to resources being loaded from moz-extension URLs.
-  if (!(aContentLocation->SchemeIs("moz-extension") ||
-        loadingPrincipal->SchemeIs("moz-extension"))) {
-    return NS_OK;
-  }
-
-  if (contentType == ExtContentPolicy::TYPE_SCRIPT) {
-    NS_ConvertUTF8toUTF16 typeString(aMimeTypeGuess);
-    nsContentTypeParser mimeParser(typeString);
-
-    // Reject attempts to load JavaScript scripts with a non-default version.
-    nsAutoString mimeType, version;
-    if (NS_SUCCEEDED(mimeParser.GetType(mimeType)) &&
-        nsContentUtils::IsJavascriptMIMEType(mimeType) &&
-        NS_SUCCEEDED(mimeParser.GetParameter("version", version))) {
-      NS_SetRequestBlockingReason(
-          aLoadInfo, nsILoadInfo::BLOCKING_REASON_CONTENT_POLICY_WEBEXT);
-      *aShouldLoad = nsIContentPolicy::REJECT_REQUEST;
-
-      nsCString sourceName;
-      loadingPrincipal->GetExposableSpec(sourceName);
-      NS_ConvertUTF8toUTF16 nameString(sourceName);
-
-      nsCOMPtr<nsISupports> context = aLoadInfo->GetLoadingContext();
-      LogMessage(nsLiteralString(VERSIONED_JS_BLOCKED_MESSAGE), nameString,
-                 typeString, context);
-      return NS_OK;
-    }
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-AddonContentPolicy::ShouldProcess(nsIURI* aContentLocation,
-                                  nsILoadInfo* aLoadInfo,
-                                  const nsACString& aMimeTypeGuess,
-                                  int16_t* aShouldProcess) {
-  *aShouldProcess = nsIContentPolicy::ACCEPT;
-  return NS_OK;
-}
+NS_IMPL_ISUPPORTS(AddonContentPolicy, nsIAddonContentPolicy)
 
 // CSP Validation:
 
