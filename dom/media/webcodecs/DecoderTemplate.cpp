@@ -476,7 +476,7 @@ MessageProcessedResult DecoderTemplate<DecoderType>::ProcessConfigureMessage(
          DecoderType::Name.get(), this, errorMessage.get());
 
     mProcessingMessage.reset();
-    QueueATask("Error during flush runnable",
+    QueueATask("Error while configuring decoder",
                [self = RefPtr{this}]() MOZ_CAN_RUN_SCRIPT_BOUNDARY {
                  MOZ_ASSERT(self->mState != CodecState::Closed);
                  self->CloseInternal(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
@@ -570,7 +570,7 @@ MessageProcessedResult DecoderTemplate<DecoderType>::ProcessDecodeMessage(
   // data is invalid.
   auto closeOnError = [&]() MOZ_CAN_RUN_SCRIPT_BOUNDARY {
     mProcessingMessage.reset();
-    QueueATask("Error during configure",
+    QueueATask("Error during decode",
                [self = RefPtr{this}]() MOZ_CAN_RUN_SCRIPT_BOUNDARY {
                  MOZ_ASSERT(self->mState != CodecState::Closed);
                  self->CloseInternal(NS_ERROR_DOM_ENCODING_NOT_SUPPORTED_ERR);
@@ -624,7 +624,7 @@ MessageProcessedResult DecoderTemplate<DecoderType>::ProcessDecodeMessage(
                           DecoderType::Name.get(), self.get(), id, msgStr.get(),
                           error.Description().get());
                      self->QueueATask(
-                         "Error during configure",
+                         "Error during decode runnable",
                          [self = RefPtr{self}]() MOZ_CAN_RUN_SCRIPT_BOUNDARY {
                            MOZ_ASSERT(self->mState != CodecState::Closed);
                            self->CloseInternal(
