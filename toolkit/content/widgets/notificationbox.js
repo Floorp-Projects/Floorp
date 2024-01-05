@@ -144,7 +144,7 @@
      *
      * @return The <notification> element that is shown.
      */
-    appendNotification(aType, aNotification, aButtons) {
+    async appendNotification(aType, aNotification, aButtons) {
       if (
         aNotification.priority < this.PRIORITY_SYSTEM ||
         aNotification.priority > this.PRIORITY_CRITICAL_HIGH
@@ -157,12 +157,19 @@
       MozXULElement.insertFTLIfNeeded("toolkit/global/notification.ftl");
 
       // Create the Custom Element and connect it to the document immediately.
-      var newitem;
+      let newitem;
       if (!aNotification.notificationIs) {
         if (!customElements.get("notification-message")) {
           // There's some weird timing stuff when this element is created at
           // script load time, we don't need it until now anyway so be lazy.
-          createNotificationMessageElement();
+          // Wrapped in a try/catch to handle rare cases where we start creating
+          // a notification but then the window gets closed/goes away.
+          try {
+            await createNotificationMessageElement();
+          } catch (err) {
+            console.warn(err);
+            throw err;
+          }
         }
         newitem = document.createElement("notification-message");
         newitem.setAttribute("message-bar-type", "infobar");
@@ -182,8 +189,10 @@
         this.stack.append(newitem);
       }
 
-      // Custom notification classes may not have the messageText property.
-      if (newitem.messageText) {
+      if (newitem.localName === "notification-message" && aNotification.label) {
+        newitem.label = aNotification.label;
+      } else if (newitem.messageText) {
+        // Custom notification classes may not have the messageText property.
         // Can't use instanceof in case this was created from a different document:
         if (
           aNotification.label &&
@@ -241,6 +250,10 @@
       newitem.style.top = "100%";
       newitem.style.marginTop = "-15px";
       newitem.style.opacity = "0";
+
+      // Ensure the DOM has been created for the Lit-based notification-message
+      // element so that we add the .animated class + it animates as expected.
+      await newitem.updateComplete;
       this._showNotification(newitem, true);
 
       // Fire event for accessibility APIs
@@ -607,51 +620,54 @@
 
   customElements.define("notification", MozElements.Notification);
 
-  function createNotificationMessageElement() {
-    // Get a reference to MessageBarElement from a created element so the import
-    // gets handled automatically if needed.
-    class NotificationMessage extends document.createElement("message-bar")
-      .constructor {
+  async function createNotificationMessageElement() {
+    await window.ensureCustomElements("moz-message-bar");
+    let MozMessageBar = customElements.get("moz-message-bar");
+    class NotificationMessage extends MozMessageBar {
+      static queries = {
+        ...MozMessageBar.queries,
+        messageText: ".message",
+        messageImage: ".icon",
+      };
+
       constructor() {
         super();
         this.persistence = 0;
         this.priority = 0;
         this.timeout = 0;
         this.telemetry = null;
+        this.dismissable = true;
         this._shown = false;
+
+        this.addEventListener("click", this);
+        this.addEventListener("command", this);
       }
 
       connectedCallback() {
-        this.toggleAttribute("dismissable", true);
-        this.closeButton.classList.add("notification-close");
+        super.connectedCallback();
+        this.#setStyles();
 
-        this.container = this.shadowRoot.querySelector(".container");
-        this.container.classList.add("infobar");
+        this.classList.add("infobar");
         this.setAlertRole();
 
-        let messageContent = this.shadowRoot.querySelector(".content");
-        messageContent.classList.add("notification-content");
-
-        // Remove the <slot>, API surface is `set label()` and `setButtons()`.
-        messageContent.textContent = "";
-
-        // A 'label' allows screen readers to detect the text of the alert.
-        this.messageText = document.createElement("label");
-        this.messageText.classList.add("notification-message");
         this.buttonContainer = document.createElement("span");
         this.buttonContainer.classList.add("notification-button-container");
-
-        this.messageImage = this.shadowRoot.querySelector(".icon");
-
-        messageContent.append(this.messageText, this.buttonContainer);
-        this.shadowRoot.addEventListener("click", this);
-        this.shadowRoot.addEventListener("command", this);
+        this.buttonContainer.setAttribute("slot", "actions");
+        this.appendChild(this.buttonContainer);
       }
 
       disconnectedCallback() {
+        super.disconnectedCallback();
         if (this.eventCallback) {
           this.eventCallback("disconnected");
         }
+      }
+
+      #setStyles() {
+        let style = document.createElement("link");
+        style.rel = "stylesheet";
+        style.href = "chrome://global/content/elements/infobar.css";
+        this.renderRoot.append(style);
       }
 
       _doTelemetry(type) {
@@ -686,10 +702,10 @@
       setAlertRole() {
         // Wait a little for this to render before setting the role for more
         // consistent alerts to screen readers.
-        this.container.removeAttribute("role");
+        this.removeAttribute("role");
         window.requestAnimationFrame(() => {
           window.requestAnimationFrame(() => {
-            this.container.setAttribute("role", "alert");
+            this.setAttribute("role", "alert");
           });
         });
       }
@@ -736,18 +752,10 @@
        */
       set label(value) {
         if (value && typeof value == "object" && "l10n-id" in value) {
-          const message = document.createElement("span");
-          document.l10n.setAttributes(
-            message,
-            value["l10n-id"],
-            value["l10n-args"]
-          );
-          while (this.messageText.firstChild) {
-            this.messageText.firstChild.remove();
-          }
-          this.messageText.appendChild(message);
+          this.messageL10nId = value["l10n-id"];
+          this.messageL10nArgs = value["l10n-args"];
         } else {
-          this.messageText.textContent = value;
+          this.message = value;
         }
         this.setAlertRole();
       }
@@ -777,7 +785,11 @@
               "button",
               button.is ? { is: button.is } : {}
             );
-            buttonElem.classList.add("notification-button", "small-button");
+            buttonElem.classList.add(
+              "notification-button",
+              "small-button",
+              "footer-button"
+            );
 
             if (button.primary) {
               buttonElem.classList.add("primary");
@@ -794,7 +806,8 @@
           }
 
           if (link) {
-            this.messageText.append(new Text(" "), buttonElem);
+            buttonElem.setAttribute("slot", "support-link");
+            this.appendChild(buttonElem);
           } else {
             this.buttonContainer.appendChild(buttonElem);
           }
@@ -811,6 +824,8 @@
         super.dismiss();
       }
     }
-    customElements.define("notification-message", NotificationMessage);
+    if (!customElements.get("notification-message")) {
+      customElements.define("notification-message", NotificationMessage);
+    }
   }
 }

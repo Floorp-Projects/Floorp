@@ -46,7 +46,7 @@ addRDMTask(
     const notificationEl = box.currentNotification;
     ok(notificationEl, "Notification should be visible");
     is(
-      notificationEl.messageText.textContent,
+      notificationEl.messageText.textContent.trim(),
       "The device pixel ratio was reduced to 1 as the resulting image was too large",
       "The expected warning was displayed"
     );

@@ -20,7 +20,7 @@
 var gNotificationBox;
 
 // Tests that a notification that is added in an hidden box didn't throw the animation
-function test() {
+async function test() {
   SimpleTest.waitForExplicitFinish();
   gNotificationBox = new MozElements.NotificationBox(e => {
     document.getElementById("nb").appendChild(e);
@@ -28,7 +28,7 @@ function test() {
 
   is(gNotificationBox.allNotifications.length, 0, "There should be no initial notifications");
 
-  gNotificationBox.appendNotification("notification1",
+  await gNotificationBox.appendNotification("notification1",
     { label: "Test notification", priority: gNotificationBox.PRIORITY_INFO_LOW });
 
   is(gNotificationBox.allNotifications.length, 1, "Notification exists");

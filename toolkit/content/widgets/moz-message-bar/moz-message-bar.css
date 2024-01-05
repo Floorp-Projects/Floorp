@@ -177,26 +177,27 @@
 
   :host([type=warning]) {
     --message-bar-background-color: var(--color-background-warning);
+
+    .icon {
+      --message-bar-icon-color: var(--icon-color-warning);
+    }
   }
 
   :host([type=success]) {
     --message-bar-background-color: var(--color-background-success);
+
+    .icon {
+      --message-bar-icon-color: var(--icon-color-success);
+    }
   }
 
-  :host([type=error]) {
+  :host([type=error]),
+  :host([type=critical]) {
     --message-bar-background-color: var(--color-background-critical);
-  }
 
-  :host([type=success]) .icon {
-    --message-bar-icon-color: var(--icon-color-success);
-  }
-
-  :host([type=warning]) .icon {
-    --message-bar-icon-color: var(--icon-color-warning);
-  }
-
-  :host([type=error]) .icon {
-    --message-bar-icon-color: var(--icon-color-critical);
+    .icon {
+      --message-bar-icon-color: var(--icon-color-critical);
+    }
   }
 
   .close {
