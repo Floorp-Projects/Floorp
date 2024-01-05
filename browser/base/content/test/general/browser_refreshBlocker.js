@@ -187,23 +187,21 @@ add_task(async function test_can_update_notification() {
       // should have fired, so the notification should be visible.
       let notificationBox = gBrowser.getNotificationBox(browser);
       let notification = notificationBox.currentNotification;
-      let [redirectLabel, refreshLabel] = await document.l10n.formatValues([
-        { id: "refresh-blocked-redirect-label" },
-        { id: "refresh-blocked-refresh-label" },
-      ]);
 
+      let message = notification.messageText.querySelector("span");
       is(
-        notification.messageText.textContent.trim(),
-        redirectLabel,
+        message.dataset.l10nId,
+        "refresh-blocked-redirect-label",
         "Should be showing the redirect message"
       );
 
       // Next, attempt a refresh
       await attemptFakeRefresh(browser, false);
 
+      message = notification.messageText.querySelector("span");
       is(
-        notification.messageText.textContent.trim(),
-        refreshLabel,
+        message.dataset.l10nId,
+        "refresh-blocked-refresh-label",
         "Should be showing the refresh message"
       );
     }

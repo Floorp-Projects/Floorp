@@ -21,7 +21,7 @@ add_task(async function show_and_send_telemetry() {
   Assert.ok(message.id, "Found the message");
 
   let dispatchStub = sinon.stub();
-  let infobar = await InfoBar.showInfoBarMessage(
+  let infobar = InfoBar.showInfoBarMessage(
     BrowserWindowTracker.getTopWindow().gBrowser.selectedBrowser,
     {
       ...message,
@@ -107,7 +107,7 @@ add_task(async function react_to_trigger() {
     "Notification has default priority"
   );
   // Dismiss the notification
-  notificationStack.currentNotification.closeButtonEl.click();
+  notificationStack.currentNotification.closeButton.click();
 });
 
 add_task(async function dismiss_telemetry() {
@@ -119,7 +119,7 @@ add_task(async function dismiss_telemetry() {
   message.content.type = "tab";
 
   let dispatchStub = sinon.stub();
-  let infobar = await InfoBar.showInfoBarMessage(
+  let infobar = InfoBar.showInfoBarMessage(
     BrowserWindowTracker.getTopWindow().gBrowser.selectedBrowser,
     message,
     dispatchStub
@@ -128,7 +128,7 @@ add_task(async function dismiss_telemetry() {
   // Remove any IMPRESSION pings
   dispatchStub.reset();
 
-  infobar.notification.closeButtonEl.click();
+  infobar.notification.closeButton.click();
 
   await BrowserTestUtils.waitForCondition(
     () => infobar.notification === null,
@@ -149,7 +149,7 @@ add_task(async function dismiss_telemetry() {
     gBrowser,
     "about:blank"
   );
-  infobar = await InfoBar.showInfoBarMessage(
+  infobar = InfoBar.showInfoBarMessage(
     BrowserWindowTracker.getTopWindow().gBrowser.selectedBrowser,
     message,
     dispatchStub
@@ -186,7 +186,7 @@ add_task(async function prevent_multiple_messages() {
   Assert.ok(message.id, "Found the message");
 
   let dispatchStub = sinon.stub();
-  let infobar = await InfoBar.showInfoBarMessage(
+  let infobar = InfoBar.showInfoBarMessage(
     BrowserWindowTracker.getTopWindow().gBrowser.selectedBrowser,
     message,
     dispatchStub
@@ -195,7 +195,7 @@ add_task(async function prevent_multiple_messages() {
   Assert.equal(dispatchStub.callCount, 2, "Called twice with IMPRESSION");
 
   // Try to stack 2 notifications
-  await InfoBar.showInfoBarMessage(
+  InfoBar.showInfoBarMessage(
     BrowserWindowTracker.getTopWindow().gBrowser.selectedBrowser,
     message,
     dispatchStub
@@ -204,13 +204,13 @@ add_task(async function prevent_multiple_messages() {
   Assert.equal(dispatchStub.callCount, 2, "Impression count did not increase");
 
   // Dismiss the first notification
-  infobar.notification.closeButtonEl.click();
+  infobar.notification.closeButton.click();
   Assert.equal(InfoBar._activeInfobar, null, "Cleared the active notification");
 
   // Reset impressions count
   dispatchStub.reset();
   // Try show the message again
-  infobar = await InfoBar.showInfoBarMessage(
+  infobar = InfoBar.showInfoBarMessage(
     BrowserWindowTracker.getTopWindow().gBrowser.selectedBrowser,
     message,
     dispatchStub
@@ -218,6 +218,6 @@ add_task(async function prevent_multiple_messages() {
   Assert.ok(InfoBar._activeInfobar, "activeInfobar is set");
   Assert.equal(dispatchStub.callCount, 2, "Called twice with IMPRESSION");
   // Dismiss the notification again
-  infobar.notification.closeButtonEl.click();
+  infobar.notification.closeButton.click();
   Assert.equal(InfoBar._activeInfobar, null, "Cleared the active notification");
 });

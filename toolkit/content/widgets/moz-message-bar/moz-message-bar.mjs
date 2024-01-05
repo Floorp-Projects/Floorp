@@ -22,10 +22,6 @@ const messageTypeToIconData = {
     iconSrc: "chrome://global/skin/icons/error.svg",
     l10nId: "moz-message-bar-icon-error",
   },
-  critical: {
-    iconSrc: "chrome://global/skin/icons/error.svg",
-    l10nId: "moz-message-bar-icon-error",
-  },
 };
 
 /**
@@ -37,8 +33,6 @@ const messageTypeToIconData = {
  * @property {string} heading - The heading of the message.
  * @property {string} message - The message text.
  * @property {boolean} dismissable - Whether or not the element is dismissable.
- * @property {string} messageL10nId - l10n ID for the message.
- * @property {string} messageL10nArgs - Any args needed for the message l10n ID.
  * @fires message-bar:close
  *  Custom event indicating that message bar was closed.
  *  @fires message-bar:user-dismissed
@@ -50,7 +44,6 @@ export default class MozMessageBar extends MozLitElement {
     actionsSlotEl: "slot[name=actions]",
     actionsEl: ".actions",
     closeButtonEl: "button.close",
-    supportLinkSlotEl: "slot[name=support-link]",
   };
 
   static properties = {
@@ -58,8 +51,6 @@ export default class MozMessageBar extends MozLitElement {
     heading: { type: String },
     message: { type: String },
     dismissable: { type: Boolean },
-    messageL10nId: { type: String },
-    messageL10nArgs: { type: String },
   };
 
   constructor() {
@@ -82,10 +73,6 @@ export default class MozMessageBar extends MozLitElement {
   disconnectedCallback() {
     super.disconnectedCallback();
     this.dispatchEvent(new CustomEvent("message-bar:close"));
-  }
-
-  get supportLinkEls() {
-    return this.supportLinkSlotEl.assignedElements();
   }
 
   iconTemplate() {
@@ -139,15 +126,7 @@ export default class MozMessageBar extends MozLitElement {
             <div class="text-content">
               ${this.headingTemplate()}
               <div>
-                <span
-                  class="message"
-                  data-l10n-id=${ifDefined(this.messageL10nId)}
-                  data-l10n-args=${ifDefined(
-                    JSON.stringify(this.messageL10nArgs)
-                  )}
-                >
-                  ${this.message}
-                </span>
+                <span class="message">${ifDefined(this.message)}</span>
                 <span class="link">
                   <slot name="support-link"></slot>
                 </span>

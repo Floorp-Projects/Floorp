@@ -1106,7 +1106,7 @@ const gStoragePressureObserver = {
     }
     messageFragment.appendChild(message);
 
-    await gNotificationBox.appendNotification(
+    gNotificationBox.appendNotification(
       NOTIFICATION_VALUE,
       {
         label: messageFragment,
@@ -1122,7 +1122,7 @@ const gStoragePressureObserver = {
 };
 
 var gPopupBlockerObserver = {
-  async handleEvent(aEvent) {
+  handleEvent(aEvent) {
     if (aEvent.originalTarget != gBrowser.selectedBrowser) {
       return;
     }
@@ -1158,31 +1158,23 @@ var gPopupBlockerObserver = {
 
         let notificationBox = gBrowser.getNotificationBox();
         let notification =
-          notificationBox.getNotificationWithValue("popup-blocked") ||
-          (await this.notificationPromise);
+          notificationBox.getNotificationWithValue("popup-blocked");
         if (notification) {
           notification.label = label;
         } else {
           const image = "chrome://browser/skin/notification-icons/popup.svg";
           const priority = notificationBox.PRIORITY_INFO_MEDIUM;
-          try {
-            this.notificationPromise = notificationBox.appendNotification(
-              "popup-blocked",
-              { label, image, priority },
-              [
-                {
-                  "l10n-id": "popup-warning-button",
-                  popup: "blockedPopupOptions",
-                  callback: null,
-                },
-              ]
-            );
-            await this.notificationPromise;
-          } catch (err) {
-            console.warn(err);
-          } finally {
-            this.notificationPromise = null;
-          }
+          notificationBox.appendNotification(
+            "popup-blocked",
+            { label, image, priority },
+            [
+              {
+                "l10n-id": "popup-warning-button",
+                popup: "blockedPopupOptions",
+                callback: null,
+              },
+            ]
+          );
         }
       }
 
@@ -1410,7 +1402,7 @@ var gKeywordURIFixup = {
     let asciiHost = fixedURI.asciiHost;
 
     let onLookupCompleteListener = {
-      async onLookupComplete(request, record, status) {
+      onLookupComplete(request, record, status) {
         let browserRef = weakBrowser.get();
         if (!Components.isSuccessCode(status) || !browserRef) {
           return;
@@ -1465,7 +1457,7 @@ var gKeywordURIFixup = {
             },
           },
         ];
-        let notification = await notificationBox.appendNotification(
+        let notification = notificationBox.appendNotification(
           "keyword-uri-fixup",
           {
             label: message,
@@ -3342,9 +3334,22 @@ function PageProxyClickHandler(aEvent) {
  * us via async messaging.
  */
 var BrowserOnClick = {
-  async ignoreWarningLink(reason, blockedInfo, browsingContext) {
-    // Add a notify bar before allowing the user to continue through to the
-    // site, so that they don't lose track after, e.g., tab switching.
+  ignoreWarningLink(reason, blockedInfo, browsingContext) {
+    let triggeringPrincipal =
+      blockedInfo.triggeringPrincipal ||
+      _createNullPrincipalFromTabUserContextId();
+
+    // Allow users to override and continue through to the site,
+    // but add a notify bar as a reminder, so that they don't lose
+    // track after, e.g., tab switching.
+    // Note that we have to use the passed URI info and can't just
+    // rely on the document URI, because the latter contains
+    // additional query parameters that should be stripped.
+    browsingContext.fixupAndLoadURIString(blockedInfo.uri, {
+      triggeringPrincipal,
+      flags: Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CLASSIFIER,
+    });
+
     // We can't use browser.contentPrincipal which is principal of about:blocked
     // Create one from uri with current principal origin attributes
     let principal = Services.scriptSecurityManager.createContentPrincipal(
@@ -3419,20 +3424,7 @@ var BrowserOnClick = {
       // provide a URL endpoint for these reports.
     }
 
-    await SafeBrowsingNotificationBox.show(title, buttons);
-
-    // Allow users to override and continue through to the site.
-    // Note that we have to use the passed URI info and can't just
-    // rely on the document URI, because the latter contains
-    // additional query parameters that should be stripped.
-    let triggeringPrincipal =
-      blockedInfo.triggeringPrincipal ||
-      _createNullPrincipalFromTabUserContextId();
-
-    browsingContext.fixupAndLoadURIString(blockedInfo.uri, {
-      triggeringPrincipal,
-      flags: Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CLASSIFIER,
-    });
+    SafeBrowsingNotificationBox.show(title, buttons);
   },
 };
 
@@ -4288,8 +4280,26 @@ const BrowserSearch = {
    * @param {string} newEngine
    *   name of the application default engine to replaced the removed engine.
    */
-  async removalOfSearchEngineNotificationBox(oldEngine, newEngine) {
-    let buttons = [
+  removalOfSearchEngineNotificationBox(oldEngine, newEngine) {
+    let messageFragment = document.createDocumentFragment();
+    let message = document.createElement("span");
+    let link = document.createXULElement("label", {
+      is: "text-link",
+    });
+
+    link.href = Services.urlFormatter.formatURLPref(
+      "browser.search.searchEngineRemoval"
+    );
+    link.setAttribute("data-l10n-name", "remove-search-engine-article");
+    document.l10n.setAttributes(message, "removed-search-engine-message", {
+      oldEngine,
+      newEngine,
+    });
+
+    message.appendChild(link);
+    messageFragment.appendChild(message);
+
+    let button = [
       {
         "l10n-id": "remove-search-engine-button",
         primary: true,
@@ -4300,21 +4310,15 @@ const BrowserSearch = {
           gNotificationBox.removeNotification(notificationBox);
         },
       },
-      {
-        supportPage: "search-engine-removal",
-      },
     ];
 
-    await gNotificationBox.appendNotification(
+    gNotificationBox.appendNotification(
       "search-engine-removal",
       {
-        label: {
-          "l10n-id": "removed-search-engine-message2",
-          "l10n-args": { oldEngine, newEngine },
-        },
+        label: messageFragment,
         priority: gNotificationBox.PRIORITY_SYSTEM,
       },
-      buttons
+      button
     );
 
     // Update engine name in the placeholder to the new default engine name.
@@ -9055,7 +9059,7 @@ var PanicButtonNotifier = {
 
 const SafeBrowsingNotificationBox = {
   _currentURIBaseDomain: null,
-  async show(title, buttons) {
+  show(title, buttons) {
     let uri = gBrowser.currentURI;
 
     // start tracking host so that we know when we leave the domain
@@ -9076,7 +9080,7 @@ const SafeBrowsingNotificationBox = {
       notificationBox.removeNotification(previousNotification);
     }
 
-    let notification = await notificationBox.appendNotification(
+    let notification = notificationBox.appendNotification(
       value,
       {
         label: title,
