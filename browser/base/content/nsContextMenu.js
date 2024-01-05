@@ -284,8 +284,8 @@ class nsContextMenu {
 
     const { gBrowser } = this.browser.ownerGlobal;
 
-    this.textSelected = this.selectionInfo.text;
-    this.isTextSelected = !!this.textSelected.length;
+    this.selectedText = this.selectionInfo.text;
+    this.isTextSelected = !!this.selectedText.length;
     this.webExtBrowserType = this.browser.getAttribute(
       "webextension-view-type"
     );
@@ -2489,7 +2489,7 @@ class nsContextMenu {
     }
 
     let selectedText = this.isTextSelected
-      ? this.textSelected
+      ? this.selectedText
       : this.linkTextStr;
 
     // Store searchTerms in context menu item so we know what to search onclick
