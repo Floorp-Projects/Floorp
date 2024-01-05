@@ -711,6 +711,8 @@ already_AddRefed<PerformanceMeasure> Performance::Measure(
       GetParentObject(), aName, startTime, endTime, detail);
   InsertUserEntry(performanceMeasure);
 
+  MaybeEmitExternalProfilerMarker(aName, options, startMark, aEndMark);
+
   if (profiler_is_collecting_markers()) {
     auto [startTimeStamp, endTimeStamp] =
         GetTimeStampsForMarker(startMark, aEndMark, options, aRv);
