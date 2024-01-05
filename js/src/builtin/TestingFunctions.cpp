@@ -1812,24 +1812,9 @@ static bool DisassembleNative(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  DisasmBuffer buf(cx);
-  disasmBuf.set(&buf);
-  auto onFinish = mozilla::MakeScopeExit([&] { disasmBuf.set(nullptr); });
-
-  jit::Disassemble(jit_begin, jit_end - jit_begin, &captureDisasmText);
-
-  if (buf.oom) {
-    ReportOutOfMemory(cx);
-    return false;
-  }
-  JSString* sresult = buf.builder.finishString();
-  if (!sresult) {
-    ReportOutOfMemory(cx);
-    return false;
-  }
-  sprinter.putString(cx, sresult);
-
-  if (args.length() > 1 && args[1].isString()) {
+  // Dump the raw code to a file before disassembling in case
+  // finishString triggers a GC and discards the jitcode.
+  if (!fuzzingSafe && args.length() > 1 && args[1].isString()) {
     RootedString str(cx, args[1].toString());
     JS::UniqueChars fileNameBytes = JS_EncodeStringToUTF8(cx, str);
 
@@ -1854,6 +1839,23 @@ static bool DisassembleNative(JSContext* cx, unsigned argc, Value* vp) {
     }
     fclose(f);
   }
+
+  DisasmBuffer buf(cx);
+  disasmBuf.set(&buf);
+  auto onFinish = mozilla::MakeScopeExit([&] { disasmBuf.set(nullptr); });
+
+  jit::Disassemble(jit_begin, jit_end - jit_begin, &captureDisasmText);
+
+  if (buf.oom) {
+    ReportOutOfMemory(cx);
+    return false;
+  }
+  JSString* sresult = buf.builder.finishString();
+  if (!sresult) {
+    ReportOutOfMemory(cx);
+    return false;
+  }
+  sprinter.putString(cx, sresult);
 
   JSString* str = sprinter.release(cx);
   if (!str) {
