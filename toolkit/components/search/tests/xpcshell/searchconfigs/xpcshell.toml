@@ -42,6 +42,8 @@ requesttimeoutfactor = 2
 
 ["test_searchconfig_validates.js"]
 support-files = [
+  "../../../schema/search-config-overrides-schema.json",
+  "../../../schema/search-config-overrides-v2-schema.json",
   "../../../schema/search-config-schema.json",
   "../../../schema/search-config-ui-schema.json",
   "../../../schema/search-config-v2-schema.json",

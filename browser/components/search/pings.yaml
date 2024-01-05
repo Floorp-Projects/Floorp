@@ -1,0 +1,22 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+---
+$schema: moz://mozilla.org/schemas/glean/pings/2-0-0
+
+search-with:
+  description: |
+    A ping representing a "This time, search with" event with a partner search.
+    Does not contain a `client_id`, preferring a `context_id` instead.
+    The `context_id` is used internally for counting unique sers as well as for
+    anti-fraud. It is shared with other Contextual Services. It is not shared
+    externally.
+
+  include_client_id: false
+  bugs:
+    - https://bugzilla.mozilla.org/show_bug.cgi?id=1870138
+  data_reviews:
+    - https://bugzilla.mozilla.org/show_bug.cgi?id=1870138
+  notification_emails:
+    - mkaply@mozilla.com

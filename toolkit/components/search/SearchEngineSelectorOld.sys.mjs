@@ -73,8 +73,13 @@ export class SearchEngineSelectorOld {
   constructor(listener) {
     this.QueryInterface = ChromeUtils.generateQI(["nsIObserver"]);
     this._remoteConfig = lazy.RemoteSettings(lazy.SearchUtils.OLD_SETTINGS_KEY);
+    this._remoteConfigOverrides = lazy.RemoteSettings(
+      lazy.SearchUtils.OLD_SETTINGS_OVERRIDES_KEY
+    );
     this._listenerAdded = false;
     this._onConfigurationUpdated = this._onConfigurationUpdated.bind(this);
+    this._onConfigurationOverridesUpdated =
+      this._onConfigurationOverridesUpdated.bind(this);
     this._changeListener = listener;
   }
 
@@ -86,8 +91,13 @@ export class SearchEngineSelectorOld {
       return this._getConfigurationPromise;
     }
 
-    this._configuration = await (this._getConfigurationPromise =
-      this._getConfiguration());
+    this._getConfigurationPromise = Promise.all([
+      this._getConfiguration(),
+      this._getConfigurationOverrides(),
+    ]);
+    let remoteSettingsData = await this._getConfigurationPromise;
+    this._configuration = remoteSettingsData[0];
+    this._configurationOverrides = remoteSettingsData[1];
     delete this._getConfigurationPromise;
 
     if (!this._configuration?.length) {
@@ -99,10 +109,22 @@ export class SearchEngineSelectorOld {
 
     if (!this._listenerAdded) {
       this._remoteConfig.on("sync", this._onConfigurationUpdated);
+      this._remoteConfigOverrides.on(
+        "sync",
+        this._onConfigurationOverridesUpdated
+      );
       this._listenerAdded = true;
     }
 
     return this._configuration;
+  }
+
+  /**
+   * Used by tests to get the configuration overrides.
+   */
+  async getEngineConfigurationOverrides() {
+    await this.getEngineConfiguration();
+    return this._configurationOverrides;
   }
 
   /**
@@ -162,6 +184,42 @@ export class SearchEngineSelectorOld {
     if (this._changeListener) {
       this._changeListener();
     }
+  }
+
+  /**
+   * Handles updating of the configuration. Note that the search service is
+   * only updated after a period where the user is observed to be idle.
+   *
+   * @param {object} options
+   *   The options object
+   * @param {object} options.data
+   *   The data to update
+   * @param {Array} options.data.current
+   *   The new configuration object
+   */
+  _onConfigurationOverridesUpdated({ data: { current } }) {
+    this._configurationOverrides = current;
+    lazy.logConsole.debug("Search configuration overrides updated remotely");
+    if (this._changeListener) {
+      this._changeListener();
+    }
+  }
+
+  /**
+   * Obtains the configuration overrides from remote settings.
+   *
+   * @returns {Array}
+   *   An array of objects in the database, or an empty array if none
+   *   could be obtained.
+   */
+  async _getConfigurationOverrides() {
+    let result = [];
+    try {
+      result = await this._remoteConfigOverrides.get();
+    } catch (ex) {
+      // This data is remote only, so we just return an empty array if it fails.
+    }
+    return result;
   }
 
   /**
@@ -314,6 +372,22 @@ export class SearchEngineSelectorOld {
       ) {
         defaultEngine = engine;
       }
+      if (engine.telemetryId) {
+        for (let override of this._configurationOverrides) {
+          if (override.telemetryId == engine.telemetryId) {
+            engine.params = this._copyObject(
+              engine.params || {},
+              override.params
+            );
+            if (override.clickUrl) {
+              engine.clickUrl = override.clickUrl;
+            }
+            if (override.telemetrySuffix) {
+              engine.telemetryId += `-${override.telemetrySuffix}`;
+            }
+          }
+        }
+      }
       if (
         "defaultPrivate" in engine &&
         shouldPrefer(
@@ -387,7 +461,7 @@ export class SearchEngineSelectorOld {
    * Object.assign but ignore some keys
    *
    * @param {object} target - Object to copy to.
-   * @param {object} source - Object top copy from.
+   * @param {object} source - Object to copy from.
    * @returns {object} - The source object.
    */
   _copyObject(target, source) {

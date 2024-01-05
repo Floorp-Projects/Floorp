@@ -1,0 +1,64 @@
+{
+  "title": "Search Engine Overrides Schema",
+  "description": "This schema contains the details for overriding application provided search engines defined in search-config. The associated remote settings collection is search-config-overrides.",
+  "type": "object",
+  "required": ["telemetryId"],
+  "properties": {
+    "telemetryId": {
+      "type": "string",
+      "title": "Telemetry Id",
+      "description": "The telemetry Id used to match the engine that this record will override.",
+      "pattern": "^[a-zA-Z0-9-$_]{0,100}$"
+    },
+    "params": {
+      "$ref": "#/definitions/params"
+    },
+    "clickUrl": {
+      "type": "string",
+      "format": "uri",
+      "description": "The url used to for reporting clicks."
+    },
+    "telemetrySuffix": {
+      "type": "string",
+      "title": "Telemetry Suffix",
+      "description": "Suffix that is appended to the search engine identifier following a dash, i.e. `<identifier>-<suffix>`.",
+      "pattern": "^[a-zA-Z0-9-]*$"
+    }
+  },
+  "definitions": {
+    "searchUrlCodes": {
+      "type": "array",
+      "title": "Codes",
+      "description": "A array of objects - map of parameter name to the parameter value.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "pattern": "^[a-zA-Z0-9.-]{0,100}$",
+            "description": "Name of the parameter that will be used in the query"
+          },
+          "value": {
+            "type": "string",
+            "title": "Value",
+            "pattern": "^[a-zA-Z0-9_{}:/.-]{0,100}$",
+            "description": "The value of parameter (pref or purpose)"
+          }
+        }
+      }
+    },
+    "params": {
+      "type": "object",
+      "title": "Parameters",
+      "description": "Various parameters for the search engines",
+      "properties": {
+        "searchUrlGetParams": {
+          "title": "Search URL GET Parameters",
+          "description": "Extra parameters for search URLs (e.g. 'pc=foo').",
+          "$ref": "#/definitions/searchUrlCodes"
+        }
+      }
+    }
+  }
+}
