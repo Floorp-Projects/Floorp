@@ -4037,7 +4037,7 @@ export class SitePermission extends ExtensionData {
           site_permissions.includes(perm) &&
           !this.sitePermissions.includes(perm)
         ) {
-          Services.perms.removeFromPrincipal(principal, perm);
+          Services.perms.removeFromPrincipal(principal, perm.type);
         }
       }
     }
