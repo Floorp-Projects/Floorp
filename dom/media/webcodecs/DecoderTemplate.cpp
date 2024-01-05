@@ -456,22 +456,18 @@ MessageProcessedResult DecoderTemplate<DecoderType>::ProcessConfigureMessage(
 
   mMessageQueueBlocked = true;
 
+  nsAutoCString errorMessage;
   auto i = DecoderType::CreateTrackInfo(msg->Config());
-  bool supported = !i.isErr() && DecoderType::IsSupported(msg->Config());
-  bool decoderAgentCreated =
-      supported && !i.isErr() &&
-      CreateDecoderAgent(msg->mId, msg->TakeConfig(), i.unwrap());
-  if (!supported || i.isErr() || !decoderAgentCreated) {
-    nsCString errorMessage;
-    if (i.isErr()) {
-      nsCString res;
-      GetErrorName(i.unwrapErr(), res);
-      errorMessage.AppendPrintf("CreateTrackInfo failed: %s", res.get());
-    } else if (!supported) {
-      errorMessage.Append("Not supported.");
-    } else if (!decoderAgentCreated) {
-      errorMessage.Append("DecoderAgent creation failed.");
-    }
+  if (i.isErr()) {
+    nsCString res;
+    GetErrorName(i.unwrapErr(), res);
+    errorMessage.AppendPrintf("CreateTrackInfo failed: %s", res.get());
+  } else if (!DecoderType::IsSupported(msg->Config())) {
+    errorMessage.Append("Not supported.");
+  } else if (!CreateDecoderAgent(msg->mId, msg->TakeConfig(), i.unwrap())) {
+    errorMessage.Append("DecoderAgent creation failed.");
+  }
+  if (!errorMessage.IsEmpty()) {
     LOGE("%s %p ProcessConfigureMessage error (sync): %s",
          DecoderType::Name.get(), this, errorMessage.get());
 
