@@ -247,16 +247,17 @@ already_AddRefed<BindGroup> Device::CreateBindGroup(
 }
 
 already_AddRefed<ShaderModule> Device::CreateShaderModule(
-    JSContext* aCx, const dom::GPUShaderModuleDescriptor& aDesc) {
+    JSContext* aCx, const dom::GPUShaderModuleDescriptor& aDesc,
+    ErrorResult& aRv) {
   Unused << aCx;
 
   if (!mBridge->CanSend()) {
+    aRv.ThrowInvalidStateError("Connection to GPU process has shut down");
     return nullptr;
   }
 
-  ErrorResult err;
-  RefPtr<dom::Promise> promise = dom::Promise::Create(GetParentObject(), err);
-  if (NS_WARN_IF(err.Failed())) {
+  RefPtr<dom::Promise> promise = dom::Promise::Create(GetParentObject(), aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
 
