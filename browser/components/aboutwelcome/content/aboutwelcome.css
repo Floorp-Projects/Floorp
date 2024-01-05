@@ -417,6 +417,9 @@ div#feature-callout.hidden {
   gap: 10px;
   margin-top: 4px;
 }
+#feature-callout .screen[pos=callout] .action-buttons .secondary-cta {
+  font-size: inherit;
+}
 #feature-callout .screen[pos=callout] .action-buttons .primary,
 #feature-callout .screen[pos=callout] .action-buttons .secondary {
   padding: 4px 16px;
@@ -433,6 +436,38 @@ div#feature-callout.hidden {
 }
 #feature-callout .screen[pos=callout] .action-buttons .primary {
   background-color: var(--fc-primary-button-background);
+}
+#feature-callout .screen[pos=callout] .action-buttons .split-button-container {
+  align-items: stretch;
+}
+#feature-callout .screen[pos=callout] .action-buttons .split-button-container:not([hidden]) {
+  display: flex;
+}
+#feature-callout .screen[pos=callout] .action-buttons .split-button-container .primary:not(.submenu-button),
+#feature-callout .screen[pos=callout] .action-buttons .split-button-container .secondary:not(.submenu-button),
+#feature-callout .screen[pos=callout] .action-buttons .split-button-container .additional-cta:not(.submenu-button) {
+  border-start-end-radius: 0;
+  border-end-end-radius: 0;
+  margin-inline-end: 0;
+}
+#feature-callout .screen[pos=callout] .action-buttons .split-button-container .primary:focus-visible,
+#feature-callout .screen[pos=callout] .action-buttons .split-button-container .secondary:focus-visible,
+#feature-callout .screen[pos=callout] .action-buttons .split-button-container .additional-cta:focus-visible {
+  z-index: 2;
+}
+#feature-callout .screen[pos=callout] .action-buttons .split-button-container .submenu-button {
+  border-start-start-radius: 0;
+  border-end-start-radius: 0;
+  margin-inline-start: 1px;
+  padding: 8px;
+  min-width: 30px;
+  box-sizing: border-box;
+  background-image: url("chrome://global/skin/icons/arrow-down.svg");
+  background-repeat: no-repeat;
+  background-size: 16px;
+  background-position: center;
+  -moz-context-properties: fill;
+  fill: currentColor;
 }
 #feature-callout .screen[pos=callout] .action-buttons .primary,
 #feature-callout .screen[pos=callout] .action-buttons .secondary,
@@ -457,14 +492,16 @@ div#feature-callout.hidden {
   border: 1px solid var(--fc-button-border);
   color: var(--fc-button-color);
 }
-#feature-callout .screen[pos=callout] .action-buttons .secondary:hover:not(:disabled),
-#feature-callout .screen[pos=callout] .dismiss-button:hover:not(:disabled) {
+#feature-callout .screen[pos=callout] .action-buttons .secondary:hover:not(:disabled), #feature-callout .screen[pos=callout] .action-buttons .secondary[open],
+#feature-callout .screen[pos=callout] .dismiss-button:hover:not(:disabled),
+#feature-callout .screen[pos=callout] .dismiss-button[open] {
   background-color: var(--fc-button-background-hover);
   color: var(--fc-button-color-hover);
   border: 1px solid var(--fc-button-border-hover);
 }
-#feature-callout .screen[pos=callout] .action-buttons .secondary:hover:not(:disabled):active,
-#feature-callout .screen[pos=callout] .dismiss-button:hover:not(:disabled):active {
+#feature-callout .screen[pos=callout] .action-buttons .secondary:hover:not(:disabled):active, #feature-callout .screen[pos=callout] .action-buttons .secondary[open]:active,
+#feature-callout .screen[pos=callout] .dismiss-button:hover:not(:disabled):active,
+#feature-callout .screen[pos=callout] .dismiss-button[open]:active {
   background-color: var(--fc-button-background-active);
   color: var(--fc-button-color-active);
   border: 1px solid var(--fc-button-border-active);
@@ -473,12 +510,12 @@ div#feature-callout.hidden {
   border: 1px solid var(--fc-primary-button-border);
   color: var(--fc-primary-button-color);
 }
-#feature-callout .screen[pos=callout] .action-buttons .primary:hover:not(:disabled) {
+#feature-callout .screen[pos=callout] .action-buttons .primary:hover:not(:disabled), #feature-callout .screen[pos=callout] .action-buttons .primary[open] {
   background-color: var(--fc-primary-button-background-hover);
   color: var(--fc-primary-button-color-hover);
   border: 1px solid var(--fc-primary-button-border-hover);
 }
-#feature-callout .screen[pos=callout] .action-buttons .primary:hover:not(:disabled):active {
+#feature-callout .screen[pos=callout] .action-buttons .primary:hover:not(:disabled):active, #feature-callout .screen[pos=callout] .action-buttons .primary[open]:active {
   background-color: var(--fc-primary-button-background-active);
   color: var(--fc-primary-button-color-active);
   border: 1px solid var(--fc-primary-button-border-active);
@@ -1082,11 +1119,11 @@ html {
   cursor: default;
   color: var(--in-content-button-text-color);
 }
-.onboardingContainer .screen[pos=center].with-video .main-content .secondary-cta .secondary:hover {
+.onboardingContainer .screen[pos=center].with-video .main-content .secondary-cta .secondary:hover, .onboardingContainer .screen[pos=center].with-video .main-content .secondary-cta .secondary[open] {
   background-color: var(--in-content-button-background-hover);
   color: var(--in-content-button-text-color-hover);
 }
-.onboardingContainer .screen[pos=center].with-video .main-content .secondary-cta .secondary:hover:active {
+.onboardingContainer .screen[pos=center].with-video .main-content .secondary-cta .secondary:hover:active, .onboardingContainer .screen[pos=center].with-video .main-content .secondary-cta .secondary[open]:active {
   background-color: var(--in-content-button-background-active);
   color: var(--in-content-button-text-color-active);
 }
@@ -1182,11 +1219,11 @@ html {
   cursor: default;
   color: var(--in-content-button-text-color);
 }
-.onboardingContainer .screen[pos=center].addons-picker .main-content .secondary-cta .secondary:hover {
+.onboardingContainer .screen[pos=center].addons-picker .main-content .secondary-cta .secondary:hover, .onboardingContainer .screen[pos=center].addons-picker .main-content .secondary-cta .secondary[open] {
   background-color: var(--in-content-button-background-hover);
   color: var(--in-content-button-text-color-hover);
 }
-.onboardingContainer .screen[pos=center].addons-picker .main-content .secondary-cta .secondary:hover:active {
+.onboardingContainer .screen[pos=center].addons-picker .main-content .secondary-cta .secondary:hover:active, .onboardingContainer .screen[pos=center].addons-picker .main-content .secondary-cta .secondary[open]:active {
   background-color: var(--in-content-button-background-active);
   color: var(--in-content-button-text-color-active);
 }
@@ -1342,10 +1379,13 @@ html {
 .onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons .checkbox-container label {
   vertical-align: middle;
 }
-.onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons .additional-cta {
+.onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons .additional-cta-box {
   margin: 8px 0;
 }
-.onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons .additional-cta.cta-link {
+.onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons .additional-cta-box .additional-cta {
+  margin: 0;
+}
+.onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons .additional-cta-box.cta-link {
   background: none;
   text-decoration: underline;
   cursor: pointer;
@@ -1353,18 +1393,18 @@ html {
   padding: 0;
   font-weight: normal;
 }
-.onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons .additional-cta.cta-link:hover {
+.onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons .additional-cta-box.cta-link:hover {
   color: var(--link-color-hover);
 }
-.onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons .additional-cta.cta-link:active {
+.onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons .additional-cta-box.cta-link:active {
   color: var(--link-color-active);
 }
 @media (prefers-contrast) {
-  .onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons .additional-cta.cta-link:active {
+  .onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons .additional-cta-box.cta-link:active {
     text-decoration: none;
   }
 }
-.onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons .additional-cta.secondary:hover {
+.onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons .additional-cta-box.secondary:hover, .onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons .additional-cta-box.secondary[open] {
   background-color: var(--in-content-button-background-hover);
 }
 .onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons.additional-cta-container {
@@ -1386,11 +1426,11 @@ html {
   text-decoration: none;
   cursor: default;
 }
-.onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons .secondary-cta .secondary:hover {
+.onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons .secondary-cta .secondary:hover, .onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons .secondary-cta .secondary[open] {
   background-color: var(--in-content-button-background-hover);
   color: var(--in-content-button-text-color-hover);
 }
-.onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons .secondary-cta .secondary:hover:active {
+.onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons .secondary-cta .secondary:hover:active, .onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons .secondary-cta .secondary[open]:active {
   background-color: var(--in-content-button-background-active);
   color: var(--in-content-button-text-color-active);
 }
@@ -2163,7 +2203,8 @@ html {
 }
 .onboardingContainer .primary,
 .onboardingContainer .secondary,
-.onboardingContainer .additional-cta {
+.onboardingContainer .additional-cta,
+.onboardingContainer .submenu-button {
   font-size: 13px;
   line-height: 16px;
   padding: 11px 15px;
@@ -2171,12 +2212,54 @@ html {
 }
 .onboardingContainer .primary.rtamo,
 .onboardingContainer .secondary.rtamo,
-.onboardingContainer .additional-cta.rtamo {
+.onboardingContainer .additional-cta.rtamo,
+.onboardingContainer .submenu-button.rtamo {
   margin-top: 24px;
 }
 .onboardingContainer .secondary {
   background-color: var(--in-content-button-background);
   color: var(--in-content-button-text-color);
+}
+.onboardingContainer .split-button-container,
+.onboardingContainer .screen .action-buttons .split-button-container {
+  align-items: stretch;
+}
+.onboardingContainer .split-button-container:not([hidden]),
+.onboardingContainer .screen .action-buttons .split-button-container:not([hidden]) {
+  display: flex;
+}
+.onboardingContainer .split-button-container .primary:not(.submenu-button),
+.onboardingContainer .split-button-container .secondary:not(.submenu-button),
+.onboardingContainer .split-button-container .additional-cta:not(.submenu-button),
+.onboardingContainer .screen .action-buttons .split-button-container .primary:not(.submenu-button),
+.onboardingContainer .screen .action-buttons .split-button-container .secondary:not(.submenu-button),
+.onboardingContainer .screen .action-buttons .split-button-container .additional-cta:not(.submenu-button) {
+  border-start-end-radius: 0;
+  border-end-end-radius: 0;
+  margin-inline-end: 0;
+}
+.onboardingContainer .split-button-container .primary:focus-visible,
+.onboardingContainer .split-button-container .secondary:focus-visible,
+.onboardingContainer .split-button-container .additional-cta:focus-visible,
+.onboardingContainer .screen .action-buttons .split-button-container .primary:focus-visible,
+.onboardingContainer .screen .action-buttons .split-button-container .secondary:focus-visible,
+.onboardingContainer .screen .action-buttons .split-button-container .additional-cta:focus-visible {
+  z-index: 2;
+}
+.onboardingContainer .split-button-container .submenu-button,
+.onboardingContainer .screen .action-buttons .split-button-container .submenu-button {
+  border-start-start-radius: 0;
+  border-end-start-radius: 0;
+  margin-inline-start: 1px;
+  padding: 8px;
+  min-width: 30px;
+  box-sizing: border-box;
+  background-image: url("chrome://global/skin/icons/arrow-down.svg");
+  background-repeat: no-repeat;
+  background-size: 16px;
+  background-position: center;
+  -moz-context-properties: fill;
+  fill: currentColor;
 }
 .onboardingContainer .noodle {
   display: block;

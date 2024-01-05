@@ -178,10 +178,12 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(3);
 /* harmony import */ var _MultiStageProtonScreen__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(6);
 /* harmony import */ var _LanguageSwitcher__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(10);
-/* harmony import */ var _newtab_content_src_asrouter_templates_FirstRun_addUtmParams__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(18);
+/* harmony import */ var _SubmenuButton__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(15);
+/* harmony import */ var _newtab_content_src_asrouter_templates_FirstRun_addUtmParams__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(19);
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 
 
 
@@ -402,11 +404,19 @@ const MultiStageAboutWelcome = props => {
   })));
 };
 const SecondaryCTA = props => {
-  var _props$content$second, _props$content$tiles, _props$content$second2;
+  var _props$content$second, _props$content$second2, _props$content$tiles, _props$content$submen;
   const targetElement = props.position ? `secondary_button_${props.position}` : `secondary_button`;
   let buttonStyling = (_props$content$second = props.content.secondary_button) !== null && _props$content$second !== void 0 && _props$content$second.has_arrow_icon ? `secondary arrow-icon` : `secondary`;
-  const isTextLink = !["split", "callout"].includes(props.content.position) && ((_props$content$tiles = props.content.tiles) === null || _props$content$tiles === void 0 ? void 0 : _props$content$tiles.type) !== "addons-picker";
   const isPrimary = ((_props$content$second2 = props.content.secondary_button) === null || _props$content$second2 === void 0 ? void 0 : _props$content$second2.style) === "primary";
+  const isTextLink = !["split", "callout"].includes(props.content.position) && ((_props$content$tiles = props.content.tiles) === null || _props$content$tiles === void 0 ? void 0 : _props$content$tiles.type) !== "addons-picker" && !isPrimary;
+  const isSplitButton = ((_props$content$submen = props.content.submenu_button) === null || _props$content$submen === void 0 ? void 0 : _props$content$submen.attached_to) === targetElement;
+  let className = "secondary-cta";
+  if (props.position) {
+    className += ` ${props.position}`;
+  }
+  if (isSplitButton) {
+    className += " split-button-container";
+  }
   if (isTextLink) {
     buttonStyling += " text-link";
   }
@@ -415,7 +425,7 @@ const SecondaryCTA = props => {
     buttonStyling = (_props$content$second3 = props.content.secondary_button) !== null && _props$content$second3 !== void 0 && _props$content$second3.has_arrow_icon ? `primary arrow-icon` : `primary`;
   }
   return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
-    className: props.position ? `secondary-cta ${props.position}` : "secondary-cta"
+    className: className
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__.Localized, {
     text: props.content[targetElement].text
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", null)), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__.Localized, {
@@ -424,7 +434,10 @@ const SecondaryCTA = props => {
     className: buttonStyling,
     value: targetElement,
     onClick: props.handleAction
-  })));
+  })), isSplitButton ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_SubmenuButton__WEBPACK_IMPORTED_MODULE_5__.SubmenuButton, {
+    content: props.content,
+    handleAction: props.handleAction
+  }) : null);
 };
 const StepsIndicator = props => {
   let steps = [];
@@ -469,7 +482,7 @@ class WelcomeScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCo
     } = action;
     if (type === "SHOW_FIREFOX_ACCOUNTS") {
       let params = {
-        ..._newtab_content_src_asrouter_templates_FirstRun_addUtmParams__WEBPACK_IMPORTED_MODULE_5__.BASE_PARAMS,
+        ..._newtab_content_src_asrouter_templates_FirstRun_addUtmParams__WEBPACK_IMPORTED_MODULE_6__.BASE_PARAMS,
         utm_term: `${UTMTerm}-screen`
       };
       if (action.addFlowParams && flowParams) {
@@ -484,7 +497,7 @@ class WelcomeScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCo
       };
     } else if (type === "OPEN_URL") {
       let url = new URL(data.args);
-      (0,_newtab_content_src_asrouter_templates_FirstRun_addUtmParams__WEBPACK_IMPORTED_MODULE_5__.addUtmParams)(url, `${UTMTerm}-screen`);
+      (0,_newtab_content_src_asrouter_templates_FirstRun_addUtmParams__WEBPACK_IMPORTED_MODULE_6__.addUtmParams)(url, `${UTMTerm}-screen`);
       if (action.addFlowParams && flowParams) {
         url.searchParams.append("device_id", flowParams.deviceId);
         url.searchParams.append("flow_id", flowParams.flowId);
@@ -507,6 +520,11 @@ class WelcomeScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCo
     const value = event.currentTarget.value ?? event.currentTarget.getAttribute("value");
     const source = event.source || value;
     let targetContent = props.content[value] || props.content.tiles || props.content.languageSwitcher;
+    if (value === "submenu_button" && event.action) {
+      targetContent = {
+        action: event.action
+      };
+    }
     if (!(targetContent && targetContent.action)) {
       return;
     }
@@ -524,44 +542,7 @@ class WelcomeScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCo
     } = targetContent;
     action = JSON.parse(JSON.stringify(action));
     if (action.collectSelect) {
-      var _action$data;
-      // Populate MULTI_ACTION data actions property with selected checkbox
-      // actions from tiles data
-      if (action.type !== "MULTI_ACTION") {
-        console.error("collectSelect is only supported for MULTI_ACTION type actions");
-        action.type = "MULTI_ACTION";
-      }
-      if (!Array.isArray((_action$data = action.data) === null || _action$data === void 0 ? void 0 : _action$data.actions)) {
-        console.error("collectSelect is only supported for MULTI_ACTION type actions with an array of actions");
-        action.data = {
-          actions: []
-        };
-      }
-
-      // Prepend the multi-select actions to the CTA's actions array, but keep
-      // the actions in the same order they appear in. This way the CTA action
-      // can go last, after the multi-select actions are processed. For example,
-      // 1. checkbox action 1
-      // 2. checkbox action 2
-      // 3. radio action
-      // 4. CTA action (which perhaps depends on the radio action)
-      let multiSelectActions = [];
-      for (const checkbox of ((_props$content = props.content) === null || _props$content === void 0 ? void 0 : (_props$content$tiles2 = _props$content.tiles) === null || _props$content$tiles2 === void 0 ? void 0 : _props$content$tiles2.data) ?? []) {
-        var _props$content, _props$content$tiles2, _this$props$activeMul;
-        let checkboxAction;
-        if ((_this$props$activeMul = this.props.activeMultiSelect) !== null && _this$props$activeMul !== void 0 && _this$props$activeMul.includes(checkbox.id)) {
-          checkboxAction = checkbox.checkedAction ?? checkbox.action;
-        } else {
-          checkboxAction = checkbox.uncheckedAction;
-        }
-        if (checkboxAction) {
-          multiSelectActions.push(checkboxAction);
-        }
-      }
-      action.data.actions.unshift(...multiSelectActions);
-
-      // Send telemetry with selected checkbox ids
-      _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_2__.AboutWelcomeUtils.sendActionTelemetry(props.messageId, props.activeMultiSelect, "SELECT_CHECKBOX");
+      this.setMultiSelectActions(action);
     }
     let actionResult;
     if (["OPEN_URL", "SHOW_FIREFOX_ACCOUNTS"].includes(action.type)) {
@@ -605,6 +586,49 @@ class WelcomeScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCo
     if (shouldDoBehavior(action.dismiss)) {
       window.AWFinish();
     }
+  }
+  setMultiSelectActions(action) {
+    var _action$data;
+    let {
+      props
+    } = this;
+    // Populate MULTI_ACTION data actions property with selected checkbox
+    // actions from tiles data
+    if (action.type !== "MULTI_ACTION") {
+      console.error("collectSelect is only supported for MULTI_ACTION type actions");
+      action.type = "MULTI_ACTION";
+    }
+    if (!Array.isArray((_action$data = action.data) === null || _action$data === void 0 ? void 0 : _action$data.actions)) {
+      console.error("collectSelect is only supported for MULTI_ACTION type actions with an array of actions");
+      action.data = {
+        actions: []
+      };
+    }
+
+    // Prepend the multi-select actions to the CTA's actions array, but keep
+    // the actions in the same order they appear in. This way the CTA action
+    // can go last, after the multi-select actions are processed. For example,
+    // 1. checkbox action 1
+    // 2. checkbox action 2
+    // 3. radio action
+    // 4. CTA action (which perhaps depends on the radio action)
+    let multiSelectActions = [];
+    for (const checkbox of ((_props$content = props.content) === null || _props$content === void 0 ? void 0 : (_props$content$tiles2 = _props$content.tiles) === null || _props$content$tiles2 === void 0 ? void 0 : _props$content$tiles2.data) ?? []) {
+      var _props$content, _props$content$tiles2, _props$activeMultiSel;
+      let checkboxAction;
+      if ((_props$activeMultiSel = props.activeMultiSelect) !== null && _props$activeMultiSel !== void 0 && _props$activeMultiSel.includes(checkbox.id)) {
+        checkboxAction = checkbox.checkedAction ?? checkbox.action;
+      } else {
+        checkboxAction = checkbox.uncheckedAction;
+      }
+      if (checkboxAction) {
+        multiSelectActions.push(checkboxAction);
+      }
+    }
+    action.data.actions.unshift(...multiSelectActions);
+
+    // Send telemetry with selected checkbox ids
+    _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_2__.AboutWelcomeUtils.sendActionTelemetry(props.messageId, props.activeMultiSelect, "SELECT_CHECKBOX");
   }
   render() {
     return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MultiStageProtonScreen__WEBPACK_IMPORTED_MODULE_3__.MultiStageProtonScreen, {
@@ -768,9 +792,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _HeroImage__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(12);
 /* harmony import */ var _OnboardingVideo__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(13);
 /* harmony import */ var _AdditionalCTA__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(14);
-/* harmony import */ var _EmbeddedMigrationWizard__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(15);
-/* harmony import */ var _AddonsPicker__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(16);
-/* harmony import */ var _LinkParagraph__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(17);
+/* harmony import */ var _EmbeddedMigrationWizard__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(16);
+/* harmony import */ var _AddonsPicker__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(17);
+/* harmony import */ var _LinkParagraph__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(18);
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -1821,9 +1845,11 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _MSLocalized__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(5);
+/* harmony import */ var _SubmenuButton__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(15);
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 
 
 
@@ -1831,26 +1857,195 @@ const AdditionalCTA = ({
   content,
   handleAction
 }) => {
-  var _content$additional_b, _content$additional_b4, _content$additional_b5;
+  var _content$submenu_butt, _content$additional_b, _content$additional_b4, _content$additional_b5;
   let buttonStyle = "";
+  const isSplitButton = ((_content$submenu_butt = content.submenu_button) === null || _content$submenu_butt === void 0 ? void 0 : _content$submenu_butt.attached_to) === "additional_button";
+  let className = "additional-cta-box";
+  if (isSplitButton) {
+    className += " split-button-container";
+  }
   if (!((_content$additional_b = content.additional_button) !== null && _content$additional_b !== void 0 && _content$additional_b.style)) {
     buttonStyle = "primary";
   } else {
     var _content$additional_b2, _content$additional_b3;
     buttonStyle = ((_content$additional_b2 = content.additional_button) === null || _content$additional_b2 === void 0 ? void 0 : _content$additional_b2.style) === "link" ? "cta-link" : (_content$additional_b3 = content.additional_button) === null || _content$additional_b3 === void 0 ? void 0 : _content$additional_b3.style;
   }
-  return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__.Localized, {
+  return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+    className: className
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__.Localized, {
     text: (_content$additional_b4 = content.additional_button) === null || _content$additional_b4 === void 0 ? void 0 : _content$additional_b4.label
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", {
     className: `${buttonStyle} additional-cta`,
     onClick: handleAction,
     value: "additional_button",
     disabled: ((_content$additional_b5 = content.additional_button) === null || _content$additional_b5 === void 0 ? void 0 : _content$additional_b5.disabled) === true
-  }));
+  })), isSplitButton ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_SubmenuButton__WEBPACK_IMPORTED_MODULE_2__.SubmenuButton, {
+    content: content,
+    handleAction: handleAction
+  }) : null);
 };
 
 /***/ }),
 /* 15 */
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "SubmenuButton": () => (/* binding */ SubmenuButton)
+/* harmony export */ });
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var _MSLocalized__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(5);
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
+
+const SubmenuButton = props => {
+  return document.createXULElement ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(SubmenuButtonInner, props) : null;
+};
+function translateMenuitem(item, element) {
+  let {
+    label
+  } = item;
+  if (!label) {
+    return;
+  }
+  if (label.raw) {
+    element.setAttribute("label", label.raw);
+  }
+  if (label.access_key) {
+    element.setAttribute("accesskey", label.access_key);
+  }
+  if (label.aria_label) {
+    element.setAttribute("aria-label", label.aria_label);
+  }
+  if (label.tooltip_text) {
+    element.setAttribute("tooltiptext", label.tooltip_text);
+  }
+  if (label.string_id) {
+    element.setAttribute("data-l10n-id", label.string_id);
+    if (label.args) {
+      element.setAttribute("data-l10n-args", JSON.stringify(label.args));
+    }
+  }
+}
+function addMenuitems(items, popup) {
+  for (let item of items) {
+    switch (item.type) {
+      case "separator":
+        popup.appendChild(document.createXULElement("menuseparator"));
+        break;
+      case "menu":
+        let menu = document.createXULElement("menu");
+        menu.className = "fxms-multi-stage-menu";
+        translateMenuitem(item, menu);
+        if (item.id) {
+          menu.value = item.id;
+        }
+        if (item.icon) {
+          menu.classList.add("menu-iconic");
+          menu.setAttribute("image", item.icon);
+        }
+        popup.appendChild(menu);
+        let submenuPopup = document.createXULElement("menupopup");
+        menu.appendChild(submenuPopup);
+        addMenuitems(item.submenu, submenuPopup);
+        break;
+      case "action":
+        let menuitem = document.createXULElement("menuitem");
+        translateMenuitem(item, menuitem);
+        menuitem.config = item;
+        if (item.id) {
+          menuitem.value = item.id;
+        }
+        if (item.icon) {
+          menuitem.classList.add("menuitem-iconic");
+          menuitem.setAttribute("image", item.icon);
+        }
+        popup.appendChild(menuitem);
+        break;
+    }
+  }
+}
+const SubmenuButtonInner = ({
+  content,
+  handleAction
+}) => {
+  var _content$submenu_butt;
+  const ref = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(null);
+  const isPrimary = ((_content$submenu_butt = content.submenu_button) === null || _content$submenu_butt === void 0 ? void 0 : _content$submenu_butt.style) === "primary";
+  const onCommand = (0,react__WEBPACK_IMPORTED_MODULE_0__.useCallback)(event => {
+    let {
+      config
+    } = event.target;
+    let mockEvent = {
+      currentTarget: ref.current,
+      source: config.id,
+      name: "command",
+      action: config.action
+    };
+    handleAction(mockEvent);
+  }, [handleAction]);
+  const onClick = (0,react__WEBPACK_IMPORTED_MODULE_0__.useCallback)(() => {
+    let button = ref.current;
+    let submenu = button === null || button === void 0 ? void 0 : button.querySelector(".fxms-multi-stage-submenu");
+    if (submenu && !button.hasAttribute("open")) {
+      submenu.openPopup(button, {
+        position: "after_end"
+      });
+    }
+  }, []);
+  (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
+    let button = ref.current;
+    if (!button || button.querySelector(".fxms-multi-stage-submenu")) {
+      return null;
+    }
+    let menupopup = document.createXULElement("menupopup");
+    menupopup.className = "fxms-multi-stage-submenu";
+    addMenuitems(content.submenu_button.submenu, menupopup);
+    button.appendChild(menupopup);
+    let stylesheet;
+    if (!document.head.querySelector(`link[href="chrome://global/content/widgets.css"], link[href="chrome://global/skin/global.css"]`)) {
+      stylesheet = document.createElement("link");
+      stylesheet.rel = "stylesheet";
+      stylesheet.href = "chrome://global/content/widgets.css";
+      document.head.appendChild(stylesheet);
+    }
+    if (!menupopup.listenersRegistered) {
+      menupopup.addEventListener("command", onCommand);
+      menupopup.addEventListener("popupshowing", event => {
+        if (event.target === menupopup && event.target.anchorNode) {
+          event.target.anchorNode.toggleAttribute("open", true);
+        }
+      });
+      menupopup.addEventListener("popuphiding", event => {
+        if (event.target === menupopup && event.target.anchorNode) {
+          event.target.anchorNode.toggleAttribute("open", false);
+        }
+      });
+      menupopup.listenersRegistered = true;
+    }
+    return () => {
+      var _stylesheet;
+      menupopup === null || menupopup === void 0 ? void 0 : menupopup.remove();
+      (_stylesheet = stylesheet) === null || _stylesheet === void 0 ? void 0 : _stylesheet.remove();
+    };
+  }, [onCommand]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__.Localized, {
+    text: content.submenu_button.label ?? {}
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", {
+    className: `submenu-button ${isPrimary ? "primary" : "secondary"}`,
+    value: "submenu_button",
+    onClick: onClick,
+    ref: ref
+  }));
+};
+
+/***/ }),
+/* 16 */
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 __webpack_require__.r(__webpack_exports__);
@@ -1902,7 +2097,7 @@ const EmbeddedMigrationWizard = ({
 };
 
 /***/ }),
-/* 16 */
+/* 17 */
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 __webpack_require__.r(__webpack_exports__);
@@ -1990,7 +2185,7 @@ const AddonsPicker = props => {
 };
 
 /***/ }),
-/* 17 */
+/* 18 */
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 __webpack_require__.r(__webpack_exports__);
@@ -2045,7 +2240,7 @@ const LinkParagraph = props => {
 };
 
 /***/ }),
-/* 18 */
+/* 19 */
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 __webpack_require__.r(__webpack_exports__);
@@ -2087,7 +2282,7 @@ function addUtmParams(url, utmTerm) {
 }
 
 /***/ }),
-/* 19 */
+/* 20 */
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 __webpack_require__.r(__webpack_exports__);
@@ -2098,7 +2293,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(3);
 /* harmony import */ var _MultiStageProtonScreen__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(6);
-/* harmony import */ var _newtab_content_src_asrouter_templates_FirstRun_addUtmParams__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(18);
+/* harmony import */ var _newtab_content_src_asrouter_templates_FirstRun_addUtmParams__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(19);
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -2285,7 +2480,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var react_dom__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(react_dom__WEBPACK_IMPORTED_MODULE_1__);
 /* harmony import */ var _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(3);
 /* harmony import */ var _components_MultiStageAboutWelcome__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(4);
-/* harmony import */ var _components_ReturnToAMO__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(19);
+/* harmony import */ var _components_ReturnToAMO__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(20);
 function _extends() { _extends = Object.assign ? Object.assign.bind() : function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,

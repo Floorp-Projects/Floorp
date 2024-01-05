@@ -7,6 +7,7 @@ import { Localized } from "./MSLocalized";
 import { AboutWelcomeUtils } from "../lib/aboutwelcome-utils";
 import { MultiStageProtonScreen } from "./MultiStageProtonScreen";
 import { useLanguageSwitcher } from "./LanguageSwitcher";
+import { SubmenuButton } from "./SubmenuButton";
 import {
   BASE_PARAMS,
   addUtmParams,
@@ -268,10 +269,20 @@ export const SecondaryCTA = props => {
   let buttonStyling = props.content.secondary_button?.has_arrow_icon
     ? `secondary arrow-icon`
     : `secondary`;
+  const isPrimary = props.content.secondary_button?.style === "primary";
   const isTextLink =
     !["split", "callout"].includes(props.content.position) &&
-    props.content.tiles?.type !== "addons-picker";
-  const isPrimary = props.content.secondary_button?.style === "primary";
+    props.content.tiles?.type !== "addons-picker" &&
+    !isPrimary;
+  const isSplitButton =
+    props.content.submenu_button?.attached_to === targetElement;
+  let className = "secondary-cta";
+  if (props.position) {
+    className += ` ${props.position}`;
+  }
+  if (isSplitButton) {
+    className += " split-button-container";
+  }
 
   if (isTextLink) {
     buttonStyling += " text-link";
@@ -284,11 +295,7 @@ export const SecondaryCTA = props => {
   }
 
   return (
-    <div
-      className={
-        props.position ? `secondary-cta ${props.position}` : "secondary-cta"
-      }
-    >
+    <div className={className}>
       <Localized text={props.content[targetElement].text}>
         <span />
       </Localized>
@@ -299,6 +306,12 @@ export const SecondaryCTA = props => {
           onClick={props.handleAction}
         />
       </Localized>
+      {isSplitButton ? (
+        <SubmenuButton
+          content={props.content}
+          handleAction={props.handleAction}
+        />
+      ) : null}
     </div>
   );
 };
@@ -377,6 +390,10 @@ export class WelcomeScreen extends React.PureComponent {
       props.content.tiles ||
       props.content.languageSwitcher;
 
+    if (value === "submenu_button" && event.action) {
+      targetContent = { action: event.action };
+    }
+
     if (!(targetContent && targetContent.action)) {
       return;
     }
@@ -394,51 +411,7 @@ export class WelcomeScreen extends React.PureComponent {
     action = JSON.parse(JSON.stringify(action));
 
     if (action.collectSelect) {
-      // Populate MULTI_ACTION data actions property with selected checkbox
-      // actions from tiles data
-      if (action.type !== "MULTI_ACTION") {
-        console.error(
-          "collectSelect is only supported for MULTI_ACTION type actions"
-        );
-        action.type = "MULTI_ACTION";
-      }
-      if (!Array.isArray(action.data?.actions)) {
-        console.error(
-          "collectSelect is only supported for MULTI_ACTION type actions with an array of actions"
-        );
-        action.data = {
-          actions: [],
-        };
-      }
-
-      // Prepend the multi-select actions to the CTA's actions array, but keep
-      // the actions in the same order they appear in. This way the CTA action
-      // can go last, after the multi-select actions are processed. For example,
-      // 1. checkbox action 1
-      // 2. checkbox action 2
-      // 3. radio action
-      // 4. CTA action (which perhaps depends on the radio action)
-      let multiSelectActions = [];
-      for (const checkbox of props.content?.tiles?.data ?? []) {
-        let checkboxAction;
-        if (this.props.activeMultiSelect?.includes(checkbox.id)) {
-          checkboxAction = checkbox.checkedAction ?? checkbox.action;
-        } else {
-          checkboxAction = checkbox.uncheckedAction;
-        }
-
-        if (checkboxAction) {
-          multiSelectActions.push(checkboxAction);
-        }
-      }
-      action.data.actions.unshift(...multiSelectActions);
-
-      // Send telemetry with selected checkbox ids
-      AboutWelcomeUtils.sendActionTelemetry(
-        props.messageId,
-        props.activeMultiSelect,
-        "SELECT_CHECKBOX"
-      );
+      this.setMultiSelectActions(action);
     }
 
     let actionResult;
@@ -497,6 +470,53 @@ export class WelcomeScreen extends React.PureComponent {
     if (shouldDoBehavior(action.dismiss)) {
       window.AWFinish();
     }
+  }
+
+  setMultiSelectActions(action) {
+    let { props } = this;
+    // Populate MULTI_ACTION data actions property with selected checkbox
+    // actions from tiles data
+    if (action.type !== "MULTI_ACTION") {
+      console.error(
+        "collectSelect is only supported for MULTI_ACTION type actions"
+      );
+      action.type = "MULTI_ACTION";
+    }
+    if (!Array.isArray(action.data?.actions)) {
+      console.error(
+        "collectSelect is only supported for MULTI_ACTION type actions with an array of actions"
+      );
+      action.data = { actions: [] };
+    }
+
+    // Prepend the multi-select actions to the CTA's actions array, but keep
+    // the actions in the same order they appear in. This way the CTA action
+    // can go last, after the multi-select actions are processed. For example,
+    // 1. checkbox action 1
+    // 2. checkbox action 2
+    // 3. radio action
+    // 4. CTA action (which perhaps depends on the radio action)
+    let multiSelectActions = [];
+    for (const checkbox of props.content?.tiles?.data ?? []) {
+      let checkboxAction;
+      if (props.activeMultiSelect?.includes(checkbox.id)) {
+        checkboxAction = checkbox.checkedAction ?? checkbox.action;
+      } else {
+        checkboxAction = checkbox.uncheckedAction;
+      }
+
+      if (checkboxAction) {
+        multiSelectActions.push(checkboxAction);
+      }
+    }
+    action.data.actions.unshift(...multiSelectActions);
+
+    // Send telemetry with selected checkbox ids
+    AboutWelcomeUtils.sendActionTelemetry(
+      props.messageId,
+      props.activeMultiSelect,
+      "SELECT_CHECKBOX"
+    );
   }
 
   render() {
