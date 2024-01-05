@@ -28,23 +28,6 @@ data_storage:
       - AlternateServices
       - ClientAuthRememberList
       - SiteSecurityServiceState
-  migration:
-    type: labeled_boolean
-    description:
-      Indicates whether or not migration was successful for each nsIDataStorage.
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1840135
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1840135
-    data_sensitivity:
-      - interaction
-    notification_emails:
-      - dkeeler@mozilla.com
-    expires: 124
-    labels:
-      - AlternateServices
-      - ClientAuthRememberList
-      - SiteSecurityServiceState
 
 oskeystore:
   self_test:
