@@ -2092,54 +2092,112 @@ bool ArrayBufferObject::addView(JSContext* cx, ArrayBufferViewObject* view) {
  * InnerViewTable
  */
 
-constexpr size_t VIEW_LIST_MAX_LENGTH = 500;
+inline bool InnerViewTable::Views::empty() { return views.empty(); }
+
+inline bool InnerViewTable::Views::hasNurseryViews() {
+  return firstNurseryView < views.length();
+}
+
+bool InnerViewTable::Views::addView(ArrayBufferViewObject* view) {
+  // Add the view to the list, ensuring that all nursery views are at end.
+
+  if (!views.append(view)) {
+    return false;
+  }
+
+  if (!gc::IsInsideNursery(view)) {
+    // Move tenured views before |firstNurseryView|.
+    if (firstNurseryView != views.length() - 1) {
+      std::swap(views[firstNurseryView], views.back());
+    }
+    firstNurseryView++;
+  }
+
+  check();
+
+  return true;
+}
+
+bool InnerViewTable::Views::sweepAfterMinorGC(JSTracer* trc) {
+  return traceWeak(trc, firstNurseryView);
+}
+
+bool InnerViewTable::Views::traceWeak(JSTracer* trc, size_t startIndex) {
+  // Use |trc| to trace the view vector from |startIndex| to the end, removing
+  // dead views and updating |firstNurseryView|.
+
+  size_t index = startIndex;
+  bool sawNurseryView = false;
+  views.mutableEraseIf(
+      [&](auto& view) {
+        if (!JS::GCPolicy<ViewVector::ElementType>::traceWeak(trc, &view)) {
+          return true;
+        }
+
+        if (!sawNurseryView && gc::IsInsideNursery(view)) {
+          sawNurseryView = true;
+          firstNurseryView = index;
+        }
+
+        index++;
+        return false;
+      },
+      startIndex);
+
+  if (!sawNurseryView) {
+    firstNurseryView = views.length();
+  }
+
+  check();
+
+  return !views.empty();
+}
+
+inline void InnerViewTable::Views::check() {
+#ifdef DEBUG
+  MOZ_ASSERT(firstNurseryView <= views.length());
+  if (views.length() < 100) {
+    for (size_t i = 0; i < views.length(); i++) {
+      MOZ_ASSERT(gc::IsInsideNursery(views[i]) == (i >= firstNurseryView));
+    }
+  }
+#endif
+}
 
 bool InnerViewTable::addView(JSContext* cx, ArrayBufferObject* buffer,
                              ArrayBufferViewObject* view) {
   // ArrayBufferObject entries are only added when there are multiple views.
   MOZ_ASSERT(buffer->firstView());
-
-  auto ptr = map.lookupForAdd(buffer);
-
   MOZ_ASSERT(!gc::IsInsideNursery(buffer));
-  bool addToNursery = nurseryKeysValid && gc::IsInsideNursery(view);
 
-  if (ptr) {
-    ViewVector& views = ptr->value();
-    MOZ_ASSERT(!views.empty());
+  // Ensure the buffer is present in the map, getting the list of views.
+  auto ptr = map.lookupForAdd(buffer);
+  if (!ptr && !map.add(ptr, buffer, Views(cx->zone()))) {
+    ReportOutOfMemory(cx);
+    return false;
+  }
+  Views& views = ptr->value();
 
-    if (addToNursery) {
-      // Only add the entry to |nurseryKeys| if it isn't already there.
-      if (views.length() >= VIEW_LIST_MAX_LENGTH) {
-        // To avoid quadratic blowup, skip the loop below if we end up
-        // adding enormous numbers of views for the same object.
-        nurseryKeysValid = false;
-      } else {
-        for (size_t i = 0; i < views.length(); i++) {
-          if (gc::IsInsideNursery(views[i])) {
-            addToNursery = false;
-            break;
-          }
-        }
-      }
-    }
-
-    if (!views.append(view)) {
-      ReportOutOfMemory(cx);
-      return false;
-    }
-  } else {
-    if (!map.add(ptr, buffer, ViewVector(cx->zone()))) {
-      ReportOutOfMemory(cx);
-      return false;
-    }
-    // ViewVector has one inline element, so the first insertion is
-    // guaranteed to succeed.
-    MOZ_ALWAYS_TRUE(ptr->value().append(view));
+  bool isNurseryView = gc::IsInsideNursery(view);
+  bool hadNurseryViews = views.hasNurseryViews();
+  if (!views.addView(view)) {
+    ReportOutOfMemory(cx);
+    return false;
   }
 
-  if (addToNursery && !nurseryKeys.append(buffer)) {
-    nurseryKeysValid = false;
+  // If we added the first nursery view, add the buffer to the list of buffers
+  // which have nursery views.
+  if (isNurseryView && !hadNurseryViews && nurseryKeysValid) {
+#ifdef DEBUG
+    if (nurseryKeys.length() < 100) {
+      for (auto* key : nurseryKeys) {
+        MOZ_ASSERT(key != buffer);
+      }
+    }
+#endif
+    if (!nurseryKeys.append(buffer)) {
+      nurseryKeysValid = false;
+    }
   }
 
   return true;
@@ -2149,7 +2207,7 @@ InnerViewTable::ViewVector* InnerViewTable::maybeViewsUnbarriered(
     ArrayBufferObject* buffer) {
   auto ptr = map.lookup(buffer);
   if (ptr) {
-    return &ptr->value();
+    return &ptr->value().views;
   }
   return nullptr;
 }
@@ -2168,16 +2226,20 @@ void InnerViewTable::sweepAfterMinorGC(JSTracer* trc) {
 
   if (nurseryKeysValid) {
     for (size_t i = 0; i < nurseryKeys.length(); i++) {
-      ArrayBufferObject* buffer = MaybeForwarded(nurseryKeys[i]);
+      ArrayBufferObject* buffer = nurseryKeys[i];
+      MOZ_ASSERT(!gc::IsInsideNursery(buffer));
       auto ptr = map.lookup(buffer);
-      using Policy = ArrayBufferViewMap::EntryGCPolicy;
-      if (ptr && !Policy::traceWeak(trc, &ptr->mutableKey(), &ptr->value())) {
+      if (ptr && !ptr->value().sweepAfterMinorGC(trc)) {
         map.remove(ptr);
       }
     }
   } else {
-    // Do the required sweeping by looking at every map entry.
-    map.traceWeak(trc);
+    for (ArrayBufferViewMap::Enum e(map); !e.empty(); e.popFront()) {
+      MOZ_ASSERT(!gc::IsInsideNursery(e.front().key()));
+      if (!e.front().value().sweepAfterMinorGC(trc)) {
+        e.removeFront();
+      }
+    }
   }
 
   nurseryKeys.clear();
@@ -2187,7 +2249,7 @@ void InnerViewTable::sweepAfterMinorGC(JSTracer* trc) {
 size_t InnerViewTable::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) {
   size_t vectorSize = 0;
   for (auto r = map.all(); !r.empty(); r.popFront()) {
-    vectorSize += r.front().value().sizeOfExcludingThis(mallocSizeOf);
+    vectorSize += r.front().value().views.sizeOfExcludingThis(mallocSizeOf);
   }
 
   return vectorSize + map.shallowSizeOfExcludingThis(mallocSizeOf) +

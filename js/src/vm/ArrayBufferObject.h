@@ -551,8 +551,25 @@ ArrayBufferObjectMaybeShared* CreateWasmBuffer(JSContext* cx,
 // Per-compartment table that manages the relationship between array buffers
 // and the views that use their storage.
 class InnerViewTable {
+  // Store views in a vector such that all the tenured views come before any
+  // nursery views. Maintain the index of the first nursery view so there is an
+  // efficient way to access only the nursery views.
   using ViewVector =
       GCVector<UnsafeBarePtr<ArrayBufferViewObject*>, 1, ZoneAllocPolicy>;
+  struct Views {
+    ViewVector views;  // List of views with tenured views at the front.
+    size_t firstNurseryView = 0;
+
+    explicit Views(JS::Zone* zone) : views(zone) {}
+    bool empty();
+    bool hasNurseryViews();
+    bool addView(ArrayBufferViewObject* view);
+
+    bool traceWeak(JSTracer* trc, size_t startIndex = 0);
+    bool sweepAfterMinorGC(JSTracer* trc);
+
+    void check();
+  };
 
   // For all objects sharing their storage with some other view, this maps
   // the object to the list of such views. All entries in this map are weak.
@@ -566,7 +583,7 @@ class InnerViewTable {
   // live. Special support is required in the minor GC, implemented in
   // sweepAfterMinorGC.
   using ArrayBufferViewMap =
-      GCHashMap<UnsafeBarePtr<ArrayBufferObject*>, ViewVector,
+      GCHashMap<UnsafeBarePtr<ArrayBufferObject*>, Views,
                 StableCellHasher<JSObject*>, ZoneAllocPolicy>;
   ArrayBufferViewMap map;
 
