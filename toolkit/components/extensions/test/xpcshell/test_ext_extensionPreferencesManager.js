@@ -10,10 +10,6 @@ ChromeUtils.defineESModuleGetters(this, {
   Preferences: "resource://gre/modules/Preferences.sys.mjs",
 });
 
-var { PromiseUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/PromiseUtils.sys.mjs"
-);
-
 const { createAppInfo, promiseShutdownManager, promiseStartupManager } =
   AddonTestUtils;
 
@@ -556,12 +552,12 @@ add_task(async function test_preference_manager_set_when_disabled() {
   ok(isUndefinedPref("foo"), "test pref is not set");
 
   await ExtensionSettingsStore.initialize();
-  let lastItemChange = PromiseUtils.defer();
+  let lastItemChange = Promise.withResolvers();
   ExtensionPreferencesManager.addSetting("some-pref", {
     prefNames: ["foo", "bar"],
     onPrefsChanged(item) {
       lastItemChange.resolve(item);
-      lastItemChange = PromiseUtils.defer();
+      lastItemChange = Promise.withResolvers();
     },
     setCallback(value) {
       return { [this.prefNames[0]]: value, [this.prefNames[1]]: false };

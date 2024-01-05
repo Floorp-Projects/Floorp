@@ -30,7 +30,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   ExtensionProcessScript:
     "resource://gre/modules/ExtensionProcessScript.sys.mjs",
   NativeApp: "resource://gre/modules/NativeMessaging.sys.mjs",
-  PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
 });
 
 import { ExtensionCommon } from "resource://gre/modules/ExtensionCommon.sys.mjs";
@@ -881,7 +880,7 @@ class ChildAPIManager {
    */
   callParentAsyncFunction(path, args, callback, options = {}) {
     let callId = getUniqueId();
-    let deferred = lazy.PromiseUtils.defer();
+    let deferred = Promise.withResolvers();
     this.callPromises.set(callId, deferred);
 
     let {

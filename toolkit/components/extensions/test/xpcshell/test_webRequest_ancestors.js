@@ -3,9 +3,6 @@
 var { WebRequest } = ChromeUtils.importESModule(
   "resource://gre/modules/WebRequest.sys.mjs"
 );
-var { PromiseUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/PromiseUtils.sys.mjs"
-);
 var { ExtensionParent } = ChromeUtils.importESModule(
   "resource://gre/modules/ExtensionParent.sys.mjs"
 );
@@ -20,7 +17,7 @@ add_task(async function setup() {
 });
 
 add_task(async function test_ancestors_exist() {
-  let deferred = PromiseUtils.defer();
+  let deferred = Promise.withResolvers();
   function onBeforeRequest(details) {
     info(`onBeforeRequest ${details.url}`);
     ok(
@@ -46,7 +43,7 @@ add_task(async function test_ancestors_exist() {
 });
 
 add_task(async function test_ancestors_null() {
-  let deferred = PromiseUtils.defer();
+  let deferred = Promise.withResolvers();
   function onBeforeRequest(details) {
     info(`onBeforeRequest ${details.url}`);
     ok(details.frameAncestors === undefined, "ancestors do not exist");

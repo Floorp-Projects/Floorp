@@ -8,7 +8,6 @@
 
 ChromeUtils.defineESModuleGetters(this, {
   GeckoViewTabBridge: "resource://gre/modules/GeckoViewTab.sys.mjs",
-  PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
   mobileWindowTracker: "resource://gre/modules/GeckoViewWebExtension.sys.mjs",
 });
 
@@ -62,7 +61,7 @@ const tabListener = {
   awaitTabReady(nativeTab) {
     let deferred = this.tabReadyPromises.get(nativeTab);
     if (!deferred) {
-      deferred = PromiseUtils.defer();
+      deferred = Promise.withResolvers();
       if (
         !this.initializingTabs.has(nativeTab) &&
         (nativeTab.browser.innerWindowID ||
