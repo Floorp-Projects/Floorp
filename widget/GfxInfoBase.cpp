@@ -30,6 +30,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/gfx/BuildConstants.h"
 #include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/gfx/gfxVars.h"
@@ -1300,8 +1301,12 @@ nsresult GfxInfoBase::GetFeatureStatusImpl(
   if (NS_FAILED(GetAdapterVendorID(adapterVendorID)) ||
       NS_FAILED(GetAdapterDeviceID(adapterDeviceID)) ||
       NS_FAILED(GetAdapterDriverVersion(adapterDriverVersionString))) {
-    aFailureId = "FEATURE_FAILURE_CANT_RESOLVE_ADAPTER";
-    *aStatus = FEATURE_BLOCKED_DEVICE;
+    if (OnlyAllowFeatureOnKnownConfig(aFeature)) {
+      aFailureId = "FEATURE_FAILURE_CANT_RESOLVE_ADAPTER";
+      *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
+    } else {
+      *aStatus = nsIGfxInfo::FEATURE_STATUS_OK;
+    }
     return NS_OK;
   }
 
@@ -1513,6 +1518,26 @@ const nsCString& GfxInfoBase::GetApplicationVersion() {
     }
   }
   return gBaseAppVersion;
+}
+
+/* static */ bool GfxInfoBase::OnlyAllowFeatureOnKnownConfig(int32_t aFeature) {
+  switch (aFeature) {
+    // The GPU process doesn't need hardware acceleration and can run on
+    // devices that we normally block from not being on our whitelist.
+    case nsIGfxInfo::FEATURE_GPU_PROCESS:
+      return kIsAndroid;
+    // We can mostly assume that ANGLE will work
+    case nsIGfxInfo::FEATURE_DIRECT3D_11_ANGLE:
+    // Remote WebGL is needed for Win32k Lockdown, so it should be enabled
+    // regardless of HW support or not
+    case nsIGfxInfo::FEATURE_ALLOW_WEBGL_OUT_OF_PROCESS:
+    // Backdrop filter should generally work, especially if we fall back to
+    // Software WebRender because of an unknown vendor.
+    case nsIGfxInfo::FEATURE_BACKDROP_FILTER:
+      return false;
+    default:
+      return true;
+  }
 }
 
 void GfxInfoBase::AddCollector(GfxInfoCollectorBase* collector) {
