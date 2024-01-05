@@ -44,3 +44,38 @@ add_task(
     await cleanup();
   }
 );
+
+/**
+ * This test case verifies the functionality of the translate-selection context menu item
+ * when the selected text is not in the user's preferred language. The menu item should be
+ * localized to translate to the target language matching the user's top preferred language
+ * when the selected text is detected to be in a different language.
+ */
+add_task(
+  async function test_translate_selection_menuitem_is_unavailable_with_feature_disabled_and_text_selected() {
+    const { cleanup, runInPage } = await loadTestPage({
+      page: SPANISH_PAGE_URL,
+      languagePairs: LANGUAGE_PAIRS,
+      prefs: [["browser.translations.select.enable", false]],
+    });
+
+    await assertTranslationsButton(
+      { button: true, circleArrows: false, locale: false, icon: true },
+      "The button is available."
+    );
+
+    await assertPageIsUntranslated(runInPage);
+
+    await assertContextMenuTranslateSelectionItem(
+      runInPage,
+      {
+        selectSpanishParagraph: true,
+        openAtSpanishParagraph: true,
+        expectMenuItemVisible: false,
+      },
+      "The translate-selection context menu item should be unavailable when the feature is disabled."
+    );
+
+    await cleanup();
+  }
+);
