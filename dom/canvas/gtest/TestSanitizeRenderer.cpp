@@ -138,7 +138,8 @@ TEST(SanitizeRenderer, TestAngleRadeon)
       "ANGLE (AMD, AMD Radeon(TM) Graphics Direct3D11 vs_5_0 ps_5_0, "
       "D3D11-27.20.1020.2002)");
   const std::string expectation(
-      "ANGLE (AMD, Radeon HD 3200 Graphics Direct3D11 vs_5_0 ps_5_0), or similar");
+      "ANGLE (AMD, Radeon HD 3200 Graphics Direct3D11 vs_5_0 ps_5_0), or "
+      "similar");
   const auto sanitized = mozilla::webgl::SanitizeRenderer(renderer);
   EXPECT_EQ(sanitized, expectation);
 }
@@ -149,7 +150,8 @@ TEST(SanitizeRenderer, TestAngleWarp)
       "ANGLE (Unknown, Microsoft Basic Render Driver Direct3D11 vs_5_0 ps_5_0, "
       "D3D11-10.0.22000.1)");
   const std::string expectation =
-      "ANGLE (Unknown, Microsoft Basic Render Driver Direct3D11 vs_5_0 ps_5_0), or similar";
+      "ANGLE (Unknown, Microsoft Basic Render Driver Direct3D11 vs_5_0 "
+      "ps_5_0), or similar";
   const auto sanitized = mozilla::webgl::SanitizeRenderer(renderer);
   EXPECT_EQ(sanitized, expectation);
 }
@@ -160,7 +162,8 @@ TEST(SanitizeRenderer, TestAngle3070)
       "ANGLE (NVIDIA, NVIDIA GeForce RTX 3070 Direct3D11 vs_5_0 ps_5_0, "
       "D3D11-10.0.22000.1)");
   const std::string expectation(
-      "ANGLE (NVIDIA, NVIDIA GeForce GTX 980 Direct3D11 vs_5_0 ps_5_0), or similar");
+      "ANGLE (NVIDIA, NVIDIA GeForce GTX 980 Direct3D11 vs_5_0 ps_5_0), or "
+      "similar");
   const auto sanitized = mozilla::webgl::SanitizeRenderer(renderer);
   EXPECT_EQ(sanitized, expectation);
 }
@@ -179,7 +182,8 @@ TEST(SanitizeRenderer, TestAngleK600)
       "ANGLE (NVIDIA, NVIDIA Quadro K600 Direct3D11 vs_5_0 ps_5_0, somethig "
       "like D3D11-10.0.22000.1)");
   const std::string expectation(
-      "ANGLE (NVIDIA, NVIDIA GeForce GTX 480 Direct3D11 vs_5_0 ps_5_0), or similar");
+      "ANGLE (NVIDIA, NVIDIA GeForce GTX 480 Direct3D11 vs_5_0 ps_5_0), or "
+      "similar");
   const auto sanitized = mozilla::webgl::SanitizeRenderer(renderer);
   EXPECT_EQ(sanitized, expectation);
 }
@@ -251,7 +255,8 @@ TEST(SanitizeRenderer, TestCiWindows)
       "ANGLE (NVIDIA, NVIDIA Tesla M60 Direct3D11 vs_5_0 ps_5_0, "
       "D3D11-23.21.13.9181)");
   const std::string expectation(
-      "ANGLE (NVIDIA, NVIDIA GeForce 8800 GTX Direct3D11 vs_5_0 ps_5_0), or similar");
+      "ANGLE (NVIDIA, NVIDIA GeForce 8800 GTX Direct3D11 vs_5_0 ps_5_0), or "
+      "similar");
   const auto sanitized = mozilla::webgl::SanitizeRenderer(renderer);
   EXPECT_EQ(sanitized, expectation);
 }
