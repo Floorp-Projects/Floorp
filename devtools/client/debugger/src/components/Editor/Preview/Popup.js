@@ -46,27 +46,39 @@ export class Popup extends Component {
   }
 
   componentDidMount() {
-    this.addHighlightToToken();
+    this.addHighlightToToken(this.props.preview.target);
   }
 
   componentWillUnmount() {
-    this.removeHighlightFromToken();
+    this.removeHighlightFromToken(this.props.preview.target);
   }
 
-  addHighlightToToken() {
+  componentDidUpdate(prevProps) {
     const { target } = this.props.preview;
-    if (target) {
-      target.classList.add("preview-token");
-      addHighlightToTargetSiblings(target, this.props);
+    if (prevProps.target == target) {
+      return;
     }
+
+    this.removeHighlightFromToken(prevProps.preview.target);
+    this.addHighlightToToken(target);
   }
 
-  removeHighlightFromToken() {
-    const { target } = this.props.preview;
-    if (target) {
-      target.classList.remove("preview-token");
-      removeHighlightForTargetSiblings(target);
+  addHighlightToToken(target) {
+    if (!target) {
+      return;
     }
+
+    target.classList.add("preview-token");
+    addHighlightToTargetSiblings(target, this.props);
+  }
+
+  removeHighlightFromToken(target) {
+    if (!target) {
+      return;
+    }
+
+    target.classList.remove("preview-token");
+    removeHighlightForTargetSiblings(target);
   }
 
   calculateMaxHeight = () => {
