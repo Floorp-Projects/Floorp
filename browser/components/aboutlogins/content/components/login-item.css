@@ -323,6 +323,5 @@ login-command-button {
 }
 
 .action-buttons .form-actions-row {
-  margin-block: 5px 0;
   margin-inline: 0 5px;
 }
