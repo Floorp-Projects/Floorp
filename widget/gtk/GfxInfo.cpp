@@ -1102,15 +1102,14 @@ nsresult GfxInfo::GetFeatureStatusImpl(
 
   GetData();
 
-  if (aFeature == nsIGfxInfo::FEATURE_BACKDROP_FILTER) {
-    *aStatus = nsIGfxInfo::FEATURE_STATUS_OK;
-    return NS_OK;
-  }
-
   if (mGlxTestError) {
-    // If glxtest failed, block all features by default.
-    *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
-    aFailureId = "FEATURE_FAILURE_GLXTEST_FAILED";
+    // If glxtest failed, block most features by default.
+    if (OnlyAllowFeatureOnKnownConfig(aFeature)) {
+      *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
+      aFailureId = "FEATURE_FAILURE_GLXTEST_FAILED";
+    } else {
+      *aStatus = nsIGfxInfo::FEATURE_STATUS_OK;
+    }
     return NS_OK;
   }
 
@@ -1118,8 +1117,12 @@ nsresult GfxInfo::GetFeatureStatusImpl(
     // We're on OpenGL 1. In most cases that indicates really old hardware.
     // We better block them, rather than rely on them to fail gracefully,
     // because they don't! see bug 696636
-    *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
-    aFailureId = "FEATURE_FAILURE_OPENGL_1";
+    if (OnlyAllowFeatureOnKnownConfig(aFeature)) {
+      *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
+      aFailureId = "FEATURE_FAILURE_OPENGL_1";
+    } else {
+      *aStatus = nsIGfxInfo::FEATURE_STATUS_OK;
+    }
     return NS_OK;
   }
 
