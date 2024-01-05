@@ -241,6 +241,11 @@ ASSERT_NODE_SIZE(Text, 120, 80);
 #undef ASSERT_NODE_SIZE
 #undef EXTRA_DOM_NODE_BYTES
 
+// XXXedgar: This is a temporary hack for the link elements, which have not yet
+// adopted the activation behavior defined in the specification. This should be
+// removed after resolving bug 1851970.
+#define LINK_ACTIVATE_EVENT (1 << 0)
+
 }  // namespace mozilla::dom
 
 nsAtom* nsIContent::DoGetID() const {
@@ -3162,6 +3167,7 @@ void Element::GetEventTargetParentForLinks(EventChainPreVisitor& aVisitor) {
     case eFocus:
     case eMouseOut:
     case eBlur:
+    case eMouseClick:
       break;
     default:
       return;
@@ -3207,6 +3213,17 @@ void Element::GetEventTargetParentForLinks(EventChainPreVisitor& aVisitor) {
       nsresult rv = LeaveLink(aVisitor.mPresContext);
       if (NS_SUCCEEDED(rv)) {
         aVisitor.mEvent->mFlags.mMultipleActionsPrevented = true;
+      }
+      break;
+    }
+    case eMouseClick: {
+      // XXXedgar: This is a temporary hack for the link elements, which have
+      // not yet adopted the activation behavior defined in the specification.
+      // This should be removed after resolving bug 1851970.
+      WidgetMouseEvent* mouseEvent = aVisitor.mEvent->AsMouseEvent();
+      if (mouseEvent && mouseEvent->IsLeftClickEvent() &&
+          !aVisitor.mEvent->mFlags.mMultipleActivationPrevented) {
+        aVisitor.mItemFlags |= LINK_ACTIVATE_EVENT;
       }
       break;
     }
@@ -3330,7 +3347,11 @@ nsresult Element::PostHandleEventForLinks(EventChainPostVisitor& aVisitor) {
 
     case eMouseClick: {
       WidgetMouseEvent* mouseEvent = aVisitor.mEvent->AsMouseEvent();
-      if (mouseEvent->IsLeftClickEvent()) {
+      if (mouseEvent->IsLeftClickEvent() &&
+          // XXXedgar: This is a temporary hack for the link elements, which
+          // have not yet adopted the activation behavior defined in the
+          // specification. This should be removed after resolving bug 1851970.
+          (aVisitor.mItemFlags & LINK_ACTIVATE_EVENT)) {
         if (!mouseEvent->IsControl() && !mouseEvent->IsMeta() &&
             !mouseEvent->IsAlt() && !mouseEvent->IsShift()) {
           if (OwnerDoc()->MayHaveDOMActivateListeners()) {
