@@ -378,7 +378,7 @@ class RemoteTextureMap {
     // Hold compositable ref of remote texture of the RemoteTextureId in async
     // mode. It is for keeping the texture alive during its rendering by
     // WebRender.
-    CompositableTextureHostRef mAsyncRemoteTextureHost;
+    CompositableTextureHostRef mRemoteTextureHost;
     bool mReadyCheckSuppressed = false;
   };
 
