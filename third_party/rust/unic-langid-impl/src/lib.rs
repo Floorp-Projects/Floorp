@@ -14,7 +14,7 @@ use std::iter::Peekable;
 use std::str::FromStr;
 
 /// Enum representing available character direction orientations.
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Debug, PartialEq)]
 pub enum CharacterDirection {
     /// Right To Left
     ///
@@ -24,10 +24,6 @@ pub enum CharacterDirection {
     ///
     /// Used in languages such as French, Spanish, English, German etc.
     LTR,
-    /// Top To Bottom
-    ///
-    /// Used in Traditional Mongolian
-    TTB,
 }
 
 type PartsTuple = (
@@ -246,7 +242,7 @@ impl LanguageIdentifier {
     ) -> bool {
         let other = other.as_ref();
         self.language
-            .matches(other.language, self_as_range, other_as_range)
+            .matches(&other.language, self_as_range, other_as_range)
             && subtag_matches(&self.script, &other.script, self_as_range, other_as_range)
             && subtag_matches(&self.region, &other.region, self_as_range, other_as_range)
             && subtags_match(
@@ -276,7 +272,7 @@ impl LanguageIdentifier {
     /// ```
     pub fn variants(&self) -> impl ExactSizeIterator<Item = &subtags::Variant> {
         let variants: &[_] = match self.variants {
-            Some(ref v) => v,
+            Some(ref v) => &**v,
             None => &[],
         };
 
@@ -418,19 +414,9 @@ impl LanguageIdentifier {
     pub fn character_direction(&self) -> CharacterDirection {
         match (self.language.into(), self.script) {
             (_, Some(script))
-                if layout_table::SCRIPTS_CHARACTER_DIRECTION_LTR.contains(&script.into()) =>
-            {
-                CharacterDirection::LTR
-            }
-            (_, Some(script))
                 if layout_table::SCRIPTS_CHARACTER_DIRECTION_RTL.contains(&script.into()) =>
             {
                 CharacterDirection::RTL
-            }
-            (_, Some(script))
-                if layout_table::SCRIPTS_CHARACTER_DIRECTION_TTB.contains(&script.into()) =>
-            {
-                CharacterDirection::TTB
             }
             (Some(lang), _) if layout_table::LANGS_CHARACTER_DIRECTION_RTL.contains(&lang) => {
                 CharacterDirection::RTL

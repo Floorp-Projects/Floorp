@@ -10,23 +10,21 @@
 # See Cargo.toml.orig for the original contents.
 
 [package]
-edition = "2021"
+edition = "2018"
 name = "unic-langid-impl"
-version = "0.9.4"
+version = "0.9.1"
 authors = ["Zibi Braniecki <gandalf@mozilla.com>"]
 include = [
     "src/**/*",
     "benches/*.rs",
     "tests/*.rs",
     "Cargo.toml",
-    "LICENSE-APACHE",
-    "LICENSE-MIT",
     "README.md",
 ]
 description = "API for managing Unicode Language Identifiers"
 readme = "README.md"
 categories = ["internationalization"]
-license = "MIT OR Apache-2.0"
+license = "MIT/Apache-2.0"
 repository = "https://github.com/zbraniecki/unic-locale"
 
 [[bin]]
