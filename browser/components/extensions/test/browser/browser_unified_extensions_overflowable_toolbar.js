@@ -211,7 +211,7 @@ async function withWindowOverflowed(
   // added.
   let listener = {
     _remainingBrowserActions: NUM_EXTENSIONS,
-    _deferred: PromiseUtils.defer(),
+    _deferred: Promise.withResolvers(),
 
     get promise() {
       return this._deferred.promise;
@@ -257,7 +257,7 @@ async function withWindowOverflowed(
     let widgetOverflowListener = {
       _remainingOverflowables:
         browserActionsInNavBar.length + DEFAULT_WIDGET_IDS.length,
-      _deferred: PromiseUtils.defer(),
+      _deferred: Promise.withResolvers(),
 
       get promise() {
         return this._deferred.promise;

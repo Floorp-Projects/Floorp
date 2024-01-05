@@ -148,9 +148,9 @@ function mockLangpackInstall() {
     XPIInstall.stageLangpacksForAppUpdate = original;
   });
 
-  let stagingCall = PromiseUtils.defer();
+  let stagingCall = Promise.withResolvers();
   XPIInstall.stageLangpacksForAppUpdate = (appVersion, platformVersion) => {
-    let result = PromiseUtils.defer();
+    let result = Promise.withResolvers();
     stagingCall.resolve({
       appVersion,
       platformVersion,

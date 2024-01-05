@@ -5,7 +5,7 @@ const { NormandyAddonManager } = ChromeUtils.importESModule(
 );
 
 decorate_task(ensureAddonCleanup(), async function download_and_install() {
-  const applyDeferred = PromiseUtils.defer();
+  const applyDeferred = Promise.withResolvers();
 
   const [addonId, addonVersion] = await NormandyAddonManager.downloadAndInstall(
     {
@@ -37,8 +37,8 @@ decorate_task(ensureAddonCleanup(), async function download_and_install() {
 });
 
 decorate_task(ensureAddonCleanup(), async function id_mismatch() {
-  const applyDeferred = PromiseUtils.defer();
-  const undoDeferred = PromiseUtils.defer();
+  const applyDeferred = Promise.withResolvers();
+  const undoDeferred = Promise.withResolvers();
 
   let error;
 
@@ -87,8 +87,8 @@ decorate_task(ensureAddonCleanup(), async function id_mismatch() {
 });
 
 decorate_task(ensureAddonCleanup(), async function version_mismatch() {
-  const applyDeferred = PromiseUtils.defer();
-  const undoDeferred = PromiseUtils.defer();
+  const applyDeferred = Promise.withResolvers();
+  const undoDeferred = Promise.withResolvers();
 
   let error;
 
@@ -137,8 +137,8 @@ decorate_task(ensureAddonCleanup(), async function version_mismatch() {
 });
 
 decorate_task(ensureAddonCleanup(), async function download_failure() {
-  const applyDeferred = PromiseUtils.defer();
-  const undoDeferred = PromiseUtils.defer();
+  const applyDeferred = Promise.withResolvers();
+  const undoDeferred = Promise.withResolvers();
 
   let error;
 

@@ -19,7 +19,7 @@ add_task(async function test() {
     ));
     await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
-    let promiseFinished = PromiseUtils.defer();
+    let promiseFinished = Promise.withResolvers();
     setTimeout(function () {
       let notificationBox = aWindow.gBrowser.getNotificationBox();
       let notification =

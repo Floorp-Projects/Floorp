@@ -32,7 +32,7 @@ var tests = [
 
     let highlight = document.getElementById("UITourHighlight");
 
-    let browserStartupDeferred = PromiseUtils.defer();
+    let browserStartupDeferred = Promise.withResolvers();
     Services.obs.addObserver(function onBrowserDelayedStartup(aWindow) {
       Services.obs.removeObserver(
         onBrowserDelayedStartup,

@@ -20,7 +20,7 @@ add_setup(async function () {
 class NoResponseTestProvider extends UrlbarTestUtils.TestProvider {
   constructor() {
     super({ name: "TestProviderNoResponse ", results: [] });
-    this.#deferred = PromiseUtils.defer();
+    this.#deferred = Promise.withResolvers();
   }
 
   get type() {
@@ -45,7 +45,7 @@ const noResponseProvider = new NoResponseTestProvider();
 class AnotherHeuristicProvider extends UrlbarTestUtils.TestProvider {
   constructor({ results }) {
     super({ name: "TestProviderAnotherHeuristic ", results });
-    this.#deferred = PromiseUtils.defer();
+    this.#deferred = Promise.withResolvers();
   }
 
   get type() {

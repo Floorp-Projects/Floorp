@@ -178,7 +178,7 @@ add_task(
       const { expectTab, expectLaunch, description, expectUCT } = testCase;
 
       let oldLaunchFile = DownloadIntegration.launchFile;
-      let fileLaunched = PromiseUtils.defer();
+      let fileLaunched = Promise.withResolvers();
       DownloadIntegration.launchFile = () => {
         ok(
           expectLaunch,

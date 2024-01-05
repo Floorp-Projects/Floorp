@@ -12,7 +12,7 @@ add_task(async () => {
 
   let tab = await preparePendingTab();
 
-  let deferredTab = PromiseUtils.defer();
+  let deferredTab = Promise.withResolvers();
 
   let win = gBrowser.replaceTabWithWindow(tab);
   win.addEventListener(
