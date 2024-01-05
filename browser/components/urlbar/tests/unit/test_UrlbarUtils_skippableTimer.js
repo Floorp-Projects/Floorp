@@ -16,7 +16,7 @@ const { setTimeout } = ChromeUtils.importESModule(
 
 add_task(async function test_basic() {
   let invoked = 0;
-  let deferred = PromiseUtils.defer();
+  let deferred = Promise.withResolvers();
   let timer = new SkippableTimer({
     name: "test 1",
     callback: () => {
@@ -36,7 +36,7 @@ add_task(async function test_basic() {
 add_task(async function test_fire() {
   let longTimeMs = 1000;
   let invoked = 0;
-  let deferred = PromiseUtils.defer();
+  let deferred = Promise.withResolvers();
   let timer = new SkippableTimer({
     name: "test 1",
     callback: () => {
@@ -62,7 +62,7 @@ add_task(async function test_fire() {
 add_task(async function test_cancel() {
   let timeMs = 50;
   let invoked = 0;
-  let deferred = PromiseUtils.defer();
+  let deferred = Promise.withResolvers();
   let timer = new SkippableTimer({
     name: "test 1",
     callback: () => {

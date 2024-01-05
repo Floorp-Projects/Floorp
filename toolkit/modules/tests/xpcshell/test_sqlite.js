@@ -2,9 +2,6 @@
 
 const PROFILE_DIR = do_get_profile().path;
 
-const { PromiseUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/PromiseUtils.sys.mjs"
-);
 const { FileUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/FileUtils.sys.mjs"
 );
@@ -468,7 +465,7 @@ add_task(async function test_execute_transaction_success() {
 add_task(async function test_execute_transaction_rollback() {
   let c = await getDummyDatabase("execute_transaction_rollback");
 
-  let deferred = PromiseUtils.defer();
+  let deferred = Promise.withResolvers();
 
   c.executeTransaction(async function transaction(conn) {
     await conn.execute("INSERT INTO dirs (path) VALUES ('foo')");
@@ -771,7 +768,7 @@ add_task(async function test_in_progress_counts() {
   // To do so, we kick off a second statement within the row handler
   // of the first, then wait for both to finish.
 
-  let inner = PromiseUtils.defer();
+  let inner = Promise.withResolvers();
   await c.executeCached("SELECT * from dirs", null, function onRow() {
     // In the onRow handler, we're still an outstanding query.
     // Expect a single in-progress entry.
@@ -1012,7 +1009,7 @@ add_task(async function test_direct() {
   let begin = db.createAsyncStatement("BEGIN DEFERRED TRANSACTION");
   let end = db.createAsyncStatement("COMMIT TRANSACTION");
 
-  let deferred = PromiseUtils.defer();
+  let deferred = Promise.withResolvers();
   begin.executeAsync({
     handleCompletion(reason) {
       deferred.resolve();
@@ -1022,7 +1019,7 @@ add_task(async function test_direct() {
 
   statement.bindParameters(params);
 
-  deferred = PromiseUtils.defer();
+  deferred = Promise.withResolvers();
   print("Executing async.");
   statement.executeAsync({
     handleResult(resultSet) {},
@@ -1043,7 +1040,7 @@ add_task(async function test_direct() {
 
   await deferred.promise;
 
-  deferred = PromiseUtils.defer();
+  deferred = Promise.withResolvers();
   end.executeAsync({
     handleCompletion(reason) {
       deferred.resolve();
@@ -1055,7 +1052,7 @@ add_task(async function test_direct() {
   begin.finalize();
   end.finalize();
 
-  deferred = PromiseUtils.defer();
+  deferred = Promise.withResolvers();
   db.asyncClose(function () {
     deferred.resolve();
   });
@@ -1215,7 +1212,7 @@ add_task(async function test_warning_message_on_finalization() {
   failTestsOnAutoClose(false);
   let c = await getDummyDatabase("warning_message_on_finalization");
   let identifier = c._connectionData._identifier;
-  let deferred = PromiseUtils.defer();
+  let deferred = Promise.withResolvers();
 
   let listener = {
     observe(msg) {
@@ -1243,7 +1240,7 @@ add_task(async function test_warning_message_on_finalization() {
 
 add_task(async function test_error_message_on_unknown_finalization() {
   failTestsOnAutoClose(false);
-  let deferred = PromiseUtils.defer();
+  let deferred = Promise.withResolvers();
 
   let listener = {
     observe(msg) {
@@ -1289,7 +1286,7 @@ add_task(async function test_close_database_on_gc() {
   {
     let collectedPromises = [];
     for (let i = 0; i < 100; ++i) {
-      let deferred = PromiseUtils.defer();
+      let deferred = Promise.withResolvers();
       let c = await getDummyDatabase("gc_" + i);
       c._connectionData._deferredClose.promise.then(deferred.resolve);
       collectedPromises.push(deferred.promise);

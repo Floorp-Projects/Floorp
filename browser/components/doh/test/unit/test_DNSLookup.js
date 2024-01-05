@@ -7,7 +7,7 @@
 add_task(setup);
 
 add_task(async function test_SuccessfulRandomDNSLookup() {
-  let deferred = PromiseUtils.defer();
+  let deferred = Promise.withResolvers();
   let lookup = new DNSLookup(
     null,
     trrServer1,
@@ -26,7 +26,7 @@ add_task(async function test_SuccessfulRandomDNSLookup() {
 });
 
 add_task(async function test_SuccessfulSpecifiedDNSLookup() {
-  let deferred = PromiseUtils.defer();
+  let deferred = Promise.withResolvers();
   let lookup = new DNSLookup(
     "foo.example.com",
     trrServer1,
@@ -45,7 +45,7 @@ add_task(async function test_SuccessfulSpecifiedDNSLookup() {
 });
 
 add_task(async function test_FailedDNSLookup() {
-  let deferred = PromiseUtils.defer();
+  let deferred = Promise.withResolvers();
   let lookup = new DNSLookup(
     null,
     `https://foo.example.com:${h2Port}/doh?responseIP=none`,

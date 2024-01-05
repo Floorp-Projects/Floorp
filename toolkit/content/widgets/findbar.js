@@ -1125,10 +1125,7 @@
         );
       }
 
-      let { PromiseUtils } = ChromeUtils.importESModule(
-        "resource://gre/modules/PromiseUtils.sys.mjs"
-      );
-      this._startFindDeferred = PromiseUtils.defer();
+      this._startFindDeferred = Promise.withResolvers();
       let startFindPromise = this._startFindDeferred.promise;
 
       if (this.prefillWithSelection) {

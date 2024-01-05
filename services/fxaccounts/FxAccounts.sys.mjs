@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { PromiseUtils } from "resource://gre/modules/PromiseUtils.sys.mjs";
-
 import { CryptoUtils } from "resource://services-crypto/utils.sys.mjs";
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 import { clearTimeout, setTimeout } from "resource://gre/modules/Timer.sys.mjs";
@@ -1199,7 +1197,7 @@ FxAccountsInternal.prototype = {
 
     this.pollStartDate = Date.now();
     if (!currentState.whenVerifiedDeferred) {
-      currentState.whenVerifiedDeferred = PromiseUtils.defer();
+      currentState.whenVerifiedDeferred = Promise.withResolvers();
       // This deferred might not end up with any handlers (eg, if sync
       // is yet to start up.)  This might cause "A promise chain failed to
       // handle a rejection" messages, so add an error handler directly

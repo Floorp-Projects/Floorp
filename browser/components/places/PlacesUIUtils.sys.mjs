@@ -19,7 +19,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   PlacesTransactions: "resource://gre/modules/PlacesTransactions.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
-  PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
   Weave: "resource://services-sync/main.sys.mjs",
 });
 
@@ -566,7 +565,7 @@ export var PlacesUIUtils = {
    *                   undefined otherwise.
    */
   async showBookmarkDialog(aInfo, aParentWindow = null) {
-    this.lastBookmarkDialogDeferred = lazy.PromiseUtils.defer();
+    this.lastBookmarkDialogDeferred = Promise.withResolvers();
 
     let dialogURL = "chrome://browser/content/places/bookmarkProperties.xhtml";
     let features = "centerscreen,chrome,modal,resizable=no";

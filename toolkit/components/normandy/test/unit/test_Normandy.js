@@ -9,9 +9,6 @@ const { Normandy } = ChromeUtils.importESModule(
 const { NormandyMigrations } = ChromeUtils.importESModule(
   "resource://normandy/NormandyMigrations.sys.mjs"
 );
-const { PromiseUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/PromiseUtils.sys.mjs"
-);
 ChromeUtils.defineESModuleGetters(this, {
   TestUtils: "resource://testing-common/TestUtils.sys.mjs",
 });
@@ -71,10 +68,10 @@ decorate_task(
     applyAllStub,
   }) {
     let originalDeferred = Normandy.uiAvailableNotificationObserved;
-    let mockUiAvailableDeferred = PromiseUtils.defer();
+    let mockUiAvailableDeferred = Promise.withResolvers();
     Normandy.uiAvailableNotificationObserved = mockUiAvailableDeferred;
 
-    let applyAllDeferred = PromiseUtils.defer();
+    let applyAllDeferred = Promise.withResolvers();
     applyAllStub.returns(applyAllStub);
 
     let promiseResolvedCount = 0;

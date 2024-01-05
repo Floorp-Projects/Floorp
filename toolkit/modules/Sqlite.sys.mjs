@@ -27,7 +27,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.sys.mjs",
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
   Log: "resource://gre/modules/Log.sys.mjs",
-  PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
 });
 
 XPCOMUtils.defineLazyServiceGetter(
@@ -379,7 +378,7 @@ function ConnectionData(connection, identifier, options = {}) {
 
   // Deferred whose promise is resolved when the connection closing procedure
   // is complete.
-  this._deferredClose = lazy.PromiseUtils.defer();
+  this._deferredClose = Promise.withResolvers();
   this._closeRequested = false;
 
   // An AsyncShutdown barrier used to make sure that we wait until clients
@@ -1011,7 +1010,7 @@ ConnectionData.prototype = Object.freeze({
 
     let index = this._statementCounter++;
 
-    let deferred = lazy.PromiseUtils.defer();
+    let deferred = Promise.withResolvers();
     let userCancelled = false;
     let errors = [];
     let rows = [];

@@ -5,7 +5,6 @@
 
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 import { AsyncShutdown } from "resource://gre/modules/AsyncShutdown.sys.mjs";
-import { PromiseUtils } from "resource://gre/modules/PromiseUtils.sys.mjs";
 import { DeferredTask } from "resource://gre/modules/DeferredTask.sys.mjs";
 
 import { TelemetryUtils } from "resource://gre/modules/TelemetryUtils.sys.mjs";
@@ -790,7 +789,7 @@ var Impl = {
     // Delay full telemetry initialization to give the browser time to
     // run various late initializers. Otherwise our gathered memory
     // footprint and other numbers would be too optimistic.
-    this._delayedInitTaskDeferred = PromiseUtils.defer();
+    this._delayedInitTaskDeferred = Promise.withResolvers();
     this._delayedInitTask = new DeferredTask(
       async () => {
         try {

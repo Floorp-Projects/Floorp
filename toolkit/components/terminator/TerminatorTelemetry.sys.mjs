@@ -12,13 +12,12 @@
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
 });
 
 export function nsTerminatorTelemetry() {
   this._wasNotified = false;
-  this._deferred = lazy.PromiseUtils.defer();
+  this._deferred = Promise.withResolvers();
 
   IOUtils.sendTelemetry.addBlocker(
     "TerminatoryTelemetry: Waiting to submit telemetry",

@@ -40,9 +40,6 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
-ChromeUtils.defineESModuleGetters(lazy, {
-  PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
-});
 XPCOMUtils.defineLazyServiceGetter(
   lazy,
   "gDebug",
@@ -145,7 +142,7 @@ PromiseSet.prototype = {
       throw new Error("Wait is complete, cannot add further promises.");
     }
     this._ensurePromise(key);
-    let indirection = lazy.PromiseUtils.defer();
+    let indirection = Promise.withResolvers();
     key
       .then(
         x => {
@@ -291,7 +288,7 @@ function looseTimer(delay) {
   let DELAY_BEAT = 1000;
   let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
   let beats = Math.ceil(delay / DELAY_BEAT);
-  let deferred = lazy.PromiseUtils.defer();
+  let deferred = Promise.withResolvers();
   timer.initWithCallback(
     function () {
       if (beats <= 0) {

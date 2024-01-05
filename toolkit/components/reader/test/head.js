@@ -1,7 +1,3 @@
-ChromeUtils.defineESModuleGetters(this, {
-  PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
-});
-
 /* exported promiseTabLoadEvent, is_element_visible, is_element_hidden */
 
 /**
@@ -17,7 +13,7 @@ ChromeUtils.defineESModuleGetters(this, {
  * @rejects if a valid load event is not received within a meaningful interval
  */
 function promiseTabLoadEvent(tab, url) {
-  let deferred = PromiseUtils.defer();
+  let deferred = Promise.withResolvers();
   info("Wait tab event: load");
 
   function handle(loadedUrl) {

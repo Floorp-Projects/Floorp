@@ -7,7 +7,7 @@
 add_task(setup);
 
 add_task(async function test_TRRRacer_cleanRun() {
-  let deferred = PromiseUtils.defer();
+  let deferred = Promise.withResolvers();
   let racer = new TRRRacer(() => {
     deferred.resolve();
     deferred.resolved = true;
@@ -56,7 +56,7 @@ add_task(async function test_TRRRacer_cleanRun() {
 });
 
 async function test_TRRRacer_networkFlux_helper(captivePortal = false) {
-  let deferred = PromiseUtils.defer();
+  let deferred = Promise.withResolvers();
   let racer = new TRRRacer(() => {
     deferred.resolve();
     deferred.resolved = true;
@@ -105,7 +105,7 @@ add_task(async function test_TRRRacer_networkFlux() {
 });
 
 async function test_TRRRacer_maxRetries_helper(captivePortal = false) {
-  let deferred = PromiseUtils.defer();
+  let deferred = Promise.withResolvers();
   let racer = new TRRRacer(() => {
     deferred.resolve();
     deferred.resolved = true;

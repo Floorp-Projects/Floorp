@@ -24,9 +24,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=937317
   SpecialPowers.pushPrefEnv({"set": [["security.allow_eval_with_system_principal",
                                       true]]});
   addLoadEvent(function() {
-    const {PromiseUtils} = ChromeUtils.importESModule(
-      "resource://gre/modules/PromiseUtils.sys.mjs"
-    );
     let iwin = window[0];
 
     // Smoketest.
@@ -68,25 +65,25 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=937317
     // Callbacks grab the incumbent script at the time of invocation.
     //
     // Note - We avoid calling the initial defer |d| so that it's not in-scope for everything below.
-    let initialDefer = PromiseUtils.defer();
+    let initialDefer = Promise.withResolvers();
     setTimeout(Cu.getIncumbentGlobal.bind(Cu, makeCallback(window, initialDefer, "same-global setTimeout")), 0);
     initialDefer.promise.then(function() {
 
       // Try cross-global setTimeout where |window| is the incumbent script when the callback is created.
-      let d = PromiseUtils.defer();
+      let d = Promise.withResolvers();
       iwin.setTimeout(Cu.getIncumbentGlobal.bind(Cu, makeCallback(window, d, "cross-global setTimeout by |window|")), 0);
       return d.promise;
     }).then(function() {
 
       // Try cross-global setTimeout where |iwin| is the incumbent script when the callback is created.
-      let d = PromiseUtils.defer();
+      let d = Promise.withResolvers();
       iwin.wrappedJSObject.timeoutFun = Cu.getIncumbentGlobal.bind(Cu, makeCallback(iwin, d, "cross-global setTimeout by |iwin|"));
       iwin.eval('setTimeout(timeoutFun, 0);');
       return d.promise;
     }).then(function() {
 
       // The incumbent script override doesn't take effect if the callback is scripted.
-      let d = PromiseUtils.defer();
+      let d = Promise.withResolvers();
       iwin.wrappedJSObject.timeoutFun2 = Cu.getIncumbentGlobal.bind(Cu, makeCallback(iwin, d, "cross-global setTimeout of scripted function"));
       iwin.eval('var timeoutFun2Wrapper = function() { timeoutFun2(); }');
       setTimeout(iwin.wrappedJSObject.timeoutFun2Wrapper, 0);
@@ -94,7 +91,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=937317
     }).then(function() {
 
       // Try event listeners.
-      let d = PromiseUtils.defer();
+      let d = Promise.withResolvers();
       let body = iwin.document.body;
       body.addEventListener('click', Cu.getIncumbentGlobal.bind(Cu, makeCallback(window, d, "cross-global event listener")));
       body.dispatchEvent(new iwin.MouseEvent('click'));
@@ -103,7 +100,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=937317
     }).then(function() {
 
       // Try an event handler set by |iwin|.
-      let d = PromiseUtils.defer();
+      let d = Promise.withResolvers();
       let body = iwin.document.body;
       iwin.wrappedJSObject.handler = Cu.getIncumbentGlobal.bind(Cu, makeCallback(iwin, d, "cross-global event handler"));
       iwin.eval('document.body.onmousemove = handler');
@@ -113,7 +110,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=937317
     }).then(function() {
 
       // Try an event handler compiled by a content attribute.
-      let d = PromiseUtils.defer();
+      let d = Promise.withResolvers();
       let body = iwin.document.body;
       iwin.wrappedJSObject.innerHandler = Cu.getIncumbentGlobal.bind(Cu, makeCallback(iwin, d, "cross-global compiled event handler"));
       iwin.eval("document.body.setAttribute('onmouseout', 'innerHandler()')");

@@ -73,9 +73,9 @@ add_task(async function test_reentrant() {
     info("Kind: " + kind);
     let lock = makeLock(kind);
 
-    let deferredOuter = PromiseUtils.defer();
-    let deferredInner = PromiseUtils.defer();
-    let deferredBlockInner = PromiseUtils.defer();
+    let deferredOuter = Promise.withResolvers();
+    let deferredInner = Promise.withResolvers();
+    let deferredBlockInner = Promise.withResolvers();
 
     lock.addBlocker("Outer blocker", () => {
       info("Entering outer blocker");
@@ -130,7 +130,7 @@ add_task(async function test_phase_removeBlocker() {
     let lock = makeLock(kind);
     let blocker = () => {
       info("This promise will never be resolved");
-      return PromiseUtils.defer().promise;
+      return Promise.withResolvers().promise;
     };
 
     lock.addBlocker("Wait forever", blocker);
@@ -163,13 +163,13 @@ add_task(async function test_phase_removeBlocker() {
       () => {
         info("This blocker will self-destruct");
         do_remove_blocker(lock, blockers[0], true);
-        return PromiseUtils.defer().promise;
+        return Promise.withResolvers().promise;
       },
       () => {
         info("This blocker will self-destruct twice");
         do_remove_blocker(lock, blockers[1], true);
         do_remove_blocker(lock, blockers[1], false);
-        return PromiseUtils.defer().promise;
+        return Promise.withResolvers().promise;
       },
       () => {
         info("Attempt to remove non-registered blockers during wait()");
@@ -207,9 +207,9 @@ add_task(async function test_addBlocker_noDistinctNamesConstraint() {
   ]) {
     info("Switching to kind " + kind);
     let lock = makeLock(kind);
-    let deferred1 = PromiseUtils.defer();
+    let deferred1 = Promise.withResolvers();
     let resolved1 = false;
-    let deferred2 = PromiseUtils.defer();
+    let deferred2 = Promise.withResolvers();
     let resolved2 = false;
     let blocker1 = () => {
       info("Entering blocker1");
@@ -263,7 +263,7 @@ add_task(async function test_state() {
   // Set up the barrier. Note that we cannot test `barrier.state`
   // immediately, as it initially contains "Not started"
   let barrier = new AsyncShutdown.Barrier("test_filename");
-  let deferred = PromiseUtils.defer();
+  let deferred = Promise.withResolvers();
   let { filename, lineNumber } = Components.stack;
   barrier.client.addBlocker(BLOCKER_NAME, function () {
     return deferred.promise;
@@ -301,7 +301,7 @@ add_task(async function test_multistate() {
   // Set up the barrier. Note that we cannot test `barrier.state`
   // immediately, as it initially contains "Not started"
   let barrier = asyncShutdownService.makeBarrier("test_filename");
-  let deferred = PromiseUtils.defer();
+  let deferred = Promise.withResolvers();
   let { filename, lineNumber } = Components.stack;
   for (let name of BLOCKER_NAMES) {
     barrier.client.jsclient.addBlocker(name, () => deferred.promise, {

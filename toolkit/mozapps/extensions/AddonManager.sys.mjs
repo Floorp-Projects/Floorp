@@ -78,8 +78,6 @@ import { AsyncShutdown as realAsyncShutdown } from "resource://gre/modules/Async
 
 var AsyncShutdown = realAsyncShutdown;
 
-import { PromiseUtils } from "resource://gre/modules/PromiseUtils.sys.mjs";
-
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -473,7 +471,7 @@ AddonScreenshot.prototype = {
 };
 
 var gStarted = false;
-var gStartedPromise = PromiseUtils.defer();
+var gStartedPromise = Promise.withResolvers();
 var gStartupComplete = false;
 var gCheckCompatibility = true;
 var gStrictCompatibility = true;
@@ -1043,7 +1041,7 @@ var AddonManagerInternal = {
       delete this.startupChanges[type];
     }
     gStarted = false;
-    gStartedPromise = PromiseUtils.defer();
+    gStartedPromise = Promise.withResolvers();
     gStartupComplete = false;
     gFinalShutdownBarrier = null;
     gBeforeShutdownBarrier = null;

@@ -16,7 +16,7 @@ add_setup(async function () {
 });
 
 async function checkShortcutLoading(modifierKeys) {
-  let deferred = PromiseUtils.defer();
+  let deferred = Promise.withResolvers();
   let tab = await BrowserTestUtils.openNewForegroundTab({
     gBrowser,
     opening: "about:robots",

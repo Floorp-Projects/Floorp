@@ -5,7 +5,6 @@
 
 ChromeUtils.defineESModuleGetters(this, {
   IgnoreLists: "resource://gre/modules/IgnoreLists.sys.mjs",
-  PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
   RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
   RemoteSettingsClient:
     "resource://services-settings/RemoteSettingsClient.sys.mjs",
@@ -45,7 +44,7 @@ add_task(async function test_ignoreList_basic_get() {
 });
 
 add_task(async function test_ignoreList_reentry() {
-  let promise = PromiseUtils.defer();
+  let promise = Promise.withResolvers();
   getStub.resetHistory();
   getStub.onFirstCall().returns(promise.promise);
 

@@ -1,9 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const { PromiseUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/PromiseUtils.sys.mjs"
-);
 const { Observers } = ChromeUtils.importESModule(
   "resource://services-common/observers.sys.mjs"
 );
@@ -222,7 +219,7 @@ add_task(async function test_disabled_no_track() {
   changes = await tracker.getChangedIDs();
   do_check_empty(changes);
 
-  let promisePrefChangeHandled = PromiseUtils.defer();
+  let promisePrefChangeHandled = Promise.withResolvers();
   const origMethod = tracker.onEngineEnabledChanged;
   tracker.onEngineEnabledChanged = async (...args) => {
     await origMethod.apply(tracker, args);
@@ -238,7 +235,7 @@ add_task(async function test_disabled_no_track() {
   await tracker.addChangedID("abcdefghijkl");
   changes = await tracker.getChangedIDs();
   Assert.ok(0 < changes.abcdefghijkl);
-  promisePrefChangeHandled = PromiseUtils.defer();
+  promisePrefChangeHandled = Promise.withResolvers();
   Svc.PrefBranch.setBoolPref("engine." + engine.prefName, false);
   await promisePrefChangeHandled.promise;
   Assert.ok(!tracker._isTracking);

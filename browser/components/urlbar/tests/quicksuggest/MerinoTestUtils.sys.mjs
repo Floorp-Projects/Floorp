@@ -4,7 +4,6 @@
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
   QuickSuggest: "resource:///modules/QuickSuggest.sys.mjs",
   TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
@@ -651,7 +650,7 @@ class MockMerinoServer {
    */
   waitForNextRequest() {
     if (!this.#nextRequestDeferred) {
-      this.#nextRequestDeferred = lazy.PromiseUtils.defer();
+      this.#nextRequestDeferred = Promise.withResolvers();
     }
     return this.#nextRequestDeferred.promise;
   }
@@ -722,7 +721,7 @@ class MockMerinoServer {
         JSON.stringify({ delayedResponseID, delay: response.delay })
     );
 
-    let deferred = lazy.PromiseUtils.defer();
+    let deferred = Promise.withResolvers();
     let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
     let record = { timer, resolve: deferred.resolve };
     this.#delayedResponseRecords.add(record);

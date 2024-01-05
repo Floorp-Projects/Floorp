@@ -15,7 +15,7 @@ const testIconURI = uri("http://mozilla.org/favicon.png");
 
 function streamListener(aExpectedContentType) {
   this._expectedContentType = aExpectedContentType;
-  this.done = PromiseUtils.defer();
+  this.done = Promise.withResolvers();
 }
 streamListener.prototype = {
   onStartRequest() {},

@@ -17,10 +17,6 @@ const do_backgroundtask = BackgroundTasksTestUtils.do_backgroundtask.bind(
   BackgroundTasksTestUtils
 );
 
-const { PromiseUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/PromiseUtils.sys.mjs"
-);
-
 async function run_test() {
   // Without omnijars, the background task apparatus will fail to find task
   // definitions.
@@ -80,7 +76,7 @@ async function run_test() {
   // This task will wait 10 seconds before exiting, which should overlap with
   // the update below.  We wait for some output from the wait background task,
   // so that there is meaningful overlap.
-  let taskStarted = PromiseUtils.defer();
+  let taskStarted = Promise.withResolvers();
   let p = do_backgroundtask("wait", {
     onStdoutLine: (line, proc) => {
       // This sentinel seems pretty safe: it's printed by the task itself and so

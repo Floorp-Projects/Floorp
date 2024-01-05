@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
-import { PromiseUtils } from "resource://gre/modules/PromiseUtils.sys.mjs";
 import { setTimeout } from "resource://gre/modules/Timer.sys.mjs";
 
 const lazy = {};
@@ -409,7 +408,7 @@ CrashManager.prototype = Object.freeze({
    *        (integer) Delay in milliseconds when maintenance should occur.
    */
   scheduleMaintenance(delay) {
-    let deferred = PromiseUtils.defer();
+    let deferred = Promise.withResolvers();
 
     setTimeout(() => {
       this.runMaintenanceTasks().then(deferred.resolve, deferred.reject);
@@ -526,7 +525,7 @@ CrashManager.prototype = Object.freeze({
       return Promise.resolve();
     }
 
-    let deferred = PromiseUtils.defer();
+    let deferred = Promise.withResolvers();
 
     this._crashPromises.set(id, deferred);
     return deferred.promise;

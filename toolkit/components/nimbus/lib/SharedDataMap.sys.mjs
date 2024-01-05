@@ -7,7 +7,6 @@ import { EventEmitter } from "resource://gre/modules/EventEmitter.sys.mjs";
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   JSONFile: "resource://gre/modules/JSONFile.sys.mjs",
-  PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
 });
 
 const IS_MAIN_PROCESS =
@@ -20,7 +19,7 @@ export class SharedDataMap extends EventEmitter {
     this._sharedDataKey = sharedDataKey;
     this._isParent = options.isParent;
     this._isReady = false;
-    this._readyDeferred = lazy.PromiseUtils.defer();
+    this._readyDeferred = Promise.withResolvers();
     this._data = null;
 
     if (this.isParent) {

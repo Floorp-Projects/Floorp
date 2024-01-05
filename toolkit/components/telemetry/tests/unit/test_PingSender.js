@@ -7,9 +7,6 @@
 
 "use strict";
 
-const { PromiseUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/PromiseUtils.sys.mjs"
-);
 const { TelemetrySend } = ChromeUtils.importESModule(
   "resource://gre/modules/TelemetrySend.sys.mjs"
 );
@@ -98,7 +95,7 @@ async function test_pingSender(version = "1.0") {
   // PingSender twice, trying to send the ping to this server. After the
   // second time, we will resolve |deferred404Hit|.
   let failingServer = new HttpServer();
-  let deferred404Hit = PromiseUtils.defer();
+  let deferred404Hit = Promise.withResolvers();
   let hitCount = 0;
   failingServer.registerPathHandler("/lookup_fail", (metadata, response) => {
     response.setStatusLine("1.1", 404, "Not Found");

@@ -12,9 +12,6 @@ const { FxAccountsProfileClient } = ChromeUtils.importESModule(
 const { FxAccountsProfile } = ChromeUtils.importESModule(
   "resource://gre/modules/FxAccountsProfile.sys.mjs"
 );
-const { PromiseUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/PromiseUtils.sys.mjs"
-);
 const { setTimeout } = ChromeUtils.importESModule(
   "resource://gre/modules/Timer.sys.mjs"
 );
@@ -339,7 +336,7 @@ add_task(async function fetchAndCacheProfileAfterThreshold() {
   });
 
   let origFetchAndCatch = profile._fetchAndCacheProfile;
-  let backgroundFetchDone = PromiseUtils.defer();
+  let backgroundFetchDone = Promise.withResolvers();
   profile._fetchAndCacheProfile = async () => {
     await origFetchAndCatch.call(profile);
     backgroundFetchDone.resolve();
@@ -543,7 +540,7 @@ add_task(async function fetchAndCacheProfileBeforeThresholdOnNotification() {
   Services.obs.notifyObservers(null, ON_PROFILE_CHANGE_NOTIFICATION);
 
   let origFetchAndCatch = profile._fetchAndCacheProfile;
-  let backgroundFetchDone = PromiseUtils.defer();
+  let backgroundFetchDone = Promise.withResolvers();
   profile._fetchAndCacheProfile = async () => {
     await origFetchAndCatch.call(profile);
     backgroundFetchDone.resolve();

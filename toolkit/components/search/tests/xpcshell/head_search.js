@@ -7,7 +7,6 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 
 ChromeUtils.defineESModuleGetters(this, {
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
-  PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
   Region: "resource://gre/modules/Region.sys.mjs",
   RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
   RemoteSettingsClient:
@@ -402,7 +401,7 @@ async function assertGleanDefaultEngine(expected) {
 class SearchObserver {
   constructor(expectedNotifications, returnEngineForNotification = false) {
     this.observer = this.observer.bind(this);
-    this.deferred = PromiseUtils.defer();
+    this.deferred = Promise.withResolvers();
     this.expectedNotifications = expectedNotifications;
     this.returnEngineForNotification = returnEngineForNotification;
 

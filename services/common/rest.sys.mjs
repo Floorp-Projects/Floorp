@@ -5,7 +5,6 @@
 import { NetUtil } from "resource://gre/modules/NetUtil.sys.mjs";
 
 import { Log } from "resource://gre/modules/Log.sys.mjs";
-import { PromiseUtils } from "resource://gre/modules/PromiseUtils.sys.mjs";
 
 import { CommonUtils } from "resource://services-common/utils.sys.mjs";
 
@@ -87,7 +86,7 @@ export function RESTRequest(uri) {
   this.uri = uri;
 
   this._headers = {};
-  this._deferred = PromiseUtils.defer();
+  this._deferred = Promise.withResolvers();
   this._log = Log.repository.getLogger(this._logName);
   this._log.manageLevelFromPref("services.common.log.logger.rest.request");
 }

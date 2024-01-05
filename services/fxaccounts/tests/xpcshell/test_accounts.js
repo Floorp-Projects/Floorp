@@ -24,9 +24,6 @@ const {
 } = ChromeUtils.importESModule(
   "resource://gre/modules/FxAccountsCommon.sys.mjs"
 );
-const { PromiseUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/PromiseUtils.sys.mjs"
-);
 
 // We grab some additional stuff via backstage passes.
 var { AccountState } = ChromeUtils.importESModule(
@@ -196,7 +193,7 @@ function MockFxAccounts(credentials = null) {
     VERIFICATION_POLL_TIMEOUT_INITIAL: 100, // 100ms
 
     _getCertificateSigned_calls: [],
-    _d_signCertificate: PromiseUtils.defer(),
+    _d_signCertificate: Promise.withResolvers(),
     _now_is: new Date(),
     now() {
       return this._now_is;

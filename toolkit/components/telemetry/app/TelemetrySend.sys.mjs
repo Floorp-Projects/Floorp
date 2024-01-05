@@ -13,7 +13,6 @@ import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
 import { ClientID } from "resource://gre/modules/ClientID.sys.mjs";
 import { Log } from "resource://gre/modules/Log.sys.mjs";
-import { PromiseUtils } from "resource://gre/modules/PromiseUtils.sys.mjs";
 import { ServiceRequest } from "resource://gre/modules/ServiceRequest.sys.mjs";
 
 import { TelemetryUtils } from "resource://gre/modules/TelemetryUtils.sys.mjs";
@@ -379,7 +378,7 @@ var CancellableTimeout = {
    */
   promiseWaitOnTimeout(timeoutMs) {
     if (!this._deferred) {
-      this._deferred = PromiseUtils.defer();
+      this._deferred = Promise.withResolvers();
       this._timer = Policy.setSchedulerTickTimeout(
         () => this._onTimeout(),
         timeoutMs
@@ -1395,7 +1394,7 @@ export var TelemetrySendImpl = {
     const url = this._buildSubmissionURL(ping);
 
     const monotonicStartTime = Utils.monotonicNow();
-    let deferred = PromiseUtils.defer();
+    let deferred = Promise.withResolvers();
 
     let onRequestFinished = (success, event) => {
       let onCompletion = () => {

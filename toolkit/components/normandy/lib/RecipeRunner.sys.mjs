@@ -4,7 +4,6 @@
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 import { LogManager } from "resource://normandy/lib/LogManager.sys.mjs";
-import { PromiseUtils } from "resource://gre/modules/PromiseUtils.sys.mjs";
 
 const lazy = {};
 
@@ -81,7 +80,7 @@ function cacheProxy(target) {
 }
 
 export var RecipeRunner = {
-  initializedPromise: PromiseUtils.defer(),
+  initializedPromise: Promise.withResolvers(),
 
   async init() {
     this.running = false;

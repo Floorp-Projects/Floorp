@@ -10,9 +10,6 @@ function setup_crash() {
   const { AsyncShutdown } = ChromeUtils.importESModule(
     "resource://gre/modules/AsyncShutdown.sys.mjs"
   );
-  const { PromiseUtils } = ChromeUtils.importESModule(
-    "resource://gre/modules/PromiseUtils.sys.mjs"
-  );
 
   Services.prefs.setBoolPref("toolkit.asyncshutdown.testing", true);
   Services.prefs.setIntPref("toolkit.asyncshutdown.crash_timeout", 10);
@@ -21,7 +18,7 @@ function setup_crash() {
   let phase = AsyncShutdown._getPhase(TOPIC);
   phase.addBlocker("A blocker that is never satisfied", function () {
     dump("Installing blocker\n");
-    let deferred = PromiseUtils.defer();
+    let deferred = Promise.withResolvers();
     return deferred.promise;
   });
 
@@ -43,15 +40,11 @@ function after_crash(mdump, extra) {
 // Test that AsyncShutdown + IOUtils reports errors correctly.,
 
 function setup_ioutils_crash() {
-  const { PromiseUtils } = ChromeUtils.importESModule(
-    "resource://gre/modules/PromiseUtils.sys.mjs"
-  );
-
   Services.prefs.setIntPref("toolkit.asyncshutdown.crash_timeout", 1);
 
   IOUtils.profileBeforeChange.addBlocker(
     "Adding a blocker that will never be resolved",
-    () => PromiseUtils.defer().promise
+    () => Promise.withResolvers().promise
   );
 
   Services.startup.advanceShutdownPhase(

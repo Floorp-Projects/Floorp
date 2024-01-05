@@ -2,9 +2,6 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-var { PromiseUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/PromiseUtils.sys.mjs"
-);
 const { Preferences } = ChromeUtils.importESModule(
   "resource://gre/modules/Preferences.sys.mjs"
 );
@@ -224,7 +221,7 @@ function pushPrefs(...aPrefs) {
 }
 
 function waitForPrefChange(pref) {
-  let deferred = PromiseUtils.defer();
+  let deferred = Promise.withResolvers();
   let observer = () => {
     Preferences.ignore(pref, observer);
     deferred.resolve();

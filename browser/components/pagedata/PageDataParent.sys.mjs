@@ -6,7 +6,6 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   PageDataService: "resource:///modules/pagedata/PageDataService.sys.mjs",
-  PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
 });
 
 /**
@@ -24,7 +23,7 @@ export class PageDataParent extends JSWindowActorParent {
    */
   collectPageData() {
     if (!this.#deferredCollection) {
-      this.#deferredCollection = lazy.PromiseUtils.defer();
+      this.#deferredCollection = Promise.withResolvers();
       this.sendQuery("PageData:Collect").then(
         this.#deferredCollection.resolve,
         this.#deferredCollection.reject

@@ -19,9 +19,6 @@ const { AddonManager } = ChromeUtils.importESModule(
 const { AddonStudies } = ChromeUtils.importESModule(
   "resource://normandy/lib/AddonStudies.sys.mjs"
 );
-const { PromiseUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/PromiseUtils.sys.mjs"
-);
 
 /* import-globals-from utils.js */
 load("utils.js");
@@ -289,7 +286,7 @@ decorate_task(
     let addon = await AddonManager.getAddonByID(ID);
     ok(addon, "Extension is installed");
 
-    let listenerDeferred = PromiseUtils.defer();
+    let listenerDeferred = Promise.withResolvers();
 
     AddonStudies.addUnenrollListener(ID, () => {
       listenerDeferred.resolve();

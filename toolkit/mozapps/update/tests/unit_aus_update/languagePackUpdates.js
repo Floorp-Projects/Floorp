@@ -7,9 +7,6 @@ const { getAppInfo } = ChromeUtils.importESModule(
 const { XPIInstall } = ChromeUtils.import(
   "resource://gre/modules/addons/XPIInstall.jsm"
 );
-const { PromiseUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/PromiseUtils.sys.mjs"
-);
 const { setTimeout } = ChromeUtils.importESModule(
   "resource://gre/modules/Timer.sys.mjs"
 );
@@ -48,9 +45,9 @@ async function downloadUpdate() {
  * complete the mocked langpack update.
  */
 function mockLangpackUpdate() {
-  let stagingCall = PromiseUtils.defer();
+  let stagingCall = Promise.withResolvers();
   XPIInstall.stageLangpacksForAppUpdate = (appVersion, platformVersion) => {
-    let result = PromiseUtils.defer();
+    let result = Promise.withResolvers();
     stagingCall.resolve({
       appVersion,
       platformVersion,

@@ -4,7 +4,6 @@
 "use strict";
 
 ChromeUtils.defineESModuleGetters(this, {
-  PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
   SearchEngineSelectorOld:
     "resource://gre/modules/SearchEngineSelectorOld.sys.mjs",
 });
@@ -107,7 +106,7 @@ add_task(async function test_selector_basic_get() {
 add_task(async function test_selector_get_reentry() {
   const listenerSpy = sinon.spy();
   const engineSelector = new SearchEngineSelectorOld(listenerSpy);
-  let promise = PromiseUtils.defer();
+  let promise = Promise.withResolvers();
   getStub.resetHistory();
   getStub.onFirstCall().returns(promise.promise);
   delete engineSelector._configuration;

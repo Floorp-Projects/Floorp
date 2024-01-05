@@ -4,7 +4,6 @@
 
 /* eslint no-shadow: error, mozilla/no-aArgs: error */
 
-import { PromiseUtils } from "resource://gre/modules/PromiseUtils.sys.mjs";
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
@@ -430,7 +429,7 @@ export class SearchService {
    */
   reset() {
     this.#initializationStatus = "not initialized";
-    this.#initDeferredPromise = PromiseUtils.defer();
+    this.#initDeferredPromise = Promise.withResolvers();
     this.#startupExtensions = new Set();
     this._engines.clear();
     this._cachedSortedEngines = null;
@@ -998,7 +997,7 @@ export class SearchService {
    *   Resolved when initalization has successfully finished, and rejected if it
    *   has failed.
    */
-  #initDeferredPromise = PromiseUtils.defer();
+  #initDeferredPromise = Promise.withResolvers();
 
   /**
    * Indicates if initialization has started, failed, succeeded or has not

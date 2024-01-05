@@ -237,7 +237,7 @@ async function showZeroPrefix() {
  *       This should be called to remove the listener.
  */
 function waitForQueryFinished() {
-  let deferred = PromiseUtils.defer();
+  let deferred = Promise.withResolvers();
   let listener = {
     onQueryFinished: () => deferred.resolve(),
   };

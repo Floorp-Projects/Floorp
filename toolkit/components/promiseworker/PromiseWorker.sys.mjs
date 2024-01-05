@@ -15,12 +15,6 @@
  * counterpart PromiseWorker.js.
  */
 
-const lazy = {};
-
-ChromeUtils.defineESModuleGetters(lazy, {
-  PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
-});
-
 /**
  * An implementation of queues (FIFO).
  *
@@ -325,7 +319,7 @@ BasePromiseWorker.prototype = {
         throw ex;
       }
 
-      let deferred = lazy.PromiseUtils.defer();
+      let deferred = Promise.withResolvers();
       this._queue.push({ deferred, closure, id });
       this.log("Message posted");
 

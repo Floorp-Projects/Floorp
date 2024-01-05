@@ -14,7 +14,7 @@ async function helper_SuccessfulLookupAggregator(
   networkUnstable = false,
   captivePortal = false
 ) {
-  let deferred = PromiseUtils.defer();
+  let deferred = Promise.withResolvers();
   let aggregator = new LookupAggregator(() => deferred.resolve(), trrList);
   // The aggregator's domain list should correctly reflect our set
   // prefs for number of random subdomains (2) and the list of
@@ -125,7 +125,7 @@ add_task(async function test_SuccessfulLookupAggregator() {
 });
 
 add_task(async function test_AbortedLookupAggregator() {
-  let deferred = PromiseUtils.defer();
+  let deferred = Promise.withResolvers();
   let aggregator = new LookupAggregator(() => deferred.resolve(), trrList);
   // The aggregator's domain list should correctly reflect our set
   // prefs for number of random subdomains (2) and the list of
