@@ -89,9 +89,15 @@ bool IsDBusWakeLock(int aWakeLockType) {
 #endif
 
 #ifdef MOZ_LOGGING
-const char* WakeLockTypeNames[7] = {
-    "Initial",      "FreeDesktopScreensaver", "FreeDesktopPower", "GNOME",
-    "XScreenSaver", "WaylandIdleInhibit",     "Unsupported",
+const char* WakeLockTypeNames[] = {
+    "Initial",
+    "FreeDesktopScreensaver",
+    "FreeDesktopPower",
+    "FreeDesktopPortal",
+    "GNOME",
+    "XScreenSaver",
+    "WaylandIdleInhibit",
+    "Unsupported",
 };
 #endif
 
