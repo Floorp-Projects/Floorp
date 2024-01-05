@@ -449,9 +449,10 @@ HRESULT MaybeWritePreviousNotificationAction(
 }
 
 // Sends Firefox Desktop and Glean telemetry for the Default Agent in parallel.
-HRESULT SendDefaultAgentPing(
-    const DefaultBrowserInfo& browserInfo, const DefaultPdfInfo& pdfInfo,
-    const NotificationActivities& activitiesPerformed) {
+HRESULT SendDefaultAgentPing(const DefaultBrowserInfo& browserInfo,
+                             const DefaultPdfInfo& pdfInfo,
+                             const NotificationActivities& activitiesPerformed,
+                             const nsACString& doTaskImpl) {
   std::string currentDefaultBrowser =
       GetStringForBrowser(browserInfo.currentDefaultBrowser);
   std::string currentDefaultPdf =
@@ -564,6 +565,8 @@ HRESULT SendDefaultAgentPing(
         nsDependentCString(previousDefaultBrowser.c_str()));
     mozilla::glean::system_default::pdf_handler.Set(
         nsDependentCString(currentDefaultPdf.c_str()));
+
+    mozilla::glean::do_task::implementation.Set(doTaskImpl);
 
     return SendDesktopTelemetryPing(
                currentDefaultBrowser, previousDefaultBrowser, currentDefaultPdf,
