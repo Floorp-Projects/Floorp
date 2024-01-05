@@ -851,6 +851,9 @@ class TestResolver(MozbuildObject):
         ):
             depth = depth + 1
 
+        if test["name"].startswith("/_mozilla/webgpu"):
+            depth = 9001
+
         group = os.path.dirname(test["name"])
         while group.count("/") > depth:
             group = os.path.dirname(group)
