@@ -64,3 +64,12 @@ function classPreview() {
   const foo = new Foo();
   foo.breakFn();
 }
+
+function primitives() {
+  "a";
+  false;
+  undefined;
+  null;
+  42;
+  debugger;
+}

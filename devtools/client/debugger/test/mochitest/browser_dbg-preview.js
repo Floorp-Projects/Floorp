@@ -68,6 +68,8 @@ add_task(async function () {
     { line: 51, column: 39, expression: "#privateVar", result: 2 },
   ]);
 
+  await testHoveringPrimitiveTokens(dbg);
+
   info(
     "Check that closing the preview tooltip doesn't release the underlying object actor"
   );
@@ -111,6 +113,40 @@ async function testPreviews(dbg, fnName, previews) {
   await resume(dbg);
 
   info(`Ran tests for ${fnName}`);
+}
+
+async function testHoveringPrimitiveTokens(dbg) {
+  invokeInTab("primitives");
+  await waitForPaused(dbg);
+  await assertNoPreviews(dbg, `"a"`, 69, 4);
+  await assertNoPreviews(dbg, `false`, 70, 4);
+  await assertNoPreviews(dbg, `undefined`, 71, 4);
+  await assertNoPreviews(dbg, `null`, 72, 4);
+  await assertNoPreviews(dbg, `42`, 73, 4);
+  await resume(dbg);
+}
+
+async function assertNoPreviews(dbg, expression, line, column) {
+  // Move the cursor to the top left corner to have a clean state
+  EventUtils.synthesizeMouse(
+    findElement(dbg, "codeMirror"),
+    0,
+    0,
+    {
+      type: "mousemove",
+    },
+    dbg.win
+  );
+
+  // CodeMirror refreshes after inline previews are displayed, so wait until they're rendered.
+  await waitForInlinePreviews(dbg);
+
+  // Hover the token
+  const result = await Promise.race([
+    tryHoverTokenAtLine(dbg, expression, line, column, "previewPopup"),
+    wait(1000).then(() => "TIMEOUT"),
+  ]);
+  is(result, "TIMEOUT", `No popup was displayed when hovering "${expression}"`);
 }
 
 async function testBucketedArray(dbg) {

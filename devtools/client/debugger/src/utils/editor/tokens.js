@@ -10,8 +10,19 @@ function _isInvalidTarget(target) {
   const tokenText = target.innerText.trim();
   const cursorPos = target.getBoundingClientRect();
 
-  // exclude literal tokens where it does not make sense to show a preview
-  const invalidType = ["cm-atom", ""].includes(target.className);
+  // exclude tokens for which it does not make sense to show a preview:
+  // - literal
+  // - primitives
+  // - operators
+  // - tags
+  const invalidType = [
+    "",
+    "cm-atom",
+    "cm-number",
+    "cm-operator",
+    "cm-string",
+    "cm-tag",
+  ].includes(target.className);
 
   // exclude syntax where the expression would be a syntax error
   const invalidToken =
@@ -20,7 +31,7 @@ function _isInvalidTarget(target) {
   // exclude codemirror elements that are not tokens
   const invalidTarget =
     (target.parentElement &&
-      !target.parentElement.closest(".CodeMirror-line")) ||
+      !target.parentElement.closest(".CodeMirror-line, .CodeMirror-widget")) ||
     cursorPos.top == 0;
 
   const invalidClasses = ["editor-mount"];
