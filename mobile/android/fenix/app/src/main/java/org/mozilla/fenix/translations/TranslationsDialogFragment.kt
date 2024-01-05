@@ -116,6 +116,7 @@ class TranslationsDialogFragment : BottomSheetDialogFragment() {
                                         )
                                     },
                                     onTranslateButtonClick = {},
+                                    onNotNowButtonClick = { dismiss() },
                                 )
                             }
                         }

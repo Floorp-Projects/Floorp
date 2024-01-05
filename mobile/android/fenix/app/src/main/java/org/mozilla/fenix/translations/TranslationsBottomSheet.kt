@@ -135,14 +135,18 @@ internal fun TranslationsDialog(
     onSettingClicked: () -> Unit,
     onLearnMoreClicked: () -> Unit,
     onTranslateButtonClick: () -> Unit,
+    onNotNowButtonClick: () -> Unit,
 ) {
     TranslationsDialogBottomSheet(
         learnMoreUrl = learnMoreUrl,
         showFirstTimeTranslation = showFirstTimeTranslation,
         translationError = translationError,
+        translateFromLanguages = getTranslateFromLanguageList(),
+        translateToLanguages = getTranslateToLanguageList(),
         onSettingClicked = onSettingClicked,
         onLearnMoreClicked = onLearnMoreClicked,
-        onTranslateButtonClick = onTranslateButtonClick,
+        onTranslateButtonClicked = onTranslateButtonClick,
+        onNotNowButtonClicked = onNotNowButtonClick,
     )
 }
 
