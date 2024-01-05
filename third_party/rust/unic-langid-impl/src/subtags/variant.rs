@@ -9,7 +9,7 @@ impl Variant {
     pub fn from_bytes(v: &[u8]) -> Result<Self, ParserError> {
         let slen = v.len();
 
-        if !(4..=8).contains(&slen) {
+        if slen < 4 || slen > 8 {
             return Err(ParserError::InvalidSubtag);
         }
 
