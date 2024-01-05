@@ -11,23 +11,48 @@ $tags:
   - 'Core :: Security: PSM'
 
 data_storage:
-  entries:
-    type: labeled_counter
+  alternate_services:
+    type: quantity
     description:
-      Counts the number of entries stored in each nsIDataStorage.
+      The number of entries stored in the AlternateServices nsIDataStorage
     bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1840135
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1873080
     data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1840135
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1873080
     data_sensitivity:
       - interaction
     notification_emails:
       - dkeeler@mozilla.com
     expires: never
-    labels:
-      - AlternateServices
-      - ClientAuthRememberList
-      - SiteSecurityServiceState
+    unit: entries
+  client_auth_remember_list:
+    type: quantity
+    description:
+      The number of entries stored in the ClientAuthRememberList nsIDataStorage
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1873080
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1873080
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - dkeeler@mozilla.com
+    expires: never
+    unit: entries
+  site_security_service_state:
+    type: quantity
+    description:
+      The number of entries stored in the SiteSecurityServiceState nsIDataStorage
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1873080
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1873080
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - dkeeler@mozilla.com
+    expires: never
+    unit: entries
 
 oskeystore:
   self_test:

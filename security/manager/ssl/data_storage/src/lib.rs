@@ -325,9 +325,15 @@ impl DataStorageInner {
             .filter(|slot| !slot.is_empty())
             .map(|slot| (slot.key.clone(), slot.slot_index))
             .collect();
-        data_storage::entries
-            .get(&self.name)
-            .add(self.persistent_table.len() as i32);
+        let num_entries = self.persistent_table.len() as i64;
+        match self.name.as_str() {
+            "AlternateServices" => data_storage::alternate_services.set(num_entries),
+            "ClientAuthRememberList" => data_storage::client_auth_remember_list.set(num_entries),
+            "SiteSecurityServiceState" => {
+                data_storage::site_security_service_state.set(num_entries)
+            }
+            _ => panic!("unknown nsIDataStorageManager::DataStorage"),
+        }
         Ok(())
     }
 
@@ -428,9 +434,15 @@ impl DataStorageInner {
             .collect();
         // Finally, write out the migrated data to the new backing file.
         self.async_write_entries(self.persistent_slots.clone())?;
-        data_storage::entries
-            .get(&self.name)
-            .add(self.persistent_table.len() as i32);
+        let num_entries = self.persistent_table.len() as i64;
+        match self.name.as_str() {
+            "AlternateServices" => data_storage::alternate_services.set(num_entries),
+            "ClientAuthRememberList" => data_storage::client_auth_remember_list.set(num_entries),
+            "SiteSecurityServiceState" => {
+                data_storage::site_security_service_state.set(num_entries)
+            }
+            _ => panic!("unknown nsIDataStorageManager::DataStorage"),
+        }
         Ok(())
     }
 
