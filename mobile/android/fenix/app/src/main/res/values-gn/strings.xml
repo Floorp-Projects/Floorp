@@ -2504,10 +2504,14 @@
     The dialog will be presented when the user requests deletion of a language.
     The first parameter is the name of the language, for example, "Spanish" and the second parameter is the size in kilobytes or megabytes of the language file. -->
     <string name="delete_language_file_dialog_title">¿Embogue %1$s (%2$s)?</string>
+    <!-- Additional information for the dialog used by the translations feature to confirm deleting a language. The first parameter is the name of the application, for example, "Fenix". -->
+    <string name="delete_language_file_dialog_message">Emboguéramo ko ñe’ẽ, %1$s omboguejýta ñe’ẽ vore kachépe emoñe’ẽasakuévo.</string>
     <!-- Title for the dialog used by the translations feature to confirm deleting all languages file.
     The dialog will be presented when the user requests deletion of all languages file.
     The first parameter is the size in kilobytes or megabytes of the language file. -->
     <string name="delete_language_all_languages_file_dialog_title">¿Emboguepa ñe’ẽnguéra (%1$s)?</string>
+    <!-- Additional information for the dialog used by the translations feature to confirm deleting all languages file. The first parameter is the name of the application, for example, "Fenix". -->
+    <string name="delete_language_all_languages_file_dialog_message">Emboguéramo ñe’ẽnguéra, %1$s omboguejýta ñe’ẽ vore kachépe emoñe’ẽasakuévo.</string>
     <!-- Button text on the dialog used by the translations feature to confirm deleting a language. -->
     <string name="delete_language_file_dialog_positive_button_text">Mboguete</string>
     <!-- Button text on the dialog used by the translations feature to cancel deleting a language. -->
@@ -2518,6 +2522,8 @@
     a translation without the necessary language files downloaded first when Android's data saver mode is enabled and the user is not using WiFi.
     The first parameter is the size in kilobytes or megabytes of the language file.-->
     <string name="download_language_file_dialog_title">¿Emboguejy ñe’ẽnguéra mba’ekuaarã poru’iverãme (%1$s)?</string>
+    <!-- Additional information for the data saving mode warning dialog used by the translations feature. This text explains the reason a download is required for a translation. -->
+    <string name="download_language_file_dialog_message_all_languages">Romboguejy ñe’ẽnguéra vore kachépe opyta hag̃ua moñe’ẽasa ñemiguáva.</string>
     <!-- Checkbox label text on the data saving mode warning dialog used by the translations feature. This checkbox allows users to ignore the data usage warnings. -->
     <string name="download_language_file_dialog_checkbox_text">Emboguejy ñe’ẽnguéra mba’ekuaarã poru’iverãme</string>
     <!-- Button text on the data saving mode warning dialog used by the translations feature to allow users to confirm they wish to continue and download the language file. -->

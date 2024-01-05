@@ -150,7 +150,7 @@
     <!-- Header text for jumping back into the recent tab in the home screen -->
     <string name="recent_tabs_header">Trang đã xem gần đây</string>
     <!-- Button text for showing all the tabs in the tabs tray -->
-    <string name="recent_tabs_show_all">Hiển thị tất cả</string>
+    <string name="recent_tabs_show_all">Xem tất cả</string>
 
     <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
     <string name="recent_tabs_show_all_content_description_2">Hiển thị nút tất cả các thẻ gần đây</string>
@@ -325,7 +325,7 @@
 
     <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
-    <string name="juno_onboarding_default_browser_title_nimbus_2">Chúng tôi thích việc giữ an toàn cho bạn</string>
+    <string name="juno_onboarding_default_browser_title_nimbus_2">Chúng tôi thích giữ an toàn cho bạn</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_description_nimbus_2">Trình duyệt được tài trợ bởi tổ chức phi lợi nhuận của chúng tôi giúp ngăn các công ty bí mật theo dõi bạn trên web.\n\nTìm hiểu thêm về thông báo quyền riêng tư của chúng tôi.
 </string>
@@ -337,7 +337,7 @@
     <!-- Text for the button dismiss the screen and move on with the flow -->
     <string name="juno_onboarding_default_browser_negative_button" tools:ignore="UnusedResources">Không phải bây giờ</string>
     <!-- Title for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_title_2">Luôn được mã hóa khi bạn chuyển đổi giữa các thiết bị</string>
+    <string name="juno_onboarding_sign_in_title_2">Luôn mã hóa khi bạn chuyển đổi giữa nhiều thiết bị</string>
     <!-- Description for sign in to sync screen. Nimbus experiments do not support string placeholders.
      Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_sign_in_description_2">Khi bạn đăng nhập và đồng bộ hóa, bạn sẽ an toàn hơn. Firefox mã hóa mật khẩu, dấu trang của bạn và hơn thế nữa.</string>
@@ -1282,7 +1282,7 @@
     <!-- Sub-header in the dialog to share a link to an app from the full list -->
     <string name="share_link_all_apps_subheader">Mọi hành động</string>
     <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
-    <string name="share_link_recent_apps_subheader">Được sử dụng gần đây</string>
+    <string name="share_link_recent_apps_subheader">Sử dụng gần đây</string>
     <!-- Text for the copy link action in the share screen. -->
     <string name="share_copy_link_to_clipboard">Sao chép vào khay nhớ tạm</string>
     <!-- Toast shown after copying link to clipboard -->
@@ -1529,7 +1529,7 @@
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Nghiêm ngặt</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_4">Trình chống theo dõi mạnh mẽ hơn và hiệu suất nhanh hơn, nhưng một số trang web có thể không hoạt động đúng.</string>
+    <string name="preference_enhanced_tracking_protection_strict_description_4">Trình chống theo dõi mạnh mẽ hơn và hiệu suất nhanh hơn, nhưng có thể làm hỏng một số trang web.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Những gì bị chặn bởi trình chống theo dõi nghiêm ngặt</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1546,9 +1546,9 @@
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies_2">Cookie từ các trang không mong muốn</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
-    <string name="preference_enhanced_tracking_protection_custom_cookies_3">Tất cả cookie của bên thứ ba (có thể khiến các trang web bị hỏng)</string>
+    <string name="preference_enhanced_tracking_protection_custom_cookies_3">Tất cả cookie của bên thứ ba (có thể làm hỏng các trang web)</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
-    <string name="preference_enhanced_tracking_protection_custom_cookies_4">Tất cả các cookie (có thể khiến các trang web bị hỏng)</string>
+    <string name="preference_enhanced_tracking_protection_custom_cookies_4">Tất cả cookie (có thể làm hỏng các trang web)</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies_5">Cô lập cookie trên nhiều trang web</string>
     <!-- Preference for Global Privacy Control for the custom privacy settings for Global Privacy Control. '&amp;' is replaced with the ampersand symbol: &-->
@@ -1572,7 +1572,7 @@
     <!-- Category of trackers (social media trackers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_social_media_trackers_title">Trình theo dõi truyền thông xã hội</string>
     <!-- Description of social media trackers that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_social_media_trackers_description">Hạn chế khả năng của các mạng xã hội mà nó theo dõi hoạt động duyệt web của bạn trên web.</string>
+    <string name="etp_social_media_trackers_description">Hạn chế các mạng xã hội theo dõi hoạt động duyệt web của bạn trên internet.</string>
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_title">Cookie theo dõi chéo trang web</string>
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
@@ -1584,7 +1584,7 @@
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_title">Tiền điện tử</string>
     <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_cryptominers_description">Ngăn chặn các tập lệnh độc hại có quyền truy cập vào thiết bị của bạn mà nó khai thác tiền kỹ thuật số.</string>
+    <string name="etp_cryptominers_description">Ngăn chặn các tập lệnh độc hại truy cập vào thiết bị của bạn để khai thác tiền điện tử.</string>
     <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_fingerprinters_title">Vân tay</string>
     <!-- Description of fingerprinters that can be blocked by Enhanced Tracking Protection -->

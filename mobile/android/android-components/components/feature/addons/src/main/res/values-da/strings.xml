@@ -75,7 +75,7 @@
     <!-- The author of an add-on. -->
     <string name="mozac_feature_addons_author">Udvikler</string>
     <!-- The authors of an add-on. -->
-    <string name="mozac_feature_addons_authors" moz:removedIn="120" tools:ignore="UnusedResources">Udviklere</string>
+    <string name="mozac_feature_addons_authors" moz:removedIn="123" tools:ignore="UnusedResources">Udviklere</string>
     <!-- The last date that the add-on was updated. -->
     <string name="mozac_feature_addons_last_updated">Senest opdateret</string>
     <!-- The developer website (Homepage) of the add-on. -->
@@ -114,8 +114,10 @@
     <string name="mozac_feature_addons_details">Detaljer</string>
     <!-- Displays a page with all the permissions of an add-on. -->
     <string name="mozac_feature_addons_permissions">Tilladelser</string>
-    <!-- This is button that remove (uninstall an add-on). -->
+    <!-- This is a button to remove (i.e. uninstall) an add-on. -->
     <string name="mozac_feature_addons_remove">Fjern</string>
+    <!-- This is a button to report an add-on. -->
+    <string name="mozac_feature_addons_report">Rapporter</string>
     <!-- This is the title of a dialog that asks the users if they to install or not an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_permissions_dialog_title">Tilføj %1$s?</string>
     <!-- This is the title of a dialog that asks the users to grant optional permissions. %1$s is the add-on name. -->
@@ -202,8 +204,6 @@
     <string name="mozac_feature_addons_failed_to_install_incompatible_error">%1$s kunne ikke installeres, fordi den ikke er kompatibel med %2$s %3$s.</string>
     <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_blocklisted_1">%1$s kunne ikke installeres, fordi der er høj risiko for at tilføjelsen kan forårsage stabilitets- eller sikkerhedsproblemer.</string>
-    <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->
-    <string name="mozac_feature_addons_blocklisted" moz:removedIn="119" tools:ignore="UnusedResources">%1$s kunne ikke installeres, fordi der er høj risiko for at tilføjelsen kan forårsage stabilitets- eller sikkerhedsproblemer</string>
     <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_successfully_enabled">%1$s blev aktiveret</string>
     <!-- Text shown after failed to enable an add-on. %1$s is the add-on name. -->

@@ -470,9 +470,19 @@
     <string name="reduce_cookie_banner_unsupported_site">Страницата не се поддържа</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
     <string name="reduce_cookie_banner_details_panel_title_on_for_site" moz:RemovedIn="121" tools:ignore="UnusedResources">Включване на намаляването на банерите за бисквитки за %1$s?</string>
+    <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
+    <string name="reduce_cookie_banner_details_panel_title_on_for_site_1">Включване на скриването на банери за бисквитки за %1$s?</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
     <string name="reduce_cookie_banner_details_panel_title_off_for_site" moz:RemovedIn="121" tools:ignore="UnusedResources">Изключване на намаляването на банерите за бисквитки за %1$s?</string>
 
+    <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
+    <string name="reduce_cookie_banner_details_panel_title_off_for_site_1">Изключване на скриването на банери за бисквитки за %1$s?</string>
+    <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name-->
+    <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request_2">%1$s не може автоматично да отхвърля заявките за бисквитки на този сайт. Можете да изпратите заявка за поддръжка на този сайт в бъдеще.</string>
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_off_for_site" moz:RemovedIn="121" tools:ignore="UnusedResources">%1$s ще изчисти бисквитките на този сайт и ще презареди страницата. Изчистването на всички бисквитки може да ви отпише от системата или да изпразни количките ви за пазаруване.</string>
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_off_for_site_1">Изключете и %1$s ще изчисти бисквитките и ще презареди този сайт. Това може да доведе до излизане от профила или изпразване на количките.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_on_for_site_2" moz:RemovedIn="121" tools:ignore="UnusedResources">%1$s се опитва автоматично да отхвърли всички заявки за бисквитки на поддържаните сайтове.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
@@ -518,6 +528,8 @@
     <string name="preferences_override_account_server">Персонализиран сървър за профили на Mozilla</string>
     <!-- Preference to override the Sync token server -->
     <string name="preferences_override_sync_tokenserver">Личен сървър за Sync</string>
+    <!-- Toast shown after updating the Mozilla account/Sync server override preferences -->
+    <string name="toast_override_account_sync_server_done">Променен акаунт в Mozilla/Sync. Излизане от приложението за прилагане на промените…</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Профил</string>
     <!-- Preference for changing where the toolbar is positioned -->
@@ -530,6 +542,10 @@
     <string name="preferences_gestures">Жестове</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Външен вид</string>
+    <!-- Preference description for banner about signing in -->
+    <string name="preferences_sign_in_description_2">Впишете се, за да синхронизирате раздели, отметки, пароли и други.</string>
+    <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
+    <string name="preferences_account_default_name_2">сметка в Mozilla</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
     <string name="preferences_account_sync_error">Свържете повторно, за да бъде възобновено синхронизирането</string>
     <!-- Preference for language -->
@@ -558,21 +574,37 @@
     <string name="preferences_account_settings">Настройки на профил</string>
     <!-- Preference for enabling url autocomplete-->
     <string name="preferences_enable_autocomplete_urls">Автоматично довършване на адреси</string>
+    <!-- Preference title for switch preference to show sponsored Firefox Suggest search suggestions -->
+    <string name="preferences_show_sponsored_suggestions">Предложения от спонсори</string>
+    <!-- Summary for preference to show sponsored Firefox Suggest search suggestions.
+         The first parameter is the name of the application. -->
+    <string name="preferences_show_sponsored_suggestions_summary">Подкрепете %1$s с от време на време спонсорирани предложения</string>
+    <!-- Preference title for switch preference to show Firefox Suggest search suggestions for web content.
+         The first parameter is the name of the application. -->
+    <string name="preferences_show_nonsponsored_suggestions">Предложения от %1$s</string>
+    <!-- Summary for preference to show Firefox Suggest search suggestions for web content -->
+    <string name="preferences_show_nonsponsored_suggestions_summary">Получавайте предложения от мрежата, свързани с търсенето ви</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Отваряне на препратки в приложения</string>
     <!-- Preference for open links in third party apps always open in apps option -->
     <string name="preferences_open_links_in_apps_always">Винаги</string>
+    <!-- Preference for open links in third party apps ask before opening option -->
+    <string name="preferences_open_links_in_apps_ask">Питайте преди отваряне</string>
     <!-- Preference for open links in third party apps never open in apps option -->
     <string name="preferences_open_links_in_apps_never">Никога</string>
     <!-- Preference for open download with an external download manager app -->
     <string name="preferences_external_download_manager">Външно приложение за изтегляния</string>
 
+    <!-- Preference for enabling gecko engine logs -->
+    <string name="preferences_enable_gecko_logs">Активиране на журналите на Gecko</string>
     <!-- Message to indicate users that we are quitting the application to apply the changes -->
     <string name="quit_application">Приложението се затваря за прилагане на промени…</string>
 
     <!-- Preference for add_ons -->
     <string name="preferences_addons">Добавки</string>
 
+    <!-- Preference for installing a local add-on -->
+    <string name="preferences_install_local_addon">Инсталиране на добавка от файл</string>
     <!-- Preference for notifications -->
     <string name="preferences_notifications">Известия</string>
 
@@ -606,6 +638,8 @@
 
     <!-- Title for the customize home screen section with Pocket. -->
     <string name="customize_toggle_pocket_2">Истории, навеждащи на размисъл</string>
+    <!-- Summary for the customize home screen section with Pocket. The first parameter is product name Pocket -->
+    <string name="customize_toggle_pocket_summary">Статии, предоставени от %s</string>
     <!-- Title for the customize home screen section with sponsored Pocket stories. -->
     <string name="customize_toggle_pocket_sponsored">Платени публикации</string>
     <!-- Title for the opening wallpaper settings screen -->
@@ -613,16 +647,49 @@
     <!-- Title for the customize home screen section with sponsored shortcuts. -->
     <string name="customize_toggle_contile">Спонсорирани препратки</string>
 
+    <!-- Wallpapers -->
+    <!-- Content description for various wallpapers. The first parameter is the name of the wallpaper -->
+    <string name="wallpapers_item_name_content_description">Тапет: %1$s</string>
+    <!-- Snackbar message for when wallpaper is selected -->
+    <string name="wallpaper_updated_snackbar_message">Тапетът е обновен!</string>
     <!-- Snackbar label for action to view selected wallpaper -->
     <string name="wallpaper_updated_snackbar_action">Преглед</string>
 
+    <!-- Snackbar message for when wallpaper couldn't be downloaded -->
+    <string name="wallpaper_download_error_snackbar_message">Тапетът не можа да бъде изтеглен</string>
     <!-- Snackbar label for action to retry downloading the wallpaper -->
     <string name="wallpaper_download_error_snackbar_action">Повторен опит</string>
+    <!-- Snackbar message for when wallpaper couldn't be selected because of the disk error -->
+    <string name="wallpaper_select_error_snackbar_message">Тапетът не можа да бъде сменен</string>
     <!-- Text displayed that links to website containing documentation about the "Limited Edition" wallpapers. -->
     <string name="wallpaper_learn_more">Научете повече</string>
     <!-- Text for classic wallpapers title. The first parameter is the Firefox name. -->
     <string name="wallpaper_classic_title">Класически %s</string>
 
+    <!-- Text for artist series wallpapers title. "Artist series" represents a collection of artist collaborated wallpapers. -->
+    <string name="wallpaper_artist_series_title">Серия за художници</string>
+    <!-- Description text for the artist series wallpapers with learn more link. The first parameter is the learn more string defined in wallpaper_learn_more. "Independent voices" is the name of the wallpaper collection -->
+    <string name="wallpaper_artist_series_description_with_learn_more">Колекцията независими гласове. %s</string>
+    <!-- Description text for the artist series wallpapers. "Independent voices" is the name of the wallpaper collection -->
+    <string name="wallpaper_artist_series_description">Колекцията независими гласове.</string>
+    <!-- Wallpaper onboarding dialog header text. -->
+    <string name="wallpapers_onboarding_dialog_title_text">Опитайте пръска цвят</string>
+    <!-- Wallpaper onboarding dialog body text. -->
+    <string name="wallpapers_onboarding_dialog_body_text">Изберете тапет, който говори за вас.</string>
+    <!-- Wallpaper onboarding dialog learn more button text. The button navigates to the wallpaper settings screen. -->
+    <string name="wallpapers_onboarding_dialog_explore_more_button_text">Разгледайте още тапети</string>
+
+    <!-- Add-ons general availability nimbus message-->
+    <!-- Title of the Nimbus message for add-ons general availability-->
+    <string name="addon_ga_message_title" tools:ignore="UnusedResources">Налични са нови добавки</string>
+    <!-- Body of the Nimbus message for add-ons general availability. 'Firefox' intentionally hardcoded here-->
+    <string name="addon_ga_message_body" tools:ignore="UnusedResources">Вижте 100+ нови разширения, които ви позволяват да направите Firefox ваш.</string>
+    <!-- Button text of the Nimbus message for add-ons general availability. -->
+    <string name="addon_ga_message_button" tools:ignore="UnusedResources">Разгледайте добавките</string>
+
+    <!-- Add-on process crash dialog to user -->
+    <!-- Title of a dialog shown to the user when enough errors have occurred with addons and they need to be temporarily disabled -->
+    <string name="addon_process_crash_dialog_title" tools:ignore="UnusedResources">Добавките са временно изключени</string>
     <!-- The first parameter is the application name. This is a message shown to the user when too many errors have occurred with the addons process and they have been disabled. The user can decide if they would like to continue trying to start add-ons or if they'd rather continue without them. -->
     <string name="addon_process_crash_dialog_message" tools:ignore="UnusedResources">Една или повече добавки са спрели да работят, като намаляват стабилността на системата. %1$s направи опит да ги рестартира, но без успех.\n\nТези добавки няма да работят в текущата сесия.\n\nПремахването или изключването на добавки може да реши този проблем.</string>
     <!-- This will cause the add-ons to try restarting but the dialog will reappear if it is unsuccessful again -->
@@ -633,6 +700,8 @@
     <!-- Account Preferences -->
     <!-- Preference for managing your account via accounts.firefox.com -->
     <string name="preferences_manage_account">Управление на профила</string>
+    <!-- Summary of the preference for managing your account via accounts.firefox.com. -->
+    <string name="preferences_manage_account_summary">Променете паролата си, управлявайте събирането на данни или изтрийте профила си</string>
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">Синхронизиране</string>
     <!-- Preference category for sync -->
@@ -770,6 +839,9 @@
     <!-- Title to show in alert when a lot of tabs are to be opened
     %d is a placeholder for the number of tabs that will be opened -->
     <string name="open_all_warning_title">Отваряне на %d раздела?</string>
+    <!-- Message to warn users that a large number of tabs will be opened
+    %s will be replaced by app name. -->
+    <string name="open_all_warning_message">Отварянето на толкова много раздели може да забави %s, докато страниците се зареждат. Сигурни ли сте, че искате да продължите?</string>
     <!-- Dialog button text for confirming open all tabs -->
     <string name="open_all_warning_confirm">Отворени раздели</string>
     <!-- Dialog button text for canceling open all tabs -->
@@ -855,6 +927,8 @@
     <string name="studies_remove">Премахване</string>
     <!-- Title of the active section on the studies list -->
     <string name="studies_active">Активни</string>
+    <!-- Description for studies, it indicates why Firefox use studies. The first parameter is the name of the application. -->
+    <string name="studies_description_2">%1$s може от време на време да инсталира и извършва проучвания.</string>
     <!-- Learn more link for studies, links to an article for more information about studies. -->
     <string name="studies_learn_more">Научете повече</string>
     <!-- Dialog message shown after removing a study -->
@@ -1010,6 +1084,10 @@
     <string name="bookmark_menu_open_in_new_tab_button">Отваряне в нов раздел</string>
     <!-- Bookmark overflow menu open in private tab button -->
     <string name="bookmark_menu_open_in_private_tab_button">Отваряне в поверителен раздел</string>
+    <!-- Bookmark overflow menu open all in tabs button -->
+    <string name="bookmark_menu_open_all_in_tabs_button">Отваряне на всички в нови раздели</string>
+    <!-- Bookmark overflow menu open all in private tabs button -->
+    <string name="bookmark_menu_open_all_in_private_tabs_button">Отваряне на всички в поверителни раздели</string>
     <!-- Bookmark overflow menu delete button -->
     <string name="bookmark_menu_delete_button">Изтриване</string>
     <!--Bookmark overflow menu save button -->
@@ -1260,6 +1338,9 @@
     <string name="nimbus_notification_default_browser_text" tools:ignore="UnusedResources">Направете Firefox вашия четец по подразбиране</string>
     <!-- Title shown in the notification that pops up to re-engage the user -->
     <string name="notification_re_engagement_title">Пробвайте поверително разглеждане</string>
+    <!-- Text shown in the notification that pops up to re-engage the user.
+    %1$s is a placeholder that will be replaced by the app name. -->
+    <string name="notification_re_engagement_text">Разглеждайте без запазени бисквитки или история в %1$s</string>
     <!-- Title A shown in the notification that pops up to re-engage the user -->
     <string name="notification_re_engagement_A_title">Преглеждайте без следа</string>
 
@@ -1268,6 +1349,9 @@
     <string name="notification_re_engagement_A_text">Поверителното разглеждане в %1$s не пази информация.</string>
     <!-- Title B shown in the notification that pops up to re-engage the user -->
     <string name="notification_re_engagement_B_title">Направете първото си търсене</string>
+
+    <!-- Text B shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_B_text">Намерете нещо наблизо. Или да откриете нещо забавно.</string>
 
     <!-- Survey -->
     <!-- Text shown in the fullscreen message that pops up to ask user to take a short survey.
@@ -1295,6 +1379,8 @@
     <string name="snackbar_private_tab_closed">Поверителният раздел е затворен</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
     <string name="snackbar_private_tabs_closed">Поверителните раздели са затворени</string>
+    <!-- Text shown in snackbar when user erases their private browsing data -->
+    <string name="snackbar_private_data_deleted">Личните данни за сърфиране са изтрити</string>
     <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
     <string name="snackbar_deleted_undo">ОТМЕНЯНЕ</string>
     <!-- Text shown in snackbar when user removes a top site -->
@@ -1372,6 +1458,10 @@
 
     <!-- Title text of a delete browsing data dialog. -->
     <string name="delete_history_prompt_title">Времеви обхват за изчистване</string>
+    <!-- Body text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_body" moz:RemovedIn="130" tools:ignore="UnusedResources">Премахва история (включително история, синхронизирана от други устройства), бисквитки и друга информация за сърфирането.</string>
+    <!-- Body text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_body_2">Премахва история (включително история, синхронизирана от други устройства)</string>
     <!-- Radio button in the delete browsing data dialog to delete history items for the last hour. -->
     <string name="delete_history_prompt_button_last_hour">Последения час</string>
     <!-- Radio button in the delete browsing data dialog to delete history items for today and yesterday. -->
@@ -1445,15 +1535,21 @@
   
     <!-- Preference summary for enhanced tracking protection settings on/off switch -->
     <string name="preference_enhanced_tracking_protection_summary">Вече включва цялостна защита на бисквитките, най-мощната ни бариера срещу проследяване в различни сайтове.</string>
+    <!-- Description of enhanced tracking protection. The parameter is the name of the application (For example: Firefox Fenix) -->
+    <string name="preference_enhanced_tracking_protection_explanation_2">%s ви предпазва от много от най-разпространените проследявания, които следят какво правите онлайн.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Научете повече</string>
 
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Стандартна (подразбиране)</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description_5">Страниците ще зареждат нормално, но ще блокират по-малко тракери.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Какво е спряно от стандартната защита от проследяване</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Строга</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_description_4">По-силна защита от проследяване и по-бърза производителност, но някои сайтове може да не работят правилно.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Какво е спряно от строгата защита от проследяване</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1473,6 +1569,10 @@
     <string name="preference_enhanced_tracking_protection_custom_cookies_3">Всички бисквитки от трети страни (може наруши работата на страници)</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies_4">Всички бисквитки (ще наруши работата на страници)</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_5">Изолиране на бисквитки в различни сайтове</string>
+    <!-- Preference for Global Privacy Control for the custom privacy settings for Global Privacy Control. '&amp;' is replaced with the ampersand symbol: &-->
+    <string name="preference_enhanced_tracking_protection_custom_global_privacy_control">Кажете на уебсайтовете да не споделят и продават данни</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content">Проследяващо съдържание</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
@@ -1495,6 +1595,8 @@
     <string name="etp_social_media_trackers_description">Ограничава възможността социалните мрежи да проследяват вашата активност в Мрежата.</string>
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_title">Бисквитки за следене в различни сайтове</string>
+    <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_title_2">Бисквитки между сайтове</string>
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_description">Спира бисквитки, които компаниите за реклама и анализ използват за събиране на ваши данни от посещения в множество страници.</string>
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
@@ -1533,8 +1635,15 @@
     <!-- Description of redirect tracker cookies that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_redirect_trackers_description">Изчиства бисквитки за пренасочване към известни проследяващи страници.</string>
 
+    <!-- Description of the SmartBlock Enhanced Tracking Protection feature. The * symbol is intentionally hardcoded here,
+         as we use it on the UI to indicate which trackers have been partially unblocked.  -->
+    <string name="preference_etp_smartblock_description">Някои проследявания, отбелязани по-долу, са частично деблокирани на страницата, защото сте взаимодействали с тях *.</string>
     <!-- Text displayed that links to website about enhanced tracking protection SmartBlock -->
     <string name="preference_etp_smartblock_learn_more">Научете повече</string>
+
+    <!-- Content description (not visible, for screen readers etc.):
+    Enhanced tracking protection exception preference icon for ETP settings. -->
+    <string name="preference_etp_exceptions_icon_description">Икона за предпочитание за изключение с подобрена защита от проследяване</string>
 
     <!-- About page link text to open support link -->
     <string name="about_support">Поддръжка</string>
@@ -1858,6 +1967,10 @@
     <string name="quick_settings_sheet_secure_connection_2">Връзката е защитена</string>
     <!-- Label that indicates a site is using a insecure connection -->
     <string name="quick_settings_sheet_insecure_connection_2">Връзката не е защитена</string>
+    <!-- Label to clear site data -->
+    <string name="clear_site_data">Изчистване на бисквитките и данните на сайта</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete all data for current site -->
+    <string name="confirm_clear_site_data"><![CDATA[Сигурни ли сте, че искате да изчистите всички бисквитки и данни на сайта <b>%s</b>?]]></string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for all sites-->
     <string name="confirm_clear_permissions_on_all_sites">Сигурни ли сте, че искате да премахнете всички права за всички страници?</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for a site-->
@@ -1868,6 +1981,10 @@
     <string name="no_site_exceptions">Няма изключения</string>
     <!-- Bookmark deletion confirmation -->
     <string name="bookmark_deletion_confirmation">Сигурен ли сте, че искате да изтриете отметката?</string>
+    <!-- Browser menu button that adds a shortcut to the home fragment -->
+    <string name="browser_menu_add_to_shortcuts">Добавяне към преки пътища</string>
+    <!-- Browser menu button that removes a shortcut from the home fragment -->
+    <string name="browser_menu_remove_from_shortcuts">Премахване от преките пътища</string>
     <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
      the certificate authority that verified the ticket-->
     <string name="certificate_info_verified_by">Проверено от: %1$s</string>
@@ -1879,6 +1996,8 @@
     <string name="login_deletion_confirmation">Сигурни ли сте, че искате да изтриете тези данни за вход?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Изтриване</string>
+    <!-- Negative action of a dialog asking to delete login -->
+    <string name="dialog_delete_negative">Отказ</string>
     <!--  The saved login options menu description. -->
     <string name="login_options_menu">Настройки за вход</string>
     <!--  The editable text field for a login's web address. -->
@@ -1931,21 +2050,47 @@
     <!-- The text displayed when a synced device has no tabs to show in the list of Synced Tabs. -->
     <string name="synced_tabs_no_open_tabs">Няма отворени раздели</string>
 
+    <!-- Content description for expanding a group of synced tabs. -->
+    <string name="synced_tabs_expand_group">Разгъване на групата синхронизирани раздели</string>
+    <!-- Content description for collapsing a group of synced tabs. -->
+    <string name="synced_tabs_collapse_group">Свиване на групата синхронизирани раздели</string>
+
+    <!-- Top Sites -->
+    <!-- Title text displayed in the dialog when shortcuts limit is reached. -->
+    <string name="shortcut_max_limit_title">Пределът за преки пътища е достигнат</string>
+    <!-- Content description text displayed in the dialog when shortcut limit is reached. -->
+    <string name="shortcut_max_limit_content">За да добавите нов пряк път, премахнете такъв. Докоснете и задръжте страницата и изберете премахване.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Добре, разбрах</string>
 
+    <!-- Label for the preference to show the shortcuts for the most visited top sites on the homepage -->
+    <string name="top_sites_toggle_top_recent_sites_4">Бързи клавиши</string>
     <!-- Title text displayed in the rename top site dialog. -->
     <string name="top_sites_rename_dialog_title">Наименование</string>
+    <!-- Hint for renaming title of a shortcut -->
+    <string name="shortcut_name_hint">Име на пряк път</string>
     <!-- Button caption to confirm the renaming of the top site. -->
     <string name="top_sites_rename_dialog_ok">Добре</string>
     <!-- Dialog button text for canceling the rename top site prompt. -->
     <string name="top_sites_rename_dialog_cancel">Отказ</string>
+
+    <!-- Text for the menu button to open the homepage settings. -->
+    <string name="top_sites_menu_settings">Настройки</string>
+    <!-- Text for the menu button to navigate to sponsors and privacy support articles. '&amp;' is replaced with the ampersand symbol: & -->
+    <string name="top_sites_menu_sponsor_privacy">Спонсори и поверителност</string>
+    <!-- Label text displayed for a sponsored top site. -->
+    <string name="top_sites_sponsored_label">Спонсорирано</string>
 
     <!-- Inactive tabs in the tabs tray -->
     <!-- Title text displayed in the tabs tray when a tab has been unused for 14 days. -->
     <string name="inactive_tabs_title">Неактивни раздели</string>
     <!-- Content description for closing all inactive tabs -->
     <string name="inactive_tabs_delete_all">Затваряне на всички неактивни раздели</string>
+
+    <!-- Content description for expanding the inactive tabs section. -->
+    <string name="inactive_tabs_expand_content_description">Разгъване на неактивните раздели</string>
+    <!-- Content description for collapsing the inactive tabs section. -->
+    <string name="inactive_tabs_collapse_content_description">Сгъване на неактивните раздели</string>
 
     <!-- Inactive tabs auto-close message in the tabs tray -->
     <!-- The header text of the auto-close message when the user is asked if they want to turn on the auto-closing of inactive tabs. -->
@@ -1956,6 +2101,14 @@
     <string name="inactive_tabs_auto_close_message_action" tools:ignore="UnusedResources">АВТОМАТИЧНО ЗАТВАРЯНЕ</string>
     <!-- Text for the snackbar to confirm auto-close is enabled for inactive tabs -->
     <string name="inactive_tabs_auto_close_message_snackbar">Автоматичното затваряне е включено</string>
+
+    <!-- Awesome bar suggestion's headers -->
+    <!-- Search suggestions title for Firefox Suggest. -->
+    <string name="firefox_suggest_header">Предложение от Firefox</string>
+    <!-- Title for search suggestions when Google is the default search suggestion engine. -->
+    <string name="google_search_engine_suggestion_header">Търсене в Гугъл</string>
+    <!-- Title for search suggestions when the default search suggestion engine is anything other than Google. The first parameter is default search engine name. -->
+    <string name="other_default_search_engine_suggestion_header">Търсене с %s</string>
 
     <!-- Default browser experiment -->
     <string name="default_browser_experiment_card_text">Задайте Firefox като стандартно приложение за отваряне на страници, електронна поща и съобщения.</string>
@@ -1979,14 +2132,372 @@
     <string name="pocket_stories_categories_header">Истории по тема</string>
     <!-- Text of a button allowing users to access an external url for more Pocket recommendations. -->
     <string name="pocket_stories_placeholder_text">Открийте повече</string>
+    <!-- Title of an app feature. Smaller than a heading. The first parameter is product name Pocket -->
+    <string name="pocket_stories_feature_title_2">С подкрепата на %s.</string>
     <!-- Caption for describing a certain feature. The placeholder is for a clickable text (eg: Learn more) which will load an url in a new tab when clicked.  -->
     <string name="pocket_stories_feature_caption">Част от семейството на Firefox. %s</string>
     <!-- Clickable text for opening an external link for more information about Pocket. -->
     <string name="pocket_stories_feature_learn_more">Научете повече</string>
 
+    <!-- Text indicating that the Pocket story that also displays this text is a sponsored story by other 3rd party entity. -->
+    <string name="pocket_stories_sponsor_indication">Спонсорирано</string>
+
+    <!-- Snackbar message for enrolling in a Nimbus experiment from the secret settings when Studies preference is Off.-->
+    <string name="experiments_snackbar">Активирайте телеметрията за изпращане на данни.</string>
+    <!-- Snackbar button text to navigate to telemetry settings.-->
+    <string name="experiments_snackbar_button">Към настройки</string>
+
+    <!-- Review quality check feature-->
+    <!-- Name for the review quality check feature used as title for the panel. -->
+    <string name="review_quality_check_feature_name_2">Проверка за преглед</string>
+    <!-- Summary for grades A and B for review quality check adjusted grading. -->
+    <string name="review_quality_check_grade_a_b_description">Надеждни отзиви</string>
+    <!-- Summary for grade C for review quality check adjusted grading. -->
+    <string name="review_quality_check_grade_c_description">Смесица от надеждни и ненадеждни отзиви</string>
+    <!-- Summary for grades D and F for review quality check adjusted grading. -->
+    <string name="review_quality_check_grade_d_f_description">Ненадеждни отзиви</string>
+    <!-- Text for title presenting the reliability of a product's reviews. -->
+    <string name="review_quality_check_grade_title">Колко надеждни са тези отзиви?</string>
+    <!-- Title for when the rating has been updated by the review checker -->
+    <string name="review_quality_check_adjusted_rating_title">Коригиран рейтинг</string>
+    <!-- Description for a product's adjusted star rating. The text presents that the product's reviews which were evaluated as unreliable were removed from the adjusted rating. -->
+    <string name="review_quality_check_adjusted_rating_description" moz:RemovedIn="122" tools:ignore="UnusedResources">Ненадеждните отзиви са премахнати</string>
+    <!-- Description for a product's adjusted star rating. The text presents that the product's reviews which were evaluated as unreliable were removed from the adjusted rating. -->
+    <string name="review_quality_check_adjusted_rating_description_2">Въз основа на надеждни отзиви</string>
+    <!-- Title for list of highlights from a product's review emphasizing a product's important traits. -->
+    <string name="review_quality_check_highlights_title">Акценти от скорошни рецензии</string>
+    <!-- Title for section explaining how we analyze the reliability of a product's reviews. -->
+    <string name="review_quality_check_explanation_title">Как определяме качеството на отзивите</string>
+    <!-- Paragraph explaining how we analyze the reliability of a product's reviews. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
+    <string name="review_quality_check_explanation_body_reliability">Използваме AI технологията на %s от Mozilla, за да проверим надеждността на отзивите за продукти. Това ще ви помогне да оцените само качеството на отзивите, а не качеството на продукта.</string>
+    <!-- Paragraph explaining the grading system we use to classify the reliability of a product's reviews. -->
+    <string name="review_quality_check_info_review_grade_header"><![CDATA[Приписваме на отзивите за всеки продукт <b>буквична оценка</b> от A до F.]]></string>
+    <!-- Description explaining grades A and B for review quality check adjusted grading. -->
+    <string name="review_quality_check_info_grade_info_AB">Надеждни отзиви. Вярваме, че рецензиите са вероятни от реални клиенти, оставили честни и безпристрастни отзиви.</string>
+    <!-- Description explaining grade C for review quality check adjusted grading. -->
+    <string name="review_quality_check_info_grade_info_C">Вярваме, че има комбинация от надеждни и ненадеждни отзиви.</string>
+    <!-- Description explaining grades D and F for review quality check adjusted grading. -->
+    <string name="review_quality_check_info_grade_info_DF">Ненадеждни отзиви. Вярваме, че отзивите вероятно са фалшиви или от пристрастни рецензенти.</string>
+    <!-- Paragraph explaining how a product's adjusted grading is calculated. -->
+    <string name="review_quality_check_explanation_body_adjusted_grading"><![CDATA[<b>Коригираната оценка</b> се основава само на отзиви, които смятаме за надеждни.]]></string>
+    <!-- Paragraph explaining product review highlights. First parameter is the name of the retailer (e.g. Amazon). -->
+    <string name="review_quality_check_explanation_body_highlights"><![CDATA[<b>Акцентите</b> са от %s отзиви през последните 80 дни, които смятаме за надеждни.]]></string>
+    <!-- Text for learn more caption presenting a link with information about review quality. First parameter is for clickable text defined in review_quality_check_info_learn_more_link. -->
+    <string name="review_quality_check_info_learn_more">Научете повече за %s.</string>
+    <!-- Clickable text that links to review quality check SuMo page. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
+    <string name="review_quality_check_info_learn_more_link" moz:RemovedIn="121" tools:ignore="UnusedResources">как %s от Mozilla определя качеството на рецензията</string>
+    <!-- Clickable text that links to review quality check SuMo page. First parameter is the Fakespot product name. -->
+    <string name="review_quality_check_info_learn_more_link_2">как %s определя качеството на рецензията</string>
+    <!-- Text for title of settings section. -->
+    <string name="review_quality_check_settings_title">Настройки</string>
+    <!-- Text for label for switch preference to show recommended products from review quality check settings section. -->
+    <string name="review_quality_check_settings_recommended_products">Показване на рекламите в програмата за прегледи</string>
+    <!-- Description for switch preference to show recommended products from review quality check settings section. First parameter is for clickable text defined in review_quality_check_settings_recommended_products_learn_more.-->
+    <string name="review_quality_check_settings_recommended_products_description_2" tools:ignore="UnusedResources">От време на време ще виждате реклами на подходящи продукти. Ние рекламираме само продукти с надеждни отзиви. %s</string>
+    <!-- Clickable text that links to review quality check recommended products support article. -->
+    <string name="review_quality_check_settings_recommended_products_learn_more" tools:ignore="UnusedResources">Научете повече</string>
+    <!-- Text for turning sidebar off button from review quality check settings section. -->
+    <string name="review_quality_check_settings_turn_off">Изключване на проверката за рецензии</string>
+    <!-- Text for title of recommended product section. This is displayed above a product image, suggested as an alternative to the product reviewed. -->
+    <string name="review_quality_check_ad_title" tools:ignore="UnusedResources">Повече за разглеждане</string>
+    <!-- Caption for recommended product section indicating this is an ad by Fakespot. First parameter is the Fakespot product name. -->
+    <string name="review_quality_check_ad_caption" tools:ignore="UnusedResources">Реклама от %s</string>
+    <!-- Caption for review quality check panel. First parameter is for clickable text defined in review_quality_check_powered_by_link. -->
+    <string name="review_quality_check_powered_by_2">Проверката на отзиви се поддържа от %s</string>
+    <!-- Clickable text that links to Fakespot.com. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
+    <string name="review_quality_check_powered_by_link" tools:ignore="UnusedResources">%s от Mozilla</string>
+    <!-- Text for title of warning card informing the user that the current analysis is outdated. -->
+    <string name="review_quality_check_outdated_analysis_warning_title" tools:ignore="UnusedResources">Нова информация за проверка</string>
     <!-- Text for button from warning card informing the user that the current analysis is outdated. Clicking this should trigger the product's re-analysis. -->
     <string name="review_quality_check_outdated_analysis_warning_action" tools:ignore="UnusedResources">Проверяване</string>
 
+    <!-- Title for warning card informing the user that the current product does not have enough reviews for a review analysis. -->
+    <string name="review_quality_check_no_reviews_warning_title">Все още няма достатъчно отзиви</string>
+    <!-- Text for body of warning card informing the user that the current product does not have enough reviews for a review analysis. -->
+    <string name="review_quality_check_no_reviews_warning_body">Когато този продукт има повече отзиви, ще можем да проверим качеството им.</string>
+    <!-- Title for warning card informing the user that the current product is currently not available. -->
+    <string name="review_quality_check_product_availability_warning_title">Продуктът не е наличен</string>
+    <!-- Text for the body of warning card informing the user that the current product is currently not available. -->
+    <string name="review_quality_check_product_availability_warning_body">Ако видите, че продуктът е отново в наличност, докладвайте и ще работим върху проверка на отзивите.</string>
+    <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
+    <string name="review_quality_check_product_availability_warning_action_2">Докладвайте продукта е наличен</string>
+    <!-- Title for warning card informing the user that the current product's re-analysis is still processing. -->
+    <string name="review_quality_check_reanalysis_in_progress_warning_title" moz:RemovedIn="122">Проверяване на качеството на отзива</string>
+    <!-- Title for warning card informing the user that the current product's analysis is still processing. -->
+    <string name="review_quality_check_analysis_in_progress_warning_title" moz:RemovedIn="122">Проверяване на качеството на отзива</string>
+    <!-- Title for warning card informing the user that the current product's analysis is still processing. The parameter is the percentage progress (0-100%) of the analysis process (e.g. 56%). -->
+    <string name="review_quality_check_analysis_in_progress_warning_title_2">Проверка на качеството на рецензията (%s)</string>
+    <!-- Text for body of warning card informing the user that the current product's analysis is still processing. -->
+    <string name="review_quality_check_analysis_in_progress_warning_body">Това може да отнеме около 60 секунди.</string>
+    <!-- Title for info card displayed after the user reports a product is back in stock. -->
+    <string name="review_quality_check_analysis_requested_info_title">Благодарим ви, че докладвахте!</string>
+    <!-- Text for body of info card displayed after the user reports a product is back in stock. -->
+    <string name="review_quality_check_analysis_requested_info_body">Би трябвало да имаме информация за отзивите на този продукт в рамките на 24 часа. Моля, проверете отново.</string>
+    <!-- Title for info card displayed when the user review checker while on a product that Fakespot does not analyze (e.g. gift cards, music). -->
+    <string name="review_quality_check_not_analyzable_info_title">Не можем да проверим тези отзиви</string>
+    <!-- Text for body of info card displayed when the user review checker while on a product that Fakespot does not analyze (e.g. gift cards, music). -->
+    <string name="review_quality_check_not_analyzable_info_body">За съжаление, не можем да проверим качеството на отзивите за определени видове продукти. Например карти за подарък и поточно видео, музика и игри.</string>
+    <!-- Title for info card displayed when another user reported the displayed product is back in stock. -->
+    <string name="review_quality_check_analysis_requested_other_user_info_title" tools:ignore="UnusedResources">Информация очаквайте скоро</string>
+    <!-- Text for body of info card displayed when another user reported the displayed product is back in stock. -->
+    <string name="review_quality_check_analysis_requested_other_user_info_body" tools:ignore="UnusedResources">Би трябвало да имаме информация за отзивите на този продукт в рамките на 24 часа. Моля, проверете отново.</string>
+    <!-- Title for info card displayed to the user when analysis finished updating. -->
+    <string name="review_quality_check_analysis_updated_confirmation_title" tools:ignore="UnusedResources">Анализът е актуален</string>
+    <!-- Text for the action button from info card displayed to the user when analysis finished updating. -->
+    <string name="review_quality_check_analysis_updated_confirmation_action" tools:ignore="UnusedResources">Разбрах</string>
+    <!-- Title for error card displayed to the user when an error occurred. -->
+    <string name="review_quality_check_generic_error_title">В момента няма налична информация</string>
+    <!-- Text for body of error card displayed to the user when an error occurred. -->
+    <string name="review_quality_check_generic_error_body">Работим за разрешаване на проблема. Моля, проверете отново по-късно.</string>
+    <!-- Title for error card displayed to the user when the device is disconnected from the network. -->
+    <string name="review_quality_check_no_connection_title">Няма мрежова връзка</string>
+    <!-- Text for body of error card displayed to the user when the device is disconnected from the network. -->
+    <string name="review_quality_check_no_connection_body">Проверете мрежовата си връзка и опитайте да презаредите страницата.</string>
+    <!-- Title for card displayed to the user for products whose reviews were not analyzed yet. -->
+    <string name="review_quality_check_no_analysis_title">Все още няма информация за тези отзиви</string>
+    <!-- Text for the body of card displayed to the user for products whose reviews were not analyzed yet. -->
+    <string name="review_quality_check_no_analysis_body">За да разберете дали отзивите за този продукт са надеждни, проверете качеството им. Отнема само около 60 секунди.</string>
+    <!-- Text for button from body of card displayed to the user for products whose reviews were not analyzed yet. Clicking this should trigger a product analysis. -->
+    <string name="review_quality_check_no_analysis_link">Проверете качеството на отзивите</string>
+    <!-- Headline for review quality check contextual onboarding card. -->
+    <string name="review_quality_check_contextual_onboarding_title">Опитайте нашето надеждно ръководство за отзиви за продукти</string>
+    <!-- Description for review quality check contextual onboarding card. The first and last two parameters are for retailer names (e.g. Amazon, Walmart). The second parameter is for the name of the application (e.g. Firefox). -->
+    <string name="review_quality_check_contextual_onboarding_description">Вижте колко надеждни са отзивите за продукта в %1$s, преди да купите. Проверка на рецензиите, експериментална функция от %2$s, е вградена директно в браузъра. Работи и на %3$s и %4$s.</string>
+    <!-- Description for review quality check contextual onboarding card. The first parameters is for retailer name (e.g. Amazon). The second parameter is for the name of the application (e.g. Firefox). -->
+    <string name="review_quality_check_contextual_onboarding_description_one_vendor">Вижте колко надеждни са отзивите за продукта в %1$s, преди да купите. Проверка за преглед, експериментална функция от %2$s, е вградена директно в браузъра.</string>
+    <!-- Paragraph presenting review quality check feature. First parameter is the Fakespot product name. Second parameter is for clickable text defined in review_quality_check_contextual_onboarding_learn_more_link. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
+    <string name="review_quality_check_contextual_onboarding_learn_more">Използвайки мощта на %1$s от Mozilla, ние ви помагаме да избегнете необективни и недостоверни рецензии. Нашият AI модел винаги се подобрява, за да ви защитава, докато пазарувате. %2$s</string>
+    <!-- Clickable text from the contextual onboarding card that links to review quality check support article. -->
+    <string name="review_quality_check_contextual_onboarding_learn_more_link">Научете повече</string>
+    <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. Parameter is the Fakespot product name. After the colon, what appears are two links, each on their own line. The first link is to a Privacy policy (review_quality_check_contextual_onboarding_privacy_policy_2). The second link is to Terms of use (review_quality_check_contextual_onboarding_terms_use_2). -->
+    <string name="review_quality_check_contextual_onboarding_caption_2">С избирането на „Да, изпробвайте“ вие се съгласявате със следното от %1$s:</string>
+    <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
+    <string name="review_quality_check_contextual_onboarding_privacy_policy" moz:RemovedIn="121" tools:ignore="UnusedResources">декларация за поверителност</string>
+    <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
+    <string name="review_quality_check_contextual_onboarding_privacy_policy_2">Политика на поверителност</string>
+    <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
+    <string name="review_quality_check_contextual_onboarding_terms_use" moz:RemovedIn="121" tools:ignore="UnusedResources">условия за ползване</string>
+    <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
+    <string name="review_quality_check_contextual_onboarding_terms_use_2">Условия за употреба</string>
+    <!-- Text for opt-in button from the review quality check contextual onboarding card. -->
+    <string name="review_quality_check_contextual_onboarding_primary_button_text">Да, опитай</string>
+    <!-- Text for opt-out button from the review quality check contextual onboarding card. -->
+    <string name="review_quality_check_contextual_onboarding_secondary_button_text">Не сега</string>
+    <!-- Text for the first CFR presenting the review quality check feature. -->
+    <string name="review_quality_check_first_cfr_message">Разберете дали можете да се доверите на отзивите за този продукт — преди да закупите.</string>
+    <!-- Text displayed in the first CFR presenting the review quality check feature that opens the review checker when clicked. -->
+    <string name="review_quality_check_first_cfr_action" tools:ignore="UnusedResources">Опитайте проверка на отзиви</string>
+    <!-- Text for the second CFR presenting the review quality check feature. -->
+    <string name="review_quality_check_second_cfr_message">Тези отзиви надеждни ли са? Проверете сега, за да видите коригирана оценка.</string>
+    <!-- Text displayed in the second CFR presenting the review quality check feature that opens the review checker when clicked. -->
+    <string name="review_quality_check_second_cfr_action" tools:ignore="UnusedResources">Отваряне на проверка за отзиви</string>
+    <!-- Flag showing that the review quality check feature is work in progress. -->
+    <string name="review_quality_check_beta_flag">Beta</string>
+    <!-- Content description (not visible, for screen readers etc.) for opening browser menu button to open review quality check bottom sheet. -->
+    <string name="review_quality_check_open_handle_content_description">Отваряне на проверка за отзиви</string>
+    <!-- Content description (not visible, for screen readers etc.) for closing browser menu button to open review quality check bottom sheet. -->
+    <string name="review_quality_check_close_handle_content_description">Затваряне на програмата за преглед</string>
+    <!-- Content description (not visible, for screen readers etc.) for review quality check star rating. First parameter is the number of stars (1-5) representing the rating. -->
+    <string name="review_quality_check_star_rating_content_description">%1$s от 5 звезди</string>
+    <!-- Text for minimize button from highlights card. When clicked the highlights card should reduce its size. -->
+    <string name="review_quality_check_highlights_show_less">По-малко</string>
+    <!-- Text for maximize button from highlights card. When clicked the highlights card should expand to its full size. -->
+    <string name="review_quality_check_highlights_show_more">Повече</string>
+    <!-- Text for highlights card quality category header. Reviews shown under this header should refer the product's quality. -->
+    <string name="review_quality_check_highlights_type_quality">Качество</string>
+    <!-- Text for highlights card price category header. Reviews shown under this header should refer the product's price. -->
+    <string name="review_quality_check_highlights_type_price">Цена</string>
+    <!-- Text for highlights card shipping category header. Reviews shown under this header should refer the product's shipping. -->
+    <string name="review_quality_check_highlights_type_shipping">Доставка</string>
+    <!-- Text for highlights card packaging and appearance category header. Reviews shown under this header should refer the product's packaging and appearance. -->
+    <string name="review_quality_check_highlights_type_packaging_appearance">Опаковка и външен вид</string>
+    <!-- Text for highlights card competitiveness category header. Reviews shown under this header should refer the product's competitiveness. -->
+    <string name="review_quality_check_highlights_type_competitiveness">Конкурентоспособност</string>
+    <!-- Text that is surrounded by quotes. The parameter is the actual text that is in quotes. An example of that text could be: Excellent craftsmanship, and that is displayed as “Excellent craftsmanship”. The text comes from a buyer's review that the feature is highlighting"   -->
+    <string name="surrounded_with_quotes">„%s“</string>
+
+    <!-- Accessibility services actions labels. These will be appended to accessibility actions like "Double tap to.." but not by or applications but by services like Talkback. -->
+    <!-- Action label for elements that can be collapsed if interacting with them. Talkback will append this to say "Double tap to collapse". -->
+    <string name="a11y_action_label_collapse">срив</string>
+    <!-- Current state for elements that can be collapsed if interacting with them. Talkback will dictate this after a state change. -->
+    <string name="a11y_state_label_collapsed">свито</string>
+    <!-- Action label for elements that can be expanded if interacting with them. Talkback will append this to say "Double tap to expand". -->
+    <string name="a11y_action_label_expand">разгънете</string>
+    <!-- Current state for elements that can be expanded if interacting with them. Talkback will dictate this after a state change. -->
+    <string name="a11y_state_label_expanded">разширено</string>
+    <!-- Action label for links to a website containing documentation about a wallpaper collection. Talkback will append this to say "Double tap to open link to learn more about this collection". -->
+    <string name="a11y_action_label_wallpaper_collection_learn_more">отворете връзката, за да научите повече за тази колекция</string>
+    <!-- Action label for links that point to an article. Talkback will append this to say "Double tap to read the article". -->
+    <string name="a11y_action_label_read_article">прочетете статията</string>
+    <!-- Action label for links to the Firefox Pocket website. Talkback will append this to say "Double tap to open link to learn more". -->
+    <string name="a11y_action_label_pocket_learn_more">отворете препратката, за да научите повече</string>
+    <!-- Content description for headings announced by accessibility service. The first parameter is the text of the heading. Talkback will announce the first parameter and then speak the word "Heading" indicating to the user that this text is a heading for a section. -->
+    <string name="a11y_heading">%s, Заглавие</string>
+
     <!-- Translations feature-->
 
-    </resources>
+    <!-- Translation request dialog -->
+    <!-- Title for the translation dialog that allows a user to translate the webpage. -->
+    <string name="translations_bottom_sheet_title">език. Превеждане на страницата?</string>
+    <!-- Title for the translation dialog that allows a user to translate the webpage when a user uses the translation feature the first time. The first parameter is the name of the application, for example, "Fenix". -->
+    <string name="translations_bottom_sheet_title_first_time">Опитайте с поверителни преводи след %1$s</string>
+    <!-- Additional information on the translation dialog that appears when a user uses the translation feature the first time. The first parameter is clickable text with a link, for example, "Learn more". -->
+    <string name="translations_bottom_sheet_info_message">За ваша поверителност, преводите никога не напускат устройството ви. Нови езици и подобрения очакват скоро! %1$s</string>
+    <!-- Text that links to additional information about the Firefox translations feature. -->
+    <string name="translations_bottom_sheet_info_message_learn_more">Научете повече</string>
+    <!-- Label for the dropdown to select which language to translate from on the translations dialog. Usually the translate from language selected will be the same as the page language. -->
+    <string name="translations_bottom_sheet_translate_from">Превеждане от</string>
+    <!-- Label for the dropdown to select which language to translate to on the translations dialog. Usually the translate to language selected will be the user's preferred language. -->
+    <string name="translations_bottom_sheet_translate_to">Превод на</string>
+    <!-- Button text on the translations dialog to dismiss the dialog and return to the browser. -->
+    <string name="translations_bottom_sheet_negative_button">Не сега</string>
+    <!-- Button text on the translations dialog to begin a translation of the website. -->
+    <string name="translations_bottom_sheet_positive_button">Превеждане</string>
+    <!-- Inactive button text on the translations dialog that indicates a translation is currently in progress. This button will be accompanied by a loading icon. -->
+    <string name="translations_bottom_sheet_translating_in_progress">Превеждане</string>
+    <!-- Button content description (not visible, for screen readers etc.) for the translations dialog translate button that indicates a translation is currently in progress. -->
+    <string name="translations_bottom_sheet_translating_in_progress_content_description">Превеждането е в процес на изпълнение</string>
+
+    <!-- Translations options dialog -->
+    <!-- Title of the translation options dialog that allows a user to set their translation options for the site the user is currently on. -->
+    <string name="translation_option_bottom_sheet_title">Настройки на превода</string>
+    <!-- Toggle switch label that allows a user to set the setting if they would like the browser to always offer or suggest translations when available. -->
+    <string name="translation_option_bottom_sheet_always_translate">Винаги предлагайте превод</string>
+    <!-- Toggle switch label that allows a user to set if they would like a given language to automatically translate or not. The first parameter is the language name, for example, "Spanish". -->
+    <string name="translation_option_bottom_sheet_always_translate_in_language">%1$s винаги се превежда</string>
+    <!-- Toggle switch label that allows a user to set if they would like to never be offered a translation of the given language. The first parameter is the language name, for example, "Spanish". -->
+    <string name="translation_option_bottom_sheet_never_translate_in_language">Без превод на %1$s</string>
+    <!-- Toggle switch label that allows a user to set the setting if they would like the browser to never translate the site the user is currently visiting. -->
+    <string name="translation_option_bottom_sheet_never_translate_site">Без превод на този сайт</string>
+    <!-- Button text for the button that will take the user to the translation settings dialog. -->
+    <string name="translation_option_bottom_sheet_translation_settings">Настройки на превода</string>
+    <!-- Button text for the button that will take the user to a website to learn more about how translations works in the given app. The first parameter is the name of the application, for example, "Fenix". -->
+    <string name="translation_option_bottom_sheet_about_translations">Относно преводите от %1$s</string>
+
+    <!-- Translation settings dialog -->
+    <!-- Title of the translation settings dialog that allows a user to set their preferred translation settings. -->
+    <string name="translation_settings_toolbar_title">Преводи</string>
+    <!-- Toggle switch label that indicates that the browser should signal or indicate when a translation is possible for any page. -->
+    <string name="translation_settings_offer_to_translate">Предложете превод, когато е възможно</string>
+    <!-- Toggle switch label that indicates that downloading files required for translating is permitted when using data saver mode in Android. -->
+    <string name="translation_settings_always_download">Езиците се изтеглят винаги в режим за икономия на данни</string>
+    <!-- Section header text that begins the section of a list of different options the user may select to adjust their translation preferences. -->
+    <string name="translation_settings_translation_preference">Настройки на превода</string>
+    <!-- Button text for the button that will take the user to the automatic translations settings dialog. On the automatic translations settings dialog, the user can set if translations should occur automatically for a given language. -->
+    <string name="translation_settings_automatic_translation">Автоматичен превод</string>
+    <!-- Button text for the button that will take the user to the never translate these sites dialog. On the never translate these sites dialog, the user can set if translations should never occur on certain websites. -->
+    <string name="translation_settings_automatic_never_translate_sites">Тези сайтове никога да не бъдат превеждани</string>
+    <!-- Button text for the button that will take the user to the download languages dialog. On the download languages dialog, the user can manage which languages they would like to download for translations. -->
+    <string name="translation_settings_download_language">Изтегляне на езици</string>
+
+    <!-- Automatic translation preference screen -->
+    <!-- Title of the automatic translation preference screen that will appear on the toolbar.-->
+    <string name="automatic_translation_toolbar_title_preference">Автоматичен превод</string>
+    <!-- Screen header presenting the automatic translation preference feature. It will appear under the toolbar. -->
+    <string name="automatic_translation_header_preference">Изберете език, който да управлявате „винаги превежда“ и „never translate“.</string>
+
+    <!-- Automatic translation options preference screen -->
+    <!-- Preference option for offering to translate. Radio button title text.-->
+    <string name="automatic_translation_option_offer_to_translate_title_preference">Предложение за превод (по подразбиране)</string>
+    <!-- Preference option for offering to translate. Radio button summary text. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="automatic_translation_option_offer_to_translate_summary_preference">%1$s ще предлага превод на сайтове на този език.</string>
+    <!-- Preference option for always translate. Radio button title text. -->
+    <string name="automatic_translation_option_always_translate_title_preference">Винаги да се превежда</string>
+    <!-- Preference option for always translate. Radio button summary text. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="automatic_translation_option_always_translate_summary_preference">%1$s ще преведе този език автоматично при зареждане на страницата.</string>
+    <!-- Preference option for never translate. Radio button title text.-->
+    <string name="automatic_translation_option_never_translate_title_preference">Никога да не се превежда</string>
+    <!-- Preference option for never translate. Radio button summary text. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="automatic_translation_option_never_translate_summary_preference">%1$s никога няма да предложи превод на сайтове на този език.</string>
+
+    <!-- Never translate site preference screen -->
+    <!-- Title of the never translate site preference screen that will appear on the toolbar.-->
+    <string name="never_translate_site_toolbar_title_preference">Тези сайтове никога да не бъдат превеждани</string>
+    <!-- Screen header presenting the never translate site preference feature. It will appear under the toolbar. -->
+    <string name="never_translate_site_header_preference">За да добавите нов сайт: Посетете го и изберете „Never translate this site“ от менюто за превод.</string>
+    <!-- Content description (not visible, for screen readers etc.): For a never-translated site list item that is selected.
+             The first parameter is web site url (for example:"wikipedia.com") -->
+    <string name="never_translate_site_item_list_content_description_preference">Премахване на %1$s</string>
+    <!-- The Delete site dialogue title will appear when the user clicks on a list item.
+             The first parameter is web site url (for example:"wikipedia.com") -->
+    <string name="never_translate_site_dialog_title_preference">Изтриване на %1$s?</string>
+    <!-- The Delete site dialogue positive button will appear when the user clicks on a list item. The site will be deleted. -->
+    <string name="never_translate_site_dialog_confirm_delete_preference">Изтриване</string>
+    <!-- The Delete site dialogue negative button will appear when the user clicks on a list item. The dialog will be dismissed. -->
+    <string name="never_translate_site_dialog_cancel_preference">Отказ</string>
+
+    <!-- Download languages preference screen -->
+    <!-- Title of the download languages preference screen toolbar.-->
+    <string name="download_languages_toolbar_title_preference">Изтегляне на езици</string>
+    <!-- Screen header presenting the download language preference feature. It will appear under the toolbar.The first parameter is "Learn More," a clickable text with a link. Talkback will append this to say "Double tap to open link to learn more". -->
+    <string name="download_languages_header_preference">Изтеглете цялостни езици за по-бързи преводи, както и за преводи офлайн. %1$s</string>
+    <!-- Clickable text from the screen header that links to a website. -->
+    <string name="download_languages_header_learn_more_preference">Научете повече</string>
+    <!-- The subhead of the download language preference screen will appear above the pivot language. -->
+    <string name="download_languages_available_languages_preference">Достъпни езици</string>
+    <!-- Text that will appear beside a core or pivot language package name to show that the language is necessary for the translation feature to function. -->
+    <string name="download_languages_default_system_language_require_preference">задължителен</string>
+    <!-- A text for download language preference item.
+    The first parameter is the language name, for example, "Spanish".
+    The second parameter is the language file size, for example, "(3.91 KB)" or, if the language package name is a pivot language, "(required)". -->
+    <string name="download_languages_language_item_preference">%1$s (%2$s)</string>
+    <!-- The subhead of the download language preference screen will appear above the items that were not downloaded. -->
+    <string name="download_language_header_preference">Изтегляне на езици</string>
+    <!-- All languages list item. When the user presses this item, they can download or delete all languages. -->
+    <string name="download_language_all_languages_item_preference">Всички езици</string>
+    <!-- Content description (not visible, for screen readers etc.): For a language list item that was downloaded, the user can now delete it. -->
+    <string name="download_languages_item_content_description_downloaded_state">Изтриване</string>
+    <!-- Content description (not visible, for screen readers etc.): For a language list item, downloading is in progress. -->
+    <string name="download_languages_item_content_description_in_progress_state">Изпълнява се</string>
+    <!-- Content description (not visible, for screen readers etc.): For a language list item that was not downloaded. -->
+    <string name="download_languages_item_content_description_not_downloaded_state">Изтегляния</string>
+    <!-- Content description (not visible, for screen readers etc.): For a language list item that is selected. -->
+    <string name="download_languages_item_content_description_selected_state">Избрано</string>
+
+    <!-- Title for the dialog used by the translations feature to confirm deleting a language.
+    The dialog will be presented when the user requests deletion of a language.
+    The first parameter is the name of the language, for example, "Spanish" and the second parameter is the size in kilobytes or megabytes of the language file. -->
+    <string name="delete_language_file_dialog_title">Изтриване на %1$s (%2$s)?</string>
+    <!-- Additional information for the dialog used by the translations feature to confirm deleting a language. The first parameter is the name of the application, for example, "Fenix". -->
+    <string name="delete_language_file_dialog_message">Ако изтриете този език, %1$s ще изтегли частични езици в склада ви, докато превеждате.</string>
+    <!-- Title for the dialog used by the translations feature to confirm deleting all languages file.
+    The dialog will be presented when the user requests deletion of all languages file.
+    The first parameter is the size in kilobytes or megabytes of the language file. -->
+    <string name="delete_language_all_languages_file_dialog_title">Изтриване на всички езици (%1$s)?</string>
+    <!-- Additional information for the dialog used by the translations feature to confirm deleting all languages file. The first parameter is the name of the application, for example, "Fenix". -->
+    <string name="delete_language_all_languages_file_dialog_message">Ако изтриете всички езици, %1$s ще изтегли частични езици в склада ви, докато превеждате.</string>
+    <!-- Button text on the dialog used by the translations feature to confirm deleting a language. -->
+    <string name="delete_language_file_dialog_positive_button_text">Изтриване</string>
+    <!-- Button text on the dialog used by the translations feature to cancel deleting a language. -->
+    <string name="delete_language_file_dialog_negative_button_text">Отказ</string>
+
+    <!-- Title for the data saving mode warning dialog used by the translations feature.
+    This dialog will be presented when the user attempts to download a language or perform
+    a translation without the necessary language files downloaded first when Android's data saver mode is enabled and the user is not using WiFi.
+    The first parameter is the size in kilobytes or megabytes of the language file.-->
+    <string name="download_language_file_dialog_title">Изтегляне в режим за икономия на данни (%1$s)?</string>
+    <!-- Additional information for the data saving mode warning dialog used by the translations feature. This text explains the reason a download is required for a translation. -->
+    <string name="download_language_file_dialog_message_all_languages">Изтегляне на частични езици в склада, за да запазим преводите поверителни.</string>
+    <!-- Checkbox label text on the data saving mode warning dialog used by the translations feature. This checkbox allows users to ignore the data usage warnings. -->
+    <string name="download_language_file_dialog_checkbox_text">Изтегляне винаги в режим за пестене на данни</string>
+    <!-- Button text on the data saving mode warning dialog used by the translations feature to allow users to confirm they wish to continue and download the language file. -->
+    <string name="download_language_file_dialog_positive_button_text">Изтегляния</string>
+    <!-- Button text on the data saving mode warning dialog used by the translations feature to allow users to confirm they wish to continue and download the language file and perform a translation. -->
+    <string name="download_language_file_dialog_positive_button_text_all_languages">Изтеглете и преведете</string>
+    <!-- Button text on the data saving mode warning dialog used by the translations feature to allow users to cancel the action and not perform a download of the language file. -->
+    <string name="download_language_file_dialog_negative_button_text">Отказ</string>
+
+    <!-- Debug drawer -->
+    <!-- The title of the Tab Tools feature in the Debug Drawer. -->
+    <string name="debug_drawer_tab_tools_title" tools:ignore="UnusedResources">Инструменти за раздели</string>
+    <!-- The title of the tab count section in Tab Tools. -->
+    <string name="debug_drawer_tab_tools_tab_count_title">Брой на разделите</string>
+    <!-- The active tab count category in the tab count section in Tab Tools. -->
+    <string name="debug_drawer_tab_tools_tab_count_normal">Включен</string>
+    <!-- The inactive tab count category in the tab count section in Tab Tools. -->
+    <string name="debug_drawer_tab_tools_tab_count_inactive">Изключени</string>
+    <!-- The private tab count category in the tab count section in Tab Tools. -->
+    <string name="debug_drawer_tab_tools_tab_count_private">Лични</string>
+    <!-- The total tab count category in the tab count section in Tab Tools. -->
+    <string name="debug_drawer_tab_tools_tab_count_total">Всичко</string>
+</resources>

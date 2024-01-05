@@ -577,7 +577,7 @@
     <string name="preferences_account_settings">Nastavení účtu</string>
 
     <!-- Preference for enabling url autocomplete-->
-    <string name="preferences_enable_autocomplete_urls">Automaticky doplňovat URL adresy</string>
+    <string name="preferences_enable_autocomplete_urls">Automaticky doplňovat adresy URL</string>
     <!-- Preference title for switch preference to show sponsored Firefox Suggest search suggestions -->
     <string name="preferences_show_sponsored_suggestions">Návrhy od sponzorů</string>
     <!-- Summary for preference to show sponsored Firefox Suggest search suggestions.
@@ -2411,4 +2411,5 @@
     <string name="download_languages_item_content_description_not_downloaded_state">Stáhnout</string>
     <!-- Content description (not visible, for screen readers etc.): For a language list item that is selected. -->
     <string name="download_languages_item_content_description_selected_state">Vybráno</string>
-</resources>
+
+    </resources>

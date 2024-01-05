@@ -146,7 +146,7 @@
     ]]></string>
 
     <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
-    <string name="mozac_browser_errorpages_unsafe_content_type_title">Loại tệp không an toàn</string>
+    <string name="mozac_browser_errorpages_unsafe_content_type_title">Loại tập tin không an toàn</string>
     <!-- The error message shown when the browser refuses to load a type of file that is considered unsafe. -->
     <string name="mozac_browser_errorpages_unsafe_content_type_message"><![CDATA[
       <ul>
@@ -182,7 +182,7 @@
     ]]></string>
 
     <!-- The document title and heading of an error page. -->
-    <string name="mozac_browser_errorpages_unknown_host_title">Địa chỉ không tìm thấy</string>
+    <string name="mozac_browser_errorpages_unknown_host_title">Không tìm thấy địa chỉ</string>
     <!-- In the example, the two URLs in markup do not need to be translated. -->
     <string name="mozac_browser_errorpages_unknown_host_message"><![CDATA[
       <p>Trình duyệt không thể tìm thấy máy chủ lưu trữ cho địa chỉ được cung cấp.</p>
@@ -227,7 +227,7 @@
     ]]></string>
 
     <!-- The document title and heading of an error page. -->
-    <string name="mozac_browser_errorpages_file_not_found_title">Không tìm thấy tệp</string>
+    <string name="mozac_browser_errorpages_file_not_found_title">Không tìm thấy tập tin</string>
 
     <string name="mozac_browser_errorpages_file_not_found_message"><![CDATA[
       <ul>
@@ -238,7 +238,7 @@
     ]]></string>
 
     <!-- The document title and heading of an error page. -->
-    <string name="mozac_browser_errorpages_file_access_denied_title">Truy cập tập tin bị từ chối</string>
+    <string name="mozac_browser_errorpages_file_access_denied_title">Quyền truy cập tập tin đã bị từ chối</string>
 
     <string name="mozac_browser_errorpages_file_access_denied_message"><![CDATA[
       <ul>
@@ -271,7 +271,7 @@
     ]]></string>
 
     <!-- The document title and heading of an error page. -->
-    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">Sự cố trang web phần mềm độc hại</string>
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">Sự cố trang web có phần mềm độc hại</string>
 
     <!-- The %1$s will be replaced by the malicious website URL-->
     <string name="mozac_browser_errorpages_safe_browsing_malware_uri_message"><![CDATA[
