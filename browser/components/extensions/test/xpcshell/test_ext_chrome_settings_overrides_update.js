@@ -9,7 +9,6 @@ const { AddonTestUtils } = ChromeUtils.importESModule(
 ChromeUtils.defineESModuleGetters(this, {
   AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
   HomePage: "resource:///modules/HomePage.sys.mjs",
-  PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
   RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
   sinon: "resource://testing-common/Sinon.sys.mjs",
 });
@@ -27,7 +26,7 @@ AddonTestUtils.createAppInfo(
 // Similar to TestUtils.topicObserved, but returns a deferred promise that
 // can be resolved
 function topicObservable(topic, checkFn) {
-  let deferred = PromiseUtils.defer();
+  let deferred = Promise.withResolvers();
   function observer(subject, topic, data) {
     try {
       if (checkFn && !checkFn(subject, data)) {

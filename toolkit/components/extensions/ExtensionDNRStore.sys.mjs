@@ -15,7 +15,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   Extension: "resource://gre/modules/Extension.sys.mjs",
   ExtensionDNR: "resource://gre/modules/ExtensionDNR.sys.mjs",
   ExtensionDNRLimits: "resource://gre/modules/ExtensionDNRLimits.sys.mjs",
-  PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
   Schemas: "resource://gre/modules/Schemas.sys.mjs",
 });
 
@@ -298,7 +297,7 @@ class Queue {
     if (this.#closed) {
       throw new Error("Unexpected queueTask call on closed queue");
     }
-    const deferred = lazy.PromiseUtils.defer();
+    const deferred = Promise.withResolvers();
     this.#tasks.push({ callback, deferred });
     // Run the queued task right away if there isn't one already running.
     if (!this.#runningTask) {

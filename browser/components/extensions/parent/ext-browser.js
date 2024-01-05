@@ -14,7 +14,6 @@ ChromeUtils.defineESModuleGetters(this, {
   AboutReaderParent: "resource:///actors/AboutReaderParent.sys.mjs",
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
-  PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
 });
 
 var { ExtensionError } = ExtensionUtils;
@@ -442,7 +441,7 @@ class TabTracker extends TabTrackerBase {
   deferredForTabOpen(nativeTab) {
     let deferred = this._deferredTabOpenEvents.get(nativeTab);
     if (!deferred) {
-      deferred = PromiseUtils.defer();
+      deferred = Promise.withResolvers();
       this._deferredTabOpenEvents.set(nativeTab, deferred);
       deferred.promise.then(() => {
         this._deferredTabOpenEvents.delete(nativeTab);
