@@ -9209,7 +9209,7 @@ class ContentSection extends (external_React_default()).PureComponent {
       id: "row-selector",
       className: "selector",
       name: "row-count",
-      preference: "topSitesRows",
+      "data-preference": "topSitesRows",
       value: topSitesRowsCount,
       onChange: this.onPreferenceSelect,
       disabled: !topSitesEnabled,

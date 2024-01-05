@@ -216,7 +216,6 @@ export var TPS = {
           } else {
             this._triggeredSync = false;
             this.DumpError("Sync error; aborting test");
-            return;
           }
 
           break;

@@ -6705,10 +6705,8 @@ function runCSSTransformTest()
       return;
     }
     lastCharRectTranslatedAsArray = synthesizeQueryTextRectArray(textarea.value.length - 1, textarea.value.length);
-    if (!checkQueryContentResult(lastCharRectTranslatedAsArray, "runCSSTransformTest: lastCharRectTranslatedAsArray, " + textarea.style.transform) ||
-        !checkRectArray(lastCharRectTranslatedAsArray, [lastCharRectTranslated], "runCSSTransformTest: lastCharRectTranslatedAsArray, " + textarea.style.transform)) {
-      return;
-    }
+    checkQueryContentResult(lastCharRectTranslatedAsArray, "runCSSTransformTest: lastCharRectTranslatedAsArray, " + textarea.style.transform);
+    checkRectArray(lastCharRectTranslatedAsArray, [lastCharRectTranslated], "runCSSTransformTest: lastCharRectTranslatedAsArray, " + textarea.style.transform);
   } finally {
     textarea.style.transform = "";
   }

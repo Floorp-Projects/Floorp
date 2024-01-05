@@ -170,7 +170,6 @@
         );
         if (!this._prevFocus.get()) {
           this._prevFocus = Cu.getWeakReference(document.activeElement);
-          return;
         }
       } catch (ex) {
         this._prevFocus = Cu.getWeakReference(document.activeElement);
