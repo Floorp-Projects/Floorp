@@ -123,9 +123,9 @@ void MediaKeySession::UpdateKeyStatusMap() {
         nsPrintfCString("MediaKeySession[%p,'%s'] key statuses change {", this,
                         NS_ConvertUTF16toUTF8(mSessionId).get()));
     for (const CDMCaps::KeyStatus& status : keyStatuses) {
-      message.Append(nsPrintfCString(
+      message.AppendPrintf(
           " (%s,%s)", ToHexString(status.mId).get(),
-          nsCString(MediaKeyStatusValues::GetString(status.mStatus)).get()));
+          nsCString(MediaKeyStatusValues::GetString(status.mStatus)).get());
     }
     message.AppendLiteral(" }");
     // Use %s so we aren't exposing random strings to printf interpolation.
