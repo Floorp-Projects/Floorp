@@ -2451,7 +2451,7 @@ class nsContextMenu {
   }
 
   /**
-   * Displays or hides the translate-selection item in the context menu.
+   * Displays or hides as well as localizes the translate-selection item in the context menu.
    */
   async showTranslateSelectionItem() {
     const translateSelectionItem = document.getElementById(
@@ -2464,12 +2464,41 @@ class nsContextMenu {
       "browser.translations.select.enable"
     );
 
-    translateSelectionItem.hidden = !(
-      translationsEnabled && selectTranslationsEnabled
-    );
+    const translatableText = this.selectedText.trim();
+
+    translateSelectionItem.hidden =
+      // Only show the item if the feature is enabled.
+      !(translationsEnabled && selectTranslationsEnabled) ||
+      // If there is no text to translate, we have nothing to do.
+      translatableText.length === 0;
 
     if (translateSelectionItem.hidden) {
       return;
+    }
+
+    const preferredLanguages =
+      nsContextMenu.TranslationsParent.getPreferredLanguages();
+    const topPreferredLanguage = preferredLanguages[0];
+
+    if (topPreferredLanguage) {
+      const { language } = await nsContextMenu.LanguageDetector.detectLanguage(
+        translatableText
+      );
+      if (topPreferredLanguage !== language) {
+        try {
+          const dn = new Services.intl.DisplayNames(undefined, {
+            type: "language",
+          });
+          document.l10n.setAttributes(
+            translateSelectionItem,
+            "main-context-menu-translate-selection-to-language",
+            { language: dn.of(topPreferredLanguage) }
+          );
+          return;
+        } catch {
+          // Services.intl.DisplayNames.of threw, do nothing.
+        }
+      }
     }
 
     document.l10n.setAttributes(
@@ -2580,8 +2609,11 @@ class nsContextMenu {
 
 ChromeUtils.defineESModuleGetters(nsContextMenu, {
   DevToolsShim: "chrome://devtools-startup/content/DevToolsShim.sys.mjs",
+  LanguageDetector:
+    "resource://gre/modules/translation/LanguageDetector.sys.mjs",
   LoginManagerContextMenu:
     "resource://gre/modules/LoginManagerContextMenu.sys.mjs",
+  TranslationsParent: "resource://gre/actors/TranslationsParent.sys.mjs",
   WebNavigationFrames: "resource://gre/modules/WebNavigationFrames.sys.mjs",
 });
 

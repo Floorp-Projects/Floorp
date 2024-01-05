@@ -7,3 +7,11 @@
 # selected text to a yet-to-be-determined language.
 main-context-menu-translate-selection =
     .label = Translate Selection…
+
+# Text displayed in the right-click context menu for translating
+# selected text to a target language.
+#
+# Variables:
+#   $language (string) - The localized display name of the target language
+main-context-menu-translate-selection-to-language =
+    .label = Translate Selection to { $language }

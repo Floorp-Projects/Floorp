@@ -35,11 +35,14 @@ export function getSelectors() {
     getH1() {
       return content.document.querySelector("h1");
     },
-    getLastParagraph() {
-      return content.document.querySelector("p:last-child");
-    },
     getHeader() {
       return content.document.querySelector("header");
+    },
+    getFirstParagraph() {
+      return content.document.querySelector("p:first-of-type");
+    },
+    getLastParagraph() {
+      return content.document.querySelector("p:last-of-type");
     },
     getSpanishParagraph() {
       return content.document.getElementById("spanish-paragraph");
@@ -105,4 +108,16 @@ export function rightClickContentElement(element) {
     const EventUtils = ContentTaskUtils.getEventUtils(content);
     EventUtils.sendMouseEvent({ type: "contextmenu" }, element, content.window);
   });
+}
+
+/**
+ * Selects all the content within a specified element.
+ *
+ * @param {Element} element - The element containing the content to be selected.
+ * @returns {string} - The text content of the selection.
+ */
+export function selectContentElement(element) {
+  content.focus();
+  content.getSelection().selectAllChildren(element);
+  return element.textContent;
 }
