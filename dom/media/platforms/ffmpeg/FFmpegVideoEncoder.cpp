@@ -543,7 +543,7 @@ MediaResult FFmpegVideoEncoder<LIBAV_VER>::InitInternal() {
         if (i > 0) {
           parameters.Append(",");
         }
-        parameters.Append(nsPrintfCString("%d", svc->mTargetBitrates[i]));
+        parameters.AppendPrintf("%d", svc->mTargetBitrates[i]);
       }
       // TODO: Set ts_number_layers, ts_periodicity, ts_layer_id and
       // ts_rate_decimator if they are different from the preset values in
@@ -587,8 +587,7 @@ MediaResult FFmpegVideoEncoder<LIBAV_VER>::InitInternal() {
             nsPrintfCString(" profile - %d", profile->mValue));
         mCodecContext->profile = profile->mValue;
         if (!profile->mString.IsEmpty()) {
-          codecSpecificLog.Append(
-              nsPrintfCString(" (%s)", profile->mString.get()));
+          codecSpecificLog.AppendPrintf(" (%s)", profile->mString.get());
           mLib->av_opt_set(mCodecContext->priv_data, "profile",
                            profile->mString.get(), 0);
         }
@@ -600,8 +599,8 @@ MediaResult FFmpegVideoEncoder<LIBAV_VER>::InitInternal() {
           return MediaResult(NS_ERROR_DOM_MEDIA_NOT_SUPPORTED_ERR,
                              RESULT_DETAIL("H264 level is unknown"));
         }
-        codecSpecificLog.Append(nsPrintfCString(
-            ", level %d (%s)", level->mValue, level->mString.get()));
+        codecSpecificLog.AppendPrintf(", level %d (%s)", level->mValue,
+                                      level->mString.get());
         mCodecContext->level = level->mValue;
         MOZ_ASSERT(!level->mString.IsEmpty());
         mLib->av_opt_set(mCodecContext->priv_data, "level",
