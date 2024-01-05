@@ -19,7 +19,7 @@ async function createAndShutdownContentProcess(url) {
 
   // Launch a new process and load url. Sets up a promise that will resolve
   // on shutdown.
-  let browserDestroyed = PromiseUtils.defer();
+  let browserDestroyed = Promise.withResolvers();
   await BrowserTestUtils.withNewTab(
     {
       gBrowser,

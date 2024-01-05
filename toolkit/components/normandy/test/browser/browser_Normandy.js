@@ -141,7 +141,7 @@ decorate_task(
   withStub(Normandy, "finishInit"),
   async function testStartupDelayed({ finishInitStub }) {
     let originalDeferred = Normandy.uiAvailableNotificationObserved;
-    let mockUiAvailableDeferred = PromiseUtils.defer();
+    let mockUiAvailableDeferred = Promise.withResolvers();
     Normandy.uiAvailableNotificationObserved = mockUiAvailableDeferred;
 
     let initPromise = Normandy.init();

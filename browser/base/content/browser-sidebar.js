@@ -88,7 +88,7 @@ var SidebarUI = {
    */
   _observer: null,
 
-  _initDeferred: PromiseUtils.defer(),
+  _initDeferred: Promise.withResolvers(),
 
   get promiseInitialized() {
     return this._initDeferred.promise;

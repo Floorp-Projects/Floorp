@@ -60,7 +60,6 @@ ChromeUtils.defineESModuleGetters(this, {
   Pocket: "chrome://pocket/content/Pocket.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
   ProcessHangMonitor: "resource:///modules/ProcessHangMonitor.sys.mjs",
-  PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
   PromptUtils: "resource://gre/modules/PromptUtils.sys.mjs",
   ReaderMode: "resource://gre/modules/ReaderMode.sys.mjs",
   ResetPBMPanel: "resource:///modules/ResetPBMPanel.sys.mjs",
@@ -2580,7 +2579,7 @@ var gBrowserInit = {
 ChromeUtils.defineLazyGetter(
   gBrowserInit,
   "_firstContentWindowPaintDeferred",
-  () => PromiseUtils.defer()
+  () => Promise.withResolvers()
 );
 
 gBrowserInit.idleTasksFinishedPromise = new Promise(resolve => {

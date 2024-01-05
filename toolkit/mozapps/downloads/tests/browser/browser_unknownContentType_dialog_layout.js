@@ -35,8 +35,8 @@ add_task(async function test_unknownContentType_dialog_layout() {
 
   for (let test of tests) {
     let UCTObserver = {
-      opened: PromiseUtils.defer(),
-      closed: PromiseUtils.defer(),
+      opened: Promise.withResolvers(),
+      closed: Promise.withResolvers(),
 
       observe(aSubject, aTopic, aData) {
         let win = aSubject;

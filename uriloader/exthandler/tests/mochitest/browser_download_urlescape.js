@@ -46,14 +46,14 @@ add_task(async function test_check_filename_urlescape() {
       );
 
       pendingTest = "save browser";
-      pendingPromise = PromiseUtils.defer();
+      pendingPromise = Promise.withResolvers();
       // First try to save the browser
       saveBrowser(browser);
       await pendingPromise.promise;
 
       // Next, try the context menu:
       pendingTest = "save from context menu";
-      pendingPromise = PromiseUtils.defer();
+      pendingPromise = Promise.withResolvers();
       let menu = document.getElementById("contentAreaContextMenu");
       let menuShown = BrowserTestUtils.waitForEvent(menu, "popupshown");
       BrowserTestUtils.synthesizeMouse(

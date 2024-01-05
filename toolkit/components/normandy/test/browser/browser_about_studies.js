@@ -745,7 +745,7 @@ add_task(async function test_nimbus_about_studies_rollout() {
 });
 
 add_task(async function test_getStudiesEnabled() {
-  RecipeRunner.initializedPromise = PromiseUtils.defer();
+  RecipeRunner.initializedPromise = Promise.withResolvers();
   let promise = AboutPages.aboutStudies.getStudiesEnabled();
 
   RecipeRunner.initializedPromise.resolve();

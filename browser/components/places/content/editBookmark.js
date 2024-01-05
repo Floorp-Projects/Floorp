@@ -18,7 +18,6 @@ ChromeUtils.defineESModuleGetters(this, {
   PlacesTransactions: "resource://gre/modules/PlacesTransactions.sys.mjs",
   PlacesUIUtils: "resource:///modules/PlacesUIUtils.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
-  PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
 });
 
 var gEditItemOverlay = {
@@ -257,7 +256,7 @@ var gEditItemOverlay = {
    *   "title", "location", "keyword", "folderPicker".
    */
   async initPanel(aInfo) {
-    const deferred = (this._initPanelDeferred = PromiseUtils.defer());
+    const deferred = (this._initPanelDeferred = Promise.withResolvers());
     try {
       if (typeof aInfo != "object" || aInfo === null) {
         throw new Error("aInfo must be an object.");
@@ -697,7 +696,7 @@ var gEditItemOverlay = {
    * Handle tag list updates from the input field or selector box.
    */
   async _updateTags() {
-    const deferred = (this._updateTagsDeferred = PromiseUtils.defer());
+    const deferred = (this._updateTagsDeferred = Promise.withResolvers());
     try {
       const inputTags = this._getTagsArrayFromTagsInputField();
       const isLibraryWindow =

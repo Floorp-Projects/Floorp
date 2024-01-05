@@ -331,7 +331,7 @@ add_task(async function testUpdateButton() {
     let item = getAddonCard(win, addon.id);
 
     gInstalledAddonId = "";
-    gInstallDeferred = PromiseUtils.defer();
+    gInstallDeferred = Promise.withResolvers();
 
     let loaded = waitForViewLoad(win);
     item.querySelector("[action=expand]").click();

@@ -143,7 +143,7 @@ async function createDownloadTest(
   let oldLaunchFile = DownloadIntegration.launchFile;
   let fileLaunched = null;
   if (expectLaunch) {
-    fileLaunched = PromiseUtils.defer();
+    fileLaunched = Promise.withResolvers();
     DownloadIntegration.launchFile = () => {
       ok(
         expectLaunch,

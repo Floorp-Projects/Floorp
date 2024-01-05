@@ -1482,7 +1482,7 @@ class PlacesToolbar extends PlacesViewBase {
       // Container is the toolbar itself.
       let instance = (this._rebuildingInstance = {});
       if (!this._rebuilding) {
-        this._rebuilding = PromiseUtils.defer();
+        this._rebuilding = Promise.withResolvers();
       }
       this._rebuild()
         .catch(console.error)

@@ -823,7 +823,7 @@ decorate_task(
     Services.obs.addObserver(observer, "recipe-runner:start");
 
     const originalPrefsApplied = Normandy.defaultPrefsHaveBeenApplied;
-    Normandy.defaultPrefsHaveBeenApplied = PromiseUtils.defer();
+    Normandy.defaultPrefsHaveBeenApplied = Promise.withResolvers();
 
     const recipeRunnerPromise = RecipeRunner.run();
     await Promise.resolve();

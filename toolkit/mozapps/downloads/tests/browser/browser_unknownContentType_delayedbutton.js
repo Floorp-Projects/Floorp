@@ -10,8 +10,8 @@ const DIALOG_DELAY =
   Services.prefs.getIntPref("security.dialog_enable_delay") + 200;
 
 let UCTObserver = {
-  opened: PromiseUtils.defer(),
-  closed: PromiseUtils.defer(),
+  opened: Promise.withResolvers(),
+  closed: Promise.withResolvers(),
 
   observe(aSubject, aTopic, aData) {
     let win = aSubject;
