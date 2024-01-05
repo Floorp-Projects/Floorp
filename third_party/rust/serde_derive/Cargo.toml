@@ -12,7 +12,7 @@
 [package]
 rust-version = "1.56"
 name = "serde_derive"
-version = "1.0.193"
+version = "1.0.194"
 authors = [
     "Erick Tryzelaar <erick.tryzelaar@gmail.com>",
     "David Tolnay <dtolnay@gmail.com>",
@@ -43,13 +43,13 @@ name = "serde_derive"
 proc-macro = true
 
 [dependencies.proc-macro2]
-version = "1.0"
+version = "1.0.74"
 
 [dependencies.quote]
-version = "1.0"
+version = "1.0.35"
 
 [dependencies.syn]
-version = "2.0.28"
+version = "2.0.46"
 
 [dev-dependencies.serde]
 version = "1"
