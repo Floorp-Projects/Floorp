@@ -194,7 +194,7 @@ nsresult AudioStream::EnsureTimeStretcherInitialized() {
 }
 
 nsresult AudioStream::SetPlaybackRate(double aPlaybackRate) {
-  TRACE("AudioStream::SetPlaybackRate");
+  TRACE_COMMENT("AudioStream::SetPlaybackRate", "%f", aPlaybackRate);
   NS_ASSERTION(
       aPlaybackRate > 0.0,
       "Can't handle negative or null playbackrate in the AudioStream.");
@@ -208,7 +208,7 @@ nsresult AudioStream::SetPlaybackRate(double aPlaybackRate) {
 }
 
 nsresult AudioStream::SetPreservesPitch(bool aPreservesPitch) {
-  TRACE("AudioStream::SetPreservesPitch");
+  TRACE_COMMENT("AudioStream::SetPreservesPitch", "%d", aPreservesPitch);
   if (aPreservesPitch == mPreservesPitch) {
     return NS_OK;
   }
@@ -289,7 +289,7 @@ nsresult AudioStream::OpenCubeb(cubeb* aContext, cubeb_stream_params& aParams,
 }
 
 void AudioStream::SetVolume(double aVolume) {
-  TRACE("AudioStream::SetVolume");
+  TRACE_COMMENT("AudioStream::SetVolume", "%f", aVolume);
   MOZ_ASSERT(aVolume >= 0.0 && aVolume <= 1.0, "Invalid volume");
 
   MOZ_ASSERT(mState != SHUTDOWN, "Don't set volume after shutdown.");
