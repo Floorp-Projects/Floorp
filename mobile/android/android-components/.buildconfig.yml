@@ -269,6 +269,7 @@ projects:
     - ui-autocomplete
     - ui-colors
     - ui-icons
+    - ui-widgets
   compose-awesomebar:
     description: An awesomebar component showing search results matching text entered
       into the toolbar.
@@ -601,7 +602,9 @@ projects:
     path: components/feature/autofill
     publish: true
     upstream_dependencies:
+    - browser-errorpages
     - concept-base
+    - concept-engine
     - concept-fetch
     - concept-storage
     - lib-fetch-okhttp
@@ -756,6 +759,7 @@ projects:
     - ui-colors
     - ui-icons
     - ui-tabcounter
+    - ui-widgets
   feature-downloads:
     description: Feature implementation for apps that want to use Android downloads
       manager.
@@ -1029,6 +1033,7 @@ projects:
     - ui-colors
     - ui-icons
     - ui-tabcounter
+    - ui-widgets
   feature-qr:
     description: A feature that provides functionality for scanning QR codes.
     path: components/feature/qr
@@ -1863,6 +1868,7 @@ projects:
     - ui-colors
     - ui-icons
     - ui-tabcounter
+    - ui-widgets
   service-contile:
     description: A library to communicate with the Contile services API
     path: components/service/contile
@@ -2261,9 +2267,17 @@ projects:
     path: components/ui/widgets
     publish: true
     upstream_dependencies:
+    - browser-errorpages
     - concept-base
+    - concept-engine
+    - concept-fetch
+    - concept-storage
+    - lib-publicsuffixlist
     - support-base
+    - support-ktx
     - support-test
+    - support-test-fakes
+    - support-utils
     - tooling-lint
     - ui-colors
     - ui-icons

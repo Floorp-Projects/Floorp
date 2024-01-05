@@ -8,12 +8,12 @@ import android.content.Context
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.view.isVisible
 import mozilla.components.browser.toolbar.BrowserToolbar
-import mozilla.components.browser.toolbar.behavior.BrowserToolbarBehavior
 import mozilla.components.concept.engine.EngineView
-import mozilla.components.feature.session.behavior.EngineViewBrowserToolbarBehavior
+import mozilla.components.ui.widgets.behavior.EngineViewClippingBehavior
+import mozilla.components.ui.widgets.behavior.EngineViewScrollingBehavior
 import org.mozilla.focus.R
-import mozilla.components.browser.toolbar.behavior.ToolbarPosition as browserToolbarPosition
-import mozilla.components.feature.session.behavior.ToolbarPosition as engineToolbarPosition
+import mozilla.components.ui.widgets.behavior.ToolbarPosition as engineToolbarPosition
+import mozilla.components.ui.widgets.behavior.ViewPosition as browserToolbarPosition
 
 /**
  * Collapse the toolbar and block it from appearing until calling [enableDynamicBehavior].
@@ -38,7 +38,7 @@ fun BrowserToolbar.disableDynamicBehavior(engineView: EngineView) {
  * @param engineView [EngineView] that should react to toolbar's dynamic behavior.
  */
 fun BrowserToolbar.enableDynamicBehavior(context: Context, engineView: EngineView) {
-    (layoutParams as? CoordinatorLayout.LayoutParams)?.behavior = BrowserToolbarBehavior(
+    (layoutParams as? CoordinatorLayout.LayoutParams)?.behavior = EngineViewScrollingBehavior(
         context,
         null,
         browserToolbarPosition.TOP,
@@ -48,7 +48,7 @@ fun BrowserToolbar.enableDynamicBehavior(context: Context, engineView: EngineVie
     engineView.setDynamicToolbarMaxHeight(toolbarHeight)
     (engineView.asView().layoutParams as? CoordinatorLayout.LayoutParams)?.apply {
         topMargin = 0
-        behavior = EngineViewBrowserToolbarBehavior(
+        behavior = EngineViewClippingBehavior(
             context,
             null,
             engineView.asView(),

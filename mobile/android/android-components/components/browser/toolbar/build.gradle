@@ -33,6 +33,7 @@ dependencies {
     implementation project(':browser-menu2')
     implementation project(':ui-icons')
     implementation project(':ui-colors')
+    implementation project(':ui-widgets')
     implementation project(':support-ktx')
 
     implementation ComponentsDependencies.androidx_appcompat

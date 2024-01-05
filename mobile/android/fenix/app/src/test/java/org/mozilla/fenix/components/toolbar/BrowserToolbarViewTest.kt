@@ -11,9 +11,9 @@ import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
 import mozilla.components.browser.toolbar.BrowserToolbar
-import mozilla.components.browser.toolbar.behavior.BrowserToolbarBehavior
 import mozilla.components.lib.publicsuffixlist.PublicSuffixList
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.ui.widgets.behavior.EngineViewScrollingBehavior
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Before
@@ -22,20 +22,20 @@ import org.junit.runner.RunWith
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.utils.Settings
-import mozilla.components.browser.toolbar.behavior.ToolbarPosition as MozacToolbarPosition
+import mozilla.components.ui.widgets.behavior.ViewPosition as MozacToolbarPosition
 
 @RunWith(FenixRobolectricTestRunner::class)
 class BrowserToolbarViewTest {
     private lateinit var toolbarView: BrowserToolbarView
     private lateinit var toolbar: BrowserToolbar
-    private lateinit var behavior: BrowserToolbarBehavior
+    private lateinit var behavior: EngineViewScrollingBehavior
     private lateinit var settings: Settings
 
     @Before
     fun setup() {
         toolbar = BrowserToolbar(testContext)
         toolbar.layoutParams = CoordinatorLayout.LayoutParams(100, 100)
-        behavior = spyk(BrowserToolbarBehavior(testContext, null, MozacToolbarPosition.BOTTOM))
+        behavior = spyk(EngineViewScrollingBehavior(testContext, null, MozacToolbarPosition.BOTTOM))
         (toolbar.layoutParams as CoordinatorLayout.LayoutParams).behavior = behavior
         settings = mockk(relaxed = true)
         every { testContext.components.useCases } returns mockk(relaxed = true)
@@ -217,7 +217,7 @@ class BrowserToolbarViewTest {
     }
 
     @Test
-    fun `setDynamicToolbarBehavior should set a BrowserToolbarBehavior for the bottom toolbar`() {
+    fun `setDynamicToolbarBehavior should set a ViewHideOnScrollBehavior for the bottom toolbar`() {
         val toolbarViewSpy = spyk(toolbarView)
         (toolbar.layoutParams as CoordinatorLayout.LayoutParams).behavior = null
 
@@ -227,7 +227,7 @@ class BrowserToolbarViewTest {
     }
 
     @Test
-    fun `setDynamicToolbarBehavior should set a BrowserToolbarBehavior for the top toolbar`() {
+    fun `setDynamicToolbarBehavior should set a ViewHideOnScrollBehavior for the top toolbar`() {
         val toolbarViewSpy = spyk(toolbarView)
         (toolbar.layoutParams as CoordinatorLayout.LayoutParams).behavior = null
 

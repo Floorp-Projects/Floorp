@@ -8,9 +8,9 @@ import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.view.isVisible
 import mozilla.components.browser.engine.gecko.GeckoEngineView
 import mozilla.components.browser.toolbar.BrowserToolbar
-import mozilla.components.browser.toolbar.behavior.BrowserToolbarBehavior
-import mozilla.components.feature.session.behavior.EngineViewBrowserToolbarBehavior
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.ui.widgets.behavior.EngineViewClippingBehavior
+import mozilla.components.ui.widgets.behavior.EngineViewScrollingBehavior
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -42,8 +42,8 @@ internal class BrowserToolbarTest {
 
         toolbar.enableDynamicBehavior(testContext, engineView)
 
-        assertTrue((toolbar.layoutParams as? CoordinatorLayout.LayoutParams)?.behavior is BrowserToolbarBehavior)
-        assertTrue((engineView.layoutParams as? CoordinatorLayout.LayoutParams)?.behavior is EngineViewBrowserToolbarBehavior)
+        assertTrue((toolbar.layoutParams as? CoordinatorLayout.LayoutParams)?.behavior is EngineViewScrollingBehavior)
+        assertTrue((engineView.layoutParams as? CoordinatorLayout.LayoutParams)?.behavior is EngineViewClippingBehavior)
         assertEquals(0, (engineView.layoutParams as? CoordinatorLayout.LayoutParams)?.topMargin)
         verify(engineView).setDynamicToolbarMaxHeight(toolbarHeight)
     }

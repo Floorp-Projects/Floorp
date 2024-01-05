@@ -17,8 +17,6 @@ import androidx.core.view.inputmethod.EditorInfoCompat
 import androidx.core.view.isGone
 import androidx.core.view.isVisible
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import mozilla.components.browser.toolbar.behavior.BrowserToolbarBehavior
-import mozilla.components.browser.toolbar.behavior.ToolbarPosition
 import mozilla.components.browser.toolbar.display.DisplayToolbar
 import mozilla.components.browser.toolbar.display.DisplayToolbarViews
 import mozilla.components.browser.toolbar.display.MenuButton
@@ -32,6 +30,8 @@ import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.whenever
+import mozilla.components.ui.widgets.behavior.EngineViewScrollingBehavior
+import mozilla.components.ui.widgets.behavior.ViewPosition
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
@@ -911,7 +911,7 @@ class BrowserToolbarTest {
     fun `enable scrolling is forwarded to the toolbar behavior`() {
         // Seems like real instances are needed for things to be set properly
         val toolbar = BrowserToolbar(testContext)
-        val behavior = spy(BrowserToolbarBehavior(testContext, null, ToolbarPosition.BOTTOM))
+        val behavior = spy(EngineViewScrollingBehavior(testContext, null, ViewPosition.BOTTOM))
         val params = CoordinatorLayout.LayoutParams(10, 10).apply {
             this.behavior = behavior
         }
@@ -926,7 +926,7 @@ class BrowserToolbarTest {
     fun `disable scrolling is forwarded to the toolbar behavior`() {
         // Seems like real instances are needed for things to be set properly
         val toolbar = BrowserToolbar(testContext)
-        val behavior = spy(BrowserToolbarBehavior(testContext, null, ToolbarPosition.BOTTOM))
+        val behavior = spy(EngineViewScrollingBehavior(testContext, null, ViewPosition.BOTTOM))
         val params = CoordinatorLayout.LayoutParams(10, 10).apply {
             this.behavior = behavior
         }
@@ -941,7 +941,7 @@ class BrowserToolbarTest {
     fun `expand is forwarded to the toolbar behavior`() {
         // Seems like real instances are needed for things to be set properly
         val toolbar = BrowserToolbar(testContext)
-        val behavior = spy(BrowserToolbarBehavior(testContext, null, ToolbarPosition.BOTTOM))
+        val behavior = spy(EngineViewScrollingBehavior(testContext, null, ViewPosition.BOTTOM))
         val params = CoordinatorLayout.LayoutParams(10, 10).apply {
             this.behavior = behavior
         }
@@ -956,7 +956,7 @@ class BrowserToolbarTest {
     fun `collapse is forwarded to the toolbar behavior`() {
         // Seems like real instances are needed for things to be set properly
         val toolbar = BrowserToolbar(testContext)
-        val behavior = spy(BrowserToolbarBehavior(testContext, null, ToolbarPosition.BOTTOM))
+        val behavior = spy(EngineViewScrollingBehavior(testContext, null, ViewPosition.BOTTOM))
         val params = CoordinatorLayout.LayoutParams(10, 10).apply {
             this.behavior = behavior
         }

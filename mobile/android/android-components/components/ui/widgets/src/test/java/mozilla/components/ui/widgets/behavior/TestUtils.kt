@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.browser.toolbar.behavior
+package mozilla.components.ui.widgets.behavior
 
 import android.view.MotionEvent
 
@@ -23,7 +23,7 @@ object TestUtils {
             pointerCount = 1
         }
 
-        val properties = Array(pointerCount, ::getPointerProperties)
+        val properties = Array(pointerCount, TestUtils::getPointerProperties)
         val pointerCoords = getPointerCoords(x, y, pointerCount)
 
         return MotionEvent.obtain(

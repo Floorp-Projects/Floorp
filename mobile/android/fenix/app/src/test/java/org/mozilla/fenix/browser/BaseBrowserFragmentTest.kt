@@ -16,8 +16,8 @@ import mozilla.components.browser.state.state.SessionState
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.concept.engine.permission.SitePermissions
 import mozilla.components.feature.contextmenu.ContextMenuCandidate
-import mozilla.components.feature.session.behavior.EngineViewBrowserToolbarBehavior
 import mozilla.components.ui.widgets.VerticalSwipeRefreshLayout
+import mozilla.components.ui.widgets.behavior.EngineViewClippingBehavior
 import org.junit.Before
 import org.junit.Test
 import org.mozilla.fenix.ext.components
@@ -88,17 +88,17 @@ class BaseBrowserFragmentTest {
     }
 
     @Test
-    fun `initializeEngineView should set EngineViewBrowserToolbarBehavior when dynamic toolbar is enabled`() {
+    fun `initializeEngineView should set EngineViewClippingBehavior when dynamic toolbar is enabled`() {
         every { settings.shouldUseFixedTopToolbar } returns false
         every { settings.isDynamicToolbarEnabled } returns true
         val params: CoordinatorLayout.LayoutParams = mockk(relaxed = true)
         every { params.behavior } returns mockk(relaxed = true)
         every { swipeRefreshLayout.layoutParams } returns params
-        val behavior = slot<EngineViewBrowserToolbarBehavior>()
+        val behavior = slot<EngineViewClippingBehavior>()
 
         fragment.initializeEngineView(13)
 
-        // EngineViewBrowserToolbarBehavior constructor parameters are not properties, we cannot check them.
+        // EngineViewClippingBehavior constructor parameters are not properties, we cannot check them.
         // Ensure just that the right behavior is set.
         verify { params.behavior = capture(behavior) }
     }

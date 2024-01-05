@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.browser.toolbar.behavior
+package mozilla.components.ui.widgets.behavior
 
 import android.content.Context
 import android.util.AttributeSet
@@ -11,35 +11,34 @@ import android.view.View
 import androidx.annotation.VisibleForTesting
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.view.ViewCompat
-import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.concept.base.crash.CrashReporting
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.support.ktx.android.view.findViewInHierarchy
 
 /**
- * Where the toolbar is placed on the screen.
+ * Where the view is placed on the screen.
  */
-enum class ToolbarPosition {
+enum class ViewPosition {
     TOP,
     BOTTOM,
 }
 
 /**
- * A [CoordinatorLayout.Behavior] implementation to be used when placing [BrowserToolbar] at the bottom of the screen.
+ * A [CoordinatorLayout.Behavior] implementation to be used when placing [View] at the bottom of the screen.
  *
- * This is safe to use even if the [BrowserToolbar] may be added / removed from a parent layout later
+ * This is safe to use even if the [View] may be added / removed from a parent layout later
  * or if it could have Visibility.GONE set.
  *
  * This implementation will:
- * - Show/Hide the [BrowserToolbar] automatically when scrolling vertically.
- * - Snap the [BrowserToolbar] to be hidden or visible when the user stops scrolling.
+ * - Show/Hide the [View] automatically when scrolling vertically.
+ * - Snap the [View] to be hidden or visible when the user stops scrolling.
  */
-class BrowserToolbarBehavior(
+class EngineViewScrollingBehavior(
     val context: Context?,
     attrs: AttributeSet?,
-    private val toolbarPosition: ToolbarPosition,
+    private val viewPosition: ViewPosition,
     private val crashReporting: CrashReporting? = null,
-) : CoordinatorLayout.Behavior<BrowserToolbar>(context, attrs) {
+) : CoordinatorLayout.Behavior<View>(context, attrs) {
     // This implementation is heavily based on this blog article:
     // https://android.jlelse.eu/scroll-your-bottom-navigation-view-away-with-10-lines-of-code-346f1ed40e9e
 
@@ -59,10 +58,10 @@ class BrowserToolbarBehavior(
     internal var engineView: EngineView? = null
 
     /**
-     * Reference to the actual [BrowserToolbar] that we'll animate.
+     * Reference to the actual [View] that we'll animate.
      */
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal var browserToolbar: BrowserToolbar? = null
+    internal var dynamicScrollView: View? = null
 
     /**
      * Depending on how user's touch was consumed by EngineView / current website,
@@ -84,19 +83,19 @@ class BrowserToolbarBehavior(
     internal var gesturesDetector: BrowserGestureDetector = createGestureDetector()
 
     @VisibleForTesting
-    internal var yTranslator: BrowserToolbarYTranslator = createYTranslationStragy()
+    internal var yTranslator: ViewYTranslator = createYTranslationStrategy()
 
-    private fun createYTranslationStragy() = BrowserToolbarYTranslator(toolbarPosition)
+    private fun createYTranslationStrategy() = ViewYTranslator(viewPosition)
 
     override fun onStartNestedScroll(
         coordinatorLayout: CoordinatorLayout,
-        child: BrowserToolbar,
+        child: View,
         directTargetChild: View,
         target: View,
         axes: Int,
         type: Int,
     ): Boolean {
-        return if (browserToolbar != null) {
+        return if (dynamicScrollView != null) {
             startNestedScroll(axes, type, child)
         } else {
             return false // not interested in subsequent scroll events
@@ -105,21 +104,21 @@ class BrowserToolbarBehavior(
 
     override fun onStopNestedScroll(
         coordinatorLayout: CoordinatorLayout,
-        child: BrowserToolbar,
+        child: View,
         target: View,
         type: Int,
     ) {
-        if (browserToolbar != null) {
+        if (dynamicScrollView != null) {
             stopNestedScroll(type, child)
         }
     }
 
     override fun onInterceptTouchEvent(
         parent: CoordinatorLayout,
-        child: BrowserToolbar,
+        child: View,
         ev: MotionEvent,
     ): Boolean {
-        if (browserToolbar != null) {
+        if (dynamicScrollView != null) {
             gesturesDetector.handleTouchEvent(ev)
         }
         return false // allow events to be passed to below listeners
@@ -127,31 +126,31 @@ class BrowserToolbarBehavior(
 
     override fun onLayoutChild(
         parent: CoordinatorLayout,
-        child: BrowserToolbar,
+        child: View,
         layoutDirection: Int,
     ): Boolean {
-        browserToolbar = child
+        dynamicScrollView = child
         engineView = parent.findViewInHierarchy { it is EngineView } as? EngineView
 
         return super.onLayoutChild(parent, child, layoutDirection)
     }
 
     /**
-     * Used to expand the [BrowserToolbar]
+     * Used to expand the [View]
      */
-    fun forceExpand(toolbar: BrowserToolbar) {
-        yTranslator.expandWithAnimation(toolbar)
+    fun forceExpand(view: View) {
+        yTranslator.expandWithAnimation(view)
     }
 
     /**
-     * Used to collapse the [BrowserToolbar]
+     * Used to collapse the [View]
      */
-    fun forceCollapse(toolbar: BrowserToolbar) {
-        yTranslator.collapseWithAnimation(toolbar)
+    fun forceCollapse(view: View) {
+        yTranslator.collapseWithAnimation(view)
     }
 
     /**
-     * Allow this toolbar can be animated.
+     * Allow this view to be animated.
      *
      * @see disableScrolling
      */
@@ -160,7 +159,7 @@ class BrowserToolbarBehavior(
     }
 
     /**
-     * Disable scrolling this toolbar irrespective of the intrinsic checks.
+     * Disable scrolling of the view irrespective of the intrinsic checks.
      *
      * @see enableScrolling
      */
@@ -170,15 +169,15 @@ class BrowserToolbarBehavior(
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal fun tryToScrollVertically(distance: Float) {
-        browserToolbar?.let { toolbar ->
+        dynamicScrollView?.let { view ->
             if (shouldScroll && startedScroll) {
-                yTranslator.translate(toolbar, distance)
+                yTranslator.translate(view, distance)
             } else if (engineView?.getInputResultDetail()?.isTouchHandlingUnknown() == false) {
-                // Force expand the toolbar if the user scrolled up, it is not already expanded and
+                // Force expand the view if the user scrolled up, it is not already expanded and
                 // an animation to expand it is not already in progress,
-                // otherwise the user could get stuck in a state where they cannot show the toolbar
+                // otherwise the user could get stuck in a state where they cannot show the view
                 // See https://github.com/mozilla-mobile/android-components/issues/7101
-                yTranslator.forceExpandIfNotAlready(toolbar, distance)
+                yTranslator.forceExpandIfNotAlready(view, distance)
             }
         }
     }
@@ -202,26 +201,26 @@ class BrowserToolbarBehavior(
             BrowserGestureDetector.GesturesListener(
                 onVerticalScroll = ::tryToScrollVertically,
                 onScaleBegin = {
-                    // Scale shouldn't animate the toolbar but a small y translation is still possible
+                    // Scale shouldn't animate the view but a small y translation is still possible
                     // because of a previous scroll. Try to be swift about such an in progress animation.
-                    yTranslator.snapImmediately(browserToolbar)
+                    yTranslator.snapImmediately(dynamicScrollView)
                 },
             ),
             crashReporting = crashReporting,
         )
 
     @VisibleForTesting
-    internal fun startNestedScroll(axes: Int, type: Int, toolbar: BrowserToolbar): Boolean {
+    internal fun startNestedScroll(axes: Int, type: Int, view: View): Boolean {
         return if (shouldScroll && axes == ViewCompat.SCROLL_AXIS_VERTICAL) {
             startedScroll = true
             shouldSnapAfterScroll = type == ViewCompat.TYPE_TOUCH
             yTranslator.cancelInProgressTranslation()
             true
         } else if (engineView?.getInputResultDetail()?.isTouchUnhandled() == true) {
-            // Force expand the toolbar if event is unhandled, otherwise user could get stuck in a
-            // state where they cannot show the toolbar
+            // Force expand the view if event is unhandled, otherwise user could get stuck in a
+            // state where they cannot show the view
             yTranslator.cancelInProgressTranslation()
-            yTranslator.expandWithAnimation(toolbar)
+            yTranslator.expandWithAnimation(view)
             false
         } else {
             false
@@ -229,10 +228,10 @@ class BrowserToolbarBehavior(
     }
 
     @VisibleForTesting
-    internal fun stopNestedScroll(type: Int, toolbar: BrowserToolbar) {
+    internal fun stopNestedScroll(type: Int, view: View) {
         startedScroll = false
         if (shouldSnapAfterScroll || type == ViewCompat.TYPE_NON_TOUCH) {
-            yTranslator.snapWithAnimation(toolbar)
+            yTranslator.snapWithAnimation(view)
         }
     }
 }

@@ -12,17 +12,17 @@ import kotlinx.coroutines.flow.mapNotNull
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.selector.findCustomTabOrSelectedTab
 import mozilla.components.browser.state.store.BrowserStore
-import mozilla.components.concept.toolbar.Toolbar
+import mozilla.components.concept.toolbar.ScrollableToolbar
 import mozilla.components.lib.state.ext.flowScoped
 
 /**
- * Controls how the dynamic toolbar should behave based on the current tab state.
+ * Controls how a dynamic toolbar should behave based on the current tab state.
  *
  * Responsible to enforce the following:
  * - toolbar should not be scrollable if the page has not finished loading
  */
 class ToolbarBehaviorController(
-    private val toolbar: Toolbar,
+    private val toolbar: ScrollableToolbar,
     private val store: BrowserStore,
     private val customTabId: String? = null,
 ) {

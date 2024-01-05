@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.feature.session.behavior
+package mozilla.components.ui.widgets.behavior
 
 import android.annotation.SuppressLint
 import android.content.Context
@@ -27,7 +27,7 @@ import kotlin.math.roundToInt
  * @param toolbarHeight size of [BrowserToolbar] when it is placed above the [EngineView]
  * @param whether the [BrowserToolbar] is placed above or below the [EngineView]
  */
-class EngineViewBrowserToolbarBehavior(
+class EngineViewClippingBehavior(
     context: Context?,
     attrs: AttributeSet?,
     engineViewParent: View,
@@ -76,7 +76,7 @@ class EngineViewBrowserToolbarBehavior(
     }
 
     /**
-     * Apply vertical clipping to [EngineView]. This requires [EngineViewBrowserToolbarBehavior] to be set
+     * Apply vertical clipping to [EngineView]. This requires [EngineViewClippingBehavior] to be set
      * in/on the [EngineView] or its parent. Must be a direct descending child of [CoordinatorLayout].
      */
     override fun onDependentViewChanged(parent: CoordinatorLayout, child: View, dependency: View): Boolean {

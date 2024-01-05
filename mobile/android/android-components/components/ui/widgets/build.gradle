@@ -25,8 +25,11 @@ android {
 }
 
 dependencies {
+    implementation project(':concept-base')
+    implementation project(':concept-engine')
     implementation project(':ui-colors')
     implementation project(':ui-icons')
+    implementation project(':support-ktx')
 
     implementation ComponentsDependencies.androidx_appcompat
     implementation ComponentsDependencies.androidx_constraintlayout
@@ -35,6 +38,7 @@ dependencies {
     implementation ComponentsDependencies.androidx_swiperefreshlayout
 
     testImplementation project(":support-test")
+    testImplementation project(':support-test-fakes')
 
     testImplementation ComponentsDependencies.androidx_test_junit
     testImplementation ComponentsDependencies.testing_robolectric
