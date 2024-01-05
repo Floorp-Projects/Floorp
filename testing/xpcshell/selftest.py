@@ -298,10 +298,6 @@ function run_test () {
 # A test for asynchronous cleanup functions
 ASYNC_CLEANUP = """
 function run_test() {
-  let { PromiseUtils } = ChromeUtils.importESModule(
-    "resource://gre/modules/PromiseUtils.sys.mjs"
-  );
-
   // The list of checkpoints in the order we encounter them.
   let checkpoints = [];
 
@@ -327,7 +323,7 @@ function run_test() {
   });
 
   registerCleanupFunction(function async_cleanup_2() {
-    let deferred = PromiseUtils.defer();
+    let deferred = Promise.withResolvers();
     executeSoon(deferred.resolve);
     return deferred.promise.then(function() {
       checkpoints.push(3);
@@ -339,7 +335,7 @@ function run_test() {
   });
 
   registerCleanupFunction(function async_cleanup() {
-    let deferred = PromiseUtils.defer();
+    let deferred = Promise.withResolvers();
     executeSoon(deferred.resolve);
     return deferred.promise.then(function() {
       checkpoints.push(1);

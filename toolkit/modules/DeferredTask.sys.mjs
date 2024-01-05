@@ -4,8 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const lazy = {};
-
 /**
  * Sets up a function or an asynchronous task whose execution can be triggered
  * after a defined delay.  Multiple attempts to run the task before the delay
@@ -79,10 +77,6 @@ const lazy = {};
  */
 
 // Globals
-
-ChromeUtils.defineESModuleGetters(lazy, {
-  PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
-});
 
 const Timer = Components.Constructor(
   "@mozilla.org/timer;1",
@@ -301,7 +295,7 @@ DeferredTask.prototype = {
    * Timer callback used to run the delayed task.
    */
   _timerCallback() {
-    let runningDeferred = lazy.PromiseUtils.defer();
+    let runningDeferred = Promise.withResolvers();
 
     // All these state changes must occur at the same time directly inside the
     // timer callback, to prevent race conditions and to ensure that all the

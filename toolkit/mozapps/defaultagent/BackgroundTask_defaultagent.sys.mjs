@@ -16,7 +16,6 @@ const EXIT_CODE = {
 
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
-  PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
   BackgroundTasksUtils: "resource://gre/modules/BackgroundTasksUtils.sys.mjs",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
@@ -359,7 +358,7 @@ function makeAlert(options) {
 }
 
 function makeObserver(actions) {
-  let shownPromise = lazy.PromiseUtils.defer();
+  let shownPromise = Promise.withResolvers();
 
   // We'll receive multiple callbacks which individually might indicate an
   // interaction. Only log the first one to disambiguate and reduce noise.

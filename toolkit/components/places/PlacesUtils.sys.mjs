@@ -5,7 +5,6 @@
 
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
-import { PromiseUtils } from "resource://gre/modules/PromiseUtils.sys.mjs";
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
@@ -2104,7 +2103,7 @@ ChromeUtils.defineLazyGetter(lazy, "gAsyncDBWrapperPromised", () =>
     .catch(console.error)
 );
 
-var gAsyncDBLargeCacheConnDeferred = PromiseUtils.defer();
+var gAsyncDBLargeCacheConnDeferred = Promise.withResolvers();
 ChromeUtils.defineLazyGetter(lazy, "gAsyncDBLargeCacheConnPromised", () =>
   lazy.Sqlite.cloneStorageConnection({
     connection: PlacesUtils.history.DBConnection,

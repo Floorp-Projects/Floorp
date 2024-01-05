@@ -20,7 +20,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   BaseAction: "resource://normandy/actions/BaseAction.sys.mjs",
   ClientEnvironment: "resource://normandy/lib/ClientEnvironment.sys.mjs",
   NormandyApi: "resource://normandy/lib/NormandyApi.sys.mjs",
-  PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
   Sampling: "resource://gre/modules/components-utils/Sampling.sys.mjs",
   TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.sys.mjs",
   TelemetryEvents: "resource://normandy/lib/TelemetryEvents.sys.mjs",
@@ -250,8 +249,8 @@ export class BranchedAddonStudyAction extends BaseStudyAction {
     const { slug } = recipe.arguments;
     const { hash, hash_algorithm } = extensionDetails;
 
-    const downloadDeferred = lazy.PromiseUtils.defer();
-    const installDeferred = lazy.PromiseUtils.defer();
+    const downloadDeferred = Promise.withResolvers();
+    const installDeferred = Promise.withResolvers();
 
     const install = await lazy.AddonManager.getInstallForURL(
       extensionDetails.xpi,

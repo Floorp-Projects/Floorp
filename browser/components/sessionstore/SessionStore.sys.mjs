@@ -223,7 +223,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   E10SUtils: "resource://gre/modules/E10SUtils.sys.mjs",
   HomePage: "resource:///modules/HomePage.sys.mjs",
   PrivacyFilter: "resource://gre/modules/sessionstore/PrivacyFilter.sys.mjs",
-  PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
   RunState: "resource:///modules/sessionstore/RunState.sys.mjs",
   SessionCookies: "resource:///modules/sessionstore/SessionCookies.sys.mjs",
   SessionFile: "resource:///modules/sessionstore/SessionFile.sys.mjs",
@@ -2541,7 +2540,7 @@ var SessionStoreInternal = {
           let promises = [this.flushAllWindowsAsync(progress)];
 
           const observeTopic = topic => {
-            let deferred = lazy.PromiseUtils.defer();
+            let deferred = Promise.withResolvers();
             const observer = subject => {
               // Skip abort on ipc:content-shutdown if not abnormal/crashed
               subject.QueryInterface(Ci.nsIPropertyBag2);
@@ -6220,7 +6219,7 @@ var SessionStoreInternal = {
     );
 
     this._updateWindowRestoreState(window, aState);
-    WINDOW_SHOWING_PROMISES.set(window, lazy.PromiseUtils.defer());
+    WINDOW_SHOWING_PROMISES.set(window, Promise.withResolvers());
 
     return window;
   },
@@ -6915,7 +6914,7 @@ var SessionStoreInternal = {
     let DELAY_BEAT = 1000;
     let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
     let beats = Math.ceil(delay / DELAY_BEAT);
-    let deferred = lazy.PromiseUtils.defer();
+    let deferred = Promise.withResolvers();
     timer.initWithCallback(
       function () {
         if (beats <= 0) {
@@ -7028,7 +7027,7 @@ var SessionStoreInternal = {
   },
 
   _waitForStateStop(browser, expectedURL = null) {
-    const deferred = lazy.PromiseUtils.defer();
+    const deferred = Promise.withResolvers();
 
     const listener = {
       unregister(reject = true) {

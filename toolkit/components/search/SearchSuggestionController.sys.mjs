@@ -8,7 +8,6 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   FormHistory: "resource://gre/modules/FormHistory.sys.mjs",
-  PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
   SearchUtils: "resource://gre/modules/SearchUtils.sys.mjs",
 });
 
@@ -459,7 +458,7 @@ export class SearchSuggestionController {
    *   rejected if there is an error.
    */
   #fetchRemote(context) {
-    let deferredResponse = lazy.PromiseUtils.defer();
+    let deferredResponse = Promise.withResolvers();
     let request = (context.request = new XMLHttpRequest());
     // Expect the response type to be JSON, so that the network layer will
     // decode it for us. This will also ignore incorrect Mime Types, as we are

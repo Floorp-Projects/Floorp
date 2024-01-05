@@ -76,7 +76,7 @@ add_task(async function test_n_autocomplete_cancel() {
   firstHistogram.clear();
   sixthHistogram.clear();
 
-  let providerCanceledDeferred = PromiseUtils.defer();
+  let providerCanceledDeferred = Promise.withResolvers();
   let provider = new TestProvider({
     results: [],
     onCancel: providerCanceledDeferred.resolve,

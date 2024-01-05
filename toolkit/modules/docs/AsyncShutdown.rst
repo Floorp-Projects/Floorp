@@ -167,9 +167,6 @@ Example 4: A service with both internal and external dependencies
     let { AsyncShutdown } = ChromeUtils.importESModule(
       "resource://gre/modules/AsyncShutdown.sys.mjs"
     );
-    let { PromiseUtils } = ChromeUtils.importESModule(
-      "resource://gre/modules/PromiseUtils.sys.mjs"
-    );
 
     this.exports = ["FooService2"];
 
@@ -188,7 +185,7 @@ Example 4: A service with both internal and external dependencies
         throw new Error("FooService2 is closed");
       }
 
-      let deferred = PromiseUtils.defer();
+      let deferred = Promise.withResolvers();
       connections.client.addBlocker("FooService2: Waiting for connection " + name + " to close",  deferred.promise);
 
       // ...

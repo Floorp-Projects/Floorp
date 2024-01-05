@@ -14,7 +14,7 @@ add_task(async function setup() {
 });
 
 add_task(async function testgetRowsFromDBWithoutLocksRetries() {
-  let deferred = PromiseUtils.defer();
+  let deferred = Promise.withResolvers();
   let promise = MigrationUtils.getRowsFromDBWithoutLocks(
     tmpFile.path,
     "Temp DB",

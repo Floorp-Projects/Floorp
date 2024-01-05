@@ -6,7 +6,6 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
-  PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
 });
 
 export const NormandyAddonManager = {
@@ -21,8 +20,8 @@ export const NormandyAddonManager = {
     const { extension_id, hash, hash_algorithm, version, xpi } =
       extensionDetails;
 
-    const downloadDeferred = lazy.PromiseUtils.defer();
-    const installDeferred = lazy.PromiseUtils.defer();
+    const downloadDeferred = Promise.withResolvers();
+    const installDeferred = Promise.withResolvers();
 
     const install = await lazy.AddonManager.getInstallForURL(xpi, {
       hash: `${hash_algorithm}:${hash}`,

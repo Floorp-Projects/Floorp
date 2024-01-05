@@ -15,7 +15,7 @@ add_task(async function run_test() {
   });
   PlacesUtils.tagging.tagURI(uri, tags);
 
-  let promise = PromiseUtils.defer();
+  let promise = Promise.withResolvers();
 
   let bookmarksObserver = {
     _changedCount: 0,

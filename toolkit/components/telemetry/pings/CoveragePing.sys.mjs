@@ -8,7 +8,6 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   CommonUtils: "resource://services-common/utils.sys.mjs",
-  PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
   ServiceRequest: "resource://gre/modules/ServiceRequest.sys.mjs",
   UpdateUtils: "resource://gre/modules/UpdateUtils.sys.mjs",
 });
@@ -88,7 +87,7 @@ export var CoveragePing = Object.freeze({
 
     log.debug(`putting to endpoint ${endpoint} with payload:`, payload);
 
-    let deferred = lazy.PromiseUtils.defer();
+    let deferred = Promise.withResolvers();
 
     let request = new lazy.ServiceRequest({ mozAnon: true });
     request.mozBackgroundRequest = true;

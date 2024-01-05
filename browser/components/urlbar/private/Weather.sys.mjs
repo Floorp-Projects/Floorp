@@ -9,7 +9,6 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   clearTimeout: "resource://gre/modules/Timer.sys.mjs",
   MerinoClient: "resource:///modules/MerinoClient.sys.mjs",
-  PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
   QuickSuggest: "resource:///modules/QuickSuggest.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
@@ -150,7 +149,7 @@ export class Weather extends BaseFeature {
    */
   waitForFetches() {
     if (!this.#waitForFetchesDeferred) {
-      this.#waitForFetchesDeferred = lazy.PromiseUtils.defer();
+      this.#waitForFetchesDeferred = Promise.withResolvers();
     }
     return this.#waitForFetchesDeferred.promise;
   }

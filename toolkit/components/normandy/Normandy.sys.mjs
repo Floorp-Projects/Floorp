@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { Log } from "resource://gre/modules/Log.sys.mjs";
-import { PromiseUtils } from "resource://gre/modules/PromiseUtils.sys.mjs";
 import { setTimeout } from "resource://gre/modules/Timer.sys.mjs";
 
 const lazy = {};
@@ -41,8 +40,8 @@ log.level = Services.prefs.getIntPref(PREF_LOGGING_LEVEL, Log.Level.Warn);
 export var Normandy = {
   studyPrefsChanged: {},
   rolloutPrefsChanged: {},
-  defaultPrefsHaveBeenApplied: PromiseUtils.defer(),
-  uiAvailableNotificationObserved: PromiseUtils.defer(),
+  defaultPrefsHaveBeenApplied: Promise.withResolvers(),
+  uiAvailableNotificationObserved: Promise.withResolvers(),
 
   /** Initialization that needs to happen before the first paint on startup. */
   async init({ runAsync = true } = {}) {

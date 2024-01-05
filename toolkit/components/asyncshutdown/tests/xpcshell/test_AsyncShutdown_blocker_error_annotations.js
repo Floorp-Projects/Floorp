@@ -15,7 +15,7 @@ add_task(async function test_addBlockerFailureState() {
   // Set up the barrier. Note that we cannot test `barrier.state`
   // immediately, as it initially contains "Not started"
   let barrier = new AsyncShutdown.Barrier("test_addBlocker_failure");
-  let deferred = PromiseUtils.defer();
+  let deferred = Promise.withResolvers();
   barrier.client.addBlocker(BLOCKER_NAME, function () {
     return deferred.promise;
   });

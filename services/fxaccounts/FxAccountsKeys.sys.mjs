@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { PromiseUtils } from "resource://gre/modules/PromiseUtils.sys.mjs";
-
 import { CommonUtils } from "resource://services-common/utils.sys.mjs";
 
 import { CryptoUtils } from "resource://services-crypto/utils.sys.mjs";
@@ -196,7 +194,7 @@ export class FxAccountsKeys {
         }
         // If not, we've got work to do, and we debounce to avoid duplicating it.
         if (!currentState.whenKeysReadyDeferred) {
-          currentState.whenKeysReadyDeferred = PromiseUtils.defer();
+          currentState.whenKeysReadyDeferred = Promise.withResolvers();
           // N.B. we deliberately don't `await` here, and instead use the promise
           // to resolve `whenKeysReadyDeferred` (which we then `await` below).
           this._migrateOrFetchKeys(currentState, userData).then(

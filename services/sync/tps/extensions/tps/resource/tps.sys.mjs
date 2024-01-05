@@ -8,7 +8,6 @@
  */
 
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
-import { PromiseUtils } from "resource://gre/modules/PromiseUtils.sys.mjs";
 
 const lazy = {};
 
@@ -119,7 +118,7 @@ export var TPS = {
   shouldValidateBookmarks: false,
   shouldValidatePasswords: false,
   shouldValidateForms: false,
-  _placesInitDeferred: PromiseUtils.defer(),
+  _placesInitDeferred: Promise.withResolvers(),
   ACTIONS: [
     ACTION_ADD,
     ACTION_DELETE,

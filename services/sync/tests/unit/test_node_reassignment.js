@@ -12,9 +12,6 @@ const { RESTRequest } = ChromeUtils.importESModule(
 const { Service } = ChromeUtils.importESModule(
   "resource://services-sync/service.sys.mjs"
 );
-const { PromiseUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/PromiseUtils.sys.mjs"
-);
 
 add_task(async function setup() {
   validate_all_future_pings();
@@ -75,7 +72,7 @@ async function syncAndExpectNodeReassignment(
   secondNotification,
   url
 ) {
-  let deferred = PromiseUtils.defer();
+  let deferred = Promise.withResolvers();
 
   let getTokenCount = 0;
   let mockTSC = {
@@ -287,7 +284,7 @@ add_task(async function test_loop_avoidance_storage() {
   let secondNotification = "weave:service:login:error";
   let thirdNotification = "weave:service:sync:finish";
 
-  let deferred = PromiseUtils.defer();
+  let deferred = Promise.withResolvers();
 
   let getTokenCount = 0;
   let mockTSC = {
@@ -385,7 +382,7 @@ add_task(async function test_loop_avoidance_engine() {
 
   _("Enabling the Rotary engine.");
   let { engine, syncID, tracker } = await registerRotaryEngine();
-  let deferred = PromiseUtils.defer();
+  let deferred = Promise.withResolvers();
 
   let getTokenCount = 0;
   let mockTSC = {

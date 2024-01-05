@@ -5,7 +5,6 @@
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
   SkippableTimer: "resource:///modules/UrlbarUtils.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
   UrlbarUtils: "resource:///modules/UrlbarUtils.sys.mjs",
@@ -348,7 +347,7 @@ export class MerinoClient {
    */
   waitForNextResponse() {
     if (!this.#nextResponseDeferred) {
-      this.#nextResponseDeferred = lazy.PromiseUtils.defer();
+      this.#nextResponseDeferred = Promise.withResolvers();
     }
     return this.#nextResponseDeferred.promise;
   }
@@ -361,7 +360,7 @@ export class MerinoClient {
    */
   waitForNextSessionReset() {
     if (!this.#nextSessionResetDeferred) {
-      this.#nextSessionResetDeferred = lazy.PromiseUtils.defer();
+      this.#nextSessionResetDeferred = Promise.withResolvers();
     }
     return this.#nextSessionResetDeferred.promise;
   }

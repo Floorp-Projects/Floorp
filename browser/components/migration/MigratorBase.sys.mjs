@@ -15,7 +15,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   FirefoxProfileMigrator: "resource:///modules/FirefoxProfileMigrator.sys.mjs",
   MigrationUtils: "resource:///modules/MigrationUtils.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
-  PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
   ResponsivenessMonitor: "resource://gre/modules/ResponsivenessMonitor.sys.mjs",
 });
 
@@ -438,7 +437,7 @@ export class MigratorBase {
 
         let itemSuccess = false;
         for (let res of itemResources) {
-          let completeDeferred = lazy.PromiseUtils.defer();
+          let completeDeferred = Promise.withResolvers();
           let resourceDone = function (aSuccess, details) {
             itemResources.delete(res);
             itemSuccess |= aSuccess;

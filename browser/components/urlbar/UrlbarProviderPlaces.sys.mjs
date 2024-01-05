@@ -115,7 +115,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   KeywordUtils: "resource://gre/modules/KeywordUtils.sys.mjs",
   ObjectUtils: "resource://gre/modules/ObjectUtils.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
-  PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
   Sqlite: "resource://gre/modules/Sqlite.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
   UrlbarProviderOpenTabs: "resource:///modules/UrlbarProviderOpenTabs.sys.mjs",
@@ -1530,7 +1529,7 @@ class ProviderPlaces extends UrlbarProvider {
   }
 
   _startLegacyQuery(queryContext, callback) {
-    let deferred = lazy.PromiseUtils.defer();
+    let deferred = Promise.withResolvers();
     let listener = (matches, searchOngoing) => {
       callback(matches);
       if (!searchOngoing) {

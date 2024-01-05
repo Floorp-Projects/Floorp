@@ -14,7 +14,6 @@ ChromeUtils.defineESModuleGetters(this, {
   HttpServer: "resource://testing-common/httpd.sys.mjs",
   Log: "resource://gre/modules/Log.sys.mjs",
   NetUtil: "resource://gre/modules/NetUtil.sys.mjs",
-  PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
   TelemetryController: "resource://gre/modules/TelemetryController.sys.mjs",
   TelemetryScheduler: "resource://gre/modules/TelemetryScheduler.sys.mjs",
   TelemetrySend: "resource://gre/modules/TelemetrySend.sys.mjs",
@@ -44,7 +43,7 @@ var gGlobalScope = this;
 const PingServer = {
   _httpServer: null,
   _started: false,
-  _defers: [PromiseUtils.defer()],
+  _defers: [Promise.withResolvers()],
   _currentDeferred: 0,
   _logger: null,
 
@@ -83,7 +82,7 @@ const PingServer = {
         `defaultPingHandler() - ${r.method} ${r.scheme}://${r.host}:${r.port}${r.path}`
       );
       let deferred = this._defers[this._defers.length - 1];
-      this._defers.push(PromiseUtils.defer());
+      this._defers.push(Promise.withResolvers());
       deferred.resolve(request);
     });
   },
@@ -104,7 +103,7 @@ const PingServer = {
   },
 
   clearRequests() {
-    this._defers = [PromiseUtils.defer()];
+    this._defers = [Promise.withResolvers()];
     this._currentDeferred = 0;
   },
 

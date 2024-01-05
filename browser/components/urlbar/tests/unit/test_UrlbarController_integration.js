@@ -7,10 +7,6 @@
 
 "use strict";
 
-const { PromiseUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/PromiseUtils.sys.mjs"
-);
-
 const TEST_URL = "http://example.com";
 const match = new UrlbarResult(
   UrlbarUtils.RESULT_TYPE.TAB_SWITCH,
@@ -52,7 +48,7 @@ add_task(async function test_basic_search() {
 });
 
 add_task(async function test_cancel_search() {
-  let providerCanceledDeferred = PromiseUtils.defer();
+  let providerCanceledDeferred = Promise.withResolvers();
   let provider = registerBasicTestProvider(
     [match],
     providerCanceledDeferred.resolve

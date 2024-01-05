@@ -16,7 +16,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   ObjectUtils: "resource://gre/modules/ObjectUtils.sys.mjs",
   PartnerLinkAttribution: "resource:///modules/PartnerLinkAttribution.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
-  PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
   ReaderMode: "resource://gre/modules/ReaderMode.sys.mjs",
   SearchUIUtils: "resource:///modules/SearchUIUtils.sys.mjs",
   SearchUtils: "resource://gre/modules/SearchUtils.sys.mjs",
@@ -3841,7 +3840,7 @@ export class UrlbarInput {
       if (this._keyDownEnterDeferred) {
         this._keyDownEnterDeferred.reject();
       }
-      this._keyDownEnterDeferred = lazy.PromiseUtils.defer();
+      this._keyDownEnterDeferred = Promise.withResolvers();
       event._disableCanonization = this._isKeyDownWithCtrl;
     } else if (event.keyCode !== KeyEvent.DOM_VK_CONTROL && event.ctrlKey) {
       this._isKeyDownWithCtrl = true;

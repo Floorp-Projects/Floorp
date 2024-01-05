@@ -8,9 +8,6 @@ do_get_profile();
 // Ensure PSM is initialized
 Cc["@mozilla.org/psm;1"].getService(Ci.nsISupports);
 
-const { PromiseUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/PromiseUtils.sys.mjs"
-);
 const certOverrideService = Cc[
   "@mozilla.org/security/certoverride;1"
 ].getService(Ci.nsICertOverrideService);
@@ -82,8 +79,8 @@ function startClient(port) {
   let input;
   let output;
 
-  let inputDeferred = PromiseUtils.defer();
-  let outputDeferred = PromiseUtils.defer();
+  let inputDeferred = Promise.withResolvers();
+  let outputDeferred = Promise.withResolvers();
 
   let handler = {
     onTransportStatus(transport1, status) {

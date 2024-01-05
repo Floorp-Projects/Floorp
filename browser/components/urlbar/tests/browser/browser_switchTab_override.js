@@ -52,7 +52,7 @@ add_task(async function test_switchtab_override() {
   }
 
   info("Override switch-to-tab");
-  let deferred = PromiseUtils.defer();
+  let deferred = Promise.withResolvers();
   // In case of failure this would switch tab.
   let onTabSelect = event => {
     deferred.reject(new Error("Should have overridden switch to tab"));

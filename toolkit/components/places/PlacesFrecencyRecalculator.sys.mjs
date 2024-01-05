@@ -16,7 +16,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   DeferredTask: "resource://gre/modules/DeferredTask.sys.mjs",
   ObjectUtils: "resource://gre/modules/ObjectUtils.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
-  PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
 });
 
 ChromeUtils.defineLazyGetter(lazy, "logger", function () {
@@ -370,7 +369,7 @@ export class PlacesFrecencyRecalculator {
 }
 
 class AlternativeFrecencyHelper {
-  initializedDeferred = lazy.PromiseUtils.defer();
+  initializedDeferred = Promise.withResolvers();
   #recalculator = null;
 
   sets = {

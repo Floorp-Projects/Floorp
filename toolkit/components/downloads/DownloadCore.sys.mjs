@@ -19,7 +19,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   E10SUtils: "resource://gre/modules/E10SUtils.sys.mjs",
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
   NetUtil: "resource://gre/modules/NetUtil.sys.mjs",
-  PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
 });
 
 XPCOMUtils.defineLazyServiceGetter(
@@ -119,7 +118,7 @@ const kProgressUpdateIntervalMs = 400;
  * managed by the user interface and persisted across sessions.
  */
 export var Download = function () {
-  this._deferSucceeded = lazy.PromiseUtils.defer();
+  this._deferSucceeded = Promise.withResolvers();
 };
 
 Download.prototype = {
@@ -389,7 +388,7 @@ Download.prototype = {
 
     // Create a new deferred object and an associated promise before starting
     // the actual download.  We store it on the download as the current attempt.
-    let deferAttempt = lazy.PromiseUtils.defer();
+    let deferAttempt = Promise.withResolvers();
     let currentAttempt = deferAttempt.promise;
     this._currentAttempt = currentAttempt;
 
@@ -2206,7 +2205,7 @@ DownloadCopySaver.prototype = {
       throw error;
     }
 
-    let deferSaveComplete = lazy.PromiseUtils.defer();
+    let deferSaveComplete = Promise.withResolvers();
 
     if (this._canceled) {
       // Don't create the BackgroundFileSaver object if we have been
@@ -2722,8 +2721,8 @@ DownloadCopySaver.fromSerializable = function (aSerializable) {
  * For more background on the process, see the DownloadLegacyTransfer object.
  */
 export var DownloadLegacySaver = function () {
-  this.deferExecuted = lazy.PromiseUtils.defer();
-  this.deferCanceled = lazy.PromiseUtils.defer();
+  this.deferExecuted = Promise.withResolvers();
+  this.deferCanceled = Promise.withResolvers();
 };
 
 DownloadLegacySaver.prototype = {

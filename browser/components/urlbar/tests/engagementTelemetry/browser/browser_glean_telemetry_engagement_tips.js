@@ -10,10 +10,6 @@ Services.scriptloader.loadSubScript(
   this
 );
 
-ChromeUtils.defineESModuleGetters(this, {
-  PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
-});
-
 add_setup(async function () {
   makeProfileResettable();
 
@@ -51,7 +47,7 @@ add_task(async function selected_result_tip() {
   ];
 
   for (const { type, expected } of testData) {
-    const deferred = PromiseUtils.defer();
+    const deferred = Promise.withResolvers();
     const provider = new UrlbarTestUtils.TestProvider({
       results: [
         new UrlbarResult(

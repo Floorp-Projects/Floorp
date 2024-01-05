@@ -14,7 +14,6 @@ Services.scriptloader.loadSubScript(
 
 ChromeUtils.defineESModuleGetters(this, {
   PlacesTestUtils: "resource://testing-common/PlacesTestUtils.sys.mjs",
-  PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
 });
 
 const TEST_SITE = "https://example.org";
@@ -143,7 +142,7 @@ FaviconObserver.prototype = {
         userContextId: aUserContextId,
       });
     this._faviconURL = aFaviconURL;
-    this._faviconLoaded = PromiseUtils.defer();
+    this._faviconLoaded = Promise.withResolvers();
   },
 
   get promise() {

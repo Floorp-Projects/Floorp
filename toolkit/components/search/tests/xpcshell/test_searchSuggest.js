@@ -14,9 +14,6 @@ const { FormHistory } = ChromeUtils.importESModule(
 const { SearchSuggestionController } = ChromeUtils.importESModule(
   "resource://gre/modules/SearchSuggestionController.sys.mjs"
 );
-const { PromiseUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/PromiseUtils.sys.mjs"
-);
 const { TelemetryTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/TelemetryTestUtils.sys.mjs"
 );
@@ -854,7 +851,7 @@ add_task(async function test_userContextId() {
     userContextId
   ) {
     Assert.equal(userContextId, 1);
-    return PromiseUtils.defer();
+    return Promise.withResolvers();
   };
 
   controller.fetch("test", false, getEngine, 1);

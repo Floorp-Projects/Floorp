@@ -23,7 +23,6 @@ const THIRD_PARTY_FAVICON_URI =
 
 ChromeUtils.defineESModuleGetters(this, {
   PlacesTestUtils: "resource://testing-common/PlacesTestUtils.sys.mjs",
-  PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
 });
 
 let systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
@@ -84,7 +83,7 @@ FaviconObserver.prototype = {
 
   reset(aPageURI, aFaviconURL, aTailingEnabled) {
     this._faviconURL = aFaviconURL;
-    this._faviconLoaded = PromiseUtils.defer();
+    this._faviconLoaded = Promise.withResolvers();
     this._tailingEnabled = aTailingEnabled;
   },
 

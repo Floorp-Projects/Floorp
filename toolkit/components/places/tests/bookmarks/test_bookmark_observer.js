@@ -9,7 +9,7 @@ var gBookmarksObserver = {
   expected: [],
   setup(expected) {
     this.expected = expected;
-    this.deferred = PromiseUtils.defer();
+    this.deferred = Promise.withResolvers();
     return this.deferred.promise;
   },
 
@@ -41,7 +41,7 @@ var gBookmarkSkipObserver = {
   expected: null,
   setup(expected) {
     this.expected = expected;
-    this.deferred = PromiseUtils.defer();
+    this.deferred = Promise.withResolvers();
     return this.deferred.promise;
   },
 

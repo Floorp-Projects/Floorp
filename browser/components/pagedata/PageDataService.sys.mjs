@@ -12,7 +12,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.sys.mjs",
   E10SUtils: "resource://gre/modules/E10SUtils.sys.mjs",
   HiddenFrame: "resource://gre/modules/HiddenFrame.sys.mjs",
-  PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
 });
 
 ChromeUtils.defineLazyGetter(lazy, "logConsole", function () {
@@ -539,7 +538,7 @@ export const PageDataService = new (class PageDataService extends EventEmitter {
   async fetchPageData(url) {
     return this.#browserManager.withHiddenBrowser(async browser => {
       try {
-        let { promise, resolve } = lazy.PromiseUtils.defer();
+        let { promise, resolve } = Promise.withResolvers();
         this.#backgroundBrowsers.set(browser, resolve);
 
         let principal = Services.scriptSecurityManager.getSystemPrincipal();

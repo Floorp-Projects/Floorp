@@ -45,9 +45,6 @@
   const { FirefoxViewPlacesQuery } = ChromeUtils.importESModule(
     "resource:///modules/firefox-view-places-query.sys.mjs"
   );
-  const { PromiseUtils } = ChromeUtils.importESModule(
-    "resource://gre/modules/PromiseUtils.sys.mjs"
-  );
   const { PlacesUtils } = ChromeUtils.importESModule(
     "resource://gre/modules/PlacesUtils.sys.mjs"
   );
@@ -80,7 +77,7 @@
       title: "Example Domain 1",
       visits: [{ date: now }],
     });
-    let historyUpdated = PromiseUtils.defer();
+    let historyUpdated = Promise.withResolvers();
     placesQuery.observeHistory(newHistory => {
       history = newHistory;
       historyUpdated.resolve();
@@ -91,7 +88,7 @@
       visits: [{ date: now }],
     });
     await historyUpdated.promise;
-    historyUpdated = PromiseUtils.defer();
+    historyUpdated = Promise.withResolvers();
     placesQuery.observeHistory(newHistory => {
       history = newHistory;
       historyUpdated.resolve();
@@ -102,7 +99,7 @@
       visits: [{ date: now }],
     });
     await historyUpdated.promise;
-    historyUpdated = PromiseUtils.defer();
+    historyUpdated = Promise.withResolvers();
     placesQuery.observeHistory(newHistory => {
       history = newHistory;
       historyUpdated.resolve();
@@ -216,7 +213,7 @@
       title: "Internet for people, not profits - Mozilla",
       visits: [{ date: now }],
     });
-    let historyUpdated = PromiseUtils.defer();
+    let historyUpdated = Promise.withResolvers();
     placesQuery.observeHistory(newHistory => {
       history = newHistory;
       historyUpdated.resolve();

@@ -22,9 +22,6 @@ const { MockRegistrar } = ChromeUtils.importESModule(
 const { NetUtil } = ChromeUtils.importESModule(
   "resource://gre/modules/NetUtil.sys.mjs"
 );
-const { PromiseUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/PromiseUtils.sys.mjs"
-);
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
@@ -545,7 +542,7 @@ async function asyncConnectTo(
   function Connection(host) {
     this.host = host;
     this.thread = Services.tm.currentThread;
-    this.defer = PromiseUtils.defer();
+    this.defer = Promise.withResolvers();
     let sts = Cc["@mozilla.org/network/socket-transport-service;1"].getService(
       Ci.nsISocketTransportService
     );

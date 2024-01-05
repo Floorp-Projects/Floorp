@@ -21,7 +21,6 @@ XPCOMUtils.defineLazyServiceGetters(lazy, {
 ChromeUtils.defineESModuleGetters(lazy, {
   HomePage: "resource:///modules/HomePage.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
-  PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
 });
 
 // Constants
@@ -235,7 +234,7 @@ export const BrowserWindowTracker = {
    *   Whether the opening window is a private browsing window.
    */
   registerOpeningWindow(window, isPrivate) {
-    let deferred = lazy.PromiseUtils.defer();
+    let deferred = Promise.withResolvers();
 
     this.pendingWindows.set(window, {
       isPrivate,

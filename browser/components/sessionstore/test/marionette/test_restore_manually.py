@@ -63,7 +63,7 @@ class TestSessionRestoreManually(SessionStoreTestCase):
                 return Array.from(Services.wm.getEnumerator("navigator:browser"));
             }
             function promiseResize(value, win) {
-                let deferred = PromiseUtils.defer();
+                let deferred = Promise.withResolvers();
                 let id;
                 function listener() {
                     win.clearTimeout(id);

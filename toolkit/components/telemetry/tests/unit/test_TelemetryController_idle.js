@@ -45,7 +45,7 @@ add_task(async function testSendPendingOnIdleDaily() {
     )
   );
 
-  let gatherPromise = PromiseUtils.defer();
+  let gatherPromise = Promise.withResolvers();
   Services.obs.addObserver(gatherPromise.resolve, "gather-telemetry");
 
   // Check that we are correctly receiving the gather-telemetry notification.

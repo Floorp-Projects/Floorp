@@ -416,7 +416,7 @@ add_task(async function onPrefChanged() {
   });
   UrlbarPrefs.addObserver({});
 
-  const deferred = PromiseUtils.defer();
+  const deferred = Promise.withResolvers();
   const observer = {
     onPrefChanged(pref) {
       this.prefChangedList.push(pref);
