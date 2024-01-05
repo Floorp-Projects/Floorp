@@ -13,7 +13,7 @@ interface nsIConsoleService : nsISupports
 {
     void logMessage(in nsIConsoleMessage message);
 
-    // This helper function executes `function` and redirects any exception
+    // This helper function executes `func` and redirects any exception
     // that may be thrown while running it to the DevTools Console currently
     // debugging `targetGlobal`.
     //
@@ -23,7 +23,7 @@ interface nsIConsoleService : nsISupports
     // We expect content script exception to be flaged with the content window
     // innerWindowID in order to appear in the tab's DevTools.
     [implicit_jscontext]
-    jsval callFunctionAndLogException(in jsval targetGlobal, in jsval function);
+    jsval callFunctionAndLogException(in jsval targetGlobal, in jsval func);
 
     // This is a variant of LogMessage which allows the caller to determine
     // if the message should be output to an OS-specific log. This is used on
