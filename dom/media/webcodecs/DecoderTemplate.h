@@ -180,9 +180,6 @@ class DecoderTemplate : public DOMEventTargetHelper {
   MOZ_CAN_RUN_SCRIPT void OutputDecodedData(
       const nsTArray<RefPtr<MediaData>>&& aData);
 
-  class ErrorRunnable;
-  void ScheduleReportError(const nsresult& aResult);
-
   MOZ_CAN_RUN_SCRIPT
   void ScheduleDequeueEventIfNeeded();
   nsresult FireEvent(nsAtom* aTypeWithOn, const nsAString& aEventType);
