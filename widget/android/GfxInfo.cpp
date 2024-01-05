@@ -395,12 +395,7 @@ nsresult GfxInfo::GetFeatureStatusImpl(
   EnsureInitialized();
 
   if (mGLStrings->Vendor().IsEmpty() || mGLStrings->Renderer().IsEmpty()) {
-    if (OnlyAllowFeatureOnKnownConfig(aFeature)) {
-      *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
-      aFailureId = "FEATURE_FAILURE_EMPTY_VENDOR_OR_RENDERER";
-    } else {
-      *aStatus = nsIGfxInfo::FEATURE_STATUS_OK;
-    }
+    *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
     return NS_OK;
   }
 
