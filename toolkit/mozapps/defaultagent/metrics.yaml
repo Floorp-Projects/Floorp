@@ -206,3 +206,19 @@ notification:
     expires: never
     send_in_pings:
       - default-agent
+
+do_task:
+  implementation:
+    type: string
+    description: >
+      Which implementation of `do-task` was used: "JavaScript" by default or
+      "C++" if a Nimbus rollback was acted upon.
+    notification_emails:
+        - install-update@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1871512
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1871512
+    expires: 124
+    send_in_pings:
+      - default-agent
