@@ -111,8 +111,6 @@ class GfxInfoBase : public nsIGfxInfo,
   static void SetFeatureStatus(
       nsTArray<mozilla::gfx::GfxInfoFeatureStatus>&& aFS);
 
-  static bool OnlyAllowFeatureOnKnownConfig(int32_t aFeature);
-
  protected:
   virtual ~GfxInfoBase();
 
