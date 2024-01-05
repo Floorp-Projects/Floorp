@@ -472,7 +472,7 @@ export var ProcessHangMonitor = {
   /**
    * Show the notification for a hang.
    */
-  async showNotification(win, report) {
+  showNotification(win, report) {
     let bundle = win.gNavigatorBundle;
 
     let buttons = [
@@ -563,10 +563,8 @@ export var ProcessHangMonitor = {
       });
     }
 
-    // Sometimes the window may have closed already, in which case we won't
-    // be able to create a message bar so we need to handle any related errors.
-    try {
-      let hangNotification = await win.gNotificationBox.appendNotification(
+    win.gNotificationBox
+      .appendNotification(
         "process-hang",
         {
           label: message,
@@ -579,11 +577,8 @@ export var ProcessHangMonitor = {
           },
         },
         buttons
-      );
-      hangNotification.setAttribute("notification-tag", notificationTag);
-    } catch (err) {
-      console.warn(err);
-    }
+      )
+      .setAttribute("notification-tag", notificationTag);
   },
 
   /**
