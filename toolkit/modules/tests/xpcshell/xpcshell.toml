@@ -86,8 +86,6 @@ skip-if = ["os == 'android'"]
 
 ["test_ProfileAge.js"]
 
-["test_PromiseUtils.js"]
-
 ["test_Region.js"]
 
 ["test_Region_geocoding.js"]
