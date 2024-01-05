@@ -937,6 +937,14 @@ class MochitestArguments(ArgumentContainer):
                 "help": "Compare preferences at the end of each test and report changed ones as failures.",
             },
         ],
+        [
+            ["--restart-after-failure"],
+            {
+                "dest": "restartAfterFailure",
+                "default": False,
+                "help": "Terminate the session on first failure and restart where you left off.",
+            },
+        ],
     ]
 
     defaults = {
