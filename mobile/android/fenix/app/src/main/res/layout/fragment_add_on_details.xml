@@ -49,6 +49,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@+id/author_label"
             app:layout_constraintTop_toBottomOf="@+id/details"
+            android:importantForAccessibility="no"
             tools:text="@tools:sample/full_names" />
 
         <View
@@ -83,6 +84,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@+id/version_label"
             app:layout_constraintTop_toBottomOf="@+id/author_divider"
+            android:importantForAccessibility="no"
             tools:text="1.2.3" />
 
         <View
@@ -116,6 +118,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@+id/last_updated_label"
             app:layout_constraintTop_toBottomOf="@+id/version_divider"
+            android:importantForAccessibility="no"
             tools:text="Oct 16, 2019" />
 
         <View
@@ -178,6 +181,7 @@
                 app:layout_constraintHorizontal_bias="1"
                 app:layout_constraintHorizontal_chainStyle="packed"
                 app:layout_constraintStart_toEndOf="@+id/rating_label"
+                android:importantForAccessibility="no"
                 app:layout_constraintTop_toTopOf="parent" />
 
             <TextView

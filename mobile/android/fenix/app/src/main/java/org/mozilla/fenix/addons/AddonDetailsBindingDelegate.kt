@@ -10,6 +10,8 @@ import android.text.method.LinkMovementMethod
 import android.text.style.ClickableSpan
 import android.text.style.URLSpan
 import android.view.View
+import android.widget.TextView
+import androidx.annotation.VisibleForTesting
 import androidx.core.net.toUri
 import androidx.core.text.HtmlCompat
 import androidx.core.text.getSpans
@@ -62,7 +64,6 @@ class AddonDetailsBindingDelegate(
         addon.rating?.let { rating ->
             val resources = binding.root.resources
             val ratingContentDescription = resources.getString(R.string.mozac_feature_addons_rating_content_description)
-            binding.ratingView.contentDescription = String.format(ratingContentDescription, rating.average)
             binding.ratingView.rating = rating.average
 
             binding.reviewCount.text = numberFormatter.format(rating.reviews)
@@ -73,6 +74,7 @@ class AddonDetailsBindingDelegate(
                     interactor.openWebsite(addon.ratingUrl.toUri())
                 }
             }
+            binding.ratingLabel.joinContextDescriptions(String.format(ratingContentDescription, rating.average))
         }
     }
 
@@ -96,7 +98,9 @@ class AddonDetailsBindingDelegate(
             return
         }
 
-        binding.lastUpdatedText.text = dateFormatter.format(addon.updatedAtDate)
+        val formattedDate = dateFormatter.format(addon.updatedAtDate)
+        binding.lastUpdatedText.text = formattedDate
+        binding.lastUpdatedLabel.joinContextDescriptions(formattedDate)
     }
 
     private fun bindVersion(addon: Addon) {
@@ -114,6 +118,7 @@ class AddonDetailsBindingDelegate(
         } else {
             binding.versionText.setOnLongClickListener(null)
         }
+        binding.versionLabel.joinContextDescriptions(version)
     }
 
     private fun bindAuthor(addon: Addon) {
@@ -133,6 +138,7 @@ class AddonDetailsBindingDelegate(
                 interactor.openWebsite(author.url.toUri())
             }
         }
+        binding.authorLabel.joinContextDescriptions(author.name)
     }
 
     private fun bindDetails(addon: Addon) {
@@ -178,5 +184,10 @@ class AddonDetailsBindingDelegate(
         binding.detailUrl.setOnClickListener {
             interactor.openWebsite(addon.detailUrl.toUri())
         }
+    }
+
+    @VisibleForTesting
+    internal fun TextView.joinContextDescriptions(text: String) {
+        this.contentDescription = "${this.text} $text"
     }
 }
