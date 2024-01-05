@@ -2451,6 +2451,39 @@ class nsContextMenu {
   }
 
   /**
+   * Retrieves an instance of the TranslationsParent actor.
+   * @returns {TranslationsParent} - The TranslationsParent actor.
+   * @throws Throws if an instance of the actor cannot be retrieved.
+   */
+  static #getTranslationsActor() {
+    const actor =
+      gBrowser.selectedBrowser.browsingContext.currentWindowGlobal.getActor(
+        "Translations"
+      );
+
+    if (!actor) {
+      throw new Error("Unable to get the TranslationsParent");
+    }
+    return actor;
+  }
+
+  /**
+   * Determines if Full Page Translations is currently active on this page.
+   *
+   * @returns {boolean}
+   */
+  static #isFullPageTranslationsActive() {
+    try {
+      const { requestedTranslationPair } =
+        this.#getTranslationsActor().languageState;
+      return requestedTranslationPair !== null;
+    } catch {
+      // Failed to retrieve the Full Page Translations actor, do nothing.
+    }
+    return false;
+  }
+
+  /**
    * Displays or hides as well as localizes the translate-selection item in the context menu.
    */
   async showTranslateSelectionItem() {
@@ -2473,7 +2506,9 @@ class nsContextMenu {
       // Only show the item if the feature is enabled.
       !(translationsEnabled && selectTranslationsEnabled) ||
       // If there is no text to translate, we have nothing to do.
-      translatableText.length === 0;
+      translatableText.length === 0 ||
+      // We do not allow translating selections on top of Full Page Translations.
+      nsContextMenu.#isFullPageTranslationsActive();
 
     if (translateSelectionItem.hidden) {
       return;
