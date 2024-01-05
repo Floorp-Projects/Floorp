@@ -136,7 +136,6 @@ class DecoderTemplate : public DOMEventTargetHelper {
 
   uint32_t DecodeQueueSize() const { return mDecodeQueueSize; };
 
-  // TODO: Replace virtual with MOZ_EXPORT (visibility("default"))
   MOZ_CAN_RUN_SCRIPT
   void Configure(const ConfigType& aConfig, ErrorResult& aRv);
 
