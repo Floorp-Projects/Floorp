@@ -216,10 +216,6 @@ support-files = [
   "whitenoise-he-aac-5s.mp4",
 ]
 
-["test_BufferedSeek.html"]
-
-["test_BufferedSeek_mp4.html"]
-
 ["test_BufferingWait.html"]
 
 ["test_BufferingWait_mp4.html"]
