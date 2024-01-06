@@ -28,6 +28,7 @@
 
 #ifdef XP_MACOSX
 #  include <sys/sysctl.h>
+#  include "nsCocoaFeatures.h"
 #endif
 
 extern mozilla::LazyLogModule gMediaTrackGraphLog;
@@ -476,7 +477,14 @@ AudioCallbackDriver::AudioCallbackDriver(
   mCubebOperationThread->SetIdleThreadTimeout(
       PR_MillisecondsToInterval(kIdleThreadTimeoutMs));
 
-  if (aAudioInputType == AudioInputType::Voice) {
+  bool allowVoice = true;
+#ifdef MOZ_WIDGET_COCOA
+  // Using the VoiceProcessingIO audio unit on MacOS 12 causes crashes in
+  // platform code.
+  allowVoice = nsCocoaFeatures::macOSVersionMajor() != 12;
+#endif
+
+  if (aAudioInputType == AudioInputType::Voice && allowVoice) {
     LOG(LogLevel::Debug, ("VOICE."));
     mInputDevicePreference = CUBEB_DEVICE_PREF_VOICE;
     CubebUtils::SetInCommunication(true);
