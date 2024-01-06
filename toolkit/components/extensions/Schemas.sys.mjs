@@ -1528,6 +1528,7 @@ class ChoiceType extends Type {
     return ["choices", ...super.EXTRA_PROPERTIES];
   }
 
+  /** @type {(root, schema, path, extraProperties?: Iterable) => ChoiceType} */
   static parseSchema(root, schema, path, extraProperties = []) {
     this.checkSchemaProperties(schema, path, extraProperties);
 
@@ -1628,6 +1629,7 @@ class RefType extends Type {
     return ["$ref", ...super.EXTRA_PROPERTIES];
   }
 
+  /** @type {(root, schema, path, extraProperties?: Iterable) => RefType} */
   static parseSchema(root, schema, path, extraProperties = []) {
     this.checkSchemaProperties(schema, path, extraProperties);
 
@@ -3312,6 +3314,7 @@ class Namespace extends Map {
     return super.keys();
   }
 
+  /** @returns {Generator<[string, Entry]>} */
   *entries() {
     for (let key of this.keys()) {
       yield [key, this.get(key)];

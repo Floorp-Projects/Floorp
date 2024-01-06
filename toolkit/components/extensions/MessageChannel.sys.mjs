@@ -4,6 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+// @ts-nocheck TODO bug 1580774: Remove this file and its uses.
+
 /**
  * This module provides wrappers around standard message managers to
  * simplify bidirectional communication. It currently allows a caller to

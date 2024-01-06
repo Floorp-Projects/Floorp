@@ -88,7 +88,7 @@ export class BaseConduit {
  * Child side conduit, can only send/receive point-to-point messages via the
  * one specific ConduitsChild actor.
  */
-class PointConduit extends BaseConduit {
+export class PointConduit extends BaseConduit {
   constructor(subject, address, actor) {
     super(subject, address);
     this.actor = actor;

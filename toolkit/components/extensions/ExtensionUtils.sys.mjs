@@ -77,6 +77,7 @@ class WorkerExtensionError extends DOMException {
  * Similar to a WeakMap, but creates a new key with the given
  * constructor if one is not present.
  */
+// @ts-ignore (https://github.com/microsoft/TypeScript/issues/56664)
 class DefaultWeakMap extends WeakMap {
   constructor(defaultConstructor = undefined, init = undefined) {
     super(init);
@@ -153,7 +154,7 @@ class LimitedSet extends Set {
     if (this.size >= this.limit + this.slop && !this.has(item)) {
       this.truncate(this.limit - 1);
     }
-    super.add(item);
+    return super.add(item);
   }
 }
 
@@ -259,7 +260,7 @@ function promiseEvent(
  *
  * @param {string} topic
  *        The topic to observe.
- * @param {function(nsISupports, string): boolean} [test]
+ * @param {function(any, string): boolean} [test]
  *        An optional test function which, when called with the
  *        observer's subject and data, should return true if this is the
  *        expected notification, false otherwise.
