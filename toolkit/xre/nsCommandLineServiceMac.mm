@@ -4,9 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsCommandLineServiceMac.h"
-
-#include "nsString.h"
-#include "nsTArray.h"
 #include "MacApplicationDelegate.h"
 #include <cstring>
 #include <Cocoa/Cocoa.h>
@@ -18,6 +15,8 @@ static const int kArgsGrowSize = 20;
 static char** sArgs = nullptr;
 static int sArgsAllocated = 0;
 static int sArgsUsed = 0;
+
+static bool sBuildingCommandLine = false;
 
 void AddToCommandLine(const char* inArgText) {
   if (sArgsUsed >= sArgsAllocated - 1) {
@@ -47,6 +46,8 @@ void SetupMacCommandLine(int& argc, char**& argv, bool forRestart) {
   sArgs[0] = nullptr;
   sArgsUsed = 0;
 
+  sBuildingCommandLine = true;
+
   // Copy args, stripping anything we don't want.
   for (int arg = 0; arg < argc; arg++) {
     char* flag = argv[arg];
@@ -56,13 +57,11 @@ void SetupMacCommandLine(int& argc, char**& argv, bool forRestart) {
       AddToCommandLine(flag);
   }
 
-  // Process the URLs we captured when the NSApp was first run and add them to
-  // the command line.
-  nsTArray<nsCString> startupURLs = TakeStartupURLs();
-  for (const nsCString& url : startupURLs) {
-    AddToCommandLine("-url");
-    AddToCommandLine(url.get());
-  }
+  // Force processing of any pending Apple GetURL Events while we're building
+  // the command line. The handlers will append to the command line rather than
+  // act directly so there is no chance we'll process them during a XUL window
+  // load and accidentally open unnecessary windows and home pages.
+  ProcessPendingGetURLAppleEvents();
 
   // If the process will be relaunched, the child should be in the foreground
   // if the parent is in the foreground.  This will be communicated in a
@@ -75,9 +74,22 @@ void SetupMacCommandLine(int& argc, char**& argv, bool forRestart) {
     }
   }
 
+  sBuildingCommandLine = false;
+
   free(argv);
   argc = sArgsUsed;
   argv = sArgs;
+}
+
+bool AddURLToCurrentCommandLine(const char* aURL) {
+  if (!sBuildingCommandLine) {
+    return false;
+  }
+
+  AddToCommandLine("-url");
+  AddToCommandLine(aURL);
+
+  return true;
 }
 
 }  // namespace CommandLineServiceMac
