@@ -1971,9 +1971,6 @@ pref("mousewheel.with_shift.delta_multiplier_z", 100);
 // 3 = left
 pref("layout.scrollbar.side", 0);
 
-// pref to control whether layout warnings that are hit quite often are enabled
-pref("layout.spammy_warnings.enabled", false);
-
 // enable single finger gesture input (win7+ tablets)
 pref("gestures.enable_single_finger_input", true);
 
