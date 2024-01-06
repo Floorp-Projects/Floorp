@@ -245,7 +245,7 @@ let apiManager = new (class extends SchemaAPIManager {
 // to relevant child messengers.  Also handles Native messaging and GeckoView.
 /** @typedef {typeof ProxyMessenger} NativeMessenger */
 const ProxyMessenger = {
-  /** @type {Map<number, ParentPort|Promise<ParentPort>>} */
+  /** @type {Map<number, Partial<ParentPort>&Promise<ParentPort>>} */
   ports: new Map(),
 
   init() {

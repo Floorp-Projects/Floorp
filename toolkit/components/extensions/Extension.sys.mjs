@@ -1026,7 +1026,7 @@ export class ExtensionData {
   /**
    * Discovers the file names within a directory or JAR file.
    *
-   * @param {Ci.nsIFileURL|Ci.nsIJARURI} path
+   * @param {string} path
    *   The path to the directory or jar file to look at.
    * @param {boolean} [directoriesOnly]
    *   If true, this will return only the directories present within the directory.

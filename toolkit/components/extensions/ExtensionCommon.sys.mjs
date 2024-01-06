@@ -556,6 +556,7 @@ class BaseContext {
    * @param {object} subject
    * @param {ConduitAddress} address
    * @returns {import("ConduitsChild.sys.mjs").PointConduit}
+   * @type {ConduitOpen}
    */
   openConduit(subject, address) {
     let wgc = this.contentWindow.windowGlobalChild;
@@ -1936,6 +1937,8 @@ class LazyAPIManager extends SchemaAPIManager {
 
     this.schemaURLs = schemaURLs;
   }
+
+  lazyInit() {}
 }
 
 defineLazyGetter(LazyAPIManager.prototype, "schema", function () {

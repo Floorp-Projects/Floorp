@@ -1034,7 +1034,7 @@ class RuleValidator {
       rule.action.redirect ?? {};
     const hasExtensionPath = extensionPath != null;
     const hasRegexSubstitution = regexSubstitution != null;
-    const redirectKeyCount =
+    const redirectKeyCount = // @ts-ignore trivial/noisy
       !!url + !!hasExtensionPath + !!transform + !!hasRegexSubstitution;
     if (redirectKeyCount !== 1) {
       if (redirectKeyCount === 0) {

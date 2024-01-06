@@ -1,0 +1,56 @@
+{
+  "include": ["*.mjs", "types/globals.ts"],
+  "exclude": [],
+
+  "compilerOptions": {
+    "checkJs": true,
+    "target": "ESNEXT",
+
+    "declaration": true,
+    "outDir": "./types",
+    "typeRoots": [],
+    "noEmit": true,
+
+    // prettier-ignore
+    "paths": {
+      "resource://gre/modules/ConduitsParent.sys.mjs": ["./ConduitsParent.sys.mjs"],
+      "resource://gre/modules/ConduitsChild.sys.mjs": ["./ConduitsChild.sys.mjs"],
+      "resource://gre/modules/Extension.sys.mjs": ["./Extension.sys.mjs"],
+      "resource://gre/modules/ExtensionActivityLog.sys.mjs": ["./ExtensionActivityLog.sys.mjs"],
+      "resource://gre/modules/ExtensionChild.sys.mjs": ["./ExtensionChild.sys.mjs"],
+      "resource://gre/modules/ExtensionCommon.sys.mjs": ["./ExtensionCommon.sys.mjs"],
+      "resource://gre/modules/ExtensionContent.sys.mjs": ["./ExtensionContent.sys.mjs"],
+      "resource://gre/modules/ExtensionDNR.sys.mjs": ["./ExtensionDNR.sys.mjs"],
+      "resource://gre/modules/ExtensionDNRLimits.sys.mjs": ["./ExtensionDNRLimits.sys.mjs"],
+      "resource://gre/modules/ExtensionDNRStore.sys.mjs": ["./ExtensionDNRStore.sys.mjs"],
+      "resource://gre/modules/ExtensionPageChild.sys.mjs": ["./ExtensionPageChild.sys.mjs"],
+      "resource://gre/modules/ExtensionParent.sys.mjs": ["./ExtensionParent.sys.mjs"],
+      "resource://gre/modules/ExtensionPermissionMessages.sys.mjs": ["./ExtensionPermissionMessages.sys.mjs"],
+      "resource://gre/modules/ExtensionPermissions.sys.mjs": ["./ExtensionPermissions.sys.mjs"],
+      "resource://gre/modules/ExtensionStorage.sys.mjs": ["./ExtensionStorage.sys.mjs"],
+      "resource://gre/modules/ExtensionStorageIDB.sys.mjs": ["./ExtensionStorageIDB.sys.mjs"],
+      "resource://gre/modules/ExtensionStorageSync.sys.mjs": ["./ExtensionStorageSync.sys.mjs"],
+      "resource://gre/modules/ExtensionTelemetry.sys.mjs": ["./ExtensionTelemetry.sys.mjs"],
+      "resource://gre/modules/ExtensionUtils.sys.mjs": ["./ExtensionUtils.sys.mjs"],
+      "resource://gre/modules/ExtensionWorkerChild.sys.mjs": ["./ExtensionWorkerChild.sys.mjs"],
+      "resource://gre/modules/MessageManagerProxy.sys.mjs": ["./MessageManagerProxy.sys.mjs"],
+      "resource://gre/modules/NativeManifests.sys.mjs": ["./NativeManifests.sys.mjs"],
+      "resource://gre/modules/NativeMessaging.sys.mjs": ["./NativeMessaging.sys.mjs"],
+      "resource://gre/modules/Schemas.sys.mjs": ["./Schemas.sys.mjs"],
+      "resource://gre/modules/WebNavigationFrames.sys.mjs": ["./WebNavigationFrames.sys.mjs"],
+      "resource://gre/modules/WebRequest.sys.mjs": ["./webrequest/WebRequest.sys.mjs"],
+
+      // External.
+      "resource://gre/modules/addons/crypto-utils.sys.mjs": ["../../mozapps/extensions/internal/crypto-utils.sys.mjs"],
+      "resource://gre/modules/XPCOMUtils.sys.mjs": ["../../../js/xpconnect/loader/XPCOMUtils.sys.mjs"],
+      "resource://testing-common/ExtensionTestCommon.sys.mjs": ["./ExtensionTestCommon.sys.mjs"],
+
+      // Types for external modules which need fixing, but we don't wanna touch.
+      "resource://testing-common/XPCShellContentUtils.sys.mjs": ["./types/XPCShellContentUtils.sys.d.mts"],
+
+      // Catch-all redirect for all other modules.
+      "resource://gre/modules/*.sys.mjs": ["./types/globals.ts"],
+      "./*": ["./"]
+    }
+  }
+}

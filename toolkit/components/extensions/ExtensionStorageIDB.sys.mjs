@@ -817,6 +817,7 @@ export var ExtensionStorageIDB = {
     const { ExtensionError } = lazy.ExtensionUtils;
 
     if (error instanceof ExtensionError) {
+      // @ts-ignore (will go away after `lazy` is properly typed)
       return error;
     }
 
