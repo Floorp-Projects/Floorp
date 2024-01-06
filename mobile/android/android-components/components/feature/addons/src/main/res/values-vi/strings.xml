@@ -95,7 +95,7 @@
     <!-- Indicates the add-on is allowed in private browsing mode. -->
     <string name="mozac_feature_addons_settings_allow_in_private_browsing">Cho phép trong duyệt web riêng tư</string>
     <!-- Indicates the add-on is allowed in private browsing mode. -->
-    <string name="mozac_feature_addons_settings_run_in_private_browsing">Chạy trong duyệt web riêng tư</string>
+    <string name="mozac_feature_addons_settings_run_in_private_browsing">Cho phép trong thẻ riêng tư</string>
     <!-- Indicates the add-on is enabled. -->
     <string name="mozac_feature_addons_enabled">Đã bật</string>
     <!-- Indicates the add-on is disabled. -->
@@ -161,7 +161,7 @@
     <!-- The tile of the notification, this will be shown to the user when an add-on needs new permissions, to be updated. %1$s is the name of the add-ons-->
     <string name="mozac_feature_addons_updater_notification_title">%1$s có bản cập nhật mới</string>
     <!-- The content of the notification, this will be shown when an add-on needs new permissions, to be updated. %1$d is the amount of new permissions-->
-    <string name="mozac_feature_addons_updater_notification_content" tools:ignore="PluralsCandidate">Quyền mới %1$d được yêu cầu</string>
+    <string name="mozac_feature_addons_updater_notification_content" tools:ignore="PluralsCandidate">%1$d quyền mới cần được cấp</string>
     <!-- The content of the notification displayed when an add-on needs a new permission-->
     <string name="mozac_feature_addons_updater_notification_content_singular">Yêu cầu quyền mới</string>
     <!-- Name of the "notification channel" used for displaying a notification for updating an add-on. See https://developer.android.com/training/notify-user/channels -->

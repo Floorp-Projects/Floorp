@@ -21,6 +21,9 @@
     <string name="feedback_erase">உங்கள் உலாவல் வரலாறு அழிக்கப்பட்டது.</string>
     <string name="feedback_erase2">உலாவி வரலாறு அழிக்கப்பட்டது</string>
 
+    <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a custom tab browsing session -->
+    <string name="feedback_erase_custom_tab">கீற்றின் உலாவல் வரலாறு அழிக்கப்பட்டது.</string>
+
     <!-- This label is shown below the URL bar as soon as the user enters text. Clicking the label will perform a search -->
     <string name="search_hint">%1$s சொல்லைத் தேடு</string>
 
@@ -50,7 +53,6 @@
     <string name="menu_remove_from_shortcuts">குறுக்குவழி நீக்கு</string>
 
     <!-- Menu item: Shows information about features and changes that are new to this version -->
-    <string name="menu_whats_new" moz:RemovedIn="116" tools:ignore="UnusedResources">புதிதாய் என்ன</string>
     <string name="menu_settings">அமைவுகள்</string>
     <string name="menu_about">போக்கசு பற்றி</string>
     <string name="menu_help">உதவி</string>
@@ -96,13 +98,53 @@
 
     <!-- On Android 7+ users can add a shortcut for erasing the browsing history to the home screen.
          This is the label for this shortcut. Android recommends a maximum length of 10 characters. -->
-    <string name="shortcut_erase_short_label">அகற்று</string>
+    <string name="shortcut_erase_short_label">அழி</string>
 
     <!-- The same as 'shortcut_erase_short_label' but more descriptive. The launcher shows this
          instead of the short title when it has enough space. Android recommends a maximum length
          of 25 characters. -->
-    <string name="shortcut_erase_long_label">உலாவல் வரலாற்றை அகற்று</string>
+    <string name="shortcut_erase_long_label">உலாவல் வரலாற்றை அழி</string>
 
+
+    <!-- On Android 7+ users can add a shortcut for erasing the browsing history to the home screen.
+         This is the label for this shortcut. Android recommends a maximum length of 10 characters. -->
+    <string name="shortcut_erase_and_open_short_label">துடைத்துத் திறக்கவும்</string>
+
+    <!-- The same as 'shortcut_erase_short_label' but more descriptive. The launcher shows this
+         instead of the short title when it has enough space. Android recommends a maximum length
+         of 25 characters.
+         %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="shortcut_erase_and_open_long_label">%1$s ஐ துடைத்துத் திறக்கவும்</string>
+
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+         Focus is hard coded since we can't use variables in this context.
+         Do not translate or transliterate Focus.-->
+    <string name="text_selection_search_action_focus">ஃபோகசில் தேடு</string>
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+             Klar is hard coded since we can't use variables in this context.
+             Do not translate or transliterate Klar.-->
+    <string name="text_selection_search_action_klar">கிளாரில் தேடு</string>
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+            Focus Beta is hard coded since we can't use variables in this context.
+            Do not translate or transliterate Focus Beta.-->
+    <string name="text_selection_search_action_focus_beta">ஃபோகசு பீட்டாவில் தேடு</string>
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+          Focus Nightly is hard coded since we can't use variables in this context.
+          Do not translate or transliterate Focus Nightly.-->
+    <string name="text_selection_search_action_focus_nightly">ஃபோகசு நைட்லியில் தேடு</string>
+
+    <!-- Content of about focus. Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
+         Argument 2 is the url for the learn-more link. -->
+    <string name="about_content"><![CDATA[<p>%1$s கட்டுப்பாட்டை உங்களிடம் வழங்குகிறது.</p>
+<p>அதை ஒரு தனிப்பட்ட உலாவியாக பயன்படுத்துங்கள்:
+<ul>
+<li>செயலியினுள் தேடுங்கள் உலாவுங்கள்</li>
+<li>தடமிகளை முடக்குங்கள் (அல்லது தடமிகளை அனுமதிக்க அமைப்புகளைப் புதுப்பியுங்கள்)</li>
+<li>குக்கிகள், தேடல் மற்றும் உலாவல் வரலாற்றை அழியுங்கள்</li>
+</ul>
+</p>
+<p>%1$s Mozilla ஆல் உருவாக்கப்படுகிறது. ஆரோக்கியமான, திறந்த இணையத்தை வளர்த்தெடுப்பதே எங்களின் இலக்கு ஆகும்.<br/>
+<a href="%2$s">மேலும் அறிய</a></p>]]></string>
 
     <!-- Header for the Privacy and Security settings menu -->
     <string name="preference_privacy_and_security_header">தனியுரிமை மற்றும் பாதுகாப்பு</string>
@@ -119,6 +161,9 @@
     <!-- %1$s will be replaced by the app name (e.g. Firefox Focus) -->
     <string name="preference_mozilla_summary">%1$s பற்றிய உதவி</string>
 
+    <!-- Preference category for ad blocking and enhanced tracking protection settings -->
+    <string name="preference_category_tracking_protection3">மேம்படுத்தப்பட்ட தடமறி பாதுகாப்பு</string>
+
     <!-- Preference category for settings related to controlling web content -->
     <string name="preference_category_web_content">வலை உள்ளடக்கம்</string>
 
@@ -128,10 +173,16 @@
     <!-- Preference category for General Settings -->
     <string name="preference_category_general">பொது</string>
 
+    <!-- Preference summary for General Settings category; the two things users can find in this category -->
+    <string name="preference_general_summary2">இயல்புநிலை உலாவி, மொழி</string>
+
     <!-- Preference category for settings about sending usage data -->
     <string name="preference_category_data_collection_use">தரவு சேகரிப்பு மற்றும் பயனளவு</string>
 
     <string name="preference_category_search">தேடல்</string>
+
+    <!-- Title of "switch" preference that enables/disables search suggestions -->
+    <string name="preference_show_search_suggestions">தேடல் பரிந்துரைகளைக் காட்டு</string>
 
     <!-- This label is shown below the name of the default search engine in settings -->
     <string name="preference_search_engine_default">முன்னிருப்பு</string>

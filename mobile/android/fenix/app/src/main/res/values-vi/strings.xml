@@ -289,7 +289,7 @@
 
     <!-- Home onboarding -->
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
-    <string name="onboarding_home_screen_jump_back_contextual_hint_2">Gặp gỡ trang chủ được cá nhân hóa của bạn. Các thẻ, dấu trang và kết quả tìm kiếm gần đây sẽ xuất hiện ở đây.</string>
+    <string name="onboarding_home_screen_jump_back_contextual_hint_2">Khám phá trang chủ được cá nhân hóa của bạn. Các thẻ gần đây, dấu trang và các kết quả tìm kiếm của bạn sẽ xuất hiện ngay đây.</string>
     <!-- Home onboarding dialog welcome screen title text. -->
     <string name="onboarding_home_welcome_title_2">Chào mừng bạn đến với một Internet cá nhân hơn</string>
     <!-- Home onboarding dialog welcome screen description text. -->
@@ -297,7 +297,7 @@
     <!-- Home onboarding dialog sign into sync screen title text. -->
     <string name="onboarding_home_sync_title_3">Chuyển đổi màn hình dễ dàng hơn bao giờ hết</string>
     <!-- Home onboarding dialog sign into sync screen description text. -->
-    <string name="onboarding_home_sync_description">Tiếp tục nơi bạn đã dừng lại với các thẻ từ các thiết bị khác ngay bây giờ trên trang chủ của bạn.</string>
+    <string name="onboarding_home_sync_description">Tiếp tục với các thẻ mà bạn đang truy cập từ các thiết bị khác ngay trên trang chủ này.</string>
     <!-- Text for the button to continue the onboarding on the home onboarding dialog. -->
     <string name="onboarding_home_get_started_button">Bắt đầu</string>
     <!-- Text for the button to navigate to the sync sign in screen on the home onboarding dialog. -->
@@ -464,7 +464,7 @@
     <!-- Text for indicating that a request for unsupported site was sent to Nimbus (it's a Mozilla library for experiments), this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_unsupported_site_request_submitted_2">Đã gửi yêu cầu hỗ trợ</string>
     <!-- Text for indicating cookie banner handling is currently not supported for this site, this is shown as part of the protections panel with the tracking protection toggle -->
-    <string name="reduce_cookie_banner_unsupported_site">Trang web hiện không được hỗ trợ</string>
+    <string name="reduce_cookie_banner_unsupported_site">Trang web hiện tại không được hỗ trợ</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
     <string name="reduce_cookie_banner_details_panel_title_on_for_site" moz:RemovedIn="121" tools:ignore="UnusedResources">Bật giảm biểu ngữ cookie cho %1$s?</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
@@ -673,7 +673,7 @@
     <!-- Wallpaper onboarding dialog header text. -->
     <string name="wallpapers_onboarding_dialog_title_text">Thử một chút màu sắc</string>
     <!-- Wallpaper onboarding dialog body text. -->
-    <string name="wallpapers_onboarding_dialog_body_text">Chọn một hình nền nói lên bạn.</string>
+    <string name="wallpapers_onboarding_dialog_body_text">Chọn một hình nền để nói lên phong cách của bạn.</string>
     <!-- Wallpaper onboarding dialog learn more button text. The button navigates to the wallpaper settings screen. -->
     <string name="wallpapers_onboarding_dialog_explore_more_button_text">Khám phá các hình nền khác</string>
 
@@ -1744,7 +1744,7 @@
     <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their logins -->
     <string name="logins_biometric_prompt_message_pin">Mở khóa thiết bị của bạn</string>
     <!-- Title for Accessibility Force Enable Zoom Preference -->
-    <string name="preference_accessibility_force_enable_zoom">Phóng to tất cả các trang web</string>
+    <string name="preference_accessibility_force_enable_zoom">Thu phóng trên mọi trang web</string>
     <!-- Summary for Accessibility Force Enable Zoom Preference -->
     <string name="preference_accessibility_force_enable_zoom_summary">Cho phép để chụm và thu phóng, ngay cả trên các trang web ngăn chặn cử chỉ này.</string>
 
@@ -1949,11 +1949,11 @@
     <!-- Confirmation message for a dialog confirming if the user wants to delete all data for current site -->
     <string name="confirm_clear_site_data"><![CDATA[Bạn có chắc chắn muốn xóa tất cả cookie và dữ liệu của trang web <b>%s</b> không?]]></string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for all sites-->
-    <string name="confirm_clear_permissions_on_all_sites">Bạn có chắc chắn rằng bạn muốn xóa tất cả các quyền hạn trên tất cả các trang web?</string>
+    <string name="confirm_clear_permissions_on_all_sites">Bạn có thật sự muốn xóa tất cả quyền hạn trên mọi trang web?</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for a site-->
-    <string name="confirm_clear_permissions_site">Bạn có chắc chắn rằng bạn muốn xóa tất cả các quyền hạn cho trang web này?</string>
+    <string name="confirm_clear_permissions_site">Bạn có thật sự muốn xóa tất cả quyền hạn cho trang web này?</string>
     <!-- Confirmation message for a dialog confirming if the user wants to set default value a permission for a site-->
-    <string name="confirm_clear_permission_site">Bạn có chắc chắn rằng bạn muốn xóa quyền hạn này cho trang web này?</string>
+    <string name="confirm_clear_permission_site">Bạn có thật sự muốn xóa quyền hạn này cho trang web này?</string>
     <!-- label shown when there are not site exceptions to show in the site exception settings -->
     <string name="no_site_exceptions">Không có ngoại lệ trang web</string>
     <!-- Bookmark deletion confirmation -->

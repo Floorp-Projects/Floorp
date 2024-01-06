@@ -98,7 +98,7 @@
     ]]></string>
 
     <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
-    <string name="mozac_browser_errorpages_unknown_socket_type_title">Phản hồi bất ngờ từ máy chủ</string>
+    <string name="mozac_browser_errorpages_unknown_socket_type_title">Phản hồi không mong muốn từ máy chủ</string>
     <!-- The error message shown when a website responds in an unexpected way and the browser cannot continue. -->
     <string name="mozac_browser_errorpages_unknown_socket_type_message"><![CDATA[      <p>Trang web đã phản hồi yêu cầu mạng theo cách không mong muốn và trình duyệt không thể tiếp tục.</p>
     ]]></string>
@@ -271,7 +271,7 @@
     ]]></string>
 
     <!-- The document title and heading of an error page. -->
-    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">Sự cố trang web có phần mềm độc hại</string>
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">Sự cố với trang web có mã độc</string>
 
     <!-- The %1$s will be replaced by the malicious website URL-->
     <string name="mozac_browser_errorpages_safe_browsing_malware_uri_message"><![CDATA[

@@ -651,7 +651,7 @@
     <!-- Content description for various wallpapers. The first parameter is the name of the wallpaper -->
     <string name="wallpapers_item_name_content_description">Тапет: %1$s</string>
     <!-- Snackbar message for when wallpaper is selected -->
-    <string name="wallpaper_updated_snackbar_message">Тапетът е обновен!</string>
+    <string name="wallpaper_updated_snackbar_message">Тапетът е променен!</string>
     <!-- Snackbar label for action to view selected wallpaper -->
     <string name="wallpaper_updated_snackbar_action">Преглед</string>
 
@@ -2279,8 +2279,6 @@
     <string name="review_quality_check_contextual_onboarding_terms_use" moz:RemovedIn="121" tools:ignore="UnusedResources">условия за ползване</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
     <string name="review_quality_check_contextual_onboarding_terms_use_2">Условия за употреба</string>
-    <!-- Text for opt-in button from the review quality check contextual onboarding card. -->
-    <string name="review_quality_check_contextual_onboarding_primary_button_text">Да, опитай</string>
     <!-- Text for opt-out button from the review quality check contextual onboarding card. -->
     <string name="review_quality_check_contextual_onboarding_secondary_button_text">Не сега</string>
     <!-- Text for the first CFR presenting the review quality check feature. -->
@@ -2348,7 +2346,7 @@
     <!-- Label for the dropdown to select which language to translate from on the translations dialog. Usually the translate from language selected will be the same as the page language. -->
     <string name="translations_bottom_sheet_translate_from">Превеждане от</string>
     <!-- Label for the dropdown to select which language to translate to on the translations dialog. Usually the translate to language selected will be the user's preferred language. -->
-    <string name="translations_bottom_sheet_translate_to">Превод на</string>
+    <string name="translations_bottom_sheet_translate_to">Превеждане на</string>
     <!-- Button text on the translations dialog to dismiss the dialog and return to the browser. -->
     <string name="translations_bottom_sheet_negative_button">Не сега</string>
     <!-- Button text on the translations dialog to begin a translation of the website. -->
