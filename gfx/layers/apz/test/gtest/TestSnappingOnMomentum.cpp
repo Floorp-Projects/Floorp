@@ -17,18 +17,18 @@ class APZCSnappingOnMomentumTesterMock : public APZCTreeManagerTester {
 
 TEST_F(APZCSnappingOnMomentumTesterMock, Snap_On_Momentum) {
   const char* treeShape = "x";
-  LayerIntRegion layerVisibleRegion[] = {
+  LayerIntRect layerVisibleRect[] = {
       LayerIntRect(0, 0, 100, 100),
   };
-  CreateScrollData(treeShape, layerVisibleRegion);
+  CreateScrollData(treeShape, layerVisibleRect);
   SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID,
                             CSSRect(0, 0, 100, 500));
 
   // Set up some basic scroll snapping
   ScrollSnapInfo snap;
   snap.mScrollSnapStrictnessY = StyleScrollSnapStrictness::Mandatory;
-  snap.mSnapportSize = CSSSize::ToAppUnits(
-      layerVisibleRegion[0].GetBounds().Size() * LayerToCSSScale(1.0));
+  snap.mSnapportSize =
+      CSSSize::ToAppUnits(layerVisibleRect[0].Size() * LayerToCSSScale(1.0));
   snap.mSnapTargets.AppendElement(ScrollSnapInfo::SnapTarget(
       Nothing(), Some(0 * AppUnitsPerCSSPixel()),
       CSSRect::ToAppUnits(CSSRect(0, 0, 10, 10)), StyleScrollSnapStop::Normal,

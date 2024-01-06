@@ -1000,7 +1000,7 @@ nsEventStatus AsyncPanZoomController::HandleDragEvent(
     // scrolling, but here we're interested in the other direction.
     ParentLayerRect thumbRect =
         (node->GetTransform() * AsyncTransformMatrix())
-            .TransformBounds(LayerRect(node->GetVisibleRegion().GetBounds()));
+            .TransformBounds(LayerRect(node->GetVisibleRect()));
     ScrollDirection otherDirection = GetPerpendicularDirection(direction);
     ParentLayerCoord distance =
         GetAxisStart(otherDirection, thumbRect.DistanceTo(aEvent.mLocalOrigin));

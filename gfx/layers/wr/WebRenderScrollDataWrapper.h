@@ -339,15 +339,15 @@ class MOZ_STACK_CLASS WebRenderScrollDataWrapper final {
     return false;
   }
 
-  LayerIntRegion GetVisibleRegion() const {
+  LayerIntRect GetVisibleRect() const {
     MOZ_ASSERT(IsValid());
 
     if (AtBottomLayer()) {
-      return mLayer->GetVisibleRegion();
+      return mLayer->GetVisibleRect();
     }
 
     return ViewAs<LayerPixel>(
-        TransformBy(mLayer->GetTransformTyped(), mLayer->GetVisibleRegion()),
+        TransformBy(mLayer->GetTransformTyped(), mLayer->GetVisibleRect()),
         PixelCastJustification::MovingDownToChildren);
   }
 

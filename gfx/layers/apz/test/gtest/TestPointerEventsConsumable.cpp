@@ -20,10 +20,10 @@ class APZCArePointerEventsConsumable : public APZCTreeManagerTester {
 
   void CreateSingleElementTree() {
     const char* treeShape = "x";
-    LayerIntRegion layerVisibleRegion[] = {
+    LayerIntRect layerVisibleRect[] = {
         LayerIntRect(0, 0, 100, 100),
     };
-    CreateScrollData(treeShape, layerVisibleRegion);
+    CreateScrollData(treeShape, layerVisibleRect);
     SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID,
                               CSSRect(0, 0, 500, 500));
 
@@ -36,9 +36,9 @@ class APZCArePointerEventsConsumable : public APZCTreeManagerTester {
 
   void CreateScrollHandoffTree() {
     const char* treeShape = "x(x)";
-    LayerIntRegion layerVisibleRegion[] = {LayerIntRect(0, 0, 200, 200),
-                                           LayerIntRect(50, 50, 100, 100)};
-    CreateScrollData(treeShape, layerVisibleRegion);
+    LayerIntRect layerVisibleRect[] = {LayerIntRect(0, 0, 200, 200),
+                                       LayerIntRect(50, 50, 100, 100)};
+    CreateScrollData(treeShape, layerVisibleRect);
     SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID,
                               CSSRect(0, 0, 300, 300));
     SetScrollableFrameMetrics(layers[1],

@@ -103,8 +103,7 @@ class HitTestingTreeNode {
   /* Hit test related methods */
 
   void SetHitTestData(
-      const LayerIntRegion& aVisibleRegion,
-      const LayerIntSize& aRemoteDocumentSize,
+      const LayerIntRect& aVisibleRect, const LayerIntSize& aRemoteDocumentSize,
       const CSSTransformMatrix& aTransform,
       const EventRegionsOverride& aOverride,
       const Maybe<ScrollableLayerGuid::ViewID>& aAsyncZoomContainerId);
@@ -152,7 +151,7 @@ class HitTestingTreeNode {
    * |aRemoteLayersId| is the LayersId of the remote subtree for which this
    * transform will be used. */
   LayerToScreenMatrix4x4 GetTransformToGecko(LayersId aRemoteLayersId) const;
-  const LayerIntRegion& GetVisibleRegion() const;
+  const LayerIntRect& GetVisibleRect() const;
 
   /* Returns the screen coordinate rectangle of remote iframe corresponding to
    * this node. The rectangle is the result of clipped by ancestor async
@@ -205,7 +204,7 @@ class HitTestingTreeNode {
   // we use to adjust sticky position content for the toolbar.
   Maybe<uint64_t> mStickyPositionAnimationId;
 
-  LayerIntRegion mVisibleRegion;
+  LayerIntRect mVisibleRect;
 
   /* The size of remote iframe on the corresponding layer coordinate.
    * It's empty if this node is not for remote iframe. */

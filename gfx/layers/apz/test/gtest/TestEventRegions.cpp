@@ -16,12 +16,12 @@ class APZEventRegionsTester : public APZCTreeManagerTester {
 
   void CreateEventRegionsLayerTree1() {
     const char* treeShape = "x(xx)";
-    LayerIntRegion layerVisibleRegions[] = {
+    LayerIntRect layerVisibleRects[] = {
         LayerIntRect(0, 0, 200, 200),    // root
         LayerIntRect(0, 0, 100, 200),    // left half
         LayerIntRect(0, 100, 200, 100),  // bottom half
     };
-    CreateScrollData(treeShape, layerVisibleRegions);
+    CreateScrollData(treeShape, layerVisibleRects);
     SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID);
     SetScrollableFrameMetrics(layers[1],
                               ScrollableLayerGuid::START_SCROLL_ID + 1);
@@ -37,11 +37,11 @@ class APZEventRegionsTester : public APZCTreeManagerTester {
 
   void CreateEventRegionsLayerTree2() {
     const char* treeShape = "x(x)";
-    LayerIntRegion layerVisibleRegions[] = {
+    LayerIntRect layerVisibleRects[] = {
         LayerIntRect(0, 0, 100, 500),
         LayerIntRect(0, 150, 100, 100),
     };
-    CreateScrollData(treeShape, layerVisibleRegions);
+    CreateScrollData(treeShape, layerVisibleRects);
     SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID);
 
     registration = MakeUnique<ScopedLayerTreeRegistration>(LayersId{0}, mcc);
@@ -58,7 +58,7 @@ class APZEventRegionsTester : public APZCTreeManagerTester {
     //   transforms are different from 3's.
     // 2 is a small layer that is the actual target
     // 3 is a big layer obscuring 2 with a dispatch-to-content region
-    LayerIntRegion layerVisibleRegions[] = {
+    LayerIntRect layerVisibleRects[] = {
         LayerIntRect(0, 0, 100, 100),
         LayerIntRect(0, 0, 0, 0),
         LayerIntRect(0, 0, 10, 10),
@@ -70,7 +70,7 @@ class APZEventRegionsTester : public APZCTreeManagerTester {
         Matrix4x4(),
         Matrix4x4(),
     };
-    CreateScrollData(treeShape, layerVisibleRegions, layerTransforms);
+    CreateScrollData(treeShape, layerVisibleRects, layerTransforms);
 
     SetScrollableFrameMetrics(layers[2], ScrollableLayerGuid::START_SCROLL_ID,
                               CSSRect(0, 0, 10, 10));

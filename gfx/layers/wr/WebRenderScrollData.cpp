@@ -182,7 +182,7 @@ void WebRenderLayerScrollData::Dump(std::ostream& aOut,
       aOut << ", transformIsPerspective";
     }
   }
-  aOut << ", visible=" << mVisibleRegion;
+  aOut << ", visible=" << mVisibleRect;
   if (mReferentId) {
     aOut << ", refLayersId=" << *mReferentId;
   }
@@ -438,7 +438,7 @@ void ParamTraits<mozilla::layers::WebRenderLayerScrollData>::Write(
   WriteParam(aWriter, aParam.mAncestorTransformId);
   WriteParam(aWriter, aParam.mTransform);
   WriteParam(aWriter, aParam.mTransformIsPerspective);
-  WriteParam(aWriter, aParam.mVisibleRegion);
+  WriteParam(aWriter, aParam.mVisibleRect);
   WriteParam(aWriter, aParam.mRemoteDocumentSize);
   WriteParam(aWriter, aParam.mReferentId);
   WriteParam(aWriter, aParam.mEventRegionsOverride);
@@ -465,7 +465,7 @@ bool ParamTraits<mozilla::layers::WebRenderLayerScrollData>::Read(
          ReadParam(aReader, &aResult->mAncestorTransformId) &&
          ReadParam(aReader, &aResult->mTransform) &&
          ReadParam(aReader, &aResult->mTransformIsPerspective) &&
-         ReadParam(aReader, &aResult->mVisibleRegion) &&
+         ReadParam(aReader, &aResult->mVisibleRect) &&
          ReadParam(aReader, &aResult->mRemoteDocumentSize) &&
          ReadParam(aReader, &aResult->mReferentId) &&
          ReadParam(aReader, &aResult->mEventRegionsOverride) &&

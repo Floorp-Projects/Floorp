@@ -5286,7 +5286,7 @@ bool nsDisplayOwnLayer::UpdateScrollData(WebRenderScrollData* aData,
             : mFrame->PresContext()->PresShell()->GetCumulativeResolution();
     LayerIntRect layerBounds =
         RoundedOut(bounds * LayoutDeviceToLayerScale(resolution));
-    aLayerData->SetVisibleRegion(LayerIntRegion(layerBounds));
+    aLayerData->SetVisibleRect(layerBounds);
   }
   return true;
 }
