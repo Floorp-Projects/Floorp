@@ -32,10 +32,10 @@ class APZScrollbarDraggingTester : public APZCTreeManagerTester {
     // The first child is the scrollable node, the second child is the
     // scrollbar.
     const char* treeShape = "x(xx)";
-    LayerIntRegion layerVisibleRegion[] = {LayerIntRect(0, 0, 100, 100),
-                                           LayerIntRect(0, 0, 50, 100),
-                                           LayerIntRect(50, 0, 50, 10)};
-    CreateScrollData(treeShape, layerVisibleRegion);
+    LayerIntRect layerVisibleRect[] = {LayerIntRect(0, 0, 100, 100),
+                                       LayerIntRect(0, 0, 50, 100),
+                                       LayerIntRect(50, 0, 50, 10)};
+    CreateScrollData(treeShape, layerVisibleRect);
     SetScrollableFrameMetrics(layers[1], scrollId, CSSRect(0, 0, 50, 1000));
     registration = MakeUnique<ScopedLayerTreeRegistration>(LayersId{0}, mcc);
     layers[2]->SetScrollbarData(ScrollbarData::CreateForThumb(

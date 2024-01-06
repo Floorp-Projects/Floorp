@@ -92,7 +92,7 @@ TEST_F(APZCBasicTester, ComplexTransform) {
 
   const char* treeShape = "x(x)";
   // LayerID                     0 1
-  LayerIntRegion layerVisibleRegion[] = {
+  LayerIntRect layerVisibleRect[] = {
       LayerIntRect(0, 0, 300, 300),
       LayerIntRect(0, 0, 150, 300),
   };
@@ -107,8 +107,8 @@ TEST_F(APZCBasicTester, ComplexTransform) {
       2.0f, 1.0f,
       1.0f);  // this is the 2.0 x-axis CSS transform on the child layer
 
-  auto layers = TestWRScrollData::Create(treeShape, *updater,
-                                         layerVisibleRegion, transforms);
+  auto layers = TestWRScrollData::Create(treeShape, *updater, layerVisibleRect,
+                                         transforms);
 
   ScrollMetadata metadata;
   FrameMetrics& metrics = metadata.GetMetrics();

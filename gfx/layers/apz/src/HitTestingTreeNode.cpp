@@ -249,11 +249,10 @@ bool HitTestingTreeNode::IsPrimaryHolder() const {
 LayersId HitTestingTreeNode::GetLayersId() const { return mLayersId; }
 
 void HitTestingTreeNode::SetHitTestData(
-    const LayerIntRegion& aVisibleRegion,
-    const LayerIntSize& aRemoteDocumentSize,
+    const LayerIntRect& aVisibleRect, const LayerIntSize& aRemoteDocumentSize,
     const CSSTransformMatrix& aTransform, const EventRegionsOverride& aOverride,
     const Maybe<ScrollableLayerGuid::ViewID>& aAsyncZoomContainerId) {
-  mVisibleRegion = aVisibleRegion;
+  mVisibleRect = aVisibleRect;
   mRemoteDocumentSize = aRemoteDocumentSize;
   mTransform = aTransform;
   mOverride = aOverride;
@@ -291,8 +290,8 @@ LayerToScreenMatrix4x4 HitTestingTreeNode::GetTransformToGecko(
       PixelCastJustification::ScreenIsParentLayerForRoot);
 }
 
-const LayerIntRegion& HitTestingTreeNode::GetVisibleRegion() const {
-  return mVisibleRegion;
+const LayerIntRect& HitTestingTreeNode::GetVisibleRect() const {
+  return mVisibleRect;
 }
 
 ScreenRect HitTestingTreeNode::GetRemoteDocumentScreenRect(

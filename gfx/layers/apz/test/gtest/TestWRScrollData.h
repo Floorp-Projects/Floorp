@@ -37,14 +37,14 @@ class TestWRScrollData : public WebRenderScrollData {
    *       / \
    *      x   x
    *
-   * The caller may optionally provide visible regions and/or transforms
+   * The caller may optionally provide visible rects and/or transforms
    * for the nodes. If provided, the array should contain one element
    * for each node, in the same order as in |aTreeShape|.
    */
-  static TestWRScrollData Create(
-      const char* aTreeShape, const APZUpdater& aUpdater,
-      const LayerIntRegion* aVisibleRegions = nullptr,
-      const gfx::Matrix4x4* aTransforms = nullptr);
+  static TestWRScrollData Create(const char* aTreeShape,
+                                 const APZUpdater& aUpdater,
+                                 const LayerIntRect* aVisibleRects = nullptr,
+                                 const gfx::Matrix4x4* aTransforms = nullptr);
 
   // These methods allow accessing and manipulating layers based on an index
   // representing the order in which they appear in |aTreeShape|.

@@ -21,9 +21,9 @@ TEST_F(APZCSnappingTesterMock, Bug1265510) {
   SCOPED_GFX_PREF_BOOL("general.smoothScroll", true);
 
   const char* treeShape = "x(x)";
-  LayerIntRegion layerVisibleRegion[] = {LayerIntRect(0, 0, 100, 100),
-                                         LayerIntRect(0, 100, 100, 100)};
-  CreateScrollData(treeShape, layerVisibleRegion);
+  LayerIntRect layerVisibleRect[] = {LayerIntRect(0, 0, 100, 100),
+                                     LayerIntRect(0, 100, 100, 100)};
+  CreateScrollData(treeShape, layerVisibleRect);
   SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID,
                             CSSRect(0, 0, 100, 200));
   SetScrollableFrameMetrics(layers[1], ScrollableLayerGuid::START_SCROLL_ID + 1,
@@ -32,8 +32,8 @@ TEST_F(APZCSnappingTesterMock, Bug1265510) {
 
   ScrollSnapInfo snap;
   snap.mScrollSnapStrictnessY = StyleScrollSnapStrictness::Mandatory;
-  snap.mSnapportSize = CSSSize::ToAppUnits(
-      layerVisibleRegion[0].GetBounds().Size() * LayerToCSSScale(1.0));
+  snap.mSnapportSize =
+      CSSSize::ToAppUnits(layerVisibleRect[0].Size() * LayerToCSSScale(1.0));
 
   snap.mSnapTargets.AppendElement(ScrollSnapInfo::SnapTarget(
       Nothing(), Some(0 * AppUnitsPerCSSPixel()),
@@ -95,18 +95,18 @@ TEST_F(APZCSnappingTesterMock, Bug1265510) {
 
 TEST_F(APZCSnappingTesterMock, Snap_After_Pinch) {
   const char* treeShape = "x";
-  LayerIntRegion layerVisibleRegion[] = {
+  LayerIntRect layerVisibleRect[] = {
       LayerIntRect(0, 0, 100, 100),
   };
-  CreateScrollData(treeShape, layerVisibleRegion);
+  CreateScrollData(treeShape, layerVisibleRect);
   SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID,
                             CSSRect(0, 0, 100, 200));
 
   // Set up some basic scroll snapping
   ScrollSnapInfo snap;
   snap.mScrollSnapStrictnessY = StyleScrollSnapStrictness::Mandatory;
-  snap.mSnapportSize = CSSSize::ToAppUnits(
-      layerVisibleRegion[0].GetBounds().Size() * LayerToCSSScale(1.0));
+  snap.mSnapportSize =
+      CSSSize::ToAppUnits(layerVisibleRect[0].Size() * LayerToCSSScale(1.0));
 
   snap.mSnapTargets.AppendElement(ScrollSnapInfo::SnapTarget(
       Nothing(), Some(0 * AppUnitsPerCSSPixel()),
@@ -155,18 +155,18 @@ TEST_F(APZCSnappingTesterMock, SnapOnPanEndWithZeroVelocity) {
   SCOPED_GFX_PREF_INT("apz.velocity_relevance_time_ms", 100);
 
   const char* treeShape = "x";
-  LayerIntRegion layerVisibleRegion[] = {
+  LayerIntRect layerVisibleRect[] = {
       LayerIntRect(0, 0, 100, 100),
   };
-  CreateScrollData(treeShape, layerVisibleRegion);
+  CreateScrollData(treeShape, layerVisibleRect);
   SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID,
                             CSSRect(0, 0, 100, 400));
 
   // Set up two snap points, 30 and 100.
   ScrollSnapInfo snap;
   snap.mScrollSnapStrictnessY = StyleScrollSnapStrictness::Mandatory;
-  snap.mSnapportSize = CSSSize::ToAppUnits(
-      layerVisibleRegion[0].GetBounds().Size() * LayerToCSSScale(1.0));
+  snap.mSnapportSize =
+      CSSSize::ToAppUnits(layerVisibleRect[0].Size() * LayerToCSSScale(1.0));
   snap.mSnapTargets.AppendElement(ScrollSnapInfo::SnapTarget(
       Nothing(), Some(30 * AppUnitsPerCSSPixel()),
       CSSRect::ToAppUnits(CSSRect(0, 30, 10, 10)), StyleScrollSnapStop::Normal,
@@ -232,18 +232,18 @@ TEST_F(APZCSnappingTesterMock, SnapOnPanEndWithPositiveVelocity) {
   SCOPED_GFX_PREF_INT("apz.velocity_relevance_time_ms", 100);
 
   const char* treeShape = "x";
-  LayerIntRegion layerVisibleRegion[] = {
+  LayerIntRect layerVisibleRect[] = {
       LayerIntRect(0, 0, 100, 100),
   };
-  CreateScrollData(treeShape, layerVisibleRegion);
+  CreateScrollData(treeShape, layerVisibleRect);
   SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID,
                             CSSRect(0, 0, 100, 400));
 
   // Set up two snap points, 30 and 100.
   ScrollSnapInfo snap;
   snap.mScrollSnapStrictnessY = StyleScrollSnapStrictness::Mandatory;
-  snap.mSnapportSize = CSSSize::ToAppUnits(
-      layerVisibleRegion[0].GetBounds().Size() * LayerToCSSScale(1.0));
+  snap.mSnapportSize =
+      CSSSize::ToAppUnits(layerVisibleRect[0].Size() * LayerToCSSScale(1.0));
   snap.mSnapTargets.AppendElement(ScrollSnapInfo::SnapTarget(
       Nothing(), Some(30 * AppUnitsPerCSSPixel()),
       CSSRect::ToAppUnits(CSSRect(0, 30, 10, 10)), StyleScrollSnapStop::Normal,

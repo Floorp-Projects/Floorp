@@ -92,10 +92,8 @@ class WebRenderLayerScrollData final {
     return mEventRegionsOverride;
   }
 
-  void SetVisibleRegion(const LayerIntRegion& aRegion) {
-    mVisibleRegion = aRegion;
-  }
-  const LayerIntRegion& GetVisibleRegion() const { return mVisibleRegion; }
+  void SetVisibleRect(const LayerIntRect& aRect) { mVisibleRect = aRect; }
+  const LayerIntRect& GetVisibleRect() const { return mVisibleRect; }
   void SetRemoteDocumentSize(const LayerIntSize& aRemoteDocumentSize) {
     mRemoteDocumentSize = aRemoteDocumentSize;
   }
@@ -206,7 +204,7 @@ class WebRenderLayerScrollData final {
   ViewID mAncestorTransformId;
   gfx::Matrix4x4 mTransform;
   bool mTransformIsPerspective;
-  LayerIntRegion mVisibleRegion;
+  LayerIntRect mVisibleRect;
   // The remote documents only need their size because their origin is always
   // (0, 0).
   LayerIntSize mRemoteDocumentSize;

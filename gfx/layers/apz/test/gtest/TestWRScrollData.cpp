@@ -28,7 +28,7 @@ using mozilla::layers::WebRenderScrollDataWrapper;
 /* static */
 TestWRScrollData TestWRScrollData::Create(const char* aTreeShape,
                                           const APZUpdater& aUpdater,
-                                          const LayerIntRegion* aVisibleRegions,
+                                          const LayerIntRect* aVisibleRects,
                                           const gfx::Matrix4x4* aTransforms) {
   // The WebRenderLayerScrollData tree needs to be created in a fairly
   // particular way (for example, each node needs to know the number of
@@ -60,8 +60,8 @@ TestWRScrollData TestWRScrollData::Create(const char* aTreeShape,
 
     WebRenderLayerScrollData layer;
     APZTestAccess::InitializeForTest(layer, entry.mDescendantCount);
-    if (aVisibleRegions) {
-      layer.SetVisibleRegion(aVisibleRegions[entry.mLayerIndex]);
+    if (aVisibleRects) {
+      layer.SetVisibleRect(aVisibleRects[entry.mLayerIndex]);
     }
     if (aTransforms) {
       layer.SetTransform(aTransforms[entry.mLayerIndex]);

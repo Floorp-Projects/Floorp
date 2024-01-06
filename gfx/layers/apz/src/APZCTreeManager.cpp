@@ -1151,8 +1151,7 @@ void APZCTreeManager::NotifyAutoscrollRejected(
 void SetHitTestData(HitTestingTreeNode* aNode,
                     const WebRenderScrollDataWrapper& aLayer,
                     const EventRegionsOverride& aOverrideFlags) {
-  aNode->SetHitTestData(aLayer.GetVisibleRegion(),
-                        aLayer.GetRemoteDocumentSize(),
+  aNode->SetHitTestData(aLayer.GetVisibleRect(), aLayer.GetRemoteDocumentSize(),
                         aLayer.GetTransformTyped(), aOverrideFlags,
                         aLayer.GetAsyncZoomContainerId());
 }
