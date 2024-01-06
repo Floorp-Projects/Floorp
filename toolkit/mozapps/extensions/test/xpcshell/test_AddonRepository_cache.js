@@ -2,7 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-// Tests caching in AddonRepository.jsm
+// Tests caching in AddonRepository.sys.mjs.
 
 var gServer;
 
@@ -352,7 +352,7 @@ const WITH_CACHE = [
   },
 ];
 
-// Expected add-ons when using cache
+// Expected add-ons when using cache for extension, but no cache for themes.
 const WITH_EXTENSION_CACHE = [
   {
     id: ADDON_IDS[0],
@@ -711,4 +711,18 @@ add_task(async function run_test_17() {
   await AddonManagerPrivate.backgroundUpdateCheck();
   let aAddons = await promiseAddonsByIDs(ADDON_IDS);
   check_results(aAddons, WITH_EXTENSION_CACHE);
+  Services.prefs.clearUserPref(PREF_GETADDONS_CACHE_TYPES);
+});
+
+// Tests that the cache is retained when the server/API is unreachable.
+// Regression test for https://bugzilla.mozilla.org/show_bug.cgi?id=1870905
+add_task(async function run_test_18() {
+  // The response is expected to be JSON, so setting it to non-JSON is
+  // equivalent to the server being unreachable in the implementation.
+  Services.prefs.setCharPref(PREF_GETADDONS_BYIDS, "data:text/not-json,");
+
+  await AddonManagerPrivate.backgroundUpdateCheck();
+  let aAddons = await promiseAddonsByIDs(ADDON_IDS);
+  check_results(aAddons, WITH_EXTENSION_CACHE);
+  Services.prefs.setCharPref(PREF_GETADDONS_BYIDS, GETADDONS_RESULTS);
 });
