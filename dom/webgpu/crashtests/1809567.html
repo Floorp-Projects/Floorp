@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <body>
+    <script>
+      // The bulk of the test is wrapped in an async function because
+      // the WebGPU API returns promises of adapters and devices,
+      // which we would like to conveniently await.
+      async function orphan_webgpu_device() {
+          // Create an iframe in the same origin as this code.
+          let iframe = document.createElement('iframe');
+          document.body.appendChild(iframe);
+
+          // Define a function in that iframe that creates a WebGPU
+          // `GPUDevice`.
+          let script = iframe.contentDocument.createElement('script');
+          script.type = 'text/javascript';
+          script.text = `
+              async function create_device() {
+                  // WebGPU is not yet available in beta or release.
+                  if (!navigator.gpu) {
+                      return null;
+                  }
+
+                  let adapter = await navigator.gpu.requestAdapter({ });
+                  // Not all GPUs are capable of supporting WebGPU.
+                  if (!adapter) {
+                      return null;
+                  }
+
+                  return await adapter.requestDevice({ });
+              }
+          `;
+          iframe.contentDocument.body.appendChild(script);
+
+          // Call that function to create a `GPUDevice` in the iframe.
+          let device = await iframe.contentWindow.create_device();
+
+          // If we can't run WebGPU in this browser, then we can't reach the crash.
+          if (device) {
+              // Remove the iframe from our document. This closes its window.
+              iframe.remove();
+
+              try {
+                  // When a Web API JavaScript object has had its parent window
+                  // closed, C++ implementations of its WebIDL methods become unable
+                  // to create JavaScript objects as usual: calling
+                  // `EventTarget::GetParentObject` returns `nullptr`.
+                  //
+                  // Since we removed `iframe` from this document, the following
+                  // call will fail trying to create a `Promise` of the module's
+                  // `GPUCompilationInfo`.
+                  device.createShaderModule({ code: '' });
+              } catch (error) {
+                  // Eating errors indiscriminately wastes later developers' time.
+                  if (error.name != "NS_ERROR_UNEXPECTED") {
+                      throw error;
+                  }
+              }
+          }
+      }
+
+      orphan_webgpu_device()
+          .catch((error) => {
+              console.log(error);
+          })
+          .finally(() => {
+              // End the crashtest.
+              document.documentElement.removeAttribute("class");
+          });
+    </script>
+  </body>
+</html>

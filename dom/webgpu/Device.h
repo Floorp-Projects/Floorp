@@ -165,7 +165,8 @@ class Device final : public DOMEventTargetHelper, public SupportsWeakPtr {
       const dom::GPUBindGroupDescriptor& aDesc);
 
   MOZ_CAN_RUN_SCRIPT already_AddRefed<ShaderModule> CreateShaderModule(
-      JSContext* aCx, const dom::GPUShaderModuleDescriptor& aDesc);
+      JSContext* aCx, const dom::GPUShaderModuleDescriptor& aDesc,
+      ErrorResult& aRv);
   already_AddRefed<ComputePipeline> CreateComputePipeline(
       const dom::GPUComputePipelineDescriptor& aDesc);
   already_AddRefed<RenderPipeline> CreateRenderPipeline(
