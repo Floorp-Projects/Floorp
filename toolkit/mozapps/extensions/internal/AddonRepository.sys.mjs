@@ -588,30 +588,12 @@ export var AddonRepository = {
   },
 
   /**
-   * Fetch addon metadata for a set of addons.
-   *
-   * @param {array<string>} aIDs
-   *                        A list of addon IDs to fetch information about.
-   *
-   * @returns {array<AddonSearchResult>}
-   */
-  async _getFullData(aIDs) {
-    let addons = [];
-    try {
-      addons = await this.getAddonsByIDs(aIDs, false);
-    } catch (err) {
-      logger.error(`Error in addon metadata check: ${err.message}`);
-    }
-
-    return addons;
-  },
-
-  /**
    * Asynchronously add add-ons to the cache corresponding to the specified
    * ids. If caching is disabled, the cache is unchanged.
    *
    * @param  aIds
    *         The array of add-on ids to add to the cache
+   * @returns {array<AddonSearchResult>} Add-ons to add to the cache.
    */
   async cacheAddons(aIds) {
     logger.debug(
@@ -628,10 +610,16 @@ export var AddonRepository = {
       return [];
     }
 
-    let addons = await this._getFullData(ids);
-    await AddonDatabase.update(addons);
-
-    return Array.from(addons.values());
+    let addons = [];
+    try {
+      addons = await this.getAddonsByIDs(ids);
+    } catch (err) {
+      logger.error(`Error in addon metadata check: ${err.message}`);
+    }
+    if (addons.length) {
+      await AddonDatabase.update(addons);
+    }
+    return addons;
   },
 
   /**
@@ -687,7 +675,17 @@ export var AddonRepository = {
         return;
       }
 
-      let addons = await this._getFullData(addonsToCache);
+      let addons;
+      try {
+        addons = await this.getAddonsByIDs(addonsToCache);
+      } catch (err) {
+        // This is likely to happen if the server is unreachable, e.g. when
+        // there is no network connectivity.
+        logger.error(`Error in addon metadata lookup: ${err.message}`);
+        // Return now to avoid calling repopulate with an empty array;
+        // doing so would clear the cache.
+        return;
+      }
 
       AddonDatabase.repopulate(addons);
 
@@ -1061,7 +1059,7 @@ var AddonDatabase = {
    * Asynchronously repopulates the database so it only contains the
    * specified add-ons
    *
-   * @param {Map} aAddons
+   * @param {array<AddonSearchResult>} aAddons
    *              Add-ons to repopulate the database with.
    */
   repopulate(aAddons) {
@@ -1078,21 +1076,19 @@ var AddonDatabase = {
   /**
    * Asynchronously insert new addons into the database.
    *
-   * @param {Map} aAddons
+   * @param {array<AddonSearchResult>} aAddons
    *              Add-ons to insert/update in the database
    */
   async update(aAddons) {
     await this.openConnection();
 
     this._update(aAddons);
-
-    this.save();
   },
 
   /**
    * Merge the given addons into the database.
    *
-   * @param {Map} aAddons
+   * @param {array<AddonSearchResult>} aAddons
    *              Add-ons to insert/update in the database
    */
   _update(aAddons) {
