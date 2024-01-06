@@ -95,8 +95,7 @@ void nsIScriptElement::DetermineKindFromType(
     // Step 11. Otherwise, if the script block's type string is an ASCII
     // case-insensitive match for the string "importmap", then set el's type to
     // "importmap".
-    if (aOwnerDoc->ImportMapsEnabled() &&
-        type.LowerCaseEqualsASCII("importmap")) {
+    if (type.LowerCaseEqualsASCII("importmap")) {
       mKind = ScriptKind::eImportMap;
     }
   }

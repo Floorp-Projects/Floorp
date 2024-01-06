@@ -729,63 +729,15 @@ nsresult ModuleLoaderBase::HandleResolveFailure(
   return NS_OK;
 }
 
-// Helper for getting import maps pref across main thread and workers
-bool ImportMapsEnabled() {
-  if (NS_IsMainThread()) {
-    return mozilla::StaticPrefs::dom_importMaps_enabled();
-  }
-  return false;
-}
-
 ResolveResult ModuleLoaderBase::ResolveModuleSpecifier(
     LoadedScript* aScript, const nsAString& aSpecifier) {
-  // If import map is enabled, forward to the updated 'Resolve a module
-  // specifier' algorithm defined in Import maps spec.
-  //
-  // Once import map is enabled by default,
-  // ModuleLoaderBase::ResolveModuleSpecifier should be replaced by
-  // ImportMap::ResolveModuleSpecifier.
-  if (ImportMapsEnabled()) {
-    return ImportMap::ResolveModuleSpecifier(mImportMap.get(), mLoader, aScript,
-                                             aSpecifier);
-  }
-
-  // The following module specifiers are allowed by the spec:
-  //  - a valid absolute URL
-  //  - a valid relative URL that starts with "/", "./" or "../"
-  //
-  // Bareword module specifiers are handled in Import maps.
-
-  nsCOMPtr<nsIURI> uri;
-  nsresult rv = NS_NewURI(getter_AddRefs(uri), aSpecifier);
-  if (NS_SUCCEEDED(rv)) {
-    return WrapNotNull(uri);
-  }
-
-  if (rv != NS_ERROR_MALFORMED_URI) {
-    return Err(ResolveError::Failure);
-  }
-
-  if (!StringBeginsWith(aSpecifier, u"/"_ns) &&
-      !StringBeginsWith(aSpecifier, u"./"_ns) &&
-      !StringBeginsWith(aSpecifier, u"../"_ns)) {
-    return Err(ResolveError::FailureMayBeBare);
-  }
-
-  // Get the document's base URL if we don't have a referencing script here.
-  nsCOMPtr<nsIURI> baseURL;
-  if (aScript && !aScript->IsEventScript()) {
-    baseURL = aScript->BaseURL();
-  } else {
-    baseURL = GetBaseURI();
-  }
-
-  rv = NS_NewURI(getter_AddRefs(uri), aSpecifier, nullptr, baseURL);
-  if (NS_SUCCEEDED(rv)) {
-    return WrapNotNull(uri);
-  }
-
-  return Err(ResolveError::Failure);
+  // Import Maps are not supported on workers/worklets.
+  // See https://github.com/WICG/import-maps/issues/2
+  MOZ_ASSERT_IF(!NS_IsMainThread(), mImportMap == nullptr);
+  // Forward to the updated 'Resolve a module specifier' algorithm defined in
+  // the Import Maps spec.
+  return ImportMap::ResolveModuleSpecifier(mImportMap.get(), mLoader, aScript,
+                                           aSpecifier);
 }
 
 nsresult ModuleLoaderBase::ResolveRequestedModules(

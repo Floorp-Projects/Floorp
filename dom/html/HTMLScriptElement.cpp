@@ -233,8 +233,8 @@ bool HTMLScriptElement::Supports(const GlobalObject& aGlobal,
                                  const nsAString& aType) {
   nsAutoString type(aType);
   return aType.EqualsLiteral("classic") || aType.EqualsLiteral("module") ||
-         (StaticPrefs::dom_importMaps_enabled() &&
-          aType.EqualsLiteral("importmap"));
+
+         aType.EqualsLiteral("importmap");
 }
 
 }  // namespace mozilla::dom

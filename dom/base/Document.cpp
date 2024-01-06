@@ -18410,11 +18410,6 @@ void Document::RecordNavigationTiming(ReadyState aReadyState) {
   }
 }
 
-bool Document::ImportMapsEnabled() const {
-  return nsContentUtils::IsChromeDoc(this) ||
-         StaticPrefs::dom_importMaps_enabled();
-}
-
 void Document::ReportShadowDOMUsage() {
   nsPIDOMWindowInner* inner = GetInnerWindow();
   if (NS_WARN_IF(!inner)) {
