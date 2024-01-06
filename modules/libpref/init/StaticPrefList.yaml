@@ -3096,12 +3096,6 @@
   value: true
   mirror: always
 
-# Is support for import maps (<script type="importmap">) enabled for content?
-- name: dom.importMaps.enabled
-  type: bool
-  value: true
-  mirror: always
-
 # Whether we disable triggering mutation events for changes to style
 # attribute via CSSOM.
 # NOTE: This preference is used in unit tests. If it is removed or its default

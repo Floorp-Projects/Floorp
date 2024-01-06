@@ -3991,8 +3991,6 @@ class Document : public nsINode,
 
   mozilla::dom::FeaturePolicy* FeaturePolicy() const;
 
-  bool ImportMapsEnabled() const;
-
   /**
    * Find the (non-anonymous) content in this document for aFrame. It will
    * be aFrame's content node if that content is in this document and not
