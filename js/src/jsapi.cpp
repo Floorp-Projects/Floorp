@@ -3294,7 +3294,7 @@ JS_PUBLIC_API bool JS_GetStringCharAt(JSContext* cx, JSString* str,
 }
 
 JS_PUBLIC_API bool JS_CopyStringChars(JSContext* cx,
-                                      mozilla::Range<char16_t> dest,
+                                      const mozilla::Range<char16_t>& dest,
                                       JSString* str) {
   AssertHeapIsIdle();
   CHECK_THREAD(cx);

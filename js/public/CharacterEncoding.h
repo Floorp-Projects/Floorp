@@ -235,7 +235,7 @@ class ConstTwoByteChars : public mozilla::Range<const char16_t> {
  * This method cannot trigger GC.
  */
 extern Latin1CharsZ LossyTwoByteCharsToNewLatin1CharsZ(
-    JSContext* cx, const mozilla::Range<const char16_t> tbchars);
+    JSContext* cx, const mozilla::Range<const char16_t>& tbchars);
 
 inline Latin1CharsZ LossyTwoByteCharsToNewLatin1CharsZ(JSContext* cx,
                                                        const char16_t* begin,
@@ -246,7 +246,7 @@ inline Latin1CharsZ LossyTwoByteCharsToNewLatin1CharsZ(JSContext* cx,
 
 template <typename CharT, typename Allocator>
 extern UTF8CharsZ CharsToNewUTF8CharsZ(Allocator* alloc,
-                                       const mozilla::Range<CharT> chars);
+                                       const mozilla::Range<CharT>& chars);
 
 JS_PUBLIC_API char32_t Utf8ToOneUcs4Char(const uint8_t* utf8Buffer,
                                          int utf8Length);

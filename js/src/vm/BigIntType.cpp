@@ -3829,7 +3829,7 @@ BigInt* JS::NumberToBigInt(JSContext* cx, double num) {
 
 template <typename CharT>
 static inline BigInt* StringToBigIntHelper(JSContext* cx,
-                                           Range<const CharT>& chars) {
+                                           const Range<const CharT>& chars) {
   bool parseError = false;
   BigInt* bi = ParseStringBigIntLiteral(cx, chars, &parseError);
   if (!bi) {
@@ -3843,11 +3843,12 @@ static inline BigInt* StringToBigIntHelper(JSContext* cx,
   return bi;
 }
 
-BigInt* JS::StringToBigInt(JSContext* cx, Range<const Latin1Char> chars) {
+BigInt* JS::StringToBigInt(JSContext* cx,
+                           const Range<const Latin1Char>& chars) {
   return StringToBigIntHelper(cx, chars);
 }
 
-BigInt* JS::StringToBigInt(JSContext* cx, Range<const char16_t> chars) {
+BigInt* JS::StringToBigInt(JSContext* cx, const Range<const char16_t>& chars) {
   return StringToBigIntHelper(cx, chars);
 }
 

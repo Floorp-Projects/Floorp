@@ -333,7 +333,7 @@ static const char JSONEscapeMap[] = {
 
 template <QuoteTarget target, typename CharT>
 JS_PUBLIC_API void QuoteString(Sprinter* sp,
-                               const mozilla::Range<const CharT> chars,
+                               const mozilla::Range<const CharT>& chars,
                                char quote) {
   MOZ_ASSERT_IF(target == QuoteTarget::JSON, quote == '\0');
 
@@ -356,16 +356,16 @@ JS_PUBLIC_API void QuoteString(Sprinter* sp,
 }
 
 template JS_PUBLIC_API void QuoteString<QuoteTarget::String, Latin1Char>(
-    Sprinter* sp, const mozilla::Range<const Latin1Char> chars, char quote);
+    Sprinter* sp, const mozilla::Range<const Latin1Char>& chars, char quote);
 
 template JS_PUBLIC_API void QuoteString<QuoteTarget::String, char16_t>(
-    Sprinter* sp, const mozilla::Range<const char16_t> chars, char quote);
+    Sprinter* sp, const mozilla::Range<const char16_t>& chars, char quote);
 
 template JS_PUBLIC_API void QuoteString<QuoteTarget::JSON, Latin1Char>(
-    Sprinter* sp, const mozilla::Range<const Latin1Char> chars, char quote);
+    Sprinter* sp, const mozilla::Range<const Latin1Char>& chars, char quote);
 
 template JS_PUBLIC_API void QuoteString<QuoteTarget::JSON, char16_t>(
-    Sprinter* sp, const mozilla::Range<const char16_t> chars, char quote);
+    Sprinter* sp, const mozilla::Range<const char16_t>& chars, char quote);
 
 JS_PUBLIC_API void QuoteString(Sprinter* sp, JSString* str,
                                char quote /*= '\0' */) {

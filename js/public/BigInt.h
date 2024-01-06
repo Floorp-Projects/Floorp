@@ -151,10 +151,10 @@ extern JS_PUBLIC_API BigInt* NumberToBigInt(JSContext* cx, double num);
  * If parsing fails, this function returns null and throws an exception.
  */
 extern JS_PUBLIC_API BigInt* StringToBigInt(
-    JSContext* cx, mozilla::Range<const Latin1Char> chars);
+    JSContext* cx, const mozilla::Range<const Latin1Char>& chars);
 
 extern JS_PUBLIC_API BigInt* StringToBigInt(
-    JSContext* cx, mozilla::Range<const char16_t> chars);
+    JSContext* cx, const mozilla::Range<const char16_t>& chars);
 
 /**
  * Create a BigInt by parsing a string consisting of an optional sign character

@@ -538,7 +538,7 @@ enum class QuoteTarget { String, JSON };
 
 template <QuoteTarget target, typename CharT>
 void JS_PUBLIC_API QuoteString(Sprinter* sp,
-                               const mozilla::Range<const CharT> chars,
+                               const mozilla::Range<const CharT>& chars,
                                char quote = '\0');
 
 }  // namespace js
