@@ -96,7 +96,7 @@ class GPUProcessManager final : public GPUProcessHost::Listener {
   // If the GPU process is enabled but has not yet been launched then this will
   // launch the process. If that is not desired then check that return value of
   // Process() is non-null before calling.
-  nsresult EnsureGPUReady();
+  nsresult EnsureGPUReady(bool aRetryAfterFallback = true);
 
   already_AddRefed<CompositorSession> CreateTopLevelCompositor(
       nsBaseWidget* aWidget, WebRenderLayerManager* aLayerManager,
@@ -241,6 +241,8 @@ class GPUProcessManager final : public GPUProcessHost::Listener {
 
   void DestroyRemoteCompositorSessions();
   void DestroyInProcessCompositorSessions();
+
+  void OnBlockingProcessUnexpectedShutdown();
 
   // Returns true if we crossed the threshold such that we should disable
   // acceleration.
