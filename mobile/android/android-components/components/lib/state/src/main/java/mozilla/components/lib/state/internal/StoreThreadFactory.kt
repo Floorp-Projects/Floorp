@@ -51,7 +51,8 @@ internal class StoreThreadFactory(
         }
 
         throw IllegalThreadStateException(
-            "Expected `store` thread, but running on thread `${currentThread.name}`. Leaked MiddlewareContext?",
+            "Expected `store` thread, but running on thread `${currentThread.name}`. " +
+                "Leaked MiddlewareContext or did you mean to use `MiddlewareContext.store.dispatch`?",
         )
     }
 }
