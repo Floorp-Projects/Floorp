@@ -36,7 +36,6 @@ const { TestUtils } = ChromeUtils.importESModule(
 
 ChromeUtils.defineESModuleGetters(this, {
   MockRegistrar: "resource://testing-common/MockRegistrar.sys.mjs",
-  Subprocess: "resource://gre/modules/Subprocess.sys.mjs",
   updateAppInfo: "resource://testing-common/AppInfo.sys.mjs",
 });
 
@@ -113,6 +112,9 @@ const HELPER_SLEEP_TIMEOUT = 180;
 // How many of do_timeout calls using FILE_IN_USE_TIMEOUT_MS to wait before the
 // test is aborted.
 const FILE_IN_USE_TIMEOUT_MS = 1000;
+
+const PIPE_TO_NULL =
+  AppConstants.platform == "win" ? ">nul" : "> /dev/null 2>&1";
 
 const LOG_FUNCTION = info;
 
@@ -990,6 +992,11 @@ function cleanupTestCommon() {
   }
 
   gTestserver = null;
+
+  if (AppConstants.platform == "macosx" || AppConstants.platform == "linux") {
+    // This will delete the launch script if it exists.
+    getLaunchScript();
+  }
 
   if (gIsServiceTest) {
     let exts = ["id", "log", "status"];
@@ -2462,7 +2469,7 @@ function isBinarySigned(aBinPath) {
  * This may be required to launch the updated application and have non-trivial
  * functionality available.
  */
-async function setupAppFiles({ requiresOmnijar = false } = {}) {
+function setupAppFiles({ requiresOmnijar = false } = {}) {
   debugDump(
     "start - copying or creating symlinks to application files " +
       "for the test"
@@ -2536,26 +2543,6 @@ async function setupAppFiles({ requiresOmnijar = false } = {}) {
   });
 
   copyTestUpdaterToBinDir();
-
-  if (AppConstants.platform == "macosx") {
-    // Newer versions of macOS mark copied applications as quarantined and will
-    // refuse to run them with exit code -9.  There is no console logging but
-    // the UI pops an "Allow ..." dialog.  Work around this by manually removing
-    // quarantine xattrs.
-    let promises = [];
-    let delMacXAttr = e => {
-      promises.push(
-        IOUtils.delMacXAttr(e.path, "com.apple.quarantine").catch(() => {})
-      );
-    };
-
-    checkFilesInDirRecursive(destDir, delMacXAttr, {
-      includeDirectories: true,
-    });
-
-    // `delMacXAttr` throws if the attribute doesn't exist, which is fine.
-    await Promise.all(promises);
-  }
 
   debugDump(
     "finish - copying or creating symlinks to application files " +
@@ -2823,6 +2810,29 @@ function waitForApplicationStop(aApplication) {
     0,
     "the process should have stopped, process name: " + aApplication
   );
+}
+
+/**
+ * Gets the platform specific shell binary that is launched using nsIProcess and
+ * in turn launches a binary used for the test (e.g. application, updater,
+ * etc.). A shell is used so debug console output can be redirected to a file so
+ * it doesn't end up in the test log.
+ *
+ * @return nsIFile for the shell binary to launch using nsIProcess.
+ */
+function getLaunchBin() {
+  let launchBin;
+  if (AppConstants.platform == "win") {
+    launchBin = Services.dirsvc.get("WinD", Ci.nsIFile);
+    launchBin.append("System32");
+    launchBin.append("cmd.exe");
+  } else {
+    launchBin = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
+    launchBin.initWithPath("/bin/sh");
+  }
+  Assert.ok(launchBin.exists(), MSG_SHOULD_EXIST + getMsgPath(launchBin.path));
+
+  return launchBin;
 }
 
 /**
@@ -3209,9 +3219,9 @@ async function setupUpdaterTest(
     createUpdaterINI(aPostUpdateAsync, aPostUpdateExeRelPathPrefix);
   }
 
-  await TestUtils.waitForCondition(async () => {
+  await TestUtils.waitForCondition(() => {
     try {
-      await setupAppFiles({ requiresOmnijar });
+      setupAppFiles({ requiresOmnijar });
       return true;
     } catch (e) {
       logTestInfo("exception when calling setupAppFiles, Exception: " + e);
@@ -4113,21 +4123,12 @@ function checkForBackupFiles(aFile) {
  * each file found.
  *
  * @param   aDir
- *          A nsIFile for the directory to be enumerated
+ *          A nsIFile for the directory to be deleted
  * @param   aCallback
  *          A callback function that will be called with the file as a
  *          parameter for each file found.
- * @param   options.includeDirectories
- *          When true, also invoke callback function with the directory as a
- *          parameter for each directory found.  Directories are enumerated
- *          after their children, to allow callers to conveniently recursively
- *          remove.
  */
-function checkFilesInDirRecursive(
-  aDir,
-  aCallback,
-  { includeDirectories = false } = {}
-) {
+function checkFilesInDirRecursive(aDir, aCallback) {
   if (!aDir.exists()) {
     do_throw("Directory must exist!");
   }
@@ -4138,15 +4139,11 @@ function checkFilesInDirRecursive(
 
     if (entry.exists()) {
       if (entry.isDirectory()) {
-        checkFilesInDirRecursive(entry, aCallback, { includeDirectories });
+        checkFilesInDirRecursive(entry, aCallback);
       } else {
         aCallback(entry);
       }
     }
-  }
-
-  if (includeDirectories) {
-    aCallback(aDir);
   }
 }
 
@@ -4312,20 +4309,30 @@ function createAppInfo(aID, aName, aVersion, aPlatformVersion) {
 }
 
 /**
- * Returns the platform specific `Subprocess.jsm` options to launch
+ * Returns the platform specific arguments used by nsIProcess when launching
  * the application.
  *
  * @param   aExtraArgs (optional)
  *          An array of extra arguments to append to the default arguments.
- * @return  an options object to be passed to `Subprocess.call`.
+ * @return  an array of arguments to be passed to nsIProcess.
+ *
+ * Note: a shell is necessary to pipe the application's console output which
+ *       would otherwise pollute the xpcshell log.
  *
  * Command line arguments used when launching the application:
  * -no-remote prevents shell integration from being affected by an existing
  * application process.
  * -test-process-updates makes the application exit after being relaunched by
  * the updater.
+ * the platform specific string defined by PIPE_TO_NULL to output both stdout
+ * and stderr to null. This is needed to prevent output from the application
+ * from ending up in the xpchsell log.
  */
-function getSubprocessOptions(aExtraArgs = []) {
+function getProcessArgs(aExtraArgs) {
+  if (!aExtraArgs) {
+    aExtraArgs = [];
+  }
+
   let appBin = getApplyDirFile(DIR_MACOS + FILE_APP_BIN);
   Assert.ok(appBin.exists(), MSG_SHOULD_EXIST + ", path: " + appBin.path);
   let appBinPath = appBin.path;
@@ -4345,18 +4352,41 @@ function getSubprocessOptions(aExtraArgs = []) {
   profileDir.append("profile");
   let profilePath = profileDir.path;
 
-  // Bug 1873274: `--profile` requires the path to exist under Linux.
-  if (!profileDir.exists()) {
-    profileDir.create(Ci.nsIFile.DIRECTORY_TYPE, PERMS_DIRECTORY);
-  }
+  let args;
+  if (AppConstants.platform == "macosx" || AppConstants.platform == "linux") {
+    let launchScript = getLaunchScript();
+    // Precreate the script with executable permissions
+    launchScript.create(Ci.nsIFile.NORMAL_FILE_TYPE, PERMS_DIRECTORY);
 
-  let args = ["-profile", profilePath, "-no-remote", "-test-process-updates"];
-  if (AppConstants.platform == "win") {
-    args.push("-wait-for-browser");
+    let scriptContents = "#! /bin/sh\n";
+    scriptContents += "export XRE_PROFILE_PATH=" + profilePath + "\n";
+    scriptContents +=
+      appBinPath +
+      " -no-remote -test-process-updates " +
+      aExtraArgs.join(" ") +
+      " " +
+      PIPE_TO_NULL;
+    writeFile(launchScript, scriptContents);
+    debugDump(
+      "created " + launchScript.path + " containing:\n" + scriptContents
+    );
+    args = [launchScript.path];
+  } else {
+    args = [
+      "/D",
+      "/Q",
+      "/C",
+      appBinPath,
+      "-profile",
+      profilePath,
+      "-no-remote",
+      "-test-process-updates",
+      "-wait-for-browser",
+    ]
+      .concat(aExtraArgs)
+      .concat([PIPE_TO_NULL]);
   }
-  args.push(...aExtraArgs);
-
-  return { command: appBinPath, arguments: args };
+  return args;
 }
 
 /**
@@ -4375,6 +4405,20 @@ function getAppArgsLogPath() {
     appArgsLogPath = '"' + appArgsLogPath + '"';
   }
   return appArgsLogPath;
+}
+
+/**
+ * Gets the nsIFile reference for the shell script to launch the application. If
+ * the file exists it will be removed by this function.
+ *
+ * @return  the nsIFile for the shell script to launch the application.
+ */
+function getLaunchScript() {
+  let launchScript = do_get_file("/" + gTestID + "_launch.sh", true);
+  if (launchScript.exists()) {
+    launchScript.remove(false);
+  }
+  return launchScript;
 }
 
 /**
@@ -4408,7 +4452,7 @@ function adjustGeneralPaths() {
   ds.QueryInterface(Ci.nsIProperties).undefine(NS_GRE_BIN_DIR);
   ds.QueryInterface(Ci.nsIProperties).undefine(XRE_EXECUTABLE_FILE);
   ds.registerProvider(dirProvider);
-  registerCleanupFunction(async function AGP_cleanup() {
+  registerCleanupFunction(function AGP_cleanup() {
     debugDump("start - unregistering directory provider");
 
     if (gAppTimer) {
@@ -4418,10 +4462,10 @@ function adjustGeneralPaths() {
       debugDump("finish - cancel app timer");
     }
 
-    if (gProcess) {
+    if (gProcess && gProcess.isRunning) {
       debugDump("start - kill process");
       try {
-        await gProcess.kill();
+        gProcess.kill();
       } catch (e) {
         debugDump("kill process failed, Exception: " + e);
       }
@@ -4483,7 +4527,7 @@ function adjustGeneralPaths() {
 const gAppTimerCallback = {
   notify: function TC_notify(aTimer) {
     gAppTimer = null;
-    if (gProcess) {
+    if (gProcess.isRunning) {
       logTestInfo("attempting to kill process");
       gProcess.kill();
     }
@@ -4504,15 +4548,13 @@ async function runUpdateUsingApp(aExpectedStatus) {
   // The maximum number of milliseconds the process that is launched can run
   // before the test will try to kill it.
   const APP_TIMER_TIMEOUT = 120000;
+  let launchBin = getLaunchBin();
+  let args = getProcessArgs();
+  debugDump("launching " + launchBin.path + " " + args.join(" "));
 
-  let subprocess = getSubprocessOptions();
-  Object.assign(subprocess, {
-    environmentAppend: true,
-    stderr: "stdout",
-  });
-  debugDump("launching with subprocess options" + JSON.stringify(subprocess));
+  gProcess = Cc["@mozilla.org/process/util;1"].createInstance(Ci.nsIProcess);
+  gProcess.init(launchBin);
 
-  // TODO: use `Promise.race` with a regular timeout.
   gAppTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
   gAppTimer.initWithCallback(
     gAppTimerCallback,
@@ -4520,41 +4562,11 @@ async function runUpdateUsingApp(aExpectedStatus) {
     Ci.nsITimer.TYPE_ONE_SHOT
   );
 
-  // TODO: specify `Subprocess.jsm` environment directly.
   setEnvironment();
 
   debugDump("launching application");
-  gProcess = await Subprocess.call(subprocess).then(p => {
-    p.stdin.close();
-    const dumpPipe = async pipe => {
-      // We must assemble all of the string fragments from stdout.
-      let leftover = "";
-      let data = await pipe.readString();
-      while (data) {
-        data = leftover + data;
-        // When the string is empty and the separator is not empty,
-        // split() returns an array containing one empty string,
-        // rather than an empty array, i.e., we always have
-        // `lines.length > 0`.
-        let lines = data.split(/\r\n|\r|\n/);
-        for (let line of lines.slice(0, -1)) {
-          debugDump(`${p.pid}> ${line}\n`);
-        }
-        leftover = lines[lines.length - 1];
-        data = await pipe.readString();
-      }
-
-      if (leftover.length) {
-        debugDump(`${p.pid}> ${leftover}\n`);
-      }
-    };
-    dumpPipe(p.stdout);
-
-    return p;
-  });
-  let { exitCode } = await gProcess.wait();
-  gProcess = null;
-  debugDump(`launched application exited with exitCode: ${exitCode}`);
+  gProcess.run(true, args, args.length);
+  debugDump("launched application exited");
 
   resetEnvironment();
 
