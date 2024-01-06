@@ -55,7 +55,7 @@ using namespace js;
 using namespace js::unicode;
 
 Latin1CharsZ JS::LossyTwoByteCharsToNewLatin1CharsZ(
-    JSContext* cx, const mozilla::Range<const char16_t> tbchars) {
+    JSContext* cx, const mozilla::Range<const char16_t>& tbchars) {
   MOZ_ASSERT(cx);
   size_t len = tbchars.length();
   unsigned char* latin1 = cx->pod_malloc<unsigned char>(len + 1);
@@ -143,7 +143,7 @@ void ConvertToUTF8<const Latin1Char>(mozilla::Span<const Latin1Char> src,
 
 template <typename CharT, typename Allocator>
 UTF8CharsZ JS::CharsToNewUTF8CharsZ(Allocator* alloc,
-                                    const mozilla::Range<CharT> chars) {
+                                    const mozilla::Range<CharT>& chars) {
   /* Get required buffer size. */
   const CharT* str = chars.begin().get();
   size_t len = ::GetDeflatedUTF8StringLength(str, chars.length());
@@ -162,28 +162,28 @@ UTF8CharsZ JS::CharsToNewUTF8CharsZ(Allocator* alloc,
 }
 
 template UTF8CharsZ JS::CharsToNewUTF8CharsZ(
-    JSContext* cx, const mozilla::Range<Latin1Char> chars);
+    JSContext* cx, const mozilla::Range<Latin1Char>& chars);
 
 template UTF8CharsZ JS::CharsToNewUTF8CharsZ(
-    JSContext* cx, const mozilla::Range<char16_t> chars);
+    JSContext* cx, const mozilla::Range<char16_t>& chars);
 
 template UTF8CharsZ JS::CharsToNewUTF8CharsZ(
-    JSContext* cx, const mozilla::Range<const Latin1Char> chars);
+    JSContext* cx, const mozilla::Range<const Latin1Char>& chars);
 
 template UTF8CharsZ JS::CharsToNewUTF8CharsZ(
-    JSContext* cx, const mozilla::Range<const char16_t> chars);
+    JSContext* cx, const mozilla::Range<const char16_t>& chars);
 
 template UTF8CharsZ JS::CharsToNewUTF8CharsZ(
-    FrontendAllocator* cx, const mozilla::Range<Latin1Char> chars);
+    FrontendAllocator* cx, const mozilla::Range<Latin1Char>& chars);
 
 template UTF8CharsZ JS::CharsToNewUTF8CharsZ(
-    FrontendAllocator* cx, const mozilla::Range<char16_t> chars);
+    FrontendAllocator* cx, const mozilla::Range<char16_t>& chars);
 
 template UTF8CharsZ JS::CharsToNewUTF8CharsZ(
-    FrontendAllocator* cx, const mozilla::Range<const Latin1Char> chars);
+    FrontendAllocator* cx, const mozilla::Range<const Latin1Char>& chars);
 
 template UTF8CharsZ JS::CharsToNewUTF8CharsZ(
-    FrontendAllocator* cx, const mozilla::Range<const char16_t> chars);
+    FrontendAllocator* cx, const mozilla::Range<const char16_t>& chars);
 
 static constexpr uint32_t INVALID_UTF8 = std::numeric_limits<char32_t>::max();
 
