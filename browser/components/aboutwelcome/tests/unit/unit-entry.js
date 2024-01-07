@@ -8,9 +8,7 @@ import {
 } from "newtab/test/unit/utils";
 import Adapter from "enzyme-adapter-react-16";
 import { chaiAssertions } from "newtab/test/schemas/pings";
-import chaiJsonSchema from "chai-json-schema";
 import enzyme from "enzyme";
-import FxMSCommonSchema from "newtab/content-src/asrouter/schemas/FxMSCommon.schema.json";
 
 enzyme.configure({ adapter: new Adapter() });
 
@@ -35,8 +33,6 @@ const files = req.keys();
 sinon.assert.expose(assert, { prefix: "" });
 
 chai.use(chaiAssertions);
-chai.use(chaiJsonSchema);
-chai.tv4.addSchema("file:///FxMSCommon.schema.json", FxMSCommonSchema);
 
 const overrider = new GlobalOverrider();
 
