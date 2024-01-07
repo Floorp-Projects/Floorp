@@ -27,9 +27,6 @@ namespace wr {
 class RenderTextureHostWrapper final : public RenderTextureHostSWGL {
  public:
   explicit RenderTextureHostWrapper(ExternalImageId aExternalImageId);
-  RenderTextureHostWrapper(const layers::RemoteTextureId aTextureId,
-                           const layers::RemoteTextureOwnerId aOwnerId,
-                           const base::ProcessId aForPid);
 
   // RenderTextureHost
   wr::WrExternalImage Lock(uint8_t aChannelIndex, gl::GLContext* aGL) override;
@@ -47,7 +44,6 @@ class RenderTextureHostWrapper final : public RenderTextureHostSWGL {
   AsRenderAndroidHardwareBufferTextureHost() override;
   RenderAndroidSurfaceTextureHost* AsRenderAndroidSurfaceTextureHost() override;
   RenderTextureHostSWGL* AsRenderTextureHostSWGL() override;
-  bool IsWrappingAsyncRemoteTexture() override;
   void SetIsSoftwareDecodedVideo() override;
   bool IsSoftwareDecodedVideo() override;
 
@@ -73,15 +69,10 @@ class RenderTextureHostWrapper final : public RenderTextureHostSWGL {
   ~RenderTextureHostWrapper() override;
 
   void EnsureTextureHost() const;
-  void EnsureRemoteTexture() const;
   RenderTextureHostSWGL* EnsureRenderTextureHostSWGL() const;
 
   ExternalImageId mExternalImageId;
   mutable RefPtr<RenderTextureHost> mTextureHost;
-
-  Maybe<layers::RemoteTextureId> mTextureId;
-  Maybe<layers::RemoteTextureOwnerId> mOwnerId;
-  Maybe<base::ProcessId> mForPid;
 };
 
 }  // namespace wr

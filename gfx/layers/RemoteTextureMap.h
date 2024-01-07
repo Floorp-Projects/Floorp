@@ -145,7 +145,7 @@ class RemoteTextureOwnerClient final {
 
   bool IsRegistered(const RemoteTextureOwnerId aOwnerId);
   void RegisterTextureOwner(const RemoteTextureOwnerId aOwnerId,
-                            bool aIsSyncMode, bool aSharedRecycling = false);
+                            bool aSharedRecycling = false);
   void UnregisterTextureOwner(const RemoteTextureOwnerId aOwnerId);
   void UnregisterAllTextureOwners();
   void ClearRecycledTextures();
@@ -230,11 +230,8 @@ class RemoteTextureMap {
                                const mozilla::ipc::Shmem& aDestShmem,
                                const gfx::IntSize& aSize);
 
-  // aIsSyncMode defines if RemoteTextureMap::GetRemoteTextureForDisplayList()
-  // works synchronously.
   void RegisterTextureOwner(
       const RemoteTextureOwnerId aOwnerId, const base::ProcessId aForPid,
-      bool aIsSyncMode,
       const RefPtr<RemoteTextureRecycleBin>& aRecycleBin = nullptr);
   void UnregisterTextureOwner(const RemoteTextureOwnerId aOwnerIds,
                               const base::ProcessId aForPid);
@@ -257,24 +254,15 @@ class RemoteTextureMap {
                                RemoteTextureOwnerId::HashFn>& aOwnerIds,
       const base::ProcessId aForPid);
 
-  // Get TextureHost that is used for building wr display list.
-  // In sync mode, mRemoteTextureForDisplayList holds TextureHost of mTextureId.
-  // In async mode, it could be previous remote texture's TextureHost that is
-  // compatible to the mTextureId's TextureHost.
+  // Get remote texture's TextureHost for RemoteTextureHostWrapper.
   //
   // return true when aReadyCallback will be called.
-  bool GetRemoteTextureForDisplayList(
+  bool GetRemoteTexture(
       RemoteTextureHostWrapper* aTextureHostWrapper,
       std::function<void(const RemoteTextureInfo&)>&& aReadyCallback,
       bool aWaitForRemoteTextureOwner = false);
 
-  // Get ExternalImageId of remote texture for WebRender rendering.
-  wr::MaybeExternalImageId GetExternalImageIdOfRemoteTexture(
-      const RemoteTextureId aTextureId, const RemoteTextureOwnerId aOwnerId,
-      const base::ProcessId aForPid);
-
-  void ReleaseRemoteTextureHostForDisplayList(
-      RemoteTextureHostWrapper* aTextureHostWrapper);
+  void ReleaseRemoteTextureHost(RemoteTextureHostWrapper* aTextureHostWrapper);
 
   RefPtr<TextureHost> GetOrCreateRemoteTextureHostWrapper(
       const RemoteTextureId aTextureId, const RemoteTextureOwnerId aOwnerId,
@@ -343,12 +331,11 @@ class RemoteTextureMap {
         std::function<void(const RemoteTextureInfo&)>&& aCallback);
 
     const RemoteTextureId mTextureId;
-    // callback of async RemoteTexture ready
+    // callback of RemoteTexture ready
     std::function<void(const RemoteTextureInfo&)> mCallback;
   };
 
   struct TextureOwner {
-    bool mIsSyncMode = true;
     bool mIsContextLost = false;
     // Holds TextureDataHolders that wait to be used for building wr display
     // list.
@@ -356,7 +343,7 @@ class RemoteTextureMap {
     // Holds TextureDataHolders that are used for building wr display list.
     std::deque<UniquePtr<TextureDataHolder>> mUsingTextureDataHolders;
     std::deque<UniquePtr<TextureDataHolder>> mReleasingTextureDataHolders;
-    // Holds async RemoteTexture ready callbacks.
+    // Holds RemoteTexture ready callbacks.
     std::deque<UniquePtr<RenderingReadyCallbackHolder>>
         mRenderingReadyCallbackHolders;
 
@@ -375,9 +362,7 @@ class RemoteTextureMap {
         RefPtr<TextureHost> aRemoteTextureHostWrapper);
 
     const RefPtr<TextureHost> mRemoteTextureHostWrapper;
-    // Hold compositable ref of remote texture of the RemoteTextureId in async
-    // mode. It is for keeping the texture alive during its rendering by
-    // WebRender.
+    // Hold compositable ref of remote texture of the RemoteTextureId.
     CompositableTextureHostRef mRemoteTextureHost;
     bool mReadyCheckSuppressed = false;
   };
