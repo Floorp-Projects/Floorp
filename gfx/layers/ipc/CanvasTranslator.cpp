@@ -347,9 +347,7 @@ void CanvasTranslator::ActorDestroy(ActorDestroyReason why) {
   mTranslationTaskQueue->AwaitShutdownAndIdle();
 }
 
-void CanvasTranslator::FinishShutdown() {
-  ClearTextureInfo();
-}
+void CanvasTranslator::FinishShutdown() { ClearTextureInfo(); }
 
 bool CanvasTranslator::CheckDeactivated() {
   if (mDeactivated) {
@@ -893,10 +891,8 @@ void CanvasTranslator::EnsureRemoteTextureOwner(RemoteTextureOwnerId aOwnerId) {
     mRemoteTextureOwner = new RemoteTextureOwnerClient(mOtherPid);
   }
   if (!mRemoteTextureOwner->IsRegistered(aOwnerId)) {
-    mRemoteTextureOwner->RegisterTextureOwner(
-        aOwnerId,
-        /* aIsSyncMode */ gfx::gfxVars::WebglOopAsyncPresentForceSync(),
-        /* aSharedRecycling */ true);
+    mRemoteTextureOwner->RegisterTextureOwner(aOwnerId,
+                                              /* aSharedRecycling */ true);
   }
 }
 

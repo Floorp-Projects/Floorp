@@ -13,9 +13,7 @@
 namespace mozilla::layers {
 
 // This class wraps TextureHost of remote texture.
-// In sync mode, mRemoteTextureForDisplayList holds TextureHost of mTextureId.
-// In async mode, it could be previous remote texture's TextureHost that is
-// compatible to the mTextureId's TextureHost.
+// mRemoteTexture holds TextureHost of mTextureId.
 class RemoteTextureHostWrapper : public TextureHost {
  public:
   static RefPtr<TextureHost> Create(const RemoteTextureId aTextureId,
@@ -93,26 +91,22 @@ class RemoteTextureHostWrapper : public TextureHost {
                            const base::ProcessId aForPid,
                            const gfx::IntSize aSize, const TextureFlags aFlags);
   virtual ~RemoteTextureHostWrapper();
+  void MaybeCreateRenderTexture();
 
   // Called only by RemoteTextureMap
-  TextureHost* GetRemoteTextureHostForDisplayList(
-      const MonitorAutoLock& aProofOfLock);
+  TextureHost* GetRemoteTextureHost(const MonitorAutoLock& aProofOfLock);
   // Called only by RemoteTextureMap
-  void SetRemoteTextureHostForDisplayList(const MonitorAutoLock& aProofOfLock,
-                                          TextureHost* aTextureHost,
-                                          bool aIsSyncMode);
-  void ClearRemoteTextureHostForDisplayList(
-      const MonitorAutoLock& aProofOfLock);
+  void SetRemoteTextureHost(const MonitorAutoLock& aProofOfLock,
+                            TextureHost* aTextureHost);
+  void ClearRemoteTextureHost(const MonitorAutoLock& aProofOfLock);
 
   // Updated by RemoteTextureMap
   //
   // Hold compositable ref of remote texture's TextureHost that is used for
-  // building WebRender display list. In sync mode, it is TextureHost of
-  // mTextureId. In async mode, it could be previous TextureHost that is
-  // compatible to the mTextureId's TextureHost.
-  CompositableTextureHostRef mRemoteTextureForDisplayList;
+  // building WebRender display list. It is TextureHost of mTextureId.
+  CompositableTextureHostRef mRemoteTexture;
 
-  bool mIsSyncMode = true;
+  bool mRenderTextureCreated = false;
 
   friend class RemoteTextureMap;
 };

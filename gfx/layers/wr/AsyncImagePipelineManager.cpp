@@ -226,6 +226,13 @@ Maybe<TextureHost::ResourceUpdateOp> AsyncImagePipelineManager::UpdateImageKeys(
     return Nothing();
   }
 
+  auto* wrapper = aTexture ? aTexture->AsRemoteTextureHostWrapper() : nullptr;
+  if (wrapper && !aPipeline->mImageHost->GetAsyncRef()) {
+    std::function<void(const RemoteTextureInfo&)> function;
+    RemoteTextureMap::Get()->GetRemoteTexture(
+        wrapper, std::move(function), /* aWaitForRemoteTextureOwner */ false);
+  }
+
   if (!aTexture || aTexture->NumSubTextures() == 0) {
     // We don't have a new texture or texture does not have SubTextures, there
     // isn't much we can do.
@@ -516,8 +523,7 @@ void AsyncImagePipelineManager::ApplyAsyncImageForPipeline(
 
   // Store pending remote texture that is used for waiting at WebRenderAPI.
   if (aPendingRemoteTextures && texture &&
-      texture != pipeline->mCurrentTexture && texture->NumSubTextures() != 0 &&
-      wrapper && wrapper->IsReadyForRendering()) {
+      texture != pipeline->mCurrentTexture && wrapper) {
     aPendingRemoteTextures->mList.emplace(wrapper->mTextureId,
                                           wrapper->mOwnerId, wrapper->mForPid);
   }

@@ -110,8 +110,6 @@ class RenderTextureHost {
     return nullptr;
   }
 
-  virtual bool IsWrappingAsyncRemoteTexture() { return false; }
-
   virtual void Destroy();
 
   virtual void SetIsSoftwareDecodedVideo() {

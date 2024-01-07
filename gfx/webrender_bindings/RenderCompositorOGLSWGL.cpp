@@ -229,8 +229,6 @@ void RenderCompositorOGLSWGL::HandleExternalImage(
     effect.mPrimaryEffect = texturedEffect;
     mCompositor->DrawQuad(drawRect, aFrameSurface.mClipRect, effect, 1.0,
                           aFrameSurface.mTransform, drawRect);
-  } else if (!aExternalImage->IsWrappingAsyncRemoteTexture()) {
-    MOZ_ASSERT_UNREACHABLE("unexpected to be called");
   }
 #endif
 }

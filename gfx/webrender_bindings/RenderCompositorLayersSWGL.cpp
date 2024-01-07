@@ -283,8 +283,7 @@ void RenderCompositorLayersSWGL::AttachExternalImage(
                      image->AsRenderDXGIYCbCrTextureHost());
 #elif defined(ANDROID)
   MOZ_RELEASE_ASSERT(image->AsRenderAndroidHardwareBufferTextureHost() ||
-                     image->AsRenderAndroidSurfaceTextureHost() ||
-                     image->IsWrappingAsyncRemoteTexture());
+                     image->AsRenderAndroidSurfaceTextureHost());
 #endif
 
   auto surfaceCursor = mSurfaces.find(aId);
