@@ -290,7 +290,8 @@ class OscillatorNodeEngine final : public AudioNodeEngine {
       return;
     }
 
-    if (ticks + WEBAUDIO_BLOCK_SIZE <= mStart || ticks >= mStop) {
+    if (ticks + WEBAUDIO_BLOCK_SIZE <= mStart || ticks >= mStop ||
+        mStop <= mStart) {
       ComputeSilence(aOutput);
 
     } else {
@@ -299,6 +300,7 @@ class OscillatorNodeEngine final : public AudioNodeEngine {
 
       uint32_t start, end;
       FillBounds(output, ticks, start, end);
+      MOZ_ASSERT(start < end);
 
       float frequency[WEBAUDIO_BLOCK_SIZE];
       float detune[WEBAUDIO_BLOCK_SIZE];
