@@ -131,14 +131,12 @@
     <string name="mozac_feature_prompts_account_picture">Зображення облікового запису</string>
     <!-- Title of the Identity Credential provider dialog chooser. -->
     <string name="mozac_feature_prompts_identity_credentials_choose_provider">Оберіть постачальника послуг входу</string>
-    <!-- Title of an account picker dialog for identity credentials. -->
-    <string name="mozac_feature_prompts_identity_credentials_choose_account" moz:removedIn="119" tools:ignore="UnusedResources">Обрати обліковий запис</string>
     <!-- Title of an account picker dialog for identity credentials. The %1$s will be replaced with the name of the provider -->
     <string name="mozac_feature_prompts_identity_credentials_choose_account_for_provider">Увійдіть з обліковим записом %1$s</string>
     <!-- Title of the Identity Credential privacy policy dialog title. The %1$s will be replaced with the name of the provider. -->
     <string name="mozac_feature_prompts_identity_credentials_privacy_policy_title">Використовувати %1$s як постачальника авторизації</string>
     <!-- Title of the Identity Credential privacy policy dialog description. The %1$s will be replaced with the name of the provider, %2$s will be replaced with the account, %3$s will be replaced with the privacy policy url and  %4$s will be replaced with the terms of service. -->
-    <string name="mozac_feature_prompts_identity_credentials_privacy_policy_description"><![CDATA[ Вхід до %1$s з використанням облікового запису %2$s регулюється <a href="%3$s">Політикою приватності</a> та <a href="%4$s">Умовами користування</a> постачальника послуг авторизації]]></string>
+    <string name="mozac_feature_prompts_identity_credentials_privacy_policy_description"><![CDATA[ Вхід до %1$s з використанням облікового запису %2$s регулюється <a href="%3$s">Політикою приватності</a> та <a href="%4$s">Умовами надання послуг</a> постачальника послуг авторизації]]></string>
     <!-- Text for the positive button of the Identity Credential dialogs. -->
     <string name="mozac_feature_prompts_identity_credentials_continue">Продовжити</string>
     <!-- Text for the cancel button of the Identity Credential dialogs. -->

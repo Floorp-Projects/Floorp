@@ -395,9 +395,9 @@
     <!-- Preference category for settings related to changing the default search engine -->
     <string name="preferences_category_select_default_search_engine">Zvoľte vyhľadávač</string>
     <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
-    <string name="preferences_manage_search_shortcuts_2">Spravovať alternatívne vyhľadávacie moduly</string>
+    <string name="preferences_manage_search_shortcuts_2">Spravovať alternatívne vyhľadávače</string>
     <!-- Summary for preference for settings related to managing search shortcuts for the quick search menu -->
-    <string name="preferences_manage_search_shortcuts_summary">Upraviť vyhľadávače viditeľné v ponuke vyhľadávania</string>
+    <string name="preferences_manage_search_shortcuts_summary">Upravte si vyhľadávače viditeľné v ponuke vyhľadávania</string>
     <!-- Preference category for settings related to managing search shortcuts for the quick search menu -->
     <string name="preferences_category_engines_in_search_menu">Vyhľadávače viditeľné v ponuke vyhľadávania</string>
     <!-- Preference for settings related to changing the default search engine -->
@@ -567,7 +567,7 @@
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Zobrazovať návrhy vyhľadávania</string>
     <!-- Preference title for switch preference to show voice search button -->
-    <string name="preferences_show_voice_search">Zobraziť hlasové vyhľadávanie</string>
+    <string name="preferences_show_voice_search">Zobrazovať hlasové vyhľadávanie</string>
     <!-- Preference title for switch preference to show search suggestions also in private mode -->
     <string name="preferences_show_search_suggestions_in_private">Zobrazovať v súkromnom prehliadaní</string>
     <!-- Preference title for switch preference to show a clipboard suggestion when searching -->

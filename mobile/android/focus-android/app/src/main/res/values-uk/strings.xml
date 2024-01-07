@@ -350,7 +350,7 @@
     <string name="preference_mozilla_telemetry_summary2">Mozilla намагається збирати лише дані, що необхідні для роботи і вдосконалення %1$s для кожного.</string>
 
     <!-- In-app link (in settings) to Focus privacy notice. -->
-    <string name="preference_privacy_notice">Повідомлення про приватність</string>
+    <string name="preference_privacy_notice">Положення про приватність</string>
 
     <!-- In-app link (in settings) to Focus licensing information. -->
     <string name="preference_licensing_info">Інформація про ліцензію</string>
