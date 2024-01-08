@@ -181,7 +181,11 @@ add_task(async function testLimitedRecord() {
     "But the second event loop was ignored"
   );
   ok(
-    !!findConsoleAPIMessage(hud, `Stopped tracing`, ".console-api"),
+    !!findConsoleAPIMessage(
+      hud,
+      `Stopped tracing (reason: max-records)`,
+      ".console-api"
+    ),
     "And the tracer was automatically stopped"
   );
 

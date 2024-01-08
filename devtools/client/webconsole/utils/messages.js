@@ -414,7 +414,7 @@ function transformTraceResource(traceResource) {
 }
 
 function transformTracerStateResource(stateResource) {
-  const { targetFront, enabled, logMethod, timeStamp } = stateResource;
+  const { targetFront, enabled, logMethod, timeStamp, reason } = stateResource;
   let message;
   if (enabled) {
     if (logMethod == "stdout") {
@@ -430,6 +430,11 @@ function transformTracerStateResource(stateResource) {
     } else {
       throw new Error(`Unsupported tracer log method ${logMethod}`);
     }
+  } else if (reason) {
+    message = l10n.getFormatStr(
+      "webconsole.message.commands.stopTracingWithReason",
+      [reason]
+    );
   } else {
     message = l10n.getStr("webconsole.message.commands.stopTracing");
   }
