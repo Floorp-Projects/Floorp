@@ -514,8 +514,7 @@ void ScriptLoader::RunScriptWhenSafe(ScriptLoadRequest* aRequest) {
 }
 
 nsresult ScriptLoader::RestartLoad(ScriptLoadRequest* aRequest) {
-  MOZ_ASSERT(aRequest->IsBytecode());
-  aRequest->mScriptBytecode.clearAndFree();
+  aRequest->DropBytecode();
   TRACE_FOR_TEST(aRequest->GetScriptLoadContext()->GetScriptElement(),
                  "scriptloader_fallback");
 
@@ -2277,7 +2276,7 @@ nsresult ScriptLoader::ProcessRequest(ScriptLoadRequest* aRequest) {
     // We received bytecode as input, thus we were decoding, and we will not be
     // encoding the bytecode once more. We can safely clear the content of this
     // buffer.
-    aRequest->mScriptBytecode.clearAndFree();
+    aRequest->DropBytecode();
   }
 
   return rv;
@@ -2944,7 +2943,7 @@ void ScriptLoader::EncodeBytecode() {
     MOZ_ASSERT(!IsWebExtensionRequest(request),
                "Bytecode for web extension content scrips is not cached");
     EncodeRequestBytecode(aes.cx(), request);
-    request->mScriptBytecode.clearAndFree();
+    request->DropBytecode();
     request->DropBytecodeCacheReferences();
   }
 }
@@ -3074,7 +3073,7 @@ void ScriptLoader::GiveUpBytecodeEncoding() {
       }
     }
 
-    request->mScriptBytecode.clearAndFree();
+    request->DropBytecode();
     request->DropBytecodeCacheReferences();
   }
 }
