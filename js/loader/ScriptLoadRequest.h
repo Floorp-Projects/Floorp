@@ -258,8 +258,6 @@ class ScriptLoadRequest
 
   void ClearScriptSource();
 
-  void EnsureScript();
-
   // Convert a CheckingCache ScriptLoadRequest into a Fetching one, by creating
   // a new LoadedScript which is matching the ScriptKind provided when
   // constructing this ScriptLoadRequest.

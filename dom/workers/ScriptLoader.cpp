@@ -1250,7 +1250,6 @@ bool WorkerScriptLoader::EvaluateScript(JSContext* aCx,
     } else {
       requestBaseURI = aRequest->mBaseURL;
     }
-    aRequest->EnsureScript();
     MOZ_ASSERT(aRequest->mLoadedScript->IsClassicScript());
     MOZ_ASSERT(aRequest->mLoadedScript->GetFetchOptions() ==
                aRequest->mFetchOptions);
