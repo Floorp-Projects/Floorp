@@ -638,7 +638,6 @@ nsresult ModuleLoaderBase::CreateModuleScript(ModuleLoadRequest* aRequest) {
       }
     }
 
-    aRequest->EnsureScript();
     MOZ_ASSERT(aRequest->mLoadedScript->IsModuleScript());
     MOZ_ASSERT(aRequest->mLoadedScript->GetFetchOptions() ==
                aRequest->mFetchOptions);

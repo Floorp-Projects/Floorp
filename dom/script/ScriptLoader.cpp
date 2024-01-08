@@ -2761,7 +2761,6 @@ nsresult ScriptLoader::EvaluateScript(nsIGlobalObject* aGlobalObject,
   aRequest->GetScriptLoadContext()->GetProfilerLabel(profilerLabelString);
 
   // Create a ClassicScript object and associate it with the JSScript.
-  aRequest->EnsureScript();
   MOZ_ASSERT(aRequest->mLoadedScript->IsClassicScript());
   MOZ_ASSERT(aRequest->mLoadedScript->GetFetchOptions() ==
              aRequest->mFetchOptions);
