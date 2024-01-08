@@ -47,7 +47,7 @@ jobs:
         run:
             pre-gradlew:
                 - ["cd", "mobile/android/focus-android"]
-            gradlew: ['clean', 'test', 'githubTestDetails']
+            gradlew: ['clean', 'test']
             dummy-secrets:
                 - content: "faketoken"
                   path: .adjust_token
@@ -79,7 +79,7 @@ jobs:
             pre-gradlew:
                 - ["cd", "mobile/android/fenix"]
                 - ['java', '-version']
-            gradlew: ['clean', 'testFenixDebugUnitTest', 'githubTestDetails']
+            gradlew: ['clean', 'testFenixDebugUnitTest']
         treeherder:
             platform: 'fenix-android-all/opt'
             symbol: fenix-debug(T)
