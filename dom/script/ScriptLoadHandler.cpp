@@ -93,7 +93,7 @@ nsresult ScriptDecoder::DecodeRawDataHelper(
   MOZ_ASSERT(haveRead <= capacity.value(),
              "mDecoder produced more data than expected");
   MOZ_ALWAYS_TRUE(scriptText.resize(haveRead));
-  aRequest->mScriptTextLength = scriptText.length();
+  aRequest->SetReceivedScriptTextLength(scriptText.length());
 
   return NS_OK;
 }
