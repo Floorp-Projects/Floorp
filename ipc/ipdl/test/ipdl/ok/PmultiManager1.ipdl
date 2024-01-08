@@ -1,6 +1,5 @@
 include protocol PmultiManaged;
 
-[ChildProc=any]
 protocol PmultiManager1 {
     manages PmultiManaged;
 

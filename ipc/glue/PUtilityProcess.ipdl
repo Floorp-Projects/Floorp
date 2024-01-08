@@ -45,8 +45,7 @@ namespace ipc {
 // one instance of this protocol, with the UtilityProcessParent living on the main thread
 // of the main process and the UtilityProcessChild living on the main thread of the Utility
 // process.
-[NeedsOtherPid, ChildProc=Utility]
-protocol PUtilityProcess
+[NeedsOtherPid] protocol PUtilityProcess
 {
 parent:
   async InitCrashReporter(NativeThreadId threadId);

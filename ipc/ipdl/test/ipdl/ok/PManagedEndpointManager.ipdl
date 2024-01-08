@@ -2,7 +2,6 @@ include protocol PManagedEndpointDecl;
 
 namespace mozilla {
 
-[ChildProc=any]
 protocol PManagedEndpointManager {
   manages PManagedEndpointDecl;
 

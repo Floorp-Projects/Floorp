@@ -10,7 +10,6 @@ union Socks {
 
 namespace puppies {
 
-[ChildProc=any]
 protocol Punion_Namespaced {
 child:
     async Msg(Socks s);

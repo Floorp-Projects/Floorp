@@ -22,7 +22,6 @@ namespace net {
   * We use this to create several IPC protocols between the socket process
   * and the parent process.
   */
-[ChildProc=Socket]
 sync protocol PSocketProcessBackground
 {
 parent:

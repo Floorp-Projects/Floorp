@@ -4,7 +4,6 @@ union Union {
     double;
 };
 
-[ChildProc=any]
 sync protocol Parray_Union {
 parent:
     sync Msg(Union u, Union[] au) returns (Union r);

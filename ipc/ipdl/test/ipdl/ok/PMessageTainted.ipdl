@@ -1,4 +1,3 @@
-[ChildProc=any]
 intr protocol PMessageTainted {
 child:
     [Tainted] async foo();

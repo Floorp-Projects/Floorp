@@ -1,6 +1,5 @@
 include protocol PUniquePtrOfActorsSub;
 
-[ChildProc=any]
 protocol PUniquePtrOfActors {
     manages PUniquePtrOfActorsSub;
 

@@ -6,7 +6,6 @@
 // obviously bad.
 include protocol PDouble;
 
-[ChildProc=any]
 protocol PDouble {
 child: async Msg();
 };

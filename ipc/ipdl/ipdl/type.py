@@ -15,10 +15,6 @@ from ipdl.ast import priorityList
 import ipdl.builtin as builtin
 from ipdl.util import hash_str
 
-# Used to get the list of Gecko process types
-# xpcom/geckoprocesstypes_generator/geckoprocesstypes/__init__.py
-import geckoprocesstypes
-
 _DELETE_MSG = "__delete__"
 
 
@@ -985,13 +981,6 @@ class GatherDecls(TcheckVisitor):
 
             p = tu.protocol
 
-            proc_options = [
-                "any",
-                "anychild",  # non-Parent process
-                "anydom",  # Parent or Content process
-                "compositor",  # Parent or GPU process
-            ] + [p.proc_typename for p in geckoprocesstypes.process_types]
-
             self.checkAttributes(
                 p.attributes,
                 {
@@ -1000,8 +989,6 @@ class GatherDecls(TcheckVisitor):
                     "NeedsOtherPid": None,
                     "ChildImpl": ("virtual", StringLiteral),
                     "ParentImpl": ("virtual", StringLiteral),
-                    "ChildProc": proc_options,
-                    "ParentProc": proc_options,
                 },
             )
 
@@ -1288,12 +1275,8 @@ class GatherDecls(TcheckVisitor):
         if not p.decl.type.isToplevel() and p.decl.type.needsotherpid:
             self.error(p.loc, "[NeedsOtherPid] only applies to toplevel protocols")
 
-        if p.decl.type.isToplevel():
-            if not p.decl.type.isRefcounted():
-                self.error(p.loc, "Toplevel protocols cannot be [ManualDealloc]")
-
-            if "ChildProc" not in p.attributes:
-                self.error(p.loc, "Toplevel protocols must specify [ChildProc]")
+        if p.decl.type.isToplevel() and not p.decl.type.isRefcounted():
+            self.error(p.loc, "Toplevel protocols cannot be [ManualDealloc]")
 
         # FIXME/cjones declare all the little C++ thingies that will
         # be generated.  they're not relevant to IPDL itself, but
