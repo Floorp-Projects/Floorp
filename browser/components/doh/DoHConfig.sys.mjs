@@ -166,6 +166,15 @@ export const DoHConfigController = {
   // until the region is available.
   async loadRegion() {
     await new Promise(resolve => {
+      // If the region has changed since it was last set, update the pref.
+      let homeRegionChanged = lazy.Preferences.get(
+        `${kGlobalPrefBranch}.home-region-changed`
+      );
+      if (homeRegionChanged) {
+        lazy.Preferences.reset(`${kGlobalPrefBranch}.home-region-changed`);
+        lazy.Preferences.reset(`${kGlobalPrefBranch}.home-region`);
+      }
+
       let homeRegion = lazy.Preferences.get(`${kGlobalPrefBranch}.home-region`);
       if (homeRegion) {
         kRegionPrefBranch = `${kGlobalPrefBranch}.${homeRegion.toLowerCase()}`;
@@ -201,6 +210,7 @@ export const DoHConfigController = {
     await this.loadRegion();
 
     Services.prefs.addObserver(`${kGlobalPrefBranch}.`, this, true);
+    Services.obs.addObserver(this, lazy.Region.REGION_TOPIC);
 
     gProvidersCollection.on("sync", this.updateFromRemoteSettings);
     gConfigCollection.on("sync", this.updateFromRemoteSettings);
@@ -213,6 +223,7 @@ export const DoHConfigController = {
     await this.initComplete;
 
     Services.prefs.removeObserver(`${kGlobalPrefBranch}`, this);
+    Services.obs.removeObserver(this, lazy.Region.REGION_TOPIC);
 
     gProvidersCollection.off("sync", this.updateFromRemoteSettings);
     gConfigCollection.off("sync", this.updateFromRemoteSettings);
@@ -239,6 +250,9 @@ export const DoHConfigController = {
           break;
         }
         this.notifyNewConfig();
+        break;
+      case lazy.Region.REGION_TOPIC:
+        lazy.Preferences.set(`${kGlobalPrefBranch}.home-region-changed`, true);
         break;
     }
   },
