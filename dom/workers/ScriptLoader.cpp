@@ -1250,9 +1250,12 @@ bool WorkerScriptLoader::EvaluateScript(JSContext* aCx,
     } else {
       requestBaseURI = aRequest->mBaseURL;
     }
-    classicScript = new JS::loader::ClassicScript(
-        aRequest->ReferrerPolicy(), aRequest->mFetchOptions, aRequest->mURI);
-    classicScript->SetBaseURL(requestBaseURI);
+    aRequest->EnsureScript();
+    MOZ_ASSERT(aRequest->mLoadedScript->IsClassicScript());
+    MOZ_ASSERT(aRequest->mLoadedScript->GetFetchOptions() ==
+               aRequest->mFetchOptions);
+    aRequest->mLoadedScript->SetBaseURL(requestBaseURI);
+    classicScript = aRequest->mLoadedScript->AsClassicScript();
   }
 
   JS::Rooted<JSScript*> script(aCx);

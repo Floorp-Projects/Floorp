@@ -62,13 +62,15 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(ScriptLoadRequest)
 NS_IMPL_CYCLE_COLLECTION_CLASS(ScriptLoadRequest)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(ScriptLoadRequest)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mFetchOptions, mCacheInfo, mLoadContext)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mFetchOptions, mCacheInfo, mLoadContext,
+                                  mLoadedScript)
   tmp->mScriptForBytecodeEncoding = nullptr;
   tmp->DropBytecodeCacheReferences();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(ScriptLoadRequest)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFetchOptions, mCacheInfo, mLoadContext)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFetchOptions, mCacheInfo, mLoadContext,
+                                    mLoadedScript)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(ScriptLoadRequest)
@@ -161,6 +163,21 @@ void ScriptLoadRequest::NoCacheEntryFound() {
   MOZ_ASSERT(IsCheckingCache());
   MOZ_ASSERT(mURI);
   mState = State::Fetching;
+}
+
+void ScriptLoadRequest::EnsureScript() {
+  switch (mKind) {
+    case ScriptKind::eClassic:
+    case ScriptKind::eImportMap:
+      mLoadedScript = new ClassicScript(mReferrerPolicy, mFetchOptions, mURI);
+      break;
+    case ScriptKind::eModule:
+      mLoadedScript = new ModuleScript(mReferrerPolicy, mFetchOptions, mURI);
+      break;
+    case ScriptKind::eEvent:
+      MOZ_ASSERT_UNREACHABLE("EventScripts are not using ScriptLoadRequest");
+      break;
+  }
 }
 
 void ScriptLoadRequest::SetPendingFetchingError() {

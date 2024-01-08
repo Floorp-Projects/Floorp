@@ -638,9 +638,14 @@ nsresult ModuleLoaderBase::CreateModuleScript(ModuleLoadRequest* aRequest) {
       }
     }
 
-    RefPtr<ModuleScript> moduleScript = new ModuleScript(
-        aRequest->ReferrerPolicy(), aRequest->mFetchOptions, aRequest->mURI);
-    moduleScript->SetBaseURL(aRequest->mBaseURL);
+    aRequest->EnsureScript();
+    MOZ_ASSERT(aRequest->mLoadedScript->IsModuleScript());
+    MOZ_ASSERT(aRequest->mLoadedScript->GetFetchOptions() ==
+               aRequest->mFetchOptions);
+    MOZ_ASSERT(aRequest->mLoadedScript->GetURI() == aRequest->mURI);
+    aRequest->mLoadedScript->SetBaseURL(aRequest->mBaseURL);
+    RefPtr<ModuleScript> moduleScript =
+        aRequest->mLoadedScript->AsModuleScript();
     aRequest->mModuleScript = moduleScript;
 
     if (!module) {
