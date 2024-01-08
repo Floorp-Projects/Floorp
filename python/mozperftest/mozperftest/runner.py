@@ -207,7 +207,7 @@ def run_tools(mach_cmd, kwargs):
     mach_cmd.activate_virtualenv()
     install_package(
         mach_cmd.virtualenv_manager,
-        "mozperftest-tools==0.2.9",
+        "mozperftest-tools==0.3.2",
     )
 
     log_level = logging.INFO
