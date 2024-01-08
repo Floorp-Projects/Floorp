@@ -187,7 +187,7 @@ ScriptLoadHandler::OnIncrementalData(nsIIncrementalStreamLoader* aLoader,
       return channelRequest->Cancel(mScriptLoader->RestartLoad(mRequest));
     }
     if (sriLength) {
-      mRequest->mBytecodeOffset = JS::AlignTranscodingBytecodeOffset(sriLength);
+      mRequest->SetSRILength(sriLength);
     }
   }
 
@@ -433,14 +433,14 @@ ScriptLoadHandler::OnStreamComplete(nsIIncrementalStreamLoader* aLoader,
         return channelRequest->Cancel(mScriptLoader->RestartLoad(mRequest));
       }
 
-      mRequest->mBytecodeOffset = JS::AlignTranscodingBytecodeOffset(sriLength);
+      mRequest->SetSRILength(sriLength);
 
       Vector<uint8_t> compressedBytecode;
       // mRequest has the compressed bytecode, but will be filled with the
       // uncompressed bytecode
       compressedBytecode.swap(bytecode);
       if (!JS::loader::ScriptBytecodeDecompress(
-              compressedBytecode, mRequest->mBytecodeOffset, bytecode)) {
+              compressedBytecode, mRequest->GetSRILength(), bytecode)) {
         return NS_ERROR_UNEXPECTED;
       }
     }

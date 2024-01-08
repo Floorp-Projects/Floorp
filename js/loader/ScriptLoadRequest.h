@@ -259,6 +259,15 @@ class ScriptLoadRequest
                               bytecode.length() - offset);
   }
 
+  size_t GetSRILength() const {
+    MOZ_ASSERT(IsBytecode() || IsSource());
+    return mBytecodeOffset;
+  }
+  void SetSRILength(size_t sriLength) {
+    MOZ_ASSERT(IsBytecode() || IsSource());
+    mBytecodeOffset = JS::AlignTranscodingBytecodeOffset(sriLength);
+  }
+
   mozilla::CORSMode CORSMode() const { return mFetchOptions->mCORSMode; }
 
   void DropBytecodeCacheReferences();
