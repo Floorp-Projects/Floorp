@@ -54,6 +54,7 @@ var Readerable = {
     "reddit.com",
     "twitter.com",
     "youtube.com",
+    "app.slack.com",
   ],
 
   shouldCheckUri(uri, isBaseUri = false) {
