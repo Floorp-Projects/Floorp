@@ -1,4 +1,4 @@
-// |reftest| skip-if(!this.hasOwnProperty('Intl')||!this.Intl.Segmenter)
+// |reftest| slow skip-if(!this.hasOwnProperty('Intl')||!this.Intl.Segmenter)
 
 // CRLF should be the only compound grapheme for Latin-1 strings.
 
