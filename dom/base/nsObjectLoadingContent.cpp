@@ -806,9 +806,9 @@ bool nsObjectLoadingContent::CheckLoadPolicy(int16_t* aContentPolicy) {
       contentPolicyType);
 
   *aContentPolicy = nsIContentPolicy::ACCEPT;
-  nsresult rv = NS_CheckContentLoadPolicy(mURI, secCheckLoadInfo, mContentType,
-                                          aContentPolicy,
-                                          nsContentUtils::GetContentPolicy());
+  nsresult rv =
+      NS_CheckContentLoadPolicy(mURI, secCheckLoadInfo, aContentPolicy,
+                                nsContentUtils::GetContentPolicy());
   NS_ENSURE_SUCCESS(rv, false);
   if (NS_CP_REJECTED(*aContentPolicy)) {
     LOG(("OBJLC [%p]: Content policy denied load of %s", this,
@@ -858,7 +858,7 @@ bool nsObjectLoadingContent::CheckProcessPolicy(int16_t* aContentPolicy) {
 
   *aContentPolicy = nsIContentPolicy::ACCEPT;
   nsresult rv = NS_CheckContentProcessPolicy(
-      mURI ? mURI : mBaseURI, secCheckLoadInfo, mContentType, aContentPolicy,
+      mURI ? mURI : mBaseURI, secCheckLoadInfo, aContentPolicy,
       nsContentUtils::GetContentPolicy());
   NS_ENSURE_SUCCESS(rv, false);
 

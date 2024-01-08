@@ -1689,7 +1689,7 @@ nsresult WebSocketImpl::Init(JSContext* aCx, bool aIsSecure,
     }
 
     int16_t shouldLoad = nsIContentPolicy::ACCEPT;
-    rv = NS_CheckContentLoadPolicy(uri, secCheckLoadInfo, ""_ns, &shouldLoad,
+    rv = NS_CheckContentLoadPolicy(uri, secCheckLoadInfo, &shouldLoad,
                                    nsContentUtils::GetContentPolicy());
     NS_ENSURE_SUCCESS(rv, rv);
 

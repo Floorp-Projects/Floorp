@@ -881,9 +881,9 @@ nsresult Loader::CheckContentPolicy(nsIPrincipal* aLoadingPrincipal,
   secCheckLoadInfo->SetCspNonce(aNonce);
 
   int16_t shouldLoad = nsIContentPolicy::ACCEPT;
-  nsresult rv = NS_CheckContentLoadPolicy(aTargetURI, secCheckLoadInfo,
-                                          "text/css"_ns, &shouldLoad,
-                                          nsContentUtils::GetContentPolicy());
+  nsresult rv =
+      NS_CheckContentLoadPolicy(aTargetURI, secCheckLoadInfo, &shouldLoad,
+                                nsContentUtils::GetContentPolicy());
   if (NS_FAILED(rv) || NS_CP_REJECTED(shouldLoad)) {
     // Asynchronously notify observers (e.g devtools) of CSP failure.
     nsContentUtils::AddScriptRunner(NS_NewRunnableFunction(

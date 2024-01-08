@@ -19,7 +19,6 @@ NS_IMPL_ISUPPORTS(nsWebBrowserContentPolicy, nsIContentPolicy)
 NS_IMETHODIMP
 nsWebBrowserContentPolicy::ShouldLoad(nsIURI* aContentLocation,
                                       nsILoadInfo* aLoadInfo,
-                                      const nsACString& aMimeGuess,
                                       int16_t* aShouldLoad) {
   MOZ_ASSERT(aShouldLoad, "Null out param");
 
@@ -60,7 +59,6 @@ nsWebBrowserContentPolicy::ShouldLoad(nsIURI* aContentLocation,
 NS_IMETHODIMP
 nsWebBrowserContentPolicy::ShouldProcess(nsIURI* aContentLocation,
                                          nsILoadInfo* aLoadInfo,
-                                         const nsACString& aMimeGuess,
                                          int16_t* aShouldProcess) {
   MOZ_ASSERT(aShouldProcess, "Null out param");
 

@@ -68,7 +68,7 @@ bool CSPPermitsResponse(nsILoadInfo* aLoadInfo,
   }
 
   int16_t decision = nsIContentPolicy::ACCEPT;
-  rv = NS_CheckContentLoadPolicy(uri, aLoadInfo, ""_ns, &decision);
+  rv = NS_CheckContentLoadPolicy(uri, aLoadInfo, &decision);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return false;
   }

@@ -3899,9 +3899,8 @@ bool nsContentUtils::CanLoadImage(nsIURI* aURI, nsINode* aNode,
 
   int16_t decision = nsIContentPolicy::ACCEPT;
 
-  rv = NS_CheckContentLoadPolicy(aURI, secCheckLoadInfo,
-                                 ""_ns,  // mime guess
-                                 &decision, GetContentPolicy());
+  rv = NS_CheckContentLoadPolicy(aURI, secCheckLoadInfo, &decision,
+                                 GetContentPolicy());
 
   return NS_SUCCEEDED(rv) && NS_CP_ACCEPTED(decision);
 }

@@ -192,7 +192,7 @@ bool ScriptElement::MaybeProcessScript() {
   }
 
   RefPtr<ScriptLoader> loader = ownerDoc->ScriptLoader();
-  return loader->ProcessScriptElement(this, type);
+  return loader->ProcessScriptElement(this);
 }
 
 bool ScriptElement::GetScriptType(nsAString& aType) {

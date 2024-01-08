@@ -83,8 +83,7 @@ class nsMixedContentBlocker : public nsIContentPolicy,
    */
   static nsresult ShouldLoad(bool aHadInsecureImageRedirect,
                              nsIURI* aContentLocation, nsILoadInfo* aLoadInfo,
-                             const nsACString& aMimeGuess, bool aReportError,
-                             int16_t* aDecision);
+                             bool aReportError, int16_t* aDecision);
   static void AccumulateMixedContentHSTS(
       nsIURI* aURI, bool aActive, const OriginAttributes& aOriginAttributes);
 

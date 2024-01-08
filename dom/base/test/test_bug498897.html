@@ -44,7 +44,7 @@ var policy = {
   },
 
   // nsIContentPolicy implementation
-  shouldLoad(contentLocation, loadInfo, mimeTypeGuess) {
+  shouldLoad(contentLocation, loadInfo) {
     var url = window.location.href.substr(0, window.location.href.indexOf('test_bug498897'));
     let loadingPrincipal = loadInfo.loadingPrincipal;
     if (loadingPrincipal) {
@@ -58,7 +58,7 @@ var policy = {
     return Ci.nsIContentPolicy.ACCEPT;
   },
 
-  shouldProcess(contentLocation, loadInfo, mimeTypeGuess) {
+  shouldProcess(contentLocation, loadInfo) {
     return Ci.nsIContentPolicy.ACCEPT;
   }
 }

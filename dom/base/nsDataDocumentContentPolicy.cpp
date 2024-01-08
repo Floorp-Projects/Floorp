@@ -40,7 +40,6 @@ static bool HasFlags(nsIURI* aURI, uint32_t aURIFlags) {
 NS_IMETHODIMP
 nsDataDocumentContentPolicy::ShouldLoad(nsIURI* aContentLocation,
                                         nsILoadInfo* aLoadInfo,
-                                        const nsACString& aMimeGuess,
                                         int16_t* aDecision) {
   auto setBlockingReason = mozilla::MakeScopeExit([&]() {
     if (NS_CP_REJECTED(*aDecision)) {
@@ -171,7 +170,6 @@ nsDataDocumentContentPolicy::ShouldLoad(nsIURI* aContentLocation,
 NS_IMETHODIMP
 nsDataDocumentContentPolicy::ShouldProcess(nsIURI* aContentLocation,
                                            nsILoadInfo* aLoadInfo,
-                                           const nsACString& aMimeGuess,
                                            int16_t* aDecision) {
-  return ShouldLoad(aContentLocation, aLoadInfo, aMimeGuess, aDecision);
+  return ShouldLoad(aContentLocation, aLoadInfo, aDecision);
 }

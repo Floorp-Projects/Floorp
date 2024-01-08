@@ -80,9 +80,6 @@ ImageListener::OnStartRequest(nsIRequest* request) {
   nsCOMPtr<nsIURI> channelURI;
   channel->GetURI(getter_AddRefs(channelURI));
 
-  nsAutoCString mimeType;
-  channel->GetContentType(mimeType);
-
   nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
   // query the corresponding arguments for the channel loadinfo and pass
   // it on to the temporary loadinfo used for content policy checks.
@@ -101,9 +98,9 @@ ImageListener::OnStartRequest(nsIRequest* request) {
       nsIContentPolicy::TYPE_INTERNAL_IMAGE);
 
   int16_t decision = nsIContentPolicy::ACCEPT;
-  nsresult rv = NS_CheckContentProcessPolicy(
-      channelURI, secCheckLoadInfo, mimeType, &decision,
-      nsContentUtils::GetContentPolicy());
+  nsresult rv =
+      NS_CheckContentProcessPolicy(channelURI, secCheckLoadInfo, &decision,
+                                   nsContentUtils::GetContentPolicy());
 
   if (NS_FAILED(rv) || NS_CP_REJECTED(decision)) {
     request->Cancel(NS_ERROR_CONTENT_BLOCKED);

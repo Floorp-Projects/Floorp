@@ -730,9 +730,8 @@ static bool ShouldLoadCachedImage(imgRequest* aImgRequest,
   secCheckLoadInfo->SetSendCSPViolationEvents(aSendCSPViolationReports);
 
   int16_t decision = nsIContentPolicy::REJECT_REQUEST;
-  rv = NS_CheckContentLoadPolicy(contentLocation, secCheckLoadInfo,
-                                 ""_ns,  // mime guess
-                                 &decision, nsContentUtils::GetContentPolicy());
+  rv = NS_CheckContentLoadPolicy(contentLocation, secCheckLoadInfo, &decision,
+                                 nsContentUtils::GetContentPolicy());
   if (NS_FAILED(rv) || !NS_CP_ACCEPTED(decision)) {
     return false;
   }
@@ -760,8 +759,7 @@ static bool ShouldLoadCachedImage(imgRequest* aImgRequest,
       decision = nsIContentPolicy::REJECT_REQUEST;
       rv = nsMixedContentBlocker::ShouldLoad(insecureRedirect, contentLocation,
                                              secCheckLoadInfo,
-                                             ""_ns,  // mime guess
-                                             true,   // aReportError
+                                             true,  // aReportError
                                              &decision);
       if (NS_FAILED(rv) || !NS_CP_ACCEPTED(decision)) {
         return false;

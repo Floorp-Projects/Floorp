@@ -50,7 +50,7 @@ var policy = {
   },
 
   // nsIContentPolicy implementation
-  shouldLoad(contentLocation, loadInfo, mimeTypeGuess) {
+  shouldLoad(contentLocation, loadInfo) {
     let contentType = loadInfo.externalContentPolicyType;
     let context = loadInfo.loadingContext;
 
@@ -78,7 +78,7 @@ var policy = {
     return Ci.nsIContentPolicy.REJECT_REQUEST;
   },
 
-  shouldProcess(contentLocation, loadInfo, mimeTypeGuess) {
+  shouldProcess(contentLocation, loadInfo) {
     return Ci.nsIContentPolicy.ACCEPT;
   },
 };
