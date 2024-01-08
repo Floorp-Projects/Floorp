@@ -1,6 +1,24 @@
 {
   "data": [
     {
+      "schema": 1704469686367,
+      "derHash": "5LKgc2+VlQ0RuCyebDIDHhQg4GpmST5mXxKK5JlJj6s=",
+      "subject": "CN=LH.pl CA,O=LH.pl Sp. z o.o.,C=PL",
+      "subjectDN": "MDsxCzAJBgNVBAYTAlBMMRkwFwYDVQQKDBBMSC5wbCBTcC4geiBvLm8uMREwDwYDVQQDDAhMSC5wbCBDQQ==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "1628c3d8568e4de0d51be81fe712f96e36711cc6b153eea5f3108e39a41b9d94",
+        "size": 1699,
+        "filename": "MJ-BRaw47gS1vebKWSZ_Y4etVrVSkjRdUN9KP4Ox3NM=.pem",
+        "location": "security-state-staging/intermediates/6bb2b968-d1dd-408d-bd15-bb2258ca0953.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "MJ+BRaw47gS1vebKWSZ/Y4etVrVSkjRdUN9KP4Ox3NM=",
+      "crlite_enrolled": false,
+      "id": "9604f1d4-9179-4db7-a8ef-e1fca8de5e17",
+      "last_modified": 1704470223072
+    },
+    {
       "schema": 1703537607315,
       "derHash": "ctcW97tr0QVwT0K5UkkjUQ3LhbLYcMDpraWuuclpBRo=",
       "subject": "CN=ePKI Root Certification Authority - G2,O=Chunghwa Telecom Co.\\, Ltd.,C=TW",
@@ -29629,5 +29647,5 @@
       "last_modified": 1559865884636
     }
   ],
-  "timestamp": 1704038223096
+  "timestamp": 1704470223072
 }
