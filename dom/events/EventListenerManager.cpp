@@ -9,6 +9,7 @@
 
 #include "js/ColumnNumber.h"  // JS::ColumnNumberOneOrigin
 #include "js/loader/LoadedScript.h"
+#include "js/loader/ScriptFetchOptions.h"
 #include "mozilla/BasicEvents.h"
 #include "mozilla/BinarySearch.h"
 #include "mozilla/CycleCollectedJSRuntime.h"
