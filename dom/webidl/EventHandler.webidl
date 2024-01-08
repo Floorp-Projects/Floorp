@@ -83,7 +83,6 @@ interface mixin GlobalEventHandlers {
            attribute EventHandler onreset;
            attribute EventHandler onresize;
            attribute EventHandler onscroll;
-           [Pref="apz.scrollend-event.content.enabled"]
            attribute EventHandler onscrollend;
            attribute EventHandler onsecuritypolicyviolation;
            attribute EventHandler onseeked;
