@@ -39,10 +39,7 @@ nsTextPaintStyle::nsTextPaintStyle(nsTextFrame* aFrame)
       mSufficientContrast(0),
       mFrameBackgroundColor(NS_RGBA(0, 0, 0, 0)),
       mSystemFieldForegroundColor(NS_RGBA(0, 0, 0, 0)),
-      mSystemFieldBackgroundColor(NS_RGBA(0, 0, 0, 0)) {
-  for (uint32_t i = 0; i < ArrayLength(mSelectionStyle); i++)
-    mSelectionStyle[i].mInit = false;
-}
+      mSystemFieldBackgroundColor(NS_RGBA(0, 0, 0, 0)) {}
 
 bool nsTextPaintStyle::EnsureSufficientContrast(nscolor* aForeColor,
                                                 nscolor* aBackColor) {
@@ -411,7 +408,7 @@ bool nsTextPaintStyle::InitSelectionColorsAndShadow() {
 nsTextPaintStyle::nsSelectionStyle* nsTextPaintStyle::GetSelectionStyle(
     int32_t aIndex) {
   InitSelectionStyle(aIndex);
-  return &mSelectionStyle[aIndex];
+  return mSelectionStyle[aIndex].ptr();
 }
 
 struct StyleIDs {
@@ -447,9 +444,9 @@ static StyleIDs SelectionStyleIDs[] = {
 
 void nsTextPaintStyle::InitSelectionStyle(int32_t aIndex) {
   NS_ASSERTION(aIndex >= 0 && aIndex < 5, "aIndex is invalid");
-  nsSelectionStyle* selectionStyle = &mSelectionStyle[aIndex];
-  if (selectionStyle->mInit) {
-    return;
+  Maybe<nsSelectionStyle>& selectionStyle = mSelectionStyle[aIndex];
+  if (selectionStyle) {
+    return;  // Already initialized; we don't need to do anything.
   }
 
   StyleIDs* styleIDs = &SelectionStyleIDs[aIndex];
@@ -491,12 +488,12 @@ void nsTextPaintStyle::InitSelectionStyle(int32_t aIndex) {
     lineColor = GetResolvedForeColor(lineColor, foreColor, backColor);
   }
 
+  selectionStyle.emplace();
   selectionStyle->mTextColor = foreColor;
   selectionStyle->mBGColor = backColor;
   selectionStyle->mUnderlineColor = lineColor;
   selectionStyle->mUnderlineStyle = lineStyle;
   selectionStyle->mUnderlineRelativeSize = relativeSize;
-  selectionStyle->mInit = true;
 }
 
 /* static */
