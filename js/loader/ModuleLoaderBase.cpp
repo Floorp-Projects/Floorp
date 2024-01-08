@@ -638,9 +638,9 @@ nsresult ModuleLoaderBase::CreateModuleScript(ModuleLoadRequest* aRequest) {
       }
     }
 
-    RefPtr<ModuleScript> moduleScript =
-        new ModuleScript(aRequest->ReferrerPolicy(), aRequest->mFetchOptions,
-                         aRequest->mBaseURL);
+    RefPtr<ModuleScript> moduleScript = new ModuleScript(
+        aRequest->ReferrerPolicy(), aRequest->mFetchOptions, aRequest->mURI);
+    moduleScript->SetBaseURL(aRequest->mBaseURL);
     aRequest->mModuleScript = moduleScript;
 
     if (!module) {
