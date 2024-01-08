@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<meta name="viewport" content="width=device-width; initial-scale=1.0">
+<title>Tests that :active state is cleared after a longpress event</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+ <script src="/tests/SimpleTest/paint_listener.js"></script>
+<script src="apz_test_utils.js"></script>
+<script src="apz_test_native_event_utils.js"></script>
+<style>
+  #button {
+    width: 100px;
+    height: 100px;
+  }
+</style>
+<button id="button">Button</button>
+<script>
+async function test() {
+  await synthesizeNativeTouch(button, 10, 10, SpecialPowers.DOMWindowUtils.TOUCH_CONTACT);
+  await promiseOneEvent(button, "touchstart");
+  await promiseApzFlushedRepaints();
+
+  ok(button.matches(":active"), "should be active");
+
+  const contextmenuPromise = promiseOneEvent(button, "contextmenu", e => {
+    e.preventDefault();
+    return true;
+  });
+  await contextmenuPromise;
+
+  await synthesizeNativeTouch(button, 10, 10, SpecialPowers.DOMWindowUtils.TOUCH_REMOVE);
+  await promiseOneEvent(button, "touchend");
+  await promiseApzFlushedRepaints();
+
+  ok(!button.matches(":active"), "should not be active");
+}
+
+if (getPlatform() == "windows") {
+  // On Windows every context menu on touch screens opens __after__ lifting the
+  // finger.
+  ok(true, "Test doesn't need to run on Windows");
+  subtestDone();
+} else {
+  waitUntilApzStable()
+  .then(test)
+  .then(subtestDone, subtestFailed);
+}
+</script>
+</html>

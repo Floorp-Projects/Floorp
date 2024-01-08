@@ -3097,7 +3097,13 @@ nsEventStatus AsyncPanZoomController::GenerateSingleTap(
               this);
           return nsEventStatus_eIgnore;
         }
-        touch->SetSingleTapOccurred();
+
+        // The below `single-tap-occurred` flag is only used to tell whether the
+        // touch block caused a `click` event or not, thus for long-tap events,
+        // it's not necessary.
+        if (aType != TapType::eLongTapUp) {
+          touch->SetSingleTapOccurred();
+        }
       }
       // Because this may be being running as part of
       // APZCTreeManager::ReceiveInputEvent, calling controller->HandleTap
