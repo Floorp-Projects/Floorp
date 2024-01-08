@@ -105,6 +105,8 @@ class Watchtower {
     return watchPropertyChangeSlow(cx, obj, id, flags);
   }
 
+  // Note: We can only watch property modification for regular object slots
+  // with an id, not reserved slots.
   template <AllowGC allowGC>
   static bool watchPropertyModification(
       JSContext* cx,
