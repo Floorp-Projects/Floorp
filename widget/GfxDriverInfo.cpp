@@ -11,9 +11,6 @@
 
 using namespace mozilla::widget;
 
-int32_t GfxDriverInfo::allFeatures = 0;
-uint64_t GfxDriverInfo::allDriverVersions = ~(uint64_t(0));
-
 GfxDeviceFamily*
     GfxDriverInfo::sDeviceFamilies[static_cast<size_t>(DeviceFamily::Max)];
 nsString*

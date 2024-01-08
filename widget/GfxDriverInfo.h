@@ -326,9 +326,12 @@ struct GfxDriverInfo {
   // deallocated. False by default.
   bool mDeleteDevices;
 
-  /* A feature from nsIGfxInfo, or all features */
+  /* A feature from nsIGfxInfo, or a wildcard set of features */
   int32_t mFeature;
-  static int32_t allFeatures;
+  /* Block all features */
+  static constexpr int32_t allFeatures = 0;
+  /* Block all features not permitted by OnlyAllowFeatureOnKnownConfig */
+  static constexpr int32_t optionalFeatures = -1;
 
   /* A feature status from nsIGfxInfo */
   int32_t mFeatureStatus;
@@ -338,7 +341,7 @@ struct GfxDriverInfo {
   /* versions are assumed to be A.B.C.D packed as 0xAAAABBBBCCCCDDDD */
   uint64_t mDriverVersion;
   uint64_t mDriverVersionMax;
-  static uint64_t allDriverVersions;
+  static constexpr uint64_t allDriverVersions = ~(uint64_t(0));
 
   const char* mSuggestedVersion;
   nsCString mRuleId;

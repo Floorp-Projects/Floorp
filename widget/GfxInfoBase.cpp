@@ -1174,7 +1174,9 @@ int32_t GfxInfoBase::FindBlocklistedDeviceInList(
 
     if (match || info[i].mDriverVersion == GfxDriverInfo::allDriverVersions) {
       if (info[i].mFeature == GfxDriverInfo::allFeatures ||
-          info[i].mFeature == aFeature) {
+          info[i].mFeature == aFeature ||
+          (info[i].mFeature == GfxDriverInfo::optionalFeatures &&
+           OnlyAllowFeatureOnKnownConfig(aFeature))) {
         status = info[i].mFeatureStatus;
         if (!info[i].mRuleId.IsEmpty()) {
           aFailureId = info[i].mRuleId.get();
