@@ -1,4 +1,4 @@
-// |reftest| skip-if(!this.hasOwnProperty("oomTest"))
+// |reftest| slow skip-if(!this.hasOwnProperty("oomTest"))
 
 // Bug 1572988: Make a bunch of nursery ropes and flatten them with oomTest.
 // The goal is to get an OOM while flattening that makes registering the
