@@ -2685,10 +2685,12 @@ nsresult ScriptLoader::MaybePrepareForBytecodeEncodingAfterExecute(
   if (aRequest->IsMarkedForBytecodeEncoding()) {
     TRACE_FOR_TEST(aRequest->GetScriptLoadContext()->GetScriptElement(),
                    "scriptloader_encode");
+    // Check that the TranscodeBuffer which is going to receive the encoded
+    // bytecode only contains the SRI, and nothing more.
+    //
     // NOTE: This assertion will fail once we start encoding more data after the
     //       first encode.
-    MOZ_ASSERT(aRequest->mBytecodeOffset ==
-               aRequest->SRIAndBytecode().length());
+    MOZ_ASSERT(aRequest->GetSRILength() == aRequest->SRIAndBytecode().length());
     RegisterForBytecodeEncoding(aRequest);
     MOZ_ASSERT(IsAlreadyHandledForBytecodeEncodingPreparation(aRequest));
 
@@ -2981,7 +2983,7 @@ void ScriptLoader::EncodeRequestBytecode(JSContext* aCx,
   Vector<uint8_t> compressedBytecode;
   // TODO probably need to move this to a helper thread
   if (!ScriptBytecodeCompress(aRequest->SRIAndBytecode(),
-                              aRequest->mBytecodeOffset, compressedBytecode)) {
+                              aRequest->GetSRILength(), compressedBytecode)) {
     return;
   }
 
@@ -3342,10 +3344,13 @@ nsresult ScriptLoader::OnStreamComplete(
       JS::TranscodeBuffer& bytecode = aRequest->SRIAndBytecode();
       MOZ_ASSERT_IF(NS_SUCCEEDED(rv), bytecode.length() == sriLength);
 
-      aRequest->mBytecodeOffset = JS::AlignTranscodingBytecodeOffset(sriLength);
-      if (aRequest->mBytecodeOffset != sriLength) {
-        // We need extra padding after SRI hash.
-        if (!bytecode.resize(aRequest->mBytecodeOffset)) {
+      // TODO: (Bug 1800896) This code should be moved into SaveSRIHash, and the
+      // SRI out-param can be removed.
+      aRequest->SetSRILength(sriLength);
+      if (aRequest->GetSRILength() != sriLength) {
+        // The bytecode is aligned in the bytecode buffer, and space might be
+        // reserved for padding after the SRI hash.
+        if (!bytecode.resize(aRequest->GetSRILength())) {
           return NS_ERROR_OUT_OF_MEMORY;
         }
       }
