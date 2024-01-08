@@ -1,5 +1,6 @@
 //error: `nullable' qualifier for type `int' is unsupported
 
+[ChildProc=any]
 protocol PNullable {
 child:
     async Msg(nullable int i);

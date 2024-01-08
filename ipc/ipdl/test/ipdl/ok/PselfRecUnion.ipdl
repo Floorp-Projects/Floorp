@@ -4,6 +4,7 @@ union R {
     R;
 };
 
+[ChildProc=any]
 protocol PselfRecUnion {
 child:
     async Test(R r);

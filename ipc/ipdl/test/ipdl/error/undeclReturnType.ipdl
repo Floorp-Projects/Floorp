@@ -1,5 +1,6 @@
 //error: argument typename `FARGLEGARGLE' of message `Msg' has not been declared
 
+[ChildProc=any]
 sync protocol undeclReturnType {
 
 child:  sync Msg() returns (FARGLEGARGLE r);

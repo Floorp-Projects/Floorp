@@ -21,7 +21,7 @@ namespace layers {
  * The PVideoBridge protocol is used to share textures from the video decoders
  * to the compositor.
  */
-[NeedsOtherPid]
+[NeedsOtherPid, ParentProc=compositor, ChildProc=any]
 sync protocol PVideoBridge
 {
   manages PTexture;

@@ -20,7 +20,8 @@ struct TestPartResult {
 };
 
 // Primary actor for the IPDLUnitTest process and thread.
-[NeedsOtherPid] async protocol PIPDLUnitTest {
+[NeedsOtherPid, ChildProc=any]
+async protocol PIPDLUnitTest {
  child:
   async Start(nsCString name, ScopedPort port, nsID channelId);
 

@@ -1,4 +1,6 @@
 //error: non-async message `NormalPrio' cannot specify [ReplyPriority]
+
+[ChildProc=any]
 sync protocol SyncPrio
 {
 child:

@@ -2,10 +2,12 @@
 
 //error: only one protocol definition per file
 
+[ChildProc=any]
 protocol p1 {
 child: async Msg();
 };
 
+[ChildProc=any]
 protocol p2 {
 child: async Msg();
 };

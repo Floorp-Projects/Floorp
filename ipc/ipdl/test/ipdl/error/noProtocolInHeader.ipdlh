@@ -1,5 +1,6 @@
 //error: can't define a protocol in a header.  Do it in a protocol spec instead.
 
+[ChildProc=any]
 protocol noProtocolInHeader {
 child:
     async __delete__();

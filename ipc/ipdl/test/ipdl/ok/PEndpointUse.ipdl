@@ -2,6 +2,7 @@ include protocol PEndpointDecl;
 
 // Basic test that Endpoint types are declared for included protocols.
 
+[ChildProc=any]
 protocol PEndpointUse {
   child:
     async Message(Endpoint<PEndpointDeclParent> aEndpointParent,

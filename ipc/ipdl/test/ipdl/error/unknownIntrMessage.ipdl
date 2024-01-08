@@ -1,5 +1,6 @@
 //error: Unknown sync IPC message unknownIntrMessage::Msg
 
+[ChildProc=any]
 intr protocol unknownIntrMessage {
 parent:
     [LegacyIntr] intr Msg();

@@ -5,6 +5,7 @@ include protocol ForgottenManagee;
 // See ForgottenManagee.ipdl. This includes ForgottenManagee to
 // ensure that loading this file fails.
 
+[ChildProc=any]
 protocol ManagerForgot {
 child:
     async Msg();

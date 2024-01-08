@@ -1,6 +1,7 @@
 //error: invalid value for attribute `NestedUpTo', expected one of: not, inside_sync, inside_cpow
 
-[NestedUpTo=invalid] async protocol PExtendedAttrInvalidValue {
+[NestedUpTo=invalid, ChildProc=any]
+async protocol PExtendedAttrInvalidValue {
 parent:
     async Msg();
 };

@@ -1,5 +1,6 @@
 //error: message `Msg' requires more powerful send semantics than its protocol `tooWeakSyncAsync' provides
 
+[ChildProc=any]
 protocol tooWeakSyncAsync {
 
     // it's an error to declare an async protocol with a sync message

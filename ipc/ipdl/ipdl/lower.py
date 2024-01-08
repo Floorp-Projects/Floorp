@@ -3829,6 +3829,27 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
         self.cls.addstmts([dtor, Whitespace.NL])
 
+        # ActorAlloc() and ActorDealloc()
+        actoralloc = MethodDefn(MethodDecl("ActorAlloc", methodspec=MethodSpec.FINAL))
+        actordealloc = MethodDefn(
+            MethodDecl("ActorDealloc", methodspec=MethodSpec.FINAL)
+        )
+
+        # Assert process type in ActorAlloc
+        procattr = p.procAttribute(self.side)
+        if procattr not in ("any", None):
+            if procattr == "anychild":
+                procattr_assertion = "!XRE_IsParentProcess()"
+            elif procattr == "anydom":
+                procattr_assertion = "XRE_IsParentProcess() || XRE_IsContentProcess()"
+            elif procattr == "compositor":
+                procattr_assertion = "XRE_IsParentProcess() || XRE_IsGPUProcess()"
+            else:
+                procattr_assertion = "XRE_Is%sProcess()" % procattr
+            actoralloc.addcode(
+                "MOZ_RELEASE_ASSERT(${assertion});\n", assertion=procattr_assertion
+            )
+
         if ptype.isRefcounted():
             if not ptype.isToplevel():
                 self.cls.addcode(
@@ -3836,13 +3857,22 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                     NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
                     """
                 )
-            self.cls.addstmt(Label.PROTECTED)
-            self.cls.addcode(
+            # Perform AddRef/Release in ActorAlloc/ActorDealloc if refcounted.
+            actoralloc.addcode("AddRef();\n")
+            actordealloc.addcode("Release();\n")
+        elif not ptype.isToplevel():
+            # If we're a managed actor with [ManualDealloc], use DeallocManagee
+            # to invoke the relevant Dealloc method.
+            actordealloc.addcode(
                 """
-                void ActorAlloc() final { AddRef(); }
-                void ActorDealloc() final { Release(); }
-                """
+                if (Manager()) {
+                    Manager()->DeallocManagee(${protocolId}, this);
+                }
+                """,
+                protocolId=_protocolId(ptype),
             )
+
+        self.cls.addstmts([Label.PROTECTED, actoralloc, actordealloc])
 
         self.cls.addstmt(Label.PUBLIC)
         if ptype.hasOtherPid():

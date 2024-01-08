@@ -9,6 +9,7 @@ struct Whatever {
 
 namespace mozilla {
 
+[ChildProc=any]
 protocol PEndpointDecl {
   child:
     async Message(Endpoint<PEndpointDeclParent> aEndpointParent,
