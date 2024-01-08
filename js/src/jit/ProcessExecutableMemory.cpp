@@ -484,9 +484,23 @@ static void* ReserveProcessExecutableMemory(size_t bytes) {
   //
   // This means we have to use the following strategy on Apple Silicon:
   //
-  // * Reserve:  mmap with PROT_READ | PROT_WRITE | PROT_EXEC, then decommit
+  // * Reserve:  1) mmap with PROT_READ | PROT_WRITE | PROT_EXEC and MAP_JIT
+  //             2) decommit
   // * Commit:   madvise with MADV_FREE_REUSE
   // * Decommit: madvise with MADV_FREE_REUSABLE
+  //
+  // On Intel Macs we also need to use MAP_JIT, to be compatible with the
+  // Hardened Runtime (with com.apple.security.cs.allow-jit = true). The
+  // pthread_jit_write_protect_np API is not available on Intel and MAP_JIT
+  // can't be used with MAP_FIXED, so we have to use a hybrid of the above two
+  // strategies:
+  //
+  // * Reserve:  1) mmap with PROT_NONE and MAP_JIT
+  //             2) decommit
+  // * Commit:   1) madvise with MADV_FREE_REUSE
+  //             2) mprotect with PROT_READ | ...
+  // * Decommit: 1) mprotect with PROT_NONE
+  //             2) madvise with MADV_FREE_REUSABLE
   //
   // This is inspired by V8's code in OS::SetPermissions.
 
@@ -495,16 +509,18 @@ static void* ReserveProcessExecutableMemory(size_t bytes) {
   void* randomAddr = ComputeRandomAllocationAddress();
   unsigned protection = PROT_NONE;
   unsigned flags = MAP_NORESERVE | MAP_PRIVATE | MAP_ANON;
-#  ifdef JS_USE_APPLE_FAST_WX
-  protection = PROT_READ | PROT_WRITE | PROT_EXEC;
+#  if defined(XP_DARWIN)
   flags |= MAP_JIT;
+#    if defined(JS_USE_APPLE_FAST_WX)
+  protection = PROT_READ | PROT_WRITE | PROT_EXEC;
+#    endif
 #  endif
   void* p = MozTaggedAnonymousMmap(randomAddr, bytes, protection, flags, -1, 0,
                                    "js-executable-memory");
   if (p == MAP_FAILED) {
     return nullptr;
   }
-#  ifdef JS_USE_APPLE_FAST_WX
+#  if defined(XP_DARWIN)
   DecommitPages(p, bytes);
 #  endif
   return p;
@@ -548,12 +564,21 @@ static unsigned ProtectionSettingToFlags(ProtectionSetting protection) {
 [[nodiscard]] static bool CommitPages(void* addr, size_t bytes,
                                       ProtectionSetting protection) {
   // See the comment in ReserveProcessExecutableMemory.
-#  ifdef JS_USE_APPLE_FAST_WX
+#  if defined(XP_DARWIN)
   int ret;
   do {
     ret = madvise(addr, bytes, MADV_FREE_REUSE);
   } while (ret != 0 && errno == EAGAIN);
-  return ret == 0;
+  if (ret != 0) {
+    return false;
+  }
+#    if !defined(JS_USE_APPLE_FAST_WX)
+  unsigned flags = ProtectionSettingToFlags(protection);
+  if (mprotect(addr, bytes, flags)) {
+    return false;
+  }
+#    endif
+  return true;
 #  else
   unsigned flags = ProtectionSettingToFlags(protection);
   void* p = MozTaggedAnonymousMmap(addr, bytes, flags,
@@ -569,8 +594,12 @@ static unsigned ProtectionSettingToFlags(ProtectionSetting protection) {
 
 static void DecommitPages(void* addr, size_t bytes) {
   // See the comment in ReserveProcessExecutableMemory.
-#  ifdef JS_USE_APPLE_FAST_WX
+#  if defined(XP_DARWIN)
   int ret;
+#    if !defined(JS_USE_APPLE_FAST_WX)
+  ret = mprotect(addr, bytes, PROT_NONE);
+  MOZ_RELEASE_ASSERT(ret == 0);
+#    endif
   do {
     ret = madvise(addr, bytes, MADV_FREE_REUSABLE);
   } while (ret != 0 && errno == EAGAIN);
