@@ -396,16 +396,22 @@ export class AddressSaveDoorhanger extends AutofillDoorhanger {
    */
   #formatLine(datalist, showDiff) {
     const createSpan = (text, style = null) => {
-      const s = this.doc.createElement("span");
-      s.textContent = text;
+      let s;
 
       if (showDiff) {
         if (style == "remove") {
+          s = this.doc.createElement("del");
           s.setAttribute("class", "address-update-text-diff-removed");
         } else if (style == "add") {
+          s = this.doc.createElement("mark");
           s.setAttribute("class", "address-update-text-diff-added");
+        } else {
+          s = this.doc.createElement("span");
         }
+      } else {
+        s = this.doc.createElement("span");
       }
+      s.textContent = text;
       return s;
     };
 
