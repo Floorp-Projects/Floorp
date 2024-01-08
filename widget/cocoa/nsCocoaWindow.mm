@@ -723,20 +723,16 @@ void nsCocoaWindow::Destroy() {
   }
   nsBaseWidget::OnDestroy();
 
-  if (mInFullScreenMode) {
-    // On Lion we don't have to mess with the OS chrome when in Full Screen
-    // mode.  But we do have to destroy the native window here (and not wait
-    // for that to happen in our destructor).  We don't switch away from the
-    // native window's space until the window is destroyed, and otherwise this
-    // might not happen for several seconds (because at least one object
-    // holding a reference to ourselves is usually waiting to be garbage-
-    // collected).  See bug 757618.
-    if (mInNativeFullScreenMode) {
-      DestroyNativeWindow();
-    } else if (mWindow) {
-      nsCocoaUtils::HideOSChromeOnScreen(false);
-    }
+  if (mInFullScreenMode && !mInNativeFullScreenMode) {
+    // Keep these calls balanced for emulated fullscreen.
+    nsCocoaUtils::HideOSChromeOnScreen(false);
   }
+
+  // Destroy the native window here (and not wait for that to happen in our
+  // destructor). Otherwise this might not happen for several seconds because
+  // at least one object holding a reference to ourselves is usually waiting
+  // to be garbage-collected.
+  DestroyNativeWindow();
 }
 
 nsIWidget* nsCocoaWindow::GetSheetWindowParent(void) {
