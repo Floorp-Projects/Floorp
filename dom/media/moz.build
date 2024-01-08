@@ -85,6 +85,7 @@ MOCHITEST_MANIFESTS += [
     "test/mochitest_bugs.toml",
     "test/mochitest_compat.toml",
     "test/mochitest_eme.toml",
+    "test/mochitest_eme_compat.toml",
     "test/mochitest_media_engine.toml",
     "test/mochitest_media_recorder.toml",
     "test/mochitest_seek.toml",
