@@ -27,6 +27,7 @@
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIGlobalObject.h"
+#include "LoadedScript.h"
 #include "ScriptKind.h"
 #include "ScriptFetchOptions.h"
 #include "nsIScriptElement.h"
@@ -257,6 +258,8 @@ class ScriptLoadRequest
 
   void ClearScriptSource();
 
+  void EnsureScript();
+
   // Convert a CheckingCache ScriptLoadRequest into a Fetching one, by creating
   // a new LoadedScript which is matching the ScriptKind provided when
   // constructing this ScriptLoadRequest.
@@ -359,6 +362,14 @@ class ScriptLoadRequest
 
   // The base URL used for resolving relative module imports.
   nsCOMPtr<nsIURI> mBaseURL;
+
+  // The loaded script holds the source / bytecode which is loaded.
+  //
+  // Currently it is used to hold information which are needed by the Debugger.
+  // Soon it would be used as a way to dissociate the LoadRequest from the
+  // loaded value, such that multiple request referring to the same content
+  // would share the same loaded script.
+  RefPtr<LoadedScript> mLoadedScript;
 
   // Holds the top-level JSScript that corresponds to the current source, once
   // it is parsed, and planned to be saved in the bytecode cache.

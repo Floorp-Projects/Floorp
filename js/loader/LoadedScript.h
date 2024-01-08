@@ -10,7 +10,7 @@
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "jsapi.h"
-#include "ScriptLoadRequest.h"
+#include "ScriptKind.h"
 #include "ScriptFetchOptions.h"
 
 class nsIURI;
@@ -41,6 +41,7 @@ class LoadedScript : public nsISupports {
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS(LoadedScript)
 
+  bool IsClassicScript() const { return mKind == ScriptKind::eClassic; }
   bool IsModuleScript() const { return mKind == ScriptKind::eModule; }
   bool IsEventScript() const { return mKind == ScriptKind::eEvent; }
 

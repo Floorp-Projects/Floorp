@@ -2761,9 +2761,14 @@ nsresult ScriptLoader::EvaluateScript(nsIGlobalObject* aGlobalObject,
   aRequest->GetScriptLoadContext()->GetProfilerLabel(profilerLabelString);
 
   // Create a ClassicScript object and associate it with the JSScript.
-  RefPtr<ClassicScript> classicScript = new ClassicScript(
-      aRequest->ReferrerPolicy(), aRequest->mFetchOptions, aRequest->mURI);
-  classicScript->SetBaseURL(aRequest->mBaseURL);
+  aRequest->EnsureScript();
+  MOZ_ASSERT(aRequest->mLoadedScript->IsClassicScript());
+  MOZ_ASSERT(aRequest->mLoadedScript->GetFetchOptions() ==
+             aRequest->mFetchOptions);
+  MOZ_ASSERT(aRequest->mLoadedScript->GetURI() == aRequest->mURI);
+  aRequest->mLoadedScript->SetBaseURL(aRequest->mBaseURL);
+  RefPtr<ClassicScript> classicScript =
+      aRequest->mLoadedScript->AsClassicScript();
   JS::Rooted<JS::Value> classicScriptValue(cx, JS::PrivateValue(classicScript));
 
   JS::CompileOptions options(cx);
