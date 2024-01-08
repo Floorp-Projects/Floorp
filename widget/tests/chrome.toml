@@ -15,9 +15,6 @@ skip-if = ["os == 'win' && bits == 32"]
 ["test_bug343416.xhtml"]
 skip-if = ["debug"]
 
-["test_bug413277.html"]
-skip-if = ["toolkit != 'cocoa'"] # Cocoa widget test
-
 ["test_bug428405.xhtml"]
 skip-if = ["toolkit != 'cocoa'"] # Cocoa widget test
 
