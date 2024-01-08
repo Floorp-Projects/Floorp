@@ -3,7 +3,6 @@
     double d;
 };
 
-[ChildProc=any]
 sync protocol PStructComparable {
 parent:
     sync test(S s) returns (S ss);

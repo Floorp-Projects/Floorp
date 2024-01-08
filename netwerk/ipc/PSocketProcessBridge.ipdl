@@ -23,7 +23,7 @@ namespace net {
   * content process and PSocketProcessBridgeParent lives in
   * socket process.
   */
-[NeedsOtherPid, ParentProc=Socket, ChildProc=Content]
+[NeedsOtherPid]
 sync protocol PSocketProcessBridge
 {
 parent:

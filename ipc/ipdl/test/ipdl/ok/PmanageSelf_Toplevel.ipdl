@@ -1,6 +1,5 @@
 include protocol PmanageSelf;
 
-[ChildProc=any]
 protocol PmanageSelf_Toplevel {
     manages PmanageSelf;
 

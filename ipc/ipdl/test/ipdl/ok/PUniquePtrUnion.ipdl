@@ -4,7 +4,6 @@ union UniquePtrUnion {
     double;
 };
 
-[ChildProc=any]
 sync protocol PUniquePtrUnion {
 parent:
     async Msg(UniquePtrUnion u, UniquePtr<UniquePtrUnion> au) returns (UniquePtrUnion r);

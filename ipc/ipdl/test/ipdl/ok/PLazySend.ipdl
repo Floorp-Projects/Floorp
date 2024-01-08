@@ -1,4 +1,3 @@
-[ChildProc=any]
 protocol PLazySend {
 child:
     [LazySend] async foo();

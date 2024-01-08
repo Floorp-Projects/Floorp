@@ -1,7 +1,6 @@
 //error: message `foo' in protocol `intrMessageCompress' requests compression but is not async
 //error: message `bar' in protocol `intrMessageCompress' requests compression but is not async
 
-[ChildProc=any]
 intr protocol intrMessageCompress {
 parent:
     [Compress, LegacyIntr] intr foo();

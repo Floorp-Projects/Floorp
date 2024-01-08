@@ -2,7 +2,6 @@
 
 union X { X; };
 
-[ChildProc=any]
 protocol undefSelfRecUnion {
 child: async __delete__(X x);
 };

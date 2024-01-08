@@ -1,4 +1,3 @@
-[ChildProc=any]
 protocol PthreeDirections {
 
     // sanity check that the three direction specifiers are being accepted
