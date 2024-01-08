@@ -11,6 +11,7 @@
 #include "nsCycleCollectionParticipant.h"
 #include "jsapi.h"
 #include "ScriptLoadRequest.h"
+#include "ScriptFetchOptions.h"
 
 class nsIURI;
 
