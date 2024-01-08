@@ -82,7 +82,9 @@ class MOZ_STACK_CLASS nsTextPaintStyle {
     eIndexSelRawText,
     eIndexConvText,
     eIndexSelConvText,
-    eIndexSpellChecker
+    eIndexSpellChecker,
+    eNumSelectionTypes /* Not an actual enum value; just a record of how many
+                          enum values there are. */
   };
 
   static uint32_t GetUnderlineStyleIndexForSelectionType(
