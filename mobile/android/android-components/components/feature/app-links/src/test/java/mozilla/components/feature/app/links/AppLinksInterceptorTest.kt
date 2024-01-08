@@ -43,6 +43,7 @@ class AppLinksInterceptorTest {
     private val intentUrl = "zxing://scan;S.browser_fallback_url=example.com"
     private val fallbackUrl = "https://getpocket.com"
     private val marketplaceUrl = "market://details?id=example.com"
+    private val mailtoUrl = "mailto:email@example.com"
 
     @Before
     fun setup() {
@@ -563,6 +564,29 @@ class AppLinksInterceptorTest {
 
         response = appLinksInterceptor.onLoadRequest(mockEngineSession, webUrlWithAppLink, null, true, false, false, false, false)
         assertNull(response)
+    }
+
+    @Test
+    fun `WHEN request is in user do not intercept cache but engine doesn't support scheme THEN request is intercepted`() {
+        val engineSession: EngineSession = mock()
+        val supportedScheme = "supported"
+        val notSupportedScheme = "not_supported"
+        val blocklistedScheme = "blocklisted"
+        val feature = AppLinksInterceptor(
+            context = mockContext,
+            interceptLinkClicks = false,
+            engineSupportedSchemes = setOf(supportedScheme),
+            alwaysDeniedSchemes = setOf(blocklistedScheme),
+            launchInApp = { true },
+            useCases = mockUseCases,
+        )
+
+        val notSupportedUrl = "$notSupportedScheme://example.com"
+        addUserDoNotIntercept(notSupportedUrl, null)
+        val notSupportedRedirect = AppLinkRedirect(Intent.parseUri(notSupportedUrl, 0), null, null)
+        whenever(mockGetRedirect.invoke(notSupportedUrl)).thenReturn(notSupportedRedirect)
+        val response = feature.onLoadRequest(engineSession, notSupportedUrl, null, false, false, false, false, false)
+        assert(response is RequestInterceptor.InterceptionResponse.AppIntent)
     }
 
     @Test

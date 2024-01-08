@@ -113,7 +113,7 @@ class AppLinksInterceptor(
         val redirect = useCases.interceptedAppLinkRedirect(uri)
         val result = handleRedirect(redirect, uri)
 
-        if (inUserDoNotIntercept(uri, redirect.appIntent)) {
+        if (engineSupportedSchemes.contains(uriScheme) && inUserDoNotIntercept(uri, redirect.appIntent)) {
             return null
         }
 
