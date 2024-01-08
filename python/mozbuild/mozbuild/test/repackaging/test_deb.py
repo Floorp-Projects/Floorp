@@ -390,7 +390,7 @@ desktop-action-new-window-name = 開新視窗
 desktop-action-new-private-window-name = 開新隱私視窗
 """
 
-DESKTOP_ENTRY_FILE_TEXT = """\
+NIGHTLY_DESKTOP_ENTRY_FILE_TEXT = """\
 [Desktop Entry]
 Version=1.0
 Type=Application
@@ -430,6 +430,46 @@ Name=en-US-desktop-action-open-profile-manager
 Name[zh_TW]=zh-TW-desktop-action-open-profile-manager
 """
 
+DEVEDITION_DESKTOP_ENTRY_FILE_TEXT = """\
+[Desktop Entry]
+Version=1.0
+Type=Application
+Exec=firefox-devedition %u
+Terminal=false
+X-MultipleArgs=false
+Icon=firefox-devedition
+StartupWMClass=firefox-aurora
+Categories=GNOME;GTK;Network;WebBrowser;
+MimeType=application/json;application/pdf;application/rdf+xml;application/rss+xml;application/x-xpinstall;application/xhtml+xml;application/xml;audio/flac;audio/ogg;audio/webm;image/avif;image/gif;image/jpeg;image/png;image/svg+xml;image/webp;text/html;text/xml;video/ogg;video/webm;x-scheme-handler/chrome;x-scheme-handler/http;x-scheme-handler/https;x-scheme-handler/mailto;
+StartupNotify=true
+Actions=new-window;new-private-window;open-profile-manager;
+Name=en-US-desktop-entry-name
+Name[zh_TW]=zh-TW-desktop-entry-name
+Comment=en-US-desktop-entry-comment
+Comment[zh_TW]=zh-TW-desktop-entry-comment
+GenericName=en-US-desktop-entry-generic-name
+GenericName[zh_TW]=zh-TW-desktop-entry-generic-name
+Keywords=en-US-desktop-entry-keywords
+Keywords[zh_TW]=zh-TW-desktop-entry-keywords
+X-GNOME-FullName=en-US-desktop-entry-x-gnome-full-name
+X-GNOME-FullName[zh_TW]=zh-TW-desktop-entry-x-gnome-full-name
+
+[Desktop Action new-window]
+Exec=firefox-devedition --new-window %u
+Name=en-US-desktop-action-new-window-name
+Name[zh_TW]=zh-TW-desktop-action-new-window-name
+
+[Desktop Action new-private-window]
+Exec=firefox-devedition --private-window %u
+Name=en-US-desktop-action-new-private-window-name
+Name[zh_TW]=zh-TW-desktop-action-new-private-window-name
+
+[Desktop Action open-profile-manager]
+Exec=firefox-devedition --ProfileManager
+Name=en-US-desktop-action-open-profile-manager
+Name[zh_TW]=zh-TW-desktop-action-open-profile-manager
+"""
+
 
 def test_generate_deb_desktop_entry_file_text(monkeypatch):
     def responsive(url):
@@ -456,12 +496,6 @@ def test_generate_deb_desktop_entry_file_text(monkeypatch):
             extra={"action": action, "params": params},
         )
 
-    build_variables = {
-        "DEB_PKG_NAME": "firefox-nightly",
-    }
-    release_product = "firefox"
-    release_type = "nightly"
-
     def fluent_localization(locales, resources, loader):
         def format_value(resource):
             return f"{locales[0]}-{resource}"
@@ -476,6 +510,12 @@ def test_generate_deb_desktop_entry_file_text(monkeypatch):
         lambda f: {"zh-TW": {"platforms": ["linux"], "revision": "default"}},
     )
 
+    build_variables = {
+        "DEB_PKG_NAME": "firefox-nightly",
+    }
+    release_product = "firefox"
+    release_type = "nightly"
+
     desktop_entry_file_text = deb._generate_browser_desktop_entry_file_text(
         log,
         build_variables,
@@ -485,7 +525,24 @@ def test_generate_deb_desktop_entry_file_text(monkeypatch):
         fluent_resource_loader,
     )
 
-    assert desktop_entry_file_text == DESKTOP_ENTRY_FILE_TEXT
+    assert desktop_entry_file_text == NIGHTLY_DESKTOP_ENTRY_FILE_TEXT
+
+    build_variables = {
+        "DEB_PKG_NAME": "firefox-devedition",
+    }
+    release_product = "devedition"
+    release_type = "beta"
+
+    desktop_entry_file_text = deb._generate_browser_desktop_entry_file_text(
+        log,
+        build_variables,
+        release_product,
+        release_type,
+        fluent_localization,
+        fluent_resource_loader,
+    )
+
+    assert desktop_entry_file_text == DEVEDITION_DESKTOP_ENTRY_FILE_TEXT
 
     def outage(url):
         return Mock(**{"status_code": 500})

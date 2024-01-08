@@ -577,7 +577,9 @@ def _generate_browser_desktop_entry(build_variables, localizations):
             },
             {
                 "key": "StartupWMClass",
-                "value": build_variables["DEB_PKG_NAME"],
+                "value": "firefox-aurora"
+                if build_variables["DEB_PKG_NAME"] == "firefox-devedition"
+                else build_variables["DEB_PKG_NAME"],
             },
             {
                 "key": "Categories",
