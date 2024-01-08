@@ -854,14 +854,7 @@ bool DisplayPortUtils::MaybeCreateDisplayPortInFirstScrollFrameEncountered(
       aFrame->GetContent()->GetID() == nsGkAtoms::tabbrowser_arrowscrollbox) {
     return false;
   }
-  // The do_QueryFrame call below is the most expensive part of this function.
-  // IsLeaf is a quick function we can call to avoid this in a lot of cases. It
-  // also neatly lines up with we check below (subdocument and placeholder
-  // frames are leaves, and leaves don't have child lists) so it speeds this
-  // function up whether it is true or false. Using IsScrollContainer is
-  // slightly less fast.
-  const bool isLeaf = aFrame->IsLeaf();
-  if (!isLeaf) {
+  if (aFrame->IsScrollContainer()) {
     if (nsIScrollableFrame* sf = do_QueryFrame(aFrame)) {
       if (MaybeCreateDisplayPort(aBuilder, aFrame, sf, RepaintMode::Repaint)) {
         // If this was the first displayport found in the first scroll frame
@@ -896,12 +889,9 @@ bool DisplayPortUtils::MaybeCreateDisplayPortInFirstScrollFrameEncountered(
     // Only descend the visible card of deck / tabpanels
     return false;
   }
-  if (!isLeaf) {
-    for (nsIFrame* child : aFrame->PrincipalChildList()) {
-      if (MaybeCreateDisplayPortInFirstScrollFrameEncountered(child,
-                                                              aBuilder)) {
-        return true;
-      }
+  for (nsIFrame* child : aFrame->PrincipalChildList()) {
+    if (MaybeCreateDisplayPortInFirstScrollFrameEncountered(child, aBuilder)) {
+      return true;
     }
   }
   return false;
