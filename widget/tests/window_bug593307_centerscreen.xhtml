@@ -16,8 +16,8 @@
 function onload()
 {
   var SimpleTest = window.opener.SimpleTest;
-  SimpleTest.ok(window.screenX >= 0, "centerscreen window should not start offscreen (X coordinate)");
-  SimpleTest.ok(window.screenY >= 0, "centerscreen window should not start offscreen (Y coordinate)");
+  SimpleTest.ok(window.screenX >= 0, "centerscreen window should not start offscreen (X coordinate): " + window.screenX);
+  SimpleTest.ok(window.screenY >= 0, "centerscreen window should not start offscreen (Y coordinate): " + window.screenY);
   window.opener.finished();
 }
 ]]>

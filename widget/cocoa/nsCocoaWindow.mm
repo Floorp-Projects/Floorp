@@ -297,44 +297,6 @@ static NSScreen* FindTargetScreenForRect(const DesktopIntRect& aRect) {
   return targetScreen;
 }
 
-// fits the rect to the screen that contains the largest area of it,
-// or to aScreen if a screen is passed in
-// NB: this operates with aRect in desktop pixels
-static void FitRectToVisibleAreaForScreen(DesktopIntRect& aRect,
-                                          NSScreen* aScreen) {
-  if (!aScreen) {
-    aScreen = FindTargetScreenForRect(aRect);
-  }
-
-  DesktopIntRect screenBounds =
-      nsCocoaUtils::CocoaRectToGeckoRect([aScreen visibleFrame]);
-
-  if (aRect.width > screenBounds.width) {
-    aRect.width = screenBounds.width;
-  }
-  if (aRect.height > screenBounds.height) {
-    aRect.height = screenBounds.height;
-  }
-
-  if (aRect.x - screenBounds.x + aRect.width > screenBounds.width) {
-    aRect.x += screenBounds.width - (aRect.x - screenBounds.x + aRect.width);
-  }
-  if (aRect.y - screenBounds.y + aRect.height > screenBounds.height) {
-    aRect.y += screenBounds.height - (aRect.y - screenBounds.y + aRect.height);
-  }
-
-  // If the left/top edge of the window is off the screen in either direction,
-  // then set the window to start at the left/top edge of the screen.
-  if (aRect.x < screenBounds.x ||
-      aRect.x > (screenBounds.x + screenBounds.width)) {
-    aRect.x = screenBounds.x;
-  }
-  if (aRect.y < screenBounds.y ||
-      aRect.y > (screenBounds.y + screenBounds.height)) {
-    aRect.y = screenBounds.y;
-  }
-}
-
 DesktopToLayoutDeviceScale ParentBackingScaleFactor(nsIWidget* aParent,
                                                     NSView* aParentView) {
   if (aParent) {
@@ -392,9 +354,6 @@ nsresult nsCocoaWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
   // we have to provide an autorelease pool (see bug 559075).
   nsAutoreleasePool localPool;
 
-  DesktopIntRect newBounds = aRect;
-  FitRectToVisibleAreaForScreen(newBounds, nullptr);
-
   // Set defaults which can be overriden from aInitData in BaseCreate
   mWindowType = WindowType::TopLevel;
   mBorderStyle = BorderStyle::Default;
@@ -431,7 +390,7 @@ nsresult nsCocoaWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
     // now we can convert widgetRect to device pixels for the window we created,
     // as the child view expects a rect expressed in the dev pix of its parent
     LayoutDeviceIntRect devRect =
-        RoundedToInt(newBounds * GetDesktopToDeviceScale());
+        RoundedToInt(aRect * GetDesktopToDeviceScale());
     return CreatePopupContentView(devRect, aInitData);
   }
 
@@ -2165,10 +2124,6 @@ void nsCocoaWindow::DoResize(double aX, double aY, double aWidth,
   DesktopIntRect newBounds(NSToIntRound(aX), NSToIntRound(aY),
                            NSToIntRound(width / scale),
                            NSToIntRound(height / scale));
-
-  // constrain to the screen that contains the largest area of the new rect
-  FitRectToVisibleAreaForScreen(
-      newBounds, aConstrainToCurrentScreen ? [mWindow screen] : nullptr);
 
   // convert requested bounds into Cocoa coordinate system
   NSRect newFrame = nsCocoaUtils::GeckoRectToCocoaRect(newBounds);

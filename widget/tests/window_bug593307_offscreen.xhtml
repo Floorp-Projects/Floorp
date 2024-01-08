@@ -19,7 +19,9 @@ var finish = window.arguments[1];
 
 function onLoad()
 {
-  centerscreen = window.openDialog('window_bug593307_centerscreen.xhtml','', 'chrome,centerscreen,dependent,dialog=no');
+  setTimeout(() => {
+    centerscreen = window.openDialog('window_bug593307_centerscreen.xhtml','', 'chrome,centerscreen,dependent,dialog=no');
+  }, 0);
 }
 
 function finished() {
