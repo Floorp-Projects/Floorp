@@ -180,11 +180,19 @@ class TracerActor extends Actor {
    *
    * @param {Boolean} enabled
    *        True if the tracer starts tracing, false it it stops.
+   * @param {String} reason
+   *        Optional string to justify why the tracer stopped.
+   * @return {Boolean}
+   *         Return true, if the JavaScriptTracer should log a message to stdout.
    */
-  onTracingToggled(enabled) {
+  onTracingToggled(enabled, reason) {
+    // stopTracing will clear `logMethod`, so compute this before calling it.
+    const shouldLogToStdout = this.logMethod == LOG_METHODS.STDOUT;
+
     if (!enabled) {
       this.stopTracing();
     }
+    return shouldLogToStdout;
   }
 
   onTracingInfiniteLoop() {
