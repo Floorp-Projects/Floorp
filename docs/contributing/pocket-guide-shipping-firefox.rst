@@ -160,7 +160,7 @@ PI Request deadline                         Nightly W1       Friday            M
 Feature technical documentation due         Nightly W2       Friday            Deadline for features requiring manual QA
 Beta release notes draft                    Nightly W4       Wednesday
 Nightly features Go/No-Go decisions         Nightly W4       Wednesday
-Feature Complete Milestone                  Nightly W4       Wednesday         Last day to land risky patches and/or enable new features
+Feature Complete Milestone                  Nightly W4       Thursday          Last day to land risky patches and/or enable new features
 Nightly soft code freeze start              Nightly W4       Thursday          Stabilization period in preparation to merge to Beta
 QA Test Plan approval due                   Nightly W4       Friday            Last day to provide QA with feature Test Plan sign-offs
 String freeze                               Nightly W4       Friday            Modification or deletion of strings exposed to the end-users is not allowed
