@@ -211,6 +211,12 @@ class ScriptLoadRequest
                          : ScriptText<Utf8Unit>().clearAndFree();
   }
 
+  size_t ReceivedScriptTextLength() const { return mReceivedScriptTextLength; }
+
+  void SetReceivedScriptTextLength(size_t aLength) {
+    mReceivedScriptTextLength = aLength;
+  }
+
   mozilla::dom::RequestPriority FetchPriority() const {
     return mFetchOptions->mFetchPriority;
   }
@@ -312,7 +318,7 @@ class ScriptLoadRequest
 
   // The length of script source text, set when reading completes. This is used
   // since mScriptData is cleared when the source is passed to the JS engine.
-  size_t mScriptTextLength;
+  size_t mReceivedScriptTextLength;
 
   // Holds the SRI serialized hash and the script bytecode for non-inline
   // scripts. The data is laid out according to ScriptBytecodeDataLayout

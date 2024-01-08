@@ -2474,7 +2474,7 @@ bool ScriptLoader::ShouldCacheBytecode(ScriptLoadRequest* aRequest) {
     size_t sourceLength;
     size_t minLength;
     MOZ_ASSERT(aRequest->IsTextSource());
-    sourceLength = aRequest->mScriptTextLength;
+    sourceLength = aRequest->ReceivedScriptTextLength();
     minLength = sourceLengthMin;
     if (sourceLength < minLength) {
       LOG(("ScriptLoadRequest (%p): Bytecode-cache: Script is too small.",

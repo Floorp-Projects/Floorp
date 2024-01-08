@@ -88,7 +88,7 @@ ScriptLoadRequest::ScriptLoadRequest(
       mFetchOptions(aFetchOptions),
       mIntegrity(aIntegrity),
       mReferrer(aReferrer),
-      mScriptTextLength(0),
+      mReceivedScriptTextLength(0),
       mBytecodeOffset(0),
       mURI(aURI),
       mLoadContext(aContext),
