@@ -1924,7 +1924,7 @@ inline MarkStack::SlotsOrElementsRange MarkStack::popSlotsOrElementsRange() {
 
 inline bool MarkStack::ensureSpace(size_t count) {
   if (MOZ_LIKELY((topIndex_ + count) <= capacity())) {
-    return !js::oom::ShouldFailWithOOM();
+    return true;
   }
 
   return enlarge(count);
