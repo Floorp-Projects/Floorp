@@ -525,19 +525,6 @@ class OfflineClockDriver : public ThreadedDriver {
   GraphTime mSlice;
 };
 
-struct TrackAndPromiseForOperation {
-  TrackAndPromiseForOperation(
-      MediaTrack* aTrack, dom::AudioContextOperation aOperation,
-      AbstractThread* aMainThread,
-      MozPromiseHolder<MediaTrackGraph::AudioContextOperationPromise>&&
-          aHolder);
-  TrackAndPromiseForOperation(TrackAndPromiseForOperation&& aOther) noexcept;
-  RefPtr<MediaTrack> mTrack;
-  dom::AudioContextOperation mOperation;
-  RefPtr<AbstractThread> mMainThread;
-  MozPromiseHolder<MediaTrackGraph::AudioContextOperationPromise> mHolder;
-};
-
 enum class AudioInputType { Unknown, Voice };
 
 /**

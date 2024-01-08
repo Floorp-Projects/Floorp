@@ -301,22 +301,6 @@ MediaTime OfflineClockDriver::GetIntervalForIteration() {
   return MillisecondsToMediaTime(mSlice);
 }
 
-TrackAndPromiseForOperation::TrackAndPromiseForOperation(
-    MediaTrack* aTrack, dom::AudioContextOperation aOperation,
-    AbstractThread* aMainThread,
-    MozPromiseHolder<MediaTrackGraph::AudioContextOperationPromise>&& aHolder)
-    : mTrack(aTrack),
-      mOperation(aOperation),
-      mMainThread(aMainThread),
-      mHolder(std::move(aHolder)) {}
-
-TrackAndPromiseForOperation::TrackAndPromiseForOperation(
-    TrackAndPromiseForOperation&& aOther) noexcept
-    : mTrack(std::move(aOther.mTrack)),
-      mOperation(aOther.mOperation),
-      mMainThread(std::move(aOther.mMainThread)),
-      mHolder(std::move(aOther.mHolder)) {}
-
 /* Helper to proxy the GraphInterface methods used by a running
  * mFallbackDriver. */
 class AudioCallbackDriver::FallbackWrapper : public GraphInterface {
