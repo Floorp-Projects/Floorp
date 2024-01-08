@@ -44,6 +44,9 @@ case `uname -s` in
         export LDFLAGS="${LDFLAGS} ${sysroot_flags} -L${xz_prefix}/lib"
         configure_flags_extra=--with-openssl=/usr/local/opt/openssl
 
+        # see https://bugs.python.org/issue22490
+        unset __PYVENV_LAUNCHER__
+
         # see https://bugs.python.org/issue44065
         sed -i -e 's,$CC --print-multiarch,:,' ${python_src}/configure
         export LDFLAGS="${LDFLAGS} -Wl,-rpath -Wl,@loader_path/../.."
@@ -65,6 +68,7 @@ tardir=python
 
 cd `mktemp -d`
 ${python_src}/configure --prefix=/${tardir} --enable-optimizations ${configure_flags_extra} || { exit_status=$? && cat config.log && exit $exit_status ; }
+
 export MAKEFLAGS=-j`nproc`
 make
 make DESTDIR=${work_dir} install
@@ -80,13 +84,13 @@ case `uname -s` in
         cp ${xz_prefix}/lib/liblzma.dylib ${work_dir}/python/lib/
 
         # Instruct the loader to search for the lib in rpath instead of the one used during linking
-        install_name_tool -change /usr/local/opt/openssl@1.1/lib/libssl.1.1.dylib @rpath/libssl.1.1.dylib ${work_dir}/python/lib/python3.8/lib-dynload/_ssl.cpython-38-darwin.so
-        install_name_tool -change /usr/local/opt/openssl@1.1/lib/libcrypto.1.1.dylib @rpath/libcrypto.1.1.dylib ${work_dir}/python/lib/python3.8/lib-dynload/_ssl.cpython-38-darwin.so
-        otool -L ${work_dir}/python/lib/python3.8/lib-dynload/_ssl.cpython-38-darwin.so | grep @rpath/libssl.1.1.dylib
+        install_name_tool -change /usr/local/opt/openssl@1.1/lib/libssl.1.1.dylib @rpath/libssl.1.1.dylib ${work_dir}/python/lib/python3.*/lib-dynload/_ssl.cpython-3*-darwin.so
+        install_name_tool -change /usr/local/opt/openssl@1.1/lib/libcrypto.1.1.dylib @rpath/libcrypto.1.1.dylib ${work_dir}/python/lib/python3.*/lib-dynload/_ssl.cpython-3*-darwin.so
+        otool -L ${work_dir}/python/lib/python3.*/lib-dynload/_ssl.cpython-3*-darwin.so | grep @rpath/libssl.1.1.dylib
 
 
-        install_name_tool -change /xz/lib/liblzma.5.dylib @rpath/liblzma.5.dylib ${work_dir}/python/lib/python3.8/lib-dynload/_lzma.cpython-38-darwin.so
-        otool -L ${work_dir}/python/lib/python3.8/lib-dynload/_lzma.cpython-38-darwin.so | grep @rpath/liblzma.5.dylib
+        install_name_tool -change /xz/lib/liblzma.5.dylib @rpath/liblzma.5.dylib ${work_dir}/python/lib/python3.*/lib-dynload/_lzma.cpython-3*-darwin.so
+        otool -L ${work_dir}/python/lib/python3.*/lib-dynload/_lzma.cpython-3*-darwin.so | grep @rpath/liblzma.5.dylib
 
         # Also modify the shipped libssl to use the shipped libcrypto
         install_name_tool -change /usr/local/Cellar/openssl@1.1/1.1.1h/lib/libcrypto.1.1.dylib @rpath/libcrypto.1.1.dylib ${work_dir}/python/lib/libssl.1.1.dylib
