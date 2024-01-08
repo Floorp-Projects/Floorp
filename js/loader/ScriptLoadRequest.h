@@ -243,6 +243,14 @@ class ScriptLoadRequest
 
   void SetBytecode();
 
+  JS::TranscodeRange Bytecode() const {
+    MOZ_ASSERT(IsBytecode());
+    const auto& bytecode = mScriptBytecode;
+    auto offset = mBytecodeOffset;
+    return JS::TranscodeRange(bytecode.begin() + offset,
+                              bytecode.length() - offset);
+  }
+
   mozilla::CORSMode CORSMode() const { return mFetchOptions->mCORSMode; }
 
   void DropBytecodeCacheReferences();

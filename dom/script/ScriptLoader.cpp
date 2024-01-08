@@ -1776,10 +1776,9 @@ nsresult ScriptLoader::AttemptOffThreadScriptCompile(
   } else {
     MOZ_ASSERT(aRequest->IsBytecode());
 
-    size_t length =
-        aRequest->mScriptBytecode.length() - aRequest->mBytecodeOffset;
+    JS::TranscodeRange bytecode = aRequest->Bytecode();
     if (!StaticPrefs::javascript_options_parallel_parsing() ||
-        length < OffThreadMinimumBytecodeLength) {
+        bytecode.length() < OffThreadMinimumBytecodeLength) {
       return NS_OK;
     }
   }
@@ -2034,11 +2033,9 @@ nsresult ScriptLoader::CreateOffThreadTask(
     JSContext* aCx, ScriptLoadRequest* aRequest, JS::CompileOptions& aOptions,
     CompileOrDecodeTask** aCompileOrDecodeTask) {
   if (aRequest->IsBytecode()) {
+    JS::TranscodeRange bytecode = aRequest->Bytecode();
     JS::DecodeOptions decodeOptions(aOptions);
-    JS::TranscodeRange range(
-        aRequest->mScriptBytecode.begin() + aRequest->mBytecodeOffset,
-        aRequest->mScriptBytecode.length() - aRequest->mBytecodeOffset);
-    RefPtr<ScriptDecodeTask> decodeTask = new ScriptDecodeTask(range);
+    RefPtr<ScriptDecodeTask> decodeTask = new ScriptDecodeTask(bytecode);
     nsresult rv = decodeTask->Init(decodeOptions);
     NS_ENSURE_SUCCESS(rv, rv);
     decodeTask.forget(aCompileOrDecodeTask);
@@ -2623,7 +2620,7 @@ nsresult ScriptLoader::CompileOrDecodeClassicScript(
                                 MarkerInnerWindowIdFromJSContext(aCx),
                                 profilerLabelString);
 
-      rv = aExec.Decode(aRequest->mScriptBytecode, aRequest->mBytecodeOffset);
+      rv = aExec.Decode(aRequest->Bytecode());
     }
 
     // We do not expect to be saving anything when we already have some

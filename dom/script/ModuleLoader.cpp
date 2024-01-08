@@ -237,12 +237,7 @@ nsresult ModuleLoader::CompileFetchedModule(
     JS::DecodeOptions decodeOptions(aOptions);
     decodeOptions.borrowBuffer = true;
 
-    auto& bytecode = aRequest->mScriptBytecode;
-    auto& offset = aRequest->mBytecodeOffset;
-
-    JS::TranscodeRange range(bytecode.begin() + offset,
-                             bytecode.length() - offset);
-
+    JS::TranscodeRange range = aRequest->Bytecode();
     JS::TranscodeResult tr =
         JS::DecodeStencil(aCx, decodeOptions, range, getter_AddRefs(stencil));
     if (tr != JS::TranscodeResult::Ok) {
