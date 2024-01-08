@@ -268,6 +268,11 @@ class ScriptLoadRequest
     mBytecodeOffset = JS::AlignTranscodingBytecodeOffset(sriLength);
   }
 
+  void DropBytecode() {
+    MOZ_ASSERT(IsBytecode() || IsSource());
+    mScriptBytecode.clearAndFree();
+  }
+
   mozilla::CORSMode CORSMode() const { return mFetchOptions->mCORSMode; }
 
   void DropBytecodeCacheReferences();
