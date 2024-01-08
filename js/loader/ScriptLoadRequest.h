@@ -135,6 +135,8 @@ class ScriptLoadRequest
   virtual void SetReady();
 
   enum class State : uint8_t {
+    CheckingCache,
+    PendingFetchingError,
     Fetching,
     Compiling,
     LoadingImports,
@@ -142,10 +144,23 @@ class ScriptLoadRequest
     Canceled
   };
 
+  // Before any attempt at fetching resources from the cache we should first
+  // make sure that the resource does not yet exists in the cache. In which case
+  // we might simply alias its LoadedScript. Otherwise a new one would be
+  // created.
+  // TODO: Add LoadedScript field.
+  bool IsCheckingCache() const { return mState == State::CheckingCache; }
+
+  // Setup and load resources, to fill the LoadedScript and make it usable by
+  // the JavaScript engine.
   bool IsFetching() const { return mState == State::Fetching; }
   bool IsCompiling() const { return mState == State::Compiling; }
   bool IsLoadingImports() const { return mState == State::LoadingImports; }
   bool IsCanceled() const { return mState == State::Canceled; }
+
+  bool IsPendingFetchingError() const {
+    return mState == State::PendingFetchingError;
+  }
 
   // Return whether the request has been completed, either successfully or
   // otherwise.
@@ -240,6 +255,13 @@ class ScriptLoadRequest
   }
 
   void ClearScriptSource();
+
+  // Convert a CheckingCache ScriptLoadRequest into a Fetching one, by creating
+  // a new LoadedScript which is matching the ScriptKind provided when
+  // constructing this ScriptLoadRequest.
+  void NoCacheEntryFound();
+
+  void SetPendingFetchingError();
 
   void MarkForBytecodeEncoding(JSScript* aScript);
 

@@ -659,11 +659,13 @@ already_AddRefed<ScriptLoadRequest> WorkerScriptLoader::CreateScriptLoadRequest(
                 aIsMainScript && !mWorkerRef->Private()->GetParent());
   nsCOMPtr<nsIURI> baseURI = aIsMainScript ? GetInitialBaseURI() : GetBaseURI();
   nsCOMPtr<nsIURI> uri;
+  bool setErrorResult = false;
   nsresult rv =
       ConstructURI(aScriptURL, baseURI, aDocumentEncoding, getter_AddRefs(uri));
   // If we failed to construct the URI, handle it in the LoadContext so it is
   // thrown in the right order.
   if (NS_WARN_IF(NS_FAILED(rv))) {
+    setErrorResult = true;
     loadContext->mLoadResult = rv;
   }
 
@@ -727,6 +729,12 @@ already_AddRefed<ScriptLoadRequest> WorkerScriptLoader::CreateScriptLoadRequest(
 
   // Set the mURL, it will be used for error handling and debugging.
   request->mURL = NS_ConvertUTF16toUTF8(aScriptURL);
+
+  if (setErrorResult) {
+    request->SetPendingFetchingError();
+  } else {
+    request->NoCacheEntryFound();
+  }
 
   return request.forget();
 }

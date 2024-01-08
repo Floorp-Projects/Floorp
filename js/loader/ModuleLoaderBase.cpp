@@ -409,7 +409,7 @@ nsresult ModuleLoaderBase::RestartModuleLoad(ModuleLoadRequest* aRequest) {
 nsresult ModuleLoaderBase::StartOrRestartModuleLoad(ModuleLoadRequest* aRequest,
                                                     RestartRequest aRestart) {
   MOZ_ASSERT(aRequest->mLoader == this);
-  MOZ_ASSERT(aRequest->IsFetching());
+  MOZ_ASSERT(aRequest->IsFetching() || aRequest->IsPendingFetchingError());
 
   aRequest->SetUnknownDataType();
 
@@ -475,7 +475,7 @@ nsresult ModuleLoaderBase::GetFetchedModuleURLs(nsTArray<nsCString>& aURLs) {
 void ModuleLoaderBase::SetModuleFetchStarted(ModuleLoadRequest* aRequest) {
   // Update the module map to indicate that a module is currently being fetched.
 
-  MOZ_ASSERT(aRequest->IsFetching());
+  MOZ_ASSERT(aRequest->IsFetching() || aRequest->IsPendingFetchingError());
   MOZ_ASSERT(!ModuleMapContainsURL(aRequest->mURI));
 
   mFetchingModules.InsertOrUpdate(aRequest->mURI, nullptr);

@@ -1027,6 +1027,7 @@ already_AddRefed<ScriptLoadRequest> ScriptLoader::CreateLoadRequest(
         new ScriptLoadRequest(aKind, aURI, aReferrerPolicy, fetchOptions,
                               aIntegrity, referrer, context);
 
+    aRequest->NoCacheEntryFound();
     return aRequest.forget();
   }
 

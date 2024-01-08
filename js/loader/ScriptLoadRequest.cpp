@@ -81,7 +81,7 @@ ScriptLoadRequest::ScriptLoadRequest(
     ScriptFetchOptions* aFetchOptions, const SRIMetadata& aIntegrity,
     nsIURI* aReferrer, LoadContextBase* aContext)
     : mKind(aKind),
-      mState(State::Fetching),
+      mState(State::CheckingCache),
       mFetchSourceOnly(false),
       mDataType(DataType::eUnknown),
       mReferrerPolicy(aReferrerPolicy),
@@ -155,6 +155,17 @@ ModuleLoadRequest* ScriptLoadRequest::AsModuleRequest() {
 const ModuleLoadRequest* ScriptLoadRequest::AsModuleRequest() const {
   MOZ_ASSERT(IsModuleRequest());
   return static_cast<const ModuleLoadRequest*>(this);
+}
+
+void ScriptLoadRequest::NoCacheEntryFound() {
+  MOZ_ASSERT(IsCheckingCache());
+  MOZ_ASSERT(mURI);
+  mState = State::Fetching;
+}
+
+void ScriptLoadRequest::SetPendingFetchingError() {
+  MOZ_ASSERT(IsCheckingCache());
+  mState = State::PendingFetchingError;
 }
 
 void ScriptLoadRequest::SetBytecode() {
