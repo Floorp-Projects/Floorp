@@ -4,6 +4,8 @@
 
 ---
 $schema: moz://mozilla.org/schemas/glean/metrics/2-0-0
+$tags:
+  - 'Firefox :: Search'
 
 search.engine.default:
   engine_id:
