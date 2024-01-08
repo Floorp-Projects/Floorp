@@ -1942,14 +1942,13 @@ namespace xsimd
         {
             using batch_type = batch<T, A>;
             const auto zero = batch_type(0.);
-            auto negx = self < zero;
-            auto iszero = self == zero;
-            constexpr T e = static_cast<T>(2.718281828459045);
-            auto adj_self = select(iszero, batch_type(e), abs(self));
+            auto negself = self < zero;
+            auto iszeropowpos = self == zero && other >= zero;
+            auto adj_self = select(iszeropowpos, batch_type(1), abs(self));
             batch_type z = exp(other * log(adj_self));
-            z = select(iszero, zero, z);
-            z = select(is_odd(other) && negx, -z, z);
-            auto invalid = negx && !(is_flint(other) || isinf(other));
+            z = select(iszeropowpos, zero, z);
+            z = select(is_odd(other) && negself, -z, z);
+            auto invalid = negself && !(is_flint(other) || isinf(other));
             return select(invalid, constants::nan<batch_type>(), z);
         }
 
