@@ -759,7 +759,7 @@
     <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="fxa_received_tab_channel_name">ਮਿਲੀਆਂ ਟੈਬਾਂ</string>
     <!-- Description of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
-    <string name="fxa_received_tab_channel_description">ਹੋਰ ਫਾਇਰਫਾਕਸ ਡਿਵਾਈਸਾਂ ਤੋਂ ਮਿਲੀਆਂ ਟੈਬਾਂ ਲਈ ਸੂਚਨਾਵਾਂ ਹਨ।</string>
+    <string name="fxa_received_tab_channel_description">ਹੋਰ Firefox ਡਿਵਾਈਸਾਂ ਤੋਂ ਮਿਲੀਆਂ ਟੈਬਾਂ ਲਈ ਸੂਚਨਾਵਾਂ ਹਨ।</string>
     <!--  The body for these is the URL of the tab received  -->
     <string name="fxa_tab_received_notification_name">ਟੈਬ ਮਿਲੀ</string>
     <!-- %s is the device name -->
@@ -1324,7 +1324,7 @@
     <!-- An option to connect additional devices -->
     <string name="sync_connect_device">ਹੋਰ ਡਿਵਾਈਸ ਨਾਲ ਕਨੈਕਟ ਕਰੋ</string>
     <!-- The dialog text shown when additional devices are not available -->
-    <string name="sync_connect_device_dialog">ਟੈਬ ਭੇਜਣ ਲਈ, ਘੱਟੋ-ਘੱਟ ਹੋਰ ਡਿਵਾਈਸ ‘ਤੇ ਫਾਇਰਫਾਕਸ ਵਿੱਚ ਸਾਈਨ ਇਨ ਕਰੋ।</string>
+    <string name="sync_connect_device_dialog">ਟੈਬ ਭੇਜਣ ਲਈ, ਘੱਟੋ-ਘੱਟ ਹੋਰ ਡਿਵਾਈਸ ਉੱਤੇ Firefox ਵਿੱਚ ਸਾਈਨ ਇਨ ਕਰੋ।</string>
     <!-- Confirmation dialog button -->
     <string name="sync_confirmation_button">ਸਮਝ ਗਏ</string>
 
@@ -1522,7 +1522,7 @@
     <!-- Title of QR Pairing Fragment -->
     <string name="sync_scan_code">ਕੋਡ ਸਕੈਨ ਕਰੋ</string>
     <!-- Instructions on how to access pairing -->
-    <string name="sign_in_instructions"><![CDATA[ਆਪਣੇ ਕੰਪਿਊਟਰ ‘ਤੇ ਫਾਇਰਫਾਕਸ ਖੋਲ੍ਹੋ ਅਤੇ <b>https://firefox.com/pair</b> ‘ਤੇ ਜਾਓ]]></string>
+    <string name="sign_in_instructions"><![CDATA[ਆਪਣੇ ਕੰਪਿਊਟਰ ‘ਤੇ Firefox ਖੋਲ੍ਹੋ ਅਤੇ <b>https://firefox.com/pair</b> ‘ਤੇ ਜਾਓ]]></string>
     <!-- Text shown for sign in pairing when ready -->
     <string name="sign_in_ready_for_scan">ਸਕੈਨ ਕਰਨ ਲਈ ਤਿਆਰ</string>
     <!-- Text shown for settings option for sign with pairing -->
@@ -2051,7 +2051,7 @@
     <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
     <string name="synced_tabs_enable_tab_syncing">ਟੈਬ ਨੂੰ ਸਿੰਕ ਕਰਨਾ ਸਮਰੱਥ ਕਰੋ।</string>
     <!-- Text displayed when user has no tabs that have been synced -->
-    <string name="synced_tabs_no_tabs">ਤੁਹਾਡੇ ਹੋਰ ਡਿਵਾਈਸ ਉੱਤੇ ਫਾਇਰਫਾਕਸ ਵਿੱਚ ਕੋਈ ਵੀ ਖੋਲ੍ਹੀ ਹੋਈ ਟੈਬ ਨਹੀਂ ਹੈ।</string>
+    <string name="synced_tabs_no_tabs">ਤੁਹਾਡੇ ਹੋਰ ਡਿਵਾਈਸ ਉੱਤੇ Firefox ਵਿੱਚ ਕੋਈ ਵੀ ਖੋਲ੍ਹੀ ਹੋਈ ਟੈਬ ਨਹੀਂ ਹੈ।</string>
     <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
     <string name="synced_tabs_sign_in_message">ਤੁਹਾਡੇ ਹੋਰ ਡਿਵਾਈਸਾਂ ਤੋਂ ਟੈਬਾਂ ਦੀ ਸੂਚੀ ਵੇਖੋ।</string>
     <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->

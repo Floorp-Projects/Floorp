@@ -442,7 +442,7 @@
     <!-- Label for cookie banner section in quick settings panel. -->
     <string name="cookie_banner_blocker">Bloqueador de avisos de cookies</string>
     <!-- Preference for removing cookie/consent banners from sites automatically in private mode. See reduce_cookie_banner_summary for additional context. -->
-    <string name="preferences_cookie_banner_reduction_private_mode">Bloqueador de avisos de cookies na navegação privada</string>
+    <string name="preferences_cookie_banner_reduction_private_mode">Bloqueador de avisos de cookies na navegação privativa</string>
     <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
     <string name="reduce_cookie_banner_option" moz:RemovedIn="121" tools:ignore="UnusedResources">Reduzir avisos de cookies</string>
     <!-- Summary of cookie banner handling preference if the setting disabled is set to off -->
@@ -2347,7 +2347,7 @@
     <!-- Title for the translation dialog that allows a user to translate the webpage. -->
     <string name="translations_bottom_sheet_title">Traduzir esta página?</string>
     <!-- Title for the translation dialog that allows a user to translate the webpage when a user uses the translation feature the first time. The first parameter is the name of the application, for example, "Fenix". -->
-    <string name="translations_bottom_sheet_title_first_time">Experimente tradução privada no %1$s</string>
+    <string name="translations_bottom_sheet_title_first_time">Experimente tradução privativa no %1$s</string>
     <!-- Additional information on the translation dialog that appears when a user uses the translation feature the first time. The first parameter is clickable text with a link, for example, "Learn more". -->
     <string name="translations_bottom_sheet_info_message">Para sua privacidade, o texto de tradução nunca sai do seu dispositivo. Novos idiomas e melhorias em breve! %1$s
 </string>
