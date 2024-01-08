@@ -710,7 +710,7 @@ nsresult GetOSXFolderType(short aDomain, OSType aFolderType,
     nsCOMPtr<nsILocalFileMac> localMacFile(do_QueryInterface(*aLocalFile));
     if (localMacFile) {
       rv = localMacFile->InitWithCFURL(
-          CocoaFileUtils::GetTemporaryFolderCFURLRef());
+          CocoaFileUtils::GetTemporaryFolder().get());
     }
     return rv;
   }
