@@ -1225,7 +1225,8 @@ bool WorkerScriptLoader::EvaluateScript(JSContext* aCx,
 
   // Get the source text.
   ScriptLoadRequest::MaybeSourceText maybeSource;
-  rv = aRequest->GetScriptSource(aCx, &maybeSource);
+  rv = aRequest->GetScriptSource(aCx, &maybeSource,
+                                 aRequest->mLoadContext.get());
   if (NS_FAILED(rv)) {
     mRv.StealExceptionFromJSContext(aCx);
     return false;

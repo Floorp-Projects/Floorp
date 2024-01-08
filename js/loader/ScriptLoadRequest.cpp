@@ -195,7 +195,8 @@ bool ScriptLoadRequest::IsMarkedForBytecodeEncoding() const {
 }
 
 nsresult ScriptLoadRequest::GetScriptSource(JSContext* aCx,
-                                            MaybeSourceText* aMaybeSource) {
+                                            MaybeSourceText* aMaybeSource,
+                                            LoadContextBase* aLoadContext) {
   // If there's no script text, we try to get it from the element
   if (HasScriptLoadContext() && GetScriptLoadContext()->mIsInline) {
     nsAutoString inlineData;

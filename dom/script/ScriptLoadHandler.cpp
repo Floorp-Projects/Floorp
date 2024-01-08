@@ -321,7 +321,7 @@ nsresult ScriptLoadHandler::EnsureKnownDataType(
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (mRequest->mFetchSourceOnly) {
-    mRequest->SetTextSource();
+    mRequest->SetTextSource(mRequest->mLoadContext.get());
     TRACE_FOR_TEST(mRequest->GetScriptLoadContext()->GetScriptElement(),
                    "scriptloader_load_source");
     return NS_OK;
@@ -340,7 +340,7 @@ nsresult ScriptLoadHandler::EnsureKnownDataType(
     MOZ_ASSERT(altDataType.IsEmpty());
   }
 
-  mRequest->SetTextSource();
+  mRequest->SetTextSource(mRequest->mLoadContext.get());
   TRACE_FOR_TEST(mRequest->GetScriptLoadContext()->GetScriptElement(),
                  "scriptloader_load_source");
 
