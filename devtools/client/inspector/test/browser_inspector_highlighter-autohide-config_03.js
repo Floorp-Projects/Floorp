@@ -4,6 +4,10 @@
 
 "use strict";
 
+const { getTimeoutMultiplier } = ChromeUtils.importESModule(
+  "chrome://remote/content/shared/AppInfo.sys.mjs"
+);
+
 // Test that configuring a highlighter to autohide twice
 // will replace the first timer and hide just once.
 add_task(async function () {
@@ -12,8 +16,12 @@ add_task(async function () {
     "data:text/html;charset=utf-8,<p id='one'>TEST 1</p>"
   );
 
-  const ONE_SECOND = 1000;
-  const HALF_SECOND = 500;
+  // On opt builds, use 500ms and 1000ms for popup timeouts.
+  // On debug builds, multiply the first timeout by the platform multiplier to avoid
+  // an extra `hidden` event between the `showHighlighterTypeForNode` commands.
+  const FIRST_POPUP_TIMEOUT = getTimeoutMultiplier() * 500;
+  const SECOND_POPUP_TIMEOUT = 1000;
+
   const nodeFront = await getNodeFront("#one", inspector);
 
   const waitForShowEvents = waitForNEvents(
@@ -31,14 +39,14 @@ add_task(async function () {
   await inspector.highlighters.showHighlighterTypeForNode(
     inspector.highlighters.TYPES.BOXMODEL,
     nodeFront,
-    { duration: HALF_SECOND }
+    { duration: FIRST_POPUP_TIMEOUT }
   );
 
   info("Show Box Model Highlighter again, then hide after one second");
   await inspector.highlighters.showHighlighterTypeForNode(
     inspector.highlighters.TYPES.BOXMODEL,
     nodeFront,
-    { duration: ONE_SECOND }
+    { duration: SECOND_POPUP_TIMEOUT }
   );
 
   info("Waiting for 2 highlighter-shown and 1 highlighter-hidden event");
@@ -62,7 +70,10 @@ add_task(async function () {
   });
 
   info("Wait to see if another highlighter-hidden event is emitted");
-  await Promise.race([waitForExtraEvent, wait(HALF_SECOND + ONE_SECOND)]);
+  await Promise.race([
+    waitForExtraEvent,
+    wait(FIRST_POPUP_TIMEOUT + SECOND_POPUP_TIMEOUT),
+  ]);
 
   is(wasEmitted, false, "An extra highlighter-hidden event was not emitted");
 });
