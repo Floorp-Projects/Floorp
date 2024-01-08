@@ -85,13 +85,10 @@ ScriptLoadRequest::ScriptLoadRequest(
     : mKind(aKind),
       mState(State::CheckingCache),
       mFetchSourceOnly(false),
-      mDataType(DataType::eUnknown),
       mReferrerPolicy(aReferrerPolicy),
       mFetchOptions(aFetchOptions),
       mIntegrity(aIntegrity),
       mReferrer(aReferrer),
-      mReceivedScriptTextLength(0),
-      mBytecodeOffset(0),
       mURI(aURI),
       mLoadContext(aContext),
       mEarlyHintPreloaderId(0) {
@@ -185,17 +182,6 @@ void ScriptLoadRequest::SetPendingFetchingError() {
   mState = State::PendingFetchingError;
 }
 
-void ScriptLoadRequest::SetBytecode() {
-  MOZ_ASSERT(IsUnknownDataType());
-  mDataType = DataType::eBytecode;
-}
-
-void ScriptLoadRequest::ClearScriptSource() {
-  if (IsTextSource()) {
-    ClearScriptText();
-  }
-}
-
 void ScriptLoadRequest::MarkForBytecodeEncoding(JSScript* aScript) {
   MOZ_ASSERT(!IsModuleRequest());
   MOZ_ASSERT(!IsMarkedForBytecodeEncoding());
@@ -209,67 +195,6 @@ bool ScriptLoadRequest::IsMarkedForBytecodeEncoding() const {
   }
 
   return !!mScriptForBytecodeEncoding;
-}
-
-nsresult ScriptLoadRequest::GetScriptSource(JSContext* aCx,
-                                            MaybeSourceText* aMaybeSource,
-                                            LoadContextBase* aLoadContext) {
-  // If there's no script text, we try to get it from the element
-  if (HasScriptLoadContext() && GetScriptLoadContext()->mIsInline) {
-    nsAutoString inlineData;
-    GetScriptLoadContext()->GetScriptElement()->GetScriptText(inlineData);
-
-    size_t nbytes = inlineData.Length() * sizeof(char16_t);
-    JS::UniqueTwoByteChars chars(
-        static_cast<char16_t*>(JS_malloc(aCx, nbytes)));
-    if (!chars) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    memcpy(chars.get(), inlineData.get(), nbytes);
-
-    SourceText<char16_t> srcBuf;
-    if (!srcBuf.init(aCx, std::move(chars), inlineData.Length())) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    aMaybeSource->construct<SourceText<char16_t>>(std::move(srcBuf));
-    return NS_OK;
-  }
-
-  size_t length = ScriptTextLength();
-  if (IsUTF16Text()) {
-    JS::UniqueTwoByteChars chars;
-    chars.reset(ScriptText<char16_t>().extractOrCopyRawBuffer());
-    if (!chars) {
-      JS_ReportOutOfMemory(aCx);
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    SourceText<char16_t> srcBuf;
-    if (!srcBuf.init(aCx, std::move(chars), length)) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    aMaybeSource->construct<SourceText<char16_t>>(std::move(srcBuf));
-    return NS_OK;
-  }
-
-  MOZ_ASSERT(IsUTF8Text());
-  UniquePtr<Utf8Unit[], JS::FreePolicy> chars;
-  chars.reset(ScriptText<Utf8Unit>().extractOrCopyRawBuffer());
-  if (!chars) {
-    JS_ReportOutOfMemory(aCx);
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  SourceText<Utf8Unit> srcBuf;
-  if (!srcBuf.init(aCx, std::move(chars), length)) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  aMaybeSource->construct<SourceText<Utf8Unit>>(std::move(srcBuf));
-  return NS_OK;
 }
 
 //////////////////////////////////////////////////////////////
