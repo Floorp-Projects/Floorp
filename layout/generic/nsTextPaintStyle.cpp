@@ -265,12 +265,12 @@ void nsTextPaintStyle::GetURLSecondaryColor(nscolor* aForeColor) {
                         NS_GET_B(textColor), 127);
 }
 
-void nsTextPaintStyle::GetIMESelectionColors(int32_t aIndex,
+void nsTextPaintStyle::GetIMESelectionColors(uint32_t aIndex,
                                              nscolor* aForeColor,
                                              nscolor* aBackColor) {
   NS_ASSERTION(aForeColor, "aForeColor is null");
   NS_ASSERTION(aBackColor, "aBackColor is null");
-  NS_ASSERTION(aIndex >= 0 && aIndex < 5, "Index out of range");
+  NS_ASSERTION(aIndex < 5, "Index out of range");
 
   nsSelectionStyle* selectionStyle = SelectionStyle(aIndex);
   *aForeColor = selectionStyle->mTextColor;
@@ -278,11 +278,11 @@ void nsTextPaintStyle::GetIMESelectionColors(int32_t aIndex,
 }
 
 bool nsTextPaintStyle::GetSelectionUnderlineForPaint(
-    int32_t aIndex, nscolor* aLineColor, float* aRelativeSize,
+    uint32_t aIndex, nscolor* aLineColor, float* aRelativeSize,
     StyleTextDecorationStyle* aStyle) {
   NS_ASSERTION(aLineColor, "aLineColor is null");
   NS_ASSERTION(aRelativeSize, "aRelativeSize is null");
-  NS_ASSERTION(aIndex >= 0 && aIndex < 5, "Index out of range");
+  NS_ASSERTION(aIndex < 5, "Index out of range");
 
   nsSelectionStyle* selectionStyle = SelectionStyle(aIndex);
   if (selectionStyle->mUnderlineStyle == StyleTextDecorationStyle::None ||
@@ -406,7 +406,7 @@ bool nsTextPaintStyle::InitSelectionColorsAndShadow() {
 }
 
 nsTextPaintStyle::nsSelectionStyle* nsTextPaintStyle::SelectionStyle(
-    int32_t aIndex) {
+    uint32_t aIndex) {
   InitSelectionStyle(aIndex);
   return mSelectionStyle[aIndex].ptr();
 }
@@ -442,8 +442,8 @@ static StyleIDs SelectionStyleIDs[] = {
      LookAndFeel::IntID::SpellCheckerUnderlineStyle,
      LookAndFeel::FloatID::SpellCheckerUnderlineRelativeSize}};
 
-void nsTextPaintStyle::InitSelectionStyle(int32_t aIndex) {
-  NS_ASSERTION(aIndex >= 0 && aIndex < 5, "aIndex is invalid");
+void nsTextPaintStyle::InitSelectionStyle(uint32_t aIndex) {
+  NS_ASSERTION(aIndex < 5, "aIndex is invalid");
   Maybe<nsSelectionStyle>& selectionStyle = mSelectionStyle[aIndex];
   if (selectionStyle) {
     return;  // Already initialized; we don't need to do anything.
@@ -497,14 +497,14 @@ void nsTextPaintStyle::InitSelectionStyle(int32_t aIndex) {
 }
 
 /* static */
-bool nsTextPaintStyle::GetSelectionUnderline(nsIFrame* aFrame, int32_t aIndex,
+bool nsTextPaintStyle::GetSelectionUnderline(nsIFrame* aFrame, uint32_t aIndex,
                                              nscolor* aLineColor,
                                              float* aRelativeSize,
                                              StyleTextDecorationStyle* aStyle) {
   NS_ASSERTION(aFrame, "aFrame is null");
   NS_ASSERTION(aRelativeSize, "aRelativeSize is null");
   NS_ASSERTION(aStyle, "aStyle is null");
-  NS_ASSERTION(aIndex >= 0 && aIndex < 5, "Index out of range");
+  NS_ASSERTION(aIndex < 5, "Index out of range");
 
   StyleIDs& styleID = SelectionStyleIDs[aIndex];
 

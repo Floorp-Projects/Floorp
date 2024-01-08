@@ -5557,7 +5557,7 @@ void nsTextFrame::DrawSelectionDecorations(
     case SelectionType::eIMESelectedClause:
     case SelectionType::eSpellCheck:
     case SelectionType::eHighlight: {
-      int32_t index = nsTextPaintStyle::GetUnderlineStyleIndexForSelectionType(
+      uint32_t index = nsTextPaintStyle::GetUnderlineStyleIndexForSelectionType(
           aSelectionType);
       bool weDefineSelectionUnderline =
           aTextPaintStyle.GetSelectionUnderlineForPaint(
@@ -7403,7 +7403,7 @@ bool nsTextFrame::CombineSelectionUnderlineRect(nsPresContext* aPresContext,
     }
 
     float relativeSize;
-    int32_t index = nsTextPaintStyle::GetUnderlineStyleIndexForSelectionType(
+    uint32_t index = nsTextPaintStyle::GetUnderlineStyleIndexForSelectionType(
         sd->mSelectionType);
     if (sd->mSelectionType == SelectionType::eSpellCheck) {
       if (!nsTextPaintStyle::GetSelectionUnderline(
