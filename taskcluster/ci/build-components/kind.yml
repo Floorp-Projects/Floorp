@@ -85,28 +85,24 @@ job-defaults:
                             - ':{component}:assembleAndroidTest'
                             - ':{component}:test'
                             - ':{component}:lint'
-                            - 'githubBuildDetails'
                         # No testRelease on this task, gradle task isn't defined
                         tooling-detekt:
                             - ':{component}:assemble'
                             - ':{component}:assembleAndroidTest'
                             - ':{component}:test'
                             - ':{component}:lintRelease'
-                            - 'githubBuildDetails'
                         # No publish on these tasks
                         tooling-fetch-tests|samples-.*:
                             - ':{component}:assemble'
                             - ':{component}:assembleAndroidTest'
                             - ':{component}:testRelease'
                             - ':{component}:lintRelease'
-                            - 'githubBuildDetails'
                         default:
                             - ':{component}:assemble'
                             - ':{component}:assembleAndroidTest'
                             - ':{component}:testRelease'
                             - ':{component}:lintRelease'
                             - ':{component}:publish'
-                            - 'githubBuildDetails'
         pre-gradlew:
             - ["cd", "mobile/android/android-components"]
         using: gradlew
