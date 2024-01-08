@@ -11,6 +11,7 @@ import mozilla.components.concept.engine.translate.TranslationOperation
 
 internal object TranslationsStateReducer {
 
+    @Suppress("LongMethod")
     fun reduce(state: BrowserState, action: TranslationsAction): BrowserState = when (action) {
         is TranslationsAction.TranslateExpectedAction -> {
             state.copyWithTranslationsState(action.tabId) {
@@ -54,40 +55,77 @@ internal object TranslationsStateReducer {
             }
 
         is TranslationsAction.TranslateSuccessAction -> {
-            if (TranslationOperation.TRANSLATE == action.operation) {
-                state.copyWithTranslationsState(action.tabId) {
-                    it.copy(
-                        isTranslated = true,
-                        isTranslateProcessing = false,
-                    )
+            when (action.operation) {
+                TranslationOperation.TRANSLATE -> {
+                    state.copyWithTranslationsState(action.tabId) {
+                        it.copy(
+                            isTranslated = true,
+                            isTranslateProcessing = false,
+                            translationError = null,
+                        )
+                    }
                 }
-            } else {
-                // Restore
-                state.copyWithTranslationsState(action.tabId) {
-                    it.copy(
-                        isTranslated = false,
-                        isRestoreProcessing = false,
-                    )
+
+                TranslationOperation.RESTORE -> {
+                    state.copyWithTranslationsState(action.tabId) {
+                        it.copy(
+                            isTranslated = false,
+                            isRestoreProcessing = false,
+                            translationError = null,
+                        )
+                    }
+                }
+
+                TranslationOperation.FETCH_LANGUAGES -> {
+                    // Generally expect [TranslationsAction.TranslateSetLanguagesAction] to be used
+                    // as the success condition since the updated value is needed.
+                    state.copyWithTranslationsState(action.tabId) {
+                        it.copy(
+                            translationError = null,
+                        )
+                    }
                 }
             }
         }
 
         is TranslationsAction.TranslateExceptionAction -> {
-            if (TranslationOperation.TRANSLATE == action.operation) {
-                state.copyWithTranslationsState(action.tabId) {
-                    it.copy(
-                        isTranslateProcessing = false,
-                    )
+            when (action.operation) {
+                TranslationOperation.TRANSLATE -> {
+                    state.copyWithTranslationsState(action.tabId) {
+                        it.copy(
+                            isTranslateProcessing = false,
+                            translationError = action.translationError,
+                        )
+                    }
                 }
-            } else {
-                // Restore
-                state.copyWithTranslationsState(action.tabId) {
-                    it.copy(
-                        isRestoreProcessing = false,
-                    )
+
+                TranslationOperation.RESTORE -> {
+                    state.copyWithTranslationsState(action.tabId) {
+                        it.copy(
+                            isRestoreProcessing = false,
+                            translationError = action.translationError,
+                        )
+                    }
+                }
+
+                TranslationOperation.FETCH_LANGUAGES -> {
+                    state.copyWithTranslationsState(action.tabId) {
+                        it.copy(
+                            supportedLanguages = null,
+                            translationError = action.translationError,
+                        )
+                    }
                 }
             }
         }
+
+        is TranslationsAction.TranslateSetLanguagesAction ->
+            state.copyWithTranslationsState(action.tabId) {
+                it.copy(
+                    supportedLanguages = action.supportedLanguages,
+                    translationError = null,
+                )
+            }
     }
 
     private inline fun BrowserState.copyWithTranslationsState(

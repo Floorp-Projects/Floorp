@@ -41,6 +41,7 @@ import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.engine.shopping.ProductAnalysis
 import mozilla.components.concept.engine.shopping.ProductAnalysisStatus
 import mozilla.components.concept.engine.shopping.ProductRecommendation
+import mozilla.components.concept.engine.translate.TranslationError
 import mozilla.components.concept.engine.translate.TranslationOperation
 import mozilla.components.concept.engine.translate.TranslationOptions
 import mozilla.components.concept.engine.window.WindowRequest
@@ -449,7 +450,7 @@ class EngineObserverTest {
     fun `WHEN onTranslateException is called THEN dispatch a TranslationsAction TranslateExceptionAction`() {
         val store: BrowserStore = mock()
         val observer = EngineObserver("mozilla", store)
-        val exception = Exception()
+        val exception = TranslationError.UnknownError(Exception())
 
         observer.onTranslateException(operation = TranslationOperation.TRANSLATE, exception)
 

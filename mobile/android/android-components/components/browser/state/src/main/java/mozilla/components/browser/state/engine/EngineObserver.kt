@@ -34,6 +34,7 @@ import mozilla.components.concept.engine.mediasession.MediaSession
 import mozilla.components.concept.engine.permission.PermissionRequest
 import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.engine.translate.TranslationEngineState
+import mozilla.components.concept.engine.translate.TranslationError
 import mozilla.components.concept.engine.translate.TranslationOperation
 import mozilla.components.concept.engine.window.WindowRequest
 import mozilla.components.concept.fetch.Response
@@ -484,7 +485,7 @@ internal class EngineObserver(
         store.dispatch(TranslationsAction.TranslateSuccessAction(tabId, operation))
     }
 
-    override fun onTranslateException(operation: TranslationOperation, throwable: Throwable) {
-        store.dispatch(TranslationsAction.TranslateExceptionAction(tabId, operation, throwable))
+    override fun onTranslateException(operation: TranslationOperation, translationError: TranslationError) {
+        store.dispatch(TranslationsAction.TranslateExceptionAction(tabId, operation, translationError))
     }
 }

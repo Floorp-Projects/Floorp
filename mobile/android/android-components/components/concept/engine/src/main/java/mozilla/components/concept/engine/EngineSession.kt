@@ -19,6 +19,7 @@ import mozilla.components.concept.engine.shopping.ProductAnalysis
 import mozilla.components.concept.engine.shopping.ProductAnalysisStatus
 import mozilla.components.concept.engine.shopping.ProductRecommendation
 import mozilla.components.concept.engine.translate.TranslationEngineState
+import mozilla.components.concept.engine.translate.TranslationError
 import mozilla.components.concept.engine.translate.TranslationOperation
 import mozilla.components.concept.engine.translate.TranslationOptions
 import mozilla.components.concept.engine.window.WindowRequest
@@ -369,9 +370,12 @@ abstract class EngineSession(
          * Event to indicate that the translation operation was unsuccessful.
          *
          * @param operation The operation that the translation engine attempted.
-         * @param throwable The exception that occurred during the operation.
+         * @param translationError The exception that occurred during the operation.
          */
-        fun onTranslateException(operation: TranslationOperation, throwable: Throwable) = Unit
+        fun onTranslateException(
+            operation: TranslationOperation,
+            translationError: TranslationError,
+        ) = Unit
     }
 
     /**

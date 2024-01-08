@@ -2880,7 +2880,7 @@ class GeckoEngineSessionTest {
 
             override fun onTranslateException(
                 operation: TranslationOperation,
-                throwable: Throwable,
+                translationError: TranslationError,
             ) {
                 assert(false) { "We should not notify of a failure." }
             }
@@ -2911,7 +2911,7 @@ class GeckoEngineSessionTest {
             }
             override fun onTranslateException(
                 operation: TranslationOperation,
-                throwable: Throwable,
+                translationError: TranslationError,
             ) {
                 assert(false) { "We should not notify of a failure." }
             }
@@ -2943,7 +2943,7 @@ class GeckoEngineSessionTest {
 
             override fun onTranslateException(
                 operation: TranslationOperation,
-                throwable: Throwable,
+                translationError: TranslationError,
             ) {
                 assert(true) { "We should notify of a failure." }
             }
@@ -2974,7 +2974,7 @@ class GeckoEngineSessionTest {
             }
             override fun onTranslateException(
                 operation: TranslationOperation,
-                throwable: Throwable,
+                translationError: TranslationError,
             ) {
                 assert(true) { "We should notify of a failure." }
             }
