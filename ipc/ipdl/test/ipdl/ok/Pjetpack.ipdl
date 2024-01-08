@@ -1,3 +1,4 @@
+[ChildProc=any]
 sync protocol Pjetpack {
 child:
     async __delete__();

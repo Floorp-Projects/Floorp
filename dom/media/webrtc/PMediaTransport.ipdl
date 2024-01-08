@@ -28,6 +28,7 @@ using mozilla::net::NrIceStunAddrArray from "mozilla/net/PStunAddrsParams.h";
 namespace mozilla {
 namespace dom {
 
+[ParentProc=Socket, ChildProc=Content]
 async protocol PMediaTransport {
 #ifdef MOZ_WEBRTC
 parent:

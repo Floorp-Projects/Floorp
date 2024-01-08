@@ -4,6 +4,7 @@ union Union {
     nullable int;
 };
 
+[ChildProc=any]
 protocol Nullable2 {
 child:
     async Msg(Union i);

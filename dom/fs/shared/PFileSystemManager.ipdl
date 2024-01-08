@@ -247,6 +247,7 @@ union FileSystemMoveEntryResponse
 
 }  // namespace fs
 
+[ChildProc=anydom]
 async protocol PFileSystemManager
 {
   manages PFileSystemAccessHandle;

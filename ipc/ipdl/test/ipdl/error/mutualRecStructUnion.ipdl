@@ -17,6 +17,7 @@ struct Z {
     X x;
 };
 
+[ChildProc=any]
 protocol mutualRecStructUnion {
 child:
     async Test(X x, Y y, Z z);

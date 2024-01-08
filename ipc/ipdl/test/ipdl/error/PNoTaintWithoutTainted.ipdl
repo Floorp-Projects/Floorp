@@ -1,5 +1,6 @@
 //error: argument typename `int' of message `foo' has a NoTaint attribute, but the message lacks the Tainted attribute
 
+[ChildProc=any]
 intr protocol PNoTaintWithoutTainted {
 child:
     async foo([NoTaint=passback] int id);

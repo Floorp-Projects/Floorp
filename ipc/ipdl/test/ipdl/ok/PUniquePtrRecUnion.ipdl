@@ -14,6 +14,7 @@ union Z {
     X;
 };
 
+[ChildProc=any]
 protocol PUniquePtrRecUnion {
 child:
     async Test(X x, Y y, Z z);

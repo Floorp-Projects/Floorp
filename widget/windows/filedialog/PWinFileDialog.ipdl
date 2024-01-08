@@ -12,6 +12,7 @@ namespace mozilla {
 namespace widget {
 namespace filedialog {
 
+[ChildProc=Utility]
 protocol PWinFileDialog {
 
 child:

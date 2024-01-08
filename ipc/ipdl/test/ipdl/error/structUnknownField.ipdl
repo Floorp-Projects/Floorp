@@ -4,6 +4,7 @@ struct S {
     Foobers i;
 };
 
+[ChildProc=any]
 protocol structUnknownField {
 child: async __delete__(S s);
 };

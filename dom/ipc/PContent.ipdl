@@ -479,7 +479,7 @@ union PClipboardReadRequestOrError {
  * and a content process. There is exactly one PContentParent/PContentChild pair
  * for each content process.
  */
-[NestedUpTo=inside_cpow, NeedsOtherPid]
+[NestedUpTo=inside_cpow, NeedsOtherPid, ChildProc=Content]
 sync protocol PContent
 {
     manages PBrowser;

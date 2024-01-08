@@ -23,7 +23,7 @@ struct SlowScriptData
   double duration;
 };
 
-[ChildImpl=virtual, ParentImpl=virtual]
+[ChildImpl=virtual, ParentImpl=virtual, ChildProc=Content]
 protocol PProcessHangMonitor
 {
 parent:

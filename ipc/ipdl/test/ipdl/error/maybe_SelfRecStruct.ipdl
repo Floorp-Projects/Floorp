@@ -4,6 +4,7 @@ struct X {
     X? x;
 };
 
+[ChildProc=any]
 protocol maybe_SelfRecStruct {
 child: async Msg(X? aa);
 };
