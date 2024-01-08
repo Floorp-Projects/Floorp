@@ -1384,7 +1384,7 @@ bool ScriptLoader::ProcessInlineScript(nsIScriptElement* aElement,
   request->GetScriptLoadContext()->mColumnNo =
       aElement->GetScriptColumnNumber();
   request->mFetchSourceOnly = true;
-  request->SetTextSource();
+  request->SetTextSource(request->mLoadContext.get());
   TRACE_FOR_TEST_BOOL(request->GetScriptLoadContext()->GetScriptElement(),
                       "scriptloader_load_source");
   CollectScriptTelemetry(request);
@@ -2043,7 +2043,8 @@ nsresult ScriptLoader::CreateOffThreadTask(
   }
 
   MaybeSourceText maybeSource;
-  nsresult rv = aRequest->GetScriptSource(aCx, &maybeSource);
+  nsresult rv = aRequest->GetScriptSource(aCx, &maybeSource,
+                                          aRequest->mLoadContext.get());
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (ShouldApplyDelazifyStrategy(aRequest)) {
@@ -2646,7 +2647,8 @@ nsresult ScriptLoader::CompileOrDecodeClassicScript(
     LOG(("ScriptLoadRequest (%p): Compile And Exec", aRequest));
     MOZ_ASSERT(aRequest->IsTextSource());
     MaybeSourceText maybeSource;
-    rv = aRequest->GetScriptSource(aCx, &maybeSource);
+    rv = aRequest->GetScriptSource(aCx, &maybeSource,
+                                   aRequest->mLoadContext.get());
     if (NS_SUCCEEDED(rv)) {
       AUTO_PROFILER_MARKER_TEXT("ScriptCompileMainThread", JS,
                                 MarkerInnerWindowIdFromJSContext(aCx),
