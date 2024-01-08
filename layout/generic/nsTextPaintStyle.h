@@ -146,7 +146,7 @@ class MOZ_STACK_CLASS nsTextPaintStyle {
   void InitCommonColors();
   bool InitSelectionColorsAndShadow();
 
-  nsSelectionStyle* GetSelectionStyle(int32_t aIndex);
+  nsSelectionStyle* SelectionStyle(int32_t aIndex);
   void InitSelectionStyle(int32_t aIndex);
 
   // Ensures sufficient contrast between the frame background color and the

@@ -272,7 +272,7 @@ void nsTextPaintStyle::GetIMESelectionColors(int32_t aIndex,
   NS_ASSERTION(aBackColor, "aBackColor is null");
   NS_ASSERTION(aIndex >= 0 && aIndex < 5, "Index out of range");
 
-  nsSelectionStyle* selectionStyle = GetSelectionStyle(aIndex);
+  nsSelectionStyle* selectionStyle = SelectionStyle(aIndex);
   *aForeColor = selectionStyle->mTextColor;
   *aBackColor = selectionStyle->mBGColor;
 }
@@ -284,7 +284,7 @@ bool nsTextPaintStyle::GetSelectionUnderlineForPaint(
   NS_ASSERTION(aRelativeSize, "aRelativeSize is null");
   NS_ASSERTION(aIndex >= 0 && aIndex < 5, "Index out of range");
 
-  nsSelectionStyle* selectionStyle = GetSelectionStyle(aIndex);
+  nsSelectionStyle* selectionStyle = SelectionStyle(aIndex);
   if (selectionStyle->mUnderlineStyle == StyleTextDecorationStyle::None ||
       selectionStyle->mUnderlineColor == NS_TRANSPARENT ||
       selectionStyle->mUnderlineRelativeSize <= 0.0f)
@@ -405,7 +405,7 @@ bool nsTextPaintStyle::InitSelectionColorsAndShadow() {
   return true;
 }
 
-nsTextPaintStyle::nsSelectionStyle* nsTextPaintStyle::GetSelectionStyle(
+nsTextPaintStyle::nsSelectionStyle* nsTextPaintStyle::SelectionStyle(
     int32_t aIndex) {
   InitSelectionStyle(aIndex);
   return mSelectionStyle[aIndex].ptr();
