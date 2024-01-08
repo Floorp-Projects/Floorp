@@ -1713,7 +1713,7 @@ bool nsWindow::WaylandPopupConfigure() {
   }
 
   LOG("nsWindow::WaylandPopupConfigure tracked %d anchored %d hint %d\n",
-      mPopupTrackInHierarchy, mPopupAnchored, int(mPopupHint));
+      mPopupTrackInHierarchy, mPopupAnchored, int(mPopupType));
 
   // Permanent state changed and popup is mapped.
   // We need to switch popup type but that's done when popup is mapped
@@ -1731,7 +1731,7 @@ bool nsWindow::WaylandPopupConfigure() {
   // See gdkwindow-wayland.c and
   // should_map_as_popup()/should_map_as_subsurface()
   GdkWindowTypeHint gtkTypeHint;
-  switch (mPopupHint) {
+  switch (mPopupType) {
     case PopupType::Menu:
       // GDK_WINDOW_TYPE_HINT_POPUP_MENU is mapped as xdg_popup by default.
       // We use this type for all menu popups.
@@ -1886,7 +1886,7 @@ void nsWindow::UpdateWaylandPopupHierarchy() {
         // popups are adjacent.
         return false;
       }
-      if (popup->mPopupHint == PopupType::Panel &&
+      if (popup->mPopupType == PopupType::Panel &&
           popup->WaylandPopupIsFirst() &&
           popup->WaylandPopupFitsToplevelWindow(/* aMove */ true)) {
         // Workaround for https://gitlab.gnome.org/GNOME/gtk/-/issues/1986
@@ -2602,7 +2602,7 @@ bool nsWindow::WaylandPopupCheckAndGetAnchor(GdkRectangle* aPopupAnchor,
 void nsWindow::WaylandPopupPrepareForMove() {
   LOG("nsWindow::WaylandPopupPrepareForMove()");
 
-  if (mPopupHint == PopupType::Tooltip) {
+  if (mPopupType == PopupType::Tooltip) {
     // Don't fiddle with tooltips type, just hide it before move-to-rect
     if (mPopupUseMoveToRect && gtk_widget_is_visible(mShell)) {
       HideWaylandPopupWindow(/* aTemporaryHide */ true,
@@ -5731,7 +5731,7 @@ nsAutoCString nsWindow::GetFrameTag() const {
 }
 
 nsCString nsWindow::GetPopupTypeName() {
-  switch (mPopupHint) {
+  switch (mPopupType) {
     case PopupType::Menu:
       return nsCString("Menu");
     case PopupType::Tooltip:
@@ -6091,7 +6091,6 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
   } else if (mWindowType == WindowType::Popup) {
     MOZ_ASSERT(aInitData);
     mGtkWindowRoleName = "Popup";
-    mPopupHint = aInitData->mPopupHint;
 
     LOG("nsWindow::Create() Popup");
 
@@ -6132,7 +6131,7 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
       // Set the window hints on X11 only. Wayland popups are configured
       // at WaylandPopupConfigure().
       GdkWindowTypeHint gtkTypeHint;
-      switch (mPopupHint) {
+      switch (mPopupType) {
         case PopupType::Menu:
           gtkTypeHint = GDK_WINDOW_TYPE_HINT_POPUP_MENU;
           break;
@@ -6153,7 +6152,7 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
       GtkWindowSetTransientFor(GTK_WINDOW(mShell), parentWidget);
 
       // If popup parent is modal, we need to make popup modal too.
-      if (mPopupHint != PopupType::Tooltip &&
+      if (mPopupType != PopupType::Tooltip &&
           gtk_window_get_modal(parentWidget)) {
         gtk_window_set_modal(GTK_WINDOW(mShell), true);
       }
@@ -8259,7 +8258,7 @@ static GdkFilterReturn popup_take_focus_filter(GdkXEvent* gdk_xevent,
   GdkWindow* parent_window = gtk_widget_get_window(GTK_WIDGET(parent));
   if (!parent_window) return GDK_FILTER_CONTINUE;
 
-  // In case the parent has not been deconified.
+  // In case the parent has not been deiconified.
   gdk_window_show_unraised(parent_window);
 
   // Request focus on the parent window.

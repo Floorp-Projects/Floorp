@@ -286,7 +286,6 @@ class nsWindow final : public nsBaseWidget {
   bool IsDestroyed() const { return mIsDestroyed; }
   bool IsPopup() const;
   bool IsWaylandPopup() const;
-  bool IsPIPWindow() const { return mIsPIPWindow; };
   bool IsDragPopup() { return mIsDragPopup; };
 
   nsAutoCString GetDebugTag() const;
@@ -474,7 +473,6 @@ class nsWindow final : public nsBaseWidget {
   void RegisterTouchWindow() override;
 
   nsCOMPtr<nsIWidget> mParent;
-  PopupType mPopupHint{};
   mozilla::Atomic<int, mozilla::Relaxed> mCeiledScaleFactor{1};
   double mFractionalScaleFactor = 0.0;
 
