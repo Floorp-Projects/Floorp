@@ -303,11 +303,6 @@
   value: true
   mirror: always
 
-- name: apz.scrollend-event.content.enabled
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
 # After a user has executed a pan gesture, we may receive momentum phase pan
 # gestures from the OS. This specifies how long we should wait following the
 # pan end gesture for possible momentum phase pan gestures before sending the

@@ -5,7 +5,6 @@
 "use strict";
 
 add_task(async function () {
-  await pushPref("apz.scrollend-event.content.enabled", true);
   await pushPref("dom.element.invokers.enabled", true);
   await pushPref("dom.element.popover.enabled", true);
 
@@ -225,23 +224,6 @@ add_task(async function () {
   await resume(dbg);
   await onReload;
   await toggleEventBreakpoint(dbg, "Load", "event.load.unload");
-});
-
-add_task(async function checkUnavailableEvents() {
-  await pushPref("apz.scrollend-event.content.enabled", false);
-
-  const dbg = await initDebugger(
-    "doc-event-breakpoints.html",
-    "event-breakpoints.js"
-  );
-  await selectSource(dbg, "event-breakpoints.js");
-  await waitForSelectedSource(dbg, "event-breakpoints.js");
-
-  is(
-    await getEventBreakpointCheckbox(dbg, "Control", "event.control.scrollend"),
-    null,
-    `"scrollend" item is not displayed when "apz.scrollend-event.content.enabled" is false`
-  );
 });
 
 function getEventListenersPanel(dbg) {
