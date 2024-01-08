@@ -190,7 +190,7 @@ nsresult nsAppFileLocationProvider::GetProductDirectory(nsIFile** aLocalFile,
   nsCOMPtr<nsILocalFileMac> localDirMac(do_QueryInterface(localDir));
 
   rv = localDirMac->InitWithCFURL(
-      CocoaFileUtils::GetProductDirectoryCFURLRef(aLocal));
+      CocoaFileUtils::GetProductDirectory(aLocal).get());
   if (NS_FAILED(rv)) {
     return rv;
   }
