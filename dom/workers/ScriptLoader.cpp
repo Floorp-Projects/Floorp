@@ -1251,7 +1251,8 @@ bool WorkerScriptLoader::EvaluateScript(JSContext* aCx,
       requestBaseURI = aRequest->mBaseURL;
     }
     classicScript = new JS::loader::ClassicScript(
-        aRequest->ReferrerPolicy(), aRequest->mFetchOptions, requestBaseURI);
+        aRequest->ReferrerPolicy(), aRequest->mFetchOptions, aRequest->mURI);
+    classicScript->SetBaseURL(requestBaseURI);
   }
 
   JS::Rooted<JSScript*> script(aCx);

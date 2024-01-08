@@ -37,18 +37,21 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(LoadedScript)
 
 LoadedScript::LoadedScript(ScriptKind aKind,
                            mozilla::dom::ReferrerPolicy aReferrerPolicy,
-                           ScriptFetchOptions* aFetchOptions, nsIURI* aBaseURL)
+                           ScriptFetchOptions* aFetchOptions, nsIURI* aURI)
     : mKind(aKind),
       mReferrerPolicy(aReferrerPolicy),
       mFetchOptions(aFetchOptions),
-      mBaseURL(aBaseURL) {
+      mURI(aURI) {
   MOZ_ASSERT(mFetchOptions);
-  MOZ_ASSERT(mBaseURL);
+  MOZ_ASSERT(mURI);
 }
 
 LoadedScript::~LoadedScript() { mozilla::DropJSObjects(this); }
 
 void LoadedScript::AssociateWithScript(JSScript* aScript) {
+  // Verify that the rewritten URL is available when manipulating LoadedScript.
+  MOZ_ASSERT(mBaseURL);
+
   // Set a JSScript's private value to point to this object. The JS engine will
   // increment our reference count by calling HostAddRefTopLevelScript(). This
   // is decremented by HostReleaseTopLevelScript() below when the JSScript dies.
@@ -92,19 +95,21 @@ void HostReleaseTopLevelScript(const JS::Value& aPrivate) {
 //////////////////////////////////////////////////////////////
 
 EventScript::EventScript(mozilla::dom::ReferrerPolicy aReferrerPolicy,
-                         ScriptFetchOptions* aFetchOptions, nsIURI* aBaseURL)
-    : LoadedScript(ScriptKind::eEvent, aReferrerPolicy, aFetchOptions,
-                   aBaseURL) {}
+                         ScriptFetchOptions* aFetchOptions, nsIURI* aURI)
+    : LoadedScript(ScriptKind::eEvent, aReferrerPolicy, aFetchOptions, aURI) {
+  // EventScripts are not using ScriptLoadRequest, and mBaseURL and mURI are
+  // the same thing.
+  SetBaseURL(aURI);
+}
 
 //////////////////////////////////////////////////////////////
 // ClassicScript
 //////////////////////////////////////////////////////////////
 
 ClassicScript::ClassicScript(mozilla::dom::ReferrerPolicy aReferrerPolicy,
-                             ScriptFetchOptions* aFetchOptions,
-                             nsIURI* aBaseURL)
-    : LoadedScript(ScriptKind::eClassic, aReferrerPolicy, aFetchOptions,
-                   aBaseURL) {}
+                             ScriptFetchOptions* aFetchOptions, nsIURI* aURI)
+    : LoadedScript(ScriptKind::eClassic, aReferrerPolicy, aFetchOptions, aURI) {
+}
 
 //////////////////////////////////////////////////////////////
 // ModuleScript
@@ -130,9 +135,8 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(ModuleScript, LoadedScript)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 ModuleScript::ModuleScript(mozilla::dom::ReferrerPolicy aReferrerPolicy,
-                           ScriptFetchOptions* aFetchOptions, nsIURI* aBaseURL)
-    : LoadedScript(ScriptKind::eModule, aReferrerPolicy, aFetchOptions,
-                   aBaseURL),
+                           ScriptFetchOptions* aFetchOptions, nsIURI* aURI)
+    : LoadedScript(ScriptKind::eModule, aReferrerPolicy, aFetchOptions, aURI),
       mDebuggerDataInitialized(false) {
   MOZ_ASSERT(!ModuleRecord());
   MOZ_ASSERT(!HasParseError());

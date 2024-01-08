@@ -28,11 +28,12 @@ class LoadedScript : public nsISupports {
   ScriptKind mKind;
   const mozilla::dom::ReferrerPolicy mReferrerPolicy;
   RefPtr<ScriptFetchOptions> mFetchOptions;
+  nsCOMPtr<nsIURI> mURI;
   nsCOMPtr<nsIURI> mBaseURL;
 
  protected:
   LoadedScript(ScriptKind aKind, mozilla::dom::ReferrerPolicy aReferrerPolicy,
-               ScriptFetchOptions* aFetchOptions, nsIURI* aBaseURL);
+               ScriptFetchOptions* aFetchOptions, nsIURI* aURI);
 
   virtual ~LoadedScript();
 
@@ -54,6 +55,11 @@ class LoadedScript : public nsISupports {
     return mReferrerPolicy;
   }
 
+  nsIURI* GetURI() const { return mURI; }
+  void SetBaseURL(nsIURI* aBaseURL) {
+    MOZ_ASSERT(!mBaseURL);
+    mBaseURL = aBaseURL;
+  }
   nsIURI* BaseURL() const { return mBaseURL; }
 
   void AssociateWithScript(JSScript* aScript);
@@ -64,7 +70,7 @@ class ClassicScript final : public LoadedScript {
 
  public:
   ClassicScript(mozilla::dom::ReferrerPolicy aReferrerPolicy,
-                ScriptFetchOptions* aFetchOptions, nsIURI* aBaseURL);
+                ScriptFetchOptions* aFetchOptions, nsIURI* aURI);
 };
 
 class EventScript final : public LoadedScript {
@@ -72,7 +78,7 @@ class EventScript final : public LoadedScript {
 
  public:
   EventScript(mozilla::dom::ReferrerPolicy aReferrerPolicy,
-              ScriptFetchOptions* aFetchOptions, nsIURI* aBaseURL);
+              ScriptFetchOptions* aFetchOptions, nsIURI* aURI);
 };
 
 // A single module script. May be used to satisfy multiple load requests.
@@ -91,7 +97,7 @@ class ModuleScript final : public LoadedScript {
                                                          LoadedScript)
 
   ModuleScript(mozilla::dom::ReferrerPolicy aReferrerPolicy,
-               ScriptFetchOptions* aFetchOptions, nsIURI* aBaseURL);
+               ScriptFetchOptions* aFetchOptions, nsIURI* aURI);
 
   void SetModuleRecord(JS::Handle<JSObject*> aModuleRecord);
   void SetParseError(const JS::Value& aError);
