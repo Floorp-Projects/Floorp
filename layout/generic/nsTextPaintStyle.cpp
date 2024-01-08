@@ -270,7 +270,7 @@ void nsTextPaintStyle::GetIMESelectionColors(uint32_t aIndex,
                                              nscolor* aBackColor) {
   NS_ASSERTION(aForeColor, "aForeColor is null");
   NS_ASSERTION(aBackColor, "aBackColor is null");
-  NS_ASSERTION(aIndex < 5, "Index out of range");
+  NS_ASSERTION(aIndex < eNumSelectionTypes, "Index out of range");
 
   nsSelectionStyle* selectionStyle = SelectionStyle(aIndex);
   *aForeColor = selectionStyle->mTextColor;
@@ -282,7 +282,7 @@ bool nsTextPaintStyle::GetSelectionUnderlineForPaint(
     StyleTextDecorationStyle* aStyle) {
   NS_ASSERTION(aLineColor, "aLineColor is null");
   NS_ASSERTION(aRelativeSize, "aRelativeSize is null");
-  NS_ASSERTION(aIndex < 5, "Index out of range");
+  NS_ASSERTION(aIndex < eNumSelectionTypes, "Index out of range");
 
   nsSelectionStyle* selectionStyle = SelectionStyle(aIndex);
   if (selectionStyle->mUnderlineStyle == StyleTextDecorationStyle::None ||
@@ -443,7 +443,7 @@ static StyleIDs SelectionStyleIDs[] = {
      LookAndFeel::FloatID::SpellCheckerUnderlineRelativeSize}};
 
 void nsTextPaintStyle::InitSelectionStyle(uint32_t aIndex) {
-  NS_ASSERTION(aIndex < 5, "aIndex is invalid");
+  NS_ASSERTION(aIndex < eNumSelectionTypes, "aIndex is invalid");
   Maybe<nsSelectionStyle>& selectionStyle = mSelectionStyle[aIndex];
   if (selectionStyle) {
     return;  // Already initialized; we don't need to do anything.
@@ -504,7 +504,7 @@ bool nsTextPaintStyle::GetSelectionUnderline(nsIFrame* aFrame, uint32_t aIndex,
   NS_ASSERTION(aFrame, "aFrame is null");
   NS_ASSERTION(aRelativeSize, "aRelativeSize is null");
   NS_ASSERTION(aStyle, "aStyle is null");
-  NS_ASSERTION(aIndex < 5, "Index out of range");
+  NS_ASSERTION(aIndex < eNumSelectionTypes, "Index out of range");
 
   StyleIDs& styleID = SelectionStyleIDs[aIndex];
 
