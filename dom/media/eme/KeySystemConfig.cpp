@@ -74,11 +74,7 @@ bool KeySystemConfig::CreateKeySystemConfigs(
     return false;
   }
 
-  bool useGMPClearKey = true;
-#ifdef MOZ_WMF_CDM
-  useGMPClearKey = !StaticPrefs::media_eme_wmf_clearkey_enabled();
-#endif
-  if (IsClearkeyKeySystem(aKeySystem) && useGMPClearKey) {
+  if (IsClearkeyKeySystem(aKeySystem)) {
     KeySystemConfig* config = aOutConfigs.AppendElement();
     config->mKeySystem = aKeySystem;
     config->mInitDataTypes.AppendElement(u"cenc"_ns);
@@ -211,8 +207,7 @@ bool KeySystemConfig::CreateKeySystemConfigs(
   }
 #ifdef MOZ_WMF_CDM
   if (IsPlayReadyKeySystemAndSupported(aKeySystem) ||
-      IsWidevineExperimentKeySystemAndSupported(aKeySystem) ||
-      IsWMFClearKeySystemAndSupported(aKeySystem)) {
+      IsWidevineExperimentKeySystemAndSupported(aKeySystem)) {
     RefPtr<WMFCDMImpl> cdm = MakeRefPtr<WMFCDMImpl>(aKeySystem);
     return cdm->GetCapabilities(aOutConfigs);
   }
