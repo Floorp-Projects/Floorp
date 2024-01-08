@@ -40,8 +40,8 @@ add_task(async function () {
   ok(msg.textContent.includes("Toggles the JavaScript tracer"));
 
   info("Test toggling the tracer ON");
-  // Pass `console-api` specific classname as the command results aren't logged as "result".
-  // Instead the frontend log a message as a console API message.
+  // Pass `console-api` specific classname as the command results don't log anything.
+  // Instead a JSTRACER_STATE resource logs a console-api message.
   msg = await evaluateExpressionInConsole(
     hud,
     ":trace --logMethod console --prefix foo --values --on-next-interaction",

@@ -126,6 +126,10 @@ function transformResource(resource, persistLogs) {
       return transformTraceResource(resource);
     }
 
+    case ResourceCommand.TYPES.JSTRACER_STATE: {
+      return transformTracerStateResource(resource);
+    }
+
     case "will-navigate": {
       return transformNavigationMessagePacket(resource);
     }
@@ -406,6 +410,36 @@ function transformTraceResource(traceResource) {
     // Allow the identical frames to be coallesced into a unique message
     // with a repeatition counter so that we keep the output short in case of loops.
     allowRepeating: true,
+  });
+}
+
+function transformTracerStateResource(stateResource) {
+  const { targetFront, enabled, logMethod, timeStamp } = stateResource;
+  let message;
+  if (enabled) {
+    if (logMethod == "stdout") {
+      message = l10n.getStr("webconsole.message.commands.startTracingToStdout");
+    } else if (logMethod == "console") {
+      message = l10n.getStr(
+        "webconsole.message.commands.startTracingToWebConsole"
+      );
+    } else if (logMethod == "profiler") {
+      message = l10n.getStr(
+        "webconsole.message.commands.startTracingToProfiler"
+      );
+    } else {
+      throw new Error(`Unsupported tracer log method ${logMethod}`);
+    }
+  } else {
+    message = l10n.getStr("webconsole.message.commands.stopTracing");
+  }
+  return new ConsoleMessage({
+    targetFront,
+    source: MESSAGE_SOURCE.CONSOLE_API,
+    type: MESSAGE_TYPE.LOG,
+    level: MESSAGE_LEVEL.LOG,
+    messageText: message,
+    timeStamp,
   });
 }
 
