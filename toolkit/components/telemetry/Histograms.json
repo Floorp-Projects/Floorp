@@ -1443,8 +1443,9 @@
     "low": 32768,
     "high": 16777216,
     "n_buckets": 100,
-    "bug_numbers": [1226196],
-    "description": "Resident memory size (KB)"
+    "bug_numbers": [1226196, 1870550],
+    "description": "Resident memory size (KB)",
+    "releaseChannelCollection": "opt-out"
   },
   "MEMORY_RESIDENT_PEAK": {
     "record_in_processes": ["main", "content"],
@@ -1458,8 +1459,9 @@
     "low": 32768,
     "high": 16777216,
     "n_buckets": 100,
-    "bug_numbers": [1551648],
-    "description": "Peak resident memory size (KB)"
+    "bug_numbers": [1551648, 1870550],
+    "description": "Peak resident memory size (KB)",
+    "releaseChannelCollection": "opt-out"
   },
   "MEMORY_TOTAL": {
     "record_in_processes": ["main"],
@@ -1493,13 +1495,14 @@
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
     "alert_emails": ["memshrink-telemetry-alerts@mozilla.com"],
-    "bug_numbers": [1198209],
+    "bug_numbers": [1198209, 1870550],
     "expires_in_version": "never",
     "kind": "exponential",
     "low": 32768,
     "high": 16777216,
     "n_buckets": 100,
-    "description": "Unique Set Size (KB)"
+    "description": "Unique Set Size (KB)",
+    "releaseChannelCollection": "opt-out"
   },
   "MEMORY_UNIQUE_CONTENT_STARTUP": {
     "record_in_processes": ["content"],
