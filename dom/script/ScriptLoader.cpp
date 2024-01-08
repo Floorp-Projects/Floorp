@@ -406,7 +406,6 @@ nsContentPolicyType ScriptLoadRequestToContentPolicyType(
 
 nsresult ScriptLoader::CheckContentPolicy(Document* aDocument,
                                           nsIScriptElement* aElement,
-                                          const nsAString& aType,
                                           const nsAString& aNonce,
                                           ScriptLoadRequest* aRequest) {
   nsContentPolicyType contentPolicyType =
@@ -430,9 +429,9 @@ nsresult ScriptLoader::CheckContentPolicy(Document* aDocument,
   }
 
   int16_t shouldLoad = nsIContentPolicy::ACCEPT;
-  nsresult rv = NS_CheckContentLoadPolicy(
-      aRequest->mURI, secCheckLoadInfo, NS_LossyConvertUTF16toASCII(aType),
-      &shouldLoad, nsContentUtils::GetContentPolicy());
+  nsresult rv =
+      NS_CheckContentLoadPolicy(aRequest->mURI, secCheckLoadInfo, &shouldLoad,
+                                nsContentUtils::GetContentPolicy());
   if (NS_FAILED(rv) || NS_CP_REJECTED(shouldLoad)) {
     if (NS_FAILED(rv) || shouldLoad != nsIContentPolicy::REJECT_TYPE) {
       return NS_ERROR_CONTENT_BLOCKED;
@@ -1037,8 +1036,7 @@ already_AddRefed<ScriptLoadRequest> ScriptLoader::CreateLoadRequest(
   return aRequest.forget();
 }
 
-bool ScriptLoader::ProcessScriptElement(nsIScriptElement* aElement,
-                                        const nsAutoString& aTypeAttr) {
+bool ScriptLoader::ProcessScriptElement(nsIScriptElement* aElement) {
   // We need a document to evaluate scripts.
   NS_ENSURE_TRUE(mDocument, false);
 
@@ -1076,8 +1074,7 @@ bool ScriptLoader::ProcessScriptElement(nsIScriptElement* aElement,
 
   // Step 15. and later in the HTML5 spec
   if (aElement->GetScriptExternal()) {
-    return ProcessExternalScript(aElement, scriptKind, aTypeAttr,
-                                 scriptContent);
+    return ProcessExternalScript(aElement, scriptKind, scriptContent);
   }
 
   return ProcessInlineScript(aElement, scriptKind);
@@ -1091,7 +1088,6 @@ static ParserMetadata GetParserMetadata(nsIScriptElement* aElement) {
 
 bool ScriptLoader::ProcessExternalScript(nsIScriptElement* aElement,
                                          ScriptKind aScriptKind,
-                                         const nsAutoString& aTypeAttr,
                                          nsIContent* aScriptContent) {
   LOG(("ScriptLoader (%p): Process external script for element %p", this,
        aElement));
@@ -1135,8 +1131,8 @@ bool ScriptLoader::ProcessExternalScript(nsIScriptElement* aElement,
   RefPtr<ScriptLoadRequest> request =
       LookupPreloadRequest(aElement, aScriptKind, sriMetadata);
 
-  if (request && NS_FAILED(CheckContentPolicy(mDocument, aElement, aTypeAttr,
-                                              nonce, request))) {
+  if (request &&
+      NS_FAILED(CheckContentPolicy(mDocument, aElement, nonce, request))) {
     LOG(("ScriptLoader (%p): content policy check failed for preload", this));
 
     // Probably plans have changed; even though the preload was allowed seems

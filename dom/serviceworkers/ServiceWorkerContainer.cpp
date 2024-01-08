@@ -318,8 +318,7 @@ already_AddRefed<Promise> ServiceWorkerContainer::Register(
 
   // Check content policy.
   int16_t decision = nsIContentPolicy::ACCEPT;
-  rv = NS_CheckContentLoadPolicy(scriptURI, secCheckLoadInfo,
-                                 "application/javascript"_ns, &decision);
+  rv = NS_CheckContentLoadPolicy(scriptURI, secCheckLoadInfo, &decision);
   if (NS_FAILED(rv)) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return nullptr;

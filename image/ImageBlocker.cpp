@@ -15,7 +15,7 @@ NS_IMPL_ISUPPORTS(ImageBlocker, nsIContentPolicy)
 
 NS_IMETHODIMP
 ImageBlocker::ShouldLoad(nsIURI* aContentLocation, nsILoadInfo* aLoadInfo,
-                         const nsACString& aMimeGuess, int16_t* aShouldLoad) {
+                         int16_t* aShouldLoad) {
   ExtContentPolicyType contentType = aLoadInfo->GetExternalContentPolicyType();
 
   *aShouldLoad = nsIContentPolicy::ACCEPT;
@@ -51,7 +51,6 @@ ImageBlocker::ShouldLoad(nsIURI* aContentLocation, nsILoadInfo* aLoadInfo,
 
 NS_IMETHODIMP
 ImageBlocker::ShouldProcess(nsIURI* aContentLocation, nsILoadInfo* aLoadInfo,
-                            const nsACString& aMimeGuess,
                             int16_t* aShouldProcess) {
   // We block images at load level already, so those should not end up here.
   *aShouldProcess = nsIContentPolicy::ACCEPT;

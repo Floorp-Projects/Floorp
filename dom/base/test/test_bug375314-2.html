@@ -44,7 +44,7 @@ function createChromeScript() {
     },
 
     // nsIContentPolicy implementation
-    shouldLoad(contentLocation, loadInfo, mimeTypeGuess) {
+    shouldLoad(contentLocation, loadInfo) {
       if (contentLocation.asciiSpec === "http://mochi.test:8888/tests/dom/base/test/test_bug375314-2.html/this/is/the/test/url") {
         sendAsyncMessage("loadBlocked", { policyType: loadInfo.externalContentPolicyType});
         return Ci.nsIContentPolicy.REJECT_REQUEST;
@@ -52,7 +52,7 @@ function createChromeScript() {
       return Ci.nsIContentPolicy.ACCEPT;
     },
 
-    shouldProcess(contentLocation, loadInfo, mimeTypeGuess) {
+    shouldProcess(contentLocation, loadInfo) {
       return Ci.nsIContentPolicy.ACCEPT;
     }
   };

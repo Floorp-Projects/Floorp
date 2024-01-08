@@ -718,8 +718,7 @@ nsresult nsXMLContentSink::MaybeProcessXSLTLink(
 
   // Do content policy check
   int16_t decision = nsIContentPolicy::ACCEPT;
-  rv = NS_CheckContentLoadPolicy(url, secCheckLoadInfo,
-                                 NS_ConvertUTF16toUTF8(aType), &decision,
+  rv = NS_CheckContentLoadPolicy(url, secCheckLoadInfo, &decision,
                                  nsContentUtils::GetContentPolicy());
 
   NS_ENSURE_SUCCESS(rv, rv);

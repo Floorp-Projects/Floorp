@@ -37,7 +37,7 @@ function createChromeScript() {
     },
 
     // nsIContentPolicy implementation
-    shouldLoad(contentLocation, loadInfo, mimeTypeGuess) {
+    shouldLoad(contentLocation, loadInfo) {
       if (contentLocation.asciiSpec === EXPECTED_URL) {
         sendAsyncMessage("loadBlocked", { policyType: loadInfo.externalContentPolicyType});
         Services.catMan.deleteCategoryEntry(
@@ -51,7 +51,7 @@ function createChromeScript() {
       return Ci.nsIContentPolicy.ACCEPT;
     },
 
-    shouldProcess(contentLocation, loadInfo, mimeTypeGuess) {
+    shouldProcess(contentLocation, loadInfo) {
       return Ci.nsIContentPolicy.ACCEPT;
     }
   };

@@ -46,7 +46,7 @@ var policy = {
   },
 
   // nsIContentPolicy implementation
-  shouldLoad(contentLocation, loadInfo, mimeTypeGuess) {
+  shouldLoad(contentLocation, loadInfo) {
     let contentType = loadInfo.externalContentPolicyType;
     // Remember last content type seen for the test url
     if (SpecialPowers.wrap(contentLocation).spec == testURL) {
@@ -57,7 +57,7 @@ var policy = {
     return Ci.nsIContentPolicy.ACCEPT;
   },
 
-  shouldProcess(contentLocation, loadInfo, mimeTypeGuess) {
+  shouldProcess(contentLocation, loadInfo) {
     return Ci.nsIContentPolicy.ACCEPT;
   }
 }

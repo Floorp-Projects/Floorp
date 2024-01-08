@@ -39,19 +39,6 @@ interface nsIContentPolicy : nsISupports
      * But if you are fairly sure that no one would care about your more specific
      * type, then it's ok to use TYPE_OTHER.
      *
-     * Extension developers: Whenever it is reasonable, use one of the existing
-     * content types. If none of the existing content types are right for
-     * something you are doing, file a bug in the Core/DOM component that
-     * includes a patch that adds your new content type to the end of the list of
-     * TYPE_* constants here. But, don't start using your new content type until
-     * your patch has been accepted, because it will be uncertain what exact
-     * value and name your new content type will have; in that interim period,
-     * use TYPE_OTHER. In your patch, document your new content type in the style
-     * of the existing ones. In the bug you file, provide a more detailed
-     * description of the new type of content you want Gecko to support, so that
-     * the existing implementations of nsIContentPolicy can be properly modified
-     * to deal with that new type of content.
-     *
      * Implementations of nsIContentPolicy should treat this the same way they
      * treat unknown types, because existing users of TYPE_OTHER may be converted
      * to use new content types.
@@ -525,12 +512,6 @@ interface nsIContentPolicy : nsISupports
    *
    * @param aLoadInfo         the loadinfo of the channel being evaluated.
    *
-   * @param aMimeTypeGuess    OPTIONAL. a guess for the requested content's
-   *                          MIME type, based on information available to
-   *                          the request initiator (e.g., an OBJECT's type
-   *                          attribute); does not reliably reflect the
-   *                          actual MIME type of the requested content
-   *
    * @return ACCEPT or REJECT_*
    *
    * @note shouldLoad can be called while the DOM and layout of the document
@@ -551,8 +532,7 @@ interface nsIContentPolicy : nsISupports
    * above, do them off timeout or event.
    */
   short shouldLoad(in nsIURI      aContentLocation,
-                   in nsILoadInfo aLoadInfo,
-                   in ACString    aMimeTypeGuess);
+                   in nsILoadInfo aLoadInfo);
 
   /**
    * Should the resource be processed?
@@ -566,11 +546,6 @@ interface nsIContentPolicy : nsISupports
    *
    * @param aLoadInfo         the loadinfo of the channel being evaluated.
    *
-   * @param aMimeType         the MIME type of the requested resource (e.g.,
-   *                          image/png), as reported by the networking library,
-   *                          if available (may be empty if inappropriate for
-   *                          the type).
-   *
    * @return ACCEPT or REJECT_*
    *
    * @note shouldProcess can be called while the DOM and layout of the document
@@ -578,8 +553,7 @@ interface nsIContentPolicy : nsISupports
    * what this means for implementors of this method.
    */
   short shouldProcess(in nsIURI      aContentLocation,
-                      in nsILoadInfo aLoadInfo,
-                      in ACString    aMimeType);
+                      in nsILoadInfo aLoadInfo);
 };
 
 typedef nsIContentPolicy_nsContentPolicyType nsContentPolicyType;

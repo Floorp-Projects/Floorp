@@ -187,8 +187,7 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
    * @param aElement The element representing the script to be loaded and
    *        evaluated.
    */
-  bool ProcessScriptElement(nsIScriptElement* aElement,
-                            const nsAutoString& aTypeAttr);
+  bool ProcessScriptElement(nsIScriptElement* aElement);
 
   /**
    * Gets the currently executing script. This is useful if you want to
@@ -452,7 +451,6 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
   void ContinueParserAsync(ScriptLoadRequest* aParserBlockingRequest);
 
   bool ProcessExternalScript(nsIScriptElement* aElement, ScriptKind aScriptKind,
-                             const nsAutoString& aTypeAttr,
                              nsIContent* aScriptContent);
 
   bool ProcessInlineScript(nsIScriptElement* aElement, ScriptKind aScriptKind);
@@ -475,7 +473,6 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
    */
   static nsresult CheckContentPolicy(Document* aDocument,
                                      nsIScriptElement* aElement,
-                                     const nsAString& aType,
                                      const nsAString& aNonce,
                                      ScriptLoadRequest* aRequest);
 

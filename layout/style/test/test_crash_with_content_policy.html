@@ -36,11 +36,11 @@ var policy = {
   },
 
   // nsIContentPolicy implementation
-  shouldLoad: function(contentLocation, loadInfo, mimeTypeGuess) {
+  shouldLoad: function(contentLocation, loadInfo) {
     info(`shouldLoad is invoked for ${SpecialPowers.wrap(contentLocation).spec}`);
     return Ci.nsIContentPolicy.ACCEPT;
   },
-  shouldProcess: function(contentLocation, loadInfo, mimeTypeGuess) {
+  shouldProcess: function(contentLocation, loadInfo) {
     return Ci.nsIContentPolicy.ACCEPT;
   }
 }

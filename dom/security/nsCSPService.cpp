@@ -104,7 +104,6 @@ bool subjectToCSP(nsIURI* aURI, nsContentPolicyType aContentType) {
 
 /* static */ nsresult CSPService::ConsultCSP(nsIURI* aContentLocation,
                                              nsILoadInfo* aLoadInfo,
-                                             const nsACString& aMimeTypeGuess,
                                              int16_t* aDecision) {
   if (!aContentLocation) {
     return NS_ERROR_FAILURE;
@@ -204,13 +203,12 @@ bool subjectToCSP(nsIURI* aURI, nsContentPolicyType aContentType) {
 /* nsIContentPolicy implementation */
 NS_IMETHODIMP
 CSPService::ShouldLoad(nsIURI* aContentLocation, nsILoadInfo* aLoadInfo,
-                       const nsACString& aMimeTypeGuess, int16_t* aDecision) {
-  return ConsultCSP(aContentLocation, aLoadInfo, aMimeTypeGuess, aDecision);
+                       int16_t* aDecision) {
+  return ConsultCSP(aContentLocation, aLoadInfo, aDecision);
 }
 
 NS_IMETHODIMP
 CSPService::ShouldProcess(nsIURI* aContentLocation, nsILoadInfo* aLoadInfo,
-                          const nsACString& aMimeTypeGuess,
                           int16_t* aDecision) {
   if (!aContentLocation) {
     return NS_ERROR_FAILURE;
@@ -236,7 +234,7 @@ CSPService::ShouldProcess(nsIURI* aContentLocation, nsILoadInfo* aLoadInfo,
     return NS_OK;
   }
 
-  return ShouldLoad(aContentLocation, aLoadInfo, aMimeTypeGuess, aDecision);
+  return ShouldLoad(aContentLocation, aLoadInfo, aDecision);
 }
 
 /* nsIChannelEventSink implementation */
