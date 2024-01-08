@@ -1762,7 +1762,7 @@ static bool ParseDate(DateTimeInfo::ForceUTC forceUTC, const CharT* s,
         break;
       }
 
-      if (k == size_t(-1) && (!seenMonthName || mday != -1)) {
+      if (k == size_t(-1)) {
         return false;
       }
 
