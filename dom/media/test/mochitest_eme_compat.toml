@@ -23,6 +23,7 @@
 
 [DEFAULT]
 subsuite = "media"
+tags = "media-engine-compatible"
 skip-if = ["os == 'linux' && (asan || debug)"] # Bug 1476870: common fatal error (shutdown hang) on asan/debug
 support-files = [
   "16bit_wave_extrametadata.wav",
@@ -760,91 +761,33 @@ support-files = [
   "sync.webm",
 ]
 
-["test_eme_autoplay.html"]
+["test_eme_createMediaKeys_iframes.html"]
 skip-if = ["os == 'android'"] # bug 1149374
 scheme = "https"
 
-["test_eme_canvas_blocked.html"]
-skip-if = [
-  "os == 'android'", # bug 1149374
-  "apple_silicon", # bug 1707737
-]
-scheme = "https"
-
-["test_eme_detach_reattach_same_mediakeys_during_playback.html"]
-skip-if = ["os == 'android'"] # bug 1149374
-scheme = "https"
-
-["test_eme_initDataTypes.html"]
+["test_eme_detach_media_keys.html"]
 skip-if = ["os == 'android'"]
 scheme = "https"
 
-["test_eme_missing_pssh.html"]
+["test_eme_getstatusforpolicy.html"]
+skip-if = ["os == 'android'"] # bug 1149374
+scheme = "https"
+
+["test_eme_requestKeySystemAccess.html"]
+skip-if = ["os == 'android'"] # bug 1149374
+scheme = "https"
+
+["test_eme_requestMediaKeySystemAccess_with_app_approval.html"]
+skip-if = ["os == 'android'"] # bug 1149374
+scheme = "https"
+
+["test_eme_request_notifications.html"]
 skip-if = ["os == 'android'"]
 scheme = "https"
 
-["test_eme_non_mse_fails.html"]
+["test_eme_session_callable_value.html"]
+scheme = "https"
+
+["test_eme_setMediaKeys_before_attach_MediaSource.html"]
 skip-if = ["os == 'android'"] # bug 1149374
-scheme = "https"
-
-["test_eme_playback.html"]
-skip-if = [
-  "os == 'android'", # bug 1149374
-  "apple_silicon", # bug 1707737
-]
-
-["test_eme_protection_query.html"]
-skip-if = ["os == 'android'"] # bug 1149374
-scheme = "https"
-
-["test_eme_pssh_in_moof.html"]
-skip-if = ["os == 'android'"] # bug 1149374
-scheme = "https"
-
-["test_eme_sample_groups_playback.html"]
-skip-if = ["os == 'android'"] # bug 1149374
-scheme = "https"
-
-["test_eme_special_key_system.html"]
-skip-if = ["os == 'android'"] # bug 1149374
-scheme = "https"
-
-["test_eme_stream_capture_blocked_case1.html"]
-tags = "mtg capturestream"
-skip-if = ["os == 'android'"] # bug 1149374
-scheme = "https"
-
-["test_eme_stream_capture_blocked_case2.html"]
-tags = "mtg capturestream"
-skip-if = [
-  "os == 'android'", # bug 1149374
-  "apple_silicon", # bug 1707737
-]
-scheme = "https"
-
-["test_eme_stream_capture_blocked_case3.html"]
-tags = "mtg capturestream"
-skip-if = [
-  "os == 'android'", # bug 1149374
-  "apple_silicon", # bug 1707737
-]
-scheme = "https"
-
-["test_eme_unsetMediaKeys_then_capture.html"]
-skip-if = [
-  "xorigin",
-  "os == 'android'", # bug 1149374
-  "apple_silicon", # bug 1707737
-]
-scheme = "https"
-
-["test_eme_waitingforkey.html"]
-skip-if = [
-  "xorigin",
-  "os == 'android'", # bug 1149374
-  "apple_silicon", # bug 1707737
-]
-scheme = "https"
-
-["test_eme_wv_privacy.html"]
 scheme = "https"
