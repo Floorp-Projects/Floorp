@@ -300,41 +300,10 @@ nsWindowsShellService::CheckAllProgIDsExist(bool* aResult) {
   if (!mozilla::widget::WinTaskbar::GetAppUserModelID(aumid)) {
     return NS_OK;
   }
-
-  if (widget::WinUtils::HasPackageIdentity()) {
-    UniquePtr<wchar_t[]> extraProgID;
-    nsresult rv;
-    bool result = true;
-
-    // "FirefoxURL".
-    rv = GetMsixProgId(L"https", extraProgID);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-    result = result && CheckProgIDExists(extraProgID.get());
-
-    // "FirefoxHTML".
-    rv = GetMsixProgId(L".htm", extraProgID);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-    result = result && CheckProgIDExists(extraProgID.get());
-
-    // "FirefoxPDF".
-    rv = GetMsixProgId(L".pdf", extraProgID);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-    result = result && CheckProgIDExists(extraProgID.get());
-
-    *aResult = result;
-  } else {
-    *aResult =
-        CheckProgIDExists(FormatProgID(L"FirefoxURL", aumid.get()).get()) &&
-        CheckProgIDExists(FormatProgID(L"FirefoxHTML", aumid.get()).get()) &&
-        CheckProgIDExists(FormatProgID(L"FirefoxPDF", aumid.get()).get());
-  }
-
+  *aResult =
+      CheckProgIDExists(FormatProgID(L"FirefoxURL", aumid.get()).get()) &&
+      CheckProgIDExists(FormatProgID(L"FirefoxHTML", aumid.get()).get()) &&
+      CheckProgIDExists(FormatProgID(L"FirefoxPDF", aumid.get()).get());
   return NS_OK;
 }
 
