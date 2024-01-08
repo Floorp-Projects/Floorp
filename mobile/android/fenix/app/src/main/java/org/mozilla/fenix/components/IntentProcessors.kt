@@ -52,7 +52,7 @@ class IntentProcessors(
      * Provides intent processing functionality for ACTION_VIEW and ACTION_SEND intents in private tabs.
      */
     val privateIntentProcessor by lazyMonitored {
-        TabIntentProcessor(tabsUseCases, searchUseCases.newTabSearch, isPrivate = true)
+        TabIntentProcessor(tabsUseCases, searchUseCases.newPrivateTabSearch, isPrivate = true)
     }
 
     val customTabIntentProcessor by lazyMonitored {
