@@ -12,7 +12,9 @@ import androidx.core.view.NestedScrollingChild
 import androidx.core.view.NestedScrollingChildHelper
 import androidx.core.view.ViewCompat
 import mozilla.components.concept.engine.InputResultDetail
+import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoView
+import org.mozilla.geckoview.PanZoomController
 
 /**
  * geckoView that supports nested scrolls (for using in a CoordinatorLayout).
@@ -27,7 +29,6 @@ import org.mozilla.geckoview.GeckoView
 
 @Suppress("ClickableViewAccessibility")
 open class NestedGeckoView(context: Context) : GeckoView(context), NestedScrollingChild {
-
     @VisibleForTesting
     internal var lastY: Int = 0
 
@@ -36,7 +37,7 @@ open class NestedGeckoView(context: Context) : GeckoView(context), NestedScrolli
 
     private val scrollConsumed = IntArray(2)
 
-    private var didReceiveFirstTouchMove: Boolean = false
+    private var gestureCanReachParent = true
 
     private var initialDownY: Float = 0f
 
@@ -66,8 +67,6 @@ open class NestedGeckoView(context: Context) : GeckoView(context), NestedScrolli
         when (action) {
             MotionEvent.ACTION_MOVE -> {
                 val allowScroll = !shouldPinOnScreen() && inputResultDetail.isTouchHandledByBrowser()
-                val isFirstTouchMove = !didReceiveFirstTouchMove
-                didReceiveFirstTouchMove = true
 
                 var deltaY = lastY - eventY
 
@@ -86,21 +85,20 @@ open class NestedGeckoView(context: Context) : GeckoView(context), NestedScrolli
                 }
 
                 // If this event is the first touch move event, there are two possible cases
-                // where we still need to wait for the reponse for this first touch move event.
+                // where we still need to wait for the response for this first touch move event.
                 // a) we haven't yet received the response from GeckoView because of active touch
-                //    event listners etc.
+                //    event listeners etc.
                 // b) we have received the response for the touch down event that GeckoView
                 //    consumed the event
-                // In the case of a) it's possible a touch move event listner does preventDefault()
+                // In the case of a) it's possible a touch move event listener does preventDefault()
                 // for this touch move event, then any subsequent touch events need to be directly
                 // routed to GeckoView rather than being intercepted.
                 // In the case of b) if GeckoView consumed this touch move event to scroll down the
                 // web content, any touch event interception should not be allowed since, for example
                 // SwipeRefreshLayout is supposed to trigger a refresh after the user started scroll
                 // down if the user restored the scroll position at the top.
-                if (isFirstTouchMove &&
-                    (inputResultDetail.isTouchHandlingUnknown() ||
-                     inputResultDetail.isTouchHandledByBrowser())) {
+                val hasDragGestureStarted = event.y != initialDownY
+                if (gestureCanReachParent && hasDragGestureStarted) {
                     updateInputResult(event)
                     event.recycle()
                     return true
@@ -108,8 +106,6 @@ open class NestedGeckoView(context: Context) : GeckoView(context), NestedScrolli
             }
 
             MotionEvent.ACTION_DOWN -> {
-                didReceiveFirstTouchMove = false
-
                 // A new gesture started. Ask GV if it can handle this.
                 parent?.requestDisallowInterceptTouchEvent(true)
                 updateInputResult(event)
@@ -138,6 +134,7 @@ open class NestedGeckoView(context: Context) : GeckoView(context), NestedScrolli
                 // Allow touch event interception here so that the next ACTION_DOWN event can be properly
                 // intercepted by the parent.
                 parent?.requestDisallowInterceptTouchEvent(false)
+                gestureCanReachParent = true
             }
         }
 
@@ -158,37 +155,47 @@ open class NestedGeckoView(context: Context) : GeckoView(context), NestedScrolli
     @SuppressLint("WrongThread") // Lint complains startNestedScroll() needs to be called on the main thread
     @VisibleForTesting
     internal fun updateInputResult(event: MotionEvent) {
-        super.onTouchEventForDetailResult(event)
+        val eventAction = event.actionMasked
+        val eventY = event.y
+        superOnTouchEventForDetailResult(event)
             .accept {
+                // Since the response from APZ is async, we could theoretically have a response
+                // which is out of time when we get the ACTION_MOVE events, and we do not want
+                // to forward this to the parent pre-emptively.
+                if (!gestureCanReachParent) {
+                    return@accept
+                }
+
                 inputResultDetail = inputResultDetail.copy(
                     it?.handledResult(),
                     it?.scrollableDirections(),
                     it?.overscrollDirections(),
                 )
 
-                when (event.action) {
+                when (eventAction) {
                     MotionEvent.ACTION_DOWN -> {
-                        // If the event wasn't used in GeckoView, allow touch event interception.
-                        if (inputResultDetail.isTouchUnhandled()) {
+                        // Gesture can reach the parent only if the content is already at the top
+                        gestureCanReachParent = inputResultDetail.canOverscrollTop()
+
+                        if (gestureCanReachParent && inputResultDetail.isTouchUnhandled()) {
+                            // If the event wasn't used in GeckoView, allow touch event interception.
                             parent?.requestDisallowInterceptTouchEvent(false)
                         }
                     }
 
                     MotionEvent.ACTION_MOVE -> {
-                        if (initialDownY < event.y) {
-                            // In the case of scroll up gestures, allow touch event interception
+                        if (initialDownY < eventY) {
+                            // In the case of scroll upwards gestures, allow touch event interception
                             // only if the event wasn't consumed by the web site. I.e. even if
                             // the event was consumed by the browser to scroll up the content.
                             if (!inputResultDetail.isTouchHandledByWebsite()) {
                                 parent?.requestDisallowInterceptTouchEvent(false)
                             }
-                        } else if (initialDownY > event.y) {
-                            // In the case of scroll down gestures, allow touch event interception
-                            // only if the event wasn't used in GeckoView. I.e. once after the content
-                            // started scroll down, touch event interception is never allowed.
-                            if  (inputResultDetail.isTouchUnhandled()) {
-                                parent?.requestDisallowInterceptTouchEvent(false)
-                            }
+                        } else if (initialDownY > eventY) {
+                            // Once after the content started scroll down, touch event interception
+                            // is never allowed.
+                            parent?.requestDisallowInterceptTouchEvent(true)
+                            gestureCanReachParent = false
                         } else {
                             // Normally ACTION_MOVE should happen with moving the event position,
                             // but if it happened allow touch event interception just in case.
@@ -200,6 +207,12 @@ open class NestedGeckoView(context: Context) : GeckoView(context), NestedScrolli
                 startNestedScroll(ViewCompat.SCROLL_AXIS_VERTICAL)
             }
     }
+
+    @VisibleForTesting
+    internal open fun superOnTouchEventForDetailResult(
+        event: MotionEvent,
+    ): GeckoResult<PanZoomController.InputResultDetail> =
+        super.onTouchEventForDetailResult(event)
 
     override fun setNestedScrollingEnabled(enabled: Boolean) {
         childHelper.isNestedScrollingEnabled = enabled

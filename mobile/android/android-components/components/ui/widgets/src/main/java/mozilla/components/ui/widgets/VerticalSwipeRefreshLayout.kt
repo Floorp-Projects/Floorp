@@ -43,12 +43,15 @@ class VerticalSwipeRefreshLayout @JvmOverloads constructor(
     @VisibleForTesting
     internal var hadMultiTouch: Boolean = false
 
+    @VisibleForTesting
+    internal var disallowInterceptTouchEvent = false
+
     @Suppress("ComplexMethod", "ReturnCount")
     override fun onInterceptTouchEvent(event: MotionEvent): Boolean {
         // Setting "isEnabled = false" is recommended for users of this ViewGroup
         // who who are not interested in the pull to refresh functionality
         // Setting this easily avoids executing code unneededsly before the check for "canChildScrollUp".
-        if (!isEnabled) {
+        if (!isEnabled || disallowInterceptTouchEvent) {
             return false
         }
 
@@ -141,6 +144,13 @@ class VerticalSwipeRefreshLayout @JvmOverloads constructor(
         else if (MotionEvent.ACTION_UP == currentEventAction && quickScaleEvents.firstDownEvent != null) {
             quickScaleEvents.upEvent = MotionEvent.obtain(event)
         }
+    }
+
+    override fun requestDisallowInterceptTouchEvent(b: Boolean) {
+        // We need to disable Pull to Refresh on this layout be we don't want to propagate the
+        // request to the parent, because they may use the gesture for other purpose, like
+        // propagating it to ToolbarBehavior
+        this.disallowInterceptTouchEvent = b
     }
 
     @VisibleForTesting
