@@ -276,6 +276,17 @@ TooltipsOverlay.prototype = {
     return tooltipType;
   },
 
+  _removePreviousInstances() {
+    for (const tooltip of this._instances.values()) {
+      if (tooltip.isVisible()) {
+        if (tooltip.revert) {
+          tooltip.revert();
+        }
+        tooltip.hide();
+      }
+    }
+  },
+
   /**
    * Executed by the tooltip when the pointer hovers over an element of the
    * view. Used to decide whether the tooltip should be shown or not and to
@@ -298,12 +309,7 @@ TooltipsOverlay.prototype = {
       return false;
     }
 
-    for (const [, tooltip] of this._instances) {
-      if (tooltip.isVisible()) {
-        tooltip.revert();
-        tooltip.hide();
-      }
-    }
+    this._removePreviousInstances();
 
     const inspector = this.view.inspector;
 
@@ -390,15 +396,7 @@ TooltipsOverlay.prototype = {
       return false;
     }
 
-    // Remove previous tooltip instances.
-    for (const [, tooltip] of this._instances) {
-      if (tooltip.isVisible()) {
-        if (tooltip.revert) {
-          tooltip.revert();
-        }
-        tooltip.hide();
-      }
-    }
+    this._removePreviousInstances();
 
     if (type === TOOLTIP_INACTIVE_CSS) {
       // Ensure this is the correct node and not a parent.
