@@ -32,6 +32,16 @@ function isObject(value) {
  *   The section to check to see if an additionalProperties flag should be added.
  */
 function disallowAdditionalProperties(section) {
+  // It is generally acceptable for new properties to be added to the
+  // configuration as older builds will ignore them.
+  //
+  // As a result, we only check for new properties on nightly builds, and this
+  // avoids us having to uplift schema changes. This also helps preserve the
+  // schemas as documentation of "what was supported in this version".
+  if (!AppConstants.NIGHTLY_BUILD) {
+    return;
+  }
+
   // If the section is a `oneOf` section, avoid the additionalProperties check.
   // Otherwise, the validator expects all properties of any `oneOf` item to be
   // present.
@@ -154,8 +164,9 @@ add_task(async function test_search_config_override_validates_to_schema_v1() {
   );
 });
 
-if (SearchUtils.newSearchConfigEnabled) {
-  add_task(async function test_search_config_validates_to_schema() {
+add_task(
+  { skip_if: () => !SearchUtils.newSearchConfigEnabled },
+  async function test_search_config_validates_to_schema() {
     delete SearchUtils.newSearchConfigEnabled;
     SearchUtils.newSearchConfigEnabled = true;
 
@@ -163,17 +174,23 @@ if (SearchUtils.newSearchConfigEnabled) {
     let searchConfig = await selector.getEngineConfiguration();
 
     await checkSearchConfigValidates(searchConfigSchema, searchConfig);
-  });
+  }
+);
 
-  add_task(async function test_ui_schema_valid() {
+add_task(
+  { skip_if: () => !SearchUtils.newSearchConfigEnabled },
+  async function test_ui_schema_valid() {
     let uiSchema = await IOUtils.readJSON(
       PathUtils.join(do_get_cwd().path, "search-config-v2-ui-schema.json")
     );
 
     await checkUISchemaValid(searchConfigSchema, uiSchema);
-  });
+  }
+);
 
-  add_task(async function test_search_config_override_validates_to_schema() {
+add_task(
+  { skip_if: () => !SearchUtils.newSearchConfigEnabled },
+  async function test_search_config_override_validates_to_schema() {
     let selector = new SearchEngineSelector(() => {});
     let searchConfigOverrides =
       await selector.getEngineConfigurationOverrides();
@@ -188,5 +205,5 @@ if (SearchUtils.newSearchConfigEnabled) {
       overrideSchema,
       searchConfigOverrides
     );
-  });
-}
+  }
+);
