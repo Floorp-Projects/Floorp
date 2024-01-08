@@ -658,7 +658,8 @@ std::tuple<void*, bool> js::Nursery::allocateZeroedBuffer(Zone* zone,
     }
   }
 
-  return {zone->pod_arena_calloc<uint8_t>(arena, nbytes), true};
+  void* buffer = zone->pod_arena_calloc<uint8_t>(arena, nbytes);
+  return {buffer, bool(buffer)};
 }
 
 void* js::Nursery::allocateZeroedBuffer(Cell* owner, size_t nbytes,
