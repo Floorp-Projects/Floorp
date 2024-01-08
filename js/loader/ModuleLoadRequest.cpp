@@ -125,7 +125,7 @@ void ModuleLoadRequest::ModuleLoaded() {
     return;
   }
 
-  MOZ_ASSERT(IsFetching());
+  MOZ_ASSERT(IsFetching() || IsPendingFetchingError());
 
   mModuleScript = mLoader->GetFetchedModule(mURI);
   if (IsErrored()) {
@@ -147,7 +147,7 @@ void ModuleLoadRequest::LoadFailed() {
     return;
   }
 
-  MOZ_ASSERT(IsFetching());
+  MOZ_ASSERT(IsFetching() || IsPendingFetchingError());
   MOZ_ASSERT(!mModuleScript);
 
   Cancel();

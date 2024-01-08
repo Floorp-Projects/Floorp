@@ -277,6 +277,7 @@ already_AddRefed<ModuleLoadRequest> ModuleLoader::CreateTopLevel(
       aLoader->GetModuleLoader(),
       ModuleLoadRequest::NewVisitedSetForTopLevelImport(aURI), nullptr);
 
+  request->NoCacheEntryFound();
   return request.forget();
 }
 
@@ -294,6 +295,7 @@ already_AddRefed<ModuleLoadRequest> ModuleLoader::CreateStaticImport(
       false,                            /* is dynamic import */
       aParent->mLoader, aParent->mVisitedSet, aParent->GetRootModule());
 
+  request->NoCacheEntryFound();
   return request.forget();
 }
 
@@ -357,6 +359,7 @@ already_AddRefed<ModuleLoadRequest> ModuleLoader::CreateDynamicImport(
 
   HoldJSObjects(request.get());
 
+  request->NoCacheEntryFound();
   return request.forget();
 }
 

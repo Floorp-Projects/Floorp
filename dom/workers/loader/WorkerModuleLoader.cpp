@@ -61,6 +61,7 @@ already_AddRefed<ModuleLoadRequest> WorkerModuleLoader::CreateStaticImport(
       this, aParent->mVisitedSet, aParent->GetRootModule());
 
   request->mURL = request->mURI->GetSpecOrDefault();
+  request->NoCacheEntryFound();
   return request.forget();
 }
 
@@ -145,6 +146,7 @@ already_AddRefed<ModuleLoadRequest> WorkerModuleLoader::CreateDynamicImport(
   request->mDynamicReferencingScript = aMaybeActiveScript;
   request->mDynamicSpecifier = aSpecifier;
   request->mDynamicPromise = aPromise;
+  request->NoCacheEntryFound();
 
   HoldJSObjects(request.get());
 
