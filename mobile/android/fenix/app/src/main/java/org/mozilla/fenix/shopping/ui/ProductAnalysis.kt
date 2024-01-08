@@ -10,6 +10,7 @@ import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -38,6 +39,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.CollectionInfo
 import androidx.compose.ui.semantics.CollectionItemInfo
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.collectionInfo
 import androidx.compose.ui.semantics.collectionItemInfo
 import androidx.compose.ui.semantics.contentDescription
@@ -499,33 +501,51 @@ private enum class Highlight(
     ),
 }
 
+@Suppress("LongMethod")
 @Composable
 private fun ProductRecommendation(
     product: RecommendedProductState.Product,
     onClick: (String, String) -> Unit,
     onImpression: (String) -> Unit,
 ) {
+    val titleContentDescription = headingResource(id = R.string.review_quality_check_ad_title)
+    val interactionSource = remember { MutableInteractionSource() }
+
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         ReviewQualityCheckCard(
             modifier = Modifier
                 .fillMaxWidth()
-                .semantics { heading() }
-                .clickable {
-                    onClick(product.aid, product.productUrl)
-                }
                 .onShown(
                     threshold = PRODUCT_RECOMMENDATION_IMPRESSION_THRESHOLD,
                     settleTime = PRODUCT_RECOMMENDATION_SETTLE_TIME_MS,
                     onVisible = { onImpression(product.aid) },
                 ),
         ) {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth(1f)
+                    .clearAndSetSemantics {
+                        heading()
+                        contentDescription = titleContentDescription
+                    }
+                    .clickable(interactionSource = interactionSource, indication = null) {
+                        onClick(product.aid, product.productUrl)
+                    },
+            ) {
                 Text(
                     text = stringResource(R.string.review_quality_check_ad_title),
                     color = FirefoxTheme.colors.textPrimary,
                     style = FirefoxTheme.typography.headline8,
                 )
 
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+
+            Column(
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier
+                    .clickable { onClick(product.aid, product.productUrl) },
+            ) {
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     Image(
                         url = product.imageUrl,
