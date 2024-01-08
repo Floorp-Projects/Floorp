@@ -650,13 +650,22 @@ cpython-3.8.10.exe:
         size: 28296784
         artifact-name: python-3.8.10-amd64.exe
 
-cpython-3.7.15:
-    description: cpython 3.7.15 source code
+cpython-3.11.7:
+    description: cpython 3.11.7 source code
     fetch:
         type: static-url
-        url: https://www.python.org/ftp/python/3.7.15/Python-3.7.15.tgz
-        sha256: cf2993798ae8430f3af3a00d96d9fdf320719f4042f039380dca79967c25e436
-        size: 24033532
+        url: https://www.python.org/ftp/python/3.11.7/Python-3.11.7.tgz
+        sha256: 068c05f82262e57641bd93458dfa883128858f5f4997aad7a36fd25b13b29209
+        size: 26601929
         artifact-name: cpython-source.tar.zst
         strip-components: 1
         add-prefix: cpython-source/
+
+cpython-3.11.7.exe:
+    description: cpython 3.11.7 installer
+    fetch:
+        type: static-url
+        url: https://www.python.org/ftp/python/3.11.7/python-3.11.7-amd64.exe
+        sha256: c117c6444494bbe4cc937e8a5a61899d53f7f5c5bc573c5d130304e457d54024
+        size: 26009544
+        artifact-name: python-3.11.7-amd64.exe

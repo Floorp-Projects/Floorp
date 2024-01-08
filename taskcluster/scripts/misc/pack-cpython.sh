@@ -13,7 +13,7 @@ tardir=python
 mkdir $tardir
 pushd $tardir
 msiextract ../*
-rm api-ms-win-*
+rm -f api-ms-win-*
 
 # bundle pip
 $WINE python.exe -m ensurepip
