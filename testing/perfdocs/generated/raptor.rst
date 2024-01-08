@@ -1743,11 +1743,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-benchmark-chrome-motionmark-animometer-ramp**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-benchmark-custom-car-motionmark-animometer-ramp**
         - ❌
         - ❌
@@ -2038,11 +2033,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-benchmark-chrome-motionmark-animometer-ramp**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-benchmark-custom-car-motionmark-animometer-ramp**
         - ❌
         - ❌
@@ -2904,11 +2894,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-benchmark-chrome-motionmark-htmlsuite-ramp**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-benchmark-custom-car-motionmark-htmlsuite-ramp**
         - ❌
         - ❌
@@ -3200,11 +3185,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-benchmark-chrome-motionmark-htmlsuite-ramp**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-benchmark-custom-car-motionmark-htmlsuite-ramp**
         - ❌
         - ❌
