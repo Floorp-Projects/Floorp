@@ -109,7 +109,7 @@ browsertime-tp6:
                         - --extra-profiler-run
         run-on-projects:
             by-subtest:
-                netflix:  # Bug 1756212 - Disable temporarily due to perma on mac
+                netflix:
                     by-app:
                         firefox:
                             by-test-platform:
@@ -629,7 +629,7 @@ browsertime-tp6-live:
                     - [google-slides, gslides]
                     - imdb
                     # - imgur (see bugs 1825337 & 1817420)
-                    - instagram  # (see bug 1736999)
+                    - instagram
                     - linkedin
                     - microsoft
                     - netflix
@@ -656,7 +656,7 @@ browsertime-tp6-live:
                     - [google-slides, gslides]
                     - imdb
                     - imgur
-                    - instagram  # (see bug 1736999)
+                    - instagram
                     - linkedin
                     - microsoft
                     - netflix
