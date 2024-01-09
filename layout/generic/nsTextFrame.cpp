@@ -9566,7 +9566,8 @@ void nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
   uint32_t transformedCharsFit = mTextRun->BreakAndMeasureText(
       transformedOffset, transformedLength, HasAnyStateBits(TEXT_START_OF_LINE),
       availWidth, provider, suppressBreak, boundingBoxType, aDrawTarget,
-      textStyle->WordCanWrap(this), isBreakSpaces,
+      textStyle->WordCanWrap(this), textStyle->WhiteSpaceCanWrap(this),
+      isBreakSpaces,
       // The following are output parameters:
       canTrimTrailingWhitespace || whitespaceCanHang ? &trimmableWS : nullptr,
       textMetrics, usedHyphenation, transformedLastBreak,
