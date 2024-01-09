@@ -1792,7 +1792,8 @@ static ExceptionHandler::FilterResult ChildFilter(
 
 static MINIDUMP_TYPE GetMinidumpType() {
   MINIDUMP_TYPE minidump_type = static_cast<MINIDUMP_TYPE>(
-      MiniDumpWithFullMemoryInfo | MiniDumpWithUnloadedModules);
+      MiniDumpWithFullMemoryInfo | MiniDumpWithUnloadedModules |
+      MiniDumpWithHandleData);
 
 #  ifdef NIGHTLY_BUILD
   minidump_type = static_cast<MINIDUMP_TYPE>(
