@@ -309,6 +309,14 @@ start = "2022-08-04"
 end = "2024-03-09"
 notes = "This code contains two cryptographic back ends.  No unsafe code is contained if the Rust `hpke` crate is used (the `rust-hpke` feature).  Using NSS (the `nss` feature) involves extensive use of bindings to the native code provided by NSS.  This interface uses wrappers that attempt to add safety to a fundamentally very dangerous library, but those wrappers have only been validated for use following the needs of this crate."
 
+[[wildcard-audits.qcms]]
+who = "Jeff Muizelaar <jmuizelaar@mozilla.com>"
+criteria = "safe-to-deploy"
+user-id = 5946 # Jeff Muizelaar (jrmuizel)
+start = "2020-11-05"
+end = "2025-01-09"
+notes = "Maintained by the Graphics team at Mozilla in mozilla-central."
+
 [[wildcard-audits.rust_cascade]]
 who = "Dana Keeler <dkeeler@mozilla.com>"
 criteria = "safe-to-deploy"
@@ -2998,11 +3006,6 @@ notes = "Changes against 0.11.9 are mine."
 who = "Drew Willcoxon <adw@mozilla.com>"
 criteria = "safe-to-deploy"
 delta = "0.11.9 -> 0.12.1"
-
-[[audits.qcms]]
-who = "Jeff Muizelaar <jmuizelaar@mozilla.com>"
-criteria = "safe-to-deploy"
-version = "0.2.0"
 
 [[audits.qlog]]
 who = "Kershaw Chang <kershaw@mozilla.com>"

@@ -1,7 +1,7 @@
 [package]
 name = "qcms"
 authors = ["Jeff Muizelaar", "Benoit Girard", "Andrew Osmond"]
-version = "0.2.0"
+version = "0.3.0"
 edition = "2018"
 include = ["src/**/*", "build.rs"]
 description = "lightweight color management"
