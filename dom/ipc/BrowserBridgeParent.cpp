@@ -216,7 +216,13 @@ IPCResult BrowserBridgeParent::RecvDispatchSynthesizedMouseEvent(
     return IPC_FAIL(this, "Unexpected event type");
   }
 
+  nsCOMPtr<nsIWidget> widget = Manager()->GetWidget();
+  if (!widget) {
+    return IPC_OK();
+  }
+
   WidgetMouseEvent event = aEvent;
+  event.mWidget = widget;
   // Convert mRefPoint from the dispatching child process coordinate space
   // to the parent coordinate space. The SendRealMouseEvent call will convert
   // it into the dispatchee child process coordinate space
