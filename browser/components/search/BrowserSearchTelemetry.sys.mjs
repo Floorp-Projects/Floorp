@@ -11,6 +11,17 @@ ChromeUtils.defineESModuleGetters(lazy, {
   UrlbarSearchUtils: "resource:///modules/UrlbarSearchUtils.sys.mjs",
 });
 
+// `contextId` is a unique identifier used by Contextual Services
+const CONTEXT_ID_PREF = "browser.contextual-services.contextId";
+ChromeUtils.defineLazyGetter(lazy, "contextId", () => {
+  let _contextId = Services.prefs.getStringPref(CONTEXT_ID_PREF, null);
+  if (!_contextId) {
+    _contextId = Services.uuid.generateUUID().toString();
+    Services.prefs.setStringPref(CONTEXT_ID_PREF, _contextId);
+  }
+  return _contextId;
+});
+
 // A map of known search origins.
 // The keys of this map are used in the calling code to recordSearch, and in
 // the SEARCH_COUNTS histogram.
@@ -172,6 +183,10 @@ class BrowserSearchTelemetryHandler {
    * @throws if source is not in the known sources list.
    */
   recordSearch(browser, engine, source, details = {}) {
+    if (engine.clickUrl) {
+      this.#reportSearchInGlean(engine.clickUrl);
+    }
+
     try {
       if (!this.shouldRecordSearchCount(browser)) {
         return;
@@ -287,6 +302,33 @@ class BrowserSearchTelemetryHandler {
         engine: engine.telemetryId,
       }
     );
+  }
+
+  /**
+   * Records the search in Glean for contextual services.
+   *
+   * @param {string} reportingUrl
+   *   The url to be sent to contextual services.
+   */
+  #reportSearchInGlean(reportingUrl) {
+    let defaultValuesByGleanKey = {
+      contextId: lazy.contextId,
+    };
+
+    let sendGleanPing = valuesByGleanKey => {
+      valuesByGleanKey = { ...defaultValuesByGleanKey, ...valuesByGleanKey };
+      for (let [gleanKey, value] of Object.entries(valuesByGleanKey)) {
+        let glean = Glean.searchWith[gleanKey];
+        if (value !== undefined && value !== "") {
+          glean.set(value);
+        }
+      }
+      GleanPings.searchWith.submit();
+    };
+
+    sendGleanPing({
+      reportingUrl,
+    });
   }
 }
 

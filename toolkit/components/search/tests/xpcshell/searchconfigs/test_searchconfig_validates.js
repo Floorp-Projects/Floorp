@@ -103,6 +103,29 @@ async function checkSearchConfigValidates(schema, searchConfig) {
   }
 }
 
+async function checkSearchConfigOverrideValidates(
+  schema,
+  searchConfigOverride
+) {
+  let validator = new JsonSchema.Validator(schema);
+
+  for (let entry of searchConfigOverride) {
+    // Records in Remote Settings contain additional properties independent of
+    // the schema. Hence, we don't want to validate their presence.
+    delete entry.schema;
+    delete entry.id;
+    delete entry.last_modified;
+
+    let result = validator.validate(entry);
+
+    let message = `Should validate ${entry.identifier ?? entry.telemetryId}`;
+    if (!result.valid) {
+      message += `:\n${JSON.stringify(result.errors, null, 2)}`;
+    }
+    Assert.ok(result.valid, message);
+  }
+}
+
 add_task(async function test_search_config_validates_to_schema_v1() {
   let selector = new SearchEngineSelectorOld(() => {});
   let searchConfig = await selector.getEngineConfiguration();
@@ -116,6 +139,19 @@ add_task(async function test_ui_schema_valid_v1() {
   );
 
   await checkUISchemaValid(searchConfigSchemaV1, uiSchema);
+});
+
+add_task(async function test_search_config_override_validates_to_schema_v1() {
+  let selector = new SearchEngineSelectorOld(() => {});
+  let searchConfigOverrides = await selector.getEngineConfigurationOverrides();
+  let overrideSchema = await IOUtils.readJSON(
+    PathUtils.join(do_get_cwd().path, "search-config-overrides-schema.json")
+  );
+
+  await checkSearchConfigOverrideValidates(
+    overrideSchema,
+    searchConfigOverrides
+  );
 });
 
 if (SearchUtils.newSearchConfigEnabled) {
@@ -135,5 +171,22 @@ if (SearchUtils.newSearchConfigEnabled) {
     );
 
     await checkUISchemaValid(searchConfigSchema, uiSchema);
+  });
+
+  add_task(async function test_search_config_override_validates_to_schema() {
+    let selector = new SearchEngineSelector(() => {});
+    let searchConfigOverrides =
+      await selector.getEngineConfigurationOverrides();
+    let overrideSchema = await IOUtils.readJSON(
+      PathUtils.join(
+        do_get_cwd().path,
+        "search-config-overrides-v2-schema.json"
+      )
+    );
+
+    await checkSearchConfigOverrideValidates(
+      overrideSchema,
+      searchConfigOverrides
+    );
   });
 }
