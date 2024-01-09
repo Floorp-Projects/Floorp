@@ -102,11 +102,6 @@ const customLazy = {
  * @param {Boolean} options.traceOnNextInteraction
  *        Optional setting to enable when the tracing should only start when the
  *        use starts interacting with the page. i.e. on next keydown or mousedown.
- * @param {Number} options.maxDepth
- *        Optional setting to ignore frames when depth is greater than the passed number.
- * @param {Number} options.maxRecords
- *        Optional setting to stop the tracer after having recorded at least
- *        the passed number of top level frames.
  */
 class JavaScriptTracer {
   constructor(options) {
@@ -137,9 +132,6 @@ class JavaScriptTracer {
 
     this.traceDOMEvents = !!options.traceDOMEvents;
     this.traceValues = !!options.traceValues;
-    this.maxDepth = options.maxDepth;
-    this.maxRecords = options.maxRecords;
-    this.records = 0;
 
     // This feature isn't supported on Workers as they aren't involving user events
     if (options.traceOnNextInteraction && typeof isWorker !== "boolean") {
@@ -231,13 +223,7 @@ class JavaScriptTracer {
     }
   }
 
-  /**
-   * Stop observing execution.
-   *
-   * @param {String} reason
-   *        Optional string to justify why the tracer stopped.
-   */
-  stopTracing(reason = "") {
+  stopTracing() {
     if (!this.isTracing()) {
       return;
     }
@@ -259,7 +245,7 @@ class JavaScriptTracer {
 
     this.tracedGlobal = null;
 
-    this.notifyToggle(false, reason);
+    this.notifyToggle(false);
   }
 
   isTracing() {
@@ -296,26 +282,19 @@ class JavaScriptTracer {
    *
    * @param {Boolean} state
    *        True if we just started tracing, false when it just stopped.
-   * @param {String} reason
-   *        Optional string to justify why the tracer stopped.
    */
-  notifyToggle(state, reason) {
+  notifyToggle(state) {
     let shouldLogToStdout = listeners.size == 0;
     for (const listener of listeners) {
       if (typeof listener.onTracingToggled == "function") {
-        shouldLogToStdout |= listener.onTracingToggled(state, reason);
+        shouldLogToStdout |= listener.onTracingToggled(state);
       }
     }
     if (shouldLogToStdout) {
       if (state) {
         this.loggingMethod(this.prefix + "Start tracing JavaScript\n");
       } else {
-        if (reason) {
-          reason = ` (reason: ${reason})`;
-        }
-        this.loggingMethod(
-          this.prefix + "Stop tracing JavaScript" + reason + "\n"
-        );
+        this.loggingMethod(this.prefix + "Stop tracing JavaScript\n");
       }
     }
   }
@@ -351,34 +330,19 @@ class JavaScriptTracer {
       return;
     }
     try {
-      // Ignore the frame if we reached the depth limit (if one is provided)
-      if (this.maxDepth && this.depth >= this.maxDepth) {
-        return;
-      }
-
-      // Auto-stop the tracer if we reached the number of max recorded top level frames
-      if (this.depth === 0 && this.maxRecords) {
-        if (this.records >= this.maxRecords) {
-          this.stopTracing("max-records");
-          return;
-        }
-        this.records++;
-      }
-
-      // Consider depth > 100 as an infinite recursive loop and stop the tracer.
       if (this.depth == 100) {
         this.notifyInfiniteLoop();
-        this.stopTracing("infinite-loop");
+        this.stopTracing();
         return;
       }
 
+      const formatedDisplayName = formatDisplayName(frame);
       let shouldLogToStdout = true;
 
       // If there is at least one DevTools debugging this process,
       // delegate logging to DevTools actors.
       if (listeners.size > 0) {
         shouldLogToStdout = false;
-        const formatedDisplayName = formatDisplayName(frame);
         for (const listener of listeners) {
           // If any listener return true, also log to stdout
           if (typeof listener.onTracingFrame == "function") {
@@ -396,7 +360,61 @@ class JavaScriptTracer {
       // DevTools may delegate the work to log to stdout,
       // but if DevTools are closed, stdout is the only way to log the traces.
       if (shouldLogToStdout) {
-        this.logFrameToStdout(frame);
+        const { script } = frame;
+        const { lineNumber, columnNumber } = script.getOffsetMetadata(
+          frame.offset
+        );
+        const padding = "—".repeat(this.depth + 1);
+
+        // If we are tracing DOM events and we are in middle of an event,
+        // and are logging the topmost frame,
+        // then log a preliminary dedicated line to mention that event type.
+        if (this.currentDOMEvent && this.depth == 0) {
+          this.loggingMethod(
+            this.prefix + padding + this.currentDOMEvent + "\n"
+          );
+        }
+
+        // Use a special URL, including line and column numbers which Firefox
+        // interprets as to be opened in the already opened DevTool's debugger
+        const href = `${script.source.url}:${lineNumber}:${columnNumber}`;
+
+        // Use special characters in order to print working hyperlinks right from the terminal
+        // See https://gist.github.com/egmontkob/eb114294efbcd5adb1944c9f3cb5feda
+        const urlLink = `\x1B]8;;${href}\x1B\\${href}\x1B]8;;\x1B\\`;
+
+        let message = `${padding}[${
+          frame.implementation
+        }]—> ${urlLink} - ${formatDisplayName(frame)}`;
+
+        // Log arguments, but only when this feature is enabled as it introduces
+        // some significant performance and visual overhead.
+        // Also prevent trying to log function call arguments if we aren't logging a frame
+        // with arguments (e.g. Debugger evaluation frames, when executing from the console)
+        if (this.traceValues && frame.arguments) {
+          message += "(";
+          for (let i = 0, l = frame.arguments.length; i < l; i++) {
+            const arg = frame.arguments[i];
+            // Debugger.Frame.arguments contains either a Debugger.Object or primitive object
+            if (arg?.unsafeDereference) {
+              // Special case classes as they can't be easily differentiated in pure JavaScript
+              if (arg.isClassConstructor) {
+                message += "class " + arg.name;
+              } else {
+                message += objectToString(arg.unsafeDereference());
+              }
+            } else {
+              message += primitiveToString(arg);
+            }
+
+            if (i < l - 1) {
+              message += ", ";
+            }
+          }
+          message += ")";
+        }
+
+        this.loggingMethod(this.prefix + message + "\n");
       }
 
       this.depth++;
@@ -406,65 +424,6 @@ class JavaScriptTracer {
     } catch (e) {
       console.error("Exception while tracing javascript", e);
     }
-  }
-
-  /**
-   * Display to stdout one given frame execution, which represents a function call.
-   *
-   * @param {Debugger.Frame} frame
-   */
-  logFrameToStdout(frame) {
-    const { script } = frame;
-    const { lineNumber, columnNumber } = script.getOffsetMetadata(frame.offset);
-    const padding = "—".repeat(this.depth + 1);
-
-    // If we are tracing DOM events and we are in middle of an event,
-    // and are logging the topmost frame,
-    // then log a preliminary dedicated line to mention that event type.
-    if (this.currentDOMEvent && this.depth == 0) {
-      this.loggingMethod(this.prefix + padding + this.currentDOMEvent + "\n");
-    }
-
-    // Use a special URL, including line and column numbers which Firefox
-    // interprets as to be opened in the already opened DevTool's debugger
-    const href = `${script.source.url}:${lineNumber}:${columnNumber}`;
-
-    // Use special characters in order to print working hyperlinks right from the terminal
-    // See https://gist.github.com/egmontkob/eb114294efbcd5adb1944c9f3cb5feda
-    const urlLink = `\x1B]8;;${href}\x1B\\${href}\x1B]8;;\x1B\\`;
-
-    let message = `${padding}[${
-      frame.implementation
-    }]—> ${urlLink} - ${formatDisplayName(frame)}`;
-
-    // Log arguments, but only when this feature is enabled as it introduces
-    // some significant performance and visual overhead.
-    // Also prevent trying to log function call arguments if we aren't logging a frame
-    // with arguments (e.g. Debugger evaluation frames, when executing from the console)
-    if (this.traceValues && frame.arguments) {
-      message += "(";
-      for (let i = 0, l = frame.arguments.length; i < l; i++) {
-        const arg = frame.arguments[i];
-        // Debugger.Frame.arguments contains either a Debugger.Object or primitive object
-        if (arg?.unsafeDereference) {
-          // Special case classes as they can't be easily differentiated in pure JavaScript
-          if (arg.isClassConstructor) {
-            message += "class " + arg.name;
-          } else {
-            message += objectToString(arg.unsafeDereference());
-          }
-        } else {
-          message += primitiveToString(arg);
-        }
-
-        if (i < l - 1) {
-          message += ", ";
-        }
-      }
-      message += ")";
-    }
-
-    this.loggingMethod(this.prefix + message + "\n");
   }
 }
 

@@ -46,17 +46,10 @@ class TracingStateWatcher {
     removeTracingListener(this.tracingListener);
   }
 
-  /**
-   * Be notified by the underlying JavaScriptTracer class
-   * in case it stops by itself, instead of being stopped when the Actor's stopTracing
-   * method is called by the user.
-   *
-   * @param {Boolean} enabled
-   *        True if the tracer starts tracing, false it it stops.
-   * @param {String} reason
-   *        Optional string to justify why the tracer stopped.
-   */
-  onTracingToggled(enabled, reason) {
+  // Emit a JSTRACER_STATE resource with:
+  //   enabled = true|false
+  // When Javascript tracing is enabled or disabled.
+  onTracingToggled(enabled) {
     const tracerActor = this.targetActor.getTargetScopedActor("tracer");
     const logMethod = tracerActor?.getLogMethod();
     this.onAvailable([
@@ -68,8 +61,6 @@ class TracingStateWatcher {
           logMethod == LOG_METHODS.PROFILER && !enabled
             ? tracerActor.getProfile()
             : undefined,
-        timeStamp: ChromeUtils.dateNow(),
-        reason,
       },
     ]);
   }

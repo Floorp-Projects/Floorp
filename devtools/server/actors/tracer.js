@@ -113,12 +113,6 @@ class TracerActor extends Actor {
     if (options.prefix && typeof options.prefix != "string") {
       throw new Error("Invalid prefix, only support string type");
     }
-    if (options.maxDepth && typeof options.maxDepth != "number") {
-      throw new Error("Invalid max-depth, only support numbers");
-    }
-    if (options.maxRecords && typeof options.maxRecords != "number") {
-      throw new Error("Invalid max-records, only support numbers");
-    }
     this.logMethod = options.logMethod || LOG_METHODS.STDOUT;
 
     if (this.logMethod == LOG_METHODS.PROFILER) {
@@ -128,7 +122,6 @@ class TracerActor extends Actor {
     this.tracingListener = {
       onTracingFrame: this.onTracingFrame.bind(this),
       onTracingInfiniteLoop: this.onTracingInfiniteLoop.bind(this),
-      onTracingToggled: this.onTracingToggled.bind(this),
     };
     addTracingListener(this.tracingListener);
     this.traceValues = !!options.traceValues;
@@ -141,10 +134,6 @@ class TracerActor extends Actor {
       traceValues: !!options.traceValues,
       // Enable tracing only on next user interaction
       traceOnNextInteraction: !!options.traceOnNextInteraction,
-      // Ignore frames beyond the given depth
-      maxDepth: options.maxDepth,
-      // Stop the tracing after a number of top level frames
-      maxRecords: options.maxRecords,
     });
   }
 
@@ -171,28 +160,6 @@ class TracerActor extends Actor {
       return profile;
     }
     return null;
-  }
-
-  /**
-   * Be notified by the underlying JavaScriptTracer class
-   * in case it stops by itself, instead of being stopped when the Actor's stopTracing
-   * method is called by the user.
-   *
-   * @param {Boolean} enabled
-   *        True if the tracer starts tracing, false it it stops.
-   * @param {String} reason
-   *        Optional string to justify why the tracer stopped.
-   * @return {Boolean}
-   *         Return true, if the JavaScriptTracer should log a message to stdout.
-   */
-  onTracingToggled(enabled, reason) {
-    // stopTracing will clear `logMethod`, so compute this before calling it.
-    const shouldLogToStdout = this.logMethod == LOG_METHODS.STDOUT;
-
-    if (!enabled) {
-      this.stopTracing();
-    }
-    return shouldLogToStdout;
   }
 
   onTracingInfiniteLoop() {
