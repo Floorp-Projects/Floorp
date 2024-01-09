@@ -93,7 +93,7 @@ path:testing/geckodriver
 path:testing/mozbase/rust
 path:testing/webdriver
 
-# for external-gradle-dependencies
+# for firefox-android
 path:mobile/android/android-components/.buildconfig.yml
 path:mobile/android/focus-android/.buildconfig.yml
 path:mobile/android/fenix/.buildconfig.yml
@@ -103,6 +103,4 @@ path:mobile/android/fenix/gradle/wrapper/gradle-wrapper.properties
 path:mobile/android/android-components/plugins/dependencies/src/main/java/DependenciesPlugin.kt
 path:mobile/android/focus-android/plugins/focusdependencies/src/main/java/FocusDependenciesPlugin.kt
 path:mobile/android/fenix/plugins/fenixdependencies/src/main/java/FenixDependenciesPlugin.kt
-
-# for build-components
 path:mobile/android/version.txt

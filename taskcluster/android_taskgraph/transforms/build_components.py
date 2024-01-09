@@ -113,19 +113,6 @@ def _deep_format(object, field, **format_kwargs):
 
 
 @transforms.add
-def set_external_gradle_dependencies(config, tasks):
-    for task in tasks:
-        component = task["attributes"]["component"]
-
-        dependencies = task.setdefault("dependencies", {})
-        dependencies[
-            "external-gradle-dependencies"
-        ] = f"external-gradle-dependencies-{component}"
-
-        yield task
-
-
-@transforms.add
 def add_artifacts(config, tasks):
     _get_timestamp(config)
     version = config.params["version"]

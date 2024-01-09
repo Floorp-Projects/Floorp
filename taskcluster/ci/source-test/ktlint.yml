@@ -11,14 +11,11 @@ job-defaults:
     attributes:
         code-review: true
     always-target: true
-    dependencies:
-        external-gradle-dependencies: external-gradle-dependencies-lint-components
     fetches:
         toolchain:
             - android-sdk-linux
+            - android-gradle-dependencies
             - linux64-jdk-repack
-        external-gradle-dependencies:
-            - external-gradle-dependencies.tar.xz
     platform: 'lint/opt'
     treeherder:
         kind: test
@@ -51,8 +48,6 @@ focus:
         symbol: ktlint(focus)
 
 fenix:
-    dependencies:
-        external-gradle-dependencies: external-gradle-dependencies-lint-fenix
     when:
         files-changed:
             - "mobile/android/fenix/**"

@@ -19,10 +19,7 @@ transforms = TransformSequence()
 def add_common_config(config, tasks):
     for task in tasks:
         fetches = task.setdefault("fetches", {})
-        fetches["toolchain"] = ["android-sdk-linux"]
-        fetches["external-gradle-dependencies"] = [
-            "external-gradle-dependencies.tar.xz"
-        ]
+        fetches["toolchain"] = ["android-sdk-linux", "android-gradle-dependencies"]
         fetches["build-fat-aar"] = ["target.maven.tar.xz"]
 
         run = task.setdefault("run", {})

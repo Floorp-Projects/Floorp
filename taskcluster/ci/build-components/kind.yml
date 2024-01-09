@@ -15,7 +15,6 @@ not-for-components:
 
 kind-dependencies:
     - toolchain
-    - external-gradle-dependencies
     - build-fat-aar
 
 job-defaults:
@@ -46,8 +45,7 @@ job-defaults:
     fetches:
         toolchain:
             - android-sdk-linux
-        external-gradle-dependencies:
-            - external-gradle-dependencies.tar.xz
+            - android-gradle-dependencies
         build-fat-aar:
             - target.maven.tar.xz
     dependencies:

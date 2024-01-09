@@ -812,10 +812,6 @@ trigger-comm-central
 Trigger a CI decision task on comm-central when conditions are met. Currently
 used for verifying third party Rust code is consistent.
 
-external-gradle-dependencies
-----------------------------
-External Gradle dependencies toolchain task.
-
 build-components
 ----------------
 Build android-components.
