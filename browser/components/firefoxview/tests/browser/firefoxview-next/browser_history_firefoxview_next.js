@@ -472,9 +472,10 @@ add_task(async function test_search_history() {
         historyComponent.cards.length ===
         historyComponent.historyMapByDate.length
     );
+    searchTextbox.blur();
 
-    info("Input a bogus search query.");
-    EventUtils.synthesizeMouseAtCenter(searchTextbox, {}, content);
+    info("Input a bogus search query with keyboard.");
+    EventUtils.synthesizeKey("f", { accelKey: true }, content);
     EventUtils.sendString("Bogus Query", content);
     await TestUtils.waitForCondition(() => {
       const tabList = historyComponent.lists[0];

@@ -23,6 +23,11 @@ XPCOMUtils.defineLazyPreferenceGetter(
     return new Set(val.split("|"));
   }
 );
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "FXVIEW_SEARCH_ENABLED",
+  "browser.firefox-view.search.enabled"
+);
 
 ChromeUtils.defineLazyGetter(lazy, "gLocalization", () => {
   return new Localization(["toolkit/global/browser-utils.ftl"], true);
@@ -107,7 +112,8 @@ export var BrowserUtils = {
   canFindInPage(location) {
     return (
       !location.startsWith("about:preferences") &&
-      !location.startsWith("about:logins")
+      !location.startsWith("about:logins") &&
+      !(location.startsWith("about:firefoxview") && lazy.FXVIEW_SEARCH_ENABLED)
     );
   },
 
