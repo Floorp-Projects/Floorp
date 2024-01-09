@@ -879,8 +879,6 @@ WebConsoleCommandsManager.register({
       prefix: args.prefix || null,
       traceValues: !!args.values,
       traceOnNextInteraction: args["on-next-interaction"] || null,
-      maxDepth: args["max-depth"] || null,
-      maxRecords: args["max-records"] || null,
     });
 
     owner.helperResult = {
@@ -889,12 +887,5 @@ WebConsoleCommandsManager.register({
       logMethod,
     };
   },
-  validArguments: [
-    "logMethod",
-    "max-depth",
-    "max-records",
-    "on-next-interaction",
-    "prefix",
-    "values",
-  ],
+  validArguments: ["logMethod", "prefix", "values", "on-next-interaction"],
 });

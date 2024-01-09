@@ -18,7 +18,7 @@ const TEST_URI = `data:text/html;charset=utf-8,<!DOCTYPE html>
   <div><p></p></div>
 </body>`;
 
-add_task(async function testBasicRecord() {
+add_task(async function () {
   await pushPref("devtools.debugger.features.javascript-tracing", true);
 
   const hud = await openNewTabAndConsole(TEST_URI);
@@ -40,8 +40,8 @@ add_task(async function testBasicRecord() {
   ok(msg.textContent.includes("Toggles the JavaScript tracer"));
 
   info("Test toggling the tracer ON");
-  // Pass `console-api` specific classname as the command results don't log anything.
-  // Instead a JSTRACER_STATE resource logs a console-api message.
+  // Pass `console-api` specific classname as the command results aren't logged as "result".
+  // Instead the frontend log a message as a console API message.
   msg = await evaluateExpressionInConsole(
     hud,
     ":trace --logMethod console --prefix foo --values --on-next-interaction",
@@ -103,106 +103,4 @@ add_task(async function testBasicRecord() {
     !findTracerMessages(hud, `foo: interpreter⟶λ main("arg", 2)`).length,
     "We really stopped recording traces, and no trace appear in the console"
   );
-});
-
-add_task(async function testLimitedRecord() {
-  await pushPref("devtools.debugger.features.javascript-tracing", true);
-
-  const jsCode = `function foo1() {foo2()}; function foo2() {foo3()}; function foo3() {}; function bar() {}`;
-  const hud = await openNewTabAndConsole(
-    "data:text/html," + encodeURIComponent(`<script>${jsCode}</script>`)
-  );
-  ok(hud, "web console opened");
-
-  info("Test toggling the tracer ON");
-  // Pass `console-api` specific classname as the command results aren't logged as "result".
-  // Instead the frontend log a message as a console API message.
-  await evaluateExpressionInConsole(
-    hud,
-    ":trace --logMethod console --max-depth 1",
-    "console-api"
-  );
-
-  info("Execute some code trigerring the tracer");
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
-    content.wrappedJSObject.foo1();
-  });
-
-  await waitFor(() => !!findTracerMessages(hud, `λ foo1`).length);
-  ok(true, "foo1 trace was printed to console");
-
-  is(
-    findTracerMessages(hud, `λ foo2`).length,
-    0,
-    "We only see the first function thanks to the depth limit"
-  );
-
-  info("Test toggling the tracer OFF");
-  await evaluateExpressionInConsole(hud, ":trace", "console-api");
-
-  info("Clear past traces");
-  hud.ui.clearOutput();
-  await waitFor(() => !findTracerMessages(hud, `λ foo1`).length);
-  ok("Console was cleared");
-
-  info("Re-enable the tracing, but with a max record limit");
-  await evaluateExpressionInConsole(
-    hud,
-    ":trace --logMethod console --max-records 1",
-    "console-api"
-  );
-
-  info("Trigger some code again");
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
-    content.wrappedJSObject.foo1();
-    content.wrappedJSObject.bar();
-  });
-
-  await waitFor(() => !!findTracerMessages(hud, `λ foo3`).length);
-  await waitFor(() => !!findConsoleAPIMessage(hud, `Stopped tracing`));
-  is(
-    findTracerMessages(hud, `λ foo1`).length,
-    1,
-    "Found the whole depth for the first event loop 1/3"
-  );
-  is(
-    findTracerMessages(hud, `λ foo2`).length,
-    1,
-    "Found the whole depth for the first event loop 2/3"
-  );
-  is(
-    findTracerMessages(hud, `λ foo3`).length,
-    1,
-    "Found the whole depth for the first event loop 3/3"
-  );
-  is(
-    findTracerMessages(hud, `λ bar`).length,
-    0,
-    "But the second event loop was ignored"
-  );
-  ok(
-    !!findConsoleAPIMessage(
-      hud,
-      `Stopped tracing (reason: max-records)`,
-      ".console-api"
-    ),
-    "And the tracer was automatically stopped"
-  );
-
-  info("Enable tracing one last time without any restriction");
-  await evaluateExpressionInConsole(
-    hud,
-    ":trace --logMethod console",
-    "console-api"
-  );
-  info("Trigger various code again");
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
-    content.wrappedJSObject.foo1();
-    content.wrappedJSObject.bar();
-  });
-  await waitFor(() => !!findTracerMessages(hud, `λ foo1`).length);
-  await waitFor(() => !!findTracerMessages(hud, `λ foo2`).length);
-  await waitFor(() => !!findTracerMessages(hud, `λ foo3`).length);
-  await waitFor(() => !!findTracerMessages(hud, `λ bar`).length);
-  ok(true, "All traces were printed to console");
 });

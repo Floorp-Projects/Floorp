@@ -27,8 +27,6 @@ add_task(async function () {
     "Split console is automatically opened when tracing to the console"
   );
 
-  await hasConsoleMessage(dbg, "Started tracing to Web Console");
-
   invokeInTab("main");
 
   info("Wait for console messages for the whole trace");
@@ -93,7 +91,6 @@ add_task(async function () {
   await waitForState(dbg, state => {
     return !dbg.selectors.getIsThreadCurrentlyTracing(topLevelThreadActorID);
   });
-  await hasConsoleMessage(dbg, "Stopped tracing");
 
   invokeInTab("inline_script2");
 

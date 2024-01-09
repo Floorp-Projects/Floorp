@@ -187,7 +187,6 @@ class WebConsoleUI {
         resourceCommand.TYPES.DOCUMENT_EVENT,
         resourceCommand.TYPES.LAST_PRIVATE_CONTEXT_EXIT,
         resourceCommand.TYPES.JSTRACER_TRACE,
-        resourceCommand.TYPES.JSTRACER_STATE,
       ],
       { onAvailable: this._onResourceAvailable }
     );
@@ -340,7 +339,6 @@ class WebConsoleUI {
         resourceCommand.TYPES.DOCUMENT_EVENT,
         resourceCommand.TYPES.LAST_PRIVATE_CONTEXT_EXIT,
         resourceCommand.TYPES.JSTRACER_TRACE,
-        resourceCommand.TYPES.JSTRACER_STATE,
       ],
       { onAvailable: this._onResourceAvailable }
     );
