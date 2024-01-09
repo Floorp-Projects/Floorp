@@ -159,8 +159,8 @@ class CanvasTranslator final : public gfx::InlineTranslator,
       gfx::SurfaceFormat aFormat) final;
 
   already_AddRefed<gfx::GradientStops> GetOrCreateGradientStops(
-      gfx::GradientStop* aRawStops, uint32_t aNumStops,
-      gfx::ExtendMode aExtendMode) final;
+      gfx::DrawTarget* aDrawTarget, gfx::GradientStop* aRawStops,
+      uint32_t aNumStops, gfx::ExtendMode aExtendMode) final;
 
   void CheckpointReached();
 
