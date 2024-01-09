@@ -18,12 +18,6 @@
           src="../states.js"></script>
 
   <script type="application/javascript">
-    // Disable mixed-content upgrading as this test is expecting an HTTP load
-    Services.prefs.setBoolPref(
-      "security.mixed_content.upgrade_display_content",
-      false
-    );
-
     async function openNode(aIDDetails, aIDSummary, aIsOpen) {
       let p = waitForStateChange(aIDSummary, STATE_EXPANDED, aIsOpen, false);
       if (aIsOpen) {
@@ -369,6 +363,11 @@
     }
 
     async function doTests() {
+      // Disable mixed-content upgrading as this test is expecting an HTTP load
+      await SpecialPowers.pushPrefEnv({
+          set: [["security.mixed_content.upgrade_display_content", false]]
+      });
+
       // Test opening details objects
       await openNode("detailsOpen", "summaryOpen", true);
       await openNode("detailsOpen", "summaryOpen", false);
