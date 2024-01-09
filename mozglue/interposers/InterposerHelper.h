@@ -41,10 +41,10 @@ static T get_real_symbol(const char* aName, T aReplacementSymbol) {
   T real_symbol = dlsym_wrapper<T>(RTLD_NEXT, aName);
 
 #if defined(ANDROID)
-  if (real_symbol == nullptr) {
+  if ((real_symbol == nullptr) || (real_symbol == aReplacementSymbol)) {
     // On old versions of Android the application runtime links in libc before
     // we get a chance to link libmozglue, so its symbols don't appear when
-    // resolving them with RTLD_NEXT. This behavior differ between the
+    // resolving them with RTLD_NEXT. This behavior differs between the
     // different versions of Android so we'll just look for them directly into
     // libc.so. Note that this won't work if we're trying to interpose
     // functions that are in other libraries, but hopefully we'll never have
