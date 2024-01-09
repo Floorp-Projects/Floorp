@@ -28,6 +28,7 @@ class AudioData;
 class VideoData;
 struct PlaybackInfoInit;
 class ProcessedMediaTrack;
+struct SharedDummyTrack;
 class TimeStamp;
 
 template <class T>

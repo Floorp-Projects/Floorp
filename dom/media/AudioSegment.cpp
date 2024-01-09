@@ -6,6 +6,7 @@
 #include "AudioSegment.h"
 #include "AudioMixer.h"
 #include "AudioChannelFormat.h"
+#include "MediaTrackGraph.h"  // for nsAutoRefTraits<SpeexResamplerState>
 #include <speex/speex_resampler.h>
 
 namespace mozilla {
@@ -27,6 +28,64 @@ const int16_t* SilentChannel::ZeroChannel<int16_t>() {
 void AudioSegment::ApplyVolume(float aVolume) {
   for (ChunkIterator ci(*this); !ci.IsEnded(); ci.Next()) {
     ci->mVolume *= aVolume;
+  }
+}
+
+template <typename T>
+void AudioSegment::Resample(nsAutoRef<SpeexResamplerState>& aResampler,
+                            uint32_t* aResamplerChannelCount, uint32_t aInRate,
+                            uint32_t aOutRate) {
+  mDuration = 0;
+
+  for (ChunkIterator ci(*this); !ci.IsEnded(); ci.Next()) {
+    AutoTArray<nsTArray<T>, GUESS_AUDIO_CHANNELS> output;
+    AutoTArray<const T*, GUESS_AUDIO_CHANNELS> bufferPtrs;
+    AudioChunk& c = *ci;
+    // If this chunk is null, don't bother resampling, just alter its duration
+    if (c.IsNull()) {
+      c.mDuration = (c.mDuration * aOutRate) / aInRate;
+      mDuration += c.mDuration;
+      continue;
+    }
+    uint32_t channels = c.mChannelData.Length();
+    // This might introduce a discontinuity, but a channel count change in the
+    // middle of a stream is not that common. This also initializes the
+    // resampler as late as possible.
+    if (channels != *aResamplerChannelCount) {
+      SpeexResamplerState* state =
+          speex_resampler_init(channels, aInRate, aOutRate,
+                               SPEEX_RESAMPLER_QUALITY_DEFAULT, nullptr);
+      MOZ_ASSERT(state);
+      aResampler.own(state);
+      *aResamplerChannelCount = channels;
+    }
+    output.SetLength(channels);
+    bufferPtrs.SetLength(channels);
+    uint32_t inFrames = c.mDuration;
+    // Round up to allocate; the last frame may not be used.
+    NS_ASSERTION((UINT64_MAX - aInRate + 1) / c.mDuration >= aOutRate,
+                 "Dropping samples");
+    uint32_t outSize =
+        (static_cast<uint64_t>(c.mDuration) * aOutRate + aInRate - 1) / aInRate;
+    for (uint32_t i = 0; i < channels; i++) {
+      T* out = output[i].AppendElements(outSize);
+      uint32_t outFrames = outSize;
+
+      const T* in = static_cast<const T*>(c.mChannelData[i]);
+      dom::WebAudioUtils::SpeexResamplerProcess(aResampler.get(), i, in,
+                                                &inFrames, out, &outFrames);
+      MOZ_ASSERT(inFrames == c.mDuration);
+
+      bufferPtrs[i] = out;
+      output[i].SetLength(outFrames);
+    }
+    MOZ_ASSERT(channels > 0);
+    c.mDuration = output[0].Length();
+    c.mBuffer = new mozilla::SharedChannelArrayBuffer<T>(std::move(output));
+    for (uint32_t i = 0; i < channels; i++) {
+      c.mChannelData[i] = bufferPtrs[i];
+    }
+    mDuration += c.mDuration;
   }
 }
 
