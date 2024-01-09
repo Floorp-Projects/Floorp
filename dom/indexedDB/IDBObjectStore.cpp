@@ -35,6 +35,7 @@
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/BlobBinding.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/IDBObjectStoreBinding.h"
 #include "mozilla/dom/MemoryBlobImpl.h"
@@ -1341,6 +1342,18 @@ RefPtr<IDBIndex> IDBObjectStore::CreateIndex(
   bool autoLocale = locale.EqualsASCII("auto");
   if (autoLocale) {
     locale = IndexedDatabaseManager::GetLocale();
+  }
+
+  if (!locale.IsEmpty()) {
+    // Set use counter and log deprecation warning for locale in parent doc.
+    nsIGlobalObject* global = GetParentObject();
+    AutoJSAPI jsapi;
+    // This isn't critical so don't error out if init fails.
+    if (jsapi.Init(global)) {
+      DeprecationWarning(
+          jsapi.cx(), global->GetGlobalJSObject(),
+          DeprecatedOperations::eIDBObjectStoreCreateIndexLocale);
+    }
   }
 
   IndexMetadata* const metadata = mSpec->indexes().EmplaceBack(
