@@ -159,17 +159,9 @@ impl Hash for FileSource {
     }
 }
 
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Default)]
 pub struct FileSourceOptions {
     pub allow_override: bool,
-}
-
-impl Default for FileSourceOptions {
-    fn default() -> Self {
-        Self {
-            allow_override: false,
-        }
-    }
 }
 
 impl FileSource {
@@ -409,7 +401,7 @@ impl Inner {
         F: FnOnce() -> ResourceStatus,
     {
         let mut lock = self.entries.borrow_mut();
-        lock.entry(resource_id.value).or_insert_with(|| f()).clone()
+        lock.entry(resource_id.value).or_insert_with(f).clone()
     }
 
     fn update_resource(&self, resource_id: ResourceId, resource: ResourceOption) -> ResourceOption {
