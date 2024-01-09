@@ -38,6 +38,7 @@ export default class FxviewSearchTextbox extends MozLitElement {
 
   static queries = {
     clearButton: ".clear-icon",
+    input: "input",
   };
 
   constructor() {
@@ -55,6 +56,14 @@ export default class FxviewSearchTextbox extends MozLitElement {
     if (!this.searchTask?.isFinalized) {
       this.searchTask?.finalize();
     }
+  }
+
+  focus() {
+    this.input.focus();
+  }
+
+  blur() {
+    this.input.blur();
   }
 
   onInput(event) {

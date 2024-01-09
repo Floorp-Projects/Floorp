@@ -543,13 +543,10 @@ add_task(async function search_synced_tabs() {
           .length === deviceTwoTabs.length,
       "The new devices's list is restored."
     );
+    syncedTabsComponent.searchTextbox.blur();
 
-    info("Input a search query.");
-    EventUtils.synthesizeMouseAtCenter(
-      syncedTabsComponent.searchTextbox,
-      {},
-      content
-    );
+    info("Input a search query with keyboard.");
+    EventUtils.synthesizeKey("f", { accelKey: true }, content);
     EventUtils.sendString("Mozilla", content);
     await TestUtils.waitForCondition(
       () => syncedTabsComponent.fullyUpdated,

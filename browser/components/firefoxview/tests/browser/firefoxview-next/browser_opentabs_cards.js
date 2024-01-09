@@ -426,9 +426,10 @@ add_task(async function search_open_tabs() {
       () => openTabs.viewCards[1].tabList.rowEls.length === newWinTabs.length,
       "The new window's list is restored."
     );
+    openTabs.searchTextbox.blur();
 
-    info("Input a search query.");
-    EventUtils.synthesizeMouseAtCenter(openTabs.searchTextbox, {}, content);
+    info("Input a search query with keyboard.");
+    EventUtils.synthesizeKey("f", { accelKey: true }, content);
     EventUtils.sendString(TEST_URL, content);
     await TestUtils.waitForCondition(
       () => openTabs.viewCards[0].tabList.rowEls.length === 0,

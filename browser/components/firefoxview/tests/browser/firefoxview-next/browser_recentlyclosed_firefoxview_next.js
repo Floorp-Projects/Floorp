@@ -578,9 +578,10 @@ add_task(async function test_search() {
       () => listElem.rowEls.length === expectedURLs.length,
       "The original list is restored."
     );
+    searchTextbox.blur();
 
-    info("Input a bogus search query.");
-    EventUtils.synthesizeMouseAtCenter(searchTextbox, {}, content);
+    info("Input a bogus search query with keyboard.");
+    EventUtils.synthesizeKey("f", { accelKey: true }, content);
     EventUtils.sendString("Bogus Query", content);
     await TestUtils.waitForCondition(
       () => tabList.shadowRoot.querySelector("fxview-empty-state"),

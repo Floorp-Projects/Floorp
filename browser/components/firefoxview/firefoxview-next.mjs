@@ -5,6 +5,8 @@
 let pageList = [];
 let categoryPagesDeck = null;
 let categoryNavigation = null;
+let activeComponent = null;
+let searchKeyboardShortcut = null;
 
 const { topChromeWindow } = window.browsingContext;
 
@@ -31,6 +33,7 @@ function onPagesDeckViewChange() {
   for (const child of categoryPagesDeck.children) {
     if (child.getAttribute("name") == categoryPagesDeck.selectedViewName) {
       child.enter();
+      activeComponent = child;
     } else {
       child.exit();
     }
@@ -75,6 +78,14 @@ async function updateSearchTextboxSize() {
   }
 }
 
+async function updateSearchKeyboardShortcut() {
+  const [message] = await topChromeWindow.document.l10n.formatMessages([
+    { id: "find-shortcut" },
+  ]);
+  const key = message.attributes[0].value;
+  searchKeyboardShortcut = key.toLocaleLowerCase();
+}
+
 window.addEventListener("DOMContentLoaded", async () => {
   recordEnteredTelemetry();
 
@@ -100,6 +111,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   onHashChange();
   onPagesDeckViewChange();
   await updateSearchTextboxSize();
+  await updateSearchKeyboardShortcut();
 
   if (Cu.isInAutomation) {
     Services.obs.notifyObservers(null, "firefoxview-entered");
@@ -129,6 +141,12 @@ function recordEnteredTelemetry() {
     }
   );
 }
+
+document.addEventListener("keydown", e => {
+  if (e.getModifierState("Accel") && e.key === searchKeyboardShortcut) {
+    activeComponent.searchTextbox?.focus();
+  }
+});
 
 window.addEventListener(
   "unload",
@@ -164,5 +182,8 @@ function onCommand(e) {
 }
 
 function onLocalesChanged() {
-  requestIdleCallback(updateSearchTextboxSize);
+  requestIdleCallback(() => {
+    updateSearchTextboxSize();
+    updateSearchKeyboardShortcut();
+  });
 }
