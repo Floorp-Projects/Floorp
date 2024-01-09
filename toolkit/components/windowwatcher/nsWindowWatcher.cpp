@@ -2005,6 +2005,9 @@ uint32_t nsWindowWatcher::CalculateChromeFlagsForSystem(
   if (aFeatures.GetBoolWithDefault("dialog", false)) {
     chromeFlags |= nsIWebBrowserChrome::CHROME_OPENAS_DIALOG;
   }
+  if (aFeatures.GetBoolWithDefault("alert", false)) {
+    chromeFlags |= nsIWebBrowserChrome::CHROME_ALERT;
+  }
 
   /* dialogs need to have the last word. assume dialogs are dialogs,
      and opened as chrome, unless explicitly told otherwise. */

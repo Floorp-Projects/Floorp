@@ -12,14 +12,11 @@
 #include "mozilla/EventForwards.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/dom/Notification.h"
-#include "mozilla/Unused.h"
 #include "nsISupportsPrimitives.h"
 #include "nsPIDOMWindow.h"
 #include "nsIWindowWatcher.h"
 
 using namespace mozilla;
-
-#define ALERT_CHROME_URL "chrome://global/content/alerts/alert.xhtml"_ns
 
 namespace {
 StaticRefPtr<nsXULAlerts> gXULAlerts;
@@ -163,9 +160,8 @@ nsXULAlerts::ShowAlert(nsIAlertNotification* aAlert,
     PendingAlert* pa = mPendingPersistentAlerts.AppendElement();
     pa->Init(aAlert, aAlertListener);
     return NS_OK;
-  } else {
-    return ShowAlertWithIconURI(aAlert, aAlertListener, nullptr);
   }
+  return ShowAlertWithIconURI(aAlert, aAlertListener, nullptr);
 }
 
 NS_IMETHODIMP
@@ -181,8 +177,9 @@ nsXULAlerts::ShowAlertWithIconURI(nsIAlertNotification* aAlert,
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (mDoNotDisturb) {
-    if (aAlertListener)
+    if (aAlertListener) {
       aAlertListener->Observe(nullptr, "alertfinished", cookie.get());
+    }
     return NS_OK;
   }
 
@@ -354,12 +351,13 @@ nsXULAlerts::ShowAlertWithIconURI(nsIAlertNotification* aAlert,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<mozIDOMWindowProxy> newWindow;
-  nsAutoCString features("chrome,dialog=yes,titlebar=no");
+  nsAutoCString features("chrome,dialog=yes,alert=yes,titlebar=no");
   if (inPrivateBrowsing) {
     features.AppendLiteral(",private");
   }
-  rv = wwatch->OpenWindow(nullptr, ALERT_CHROME_URL, "_blank"_ns, features,
-                          argsArray, getter_AddRefs(newWindow));
+  rv = wwatch->OpenWindow(
+      nullptr, "chrome://global/content/alerts/alert.xhtml"_ns, "_blank"_ns,
+      features, argsArray, getter_AddRefs(newWindow));
   NS_ENSURE_SUCCESS(rv, rv);
 
   mNamedWindows.InsertOrUpdate(name, newWindow);

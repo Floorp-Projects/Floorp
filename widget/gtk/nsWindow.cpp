@@ -6075,8 +6075,12 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
     gtk_window_resize(GTK_WINDOW(mShell), size.width, size.height);
   }
   if (mIsPIPWindow) {
-    LOG("    Is PIP Window\n");
+    LOG("    Is PIP window\n");
     gtk_window_set_type_hint(GTK_WINDOW(mShell), GDK_WINDOW_TYPE_HINT_UTILITY);
+  } else if (aInitData && aInitData->mIsAlert) {
+    LOG("    Is alert window\n");
+    gtk_window_set_type_hint(GTK_WINDOW(mShell),
+                             GDK_WINDOW_TYPE_HINT_NOTIFICATION);
   } else if (mWindowType == WindowType::Dialog) {
     mGtkWindowRoleName = "Dialog";
 
@@ -7550,13 +7554,9 @@ nsresult nsWindow::MakeFullScreen(bool aFullScreen) {
 
     gtk_window_unfullscreen(GTK_WINDOW(mShell));
 
-    if (mIsPIPWindow) {
-      gtk_window_set_type_hint(GTK_WINDOW(mShell),
-                               GDK_WINDOW_TYPE_HINT_UTILITY);
-      if (gUseAspectRatio) {
-        mAspectRatio = mAspectRatioSaved;
-        // ApplySizeConstraints();
-      }
+    if (mIsPIPWindow && gUseAspectRatio) {
+      mAspectRatio = mAspectRatioSaved;
+      // ApplySizeConstraints();
     }
   }
 

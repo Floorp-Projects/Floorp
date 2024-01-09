@@ -596,6 +596,8 @@ nsresult nsAppShellService::JustCreateTopWindow(
   }
 #endif
 
+  widgetInitData.mIsAlert = !!(aChromeMask & nsIWebBrowserChrome::CHROME_ALERT);
+
 #ifdef XP_MACOSX
   // Mac OS X sheet support
   // Adding CHROME_OPENAS_CHROME to sheetMask makes modal windows opened from
