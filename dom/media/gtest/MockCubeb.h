@@ -10,6 +10,7 @@
 #include "AudioVerifier.h"
 #include "MediaEventSource.h"
 #include "mozilla/DataMutex.h"
+#include "mozilla/MozPromise.h"
 #include "mozilla/ThreadSafeWeakPtr.h"
 #include "nsTArray.h"
 
