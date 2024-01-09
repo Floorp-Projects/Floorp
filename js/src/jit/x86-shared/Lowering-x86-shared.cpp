@@ -1501,6 +1501,12 @@ void LIRGenerator::visitWasmShuffleSimd128(MWasmShuffleSimd128* ins) {
         case SimdPermuteOp::REVERSE_16x8:
         case SimdPermuteOp::REVERSE_32x4:
         case SimdPermuteOp::REVERSE_64x2:
+        case SimdPermuteOp::ZERO_EXTEND_8x16_TO_16x8:
+        case SimdPermuteOp::ZERO_EXTEND_8x16_TO_32x4:
+        case SimdPermuteOp::ZERO_EXTEND_8x16_TO_64x2:
+        case SimdPermuteOp::ZERO_EXTEND_16x8_TO_32x4:
+        case SimdPermuteOp::ZERO_EXTEND_16x8_TO_64x2:
+        case SimdPermuteOp::ZERO_EXTEND_32x4_TO_64x2:
           // No need to reuse registers when VEX instructions are enabled.
           reuse = !Assembler::HasAVX();
           break;

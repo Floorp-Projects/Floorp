@@ -3715,6 +3715,24 @@ void CodeGenerator::visitWasmPermuteSimd128(LWasmPermuteSimd128* ins) {
       masm.rightShiftSimd128(Imm32(count), src, dest);
       break;
     }
+    case SimdPermuteOp::ZERO_EXTEND_8x16_TO_16x8:
+      masm.zeroExtend8x16To16x8(src, dest);
+      break;
+    case SimdPermuteOp::ZERO_EXTEND_8x16_TO_32x4:
+      masm.zeroExtend8x16To32x4(src, dest);
+      break;
+    case SimdPermuteOp::ZERO_EXTEND_8x16_TO_64x2:
+      masm.zeroExtend8x16To64x2(src, dest);
+      break;
+    case SimdPermuteOp::ZERO_EXTEND_16x8_TO_32x4:
+      masm.zeroExtend16x8To32x4(src, dest);
+      break;
+    case SimdPermuteOp::ZERO_EXTEND_16x8_TO_64x2:
+      masm.zeroExtend16x8To64x2(src, dest);
+      break;
+    case SimdPermuteOp::ZERO_EXTEND_32x4_TO_64x2:
+      masm.zeroExtend32x4To64x2(src, dest);
+      break;
     case SimdPermuteOp::REVERSE_16x8:
       masm.reverseInt16x8(src, dest);
       break;
