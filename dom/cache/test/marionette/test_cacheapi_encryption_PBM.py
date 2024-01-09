@@ -7,8 +7,6 @@ import re
 import sys
 from pathlib import Path
 
-from marionette_driver import Wait
-
 sys.path.append(os.fspath(Path(__file__).parents[3] / "quota/test/marionette"))
 
 from quota_test_case import QuotaTestCase
@@ -53,6 +51,8 @@ class CacheAPIEncryptionPBM(QuotaTestCase):
         self.marionette.navigate(
             self.marionette.absolute_url("dom/cache/basicCacheAPI_PBM.html")
         )
+
+        self.origin = self.marionette.absolute_url("")[:-1] + "^privateBrowsingId=1"
 
     def tearDown(self):
         super(CacheAPIEncryptionPBM, self).setUp()
@@ -149,11 +149,7 @@ class CacheAPIEncryptionPBM(QuotaTestCase):
             "Sqlite journal file did not get encrypted",
         )
 
-        self.assertTrue(
-            self.resetStoragesForPrincipal(
-                self.marionette.absolute_url("")[:-1] + "^privateBrowsingId=1"
-            )
-        )
+        self.assertTrue(self.resetStoragesForPrincipal(self.origin, "private", "cache"))
 
         self.assertFalse(os.path.getsize(dbJournalFile) > os.path.getsize(dbFile))
 
@@ -162,70 +158,13 @@ class CacheAPIEncryptionPBM(QuotaTestCase):
             "Sqlite main db file did not get encrypted",
         )
 
-    def resetStoragesForPrincipal(self, relatedOrigin):
-        # This method is used to force sqlite to write journal file contents to
-        # main sqlite database file
-
-        script = (
-            """
-            const [resolve] = arguments
-
-            function resetStorage() {
-                return new Promise((resolve, reject) => {
-                    let origin = '%s';
-                    let principal = Services.scriptSecurityManager.
-                                        createContentPrincipalFromOrigin(origin);
-
-                    let qms = Components.classes["@mozilla.org/dom/quota-manager-service;1"]
-                                        .getService(Components.interfaces.nsIQuotaManagerService);
-
-                    let req = qms.resetStoragesForPrincipal(principal, "private", "cache");
-                    req.callback = () => {
-                        if (req.resultCode != 0) reject([false, req.resultCode]);
-                        resolve([true, 0]);
-                    };
-                });
-            }
-
-            return resetStorage()
-                .then((result) => resolve(result))
-                .catch((error) => resolve(error));
-            """
-            % relatedOrigin
-        )
-
-        with self.marionette.using_context(self.marionette.CONTEXT_CHROME):
-            return self.marionette.execute_async_script(script)[0]
-
     def getCacheAPIStoragePath(self):
         if self.cacheAPIStoragePath is not None:
             return self.cacheAPIStoragePath
 
-        fullOriginMetadata = self.getFullOriginMetadata(
-            "private", self.marionette.absolute_url("")[:-1] + "^privateBrowsingId=1"
+        self.cacheAPIStoragePath = self.getStoragePath(
+            self.profilePath, self.origin, "private", "cache"
         )
-
-        storageOrigin = fullOriginMetadata["storageOrigin"]
-        sanitizedStorageOrigin = storageOrigin.replace(":", "+").replace("/", "+")
-
-        storagePath = os.path.join(
-            self.profilePath, "storage", "private", sanitizedStorageOrigin, "cache"
-        )
-
-        self.cacheAPIStoragePath = storagePath
 
         print("cacheAPI origin directory = " + self.cacheAPIStoragePath)
         return self.cacheAPIStoragePath
-
-    def findDirObj(self, path, pattern, isFile):
-        for obj in os.scandir(path):
-            if obj.path.endswith(pattern) and (obj.is_file() == isFile):
-                return obj.path
-        return None
-
-    def ensureInvariantHolds(self, op):
-        maxWaitTime = 60
-        Wait(self.marionette, timeout=maxWaitTime).until(
-            op,
-            message=f"operation did not yield success even after waiting {maxWaitTime}s time",
-        )
