@@ -801,6 +801,19 @@ impl<'le> GeckoElement<'le> {
         return self.flags() & NODE_IS_NATIVE_ANONYMOUS_ROOT != 0;
     }
 
+    /// Returns true if this node is the shadow root of an use-element shadow tree.
+    #[inline]
+    fn is_root_of_use_element_shadow_tree(&self) -> bool {
+        if !self.as_node().is_in_shadow_tree() {
+            return false;
+        }
+        if !self.parent_node_is_shadow_root() {
+            return false;
+        }
+        let host = self.containing_shadow_host().unwrap();
+        host.is_svg_element() && host.local_name() == &**local_name!("use")
+    }
+
     fn css_transitions_info(&self) -> FxHashMap<OwnedPropertyDeclarationId, Arc<AnimationValue>> {
         use crate::gecko_bindings::bindings::Gecko_ElementTransitions_EndValueAt;
         use crate::gecko_bindings::bindings::Gecko_ElementTransitions_Length;
@@ -2059,6 +2072,7 @@ impl<'le> ::selectors::Element for GeckoElement<'le> {
                 true
             },
             NonTSPseudoClass::MozNativeAnonymous => !self.matches_user_and_content_rules(),
+            NonTSPseudoClass::MozUseShadowTreeRoot => self.is_root_of_use_element_shadow_tree(),
             NonTSPseudoClass::MozTableBorderNonzero => unsafe {
                 bindings::Gecko_IsTableBorderNonzero(self.0)
             },

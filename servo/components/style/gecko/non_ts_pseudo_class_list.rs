@@ -87,6 +87,7 @@ macro_rules! apply_non_ts_list {
                 ("-moz-last-node", MozLastNode, _, _),
                 ("-moz-only-whitespace", MozOnlyWhitespace, _, _),
                 ("-moz-native-anonymous", MozNativeAnonymous, _, PSEUDO_CLASS_ENABLED_IN_UA_SHEETS),
+                ("-moz-use-shadow-tree-root", MozUseShadowTreeRoot, _, PSEUDO_CLASS_ENABLED_IN_UA_SHEETS),
                 ("-moz-placeholder", MozPlaceholder, _, _),
 
                 // NOTE(emilio): Pseudo-classes below only depend on document state, and thus
