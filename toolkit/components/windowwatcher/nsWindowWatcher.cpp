@@ -1784,47 +1784,6 @@ nsresult nsWindowWatcher::URIfromURL(const nsACString& aURL,
 }
 
 // static
-uint32_t nsWindowWatcher::CalculateChromeFlagsHelper(
-    uint32_t aInitialFlags, const WindowFeatures& aFeatures,
-    bool* presenceFlag) {
-  uint32_t chromeFlags = aInitialFlags;
-
-  if (aFeatures.GetBoolWithDefault("titlebar", false, presenceFlag)) {
-    chromeFlags |= nsIWebBrowserChrome::CHROME_TITLEBAR;
-  }
-  if (aFeatures.GetBoolWithDefault("close", false, presenceFlag)) {
-    chromeFlags |= nsIWebBrowserChrome::CHROME_WINDOW_CLOSE;
-  }
-  if (aFeatures.GetBoolWithDefault("toolbar", false, presenceFlag)) {
-    chromeFlags |= nsIWebBrowserChrome::CHROME_TOOLBAR;
-  }
-  if (aFeatures.GetBoolWithDefault("location", false, presenceFlag)) {
-    chromeFlags |= nsIWebBrowserChrome::CHROME_LOCATIONBAR;
-  }
-  if (aFeatures.GetBoolWithDefault("personalbar", false, presenceFlag)) {
-    chromeFlags |= nsIWebBrowserChrome::CHROME_PERSONAL_TOOLBAR;
-  }
-  if (aFeatures.GetBoolWithDefault("status", false, presenceFlag)) {
-    chromeFlags |= nsIWebBrowserChrome::CHROME_STATUSBAR;
-  }
-  if (aFeatures.GetBoolWithDefault("menubar", false, presenceFlag)) {
-    chromeFlags |= nsIWebBrowserChrome::CHROME_MENUBAR;
-  }
-  if (aFeatures.GetBoolWithDefault("resizable", false, presenceFlag)) {
-    chromeFlags |= nsIWebBrowserChrome::CHROME_WINDOW_RESIZE;
-  }
-  if (aFeatures.GetBoolWithDefault("minimizable", false, presenceFlag)) {
-    chromeFlags |= nsIWebBrowserChrome::CHROME_WINDOW_MINIMIZE;
-  }
-
-  if (aFeatures.GetBoolWithDefault("scrollbars", true, presenceFlag)) {
-    chromeFlags |= nsIWebBrowserChrome::CHROME_SCROLLBARS;
-  }
-
-  return chromeFlags;
-}
-
-// static
 bool nsWindowWatcher::ShouldOpenPopup(const WindowFeatures& aFeatures) {
   if (aFeatures.IsEmpty()) {
     return false;
@@ -1925,8 +1884,36 @@ uint32_t nsWindowWatcher::CalculateChromeFlagsForSystem(
   }
 
   /* Next, allow explicitly named options to override the initial settings */
-  chromeFlags =
-      CalculateChromeFlagsHelper(chromeFlags, aFeatures, &presenceFlag);
+  if (aFeatures.GetBoolWithDefault("titlebar", false, &presenceFlag)) {
+    chromeFlags |= nsIWebBrowserChrome::CHROME_TITLEBAR;
+  }
+  if (aFeatures.GetBoolWithDefault("close", false, &presenceFlag)) {
+    chromeFlags |= nsIWebBrowserChrome::CHROME_WINDOW_CLOSE;
+  }
+  if (aFeatures.GetBoolWithDefault("toolbar", false, &presenceFlag)) {
+    chromeFlags |= nsIWebBrowserChrome::CHROME_TOOLBAR;
+  }
+  if (aFeatures.GetBoolWithDefault("location", false, &presenceFlag)) {
+    chromeFlags |= nsIWebBrowserChrome::CHROME_LOCATIONBAR;
+  }
+  if (aFeatures.GetBoolWithDefault("personalbar", false, &presenceFlag)) {
+    chromeFlags |= nsIWebBrowserChrome::CHROME_PERSONAL_TOOLBAR;
+  }
+  if (aFeatures.GetBoolWithDefault("status", false, &presenceFlag)) {
+    chromeFlags |= nsIWebBrowserChrome::CHROME_STATUSBAR;
+  }
+  if (aFeatures.GetBoolWithDefault("menubar", false, &presenceFlag)) {
+    chromeFlags |= nsIWebBrowserChrome::CHROME_MENUBAR;
+  }
+  if (aFeatures.GetBoolWithDefault("resizable", false, &presenceFlag)) {
+    chromeFlags |= nsIWebBrowserChrome::CHROME_WINDOW_RESIZE;
+  }
+  if (aFeatures.GetBoolWithDefault("minimizable", false, &presenceFlag)) {
+    chromeFlags |= nsIWebBrowserChrome::CHROME_WINDOW_MINIMIZE;
+  }
+  if (aFeatures.GetBoolWithDefault("scrollbars", true, &presenceFlag)) {
+    chromeFlags |= nsIWebBrowserChrome::CHROME_SCROLLBARS;
+  }
 
   // Determine whether the window is a private browsing window
   if (aFeatures.GetBoolWithDefault("private", false, &presenceFlag)) {
@@ -2029,10 +2016,6 @@ uint32_t nsWindowWatcher::CalculateChromeFlagsForSystem(
       chromeFlags |= nsIWebBrowserChrome::CHROME_OPENAS_CHROME;
     }
   }
-
-  /* missing
-     chromeFlags->copy_history
-   */
 
   return chromeFlags;
 }

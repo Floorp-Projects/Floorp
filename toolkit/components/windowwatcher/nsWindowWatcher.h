@@ -96,10 +96,6 @@ class nsWindowWatcher : public nsIWindowWatcher,
       nsIWebBrowserChrome* aParentChrome, uint32_t aChromeFlags,
       nsIOpenWindowInfo* aOpenWindowInfo, nsIWebBrowserChrome** aResult);
 
-  static uint32_t CalculateChromeFlagsHelper(
-      uint32_t aInitialFlags, const mozilla::dom::WindowFeatures& aFeatures,
-      bool* presenceFlag = nullptr);
-
  protected:
   nsTArray<nsWatcherWindowEnumerator*> mEnumeratorList;
   nsWatcherWindowEntry* mOldestWindow;
