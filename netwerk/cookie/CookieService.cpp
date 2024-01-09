@@ -119,6 +119,7 @@ namespace net {
 
 static StaticRefPtr<CookieService> gCookieService;
 
+constexpr auto CONSOLE_CHIPS_CATEGORY = "cookiesCHIPS"_ns;
 constexpr auto CONSOLE_SAMESITE_CATEGORY = "cookieSameSite"_ns;
 constexpr auto CONSOLE_OVERSIZE_CATEGORY = "cookiesOversize"_ns;
 constexpr auto CONSOLE_REJECTION_CATEGORY = "cookiesRejection"_ns;
@@ -686,6 +687,12 @@ CookieService::SetCookieStringFromHttp(nsIURI* aHostURI,
                                          &isForeignAndNotAddon);
   }
 
+  bool mustBePartitioned =
+      isForeignAndNotAddon &&
+      cookieJarSettings->GetCookieBehavior() ==
+          nsICookieService::BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN &&
+      !result.contains(ThirdPartyAnalysis::IsStorageAccessPermissionGranted);
+
   nsCString cookieHeader(aCookieHeader);
 
   bool moreCookieToRead = true;
@@ -695,9 +702,10 @@ CookieService::SetCookieStringFromHttp(nsIURI* aHostURI,
     CookieStruct cookieData;
     bool canSetCookie = false;
 
-    moreCookieToRead = CanSetCookie(
-        aHostURI, baseDomain, cookieData, requireHostMatch, cookieStatus,
-        cookieHeader, true, isForeignAndNotAddon, crc, canSetCookie);
+    moreCookieToRead =
+        CanSetCookie(aHostURI, baseDomain, cookieData, requireHostMatch,
+                     cookieStatus, cookieHeader, true, isForeignAndNotAddon,
+                     mustBePartitioned, crc, canSetCookie);
 
     if (!canSetCookie) {
       continue;
@@ -1146,8 +1154,8 @@ static void RecordPartitionedTelemetry(const CookieStruct& aCookieData,
 bool CookieService::CanSetCookie(
     nsIURI* aHostURI, const nsACString& aBaseDomain, CookieStruct& aCookieData,
     bool aRequireHostMatch, CookieStatus aStatus, nsCString& aCookieHeader,
-    bool aFromHttp, bool aIsForeignAndNotAddon, nsIConsoleReportCollector* aCRC,
-    bool& aSetCookie) {
+    bool aFromHttp, bool aIsForeignAndNotAddon, bool aPartitionedOnly,
+    nsIConsoleReportCollector* aCRC, bool& aSetCookie) {
   MOZ_ASSERT(aHostURI);
 
   aSetCookie = false;
@@ -1336,6 +1344,31 @@ bool CookieService::CanSetCookie(
             NS_ConvertUTF8toUTF16(aCookieData.name()),
         });
     return newCookie;
+  }
+
+  // If the cookie does not have the partitioned attribute,
+  // but is foreign we should give the developer a message.
+  // If CHIPS isn't required yet, we will warn the console
+  // that we have upcoming changes. Otherwise we give a rejection message.
+  if (aPartitionedOnly && !aCookieData.isPartitioned() &&
+      aIsForeignAndNotAddon) {
+    if (StaticPrefs::network_cookie_cookieBehavior_optInPartitioning()) {
+      COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, savedCookieHeader,
+                        "foreign cookies must be partitioned");
+      CookieLogging::LogMessageToConsole(
+          aCRC, aHostURI, nsIScriptError::warningFlag, CONSOLE_CHIPS_CATEGORY,
+          "CookieForeignNoPartitionedError"_ns,
+          AutoTArray<nsString, 1>{
+              NS_ConvertUTF8toUTF16(aCookieData.name()),
+          });
+      return newCookie;
+    }
+    CookieLogging::LogMessageToConsole(
+        aCRC, aHostURI, nsIScriptError::warningFlag, CONSOLE_CHIPS_CATEGORY,
+        "CookieForeignNoPartitionedWarning"_ns,
+        AutoTArray<nsString, 1>{
+            NS_ConvertUTF8toUTF16(aCookieData.name()),
+        });
   }
 
   aSetCookie = true;
@@ -1791,22 +1824,6 @@ CookieStatus CookieService::CheckPrefs(
   if (aIsForeign) {
     if (aCookieJarSettings->GetCookieBehavior() ==
             nsICookieService::BEHAVIOR_REJECT_FOREIGN &&
-        !aStorageAccessPermissionGranted) {
-      COOKIE_LOGFAILURE(!aCookieHeader.IsVoid(), aHostURI, aCookieHeader,
-                        "context is third party");
-      CookieLogging::LogMessageToConsole(
-          aCRC, aHostURI, nsIScriptError::warningFlag,
-          CONSOLE_REJECTION_CATEGORY, "CookieRejectedThirdParty"_ns,
-          AutoTArray<nsString, 1>{
-              NS_ConvertUTF8toUTF16(aCookieHeader),
-          });
-      *aRejectedReason = nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN;
-      return STATUS_REJECTED;
-    }
-
-    if (aCookieJarSettings->GetCookieBehavior() ==
-            nsICookieService::BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN &&
-        StaticPrefs::network_cookie_cookieBehavior_optInPartitioning() &&
         !aStorageAccessPermissionGranted) {
       COOKIE_LOGFAILURE(!aCookieHeader.IsVoid(), aHostURI, aCookieHeader,
                         "context is third party");

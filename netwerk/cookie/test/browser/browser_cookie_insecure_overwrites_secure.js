@@ -25,6 +25,14 @@ function securify(cookie) {
 }
 
 registerCleanupFunction(() => {
+  Services.prefs.clearUserPref("dom.security.https_first");
+  Services.prefs.clearUserPref("network.cookie.cookieBehavior");
+  Services.prefs.clearUserPref(
+    "network.cookieJarSettings.unblocked_for_testing"
+  );
+  Services.prefs.clearUserPref("network.cookie.sameSite.laxByDefault");
+  Services.prefs.clearUserPref("network.cookie.sameSite.noneRequiresSecure");
+  Services.prefs.clearUserPref("network.cookie.sameSite.schemeful");
   info("Cleaning up the test");
 });
 

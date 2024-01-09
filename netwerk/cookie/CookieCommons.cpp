@@ -397,6 +397,12 @@ already_AddRefed<Cookie> CookieCommons::CreateCookieFromDocument(
     }
   }
 
+  bool mustBePartitioned =
+      isForeignAndNotAddon &&
+      aDocument->CookieJarSettings()->GetCookieBehavior() ==
+          nsICookieService::BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN &&
+      !aDocument->UsingStorageAccess();
+
   // If we are here, we have been already accepted by the anti-tracking.
   // We just need to check if we have to be in session-only mode.
   CookieStatus cookieStatus = CookieStatusForWindow(innerWindow, principalURI);
@@ -415,7 +421,8 @@ already_AddRefed<Cookie> CookieCommons::CreateCookieFromDocument(
   bool canSetCookie = false;
   CookieService::CanSetCookie(principalURI, baseDomain, cookieData,
                               requireHostMatch, cookieStatus, cookieString,
-                              false, isForeignAndNotAddon, crc, canSetCookie);
+                              false, isForeignAndNotAddon, mustBePartitioned,
+                              crc, canSetCookie);
 
   if (!canSetCookie) {
     return nullptr;

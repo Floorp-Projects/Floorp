@@ -210,8 +210,6 @@ AntiTracking._createTask({
     );
   },
   extraPrefs: [["network.cookie.cookieBehavior.optInPartitioning", true]],
-  expectedBlockingNotifications:
-    Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_FOREIGN,
   thirdPartyPage: TEST_4TH_PARTY_PAGE,
   runInPrivateWindow: false,
   iframeSandbox: null,
@@ -247,8 +245,6 @@ AntiTracking._createTask({
     );
   },
   extraPrefs: [["network.cookie.cookieBehavior.optInPartitioning", true]],
-  expectedBlockingNotifications:
-    Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_FOREIGN,
   thirdPartyPage: TEST_4TH_PARTY_PAGE,
   runInPrivateWindow: true,
   iframeSandbox: null,
