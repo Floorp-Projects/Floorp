@@ -698,6 +698,7 @@ mochitest-media:
             wmf-media-engine:
                 by-test-platform:
                     .*hw-ref.*: []
+                    windows1.*ccov.*: []
                     windows1.*-64.*: ['autoland', 'mozilla-central']
                     default: []
             msix:
