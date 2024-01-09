@@ -80,8 +80,7 @@ uniffi-fixture-external-types = { path = "../../../components/uniffi-fixture-ext
 binary_http = { path = "../../../../netwerk/protocol/http/binary_http" }
 oblivious_http = { path = "../../../../netwerk/protocol/http/oblivious_http" }
 mime-guess-ffi = { path = "../../../../dom/fs/parent/rust/mime-guess-ffi" }
-# Explicitly list the `uniffi_core` dependency so we can enable the `extern-rustbuffer` feature.
-uniffi_core = { version = "0.25.2", features = ["extern-rustbuffer"] }
+uniffi = { version = "0.25.2" }
 
 # Note: `modern_sqlite` means rusqlite's bindings file be for a sqlite with
 # version less than or equal to what we link to. This isn't a problem because we
