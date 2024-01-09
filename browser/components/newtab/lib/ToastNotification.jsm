@@ -128,7 +128,7 @@ const ToastNotification = {
 
     let shownPromise = lazy.PromiseUtils.defer();
     let obs = (subject, topic, data) => {
-      if (topic === "alertshown") {
+      if (topic === "alertshow") {
         shownPromise.resolve();
       }
     };
