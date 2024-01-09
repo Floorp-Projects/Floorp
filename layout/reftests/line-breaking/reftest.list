@@ -7,7 +7,7 @@ pref(intl.icu4x.segmenter.enabled,false) == currency-1.html currency-1-ref.html
 pref(intl.icu4x.segmenter.enabled,false) == datetime-1.html datetime-1-ref.html
 pref(gfx.font_rendering.fallback.async,false) == emoji-1.html emoji-1-ref.html
 pref(gfx.font_rendering.fallback.async,false) pref(intl.icu4x.segmenter.enabled,false) == emoji-2.html emoji-2-ref.html
-pref(intl.icu4x.segmenter.enabled,false) == hyphens-1.html hyphens-1-ref.html
+random-if(gtkWidget) pref(intl.icu4x.segmenter.enabled,false) == hyphens-1.html hyphens-1-ref.html # may fail depending on `serif` font on linux
 pref(intl.icu4x.segmenter.enabled,false) == hyphens-2.html hyphens-2-ref.html
 # The following three tests may fail if rendering with Core Text (see bug 389074)
 # due to subpixel glyph positioning differences between the reference cases with <br>
