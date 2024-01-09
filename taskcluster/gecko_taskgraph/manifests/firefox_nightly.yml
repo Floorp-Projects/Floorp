@@ -357,8 +357,11 @@ mapping:
         <<: *default
         description: "Main package disk image for Mac OS X platforms"
         all_locales: true
+        # Attribution-l10n jobs don't have locale in the artifact path
+        source_path_modifier: ""
         from:
-            - repackage
+            - attribution
+            - attribution-l10n
         only_for_platforms:
             - macosx64-shippable
         pretty_name: firefox-${version}.${locale}.${filename_platform}.dmg
