@@ -9,6 +9,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/ComputedStyle.h"
+#include "mozilla/EnumeratedArray.h"
 #include "mozilla/Span.h"
 
 #include "nsAtomHashKeys.h"
@@ -47,6 +48,17 @@ class MOZ_STACK_CLASS nsTextPaintStyle {
   nscolor GetWebkitTextStrokeColor();
   float GetWebkitTextStrokeWidth();
 
+  // Index used to look up styles for different types of selection.
+  enum class SelectionStyleIndex : uint8_t {
+    RawInput = 0,
+    SelRawText,
+    ConvText,
+    SelConvText,
+    SpellChecker,
+    // Not an actual enum value; used to size the array of styles.
+    Count,
+  };
+
   /**
    * Compute the colors for normally-selected text. Returns false if
    * the normal selection is not being displayed.
@@ -59,15 +71,15 @@ class MOZ_STACK_CLASS nsTextPaintStyle {
   bool GetCustomHighlightBackgroundColor(nsAtom* aHighlightName,
                                          nscolor* aBackColor);
   void GetURLSecondaryColor(nscolor* aForeColor);
-  void GetIMESelectionColors(uint32_t aIndex, nscolor* aForeColor,
+  void GetIMESelectionColors(SelectionStyleIndex aIndex, nscolor* aForeColor,
                              nscolor* aBackColor);
   // if this returns false, we don't need to draw underline.
-  bool GetSelectionUnderlineForPaint(uint32_t aIndex, nscolor* aLineColor,
-                                     float* aRelativeSize,
+  bool GetSelectionUnderlineForPaint(SelectionStyleIndex aIndex,
+                                     nscolor* aLineColor, float* aRelativeSize,
                                      StyleTextDecorationStyle* aStyle);
 
   // if this returns false, we don't need to draw underline.
-  static bool GetSelectionUnderline(nsIFrame*, uint32_t aIndex,
+  static bool GetSelectionUnderline(nsIFrame*, SelectionStyleIndex aIndex,
                                     nscolor* aLineColor, float* aRelativeSize,
                                     StyleTextDecorationStyle* aStyle);
 
@@ -77,32 +89,22 @@ class MOZ_STACK_CLASS nsTextPaintStyle {
 
   nsPresContext* PresContext() const { return mPresContext; }
 
-  enum : uint32_t {
-    eIndexRawInput = 0,
-    eIndexSelRawText,
-    eIndexConvText,
-    eIndexSelConvText,
-    eIndexSpellChecker,
-    eNumSelectionTypes /* Not an actual enum value; just a record of how many
-                          enum values there are. */
-  };
-
-  static uint32_t GetUnderlineStyleIndexForSelectionType(
+  static SelectionStyleIndex GetUnderlineStyleIndexForSelectionType(
       SelectionType aSelectionType) {
     switch (aSelectionType) {
       case SelectionType::eIMERawClause:
-        return eIndexRawInput;
+        return SelectionStyleIndex::RawInput;
       case SelectionType::eIMESelectedRawClause:
-        return eIndexSelRawText;
+        return SelectionStyleIndex::SelRawText;
       case SelectionType::eIMEConvertedClause:
-        return eIndexConvText;
+        return SelectionStyleIndex::ConvText;
       case SelectionType::eIMESelectedClause:
-        return eIndexSelConvText;
+        return SelectionStyleIndex::SelConvText;
       case SelectionType::eSpellCheck:
-        return eIndexSpellChecker;
+        return SelectionStyleIndex::SpellChecker;
       default:
         NS_WARNING("non-IME selection type");
-        return eIndexRawInput;
+        return SelectionStyleIndex::RawInput;
     }
   }
 
@@ -142,14 +144,16 @@ class MOZ_STACK_CLASS nsTextPaintStyle {
     StyleTextDecorationStyle mUnderlineStyle;
     float mUnderlineRelativeSize;
   };
-  mozilla::Maybe<nsSelectionStyle> mSelectionStyle[5];
+  mozilla::EnumeratedArray<SelectionStyleIndex, SelectionStyleIndex::Count,
+                           mozilla::Maybe<nsSelectionStyle>>
+      mSelectionStyle;
 
   // Color initializations
   void InitCommonColors();
   bool InitSelectionColorsAndShadow();
 
-  nsSelectionStyle* SelectionStyle(uint32_t aIndex);
-  void InitSelectionStyle(uint32_t aIndex);
+  nsSelectionStyle* SelectionStyle(SelectionStyleIndex aIndex);
+  nsSelectionStyle InitSelectionStyle(SelectionStyleIndex aIndex);
 
   // Ensures sufficient contrast between the frame background color and the
   // selection background color, and swaps the selection text and background

@@ -265,12 +265,11 @@ void nsTextPaintStyle::GetURLSecondaryColor(nscolor* aForeColor) {
                         NS_GET_B(textColor), 127);
 }
 
-void nsTextPaintStyle::GetIMESelectionColors(uint32_t aIndex,
+void nsTextPaintStyle::GetIMESelectionColors(SelectionStyleIndex aIndex,
                                              nscolor* aForeColor,
                                              nscolor* aBackColor) {
   NS_ASSERTION(aForeColor, "aForeColor is null");
   NS_ASSERTION(aBackColor, "aBackColor is null");
-  NS_ASSERTION(aIndex < eNumSelectionTypes, "Index out of range");
 
   nsSelectionStyle* selectionStyle = SelectionStyle(aIndex);
   *aForeColor = selectionStyle->mTextColor;
@@ -278,11 +277,10 @@ void nsTextPaintStyle::GetIMESelectionColors(uint32_t aIndex,
 }
 
 bool nsTextPaintStyle::GetSelectionUnderlineForPaint(
-    uint32_t aIndex, nscolor* aLineColor, float* aRelativeSize,
+    SelectionStyleIndex aIndex, nscolor* aLineColor, float* aRelativeSize,
     StyleTextDecorationStyle* aStyle) {
   NS_ASSERTION(aLineColor, "aLineColor is null");
   NS_ASSERTION(aRelativeSize, "aRelativeSize is null");
-  NS_ASSERTION(aIndex < eNumSelectionTypes, "Index out of range");
 
   nsSelectionStyle* selectionStyle = SelectionStyle(aIndex);
   if (selectionStyle->mUnderlineStyle == StyleTextDecorationStyle::None ||
@@ -406,9 +404,12 @@ bool nsTextPaintStyle::InitSelectionColorsAndShadow() {
 }
 
 nsTextPaintStyle::nsSelectionStyle* nsTextPaintStyle::SelectionStyle(
-    uint32_t aIndex) {
-  InitSelectionStyle(aIndex);
-  return mSelectionStyle[aIndex].ptr();
+    SelectionStyleIndex aIndex) {
+  Maybe<nsSelectionStyle>& selectionStyle = mSelectionStyle[aIndex];
+  if (!selectionStyle) {
+    selectionStyle.emplace(InitSelectionStyle(aIndex));
+  }
+  return selectionStyle.ptr();
 }
 
 struct StyleIDs {
@@ -416,51 +417,48 @@ struct StyleIDs {
   LookAndFeel::IntID mLineStyle;
   LookAndFeel::FloatID mLineRelativeSize;
 };
-static StyleIDs SelectionStyleIDs[] = {
-    {LookAndFeel::ColorID::IMERawInputForeground,
-     LookAndFeel::ColorID::IMERawInputBackground,
-     LookAndFeel::ColorID::IMERawInputUnderline,
-     LookAndFeel::IntID::IMERawInputUnderlineStyle,
-     LookAndFeel::FloatID::IMEUnderlineRelativeSize},
-    {LookAndFeel::ColorID::IMESelectedRawTextForeground,
-     LookAndFeel::ColorID::IMESelectedRawTextBackground,
-     LookAndFeel::ColorID::IMESelectedRawTextUnderline,
-     LookAndFeel::IntID::IMESelectedRawTextUnderlineStyle,
-     LookAndFeel::FloatID::IMEUnderlineRelativeSize},
-    {LookAndFeel::ColorID::IMEConvertedTextForeground,
-     LookAndFeel::ColorID::IMEConvertedTextBackground,
-     LookAndFeel::ColorID::IMEConvertedTextUnderline,
-     LookAndFeel::IntID::IMEConvertedTextUnderlineStyle,
-     LookAndFeel::FloatID::IMEUnderlineRelativeSize},
-    {LookAndFeel::ColorID::IMESelectedConvertedTextForeground,
-     LookAndFeel::ColorID::IMESelectedConvertedTextBackground,
-     LookAndFeel::ColorID::IMESelectedConvertedTextUnderline,
-     LookAndFeel::IntID::IMESelectedConvertedTextUnderline,
-     LookAndFeel::FloatID::IMEUnderlineRelativeSize},
-    {LookAndFeel::ColorID::End, LookAndFeel::ColorID::End,
-     LookAndFeel::ColorID::SpellCheckerUnderline,
-     LookAndFeel::IntID::SpellCheckerUnderlineStyle,
-     LookAndFeel::FloatID::SpellCheckerUnderlineRelativeSize}};
+EnumeratedArray<nsTextPaintStyle::SelectionStyleIndex,
+                nsTextPaintStyle::SelectionStyleIndex::Count, StyleIDs>
+    SelectionStyleIDs = {
+        StyleIDs{LookAndFeel::ColorID::IMERawInputForeground,
+                 LookAndFeel::ColorID::IMERawInputBackground,
+                 LookAndFeel::ColorID::IMERawInputUnderline,
+                 LookAndFeel::IntID::IMERawInputUnderlineStyle,
+                 LookAndFeel::FloatID::IMEUnderlineRelativeSize},
+        StyleIDs{LookAndFeel::ColorID::IMESelectedRawTextForeground,
+                 LookAndFeel::ColorID::IMESelectedRawTextBackground,
+                 LookAndFeel::ColorID::IMESelectedRawTextUnderline,
+                 LookAndFeel::IntID::IMESelectedRawTextUnderlineStyle,
+                 LookAndFeel::FloatID::IMEUnderlineRelativeSize},
+        StyleIDs{LookAndFeel::ColorID::IMEConvertedTextForeground,
+                 LookAndFeel::ColorID::IMEConvertedTextBackground,
+                 LookAndFeel::ColorID::IMEConvertedTextUnderline,
+                 LookAndFeel::IntID::IMEConvertedTextUnderlineStyle,
+                 LookAndFeel::FloatID::IMEUnderlineRelativeSize},
+        StyleIDs{LookAndFeel::ColorID::IMESelectedConvertedTextForeground,
+                 LookAndFeel::ColorID::IMESelectedConvertedTextBackground,
+                 LookAndFeel::ColorID::IMESelectedConvertedTextUnderline,
+                 LookAndFeel::IntID::IMESelectedConvertedTextUnderline,
+                 LookAndFeel::FloatID::IMEUnderlineRelativeSize},
+        StyleIDs{LookAndFeel::ColorID::End, LookAndFeel::ColorID::End,
+                 LookAndFeel::ColorID::SpellCheckerUnderline,
+                 LookAndFeel::IntID::SpellCheckerUnderlineStyle,
+                 LookAndFeel::FloatID::SpellCheckerUnderlineRelativeSize}};
 
-void nsTextPaintStyle::InitSelectionStyle(uint32_t aIndex) {
-  NS_ASSERTION(aIndex < eNumSelectionTypes, "aIndex is invalid");
-  Maybe<nsSelectionStyle>& selectionStyle = mSelectionStyle[aIndex];
-  if (selectionStyle) {
-    return;  // Already initialized; we don't need to do anything.
-  }
-
-  StyleIDs* styleIDs = &SelectionStyleIDs[aIndex];
+nsTextPaintStyle::nsSelectionStyle nsTextPaintStyle::InitSelectionStyle(
+    SelectionStyleIndex aIndex) {
+  const StyleIDs& styleIDs = SelectionStyleIDs[aIndex];
 
   nscolor foreColor, backColor;
-  if (styleIDs->mForeground == LookAndFeel::ColorID::End) {
+  if (styleIDs.mForeground == LookAndFeel::ColorID::End) {
     foreColor = NS_SAME_AS_FOREGROUND_COLOR;
   } else {
-    foreColor = LookAndFeel::Color(styleIDs->mForeground, mFrame);
+    foreColor = LookAndFeel::Color(styleIDs.mForeground, mFrame);
   }
-  if (styleIDs->mBackground == LookAndFeel::ColorID::End) {
+  if (styleIDs.mBackground == LookAndFeel::ColorID::End) {
     backColor = NS_TRANSPARENT;
   } else {
-    backColor = LookAndFeel::Color(styleIDs->mBackground, mFrame);
+    backColor = LookAndFeel::Color(styleIDs.mBackground, mFrame);
   }
 
   // Convert special color to actual color
@@ -488,34 +486,30 @@ void nsTextPaintStyle::InitSelectionStyle(uint32_t aIndex) {
     lineColor = GetResolvedForeColor(lineColor, foreColor, backColor);
   }
 
-  selectionStyle.emplace();
-  selectionStyle->mTextColor = foreColor;
-  selectionStyle->mBGColor = backColor;
-  selectionStyle->mUnderlineColor = lineColor;
-  selectionStyle->mUnderlineStyle = lineStyle;
-  selectionStyle->mUnderlineRelativeSize = relativeSize;
+  return nsSelectionStyle{foreColor, backColor, lineColor, lineStyle,
+                          relativeSize};
 }
 
 /* static */
-bool nsTextPaintStyle::GetSelectionUnderline(nsIFrame* aFrame, uint32_t aIndex,
+bool nsTextPaintStyle::GetSelectionUnderline(nsIFrame* aFrame,
+                                             SelectionStyleIndex aIndex,
                                              nscolor* aLineColor,
                                              float* aRelativeSize,
                                              StyleTextDecorationStyle* aStyle) {
   NS_ASSERTION(aFrame, "aFrame is null");
   NS_ASSERTION(aRelativeSize, "aRelativeSize is null");
   NS_ASSERTION(aStyle, "aStyle is null");
-  NS_ASSERTION(aIndex < eNumSelectionTypes, "Index out of range");
 
-  StyleIDs& styleID = SelectionStyleIDs[aIndex];
+  const StyleIDs& styleIDs = SelectionStyleIDs[aIndex];
 
-  nscolor color = LookAndFeel::Color(styleID.mLine, aFrame);
-  const int32_t lineStyle = LookAndFeel::GetInt(styleID.mLineStyle);
+  nscolor color = LookAndFeel::Color(styleIDs.mLine, aFrame);
+  const int32_t lineStyle = LookAndFeel::GetInt(styleIDs.mLineStyle);
   auto style = static_cast<StyleTextDecorationStyle>(lineStyle);
   if (lineStyle > static_cast<int32_t>(StyleTextDecorationStyle::Sentinel)) {
     NS_ERROR("Invalid underline style value is specified");
     style = StyleTextDecorationStyle::Solid;
   }
-  float size = LookAndFeel::GetFloat(styleID.mLineRelativeSize);
+  float size = LookAndFeel::GetFloat(styleIDs.mLineRelativeSize);
 
   NS_ASSERTION(size, "selection underline relative size must be larger than 0");
 
