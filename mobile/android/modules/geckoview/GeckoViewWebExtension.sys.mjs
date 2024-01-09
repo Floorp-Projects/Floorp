@@ -1084,6 +1084,11 @@ export var GeckoViewWebExtension = {
       await this._promiseAddonRepositoryUpdate;
     }
 
+    // Early-return when extension updates are disabled.
+    if (!lazy.AddonManager.updateEnabled) {
+      return null;
+    }
+
     const extension = await this.extensionById(aId);
 
     const install = await this.checkForUpdate(extension);
