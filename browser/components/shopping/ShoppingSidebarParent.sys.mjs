@@ -174,10 +174,10 @@ class ShoppingSidebarManagerClass {
     }
 
     let { selectedBrowser, currentURI } = window.gBrowser;
-    this._maybeToggleSidebar(selectedBrowser, currentURI, 0);
+    this._maybeToggleSidebar(selectedBrowser, currentURI, 0, false);
   }
 
-  _maybeToggleSidebar(aBrowser, aLocationURI, aFlags) {
+  _maybeToggleSidebar(aBrowser, aLocationURI, aFlags, aIsNavigation) {
     let gBrowser = aBrowser.getTabBrowser();
     let document = aBrowser.ownerDocument;
     if (!this.enabled) {
@@ -213,12 +213,25 @@ class ShoppingSidebarManagerClass {
     this._updateBCActiveness(aBrowser);
     this._setShoppingButtonState(aBrowser);
 
+    // Note: (bug 1868602) only record surface displayed telemetry if:
+    // - the foregrounded tab navigates to a product page with sidebar visible,
+    // - a product page tab loaded in the background is foregrounded, or
+    // - a foregrounded product page tab was loaded with the sidebar hidden and
+    //   now the sidebar has been shown.
     if (
-      sidebar &&
-      !sidebar.hidden &&
+      this.enabled &&
       lazy.ShoppingUtils.isProductPageNavigation(aLocationURI, aFlags)
     ) {
-      Glean.shopping.surfaceDisplayed.record();
+      if (
+        this.isActive &&
+        aBrowser === gBrowser.selectedBrowser &&
+        (aIsNavigation || aBrowser.isDistinctProductPageVisit)
+      ) {
+        Glean.shopping.surfaceDisplayed.record();
+        delete aBrowser.isDistinctProductPageVisit;
+      } else if (aIsNavigation) {
+        aBrowser.isDistinctProductPageVisit = true;
+      }
     }
 
     if (isProduct) {
@@ -307,7 +320,7 @@ class ShoppingSidebarManagerClass {
     lazy.ShoppingUtils.maybeRecordExposure(aLocationURI, aFlags);
 
     this._maybeToggleButton(aBrowser.getTabBrowser());
-    this._maybeToggleSidebar(aBrowser, aLocationURI, aFlags);
+    this._maybeToggleSidebar(aBrowser, aLocationURI, aFlags, true);
   }
 
   handleEvent(event) {
