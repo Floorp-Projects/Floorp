@@ -156,10 +156,6 @@ nsCSSFontDesc nsCSSProps::LookupFontDesc(const nsACString& aFontDesc) {
   MOZ_ASSERT(gFontDescTable, "no lookup table, needs addref");
   nsCSSFontDesc which = nsCSSFontDesc(gFontDescTable->Lookup(aFontDesc));
 
-  if (which == eCSSFontDesc_Display &&
-      !StaticPrefs::layout_css_font_display_enabled()) {
-    which = eCSSFontDesc_UNKNOWN;
-  }
   return which;
 }
 

@@ -614,9 +614,6 @@ impl Parse for Source {
 }
 
 macro_rules! is_descriptor_enabled {
-    ("font-display") => {
-        static_prefs::pref!("layout.css.font-display.enabled")
-    };
     ("font-variation-settings") => {
         static_prefs::pref!("layout.css.font-variations.enabled")
     };

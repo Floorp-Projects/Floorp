@@ -110,8 +110,7 @@ function runTest() {
 SimpleTest.waitForExplicitFinish();
 SimpleTest.requestLongerTimeout(5);
 
-SpecialPowers.pushPrefEnv({ set: [["layout.css.font-display.enabled", true]] },
-                          runTest);
+runTest();
 
 </script>
 </pre>
