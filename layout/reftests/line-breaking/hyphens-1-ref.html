@@ -1,39 +1,46 @@
 <html>
 <head>
-<style type="text/css"> p { margin: 5px 1em; width: 0; white-space: nowrap; } </style>
+<style type="text/css">
+p {
+  font-family: "Times New Roman", serif;
+  margin: 5px 1em;
+  width: 0;
+  white-space: nowrap;
+}
+</style>
 </head>
 <body>
 
 <p>ab-<br>ab</p>
-<p>a-ab</p>
-<p>ab-a</p>
+<p>a-<br>ab</p>
+<p>ab-<br>a</p>
 <p>abcdef--<br>abcdef</p>
 <p>------abcdef<p>
 
 <!-- U+058A is ARMENIAN HYPHEN -->
-<p>ab&#x058A;<br>ab</p>
-<p>a&#x058A;ab</p>
-<p>ab&#x058A;a</p>
-<p>abcdef&#x058A;&#x058A;<br>abcdef</p>
-<p>&#x058A;&#x058A;&#x058A;&#x058A;&#x058A;&#x058A;abcdef<p>
+<p>&#x561;&#x562;&#x058A;<br>&#x561;&#x562;</p>
+<p>&#x561;&#x058A;<br>&#x561;&#x562;</p>
+<p>&#x561;&#x562;&#x058A;<br>&#x561;</p>
+<p>&#x561;&#x562;&#x563;&#x564;&#x565;&#x566;&#x058A;&#x058A;<br>&#x561;&#x562;&#x563;&#x564;&#x565;&#x566;</p>
+<p>&#x058A;&#x058A;&#x058A;&#x058A;&#x058A;&#x058A;&#x561;&#x562;&#x563;&#x564;&#x565;&#x566;<p>
 
 <!-- U+2010 is HYPHEN -->
 <p>ab&#x2010;<br>ab</p>
-<p>a&#x2010;ab</p>
-<p>ab&#x2010;a</p>
+<p>a&#x2010;<br>ab</p>
+<p>ab&#x2010;<br>a</p>
 <p>abcdef&#x2010;&#x2010;<br>abcdef</p>
 <p>&#x2010;&#x2010;&#x2010;&#x2010;&#x2010;&#x2010;abcdef<p>
 
 <!-- U+2012 is FIGURE DASH -->
 <p>ab&#x2012;<br>ab</p>
-<p>a&#x2012;ab</p>
-<p>ab&#x2012;a</p>
+<p>a&#x2012;<br>ab</p>
+<p>ab&#x2012;<br>a</p>
 <p>abcdef&#x2012;&#x2012;<br>abcdef</p>
 <p>&#x2012;&#x2012;&#x2012;&#x2012;&#x2012;&#x2012;abcdef<p>
 
 <p>ab&ndash;<br>ab</p>
-<p>a&ndash;ab</p>
-<p>ab&ndash;a</p>
+<p>a&ndash;<br>ab</p>
+<p>ab&ndash;<br>a</p>
 <p>abcdef&ndash;&ndash;<br>abcdef</p>
 <p>&ndash;&ndash;&ndash;&ndash;&ndash;&ndash;abcdef<p>
 

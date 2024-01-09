@@ -18,12 +18,6 @@ p {
 </head>
 <body>
 The green examples should break at all their hyphens; the red ones should not.
-<p class="nobreak">
-T-shirt
-</p>
-<p class="nobreak">
-billy-o
-</p>
 <p class="break">
 tally-<br>ho
 </p>
@@ -63,6 +57,20 @@ Lee-<br>on-<br>the-<br>Solent
 </p>
 <p class="nobreak">
 :-D
+</p>
+<!-- these break due to "emergency" overflow wrapping -->
+<p class="break">
+T-<br>shirt
+</p>
+<p class="break">
+billy-<br>o
+</p>
+<!-- but here the emergency wrap is not forced -->
+<p class="nobreak">
+Supersized<br>T-shirt
+</p>
+<p class="nobreak">
+Going like<br>billy-o
 </p>
 </body>
 </html>
