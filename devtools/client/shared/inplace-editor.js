@@ -22,16 +22,12 @@
 "use strict";
 
 const focusManager = Services.focus;
+const isOSX = Services.appinfo.OS === "Darwin";
 const { KeyCodes } = require("resource://devtools/client/shared/keycodes.js");
 const EventEmitter = require("resource://devtools/shared/event-emitter.js");
 const {
   findMostRelevantCssPropertyIndex,
 } = require("resource://devtools/client/shared/suggestion-picker.js");
-
-const lazy = {};
-ChromeUtils.defineESModuleGetters(lazy, {
-  AppConstants: "resource://gre/modules/AppConstants.sys.mjs",
-});
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 const CONTENT_TYPES = {
@@ -130,7 +126,7 @@ function isKeyIn(key, ...keys) {
  *        then the character is inserted instead.
  * @param {Boolean} options.stopOnReturn:
  *        If true, the return key will not advance the editor to the next
- *        focusable element.
+ *        focusable element. Note that Ctrl/Cmd+Enter will still advance the editor
  * @param {Boolean} options.stopOnTab:
  *        If true, the tab key will not advance the editor to the next
  *        focusable element.
@@ -1300,9 +1296,11 @@ class InplaceEditor extends EventEmitter {
     ) {
       prevent = true;
 
+      const ctrlOrCmd = isOSX ? event.metaKey : event.ctrlKey;
+
       let direction;
       if (
-        (this.stopOnReturn && isKeyIn(key, "RETURN")) ||
+        (this.stopOnReturn && isKeyIn(key, "RETURN") && !ctrlOrCmd) ||
         (this.stopOnTab && !event.shiftKey && isKeyIn(key, "TAB")) ||
         (this.stopOnShiftTab && event.shiftKey && isKeyIn(key, "TAB"))
       ) {
@@ -1427,7 +1425,7 @@ class InplaceEditor extends EventEmitter {
    */
   #getIncrement(event) {
     const getSmallIncrementKey = evt => {
-      if (lazy.AppConstants.platform === "macosx") {
+      if (isOSX) {
         return evt.altKey;
       }
       return evt.ctrlKey;
