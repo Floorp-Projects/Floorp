@@ -147,6 +147,10 @@ def main():
         "Decimal.o",
         # Ignore use of std::string in regexp AST debug output.
         "regexp-ast.o",
+        # mozglue/misc/Debug.cpp contains a call to `printf_stderr("%s", aStr.str().c_str())`
+        # where `aStr` is a `std::stringstream`. In inlined opt builds, this calls
+        # `operator new()` and `operator delete` for a temporary.
+        "Debug.o",
     ]
     all_ignored_files = set((f, 1) for f in ignored_files)
 
