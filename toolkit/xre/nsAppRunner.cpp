@@ -344,12 +344,23 @@ nsString gProcessStartupShortcut;
 #  ifdef MOZ_WAYLAND
 #    include <gdk/gdkwayland.h>
 #    include "mozilla/widget/nsWaylandDisplay.h"
+#    include "wayland-proxy.h"
 #  endif
 #  ifdef MOZ_X11
 #    include <gdk/gdkx.h>
 #  endif /* MOZ_X11 */
 #endif
+
+#if defined(MOZ_WAYLAND)
+std::unique_ptr<WaylandProxy> gWaylandProxy;
+#endif
+
 #include "BinaryPath.h"
+
+#ifdef MOZ_LOGGING
+#  include "mozilla/Logging.h"
+extern mozilla::LazyLogModule gWidgetWaylandLog;
+#endif /* MOZ_LOGGING */
 
 #ifdef FUZZING
 #  include "FuzzerRunner.h"
@@ -2792,6 +2803,9 @@ static ReturnAbortOnError ProfileLockedDialog(nsIFile* aProfileDir,
           gRemoteService = nullptr;
         }
 #endif
+#if defined(MOZ_WAYLAND)
+        gWaylandProxy = nullptr;
+#endif
         return LaunchChild(false, true);
       }
     } else {
@@ -2905,6 +2919,9 @@ static ReturnAbortOnError ShowProfileManager(
     gRemoteService->UnlockStartup();
     gRemoteService = nullptr;
   }
+#endif
+#if defined(MOZ_WAYLAND)
+  gWaylandProxy = nullptr;
 #endif
   return LaunchChild(false, true);
 }
@@ -4711,6 +4728,23 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
     const char* display_name = nullptr;
     bool saveDisplayArg = false;
 
+    bool waylandEnabled = IsWaylandEnabled();
+#  ifdef MOZ_WAYLAND
+    auto* proxyEnv = getenv("MOZ_DISABLE_WAYLAND_PROXY");
+    bool disableWaylandProxy = proxyEnv && *proxyEnv;
+    if (!disableWaylandProxy && XRE_IsParentProcess() && waylandEnabled) {
+#    ifdef MOZ_LOGGING
+      if (MOZ_LOG_TEST(gWidgetWaylandLog, mozilla::LogLevel::Debug)) {
+        WaylandProxy::SetVerbose(true);
+      }
+#    endif
+      gWaylandProxy = WaylandProxy::Create();
+      if (gWaylandProxy) {
+        gWaylandProxy->RunThread();
+      }
+    }
+#  endif
+
     // display_name is owned by gdk.
     display_name = gdk_get_display_arg_name();
     // if --display argument is given make sure it's
@@ -4720,7 +4754,6 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
       saveDisplayArg = true;
     }
 
-    bool waylandEnabled = IsWaylandEnabled();
     // On Wayland disabled builds read X11 DISPLAY env exclusively
     // and don't care about different displays.
     if (!waylandEnabled && !display_name) {
@@ -5959,6 +5992,7 @@ int XREMain::XRE_main(int argc, char* argv[], const BootstrapConfig& aConfig) {
   if (!gfxPlatform::IsHeadless()) {
 #  ifdef MOZ_WAYLAND
     WaylandDisplayRelease();
+    gWaylandProxy = nullptr;
 #  endif
   }
 #endif
