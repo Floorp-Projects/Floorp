@@ -1,0 +1,33 @@
+<!doctype html>
+<title>Test whether it can access a filed in MediaList with normal privilege after accessing with chrome privilege.</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+
+<style>
+@media screen and (max-width: 800px) {
+  body {
+    background-color: lime;
+  }
+}
+</style>
+<script>
+"use strict";
+
+function assertMediaText(rule, description) {
+  is(rule.media.mediaText, "screen and (max-width: 800px)", description);
+}
+
+add_task(function testCssRuleMedia() {
+  assertMediaText(SpecialPowers.wrap(document).styleSheets[0].cssRules[0], "privileged document");
+  assertMediaText(document.styleSheets[0].cssRules[0], "unprivileged document");
+});
+
+add_task(function testSheetFromCache() {
+  for (let i = 0; i < 2; ++i) {
+    const style = document.createElement("style");
+    style.textContent = `@media screen and (max-width: 800px) {}`;
+    document.head.append(style);
+    assertMediaText(SpecialPowers.wrap(style).sheet.cssRules[0], "privileged sheet " + i);
+    assertMediaText(style.sheet.cssRules[0], "unprivileged sheet " + i);
+  }
+});
+</script>
