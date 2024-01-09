@@ -47,7 +47,9 @@ class BrowsertimeDesktop(PerftestDesktop, Browsertime):
 
         # Add this argument here, it's added by mozrunner
         # for raptor
-        chrome_args.extend(["--no-first-run"])
+        chrome_args.extend(
+            ["--no-first-run", "--no-experiments", "--disable-site-isolation-trials"]
+        )
 
         btime_chrome_args = []
         for arg in chrome_args:
