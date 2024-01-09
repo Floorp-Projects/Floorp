@@ -3038,31 +3038,6 @@ nsDOMWindowUtils::ZoomToFocusedInput() {
     return NS_OK;
   }
 
-  bool shouldSkip = [&] {
-    nsIFrame* frame = element->GetPrimaryFrame();
-    if (!frame) {
-      return true;
-    }
-
-    // Skip zooming to focused inputs in fixed subtrees, as we'd scroll to the
-    // top unnecessarily, see bug 1627734.
-    //
-    // We could try to teach apz to zoom to a rect only without panning, or
-    // maybe we could give it a rect offsetted by the root scroll position, if
-    // we wanted to do this.
-    for (; frame; frame = nsLayoutUtils::GetCrossDocParentFrame(frame)) {
-      if (frame->PresShell() == presShell) {
-        // Note that we only do this if the frame belongs to `presShell` (that
-        // is, we still zoom in fixed elements in subdocuments, as they're not
-        // fixed to the root content document).
-        return nsLayoutUtils::IsInPositionFixedSubtree(frame);
-      }
-      frame = frame->PresShell()->GetRootFrame();
-    }
-
-    return false;
-  }();
-
   // The content may be inside a scrollable subframe inside a non-scrollable
   // root content document. In this scenario, we want to ensure that the
   // main-thread side knows to scroll the content into view before we get
@@ -3071,10 +3046,6 @@ nsDOMWindowUtils::ZoomToFocusedInput() {
       element, ScrollAxis(WhereToScroll::Nearest, WhenToScroll::IfNotVisible),
       ScrollAxis(WhereToScroll::Nearest, WhenToScroll::IfNotVisible),
       ScrollFlags::ScrollOverflowHidden);
-
-  if (shouldSkip) {
-    return NS_OK;
-  }
 
   RefPtr<Document> document = presShell->GetDocument();
   if (!document) {
