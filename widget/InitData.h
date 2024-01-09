@@ -100,11 +100,13 @@ struct InitData {
   // true if the window should support an alpha channel, if available.
   bool mHasRemoteContent = false;
   bool mAlwaysOnTop = false;
-  // Is PictureInPicture window
+  // Whether we're a PictureInPicture window
   bool mPIPWindow = false;
   // True if the window is user-resizable.
   bool mResizable = false;
   bool mIsPrivate = false;
+  // True if the window is an alert / notification.
+  bool mIsAlert = false;
 };
 
 }  // namespace mozilla::widget
