@@ -83,6 +83,7 @@ job-defaults:
                 default: null
     fetches:
         toolchain:
+            - android-gradle-python-envs
             - android-ndk-linux
             - android-sdk-linux
             - linux64-clang
