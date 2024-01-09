@@ -132,10 +132,6 @@ function nonBrowserWindowDelayedStartup() {
 
   // initialize the private browsing UI
   gPrivateBrowsingUI.init();
-
-  if (!NimbusFeatures.majorRelease2022.getVariable("firefoxView")) {
-    document.getElementById("menu_openFirefoxView").hidden = true;
-  }
 }
 
 function nonBrowserWindowShutdown() {
