@@ -16,7 +16,6 @@ kind-dependencies:
     - fetch
     - toolchain
     - build
-    - external-gradle-dependencies
     - build-fat-aar
 
 jobs-from:

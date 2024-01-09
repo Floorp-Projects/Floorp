@@ -12,7 +12,6 @@ transforms:
 
 kind-dependencies:
     - toolchain
-    - external-gradle-dependencies
     - build-fat-aar
 
 job-defaults:
@@ -23,8 +22,7 @@ job-defaults:
     fetches:
         toolchain:
             - android-sdk-linux
-        external-gradle-dependencies:
-            - external-gradle-dependencies.tar.xz
+            - android-gradle-dependencies
         build-fat-aar:
             - target.maven.tar.xz
     optimization:
@@ -43,8 +41,6 @@ job-defaults:
 
 jobs:
     focus-debug:
-        dependencies:
-            external-gradle-dependencies: external-gradle-dependencies-focus
         description: Focus unit tests
         attributes:
             code-review: true
@@ -70,8 +66,6 @@ jobs:
                   type: directory
 
     fenix-debug:
-        dependencies:
-            external-gradle-dependencies: external-gradle-dependencies-fenix
         description: Fenix unit tests
         attributes:
             build-type: debug

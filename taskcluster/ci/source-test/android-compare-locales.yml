@@ -38,8 +38,6 @@ compare-locales-focus:
         symbol: compare-locales(focus)
 
 compare-locales-fenix:
-    dependencies:
-        external-gradle-dependencies: external-gradle-dependencies-lint-fenix
     optimization:
         skip-unless-changed:
             - "mobile/android/fenix/**"

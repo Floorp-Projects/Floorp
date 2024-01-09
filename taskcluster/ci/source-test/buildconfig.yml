@@ -25,6 +25,7 @@ job-defaults:
     fetches:
         toolchain:
             - linux64-jdk-repack
+            - android-gradle-dependencies
     use-system-python: true
 
 
@@ -51,8 +52,6 @@ buildconfig-focus:
         symbol: buildconfig(focus)
 
 buildconfig-fenix:
-    dependencies:
-        external-gradle-dependencies: external-gradle-dependencies-lint-fenix
     optimization:
         skip-unless-changed:
             - "mobile/android/android-components/**/build.gradle"   # A change in A-C may be reflected in fenix

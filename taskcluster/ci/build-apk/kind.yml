@@ -12,7 +12,6 @@ transforms:
 
 kind-dependencies:
     - toolchain
-    - external-gradle-dependencies
     - build-fat-aar
 
 job-defaults:
@@ -32,7 +31,6 @@ jobs:
             code-review: true
             shipping-product: focus
         dependencies:
-            external-gradle-dependencies: external-gradle-dependencies-focus
             build-fat-aar: build-fat-aar-android-geckoview-fat-aar-shippable/opt
         description: 'Focus debug build from source code'
         run:
@@ -49,7 +47,6 @@ jobs:
             code-review: true
             shipping-product: focus
         dependencies:
-            external-gradle-dependencies: external-gradle-dependencies-focus
             build-fat-aar: build-fat-aar-android-geckoview-fat-aar-shippable/opt
         description: 'Klar debug build from source code'
         run:
@@ -66,7 +63,6 @@ jobs:
             code-review: true
             shipping-product: fenix
         dependencies:
-            external-gradle-dependencies: external-gradle-dependencies-fenix
             build-fat-aar: build-fat-aar-android-geckoview-fat-aar-shippable/opt
         description: 'Fenix debug build from source code'
         run:
@@ -88,7 +84,6 @@ jobs:
             shipping-product: focus
         shipping-product: firefox-android
         dependencies:
-            external-gradle-dependencies: external-gradle-dependencies-focus
             build-fat-aar: build-fat-aar-android-geckoview-fat-aar-shippable/opt
         include-shippable-secrets: true
         include-release-version: true
@@ -110,7 +105,6 @@ jobs:
             shipping-product: focus
         shipping-product: firefox-android
         dependencies:
-            external-gradle-dependencies: external-gradle-dependencies-focus
             build-fat-aar: build-fat-aar-android-geckoview-fat-aar-shippable/opt
         include-shippable-secrets: true
         include-release-version: true
@@ -132,7 +126,6 @@ jobs:
             shipping-product: fenix
         shipping-product: firefox-android
         dependencies:
-            external-gradle-dependencies: external-gradle-dependencies-fenix
             build-fat-aar: build-fat-aar-android-geckoview-fat-aar-shippable/opt
         include-shippable-secrets: true
         include-release-version: true
@@ -156,7 +149,6 @@ jobs:
             nightly-task: true
             shipping-product: focus
         dependencies:
-            external-gradle-dependencies: external-gradle-dependencies-focus
             build-fat-aar: build-fat-aar-android-geckoview-fat-aar-shippable/opt
         include-shippable-secrets: true
         include-nightly-version: true
@@ -178,7 +170,6 @@ jobs:
             nightly-task: true
             shipping-product: fenix
         dependencies:
-            external-gradle-dependencies: external-gradle-dependencies-fenix
             build-fat-aar: build-fat-aar-android-geckoview-fat-aar-shippable/opt
         include-shippable-secrets: true
         include-nightly-version: true
@@ -200,7 +191,6 @@ jobs:
             shipping-product: focus
         shipping-product: firefox-android
         dependencies:
-            external-gradle-dependencies: external-gradle-dependencies-focus
             build-fat-aar: build-fat-aar-android-geckoview-fat-aar-shippable/opt
         include-shippable-secrets: true
         include-release-version: true
@@ -222,7 +212,6 @@ jobs:
             shipping-product: fenix
         shipping-product: firefox-android
         dependencies:
-            external-gradle-dependencies: external-gradle-dependencies-fenix
             build-fat-aar: build-fat-aar-android-geckoview-fat-aar-shippable/opt
         include-shippable-secrets: true
         include-release-version: true
@@ -243,7 +232,6 @@ jobs:
             shipping-product: focus
         description: 'Focus Nightly build for UI tests'
         dependencies:
-            external-gradle-dependencies: external-gradle-dependencies-focus
             build-fat-aar: build-fat-aar-android-geckoview-fat-aar-shippable/opt
         disable-optimization: true
         run:
@@ -262,7 +250,6 @@ jobs:
             shipping-product: fenix
         description: 'Fenix Nightly build for UI tests'
         dependencies:
-            external-gradle-dependencies: external-gradle-dependencies-fenix
             build-fat-aar: build-fat-aar-android-geckoview-fat-aar-shippable/opt
         disable-optimization: true
         run:
@@ -281,7 +268,6 @@ jobs:
             shipping-product: focus
         description: 'Focus Beta build for UI tests'
         dependencies:
-            external-gradle-dependencies: external-gradle-dependencies-focus
             build-fat-aar: build-fat-aar-android-geckoview-fat-aar-shippable/opt
         disable-optimization: true
         run:
@@ -300,7 +286,6 @@ jobs:
             shipping-product: fenix
         description: 'Fenix Beta build for UI tests'
         dependencies:
-            external-gradle-dependencies: external-gradle-dependencies-fenix
             build-fat-aar: build-fat-aar-android-geckoview-fat-aar-shippable/opt
         disable-optimization: true
         run:
@@ -320,7 +305,6 @@ jobs:
             shipping-product: focus
         description: 'Focus Android Test for debugging'
         dependencies:
-            external-gradle-dependencies: external-gradle-dependencies-focus
             build-fat-aar: build-fat-aar-android-geckoview-fat-aar-shippable/opt
         run:
             gradle-build-type: androidTest
@@ -340,7 +324,6 @@ jobs:
             shipping-product: fenix
         description: 'Fenix Debug Android Test for debugging'
         dependencies:
-            external-gradle-dependencies: external-gradle-dependencies-fenix
             build-fat-aar: build-fat-aar-android-geckoview-fat-aar-shippable/opt
         run:
             gradle-build-type: androidTest
@@ -367,7 +350,6 @@ jobs:
             shipping-product: focus
         description: 'Focus Nightly Android Test for debugging'
         dependencies:
-            external-gradle-dependencies: external-gradle-dependencies-focus
             build-fat-aar: build-fat-aar-android-geckoview-fat-aar-shippable/opt
         run:
             gradle-build-type: androidTest
@@ -395,7 +377,6 @@ jobs:
             shipping-product: fenix
         description: 'Fenix Nightly Android Test for debugging'
         dependencies:
-            external-gradle-dependencies: external-gradle-dependencies-fenix
             build-fat-aar: build-fat-aar-android-geckoview-fat-aar-shippable/opt
         apk-artifact-template:
             # 3 differences here:
@@ -420,7 +401,6 @@ jobs:
             shipping-product: focus
         description: 'Focus Beta Android Test for debugging'
         dependencies:
-            external-gradle-dependencies: external-gradle-dependencies-focus
             build-fat-aar: build-fat-aar-android-geckoview-fat-aar-shippable/opt
         run:
             gradle-build-type: androidTest
@@ -440,7 +420,6 @@ jobs:
             shipping-product: fenix
         description: 'Fenix Beta Android Test for debugging'
         dependencies:
-            external-gradle-dependencies: external-gradle-dependencies-fenix
             build-fat-aar: build-fat-aar-android-geckoview-fat-aar-shippable/opt
         apk-artifact-template:
             # 3 differences here:
@@ -465,7 +444,6 @@ jobs:
             shipping-product: fenix
         description: 'Fenix Android Test mozillaonline'
         dependencies:
-            external-gradle-dependencies: external-gradle-dependencies-fenix
             build-fat-aar: build-fat-aar-android-geckoview-fat-aar-shippable/opt
         apk-artifact-template:
             # 3 differences here:
@@ -490,7 +468,6 @@ jobs:
     fenix-nightly-simulation:
         description: 'Fenix Nightly Simulation'
         dependencies:
-            external-gradle-dependencies: external-gradle-dependencies-fenix
             build-fat-aar: build-fat-aar-android-geckoview-fat-aar-shippable/opt
         attributes:
             nightly: false
@@ -509,7 +486,6 @@ jobs:
     fenix-beta-mozillaonline:
         description: 'Fenix Beta mozillaonline'
         dependencies:
-            external-gradle-dependencies: external-gradle-dependencies-fenix
             build-fat-aar: build-fat-aar-android-geckoview-fat-aar-shippable/opt
         # apk-artifact-template:
         #     github-name: 'fenix-mozillaonline-{version}-{abi}.apk'
@@ -534,7 +510,6 @@ jobs:
     fenix-release-mozillaonline:
         description: 'Fenix Release mozillaonline'
         dependencies:
-            external-gradle-dependencies: external-gradle-dependencies-fenix
             build-fat-aar: build-fat-aar-android-geckoview-fat-aar-shippable/opt
         # apk-artifact-template:
         #     github-name: 'fenix-mozillaonline-{version}-{abi}.apk'
