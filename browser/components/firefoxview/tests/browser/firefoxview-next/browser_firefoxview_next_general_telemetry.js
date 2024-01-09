@@ -35,11 +35,6 @@ add_task(async function firefox_view_entered_telemetry() {
   await clearAllParentTelemetryEvents();
   await withFirefoxView({}, async browser => {
     const { document } = browser.contentWindow;
-    is(
-      document.location.href,
-      "about:firefoxview",
-      "The Recent browsing page is showing."
-    );
     let enteredAndTabSelectedEvents = [tabSelectedTelemetry, enteredTelemetry];
     await telemetryEvent(enteredAndTabSelectedEvents);
 
@@ -67,11 +62,6 @@ add_task(async function firefox_view_entered_telemetry() {
 add_task(async function test_collapse_and_expand_card() {
   await withFirefoxView({}, async browser => {
     const { document } = browser.contentWindow;
-    is(
-      document.location.href,
-      "about:firefoxview",
-      "The Recent browsing page is showing."
-    );
 
     // Test using Recently Closed card on Recent Browsing page
     let recentlyClosedComponent = document.querySelector(
@@ -109,11 +99,6 @@ add_task(async function test_collapse_and_expand_card() {
 add_task(async function test_change_page_telemetry() {
   await withFirefoxView({}, async browser => {
     const { document } = browser.contentWindow;
-    is(
-      document.location.href,
-      "about:firefoxview",
-      "The Recent browsing page is showing."
-    );
     let changePageEvent = [
       [
         "firefoxview_next",
@@ -153,11 +138,6 @@ add_task(async function test_browser_context_menu_telemetry() {
   const menu = document.getElementById("contentAreaContextMenu");
   await withFirefoxView({}, async browser => {
     const { document } = browser.contentWindow;
-    is(
-      document.location.href,
-      "about:firefoxview",
-      "The Recent browsing page is showing."
-    );
     await clearAllParentTelemetryEvents();
 
     // Test browser context menu options

@@ -282,16 +282,6 @@ var allowlist = [
   { file: "chrome://browser/content/screenshots/copy.svg" },
   { file: "chrome://browser/content/screenshots/download.svg" },
   { file: "chrome://browser/content/screenshots/download-white.svg" },
-
-  // Files removed in child patch for Bug 1869833
-  { file: "chrome://browser/content/firefoxview/firefoxview.css" },
-  { file: "chrome://browser/content/firefoxview/firefoxview.html" },
-  { file: "chrome://browser/content/firefoxview/firefoxview.mjs" },
-  { file: "chrome://browser/content/firefoxview/recently-closed-empty.svg" },
-  { file: "chrome://browser/content/firefoxview/recently-closed-tabs.mjs" },
-  { file: "chrome://browser/content/firefoxview/tab-pickup-container.mjs" },
-  { file: "chrome://browser/content/firefoxview/tab-pickup-empty.svg" },
-  { file: "chrome://browser/content/firefoxview/tab-pickup-list.mjs" },
 ];
 
 if (AppConstants.platform != "win") {
