@@ -16,6 +16,7 @@ import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   MacAttribution: "resource:///modules/MacAttribution.sys.mjs",
+  UpdateUtils: "resource://gre/modules/UpdateUtils.sys.mjs",
 });
 ChromeUtils.defineLazyGetter(lazy, "log", () => {
   let { ConsoleAPI } = ChromeUtils.importESModule(
@@ -81,6 +82,49 @@ export var AttributionCode = {
       let file = Services.dirsvc.get("GreD", Ci.nsIFile);
       file.append("postSigningData");
       return file;
+    } else if (AppConstants.platform == "macosx") {
+      // There's no `UpdRootD` in xpcshell tests.  Some existing tests override
+      // it, which is onerous and difficult to share across tests.  When testing,
+      // if it's not defined, fallback to a nested subdirectory of the xpcshell
+      // temp directory.  Nesting more closely replicates the situation where the
+      // update directory does not (yet) exist, testing a scenario witnessed in
+      // development.
+      let file;
+      try {
+        file = Services.dirsvc.get("UpdRootD", Ci.nsIFile);
+      } catch (ex) {
+        // It's most common to test for the profile dir, even though we actually
+        // are using the temp dir.
+        if (
+          ex instanceof Ci.nsIException &&
+          ex.result == Cr.NS_ERROR_FAILURE &&
+          Services.env.exists("XPCSHELL_TEST_PROFILE_DIR")
+        ) {
+          let path = Services.env.get("XPCSHELL_TEST_TEMP_DIR");
+          file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
+          file.initWithPath(path);
+          file.append("nested_UpdRootD_1");
+          file.append("nested_UpdRootD_2");
+        } else {
+          throw ex;
+        }
+      }
+      // Note: this file is in a location that includes the absolute path
+      // to the running install, and the filename includes the update channel.
+      // To ensure consistency regardless of when `attributionFile` is accessed we
+      // explicitly do not include partner IDs that may be part of the full update channel.
+      // These are not necessarily applied when this is first accessed, and we want to
+      // ensure consistency between early and late accesses.
+      // Partner builds never contain attribution information, so this has no known
+      // consequences.
+      // For example:
+      // ~/Library/Caches/Mozilla/updates/Applications/Firefox/macAttributionDataCache-release
+      // This is done to ensure that attribution data is preserved through a
+      // pave over install of an install on the same channel.
+      file.append(
+        "macAttributionDataCache-" + lazy.UpdateUtils.getUpdateChannel(false)
+      );
+      return file;
     }
 
     return null;
@@ -91,8 +135,8 @@ export var AttributionCode = {
    * @param {String} code to write.
    */
   async writeAttributionFile(code) {
-    // Writing attribution files is only used as part of test code
-    // so bailing here for MSIX builds is no big deal.
+    // Writing attribution files is only used as part of test code, and Mac
+    // attribution, so bailing here for MSIX builds is no big deal.
     if (
       AppConstants.platform === "win" &&
       Services.sysinfo.getProperty("hasWinPackageId")
@@ -183,58 +227,6 @@ export var AttributionCode = {
     return s;
   },
 
-  async _getMacAttrDataAsync() {
-    // On macOS, we fish the attribution data from an extended attribute on
-    // the .app bundle directory.
-    try {
-      let attrStr = await lazy.MacAttribution.getAttributionString();
-      lazy.log.debug(
-        `_getMacAttrDataAsync: getAttributionString: "${attrStr}"`
-      );
-
-      gCachedAttrData = this.parseAttributionCode(attrStr);
-    } catch (ex) {
-      // Avoid partial attribution data.
-      gCachedAttrData = {};
-
-      // No attributions.  Just `warn` 'cuz this isn't necessarily an error.
-      lazy.log.warn("Caught exception fetching macOS attribution codes!", ex);
-
-      if (
-        ex instanceof Ci.nsIException &&
-        ex.result == Cr.NS_ERROR_UNEXPECTED
-      ) {
-        // Bad quarantine data.
-        Services.telemetry
-          .getHistogramById("BROWSER_ATTRIBUTION_ERRORS")
-          .add("quarantine_error");
-      }
-    }
-
-    lazy.log.debug(
-      `macOS attribution data is ${JSON.stringify(gCachedAttrData)}`
-    );
-
-    return gCachedAttrData;
-  },
-
-  async _getWindowsNSISAttrDataAsync() {
-    return AttributionIOUtils.read(this.attributionFile.path);
-  },
-
-  async _getWindowsMSIXAttrDataAsync() {
-    // This comes out of windows-package-manager _not_ URL encoded or in an ArrayBuffer,
-    // but the parsing code wants it that way. It's easier to just provide that
-    // than have the parsing code support both.
-    lazy.log.debug(
-      `winPackageFamilyName is: ${Services.sysinfo.getProperty(
-        "winPackageFamilyName"
-      )}`
-    );
-    let encoder = new TextEncoder();
-    return encoder.encode(encodeURIComponent(await this.msixCampaignId));
-  },
-
   /**
    * Reads the attribution code, either from disk or a cached version.
    * Returns a promise that fulfills with an object containing the parsed
@@ -246,10 +238,6 @@ export var AttributionCode = {
    * strip "utm_" while retrieving the params.
    */
   async getAttrDataAsync() {
-    if (AppConstants.platform != "win" && AppConstants.platform != "macosx") {
-      // This platform doesn't support attribution.
-      return gCachedAttrData;
-    }
     if (gCachedAttrData != null) {
       lazy.log.debug(
         `getAttrDataAsync: attribution is cached: ${JSON.stringify(
@@ -271,26 +259,98 @@ export var AttributionCode = {
     }
 
     gCachedAttrData = {};
-
-    if (AppConstants.platform == "macosx") {
-      lazy.log.debug(`getAttrDataAsync: macOS`);
-      return this._getMacAttrDataAsync();
+    let attributionFile = this.attributionFile;
+    if (!attributionFile) {
+      // This platform doesn't support attribution.
+      lazy.log.debug(
+        `getAttrDataAsync: no attribution (attributionFile is null)`
+      );
+      return gCachedAttrData;
     }
 
-    lazy.log.debug("getAttrDataAsync: !macOS");
+    if (
+      AppConstants.platform == "macosx" &&
+      !(await AttributionIOUtils.exists(attributionFile.path))
+    ) {
+      lazy.log.debug(
+        `getAttrDataAsync: macOS && !exists("${attributionFile.path}")`
+      );
 
-    let attributionFile = this.attributionFile;
+      // On macOS, we fish the attribution data from an extended attribute on
+      // the .app bundle directory.
+      try {
+        let attrStr = await lazy.MacAttribution.getAttributionString();
+        lazy.log.debug(
+          `getAttrDataAsync: macOS attribution getAttributionString: "${attrStr}"`
+        );
+
+        gCachedAttrData = this.parseAttributionCode(attrStr);
+      } catch (ex) {
+        // Avoid partial attribution data.
+        gCachedAttrData = {};
+
+        // No attributions.  Just `warn` 'cuz this isn't necessarily an error.
+        lazy.log.warn("Caught exception fetching macOS attribution codes!", ex);
+
+        if (
+          ex instanceof Ci.nsIException &&
+          ex.result == Cr.NS_ERROR_UNEXPECTED
+        ) {
+          // Bad quarantine data.
+          Services.telemetry
+            .getHistogramById("BROWSER_ATTRIBUTION_ERRORS")
+            .add("quarantine_error");
+        }
+      }
+
+      lazy.log.debug(
+        `macOS attribution data is ${JSON.stringify(gCachedAttrData)}`
+      );
+
+      // We only want to try to fetch the attribution string once on macOS
+      try {
+        let code = this.serializeAttributionData(gCachedAttrData);
+        lazy.log.debug(`macOS attribution data serializes as "${code}"`);
+        await this.writeAttributionFile(code);
+      } catch (ex) {
+        lazy.log.debug(
+          `Caught exception writing "${attributionFile.path}"`,
+          ex
+        );
+        Services.telemetry
+          .getHistogramById("BROWSER_ATTRIBUTION_ERRORS")
+          .add("write_error");
+        return gCachedAttrData;
+      }
+
+      lazy.log.debug(
+        `Returning after successfully writing "${attributionFile.path}"`
+      );
+      return gCachedAttrData;
+    }
+
+    lazy.log.debug(
+      `getAttrDataAsync: !macOS || !exists("${attributionFile.path}")`
+    );
+
     let bytes;
     try {
       if (
         AppConstants.platform === "win" &&
         Services.sysinfo.getProperty("hasWinPackageId")
       ) {
-        lazy.log.debug("getAttrDataAsync: MSIX");
-        bytes = await this._getWindowsMSIXAttrDataAsync();
+        // This comes out of windows-package-manager _not_ URL encoded or in an ArrayBuffer,
+        // but the parsing code wants it that way. It's easier to just provide that
+        // than have the parsing code support both.
+        lazy.log.debug(
+          `winPackageFamilyName is: ${Services.sysinfo.getProperty(
+            "winPackageFamilyName"
+          )}`
+        );
+        let encoder = new TextEncoder();
+        bytes = encoder.encode(encodeURIComponent(await this.msixCampaignId()));
       } else {
-        lazy.log.debug("getAttrDataAsync: NSIS");
-        bytes = await this._getWindowsNSISAttrDataAsync();
+        bytes = await AttributionIOUtils.read(attributionFile.path);
       }
     } catch (ex) {
       if (DOMException.isInstance(ex) && ex.name == "NotFoundError") {
@@ -359,15 +419,12 @@ export var AttributionCode = {
    * or if the file couldn't be deleted (the promise is never rejected).
    */
   async deleteFileAsync() {
-    // There is no cache file on macOS
-    if (AppConstants.platform == "win") {
-      try {
-        await IOUtils.remove(this.attributionFile.path);
-      } catch (ex) {
-        // The attribution file may already have been deleted,
-        // or it may have never been installed at all;
-        // failure to delete it isn't an error.
-      }
+    try {
+      await IOUtils.remove(this.attributionFile.path);
+    } catch (ex) {
+      // The attribution file may already have been deleted,
+      // or it may have never been installed at all;
+      // failure to delete it isn't an error.
     }
   },
 

@@ -39,14 +39,7 @@ add_task(async function testValidAttrCodes() {
       // are not URI encoded, and the AttributionCode code that deals with
       // them expects that - so we have to simulate that as well.
       msixCampaignIdStub.callsFake(async () => decodeURIComponent(currentCode));
-    } else if (AppConstants.platform === "macosx") {
-      const { MacAttribution } = ChromeUtils.importESModule(
-        "resource:///modules/MacAttribution.sys.mjs"
-      );
-
-      await MacAttribution.setAttributionString(currentCode);
     } else {
-      // non-msix windows
       await AttributionCode.writeAttributionFile(currentCode);
     }
     AttributionCode._clearCache();
@@ -87,14 +80,7 @@ add_task(async function testInvalidAttrCodes() {
       }
 
       msixCampaignIdStub.callsFake(async () => decodeURIComponent(currentCode));
-    } else if (AppConstants.platform === "macosx") {
-      const { MacAttribution } = ChromeUtils.importESModule(
-        "resource:///modules/MacAttribution.sys.mjs"
-      );
-
-      await MacAttribution.setAttributionString(currentCode);
     } else {
-      // non-msix windows
       await AttributionCode.writeAttributionFile(currentCode);
     }
     AttributionCode._clearCache();
@@ -116,12 +102,11 @@ add_task(async function testInvalidAttrCodes() {
  * and making sure we still get the expected code.
  */
 let condition = {
-  // macOS and MSIX attribution codes are not cached by us, thus this test is
+  // MSIX attribution codes are not cached by us, thus this test is
   // unnecessary for those builds.
   skip_if: () =>
-    (AppConstants.platform === "win" &&
-      Services.sysinfo.getProperty("hasWinPackageId")) ||
-    AppConstants.platform === "macosx",
+    AppConstants.platform === "win" &&
+    Services.sysinfo.getProperty("hasWinPackageId"),
 };
 add_task(condition, async function testDeletedFile() {
   // Set up the test by clearing the cache and writing a valid file.

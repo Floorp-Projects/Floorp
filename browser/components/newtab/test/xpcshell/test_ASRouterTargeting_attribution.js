@@ -21,7 +21,7 @@ add_task(async function check_attribution_data() {
   // Some setup to fake the correct attribution data
   const campaign = "non-fx-button";
   const source = "addons.mozilla.org";
-  const attrStr = `campaign%3D${campaign}%26source%3D${source}`;
+  const attrStr = `__MOZCUSTOM__campaign%3D${campaign}%26source%3D${source}`;
   await MacAttribution.setAttributionString(attrStr);
   AttributionCode._clearCache();
   await AttributionCode.getAttrDataAsync();

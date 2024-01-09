@@ -1865,7 +1865,12 @@ class _ASRouter {
         encodeURIComponent(attributionData)
       );
     } else if (AppConstants.platform === "macosx") {
-      await this.setAttributionString(encodeURIComponent(attributionData));
+      await this.setAttributionString(
+        `__MOZCUSTOM__${encodeURIComponent(attributionData)}`
+      );
+
+      // Delete attribution data file
+      await AttributionCode.deleteFileAsync();
     }
 
     // Clear cache call is only possible in a testing environment

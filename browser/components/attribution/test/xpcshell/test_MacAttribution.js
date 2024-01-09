@@ -61,13 +61,7 @@ add_task(async () => {
 // data.
 add_task(async function testExtendedAttributeProcessing() {
   for (let entry of extendedAttributeTestCases) {
-    // We use setMacXAttr directly here rather than setAttributionString because
-    // we need the ability to set invalid attribution strings.
-    await IOUtils.setMacXAttr(
-      MacAttribution.applicationPath,
-      "com.apple.application-instance",
-      new TextEncoder().encode(entry.raw)
-    );
+    await MacAttribution.setAttributionString(entry.raw);
     try {
       let got = await MacAttribution.getAttributionString();
       if (entry.error === true) {
@@ -95,9 +89,10 @@ add_task(async function testValidAttrCodes() {
       continue;
     }
 
-    await MacAttribution.setAttributionString(entry.code);
+    await MacAttribution.setAttributionString("__MOZCUSTOM__" + entry.code);
 
     // Read attribution code from xattr.
+    await AttributionCode.deleteFileAsync();
     AttributionCode._clearCache();
     let result = await AttributionCode.getAttrDataAsync();
     Assert.deepEqual(
@@ -107,6 +102,7 @@ add_task(async function testValidAttrCodes() {
     );
 
     // Read attribution code from cache.
+    AttributionCode._clearCache();
     result = await AttributionCode.getAttrDataAsync();
     Assert.deepEqual(
       result,
@@ -129,7 +125,8 @@ add_task(async function testInvalidAttrCodes() {
   for (let code of invalidAttrCodes) {
     await MacAttribution.setAttributionString("__MOZCUSTOM__" + code);
 
-    // Read attribution code from xattr
+    // Read attribution code from referrer.
+    await AttributionCode.deleteFileAsync();
     AttributionCode._clearCache();
     let result = await AttributionCode.getAttrDataAsync();
     Assert.deepEqual(result, {}, "Code should have failed to parse: " + code);
