@@ -301,6 +301,7 @@ export class PromptParent extends JSWindowActorParent {
 
       args.promptAborted = false;
       args.openedWithTabDialog = true;
+      args.owningBrowsingContext = this.browsingContext;
 
       // Convert args object to a prop bag for the dialog to consume.
       let bag;

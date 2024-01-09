@@ -221,7 +221,7 @@ export const ContentAnalysis = {
       }
       case "dlp-request-made":
         {
-          const request = aSubj;
+          const request = aSubj.QueryInterface(Ci.nsIContentAnalysisRequest);
           if (!request) {
             console.error(
               "Showing in-browser Content Analysis notification but no request was passed"
@@ -272,7 +272,7 @@ export const ContentAnalysis = {
         }
         break;
       case "dlp-response":
-        const request = aSubj;
+        const request = aSubj.QueryInterface(Ci.nsIContentAnalysisResponse);
         // Cancels timer or slow message UI,
         // if present, and possibly presents the CA verdict.
         if (!request) {
