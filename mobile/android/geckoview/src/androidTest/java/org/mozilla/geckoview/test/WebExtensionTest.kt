@@ -2341,6 +2341,7 @@ class WebExtensionTest : BaseSessionTest() {
         sessionRule.setPrefsUntilTestEnd(
             mapOf(
                 "xpinstall.signatures.required" to false,
+                "extensions.update.enabled" to true,
                 "extensions.install.requireBuiltInCerts" to false,
                 "extensions.update.requireBuiltInCerts" to false,
                 "extensions.getAddons.cache.enabled" to true,
@@ -2400,11 +2401,47 @@ class WebExtensionTest : BaseSessionTest() {
     }
 
     @Test
+    fun updateDisabled() {
+        sessionRule.setPrefsUntilTestEnd(
+            mapOf(
+                "xpinstall.signatures.required" to false,
+                // This is the important change here:
+                "extensions.update.enabled" to false,
+                "extensions.install.requireBuiltInCerts" to false,
+                "extensions.update.requireBuiltInCerts" to false,
+            ),
+        )
+
+        sessionRule.delegateDuringNextWait(object : WebExtensionController.PromptDelegate {
+            @AssertCalled(count = 1)
+            override fun onInstallPrompt(extension: WebExtension): GeckoResult<AllowOrDeny> {
+                assertEquals(extension.metaData.version, "1.0")
+
+                return GeckoResult.allow()
+            }
+        })
+
+        // Install an extension that can be updated.
+        val update1 = sessionRule.waitForResult(
+            controller.install("https://example.org/tests/junit/update-1.xpi", null),
+        )
+
+        // Attempt to update the extension, which should not be possible since
+        // we set the pref to `false` above.
+        val update2 = sessionRule.waitForResult(controller.update(update1))
+        assertNull(update2)
+
+        // Cleanup.
+        sessionRule.waitForResult(controller.uninstall(update1))
+    }
+
+    @Test
     fun updateWithMetadataNotStale() {
         val now = (System.currentTimeMillis() / 1000).toInt()
         sessionRule.setPrefsUntilTestEnd(
             mapOf(
                 "xpinstall.signatures.required" to false,
+                "extensions.update.enabled" to true,
                 "extensions.install.requireBuiltInCerts" to false,
                 "extensions.update.requireBuiltInCerts" to false,
                 "extensions.getAddons.cache.enabled" to true,
@@ -2444,6 +2481,7 @@ class WebExtensionTest : BaseSessionTest() {
         sessionRule.setPrefsUntilTestEnd(
             mapOf(
                 "xpinstall.signatures.required" to false,
+                "extensions.update.enabled" to true,
                 "extensions.install.requireBuiltInCerts" to false,
                 "extensions.update.requireBuiltInCerts" to false,
             ),
@@ -2567,6 +2605,7 @@ class WebExtensionTest : BaseSessionTest() {
         sessionRule.setPrefsUntilTestEnd(
             mapOf(
                 "xpinstall.signatures.required" to false,
+                "extensions.update.enabled" to true,
                 "extensions.install.requireBuiltInCerts" to false,
                 "extensions.update.requireBuiltInCerts" to false,
             ),
@@ -2674,6 +2713,7 @@ class WebExtensionTest : BaseSessionTest() {
         sessionRule.setPrefsUntilTestEnd(
             mapOf(
                 "xpinstall.signatures.required" to false,
+                "extensions.update.enabled" to true,
                 "extensions.install.requireBuiltInCerts" to false,
                 "extensions.update.requireBuiltInCerts" to false,
                 "extensions.webextensions.warnings-as-errors" to false,
@@ -2736,6 +2776,7 @@ class WebExtensionTest : BaseSessionTest() {
         sessionRule.setPrefsUntilTestEnd(
             mapOf(
                 "xpinstall.signatures.required" to false,
+                "extensions.update.enabled" to true,
                 "extensions.install.requireBuiltInCerts" to false,
                 "extensions.update.requireBuiltInCerts" to false,
             ),
