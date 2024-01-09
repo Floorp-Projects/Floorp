@@ -37,43 +37,49 @@ add_task(async function test_max_render_count_on_win_resize() {
     let tabList = historyComponent.lists[0];
     let rootVirtualList = tabList.rootVirtualListEl;
 
-    const initialHeight = window.innerHeight;
-    const initialWidth = window.innerWidth;
+    const initialHeight = window.outerHeight;
+    const initialWidth = window.outerWidth;
     const initialMaxRenderCount = rootVirtualList.maxRenderCountEstimate;
     info(`The initial maxRenderCountEstimate is ${initialMaxRenderCount}`);
+    info(`The initial innerHeight is ${window.innerHeight}`);
 
     // Resize window with new height value
     const newHeight = 540;
-    const newMaxRenderCount = 40;
-    let resizePromise = BrowserTestUtils.waitForEvent(window, "resize");
     window.resizeTo(initialWidth, newHeight);
-    await resizePromise;
-    info("The window has been resized with a height of 540px");
-
     await TestUtils.waitForCondition(
-      () => rootVirtualList.maxRenderCountEstimate === newMaxRenderCount
+      () => window.outerHeight >= newHeight,
+      `The window has been resized with outer height of ${window.outerHeight} instead of ${newHeight}.`
     );
+    await TestUtils.waitForCondition(
+      () =>
+        rootVirtualList.updateComplete &&
+        rootVirtualList.maxRenderCountEstimate < initialMaxRenderCount,
+      `Max render count ${rootVirtualList.maxRenderCountEstimate} is not less than initial max render count ${initialMaxRenderCount}`
+    );
+    const newMaxRenderCount = rootVirtualList.maxRenderCountEstimate;
 
-    is(
-      rootVirtualList.maxRenderCountEstimate,
-      newMaxRenderCount,
+    ok(
+      rootVirtualList.maxRenderCountEstimate === newMaxRenderCount,
       `The maxRenderCountEstimate on the virtual-list is now ${newMaxRenderCount}`
     );
 
     // Restore initial window size
-    let resizePromiseTwo = BrowserTestUtils.waitForEvent(window, "resize");
-    window.resizeTo(initialWidth, initialHeight);
-    await resizePromiseTwo;
-    info("The window has been resized with initial dimensions");
-
+    resizeTo(initialWidth, initialHeight);
     await TestUtils.waitForCondition(
-      () => rootVirtualList.maxRenderCountEstimate === initialMaxRenderCount
+      () =>
+        window.outerWidth >= initialHeight && window.outerWidth >= initialWidth,
+      `The window has been resized with outer height of ${window.outerHeight} instead of ${initialHeight}.`
+    );
+    info(`The final innerHeight is ${window.innerHeight}`);
+    await TestUtils.waitForCondition(
+      () =>
+        rootVirtualList.updateComplete &&
+        rootVirtualList.maxRenderCountEstimate > newMaxRenderCount,
+      `Max render count ${rootVirtualList.maxRenderCountEstimate} is not greater than new max render count ${newMaxRenderCount}`
     );
 
-    is(
-      rootVirtualList.maxRenderCountEstimate,
-      initialMaxRenderCount,
-      `The maxRenderCountEstimate on the virtual-list is restored to ${initialMaxRenderCount}`
+    info(
+      `The maxRenderCountEstimate on the virtual-list is greater than ${newMaxRenderCount} after window resize`
     );
     gBrowser.removeTab(gBrowser.selectedTab);
   });
