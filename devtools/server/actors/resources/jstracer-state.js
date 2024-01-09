@@ -61,6 +61,7 @@ class TracingStateWatcher {
           logMethod == LOG_METHODS.PROFILER && !enabled
             ? tracerActor.getProfile()
             : undefined,
+        timeStamp: ChromeUtils.dateNow(),
       },
     ]);
   }
