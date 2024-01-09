@@ -7,8 +7,6 @@ import re
 import sys
 from pathlib import Path
 
-from marionette_driver import Wait
-
 sys.path.append(os.fspath(Path(__file__).parents[3] / "quota/test/marionette"))
 
 from quota_test_case import QuotaTestCase
@@ -48,6 +46,8 @@ class IDBEncryptionPBM(QuotaTestCase):
         self.marionette.navigate(
             self.marionette.absolute_url("dom/indexedDB/basicIDB_PBM.html")
         )
+
+        self.origin = self.marionette.absolute_url("")[:-1] + "^privateBrowsingId=1"
 
     def tearDown(self):
         super(IDBEncryptionPBM, self).setUp()
@@ -118,27 +118,12 @@ class IDBEncryptionPBM(QuotaTestCase):
         if self.idbStoragePath is not None:
             return self.idbStoragePath
 
-        fullOriginMetadata = self.getFullOriginMetadata(
-            "private", self.marionette.absolute_url("")[:-1] + "^privateBrowsingId=1"
+        self.idbStoragePath = self.getStoragePath(
+            self.profilePath, self.origin, "private", "idb"
         )
-
-        storageOrigin = fullOriginMetadata["storageOrigin"]
-        sanitizedStorageOrigin = storageOrigin.replace(":", "+").replace("/", "+")
-
-        storagePath = os.path.join(
-            self.profilePath, "storage", "private", sanitizedStorageOrigin, "idb"
-        )
-
-        self.idbStoragePath = storagePath
 
         print("idb origin directory = " + self.idbStoragePath)
         return self.idbStoragePath
-
-    def findDirObj(self, path, pattern, isFile):
-        for obj in os.scandir(path):
-            if obj.path.endswith(pattern) and (obj.is_file() == isFile):
-                return obj.path
-        return None
 
     def sqliteWALReleased(self):
         """
@@ -149,10 +134,3 @@ class IDBEncryptionPBM(QuotaTestCase):
             return False
         walPath = self.findDirObj(self.idbStoragePath, ".sqlite-wal", True)
         return walPath is None or os.stat(walPath).st_size == 0
-
-    def ensureInvariantHolds(self, op):
-        maxWaitTime = 60
-        Wait(self.marionette, timeout=maxWaitTime).until(
-            op,
-            message=f"operation did not yield success even after waiting {maxWaitTime}s time",
-        )
