@@ -332,8 +332,16 @@ function compare_remote_settings_files {
       update_remote_settings_attachment "${bucket}" "${collection}" addons-mlbf.bin \
         'map(select(.attachment_type == "bloomfilter-base")) | sort_by(.generation_time) | last'
     fi
-    # Here is an example to download an attachment with record identifier "ID":
-    # update_remote_settings_attachment "${bucket}" "${collection}" ID '.[] | select(.id == "ID")'
+    # TODO: Bug 1873448. This cannot handle new/removed files currently, due to the
+    # build system making it difficult.
+    if [ "${bucket}" = "main" ] && [ "${collection}" = "search-config-icons" ]; then
+      ${JQ} -r '.data[] | .id' < "${local_location_output}" |\
+      while read -r id; do
+        # We do not want quotes around ${id}
+        # shellcheck disable=SC2086
+        update_remote_settings_attachment "${bucket}" "${collection}" ${id} ".[] | select(.id == \"${id}\")"
+      done
+    fi
     # NOTE: The downloaded data is not validated. xpcshell should be used for that.
   done
 
