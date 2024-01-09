@@ -32,11 +32,10 @@ class SVGSymbolFrame final : public SVGViewportFrame {
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS(SVGSymbolFrame)
 
+#ifdef DEBUG
   void Init(nsIContent* aContent, nsContainerFrame* aParent,
             nsIFrame* aPrevInFlow) override;
-
-  void BuildDisplayList(nsDisplayListBuilder* aBuilder,
-                        const nsDisplayListSet& aLists) override;
+#endif
 
 #ifdef DEBUG_FRAME_DUMP
   nsresult GetFrameName(nsAString& aResult) const override {
