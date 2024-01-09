@@ -127,7 +127,7 @@ const ToastNotification = {
 
     let shownPromise = Promise.withResolvers();
     let obs = (subject, topic, data) => {
-      if (topic === "alertshown") {
+      if (topic === "alertshow") {
         shownPromise.resolve();
       }
     };
