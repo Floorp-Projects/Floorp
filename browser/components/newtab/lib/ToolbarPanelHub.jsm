@@ -50,8 +50,6 @@ class _ToolbarPanelHub {
     this._hideAppmenuButton = this._hideAppmenuButton.bind(this);
     this._showToolbarButton = this._showToolbarButton.bind(this);
     this._hideToolbarButton = this._hideToolbarButton.bind(this);
-    this.insertProtectionPanelMessage =
-      this.insertProtectionPanelMessage.bind(this);
 
     this.state = {};
     this._initialized = false;
@@ -509,73 +507,6 @@ class _ToolbarPanelHub {
         event_context: options.value,
       });
     }
-  }
-
-  /**
-   * Inserts a message into the Protections Panel. The message is visible once
-   * and afterwards set in a collapsed state. It can be shown again using the
-   * info button in the panel header.
-   */
-  async insertProtectionPanelMessage(event) {
-    const win = event.target.ownerGlobal;
-    this.maybeInsertFTL(win);
-
-    const doc = event.target.ownerDocument;
-    const container = doc.getElementById("messaging-system-message-container");
-    const infoButton = doc.getElementById("protections-popup-info-button");
-    const panelContainer = doc.getElementById("protections-popup");
-    const toggleMessage = () => {
-      const learnMoreLink = doc.querySelector(
-        "#messaging-system-message-container .text-link"
-      );
-      if (learnMoreLink) {
-        container.toggleAttribute("disabled");
-        infoButton.toggleAttribute("checked");
-        panelContainer.toggleAttribute("infoMessageShowing");
-        learnMoreLink.disabled = !learnMoreLink.disabled;
-      }
-    };
-    if (!container.childElementCount) {
-      const message = await this._getMessages({
-        template: "protections_panel",
-        triggerId: "protectionsPanelOpen",
-      });
-      if (message) {
-        const messageEl = this._createHeroElement(win, doc, message);
-        container.appendChild(messageEl);
-        infoButton.addEventListener("click", toggleMessage);
-        this.sendUserEventTelemetry(win, "IMPRESSION", message);
-      }
-    }
-    // Message is collapsed by default. If it was never shown before we want
-    // to expand it
-    if (
-      !this.state.protectionPanelMessageSeen &&
-      container.hasAttribute("disabled")
-    ) {
-      toggleMessage();
-    }
-    // Save state that we displayed the message
-    if (!this.state.protectionPanelMessageSeen) {
-      Services.prefs.setBoolPref(PROTECTIONS_PANEL_INFOMSG_PREF, true);
-      this.state.protectionPanelMessageSeen = true;
-    }
-    // Collapse the message after the panel is hidden so we don't get the
-    // animation when opening the panel
-    panelContainer.addEventListener(
-      "popuphidden",
-      () => {
-        if (
-          this.state.protectionPanelMessageSeen &&
-          !container.hasAttribute("disabled")
-        ) {
-          toggleMessage();
-        }
-      },
-      {
-        once: true,
-      }
-    );
   }
 
   /**

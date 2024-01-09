@@ -153,3 +153,9 @@ protections-panel-cookie-banner-view-turn-on-label =
 protections-panel-report-broken-site =
   .label = Report broken site
   .title = Report broken site
+
+## Protections panel info message
+
+cfr-protections-panel-header = Browse without being followed
+cfr-protections-panel-body = Keep your data to yourself. { -brand-short-name } protects you from many of the most common trackers that follow what you do online.
+cfr-protections-panel-link-text = Learn more
