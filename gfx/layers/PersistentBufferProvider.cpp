@@ -255,6 +255,11 @@ bool PersistentBufferProviderAccelerated::RequiresRefresh() const {
   return mTexture->GetInternalData()->RequiresRefresh();
 }
 
+void PersistentBufferProviderAccelerated::UseCompositableForwarder(
+    CompositableForwarder* aForwarder) {
+  mTexture->GetInternalData()->UseCompositableForwarder(aForwarder);
+}
+
 // static
 already_AddRefed<PersistentBufferProviderShared>
 PersistentBufferProviderShared::Create(gfx::IntSize aSize,

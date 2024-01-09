@@ -80,7 +80,6 @@ CompositorBridgeChild::CompositorBridgeChild(CompositorManagerChild* aManager)
       mCanSend(false),
       mActorDestroyed(false),
       mPaused(false),
-      mFwdTransactionId(0),
       mThread(NS_GetCurrentThread()),
       mProcessToken(0),
       mSectionAllocator(nullptr) {
@@ -470,7 +469,8 @@ void CompositorBridgeChild::HoldUntilCompositableRefReleasedIfNecessary(
     return;
   }
 
-  aClient->SetLastFwdTransactionId(GetFwdTransactionId());
+  aClient->SetLastFwdTransactionId(
+      GetFwdTransactionCounter().mFwdTransactionId);
   mTexturesWaitingNotifyNotUsed.emplace(aClient->GetSerial(), aClient);
 }
 
@@ -630,6 +630,10 @@ wr::MaybeExternalImageId CompositorBridgeChild::GetNextExternalImageId() {
 
 wr::PipelineId CompositorBridgeChild::GetNextPipelineId() {
   return wr::AsPipelineId(GetNextResourceId());
+}
+
+FwdTransactionCounter& CompositorBridgeChild::GetFwdTransactionCounter() {
+  return mCompositorManager->GetFwdTransactionCounter();
 }
 
 }  // namespace layers
