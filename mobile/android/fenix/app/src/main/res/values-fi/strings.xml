@@ -2230,6 +2230,8 @@
     <string name="review_quality_check_reanalysis_in_progress_warning_title" moz:RemovedIn="122">Tarkistetaan arvostelun laatua</string>
     <!-- Title for warning card informing the user that the current product's analysis is still processing. -->
     <string name="review_quality_check_analysis_in_progress_warning_title" moz:RemovedIn="122">Tarkistetaan arvostelun laatua</string>
+    <!-- Title for warning card informing the user that the current product's analysis is still processing. The parameter is the percentage progress (0-100%) of the analysis process (e.g. 56%). -->
+    <string name="review_quality_check_analysis_in_progress_warning_title_2">Tarkistetaan arvostelun laatua (%s)</string>
     <!-- Text for body of warning card informing the user that the current product's analysis is still processing. -->
     <string name="review_quality_check_analysis_in_progress_warning_body">Tämä voi kestää noin 60 sekuntia.</string>
     <!-- Title for info card displayed after the user reports a product is back in stock. -->
@@ -2296,6 +2298,9 @@
     <string name="review_quality_check_highlights_type_packaging_appearance">Paketointi ja ulkoasu</string>
     <!-- Text for highlights card competitiveness category header. Reviews shown under this header should refer the product's competitiveness. -->
     <string name="review_quality_check_highlights_type_competitiveness">Kilpailukyky</string>
+
+    <!-- Text that is surrounded by quotes. The parameter is the actual text that is in quotes. An example of that text could be: Excellent craftsmanship, and that is displayed as “Excellent craftsmanship”. The text comes from a buyer's review that the feature is highlighting"   -->
+    <string name="surrounded_with_quotes">“%s”</string>
 
     <!-- Accessibility services actions labels. These will be appended to accessibility actions like "Double tap to.." but not by or applications but by services like Talkback. -->
     <!-- Action label for elements that can be collapsed if interacting with them. Talkback will append this to say "Double tap to collapse". -->

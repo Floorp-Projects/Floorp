@@ -277,7 +277,7 @@
     <!-- Search suggestion onboarding hint title text -->
     <string name="search_suggestions_onboarding_title">Suchvorschläge in privaten Sitzungen erlauben?</string>
     <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
-    <string name="search_suggestions_onboarding_text">%s übermittelt Ihre Eingaben in die Adressleiste an Ihre Standard-Suchmaschine.</string>
+    <string name="search_suggestions_onboarding_text">%s übermittelt Ihre Eingaben in die Adressleiste an Ihre Standardsuchmaschine.</string>
 
     <!-- Search engine suggestion title text. The first parameter is the name of the suggested engine-->
     <string name="search_engine_suggestions_title">Suchen mit %s</string>
