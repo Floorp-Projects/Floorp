@@ -327,7 +327,7 @@ class SettingsAdvancedTest {
         }
 
         navigationToolbar {
-        }.enterURLAndEnterToBrowser(youTubePage) {
+        }.enterURLAndEnterToBrowser("https://m.youtube.com/".toUri()) {
             waitForPageToLoad()
             verifyOpenLinksInAppsCFRExists(true)
         }.clickOpenLinksInAppsGoToSettingsCFRButton {

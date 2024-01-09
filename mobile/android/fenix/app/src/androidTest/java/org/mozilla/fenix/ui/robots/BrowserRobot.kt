@@ -1154,6 +1154,7 @@ class BrowserRobot {
                 "$packageName:id/action",
                 getStringResource(R.string.open_in_app_cfr_positive_button_text),
             ).clickAndWaitForNewWindow(waitingTime)
+            Log.i(TAG, "clickOpenLinksInAppsGoToSettingsCFRButton: Clicked \"Go to settings\" open links in apps CFR button")
 
             SettingsRobot().interact()
             return SettingsRobot.Transition()

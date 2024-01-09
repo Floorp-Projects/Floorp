@@ -604,6 +604,7 @@ private fun assertOpenLinksInAppsButton() {
     scrollToElementByText("Open links in apps")
     openLinksInAppsButton()
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+    Log.i(TAG, "clickOpenLinksInAppsGoToSettingsCFRButton: Verified \"Open links in apps\" setting option")
 }
 
 // ADVANCED SECTION
