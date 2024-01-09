@@ -70,6 +70,7 @@ class CookieService final : public nsICookieService,
                            CookieStruct& aCookieData, bool aRequireHostMatch,
                            CookieStatus aStatus, nsCString& aCookieHeader,
                            bool aFromHttp, bool aIsForeignAndNotAddon,
+                           bool aPartitionedOnly,
                            nsIConsoleReportCollector* aCRC, bool& aSetCookie);
   static CookieStatus CheckPrefs(
       nsIConsoleReportCollector* aCRC, nsICookieJarSettings* aCookieJarSettings,

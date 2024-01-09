@@ -531,13 +531,20 @@ CookieServiceChild::SetCookieStringFromHttp(nsIURI* aHostURI,
                                          &isForeignAndNotAddon);
   }
 
+  bool mustBePartitioned =
+      isForeignAndNotAddon &&
+      cookieJarSettings->GetCookieBehavior() ==
+          nsICookieService::BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN &&
+      !result.contains(ThirdPartyAnalysis::IsStorageAccessPermissionGranted);
+
   bool moreCookies;
   do {
     CookieStruct cookieData;
     bool canSetCookie = false;
     moreCookies = CookieService::CanSetCookie(
         aHostURI, baseDomain, cookieData, requireHostMatch, cookieStatus,
-        cookieString, true, isForeignAndNotAddon, crc, canSetCookie);
+        cookieString, true, isForeignAndNotAddon, mustBePartitioned, crc,
+        canSetCookie);
     if (!canSetCookie) {
       continue;
     }
