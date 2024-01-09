@@ -619,6 +619,7 @@ class BrowserParent final : public PBrowserParent,
 
   // Transform a coordinate from the parent process coordinate space to the
   // child process coordinate space.
+  LayoutDeviceIntPoint TransformParentToChild(const WidgetMouseEvent& aEvent);
   LayoutDeviceIntPoint TransformParentToChild(
       const LayoutDeviceIntPoint& aPoint);
   LayoutDevicePoint TransformParentToChild(const LayoutDevicePoint& aPoint);
