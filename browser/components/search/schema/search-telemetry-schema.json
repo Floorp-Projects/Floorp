@@ -13,6 +13,14 @@
       "description": "The telemetry identifier for the provider.",
       "pattern": "^[a-z0-9-._]*$"
     },
+    "searchPageMatches": {
+      "type": "array",
+      "title": "Search Page Matches",
+      "description": "An array containing match expressions used to match on URLs.",
+      "items": {
+        "type": "string"
+      }
+    },
     "searchPageRegexp": {
       "type": "string",
       "title": "Search Page Regular Expression",
