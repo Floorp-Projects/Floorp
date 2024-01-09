@@ -6,10 +6,9 @@
 
 #include "nsFilePicker.h"
 
-#include <cderr.h>
 #include <shlobj.h>
 #include <shlwapi.h>
-#include <sysinfoapi.h>
+#include <cderr.h>
 #include <winerror.h>
 #include <winuser.h>
 #include <utility>
@@ -26,18 +25,17 @@
 #include "nsEnumeratorUtils.h"
 #include "nsNetUtil.h"
 #include "nsPIDOMWindow.h"
-#include "nsPrintfCString.h"
 #include "nsReadableUtils.h"
 #include "nsString.h"
 #include "nsToolkit.h"
 #include "nsWindow.h"
 #include "WinUtils.h"
 
-#include "mozilla/glean/GleanMetrics.h"
-
 #include "mozilla/widget/filedialog/WinFileDialogCommands.h"
 #include "mozilla/widget/filedialog/WinFileDialogParent.h"
 
+using mozilla::Maybe;
+using mozilla::Result;
 using mozilla::UniquePtr;
 
 using namespace mozilla::widget;
@@ -189,167 +187,99 @@ static auto ShowRemote(HWND parent, ActionType&& action)
       });
 }
 
-// fd_async
+// LocalAndOrRemote
 //
-// Wrapper-namespace for the AsyncExecute() function.
-namespace fd_async {
+// Pseudo-namespace for the private implementation details of its AsyncExecute()
+// function. Not intended to be instantiated.
+struct LocalAndOrRemote {
+  LocalAndOrRemote() = delete;
 
-// Implementation details of, specifically, the AsyncExecute() function.
-namespace details {
-// Helper for generically copying ordinary types and nsTArray (which lacks a
-// copy constructor) in the same breath.
-template <typename T>
-static T Copy(T const& val) {
-  return val;
-}
-template <typename T>
-static nsTArray<T> Copy(nsTArray<T> const& arr) {
-  return arr.Clone();
-}
+ private:
+  // Helper for generically copying ordinary types and nsTArray (which lacks a
+  // copy constructor) in the same breath.
+  //
+  // N.B.: This function is ultimately the reason for LocalAndOrRemote existing
+  // (rather than AsyncExecute() being a free function at namespace scope).
+  // While this is notionally an implementation detail of AsyncExecute(), it
+  // can't be confined to a local struct therein because local structs can't
+  // have template member functions [temp.mem/2].
+  template <typename T>
+  static T Copy(T const& val) {
+    return val;
+  }
+  template <typename T>
+  static nsTArray<T> Copy(nsTArray<T> const& arr) {
+    return arr.Clone();
+  }
 
-// The possible execution strategies of AsyncExecute.
-enum Strategy { Local, Remote, RemoteWithFallback };
+  // The possible execution strategies of AsyncExecute.
+  enum Strategy { Local, Remote, RemoteWithFallback };
 
-// Decode the relevant preference to determine the desired execution-
-// strategy.
-static Strategy GetStrategy() {
-  int32_t const pref =
-      mozilla::StaticPrefs::widget_windows_utility_process_file_picker();
-  switch (pref) {
-    case -1:
-      return Local;
-    case 2:
-      return Remote;
-    case 1:
-      return RemoteWithFallback;
+  // Decode the relevant preference to determine the desired execution-
+  // strategy.
+  static Strategy GetStrategy() {
+    int32_t const pref =
+        mozilla::StaticPrefs::widget_windows_utility_process_file_picker();
+    switch (pref) {
+      case -1:
+        return Local;
+      case 2:
+        return Remote;
+      case 1:
+        return RemoteWithFallback;
 
-    default:
+      default:
 #ifdef NIGHTLY_BUILD
-      // on Nightly builds, fall back to local on failure
-      return RemoteWithFallback;
+        // on Nightly builds, fall back to local on failure
+        return RemoteWithFallback;
 #else
-      // on release and beta, remain local-only for now
-      return Local;
+        // on release and beta, remain local-only for now
+        return Local;
 #endif
-  }
-};
-
-namespace telemetry {
-static uint32_t Delta(uint64_t tb, uint64_t ta) {
-  // FILETIMEs are 100ns intervals; we reduce that to 1ms.
-  // (`u32::max()` milliseconds is roughly 47.91 days.)
-  return uint32_t((tb - ta) / 10'000);
-};
-static nsCString HexString(HRESULT val) {
-  return nsPrintfCString("%08lX", val);
-};
-
-static void RecordSuccess(uint64_t (&&time)[2]) {
-  auto [t0, t1] = time;
-
-  namespace glean_fd = mozilla::glean::file_dialog;
-  glean_fd::FallbackExtra extra{
-      .hresultLocal = Nothing(),
-      .hresultRemote = Nothing(),
-      .succeeded = Some(true),
-      .timeLocal = Nothing(),
-      .timeRemote = Some(Delta(t1, t0)),
+    }
   };
-  glean_fd::fallback.Record(Some(extra));
-}
 
-static void RecordFailure(uint64_t (&&time)[3], HRESULT hrRemote,
-                          HRESULT hrLocal) {
-  auto [t0, t1, t2] = time;
+ public:
+  // Invoke either or both of a "do locally" and "do remotely" function with the
+  // provided arguments, depending on the relevant preference-value and whether
+  // or not the remote version fails.
+  //
+  // Both functions must be asynchronous, returning a `RefPtr<MozPromise<...>>`.
+  // "Failure" is defined as the promise being rejected.
+  template <typename Fn1, typename Fn2, typename... Args>
+  static auto AsyncExecute(Fn1 local, Fn2 remote, Args const&... args)
+      -> std::invoke_result_t<Fn1, Args...> {
+    static_assert(std::is_same_v<std::invoke_result_t<Fn1, Args...>,
+                                 std::invoke_result_t<Fn2, Args...>>);
+    using PromiseT = typename std::invoke_result_t<Fn1, Args...>::element_type;
 
-  {
-    namespace glean_fd = mozilla::glean::file_dialog;
-    glean_fd::FallbackExtra extra{
-        .hresultLocal = Some(HexString(hrLocal)),
-        .hresultRemote = Some(HexString(hrRemote)),
-        .succeeded = Some(false),
-        .timeLocal = Some(Delta(t2, t1)),
-        .timeRemote = Some(Delta(t1, t0)),
-    };
-    glean_fd::fallback.Record(Some(extra));
-  }
-}
+    constexpr static char kFunctionName[] = "LocalAndOrRemote::AsyncExecute";
 
-}  // namespace telemetry
-}  // namespace details
+    switch (GetStrategy()) {
+      case Local:
+        return local(args...);
 
-// Invoke either or both of a "do locally" and "do remotely" function with the
-// provided arguments, depending on the relevant preference-value and whether
-// or not the remote version fails.
-//
-// Both functions must be asynchronous, returning a `RefPtr<MozPromise<...>>`.
-// "Failure" is defined as the promise being rejected.
-template <typename Fn1, typename Fn2, typename... Args>
-static auto AsyncExecute(Fn1 local, Fn2 remote, Args const&... args)
-    -> std::invoke_result_t<Fn1, Args...> {
-  using namespace details;
+      case Remote:
+        return remote(args...);
 
-  static_assert(std::is_same_v<std::invoke_result_t<Fn1, Args...>,
-                               std::invoke_result_t<Fn2, Args...>>);
-  using PromiseT = typename std::invoke_result_t<Fn1, Args...>::element_type;
-
-  constexpr static char kFunctionName[] = "LocalAndOrRemote::AsyncExecute";
-
-  switch (GetStrategy()) {
-    case Local:
-      return local(args...);
-
-    case Remote:
-      return remote(args...);
-
-    case RemoteWithFallback:
-      // more complicated; continue below
-      break;
-  }
-
-  // capture time for telemetry
-  constexpr static const auto GetTime = []() -> uint64_t {
-    FILETIME t;
-    ::GetSystemTimeAsFileTime(&t);
-    return (uint64_t(t.dwHighDateTime) << 32) | t.dwLowDateTime;
-  };
-  uint64_t const t0 = GetTime();
-
-  return remote(args...)->Then(
-      NS_GetCurrentThread(), kFunctionName,
-      [t0](typename PromiseT::ResolveValueType result) -> RefPtr<PromiseT> {
-        // success; stop here
-        auto const t1 = GetTime();
-        // record success
-        telemetry::RecordSuccess({t0, t1});
-        return PromiseT::CreateAndResolve(result, kFunctionName);
-      },
-      // initialized lambda pack captures are C++20 (clang 9, gcc 9);
-      // `make_tuple` is just a C++17 workaround
-      [=, tuple = std::make_tuple(Copy(args)...)](
-          typename PromiseT::RejectValueType err) mutable -> RefPtr<PromiseT> {
-        // failure; record time
-        auto const t1 = GetTime();
-        HRESULT const hrRemote = err;
-
-        // retry locally...
-        auto p0 = std::apply(local, std::move(tuple));
-        // ...then record the telemetry event
-        return p0->Then(
+      case RemoteWithFallback:
+        return remote(args...)->Then(
             NS_GetCurrentThread(), kFunctionName,
-            [t0, t1, hrRemote](typename PromiseT::ResolveOrRejectValue val)
-                -> RefPtr<PromiseT> {
-              auto const t2 = GetTime();
-              HRESULT const hrLocal = val.IsReject() ? val.RejectValue() : S_OK;
-              telemetry::RecordFailure({t0, t1, t2}, hrRemote, hrLocal);
-
-              return PromiseT::CreateAndResolveOrReject(val, kFunctionName);
+            [](typename PromiseT::ResolveValueType result) -> RefPtr<PromiseT> {
+              // success; stop here
+              return PromiseT::CreateAndResolve(result, kFunctionName);
+            },
+            // initialized lambda pack captures are C++20 (clang 9, gcc 9);
+            // `make_tuple` is just a C++17 workaround
+            [=, tuple = std::make_tuple(Copy(args)...)](
+                typename PromiseT::RejectValueType _err) mutable
+            -> RefPtr<PromiseT> {
+              // failure; retry locally
+              return std::apply(local, std::move(tuple));
             });
-      });
-}
-}  // namespace fd_async
-
-using fd_async::AsyncExecute;
+    }
+  }
+};
 
 }  // namespace mozilla::detail
 
@@ -435,9 +365,9 @@ RefPtr<mozilla::MozPromise<bool, HRESULT, true>> nsFilePicker::ShowFolderPicker(
   ScopedRtlShimWindow shim(mParentWidget.get());
   AutoWidgetPickerState awps(mParentWidget);
 
-  return mozilla::detail::AsyncExecute(&ShowFolderPickerLocal,
-                                       &ShowFolderPickerRemote, shim.get(),
-                                       commands)
+  return mozilla::detail::LocalAndOrRemote::AsyncExecute(
+             &ShowFolderPickerLocal, &ShowFolderPickerRemote, shim.get(),
+             commands)
       ->Then(
           NS_GetCurrentThread(), __PRETTY_FUNCTION__,
           [self = RefPtr(this), shim = std::move(shim),
@@ -565,7 +495,7 @@ RefPtr<mozilla::MozPromise<bool, HRESULT, true>> nsFilePicker::ShowFilePicker(
   mozilla::BackgroundHangMonitor().NotifyWait();
   auto type = mMode == modeSave ? FileDialogType::Save : FileDialogType::Open;
 
-  auto promise = mozilla::detail::AsyncExecute(
+  auto promise = mozilla::detail::LocalAndOrRemote::AsyncExecute(
       &ShowFilePickerLocal, &ShowFilePickerRemote, shim.get(), type, commands);
 
   return promise->Then(
