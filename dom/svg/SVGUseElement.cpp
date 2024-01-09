@@ -16,9 +16,10 @@
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/ReferrerInfo.h"
 #include "mozilla/dom/ShadowIncludingTreeIterator.h"
-#include "mozilla/dom/SVGLengthBinding.h"
 #include "mozilla/dom/SVGGraphicsElement.h"
+#include "mozilla/dom/SVGLengthBinding.h"
 #include "mozilla/dom/SVGSVGElement.h"
+#include "mozilla/dom/SVGSymbolElement.h"
 #include "mozilla/dom/SVGUseElementBinding.h"
 #include "nsGkAtoms.h"
 #include "nsContentUtils.h"
@@ -247,11 +248,8 @@ void SVGUseElement::NodeWillBeDestroyed(nsINode* aNode) {
 
 // Returns whether this node could ever be displayed.
 static bool NodeCouldBeRendered(const nsINode& aNode) {
-  if (aNode.IsSVGElement(nsGkAtoms::symbol)) {
-    // Only <symbol> elements in the root of a <svg:use> shadow tree are
-    // displayed.
-    auto* shadowRoot = ShadowRoot::FromNodeOrNull(aNode.GetParentNode());
-    return shadowRoot && shadowRoot->Host()->IsSVGElement(nsGkAtoms::use);
+  if (const auto* symbol = SVGSymbolElement::FromNode(aNode)) {
+    return symbol->CouldBeRendered();
   }
   // TODO: Do we have other cases we can optimize out easily?
   return true;

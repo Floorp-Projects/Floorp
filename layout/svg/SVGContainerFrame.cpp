@@ -162,9 +162,7 @@ void SVGDisplayContainerFrame::InsertFrames(
     for (nsIFrame* kid = firstNewFrame; kid != nextFrame;
          kid = kid->GetNextSibling()) {
       ISVGDisplayableFrame* SVGFrame = do_QueryFrame(kid);
-      if (SVGFrame) {
-        MOZ_ASSERT(!kid->HasAnyStateBits(NS_FRAME_IS_NONDISPLAY),
-                   "Check for this explicitly in the |if|, then");
+      if (SVGFrame && !kid->HasAnyStateBits(NS_FRAME_IS_NONDISPLAY)) {
         bool isFirstReflow = kid->HasAnyStateBits(NS_FRAME_FIRST_REFLOW);
         // Remove bits so that ScheduleBoundsUpdate will work:
         kid->RemoveStateBits(NS_FRAME_FIRST_REFLOW | NS_FRAME_IS_DIRTY |
@@ -190,8 +188,10 @@ void SVGDisplayContainerFrame::RemoveFrame(DestroyContext& aContext,
   // nsContainerFrame::RemoveFrame, so it doesn't call FrameNeedsReflow. We
   // need to schedule a repaint and schedule an update to our overflow rects.
   SchedulePaint();
-  PresContext()->RestyleManager()->PostRestyleEvent(
-      mContent->AsElement(), RestyleHint{0}, nsChangeHint_UpdateOverflow);
+  if (!HasAnyStateBits(NS_FRAME_IS_NONDISPLAY)) {
+    PresContext()->RestyleManager()->PostRestyleEvent(
+        mContent->AsElement(), RestyleHint{0}, nsChangeHint_UpdateOverflow);
+  }
 
   SVGContainerFrame::RemoveFrame(aContext, aListID, aOldFrame);
 }
@@ -332,9 +332,7 @@ void SVGDisplayContainerFrame::ReflowSVG() {
 
   for (auto* kid : mFrames) {
     ISVGDisplayableFrame* SVGFrame = do_QueryFrame(kid);
-    if (SVGFrame) {
-      MOZ_ASSERT(!kid->HasAnyStateBits(NS_FRAME_IS_NONDISPLAY),
-                 "Check for this explicitly in the |if|, then");
+    if (SVGFrame && !kid->HasAnyStateBits(NS_FRAME_IS_NONDISPLAY)) {
       SVGFrame->ReflowSVG();
 
       // We build up our child frame overflows here instead of using
