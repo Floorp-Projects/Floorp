@@ -20,6 +20,7 @@ skip-if = [
 ]
 
 ["browser_networkobserver_auth_listener.js"]
+skip-if = ["debug || asan"] # Disabled for frequent leaks in Bug 1873571.
 
 ["browser_networkobserver_invalid_constructor.js"]
 
