@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=2100,initial-scale=0.4"/>
+  <title>Tests that zoomToFocuedInput zooms in element in position:fixed element</title>
+  <script src="apz_test_native_event_utils.js"></script>
+  <script src="apz_test_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <style>
+  .container {
+    top: 0px;
+    height: 100px;
+    width: calc(100% - 30px);
+    position: fixed;
+  }
+  html {
+    height: 500vh;
+  }
+  </style>
+</head>
+<body>
+<div class="container">
+  <input>
+</div>
+<script>
+async function test() {
+  const initial_resolution = await getResolution();
+  ok(initial_resolution > 0,
+     "The initial_resolution is " + initial_resolution + ", which is some sane value");
+
+  document.querySelector("input").focus();
+
+  const transformEndPromise = promiseTransformEnd();
+  SpecialPowers.DOMWindowUtils.zoomToFocusedInput();
+  await transformEndPromise;
+
+  let resolution = await getResolution();
+  ok(resolution > initial_resolution, "zoomToFocusedInput zooms in to " + resolution);
+}
+
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+</script>
+</body>
+</html>
