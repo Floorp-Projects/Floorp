@@ -196,9 +196,7 @@ void ShareableCanvasRenderer::UpdateCompositableClient() {
       EnsurePipeline();
       forwarder->UseRemoteTexture(mCanvasClient, textureDesc.textureId(),
                                   textureDesc.ownerId(), mData.mSize, flags);
-      if (provider) {
-        provider->UseCompositableForwarder(forwarder);
-      }
+
       FireDidTransactionCallback();
       return;
     }

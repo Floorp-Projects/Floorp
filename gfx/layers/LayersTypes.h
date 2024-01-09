@@ -390,9 +390,6 @@ struct RemoteTextureOwnerId {
   };
 };
 
-typedef uint32_t RemoteTextureTxnType;
-typedef uint64_t RemoteTextureTxnId;
-
 // TextureId allocated in GPU process
 struct GpuProcessTextureId {
   uint64_t mId = 0;

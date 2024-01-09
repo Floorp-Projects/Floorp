@@ -28,7 +28,6 @@ class DrawTarget;
 
 namespace layers {
 
-class CompositableForwarder;
 class KnowsCompositor;
 struct RemoteTextureOwnerId;
 class TextureClient;
@@ -107,8 +106,6 @@ class PersistentBufferProvider : public RefCounted<PersistentBufferProvider>,
   virtual bool RequiresRefresh() const { return false; }
 
   virtual Maybe<SurfaceDescriptor> GetFrontBuffer() { return Nothing(); }
-
-  virtual void UseCompositableForwarder(CompositableForwarder* aForwarder) {}
 };
 
 class PersistentBufferProviderBasic : public PersistentBufferProvider {
@@ -173,8 +170,6 @@ class PersistentBufferProviderAccelerated : public PersistentBufferProvider {
   Maybe<SurfaceDescriptor> GetFrontBuffer() override;
 
   bool RequiresRefresh() const override;
-
-  void UseCompositableForwarder(CompositableForwarder* aForwarder) override;
 
  protected:
   explicit PersistentBufferProviderAccelerated(

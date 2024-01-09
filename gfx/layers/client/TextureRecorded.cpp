@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "TextureRecorded.h"
-#include "mozilla/layers/CompositableForwarder.h"
 
 #include "RecordedCanvasEventImpl.h"
 
@@ -32,8 +31,7 @@ RecordedTextureData::~RecordedTextureData() {
   // because the TextureData might need to destroy its DrawTarget within a lock.
   mDT = nullptr;
   mCanvasChild->CleanupTexture(mTextureId);
-  mCanvasChild->RecordEvent(
-      RecordedTextureDestruction(mTextureId, mLastTxnType, mLastTxnId));
+  mCanvasChild->RecordEvent(RecordedTextureDestruction(mTextureId));
 }
 
 void RecordedTextureData::FillInfo(TextureData::Info& aInfo) const {
@@ -165,12 +163,6 @@ bool RecordedTextureData::Serialize(SurfaceDescriptor& aDescriptor) {
   aDescriptor = SurfaceDescriptorRemoteTexture(mLastRemoteTextureId,
                                                mRemoteTextureOwnerId);
   return true;
-}
-
-void RecordedTextureData::UseCompositableForwarder(
-    CompositableForwarder* aForwarder) {
-  mLastTxnType = (RemoteTextureTxnType)aForwarder->GetFwdTransactionType();
-  mLastTxnId = (RemoteTextureTxnId)aForwarder->GetFwdTransactionId();
 }
 
 void RecordedTextureData::OnForwardedToHost() {

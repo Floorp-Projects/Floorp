@@ -10,10 +10,9 @@
 #include <stddef.h>  // for size_t
 #include <stdint.h>  // for uint32_t, uint64_t
 #include "mozilla/Atomics.h"
-#include "mozilla/Attributes.h"                    // for override
-#include "mozilla/RefPtr.h"                        // for already_AddRefed
-#include "mozilla/StaticPtr.h"                     // for StaticRefPtr
-#include "mozilla/layers/CompositableForwarder.h"  // for FwdTransactionCounter
+#include "mozilla/Attributes.h"  // for override
+#include "mozilla/RefPtr.h"      // for already_AddRefed
+#include "mozilla/StaticPtr.h"   // for StaticRefPtr
 #include "mozilla/layers/PCompositorManagerChild.h"
 
 namespace mozilla {
@@ -93,10 +92,6 @@ class CompositorManagerChild : public PCompositorManagerChild {
   mozilla::ipc::IPCResult RecvNotifyWebRenderError(
       const WebRenderError&& aError);
 
-  FwdTransactionCounter& GetFwdTransactionCounter() {
-    return mFwdTransactionCounter;
-  }
-
  private:
   static StaticRefPtr<CompositorManagerChild> sInstance;
   static Atomic<base::ProcessId> sOtherPid;
@@ -116,7 +111,6 @@ class CompositorManagerChild : public PCompositorManagerChild {
   uint32_t mResourceId;
   bool mCanSend;
   bool mSameProcess;
-  FwdTransactionCounter mFwdTransactionCounter;
 };
 
 }  // namespace layers
