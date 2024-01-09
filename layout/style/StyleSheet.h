@@ -547,7 +547,8 @@ class StyleSheet final : public nsICSSLoaderObserver, public nsWrapperCache {
 
   // Drop our reference to mMedia
   void DropMedia();
-
+  // Set our relevant global if needed.
+  void UpdateRelevantGlobal();
   // Unlink our inner, if needed, for cycle collection.
   void UnlinkInner();
   // Traverse our inner, if needed, for cycle collection
