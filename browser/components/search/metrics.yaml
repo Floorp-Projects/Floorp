@@ -318,3 +318,38 @@ serp:
     notification_emails:
       - fx-search-telemetry@mozilla.com
     expires: never
+
+search_with:
+  reporting_url:
+    type: url
+    description: >
+      The external url to report this interaction to.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1870138
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1870138
+    data_sensitivity:
+      - web_activity
+    notification_emails:
+      - mkaply@mozilla.com
+    expires: never
+    send_in_pings:
+      - search-with
+
+  context_id:
+    type: uuid
+    description: >
+      An identifier for Contextual Services user interaction pings. This is
+      used internally for counting unique users as well as for anti-fraud. It
+      is shared with other Contextual Services. It is not shared externally.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1870138
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1870138#c3
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - mkaply@mozilla.com
+    expires: never
+    send_in_pings:
+      - search-with

@@ -12,6 +12,7 @@ FINAL_TARGET_FILES.defaults.settings.main += [
     "language-dictionaries.json",
     "password-recipes.json",
     "password-rules.json",
+    "search-config-overrides.json",
     "search-config-v2.json",
     "search-config.json",
     "search-default-override-allowlist.json",

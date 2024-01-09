@@ -113,6 +113,7 @@ gecko_pings = [
 firefox_desktop_pings = [
     "browser/components/newtab/pings.yaml",
     "browser/components/pocket/pings.yaml",
+    "browser/components/search/pings.yaml",
     "browser/components/urlbar/pings.yaml",
     "toolkit/components/crashes/pings.yaml",
     "toolkit/components/telemetry/pings.yaml",

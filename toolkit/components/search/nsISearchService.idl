@@ -219,12 +219,18 @@ interface nsISearchEngine : nsISupports
   readonly attribute boolean isGeneralPurposeEngine;
 
   /**
-  * The domain from which search results are returned for this engine.
-  *
-  * @return the domain of the the search URL.
-  */
-readonly attribute AString searchUrlDomain;
+   * The domain from which search results are returned for this engine.
+   *
+   * @return the domain of the the search URL.
+   */
+  readonly attribute AString searchUrlDomain;
 
+  /**
+   * The URL to report the search to.
+   *
+   * @return the reporting URL.
+   */
+  readonly attribute AString clickUrl;
 };
 
 [scriptable, uuid(0dc93e51-a7bf-4a16-862d-4b3469ff6206)]

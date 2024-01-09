@@ -1027,6 +1027,10 @@ export class SearchEngine {
       this._urls.push(trending);
     }
 
+    if (configuration.clickUrl) {
+      this.clickUrl = configuration.clickUrl;
+    }
+
     if (details.encoding) {
       this._queryCharset = details.encoding;
     }
