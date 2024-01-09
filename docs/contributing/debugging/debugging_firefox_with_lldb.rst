@@ -65,7 +65,7 @@ followed by the command line you'd like to run, like this:
 
 .. code:: bash
 
-   $ lldb -- obj-ff-dbg/dist/Nightly.app/Contents/MacOS/firefox-bin -no-remote -profile /path/to/profile
+   $ lldb -- obj-ff-dbg/dist/Nightly.app/Contents/MacOS/firefox -no-remote -profile /path/to/profile
 
 Then set breakpoints you need and start the process:
 
@@ -76,5 +76,5 @@ Then set breakpoints you need and start the process:
    WARNING: Unable to resolve breakpoint to any actual locations.
 
    (lldb) r
-   Process 7602 launched: '/.../obj-ff-opt/dist/Nightly.app/Contents/MacOS/firefox-bin' (x86_64)
+   Process 7602 launched: '/.../obj-ff-opt/dist/Nightly.app/Contents/MacOS/firefox' (x86_64)
    1 location added to breakpoint 1

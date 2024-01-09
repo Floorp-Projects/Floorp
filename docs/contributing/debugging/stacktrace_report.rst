@@ -117,7 +117,7 @@ macOS
 ~~~~~
 
 Run /Applications/Utilities/Console.app.  Expand "~/Library/Logs" and
-"CrashReporter", then look for logs for "firefox-bin".
+"CrashReporter", then look for logs for "firefox".
 
 
 Linux
