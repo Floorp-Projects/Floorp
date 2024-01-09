@@ -19,7 +19,7 @@ from utils import (
 )
 
 here = os.path.abspath(os.path.dirname(__file__))
-raptor_ini = os.path.join(here, "raptor.ini")
+raptor_toml = os.path.join(here, "raptor.toml")
 tests_dir = os.path.join(here, "tests")
 LOG = RaptorLogger(component="raptor-manifest")
 
@@ -49,16 +49,16 @@ def filter_app(tests, values):
 
 
 def get_browser_test_list(browser_app, run_local):
-    LOG.info(raptor_ini)
-    test_manifest = TestManifest([raptor_ini], strict=False)
+    LOG.info(raptor_toml)
+    test_manifest = TestManifest([raptor_toml], strict=False)
     info = {"app": browser_app, "run_local": run_local}
     return test_manifest.active_tests(
         exists=False, disabled=False, filters=[filter_app], **info
     )
 
 
-def validate_test_ini(test_details):
-    # validate all required test details were found in the test INI
+def validate_test_toml(test_details):
+    # validate all required test details were found in the test TOML
     valid_settings = True
 
     for setting in required_settings:
@@ -93,13 +93,16 @@ def validate_test_ini(test_details):
                 )
 
     # if 'alert-on' is specified, we need to make sure that the value given is valid
-    # i.e. any 'alert_on' values must be values that exist in the 'measure' ini setting
+    # i.e. any 'alert_on' values must be values that exist in the 'measure' toml setting
     if test_details.get("alert_on") is not None:
         # support with or without spaces, i.e. 'measure = fcp, loadtime' or '= fcp,loadtime'
         # convert to a list; and remove any spaces
+        # when switching to .toml, values are \n separated, convert to a ',' and this will
+        # support scenarios where we have older .ini format as well as embedded commas
         # this can also have regexes inside
         test_details["alert_on"] = [
-            _item.strip() for _item in test_details["alert_on"].split(",")
+            _item.strip()
+            for _item in test_details["alert_on"].replace("\n", ",").split(",")
         ]
 
         # this variable will store all the concrete values for alert_on elements
@@ -202,7 +205,7 @@ def write_test_settings_json(args, test_details, oskey):
         test_settings["raptor-options"]["measure"] = {}
 
         # test_details['measure'] was already converted to a list in get_raptor_test_list below
-        # the 'hero=' line is still a raw string from the test INI
+        # the 'hero=' line is still a raw string from the test TOML
         for m in test_details["measure"]:
             test_settings["raptor-options"]["measure"][m] = True
             if m == "hero":
@@ -316,24 +319,24 @@ def write_test_settings_json(args, test_details, oskey):
 
 def get_raptor_test_list(args, oskey):
     """
-    A test ini (i.e. raptor-firefox-tp6.ini) will have one or more subtests inside,
-    each with it's own name ([the-ini-file-test-section]).
+    A test toml (i.e. raptor-firefox-tp6.toml) will have one or more subtests inside,
+    each with it's own name ([the-toml-file-test-section]).
 
     We want the ability to eiter:
-        - run * all * of the subtests listed inside the test ini; - or -
-        - just run a single one of those subtests that are inside the ini
+        - run * all * of the subtests listed inside the test toml; - or -
+        - just run a single one of those subtests that are inside the toml
 
     A test name is received on the command line. This will either match the name
-    of a single subtest (within an ini) - or - if there's no matching single
+    of a single subtest (within an toml) - or - if there's no matching single
     subtest with that name, then the test name provided might be the name of a
-    test ini itself (i.e. raptor-firefox-tp6) that contains multiple subtests.
+    test toml itself (i.e. raptor-firefox-tp6) that contains multiple subtests.
 
     First look for a single matching subtest name in the list of all availble tests,
     and if it's found we will just run that single subtest.
 
     Then look at the list of all available tests - each available test has a manifest
     name associated to it - and pull out all subtests whose manifest name matches
-    the test name provided on the command line i.e. run all subtests in a specified ini.
+    the test name provided on the command line i.e. run all subtests in a specified toml.
 
     If no tests are found at all then the test name is invalid.
     """
@@ -347,14 +350,14 @@ def get_raptor_test_list(args, oskey):
             tests_to_run.append(next_test)
             break
 
-    # no matches, so now look for all subtests that come from a test ini
+    # no matches, so now look for all subtests that come from a test toml
     # manifest that matches the test name provided on the commmand line
     if len(tests_to_run) == 0:
-        _ini = args.test + ".ini"
+        _toml = args.test + ".toml"
         for next_test in available_tests:
             head, tail = os.path.split(next_test["manifest"])
-            if tail == _ini:
-                # subtest comes from matching test ini file name, so add it
+            if tail == _toml:
+                # subtest comes from matching test toml file name, so add it
                 tests_to_run.append(next_test)
 
     if args.collect_perfstats and args.app.lower() not in (
@@ -374,7 +377,7 @@ def get_raptor_test_list(args, oskey):
             next_test["playback"] = None
 
     # go through each test and set the page-cycles and page-timeout, and some config flags
-    # the page-cycles value in the INI can be overriden when debug-mode enabled, when
+    # the page-cycles value in the TOML can be overriden when debug-mode enabled, when
     # gecko-profiling enabled, or when --page-cycles cmd line arg was used (that overrides all)
     for next_test in tests_to_run:
         LOG.info("configuring settings for test %s" % next_test["name"])
@@ -462,8 +465,8 @@ def get_raptor_test_list(args, oskey):
             LOG.info("debug-mode enabled")
             max_page_cycles = 2
 
-        # if --page-cycles was provided on the command line, use that instead of INI
-        # if just provided in the INI use that but cap at 3 if gecko-profiling is enabled
+        # if --page-cycles was provided on the command line, use that instead of TOML
+        # if just provided in the TOML use that but cap at 3 if gecko-profiling is enabled
         if args.page_cycles is not None:
             next_test["page_cycles"] = args.page_cycles
             LOG.info(
@@ -476,8 +479,8 @@ def get_raptor_test_list(args, oskey):
                 % next_test["page_cycles"]
             )
 
-        # if --browser-cycles was provided on the command line, use that instead of INI
-        # if just provided in the INI use that but cap at 3 if gecko-profiling is enabled
+        # if --browser-cycles was provided on the command line, use that instead of TOML
+        # if just provided in the TOML use that but cap at 3 if gecko-profiling is enabled
         if args.browser_cycles is not None:
             next_test["browser_cycles"] = args.browser_cycles
             LOG.info(
@@ -491,7 +494,7 @@ def get_raptor_test_list(args, oskey):
                 % next_test["browser_cycles"]
             )
 
-        # if --page-timeout was provided on the command line, use that instead of INI
+        # if --page-timeout was provided on the command line, use that instead of TOML
         if args.page_timeout is not None:
             LOG.info(
                 "setting page-timeout to %d as specified on cmd line"
@@ -504,7 +507,7 @@ def get_raptor_test_list(args, oskey):
         # check command line to see if we set cold page load from command line
         if args.cold or next_test.get("cold") == "true":
             # for raptor-webext jobs cold page-load is determined by the 'cold' key
-            # in test manifest INI
+            # in test manifest TOML
             _running_cold = True
         else:
             # if it's a warm load test ignore browser_cycles if set
@@ -533,7 +536,7 @@ def get_raptor_test_list(args, oskey):
         next_test["browser_cycle"] = 1
 
         # if --test-url-params was provided on the command line, add the params to the test_url
-        # provided in the INI
+        # provided in the TOML
         if args.test_url_params is not None:
             initial_test_url = next_test["test_url"]
             next_test["test_url"] = add_test_url_params(
@@ -568,7 +571,7 @@ def get_raptor_test_list(args, oskey):
                 % next_test.get("name", "Unknown")
             )
 
-        # browsertime doesn't use the 'measure' test ini setting; however just for the sake
+        # browsertime doesn't use the 'measure' test toml setting; however just for the sake
         # of supporting both webext and browsertime, just provide a dummy 'measure' setting
         # here to prevent having to check in multiple places; it has no effect on what
         # browsertime actually measures; remove this when eventually we remove webext support
@@ -584,7 +587,7 @@ def get_raptor_test_list(args, oskey):
                 "largestContentfulPaint"
             )
 
-        # convert 'measure =' test INI line to list
+        # convert 'measure =' test TOML line to list
         if next_test.get("measure") is not None:
             _measures = []
             for measure in [m.strip() for m in next_test["measure"].split(",")]:
@@ -630,7 +633,7 @@ def get_raptor_test_list(args, oskey):
     # write out .json test setting files for the control server to read and send to web ext
     if len(tests_to_run) != 0:
         for test in tests_to_run:
-            if validate_test_ini(test):
+            if validate_test_toml(test):
                 write_test_settings_json(args, test, oskey)
             else:
                 # test doesn't have valid settings, remove it from available list

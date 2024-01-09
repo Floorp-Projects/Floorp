@@ -1,0 +1,17 @@
+[DEFAULT]
+alert_threshold = 2.0
+apps = "fenix, geckoview, refbrow"
+lower_is_better = true
+measure = "fakeMeasure"
+owner = "PerfTest Team"
+page_cycles = 1
+page_timeout = 1320000
+scenario_time = 1200000
+test_url = "about:blank"
+type = "scenario"
+unit = "scenarioComplete"
+
+["idle"]
+
+["idle-bg"]
+browsertime_args = "--browsertime.scenario_time=60000 --browsertime.background_app=false"

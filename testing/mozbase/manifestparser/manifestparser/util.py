@@ -43,4 +43,9 @@ def evaluate_list_from_string(list_string):
             8,
     ```
     """
-    return ast.literal_eval("[" + "".join(list_string.strip(",").split("\n")) + "]")
+    parts = [
+        x.strip(",")
+        for x in list_string.strip(",").replace("\r", "").split("\n")
+        if x.strip()
+    ]
+    return ast.literal_eval("[" + ",".join(parts) + "]")

@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
 name: raptor
-manifest: testing/raptor/raptor/raptor.ini
+manifest: testing/raptor/raptor/raptor.toml
 static-only: False
 metrics:
     "First Paint":

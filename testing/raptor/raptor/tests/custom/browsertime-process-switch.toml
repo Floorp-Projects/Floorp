@@ -1,0 +1,28 @@
+[DEFAULT]
+alert_on = "fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange"
+alert_threshold = 2.0
+apps = "firefox, chrome, chromium"
+browser_cycles = 25
+gecko_profile_entries = 14000000
+gecko_profile_interval = 1
+lower_is_better = true
+owner = "PerfTest Team"
+page_cycles = 25
+page_timeout = 60000
+playback = "mitmproxy"
+playback_version = "5.1.1"
+type = "pageload"
+unit = "ms"
+use_live_sites = false
+
+# raptor-browsertime fission process switch time test
+
+["process-switch"]
+# Bug 1867507 - This test isn't producing a largestContentfulPaint
+alert_on = "fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange"
+measure = "fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange"
+accept_zero_vismet = true
+browsertime_args = "--pageCompleteWaitTime=1000 --pageCompleteCheckInactivity=true"
+playback_pageset_manifest = "mitm5-linux-firefox-proc-switch.manifest"
+test_script = "process_switch.js"
+test_url = "https://mozilla.seanfeng.dev/files/red.html,https://mozilla.pettay.fi/moztests/blue.html"

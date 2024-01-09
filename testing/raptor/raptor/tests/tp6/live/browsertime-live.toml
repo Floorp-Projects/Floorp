@@ -1,0 +1,62 @@
+[DEFAULT]
+alert_on = "fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange"
+alert_threshold = 2.0
+apps = "geckoview, fenix, refbrow, chrome-m, firefox, chrome, chromium"
+browser_cycles = 15
+lower_is_better = true
+owner = "PerfTest Team"
+page_cycles = 25
+page_timeout = 60000
+type = "pageload"
+unit = "ms"
+use_live_sites = true
+
+## Keep this test list in alphabetical order
+
+["booking-sf"]
+test_url = "https://www.booking.com/hotel/us/edwardian-san-francisco.html"
+
+["cnn"]
+test_url = "https://www.cnn.com/2021/03/22/weather/climate-change-warm-waters-lake-michigan/index.html"
+
+["cnn-ampstories"]
+test_url = "https://cnn.com/ampstories/us/why-hurricane-michael-is-a-monster-unlike-any-other"
+
+["discord"]
+test_url = "https://discordapp.com/"
+
+["expedia"]
+test_url = "https://expedia.com/Hotel-Search?destination=New+York%2C+New+York&latLong=40.756680%2C-73.986470&regionId=178293&startDate=&endDate=&rooms=1&_xpid=11905%7C1&adults=2" #noqa
+
+["fashionbeans"]
+test_url = "https://fashionbeans.com/article/coolest-menswear-stores-in-the-world"
+
+["google-accounts"]
+test_url = "https://accounts.google.com"
+
+["imdb-firefox"]
+test_url = "https://m.imdb.com/title/tt0083943/"
+
+["medium-article"]
+test_url = "https://medium.com/s/coincidences-are-a-lie/could-america-have-also-been-the-birthplace-of-impressionism-cb3d31a2e22d" #noqa
+
+["nytimes"]
+test_url = "https://www.nytimes.com/2020/02/19/opinion/surprise-medical-bill.html"
+
+["people-article"]
+test_url = "https://people.com/amp-stories/royal-a-to-z/"
+
+["reddit-thread"]
+test_url = "https://www.reddit.com/r/firefox/comments/7dkq03/its_been_a_while/"
+
+["rumble-fox"]
+test_url = "https://rumble.com/v3c44t-foxes-jumping-on-my-trampoline.html"
+
+["stackoverflow-question"]
+test_url = "https://stackoverflow.com/questions/927358/how-do-i-undo-the-most-recent-commits-in-git"
+
+["urbandictionary-define"]
+test_url = "https://urbandictionary.com/define.php?term=awesome%20sauce"
+
+["wikia-marvel"]
+test_url = "https://marvel.wikia.com/wiki/Black_Panther"

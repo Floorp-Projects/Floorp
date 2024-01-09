@@ -62,7 +62,7 @@ Here is an example of a configuration file for the Raptor framework:
 .. parsed-literal::
 
     name: raptor
-    manifest: testing/raptor/raptor/raptor.ini
+    manifest: testing/raptor/raptor/raptor.toml
     suites:
         desktop:
             description: "Desktop tests."

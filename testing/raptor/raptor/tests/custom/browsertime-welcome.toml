@@ -1,0 +1,26 @@
+[DEFAULT]
+alert_on = "fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange"
+alert_threshold = 2.0
+apps = "firefox"
+browser_cycles = 25
+gecko_profile_entries = 14000000
+gecko_profile_interval = 1
+lower_is_better = true
+owner = "PerfTest Team"
+page_cycles = 25
+page_timeout = 60000
+playback = "mitmproxy"
+playback_version = "8.1.1"
+type = "pageload"
+unit = "ms"
+use_live_sites = false
+
+# raptor-browsertime first-install about:welcome pageload test
+
+["welcome"]
+# Bug 1867507 - This test isn't producing a largestContentfulPaint
+alert_on = "fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange"
+measure = "fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange"
+playback_pageset_manifest = "mitm5-linux-firefox-welcome.manifest"
+test_script = "welcome.js"
+test_url = "about:welcome"

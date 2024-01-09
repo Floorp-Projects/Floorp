@@ -1,0 +1,25 @@
+[DEFAULT]
+apps = "firefox, chrome, chromium, safari"
+alert_threshold = 2.0
+browser_cycles = 1
+cold = true
+gecko_profile_entries = 14000000
+gecko_profile_interval = 1
+lower_is_better = true
+owner = "PerfTest Team"
+page_cycles = 1
+page_timeout = 1800000
+output_timeout = 2000000
+unit = "ms"
+subtest_unit = "ms"
+type = "pageload"
+playback_version = "8.1.1"
+playback = "mitmproxy"
+support_class = "browsertime_tp6_bench.py"
+
+["tp6-bench"]
+custom_data = true
+test_summary = "flatten"
+test_script = "browsertime_tp6_bench.js"
+test_url = "None"
+playback_pageset_manifest = "None"
