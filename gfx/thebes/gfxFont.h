@@ -762,8 +762,6 @@ class gfxShapedText {
       FLAG_BREAK_TYPE_NONE = 0,
       FLAG_BREAK_TYPE_NORMAL = 1,
       FLAG_BREAK_TYPE_HYPHEN = 2,
-      // Allow break before this position if needed to avoid overflow:
-      FLAG_BREAK_TYPE_EMERGENCY_WRAP = 3,
 
       FLAG_CHAR_IS_SPACE = 0x10000000U,
 
@@ -888,7 +886,7 @@ class gfxShapedText {
     }
     // Returns FLAGS_CAN_BREAK_BEFORE if the setting changed, 0 otherwise
     uint32_t SetCanBreakBefore(uint8_t aCanBreakBefore) {
-      MOZ_ASSERT(aCanBreakBefore <= 3, "Bogus break-flags value!");
+      MOZ_ASSERT(aCanBreakBefore <= 2, "Bogus break-before value!");
       uint32_t breakMask = (uint32_t(aCanBreakBefore) << FLAGS_CAN_BREAK_SHIFT);
       uint32_t toggle = breakMask ^ (mValue & FLAGS_CAN_BREAK_BEFORE);
       mValue ^= toggle;
@@ -1371,7 +1369,6 @@ class gfxShapedWord final : public gfxShapedText {
     memset(mCharGlyphsStorage, 0, aLength * sizeof(CompressedGlyph));
     uint8_t* text = reinterpret_cast<uint8_t*>(&mCharGlyphsStorage[aLength]);
     memcpy(text, aText, aLength * sizeof(uint8_t));
-    SetupClusterBoundaries(0, aText, aLength);
   }
 
   gfxShapedWord(const char16_t* aText, uint32_t aLength, Script aRunScript,
