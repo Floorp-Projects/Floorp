@@ -460,12 +460,8 @@ void WebRenderBridgeChild::EnableRemoteTexturePushCallback(
       OpEnableRemoteTexturePushCallback(aOwnerId, aSize, aFlags)));
 }
 
-void WebRenderBridgeChild::UpdateFwdTransactionId() {
-  GetCompositorBridgeChild()->UpdateFwdTransactionId();
-}
-
-uint64_t WebRenderBridgeChild::GetFwdTransactionId() {
-  return GetCompositorBridgeChild()->GetFwdTransactionId();
+FwdTransactionCounter& WebRenderBridgeChild::GetFwdTransactionCounter() {
+  return GetCompositorBridgeChild()->GetFwdTransactionCounter();
 }
 
 bool WebRenderBridgeChild::InForwarderThread() { return NS_IsMainThread(); }

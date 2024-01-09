@@ -12,6 +12,7 @@
 #include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/ContentCompositorBridgeParent.h"
 #include "mozilla/layers/CompositorThread.h"
+#include "mozilla/layers/RemoteTextureMap.h"
 #include "mozilla/layers/SharedSurfacesParent.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
@@ -150,6 +151,10 @@ void CompositorManagerParent::ActorDestroy(ActorDestroyReason aReason) {
   GetCurrentSerialEventTarget()->Dispatch(
       NewRunnableMethod("layers::CompositorManagerParent::DeferredDestroy",
                         this, &CompositorManagerParent::DeferredDestroy));
+
+  if (mRemoteTextureTxnScheduler) {
+    mRemoteTextureTxnScheduler = nullptr;
+  }
 
   StaticMonitorAutoLock lock(sMonitor);
   if (sInstance == this) {
@@ -372,6 +377,8 @@ mozilla::ipc::IPCResult CompositorManagerParent::RecvInitCanvasManager(
     Endpoint<PCanvasManagerParent>&& aEndpoint) {
   gfx::CanvasManagerParent::Init(std::move(aEndpoint), mSharedSurfacesHolder,
                                  mContentId);
+  mRemoteTextureTxnScheduler =
+      RemoteTextureMap::Get()->RegisterTxnScheduler(this);
   return IPC_OK();
 }
 

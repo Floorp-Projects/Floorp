@@ -176,7 +176,8 @@ CompositorManagerChild::CompositorManagerChild(CompositorManagerParent* aParent,
       mNamespace(aNamespace),
       mResourceId(0),
       mCanSend(false),
-      mSameProcess(true) {
+      mSameProcess(true),
+      mFwdTransactionCounter(this) {
   MOZ_ASSERT(aParent);
 
   SetOtherProcessId(base::GetCurrentProcId());
@@ -195,7 +196,8 @@ CompositorManagerChild::CompositorManagerChild(
       mNamespace(aNamespace),
       mResourceId(0),
       mCanSend(false),
-      mSameProcess(false) {
+      mSameProcess(false),
+      mFwdTransactionCounter(this) {
   if (NS_WARN_IF(!aEndpoint.Bind(this))) {
     return;
   }

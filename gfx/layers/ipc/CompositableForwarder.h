@@ -9,8 +9,9 @@
 
 #include <stdint.h>  // for int32_t, uint32_t, uint64_t
 #include "mozilla/Assertions.h"  // for AssertionConditionType, MOZ_ASSERT, MOZ_ASSERT_HELPER1
-#include "mozilla/RefPtr.h"                  // for RefPtr
-#include "mozilla/TimeStamp.h"               // for TimeStamp
+#include "mozilla/RefPtr.h"             // for RefPtr
+#include "mozilla/TimeStamp.h"          // for TimeStamp
+#include "mozilla/ipc/ProtocolUtils.h"  // for IToplevelProtocol, ProtocolID
 #include "mozilla/layers/KnowsCompositor.h"  // for KnowsCompositor
 #include "nsRect.h"                          // for nsIntRect
 #include "nsRegion.h"                        // for nsIntRegion
@@ -24,6 +25,34 @@ class ImageContainer;
 class PTextureChild;
 class SurfaceDescriptorTiles;
 class TextureClient;
+
+/**
+ * FwdTransactionCounter issues forwarder transaction numbers that represent a
+ * sequential stream of transactions to be transported over IPDL. Since every
+ * top-level protocol represents its own independently-sequenced IPDL queue,
+ * transaction numbers most naturally align with top-level protocols, rather
+ * than have different sub-protocols with their own independent transaction
+ * numbers that can't be usefully sequenced. FwdTransactionCounter expects
+ * users of it to provide themselves as proof they are a top-level protocol
+ * to avoid issues.
+ */
+struct FwdTransactionCounter {
+  explicit FwdTransactionCounter(mozilla::ipc::IToplevelProtocol* aToplevel)
+      : mFwdTransactionType(aToplevel->GetProtocolId()) {}
+
+  /**
+   * The ID of the top-level protocol. This is useful to tag the source of
+   * the transaction numbers in case different sources must be disambiguated.
+   */
+  mozilla::ipc::ProtocolId mFwdTransactionType;
+
+  /**
+   * Transaction id of ShadowLayerForwarder.
+   * It is incremented by UpdateFwdTransactionId() in each BeginTransaction()
+   * call.
+   */
+  uint64_t mFwdTransactionId = 0;
+};
 
 /**
  * A transaction is a set of changes that happenned on the content side, that
@@ -92,14 +121,23 @@ class CompositableForwarder : public KnowsCompositor {
       CompositableClient* aCompositable, const RemoteTextureOwnerId aOwnerId,
       const gfx::IntSize aSize, const TextureFlags aFlags) = 0;
 
-  virtual void UpdateFwdTransactionId() = 0;
-  virtual uint64_t GetFwdTransactionId() = 0;
+  void UpdateFwdTransactionId() {
+    ++GetFwdTransactionCounter().mFwdTransactionId;
+  }
+  uint64_t GetFwdTransactionId() {
+    return GetFwdTransactionCounter().mFwdTransactionId;
+  }
+  mozilla::ipc::ProtocolId GetFwdTransactionType() {
+    return GetFwdTransactionCounter().mFwdTransactionType;
+  }
 
   virtual bool InForwarderThread() = 0;
 
   void AssertInForwarderThread() { MOZ_ASSERT(InForwarderThread()); }
 
  protected:
+  virtual FwdTransactionCounter& GetFwdTransactionCounter() = 0;
+
   nsTArray<RefPtr<TextureClient>> mTexturesToRemove;
   nsTArray<RefPtr<CompositableClient>> mCompositableClientsToRemove;
 };
