@@ -126,20 +126,20 @@ void NS_GetComplexLineBreaks(const char16_t* aText, uint32_t aLength,
   }
 
   if (mismatch) {
+    nsCString line("uniscribe: ");
     // The logging here doesn't handle surrogates, but we only have tests using
     // Thai currently, which is BMP-only.
-    printf_stderr("uniscribe: ");
     for (uint32_t i = 0; i < aLength; ++i) {
-      if (aBreakBefore[i]) printf_stderr("#");
-      printf_stderr("%s", NS_ConvertUTF16toUTF8(aText + i, 1).get());
+      if (aBreakBefore[i]) line.Append('#');
+      line.Append(NS_ConvertUTF16toUTF8(aText + i, 1).get());
     }
-    printf_stderr("\n");
-    printf_stderr("brokered : ");
+    printf_stderr("%s\n", line.get());
+    line.Assign("brokered : ");
     for (uint32_t i = 0; i < aLength; ++i) {
-      if (brokeredBreaks[i]) printf_stderr("#");
-      printf_stderr("%s", NS_ConvertUTF16toUTF8(aText + i, 1).get());
+      if (brokeredBreaks[i]) line.Append('#');
+      line.Append(NS_ConvertUTF16toUTF8(aText + i, 1).get());
     }
-    printf_stderr("\n");
+    printf_stderr("%s\n", line.get());
     MOZ_CRASH("Brokered breaks did not match.");
   }
 #endif
