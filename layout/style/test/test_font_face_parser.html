@@ -378,8 +378,9 @@ function runTest() {
 }
 
 SimpleTest.waitForExplicitFinish();
-SpecialPowers.pushPrefEnv({ set: [["layout.css.font-display.enabled", true]] },
-                          runTest);
+
+runTest();
+
 </script>
 </body>
 </html>

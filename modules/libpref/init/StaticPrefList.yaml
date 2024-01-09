@@ -96,7 +96,7 @@
 #
 # - `rust` indicates if the mirror variable is used by Rust code. If so, it
 #   will be usable via the `static_prefs::pref!` macro, e.g.
-#   `static_prefs::pref!("layout.css.font-display.enabled")`.
+#   `static_prefs::pref!("layout.css.cross-fade.enabled")`.
 #
 # The getter function's base name is the same as the pref's name, but with
 # '.' or '-' chars converted to '_', to make a valid identifier. For example,
@@ -8432,13 +8432,6 @@
   value: 1
 #endif
   mirror: always
-
-# Is support for the font-display @font-face descriptor enabled?
-- name: layout.css.font-display.enabled
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-  rust: true
 
 # Is support for the @font-palette-values rule and font-palette property enabled?
 - name: layout.css.font-palette.enabled

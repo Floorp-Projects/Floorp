@@ -372,9 +372,6 @@ void nsFontFaceLoader::Cancel() {
 }
 
 StyleFontDisplay nsFontFaceLoader::GetFontDisplay() {
-  if (!StaticPrefs::layout_css_font_display_enabled()) {
-    return StyleFontDisplay::Auto;
-  }
   return mUserFontEntry->GetFontDisplay();
 }
 
