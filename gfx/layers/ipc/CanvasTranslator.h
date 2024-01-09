@@ -171,7 +171,8 @@ class CanvasTranslator final : public gfx::InlineTranslator,
    *
    * @param aTextureId the texture ID to remove
    */
-  void RemoveTexture(int64_t aTextureId);
+  void RemoveTexture(int64_t aTextureId, RemoteTextureTxnType aTxnType = 0,
+                     RemoteTextureTxnId aTxnId = 0);
 
   bool LockTexture(int64_t aTextureId, OpenMode aMode,
                    bool aInvalidContents = false);

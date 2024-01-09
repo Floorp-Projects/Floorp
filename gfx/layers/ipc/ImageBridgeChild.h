@@ -308,8 +308,9 @@ class ImageBridgeChild final : public PImageBridgeChild,
 
   bool IsSameProcess() const override;
 
-  void UpdateFwdTransactionId() override { ++mFwdTransactionId; }
-  uint64_t GetFwdTransactionId() override { return mFwdTransactionId; }
+  FwdTransactionCounter& GetFwdTransactionCounter() override {
+    return mFwdTransactionCounter;
+  }
 
   bool InForwarderThread() override { return InImageBridgeChildThread(); }
 
@@ -351,7 +352,7 @@ class ImageBridgeChild final : public PImageBridgeChild,
    * It is incrementaed by UpdateFwdTransactionId() in each BeginTransaction()
    * call.
    */
-  uint64_t mFwdTransactionId;
+  FwdTransactionCounter mFwdTransactionCounter;
 
   /**
    * Hold TextureClients refs until end of their usages on host side.

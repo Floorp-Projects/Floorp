@@ -47,6 +47,7 @@ class Compositor;
 class CompositorBridgeParentBase;
 class CompositorVsyncScheduler;
 class OMTASampler;
+class RemoteTextureTxnScheduler;
 class UiCompositorControllerParent;
 class WebRenderBridgeParentRef;
 class WebRenderImageHost;
@@ -496,6 +497,8 @@ class WebRenderBridgeParent final : public PWebRenderBridgeParent,
   // These payloads are being used for SCROLL_PRESENT_LATENCY telemetry
   DataMutex<nsClassHashtable<nsUint64HashKey, nsTArray<CompositionPayload>>>
       mPendingScrollPayloads;
+
+  RefPtr<RemoteTextureTxnScheduler> mRemoteTextureTxnScheduler;
 };
 
 // Use this class, since WebRenderBridgeParent could not supports

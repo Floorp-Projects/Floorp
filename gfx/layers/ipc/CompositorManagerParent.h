@@ -27,6 +27,7 @@ namespace layers {
 
 class CompositorBridgeParent;
 class CompositorThreadHolder;
+class RemoteTextureTxnScheduler;
 class SharedSurfacesHolder;
 
 class CompositorManagerParent final : public PCompositorManagerParent {
@@ -104,6 +105,7 @@ class CompositorManagerParent final : public PCompositorManagerParent {
   const dom::ContentParentId mContentId;
   const uint32_t mNamespace;
   uint32_t mLastSharedSurfaceResourceId MOZ_GUARDED_BY(sMonitor) = 0;
+  RefPtr<RemoteTextureTxnScheduler> mRemoteTextureTxnScheduler;
 };
 
 }  // namespace layers
