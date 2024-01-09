@@ -19,7 +19,7 @@ Firefox::
 
     import mozversion
 
-    version = mozversion.get_version(binary='/path/to/firefox-bin')
+    version = mozversion.get_version(binary='/path/to/firefox')
     for (key, value) in sorted(version.items()):
         if value:
             print '%s: %s' % (key, value)

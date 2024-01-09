@@ -35,11 +35,11 @@ already).
 #. Type "export NSPR_LOG_MODULES=cookie:4" and press Enter.
 #. Run Firefox by typing "./firefox" and pressing Enter
 
-Mac OS X
-^^^^^^^^
+macOS
+^^^^^
 
 Open Terminal.app, which is located in the /Applications/Utilities
-folder (these instructions are for bash, the default shell in Mac OS X
+folder (these instructions are for bash, the default shell in macOS
 10.3 and higher; if you use something else, you probably know how to
 modify these instructions already).
 
@@ -48,7 +48,7 @@ modify these instructions already).
 #. Type "export NSPR_LOG_FILE=~/Desktop/cookie-log.txt" and press
    Return.
 #. Type "export NSPR_LOG_MODULES=cookie:4" and press Return.
-#. Run Firefox by typing "./firefox-bin" and pressing Return (note that
+#. Run Firefox by typing "./firefox" and pressing Return (note that
    Firefox will launch behind windows for other applications).
 
 Creating the Log
