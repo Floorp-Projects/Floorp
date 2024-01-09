@@ -58,6 +58,7 @@ job-defaults:
             - linux64-node
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
+            - android-gradle-python-envs
 
 android-arm/debug:
     description: "Android 5.0 Arm Debug"
