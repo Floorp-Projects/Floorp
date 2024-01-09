@@ -2800,16 +2800,18 @@ bool nsFrameLoader::TryRemoteBrowserInternal() {
 }
 
 bool nsFrameLoader::TryRemoteBrowser() {
-  // Creating remote browsers may result in creating new processes, but during
-  // parent shutdown that would add just noise, so better bail out.
-  if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownConfirmed)) {
-    return false;
-  }
+  // NOTE: Do not add new checks to this function, it exists to ensure we always
+  // MaybeNotifyCrashed for any errors within TryRemoteBrowserInternal. If new
+  // checks are added, they should be added into that function, not here.
 
   // Try to create the internal remote browser.
   if (TryRemoteBrowserInternal()) {
     return true;
   }
+
+  // We shouldn't TryRemoteBrowser again, even if a check failed before we
+  // initialize mInitialized within TryRemoteBrowserInternal.
+  mInitialized = true;
 
   // Check if we should report a browser-crashed error because the browser
   // failed to start.

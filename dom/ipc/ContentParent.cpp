@@ -1444,6 +1444,14 @@ already_AddRefed<RemoteBrowser> ContentParent::CreateBrowser(
       "BrowsingContext must not have BrowserParent, or have previous "
       "BrowserParent cleared");
 
+  // Don't bother creating new content browsers after entering shutdown. This
+  // could lead to starting a new content process, which may significantly delay
+  // shutdown, and the content is unlikely to be displayed.
+  if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownConfirmed)) {
+    NS_WARNING("Ignoring remote browser creation request during shutdown");
+    return nullptr;
+  }
+
   nsAutoCString remoteType(aRemoteType);
   if (remoteType.IsEmpty()) {
     remoteType = DEFAULT_REMOTE_TYPE;
