@@ -46,7 +46,8 @@
           "processcpu",
           "power",
           "responsiveness",
-          "cpufreq"
+          "cpufreq",
+          "bandwidth"
         ]
       },
       {

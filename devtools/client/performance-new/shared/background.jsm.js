@@ -238,7 +238,15 @@ const presets = {
   networking: {
     entries: 128 * 1024 * 1024,
     interval: 1,
-    features: ["screenshots", "js", "stackwalk", "cpu", "java", "processcpu"],
+    features: [
+      "screenshots",
+      "js",
+      "stackwalk",
+      "cpu",
+      "java",
+      "processcpu",
+      "bandwidth",
+    ],
     threads: [
       "Compositor",
       "DNS Resolver",
@@ -275,6 +283,7 @@ const presets = {
       "ipcmessages",
       "markersallthreads",
       "power",
+      "bandwidth",
     ],
     threads: ["GeckoMain", "Renderer"],
     duration: 0,

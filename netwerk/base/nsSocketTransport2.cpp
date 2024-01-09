@@ -19,6 +19,7 @@
 #include "mozilla/dom/ToJSValue.h"
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/net/SSLTokensCache.h"
+#include "mozilla/ProfilerBandwidthCounter.h"
 #include "nsCOMPtr.h"
 #include "nsICancelable.h"
 #include "nsIClassInfoImpl.h"
@@ -402,6 +403,7 @@ nsSocketInputStream::Read(char* buf, uint32_t count, uint32_t* countRead) {
 
     if (n > 0) {
       mByteCount += (*countRead = n);
+      profiler_count_bandwidth_read_bytes(n);
     } else if (n < 0) {
       PRErrorCode code = PR_GetError();
       if (code == PR_WOULD_BLOCK_ERROR) return NS_BASE_STREAM_WOULD_BLOCK;
@@ -592,6 +594,7 @@ nsSocketOutputStream::Write(const char* buf, uint32_t count,
 
     if (n > 0) {
       mByteCount += (*countWritten = n);
+      profiler_count_bandwidth_written_bytes(n);
     } else if (n < 0) {
       PRErrorCode code = PR_GetError();
       if (code == PR_WOULD_BLOCK_ERROR) return NS_BASE_STREAM_WOULD_BLOCK;

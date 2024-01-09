@@ -180,6 +180,7 @@ EXPORTS += [
 EXPORTS.mozilla += [
     "public/ProfileBufferEntrySerializationGeckoExtensions.h",
     "public/ProfileJSONWriter.h",
+    "public/ProfilerBandwidthCounter.h",
     "public/ProfilerCounts.h",
     "public/ProfilerLabels.h",
     "public/ProfilerMarkers.h",
