@@ -707,12 +707,18 @@ class GitRepository(Repository):
 
         return None
 
-    @property
-    def base_ref(self):
+    def get_mozilla_remote_arg(self) -> str:
+        """Return a `--remotes` argument to limit revisions to relevant upstreams."""
         official_remote = self.get_mozilla_upstream_remote()
 
         # Limit remotes to official Firefox repos where possible.
         remote_arg = f"--remotes={official_remote}" if official_remote else "--remotes"
+
+        return remote_arg
+
+    @property
+    def base_ref(self):
+        remote_arg = self.get_mozilla_remote_arg()
 
         refs = self._run(
             "rev-list", "HEAD", "--topo-order", "--boundary", "--not", remote_arg
@@ -875,12 +881,14 @@ class GitRepository(Repository):
 
     def get_branch_nodes(self) -> List[str]:
         """Return a list of commit SHAs for nodes on the current branch."""
+        remote_arg = self.get_mozilla_remote_arg()
+
         return self._run(
             "log",
             "HEAD",
             "--reverse",
             "--not",
-            "--remotes",
+            remote_arg,
             "--pretty=%H",
         ).splitlines()
 
