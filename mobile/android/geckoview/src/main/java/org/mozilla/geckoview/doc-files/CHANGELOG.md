@@ -16,6 +16,7 @@ exclude: true
 ## v123
 - For Translations, added [`checkPairDownloadSize`][123.1] and [`TranslationsException.ERROR_MODEL_LANGUAGE_REQUIRED`][123.2] as an error state.
 - ⚠️ Deprecated [`GeckoSession.requestAnalysisCreationStatus`][119.2] by 124, please use [`GeckoSession.requestCreateAnalysis`][122.2] instead.
+- ⚠️ Removed deprecated [`GeckoSession.requestAnalysisCreationStatus`][119.2]
 
 [123.1]: {{javadoc_uri}}/TranslationsController.RuntimeTranslation.html#checkPairDownloadSize(java.lang.String,java.lang.String)
 [123.2]: {{javadoc_uri}}/TranslationsController.TranslationsException.html#ERROR_MODEL_LANGUAGE_REQUIRED
@@ -1501,4 +1502,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport(android.content.Context,android.os.Bundle,java.lang.String)
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 8af2bae39c9b5023991538f71f1f3da0ccfb78c7
+[api-version]: 37c99c6944c474d502ea836194b93fae8d1d25e0
