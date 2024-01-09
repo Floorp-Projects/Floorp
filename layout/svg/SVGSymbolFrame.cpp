@@ -7,6 +7,7 @@
 // Main header first:
 #include "SVGSymbolFrame.h"
 
+#include "mozilla/dom/SVGSymbolElement.h"
 #include "mozilla/PresShell.h"
 
 nsIFrame* NS_NewSVGSymbolFrame(mozilla::PresShell* aPresShell,
@@ -26,14 +27,24 @@ NS_QUERYFRAME_HEAD(SVGSymbolFrame)
   NS_QUERYFRAME_ENTRY(SVGSymbolFrame)
 NS_QUERYFRAME_TAIL_INHERITING(SVGViewportFrame)
 
-#ifdef DEBUG
 void SVGSymbolFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
                           nsIFrame* aPrevInFlow) {
-  NS_ASSERTION(aContent->IsSVGElement(nsGkAtoms::symbol),
-               "Content is not an SVG 'symbol' element!");
+  MOZ_ASSERT(aContent->IsSVGElement(nsGkAtoms::symbol),
+             "Content is not an SVG 'symbol' element!");
+
+  if (!dom::SVGSymbolElement::FromNode(aContent)->CouldBeRendered()) {
+    AddStateBits(NS_FRAME_IS_NONDISPLAY);
+  }
 
   SVGViewportFrame::Init(aContent, aParent, aPrevInFlow);
 }
-#endif /* DEBUG */
+
+void SVGSymbolFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
+                                      const nsDisplayListSet& aLists) {
+  if (HasAnyStateBits(NS_FRAME_IS_NONDISPLAY)) {
+    return;
+  }
+  SVGViewportFrame::BuildDisplayList(aBuilder, aLists);
+}
 
 }  // namespace mozilla

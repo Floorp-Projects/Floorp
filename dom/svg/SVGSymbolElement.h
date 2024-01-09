@@ -26,11 +26,17 @@ class SVGSymbolElement final : public SVGSymbolElementBase {
   ~SVGSymbolElement() = default;
   JSObject* WrapNode(JSContext* cx, JS::Handle<JSObject*> aGivenProto) override;
 
+  Focusable IsFocusableWithoutStyle(bool aWithMouse) override;
+
  public:
   // interfaces:
   NS_DECL_ISUPPORTS_INHERITED
 
+  NS_IMPL_FROMNODE_WITH_TAG(SVGSymbolElement, kNameSpaceID_SVG, symbol)
+
   nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
+
+  bool CouldBeRendered() const;
 };
 
 }  // namespace mozilla::dom
