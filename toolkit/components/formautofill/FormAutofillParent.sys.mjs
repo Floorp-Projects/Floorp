@@ -558,7 +558,7 @@ export class FormAutofillParent extends JSWindowActorParent {
         );
         // If we find multiple mergeable records, choose the record with fewest mergeable fields.
         // TODO: Bug 1830841. Add a testcase
-        const fields = Object.entries(result)
+        let fields = Object.entries(result)
           .filter(v => ["superset", "similar"].includes(v[1]))
           .map(v => v[0]);
         if (!mergeableFields.length || mergeableFields.length > fields.length) {
@@ -586,22 +586,6 @@ export class FormAutofillParent extends JSWindowActorParent {
         "Do not show the capture prompt for an unsupported region"
       );
       return false;
-    }
-
-    if (mergeableFields.length) {
-      // TODO: This is only temporarily, should be removed after Bug 1836438 is fixed
-      if (mergeableFields.includes("name")) {
-        mergeableFields.push("given-name", "additional-name", "family-name");
-      }
-
-      // For fields that are not mergeable, copy their values from the old
-      // address to the new address. This ensures they are not merged
-      // during the update process.
-      Object.keys(newAddress.record).forEach(fieldName => {
-        if (!mergeableFields.includes(fieldName)) {
-          newAddress.record[fieldName] = oldRecord[fieldName];
-        }
-      });
     }
 
     return async () => {
