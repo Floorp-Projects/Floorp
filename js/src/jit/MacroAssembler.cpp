@@ -7639,18 +7639,7 @@ void MacroAssembler::prepareHashNonGCThing(ValueOperand value, Register result,
   move64(value.toRegister64(), r64);
   rshift64Arithmetic(Imm32(32), r64);
 #else
-  // TODO: This seems like a bug in mozilla::detail::AddUintptrToHash().
-  // The uint64_t input is first converted to uintptr_t and then back to
-  // uint64_t. But |uint64_t(uintptr_t(bits))| actually only clears the high
-  // bits, so this computation:
-  //
-  // aValue = uintptr_t(bits)
-  // v2 = static_cast<uint32_t>(static_cast<uint64_t>(aValue) >> 32)
-  //
-  // really just sets |v2 = 0|. And that means the xor-operation in AddU32ToHash
-  // can be optimized away, because |x ^ 0 = x|.
-  //
-  // Filed as bug 1718516.
+  move32(value.typeReg(), temp);
 #endif
 
   // mozilla::WrappingMultiply(kGoldenRatioU32, RotateLeft5(aHash) ^ aValue);
@@ -7660,9 +7649,7 @@ void MacroAssembler::prepareHashNonGCThing(ValueOperand value, Register result,
   // mozilla::WrappingMultiply(kGoldenRatioU32, RotateLeft5(aHash) ^ aValue);
   // with |aHash = <above hash>| and |aValue = v2|.
   rotateLeft(Imm32(5), result, result);
-#ifdef JS_PUNBOX64
   xor32(temp, result);
-#endif
 
   // Combine |mul32| and |scrambleHashCode| by directly multiplying with
   // |kGoldenRatioU32 * kGoldenRatioU32|.
