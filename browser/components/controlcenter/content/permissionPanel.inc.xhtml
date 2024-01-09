@@ -16,10 +16,13 @@
                   mainViewId="permission-popup-mainView">
     <panelview id="permission-popup-mainView"
                role="document"
-               showheader="true">
+               mainview-with-header="true">
+      <!-- The panel header text value changes dynamically by browser-sitePermissionPanel.js,
+         - that's why the panel header box needs to remain hardcoded in the markup.
+         - instead of being handled by PanelMultiView.sys.mjs. -->
       <box id="permission-popup-mainView-panel-header" class="panel-header">
         <html:h1>
-          <html:span id="permission-popup-mainView-panel-header-span" role="heading" aria-level="1"/>
+          <html:span id="permission-popup-mainView-panel-header-span"/>
         </html:h1>
       </box>
       <toolbarseparator></toolbarseparator>

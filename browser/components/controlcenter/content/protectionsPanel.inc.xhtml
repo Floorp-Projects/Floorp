@@ -18,13 +18,13 @@
     <panelview id="protections-popup-mainView"
                class="PanelUI-subView"
                role="document"
-               showheader="true">
+               mainview-with-header="true"
+               has-custom-header="true">
       <vbox id="protections-popup-mainView-panel-header-section">
         <box id="protections-popup-mainView-panel-header"
              class="panel-header panel-header-with-additional-element panel-header-with-info-button"
              onclick="gProtectionsHandler.onHeaderClicked(event);">
-          <html:h1 id="protections-popup-main-header-label"
-                 role="heading" aria-level="1">
+          <html:h1 id="protections-popup-main-header-label">
             <html:span id="protections-popup-mainView-panel-header-span"/>
           </html:h1>
           <toolbarbutton id="protections-popup-info-button" class="panel-info-button"

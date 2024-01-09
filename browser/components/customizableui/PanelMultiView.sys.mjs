@@ -1405,45 +1405,50 @@ export var PanelView = class extends AssociatedToNode {
     };
 
     // If the header already exists, update or remove it as requested.
+    let isMainView = this.node.getAttribute("mainview");
     let header = this.node.querySelector(".panel-header");
     if (header) {
-      let headerInfoButton = header.querySelector(".panel-info-button");
       let headerBackButton = header.querySelector(".subviewbutton-back");
-      if (headerBackButton && this.node.getAttribute("mainview")) {
-        // A back button should not appear in a mainview.
-        // This codepath can be reached if a user enters a panelview in
-        // the overflow panel, and then unpins it back to the toolbar.
-        headerBackButton.remove();
-      }
-      if (!this.node.getAttribute("mainview")) {
-        if (value) {
-          let headerWantsBackButton =
-            headerInfoButton || header.hasAttribute("wants-back-button");
-          if (headerWantsBackButton && !headerBackButton) {
-            // If we're not in a mainview and an info button is present, or the
-            // panel says that it wants one, that means the panel header is a
-            // custom one and a back button should be added, if not already present.
-            header.prepend(this.createHeaderBackButton());
-          }
-          // Set the header title based on the value given.
-          header.querySelector(".panel-header > h1 > span").textContent = value;
-          ensureHeaderSeparator(header);
-        } else {
-          if (header.nextSibling.tagName == "toolbarseparator") {
-            header.nextSibling.remove();
-          }
-          header.remove();
+      if (isMainView) {
+        if (headerBackButton) {
+          // A back button should not appear in a mainview.
+          // This codepath can be reached if a user enters a panelview in
+          // the overflow panel (like the Profiler), and then unpins it back to the toolbar.
+          headerBackButton.remove();
         }
-        return;
-      } else if (!this.node.getAttribute("showheader")) {
+      }
+      if (value) {
+        if (
+          !isMainView &&
+          !headerBackButton &&
+          !this.node.getAttribute("no-back-button")
+        ) {
+          // Add a back button when not in mainview (if it doesn't exist already),
+          // also when a panelview specifies it doesn't want a back button,
+          // like the Report Broken Site (sent) panelview.
+          header.prepend(this.createHeaderBackButton());
+        }
+        // Set the header title based on the value given.
+        header.querySelector(".panel-header > h1 > span").textContent = value;
+        ensureHeaderSeparator(header);
+      } else if (
+        !this.node.getAttribute("has-custom-header") &&
+        !this.node.getAttribute("mainview-with-header")
+      ) {
+        // No value supplied, and the panelview doesn't have a certain requirement
+        // for any kind of header, so remove it and the following toolbarseparator.
         if (header.nextSibling.tagName == "toolbarseparator") {
           header.nextSibling.remove();
         }
         header.remove();
+        return;
       }
+      // Either the header exists and has been adjusted accordingly by now,
+      // or it doesn't (or shouldn't) exist. Bail out to not create a duplicate header.
+      return;
     }
 
-    // The header doesn't exist, only create it if needed.
+    // The header doesn't and shouldn't exist, only create it if needed.
     if (!value) {
       return;
     }
@@ -1451,13 +1456,17 @@ export var PanelView = class extends AssociatedToNode {
     header = this.document.createXULElement("box");
     header.classList.add("panel-header");
 
-    let backButton = this.createHeaderBackButton();
+    if (!isMainView) {
+      let backButton = this.createHeaderBackButton();
+      header.append(backButton);
+    }
+
     let h1 = this.document.createElement("h1");
     let span = this.document.createElement("span");
     span.textContent = value;
     h1.appendChild(span);
 
-    header.append(backButton, h1);
+    header.append(h1);
     this.node.prepend(header);
 
     ensureHeaderSeparator(header);
