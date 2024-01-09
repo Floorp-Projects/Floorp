@@ -25,11 +25,11 @@ struct AuxOut;
 
 struct ACSConfig {
   const DequantMatrices* JXL_RESTRICT dequant;
-  float* JXL_RESTRICT quant_field_row;
+  const float* JXL_RESTRICT quant_field_row;
   size_t quant_field_stride;
-  float* JXL_RESTRICT masking_field_row;
+  const float* JXL_RESTRICT masking_field_row;
   size_t masking_field_stride;
-  float* JXL_RESTRICT masking1x1_field_row;
+  const float* JXL_RESTRICT masking1x1_field_row;
   size_t masking1x1_field_stride;
   const float* JXL_RESTRICT src_rows[3];
   size_t src_stride;
@@ -43,7 +43,7 @@ struct ACSConfig {
     JXL_DASSERT(masking_field_row[by * masking_field_stride + bx] > 0);
     return masking_field_row[by * masking_field_stride + bx];
   }
-  float* MaskingPtr1x1(size_t bx, size_t by) const {
+  const float* MaskingPtr1x1(size_t bx, size_t by) const {
     JXL_DASSERT(masking1x1_field_row[by * masking1x1_field_stride + bx] > 0);
     return &masking1x1_field_row[by * masking1x1_field_stride + bx];
   }
@@ -54,11 +54,16 @@ struct ACSConfig {
 };
 
 struct AcStrategyHeuristics {
-  void Init(const Image3F& src, PassesEncoderState* enc_state);
-  void ProcessRect(const Rect& rect);
-  void Finalize(AuxOut* aux_out);
+  AcStrategyHeuristics(const CompressParams& cparams) : cparams(cparams) {}
+  void Init(const Image3F& src, const Rect& rect_in, const ImageF& quant_field,
+            const ImageF& mask, const ImageF& mask1x1,
+            DequantMatrices* matrices);
+  void ProcessRect(const Rect& rect, const ColorCorrelationMap& cmap,
+                   AcStrategyImage* ac_strategy);
+  void Finalize(const FrameDimensions& frame_dim,
+                const AcStrategyImage& ac_strategy, AuxOut* aux_out);
+  const CompressParams& cparams;
   ACSConfig config;
-  PassesEncoderState* enc_state;
 };
 
 }  // namespace jxl

@@ -69,7 +69,7 @@ struct JxlFastLosslessFrameState;
 // JxlFastLosslessFreeFrameState.
 JxlFastLosslessFrameState* JxlFastLosslessPrepareFrame(
     JxlChunkedFrameInputSource input, size_t width, size_t height,
-    size_t nb_chans, size_t bitdepth, int big_endian, int effort);
+    size_t nb_chans, size_t bitdepth, int big_endian, int effort, int oneshot);
 
 #if !FJXL_STANDALONE
 class JxlEncoderOutputProcessorWrapper;

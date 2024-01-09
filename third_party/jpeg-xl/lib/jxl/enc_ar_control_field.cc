@@ -40,18 +40,14 @@ using hwy::HWY_NAMESPACE::Mul;
 using hwy::HWY_NAMESPACE::MulAdd;
 using hwy::HWY_NAMESPACE::Sqrt;
 
-void ProcessTile(const FrameHeader& frame_header, const Image3F& opsin,
-                 PassesEncoderState* enc_state, const Rect& rect,
+void ProcessTile(const CompressParams& cparams, const FrameHeader& frame_header,
+                 const Image3F& opsin, const Rect& opsin_rect,
+                 const ImageF& quant_field, const AcStrategyImage& ac_strategy,
+                 ImageB* epf_sharpness, const Rect& rect,
                  ArControlFieldHeuristics::TempImages* temp_image) {
   constexpr size_t N = kBlockDim;
-  ImageB* JXL_RESTRICT epf_sharpness = &enc_state->shared.epf_sharpness;
-  ImageF* JXL_RESTRICT quant = &enc_state->initial_quant_field;
-  JXL_ASSERT(
-      epf_sharpness->xsize() == enc_state->shared.frame_dim.xsize_blocks &&
-      epf_sharpness->ysize() == enc_state->shared.frame_dim.ysize_blocks);
-
-  if (enc_state->cparams.butteraugli_distance < kMinButteraugliForDynamicAR ||
-      enc_state->cparams.speed_tier > SpeedTier::kWombat ||
+  if (cparams.butteraugli_distance < kMinButteraugliForDynamicAR ||
+      cparams.speed_tier > SpeedTier::kWombat ||
       frame_header.loop_filter.epf_iters == 0) {
     FillPlane(static_cast<uint8_t>(4), epf_sharpness, rect);
     return;
@@ -76,11 +72,13 @@ void ProcessTile(const FrameHeader& frame_header, const Image3F& opsin,
   // (for example 32x32 dct). This relates to transforms ability
   // to propagate artefacts.
   size_t y0 = by0 == 0 ? 2 : 0;
-  size_t y1 = by1 * N + 4 <= opsin.ysize() + 2 ? (by1 - by0) * N + 4
-                                               : opsin.ysize() + 2 - by0 * N;
+  size_t y1 = by1 * N + 4 <= opsin_rect.ysize() + 2
+                  ? (by1 - by0) * N + 4
+                  : opsin_rect.ysize() + 2 - by0 * N;
   size_t x0 = bx0 == 0 ? 2 : 0;
-  size_t x1 = bx1 * N + 4 <= opsin.xsize() + 2 ? (bx1 - bx0) * N + 4
-                                               : opsin.xsize() + 2 - bx0 * N;
+  size_t x1 = bx1 * N + 4 <= opsin_rect.xsize() + 2
+                  ? (bx1 - bx0) * N + 4
+                  : opsin_rect.xsize() + 2 - bx0 * N;
   HWY_FULL(float) df;
   for (size_t y = y0; y < y1; y++) {
     float* JXL_RESTRICT laplacian_sqrsum_row = laplacian_sqrsum.Row(y);
@@ -89,14 +87,15 @@ void ProcessTile(const FrameHeader& frame_header, const Image3F& opsin,
     const float* JXL_RESTRICT in_row[3];
     const float* JXL_RESTRICT in_row_b[3];
     for (size_t c = 0; c < 3; c++) {
-      in_row_t[c] = opsin.PlaneRow(c, cy > 0 ? cy - 1 : cy);
-      in_row[c] = opsin.PlaneRow(c, cy);
-      in_row_b[c] = opsin.PlaneRow(c, cy + 1 < opsin.ysize() ? cy + 1 : cy);
+      in_row_t[c] = opsin_rect.ConstPlaneRow(opsin, c, cy > 0 ? cy - 1 : cy);
+      in_row[c] = opsin_rect.ConstPlaneRow(opsin, c, cy);
+      in_row_b[c] = opsin_rect.ConstPlaneRow(
+          opsin, c, cy + 1 < opsin_rect.ysize() ? cy + 1 : cy);
     }
     auto compute_laplacian_scalar = [&](size_t x) {
       size_t cx = x + bx0 * N - 2;
       const size_t prevX = cx >= 1 ? cx - 1 : cx;
-      const size_t nextX = cx + 1 < opsin.xsize() ? cx + 1 : cx;
+      const size_t nextX = cx + 1 < opsin_rect.xsize() ? cx + 1 : cx;
       float sumsqr = 0;
       for (size_t c = 0; c < 3; c++) {
         float laplacian =
@@ -114,7 +113,8 @@ void ProcessTile(const FrameHeader& frame_header, const Image3F& opsin,
       compute_laplacian_scalar(x);
     }
     // Interior. One extra pixel of border as the last pixel is special.
-    for (; x + Lanes(df) <= x1 && x + Lanes(df) + bx0 * N - 1 <= opsin.xsize();
+    for (; x + Lanes(df) <= x1 &&
+           x + Lanes(df) + bx0 * N - 1 <= opsin_rect.xsize();
          x += Lanes(df)) {
       size_t cx = x + bx0 * N - 2;
       auto sumsqr = Zero(df);
@@ -182,16 +182,16 @@ void ProcessTile(const FrameHeader& frame_header, const Image3F& opsin,
     // ignore pixels outside the image.
     // Y coordinates are relative to by0*8+y*4.
     size_t sy = y * 4 + by0 * 8 > 0 ? 0 : 2;
-    size_t ey = y * 4 + by0 * 8 + 4 <= opsin.ysize() + 2
+    size_t ey = y * 4 + by0 * 8 + 4 <= opsin_rect.ysize() + 2
                     ? 4
-                    : opsin.ysize() - y * 4 - by0 * 8 + 2;
+                    : opsin_rect.ysize() - y * 4 - by0 * 8 + 2;
     for (size_t x = 0; x < (bx1 - bx0) * 2 + 1; x++) {
       // ignore pixels outside the image.
       // X coordinates are relative to bx0*8.
       size_t sx = x * 4 + bx0 * 8 > 0 ? x * 4 : x * 4 + 2;
-      size_t ex = x * 4 + bx0 * 8 + 4 <= opsin.xsize() + 2
+      size_t ex = x * 4 + bx0 * 8 + 4 <= opsin_rect.xsize() + 2
                       ? x * 4 + 4
-                      : opsin.xsize() - bx0 * 8 + 2;
+                      : opsin_rect.xsize() - bx0 * 8 + 2;
       if (ex - sx == 4 && ey - sy == 4) {
         auto sum = Zero(df4);
         for (size_t iy = 0; iy < 4; iy++) {
@@ -212,9 +212,9 @@ void ProcessTile(const FrameHeader& frame_header, const Image3F& opsin,
     }
   }
   for (size_t by = by0; by < by1; by++) {
-    AcStrategyRow acs_row = enc_state->shared.ac_strategy.ConstRow(by);
+    AcStrategyRow acs_row = ac_strategy.ConstRow(by);
     uint8_t* JXL_RESTRICT out_row = epf_sharpness->Row(by);
-    float* JXL_RESTRICT quant_row = quant->Row(by);
+    const float* JXL_RESTRICT quant_row = quant_field.Row(by);
     for (size_t bx = bx0; bx < bx1; bx++) {
       AcStrategy acs = acs_row[bx];
       if (!acs.IsFirstBlock()) continue;
@@ -311,13 +311,14 @@ HWY_AFTER_NAMESPACE();
 namespace jxl {
 HWY_EXPORT(ProcessTile);
 
-void ArControlFieldHeuristics::RunRect(const FrameHeader& frame_header,
-                                       const Rect& block_rect,
-                                       const Image3F& opsin,
-                                       PassesEncoderState* enc_state,
-                                       size_t thread) {
+void ArControlFieldHeuristics::RunRect(
+    const CompressParams& cparams, const FrameHeader& frame_header,
+    const Rect& block_rect, const Image3F& opsin, const Rect& opsin_rect,
+    const ImageF& quant_field, const AcStrategyImage& ac_strategy,
+    ImageB* epf_sharpness, size_t thread) {
   HWY_DYNAMIC_DISPATCH(ProcessTile)
-  (frame_header, opsin, enc_state, block_rect, &temp_images[thread]);
+  (cparams, frame_header, opsin, opsin_rect, quant_field, ac_strategy,
+   epf_sharpness, block_rect, &temp_images[thread]);
 }
 
 }  // namespace jxl

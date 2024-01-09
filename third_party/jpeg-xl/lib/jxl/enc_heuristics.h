@@ -37,8 +37,8 @@ Status LossyFrameHeuristics(const FrameHeader& frame_header,
                             PassesEncoderState* enc_state,
                             ModularFrameEncoder* modular_frame_encoder,
                             const Image3F* original_pixels, Image3F* opsin,
-                            const JxlCmsInterface& cms, ThreadPool* pool,
-                            AuxOut* aux_out);
+                            const Rect& rect, const JxlCmsInterface& cms,
+                            ThreadPool* pool, AuxOut* aux_out);
 
 void FindBestBlockEntropyModel(PassesEncoderState& enc_state);
 

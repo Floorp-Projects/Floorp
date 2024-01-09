@@ -8,8 +8,10 @@
 
 #include <algorithm>
 #include <cmath>
+#include <utility>
 
 #include "lib/jxl/base/common.h"
+#include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/cms/transfer_functions.h"
 
 namespace jxl {
@@ -122,9 +124,10 @@ class HlgOOTF_Base {
   const float blue_Y_;
 };
 
-static void GamutMapScalar(float* red, float* green, float* blue,
-                           const float primaries_luminances[3],
-                           float preserve_saturation = 0.1f) {
+static JXL_MAYBE_UNUSED void GamutMapScalar(float* red, float* green,
+                                            float* blue,
+                                            const float primaries_luminances[3],
+                                            float preserve_saturation = 0.1f) {
   const float luminance = primaries_luminances[0] * *red +
                           primaries_luminances[1] * *green +
                           primaries_luminances[2] * *blue;

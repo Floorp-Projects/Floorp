@@ -8,7 +8,7 @@
 #include <jxl/encode.h>
 #include <jxl/encode_cxx.h>
 
-#include "lib/jxl/exif.h"
+#include "lib/jxl/base/exif.h"
 
 namespace jxl {
 namespace extras {

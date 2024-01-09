@@ -824,8 +824,8 @@ struct JxlChunkedFrameInputSource {
 
   /**
    * Callback to retrieve a rectangle of color channel data at a specific
-   * location. It is guaranteed that xpos and ypos are multiples of 128. xsize,
-   * ysize will be multiples of 128, unless the resulting rectangle would be out
+   * location. It is guaranteed that xpos and ypos are multiples of 8. xsize,
+   * ysize will be multiples of 8, unless the resulting rectangle would be out
    * of image bounds. Moreover, xsize and ysize will be at most 2048. The
    * returned data will be assumed to be in the format returned by the
    * (preceding) call to get_color_channels_pixel_format, except the `align`
@@ -868,7 +868,7 @@ struct JxlChunkedFrameInputSource {
   /**
    * Callback to retrieve a rectangle of extra channel `ec_index` data at a
    * specific location. It is guaranteed that xpos and ypos are multiples of
-   * 128. xsize, ysize will be multiples of 128, unless the resulting rectangle
+   * 8. xsize, ysize will be multiples of 8, unless the resulting rectangle
    * would be out of image bounds. Moreover, xsize and ysize will be at most
    * 2048. The returned data will be assumed to be in the format returned by the
    * (preceding) call to get_extra_channels_pixel_format_at with the

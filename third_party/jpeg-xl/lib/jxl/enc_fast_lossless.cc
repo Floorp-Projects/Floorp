@@ -706,12 +706,12 @@ void JxlFastLosslessPrepareHeader(JxlFastLosslessFrameState* frame,
   if (!is_last) {
     output->Write(2, 0b00);  // can not be saved as reference
   }
-  output->Write(2, 0b00);     // a frame has no name
-  output->Write(1, 0);        // loop filter is not all_default
-  output->Write(1, 0);        // no gaborish
-  output->Write(2, 0);        // 0 EPF iters
-  output->Write(2, 0b00);     // No LF extensions
-  output->Write(2, 0b00);     // No FH extensions
+  output->Write(2, 0b00);  // a frame has no name
+  output->Write(1, 0);     // loop filter is not all_default
+  output->Write(1, 0);     // no gaborish
+  output->Write(2, 0);     // 0 EPF iters
+  output->Write(2, 0b00);  // No LF extensions
+  output->Write(2, 0b00);  // No FH extensions
 
   output->Write(1, 0);      // No TOC permutation
   output->ZeroPadToByte();  // TOC is byte-aligned.
@@ -3632,13 +3632,11 @@ bool detect_palette(const unsigned char* r, size_t width,
   return collided;
 }
 
-// TODO(szabadka): Add some parameter to indicate whether the input is
-// truly streaming.
 template <typename BitDepth>
 JxlFastLosslessFrameState* LLPrepare(JxlChunkedFrameInputSource input,
                                      size_t width, size_t height,
                                      BitDepth bitdepth, size_t nb_chans,
-                                     bool big_endian, int effort) {
+                                     bool big_endian, int effort, int oneshot) {
   assert(width != 0);
   assert(height != 0);
 
@@ -3647,7 +3645,7 @@ JxlFastLosslessFrameState* LLPrepare(JxlChunkedFrameInputSource input,
   std::vector<int16_t> lookup(kHashSize);
   lookup[0] = 0;
   int pcolors = 0;
-  bool collided = effort < 2 || bitdepth.bitdepth != 8;
+  bool collided = effort < 2 || bitdepth.bitdepth != 8 || !oneshot;
   for (size_t y0 = 0; y0 < height && !collided; y0 += 256) {
     size_t ys = std::min<size_t>(height - y0, 256);
     for (size_t x0 = 0; x0 < width && !collided; x0 += 256) {
@@ -3728,11 +3726,7 @@ JxlFastLosslessFrameState* LLPrepare(JxlChunkedFrameInputSource input,
 
   bool onegroup = num_groups_x == 1 && num_groups_y == 1;
 
-  // sample the middle (effort * 2) rows of every group
-  // TODO(szabadka): Optimize sampling rule for low-memory code-path.
-  for (size_t g = 0; g < num_groups_y * num_groups_x; g++) {
-    size_t xg = g % num_groups_x;
-    size_t yg = g / num_groups_x;
+  auto sample_rows = [&](size_t xg, size_t yg, size_t num_rows) {
     size_t y0 = yg * 256;
     size_t x0 = xg * 256;
     size_t ys = std::min<size_t>(height - y0, 256);
@@ -3742,12 +3736,31 @@ JxlFastLosslessFrameState* LLPrepare(JxlChunkedFrameInputSource input,
         input.get_color_channel_data_at(input.opaque, x0, y0, xs, ys, &stride);
     auto rgba = reinterpret_cast<const unsigned char*>(buffer);
     int y_begin = std::max<int>(0, ys - 2 * effort) / 2;
-    int y_count = std::min<int>(2 * effort * ys / 256, y0 + ys - y_begin - 1);
+    int y_count = std::min<int>(num_rows, y0 + ys - y_begin - 1);
     int x_max = xs / kChunkSize * kChunkSize;
     CollectSamples(rgba, 0, y_begin, x_max, stride, y_count, raw_counts,
                    lz77_counts, onegroup, !collided, bitdepth, nb_chans,
                    big_endian, lookup.data());
     input.release_buffer(input.opaque, buffer);
+  };
+
+  // TODO(veluca): that `64` is an arbitrary constant, meant to correspond to
+  // the point where the number of processed rows is large enough that loading
+  // the entire image is cost-effective.
+  if (oneshot || effort >= 64) {
+    for (size_t g = 0; g < num_groups_y * num_groups_x; g++) {
+      size_t xg = g % num_groups_x;
+      size_t yg = g / num_groups_x;
+      size_t y0 = yg * 256;
+      size_t ys = std::min<size_t>(height - y0, 256);
+      size_t num_rows = 2 * effort * ys / 256;
+      sample_rows(xg, yg, num_rows);
+    }
+  } else {
+    // sample the middle (effort * 2 * num_groups) rows of the center group
+    // (possibly all of them).
+    sample_rows((num_groups_x - 1) / 2, (num_groups_y - 1) / 2,
+                2 * effort * num_groups_x * num_groups_y);
   }
 
   // TODO(veluca): can probably improve this and make it bitdepth-dependent.
@@ -3946,24 +3959,25 @@ void LLProcess(JxlFastLosslessFrameState* frame_state, bool is_last,
 
 JxlFastLosslessFrameState* JxlFastLosslessPrepareImpl(
     JxlChunkedFrameInputSource input, size_t width, size_t height,
-    size_t nb_chans, size_t bitdepth, bool big_endian, int effort) {
+    size_t nb_chans, size_t bitdepth, bool big_endian, int effort,
+    int oneshot) {
   assert(bitdepth > 0);
   assert(nb_chans <= 4);
   assert(nb_chans != 0);
   if (bitdepth <= 8) {
     return LLPrepare(input, width, height, UpTo8Bits(bitdepth), nb_chans,
-                     big_endian, effort);
+                     big_endian, effort, oneshot);
   }
   if (bitdepth <= 13) {
     return LLPrepare(input, width, height, From9To13Bits(bitdepth), nb_chans,
-                     big_endian, effort);
+                     big_endian, effort, oneshot);
   }
   if (bitdepth == 14) {
     return LLPrepare(input, width, height, Exactly14Bits(bitdepth), nb_chans,
-                     big_endian, effort);
+                     big_endian, effort, oneshot);
   }
   return LLPrepare(input, width, height, MoreThan14Bits(bitdepth), nb_chans,
-                   big_endian, effort);
+                   big_endian, effort, oneshot);
 }
 
 void JxlFastLosslessProcessFrameImpl(
@@ -4074,10 +4088,8 @@ class FJxlFrameInput {
         bytes_per_pixel_(bitdepth <= 8 ? nb_chans : 2 * nb_chans) {}
 
   JxlChunkedFrameInputSource GetInputSource() {
-    return JxlChunkedFrameInputSource{
-        this,
-        GetDataAt,
-        [](void*, const void*) {}};
+    return JxlChunkedFrameInputSource{this, GetDataAt,
+                                      [](void*, const void*) {}};
   }
 
  private:
@@ -4099,9 +4111,9 @@ size_t JxlFastLosslessEncode(const unsigned char* rgba, size_t width,
                              unsigned char** output, void* runner_opaque,
                              FJxlParallelRunner runner) {
   FJxlFrameInput input(rgba, row_stride, nb_chans, bitdepth);
-  auto frame_state =
-      JxlFastLosslessPrepareFrame(input.GetInputSource(), width, height,
-                                  nb_chans, bitdepth, big_endian, effort);
+  auto frame_state = JxlFastLosslessPrepareFrame(
+      input.GetInputSource(), width, height, nb_chans, bitdepth, big_endian,
+      effort, /*oneshot=*/true);
   JxlFastLosslessProcessFrame(frame_state, /*is_last=*/true, runner_opaque,
                               runner, nullptr);
   JxlFastLosslessPrepareHeader(frame_state, /*add_image_header=*/1,
@@ -4121,25 +4133,25 @@ size_t JxlFastLosslessEncode(const unsigned char* rgba, size_t width,
 
 JxlFastLosslessFrameState* JxlFastLosslessPrepareFrame(
     JxlChunkedFrameInputSource input, size_t width, size_t height,
-    size_t nb_chans, size_t bitdepth, int big_endian, int effort) {
+    size_t nb_chans, size_t bitdepth, int big_endian, int effort, int oneshot) {
 #if FJXL_ENABLE_AVX512
   if (__builtin_cpu_supports("avx512cd") &&
       __builtin_cpu_supports("avx512vbmi") &&
       __builtin_cpu_supports("avx512bw") && __builtin_cpu_supports("avx512f") &&
       __builtin_cpu_supports("avx512vl")) {
-    return AVX512::JxlFastLosslessPrepareImpl(input, width, height, nb_chans,
-                                              bitdepth, big_endian, effort);
+    return AVX512::JxlFastLosslessPrepareImpl(
+        input, width, height, nb_chans, bitdepth, big_endian, effort, oneshot);
   }
 #endif
 #if FJXL_ENABLE_AVX2
   if (__builtin_cpu_supports("avx2")) {
-    return AVX2::JxlFastLosslessPrepareImpl(input, width, height, nb_chans,
-                                            bitdepth, big_endian, effort);
+    return AVX2::JxlFastLosslessPrepareImpl(
+        input, width, height, nb_chans, bitdepth, big_endian, effort, oneshot);
   }
 #endif
 
   return default_implementation::JxlFastLosslessPrepareImpl(
-      input, width, height, nb_chans, bitdepth, big_endian, effort);
+      input, width, height, nb_chans, bitdepth, big_endian, effort, oneshot);
 }
 
 void JxlFastLosslessProcessFrame(

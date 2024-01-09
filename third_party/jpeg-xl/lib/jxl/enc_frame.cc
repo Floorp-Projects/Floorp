@@ -121,8 +121,7 @@ uint32_t GetBitDepth(JxlBitDepth bit_depth, const T& metadata,
   }
 }
 
-Status CopyColorChannels(JxlChunkedFrameInputSource input, size_t x0, size_t y0,
-                         size_t xsize, size_t ysize,
+Status CopyColorChannels(JxlChunkedFrameInputSource input, Rect rect,
                          const FrameInfo& frame_info,
                          const ImageMetadata& metadata, ThreadPool* pool,
                          Image3F* color, ImageF* alpha,
@@ -133,7 +132,8 @@ Status CopyColorChannels(JxlChunkedFrameInputSource input, size_t x0, size_t y0,
   size_t bits_per_sample =
       GetBitDepth(frame_info.image_bit_depth, metadata, format);
   size_t row_offset;
-  auto buffer = GetColorBuffer(input, x0, y0, xsize, ysize, &row_offset);
+  auto buffer = GetColorBuffer(input, rect.x0(), rect.y0(), rect.xsize(),
+                               rect.ysize(), &row_offset);
   if (!buffer) {
     return JXL_FAILURE("no buffer for color channels given");
   }
@@ -145,12 +145,12 @@ Status CopyColorChannels(JxlChunkedFrameInputSource input, size_t x0, size_t y0,
                        " color channels, received only %u channels",
                        color_channels, format.num_channels);
   }
-  *color = Image3F(xsize, ysize);
+  *color = Image3F(rect.xsize(), rect.ysize());
   const uint8_t* data = reinterpret_cast<const uint8_t*>(buffer.get());
   for (size_t c = 0; c < color_channels; ++c) {
     JXL_RETURN_IF_ERROR(ConvertFromExternalNoSizeCheck(
-        data, xsize, ysize, row_offset, bits_per_sample, format, c, pool,
-        &color->Plane(c)));
+        data, rect.xsize(), rect.ysize(), row_offset, bits_per_sample, format,
+        c, pool, &color->Plane(c)));
   }
   if (color_channels == 1) {
     CopyImageTo(color->Plane(0), &color->Plane(1));
@@ -159,7 +159,7 @@ Status CopyColorChannels(JxlChunkedFrameInputSource input, size_t x0, size_t y0,
   if (alpha) {
     if (*has_interleaved_alpha) {
       JXL_RETURN_IF_ERROR(ConvertFromExternalNoSizeCheck(
-          data, xsize, ysize, row_offset, bits_per_sample, format,
+          data, rect.xsize(), rect.ysize(), row_offset, bits_per_sample, format,
           format.num_channels - 1, pool, alpha));
     } else {
       // if alpha is not passed, but it is expected, then assume
@@ -170,8 +170,7 @@ Status CopyColorChannels(JxlChunkedFrameInputSource input, size_t x0, size_t y0,
   return true;
 }
 
-Status CopyExtraChannels(JxlChunkedFrameInputSource input, size_t x0, size_t y0,
-                         size_t xsize, size_t ysize,
+Status CopyExtraChannels(JxlChunkedFrameInputSource input, Rect rect,
                          const FrameInfo& frame_info,
                          const ImageMetadata& metadata,
                          bool has_interleaved_alpha, ThreadPool* pool,
@@ -189,15 +188,16 @@ Status CopyExtraChannels(JxlChunkedFrameInputSource input, size_t x0, size_t y0,
     ec_format.num_channels = 1;
     size_t row_offset;
     auto buffer =
-        GetExtraChannelBuffer(input, ec, x0, y0, xsize, ysize, &row_offset);
+        GetExtraChannelBuffer(input, ec, rect.x0(), rect.y0(), rect.xsize(),
+                              rect.ysize(), &row_offset);
     if (!buffer) {
       return JXL_FAILURE("no buffer for extra channel given");
     }
     size_t bits_per_sample = GetBitDepth(
         frame_info.image_bit_depth, metadata.extra_channel_info[ec], ec_format);
     if (!ConvertFromExternalNoSizeCheck(
-            reinterpret_cast<const uint8_t*>(buffer.get()), xsize, ysize,
-            row_offset, bits_per_sample, ec_format, 0, pool,
+            reinterpret_cast<const uint8_t*>(buffer.get()), rect.xsize(),
+            rect.ysize(), row_offset, bits_per_sample, ec_format, 0, pool,
             &(*extra_channels)[ec])) {
       return JXL_FAILURE("Failed to set buffer for extra channel");
     }
@@ -258,12 +258,10 @@ Status LoopFilterFromParams(const CompressParams& cparams, bool streaming_mode,
   LoopFilter* loop_filter = &frame_header->loop_filter;
 
   // Gaborish defaults to enabled in Hare or slower.
-  // TODO(szabadka) Re-enable Gaborish for streaming mode.
-  loop_filter->gab =
-      ApplyOverride(cparams.gaborish,
-                    !streaming_mode && cparams.speed_tier <= SpeedTier::kHare &&
-                        frame_header->encoding == FrameEncoding::kVarDCT &&
-                        cparams.decoding_speed_tier < 4);
+  loop_filter->gab = ApplyOverride(
+      cparams.gaborish, cparams.speed_tier <= SpeedTier::kHare &&
+                            frame_header->encoding == FrameEncoding::kVarDCT &&
+                            cparams.decoding_speed_tier < 4);
 
   if (cparams.epf != -1) {
     loop_filter->epf_iters = cparams.epf;
@@ -540,14 +538,14 @@ struct PixelStatsForChromacityAdjustment {
   float dx = 0;
   float db = 0;
   float exposed_blue = 0;
-  float CalcPlane(const ImageF* JXL_RESTRICT plane) const {
+  float CalcPlane(const ImageF* JXL_RESTRICT plane, const Rect& rect) const {
     float xmax = 0;
     float ymax = 0;
-    for (size_t ty = 1; ty < plane->ysize(); ++ty) {
-      for (size_t tx = 1; tx < plane->xsize(); ++tx) {
-        float cur = plane->Row(ty)[tx];
-        float prev_row = plane->Row(ty - 1)[tx];
-        float prev = plane->Row(ty)[tx - 1];
+    for (size_t ty = 1; ty < rect.ysize(); ++ty) {
+      for (size_t tx = 1; tx < rect.xsize(); ++tx) {
+        float cur = rect.Row(plane, ty)[tx];
+        float prev_row = rect.Row(plane, ty - 1)[tx];
+        float prev = rect.Row(plane, ty)[tx - 1];
         xmax = std::max(xmax, std::abs(cur - prev));
         ymax = std::max(ymax, std::abs(cur - prev_row));
       }
@@ -555,20 +553,20 @@ struct PixelStatsForChromacityAdjustment {
     return std::max(xmax, ymax);
   }
   void CalcExposedBlue(const ImageF* JXL_RESTRICT plane_y,
-                       const ImageF* JXL_RESTRICT plane_b) {
+                       const ImageF* JXL_RESTRICT plane_b, const Rect& rect) {
     float eb = 0;
     float xmax = 0;
     float ymax = 0;
-    for (size_t ty = 1; ty < plane_y->ysize(); ++ty) {
-      for (size_t tx = 1; tx < plane_y->xsize(); ++tx) {
-        float cur_y = plane_y->Row(ty)[tx];
-        float cur_b = plane_b->Row(ty)[tx];
+    for (size_t ty = 1; ty < rect.ysize(); ++ty) {
+      for (size_t tx = 1; tx < rect.xsize(); ++tx) {
+        float cur_y = rect.Row(plane_y, ty)[tx];
+        float cur_b = rect.Row(plane_b, ty)[tx];
         float exposed_b = cur_b - cur_y * 1.2;
         float diff_b = cur_b - cur_y;
-        float prev_row = plane_b->Row(ty - 1)[tx];
-        float prev = plane_b->Row(ty)[tx - 1];
-        float diff_prev_row = prev_row - plane_y->Row(ty - 1)[tx];
-        float diff_prev = prev - plane_y->Row(ty)[tx - 1];
+        float prev_row = rect.Row(plane_b, ty - 1)[tx];
+        float prev = rect.Row(plane_b, ty)[tx - 1];
+        float diff_prev_row = prev_row - rect.Row(plane_y, ty - 1)[tx];
+        float diff_prev = prev - rect.Row(plane_y, ty)[tx - 1];
         xmax = std::max(xmax, std::abs(diff_b - diff_prev));
         ymax = std::max(ymax, std::abs(diff_b - diff_prev_row));
         if (exposed_b >= 0) {
@@ -580,9 +578,9 @@ struct PixelStatsForChromacityAdjustment {
     exposed_blue = eb;
     db = std::max(xmax, ymax);
   }
-  void Calc(const Image3F* JXL_RESTRICT opsin) {
-    dx = CalcPlane(&opsin->Plane(0));
-    CalcExposedBlue(&opsin->Plane(1), &opsin->Plane(2));
+  void Calc(const Image3F* JXL_RESTRICT opsin, const Rect& rect) {
+    dx = CalcPlane(&opsin->Plane(0), rect);
+    CalcExposedBlue(&opsin->Plane(1), &opsin->Plane(2), rect);
   }
   int HowMuchIsXChannelPixelized() {
     if (dx >= 0.03) {
@@ -609,7 +607,7 @@ struct PixelStatsForChromacityAdjustment {
 };
 
 void ComputeChromacityAdjustments(const CompressParams& cparams,
-                                  const Image3F& opsin,
+                                  const Image3F& opsin, const Rect& rect,
                                   FrameHeader* frame_header) {
   if (frame_header->encoding != FrameEncoding::kVarDCT ||
       cparams.max_error_mode) {
@@ -633,7 +631,7 @@ void ComputeChromacityAdjustments(const CompressParams& cparams,
   // the image would be based on the worst case pixel.
   PixelStatsForChromacityAdjustment pixel_stats;
   if (cparams.speed_tier <= SpeedTier::kWombat) {
-    pixel_stats.Calc(&opsin);
+    pixel_stats.Calc(&opsin, rect);
   }
   // For X take the most severe adjustment.
   frame_header->x_qm_scale = std::max<int>(
@@ -1041,18 +1039,19 @@ Status ComputeJPEGTranscodingData(const jpeg::JPEGData& jpeg_data,
 
 Status ComputeVarDCTEncodingData(const FrameHeader& frame_header,
                                  const Image3F* linear,
-                                 Image3F* JXL_RESTRICT opsin,
+                                 Image3F* JXL_RESTRICT opsin, const Rect& rect,
                                  const JxlCmsInterface& cms, ThreadPool* pool,
                                  ModularFrameEncoder* enc_modular,
                                  PassesEncoderState* enc_state,
                                  AuxOut* aux_out) {
-  JXL_ASSERT((opsin->xsize() % kBlockDim) == 0 &&
-             (opsin->ysize() % kBlockDim) == 0);
+  JXL_ASSERT((rect.xsize() % kBlockDim) == 0 &&
+             (rect.ysize() % kBlockDim) == 0);
   JXL_RETURN_IF_ERROR(LossyFrameHeuristics(frame_header, enc_state, enc_modular,
-                                           linear, opsin, cms, pool, aux_out));
+                                           linear, opsin, rect, cms, pool,
+                                           aux_out));
 
-  JXL_RETURN_IF_ERROR(InitializePassesEncoder(frame_header, *opsin, cms, pool,
-                                              enc_state, enc_modular, aux_out));
+  JXL_RETURN_IF_ERROR(InitializePassesEncoder(
+      frame_header, *opsin, rect, cms, pool, enc_state, enc_modular, aux_out));
   return true;
 }
 
@@ -1364,6 +1363,7 @@ Status ComputeEncodingData(
   } else {
     shared.frame_dim = frame_header.ToFrameDimensions();
   }
+
   shared.image_features.patches.SetPassesSharedState(&shared);
   const FrameDimensions& frame_dim = shared.frame_dim;
   shared.ac_strategy =
@@ -1389,6 +1389,14 @@ Status ComputeEncodingData(
   const size_t black_idx = black_eci - metadata->m.extra_channel_info.data();
   const ColorEncoding c_enc = metadata->m.color_encoding;
 
+  // Make the image patch bigger than the currently processed group in streaming
+  // mode so that we can take into account border pixels around the group when
+  // computing inverse Gaborish and adaptive quantization map.
+  int max_border = enc_state.streaming_mode ? kBlockDim : 0;
+  Rect frame_rect(0, 0, frame_data.xsize, frame_data.ysize);
+  Rect patch_rect = Rect(x0, y0, xsize, ysize).Extend(max_border, frame_rect);
+  JXL_ASSERT(patch_rect.IsInside(frame_rect));
+
   Image3F color;
   std::vector<ImageF> extra_channels(num_extra_channels);
   for (auto& extra_channel : extra_channels) {
@@ -1399,11 +1407,11 @@ Status ComputeEncodingData(
   bool has_interleaved_alpha = false;
   JxlChunkedFrameInputSource input = frame_data.GetInputSource();
   if (!frame_data.IsJPEG()) {
-    JXL_RETURN_IF_ERROR(CopyColorChannels(input, x0, y0, xsize, ysize,
-                                          frame_info, metadata->m, pool, &color,
-                                          alpha, &has_interleaved_alpha));
+    JXL_RETURN_IF_ERROR(CopyColorChannels(input, patch_rect, frame_info,
+                                          metadata->m, pool, &color, alpha,
+                                          &has_interleaved_alpha));
   }
-  JXL_RETURN_IF_ERROR(CopyExtraChannels(input, x0, y0, xsize, ysize, frame_info,
+  JXL_RETURN_IF_ERROR(CopyExtraChannels(input, patch_rect, frame_info,
                                         metadata->m, has_interleaved_alpha,
                                         pool, &extra_channels));
 
@@ -1416,13 +1424,14 @@ Status ComputeEncodingData(
   Image3F opsin;
   if (!jpeg_data) {
     // Allocating a large enough image avoids a copy when padding.
-    opsin = Image3F(RoundUpToBlockDim(xsize), RoundUpToBlockDim(ysize));
-    opsin.ShrinkTo(xsize, ysize);
+    opsin = Image3F(RoundUpToBlockDim(color.xsize()),
+                    RoundUpToBlockDim(color.ysize()));
+    opsin.ShrinkTo(color.xsize(), color.ysize());
     if (frame_header.color_transform == ColorTransform::kXYB &&
         frame_info.ib_needs_color_transform) {
       if (frame_header.encoding == FrameEncoding::kVarDCT &&
           cparams.speed_tier <= SpeedTier::kKitten) {
-        linear_storage = Image3F(xsize, ysize);
+        linear_storage = Image3F(color.xsize(), color.ysize());
         linear = &linear_storage;
       }
       ToXYB(color, c_enc, metadata->m.IntensityTarget(), black, pool, &opsin,
@@ -1447,9 +1456,16 @@ Status ComputeEncodingData(
     }
     PadImageToBlockMultipleInPlace(&opsin);
   }
+  color = Image3F();
+
+  // Rectangle within opsin that corresponds to the currently processed group in
+  // streaming mode.
+  Rect opsin_rect(x0 - patch_rect.x0(), y0 - patch_rect.y0(),
+                  RoundUpToBlockDim(xsize), RoundUpToBlockDim(ysize));
 
   if (enc_state.initialize_global_state && !jpeg_data) {
-    ComputeChromacityAdjustments(cparams, opsin, &mutable_frame_header);
+    ComputeChromacityAdjustments(cparams, opsin, opsin_rect,
+                                 &mutable_frame_header);
   }
 
   if (!enc_state.streaming_mode) {
@@ -1466,6 +1482,10 @@ Status ComputeEncodingData(
     }
   }
 
+  if (!enc_state.streaming_mode) {
+    opsin_rect = Rect(opsin);
+  }
+
   if (frame_header.encoding == FrameEncoding::kVarDCT) {
     enc_state.passes.resize(enc_state.progressive_splitter.GetNumPasses());
     for (PassesEncoderState::PassData& pass : enc_state.passes) {
@@ -1475,9 +1495,9 @@ Status ComputeEncodingData(
       JXL_RETURN_IF_ERROR(ComputeJPEGTranscodingData(
           *jpeg_data, frame_header, pool, &enc_modular, &enc_state));
     } else {
-      JXL_RETURN_IF_ERROR(
-          ComputeVarDCTEncodingData(frame_header, linear, &opsin, cms, pool,
-                                    &enc_modular, &enc_state, aux_out));
+      JXL_RETURN_IF_ERROR(ComputeVarDCTEncodingData(
+          frame_header, linear, &opsin, opsin_rect, cms, pool, &enc_modular,
+          &enc_state, aux_out));
     }
     ComputeAllCoeffOrders(enc_state, frame_dim);
     if (!enc_state.streaming_mode) {

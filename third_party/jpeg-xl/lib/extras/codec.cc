@@ -133,8 +133,8 @@ Status Encode(const CodecInOut& io, const ColorEncoding& c_desired,
               size_t bits_per_sample, const std::string& pathname,
               std::vector<uint8_t>* bytes, ThreadPool* pool) {
   std::string extension;
-  const extras::Codec codec = extras::CodecFromPath(
-      pathname, &bits_per_sample, /* filename */ nullptr, &extension);
+  const extras::Codec codec =
+      extras::CodecFromPath(pathname, &bits_per_sample, &extension);
 
   // Warn about incorrect usage of PGM/PGX/PPM - only the latter supports
   // color, but CodecFromPath lumps them all together.

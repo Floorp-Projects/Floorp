@@ -40,10 +40,6 @@ struct PassesEncoderState {
   bool initialize_global_state = true;
   size_t dc_group_index = 0;
 
-  ImageF initial_quant_field;    // Invalid in Falcon mode.
-  ImageF initial_quant_masking;  // Invalid in Falcon mode.
-  ImageF initial_quant_masking1x1;  // Invalid in Falcon mode.
-
   // Per-pass DCT coefficients for the image. One row per group.
   std::vector<std::unique_ptr<ACImage>> coeffs;
 
@@ -77,8 +73,8 @@ struct PassesEncoderState {
 // Initialize per-frame information.
 class ModularFrameEncoder;
 Status InitializePassesEncoder(const FrameHeader& frame_header,
-                               const Image3F& opsin, const JxlCmsInterface& cms,
-                               ThreadPool* pool,
+                               const Image3F& opsin, const Rect& rect,
+                               const JxlCmsInterface& cms, ThreadPool* pool,
                                PassesEncoderState* passes_enc_state,
                                ModularFrameEncoder* modular_frame_encoder,
                                AuxOut* aux_out);

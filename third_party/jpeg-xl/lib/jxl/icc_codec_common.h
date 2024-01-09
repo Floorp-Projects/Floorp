@@ -92,7 +92,7 @@ void EncodeKeyword(const Tag& keyword, uint8_t* data, size_t size, size_t pos);
 void AppendKeyword(const Tag& keyword, PaddedBytes* data);
 
 // Checks if a + b > size, taking possible integer overflow into account.
-Status CheckOutOfBounds(size_t a, size_t b, size_t size);
+Status CheckOutOfBounds(uint64_t a, uint64_t b, uint64_t size);
 Status CheckIs32Bit(uint64_t v);
 
 const Span<const uint8_t> ICCInitialHeaderPrediction();

@@ -11,7 +11,6 @@
 #include <algorithm>
 #include <cmath>
 
-#include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/base/status.h"
 
 namespace jxl {

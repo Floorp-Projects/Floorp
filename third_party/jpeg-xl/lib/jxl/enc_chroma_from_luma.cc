@@ -205,22 +205,23 @@ void ComputeDC(const ImageF& dc_values, bool fast, int32_t* dc_x,
                              jxl::cms::kYToBRatio, kDistanceMultiplierDC, fast);
 }
 
-void ComputeTile(const Image3F& opsin, const DequantMatrices& dequant,
+void ComputeTile(const Image3F& opsin, const Rect& opsin_rect,
+                 const DequantMatrices& dequant,
                  const AcStrategyImage* ac_strategy,
                  const ImageI* raw_quant_field, const Quantizer* quantizer,
-                 const Rect& r, bool fast, bool use_dct8, ImageSB* map_x,
+                 const Rect& rect, bool fast, bool use_dct8, ImageSB* map_x,
                  ImageSB* map_b, ImageF* dc_values, float* mem) {
   static_assert(kEncTileDimInBlocks == kColorTileDimInBlocks,
                 "Invalid color tile dim");
-  size_t xsize_blocks = opsin.xsize() / kBlockDim;
+  size_t xsize_blocks = opsin_rect.xsize() / kBlockDim;
   constexpr float kDistanceMultiplierAC = 1e-9f;
   const size_t dct_scratch_size =
       3 * (MaxVectorSize() / sizeof(float)) * AcStrategy::kMaxBlockDim;
 
-  const size_t y0 = r.y0();
-  const size_t x0 = r.x0();
-  const size_t x1 = r.x0() + r.xsize();
-  const size_t y1 = r.y0() + r.ysize();
+  const size_t y0 = rect.y0();
+  const size_t x0 = rect.x0();
+  const size_t x1 = rect.x0() + rect.xsize();
+  const size_t y1 = rect.y0() + rect.ysize();
 
   int ty = y0 / kColorTileDimInBlocks;
   int tx = x0 / kColorTileDimInBlocks;
@@ -257,9 +258,12 @@ void ComputeTile(const Image3F& opsin, const DequantMatrices& dequant,
   size_t num_ac = 0;
 
   for (size_t y = y0; y < y1; ++y) {
-    const float* JXL_RESTRICT row_y = opsin.ConstPlaneRow(1, y * kBlockDim);
-    const float* JXL_RESTRICT row_x = opsin.ConstPlaneRow(0, y * kBlockDim);
-    const float* JXL_RESTRICT row_b = opsin.ConstPlaneRow(2, y * kBlockDim);
+    const float* JXL_RESTRICT row_y =
+        opsin_rect.ConstPlaneRow(opsin, 1, y * kBlockDim);
+    const float* JXL_RESTRICT row_x =
+        opsin_rect.ConstPlaneRow(opsin, 0, y * kBlockDim);
+    const float* JXL_RESTRICT row_b =
+        opsin_rect.ConstPlaneRow(opsin, 2, y * kBlockDim);
     size_t stride = opsin.PixelsPerRow();
 
     for (size_t x = x0; x < x1; x++) {
@@ -362,14 +366,15 @@ HWY_EXPORT(InitDCStorage);
 HWY_EXPORT(ComputeDC);
 HWY_EXPORT(ComputeTile);
 
-void CfLHeuristics::Init(const Image3F& opsin) {
-  size_t xsize_blocks = opsin.xsize() / kBlockDim;
-  size_t ysize_blocks = opsin.ysize() / kBlockDim;
+void CfLHeuristics::Init(const Rect& rect) {
+  size_t xsize_blocks = rect.xsize() / kBlockDim;
+  size_t ysize_blocks = rect.ysize() / kBlockDim;
   HWY_DYNAMIC_DISPATCH(InitDCStorage)
   (xsize_blocks * ysize_blocks, &dc_values);
 }
 
 void CfLHeuristics::ComputeTile(const Rect& r, const Image3F& opsin,
+                                const Rect& opsin_rect,
                                 const DequantMatrices& dequant,
                                 const AcStrategyImage* ac_strategy,
                                 const ImageI* raw_quant_field,
@@ -377,8 +382,8 @@ void CfLHeuristics::ComputeTile(const Rect& r, const Image3F& opsin,
                                 size_t thread, ColorCorrelationMap* cmap) {
   bool use_dct8 = ac_strategy == nullptr;
   HWY_DYNAMIC_DISPATCH(ComputeTile)
-  (opsin, dequant, ac_strategy, raw_quant_field, quantizer, r, fast, use_dct8,
-   &cmap->ytox_map, &cmap->ytob_map, &dc_values,
+  (opsin, opsin_rect, dequant, ac_strategy, raw_quant_field, quantizer, r, fast,
+   use_dct8, &cmap->ytox_map, &cmap->ytob_map, &dc_values,
    mem.get() + thread * ItemsPerThread());
 }
 
