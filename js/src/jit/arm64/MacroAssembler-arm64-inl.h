@@ -2624,6 +2624,42 @@ void MacroAssembler::concatAndRightShiftSimd128(FloatRegister lhs,
   Ext(Simd16B(dest), Simd16B(rhs), Simd16B(lhs), shift);
 }
 
+// Zero extend int values.
+
+void MacroAssembler::zeroExtend8x16To16x8(FloatRegister src,
+                                          FloatRegister dest) {
+  Ushll(Simd8H(dest), Simd8B(src), 0);
+}
+
+void MacroAssembler::zeroExtend8x16To32x4(FloatRegister src,
+                                          FloatRegister dest) {
+  Ushll(Simd8H(dest), Simd8B(src), 0);
+  Ushll(Simd4S(dest), Simd4H(dest), 0);
+}
+
+void MacroAssembler::zeroExtend8x16To64x2(FloatRegister src,
+                                          FloatRegister dest) {
+  Ushll(Simd8H(dest), Simd8B(src), 0);
+  Ushll(Simd4S(dest), Simd4H(dest), 0);
+  Ushll(Simd2D(dest), Simd2S(dest), 0);
+}
+
+void MacroAssembler::zeroExtend16x8To32x4(FloatRegister src,
+                                          FloatRegister dest) {
+  Ushll(Simd4S(dest), Simd4H(src), 0);
+}
+
+void MacroAssembler::zeroExtend16x8To64x2(FloatRegister src,
+                                          FloatRegister dest) {
+  Ushll(Simd4S(dest), Simd4H(src), 0);
+  Ushll(Simd2D(dest), Simd2S(dest), 0);
+}
+
+void MacroAssembler::zeroExtend32x4To64x2(FloatRegister src,
+                                          FloatRegister dest) {
+  Ushll(Simd2D(dest), Simd2S(src), 0);
+}
+
 // Reverse bytes in lanes.
 
 void MacroAssembler::reverseInt16x8(FloatRegister src, FloatRegister dest) {
