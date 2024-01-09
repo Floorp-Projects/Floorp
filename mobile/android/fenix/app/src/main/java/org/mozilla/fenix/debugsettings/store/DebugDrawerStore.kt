@@ -20,9 +20,8 @@ class DebugDrawerStore(
     middlewares,
 )
 
-private fun reduce(state: DebugDrawerState, action: DebugDrawerAction): DebugDrawerState {
-    return when (action) {
-        is DebugDrawerAction.DrawerOpened -> state.copy(drawerStatus = DrawerStatus.Open)
-        is DebugDrawerAction.DrawerClosed -> state.copy(drawerStatus = DrawerStatus.Closed)
-    }
+private fun reduce(state: DebugDrawerState, action: DebugDrawerAction): DebugDrawerState = when (action) {
+    is DebugDrawerAction.DrawerOpened -> state.copy(drawerStatus = DrawerStatus.Open)
+    is DebugDrawerAction.DrawerClosed -> state.copy(drawerStatus = DrawerStatus.Closed)
+    is DebugDrawerAction.NavigateTo, DebugDrawerAction.OnBackPressed -> state // handled by [DebugDrawerNavigationMiddleware]
 }
