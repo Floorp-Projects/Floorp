@@ -29,13 +29,13 @@ void ColorCorrelationMapEncodeDC(const ColorCorrelationMap& map,
                                  AuxOut* aux_out);
 
 struct CfLHeuristics {
-  void Init(const Image3F& opsin);
+  void Init(const Rect& rect);
 
   void PrepareForThreads(size_t num_threads) {
     mem = hwy::AllocateAligned<float>(num_threads * ItemsPerThread());
   }
 
-  void ComputeTile(const Rect& r, const Image3F& opsin,
+  void ComputeTile(const Rect& r, const Image3F& opsin, const Rect& opsin_rect,
                    const DequantMatrices& dequant,
                    const AcStrategyImage* ac_strategy,
                    const ImageI* raw_quant_field, const Quantizer* quantizer,

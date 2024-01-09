@@ -2009,3 +2009,64 @@ TEST_P(EncoderStreamingTest, ChunkedAndOutputCallback) {
 JXL_GTEST_INSTANTIATE_TEST_SUITE_P(
     EncoderStreamingTest, EncoderStreamingTest,
     testing::ValuesIn(StreamingTestParam::All()));
+
+TEST(EncoderTest, CMYK) {
+  size_t xsize = 257;
+  size_t ysize = 259;
+  jxl::test::TestImage image;
+  image.SetDimensions(xsize, ysize)
+      .SetDataType(JXL_TYPE_UINT8)
+      .SetChannels(3)
+      .SetAllBitDepths(8);
+  image.AddFrame().RandomFill();
+  jxl::test::TestImage ec_image;
+  ec_image.SetDataType(JXL_TYPE_UINT8)
+      .SetDimensions(xsize, ysize)
+      .SetChannels(1)
+      .SetAllBitDepths(8);
+  ec_image.AddFrame().RandomFill();
+  const auto& frame = image.ppf().frames[0].color;
+  const auto& ec_frame = ec_image.ppf().frames[0].color;
+  JxlBasicInfo basic_info = image.ppf().info;
+  basic_info.xsize = xsize;
+  basic_info.ysize = ysize;
+  basic_info.num_extra_channels = 1;
+  basic_info.uses_original_profile = JXL_TRUE;
+
+  std::vector<uint8_t> compressed = std::vector<uint8_t>(64);
+  JxlEncoderPtr enc_ptr = JxlEncoderMake(nullptr);
+  JxlEncoderStruct* enc = enc_ptr.get();
+  ASSERT_NE(nullptr, enc);
+  JxlEncoderFrameSettings* frame_settings =
+      JxlEncoderFrameSettingsCreate(enc, NULL);
+
+  EXPECT_EQ(JXL_ENC_SUCCESS, JxlEncoderSetBasicInfo(enc, &basic_info));
+  JxlExtraChannelInfo channel_info;
+  JxlExtraChannelType channel_type = JXL_CHANNEL_BLACK;
+  JxlEncoderInitExtraChannelInfo(channel_type, &channel_info);
+  EXPECT_EQ(JXL_ENC_SUCCESS,
+            JxlEncoderSetExtraChannelInfo(enc, 0, &channel_info));
+  const std::vector<uint8_t> icc = jxl::test::ReadTestData(
+      "external/Compact-ICC-Profiles/profiles/"
+      "CGATS001Compat-v2-micro.icc");
+  EXPECT_EQ(JXL_ENC_SUCCESS,
+            JxlEncoderSetICCProfile(enc, icc.data(), icc.size()));
+  EXPECT_EQ(JXL_ENC_SUCCESS,
+            JxlEncoderAddImageFrame(frame_settings, &frame.format,
+                                    frame.pixels(), frame.pixels_size));
+  EXPECT_EQ(JXL_ENC_SUCCESS, JxlEncoderSetExtraChannelBuffer(
+                                 frame_settings, &ec_frame.format,
+                                 ec_frame.pixels(), ec_frame.pixels_size, 0));
+  JxlEncoderCloseInput(frame_settings->enc);
+  uint8_t* next_out = compressed.data();
+  size_t avail_out = compressed.size();
+  ProcessEncoder(enc, compressed, next_out, avail_out);
+
+  jxl::extras::JXLDecompressParams dparams;
+  dparams.accepted_formats = {
+      {3, JXL_TYPE_UINT8, JXL_LITTLE_ENDIAN, 0},
+  };
+  jxl::extras::PackedPixelFile ppf;
+  EXPECT_TRUE(DecodeImageJXL(compressed.data(), compressed.size(), dparams,
+                             nullptr, &ppf, nullptr));
+}

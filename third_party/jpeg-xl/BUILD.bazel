@@ -20,3 +20,4 @@ filegroup(
         "testdata/position_encoding/*.txt",
     ]),
 )
+

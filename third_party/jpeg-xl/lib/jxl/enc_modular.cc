@@ -490,7 +490,7 @@ Status ModularFrameEncoder::ComputeEncodingData(
   if (do_color && frame_header.loop_filter.gab) {
     float w = 0.9908511000000001f;
     float weights[3] = {w, w, w};
-    GaborishInverse(color, weights, pool);
+    GaborishInverse(color, Rect(*color), weights, pool);
   }
 
   if (do_color && metadata.bit_depth.bits_per_sample <= 16 &&

@@ -6,6 +6,7 @@
 #include "lib/jxl/splines.h"
 
 #include <algorithm>
+#include <cinttypes>
 #include <cmath>
 #include <limits>
 

@@ -5,10 +5,10 @@
 
 #include "lib/jxl/fields.h"
 
-#include <stddef.h>
-
 #include <algorithm>
+#include <cinttypes>
 #include <cmath>
+#include <cstddef>
 #include <hwy/base.h>
 
 #include "lib/jxl/base/bits.h"

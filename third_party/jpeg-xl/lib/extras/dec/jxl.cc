@@ -10,10 +10,12 @@
 #include <jxl/decode_cxx.h>
 #include <jxl/types.h>
 
+#include <cinttypes>
+
 #include "lib/extras/common.h"
 #include "lib/extras/dec/color_description.h"
+#include "lib/jxl/base/exif.h"
 #include "lib/jxl/base/printf_macros.h"
-#include "lib/jxl/exif.h"
 
 namespace jxl {
 namespace extras {

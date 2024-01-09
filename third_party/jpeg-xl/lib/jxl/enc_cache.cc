@@ -35,8 +35,9 @@
 namespace jxl {
 
 Status InitializePassesEncoder(const FrameHeader& frame_header,
-                               const Image3F& opsin, const JxlCmsInterface& cms,
-                               ThreadPool* pool, PassesEncoderState* enc_state,
+                               const Image3F& opsin, const Rect& rect,
+                               const JxlCmsInterface& cms, ThreadPool* pool,
+                               PassesEncoderState* enc_state,
                                ModularFrameEncoder* modular_frame_encoder,
                                AuxOut* aux_out) {
   PassesSharedState& JXL_RESTRICT shared = enc_state->shared;
@@ -68,7 +69,7 @@ Status InitializePassesEncoder(const FrameHeader& frame_header,
   JXL_RETURN_IF_ERROR(RunOnPool(
       pool, 0, shared.frame_dim.num_groups, ThreadPool::NoInit,
       [&](size_t group_idx, size_t _) {
-        ComputeCoefficients(group_idx, enc_state, opsin, &dc);
+        ComputeCoefficients(group_idx, enc_state, opsin, rect, &dc);
       },
       "Compute coeffs"));
 

@@ -47,7 +47,7 @@ void TestRoundTrip(const Image3F& in, float max_l1) {
       w,
       w,
   };
-  GaborishInverse(&fwd, weights, null_pool);
+  GaborishInverse(&fwd, Rect(fwd), weights, null_pool);
   JXL_ASSERT_OK(VerifyRelativeError(in, fwd, max_l1, 1E-4f, _));
 }
 

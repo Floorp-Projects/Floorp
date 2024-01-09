@@ -8,7 +8,6 @@
 
 // Metadata for color space conversions.
 
-#include <jxl/cms.h>
 #include <jxl/cms_interface.h>
 #include <jxl/color_encoding.h>
 #include <stddef.h>

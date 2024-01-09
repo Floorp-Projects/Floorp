@@ -11,7 +11,12 @@
 
 #include <jxl/codestream_header.h>
 
-#include "lib/jxl/image_metadata.h"
+#include <cstddef>
+#include <cstdint>
+#include <vector>
+
+#include "lib/jxl/base/byte_order.h"
+#include "lib/jxl/base/compiler_specific.h"
 
 namespace jxl {
 
@@ -19,7 +24,7 @@ constexpr uint16_t kExifOrientationTag = 274;
 
 // Checks if a blob looks like Exif, and if so, sets bigendian
 // according to the tiff endianness
-inline bool IsExif(const std::vector<uint8_t>& exif, bool* bigendian) {
+JXL_INLINE bool IsExif(const std::vector<uint8_t>& exif, bool* bigendian) {
   if (exif.size() < 12) return false;  // not enough bytes for a valid exif blob
   const uint8_t* t = exif.data();
   if (LoadLE32(t) == 0x2A004D4D) {
@@ -33,8 +38,8 @@ inline bool IsExif(const std::vector<uint8_t>& exif, bool* bigendian) {
 }
 
 // Finds the position of an Exif tag, or 0 if it is not found
-inline size_t FindExifTagPosition(const std::vector<uint8_t>& exif,
-                                  uint16_t tagname) {
+JXL_INLINE size_t FindExifTagPosition(const std::vector<uint8_t>& exif,
+                                      uint16_t tagname) {
   bool bigendian;
   if (!IsExif(exif, &bigendian)) return 0;
   const uint8_t* t = exif.data() + 4;
@@ -62,8 +67,8 @@ inline size_t FindExifTagPosition(const std::vector<uint8_t>& exif,
 // Parses the Exif data just enough to extract any render-impacting info.
 // If the Exif data is invalid or could not be parsed, then it is treated
 // as a no-op.
-inline void InterpretExif(const std::vector<uint8_t>& exif,
-                          JxlOrientation* orientation) {
+JXL_INLINE void InterpretExif(const std::vector<uint8_t>& exif,
+                              JxlOrientation* orientation) {
   bool bigendian;
   if (!IsExif(exif, &bigendian)) return;
   size_t o_pos = FindExifTagPosition(exif, kExifOrientationTag);

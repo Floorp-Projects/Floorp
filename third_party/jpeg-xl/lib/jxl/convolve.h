@@ -76,17 +76,21 @@ void SlowSymmetric3(const ImageF& in, const Rect& rect,
                     const WeightsSymmetric3& weights, ThreadPool* pool,
                     ImageF* JXL_RESTRICT out);
 
-void SlowSeparable5(const ImageF& in, const Rect& rect,
+void SlowSeparable5(const ImageF& in, const Rect& in_rect,
                     const WeightsSeparable5& weights, ThreadPool* pool,
-                    ImageF* out);
+                    ImageF* out, const Rect& out_rect);
 
-void SlowSeparable7(const ImageF& in, const Rect& rect,
+void SlowSeparable7(const ImageF& in, const Rect& in_rect,
                     const WeightsSeparable7& weights, ThreadPool* pool,
-                    ImageF* out);
+                    ImageF* out, const Rect& out_rect);
 
 void Symmetric3(const ImageF& in, const Rect& rect,
                 const WeightsSymmetric3& weights, ThreadPool* pool,
                 ImageF* out);
+
+void Symmetric5(const ImageF& in, const Rect& in_rect,
+                const WeightsSymmetric5& weights, ThreadPool* pool,
+                ImageF* JXL_RESTRICT out, const Rect& out_rect);
 
 void Symmetric5(const ImageF& in, const Rect& rect,
                 const WeightsSymmetric5& weights, ThreadPool* pool,

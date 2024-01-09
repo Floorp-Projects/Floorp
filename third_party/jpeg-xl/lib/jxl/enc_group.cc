@@ -357,15 +357,17 @@ void QuantizeRoundtripYBlockAC(PassesEncoderState* enc_state, const size_t size,
 }
 
 void ComputeCoefficients(size_t group_idx, PassesEncoderState* enc_state,
-                         const Image3F& opsin, Image3F* dc) {
+                         const Image3F& opsin, const Rect& rect, Image3F* dc) {
   const Rect block_group_rect =
       enc_state->shared.frame_dim.BlockGroupRect(group_idx);
-  const Rect group_rect = enc_state->shared.frame_dim.GroupRect(group_idx);
   const Rect cmap_rect(
       block_group_rect.x0() / kColorTileDimInBlocks,
       block_group_rect.y0() / kColorTileDimInBlocks,
       DivCeil(block_group_rect.xsize(), kColorTileDimInBlocks),
       DivCeil(block_group_rect.ysize(), kColorTileDimInBlocks));
+  const Rect group_rect =
+      enc_state->shared.frame_dim.GroupRect(group_idx).Translate(rect.x0(),
+                                                                 rect.y0());
 
   const size_t xsize_blocks = block_group_rect.xsize();
   const size_t ysize_blocks = block_group_rect.ysize();
@@ -504,9 +506,9 @@ HWY_AFTER_NAMESPACE();
 namespace jxl {
 HWY_EXPORT(ComputeCoefficients);
 void ComputeCoefficients(size_t group_idx, PassesEncoderState* enc_state,
-                         const Image3F& opsin, Image3F* dc) {
+                         const Image3F& opsin, const Rect& rect, Image3F* dc) {
   return HWY_DYNAMIC_DISPATCH(ComputeCoefficients)(group_idx, enc_state, opsin,
-                                                   dc);
+                                                   rect, dc);
 }
 
 Status EncodeGroupTokenizedCoefficients(size_t group_idx, size_t pass_idx,

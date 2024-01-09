@@ -7,6 +7,7 @@
 
 #include <jxl/cms.h>
 #include <jxl/cms_interface.h>
+#include <jxl/types.h>
 
 #include <cstddef>
 #include <fstream>
@@ -486,6 +487,10 @@ size_t ComparePixels(const uint8_t* a, const uint8_t* b, size_t xsize,
     // than the x86 implementations.
     // TODO(lode): Set the required precision back to 11 bits when possible.
     precision = 0.5 * threshold_multiplier / ((1ull << (bits - 1)) - 1ull);
+  }
+  if (format_b.data_type == JXL_TYPE_UINT8) {
+    // Increase the threshold by the maximum difference introduced by dithering.
+    precision += 63.0 / 128.0;
   }
   size_t numdiff = 0;
   for (size_t y = 0; y < ysize; y++) {

@@ -141,19 +141,19 @@ float SlowSeparablePixel(const ImageF& in, const Rect& rect, const int64_t x,
                          const int64_t y, const int64_t radius,
                          const float* JXL_RESTRICT horz_weights,
                          const float* JXL_RESTRICT vert_weights) {
-  const size_t xsize = rect.xsize();
-  const size_t ysize = rect.ysize();
+  const size_t xsize = in.xsize();
+  const size_t ysize = in.ysize();
   const WrapMirror wrap;
 
   float mul = 0.0f;
   for (int dy = -radius; dy <= radius; ++dy) {
     const float wy = vert_weights[std::abs(dy) * 4];
-    const size_t sy = wrap(y + dy, ysize);
+    const size_t sy = wrap(rect.y0() + y + dy, ysize);
     JXL_CHECK(sy < ysize);
-    const float* const JXL_RESTRICT row = rect.ConstRow(in, sy);
+    const float* const JXL_RESTRICT row = in.ConstRow(sy);
     for (int dx = -radius; dx <= radius; ++dx) {
       const float wx = horz_weights[std::abs(dx) * 4];
-      const size_t sx = wrap(x + dx, xsize);
+      const size_t sx = wrap(rect.x0() + x + dx, xsize);
       JXL_CHECK(sx < xsize);
       mul += row[sx] * wx * wy;
     }
@@ -161,48 +161,44 @@ float SlowSeparablePixel(const ImageF& in, const Rect& rect, const int64_t x,
   return mul;
 }
 
-}  // namespace
-
-void SlowSeparable5(const ImageF& in, const Rect& rect,
-                    const WeightsSeparable5& weights, ThreadPool* pool,
-                    ImageF* out) {
+template <int R, typename Weights>
+void SlowSeparable(const ImageF& in, const Rect& in_rect,
+                   const Weights& weights, ThreadPool* pool, ImageF* out,
+                   const Rect& out_rect) {
+  JXL_ASSERT(in_rect.xsize() == out_rect.xsize());
+  JXL_ASSERT(in_rect.ysize() == out_rect.ysize());
+  JXL_ASSERT(in_rect.IsInside(Rect(in)));
+  JXL_ASSERT(out_rect.IsInside(Rect(*out)));
   const float* horz_weights = &weights.horz[0];
   const float* vert_weights = &weights.vert[0];
 
-  const size_t ysize = rect.ysize();
+  const size_t ysize = in_rect.ysize();
   JXL_CHECK(RunOnPool(
       pool, 0, static_cast<uint32_t>(ysize), ThreadPool::NoInit,
       [&](const uint32_t task, size_t /*thread*/) {
         const int64_t y = task;
 
-        float* const JXL_RESTRICT row_out = out->Row(y);
-        for (size_t x = 0; x < rect.xsize(); ++x) {
-          row_out[x] = SlowSeparablePixel(in, rect, x, y, /*radius=*/2,
+        float* const JXL_RESTRICT row_out = out_rect.Row(out, y);
+        for (size_t x = 0; x < in_rect.xsize(); ++x) {
+          row_out[x] = SlowSeparablePixel(in, in_rect, x, y, /*radius=*/R,
                                           horz_weights, vert_weights);
         }
       },
-      "SlowSeparable5"));
+      "SlowSeparable"));
 }
 
-void SlowSeparable7(const ImageF& in, const Rect& rect,
+}  // namespace
+
+void SlowSeparable5(const ImageF& in, const Rect& in_rect,
+                    const WeightsSeparable5& weights, ThreadPool* pool,
+                    ImageF* out, const Rect& out_rect) {
+  SlowSeparable<2>(in, in_rect, weights, pool, out, out_rect);
+}
+
+void SlowSeparable7(const ImageF& in, const Rect& in_rect,
                     const WeightsSeparable7& weights, ThreadPool* pool,
-                    ImageF* out) {
-  const float* horz_weights = &weights.horz[0];
-  const float* vert_weights = &weights.vert[0];
-
-  const size_t ysize = rect.ysize();
-  JXL_CHECK(RunOnPool(
-      pool, 0, static_cast<uint32_t>(ysize), ThreadPool::NoInit,
-      [&](const uint32_t task, size_t /*thread*/) {
-        const int64_t y = task;
-
-        float* const JXL_RESTRICT row_out = out->Row(y);
-        for (size_t x = 0; x < rect.xsize(); ++x) {
-          row_out[x] = SlowSeparablePixel(in, rect, x, y, /*radius=*/3,
-                                          horz_weights, vert_weights);
-        }
-      },
-      "SlowSeparable7"));
+                    ImageF* out, const Rect& out_rect) {
+  SlowSeparable<3>(in, in_rect, weights, pool, out, out_rect);
 }
 
 }  // namespace jxl

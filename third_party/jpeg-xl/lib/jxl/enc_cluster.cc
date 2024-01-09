@@ -82,13 +82,33 @@ float HistogramDistance(const Histogram& a, const Histogram& b) {
   return total_distance - a.entropy_ - b.entropy_;
 }
 
-bool HasNewSymbol(const Histogram& a, const Histogram& b) {
-  for (size_t i = 0; i < a.data_.size(); ++i) {
-    if (a.data_[i] > 0 && (i >= b.data_.size() || b.data_[i] == 0)) {
-      return true;
-    }
+constexpr const float kInfinity = std::numeric_limits<float>::infinity();
+
+float HistogramKLDivergence(const Histogram& actual, const Histogram& coding) {
+  if (actual.total_count_ == 0) return 0;
+  if (coding.total_count_ == 0) return kInfinity;
+
+  const HWY_CAPPED(float, Histogram::kRounding) df;
+  const HWY_CAPPED(int32_t, Histogram::kRounding) di;
+
+  const auto coding_inv = Set(df, 1.0f / coding.total_count_);
+  auto cost_lanes = Zero(df);
+
+  for (size_t i = 0; i < actual.data_.size(); i += Lanes(di)) {
+    const auto counts = LoadU(di, &actual.data_[i]);
+    const auto coding_counts =
+        coding.data_.size() > i ? LoadU(di, &coding.data_[i]) : Zero(di);
+    const auto coding_probs = Mul(ConvertTo(df, coding_counts), coding_inv);
+    const auto neg_coding_cost = BitCast(
+        df,
+        IfThenZeroElse(Eq(counts, Zero(di)),
+                       IfThenElse(Eq(coding_counts, Zero(di)),
+                                  BitCast(di, Set(df, -kInfinity)),
+                                  BitCast(di, FastLog2f(df, coding_probs)))));
+    cost_lanes = NegMulAdd(ConvertTo(df, counts), neg_coding_cost, cost_lanes);
   }
-  return false;
+  const float total_cost = GetLane(SumOfLanes(df, cost_lanes));
+  return total_cost - actual.entropy_;
 }
 
 // First step of a k-means clustering with a fancy distance metric.
@@ -121,7 +141,7 @@ void FastClusterHistograms(const std::vector<Histogram>& in,
     for (size_t i = 0; i < in.size(); i++) {
       if (dists[i] == 0.0f) continue;
       for (size_t j = 0; j < prev_histograms; ++j) {
-        dists[i] = std::min(HistogramDistance(in[i], (*out)[j]), dists[i]);
+        dists[i] = std::min(HistogramKLDivergence(in[i], (*out)[j]), dists[i]);
       }
     }
     auto max_dist = std::max_element(dists.begin(), dists.end());
@@ -149,10 +169,8 @@ void FastClusterHistograms(const std::vector<Histogram>& in,
     size_t best = 0;
     float best_dist = std::numeric_limits<float>::max();
     for (size_t j = 0; j < out->size(); j++) {
-      // TODO(szabadka) Choose a different distance metric for previous
-      // histograms (i.e. the cost of the new histogram with the old one).
-      if (j < prev_histograms && HasNewSymbol(in[i], (*out)[j])) continue;
-      float dist = HistogramDistance(in[i], (*out)[j]);
+      float dist = j < prev_histograms ? HistogramKLDivergence(in[i], (*out)[j])
+                                       : HistogramDistance(in[i], (*out)[j]);
       if (dist < best_dist) {
         best = j;
         best_dist = dist;

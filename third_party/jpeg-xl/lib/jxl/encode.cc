@@ -17,6 +17,7 @@
 #include "lib/jxl/base/byte_order.h"
 #include "lib/jxl/base/common.h"
 #include "lib/jxl/base/data_parallel.h"
+#include "lib/jxl/base/exif.h"
 #include "lib/jxl/base/printf_macros.h"
 #include "lib/jxl/base/span.h"
 #include "lib/jxl/base/status.h"
@@ -31,7 +32,6 @@
 #include "lib/jxl/enc_icc_codec.h"
 #include "lib/jxl/enc_params.h"
 #include "lib/jxl/encode_internal.h"
-#include "lib/jxl/exif.h"
 #include "lib/jxl/jpeg/enc_jpeg_data.h"
 #include "lib/jxl/luminance.h"
 #include "lib/jxl/memory_manager_internal.h"
@@ -2252,7 +2252,7 @@ JxlEncoderStatus JxlEncoderAddImageFrameInternal(
     auto frame_state = JxlFastLosslessPrepareFrame(
         frame_data.GetInputSource(), xsize, ysize, num_channels,
         frame_settings->enc->metadata.m.bit_depth.bits_per_sample, big_endian,
-        /*effort=*/2);
+        /*effort=*/2, /*oneshot=*/!frame_data.StreamingInput());
     if (!streaming) {
       JxlFastLosslessProcessFrame(frame_state, /*is_last=*/false,
                                   frame_settings->enc->thread_pool.get(),

@@ -263,7 +263,7 @@ void Separable7(const ImageF& in, const Rect& rect,
     return Conv::Run(in, rect, weights, pool, out);
   }
 
-  return SlowSeparable7(in, rect, weights, pool, out);
+  return SlowSeparable7(in, rect, weights, pool, out, Rect(*out));
 }
 
 // NOLINTNEXTLINE(google-readability-namespace-comments)

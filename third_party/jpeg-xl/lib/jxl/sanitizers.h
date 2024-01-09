@@ -6,7 +6,6 @@
 #ifndef LIB_JXL_SANITIZERS_H_
 #define LIB_JXL_SANITIZERS_H_
 
-#include <inttypes.h>
 #include <stddef.h>
 
 #include "lib/jxl/base/compiler_specific.h"
@@ -14,6 +13,7 @@
 #include "lib/jxl/image.h"
 
 #if JXL_MEMORY_SANITIZER
+#include <inttypes.h>
 #include <stdio.h>
 
 #include <algorithm>
