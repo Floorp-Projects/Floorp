@@ -546,6 +546,10 @@ class TestFunctional(HelperMixin, unittest.TestCase):
             self.target_bin = os.path.join(
                 buildconfig.topobjdir, "dist", "bin", "firefox.exe"
             )
+        elif target_platform() == "Darwin":
+            self.target_bin = os.path.join(
+                buildconfig.topobjdir, "dist", "bin", "firefox"
+            )
         else:
             self.target_bin = os.path.join(
                 buildconfig.topobjdir, "dist", "bin", "firefox-bin"
