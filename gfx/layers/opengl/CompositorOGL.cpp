@@ -1464,16 +1464,13 @@ void CompositorOGL::InitializeVAO(const GLuint aAttrib, const GLint aComponents,
 #ifdef MOZ_DUMP_PAINTING
 template <typename T>
 void WriteSnapshotToDumpFile_internal(T* aObj, DataSourceSurface* aSurf) {
-  nsCString string(aObj->Name());
-  string.Append('-');
-  string.AppendInt((uint64_t)aObj);
   if (gfxUtils::sDumpPaintFile != stderr) {
-    fprintf_stderr(gfxUtils::sDumpPaintFile, R"(array["%s"]=")",
-                   string.BeginReading());
-  }
-  gfxUtils::DumpAsDataURI(aSurf, gfxUtils::sDumpPaintFile);
-  if (gfxUtils::sDumpPaintFile != stderr) {
-    fprintf_stderr(gfxUtils::sDumpPaintFile, R"(";)");
+    gfxUtils::DumpAsDataURI(aSurf, gfxUtils::sDumpPaintFile);
+  } else {
+    nsCString uri = gfxUtils::GetAsDataURI(aSurf);
+    nsPrintfCString string(R"(array["%s-%)" PRIu64 R"("]="%s";\n)",
+                           aObj->Name(), uint64_t(aObj), uri.BeginReading());
+    fprintf_stderr(gfxUtils::sDumpPaintFile, "%s", string.get());
   }
 }
 
