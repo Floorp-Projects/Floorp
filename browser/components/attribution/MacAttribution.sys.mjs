@@ -18,7 +18,7 @@ export var MacAttribution = {
     return IOUtils.setMacXAttr(
       path,
       "com.apple.application-instance",
-      new TextEncoder().encode(aAttrStr)
+      new TextEncoder().encode(`__MOZCUSTOM__${aAttrStr}`)
     );
   },
 

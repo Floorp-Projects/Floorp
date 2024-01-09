@@ -6,13 +6,6 @@ const { AttributionIOUtils } = ChromeUtils.importESModule(
 );
 
 add_task(async function test_parse_error() {
-  if (AppConstants.platform == "macosx") {
-    const { MacAttribution } = ChromeUtils.importESModule(
-      "resource:///modules/MacAttribution.sys.mjs"
-    );
-    MacAttribution.setAttributionString("");
-  }
-
   registerCleanupFunction(async () => {
     await AttributionCode.deleteFileAsync();
     AttributionCode._clearCache();
@@ -41,10 +34,7 @@ add_task(async function test_parse_error() {
   ) {
     await AttributionCode.deleteFileAsync();
     AttributionCode._clearCache();
-    // Empty string is valid on macOS.
-    await AttributionCode.writeAttributionFile(
-      AppConstants.platform == "macosx" ? "invalid" : ""
-    );
+    await AttributionCode.writeAttributionFile("");
     result = await AttributionCode.getAttrDataAsync();
     Assert.deepEqual(result, {}, "Should have failed to parse");
 
