@@ -38,6 +38,12 @@ class AddonsPermissionsAdapterTest {
         adapter.onBindViewHolder(viewHolder, 0)
 
         verify(textView).text = "permission"
+        verify(textView).contentDescription = testContext.getString(
+            mozilla.components.feature.addons.R.string.mozac_feature_addons_permissions_content_description_item,
+            "permission",
+            1,
+            1,
+        )
         verify(textView).setTextColor(ContextCompat.getColor(testContext, style.itemsTextColor!!))
     }
 }

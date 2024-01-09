@@ -41,6 +41,12 @@ class AddonPermissionsAdapter(
         val permission = permissions[position]
         with(holder.textView) {
             text = permission
+            contentDescription = context.getString(
+                R.string.mozac_feature_addons_permissions_content_description_item,
+                permission,
+                position + 1,
+                permissions.size,
+            )
             style?.maybeSetItemTextColor(this)
         }
     }
