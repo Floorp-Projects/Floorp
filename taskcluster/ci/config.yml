@@ -800,6 +800,7 @@ mac-signing:
                                   mozilla-central: security/mac/hardenedruntime/v2/production/nightly.browser.xml
                                   default: security/mac/hardenedruntime/v2/production/firefox.browser.xml
                   globs:
+                      - "/Contents/MacOS/firefox-bin"
                       - "/"  # The .app
 
             default:
@@ -842,6 +843,7 @@ mac-signing:
                   force: true
                   entitlements: security/mac/hardenedruntime/v2/developer/browser.xml
                   globs:
+                      - "/Contents/MacOS/firefox-bin"
                       - "/"  # The .app
 
 expiration-policy:

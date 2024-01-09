@@ -10,15 +10,15 @@ sub usage() {
     print <<EOUSAGE;
 # bloatdiff.pl - munges the output from
 #   XPCOM_MEM_BLOAT_LOG=1 
-#   firefox -P default resource:///res/bloatcycle.html
+#   firefox-bin -P default resource:///res/bloatcycle.html
 # so that it does some summary and stats stuff.
 #
 # To show leak test results for a set of changes, do something like this:
 #
 #   XPCOM_MEM_BLOAT_LOG=1
-#   firefox -P default resource:///res/bloatcycle.html > a.out
+#   firefox-bin -P default resource:///res/bloatcycle.html > a.out
 #     **make change**
-#   firefox -P default resource:///res/bloatcycle.html > b.out
+#   firefox-bin -P default resource:///res/bloatcycle.html > b.out
 #   bloatdiff.pl a.out b.out
 
 EOUSAGE
