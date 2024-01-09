@@ -22,7 +22,6 @@
 #include "mozilla/layers/PImageBridgeParent.h"
 #include "mozilla/layers/TextureHostOGL.h"  // for TextureHostOGL
 #include "mozilla/layers/Compositor.h"
-#include "mozilla/layers/RemoteTextureMap.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/mozalloc.h"  // for operator new, etc
 #include "mozilla/ProfilerLabels.h"
@@ -71,8 +70,6 @@ ImageBridgeParent::ImageBridgeParent(nsISerialEventTarget* aThread,
       mCompositorThreadHolder(CompositorThreadHolder::GetSingleton()) {
   MOZ_ASSERT(NS_IsMainThread());
   SetOtherProcessId(aChildProcessId);
-  mRemoteTextureTxnScheduler =
-      RemoteTextureMap::Get()->RegisterTxnScheduler(this);
 }
 
 ImageBridgeParent::~ImageBridgeParent() = default;
@@ -145,9 +142,6 @@ void ImageBridgeParent::ActorDestroy(ActorDestroyReason aWhy) {
   // Can't alloc/dealloc shmems from now on.
   mClosed = true;
 
-  if (mRemoteTextureTxnScheduler) {
-    mRemoteTextureTxnScheduler = nullptr;
-  }
   for (const auto& entry : mCompositables) {
     entry.second->OnReleased();
   }
@@ -204,16 +198,13 @@ mozilla::ipc::IPCResult ImageBridgeParent::RecvUpdate(
                                                                  &aToDestroy);
   UpdateFwdTransactionId(aFwdTransactionId);
 
-  auto result = IPC_OK();
-
   for (const auto& edit : aEdits) {
     RefPtr<CompositableHost> compositable =
         FindCompositable(edit.compositable());
     if (!compositable ||
         !ReceiveCompositableUpdate(edit.detail(), WrapNotNull(compositable),
                                    edit.compositable())) {
-      result = IPC_FAIL_NO_REASON(this);
-      break;
+      return IPC_FAIL_NO_REASON(this);
     }
     uint32_t dropped = compositable->GetDroppedFrames();
     if (dropped) {
@@ -221,11 +212,7 @@ mozilla::ipc::IPCResult ImageBridgeParent::RecvUpdate(
     }
   }
 
-  if (mRemoteTextureTxnScheduler) {
-    mRemoteTextureTxnScheduler->NotifyTxn(aFwdTransactionId);
-  }
-
-  return result;
+  return IPC_OK();
 }
 
 /* static */

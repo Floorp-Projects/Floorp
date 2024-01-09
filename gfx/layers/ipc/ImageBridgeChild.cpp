@@ -246,7 +246,7 @@ ImageBridgeChild::ImageBridgeChild(uint32_t aNamespace)
     : mNamespace(aNamespace),
       mCanSend(false),
       mDestroyed(false),
-      mFwdTransactionCounter(this),
+      mFwdTransactionId(0),
       mContainerMapLock("ImageBridgeChild.mContainerMapLock") {
   MOZ_ASSERT(mNamespace);
   MOZ_ASSERT(NS_IsMainThread());

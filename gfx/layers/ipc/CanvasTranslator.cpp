@@ -796,29 +796,19 @@ already_AddRefed<gfx::DrawTarget> CanvasTranslator::CreateDrawTarget(
   return dt.forget();
 }
 
-void CanvasTranslator::RemoveTexture(int64_t aTextureId,
-                                     RemoteTextureTxnType aTxnType,
-                                     RemoteTextureTxnId aTxnId) {
+void CanvasTranslator::RemoveTexture(int64_t aTextureId) {
   // Don't erase the texture if still in use
   auto result = mTextureInfo.find(aTextureId);
-  if (result == mTextureInfo.end()) {
+  if (result == mTextureInfo.end() || --result->second.mLocked > 0) {
     return;
   }
-  auto& info = result->second;
-  if (aTxnType && aTxnId) {
-    RemoteTextureMap::Get()->WaitForTxn(info.mRemoteTextureOwnerId, mOtherPid,
-                                        aTxnType, aTxnId);
-  }
-  if (--info.mLocked > 0) {
-    return;
-  }
-  if (info.mTextureData) {
-    info.mTextureData->Unlock();
+  if (result->second.mTextureData) {
+    result->second.mTextureData->Unlock();
   }
   if (mRemoteTextureOwner) {
     // If this texture id was manually registered as a remote texture owner,
     // unregister it so it does not stick around after the texture id goes away.
-    RemoteTextureOwnerId owner = info.mRemoteTextureOwnerId;
+    RemoteTextureOwnerId owner = result->second.mRemoteTextureOwnerId;
     if (owner.IsValid()) {
       mRemoteTextureOwner->UnregisterTextureOwner(owner);
     }

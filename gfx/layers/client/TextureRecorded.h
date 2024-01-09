@@ -49,8 +49,6 @@ class RecordedTextureData final : public TextureData {
 
   bool RequiresRefresh() const final;
 
-  void UseCompositableForwarder(CompositableForwarder* aForwarder) final;
-
  private:
   DISALLOW_COPY_AND_ASSIGN(RecordedTextureData);
 
@@ -64,10 +62,8 @@ class RecordedTextureData final : public TextureData {
   RefPtr<gfx::SourceSurface> mSnapshot;
   ThreadSafeWeakPtr<gfx::SourceSurface> mSnapshotWrapper;
   OpenMode mLockedMode;
-  RemoteTextureId mLastRemoteTextureId;
-  RemoteTextureOwnerId mRemoteTextureOwnerId;
-  RemoteTextureTxnType mLastTxnType = 0;
-  RemoteTextureTxnId mLastTxnId = 0;
+  layers::RemoteTextureId mLastRemoteTextureId;
+  layers::RemoteTextureOwnerId mRemoteTextureOwnerId;
   bool mUsedRemoteTexture = false;
   bool mInvalidContents = true;
 };

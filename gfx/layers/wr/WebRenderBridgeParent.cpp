@@ -34,7 +34,6 @@
 #include "mozilla/layers/ImageDataSerializer.h"
 #include "mozilla/layers/IpcResourceUpdateQueue.h"
 #include "mozilla/layers/OMTASampler.h"
-#include "mozilla/layers/RemoteTextureMap.h"
 #include "mozilla/layers/SharedSurfacesParent.h"
 #include "mozilla/layers/TextureHost.h"
 #include "mozilla/layers/AsyncImagePipelineManager.h"
@@ -315,8 +314,6 @@ WebRenderBridgeParent::WebRenderBridgeParent(
     mBoolParameterBits = ~gfxVars::WebRenderBoolParameters();
     UpdateBoolParameters();
   }
-  mRemoteTextureTxnScheduler =
-      RemoteTextureMap::Get()->RegisterTxnScheduler(aCompositorBridge);
 }
 
 WebRenderBridgeParent::WebRenderBridgeParent(const wr::PipelineId& aPipelineId,
@@ -394,9 +391,6 @@ void WebRenderBridgeParent::Destroy() {
       IsRootWebRenderBridgeParent());
 
   mDestroyed = true;
-  if (mRemoteTextureTxnScheduler) {
-    mRemoteTextureTxnScheduler = nullptr;
-  }
   if (mWebRenderBridgeRef) {
     // Break mutual reference
     mWebRenderBridgeRef->Clear();
@@ -1238,10 +1232,6 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvSetDisplayList(
   wr::IpcResourceUpdateQueue::ReleaseShmems(this, aDisplayList.mSmallShmems);
   wr::IpcResourceUpdateQueue::ReleaseShmems(this, aDisplayList.mLargeShmems);
 
-  if (mRemoteTextureTxnScheduler) {
-    mRemoteTextureTxnScheduler->NotifyTxn(aFwdTransactionId);
-  }
-
   if (!success) {
     return IPC_FAIL(this, "Failed to process DisplayListData.");
   }
@@ -1391,10 +1381,6 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvEmptyTransaction(
                                               aTransactionData->mSmallShmems);
     wr::IpcResourceUpdateQueue::ReleaseShmems(this,
                                               aTransactionData->mLargeShmems);
-  }
-
-  if (mRemoteTextureTxnScheduler) {
-    mRemoteTextureTxnScheduler->NotifyTxn(aFwdTransactionId);
   }
 
   if (!success) {

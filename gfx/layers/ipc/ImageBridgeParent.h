@@ -28,7 +28,6 @@ class Shmem;
 namespace layers {
 
 struct ImageCompositeNotificationInfo;
-class RemoteTextureTxnScheduler;
 
 /**
  * ImageBridgeParent is the manager Protocol of async Compositables.
@@ -144,8 +143,6 @@ class ImageBridgeParent final : public PImageBridgeParent,
   static ImageBridgeMap sImageBridges;
 
   RefPtr<CompositorThreadHolder> mCompositorThreadHolder;
-
-  RefPtr<RemoteTextureTxnScheduler> mRemoteTextureTxnScheduler;
 };
 
 }  // namespace layers
