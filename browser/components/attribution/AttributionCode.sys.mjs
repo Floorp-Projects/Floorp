@@ -227,6 +227,76 @@ export var AttributionCode = {
     return s;
   },
 
+  async _getMacAttrDataAsync() {
+    let attributionFile = this.attributionFile;
+
+    // On macOS, we fish the attribution data from an extended attribute on
+    // the .app bundle directory.
+    try {
+      let attrStr = await lazy.MacAttribution.getAttributionString();
+      lazy.log.debug(
+        `getAttrDataAsync: macOS attribution getAttributionString: "${attrStr}"`
+      );
+
+      gCachedAttrData = this.parseAttributionCode(attrStr);
+    } catch (ex) {
+      // Avoid partial attribution data.
+      gCachedAttrData = {};
+
+      // No attributions.  Just `warn` 'cuz this isn't necessarily an error.
+      lazy.log.warn("Caught exception fetching macOS attribution codes!", ex);
+
+      if (
+        ex instanceof Ci.nsIException &&
+        ex.result == Cr.NS_ERROR_UNEXPECTED
+      ) {
+        // Bad quarantine data.
+        Services.telemetry
+          .getHistogramById("BROWSER_ATTRIBUTION_ERRORS")
+          .add("quarantine_error");
+      }
+    }
+
+    lazy.log.debug(
+      `macOS attribution data is ${JSON.stringify(gCachedAttrData)}`
+    );
+
+    // We only want to try to fetch the attribution string once on macOS
+    try {
+      let code = this.serializeAttributionData(gCachedAttrData);
+      lazy.log.debug(`macOS attribution data serializes as "${code}"`);
+      await this.writeAttributionFile(code);
+    } catch (ex) {
+      lazy.log.debug(`Caught exception writing "${attributionFile.path}"`, ex);
+      Services.telemetry
+        .getHistogramById("BROWSER_ATTRIBUTION_ERRORS")
+        .add("write_error");
+      return gCachedAttrData;
+    }
+
+    lazy.log.debug(
+      `Returning after successfully writing "${attributionFile.path}"`
+    );
+    return gCachedAttrData;
+  },
+
+  async _getWindowsNSISAttrDataAsync() {
+    return AttributionIOUtils.read(this.attributionFile.path);
+  },
+
+  async _getWindowsMSIXAttrDataAsync() {
+    // This comes out of windows-package-manager _not_ URL encoded or in an ArrayBuffer,
+    // but the parsing code wants it that way. It's easier to just provide that
+    // than have the parsing code support both.
+    lazy.log.debug(
+      `winPackageFamilyName is: ${Services.sysinfo.getProperty(
+        "winPackageFamilyName"
+      )}`
+    );
+    let encoder = new TextEncoder();
+    return encoder.encode(encodeURIComponent(await this.msixCampaignId));
+  },
+
   /**
    * Reads the attribution code, either from disk or a cached version.
    * Returns a promise that fulfills with an object containing the parsed
@@ -275,58 +345,7 @@ export var AttributionCode = {
       lazy.log.debug(
         `getAttrDataAsync: macOS && !exists("${attributionFile.path}")`
       );
-
-      // On macOS, we fish the attribution data from an extended attribute on
-      // the .app bundle directory.
-      try {
-        let attrStr = await lazy.MacAttribution.getAttributionString();
-        lazy.log.debug(
-          `getAttrDataAsync: macOS attribution getAttributionString: "${attrStr}"`
-        );
-
-        gCachedAttrData = this.parseAttributionCode(attrStr);
-      } catch (ex) {
-        // Avoid partial attribution data.
-        gCachedAttrData = {};
-
-        // No attributions.  Just `warn` 'cuz this isn't necessarily an error.
-        lazy.log.warn("Caught exception fetching macOS attribution codes!", ex);
-
-        if (
-          ex instanceof Ci.nsIException &&
-          ex.result == Cr.NS_ERROR_UNEXPECTED
-        ) {
-          // Bad quarantine data.
-          Services.telemetry
-            .getHistogramById("BROWSER_ATTRIBUTION_ERRORS")
-            .add("quarantine_error");
-        }
-      }
-
-      lazy.log.debug(
-        `macOS attribution data is ${JSON.stringify(gCachedAttrData)}`
-      );
-
-      // We only want to try to fetch the attribution string once on macOS
-      try {
-        let code = this.serializeAttributionData(gCachedAttrData);
-        lazy.log.debug(`macOS attribution data serializes as "${code}"`);
-        await this.writeAttributionFile(code);
-      } catch (ex) {
-        lazy.log.debug(
-          `Caught exception writing "${attributionFile.path}"`,
-          ex
-        );
-        Services.telemetry
-          .getHistogramById("BROWSER_ATTRIBUTION_ERRORS")
-          .add("write_error");
-        return gCachedAttrData;
-      }
-
-      lazy.log.debug(
-        `Returning after successfully writing "${attributionFile.path}"`
-      );
-      return gCachedAttrData;
+      return this._getMacAttrDataAsync();
     }
 
     lazy.log.debug(
@@ -339,18 +358,9 @@ export var AttributionCode = {
         AppConstants.platform === "win" &&
         Services.sysinfo.getProperty("hasWinPackageId")
       ) {
-        // This comes out of windows-package-manager _not_ URL encoded or in an ArrayBuffer,
-        // but the parsing code wants it that way. It's easier to just provide that
-        // than have the parsing code support both.
-        lazy.log.debug(
-          `winPackageFamilyName is: ${Services.sysinfo.getProperty(
-            "winPackageFamilyName"
-          )}`
-        );
-        let encoder = new TextEncoder();
-        bytes = encoder.encode(encodeURIComponent(await this.msixCampaignId()));
+        bytes = await this._getWindowsMSIXAttrDataAsync();
       } else {
-        bytes = await AttributionIOUtils.read(attributionFile.path);
+        bytes = await this._getWindowsNSISAttrDataAsync();
       }
     } catch (ex) {
       if (DOMException.isInstance(ex) && ex.name == "NotFoundError") {
