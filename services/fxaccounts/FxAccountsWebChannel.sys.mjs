@@ -663,10 +663,9 @@ FxAccountsWebChannelHelpers.prototype = {
    * Open Firefox View in the browser's window
    *
    * @param {Object} browser the browser in whose window we'll open Firefox View
-   * @param {String} [entryPoint] entryPoint Optional string to use for logging
    */
-  openFirefoxView(browser, entryPoint) {
-    browser.ownerGlobal.FirefoxViewHandler.openTab(entryPoint);
+  openFirefoxView(browser) {
+    browser.ownerGlobal.FirefoxViewHandler.openTab("syncedtabs");
   },
 
   /**
