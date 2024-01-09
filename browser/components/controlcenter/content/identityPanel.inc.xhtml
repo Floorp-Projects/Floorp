@@ -15,10 +15,16 @@
 
   <panelmultiview id="identity-popup-multiView"
                   mainViewId="identity-popup-mainView">
-    <panelview id="identity-popup-mainView" class="PanelUI-subView" role="document" showheader="true">
+    <panelview id="identity-popup-mainView"
+               class="PanelUI-subView"
+               role="document"
+               mainview-with-header="true">
+      <!-- The panel header text value changes dynamically by browser-siteIdentity.js,
+         - that's why the panel header box needs to remain hardcoded in the markup.
+         - instead of being handled by PanelMultiView.sys.mjs. -->
       <box id="identity-popup-mainView-panel-header" class="panel-header">
         <html:h1>
-          <html:span id="identity-popup-mainView-panel-header-span" role="heading" aria-level="1"/>
+          <html:span id="identity-popup-mainView-panel-header-span"/>
         </html:h1>
       </box>
       <toolbarseparator/>

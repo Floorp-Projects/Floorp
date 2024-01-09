@@ -8,16 +8,16 @@
            aria-describedby="report-broken-site-panel-intro"
            data-l10n-id="report-broken-site-panel-header"
            data-l10n-attrs="title"
-           showheader="true">
-  <!-- wants-back-button will be removed in bug 1869574
-       (and also from PanelMultiView.sys.mjs)
-  -->
-  <box class="panel-header" wants-back-button="true">
+           mainview-with-header="true">
+  <!-- The panel can be opened from the Help menubar, so with the current
+     - headerText implementation in PanelMultiView.sys.mjs the markup must
+     - be added manually. -->
+  <box class="panel-header">
     <html:h1>
       <html:span data-l10n-id="report-broken-site-mainview-title"/>
     </html:h1>
   </box>
-  <toolbarseparator></toolbarseparator>
+  <toolbarseparator/>
   <vbox id="report-broken-site-panel-container"
         class="panel-subview-body">
     <html:p id="report-broken-site-panel-intro"
@@ -102,7 +102,8 @@
            data-l10n-id="report-broken-site-panel-report-sent-header"
            data-l10n-attrs="title"
            aria-describedby="report-broken-site-panel-report-sent-text"
-           showheader="true">
+           has-customized-header="true"
+           no-back-button="true">
   <box class="panel-header panel-header-with-additional-element">
     <image class="checkmark-icon additional-element-on-inline-start"></image>
     <html:h1>
