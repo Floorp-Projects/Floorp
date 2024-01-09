@@ -99,10 +99,6 @@ struct BaseEventFlags {
   // the first <label> element is clicked, that one may set this true.
   // Then, the second <label> element won't handle the event.
   bool mMultipleActionsPrevented : 1;
-  // XXXedgar: This is a temporary hack for elements, like <a>, which have not
-  // yet adopted the activation behavior defined in the specification. This
-  // should be removed after resolving bug 1851970.
-  bool mMultipleActivationPrevented : 1;
   // If mIsBeingDispatched is true, the DOM event created from the event is
   // dispatching into the DOM tree and not completed.
   bool mIsBeingDispatched : 1;
