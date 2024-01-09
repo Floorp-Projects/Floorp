@@ -443,7 +443,7 @@ void TelemetryProbesReporter::ReportResultForVideo() {
                       {576, "480<h<=576"},   {720, "576<h<=720"},
                       {1080, "720<h<=1080"}, {2160, "1080<h<=2160"}};
   const char* resolution = "h>2160";
-  int32_t height = info.mVideo.mImage.height;
+  int32_t height = info.mVideo.mDisplay.height;
   for (const auto& res : sResolutions) {
     if (height <= res.mH) {
       resolution = res.mRes;
