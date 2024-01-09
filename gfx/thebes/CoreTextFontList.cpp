@@ -735,26 +735,46 @@ static inline int GetWeightOverride(const nsAString& aPSName) {
 // (https://developer.apple.com/documentation/coretext/kctfontweighttrait)
 //
 // CSS 'normal' font-weight is defined as 400, so we map 0.0 to this.
-// The exact mapping to use for other values is not well defined; for now,
-// we arbitrarily map the smallest value (-1.0) to CSS weight 100.
-// For weights greater than 0.0, we map 0.23 to 500 (per HelveticaNeue-Medium),
-// and 0.4 (seems to be what Core Text uses for standard "bold" fonts) to 700,
-// and interpolate linearly for other values.
+// The exact mapping to use for other values is not well defined; the table
+// here is empirically determined by looking at what Core Text returns for
+// the various system fonts that have a range of weights.
 static inline int32_t CoreTextWeightToCSSWeight(CGFloat aCTWeight) {
-  if (aCTWeight >= 0.4) {
-    // map weights from 0.4 upwards to [700..1000]
-    return 700 + NS_round((aCTWeight - 0.4) * (1000 - 700) / (1.0 - 0.4));
+  using Mapping = std::pair<CGFloat, int32_t>;
+  constexpr Mapping kCoreTextToCSSWeights[] = {
+      // clang-format off
+      {-1.0, 1},
+      {-0.8, 100},
+      {-0.6, 200},
+      {-0.4, 300},
+      {0.0,  400},  // standard 'regular' weight
+      {0.23, 500},
+      {0.3,  600},
+      {0.4,  700},  // standard 'bold' weight
+      {0.56, 800},
+      {0.62, 900},  // Core Text seems to return 0.62 for faces with both
+                    // usWeightClass=800 and 900 in their OS/2 tables!
+                    // We use 900 as there are also fonts that return 0.56,
+                    // so we want an intermediate value for that.
+      {1.0,  1000},
+      // clang-format on
+  };
+  const auto* begin = &kCoreTextToCSSWeights[0];
+  const auto* end = begin + ArrayLength(kCoreTextToCSSWeights);
+  auto m = std::upper_bound(begin, end, aCTWeight,
+                            [](CGFloat aValue, const Mapping& aMapping) {
+                              return aValue <= aMapping.first;
+                            });
+  if (m == end) {
+    NS_WARNING("Core Text weight out of range");
+    return 1000;
   }
-  if (aCTWeight >= 0.23) {
-    // weights from 0.23 to 0.4 map to [500..700]
-    return 500 + NS_round((aCTWeight - 0.23) * (700 - 500) / (0.4 - 0.23));
+  if (m->first == aCTWeight || m == begin) {
+    return m->second;
   }
-  if (aCTWeight >= 0.0) {
-    // map weights from 0.0 to 0.23 to [400..500]
-    return 400 + NS_round(aCTWeight * (500 - 400) / 0.23);
-  }
-  // weights less than 0.0
-  return 400 + NS_round(aCTWeight * 300);
+  // Interpolate between the preceding and found entries:
+  const auto* prev = m - 1;
+  const auto t = (aCTWeight - prev->first) / (m->first - prev->first);
+  return NS_round(prev->second * (1.0 - t) + m->second * t);
 }
 
 // The Core Text width trait is documented as
