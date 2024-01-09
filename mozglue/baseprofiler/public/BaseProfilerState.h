@@ -235,7 +235,10 @@ class MOZ_RAII AutoProfilerStats {
                                                                              \
     MACRO(22, "cpufreq", CPUFrequency,                                       \
           "Record the clock frequency of "                                   \
-          "every CPU core for every profiler sample.")
+          "every CPU core for every profiler sample.")                       \
+                                                                             \
+    MACRO(23, "bandwidth", Bandwidth,                                        \
+          "Record the network bandwidth used for every profiler sample.")
 // *** Synchronize with lists in ProfilerState.h and geckoProfiler.json ***
 
 struct ProfilerFeature {

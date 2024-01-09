@@ -561,6 +561,11 @@ const featureDescriptions = [
     disabledReason:
       "This feature is only available on Windows, Linux and Android.",
   },
+  {
+    name: "Network Bandwidth",
+    value: "bandwidth",
+    title: "Record the network bandwidth used between every profiler sample.",
+  },
 ];
 
 module.exports = {

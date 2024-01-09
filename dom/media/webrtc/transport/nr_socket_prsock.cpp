@@ -97,6 +97,7 @@ nrappkit copyright:
 #include "prnetdb.h"
 
 #include "mozilla/net/DNS.h"
+#include "mozilla/ProfilerBandwidthCounter.h"
 #include "nsCOMPtr.h"
 #include "nsASocketHandler.h"
 #include "nsISocketTransportService.h"
@@ -757,6 +758,7 @@ int NrSocket::sendto(const void* msg, size_t len, int flags,
     ABORT(R_IO_ERROR);
   }
 
+  mozilla::profiler_count_bandwidth_written_bytes(status);
   _status = 0;
 abort:
   return (_status);
@@ -781,6 +783,7 @@ int NrSocket::recvfrom(void* buf, size_t maxlen, size_t* len, int flags,
     ABORT(r);
 
   // r_log(LOG_GENERIC,LOG_DEBUG,"Read %d bytes from %s",*len,addr->as_string);
+  mozilla::profiler_count_bandwidth_read_bytes(status);
 
   _status = 0;
 abort:

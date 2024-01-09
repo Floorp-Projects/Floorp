@@ -55,13 +55,13 @@ constexpr std::size_t GetPackingSpace() {
   size_t length = 0;
   for (size_t i = 0; i < std::size(T::PayloadFields); i++) {
     length += std::string_view{T::PayloadFields[i].Key}.size() + 1;
-    length += sizeof(UINT8);
+    length += sizeof(uint8_t);
   }
   return length;
 }
 
 // Convert our InputType to Tlgs input type.
-constexpr UINT8 GetTlgInputType(mozilla::MarkerSchema::InputType aInput) {
+constexpr uint8_t GetTlgInputType(mozilla::MarkerSchema::InputType aInput) {
   using InputType = mozilla::MarkerSchema::InputType;
   switch (aInput) {
     case InputType::Boolean:

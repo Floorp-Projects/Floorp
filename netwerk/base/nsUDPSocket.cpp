@@ -32,6 +32,7 @@
 #include "nsIPipe.h"
 #include "nsWrapperCacheInlines.h"
 #include "HttpConnectionUDP.h"
+#include "mozilla/ProfilerBandwidthCounter.h"
 #include "mozilla/StaticPrefs_network.h"
 
 #if defined(FUZZING)
@@ -254,7 +255,10 @@ nsUDPSocket::nsUDPSocket() {
 
 nsUDPSocket::~nsUDPSocket() { CloseSocket(); }
 
-void nsUDPSocket::AddOutputBytes(uint64_t aBytes) { mByteWriteCount += aBytes; }
+void nsUDPSocket::AddOutputBytes(int32_t aBytes) {
+  mByteWriteCount += aBytes;
+  profiler_count_bandwidth_written_bytes(aBytes);
+}
 
 void nsUDPSocket::OnMsgClose() {
   UDPSOCKET_LOG(("nsUDPSocket::OnMsgClose [this=%p]\n", this));
@@ -425,6 +429,7 @@ void nsUDPSocket::OnSocketReady(PRFileDesc* fd, int16_t outFlags) {
     return;
   }
   mByteReadCount += count;
+  profiler_count_bandwidth_read_bytes(count);
 
   FallibleTArray<uint8_t> data;
   if (!data.AppendElements(buff, count, fallible)) {
@@ -1231,6 +1236,7 @@ nsUDPSocket::RecvWithAddr(NetAddr* addr, nsTArray<uint8_t>& aData) {
     return NS_OK;
   }
   mByteReadCount += count;
+  profiler_count_bandwidth_read_bytes(count);
   PRNetAddrToNetAddr(&prAddr, addr);
 
   if (!aData.AppendElements(buff, count, fallible)) {
