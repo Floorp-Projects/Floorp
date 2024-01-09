@@ -1,0 +1,29 @@
+[DEFAULT]
+apps = "firefox, chrome, chromium, safari, geckoview, fenix"
+alert_threshold = 2.0
+browser_cycles = 1
+fore_window = 1
+gecko_profile_entries = 14000000
+gecko_profile_interval = 1
+lower_is_better = true
+min_back_window = 2
+max_back_window = 3
+owner = "PerfTest Team"
+page_cycles = 1
+page_timeout = 1800000
+output_timeout = 2000000
+subtest_unit = "ms"
+type = "pageload"
+unit = "score"
+use_live_sites = true
+
+# Name these like `*-regression` where * represents
+# the kind of data is being produced. This makes it clearer
+# that it's not an actual performance test.
+
+["constant-regression"]
+browsertime_args = "--browsertime.constant_value=1500"
+custom_data = true
+test_script = "constant_regression_test.js"
+test_summary = "flatten"
+test_url = "None"

@@ -1,0 +1,79 @@
+[DEFAULT]
+apps = "firefox, chrome, chromium, safari"
+alert_threshold = 2.0
+browser_cycles = 1
+custom_data = true
+gecko_profile_entries = 131072000
+gecko_profile_features = "js,stackwalk,cpu"
+gecko_profile_threads = "GeckoMain,DOM Worker,IndexedDB"
+lower_is_better = true
+measure = "cpuTime"
+output_timeout = 2000000
+owner = "DOM Lifecycle, Workers and Storage Team"
+page_cycles = 1
+page_timeout = 1800000
+subtest_unit = "ms"
+test_summary = "flatten"
+type = "pageload"
+unit = "ms"
+playback = "mitmproxy"
+playback_pageset_manifest = "mitm8-linux-firefox-example.manifest"
+test_url = "https://www.example.com"
+use_live_sites = false
+
+# Meaning of the idb_write names:
+# 1. Iterations - how many add/put requests are made? (k ~ few, M ~ many)
+# 2. Buffer type - what kind of buffer is supplied to each add/put, Array (ar), ArrayBuffer (ab) or Blob (bl)?
+# 3. Chunk size - how much data is stored in each add/put? (lower-case buffer type: small, capitalized buffer type: a lot)
+# 4. Transactions - should each add/put share one big transaction (1 => atomic=1) or have its own transaction (N => atomic=0)?
+
+["addMab1"]
+browsertime_args = "--browsertime.iterations=16384 --browsertime.chunk_size=1024 --browsertime.buffer_type=ArrayBuffer --browsertime.atomic=1"
+test_script = "indexeddb_write.js"
+
+["addMabN"]
+browsertime_args = "--browsertime.iterations=16384 --browsertime.chunk_size=1024 --browsertime.buffer_type=ArrayBuffer --browsertime.atomic=0"
+test_script = "indexeddb_write.js"
+
+["addMar1"]
+browsertime_args = "--browsertime.iterations=16384 --browsertime.chunk_size=1024 --browsertime.buffer_type=Array --browsertime.atomic=1"
+test_script = "indexeddb_write.js"
+
+["addMarN"]
+browsertime_args = "--browsertime.iterations=16384 --browsertime.chunk_size=1024 --browsertime.buffer_type=Array --browsertime.atomic=0"
+test_script = "indexeddb_write.js"
+
+["addMbl1"]
+browsertime_args = "--browsertime.iterations=16384 --browsertime.chunk_size=1024 --browsertime.buffer_type=Blob --browsertime.atomic=1"
+test_script = "indexeddb_write.js"
+
+["addMblN"]
+browsertime_args = "--browsertime.iterations=16384 --browsertime.chunk_size=1024 --browsertime.buffer_type=Blob --browsertime.atomic=0"
+test_script = "indexeddb_write.js"
+
+["addkAB1"]
+browsertime_args = "--browsertime.iterations=128 --browsertime.chunk_size=1048576 --browsertime.buffer_type=ArrayBuffer --browsertime.atomic=1"
+test_script = "indexeddb_write.js"
+
+["addkABN"]
+browsertime_args = "--browsertime.iterations=128 --browsertime.chunk_size=1048576 --browsertime.buffer_type=ArrayBuffer --browsertime.atomic=0"
+test_script = "indexeddb_write.js"
+
+["addkAR1"]
+browsertime_args = "--browsertime.iterations=128 --browsertime.chunk_size=1048576 --browsertime.buffer_type=Array --browsertime.atomic=1"
+test_script = "indexeddb_write.js"
+
+["addkARN"]
+browsertime_args = "--browsertime.iterations=128 --browsertime.chunk_size=1048576 --browsertime.buffer_type=Array --browsertime.atomic=0"
+test_script = "indexeddb_write.js"
+
+["addkBL1"]
+browsertime_args = "--browsertime.iterations=128 --browsertime.chunk_size=1048576 --browsertime.buffer_type=Blob --browsertime.atomic=1"
+test_script = "indexeddb_write.js"
+
+["addkBLN"]
+browsertime_args = "--browsertime.iterations=128 --browsertime.chunk_size=1048576 --browsertime.buffer_type=Blob --browsertime.atomic=0"
+test_script = "indexeddb_write.js"
+
+["getkeyrng"]
+test_script = "indexeddb_getkeyrange.js"

@@ -640,10 +640,10 @@ class _PrintTests(_StopAction):
         from manifestparser import TestManifest
 
         here = os.path.abspath(os.path.dirname(__file__))
-        raptor_ini = os.path.join(here, "raptor.ini")
+        raptor_toml = os.path.join(here, "raptor.toml")
 
         for _app in self.integrated_apps:
-            test_manifest = TestManifest([raptor_ini], strict=False)
+            test_manifest = TestManifest([raptor_toml], strict=False)
             info = {"app": _app}
             available_tests = test_manifest.active_tests(
                 exists=False, disabled=False, filters=[self.filter_app], **info
@@ -672,7 +672,9 @@ class _PrintTests(_StopAction):
                     # no test name; skip it
                     continue
 
-                suite = os.path.basename(next_test["manifest"])[:-4]
+                suite = ".".join(
+                    os.path.basename(next_test["manifest"]).split(".")[:-1]
+                )
                 if suite not in test_list:
                     test_list[suite] = {"type": None, "subtests": []}
 
@@ -684,7 +686,9 @@ class _PrintTests(_StopAction):
                         subtest = next_test["name"]
                         measure = next_test.get("measure")
                         if measure is not None:
-                            subtest = "{0} ({1})".format(subtest, measure)
+                            subtest = "{0} ({1})".format(
+                                subtest, measure.replace("\n", ", ")
+                            )
                         test_list[suite]["subtests"].append(subtest)
 
             # print the list in a nice, readable format

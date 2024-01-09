@@ -1,0 +1,25 @@
+[DEFAULT]
+alert_on = "fcp, loadtime"
+alert_threshold = 2.0
+apps = "firefox"
+browser_cycles = 1
+gecko_profile_entries = 14000000
+gecko_profile_interval = 1
+lower_is_better = true
+measure = "fnbpaint, fcp, dcf, loadtime"
+owner = "PerfTest Team"
+page_cycles = 1
+page_timeout = 60000
+playback = "mitmproxy"
+playback_version = "8.1.1"
+type = "pageload"
+unit = "ms"
+use_live_sites = true
+
+# Use this to run a custom browsertime test locally (with a custom url).
+# Essentially, this is "vanilla" browsertime in a raptor wrapper.
+
+["browsertime"]
+playback_pageset_manifest = "null.manifest"
+test_script = "None"
+test_url = "None"

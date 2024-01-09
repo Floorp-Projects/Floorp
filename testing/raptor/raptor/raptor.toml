@@ -1,0 +1,101 @@
+[DEFAULT]
+
+["include:tests/benchmarks/ares6.toml"]
+# raptor-browsertime benchmark tests
+
+["include:tests/benchmarks/assorted-dom.toml"]
+
+["include:tests/benchmarks/jetstream2.toml"]
+
+["include:tests/benchmarks/matrix-react-bench.toml"]
+
+["include:tests/benchmarks/motionmark-animometer-desktop.toml"]
+
+["include:tests/benchmarks/motionmark-animometer-mobile.toml"]
+
+["include:tests/benchmarks/motionmark-htmlsuite-desktop.toml"]
+
+["include:tests/benchmarks/motionmark-htmlsuite-mobile.toml"]
+
+["include:tests/benchmarks/speedometer-desktop.toml"]
+
+["include:tests/benchmarks/speedometer-mobile.toml"]
+
+["include:tests/benchmarks/stylebench.toml"]
+
+["include:tests/benchmarks/sunspider.toml"]
+
+["include:tests/benchmarks/twitch-animation.toml"]
+
+["include:tests/benchmarks/unity-webgl-desktop.toml"]
+
+["include:tests/benchmarks/unity-webgl-mobile.toml"]
+
+["include:tests/benchmarks/wasm-godot-baseline.toml"]
+
+["include:tests/benchmarks/wasm-godot-optimizing.toml"]
+
+["include:tests/benchmarks/wasm-godot.toml"]
+
+["include:tests/benchmarks/wasm-misc-baseline.toml"]
+
+["include:tests/benchmarks/wasm-misc-optimizing.toml"]
+
+["include:tests/benchmarks/wasm-misc.toml"]
+
+["include:tests/benchmarks/webaudio.toml"]
+
+["include:tests/benchmarks/youtube-playback.toml"]
+
+
+["include:tests/custom/browsertime-custom.toml"]
+# Local custom browsertime tests
+
+["include:tests/custom/browsertime-grandprix.toml"]
+# Custom grandprix benchmark test
+
+["include:tests/custom/browsertime-indexeddb.toml"]
+# Custom indexeddb test
+
+["include:tests/custom/browsertime-process-switch.toml"]
+# Fission process switch time test
+
+["include:tests/custom/browsertime-regression-test.toml"]
+# Tests that are used for testing our regression system
+
+["include:tests/custom/browsertime-sample-python-support.toml"]
+# Sample test for the Raptor python support file
+
+["include:tests/custom/browsertime-speculative.toml"]
+# Custom speculative connection test
+
+["include:tests/custom/browsertime-throttled-pageload.toml"]
+# Custom throttled network pageload test
+
+["include:tests/custom/browsertime-tp6-bench.toml"]
+# Pageload benchmark test used for getting an overview of impact
+
+["include:tests/custom/browsertime-upload.toml"]
+# Custom upload speed test
+
+["include:tests/custom/browsertime-welcome.toml"]
+# First-install pageload test
+
+["include:tests/interactive/browsertime-responsiveness.toml"]
+# Interactive raptor-browsertime tests
+
+["include:tests/scenario/idle.toml"]
+# raptor-browsertime scenario tests
+
+["include:tests/tp6/desktop/browsertime-tp6.toml"]
+# raptor-browsertime desktop page-load tests
+
+["include:tests/tp6/live/browsertime-live.toml"]
+# raptor-browsertime live page-load tests
+
+["include:tests/tp6/mobile/browsertime-tp6m.toml"]
+# raptor-browsertime android page-load tests
+
+["include:tests/unittests/browsertime-tp6-unittest.toml"]
+# raptor-browsertime unit tests
+# this is required for the manifest unit tests

@@ -1,0 +1,23 @@
+[DEFAULT]
+alert_on = "fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange"
+alert_change_type = "absolute"
+alert_threshold = 10.0  # expected value is 0, allow for 10 ms within the runtime
+apps = "firefox"
+cold = true
+gecko_profile_entries = 14000000
+gecko_profile_interval = 1
+lower_is_better = true
+owner = "Network Team"
+page_cycles = 1 # this is a cold pageload test
+page_timeout = 60000
+type = "pageload"
+unit = "ms"
+use_live_sites = true
+
+# Keep this list in alphabetical order
+
+["connect"]
+browser_cycles = 3
+test_script = "speculative-connect.js"
+test_url = "None"
+custom_data = true

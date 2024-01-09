@@ -1,0 +1,19 @@
+[DEFAULT]
+alert_threshold = 2.0
+apps = "fenix, chrome-m, geckoview"
+gecko_profile_entries = 8000000
+gecko_profile_interval = 1
+expose_gecko_profiler = true
+expose_chrome_trace = true
+lower_is_better = false
+owner = ":jgilbert and Graphics(gfx) Team"
+page_cycles = 5
+page_timeout = 600000
+test_url = "http://<host>:<port>/MotionMark/developer.html?test-interval=15&display=minimal&tiles=big&controller=fixed&frame-rate=30&kalman-process-error=1&kalman-measurement-error=4&time-measurement=performance&suite-name=HTMLsuite&raptor=true&oskey={platform}"
+type = "benchmark"
+unit = "score"
+
+["motionmark-htmlsuite"]
+
+["motionmark-htmlsuite-ramp"]
+test_url = "http://<host>:<port>/MotionMark/developer.html?test-interval=30&display=minimal&tiles=big&controller=ramp&frame-rate=60&kalman-process-error=1&kalman-measurement-error=4&time-measurement=performance&suite-name=HTMLsuite&raptor=true&oskey={platform}"

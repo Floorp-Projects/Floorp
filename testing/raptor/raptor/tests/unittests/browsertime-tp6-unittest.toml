@@ -1,0 +1,27 @@
+[DEFAULT]
+alert_on = "fcp, loadtime"
+alert_threshold = 2.0
+apps = "firefox"
+gecko_profile_entries = 14000000
+gecko_profile_interval = 1
+lower_is_better = true
+owner = "PerfTest Team"
+page_cycles = 25
+page_timeout = 60000
+playback = "mitmproxy"
+playback_pageset_manifest = "mitm7-linux-firefox-{subtest}.manifest"
+playback_version = "8.1.1"
+type = "pageload"
+unit = "ms"
+
+["amazon"]
+test_url = "https://www.amazon.com/s?k=laptop&ref=nb_sb_noss_1"
+
+["facebook"]
+test_url = "https://www.facebook.com"
+
+["google"]
+test_url = "https://www.google.com/search?hl=en&q=barack+obama&cad=h"
+
+["youtube"]
+test_url = "https://www.youtube.com"

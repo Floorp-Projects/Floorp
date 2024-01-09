@@ -21,6 +21,7 @@ from logger.logger import RaptorLogger
 from manifestparser.util import evaluate_list_from_string
 from perftest import GECKO_PROFILER_APPS, TRACE_APPS, Perftest
 from results import BrowsertimeResultsHandler
+from utils import bool_from_str
 
 LOG = RaptorLogger(component="raptor-browsertime")
 
@@ -121,10 +122,33 @@ class Browsertime(Perftest):
     def set_browser_test_prefs(self, raw_prefs):
         # add test specific preferences
         LOG.info("setting test-specific Firefox preferences")
-        self.profile.set_preferences(json.loads(raw_prefs))
+
+        self.profile.set_preferences(raw_prefs)
         self.remove_mozprofile_delimiters_from_profile()
 
+    def _convert_prefs_to_dict(self, raw_prefs):
+        pref_dict = {}
+        prefparts = raw_prefs.split("\n")
+        for pref in prefparts:
+            if "=" not in pref:
+                continue
+            parts = pref.strip("\r").split("=")
+            try:
+                if "rue" in parts[-1] or "alse" in parts[-1]:
+                    parts[-1] = bool_from_str(parts[-1])
+                else:
+                    parts[-1] = int(parts[-1])
+            except ValueError:
+                pass
+            pref_dict[parts[0]] = parts[-1]
+            if len(parts) > 2:
+                pref_dict[parts[0]] = "=".join(parts[1:])
+        return pref_dict
+
     def run_test_setup(self, test):
+        if test.get("preferences", ""):
+            test["preferences"] = self._convert_prefs_to_dict(test["preferences"])
+
         super(Browsertime, self).run_test_setup(test)
 
         if test.get("type") == "benchmark":

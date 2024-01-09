@@ -1,0 +1,20 @@
+[DEFAULT]
+alert_threshold = 2.0
+apps = "firefox, chrome, chromium, safari"
+gecko_profile_entries = 14000000
+gecko_profile_interval = 1
+expose_browser_profiler = true
+lower_is_better = false
+owner = ":jandem and SpiderMonkey Team"
+page_cycles = 4
+page_timeout = 2000000
+subtest_lower_is_better = false
+subtest_unit = "score"
+test_url = "http://<host>:<port>/index.html?raptor"
+type = "benchmark"
+unit = "score"
+
+["jetstream2"]
+repository = "https://github.com/mozilla/perf-automation"
+repository_revision = "61332db584026b73e37066d717a162825408c36b"
+repository_path = "benchmarks/JetStream2"

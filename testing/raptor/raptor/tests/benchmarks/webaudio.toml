@@ -1,0 +1,22 @@
+[DEFAULT]
+alert_threshold = 2.0
+apps = "firefox, chrome, chromium, safari"
+gecko_profile_entries = 4000000
+gecko_profile_interval = 1
+expose_browser_profiler = true
+lower_is_better = true
+owner = ":padenot and Media Team"
+page_cycles = 5
+page_timeout = 360000
+test_url = "http://<host>:<port>/webaudio/index.html?raptor"
+type = "benchmark"
+unit = "score"
+preferences = [
+  "media.autoplay.default=0",
+  "media.autoplay.ask-permission=false",
+  "media.autoplay.blocking_policy=0",
+  "media.allowed-to-play.enabled=true",
+  "media.block-autoplay-until-in-foreground=false",
+]
+
+["webaudio"]

@@ -16,10 +16,10 @@ from manifest import (
     add_test_url_params,
     get_browser_test_list,
     get_raptor_test_list,
-    validate_test_ini,
+    validate_test_toml,
 )
 
-# some test details (test INIs)
+# some test details (test TOMLs)
 VALID_MANIFESTS = [
     {
         # page load test with local playback
@@ -153,13 +153,13 @@ def test_get_browser_test_list(app):
 
 
 @pytest.mark.parametrize("test_details", VALID_MANIFESTS)
-def test_validate_test_ini_valid(test_details):
-    assert validate_test_ini(test_details)
+def test_validate_test_toml_valid(test_details):
+    assert validate_test_toml(test_details)
 
 
 @pytest.mark.parametrize("test_details", INVALID_MANIFESTS)
-def test_validate_test_ini_invalid(test_details):
-    assert not (validate_test_ini(test_details))
+def test_validate_test_toml_invalid(test_details):
+    assert not (validate_test_toml(test_details))
 
 
 def test_get_raptor_test_list_firefox(create_args):

@@ -1,0 +1,18 @@
+[DEFAULT]
+alert_threshold = 2.0
+apps = "fenix, chrome-m, geckoview"
+gecko_profile_entries = 8000000
+gecko_profile_interval = 1
+expose_browser_profiler = true
+lower_is_better = false
+page_cycles = 1
+page_timeout = 600000
+owner = ":jgilbert and Graphics(gfx) Team"
+test_url = "http://<host>:<port>/MotionMark/developer.html?test-interval=15&display=minimal&tiles=big&controller=fixed&frame-rate=30&kalman-process-error=1&kalman-measurement-error=4&time-measurement=performance&suite-name=Animometer&raptor=true&oskey={platform}"
+type = "benchmark"
+unit = "score"
+
+["motionmark-animometer"]
+
+["motionmark-animometer-ramp"]
+test_url = "http://<host>:<port>/MotionMark/developer.html?test-interval=30&display=minimal&tiles=big&controller=ramp&frame-rate=60&kalman-process-error=1&kalman-measurement-error=4&time-measurement=performance&suite-name=Animometer&raptor=true&oskey={platform}"

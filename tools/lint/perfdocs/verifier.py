@@ -18,7 +18,7 @@ Schema for the config.yml file.
 Expecting a YAML file with a format such as this:
 
 name: raptor
-manifest: testing/raptor/raptor/raptor.ini
+manifest: testing/raptor/raptor/raptor.toml
 static-only: False
 suites:
     desktop:
