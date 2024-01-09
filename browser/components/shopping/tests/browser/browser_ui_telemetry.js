@@ -181,6 +181,35 @@ add_task(async function test_shopping_sidebar_displayed() {
 
   Assert.equal(emptyDisplayedEvents, null);
   Assert.equal(emptyAddressBarIconDisplayedEvents, null);
+
+  // Open a product page in a background tab, verify telemetry is not recorded.
+  let backgroundTab = await BrowserTestUtils.addTab(gBrowser, PRODUCT_PAGE);
+  Services.fog.testFlushAllChildren();
+  let tabSwitchEvents = Glean.shopping.surfaceDisplayed.testGetValue();
+  Assert.equal(tabSwitchEvents, null);
+  Services.fog.testResetFOG();
+
+  // Next, switch tabs to the backgrounded product tab and verify telemetry is
+  // recorded.
+  await BrowserTestUtils.switchTab(gBrowser, backgroundTab);
+  Services.fog.testFlushAllChildren();
+  tabSwitchEvents = Glean.shopping.surfaceDisplayed.testGetValue();
+  Assert.equal(1, tabSwitchEvents.length);
+  assertEventMatches(tabSwitchEvents[0], {
+    category: "shopping",
+    name: "surface_displayed",
+  });
+  Services.fog.testResetFOG();
+
+  // Finally, switch tabs again and verify telemetry is not recorded for the
+  // background tab after it has been foregrounded once.
+  await BrowserTestUtils.switchTab(gBrowser, gBrowser.tabs[0]);
+  await BrowserTestUtils.switchTab(gBrowser, backgroundTab);
+  Services.fog.testFlushAllChildren();
+  tabSwitchEvents = Glean.shopping.surfaceDisplayed.testGetValue();
+  Assert.equal(tabSwitchEvents, null);
+  Services.fog.testResetFOG();
+  BrowserTestUtils.removeTab(backgroundTab);
 });
 
 add_task(async function test_shopping_card_clicks() {
