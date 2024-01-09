@@ -61,6 +61,8 @@ const LOG_COMPLETE_SUCCESS = "complete_log_success" + COMPARE_LOG_SUFFIX;
 const LOG_PARTIAL_SUCCESS = "partial_log_success" + COMPARE_LOG_SUFFIX;
 const LOG_PARTIAL_FAILURE = "partial_log_failure" + COMPARE_LOG_SUFFIX;
 const LOG_REPLACE_SUCCESS = "replace_log_success";
+const MAC_APP_XATTR_KEY = "com.apple.application-instance";
+const MAC_APP_XATTR_VALUE = "dlsource%3Dmozillaci";
 
 const USE_EXECV = AppConstants.platform == "linux";
 
@@ -3165,6 +3167,15 @@ async function setupUpdaterTest(
     debugDump("finish - setup test file: " + aTestFile.fileName);
   });
 
+  // Set a similar extended attribute on the `.app` directory as we see in
+  // the wild. We will verify that it is preserved at the end of tests.
+  if (AppConstants.platform == "macosx") {
+    await IOUtils.setMacXAttr(
+      getApplyDirFile().path,
+      MAC_APP_XATTR_KEY,
+      new TextEncoder().encode(MAC_APP_XATTR_VALUE)
+    );
+  }
   // Add the test directory that will be updated for a successful update or left
   // in the initial state for a failed update.
   gTestDirs.forEach(function SUT_TD_FE(aTestDir) {
@@ -3744,6 +3755,22 @@ function checkFilesAfterUpdateSuccess(
       }
     }
   });
+
+  if (AppConstants.platform == "macosx") {
+    debugDump("testing that xattrs were preserved after a successful update");
+    IOUtils.getMacXAttr(getApplyDirFile().path, MAC_APP_XATTR_KEY).then(
+      bytes => {
+        Assert.equal(
+          new TextDecoder().decode(bytes),
+          MAC_APP_XATTR_VALUE,
+          "xattr value changed"
+        );
+      },
+      reason => {
+        Assert.fail(MAC_APP_XATTR_KEY + " xattr is missing!");
+      }
+    );
+  }
 
   checkFilesAfterUpdateCommon(aStageDirExists, aToBeDeletedDirExists);
 }
