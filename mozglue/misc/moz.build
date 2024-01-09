@@ -43,7 +43,6 @@ if CONFIG["OS_ARCH"] == "WINNT":
 SOURCES += [
     "AutoProfilerLabel.cpp",
     "AwakeTimeStamp.cpp",
-    "Debug.cpp",
     "MmapFaultHandler.cpp",
     "Printf.cpp",
     "SIMD.cpp",

@@ -19,6 +19,12 @@
 #ifdef XP_WIN
 #  include <io.h>
 #  include <windows.h>
+#  include "mozilla/LateWriteChecks.h"
+#  include "mozilla/UniquePtr.h"
+#endif
+
+#ifdef ANDROID
+#  include <android/log.h>
 #endif
 
 #ifdef FUZZING_SNAPSHOT
@@ -224,3 +230,99 @@ void NS_MakeRandomString(char* aBuf, int32_t aBufLen) {
 }
 
 #endif
+
+#if defined(XP_WIN)
+void vprintf_stderr(const char* aFmt, va_list aArgs) {
+  if (IsDebuggerPresent()) {
+    int lengthNeeded = _vscprintf(aFmt, aArgs);
+    if (lengthNeeded) {
+      lengthNeeded++;
+      auto buf = MakeUnique<char[]>(lengthNeeded);
+      if (buf) {
+        va_list argsCpy;
+        va_copy(argsCpy, aArgs);
+        vsnprintf(buf.get(), lengthNeeded, aFmt, argsCpy);
+        buf[lengthNeeded - 1] = '\0';
+        va_end(argsCpy);
+        OutputDebugStringA(buf.get());
+      }
+    }
+  }
+
+  // stderr is unbuffered by default so we open a new FILE (which is buffered)
+  // so that calls to printf_stderr are not as likely to get mixed together.
+  int fd = _fileno(stderr);
+  if (fd == -2) {
+    return;
+  }
+
+  FILE* fp = _fdopen(_dup(fd), "a");
+  if (!fp) {
+    return;
+  }
+
+  vfprintf(fp, aFmt, aArgs);
+
+  AutoSuspendLateWriteChecks suspend;
+  fclose(fp);
+}
+
+#elif defined(ANDROID)
+void vprintf_stderr(const char* aFmt, va_list aArgs) {
+  __android_log_vprint(ANDROID_LOG_INFO, "Gecko", aFmt, aArgs);
+}
+#elif defined(FUZZING_SNAPSHOT)
+void vprintf_stderr(const char* aFmt, va_list aArgs) {
+  if (nyx_puts) {
+    auto msgbuf = mozilla::Vsmprintf(aFmt, aArgs);
+    nyx_puts(msgbuf.get());
+  } else {
+    vfprintf(stderr, aFmt, aArgs);
+  }
+}
+#else
+void vprintf_stderr(const char* aFmt, va_list aArgs) {
+  vfprintf(stderr, aFmt, aArgs);
+}
+#endif
+
+void printf_stderr(const char* aFmt, ...) {
+  va_list args;
+  va_start(args, aFmt);
+  vprintf_stderr(aFmt, args);
+  va_end(args);
+}
+
+void fprintf_stderr(FILE* aFile, const char* aFmt, ...) {
+  va_list args;
+  va_start(args, aFmt);
+  if (aFile == stderr) {
+    vprintf_stderr(aFmt, args);
+  } else {
+    vfprintf(aFile, aFmt, args);
+  }
+  va_end(args);
+}
+
+void print_stderr(std::stringstream& aStr) {
+#if defined(ANDROID)
+  // On Android logcat output is truncated to 1024 chars per line, and
+  // we usually use std::stringstream to build up giant multi-line gobs
+  // of output. So to avoid the truncation we find the newlines and
+  // print the lines individually.
+  std::string line;
+  while (std::getline(aStr, line)) {
+    printf_stderr("%s\n", line.c_str());
+  }
+#else
+  printf_stderr("%s", aStr.str().c_str());
+#endif
+}
+
+void fprint_stderr(FILE* aFile, std::stringstream& aStr) {
+  if (aFile == stderr) {
+    print_stderr(aStr);
+  } else {
+    fprintf_stderr(aFile, "%s", aStr.str().c_str());
+  }
+}
