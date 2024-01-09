@@ -111,9 +111,7 @@ class Rule : public nsISupports, public nsWrapperCache {
     auto* associated = mSheet->GetAssociatedDocumentOrShadowRoot();
     return associated ? &associated->AsNode() : nullptr;
   }
-  nsISupports* GetParentObject() const {
-    return mSheet ? mSheet->GetRelevantGlobal() : nullptr;
-  }
+  nsISupports* GetParentObject() const { return mSheet; }
 
  protected:
   // True if we're known-live for cycle collection purposes.
