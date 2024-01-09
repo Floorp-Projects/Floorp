@@ -36,9 +36,11 @@ browser/chrome.manifest
 crashreporter.app/Contents/Resources/English.lproj/MainMenu.nib/classes.nib
 crashreporter.app/Contents/Resources/English.lproj/MainMenuRTL.nib/classes.nib
 
+#ifndef XP_MACOSX
 # firefox/firefox-bin is bug 658850
 @MOZ_APP_NAME@
 @MOZ_APP_NAME@-bin
+#endif
 
 # Row and column icons are duplicated
 res/table-remove-column-active.gif
