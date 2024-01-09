@@ -523,8 +523,6 @@ skip-if = ["xorigin"] # Crashes, Assertion failure: mInFlightProcessId == 0, at 
 
 ["test_media_query_serialization.html"]
 
-["test_medialist_privilege.html"]
-
 ["test_moz_device_pixel_ratio.html"]
 
 ["test_moz_prefixed_cursor.html"]
@@ -647,6 +645,8 @@ support-files = [
   "file_shared_sheet_caching.html",
 ]
 fail-if = ["xorigin"]
+
+["test_sheet_privilege.html"]
 
 ["test_shorthand_property_getters.html"]
 
