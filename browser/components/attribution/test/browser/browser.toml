@@ -6,6 +6,4 @@ prefs = ["browser.attribution.macos.enabled=true"]
 skip-if = ["toolkit != 'cocoa'"] # macOS only telemetry.
 
 ["browser_AttributionCode_telemetry.js"]
-# These tests only cover the attribution cache file - which only exists on
-# Windows.
-skip-if = ["os != 'win'"]
+skip-if = ["(os != 'win' && toolkit != 'cocoa')"] # Windows and macOS only telemetry.

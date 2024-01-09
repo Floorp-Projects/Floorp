@@ -148,27 +148,16 @@ export var TelemetryEnvironmentTesting = {
   },
 
   async spoofAttributionData() {
-    if (gIsWindows) {
+    if (gIsWindows || gIsMac) {
       lazy.AttributionCode._clearCache();
       await lazy.AttributionCode.writeAttributionFile(ATTRIBUTION_CODE);
-    } else if (gIsMac) {
-      lazy.AttributionCode._clearCache();
-      const { MacAttribution } = ChromeUtils.importESModule(
-        "resource:///modules/MacAttribution.sys.mjs"
-      );
-      await MacAttribution.setAttributionString(ATTRIBUTION_CODE);
     }
   },
 
-  async cleanupAttributionData() {
-    if (gIsWindows) {
+  cleanupAttributionData() {
+    if (gIsWindows || gIsMac) {
       lazy.AttributionCode.attributionFile.remove(false);
       lazy.AttributionCode._clearCache();
-    } else if (gIsMac) {
-      const { MacAttribution } = ChromeUtils.importESModule(
-        "resource:///modules/MacAttribution.sys.mjs"
-      );
-      await MacAttribution.delAttributionString();
     }
   },
 

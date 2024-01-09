@@ -175,9 +175,7 @@ add_task(async function setup() {
   // The attribution functionality only exists in Firefox.
   if (AppConstants.MOZ_BUILD_APP == "browser") {
     TelemetryEnvironmentTesting.spoofAttributionData();
-    registerCleanupFunction(async function () {
-      await TelemetryEnvironmentTesting.cleanupAttributionData;
-    });
+    registerCleanupFunction(TelemetryEnvironmentTesting.cleanupAttributionData);
   }
 
   await TelemetryEnvironmentTesting.spoofProfileReset();
