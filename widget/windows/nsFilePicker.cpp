@@ -6,9 +6,10 @@
 
 #include "nsFilePicker.h"
 
+#include <cderr.h>
 #include <shlobj.h>
 #include <shlwapi.h>
-#include <cderr.h>
+#include <sysinfoapi.h>
 #include <winerror.h>
 #include <winuser.h>
 #include <utility>
@@ -25,17 +26,18 @@
 #include "nsEnumeratorUtils.h"
 #include "nsNetUtil.h"
 #include "nsPIDOMWindow.h"
+#include "nsPrintfCString.h"
 #include "nsReadableUtils.h"
 #include "nsString.h"
 #include "nsToolkit.h"
 #include "nsWindow.h"
 #include "WinUtils.h"
 
+#include "mozilla/glean/GleanMetrics.h"
+
 #include "mozilla/widget/filedialog/WinFileDialogCommands.h"
 #include "mozilla/widget/filedialog/WinFileDialogParent.h"
 
-using mozilla::Maybe;
-using mozilla::Result;
 using mozilla::UniquePtr;
 
 using namespace mozilla::widget;
@@ -239,6 +241,51 @@ struct LocalAndOrRemote {
     }
   };
 
+ private:
+  // inner details namespace
+  struct Telemetry {
+    static void RecordSuccess(uint64_t (&&time)[2]) {
+      auto [t0, t1] = time;
+
+      namespace glean_fd = mozilla::glean::file_dialog;
+      glean_fd::FallbackExtra extra{
+          .hresultLocal = Nothing(),
+          .hresultRemote = Nothing(),
+          .succeeded = Some(true),
+          .timeLocal = Nothing(),
+          .timeRemote = Some(delta(t1, t0)),
+      };
+      glean_fd::fallback.Record(Some(extra));
+    }
+
+    static void RecordFailure(uint64_t (&&time)[3], HRESULT hrRemote,
+                              HRESULT hrLocal) {
+      auto [t0, t1, t2] = time;
+
+      {
+        namespace glean_fd = mozilla::glean::file_dialog;
+        glean_fd::FallbackExtra extra{
+            .hresultLocal = Some(hexString(hrLocal)),
+            .hresultRemote = Some(hexString(hrRemote)),
+            .succeeded = Some(false),
+            .timeLocal = Some(delta(t2, t1)),
+            .timeRemote = Some(delta(t1, t0)),
+        };
+        glean_fd::fallback.Record(Some(extra));
+      }
+    }
+
+   private:
+    static uint32_t delta(uint64_t tb, uint64_t ta) {
+      // FILETIMEs are 100ns intervals; we reduce that to 1ms.
+      // (`u32::max()` milliseconds is roughly 47.91 days.)
+      return uint32_t((tb - ta) / 10'000);
+    };
+    static nsCString hexString(HRESULT val) {
+      return nsPrintfCString("%08lX", val);
+    };
+  };
+
  public:
   // Invoke either or both of a "do locally" and "do remotely" function with the
   // provided arguments, depending on the relevant preference-value and whether
@@ -263,21 +310,51 @@ struct LocalAndOrRemote {
         return remote(args...);
 
       case RemoteWithFallback:
-        return remote(args...)->Then(
-            NS_GetCurrentThread(), kFunctionName,
-            [](typename PromiseT::ResolveValueType result) -> RefPtr<PromiseT> {
-              // success; stop here
-              return PromiseT::CreateAndResolve(result, kFunctionName);
-            },
-            // initialized lambda pack captures are C++20 (clang 9, gcc 9);
-            // `make_tuple` is just a C++17 workaround
-            [=, tuple = std::make_tuple(Copy(args)...)](
-                typename PromiseT::RejectValueType _err) mutable
-            -> RefPtr<PromiseT> {
-              // failure; retry locally
-              return std::apply(local, std::move(tuple));
-            });
+        // more complicated; continue below
+        break;
     }
+
+    // capture time for telemetry
+    constexpr static const auto GetTime = []() -> uint64_t {
+      FILETIME t;
+      ::GetSystemTimeAsFileTime(&t);
+      return (uint64_t(t.dwHighDateTime) << 32) | t.dwLowDateTime;
+    };
+    uint64_t const t0 = GetTime();
+
+    return remote(args...)->Then(
+        NS_GetCurrentThread(), kFunctionName,
+        [t0](typename PromiseT::ResolveValueType result) -> RefPtr<PromiseT> {
+          // success; stop here
+          auto const t1 = GetTime();
+          // record success
+          Telemetry::RecordSuccess({t0, t1});
+          return PromiseT::CreateAndResolve(result, kFunctionName);
+        },
+        // initialized lambda pack captures are C++20 (clang 9, gcc 9);
+        // `make_tuple` is just a C++17 workaround
+        [=, tuple = std::make_tuple(Copy(args)...)](
+            typename PromiseT::RejectValueType err) mutable
+        -> RefPtr<PromiseT> {
+          // failure; record time
+          auto const t1 = GetTime();
+          HRESULT const hrRemote = err;
+
+          // retry locally...
+          auto p0 = std::apply(local, std::move(tuple));
+          // ...then record the telemetry event
+          return p0->Then(
+              NS_GetCurrentThread(), kFunctionName,
+              [t0, t1, hrRemote](typename PromiseT::ResolveOrRejectValue val)
+                  -> RefPtr<PromiseT> {
+                auto const t2 = GetTime();
+                HRESULT const hrLocal =
+                    val.IsReject() ? val.RejectValue() : S_OK;
+                Telemetry::RecordFailure({t0, t1, t2}, hrRemote, hrLocal);
+
+                return PromiseT::CreateAndResolveOrReject(val, kFunctionName);
+              });
+        });
   }
 };
 

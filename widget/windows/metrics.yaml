@@ -1,0 +1,58 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Adding a new metric? We have docs for that!
+# https://firefox-source-docs.mozilla.org/toolkit/components/glean/user/new_definitions_file.html
+
+---
+$schema: moz://mozilla.org/schemas/glean/metrics/2-0-0
+$tags:
+  - 'Core :: Widget: Win32'
+
+file_dialog:
+  fallback:
+    type: event
+    description: >
+      Records the result of an attempt to open and use the out-of-process file
+      dialog when the in-process file-dialog is available as a fallback.
+    metadata:
+      # mostly technical, but includes timing data that may derive from user
+      # interactions
+      data-sensitivity: [technical, interaction]
+    notification_emails:
+      - rkraesig@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1872397
+    # this event may alternatively be manually expired once bug 1677170 is
+    # closed
+    expires: 135
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1872397#c7
+    extra_keys:
+      succeeded:
+        type: boolean
+        description: >
+          Whether the out-of-process dialog succeeded or failed. (Note that
+          user-induced cancellation is considered a form of success.)
+      time_remote:
+        type: quantity
+        description: >
+          The time between the out-of-process file dialog's instantiation
+          attempt and its failure, in milliseconds.
+      hresult_remote:
+        type: string
+        description: >
+          The failure code produced by the out-of-process file dialog, formatted
+          as eight hexdigits. Only present when `!succeeded`.
+      time_local:
+        type: quantity
+        description: >
+          The time between the in-process file dialog's instantiation attempt
+          and its conclusion (successfully or otherwise), in milliseconds. Only
+          present when `!succeeded`.
+      hresult_local:
+        type: string
+        description: >
+          The return code produced by the in-process file dialog, formatted as
+          eight hexdigits. Only present when `!succeeded`.
