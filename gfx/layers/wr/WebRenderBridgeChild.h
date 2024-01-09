@@ -206,8 +206,8 @@ class WebRenderBridgeChild final : public PWebRenderBridgeChild,
                                        const RemoteTextureOwnerId aOwnerId,
                                        const gfx::IntSize aSize,
                                        const TextureFlags aFlags) override;
-  void UpdateFwdTransactionId() override;
-  uint64_t GetFwdTransactionId() override;
+  FwdTransactionCounter& GetFwdTransactionCounter() override;
+
   bool InForwarderThread() override;
 
   void ActorDestroy(ActorDestroyReason why) override;

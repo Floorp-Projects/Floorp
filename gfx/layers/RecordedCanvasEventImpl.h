@@ -531,8 +531,12 @@ RecordedNextTextureId::RecordedNextTextureId(S& aStream)
 class RecordedTextureDestruction final
     : public RecordedEventDerived<RecordedTextureDestruction> {
  public:
-  explicit RecordedTextureDestruction(int64_t aTextureId)
-      : RecordedEventDerived(TEXTURE_DESTRUCTION), mTextureId(aTextureId) {}
+  RecordedTextureDestruction(int64_t aTextureId, RemoteTextureTxnType aTxnType,
+                             RemoteTextureTxnId aTxnId)
+      : RecordedEventDerived(TEXTURE_DESTRUCTION),
+        mTextureId(aTextureId),
+        mTxnType(aTxnType),
+        mTxnId(aTxnId) {}
 
   template <class S>
   MOZ_IMPLICIT RecordedTextureDestruction(S& aStream);
@@ -546,23 +550,29 @@ class RecordedTextureDestruction final
 
  private:
   int64_t mTextureId = 0;
+  RemoteTextureTxnType mTxnType = 0;
+  RemoteTextureTxnId mTxnId = 0;
 };
 
 inline bool RecordedTextureDestruction::PlayCanvasEvent(
     CanvasTranslator* aTranslator) const {
-  aTranslator->RemoveTexture(mTextureId);
+  aTranslator->RemoveTexture(mTextureId, mTxnType, mTxnId);
   return true;
 }
 
 template <class S>
 void RecordedTextureDestruction::Record(S& aStream) const {
   WriteElement(aStream, mTextureId);
+  WriteElement(aStream, mTxnType);
+  WriteElement(aStream, mTxnId);
 }
 
 template <class S>
 RecordedTextureDestruction::RecordedTextureDestruction(S& aStream)
     : RecordedEventDerived(TEXTURE_DESTRUCTION) {
   ReadElement(aStream, mTextureId);
+  ReadElement(aStream, mTxnType);
+  ReadElement(aStream, mTxnId);
 }
 
 class RecordedCheckpoint final

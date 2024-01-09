@@ -6,9 +6,11 @@
 
 #include "mozilla/layers/RemoteTextureMap.h"
 
+#include <algorithm>
 #include <vector>
 
 #include "CompositableHost.h"
+#include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/layers/AsyncImagePipelineManager.h"
 #include "mozilla/layers/BufferTexture.h"
@@ -352,8 +354,8 @@ void RemoteTextureMap::PushTexture(
     owner->mWaitingTextureDataHolders.push_back(std::move(textureData));
 
     {
-      renderingReadyCallbacks =
-          GetRenderingReadyCallbacks(lock, owner, aTextureId);
+      GetRenderingReadyCallbacks(lock, owner, aTextureId,
+                                 renderingReadyCallbacks);
       // Update mRemoteTextureHost.
       // This happens when PushTexture() with RemoteTextureId is called after
       // GetRemoteTexture() with the RemoteTextureId.
@@ -574,6 +576,66 @@ void RemoteTextureMap::KeepTextureDataAliveForTextureHostIfNecessary(
   }
 }
 
+UniquePtr<RemoteTextureMap::TextureOwner>
+RemoteTextureMap::UnregisterTextureOwner(
+    const MonitorAutoLock& aProofOfLock, const RemoteTextureOwnerId aOwnerId,
+    const base::ProcessId aForPid,
+    std::vector<RefPtr<TextureHost>>& aReleasingTextures,
+    std::vector<std::function<void(const RemoteTextureInfo&)>>&
+        aRenderingReadyCallbacks) {
+  const auto key = std::pair(aForPid, aOwnerId);
+  auto it = mTextureOwners.find(key);
+  if (it == mTextureOwners.end()) {
+    MOZ_ASSERT_UNREACHABLE("unexpected to be called");
+    return nullptr;
+  }
+
+  auto* owner = it->second.get();
+  // If waiting for a last use, and it hasn't arrived yet, then defer
+  // unregistering.
+  if (owner->mWaitForTxn) {
+    owner->mDeferUnregister = GetCurrentSerialEventTarget();
+    return nullptr;
+  }
+
+  if (owner->mLatestTextureHost) {
+    // Release CompositableRef in mMonitor
+    aReleasingTextures.emplace_back(owner->mLatestTextureHost);
+    owner->mLatestTextureHost = nullptr;
+  }
+
+  // mReleasingRenderedTextureHosts and mLatestRenderedTextureHost could
+  // simply be cleared. Since NumCompositableRefs() > 0 keeps TextureHosts in
+  // mUsingTextureDataHolders alive. They need to be cleared before
+  // KeepTextureDataAliveForTextureHostIfNecessary() call. The function uses
+  // NumCompositableRefs().
+  if (!owner->mReleasingRenderedTextureHosts.empty()) {
+    std::transform(owner->mReleasingRenderedTextureHosts.begin(),
+                   owner->mReleasingRenderedTextureHosts.end(),
+                   std::back_inserter(aReleasingTextures),
+                   [](CompositableTextureHostRef& aRef) { return aRef.get(); });
+    owner->mReleasingRenderedTextureHosts.clear();
+  }
+  if (owner->mLatestRenderedTextureHost) {
+    owner->mLatestRenderedTextureHost = nullptr;
+  }
+
+  GetAllRenderingReadyCallbacks(aProofOfLock, owner, aRenderingReadyCallbacks);
+
+  KeepTextureDataAliveForTextureHostIfNecessary(
+      aProofOfLock, owner, owner->mWaitingTextureDataHolders);
+
+  KeepTextureDataAliveForTextureHostIfNecessary(
+      aProofOfLock, owner, owner->mUsingTextureDataHolders);
+
+  KeepTextureDataAliveForTextureHostIfNecessary(
+      aProofOfLock, owner, owner->mReleasingTextureDataHolders);
+
+  UniquePtr<TextureOwner> releasingOwner = std::move(it->second);
+  mTextureOwners.erase(it);
+  return releasingOwner;
+}
+
 void RemoteTextureMap::UnregisterTextureOwner(
     const RemoteTextureOwnerId aOwnerId, const base::ProcessId aForPid) {
   UniquePtr<TextureOwner> releasingOwner;  // Release outside the monitor
@@ -584,50 +646,11 @@ void RemoteTextureMap::UnregisterTextureOwner(
   {
     MonitorAutoLock lock(mMonitor);
 
-    const auto key = std::pair(aForPid, aOwnerId);
-    auto it = mTextureOwners.find(key);
-    if (it == mTextureOwners.end()) {
-      MOZ_ASSERT_UNREACHABLE("unexpected to be called");
+    releasingOwner = UnregisterTextureOwner(
+        lock, aOwnerId, aForPid, releasingTextures, renderingReadyCallbacks);
+    if (!releasingOwner) {
       return;
     }
-
-    auto* owner = it->second.get();
-    if (owner->mLatestTextureHost) {
-      // Release CompositableRef in mMonitor
-      releasingTextures.emplace_back(owner->mLatestTextureHost);
-      owner->mLatestTextureHost = nullptr;
-    }
-
-    // mReleasingRenderedTextureHosts and mLatestRenderedTextureHost could
-    // simply be cleared. Since NumCompositableRefs() > 0 keeps TextureHosts in
-    // mUsingTextureDataHolders alive. They need to be cleared before
-    // KeepTextureDataAliveForTextureHostIfNecessary() call. The function uses
-    // NumCompositableRefs().
-    if (!owner->mReleasingRenderedTextureHosts.empty()) {
-      std::transform(
-          owner->mReleasingRenderedTextureHosts.begin(),
-          owner->mReleasingRenderedTextureHosts.end(),
-          std::back_inserter(releasingTextures),
-          [](CompositableTextureHostRef& aRef) { return aRef.get(); });
-      owner->mReleasingRenderedTextureHosts.clear();
-    }
-    if (owner->mLatestRenderedTextureHost) {
-      owner->mLatestRenderedTextureHost = nullptr;
-    }
-
-    renderingReadyCallbacks = GetAllRenderingReadyCallbacks(lock, owner);
-
-    KeepTextureDataAliveForTextureHostIfNecessary(
-        lock, owner, owner->mWaitingTextureDataHolders);
-
-    KeepTextureDataAliveForTextureHostIfNecessary(
-        lock, owner, owner->mUsingTextureDataHolders);
-
-    KeepTextureDataAliveForTextureHostIfNecessary(
-        lock, owner, owner->mReleasingTextureDataHolders);
-
-    releasingOwner = std::move(it->second);
-    mTextureOwners.erase(it);
 
     mMonitor.Notify();
   }
@@ -653,50 +676,14 @@ void RemoteTextureMap::UnregisterTextureOwners(
     MonitorAutoLock lock(mMonitor);
 
     for (const auto& id : aOwnerIds) {
-      const auto key = std::pair(aForPid, id);
-      auto it = mTextureOwners.find(key);
-      if (it == mTextureOwners.end()) {
-        MOZ_ASSERT_UNREACHABLE("unexpected to be called");
-        continue;
+      if (auto releasingOwner = UnregisterTextureOwner(
+              lock, id, aForPid, releasingTextures, renderingReadyCallbacks)) {
+        releasingOwners.push_back(std::move(releasingOwner));
       }
+    }
 
-      auto* owner = it->second.get();
-      if (owner->mLatestTextureHost) {
-        // Release CompositableRef in mMonitor
-        releasingTextures.emplace_back(owner->mLatestTextureHost);
-        owner->mLatestTextureHost = nullptr;
-      }
-
-      // mReleasingRenderedTextureHosts and mLatestRenderedTextureHost could
-      // simply be cleared. Since NumCompositableRefs() > 0 keeps TextureHosts
-      // in mUsingTextureDataHolders alive. They need to be cleared before
-      // KeepTextureDataAliveForTextureHostIfNecessary() call. The function uses
-      // NumCompositableRefs().
-      if (!owner->mReleasingRenderedTextureHosts.empty()) {
-        std::transform(
-            owner->mReleasingRenderedTextureHosts.begin(),
-            owner->mReleasingRenderedTextureHosts.end(),
-            std::back_inserter(releasingTextures),
-            [](CompositableTextureHostRef& aRef) { return aRef.get(); });
-        owner->mReleasingRenderedTextureHosts.clear();
-      }
-      if (owner->mLatestRenderedTextureHost) {
-        owner->mLatestRenderedTextureHost = nullptr;
-      }
-
-      renderingReadyCallbacks = GetAllRenderingReadyCallbacks(lock, owner);
-
-      KeepTextureDataAliveForTextureHostIfNecessary(
-          lock, owner, owner->mWaitingTextureDataHolders);
-
-      KeepTextureDataAliveForTextureHostIfNecessary(
-          lock, owner, owner->mUsingTextureDataHolders);
-
-      KeepTextureDataAliveForTextureHostIfNecessary(
-          lock, owner, owner->mReleasingTextureDataHolders);
-
-      releasingOwners.push_back(std::move(it->second));
-      mTextureOwners.erase(it);
+    if (releasingOwners.empty()) {
+      return;
     }
 
     mMonitor.Notify();
@@ -707,6 +694,79 @@ void RemoteTextureMap::UnregisterTextureOwners(
   for (auto& callback : renderingReadyCallbacks) {
     callback(info);
   }
+}
+
+already_AddRefed<RemoteTextureTxnScheduler>
+RemoteTextureMap::RegisterTxnScheduler(base::ProcessId aForPid,
+                                       RemoteTextureTxnType aType) {
+  MonitorAutoLock lock(mMonitor);
+
+  const auto key = std::pair(aForPid, aType);
+  auto it = mTxnSchedulers.find(key);
+  if (it != mTxnSchedulers.end()) {
+    return do_AddRef(it->second);
+  }
+
+  RefPtr<RemoteTextureTxnScheduler> scheduler(
+      new RemoteTextureTxnScheduler(aForPid, aType));
+  mTxnSchedulers.emplace(key, scheduler.get());
+  return scheduler.forget();
+}
+
+void RemoteTextureMap::UnregisterTxnScheduler(base::ProcessId aForPid,
+                                              RemoteTextureTxnType aType) {
+  MonitorAutoLock lock(mMonitor);
+
+  const auto key = std::pair(aForPid, aType);
+  auto it = mTxnSchedulers.find(key);
+  if (it == mTxnSchedulers.end()) {
+    MOZ_ASSERT_UNREACHABLE("Remote texture txn scheduler does not exist.");
+    return;
+  }
+  mTxnSchedulers.erase(it);
+}
+
+already_AddRefed<RemoteTextureTxnScheduler> RemoteTextureTxnScheduler::Create(
+    mozilla::ipc::IProtocol* aProtocol) {
+  if (auto* instance = RemoteTextureMap::Get()) {
+    if (auto* toplevel = aProtocol->ToplevelProtocol()) {
+      auto pid = toplevel->OtherPidMaybeInvalid();
+      if (pid != base::kInvalidProcessId) {
+        return instance->RegisterTxnScheduler(pid, toplevel->GetProtocolId());
+      }
+    }
+  }
+  return nullptr;
+}
+
+RemoteTextureTxnScheduler::~RemoteTextureTxnScheduler() {
+  NotifyTxn(std::numeric_limits<RemoteTextureTxnId>::max());
+  RemoteTextureMap::Get()->UnregisterTxnScheduler(mForPid, mType);
+}
+
+void RemoteTextureTxnScheduler::NotifyTxn(RemoteTextureTxnId aTxnId) {
+  MonitorAutoLock lock(RemoteTextureMap::Get()->mMonitor);
+
+  mLastTxnId = aTxnId;
+
+  for (; !mWaits.empty(); mWaits.pop_front()) {
+    auto& wait = mWaits.front();
+    if (wait.mTxnId > aTxnId) {
+      break;
+    }
+    RemoteTextureMap::Get()->NotifyTxn(lock, wait.mOwnerId, mForPid);
+  }
+}
+
+bool RemoteTextureTxnScheduler::WaitForTxn(const MonitorAutoLock& aProofOfLock,
+                                           RemoteTextureOwnerId aOwnerId,
+                                           RemoteTextureTxnId aTxnId) {
+  if (aTxnId <= mLastTxnId) {
+    return false;
+  }
+  mWaits.insert(std::upper_bound(mWaits.begin(), mWaits.end(), aTxnId),
+                Wait{aOwnerId, aTxnId});
+  return true;
 }
 
 void RemoteTextureMap::ClearRecycledTextures(
@@ -846,13 +906,11 @@ void RemoteTextureMap::UpdateTexture(const MonitorAutoLock& aProofOfLock,
   }
 }
 
-std::vector<std::function<void(const RemoteTextureInfo&)>>
-RemoteTextureMap::GetRenderingReadyCallbacks(
+void RemoteTextureMap::GetRenderingReadyCallbacks(
     const MonitorAutoLock& aProofOfLock, RemoteTextureMap::TextureOwner* aOwner,
-    const RemoteTextureId aTextureId) {
+    const RemoteTextureId aTextureId,
+    std::vector<std::function<void(const RemoteTextureInfo&)>>& aFunctions) {
   MOZ_ASSERT(aOwner);
-
-  std::vector<std::function<void(const RemoteTextureInfo&)>> functions;
 
   while (!aOwner->mRenderingReadyCallbackHolders.empty()) {
     auto& front = aOwner->mRenderingReadyCallbackHolders.front();
@@ -860,23 +918,18 @@ RemoteTextureMap::GetRenderingReadyCallbacks(
       break;
     }
     if (front->mCallback) {
-      functions.push_back(std::move(front->mCallback));
+      aFunctions.push_back(std::move(front->mCallback));
     }
     aOwner->mRenderingReadyCallbackHolders.pop_front();
   }
-
-  return functions;
 }
 
-std::vector<std::function<void(const RemoteTextureInfo&)>>
-RemoteTextureMap::GetAllRenderingReadyCallbacks(
-    const MonitorAutoLock& aProofOfLock,
-    RemoteTextureMap::TextureOwner* aOwner) {
-  auto functions =
-      GetRenderingReadyCallbacks(aProofOfLock, aOwner, RemoteTextureId::Max());
+void RemoteTextureMap::GetAllRenderingReadyCallbacks(
+    const MonitorAutoLock& aProofOfLock, RemoteTextureMap::TextureOwner* aOwner,
+    std::vector<std::function<void(const RemoteTextureInfo&)>>& aFunctions) {
+  GetRenderingReadyCallbacks(aProofOfLock, aOwner, RemoteTextureId::Max(),
+                             aFunctions);
   MOZ_ASSERT(aOwner->mRenderingReadyCallbackHolders.empty());
-
-  return functions;
 }
 
 bool RemoteTextureMap::GetRemoteTexture(
@@ -964,6 +1017,64 @@ bool RemoteTextureMap::GetRemoteTexture(
     }
   }
 
+  return false;
+}
+
+void RemoteTextureMap::NotifyTxn(const MonitorAutoLock& aProofOfLock,
+                                 const RemoteTextureOwnerId aOwnerId,
+                                 const base::ProcessId aForPid) {
+  if (auto* owner = GetTextureOwner(aProofOfLock, aOwnerId, aForPid)) {
+    if (!owner->mWaitForTxn) {
+      MOZ_ASSERT_UNREACHABLE("Expected texture owner to wait for txn.");
+      return;
+    }
+    owner->mWaitForTxn = false;
+    if (!owner->mDeferUnregister) {
+      // If unregistering was not deferred, then don't try to force
+      // unregistering yet.
+      return;
+    }
+    owner->mDeferUnregister->Dispatch(NS_NewRunnableFunction(
+        "RemoteTextureMap::SetLastRemoteTextureUse::Runnable",
+        [aOwnerId, aForPid]() {
+          RemoteTextureMap::Get()->UnregisterTextureOwner(aOwnerId, aForPid);
+        }));
+  }
+}
+
+bool RemoteTextureMap::WaitForTxn(const RemoteTextureOwnerId aOwnerId,
+                                  const base::ProcessId aForPid,
+                                  RemoteTextureTxnType aTxnType,
+                                  RemoteTextureTxnId aTxnId) {
+  MonitorAutoLock lock(mMonitor);
+  if (auto* owner = GetTextureOwner(lock, aOwnerId, aForPid)) {
+    if (owner->mDeferUnregister) {
+      MOZ_ASSERT_UNREACHABLE(
+          "Texture owner must wait for txn before unregistering.");
+      return false;
+    }
+    if (owner->mWaitForTxn) {
+      MOZ_ASSERT_UNREACHABLE("Texture owner already waiting for txn.");
+      return false;
+    }
+    const auto key = std::pair(aForPid, aTxnType);
+    auto it = mTxnSchedulers.find(key);
+    if (it == mTxnSchedulers.end()) {
+      // During shutdown, different toplevel protocols may go away in
+      // disadvantageous orders, causing us to sometimes be processing
+      // waits even though the source of transactions upon which the
+      // wait depends shut down. This is generally harmless to ignore,
+      // as it means no further transactions will be generated of that
+      // type and all such transactions have been processed before it
+      // unregistered.
+      NS_WARNING("Could not find scheduler for txn type.");
+      return false;
+    }
+    if (it->second->WaitForTxn(lock, aOwnerId, aTxnId)) {
+      owner->mWaitForTxn = true;
+    }
+    return true;
+  }
   return false;
 }
 
