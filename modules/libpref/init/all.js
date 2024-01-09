@@ -810,12 +810,6 @@ pref("print.print_edge_bottom", 0);
   pref("print.print_in_color", true);
 #endif
 
-// List of domains of web apps which depend on Gecko's traditional join/split
-// node(s) behavior or Blink/WebKit compatible one in `contenteditable` or
-// `designMode`.
-pref("editor.join_split_direction.force_use_traditional_direction", "");
-pref("editor.join_split_direction.force_use_compatible_direction", "");
-
 // Scripts & Windows prefs
 pref("dom.beforeunload_timeout_ms",         1000);
 pref("dom.disable_window_flip",             false);
