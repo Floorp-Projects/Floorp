@@ -63,7 +63,6 @@ firefox_desktop_metrics = [
     "toolkit/modules/metrics.yaml",
     "toolkit/xre/metrics.yaml",
     "widget/cocoa/metrics.yaml",
-    "widget/windows/metrics.yaml",
 ]
 
 # Metrics that are sent by the Firefox Desktop Background Update Task
