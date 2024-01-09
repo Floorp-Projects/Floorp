@@ -1814,7 +1814,7 @@ uint32_t nsWindowWatcher::CalculateChromeFlagsHelper(
     chromeFlags |= nsIWebBrowserChrome::CHROME_WINDOW_RESIZE;
   }
   if (aFeatures.GetBoolWithDefault("minimizable", false, presenceFlag)) {
-    chromeFlags |= nsIWebBrowserChrome::CHROME_WINDOW_MIN;
+    chromeFlags |= nsIWebBrowserChrome::CHROME_WINDOW_MINIMIZE;
   }
 
   if (aFeatures.GetBoolWithDefault("scrollbars", true, presenceFlag)) {

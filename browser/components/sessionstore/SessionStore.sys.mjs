@@ -73,7 +73,7 @@ const CHROME_FLAGS_MAP = [
   [Ci.nsIWebBrowserChrome.CHROME_STATUSBAR, "status"],
   [Ci.nsIWebBrowserChrome.CHROME_MENUBAR, "menubar"],
   [Ci.nsIWebBrowserChrome.CHROME_WINDOW_RESIZE, "resizable"],
-  [Ci.nsIWebBrowserChrome.CHROME_WINDOW_MIN, "minimizable"],
+  [Ci.nsIWebBrowserChrome.CHROME_WINDOW_MINIMIZE, "minimizable"],
   [Ci.nsIWebBrowserChrome.CHROME_SCROLLBARS, "", "scrollbars=0"],
   [Ci.nsIWebBrowserChrome.CHROME_PRIVATE_WINDOW, "private"],
   [Ci.nsIWebBrowserChrome.CHROME_NON_PRIVATE_WINDOW, "non-private"],

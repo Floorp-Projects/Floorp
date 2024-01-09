@@ -41,12 +41,14 @@ interface nsIWebBrowserChrome : nsISupports
     const unsigned long CHROME_TITLEBAR               = 1 << 10;
     const unsigned long CHROME_EXTRA                  = 1 << 11;
 
-    // createBrowserWindow specific flags
-    const unsigned long CHROME_WITH_SIZE              = 1 << 12;
-    const unsigned long CHROME_WITH_POSITION          = 1 << 13;
+    // Free bits here.
+    const unsigned long CHROME_ALL =
+        CHROME_WINDOW_BORDERS | CHROME_WINDOW_CLOSE | CHROME_WINDOW_RESIZE |
+        CHROME_MENUBAR | CHROME_TOOLBAR | CHROME_LOCATIONBAR |
+        CHROME_STATUSBAR | CHROME_PERSONAL_TOOLBAR | CHROME_SCROLLBARS |
+        CHROME_TITLEBAR | CHROME_EXTRA;
 
-    // special cases
-    const unsigned long CHROME_WINDOW_MIN             = 1 << 14;
+    const unsigned long CHROME_WINDOW_MINIMIZE        = 1 << 14;
 
     // whether to open a new private window.  CHROME_NON_PRIVATE_WINDOW
     // forces the opened window to be non-private, and overrides
@@ -89,12 +91,10 @@ interface nsIWebBrowserChrome : nsISupports
     const unsigned long CHROME_OPENAS_DIALOG          = 1 << 30;
     const unsigned long CHROME_OPENAS_CHROME          = 1 << 31;
 
-    const unsigned long CHROME_ALL                    = 0x00000ffe;
-
     const unsigned long CHROME_MINIMAL_POPUP =
       CHROME_WINDOW_BORDERS | CHROME_WINDOW_CLOSE | CHROME_WINDOW_RESIZE |
-      CHROME_LOCATIONBAR | CHROME_STATUSBAR | CHROME_SCROLLBARS |
-      CHROME_TITLEBAR | CHROME_WINDOW_MIN;
+      CHROME_WINDOW_MINIMIZE | CHROME_LOCATIONBAR | CHROME_STATUSBAR |
+      CHROME_SCROLLBARS | CHROME_TITLEBAR;
 
     /**
      * The chrome flags for this browser chrome. The implementation should
