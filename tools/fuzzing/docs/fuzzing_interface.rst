@@ -254,7 +254,7 @@ In order to define your fuzzing target ``MyTarget``, you only need to implement 
 Once you have implemented the two functions, the only thing remaining is to
 register them with the fuzzing interface. For this purpose, we offer two
 macros, depending on which iteration function signature you used. If you
-sticked to the classic signature using buffer and size, you can simply use
+stuck to the classic signature using buffer and size, you can simply use
 
 ::
 
