@@ -144,14 +144,14 @@ running on Linux.
 #. When the problem has been reproduced, exit Firefox and look for the
    generated log files, which you can find at ``/tmp/log.txt``.
 
-macOS
-~~~~~
+Mac OS X
+~~~~~~~~
 
-These instructions show how to log HTTP traffic in Firefox on macOS.
+These instructions show how to log HTTP traffic in Firefox on Mac OS X.
 
 #. Quit Firefox is if it's currently running, by using the Quit option
    in the File menu. Keep in mind that simply closing all windows does
-   **not** quit Firefox on macOS (this is standard practice for Mac
+   **not** quit Firefox on Mac OS X (this is standard practice for Mac
    applications).
 
 #. Run the Terminal application, which is located in the Utilities
@@ -165,7 +165,7 @@ These instructions show how to log HTTP traffic in Firefox on macOS.
       export MOZ_LOG=timestamp,rotate:200,nsHttp:5,cache2:5,nsSocketTransport:5,nsHostResolver:5
       export MOZ_LOG_FILE=~/Desktop/log.txt
       cd /Applications/Firefox.app/Contents/MacOS
-      ./firefox
+      ./firefox-bin
 
    (The instructions assume that you've installed Firefox directly into
    your startup disk's Applications folder. If you've put it elsewhere,

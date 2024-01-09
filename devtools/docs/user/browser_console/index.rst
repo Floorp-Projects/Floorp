@@ -29,7 +29,7 @@ You can also start the Browser Console by launching Firefox from the command lin
 
 .. code-block:: bash
 
-  /Applications/FirefoxAurora.app/Contents/MacOS/firefox -jsconsole
+  /Applications/FirefoxAurora.app/Contents/MacOS/firefox-bin -jsconsole
 
 The Browser Console looks like this:
 
