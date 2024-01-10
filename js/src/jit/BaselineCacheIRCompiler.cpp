@@ -1249,11 +1249,7 @@ bool BaselineCacheIRCompiler::emitLoadStringCharResult(StringOperandId strId,
 
   // Load StaticString for this char. For larger code units perform a VM call.
   Label vmCall;
-  masm.boundsCheck32PowerOfTwo(scratch1, StaticStrings::UNIT_STATIC_LIMIT,
-                               &vmCall);
-  masm.movePtr(ImmPtr(&cx_->staticStrings().unitStaticTable), scratch2);
-  masm.loadPtr(BaseIndex(scratch2, scratch1, ScalePointer), scratch2);
-
+  masm.lookupStaticString(scratch1, scratch2, cx_->staticStrings(), &vmCall);
   masm.jump(&done);
 
   if (handleOOB) {
@@ -1308,10 +1304,8 @@ bool BaselineCacheIRCompiler::emitStringFromCodeResult(Int32OperandId codeId,
   // We pre-allocate atoms for the first UNIT_STATIC_LIMIT characters.
   // For code units larger than that, we must do a VM call.
   Label vmCall;
-  masm.boundsCheck32PowerOfTwo(code, StaticStrings::UNIT_STATIC_LIMIT, &vmCall);
+  masm.lookupStaticString(code, scratch, cx_->staticStrings(), &vmCall);
 
-  masm.movePtr(ImmPtr(cx_->runtime()->staticStrings->unitStaticTable), scratch);
-  masm.loadPtr(BaseIndex(scratch, code, ScalePointer), scratch);
   Label done;
   masm.jump(&done);
 

@@ -1568,15 +1568,6 @@ void CodeGenerator::visitBooleanToString(LBooleanToString* lir) {
   masm.bind(&done);
 }
 
-void CodeGenerator::emitIntToString(Register input, Register output,
-                                    Label* ool) {
-  masm.boundsCheck32PowerOfTwo(input, StaticStrings::INT_STATIC_LIMIT, ool);
-
-  // Fast path for small integers.
-  masm.movePtr(ImmPtr(&gen->runtime->staticStrings().intStaticTable), output);
-  masm.loadPtr(BaseIndex(output, input, ScalePointer), output);
-}
-
 void CodeGenerator::visitIntToString(LIntToString* lir) {
   Register input = ToRegister(lir->input());
   Register output = ToRegister(lir->output());
@@ -1585,7 +1576,8 @@ void CodeGenerator::visitIntToString(LIntToString* lir) {
   OutOfLineCode* ool = oolCallVM<Fn, Int32ToString<CanGC>>(
       lir, ArgList(input), StoreRegisterTo(output));
 
-  emitIntToString(input, output, ool->entry());
+  masm.lookupStaticIntString(input, output, gen->runtime->staticStrings(),
+                             ool->entry());
 
   masm.bind(ool->rejoin());
 }
@@ -1601,7 +1593,8 @@ void CodeGenerator::visitDoubleToString(LDoubleToString* lir) {
 
   // Try double to integer conversion and run integer to string code.
   masm.convertDoubleToInt32(input, temp, ool->entry(), false);
-  emitIntToString(temp, output, ool->entry());
+  masm.lookupStaticIntString(temp, output, gen->runtime->staticStrings(),
+                             ool->entry());
 
   masm.bind(ool->rejoin());
 }
@@ -1633,7 +1626,8 @@ void CodeGenerator::visitValueToString(LValueToString* lir) {
     masm.branchTestInt32(Assembler::NotEqual, tag, &notInteger);
     Register unboxed = ToTempUnboxRegister(lir->temp0());
     unboxed = masm.extractInt32(input, unboxed);
-    emitIntToString(unboxed, output, ool->entry());
+    masm.lookupStaticIntString(unboxed, output, gen->runtime->staticStrings(),
+                               ool->entry());
     masm.jump(&done);
     masm.bind(&notInteger);
   }
@@ -2306,9 +2300,7 @@ void CreateDependentString::generate(MacroAssembler& masm,
         masm.loadStringChars(base, temp1_, encoding_);
         masm.loadChar(temp1_, temp2_, temp1_, encoding_);
 
-        masm.movePtr(ImmPtr(&runtime->staticStrings().unitStaticTable),
-                     string_);
-        masm.loadPtr(BaseIndex(string_, temp1_, ScalePointer), string_);
+        masm.lookupStaticString(temp1_, string_, runtime->staticStrings());
 
         masm.jump(&done);
       }
@@ -12082,11 +12074,8 @@ void CodeGenerator::visitFromCharCode(LFromCharCode* lir) {
       lir, ArgList(code), StoreRegisterTo(output));
 
   // OOL path if code >= UNIT_STATIC_LIMIT.
-  masm.boundsCheck32PowerOfTwo(code, StaticStrings::UNIT_STATIC_LIMIT,
-                               ool->entry());
-
-  masm.movePtr(ImmPtr(&gen->runtime->staticStrings().unitStaticTable), output);
-  masm.loadPtr(BaseIndex(output, code, ScalePointer), output);
+  masm.lookupStaticString(code, output, gen->runtime->staticStrings(),
+                          ool->entry());
 
   masm.bind(ool->rejoin());
 }
@@ -12106,11 +12095,8 @@ void CodeGenerator::visitFromCharCodeEmptyIfNegative(
   masm.branchTest32(Assembler::Signed, code, code, ool->rejoin());
 
   // OOL path if code >= UNIT_STATIC_LIMIT.
-  masm.boundsCheck32PowerOfTwo(code, StaticStrings::UNIT_STATIC_LIMIT,
-                               ool->entry());
-
-  masm.movePtr(ImmPtr(&gen->runtime->staticStrings().unitStaticTable), output);
-  masm.loadPtr(BaseIndex(output, code, ScalePointer), output);
+  masm.lookupStaticString(code, output, gen->runtime->staticStrings(),
+                          ool->entry());
 
   masm.bind(ool->rejoin());
 }
@@ -12133,12 +12119,10 @@ void CodeGenerator::visitFromCodePoint(LFromCodePoint* lir) {
   static_assert(
       StaticStrings::UNIT_STATIC_LIMIT - 1 == JSString::MAX_LATIN1_CHAR,
       "Latin-1 strings can be loaded from static strings");
-  masm.boundsCheck32PowerOfTwo(codePoint, StaticStrings::UNIT_STATIC_LIMIT,
-                               &isTwoByte);
+
   {
-    masm.movePtr(ImmPtr(&gen->runtime->staticStrings().unitStaticTable),
-                 output);
-    masm.loadPtr(BaseIndex(output, codePoint, ScalePointer), output);
+    masm.lookupStaticString(codePoint, output, gen->runtime->staticStrings(),
+                            &isTwoByte);
     masm.jump(done);
   }
   masm.bind(&isTwoByte);
@@ -12654,9 +12638,7 @@ void CodeGenerator::visitStringToLowerCase(LStringToLowerCase* lir) {
     masm.loadChar(Address(inputChars, 0), current, CharEncoding::Latin1);
     masm.load8ZeroExtend(BaseIndex(toLowerCaseTable, current, TimesOne),
                          current);
-    masm.movePtr(ImmPtr(&gen->runtime->staticStrings().unitStaticTable),
-                 output);
-    masm.loadPtr(BaseIndex(output, current, ScalePointer), output);
+    masm.lookupStaticString(current, output, gen->runtime->staticStrings());
 
     masm.jump(ool->rejoin());
   }
@@ -12769,8 +12751,7 @@ void CodeGenerator::visitCharCodeToLowerCase(LCharCodeToLowerCase* lir) {
   masm.load8ZeroExtend(BaseIndex(temp, code, TimesOne), temp);
 
   // Load static string for lower case character.
-  masm.movePtr(ImmPtr(&gen->runtime->staticStrings().unitStaticTable), output);
-  masm.loadPtr(BaseIndex(output, temp, ScalePointer), output);
+  masm.lookupStaticString(temp, output, gen->runtime->staticStrings());
 
   masm.bind(ool->rejoin());
 }
@@ -12845,8 +12826,7 @@ void CodeGenerator::visitCharCodeToUpperCase(LCharCodeToUpperCase* lir) {
   masm.move8ZeroExtend(temp, temp);
 
   // Load static string for upper case character.
-  masm.movePtr(ImmPtr(&gen->runtime->staticStrings().unitStaticTable), output);
-  masm.loadPtr(BaseIndex(output, temp, ScalePointer), output);
+  masm.lookupStaticString(temp, output, gen->runtime->staticStrings());
 
   masm.bind(ool->rejoin());
 }
@@ -15077,19 +15057,13 @@ void CodeGenerator::visitIdToStringOrSymbol(LIdToStringOrSymbol* ins) {
   masm.moveValue(id, output);
 
   Label done, callVM;
-  Maybe<Label> bail;
-
-  MDefinition* idDef = ins->mir()->idVal();
-  if (idDef->isBox()) {
-    idDef = idDef->toBox()->input();
-  }
-  if (idDef->type() != MIRType::Int32) {
-    bail.emplace();
+  Label bail;
+  {
     ScratchTagScope tag(masm, output);
     masm.splitTagForTest(output, tag);
     masm.branchTestString(Assembler::Equal, tag, &done);
     masm.branchTestSymbol(Assembler::Equal, tag, &done);
-    masm.branchTestInt32(Assembler::NotEqual, tag, &*bail);
+    masm.branchTestInt32(Assembler::NotEqual, tag, &bail);
   }
 
   masm.unboxInt32(output, scratch);
@@ -15098,14 +15072,14 @@ void CodeGenerator::visitIdToStringOrSymbol(LIdToStringOrSymbol* ins) {
   OutOfLineCode* ool = oolCallVM<Fn, Int32ToString<CanGC>>(
       ins, ArgList(scratch), StoreRegisterTo(output.scratchReg()));
 
-  emitIntToString(scratch, output.scratchReg(), ool->entry());
+  masm.lookupStaticIntString(scratch, output.scratchReg(),
+                             gen->runtime->staticStrings(), ool->entry());
 
   masm.bind(ool->rejoin());
   masm.tagValue(JSVAL_TYPE_STRING, output.scratchReg(), output);
   masm.bind(&done);
-  if (bail) {
-    bailoutFrom(&*bail, ins->snapshot());
-  }
+
+  bailoutFrom(&bail, ins->snapshot());
 }
 
 void CodeGenerator::visitLoadFixedSlotV(LLoadFixedSlotV* ins) {

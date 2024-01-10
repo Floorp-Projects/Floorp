@@ -124,7 +124,6 @@ class CodeGenerator final : public CodeGeneratorSpecific {
 
   void emitOOLTestObject(Register objreg, Label* ifTruthy, Label* ifFalsy,
                          Register scratch);
-  void emitIntToString(Register input, Register output, Label* ool);
 
   void emitTypeOfCheck(JSValueType type, Register tag, Register output,
                        Label* done, Label* oolObject);

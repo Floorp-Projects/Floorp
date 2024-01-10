@@ -2398,12 +2398,9 @@ bool CacheIRCompiler::emitIdToStringOrSymbol(ValOperandId resultId,
   Register intReg = output.scratchReg();
   masm.unboxInt32(output, intReg);
 
-  masm.boundsCheck32PowerOfTwo(intReg, StaticStrings::INT_STATIC_LIMIT,
-                               &callVM);
-
   // Fast path for small integers.
-  masm.movePtr(ImmPtr(&cx_->runtime()->staticStrings->intStaticTable), scratch);
-  masm.loadPtr(BaseIndex(scratch, intReg, ScalePointer), intReg);
+  masm.lookupStaticIntString(intReg, intReg, scratch, cx_->staticStrings(),
+                             &callVM);
   masm.jump(&intDone);
 
   masm.bind(&callVM);
