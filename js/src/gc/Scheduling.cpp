@@ -225,6 +225,9 @@ void GCSchedulingTunables::resetParameter(JSGCParamKey key) {
 }
 
 void GCSchedulingTunables::maintainInvariantsAfterUpdate(JSGCParamKey updated) {
+  // Check whether a change to parameter |updated| has broken an invariant in
+  // relation to another parameter. If it has, adjust that other parameter to
+  // restore the invariant.
   switch (updated) {
     case JSGC_MIN_NURSERY_BYTES:
       if (gcMaxNurseryBytes_ < gcMinNurseryBytes_) {
@@ -256,6 +259,16 @@ void GCSchedulingTunables::maintainInvariantsAfterUpdate(JSGCParamKey updated) {
         highFrequencySmallHeapGrowth_ = highFrequencyLargeHeapGrowth_;
       }
       break;
+    case JSGC_SMALL_HEAP_INCREMENTAL_LIMIT:
+      if (smallHeapIncrementalLimit_ < largeHeapIncrementalLimit_) {
+        largeHeapIncrementalLimit_ = smallHeapIncrementalLimit_;
+      }
+      break;
+    case JSGC_LARGE_HEAP_INCREMENTAL_LIMIT:
+      if (largeHeapIncrementalLimit_ > smallHeapIncrementalLimit_) {
+        smallHeapIncrementalLimit_ = largeHeapIncrementalLimit_;
+      }
+      break;
     default:
       break;
   }
@@ -278,6 +291,8 @@ void GCSchedulingTunables::checkInvariants() {
   MOZ_ASSERT(highFrequencyLargeHeapGrowth_ <= highFrequencySmallHeapGrowth_);
   MOZ_ASSERT(highFrequencyLargeHeapGrowth_ >= MinHeapGrowthFactor);
   MOZ_ASSERT(highFrequencySmallHeapGrowth_ <= MaxHeapGrowthFactor);
+
+  MOZ_ASSERT(smallHeapIncrementalLimit_ >= largeHeapIncrementalLimit_);
 }
 
 void GCSchedulingState::updateHighFrequencyMode(
