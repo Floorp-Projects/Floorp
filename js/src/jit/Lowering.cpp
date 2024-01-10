@@ -2531,6 +2531,19 @@ void LIRGenerator::visitFromCodePoint(MFromCodePoint* ins) {
   assignSafepoint(lir, ins);
 }
 
+void LIRGenerator::visitStringIncludes(MStringIncludes* ins) {
+  auto* string = ins->string();
+  MOZ_ASSERT(string->type() == MIRType::String);
+
+  auto* searchStr = ins->searchString();
+  MOZ_ASSERT(searchStr->type() == MIRType::String);
+
+  auto* lir = new (alloc()) LStringIncludes(useRegisterAtStart(string),
+                                            useRegisterAtStart(searchStr));
+  defineReturn(lir, ins);
+  assignSafepoint(lir, ins);
+}
+
 void LIRGenerator::visitStringIndexOf(MStringIndexOf* ins) {
   auto* string = ins->string();
   MOZ_ASSERT(string->type() == MIRType::String);
@@ -2540,6 +2553,19 @@ void LIRGenerator::visitStringIndexOf(MStringIndexOf* ins) {
 
   auto* lir = new (alloc())
       LStringIndexOf(useRegisterAtStart(string), useRegisterAtStart(searchStr));
+  defineReturn(lir, ins);
+  assignSafepoint(lir, ins);
+}
+
+void LIRGenerator::visitStringLastIndexOf(MStringLastIndexOf* ins) {
+  auto* string = ins->string();
+  MOZ_ASSERT(string->type() == MIRType::String);
+
+  auto* searchStr = ins->searchString();
+  MOZ_ASSERT(searchStr->type() == MIRType::String);
+
+  auto* lir = new (alloc()) LStringLastIndexOf(useRegisterAtStart(string),
+                                               useRegisterAtStart(searchStr));
   defineReturn(lir, ins);
   assignSafepoint(lir, ins);
 }

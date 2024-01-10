@@ -139,7 +139,9 @@
   _(StringFromCharCode)                            \
   _(StringFromCodePoint)                           \
   _(StringCharAt)                                  \
+  _(StringIncludes)                                \
   _(StringIndexOf)                                 \
+  _(StringLastIndexOf)                             \
   _(StringStartsWith)                              \
   _(StringEndsWith)                                \
   _(StringToLowerCase)                             \

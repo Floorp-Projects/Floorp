@@ -2300,6 +2300,22 @@ bool js::str_includes(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+bool js::StringIncludes(JSContext* cx, HandleString string,
+                        HandleString searchString, bool* result) {
+  JSLinearString* text = string->ensureLinear(cx);
+  if (!text) {
+    return false;
+  }
+
+  JSLinearString* searchStr = searchString->ensureLinear(cx);
+  if (!searchStr) {
+    return false;
+  }
+
+  *result = StringMatch(text, searchStr, 0) != -1;
+  return true;
+}
+
 /* ES6 20120927 draft 15.5.4.7. */
 bool js::str_indexOf(JSContext* cx, unsigned argc, Value* vp) {
   AutoJSMethodProfilerEntry pseudoFrame(cx, "String.prototype", "indexOf");
@@ -2405,6 +2421,32 @@ static int32_t LastIndexOfImpl(const TextChar* text, size_t textLen,
   return -1;
 }
 
+static int32_t LastIndexOf(JSLinearString* text, JSLinearString* searchStr,
+                           size_t start) {
+  AutoCheckCannotGC nogc;
+
+  size_t len = text->length();
+  size_t searchLen = searchStr->length();
+
+  if (text->hasLatin1Chars()) {
+    const Latin1Char* textChars = text->latin1Chars(nogc);
+    if (searchStr->hasLatin1Chars()) {
+      return LastIndexOfImpl(textChars, len, searchStr->latin1Chars(nogc),
+                             searchLen, start);
+    }
+    return LastIndexOfImpl(textChars, len, searchStr->twoByteChars(nogc),
+                           searchLen, start);
+  }
+
+  const char16_t* textChars = text->twoByteChars(nogc);
+  if (searchStr->hasLatin1Chars()) {
+    return LastIndexOfImpl(textChars, len, searchStr->latin1Chars(nogc),
+                           searchLen, start);
+  }
+  return LastIndexOfImpl(textChars, len, searchStr->twoByteChars(nogc),
+                         searchLen, start);
+}
+
 // ES2017 draft rev 6859bb9ccaea9c6ede81d71e5320e3833b92cb3e
 // 21.1.3.9 String.prototype.lastIndexOf ( searchString [ , position ] )
 static bool str_lastIndexOf(JSContext* cx, unsigned argc, Value* vp) {
@@ -2478,29 +2520,44 @@ static bool str_lastIndexOf(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   // Step 9.
-  int32_t res;
-  AutoCheckCannotGC nogc;
-  if (text->hasLatin1Chars()) {
-    const Latin1Char* textChars = text->latin1Chars(nogc);
-    if (searchStr->hasLatin1Chars()) {
-      res = LastIndexOfImpl(textChars, len, searchStr->latin1Chars(nogc),
-                            searchLen, start);
-    } else {
-      res = LastIndexOfImpl(textChars, len, searchStr->twoByteChars(nogc),
-                            searchLen, start);
-    }
-  } else {
-    const char16_t* textChars = text->twoByteChars(nogc);
-    if (searchStr->hasLatin1Chars()) {
-      res = LastIndexOfImpl(textChars, len, searchStr->latin1Chars(nogc),
-                            searchLen, start);
-    } else {
-      res = LastIndexOfImpl(textChars, len, searchStr->twoByteChars(nogc),
-                            searchLen, start);
-    }
+  args.rval().setInt32(LastIndexOf(text, searchStr, start));
+  return true;
+}
+
+bool js::StringLastIndexOf(JSContext* cx, HandleString string,
+                           HandleString searchString, int32_t* result) {
+  if (string == searchString) {
+    *result = 0;
+    return true;
   }
 
-  args.rval().setInt32(res);
+  size_t len = string->length();
+  size_t searchLen = searchString->length();
+
+  if (searchLen > len) {
+    *result = -1;
+    return true;
+  }
+
+  if (searchLen == 0) {
+    *result = 0;
+    return true;
+  }
+
+  JSLinearString* text = string->ensureLinear(cx);
+  if (!text) {
+    return false;
+  }
+
+  JSLinearString* searchStr = searchString->ensureLinear(cx);
+  if (!searchStr) {
+    return false;
+  }
+
+  MOZ_ASSERT(len >= searchLen);
+  size_t start = len - searchLen;
+
+  *result = LastIndexOf(text, searchStr, start);
   return true;
 }
 
@@ -3725,9 +3782,9 @@ static const JSFunctionSpec string_methods[] = {
     JS_SELF_HOSTED_FN("padStart", "String_pad_start", 2, 0),
     JS_SELF_HOSTED_FN("padEnd", "String_pad_end", 2, 0),
     JS_SELF_HOSTED_FN("codePointAt", "String_codePointAt", 1, 0),
-    JS_FN("includes", str_includes, 1, 0),
+    JS_INLINABLE_FN("includes", str_includes, 1, 0, StringIncludes),
     JS_INLINABLE_FN("indexOf", str_indexOf, 1, 0, StringIndexOf),
-    JS_FN("lastIndexOf", str_lastIndexOf, 1, 0),
+    JS_INLINABLE_FN("lastIndexOf", str_lastIndexOf, 1, 0, StringLastIndexOf),
     JS_INLINABLE_FN("startsWith", str_startsWith, 1, 0, StringStartsWith),
     JS_INLINABLE_FN("endsWith", str_endsWith, 1, 0, StringEndsWith),
     JS_FN("trim", str_trim, 0, 0),
