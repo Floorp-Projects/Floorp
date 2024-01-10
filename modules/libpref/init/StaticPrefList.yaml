@@ -11921,6 +11921,14 @@
   value: false
   mirror: always
 
+# DnsQuery_A is broken for HTTPS queries on Windows 10.
+# Once it gets fixed, we can flip this pref to enable it.
+# Changes might not take effect until restart.
+- name: network.dns.native_https_query_win10
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 # When resolving a native HTTPS query with native APIs
 # the Android implementation has a max timeout
 - name: network.dns.native_https_timeout_android
