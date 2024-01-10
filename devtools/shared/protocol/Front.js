@@ -12,7 +12,6 @@ var {
   getStack,
   callFunctionWithAsyncStack,
 } = require("resource://devtools/shared/platform/stack.js");
-const defer = require("resource://devtools/shared/defer.js");
 
 /**
  * Base class for client-side actor fronts.
@@ -290,7 +289,7 @@ class Front extends Pool {
    * Send a two-way request on the connection.
    */
   request(packet) {
-    const deferred = defer();
+    const deferred = Promise.withResolvers();
     // Save packet basics for debugging
     const { to, type } = packet;
     this._requests.push({

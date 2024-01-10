@@ -124,6 +124,17 @@ function setMocksInGlobal() {
     const { TextDecoder } = require("util");
     global.TextDecoder = TextDecoder;
   }
+
+  if (!Promise.withResolvers) {
+    Promise.withResolvers = function () {
+      let resolve, reject;
+      const promise = new Promise(function (res, rej) {
+        resolve = res;
+        reject = rej;
+      });
+      return { resolve, reject, promise };
+    };
+  }
 }
 
 module.exports = {

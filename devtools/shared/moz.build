@@ -52,7 +52,6 @@ DevToolsModules(
     "constants.js",
     "content-observer.js",
     "debounce.js",
-    "defer.js",
     "DevToolsInfaillibleUtils.sys.mjs",
     "DevToolsUtils.js",
     "dom-helpers.js",
