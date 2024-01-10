@@ -61,7 +61,7 @@ fun ReviewQualityCheckContextualOnboarding(
     val learnMoreText =
         stringResource(id = R.string.review_quality_check_contextual_onboarding_learn_more_link)
     val privacyPolicyText =
-        stringResource(id = R.string.review_quality_check_contextual_onboarding_privacy_policy)
+        stringResource(id = R.string.review_quality_check_contextual_onboarding_privacy_policy_3)
     val termsOfUseText =
         stringResource(id = R.string.review_quality_check_contextual_onboarding_terms_use)
     val titleContentDescription =
@@ -113,9 +113,10 @@ fun ReviewQualityCheckContextualOnboarding(
 
         LinkText(
             text = stringResource(
-                id = R.string.review_quality_check_contextual_onboarding_caption,
-                stringResource(id = R.string.shopping_product_name),
+                id = R.string.review_quality_check_contextual_onboarding_caption_3,
+                stringResource(id = R.string.firefox),
                 privacyPolicyText,
+                stringResource(id = R.string.shopping_product_name),
                 termsOfUseText,
             ),
             linkTextStates = listOf(
