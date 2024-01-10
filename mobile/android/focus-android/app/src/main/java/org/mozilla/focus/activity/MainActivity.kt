@@ -465,6 +465,5 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
         const val ACTION_OPEN = "open"
 
         const val EXTRA_NOTIFICATION = "notification"
-        private const val EXTRA_SHORTCUT = "shortcut"
     }
 }

@@ -13,7 +13,6 @@ import kotlinx.coroutines.launch
 import mozilla.components.support.base.log.logger.Logger
 import org.mozilla.focus.GleanMetrics.Activation
 import org.mozilla.focus.GleanMetrics.Pings
-import java.util.UUID
 
 /**
  * Ensures that only one activation ping is ever sent.

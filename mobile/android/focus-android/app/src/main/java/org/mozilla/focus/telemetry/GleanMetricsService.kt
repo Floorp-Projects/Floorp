@@ -25,7 +25,6 @@ import mozilla.components.support.base.log.logger.Logger
 import mozilla.telemetry.glean.Glean
 import mozilla.telemetry.glean.config.Configuration
 import org.mozilla.focus.BuildConfig
-import org.mozilla.focus.R
 import org.mozilla.focus.Components
 import org.mozilla.focus.GleanMetrics.Browser
 import org.mozilla.focus.GleanMetrics.GleanBuildInfo
@@ -36,6 +35,7 @@ import org.mozilla.focus.GleanMetrics.Pings
 import org.mozilla.focus.GleanMetrics.Preferences
 import org.mozilla.focus.GleanMetrics.Shortcuts
 import org.mozilla.focus.GleanMetrics.TrackingProtection
+import org.mozilla.focus.R
 import org.mozilla.focus.ext.components
 import org.mozilla.focus.ext.settings
 import org.mozilla.focus.topsites.DefaultTopSitesStorage.Companion.TOP_SITES_MAX_LIMIT
@@ -63,6 +63,9 @@ class GleanMetricsService(context: Context) : MetricsService {
             return Build.BRAND == brand && Build.DEVICE == device
         }
 
+        /**
+         * Determines whether or not telemetry is enabled.
+         */
         @JvmStatic
         fun isTelemetryEnabled(context: Context): Boolean {
             if (isDeviceWithTelemetryDisabled()) { return false }

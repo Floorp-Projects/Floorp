@@ -6,7 +6,6 @@ package org.mozilla.focus.telemetry
 
 import androidx.annotation.VisibleForTesting
 import mozilla.components.browser.menu.facts.BrowserMenuFacts
-import mozilla.components.browser.toolbar.facts.ToolbarFacts
 import mozilla.components.feature.contextmenu.facts.ContextMenuFacts
 import mozilla.components.feature.customtabs.CustomTabsFacts
 import mozilla.components.feature.search.telemetry.ads.AdsTelemetry
