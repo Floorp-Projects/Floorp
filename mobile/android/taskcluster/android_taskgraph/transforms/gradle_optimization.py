@@ -81,8 +81,6 @@ def extend_optimization_if_one_already_exists(config, tasks):
 def _get_path(gradle_project):
     if gradle_project == "focus":
         return "focus-android/**"
-    elif gradle_project == "service-telemetry":
-        return "focus-android/service-telemetry/**"
     elif gradle_project == "fenix":
         return "fenix/**"
     else:

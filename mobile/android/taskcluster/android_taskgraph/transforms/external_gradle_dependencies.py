@@ -55,8 +55,6 @@ def _get_build_gradle_paths(gradle_project):
 
     if gradle_project in ("focus", "fenix"):
         project_subdir = "app"
-    elif gradle_project == "service-telemetry":
-        project_subdir = "service-telemetry"
     else:
         project_subdir = get_path(gradle_project)
 
@@ -78,7 +76,7 @@ def _get_build_gradle_paths(gradle_project):
 
 
 def _get_gradle_project_dir(gradle_project):
-    if gradle_project in ("focus", "service-telemetry"):
+    if gradle_project in ("focus"):
         project_dir = "focus-android"
     elif gradle_project == "fenix":
         project_dir = "fenix"
