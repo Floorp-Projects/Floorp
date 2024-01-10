@@ -1425,7 +1425,10 @@ bool WarpCacheIRTranspiler::emitInt32ToStringWithBaseResult(
   auto* guardedBase = MGuardInt32Range::New(alloc(), base, 2, 36);
   add(guardedBase);
 
-  auto* ins = MInt32ToStringWithBase::New(alloc(), input, guardedBase);
+  // Use lower-case characters by default.
+  constexpr bool lower = true;
+
+  auto* ins = MInt32ToStringWithBase::New(alloc(), input, guardedBase, lower);
   add(ins);
 
   pushResult(ins);

@@ -10573,24 +10573,27 @@ void CodeGenerator::visitInt32ToStringWithBase(LInt32ToStringWithBase* lir) {
   Register temp0 = ToRegister(lir->temp0());
   Register temp1 = ToRegister(lir->temp1());
 
-  using Fn = JSString* (*)(JSContext*, int32_t, int32_t);
+  bool lowerCase = lir->mir()->lowerCase();
+
+  using Fn = JSString* (*)(JSContext*, int32_t, int32_t, bool);
   if (base.is<Register>()) {
     auto* ool = oolCallVM<Fn, js::Int32ToStringWithBase>(
-        lir, ArgList(input, base.as<Register>()), StoreRegisterTo(output));
+        lir, ArgList(input, base.as<Register>(), Imm32(lowerCase)),
+        StoreRegisterTo(output));
 
     LiveRegisterSet liveRegs = liveVolatileRegs(lir);
     masm.loadInt32ToStringWithBase(input, base.as<Register>(), output, temp0,
                                    temp1, gen->runtime->staticStrings(),
-                                   liveRegs, ool->entry());
+                                   liveRegs, lowerCase, ool->entry());
     masm.bind(ool->rejoin());
   } else {
     auto* ool = oolCallVM<Fn, js::Int32ToStringWithBase>(
-        lir, ArgList(input, Imm32(base.as<int32_t>())),
+        lir, ArgList(input, Imm32(base.as<int32_t>()), Imm32(lowerCase)),
         StoreRegisterTo(output));
 
     masm.loadInt32ToStringWithBase(input, base.as<int32_t>(), output, temp0,
                                    temp1, gen->runtime->staticStrings(),
-                                   ool->entry());
+                                   lowerCase, ool->entry());
     masm.bind(ool->rejoin());
   }
 }

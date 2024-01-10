@@ -1793,6 +1793,19 @@ MDefinition* MStringConvertCase::foldsTo(TempAllocator& alloc) {
     return MCharCodeConvertCase::New(alloc, charCode, mode);
   }
 
+  // Handle the pattern |num.toString(base).toUpperCase()| and simplify it to
+  // directly return the string representation in the correct case.
+  if (string->isInt32ToStringWithBase()) {
+    auto* toString = string->toInt32ToStringWithBase();
+
+    bool lowerCase = mode_ == Mode::LowerCase;
+    if (toString->lowerCase() == lowerCase) {
+      return toString;
+    }
+    return MInt32ToStringWithBase::New(alloc, toString->input(),
+                                       toString->base(), lowerCase);
+  }
+
   return this;
 }
 
@@ -7490,6 +7503,16 @@ MDefinition* MNormalizeSliceTerm::foldsTo(TempAllocator& alloc) {
   }
 
   return this;
+}
+
+bool MInt32ToStringWithBase::congruentTo(const MDefinition* ins) const {
+  if (!ins->isInt32ToStringWithBase()) {
+    return false;
+  }
+  if (ins->toInt32ToStringWithBase()->lowerCase() != lowerCase()) {
+    return false;
+  }
+  return congruentIfOperandsEqual(ins);
 }
 
 bool MWasmShiftSimd128::congruentTo(const MDefinition* ins) const {

@@ -29,6 +29,7 @@
 
 #include "jstypes.h"
 
+#include "builtin/String.h"
 #include "double-conversion/double-conversion.h"
 #include "frontend/ParserAtom.h"  // frontend::{ParserAtomsTable, TaggedParserAtomIndex}
 #include "jit/InlinableNatives.h"
@@ -1876,8 +1877,16 @@ JSLinearString* js::IndexToString(JSContext* cx, uint32_t index) {
   return str;
 }
 
-JSString* js::Int32ToStringWithBase(JSContext* cx, int32_t i, int32_t base) {
-  return NumberToStringWithBase<CanGC>(cx, double(i), base);
+JSString* js::Int32ToStringWithBase(JSContext* cx, int32_t i, int32_t base,
+                                    bool lowerCase) {
+  Rooted<JSString*> str(cx, NumberToStringWithBase<CanGC>(cx, double(i), base));
+  if (!str) {
+    return nullptr;
+  }
+  if (lowerCase) {
+    return str;
+  }
+  return StringToUpperCase(cx, str);
 }
 
 bool js::NumberValueToStringBuffer(const Value& v, StringBuffer& sb) {
