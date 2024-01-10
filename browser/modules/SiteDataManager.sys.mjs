@@ -16,6 +16,11 @@ ChromeUtils.defineLazyGetter(lazy, "gBrandBundle", function () {
   );
 });
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  DownloadHistory: "resource://gre/modules/DownloadHistory.sys.mjs",
+  Sanitizer: "resource:///modules/Sanitizer.sys.mjs",
+});
+
 export var SiteDataManager = {
   // A Map of sites and their disk usage according to Quota Manager.
   // Key is base domain (group sites based on base domain across scheme, port,
@@ -104,6 +109,37 @@ export var SiteDataManager = {
       };
       this._sites.set(baseDomainOrHost, site);
     }
+    return site;
+  },
+
+  /**
+   * Insert site with specific params into the SiteDataManager
+   * Currently used for testing purposes
+   *
+   * @param {String} baseDomainOrHost
+   * @param {Object} Site info params
+   * @returns {Object} site object
+   */
+  _testInsertSite(
+    baseDomainOrHost,
+    {
+      cookies = [],
+      persisted = false,
+      quotaUsage = 0,
+      lastAccessed = 0,
+      principals = [],
+    }
+  ) {
+    let site = {
+      baseDomainOrHost,
+      cookies,
+      persisted,
+      quotaUsage,
+      lastAccessed,
+      principals,
+    };
+    this._sites.set(baseDomainOrHost, site);
+
     return site;
   },
 
@@ -329,6 +365,12 @@ export var SiteDataManager = {
     return false;
   },
 
+  /**
+   * Fetches total quota usage
+   * This method assumes that siteDataManager.updateSites has been called externally
+   *
+   * @returns total quota usage
+   */
   getTotalUsage() {
     return this._getQuotaUsagePromise.then(() => {
       let usage = 0;
@@ -337,6 +379,75 @@ export var SiteDataManager = {
       }
       return usage;
     });
+  },
+
+  /**
+   *
+   * Fetch quota usage for all time ranges to display in the clear data dialog.
+   * This method assumes that SiteDataManager.updateSites has been called externally
+   *
+   * @param {string[]} timeSpanArr - Array of timespan options to get quota usage
+   *              from Sanitizer, e.g. ["TIMESPAN_HOUR", "TIMESPAN_2HOURS"]
+   * @returns {Object} bytes used for each timespan
+   */
+  async getQuotaUsageForTimeRanges(timeSpanArr) {
+    let usage = {};
+    await this._getQuotaUsagePromise;
+
+    for (let timespan of timeSpanArr) {
+      usage[timespan] = 0;
+    }
+
+    let timeNow = Date.now();
+    for (let site of this._sites.values()) {
+      let lastAccessed = new Date(site.lastAccessed / 1000);
+      for (let timeSpan of timeSpanArr) {
+        let compareTime = new Date(
+          timeNow - lazy.Sanitizer.timeSpanMsMap[timeSpan]
+        );
+
+        if (timeSpan === "TIMESPAN_EVERYTHING") {
+          usage[timeSpan] += site.quotaUsage;
+        } else if (lastAccessed >= compareTime) {
+          usage[timeSpan] += site.quotaUsage;
+        }
+      }
+    }
+    return usage;
+  },
+
+  /**
+   * Fetches number of downloads for all timespans in timeSpanArr
+   *
+   * @param {String[]} timeSpanArr - Array of timespan options to get downloads count
+   *              from Sanitizer, e.g. ["TIMESPAN_HOUR", "TIMESPAN_2HOURS"]
+   * @returns {Object} downloads counted for each timespan
+   */
+  async getDownloadCountForTimeRanges(timeSpanArr) {
+    let downloads = await lazy.DownloadHistory.getList();
+
+    let downloadSizes = {};
+    timeSpanArr.forEach(timespan => {
+      downloadSizes[timespan] = 0;
+    });
+
+    let timeNow = Date.now();
+
+    for (let download of downloads._downloads) {
+      let startTime = new Date(download.startTime);
+      for (let timeSpan of timeSpanArr) {
+        let compareTime = new Date(
+          timeNow - lazy.Sanitizer.timeSpanMsMap[timeSpan]
+        );
+
+        if (timeSpan === "TIMESPAN_EVERYTHING") {
+          downloadSizes[timeSpan] += 1;
+        } else if (startTime >= compareTime) {
+          downloadSizes[timeSpan] += 1;
+        }
+      }
+    }
+    return downloadSizes;
   },
 
   /**

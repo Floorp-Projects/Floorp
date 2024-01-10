@@ -35,6 +35,8 @@
         rel="stylesheet"
         href="chrome://browser/skin/sanitizeDialog_v2.css"
       />
+
+      <html:link rel="localization" href="branding/brand.ftl" />
       <html:link rel="localization" href="browser/sanitize.ftl" />
     </linkset>
 
@@ -110,6 +112,7 @@
             data-l10n-id="item-cookies-site-data"
             preference="privacy.cpd.cookies"
             aria-describedby="cookies-site-data-description"
+            id="clearCookiesAndSiteData"
           />
           <description
             class="sanitizeCheckboxDescription text-deemphasized"
@@ -124,6 +127,7 @@
             data-l10n-id="item-cached-content"
             preference="privacy.cpd.cache"
             aria-describedby="cached-content-description"
+            id="clearCachedContent"
           />
           <description
             class="sanitizeCheckboxDescription text-deemphasized"
@@ -151,6 +155,7 @@
           <checkbox
             data-l10n-id="item-download-history"
             preference="privacy.cpd.downloads"
+            id="clearDownloadHistory"
           />
         </vbox>
       </hbox>
