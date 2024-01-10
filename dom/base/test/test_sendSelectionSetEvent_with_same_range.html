@@ -10,7 +10,7 @@
 const { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs"
 );
-const kLineBreak = navigator.platform.indexOf("Win") == 0 && !AppConstants.EARLY_BETA_OR_EARLIER ? "\r\n" : "\n";
+const kLineBreak = navigator.platform.indexOf("Win") == 0 && false ? "\r\n" : "\n";
 
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(async () => {
