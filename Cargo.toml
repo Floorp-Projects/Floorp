@@ -142,10 +142,9 @@ wasi = { path = "build/rust/wasi" }
 # else we do use requires backtrace, so dummy it out for now.
 backtrace = { path = "build/rust/backtrace" }
 
-# Patch bindgen 0.63, 0.64 and 0.66 to 0.69
+# Patch bindgen 0.63 and 0.64 to 0.69
 bindgen_0_63 = { package = "bindgen", path = "build/rust/bindgen-0.63" }
 bindgen_0_64 = { package = "bindgen", path = "build/rust/bindgen-0.64" }
-bindgen = { path = "build/rust/bindgen" }
 # 0.69.1 +  https://github.com/rust-lang/rust-bindgen/pull/2689
 bindgen_0_69 = { package = "bindgen", git = "https://github.com/rust-lang/rust-bindgen", rev = "86f3dbe846020e2ba573d6eb38d1434d0cbcbb40" }
 

@@ -418,19 +418,12 @@ dependencies = [
 name = "bindgen"
 version = "0.63.999"
 dependencies = [
- "bindgen 0.66.999",
+ "bindgen 0.69.1",
 ]
 
 [[package]]
 name = "bindgen"
 version = "0.64.999"
-dependencies = [
- "bindgen 0.66.999",
-]
-
-[[package]]
-name = "bindgen"
-version = "0.66.999"
 dependencies = [
  "bindgen 0.69.1",
 ]
