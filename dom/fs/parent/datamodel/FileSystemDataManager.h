@@ -51,6 +51,9 @@ Result<EntryId, QMResult> GetRootHandle(const Origin& origin);
 Result<EntryId, QMResult> GetEntryHandle(
     const FileSystemChildMetadata& aHandle);
 
+Result<ResultConnection, QMResult> GetStorageConnection(
+    const quota::OriginMetadata& aOriginMetadata);
+
 class FileSystemDataManager
     : public SupportsCheckedUnsafePtr<CheckIf<DiagnosticAssertEnabled>> {
  public:
