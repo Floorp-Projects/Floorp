@@ -3137,7 +3137,8 @@ already_AddRefed<QuotaObject> QuotaManager::GetQuotaObject(
     return GetQuotaObject(persistenceType, originMetadata, clientType, aPath);
   }
 
-  MOZ_CRASH("Getting quota object for an unregistered directory lock?");
+  MOZ_ASSERT(aDirectoryLockId == -1);
+  return nullptr;
 }
 
 Nullable<bool> QuotaManager::OriginPersisted(
