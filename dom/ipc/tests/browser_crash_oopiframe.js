@@ -132,16 +132,16 @@ async function testFrameCrash(numTabs) {
       1,
       "Notification " + count + " should have only one button."
     );
-    let links = notification.messageText.querySelectorAll(".text-link");
+    let links = notification.supportLinkEls;
     is(
       links.length,
       1,
       "Notification " + count + " should have only one link."
     );
-    let msgs = notification.messageText.querySelectorAll(
-      "span[data-l10n-id='crashed-subframe-message']"
+    ok(
+      notification.messageText.textContent.length,
+      "Notification " + count + " should have a crash msg."
     );
-    is(msgs.length, 1, "Notification " + count + " should have one crash msg.");
   }
 
   // Press the ignore button on the visible notification.
@@ -203,6 +203,15 @@ add_task(async function test_nominidump() {
 
     let childID = iframeBC.currentWindowGlobal.domProcess.childID;
 
+    let notificationPromise;
+    if (dumpID) {
+      notificationPromise = BrowserTestUtils.waitForNotificationBar(
+        gBrowser,
+        gBrowser.selectedBrowser,
+        "subframe-crashed"
+      );
+    }
+
     gBrowser.selectedBrowser.dispatchEvent(
       new FrameCrashedEvent("oop-browser-crashed", {
         browsingContextID: iframeBC,
@@ -223,6 +232,7 @@ add_task(async function test_nominidump() {
 
     Services.obs.notifyObservers(bag, "ipc:content-shutdown");
 
+    await notificationPromise;
     let notificationBox = gBrowser.getNotificationBox(gBrowser.selectedBrowser);
     let notification = notificationBox.currentNotification;
     ok(
