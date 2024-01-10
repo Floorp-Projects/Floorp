@@ -58,6 +58,7 @@ except ImportError:
     build = None
 
 POST_DELAY_CONDPROF = 1000
+POST_DELAY_MOBILE = 20000
 POST_DELAY_DEBUG = 3000
 POST_DELAY_DEFAULT = 30000
 
@@ -221,6 +222,11 @@ class Perftest(object):
         else:
             self.post_startup_delay = post_startup_delay
 
+        if app in CHROME_ANDROID_APPS + FIREFOX_ANDROID_APPS and not self.config.get(
+            "conditioned_profile"
+        ):
+            LOG.info("Mobile non-conditioned profile")
+            self.post_startup_delay = POST_DELAY_MOBILE
         LOG.info("Post startup delay set to %d ms" % self.post_startup_delay)
         LOG.info("main raptor init, config is: %s" % str(self.config))
 

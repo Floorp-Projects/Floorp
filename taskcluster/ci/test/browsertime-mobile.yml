@@ -50,7 +50,6 @@ job-defaults:
         extra-options:
             # Bug 1635749, disable window recorder temporarily
             - --browsertime-no-ffwindowrecorder
-            - --conditioned-profile=settled
     optimization:
         skip-unless-backstop: null
     limit-platforms:
