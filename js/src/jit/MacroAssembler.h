@@ -4763,6 +4763,39 @@ class MacroAssembler : public MacroAssemblerSpecific {
 
  public:
   /**
+   * Lookup the length-one string from the static strings cache.
+   */
+  void lookupStaticString(Register ch, Register dest,
+                          const StaticStrings& staticStrings);
+
+  /**
+   * Lookup the length-one string from the static strings cache. Jumps to |fail|
+   * when the string wasn't found in the strings cache.
+   */
+  void lookupStaticString(Register ch, Register dest,
+                          const StaticStrings& staticStrings, Label* fail);
+
+  /**
+   * Lookup the length-two string from the static strings cache. Jumps to |fail|
+   * when the string wasn't found in the strings cache.
+   *
+   * Clobbers |ch1| and |ch2|.
+   */
+  void lookupStaticString(Register ch1, Register ch2, Register dest,
+                          const StaticStrings& staticStrings, Label* fail);
+
+  /**
+   * Lookup the integer string from the static integer strings cache. Jumps to
+   * |fail| when the string wasn't found in the strings cache.
+   */
+  void lookupStaticIntString(Register integer, Register dest, Register scratch,
+                             const StaticStrings& staticStrings, Label* fail);
+  void lookupStaticIntString(Register integer, Register dest,
+                             const StaticStrings& staticStrings, Label* fail) {
+    lookupStaticIntString(integer, dest, dest, staticStrings, fail);
+  }
+
+  /**
    * Load the string representation of |input| in base |base|. Jumps to |fail|
    * when the string representation needs to be allocated dynamically.
    */

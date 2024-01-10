@@ -1633,6 +1633,64 @@ void MacroAssembler::loadLengthTwoString(Register c1, Register c2,
   loadPtr(BaseIndex(dest, c1, ScalePointer), dest);
 }
 
+void MacroAssembler::lookupStaticString(Register ch, Register dest,
+                                        const StaticStrings& staticStrings) {
+  MOZ_ASSERT(ch != dest);
+
+  movePtr(ImmPtr(&staticStrings.unitStaticTable), dest);
+  loadPtr(BaseIndex(dest, ch, ScalePointer), dest);
+}
+
+void MacroAssembler::lookupStaticString(Register ch, Register dest,
+                                        const StaticStrings& staticStrings,
+                                        Label* fail) {
+  MOZ_ASSERT(ch != dest);
+
+  boundsCheck32PowerOfTwo(ch, StaticStrings::UNIT_STATIC_LIMIT, fail);
+  movePtr(ImmPtr(&staticStrings.unitStaticTable), dest);
+  loadPtr(BaseIndex(dest, ch, ScalePointer), dest);
+}
+
+void MacroAssembler::lookupStaticString(Register ch1, Register ch2,
+                                        Register dest,
+                                        const StaticStrings& staticStrings,
+                                        Label* fail) {
+  MOZ_ASSERT(ch1 != dest);
+  MOZ_ASSERT(ch2 != dest);
+
+  branch32(Assembler::AboveOrEqual, ch1,
+           Imm32(StaticStrings::SMALL_CHAR_TABLE_SIZE), fail);
+  branch32(Assembler::AboveOrEqual, ch2,
+           Imm32(StaticStrings::SMALL_CHAR_TABLE_SIZE), fail);
+
+  movePtr(ImmPtr(&StaticStrings::toSmallCharTable.storage), dest);
+  load8ZeroExtend(BaseIndex(dest, ch1, Scale::TimesOne), ch1);
+  load8ZeroExtend(BaseIndex(dest, ch2, Scale::TimesOne), ch2);
+
+  branch32(Assembler::Equal, ch1, Imm32(StaticStrings::INVALID_SMALL_CHAR),
+           fail);
+  branch32(Assembler::Equal, ch2, Imm32(StaticStrings::INVALID_SMALL_CHAR),
+           fail);
+
+  lshift32(Imm32(StaticStrings::SMALL_CHAR_BITS), ch1);
+  add32(ch2, ch1);
+
+  // Look up the string from the computed index.
+  movePtr(ImmPtr(&staticStrings.length2StaticTable), dest);
+  loadPtr(BaseIndex(dest, ch1, ScalePointer), dest);
+}
+
+void MacroAssembler::lookupStaticIntString(Register integer, Register dest,
+                                           Register scratch,
+                                           const StaticStrings& staticStrings,
+                                           Label* fail) {
+  MOZ_ASSERT(integer != scratch);
+
+  boundsCheck32PowerOfTwo(integer, StaticStrings::INT_STATIC_LIMIT, fail);
+  movePtr(ImmPtr(&staticStrings.intStaticTable), scratch);
+  loadPtr(BaseIndex(scratch, integer, ScalePointer), dest);
+}
+
 void MacroAssembler::loadInt32ToStringWithBase(
     Register input, Register base, Register dest, Register scratch1,
     Register scratch2, const StaticStrings& staticStrings,
