@@ -24,7 +24,7 @@ SimpleTest.waitForFocus(runTests);
 const { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs"
 );
-const kLF = !navigator.platform.indexOf("Win") && !AppConstants.EARLY_BETA_OR_EARLIER ? "\r\n" : "\n";
+const kLF = !navigator.platform.indexOf("Win") && false ? "\r\n" : "\n";
 
 function runTests() {
   var fm = Services.focus;

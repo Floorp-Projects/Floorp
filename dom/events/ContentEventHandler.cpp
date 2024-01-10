@@ -50,7 +50,7 @@
 #  undef small
 #endif  // defined(small)
 
-#if defined(XP_WIN) && !defined(EARLY_BETA_OR_EARLIER)
+#if defined(XP_WIN) && 0
 #  define TRANSLATE_NEW_LINES
 #endif
 
