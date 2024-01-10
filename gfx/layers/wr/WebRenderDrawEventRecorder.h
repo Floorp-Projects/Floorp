@@ -26,6 +26,10 @@ class WebRenderDrawEventRecorder final : public gfx::DrawEventRecorderMemory {
       const gfx::SerializeResourcesFn& aSerialize)
       : DrawEventRecorderMemory(aSerialize) {}
 
+  gfx::RecorderType GetRecorderType() const final {
+    return gfx::RecorderType::WEBRENDER;
+  }
+
   void StoreSourceSurfaceRecording(gfx::SourceSurface* aSurface,
                                    const char* aReason) final;
 

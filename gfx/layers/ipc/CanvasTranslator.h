@@ -136,24 +136,22 @@ class CanvasTranslator final : public gfx::InlineTranslator,
   void DeviceChangeAcknowledged();
 
   /**
-   * Set the texture ID that will be used as a lookup for the texture created by
-   * the next CreateDrawTarget.
-   */
-  void SetNextTextureId(int64_t aNextTextureId, RemoteTextureOwnerId aOwnerId) {
-    mNextTextureId = aNextTextureId;
-    mNextRemoteTextureOwnerId = aOwnerId;
-  }
-
-  /**
    * Used during playback of events to create DrawTargets. For the
    * CanvasTranslator this means creating TextureDatas and getting the
    * DrawTargets from those.
    *
    * @param aRefPtr the key to store the created DrawTarget against
+   * @param aTextureId texture ID for this DrawTarget
+   * @param aTextureOwnerId texture owner ID for this DrawTarget
    * @param aSize the size of the DrawTarget
    * @param aFormat the surface format for the DrawTarget
    * @returns the new DrawTarget
    */
+  already_AddRefed<gfx::DrawTarget> CreateDrawTarget(
+      gfx::ReferencePtr aRefPtr, int64_t aTextureId,
+      RemoteTextureOwnerId aTextureOwnerId, const gfx::IntSize& aSize,
+      gfx::SurfaceFormat aFormat);
+
   already_AddRefed<gfx::DrawTarget> CreateDrawTarget(
       gfx::ReferencePtr aRefPtr, const gfx::IntSize& aSize,
       gfx::SurfaceFormat aFormat) final;
@@ -363,8 +361,6 @@ class CanvasTranslator final : public gfx::InlineTranslator,
     OpenMode mTextureLockMode = OpenMode::OPEN_NONE;
   };
   std::unordered_map<int64_t, TextureInfo> mTextureInfo;
-  int64_t mNextTextureId = -1;
-  RemoteTextureOwnerId mNextRemoteTextureOwnerId;
   nsRefPtrHashtable<nsPtrHashKey<void>, gfx::DataSourceSurface> mDataSurfaces;
   gfx::ReferencePtr mMappedSurface;
   UniquePtr<gfx::DataSourceSurface::ScopedMap> mPreparedMap;
