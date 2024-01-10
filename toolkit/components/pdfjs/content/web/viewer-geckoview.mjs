@@ -4019,7 +4019,6 @@ class TextLayerBuilder {
   constructor({
     highlighter = null,
     accessibilityManager = null,
-    isOffscreenCanvasSupported = true,
     enablePermissions = false
   }) {
     this.textContentItemsStr = [];
@@ -4029,7 +4028,6 @@ class TextLayerBuilder {
     this.textLayerRenderTask = null;
     this.highlighter = highlighter;
     this.accessibilityManager = accessibilityManager;
-    this.isOffscreenCanvasSupported = isOffscreenCanvasSupported;
     this.#enablePermissions = enablePermissions === true;
     this.onAppend = null;
     this.div = document.createElement("div");
@@ -4063,7 +4061,6 @@ class TextLayerBuilder {
           viewport,
           textDivs: this.textDivs,
           textDivProperties: this.textDivProperties,
-          isOffscreenCanvasSupported: this.isOffscreenCanvasSupported,
           mustRescale,
           mustRotate
         });
@@ -4082,8 +4079,7 @@ class TextLayerBuilder {
       viewport,
       textDivs: this.textDivs,
       textDivProperties: this.textDivProperties,
-      textContentItemsStr: this.textContentItemsStr,
-      isOffscreenCanvasSupported: this.isOffscreenCanvasSupported
+      textContentItemsStr: this.textContentItemsStr
     });
     await this.textLayerRenderTask.promise;
     this.#finishRendering();
@@ -4262,7 +4258,6 @@ class PDFPageView {
     this.#textLayerMode = options.textLayerMode ?? TextLayerMode.ENABLE;
     this.#annotationMode = options.annotationMode ?? AnnotationMode.ENABLE_FORMS;
     this.imageResourcesPath = options.imageResourcesPath || "";
-    this.isOffscreenCanvasSupported = options.isOffscreenCanvasSupported ?? true;
     this.maxCanvasPixels = options.maxCanvasPixels ?? MAX_CANVAS_PIXELS;
     this.pageColors = options.pageColors || null;
     this.eventBus = options.eventBus;
@@ -4780,7 +4775,6 @@ class PDFPageView {
       this.textLayer = new TextLayerBuilder({
         highlighter: this._textHighlighter,
         accessibilityManager: this._accessibilityManager,
-        isOffscreenCanvasSupported: this.isOffscreenCanvasSupported,
         enablePermissions: this.#textLayerMode === TextLayerMode.ENABLE_PERMISSIONS
       });
       this.textLayer.onAppend = textLayerDiv => {
@@ -5042,7 +5036,7 @@ class PDFViewer {
   #scaleTimeoutId = null;
   #textLayerMode = TextLayerMode.ENABLE;
   constructor(options) {
-    const viewerVersion = '4.0.381';
+    const viewerVersion = '4.0.396';
     if (version !== viewerVersion) {
       throw new Error(`The API version "${version}" does not match the Viewer version "${viewerVersion}".`);
     }
@@ -5064,7 +5058,6 @@ class PDFViewer {
     this.#annotationEditorHighlightColors = options.annotationEditorHighlightColors || null;
     this.imageResourcesPath = options.imageResourcesPath || "";
     this.enablePrintAutoRotate = options.enablePrintAutoRotate || false;
-    this.isOffscreenCanvasSupported = options.isOffscreenCanvasSupported ?? true;
     this.maxCanvasPixels = options.maxCanvasPixels;
     this.l10n = options.l10n || NullL10n;
     this.#enablePermissions = options.enablePermissions || false;
@@ -5465,7 +5458,6 @@ class PDFViewer {
           textLayerMode,
           annotationMode,
           imageResourcesPath: this.imageResourcesPath,
-          isOffscreenCanvasSupported: this.isOffscreenCanvasSupported,
           maxCanvasPixels: this.maxCanvasPixels,
           pageColors: this.pageColors,
           l10n: this.l10n,
@@ -6819,7 +6811,6 @@ const PDFViewerApplication = {
       annotationEditorHighlightColors: AppOptions.get("highlightEditorColors"),
       imageResourcesPath: AppOptions.get("imageResourcesPath"),
       enablePrintAutoRotate: AppOptions.get("enablePrintAutoRotate"),
-      isOffscreenCanvasSupported,
       maxCanvasPixels: AppOptions.get("maxCanvasPixels"),
       enablePermissions: AppOptions.get("enablePermissions"),
       pageColors
@@ -9262,8 +9253,8 @@ PDFPrintServiceFactory.instance = {
 
 
 
-const pdfjsVersion = '4.0.381';
-const pdfjsBuild = '231c79800';
+const pdfjsVersion = '4.0.396';
+const pdfjsBuild = '903af4ee0';
 const AppConstants = null;
 window.PDFViewerApplication = PDFViewerApplication;
 window.PDFViewerApplicationConstants = AppConstants;
