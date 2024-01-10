@@ -105,9 +105,10 @@ class RecordedDrawTargetDestruction
 class RecordedCreateSimilarDrawTarget
     : public RecordedEventDerived<RecordedCreateSimilarDrawTarget> {
  public:
-  RecordedCreateSimilarDrawTarget(ReferencePtr aRefPtr, const IntSize& aSize,
-                                  SurfaceFormat aFormat)
+  RecordedCreateSimilarDrawTarget(ReferencePtr aDT, ReferencePtr aRefPtr,
+                                  const IntSize& aSize, SurfaceFormat aFormat)
       : RecordedEventDerived(CREATESIMILARDRAWTARGET),
+        mDT(aDT),
         mRefPtr(aRefPtr),
         mSize(aSize),
         mFormat(aFormat) {}
@@ -121,6 +122,7 @@ class RecordedCreateSimilarDrawTarget
 
   std::string GetName() const override { return "CreateSimilarDrawTarget"; }
 
+  ReferencePtr mDT;
   ReferencePtr mRefPtr;
   IntSize mSize;
   SurfaceFormat mFormat;
@@ -857,7 +859,7 @@ class RecordedDrawFilter : public RecordedDrawingEvent<RecordedDrawFilter> {
 
 class RecordedPathCreation : public RecordedEventDerived<RecordedPathCreation> {
  public:
-  MOZ_IMPLICIT RecordedPathCreation(PathRecording* aPath);
+  MOZ_IMPLICIT RecordedPathCreation(DrawTarget* aDT, PathRecording* aPath);
 
   bool PlayEvent(Translator* aTranslator) const override;
 
@@ -870,6 +872,7 @@ class RecordedPathCreation : public RecordedEventDerived<RecordedPathCreation> {
  private:
   friend class RecordedEvent;
 
+  ReferencePtr mDT;
   ReferencePtr mRefPtr;
   FillRule mFillRule;
   RefPtr<PathRecording> mPath;
@@ -1025,8 +1028,10 @@ class RecordedExternalSurfaceCreation
 class RecordedFilterNodeCreation
     : public RecordedEventDerived<RecordedFilterNodeCreation> {
  public:
-  RecordedFilterNodeCreation(ReferencePtr aRefPtr, FilterType aType)
+  RecordedFilterNodeCreation(ReferencePtr aDT, ReferencePtr aRefPtr,
+                             FilterType aType)
       : RecordedEventDerived(FILTERNODECREATION),
+        mDT(aDT),
         mRefPtr(aRefPtr),
         mType(aType) {}
 
@@ -1043,6 +1048,7 @@ class RecordedFilterNodeCreation
  private:
   friend class RecordedEvent;
 
+  ReferencePtr mDT;
   ReferencePtr mRefPtr;
   FilterType mType;
 
@@ -1076,9 +1082,11 @@ class RecordedFilterNodeDestruction
 class RecordedGradientStopsCreation
     : public RecordedEventDerived<RecordedGradientStopsCreation> {
  public:
-  RecordedGradientStopsCreation(ReferencePtr aRefPtr, GradientStop* aStops,
-                                uint32_t aNumStops, ExtendMode aExtendMode)
+  RecordedGradientStopsCreation(ReferencePtr aDT, ReferencePtr aRefPtr,
+                                GradientStop* aStops, uint32_t aNumStops,
+                                ExtendMode aExtendMode)
       : RecordedEventDerived(GRADIENTSTOPSCREATION),
+        mDT(aDT),
         mRefPtr(aRefPtr),
         mStops(aStops),
         mNumStops(aNumStops),
@@ -1098,6 +1106,7 @@ class RecordedGradientStopsCreation
  private:
   friend class RecordedEvent;
 
+  ReferencePtr mDT;
   ReferencePtr mRefPtr;
   GradientStop* mStops = nullptr;
   uint32_t mNumStops = 0;
@@ -2038,10 +2047,8 @@ inline void RecordedDrawTargetDestruction::OutputSimpleEventInfo(
 
 inline bool RecordedCreateSimilarDrawTarget::PlayEvent(
     Translator* aTranslator) const {
-  RefPtr<DrawTarget> drawTarget = aTranslator->GetReferenceDrawTarget();
+  DrawTarget* drawTarget = aTranslator->LookupDrawTarget(mDT);
   if (!drawTarget) {
-    // We might end up with a null reference draw target due to a device
-    // failure, just return false so that we can recover.
     return false;
   }
 
@@ -2060,6 +2067,7 @@ inline bool RecordedCreateSimilarDrawTarget::PlayEvent(
 
 template <class S>
 void RecordedCreateSimilarDrawTarget::Record(S& aStream) const {
+  WriteElement(aStream, mDT);
   WriteElement(aStream, mRefPtr);
   WriteElement(aStream, mSize);
   WriteElement(aStream, mFormat);
@@ -2068,6 +2076,7 @@ void RecordedCreateSimilarDrawTarget::Record(S& aStream) const {
 template <class S>
 RecordedCreateSimilarDrawTarget::RecordedCreateSimilarDrawTarget(S& aStream)
     : RecordedEventDerived(CREATESIMILARDRAWTARGET) {
+  ReadElement(aStream, mDT);
   ReadElement(aStream, mRefPtr);
   ReadElement(aStream, mSize);
   ReadElementConstrained(aStream, mFormat, SurfaceFormat::A8R8G8B8_UINT32,
@@ -2076,7 +2085,7 @@ RecordedCreateSimilarDrawTarget::RecordedCreateSimilarDrawTarget(S& aStream)
 
 inline void RecordedCreateSimilarDrawTarget::OutputSimpleEventInfo(
     std::stringstream& aStringStream) const {
-  aStringStream << "[" << mRefPtr
+  aStringStream << "[" << mDT << "] [" << mRefPtr
                 << "] CreateSimilarDrawTarget (Size: " << mSize.width << "x"
                 << mSize.height << ")";
 }
@@ -3098,17 +3107,17 @@ inline void RecordedDrawSurfaceWithShadow::OutputSimpleEventInfo(
                 << mShadow.mColor.a << ")";
 }
 
-inline RecordedPathCreation::RecordedPathCreation(PathRecording* aPath)
+inline RecordedPathCreation::RecordedPathCreation(DrawTarget* aDT,
+                                                  PathRecording* aPath)
     : RecordedEventDerived(PATHCREATION),
+      mDT(aDT),
       mRefPtr(aPath),
       mFillRule(aPath->mFillRule),
       mPath(aPath) {}
 
 inline bool RecordedPathCreation::PlayEvent(Translator* aTranslator) const {
-  RefPtr<DrawTarget> drawTarget = aTranslator->GetReferenceDrawTarget();
+  DrawTarget* drawTarget = aTranslator->LookupDrawTarget(mDT);
   if (!drawTarget) {
-    // We might end up with a null reference draw target due to a device
-    // failure, just return false so that we can recover.
     return false;
   }
 
@@ -3124,6 +3133,7 @@ inline bool RecordedPathCreation::PlayEvent(Translator* aTranslator) const {
 
 template <class S>
 void RecordedPathCreation::Record(S& aStream) const {
+  WriteElement(aStream, mDT);
   WriteElement(aStream, mRefPtr);
   WriteElement(aStream, mFillRule);
   mPath->mPathOps.Record(aStream);
@@ -3132,6 +3142,7 @@ void RecordedPathCreation::Record(S& aStream) const {
 template <class S>
 RecordedPathCreation::RecordedPathCreation(S& aStream)
     : RecordedEventDerived(PATHCREATION) {
+  ReadElement(aStream, mDT);
   ReadElement(aStream, mRefPtr);
   ReadElementConstrained(aStream, mFillRule, FillRule::FILL_WINDING,
                          FillRule::FILL_EVEN_ODD);
@@ -3142,8 +3153,8 @@ inline void RecordedPathCreation::OutputSimpleEventInfo(
     std::stringstream& aStringStream) const {
   size_t numberOfOps =
       mPath ? mPath->mPathOps.NumberOfOps() : mPathOps->NumberOfOps();
-  aStringStream << "[" << mRefPtr << "] Path created (OpCount: " << numberOfOps
-                << ")";
+  aStringStream << "[" << mDT << "] [" << mRefPtr
+                << "] Path created (OpCount: " << numberOfOps << ")";
 }
 inline bool RecordedPathDestruction::PlayEvent(Translator* aTranslator) const {
   aTranslator->RemovePath(mRefPtr);
@@ -3335,10 +3346,8 @@ inline RecordedFilterNodeCreation::~RecordedFilterNodeCreation() = default;
 
 inline bool RecordedFilterNodeCreation::PlayEvent(
     Translator* aTranslator) const {
-  RefPtr<DrawTarget> drawTarget = aTranslator->GetReferenceDrawTarget();
+  DrawTarget* drawTarget = aTranslator->LookupDrawTarget(mDT);
   if (!drawTarget) {
-    // We might end up with a null reference draw target due to a device
-    // failure, just return false so that we can recover.
     return false;
   }
 
@@ -3349,6 +3358,7 @@ inline bool RecordedFilterNodeCreation::PlayEvent(
 
 template <class S>
 void RecordedFilterNodeCreation::Record(S& aStream) const {
+  WriteElement(aStream, mDT);
   WriteElement(aStream, mRefPtr);
   WriteElement(aStream, mType);
 }
@@ -3356,6 +3366,7 @@ void RecordedFilterNodeCreation::Record(S& aStream) const {
 template <class S>
 RecordedFilterNodeCreation::RecordedFilterNodeCreation(S& aStream)
     : RecordedEventDerived(FILTERNODECREATION) {
+  ReadElement(aStream, mDT);
   ReadElement(aStream, mRefPtr);
   ReadElementConstrained(aStream, mType, FilterType::BLEND,
                          FilterType::OPACITY);
@@ -3363,7 +3374,7 @@ RecordedFilterNodeCreation::RecordedFilterNodeCreation(S& aStream)
 
 inline void RecordedFilterNodeCreation::OutputSimpleEventInfo(
     std::stringstream& aStringStream) const {
-  aStringStream << "[" << mRefPtr
+  aStringStream << "[" << mDT << "] CreateFilter [" << mRefPtr
                 << "] FilterNode created (Type: " << int(mType) << ")";
 }
 
@@ -3401,14 +3412,21 @@ inline bool RecordedGradientStopsCreation::PlayEvent(
     // Stops allocation failed
     return false;
   }
+
+  DrawTarget* dt = aTranslator->LookupDrawTarget(mDT);
+  if (!dt) {
+    return false;
+  }
+
   RefPtr<GradientStops> src =
-      aTranslator->GetOrCreateGradientStops(mStops, mNumStops, mExtendMode);
+      aTranslator->GetOrCreateGradientStops(dt, mStops, mNumStops, mExtendMode);
   aTranslator->AddGradientStops(mRefPtr, src);
   return true;
 }
 
 template <class S>
 void RecordedGradientStopsCreation::Record(S& aStream) const {
+  WriteElement(aStream, mDT);
   WriteElement(aStream, mRefPtr);
   WriteElement(aStream, mExtendMode);
   WriteElement(aStream, mNumStops);
@@ -3418,6 +3436,7 @@ void RecordedGradientStopsCreation::Record(S& aStream) const {
 template <class S>
 RecordedGradientStopsCreation::RecordedGradientStopsCreation(S& aStream)
     : RecordedEventDerived(GRADIENTSTOPSCREATION), mDataOwned(true) {
+  ReadElement(aStream, mDT);
   ReadElement(aStream, mRefPtr);
   ReadElementConstrained(aStream, mExtendMode, ExtendMode::CLAMP,
                          ExtendMode::REFLECT);
@@ -3439,7 +3458,7 @@ RecordedGradientStopsCreation::RecordedGradientStopsCreation(S& aStream)
 
 inline void RecordedGradientStopsCreation::OutputSimpleEventInfo(
     std::stringstream& aStringStream) const {
-  aStringStream << "[" << mRefPtr
+  aStringStream << "[" << mDT << "] [" << mRefPtr
                 << "] GradientStops created (Stops: " << mNumStops << ")";
 }
 
