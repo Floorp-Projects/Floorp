@@ -241,6 +241,7 @@ legacy_ids:
     type: uuid
     description: |
       Sets the legacy client ID as part of the deletion-request ping.
+      **No longer reported set since Focus 124, where legacy telemetry was removed**.
     send_in_pings:
       - deletion-request
     bugs:
