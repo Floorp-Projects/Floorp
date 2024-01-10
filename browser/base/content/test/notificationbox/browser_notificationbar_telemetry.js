@@ -31,15 +31,16 @@ add_task(async function showNotification() {
 
   verifyTelemetry("initial", 0, 0, 0, 0, 0, 0);
 
-  let notif3 = box3.appendNotification("infobar-testtwo-value", {
+  let notif3 = await box3.appendNotification("infobar-testtwo-value", {
     label: "Message for tab 3",
     priority: box3.PRIORITY_INFO_HIGH,
     telemetry: TELEMETRY_BASE + "testtwo",
   });
+  await notif3.updateComplete;
 
   verifyTelemetry("first notification", 0, 0, 0, 0, 0, 1);
 
-  let notif1 = box1.appendNotification(
+  let notif1 = await box1.appendNotification(
     "infobar-testone-value",
     {
       label: "Message for tab 1",
@@ -60,6 +61,7 @@ add_task(async function showNotification() {
       },
     ]
   );
+  await notif1.updateComplete;
   verifyTelemetry("second notification", 0, 0, 0, 0, 0, 1);
 
   await BrowserTestUtils.switchTab(gBrowser, tab1);
@@ -89,7 +91,7 @@ add_task(async function showNotification() {
   notif3.dismiss();
   verifyTelemetry("dismiss notification for box 3", 1, 1, 1, 1, 1, 1, 1);
 
-  let notif4 = box1.appendNotification(
+  let notif4 = await box1.appendNotification(
     "infobar-testtwo-value",
     {
       label: "Additional message for tab 1",
@@ -103,13 +105,14 @@ add_task(async function showNotification() {
       },
     ]
   );
+  await notif4.updateComplete;
   verifyTelemetry("show first filtered notification", 2, 1, 1, 1, 1, 1, 1);
 
   notif4.buttonContainer.lastElementChild.click();
   notif4.dismiss();
   verifyTelemetry("dismiss first filtered notification", 2, 1, 1, 1, 1, 1, 1);
 
-  let notif5 = box1.appendNotification(
+  let notif5 = await box1.appendNotification(
     "infobar-testtwo-value",
     {
       label: "Dimissed additional message for tab 1",
@@ -123,13 +126,14 @@ add_task(async function showNotification() {
       },
     ]
   );
+  await notif5.updateComplete;
   verifyTelemetry("show second filtered notification", 2, 1, 1, 1, 1, 1, 1);
 
   notif5.buttonContainer.lastElementChild.click();
   notif5.dismiss();
   verifyTelemetry("dismiss second filtered notification", 2, 1, 1, 1, 2, 1, 1);
 
-  let notif6 = box1.appendNotification(
+  let notif6 = await box1.appendNotification(
     "infobar-testtwo-value",
     {
       label: "Dimissed additional message for tab 1",
@@ -144,6 +148,7 @@ add_task(async function showNotification() {
       },
     ]
   );
+  await notif6.updateComplete;
   verifyTelemetry("show third filtered notification", 2, 1, 1, 1, 2, 1, 1);
 
   notif6.buttonContainer.lastElementChild.click();
