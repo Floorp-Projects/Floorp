@@ -5001,12 +5001,15 @@ void ChildViewMouseTracker::OnDestroyWindow(NSWindow* aWindow) {
 }
 
 void ChildViewMouseTracker::MouseEnteredWindow(NSEvent* aEvent) {
-  sWindowUnderMouse = [aEvent window];
-  ReEvaluateMouseEnterState(aEvent);
+  NSWindow* window = aEvent.window;
+  if (!window.ignoresMouseEvents) {
+    sWindowUnderMouse = window;
+    ReEvaluateMouseEnterState(aEvent);
+  }
 }
 
 void ChildViewMouseTracker::MouseExitedWindow(NSEvent* aEvent) {
-  if (sWindowUnderMouse == [aEvent window]) {
+  if (sWindowUnderMouse == aEvent.window) {
     sWindowUnderMouse = nil;
     [sLastMouseMoveEvent release];
     sLastMouseMoveEvent = nil;
