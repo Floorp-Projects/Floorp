@@ -37,6 +37,7 @@ static Maybe<ShmemAndHandle> CreateAndMapShmem(size_t aSize) {
 CanvasDrawEventRecorder::CanvasDrawEventRecorder() {
   mDefaultBufferSize = ipc::SharedMemory::PageAlignedSize(
       StaticPrefs::gfx_canvas_remote_default_buffer_size());
+  mMaxDefaultBuffers = StaticPrefs::gfx_canvas_remote_max_default_buffers();
   mMaxSpinCount = StaticPrefs::gfx_canvas_remote_max_spin_count();
   mDropBufferLimit = StaticPrefs::gfx_canvas_remote_drop_buffer_limit();
   mDropBufferOnZero = mDropBufferLimit;
@@ -176,9 +177,25 @@ gfx::ContiguousBuffer& CanvasDrawEventRecorder::GetContiguousBuffer(
     return mCurrentBuffer;
   }
 
-  // If the next recycled buffer is big enough and free use that.
-  if (mRecycledBuffers.front().Capacity() > aSize &&
-      mRecycledBuffers.front().eventCount <= mHeader->processedCount) {
+  bool useRecycledBuffer = false;
+  if (mRecycledBuffers.front().Capacity() > aSize) {
+    // The recycled buffer is big enough, check if it is free.
+    if (mRecycledBuffers.front().eventCount <= mHeader->processedCount) {
+      useRecycledBuffer = true;
+    } else if (mRecycledBuffers.size() >= mMaxDefaultBuffers) {
+      // We've hit he max number of buffers, wait for the next one to be free.
+      // We wait for (eventCount - 1), as we check and signal in the translator
+      // during the play event, before the processedCount has been updated.
+      useRecycledBuffer = true;
+      if (!WaitForCheckpoint(mRecycledBuffers.front().eventCount - 1)) {
+        // The wait failed or we're shutting down, just return an empty buffer.
+        mCurrentBuffer = CanvasBuffer();
+        return mCurrentBuffer;
+      }
+    }
+  }
+
+  if (useRecycledBuffer) {
     // Only queue default size buffers for recycling.
     if (mCurrentBuffer.Capacity() == mDefaultBufferSize) {
       WriteInternalEvent(RECYCLE_BUFFER);
