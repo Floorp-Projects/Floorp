@@ -721,9 +721,9 @@ class MacroAssembler : public MacroAssemblerSpecific {
   // 3) Passing arguments. Arguments are passed left-to-right.
   //
   //      masm.passABIArg(scratch);
-  //      masm.passABIArg(FloatOp0, ABIType::Float64);
+  //      masm.passABIArg(FloatOp0, MoveOp::Double);
   //
-  //    Note how float register arguments are annotated with ABIType::Float64.
+  //    Note how float register arguments are annotated with MoveOp::Double.
   //
   //    Concerning stack-relative address, see the note on passABIArg.
   //
@@ -736,7 +736,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
   //    indicated to the callWithABI like this:
   //
   //      using Fn = double (*)(int32_t)
-  //      masm.callWithABI<Fn, Callee>(ABIType::Float64);
+  //      masm.callWithABI<Fn, Callee>(MoveOp::DOUBLE);
   //
   //    There are overloads to allow calls to registers and addresses.
   //
@@ -795,26 +795,26 @@ class MacroAssembler : public MacroAssemblerSpecific {
   // automatically adjusted. It is extremely important that esp-relative
   // addresses are computed *after* setupABICall(). Furthermore, no
   // operations should be emitted while setting arguments.
-  void passABIArg(const MoveOperand& from, ABIType type);
+  void passABIArg(const MoveOperand& from, MoveOp::Type type);
   inline void passABIArg(Register reg);
-  inline void passABIArg(FloatRegister reg, ABIType type);
+  inline void passABIArg(FloatRegister reg, MoveOp::Type type);
 
   inline void callWithABI(
-      DynFn fun, ABIType result = ABIType::General,
+      DynFn fun, MoveOp::Type result = MoveOp::GENERAL,
       CheckUnsafeCallWithABI check = CheckUnsafeCallWithABI::Check);
   template <typename Sig, Sig fun>
   inline void callWithABI(
-      ABIType result = ABIType::General,
+      MoveOp::Type result = MoveOp::GENERAL,
       CheckUnsafeCallWithABI check = CheckUnsafeCallWithABI::Check);
-  inline void callWithABI(Register fun, ABIType result = ABIType::General);
+  inline void callWithABI(Register fun, MoveOp::Type result = MoveOp::GENERAL);
   inline void callWithABI(const Address& fun,
-                          ABIType result = ABIType::General);
+                          MoveOp::Type result = MoveOp::GENERAL);
 
   CodeOffset callWithABI(wasm::BytecodeOffset offset, wasm::SymbolicAddress fun,
                          mozilla::Maybe<int32_t> instanceOffset,
-                         ABIType result = ABIType::General);
+                         MoveOp::Type result = MoveOp::GENERAL);
   void callDebugWithABI(wasm::SymbolicAddress fun,
-                        ABIType result = ABIType::General);
+                        MoveOp::Type result = MoveOp::GENERAL);
 
  private:
   // Reinitialize the variables which have to be cleared before making a call
@@ -831,18 +831,18 @@ class MacroAssembler : public MacroAssemblerSpecific {
                       bool callFromWasm = false) PER_ARCH;
 
   // Emits a call to a C/C++ function, resolving all argument moves.
-  void callWithABINoProfiler(void* fun, ABIType result,
+  void callWithABINoProfiler(void* fun, MoveOp::Type result,
                              CheckUnsafeCallWithABI check);
-  void callWithABINoProfiler(Register fun, ABIType result) PER_ARCH;
-  void callWithABINoProfiler(const Address& fun, ABIType result) PER_ARCH;
+  void callWithABINoProfiler(Register fun, MoveOp::Type result) PER_ARCH;
+  void callWithABINoProfiler(const Address& fun, MoveOp::Type result) PER_ARCH;
 
   // Restore the stack to its state before the setup function call.
-  void callWithABIPost(uint32_t stackAdjust, ABIType result,
+  void callWithABIPost(uint32_t stackAdjust, MoveOp::Type result,
                        bool callFromWasm = false) PER_ARCH;
 
   // Create the signature to be able to decode the arguments of a native
   // function, when calling a function within the simulator.
-  inline void appendSignatureType(ABIType type);
+  inline void appendSignatureType(MoveOp::Type type);
   inline ABIFunctionType signature() const;
 
   // Private variables used to handle moves between registers given as

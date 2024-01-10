@@ -420,32 +420,32 @@ FOR_EACH_BUILTIN_MODULE_FUNC(VISIT_BUILTIN_FUNC)
 #undef _FailOnNullPtr
 
 #ifdef DEBUG
-ABIType ToABIType(FailureMode mode) {
+ABIArgType ToABIType(FailureMode mode) {
   switch (mode) {
     case FailureMode::FailOnNegI32:
-      return ABIType::Int32;
+      return ArgType_Int32;
     case FailureMode::FailOnNullPtr:
     case FailureMode::FailOnInvalidRef:
-      return ABIType::General;
+      return ArgType_General;
     default:
       MOZ_CRASH("unexpected failure mode");
   }
 }
 
-ABIType ToABIType(MIRType type) {
+ABIArgType ToABIType(MIRType type) {
   switch (type) {
     case MIRType::None:
     case MIRType::Int32:
-      return ABIType::Int32;
+      return ArgType_Int32;
     case MIRType::Int64:
-      return ABIType::Int64;
+      return ArgType_Int64;
     case MIRType::Pointer:
     case MIRType::WasmAnyRef:
-      return ABIType::General;
+      return ArgType_General;
     case MIRType::Float32:
-      return ABIType::Float32;
+      return ArgType_Float32;
     case MIRType::Double:
-      return ABIType::Float64;
+      return ArgType_Float64;
     default:
       MOZ_CRASH("unexpected type");
   }
@@ -456,11 +456,11 @@ ABIFunctionType ToABIType(const SymbolicAddressSignature& sig) {
                 ToABIType(sig.failureMode) == ToABIType(sig.retType));
   int abiType = 0;
   for (int i = 0; i < sig.numArgs; i++) {
-    abiType <<= ABITypeArgShift;
-    abiType |= uint32_t(ToABIType(sig.argTypes[i]));
+    abiType <<= ArgType_Shift;
+    abiType |= ToABIType(sig.argTypes[i]);
   }
-  abiType <<= ABITypeArgShift;
-  abiType |= uint32_t(ToABIType(sig.retType));
+  abiType <<= ArgType_Shift;
+  abiType |= ToABIType(sig.retType);
   return ABIFunctionType(abiType);
 }
 #endif
@@ -1986,7 +1986,7 @@ static Maybe<ABIFunctionType> ToBuiltinABIFunctionType(
     return Nothing();
   }
 
-  if ((args.length() + 1) > (sizeof(uint32_t) * 8 / ABITypeArgShift)) {
+  if ((args.length() + 1) > (sizeof(uint32_t) * 8 / ArgType_Shift)) {
     return Nothing();
   }
 
@@ -1994,25 +1994,25 @@ static Maybe<ABIFunctionType> ToBuiltinABIFunctionType(
   for (size_t i = 0; i < args.length(); i++) {
     switch (args[i].kind()) {
       case ValType::F32:
-        abiType <<= ABITypeArgShift;
-        abiType |= uint32_t(ABIType::Float32);
+        abiType <<= ArgType_Shift;
+        abiType |= ArgType_Float32;
         break;
       case ValType::F64:
-        abiType <<= ABITypeArgShift;
-        abiType |= uint32_t(ABIType::Float64);
+        abiType <<= ArgType_Shift;
+        abiType |= ArgType_Float64;
         break;
       default:
         return Nothing();
     }
   }
 
-  abiType <<= ABITypeArgShift;
+  abiType <<= ArgType_Shift;
   switch (results[0].kind()) {
     case ValType::F32:
-      abiType |= uint32_t(ABIType::Float32);
+      abiType |= ArgType_Float32;
       break;
     case ValType::F64:
-      abiType |= uint32_t(ABIType::Float64);
+      abiType |= ArgType_Float64;
       break;
     default:
       return Nothing();

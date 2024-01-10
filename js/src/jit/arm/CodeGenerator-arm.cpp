@@ -574,7 +574,7 @@ void CodeGenerator::visitSoftDivI(LSoftDivI* ins) {
     masm.passABIArg(lhs);
     masm.passABIArg(rhs);
     masm.callWithABI<Fn, __aeabi_idivmod>(
-        ABIType::Int64, CheckUnsafeCallWithABI::DontCheckOther);
+        MoveOp::GENERAL, CheckUnsafeCallWithABI::DontCheckOther);
   }
 
   // idivmod returns the quotient in r0, and the remainder in r1.
@@ -764,7 +764,7 @@ void CodeGenerator::visitSoftModI(LSoftModI* ins) {
     masm.passABIArg(lhs);
     masm.passABIArg(rhs);
     masm.callWithABI<Fn, __aeabi_idivmod>(
-        ABIType::Int64, CheckUnsafeCallWithABI::DontCheckOther);
+        MoveOp::GENERAL, CheckUnsafeCallWithABI::DontCheckOther);
   }
 
   MOZ_ASSERT(r1 != output);
@@ -866,7 +866,7 @@ void CodeGeneratorARM::emitBigIntDiv(LBigIntDiv* ins, Register dividend,
   masm.setupUnalignedABICall(output);
   masm.passABIArg(dividend);
   masm.passABIArg(divisor);
-  masm.callWithABI<Fn, __aeabi_idivmod>(ABIType::Int64,
+  masm.callWithABI<Fn, __aeabi_idivmod>(MoveOp::GENERAL,
                                         CheckUnsafeCallWithABI::DontCheckOther);
 
   masm.PopRegsInMask(volatileRegs);
@@ -909,7 +909,7 @@ void CodeGeneratorARM::emitBigIntMod(LBigIntMod* ins, Register dividend,
   masm.setupUnalignedABICall(output);
   masm.passABIArg(dividend);
   masm.passABIArg(divisor);
-  masm.callWithABI<Fn, __aeabi_idivmod>(ABIType::Int64,
+  masm.callWithABI<Fn, __aeabi_idivmod>(MoveOp::GENERAL,
                                         CheckUnsafeCallWithABI::DontCheckOther);
 
   masm.PopRegsInMask(volatileRegs);
@@ -2344,7 +2344,7 @@ void CodeGenerator::visitSoftUDivOrMod(LSoftUDivOrMod* ins) {
     masm.passABIArg(lhs);
     masm.passABIArg(rhs);
     masm.callWithABI<Fn, __aeabi_uidivmod>(
-        ABIType::Int64, CheckUnsafeCallWithABI::DontCheckOther);
+        MoveOp::GENERAL, CheckUnsafeCallWithABI::DontCheckOther);
   }
 
   if (mod) {
@@ -2461,7 +2461,7 @@ void CodeGenerator::visitWasmTruncateToInt64(LWasmTruncateToInt64* lir) {
   masm.Push(input);
 
   masm.setupWasmABICall();
-  masm.passABIArg(inputDouble, ABIType::Float64);
+  masm.passABIArg(inputDouble, MoveOp::DOUBLE);
 
   int32_t instanceOffset = masm.framePushed() - framePushedAfterInstance;
   if (lir->mir()->isSaturating()) {
@@ -2544,8 +2544,8 @@ void CodeGenerator::visitInt64ToFloatingPointCall(
                         : wasm::SymbolicAddress::Int64ToDouble);
 
   int32_t instanceOffset = masm.framePushed() - framePushedAfterInstance;
-  ABIType result =
-      toType == MIRType::Float32 ? ABIType::Float32 : ABIType::Float64;
+  MoveOp::Type result =
+      toType == MIRType::Float32 ? MoveOp::FLOAT32 : MoveOp::DOUBLE;
   masm.callWithABI(mir->bytecodeOffset(), callee, mozilla::Some(instanceOffset),
                    result);
 

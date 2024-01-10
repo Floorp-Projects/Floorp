@@ -2811,7 +2811,7 @@ void MacroAssembler::callWithABIPre(uint32_t* stackAdjust, bool callFromWasm) {
   assertStackAlignment(ABIStackAlignment);
 }
 
-void MacroAssembler::callWithABIPost(uint32_t stackAdjust, ABIType result,
+void MacroAssembler::callWithABIPost(uint32_t stackAdjust, MoveOp::Type result,
                                      bool callFromWasm) {
   // Restore ra value (as stored in callWithABIPre()).
   loadPtr(Address(StackPointer, stackAdjust - sizeof(intptr_t)), ra);
@@ -2831,7 +2831,7 @@ void MacroAssembler::callWithABIPost(uint32_t stackAdjust, ABIType result,
 #endif
 }
 
-void MacroAssembler::callWithABINoProfiler(Register fun, ABIType result) {
+void MacroAssembler::callWithABINoProfiler(Register fun, MoveOp::Type result) {
   SecondScratchRegisterScope scratch2(asMasm());
   // Load the callee in scratch2, no instruction between the movePtr and
   // call should clobber it. Note that we can't use fun because it may be
@@ -2844,7 +2844,8 @@ void MacroAssembler::callWithABINoProfiler(Register fun, ABIType result) {
   callWithABIPost(stackAdjust, result);
 }
 
-void MacroAssembler::callWithABINoProfiler(const Address& fun, ABIType result) {
+void MacroAssembler::callWithABINoProfiler(const Address& fun,
+                                           MoveOp::Type result) {
   SecondScratchRegisterScope scratch2(asMasm());
   // Load the callee in scratch2, as above.
   loadPtr(fun, scratch2);
@@ -5355,7 +5356,7 @@ void MacroAssemblerLOONG64Compat::handleFailureWithHandlerTail(
   asMasm().setupUnalignedABICall(a1);
   asMasm().passABIArg(a0);
   asMasm().callWithABI<Fn, HandleException>(
-      ABIType::General, CheckUnsafeCallWithABI::DontCheckHasExitFrame);
+      MoveOp::GENERAL, CheckUnsafeCallWithABI::DontCheckHasExitFrame);
 
   Label entryFrame;
   Label catch_;

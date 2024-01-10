@@ -1738,8 +1738,8 @@ static void EmitStoreBufferMutation(MacroAssembler& masm, Register holder,
   }
   masm.passABIArg(buffer);
   masm.passABIArg(addrReg);
-  masm.callWithABI(DynamicFunction<StoreBufferMutationFn>(fun),
-                   ABIType::General, CheckUnsafeCallWithABI::DontCheckOther);
+  masm.callWithABI(DynamicFunction<StoreBufferMutationFn>(fun), MoveOp::GENERAL,
+                   CheckUnsafeCallWithABI::DontCheckOther);
 
   if (needExtraReg) {
     masm.pop(holder);
@@ -5537,7 +5537,7 @@ void CodeGenerator::emitCallNative(LCallIns* call, JSNative native) {
   }
 #endif
   if (!emittedCall) {
-    masm.callWithABI(DynamicFunction<JSNative>(native), ABIType::General,
+    masm.callWithABI(DynamicFunction<JSNative>(native), MoveOp::GENERAL,
                      CheckUnsafeCallWithABI::DontCheckHasExitFrame);
   }
 
@@ -5706,7 +5706,7 @@ void CodeGenerator::visitCallDOMNative(LCallDOMNative* call) {
   masm.passABIArg(argArgs);
   ensureOsiSpace();
   masm.callWithABI(DynamicFunction<JSJitMethodOp>(target->jitInfo()->method),
-                   ABIType::General,
+                   MoveOp::GENERAL,
                    CheckUnsafeCallWithABI::DontCheckHasExitFrame);
 
   if (target->jitInfo()->isInfallible) {
@@ -7441,9 +7441,9 @@ void CodeGenerator::visitAtan2D(LAtan2D* lir) {
 
   using Fn = double (*)(double x, double y);
   masm.setupAlignedABICall();
-  masm.passABIArg(y, ABIType::Float64);
-  masm.passABIArg(x, ABIType::Float64);
-  masm.callWithABI<Fn, ecmaAtan2>(ABIType::Float64);
+  masm.passABIArg(y, MoveOp::DOUBLE);
+  masm.passABIArg(x, MoveOp::DOUBLE);
+  masm.callWithABI<Fn, ecmaAtan2>(MoveOp::DOUBLE);
 
   MOZ_ASSERT(ToFloatRegister(lir->output()) == ReturnDoubleReg);
 }
@@ -7453,23 +7453,23 @@ void CodeGenerator::visitHypot(LHypot* lir) {
   masm.setupAlignedABICall();
 
   for (uint32_t i = 0; i < numArgs; ++i) {
-    masm.passABIArg(ToFloatRegister(lir->getOperand(i)), ABIType::Float64);
+    masm.passABIArg(ToFloatRegister(lir->getOperand(i)), MoveOp::DOUBLE);
   }
 
   switch (numArgs) {
     case 2: {
       using Fn = double (*)(double x, double y);
-      masm.callWithABI<Fn, ecmaHypot>(ABIType::Float64);
+      masm.callWithABI<Fn, ecmaHypot>(MoveOp::DOUBLE);
       break;
     }
     case 3: {
       using Fn = double (*)(double x, double y, double z);
-      masm.callWithABI<Fn, hypot3>(ABIType::Float64);
+      masm.callWithABI<Fn, hypot3>(MoveOp::DOUBLE);
       break;
     }
     case 4: {
       using Fn = double (*)(double x, double y, double z, double w);
-      masm.callWithABI<Fn, hypot4>(ABIType::Float64);
+      masm.callWithABI<Fn, hypot4>(MoveOp::DOUBLE);
       break;
     }
     default:
@@ -9330,7 +9330,7 @@ void CodeGenerator::visitOutOfLineWasmCallPostWriteBarrier(
   masm.passABIArg(temp);
   int32_t instanceOffset = masm.framePushed() - framePushedAfterInstance;
   masm.callWithABI(wasm::BytecodeOffset(0), wasm::SymbolicAddress::PostBarrier,
-                   mozilla::Some(instanceOffset), ABIType::General);
+                   mozilla::Some(instanceOffset), MoveOp::GENERAL);
 
   masm.Pop(InstanceReg);
   restoreLiveVolatile(ool->lir());
@@ -9576,10 +9576,10 @@ void CodeGenerator::visitPowI(LPowI* ins) {
 
   using Fn = double (*)(double x, int32_t y);
   masm.setupAlignedABICall();
-  masm.passABIArg(value, ABIType::Float64);
+  masm.passABIArg(value, MoveOp::DOUBLE);
   masm.passABIArg(power);
 
-  masm.callWithABI<Fn, js::powi>(ABIType::Float64);
+  masm.callWithABI<Fn, js::powi>(MoveOp::DOUBLE);
   MOZ_ASSERT(ToFloatRegister(ins->output()) == ReturnDoubleReg);
 }
 
@@ -9589,9 +9589,9 @@ void CodeGenerator::visitPowD(LPowD* ins) {
 
   using Fn = double (*)(double x, double y);
   masm.setupAlignedABICall();
-  masm.passABIArg(value, ABIType::Float64);
-  masm.passABIArg(power, ABIType::Float64);
-  masm.callWithABI<Fn, ecmaPow>(ABIType::Float64);
+  masm.passABIArg(value, MoveOp::DOUBLE);
+  masm.passABIArg(power, MoveOp::DOUBLE);
+  masm.callWithABI<Fn, ecmaPow>(MoveOp::DOUBLE);
 
   MOZ_ASSERT(ToFloatRegister(ins->output()) == ReturnDoubleReg);
 }
@@ -9672,9 +9672,9 @@ void CodeGenerator::visitMathFunctionD(LMathFunctionD* ins) {
 
   masm.setupAlignedABICall();
 
-  masm.passABIArg(input, ABIType::Float64);
+  masm.passABIArg(input, MoveOp::DOUBLE);
   masm.callWithABI(DynamicFunction<UnaryMathFunctionType>(funPtr),
-                   ABIType::Float64);
+                   MoveOp::DOUBLE);
 }
 
 void CodeGenerator::visitMathFunctionF(LMathFunctionF* ins) {
@@ -9682,7 +9682,7 @@ void CodeGenerator::visitMathFunctionF(LMathFunctionF* ins) {
   MOZ_ASSERT(ToFloatRegister(ins->output()) == ReturnFloat32Reg);
 
   masm.setupAlignedABICall();
-  masm.passABIArg(input, ABIType::Float32);
+  masm.passABIArg(input, MoveOp::FLOAT32);
 
   using Fn = float (*)(float x);
   Fn funptr = nullptr;
@@ -9706,7 +9706,7 @@ void CodeGenerator::visitMathFunctionF(LMathFunctionF* ins) {
       MOZ_CRASH("Unknown or unsupported float32 math function");
   }
 
-  masm.callWithABI(DynamicFunction<Fn>(funptr), ABIType::Float32, check);
+  masm.callWithABI(DynamicFunction<Fn>(funptr), MoveOp::FLOAT32, check);
 }
 
 void CodeGenerator::visitModD(LModD* ins) {
@@ -9719,9 +9719,9 @@ void CodeGenerator::visitModD(LModD* ins) {
 
   using Fn = double (*)(double a, double b);
   masm.setupAlignedABICall();
-  masm.passABIArg(lhs, ABIType::Float64);
-  masm.passABIArg(rhs, ABIType::Float64);
-  masm.callWithABI<Fn, NumberMod>(ABIType::Float64);
+  masm.passABIArg(lhs, MoveOp::DOUBLE);
+  masm.passABIArg(rhs, MoveOp::DOUBLE);
+  masm.callWithABI<Fn, NumberMod>(MoveOp::DOUBLE);
 }
 
 void CodeGenerator::visitModPowTwoD(LModPowTwoD* ins) {
@@ -9790,12 +9790,12 @@ void CodeGenerator::visitWasmBuiltinModD(LWasmBuiltinModD* ins) {
   MOZ_ASSERT(ToFloatRegister(ins->output()) == ReturnDoubleReg);
 
   masm.setupWasmABICall();
-  masm.passABIArg(lhs, ABIType::Float64);
-  masm.passABIArg(rhs, ABIType::Float64);
+  masm.passABIArg(lhs, MoveOp::DOUBLE);
+  masm.passABIArg(rhs, MoveOp::DOUBLE);
 
   int32_t instanceOffset = masm.framePushed() - framePushedAfterInstance;
   masm.callWithABI(ins->mir()->bytecodeOffset(), wasm::SymbolicAddress::ModD,
-                   mozilla::Some(instanceOffset), ABIType::Float64);
+                   mozilla::Some(instanceOffset), MoveOp::DOUBLE);
 
   masm.Pop(InstanceReg);
 }
@@ -11051,11 +11051,11 @@ void CodeGenerator::visitCompareBigIntDouble(LCompareBigIntDouble* lir) {
   // - |left <= right| is implemented as |right >= left|.
   // - |left > right| is implemented as |right < left|.
   if (op == JSOp::Le || op == JSOp::Gt) {
-    masm.passABIArg(right, ABIType::Float64);
+    masm.passABIArg(right, MoveOp::DOUBLE);
     masm.passABIArg(left);
   } else {
     masm.passABIArg(left);
-    masm.passABIArg(right, ABIType::Float64);
+    masm.passABIArg(right, MoveOp::DOUBLE);
   }
 
   using FnBigIntNumber = bool (*)(BigInt*, double);
@@ -12082,7 +12082,7 @@ void JitRuntime::generateFreeStub(MacroAssembler& masm) {
   using Fn = void (*)(void* p);
   masm.setupUnalignedABICall(regTemp);
   masm.passABIArg(regSlots);
-  masm.callWithABI<Fn, js_free>(ABIType::General,
+  masm.callWithABI<Fn, js_free>(MoveOp::GENERAL,
                                 CheckUnsafeCallWithABI::DontCheckOther);
 
   masm.PopRegsInMask(save);
@@ -12115,7 +12115,7 @@ void JitRuntime::generateLazyLinkStub(MacroAssembler& masm) {
   masm.passABIArg(temp0);
   masm.passABIArg(temp1);
   masm.callWithABI<Fn, LazyLinkTopActivation>(
-      ABIType::General, CheckUnsafeCallWithABI::DontCheckHasExitFrame);
+      MoveOp::GENERAL, CheckUnsafeCallWithABI::DontCheckHasExitFrame);
 
   // Discard exit frame and restore frame pointer.
   masm.leaveExitFrame(0);
@@ -12154,7 +12154,7 @@ void JitRuntime::generateInterpreterStub(MacroAssembler& masm) {
   masm.passABIArg(temp0);
   masm.passABIArg(temp1);
   masm.callWithABI<Fn, InvokeFromInterpreterStub>(
-      ABIType::General, CheckUnsafeCallWithABI::DontCheckHasExitFrame);
+      MoveOp::GENERAL, CheckUnsafeCallWithABI::DontCheckHasExitFrame);
 
   masm.branchIfFalseBool(ReturnReg, masm.failureLabel());
 
@@ -17455,7 +17455,7 @@ void CodeGenerator::visitGetDOMProperty(LGetDOMProperty* ins) {
   masm.passABIArg(ValueReg);
   ensureOsiSpace();
   masm.callWithABI(DynamicFunction<JSJitGetterOp>(ins->mir()->fun()),
-                   ABIType::General,
+                   MoveOp::GENERAL,
                    CheckUnsafeCallWithABI::DontCheckHasExitFrame);
 
   if (ins->mir()->isInfallible()) {
@@ -17576,7 +17576,7 @@ void CodeGenerator::visitSetDOMProperty(LSetDOMProperty* ins) {
   masm.passABIArg(ValueReg);
   ensureOsiSpace();
   masm.callWithABI(DynamicFunction<JSJitSetterOp>(ins->mir()->fun()),
-                   ABIType::General,
+                   MoveOp::GENERAL,
                    CheckUnsafeCallWithABI::DontCheckHasExitFrame);
 
   masm.branchIfFalseBool(ReturnReg, masm.exceptionLabel());
@@ -18385,7 +18385,7 @@ void CodeGenerator::callWasmStructAllocFun(LInstruction* lir,
   int32_t instanceOffset = masm.framePushed() - framePushedAfterInstance;
   CodeOffset offset =
       masm.callWithABI(wasm::BytecodeOffset(0), fun,
-                       mozilla::Some(instanceOffset), ABIType::General);
+                       mozilla::Some(instanceOffset), MoveOp::GENERAL);
   masm.storeCallPointerResult(output);
 
   markSafepointAt(offset.offset(), lir);
