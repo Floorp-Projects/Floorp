@@ -18,6 +18,10 @@ const TOP_SITES_BLOCKED_SPONSORS_PREF = "browser.topsites.blockedSponsors";
 const CONTILE_CACHE_PREF = "browser.topsites.contile.cachedTiles";
 const CONTILE_CACHE_VALID_FOR_PREF = "browser.topsites.contile.cacheValidFor";
 const CONTILE_CACHE_LAST_FETCH_PREF = "browser.topsites.contile.lastFetch";
+const NIMBUS_VARIABLE_MAX_SPONSORED = "topSitesMaxSponsored";
+const NIMBUS_VARIABLE_CONTILE_POSITIONS = "contileTopsitesPositions";
+const NIMBUS_VARIABLE_CONTILE_ENABLED = "topSitesContileEnabled";
+const NIMBUS_VARIABLE_CONTILE_MAX_NUM_SPONSORED = "topSitesContileMaxSponsored";
 
 let contileTile1 = {
   id: 74357,
@@ -86,13 +90,31 @@ function prepFeed(feed, sandbox) {
   return { feed, fetchStub };
 }
 
+function setNimbusVariablesForNumTiles(nimbusPocketStub, numTiles) {
+  nimbusPocketStub.withArgs(NIMBUS_VARIABLE_MAX_SPONSORED).returns(numTiles);
+  nimbusPocketStub
+    .withArgs(NIMBUS_VARIABLE_CONTILE_MAX_NUM_SPONSORED)
+    .returns(numTiles);
+  // when setting num tiles to > 2 need to set the positions or the > 2 has no effect.
+  // can be defaulted to undefined
+  let positionsArray = Array.from(
+    { length: numTiles },
+    (value, index) => index
+  );
+  nimbusPocketStub
+    .withArgs(NIMBUS_VARIABLE_CONTILE_POSITIONS)
+    .returns(positionsArray.toString());
+}
+
 add_setup(async () => {
   do_get_profile();
   Services.fog.initializeFOG();
 
   let sandbox = sinon.createSandbox();
   sandbox.stub(SearchService.prototype, "init").resolves();
-  sandbox.stub(NimbusFeatures.newtab, "getVariable").returns(true);
+
+  const nimbusStub = sandbox.stub(NimbusFeatures.newtab, "getVariable");
+  nimbusStub.withArgs(NIMBUS_VARIABLE_CONTILE_ENABLED).returns(true);
 
   sandbox.spy(Glean.topsites.sponsoredTilesConfigured, "set");
   sandbox.spy(Glean.topsites.sponsoredTilesReceived, "set");
@@ -944,7 +966,11 @@ add_task(async function test_update_tile_count() {
   );
 
   // 2.  Set the Numbus pref to 3, confirm previous count still used.
-  sandbox.stub(NimbusFeatures.pocketNewtab, "getVariable").returns(3);
+  const nimbusPocketStub = sandbox.stub(
+    NimbusFeatures.pocketNewtab,
+    "getVariable"
+  );
+  setNimbusVariablesForNumTiles(nimbusPocketStub, 3);
 
   Assert.equal(Glean.topsites.sponsoredTilesConfigured.testGetValue(), 2);
 
@@ -1095,7 +1121,11 @@ add_task(async function test_update_tile_count_sourced_from_cache() {
   );
 
   // 2.  Set the Numbus pref to 3, confirm previous count still used.
-  sandbox.stub(NimbusFeatures.pocketNewtab, "getVariable").returns(3);
+  const nimbusPocketStub = sandbox.stub(
+    NimbusFeatures.pocketNewtab,
+    "getVariable"
+  );
+  setNimbusVariablesForNumTiles(nimbusPocketStub, 3);
 
   Assert.equal(Glean.topsites.sponsoredTilesConfigured.testGetValue(), 2);
 
@@ -1148,7 +1178,6 @@ add_task(
       sandbox
     );
 
-    sandbox.stub(NimbusFeatures.pocketNewtab, "getVariable").returns(2);
     fetchStub.resolves({
       ok: true,
       status: 200,
