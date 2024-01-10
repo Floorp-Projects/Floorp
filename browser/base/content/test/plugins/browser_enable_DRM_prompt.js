@@ -36,6 +36,11 @@ add_task(async function test_drm_prompt_shows_for_toplevel() {
     // Turn off EME and Widevine CDM.
     Services.prefs.setBoolPref("media.eme.enabled", false);
     Services.prefs.setBoolPref("media.gmp-widevinecdm.enabled", false);
+    let notificationShownPromise = BrowserTestUtils.waitForNotificationBar(
+      gBrowser,
+      browser,
+      "drmContentDisabled"
+    );
 
     // Have content request access to Widevine, UI should drop down to
     // prompt user to enable DRM.
@@ -64,7 +69,9 @@ add_task(async function test_drm_prompt_shows_for_toplevel() {
 
     // Verify the UI prompt showed.
     let box = gBrowser.getNotificationBox(browser);
+    await notificationShownPromise;
     let notification = box.currentNotification;
+    await notification.updateComplete;
 
     ok(notification, "Notification should be visible");
     is(
@@ -152,6 +159,11 @@ add_task(async function test_drm_prompt_shows_for_cross_origin_iframe() {
     // Turn off EME and Widevine CDM.
     Services.prefs.setBoolPref("media.eme.enabled", false);
     Services.prefs.setBoolPref("media.gmp-widevinecdm.enabled", false);
+    let notificationShownPromise = BrowserTestUtils.waitForNotificationBar(
+      gBrowser,
+      browser,
+      "drmContentDisabled"
+    );
 
     // Have content request access to Widevine, UI should drop down to
     // prompt user to enable DRM.
@@ -198,7 +210,9 @@ add_task(async function test_drm_prompt_shows_for_cross_origin_iframe() {
 
     // Verify the UI prompt showed.
     let box = gBrowser.getNotificationBox(browser);
+    await notificationShownPromise;
     let notification = box.currentNotification;
+    await notification.updateComplete;
 
     ok(notification, "Notification should be visible");
     is(

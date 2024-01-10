@@ -138,18 +138,15 @@ function testtag_notification_eventCallback(expectedEvents, ntf, testName)
 var tests =
 [
   {
-    test(nb, ntf) {
-      ntf = nb.appendNotification("mutable", {
+    async test(nb, ntf) {
+      ntf = await nb.appendNotification("mutable", {
           label: "Original",
           priority: nb.PRIORITY_INFO_LOW,
         }, testtag_notificationbox_buttons);
 
       ntf.label = "Changed string";
-      SimpleTest.is(ntf.messageText.textContent, "Changed string", "set notification label with string");
-
-      ntf.label = { "l10n-id": "foo-bar" };
-      const message = ntf.messageText.querySelector("span");
-      SimpleTest.is(message.dataset.l10nId, "foo-bar", "set notification label with l10n id");
+      await ntf.updateComplete;
+      SimpleTest.is(ntf.messageText.textContent.trim(), "Changed string", "set notification label with string");
       return ntf;
     },
     result(nb, ntf) {
@@ -162,8 +159,8 @@ var tests =
   label attribute set correctly.
   */
   {
-    test(nb, ntf) {
-      ntf = nb.appendNotification("note", {
+    async test(nb, ntf) {
+      ntf = await nb.appendNotification("note", {
         label: "Notification",
         image: "happy.png",
         priority: nb.PRIORITY_INFO_LOW,
@@ -183,8 +180,8 @@ var tests =
     Ensures that buttons created with the "l10n-id" parameter have
     their "l10n-id" assigned correctly.
     */
-    test(nb, ntf) {
-      ntf = nb.appendNotification("note", {
+    async test(nb, ntf) {
+      ntf = await nb.appendNotification("note", {
         label: "Notification",
         image: "happy.png",
         priority: nb.PRIORITY_INFO_LOW,
@@ -200,9 +197,9 @@ var tests =
     }
   },
   {
-    test(nb, ntf) {
+    async test(nb, ntf) {
       // append a new notification
-      ntf = nb.appendNotification("note", {
+      ntf = await nb.appendNotification("note", {
           label: "Notification", 
           image: "happy.png",
           priority: nb.PRIORITY_INFO_LOW,
@@ -235,9 +232,9 @@ var tests =
     }
   },
   {
-    test(nb, ntf) {
+    async test(nb, ntf) {
       // append a new notification, but now with an event callback
-      ntf = nb.appendNotification("note", {
+      ntf = await nb.appendNotification("note", {
           label: "Notification", 
           image: "happy.png",
           priority: nb.PRIORITY_INFO_LOW,
@@ -265,8 +262,8 @@ var tests =
     }
   },
   {
-    test(nb, ntf) {
-      ntf = nb.appendNotification("note", {
+    async test(nb, ntf) {
+      ntf = await nb.appendNotification("note", {
           label: "Notification", 
           image: "happy.png",
           priority: nb.PRIORITY_INFO_MEDIUM,
@@ -299,8 +296,8 @@ var tests =
     }
   },
   {
-    test(nb, ntf) {
-      ntf = nb.appendNotification("note", {
+    async test(nb, ntf) {
+      ntf = await nb.appendNotification("note", {
           label: "Notification", 
           image: "happy.png",
           priority: nb.PRIORITY_WARNING_LOW,
@@ -321,13 +318,13 @@ var tests =
   },
   {
     repeat: true,
-    test(nb, arr) {
+    async test(nb, arr) {
       var idx = arr[0];
       var ntf = arr[1];
       switch (idx) {
         case 1:
           // append a new notification
-          ntf = nb.appendNotification("note", {
+          ntf = await nb.appendNotification("note", {
               label: "Notification",
               image: "happy.png",
               priority: nb.PRIORITY_INFO_LOW,
@@ -373,9 +370,9 @@ var tests =
     }
   },
   {
-    test(nb, ntf) {
+    async test(nb, ntf) {
       // append another notification
-      ntf = nb.appendNotification("note", {
+      ntf = await nb.appendNotification("note", {
           label: "Notification",
           image: "happy.png",
           priority: nb.PRIORITY_INFO_MEDIUM,
@@ -402,8 +399,8 @@ var tests =
     }
   },
   {
-    test(nb, ntf) {
-      ntf = nb.appendNotification("note", {
+    async test(nb, ntf) {
+      ntf = await nb.appendNotification("note", {
           label: "Notification",
           image: "happy.png",
           priority: nb.PRIORITY_INFO_HIGH,
@@ -419,8 +416,8 @@ var tests =
     }
   },
   {
-    test(nb, ntf) {
-      ntf = nb.appendNotification("note", {
+    async test(nb, ntf) {
+      ntf = await nb.appendNotification("note", {
           label: "Notification",
           image: "happy.png",
           priority: nb.PRIORITY_INFO_LOW,
@@ -437,7 +434,7 @@ var tests =
       SimpleTest.is(button.localName, "button", "button is a button");
       SimpleTest.ok(!button.href, "button href is not set");
 
-      let link = ntf.messageText.lastElementChild;
+      let link = ntf.querySelector(".notification-link");
       SimpleTest.is(link.localName, "label", "link is a label");
       SimpleTest.is(link.href, "about:mozilla", "link href is correct");
 
@@ -445,9 +442,9 @@ var tests =
     }
   },
   {
-    test(nb, ntf) {
+    async test(nb, ntf) {
       // append a new notification
-      ntf = nb.appendNotification("note", {
+      ntf = await nb.appendNotification("note", {
           label: "Notification",
           image: "happy.png",
           priority: nb.PRIORITY_INFO_LOW,
@@ -473,20 +470,21 @@ var tests =
     }
   },
   {
-    test(nb, ntf) {
-      ntf = nb.appendNotification("note", {
+    async test(nb, ntf) {
+      ntf = await nb.appendNotification("note", {
         label: "Notification",
         image: "happy.png",
         priority: nb.PRIORITY_INFO_LOW,
         eventCallback: notification_eventCallback,
       }, testtag_notificationbox_supportpage);
+      await ntf.updateComplete;
       SimpleTest.is(ntf && ntf.localName == NOTIFICATION_LOCAL_NAME, true, "append support page notification");
       return ntf;
     },
     result(nb, ntf) {
       testtag_notificationbox_State(nb, "append link with callback", ntf, 1);
 
-      let link = ntf.messageText.firstElementChild;
+      let link = ntf.querySelector(".notification-link");
       SimpleTest.is(link.localName, "a", "link 1 is an anchor");
       SimpleTest.is(link.dataset.l10nId, "moz-support-link-text", "link 1 Fluent ID is set");
       SimpleTest.ok(link.href.endsWith("/test1"), "link 1 href is set");
@@ -512,20 +510,20 @@ var tests =
     }
   },
   {
-    test(nb, unused) {
+    async test(nb, unused) {
       // add a number of notifications and check that they are added in order
-      nb.appendNotification("4", { label: "Four", priority: nb.PRIORITY_INFO_HIGH },
+      await nb.appendNotification("4", { label: "Four", priority: nb.PRIORITY_INFO_HIGH },
                             testtag_notificationbox_buttons);
-      nb.appendNotification("7", { label: "Seven", priority: nb.PRIORITY_WARNING_HIGH },
+      await nb.appendNotification("7", { label: "Seven", priority: nb.PRIORITY_WARNING_HIGH },
                             testtag_notificationbox_buttons);
-      nb.appendNotification("2", { label: "Two", priority: nb.PRIORITY_INFO_LOW });
-      nb.appendNotification("8", { label: "Eight", priority: nb.PRIORITY_CRITICAL_LOW });
-      nb.appendNotification("5", { label: "Five", priority: nb.PRIORITY_WARNING_LOW });
-      nb.appendNotification("6", { label: "Six", priority: nb.PRIORITY_WARNING_HIGH });
-      nb.appendNotification("1", { label: "One", priority: nb.PRIORITY_INFO_LOW });
-      nb.appendNotification("9", { label: "Nine", priority: nb.PRIORITY_CRITICAL_MEDIUM });
-      let ntf = nb.appendNotification("10", { label: "Ten", priority: nb.PRIORITY_CRITICAL_HIGH });
-      nb.appendNotification("3", { label: "Three", priority: nb.PRIORITY_INFO_MEDIUM });
+      await nb.appendNotification("2", { label: "Two", priority: nb.PRIORITY_INFO_LOW });
+      await nb.appendNotification("8", { label: "Eight", priority: nb.PRIORITY_CRITICAL_LOW });
+      await nb.appendNotification("5", { label: "Five", priority: nb.PRIORITY_WARNING_LOW });
+      await nb.appendNotification("6", { label: "Six", priority: nb.PRIORITY_WARNING_HIGH });
+      await nb.appendNotification("1", { label: "One", priority: nb.PRIORITY_INFO_LOW });
+      await nb.appendNotification("9", { label: "Nine", priority: nb.PRIORITY_CRITICAL_MEDIUM });
+      let ntf = await nb.appendNotification("10", { label: "Ten", priority: nb.PRIORITY_CRITICAL_HIGH });
+      await nb.appendNotification("3", { label: "Three", priority: nb.PRIORITY_INFO_MEDIUM });
       return ntf;
     },
     result(nb, ntf) {
@@ -558,16 +556,16 @@ var tests =
     }
   },
   {
-    test(nb, ntf) {
+    async test(nb, ntf) {
       var exh = false;
       try {
-        nb.appendNotification("no", { label: "no", priority: -1 });
+        await nb.appendNotification("no", { label: "no", priority: -1 });
       } catch (ex) { exh = true; }
       SimpleTest.is(exh, true, "appendNotification priority too low");
 
       exh = false;
       try {
-        nb.appendNotification("no", { label: "no", priority: 11 });
+        await nb.appendNotification("no", { label: "no", priority: 11 });
       } catch (ex) { exh = true; }
       SimpleTest.is(exh, true, "appendNotification priority too high");
 
@@ -579,8 +577,8 @@ var tests =
 
 var appendPriorityTests = [
   {
-    test(nb, priority) {
-      let ntf = nb.appendNotification("note", {
+    async test(nb, priority) {
+      let ntf = await nb.appendNotification("note", {
           label: "Notification", 
           image: "happy.png",
           priority,
@@ -598,9 +596,9 @@ var appendPriorityTests = [
       nb.removeCurrentNotification();
       return priority;
     },
-    result(nb, priority) {
+    async result(nb, priority) {
       if (priority == nb.PRIORITY_CRITICAL_HIGH) {
-        let ntf = nb.appendNotification("note", {
+        let ntf = await nb.appendNotification("note", {
             label: "Notification", 
             image: "happy.png",
             priority: nb.PRIORITY_INFO_LOW,
@@ -623,7 +621,7 @@ function testtag_notificationbox_State(nb, testid, expecteditem, expectedcount)
 
 function testtag_notification_State(nb, ntf, testid, label, value, image, priority)
 {
-  is(ntf.messageText.textContent, label, testid + " notification label");
+  is(ntf.messageText.textContent.trim(), label, testid + " notification label");
   is(ntf.getAttribute("value"), value, testid + " notification value");
   is(ntf.priority, priority, testid + " notification priority");
 
@@ -654,7 +652,7 @@ function testtag_notification_State(nb, ntf, testid, label, value, image, priori
     critical: "chrome://global/skin/icons/error.svg",
   };
   let icon = icons[type];
-  is(getComputedStyle(ntf.messageImage, "::after").backgroundImage, `url("${icon}")`, "notification image is set");
+  is(ntf.messageImage.src, icon, "notification image is set");
 }
 
 function checkPopupTest(nb, ntf)
@@ -697,7 +695,7 @@ function checkPopupClosed()
  * function as its arg. The result function may also return a value which
  * will be passed to the next repetition or the next test in the array.
  */
-function runTimedTests(tests, idx, element, arg)
+async function runTimedTests(tests, idx, element, arg)
 {
   if (idx >= 0 && "result" in tests[idx])
     arg = tests[idx].result(element, arg);
@@ -707,7 +705,7 @@ function runTimedTests(tests, idx, element, arg)
     idx++;
 
   if (idx < tests.length) {
-    var result = tests[idx].test(element, arg);
+    let result = await tests[idx].test(element, arg);
     setTimeout(runTimedTestsWait, 50, tests, idx, element, result);
   }
 }

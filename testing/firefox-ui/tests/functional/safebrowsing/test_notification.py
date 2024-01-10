@@ -123,7 +123,7 @@ class TestSafeBrowsingNotificationBar(WindowManagerMixin, MarionetteTestCase):
             message = notification_box.find_element(
                 By.CSS_SELECTOR, "notification-message[value=blocked-badware-page]"
             )
-            button = message.get_property("closeButton")
+            button = message.get_property("closeButtonEl")
             button.click()
 
             Wait(self.marionette, timeout=self.marionette.timeout.page_load).until(
