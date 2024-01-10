@@ -327,3 +327,35 @@ function runAllCookiePermissionTests(originAttributes) {
     });
   });
 }
+
+function openPreferencesViaOpenPreferencesAPI(aPane, aOptions) {
+  return new Promise(resolve => {
+    let finalPrefPaneLoaded = TestUtils.topicObserved(
+      "sync-pane-loaded",
+      () => true
+    );
+    gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:blank");
+    openPreferences(aPane);
+    let newTabBrowser = gBrowser.selectedBrowser;
+
+    newTabBrowser.addEventListener(
+      "Initialized",
+      function () {
+        newTabBrowser.contentWindow.addEventListener(
+          "load",
+          async function () {
+            let win = gBrowser.contentWindow;
+            let selectedPane = win.history.state;
+            await finalPrefPaneLoaded;
+            if (!aOptions || !aOptions.leaveOpen) {
+              gBrowser.removeCurrentTab();
+            }
+            resolve({ selectedPane });
+          },
+          { once: true }
+        );
+      },
+      { capture: true, once: true }
+    );
+  });
+}
