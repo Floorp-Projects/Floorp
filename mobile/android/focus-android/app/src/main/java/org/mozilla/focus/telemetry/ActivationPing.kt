@@ -61,7 +61,7 @@ class ActivationPing(private val context: Context) {
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal fun triggerPing() {
         // Generate the activation_id.
-        Activation.activationId.set(UUID.fromString(TelemetryWrapper.clientId))
+        Activation.activationId.generateAndSet()
 
         CoroutineScope(Dispatchers.IO).launch {
             Pings.activation.submit()

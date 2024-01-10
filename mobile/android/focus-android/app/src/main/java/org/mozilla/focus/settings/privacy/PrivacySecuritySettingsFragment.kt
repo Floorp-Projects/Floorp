@@ -24,7 +24,6 @@ import org.mozilla.focus.nimbus.FocusNimbus
 import org.mozilla.focus.settings.BaseSettingsFragment
 import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.state.Screen
-import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.widget.CookiesPreference
 
 class PrivacySecuritySettingsFragment :
@@ -101,7 +100,6 @@ class PrivacySecuritySettingsFragment :
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences, key: String?) {
         key?.let {
             recordTelemetry(it, sharedPreferences.all[key])
-            TelemetryWrapper.settingsEvent(key, sharedPreferences.all[key].toString())
         }
         updateStealthToggleAvailability()
     }
@@ -162,8 +160,6 @@ class PrivacySecuritySettingsFragment :
         when (preference.key) {
             resources.getString(R.string.pref_key_screen_exceptions) -> {
                 TrackingProtectionExceptions.allowListOpened.record(NoExtras())
-
-                TelemetryWrapper.openExceptionsListSetting()
 
                 requireComponents.appStore.dispatch(
                     AppAction.OpenSettings(page = Screen.Settings.Page.PrivacyExceptions),

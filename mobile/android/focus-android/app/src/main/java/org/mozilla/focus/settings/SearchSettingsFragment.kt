@@ -15,7 +15,6 @@ import org.mozilla.focus.ext.requireComponents
 import org.mozilla.focus.ext.showToolbar
 import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.state.Screen
-import org.mozilla.focus.telemetry.TelemetryWrapper
 
 class SearchSettingsFragment :
     BaseSettingsFragment(),
@@ -44,8 +43,6 @@ class SearchSettingsFragment :
                     AppAction.OpenSettings(page = Screen.Settings.Page.SearchList),
                 )
                 SearchEngines.openSettings.record(NoExtras())
-
-                TelemetryWrapper.openSearchSettingsEvent()
             }
             resources.getString(R.string.pref_key_screen_autocomplete) ->
                 requireComponents.appStore.dispatch(

@@ -29,7 +29,6 @@ import org.mozilla.focus.GleanMetrics.OpenWith.listItemTapped
 import org.mozilla.focus.R
 import org.mozilla.focus.ext.isTablet
 import org.mozilla.focus.open.AppAdapter.OnAppSelectedListener
-import org.mozilla.focus.telemetry.TelemetryWrapper.openFirefoxEvent
 
 /**
  * [AppCompatDialogFragment] used to display open in app options.
@@ -116,10 +115,6 @@ class OpenWithFragment : AppCompatDialogFragment(), OnAppSelectedListener {
         startActivity(intent)
 
         listItemTapped.record(ListItemTappedExtra(app.packageName.contains("mozilla")))
-
-        if (app.packageName.contains("firefox")) {
-            openFirefoxEvent()
-        }
 
         dismiss()
     }

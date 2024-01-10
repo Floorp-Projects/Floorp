@@ -15,7 +15,6 @@ import org.mozilla.focus.ext.showToolbar
 import org.mozilla.focus.settings.BaseSettingsFragment
 import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.state.Screen
-import org.mozilla.focus.telemetry.TelemetryWrapper
 
 /**
  * Settings UI for configuring autocomplete.
@@ -69,8 +68,6 @@ class AutocompleteSettingsFragment : BaseSettingsFragment(), SharedPreferences.O
         if (key == null || sharedPreferences == null) {
             return
         }
-
-        TelemetryWrapper.settingsEvent(key, sharedPreferences.all[key].toString())
 
         when (key) {
             topSitesAutocomplete.key ->

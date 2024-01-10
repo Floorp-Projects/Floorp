@@ -50,45 +50,22 @@ object FactsProcessor {
 
         Component.FEATURE_CUSTOMTABS to CustomTabsFacts.Items.CLOSE -> {
             CustomTabsToolbar.closeTabTapped.record(NoExtras())
-
-            TelemetryWrapper.closeCustomTabEvent()
         }
 
         Component.FEATURE_CUSTOMTABS to CustomTabsFacts.Items.ACTION_BUTTON -> {
             CustomTabsToolbar.actionButtonTapped.record(NoExtras())
-
-            TelemetryWrapper.customTabActionButtonEvent()
         }
 
         Component.FEATURE_CONTEXTMENU to ContextMenuFacts.Items.ITEM -> {
             ContextMenu.itemTapped.record(ContextMenu.ItemTappedExtra(toContextMenuExtraKey()))
-
-            when (this.toContextMenuExtraKey()) {
-                "copy_link" -> TelemetryWrapper.copyLinkEvent()
-                "share_link" -> TelemetryWrapper.shareLinkEvent()
-                "copy_image_location" -> TelemetryWrapper.copyImageEvent()
-                "share_image" -> TelemetryWrapper.shareImageEvent()
-                "save_image" -> TelemetryWrapper.saveImageEvent()
-                "open_in_private_tab" -> TelemetryWrapper.openLinkInNewTabEvent()
-                "open_in_external_app" -> TelemetryWrapper.openLinkInFullBrowserFromCustomTabEvent()
-                else -> {
-                    // no op
-                }
-            }
         }
 
         Component.BROWSER_MENU to BrowserMenuFacts.Items.WEB_EXTENSION_MENU_ITEM -> {
             if (metadata?.get("id") == "webcompat-reporter@mozilla.org") {
                 Browser.reportSiteIssueCounter.add()
-
-                TelemetryWrapper.reportSiteIssueEvent()
             } else {
                 // other extension action was emitted
             }
-        }
-
-        Component.BROWSER_TOOLBAR to ToolbarFacts.Items.MENU -> {
-            metadata?.get("customTab")?.let { TelemetryWrapper.customTabMenuEvent() }
         }
 
         else -> Unit

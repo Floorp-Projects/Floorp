@@ -35,7 +35,6 @@ import org.mozilla.focus.nimbus.FocusNimbus
 import org.mozilla.focus.session.VisibilityLifeCycleCallback
 import org.mozilla.focus.telemetry.FactsProcessor
 import org.mozilla.focus.telemetry.ProfilerMarkerFactProcessor
-import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.AdjustHelper
 import org.mozilla.focus.utils.AppConstants
 import kotlin.coroutines.CoroutineContext
@@ -69,7 +68,6 @@ open class FocusApplication : LocaleAwareApplication(), Provider, CoroutineScope
             setTheme(this)
             components.engine.warmUp()
 
-            TelemetryWrapper.init(this)
             components.metrics.initialize(this)
             FactsProcessor.initialize()
             finishSetupMegazord()

@@ -15,7 +15,6 @@ import mozilla.components.service.glean.private.NoExtras
 import mozilla.components.support.utils.Browsers
 import mozilla.components.support.utils.ext.resolveActivityCompat
 import org.mozilla.focus.GleanMetrics.OpenWith
-import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.AppConstants
 
 /**
@@ -89,8 +88,6 @@ class InstallFirefoxActivity : Activity() {
             }
 
             OpenWith.installFirefox.record(NoExtras())
-
-            TelemetryWrapper.installFirefoxEvent()
         }
     }
 }

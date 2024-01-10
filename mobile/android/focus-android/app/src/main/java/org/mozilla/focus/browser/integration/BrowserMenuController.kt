@@ -21,7 +21,6 @@ import org.mozilla.focus.menu.ToolbarMenu
 import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.state.AppStore
 import org.mozilla.focus.state.Screen
-import org.mozilla.focus.telemetry.TelemetryWrapper
 
 @Suppress("LongParameterList")
 class BrowserMenuController(
@@ -108,8 +107,6 @@ class BrowserMenuController(
                 BrowserMenu.navigationToolbarAction.record(
                     BrowserMenu.NavigationToolbarActionExtra("reload"),
                 )
-
-                TelemetryWrapper.menuReloadEvent()
             }
             is ToolbarMenu.Item.Stop -> BrowserMenu.navigationToolbarAction.record(
                 BrowserMenu.NavigationToolbarActionExtra("stop"),
@@ -135,8 +132,6 @@ class BrowserMenuController(
                         BrowserMenu.BrowserMenuActionExtra("desktop_view_off"),
                     )
                 }
-
-                TelemetryWrapper.desktopRequestCheckEvent(item.isChecked)
             }
             is ToolbarMenu.Item.AddToHomeScreen -> BrowserMenu.browserMenuAction.record(
                 BrowserMenu.BrowserMenuActionExtra("add_to_home_screen"),
@@ -164,8 +159,6 @@ class BrowserMenuController(
                 CustomTabsToolbar.navigationToolbarAction.record(
                     CustomTabsToolbar.NavigationToolbarActionExtra("reload"),
                 )
-
-                TelemetryWrapper.menuReloadEvent()
             }
 
             ToolbarMenu.CustomTabItem.AddToHomeScreen -> CustomTabsToolbar.browserMenuAction.record(
