@@ -4475,9 +4475,24 @@ MDefinition* MCompare::tryFoldCharCompare(TempAllocator& alloc) {
   MOZ_ASSERT(right->type() == MIRType::String);
 
   // |str[i]| is compiled as |MFromCharCode(MCharCodeAt(str, i))|.
+  // Out-of-bounds access is compiled as
+  // |FromCharCodeEmptyIfNegative(CharCodeAtOrNegative(str, i))|.
   auto isCharAccess = [](MDefinition* ins) {
-    return ins->isFromCharCode() &&
-           ins->toFromCharCode()->input()->isCharCodeAt();
+    if (ins->isFromCharCode()) {
+      return ins->toFromCharCode()->code()->isCharCodeAt();
+    }
+    if (ins->isFromCharCodeEmptyIfNegative()) {
+      auto* fromCharCode = ins->toFromCharCodeEmptyIfNegative();
+      return fromCharCode->code()->isCharCodeAtOrNegative();
+    }
+    return false;
+  };
+
+  auto charAccessCode = [](MDefinition* ins) {
+    if (ins->isFromCharCode()) {
+      return ins->toFromCharCode()->code();
+    }
+    return ins->toFromCharCodeEmptyIfNegative()->code();
   };
 
   if (left->isConstant() || right->isConstant()) {
@@ -4501,7 +4516,7 @@ MDefinition* MCompare::tryFoldCharCompare(TempAllocator& alloc) {
     MConstant* charCodeConst = MConstant::New(alloc, Int32Value(charCode));
     block()->insertBefore(this, charCodeConst);
 
-    MDefinition* charCodeAt = operand->toFromCharCode()->input();
+    MDefinition* charCodeAt = charAccessCode(operand);
 
     if (left->isConstant()) {
       left = charCodeConst;
@@ -4514,8 +4529,8 @@ MDefinition* MCompare::tryFoldCharCompare(TempAllocator& alloc) {
     // Try to optimize |(MFromCharCode MCharCodeAt) <compare> (MFromCharCode
     // MCharCodeAt)| as |MCharCodeAt <compare> MCharCodeAt|.
 
-    left = left->toFromCharCode()->input();
-    right = right->toFromCharCode()->input();
+    left = charAccessCode(left);
+    right = charAccessCode(right);
   } else {
     return this;
   }
