@@ -13,8 +13,6 @@
 #include "Tools.h"
 #include "Filters.h"
 #include "mozilla/gfx/DataSurfaceHelpers.h"
-#include "mozilla/layers/CanvasDrawEventRecorder.h"
-#include "mozilla/layers/RecordedCanvasEventImpl.h"
 #include "mozilla/layers/SourceSurfaceSharedData.h"
 #include "mozilla/UniquePtr.h"
 #include "nsXULAppAPI.h"  // for XRE_IsContentProcess()
@@ -190,26 +188,12 @@ class FilterNodeRecording : public FilterNode {
   RefPtr<DrawEventRecorderPrivate> mRecorder;
 };
 
-DrawTargetRecording::DrawTargetRecording(
-    layers::CanvasDrawEventRecorder* aRecorder, int64_t aTextureId,
-    const layers::RemoteTextureOwnerId& aTextureOwnerId, DrawTarget* aDT,
-    const IntSize& aSize)
-    : mRecorder(static_cast<DrawEventRecorderPrivate*>(aRecorder)),
-      mFinalDT(aDT),
-      mRect(IntPoint(0, 0), aSize) {
-  mRecorder->RecordEvent(layers::RecordedCanvasDrawTargetCreation(
-      this, aTextureId, aTextureOwnerId, mFinalDT->GetBackendType(), aSize,
-      mFinalDT->GetFormat()));
-  mFormat = mFinalDT->GetFormat();
-}
-
 DrawTargetRecording::DrawTargetRecording(DrawEventRecorder* aRecorder,
                                          DrawTarget* aDT, IntRect aRect,
                                          bool aHasData)
     : mRecorder(static_cast<DrawEventRecorderPrivate*>(aRecorder)),
       mFinalDT(aDT),
       mRect(aRect) {
-  MOZ_DIAGNOSTIC_ASSERT(aRecorder->GetRecorderType() != RecorderType::CANVAS);
   RefPtr<SourceSurface> snapshot = aHasData ? mFinalDT->Snapshot() : nullptr;
   mRecorder->RecordEvent(
       RecordedDrawTargetCreation(this, mFinalDT->GetBackendType(), mRect,
