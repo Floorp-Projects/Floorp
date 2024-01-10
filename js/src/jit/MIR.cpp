@@ -1780,6 +1780,66 @@ MDefinition* MConcat::foldsTo(TempAllocator& alloc) {
   return this;
 }
 
+static bool IsSubstrTo(MSubstr* substr, int32_t len) {
+  // We want to match this pattern:
+  //
+  // Substr(string, Constant(0), Min(Constant(length), StringLength(string)))
+  //
+  // which is generated for the self-hosted `String.p.{substring,slice,substr}`
+  // functions when called with constants `start` and `end` parameters.
+
+  auto isConstantZero = [](auto* def) {
+    return def->isConstant() && def->toConstant()->isInt32(0);
+  };
+
+  if (!isConstantZero(substr->begin())) {
+    return false;
+  }
+
+  auto* length = substr->length();
+  if (length->isBitOr()) {
+    // Unnecessary bit-ops haven't yet been removed.
+    auto* bitOr = length->toBitOr();
+    if (isConstantZero(bitOr->lhs())) {
+      length = bitOr->rhs();
+    } else if (isConstantZero(bitOr->rhs())) {
+      length = bitOr->lhs();
+    }
+  }
+  if (!length->isMinMax() || length->toMinMax()->isMax()) {
+    return false;
+  }
+
+  auto* min = length->toMinMax();
+  if (!min->lhs()->isConstant() && !min->rhs()->isConstant()) {
+    return false;
+  }
+
+  auto* minConstant = min->lhs()->isConstant() ? min->lhs()->toConstant()
+                                               : min->rhs()->toConstant();
+
+  auto* minOperand = min->lhs()->isConstant() ? min->rhs() : min->lhs();
+  if (!minOperand->isStringLength() ||
+      minOperand->toStringLength()->string() != substr->string()) {
+    return false;
+  }
+
+  // Ensure |len| matches the substring's length.
+  return minConstant->isInt32(len);
+}
+
+MDefinition* MSubstr::foldsTo(TempAllocator& alloc) {
+  // Fold |str.substring(0, 1)| to |str.charAt(0)|.
+  if (!IsSubstrTo(this, 1)) {
+    return this;
+  }
+
+  auto* charCode = MCharCodeAtOrNegative::New(alloc, string(), begin());
+  block()->insertBefore(this, charCode);
+
+  return MFromCharCodeEmptyIfNegative::New(alloc, charCode);
+}
+
 MDefinition* MCharCodeAt::foldsTo(TempAllocator& alloc) {
   MDefinition* string = this->string();
   if (!string->isConstant() && !string->isFromCharCode()) {
@@ -4612,52 +4672,12 @@ MDefinition* MCompare::tryFoldStringSubstring(TempAllocator& alloc) {
   if (!operand->isSubstr()) {
     return this;
   }
-
-  // We want to match this pattern:
-  // Substr(string, Constant(0), Min(Constant(length), StringLength(string)))
   auto* substr = operand->toSubstr();
-
-  auto isConstantZero = [](auto* def) {
-    return def->isConstant() && def->toConstant()->isInt32(0);
-  };
-
-  if (!isConstantZero(substr->begin())) {
-    return this;
-  }
-
-  auto* length = substr->length();
-  if (length->isBitOr()) {
-    // Unnecessary bit-ops haven't yet been removed.
-    auto* bitOr = length->toBitOr();
-    if (isConstantZero(bitOr->lhs())) {
-      length = bitOr->rhs();
-    } else if (isConstantZero(bitOr->rhs())) {
-      length = bitOr->lhs();
-    }
-  }
-  if (!length->isMinMax() || length->toMinMax()->isMax()) {
-    return this;
-  }
-
-  auto* min = length->toMinMax();
-  if (!min->lhs()->isConstant() && !min->rhs()->isConstant()) {
-    return this;
-  }
-
-  auto* minConstant = min->lhs()->isConstant() ? min->lhs()->toConstant()
-                                               : min->rhs()->toConstant();
-
-  auto* minOperand = min->lhs()->isConstant() ? min->rhs() : min->lhs();
-  if (!minOperand->isStringLength() ||
-      minOperand->toStringLength()->string() != substr->string()) {
-    return this;
-  }
 
   static_assert(JSString::MAX_LENGTH < INT32_MAX,
                 "string length can be casted to int32_t");
 
-  // Ensure the string length matches the substring's length.
-  if (!minConstant->isInt32(int32_t(constant->toString()->length()))) {
+  if (!IsSubstrTo(substr, int32_t(constant->toString()->length()))) {
     return this;
   }
 
