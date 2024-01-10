@@ -11628,6 +11628,46 @@ void CodeGenerator::visitSubstr(LSubstr* lir) {
   masm.bind(&nonInput);
   masm.branchIfRope(string, slowPath);
 
+  // Optimize one and two character strings.
+  Label nonStatic;
+  masm.branch32(Assembler::Above, length, Imm32(2), &nonStatic);
+  {
+    Label loadLengthOne, loadLengthTwo;
+
+    auto loadChars = [&](CharEncoding encoding, bool fallthru) {
+      size_t size = encoding == CharEncoding::Latin1 ? sizeof(JS::Latin1Char)
+                                                     : sizeof(char16_t);
+
+      masm.loadStringChars(string, temp0, encoding);
+      masm.loadChar(temp0, begin, temp2, encoding);
+      masm.branch32(Assembler::Equal, length, Imm32(1), &loadLengthOne);
+      masm.loadChar(temp0, begin, temp0, encoding, int32_t(size));
+      if (!fallthru) {
+        masm.jump(&loadLengthTwo);
+      }
+    };
+
+    Label isLatin1;
+    masm.branchLatin1String(string, &isLatin1);
+    loadChars(CharEncoding::TwoByte, /* fallthru = */ false);
+
+    masm.bind(&isLatin1);
+    loadChars(CharEncoding::Latin1, /* fallthru = */ true);
+
+    // Try to load a length-two static string.
+    masm.bind(&loadLengthTwo);
+    masm.lookupStaticString(temp2, temp0, output, gen->runtime->staticStrings(),
+                            &nonStatic);
+    masm.jump(done);
+
+    // Try to load a length-one static string.
+    masm.bind(&loadLengthOne);
+    masm.lookupStaticString(temp2, output, gen->runtime->staticStrings(),
+                            &nonStatic);
+    masm.jump(done);
+  }
+  masm.bind(&nonStatic);
+
   // Allocate either a JSThinInlineString or JSFatInlineString, or jump to
   // notInline if we need a dependent string.
   {
