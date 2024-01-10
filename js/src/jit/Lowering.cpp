@@ -2538,6 +2538,23 @@ void LIRGenerator::visitStringIncludes(MStringIncludes* ins) {
   auto* searchStr = ins->searchString();
   MOZ_ASSERT(searchStr->type() == MIRType::String);
 
+  if (searchStr->isConstant()) {
+    JSLinearString* linear = &searchStr->toConstant()->toString()->asLinear();
+    size_t length = linear->length();
+    if (length == 1 || length == 2) {
+      LDefinition tempDef = LDefinition::BogusTemp();
+      if (length > 1) {
+        tempDef = temp();
+      }
+
+      auto* lir = new (alloc()) LStringIncludesSIMD(useRegister(string), temp(),
+                                                    temp(), tempDef, linear);
+      define(lir, ins);
+      assignSafepoint(lir, ins);
+      return;
+    }
+  }
+
   auto* lir = new (alloc()) LStringIncludes(useRegisterAtStart(string),
                                             useRegisterAtStart(searchStr));
   defineReturn(lir, ins);
@@ -2550,6 +2567,23 @@ void LIRGenerator::visitStringIndexOf(MStringIndexOf* ins) {
 
   auto* searchStr = ins->searchString();
   MOZ_ASSERT(searchStr->type() == MIRType::String);
+
+  if (searchStr->isConstant()) {
+    JSLinearString* linear = &searchStr->toConstant()->toString()->asLinear();
+    size_t length = linear->length();
+    if (length == 1 || length == 2) {
+      LDefinition tempDef = LDefinition::BogusTemp();
+      if (length > 1) {
+        tempDef = temp();
+      }
+
+      auto* lir = new (alloc()) LStringIndexOfSIMD(useRegister(string), temp(),
+                                                   temp(), tempDef, linear);
+      define(lir, ins);
+      assignSafepoint(lir, ins);
+      return;
+    }
+  }
 
   auto* lir = new (alloc())
       LStringIndexOf(useRegisterAtStart(string), useRegisterAtStart(searchStr));
