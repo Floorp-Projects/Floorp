@@ -12867,6 +12867,11 @@ AttachDecision BinaryArithIRGenerator::tryAttachStub() {
   // Arithmetic operations (without addition) with String x Int32.
   TRY_ATTACH(tryAttachStringInt32Arith());
 
+  // Arithmetic operations (without addition) with String x Number. This needs
+  // to come after tryAttachStringInt32Arith, as the guards overlap, and we'd
+  // prefer to attach the more specialized Int32 IC if it is possible.
+  TRY_ATTACH(tryAttachStringNumberArith());
+
   trackAttached(IRGenerator::NotAttached);
   return AttachDecision::NoAction;
 }
@@ -13238,6 +13243,64 @@ AttachDecision BinaryArithIRGenerator::tryAttachStringInt32Arith() {
       break;
     default:
       MOZ_CRASH("Unhandled op in tryAttachStringInt32Arith");
+  }
+
+  writer.returnFromIC();
+  return AttachDecision::Attach;
+}
+
+AttachDecision BinaryArithIRGenerator::tryAttachStringNumberArith() {
+  // Check for either number x string or string x number.
+  if (!(lhs_.isNumber() && rhs_.isString()) &&
+      !(lhs_.isString() && rhs_.isNumber())) {
+    return AttachDecision::NoAction;
+  }
+
+  // Must _not_ support Add, because it would be string concatenation instead.
+  if (op_ != JSOp::Sub && op_ != JSOp::Mul && op_ != JSOp::Div &&
+      op_ != JSOp::Mod && op_ != JSOp::Pow) {
+    return AttachDecision::NoAction;
+  }
+
+  ValOperandId lhsId(writer.setInputOperandId(0));
+  ValOperandId rhsId(writer.setInputOperandId(1));
+
+  auto guardToNumber = [&](ValOperandId id, const Value& v) {
+    if (v.isNumber()) {
+      return writer.guardIsNumber(id);
+    }
+
+    MOZ_ASSERT(v.isString());
+    StringOperandId strId = writer.guardToString(id);
+    return writer.guardStringToNumber(strId);
+  };
+
+  NumberOperandId lhsIntId = guardToNumber(lhsId, lhs_);
+  NumberOperandId rhsIntId = guardToNumber(rhsId, rhs_);
+
+  switch (op_) {
+    case JSOp::Sub:
+      writer.doubleSubResult(lhsIntId, rhsIntId);
+      trackAttached("BinaryArith.StringNumberSub");
+      break;
+    case JSOp::Mul:
+      writer.doubleMulResult(lhsIntId, rhsIntId);
+      trackAttached("BinaryArith.StringNumberMul");
+      break;
+    case JSOp::Div:
+      writer.doubleDivResult(lhsIntId, rhsIntId);
+      trackAttached("BinaryArith.StringNumberDiv");
+      break;
+    case JSOp::Mod:
+      writer.doubleModResult(lhsIntId, rhsIntId);
+      trackAttached("BinaryArith.StringNumberMod");
+      break;
+    case JSOp::Pow:
+      writer.doublePowResult(lhsIntId, rhsIntId);
+      trackAttached("BinaryArith.StringNumberPow");
+      break;
+    default:
+      MOZ_CRASH("Unhandled op in tryAttachStringNumberArith");
   }
 
   writer.returnFromIC();

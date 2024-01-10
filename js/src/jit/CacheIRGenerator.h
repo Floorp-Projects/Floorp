@@ -863,6 +863,7 @@ class MOZ_RAII BinaryArithIRGenerator : public IRGenerator {
   AttachDecision tryAttachStringObjectConcat();
   AttachDecision tryAttachBigInt();
   AttachDecision tryAttachStringInt32Arith();
+  AttachDecision tryAttachStringNumberArith();
 
  public:
   BinaryArithIRGenerator(JSContext* cx, HandleScript, jsbytecode* pc,
