@@ -375,41 +375,38 @@ JSObject* BrowsingContextGroup::WrapObject(JSContext* aCx,
 
 nsresult BrowsingContextGroup::QueuePostMessageEvent(
     already_AddRefed<nsIRunnable>&& aRunnable) {
-  if (StaticPrefs::dom_separate_event_queue_for_post_message_enabled()) {
-    if (!mPostMessageEventQueue) {
-      nsCOMPtr<nsISerialEventTarget> target = GetMainThreadSerialEventTarget();
-      mPostMessageEventQueue = ThrottledEventQueue::Create(
-          target, "PostMessage Queue",
-          nsIRunnablePriority::PRIORITY_DEFERRED_TIMERS);
-      nsresult rv = mPostMessageEventQueue->SetIsPaused(false);
-      MOZ_ALWAYS_SUCCEEDS(rv);
-    }
-
-    // Ensure the queue is enabled
-    if (mPostMessageEventQueue->IsPaused()) {
-      nsresult rv = mPostMessageEventQueue->SetIsPaused(false);
-      MOZ_ALWAYS_SUCCEEDS(rv);
-    }
-
-    if (mPostMessageEventQueue) {
-      mPostMessageEventQueue->Dispatch(std::move(aRunnable),
-                                       NS_DISPATCH_NORMAL);
-      return NS_OK;
-    }
+  if (!StaticPrefs::dom_separate_event_queue_for_post_message_enabled()) {
+    return NS_ERROR_FAILURE;
   }
-  return NS_ERROR_FAILURE;
+
+  if (!mPostMessageEventQueue) {
+    nsCOMPtr<nsISerialEventTarget> target = GetMainThreadSerialEventTarget();
+    mPostMessageEventQueue = ThrottledEventQueue::Create(
+        target, "PostMessage Queue",
+        nsIRunnablePriority::PRIORITY_DEFERRED_TIMERS);
+    nsresult rv = mPostMessageEventQueue->SetIsPaused(false);
+    MOZ_ALWAYS_SUCCEEDS(rv);
+  }
+
+  // Ensure the queue is enabled
+  if (mPostMessageEventQueue->IsPaused()) {
+    nsresult rv = mPostMessageEventQueue->SetIsPaused(false);
+    MOZ_ALWAYS_SUCCEEDS(rv);
+  }
+
+  mPostMessageEventQueue->Dispatch(std::move(aRunnable), NS_DISPATCH_NORMAL);
+  return NS_OK;
 }
 
 void BrowsingContextGroup::FlushPostMessageEvents() {
-  if (StaticPrefs::dom_separate_event_queue_for_post_message_enabled()) {
-    if (mPostMessageEventQueue) {
-      nsresult rv = mPostMessageEventQueue->SetIsPaused(true);
-      MOZ_ALWAYS_SUCCEEDS(rv);
-      nsCOMPtr<nsIRunnable> event;
-      while ((event = mPostMessageEventQueue->GetEvent())) {
-        NS_DispatchToMainThread(event.forget());
-      }
-    }
+  if (!mPostMessageEventQueue) {
+    return;
+  }
+  nsresult rv = mPostMessageEventQueue->SetIsPaused(true);
+  MOZ_ALWAYS_SUCCEEDS(rv);
+  nsCOMPtr<nsIRunnable> event;
+  while ((event = mPostMessageEventQueue->GetEvent())) {
+    NS_DispatchToMainThread(event.forget());
   }
 }
 
