@@ -4550,6 +4550,7 @@ void MacroAssembler::callWithABIPost(uint32_t stackAdjust, ABIType result,
         ma_vxfer(r0, ReturnFloat32Reg);
         break;
       case ABIType::General:
+      case ABIType::Int64:
         break;
       default:
         MOZ_CRASH("unexpected callWithABI result");
@@ -5939,10 +5940,10 @@ inline void EmitRemainderOrQuotient(bool isRemainder, MacroAssembler& masm,
     masm.passABIArg(rhs);
     if (isUnsigned) {
       masm.callWithABI<Fn, __aeabi_uidivmod>(
-          ABIType::General, CheckUnsafeCallWithABI::DontCheckOther);
+          ABIType::Int64, CheckUnsafeCallWithABI::DontCheckOther);
     } else {
       masm.callWithABI<Fn, __aeabi_idivmod>(
-          ABIType::General, CheckUnsafeCallWithABI::DontCheckOther);
+          ABIType::Int64, CheckUnsafeCallWithABI::DontCheckOther);
     }
     if (isRemainder) {
       masm.mov(ReturnRegVal1, lhsOutput);

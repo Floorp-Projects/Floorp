@@ -202,6 +202,7 @@ ABIFunctionType MacroAssembler::signature() const {
     case Args_Int_IntDoubleIntInt:
     case Args_Double_DoubleDoubleDouble:
     case Args_Double_DoubleDoubleDoubleDouble:
+    case Args_Int64_GeneralGeneral:
       break;
     default:
       MOZ_CRASH("Unexpected type");
