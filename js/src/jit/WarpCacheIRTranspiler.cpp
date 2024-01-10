@@ -2332,6 +2332,72 @@ bool WarpCacheIRTranspiler::emitStringToUpperCaseResult(StringOperandId strId) {
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitStringTrimResult(StringOperandId strId) {
+  MDefinition* str = getOperand(strId);
+
+  auto* linear = MLinearizeString::New(alloc(), str);
+  add(linear);
+
+  auto* start = MStringTrimStartIndex::New(alloc(), linear);
+  add(start);
+
+  auto* end = MStringTrimEndIndex::New(alloc(), linear, start);
+  add(end);
+
+  // Safe to truncate because both operands are positive and end >= start.
+  auto* length = MSub::New(alloc(), end, start, MIRType::Int32);
+  length->setTruncateKind(TruncateKind::Truncate);
+  add(length);
+
+  auto* substr = MSubstr::New(alloc(), linear, start, length);
+  add(substr);
+
+  pushResult(substr);
+  return true;
+}
+
+bool WarpCacheIRTranspiler::emitStringTrimStartResult(StringOperandId strId) {
+  MDefinition* str = getOperand(strId);
+
+  auto* linear = MLinearizeString::New(alloc(), str);
+  add(linear);
+
+  auto* start = MStringTrimStartIndex::New(alloc(), linear);
+  add(start);
+
+  auto* end = MStringLength::New(alloc(), linear);
+  add(end);
+
+  // Safe to truncate because both operands are positive and end >= start.
+  auto* length = MSub::New(alloc(), end, start, MIRType::Int32);
+  length->setTruncateKind(TruncateKind::Truncate);
+  add(length);
+
+  auto* substr = MSubstr::New(alloc(), linear, start, length);
+  add(substr);
+
+  pushResult(substr);
+  return true;
+}
+
+bool WarpCacheIRTranspiler::emitStringTrimEndResult(StringOperandId strId) {
+  MDefinition* str = getOperand(strId);
+
+  auto* linear = MLinearizeString::New(alloc(), str);
+  add(linear);
+
+  auto* start = constant(Int32Value(0));
+
+  auto* length = MStringTrimEndIndex::New(alloc(), linear, start);
+  add(length);
+
+  auto* substr = MSubstr::New(alloc(), linear, start, length);
+  add(substr);
+
+  pushResult(substr);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitStoreDynamicSlot(ObjOperandId objId,
                                                  uint32_t offsetOffset,
                                                  ValOperandId rhsId) {

@@ -29,6 +29,7 @@
 #include "js/Printf.h"
 #include "js/TraceKind.h"
 #include "proxy/ScriptedProxyHandler.h"
+#include "util/Unicode.h"
 #include "vm/ArrayObject.h"
 #include "vm/Compartment.h"
 #include "vm/Interpreter.h"
@@ -765,6 +766,61 @@ JSLinearString* LinearizeForCharAccess(JSContext* cx, JSString* str) {
   MOZ_ASSERT(str->isRope());
 
   return str->ensureLinear(cx);
+}
+
+template <typename CharT>
+static size_t StringTrimStartIndex(mozilla::Range<CharT> chars) {
+  size_t begin = 0;
+  while (begin < chars.length() && unicode::IsSpace(chars[begin])) {
+    ++begin;
+  }
+  return begin;
+}
+
+template <typename CharT>
+static size_t StringTrimEndIndex(mozilla::Range<CharT> chars, size_t begin) {
+  size_t end = chars.length();
+  while (end > begin && unicode::IsSpace(chars[end - 1])) {
+    --end;
+  }
+  return end;
+}
+
+int32_t StringTrimStartIndex(const JSString* str) {
+  AutoUnsafeCallWithABI unsafe;
+
+  MOZ_ASSERT(str->isLinear());
+
+  const auto* linear = &str->asLinear();
+
+  size_t begin;
+  if (linear->hasLatin1Chars()) {
+    JS::AutoCheckCannotGC nogc;
+    begin = StringTrimStartIndex(linear->latin1Range(nogc));
+  } else {
+    JS::AutoCheckCannotGC nogc;
+    begin = StringTrimStartIndex(linear->twoByteRange(nogc));
+  }
+  return int32_t(begin);
+}
+
+int32_t StringTrimEndIndex(const JSString* str, int32_t start) {
+  AutoUnsafeCallWithABI unsafe;
+
+  MOZ_ASSERT(str->isLinear());
+  MOZ_ASSERT(start >= 0 && size_t(start) <= str->length());
+
+  const auto* linear = &str->asLinear();
+
+  size_t end;
+  if (linear->hasLatin1Chars()) {
+    JS::AutoCheckCannotGC nogc;
+    end = StringTrimEndIndex(linear->latin1Range(nogc), size_t(start));
+  } else {
+    JS::AutoCheckCannotGC nogc;
+    end = StringTrimEndIndex(linear->twoByteRange(nogc), size_t(start));
+  }
+  return int32_t(end);
 }
 
 bool SetProperty(JSContext* cx, HandleObject obj, Handle<PropertyName*> name,

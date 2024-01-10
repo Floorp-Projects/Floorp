@@ -2456,6 +2456,15 @@ void LIRGenerator::visitConcat(MConcat* ins) {
   assignSafepoint(lir, ins);
 }
 
+void LIRGenerator::visitLinearizeString(MLinearizeString* ins) {
+  MDefinition* str = ins->string();
+  MOZ_ASSERT(str->type() == MIRType::String);
+
+  auto* lir = new (alloc()) LLinearizeString(useRegister(str));
+  define(lir, ins);
+  assignSafepoint(lir, ins);
+}
+
 void LIRGenerator::visitLinearizeForCharAccess(MLinearizeForCharAccess* ins) {
   MDefinition* str = ins->string();
   MDefinition* idx = ins->index();
@@ -2677,6 +2686,28 @@ void LIRGenerator::visitStringConvertCase(MStringConvertCase* ins) {
     defineReturn(lir, ins);
     assignSafepoint(lir, ins);
   }
+}
+
+void LIRGenerator::visitStringTrimStartIndex(MStringTrimStartIndex* ins) {
+  auto* string = ins->string();
+  MOZ_ASSERT(string->type() == MIRType::String);
+
+  auto* lir = new (alloc()) LStringTrimStartIndex(useRegister(string));
+  define(lir, ins);
+  assignSafepoint(lir, ins);
+}
+
+void LIRGenerator::visitStringTrimEndIndex(MStringTrimEndIndex* ins) {
+  auto* string = ins->string();
+  MOZ_ASSERT(string->type() == MIRType::String);
+
+  auto* start = ins->start();
+  MOZ_ASSERT(start->type() == MIRType::Int32);
+
+  auto* lir = new (alloc())
+      LStringTrimEndIndex(useRegister(string), useRegister(start));
+  define(lir, ins);
+  assignSafepoint(lir, ins);
 }
 
 void LIRGenerator::visitStart(MStart* start) {}

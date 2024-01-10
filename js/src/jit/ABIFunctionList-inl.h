@@ -169,6 +169,8 @@ namespace jit {
   _(js::jit::Printf0)                                                 \
   _(js::jit::Printf1)                                                 \
   _(js::jit::StringFromCharCodeNoGC)                                  \
+  _(js::jit::StringTrimEndIndex)                                      \
+  _(js::jit::StringTrimStartIndex)                                    \
   _(js::jit::TypeOfNameObject)                                        \
   _(js::jit::WrapObjectPure)                                          \
   ABIFUNCTION_FUZZILLI_LIST(_)                                        \

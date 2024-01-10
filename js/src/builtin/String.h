@@ -101,6 +101,12 @@ extern JSString* StringToLowerCase(JSContext* cx, HandleString string);
 
 extern JSString* StringToUpperCase(JSContext* cx, HandleString string);
 
+extern JSString* StringTrim(JSContext* cx, HandleString string);
+
+extern JSString* StringTrimStart(JSContext* cx, HandleString string);
+
+extern JSString* StringTrimEnd(JSContext* cx, HandleString string);
+
 extern bool StringConstructor(JSContext* cx, unsigned argc, Value* vp);
 
 extern bool FlatStringMatch(JSContext* cx, unsigned argc, Value* vp);

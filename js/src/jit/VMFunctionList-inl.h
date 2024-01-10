@@ -312,6 +312,9 @@ namespace jit {
   _(StringToLowerCase, js::StringToLowerCase)                                  \
   _(StringToNumber, js::StringToNumber)                                        \
   _(StringToUpperCase, js::StringToUpperCase)                                  \
+  _(StringTrim, js::StringTrim)                                                \
+  _(StringTrimEnd, js::StringTrimEnd)                                          \
+  _(StringTrimStart, js::StringTrimStart)                                      \
   _(StringsCompareGreaterThanOrEquals,                                         \
     js::jit::StringsCompare<ComparisonKind::GreaterThanOrEqual>)               \
   _(StringsCompareLessThan, js::jit::StringsCompare<ComparisonKind::LessThan>) \

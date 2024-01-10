@@ -1315,6 +1315,27 @@
   args:
     str: StringId
 
+- name: StringTrimResult
+  shared: true
+  transpile: true
+  cost_estimate: 5
+  args:
+    str: StringId
+
+- name: StringTrimStartResult
+  shared: true
+  transpile: true
+  cost_estimate: 5
+  args:
+    str: StringId
+
+- name: StringTrimEndResult
+  shared: true
+  transpile: true
+  cost_estimate: 5
+  args:
+    str: StringId
+
 - name: MathAbsInt32Result
   shared: true
   transpile: true

@@ -11977,6 +11977,20 @@ void JitRuntime::generateDoubleToInt32ValueStub(MacroAssembler& masm) {
   masm.abiret();
 }
 
+void CodeGenerator::visitLinearizeString(LLinearizeString* lir) {
+  Register str = ToRegister(lir->str());
+  Register output = ToRegister(lir->output());
+
+  using Fn = JSLinearString* (*)(JSContext*, JSString*);
+  auto* ool = oolCallVM<Fn, jit::LinearizeForCharAccess>(
+      lir, ArgList(str), StoreRegisterTo(output));
+
+  masm.branchIfRope(str, ool->entry());
+
+  masm.movePtr(str, output);
+  masm.bind(ool->rejoin());
+}
+
 void CodeGenerator::visitLinearizeForCharAccess(LLinearizeForCharAccess* lir) {
   Register str = ToRegister(lir->str());
   Register index = ToRegister(lir->index());
@@ -12720,6 +12734,44 @@ void CodeGenerator::visitStringToUpperCase(LStringToUpperCase* lir) {
 
   using Fn = JSString* (*)(JSContext*, HandleString);
   callVM<Fn, js::StringToUpperCase>(lir);
+}
+
+void CodeGenerator::visitStringTrimStartIndex(LStringTrimStartIndex* lir) {
+  Register string = ToRegister(lir->string());
+  Register output = ToRegister(lir->output());
+
+  auto volatileRegs = liveVolatileRegs(lir);
+  volatileRegs.takeUnchecked(output);
+
+  masm.PushRegsInMask(volatileRegs);
+
+  using Fn = int32_t (*)(const JSString*);
+  masm.setupAlignedABICall();
+  masm.passABIArg(string);
+  masm.callWithABI<Fn, jit::StringTrimStartIndex>();
+  masm.storeCallInt32Result(output);
+
+  masm.PopRegsInMask(volatileRegs);
+}
+
+void CodeGenerator::visitStringTrimEndIndex(LStringTrimEndIndex* lir) {
+  Register string = ToRegister(lir->string());
+  Register start = ToRegister(lir->start());
+  Register output = ToRegister(lir->output());
+
+  auto volatileRegs = liveVolatileRegs(lir);
+  volatileRegs.takeUnchecked(output);
+
+  masm.PushRegsInMask(volatileRegs);
+
+  using Fn = int32_t (*)(const JSString*, int32_t);
+  masm.setupAlignedABICall();
+  masm.passABIArg(string);
+  masm.passABIArg(start);
+  masm.callWithABI<Fn, jit::StringTrimEndIndex>();
+  masm.storeCallInt32Result(output);
+
+  masm.PopRegsInMask(volatileRegs);
 }
 
 void CodeGenerator::visitStringSplit(LStringSplit* lir) {
