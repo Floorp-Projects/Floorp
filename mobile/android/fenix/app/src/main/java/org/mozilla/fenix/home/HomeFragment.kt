@@ -49,7 +49,9 @@ import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.selector.normalTabs
@@ -74,6 +76,7 @@ import mozilla.components.lib.state.ext.consumeFlow
 import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.service.glean.private.NoExtras
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
+import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.ui.colors.PhotonColors
 import org.mozilla.fenix.GleanMetrics.HomeScreen
 import org.mozilla.fenix.GleanMetrics.Homepage
@@ -119,7 +122,6 @@ import org.mozilla.fenix.messaging.FenixNimbusMessagingController
 import org.mozilla.fenix.messaging.MessagingFeature
 import org.mozilla.fenix.nimbus.FxNimbus
 import org.mozilla.fenix.perf.MarkersFragmentLifecycleCallbacks
-import org.mozilla.fenix.perf.runBlockingIncrement
 import org.mozilla.fenix.search.toolbar.DefaultSearchSelectorController
 import org.mozilla.fenix.search.toolbar.SearchSelectorMenu
 import org.mozilla.fenix.tabstray.TabsTrayAccessPoint
@@ -132,6 +134,8 @@ import java.lang.ref.WeakReference
 @Suppress("TooManyFunctions", "LargeClass")
 class HomeFragment : Fragment() {
     private val args by navArgs<HomeFragmentArgs>()
+
+    private val logger = Logger("HomeFragment")
 
     @VisibleForTesting
     internal lateinit var bundleArgs: Bundle
@@ -237,6 +241,7 @@ class HomeFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?,
     ): View {
+        logger.debug("onCreateView")
         // DO NOT ADD ANYTHING ABOVE THIS getProfilerTime CALL!
         val profilerStartTime = requireComponents.core.engine.profiler?.getProfilerTime()
 
@@ -245,6 +250,7 @@ class HomeFragment : Fragment() {
         val components = requireComponents
 
         val currentWallpaperName = requireContext().settings().currentWallpaperName
+        logger.debug("applyWallpaper from onCreateView")
         applyWallpaper(wallpaperName = currentWallpaperName, orientationChange = false)
 
         lifecycleScope.launch(IO) {
@@ -449,6 +455,7 @@ class HomeFragment : Fragment() {
         homeMenuView?.dismissMenu()
 
         val currentWallpaperName = requireContext().settings().currentWallpaperName
+        logger.debug("applyWallpaper from onConfigurationChanged")
         applyWallpaper(wallpaperName = currentWallpaperName, orientationChange = true)
     }
 
@@ -1005,17 +1012,23 @@ class HomeFragment : Fragment() {
                 lastAppliedWallpaperName = wallpaperName
             }
             else -> {
-                runBlockingIncrement {
+                viewLifecycleOwner.lifecycleScope.launch {
+                    val lifecycle = viewLifecycleOwner.lifecycle
                     // loadBitmap does file lookups based on name, so we don't need a fully
                     // qualified type to load the image
                     val wallpaper = Wallpaper.Default.copy(name = wallpaperName)
+                    logger.debug("loading bitmap")
                     val wallpaperImage =
                         requireComponents.useCases.wallpaperUseCases.loadBitmap(wallpaper)
                     wallpaperImage?.let {
+                        logger.debug("loaded bitmap")
                         it.scaleToBottomOfView(binding.wallpaperImageView)
                         binding.wallpaperImageView.isVisible = true
                         lastAppliedWallpaperName = wallpaperName
+                        logger.debug("applied bitmap")
                     } ?: run {
+                        logger.debug("bitmap null, is coroutine active $isActive, ${lifecycle.currentState}")
+                        if (!isActive) return@run
                         with(binding.wallpaperImageView) {
                             isVisible = false
                             showSnackBar(
@@ -1049,11 +1062,16 @@ class HomeFragment : Fragment() {
     }
 
     private fun observeWallpaperUpdates() {
-        consumeFrom(requireComponents.appStore) {
-            val currentWallpaper = it.wallpaperState.currentWallpaper
-            if (currentWallpaper.name != lastAppliedWallpaperName) {
-                applyWallpaper(wallpaperName = currentWallpaper.name, orientationChange = false)
-            }
+        consumeFlow(requireComponents.appStore, viewLifecycleOwner) { flow ->
+            flow.filter { it.mode == BrowsingMode.Normal }
+                .map { it.wallpaperState.currentWallpaper }
+                .distinctUntilChanged()
+                .collect {
+                    if (it.name != lastAppliedWallpaperName) {
+                        logger.debug("applyWallpaper from observer: $it")
+                        applyWallpaper(wallpaperName = it.name, orientationChange = false)
+                    }
+                }
         }
     }
 

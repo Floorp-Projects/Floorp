@@ -61,7 +61,7 @@ class WallpapersUseCases(
     // Use case for loading specific wallpaper bitmaps.
     val loadBitmap: LoadBitmapUseCase by lazy {
         DefaultLoadBitmapUseCase(
-            filesDir = context.filesDir,
+            getFilesDir = { context.filesDir },
             getOrientation = { context.resources.configuration.orientation },
         )
     }
@@ -167,7 +167,7 @@ class WallpapersUseCases(
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal class DefaultLoadBitmapUseCase(
-        private val filesDir: File,
+        private val getFilesDir: suspend () -> File,
         private val getOrientation: () -> Int,
     ) : LoadBitmapUseCase {
         override suspend fun invoke(wallpaper: Wallpaper): Bitmap? =
@@ -178,7 +178,7 @@ class WallpapersUseCases(
         ): Bitmap? = Result.runCatching {
             val path = wallpaper.getLocalPathFromContext()
             withContext(Dispatchers.IO) {
-                val file = File(filesDir, path)
+                val file = File(getFilesDir(), path)
                 BitmapFactory.decodeStream(file.inputStream())
             }
         }.getOrNull()
