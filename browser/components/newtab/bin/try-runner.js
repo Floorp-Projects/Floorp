@@ -83,8 +83,8 @@ const tests = {
       "activity-stream-windows.css": {
         path: path.join("css", "activity-stream-windows.css"),
       },
-      // This should get split out to its own try-runner eventually (bug 1866170).
-      "About:welcome bundle": {
+      // These should get split out to their own try-runner eventually (bug 1866170).
+      "about:welcome bundle": {
         path: path.join(
           "../",
           "aboutwelcome",
@@ -94,6 +94,25 @@ const tests = {
       },
       "aboutwelcome.css": {
         path: path.join("../", "aboutwelcome", "content", "aboutwelcome.css"),
+      },
+      // These should get split out to their own try-runner eventually (bug 1866170).
+      "about:asrouter bundle": {
+        path: path.join(
+          "../",
+          "asrouter",
+          "content",
+          "asrouter-admin.bundle.js"
+        ),
+      },
+      "ASRouterAdmin.css": {
+        path: path.join(
+          "../",
+          "asrouter",
+          "content",
+          "components",
+          "ASRouterAdmin",
+          "ASRouterAdmin.css"
+        ),
       },
     };
     const errors = [];
@@ -112,6 +131,14 @@ const tests = {
     let welcomeBundleExitCode = execOut(npmCommand, ["run", "bundle"]).exitCode;
     process.chdir(cwd);
 
+    // Same thing for about:asrouter
+    process.chdir("../asrouter");
+    let asrouterBundleExitCode = execOut(npmCommand, [
+      "run",
+      "bundle",
+    ]).exitCode;
+    process.chdir(cwd);
+
     for (const name of Object.keys(items)) {
       const item = items[name];
       const after = readFileSync(item.path, item.encoding || "utf8");
@@ -127,6 +154,10 @@ const tests = {
 
     if (welcomeBundleExitCode !== 0) {
       errors.push("about:welcome npm:bundle did not run successfully");
+    }
+
+    if (asrouterBundleExitCode !== 0) {
+      errors.push("about:asrouter npm:bundle did not run successfully");
     }
 
     logErrors("bundles", errors);
@@ -198,16 +229,26 @@ const tests = {
     return result;
   },
 
+  asrouterkarma() {
+    let cwd = process.cwd();
+    process.chdir("../asrouter");
+    const result = this.karma();
+    process.chdir(cwd);
+    return result;
+  },
+
   zipCodeCoverage() {
     logStart("zipCodeCoverage");
 
     const newtabCoveragePath = "logs/coverage/lcov.info";
     const welcomeCoveragePath = "../aboutwelcome/logs/coverage/lcov.info";
+    const asrouterCoveragePath = "../asrouter/logs/coverage/lcov.info";
 
     let newtabCoverage = readFileSync(newtabCoveragePath, "utf8");
     const welcomeCoverage = readFileSync(welcomeCoveragePath, "utf8");
+    const asrouterCoverage = readFileSync(asrouterCoveragePath, "utf8");
 
-    newtabCoverage = `${newtabCoverage}${welcomeCoverage}`;
+    newtabCoverage = `${newtabCoverage}${welcomeCoverage}${asrouterCoverage}`;
     writeFileSync(newtabCoveragePath, newtabCoverage, "utf8");
 
     const { exitCode, out } = execOut("zip", [
@@ -275,6 +316,8 @@ async function main() {
     zip: "zipCodeCoverage",
     welcomecoverage: "welcomekarma",
     welcomecov: "welcomekarma",
+    asroutercoverage: "asrouterkarma",
+    asroutercov: "asrouterkarma",
   };
 
   const inputs = [...cli.input, ...cli.flags.test].map(input =>

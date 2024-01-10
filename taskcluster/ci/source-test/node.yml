@@ -32,6 +32,9 @@ newtab-unit-tests:
             cd /builds/worker/checkouts/gecko/browser/components/aboutwelcome &&
             rm -rf node_modules &&
             npm ci &&
+            cd /builds/worker/checkouts/gecko/browser/components/asrouter &&
+            rm -rf node_modules &&
+            npm ci &&
             cd /builds/worker/checkouts/gecko/browser/components/newtab &&
             rm -rf node_modules &&
             npm ci &&
@@ -40,6 +43,7 @@ newtab-unit-tests:
         files-changed:
             - "browser/components/newtab/**"
             - "browser/components/aboutwelcome/**"
+            - "browser/components/asrouter/**"
 
 newtab-unit-tests-ccov:
     description: newtab unit tests code coverage
@@ -71,6 +75,9 @@ newtab-unit-tests-ccov:
             rm -rf node_modules &&
             npm ci &&
             cd /builds/worker/checkouts/gecko/browser/components/aboutwelcome &&
+            rm -rf node_modules &&
+            npm ci &&
+            cd /builds/worker/checkouts/gecko/browser/components/asrouter &&
             rm -rf node_modules &&
             npm ci &&
             cd /builds/worker/checkouts/gecko/browser/components/newtab &&
