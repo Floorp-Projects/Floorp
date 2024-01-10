@@ -11,6 +11,7 @@
 
 #include "jsapi.h"
 #include "jsmath.h"
+#include "jsnum.h"
 
 #include "builtin/DataViewObject.h"
 #include "builtin/MapObject.h"
@@ -13205,6 +13206,20 @@ AttachDecision BinaryArithIRGenerator::tryAttachStringInt32Arith() {
   // reject that as well.
   if (op_ != JSOp::Sub && op_ != JSOp::Mul && op_ != JSOp::Div &&
       op_ != JSOp::Mod) {
+    return AttachDecision::NoAction;
+  }
+
+  // The string operand must be convertable to an int32 value.
+  JSString* str = lhs_.isString() ? lhs_.toString() : rhs_.toString();
+
+  double num;
+  if (!StringToNumber(cx_, str, &num)) {
+    cx_->recoverFromOutOfMemory();
+    return AttachDecision::NoAction;
+  }
+
+  int32_t unused;
+  if (!mozilla::NumberIsInt32(num, &unused)) {
     return AttachDecision::NoAction;
   }
 
