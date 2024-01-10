@@ -313,13 +313,6 @@ class nsDocShell final : public nsDocLoader,
                          LOCATION_CHANGE_SAME_DOCUMENT);
   }
 
-  // This function is created exclusively for dom.background_loading_iframe is
-  // set. As soon as the current DocShell knows itself can be treated as
-  // background loading, it triggers the parent docshell to see if the parent
-  // document can fire load event earlier.
-  // TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230)
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY void TriggerParentCheckDocShellIsEmpty();
-
   nsresult HistoryEntryRemoved(int32_t aIndex);
 
   // Notify Scroll observers when an async panning/zooming transform

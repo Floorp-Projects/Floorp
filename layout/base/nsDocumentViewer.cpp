@@ -1022,55 +1022,6 @@ nsDocumentViewer::LoadComplete(nsresult aStatus) {
       }
 
       nsPIDOMWindowInner* innerWindow = window->GetCurrentInnerWindow();
-      RefPtr<DocGroup> docGroup = d->GetDocGroup();
-      // It is possible that the parent document's load event fires earlier than
-      // childs' load event, and in this case we need to fire some artificial
-      // load events to make the parent thinks the load events for child has
-      // been done
-      if (innerWindow && DocGroup::TryToLoadIframesInBackground()) {
-        nsTArray<nsCOMPtr<nsIDocShell>> docShells;
-        nsCOMPtr<nsIDocShell> container(mContainer);
-        if (container) {
-          int32_t count;
-          container->GetInProcessChildCount(&count);
-          // We first find all background loading iframes that need to
-          // fire artificial load events, and instead of firing them as
-          // soon as we find them, we store them in an array, to prevent
-          // us from skipping some events.
-          for (int32_t i = 0; i < count; ++i) {
-            nsCOMPtr<nsIDocShellTreeItem> child;
-            container->GetInProcessChildAt(i, getter_AddRefs(child));
-            nsCOMPtr<nsIDocShell> childIDocShell = do_QueryInterface(child);
-            RefPtr<nsDocShell> docShell = nsDocShell::Cast(childIDocShell);
-            if (docShell && docShell->TreatAsBackgroundLoad() &&
-                docShell->GetDocument()->GetReadyStateEnum() <
-                    Document::READYSTATE_COMPLETE) {
-              docShells.AppendElement(childIDocShell);
-            }
-          }
-
-          // Re-iterate the stored docShells to fire artificial load events
-          for (size_t i = 0; i < docShells.Length(); ++i) {
-            RefPtr<nsDocShell> docShell = nsDocShell::Cast(docShells[i]);
-            if (docShell && docShell->TreatAsBackgroundLoad() &&
-                docShell->GetDocument()->GetReadyStateEnum() <
-                    Document::READYSTATE_COMPLETE) {
-              nsEventStatus status = nsEventStatus_eIgnore;
-              WidgetEvent event(true, eLoad);
-              event.mFlags.mBubbles = false;
-              event.mFlags.mCancelable = false;
-
-              nsCOMPtr<nsPIDOMWindowOuter> win = docShell->GetWindow();
-              nsCOMPtr<Element> element = win->GetFrameElementInternal();
-
-              docShell->SetFakeOnLoadDispatched();
-              EventDispatcher::Dispatch(element, nullptr, &event, nullptr,
-                                        &status);
-            }
-          }
-        }
-      }
-
       d->SetLoadEventFiring(true);
       RefPtr<nsPresContext> presContext = mPresContext;
       // MOZ_KnownLive due to bug 1506441
@@ -1078,10 +1029,6 @@ nsDocumentViewer::LoadComplete(nsresult aStatus) {
           MOZ_KnownLive(nsGlobalWindowOuter::Cast(window)), presContext, &event,
           nullptr, &status);
       d->SetLoadEventFiring(false);
-
-      if (docGroup && docShell->TreatAsBackgroundLoad()) {
-        docGroup->TryFlushIframePostMessages(docShell->GetOuterWindowID());
-      }
 
       if (timing) {
         timing->NotifyLoadEventEnd();
