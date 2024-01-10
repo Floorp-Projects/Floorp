@@ -1635,3 +1635,37 @@ add_task(async function test_enrollment_targeting() {
   await assertEmptyStore(manager.store, { cleanup: true });
   cleanupFeatures();
 });
+
+add_task(async function test_update_experiments_ordered_by_published_date() {
+  const manager = ExperimentFakes.manager();
+  const sandbox = sinon.createSandbox();
+  const loader = ExperimentFakes.rsLoader();
+  loader.manager = manager;
+  const RECIPE_NO_PUBLISHED_DATE_1 = ExperimentFakes.recipe("foo");
+  const RECIPE_NO_PUBLISHED_DATE_2 = ExperimentFakes.recipe("bar");
+  const RECIPE_PUBLISHED_DATE_1 = ExperimentFakes.recipe("baz", {
+    publishedDate: `2024-01-05T12:00:00Z`,
+  });
+  const RECIPE_PUBLISHED_DATE_2 = ExperimentFakes.recipe("qux", {
+    publishedDate: `2024-01-03T12:00:00Z`,
+  });
+  const onRecipe = sandbox.stub(manager, "onRecipe");
+  sinon
+    .stub(loader.remoteSettingsClient, "get")
+    .resolves([
+      RECIPE_NO_PUBLISHED_DATE_1,
+      RECIPE_PUBLISHED_DATE_1,
+      RECIPE_PUBLISHED_DATE_2,
+      RECIPE_NO_PUBLISHED_DATE_2,
+    ]);
+  sandbox.stub(manager.store, "ready").resolves();
+
+  await loader.init();
+
+  ok(onRecipe.getCall(0).calledWithMatch({ slug: "foo" }, "rs-loader"));
+  ok(onRecipe.getCall(1).calledWithMatch({ slug: "bar" }, "rs-loader"));
+  ok(onRecipe.getCall(2).calledWithMatch({ slug: "qux" }, "rs-loader"));
+  ok(onRecipe.getCall(3).calledWithMatch({ slug: "baz" }, "rs-loader"));
+
+  await assertEmptyStore(manager.store);
+});
