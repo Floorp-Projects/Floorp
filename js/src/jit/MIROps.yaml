@@ -1254,6 +1254,7 @@
     begin: Int32
     length: Int32
   result_type: String
+  folds_to: custom
   congruent_to: if_operands_equal
   alias_set: none
   movable: true
