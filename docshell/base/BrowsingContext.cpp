@@ -3307,8 +3307,7 @@ void BrowsingContext::DidSet(FieldIndex<IDX_Loading>) {
     NS_DispatchToCurrentThread(runner.forget());
   }
 
-  if (StaticPrefs::dom_separate_event_queue_for_post_message_enabled() &&
-      Top() == this) {
+  if (IsTop()) {
     Group()->FlushPostMessageEvents();
   }
 }

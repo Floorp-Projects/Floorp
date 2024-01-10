@@ -259,19 +259,6 @@ void PostMessageEvent::Dispatch(nsGlobalWindowInner* aTargetWindow,
 
 void PostMessageEvent::DispatchToTargetThread(ErrorResult& aError) {
   nsCOMPtr<nsIRunnable> event = this;
-
-  if (StaticPrefs::dom_separate_event_queue_for_post_message_enabled() &&
-      !DocGroup::TryToLoadIframesInBackground()) {
-    BrowsingContext* bc = mTargetWindow->GetBrowsingContext();
-    bc = bc ? bc->Top() : nullptr;
-    if (bc && bc->IsLoading()) {
-      // As long as the top level is loading, we can dispatch events to the
-      // queue because the queue will be flushed eventually
-      aError = bc->Group()->QueuePostMessageEvent(event.forget());
-      return;
-    }
-  }
-
   // XXX Loading iframes in background isn't enabled by default and doesn't
   //     work with Fission at the moment.
   if (DocGroup::TryToLoadIframesInBackground()) {
@@ -299,6 +286,15 @@ void PostMessageEvent::DispatchToTargetThread(ErrorResult& aError) {
                                                    dShell->GetOuterWindowID());
         return;
       }
+    }
+  } else if (StaticPrefs::dom_separate_event_queue_for_post_message_enabled()) {
+    BrowsingContext* bc = mTargetWindow->GetBrowsingContext();
+    bc = bc ? bc->Top() : nullptr;
+    if (bc && bc->IsLoading()) {
+      // As long as the top level is loading, we can dispatch events to the
+      // queue because the queue will be flushed eventually
+      aError = bc->Group()->QueuePostMessageEvent(event.forget());
+      return;
     }
   }
 
