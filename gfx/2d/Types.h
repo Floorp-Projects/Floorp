@@ -750,6 +750,15 @@ enum class BackendType : int8_t {
   BACKEND_LAST
 };
 
+enum class RecorderType : int8_t {
+  UNKNOWN,
+  PRIVATE,
+  MEMORY,
+  CANVAS,
+  PRFILEDESC,
+  WEBRENDER
+};
+
 enum class FontType : int8_t {
   DWRITE,
   GDI,

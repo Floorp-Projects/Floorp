@@ -11,6 +11,11 @@
 #include "DrawEventRecorder.h"
 
 namespace mozilla {
+namespace layers {
+class CanvasDrawEventRecorder;
+struct RemoteTextureOwnerId;
+}  // namespace layers
+
 namespace gfx {
 
 class DrawTargetRecording : public DrawTarget {
@@ -18,6 +23,10 @@ class DrawTargetRecording : public DrawTarget {
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(DrawTargetRecording, override)
   DrawTargetRecording(DrawEventRecorder* aRecorder, DrawTarget* aDT,
                       IntRect aRect, bool aHasData = false);
+  DrawTargetRecording(layers::CanvasDrawEventRecorder* aRecorder,
+                      int64_t aTextureId,
+                      const layers::RemoteTextureOwnerId& aTextureOwnerId,
+                      DrawTarget* aDT, const IntSize& aSize);
 
   ~DrawTargetRecording();
 

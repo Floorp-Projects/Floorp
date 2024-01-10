@@ -21,6 +21,7 @@ class SourceSurface;
 
 namespace layers {
 class CanvasDrawEventRecorder;
+struct RemoteTextureOwnerId;
 
 class CanvasChild final : public PCanvasChild, public SupportsWeakPtr {
  public:
@@ -96,7 +97,8 @@ class CanvasChild final : public PCanvasChild, public SupportsWeakPtr {
    * @returns newly created DrawTargetRecording
    */
   already_AddRefed<gfx::DrawTarget> CreateDrawTarget(
-      int64_t aTextureId, gfx::IntSize aSize, gfx::SurfaceFormat aFormat);
+      int64_t aTextureId, const RemoteTextureOwnerId& aTextureOwnerId,
+      gfx::IntSize aSize, gfx::SurfaceFormat aFormat);
 
   /**
    * Record an event for processing by the CanvasParent's CanvasTranslator.
