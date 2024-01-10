@@ -81,25 +81,6 @@ add_task(async function test_restrictions() {
     "The restriction token should be ignored and not stripped"
   );
 
-  info("search restrict with alias");
-  await SearchTestUtils.installSearchExtension({
-    name: "Test",
-    keyword: "match",
-  });
-  results = await get_results({
-    sources: [UrlbarUtils.RESULT_SOURCE.SEARCH],
-    searchString: "match this",
-  });
-  Assert.ok(
-    !results.some(r => r.payload.engine != SUGGESTIONS_ENGINE_NAME),
-    "All the results should be search results and the alias should be ignored"
-  );
-  Assert.equal(
-    results[0].payload.query,
-    `match this`,
-    "The restriction token should be ignored and not stripped"
-  );
-
   info("search restrict with other engine");
   results = await get_results({
     sources: [UrlbarUtils.RESULT_SOURCE.SEARCH],

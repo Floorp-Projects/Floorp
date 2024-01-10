@@ -17,7 +17,6 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   UrlbarResult: "resource:///modules/UrlbarResult.sys.mjs",
   UrlbarSearchUtils: "resource:///modules/UrlbarSearchUtils.sys.mjs",
-  UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.sys.mjs",
 });
 
 /**
@@ -53,7 +52,7 @@ class ProviderAliasEngines extends UrlbarProvider {
   isActive(queryContext) {
     return (
       (!queryContext.restrictSource ||
-        queryContext.restrictSource == lazy.UrlbarTokenizer.RESTRICT.SEARCH) &&
+        queryContext.restrictSource == UrlbarUtils.RESULT_SOURCE.SEARCH) &&
       !queryContext.searchMode &&
       queryContext.tokens.length
     );
