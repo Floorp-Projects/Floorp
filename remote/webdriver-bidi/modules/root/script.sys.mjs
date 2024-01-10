@@ -647,17 +647,8 @@ class ScriptModule extends Module {
       `Expected "target" to be an object, got ${target}`
     );
 
-    const {
-      context: contextId = null,
-      realm: realmId = null,
-      sandbox = null,
-    } = target;
-
-    if (realmId != null && (contextId != null || sandbox != null)) {
-      throw new lazy.error.InvalidArgumentError(
-        `A context and a realm reference are mutually exclusive`
-      );
-    }
+    const { context: contextId = null, sandbox = null } = target;
+    let { realm: realmId = null } = target;
 
     if (contextId != null) {
       lazy.assert.string(
@@ -671,6 +662,9 @@ class ScriptModule extends Module {
           `Expected "sandbox" to be a string, got ${sandbox}`
         );
       }
+
+      // Ignore realm if context is provided.
+      realmId = null;
     } else if (realmId != null) {
       lazy.assert.string(
         realmId,
