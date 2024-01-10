@@ -652,18 +652,20 @@ async function onLoad() {
   document
     .getElementById("current-pin")
     .addEventListener("input", check_pin_repeat_is_correct);
-  document
-    .getElementById("info-tab-button")
-    .addEventListener("click", open_info_tab);
-  document
-    .getElementById("pin-tab-button")
-    .addEventListener("click", open_pin_tab);
-  document
-    .getElementById("credentials-tab-button")
-    .addEventListener("click", open_credentials_tab);
-  document
-    .getElementById("bio-enrollments-tab-button")
-    .addEventListener("click", open_bio_enrollments_tab);
+  let info_button = document.getElementById("info-tab-button");
+  info_button.addEventListener("click", open_info_tab);
+  info_button.addEventListener("keydown", handle_keydowns);
+  let pin_button = document.getElementById("pin-tab-button");
+  pin_button.addEventListener("click", open_pin_tab);
+  pin_button.addEventListener("keydown", handle_keydowns);
+  let credentials_button = document.getElementById("credentials-tab-button");
+  credentials_button.addEventListener("click", open_credentials_tab);
+  credentials_button.addEventListener("keydown", handle_keydowns);
+  let bio_enrollments_button = document.getElementById(
+    "bio-enrollments-tab-button"
+  );
+  bio_enrollments_button.addEventListener("click", open_bio_enrollments_tab);
+  bio_enrollments_button.addEventListener("keydown", handle_keydowns);
   document
     .getElementById("send-pin-button")
     .addEventListener("click", send_pin);
@@ -679,6 +681,59 @@ async function onLoad() {
   document
     .getElementById("confirm-deletion-button")
     .addEventListener("click", confirm_deletion);
+}
+
+function handle_keydowns(event) {
+  let index;
+  let event_was_handled = true;
+  let tabs = Array.from(document.getElementsByClassName("category"));
+  if (tabs.length <= 0) {
+    return;
+  }
+
+  switch (event.key) {
+    case "ArrowLeft":
+    case "ArrowUp":
+      if (event.currentTarget === tabs[0]) {
+        event.currentTarget.focus();
+      } else {
+        index = tabs.indexOf(event.currentTarget);
+        tabs[index - 1].focus();
+      }
+      break;
+
+    case "ArrowRight":
+    case "ArrowDown":
+      if (event.currentTarget === tabs[tabs.length - 1]) {
+        event.currentTarget.focus();
+      } else {
+        index = tabs.indexOf(event.currentTarget);
+        tabs[index + 1].focus();
+      }
+      break;
+
+    case "Home":
+      tabs[0].focus();
+      break;
+
+    case "End":
+      tabs[tabs.length - 1].focus();
+      break;
+
+    case "Enter":
+    case " ":
+      event.currentTarget.click();
+      break;
+
+    default:
+      event_was_handled = false;
+      break;
+  }
+
+  if (event_was_handled) {
+    event.stopPropagation();
+    event.preventDefault();
+  }
 }
 
 function open_tab(evt, tabName) {
