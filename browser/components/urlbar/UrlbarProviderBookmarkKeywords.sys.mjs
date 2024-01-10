@@ -16,7 +16,6 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   KeywordUtils: "resource://gre/modules/KeywordUtils.sys.mjs",
   UrlbarResult: "resource:///modules/UrlbarResult.sys.mjs",
-  UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.sys.mjs",
 });
 
 /**
@@ -52,8 +51,7 @@ class ProviderBookmarkKeywords extends UrlbarProvider {
   isActive(queryContext) {
     return (
       (!queryContext.restrictSource ||
-        queryContext.restrictSource ==
-          lazy.UrlbarTokenizer.RESTRICT.BOOKMARK) &&
+        queryContext.restrictSource == UrlbarUtils.RESULT_SOURCE.BOOKMARKS) &&
       !queryContext.searchMode &&
       queryContext.tokens.length
     );

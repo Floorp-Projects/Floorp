@@ -137,6 +137,23 @@ add_task(async function test_keyword_search() {
     ],
   });
 
+  info("Keyword query with *");
+  // We need a space before the asterisk to ensure it's considered a restriction
+  // token otherwise it will be a regular string character.
+  context = createContext("key blocking *", { isPrivate: false });
+  await check_results({
+    context,
+    matches: [
+      makeKeywordSearchResult(context, {
+        uri: "http://abc/?search=blocking%20*",
+        keyword: "key",
+        title: "abc: blocking *",
+        iconUri: "page-icon:http://abc/?search=%s",
+        heuristic: true,
+      }),
+    ],
+  });
+
   info("Unescaped term in query");
   // ... but note that we call encodeURIComponent() on the query string when we
   // build the URL, so the expected result will have the ユニコード substring

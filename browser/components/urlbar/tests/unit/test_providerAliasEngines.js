@@ -108,6 +108,38 @@ add_task(async function basicGetAndPost() {
         }),
       ],
     });
+
+    context = createContext(`${alias} kitten?`, {
+      isPrivate: false,
+    });
+    await check_results({
+      context,
+      matches: [
+        makeSearchResult(context, {
+          engineName: `Aliased${alias.toUpperCase()}MozSearch`,
+          query: "kitten?",
+          alias,
+          heuristic: true,
+          providerName: "AliasEngines",
+        }),
+      ],
+    });
+
+    context = createContext(`${alias} kitten ?`, {
+      isPrivate: false,
+    });
+    await check_results({
+      context,
+      matches: [
+        makeSearchResult(context, {
+          engineName: `Aliased${alias.toUpperCase()}MozSearch`,
+          query: "kitten ?",
+          alias,
+          heuristic: true,
+          providerName: "AliasEngines",
+        }),
+      ],
+    });
   }
 
   await cleanupPlaces();
