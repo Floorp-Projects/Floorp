@@ -524,8 +524,8 @@ export class FormAutofillParent extends JSWindowActorParent {
       { ignoreInvalid: true }
     );
 
+    let newRecord = newAddress.record;
     let oldRecord = {};
-    let mergeableFields = [];
 
     // Exams all stored record to determine whether to show the prompt or not.
     for (const record of await storage.getAll()) {
@@ -556,14 +556,33 @@ export class FormAutofillParent extends JSWindowActorParent {
         lazy.log.debug(
           "A mergeable address record is found, show the update prompt"
         );
-        // If we find multiple mergeable records, choose the record with fewest mergeable fields.
-        // TODO: Bug 1830841. Add a testcase
-        let fields = Object.entries(result)
+        const mergeableFields = Object.entries(result)
           .filter(v => ["superset", "similar"].includes(v[1]))
           .map(v => v[0]);
-        if (!mergeableFields.length || mergeableFields.length > fields.length) {
+
+        // If one record has fewer mergeable fields compared to another, it suggests greater similarity
+        // // to the merged record. In such cases, we opt for the record with the fewest mergeable fields.
+        // TODO: Bug 1830841. Add a testcase
+        if (Object.keys(newRecord).length > mergeableFields.length) {
+          // TODO: This is only temporarily, should be removed after Bug 1836438 is fixed
+          if (mergeableFields.includes("name")) {
+            mergeableFields.push(
+              "given-name",
+              "additional-name",
+              "family-name"
+            );
+          }
+
           oldRecord = record;
-          mergeableFields = fields;
+
+          // New record should only contains fields that can be merged with the old record.
+          newRecord = mergeableFields.reduce(
+            (result, fieldName) => ({
+              ...result,
+              [fieldName]: newAddress.record[fieldName],
+            }),
+            {}
+          );
         }
       }
     }
@@ -593,7 +612,7 @@ export class FormAutofillParent extends JSWindowActorParent {
         browser,
         storage,
         address.flowId,
-        { oldRecord, newRecord: newAddress.record }
+        { oldRecord, newRecord }
       );
     };
   }
