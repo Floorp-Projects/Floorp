@@ -3374,7 +3374,7 @@ void MacroAssemblerARMCompat::handleFailureWithHandlerTail(
   asMasm().setupUnalignedABICall(r1);
   asMasm().passABIArg(r0);
   asMasm().callWithABI<Fn, HandleException>(
-      MoveOp::GENERAL, CheckUnsafeCallWithABI::DontCheckHasExitFrame);
+      ABIType::General, CheckUnsafeCallWithABI::DontCheckHasExitFrame);
 
   Label entryFrame;
   Label catch_;
@@ -4531,7 +4531,7 @@ void MacroAssembler::callWithABIPre(uint32_t* stackAdjust, bool callFromWasm) {
   }
 }
 
-void MacroAssembler::callWithABIPost(uint32_t stackAdjust, MoveOp::Type result,
+void MacroAssembler::callWithABIPost(uint32_t stackAdjust, ABIType result,
                                      bool callFromWasm) {
   if (secondScratchReg_ != lr) {
     ma_mov(secondScratchReg_, lr);
@@ -4541,15 +4541,15 @@ void MacroAssembler::callWithABIPost(uint32_t stackAdjust, MoveOp::Type result,
   // fixes up the return value for us.
   if (!callFromWasm && !UseHardFpABI()) {
     switch (result) {
-      case MoveOp::DOUBLE:
+      case ABIType::Float64:
         // Move double from r0/r1 to ReturnFloatReg.
         ma_vxfer(r0, r1, ReturnDoubleReg);
         break;
-      case MoveOp::FLOAT32:
+      case ABIType::Float32:
         // Move float32 from r0 to ReturnFloatReg.
         ma_vxfer(r0, ReturnFloat32Reg);
         break;
-      case MoveOp::GENERAL:
+      case ABIType::General:
         break;
       default:
         MOZ_CRASH("unexpected callWithABI result");
@@ -4570,7 +4570,7 @@ void MacroAssembler::callWithABIPost(uint32_t stackAdjust, MoveOp::Type result,
 #endif
 }
 
-void MacroAssembler::callWithABINoProfiler(Register fun, MoveOp::Type result) {
+void MacroAssembler::callWithABINoProfiler(Register fun, ABIType result) {
   // Load the callee in r12, as above.
   ma_mov(fun, r12);
   uint32_t stackAdjust;
@@ -4579,8 +4579,7 @@ void MacroAssembler::callWithABINoProfiler(Register fun, MoveOp::Type result) {
   callWithABIPost(stackAdjust, result);
 }
 
-void MacroAssembler::callWithABINoProfiler(const Address& fun,
-                                           MoveOp::Type result) {
+void MacroAssembler::callWithABINoProfiler(const Address& fun, ABIType result) {
   // Load the callee in r12, no instruction between the ldr and call should
   // clobber it. Note that we can't use fun.base because it may be one of the
   // IntArg registers clobbered before the call.
@@ -5940,10 +5939,10 @@ inline void EmitRemainderOrQuotient(bool isRemainder, MacroAssembler& masm,
     masm.passABIArg(rhs);
     if (isUnsigned) {
       masm.callWithABI<Fn, __aeabi_uidivmod>(
-          MoveOp::GENERAL, CheckUnsafeCallWithABI::DontCheckOther);
+          ABIType::General, CheckUnsafeCallWithABI::DontCheckOther);
     } else {
       masm.callWithABI<Fn, __aeabi_idivmod>(
-          MoveOp::GENERAL, CheckUnsafeCallWithABI::DontCheckOther);
+          ABIType::General, CheckUnsafeCallWithABI::DontCheckOther);
     }
     if (isRemainder) {
       masm.mov(ReturnRegVal1, lhsOutput);
@@ -5995,10 +5994,10 @@ void MacroAssembler::flexibleDivMod32(Register rhs, Register lhsOutput,
     passABIArg(lhsOutput);
     passABIArg(rhs);
     if (isUnsigned) {
-      callWithABI<Fn, __aeabi_uidivmod>(MoveOp::GENERAL,
+      callWithABI<Fn, __aeabi_uidivmod>(ABIType::Int64,
                                         CheckUnsafeCallWithABI::DontCheckOther);
     } else {
-      callWithABI<Fn, __aeabi_idivmod>(MoveOp::GENERAL,
+      callWithABI<Fn, __aeabi_idivmod>(ABIType::Int64,
                                        CheckUnsafeCallWithABI::DontCheckOther);
     }
     moveRegPair(ReturnRegVal0, ReturnRegVal1, lhsOutput, remOutput);

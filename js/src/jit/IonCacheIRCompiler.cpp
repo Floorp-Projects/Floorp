@@ -1157,7 +1157,8 @@ bool IonCacheIRCompiler::emitCallNativeGetterResult(
   masm.passABIArg(argJSContext);
   masm.passABIArg(argUintN);
   masm.passABIArg(argVp);
-  masm.callWithABI(DynamicFunction<JSNative>(target->native()), MoveOp::GENERAL,
+  masm.callWithABI(DynamicFunction<JSNative>(target->native()),
+                   ABIType::General,
                    CheckUnsafeCallWithABI::DontCheckHasExitFrame);
 
   // Test for failure.
@@ -1276,7 +1277,7 @@ bool IonCacheIRCompiler::emitProxyGetResult(ObjOperandId objId,
   masm.passABIArg(argId);
   masm.passABIArg(argVp);
   masm.callWithABI<Fn, ProxyGetProperty>(
-      MoveOp::GENERAL, CheckUnsafeCallWithABI::DontCheckHasExitFrame);
+      ABIType::General, CheckUnsafeCallWithABI::DontCheckHasExitFrame);
 
   // Test for failure.
   masm.branchIfFalseBool(ReturnReg, masm.exceptionLabel());
@@ -1633,7 +1634,8 @@ bool IonCacheIRCompiler::emitCallNativeSetter(ObjOperandId receiverId,
   masm.passABIArg(argJSContext);
   masm.passABIArg(argUintN);
   masm.passABIArg(argVp);
-  masm.callWithABI(DynamicFunction<JSNative>(target->native()), MoveOp::GENERAL,
+  masm.callWithABI(DynamicFunction<JSNative>(target->native()),
+                   ABIType::General,
                    CheckUnsafeCallWithABI::DontCheckHasExitFrame);
 
   // Test for failure.
