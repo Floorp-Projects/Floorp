@@ -299,6 +299,9 @@ bool js::jit::CanInlineNativeCrossRealm(InlinableNative native) {
     case InlinableNative::StringEndsWith:
     case InlinableNative::StringToLowerCase:
     case InlinableNative::StringToUpperCase:
+    case InlinableNative::StringTrim:
+    case InlinableNative::StringTrimStart:
+    case InlinableNative::StringTrimEnd:
     case InlinableNative::Object:
     case InlinableNative::ObjectCreate:
     case InlinableNative::ObjectIs:

@@ -1175,6 +1175,13 @@
     rhs: WordSized
   num_temps: 5
 
+# Linearize a string.
+- name: LinearizeString
+  result_type: WordSized
+  operands:
+    str: WordSized
+  mir_op: true
+
 # Linearize a string before a character access.
 - name: LinearizeForCharAccess
   result_type: WordSized
@@ -1313,6 +1320,19 @@
     string: WordSized
   call_instruction: true
   mir_op: StringConvertCase
+
+# Index of first non-whitespace character.
+- name: StringTrimStartIndex
+  result_type: WordSized
+  operands:
+    string: WordSized
+
+# Index of last non-whitespace character.
+- name: StringTrimEndIndex
+  result_type: WordSized
+  operands:
+    string: WordSized
+    start: WordSized
 
 - name: StringSplit
   result_type: WordSized

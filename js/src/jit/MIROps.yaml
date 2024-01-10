@@ -910,6 +910,15 @@
 - name: Concat
   gen_boilerplate: false
 
+- name: LinearizeString
+  operands:
+    string: String
+  result_type: String
+  movable: true
+  congruent_to: if_operands_equal
+  # Strings are immutable, so there is no implicit dependency.
+  alias_set: none
+
 - name: LinearizeForCharAccess
   operands:
     string: String
@@ -1028,6 +1037,23 @@
 
 - name: StringConvertCase
   gen_boilerplate: false
+
+- name: StringTrimStartIndex
+  operands:
+    string: String
+  result_type: Int32
+  movable: true
+  congruent_to: if_operands_equal
+  alias_set: none
+
+- name: StringTrimEndIndex
+  operands:
+    string: String
+    start: Int32
+  result_type: Int32
+  movable: true
+  congruent_to: if_operands_equal
+  alias_set: none
 
 - name: StringSplit
   operands:

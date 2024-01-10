@@ -7651,6 +7651,93 @@ AttachDecision InlinableNativeIRGenerator::tryAttachStringToUpperCase() {
   return AttachDecision::Attach;
 }
 
+AttachDecision InlinableNativeIRGenerator::tryAttachStringTrim() {
+  // Expecting no arguments.
+  if (argc_ != 0) {
+    return AttachDecision::NoAction;
+  }
+
+  // Ensure |this| is a primitive string value.
+  if (!thisval_.isString()) {
+    return AttachDecision::NoAction;
+  }
+
+  // Initialize the input operand.
+  initializeInputOperand();
+
+  // Guard callee is the 'trim' native function.
+  emitNativeCalleeGuard();
+
+  // Guard this is a string.
+  ValOperandId thisValId =
+      writer.loadArgumentFixedSlot(ArgumentKind::This, argc_);
+  StringOperandId strId = writer.guardToString(thisValId);
+
+  writer.stringTrimResult(strId);
+  writer.returnFromIC();
+
+  trackAttached("StringTrim");
+  return AttachDecision::Attach;
+}
+
+AttachDecision InlinableNativeIRGenerator::tryAttachStringTrimStart() {
+  // Expecting no arguments.
+  if (argc_ != 0) {
+    return AttachDecision::NoAction;
+  }
+
+  // Ensure |this| is a primitive string value.
+  if (!thisval_.isString()) {
+    return AttachDecision::NoAction;
+  }
+
+  // Initialize the input operand.
+  initializeInputOperand();
+
+  // Guard callee is the 'trimStart' native function.
+  emitNativeCalleeGuard();
+
+  // Guard this is a string.
+  ValOperandId thisValId =
+      writer.loadArgumentFixedSlot(ArgumentKind::This, argc_);
+  StringOperandId strId = writer.guardToString(thisValId);
+
+  writer.stringTrimStartResult(strId);
+  writer.returnFromIC();
+
+  trackAttached("StringTrimStart");
+  return AttachDecision::Attach;
+}
+
+AttachDecision InlinableNativeIRGenerator::tryAttachStringTrimEnd() {
+  // Expecting no arguments.
+  if (argc_ != 0) {
+    return AttachDecision::NoAction;
+  }
+
+  // Ensure |this| is a primitive string value.
+  if (!thisval_.isString()) {
+    return AttachDecision::NoAction;
+  }
+
+  // Initialize the input operand.
+  initializeInputOperand();
+
+  // Guard callee is the 'trimEnd' native function.
+  emitNativeCalleeGuard();
+
+  // Guard this is a string.
+  ValOperandId thisValId =
+      writer.loadArgumentFixedSlot(ArgumentKind::This, argc_);
+  StringOperandId strId = writer.guardToString(thisValId);
+
+  writer.stringTrimEndResult(strId);
+  writer.returnFromIC();
+
+  trackAttached("StringTrimEnd");
+  return AttachDecision::Attach;
+}
+
 AttachDecision InlinableNativeIRGenerator::tryAttachMathRandom() {
   // Expecting no arguments.
   if (argc_ != 0) {
@@ -11080,6 +11167,12 @@ AttachDecision InlinableNativeIRGenerator::tryAttachStub() {
       return tryAttachStringToLowerCase();
     case InlinableNative::StringToUpperCase:
       return tryAttachStringToUpperCase();
+    case InlinableNative::StringTrim:
+      return tryAttachStringTrim();
+    case InlinableNative::StringTrimStart:
+      return tryAttachStringTrimStart();
+    case InlinableNative::StringTrimEnd:
+      return tryAttachStringTrimEnd();
     case InlinableNative::IntrinsicStringReplaceString:
       return tryAttachStringReplaceString();
     case InlinableNative::IntrinsicStringSplitString:

@@ -2756,16 +2756,11 @@ static void TrimString(const CharT* chars, bool trimStart, bool trimEnd,
   *pEnd = end;
 }
 
-static bool TrimString(JSContext* cx, const CallArgs& args, const char* funName,
-                       bool trimStart, bool trimEnd) {
-  JSString* str = ToStringForStringFunction(cx, funName, args.thisv());
-  if (!str) {
-    return false;
-  }
-
+static JSLinearString* TrimString(JSContext* cx, JSString* str, bool trimStart,
+                                  bool trimEnd) {
   JSLinearString* linear = str->ensureLinear(cx);
   if (!linear) {
-    return false;
+    return nullptr;
   }
 
   size_t length = linear->length();
@@ -2780,7 +2775,29 @@ static bool TrimString(JSContext* cx, const CallArgs& args, const char* funName,
                &end);
   }
 
-  JSLinearString* result = NewDependentString(cx, linear, begin, end - begin);
+  return NewDependentString(cx, linear, begin, end - begin);
+}
+
+JSString* js::StringTrim(JSContext* cx, HandleString string) {
+  return TrimString(cx, string, true, true);
+}
+
+JSString* js::StringTrimStart(JSContext* cx, HandleString string) {
+  return TrimString(cx, string, true, false);
+}
+
+JSString* js::StringTrimEnd(JSContext* cx, HandleString string) {
+  return TrimString(cx, string, false, true);
+}
+
+static bool TrimString(JSContext* cx, const CallArgs& args, const char* funName,
+                       bool trimStart, bool trimEnd) {
+  JSString* str = ToStringForStringFunction(cx, funName, args.thisv());
+  if (!str) {
+    return false;
+  }
+
+  JSLinearString* result = TrimString(cx, str, trimStart, trimEnd);
   if (!result) {
     return false;
   }
@@ -3787,9 +3804,9 @@ static const JSFunctionSpec string_methods[] = {
     JS_INLINABLE_FN("lastIndexOf", str_lastIndexOf, 1, 0, StringLastIndexOf),
     JS_INLINABLE_FN("startsWith", str_startsWith, 1, 0, StringStartsWith),
     JS_INLINABLE_FN("endsWith", str_endsWith, 1, 0, StringEndsWith),
-    JS_FN("trim", str_trim, 0, 0),
-    JS_FN("trimStart", str_trimStart, 0, 0),
-    JS_FN("trimEnd", str_trimEnd, 0, 0),
+    JS_INLINABLE_FN("trim", str_trim, 0, 0, StringTrim),
+    JS_INLINABLE_FN("trimStart", str_trimStart, 0, 0, StringTrimStart),
+    JS_INLINABLE_FN("trimEnd", str_trimEnd, 0, 0, StringTrimEnd),
 #if JS_HAS_INTL_API
     JS_SELF_HOSTED_FN("toLocaleLowerCase", "String_toLocaleLowerCase", 0, 0),
     JS_SELF_HOSTED_FN("toLocaleUpperCase", "String_toLocaleUpperCase", 0, 0),
