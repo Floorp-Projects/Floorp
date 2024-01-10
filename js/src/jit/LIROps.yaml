@@ -1198,25 +1198,29 @@
     index: WordSized
   num_temps: 2
 
-# Get uint16 character code from a string. Return NaN on out-of-bounds.
-- name: CharCodeAtMaybeOutOfBounds
-  result_type: BoxedValue
-  operands:
-    str: WordSized
-    index: WordSized
-  num_temps: 2
-
-# Get uint16 character code from a string and convert it to a string. Return
-# the empty string on out-of-bounds.
-- name: CharAtMaybeOutOfBounds
+# Get uint16 character code from a string. Return -1 on out-of-bounds.
+- name: CharCodeAtOrNegative
   result_type: WordSized
   operands:
     str: WordSized
     index: WordSized
   num_temps: 2
 
+# Box the input if non-negative. Otherwise return NaN.
+- name: NegativeToNaN
+  result_type: BoxedValue
+  operands:
+    input: WordSized
+
 # Convert uint16 character code to a string.
 - name: FromCharCode
+  result_type: WordSized
+  operands:
+    code: WordSized
+
+# Convert non-negative input as a uint16 character code to a string. If the
+# input is negative, return the empty string.
+- name: FromCharCodeEmptyIfNegative
   result_type: WordSized
   operands:
     code: WordSized

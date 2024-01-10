@@ -2168,10 +2168,13 @@ bool WarpCacheIRTranspiler::emitLoadStringCharResult(StringOperandId strId,
   MDefinition* index = getOperand(indexId);
 
   if (handleOOB) {
-    auto* ins = MCharAtMaybeOutOfBounds::New(alloc(), str, index);
-    add(ins);
+    auto* charCode = MCharCodeAtOrNegative::New(alloc(), str, index);
+    add(charCode);
 
-    pushResult(ins);
+    auto* fromCharCode = MFromCharCodeEmptyIfNegative::New(alloc(), charCode);
+    add(fromCharCode);
+
+    pushResult(fromCharCode);
     return true;
   }
 
@@ -2197,7 +2200,10 @@ bool WarpCacheIRTranspiler::emitLoadStringCharCodeResult(StringOperandId strId,
   MDefinition* index = getOperand(indexId);
 
   if (handleOOB) {
-    auto* ins = MCharCodeAtMaybeOutOfBounds::New(alloc(), str, index);
+    auto* charCode = MCharCodeAtOrNegative::New(alloc(), str, index);
+    add(charCode);
+
+    auto* ins = MNegativeToNaN::New(alloc(), charCode);
     add(ins);
 
     pushResult(ins);

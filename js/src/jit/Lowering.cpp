@@ -2491,35 +2491,28 @@ void LIRGenerator::visitCharCodeAt(MCharCodeAt* ins) {
   assignSafepoint(lir, ins);
 }
 
-void LIRGenerator::visitCharCodeAtMaybeOutOfBounds(
-    MCharCodeAtMaybeOutOfBounds* ins) {
+void LIRGenerator::visitCharCodeAtOrNegative(MCharCodeAtOrNegative* ins) {
   MDefinition* str = ins->string();
   MDefinition* idx = ins->index();
 
   MOZ_ASSERT(str->type() == MIRType::String);
   MOZ_ASSERT(idx->type() == MIRType::Int32);
 
-  auto* lir = new (alloc()) LCharCodeAtMaybeOutOfBounds(
-      useRegister(str), useRegister(idx), temp(), temp());
-  defineBox(lir, ins);
-  assignSafepoint(lir, ins);
-}
-
-void LIRGenerator::visitCharAtMaybeOutOfBounds(MCharAtMaybeOutOfBounds* ins) {
-  MDefinition* str = ins->string();
-  MDefinition* idx = ins->index();
-
-  MOZ_ASSERT(str->type() == MIRType::String);
-  MOZ_ASSERT(idx->type() == MIRType::Int32);
-
-  auto* lir = new (alloc()) LCharAtMaybeOutOfBounds(
-      useRegister(str), useRegister(idx), temp(), temp());
+  auto* lir = new (alloc())
+      LCharCodeAtOrNegative(useRegister(str), useRegister(idx), temp(), temp());
   define(lir, ins);
   assignSafepoint(lir, ins);
 }
 
+void LIRGenerator::visitNegativeToNaN(MNegativeToNaN* ins) {
+  MOZ_ASSERT(ins->input()->type() == MIRType::Int32);
+
+  auto* lir = new (alloc()) LNegativeToNaN(useRegister(ins->input()));
+  defineBox(lir, ins);
+}
+
 void LIRGenerator::visitFromCharCode(MFromCharCode* ins) {
-  MDefinition* code = ins->getOperand(0);
+  MDefinition* code = ins->code();
 
   MOZ_ASSERT(code->type() == MIRType::Int32);
 
@@ -2528,8 +2521,19 @@ void LIRGenerator::visitFromCharCode(MFromCharCode* ins) {
   assignSafepoint(lir, ins);
 }
 
+void LIRGenerator::visitFromCharCodeEmptyIfNegative(
+    MFromCharCodeEmptyIfNegative* ins) {
+  MDefinition* code = ins->code();
+
+  MOZ_ASSERT(code->type() == MIRType::Int32);
+
+  auto* lir = new (alloc()) LFromCharCodeEmptyIfNegative(useRegister(code));
+  define(lir, ins);
+  assignSafepoint(lir, ins);
+}
+
 void LIRGenerator::visitFromCodePoint(MFromCodePoint* ins) {
-  MDefinition* codePoint = ins->getOperand(0);
+  MDefinition* codePoint = ins->codePoint();
 
   MOZ_ASSERT(codePoint->type() == MIRType::Int32);
 
