@@ -91,8 +91,8 @@ class HTMLEditUtils final {
             aContent.IsAnyOfHTMLElements(
                 nsGkAtoms::applet, nsGkAtoms::colgroup, nsGkAtoms::frameset,
                 nsGkAtoms::head, nsGkAtoms::html, nsGkAtoms::iframe,
-                nsGkAtoms::meter, nsGkAtoms::picture, nsGkAtoms::progress,
-                nsGkAtoms::select, nsGkAtoms::textarea));
+                nsGkAtoms::meter, nsGkAtoms::progress, nsGkAtoms::select,
+                nsGkAtoms::textarea));
   }
 
   /**
