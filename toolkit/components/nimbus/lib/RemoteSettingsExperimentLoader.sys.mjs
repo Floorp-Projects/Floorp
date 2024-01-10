@@ -195,6 +195,10 @@ export class _RemoteSettingsExperimentLoader {
       console.error(e);
     }
 
+    recipes?.sort(
+      (a, b) => new Date(a.publishedDate ?? 0) - new Date(b.publishedDate ?? 0)
+    );
+
     let recipeValidator;
 
     if (validationEnabled) {

@@ -331,6 +331,28 @@
             }
           ],
           "description": "Per-locale localization substitutions.\n\nThe top level key is the locale (e.g., \"en-US\" or \"fr\"). Each entry is a mapping of string IDs to their localized equivalents.\n\nOnly supported on desktop."
+        },
+        "locales": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The list of locale codes (e.g., \"en-US\" or \"fr\") that this experiment is targeting.\n\nIf null, all locales are targeted."
+        },
+        "publishedDate": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "The date that this experiment was first published to Remote Settings. Note that this value is expected to be present in Remote Settings.\n\nIf null, it has not yet been published.",
+          "format": "date-time"
         }
       },
       "required": [

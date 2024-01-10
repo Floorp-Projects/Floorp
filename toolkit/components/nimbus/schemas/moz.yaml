@@ -9,8 +9,8 @@ origin:
   description: "Shared data and schemas for Project Nimbus"
   url: "https://github.com/mozilla/nimbus-shared"
   license: "MPL-2.0"
-  release: "version 2.1.0"
-  revision: "v2.1.0"
+  release: "version 2.5.2"
+  revision: "v2.5.2"
 
 vendoring:
   url: "https://github.com/mozilla/nimbus-shared"
