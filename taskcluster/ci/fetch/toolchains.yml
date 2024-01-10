@@ -616,8 +616,8 @@ symbol-scrapers:
     description: Linux distribution symbol scraper source
     fetch:
         type: git
-        repo: http://github.com/mozilla/symbol-scrapers
-        revision: d6b42d6475aa9b9a24e2c0a72a5b15afd48b72df
+        repo: https://github.com/mozilla/symbol-scrapers
+        revision: f3778f70e2c34315b4759b58c8284b76a6d71dfc
 
 xz-5.4.4:
     description: xz 5.4.4 source code
