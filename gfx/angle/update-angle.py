@@ -26,9 +26,10 @@ An easy choice is to grab Chrome's Beta's ANGLE branch.
 
 Prepare your env:
 
-~~~
-export PATH="$PATH:/path/to/depot_tools"
-~~~
+* If in `cmd`:
+    `export PATH="$PATH:/path/to/depot_tools"`
+* If in `powershell`:
+    `$env:Path += "C:\path\to\depot_tools"`
 
 If this is a new repo, don't forget:
 

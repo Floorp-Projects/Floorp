@@ -1,3 +1,25 @@
+commit ddaf44ac75d5d0390873c2af193e02159ecbe672
+Author: Geoff Lang <geofflang@chromium.org>
+Date:   Fri Dec 8 13:20:36 2023 -0500
+
+    Validate Uniform variable limits with each iteration
+    
+    VariablePacker would loop over all variables and sum up the total
+    row counts before validating. Each variable can take hundreds of rows
+    so it is possible to overflow the counters before validating them.
+    
+    Validate the limits with each iteration and early-out when the limits
+    are exceeded.
+    
+    https://bugzilla.mozilla.org/show_bug.cgi?id=1864587
+    
+    Bug: chromium:1864587
+    Change-Id: Ic235ada1516a0d5a9948d82b22f6316a037c09ca
+    Reviewed-on: https://chromium-review.googlesource.com/c/angle/angle/+/5106408
+    Reviewed-by: Shahbaz Youssefi <syoussefi@chromium.org>
+    Auto-Submit: Geoff Lang <geofflang@chromium.org>
+    Commit-Queue: Shahbaz Youssefi <syoussefi@chromium.org>
+
 commit 6784271c1c6273a1be0b6a2dad9ac7b921521ad8
 Author: Shahbaz Youssefi <syoussefi@chromium.org>
 Date:   Tue Mar 28 11:43:23 2023 -0400
