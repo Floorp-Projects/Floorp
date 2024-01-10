@@ -78,30 +78,25 @@ object DataGenerationHelper {
     }
 
     /**
-     * Returns the date and time placeholder used in sponsored Fx suggest links.
+     * Constructs a date and time placeholder string for sponsored Fx suggest links.
+     * The format of the datetime is YYYYMMDDHH, where YYYY is the four-digit year,
+     * MM is the two-digit month, DD is the two-digit day, and HH is the two-digit hour.
+     * Single-digit months, days, and hours are padded with a leading zero to ensure
+     * the correct format. For example, a date and time of January 10, 2024, at 3 PM
+     * would be represented as "2024011015".
+     *
+     * @return A string representing the current date and time in the specified format.
      */
     fun getSponsoredFxSuggestPlaceHolder(): String {
         val currentDate = LocalDate.now()
         val currentTime = LocalTime.now()
-        val currentDay = currentDate.dayOfMonth
-        val currentMonth = currentDate.monthValue
-        val currentYear = currentDate.year
-        val currentHour = currentTime.hour
-        var placeholder: String
 
-        if (currentMonth < 10 && currentDay < 10 && currentHour < 10) {
-            placeholder = "$currentYear" + "0" + "$currentMonth" + "0" + "$currentDay" + "0" + "$currentHour"
-        } else if (currentMonth < 10 && currentDay < 10) {
-            placeholder = "$currentYear" + "0" + "$currentMonth" + "0" + "$currentDay$currentHour"
-        } else if (currentMonth < 10 && currentHour < 10) {
-            placeholder = "$currentYear" + "0" + "$currentMonth" + "$currentDay" + "0" + "$currentHour"
-        } else if (currentDay < 10 && currentHour < 10) {
-            placeholder = "$currentYear$currentMonth" + "0" + "$currentDay" + "0" + "$currentHour"
-        } else {
-            placeholder = "$currentYear$currentMonth$currentDay$currentHour"
-        }
+        val currentDay = currentDate.dayOfMonth.toString().padStart(2, '0')
+        val currentMonth = currentDate.monthValue.toString().padStart(2, '0')
+        val currentYear = currentDate.year.toString()
+        val currentHour = currentTime.hour.toString().padStart(2, '0')
 
-        return placeholder
+        return currentYear + currentMonth + currentDay + currentHour
     }
 
     /**
