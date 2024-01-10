@@ -31,11 +31,22 @@ const snippet = `
     .auto {
       content-visibility: auto;
     }
+    #hidden-subtree-2 {
+      visibility: hidden;
+    }
   </style>
   <div class="hidden" id="target">
-    <div id="child"></div>
-    <div id="content-child"></div>
+    <div id="child">A</div>
+    <div id="content-child">B</div>
+    <div id="hidden-subtree-1" class="hidden">C</div>
+    <div id="hidden-subtree-2">D</div>
+    <div id="shadow-host"></div>
   </div>
+  <script>
+    const host = document.querySelector("#shadow-host");
+    const shadowRoot = host.attachShadow({ mode: "open" });
+    shadowRoot.innerHTML = "<div id='shadowDiv'>E</div>";
+  </script>
   `;
 
 add_setup(async function () {
@@ -44,28 +55,50 @@ add_setup(async function () {
   });
 });
 
-async function setContentVisibility(browser, id, value) {
-  let onReorder = waitForEvent(EVENT_REORDER, id);
+async function setContentVisibility(browser, value) {
+  let mutationPromise = (() => {
+    switch (value) {
+      case "hidden":
+        return waitForEvent(EVENT_REORDER, "target");
+      case "auto":
+        return waitForEvents({
+          expected: [
+            [EVENT_REORDER, "child"],
+            [EVENT_REORDER, "content-child"],
+            [EVENT_REORDER, "shadowDiv"],
+            [EVENT_REORDER, "target"],
+          ],
+        });
+      default:
+        throw new Error(`unexpected content-visibility: ${value}`);
+    }
+  })();
 
   // Change the value of `content-visibility` property for the target
-  info(`Setting content-visibility: ${value} on ${id}`);
-  await invokeSetAttribute(browser, id, "class", value);
-  await onReorder;
+  info(`Setting content-visibility: ${value}`);
+  await invokeSetAttribute(browser, "target", "class", value);
+  await mutationPromise;
 }
 
 addAccessibleTask(
   snippet,
   async function (browser, accDoc) {
-    const targetId = "target";
-    const target = findAccessibleChildByID(accDoc, targetId);
+    const target = findAccessibleChildByID(accDoc, "target");
 
     info("Initial Accessibility Structure Test");
     testAccessibleTree(target, { SECTION: [] });
 
-    await setContentVisibility(browser, targetId, "auto");
-    testAccessibleTree(target, { SECTION: [{ SECTION: [] }, { SECTION: [] }] });
+    await setContentVisibility(browser, "auto");
+    testAccessibleTree(target, {
+      SECTION: [
+        { SECTION: [{ TEXT_LEAF: [] }] } /* child */,
+        { SECTION: [{ TEXT_LEAF: [] }] } /* content-child */,
+        { SECTION: [] } /* hidden-subtree-1 */,
+        { SECTION: [{ SECTION: [{ TEXT_LEAF: [] }] }] } /* shadow-host */,
+      ],
+    });
 
-    await setContentVisibility(browser, targetId, "hidden");
+    await setContentVisibility(browser, "hidden");
     testAccessibleTree(target, { SECTION: [] });
   },
   { iframe: true, remoteIframe: true, chrome: true }
