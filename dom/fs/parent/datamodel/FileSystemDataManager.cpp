@@ -114,10 +114,12 @@ void RemoveFileSystemDataManager(const Origin& aOrigin) {
   }
 }
 
+}  // namespace
+
 Result<ResultConnection, QMResult> GetStorageConnection(
     const quota::OriginMetadata& aOriginMetadata,
     const int64_t aDirectoryLockId) {
-  MOZ_ASSERT(aDirectoryLockId >= 0);
+  MOZ_ASSERT(aDirectoryLockId >= -1);
 
   // Ensure that storage is initialized and file system folder exists!
   QM_TRY_INSPECT(const auto& dbFileUrl,
@@ -140,8 +142,6 @@ Result<ResultConnection, QMResult> GetStorageConnection(
   return result;
 }
 
-}  // namespace
-
 Result<EntryId, QMResult> GetRootHandle(const Origin& origin) {
   MOZ_ASSERT(!origin.IsEmpty());
 
@@ -154,28 +154,6 @@ Result<EntryId, QMResult> GetEntryHandle(
 
   return FileSystemHashSource::GenerateHash(aHandle.parentId(),
                                             aHandle.childName());
-}
-
-Result<ResultConnection, QMResult> GetStorageConnection(
-    const quota::OriginMetadata& aOriginMetadata) {
-  QM_TRY_INSPECT(const nsCOMPtr<nsIFile>& databaseFile,
-                 data::GetDatabaseFile(aOriginMetadata));
-
-  QM_TRY_INSPECT(
-      const auto& storageService,
-      QM_TO_RESULT_TRANSFORM(MOZ_TO_RESULT_GET_TYPED(
-          nsCOMPtr<mozIStorageService>, MOZ_SELECT_OVERLOAD(do_GetService),
-          MOZ_STORAGE_SERVICE_CONTRACTID)));
-
-  QM_TRY_UNWRAP(
-      auto connection,
-      QM_TO_RESULT_TRANSFORM(MOZ_TO_RESULT_INVOKE_MEMBER_TYPED(
-          nsCOMPtr<mozIStorageConnection>, storageService, OpenDatabase,
-          databaseFile, mozIStorageService::CONNECTION_DEFAULT)));
-
-  ResultConnection result(connection);
-
-  return result;
 }
 
 FileSystemDataManager::FileSystemDataManager(
