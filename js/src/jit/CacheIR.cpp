@@ -13791,6 +13791,9 @@ AttachDecision OptimizeGetIteratorIRGenerator::tryAttachArray() {
 
   if (!IsArrayPrototypeOptimizable(cx_, obj.as<ArrayObject>(), arrProto,
                                    &arrProtoIterSlot, &iterFun)) {
+    // Fuse should be popped.
+    MOZ_ASSERT(
+        !obj->nonCCWRealm()->realmFuses.optimizeGetIteratorFuse.intact());
     return AttachDecision::NoAction;
   }
 
@@ -13801,6 +13804,9 @@ AttachDecision OptimizeGetIteratorIRGenerator::tryAttachArray() {
   Rooted<JSFunction*> nextFun(cx_);
   if (!IsArrayIteratorPrototypeOptimizable(
           cx_, AllowIteratorReturn::No, &arrayIteratorProto, &slot, &nextFun)) {
+    // Fuse should be popped.
+    MOZ_ASSERT(
+        !obj->nonCCWRealm()->realmFuses.optimizeGetIteratorFuse.intact());
     return AttachDecision::NoAction;
   }
 
@@ -13811,10 +13817,20 @@ AttachDecision OptimizeGetIteratorIRGenerator::tryAttachArray() {
   MOZ_ASSERT(obj->is<ArrayObject>());
   writer.guardShape(objId, obj->shape());
   writer.guardArrayIsPacked(objId);
+  bool intact = obj->nonCCWRealm()->realmFuses.optimizeGetIteratorFuse.intact();
 
-  MOZ_ASSERT(obj->nonCCWRealm()->realmFuses.optimizeGetIteratorFuse.intact());
-
-  if (!cx_->options().enableDestructuringFuse()) {
+  // If the fuse isn't intact but we've still passed all these dynamic checks
+  // then we can attach a version of the IC that dynamically checks to ensure
+  // the required invariants still hold.
+  //
+  // As an example of how this could be the case, consider an assignment
+  //
+  //    Array.prototype[Symbol.iterator] = Array.prototype[Symbol.iterator]
+  //
+  // This assignment pops the fuse, however we can still use the dynamic check
+  // version of this IC, as the actual -value- is still correct.
+  bool useDynamicCheck = !intact || !cx_->options().enableDestructuringFuse();
+  if (useDynamicCheck) {
     // Guard on Array.prototype[@@iterator].
     ObjOperandId arrProtoId = writer.loadObject(arrProto);
     ObjOperandId iterId = writer.loadObject(iterFun);
@@ -13840,7 +13856,11 @@ AttachDecision OptimizeGetIteratorIRGenerator::tryAttachArray() {
   writer.loadBooleanResult(true);
   writer.returnFromIC();
 
-  trackAttached("OptimizeGetIterator.Array");
+  if (useDynamicCheck) {
+    trackAttached("OptimizeGetIterator.Array.Dynamic");
+  } else {
+    trackAttached("OptimizeGetIterator.Array.Fuse");
+  }
   return AttachDecision::Attach;
 }
 
