@@ -8233,12 +8233,16 @@ bool CacheIRCompiler::emitInt32ToStringWithBaseResult(Int32OperandId inputId,
   masm.branch32(Assembler::LessThan, base, Imm32(2), failure->label());
   masm.branch32(Assembler::GreaterThan, base, Imm32(36), failure->label());
 
+  // Use lower-case characters by default.
+  constexpr bool lowerCase = true;
+
   callvm.prepare();
 
+  masm.Push(Imm32(lowerCase));
   masm.Push(base);
   masm.Push(input);
 
-  using Fn = JSString* (*)(JSContext*, int32_t, int32_t);
+  using Fn = JSString* (*)(JSContext*, int32_t, int32_t, bool);
   callvm.call<Fn, js::Int32ToStringWithBase>();
   return true;
 }

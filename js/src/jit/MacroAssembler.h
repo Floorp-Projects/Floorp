@@ -4803,11 +4803,11 @@ class MacroAssembler : public MacroAssemblerSpecific {
                                  Register scratch1, Register scratch2,
                                  const StaticStrings& staticStrings,
                                  const LiveRegisterSet& volatileRegs,
-                                 Label* fail);
+                                 bool lowerCase, Label* fail);
   void loadInt32ToStringWithBase(Register input, int32_t base, Register dest,
                                  Register scratch1, Register scratch2,
                                  const StaticStrings& staticStrings,
-                                 Label* fail);
+                                 bool lowerCase, Label* fail);
 
   /**
    * Load the BigInt digits from |bigInt| into |digits|.

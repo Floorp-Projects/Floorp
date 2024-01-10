@@ -884,9 +884,11 @@
   operands:
     input: Int32
     base: Int32
+  arguments:
+    lowerCase: bool
   result_type: String
   movable: true
-  congruent_to: if_operands_equal
+  congruent_to: custom
   alias_set: none
 
 - name: NumberParseInt

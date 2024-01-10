@@ -1694,7 +1694,7 @@ void MacroAssembler::lookupStaticIntString(Register integer, Register dest,
 void MacroAssembler::loadInt32ToStringWithBase(
     Register input, Register base, Register dest, Register scratch1,
     Register scratch2, const StaticStrings& staticStrings,
-    const LiveRegisterSet& volatileRegs, Label* fail) {
+    const LiveRegisterSet& volatileRegs, bool lowerCase, Label* fail) {
 #ifdef DEBUG
   Label baseBad, baseOk;
   branch32(Assembler::LessThan, base, Imm32(2), &baseBad);
@@ -1705,7 +1705,7 @@ void MacroAssembler::loadInt32ToStringWithBase(
 #endif
 
   // Compute |"0123456789abcdefghijklmnopqrstuvwxyz"[r]|.
-  auto toChar = [this, base](Register r) {
+  auto toChar = [this, base, lowerCase](Register r) {
 #ifdef DEBUG
     Label ok;
     branch32(Assembler::Below, r, base, &ok);
@@ -1719,7 +1719,7 @@ void MacroAssembler::loadInt32ToStringWithBase(
     Label done;
     add32(Imm32('0'), r);
     branch32(Assembler::BelowOrEqual, r, Imm32('9'), &done);
-    add32(Imm32('a' - '0' - 10), r);
+    add32(Imm32((lowerCase ? 'a' : 'A') - '0' - 10), r);
     bind(&done);
   };
 
@@ -1759,11 +1759,12 @@ void MacroAssembler::loadInt32ToStringWithBase(
 
 void MacroAssembler::loadInt32ToStringWithBase(
     Register input, int32_t base, Register dest, Register scratch1,
-    Register scratch2, const StaticStrings& staticStrings, Label* fail) {
+    Register scratch2, const StaticStrings& staticStrings, bool lowerCase,
+    Label* fail) {
   MOZ_ASSERT(2 <= base && base <= 36, "base must be in range [2, 36]");
 
   // Compute |"0123456789abcdefghijklmnopqrstuvwxyz"[r]|.
-  auto toChar = [this, base](Register r) {
+  auto toChar = [this, base, lowerCase](Register r) {
 #ifdef DEBUG
     Label ok;
     branch32(Assembler::Below, r, Imm32(base), &ok);
@@ -1777,7 +1778,7 @@ void MacroAssembler::loadInt32ToStringWithBase(
       Label done;
       add32(Imm32('0'), r);
       branch32(Assembler::BelowOrEqual, r, Imm32('9'), &done);
-      add32(Imm32('a' - '0' - 10), r);
+      add32(Imm32((lowerCase ? 'a' : 'A') - '0' - 10), r);
       bind(&done);
     }
   };
