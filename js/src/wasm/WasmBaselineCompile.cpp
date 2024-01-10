@@ -5491,7 +5491,7 @@ bool BaseCompiler::emitConvertInt64ToFloatingCallout(SymbolicAddress callee,
 #  endif
   CodeOffset raOffset = masm.callWithABI(
       bytecodeOffset(), callee, mozilla::Some(fr.getInstancePtrOffset()),
-      resultType == ValType::F32 ? ABIType::Float32 : ABIType::Float64);
+      resultType == ValType::F32 ? MoveOp::FLOAT32 : MoveOp::DOUBLE);
   if (!createStackMap("emitConvertInt64To[..]", raOffset)) {
     return false;
   }
@@ -5533,7 +5533,7 @@ bool BaseCompiler::emitConvertFloatingToInt64Callout(SymbolicAddress callee,
   FunctionCall call{};
 
   masm.setupWasmABICall();
-  masm.passABIArg(doubleInput, ABIType::Float64);
+  masm.passABIArg(doubleInput, MoveOp::DOUBLE);
   CodeOffset raOffset = masm.callWithABI(
       bytecodeOffset(), callee, mozilla::Some(fr.getInstancePtrOffset()));
   if (!createStackMap("emitConvertFloatin[..]", raOffset)) {

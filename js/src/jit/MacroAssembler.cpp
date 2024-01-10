@@ -3331,7 +3331,7 @@ void MacroAssembler::generateBailoutTail(Register scratch,
     setupUnalignedABICall(temp);
     passABIArg(bailoutInfo);
     callWithABI<Fn, FinishBailoutToBaseline>(
-        ABIType::General, CheckUnsafeCallWithABI::DontCheckHasExitFrame);
+        MoveOp::GENERAL, CheckUnsafeCallWithABI::DontCheckHasExitFrame);
     branchIfFalseBool(ReturnReg, exceptionLabel());
 
     // Restore values where they need to be and resume execution.
@@ -3429,7 +3429,7 @@ void MacroAssembler::assumeUnreachable(const char* output) {
     setupUnalignedABICall(temp);
     movePtr(ImmPtr(output), temp);
     passABIArg(temp);
-    callWithABI<Fn, AssumeUnreachable>(ABIType::General,
+    callWithABI<Fn, AssumeUnreachable>(MoveOp::GENERAL,
                                        CheckUnsafeCallWithABI::DontCheckOther);
 
     PopRegsInMask(save);
@@ -3576,14 +3576,14 @@ void MacroAssembler::outOfLineTruncateSlow(FloatRegister src, Register dest,
   if (compilingWasm) {
     int32_t instanceOffset = framePushed() - framePushedAfterInstance;
     setupWasmABICall();
-    passABIArg(src, ABIType::Float64);
+    passABIArg(src, MoveOp::DOUBLE);
     callWithABI(callOffset, wasm::SymbolicAddress::ToInt32,
                 mozilla::Some(instanceOffset));
   } else {
     using Fn = int32_t (*)(double);
     setupUnalignedABICall(dest);
-    passABIArg(src, ABIType::Float64);
-    callWithABI<Fn, JS::ToInt32>(ABIType::General,
+    passABIArg(src, MoveOp::DOUBLE);
+    callWithABI<Fn, JS::ToInt32>(MoveOp::GENERAL,
                                  CheckUnsafeCallWithABI::DontCheckOther);
   }
   storeCallInt32Result(dest);
@@ -4230,24 +4230,20 @@ void MacroAssembler::setupAlignedABICall() {
   dynamicAlignment_ = false;
 }
 
-void MacroAssembler::passABIArg(const MoveOperand& from, ABIType type) {
+void MacroAssembler::passABIArg(const MoveOperand& from, MoveOp::Type type) {
   MOZ_ASSERT(inCall_);
   appendSignatureType(type);
 
   ABIArg arg;
-  MoveOp::Type moveType;
   switch (type) {
-    case ABIType::Float32:
+    case MoveOp::FLOAT32:
       arg = abiArgs_.next(MIRType::Float32);
-      moveType = MoveOp::FLOAT32;
       break;
-    case ABIType::Float64:
+    case MoveOp::DOUBLE:
       arg = abiArgs_.next(MIRType::Double);
-      moveType = MoveOp::DOUBLE;
       break;
-    case ABIType::General:
+    case MoveOp::GENERAL:
       arg = abiArgs_.next(MIRType::Pointer);
-      moveType = MoveOp::GENERAL;
       break;
     default:
       MOZ_CRASH("Unexpected argument type");
@@ -4261,10 +4257,10 @@ void MacroAssembler::passABIArg(const MoveOperand& from, ABIType type) {
   if (oom()) {
     return;
   }
-  propagateOOM(moveResolver_.addMove(from, to, moveType));
+  propagateOOM(moveResolver_.addMove(from, to, type));
 }
 
-void MacroAssembler::callWithABINoProfiler(void* fun, ABIType result,
+void MacroAssembler::callWithABINoProfiler(void* fun, MoveOp::Type result,
                                            CheckUnsafeCallWithABI check) {
   appendSignatureType(result);
 #ifdef JS_SIMULATOR
@@ -4309,7 +4305,7 @@ void MacroAssembler::callWithABINoProfiler(void* fun, ABIType result,
 CodeOffset MacroAssembler::callWithABI(wasm::BytecodeOffset bytecode,
                                        wasm::SymbolicAddress imm,
                                        mozilla::Maybe<int32_t> instanceOffset,
-                                       ABIType result) {
+                                       MoveOp::Type result) {
   MOZ_ASSERT(wasm::NeedsBuiltinThunk(imm));
 
   uint32_t stackAdjust;
@@ -4331,7 +4327,7 @@ CodeOffset MacroAssembler::callWithABI(wasm::BytecodeOffset bytecode,
 }
 
 void MacroAssembler::callDebugWithABI(wasm::SymbolicAddress imm,
-                                      ABIType result) {
+                                      MoveOp::Type result) {
   MOZ_ASSERT(!wasm::NeedsBuiltinThunk(imm));
   uint32_t stackAdjust;
   callWithABIPre(&stackAdjust, /* callFromWasm = */ false);

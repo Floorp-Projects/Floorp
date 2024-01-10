@@ -137,40 +137,53 @@ CodeOffset MacroAssembler::call(const wasm::CallSiteDesc& desc,
 // ABI function calls.
 
 void MacroAssembler::passABIArg(Register reg) {
-  passABIArg(MoveOperand(reg), ABIType::General);
+  passABIArg(MoveOperand(reg), MoveOp::GENERAL);
 }
 
-void MacroAssembler::passABIArg(FloatRegister reg, ABIType type) {
+void MacroAssembler::passABIArg(FloatRegister reg, MoveOp::Type type) {
   passABIArg(MoveOperand(reg), type);
 }
 
-void MacroAssembler::callWithABI(DynFn fun, ABIType result,
+void MacroAssembler::callWithABI(DynFn fun, MoveOp::Type result,
                                  CheckUnsafeCallWithABI check) {
   AutoProfilerCallInstrumentation profiler(*this);
   callWithABINoProfiler(fun.address, result, check);
 }
 
 template <typename Sig, Sig fun>
-void MacroAssembler::callWithABI(ABIType result, CheckUnsafeCallWithABI check) {
+void MacroAssembler::callWithABI(MoveOp::Type result,
+                                 CheckUnsafeCallWithABI check) {
   ABIFunction<Sig, fun> abiFun;
   AutoProfilerCallInstrumentation profiler(*this);
   callWithABINoProfiler(abiFun.address(), result, check);
 }
 
-void MacroAssembler::callWithABI(Register fun, ABIType result) {
+void MacroAssembler::callWithABI(Register fun, MoveOp::Type result) {
   AutoProfilerCallInstrumentation profiler(*this);
   callWithABINoProfiler(fun, result);
 }
 
-void MacroAssembler::callWithABI(const Address& fun, ABIType result) {
+void MacroAssembler::callWithABI(const Address& fun, MoveOp::Type result) {
   AutoProfilerCallInstrumentation profiler(*this);
   callWithABINoProfiler(fun, result);
 }
 
-void MacroAssembler::appendSignatureType(ABIType type) {
+void MacroAssembler::appendSignatureType(MoveOp::Type type) {
 #ifdef JS_SIMULATOR
-  signature_ <<= ABITypeArgShift;
-  signature_ |= uint32_t(type);
+  signature_ <<= ArgType_Shift;
+  switch (type) {
+    case MoveOp::GENERAL:
+      signature_ |= ArgType_General;
+      break;
+    case MoveOp::DOUBLE:
+      signature_ |= ArgType_Float64;
+      break;
+    case MoveOp::FLOAT32:
+      signature_ |= ArgType_Float32;
+      break;
+    default:
+      MOZ_CRASH("Invalid argument type");
+  }
 #endif
 }
 
@@ -202,7 +215,6 @@ ABIFunctionType MacroAssembler::signature() const {
     case Args_Int_IntDoubleIntInt:
     case Args_Double_DoubleDoubleDouble:
     case Args_Double_DoubleDoubleDoubleDouble:
-    case Args_Int64_GeneralGeneral:
       break;
     default:
       MOZ_CRASH("Unexpected type");
