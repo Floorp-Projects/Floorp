@@ -586,10 +586,8 @@ Result<nsCOMPtr<nsIFileURL>, nsresult> GetDatabaseFileURL(
   // - from DeleteDatabaseOp::LoadPreviousVersion, since this might require
   //   temporarily exceeding the quota limit before the database can be
   //   deleted.
-  const auto directoryLockIdClause =
-      aDirectoryLockId >= 0
-          ? "&directoryLockId="_ns + IntToCString(aDirectoryLockId)
-          : EmptyCString();
+  const nsCString directoryLockIdClause =
+      "&directoryLockId="_ns + IntToCString(aDirectoryLockId);
 
   const auto keyClause = [&aMaybeKey] {
     nsAutoCString keyClause;

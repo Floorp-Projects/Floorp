@@ -160,10 +160,8 @@ Result<nsCOMPtr<mozIStorageConnection>, nsresult> OpenDBConnection(
                                           NewFileURIMutator, &aDBFile));
 
   const nsCString directoryLockIdClause =
-      aDirectoryMetadata.mDirectoryLockId >= 0
-          ? "&directoryLockId="_ns +
-                IntToCString(aDirectoryMetadata.mDirectoryLockId)
-          : EmptyCString();
+      "&directoryLockId="_ns +
+      IntToCString(aDirectoryMetadata.mDirectoryLockId);
 
   const auto keyClause = [&aMaybeCipherKey] {
     nsAutoCString keyClause;

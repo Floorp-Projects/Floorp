@@ -243,10 +243,8 @@ Result<nsCOMPtr<nsIFileURL>, QMResult> GetDatabaseFileURL(
   // initialized yet. At that time, the in-memory objects (e.g. OriginInfo) are
   // only being created so it doesn't make sense to tunnel quota information to
   // QuotaVFS to get corresponding QuotaObject instances for SQLite files.
-  const auto directoryLockIdClause =
-      aDirectoryLockId >= 0
-          ? "&directoryLockId="_ns + IntToCString(aDirectoryLockId)
-          : EmptyCString();
+  const nsCString directoryLockIdClause =
+      "&directoryLockId="_ns + IntToCString(aDirectoryLockId);
 
   nsCOMPtr<nsIFileURL> result;
   QM_TRY(QM_TO_RESULT(NS_MutateURI(mutator)
