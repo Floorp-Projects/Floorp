@@ -2497,7 +2497,10 @@ security.ui.app_menu:
 
 security.ui.protectionspopup:
   open:
-    objects: ["protections_popup"]
+    objects: ["protections_popup", "protectionspopup_cfr",]
+    extra_keys:
+      message: >
+        For protectionspopup_cfr, the message ID.
     bug_numbers:
       - 1560327
       - 1607488
@@ -2534,7 +2537,11 @@ security.ui.protectionspopup:
       "milestone_message",
       "cookieb_toggle_on",
       "cookieb_toggle_off",
+      "protectionspopup_cfr",
     ]
+    extra_keys:
+      message: >
+        For protectionspopup_cfr, the message ID.
     bug_numbers:
       - 1560327
       - 1602015
