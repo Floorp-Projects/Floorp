@@ -51,7 +51,6 @@ projects:
     - service-glean
     - service-location
     - service-nimbus
-    - service-telemetry
     - support-base
     - support-images
     - support-ktx

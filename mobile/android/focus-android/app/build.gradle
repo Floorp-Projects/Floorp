@@ -298,8 +298,6 @@ dependencies {
     implementation project(':support-locale')
     implementation project(':compose-cfr')
 
-    implementation project(':service-telemetry')
-
     implementation ComponentsDependencies.kotlin_coroutines
     debugImplementation ComponentsDependencies.leakcanary
 

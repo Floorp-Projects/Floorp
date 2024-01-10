@@ -20,7 +20,6 @@ plugins {
 apply from: file('../shared-settings.gradle')
 
 include ':app'
-include ':service-telemetry'
 
 gradle.projectsLoaded { ->
     // Disables A-C tests and lint when building Focus.
