@@ -34,5 +34,5 @@ searchbar-icon =
 ## $oldEngine (String) - the search engine to be removed.
 ## $newEngine (String) - the search engine to replace the removed search engine.
 
-removed-search-engine-message = <strong>Your default search engine has been changed.</strong> { $oldEngine } is no longer available as a default search engine in { -brand-short-name }. { $newEngine } is now your default search engine. To change to another default search engine, go to settings. <label data-l10n-name="remove-search-engine-article">Learn more</label>
+removed-search-engine-message2 = <strong>Your default search engine has been changed.</strong> { $oldEngine } is no longer available as a default search engine in { -brand-short-name }. { $newEngine } is now your default search engine. To change to another default search engine, go to settings.
 remove-search-engine-button = OK

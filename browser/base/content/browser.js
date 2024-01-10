@@ -4288,26 +4288,8 @@ const BrowserSearch = {
    * @param {string} newEngine
    *   name of the application default engine to replaced the removed engine.
    */
-  removalOfSearchEngineNotificationBox(oldEngine, newEngine) {
-    let messageFragment = document.createDocumentFragment();
-    let message = document.createElement("span");
-    let link = document.createXULElement("label", {
-      is: "text-link",
-    });
-
-    link.href = Services.urlFormatter.formatURLPref(
-      "browser.search.searchEngineRemoval"
-    );
-    link.setAttribute("data-l10n-name", "remove-search-engine-article");
-    document.l10n.setAttributes(message, "removed-search-engine-message", {
-      oldEngine,
-      newEngine,
-    });
-
-    message.appendChild(link);
-    messageFragment.appendChild(message);
-
-    let button = [
+  async removalOfSearchEngineNotificationBox(oldEngine, newEngine) {
+    let buttons = [
       {
         "l10n-id": "remove-search-engine-button",
         primary: true,
@@ -4318,15 +4300,21 @@ const BrowserSearch = {
           gNotificationBox.removeNotification(notificationBox);
         },
       },
+      {
+        supportPage: "search-engine-removal",
+      },
     ];
 
-    gNotificationBox.appendNotification(
+    await gNotificationBox.appendNotification(
       "search-engine-removal",
       {
-        label: messageFragment,
+        label: {
+          "l10n-id": "removed-search-engine-message2",
+          "l10n-args": { oldEngine, newEngine },
+        },
         priority: gNotificationBox.PRIORITY_SYSTEM,
       },
-      button
+      buttons
     );
 
     // Update engine name in the placeholder to the new default engine name.
