@@ -897,7 +897,7 @@ void CodeGeneratorX86::visitOutOfLineTruncate(OutOfLineTruncate* ool) {
 
     if (gen->compilingWasm()) {
       masm.setupWasmABICall();
-      masm.passABIArg(input, MoveOp::DOUBLE);
+      masm.passABIArg(input, ABIType::Float64);
 
       int32_t instanceOffset = masm.framePushed() - framePushedAfterInstance;
       masm.callWithABI(ool->bytecodeOffset(), wasm::SymbolicAddress::ToInt32,
@@ -905,8 +905,8 @@ void CodeGeneratorX86::visitOutOfLineTruncate(OutOfLineTruncate* ool) {
     } else {
       using Fn = int32_t (*)(double);
       masm.setupUnalignedABICall(output);
-      masm.passABIArg(input, MoveOp::DOUBLE);
-      masm.callWithABI<Fn, JS::ToInt32>(MoveOp::GENERAL,
+      masm.passABIArg(input, ABIType::Float64);
+      masm.callWithABI<Fn, JS::ToInt32>(ABIType::General,
                                         CheckUnsafeCallWithABI::DontCheckOther);
     }
     masm.storeCallInt32Result(output);
@@ -1005,7 +1005,7 @@ void CodeGeneratorX86::visitOutOfLineTruncateFloat32(
     }
 
     masm.vcvtss2sd(input, input, input);
-    masm.passABIArg(input.asDouble(), MoveOp::DOUBLE);
+    masm.passABIArg(input.asDouble(), ABIType::Float64);
 
     if (gen->compilingWasm()) {
       int32_t instanceOffset = masm.framePushed() - framePushedAfterInstance;
@@ -1013,7 +1013,7 @@ void CodeGeneratorX86::visitOutOfLineTruncateFloat32(
                        mozilla::Some(instanceOffset));
     } else {
       using Fn = int32_t (*)(double);
-      masm.callWithABI<Fn, JS::ToInt32>(MoveOp::GENERAL,
+      masm.callWithABI<Fn, JS::ToInt32>(ABIType::General,
                                         CheckUnsafeCallWithABI::DontCheckOther);
     }
 

@@ -520,7 +520,7 @@ void MacroAssemblerX86::handleFailureWithHandlerTail(Label* profilerExitTail,
   asMasm().setupUnalignedABICall(ecx);
   asMasm().passABIArg(eax);
   asMasm().callWithABI<Fn, HandleException>(
-      MoveOp::GENERAL, CheckUnsafeCallWithABI::DontCheckHasExitFrame);
+      ABIType::General, CheckUnsafeCallWithABI::DontCheckHasExitFrame);
 
   Label entryFrame;
   Label catch_;
@@ -770,19 +770,19 @@ void MacroAssembler::callWithABIPre(uint32_t* stackAdjust, bool callFromWasm) {
   assertStackAlignment(ABIStackAlignment);
 }
 
-void MacroAssembler::callWithABIPost(uint32_t stackAdjust, MoveOp::Type result,
+void MacroAssembler::callWithABIPost(uint32_t stackAdjust, ABIType result,
                                      bool callFromWasm) {
   freeStack(stackAdjust);
 
   // Calls to native functions in wasm pass through a thunk which already
   // fixes up the return value for us.
   if (!callFromWasm) {
-    if (result == MoveOp::DOUBLE) {
+    if (result == ABIType::Float64) {
       reserveStack(sizeof(double));
       fstp(Operand(esp, 0));
       loadDouble(Operand(esp, 0), ReturnDoubleReg);
       freeStack(sizeof(double));
-    } else if (result == MoveOp::FLOAT32) {
+    } else if (result == ABIType::Float32) {
       reserveStack(sizeof(float));
       fstp32(Operand(esp, 0));
       loadFloat32(Operand(esp, 0), ReturnFloat32Reg);
@@ -800,15 +800,14 @@ void MacroAssembler::callWithABIPost(uint32_t stackAdjust, MoveOp::Type result,
 #endif
 }
 
-void MacroAssembler::callWithABINoProfiler(Register fun, MoveOp::Type result) {
+void MacroAssembler::callWithABINoProfiler(Register fun, ABIType result) {
   uint32_t stackAdjust;
   callWithABIPre(&stackAdjust);
   call(fun);
   callWithABIPost(stackAdjust, result);
 }
 
-void MacroAssembler::callWithABINoProfiler(const Address& fun,
-                                           MoveOp::Type result) {
+void MacroAssembler::callWithABINoProfiler(const Address& fun, ABIType result) {
   uint32_t stackAdjust;
   callWithABIPre(&stackAdjust);
   call(fun);

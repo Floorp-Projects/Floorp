@@ -3072,9 +3072,9 @@ bool CacheIRCompiler::emitDoubleModResult(NumberOperandId lhsId,
 
   using Fn = double (*)(double a, double b);
   masm.setupUnalignedABICall(scratch);
-  masm.passABIArg(floatScratch0, MoveOp::DOUBLE);
-  masm.passABIArg(floatScratch1, MoveOp::DOUBLE);
-  masm.callWithABI<Fn, js::NumberMod>(MoveOp::DOUBLE);
+  masm.passABIArg(floatScratch0, ABIType::Float64);
+  masm.passABIArg(floatScratch1, ABIType::Float64);
+  masm.callWithABI<Fn, js::NumberMod>(ABIType::Float64);
   masm.storeCallFloatResult(floatScratch0);
 
   LiveRegisterSet ignore;
@@ -3102,9 +3102,9 @@ bool CacheIRCompiler::emitDoublePowResult(NumberOperandId lhsId,
 
   using Fn = double (*)(double x, double y);
   masm.setupUnalignedABICall(scratch);
-  masm.passABIArg(floatScratch0, MoveOp::DOUBLE);
-  masm.passABIArg(floatScratch1, MoveOp::DOUBLE);
-  masm.callWithABI<Fn, js::ecmaPow>(MoveOp::DOUBLE);
+  masm.passABIArg(floatScratch0, ABIType::Float64);
+  masm.passABIArg(floatScratch1, ABIType::Float64);
+  masm.callWithABI<Fn, js::ecmaPow>(ABIType::Float64);
   masm.storeCallFloatResult(floatScratch0);
 
   LiveRegisterSet ignore;
@@ -3659,8 +3659,8 @@ bool CacheIRCompiler::emitTruncateDoubleToUInt32(NumberOperandId inputId,
 
   using Fn = int32_t (*)(double);
   masm.setupUnalignedABICall(res);
-  masm.passABIArg(floatReg, MoveOp::DOUBLE);
-  masm.callWithABI<Fn, JS::ToInt32>(MoveOp::GENERAL,
+  masm.passABIArg(floatReg, ABIType::Float64);
+  masm.callWithABI<Fn, JS::ToInt32>(ABIType::General,
                                     CheckUnsafeCallWithABI::DontCheckOther);
   masm.storeCallInt32Result(res);
 
@@ -5450,10 +5450,10 @@ bool CacheIRCompiler::emitMathHypot2NumberResult(NumberOperandId first,
 
   using Fn = double (*)(double x, double y);
   masm.setupUnalignedABICall(scratch);
-  masm.passABIArg(floatScratch0, MoveOp::DOUBLE);
-  masm.passABIArg(floatScratch1, MoveOp::DOUBLE);
+  masm.passABIArg(floatScratch0, ABIType::Float64);
+  masm.passABIArg(floatScratch1, ABIType::Float64);
 
-  masm.callWithABI<Fn, ecmaHypot>(MoveOp::DOUBLE);
+  masm.callWithABI<Fn, ecmaHypot>(ABIType::Float64);
   masm.storeCallFloatResult(floatScratch0);
 
   LiveRegisterSet ignore;
@@ -5484,11 +5484,11 @@ bool CacheIRCompiler::emitMathHypot3NumberResult(NumberOperandId first,
 
   using Fn = double (*)(double x, double y, double z);
   masm.setupUnalignedABICall(scratch);
-  masm.passABIArg(floatScratch0, MoveOp::DOUBLE);
-  masm.passABIArg(floatScratch1, MoveOp::DOUBLE);
-  masm.passABIArg(floatScratch2, MoveOp::DOUBLE);
+  masm.passABIArg(floatScratch0, ABIType::Float64);
+  masm.passABIArg(floatScratch1, ABIType::Float64);
+  masm.passABIArg(floatScratch2, ABIType::Float64);
 
-  masm.callWithABI<Fn, hypot3>(MoveOp::DOUBLE);
+  masm.callWithABI<Fn, hypot3>(ABIType::Float64);
   masm.storeCallFloatResult(floatScratch0);
 
   LiveRegisterSet ignore;
@@ -5522,12 +5522,12 @@ bool CacheIRCompiler::emitMathHypot4NumberResult(NumberOperandId first,
 
   using Fn = double (*)(double x, double y, double z, double w);
   masm.setupUnalignedABICall(scratch);
-  masm.passABIArg(floatScratch0, MoveOp::DOUBLE);
-  masm.passABIArg(floatScratch1, MoveOp::DOUBLE);
-  masm.passABIArg(floatScratch2, MoveOp::DOUBLE);
-  masm.passABIArg(floatScratch3, MoveOp::DOUBLE);
+  masm.passABIArg(floatScratch0, ABIType::Float64);
+  masm.passABIArg(floatScratch1, ABIType::Float64);
+  masm.passABIArg(floatScratch2, ABIType::Float64);
+  masm.passABIArg(floatScratch3, ABIType::Float64);
 
-  masm.callWithABI<Fn, hypot4>(MoveOp::DOUBLE);
+  masm.callWithABI<Fn, hypot4>(ABIType::Float64);
   masm.storeCallFloatResult(floatScratch0);
 
   LiveRegisterSet ignore;
@@ -5555,9 +5555,9 @@ bool CacheIRCompiler::emitMathAtan2NumberResult(NumberOperandId yId,
 
   using Fn = double (*)(double x, double y);
   masm.setupUnalignedABICall(scratch);
-  masm.passABIArg(floatScratch0, MoveOp::DOUBLE);
-  masm.passABIArg(floatScratch1, MoveOp::DOUBLE);
-  masm.callWithABI<Fn, js::ecmaAtan2>(MoveOp::DOUBLE);
+  masm.passABIArg(floatScratch0, ABIType::Float64);
+  masm.passABIArg(floatScratch1, ABIType::Float64);
+  masm.callWithABI<Fn, js::ecmaAtan2>(ABIType::Float64);
   masm.storeCallFloatResult(floatScratch0);
 
   LiveRegisterSet ignore;
@@ -5750,9 +5750,9 @@ bool CacheIRCompiler::emitMathFunctionNumberResultShared(
   masm.PushRegsInMask(save);
 
   masm.setupUnalignedABICall(output.scratchReg());
-  masm.passABIArg(inputScratch, MoveOp::DOUBLE);
+  masm.passABIArg(inputScratch, ABIType::Float64);
   masm.callWithABI(DynamicFunction<UnaryMathFunctionType>(funPtr),
-                   MoveOp::DOUBLE);
+                   ABIType::Float64);
   masm.storeCallFloatResult(inputScratch);
 
   masm.PopRegsInMask(save);
@@ -7189,11 +7189,11 @@ bool CacheIRCompiler::emitCompareBigIntNumberResult(JSOp op,
   // - |left <= right| is implemented as |right >= left|.
   // - |left > right| is implemented as |right < left|.
   if (op == JSOp::Le || op == JSOp::Gt) {
-    masm.passABIArg(floatScratch0, MoveOp::DOUBLE);
+    masm.passABIArg(floatScratch0, ABIType::Float64);
     masm.passABIArg(lhs);
   } else {
     masm.passABIArg(lhs);
-    masm.passABIArg(floatScratch0, MoveOp::DOUBLE);
+    masm.passABIArg(floatScratch0, ABIType::Float64);
   }
 
   using FnBigIntNumber = bool (*)(BigInt*, double);
@@ -8202,7 +8202,7 @@ bool CacheIRCompiler::emitCallNumberToString(NumberOperandId inputId,
   masm.setupUnalignedABICall(result);
   masm.loadJSContext(result);
   masm.passABIArg(result);
-  masm.passABIArg(floatScratch0, MoveOp::DOUBLE);
+  masm.passABIArg(floatScratch0, ABIType::Float64);
   masm.callWithABI<Fn, js::NumberToStringPure>();
 
   masm.storeCallPointerResult(result);
