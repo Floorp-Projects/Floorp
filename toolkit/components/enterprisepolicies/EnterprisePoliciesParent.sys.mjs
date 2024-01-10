@@ -280,27 +280,19 @@ EnterprisePoliciesManager.prototype = {
       this._callbacks[timing] = [];
     }
 
-    let { PromiseUtils } = ChromeUtils.importESModule(
-      "resource://gre/modules/PromiseUtils.sys.mjs"
-    );
     // Simulate the startup process. This step-by-step is a bit ugly but it
     // tries to emulate the same behavior as of a normal startup.
-
-    await PromiseUtils.idleDispatch(() => {
-      this.observe(null, "policies-startup", null);
-    });
-
-    await PromiseUtils.idleDispatch(() => {
-      this.observe(null, "profile-after-change", null);
-    });
-
-    await PromiseUtils.idleDispatch(() => {
-      this.observe(null, "final-ui-startup", null);
-    });
-
-    await PromiseUtils.idleDispatch(() => {
-      this.observe(null, "sessionstore-windows-restored", null);
-    });
+    let notifyTopicOnIdle = topic =>
+      new Promise(resolve => {
+        ChromeUtils.idleDispatch(() => {
+          this.observe(null, topic, "");
+          resolve();
+        });
+      });
+    await notifyTopicOnIdle("policies-startup");
+    await notifyTopicOnIdle("profile-after-change");
+    await notifyTopicOnIdle("final-ui-startup");
+    await notifyTopicOnIdle("sessionstore-windows-restored");
   },
 
   // nsIObserver implementation

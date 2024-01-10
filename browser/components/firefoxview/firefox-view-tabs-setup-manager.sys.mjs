@@ -7,7 +7,6 @@
  * diverse inputs which drive the Firefox View synced tabs setup flow
  */
 
-import { PromiseUtils } from "resource://gre/modules/PromiseUtils.sys.mjs";
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
@@ -568,9 +567,11 @@ export const TabsSetupFlowManager = new (class {
       if (uiStateIndex == 0) {
         // Use idleDispatch() to give observers a chance to resolve before
         // determining the new state.
-        errorState = await PromiseUtils.idleDispatch(() =>
-          lazy.SyncedTabsErrorHandler.getErrorType()
-        );
+        errorState = await new Promise(resolve => {
+          ChromeUtils.idleDispatch(() => {
+            resolve(lazy.SyncedTabsErrorHandler.getErrorType());
+          });
+        });
         this.logger.debug("maybeUpdateUI, in error state:", errorState);
       }
       Services.obs.notifyObservers(null, TOPIC_SETUPSTATE_CHANGED, errorState);
