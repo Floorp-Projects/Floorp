@@ -32,9 +32,6 @@ class DrawEventRecorderPrivate : public DrawEventRecorder {
 
   DrawEventRecorderPrivate();
   virtual ~DrawEventRecorderPrivate();
-  RecorderType GetRecorderType() const override {
-    return RecorderType::PRIVATE;
-  }
   bool Finish() override {
     ClearResources();
     return true;
@@ -251,8 +248,6 @@ class DrawEventRecorderMemory : public DrawEventRecorderPrivate {
    */
   DrawEventRecorderMemory();
   explicit DrawEventRecorderMemory(const SerializeResourcesFn& aSerialize);
-
-  RecorderType GetRecorderType() const override { return RecorderType::MEMORY; }
 
   void RecordEvent(const RecordedEvent& aEvent) override;
 

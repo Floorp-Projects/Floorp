@@ -67,8 +67,9 @@ bool RecordedTextureData::Lock(OpenMode aMode) {
 
   if (!mDT) {
     mTextureId = sNextRecordedTextureId++;
-    mDT = mCanvasChild->CreateDrawTarget(mTextureId, mRemoteTextureOwnerId,
-                                         mSize, mFormat);
+    mCanvasChild->RecordEvent(
+        RecordedNextTextureId(mTextureId, mRemoteTextureOwnerId));
+    mDT = mCanvasChild->CreateDrawTarget(mTextureId, mSize, mFormat);
     if (!mDT) {
       return false;
     }
