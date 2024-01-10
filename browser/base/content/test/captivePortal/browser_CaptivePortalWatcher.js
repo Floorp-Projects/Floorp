@@ -44,9 +44,9 @@ let testCasesForBothSuccessAndAbort = [
     await portalDetected();
 
     // Notification should be shown in both windows.
-    ensurePortalNotification(win1);
+    await ensurePortalNotification(win1);
     ensureNoPortalTab(win1);
-    ensurePortalNotification(win2);
+    await ensurePortalNotification(win2);
     ensureNoPortalTab(win2);
 
     await focusWindowAndWaitForPortalUI(false, win2);
@@ -108,8 +108,8 @@ let testCasesForBothSuccessAndAbort = [
     await portalDetected();
     ensureNoPortalTab(win1);
     ensureNoPortalTab(win2);
-    ensurePortalNotification(win1);
-    ensurePortalNotification(win2);
+    await ensurePortalNotification(win1);
+    await ensurePortalNotification(win2);
     await freePortal(aSuccess);
     ensureNoPortalNotification(win1);
     ensureNoPortalNotification(win2);
