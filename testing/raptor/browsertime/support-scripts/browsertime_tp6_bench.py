@@ -30,9 +30,9 @@ class TP6BenchSupport:
 
         all_tests = get_browser_test_list(args.app, args.run_local)
 
-        manifest_to_find = "browsertime-tp6.ini"
+        manifest_to_find = "browsertime-tp6.toml"
         if args.app not in DESKTOP_APPS:
-            manifest_to_find = "browsertime-tp6m.ini"
+            manifest_to_find = "browsertime-tp6m.toml"
 
         test_urls = []
         playback_pageset_manifests = []
@@ -44,6 +44,9 @@ class TP6BenchSupport:
                         parsed_test["playback_pageset_manifest"], parsed_test["name"]
                     )
                 )
+
+        if len(playback_pageset_manifests) == 0:
+            raise Exception("Could not find any manifests for testing.")
 
         test["test_url"] = ",".join(test_urls)
         test["playback_pageset_manifest"] = ",".join(playback_pageset_manifests)
