@@ -57,6 +57,7 @@ class BrowserToolbarView(
         .findViewById(R.id.toolbar)
 
     val toolbarIntegration: ToolbarIntegration
+    val menuToolbar: ToolbarMenu
 
     @VisibleForTesting
     internal val isPwaTabOrTwaTab: Boolean
@@ -129,7 +130,6 @@ class BrowserToolbarView(
                 display.hint = context.getString(R.string.search_hint)
             }
 
-            val menuToolbar: ToolbarMenu
             if (isCustomTabSession) {
                 menuToolbar = CustomTabToolbarMenu(
                     context = this,

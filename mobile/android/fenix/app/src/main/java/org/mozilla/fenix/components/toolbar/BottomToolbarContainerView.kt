@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.coordinatorlayout.widget.CoordinatorLayout
+import mozilla.components.browser.menu.view.MenuButton
 import org.mozilla.fenix.compose.Divider
 import org.mozilla.fenix.theme.FirefoxTheme
 
@@ -22,6 +23,8 @@ import org.mozilla.fenix.theme.FirefoxTheme
  * @param container The ViewGroup into which the NavigationBar composable will be added.
  * @param navigationItems A list of [ActionItem] objects representing the items to be displayed in the navigation bar.
  * @param androidToolbarView An option toolbar view that will be added atop of the navigation bar.
+ * @param menuButton A [MenuButton] to be used for [ItemType.MENU]
+ *
  * Defaults to [NavigationItems.defaultItems] which provides a standard set of navigation items.
  */
 class BottomToolbarContainerView(
@@ -29,6 +32,7 @@ class BottomToolbarContainerView(
     container: ViewGroup,
     navigationItems: List<ActionItem> = NavigationItems.defaultItems,
     androidToolbarView: View? = null,
+    menuButton: MenuButton
 ) {
 
     init {
@@ -42,7 +46,10 @@ class BottomToolbarContainerView(
                             Divider()
                         }
 
-                        NavigationBar(actionItems = navigationItems)
+                        NavigationBar(
+                            actionItems = navigationItems,
+                            menuButton = menuButton,
+                        )
                     }
                 }
             }

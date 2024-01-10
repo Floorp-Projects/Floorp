@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.Text
@@ -24,6 +25,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
+import mozilla.components.browser.menu.view.MenuButton
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
 import org.mozilla.fenix.theme.FirefoxTheme
@@ -33,9 +36,13 @@ import org.mozilla.fenix.theme.Theme
  * Top-level UI for displaying the navigation bar.
  *
  * @param actionItems A list of [ActionItem] used to populate the bar.
+ * @param menuButton A [MenuButton] to be used for [ItemType.MENU]
  */
 @Composable
-fun NavigationBar(actionItems: List<ActionItem>) {
+fun NavigationBar(
+    actionItems: List<ActionItem>,
+    menuButton: MenuButton? = null
+) {
     Box(
         modifier = Modifier
             .background(FirefoxTheme.colors.layer1)
@@ -63,6 +70,28 @@ fun NavigationBar(actionItems: List<ActionItem>) {
                     ItemType.TAB_COUNTER -> {
                         IconButton(onClick = {}) {
                             TabsIcon(item = it, tabsCount = 0)
+                        }
+                    }
+
+                    ItemType.MENU -> {
+                        // Probably, [ActionItem] will be refactored in future to incorporate
+                        // the [MenuButton] as well, so this check won't be necessary;
+                        // will revisit it when doing tab counter and navigation buttons.
+                        if (menuButton != null) {
+                            AndroidView(
+                                modifier = Modifier.height(48.dp).width(48.dp),
+                                factory = { _ ->
+                                    menuButton
+                                },
+                            )
+                        } else {
+                            IconButton(onClick = {}) {
+                                Icon(
+                                    painter = painterResource(it.iconId),
+                                    stringResource(id = it.descriptionResourceId),
+                                    tint = FirefoxTheme.colors.iconPrimary,
+                                )
+                            }
                         }
                     }
                 }
@@ -110,7 +139,7 @@ data class ActionItem(
  * [TAB_COUNTER] - Represents a specialized item used to display a count, such as the number of open tabs in a browser.
  */
 enum class ItemType {
-    STANDARD, TAB_COUNTER
+    STANDARD, TAB_COUNTER, MENU
 }
 
 /**
@@ -122,9 +151,10 @@ object NavigationItems {
         descriptionResourceId = R.string.browser_toolbar_home,
     )
 
-    val settings = ActionItem(
+    val menu = ActionItem(
         iconId = R.drawable.mozac_ic_ellipsis_vertical_24,
         descriptionResourceId = R.string.mozac_browser_menu_button,
+        type = ItemType.MENU,
     )
 
     val back = ActionItem(
@@ -143,7 +173,7 @@ object NavigationItems {
         type = ItemType.TAB_COUNTER,
     )
 
-    val defaultItems = listOf(back, forward, home, tabs, settings)
+    val defaultItems = listOf(back, forward, home, tabs, menu)
 }
 
 @LightDarkPreview
