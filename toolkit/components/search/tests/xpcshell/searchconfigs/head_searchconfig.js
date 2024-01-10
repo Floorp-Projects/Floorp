@@ -10,6 +10,7 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 ChromeUtils.defineESModuleGetters(this, {
   // Only needed when SearchUtils.newSearchConfigEnabled is false.
   AddonTestUtils: "resource://testing-common/AddonTestUtils.sys.mjs",
+  AppConstants: "resource://gre/modules/AppConstants.sys.mjs",
   ObjectUtils: "resource://gre/modules/ObjectUtils.sys.mjs",
   Region: "resource://gre/modules/Region.sys.mjs",
   RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
