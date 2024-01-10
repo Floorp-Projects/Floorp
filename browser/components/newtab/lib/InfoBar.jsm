@@ -25,7 +25,7 @@ class InfoBarNotification {
    *
    * @param {object} browser Browser reference for the currently selected tab
    */
-  showNotification(browser) {
+  async showNotification(browser) {
     let { content } = this.message;
     let { gBrowser } = browser.ownerGlobal;
     let doc = gBrowser.ownerDocument;
@@ -38,7 +38,7 @@ class InfoBarNotification {
 
     let priority = content.priority || notificationContainer.PRIORITY_SYSTEM;
 
-    this.notification = notificationContainer.appendNotification(
+    this.notification = await notificationContainer.appendNotification(
       this.message.id,
       {
         label: this.formatMessageConfig(doc, content.text),
@@ -146,7 +146,7 @@ const InfoBar = {
     );
   },
 
-  showInfoBarMessage(browser, message, dispatch) {
+  async showInfoBarMessage(browser, message, dispatch) {
     // Prevent stacking multiple infobars
     if (this._activeInfobar) {
       return null;
@@ -162,7 +162,7 @@ const InfoBar = {
     this.maybeInsertFTL(win);
 
     let notification = new InfoBarNotification(message, dispatch);
-    notification.showNotification(browser);
+    await notification.showNotification(browser);
     this._activeInfobar = true;
 
     return notification;
