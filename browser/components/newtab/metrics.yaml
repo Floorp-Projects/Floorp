@@ -506,6 +506,44 @@ topsites:
     send_in_pings:
       - newtab
 
+  sponsored_tiles_configured:
+    lifetime: application
+    type: quantity
+    unit: integer
+    description: >
+      The number of topsite tiles configured to be shown on newtab.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1862493
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - gleonard@mozilla.com
+    expires: never
+    send_in_pings:
+      - newtab
+
+  sponsored_tiles_received:
+    lifetime: application
+    type: text
+    description: >
+      The stringified JSON of tiles processed for display (array of objects).
+      Includes tiles not displayed and reason for not displaying.
+      Fields included: advertiser, provider, display_position,
+      display_fail_reason.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi
+    data_sensitivity:
+      - web_activity
+    notification_emails:
+      - gleonard@mozilla.com
+    expires: never
+    send_in_pings:
+      - newtab
+
 pocket:
   is_signed_in:
     lifetime: application

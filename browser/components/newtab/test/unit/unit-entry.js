@@ -683,6 +683,12 @@ const TEST_GLOBAL = {
       prefChanged: {
         record() {},
       },
+      sponsoredTilesConfigured: {
+        set() {},
+      },
+      sponsoredTilesReceived: {
+        set() {},
+      },
     },
     topSites: {
       pingType: {
