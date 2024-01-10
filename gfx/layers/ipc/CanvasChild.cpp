@@ -282,6 +282,8 @@ void CanvasChild::ClearCachedResources() {
   NS_ASSERT_OWNINGTHREAD(CanvasChild);
   if (mRecorder) {
     mRecorder->DropFreeBuffers();
+    // Notify CanvasTranslator it is about to be minimized.
+    SendClearCachedResources();
   }
 }
 
