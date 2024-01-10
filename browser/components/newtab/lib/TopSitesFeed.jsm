@@ -147,9 +147,144 @@ const SPONSORED_TILE_PARTNERS = new Set([
   SPONSORED_TILE_PARTNER_MOZ_SALES,
 ]);
 
+const DISPLAY_FAIL_REASON_OVERSOLD = "oversold";
+const DISPLAY_FAIL_REASON_DISMISSED = "dismissed";
+
 function getShortURLForCurrentSearch() {
   const url = shortURL({ url: Services.search.defaultEngine.searchForm });
   return url;
+}
+
+class TopSitesTelemetry {
+  constructor() {
+    this.allSponsoredTiles = {};
+  }
+
+  _tileProviderForTiles(tiles) {
+    return tiles && tiles.length ? this._tileProvider(tiles[0]) : null;
+  }
+
+  _tileProvider(tile) {
+    // Assumption: the list of tiles is from a single provider
+    return Object.prototype.hasOwnProperty.call(tile, "partner")
+      ? tile.partner
+      : SPONSORED_TILE_PARTNER_AMP;
+  }
+
+  _buildPropertyKey(tile) {
+    let provider = this._tileProvider(tile);
+    return provider + shortURL(tile);
+  }
+
+  _getFilteredTiles(currentTiles) {
+    //Get the property names for all the available tiles that have not already been filtered
+    let notPreviouslyFilteredTiles = Object.assign(
+      {},
+      ...Object.entries(this.allSponsoredTiles)
+        .filter(
+          ([k, v]) =>
+            v.display_fail_reason === null ||
+            v.display_fail_reason === undefined
+        )
+        .map(([k, v]) => ({ [k]: v }))
+    );
+
+    //Get the property names of the newly filtered list.
+    let remainingTiles = currentTiles.map(el => {
+      return this._buildPropertyKey(el);
+    });
+
+    //Get the property names of the tiles that were filtered.
+    let tilesToUpdate = Object.keys(notPreviouslyFilteredTiles).filter(
+      element => !remainingTiles.includes(element)
+    );
+    return tilesToUpdate;
+  }
+
+  setSponsoredTilesConfigured() {
+    const maxSponsored =
+      lazy.NimbusFeatures.pocketNewtab.getVariable(
+        NIMBUS_VARIABLE_MAX_SPONSORED
+      ) ?? MAX_NUM_SPONSORED;
+
+    Glean.topsites.sponsoredTilesConfigured.set(maxSponsored);
+  }
+
+  clearTilesForProvider(provider) {
+    Object.entries(this.allSponsoredTiles)
+      .filter(([k, v]) => k.startsWith(provider))
+      .map(([k, v]) => delete this.allSponsoredTiles[k]);
+  }
+
+  _getAdvertiser(tile) {
+    let label = Object.prototype.hasOwnProperty.call(tile, "label")
+      ? tile.label
+      : null;
+
+    let title = Object.prototype.hasOwnProperty.call(tile, "title")
+      ? tile.title
+      : null;
+
+    return label ?? title ?? shortURL(tile);
+  }
+
+  setTiles(tiles) {
+    // Assumption: the list of tiles is from a single provider,
+    // should be called once per tile source.
+    if (tiles && tiles.length) {
+      let tile_provider = this._tileProviderForTiles(tiles);
+      this.clearTilesForProvider(tile_provider);
+
+      for (let sponsoredTile of tiles) {
+        this.allSponsoredTiles[this._buildPropertyKey(sponsoredTile)] = {
+          advertiser: this._getAdvertiser(sponsoredTile).toLowerCase(),
+          provider: tile_provider,
+          display_position: null,
+          display_fail_reason: null,
+        };
+      }
+    }
+  }
+
+  _setDisplayFailReason(nonFilteredTiles, reason) {
+    let filteredTiles = this._getFilteredTiles(nonFilteredTiles);
+    for (let tile of filteredTiles) {
+      if (tile in this.allSponsoredTiles) {
+        let tileToUpdate = this.allSponsoredTiles[tile];
+        tileToUpdate.display_position = null;
+        tileToUpdate.display_fail_reason = reason;
+      }
+    }
+  }
+
+  setRemovedTilesToOversold(nonOversoldTiles) {
+    this._setDisplayFailReason(nonOversoldTiles, DISPLAY_FAIL_REASON_OVERSOLD);
+  }
+
+  setRemovedTilesToDismissed(nonDismissedTiles) {
+    this._setDisplayFailReason(
+      nonDismissedTiles,
+      DISPLAY_FAIL_REASON_DISMISSED
+    );
+  }
+
+  setTilePositions(currentTiles) {
+    if (this.allSponsoredTiles) {
+      currentTiles.forEach(item => {
+        if (this._buildPropertyKey(item) in this.allSponsoredTiles) {
+          this.allSponsoredTiles[
+            this._buildPropertyKey(item)
+          ].display_position = item.sponsored_position;
+        }
+      });
+    }
+  }
+
+  finalizeNewtabPingFields() {
+    Glean.topsites.sponsoredTilesReceived.set(
+      Object.values(this.allSponsoredTiles).map(entry => JSON.stringify(entry))
+    );
+  }
 }
 
 class ContileIntegration {
@@ -236,12 +371,17 @@ class ContileIntegration {
       0
     );
     const validFor = Services.prefs.getIntPref(CONTILE_CACHE_VALID_FOR_PREF, 0);
+    this._topSitesFeed._telemetryUtility.setSponsoredTilesConfigured();
     if (now <= lastFetch + validFor) {
       try {
         let cachedTiles = JSON.parse(
           Services.prefs.getStringPref(CONTILE_CACHE_PREF)
         );
+        this._topSitesFeed._telemetryUtility.setTiles(cachedTiles);
         cachedTiles = this._filterBlockedSponsors(cachedTiles);
+        this._topSitesFeed._telemetryUtility.setRemovedTilesToDismissed(
+          cachedTiles
+        );
         this._sites = cachedTiles;
         lazy.log.info("Local cache loaded.");
         return true;
@@ -294,11 +434,15 @@ class ContileIntegration {
 
       const lastFetch = Math.round(Date.now() / 1000);
       Services.prefs.setIntPref(CONTILE_CACHE_LAST_FETCH_PREF, lastFetch);
+      this._topSitesFeed._telemetryUtility.setSponsoredTilesConfigured();
 
       // Contile returns 204 indicating there is no content at the moment.
       // If this happens, it will clear `this._sites` reset the cached tiles
       // to an empty array.
       if (response.status === 204) {
+        this._topSitesFeed._telemetryUtility.clearTilesForProvider(
+          SPONSORED_TILE_PARTNER_AMP
+        );
         if (this._sites.length) {
           this._sites = [];
           Services.prefs.setStringPref(
@@ -322,17 +466,21 @@ class ContileIntegration {
         const maxNumFromContile = this._getMaxNumFromContile();
 
         let { tiles } = body;
+        this._topSitesFeed._telemetryUtility.setTiles(tiles);
         if (
           useAdditionalTiles !== undefined &&
           !useAdditionalTiles &&
           tiles.length > maxNumFromContile
         ) {
           tiles.length = maxNumFromContile;
+          this._topSitesFeed._telemetryUtility.setRemovedTilesToOversold(tiles);
         }
         tiles = this._filterBlockedSponsors(tiles);
+        this._topSitesFeed._telemetryUtility.setRemovedTilesToDismissed(tiles);
         if (tiles.length > maxNumFromContile) {
           lazy.log.info("Remove unused links from Contile");
           tiles.length = maxNumFromContile;
+          this._topSitesFeed._telemetryUtility.setRemovedTilesToOversold(tiles);
         }
         this._sites = tiles;
         Services.prefs.setStringPref(
@@ -361,6 +509,7 @@ class ContileIntegration {
 
 class TopSitesFeed {
   constructor() {
+    this._telemetryUtility = new TopSitesTelemetry();
     this._contile = new ContileIntegration(this);
     this._tippyTopProvider = new TippyTopProvider();
     XPCOMUtils.defineLazyGetter(
@@ -992,8 +1141,10 @@ class TopSitesFeed {
         );
       }
     }
+    this._telemetryUtility.setRemovedTilesToDismissed(contileSponsored);
 
     const discoverySponsored = this.fetchDiscoveryStreamSpocs();
+    this._telemetryUtility.setTiles(discoverySponsored);
 
     const sponsored = this._mergeSponsoredLinks({
       [SPONSORED_TILE_PARTNER_AMP]: contileSponsored,
@@ -1001,6 +1152,9 @@ class TopSitesFeed {
     });
 
     this._maybeCapSponsoredLinks(sponsored);
+
+    //This will set all extra tiles to oversold, including moz-sales.
+    this._telemetryUtility.setRemovedTilesToOversold(sponsored);
 
     // Get pinned links augmented with desired properties
     let plainPinned = await this.pinnedCache.request();
@@ -1093,6 +1247,7 @@ class TopSitesFeed {
       }
     });
 
+    this._telemetryUtility.setTilePositions(dedupedSponsored);
     // Remove excess items after we inserted sponsored ones.
     withPinned = withPinned.slice(0, numItems);
 
@@ -1118,6 +1273,7 @@ class TopSitesFeed {
 
     this._linksWithDefaults = withPinned;
 
+    this._telemetryUtility.finalizeNewtabPingFields();
     return withPinned;
   }
 
