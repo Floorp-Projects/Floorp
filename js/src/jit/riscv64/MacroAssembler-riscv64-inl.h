@@ -1561,6 +1561,10 @@ void MacroAssembler::move64To32(Register64 src, Register dest) {
   slliw(dest, src.reg, 0);
 }
 
+void MacroAssembler::move8ZeroExtend(Register src, Register dest) {
+  MOZ_CRASH("NYI");
+}
+
 void MacroAssembler::move8SignExtend(Register src, Register dest) {
   slli(dest, src, xlen - 8);
   srai(dest, dest, xlen - 8);

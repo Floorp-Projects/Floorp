@@ -32,6 +32,10 @@ void MacroAssembler::moveGPRToFloat32(Register src, FloatRegister dest) {
   ma_vxfer(src, dest);
 }
 
+void MacroAssembler::move8ZeroExtend(Register src, Register dest) {
+  as_uxtb(dest, src, 0);
+}
+
 void MacroAssembler::move8SignExtend(Register src, Register dest) {
   as_sxtb(dest, src, 0);
 }

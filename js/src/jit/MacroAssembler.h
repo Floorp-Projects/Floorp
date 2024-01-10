@@ -983,6 +983,8 @@ class MacroAssembler : public MacroAssemblerSpecific {
   inline void moveDoubleToGPR64(FloatRegister src, Register64 dest) PER_ARCH;
   inline void moveGPR64ToDouble(Register64 src, FloatRegister dest) PER_ARCH;
 
+  inline void move8ZeroExtend(Register src, Register dest) PER_SHARED_ARCH;
+
   inline void move8SignExtend(Register src, Register dest) PER_SHARED_ARCH;
   inline void move16SignExtend(Register src, Register dest) PER_SHARED_ARCH;
 

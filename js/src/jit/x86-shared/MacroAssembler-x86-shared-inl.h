@@ -26,6 +26,10 @@ void MacroAssembler::moveGPRToFloat32(Register src, FloatRegister dest) {
   vmovd(src, dest);
 }
 
+void MacroAssembler::move8ZeroExtend(Register src, Register dest) {
+  movzbl(src, dest);
+}
+
 void MacroAssembler::move8SignExtend(Register src, Register dest) {
   movsbl(src, dest);
 }
