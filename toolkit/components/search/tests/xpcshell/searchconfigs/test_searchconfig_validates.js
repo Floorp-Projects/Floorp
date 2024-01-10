@@ -163,4 +163,3 @@ add_task(
     await checkUISchemaValid(searchConfigSchema, uiSchema);
   }
 );
-
