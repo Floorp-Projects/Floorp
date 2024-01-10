@@ -1780,6 +1780,22 @@ MDefinition* MConcat::foldsTo(TempAllocator& alloc) {
   return this;
 }
 
+MDefinition* MStringConvertCase::foldsTo(TempAllocator& alloc) {
+  MDefinition* string = this->string();
+
+  // Handle the pattern |str[idx].toUpperCase()| and simplify it from
+  // |StringConvertCase(FromCharCode(CharCodeAt(str, idx)))| to just
+  // |CharCodeConvertCase(CharCodeAt(str, idx))|.
+  if (string->isFromCharCode()) {
+    auto* charCode = string->toFromCharCode()->code();
+    auto mode = mode_ == Mode::LowerCase ? MCharCodeConvertCase::LowerCase
+                                         : MCharCodeConvertCase::UpperCase;
+    return MCharCodeConvertCase::New(alloc, charCode, mode);
+  }
+
+  return this;
+}
+
 static bool IsSubstrTo(MSubstr* substr, int32_t len) {
   // We want to match this pattern:
   //

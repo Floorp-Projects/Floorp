@@ -111,6 +111,8 @@ namespace jit {
   _(CallObjectCreateWithShape, js::CallObject::createWithShape)                \
   _(CanSkipAwait, js::CanSkipAwait)                                            \
   _(CharCodeAt, js::jit::CharCodeAt)                                           \
+  _(CharCodeToLowerCase, js::jit::CharCodeToLowerCase)                         \
+  _(CharCodeToUpperCase, js::jit::CharCodeToUpperCase)                         \
   _(CheckClassHeritageOperation, js::CheckClassHeritageOperation)              \
   _(CheckOverRecursed, js::jit::CheckOverRecursed)                             \
   _(CheckOverRecursedBaseline, js::jit::CheckOverRecursedBaseline)             \

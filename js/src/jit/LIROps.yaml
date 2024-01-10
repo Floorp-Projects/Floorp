@@ -1317,6 +1317,15 @@
   num_temps: 5
   mir_op: StringConvertCase
 
+# Calls the ToLowerCase case conversion function. Inlines the case conversion
+# when possible.
+- name: CharCodeToLowerCase
+  result_type: WordSized
+  operands:
+    code: WordSized
+  num_temps: 1
+  mir_op: CharCodeConvertCase
+
 # Calls the ToUpperCase case conversion function.
 - name: StringToUpperCase
   result_type: WordSized
@@ -1324,6 +1333,15 @@
     string: WordSized
   call_instruction: true
   mir_op: StringConvertCase
+
+# Calls the ToUpperCase case conversion function. Inlines the case conversion
+# when possible.
+- name: CharCodeToUpperCase
+  result_type: WordSized
+  operands:
+    code: WordSized
+  num_temps: 1
+  mir_op: CharCodeConvertCase
 
 # Index of first non-whitespace character.
 - name: StringTrimStartIndex

@@ -6009,12 +6009,40 @@ class MStringConvertCase : public MUnaryInstruction,
   TRIVIAL_NEW_WRAPPERS
   NAMED_OPERANDS((0, string))
 
+  MDefinition* foldsTo(TempAllocator& alloc) override;
   bool congruentTo(const MDefinition* ins) const override {
     return congruentIfOperandsEqual(ins) &&
            ins->toStringConvertCase()->mode() == mode();
   }
   AliasSet getAliasSet() const override { return AliasSet::None(); }
   bool possiblyCalls() const override { return true; }
+  Mode mode() const { return mode_; }
+};
+
+class MCharCodeConvertCase : public MUnaryInstruction,
+                             public UnboxedInt32Policy<0>::Data {
+ public:
+  enum Mode { LowerCase, UpperCase };
+
+ private:
+  Mode mode_;
+
+  MCharCodeConvertCase(MDefinition* code, Mode mode)
+      : MUnaryInstruction(classOpcode, code), mode_(mode) {
+    setResultType(MIRType::String);
+    setMovable();
+  }
+
+ public:
+  INSTRUCTION_HEADER(CharCodeConvertCase)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, code))
+
+  bool congruentTo(const MDefinition* ins) const override {
+    return congruentIfOperandsEqual(ins) &&
+           ins->toCharCodeConvertCase()->mode() == mode();
+  }
+  AliasSet getAliasSet() const override { return AliasSet::None(); }
   Mode mode() const { return mode_; }
 };
 
