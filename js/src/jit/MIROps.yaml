@@ -1047,6 +1047,9 @@
 - name: StringConvertCase
   gen_boilerplate: false
 
+- name: CharCodeConvertCase
+  gen_boilerplate: false
+
 - name: StringTrimStartIndex
   operands:
     string: String

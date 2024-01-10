@@ -12750,6 +12750,107 @@ void CodeGenerator::visitStringToUpperCase(LStringToUpperCase* lir) {
   callVM<Fn, js::StringToUpperCase>(lir);
 }
 
+void CodeGenerator::visitCharCodeToLowerCase(LCharCodeToLowerCase* lir) {
+  Register code = ToRegister(lir->code());
+  Register output = ToRegister(lir->output());
+  Register temp = ToRegister(lir->temp0());
+
+  using Fn = JSString* (*)(JSContext*, int32_t);
+  auto* ool = oolCallVM<Fn, jit::CharCodeToLowerCase>(lir, ArgList(code),
+                                                      StoreRegisterTo(output));
+
+  constexpr char16_t NonLatin1Min = char16_t(JSString::MAX_LATIN1_CHAR) + 1;
+
+  // OOL path if code >= NonLatin1Min.
+  masm.boundsCheck32PowerOfTwo(code, NonLatin1Min, ool->entry());
+
+  // Convert to lower case.
+  masm.movePtr(ImmPtr(unicode::latin1ToLowerCaseTable), temp);
+  masm.load8ZeroExtend(BaseIndex(temp, code, TimesOne), temp);
+
+  // Load static string for lower case character.
+  masm.movePtr(ImmPtr(&gen->runtime->staticStrings().unitStaticTable), output);
+  masm.loadPtr(BaseIndex(output, temp, ScalePointer), output);
+
+  masm.bind(ool->rejoin());
+}
+
+void CodeGenerator::visitCharCodeToUpperCase(LCharCodeToUpperCase* lir) {
+  Register code = ToRegister(lir->code());
+  Register output = ToRegister(lir->output());
+  Register temp = ToRegister(lir->temp0());
+
+  using Fn = JSString* (*)(JSContext*, int32_t);
+  auto* ool = oolCallVM<Fn, jit::CharCodeToUpperCase>(lir, ArgList(code),
+                                                      StoreRegisterTo(output));
+
+  constexpr char16_t NonLatin1Min = char16_t(JSString::MAX_LATIN1_CHAR) + 1;
+
+  // OOL path if code >= NonLatin1Min.
+  masm.boundsCheck32PowerOfTwo(code, NonLatin1Min, ool->entry());
+
+  // Most one element Latin-1 strings can be directly retrieved from the
+  // static strings cache, except the following three characters:
+  //
+  // 1. ToUpper(U+00B5) = 0+039C
+  // 2. ToUpper(U+00FF) = 0+0178
+  // 3. ToUpper(U+00DF) = 0+0053 0+0053
+  masm.branch32(Assembler::Equal, code, Imm32(unicode::MICRO_SIGN),
+                ool->entry());
+  masm.branch32(Assembler::Equal, code,
+                Imm32(unicode::LATIN_SMALL_LETTER_Y_WITH_DIAERESIS),
+                ool->entry());
+  masm.branch32(Assembler::Equal, code,
+                Imm32(unicode::LATIN_SMALL_LETTER_SHARP_S), ool->entry());
+
+  // Inline unicode::ToUpperCase (without the special case for ASCII characters)
+
+  constexpr size_t shift = unicode::CharInfoShift;
+
+  // code >> shift
+  masm.move32(code, temp);
+  masm.rshift32(Imm32(shift), temp);
+
+  // index = index1[code >> shift];
+  masm.movePtr(ImmPtr(unicode::index1), output);
+  masm.load8ZeroExtend(BaseIndex(output, temp, TimesOne), temp);
+
+  // (code & ((1 << shift) - 1)
+  masm.move32(code, output);
+  masm.and32(Imm32((1 << shift) - 1), output);
+
+  // (index << shift) + (code & ((1 << shift) - 1))
+  masm.lshift32(Imm32(shift), temp);
+  masm.add32(output, temp);
+
+  // index = index2[(index << shift) + (code & ((1 << shift) - 1))]
+  masm.movePtr(ImmPtr(unicode::index2), output);
+  masm.load8ZeroExtend(BaseIndex(output, temp, TimesOne), temp);
+
+  // Compute |index * 6| through |(index * 3) * TimesTwo|.
+  static_assert(sizeof(unicode::CharacterInfo) == 6);
+  masm.mulBy3(temp, temp);
+
+  // upperCase = js_charinfo[index].upperCase
+  masm.movePtr(ImmPtr(unicode::js_charinfo), output);
+  masm.load16ZeroExtend(BaseIndex(output, temp, TimesTwo,
+                                  offsetof(unicode::CharacterInfo, upperCase)),
+                        temp);
+
+  // uint16_t(ch) + upperCase
+  masm.add32(code, temp);
+
+  // Clear any high bits added when performing the unsigned 16-bit addition
+  // through a signed 32-bit addition.
+  masm.move8ZeroExtend(temp, temp);
+
+  // Load static string for upper case character.
+  masm.movePtr(ImmPtr(&gen->runtime->staticStrings().unitStaticTable), output);
+  masm.loadPtr(BaseIndex(output, temp, ScalePointer), output);
+
+  masm.bind(ool->rejoin());
+}
+
 void CodeGenerator::visitStringTrimStartIndex(LStringTrimStartIndex* lir) {
   Register string = ToRegister(lir->string());
   Register output = ToRegister(lir->output());

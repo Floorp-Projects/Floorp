@@ -2692,6 +2692,22 @@ void LIRGenerator::visitStringConvertCase(MStringConvertCase* ins) {
   }
 }
 
+void LIRGenerator::visitCharCodeConvertCase(MCharCodeConvertCase* ins) {
+  MOZ_ASSERT(ins->code()->type() == MIRType::Int32);
+
+  if (ins->mode() == MCharCodeConvertCase::LowerCase) {
+    auto* lir = new (alloc())
+        LCharCodeToLowerCase(useRegister(ins->code()), tempByteOpRegister());
+    define(lir, ins);
+    assignSafepoint(lir, ins);
+  } else {
+    auto* lir = new (alloc())
+        LCharCodeToUpperCase(useRegister(ins->code()), tempByteOpRegister());
+    define(lir, ins);
+    assignSafepoint(lir, ins);
+  }
+}
+
 void LIRGenerator::visitStringTrimStartIndex(MStringTrimStartIndex* ins) {
   auto* string = ins->string();
   MOZ_ASSERT(string->type() == MIRType::String);

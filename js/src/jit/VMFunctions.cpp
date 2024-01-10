@@ -823,6 +823,22 @@ int32_t StringTrimEndIndex(const JSString* str, int32_t start) {
   return int32_t(end);
 }
 
+JSString* CharCodeToLowerCase(JSContext* cx, int32_t code) {
+  RootedString str(cx, StringFromCharCode(cx, code));
+  if (!str) {
+    return nullptr;
+  }
+  return js::StringToLowerCase(cx, str);
+}
+
+JSString* CharCodeToUpperCase(JSContext* cx, int32_t code) {
+  RootedString str(cx, StringFromCharCode(cx, code));
+  if (!str) {
+    return nullptr;
+  }
+  return js::StringToUpperCase(cx, str);
+}
+
 bool SetProperty(JSContext* cx, HandleObject obj, Handle<PropertyName*> name,
                  HandleValue value, bool strict, jsbytecode* pc) {
   RootedId id(cx, NameToId(name));
