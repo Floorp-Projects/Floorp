@@ -268,7 +268,7 @@ class TopSitesTelemetry {
     );
   }
 
-  setTilePositions(currentTiles) {
+  _setTilePositions(currentTiles) {
     if (this.allSponsoredTiles) {
       currentTiles.forEach(item => {
         if (this._buildPropertyKey(item) in this.allSponsoredTiles) {
@@ -280,9 +280,12 @@ class TopSitesTelemetry {
     }
   }
 
-  finalizeNewtabPingFields() {
+  finalizeNewtabPingFields(currentTiles) {
+    this._setTilePositions(currentTiles);
     Glean.topsites.sponsoredTilesReceived.set(
-      Object.values(this.allSponsoredTiles).map(entry => JSON.stringify(entry))
+      JSON.stringify({
+        sponsoredTilesReceived: Object.values(this.allSponsoredTiles),
+      })
     );
   }
 }
@@ -1246,8 +1249,6 @@ class TopSitesFeed {
         withPinned.splice(index, 0, link);
       }
     });
-
-    this._telemetryUtility.setTilePositions(dedupedSponsored);
     // Remove excess items after we inserted sponsored ones.
     withPinned = withPinned.slice(0, numItems);
 
@@ -1273,7 +1274,7 @@ class TopSitesFeed {
 
     this._linksWithDefaults = withPinned;
 
-    this._telemetryUtility.finalizeNewtabPingFields();
+    this._telemetryUtility.finalizeNewtabPingFields(dedupedSponsored);
     return withPinned;
   }
 
