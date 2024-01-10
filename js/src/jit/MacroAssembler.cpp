@@ -1491,7 +1491,9 @@ void MacroAssembler::loadStringChar(Register str, Register index,
   MOZ_ASSERT(output != scratch2);
 
   // Use scratch1 for the index (adjusted below).
-  move32(index, scratch1);
+  if (index != scratch1) {
+    move32(index, scratch1);
+  }
   movePtr(str, output);
 
   // This follows JSString::getChar.
@@ -1531,6 +1533,46 @@ void MacroAssembler::loadStringChar(Register str, Register index,
   loadChar(scratch2, scratch1, output, CharEncoding::Latin1);
 
   bind(&done);
+}
+
+void MacroAssembler::loadStringChar(Register str, int32_t index,
+                                    Register output, Register scratch1,
+                                    Register scratch2, Label* fail) {
+  MOZ_ASSERT(str != output);
+  MOZ_ASSERT(output != scratch1);
+  MOZ_ASSERT(output != scratch2);
+
+  if (index == 0) {
+    movePtr(str, scratch1);
+
+    // This follows JSString::getChar.
+    Label notRope;
+    branchIfNotRope(str, &notRope);
+
+    loadRopeLeftChild(str, scratch1);
+
+    // Rope children can't be empty, so the index can't be in the right side.
+
+    // If the left side is another rope, give up.
+    branchIfRope(scratch1, fail);
+
+    bind(&notRope);
+
+    Label isLatin1, done;
+    branchLatin1String(scratch1, &isLatin1);
+    loadStringChars(scratch1, scratch2, CharEncoding::TwoByte);
+    loadChar(Address(scratch2, 0), output, CharEncoding::TwoByte);
+    jump(&done);
+
+    bind(&isLatin1);
+    loadStringChars(scratch1, scratch2, CharEncoding::Latin1);
+    loadChar(Address(scratch2, 0), output, CharEncoding::Latin1);
+
+    bind(&done);
+  } else {
+    move32(Imm32(index), scratch1);
+    loadStringChar(str, scratch1, output, scratch1, scratch2, fail);
+  }
 }
 
 void MacroAssembler::loadStringIndexValue(Register str, Register dest,

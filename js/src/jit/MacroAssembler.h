@@ -4705,6 +4705,9 @@ class MacroAssembler : public MacroAssemblerSpecific {
   void loadStringChar(Register str, Register index, Register output,
                       Register scratch1, Register scratch2, Label* fail);
 
+  void loadStringChar(Register str, int32_t index, Register output,
+                      Register scratch1, Register scratch2, Label* fail);
+
   void loadRopeLeftChild(Register str, Register dest);
   void loadRopeRightChild(Register str, Register dest);
   void storeRopeChildren(Register left, Register right, Register str);
