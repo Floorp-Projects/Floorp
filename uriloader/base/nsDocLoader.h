@@ -121,18 +121,6 @@ class nsDocLoader : public nsIDocumentLoader,
 
   void SetDocumentOpenedButNotLoaded() { mDocumentOpenedButNotLoaded = true; }
 
-  bool TreatAsBackgroundLoad();
-
-  void SetFakeOnLoadDispatched() { mHasFakeOnLoadDispatched = true; };
-
-  bool HasFakeOnLoadDispatched() { return mHasFakeOnLoadDispatched; };
-
-  void ResetToFirstLoad() {
-    mHasFakeOnLoadDispatched = false;
-    mIsReadyToHandlePostMessage = false;
-    mTreatAsBackgroundLoad = false;
-  };
-
   uint32_t ChildCount() const { return mChildList.Length(); }
 
   // TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230)
@@ -333,12 +321,7 @@ class nsDocLoader : public nsIDocumentLoader,
      flushing. */
   bool mIsFlushingLayout;
 
-  bool mTreatAsBackgroundLoad;
-
  private:
-  bool mHasFakeOnLoadDispatched;
-
-  bool mIsReadyToHandlePostMessage;
   /**
    * This flag indicates that the loader is waiting for completion of
    * a document.open-triggered "document load".  This is set when

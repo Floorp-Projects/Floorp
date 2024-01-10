@@ -2681,15 +2681,6 @@ void nsGlobalWindowOuter::DetachFromDocShell(bool aIsBeingDiscarded) {
   // later. Meanwhile, keep our weak reference to the script object
   // so that it can be retrieved later (until it is finalized by the JS GC).
 
-  if (mDoc && DocGroup::TryToLoadIframesInBackground()) {
-    DocGroup* docGroup = GetDocGroup();
-    RefPtr<nsIDocShell> docShell = GetDocShell();
-    RefPtr<nsDocShell> dShell = nsDocShell::Cast(docShell);
-    if (dShell) {
-      docGroup->TryFlushIframePostMessages(dShell->GetOuterWindowID());
-    }
-  }
-
   // Call FreeInnerObjects on all inner windows, not just the current
   // one, since some could be held by WindowStateHolder objects that
   // are GC-owned.

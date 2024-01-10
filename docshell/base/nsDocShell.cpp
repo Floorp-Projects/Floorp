@@ -2192,19 +2192,6 @@ nsDocShell::HistoryPurged(int32_t aNumEntries) {
   return NS_OK;
 }
 
-void nsDocShell::TriggerParentCheckDocShellIsEmpty() {
-  if (RefPtr<nsDocShell> parent = GetInProcessParentDocshell()) {
-    parent->DocLoaderIsEmpty(true);
-  }
-  if (GetBrowsingContext()->IsContentSubframe() &&
-      !GetBrowsingContext()->GetParentWindowContext()->IsInProcess()) {
-    if (BrowserChild* browserChild = BrowserChild::GetFrom(this)) {
-      mozilla::Unused << browserChild->SendMaybeFireEmbedderLoadEvents(
-          EmbedderElementEventType::NoEvent);
-    }
-  }
-}
-
 nsresult nsDocShell::HistoryEntryRemoved(int32_t aIndex) {
   // These indices are used for fastback cache eviction, to determine
   // which session history entries are candidates for content viewer
@@ -7696,10 +7683,6 @@ nsresult nsDocShell::RestoreFromHistory() {
 nsresult nsDocShell::CreateDocumentViewer(const nsACString& aContentType,
                                           nsIRequest* aRequest,
                                           nsIStreamListener** aContentHandler) {
-  if (DocGroup::TryToLoadIframesInBackground()) {
-    ResetToFirstLoad();
-  }
-
   *aContentHandler = nullptr;
 
   if (!mTreeOwner || mIsBeingDestroyed) {
@@ -7892,44 +7875,6 @@ nsresult nsDocShell::CreateDocumentViewer(const nsACString& aContentType,
     aOpenedChannel->SetNotificationCallbacks(this);
   }
 
-  if (DocGroup::TryToLoadIframesInBackground()) {
-    if ((!mDocumentViewer || GetDocument()->IsInitialDocument()) &&
-        IsSubframe()) {
-      // At this point, we know we just created a new iframe document based on
-      // the response from the server, and we check if it's a cross-domain
-      // iframe
-
-      RefPtr<Document> newDoc = viewer->GetDocument();
-
-      RefPtr<nsDocShell> parent = GetInProcessParentDocshell();
-      nsCOMPtr<nsIPrincipal> parentPrincipal =
-          parent->GetDocument()->NodePrincipal();
-      nsCOMPtr<nsIPrincipal> thisPrincipal = newDoc->NodePrincipal();
-
-      SiteIdentifier parentSite;
-      SiteIdentifier thisSite;
-
-      nsresult rv =
-          BasePrincipal::Cast(parentPrincipal)->GetSiteIdentifier(parentSite);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      rv = BasePrincipal::Cast(thisPrincipal)->GetSiteIdentifier(thisSite);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      if (!parentSite.Equals(thisSite)) {
-        if (profiler_thread_is_being_profiled_for_markers()) {
-          nsCOMPtr<nsIURI> prinURI;
-          BasePrincipal::Cast(thisPrincipal)->GetURI(getter_AddRefs(prinURI));
-          nsPrintfCString marker(
-              "Iframe loaded in background: %s",
-              nsContentUtils::TruncatedURLForDisplay(prinURI).get());
-          PROFILER_MARKER_TEXT("Background Iframe", DOM, {}, marker);
-        }
-        SetBackgroundLoadIframe();
-      }
-    }
-  }
-
   NS_ENSURE_SUCCESS(Embed(viewer, nullptr, false,
                           ShouldAddToSessionHistory(finalURI, aOpenedChannel),
                           aOpenedChannel, previousURI),
@@ -7937,14 +7882,6 @@ nsresult nsDocShell::CreateDocumentViewer(const nsACString& aContentType,
 
   if (!mBrowsingContext->GetHasLoadedNonInitialDocument()) {
     MOZ_ALWAYS_SUCCEEDS(mBrowsingContext->SetHasLoadedNonInitialDocument(true));
-  }
-
-  if (TreatAsBackgroundLoad()) {
-    nsCOMPtr<nsIRunnable> triggerParentCheckDocShell =
-        NewRunnableMethod("nsDocShell::TriggerParentCheckDocShellIsEmpty", this,
-                          &nsDocShell::TriggerParentCheckDocShellIsEmpty);
-    nsresult rv = NS_DispatchToCurrentThread(triggerParentCheckDocShell);
-    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   mSavedRefreshURIList = nullptr;
