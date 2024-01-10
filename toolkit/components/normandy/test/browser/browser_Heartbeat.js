@@ -82,6 +82,13 @@ function getStars(notice) {
   return notice.buttonContainer.querySelectorAll(".star-x");
 }
 
+async function getUpdatedNotice(heartbeat) {
+  let notice = await heartbeat.noticePromise;
+  // ensure notice is updated and the DOM is ready to be queried
+  await notice.updateComplete;
+  return notice;
+}
+
 add_setup(async function () {
   let win = await BrowserTestUtils.openNewBrowserWindow();
   // Open a new tab to keep the window open.
@@ -108,17 +115,18 @@ add_task(async function () {
     learnMoreMessage: "Learn More",
     learnMoreUrl: "https://example.org/learnmore",
   });
+  let notice = await getUpdatedNotice(hb);
 
   // Check UI
-  const learnMoreEl = hb.notice.messageText.querySelector(".text-link");
+  const learnMoreEl = notice.supportLinkEls[0];
   Assert.equal(
     notificationBox.allNotifications.length,
     preCount + 1,
     "Correct number of notifications open"
   );
-  Assert.equal(getStars(hb.notice).length, 5, "Correct number of stars");
+  Assert.equal(getStars(notice).length, 5, "Correct number of stars");
   Assert.equal(
-    hb.notice.buttonContainer.querySelectorAll(".notification-button").length,
+    notice.buttonContainer.querySelectorAll(".notification-button").length,
     0,
     "Engagement button not shown"
   );
@@ -130,8 +138,8 @@ add_task(async function () {
   Assert.equal(learnMoreEl.value, "Learn More", "Learn more label correct");
   // There's a space included before the learn more link in proton.
   Assert.equal(
-    hb.notice.messageText.textContent,
-    "test ",
+    notice.messageText.textContent.trim(),
+    "test",
     "Message is correct"
   );
 
@@ -186,11 +194,12 @@ add_task(async function () {
     learnMoreMessage: "Learn More",
     learnMoreUrl: "https://example.org/learnMore",
   });
-  const engagementButton = hb.notice.buttonContainer.querySelector(
+  let notice = await getUpdatedNotice(hb);
+  const engagementButton = notice.buttonContainer.querySelector(
     ".notification-button"
   );
 
-  Assert.equal(getStars(hb.notice).length, 0, "Stars not shown");
+  Assert.equal(getStars(notice).length, 0, "Stars not shown");
   Assert.ok(engagementButton, "Engagement button added");
   Assert.equal(
     engagementButton.label,
@@ -198,9 +207,6 @@ add_task(async function () {
     "Engagement button has correct label"
   );
 
-  const engagementEl = hb.notice.buttonContainer.querySelector(
-    ".notification-button"
-  );
   let loadedPromise;
   const tabOpenPromise = new Promise(resolve => {
     targetWindow.gBrowser.tabContainer.addEventListener(
@@ -217,7 +223,7 @@ add_task(async function () {
       { once: true }
     );
   });
-  engagementEl.click();
+  engagementButton.click();
   const tab = await tabOpenPromise;
   const tabUrl = await loadedPromise;
   // the postAnswer url gets query parameters appended onto the end, so use Assert.startsWith instead of Assert.equal
