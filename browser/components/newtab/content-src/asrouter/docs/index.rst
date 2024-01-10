@@ -78,6 +78,7 @@ Current templates include\:
   :maxdepth: 1
 
   moments-page
+  feature-callout
   contextual-feature-recommendation
   about-welcome
   infobars

@@ -2,9 +2,12 @@
 
 ## What are CFRs?
 The most commonly used CFR as a Messaging Surface is the doorhanger, which anchors to one of the UI elements such as the application menu, the identity panel and so on.
-CFRs like any other messaging screen has specific triggers. You can learn more about triggers [here](https://firefox-source-docs.mozilla.org/toolkit/components/messaging-system/docs/TriggerActionSchemas/index.html),
+CFRs like any other messaging screen has specific triggers. You can learn more about triggers [here](https://firefox-source-docs.mozilla.org/toolkit/components/messaging-system/docs/TriggerActionSchemas/index.html).
 
-[More examples of templates supported with CFR ](https://experimenter.info/messaging/desktop-messaging-surfaces/#doorhanger)
+[More examples of templates supported with CFR](https://experimenter.info/messaging/desktop-messaging-surfaces/#doorhanger)
+
+### Note:
+For new messages, [Feature Callout](./feature-callout.md) is recommended instead of CFR.
 
 ### Example of Doorhanger
 ![Doorhanger](./cfr-doorhanger.png)
