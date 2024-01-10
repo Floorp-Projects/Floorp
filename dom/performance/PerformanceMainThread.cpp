@@ -664,7 +664,7 @@ void PerformanceMainThread::ProcessElementTiming() {
       continue;
     }
 
-    MOZ_ASSERT(imagePendingRendering.mLoadTime < rawNowTime);
+    MOZ_ASSERT(imagePendingRendering.mLoadTime <= rawNowTime);
     if (imgRequestProxy* requestProxy =
             imagePendingRendering.GetImgRequestProxy()) {
       LCPHelpers::CreateLCPEntryForImage(
