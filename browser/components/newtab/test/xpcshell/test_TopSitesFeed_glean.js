@@ -119,7 +119,10 @@ add_setup(async () => {
   sandbox.spy(Glean.topsites.sponsoredTilesConfigured, "set");
   sandbox.spy(Glean.topsites.sponsoredTilesReceived, "set");
 
-  //Cu.isInAutomation is set to true for combination testing of getLinksWithDefaults and TelemetryUtility.
+  // Temporarily setting isInAutomation to false.
+  // If Cu.isInAutomation is true then the check for Cu.isInAutomation in
+  // ContileIntegration._readDefaults passes, bypassing Contile, resulting in
+  // not being able use stubbed values.
   if (Cu.isInAutomation) {
     Services.prefs.setBoolPref(
       "security.turn_off_all_security_so_that_viruses_can_take_over_this_computer",
@@ -172,7 +175,7 @@ add_task(async function test_set_contile_tile_to_oversold() {
     },
   ];
 
-  feed._telemetryUtility.setRemovedTilesToOversold(mergedTiles);
+  feed._telemetryUtility.determineFilteredTilesAndSetToOversold(mergedTiles);
   feed._telemetryUtility.finalizeNewtabPingFields(mergedTiles);
 
   Assert.equal(Glean.topsites.sponsoredTilesConfigured.testGetValue(), 2);
@@ -209,7 +212,7 @@ add_task(async function test_set_contile_tile_to_oversold() {
 add_task(async function test_set_moz_sale_tile_to_oversold() {
   let sandbox = sinon.createSandbox();
   info(
-    "setRemovedTilesToOversold should set moz-sale tile to oversold when_contile tiles are displayed"
+    "determineFilteredTilesAndSetToOversold should set moz-sale tile to oversold when_contile tiles are displayed"
   );
   let feed = getTopSitesFeedForTest(sandbox);
 
@@ -232,7 +235,7 @@ add_task(async function test_set_moz_sale_tile_to_oversold() {
     },
   ];
 
-  feed._telemetryUtility.setRemovedTilesToOversold(mergedTiles);
+  feed._telemetryUtility.determineFilteredTilesAndSetToOversold(mergedTiles);
   feed._telemetryUtility.finalizeNewtabPingFields(mergedTiles);
 
   let expectedResult = {
@@ -267,7 +270,7 @@ add_task(async function test_set_moz_sale_tile_to_oversold() {
 add_task(async function test_set_contile_tile_to_oversold() {
   let sandbox = sinon.createSandbox();
   info(
-    "setRemovedTilesToOversold should set contile tile to oversold when moz-sale tile is displayed"
+    "determineFilteredTilesAndSetToOversold should set contile tile to oversold when moz-sale tile is displayed"
   );
   let feed = getTopSitesFeedForTest(sandbox);
 
@@ -290,7 +293,7 @@ add_task(async function test_set_contile_tile_to_oversold() {
     },
   ];
 
-  feed._telemetryUtility.setRemovedTilesToOversold(mergedTiles);
+  feed._telemetryUtility.determineFilteredTilesAndSetToOversold(mergedTiles);
   feed._telemetryUtility.finalizeNewtabPingFields(mergedTiles);
 
   let expectedResult = {
@@ -344,7 +347,7 @@ add_task(async function test_set_contile_tiles_to_dismissed() {
     },
   ];
 
-  feed._telemetryUtility.setRemovedTilesToDismissed(mergedTiles);
+  feed._telemetryUtility.determineFilteredTilesAndSetToDismissed(mergedTiles);
   feed._telemetryUtility.finalizeNewtabPingFields(mergedTiles);
 
   let expectedResult = {
@@ -398,7 +401,7 @@ add_task(async function test_set_moz_sales_tiles_to_dismissed() {
     },
   ];
 
-  feed._telemetryUtility.setRemovedTilesToDismissed(mergedTiles);
+  feed._telemetryUtility.determineFilteredTilesAndSetToDismissed(mergedTiles);
   feed._telemetryUtility.finalizeNewtabPingFields(mergedTiles);
 
   let expectedResult = {
@@ -459,7 +462,9 @@ add_task(async function test_set_position_to_value_gt_3() {
     },
   ];
 
-  feed._telemetryUtility.setRemovedTilesToOversold(filteredContileTiles);
+  feed._telemetryUtility.determineFilteredTilesAndSetToOversold(
+    filteredContileTiles
+  );
   feed._telemetryUtility.finalizeNewtabPingFields(filteredContileTiles);
 
   let expectedResult = {
@@ -1044,7 +1049,7 @@ add_task(async function test_update_tile_count_sourced_from_cache() {
   let sandbox = sinon.createSandbox();
 
   info(
-    "the tile count should from cache update when topSitesMaxSponsored is updated by Nimbus"
+    "the tile count should update from cache when topSitesMaxSponsored is updated by Nimbus"
   );
   let { feed, fetchStub } = prepFeed(getTopSitesFeedForTest(sandbox), sandbox);
 
