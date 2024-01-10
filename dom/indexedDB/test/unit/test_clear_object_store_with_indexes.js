@@ -3,6 +3,28 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+const isInChaosMode = () => {
+  return !!parseInt(Services.env.get("MOZ_CHAOSMODE"), 16);
+};
+
+// Reduce the amount of data on slow platforms.
+const getDataBlockSize = () => {
+  if (mozinfo.os == "android") {
+    // Android is much slower than desktop.
+    if (mozinfo.verify) {
+      return 54; // Chaos mode on android
+    }
+
+    return 3333;
+  }
+
+  if (isInChaosMode()) {
+    return 333;
+  }
+
+  return 33333;
+};
+
 /* exported testSteps */
 async function testSteps() {
   const name = this.window ? window.location.pathname : "Splendid Test";
@@ -25,11 +47,13 @@ async function testSteps() {
     .transaction(["testObjectStore"], "readwrite")
     .objectStore("testObjectStore");
 
-  const segment = 33333;
-  const lastIndex = 3 * segment;
+  const dataBlock = getDataBlockSize();
+  const lastIndex = 3 * dataBlock;
+
+  info("We will now add " + lastIndex + " blobs to our object store");
 
   const addSegment = async (from, dataValue) => {
-    for (let i = from; i <= from + segment - 1; ++i) {
+    for (let i = from; i <= from + dataBlock - 1; ++i) {
       await objectStore.add({
         id: i,
         indexA: i,
@@ -57,10 +81,10 @@ async function testSteps() {
   await addSegment(1, dataValueBegin);
 
   const dataValueMiddle = getBlob(expectedMiddle);
-  await addSegment(segment + 1, dataValueMiddle);
+  await addSegment(dataBlock + 1, dataValueMiddle);
 
   const dataValueEnd = getBlob(expectedEnd);
-  await addSegment(2 * segment + 1, dataValueEnd);
+  await addSegment(2 * dataBlock + 1, dataValueEnd);
 
   // Performance issue of 1860486 occurs here
   await new Promise((res, rej) => {
@@ -81,7 +105,6 @@ async function testSteps() {
      * The deletion should be over in 20 seconds or less on desktop. With the
      * regression, the operation can take more than 30 minutes. We use one
      * minute to reduce intermittent failures due to the CI environment.
-     * For android, the CI run should be over in 3 and a half minutes.
      *
      * Note that this is not a magical timeout for the completion of an
      * asynchronous request: we are testing a hang and using an explicit timeout
@@ -89,12 +112,11 @@ async function testSteps() {
      * acceptable in real use cases.
      *
      * Maintenance plan: If disk contention and slow hardware lead to too many
-     * intermittent failures, the timeout could be increased to two, even
-     * three minutes or the test could be turned into a raptor performance test.
+     * intermittent failures, the regression cutoff could be increased to 2-3
+     * minutes or the test could be turned into a raptor performance test.
      */
-    const android = mozinfo.os == "android";
     const minutes = 60 * 1000;
-    const performance_regression_cutoff = (android ? 6 : 1) * minutes;
+    const performance_regression_cutoff = 1 * minutes;
     do_timeout(performance_regression_cutoff, () => {
       if (!isDone) {
         rej(Error("Performance regression detected"));
