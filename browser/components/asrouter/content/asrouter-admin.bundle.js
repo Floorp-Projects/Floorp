@@ -1172,7 +1172,7 @@ class ASRouterAdminInner extends (react__WEBPACK_IMPORTED_MODULE_1___default().P
     const PBMessages = this.state.messages.filter(message => message.template === "pb_newtab"); // messages from state go here
 
     PBMessages.forEach(message => {
-      if (message !== null && message !== void 0 && message.id) {
+      if (message?.id) {
         newtab_content_src_asrouter_asrouter_utils__WEBPACK_IMPORTED_MODULE_0__.ASRouterUtils.blockById(message.id);
         newtab_content_src_asrouter_asrouter_utils__WEBPACK_IMPORTED_MODULE_0__.ASRouterUtils.unblockById(message.id);
       }
@@ -1471,7 +1471,7 @@ class ASRouterAdminInner extends (react__WEBPACK_IMPORTED_MODULE_1___default().P
       let msg = JSON.parse(document.getElementById(`${msgId}-textarea`).value);
       if (selected.checked) {
         this.setState({
-          selectedPBMessage: msg === null || msg === void 0 ? void 0 : msg.content
+          selectedPBMessage: msg?.content
         });
       } else {
         this.setState({

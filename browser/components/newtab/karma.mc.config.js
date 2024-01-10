@@ -278,9 +278,6 @@ module.exports = function (config) {
                         replace: true,
                       },
                     ],
-                    "@babel/plugin-proposal-nullish-coalescing-operator",
-                    "@babel/plugin-proposal-optional-chaining",
-                    "@babel/plugin-proposal-class-properties",
                   ],
                 },
               },
@@ -290,11 +287,6 @@ module.exports = function (config) {
             test: /\.js$/,
             exclude: [/node_modules\/(?!@fluent\/).*/, /test/],
             loader: "babel-loader",
-            options: {
-              // This is a workaround for bug 1787278. It can be removed once
-              // that bug is fixed.
-              plugins: ["@babel/plugin-proposal-optional-chaining"],
-            },
           },
           {
             test: /\.jsx$/,
@@ -302,10 +294,6 @@ module.exports = function (config) {
             loader: "babel-loader",
             options: {
               presets: ["@babel/preset-react"],
-              plugins: [
-                "@babel/plugin-proposal-nullish-coalescing-operator",
-                "@babel/plugin-proposal-optional-chaining",
-              ],
             },
           },
           {

@@ -120,17 +120,17 @@ module.exports = function (config) {
               functions: 0,
               branches: 0,
             },
-            "content-src/**/*.jsx": {
-              statements: 62,
-              lines: 60,
-              functions: 50,
-              branches: 50,
-            },
             "content-src/components/**/*.jsx": {
               statements: 51.1,
               lines: 52.38,
               functions: 31.2,
               branches: 31.2,
+            },
+            "content-src/**/*.jsx": {
+              statements: 62,
+              lines: 60,
+              functions: 50,
+              branches: 50,
             },
           },
         },
@@ -201,9 +201,6 @@ module.exports = function (config) {
                         replace: true,
                       },
                     ],
-                    "@babel/plugin-proposal-nullish-coalescing-operator",
-                    "@babel/plugin-proposal-optional-chaining",
-                    "@babel/plugin-proposal-class-properties",
                   ],
                 },
               },
@@ -213,11 +210,6 @@ module.exports = function (config) {
             test: /\.js$/,
             exclude: [/node_modules\/(?!@fluent\/).*/, /tests/],
             loader: "babel-loader",
-            options: {
-              // This is a workaround for bug 1787278. It can be removed once
-              // that bug is fixed.
-              plugins: ["@babel/plugin-proposal-optional-chaining"],
-            },
           },
           {
             test: /\.jsx$/,
@@ -225,10 +217,6 @@ module.exports = function (config) {
             loader: "babel-loader",
             options: {
               presets: ["@babel/preset-react"],
-              plugins: [
-                "@babel/plugin-proposal-nullish-coalescing-operator",
-                "@babel/plugin-proposal-optional-chaining",
-              ],
             },
           },
           {
