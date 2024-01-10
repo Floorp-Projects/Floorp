@@ -1371,7 +1371,7 @@
     begin: WordSized
     length: WordSized
   num_temps: 3
-  mir_op: StringSplit
+  mir_op: true
 
 - name: Int32ToDouble
   result_type: WordSized
