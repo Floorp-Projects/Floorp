@@ -1275,9 +1275,10 @@ delta = "0.5.0 -> 0.7.0"
 who = [
     "Erich Gubler <egubler@mozilla.com>",
     "Nicolas Silva <nical@fastmail.com>",
+    "Teodor Tanasoaia <ttanasoaia@mozilla.com>",
 ]
 criteria = "safe-to-deploy"
-delta = "0.7.0 -> 0.7.0@git:4b82121501a61c2c2e11cb472d70ba54af3aa12d"
+delta = "0.7.0 -> 0.7.0@git:c6eea50b04127abe2340b93141123312baf5414b"
 importable = false
 
 [[audits.darling]]
@@ -2547,9 +2548,13 @@ criteria = "safe-to-deploy"
 delta = "0.13.0 -> 0.14.0"
 
 [[audits.naga]]
-who = ["Jim Blandy <jimb@red-bean.com>", "Nicolas Silva <nical@fastmail.com>"]
+who = [
+    "Jim Blandy <jimb@red-bean.com>",
+    "Nicolas Silva <nical@fastmail.com>",
+    "Teodor Tanasoaia <ttanasoaia@mozilla.com>",
+]
 criteria = "safe-to-deploy"
-delta = "0.14.0 -> 0.14.2@git:4b82121501a61c2c2e11cb472d70ba54af3aa12d"
+delta = "0.14.0 -> 0.14.2@git:c6eea50b04127abe2340b93141123312baf5414b"
 importable = false
 
 [[audits.net2]]
@@ -4314,9 +4319,13 @@ criteria = "safe-to-deploy"
 delta = "0.17.0 -> 0.18.0"
 
 [[audits.wgpu-core]]
-who = ["Jim Blandy <jimb@red-bean.com>", "Nicolas Silva <nical@fastmail.com>"]
+who = [
+    "Jim Blandy <jimb@red-bean.com>",
+    "Nicolas Silva <nical@fastmail.com>",
+    "Teodor Tanasoaia <ttanasoaia@mozilla.com>",
+]
 criteria = "safe-to-deploy"
-delta = "0.18.0 -> 0.18.0@git:4b82121501a61c2c2e11cb472d70ba54af3aa12d"
+delta = "0.18.0 -> 0.18.0@git:c6eea50b04127abe2340b93141123312baf5414b"
 importable = false
 
 [[audits.wgpu-hal]]
@@ -4363,9 +4372,13 @@ criteria = "safe-to-deploy"
 delta = "0.17.0 -> 0.18.0"
 
 [[audits.wgpu-hal]]
-who = ["Jim Blandy <jimb@red-bean.com>", "Nicolas Silva <nical@fastmail.com>"]
+who = [
+    "Jim Blandy <jimb@red-bean.com>",
+    "Nicolas Silva <nical@fastmail.com>",
+    "Teodor Tanasoaia <ttanasoaia@mozilla.com>",
+]
 criteria = "safe-to-deploy"
-delta = "0.18.0 -> 0.18.0@git:4b82121501a61c2c2e11cb472d70ba54af3aa12d"
+delta = "0.18.0 -> 0.18.0@git:c6eea50b04127abe2340b93141123312baf5414b"
 importable = false
 
 [[audits.wgpu-types]]
@@ -4412,9 +4425,13 @@ criteria = "safe-to-deploy"
 delta = "0.17.0 -> 0.18.0"
 
 [[audits.wgpu-types]]
-who = ["Jim Blandy <jimb@red-bean.com>", "Nicolas Silva <nical@fastmail.com>"]
+who = [
+    "Jim Blandy <jimb@red-bean.com>",
+    "Nicolas Silva <nical@fastmail.com>",
+    "Teodor Tanasoaia <ttanasoaia@mozilla.com>",
+]
 criteria = "safe-to-deploy"
-delta = "0.18.0 -> 0.18.0@git:4b82121501a61c2c2e11cb472d70ba54af3aa12d"
+delta = "0.18.0 -> 0.18.0@git:c6eea50b04127abe2340b93141123312baf5414b"
 importable = false
 
 [[audits.whatsys]]
