@@ -652,7 +652,7 @@
     <!-- Snackbar message for when wallpaper is selected -->
     <string name="wallpaper_updated_snackbar_message">Đã cập nhật hình nền!</string>
     <!-- Snackbar label for action to view selected wallpaper -->
-    <string name="wallpaper_updated_snackbar_action">Hiển thị</string>
+    <string name="wallpaper_updated_snackbar_action">Xem ngay</string>
     <!-- Snackbar message for when wallpaper couldn't be downloaded -->
     <string name="wallpaper_download_error_snackbar_message">Không thể tải xuống hình nền</string>
     <!-- Snackbar label for action to retry downloading the wallpaper -->
@@ -721,13 +721,13 @@
     <!-- Label indicating that sync is in progress -->
     <string name="sync_syncing_in_progress">Đang đồng bộ hóa…</string>
     <!-- Label summary indicating that sync failed. The first parameter is the date stamp showing last time it succeeded -->
-    <string name="sync_failed_summary">Đồng bộ hóa thất bại. Thành công lần cuối: %s</string>
+    <string name="sync_failed_summary">Đồng bộ hóa thất bại. Lần thành công gần nhất: %s</string>
     <!-- Label summary showing never synced -->
-    <string name="sync_failed_never_synced_summary">Đồng bộ hóa thất bại. Đồng bộ hóa lần cuối: không rõ</string>
+    <string name="sync_failed_never_synced_summary">Đồng bộ hóa thất bại. Lần đồng bộ gần nhất: không có</string>
     <!-- Label summary the date we last synced. The first parameter is date stamp showing last time synced -->
     <string name="sync_last_synced_summary">Đồng bộ hóa lần cuối: %s</string>
     <!-- Label summary showing never synced -->
-    <string name="sync_never_synced_summary">Đồng bộ hóa lần cuối: không rõ</string>
+    <string name="sync_never_synced_summary">Lần đồng bộ gần nhất: không có</string>
 
     <!-- Text for displaying the default device name.
         The first parameter is the application name, the second is the device manufacturer name
@@ -855,7 +855,7 @@
     <!-- Option in library for Recently Closed Tabs -->
     <string name="library_recently_closed_tabs">Các thẻ đã đóng gần đây</string>
     <!-- Option in library to open Recently Closed Tabs page -->
-    <string name="recently_closed_show_full_history">Hiển thị toàn bộ lịch sử</string>
+    <string name="recently_closed_show_full_history">Hiện toàn bộ lịch sử</string>
     <!-- Text to show users they have multiple tabs saved in the Recently Closed Tabs section of history.
     %d is a placeholder for the number of tabs selected. -->
     <string name="recently_closed_tabs">%d thẻ</string>
@@ -1445,7 +1445,7 @@
     <!-- Title text of a delete browsing data dialog. -->
     <string name="delete_history_prompt_title">Khoảng thời gian để xóa</string>
     <!-- Body text of a delete browsing data dialog. -->
-    <string name="delete_history_prompt_body" moz:RemovedIn="130" tools:ignore="UnusedResources">Xóa lịch sử (bao gồm cả lịch sử được đồng bộ hóa từ các thiết bị khác), cookie và dữ liệu duyệt web khác.</string>
+    <string name="delete_history_prompt_body" moz:RemovedIn="130" tools:ignore="UnusedResources">Xóa lịch sử (bao gồm lịch sử đã đồng bộ hóa từ các thiết bị khác), cookie và dữ liệu duyệt web khác.</string>
     <!-- Body text of a delete browsing data dialog. -->
     <string name="delete_history_prompt_body_2">Xóa lịch sử (bao gồm lịch sử đã đồng bộ hóa từ thiết bị khác)</string>
     <!-- Radio button in the delete browsing data dialog to delete history items for the last hour. -->
@@ -1477,7 +1477,7 @@
 
     <!-- Onboarding -->
     <!-- text to display in the snackbar once account is signed-in -->
-    <string name="onboarding_firefox_account_sync_is_on">Đồng bộ hóa được bật</string>
+    <string name="onboarding_firefox_account_sync_is_on">Đồng bộ hóa đang bật</string>
 
     <!-- Onboarding theme -->
     <!-- Text shown in snackbar when multiple tabs have been sent to device -->
@@ -1499,7 +1499,7 @@
     <!-- Text shown for settings option for sign with email -->
     <string name="sign_in_with_email">Sử dụng email thay thế</string>
     <!-- Text shown for settings option for create new account text.'Firefox' intentionally hardcoded here.-->
-    <string name="sign_in_create_account_text"><![CDATA[Không có tài khoản? <u>Tạo một cái</u> để đồng bộ hóa Firefox giữa các thiết bị.]]></string>
+    <string name="sign_in_create_account_text"><![CDATA[Không có tài khoản? <u>Tạo ngay tài khoản mới</u> để đồng bộ hóa Firefox giữa các thiết bị.]]></string>
     <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="sign_out_confirmation_message_2">%s sẽ ngừng đồng bộ hóa với tài khoản của bạn, nhưng sẽ không xóa bất kỳ dữ liệu duyệt web nào của bạn trên thiết bị này.</string>
     <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
@@ -1544,7 +1544,7 @@
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies_1">Trình theo dõi chéo và truyền thông xã hội</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
-    <string name="preference_enhanced_tracking_protection_custom_cookies_2">Cookie từ các trang không mong muốn</string>
+    <string name="preference_enhanced_tracking_protection_custom_cookies_2">Cookie từ các trang web chưa truy cập</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies_3">Tất cả cookie của bên thứ ba (có thể làm hỏng các trang web)</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
@@ -1588,7 +1588,7 @@
     <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_fingerprinters_title">Vân tay</string>
     <!-- Description of fingerprinters that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_fingerprinters_description">Dừng dữ liệu nhận dạng duy nhất khỏi bị thu thập về thiết bị của bạn có thể được sử dụng cho mục đích theo dõi.</string>
+    <string name="etp_fingerprinters_description">Ngăn chặn việc thu thập dữ liệu nhận dạng duy nhất về thiết bị của bạn có thể được sử dụng cho mục đích theo dõi.</string>
     <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_title">Trình theo dõi nội dung</string>
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
@@ -2016,7 +2016,7 @@
     <!-- Text displayed asking user to re-authenticate -->
     <string name="synced_tabs_reauth">Vui lòng xác thực lại.</string>
     <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
-    <string name="synced_tabs_enable_tab_syncing">Vui lòng kích hoạt đồng bộ hóa thẻ.</string>
+    <string name="synced_tabs_enable_tab_syncing">Vui lòng bật đồng bộ hóa thẻ.</string>
     <!-- Text displayed when user has no tabs that have been synced -->
     <string name="synced_tabs_no_tabs">Bạn không có bất kỳ thẻ nào mở trong Firefox trên các thiết bị khác của bạn.</string>
     <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
@@ -2170,7 +2170,7 @@
     <!-- Text for title of settings section. -->
     <string name="review_quality_check_settings_title">Cài đặt</string>
     <!-- Text for label for switch preference to show recommended products from review quality check settings section. -->
-    <string name="review_quality_check_settings_recommended_products">Hiển thị quảng cáo trong trình kiểm tra đánh giá</string>
+    <string name="review_quality_check_settings_recommended_products">Hiện quảng cáo trong bài kiểm tra đánh giá</string>
     <!-- Description for switch preference to show recommended products from review quality check settings section. First parameter is for clickable text defined in review_quality_check_settings_recommended_products_learn_more.-->
     <string name="review_quality_check_settings_recommended_products_description_2" tools:ignore="UnusedResources">Bạn sẽ thấy quảng cáo không thường xuyên cho các sản phẩm có liên quan. Chúng tôi chỉ quảng cáo những sản phẩm có đánh giá đáng tin cậy. %s</string>
     <!-- Clickable text that links to review quality check recommended products support article. -->

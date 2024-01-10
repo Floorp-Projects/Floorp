@@ -480,7 +480,7 @@
     <string name="reduce_cookie_banner_details_panel_description_off_for_site" moz:RemovedIn="121" tools:ignore="UnusedResources">%1$s vill slette infokapsler og oppdatere siden. Sletting av alle infokapsler kan føre til at du blir logget ut eller at handlekurver blir tømt.</string>
 
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
-    <string name="reduce_cookie_banner_details_panel_description_off_for_site_1">Slå av og %1$s sletter infokapsler og laster inn dette nettstedet på nytt. Dette kan logge deg ut eller tømme handlekurver.</string>
+    <string name="reduce_cookie_banner_details_panel_description_off_for_site_1">Slå av, og %1$s sletter infokapsler og laster inn dette nettstedet på nytt. Dette kan logge deg ut eller tømme handlekurver.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_on_for_site_2" moz:RemovedIn="121" tools:ignore="UnusedResources">%1$s prøver å automatisk avvise alle infokapselforespørsler på støttede nettsteder.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
@@ -2402,4 +2402,5 @@
     <string name="download_languages_item_content_description_not_downloaded_state">Last ned</string>
     <!-- Content description (not visible, for screen readers etc.): For a language list item that is selected. -->
     <string name="download_languages_item_content_description_selected_state">Valgt</string>
-</resources>
+
+    </resources>
