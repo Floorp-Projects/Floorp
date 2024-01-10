@@ -11,7 +11,7 @@
       content="default-src chrome:; style-src chrome:; object-src 'none'"
     />
     <meta charset="utf-8" />
-    <title data-l10n-id="about-webauthn-page-title"></title>
+    <title id="page-title" data-l10n-id="about-webauthn-page-title"></title>
     <link rel="stylesheet" href="chrome://global/content/aboutWebauthn.css" />
     <script src="chrome://global/content/aboutWebauthn.js"></script>
     <link rel="localization" href="toolkit/about/aboutWebauthn.ftl" />
@@ -25,7 +25,7 @@
       ></label>
     </div>
 
-    <div hidden id="categories" role="tablist" aria-labelledby="info-text-div">
+    <div hidden id="categories" role="tablist" aria-labelledby="page-title">
       <div
         id="info-tab-button"
         class="category"
@@ -92,6 +92,7 @@
         class="tabcontent token-info-section"
         id="token-info-section"
         role="tabpanel"
+        aria-labelledby="info-tab-button"
       >
         <h2
           class="categoryTitle"
@@ -114,6 +115,7 @@
         class="tabcontent pin-section"
         id="set-change-pin-section"
         role="tabpanel"
+        aria-labelledby="pin-tab-button"
       >
         <h2
           class="categoryTitle"
@@ -161,6 +163,7 @@
         class="tabcontent credential-management-section"
         id="credential-management-section"
         role="tabpanel"
+        aria-labelledby="credentials-tab-button"
       >
         <h2
           class="categoryTitle"
@@ -194,6 +197,7 @@
         class="tabcontent bio-enrollment-section"
         id="bio-enrollment-section"
         role="tabpanel"
+        aria-labelledby="bio-enrollments-tab-button"
       >
         <h2
           class="categoryTitle"
