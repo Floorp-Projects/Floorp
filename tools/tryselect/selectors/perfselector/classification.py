@@ -275,7 +275,7 @@ class ClassificationProvider:
         return {
             "Pageload": {
                 "query": {
-                    Suites.RAPTOR.value: ["'browsertime 'tp6"],
+                    Suites.RAPTOR.value: ["'browsertime 'tp6 !tp6-bench"],
                 },
                 "suites": [Suites.RAPTOR.value],
                 "tasks": [],
@@ -312,7 +312,7 @@ class ClassificationProvider:
             },
             "Benchmarks": {
                 "query": {
-                    Suites.RAPTOR.value: ["'browsertime 'benchmark"],
+                    Suites.RAPTOR.value: ["'browsertime 'benchmark !tp6-bench"],
                 },
                 "suites": [Suites.RAPTOR.value],
                 "variant-restrictions": {Suites.RAPTOR.value: []},
