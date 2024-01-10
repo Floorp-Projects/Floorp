@@ -47,6 +47,49 @@ async function clickToggle(toggle) {
   await changed;
 }
 
+add_task(async function testPanelInfoMessage() {
+  const PROTECTIONS_PANEL_INFOMSG_PREF =
+    "browser.protections_panel.infoMessage.seen";
+
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    TRACKING_PAGE
+  );
+  // Set the infomessage pref to ensure the message is displayed every time
+  Services.prefs.setBoolPref(PROTECTIONS_PANEL_INFOMSG_PREF, false);
+
+  await openProtectionsPanel();
+
+  await TestUtils.waitForCondition(() => {
+    return gProtectionsHandler._protectionsPopup.hasAttribute(
+      "infoMessageShowing"
+    );
+  });
+
+  // Test that the info message is displayed when the panel opens
+  let container = document.getElementById("messaging-system-message-container");
+  let message = document.getElementById("protections-popup-message");
+  let learnMoreLink = document.querySelector(
+    "#messaging-system-message-container .text-link"
+  );
+
+  // Check the visibility of the info message.
+  ok(
+    BrowserTestUtils.is_visible(container),
+    "The message container should exist."
+  );
+
+  ok(BrowserTestUtils.is_visible(message), "The message should be visible.");
+
+  ok(BrowserTestUtils.is_visible(learnMoreLink), "The link should be visible.");
+
+  //TODO: Add a check for infomessage telemetry
+
+  //Clear telemetry from this test so that the next one doesn't fall over
+  Services.telemetry.clearEvents();
+  BrowserTestUtils.removeTab(tab);
+});
+
 add_task(async function testToggleSwitch() {
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
@@ -68,6 +111,7 @@ add_task(async function testToggleSwitch() {
       e[2] == "open" &&
       e[3] == "protections_popup"
   );
+  console.log(buttonEvents);
   is(buttonEvents.length, 1, "recorded telemetry for opening the popup");
 
   // Check the visibility of the "Site not working?" link.
