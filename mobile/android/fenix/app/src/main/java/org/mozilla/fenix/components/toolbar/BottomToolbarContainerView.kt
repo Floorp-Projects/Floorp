@@ -32,7 +32,7 @@ class BottomToolbarContainerView(
     container: ViewGroup,
     navigationItems: List<ActionItem> = NavigationItems.defaultItems,
     androidToolbarView: View? = null,
-    menuButton: MenuButton
+    menuButton: MenuButton,
 ) {
 
     init {

@@ -41,7 +41,7 @@ import org.mozilla.fenix.theme.Theme
 @Composable
 fun NavigationBar(
     actionItems: List<ActionItem>,
-    menuButton: MenuButton? = null
+    menuButton: MenuButton? = null,
 ) {
     Box(
         modifier = Modifier
