@@ -52,7 +52,8 @@ Result<quota::UsageInfo, nsresult> FileSystemQuotaClient::InitOrigin(
 
   QM_TRY_INSPECT(
       const ResultConnection& conn,
-      data::GetStorageConnection(aOriginMetadata).mapErr(toNSResult));
+      data::GetStorageConnection(aOriginMetadata, /* aDirectoryLockId */ -1)
+          .mapErr(toNSResult));
 
   QM_TRY(MOZ_TO_RESULT(
       data::FileSystemDatabaseManager::RescanUsages(conn, aOriginMetadata)));
