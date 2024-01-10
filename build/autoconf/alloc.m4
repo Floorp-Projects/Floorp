@@ -18,14 +18,17 @@ done
 
 MALLOC_USABLE_SIZE_CONST_PTR=const
 if test -n "$HAVE_MALLOC_H"; then
-  AC_MSG_CHECKING([whether malloc_usable_size definition can use const argument])
-  AC_TRY_COMPILE([#include <malloc.h>
-                  #include <stddef.h>
-                  size_t malloc_usable_size(const void *ptr);],
-                  [return malloc_usable_size(0);],
-                  AC_MSG_RESULT([yes]),
-                  AC_MSG_RESULT([no])
-                  MALLOC_USABLE_SIZE_CONST_PTR=)
+  AC_CACHE_CHECK([whether malloc_usable_size definition can use const argument],
+                 moz_cv_malloc_usable_size_constness,
+                 [AC_TRY_COMPILE([#include <malloc.h>
+                                  #include <stddef.h>
+                                  size_t malloc_usable_size(const void *ptr);],
+                                 [return malloc_usable_size(0);],
+                                 [moz_cv_malloc_usable_size_constness=yes],
+                                 [moz_cv_malloc_usable_size_constness=no])])
+  if test "$moz_cv_malloc_usable_size_constness" = no ; then
+    MALLOC_USABLE_SIZE_CONST_PTR=
+  fi
 fi
 AC_DEFINE_UNQUOTED([MALLOC_USABLE_SIZE_CONST_PTR],[$MALLOC_USABLE_SIZE_CONST_PTR])
 
