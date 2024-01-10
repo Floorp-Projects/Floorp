@@ -694,6 +694,8 @@ class TopSitesFeed {
         DEFAULT_TOP_SITES.push(link);
       }
       hasContileTiles = contilePositionIndex > 0;
+      //This is to catch where we receive 3 tiles but reduce to 2 early in the filtering, before blocked list applied.
+      this._telemetryUtility.setRemovedTilesToOversold(DEFAULT_TOP_SITES);
     }
 
     // Read defaults from remote settings.
