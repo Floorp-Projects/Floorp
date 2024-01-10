@@ -8,7 +8,7 @@ license = "BSD-3-Clause"
 path = "lib.rs"
 
 [dependencies.bindgen]
-version = "0.66.0"
+version = "0.69"
 default-features = false
 
 [features]
