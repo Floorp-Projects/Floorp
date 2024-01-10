@@ -312,8 +312,8 @@ class HttpChannelChild final : public PHttpChannelChild,
 
   // The result of RetargetDeliveryTo for this channel.
   // |notRequested| represents OMT is not requested by the channel owner.
-  LABELS_HTTP_CHILD_OMT_STATS mOMTResult =
-      LABELS_HTTP_CHILD_OMT_STATS::notRequested;
+  Atomic<LABELS_HTTP_CHILD_OMT_STATS, mozilla::Relaxed> mOMTResult{
+      LABELS_HTTP_CHILD_OMT_STATS::notRequested};
 
   uint32_t mCacheKey{0};
   int32_t mCacheFetchCount{0};
