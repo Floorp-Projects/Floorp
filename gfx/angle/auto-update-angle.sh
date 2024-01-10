@@ -6,7 +6,7 @@
 set -vex
 
 if [[ -z "${MOZ_AUTOMATION}" ]]; then
-	echo "Angle is only meant to be updated via ./mach vendor in automation."
+	echo "This script is only meant to be used to update ANGLE via ./mach vendor when in automation."
 	echo "However, if you set a few environment variables yourself, this script"
 	echo "will probably work locally."
 	exit 1
