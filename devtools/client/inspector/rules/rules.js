@@ -144,6 +144,7 @@ function CssRuleView(inspector, document, store) {
   this.childHasDragged = false;
 
   this._outputParser = new OutputParser(document, this.cssProperties);
+  this._abortController = new this.styleWindow.AbortController();
 
   this._onAddRule = this._onAddRule.bind(this);
   this._onContextMenu = this._onContextMenu.bind(this);
@@ -675,6 +676,48 @@ CssRuleView.prototype = {
     this.pageStyle.addNewRule(element, pseudoClasses);
   },
 
+  maybeShowEnterKeyNotice() {
+    const SHOW_RULES_VIEW_ENTER_KEY_NOTICE_PREF =
+      "devtools.inspector.showRulesViewEnterKeyNotice";
+    // Make the Enter key notice visible
+    // if it wasn't dismissed by the user yet.
+    if (
+      !Services.prefs.getBoolPref(SHOW_RULES_VIEW_ENTER_KEY_NOTICE_PREF, false)
+    ) {
+      return;
+    }
+
+    const enterKeyNoticeEl = this.styleDocument.getElementById(
+      "ruleview-kbd-enter-notice"
+    );
+
+    if (!enterKeyNoticeEl.hasAttribute("hidden")) {
+      return;
+    }
+
+    // Compute the right key (Cmd / Ctrl) depending on the OS
+    enterKeyNoticeEl.querySelector(
+      "#ruleview-kbd-enter-notice-ctrl-cmd"
+    ).textContent = Services.appinfo.OS === "Darwin" ? "Cmd" : "Ctrl";
+    enterKeyNoticeEl.removeAttribute("hidden");
+
+    enterKeyNoticeEl
+      .querySelector("#ruleview-kbd-enter-notice-dismiss-button")
+      .addEventListener(
+        "click",
+        () => {
+          // Hide the notice
+          enterKeyNoticeEl.setAttribute("hidden", "");
+          // And set the pref to false so we don't show the notice on next startup.
+          Services.prefs.setBoolPref(
+            SHOW_RULES_VIEW_ENTER_KEY_NOTICE_PREF,
+            false
+          );
+        },
+        { once: true, signal: this._abortController.signal }
+      );
+  },
+
   /**
    * Disables add rule button when needed
    */
@@ -878,6 +921,8 @@ CssRuleView.prototype = {
     this.tooltips.destroy();
 
     // Remove bound listeners
+    this._abortController.abort();
+    this._abortController = null;
     this.shortcuts.destroy();
     this.styleDocument.removeEventListener("click", this, { capture: true });
     this.element.removeEventListener("copy", this._onCopy);
