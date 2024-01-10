@@ -976,7 +976,27 @@
   alias_set: none
   clone: true
 
+- name: StringIncludes
+  operands:
+    string: String
+    searchString: String
+  result_type: Boolean
+  movable: true
+  congruent_to: if_operands_equal
+  alias_set: none
+  possibly_calls: true
+
 - name: StringIndexOf
+  operands:
+    string: String
+    searchString: String
+  result_type: Int32
+  movable: true
+  congruent_to: if_operands_equal
+  alias_set: none
+  possibly_calls: true
+
+- name: StringLastIndexOf
   operands:
     string: String
     searchString: String

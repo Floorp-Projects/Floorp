@@ -651,7 +651,9 @@ class MOZ_RAII InlinableNativeIRGenerator {
   AttachDecision tryAttachStringCharAt();
   AttachDecision tryAttachStringFromCharCode();
   AttachDecision tryAttachStringFromCodePoint();
+  AttachDecision tryAttachStringIncludes();
   AttachDecision tryAttachStringIndexOf();
+  AttachDecision tryAttachStringLastIndexOf();
   AttachDecision tryAttachStringStartsWith();
   AttachDecision tryAttachStringEndsWith();
   AttachDecision tryAttachStringToLowerCase();

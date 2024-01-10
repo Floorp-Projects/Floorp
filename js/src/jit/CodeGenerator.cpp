@@ -12172,12 +12172,28 @@ void CodeGenerator::visitFromCodePoint(LFromCodePoint* lir) {
   masm.bind(done);
 }
 
+void CodeGenerator::visitStringIncludes(LStringIncludes* lir) {
+  pushArg(ToRegister(lir->searchString()));
+  pushArg(ToRegister(lir->string()));
+
+  using Fn = bool (*)(JSContext*, HandleString, HandleString, bool*);
+  callVM<Fn, js::StringIncludes>(lir);
+}
+
 void CodeGenerator::visitStringIndexOf(LStringIndexOf* lir) {
   pushArg(ToRegister(lir->searchString()));
   pushArg(ToRegister(lir->string()));
 
   using Fn = bool (*)(JSContext*, HandleString, HandleString, int32_t*);
   callVM<Fn, js::StringIndexOf>(lir);
+}
+
+void CodeGenerator::visitStringLastIndexOf(LStringLastIndexOf* lir) {
+  pushArg(ToRegister(lir->searchString()));
+  pushArg(ToRegister(lir->string()));
+
+  using Fn = bool (*)(JSContext*, HandleString, HandleString, int32_t*);
+  callVM<Fn, js::StringLastIndexOf>(lir);
 }
 
 void CodeGenerator::visitStringStartsWith(LStringStartsWith* lir) {

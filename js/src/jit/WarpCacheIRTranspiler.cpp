@@ -2250,6 +2250,18 @@ bool WarpCacheIRTranspiler::emitStringFromCodePointResult(
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitStringIncludesResult(
+    StringOperandId strId, StringOperandId searchStrId) {
+  MDefinition* str = getOperand(strId);
+  MDefinition* searchStr = getOperand(searchStrId);
+
+  auto* includes = MStringIncludes::New(alloc(), str, searchStr);
+  add(includes);
+
+  pushResult(includes);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitStringIndexOfResult(
     StringOperandId strId, StringOperandId searchStrId) {
   MDefinition* str = getOperand(strId);
@@ -2259,6 +2271,18 @@ bool WarpCacheIRTranspiler::emitStringIndexOfResult(
   add(indexOf);
 
   pushResult(indexOf);
+  return true;
+}
+
+bool WarpCacheIRTranspiler::emitStringLastIndexOfResult(
+    StringOperandId strId, StringOperandId searchStrId) {
+  MDefinition* str = getOperand(strId);
+  MDefinition* searchStr = getOperand(searchStrId);
+
+  auto* lastIndexOf = MStringLastIndexOf::New(alloc(), str, searchStr);
+  add(lastIndexOf);
+
+  pushResult(lastIndexOf);
   return true;
 }
 

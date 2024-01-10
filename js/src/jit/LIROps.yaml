@@ -1221,8 +1221,24 @@
     codePoint: WordSized
   num_temps: 2
 
+# Test if a string includes the search string.
+- name: StringIncludes
+  result_type: WordSized
+  operands:
+    string: WordSized
+    searchString: WordSized
+  call_instruction: true
+
 # Search for the first index of the search string.
 - name: StringIndexOf
+  result_type: WordSized
+  operands:
+    string: WordSized
+    searchString: WordSized
+  call_instruction: true
+
+# Search for the last index of the search string.
+- name: StringLastIndexOf
   result_type: WordSized
   operands:
     string: WordSized
