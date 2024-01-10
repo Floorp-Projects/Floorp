@@ -22,6 +22,7 @@ import androidx.annotation.CallSuper
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AlertDialog
 import androidx.coordinatorlayout.widget.CoordinatorLayout
+import androidx.core.content.ContextCompat
 import androidx.core.content.getSystemService
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
@@ -92,7 +93,6 @@ import mozilla.components.feature.session.PictureInPictureFeature
 import mozilla.components.feature.session.ScreenOrientationFeature
 import mozilla.components.feature.session.SessionFeature
 import mozilla.components.feature.session.SwipeRefreshFeature
-import mozilla.components.feature.session.behavior.EngineViewBrowserToolbarBehavior
 import mozilla.components.feature.sitepermissions.SitePermissionsFeature
 import mozilla.components.feature.webauthn.WebAuthnFeature
 import mozilla.components.lib.state.ext.consumeFlow
@@ -454,27 +454,38 @@ abstract class BaseBrowserFragment :
             interactor = browserToolbarInteractor,
             customTabSession = customTabSessionId?.let { store.state.findCustomTab(it) },
             lifecycleOwner = viewLifecycleOwner,
-        )
-
-        browserToolbar = browserToolbarView.view
+        ).also {
+            browserToolbar = it.view
+        }
 
         if (IncompleteRedesignToolbarFeature(context.settings()).isEnabled) {
-            val toolbarView = if (context.components.settings.toolbarPosition == ToolbarPosition.BOTTOM) {
-                // Should refactor this so there is no added view to remove to begin with
-                // https://bugzilla.mozilla.org/show_bug.cgi?id=1870976
-                binding.browserLayout.removeView(browserToolbarView.view)
-                browserToolbarView.view
-            } else {
-                null
+            val isToolbarAtBottom = context.components.settings.toolbarPosition == ToolbarPosition.BOTTOM
+
+            // The toolbar view has already been added directly to the container.
+            // We should remove it and add the view to the navigation bar container.
+            // Should refactor this so there is no added view to remove to begin with:
+            // https://bugzilla.mozilla.org/show_bug.cgi?id=1870976
+            if (isToolbarAtBottom) {
+                binding.browserLayout.removeView(browserToolbar)
+            }
+
+            // We need a second menu button, but we could reuse the existing builder.
+            val menuButton = MenuButton(requireContext()).apply {
+                menuBuilder = browserToolbarView.menuToolbar.menuBuilder
+                setColorFilter(
+                    ContextCompat.getColor(
+                        context,
+                        ThemeManager.resolveAttribute(R.attr.textPrimary, context),
+                    ),
+                )
             }
 
             BottomToolbarContainerView(
                 context = context,
                 container = binding.browserLayout,
-                androidToolbarView = toolbarView,
-                menuButton = MenuButton(requireContext()).apply {
-                    menuBuilder = browserToolbarView.menuToolbar.menuBuilder
-                },
+                androidToolbarView = if (isToolbarAtBottom) browserToolbar else null,
+                menuButton = menuButton,
+                browsingModeManager = activity.browsingModeManager,
             )
         }
 

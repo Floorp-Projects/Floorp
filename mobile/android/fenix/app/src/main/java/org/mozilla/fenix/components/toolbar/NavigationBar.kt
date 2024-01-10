@@ -11,23 +11,24 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
-import androidx.compose.material.Text
+import androidx.compose.material.LocalContentColor
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import mozilla.components.browser.menu.view.MenuButton
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.toolbar.ItemType.STANDARD
+import org.mozilla.fenix.components.toolbar.ItemType.TAB_COUNTER
+import org.mozilla.fenix.compose.TabCounter
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.theme.Theme
@@ -36,11 +37,13 @@ import org.mozilla.fenix.theme.Theme
  * Top-level UI for displaying the navigation bar.
  *
  * @param actionItems A list of [ActionItem] used to populate the bar.
- * @param menuButton A [MenuButton] to be used for [ItemType.MENU]
+ * @param tabCount The number of opened tabs.
+ * @param menuButton A [MenuButton] to be used for [ItemType.MENU].
  */
 @Composable
 fun NavigationBar(
     actionItems: List<ActionItem>,
+    tabCount: Int,
     menuButton: MenuButton? = null,
 ) {
     Box(
@@ -68,21 +71,20 @@ fun NavigationBar(
                         }
                     }
                     ItemType.TAB_COUNTER -> {
-                        IconButton(onClick = {}) {
-                            TabsIcon(item = it, tabsCount = 0)
+                        CompositionLocalProvider(LocalContentColor provides FirefoxTheme.colors.iconPrimary) {
+                            IconButton(onClick = {}) {
+                                TabCounter(tabCount = tabCount)
+                            }
                         }
                     }
 
                     ItemType.MENU -> {
-                        // Probably, [ActionItem] will be refactored in future to incorporate
-                        // the [MenuButton] as well, so this check won't be necessary;
-                        // will revisit it when doing tab counter and navigation buttons.
+                        // [ActionItem] will be refactored here:
+                        // https://bugzilla.mozilla.org/show_bug.cgi?id=1878827
                         if (menuButton != null) {
                             AndroidView(
-                                modifier = Modifier.height(48.dp).width(48.dp),
-                                factory = { _ ->
-                                    menuButton
-                                },
+                                modifier = Modifier.size(48.dp),
+                                factory = { _ -> menuButton },
                             )
                         } else {
                             IconButton(onClick = {}) {
@@ -97,25 +99,6 @@ fun NavigationBar(
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun TabsIcon(item: ActionItem, tabsCount: Int) {
-    Box(contentAlignment = Alignment.Center) {
-        Icon(
-            painter = painterResource(id = item.iconId),
-            contentDescription = stringResource(id = item.descriptionResourceId),
-            tint = FirefoxTheme.colors.iconPrimary,
-        )
-
-        Text(
-            text = tabsCount.toString(),
-            color = FirefoxTheme.colors.iconPrimary,
-            fontSize = 10.sp,
-            fontWeight = FontWeight.W700,
-            textAlign = TextAlign.Center,
-        )
     }
 }
 
@@ -180,7 +163,10 @@ object NavigationItems {
 @Composable
 private fun NavigationBarPreview() {
     FirefoxTheme {
-        NavigationBar(NavigationItems.defaultItems)
+        NavigationBar(
+            actionItems = NavigationItems.defaultItems,
+            tabCount = 0,
+        )
     }
 }
 
@@ -188,6 +174,9 @@ private fun NavigationBarPreview() {
 @Composable
 private fun NavigationBarPrivatePreview() {
     FirefoxTheme(theme = Theme.Private) {
-        NavigationBar(NavigationItems.defaultItems)
+        NavigationBar(
+            actionItems = NavigationItems.defaultItems,
+            tabCount = 0,
+        )
     }
 }

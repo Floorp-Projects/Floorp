@@ -435,14 +435,14 @@ class HomeFragment : Fragment() {
         )
 
         if (IncompleteRedesignToolbarFeature(requireContext().settings()).isEnabled) {
-            val toolbarView = if (requireContext().components.settings.toolbarPosition == ToolbarPosition.BOTTOM) {
-                val toolbar = binding.toolbarLayout
-                // Should refactor this so there is no added view to remove to begin with
-                // https://bugzilla.mozilla.org/show_bug.cgi?id=1870976
-                binding.root.removeView(toolbar)
-                toolbar
-            } else {
-                null
+            val isToolbarAtBottom = requireContext().components.settings.toolbarPosition == ToolbarPosition.BOTTOM
+
+            // The toolbar view has already been added directly to the container.
+            // We should remove it and add the view to the navigation bar container.
+            // Should refactor this so there is no added view to remove to begin with:
+            // https://bugzilla.mozilla.org/show_bug.cgi?id=1870976
+            if (isToolbarAtBottom) {
+                binding.root.removeView(binding.toolbarLayout)
             }
 
             val menuButton = MenuButton(requireContext())
@@ -458,8 +458,9 @@ class HomeFragment : Fragment() {
             BottomToolbarContainerView(
                 context = requireContext(),
                 container = binding.homeLayout,
-                androidToolbarView = toolbarView,
+                androidToolbarView = if (isToolbarAtBottom) binding.toolbarLayout else null,
                 menuButton = menuButton,
+                browsingModeManager = browsingModeManager,
             )
         }
 
