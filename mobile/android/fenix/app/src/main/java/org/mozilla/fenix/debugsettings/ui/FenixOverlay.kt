@@ -7,6 +7,7 @@ package org.mozilla.fenix.debugsettings.ui
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.navigation.compose.rememberNavController
 import mozilla.components.lib.state.ext.observeAsState
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
 import org.mozilla.fenix.debugsettings.store.DebugDrawerAction
@@ -20,6 +21,7 @@ import org.mozilla.fenix.theme.Theme
  */
 @Composable
 fun FenixOverlay() {
+    val navController = rememberNavController()
     val debugDrawerStore = remember { DebugDrawerStore() }
     val drawerStatus by debugDrawerStore.observeAsState(initialValue = DrawerStatus.Closed) { state ->
         state.drawerStatus
@@ -27,6 +29,7 @@ fun FenixOverlay() {
 
     FirefoxTheme(theme = Theme.getTheme(allowPrivateTheme = false)) {
         DebugOverlay(
+            navController = navController,
             drawerStatus = drawerStatus,
             onDrawerOpen = {
                 debugDrawerStore.dispatch(DebugDrawerAction.DrawerOpened)
@@ -34,6 +37,7 @@ fun FenixOverlay() {
             onDrawerClose = {
                 debugDrawerStore.dispatch(DebugDrawerAction.DrawerClosed)
             },
+            onBackButtonClick = {},
         )
     }
 }

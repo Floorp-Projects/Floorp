@@ -634,6 +634,7 @@ dependencies {
     implementation ComponentsDependencies.androidx_fragment
     implementation FenixDependencies.androidx_navigation_fragment
     implementation FenixDependencies.androidx_navigation_ui
+    implementation ComponentsDependencies.androidx_compose_navigation
     implementation ComponentsDependencies.androidx_recyclerview
     implementation ComponentsDependencies.androidx_lifecycle_common
     implementation ComponentsDependencies.androidx_lifecycle_livedata

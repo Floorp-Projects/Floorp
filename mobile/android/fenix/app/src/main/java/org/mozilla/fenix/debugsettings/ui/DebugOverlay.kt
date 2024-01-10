@@ -27,6 +27,8 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import org.mozilla.fenix.R
@@ -38,15 +40,19 @@ import org.mozilla.fenix.theme.FirefoxTheme
 /**
  * Overlay for presenting app-wide debugging content.
  *
+ * @param navController [NavHostController] used to perform navigation actions.
  * @param drawerStatus The [DrawerStatus] indicating the physical state of the drawer.
  * @param onDrawerOpen Invoked when the drawer is opened.
  * @param onDrawerClose Invoked when the drawer is closed.
+ * @param onBackButtonClick Invoked when the user taps on the back button in the app bar.
  */
 @Composable
 fun DebugOverlay(
+    navController: NavHostController,
     drawerStatus: DrawerStatus,
     onDrawerOpen: () -> Unit,
     onDrawerClose: () -> Unit,
+    onBackButtonClick: () -> Unit,
 ) {
     val snackbarState = remember { SnackbarHostState() }
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
@@ -95,7 +101,10 @@ fun DebugOverlay(
                 ModalDrawer(
                     drawerContent = {
                         CompositionLocalProvider(LocalLayoutDirection provides currentLayoutDirection) {
-                            DebugDrawer()
+                            DebugDrawer(
+                                navController = navController,
+                                onBackButtonClick = onBackButtonClick,
+                            )
                         }
                     },
                     drawerBackgroundColor = FirefoxTheme.colors.layer1,
@@ -121,16 +130,21 @@ fun DebugOverlay(
 @Composable
 @LightDarkPreview
 private fun DebugOverlayPreview() {
+    val navController = rememberNavController()
     var drawerStatus by remember { mutableStateOf(DrawerStatus.Closed) }
 
     FirefoxTheme {
         DebugOverlay(
+            navController = navController,
             drawerStatus = drawerStatus,
             onDrawerOpen = {
                 drawerStatus = DrawerStatus.Open
             },
             onDrawerClose = {
                 drawerStatus = DrawerStatus.Closed
+            },
+            onBackButtonClick = {
+                navController.popBackStack()
             },
         )
     }
