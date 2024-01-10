@@ -61,8 +61,6 @@ EXPORTS.mozilla.gfx += [
     "UserData.h",
 ]
 
-EXPORTS.mozilla.gfx += ["ssse3-scaler.h"]
-
 if CONFIG["MOZ_WIDGET_TOOLKIT"] in ("cocoa", "uikit"):
     EXPORTS.mozilla.gfx += [
         "MacIOSurface.h",
@@ -128,7 +126,6 @@ if CONFIG["INTEL_ARCHITECTURE"]:
         "ConvolutionFilterSSE2.cpp",
         "FilterProcessingSSE2.cpp",
         "ImageScalingSSE2.cpp",
-        "ssse3-scaler.c",
         "SwizzleAVX2.cpp",
         "SwizzleSSE2.cpp",
         "SwizzleSSSE3.cpp",
@@ -144,7 +141,6 @@ if CONFIG["INTEL_ARCHITECTURE"]:
     SOURCES["SwizzleAVX2.cpp"].flags += ["-mavx2"]
     SOURCES["SwizzleSSE2.cpp"].flags += CONFIG["SSE2_FLAGS"]
     SOURCES["SwizzleSSSE3.cpp"].flags += CONFIG["SSSE3_FLAGS"]
-    SOURCES["ssse3-scaler.c"].flags += CONFIG["SSSE3_FLAGS"]
 elif CONFIG["TARGET_CPU"].startswith("mips"):
     SOURCES += [
         "BlurLS3.cpp",
