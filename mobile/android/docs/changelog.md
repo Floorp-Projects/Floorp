@@ -36,6 +36,9 @@ permalink: /changelog/
 * **feature-session**
   * Update URL in the store immediately when using the optimized load URL code path.
 
+* **tooling-lint**
+  * Added a lint rule to detect when `Response#close` may not have been called. Note: Currently, this rule only runs on Android Components.
+
 # 123.0
 * [Commits](https://github.com/mozilla-mobile/firefox-android/compare/releases_v122..releases_v123)
 * [Dependencies](https://github.com/mozilla-mobile/firefox-android/blob/releases_v123/android-components/plugins/dependencies/src/main/java/DependenciesPlugin.kt)
