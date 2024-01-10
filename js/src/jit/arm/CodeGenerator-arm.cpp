@@ -574,7 +574,7 @@ void CodeGenerator::visitSoftDivI(LSoftDivI* ins) {
     masm.passABIArg(lhs);
     masm.passABIArg(rhs);
     masm.callWithABI<Fn, __aeabi_idivmod>(
-        ABIType::General, CheckUnsafeCallWithABI::DontCheckOther);
+        ABIType::Int64, CheckUnsafeCallWithABI::DontCheckOther);
   }
 
   // idivmod returns the quotient in r0, and the remainder in r1.
@@ -764,7 +764,7 @@ void CodeGenerator::visitSoftModI(LSoftModI* ins) {
     masm.passABIArg(lhs);
     masm.passABIArg(rhs);
     masm.callWithABI<Fn, __aeabi_idivmod>(
-        ABIType::General, CheckUnsafeCallWithABI::DontCheckOther);
+        ABIType::Int64, CheckUnsafeCallWithABI::DontCheckOther);
   }
 
   MOZ_ASSERT(r1 != output);
@@ -866,7 +866,7 @@ void CodeGeneratorARM::emitBigIntDiv(LBigIntDiv* ins, Register dividend,
   masm.setupUnalignedABICall(output);
   masm.passABIArg(dividend);
   masm.passABIArg(divisor);
-  masm.callWithABI<Fn, __aeabi_idivmod>(ABIType::General,
+  masm.callWithABI<Fn, __aeabi_idivmod>(ABIType::Int64,
                                         CheckUnsafeCallWithABI::DontCheckOther);
 
   masm.PopRegsInMask(volatileRegs);
@@ -909,7 +909,7 @@ void CodeGeneratorARM::emitBigIntMod(LBigIntMod* ins, Register dividend,
   masm.setupUnalignedABICall(output);
   masm.passABIArg(dividend);
   masm.passABIArg(divisor);
-  masm.callWithABI<Fn, __aeabi_idivmod>(ABIType::General,
+  masm.callWithABI<Fn, __aeabi_idivmod>(ABIType::Int64,
                                         CheckUnsafeCallWithABI::DontCheckOther);
 
   masm.PopRegsInMask(volatileRegs);
@@ -2344,7 +2344,7 @@ void CodeGenerator::visitSoftUDivOrMod(LSoftUDivOrMod* ins) {
     masm.passABIArg(lhs);
     masm.passABIArg(rhs);
     masm.callWithABI<Fn, __aeabi_uidivmod>(
-        ABIType::General, CheckUnsafeCallWithABI::DontCheckOther);
+        ABIType::Int64, CheckUnsafeCallWithABI::DontCheckOther);
   }
 
   if (mod) {
