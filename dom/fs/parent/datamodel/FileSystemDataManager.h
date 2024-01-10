@@ -52,7 +52,8 @@ Result<EntryId, QMResult> GetEntryHandle(
     const FileSystemChildMetadata& aHandle);
 
 Result<ResultConnection, QMResult> GetStorageConnection(
-    const quota::OriginMetadata& aOriginMetadata);
+    const quota::OriginMetadata& aOriginMetadata,
+    const int64_t aDirectoryLockId);
 
 class FileSystemDataManager
     : public SupportsCheckedUnsafePtr<CheckIf<DiagnosticAssertEnabled>> {
