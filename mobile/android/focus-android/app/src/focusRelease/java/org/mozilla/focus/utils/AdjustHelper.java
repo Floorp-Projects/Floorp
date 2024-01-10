@@ -16,7 +16,7 @@ import com.adjust.sdk.LogLevel;
 
 import org.mozilla.focus.BuildConfig;
 import org.mozilla.focus.FocusApplication;
-import org.mozilla.focus.telemetry.TelemetryWrapper;
+import org.mozilla.focus.telemetry.GleanMetricsService;
 
 public class AdjustHelper {
     public static void setupAdjustIfNeeded(FocusApplication application) {
@@ -27,7 +27,7 @@ public class AdjustHelper {
             throw new IllegalStateException("No adjust token defined for release build");
         }
 
-        if (!TelemetryWrapper.isTelemetryEnabled(application)) {
+        if (!GleanMetricsService.isTelemetryEnabled(application)) {
             return;
         }
 

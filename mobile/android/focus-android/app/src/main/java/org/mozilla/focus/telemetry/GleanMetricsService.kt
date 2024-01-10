@@ -7,8 +7,10 @@ package org.mozilla.focus.telemetry
 import android.content.Context
 import android.os.Build
 import android.os.RemoteException
+import android.os.StrictMode
 import androidx.annotation.VisibleForTesting
 import androidx.core.app.NotificationManagerCompat
+import androidx.preference.PreferenceManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers.IO
@@ -23,10 +25,10 @@ import mozilla.components.support.base.log.logger.Logger
 import mozilla.telemetry.glean.Glean
 import mozilla.telemetry.glean.config.Configuration
 import org.mozilla.focus.BuildConfig
+import org.mozilla.focus.R
 import org.mozilla.focus.Components
 import org.mozilla.focus.GleanMetrics.Browser
 import org.mozilla.focus.GleanMetrics.GleanBuildInfo
-import org.mozilla.focus.GleanMetrics.LegacyIds
 import org.mozilla.focus.GleanMetrics.Metrics
 import org.mozilla.focus.GleanMetrics.MozillaProducts
 import org.mozilla.focus.GleanMetrics.Notifications
@@ -36,10 +38,9 @@ import org.mozilla.focus.GleanMetrics.Shortcuts
 import org.mozilla.focus.GleanMetrics.TrackingProtection
 import org.mozilla.focus.ext.components
 import org.mozilla.focus.ext.settings
-import org.mozilla.focus.telemetry.TelemetryWrapper.isTelemetryEnabled
 import org.mozilla.focus.topsites.DefaultTopSitesStorage.Companion.TOP_SITES_MAX_LIMIT
+import org.mozilla.focus.utils.AppConstants
 import org.mozilla.focus.utils.Settings
-import java.util.UUID
 
 /**
  * Glean telemetry service.
@@ -50,6 +51,37 @@ class GleanMetricsService(context: Context) : MetricsService {
 
     @Suppress("UnusedPrivateMember")
     private val activationPing = ActivationPing(context)
+
+    companion object {
+        private val isEnabledByDefault: Boolean
+            get() = !AppConstants.isKlarBuild
+
+        private fun isDeviceWithTelemetryDisabled(): Boolean {
+            val brand = "blackberry"
+            val device = "bbf100"
+
+            return Build.BRAND == brand && Build.DEVICE == device
+        }
+
+        @JvmStatic
+        fun isTelemetryEnabled(context: Context): Boolean {
+            if (isDeviceWithTelemetryDisabled()) { return false }
+
+            // The first access to shared preferences will require a disk read.
+            val threadPolicy = StrictMode.allowThreadDiskReads()
+            try {
+                val resources = context.resources
+                val preferences = PreferenceManager.getDefaultSharedPreferences(context)
+
+                return preferences.getBoolean(
+                    resources.getString(R.string.pref_key_telemetry),
+                    isEnabledByDefault,
+                ) && !AppConstants.isDevBuild
+            } finally {
+                StrictMode.setThreadPolicy(threadPolicy)
+            }
+        }
+    }
 
     @OptIn(DelicateCoroutinesApi::class)
     override fun initialize(context: Context) {
@@ -80,9 +112,6 @@ class GleanMetricsService(context: Context) : MetricsService {
         GlobalScope.launch(IO) {
             // Wait for preferences to be collected before we send the activation ping.
             collectPrefMetricsAsync(components, settings, context).await()
-
-            // Set the client ID in Glean as part of the deletion-request.
-            LegacyIds.clientId.set(UUID.fromString(TelemetryWrapper.clientId))
 
             components.store.waitForSelectedOrDefaultSearchEngine { searchEngine ->
                 if (searchEngine != null) {

@@ -540,7 +540,7 @@ class UrlInputFragment :
 
     private fun onSearch(
         query: String,
-        isSuggestion: Boolean = false,
+        @Suppress("UNUSED_PARAMETER") isSuggestion: Boolean = false,
         alwaysSearch: Boolean = false,
     ) {
         if (alwaysSearch) {
