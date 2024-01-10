@@ -227,6 +227,10 @@ void CanvasTranslator::AddBuffer(ipc::SharedMemoryBasic::Handle&& aBufferHandle,
   MOZ_RELEASE_ASSERT(mHeader->readerState == State::Paused);
   MOZ_ASSERT(mDefaultBufferSize != 0);
 
+  // Check and signal the writer when we finish with a buffer, because it
+  // might have hit the buffer count limit and be waiting to use our old one.
+  CheckAndSignalWriter();
+
   // Default sized buffers will have been queued for recycling.
   if (mCurrentShmem.Size() == mDefaultBufferSize) {
     mCanvasShmems.emplace(std::move(mCurrentShmem));
@@ -326,6 +330,10 @@ void CanvasTranslator::RecycleBuffer() {
 }
 
 void CanvasTranslator::NextBuffer() {
+  // Check and signal the writer when we finish with a buffer, because it
+  // might have hit the buffer count limit and be waiting to use our old one.
+  CheckAndSignalWriter();
+
   mCurrentShmem = std::move(mCanvasShmems.front());
   mCanvasShmems.pop();
   mCurrentMemReader = mCurrentShmem.CreateMemReader();

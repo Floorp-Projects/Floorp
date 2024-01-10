@@ -5741,6 +5741,12 @@
   value: 32 * 1024
   mirror: always
 
+# Maximum number of Default size shmem buffers to use
+- name: gfx.canvas.remote.max_default_buffers
+  type: RelaxedAtomicUint32
+  value: 256
+  mirror: always
+
 # How many times to spin before waiting in remote canvas
 - name: gfx.canvas.remote.max-spin-count
   type: RelaxedAtomicUint32
