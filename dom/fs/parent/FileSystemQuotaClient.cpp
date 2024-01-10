@@ -6,11 +6,8 @@
 
 #include "FileSystemQuotaClient.h"
 
-#include "ResultStatement.h"
 #include "datamodel/FileSystemDatabaseManager.h"
 #include "datamodel/FileSystemFileManager.h"
-#include "mozIStorageService.h"
-#include "mozStorageCID.h"
 #include "mozilla/dom/FileSystemDataManager.h"
 #include "mozilla/dom/quota/Assertions.h"
 #include "mozilla/dom/quota/QuotaCommon.h"
@@ -25,28 +22,6 @@ namespace mozilla::dom::fs {
 namespace {
 
 auto toNSResult = [](const auto& aRv) { return ToNSResult(aRv); };
-
-Result<ResultConnection, QMResult> GetStorageConnection(
-    const quota::OriginMetadata& aOriginMetadata) {
-  QM_TRY_INSPECT(const nsCOMPtr<nsIFile>& databaseFile,
-                 data::GetDatabaseFile(aOriginMetadata));
-
-  QM_TRY_INSPECT(
-      const auto& storageService,
-      QM_TO_RESULT_TRANSFORM(MOZ_TO_RESULT_GET_TYPED(
-          nsCOMPtr<mozIStorageService>, MOZ_SELECT_OVERLOAD(do_GetService),
-          MOZ_STORAGE_SERVICE_CONTRACTID)));
-
-  QM_TRY_UNWRAP(
-      auto connection,
-      QM_TO_RESULT_TRANSFORM(MOZ_TO_RESULT_INVOKE_MEMBER_TYPED(
-          nsCOMPtr<mozIStorageConnection>, storageService, OpenDatabase,
-          databaseFile, mozIStorageService::CONNECTION_DEFAULT)));
-
-  ResultConnection result(connection);
-
-  return result;
-}
 
 }  // namespace
 
@@ -75,8 +50,9 @@ Result<quota::UsageInfo, nsresult> FileSystemQuotaClient::InitOrigin(
     }
   }
 
-  QM_TRY_INSPECT(const ResultConnection& conn,
-                 GetStorageConnection(aOriginMetadata).mapErr(toNSResult));
+  QM_TRY_INSPECT(
+      const ResultConnection& conn,
+      data::GetStorageConnection(aOriginMetadata).mapErr(toNSResult));
 
   QM_TRY(MOZ_TO_RESULT(
       data::FileSystemDatabaseManager::RescanUsages(conn, aOriginMetadata)));

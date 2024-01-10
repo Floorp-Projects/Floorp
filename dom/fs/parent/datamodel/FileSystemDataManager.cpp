@@ -156,6 +156,28 @@ Result<EntryId, QMResult> GetEntryHandle(
                                             aHandle.childName());
 }
 
+Result<ResultConnection, QMResult> GetStorageConnection(
+    const quota::OriginMetadata& aOriginMetadata) {
+  QM_TRY_INSPECT(const nsCOMPtr<nsIFile>& databaseFile,
+                 data::GetDatabaseFile(aOriginMetadata));
+
+  QM_TRY_INSPECT(
+      const auto& storageService,
+      QM_TO_RESULT_TRANSFORM(MOZ_TO_RESULT_GET_TYPED(
+          nsCOMPtr<mozIStorageService>, MOZ_SELECT_OVERLOAD(do_GetService),
+          MOZ_STORAGE_SERVICE_CONTRACTID)));
+
+  QM_TRY_UNWRAP(
+      auto connection,
+      QM_TO_RESULT_TRANSFORM(MOZ_TO_RESULT_INVOKE_MEMBER_TYPED(
+          nsCOMPtr<mozIStorageConnection>, storageService, OpenDatabase,
+          databaseFile, mozIStorageService::CONNECTION_DEFAULT)));
+
+  ResultConnection result(connection);
+
+  return result;
+}
+
 FileSystemDataManager::FileSystemDataManager(
     const quota::OriginMetadata& aOriginMetadata,
     RefPtr<quota::QuotaManager> aQuotaManager,
@@ -564,11 +586,10 @@ RefPtr<BoolPromise> FileSystemDataManager::BeginOpen() {
                                                   __func__);
             }
 
-            QM_TRY_UNWRAP(
-                auto connection,
-                fs::data::GetStorageConnection(self->mOriginMetadata,
+            QM_TRY_UNWRAP(auto connection,
+                          GetStorageConnection(self->mOriginMetadata,
                                                self->mDirectoryLock->Id()),
-                CreateAndRejectBoolPromiseFromQMResult);
+                          CreateAndRejectBoolPromiseFromQMResult);
 
             QM_TRY_UNWRAP(UniquePtr<FileSystemFileManager> fmPtr,
                           FileSystemFileManager::CreateFileSystemFileManager(
