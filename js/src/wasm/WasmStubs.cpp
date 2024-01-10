@@ -2434,11 +2434,11 @@ struct ABIFunctionArgs {
   size_t len;
 
   explicit ABIFunctionArgs(ABIFunctionType sig)
-      : abiType(ABIFunctionType(sig >> ArgType_Shift)) {
+      : abiType(ABIFunctionType(sig >> ABITypeArgShift)) {
     len = 0;
     uint64_t i = uint64_t(abiType);
     while (i) {
-      i = i >> ArgType_Shift;
+      i = i >> ABITypeArgShift;
       len++;
     }
   }
@@ -2450,10 +2450,10 @@ struct ABIFunctionArgs {
     uint64_t abi = uint64_t(abiType);
     size_t argAtLSB = len - 1;
     while (argAtLSB != i) {
-      abi = abi >> ArgType_Shift;
+      abi = abi >> ABITypeArgShift;
       argAtLSB--;
     }
-    return ToMIRType(ABIArgType(abi & ArgType_Mask));
+    return ToMIRType(ABIType(abi & ABITypeArgMask));
   }
 };
 
@@ -2510,8 +2510,8 @@ bool wasm::GenerateBuiltinThunk(MacroAssembler& masm, ABIFunctionType abiType,
 #elif defined(JS_CODEGEN_X86)
   // x86 passes the return value on the x87 FP stack.
   Operand op(esp, 0);
-  MIRType retType = ToMIRType(ABIArgType(
-      std::underlying_type_t<ABIFunctionType>(abiType) & ArgType_Mask));
+  MIRType retType = ToMIRType(ABIType(
+      std::underlying_type_t<ABIFunctionType>(abiType) & ABITypeArgMask));
   if (retType == MIRType::Float32) {
     masm.fstp32(op);
     masm.loadFloat32(op, ReturnFloat32Reg);
@@ -2521,8 +2521,8 @@ bool wasm::GenerateBuiltinThunk(MacroAssembler& masm, ABIFunctionType abiType,
   }
 #elif defined(JS_CODEGEN_ARM)
   // Non hard-fp passes the return values in GPRs.
-  MIRType retType = ToMIRType(ABIArgType(
-      std::underlying_type_t<ABIFunctionType>(abiType) & ArgType_Mask));
+  MIRType retType = ToMIRType(ABIType(
+      std::underlying_type_t<ABIFunctionType>(abiType) & ABITypeArgMask));
   if (!UseHardFpABI() && IsFloatingPointType(retType)) {
     masm.ma_vxfer(r0, r1, d0);
   }
