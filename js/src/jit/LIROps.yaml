@@ -1229,6 +1229,15 @@
     searchString: WordSized
   call_instruction: true
 
+# Test if a string includes the constant search string.
+- name: StringIncludesSIMD
+  result_type: WordSized
+  operands:
+    string: WordSized
+  arguments:
+    searchString: JSLinearString*
+  num_temps: 3
+
 # Search for the first index of the search string.
 - name: StringIndexOf
   result_type: WordSized
@@ -1236,6 +1245,15 @@
     string: WordSized
     searchString: WordSized
   call_instruction: true
+
+# Search for the first index of the constant search string.
+- name: StringIndexOfSIMD
+  result_type: WordSized
+  operands:
+    string: WordSized
+  arguments:
+    searchString: JSLinearString*
+  num_temps: 3
 
 # Search for the last index of the search string.
 - name: StringLastIndexOf

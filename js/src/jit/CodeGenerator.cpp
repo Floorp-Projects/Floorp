@@ -17,6 +17,7 @@
 #include "mozilla/Latin1.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/ScopeExit.h"
+#include "mozilla/SIMD.h"
 
 #include <limits>
 #include <type_traits>
@@ -12180,12 +12181,226 @@ void CodeGenerator::visitStringIncludes(LStringIncludes* lir) {
   callVM<Fn, js::StringIncludes>(lir);
 }
 
+template <typename LIns>
+static void CallStringMatch(MacroAssembler& masm, LIns* lir, OutOfLineCode* ool,
+                            LiveRegisterSet volatileRegs) {
+  Register string = ToRegister(lir->string());
+  Register output = ToRegister(lir->output());
+  Register tempLength = ToRegister(lir->temp0());
+  Register tempChars = ToRegister(lir->temp1());
+  Register maybeTempPat = ToTempRegisterOrInvalid(lir->temp2());
+
+  const JSLinearString* searchString = lir->searchString();
+  size_t length = searchString->length();
+  MOZ_ASSERT(length == 1 || length == 2);
+
+  // The additional temp register is only needed when searching for two
+  // pattern characters.
+  MOZ_ASSERT_IF(length == 2, maybeTempPat != InvalidReg);
+
+  if constexpr (std::is_same_v<LIns, LStringIncludesSIMD>) {
+    masm.move32(Imm32(0), output);
+  } else {
+    masm.move32(Imm32(-1), output);
+  }
+
+  masm.loadStringLength(string, tempLength);
+
+  // Can't be a substring when the string is smaller than the search string.
+  Label done;
+  masm.branch32(Assembler::Below, tempLength, Imm32(length), ool->rejoin());
+
+  bool searchStringIsPureTwoByte = false;
+  if (searchString->hasTwoByteChars()) {
+    JS::AutoCheckCannotGC nogc;
+    searchStringIsPureTwoByte =
+        !mozilla::IsUtf16Latin1(searchString->twoByteRange(nogc));
+  }
+
+  // Pure two-byte strings can't occur in a Latin-1 string.
+  if (searchStringIsPureTwoByte) {
+    masm.branchLatin1String(string, ool->rejoin());
+  }
+
+  // Slow path when we need to linearize the string.
+  masm.branchIfRope(string, ool->entry());
+
+  Label restoreVolatile;
+
+  auto callMatcher = [&](CharEncoding encoding) {
+    masm.loadStringChars(string, tempChars, encoding);
+
+    LiveGeneralRegisterSet liveRegs;
+    if constexpr (std::is_same_v<LIns, LStringIndexOfSIMD>) {
+      // Save |tempChars| to compute the result index.
+      liveRegs.add(tempChars);
+
+#ifdef DEBUG
+      // Save |tempLength| in debug-mode for assertions.
+      liveRegs.add(tempLength);
+#endif
+
+      // Exclude non-volatile registers.
+      liveRegs.set() = GeneralRegisterSet::Intersect(
+          liveRegs.set(), GeneralRegisterSet::Volatile());
+
+      masm.PushRegsInMask(liveRegs);
+    }
+
+    if (length == 1) {
+      char16_t pat = searchString->latin1OrTwoByteChar(0);
+      MOZ_ASSERT_IF(encoding == CharEncoding::Latin1,
+                    pat <= JSString::MAX_LATIN1_CHAR);
+
+      masm.move32(Imm32(pat), output);
+
+      masm.setupAlignedABICall();
+      masm.passABIArg(tempChars);
+      masm.passABIArg(output);
+      masm.passABIArg(tempLength);
+      if (encoding == CharEncoding::Latin1) {
+        using Fn = const char* (*)(const char*, char, size_t);
+        masm.callWithABI<Fn, mozilla::SIMD::memchr8>(
+            MoveOp::GENERAL, CheckUnsafeCallWithABI::DontCheckOther);
+      } else {
+        using Fn = const char16_t* (*)(const char16_t*, char16_t, size_t);
+        masm.callWithABI<Fn, mozilla::SIMD::memchr16>(
+            MoveOp::GENERAL, CheckUnsafeCallWithABI::DontCheckOther);
+      }
+    } else {
+      char16_t pat0 = searchString->latin1OrTwoByteChar(0);
+      MOZ_ASSERT_IF(encoding == CharEncoding::Latin1,
+                    pat0 <= JSString::MAX_LATIN1_CHAR);
+
+      char16_t pat1 = searchString->latin1OrTwoByteChar(1);
+      MOZ_ASSERT_IF(encoding == CharEncoding::Latin1,
+                    pat1 <= JSString::MAX_LATIN1_CHAR);
+
+      masm.move32(Imm32(pat0), output);
+      masm.move32(Imm32(pat1), maybeTempPat);
+
+      masm.setupAlignedABICall();
+      masm.passABIArg(tempChars);
+      masm.passABIArg(output);
+      masm.passABIArg(maybeTempPat);
+      masm.passABIArg(tempLength);
+      if (encoding == CharEncoding::Latin1) {
+        using Fn = const char* (*)(const char*, char, char, size_t);
+        masm.callWithABI<Fn, mozilla::SIMD::memchr2x8>(
+            MoveOp::GENERAL, CheckUnsafeCallWithABI::DontCheckOther);
+      } else {
+        using Fn =
+            const char16_t* (*)(const char16_t*, char16_t, char16_t, size_t);
+        masm.callWithABI<Fn, mozilla::SIMD::memchr2x16>(
+            MoveOp::GENERAL, CheckUnsafeCallWithABI::DontCheckOther);
+      }
+    }
+
+    masm.storeCallPointerResult(output);
+
+    // Convert to string index for `indexOf`.
+    if constexpr (std::is_same_v<LIns, LStringIndexOfSIMD>) {
+      // Restore |tempChars|. (And in debug mode |tempLength|.)
+      masm.PopRegsInMask(liveRegs);
+
+      Label found;
+      masm.branchPtr(Assembler::NotEqual, output, ImmPtr(nullptr), &found);
+      {
+        masm.move32(Imm32(-1), output);
+        masm.jump(&restoreVolatile);
+      }
+      masm.bind(&found);
+
+#ifdef DEBUG
+      // Check lower bound.
+      Label lower;
+      masm.branchPtr(Assembler::AboveOrEqual, output, tempChars, &lower);
+      masm.assumeUnreachable("result pointer below string chars");
+      masm.bind(&lower);
+
+      // Compute the end position of the characters.
+      auto scale = encoding == CharEncoding::Latin1 ? TimesOne : TimesTwo;
+      masm.computeEffectiveAddress(BaseIndex(tempChars, tempLength, scale),
+                                   tempLength);
+
+      // Check upper bound.
+      Label upper;
+      masm.branchPtr(Assembler::Below, output, tempLength, &upper);
+      masm.assumeUnreachable("result pointer above string chars");
+      masm.bind(&upper);
+#endif
+
+      masm.subPtr(tempChars, output);
+
+      if (encoding == CharEncoding::TwoByte) {
+        masm.rshiftPtr(Imm32(1), output);
+      }
+    }
+  };
+
+  volatileRegs.takeUnchecked(output);
+  volatileRegs.takeUnchecked(tempLength);
+  volatileRegs.takeUnchecked(tempChars);
+  if (maybeTempPat != InvalidReg) {
+    volatileRegs.takeUnchecked(maybeTempPat);
+  }
+  masm.PushRegsInMask(volatileRegs);
+
+  // Handle the case when the input is a Latin-1 string.
+  if (!searchStringIsPureTwoByte) {
+    Label twoByte;
+    masm.branchTwoByteString(string, &twoByte);
+    {
+      callMatcher(CharEncoding::Latin1);
+      masm.jump(&restoreVolatile);
+    }
+    masm.bind(&twoByte);
+  }
+
+  // Handle the case when the input is a two-byte string.
+  callMatcher(CharEncoding::TwoByte);
+
+  masm.bind(&restoreVolatile);
+  masm.PopRegsInMask(volatileRegs);
+
+  // Convert to bool for `includes`.
+  if constexpr (std::is_same_v<LIns, LStringIncludesSIMD>) {
+    masm.cmpPtrSet(Assembler::NotEqual, output, ImmPtr(nullptr), output);
+  }
+
+  masm.bind(ool->rejoin());
+}
+
+void CodeGenerator::visitStringIncludesSIMD(LStringIncludesSIMD* lir) {
+  Register string = ToRegister(lir->string());
+  Register output = ToRegister(lir->output());
+  const JSLinearString* searchString = lir->searchString();
+
+  using Fn = bool (*)(JSContext*, HandleString, HandleString, bool*);
+  auto* ool = oolCallVM<Fn, js::StringIncludes>(
+      lir, ArgList(string, ImmGCPtr(searchString)), StoreRegisterTo(output));
+
+  CallStringMatch(masm, lir, ool, liveVolatileRegs(lir));
+}
+
 void CodeGenerator::visitStringIndexOf(LStringIndexOf* lir) {
   pushArg(ToRegister(lir->searchString()));
   pushArg(ToRegister(lir->string()));
 
   using Fn = bool (*)(JSContext*, HandleString, HandleString, int32_t*);
   callVM<Fn, js::StringIndexOf>(lir);
+}
+
+void CodeGenerator::visitStringIndexOfSIMD(LStringIndexOfSIMD* lir) {
+  Register string = ToRegister(lir->string());
+  Register output = ToRegister(lir->output());
+  const JSLinearString* searchString = lir->searchString();
+
+  using Fn = bool (*)(JSContext*, HandleString, HandleString, int32_t*);
+  auto* ool = oolCallVM<Fn, js::StringIndexOf>(
+      lir, ArgList(string, ImmGCPtr(searchString)), StoreRegisterTo(output));
+
+  CallStringMatch(masm, lir, ool, liveVolatileRegs(lir));
 }
 
 void CodeGenerator::visitStringLastIndexOf(LStringLastIndexOf* lir) {
