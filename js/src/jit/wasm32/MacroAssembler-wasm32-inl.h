@@ -181,6 +181,10 @@ void MacroAssembler::branchToComputedAddress(const BaseIndex& address) {
   MOZ_CRASH();
 }
 
+void MacroAssembler::move8ZeroExtend(Register src, Register dest) {
+  MOZ_CRASH();
+}
+
 void MacroAssembler::move8SignExtend(Register src, Register dest) {
   MOZ_CRASH();
 }

@@ -60,6 +60,10 @@ void MacroAssembler::moveGPRToFloat32(Register src, FloatRegister dest) {
   moveToFloat32(src, dest);
 }
 
+void MacroAssembler::move8ZeroExtend(Register src, Register dest) {
+  as_bstrpick_d(dest, src, 7, 0);
+}
+
 void MacroAssembler::move8SignExtend(Register src, Register dest) {
   as_ext_w_b(dest, src);
 }

@@ -30,6 +30,10 @@ void MacroAssembler::moveGPRToFloat32(Register src, FloatRegister dest) {
   Fmov(ARMFPRegister(dest, 32), ARMRegister(src, 32));
 }
 
+void MacroAssembler::move8ZeroExtend(Register src, Register dest) {
+  Uxtb(ARMRegister(dest, 32), ARMRegister(src, 32));
+}
+
 void MacroAssembler::move8SignExtend(Register src, Register dest) {
   Sxtb(ARMRegister(dest, 32), ARMRegister(src, 32));
 }
