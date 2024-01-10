@@ -30,6 +30,9 @@ using namespace mozilla::widget;
 extern mozilla::LazyLogModule gWindowsLog;
 static mozilla::LazyLogModule gWindowsEventLog("WindowsEvent");
 
+// currently defined in widget/windows/nsAppShell.cpp
+extern UINT sAppShellGeckoMsgId;
+
 #if defined(POPUP_ROLLUP_DEBUG_OUTPUT)
 MSGFEventMsgInfo gMSGFEvents[] = {
     "MSGF_DIALOGBOX", 0,    "MSGF_MESSAGEBOX", 1, "MSGF_MENU", 2,
@@ -64,7 +67,11 @@ struct WindowProcMarker {
     } else if (aMsg >= WM_APP && aMsg < 0xC000) {
       name = "WM_APP message";
     } else if (aMsg >= 0xC000 && aMsg < 0x10000) {
-      name = "registered windows message";
+      if (aMsg == sAppShellGeckoMsgId) {
+        name = "nsAppShell:EventID";
+      } else {
+        name = "registered Windows message";
+      }
     } else {
       name = "system message";
     }
