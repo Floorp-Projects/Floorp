@@ -58,6 +58,18 @@
   margin-inline-end: 0;
 }
 
+dialog:not([inClearOnShutdown]) #SanitizeOnShutdownDescription {
+  display: none;
+}
+
+dialog[inClearOnShutdown] #SanitizeDurationBox {
+  display: none;
+}
+
+dialog[inClearOnShutdown] #SanitizeOnShutdownDescription {
+  display: block;
+}
+
 dialog:not([inbrowserwindow]) #titleText {
   display: none;
 }
