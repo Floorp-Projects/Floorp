@@ -742,13 +742,22 @@ void CanvasTranslator::PrepareShmem(int64_t aTextureId) {
 }
 
 already_AddRefed<gfx::DrawTarget> CanvasTranslator::CreateDrawTarget(
-    gfx::ReferencePtr aRefPtr, const gfx::IntSize& aSize,
+    gfx::ReferencePtr aRefPtr, int64_t aTextureId,
+    RemoteTextureOwnerId aTextureOwnerId, const gfx::IntSize& aSize,
     gfx::SurfaceFormat aFormat) {
-  MOZ_DIAGNOSTIC_ASSERT(mNextTextureId >= 0, "No texture ID set");
+  if (aTextureId < 0) {
+    MOZ_DIAGNOSTIC_ASSERT(false, "No texture ID set");
+    return nullptr;
+  }
+
+  if (!aTextureOwnerId.IsValid()) {
+    MOZ_DIAGNOSTIC_ASSERT(false, "No texture owner set");
+    return nullptr;
+  }
+
   RefPtr<gfx::DrawTarget> dt;
   const OpenMode initMode = OpenMode::OPEN_READ_WRITE;
-  if (mNextRemoteTextureOwnerId.IsValid() &&
-      gfx::gfxVars::UseAcceleratedCanvas2D()) {
+  if (gfx::gfxVars::UseAcceleratedCanvas2D()) {
     if (EnsureSharedContextWebgl()) {
       mSharedContext->EnterTlsScope();
     }
@@ -757,15 +766,15 @@ already_AddRefed<gfx::DrawTarget> CanvasTranslator::CreateDrawTarget(
       webgl->BeginFrame(true);
       dt = webgl.forget().downcast<gfx::DrawTarget>();
       if (dt) {
-        TextureInfo& info = mTextureInfo[mNextTextureId];
+        TextureInfo& info = mTextureInfo[aTextureId];
         info.mDrawTarget = dt;
-        info.mRemoteTextureOwnerId = mNextRemoteTextureOwnerId;
+        info.mRemoteTextureOwnerId = aTextureOwnerId;
         info.mTextureLockMode = initMode;
-        CacheSnapshotShmem(mNextTextureId);
+        CacheSnapshotShmem(aTextureId);
       }
     }
     if (!dt) {
-      NotifyRequiresRefresh(mNextTextureId);
+      NotifyRequiresRefresh(aTextureId);
     }
   }
 
@@ -790,18 +799,22 @@ already_AddRefed<gfx::DrawTarget> CanvasTranslator::CreateDrawTarget(
       // Recycled buffer contents may be uninitialized.
       dt->ClearRect(gfx::Rect(dt->GetRect()));
 
-      TextureInfo& info = mTextureInfo[mNextTextureId];
+      TextureInfo& info = mTextureInfo[aTextureId];
       info.mTextureData = std::move(textureData);
-      info.mRemoteTextureOwnerId = mNextRemoteTextureOwnerId;
+      info.mRemoteTextureOwnerId = aTextureOwnerId;
       info.mTextureLockMode = initMode;
     } while (!dt && CheckForFreshCanvasDevice(__LINE__));
   }
 
   AddDrawTarget(aRefPtr, dt);
-  mNextTextureId = -1;
-  mNextRemoteTextureOwnerId = RemoteTextureOwnerId();
-
   return dt.forget();
+}
+
+already_AddRefed<gfx::DrawTarget> CanvasTranslator::CreateDrawTarget(
+    gfx::ReferencePtr aRefPtr, const gfx::IntSize& aSize,
+    gfx::SurfaceFormat aFormat) {
+  MOZ_DIAGNOSTIC_ASSERT(false, "Unexpected CreateDrawTarget call!");
+  return nullptr;
 }
 
 void CanvasTranslator::RemoveTexture(int64_t aTextureId,
