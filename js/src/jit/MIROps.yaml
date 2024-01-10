@@ -943,29 +943,38 @@
   can_recover: true
   clone: true
 
-# Similar to CharCodeAt, but also supports out-of-bounds access.
-- name: CharCodeAtMaybeOutOfBounds
+# Similar to CharCodeAt, but returns a negative value on out-of-bounds access.
+- name: CharCodeAtOrNegative
   operands:
     string: String
     index: Int32
+  result_type: Int32
+  movable: true
+  congruent_to: if_operands_equal
+  # Strings are immutable, so there is no implicit dependency.
+  alias_set: none
+
+# Return the input if non-negative, otherwise return NaN.
+- name: NegativeToNaN
+  operands:
+    input: Int32
   result_type: Value
   movable: true
   congruent_to: if_operands_equal
-  # Strings are immutable, so there is no implicit dependency.
-  alias_set: none
-
-# Like CharCodeAtMaybeOutOfBounds, this operation also supports out-of-bounds access.
-- name: CharAtMaybeOutOfBounds
-  operands:
-    string: String
-    index: Int32
-  result_type: String
-  movable: true
-  congruent_to: if_operands_equal
-  # Strings are immutable, so there is no implicit dependency.
   alias_set: none
 
 - name: FromCharCode
+  operands:
+    code: Int32
+  result_type: String
+  movable: true
+  congruent_to: if_operands_equal
+  alias_set: none
+  can_recover: true
+  clone: true
+
+# Similar to FromCharCode, but returns the empty string if the input is negative.
+- name: FromCharCodeEmptyIfNegative
   operands:
     code: Int32
   result_type: String

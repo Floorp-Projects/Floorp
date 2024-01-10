@@ -95,6 +95,7 @@ namespace jit {
   _(Trunc)                        \
   _(CharCodeAt)                   \
   _(FromCharCode)                 \
+  _(FromCharCodeEmptyIfNegative)  \
   _(Pow)                          \
   _(PowHalf)                      \
   _(MinMax)                       \
@@ -553,6 +554,14 @@ class RCharCodeAt final : public RInstruction {
 class RFromCharCode final : public RInstruction {
  public:
   RINSTRUCTION_HEADER_NUM_OP_(FromCharCode, 1)
+
+  [[nodiscard]] bool recover(JSContext* cx,
+                             SnapshotIterator& iter) const override;
+};
+
+class RFromCharCodeEmptyIfNegative final : public RInstruction {
+ public:
+  RINSTRUCTION_HEADER_NUM_OP_(FromCharCodeEmptyIfNegative, 1)
 
   [[nodiscard]] bool recover(JSContext* cx,
                              SnapshotIterator& iter) const override;

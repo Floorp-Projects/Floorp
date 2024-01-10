@@ -1040,9 +1040,38 @@ bool RFromCharCode::recover(JSContext* cx, SnapshotIterator& iter) const {
   RootedValue operand(cx, iter.read());
   RootedValue result(cx);
 
-  MOZ_ASSERT(!operand.isObject());
+  MOZ_ASSERT(operand.isInt32());
   if (!js::str_fromCharCode_one_arg(cx, operand, &result)) {
     return false;
+  }
+
+  iter.storeInstructionResult(result);
+  return true;
+}
+
+bool MFromCharCodeEmptyIfNegative::writeRecoverData(
+    CompactBufferWriter& writer) const {
+  MOZ_ASSERT(canRecoverOnBailout());
+  writer.writeUnsigned(
+      uint32_t(RInstruction::Recover_FromCharCodeEmptyIfNegative));
+  return true;
+}
+
+RFromCharCodeEmptyIfNegative::RFromCharCodeEmptyIfNegative(
+    CompactBufferReader& reader) {}
+
+bool RFromCharCodeEmptyIfNegative::recover(JSContext* cx,
+                                           SnapshotIterator& iter) const {
+  RootedValue operand(cx, iter.read());
+  RootedValue result(cx);
+
+  MOZ_ASSERT(operand.isInt32());
+  if (operand.toInt32() < 0) {
+    result.setString(cx->emptyString());
+  } else {
+    if (!js::str_fromCharCode_one_arg(cx, operand, &result)) {
+      return false;
+    }
   }
 
   iter.storeInstructionResult(result);
