@@ -9518,18 +9518,44 @@ void PresShell::DidDoReflow(bool aInterruptible) {
     return;
   }
 
-  nsAutoScriptBlocker scriptBlocker;
-  AutoAssertNoFlush noReentrantFlush(*this);
-  if (nsCOMPtr<nsIDocShell> docShell = mPresContext->GetDocShell()) {
-    DOMHighResTimeStamp now = GetPerformanceNowUnclamped();
-    docShell->NotifyReflowObservers(aInterruptible, mLastReflowStart, now);
+  {
+    nsAutoScriptBlocker scriptBlocker;
+    AutoAssertNoFlush noReentrantFlush(*this);
+    if (nsCOMPtr<nsIDocShell> docShell = mPresContext->GetDocShell()) {
+      DOMHighResTimeStamp now = GetPerformanceNowUnclamped();
+      docShell->NotifyReflowObservers(aInterruptible, mLastReflowStart, now);
+    }
+
+    if (StaticPrefs::layout_reflow_synthMouseMove()) {
+      SynthesizeMouseMove(false);
+    }
+
+    mPresContext->NotifyMissingFonts();
   }
 
-  if (StaticPrefs::layout_reflow_synthMouseMove()) {
-    SynthesizeMouseMove(false);
+  if (mIsDestroying) {
+    return;
   }
 
-  mPresContext->NotifyMissingFonts();
+  if (mDirtyRoots.IsEmpty()) {
+    // We only unsuppress painting if we're out of reflows.  It's pointless to
+    // do so if reflows are still pending, since reflows are just going to
+    // thrash the frames around some more.  By waiting we avoid an overeager
+    // "jitter" effect.
+    if (mShouldUnsuppressPainting) {
+      mShouldUnsuppressPainting = false;
+      UnsuppressAndInvalidate();
+    }
+  } else {
+    // If any new reflow commands were enqueued during the reflow, schedule
+    // another reflow event to process them.  Note that we want to do this
+    // after DidDoReflow(), since that method can change whether there are
+    // dirty roots around by flushing, and there's no point in posting a
+    // reflow event just to have the flush revoke it.
+    MaybeScheduleReflow();
+    // And record that we might need flushing
+    SetNeedLayoutFlush();
+  }
 }
 
 DOMHighResTimeStamp PresShell::GetPerformanceNowUnclamped() {
@@ -9892,41 +9918,17 @@ bool PresShell::ProcessReflowCommands(bool aInterruptible) {
     DidDoReflow(aInterruptible);
   }
 
-  // DidDoReflow might have killed us
-  if (!mIsDestroying) {
 #ifdef DEBUG
-    if (VerifyReflowFlags::DumpCommands & gVerifyReflowFlags) {
-      printf("\nPresShell::ProcessReflowCommands() finished: this=%p\n",
-             (void*)this);
-    }
-    DoVerifyReflow();
+  if (VerifyReflowFlags::DumpCommands & gVerifyReflowFlags) {
+    printf("\nPresShell::ProcessReflowCommands() finished: this=%p\n",
+           (void*)this);
+  }
+  DoVerifyReflow();
 #endif
 
-    // If any new reflow commands were enqueued during the reflow, schedule
-    // another reflow event to process them.  Note that we want to do this
-    // after DidDoReflow(), since that method can change whether there are
-    // dirty roots around by flushing, and there's no point in posting a
-    // reflow event just to have the flush revoke it.
-    if (!mDirtyRoots.IsEmpty()) {
-      MaybeScheduleReflow();
-      // And record that we might need flushing
-      SetNeedLayoutFlush();
-    }
-  }
-
-  if (!mIsDestroying && mShouldUnsuppressPainting && mDirtyRoots.IsEmpty()) {
-    // We only unlock if we're out of reflows.  It's pointless
-    // to unlock if reflows are still pending, since reflows
-    // are just going to thrash the frames around some more.  By
-    // waiting we avoid an overeager "jitter" effect.
-    mShouldUnsuppressPainting = false;
-    UnsuppressAndInvalidate();
-  }
-
-  if (mDocument->GetRootElement()) {
+  {
     TimeDuration elapsed = TimeStamp::Now() - timerStart;
     int32_t intElapsed = int32_t(elapsed.ToMilliseconds());
-
     if (intElapsed > NS_LONG_REFLOW_TIME_MS) {
       Telemetry::Accumulate(Telemetry::LONG_REFLOW_INTERRUPTIBLE,
                             aInterruptible ? 1 : 0);
