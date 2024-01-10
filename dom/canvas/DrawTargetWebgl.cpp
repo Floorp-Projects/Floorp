@@ -220,12 +220,10 @@ void DrawTargetWebgl::ClearSnapshot(bool aCopyOnWrite, bool aNeedHandle) {
     return;
   }
   mSharedContext->ClearLastTexture();
-  if (mSnapshot->hasOneRef() || mSnapshot->GetType() != SurfaceType::WEBGL) {
-    mSnapshot = nullptr;
+  RefPtr<SourceSurfaceWebgl> snapshot = mSnapshot.forget();
+  if (snapshot->hasOneRef()) {
     return;
   }
-  RefPtr<SourceSurfaceWebgl> snapshot =
-      mSnapshot.forget().downcast<SourceSurfaceWebgl>();
   if (aCopyOnWrite) {
     // WebGL snapshots must be notified that the framebuffer contents will be
     // changing so that it can copy the data.
@@ -1006,6 +1004,10 @@ already_AddRefed<TextureHandle> DrawTargetWebgl::CopySnapshot(
   return mSharedContext->CopySnapshot(aRect);
 }
 
+bool DrawTargetWebgl::HasDataSnapshot() const {
+  return (mSkiaValid && !mSkiaLayer) || (mSnapshot && mSnapshot->HasReadData());
+}
+
 void DrawTargetWebgl::PrepareData() {
   if (!mSkiaValid) {
     ReadIntoSkia();
@@ -1160,6 +1162,64 @@ bool DrawTargetWebgl::MarkChanged() {
   mSkiaValid = false;
   mIsClear = false;
   return true;
+}
+
+void DrawTargetWebgl::MarkSkiaChanged(bool aOverwrite) {
+  if (aOverwrite) {
+    mSkiaValid = true;
+    mSkiaLayer = false;
+  } else if (!mSkiaValid) {
+    if (ReadIntoSkia()) {
+      // Signal that we've hit a complete software fallback.
+      mProfile.OnFallback();
+    }
+  } else if (mSkiaLayer) {
+    FlattenSkia();
+  }
+  mWebglValid = false;
+  mIsClear = false;
+}
+
+// Whether a given composition operator is associative and thus allows drawing
+// into a separate layer that can be later composited back into the WebGL
+// context.
+static inline bool SupportsLayering(const DrawOptions& aOptions) {
+  switch (aOptions.mCompositionOp) {
+    case CompositionOp::OP_OVER:
+      // Layering is only supported for the default source-over composition op.
+      return true;
+    default:
+      return false;
+  }
+}
+
+void DrawTargetWebgl::MarkSkiaChanged(const DrawOptions& aOptions) {
+  if (SupportsLayering(aOptions)) {
+    if (!mSkiaValid) {
+      // If the Skia context needs initialization, clear it and enable layering.
+      mSkiaValid = true;
+      if (mWebglValid) {
+        mProfile.OnLayer();
+        mSkiaLayer = true;
+        mSkiaLayerClear = mIsClear;
+        mSkia->DetachAllSnapshots();
+        if (mSkiaLayerClear) {
+          // Avoid blending later by making sure the layer background is filled
+          // with opaque alpha values if necessary.
+          mSkiaNoClip->FillRect(Rect(mSkiaNoClip->GetRect()), GetClearPattern(),
+                                DrawOptions(1.0f, CompositionOp::OP_SOURCE));
+        } else {
+          mSkiaNoClip->ClearRect(Rect(mSkiaNoClip->GetRect()));
+        }
+      }
+    }
+    // The WebGL context is no longer up-to-date.
+    mWebglValid = false;
+    mIsClear = false;
+  } else {
+    // For other composition ops, just overwrite the Skia data.
+    MarkSkiaChanged();
+  }
 }
 
 bool DrawTargetWebgl::LockBits(uint8_t** aData, IntSize* aSize,
@@ -1634,6 +1694,22 @@ bool DrawTargetWebgl::RemoveAllClips() {
   return true;
 }
 
+void DrawTargetWebgl::CopyToFallback(DrawTarget* aDT) {
+  if (RefPtr<SourceSurface> snapshot = Snapshot()) {
+    aDT->CopySurface(snapshot, snapshot->GetRect(), gfx::IntPoint(0, 0));
+  }
+  aDT->RemoveAllClips();
+  for (auto& clipStack : mClipStack) {
+    aDT->SetTransform(clipStack.mTransform);
+    if (clipStack.mPath) {
+      aDT->PushClip(clipStack.mPath);
+    } else {
+      aDT->PushClipRect(clipStack.mRect);
+    }
+  }
+  aDT->SetTransform(GetTransform());
+}
+
 // Whether a given composition operator can be mapped to a WebGL blend mode.
 static inline bool SupportsDrawOptions(const DrawOptions& aOptions) {
   switch (aOptions.mCompositionOp) {
@@ -1684,19 +1760,6 @@ bool SharedContextWebgl::SupportsPattern(const Pattern& aPattern) {
     }
     default:
       // Patterns other than colors and surfaces are currently not accelerated.
-      return false;
-  }
-}
-
-// Whether a given composition operator is associative and thus allows drawing
-// into a separate layer that can be later composited back into the WebGL
-// context.
-static inline bool SupportsLayering(const DrawOptions& aOptions) {
-  switch (aOptions.mCompositionOp) {
-    case CompositionOp::OP_OVER:
-      // Layering is only supported for the default source-over composition op.
-      return true;
-    default:
       return false;
   }
 }
@@ -4408,40 +4471,12 @@ void DrawTargetWebgl::FillGlyphs(ScaledFont* aFont, const GlyphBuffer& aBuffer,
   mSkia->FillGlyphs(aFont, aBuffer, aPattern, aOptions);
 }
 
-void DrawTargetWebgl::MarkSkiaChanged(const DrawOptions& aOptions) {
-  if (SupportsLayering(aOptions)) {
-    if (!mSkiaValid) {
-      // If the Skia context needs initialization, clear it and enable layering.
-      mSkiaValid = true;
-      if (mWebglValid) {
-        mProfile.OnLayer();
-        mSkiaLayer = true;
-        mSkiaLayerClear = mIsClear;
-        mSkia->DetachAllSnapshots();
-        if (mSkiaLayerClear) {
-          // Avoid blending later by making sure the layer background is filled
-          // with opaque alpha values if necessary.
-          mSkiaNoClip->FillRect(Rect(mSkiaNoClip->GetRect()), GetClearPattern(),
-                                DrawOptions(1.0f, CompositionOp::OP_SOURCE));
-        } else {
-          mSkiaNoClip->ClearRect(Rect(mSkiaNoClip->GetRect()));
-        }
-      }
-    }
-    // The WebGL context is no longer up-to-date.
-    mWebglValid = false;
-    mIsClear = false;
-  } else {
-    // For other composition ops, just overwrite the Skia data.
-    MarkSkiaChanged();
-  }
-}
-
 // Attempts to read the contents of the WebGL context into the Skia target.
-void DrawTargetWebgl::ReadIntoSkia() {
+bool DrawTargetWebgl::ReadIntoSkia() {
   if (mSkiaValid) {
-    return;
+    return false;
   }
+  bool didReadback = false;
   if (mWebglValid) {
     uint8_t* data = nullptr;
     IntSize size;
@@ -4463,13 +4498,13 @@ void DrawTargetWebgl::ReadIntoSkia() {
         // and then copying that to Skia.
         mSkia->CopySurface(snapshot, GetRect(), IntPoint(0, 0));
       }
-      // Signal that we've hit a complete software fallback.
-      mProfile.OnFallback();
+      didReadback = true;
     }
   }
   mSkiaValid = true;
   // The Skia data is flat after reading, so disable any layering.
   mSkiaLayer = false;
+  return didReadback;
 }
 
 // Reads data from the WebGL context and blends it with the current Skia layer.

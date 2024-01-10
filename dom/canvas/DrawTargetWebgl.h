@@ -86,6 +86,8 @@ class SharedContextWebgl : public mozilla::RefCounted<SharedContextWebgl>,
 
   bool IsContextLost() const;
 
+  void OnMemoryPressure();
+
  private:
   SharedContextWebgl();
 
@@ -317,7 +319,6 @@ class SharedContextWebgl : public mozilla::RefCounted<SharedContextWebgl>,
   void UnlinkSurfaceTexture(const RefPtr<TextureHandle>& aHandle);
   void UnlinkGlyphCaches();
 
-  void OnMemoryPressure();
   void ClearAllTextures();
   void ClearEmptyTextureMemory();
   void ClearCachesIfNecessary();
@@ -356,7 +357,7 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
   // The Shmem backing the Skia DT, if applicable.
   RefPtr<mozilla::ipc::SharedMemoryBasic> mShmem;
   // The currently cached snapshot of the WebGL context
-  RefPtr<DataSourceSurface> mSnapshot;
+  RefPtr<SourceSurfaceWebgl> mSnapshot;
   // The mappable size of mShmem.
   uint32_t mShmemSize = 0;
   // Whether the framebuffer is still in the initially clear state.
@@ -448,6 +449,7 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
   BackendType GetBackendType() const override { return BackendType::WEBGL; }
   IntSize GetSize() const override { return mSize; }
 
+  bool HasDataSnapshot() const;
   void PrepareData();
   already_AddRefed<SourceSurface> GetDataSnapshot();
   already_AddRefed<SourceSurface> Snapshot() override;
@@ -526,6 +528,7 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
                                 uint32_t aCount) override;
   void PopClip() override;
   bool RemoveAllClips() override;
+  void CopyToFallback(DrawTarget* aDT);
   void PushLayer(bool aOpaque, Float aOpacity, SourceSurface* aMask,
                  const Matrix& aMaskTransform,
                  const IntRect& aBounds = IntRect(),
@@ -618,23 +621,11 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
 
   bool MarkChanged();
 
-  void ReadIntoSkia();
+  bool ReadIntoSkia();
   void FlattenSkia();
   bool FlushFromSkia();
 
-  void MarkSkiaChanged(bool aOverwrite = false) {
-    if (aOverwrite) {
-      mSkiaValid = true;
-      mSkiaLayer = false;
-    } else if (!mSkiaValid) {
-      ReadIntoSkia();
-    } else if (mSkiaLayer) {
-      FlattenSkia();
-    }
-    mWebglValid = false;
-    mIsClear = false;
-  }
-
+  void MarkSkiaChanged(bool aOverwrite = false);
   void MarkSkiaChanged(const DrawOptions& aOptions);
 
   bool ShouldUseSubpixelAA(ScaledFont* aFont, const DrawOptions& aOptions);

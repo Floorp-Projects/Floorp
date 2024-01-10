@@ -57,6 +57,11 @@ parent:
    */
   async SetDataSurfaceBuffer(Handle aBufferHandle, uint64_t aBufferSize);
 
+  /**
+   * Notify CanvasTranslator it is about to be minimized.
+   */
+  async ClearCachedResources();
+
   async __delete__();
 
 child:

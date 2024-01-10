@@ -101,6 +101,8 @@ class CanvasTranslator final : public gfx::InlineTranslator,
   ipc::IPCResult RecvSetDataSurfaceBuffer(Handle&& aBufferHandle,
                                           uint64_t aBufferSize);
 
+  ipc::IPCResult RecvClearCachedResources();
+
   void ActorDestroy(ActorDestroyReason why) final;
 
   void CheckAndSignalWriter();
@@ -289,6 +291,8 @@ class CanvasTranslator final : public gfx::InlineTranslator,
 
   void Deactivate();
 
+  void ForceDrawTargetWebglFallback();
+
   void BlockCanvas();
 
   UniquePtr<TextureData> CreateTextureData(const gfx::IntSize& aSize,
@@ -299,6 +303,12 @@ class CanvasTranslator final : public gfx::InlineTranslator,
 
   UniquePtr<TextureData> CreateOrRecycleTextureData(const gfx::IntSize& aSize,
                                                     gfx::SurfaceFormat aFormat);
+
+  already_AddRefed<gfx::DrawTarget> CreateFallbackDrawTarget(
+      gfx::ReferencePtr aRefPtr, int64_t aTextureId,
+      RemoteTextureOwnerId aTextureOwnerId, const gfx::IntSize& aSize,
+      gfx::SurfaceFormat aFormat);
+
   void ClearTextureInfo();
 
   bool HandleExtensionEvent(int32_t aType);
@@ -311,6 +321,8 @@ class CanvasTranslator final : public gfx::InlineTranslator,
   gfx::DrawTargetWebgl* GetDrawTargetWebgl(int64_t aTextureId) const;
   void NotifyRequiresRefresh(int64_t aTextureId, bool aDispatch = true);
   void CacheSnapshotShmem(int64_t aTextureId, bool aDispatch = true);
+
+  void ClearCachedResources();
 
   RefPtr<TaskQueue> mTranslationTaskQueue;
   RefPtr<SharedSurfacesHolder> mSharedSurfacesHolder;
@@ -352,6 +364,7 @@ class CanvasTranslator final : public gfx::InlineTranslator,
   gfx::BackendType mBackendType = gfx::BackendType::NONE;
   base::ProcessId mOtherPid = base::kInvalidProcessId;
   struct TextureInfo {
+    gfx::ReferencePtr mRefPtr;
     UniquePtr<TextureData> mTextureData;
     RefPtr<gfx::DrawTarget> mDrawTarget;
     RemoteTextureOwnerId mRemoteTextureOwnerId;
@@ -359,6 +372,8 @@ class CanvasTranslator final : public gfx::InlineTranslator,
     // Ref-count of how active uses of the DT. Avoids deletion when locked.
     int32_t mLocked = 1;
     OpenMode mTextureLockMode = OpenMode::OPEN_NONE;
+
+    gfx::DrawTargetWebgl* GetDrawTargetWebgl() const;
   };
   std::unordered_map<int64_t, TextureInfo> mTextureInfo;
   nsRefPtrHashtable<nsPtrHashKey<void>, gfx::DataSourceSurface> mDataSurfaces;
