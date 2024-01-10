@@ -28,7 +28,6 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "AboutWelcomeUtils": () => (/* binding */ AboutWelcomeUtils),
 /* harmony export */   "DEFAULT_RTAMO_CONTENT": () => (/* binding */ DEFAULT_RTAMO_CONTENT)
 /* harmony export */ });
-var _document$querySelect;
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -36,14 +35,13 @@ var _document$querySelect;
 // If the container has a "page" data attribute, then this is
 // a Spotlight modal or Feature Callout. Otherwise, this is
 // about:welcome and we should return the current page.
-const page = ((_document$querySelect = document.querySelector("#multi-stage-message-root.onboardingContainer[data-page]")) === null || _document$querySelect === void 0 ? void 0 : _document$querySelect.dataset.page) || document.location.href;
+const page = document.querySelector("#multi-stage-message-root.onboardingContainer[data-page]")?.dataset.page || document.location.href;
 const AboutWelcomeUtils = {
   handleUserAction(action) {
     return window.AWSendToParent("SPECIAL_ACTION", action);
   },
   sendImpressionTelemetry(messageId, context) {
-    var _window$AWSendEventTe, _window;
-    (_window$AWSendEventTe = (_window = window).AWSendEventTelemetry) === null || _window$AWSendEventTe === void 0 ? void 0 : _window$AWSendEventTe.call(_window, {
+    window.AWSendEventTelemetry?.({
       event: "IMPRESSION",
       event_context: {
         ...context,
@@ -53,7 +51,6 @@ const AboutWelcomeUtils = {
     });
   },
   sendActionTelemetry(messageId, elementId, eventName = "CLICK_BUTTON") {
-    var _window$AWSendEventTe2, _window2;
     const ping = {
       event: eventName,
       event_context: {
@@ -62,7 +59,7 @@ const AboutWelcomeUtils = {
       },
       message_id: messageId
     };
-    (_window$AWSendEventTe2 = (_window2 = window).AWSendEventTelemetry) === null || _window$AWSendEventTe2 === void 0 ? void 0 : _window$AWSendEventTe2.call(_window2, ping);
+    window.AWSendEventTelemetry?.(ping);
   },
   sendDismissTelemetry(messageId, elementId) {
     // Don't send DISMISS telemetry in spotlight modals since they already send
@@ -103,7 +100,7 @@ const AboutWelcomeUtils = {
     }));
   },
   getLoadingStrategyFor(url) {
-    return url !== null && url !== void 0 && url.startsWith("http") ? "lazy" : "eager";
+    return url?.startsWith("http") ? "lazy" : "eager";
   }
 };
 const DEFAULT_RTAMO_CONTENT = {
@@ -225,14 +222,10 @@ const MultiStageAboutWelcome = props => {
       didFilter.current = true;
       const screenInitials = filteredScreens.map(({
         id
-      }) => {
-        var _id$split$;
-        return id === null || id === void 0 ? void 0 : (_id$split$ = id.split("_")[1]) === null || _id$split$ === void 0 ? void 0 : _id$split$[0];
-      }).join("");
+      }) => id?.split("_")[1]?.[0]).join("");
       // Send impression ping when respective screen first renders
       filteredScreens.forEach((screen, order) => {
         if (index === order) {
-          var _window$AWAddScreenIm, _window;
           const messageId = `${props.message_id}_${order}_${screen.id}_${screenInitials}`;
           _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_2__.AboutWelcomeUtils.sendImpressionTelemetry(messageId, {
             screen_family: props.message_id,
@@ -240,7 +233,7 @@ const MultiStageAboutWelcome = props => {
             screen_id: screen.id,
             screen_initials: screenInitials
           });
-          (_window$AWAddScreenIm = (_window = window).AWAddScreenImpression) === null || _window$AWAddScreenIm === void 0 ? void 0 : _window$AWAddScreenIm.call(_window, screen);
+          window.AWAddScreenImpression?.(screen);
         }
       });
 
@@ -404,12 +397,11 @@ const MultiStageAboutWelcome = props => {
   })));
 };
 const SecondaryCTA = props => {
-  var _props$content$second, _props$content$second2, _props$content$tiles, _props$content$submen;
   const targetElement = props.position ? `secondary_button_${props.position}` : `secondary_button`;
-  let buttonStyling = (_props$content$second = props.content.secondary_button) !== null && _props$content$second !== void 0 && _props$content$second.has_arrow_icon ? `secondary arrow-icon` : `secondary`;
-  const isPrimary = ((_props$content$second2 = props.content.secondary_button) === null || _props$content$second2 === void 0 ? void 0 : _props$content$second2.style) === "primary";
-  const isTextLink = !["split", "callout"].includes(props.content.position) && ((_props$content$tiles = props.content.tiles) === null || _props$content$tiles === void 0 ? void 0 : _props$content$tiles.type) !== "addons-picker" && !isPrimary;
-  const isSplitButton = ((_props$content$submen = props.content.submenu_button) === null || _props$content$submen === void 0 ? void 0 : _props$content$submen.attached_to) === targetElement;
+  let buttonStyling = props.content.secondary_button?.has_arrow_icon ? `secondary arrow-icon` : `secondary`;
+  const isPrimary = props.content.secondary_button?.style === "primary";
+  const isTextLink = !["split", "callout"].includes(props.content.position) && props.content.tiles?.type !== "addons-picker" && !isPrimary;
+  const isSplitButton = props.content.submenu_button?.attached_to === targetElement;
   let className = "secondary-cta";
   if (props.position) {
     className += ` ${props.position}`;
@@ -421,8 +413,7 @@ const SecondaryCTA = props => {
     buttonStyling += " text-link";
   }
   if (isPrimary) {
-    var _props$content$second3;
-    buttonStyling = (_props$content$second3 = props.content.secondary_button) !== null && _props$content$second3 !== void 0 && _props$content$second3.has_arrow_icon ? `primary arrow-icon` : `primary`;
+    buttonStyling = props.content.secondary_button?.has_arrow_icon ? `primary arrow-icon` : `primary`;
   }
   return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
     className: className
@@ -553,10 +544,7 @@ class WelcomeScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCo
         _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_2__.AboutWelcomeUtils.sendActionTelemetry(props.messageId, actionResult ? "sign_in" : "sign_in_cancel", "FXA_SIGNIN_FLOW");
       }
       // Wait until migration closes to complete the action
-      const hasMigrate = a => {
-        var _a$data, _a$data$actions;
-        return a.type === "SHOW_MIGRATION_WIZARD" || a.type === "MULTI_ACTION" && ((_a$data = a.data) === null || _a$data === void 0 ? void 0 : (_a$data$actions = _a$data.actions) === null || _a$data$actions === void 0 ? void 0 : _a$data$actions.some(hasMigrate));
-      };
+      const hasMigrate = a => a.type === "SHOW_MIGRATION_WIZARD" || a.type === "MULTI_ACTION" && a.data?.actions?.some(hasMigrate);
       if (hasMigrate(action)) {
         await window.AWWaitForMigrationClose();
         _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_2__.AboutWelcomeUtils.sendActionTelemetry(props.messageId, "migrate_close");
@@ -588,7 +576,6 @@ class WelcomeScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCo
     }
   }
   setMultiSelectActions(action) {
-    var _action$data;
     let {
       props
     } = this;
@@ -598,7 +585,7 @@ class WelcomeScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCo
       console.error("collectSelect is only supported for MULTI_ACTION type actions");
       action.type = "MULTI_ACTION";
     }
-    if (!Array.isArray((_action$data = action.data) === null || _action$data === void 0 ? void 0 : _action$data.actions)) {
+    if (!Array.isArray(action.data?.actions)) {
       console.error("collectSelect is only supported for MULTI_ACTION type actions with an array of actions");
       action.data = {
         actions: []
@@ -613,10 +600,9 @@ class WelcomeScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCo
     // 3. radio action
     // 4. CTA action (which perhaps depends on the radio action)
     let multiSelectActions = [];
-    for (const checkbox of ((_props$content = props.content) === null || _props$content === void 0 ? void 0 : (_props$content$tiles2 = _props$content.tiles) === null || _props$content$tiles2 === void 0 ? void 0 : _props$content$tiles2.data) ?? []) {
-      var _props$content, _props$content$tiles2, _props$activeMultiSel;
+    for (const checkbox of props.content?.tiles?.data ?? []) {
       let checkboxAction;
-      if ((_props$activeMultiSel = props.activeMultiSelect) !== null && _props$activeMultiSel !== void 0 && _props$activeMultiSel.includes(checkbox.id)) {
+      if (props.activeMultiSelect?.includes(checkbox.id)) {
         checkboxAction = checkbox.checkedAction ?? checkbox.action;
       } else {
         checkboxAction = checkbox.uncheckedAction;
@@ -710,7 +696,7 @@ const Localized = ({
       current
     } = zapRef;
     if (current) {
-      requestAnimationFrame(() => current === null || current === void 0 ? void 0 : current.classList.replace("short", current.getBoundingClientRect().width > ZAP_SIZE_THRESHOLD ? "long" : "short"));
+      requestAnimationFrame(() => current?.classList.replace("short", current.getBoundingClientRect().width > ZAP_SIZE_THRESHOLD ? "long" : "short"));
     }
   });
 
@@ -724,7 +710,7 @@ const Localized = ({
     children: [],
     className: "",
     style: {},
-    ...(children === null || children === void 0 ? void 0 : children.props)
+    ...children?.props
   };
   // Support nested Localized by starting with their children.
   const textNodes = Array.isArray(props.children) ? props.children : [props.children];
@@ -861,20 +847,18 @@ const MultiStageProtonScreen = props => {
   });
 };
 const ProtonScreenActionButtons = props => {
-  var _content$checkbox, _content$primary_butt, _content$additional_b, _content$primary_butt2, _content$primary_butt3, _content$primary_butt4, _content$primary_butt5;
   const {
     content,
     addonName,
     activeMultiSelect
   } = props;
-  const defaultValue = (_content$checkbox = content.checkbox) === null || _content$checkbox === void 0 ? void 0 : _content$checkbox.defaultValue;
+  const defaultValue = content.checkbox?.defaultValue;
   const [isChecked, setIsChecked] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(defaultValue || false);
   const buttonRef = react__WEBPACK_IMPORTED_MODULE_0___default().useRef(null);
-  const shouldFocusButton = content === null || content === void 0 ? void 0 : (_content$primary_butt = content.primary_button) === null || _content$primary_butt === void 0 ? void 0 : _content$primary_butt.should_focus_button;
+  const shouldFocusButton = content?.primary_button?.should_focus_button;
   (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
     if (shouldFocusButton) {
-      var _buttonRef$current;
-      (_buttonRef$current = buttonRef.current) === null || _buttonRef$current === void 0 ? void 0 : _buttonRef$current.focus();
+      buttonRef.current?.focus();
     }
   }, [shouldFocusButton]);
   if (!content.primary_button && !content.secondary_button && !content.additional_button) {
@@ -883,22 +867,22 @@ const ProtonScreenActionButtons = props => {
 
   // If we have a multi-select screen, we want to disable the primary button
   // until the user has selected at least one item.
-  const isPrimaryDisabled = primaryDisabledValue => primaryDisabledValue === "hasActiveMultiSelect" ? !((activeMultiSelect === null || activeMultiSelect === void 0 ? void 0 : activeMultiSelect.length) > 0) : primaryDisabledValue;
+  const isPrimaryDisabled = primaryDisabledValue => primaryDisabledValue === "hasActiveMultiSelect" ? !(activeMultiSelect?.length > 0) : primaryDisabledValue;
   return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
     className: `action-buttons ${content.additional_button ? "additional-cta-container" : ""}`,
-    flow: (_content$additional_b = content.additional_button) === null || _content$additional_b === void 0 ? void 0 : _content$additional_b.flow
+    flow: content.additional_button?.flow
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__.Localized, {
-    text: (_content$primary_butt2 = content.primary_button) === null || _content$primary_butt2 === void 0 ? void 0 : _content$primary_butt2.label
+    text: content.primary_button?.label
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", {
     ref: buttonRef,
-    className: `${((_content$primary_butt3 = content.primary_button) === null || _content$primary_butt3 === void 0 ? void 0 : _content$primary_butt3.style) ?? "primary"}${(_content$primary_butt4 = content.primary_button) !== null && _content$primary_butt4 !== void 0 && _content$primary_butt4.has_arrow_icon ? " arrow-icon" : ""}`
+    className: `${content.primary_button?.style ?? "primary"}${content.primary_button?.has_arrow_icon ? " arrow-icon" : ""}`
     // Whether or not the checkbox is checked determines which action
     // should be handled. By setting value here, we indicate to
     // this.handleAction() where in the content tree it should take
     // the action to execute from.
     ,
     value: isChecked ? "checkbox" : "primary_button",
-    disabled: isPrimaryDisabled((_content$primary_butt5 = content.primary_button) === null || _content$primary_butt5 === void 0 ? void 0 : _content$primary_butt5.disabled),
+    disabled: isPrimaryDisabled(content.primary_button?.disabled),
     onClick: props.handleAction,
     "data-l10n-args": addonName ? JSON.stringify({
       "addon-name": addonName
@@ -1072,7 +1056,7 @@ class ProtonScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
       className: "dismiss-button",
       onClick: this.props.handleAction,
       value: "dismiss_button",
-      "data-l10n-id": (label === null || label === void 0 ? void 0 : label.string_id) || "spotlight-dialog-close-button",
+      "data-l10n-id": label?.string_id || "spotlight-dialog-close-button",
       "button-size": size,
       style: {
         marginBlock,
@@ -1081,7 +1065,6 @@ class ProtonScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
     });
   }
   renderStepsIndicator() {
-    var _content$steps_indica;
     const currentStep = (this.props.order ?? 0) + 1;
     const previousStep = (this.props.previousOrder ?? -1) + 1;
     const {
@@ -1091,7 +1074,7 @@ class ProtonScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
     return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
       id: "steps",
       className: `steps${content.progress_bar ? " progress-bar" : ""}`,
-      "data-l10n-id": ((_content$steps_indica = content.steps_indicator) === null || _content$steps_indica === void 0 ? void 0 : _content$steps_indica.string_id) || "onboarding-welcome-steps-indicator-label",
+      "data-l10n-id": content.steps_indicator?.string_id || "onboarding-welcome-steps-indicator-label",
       "data-l10n-args": JSON.stringify({
         current: currentStep,
         total: total ?? 0
@@ -1159,7 +1142,6 @@ class ProtonScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
     return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement((react__WEBPACK_IMPORTED_MODULE_0___default().Fragment), null, elements);
   }
   render() {
-    var _content$tiles, _content$tiles2, _this$props$appAndSys, _this$props$messageId;
     const {
       autoAdvance,
       content,
@@ -1175,12 +1157,12 @@ class ProtonScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
     const includeNoodles = content.has_noodles;
     // The default screen position is "center"
     const isCenterPosition = content.position === "center" || !content.position;
-    const hideStepsIndicator = autoAdvance || (content === null || content === void 0 ? void 0 : content.video_container) || isSingleScreen || forceHideStepsIndicator;
+    const hideStepsIndicator = autoAdvance || content?.video_container || isSingleScreen || forceHideStepsIndicator;
     const textColorClass = content.text_color ? `${content.text_color}-text` : "";
     // Assign proton screen style 'screen-1' or 'screen-2' to centered screens
     // by checking if screen order is even or odd.
-    const screenClassName = isCenterPosition ? this.getScreenClassName(isFirstScreen, isLastScreen, includeNoodles, content === null || content === void 0 ? void 0 : content.video_container, ((_content$tiles = content.tiles) === null || _content$tiles === void 0 ? void 0 : _content$tiles.type) === "addons-picker") : "";
-    const isEmbeddedMigration = ((_content$tiles2 = content.tiles) === null || _content$tiles2 === void 0 ? void 0 : _content$tiles2.type) === "migration-wizard";
+    const screenClassName = isCenterPosition ? this.getScreenClassName(isFirstScreen, isLastScreen, includeNoodles, content?.video_container, content.tiles?.type === "addons-picker") : "";
+    const isEmbeddedMigration = content.tiles?.type === "migration-wizard";
     return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("main", {
       className: `screen ${this.props.id || ""}
           ${screenClassName} ${textColorClass}`,
@@ -1223,9 +1205,9 @@ class ProtonScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("h2", {
       "data-l10n-args": JSON.stringify({
         "addon-name": this.props.addonName,
-        ...((_this$props$appAndSys = this.props.appAndSystemLocaleInfo) === null || _this$props$appAndSys === void 0 ? void 0 : _this$props$appAndSys.displayNames)
+        ...this.props.appAndSystemLocaleInfo?.displayNames
       }),
-      "aria-flowto": (_this$props$messageId = this.props.messageId) !== null && _this$props$messageId !== void 0 && _this$props$messageId.includes("FEATURE_TOUR") ? "steps" : ""
+      "aria-flowto": this.props.messageId?.includes("FEATURE_TOUR") ? "steps" : ""
     })) : null, content.cta_paragraph ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_CTAParagraph__WEBPACK_IMPORTED_MODULE_8__.CTAParagraph, {
       content: content.cta_paragraph,
       handleAction: this.props.handleAction
@@ -1347,8 +1329,7 @@ const MultiSelect = ({
   const handleChange = (0,react__WEBPACK_IMPORTED_MODULE_0__.useCallback)(() => {
     const newActiveMultiSelect = [];
     Object.keys(refs.current).forEach(key => {
-      var _refs$current$key;
-      if ((_refs$current$key = refs.current[key]) !== null && _refs$current$key !== void 0 && _refs$current$key.checked) {
+      if (refs.current[key]?.checked) {
         newActiveMultiSelect.push(key);
       }
     });
@@ -1393,8 +1374,8 @@ const MultiSelect = ({
     id: id,
     value: id,
     name: group,
-    checked: activeMultiSelect === null || activeMultiSelect === void 0 ? void 0 : activeMultiSelect.includes(id),
-    style: getValidStyle(icon === null || icon === void 0 ? void 0 : icon.style, MULTI_SELECT_ICON_STYLES),
+    checked: activeMultiSelect?.includes(id),
+    style: getValidStyle(icon?.style, MULTI_SELECT_ICON_STYLES),
     onChange: handleChange,
     ref: el => refs.current[id] = el
   }), label ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__.Localized, {
@@ -1495,10 +1476,9 @@ function useLanguageSwitcher(appAndSystemLocaleInfo, screens, screenIndex, setSc
   // before the negotiatedLanguage is known. If the arg isn't present then Firefox will
   // crash in development mode.
   (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
-    var _screen$content;
-    if (screen !== null && screen !== void 0 && (_screen$content = screen.content) !== null && _screen$content !== void 0 && _screen$content.languageSwitcher) {
+    if (screen?.content?.languageSwitcher) {
       for (const text of Object.values(screen.content.languageSwitcher)) {
-        if (text !== null && text !== void 0 && text.args && text.args.negotiatedLanguage === undefined) {
+        if (text?.args && text.args.negotiatedLanguage === undefined) {
           text.args.negotiatedLanguage = "";
         }
       }
@@ -1556,7 +1536,7 @@ function useLanguageSwitcher(appAndSystemLocaleInfo, screens, screenIndex, setSc
       return;
     }
     setLangPackInstallPhase("installing");
-    window.AWEnsureLangPackInstalled(negotiatedLanguage, screen === null || screen === void 0 ? void 0 : screen.content).then(content => {
+    window.AWEnsureLangPackInstalled(negotiatedLanguage, screen?.content).then(content => {
       // Update screen content with strings that might have changed.
       screen.content = content;
       setLangPackInstallPhase("installed");
@@ -1569,7 +1549,7 @@ function useLanguageSwitcher(appAndSystemLocaleInfo, screens, screenIndex, setSc
   (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(function filterScreen() {
     // Remove the language screen if it exists (already removed for no live
     // reload) and we either don't-need-to or can't switch.
-    if (screen && ((appAndSystemLocaleInfo === null || appAndSystemLocaleInfo === void 0 ? void 0 : appAndSystemLocaleInfo.matchType) !== "language-mismatch" || (negotiatedLanguage === null || negotiatedLanguage === void 0 ? void 0 : negotiatedLanguage.langPack) === null)) {
+    if (screen && (appAndSystemLocaleInfo?.matchType !== "language-mismatch" || negotiatedLanguage?.langPack === null)) {
       if (screenIndex > languageMismatchScreenIndex) {
         setScreenIndex(screenIndex - 1);
       }
@@ -1577,7 +1557,7 @@ function useLanguageSwitcher(appAndSystemLocaleInfo, screens, screenIndex, setSc
     } else {
       setLanguageFilteredScreens(screens);
     }
-  }, [appAndSystemLocaleInfo === null || appAndSystemLocaleInfo === void 0 ? void 0 : appAndSystemLocaleInfo.matchType, languageMismatchScreenIndex, negotiatedLanguage, screen, screenIndex, screens, setScreenIndex]);
+  }, [appAndSystemLocaleInfo?.matchType, languageMismatchScreenIndex, negotiatedLanguage, screen, screenIndex, screens, setScreenIndex]);
   return {
     negotiatedLanguage,
     langPackInstallPhase,
@@ -1615,7 +1595,7 @@ function LanguageSwitcher(props) {
         });
       });
     }
-  }, [handleAction, isAwaitingLangpack, langPackInstallPhase, negotiatedLanguage === null || negotiatedLanguage === void 0 ? void 0 : negotiatedLanguage.requestSystemLocales]);
+  }, [handleAction, isAwaitingLangpack, langPackInstallPhase, negotiatedLanguage?.requestSystemLocales]);
   let showWaitingScreen = false;
   let showPreloadingScreen = false;
   let showReadyScreen = false;
@@ -1698,8 +1678,9 @@ function LanguageSwitcher(props) {
     }
   }, content.languageSwitcher.switch ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__.Localized, {
     text: content.languageSwitcher.switch
-  }) : // This is the localized name from the Intl.DisplayNames API.
-  negotiatedLanguage === null || negotiatedLanguage === void 0 ? void 0 : negotiatedLanguage.langPackDisplayName)), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", {
+  }) :
+  // This is the localized name from the Intl.DisplayNames API.
+  negotiatedLanguage?.langPackDisplayName)), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", {
     type: "button",
     className: "primary",
     value: "decline",
@@ -1709,8 +1690,9 @@ function LanguageSwitcher(props) {
     }
   }, content.languageSwitcher.continue ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__.Localized, {
     text: content.languageSwitcher.continue
-  }) : // This is the localized name from the Intl.DisplayNames API.
-  negotiatedLanguage === null || negotiatedLanguage === void 0 ? void 0 : negotiatedLanguage.appDisplayName))));
+  }) :
+  // This is the localized name from the Intl.DisplayNames API.
+  negotiatedLanguage?.appDisplayName))));
 }
 
 /***/ }),
@@ -1735,7 +1717,7 @@ const CTAParagraph = props => {
     content,
     handleAction
   } = props;
-  if (!(content !== null && content !== void 0 && content.text)) {
+  if (!content?.text) {
     return null;
   }
   return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("h2", {
@@ -1857,28 +1839,26 @@ const AdditionalCTA = ({
   content,
   handleAction
 }) => {
-  var _content$submenu_butt, _content$additional_b, _content$additional_b4, _content$additional_b5;
   let buttonStyle = "";
-  const isSplitButton = ((_content$submenu_butt = content.submenu_button) === null || _content$submenu_butt === void 0 ? void 0 : _content$submenu_butt.attached_to) === "additional_button";
+  const isSplitButton = content.submenu_button?.attached_to === "additional_button";
   let className = "additional-cta-box";
   if (isSplitButton) {
     className += " split-button-container";
   }
-  if (!((_content$additional_b = content.additional_button) !== null && _content$additional_b !== void 0 && _content$additional_b.style)) {
+  if (!content.additional_button?.style) {
     buttonStyle = "primary";
   } else {
-    var _content$additional_b2, _content$additional_b3;
-    buttonStyle = ((_content$additional_b2 = content.additional_button) === null || _content$additional_b2 === void 0 ? void 0 : _content$additional_b2.style) === "link" ? "cta-link" : (_content$additional_b3 = content.additional_button) === null || _content$additional_b3 === void 0 ? void 0 : _content$additional_b3.style;
+    buttonStyle = content.additional_button?.style === "link" ? "cta-link" : content.additional_button?.style;
   }
   return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
     className: className
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__.Localized, {
-    text: (_content$additional_b4 = content.additional_button) === null || _content$additional_b4 === void 0 ? void 0 : _content$additional_b4.label
+    text: content.additional_button?.label
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", {
     className: `${buttonStyle} additional-cta`,
     onClick: handleAction,
     value: "additional_button",
-    disabled: ((_content$additional_b5 = content.additional_button) === null || _content$additional_b5 === void 0 ? void 0 : _content$additional_b5.disabled) === true
+    disabled: content.additional_button?.disabled === true
   })), isSplitButton ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_SubmenuButton__WEBPACK_IMPORTED_MODULE_2__.SubmenuButton, {
     content: content,
     handleAction: handleAction
@@ -1973,9 +1953,8 @@ const SubmenuButtonInner = ({
   content,
   handleAction
 }) => {
-  var _content$submenu_butt;
   const ref = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(null);
-  const isPrimary = ((_content$submenu_butt = content.submenu_button) === null || _content$submenu_butt === void 0 ? void 0 : _content$submenu_butt.style) === "primary";
+  const isPrimary = content.submenu_button?.style === "primary";
   const onCommand = (0,react__WEBPACK_IMPORTED_MODULE_0__.useCallback)(event => {
     let {
       config
@@ -1990,7 +1969,7 @@ const SubmenuButtonInner = ({
   }, [handleAction]);
   const onClick = (0,react__WEBPACK_IMPORTED_MODULE_0__.useCallback)(() => {
     let button = ref.current;
-    let submenu = button === null || button === void 0 ? void 0 : button.querySelector(".fxms-multi-stage-submenu");
+    let submenu = button?.querySelector(".fxms-multi-stage-submenu");
     if (submenu && !button.hasAttribute("open")) {
       submenu.openPopup(button, {
         position: "after_end"
@@ -2028,9 +2007,8 @@ const SubmenuButtonInner = ({
       menupopup.listenersRegistered = true;
     }
     return () => {
-      var _stylesheet;
-      menupopup === null || menupopup === void 0 ? void 0 : menupopup.remove();
-      (_stylesheet = stylesheet) === null || _stylesheet === void 0 ? void 0 : _stylesheet.remove();
+      menupopup?.remove();
+      stylesheet?.remove();
     };
   }, [onCommand]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -2082,11 +2060,11 @@ const EmbeddedMigrationWizard = ({
     const {
       current
     } = ref;
-    current === null || current === void 0 ? void 0 : current.addEventListener("MigrationWizard:BeginMigration", handleBeginMigration);
-    current === null || current === void 0 ? void 0 : current.addEventListener("MigrationWizard:Close", handleClose);
+    current?.addEventListener("MigrationWizard:BeginMigration", handleBeginMigration);
+    current?.addEventListener("MigrationWizard:Close", handleClose);
     return () => {
-      current === null || current === void 0 ? void 0 : current.removeEventListener("MigrationWizard:BeginMigration", handleBeginMigration);
-      current === null || current === void 0 ? void 0 : current.removeEventListener("MigrationWizard:Close", handleClose);
+      current?.removeEventListener("MigrationWizard:BeginMigration", handleBeginMigration);
+      current?.removeEventListener("MigrationWizard:Close", handleClose);
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
   return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("migration-wizard", {
@@ -2202,7 +2180,6 @@ __webpack_require__.r(__webpack_exports__);
 
 
 const LinkParagraph = props => {
-  var _text_content$link_ke;
   const {
     text_content,
     handleAction
@@ -2227,7 +2204,7 @@ const LinkParagraph = props => {
     onClick: handleParagraphAction,
     value: "link_paragraph",
     onKeyPress: onKeyPress
-  }, (_text_content$link_ke = text_content.link_keys) === null || _text_content$link_ke === void 0 ? void 0 : _text_content$link_ke.map(link => /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("a", {
+  }, text_content.link_keys?.map(link => /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("a", {
     key: link,
     value: link,
     role: "link",
@@ -2365,7 +2342,6 @@ class ReturnToAMO extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureComp
     _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_1__.AboutWelcomeUtils.sendActionTelemetry(message_id, source_id);
   }
   render() {
-    var _this$props$themeScre;
     const {
       content,
       type
@@ -2373,7 +2349,7 @@ class ReturnToAMO extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureComp
     if (!content) {
       return null;
     }
-    if (content !== null && content !== void 0 && content.primary_button.label) {
+    if (content?.primary_button.label) {
       content.primary_button.label.string_id = type.includes("theme") ? "return-to-amo-add-theme-label" : "mr1-return-to-amo-add-extension-label";
     }
 
@@ -2393,7 +2369,7 @@ class ReturnToAMO extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureComp
       totalNumberOfScreens: 1,
       isSingleScreen: true,
       autoAdvance: this.props.auto_advance,
-      iconURL: type.includes("theme") ? (_this$props$themeScre = this.props.themeScreenshots[0]) === null || _this$props$themeScre === void 0 ? void 0 : _this$props$themeScre.url : this.props.iconURL,
+      iconURL: type.includes("theme") ? this.props.themeScreenshots[0]?.url : this.props.iconURL,
       addonName: this.props.name,
       handleAction: this.handleAction
     }));
@@ -2500,9 +2476,8 @@ class AboutWelcome extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
     this.fetchFxAFlowUri = this.fetchFxAFlowUri.bind(this);
   }
   async fetchFxAFlowUri() {
-    var _window$AWGetFxAMetri, _window;
     this.setState({
-      metricsFlowUri: await ((_window$AWGetFxAMetri = (_window = window).AWGetFxAMetricsFlowURI) === null || _window$AWGetFxAMetri === void 0 ? void 0 : _window$AWGetFxAMetri.call(_window))
+      metricsFlowUri: await window.AWGetFxAMetricsFlowURI?.()
     });
   }
   componentDidMount() {

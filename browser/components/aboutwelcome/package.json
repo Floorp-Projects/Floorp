@@ -13,9 +13,6 @@
     "redux": "4.1.2"
   },
   "devDependencies": {
-    "@babel/plugin-proposal-class-properties": "7.16.0",
-    "@babel/plugin-proposal-optional-chaining": "7.16.0",
-    "@babel/plugin-proposal-nullish-coalescing-operator": "7.16.0",
     "@babel/preset-react": "7.16.0",
     "@jsdevtools/coverage-istanbul-loader": "^3.0.5",
     "babel-loader": "8.2.3",

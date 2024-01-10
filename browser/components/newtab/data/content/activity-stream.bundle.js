@@ -750,13 +750,11 @@ class DiscoveryStreamAdminUI extends (external_React_default()).PureComponent {
   }
 
   renderFeedData(url) {
-    var _feed$recommendations;
-
     const {
       feeds
     } = this.props.state.DiscoveryStream;
     const feed = feeds.data[url].data;
-    return /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, /*#__PURE__*/external_React_default().createElement("h4", null, "Feed url: ", url), /*#__PURE__*/external_React_default().createElement("table", null, /*#__PURE__*/external_React_default().createElement("tbody", null, (_feed$recommendations = feed.recommendations) === null || _feed$recommendations === void 0 ? void 0 : _feed$recommendations.map(story => this.renderStoryData(story)))));
+    return /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, /*#__PURE__*/external_React_default().createElement("h4", null, "Feed url: ", url), /*#__PURE__*/external_React_default().createElement("table", null, /*#__PURE__*/external_React_default().createElement("tbody", null, feed.recommendations?.map(story => this.renderStoryData(story)))));
   }
 
   renderFeedsData() {
@@ -1592,30 +1590,26 @@ const LinkMenuOptions = {
     icon: "dismiss",
     action: actionCreators.AlsoToMain({
       type: actionTypes.BLOCK_URL,
-      data: tiles.map(site => {
-        var _ref;
-
-        return {
-          url: site.original_url || site.open_url || site.url,
-          // pocket_id is only for pocket stories being in highlights, and then dismissed.
-          pocket_id: site.pocket_id,
-          // used by PlacesFeed and TopSitesFeed for sponsored top sites blocking.
-          isSponsoredTopSite: site.sponsored_position,
-          ...(site.flight_id ? {
-            flight_id: site.flight_id
-          } : {}),
-          // If not sponsored, hostname could be anything (Cat3 Data!).
-          // So only put in advertiser_name for sponsored topsites.
-          ...(site.sponsored_position ? {
-            advertiser_name: (_ref = site.label || site.hostname) === null || _ref === void 0 ? void 0 : _ref.toLocaleLowerCase()
-          } : {}),
-          position: pos,
-          ...(site.sponsored_tile_id ? {
-            tile_id: site.sponsored_tile_id
-          } : {}),
-          is_pocket_card: site.type === "CardGrid"
-        };
-      })
+      data: tiles.map(site => ({
+        url: site.original_url || site.open_url || site.url,
+        // pocket_id is only for pocket stories being in highlights, and then dismissed.
+        pocket_id: site.pocket_id,
+        // used by PlacesFeed and TopSitesFeed for sponsored top sites blocking.
+        isSponsoredTopSite: site.sponsored_position,
+        ...(site.flight_id ? {
+          flight_id: site.flight_id
+        } : {}),
+        // If not sponsored, hostname could be anything (Cat3 Data!).
+        // So only put in advertiser_name for sponsored topsites.
+        ...(site.sponsored_position ? {
+          advertiser_name: (site.label || site.hostname)?.toLocaleLowerCase()
+        } : {}),
+        position: pos,
+        ...(site.sponsored_tile_id ? {
+          tile_id: site.sponsored_tile_id
+        } : {}),
+        is_pocket_card: site.type === "CardGrid"
+      }))
     }),
     impression: actionCreators.ImpressionStats({
       source: eventSource,
@@ -3382,8 +3376,8 @@ function OnboardingExperience({
 
 
     return () => {
-      resizeObserver === null || resizeObserver === void 0 ? void 0 : resizeObserver.disconnect();
-      intersectionObserver === null || intersectionObserver === void 0 ? void 0 : intersectionObserver.disconnect();
+      resizeObserver?.disconnect();
+      intersectionObserver?.disconnect();
       windowObj.document.removeEventListener(CardGrid_VISIBILITY_CHANGE_EVENT, onVisibilityChange);
     };
   }, [dispatch, windowObj]);
@@ -3443,11 +3437,7 @@ function CardGrid_IntersectionObserver({
     } // Cleanup
 
 
-    return () => {
-      var _observer;
-
-      return (_observer = observer) === null || _observer === void 0 ? void 0 : _observer.disconnect();
-    };
+    return () => observer?.disconnect();
   }, [windowObj, onIntersecting]);
   return /*#__PURE__*/external_React_default().createElement("div", {
     ref: intersectionElement
@@ -3502,7 +3492,7 @@ function RecentSavesContainer({
     const url = new URL(rec.url);
     const urlSearchParams = new URLSearchParams(queryParams);
 
-    if (rec !== null && rec !== void 0 && rec.id && !url.href.match(/getpocket\.com\/read/)) {
+    if (rec?.id && !url.href.match(/getpocket\.com\/read/)) {
       url.href = `https://getpocket.com/read/${rec.id}`;
     }
 
@@ -3511,7 +3501,7 @@ function RecentSavesContainer({
     }
 
     return /*#__PURE__*/external_React_default().createElement(DSCard, {
-      key: `dscard-${(rec === null || rec === void 0 ? void 0 : rec.id) || index}`,
+      key: `dscard-${rec?.id || index}`,
       id: rec.id,
       pos: index,
       type: source,
@@ -3546,8 +3536,6 @@ function RecentSavesContainer({
         key: `dscard-${index}`
       }));
     } else {
-      var _recentSave$domain_me;
-
       recentSavesCards.push(renderCard({
         id: recentSave.id,
         image_src: recentSave.top_image_url,
@@ -3556,7 +3544,7 @@ function RecentSavesContainer({
         time_to_read: recentSave.time_to_read,
         title: recentSave.resolved_title || recentSave.given_title,
         url: recentSave.resolved_url || recentSave.given_url,
-        domain: (_recentSave$domain_me = recentSave.domain_metadata) === null || _recentSave$domain_me === void 0 ? void 0 : _recentSave$domain_me.name,
+        domain: recentSave.domain_metadata?.name,
         excerpt: recentSave.excerpt
       }, index));
     }
@@ -3579,8 +3567,6 @@ function RecentSavesContainer({
 }
 class _CardGrid extends (external_React_default()).PureComponent {
   renderCards() {
-    var _widgets$positions, _widgets$data, _essentialReadsCards, _editorsPicksCards;
-
     const prefs = this.props.Prefs.values;
     const {
       items,
@@ -3639,7 +3625,7 @@ class _CardGrid extends (external_React_default()).PureComponent {
       }));
     }
 
-    if (widgets !== null && widgets !== void 0 && (_widgets$positions = widgets.positions) !== null && _widgets$positions !== void 0 && _widgets$positions.length && widgets !== null && widgets !== void 0 && (_widgets$data = widgets.data) !== null && _widgets$data !== void 0 && _widgets$data.length) {
+    if (widgets?.positions?.length && widgets?.data?.length) {
       let positionIndex = 0;
       const source = "CARDGRID_WIDGET";
 
@@ -3651,7 +3637,7 @@ class _CardGrid extends (external_React_default()).PureComponent {
           break;
         }
 
-        switch (widget === null || widget === void 0 ? void 0 : widget.type) {
+        switch (widget?.type) {
           case "TopicsWidget":
             widgetComponent = /*#__PURE__*/external_React_default().createElement(TopicsWidget, {
               position: position.index,
@@ -3698,18 +3684,18 @@ class _CardGrid extends (external_React_default()).PureComponent {
     const gridClassName = `ds-card-grid ${hybridLayoutClassName} ${hideCardBackgroundClass} ${fourCardLayoutClass} ${hideDescriptionsClassName} ${compactGridClassName}`;
     return /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, !isOnboardingExperienceDismissed && onboardingExperience && /*#__PURE__*/external_React_default().createElement(OnboardingExperience, {
       dispatch: this.props.dispatch
-    }), ((_essentialReadsCards = essentialReadsCards) === null || _essentialReadsCards === void 0 ? void 0 : _essentialReadsCards.length) > 0 && /*#__PURE__*/external_React_default().createElement("div", {
+    }), essentialReadsCards?.length > 0 && /*#__PURE__*/external_React_default().createElement("div", {
       className: gridClassName
     }, essentialReadsCards), showRecentSaves && /*#__PURE__*/external_React_default().createElement(RecentSavesContainer, {
       gridClassName: gridClassName,
       dispatch: this.props.dispatch
-    }), ((_editorsPicksCards = editorsPicksCards) === null || _editorsPicksCards === void 0 ? void 0 : _editorsPicksCards.length) > 0 && /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, /*#__PURE__*/external_React_default().createElement(DSSubHeader, null, /*#__PURE__*/external_React_default().createElement("span", {
+    }), editorsPicksCards?.length > 0 && /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, /*#__PURE__*/external_React_default().createElement(DSSubHeader, null, /*#__PURE__*/external_React_default().createElement("span", {
       className: "section-title"
     }, /*#__PURE__*/external_React_default().createElement(FluentOrText, {
       message: "Editor\u2019s Picks"
     }))), /*#__PURE__*/external_React_default().createElement("div", {
       className: gridClassName
-    }, editorsPicksCards)), (cards === null || cards === void 0 ? void 0 : cards.length) > 0 && /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, moreRecsHeader && /*#__PURE__*/external_React_default().createElement(DSSubHeader, null, /*#__PURE__*/external_React_default().createElement("span", {
+    }, editorsPicksCards)), cards?.length > 0 && /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, moreRecsHeader && /*#__PURE__*/external_React_default().createElement(DSSubHeader, null, /*#__PURE__*/external_React_default().createElement("span", {
       className: "section-title"
     }, /*#__PURE__*/external_React_default().createElement(FluentOrText, {
       message: moreRecsHeader
@@ -6674,7 +6660,7 @@ const NEWTAB_SOURCE = "newtab"; // For cases if we want to know if this is spons
 // or the other. This function is only applicable in cases where we only care if it's either.
 
 function isSponsored(link) {
-  return (link === null || link === void 0 ? void 0 : link.sponsored_position) || (link === null || link === void 0 ? void 0 : link.type) === SPOC_TYPE;
+  return link?.sponsored_position || link?.type === SPOC_TYPE;
 }
 
 class TopSiteLink extends (external_React_default()).PureComponent {
@@ -8810,8 +8796,6 @@ class _DiscoveryStreamBase extends (external_React_default()).PureComponent {
   }
 
   renderComponent(component, embedWidth) {
-    var _component$header;
-
     switch (component.type) {
       case "Highlights":
         return /*#__PURE__*/external_React_default().createElement(Highlights, null);
@@ -8821,7 +8805,7 @@ class _DiscoveryStreamBase extends (external_React_default()).PureComponent {
           className: "ds-top-sites"
         }, /*#__PURE__*/external_React_default().createElement(TopSites_TopSites, {
           isFixed: true,
-          title: (_component$header = component.header) === null || _component$header === void 0 ? void 0 : _component$header.title
+          title: component.header?.title
         }));
 
       case "TextPromo":
@@ -9157,9 +9141,7 @@ class ContentSection extends (external_React_default()).PureComponent {
     let drawerHeight;
 
     if (drawerRef) {
-      var _window$getComputedSt;
-
-      drawerHeight = parseFloat((_window$getComputedSt = window.getComputedStyle(drawerRef)) === null || _window$getComputedSt === void 0 ? void 0 : _window$getComputedSt.height);
+      drawerHeight = parseFloat(window.getComputedStyle(drawerRef)?.height);
 
       if (isOpen) {
         drawerRef.style.marginTop = `0`;
