@@ -12008,35 +12008,57 @@ void CodeGenerator::visitLinearizeForCharAccess(LLinearizeForCharAccess* lir) {
 
 void CodeGenerator::visitCharCodeAt(LCharCodeAt* lir) {
   Register str = ToRegister(lir->str());
-  Register index = ToRegister(lir->index());
   Register output = ToRegister(lir->output());
   Register temp0 = ToRegister(lir->temp0());
   Register temp1 = ToRegister(lir->temp1());
 
   using Fn = bool (*)(JSContext*, HandleString, int32_t, uint32_t*);
-  OutOfLineCode* ool = oolCallVM<Fn, jit::CharCodeAt>(lir, ArgList(str, index),
-                                                      StoreRegisterTo(output));
-  masm.loadStringChar(str, index, output, temp0, temp1, ool->entry());
-  masm.bind(ool->rejoin());
+
+  if (lir->index()->isBogus()) {
+    auto* ool = oolCallVM<Fn, jit::CharCodeAt>(lir, ArgList(str, Imm32(0)),
+                                               StoreRegisterTo(output));
+    masm.loadStringChar(str, 0, output, temp0, temp1, ool->entry());
+    masm.bind(ool->rejoin());
+  } else {
+    Register index = ToRegister(lir->index());
+
+    auto* ool = oolCallVM<Fn, jit::CharCodeAt>(lir, ArgList(str, index),
+                                               StoreRegisterTo(output));
+    masm.loadStringChar(str, index, output, temp0, temp1, ool->entry());
+    masm.bind(ool->rejoin());
+  }
 }
 
 void CodeGenerator::visitCharCodeAtOrNegative(LCharCodeAtOrNegative* lir) {
   Register str = ToRegister(lir->str());
-  Register index = ToRegister(lir->index());
   Register output = ToRegister(lir->output());
   Register temp0 = ToRegister(lir->temp0());
   Register temp1 = ToRegister(lir->temp1());
 
   using Fn = bool (*)(JSContext*, HandleString, int32_t, uint32_t*);
-  auto* ool = oolCallVM<Fn, jit::CharCodeAt>(lir, ArgList(str, index),
-                                             StoreRegisterTo(output));
 
   // Return -1 for out-of-bounds access.
   masm.move32(Imm32(-1), output);
-  masm.spectreBoundsCheck32(index, Address(str, JSString::offsetOfLength()),
-                            temp0, ool->rejoin());
-  masm.loadStringChar(str, index, output, temp0, temp1, ool->entry());
-  masm.bind(ool->rejoin());
+
+  if (lir->index()->isBogus()) {
+    auto* ool = oolCallVM<Fn, jit::CharCodeAt>(lir, ArgList(str, Imm32(0)),
+                                               StoreRegisterTo(output));
+
+    masm.branch32(Assembler::Equal, Address(str, JSString::offsetOfLength()),
+                  Imm32(0), ool->rejoin());
+    masm.loadStringChar(str, 0, output, temp0, temp1, ool->entry());
+    masm.bind(ool->rejoin());
+  } else {
+    Register index = ToRegister(lir->index());
+
+    auto* ool = oolCallVM<Fn, jit::CharCodeAt>(lir, ArgList(str, index),
+                                               StoreRegisterTo(output));
+
+    masm.spectreBoundsCheck32(index, Address(str, JSString::offsetOfLength()),
+                              temp0, ool->rejoin());
+    masm.loadStringChar(str, index, output, temp0, temp1, ool->entry());
+    masm.bind(ool->rejoin());
+  }
 }
 
 void CodeGenerator::visitNegativeToNaN(LNegativeToNaN* lir) {

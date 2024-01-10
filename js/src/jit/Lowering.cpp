@@ -2485,8 +2485,8 @@ void LIRGenerator::visitCharCodeAt(MCharCodeAt* ins) {
   MOZ_ASSERT(str->type() == MIRType::String);
   MOZ_ASSERT(idx->type() == MIRType::Int32);
 
-  LCharCodeAt* lir = new (alloc())
-      LCharCodeAt(useRegister(str), useRegister(idx), temp(), temp());
+  auto* lir = new (alloc())
+      LCharCodeAt(useRegister(str), useRegisterOrZero(idx), temp(), temp());
   define(lir, ins);
   assignSafepoint(lir, ins);
 }
@@ -2498,8 +2498,8 @@ void LIRGenerator::visitCharCodeAtOrNegative(MCharCodeAtOrNegative* ins) {
   MOZ_ASSERT(str->type() == MIRType::String);
   MOZ_ASSERT(idx->type() == MIRType::Int32);
 
-  auto* lir = new (alloc())
-      LCharCodeAtOrNegative(useRegister(str), useRegister(idx), temp(), temp());
+  auto* lir = new (alloc()) LCharCodeAtOrNegative(
+      useRegister(str), useRegisterOrZero(idx), temp(), temp());
   define(lir, ins);
   assignSafepoint(lir, ins);
 }
