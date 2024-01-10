@@ -17,8 +17,6 @@ support-files = [
 
 ["test_debugger_client.js"]
 
-["test_defer.js"]
-
 ["test_defineLazyPrototypeGetter.js"]
 
 ["test_eventemitter_abort_controller.js"]
