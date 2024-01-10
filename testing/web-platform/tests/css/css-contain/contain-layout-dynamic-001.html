@@ -41,6 +41,23 @@
       display: inline-flex;
       align-items: baseline;
   }
+
+  /* Selectors for testing IFC (floats) */
+  .floatleft {
+      float: left;
+  }
+  .clearleft {
+      clear: left;
+  }
+
+  /* Selectors for testing IFC (margin collapsing) */
+  .blockmargin {
+      margin: 25px 0;
+  }
+  .wrapper.blockmargin {
+      background: lightgray;
+  }
+
   .rect {
       background: black;
       width: 50px;
@@ -61,6 +78,17 @@
       <div class="rect"></div>
       <div class="wrapper rect">X</div>
     </div>
+    <div>
+      <div class="floatleft rect"></div>
+      <div class="wrapper">
+        <div class="clearleft rect"></div>
+      </div>
+    </div>
+    <div>
+      <div class="wrapper blockmargin">
+        <div class="rect blockmargin"></div>
+      </div>
+    </div>
   </div>
 
   <div id="layout">
@@ -71,6 +99,17 @@
     <div class="flex">
       <div class="rect"></div>
       <div class="wrapper rect">X</div>
+    </div>
+    <div>
+      <div class="floatleft rect"></div>
+      <div class="wrapper">
+        <div class="clearleft rect"></div>
+      </div>
+    </div>
+    <div>
+      <div class="wrapper blockmargin">
+        <div class="rect blockmargin"></div>
+      </div>
     </div>
   </div>
 
@@ -83,6 +122,17 @@
       <div class="rect"></div>
       <div class="wrapper rect">X</div>
     </div>
+    <div>
+      <div class="floatleft rect"></div>
+      <div class="wrapper">
+        <div class="clearleft rect"></div>
+      </div>
+    </div>
+    <div>
+      <div class="wrapper blockmargin">
+        <div class="rect blockmargin"></div>
+      </div>
+    </div>
   </div>
 
   <div id="layout_to_none">
@@ -93,6 +143,17 @@
     <div class="flex">
       <div class="rect"></div>
       <div class="wrapper rect">X</div>
+    </div>
+    <div>
+      <div class="floatleft rect"></div>
+      <div class="wrapper">
+        <div class="clearleft rect"></div>
+      </div>
+    </div>
+    <div>
+      <div class="wrapper blockmargin">
+        <div class="rect blockmargin"></div>
+      </div>
     </div>
   </div>
 
@@ -119,6 +180,21 @@
         let item2 = item1.previousElementSibling;
         let aligned = Math.abs(item1.getBoundingClientRect().top - item2.getBoundingClientRect().top) <= 1;
         assert_equals(aligned, applied, "vertical baseline suppressed");
+
+        // To verify the containment box establishes an independent formatting
+        // context, we test position the clear: left div with respect to the
+        // float: left div.
+        let floatLeft = wrappers[2].previousElementSibling;
+        let clearLeft = wrappers[2].firstElementChild;
+        let clearNextToFloat = Math.abs(floatLeft.getBoundingClientRect().top - clearLeft.getBoundingClientRect().top) <= 1;
+        assert_equals(clearNextToFloat, applied, "independent formatting context (floats)");
+
+        // In addition, we verify that the margin inside the containment box
+        // are not collapsed.
+        let IFCWithMargin = wrappers[3];
+        let childWithMargin = IFCWithMargin.firstElementChild;
+        let marginCollapsed = Math.abs(IFCWithMargin.getBoundingClientRect().height - childWithMargin.getBoundingClientRect().height) <= 1;
+        assert_equals(!marginCollapsed, applied, "independent formatting context (margins collapsing)");
     }
 
     function setContain(id, value) {
