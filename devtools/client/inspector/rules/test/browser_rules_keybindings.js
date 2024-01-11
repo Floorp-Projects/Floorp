@@ -6,11 +6,17 @@
 // Test keyboard navigation in the rule view
 
 add_task(async function () {
-  await addTab(`data:text/html;charset=utf-8,
+  await pushPref("devtools.inspector.showRulesViewEnterKeyNotice", true);
+  const tab = await addTab(`data:text/html;charset=utf-8,
     <style>h1 {}</style>
     <h1>Some header text</h1>`);
-  const { inspector, view } = await openRuleView();
+  let { inspector, view } = await openRuleView();
   await selectNode("h1", inspector);
+
+  let kbdNoticeEl = view.styleDocument.getElementById(
+    "ruleview-kbd-enter-notice"
+  );
+  ok(kbdNoticeEl.hasAttribute("hidden"), "Notice is not displayed by default");
 
   info("Getting the ruleclose brace element for the `h1` rule");
   const brace = view.styleDocument.querySelectorAll(".ruleview-ruleclose")[1];
@@ -66,6 +72,18 @@ add_task(async function () {
       "h1",
       "background-color"
     )?.valueSpan?.querySelector(".ruleview-colorswatch")
+  );
+
+  ok(
+    !kbdNoticeEl.hasAttribute("hidden"),
+    "Notice is displayed after hitting Enter"
+  );
+
+  info("Click on dismiss button");
+  kbdNoticeEl.querySelector("button").click();
+  ok(
+    kbdNoticeEl.hasAttribute("hidden"),
+    "Notice was hidden after clicking on dismiss button"
   );
 
   is(
@@ -125,6 +143,26 @@ add_task(async function () {
   EventUtils.sendKey("Space");
   await onRuleViewRefreshed;
   ok(toggleEl.checked, "Checkbox is checked again");
+
+  info("Re-start the toolbox");
+  await gDevTools.closeToolboxForTab(tab);
+  ({ view } = await openRuleView());
+
+  kbdNoticeEl = view.styleDocument.getElementById("ruleview-kbd-enter-notice");
+  ok(
+    kbdNoticeEl.hasAttribute("hidden"),
+    "Notice isn't displayed on init when it was dismissed before"
+  );
+  is(
+    Services.prefs.getBoolPref(
+      "devtools.inspector.showRulesViewEnterKeyNotice"
+    ),
+    false,
+    "The preference driving the UI is set to false, as expected"
+  );
+  Services.prefs.clearUserPref(
+    "devtools.inspector.showRulesViewEnterKeyNotice"
+  );
 });
 
 // The `element` have specific behavior, so we want to test that keyboard navigation
