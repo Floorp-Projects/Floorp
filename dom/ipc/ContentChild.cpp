@@ -84,6 +84,7 @@
 #include "mozilla/dom/ServiceWorkerManager.h"
 #include "mozilla/dom/SessionStorageManager.h"
 #include "mozilla/dom/URLClassifierChild.h"
+#include "mozilla/dom/UserActivation.h"
 #include "mozilla/dom/WindowGlobalChild.h"
 #include "mozilla/dom/WorkerDebugger.h"
 #include "mozilla/dom/WorkerDebuggerManager.h"
@@ -964,7 +965,8 @@ static nsresult GetCreateWindowParams(nsIOpenWindowInfo* aOpenWindowInfo,
 nsresult ContentChild::ProvideWindowCommon(
     NotNull<BrowserChild*> aTabOpener, nsIOpenWindowInfo* aOpenWindowInfo,
     uint32_t aChromeFlags, bool aCalledFromJS, nsIURI* aURI,
-    const nsAString& aName, const nsACString& aFeatures, bool aForceNoOpener,
+    const nsAString& aName, const nsACString& aFeatures,
+    const UserActivation::Modifiers& aModifiers, bool aForceNoOpener,
     bool aForceNoReferrer, bool aIsPopupRequested,
     nsDocShellLoadState* aLoadState, bool* aWindowIsNew,
     BrowsingContext** aReturn) {
@@ -1032,8 +1034,8 @@ nsresult ContentChild::ProvideWindowCommon(
       MOZ_DIAGNOSTIC_ASSERT(!nsContentUtils::IsSpecialName(name));
 
       Unused << SendCreateWindowInDifferentProcess(
-          aTabOpener, parent, aChromeFlags, aCalledFromJS, aURI, features, name,
-          triggeringPrincipal, csp, referrerInfo,
+          aTabOpener, parent, aChromeFlags, aCalledFromJS, aURI, features,
+          aModifiers, name, triggeringPrincipal, csp, referrerInfo,
           aOpenWindowInfo->GetOriginAttributes());
 
       // We return NS_ERROR_ABORT, so that the caller knows that we've abandoned
@@ -1235,7 +1237,7 @@ nsresult ContentChild::ProvideWindowCommon(
   SendCreateWindow(aTabOpener, parent, newChild, aChromeFlags, aCalledFromJS,
                    aOpenWindowInfo->GetIsForPrinting(),
                    aOpenWindowInfo->GetIsForWindowDotPrint(), aURI, features,
-                   triggeringPrincipal, csp, referrerInfo,
+                   aModifiers, triggeringPrincipal, csp, referrerInfo,
                    aOpenWindowInfo->GetOriginAttributes(), std::move(resolve),
                    std::move(reject));
 

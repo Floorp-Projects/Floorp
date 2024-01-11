@@ -160,6 +160,7 @@ using mozilla::dom::Wireframe from "mozilla/dom/DocumentBinding.h";
 using mozilla::PerfStats::MetricMask from "mozilla/PerfStats.h";
 [RefCounted] using class nsIX509Cert from "nsIX509Cert.h";
 using nsIDNSService::ResolverMode from "nsIDNSService.h";
+using mozilla::dom::UserActivation::Modifiers from "mozilla/dom/UserActivation.h";
 
 union ChromeRegistryItem
 {
@@ -1528,6 +1529,7 @@ parent:
                        bool aForWindowDotPrint,
                        nullable nsIURI aURIToLoad,
                        nsCString aFeatures,
+                       Modifiers aModifiers,
                        nullable nsIPrincipal aTriggeringPrincipal,
                        nullable nsIContentSecurityPolicy aCsp,
                        nullable nsIReferrerInfo aReferrerInfo,
@@ -1541,6 +1543,7 @@ parent:
       bool aCalledFromJS,
       nullable nsIURI aURIToLoad,
       nsCString aFeatures,
+      Modifiers aModifiers,
       nsString aName,
       nullable nsIPrincipal aTriggeringPrincipal,
       nullable nsIContentSecurityPolicy aCsp,

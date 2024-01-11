@@ -34,6 +34,7 @@
 #include "mozilla/Unused.h"
 #include "mozilla/Vector.h"
 #include "mozilla/dom/ipc/StructuredCloneData.h"
+#include "mozilla/dom/UserActivation.h"
 #include "nsCSSPropertyID.h"
 #include "nsDebug.h"
 #include "nsIContentPolicy.h"
@@ -821,6 +822,17 @@ struct ParamTraits<mozilla::net::LinkHeader> {
       return false;
     }
     return ReadParam(aReader, &aResult->mFetchPriority);
+  };
+};
+
+template <>
+struct ParamTraits<mozilla::dom::UserActivation::Modifiers> {
+  typedef mozilla::dom::UserActivation::Modifiers paramType;
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
+    WriteParam(aWriter, aParam.mModifiers);
+  }
+  static bool Read(MessageReader* aReader, paramType* aResult) {
+    return ReadParam(aReader, &aResult->mModifiers);
   };
 };
 

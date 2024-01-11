@@ -30,6 +30,7 @@
 #include "mozilla/dom/BrowsingContextGroup.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/DocumentInlines.h"
+#include "mozilla/dom/UserActivation.h"
 #include "nsIDragService.h"
 #include "nsIPrompt.h"
 #include "nsIScriptObjectPrincipal.h"
@@ -291,6 +292,7 @@ nsWindowWatcher::OpenWindow(mozIDOMWindowProxy* aParent, const nsACString& aUrl,
 
   RefPtr<BrowsingContext> bc;
   MOZ_TRY(OpenWindowInternal(aParent, aUrl, aName, aFeatures,
+                             mozilla::dom::UserActivation::Modifiers::None(),
                              /* calledFromJS = */ false, dialog,
                              /* navigate = */ true, argv,
                              /* aIsPopupSpam = */ false,
@@ -359,15 +361,13 @@ static SizeSpec CalcSizeSpec(const WindowFeatures&, bool aHasChromeParent,
                              CSSToDesktopScale);
 
 NS_IMETHODIMP
-nsWindowWatcher::OpenWindow2(mozIDOMWindowProxy* aParent,
-                             const nsACString& aUrl, const nsACString& aName,
-                             const nsACString& aFeatures,
-                             bool aCalledFromScript, bool aDialog,
-                             bool aNavigate, nsISupports* aArguments,
-                             bool aIsPopupSpam, bool aForceNoOpener,
-                             bool aForceNoReferrer, PrintKind aPrintKind,
-                             nsDocShellLoadState* aLoadState,
-                             BrowsingContext** aResult) {
+nsWindowWatcher::OpenWindow2(
+    mozIDOMWindowProxy* aParent, const nsACString& aUrl,
+    const nsACString& aName, const nsACString& aFeatures,
+    const UserActivation::Modifiers& aModifiers, bool aCalledFromScript,
+    bool aDialog, bool aNavigate, nsISupports* aArguments, bool aIsPopupSpam,
+    bool aForceNoOpener, bool aForceNoReferrer, PrintKind aPrintKind,
+    nsDocShellLoadState* aLoadState, BrowsingContext** aResult) {
   nsCOMPtr<nsIArray> argv = ConvertArgsToArray(aArguments);
 
   uint32_t argc = 0;
@@ -383,10 +383,10 @@ nsWindowWatcher::OpenWindow2(mozIDOMWindowProxy* aParent,
     dialog = argc > 0;
   }
 
-  return OpenWindowInternal(aParent, aUrl, aName, aFeatures, aCalledFromScript,
-                            dialog, aNavigate, argv, aIsPopupSpam,
-                            aForceNoOpener, aForceNoReferrer, aPrintKind,
-                            aLoadState, aResult);
+  return OpenWindowInternal(aParent, aUrl, aName, aFeatures, aModifiers,
+                            aCalledFromScript, dialog, aNavigate, argv,
+                            aIsPopupSpam, aForceNoOpener, aForceNoReferrer,
+                            aPrintKind, aLoadState, aResult);
 }
 
 // This static function checks if the aDocShell uses an UserContextId equal to
@@ -473,12 +473,11 @@ static void MaybeDisablePersistence(const SizeSpec& aSizeSpec,
 }
 
 NS_IMETHODIMP
-nsWindowWatcher::OpenWindowWithRemoteTab(nsIRemoteTab* aRemoteTab,
-                                         const WindowFeatures& aFeatures,
-                                         bool aCalledFromJS,
-                                         float aOpenerFullZoom,
-                                         nsIOpenWindowInfo* aOpenWindowInfo,
-                                         nsIRemoteTab** aResult) {
+nsWindowWatcher::OpenWindowWithRemoteTab(
+    nsIRemoteTab* aRemoteTab, const WindowFeatures& aFeatures,
+    const UserActivation::Modifiers& aModifiers, bool aCalledFromJS,
+    float aOpenerFullZoom, nsIOpenWindowInfo* aOpenWindowInfo,
+    nsIRemoteTab** aResult) {
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(mWindowCreator);
 
@@ -609,10 +608,12 @@ nsWindowWatcher::OpenWindowWithRemoteTab(nsIRemoteTab* aRemoteTab,
 
 nsresult nsWindowWatcher::OpenWindowInternal(
     mozIDOMWindowProxy* aParent, const nsACString& aUrl,
-    const nsACString& aName, const nsACString& aFeatures, bool aCalledFromJS,
-    bool aDialog, bool aNavigate, nsIArray* aArgv, bool aIsPopupSpam,
-    bool aForceNoOpener, bool aForceNoReferrer, PrintKind aPrintKind,
-    nsDocShellLoadState* aLoadState, BrowsingContext** aResult) {
+    const nsACString& aName, const nsACString& aFeatures,
+    const mozilla::dom::UserActivation::Modifiers& aModifiers,
+    bool aCalledFromJS, bool aDialog, bool aNavigate, nsIArray* aArgv,
+    bool aIsPopupSpam, bool aForceNoOpener, bool aForceNoReferrer,
+    PrintKind aPrintKind, nsDocShellLoadState* aLoadState,
+    BrowsingContext** aResult) {
   MOZ_ASSERT_IF(aForceNoReferrer, aForceNoOpener);
 
   nsresult rv = NS_OK;
@@ -938,10 +939,11 @@ nsresult nsWindowWatcher::OpenWindowInternal(
 
       nsCOMPtr<nsIWindowProvider> provider = do_GetInterface(parentTreeOwner);
       if (provider) {
-        rv = provider->ProvideWindow(
-            openWindowInfo, chromeFlags, aCalledFromJS, uriToLoad, name,
-            featuresStr, aForceNoOpener, aForceNoReferrer, isPopupRequested,
-            aLoadState, &windowIsNew, getter_AddRefs(targetBC));
+        rv = provider->ProvideWindow(openWindowInfo, chromeFlags, aCalledFromJS,
+                                     uriToLoad, name, featuresStr, aModifiers,
+                                     aForceNoOpener, aForceNoReferrer,
+                                     isPopupRequested, aLoadState, &windowIsNew,
+                                     getter_AddRefs(targetBC));
 
         if (NS_SUCCEEDED(rv) && targetBC) {
           nsCOMPtr<nsIDocShell> newDocShell = targetBC->GetDocShell();

@@ -56,6 +56,7 @@
 #include "mozilla/dom/PointerEventHandler.h"
 #include "mozilla/dom/SessionStoreUtils.h"
 #include "mozilla/dom/SessionStoreChild.h"
+#include "mozilla/dom/UserActivation.h"
 #include "mozilla/dom/WindowGlobalChild.h"
 #include "mozilla/dom/WindowProxyHolder.h"
 #include "mozilla/gfx/CrossProcessPaint.h"
@@ -649,8 +650,10 @@ NS_IMETHODIMP
 BrowserChild::ProvideWindow(nsIOpenWindowInfo* aOpenWindowInfo,
                             uint32_t aChromeFlags, bool aCalledFromJS,
                             nsIURI* aURI, const nsAString& aName,
-                            const nsACString& aFeatures, bool aForceNoOpener,
-                            bool aForceNoReferrer, bool aIsPopupRequested,
+                            const nsACString& aFeatures,
+                            const UserActivation::Modifiers& aModifiers,
+                            bool aForceNoOpener, bool aForceNoReferrer,
+                            bool aIsPopupRequested,
                             nsDocShellLoadState* aLoadState, bool* aWindowIsNew,
                             BrowsingContext** aReturn) {
   *aReturn = nullptr;
@@ -682,8 +685,8 @@ BrowserChild::ProvideWindow(nsIOpenWindowInfo* aOpenWindowInfo,
   ContentChild* cc = ContentChild::GetSingleton();
   return cc->ProvideWindowCommon(
       WrapNotNull(this), aOpenWindowInfo, aChromeFlags, aCalledFromJS, aURI,
-      aName, aFeatures, aForceNoOpener, aForceNoReferrer, aIsPopupRequested,
-      aLoadState, aWindowIsNew, aReturn);
+      aName, aFeatures, aModifiers, aForceNoOpener, aForceNoReferrer,
+      aIsPopupRequested, aLoadState, aWindowIsNew, aReturn);
 }
 
 void BrowserChild::DestroyWindow() {

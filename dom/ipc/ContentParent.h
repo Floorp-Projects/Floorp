@@ -15,6 +15,7 @@
 #include "mozilla/dom/RemoteType.h"
 #include "mozilla/dom/JSProcessActorParent.h"
 #include "mozilla/dom/ProcessActor.h"
+#include "mozilla/dom/UserActivation.h"
 #include "mozilla/gfx/gfxVarReceiver.h"
 #include "mozilla/gfx/GPUProcessListener.h"
 #include "mozilla/ipc/BackgroundUtils.h"
@@ -492,6 +493,7 @@ class ContentParent final : public PContentParent,
       const uint32_t& aChromeFlags, const bool& aCalledFromJS,
       const bool& aForPrinting, const bool& aForWindowDotPrint,
       nsIURI* aURIToLoad, const nsACString& aFeatures,
+      const UserActivation::Modifiers& aModifiers,
       nsIPrincipal* aTriggeringPrincipal, nsIContentSecurityPolicy* aCsp,
       nsIReferrerInfo* aReferrerInfo, const OriginAttributes& aOriginAttributes,
       CreateWindowResolver&& aResolve);
@@ -499,7 +501,8 @@ class ContentParent final : public PContentParent,
   mozilla::ipc::IPCResult RecvCreateWindowInDifferentProcess(
       PBrowserParent* aThisTab, const MaybeDiscarded<BrowsingContext>& aParent,
       const uint32_t& aChromeFlags, const bool& aCalledFromJS,
-      nsIURI* aURIToLoad, const nsACString& aFeatures, const nsAString& aName,
+      nsIURI* aURIToLoad, const nsACString& aFeatures,
+      const UserActivation::Modifiers& aModifiers, const nsAString& aName,
       nsIPrincipal* aTriggeringPrincipal, nsIContentSecurityPolicy* aCsp,
       nsIReferrerInfo* aReferrerInfo,
       const OriginAttributes& aOriginAttributes);
@@ -717,6 +720,7 @@ class ContentParent final : public PContentParent,
       const uint32_t& aChromeFlags, const bool& aCalledFromJS,
       const bool& aForPrinting, const bool& aForWindowDotPrint,
       nsIURI* aURIToLoad, const nsACString& aFeatures,
+      const UserActivation::Modifiers& aModifiers,
       BrowserParent* aNextRemoteBrowser, const nsAString& aName,
       nsresult& aResult, nsCOMPtr<nsIRemoteTab>& aNewRemoteTab,
       bool* aWindowIsNew, int32_t& aOpenLocation,
