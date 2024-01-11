@@ -671,3 +671,65 @@ async function doOneShowLessFrequentlyTest({
   UrlbarPrefs.clear(showLessFrequentlyCountPref);
   UrlbarPrefs.set("quicksuggest.dataCollection.enabled", true);
 }
+
+/**
+ * Queries the Rust component directly and checks the returned suggestions. The
+ * point is to make sure the Rust backend passes the correct providers to the
+ * Rust component depending on the types of enabled suggestions. Assuming the
+ * Rust component isn't buggy, it should return suggestions only for the
+ * passed-in providers.
+ *
+ * @param {object} options
+ *   Options object
+ * @param {string} options.searchString
+ *   The search string.
+ * @param {Array} options.tests
+ *   Array of test objects: `{ prefs, expectedUrls }`
+ *
+ *   For each object, the given prefs are set, the Rust component is queried
+ *   using the given search string, and the URLs of the returned suggestions are
+ *   compared to the given expected URLs (order doesn't matter).
+ *
+ *   {object} prefs
+ *     An object mapping pref names (relative to `browser.urlbar`) to values.
+ *     These prefs will be set before querying and should be used to enable or
+ *     disable particular types of suggestions.
+ *   {Array} expectedUrls
+ *     An array of the URLs of the suggestions that are expected to be returned.
+ *     The order doesn't matter.
+ */
+async function doRustProvidersTests({ searchString, tests }) {
+  UrlbarPrefs.set("quicksuggest.rustEnabled", true);
+
+  for (let { prefs, expectedUrls } of tests) {
+    info(
+      "Starting Rust providers test: " + JSON.stringify({ prefs, expectedUrls })
+    );
+
+    info("Setting prefs and forcing sync");
+    for (let [name, value] of Object.entries(prefs)) {
+      UrlbarPrefs.set(name, value);
+    }
+    await QuickSuggestTestUtils.forceSync();
+
+    info("Querying with search string: " + JSON.stringify(searchString));
+    let suggestions = await QuickSuggest.rustBackend.query(searchString);
+    info("Got suggestions: " + JSON.stringify(suggestions));
+
+    Assert.deepEqual(
+      suggestions.map(s => s.url).sort(),
+      expectedUrls.sort(),
+      "query() should return the expected suggestions (by URL)"
+    );
+
+    info("Clearing prefs and forcing sync");
+    for (let name of Object.keys(prefs)) {
+      UrlbarPrefs.clear(name);
+    }
+    await QuickSuggestTestUtils.forceSync();
+  }
+
+  info("Clearing rustEnabled pref and forcing sync");
+  UrlbarPrefs.clear("quicksuggest.rustEnabled");
+  await QuickSuggestTestUtils.forceSync();
+}

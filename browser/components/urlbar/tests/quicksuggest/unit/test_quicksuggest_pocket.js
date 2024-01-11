@@ -429,6 +429,38 @@ add_tasks_with_rust(async function showLessFrequently() {
   });
 });
 
+// The `Pocket` Rust provider should be passed to the Rust component when
+// querying depending on whether Pocket suggestions are enabled.
+add_task(async function rustProviders() {
+  // TODO bug 1874074: The Rust component fetches Pocket suggestions when the
+  // AMO provider is specified regardless of whether the Pocket provider is
+  // specified. AMO suggestions are enabled by default, so disable them first so
+  // that the Rust backend does not pass in the AMO provider.
+  UrlbarPrefs.set("suggest.addons", false);
+
+  await doRustProvidersTests({
+    searchString: LOW_KEYWORD,
+    tests: [
+      {
+        prefs: {
+          "suggest.pocket": true,
+        },
+        expectedUrls: ["https://example.com/pocket-0"],
+      },
+      {
+        prefs: {
+          "suggest.pocket": false,
+        },
+        expectedUrls: [],
+      },
+    ],
+  });
+
+  UrlbarPrefs.clear("suggest.addons");
+  UrlbarPrefs.clear("suggest.pocket");
+  await QuickSuggestTestUtils.forceSync();
+});
+
 function makeExpectedResult({
   searchString,
   fullKeyword = searchString,

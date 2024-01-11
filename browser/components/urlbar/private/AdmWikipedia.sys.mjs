@@ -52,6 +52,17 @@ export class AdmWikipedia extends BaseFeature {
     return suggestion.is_sponsored ? "adm_sponsored" : "adm_nonsponsored";
   }
 
+  isRustSuggestionTypeEnabled(type) {
+    switch (type) {
+      case "Amp":
+        return lazy.UrlbarPrefs.get("suggest.quicksuggest.sponsored");
+      case "Wikipedia":
+        return lazy.UrlbarPrefs.get("suggest.quicksuggest.nonsponsored");
+    }
+    this.logger.error("Unknown Rust suggestion type: " + type);
+    return false;
+  }
+
   enable(enabled) {
     if (enabled) {
       lazy.QuickSuggest.jsBackend.register(this);

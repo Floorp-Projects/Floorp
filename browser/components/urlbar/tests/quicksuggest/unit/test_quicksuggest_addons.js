@@ -491,6 +491,31 @@ add_tasks_with_rust(async function showLessFrequently() {
   });
 });
 
+// The `Amo` Rust provider should be passed to the Rust component when querying
+// depending on whether addon suggestions are enabled.
+add_task(async function rustProviders() {
+  await doRustProvidersTests({
+    searchString: "first",
+    tests: [
+      {
+        prefs: {
+          "suggest.addons": true,
+        },
+        expectedUrls: ["https://example.com/first-addon"],
+      },
+      {
+        prefs: {
+          "suggest.addons": false,
+        },
+        expectedUrls: [],
+      },
+    ],
+  });
+
+  UrlbarPrefs.clear("suggest.addons");
+  await QuickSuggestTestUtils.forceSync();
+});
+
 function makeExpectedResult({ suggestion, source, setUtmParams = true }) {
   if (
     source == "remote-settings" &&
