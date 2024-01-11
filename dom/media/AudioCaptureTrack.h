@@ -31,9 +31,7 @@ class AudioCaptureTrack : public ProcessedMediaTrack,
   uint32_t NumberOfChannels() const override;
 
  protected:
-  void MixerCallback(AudioDataValue* aMixedBuffer, AudioSampleFormat aFormat,
-                     uint32_t aChannels, uint32_t aFrames,
-                     uint32_t aSampleRate) override;
+  void MixerCallback(AudioChunk* aMixedBuffer, uint32_t aSampleRate) override;
   AudioMixer mMixer;
   bool mStarted;
   bool mTrackCreated;

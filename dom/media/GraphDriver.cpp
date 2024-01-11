@@ -1092,26 +1092,28 @@ void AudioCallbackDriver::StateCallback(cubeb_state aState) {
   }
 }
 
-void AudioCallbackDriver::MixerCallback(AudioDataValue* aMixedBuffer,
-                                        AudioSampleFormat aFormat,
-                                        uint32_t aChannels, uint32_t aFrames,
+void AudioCallbackDriver::MixerCallback(AudioChunk* aMixedBuffer,
                                         uint32_t aSampleRate) {
   MOZ_ASSERT(InIteration());
   uint32_t toWrite = mBuffer.Available();
 
-  if (!mBuffer.Available() && aFrames > 0) {
+  TrackTime frameCount = aMixedBuffer->mDuration;
+  if (!mBuffer.Available() && frameCount > 0) {
     NS_WARNING("DataCallback buffer full, expect frame drops.");
   }
 
-  MOZ_ASSERT(mBuffer.Available() <= aFrames);
+  MOZ_ASSERT(mBuffer.Available() <= frameCount);
 
-  mBuffer.WriteFrames(aMixedBuffer, mBuffer.Available());
+  mBuffer.WriteFrames(*aMixedBuffer, mBuffer.Available());
   MOZ_ASSERT(mBuffer.Available() == 0,
              "Missing frames to fill audio callback's buffer.");
+  if (toWrite == frameCount) {
+    return;
+  }
 
-  DebugOnly<uint32_t> written = mScratchBuffer.Fill(
-      aMixedBuffer + toWrite * aChannels, aFrames - toWrite);
-  NS_WARNING_ASSERTION(written == aFrames - toWrite, "Dropping frames.");
+  aMixedBuffer->SliceTo(toWrite, frameCount);
+  DebugOnly<uint32_t> written = mScratchBuffer.Fill(*aMixedBuffer);
+  NS_WARNING_ASSERTION(written == frameCount - toWrite, "Dropping frames.");
 };
 
 void AudioCallbackDriver::PanOutputIfNeeded(bool aMicrophoneActive) {

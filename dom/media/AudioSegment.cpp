@@ -281,49 +281,4 @@ void AudioSegment::Mix(AudioMixer& aMixer, uint32_t aOutputChannels,
   }
 }
 
-void AudioSegment::WriteTo(AudioMixer& aMixer, uint32_t aOutputChannels,
-                           uint32_t aSampleRate) {
-  AutoTArray<AudioDataValue,
-             SilentChannel::AUDIO_PROCESSING_FRAMES * GUESS_AUDIO_CHANNELS>
-      buf;
-  // Offset in the buffer that will be written to the mixer, in samples.
-  uint32_t offset = 0;
-
-  if (GetDuration() <= 0) {
-    MOZ_ASSERT(GetDuration() == 0);
-    return;
-  }
-
-  uint32_t outBufferLength = GetDuration() * aOutputChannels;
-  buf.SetLength(outBufferLength);
-
-  for (ChunkIterator ci(*this); !ci.IsEnded(); ci.Next()) {
-    AudioChunk& c = *ci;
-
-    switch (c.mBufferFormat) {
-      case AUDIO_FORMAT_S16:
-        WriteChunk<int16_t>(c, aOutputChannels, c.mVolume,
-                            buf.Elements() + offset);
-        break;
-      case AUDIO_FORMAT_FLOAT32:
-        WriteChunk<float>(c, aOutputChannels, c.mVolume,
-                          buf.Elements() + offset);
-        break;
-      case AUDIO_FORMAT_SILENCE:
-        // The mixer is expecting interleaved data, so this is ok.
-        PodZero(buf.Elements() + offset, c.mDuration * aOutputChannels);
-        break;
-      default:
-        MOZ_ASSERT(false, "Not handled");
-    }
-
-    offset += c.mDuration * aOutputChannels;
-  }
-
-  if (offset) {
-    aMixer.Mix(buf.Elements(), aOutputChannels, offset / aOutputChannels,
-               aSampleRate);
-  }
-}
-
 }  // namespace mozilla

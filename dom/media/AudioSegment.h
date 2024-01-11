@@ -404,11 +404,6 @@ class AudioSegment : public MediaSegmentBase<AudioSegment, AudioChunk> {
     chunk = AppendChunk(aChunk.mDuration);
   }
   void ApplyVolume(float aVolume);
-  // Mix the segment into a mixer, interleaved. This is useful to output a
-  // segment to a system audio callback. It up or down mixes to aChannelCount
-  // channels.
-  void WriteTo(AudioMixer& aMixer, uint32_t aChannelCount,
-               uint32_t aSampleRate);
   // Mix the segment into a mixer, keeping it planar, up or down mixing to
   // aChannelCount channels.
   void Mix(AudioMixer& aMixer, uint32_t aChannelCount, uint32_t aSampleRate);

@@ -96,35 +96,10 @@ uint32_t AudioCaptureTrack::NumberOfChannels() const {
   return GetData<AudioSegment>()->MaxChannelCount();
 }
 
-void AudioCaptureTrack::MixerCallback(AudioDataValue* aMixedBuffer,
-                                      AudioSampleFormat aFormat,
-                                      uint32_t aChannels, uint32_t aFrames,
+void AudioCaptureTrack::MixerCallback(AudioChunk* aMixedBuffer,
                                       uint32_t aSampleRate) {
-  AutoTArray<nsTArray<AudioDataValue>, MONO> output;
-  AutoTArray<const AudioDataValue*, MONO> bufferPtrs;
-  output.SetLength(MONO);
-  bufferPtrs.SetLength(MONO);
-
-  uint32_t written = 0;
-  // We need to copy here, because the mixer will reuse the storage, we should
-  // not hold onto it. Buffers are in planar format.
-  for (uint32_t channel = 0; channel < aChannels; channel++) {
-    AudioDataValue* out = output[channel].AppendElements(aFrames);
-    PodCopy(out, aMixedBuffer + written, aFrames);
-    bufferPtrs[channel] = out;
-    written += aFrames;
-  }
-  AudioChunk chunk;
-  chunk.mBuffer =
-      new mozilla::SharedChannelArrayBuffer<AudioDataValue>(std::move(output));
-  chunk.mDuration = aFrames;
-  chunk.mBufferFormat = aFormat;
-  chunk.mChannelData.SetLength(MONO);
-  for (uint32_t channel = 0; channel < aChannels; channel++) {
-    chunk.mChannelData[channel] = bufferPtrs[channel];
-  }
-
+  MOZ_ASSERT(aMixedBuffer->ChannelCount() == MONO);
   // Now we have mixed data, simply append it.
-  GetData<AudioSegment>()->AppendAndConsumeChunk(std::move(chunk));
+  GetData<AudioSegment>()->AppendAndConsumeChunk(std::move(*aMixedBuffer));
 }
 }  // namespace mozilla

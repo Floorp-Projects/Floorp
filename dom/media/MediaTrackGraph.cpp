@@ -745,7 +745,7 @@ TrackTime MediaTrackGraphImpl::PlayAudio(AudioMixer* aMixer,
     } else {
       outputChannels = AudioOutputChannelCount();
     }
-    output.WriteTo(*aMixer, outputChannels, mSampleRate);
+    output.Mix(*aMixer, outputChannels, mSampleRate);
   }
   return ticksWritten;
 }
