@@ -400,6 +400,45 @@ impl<'ln> GeckoNode<'ln> {
     fn contains_non_whitespace_content(&self) -> bool {
         unsafe { Gecko_IsSignificantChild(self.0, false) }
     }
+
+    /// Returns the previous sibling of this node that is an element.
+    #[inline]
+    pub fn prev_sibling_element(&self) -> Option<GeckoElement> {
+        let mut prev = self.prev_sibling();
+        while let Some(p) = prev {
+            if let Some(e) = p.as_element() {
+                return Some(e);
+            }
+            prev = p.prev_sibling();
+        }
+        None
+    }
+
+    /// Returns the next sibling of this node that is an element.
+    #[inline]
+    pub fn next_sibling_element(&self) -> Option<GeckoElement> {
+        let mut next = self.next_sibling();
+        while let Some(n) = next {
+            if let Some(e) = n.as_element() {
+                return Some(e);
+            }
+            next = n.next_sibling();
+        }
+        None
+    }
+
+    /// Returns last child sibling of this node that is an element.
+    #[inline]
+    pub fn last_child_element(&self) -> Option<GeckoElement<'ln>> {
+        let last = match self.last_child() {
+            Some(n) => n,
+            None => return None,
+        };
+        if let Some(e) = last.as_element() {
+            return Some(e);
+        }
+        None
+    }
 }
 
 impl<'ln> NodeInfo for GeckoNode<'ln> {
