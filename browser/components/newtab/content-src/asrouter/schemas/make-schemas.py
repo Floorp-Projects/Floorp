@@ -73,9 +73,6 @@ SCHEMAS = [
             "NewtabPromoMessage": (
                 SCHEMA_DIR / "PBNewtab" / "NewtabPromoMessage.schema.json"
             ),
-            "ProtectionsPanelMessage": (
-                SCHEMA_DIR / "OnboardingMessage" / "ProtectionsPanelMessage.schema.json"
-            ),
             "Spotlight": SCHEMA_DIR / "OnboardingMessage" / "Spotlight.schema.json",
             "ToastNotification": (
                 SCHEMA_DIR / "ToastNotification" / "ToastNotification.schema.json"
