@@ -61,23 +61,15 @@ class Baseline {
   static nscoord SynthesizeBOffsetFromBorderBox(const nsIFrame* aFrame,
                                                 WritingMode aWM,
                                                 BaselineSharingGroup);
-
   /**
-   * Synthesize a first(last) inline-axis baseline in aWM based on aFrame's
-   * content-box.
-   *
-   * An alphabetical baseline is at the end edge of aFrame's content-box with
-   * respect to aWM's block-axis, and a central baseline is halfway between the
-   * start and end edges. (aWM tells which baseline to use.)
-   * https://drafts.csswg.org/css-align-3/#synthesize-baseline
-   *
-   * @note This works only when aFrame's writing-mode is parallel to aWM.
-   * @param aWM the writing-mode of the alignment context.
-   * @return an offset from aFrame's border-box start(end) edge in aWM's
-   *         block-axis for a first(last) baseline, respectively.
+   * As above, but using the content box.
    */
-  static nscoord SynthesizeBOffsetFromContentBox(const nsIFrame* aFrame,
-                                                 WritingMode aWM,
+  static nscoord SynthesizeBOffsetFromContentBox(const nsIFrame*, WritingMode,
+                                                 BaselineSharingGroup);
+  /**
+   * As above, but using the padding box.
+   */
+  static nscoord SynthesizeBOffsetFromPaddingBox(const nsIFrame*, WritingMode,
                                                  BaselineSharingGroup);
 };
 
