@@ -8,7 +8,7 @@
  *
  * editableField({
  *   element: spanToEdit,
- *   done: function(value, commit, direction) {
+ *   done: function(value, commit, direction, key) {
  *     if (commit) {
  *       spanToEdit.textContent = value;
  *     }
@@ -107,8 +107,8 @@ function isKeyIn(key, ...keys) {
  * @param {Function} options.done:
  *        Called when input is committed or blurred.  Called with
  *        current value, a boolean telling the caller whether to
- *        commit the change, and the direction of the next element to be
- *        selected. Direction may be one of Services.focus.MOVEFOCUS_FORWARD,
+ *        commit the change, the direction of the next element to be
+ *        selected and the event keybode. Direction may be one of Services.focus.MOVEFOCUS_FORWARD,
  *        Services.focus.MOVEFOCUS_BACKWARD, or null (no movement).
  *        This function is called before the editor has been torn down.
  * @param {Function} options.destroy:
@@ -1095,7 +1095,7 @@ class InplaceEditor extends EventEmitter {
   /**
    * Call the client's done handler and clear out.
    */
-  #apply(event, direction) {
+  #apply(direction, key) {
     if (this.#applied) {
       return null;
     }
@@ -1104,7 +1104,7 @@ class InplaceEditor extends EventEmitter {
 
     if (this.done) {
       const val = this.cancelled ? this.initial : this.currentInputValue;
-      return this.done(val, !this.cancelled, direction);
+      return this.done(val, !this.cancelled, direction, key);
     }
 
     return null;
@@ -1335,7 +1335,7 @@ class InplaceEditor extends EventEmitter {
         }
       }
 
-      this.#apply(event, direction);
+      this.#apply(direction, key);
 
       // Close the popup if open
       if (this.popup && this.popup.isOpen) {
