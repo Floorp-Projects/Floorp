@@ -2363,6 +2363,12 @@ void MacroAssembler::branchToComputedAddress(const BaseIndex& addr) {
   }
 }
 
+void MacroAssembler::cmp32Move32(Condition cond, Register lhs, Imm32 rhs,
+                                 Register src, Register dest) {
+  cmp32(lhs, rhs);
+  ma_mov(src, dest, LeaveCC, cond);
+}
+
 void MacroAssembler::cmp32Move32(Condition cond, Register lhs, Register rhs,
                                  Register src, Register dest) {
   cmp32(lhs, rhs);

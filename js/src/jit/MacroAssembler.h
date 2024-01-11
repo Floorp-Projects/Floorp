@@ -2115,6 +2115,10 @@ class MacroAssembler : public MacroAssemblerSpecific {
   template <typename T>
   inline void fallibleUnboxBigInt(const T& src, Register dest, Label* fail);
 
+  inline void cmp32Move32(Condition cond, Register lhs, Imm32 rhs, Register src,
+                          Register dest)
+      DEFINED_ON(arm, arm64, loong64, riscv64, wasm32, mips_shared, x86_shared);
+
   inline void cmp32Move32(Condition cond, Register lhs, Register rhs,
                           Register src, Register dest)
       DEFINED_ON(arm, arm64, loong64, riscv64, wasm32, mips_shared, x86_shared);

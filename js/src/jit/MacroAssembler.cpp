@@ -4417,12 +4417,10 @@ void MacroAssembler::pow32(Register base, Register power, Register dest,
 void MacroAssembler::signInt32(Register input, Register output) {
   MOZ_ASSERT(input != output);
 
-  Label done;
   move32(input, output);
   rshift32Arithmetic(Imm32(31), output);
-  branch32(Assembler::LessThanOrEqual, input, Imm32(0), &done);
-  move32(Imm32(1), output);
-  bind(&done);
+  or32(Imm32(1), output);
+  cmp32Move32(Assembler::Equal, input, Imm32(0), input, output);
 }
 
 void MacroAssembler::signDouble(FloatRegister input, FloatRegister output) {

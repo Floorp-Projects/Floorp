@@ -964,6 +964,11 @@ void MacroAssembler::branchTestString(Condition cond, const ValueOperand& value,
   MOZ_CRASH();
 }
 
+void MacroAssembler::cmp32Move32(Condition cond, Register lhs, Imm32 rhs,
+                                 Register src, Register dest) {
+  MOZ_CRASH();
+}
+
 void MacroAssembler::cmp32Move32(Condition cond, Register lhs, Register rhs,
                                  Register src, Register dest) {
   MOZ_CRASH();

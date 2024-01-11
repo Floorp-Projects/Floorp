@@ -2029,6 +2029,13 @@ void MacroAssembler::branchToComputedAddress(const BaseIndex& addr) {
   Br(scratch64);
 }
 
+void MacroAssembler::cmp32Move32(Condition cond, Register lhs, Imm32 rhs,
+                                 Register src, Register dest) {
+  cmp32(lhs, rhs);
+  Csel(ARMRegister(dest, 32), ARMRegister(src, 32), ARMRegister(dest, 32),
+       cond);
+}
+
 void MacroAssembler::cmp32Move32(Condition cond, Register lhs, Register rhs,
                                  Register src, Register dest) {
   cmp32(lhs, rhs);

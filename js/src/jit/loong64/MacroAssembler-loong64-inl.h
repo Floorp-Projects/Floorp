@@ -1858,6 +1858,13 @@ void MacroAssembler::branchToComputedAddress(const BaseIndex& addr) {
   branch(scratch2);
 }
 
+void MacroAssembler::cmp32Move32(Condition cond, Register lhs, Imm32 rhs,
+                                 Register src, Register dest) {
+  SecondScratchRegisterScope scratch2(asMasm());
+  cmp32Set(cond, lhs, rhs, scratch2);
+  moveIfNotZero(dest, src, scratch2);
+}
+
 void MacroAssembler::cmp32Move32(Condition cond, Register lhs, Register rhs,
                                  Register src, Register dest) {
   SecondScratchRegisterScope scratch2(asMasm());
