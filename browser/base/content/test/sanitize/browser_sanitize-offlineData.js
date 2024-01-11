@@ -43,6 +43,16 @@ function waitForUnregister(host) {
   });
 }
 
+async function createData(host) {
+  let origin = "https://" + host;
+  let dummySWURL =
+    getRootDirectory(gTestPath).replace("chrome://mochitests/content", origin) +
+    "dummy.js";
+
+  await SiteDataTestUtils.addToIndexedDB(origin);
+  await SiteDataTestUtils.addServiceWorker(dummySWURL);
+}
+
 function moveOriginInTime(principals, endDate, host) {
   for (let i = 0; i < principals.length; ++i) {
     let principal = principals.queryElementAt(i, Ci.nsIPrincipal);
@@ -79,8 +89,8 @@ add_task(async function testWithRange() {
   info("sanitize: " + itemsToClear.join(", "));
   await Sanitizer.sanitize(itemsToClear, { ignoreTimespan: false });
 
-  await createDummyDataForHost("example.org");
-  await createDummyDataForHost("example.com");
+  await createData("example.org");
+  await createData("example.com");
 
   endDate = Date.now() * 1000;
   principals = sas.getActiveOrigins(endDate - oneHour, endDate);
@@ -182,8 +192,8 @@ add_task(async function testWithRange() {
 });
 
 add_task(async function testExceptionsOnShutdown() {
-  await createDummyDataForHost("example.org");
-  await createDummyDataForHost("example.com");
+  await createData("example.org");
+  await createData("example.com");
 
   // Set exception for example.org to not get cleaned
   let originALLOW = "https://example.org";

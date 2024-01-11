@@ -25,8 +25,6 @@ sanitize-dialog-title-everything =
 
 clear-data-settings-label = When closed, { -brand-short-name } should automatically clear all
 
-sanitize-on-shutdown-description = Automatically clear all checked items when { -brand-short-name } closes.
-
 ## clear-time-duration-prefix is followed by a dropdown list, with
 ## values localized using clear-time-duration-value-* messages.
 ## clear-time-duration-suffix is left empty in English, but can be
@@ -78,13 +76,6 @@ item-cookies =
     .label = Cookies
     .accesskey = C
 
-# Variables:
-#   $amount (Number) - Amount of site data currently stored on disk
-#   $unit (String) - Abbreviation of the unit that $amount is in, e.g. "MB"
-item-cookies-site-data-with-size =
-    .label = Cookies and site data ({ $amount } { $unit })
-    .accesskey = e
-
 item-cookies-site-data =
     .label = Cookies and site data
     .accesskey = e
@@ -98,13 +89,6 @@ item-active-logins =
 item-cache =
     .label = Cache
     .accesskey = a
-
-# Variables:
-#   $amount (Number) - Amount of cached data
-#   $unit (String) - Abbreviation of the unit that $amount is in, e.g. "MB"
-item-cached-content-with-size =
-    .label = Temporary cached files and pages ({ $amount } { $unit })
-    .accesskey = f
 
 item-cached-content =
     .label = Temporary cached files and pages
@@ -121,15 +105,6 @@ item-site-prefs =
     .accesskey = i
 
 item-site-prefs-description = Resets your permissions and site preferences to original settings
-
-# Variables:
-#   $count (Number) - Number of downloads recorded
-item-download-history-with-size =
-    .label = { $count ->
-        [one] Downloaded files list ({ $count } file)
-       *[other] Downloaded files list ({ $count } files)
-    }
-    .accesskey = D
 
 item-download-history =
     .label = Downloaded files list
@@ -155,9 +130,6 @@ sanitize-button-ok =
 
 sanitize-button-ok2 =
     .label = Clear
-
-sanitize-button-ok-on-shutdown =
-    .label = Save Changes
 
 # The label for the default button between the user clicking it and the window
 # closing.  Indicates the items are being cleared.

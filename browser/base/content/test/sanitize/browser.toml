@@ -3,7 +3,6 @@ support-files = [
   "head.js",
   "dummy.js",
   "dummy_page.html",
-  "site_data_test.html",
 ]
 
 ["browser_cookiePermission.js"]
