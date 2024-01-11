@@ -216,6 +216,8 @@ support-files = ["file_new_tab_page.html"]
 
 ["browser_open_newtab_start_observer_notification.js"]
 
+["browser_openURI_background.js"]
+
 ["browser_opened_file_tab_navigated_to_web.js"]
 https_first_disabled = true
 
