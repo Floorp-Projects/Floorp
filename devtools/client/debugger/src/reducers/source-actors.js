@@ -25,6 +25,14 @@ function initialSourceActorsState() {
     // but this may be invalid. The source map URL or source map file content may be invalid.
     // In these scenarios we will remove the source actor from this set.
     mutableSourceActorsWithSourceMap: new Set(),
+
+    // Map(Source Actor ID: string => string)
+    // Store the exception message when processing the sourceMapURL field of the source actor.
+    mutableSourceMapErrors: new Map(),
+
+    // Map(Source Actor ID: string => string)
+    // When a bundle has a functional sourcemap, reports the resolved source map URL.
+    mutableResolvedSourceMapURL: new Map(),
   };
 }
 
@@ -79,6 +87,22 @@ export default function update(state = initialSourceActorsState(), action) {
         };
       }
       return state;
+
+    case "SOURCE_MAP_ERROR": {
+      state.mutableSourceMapErrors.set(
+        action.sourceActor.id,
+        action.errorMessage
+      );
+      return { ...state };
+    }
+
+    case "RESOLVED_SOURCEMAP_URL": {
+      state.mutableResolvedSourceMapURL.set(
+        action.sourceActor.id,
+        action.resolvedSourceMapURL
+      );
+      return { ...state };
+    }
   }
 
   return state;

@@ -125,17 +125,15 @@ function update(state = initialSourceBlackBoxState(), action) {
       };
     }
 
-    case "ADD_SOURCEMAP_IGNORE_LIST_SOURCES":
-      if (action.status == "done") {
-        return {
-          ...state,
-          sourceMapIgnoreListUrls: [
-            ...state.sourceMapIgnoreListUrls,
-            ...action.value,
-          ],
-        };
-      }
-      return state;
+    case "ADD_SOURCEMAP_IGNORE_LIST_SOURCES": {
+      return {
+        ...state,
+        sourceMapIgnoreListUrls: [
+          ...state.sourceMapIgnoreListUrls,
+          ...action.ignoreListUrls,
+        ],
+      };
+    }
 
     case "NAVIGATE":
       return initialSourceBlackBoxState(state);
