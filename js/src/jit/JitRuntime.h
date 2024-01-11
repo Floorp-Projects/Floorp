@@ -126,6 +126,7 @@ class JitRuntime {
   // long it's also freed in EnterBaseline and EnterJit (after returning from
   // JIT code).
   MainThreadData<js::UniquePtr<uint8_t>> ionOsrTempData_{nullptr};
+  MainThreadData<uint32_t> ionOsrTempDataSize_{0};
 
   // List of Ion compile tasks that should be freed. Used to batch multiple
   // tasks into a single IonFreeTask.
