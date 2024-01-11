@@ -516,7 +516,7 @@ void MacroAssemblerX64::handleFailureWithHandlerTail(Label* profilerExitTail,
   asMasm().setupUnalignedABICall(rcx);
   asMasm().passABIArg(rax);
   asMasm().callWithABI<Fn, HandleException>(
-      MoveOp::GENERAL, CheckUnsafeCallWithABI::DontCheckHasExitFrame);
+      ABIType::General, CheckUnsafeCallWithABI::DontCheckHasExitFrame);
 
   Label entryFrame;
   Label catch_;
@@ -776,8 +776,8 @@ void MacroAssembler::callWithABIPre(uint32_t* stackAdjust, bool callFromWasm) {
   assertStackAlignment(ABIStackAlignment);
 }
 
-void MacroAssembler::callWithABIPost(uint32_t stackAdjust, MoveOp::Type result,
-                                     bool cleanupArg) {
+void MacroAssembler::callWithABIPost(uint32_t stackAdjust, ABIType result,
+                                     bool callFromWasm) {
   freeStack(stackAdjust);
   if (dynamicAlignment_) {
     pop(rsp);
@@ -799,7 +799,7 @@ static bool IsIntArgReg(Register reg) {
   return false;
 }
 
-void MacroAssembler::callWithABINoProfiler(Register fun, MoveOp::Type result) {
+void MacroAssembler::callWithABINoProfiler(Register fun, ABIType result) {
   if (IsIntArgReg(fun)) {
     // Callee register may be clobbered for an argument. Move the callee to
     // r10, a volatile, non-argument register.
@@ -816,8 +816,7 @@ void MacroAssembler::callWithABINoProfiler(Register fun, MoveOp::Type result) {
   callWithABIPost(stackAdjust, result);
 }
 
-void MacroAssembler::callWithABINoProfiler(const Address& fun,
-                                           MoveOp::Type result) {
+void MacroAssembler::callWithABINoProfiler(const Address& fun, ABIType result) {
   Address safeFun = fun;
   if (IsIntArgReg(safeFun.base)) {
     // Callee register may be clobbered for an argument. Move the callee to
