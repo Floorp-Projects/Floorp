@@ -116,7 +116,14 @@ add_task(async function test_more_menus() {
     let panelItem = panelList.querySelector(
       "panel-item[data-l10n-id=fxviewtabrow-close-tab]"
     );
+    let panelItemButton = panelItem.shadowRoot.querySelector(
+      "button[role=menuitem]"
+    );
     ok(panelItem, "Close Tab panel item exists");
+    ok(
+      panelItemButton,
+      "Close Tab panel item button with role=menuitem exists"
+    );
 
     await clearAllParentTelemetryEvents();
     let contextMenuEvent = [
@@ -131,7 +138,7 @@ add_task(async function test_more_menus() {
 
     // close a tab via the menu
     menuHidden = BrowserTestUtils.waitForEvent(panelList, "hidden");
-    panelItem.click();
+    panelItemButton.click();
     await cards[0].getUpdateComplete();
     await menuHidden;
     await telemetryEvent(contextMenuEvent);
@@ -221,7 +228,14 @@ add_task(async function test_more_menus() {
     panelItem = panelList.querySelector(
       "panel-item[data-l10n-id=fxviewtabrow-copy-link]"
     );
+    panelItemButton = panelItem.shadowRoot.querySelector(
+      "button[role=menuitem]"
+    );
     ok(panelItem, "Copy link panel item exists");
+    ok(
+      panelItemButton,
+      "Copy link panel item button with role=menuitem exists"
+    );
 
     await clearAllParentTelemetryEvents();
     contextMenuEvent = [
@@ -235,7 +249,7 @@ add_task(async function test_more_menus() {
     ];
 
     menuHidden = BrowserTestUtils.waitForEvent(panelList, "hidden");
-    panelItem.click();
+    panelItemButton.click();
     info("Waiting for menuHidden");
     await menuHidden;
     info("Waiting for telemetryEvent");
