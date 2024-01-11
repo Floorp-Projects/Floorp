@@ -117,9 +117,9 @@ var gSearchResultsPane = {
   },
 
   /**
-   * Finds and returns text nodes within node and all descendants.
-   * Iterates through all the siblings of the node object and adds each sibling to an
-   * array if it's a TEXT_NODE, and otherwise recurses to check text nodes within it.
+   * Finds and returns text nodes within node and all descendants
+   * Iterates through all the sibilings of the node object and adds the sibilings
+   * to an array if sibiling is a TEXT_NODE else checks the text nodes with in current node
    * Source - http://stackoverflow.com/questions/10730309/find-all-text-nodes-in-html-page
    *
    * @param Node nodeObject
@@ -419,15 +419,9 @@ var gSearchResultsPane = {
       nodeObject.tagName == "description" ||
       nodeObject.tagName == "menulist" ||
       nodeObject.tagName == "menuitem" ||
-      nodeObject.tagName == "checkbox" ||
-      nodeObject.localName == "moz-toggle"
+      nodeObject.tagName == "checkbox"
     ) {
       let simpleTextNodes = this.textNodeDescendants(nodeObject);
-      if (nodeObject.shadowRoot) {
-        simpleTextNodes.push(
-          ...this.textNodeDescendants(nodeObject.shadowRoot)
-        );
-      }
       for (let node of simpleTextNodes) {
         let result = this.highlightMatches(
           [node],
