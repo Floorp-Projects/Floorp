@@ -107,6 +107,8 @@ MOCHITEST_CHROME_MANIFESTS += [
     "test/chrome.toml",
 ]
 
+MARIONETTE_MANIFESTS += ["test/marionette/manifest.toml"]
+
 XPCSHELL_TESTS_MANIFESTS += ["test/xpcshell/xpcshell.toml"]
 
 BROWSER_CHROME_MANIFESTS += ["test/browser.toml"]

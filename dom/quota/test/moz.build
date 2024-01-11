@@ -8,6 +8,8 @@ TEST_DIRS += ["gtest"]
 
 BROWSER_CHROME_MANIFESTS += ["browser/browser.toml"]
 
+MARIONETTE_MANIFESTS += ["marionette/manifest.toml"]
+
 MOCHITEST_MANIFESTS += ["mochitest/mochitest.toml"]
 
 XPCSHELL_TESTS_MANIFESTS += [
@@ -81,8 +83,4 @@ TESTING_JS_MODULES.dom.quota.test.modules.worker += [
     "modules/system/worker/ModuleLoader.js",
     "modules/system/worker/Utils.js",
     "modules/system/worker/UtilsChild.js",
-]
-
-MARIONETTE_UNIT_MANIFESTS += [
-    "marionette/manifest.toml",
 ]

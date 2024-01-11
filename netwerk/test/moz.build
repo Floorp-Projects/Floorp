@@ -27,9 +27,7 @@ TESTING_JS_MODULES += [
 
 PERFTESTS_MANIFESTS += ["perf/perftest.toml", "unit/perftest.toml"]
 
-MARIONETTE_UNIT_MANIFESTS += [
-    "marionette/manifest.toml",
-]
+MARIONETTE_MANIFESTS += ["marionette/manifest.toml"]
 
 if CONFIG["FUZZING_INTERFACES"]:
     TEST_DIRS += ["fuzz"]

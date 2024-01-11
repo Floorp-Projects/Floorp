@@ -12,6 +12,7 @@ BROWSER_CHROME_MANIFESTS += [
     "tests/browser/browser.toml",
     "tests/browser/interactions/browser.toml",
 ]
+MARIONETTE_MANIFESTS += ["tests/marionette/manifest.toml"]
 
 JAR_MANIFESTS += ["jar.mn"]
 

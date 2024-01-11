@@ -2208,16 +2208,10 @@ VARIABLES = {
         """List of manifest files defining firefox-ui-functional tests.
         """,
     ),
-    "MARIONETTE_LAYOUT_MANIFESTS": (
+    "MARIONETTE_MANIFESTS": (
         ManifestparserManifestList,
         list,
-        """List of manifest files defining marionette-layout tests.
-        """,
-    ),
-    "MARIONETTE_UNIT_MANIFESTS": (
-        ManifestparserManifestList,
-        list,
-        """List of manifest files defining marionette-unit tests.
+        """List of manifest files defining marionette tests.
         """,
     ),
     "METRO_CHROME_MANIFESTS": (
