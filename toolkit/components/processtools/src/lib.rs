@@ -25,19 +25,6 @@ pub unsafe extern "C" fn new_process_tools_service(result: *mut *const nsIProces
     RefPtr::new(service.coerce::<nsIProcessToolsService>()).forget(&mut *result);
 }
 
-#[cfg(target_os = "windows")]
-use std::ffi::c_void;
-
-// We want to generate an exception that can be caught by the exception handler
-// when injecting in a remote process, STATUS_ACCESS_VIOLATION seems not to do,
-// it but the following code generates a STATUS_ILLEGAL_INSTRUCTION that seems
-// to do the trick
-#[cfg(target_os = "windows")]
-pub unsafe extern "system" fn crash_illegal_instruction(_arg: *mut c_void) -> u32 {
-    std::ptr::null_mut::<u32>().write(1);
-    0
-}
-
 // Implementation note:
 //
 // We're following the strategy employed by the `kvstore`.
@@ -106,6 +93,25 @@ impl ProcessToolsService {
 
     #[cfg(target_os = "windows")]
     pub fn crash(&self, pid: u64) -> Result<(), nsresult> {
+        let ntdll = unsafe {
+            winapi::um::libloaderapi::GetModuleHandleA(
+                /* lpModuleName */ std::mem::transmute(b"ntdll.dll\0".as_ptr()),
+            )
+        };
+        if ntdll.is_null() {
+            return Err(NS_ERROR_NOT_AVAILABLE);
+        }
+
+        let dbg_break_point = unsafe {
+            winapi::um::libloaderapi::GetProcAddress(
+                /* hModule */ ntdll,
+                /* lpProcName */ std::mem::transmute(b"DbgBreakPoint\0".as_ptr()),
+            )
+        };
+        if dbg_break_point.is_null() {
+            return Err(NS_ERROR_NOT_AVAILABLE);
+        }
+
         let target_proc = unsafe {
             winapi::um::processthreadsapi::OpenProcess(
                 /* dwDesiredAccess */
@@ -126,7 +132,7 @@ impl ProcessToolsService {
                 /* hProcess */ target_proc,
                 /* lpThreadAttributes */ std::ptr::null_mut(),
                 /* dwStackSize */ 0,
-                /* lpStartAddress */ Some(crash_illegal_instruction),
+                /* lpStartAddress */ Some(std::mem::transmute(dbg_break_point)),
                 /* lpParameter */ std::ptr::null_mut(),
                 /* dwCreationFlags */ 0,
                 /* lpThreadId */ std::ptr::null_mut(),
