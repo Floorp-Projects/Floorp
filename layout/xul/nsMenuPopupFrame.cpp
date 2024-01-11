@@ -774,6 +774,21 @@ void nsMenuPopupFrame::InitPositionFromAnchorAlign(const nsAString& aAnchor,
   mPosition = POPUPPOSITION_UNKNOWN;
 }
 
+static FlipType FlipFromAttribute(nsMenuPopupFrame* aFrame) {
+  nsAutoString flip;
+  aFrame->PopupElement().GetAttr(nsGkAtoms::flip, flip);
+  if (flip.EqualsLiteral("none")) {
+    return FlipType_None;
+  }
+  if (flip.EqualsLiteral("both")) {
+    return FlipType_Both;
+  }
+  if (flip.EqualsLiteral("slide")) {
+    return FlipType_Slide;
+  }
+  return FlipType_Default;
+}
+
 void nsMenuPopupFrame::InitializePopup(nsIContent* aAnchorContent,
                                        nsIContent* aTriggerContent,
                                        const nsAString& aPosition,
@@ -804,11 +819,10 @@ void nsMenuPopupFrame::InitializePopup(nsIContent* aAnchorContent,
   // position attributes on the <menupopup> override those values passed in.
   // If false, those attributes are only used if the values passed in are empty
   if (aAnchorContent || aAnchorType == MenuPopupAnchorType_Rect) {
-    nsAutoString anchor, align, position, flip;
+    nsAutoString anchor, align, position;
     mContent->AsElement()->GetAttr(nsGkAtoms::popupanchor, anchor);
     mContent->AsElement()->GetAttr(nsGkAtoms::popupalign, align);
     mContent->AsElement()->GetAttr(nsGkAtoms::position, position);
-    mContent->AsElement()->GetAttr(nsGkAtoms::flip, flip);
 
     if (aAttributesOverride) {
       // if the attributes are set, clear the offset position. Otherwise,
@@ -821,13 +835,7 @@ void nsMenuPopupFrame::InitializePopup(nsIContent* aAnchorContent,
       position.Assign(aPosition);
     }
 
-    if (flip.EqualsLiteral("none")) {
-      mFlip = FlipType_None;
-    } else if (flip.EqualsLiteral("both")) {
-      mFlip = FlipType_Both;
-    } else if (flip.EqualsLiteral("slide")) {
-      mFlip = FlipType_Slide;
-    }
+    mFlip = FlipFromAttribute(this);
 
     position.CompressWhitespace();
     int32_t spaceIdx = position.FindChar(' ');
@@ -928,7 +936,7 @@ void nsMenuPopupFrame::InitializePopupAtScreen(nsIContent* aTriggerContent,
       nsRect(CSSPixel::ToAppUnits(aXPos), CSSPixel::ToAppUnits(aYPos), 0, 0);
   mXPos = 0;
   mYPos = 0;
-  mFlip = FlipType_Default;
+  mFlip = FlipFromAttribute(this);
   mPopupAnchor = POPUPALIGNMENT_NONE;
   mPopupAlignment = POPUPALIGNMENT_NONE;
   mPosition = POPUPPOSITION_UNKNOWN;

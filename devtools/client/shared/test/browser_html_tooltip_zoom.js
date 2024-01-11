@@ -50,7 +50,7 @@ add_task(async function () {
   await onShown;
 
   const menuRect = doc
-    .querySelector(".tooltip-xul-wrapper")
+    .querySelector(".tooltip-xul-wrapper > .tooltip-container")
     .getBoxQuads({ relativeTo: doc })[0]
     .getBounds();
   const anchorRect = doc
@@ -60,10 +60,8 @@ add_task(async function () {
   const xDelta = Math.abs(menuRect.left - anchorRect.left);
   const yDelta = Math.abs(menuRect.top - anchorRect.bottom);
 
-  // This test allow the rounded error and platform's offset.
-  // For detail, see the devtools/client/framework/test/browser_toolbox_zoom_popup.js
-  ok(xDelta < 2, "xDelta is lower than 2: " + xDelta + ".");
-  ok(yDelta < 6, "yDelta is lower than 6: " + yDelta + ".");
+  ok(xDelta < 1, "xDelta: " + xDelta + ".");
+  ok(yDelta < 1, "yDelta: " + yDelta + ".");
 
   info("Hide the tooltip and check the expected events are fired.");
 

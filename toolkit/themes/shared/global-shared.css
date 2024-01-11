@@ -80,7 +80,7 @@
   }
 }
 
-:is(menupopup, panel)[type=arrow] {
+:is(menupopup, panel):where([type=arrow]) {
   --panel-background: var(--arrowpanel-background);
   --panel-color: var(--arrowpanel-color);
   --panel-border-color: var(--arrowpanel-border-color);
