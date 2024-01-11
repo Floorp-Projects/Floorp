@@ -78,7 +78,6 @@ class App extends PureComponent {
     super(props);
 
     this.onAddCustomDevice = this.onAddCustomDevice.bind(this);
-    this.onBrowserContextMenu = this.onBrowserContextMenu.bind(this);
     this.onChangeDevice = this.onChangeDevice.bind(this);
     this.onChangeNetworkThrottling = this.onChangeNetworkThrottling.bind(this);
     this.onChangePixelRatio = this.onChangePixelRatio.bind(this);
@@ -103,19 +102,8 @@ class App extends PureComponent {
     this.onUpdateDeviceModal = this.onUpdateDeviceModal.bind(this);
   }
 
-  componentWillUnmount() {
-    this.browser.removeEventListener("contextmenu", this.onContextMenu);
-    this.browser = null;
-  }
-
   onAddCustomDevice(device) {
     this.props.dispatch(addCustomDevice(device));
-  }
-
-  onBrowserContextMenu() {
-    // Update the position of remote browser so that makes the context menu to show at
-    // proper position before showing.
-    this.browser.frameLoader.requestUpdatePosition();
   }
 
   onChangeDevice(id, device, deviceType) {
