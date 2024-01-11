@@ -51,7 +51,7 @@ static nscoord SynthesizeBOffsetFromInnerBox(const nsIFrame* aFrame,
   const LogicalMargin bp = ([&] {
     switch (aType) {
       case BoxType::Border:
-        return LogicalMargin(wm);
+        return LogicalMargin(aWM);
       case BoxType::Padding:
         return aFrame->GetLogicalUsedBorder(wm)
             .ApplySkipSides(aFrame->GetLogicalSkipSides())
