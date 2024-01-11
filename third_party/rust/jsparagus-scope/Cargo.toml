@@ -17,7 +17,7 @@ authors = ["The jsparagus Project Developers"]
 license = "MIT/Apache-2.0"
 
 [dependencies]
-indexmap = "1.0"
+indexmap = "2.0"
 
 [dependencies.jsparagus-ast]
 path = "../ast"
