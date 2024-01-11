@@ -158,7 +158,9 @@ class JavaScriptTracer {
         capture: true,
       };
       // Register the event listener on the Chrome Event Handler in order to receive the event first.
-      const eventHandler = this.tracedGlobal.docShell.chromeEventHandler;
+      // When used for the parent process target, `tracedGlobal` is browser.xhtml's window, which doesn't have a chromeEventHandler.
+      const eventHandler =
+        this.tracedGlobal.docShell.chromeEventHandler || this.tracedGlobal;
       eventHandler.addEventListener("mousedown", listener, eventOptions);
       eventHandler.addEventListener("keydown", listener, eventOptions);
     } else {
