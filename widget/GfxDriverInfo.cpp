@@ -28,7 +28,7 @@ GfxDriverInfo::GfxDriverInfo()
       mDriverVendor(GfxDriverInfo::GetDriverVendor(DriverVendor::All)),
       mDevices(GfxDriverInfo::GetDeviceFamily(DeviceFamily::All)),
       mDeleteDevices(false),
-      mFeature(allFeatures),
+      mFeature(optionalFeatures),
       mFeatureStatus(nsIGfxInfo::FEATURE_STATUS_OK),
       mComparisonOp(DRIVER_COMPARISON_IGNORED),
       mDriverVersion(0),
