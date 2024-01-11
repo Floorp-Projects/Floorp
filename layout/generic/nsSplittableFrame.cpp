@@ -63,7 +63,9 @@ void nsSplittableFrame::SetNextContinuation(nsIFrame* aFrame) {
   NS_ASSERTION(!IsInNextContinuationChain(aFrame, this),
                "creating a loop in continuation chain!");
   mNextContinuation = aFrame;
-  if (aFrame) aFrame->RemoveStateBits(NS_FRAME_IS_FLUID_CONTINUATION);
+  if (mNextContinuation) {
+    mNextContinuation->RemoveStateBits(NS_FRAME_IS_FLUID_CONTINUATION);
+  }
 }
 
 nsIFrame* nsSplittableFrame::FirstContinuation() const {
@@ -139,7 +141,9 @@ void nsSplittableFrame::SetNextInFlow(nsIFrame* aFrame) {
   NS_ASSERTION(!IsInNextContinuationChain(aFrame, this),
                "creating a loop in continuation chain!");
   mNextContinuation = aFrame;
-  if (aFrame) aFrame->AddStateBits(NS_FRAME_IS_FLUID_CONTINUATION);
+  if (mNextContinuation) {
+    mNextContinuation->AddStateBits(NS_FRAME_IS_FLUID_CONTINUATION);
+  }
 }
 
 nsIFrame* nsSplittableFrame::FirstInFlow() const {
