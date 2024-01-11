@@ -5,7 +5,6 @@ run-if = [
     "os == 'mac'",
 ]
 head = "head.js"
-prefs = ["browser.attribution.macos.enabled=true"]
 
 ["test_AttributionCode.js"]
 

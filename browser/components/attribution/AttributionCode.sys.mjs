@@ -259,17 +259,6 @@ export var AttributionCode = {
       return gCachedAttrData;
     }
 
-    // This is a temporary block until we're ready to enable macOS reporting by default.
-    if (
-      AppConstants.platform == "macosx" &&
-      !Services.prefs.getBoolPref("browser.attribution.macos.enabled")
-    ) {
-      lazy.log.debug(
-        "getAttrDataSync: macOS attribution disabled by pref; skipping"
-      );
-      return {};
-    }
-
     gCachedAttrData = {};
 
     if (AppConstants.platform == "macosx") {
