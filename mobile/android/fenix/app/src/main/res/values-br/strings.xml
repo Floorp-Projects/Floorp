@@ -200,6 +200,8 @@
     <string name="resync_button_content_description">Adgoubredañ</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">Kavout er bajennad</string>
+    <!-- Browser menu button that opens the translations dialog, which has options to translate the current browser page. -->
+    <string name="browser_menu_translations">Treiñ ar bajenn</string>
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">Enrollañ en dastumad</string>
     <!-- Browser menu button that open a share menu to share the current site -->
@@ -353,6 +355,8 @@
     <string name="preferences_category_about">A-zivout</string>
     <!-- Preference category for settings related to changing the default search engine -->
     <string name="preferences_category_select_default_search_engine">Dibabit unan</string>
+    <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
+    <string name="preferences_manage_search_shortcuts_2">Merañ al luskerioù enklask all</string>
     <!-- Summary for preference for settings related to managing search shortcuts for the quick search menu -->
     <string name="preferences_manage_search_shortcuts_summary">Embann al luskerioù a c’haller gwelet el lañser klask</string>
     <!-- Preference category for settings related to managing search shortcuts for the quick search menu -->
@@ -363,6 +367,8 @@
     <string name="preferences_search">Klask</string>
     <!-- Preference for settings related to Search engines -->
     <string name="preferences_search_engines">Luskerioù klask</string>
+    <!-- Preference for settings related to Search engines suggestions-->
+    <string name="preferences_search_engines_suggestions">Kinnigoù al luskerioù enklask</string>
     <!-- Preference Category for settings to Firefox Suggest -->
     <string name="preference_search_address_bar_fx_suggest">Barrenn chomlec\'hioù - Alioù Firefox</string>
     <!-- Preference link to Learn more about Firefox Suggest -->
@@ -2204,10 +2210,25 @@
     <string name="translations_bottom_sheet_translate_to">Treiñ e</string>
     <!-- Button text on the translations dialog to dismiss the dialog and return to the browser. -->
     <string name="translations_bottom_sheet_negative_button">Diwezhatoc’h</string>
+    <!-- Button text on the translations dialog when a translation error appears, used to dismiss the dialog and return to the browser. -->
+    <string name="translations_bottom_sheet_negative_button_error">Graet</string>
     <!-- Button text on the translations dialog to begin a translation of the website. -->
     <string name="translations_bottom_sheet_positive_button">Treiñ</string>
+    <!-- Button text on the translations dialog when a translation error appears. -->
+    <string name="translations_bottom_sheet_positive_button_error">Klask en-dro</string>
     <!-- Inactive button text on the translations dialog that indicates a translation is currently in progress. This button will be accompanied by a loading icon. -->
     <string name="translations_bottom_sheet_translating_in_progress">O treiñ</string>
+
+    <!-- Button content description (not visible, for screen readers etc.) for the translations dialog translate button that indicates a translation is currently in progress. -->
+    <string name="translations_bottom_sheet_translating_in_progress_content_description">O treiñ</string>
+    <!-- The title of the warning card informs the user that a translation could not be completed. -->
+    <string name="translation_error_could_not_translate_warning_text">Ur gudenn zo bet gant an droidigezh. Klaskit en-dro.</string>
+    <!-- The title of the warning card informs the user that the list of languages cannot be loaded. -->
+    <string name="translation_error_could_not_load_languages_warning_text">N’haller ket kargañ ar yezhoù. Gwiriit ma’z oc’h kennasket ouzh ar genrouedad.</string>
+    <!-- The title of the warning card informs the user that a language is not supported. The first parameter is the name of the language that is not supported. -->
+    <string name="translation_error_language_not_supported_warning_text">Hon digarezit, n’eo ket skoret ar yezh &quot;%1$s&quot; c’hoazh.</string>
+    <!-- Button text on the warning card when a language is not supported. The link will take the user to a page to a support page about translations. -->
+    <string name="translation_error_language_not_supported_learn_more">Gouzout hiroc’h</string>
 
     <!-- Toggle switch label that allows a user to set if they would like to never be offered a translation of the given language. The first parameter is the language name, for example, "Spanish". -->
     <string name="translation_option_bottom_sheet_never_translate_in_language">Na dreiñ biken %1$s</string>
@@ -2298,4 +2319,4 @@
     <string name="debug_drawer_tab_tools_tab_count_private">Prevez</string>
     <!-- The total tab count category in the tab count section in Tab Tools. -->
     <string name="debug_drawer_tab_tools_tab_count_total">Hollad</string>
-</resources>
+    </resources>
