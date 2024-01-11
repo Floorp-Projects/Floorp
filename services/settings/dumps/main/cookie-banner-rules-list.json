@@ -2,6 +2,195 @@
   "data": [
     {
       "click": {
+        "optIn": "[data-cookieman-accept-all]",
+        "optOut": "[data-cookieman-accept-none]",
+        "presence": "#cookieman-modal"
+      },
+      "schema": 1704727928035,
+      "domains": [
+        "hfm-frankfurt.de"
+      ],
+      "id": "5FF5EEB9-1045-4ACF-8A12-0630B71063F6",
+      "last_modified": 1704881609345
+    },
+    {
+      "click": {},
+      "schema": 1704727928035,
+      "cookies": {
+        "optOut": [
+          {
+            "name": "paydirektCookieAllowed",
+            "value": "false"
+          },
+          {
+            "name": "paydirektCookieAllowedPWS",
+            "value": "{%22necessary%22:true,%22analytics%22:false}"
+          }
+        ]
+      },
+      "domains": [
+        "paydirekt.de"
+      ],
+      "id": "769dcf5b-afd1-438d-940d-3069ff4b2f51",
+      "last_modified": 1704881609341
+    },
+    {
+      "click": {
+        "optIn": "button.iubenda-cs-accept-btn",
+        "optOut": "button.iubenda-cs-reject-btn",
+        "presence": "div#iubenda-cs-banner"
+      },
+      "schema": 1704727928035,
+      "cookies": {},
+      "domains": [
+        "giallozafferano.it",
+        "virgilio.it",
+        "upfit.de",
+        "treedom.net"
+      ],
+      "id": "65638975-8222-425c-9be0-3f41a51db13c",
+      "last_modified": 1704881609336
+    },
+    {
+      "click": {
+        "optIn": "button#didomi-notice-agree-button",
+        "optOut": "button#didomi-notice-disagree-button",
+        "presence": "div#didomi-host"
+      },
+      "schema": 1704727928035,
+      "cookies": {},
+      "domains": [
+        "doctolib.fr",
+        "pravda.sk",
+        "topky.sk",
+        "zoznam.sk",
+        "tvnoviny.sk",
+        "aukro.cz",
+        "krone.at",
+        "cas.sk",
+        "heureka.sk",
+        "free.fr",
+        "markiza.sk",
+        "willhaben.at",
+        "francetvinfo.fr",
+        "france24.com",
+        "opodo.at",
+        "opodo.ch",
+        "opodo.co.uk",
+        "opodo.de",
+        "opodo.dk",
+        "opodo.fi",
+        "opodo.fr",
+        "opodo.it",
+        "opodo.nl",
+        "opodo.no",
+        "opodo.pl",
+        "opodo.pt"
+      ],
+      "id": "690aa076-4a8b-48ec-b52c-1443d44ff008",
+      "last_modified": 1704881609332
+    },
+    {
+      "click": {
+        "optIn": ".cc-btn.cc-allow",
+        "optOut": ".cc-btn.cc-deny",
+        "presence": ".cc-window.cc-banner"
+      },
+      "schema": 1704727928035,
+      "cookies": {
+        "optOut": [
+          {
+            "name": "cookieconsent_status",
+            "value": "deny"
+          }
+        ]
+      },
+      "domains": [
+        "magnite.com",
+        "omv.com",
+        "omv.at",
+        "omv.bg",
+        "omv.de",
+        "omv.nz",
+        "omv.no",
+        "omv.ro",
+        "omv.co.rs",
+        "omv.sk",
+        "omv.cz",
+        "omv.tn",
+        "omv.ae",
+        "omv.hu",
+        "omv.si",
+        "omv-gas.com",
+        "omv-gas.at",
+        "omv-gas.be",
+        "omv-gas.de",
+        "omv-gas.hu",
+        "omv-gas.nl",
+        "omv-gas.com.tr",
+        "omv-gas-storage.com",
+        "omvpetrom.com",
+        "petrom.ro",
+        "petrom.md",
+        "avanti.at",
+        "avanti-tankstellen.de",
+        "diskonttanken.at",
+        "tocimceneje.si"
+      ],
+      "id": "8f401b10-02b6-4e05-88fa-c37012d4c8c0",
+      "last_modified": 1704881609328
+    },
+    {
+      "click": {
+        "optOut": "#zdf-cmp-deny-btn",
+        "presence": ".zdf-cmp-modal-content"
+      },
+      "schema": 1704727928035,
+      "cookies": {},
+      "domains": [
+        "zdf.de",
+        "3sat.de"
+      ],
+      "id": "91484461-01AD-4D78-9ED8-D17C688F47E7",
+      "last_modified": 1704881609324
+    },
+    {
+      "click": {
+        "optIn": ".root__OblK1:not(.secondaryButton__N1rJw)",
+        "optOut": ".root__OblK1.secondaryButton__N1rJw",
+        "presence": ".root__XMKIj"
+      },
+      "schema": 1704727928035,
+      "cookies": {},
+      "domains": [
+        "forbes.com"
+      ],
+      "id": "30293090-f064-473a-ae0f-cd390507c1c7",
+      "last_modified": 1704881609320
+    },
+    {
+      "click": {
+        "optIn": "[href=\"#accept\"]",
+        "optOut": "[href=\"#refuse\"]",
+        "presence": "div#cookie-consent-banner"
+      },
+      "schema": 1704727928035,
+      "cookies": {
+        "optOut": [
+          {
+            "name": "cck1",
+            "value": "%7B%22cm%22%3Atrue%2C%22all1st%22%3Afalse%2C%22closed%22%3Atrue%7D"
+          }
+        ]
+      },
+      "domains": [
+        "europa.eu"
+      ],
+      "id": "0c74749a-8c53-4bb0-b31a-ab2f89b7f493",
+      "last_modified": 1704881609316
+    },
+    {
+      "click": {
         "optIn": ".CookieBanner_buttonContainer__NOZxH:nth-child(1) button",
         "optOut": ".CookieBanner_buttonContainer__NOZxH:nth-child(2) button",
         "presence": ".CookieBanner_cookieBanner__R_BOh"
@@ -1059,22 +1248,6 @@
     },
     {
       "click": {
-        "optIn": "button.iubenda-cs-accept-btn",
-        "optOut": "button.iubenda-cs-reject-btn",
-        "presence": "div#iubenda-cs-banner"
-      },
-      "schema": 1702598407647,
-      "cookies": {},
-      "domains": [
-        "giallozafferano.it",
-        "virgilio.it",
-        "upfit.de"
-      ],
-      "id": "65638975-8222-425c-9be0-3f41a51db13c",
-      "last_modified": 1702633230611
-    },
-    {
-      "click": {
         "optIn": "button#popin_tc_privacy_button_2",
         "presence": "div#popin_tc_privacy_container_button"
       },
@@ -1110,77 +1283,6 @@
       ],
       "id": "9e4d932a-eaf9-44e4-a3ac-55861d66a7c3",
       "last_modified": 1702633230599
-    },
-    {
-      "click": {
-        "optIn": "button#didomi-notice-agree-button",
-        "optOut": "button#didomi-notice-disagree-button",
-        "presence": "div#didomi-host"
-      },
-      "schema": 1702598407647,
-      "cookies": {},
-      "domains": [
-        "doctolib.fr",
-        "pravda.sk",
-        "topky.sk",
-        "zoznam.sk",
-        "tvnoviny.sk",
-        "aukro.cz",
-        "krone.at",
-        "cas.sk",
-        "heureka.sk",
-        "free.fr",
-        "markiza.sk",
-        "willhaben.at",
-        "francetvinfo.fr",
-        "france24.com"
-      ],
-      "id": "690aa076-4a8b-48ec-b52c-1443d44ff008",
-      "last_modified": 1702633230591
-    },
-    {
-      "click": {
-        "optIn": ".cc-btn.cc-allow",
-        "optOut": ".cc-btn.cc-deny",
-        "presence": ".cc-window.cc-banner"
-      },
-      "schema": 1702598407647,
-      "cookies": {
-        "optOut": [
-          {
-            "name": "cookieconsent_status",
-            "value": "deny"
-          }
-        ]
-      },
-      "domains": [
-        "magnite.com",
-        "omv.com",
-        "omv.at",
-        "omv.bg",
-        "omv.de",
-        "omv.nz",
-        "omv.no",
-        "omv.ro",
-        "omv.co.rs",
-        "omv.sk",
-        "omv.cz",
-        "omv.tn",
-        "omv.ae",
-        "omv.hu",
-        "omv-gas.com",
-        "omv-gas.at",
-        "omv-gas.be",
-        "omv-gas.de",
-        "omv-gas.hu",
-        "omv-gas.nl",
-        "omv-gas.com.tr",
-        "omvpetrom.com",
-        "petrom.ro",
-        "petrom.md"
-      ],
-      "id": "8f401b10-02b6-4e05-88fa-c37012d4c8c0",
-      "last_modified": 1702633230587
     },
     {
       "click": {},
@@ -1492,19 +1594,6 @@
       ],
       "id": "0EAF9E99-36C6-4165-87BE-A62EF1751E1D",
       "last_modified": 1700826062722
-    },
-    {
-      "click": {
-        "optOut": "#zdf-cmp-deny-btn",
-        "presence": ".zdf-cmp-modal-content"
-      },
-      "schema": 1700313507200,
-      "cookies": {},
-      "domains": [
-        "zdf.de"
-      ],
-      "id": "91484461-01AD-4D78-9ED8-D17C688F47E7",
-      "last_modified": 1700826062719
     },
     {
       "click": {
@@ -7139,20 +7228,6 @@
     },
     {
       "click": {
-        "optIn": ".cck-actions div > button",
-        "optOut": ".cck-actions div > button + button",
-        "presence": "div#cookie-consent-banner"
-      },
-      "schema": 1670460527205,
-      "cookies": {},
-      "domains": [
-        "europa.eu"
-      ],
-      "id": "0c74749a-8c53-4bb0-b31a-ab2f89b7f493",
-      "last_modified": 1670498157385
-    },
-    {
-      "click": {
         "optOut": "button.cookieBarButtons",
         "presence": "div#cookieBar"
       },
@@ -7249,19 +7324,6 @@
       ],
       "id": "c2f6b05e-73dc-4df4-bb54-68215bb9f176",
       "last_modified": 1670498157308
-    },
-    {
-      "click": {
-        "optIn": "button#truste-consent-button",
-        "presence": "div#truste-consent-track"
-      },
-      "schema": 1670460527205,
-      "cookies": {},
-      "domains": [
-        "forbes.com"
-      ],
-      "id": "30293090-f064-473a-ae0f-cd390507c1c7",
-      "last_modified": 1670498157304
     },
     {
       "click": {},
@@ -8867,5 +8929,5 @@
       "last_modified": 1670498155641
     }
   ],
-  "timestamp": 1702633230760
+  "timestamp": 1704881609345
 }
