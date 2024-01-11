@@ -1832,6 +1832,7 @@ const selectors = {
   fileSearchInput: ".search-bar input",
   watchExpressionsHeader: ".watch-expressions-pane ._header .header-label",
   watchExpressionsAddButton: ".watch-expressions-pane ._header .plus",
+  editorNotificationFooter: ".editor-notification-footer",
 };
 
 function getSelector(elementName, ...args) {
@@ -3108,4 +3109,11 @@ async function checkAdditionalThreadCount(dbg, count) {
     "Have the expected number of additional threads"
   );
   ok(true, `Have ${count} threads`);
+}
+
+/**
+ * Retrieve the text displayed as warning under the editor.
+ */
+function findFooterNotificationMessage(dbg) {
+  return findElement(dbg, "editorNotificationFooter")?.innerText;
 }
