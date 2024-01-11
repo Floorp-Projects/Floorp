@@ -46,7 +46,13 @@ add_task(async function test() {
     );
 
     info("Focus the urlbar clicking on the indicator");
+    // We intentionally turn off a11y_checks for the following click, because
+    // it is send to send a focus on the URL Bar with the mouse, while other
+    // ways to focus it are accessible for users of assistive technology and
+    // keyboards, thus this test can be excluded from the accessibility tests.
+    AccessibilityUtils.setEnv({ mustHaveAccessibleRule: false });
     EventUtils.synthesizeMouseAtCenter(indicator, {});
+    AccessibilityUtils.resetEnv();
     Assert.ok(BrowserTestUtils.is_visible(indicator));
     Assert.ok(BrowserTestUtils.is_visible(indicatorCloseButton));
     Assert.ok(!BrowserTestUtils.is_visible(labelBox));
