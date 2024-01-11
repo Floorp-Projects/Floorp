@@ -499,17 +499,24 @@ nsAutoCompleteController::HandleKeyNavigation(uint32_t aKey, bool* _retval) {
         }
       }
 
-      nsAutoString oldSearchString;
-      uint16_t oldResult = 0;
-
       // Open the popup if there has been a previous non-errored search, or
       // else kick off a new search
-      if (!mResults.IsEmpty() &&
-          NS_SUCCEEDED(mResults[0]->GetSearchResult(&oldResult)) &&
-          oldResult != nsIAutoCompleteResult::RESULT_FAILURE &&
-          NS_SUCCEEDED(mResults[0]->GetSearchString(oldSearchString)) &&
-          oldSearchString.Equals(mSearchString,
-                                 nsCaseInsensitiveStringComparator)) {
+      bool hadPreviousSearch = false;
+      for (uint32_t i = 0; i < mResults.Length(); ++i) {
+        nsAutoString oldSearchString;
+        uint16_t oldResult = 0;
+        nsIAutoCompleteResult* oldResultObject = mResults[i];
+        if (oldResultObject &&
+            NS_SUCCEEDED(oldResultObject->GetSearchResult(&oldResult)) &&
+            oldResult != nsIAutoCompleteResult::RESULT_FAILURE &&
+            NS_SUCCEEDED(oldResultObject->GetSearchString(oldSearchString)) &&
+            oldSearchString.Equals(mSearchString,
+                                   nsCaseInsensitiveStringComparator)) {
+          hadPreviousSearch = true;
+          break;
+        }
+      }
+      if (hadPreviousSearch) {
         if (mMatchCount) {
           OpenPopup();
         }
