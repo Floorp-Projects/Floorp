@@ -10,4 +10,5 @@ To add a test:
  iii) The test steps.
   iv) A call to perf_finish().
 3)  Add your test to the perf_reftest_singletons.manifest file.
-4)  Add your test to the list in build/pgo/index.html.
+4)  Add your test to the list in build/pgo/index.html, if it should be used
+    for profile-guided optimization.

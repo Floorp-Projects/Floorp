@@ -1,4 +1,4 @@
-# When modifying this list, please also update build/pgo/index.html.
+# When modifying this list, please also update build/pgo/index.html (If relevant to profile-guided optimzation).
 % http://localhost/tests/perf-reftest-singletons/abspos-reflow-1.html
 % http://localhost/tests/perf-reftest-singletons/attr-selector-1.html
 % http://localhost/tests/perf-reftest-singletons/bidi-resolution-1.html
@@ -35,4 +35,5 @@
 % http://localhost/tests/perf-reftest-singletons/svg-text-getExtentOfChar-1.html
 % http://localhost/tests/perf-reftest-singletons/tiny-traversal-singleton.html
 % http://localhost/tests/perf-reftest-singletons/window-named-property-get.html
-# When modifying this list, please also update build/pgo/index.html.
+% http://localhost/tests/perf-reftest-singletons/remove-children.html
+# When modifying this list, please also update build/pgo/index.html (If relevant to profile-guided optimzation).

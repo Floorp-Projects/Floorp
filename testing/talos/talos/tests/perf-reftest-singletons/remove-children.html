@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<table id="dut">
+</table>
+<script src="util.js"></script>
+<script>
+window.onload = function() {
+  // From https://build.opensuse.org/project/show/openSUSE:Leap:15.5
+  const N = 40000;
+  let elements = new Array(N);
+  // Add lots of rows with newline in between
+  for (let i = 0; i < N; i++) {
+    let d = document.createElement("tr");
+    dut.appendChild(d);
+    elements[i] = d;
+    dut.appendChild(document.createTextNode("\n"));
+  }
+
+  flush_layout();
+  perf_start();
+  // Delete all from front. Text nodes of newlines will accumulate
+  // at the start of the table.
+  for (let i = 0; i < elements.length; i++) {
+    let d = elements[i];
+    d.remove();
+  }
+  flush_layout();
+  perf_finish();
+};
+</script>
+<body></body>
