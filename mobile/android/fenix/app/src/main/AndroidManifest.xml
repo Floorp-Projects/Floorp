@@ -361,8 +361,14 @@
             </intent-filter>
         </receiver>
 
-        <service android:name=".session.PrivateNotificationService"
-                android:exported="false" />
+        <service
+            android:name=".session.PrivateNotificationService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="This foreground service allows users to easily remove private tabs from the notification" />
+        </service>
 
         <service
             android:name=".messaging.NotificationDismissedService"

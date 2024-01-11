@@ -52,6 +52,7 @@
     <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
     <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
 
     <application
         android:allowBackup="false"
@@ -185,8 +186,14 @@
             android:foregroundServiceType="mediaPlayback"
             android:exported="false" />
 
-        <service android:name=".session.SessionNotificationService"
-            android:exported="false" />
+        <service
+            android:name=".session.SessionNotificationService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="This foreground service allows users to easily remove private tabs from the notification" />
+        </service>
 
         <meta-data android:name="android.webkit.WebView.MetricsOptOut"
                    android:value="true" />
