@@ -805,11 +805,7 @@ void nsWindow::SetModal(bool aModal) {
 // nsIWidget method, which means IsShown.
 bool nsWindow::IsVisible() const { return mIsShown; }
 
-bool nsWindow::IsMapped() const {
-  // TODO: Enable for X11 when Mozilla testsuite is moved to new
-  // testing environment from Ubuntu 18.04 which is broken.
-  return GdkIsWaylandDisplay() ? mIsMapped : true;
-}
+bool nsWindow::IsMapped() const { return mIsMapped; }
 
 void nsWindow::RegisterTouchWindow() {
   mHandleTouchEvent = true;
