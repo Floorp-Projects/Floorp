@@ -680,11 +680,9 @@ static void SplitInlineAncestors(nsContainerFrame* aParent,
 static void MakeContinuationFluid(nsIFrame* aFrame, nsIFrame* aNext) {
   NS_ASSERTION(!aFrame->GetNextInFlow() || aFrame->GetNextInFlow() == aNext,
                "next-in-flow is not next continuation!");
-  aFrame->SetNextInFlow(aNext);
-
   NS_ASSERTION(!aNext->GetPrevInFlow() || aNext->GetPrevInFlow() == aFrame,
                "prev-in-flow is not prev continuation!");
-  aNext->SetPrevInFlow(aFrame);
+  aFrame->SetNextInFlow(aNext);
 }
 
 static void MakeContinuationsNonFluidUpParentChain(nsIFrame* aFrame,
@@ -697,7 +695,6 @@ static void MakeContinuationsNonFluidUpParentChain(nsIFrame* aFrame,
        IsBidiSplittable(frame);
        frame = frame->GetParent(), next = next->GetParent()) {
     frame->SetNextContinuation(next);
-    next->SetPrevContinuation(frame);
   }
 }
 
@@ -1126,7 +1123,6 @@ nsresult nsBidiPresUtils::ResolveParagraph(BidiParagraphData* aBpd) {
             nsIFrame* next = parent->GetNextInFlow();
             if (next) {
               parent->SetNextContinuation(next);
-              next->SetPrevContinuation(parent);
             }
             child = parent;
             parent = child->GetParent();

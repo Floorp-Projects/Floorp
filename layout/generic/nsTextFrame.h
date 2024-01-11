@@ -228,48 +228,14 @@ class nsTextFrame : public nsIFrame {
   }
   nsTextFrame* GetPrevContinuation() const override { return nullptr; }
   nsTextFrame* GetNextContinuation() const final { return mNextContinuation; }
-  void SetNextContinuation(nsIFrame* aNextContinuation) final {
-    NS_ASSERTION(!aNextContinuation || Type() == aNextContinuation->Type(),
-                 "setting a next continuation with incorrect type!");
-    NS_ASSERTION(
-        !nsSplittableFrame::IsInNextContinuationChain(aNextContinuation, this),
-        "creating a loop in continuation chain!");
-    mNextContinuation = static_cast<nsTextFrame*>(aNextContinuation);
-    if (aNextContinuation)
-      aNextContinuation->RemoveStateBits(NS_FRAME_IS_FLUID_CONTINUATION);
-    // Setting a non-fluid continuation might affect our flow length (they're
-    // quite rare so we assume it always does) so we delete our cached value:
-    if (GetContent()->HasFlag(NS_HAS_FLOWLENGTH_PROPERTY)) {
-      GetContent()->RemoveProperty(nsGkAtoms::flowlength);
-      GetContent()->UnsetFlags(NS_HAS_FLOWLENGTH_PROPERTY);
-    }
-  }
+  void SetNextContinuation(nsIFrame* aFrame) final;
   nsTextFrame* GetNextInFlow() const final {
     return mNextContinuation && mNextContinuation->HasAnyStateBits(
                                     NS_FRAME_IS_FLUID_CONTINUATION)
                ? mNextContinuation
                : nullptr;
   }
-  void SetNextInFlow(nsIFrame* aNextInFlow) final {
-    NS_ASSERTION(!aNextInFlow || Type() == aNextInFlow->Type(),
-                 "setting a next in flow with incorrect type!");
-    NS_ASSERTION(
-        !nsSplittableFrame::IsInNextContinuationChain(aNextInFlow, this),
-        "creating a loop in continuation chain!");
-    mNextContinuation = static_cast<nsTextFrame*>(aNextInFlow);
-    if (mNextContinuation &&
-        !mNextContinuation->HasAnyStateBits(NS_FRAME_IS_FLUID_CONTINUATION)) {
-      // Changing from non-fluid to fluid continuation might affect our flow
-      // length, so we delete our cached value:
-      if (GetContent()->HasFlag(NS_HAS_FLOWLENGTH_PROPERTY)) {
-        GetContent()->RemoveProperty(nsGkAtoms::flowlength);
-        GetContent()->UnsetFlags(NS_HAS_FLOWLENGTH_PROPERTY);
-      }
-    }
-    if (aNextInFlow) {
-      aNextInFlow->AddStateBits(NS_FRAME_IS_FLUID_CONTINUATION);
-    }
-  }
+  void SetNextInFlow(nsIFrame* aFrame) final;
   nsTextFrame* LastInFlow() const final;
   nsTextFrame* LastContinuation() const final;
 
