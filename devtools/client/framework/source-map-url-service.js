@@ -319,7 +319,13 @@ class SourceMapURLService {
         let result = null;
         try {
           await map.loaded;
+        } catch (e) {
+          // SourceMapLoader.getOriginalURLs may throw, but it will handle
+          // the exception and notify the user via a console message.
+          // So ignore the exception here, which is meant to be used by the Debugger.
+        }
 
+        try {
           const position = await this._sourceMapLoader.getOriginalLocation({
             sourceId: map.id,
             line: query.line,
