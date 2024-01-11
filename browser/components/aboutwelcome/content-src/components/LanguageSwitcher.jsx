@@ -134,12 +134,13 @@ export function useLanguageSwitcher(
         setLanguageFilteredScreens(screens);
       }
     },
+    // Removing screenIndex as a dependency as it's causing infinite re-renders (1873019)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [
       appAndSystemLocaleInfo?.matchType,
       languageMismatchScreenIndex,
       negotiatedLanguage,
       screen,
-      screenIndex,
       screens,
       setScreenIndex,
     ]
