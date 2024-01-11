@@ -426,7 +426,6 @@ support-files = [
 ]
 
 ["browser_searchMode_indicator_clickthrough.js"]
-fail-if = ["a11y_checks"] # Bug 1854660 clicked "urlbar-input-container" may not be focusable
 
 ["browser_searchMode_localOneOffs_actionText.js"]
 support-files = [
