@@ -136,6 +136,24 @@ export class BaseFeature {
   }
 
   /**
+   * If the feature manages more than one type of suggestion served by the
+   * Suggest Rust component, the subclass should override this method and return
+   * true if the given suggestion type is enabled and false otherwise. Ideally a
+   * feature manages at most one type of Rust suggestion, and in that case it's
+   * fine to rely on the default implementation here because the suggestion type
+   * will be enabled iff the feature itself is enabled.
+   *
+   * @param {string} type
+   *   A Rust suggestion type name as defined in `suggest.udl`. See also
+   *   `rustSuggestionTypes`.
+   * @returns {boolean}
+   *   Whether the suggestion type is enabled.
+   */
+  isRustSuggestionTypeEnabled(type) {
+    return true;
+  }
+
+  /**
    * If the feature corresponds to a type of suggestion, the subclass should
    * override this method. It should return a new `UrlbarResult` for a given
    * suggestion, which can come from either remote settings or Merino.

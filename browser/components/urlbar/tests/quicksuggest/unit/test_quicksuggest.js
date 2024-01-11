@@ -12,6 +12,7 @@ const TELEMETRY_REMOTE_SETTINGS_LATENCY =
 
 const SPONSORED_SEARCH_STRING = "amp";
 const NONSPONSORED_SEARCH_STRING = "wikipedia";
+const SPONSORED_AND_NONSPONSORED_SEARCH_STRING = "sponsored and non-sponsored";
 
 const HTTP_SEARCH_STRING = "http prefix";
 const HTTPS_SEARCH_STRING = "https prefix";
@@ -27,7 +28,10 @@ const REMOTE_SETTINGS_RESULTS = [
     id: 1,
     url: "http://example.com/amp",
     title: "AMP Suggestion",
-    keywords: [SPONSORED_SEARCH_STRING],
+    keywords: [
+      SPONSORED_SEARCH_STRING,
+      SPONSORED_AND_NONSPONSORED_SEARCH_STRING,
+    ],
     click_url: "http://example.com/amp-click",
     impression_url: "http://example.com/amp-impression",
     advertiser: "Amp",
@@ -38,7 +42,10 @@ const REMOTE_SETTINGS_RESULTS = [
     id: 2,
     url: "http://example.com/wikipedia",
     title: "Wikipedia Suggestion",
-    keywords: [NONSPONSORED_SEARCH_STRING],
+    keywords: [
+      NONSPONSORED_SEARCH_STRING,
+      SPONSORED_AND_NONSPONSORED_SEARCH_STRING,
+    ],
     click_url: "http://example.com/wikipedia-click",
     impression_url: "http://example.com/wikipedia-impression",
     advertiser: "Wikipedia",
@@ -1607,4 +1614,46 @@ add_tasks_with_rust(async function position() {
   UrlbarPrefs.clear("quicksuggest.allowPositionInSuggestions");
   Services.prefs.clearUserPref("browser.search.suggest.enabled");
   Services.prefs.clearUserPref("browser.urlbar.quicksuggest.sponsoredPriority");
+});
+
+// The `Amp` and `Wikipedia` Rust providers should be passed to the Rust
+// component when querying depending on whether sponsored and non-sponsored
+// suggestions are enabled.
+add_task(async function rustProviders() {
+  await doRustProvidersTests({
+    searchString: SPONSORED_AND_NONSPONSORED_SEARCH_STRING,
+    tests: [
+      {
+        prefs: {
+          "suggest.quicksuggest.nonsponsored": true,
+          "suggest.quicksuggest.sponsored": true,
+        },
+        expectedUrls: [
+          "http://example.com/amp",
+          "http://example.com/wikipedia",
+        ],
+      },
+      {
+        prefs: {
+          "suggest.quicksuggest.nonsponsored": true,
+          "suggest.quicksuggest.sponsored": false,
+        },
+        expectedUrls: ["http://example.com/wikipedia"],
+      },
+      {
+        prefs: {
+          "suggest.quicksuggest.nonsponsored": false,
+          "suggest.quicksuggest.sponsored": true,
+        },
+        expectedUrls: ["http://example.com/amp"],
+      },
+      {
+        prefs: {
+          "suggest.quicksuggest.nonsponsored": false,
+          "suggest.quicksuggest.sponsored": false,
+        },
+        expectedUrls: [],
+      },
+    ],
+  });
 });
