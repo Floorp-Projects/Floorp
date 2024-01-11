@@ -16756,7 +16756,9 @@ BrowsingContext* Document::GetBrowsingContext() const {
                             : nullptr;
 }
 
-void Document::NotifyUserGestureActivation() {
+void Document::NotifyUserGestureActivation(
+    UserActivation::Modifiers
+        aModifiers /* = UserActivation::Modifiers::None() */) {
   // https://html.spec.whatwg.org/multipage/interaction.html#activation-notification
   // 1. "Assert: document is fully active."
   RefPtr<BrowsingContext> currentBC = GetBrowsingContext();
@@ -16772,12 +16774,12 @@ void Document::NotifyUserGestureActivation() {
   // 2. "Let windows be « document's relevant global object"
   // Instead of assembling a list, we just call notify for wanted windows as we
   // find them
-  currentWC->NotifyUserGestureActivation();
+  currentWC->NotifyUserGestureActivation(aModifiers);
 
   // 3. "...windows with the active window of each of document's ancestor
   // navigables."
   for (WindowContext* wc = currentWC; wc; wc = wc->GetParentWindowContext()) {
-    wc->NotifyUserGestureActivation();
+    wc->NotifyUserGestureActivation(aModifiers);
   }
 
   // 4. "windows with the active window of each of document's descendant
@@ -16795,7 +16797,7 @@ void Document::NotifyUserGestureActivation() {
       return;
     }
 
-    wc->NotifyUserGestureActivation();
+    wc->NotifyUserGestureActivation(aModifiers);
   });
 }
 
