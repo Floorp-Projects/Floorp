@@ -47,10 +47,14 @@ internal data class LoginDatasetBuilder(
     ): Dataset {
         val dataset = Dataset.Builder()
 
+        val attributionIntent = Intent().apply {
+            `package` = context.packageName
+        }
+
         val pendingIntent = PendingIntent.getActivity(
             context,
             0,
-            Intent(),
+            attributionIntent,
             PendingIntentUtils.defaultFlags or PendingIntent.FLAG_CANCEL_CURRENT,
         )
 
