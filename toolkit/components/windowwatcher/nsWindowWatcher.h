@@ -53,9 +53,14 @@ class nsWindowWatcher : public nsIWindowWatcher,
   NS_DECL_NSPIWINDOWWATCHER
   NS_DECL_NSIPROMPTFACTORY
 
-  static int32_t GetWindowOpenLocation(nsPIDOMWindowOuter* aParent,
-                                       uint32_t aChromeFlags,
-                                       bool aCalledFromJS, bool aIsForPrinting);
+  static bool IsWindowOpenLocationModified(
+      const mozilla::dom::UserActivation::Modifiers& aModifiers,
+      int32_t* aLocation);
+
+  static int32_t GetWindowOpenLocation(
+      nsPIDOMWindowOuter* aParent, uint32_t aChromeFlags,
+      const mozilla::dom::UserActivation::Modifiers& aModifiers,
+      bool aCalledFromJS, bool aIsForPrinting);
 
   static bool HaveSpecifiedSize(const mozilla::dom::WindowFeatures& features);
 
@@ -85,7 +90,9 @@ class nsWindowWatcher : public nsIWindowWatcher,
   static bool ShouldOpenPopup(const mozilla::dom::WindowFeatures& aFeatures);
 
   static uint32_t CalculateChromeFlagsForContent(
-      const mozilla::dom::WindowFeatures& aFeatures, bool* aIsPopupRequested);
+      const mozilla::dom::WindowFeatures& aFeatures,
+      const mozilla::dom::UserActivation::Modifiers& aModifiers,
+      bool* aIsPopupRequested);
 
   static uint32_t CalculateChromeFlagsForSystem(
       const mozilla::dom::WindowFeatures& aFeatures, bool aDialog,

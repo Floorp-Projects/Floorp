@@ -539,7 +539,7 @@ nsContentTreeOwner::ProvideWindow(
 #endif
 
   int32_t openLocation = nsWindowWatcher::GetWindowOpenLocation(
-      parent->GetDOMWindow(), aChromeFlags, aCalledFromJS,
+      parent->GetDOMWindow(), aChromeFlags, aModifiers, aCalledFromJS,
       aOpenWindowInfo->GetIsForPrinting());
 
   if (openLocation != nsIBrowserDOMWindow::OPEN_NEWTAB &&

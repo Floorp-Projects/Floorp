@@ -544,7 +544,8 @@ nsWindowWatcher::OpenWindowWithRemoteTab(
   // don't need to propagate isPopupRequested out-parameter to the resulting
   // browsing context.
   bool unused = false;
-  uint32_t chromeFlags = CalculateChromeFlagsForContent(aFeatures, &unused);
+  uint32_t chromeFlags =
+      CalculateChromeFlagsForContent(aFeatures, aModifiers, &unused);
 
   if (isPrivateBrowsingWindow) {
     chromeFlags |= nsIWebBrowserChrome::CHROME_PRIVATE_WINDOW;
@@ -760,7 +761,8 @@ nsresult nsWindowWatcher::OpenWindowInternal(
   } else {
     MOZ_DIAGNOSTIC_ASSERT(parentBC && parentBC->IsContent(),
                           "content caller must provide content parent");
-    chromeFlags = CalculateChromeFlagsForContent(features, &isPopupRequested);
+    chromeFlags =
+        CalculateChromeFlagsForContent(features, aModifiers, &isPopupRequested);
 
     if (aDialog) {
       MOZ_ASSERT(XRE_IsParentProcess());
@@ -1832,10 +1834,20 @@ bool nsWindowWatcher::ShouldOpenPopup(const WindowFeatures& aFeatures) {
  */
 // static
 uint32_t nsWindowWatcher::CalculateChromeFlagsForContent(
-    const WindowFeatures& aFeatures, bool* aIsPopupRequested) {
+    const WindowFeatures& aFeatures,
+    const mozilla::dom::UserActivation::Modifiers& aModifiers,
+    bool* aIsPopupRequested) {
   if (aFeatures.IsEmpty() || !ShouldOpenPopup(aFeatures)) {
     // Open the current/new tab in the current/new window
     // (depends on browser.link.open_newwindow).
+    return nsIWebBrowserChrome::CHROME_ALL;
+  }
+
+  int32_t unused;
+  if (IsWindowOpenLocationModified(aModifiers, &unused)) {
+    // If modifier keys are held when `window.open` is called, open a new
+    // foreground/background tab in the current window, or open a new tab in a
+    // new window, depending on the modifiers combination.
     return nsIWebBrowserChrome::CHROME_ALL;
   }
 
@@ -2426,14 +2438,47 @@ static void SizeOpenedWindow(nsIDocShellTreeOwner* aTreeOwner,
 }
 
 /* static */
-int32_t nsWindowWatcher::GetWindowOpenLocation(nsPIDOMWindowOuter* aParent,
-                                               uint32_t aChromeFlags,
-                                               bool aCalledFromJS,
-                                               bool aIsForPrinting) {
+bool nsWindowWatcher::IsWindowOpenLocationModified(
+    const mozilla::dom::UserActivation::Modifiers& aModifiers,
+    int32_t* aLocation) {
+  // Perform the subset of BrowserUtils.whereToOpenLink in
+  // toolkit/modules/BrowserUtils.sys.mjs
+#ifdef XP_MACOSX
+  bool metaKey = aModifiers.IsMeta();
+#else
+  bool metaKey = aModifiers.IsControl();
+#endif
+  bool shiftKey = aModifiers.IsShift();
+  if (metaKey) {
+    if (shiftKey) {
+      *aLocation = nsIBrowserDOMWindow::OPEN_NEWTAB;
+      return true;
+    }
+    *aLocation = nsIBrowserDOMWindow::OPEN_NEWTAB_BACKGROUND;
+    return true;
+  }
+  if (shiftKey) {
+    *aLocation = nsIBrowserDOMWindow::OPEN_NEWWINDOW;
+    return true;
+  }
+
+  return false;
+}
+
+/* static */
+int32_t nsWindowWatcher::GetWindowOpenLocation(
+    nsPIDOMWindowOuter* aParent, uint32_t aChromeFlags,
+    const mozilla::dom::UserActivation::Modifiers& aModifiers,
+    bool aCalledFromJS, bool aIsForPrinting) {
   // These windows are not actually visible to the user, so we return the thing
   // that we can always handle.
   if (aIsForPrinting) {
     return nsIBrowserDOMWindow::OPEN_PRINT_BROWSER;
+  }
+
+  int32_t modifiedLocation = 0;
+  if (IsWindowOpenLocationModified(aModifiers, &modifiedLocation)) {
+    return modifiedLocation;
   }
 
   // Where should we open this?

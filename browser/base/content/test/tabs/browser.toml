@@ -339,3 +339,6 @@ skip-if = ["true"] #bug 1642084
 ["browser_visibleTabs_bookmarkAllTabs.js"]
 
 ["browser_visibleTabs_contextMenu.js"]
+
+["browser_window_open_modifiers.js"]
+support-files = ["file_window_open.html"]

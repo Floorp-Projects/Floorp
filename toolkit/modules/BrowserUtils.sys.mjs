@@ -369,6 +369,9 @@ export var BrowserUtils = {
 
     // Don't do anything special with right-mouse clicks.  They're probably clicks on context menu items.
 
+    // See also nsWindowWatcher::GetWindowOpenLocation in
+    // toolkit/components/windowwatcher/nsWindowWatcher.cpp
+
     var metaKey = AppConstants.platform == "macosx" ? meta : ctrl;
     if (metaKey || (middle && middleUsesTabs)) {
       return shift ? "tabshifted" : "tab";

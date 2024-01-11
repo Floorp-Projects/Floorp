@@ -661,7 +661,7 @@ BrowserChild::ProvideWindow(nsIOpenWindowInfo* aOpenWindowInfo,
   RefPtr<BrowsingContext> parent = aOpenWindowInfo->GetParent();
 
   int32_t openLocation = nsWindowWatcher::GetWindowOpenLocation(
-      parent->GetDOMWindow(), aChromeFlags, aCalledFromJS,
+      parent->GetDOMWindow(), aChromeFlags, aModifiers, aCalledFromJS,
       aOpenWindowInfo->GetIsForPrinting());
 
   // If it turns out we're opening in the current browser, just hand over the

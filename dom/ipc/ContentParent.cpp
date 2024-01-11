@@ -5624,7 +5624,7 @@ mozilla::ipc::IPCResult ContentParent::CommonCreateWindow(
   }
 
   aOpenLocation = nsWindowWatcher::GetWindowOpenLocation(
-      outerWin, aChromeFlags, aCalledFromJS, aForPrinting);
+      outerWin, aChromeFlags, aModifiers, aCalledFromJS, aForPrinting);
 
   MOZ_ASSERT(aOpenLocation == nsIBrowserDOMWindow::OPEN_NEWTAB ||
              aOpenLocation == nsIBrowserDOMWindow::OPEN_NEWTAB_BACKGROUND ||
