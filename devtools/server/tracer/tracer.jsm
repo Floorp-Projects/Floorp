@@ -128,10 +128,12 @@ class JavaScriptTracer {
     if (!this.loggingMethod) {
       // On workers, `dump` can't be called with JavaScript on another object,
       // so bind it.
+      // Detecting worker is different if this file is loaded via Common JS loader (isWorker)
+      // or as a JSM (constructor name)
       this.loggingMethod =
+        typeof isWorker == "boolean" ||
         globalThis.constructor.name == "WorkerDebuggerGlobalScope"
-          ? // eslint-disable-next-line mozilla/reject-globalThis-modification
-            dump.bind(globalThis)
+          ? dump.bind(null)
           : dump;
     }
 
