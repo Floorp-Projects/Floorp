@@ -1,3 +1,14 @@
+# The tests within this file are exclusively executed when `mach marionette-test`
+# is called without specifying a test path. In case a specific test or manifest
+# is provided, only that particular test or manifest is executed. Alternatively,
+# by using a path prefix, any manifest file is recursively searched for under
+# the specified path.
+#
+# Note: When adding a new top-level manifest file please also add a reference
+# to the `MARIONETTE_MANIFESTS` entry in the appropriate `moz.build` file to
+# allow the execution of tests via `mach test` and as part of the test package
+# as well.
+
 [DEFAULT]
 # marionette unit tests
 ["include:unit/unit-tests.toml"]

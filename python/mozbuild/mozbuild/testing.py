@@ -48,11 +48,7 @@ TEST_MANIFESTS = dict(
         ".",
         False,
     ),
-    # marionette tests are run from the srcdir
-    # TODO(ato): make packaging work as for other test suites
     MARIONETTE=("marionette", "marionette", ".", False),
-    MARIONETTE_UNIT=("marionette", "marionette", ".", False),
-    MARIONETTE_WEBAPI=("marionette", "marionette", ".", False),
     MOCHITEST=("mochitest", "testing/mochitest", "tests", True),
     MOCHITEST_CHROME=("chrome", "testing/mochitest", "chrome", True),
     WEBRTC_SIGNALLING_TEST=("steeplechase", "steeplechase", ".", True),

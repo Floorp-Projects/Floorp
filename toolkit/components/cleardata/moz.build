@@ -28,6 +28,8 @@ XPCSHELL_TESTS_MANIFESTS += ["tests/unit/xpcshell.toml"]
 
 BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.toml"]
 
+MARIONETTE_MANIFESTS += ["tests/marionette/manifest.toml"]
+
 include("/ipc/chromium/chromium-config.mozbuild")
 
 with Files("**"):

@@ -111,4 +111,6 @@ if CONFIG["MOZ_UPDATER"]:
         "tests/browser/whats_new_page/browser.toml",
     ]
 
+MARIONETTE_MANIFESTS += ["tests/marionette/manifest.toml"]
+
 XPCSHELL_TESTS_MANIFESTS += ["tests/unit/xpcshell.toml"]
