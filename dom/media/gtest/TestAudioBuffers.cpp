@@ -17,13 +17,21 @@ void test_for_number_of_channels(const uint32_t channels) {
   mozilla::SpillBuffer<float, 128> b(channels);
   std::vector<float> fromCallback(samples, 0.0);
   std::vector<float> other(samples, 1.0);
+  mozilla::AudioChunk chunk;
+  chunk.mBufferFormat = mozilla::AUDIO_FORMAT_FLOAT32;
+  chunk.mChannelData.SetLength(channels);
+  for (uint32_t i = 0; i < channels; ++i) {
+    chunk.mChannelData[i] = other.data() + i * channels;
+  }
 
   // Set the buffer in the wrapper from the callback
   mBuffer.SetBuffer(fromCallback.data(), FRAMES);
 
   // Fill the SpillBuffer with data.
-  ASSERT_TRUE(b.Fill(other.data(), 15) == 15);
-  ASSERT_TRUE(b.Fill(other.data(), 17) == 17);
+  chunk.mDuration = 15;
+  ASSERT_TRUE(b.Fill(chunk) == 15);
+  chunk.mDuration = 17;
+  ASSERT_TRUE(b.Fill(chunk) == 17);
   for (uint32_t i = 0; i < 32 * channels; i++) {
     other[i] = 0.0;
   }
@@ -46,8 +54,9 @@ void test_for_number_of_channels(const uint32_t channels) {
     << ")\n";
   }
 
-  ASSERT_TRUE(b.Fill(other.data(), FRAMES) == 128);
-  ASSERT_TRUE(b.Fill(other.data(), FRAMES) == 0);
+  chunk.mDuration = FRAMES;
+  ASSERT_TRUE(b.Fill(chunk) == 128);
+  ASSERT_TRUE(b.Fill(chunk) == 0);
   ASSERT_TRUE(b.Empty(mBuffer) == 0);
 }
 

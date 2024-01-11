@@ -595,9 +595,7 @@ class AudioCallbackDriver : public GraphDriver, public MixerCallbackReceiver {
 
   /* This function gets called when the graph has produced the audio frames for
    * this iteration. */
-  void MixerCallback(AudioDataValue* aMixedBuffer, AudioSampleFormat aFormat,
-                     uint32_t aChannels, uint32_t aFrames,
-                     uint32_t aSampleRate) override;
+  void MixerCallback(AudioChunk* aMixedBuffer, uint32_t aSampleRate) override;
 
   AudioCallbackDriver* AsAudioCallbackDriver() override { return this; }
   const AudioCallbackDriver* AsAudioCallbackDriver() const override {

@@ -6,6 +6,7 @@
 #ifndef MOZILLA_SCRATCHBUFFER_H_
 #define MOZILLA_SCRATCHBUFFER_H_
 
+#include "AudioSegment.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/UniquePtr.h"
 #include "nsDebug.h"
@@ -80,7 +81,7 @@ class AudioCallbackBufferWrapper {
 
   /**
    * Write some frames to the internal buffer. Free space in the buffer should
-   * be check prior to calling this.
+   * be checked prior to calling these.
    */
   void WriteFrames(T* aBuffer, uint32_t aFrames) {
     MOZ_ASSERT(aFrames <= Available(),
@@ -88,6 +89,15 @@ class AudioCallbackBufferWrapper {
 
     PodCopy(mBuffer + mSampleWriteOffset, aBuffer,
             FramesToSamples(mChannels, aFrames));
+    mSampleWriteOffset += FramesToSamples(mChannels, aFrames);
+  }
+  void WriteFrames(const AudioChunk& aChunk, uint32_t aFrames) {
+    MOZ_ASSERT(aFrames <= Available(),
+               "Writing more that we can in the audio buffer.");
+
+    InterleaveAndConvertBuffer(aChunk.ChannelData<T>().Elements(), aFrames,
+                               aChunk.mVolume, aChunk.ChannelCount(),
+                               mBuffer + mSampleWriteOffset);
     mSampleWriteOffset += FramesToSamples(mChannels, aFrames);
   }
 
@@ -178,16 +188,18 @@ class SpillBuffer {
 
     return framesToWrite;
   }
-  /* Fill the spill buffer from aInput, containing aFrames frames, return the
-   * number of frames written to the spill buffer */
-  uint32_t Fill(T* aInput, uint32_t aFrames) {
+  /* Fill the spill buffer from aInput.
+   * Return the number of frames written to the spill buffer */
+  uint32_t Fill(const AudioChunk& aInput) {
     uint32_t framesToWrite =
-        std::min(aFrames, BLOCK_SIZE - SamplesToFrames(mChannels, mPosition));
+        std::min(static_cast<uint32_t>(aInput.mDuration),
+                 BLOCK_SIZE - SamplesToFrames(mChannels, mPosition));
 
     MOZ_ASSERT(FramesToSamples(mChannels, framesToWrite) + mPosition <=
                BLOCK_SIZE * mChannels);
-    PodCopy(mBuffer.get() + mPosition, aInput,
-            FramesToSamples(mChannels, framesToWrite));
+    InterleaveAndConvertBuffer(
+        aInput.ChannelData<T>().Elements(), framesToWrite, aInput.mVolume,
+        aInput.ChannelCount(), mBuffer.get() + mPosition);
 
     mPosition += FramesToSamples(mChannels, framesToWrite);
 
