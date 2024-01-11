@@ -530,8 +530,7 @@ class ServoStyleSet {
    * the relative selector to ancestors/previous siblings.
    */
   void MaybeInvalidateForElementRemove(const dom::Element& aElement,
-                                       const dom::Element* aPrevSibling,
-                                       const dom::Element* aNextSibling);
+                                       const nsIContent* aFollowingSibling);
 
   /**
    * Returns true if a change in event state on an element might require

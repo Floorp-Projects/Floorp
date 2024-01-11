@@ -7383,17 +7383,38 @@ pub extern "C" fn Servo_StyleSet_MaybeInvalidateRelativeSelectorForAppend(
     }
 }
 
+fn get_siblings_of_element<'e>(
+    element: GeckoElement<'e>,
+    following_node: &'e Option<GeckoNode<'e>>,
+) -> (Option<GeckoElement<'e>>, Option<GeckoElement<'e>>) {
+    let node = match following_node {
+        Some(n) => n,
+        None => return match element.as_node().parent_node() {
+            Some(p) => (p.last_child_element(), None),
+            None => (None, None),
+        },
+    };
+
+    (node.prev_sibling_element(), node.next_sibling_element())
+}
+
 #[no_mangle]
 pub extern "C" fn Servo_StyleSet_MaybeInvalidateRelativeSelectorForRemoval(
     raw_data: &PerDocumentStyleData,
     element: &RawGeckoElement,
-    prev_sibling: Option<&RawGeckoElement>,
-    next_sibling: Option<&RawGeckoElement>,
+    following_node: Option<&RawGeckoNode>,
 ) {
     let element = GeckoElement(element);
 
-    let next_sibling = next_sibling.map(|e| GeckoElement(e));
-    let prev_sibling = prev_sibling.map(|e| GeckoElement(e));
+    // This element was in-tree, so we can safely say that if it was not on
+    // the relative selector search path, its removal will not invalidate any
+    // relative selector.
+    if element.relative_selector_search_direction().is_none() {
+        return;
+    }
+    let following_node = following_node.map(GeckoNode);
+    let (prev_sibling, next_sibling) =
+        get_siblings_of_element(element, &following_node);
     let data = raw_data.borrow();
     let quirks_mode: QuirksMode = data.stylist.quirks_mode();
 

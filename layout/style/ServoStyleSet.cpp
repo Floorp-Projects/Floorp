@@ -1441,10 +1441,9 @@ void ServoStyleSet::MaybeInvalidateForElementAppend(const Element& aElement) {
 }
 
 void ServoStyleSet::MaybeInvalidateForElementRemove(
-    const Element& aElement, const Element* aPrevSibling,
-    const Element* aNextSibling) {
+    const Element& aElement, const nsIContent* aFollowingSibling) {
   Servo_StyleSet_MaybeInvalidateRelativeSelectorForRemoval(
-      mRawData.get(), &aElement, aPrevSibling, aNextSibling);
+      mRawData.get(), &aElement, aFollowingSibling);
 }
 
 bool ServoStyleSet::MightHaveNthOfAttributeDependency(
