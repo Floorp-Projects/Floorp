@@ -2224,7 +2224,6 @@ nsIFrame* nsCSSFrameConstructor::ConstructTableCol(
     nsTableColFrame* newCol = NS_NewTableColFrame(mPresShell, computedStyle);
     InitAndRestoreFrame(aState, content, aParentFrame, newCol, false);
     aFrameList.LastChild()->SetNextContinuation(newCol);
-    newCol->SetPrevContinuation(aFrameList.LastChild());
     aFrameList.AppendFrame(nullptr, newCol);
     newCol->SetColType(eColAnonymousCol);
   }
@@ -8030,10 +8029,10 @@ nsIFrame* nsCSSFrameConstructor::CreateContinuingFrame(
   }
 
   // Init() set newFrame to be a fluid continuation of aFrame.
-  // If we want a non-fluid continuation, we need to call SetPrevContinuation()
-  // to reset NS_FRAME_IS_FLUID_CONTINUATION.
+  // If we want a non-fluid continuation, we need to call SetNextContinuation()
+  // to remove NS_FRAME_IS_FLUID_CONTINUATION bit from newFrame.
   if (!aIsFluid) {
-    newFrame->SetPrevContinuation(aFrame);
+    aFrame->SetNextContinuation(newFrame);
   }
 
   // If a continuing frame needs to carry frame state bits from its previous
@@ -8041,10 +8040,8 @@ nsIFrame* nsCSSFrameConstructor::CreateContinuingFrame(
   // frame class's Init() if the bits are belong to specific group.
 
   if (nextInFlow) {
-    nextInFlow->SetPrevInFlow(newFrame);
     newFrame->SetNextInFlow(nextInFlow);
   } else if (nextContinuation) {
-    nextContinuation->SetPrevContinuation(newFrame);
     newFrame->SetNextContinuation(nextContinuation);
   }
 
