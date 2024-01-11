@@ -203,7 +203,8 @@ class WindowContext : public nsISupports, public nsWrapperCache {
 
   // This function would be called when its corresponding window is activated
   // by user gesture.
-  void NotifyUserGestureActivation();
+  void NotifyUserGestureActivation(
+      UserActivation::Modifiers aModifiers = UserActivation::Modifiers::None());
 
   // This function would be called when we want to reset the user gesture
   // activation flag.

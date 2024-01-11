@@ -1097,7 +1097,22 @@ void EventStateManager::NotifyTargetUserActivation(WidgetEvent* aEvent,
 
   MOZ_ASSERT(aEvent->mMessage == eKeyDown || aEvent->mMessage == eMouseDown ||
              aEvent->mMessage == ePointerDown || aEvent->mMessage == eTouchEnd);
-  doc->NotifyUserGestureActivation();
+  UserActivation::Modifiers modifiers;
+  if (WidgetInputEvent* inputEvent = aEvent->AsInputEvent()) {
+    if (inputEvent->IsShift()) {
+      modifiers.SetShift();
+    }
+    if (inputEvent->IsMeta()) {
+      modifiers.SetMeta();
+    }
+    if (inputEvent->IsControl()) {
+      modifiers.SetControl();
+    }
+    if (inputEvent->IsAlt()) {
+      modifiers.SetAlt();
+    }
+  }
+  doc->NotifyUserGestureActivation(modifiers);
 }
 
 // https://html.spec.whatwg.org/multipage/popover.html#popover-light-dismiss
