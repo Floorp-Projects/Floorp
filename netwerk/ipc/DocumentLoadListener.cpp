@@ -1657,6 +1657,8 @@ static int32_t GetWhereToOpen(nsIChannel* aChannel, bool aIsDocumentLoad) {
       where == nsIBrowserDOMWindow::OPEN_NEWTAB) {
     return where;
   }
+  // NOTE: nsIBrowserDOMWindow::OPEN_NEWTAB_BACKGROUND is not allowed as a pref
+  //       value.
   return nsIBrowserDOMWindow::OPEN_NEWTAB;
 }
 
@@ -1748,6 +1750,7 @@ static bool ContextCanProcessSwitch(CanonicalBrowsingContext* aBrowsingContext,
 static RefPtr<dom::BrowsingContextCallbackReceivedPromise> SwitchToNewTab(
     CanonicalBrowsingContext* aLoadingBrowsingContext, int32_t aWhere) {
   MOZ_ASSERT(aWhere == nsIBrowserDOMWindow::OPEN_NEWTAB ||
+                 aWhere == nsIBrowserDOMWindow::OPEN_NEWTAB_BACKGROUND ||
                  aWhere == nsIBrowserDOMWindow::OPEN_NEWWINDOW,
              "Unsupported open location");
 

@@ -540,6 +540,7 @@ nsContentTreeOwner::ProvideWindow(
       aOpenWindowInfo->GetIsForPrinting());
 
   if (openLocation != nsIBrowserDOMWindow::OPEN_NEWTAB &&
+      openLocation != nsIBrowserDOMWindow::OPEN_NEWTAB_BACKGROUND &&
       openLocation != nsIBrowserDOMWindow::OPEN_CURRENTWINDOW &&
       openLocation != nsIBrowserDOMWindow::OPEN_PRINT_BROWSER) {
     // Just open a window normally

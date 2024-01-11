@@ -5625,6 +5625,7 @@ mozilla::ipc::IPCResult ContentParent::CommonCreateWindow(
       outerWin, aChromeFlags, aCalledFromJS, aForPrinting);
 
   MOZ_ASSERT(aOpenLocation == nsIBrowserDOMWindow::OPEN_NEWTAB ||
+             aOpenLocation == nsIBrowserDOMWindow::OPEN_NEWTAB_BACKGROUND ||
              aOpenLocation == nsIBrowserDOMWindow::OPEN_NEWWINDOW ||
              aOpenLocation == nsIBrowserDOMWindow::OPEN_PRINT_BROWSER);
 
@@ -5634,6 +5635,7 @@ mozilla::ipc::IPCResult ContentParent::CommonCreateWindow(
   }
 
   if (aOpenLocation == nsIBrowserDOMWindow::OPEN_NEWTAB ||
+      aOpenLocation == nsIBrowserDOMWindow::OPEN_NEWTAB_BACKGROUND ||
       aOpenLocation == nsIBrowserDOMWindow::OPEN_PRINT_BROWSER) {
     RefPtr<Element> openerElement = do_QueryObject(frame);
 
@@ -5860,8 +5862,9 @@ mozilla::ipc::IPCResult ContentParent::RecvCreateWindow(
 
   // This used to happen in the child - there may now be a better place to
   // do this work.
-  MOZ_ALWAYS_SUCCEEDS(
-      newBC->SetHasSiblings(openLocation == nsIBrowserDOMWindow::OPEN_NEWTAB));
+  MOZ_ALWAYS_SUCCEEDS(newBC->SetHasSiblings(
+      openLocation == nsIBrowserDOMWindow::OPEN_NEWTAB ||
+      openLocation == nsIBrowserDOMWindow::OPEN_NEWTAB_BACKGROUND));
 
   newTab->SwapFrameScriptsFrom(cwi.frameScripts());
   newTab->MaybeShowFrame();

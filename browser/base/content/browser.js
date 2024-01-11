@@ -6038,7 +6038,8 @@ nsBrowserAccess.prototype = {
     aTriggeringPrincipal = null,
     aName = "",
     aCsp = null,
-    aSkipLoad = false
+    aSkipLoad = false,
+    aForceLoadInBackground = false
   ) {
     let win, needToFocusWin;
 
@@ -6064,6 +6065,9 @@ nsBrowserAccess.prototype = {
     let loadInBackground = Services.prefs.getBoolPref(
       "browser.tabs.loadDivertedInBackground"
     );
+    if (aForceLoadInBackground) {
+      loadInBackground = true;
+    }
 
     let tab = win.gBrowser.addTab(aURI ? aURI.spec : "about:blank", {
       triggeringPrincipal: aTriggeringPrincipal,
@@ -6231,7 +6235,8 @@ nsBrowserAccess.prototype = {
           console.error(ex);
         }
         break;
-      case Ci.nsIBrowserDOMWindow.OPEN_NEWTAB: {
+      case Ci.nsIBrowserDOMWindow.OPEN_NEWTAB:
+      case Ci.nsIBrowserDOMWindow.OPEN_NEWTAB_BACKGROUND: {
         // If we have an opener, that means that the caller is expecting access
         // to the nsIDOMWindow of the opened tab right away. For e10s windows,
         // this means forcing the newly opened browser to be non-remote so that
@@ -6242,6 +6247,8 @@ nsBrowserAccess.prototype = {
         let userContextId = aOpenWindowInfo
           ? aOpenWindowInfo.originAttributes.userContextId
           : openingUserContextId;
+        let forceLoadInBackground =
+          aWhere == Ci.nsIBrowserDOMWindow.OPEN_NEWTAB_BACKGROUND;
         let browser = this._openURIInNewTab(
           aURI,
           referrerInfo,
@@ -6254,7 +6261,8 @@ nsBrowserAccess.prototype = {
           aTriggeringPrincipal,
           "",
           aCsp,
-          aSkipLoad
+          aSkipLoad,
+          forceLoadInBackground
         );
         if (browser) {
           browsingContext = browser.browsingContext;
@@ -6353,7 +6361,10 @@ nsBrowserAccess.prototype = {
         );
       }
 
-      if (aWhere != Ci.nsIBrowserDOMWindow.OPEN_NEWTAB) {
+      if (
+        aWhere != Ci.nsIBrowserDOMWindow.OPEN_NEWTAB &&
+        aWhere != Ci.nsIBrowserDOMWindow.OPEN_NEWTAB_BACKGROUND
+      ) {
         dump("Error: openURIInFrame can only open in new tabs or print");
         return null;
       }
@@ -6365,6 +6376,9 @@ nsBrowserAccess.prototype = {
         "userContextId" in aParams.openerOriginAttributes
           ? aParams.openerOriginAttributes.userContextId
           : Ci.nsIScriptSecurityManager.DEFAULT_USER_CONTEXT_ID;
+
+      var forceLoadInBackground =
+        aWhere == Ci.nsIBrowserDOMWindow.OPEN_NEWTAB_BACKGROUND;
 
       return this._openURIInNewTab(
         aURI,
@@ -6378,7 +6392,8 @@ nsBrowserAccess.prototype = {
         aParams.triggeringPrincipal,
         aName,
         aParams.csp,
-        aSkipLoad
+        aSkipLoad,
+        forceLoadInBackground
       );
     },
 
