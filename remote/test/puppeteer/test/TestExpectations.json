@@ -1862,12 +1862,6 @@
   {
     "testIdPattern": "[evaluation.spec] Evaluation specs Page.evaluate should work from-inside an exposed function",
     "platforms": ["darwin", "linux", "win32"],
-    "parameters": ["firefox", "webDriverBiDi"],
-    "expectations": ["FAIL", "TIMEOUT"]
-  },
-  {
-    "testIdPattern": "[evaluation.spec] Evaluation specs Page.evaluate should work from-inside an exposed function",
-    "platforms": ["darwin", "linux", "win32"],
     "parameters": ["cdp", "firefox"],
     "expectations": ["SKIP"]
   },
