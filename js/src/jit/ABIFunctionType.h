@@ -15,33 +15,32 @@
 namespace js {
 namespace jit {
 
-enum ABIArgType {
+enum class ABIType {
   // A pointer sized integer
-  ArgType_General = 0x1,
+  General = 0x1,
   // A 32-bit integer
-  ArgType_Int32 = 0x2,
+  Int32 = 0x2,
   // A 64-bit integer
-  ArgType_Int64 = 0x3,
+  Int64 = 0x3,
   // A 32-bit floating point number
-  ArgType_Float32 = 0x4,
+  Float32 = 0x4,
   // A 64-bit floating point number
-  ArgType_Float64 = 0x5,
-
-  RetType_Shift = 0x0,
-  ArgType_Shift = 0x3,
-  ArgType_Mask = 0x7
+  Float64 = 0x5
 };
+
+const size_t ABITypeArgShift = 0x3;
+const size_t ABITypeArgMask = (1 << ABITypeArgShift) - 1;
 
 namespace detail {
 
 static constexpr uint64_t MakeABIFunctionType(
-    ABIArgType ret, std::initializer_list<ABIArgType> args) {
+    ABIType ret, std::initializer_list<ABIType> args) {
   uint64_t abiType = 0;
   for (auto arg : args) {
-    abiType <<= ArgType_Shift;
+    abiType <<= ABITypeArgShift;
     abiType |= (uint64_t)arg;
   }
-  abiType <<= ArgType_Shift;
+  abiType <<= ABITypeArgShift;
   abiType |= (uint64_t)ret;
   return abiType;
 }
@@ -55,7 +54,7 @@ enum ABIFunctionType : uint64_t {
 };
 
 static constexpr ABIFunctionType MakeABIFunctionType(
-    ABIArgType ret, std::initializer_list<ABIArgType> args) {
+    ABIType ret, std::initializer_list<ABIType> args) {
   return ABIFunctionType(detail::MakeABIFunctionType(ret, args));
 }
 
