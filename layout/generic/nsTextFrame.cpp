@@ -4127,25 +4127,7 @@ class nsContinuingTextFrame final : public nsTextFrame {
         "creating a loop in continuation chain!");
     mPrevContinuation = static_cast<nsTextFrame*>(aPrevContinuation);
     RemoveStateBits(NS_FRAME_IS_FLUID_CONTINUATION);
-    nsTextFrame* prevFirst = mFirstContinuation;
-    if (mPrevContinuation) {
-      mFirstContinuation = mPrevContinuation->FirstContinuation();
-      if (mFirstContinuation) {
-        mFirstContinuation->ClearCachedContinuations();
-      }
-    } else {
-      mFirstContinuation = nullptr;
-    }
-    if (mFirstContinuation != prevFirst) {
-      if (prevFirst) {
-        prevFirst->ClearCachedContinuations();
-      }
-      auto* f = static_cast<nsContinuingTextFrame*>(mNextContinuation);
-      while (f) {
-        f->mFirstContinuation = mFirstContinuation;
-        f = static_cast<nsContinuingTextFrame*>(f->mNextContinuation);
-      }
-    }
+    UpdateCachedContinuations();
   }
 
   nsTextFrame* GetPrevInFlow() const final {
@@ -4161,6 +4143,11 @@ class nsContinuingTextFrame final : public nsTextFrame {
         "creating a loop in continuation chain!");
     mPrevContinuation = static_cast<nsTextFrame*>(aPrevInFlow);
     AddStateBits(NS_FRAME_IS_FLUID_CONTINUATION);
+    UpdateCachedContinuations();
+  }
+
+  // Call this helper to update cache after mPrevContinuation is changed.
+  void UpdateCachedContinuations() {
     nsTextFrame* prevFirst = mFirstContinuation;
     if (mPrevContinuation) {
       mFirstContinuation = mPrevContinuation->FirstContinuation();
