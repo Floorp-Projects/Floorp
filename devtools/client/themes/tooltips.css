@@ -215,6 +215,7 @@ strong {
   z-index: 9999;
   background: transparent;
   pointer-events: none;
+  overflow: clip;
   filter: drop-shadow(0 2px 8px var(--theme-tooltip-shadow-color));
 }
 
