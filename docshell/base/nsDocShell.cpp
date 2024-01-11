@@ -11264,19 +11264,16 @@ nsDocShell::AddState(JS::Handle<JS::Value> aData, const nsAString& aTitle,
       // It's very important that we check that newURI is of the same
       // origin as currentURI, not docBaseURI, because a page can
       // set docBaseURI arbitrarily to any domain.
-      bool isPrivateWin =
-          document->NodePrincipal()->OriginAttributesRef().mPrivateBrowsingId >
-          0;
-      if (NS_FAILED(secMan->CheckSameOriginURI(currentURI, newURI, true,
-                                               isPrivateWin))) {
-        return NS_ERROR_DOM_SECURITY_ERR;
-      }
-
       nsAutoCString currentUserPass, newUserPass;
       NS_ENSURE_SUCCESS(currentURI->GetUserPass(currentUserPass),
                         NS_ERROR_FAILURE);
       NS_ENSURE_SUCCESS(newURI->GetUserPass(newUserPass), NS_ERROR_FAILURE);
-      if (!currentUserPass.Equals(newUserPass)) {
+      bool isPrivateWin =
+          document->NodePrincipal()->OriginAttributesRef().mPrivateBrowsingId >
+          0;
+      if (NS_FAILED(secMan->CheckSameOriginURI(currentURI, newURI, true,
+                                               isPrivateWin)) ||
+          !currentUserPass.Equals(newUserPass)) {
         return NS_ERROR_DOM_SECURITY_ERR;
       }
     } else {
