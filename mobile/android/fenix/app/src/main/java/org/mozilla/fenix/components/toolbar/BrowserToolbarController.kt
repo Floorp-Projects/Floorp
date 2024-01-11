@@ -7,11 +7,13 @@ package org.mozilla.fenix.components.toolbar
 import androidx.navigation.NavController
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.selector.findCustomTabOrSelectedTab
+import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.selector.getNormalOrPrivateTabs
 import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.EngineView
+import mozilla.components.concept.engine.prompt.ShareData
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.service.glean.private.NoExtras
 import mozilla.components.support.ktx.kotlin.isUrl
@@ -19,6 +21,7 @@ import mozilla.components.ui.tabcounter.TabCounterMenu
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.ReaderMode
 import org.mozilla.fenix.HomeActivity
+import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.BrowserAnimator
 import org.mozilla.fenix.browser.BrowserAnimator.Companion.getToolbarNavOptions
@@ -69,6 +72,11 @@ interface BrowserToolbarController {
      * @see [BrowserToolbarInteractor.onTranslationsButtonClicked]
      */
     fun handleTranslationsButtonClick()
+
+    /**
+     * @see [BrowserToolbarInteractor.onShareActionClicked]
+     */
+    fun onShareActionClicked()
 }
 
 private const val MAX_DISPLAY_NUMBER_SHOPPING_CFR = 3
@@ -227,6 +235,31 @@ class DefaultBrowserToolbarController(
                 sessionId = currentSession?.id,
             )
         navController.navigateSafe(R.id.browserFragment, directions)
+    }
+
+    override fun onShareActionClicked() {
+        val directions = NavGraphDirections.actionGlobalShareFragment(
+            sessionId = currentSession?.id,
+            data = arrayOf(
+                ShareData(
+                    url = getProperUrl(currentSession),
+                    title = currentSession?.content?.title,
+                ),
+            ),
+            showPage = true,
+        )
+        navController.navigate(directions)
+    }
+
+    private fun getProperUrl(currentSession: SessionState?): String? {
+        return currentSession?.id?.let {
+            val currentTab = store.state.findTab(it)
+            if (currentTab?.readerState?.active == true) {
+                currentTab.readerState.activeUrl
+            } else {
+                currentSession.content.url
+            }
+        }
     }
 
     companion object {
