@@ -13505,7 +13505,7 @@
 # Partition the OCSP cache by the partitionKey.
 - name: privacy.partition.network_state.ocsp_cache
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
 # Partition the OCSP cache by the partitionKey for private browsing mode.
