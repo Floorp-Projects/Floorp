@@ -21,7 +21,6 @@ generated-files = [
   "system.xpi",
   "restartless.xpi",
 ]
-prefs = ["browser.attribution.macos.enabled=true"]
 
 ["test_ChildEvents.js"]
 skip-if = ["os == 'android'"] # Disabled due to crashes (see bug 1331366)

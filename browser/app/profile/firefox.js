@@ -2938,11 +2938,6 @@ pref("ui.new-webcompat-reporter.reason-dropdown", 0);
 // performing the clear action.
 pref("browser.privatebrowsing.resetPBM.showConfirmationDialog", true);
 
-// bug 1858545: Temporary pref to enable a staged rollout of macOS attribution Telemetry
-#ifdef XP_MACOSX
-  pref("browser.attribution.macos.enabled", false);
-#endif
-
 // the preferences related to the Nimbus experiment, to activate and deactivate
 // the the entire rollout or deactivate only the OS prompt (see: bug 1864216)
 pref("browser.mailto.dualPrompt", false);

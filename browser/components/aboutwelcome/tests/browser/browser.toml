@@ -5,7 +5,6 @@ support-files = [
 
 prefs = [
   "intl.multilingual.aboutWelcome.languageMismatchEnabled=false",
-  "browser.attribution.macos.enabled=true",
 ]
 
 ["browser_aboutwelcome_attribution.js"]
