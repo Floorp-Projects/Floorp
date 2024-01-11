@@ -1343,6 +1343,14 @@ void MacroAssembler::cmp32LoadPtr(Condition cond, const Address& lhs, Imm32 rhs,
   bind(&skip);
 }
 
+void MacroAssembler::cmp32Move32(Condition cond, Register lhs, Imm32 rhs,
+                                 Register src, Register dest) {
+  UseScratchRegisterScope temps(this);
+  Register scratch2 = temps.Acquire();
+  cmp32Set(cond, lhs, rhs, scratch2);
+  moveIfNotZero(dest, src, scratch2);
+}
+
 void MacroAssembler::cmp32Move32(Condition cond, Register lhs, Register rhs,
                                  Register src, Register dest) {
   UseScratchRegisterScope temps(this);

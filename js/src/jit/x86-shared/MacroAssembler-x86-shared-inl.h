@@ -1139,6 +1139,12 @@ void MacroAssembler::testBigIntSet(Condition cond, const T& src,
   emitSet(cond, dest);
 }
 
+void MacroAssembler::cmp32Move32(Condition cond, Register lhs, Imm32 rhs,
+                                 Register src, Register dest) {
+  cmp32(lhs, rhs);
+  cmovCCl(cond, src, dest);
+}
+
 void MacroAssembler::cmp32Move32(Condition cond, Register lhs, Register rhs,
                                  Register src, Register dest) {
   cmp32(lhs, rhs);
