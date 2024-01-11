@@ -394,10 +394,6 @@ browsertime-benchmark:
     treeherder-symbol: Btime()
     tier:
         by-app:
-            custom-car:
-                by-test-platform:
-                    macosx1300.*shippable.*: 3
-                    default: 2
             firefox:
                 by-subtest:
                     motionmark-animometer:
@@ -423,7 +419,10 @@ browsertime-benchmark:
                             .*64.*shippable-qr/.*: [trunk, mozilla-release]
                             .*nightlyasrelease.*: [autoland]
                             default: []
-                    custom-car: [mozilla-central]
+                    custom-car:
+                        by-test-platform:
+                            (linux|windows10-64).*shippable-qr.*: [mozilla-central]
+                            default: []
                     default: []
             unity-webgl:
                 by-app:
@@ -442,7 +441,10 @@ browsertime-benchmark:
                             .*64.*shippable-qr/.*: [trunk, mozilla-beta, mozilla-release]
                             .*nightlyasrelease.*: [autoland]
                             default: []
-                    custom-car: [mozilla-central]
+                    custom-car:
+                        by-test-platform:
+                            (linux|windows10-64).*shippable-qr.*: [mozilla-central]
+                            default: []
                     default: []
             default:
                 by-app:
