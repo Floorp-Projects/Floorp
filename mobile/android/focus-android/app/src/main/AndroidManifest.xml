@@ -176,8 +176,10 @@
             </intent-filter>
         </service>
 
-        <service android:name=".downloads.DownloadService"
-            android:exported="false" />
+        <service
+            android:name=".downloads.DownloadService"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
 
         <service android:name=".media.MediaSessionService"
             android:foregroundServiceType="mediaPlayback"

@@ -340,6 +340,7 @@
 
         <service
             android:name=".downloads.DownloadService"
+            android:foregroundServiceType="dataSync"
             android:exported="false" />
 
         <receiver

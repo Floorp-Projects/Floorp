@@ -164,7 +164,9 @@
             </intent-filter>
         </service>
 
-        <service android:name=".downloads.DownloadService" />
+        <service
+            android:name=".downloads.DownloadService"
+            android:foregroundServiceType="dataSync" />
 
         <service android:name=".media.MediaSessionService"
             android:foregroundServiceType="mediaPlayback"
