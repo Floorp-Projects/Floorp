@@ -440,17 +440,9 @@ void RestyleManager::ContentRemoved(nsIContent* aOldChild,
     // invalidated.
     IncrementUndisplayedRestyleGeneration();
   }
-  Element* nextSibling = aFollowingSibling
-                             ? aFollowingSibling->IsElement()
-                                   ? aFollowingSibling->AsElement()
-                                   : aFollowingSibling->GetNextElementSibling()
-                             : nullptr;
   if (aOldChild->IsElement()) {
-    Element* prevSibling = aFollowingSibling
-                               ? aFollowingSibling->GetPreviousElementSibling()
-                               : container->GetLastElementChild();
     StyleSet()->MaybeInvalidateForElementRemove(*aOldChild->AsElement(),
-                                                prevSibling, nextSibling);
+                                                aFollowingSibling);
   }
 
   const auto selectorFlags =
@@ -512,6 +504,11 @@ void RestyleManager::ContentRemoved(nsIContent* aOldChild,
     // Restyle all later siblings.
     RestyleSiblingsStartingWith(aFollowingSibling);
     if (selectorFlags & NodeSelectorFlags::HasSlowSelectorNthAll) {
+      Element* nextSibling =
+          aFollowingSibling ? aFollowingSibling->IsElement()
+                                  ? aFollowingSibling->AsElement()
+                                  : aFollowingSibling->GetNextElementSibling()
+                            : nullptr;
       StyleSet()->MaybeInvalidateRelativeSelectorForNthDependencyFromSibling(
           nextSibling);
     }
