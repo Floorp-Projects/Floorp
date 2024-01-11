@@ -45,9 +45,9 @@ git = "https://github.com/jfkthame/mapped_hyph.git"
 rev = "c7651a0cffff41996ad13c44f689bd9cd2192c01"
 replace-with = "vendored-sources"
 
-[source."git+https://github.com/mozilla-spidermonkey/jsparagus?rev=64ba08e24749616de2344112f226d1ef4ba893ae"]
+[source."git+https://github.com/mozilla-spidermonkey/jsparagus?rev=61f399c53a641ebd3077c1f39f054f6d396a633c"]
 git = "https://github.com/mozilla-spidermonkey/jsparagus"
-rev = "64ba08e24749616de2344112f226d1ef4ba893ae"
+rev = "61f399c53a641ebd3077c1f39f054f6d396a633c"
 replace-with = "vendored-sources"
 
 [source."git+https://github.com/mozilla/application-services?rev=57ecda94fae3226cf67b3e12ce7d6b504e0e2417"]

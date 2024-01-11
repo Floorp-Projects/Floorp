@@ -17,7 +17,7 @@ authors = ["khyperia <khyperia@live.com>"]
 license = "MIT/Apache-2.0"
 
 [dependencies]
-indexmap = "1.0"
+indexmap = "2.0"
 
 [dependencies.bumpalo]
 version = "3.4.0"
