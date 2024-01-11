@@ -1547,7 +1547,10 @@ function useLanguageSwitcher(appAndSystemLocaleInfo, screens, screenIndex, setSc
     } else {
       setLanguageFilteredScreens(screens);
     }
-  }, [appAndSystemLocaleInfo === null || appAndSystemLocaleInfo === void 0 ? void 0 : appAndSystemLocaleInfo.matchType, languageMismatchScreenIndex, negotiatedLanguage, screen, screenIndex, screens, setScreenIndex]);
+  },
+  // Removing screenIndex as a dependency as it's causing infinite re-renders (1873019)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  [appAndSystemLocaleInfo === null || appAndSystemLocaleInfo === void 0 ? void 0 : appAndSystemLocaleInfo.matchType, languageMismatchScreenIndex, negotiatedLanguage, screen, screens, setScreenIndex]);
   return {
     negotiatedLanguage,
     langPackInstallPhase,
