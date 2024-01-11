@@ -34,7 +34,7 @@
     <br />
     <a href="https://floorp.app">Official Site</a>
     ・
-    <a href="#📥-download--📦-install">Download</a>
+    <a href="#-download---install">Download</a>
     ・
     <a href="https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/">Blog & Release Notes</a>
     ・
