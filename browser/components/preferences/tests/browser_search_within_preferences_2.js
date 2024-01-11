@@ -178,3 +178,82 @@ add_task(async function () {
 
   await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
+
+/**
+ * Test that search works as expected for custom elements that utilize both
+ * slots and shadow DOM. We should be able to find text in both the light and
+ * shadow DOM.
+ */
+add_task(async function testSearchShadowLightDOM() {
+  await openPreferencesViaOpenPreferencesAPI("paneGeneral", {
+    leaveOpen: true,
+  });
+
+  // Create a toggle and slot in a link
+  const SHADOW_DOM_TEXT = "This text lives in the shadow DOM";
+  const LIGHT_DOM_TEXT = "This text lives in the light DOM";
+
+  let doc = gBrowser.contentDocument;
+  let toggle = doc.createElement("moz-toggle");
+  toggle.label = SHADOW_DOM_TEXT;
+
+  let link = doc.createElement("a");
+  link.href = "https://mozilla.org/";
+  link.textContent = LIGHT_DOM_TEXT;
+  toggle.append(link);
+  link.slot = "support-link";
+
+  let protectionsGroup = doc.getElementById("trackingGroup");
+  protectionsGroup.append(toggle);
+
+  ok(
+    !BrowserTestUtils.is_visible(toggle),
+    "Toggle is not visible prior to search."
+  );
+
+  // Perform search with text found in moz-toggle's shadow DOM.
+  let query = SHADOW_DOM_TEXT;
+  let searchCompletedPromise = BrowserTestUtils.waitForEvent(
+    gBrowser.contentWindow,
+    "PreferencesSearchCompleted",
+    evt => evt.detail == query
+  );
+  EventUtils.sendString(query);
+  await searchCompletedPromise;
+  ok(
+    BrowserTestUtils.is_visible(toggle),
+    "Toggle is visible after searching for string in the shadow DOM."
+  );
+
+  // Clear search
+  searchCompletedPromise = BrowserTestUtils.waitForEvent(
+    gBrowser.contentWindow,
+    "PreferencesSearchCompleted",
+    evt => evt.detail == ""
+  );
+  let count = query.length;
+  while (count--) {
+    EventUtils.sendKey("BACK_SPACE");
+  }
+  await searchCompletedPromise;
+  ok(
+    !BrowserTestUtils.is_visible(toggle),
+    "Toggle is not visible after clearing search."
+  );
+
+  // Perform search with text found in moz-toggle's slotted content.
+  query = LIGHT_DOM_TEXT;
+  searchCompletedPromise = BrowserTestUtils.waitForEvent(
+    gBrowser.contentWindow,
+    "PreferencesSearchCompleted",
+    evt => evt.detail == query
+  );
+  EventUtils.sendString(query);
+  await searchCompletedPromise;
+  ok(
+    BrowserTestUtils.is_visible(toggle),
+    "Toggle is visible again after searching for text found in slotted content."
+  );
+
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
+});
