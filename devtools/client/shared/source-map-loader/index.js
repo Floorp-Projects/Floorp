@@ -74,7 +74,7 @@ class SourceMapLoader extends WorkerDispatcher {
   getOriginalLocations = this.task("getOriginalLocations");
   getGeneratedRangesForOriginal = this.task("getGeneratedRangesForOriginal");
   getFileGeneratedRange = this.task("getFileGeneratedRange");
-  getSourceMapIgnoreList = this.task("getSourceMapIgnoreList");
+  loadSourceMap = this.task("loadSourceMap");
 
   async getOriginalSourceText(originalSourceId) {
     try {
