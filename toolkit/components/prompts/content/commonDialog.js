@@ -157,7 +157,7 @@ function commonDialogOnLoad() {
             {
               requestToken: Services.uuid.generateUUID().toString(),
               resources: [],
-              analysisType: Ci.nsIContentAnalysis.eBulkDataEntry,
+              analysisType: Ci.nsIContentAnalysisRequest.eBulkDataEntry,
               operationTypeForDisplay: Ci.nsIContentAnalysisRequest.eClipboard,
               url: args.owningBrowsingContext.currentURI.spec,
               textContent: data,
