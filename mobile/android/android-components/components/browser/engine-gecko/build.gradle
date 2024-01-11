@@ -70,15 +70,10 @@ dependencies {
     }
     implementation ComponentsDependencies.kotlin_coroutines
 
-    if (System.env.MOZ_AUTOMATION) {
-        rootProject.logger.lifecycle("Getting geckoview in MOZ_AUTOMATION getArtifactId=${getArtifactId()} mozconfig=${gradle.mozconfig}")
-        api "org.mozilla.geckoview:${getArtifactId()}:+"
-    } else if (findProject(":geckoview") != null) {
+    if (findProject(":geckoview") != null) {
         api project(':geckoview')
-    } else if (gradle.mozconfig.substs.MOZ_ARTIFACT_BUILDS) {
-        api getGeckoViewDependency()
     } else {
-        api ComponentsDependencies.mozilla_geckoview
+        api getGeckoViewDependency()
     }
 
     implementation ComponentsDependencies.androidx_paging
@@ -182,5 +177,6 @@ def getArtifactId() {
 }
 
 def getGeckoViewDependency() {
+    rootProject.logger.lifecycle("Getting geckoview: ${getArtifactId()}:${getVersionNumber()}")
     return "org.mozilla.geckoview:${getArtifactId()}:${getVersionNumber()}"
 }
