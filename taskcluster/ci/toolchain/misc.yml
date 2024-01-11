@@ -240,7 +240,7 @@ macosx-arm64-custom-car:
         cached_task: false
     treeherder:
         symbol: TM(custom-car-arm)
-        tier: 3
+        tier: 2
     worker:
         max-run-time: 50000
     run-on-projects: []
