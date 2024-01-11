@@ -1,0 +1,26 @@
+schema: 1
+
+bugzilla:
+  product: Toolkit
+  component: Reader Mode
+
+origin:
+  name: Readability
+  description: Readability library used for Firefox Reader View
+  url: https://github.com/mozilla/readability
+  license: Apache-2.0
+  release: 0.5.0 (2023-12-15T17:20:28+00:00).
+  revision: 0.5.0
+
+vendoring:
+  url: https://github.com/mozilla/readability
+  source-hosting: github
+  tracking: tag
+  vendor-directory: toolkit/components/reader/readability
+  exclude:
+    - "**"
+  include:
+    - LICENSE.md
+    - Readability.js
+    - Readability-readerable.js
+    - JSDOMParser.js

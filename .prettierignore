@@ -1211,11 +1211,6 @@ toolkit/mozapps/extensions/test/xpcshell/data/test_AddonRepository_fail.json
 toolkit/components/pdfjs/content/build
 toolkit/components/pdfjs/content/web
 
-# External code:
-toolkit/components/reader/Readability.js
-toolkit/components/reader/Readability-readerable.js
-toolkit/components/reader/JSDOMParser.js
-
 # Uses preprocessing
 toolkit/components/reader/Readerable.sys.mjs
 
@@ -1432,6 +1427,7 @@ toolkit/components/jsoncpp/
 toolkit/components/normandy/vendor/
 toolkit/components/passwordmgr/PasswordRulesParser.sys.mjs
 toolkit/components/protobuf/
+toolkit/components/reader/readability/
 toolkit/components/translation/cld2/
 toolkit/components/translations/bergamot-translator/thirdparty
 toolkit/components/translations/bergamot-translator/bergamot-translator.js

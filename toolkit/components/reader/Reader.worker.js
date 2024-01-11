@@ -10,7 +10,7 @@
 
 /* import-globals-from /toolkit/components/workerloader/require.js */
 /* global JSDOMParser */
-/* import-globals-from /toolkit/components/reader/Readability.js */
+/* import-globals-from /toolkit/components/reader/readability/Readability.js */
 importScripts(
   "resource://gre/modules/workers/require.js",
   "resource://gre/modules/reader/JSDOMParser.js",
