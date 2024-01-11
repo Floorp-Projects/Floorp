@@ -549,13 +549,19 @@ static int32_t BlocklistFeatureToGfxFeature(const nsAString& aFeature) {
   if (aFeature.EqualsLiteral("ACCELERATED_CANVAS2D")) {
     return nsIGfxInfo::FEATURE_ACCELERATED_CANVAS2D;
   }
+  if (aFeature.EqualsLiteral("ALL")) {
+    return GfxDriverInfo::allFeatures;
+  }
+  if (aFeature.EqualsLiteral("OPTIONAL")) {
+    return GfxDriverInfo::optionalFeatures;
+  }
 
   // If we don't recognize the feature, it may be new, and something
   // this version doesn't understand.  So, nothing to do.  This is
   // different from feature not being specified at all, in which case
   // this method should not get called and we should continue with the
-  // "all features" blocklisting.
-  return -1;
+  // "optional features" blocklisting.
+  return 0;
 }
 
 static int32_t BlocklistFeatureStatusToGfxFeatureStatus(
@@ -686,7 +692,7 @@ static bool BlocklistEntryToDriverInfo(const nsACString& aBlocklistEntry,
       aDriverInfo.mDriverVendor = dataValue;
     } else if (key.EqualsLiteral("feature")) {
       aDriverInfo.mFeature = BlocklistFeatureToGfxFeature(dataValue);
-      if (aDriverInfo.mFeature < 0) {
+      if (aDriverInfo.mFeature == 0) {
         // If we don't recognize the feature, we do not want to proceed.
         gfxWarning() << "Unrecognized feature " << value.get();
         return false;

@@ -329,9 +329,9 @@ struct GfxDriverInfo {
   /* A feature from nsIGfxInfo, or a wildcard set of features */
   int32_t mFeature;
   /* Block all features */
-  static constexpr int32_t allFeatures = 0;
+  static constexpr int32_t allFeatures = -1;
   /* Block all features not permitted by OnlyAllowFeatureOnKnownConfig */
-  static constexpr int32_t optionalFeatures = -1;
+  static constexpr int32_t optionalFeatures = -2;
 
   /* A feature status from nsIGfxInfo */
   int32_t mFeatureStatus;
