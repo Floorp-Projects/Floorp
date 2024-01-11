@@ -214,7 +214,11 @@ export class NetworkEventRecord {
       },
     };
 
-    this.#emitResponseCompleted();
+    if (responseInfo.blockedReason) {
+      this.#emitFetchError();
+    } else {
+      this.#emitResponseCompleted();
+    }
   }
 
   /**
@@ -275,8 +279,8 @@ export class NetworkEventRecord {
       authCallbacks,
       contextId: this.#contextId,
       isNavigationRequest: this.#isMainDocumentChannel,
-      requestChannel: this.#requestChannel,
       redirectCount: this.#redirectCount,
+      requestChannel: this.#requestChannel,
       requestData: this.#requestData,
       responseChannel: this.#responseChannel,
       responseData: this.#responseData,
@@ -290,8 +294,23 @@ export class NetworkEventRecord {
     this.#networkListener.emit("before-request-sent", {
       contextId: this.#contextId,
       isNavigationRequest: this.#isMainDocumentChannel,
-      requestChannel: this.#requestChannel,
       redirectCount: this.#redirectCount,
+      requestChannel: this.#requestChannel,
+      requestData: this.#requestData,
+      timestamp: Date.now(),
+    });
+  }
+
+  #emitFetchError() {
+    this.#updateDataFromTimedChannel();
+
+    this.#networkListener.emit("fetch-error", {
+      contextId: this.#contextId,
+      // TODO: Update with a proper error text. Bug 1873037.
+      errorText: ChromeUtils.getXPCOMErrorName(this.#requestChannel.status),
+      isNavigationRequest: this.#isMainDocumentChannel,
+      redirectCount: this.#redirectCount,
+      requestChannel: this.#requestChannel,
       requestData: this.#requestData,
       timestamp: Date.now(),
     });

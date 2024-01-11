@@ -281,6 +281,7 @@ class NetworkModule extends Module {
     this.#networkListener = new lazy.NetworkListener();
     this.#networkListener.on("auth-required", this.#onAuthRequired);
     this.#networkListener.on("before-request-sent", this.#onBeforeRequestSent);
+    this.#networkListener.on("fetch-error", this.#onFetchError);
     this.#networkListener.on("response-completed", this.#onResponseEvent);
     this.#networkListener.on("response-started", this.#onResponseEvent);
   }
@@ -288,6 +289,7 @@ class NetworkModule extends Module {
   destroy() {
     this.#networkListener.off("auth-required", this.#onAuthRequired);
     this.#networkListener.off("before-request-sent", this.#onBeforeRequestSent);
+    this.#networkListener.off("fetch-error", this.#onFetchError);
     this.#networkListener.off("response-completed", this.#onResponseEvent);
     this.#networkListener.off("response-started", this.#onResponseEvent);
     this.#networkListener.destroy();
@@ -787,6 +789,78 @@ class NetworkModule extends Module {
     }
   };
 
+  #onFetchError = (name, data) => {
+    const {
+      contextId,
+      errorText,
+      isNavigationRequest,
+      redirectCount,
+      requestData,
+      timestamp,
+    } = data;
+
+    const browsingContext = lazy.TabManager.getBrowsingContextById(contextId);
+    if (!browsingContext) {
+      // Do not emit events if the context id does not match any existing
+      // browsing context.
+      return;
+    }
+
+    const internalEventName = "network._fetchError";
+    const protocolEventName = "network.fetchError";
+
+    // Process the navigation to create potentially missing navigation ids
+    // before the early return below.
+    const navigation = this.#getNavigationId(
+      protocolEventName,
+      isNavigationRequest,
+      browsingContext,
+      requestData.url
+    );
+
+    // Always emit internal events, they are used to support the browsingContext
+    // navigate command.
+    // Bug 1861922: Replace internal events with a Network listener helper
+    // directly using the NetworkObserver.
+    this.emitEvent(
+      internalEventName,
+      {
+        navigation,
+        url: requestData.url,
+      },
+      this.#getContextInfo(browsingContext)
+    );
+
+    const isListening = this.messageHandler.eventsDispatcher.hasListener(
+      protocolEventName,
+      { contextId }
+    );
+    if (!isListening) {
+      // If there are no listeners subscribed to this event and this context,
+      // bail out.
+      return;
+    }
+
+    const baseParameters = this.#processNetworkEvent(protocolEventName, {
+      contextId,
+      navigation,
+      redirectCount,
+      requestData,
+      timestamp,
+    });
+
+    const fetchErrorEvent = this.#serializeNetworkEvent({
+      ...baseParameters,
+      errorText,
+    });
+
+    this.emitEvent(
+      protocolEventName,
+      fetchErrorEvent,
+      this.#getContextInfo(browsingContext)
+    );
+  };
+
   #onResponseEvent = (name, data) => {
     const {
       contextId,
@@ -1051,6 +1125,7 @@ class NetworkModule extends Module {
     return [
       "network.authRequired",
       "network.beforeRequestSent",
+      "network.fetchError",
       "network.responseCompleted",
       "network.responseStarted",
     ];
