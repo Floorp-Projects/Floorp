@@ -193,6 +193,10 @@ blockquote {
     color: var(--dark-theme-foreground);
     background-color: var(--dark-theme-background);
   }
+
+  .moz-reader-block-img {
+    filter: brightness(0.8) contrast(1.2);
+  }
 }
 
 .dark-button {
