@@ -10,6 +10,7 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/dom/BlobImpl.h"
 #include "mozilla/dom/GetFilesHelper.h"
+#include "mozilla/dom/UserActivation.h"
 #include "mozilla/dom/PContentChild.h"
 #include "mozilla/dom/ProcessActor.h"
 #include "mozilla/dom/RemoteType.h"
@@ -106,7 +107,8 @@ class ContentChild final : public PContentChild,
   MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult ProvideWindowCommon(
       NotNull<BrowserChild*> aTabOpener, nsIOpenWindowInfo* aOpenWindowInfo,
       uint32_t aChromeFlags, bool aCalledFromJS, nsIURI* aURI,
-      const nsAString& aName, const nsACString& aFeatures, bool aForceNoOpener,
+      const nsAString& aName, const nsACString& aFeatures,
+      const UserActivation::Modifiers& aModifiers, bool aForceNoOpener,
       bool aForceNoReferrer, bool aIsPopupRequested,
       nsDocShellLoadState* aLoadState, bool* aWindowIsNew,
       BrowsingContext** aReturn);

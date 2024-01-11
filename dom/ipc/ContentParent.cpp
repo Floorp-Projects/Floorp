@@ -126,6 +126,7 @@
 #include "mozilla/dom/SessionHistoryEntry.h"
 #include "mozilla/dom/SessionStorageManager.h"
 #include "mozilla/dom/StorageIPC.h"
+#include "mozilla/dom/UserActivation.h"
 #include "mozilla/dom/URLClassifierParent.h"
 #include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/dom/ipc/SharedMap.h"
@@ -5534,6 +5535,7 @@ mozilla::ipc::IPCResult ContentParent::CommonCreateWindow(
     const uint32_t& aChromeFlags, const bool& aCalledFromJS,
     const bool& aForPrinting, const bool& aForWindowDotPrint,
     nsIURI* aURIToLoad, const nsACString& aFeatures,
+    const UserActivation::Modifiers& aModifiers,
     BrowserParent* aNextRemoteBrowser, const nsAString& aName,
     nsresult& aResult, nsCOMPtr<nsIRemoteTab>& aNewRemoteTab,
     bool* aWindowIsNew, int32_t& aOpenLocation,
@@ -5694,8 +5696,8 @@ mozilla::ipc::IPCResult ContentParent::CommonCreateWindow(
   features.Tokenize(aFeatures);
 
   aResult = pwwatch->OpenWindowWithRemoteTab(
-      thisBrowserHost, features, aCalledFromJS, aParent.FullZoom(), openInfo,
-      getter_AddRefs(aNewRemoteTab));
+      thisBrowserHost, features, aModifiers, aCalledFromJS, aParent.FullZoom(),
+      openInfo, getter_AddRefs(aNewRemoteTab));
   if (NS_WARN_IF(NS_FAILED(aResult))) {
     return IPC_OK();
   }
@@ -5760,9 +5762,9 @@ mozilla::ipc::IPCResult ContentParent::RecvCreateWindow(
     PBrowserParent* aNewTab, const uint32_t& aChromeFlags,
     const bool& aCalledFromJS, const bool& aForPrinting,
     const bool& aForPrintPreview, nsIURI* aURIToLoad,
-    const nsACString& aFeatures, nsIPrincipal* aTriggeringPrincipal,
-    nsIContentSecurityPolicy* aCsp, nsIReferrerInfo* aReferrerInfo,
-    const OriginAttributes& aOriginAttributes,
+    const nsACString& aFeatures, const UserActivation::Modifiers& aModifiers,
+    nsIPrincipal* aTriggeringPrincipal, nsIContentSecurityPolicy* aCsp,
+    nsIReferrerInfo* aReferrerInfo, const OriginAttributes& aOriginAttributes,
     CreateWindowResolver&& aResolve) {
   if (!aTriggeringPrincipal) {
     return IPC_FAIL(this, "No principal");
@@ -5845,7 +5847,7 @@ mozilla::ipc::IPCResult ContentParent::RecvCreateWindow(
   int32_t openLocation = nsIBrowserDOMWindow::OPEN_NEWWINDOW;
   mozilla::ipc::IPCResult ipcResult = CommonCreateWindow(
       aThisTab, *parent, newBCOpenerId != 0, aChromeFlags, aCalledFromJS,
-      aForPrinting, aForPrintPreview, aURIToLoad, aFeatures, newTab,
+      aForPrinting, aForPrintPreview, aURIToLoad, aFeatures, aModifiers, newTab,
       VoidString(), rv, newRemoteTab, &cwi.windowOpened(), openLocation,
       aTriggeringPrincipal, aReferrerInfo, /* aLoadUri = */ false, aCsp,
       aOriginAttributes);
@@ -5882,9 +5884,10 @@ mozilla::ipc::IPCResult ContentParent::RecvCreateWindow(
 mozilla::ipc::IPCResult ContentParent::RecvCreateWindowInDifferentProcess(
     PBrowserParent* aThisTab, const MaybeDiscarded<BrowsingContext>& aParent,
     const uint32_t& aChromeFlags, const bool& aCalledFromJS, nsIURI* aURIToLoad,
-    const nsACString& aFeatures, const nsAString& aName,
-    nsIPrincipal* aTriggeringPrincipal, nsIContentSecurityPolicy* aCsp,
-    nsIReferrerInfo* aReferrerInfo, const OriginAttributes& aOriginAttributes) {
+    const nsACString& aFeatures, const UserActivation::Modifiers& aModifiers,
+    const nsAString& aName, nsIPrincipal* aTriggeringPrincipal,
+    nsIContentSecurityPolicy* aCsp, nsIReferrerInfo* aReferrerInfo,
+    const OriginAttributes& aOriginAttributes) {
   MOZ_DIAGNOSTIC_ASSERT(!nsContentUtils::IsSpecialName(aName));
 
   // Don't continue to try to create a new window if we've been fully discarded.
@@ -5926,7 +5929,7 @@ mozilla::ipc::IPCResult ContentParent::RecvCreateWindowInDifferentProcess(
   mozilla::ipc::IPCResult ipcResult = CommonCreateWindow(
       aThisTab, *parent, /* aSetOpener = */ false, aChromeFlags, aCalledFromJS,
       /* aForPrinting = */ false,
-      /* aForPrintPreview = */ false, aURIToLoad, aFeatures,
+      /* aForPrintPreview = */ false, aURIToLoad, aFeatures, aModifiers,
       /* aNextRemoteBrowser = */ nullptr, aName, rv, newRemoteTab, &windowIsNew,
       openLocation, aTriggeringPrincipal, aReferrerInfo,
       /* aLoadUri = */ true, aCsp, aOriginAttributes);

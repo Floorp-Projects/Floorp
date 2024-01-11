@@ -26,6 +26,7 @@
 #include "nsIRemoteTab.h"
 #include "nsPIWindowWatcher.h"
 #include "nsTArray.h"
+#include "mozilla/dom/UserActivation.h"  // mozilla::dom::UserActivation
 #include "mozilla/dom/WindowFeatures.h"  // mozilla::dom::WindowFeatures
 
 class nsIURI;
@@ -70,14 +71,13 @@ class nsWindowWatcher : public nsIWindowWatcher,
 
   // Just like OpenWindowJS, but knows whether it got called via OpenWindowJS
   // (which means called from script) or called via OpenWindow.
-  nsresult OpenWindowInternal(mozIDOMWindowProxy* aParent,
-                              const nsACString& aUrl, const nsACString& aName,
-                              const nsACString& aFeatures, bool aCalledFromJS,
-                              bool aDialog, bool aNavigate, nsIArray* aArgv,
-                              bool aIsPopupSpam, bool aForceNoOpener,
-                              bool aForceNoReferrer, PrintKind,
-                              nsDocShellLoadState* aLoadState,
-                              mozilla::dom::BrowsingContext** aResult);
+  nsresult OpenWindowInternal(
+      mozIDOMWindowProxy* aParent, const nsACString& aUrl,
+      const nsACString& aName, const nsACString& aFeatures,
+      const mozilla::dom::UserActivation::Modifiers& aModifiers,
+      bool aCalledFromJS, bool aDialog, bool aNavigate, nsIArray* aArgv,
+      bool aIsPopupSpam, bool aForceNoOpener, bool aForceNoReferrer, PrintKind,
+      nsDocShellLoadState* aLoadState, mozilla::dom::BrowsingContext** aResult);
 
   static nsresult URIfromURL(const nsACString& aURL,
                              mozIDOMWindowProxy* aParent, nsIURI** aURI);

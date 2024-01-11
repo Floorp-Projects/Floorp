@@ -11,6 +11,7 @@
 #include "nsISupports.idl"
 
 %{ C++
+#include "mozilla/dom/UserActivation.h"
 class nsDocShellLoadState;
 namespace mozilla::dom {
 class WindowFeatures;
@@ -27,6 +28,7 @@ interface nsIRemoteTab;
 interface nsIOpenWindowInfo;
 native nsDocShellLoadStatePtr(nsDocShellLoadState*);
 [ref] native WindowFeaturesRef(const mozilla::dom::WindowFeatures);
+[ref] native UserActivationModifiersRef(const mozilla::dom::UserActivation::Modifiers);
 
 [uuid(d162f9c4-19d5-4723-931f-f1e51bfa9f68)]
 interface nsPIWindowWatcher : nsISupports
@@ -65,6 +67,10 @@ interface nsPIWindowWatcher : nsISupports
              with this name already exists, the openWindow call may just load
              aUrl in it (if aUrl is not null) and return it.
       @param aFeatures window features from JS window.open. can be null.
+      @param aModifiers The modifiers associated with the user activation,
+             or UserActivation::Modifiers::None() if this is not initiated by
+             user activation. This is used to determine where the new window is
+             located (e.g. new foreground tab, new background tab, new window).
       @param aCalledFromScript true if we were called from script.
       @param aDialog use dialog defaults (see nsGlobalWindowOuter::OpenInternal)
       @param aNavigate true if we should navigate the new window to the
@@ -95,6 +101,7 @@ interface nsPIWindowWatcher : nsISupports
   [noscript]
   BrowsingContext openWindow2(in mozIDOMWindowProxy aParent, in ACString aUrl,
                               in ACString aName, in ACString aFeatures,
+                              in UserActivationModifiersRef aModifiers,
                               in boolean aCalledFromScript,
                               in boolean aDialog,
                               in boolean aNavigate,
@@ -114,6 +121,10 @@ interface nsPIWindowWatcher : nsISupports
    *        The nsIRemoteTab that is requesting the new window be opened.
    * @param aFeatures
    *        Window features if called with window.open or similar.
+   * @param aModifiers
+   *        The modifiers associated with the user activation, or
+   *        UserActivation::Modifiers::None() if this is not initiated by
+   *        user activation.
    * @param aCalledFromJS
    *        True if called via window.open or similar.
    * @param aOpenerFullZoom
@@ -128,6 +139,7 @@ interface nsPIWindowWatcher : nsISupports
    */
   nsIRemoteTab openWindowWithRemoteTab(in nsIRemoteTab aOpeningTab,
                                        in WindowFeaturesRef aFeatures,
+                                       in UserActivationModifiersRef aModifiers,
                                        in boolean aCalledFromJS,
                                        in float aOpenerFullZoom,
                                        in nsIOpenWindowInfo aOpenWindowInfo);

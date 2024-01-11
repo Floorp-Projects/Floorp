@@ -42,6 +42,7 @@
 #include "mozilla/Try.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/ScriptSettings.h"
+#include "mozilla/dom/UserActivation.h"
 
 using namespace mozilla;
 
@@ -513,8 +514,10 @@ NS_IMETHODIMP
 nsContentTreeOwner::ProvideWindow(
     nsIOpenWindowInfo* aOpenWindowInfo, uint32_t aChromeFlags,
     bool aCalledFromJS, nsIURI* aURI, const nsAString& aName,
-    const nsACString& aFeatures, bool aForceNoOpener, bool aForceNoReferrer,
-    bool aIsPopupRequested, nsDocShellLoadState* aLoadState, bool* aWindowIsNew,
+    const nsACString& aFeatures,
+    const mozilla::dom::UserActivation::Modifiers& aModifiers,
+    bool aForceNoOpener, bool aForceNoReferrer, bool aIsPopupRequested,
+    nsDocShellLoadState* aLoadState, bool* aWindowIsNew,
     dom::BrowsingContext** aReturn) {
   NS_ENSURE_ARG_POINTER(aOpenWindowInfo);
 

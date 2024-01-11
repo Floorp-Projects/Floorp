@@ -14,6 +14,11 @@
 #include "nsWrapperCache.h"
 #include "nsPIDOMWindow.h"
 
+namespace IPC {
+template <class P>
+struct ParamTraits;
+}  // namespace IPC
+
 namespace mozilla::dom {
 
 class UserActivation final : public nsISupports, public nsWrapperCache {
@@ -62,8 +67,6 @@ class UserActivation final : public nsISupports, public nsWrapperCache {
 
     static constexpr Modifiers None() { return Modifiers(0); }
 
-    uint8_t GetRawData() const { return mModifiers; }
-
     void SetShift() { mModifiers |= Shift; }
     void SetMeta() { mModifiers |= Meta; }
     void SetControl() { mModifiers |= Control; }
@@ -78,6 +81,8 @@ class UserActivation final : public nsISupports, public nsWrapperCache {
     uint8_t mModifiers = 0;
 
     friend class StateAndModifiers;
+    template <class P>
+    friend struct IPC::ParamTraits;
   };
 
   // State and Modifiers encoded into single data, for WindowContext field.

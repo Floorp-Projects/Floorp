@@ -14,6 +14,7 @@
 #include "nsISupports.idl"
 
 %{ C++
+#include "mozilla/dom/UserActivation.h"
 class nsDocShellLoadState;
 %}
 
@@ -22,6 +23,7 @@ interface mozIDOMWindowProxy;
 interface nsIURI;
 interface nsIOpenWindowInfo;
 native nsDocShellLoadStatePtr(nsDocShellLoadState*);
+[ref] native UserActivationModifiersRef(const mozilla::dom::UserActivation::Modifiers);
 
 /**
  * The nsIWindowProvider interface exists so that the window watcher's default
@@ -69,6 +71,11 @@ interface nsIWindowProvider : nsISupports
    *        the feature string to the window it returns in any way it sees fit.
    *        See the nsIWindowWatcher interface for details on feature strings.
    *
+   * @param aModifiers The modifiers associated with the user activation,
+   *        or UserActivation::Modifiers::None() if this is not initiated by
+   *        user activation. This is used to determine where the new window is
+   *        located (e.g. new foreground tab, new background tab, new window).
+   *
    * @param aIsPopupRequested  True if this window is opened by window.open
    *        with requesting a popup window.  This doesn't necessarily mean
    *        whether the actual window is shown as minimal popup or not.
@@ -101,6 +108,7 @@ interface nsIWindowProvider : nsISupports
                                 in nsIURI aURI,
                                 in AString aName,
                                 in AUTF8String aFeatures,
+                                in UserActivationModifiersRef aModifiers,
                                 in boolean aForceNoOpener,
                                 in boolean aForceNoReferrer,
                                 in boolean aIsPopupRequested,
