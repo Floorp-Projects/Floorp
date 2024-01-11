@@ -200,19 +200,19 @@ unsafe impl VTabCursor for SeriesTabCursor<'_> {
         let mut idx_num = QueryPlanFlags::from_bits_truncate(idx_num);
         let mut i = 0;
         if idx_num.contains(QueryPlanFlags::START) {
-            self.min_value = args.get(i)?;
+            self.min_value = args.get::<Option<_>>(i)?.unwrap_or_default();
             i += 1;
         } else {
             self.min_value = 0;
         }
         if idx_num.contains(QueryPlanFlags::STOP) {
-            self.max_value = args.get(i)?;
+            self.max_value = args.get::<Option<_>>(i)?.unwrap_or_default();
             i += 1;
         } else {
             self.max_value = 0xffff_ffff;
         }
         if idx_num.contains(QueryPlanFlags::STEP) {
-            self.step = args.get(i)?;
+            self.step = args.get::<Option<_>>(i)?.unwrap_or_default();
             if self.step == 0 {
                 self.step = 1;
             } else if self.step < 0 {
@@ -315,6 +315,26 @@ mod test {
         let mut s = db.prepare("SELECT * FROM generate_series(0,32,5) ORDER BY value DESC")?;
         let series: Vec<i32> = s.query([])?.map(|r| r.get(0)).collect()?;
         assert_eq!(vec![30, 25, 20, 15, 10, 5, 0], series);
+
+        let mut s = db.prepare("SELECT * FROM generate_series(NULL)")?;
+        let series: Vec<i32> = s.query([])?.map(|r| r.get(0)).collect()?;
+        let empty = Vec::<i32>::new();
+        assert_eq!(empty, series);
+        let mut s = db.prepare("SELECT * FROM generate_series(5,NULL)")?;
+        let series: Vec<i32> = s.query([])?.map(|r| r.get(0)).collect()?;
+        assert_eq!(empty, series);
+        let mut s = db.prepare("SELECT * FROM generate_series(5,10,NULL)")?;
+        let series: Vec<i32> = s.query([])?.map(|r| r.get(0)).collect()?;
+        assert_eq!(empty, series);
+        let mut s = db.prepare("SELECT * FROM generate_series(NULL,10,2)")?;
+        let series: Vec<i32> = s.query([])?.map(|r| r.get(0)).collect()?;
+        assert_eq!(empty, series);
+        let mut s = db.prepare("SELECT * FROM generate_series(5,NULL,2)")?;
+        let series: Vec<i32> = s.query([])?.map(|r| r.get(0)).collect()?;
+        assert_eq!(empty, series);
+        let mut s = db.prepare("SELECT * FROM generate_series(NULL) ORDER BY value DESC")?;
+        let series: Vec<i32> = s.query([])?.map(|r| r.get(0)).collect()?;
+        assert_eq!(empty, series);
 
         Ok(())
     }

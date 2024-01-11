@@ -74,7 +74,7 @@ mod test {
                 );
             }
             e => {
-                panic!("Expected conversion failure, got {}", e);
+                panic!("Expected conversion failure, got {e}");
             }
         }
         Ok(())

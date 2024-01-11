@@ -36,8 +36,7 @@ impl ValueRef<'_> {
 
 impl<'a> ValueRef<'a> {
     /// If `self` is case `Integer`, returns the integral value. Otherwise,
-    /// returns [`Err(Error::InvalidColumnType)`](crate::Error::
-    /// InvalidColumnType).
+    /// returns [`Err(Error::InvalidColumnType)`](crate::Error::InvalidColumnType).
     #[inline]
     pub fn as_i64(&self) -> FromSqlResult<i64> {
         match *self {
@@ -48,8 +47,7 @@ impl<'a> ValueRef<'a> {
 
     /// If `self` is case `Null` returns None.
     /// If `self` is case `Integer`, returns the integral value.
-    /// Otherwise returns [`Err(Error::InvalidColumnType)`](crate::Error::
-    /// InvalidColumnType).
+    /// Otherwise returns [`Err(Error::InvalidColumnType)`](crate::Error::InvalidColumnType).
     #[inline]
     pub fn as_i64_or_null(&self) -> FromSqlResult<Option<i64>> {
         match *self {
@@ -60,8 +58,7 @@ impl<'a> ValueRef<'a> {
     }
 
     /// If `self` is case `Real`, returns the floating point value. Otherwise,
-    /// returns [`Err(Error::InvalidColumnType)`](crate::Error::
-    /// InvalidColumnType).
+    /// returns [`Err(Error::InvalidColumnType)`](crate::Error::InvalidColumnType).
     #[inline]
     pub fn as_f64(&self) -> FromSqlResult<f64> {
         match *self {
@@ -72,8 +69,7 @@ impl<'a> ValueRef<'a> {
 
     /// If `self` is case `Null` returns None.
     /// If `self` is case `Real`, returns the floating point value.
-    /// Otherwise returns [`Err(Error::InvalidColumnType)`](crate::Error::
-    /// InvalidColumnType).
+    /// Otherwise returns [`Err(Error::InvalidColumnType)`](crate::Error::InvalidColumnType).
     #[inline]
     pub fn as_f64_or_null(&self) -> FromSqlResult<Option<f64>> {
         match *self {
@@ -97,8 +93,7 @@ impl<'a> ValueRef<'a> {
 
     /// If `self` is case `Null` returns None.
     /// If `self` is case `Text`, returns the string value.
-    /// Otherwise returns [`Err(Error::InvalidColumnType)`](crate::Error::
-    /// InvalidColumnType).
+    /// Otherwise returns [`Err(Error::InvalidColumnType)`](crate::Error::InvalidColumnType).
     #[inline]
     pub fn as_str_or_null(&self) -> FromSqlResult<Option<&'a str>> {
         match *self {
@@ -122,8 +117,7 @@ impl<'a> ValueRef<'a> {
 
     /// If `self` is case `Null` returns None.
     /// If `self` is case `Blob`, returns the byte slice.
-    /// Otherwise returns [`Err(Error::InvalidColumnType)`](crate::Error::
-    /// InvalidColumnType).
+    /// Otherwise returns [`Err(Error::InvalidColumnType)`](crate::Error::InvalidColumnType).
     #[inline]
     pub fn as_blob_or_null(&self) -> FromSqlResult<Option<&'a [u8]>> {
         match *self {
@@ -133,7 +127,7 @@ impl<'a> ValueRef<'a> {
         }
     }
 
-    /// Returns the byte slice that makes up this ValueRef if it's either
+    /// Returns the byte slice that makes up this `ValueRef` if it's either
     /// [`ValueRef::Blob`] or [`ValueRef::Text`].
     #[inline]
     pub fn as_bytes(&self) -> FromSqlResult<&'a [u8]> {
@@ -158,6 +152,7 @@ impl<'a> ValueRef<'a> {
 
 impl From<ValueRef<'_>> for Value {
     #[inline]
+    #[track_caller]
     fn from(borrowed: ValueRef<'_>) -> Value {
         match borrowed {
             ValueRef::Null => Value::Null,

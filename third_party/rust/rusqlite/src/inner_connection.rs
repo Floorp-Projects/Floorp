@@ -4,12 +4,12 @@ use std::os::raw::{c_char, c_int};
 use std::path::Path;
 use std::ptr;
 use std::str;
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::AtomicBool;
 use std::sync::{Arc, Mutex};
 
 use super::ffi;
 use super::str_for_sqlite;
-use super::{Connection, InterruptHandle, OpenFlags, Result};
+use super::{Connection, InterruptHandle, OpenFlags, PrepFlags, Result};
 use crate::error::{error_from_handle, error_from_sqlite_code, error_with_offset, Error};
 use crate::raw_statement::RawStatement;
 use crate::statement::Statement;
@@ -40,7 +40,7 @@ pub struct InnerConnection {
 unsafe impl Send for InnerConnection {}
 
 impl InnerConnection {
-    #[allow(clippy::mutex_atomic)]
+    #[allow(clippy::mutex_atomic, clippy::arc_with_non_send_sync)] // See unsafe impl Send / Sync for InterruptHandle
     #[inline]
     pub unsafe fn new(db: *mut ffi::sqlite3, owned: bool) -> InnerConnection {
         InnerConnection {
@@ -218,33 +218,24 @@ impl InnerConnection {
         unsafe { ffi::sqlite3_last_insert_rowid(self.db()) }
     }
 
-    pub fn prepare<'a>(&mut self, conn: &'a Connection, sql: &str) -> Result<Statement<'a>> {
-        let mut c_stmt = ptr::null_mut();
+    pub fn prepare<'a>(
+        &mut self,
+        conn: &'a Connection,
+        sql: &str,
+        flags: PrepFlags,
+    ) -> Result<Statement<'a>> {
+        let mut c_stmt: *mut ffi::sqlite3_stmt = ptr::null_mut();
         let (c_sql, len, _) = str_for_sqlite(sql.as_bytes())?;
-        let mut c_tail = ptr::null();
+        let mut c_tail: *const c_char = ptr::null();
         // TODO sqlite3_prepare_v3 (https://sqlite.org/c3ref/c_prepare_normalize.html) // 3.20.0, #728
         #[cfg(not(feature = "unlock_notify"))]
-        let r = unsafe {
-            ffi::sqlite3_prepare_v2(
-                self.db(),
-                c_sql,
-                len,
-                &mut c_stmt as *mut *mut ffi::sqlite3_stmt,
-                &mut c_tail as *mut *const c_char,
-            )
-        };
+        let r = unsafe { self.prepare_(c_sql, len, flags, &mut c_stmt, &mut c_tail) };
         #[cfg(feature = "unlock_notify")]
         let r = unsafe {
             use crate::unlock_notify;
             let mut rc;
             loop {
-                rc = ffi::sqlite3_prepare_v2(
-                    self.db(),
-                    c_sql,
-                    len,
-                    &mut c_stmt as *mut *mut ffi::sqlite3_stmt,
-                    &mut c_tail as *mut *const c_char,
-                );
+                rc = self.prepare_(c_sql, len, flags, &mut c_stmt, &mut c_tail);
                 if !unlock_notify::is_locked(self.db, rc) {
                     break;
                 }
@@ -261,8 +252,6 @@ impl InnerConnection {
         }
         // If the input text contains no SQL (if the input is an empty string or a
         // comment) then *ppStmt is set to NULL.
-        let c_stmt: *mut ffi::sqlite3_stmt = c_stmt;
-        let c_tail: *const c_char = c_tail;
         let tail = if c_tail.is_null() {
             0
         } else {
@@ -276,6 +265,32 @@ impl InnerConnection {
         Ok(Statement::new(conn, unsafe {
             RawStatement::new(c_stmt, tail)
         }))
+    }
+
+    #[inline]
+    #[cfg(not(feature = "modern_sqlite"))]
+    unsafe fn prepare_(
+        &self,
+        z_sql: *const c_char,
+        n_byte: c_int,
+        _: PrepFlags,
+        pp_stmt: *mut *mut ffi::sqlite3_stmt,
+        pz_tail: *mut *const c_char,
+    ) -> c_int {
+        ffi::sqlite3_prepare_v2(self.db(), z_sql, n_byte, pp_stmt, pz_tail)
+    }
+
+    #[inline]
+    #[cfg(feature = "modern_sqlite")]
+    unsafe fn prepare_(
+        &self,
+        z_sql: *const c_char,
+        n_byte: c_int,
+        flags: PrepFlags,
+        pp_stmt: *mut *mut ffi::sqlite3_stmt,
+        pz_tail: *mut *const c_char,
+    ) -> c_int {
+        ffi::sqlite3_prepare_v3(self.db(), z_sql, n_byte, flags.bits(), pp_stmt, pz_tail)
     }
 
     #[inline]
@@ -375,14 +390,14 @@ impl Drop for InnerConnection {
     }
 }
 
-#[cfg(not(any(target_arch = "wasm32")))]
+#[cfg(not(any(target_arch = "wasm32", feature = "loadable_extension")))]
 static SQLITE_INIT: std::sync::Once = std::sync::Once::new();
 
 pub static BYPASS_SQLITE_INIT: AtomicBool = AtomicBool::new(false);
 
 // threading mode checks are not necessary (and do not work) on target
 // platforms that do not have threading (such as webassembly)
-#[cfg(any(target_arch = "wasm32"))]
+#[cfg(target_arch = "wasm32")]
 fn ensure_safe_sqlite_threading_mode() -> Result<()> {
     Ok(())
 }
@@ -425,7 +440,9 @@ fn ensure_safe_sqlite_threading_mode() -> Result<()> {
             Ok(())
         }
     } else {
+        #[cfg(not(feature = "loadable_extension"))]
         SQLITE_INIT.call_once(|| {
+            use std::sync::atomic::Ordering;
             if BYPASS_SQLITE_INIT.load(Ordering::Relaxed) {
                 return;
             }

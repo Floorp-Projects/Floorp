@@ -113,10 +113,7 @@ unsafe impl<'vtab> VTab<'vtab> for CsvTab {
             match param {
                 "filename" => {
                     if !Path::new(value).exists() {
-                        return Err(Error::ModuleError(format!(
-                            "file '{}' does not exist",
-                            value
-                        )));
+                        return Err(Error::ModuleError(format!("file '{value}' does not exist")));
                     }
                     vtab.filename = value.to_owned();
                 }
@@ -137,8 +134,7 @@ unsafe impl<'vtab> VTab<'vtab> for CsvTab {
                         n_col = Some(n);
                     } else {
                         return Err(Error::ModuleError(format!(
-                            "unrecognized argument to 'columns': {}",
-                            value
+                            "unrecognized argument to 'columns': {value}"
                         )));
                     }
                 }
@@ -147,8 +143,7 @@ unsafe impl<'vtab> VTab<'vtab> for CsvTab {
                         vtab.has_headers = b;
                     } else {
                         return Err(Error::ModuleError(format!(
-                            "unrecognized argument to 'header': {}",
-                            value
+                            "unrecognized argument to 'header': {value}"
                         )));
                     }
                 }
@@ -157,8 +152,7 @@ unsafe impl<'vtab> VTab<'vtab> for CsvTab {
                         vtab.delimiter = b;
                     } else {
                         return Err(Error::ModuleError(format!(
-                            "unrecognized argument to 'delimiter': {}",
-                            value
+                            "unrecognized argument to 'delimiter': {value}"
                         )));
                     }
                 }
@@ -171,15 +165,13 @@ unsafe impl<'vtab> VTab<'vtab> for CsvTab {
                         }
                     } else {
                         return Err(Error::ModuleError(format!(
-                            "unrecognized argument to 'quote': {}",
-                            value
+                            "unrecognized argument to 'quote': {value}"
                         )));
                     }
                 }
                 _ => {
                     return Err(Error::ModuleError(format!(
-                        "unrecognized parameter '{}'",
-                        param
+                        "unrecognized parameter '{param}'"
                     )));
                 }
             }
@@ -326,8 +318,7 @@ unsafe impl VTabCursor for CsvTabCursor<'_> {
     fn column(&self, ctx: &mut Context, col: c_int) -> Result<()> {
         if col < 0 || col as usize >= self.cols.len() {
             return Err(Error::ModuleError(format!(
-                "column index out of bounds: {}",
-                col
+                "column index out of bounds: {col}"
             )));
         }
         if self.cols.is_empty() {

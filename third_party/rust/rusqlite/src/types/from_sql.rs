@@ -59,8 +59,7 @@ impl fmt::Display for FromSqlError {
             } => {
                 write!(
                     f,
-                    "Cannot read {} byte value out of {} byte blob",
-                    expected_size, blob_size
+                    "Cannot read {expected_size} byte value out of {blob_size} byte blob"
                 )
             }
             FromSqlError::Other(ref err) => err.fmt(f),
@@ -96,6 +95,15 @@ macro_rules! from_sql_integral(
                 i.try_into().map_err(|_| FromSqlError::OutOfRange(i))
             }
         }
+    );
+    (non_zero $nz:ty, $z:ty) => (
+        impl FromSql for $nz {
+            #[inline]
+            fn column_result(value: ValueRef<'_>) -> FromSqlResult<Self> {
+                let i = <$z>::column_result(value)?;
+                <$nz>::new(i).ok_or(FromSqlError::OutOfRange(0))
+            }
+        }
     )
 );
 
@@ -109,6 +117,22 @@ from_sql_integral!(u16);
 from_sql_integral!(u32);
 from_sql_integral!(u64);
 from_sql_integral!(usize);
+
+from_sql_integral!(non_zero std::num::NonZeroIsize, isize);
+from_sql_integral!(non_zero std::num::NonZeroI8, i8);
+from_sql_integral!(non_zero std::num::NonZeroI16, i16);
+from_sql_integral!(non_zero std::num::NonZeroI32, i32);
+from_sql_integral!(non_zero std::num::NonZeroI64, i64);
+#[cfg(feature = "i128_blob")]
+#[cfg_attr(docsrs, doc(cfg(feature = "i128_blob")))]
+from_sql_integral!(non_zero std::num::NonZeroI128, i128);
+
+from_sql_integral!(non_zero std::num::NonZeroUsize, usize);
+from_sql_integral!(non_zero std::num::NonZeroU8, u8);
+from_sql_integral!(non_zero std::num::NonZeroU16, u16);
+from_sql_integral!(non_zero std::num::NonZeroU32, u32);
+from_sql_integral!(non_zero std::num::NonZeroU64, u64);
+// std::num::NonZeroU128 is not supported since u128 isn't either
 
 impl FromSql for i64 {
     #[inline]
@@ -248,7 +272,7 @@ mod test {
                     .unwrap_err();
                 match err {
                     Error::IntegralValueOutOfRange(_, value) => assert_eq!(*n, value),
-                    _ => panic!("unexpected error: {}", err),
+                    _ => panic!("unexpected error: {err}"),
                 }
             }
             for n in in_range {
@@ -271,6 +295,72 @@ mod test {
         check_ranges::<u8>(&db, &[-2, -1, 256], &[0, 1, 255]);
         check_ranges::<u16>(&db, &[-2, -1, 65536], &[0, 1, 65535]);
         check_ranges::<u32>(&db, &[-2, -1, 4_294_967_296], &[0, 1, 4_294_967_295]);
+        Ok(())
+    }
+
+    #[test]
+    fn test_nonzero_ranges() -> Result<()> {
+        let db = Connection::open_in_memory()?;
+
+        macro_rules! check_ranges {
+            ($nz:ty, $out_of_range:expr, $in_range:expr) => {
+                for &n in $out_of_range {
+                    assert_eq!(
+                        db.query_row("SELECT ?1", [n], |r| r.get::<_, $nz>(0)),
+                        Err(Error::IntegralValueOutOfRange(0, n)),
+                        "{}",
+                        std::any::type_name::<$nz>()
+                    );
+                }
+                for &n in $in_range {
+                    let non_zero = <$nz>::new(n).unwrap();
+                    assert_eq!(
+                        Ok(non_zero),
+                        db.query_row("SELECT ?1", [non_zero], |r| r.get::<_, $nz>(0))
+                    );
+                }
+            };
+        }
+
+        check_ranges!(std::num::NonZeroI8, &[0, -129, 128], &[-128, 1, 127]);
+        check_ranges!(
+            std::num::NonZeroI16,
+            &[0, -32769, 32768],
+            &[-32768, -1, 1, 32767]
+        );
+        check_ranges!(
+            std::num::NonZeroI32,
+            &[0, -2_147_483_649, 2_147_483_648],
+            &[-2_147_483_648, -1, 1, 2_147_483_647]
+        );
+        check_ranges!(
+            std::num::NonZeroI64,
+            &[0],
+            &[-2_147_483_648, -1, 1, 2_147_483_647, i64::MAX, i64::MIN]
+        );
+        check_ranges!(
+            std::num::NonZeroIsize,
+            &[0],
+            &[-2_147_483_648, -1, 1, 2_147_483_647]
+        );
+        check_ranges!(std::num::NonZeroU8, &[0, -2, -1, 256], &[1, 255]);
+        check_ranges!(std::num::NonZeroU16, &[0, -2, -1, 65536], &[1, 65535]);
+        check_ranges!(
+            std::num::NonZeroU32,
+            &[0, -2, -1, 4_294_967_296],
+            &[1, 4_294_967_295]
+        );
+        check_ranges!(
+            std::num::NonZeroU64,
+            &[0, -2, -1, -4_294_967_296],
+            &[1, 4_294_967_295, i64::MAX as u64]
+        );
+        check_ranges!(
+            std::num::NonZeroUsize,
+            &[0, -2, -1, -4_294_967_296],
+            &[1, 4_294_967_295]
+        );
+
         Ok(())
     }
 }

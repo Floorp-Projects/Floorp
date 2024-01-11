@@ -71,21 +71,13 @@ use crate::types::{FromSql, FromSqlError, ToSql, ValueRef};
 use crate::{str_to_cstring, Connection, Error, InnerConnection, Result};
 
 unsafe fn report_error(ctx: *mut sqlite3_context, err: &Error) {
-    // Extended constraint error codes were added in SQLite 3.7.16. We don't have
-    // an explicit feature check for that, and this doesn't really warrant one.
-    // We'll use the extended code if we're on the bundled version (since it's
-    // at least 3.17.0) and the normal constraint error code if not.
-    fn constraint_error_code() -> i32 {
-        ffi::SQLITE_CONSTRAINT_FUNCTION
-    }
-
     if let Error::SqliteFailure(ref err, ref s) = *err {
         ffi::sqlite3_result_error_code(ctx, err.extended_code);
         if let Some(Ok(cstr)) = s.as_ref().map(|s| str_to_cstring(s)) {
             ffi::sqlite3_result_error(ctx, cstr.as_ptr(), -1);
         }
     } else {
-        ffi::sqlite3_result_error_code(ctx, constraint_error_code());
+        ffi::sqlite3_result_error_code(ctx, ffi::SQLITE_CONSTRAINT_FUNCTION);
         if let Ok(cstr) = str_to_cstring(&err.to_string()) {
             ffi::sqlite3_result_error(ctx, cstr.as_ptr(), -1);
         }
@@ -280,11 +272,11 @@ where
     /// call to [`step()`](Aggregate::step) to set up the context for an
     /// invocation of the function. (Note: `init()` will not be called if
     /// there are no rows.)
-    fn init(&self, _: &mut Context<'_>) -> Result<A>;
+    fn init(&self, ctx: &mut Context<'_>) -> Result<A>;
 
     /// "step" function called once for each row in an aggregate group. May be
     /// called 0 times if there are no rows.
-    fn step(&self, _: &mut Context<'_>, _: &mut A) -> Result<()>;
+    fn step(&self, ctx: &mut Context<'_>, acc: &mut A) -> Result<()>;
 
     /// Computes and returns the final result. Will be called exactly once for
     /// each invocation of the function. If [`step()`](Aggregate::step) was
@@ -295,7 +287,7 @@ where
     /// given `None`.
     ///
     /// The passed context will have no arguments.
-    fn finalize(&self, _: &mut Context<'_>, _: Option<A>) -> Result<T>;
+    fn finalize(&self, ctx: &mut Context<'_>, acc: Option<A>) -> Result<T>;
 }
 
 /// `WindowAggregate` is the callback interface for
@@ -309,10 +301,10 @@ where
 {
     /// Returns the current value of the aggregate. Unlike xFinal, the
     /// implementation should not delete any context.
-    fn value(&self, _: Option<&A>) -> Result<T>;
+    fn value(&self, acc: Option<&mut A>) -> Result<T>;
 
     /// Removes a row from the current window.
-    fn inverse(&self, _: &mut Context<'_>, _: &mut A) -> Result<()>;
+    fn inverse(&self, ctx: &mut Context<'_>, acc: &mut A) -> Result<()>;
 }
 
 bitflags::bitflags! {
@@ -646,6 +638,7 @@ unsafe extern "C" fn call_boxed_step<A, D, T>(
             args: slice::from_raw_parts(argv, argc as usize),
         };
 
+        #[allow(clippy::unnecessary_cast)]
         if (*pac as *mut A).is_null() {
             *pac = Box::into_raw(Box::new((*boxed_aggr).init(&mut ctx)?));
         }
@@ -716,7 +709,9 @@ where
     // Within the xFinal callback, it is customary to set N=0 in calls to
     // sqlite3_aggregate_context(C,N) so that no pointless memory allocations occur.
     let a: Option<A> = match aggregate_context(ctx, 0) {
-        Some(pac) => {
+        Some(pac) =>
+        {
+            #[allow(clippy::unnecessary_cast)]
             if (*pac as *mut A).is_null() {
                 None
             } else {
@@ -760,17 +755,10 @@ where
 {
     // Within the xValue callback, it is customary to set N=0 in calls to
     // sqlite3_aggregate_context(C,N) so that no pointless memory allocations occur.
-    let a: Option<&A> = match aggregate_context(ctx, 0) {
-        Some(pac) => {
-            if (*pac as *mut A).is_null() {
-                None
-            } else {
-                let a = &**pac;
-                Some(a)
-            }
-        }
-        None => None,
-    };
+    let pac = aggregate_context(ctx, 0).filter(|&pac| {
+        #[allow(clippy::unnecessary_cast)]
+        !(*pac as *mut A).is_null()
+    });
 
     let r = catch_unwind(|| {
         let boxed_aggr: *mut W = ffi::sqlite3_user_data(ctx).cast::<W>();
@@ -778,7 +766,7 @@ where
             !boxed_aggr.is_null(),
             "Internal error - null aggregate pointer"
         );
-        (*boxed_aggr).value(a)
+        (*boxed_aggr).value(pac.map(|pac| &mut **pac))
     });
     let t = match r {
         Err(_) => {
@@ -847,7 +835,7 @@ mod test {
     // This implementation of a regexp scalar function uses SQLite's auxiliary data
     // (https://www.sqlite.org/c3ref/get_auxdata.html) to avoid recompiling the regular
     // expression multiple times within one query.
-    fn regexp_with_auxilliary(ctx: &Context<'_>) -> Result<bool> {
+    fn regexp_with_auxiliary(ctx: &Context<'_>) -> Result<bool> {
         assert_eq!(ctx.len(), 2, "called with unexpected number of arguments");
         type BoxError = Box<dyn std::error::Error + Send + Sync + 'static>;
         let regexp: std::sync::Arc<Regex> = ctx
@@ -868,7 +856,7 @@ mod test {
     }
 
     #[test]
-    fn test_function_regexp_with_auxilliary() -> Result<()> {
+    fn test_function_regexp_with_auxiliary() -> Result<()> {
         let db = Connection::open_in_memory()?;
         db.execute_batch(
             "BEGIN;
@@ -882,7 +870,7 @@ mod test {
             "regexp",
             2,
             FunctionFlags::SQLITE_UTF8 | FunctionFlags::SQLITE_DETERMINISTIC,
-            regexp_with_auxilliary,
+            regexp_with_auxiliary,
         )?;
 
         let result: bool = db.one_column("SELECT regexp('l.s[aeiouy]', 'lisa')")?;
@@ -1033,7 +1021,7 @@ mod test {
             Ok(())
         }
 
-        fn value(&self, sum: Option<&i64>) -> Result<Option<i64>> {
+        fn value(&self, sum: Option<&mut i64>) -> Result<Option<i64>> {
             Ok(sum.copied())
         }
     }

@@ -435,6 +435,10 @@ impl Statement<'_> {
     ///
     /// Will return `None` if the column index is out of bounds or if the
     /// parameter is positional.
+    ///
+    /// # Panics
+    ///
+    /// Panics when parameter name is not valid UTF-8.
     #[inline]
     pub fn parameter_name(&self, index: usize) -> Option<&'_ str> {
         self.stmt.bind_parameter_name(index as i32).map(|name| {
@@ -450,7 +454,7 @@ impl Statement<'_> {
     {
         let expected = self.stmt.bind_parameter_count();
         let mut index = 0;
-        for p in params.into_iter() {
+        for p in params {
             index += 1; // The leftmost SQL parameter has an index of 1.
             if index > expected {
                 break;
@@ -744,7 +748,7 @@ impl Statement<'_> {
 
     /// Reset all bindings
     pub fn clear_bindings(&mut self) {
-        self.stmt.clear_bindings()
+        self.stmt.clear_bindings();
     }
 }
 
@@ -1081,12 +1085,12 @@ mod test {
         assert_eq!(stmt.insert([2i32])?, 2);
         match stmt.insert([1i32]).unwrap_err() {
             Error::StatementChangedRows(0) => (),
-            err => panic!("Unexpected error {}", err),
+            err => panic!("Unexpected error {err}"),
         }
         let mut multi = db.prepare("INSERT INTO foo (x) SELECT 3 UNION ALL SELECT 4")?;
         match multi.insert([]).unwrap_err() {
             Error::StatementChangedRows(2) => (),
-            err => panic!("Unexpected error {}", err),
+            err => panic!("Unexpected error {err}"),
         }
         Ok(())
     }
@@ -1349,7 +1353,7 @@ mod test {
                 assert_eq!(error.code, ErrorCode::Unknown);
                 assert_eq!(offset, 7);
             }
-            err => panic!("Unexpected error {}", err),
+            err => panic!("Unexpected error {err}"),
         }
         Ok(())
     }

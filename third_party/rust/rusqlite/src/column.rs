@@ -3,12 +3,16 @@ use std::str;
 use crate::{Error, Result, Statement};
 
 /// Information about a column of a SQLite query.
+#[cfg(feature = "column_decltype")]
+#[cfg_attr(docsrs, doc(cfg(feature = "column_decltype")))]
 #[derive(Debug)]
 pub struct Column<'stmt> {
     name: &'stmt str,
     decl_type: Option<&'stmt str>,
 }
 
+#[cfg(feature = "column_decltype")]
+#[cfg_attr(docsrs, doc(cfg(feature = "column_decltype")))]
 impl Column<'_> {
     /// Returns the name of the column.
     #[inline]
@@ -89,6 +93,8 @@ impl Statement<'_> {
     ///
     /// Returns an `Error::InvalidColumnIndex` if `idx` is outside the valid
     /// column range for this row.
+    ///
+    /// # Panics
     ///
     /// Panics when column name is not valid UTF-8.
     #[inline]
@@ -203,7 +209,7 @@ mod test {
                 assert_eq!(ty, Type::Integer);
             }
             e => {
-                panic!("Unexpected error type: {:?}", e);
+                panic!("Unexpected error type: {e:?}");
             }
         }
         match row.get::<_, String>("y").unwrap_err() {
@@ -213,7 +219,7 @@ mod test {
                 assert_eq!(ty, Type::Null);
             }
             e => {
-                panic!("Unexpected error type: {:?}", e);
+                panic!("Unexpected error type: {e:?}");
             }
         }
         Ok(())
