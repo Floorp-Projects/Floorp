@@ -552,6 +552,18 @@ bool WindowContext::ConsumeTransientUserGestureActivation() {
   return true;
 }
 
+bool WindowContext::GetTransientUserGestureActivationModifiers(
+    UserActivation::Modifiers* aModifiers) {
+  if (!HasValidTransientUserGestureActivation()) {
+    return false;
+  }
+
+  auto stateAndModifiers =
+      UserActivation::StateAndModifiers(GetUserActivationStateAndModifiers());
+  *aModifiers = stateAndModifiers.GetModifiers();
+  return true;
+}
+
 bool WindowContext::CanShowPopup() {
   uint32_t permit = GetPopupPermission();
   if (permit == nsIPermissionManager::ALLOW_ACTION) {

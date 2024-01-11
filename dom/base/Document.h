@@ -3665,6 +3665,9 @@ class Document : public nsINode,
   // and consume the activation.
   bool ConsumeTransientUserGestureActivation();
 
+  bool GetTransientUserGestureActivationModifiers(
+      UserActivation::Modifiers* aModifiers);
+
   BrowsingContext* GetBrowsingContext() const;
 
   // This document is a WebExtension page, it might be a background page, a

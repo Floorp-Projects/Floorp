@@ -227,6 +227,9 @@ class WindowContext : public nsISupports, public nsWrapperCache {
   // successfully.
   bool ConsumeTransientUserGestureActivation();
 
+  bool GetTransientUserGestureActivationModifiers(
+      UserActivation::Modifiers* aModifiers);
+
   bool CanShowPopup();
 
   bool AllowJavascript() const { return GetAllowJavascript(); }

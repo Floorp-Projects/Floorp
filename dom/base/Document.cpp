@@ -16842,6 +16842,12 @@ bool Document::ConsumeTransientUserGestureActivation() {
   return wc && wc->ConsumeTransientUserGestureActivation();
 }
 
+bool Document::GetTransientUserGestureActivationModifiers(
+    UserActivation::Modifiers* aModifiers) {
+  RefPtr<WindowContext> wc = GetWindowContext();
+  return wc && wc->GetTransientUserGestureActivationModifiers(aModifiers);
+}
+
 void Document::SetDocTreeHadMedia() {
   RefPtr<WindowContext> topWc = GetTopLevelWindowContext();
   if (topWc && !topWc->IsDiscarded() && !topWc->GetDocTreeHadMedia()) {
