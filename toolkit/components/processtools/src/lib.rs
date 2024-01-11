@@ -19,6 +19,30 @@ use xpcom::{interfaces::nsIProcessToolsService, xpcom, xpcom_method, RefPtr};
 #[cfg(target_os = "windows")]
 use nserror::NS_ERROR_NOT_AVAILABLE;
 
+#[cfg(target_os = "windows")]
+struct Handle(winapi::um::winnt::HANDLE);
+
+#[cfg(target_os = "windows")]
+impl Handle {
+    fn from_raw(raw: winapi::um::winnt::HANDLE) -> Option<Self> {
+        (raw != std::ptr::null_mut() && raw != winapi::um::handleapi::INVALID_HANDLE_VALUE)
+            .then_some(Handle(raw))
+    }
+
+    fn raw(self: &Self) -> winapi::um::winnt::HANDLE {
+        self.0
+    }
+}
+
+#[cfg(target_os = "windows")]
+impl Drop for Handle {
+    fn drop(&mut self) {
+        unsafe {
+            winapi::um::handleapi::CloseHandle(self.raw());
+        }
+    }
+}
+
 #[no_mangle]
 pub unsafe extern "C" fn new_process_tools_service(result: *mut *const nsIProcessToolsService) {
     let service: RefPtr<ProcessToolsService> = ProcessToolsService::new();
@@ -54,19 +78,14 @@ impl ProcessToolsService {
                 /* dwProcessId */ pid.try_into().unwrap(),
             )
         };
-        if handle.is_null() {
-            // Could not open process.
-            return Err(NS_ERROR_NOT_AVAILABLE);
-        }
+        let handle = Handle::from_raw(handle).ok_or(NS_ERROR_NOT_AVAILABLE)?;
 
         let result = unsafe {
             winapi::um::processthreadsapi::TerminateProcess(
-                /* hProcess */ handle, /* uExitCode */ 0,
+                /* hProcess */ handle.raw(),
+                /* uExitCode */ 0,
             )
         };
-
-        // Close handle regardless of success.
-        let _ = unsafe { winapi::um::handleapi::CloseHandle(handle) };
 
         if result == 0 {
             return Err(NS_ERROR_FAILURE);
@@ -122,14 +141,11 @@ impl ProcessToolsService {
                 /* dwProcessId */ pid.try_into().unwrap(),
             )
         };
-        if target_proc.is_null() {
-            // Could not open process.
-            return Err(NS_ERROR_NOT_AVAILABLE);
-        }
+        let target_proc = Handle::from_raw(target_proc).ok_or(NS_ERROR_NOT_AVAILABLE)?;
 
         let new_thread = unsafe {
             winapi::um::processthreadsapi::CreateRemoteThread(
-                /* hProcess */ target_proc,
+                /* hProcess */ target_proc.raw(),
                 /* lpThreadAttributes */ std::ptr::null_mut(),
                 /* dwStackSize */ 0,
                 /* lpStartAddress */ Some(std::mem::transmute(dbg_break_point)),
@@ -138,17 +154,15 @@ impl ProcessToolsService {
                 /* lpThreadId */ std::ptr::null_mut(),
             )
         };
+        let new_thread = Handle::from_raw(new_thread).ok_or(NS_ERROR_FAILURE)?;
 
-        // Close handle regardless of success.
-        let _ = unsafe {
-            winapi::um::synchapi::WaitForSingleObject(new_thread, winapi::um::winbase::INFINITE);
-            winapi::um::handleapi::CloseHandle(new_thread);
-            winapi::um::handleapi::CloseHandle(target_proc);
-        };
-
-        if new_thread.is_null() {
-            return Err(NS_ERROR_FAILURE);
+        unsafe {
+            winapi::um::synchapi::WaitForSingleObject(
+                new_thread.raw(),
+                winapi::um::winbase::INFINITE,
+            );
         }
+
         Ok(())
     }
 
