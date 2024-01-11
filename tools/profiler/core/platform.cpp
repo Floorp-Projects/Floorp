@@ -4252,12 +4252,15 @@ void SamplerThread::Run() {
         }
 
         // handle per-process generic counters
+        double counterSampleStartDeltaMs =
+            (TimeStamp::Now() - CorePS::ProcessStartTime()).ToMilliseconds();
         const Vector<BaseProfilerCount*>& counters = CorePS::Counters(lock);
         for (auto& counter : counters) {
           if (auto sample = counter->Sample(); sample.isSampleNew) {
             // create Buffer entries for each counter
             buffer.AddEntry(ProfileBufferEntry::CounterId(counter));
-            buffer.AddEntry(ProfileBufferEntry::Time(sampleStartDeltaMs));
+            buffer.AddEntry(
+                ProfileBufferEntry::Time(counterSampleStartDeltaMs));
 #if defined(MOZ_REPLACE_MALLOC) && defined(MOZ_PROFILER_MEMORY)
             if (ActivePS::IsMemoryCounter(counter)) {
               // For the memory counter, substract the size of our buffer to
