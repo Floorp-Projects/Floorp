@@ -155,6 +155,15 @@ let propNameAllowlist = [
     isFromDevTools: false,
   },
   { propName: "--browser-stack-z-index-rdm-toolbar", isFromDevTools: false },
+
+  // These variables are specified from devtools but read from non-devtools
+  // styles, which confuses the test.
+  { propName: "--panel-border-radius", isFromDevTools: true },
+  { propName: "--panel-padding", isFromDevTools: true },
+  { propName: "--panel-background", isFromDevTools: true },
+  { propName: "--panel-border-color", isFromDevTools: true },
+  { propName: "--panel-shadow", isFromDevTools: true },
+  { propName: "--panel-shadow-margin", isFromDevTools: true },
 ];
 
 // Add suffix to stylesheets' URI so that we always load them here and

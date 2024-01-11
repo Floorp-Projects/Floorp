@@ -64,7 +64,7 @@ async function runTests(doc) {
       `anchor: ${describeBounds(anchorBounds)}, ` +
       `arrow: ${describeBounds(arrowBounds)}`;
     ok(
-      delta < 1,
+      delta <= 1,
       `Arrow center is roughly aligned with anchor center (${params})`
     );
 

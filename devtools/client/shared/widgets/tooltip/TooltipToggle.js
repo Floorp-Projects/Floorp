@@ -85,15 +85,12 @@ TooltipToggle.prototype = {
     baseNode.addEventListener("mousemove", this._onMouseMove);
     baseNode.addEventListener("mouseout", this._onMouseOut);
 
+    const target = this.tooltip.xulPanelWrapper || this.tooltip.container;
     if (this._interactive) {
-      this.tooltip.container.addEventListener(
-        "mouseover",
-        this._onTooltipMouseOver
-      );
-      this.tooltip.container.addEventListener(
-        "mouseout",
-        this._onTooltipMouseOut
-      );
+      target.addEventListener("mouseover", this._onTooltipMouseOver);
+      target.addEventListener("mouseout", this._onTooltipMouseOut);
+    } else {
+      target.classList.add("non-interactive-toggle");
     }
   },
 
@@ -112,15 +109,12 @@ TooltipToggle.prototype = {
     this._baseNode.removeEventListener("mousemove", this._onMouseMove);
     this._baseNode.removeEventListener("mouseout", this._onMouseOut);
 
+    const target = this.tooltip.xulPanelWrapper || this.tooltip.container;
     if (this._interactive) {
-      this.tooltip.container.removeEventListener(
-        "mouseover",
-        this._onTooltipMouseOver
-      );
-      this.tooltip.container.removeEventListener(
-        "mouseout",
-        this._onTooltipMouseOut
-      );
+      target.removeEventListener("mouseover", this._onTooltipMouseOver);
+      target.removeEventListener("mouseout", this._onTooltipMouseOut);
+    } else {
+      target.classList.remove("non-interactive-toggle");
     }
 
     this._baseNode = null;

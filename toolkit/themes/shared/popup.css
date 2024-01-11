@@ -23,6 +23,8 @@ panel {
 
   --panel-shadow-margin: 0px;
   --panel-shadow: 0 0 var(--panel-shadow-margin) hsla(0,0%,0%,.2);
+  -moz-window-input-region-margin: var(--panel-shadow-margin);
+  margin: calc(-1 * var(--panel-shadow-margin));
 
   /* Panel design token theming */
   --color-canvas: var(--panel-background);
@@ -39,8 +41,6 @@ panel {
   @media (-moz-platform: linux) or (-moz-platform: windows) {
     /* To account for the box-shadow below */
     --panel-shadow-margin: 4px;
-    -moz-window-input-region-margin: var(--panel-shadow-margin);
-    margin: calc(-1 * var(--panel-shadow-margin));
   }
 
   @media (-moz-platform: macos) {
@@ -86,7 +86,7 @@ panel {
 
   /* ::::: arrow panel ::::: */
 
-  &[type="arrow"] {
+  &:where([type="arrow"]) {
     appearance: none;
     background-color: transparent;
 
