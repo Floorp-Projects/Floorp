@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<head>
+  <meta charset="utf-8">
+  <title>window.open test</title>
+<style>
+div {
+  padding: 20px;
+}
+</style>
+</head>
+<body>
+  <div>
+  <input id="instant" type="button" value="instant no features"
+         onclick="window.open('about:blank', '_blank');">
+  </div>
+  <div>
+  <input id="instant-popup" type="button" value="instant popup"
+         onclick="window.open('about:blank', '_blank', 'popup=true');">
+  </div>
+  <div>
+  <input id="delayed" type="button" value="delayed no features"
+         onclick="setTimeout(() => window.open('about:blank', '_blank'), 500);">
+  </div>
+  <div>
+  <input id="delayed-popup" type="button" value="delayed popup"
+         onclick="setTimeout(() => window.open('about:blank', '_blank', 'popup=true'), 500);">
+  <div>
+</body>
+</html>
