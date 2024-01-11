@@ -210,7 +210,7 @@ async function testRuleViewLinkLabel(view) {
 
   is(
     value,
-    encodeURIComponent(STYLESHEET_DATA_URL_CONTENTS) + ":1",
+    STYLESHEET_DATA_URL_CONTENTS + ":1",
     "Rule view data URL stylesheet display value matches contents"
   );
   is(
