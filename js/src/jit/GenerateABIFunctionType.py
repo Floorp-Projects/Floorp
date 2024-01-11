@@ -448,8 +448,8 @@ def main(c_out, yaml_path):
     contents = "#define ABI_FUNCTION_TYPE_ENUM \\\n"
     for func_type in func_types:
         name = "Args_" + func_type_name(func_type)
-        args = ", ".join(f"ArgType_{p}" for p in func_type["args"])
-        ret = f"ArgType_{func_type['ret']}"
+        args = ", ".join(f"ABIType::{p}" for p in func_type["args"])
+        ret = f"ABIType::{func_type['ret']}"
 
         contents += f"    {name} = detail::MakeABIFunctionType({ret}, {{{args}}}),\\\n"
     contents += "\n"

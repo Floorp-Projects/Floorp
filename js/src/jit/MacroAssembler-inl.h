@@ -170,16 +170,16 @@ void MacroAssembler::callWithABI(const Address& fun, MoveOp::Type result) {
 
 void MacroAssembler::appendSignatureType(MoveOp::Type type) {
 #ifdef JS_SIMULATOR
-  signature_ <<= ArgType_Shift;
+  signature_ <<= ABITypeArgShift;
   switch (type) {
     case MoveOp::GENERAL:
-      signature_ |= ArgType_General;
+      signature_ |= uint32_t(ABIType::General);
       break;
     case MoveOp::DOUBLE:
-      signature_ |= ArgType_Float64;
+      signature_ |= uint32_t(ABIType::Float64);
       break;
     case MoveOp::FLOAT32:
-      signature_ |= ArgType_Float32;
+      signature_ |= uint32_t(ABIType::Float32);
       break;
     default:
       MOZ_CRASH("Invalid argument type");
