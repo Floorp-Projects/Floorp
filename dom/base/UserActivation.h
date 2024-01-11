@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_UserActivation_h
 #define mozilla_dom_UserActivation_h
 
+#include "mozilla/Assertions.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/TimeStamp.h"
 #include "nsCycleCollectionParticipant.h"
@@ -42,6 +43,73 @@ class UserActivation final : public nsISupports, public nsWrapperCache {
     // haven't timed out.
     FullActivated,
     EndGuard_
+  };
+
+  class StateAndModifiers;
+
+  // Modifier keys held while the user activation.
+  class Modifiers {
+   public:
+    static constexpr uint8_t Shift = 0x10;
+    static constexpr uint8_t Meta = 0x20;
+    static constexpr uint8_t Control = 0x40;
+    static constexpr uint8_t Alt = 0x80;
+
+    static constexpr uint8_t Mask = 0xF0;
+
+    constexpr Modifiers() = default;
+    explicit constexpr Modifiers(uint8_t aModifiers) : mModifiers(aModifiers) {}
+
+    static constexpr Modifiers None() { return Modifiers(0); }
+
+    uint8_t GetRawData() const { return mModifiers; }
+
+    void SetShift() { mModifiers |= Shift; }
+    void SetMeta() { mModifiers |= Meta; }
+    void SetControl() { mModifiers |= Control; }
+    void SetAlt() { mModifiers |= Alt; }
+
+    bool IsShift() const { return mModifiers & Shift; }
+    bool IsMeta() const { return mModifiers & Meta; }
+    bool IsControl() const { return mModifiers & Control; }
+    bool IsAlt() const { return mModifiers & Alt; }
+
+   private:
+    uint8_t mModifiers = 0;
+
+    friend class StateAndModifiers;
+  };
+
+  // State and Modifiers encoded into single data, for WindowContext field.
+  class StateAndModifiers {
+   public:
+    using DataT = uint8_t;
+
+    constexpr StateAndModifiers() = default;
+    explicit constexpr StateAndModifiers(DataT aStateAndModifiers)
+        : mStateAndModifiers(aStateAndModifiers) {}
+
+    DataT GetRawData() const { return mStateAndModifiers; }
+
+    State GetState() const { return State(RawState()); }
+    void SetState(State aState) {
+      MOZ_ASSERT((uint8_t(aState) & Modifiers::Mask) == 0);
+      mStateAndModifiers = uint8_t(aState) | RawModifiers();
+    }
+
+    Modifiers GetModifiers() const { return Modifiers(RawModifiers()); }
+    void SetModifiers(Modifiers aModifiers) {
+      mStateAndModifiers = RawState() | aModifiers.mModifiers;
+    }
+
+   private:
+    uint8_t RawState() const { return mStateAndModifiers & ~Modifiers::Mask; }
+
+    uint8_t RawModifiers() const {
+      return mStateAndModifiers & Modifiers::Mask;
+    }
+
+    uint8_t mStateAndModifiers = 0;
   };
 
   /**
