@@ -1929,12 +1929,15 @@ ClearDataService.prototype = Object.freeze({
       return Cr.NS_ERROR_INVALID_ARG;
     }
 
-    StorageAccessCleaner.deleteExceptPrincipals(
-      aPrincipalsWithStorage,
-      aFrom
-    ).then(() => {
-      aCallback.onDataDeleted(0);
-    });
+    StorageAccessCleaner.deleteExceptPrincipals(aPrincipalsWithStorage, aFrom)
+      .then(() => {
+        aCallback.onDataDeleted(0);
+      })
+      .catch(() => {
+        // This is part of clearing storageAccessAPI permissions, thus return
+        // an appropriate error flag.
+        aCallback.onDataDeleted(Ci.nsIClearDataService.CLEAR_PERMISSIONS);
+      });
     return Cr.NS_OK;
   },
 
