@@ -8,7 +8,7 @@
 // Readerable.sys.mjs.
 
 /* exported Readerable */
-/* import-globals-from Readability-readerable.js */
+/* import-globals-from readability/Readability-readerable.js */
 
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"

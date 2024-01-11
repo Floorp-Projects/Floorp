@@ -1,11 +1,3 @@
-/*eslint-env es6:false*/
-/*
- * DO NOT MODIFY THIS FILE DIRECTLY!
- *
- * This is a shared library that is maintained in an external repo:
- * https://github.com/mozilla/readability
- */
-
 /*
  * Copyright (c) 2010 Arc90 Inc
  *
