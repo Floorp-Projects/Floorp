@@ -5951,8 +5951,8 @@ struct PrefListEntry {
 //      StaticPrefList.yml), a string pref, and it is NOT exempted in
 //      sDynamicPrefOverrideList
 //
-// This behavior is codified in ShouldSanitizePreference() below where
-// exclusions of preferences can be defined.
+// This behavior is codified in ShouldSanitizePreference() below.
+// Exclusions of preferences can be defined in sOverrideRestrictionsList[].
 static const PrefListEntry sRestrictFromWebContentProcesses[] = {
     // Remove prefs with user data
     PREF_LIST_ENTRY("datareporting.policy."),
@@ -5999,6 +5999,19 @@ static const PrefListEntry sRestrictFromWebContentProcesses[] = {
     PREF_LIST_ENTRY("extensions.lastAppBuildId"),
     PREF_LIST_ENTRY("media.gmp-manager.buildID"),
     PREF_LIST_ENTRY("toolkit.telemetry.previousBuildID"),
+};
+
+// Allowlist for prefs and branches blocklisted in
+// sRestrictFromWebContentProcesses[], including prefs from
+// StaticPrefList.yaml and *.js, to let them pass.
+static const PrefListEntry sOverrideRestrictionsList[]{
+    PREF_LIST_ENTRY("services.settings.clock_skew_seconds"),
+    PREF_LIST_ENTRY("services.settings.last_update_seconds"),
+    PREF_LIST_ENTRY("services.settings.loglevel"),
+    // This is really a boolean dynamic pref, but one Nightly user
+    // has it set as a string...
+    PREF_LIST_ENTRY("services.settings.preview_enabled"),
+    PREF_LIST_ENTRY("services.settings.server"),
 };
 
 // These prefs are dynamically-named (i.e. not specified in prefs.js or
@@ -6055,8 +6068,8 @@ static const PrefListEntry sDynamicPrefOverrideList[]{
     PREF_LIST_ENTRY("print_printer"),
     PREF_LIST_ENTRY("places.interactions.customBlocklist"),
     PREF_LIST_ENTRY("remote.log.level"),
-    // services.* preferences should be added in ShouldSanitizePreference - the
-    // whole preference branch gets sanitized by default.
+    // services.* preferences should be added in sOverrideRestrictionsList[] -
+    // the whole preference branch gets sanitized by default.
     PREF_LIST_ENTRY("spellchecker.dictionary"),
     PREF_LIST_ENTRY("test.char"),
     PREF_LIST_ENTRY("Test.IPC."),
@@ -6090,14 +6103,12 @@ static bool ShouldSanitizePreference(const Pref* const aPref) {
   // pref through.
   for (const auto& entry : sRestrictFromWebContentProcesses) {
     if (strncmp(entry.mPrefBranch, prefName, entry.mLen) == 0) {
-      const auto* p = prefName;  // This avoids clang-format doing ugly things.
-      return !(strncmp("services.settings.clock_skew_seconds", p, 36) == 0 ||
-               strncmp("services.settings.last_update_seconds", p, 37) == 0 ||
-               strncmp("services.settings.loglevel", p, 26) == 0 ||
-               // This is really a boolean dynamic pref, but one Nightly user
-               // has it set as a string...
-               strncmp("services.settings.preview_enabled", p, 33) == 0 ||
-               strncmp("services.settings.server", p, 24) == 0);
+      for (const auto& pasEnt : sOverrideRestrictionsList) {
+        if (strncmp(pasEnt.mPrefBranch, prefName, pasEnt.mLen) == 0) {
+          return false;
+        }
+      }
+      return true;
     }
   }
 
