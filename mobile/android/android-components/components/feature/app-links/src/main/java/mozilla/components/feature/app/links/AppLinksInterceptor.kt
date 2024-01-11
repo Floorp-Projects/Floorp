@@ -110,11 +110,7 @@ class AppLinksInterceptor(
         }
 
         val redirect = useCases.interceptedAppLinkRedirect(uri)
-        val result = handleRedirect(redirect, uri)
-
-        if (engineSupportedSchemes.contains(uriScheme) && inUserDoNotIntercept(uri, redirect.appIntent)) {
-            return null
-        }
+        val result = handleRedirect(redirect, uri, engineSupportedSchemes.contains(uriScheme))
 
         if (redirect.isRedirect()) {
             if (launchFromInterceptor && result is RequestInterceptor.InterceptionResponse.AppIntent) {
@@ -134,11 +130,16 @@ class AppLinksInterceptor(
     internal fun handleRedirect(
         redirect: AppLinkRedirect,
         uri: String,
+        schemeSupported: Boolean,
     ): RequestInterceptor.InterceptionResponse? {
-        if (!launchInApp()) {
+        if (!launchInApp() || inUserDoNotIntercept(uri, redirect.appIntent)) {
             redirect.fallbackUrl?.let {
                 return RequestInterceptor.InterceptionResponse.Url(it)
             }
+        }
+
+        if (schemeSupported && inUserDoNotIntercept(uri, redirect.appIntent)) {
+            return null
         }
 
         if (!redirect.hasExternalApp()) {
