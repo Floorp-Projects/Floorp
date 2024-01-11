@@ -59,7 +59,7 @@ elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
     UNIFIED_SOURCES += ["windows/WindowsGamepad.cpp"]
 elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "android":
     UNIFIED_SOURCES += ["android/AndroidGamepad.cpp"]
-elif CONFIG["OS_ARCH"] == "Linux":
+elif CONFIG["OS_ARCH"] in ("Linux", "FreeBSD", "DragonFly"):
     UNIFIED_SOURCES += ["linux/LinuxGamepad.cpp"]
 else:
     UNIFIED_SOURCES += ["fallback/FallbackGamepad.cpp"]

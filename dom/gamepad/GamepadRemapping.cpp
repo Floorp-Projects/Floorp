@@ -19,51 +19,10 @@
 
 namespace mozilla::dom {
 
-// Follow the canonical ordering recommendation for the "Standard Gamepad"
-// from https://www.w3.org/TR/gamepad/#remapping.
-enum CanonicalButtonIndex {
-  BUTTON_INDEX_PRIMARY,
-  BUTTON_INDEX_SECONDARY,
-  BUTTON_INDEX_TERTIARY,
-  BUTTON_INDEX_QUATERNARY,
-  BUTTON_INDEX_LEFT_SHOULDER,
-  BUTTON_INDEX_RIGHT_SHOULDER,
-  BUTTON_INDEX_LEFT_TRIGGER,
-  BUTTON_INDEX_RIGHT_TRIGGER,
-  BUTTON_INDEX_BACK_SELECT,
-  BUTTON_INDEX_START,
-  BUTTON_INDEX_LEFT_THUMBSTICK,
-  BUTTON_INDEX_RIGHT_THUMBSTICK,
-  BUTTON_INDEX_DPAD_UP,
-  BUTTON_INDEX_DPAD_DOWN,
-  BUTTON_INDEX_DPAD_LEFT,
-  BUTTON_INDEX_DPAD_RIGHT,
-  BUTTON_INDEX_META,
-  BUTTON_INDEX_COUNT
-};
-
-enum CanonicalAxisIndex {
-  AXIS_INDEX_LEFT_STICK_X,
-  AXIS_INDEX_LEFT_STICK_Y,
-  AXIS_INDEX_RIGHT_STICK_X,
-  AXIS_INDEX_RIGHT_STICK_Y,
-  AXIS_INDEX_COUNT
-};
-
 const float BUTTON_THRESHOLD_VALUE = 0.1f;
 
 float NormalizeTouch(long aValue, long aMin, long aMax) {
   return (2.f * (aValue - aMin) / static_cast<float>(aMax - aMin)) - 1.f;
-}
-
-bool AxisNegativeAsButton(float input) {
-  const float value = (input < -0.5f) ? 1.f : 0.f;
-  return value > BUTTON_THRESHOLD_VALUE;
-}
-
-bool AxisPositiveAsButton(float input) {
-  const float value = (input > 0.5f) ? 1.f : 0.f;
-  return value > BUTTON_THRESHOLD_VALUE;
 }
 
 double AxisToButtonValue(double aValue) {
