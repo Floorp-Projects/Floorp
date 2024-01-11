@@ -2172,12 +2172,28 @@ void BrowsingContext::Close(CallerType aCallerType, ErrorResult& aError) {
   }
 }
 
-/*
- * Examine the current document state to see if we're in a way that is
- * typically abused by web designers. The window.open code uses this
- * routine to determine whether to allow the new window.
- * Returns a value from the PopupControlState enum.
- */
+template <typename FuncT>
+inline bool ApplyToDocumentsForPopup(Document* doc, FuncT func) {
+  // HACK: Some pages using bogus library + UA sniffing call window.open()
+  // from a blank iframe, only on Firefox, see bug 1685056.
+  //
+  // This is a hack-around to preserve behavior in that particular and
+  // specific case, by consuming activation on the parent document, so we
+  // don't care about the InProcessParent bits not being fission-safe or what
+  // not.
+  if (func(doc)) {
+    return true;
+  }
+  if (!doc->IsInitialDocument()) {
+    return false;
+  }
+  Document* parentDoc = doc->GetInProcessParentDocument();
+  if (!parentDoc || !parentDoc->NodePrincipal()->Equals(doc->NodePrincipal())) {
+    return false;
+  }
+  return func(parentDoc);
+}
+
 PopupBlocker::PopupControlState BrowsingContext::RevisePopupAbuseLevel(
     PopupBlocker::PopupControlState aControl) {
   if (!IsContent()) {
@@ -2220,27 +2236,11 @@ PopupBlocker::PopupControlState BrowsingContext::RevisePopupAbuseLevel(
   // If we're currently in-process, attempt to consume transient user gesture
   // activations.
   if (doc) {
-    // HACK: Some pages using bogus library + UA sniffing call window.open()
-    // from a blank iframe, only on Firefox, see bug 1685056.
-    //
-    // This is a hack-around to preserve behavior in that particular and
-    // specific case, by consuming activation on the parent document, so we
-    // don't care about the InProcessParent bits not being fission-safe or what
-    // not.
     auto ConsumeTransientUserActivationForMultiplePopupBlocking =
         [&]() -> bool {
-      if (doc->ConsumeTransientUserGestureActivation()) {
-        return true;
-      }
-      if (!doc->IsInitialDocument()) {
-        return false;
-      }
-      Document* parentDoc = doc->GetInProcessParentDocument();
-      if (!parentDoc ||
-          !parentDoc->NodePrincipal()->Equals(doc->NodePrincipal())) {
-        return false;
-      }
-      return parentDoc->ConsumeTransientUserGestureActivation();
+      return ApplyToDocumentsForPopup(doc, [](Document* doc) {
+        return doc->ConsumeTransientUserGestureActivation();
+      });
     };
 
     // If this popup is allowed, let's block any other for this event, forcing
@@ -2257,6 +2257,18 @@ PopupBlocker::PopupControlState BrowsingContext::RevisePopupAbuseLevel(
   }
 
   return abuse;
+}
+
+void BrowsingContext::GetUserActivationModifiersForPopup(
+    UserActivation::Modifiers* aModifiers) {
+  RefPtr<Document> doc = GetExtantDocument();
+  if (doc) {
+    // Unlike RevisePopupAbuseLevel, modifiers can always be used regardless
+    // of PopupControlState.
+    (void)ApplyToDocumentsForPopup(doc, [&](Document* doc) {
+      return doc->GetTransientUserGestureActivationModifiers(aModifiers);
+    });
+  }
 }
 
 void BrowsingContext::IncrementHistoryEntryCountForBrowsingContext() {

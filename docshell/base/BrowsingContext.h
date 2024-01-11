@@ -906,8 +906,18 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
 
   bool CanBlurCheck(CallerType aCallerType);
 
+  // Examine the current document state to see if we're in a way that is
+  // typically abused by web designers. The window.open code uses this
+  // routine to determine whether to allow the new window.
+  // Returns a value from the PopupControlState enum.
   PopupBlocker::PopupControlState RevisePopupAbuseLevel(
       PopupBlocker::PopupControlState aControl);
+
+  // Get the modifiers associated with the user activation for relevant
+  // documents. The window.open code uses this routine to determine where the
+  // new window should be located.
+  void GetUserActivationModifiersForPopup(
+      UserActivation::Modifiers* aModifiers);
 
   void IncrementHistoryEntryCountForBrowsingContext();
 
