@@ -61,6 +61,7 @@ class MVMContext {
   virtual void UpdateDisplayPortMargins() = 0;
 
   virtual void Reflow(const CSSSize& aNewSize) = 0;
+  virtual ScreenIntCoord GetDynamicToolbarOffset() = 0;
 };
 
 }  // namespace mozilla
