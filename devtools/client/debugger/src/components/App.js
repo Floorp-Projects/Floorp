@@ -12,14 +12,13 @@ import actions from "../actions";
 import AccessibleImage from "./shared/AccessibleImage";
 
 import {
-  getSelectedLocation,
+  getSelectedSource,
   getPaneCollapse,
   getActiveSearch,
   getQuickOpenEnabled,
   getOrientation,
   getIsCurrentThreadPaused,
   isMapScopesEnabled,
-  getSourceMapErrorForSourceActor,
 } from "../selectors";
 const KeyShortcuts = require("devtools/client/shared/key-shortcuts");
 
@@ -66,7 +65,7 @@ class App extends Component {
       openQuickOpen: PropTypes.func.isRequired,
       orientation: PropTypes.oneOf(["horizontal", "vertical"]).isRequired,
       quickOpenEnabled: PropTypes.bool.isRequired,
-      selectedLocation: PropTypes.object,
+      selectedSource: PropTypes.object,
       setActiveSearch: PropTypes.func.isRequired,
       setOrientation: PropTypes.func.isRequired,
       setPrimaryPaneTab: PropTypes.func.isRequired,
@@ -209,16 +208,6 @@ class App extends Component {
   }
 
   renderEditorNotificationBar() {
-    if (this.props.sourceMapError) {
-      return div(
-        { className: "editor-notification-footer", "aria-role": "status" },
-        span(
-          { className: "info icon" },
-          React.createElement(AccessibleImage, { className: "sourcemap" })
-        ),
-        `Source Map Error: ${this.props.sourceMapError}`
-      );
-    }
     if (this.props.showOriginalVariableMappingWarning) {
       return div(
         { className: "editor-notification-footer", "aria-role": "status" },
@@ -256,7 +245,7 @@ class App extends Component {
           startPanelSize: startPanelSize,
           endPanelSize: endPanelSize,
         }),
-        !this.props.selectedLocation
+        !this.props.selectedSource
           ? React.createElement(WelcomeBox, {
               horizontal,
               toggleShortcutsModal: () => this.toggleShortcutsModal(),
@@ -362,27 +351,24 @@ App.childContextTypes = {
 };
 
 const mapStateToProps = state => {
-  const selectedLocation = getSelectedLocation(state);
+  const selectedSource = getSelectedSource(state);
   const mapScopeEnabled = isMapScopesEnabled(state);
   const isPaused = getIsCurrentThreadPaused(state);
 
   const showOriginalVariableMappingWarning =
     isPaused &&
-    selectedLocation?.source.isOriginal &&
-    !selectedLocation?.source.isPrettyPrinted &&
+    selectedSource?.isOriginal &&
+    !selectedSource.isPrettyPrinted &&
     !mapScopeEnabled;
 
   return {
     showOriginalVariableMappingWarning,
-    selectedLocation,
+    selectedSource,
     startPanelCollapsed: getPaneCollapse(state, "start"),
     endPanelCollapsed: getPaneCollapse(state, "end"),
     activeSearch: getActiveSearch(state),
     quickOpenEnabled: getQuickOpenEnabled(state),
     orientation: getOrientation(state),
-    sourceMapError: selectedLocation?.sourceActor
-      ? getSourceMapErrorForSourceActor(state, selectedLocation.sourceActor.id)
-      : null,
   };
 };
 

@@ -25,7 +25,6 @@ const {
 const assert = require("resource://devtools/client/shared/source-map-loader/utils/assert.js");
 const {
   fetchSourceMap,
-  resolveSourceMapURL,
   hasOriginalURL,
   clearOriginalURLs,
 } = require("resource://devtools/client/shared/source-map-loader/utils/fetchSourceMap.js");
@@ -46,87 +45,15 @@ const {
   clearWasmXScopes,
 } = require("resource://devtools/client/shared/source-map-loader/wasm-dwarf/wasmXScopes.js");
 
-/**
- * Create "original source info" objects being handed over to the main thread
- * to describe original sources referenced in a source map
- */
-function mapToOriginalSourceInfos(generatedId, urls) {
-  return urls.map(url => {
-    return {
-      id: generatedToOriginalId(generatedId, url),
-      url,
-    };
-  });
-}
-
-/**
- * Load the source map and retrieved infos about all the original sources
- * referenced in that source map.
- *
- * @param {Object} generatedSource
- *        Source object for a bundle referencing a source map
- * @return {Array<Object>|null}
- *        List of object with id and url attributes describing the original sources.
- */
 async function getOriginalURLs(generatedSource) {
-  const { resolvedSourceMapURL, baseURL } =
-    resolveSourceMapURL(generatedSource);
-  const map = await fetchSourceMap(
-    generatedSource,
-    resolvedSourceMapURL,
-    baseURL
-  );
-  return map ? mapToOriginalSourceInfos(generatedSource.id, map.sources) : null;
+  await fetchSourceMap(generatedSource);
+  const data = await getSourceMapWithMetadata(generatedSource.id);
+  return data ? data.sources : null;
 }
 
-/**
- * Load the source map for a given bundle and return information
- * about the related original sources and the source map itself.
- *
- * @param {Object} generatedSource
- *        Source object for the bundle.
- * @return {Object}
- *  - {Array<Object>} sources
- *    Object with id and url attributes, refering to the related original sources
- *    referenced in the source map.
- *  - [String} resolvedSourceMapURL
- *    Absolute URL for the source map file.
- *  - {Array<String>} ignoreListUrls
- *    List of URLs of sources, designated by the source map, to be ignored in the debugger.
- *  - {String} exception
- *    In case of error, a string describing the situation.
- */
-async function loadSourceMap(generatedSource) {
-  const { resolvedSourceMapURL, baseURL } =
-    resolveSourceMapURL(generatedSource);
-  try {
-    const map = await fetchSourceMap(
-      generatedSource,
-      resolvedSourceMapURL,
-      baseURL
-    );
-    if (!map.sources.length) {
-      throw new Error("No sources are declared in this source map.");
-    }
-    let ignoreListUrls = [];
-    if (map.x_google_ignoreList?.length) {
-      ignoreListUrls = map.x_google_ignoreList.map(
-        sourceIndex => map.sources[sourceIndex]
-      );
-    }
-    return {
-      sources: mapToOriginalSourceInfos(generatedSource.id, map.sources),
-      resolvedSourceMapURL,
-      ignoreListUrls,
-    };
-  } catch (e) {
-    return {
-      sources: [],
-      resolvedSourceMapURL,
-      ignoreListUrls: [],
-      exception: e.message,
-    };
-  }
+async function getSourceMapIgnoreList(generatedSourceId) {
+  const data = await getSourceMapWithMetadata(generatedSourceId);
+  return data ? data.ignoreListUrls : [];
 }
 
 const COMPUTED_SPANS = new WeakSet();
@@ -631,7 +558,6 @@ function clearSourceMaps() {
 
 module.exports = {
   getOriginalURLs,
-  loadSourceMap,
   hasOriginalURL,
   getOriginalRanges,
   getGeneratedRanges,
@@ -641,6 +567,7 @@ module.exports = {
   getOriginalSourceText,
   getGeneratedRangesForOriginal,
   getFileGeneratedRange,
+  getSourceMapIgnoreList,
   setSourceMapForGeneratedSources,
   clearSourceMaps,
 };

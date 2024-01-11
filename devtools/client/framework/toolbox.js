@@ -1409,7 +1409,10 @@ Toolbox.prototype = {
     if (this._sourceMapLoader) {
       return this._sourceMapLoader;
     }
-    this._sourceMapLoader = new SourceMapLoader(this.commands.targetCommand);
+    this._sourceMapLoader = new SourceMapLoader();
+    this._sourceMapLoader.on("source-map-error", message =>
+      this.target.logWarningInPage(message, "source map")
+    );
     return this._sourceMapLoader;
   },
 
@@ -4079,7 +4082,9 @@ Toolbox.prototype = {
     this._pausedTargets = null;
 
     if (this._sourceMapLoader) {
-      this._sourceMapLoader.destroy();
+      this._sourceMapLoader.stopSourceMapWorker();
+      // Unregister all listeners
+      this._sourceMapLoader.clearEvents();
       this._sourceMapLoader = null;
     }
 

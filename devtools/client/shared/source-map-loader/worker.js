@@ -17,7 +17,7 @@ const {
   getOriginalSourceText,
   getGeneratedRangesForOriginal,
   getFileGeneratedRange,
-  loadSourceMap,
+  getSourceMapIgnoreList,
   clearSourceMaps,
   setSourceMapForGeneratedSources,
 } = require("resource://devtools/client/shared/source-map-loader/source-map.js");
@@ -44,7 +44,7 @@ self.onmessage = workerHandler({
   getOriginalStackFrames,
   getGeneratedRangesForOriginal,
   getFileGeneratedRange,
-  loadSourceMap,
+  getSourceMapIgnoreList,
   setSourceMapForGeneratedSources,
   clearSourceMaps,
 });
