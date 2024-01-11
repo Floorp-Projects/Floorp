@@ -33,14 +33,14 @@ function hasOriginalURL(url) {
   return originalURLs.has(url);
 }
 
-function resolveSourceMapURL(source) {
+function _resolveSourceMapURL(source) {
   let { sourceMapBaseURL, sourceMapURL } = source;
   sourceMapBaseURL = sourceMapBaseURL || "";
   sourceMapURL = sourceMapURL || "";
 
   if (!sourceMapBaseURL) {
     // If the source doesn't have a URL, don't resolve anything.
-    return { resolvedSourceMapURL: sourceMapURL, baseURL: sourceMapURL };
+    return { sourceMapURL, baseURL: sourceMapURL };
   }
 
   let resolvedString;
@@ -63,11 +63,14 @@ function resolveSourceMapURL(source) {
     baseURL = resolvedString;
   }
 
-  return { resolvedSourceMapURL: resolvedString, baseURL };
+  return { sourceMapURL: resolvedString, baseURL };
 }
 
-async function _fetch(generatedSource, resolvedSourceMapURL, baseURL) {
-  let fetched = await networkRequest(resolvedSourceMapURL, {
+async function _resolveAndFetch(generatedSource) {
+  // Fetch the sourcemap over the network and create it.
+  const { sourceMapURL, baseURL } = _resolveSourceMapURL(generatedSource);
+
+  let fetched = await networkRequest(sourceMapURL, {
     loadFromCache: false,
     // Blocking redirects on the sourceMappingUrl as its not easy to verify if the
     // redirect protocol matches the supported ones.
@@ -102,7 +105,7 @@ async function _fetch(generatedSource, resolvedSourceMapURL, baseURL) {
   return map;
 }
 
-function fetchSourceMap(generatedSource, resolvedSourceMapURL, baseURL) {
+function fetchSourceMap(generatedSource) {
   const existingRequest = getSourceMap(generatedSource.id);
 
   // If it has already been requested, return the request. Make sure
@@ -121,7 +124,7 @@ function fetchSourceMap(generatedSource, resolvedSourceMapURL, baseURL) {
   }
 
   // Fire off the request, set it in the cache, and return it.
-  const req = _fetch(generatedSource, resolvedSourceMapURL, baseURL);
+  const req = _resolveAndFetch(generatedSource);
   // Make sure the cached promise does not reject, because we only
   // want to report the error once.
   setSourceMap(
@@ -131,9 +134,4 @@ function fetchSourceMap(generatedSource, resolvedSourceMapURL, baseURL) {
   return req;
 }
 
-module.exports = {
-  fetchSourceMap,
-  hasOriginalURL,
-  clearOriginalURLs,
-  resolveSourceMapURL,
-};
+module.exports = { fetchSourceMap, hasOriginalURL, clearOriginalURLs };
