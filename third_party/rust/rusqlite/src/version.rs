@@ -14,6 +14,10 @@ pub fn version_number() -> i32 {
 /// Returns the SQLite version as a string; e.g., `"3.16.2"` for version 3.16.2.
 ///
 /// See [`sqlite3_libversion()`](https://www.sqlite.org/c3ref/libversion.html).
+///
+/// # Panics
+///
+/// Panics when version is not valid UTF-8.
 #[inline]
 #[must_use]
 pub fn version() -> &'static str {

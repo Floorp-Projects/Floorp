@@ -1,6 +1,19 @@
 # Change Log
 
-## [Unreleased]
+## [v0.3.0] - 2023-05-22
+
+### Removed
+
+* `FromFallibleIterator` trait is removed, `FallibleIterator::collect` now requires `std::iter::FromIterator`,
+  which has strictly more implementations.
+
+### Added
+
+* add convenient wrapper for std::iter::Iterator
+* more utilities mirroring std::iter
+* Peekable methods
+* `IteratorExt` for convenient conversion
+* `FallibleIterator::unwrap`
 
 ## [v0.2.0] - 2019-03-10
 

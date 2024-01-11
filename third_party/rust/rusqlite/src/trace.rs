@@ -8,8 +8,7 @@ use std::ptr;
 use std::time::Duration;
 
 use super::ffi;
-use crate::error::error_from_sqlite_code;
-use crate::{Connection, Result};
+use crate::Connection;
 
 /// Set up the process-wide SQLite error logging callback.
 ///
@@ -25,7 +24,8 @@ use crate::{Connection, Result};
 ///     * It must be threadsafe if SQLite is used in a multithreaded way.
 ///
 /// cf [The Error And Warning Log](http://sqlite.org/errlog.html).
-pub unsafe fn config_log(callback: Option<fn(c_int, &str)>) -> Result<()> {
+#[cfg(not(feature = "loadable_extension"))]
+pub unsafe fn config_log(callback: Option<fn(c_int, &str)>) -> crate::Result<()> {
     extern "C" fn log_callback(p_arg: *mut c_void, err: c_int, msg: *const c_char) {
         let c_slice = unsafe { CStr::from_ptr(msg).to_bytes() };
         let callback: fn(c_int, &str) = unsafe { mem::transmute(p_arg) };
@@ -48,7 +48,7 @@ pub unsafe fn config_log(callback: Option<fn(c_int, &str)>) -> Result<()> {
     if rc == ffi::SQLITE_OK {
         Ok(())
     } else {
-        Err(error_from_sqlite_code(rc, None))
+        Err(crate::error::error_from_sqlite_code(rc, None))
     }
 }
 

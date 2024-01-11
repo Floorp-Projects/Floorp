@@ -29,8 +29,8 @@ impl<'stmt> Rows<'stmt> {
     /// This interface is not compatible with Rust's `Iterator` trait, because
     /// the lifetime of the returned row is tied to the lifetime of `self`.
     /// This is a fallible "streaming iterator". For a more natural interface,
-    /// consider using [`query_map`](crate::Statement::query_map) or
-    /// [`query_and_then`](crate::Statement::query_and_then) instead, which
+    /// consider using [`query_map`](Statement::query_map) or
+    /// [`query_and_then`](Statement::query_and_then) instead, which
     /// return types that implement `Iterator`.
     #[allow(clippy::should_implement_trait)] // cannot implement Iterator
     #[inline]
@@ -247,7 +247,7 @@ pub struct Row<'stmt> {
 impl<'stmt> Row<'stmt> {
     /// Get the value of a particular column of the result row.
     ///
-    /// ## Failure
+    /// # Panics
     ///
     /// Panics if calling [`row.get(idx)`](Row::get) would return an error,
     /// including:
@@ -257,6 +257,7 @@ impl<'stmt> Row<'stmt> {
     /// * If the underlying SQLite integral value is outside the range
     ///   representable by `T`
     /// * If `idx` is outside the range of columns in the returned query
+    #[track_caller]
     pub fn get_unwrap<I: RowIndex, T: FromSql>(&self, idx: I) -> T {
         self.get(idx).unwrap()
     }
@@ -277,6 +278,7 @@ impl<'stmt> Row<'stmt> {
     /// If the result type is i128 (which requires the `i128_blob` feature to be
     /// enabled), and the underlying SQLite column is a blob whose size is not
     /// 16 bytes, `Error::InvalidColumnType` will also be returned.
+    #[track_caller]
     pub fn get<I: RowIndex, T: FromSql>(&self, idx: I) -> Result<T> {
         let idx = idx.idx(self.stmt)?;
         let value = self.stmt.value_ref(idx);
@@ -328,13 +330,14 @@ impl<'stmt> Row<'stmt> {
     /// it can be difficult to use, and most callers will be better served by
     /// [`get`](Row::get) or [`get_unwrap`](Row::get_unwrap).
     ///
-    /// ## Failure
+    /// # Panics
     ///
     /// Panics if calling [`row.get_ref(idx)`](Row::get_ref) would return an
     /// error, including:
     ///
     /// * If `idx` is outside the range of columns in the returned query.
     /// * If `idx` is not a valid column name for this row.
+    #[track_caller]
     pub fn get_ref_unwrap<I: RowIndex>(&self, idx: I) -> ValueRef<'_> {
         self.get_ref(idx).unwrap()
     }

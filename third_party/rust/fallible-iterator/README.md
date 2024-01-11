@@ -1,8 +1,9 @@
+[![crates.io](https://img.shields.io/crates/v/fallible-iterator.svg)](https://crates.io/crates/fallible-iterator)
+[![docs.rs](https://docs.rs/fallible-iterator/badge.svg)](https://docs.rs/fallible-iterator)
+
+![Continuous integration](https://github.com/sfackler/rust-fallible-iterator/actions/workflows/rust.yml/badge.svg?branch=master&event=push)
+
 # rust-fallible-iterator
-
-[![CircleCI](https://circleci.com/gh/sfackler/rust-fallible-iterator.svg?style=shield)](https://circleci.com/gh/sfackler/rust-fallible-iterator)
-
-[Documentation](https://sfackler.github.io/rust-fallible-iterator/doc/v0.1.3/fallible_iterator)
 
 "Fallible" iterators for Rust.
 

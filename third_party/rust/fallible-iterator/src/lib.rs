@@ -65,40 +65,20 @@
 //! ```
 #![doc(html_root_url = "https://docs.rs/fallible-iterator/0.2")]
 #![warn(missing_docs)]
-#![cfg_attr(feature = "alloc", feature(alloc))]
 #![no_std]
 
 use core::cmp::{self, Ordering};
+use core::convert::Infallible;
 use core::iter;
+use core::marker::PhantomData;
 
-#[cfg(all(feature = "alloc", not(feature = "std")))]
-#[cfg_attr(test, macro_use)]
+#[cfg(feature = "alloc")]
 extern crate alloc;
 
-#[cfg(all(feature = "alloc", not(feature = "std")))]
-mod imports {
-    pub use alloc::boxed::Box;
-    pub use alloc::collections::btree_map::BTreeMap;
-    pub use alloc::collections::btree_set::BTreeSet;
-    pub use alloc::vec::Vec;
-}
+#[cfg(feature = "alloc")]
+use alloc::boxed::Box;
 
-#[cfg(feature = "std")]
-#[cfg_attr(test, macro_use)]
-extern crate std;
-
-#[cfg(feature = "std")]
-mod imports {
-    pub use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
-    pub use std::hash::{BuildHasher, Hash};
-    pub use std::prelude::v1::*;
-}
-
-#[cfg(any(feature = "std", feature = "alloc"))]
-use crate::imports::*;
-
-#[cfg(any(feature = "std", feature = "alloc"))]
-#[cfg(test)]
+#[cfg(all(test, feature = "alloc"))]
 mod test;
 
 enum FoldStop<T, E> {
@@ -141,7 +121,7 @@ pub trait FallibleIterator {
     /// Returns `Ok(None)` when iteration is finished.
     ///
     /// The behavior of calling this method after a previous call has returned
-    /// `Ok(None)` or `Err` is implemenetation defined.
+    /// `Ok(None)` or `Err` is implementation defined.
     fn next(&mut self) -> Result<Option<Self::Item>, Self::Error>;
 
     /// Returns bounds on the remaining length of the iterator.
@@ -245,7 +225,7 @@ pub trait FallibleIterator {
         Self: Sized,
         F: FnMut(Self::Item) -> Result<B, Self::Error>,
     {
-        Map { it: self, f: f }
+        Map { it: self, f }
     }
 
     /// Calls a fallible closure on each element of an iterator.
@@ -267,7 +247,7 @@ pub trait FallibleIterator {
         Self: Sized,
         F: FnMut(&Self::Item) -> Result<bool, Self::Error>,
     {
-        Filter { it: self, f: f }
+        Filter { it: self, f }
     }
 
     /// Returns an iterator which both filters and maps. The closure may fail;
@@ -278,7 +258,7 @@ pub trait FallibleIterator {
         Self: Sized,
         F: FnMut(Self::Item) -> Result<Option<B>, Self::Error>,
     {
-        FilterMap { it: self, f: f }
+        FilterMap { it: self, f }
     }
 
     /// Returns an iterator which yields the current iteration count as well
@@ -441,10 +421,10 @@ pub trait FallibleIterator {
     #[inline]
     fn collect<T>(self) -> Result<T, Self::Error>
     where
-        T: FromFallibleIterator<Self::Item>,
+        T: iter::FromIterator<Self::Item>,
         Self: Sized,
     {
-        T::from_fallible_iter(self)
+        self.iterator().collect()
     }
 
     /// Transforms the iterator into two collections, partitioning elements by a closure.
@@ -731,7 +711,7 @@ pub trait FallibleIterator {
         Cloned(self)
     }
 
-    /// Returns an iterator which repeas this iterator endlessly.
+    /// Returns an iterator which repeats this iterator endlessly.
     #[inline]
     fn cycle(self) -> Cycle<Self>
     where
@@ -960,7 +940,17 @@ pub trait FallibleIterator {
         F: FnMut(Self::Error) -> B,
         Self: Sized,
     {
-        MapErr { it: self, f: f }
+        MapErr { it: self, f }
+    }
+
+    /// Returns an iterator which unwraps all of its elements.
+    #[inline]
+    fn unwrap<T>(self) -> Unwrap<Self>
+    where
+        Self: Sized + FallibleIterator<Item = T>,
+        Self::Error: core::fmt::Debug,
+    {
+        Unwrap(self)
     }
 }
 
@@ -991,7 +981,7 @@ impl<I: DoubleEndedFallibleIterator + ?Sized> DoubleEndedFallibleIterator for &m
     }
 }
 
-#[cfg(any(feature = "std", feature = "alloc"))]
+#[cfg(feature = "alloc")]
 impl<I: FallibleIterator + ?Sized> FallibleIterator for Box<I> {
     type Item = I::Item;
     type Error = I::Error;
@@ -1012,7 +1002,7 @@ impl<I: FallibleIterator + ?Sized> FallibleIterator for Box<I> {
     }
 }
 
-#[cfg(any(feature = "std", feature = "alloc"))]
+#[cfg(feature = "alloc")]
 impl<I: DoubleEndedFallibleIterator + ?Sized> DoubleEndedFallibleIterator for Box<I> {
     #[inline]
     fn next_back(&mut self) -> Result<Option<I::Item>, I::Error> {
@@ -1052,112 +1042,6 @@ pub trait DoubleEndedFallibleIterator: FallibleIterator {
     }
 }
 
-/// Conversion from a fallible iterator.
-pub trait FromFallibleIterator<T>: Sized {
-    /// Creates a value from a fallible iterator.
-    fn from_fallible_iter<I>(it: I) -> Result<Self, I::Error>
-    where
-        I: IntoFallibleIterator<Item = T>;
-}
-
-#[cfg(any(feature = "std", feature = "alloc"))]
-impl<T> FromFallibleIterator<T> for Vec<T> {
-    #[inline]
-    fn from_fallible_iter<I>(it: I) -> Result<Vec<T>, I::Error>
-    where
-        I: IntoFallibleIterator<Item = T>,
-    {
-        let it = it.into_fallible_iter();
-        let mut vec = Vec::with_capacity(it.size_hint().0);
-        it.for_each(|v| Ok(vec.push(v)))?;
-        Ok(vec)
-    }
-}
-
-#[cfg(feature = "std")]
-impl<T, S> FromFallibleIterator<T> for HashSet<T, S>
-where
-    T: Hash + Eq,
-    S: BuildHasher + Default,
-{
-    #[inline]
-    fn from_fallible_iter<I>(it: I) -> Result<HashSet<T, S>, I::Error>
-    where
-        I: IntoFallibleIterator<Item = T>,
-    {
-        let it = it.into_fallible_iter();
-        let mut set = HashSet::default();
-        set.reserve(it.size_hint().0);
-        it.for_each(|v| {
-            set.insert(v);
-            Ok(())
-        })?;
-        Ok(set)
-    }
-}
-
-#[cfg(feature = "std")]
-impl<K, V, S> FromFallibleIterator<(K, V)> for HashMap<K, V, S>
-where
-    K: Hash + Eq,
-    S: BuildHasher + Default,
-{
-    #[inline]
-    fn from_fallible_iter<I>(it: I) -> Result<HashMap<K, V, S>, I::Error>
-    where
-        I: IntoFallibleIterator<Item = (K, V)>,
-    {
-        let it = it.into_fallible_iter();
-        let mut map = HashMap::default();
-        map.reserve(it.size_hint().0);
-        it.for_each(|(k, v)| {
-            map.insert(k, v);
-            Ok(())
-        })?;
-        Ok(map)
-    }
-}
-
-#[cfg(any(feature = "std", feature = "alloc"))]
-impl<T> FromFallibleIterator<T> for BTreeSet<T>
-where
-    T: Ord,
-{
-    #[inline]
-    fn from_fallible_iter<I>(it: I) -> Result<BTreeSet<T>, I::Error>
-    where
-        I: IntoFallibleIterator<Item = T>,
-    {
-        let it = it.into_fallible_iter();
-        let mut set = BTreeSet::new();
-        it.for_each(|v| {
-            set.insert(v);
-            Ok(())
-        })?;
-        Ok(set)
-    }
-}
-
-#[cfg(any(feature = "std", feature = "alloc"))]
-impl<K, V> FromFallibleIterator<(K, V)> for BTreeMap<K, V>
-where
-    K: Ord,
-{
-    #[inline]
-    fn from_fallible_iter<I>(it: I) -> Result<BTreeMap<K, V>, I::Error>
-    where
-        I: IntoFallibleIterator<Item = (K, V)>,
-    {
-        let it = it.into_fallible_iter();
-        let mut map = BTreeMap::new();
-        it.for_each(|(k, v)| {
-            map.insert(k, v);
-            Ok(())
-        })?;
-        Ok(map)
-    }
-}
-
 /// Conversion into a `FallibleIterator`.
 pub trait IntoFallibleIterator {
     /// The elements of the iterator.
@@ -1189,10 +1073,16 @@ where
 
 /// An iterator which applies a fallible transform to the elements of the
 /// underlying iterator.
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct Map<T, F> {
     it: T,
     f: F,
+}
+
+impl<I: core::fmt::Debug, F> core::fmt::Debug for Map<I, F> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        f.debug_struct("Map").field("iter", &self.it).finish()
+    }
 }
 
 impl<T, F, B> FallibleIterator for Map<T, F>
@@ -1516,6 +1406,62 @@ where
         F: FnMut(B, T) -> Result<B, E2>,
     {
         self.0.try_rfold(init, |acc, v| f(acc, v?))
+    }
+}
+
+/// A fallible iterator that wraps a normal iterator over `Result`s.
+#[derive(Clone, Debug)]
+pub struct IntoFallible<I>(I);
+
+impl<T, I> FallibleIterator for IntoFallible<I>
+where
+    I: iter::Iterator<Item = T>,
+{
+    type Item = T;
+    type Error = Infallible;
+
+    #[inline]
+    fn next(&mut self) -> Result<Option<T>, Self::Error> {
+        Ok(self.0.next())
+    }
+
+    #[inline]
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.0.size_hint()
+    }
+
+    #[inline]
+    fn try_fold<B, E2, F>(&mut self, init: B, f: F) -> Result<B, E2>
+    where
+        E2: From<Infallible>,
+        F: FnMut(B, T) -> Result<B, E2>,
+    {
+        self.0.try_fold(init, f)
+    }
+}
+
+impl<T, I: iter::Iterator<Item = T>> From<I> for IntoFallible<I> {
+    fn from(value: I) -> Self {
+        Self(value)
+    }
+}
+
+impl<T, I> DoubleEndedFallibleIterator for IntoFallible<I>
+where
+    I: DoubleEndedIterator<Item = T>,
+{
+    #[inline]
+    fn next_back(&mut self) -> Result<Option<T>, Infallible> {
+        Ok(self.0.next_back())
+    }
+
+    #[inline]
+    fn try_rfold<B, E2, F>(&mut self, init: B, f: F) -> Result<B, E2>
+    where
+        E2: From<Infallible>,
+        F: FnMut(B, T) -> Result<B, E2>,
+    {
+        self.0.try_rfold(init, f)
     }
 }
 
@@ -1888,6 +1834,52 @@ where
     }
 }
 
+/// Creates an iterator from a fallible function generating values.
+///
+/// ```
+/// # use fallible_iterator::{from_fn, FallibleIterator};
+/// let mut count = 0;
+/// let counter = from_fn(move || {
+///     // Increment our count. This is why we started at zero.
+///     count += 1;
+///
+///     // Check to see if we've finished counting or not.
+///     if count < 6 {
+///         Ok(Some(count))
+///     } else if count < 7 {
+///         Ok(None)
+///     } else {
+///         Err(())
+///     }
+/// });
+/// assert_eq!(&counter.collect::<Vec<_>>().unwrap(), &[1, 2, 3, 4, 5]);
+/// ```
+#[inline]
+pub fn from_fn<I, E, F>(fun: F) -> FromFn<F>
+where
+    F: FnMut() -> Result<Option<I>, E>,
+{
+    FromFn { fun }
+}
+
+/// An iterator using a function to generate new values.
+#[derive(Clone, Debug)]
+pub struct FromFn<F> {
+    fun: F,
+}
+
+impl<I, E, F> FallibleIterator for FromFn<F>
+where
+    F: FnMut() -> Result<Option<I>, E>,
+{
+    type Item = I;
+    type Error = E;
+
+    fn next(&mut self) -> Result<Option<I>, E> {
+        (self.fun)()
+    }
+}
+
 /// An iterator that yields `Ok(None)` forever after the underlying iterator
 /// yields `Ok(None)` once.
 #[derive(Clone, Debug)]
@@ -2198,6 +2190,27 @@ where
         }
 
         Ok(self.next.as_ref())
+    }
+
+    /// Consume and return the next value of this iterator if a condition is true.
+    ///
+    /// If func returns true for the next value of this iterator, consume and return it. Otherwise, return None.
+    #[inline]
+    pub fn next_if(&mut self, f: impl Fn(&I::Item) -> bool) -> Result<Option<I::Item>, I::Error> {
+        match self.peek()? {
+            Some(item) if f(item) => self.next(),
+            _ => Ok(None),
+        }
+    }
+
+    /// Consume and return the next item if it is equal to `expected`.
+    #[inline]
+    pub fn next_if_eq<T>(&mut self, expected: &T) -> Result<Option<I::Item>, I::Error>
+    where
+        T: ?Sized,
+        I::Item: PartialEq<T>,
+    {
+        self.next_if(|found| found == expected)
     }
 }
 
@@ -2603,4 +2616,193 @@ where
     }
 }
 
+/// An iterator that unwraps every element yielded by the underlying
+/// FallibleIterator
+#[derive(Clone, Debug)]
+pub struct Unwrap<T>(T);
+
+impl<T> iter::Iterator for Unwrap<T>
+where
+    T: FallibleIterator,
+    T::Error: core::fmt::Debug,
+{
+    type Item = T::Item;
+
+    #[inline]
+    fn next(&mut self) -> Option<T::Item> {
+        self.0.next().unwrap()
+    }
+
+    #[inline]
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let (_, max) = self.0.size_hint();
+        (0, max)
+    }
+}
+
 fn _is_object_safe(_: &dyn DoubleEndedFallibleIterator<Item = (), Error = ()>) {}
+
+/// An extnsion-trait with set of useful methods to convert [`core::iter::Iterator`]
+/// into [`FallibleIterator`]
+pub trait IteratorExt {
+    /// Convert an iterator of `Result`s into `FallibleIterator` by transposition
+    fn transpose_into_fallible<T, E>(self) -> Convert<Self>
+    where
+        Self: iter::Iterator<Item = Result<T, E>> + Sized;
+
+    /// Convert an iterator of anything into `FallibleIterator` by wrapping
+    /// into `Result<T, Infallible>` where `Infallible` is an error that can never actually
+    /// happen.
+    fn into_fallible<T>(self) -> IntoFallible<Self>
+    where
+        Self: iter::Iterator<Item = T> + Sized;
+}
+
+impl<I> IteratorExt for I
+where
+    I: iter::Iterator,
+{
+    /// Convert an iterator of `Result`s into `FallibleIterator` by transposition
+    fn transpose_into_fallible<T, E>(self) -> Convert<Self>
+    where
+        Self: iter::Iterator<Item = Result<T, E>> + Sized,
+    {
+        Convert(self)
+    }
+
+    /// Convert an iterator of anything into `FallibleIterator` by wrapping
+    /// into `Result<T, Infallible>` where `Infallible` is an error that can never actually
+    /// happen.
+    fn into_fallible<T>(self) -> IntoFallible<Self>
+    where
+        Self: iter::Iterator<Item = T> + Sized,
+    {
+        IntoFallible(self)
+    }
+}
+
+/// An iterator that yields nothing.
+#[derive(Clone, Debug)]
+pub struct Empty<T, E>(PhantomData<T>, PhantomData<E>);
+
+impl<T, E> FallibleIterator for Empty<T, E> {
+    type Item = T;
+    type Error = E;
+
+    #[inline]
+    fn next(&mut self) -> Result<Option<T>, E> {
+        Ok(None)
+    }
+
+    #[inline]
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        (0, Some(0))
+    }
+}
+
+/// Creates an iterator that yields nothing.
+pub fn empty<T, E>() -> Empty<T, E> {
+    Empty(PhantomData, PhantomData)
+}
+
+/// An iterator that yields something exactly once.
+#[derive(Clone, Debug)]
+pub struct Once<T, E>(Option<T>, PhantomData<E>);
+
+/// Creates an iterator that yields an element exactly once.
+pub fn once<T, E>(value: T) -> Once<T, E> {
+    Once(Some(value), PhantomData)
+}
+
+impl<T, E> FallibleIterator for Once<T, E> {
+    type Item = T;
+    type Error = E;
+
+    #[inline]
+    fn next(&mut self) -> Result<Option<Self::Item>, Self::Error> {
+        Ok(self.0.take())
+    }
+
+    #[inline]
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        match self.0 {
+            Some(_) => (1, Some(1)),
+            None => (0, Some(0)),
+        }
+    }
+}
+
+/// An iterator that fails with a predetermined error exactly once.
+#[derive(Clone, Debug)]
+pub struct OnceErr<T, E>(PhantomData<T>, Option<E>);
+
+/// Creates an iterator that fails with a predetermined error exactly once.
+pub fn once_err<T, E>(value: E) -> OnceErr<T, E> {
+    OnceErr(PhantomData, Some(value))
+}
+
+impl<T, E> FallibleIterator for OnceErr<T, E> {
+    type Item = T;
+    type Error = E;
+
+    #[inline]
+    fn next(&mut self) -> Result<Option<Self::Item>, Self::Error> {
+        match self.1.take() {
+            Some(value) => Err(value),
+            None => Ok(None),
+        }
+    }
+
+    #[inline]
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        (0, Some(0))
+    }
+}
+
+/// An iterator that endlessly repeats a single element.
+#[derive(Clone, Debug)]
+pub struct Repeat<T: Clone, E>(T, PhantomData<E>);
+
+/// Creates an iterator that endlessly repeats a single element.
+pub fn repeat<T: Clone, E>(value: T) -> Repeat<T, E> {
+    Repeat(value, PhantomData)
+}
+
+impl<T: Clone, E> FallibleIterator for Repeat<T, E> {
+    type Item = T;
+    type Error = E;
+
+    #[inline]
+    fn next(&mut self) -> Result<Option<Self::Item>, Self::Error> {
+        Ok(Some(self.0.clone()))
+    }
+
+    #[inline]
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        (usize::max_value(), None)
+    }
+}
+
+/// An iterator that endlessly repeats a single error.
+#[derive(Clone, Debug)]
+pub struct RepeatErr<T, E: Clone>(PhantomData<T>, E);
+
+/// Creates an iterator that endlessly repeats a single error.
+pub fn repeat_err<T, E: Clone>(value: E) -> RepeatErr<T, E> {
+    RepeatErr(PhantomData, value)
+}
+
+impl<T, E: Clone> FallibleIterator for RepeatErr<T, E> {
+    type Item = T;
+    type Error = E;
+
+    #[inline]
+    fn next(&mut self) -> Result<Option<Self::Item>, Self::Error> {
+        Err(self.1.clone())
+    }
+
+    #[inline]
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        (0, Some(0))
+    }
+}

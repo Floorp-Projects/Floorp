@@ -656,7 +656,7 @@ unsafe fn free_boxed_hook<F>(p: *mut c_void) {
 
 unsafe fn expect_utf8<'a>(p_str: *const c_char, description: &'static str) -> &'a str {
     expect_optional_utf8(p_str, description)
-        .unwrap_or_else(|| panic!("received empty {}", description))
+        .unwrap_or_else(|| panic!("received empty {description}"))
 }
 
 unsafe fn expect_optional_utf8<'a>(
@@ -667,7 +667,7 @@ unsafe fn expect_optional_utf8<'a>(
         return None;
     }
     std::str::from_utf8(std::ffi::CStr::from_ptr(p_str).to_bytes())
-        .unwrap_or_else(|_| panic!("received non-utf8 string as {}", description))
+        .unwrap_or_else(|_| panic!("received non-utf8 string as {description}"))
         .into()
 }
 
@@ -776,9 +776,10 @@ mod test {
             .unwrap();
 
         let authorizer = move |ctx: AuthContext<'_>| match ctx.action {
-            AuthAction::Read { column_name, .. } if column_name == "private" => {
-                Authorization::Ignore
-            }
+            AuthAction::Read {
+                column_name: "private",
+                ..
+            } => Authorization::Ignore,
             AuthAction::DropTable { .. } => Authorization::Deny,
             AuthAction::Pragma { .. } => panic!("shouldn't be called"),
             _ => Authorization::Allow,

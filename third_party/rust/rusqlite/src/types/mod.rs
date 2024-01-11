@@ -26,7 +26,8 @@
 //! [`ToSql`] always succeeds except when storing a `u64` or `usize` value that
 //! cannot fit in an `INTEGER` (`i64`). Also note that SQLite ignores column
 //! types, so if you store an `i64` in a column with type `REAL` it will be
-//! stored as an `INTEGER`, not a `REAL`.
+//! stored as an `INTEGER`, not a `REAL` (unless the column is part of a
+//! [STRICT table](https://www.sqlite.org/stricttables.html)).
 //!
 //! If the `time` feature is enabled, implementations are
 //! provided for `time::OffsetDateTime` that use the RFC 3339 date/time format,
@@ -210,10 +211,10 @@ mod test {
     fn test_option() -> Result<()> {
         let db = checked_memory_handle()?;
 
-        let s = Some("hello, world!");
+        let s = "hello, world!";
         let b = Some(vec![1u8, 2, 3, 4]);
 
-        db.execute("INSERT INTO foo(t) VALUES (?1)", [&s])?;
+        db.execute("INSERT INTO foo(t) VALUES (?1)", [Some(s)])?;
         db.execute("INSERT INTO foo(b) VALUES (?1)", [&b])?;
 
         let mut stmt = db.prepare("SELECT t, b FROM foo ORDER BY ROWID ASC")?;
@@ -223,7 +224,7 @@ mod test {
             let row1 = rows.next()?.unwrap();
             let s1: Option<String> = row1.get_unwrap(0);
             let b1: Option<Vec<u8>> = row1.get_unwrap(1);
-            assert_eq!(s.unwrap(), s1.unwrap());
+            assert_eq!(s, s1.unwrap());
             assert!(b1.is_none());
         }
 
@@ -352,7 +353,7 @@ mod test {
         assert_eq!(Value::Integer(1), row.get::<_, Value>(2)?);
         match row.get::<_, Value>(3)? {
             Value::Real(val) => assert!((1.5 - val).abs() < f64::EPSILON),
-            x => panic!("Invalid Value {:?}", x),
+            x => panic!("Invalid Value {x:?}"),
         }
         assert_eq!(Value::Null, row.get::<_, Value>(4)?);
         Ok(())

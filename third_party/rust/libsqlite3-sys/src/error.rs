@@ -132,6 +132,8 @@ const SQLITE_IOERR_BEGIN_ATOMIC: c_int = super::SQLITE_IOERR | (29 << 8);
 const SQLITE_IOERR_COMMIT_ATOMIC: c_int = super::SQLITE_IOERR | (30 << 8);
 const SQLITE_IOERR_ROLLBACK_ATOMIC: c_int = super::SQLITE_IOERR | (31 << 8);
 const SQLITE_IOERR_DATA: c_int = super::SQLITE_IOERR | (32 << 8);
+const SQLITE_IOERR_CORRUPTFS: c_int = super::SQLITE_IOERR | (33 << 8);
+const SQLITE_IOERR_IN_PAGE: c_int = super::SQLITE_IOERR | (34 << 8);
 
 const SQLITE_LOCKED_VTAB: c_int = super::SQLITE_LOCKED | (2 << 8);
 
@@ -219,6 +221,8 @@ pub fn code_to_str(code: c_int) -> &'static str {
         SQLITE_IOERR_COMMIT_ATOMIC     => "SQLITE_IOERR_COMMIT_ATOMIC",
         SQLITE_IOERR_ROLLBACK_ATOMIC   => "SQLITE_IOERR_ROLLBACK_ATOMIC",
         SQLITE_IOERR_DATA   => "SQLITE_IOERR_DATA",
+        SQLITE_IOERR_CORRUPTFS   => "SQLITE_IOERR_CORRUPTFS",
+        SQLITE_IOERR_IN_PAGE   => "SQLITE_IOERR_IN_PAGE",
 
         super::SQLITE_LOCKED_SHAREDCACHE      => "Locking conflict due to another connection with a shared cache",
         SQLITE_LOCKED_VTAB             => "SQLITE_LOCKED_VTAB",
@@ -269,3 +273,32 @@ pub fn code_to_str(code: c_int) -> &'static str {
         _ => "Unknown error code",
     }
 }
+
+/// Loadable extension initialization error
+#[cfg(feature = "loadable_extension")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[non_exhaustive]
+pub enum InitError {
+    /// Version mismatch between the extension and the SQLite3 library
+    VersionMismatch { compile_time: i32, runtime: i32 },
+    /// Invalid function pointer in one of sqlite3_api_routines fields
+    NullFunctionPointer,
+}
+#[cfg(feature = "loadable_extension")]
+impl ::std::fmt::Display for InitError {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+        match *self {
+            InitError::VersionMismatch {
+                compile_time,
+                runtime,
+            } => {
+                write!(f, "SQLite version mismatch: {runtime} < {compile_time}")
+            }
+            InitError::NullFunctionPointer => {
+                write!(f, "Some sqlite3_api_routines fields are null")
+            }
+        }
+    }
+}
+#[cfg(feature = "loadable_extension")]
+impl error::Error for InitError {}

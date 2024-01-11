@@ -7,6 +7,12 @@ use std::marker::PhantomData;
 use std::os::raw::{c_char, c_int};
 use std::ptr::NonNull;
 
+// Space to hold this string must be obtained
+// from an SQLite memory allocation function
+pub(crate) fn alloc(s: &str) -> *mut c_char {
+    SqliteMallocString::from_str(s).into_raw()
+}
+
 /// A string we own that's allocated on the SQLite heap. Automatically calls
 /// `sqlite3_free` when dropped, unless `into_raw` (or `into_inner`) is called
 /// on it. If constructed from a rust string, `sqlite3_malloc` is used.
@@ -100,7 +106,6 @@ impl SqliteMallocString {
     /// This means it's safe to use in extern "C" functions even outside of
     /// `catch_unwind`.
     pub(crate) fn from_str(s: &str) -> Self {
-        use std::convert::TryFrom;
         let s = if s.as_bytes().contains(&0) {
             std::borrow::Cow::Owned(make_nonnull(s))
         } else {

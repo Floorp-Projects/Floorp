@@ -6,4 +6,4 @@ pub(crate) use small_cstr::SmallCString;
 
 // Doesn't use any modern features or vtab stuff, but is only used by them.
 mod sqlite_string;
-pub(crate) use sqlite_string::SqliteMallocString;
+pub(crate) use sqlite_string::{alloc, SqliteMallocString};

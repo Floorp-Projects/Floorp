@@ -61,6 +61,13 @@ pub enum DbConfig {
     /// sqlite_master tables) are untainted by malicious content.
     #[cfg(feature = "modern_sqlite")]
     SQLITE_DBCONFIG_TRUSTED_SCHEMA = 1017, // 3.31.0
+    /// Sets or clears a flag that enables collection of the
+    /// sqlite3_stmt_scanstatus_v2() statistics
+    #[cfg(feature = "modern_sqlite")]
+    SQLITE_DBCONFIG_STMT_SCANSTATUS = 1018, // 3.42.0
+    /// Changes the default order in which tables and indexes are scanned
+    #[cfg(feature = "modern_sqlite")]
+    SQLITE_DBCONFIG_REVERSE_SCANORDER = 1019, // 3.42.0
 }
 
 impl Connection {

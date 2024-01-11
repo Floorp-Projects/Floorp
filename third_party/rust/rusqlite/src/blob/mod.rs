@@ -274,7 +274,6 @@ impl Blob<'_> {
     #[inline]
     #[must_use]
     pub fn len(&self) -> usize {
-        use std::convert::TryInto;
         self.size().try_into().unwrap()
     }
 

@@ -53,7 +53,7 @@ resolver = "2"
 # Shared across multiple UniFFI consumers.
 uniffi = "0.25.3"
 # Shared across multiple application-services consumers.
-rusqlite = "0.29.0"
+rusqlite = "0.30.0"
 
 # Explicitly specify what our profiles use.  The opt-level setting here is
 # a total fiction; see the setup of MOZ_RUST_DEFAULT_FLAGS for what the
@@ -204,13 +204,13 @@ warp = { git = "https://github.com/seanmonstar/warp", rev = "9d081461ae1167eb321
 malloc_size_of_derive = { path = "xpcom/rust/malloc_size_of_derive" }
 
 # application-services overrides to make updating them all simpler.
-interrupt-support = { git = "https://github.com/mozilla/application-services", rev = "57ecda94fae3226cf67b3e12ce7d6b504e0e2417" }
-sql-support = { git = "https://github.com/mozilla/application-services", rev = "57ecda94fae3226cf67b3e12ce7d6b504e0e2417" }
-suggest = { git = "https://github.com/mozilla/application-services", rev = "57ecda94fae3226cf67b3e12ce7d6b504e0e2417" }
-sync15 = { git = "https://github.com/mozilla/application-services", rev = "57ecda94fae3226cf67b3e12ce7d6b504e0e2417" }
-tabs = { git = "https://github.com/mozilla/application-services", rev = "57ecda94fae3226cf67b3e12ce7d6b504e0e2417" }
-viaduct = { git = "https://github.com/mozilla/application-services", rev = "57ecda94fae3226cf67b3e12ce7d6b504e0e2417" }
-webext-storage = { git = "https://github.com/mozilla/application-services", rev = "57ecda94fae3226cf67b3e12ce7d6b504e0e2417" }
+interrupt-support = { git = "https://github.com/mozilla/application-services", rev = "c1e935d9d1d68e2bee323a236e62165ab1bbb2da" }
+sql-support = { git = "https://github.com/mozilla/application-services", rev = "c1e935d9d1d68e2bee323a236e62165ab1bbb2da" }
+suggest = { git = "https://github.com/mozilla/application-services", rev = "c1e935d9d1d68e2bee323a236e62165ab1bbb2da" }
+sync15 = { git = "https://github.com/mozilla/application-services", rev = "c1e935d9d1d68e2bee323a236e62165ab1bbb2da" }
+tabs = { git = "https://github.com/mozilla/application-services", rev = "c1e935d9d1d68e2bee323a236e62165ab1bbb2da" }
+viaduct = { git = "https://github.com/mozilla/application-services", rev = "c1e935d9d1d68e2bee323a236e62165ab1bbb2da" }
+webext-storage = { git = "https://github.com/mozilla/application-services", rev = "c1e935d9d1d68e2bee323a236e62165ab1bbb2da" }
 
 # Patch mio 0.6 to use winapi 0.3 and miow 0.3, getting rid of winapi 0.2.
 # There is not going to be new version of mio 0.6, mio now being >= 0.7.11.

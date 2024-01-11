@@ -10,9 +10,9 @@
 # See Cargo.toml.orig for the original contents.
 
 [package]
-edition = "2018"
+edition = "2021"
 name = "libsqlite3-sys"
-version = "0.26.0"
+version = "0.27.0"
 authors = ["The rusqlite developers"]
 build = "build.rs"
 links = "sqlite3"
@@ -32,7 +32,7 @@ version = "0.9"
 optional = true
 
 [build-dependencies.bindgen]
-version = "0.64"
+version = "0.69"
 features = ["runtime"]
 optional = true
 default-features = false
@@ -43,6 +43,24 @@ optional = true
 
 [build-dependencies.pkg-config]
 version = "0.3.19"
+optional = true
+
+[build-dependencies.prettyplease]
+version = "0.2"
+optional = true
+
+[build-dependencies.quote]
+version = "1"
+optional = true
+default-features = false
+
+[build-dependencies.syn]
+version = "2.0"
+features = [
+    "full",
+    "extra-traits",
+    "visit-mut",
+]
 optional = true
 
 [build-dependencies.vcpkg]
@@ -71,6 +89,11 @@ bundled-windows = [
 bundled_bindings = []
 default = ["min_sqlite_version_3_14_0"]
 in_gecko = []
+loadable_extension = [
+    "prettyplease",
+    "quote",
+    "syn",
+]
 min_sqlite_version_3_14_0 = [
     "pkg-config",
     "vcpkg",
