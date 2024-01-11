@@ -8942,18 +8942,6 @@
     "keyed": true,
     "description": "How long it took to import logins (passwords) from another browser, keyed by the name of the browser. The time for users to unlock Keychain on macOS is included in this time."
   },
-  "PWMGR_IMPORT_LOGINS_FROM_FILE_MS": {
-    "record_in_processes": ["main"],
-    "products": ["firefox"],
-    "bug_numbers": [1688653, 1749882, 1777397, 1850888],
-    "alert_emails": ["passwords-dev@mozilla.org"],
-    "expires_in_version": "124",
-    "kind": "exponential",
-    "n_buckets": 70,
-    "high": 100000,
-    "releaseChannelCollection": "opt-out",
-    "description": "How long it took to import logins (passwords) from a CSV/TSV file. The time for users to unlock Keychain on macOS is included in this time."
-  },
   "FX_MIGRATION_BOOKMARKS_JANK_MS": {
     "record_in_processes": ["main"],
     "products": ["firefox"],

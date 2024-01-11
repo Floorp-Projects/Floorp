@@ -118,96 +118,82 @@ export class LoginCSVImport {
    * @returns {Object[]} An array of rows where each is mapped to a row in the CSV and it's import information.
    */
   static async importFromCSV(filePath) {
-    TelemetryStopwatch.start("PWMGR_IMPORT_LOGINS_FROM_FILE_MS");
-    try {
-      let csvColumnToFieldMap = LoginCSVImport._getCSVColumnToFieldMap();
-      let csvFieldToColumnMap = new Map();
+    let csvColumnToFieldMap = LoginCSVImport._getCSVColumnToFieldMap();
+    let csvFieldToColumnMap = new Map();
 
-      let csvString;
-      try {
-        csvString = await IOUtils.readUTF8(filePath, { encoding: "utf-8" });
-      } catch (ex) {
-        console.error(ex);
-        throw new ImportFailedException(
-          ImportFailedErrorType.FILE_PERMISSIONS_ERROR
+    let csvString;
+    try {
+      csvString = await IOUtils.readUTF8(filePath, { encoding: "utf-8" });
+    } catch (ex) {
+      console.error(ex);
+      throw new ImportFailedException(
+        ImportFailedErrorType.FILE_PERMISSIONS_ERROR
+      );
+    }
+    let headerLine;
+    let parsedLines;
+    try {
+      let delimiter = filePath.toUpperCase().endsWith(".CSV") ? "," : "\t";
+      [headerLine, parsedLines] = lazy.CSV.parse(csvString, delimiter);
+    } catch {
+      throw new ImportFailedException(ImportFailedErrorType.FILE_FORMAT_ERROR);
+    }
+    if (parsedLines && headerLine) {
+      for (const columnName of headerLine) {
+        const fieldName = csvColumnToFieldMap.get(
+          columnName.toLocaleLowerCase()
         );
-      }
-      let headerLine;
-      let parsedLines;
-      try {
-        let delimiter = filePath.toUpperCase().endsWith(".CSV") ? "," : "\t";
-        [headerLine, parsedLines] = lazy.CSV.parse(csvString, delimiter);
-      } catch {
-        throw new ImportFailedException(
-          ImportFailedErrorType.FILE_FORMAT_ERROR
-        );
-      }
-      if (parsedLines && headerLine) {
-        for (const columnName of headerLine) {
-          const fieldName = csvColumnToFieldMap.get(
-            columnName.toLocaleLowerCase()
-          );
-          if (fieldName) {
-            if (!csvFieldToColumnMap.has(fieldName)) {
-              csvFieldToColumnMap.set(fieldName, columnName);
-            } else {
-              throw new ImportFailedException(
-                ImportFailedErrorType.CONFLICTING_VALUES_ERROR
-              );
-            }
+        if (fieldName) {
+          if (!csvFieldToColumnMap.has(fieldName)) {
+            csvFieldToColumnMap.set(fieldName, columnName);
+          } else {
+            throw new ImportFailedException(
+              ImportFailedErrorType.CONFLICTING_VALUES_ERROR
+            );
           }
         }
       }
-      if (csvFieldToColumnMap.size === 0) {
-        throw new ImportFailedException(
-          ImportFailedErrorType.FILE_FORMAT_ERROR
-        );
-      }
-      if (
-        parsedLines[0] &&
-        (!csvFieldToColumnMap.has("origin") ||
-          !csvFieldToColumnMap.has("username") ||
-          !csvFieldToColumnMap.has("password"))
-      ) {
-        // The username *value* can be empty but we require a username column to
-        // ensure that we don't import logins without their usernames due to the
-        // username column not being recognized.
-        throw new ImportFailedException(
-          ImportFailedErrorType.FILE_FORMAT_ERROR
-        );
-      }
+    }
+    if (csvFieldToColumnMap.size === 0) {
+      throw new ImportFailedException(ImportFailedErrorType.FILE_FORMAT_ERROR);
+    }
+    if (
+      parsedLines[0] &&
+      (!csvFieldToColumnMap.has("origin") ||
+        !csvFieldToColumnMap.has("username") ||
+        !csvFieldToColumnMap.has("password"))
+    ) {
+      // The username *value* can be empty but we require a username column to
+      // ensure that we don't import logins without their usernames due to the
+      // username column not being recognized.
+      throw new ImportFailedException(ImportFailedErrorType.FILE_FORMAT_ERROR);
+    }
 
-      let loginsToImport = parsedLines.map(csvObject => {
-        return LoginCSVImport._getVanillaLoginFromCSVObject(
-          csvObject,
-          csvColumnToFieldMap
-        );
-      });
+    let loginsToImport = parsedLines.map(csvObject => {
+      return LoginCSVImport._getVanillaLoginFromCSVObject(
+        csvObject,
+        csvColumnToFieldMap
+      );
+    });
 
-      let report = await lazy.LoginHelper.maybeImportLogins(loginsToImport);
+    let report = await lazy.LoginHelper.maybeImportLogins(loginsToImport);
 
-      for (const reportRow of report) {
-        if (reportRow.result === "error_missing_field") {
-          reportRow.field_name = csvFieldToColumnMap.get(reportRow.field_name);
-        }
-      }
-
-      // Record quantity and duration telemetry.
-      try {
-        let histogram = Services.telemetry.getHistogramById(
-          "PWMGR_IMPORT_LOGINS_FROM_FILE_CATEGORICAL"
-        );
-        this._recordHistogramTelemetry(histogram, report);
-        TelemetryStopwatch.finish("PWMGR_IMPORT_LOGINS_FROM_FILE_MS");
-      } catch (ex) {
-        console.error(ex);
-      }
-      LoginCSVImport.lastImportReport = report;
-      return report;
-    } finally {
-      if (TelemetryStopwatch.running("PWMGR_IMPORT_LOGINS_FROM_FILE_MS")) {
-        TelemetryStopwatch.cancel("PWMGR_IMPORT_LOGINS_FROM_FILE_MS");
+    for (const reportRow of report) {
+      if (reportRow.result === "error_missing_field") {
+        reportRow.field_name = csvFieldToColumnMap.get(reportRow.field_name);
       }
     }
+
+    // Record quantity and duration telemetry.
+    try {
+      let histogram = Services.telemetry.getHistogramById(
+        "PWMGR_IMPORT_LOGINS_FROM_FILE_CATEGORICAL"
+      );
+      this._recordHistogramTelemetry(histogram, report);
+    } catch (ex) {
+      console.error(ex);
+    }
+    LoginCSVImport.lastImportReport = report;
+    return report;
   }
 }
