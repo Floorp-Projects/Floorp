@@ -124,8 +124,6 @@ class ResponsiveUIManager {
    */
   async openIfNeeded(window, tab, options = {}) {
     if (!this.isActiveForTab(tab)) {
-      await gDevToolsBrowser.loadBrowserStyleSheet(window);
-
       this.initMenuCheckListenerFor(window);
 
       const ui = new ResponsiveUI(this, window, tab);
@@ -134,6 +132,7 @@ class ResponsiveUIManager {
       // Explicitly not await on telemetry to avoid delaying RDM opening
       this.recordTelemetryOpen(window, tab, options);
 
+      await gDevToolsBrowser.loadBrowserStyleSheet(window);
       await this.setMenuCheckFor(tab, window);
       await ui.inited;
       this.emit("on", { tab });
