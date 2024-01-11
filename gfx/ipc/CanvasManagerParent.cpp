@@ -15,6 +15,8 @@
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/ISurfaceAllocator.h"
 #include "mozilla/layers/SharedSurfacesParent.h"
+#include "mozilla/StaticPrefs_gfx.h"
+#include "mozilla/StaticPrefs_webgl.h"
 #include "mozilla/webgpu/WebGPUParent.h"
 #include "nsIThread.h"
 #include "nsThreadUtils.h"
@@ -130,12 +132,18 @@ void CanvasManagerParent::ActorDestroy(ActorDestroyReason aWhy) {
 }
 
 already_AddRefed<dom::PWebGLParent> CanvasManagerParent::AllocPWebGLParent() {
+  if (NS_WARN_IF(!gfxVars::AllowWebglOop() &&
+                 !StaticPrefs::webgl_out_of_process_force())) {
+    MOZ_ASSERT_UNREACHABLE("AllocPWebGLParent without remote WebGL");
+    return nullptr;
+  }
   return MakeAndAddRef<dom::WebGLParent>(mContentId);
 }
 
 already_AddRefed<webgpu::PWebGPUParent>
 CanvasManagerParent::AllocPWebGPUParent() {
-  if (!gfxVars::AllowWebGPU()) {
+  if (NS_WARN_IF(!gfxVars::AllowWebGPU())) {
+    MOZ_ASSERT_UNREACHABLE("AllocPWebGPUParent without WebGPU");
     return nullptr;
   }
 
@@ -156,7 +164,15 @@ mozilla::ipc::IPCResult CanvasManagerParent::RecvInitialize(
 
 already_AddRefed<layers::PCanvasParent>
 CanvasManagerParent::AllocPCanvasParent() {
-  MOZ_RELEASE_ASSERT(mId != 0);
+  if (NS_WARN_IF(!gfx::gfxVars::RemoteCanvasEnabled() &&
+                 !gfx::gfxVars::UseAcceleratedCanvas2D())) {
+    MOZ_ASSERT_UNREACHABLE("AllocPCanvasParent without remote canvas");
+    return nullptr;
+  }
+  if (NS_WARN_IF(!mId)) {
+    MOZ_ASSERT_UNREACHABLE("AllocPCanvasParent without ID");
+    return nullptr;
+  }
   return MakeAndAddRef<layers::CanvasTranslator>(mSharedSurfacesHolder,
                                                  mContentId, mId);
 }
