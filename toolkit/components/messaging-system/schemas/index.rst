@@ -23,7 +23,6 @@ System handles:
 * `Update Action <update_action_schema_>`_
 * `Whats New <whats_new_schema_>`_
 * `Private Browsing Newtab Promo Message <pbnewtab_promo_schema_>`_
-* `Protections Panel <protections_panel_schema_>`_
 
 Together, they are combined into the `Messaging Experiments
 <messaging_experiments_schema_>`_ via a `script <make_schemas_script_>`_. This
