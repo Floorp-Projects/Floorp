@@ -1422,13 +1422,12 @@ class BrowsingContextModule extends Module {
           shouldWaitForNavigationRequest = true;
         }
       };
-      const onNetworkRequestCompleted = (name, data) => {
+      const onResponseCompleted = (name, data) => {
         if (data.navigation) {
           resolveOnNetworkEvent();
         }
       };
 
-      // The network request can either end with _responseCompleted or _fetchError
       await this.messageHandler.eventsDispatcher.on(
         "network._beforeRequestSent",
         contextDescriptor,
@@ -1437,12 +1436,7 @@ class BrowsingContextModule extends Module {
       await this.messageHandler.eventsDispatcher.on(
         "network._responseCompleted",
         contextDescriptor,
-        onNetworkRequestCompleted
-      );
-      await this.messageHandler.eventsDispatcher.on(
-        "network._fetchError",
-        contextDescriptor,
-        onNetworkRequestCompleted
+        onResponseCompleted
       );
 
       unsubscribeNavigationListeners = async () => {
@@ -1451,15 +1445,11 @@ class BrowsingContextModule extends Module {
           contextDescriptor,
           onBeforeRequestSent
         );
+
         await this.messageHandler.eventsDispatcher.off(
           "network._responseCompleted",
           contextDescriptor,
-          onNetworkRequestCompleted
-        );
-        await this.messageHandler.eventsDispatcher.off(
-          "network._fetchError",
-          contextDescriptor,
-          onNetworkRequestCompleted
+          onResponseCompleted
         );
       };
     }
