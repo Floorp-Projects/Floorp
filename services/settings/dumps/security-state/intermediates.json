@@ -1,6 +1,42 @@
 {
   "data": [
     {
+      "schema": 1704923284170,
+      "derHash": "u2FAiu2fUwsuwFReU7osjr6qV9mXZEfbFmPO1GAM1rc=",
+      "subject": "CN=UCA Global G2 Root,O=UniTrust,C=CN",
+      "subjectDN": "MD0xCzAJBgNVBAYTAkNOMREwDwYDVQQKDAhVbmlUcnVzdDEbMBkGA1UEAwwSVUNBIEdsb2JhbCBHMiBSb290",
+      "whitelist": false,
+      "attachment": {
+        "hash": "8693b94fe853c85475023fa8be1792fd1f0f41c726cf590ac632829608d32dc3",
+        "size": 2036,
+        "filename": "ElXKvoFS-mTflC96R0F-KflsHOEb-MhOy-KBXMEoCBA=.pem",
+        "location": "security-state-staging/intermediates/f56c76d7-ae95-4ac4-9562-15e370ee8355.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "ElXKvoFS+mTflC96R0F+KflsHOEb+MhOy+KBXMEoCBA=",
+      "crlite_enrolled": false,
+      "id": "8a3e5d82-5ae8-4e51-a5db-6b86500b155e",
+      "last_modified": 1704923823508
+    },
+    {
+      "schema": 1704923283383,
+      "derHash": "v6lcXfFktln6MvbRBWTXFw3eZhqFOnguarY2OUM7y0E=",
+      "subject": "CN=UCA Global G2 Root,O=UniTrust,C=CN",
+      "subjectDN": "MD0xCzAJBgNVBAYTAkNOMREwDwYDVQQKDAhVbmlUcnVzdDEbMBkGA1UEAwwSVUNBIEdsb2JhbCBHMiBSb290",
+      "whitelist": false,
+      "attachment": {
+        "hash": "5ceff937d1bce8a64fe718857c73f61b29830a24d45ac36cee4de5abec869491",
+        "size": 2040,
+        "filename": "ElXKvoFS-mTflC96R0F-KflsHOEb-MhOy-KBXMEoCBA=.pem",
+        "location": "security-state-staging/intermediates/7cd0dd1c-50ff-4045-8d42-130c062d2dff.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "ElXKvoFS+mTflC96R0F+KflsHOEb+MhOy+KBXMEoCBA=",
+      "crlite_enrolled": false,
+      "id": "2c1748b7-38bf-4495-91ea-1bd4dc918672",
+      "last_modified": 1704923823505
+    },
+    {
       "schema": 1704469686367,
       "derHash": "5LKgc2+VlQ0RuCyebDIDHhQg4GpmST5mXxKK5JlJj6s=",
       "subject": "CN=LH.pl CA,O=LH.pl Sp. z o.o.,C=PL",
@@ -29647,5 +29683,5 @@
       "last_modified": 1559865884636
     }
   ],
-  "timestamp": 1704470223072
+  "timestamp": 1704923823508
 }
