@@ -128,6 +128,14 @@ label:not([hidden]) {
   text-transform: uppercase;
 }
 
+/**
+ * When the panel-list is embedded in a XUL panel, we don't want the default
+ * padding that a XUL panel gets.
+ */
+panel {
+  --panel-padding: 0;
+}
+
 panel-item::part(button) {
   min-height: 40px;
 }
