@@ -748,7 +748,7 @@ add_bookmark_test(async function test_misreconciled_root(engine) {
 
   _("Applying record.");
   let countTelemetry = new SyncedRecordsTelemetry();
-  store.applyIncomingBatch([rec], countTelemetry);
+  await store.applyIncomingBatch([rec], countTelemetry);
 
   // Ensure that afterwards, toolbar is still there.
   // As of 2012-12-05, this only passes because Places doesn't use "toolbar" as
@@ -764,6 +764,49 @@ add_bookmark_test(async function test_misreconciled_root(engine) {
   );
   Assert.equal(parentGUIDBefore, parentGUIDAfter);
   Assert.equal(parentIDBefore, parentIDAfter);
+
+  await cleanup(engine, server);
+});
+
+add_bookmark_test(async function test_invalid_url(engine) {
+  _("Ensure an incoming invalid bookmark URL causes an outgoing tombstone.");
+
+  let server = await serverForFoo(engine);
+  let collection = server.user("foo").collection("bookmarks");
+
+  await SyncTestingInfrastructure(server);
+  await engine._syncStartup();
+
+  // check the URL really is invalid.
+  let url = "https://www.42registry.42/";
+  Assert.throws(() => Services.io.newURI(url), /invalid/);
+
+  let guid = "abcdefabcdef";
+
+  let toolbar = new BookmarkFolder("bookmarks", "toolbar");
+  toolbar.title = "toolbar";
+  toolbar.parentName = "";
+  toolbar.parentid = "places";
+  toolbar.children = [guid];
+  collection.insert("toolbar", encryptPayload(toolbar.cleartext));
+
+  let item1 = new Bookmark("bookmarks", guid);
+  item1.bmkUri = "https://www.42registry.42/";
+  item1.title = "invalid url";
+  item1.parentName = "Bookmarks Toolbar";
+  item1.parentid = "toolbar";
+  item1.dateAdded = 1234;
+  collection.insert(guid, encryptPayload(item1.cleartext));
+
+  _("syncing.");
+  await sync_engine_and_validate_telem(engine, false);
+
+  // We should find the record now exists on the server as a tombstone.
+  let updated = collection.cleartext(guid);
+  Assert.ok(updated.deleted, "record was deleted");
+
+  let local = await PlacesUtils.bookmarks.fetch(guid);
+  Assert.deepEqual(local, null, "no local bookmark exists");
 
   await cleanup(engine, server);
 });
