@@ -784,6 +784,7 @@
         const animations = Array.from(
           aTab.container.getElementsByTagName("tab")
         )
+          .filter(tab => tab.hasAttribute("busy"))
           .map(tab => {
             const throbber = tab.throbber;
             return throbber ? throbber.getAnimations({ subtree: true }) : [];
