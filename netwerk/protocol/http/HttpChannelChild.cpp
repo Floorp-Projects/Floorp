@@ -816,6 +816,11 @@ void HttpChannelChild::DoOnDataAvailable(nsIRequest* aRequest,
 
 void HttpChannelChild::SendOnDataFinished(const nsresult& aChannelStatus) {
   LOG(("HttpChannelChild::SendOnDataFinished [this=%p]\n", this));
+  if (MOZ_UNLIKELY(NS_IsMainThread())) {
+    MOZ_ASSERT(false, "SendOnDataFinished should not be called on main thread");
+    return;
+  }
+
   if (mCanceled) return;
 
   // we need to ensure we OnDataFinished only after all the progress
@@ -893,7 +898,8 @@ void HttpChannelChild::ProcessOnStopRequest(
 
   RefPtr<RecordStopRequestDelta> timing;
   TimeStamp start = TimeStamp::Now();
-  if (StaticPrefs::network_send_OnDataFinished()) {
+  if (StaticPrefs::network_send_OnDataFinished() &&
+      mOMTResult == LABELS_HTTP_CHILD_OMT_STATS::success) {
     timing = new RecordStopRequestDelta;
     mEventQ->RunOrEnqueue(new ChannelFunctionEvent(
         [self = UnsafePtr<HttpChannelChild>(this)]() {
@@ -1166,7 +1172,8 @@ void HttpChannelChild::CollectOMTTelemetry() {
   nsAutoCString key(
       NS_CP_ContentTypeName(mLoadInfo->InternalContentPolicyType()));
 
-  Telemetry::AccumulateCategoricalKeyed(key, mOMTResult);
+  Telemetry::AccumulateCategoricalKeyed(
+      key, static_cast<LABELS_HTTP_CHILD_OMT_STATS>(mOMTResult));
 }
 
 void HttpChannelChild::CollectMixedContentTelemetry() {
