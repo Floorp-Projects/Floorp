@@ -592,7 +592,11 @@ export var ScreenshotsUtils = {
     let anchor = widget?.anchor;
 
     // Check if the anchor exists and is visible
-    if (!anchor || !window.isElementVisible(anchor.parentNode)) {
+    if (
+      !anchor ||
+      !anchor.isConnected ||
+      !window.isElementVisible(anchor.parentNode)
+    ) {
       anchor = browser.ownerDocument.getElementById("navigator-toolbox");
     }
     return anchor;
