@@ -137,53 +137,40 @@ CodeOffset MacroAssembler::call(const wasm::CallSiteDesc& desc,
 // ABI function calls.
 
 void MacroAssembler::passABIArg(Register reg) {
-  passABIArg(MoveOperand(reg), MoveOp::GENERAL);
+  passABIArg(MoveOperand(reg), ABIType::General);
 }
 
-void MacroAssembler::passABIArg(FloatRegister reg, MoveOp::Type type) {
+void MacroAssembler::passABIArg(FloatRegister reg, ABIType type) {
   passABIArg(MoveOperand(reg), type);
 }
 
-void MacroAssembler::callWithABI(DynFn fun, MoveOp::Type result,
+void MacroAssembler::callWithABI(DynFn fun, ABIType result,
                                  CheckUnsafeCallWithABI check) {
   AutoProfilerCallInstrumentation profiler(*this);
   callWithABINoProfiler(fun.address, result, check);
 }
 
 template <typename Sig, Sig fun>
-void MacroAssembler::callWithABI(MoveOp::Type result,
-                                 CheckUnsafeCallWithABI check) {
+void MacroAssembler::callWithABI(ABIType result, CheckUnsafeCallWithABI check) {
   ABIFunction<Sig, fun> abiFun;
   AutoProfilerCallInstrumentation profiler(*this);
   callWithABINoProfiler(abiFun.address(), result, check);
 }
 
-void MacroAssembler::callWithABI(Register fun, MoveOp::Type result) {
+void MacroAssembler::callWithABI(Register fun, ABIType result) {
   AutoProfilerCallInstrumentation profiler(*this);
   callWithABINoProfiler(fun, result);
 }
 
-void MacroAssembler::callWithABI(const Address& fun, MoveOp::Type result) {
+void MacroAssembler::callWithABI(const Address& fun, ABIType result) {
   AutoProfilerCallInstrumentation profiler(*this);
   callWithABINoProfiler(fun, result);
 }
 
-void MacroAssembler::appendSignatureType(MoveOp::Type type) {
+void MacroAssembler::appendSignatureType(ABIType type) {
 #ifdef JS_SIMULATOR
   signature_ <<= ABITypeArgShift;
-  switch (type) {
-    case MoveOp::GENERAL:
-      signature_ |= uint32_t(ABIType::General);
-      break;
-    case MoveOp::DOUBLE:
-      signature_ |= uint32_t(ABIType::Float64);
-      break;
-    case MoveOp::FLOAT32:
-      signature_ |= uint32_t(ABIType::Float32);
-      break;
-    default:
-      MOZ_CRASH("Invalid argument type");
-  }
+  signature_ |= uint32_t(type);
 #endif
 }
 

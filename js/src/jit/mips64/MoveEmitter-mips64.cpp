@@ -30,7 +30,7 @@ void MoveEmitterMIPS64::breakCycle(const MoveOperand& from,
         masm.storeFloat32(to.floatReg(), cycleSlot(slotId));
       }
       break;
-    case MoveOp::DOUBLE:
+    case ABIType::Float64:
       if (to.isMemory()) {
         FloatRegister temp = ScratchDoubleReg;
         masm.loadDouble(getAdjustedAddress(to), temp);
@@ -85,7 +85,7 @@ void MoveEmitterMIPS64::completeCycle(const MoveOperand& from,
         masm.loadFloat32(cycleSlot(slotId), to.floatReg());
       }
       break;
-    case MoveOp::DOUBLE:
+    case ABIType::Float64:
       if (to.isMemory()) {
         FloatRegister temp = ScratchDoubleReg;
         masm.loadDouble(cycleSlot(slotId), temp);
