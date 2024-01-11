@@ -206,4 +206,12 @@ void GeckoMVMContext::Reflow(const CSSSize& aNewSize) {
   }
 }
 
+ScreenIntCoord GeckoMVMContext::GetDynamicToolbarOffset() {
+  const nsPresContext* presContext = mPresShell->GetPresContext();
+  return presContext->HasDynamicToolbar()
+             ? presContext->GetDynamicToolbarMaxHeight() -
+                   presContext->GetDynamicToolbarHeight()
+             : ScreenIntCoord(0);
+}
+
 }  // namespace mozilla

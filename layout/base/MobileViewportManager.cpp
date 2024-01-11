@@ -518,6 +518,8 @@ void MobileViewportManager::UpdateVisualViewportSize(
   CSSSize compSize = compositionSize / aZoom;
   MVM_LOG("%p: Setting VVPS %s\n", this, ToString(compSize).c_str());
   mContext->SetVisualViewportSize(compSize);
+
+  UpdateVisualViewportSizeByDynamicToolbar(mContext->GetDynamicToolbarOffset());
 }
 
 CSSToScreenScale MobileViewportManager::GetZoom() const {
@@ -534,11 +536,14 @@ void MobileViewportManager::UpdateVisualViewportSizeByDynamicToolbar(
   ScreenIntSize displaySize = ViewAs<ScreenPixel>(
       mDisplaySize, PixelCastJustification::LayoutDeviceIsScreenForBounds);
   displaySize.height += aToolbarHeight;
-  CSSSize compSize = ScreenSize(GetCompositionSize(displaySize)) / GetZoom();
+  nsSize compSize = CSSSize::ToAppUnits(
+      ScreenSize(GetCompositionSize(displaySize)) / GetZoom());
 
-  mVisualViewportSizeUpdatedByDynamicToolbar =
-      nsSize(nsPresContext::CSSPixelsToAppUnits(compSize.width),
-             nsPresContext::CSSPixelsToAppUnits(compSize.height));
+  if (mVisualViewportSizeUpdatedByDynamicToolbar == compSize) {
+    return;
+  }
+
+  mVisualViewportSizeUpdatedByDynamicToolbar = compSize;
 
   mContext->PostVisualViewportResizeEventByDynamicToolbar();
 }
