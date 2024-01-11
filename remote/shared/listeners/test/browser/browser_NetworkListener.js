@@ -78,6 +78,22 @@ add_task(async function test_beforeRequestSent_newTab() {
   gBrowser.removeTab(tab);
 });
 
+add_task(async function test_fetchError() {
+  const listener = new NetworkListener();
+  const onFetchError = listener.once("fetch-error");
+  listener.startListening();
+
+  info("Check fetchError event when loading a new tab");
+  const tab = BrowserTestUtils.addTab(gBrowser, "https://not_a_valid_url/");
+  BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+  const contextId = TabManager.getIdForBrowser(tab.linkedBrowser);
+  const event = await onFetchError;
+
+  assertNetworkEvent(event, contextId, "https://not_a_valid_url/");
+  is(event.errorText, "NS_ERROR_UNKNOWN_HOST");
+  gBrowser.removeTab(tab);
+});
+
 function assertNetworkEvent(event, expectedContextId, expectedUrl) {
   is(event.contextId, expectedContextId, "Event has the expected context id");
   is(event.requestData.url, expectedUrl, "Event has the expected url");
