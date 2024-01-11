@@ -32,7 +32,7 @@ def run_telemetry(tests, binary=None, topsrcdir=None, **kwargs):
         tests = [
             os.path.join(
                 topsrcdir,
-                "toolkit/components/telemetry/tests/marionette/tests/manifest.ini",
+                "toolkit/components/telemetry/tests/marionette/tests/manifest.toml",
             )
         ]
 
