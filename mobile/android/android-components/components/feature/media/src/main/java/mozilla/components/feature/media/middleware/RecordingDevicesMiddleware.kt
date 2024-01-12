@@ -36,7 +36,7 @@ private const val NOTIFICATION_ID = 1
 private const val PENDING_INTENT_TAG = "mozac.feature.media.pendingintent"
 private const val ACTION_RECORDING_DEVICES_NOTIFICATION_DISMISSED =
     "mozac.feature.media.recordingDevices.notificationDismissed"
-private const val NOTIFICATION_REMINDER_DELAY_MS = 5 * 1000L
+private const val NOTIFICATION_REMINDER_DELAY_MS = 5 * 60 * 1000L // 5 minutes
 
 /**
  * Middleware for displaying an ongoing notification while recording devices (camera, microphone)
