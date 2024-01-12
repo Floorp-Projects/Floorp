@@ -153,6 +153,13 @@ class CanvasChild final : public PCanvasChild, public SupportsWeakPtr {
   void ReturnDataSurfaceShmem(
       already_AddRefed<ipc::SharedMemoryBasic> aDataSurfaceShmem);
 
+  struct DataShmemHolder {
+    RefPtr<ipc::SharedMemoryBasic> shmem;
+    RefPtr<CanvasChild> canvasChild;
+  };
+
+  static void ReleaseDataShmemHolder(void* aClosure);
+
   void DropFreeBuffersWhenDormant();
 
   static const uint32_t kCacheDataSurfaceThreshold = 10;
