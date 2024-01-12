@@ -51,6 +51,8 @@ class nsWaylandDisplay {
   wp_fractional_scale_manager_v1* GetFractionalScaleManager() {
     return mFractionalScaleManager;
   }
+  bool IsPrimarySelectionEnabled() { return mIsPrimarySelectionEnabled; }
+
   void SetShm(wl_shm* aShm);
   void SetCompositor(wl_compositor* aCompositor);
   void SetSubcompositor(wl_subcompositor* aSubcompositor);
@@ -65,6 +67,7 @@ class nsWaylandDisplay {
   void SetFractionalScaleManager(wp_fractional_scale_manager_v1* aManager) {
     mFractionalScaleManager = aManager;
   }
+  void EnablePrimarySelection() { mIsPrimarySelectionEnabled = true; }
 
   ~nsWaylandDisplay();
 
@@ -83,6 +86,7 @@ class nsWaylandDisplay {
   xdg_activation_v1* mXdgActivation = nullptr;
   wp_fractional_scale_manager_v1* mFractionalScaleManager = nullptr;
   bool mExplicitSync = false;
+  bool mIsPrimarySelectionEnabled = false;
 };
 
 wl_display* WaylandDisplayGetWLDisplay();
