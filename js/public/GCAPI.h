@@ -14,6 +14,7 @@
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Vector.h"
 
+#include "js/CharacterEncoding.h"  // JS::UTF8Chars
 #include "js/GCAnnotations.h"
 #include "js/shadow/Zone.h"
 #include "js/SliceBudget.h"
@@ -1270,6 +1271,16 @@ extern JS_PUBLIC_API JSString* JS_NewMaybeExternalStringLatin1(
     const JSExternalStringCallbacks* callbacks, bool* allocatedExternal);
 extern JS_PUBLIC_API JSString* JS_NewMaybeExternalUCString(
     JSContext* cx, const char16_t* chars, size_t length,
+    const JSExternalStringCallbacks* callbacks, bool* allocatedExternal);
+
+/**
+ * Similar to JS_NewMaybeExternalStringLatin1.
+ *
+ * Create an external Latin1 string if the utf8 buffer contains only ASCII
+ * chars, otherwise copy the chars into a non-external string.
+ */
+extern JS_PUBLIC_API JSString* JS_NewMaybeExternalStringUTF8(
+    JSContext* cx, const JS::UTF8Chars& utf8,
     const JSExternalStringCallbacks* callbacks, bool* allocatedExternal);
 
 /**
