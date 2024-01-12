@@ -13,7 +13,8 @@ use crate::properties_and_values::{
     registry::PropertyRegistration,
     value::{AllowComputationallyDependent, SpecifiedValue as SpecifiedRegisteredValue},
 };
-use crate::selector_map::{PrecomputedHashMap, PrecomputedHashSet, PrecomputedHasher};
+use crate::custom_properties_map::CustomPropertiesMap;
+use crate::selector_map::{PrecomputedHashMap, PrecomputedHashSet};
 use crate::stylesheets::UrlExtraData;
 use crate::stylist::Stylist;
 use crate::values::computed;
@@ -21,7 +22,6 @@ use crate::Atom;
 use cssparser::{
     CowRcStr, Delimiter, Parser, ParserInput, SourcePosition, Token, TokenSerializationType,
 };
-use indexmap::IndexMap;
 use selectors::parser::SelectorParseErrorKind;
 use servo_arc::Arc;
 use smallvec::SmallVec;
@@ -29,7 +29,6 @@ use std::borrow::Cow;
 use std::cmp;
 use std::collections::hash_map::Entry;
 use std::fmt::{self, Write};
-use std::hash::BuildHasherDefault;
 use style_traits::{CssWriter, ParseError, StyleParseErrorKind, ToCss};
 
 /// The environment from which to get `env` function values.
@@ -222,90 +221,30 @@ impl ToCss for SpecifiedValue {
     }
 }
 
-/// A map from CSS variable names to CSS variable computed values, used for
-/// resolving.
-///
-/// A consistent ordering is required for CSSDeclaration objects in the
-/// DOM. CSSDeclarations expose property names as indexed properties, which
-/// need to be stable. So we keep an array of property names which order is
-/// determined on the order that they are added to the name-value map.
-///
-/// The variable values are guaranteed to not have references to other
-/// properties.
-pub type CustomPropertiesMap =
-    IndexMap<Name, Arc<VariableValue>, BuildHasherDefault<PrecomputedHasher>>;
-
-// IndexMap equality doesn't consider ordering, which we have to account for.
-// Also, for the same reason, IndexMap equality comparisons are slower than needed.
-//
-// See https://github.com/bluss/indexmap/issues/153
-fn maps_equal(l: Option<&CustomPropertiesMap>, r: Option<&CustomPropertiesMap>) -> bool {
-    let (l, r) = match (l, r) {
-        (Some(l), Some(r)) => (l, r),
-        (None, None) => return true,
-        _ => return false,
-    };
-    if std::ptr::eq(l, r) {
-        return true;
-    }
-    if l.len() != r.len() {
-        return false;
-    }
-    l.iter()
-        .zip(r.iter())
-        .all(|((k1, v1), (k2, v2))| k1 == k2 && v1 == v2)
-}
-
 /// A pair of separate CustomPropertiesMaps, split between custom properties
 /// that have the inherit flag set and those with the flag unset.
 #[repr(C)]
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct ComputedCustomProperties {
     /// Map for custom properties with inherit flag set, including non-registered
-    /// ones. Defined as ref-counted for cheap copy of inherited values.
-    pub inherited: Option<Arc<CustomPropertiesMap>>,
-    /// Map for custom properties with inherit flag unset. Defined as ref-counted
-    /// for cheap copy of initial values.
-    pub non_inherited: Option<Arc<CustomPropertiesMap>>,
-}
-
-impl PartialEq for ComputedCustomProperties {
-    fn eq(&self, other: &Self) -> bool {
-        self.inherited_equal(other) && self.non_inherited_equal(other)
-    }
+    /// ones.
+    pub inherited: CustomPropertiesMap,
+    /// Map for custom properties with inherit flag unset.
+    pub non_inherited: CustomPropertiesMap,
 }
 
 impl ComputedCustomProperties {
     /// Return whether the inherited and non_inherited maps are none.
     pub fn is_empty(&self) -> bool {
-        self.inherited.is_none() && self.non_inherited.is_none()
+        self.inherited.is_empty() && self.non_inherited.is_empty()
     }
 
     /// Return the name and value of the property at specified index, if any.
-    pub fn property_at(&self, index: usize) -> Option<(&Name, &Arc<VariableValue>)> {
-        // Just expose the custom property items from
-        // custom_properties.inherited, followed by custom property items from
-        // custom_properties.non_inherited.
-        // TODO(bug 1855629): In which order should we expose these properties?
-        match (&self.inherited, &self.non_inherited) {
-            (Some(p1), Some(p2)) => p1
-                .get_index(index)
-                .or_else(|| p2.get_index(index - p1.len())),
-            (Some(p1), None) => p1.get_index(index),
-            (None, Some(p2)) => p2.get_index(index),
-            (None, None) => None,
-        }
-    }
-
-    fn inherited_equal(&self, other: &Self) -> bool {
-        maps_equal(self.inherited.as_deref(), other.inherited.as_deref())
-    }
-
-    fn non_inherited_equal(&self, other: &Self) -> bool {
-        maps_equal(
-            self.non_inherited.as_deref(),
-            other.non_inherited.as_deref(),
-        )
+    pub fn property_at(&self, index: usize) -> Option<(&Name, &Option<Arc<VariableValue>>)> {
+        // Just expose the custom property items from custom_properties.inherited, followed
+        // by custom property items from custom_properties.non_inherited.
+        self.inherited.get_index(index)
+            .or_else(|| self.non_inherited.get_index(index - self.inherited.len()))
     }
 
     /// Insert a custom property in the corresponding inherited/non_inherited
@@ -313,9 +252,9 @@ impl ComputedCustomProperties {
     fn insert(
         &mut self,
         registration: Option<&PropertyRegistration>,
-        name: Name,
+        name: &Name,
         value: Arc<VariableValue>,
-    ) -> Option<Arc<VariableValue>> {
+    ) {
         self.map_mut(registration).insert(name, value)
     }
 
@@ -325,47 +264,30 @@ impl ComputedCustomProperties {
         &mut self,
         registration: Option<&PropertyRegistration>,
         name: &Name,
-    ) -> Option<Arc<VariableValue>> {
-        self.map_mut(registration).remove(name)
+    ) {
+        self.map_mut(registration).remove(name);
     }
 
-    /// Shrink the capacity of the inherited maps as much as possible. An empty map is just
-    /// replaced with None and dropped.
+    /// Shrink the capacity of the inherited maps as much as possible.
     fn shrink_to_fit(&mut self) {
-        if let Some(ref mut map) = self.inherited {
-            if map.is_empty() {
-                self.inherited = None;
-            } else if let Some(ref mut map) = Arc::get_mut(map) {
-                map.shrink_to_fit();
-            }
-        }
-
-        if let Some(ref mut map) = self.non_inherited {
-            if map.is_empty() {
-                self.non_inherited = None;
-            } else if let Some(ref mut map) = Arc::get_mut(map) {
-                map.shrink_to_fit();
-            }
-        }
+        self.inherited.shrink_to_fit();
+        self.non_inherited.shrink_to_fit();
     }
 
     fn map_mut(&mut self, registration: Option<&PropertyRegistration>) -> &mut CustomPropertiesMap {
-        // TODO: If the atomic load in make_mut shows up in profiles, we could cache whether
-        // the current map is unique, but that seems unlikely in practice.
-        let map = if registration.map_or(true, |r| r.inherits()) {
+        if registration.map_or(true, |r| r.inherits()) {
             &mut self.inherited
         } else {
             &mut self.non_inherited
-        };
-        Arc::make_mut(map.get_or_insert_with(Default::default))
+        }
     }
 
     fn get(&self, stylist: &Stylist, name: &Name) -> Option<&Arc<VariableValue>> {
         let registration = stylist.get_custom_property_registration(&name);
         if registration.map_or(true, |r| r.inherits()) {
-            self.inherited.as_ref()?.get(name)
+            self.inherited.get(name)
         } else {
-            self.non_inherited.as_ref()?.get(name)
+            self.non_inherited.get(name)
         }
     }
 }
@@ -945,7 +867,7 @@ impl<'a, 'b: 'a> CustomPropertiesBuilder<'a, 'b> {
                             self.computed_context,
                             AllowComputationallyDependent::Yes,
                         ) {
-                            map.insert(custom_registration, name.clone(), value);
+                            map.insert(custom_registration, name, value);
                         } else {
                             let inherited = self.computed_context.inherited_custom_properties();
                             let is_root_element = self.computed_context.is_root_element();
@@ -962,7 +884,7 @@ impl<'a, 'b: 'a> CustomPropertiesBuilder<'a, 'b> {
                 }
                 map.insert(
                     custom_registration,
-                    name.clone(),
+                    name,
                     Arc::clone(unparsed_value),
                 );
             },
@@ -981,7 +903,7 @@ impl<'a, 'b: 'a> CustomPropertiesBuilder<'a, 'b> {
                     map.remove(custom_registration, name);
                     if let Some(registration) = custom_registration {
                         if let Some(ref initial_value) = registration.initial_value {
-                            map.insert(custom_registration, name.clone(), initial_value.clone());
+                            map.insert(custom_registration, name, initial_value.clone());
                         }
                     }
                 },
@@ -995,10 +917,9 @@ impl<'a, 'b: 'a> CustomPropertiesBuilder<'a, 'b> {
                         .computed_context
                         .inherited_custom_properties()
                         .non_inherited
-                        .as_ref()
-                        .and_then(|m| m.get(name))
+                        .get(name)
                     {
-                        map.insert(custom_registration, name.clone(), inherited_value.clone());
+                        map.insert(custom_registration, name, inherited_value.clone());
                     }
                 },
                 // handled in value_may_affect_style
@@ -1076,8 +997,8 @@ impl<'a, 'b: 'a> CustomPropertiesBuilder<'a, 'b> {
                     .computed_context
                     .inherited_custom_properties()
                     .non_inherited
-                    .as_ref()
-                    .map_or(true, |m| !m.contains_key(name))
+                    .get(name)
+                    .is_none()
                 {
                     return false;
                 }
@@ -1114,28 +1035,27 @@ impl<'a, 'b: 'a> CustomPropertiesBuilder<'a, 'b> {
 
         self.custom_properties.shrink_to_fit();
 
-        // Some pages apply a lot of redundant custom properties, see e.g.
-        // bug 1758974 comment 5. Try to detect the case where the values
-        // haven't really changed, and save some memory by reusing the inherited
-        // map in that case.
+        // Some pages apply a lot of redundant custom properties, see e.g. bug 1758974 comment 5.
+        // Try to detect the case where the values haven't really changed, and save some memory by
+        // reusing the inherited map in that case.
         let initial_values = self.stylist.get_custom_property_initial_values();
         ComputedCustomProperties {
             inherited: if self
                 .computed_context
                 .inherited_custom_properties()
-                .inherited_equal(&self.custom_properties)
+                .inherited == self.custom_properties.inherited
             {
                 self.computed_context
                     .inherited_custom_properties()
                     .inherited
                     .clone()
             } else {
-                self.custom_properties.inherited.take()
+                self.custom_properties.inherited
             },
-            non_inherited: if initial_values.non_inherited_equal(&self.custom_properties) {
+            non_inherited: if initial_values.non_inherited == self.custom_properties.non_inherited {
                 initial_values.non_inherited.clone()
             } else {
-                self.custom_properties.non_inherited.take()
+                self.custom_properties.non_inherited
             },
         }
     }
@@ -1380,14 +1300,14 @@ fn handle_invalid_at_computed_value_time(
             // use the initial value if any, rather than removing the name.
             if registration.inherits() && !is_root_element {
                 if let Some(value) = inherited.get(stylist, name) {
-                    custom_properties.insert(custom_registration, name.clone(), Arc::clone(value));
+                    custom_properties.insert(custom_registration, name, Arc::clone(value));
                     return;
                 }
             } else {
                 if let Some(ref initial_value) = registration.initial_value {
                     custom_properties.insert(
                         custom_registration,
-                        name.clone(),
+                        name,
                         Arc::clone(initial_value),
                     );
                     return;
@@ -1481,7 +1401,7 @@ fn substitute_references_in_value_and_apply(
                         if let Some(ref initial_value) = registration.initial_value {
                             custom_properties.insert(
                                 custom_registration,
-                                name.clone(),
+                                name,
                                 Arc::clone(initial_value),
                             );
                         }
@@ -1495,7 +1415,7 @@ fn substitute_references_in_value_and_apply(
                         Some(value) => {
                             custom_properties.insert(
                                 custom_registration,
-                                name.clone(),
+                                name,
                                 Arc::clone(value),
                             );
                         },
@@ -1515,7 +1435,7 @@ fn substitute_references_in_value_and_apply(
                     computed_context,
                     AllowComputationallyDependent::Yes,
                 ) {
-                    custom_properties.insert(custom_registration, name.clone(), value);
+                    custom_properties.insert(custom_registration, name, value);
                 } else {
                     handle_invalid_at_computed_value_time(
                         name,
@@ -1532,7 +1452,7 @@ fn substitute_references_in_value_and_apply(
     };
     if should_insert {
         computed_value.css.shrink_to_fit();
-        custom_properties.insert(custom_registration, name.clone(), Arc::new(computed_value));
+        custom_properties.insert(custom_registration, name, Arc::new(computed_value));
     }
 }
 
