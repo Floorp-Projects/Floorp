@@ -619,9 +619,7 @@ Maybe<nscoord> nsTextControlFrame::ComputeBaseline(
 
   nscoord lineHeight = aReflowInput.ComputedBSize();
   if (!aForSingleLineControl || lineHeight == NS_UNCONSTRAINEDSIZE) {
-    lineHeight = NS_CSS_MINMAX(aReflowInput.GetLineHeight(),
-                               aReflowInput.ComputedMinBSize(),
-                               aReflowInput.ComputedMaxBSize());
+    lineHeight = aReflowInput.ApplyMinMaxBSize(aReflowInput.GetLineHeight());
   }
   RefPtr<nsFontMetrics> fontMet =
       nsLayoutUtils::GetInflatedFontMetricsForFrame(aFrame);

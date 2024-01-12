@@ -3601,9 +3601,8 @@ CrossAxisPositionTracker::CrossAxisPositionTracker(
     // "If the flex container is single-line, then clamp the line's
     // cross-size to be within the container's computed min and max cross-size
     // properties."
-    aLines[0].SetLineCrossSize(NS_CSS_MINMAX(aLines[0].LineCrossSize(),
-                                             aReflowInput.ComputedMinBSize(),
-                                             aReflowInput.ComputedMaxBSize()));
+    aLines[0].SetLineCrossSize(
+        aReflowInput.ApplyMinMaxBSize(aLines[0].LineCrossSize()));
   }
 
   // NOTE: The rest of this function should essentially match
@@ -4347,14 +4346,13 @@ nscoord nsFlexContainerFrame::ComputeMainSize(
   // Behave as if we had no content and just use our MinBSize.
   if (Maybe<nscoord> containBSize =
           aReflowInput.mFrame->ContainIntrinsicBSize()) {
-    return NS_CSS_MINMAX(*containBSize, aReflowInput.ComputedMinBSize(),
-                         aReflowInput.ComputedMaxBSize());
+    return aReflowInput.ApplyMinMaxBSize(*containBSize);
   }
 
   const AuCoord64 largestLineMainSize = GetLargestLineMainSize(aLines);
-  const nscoord contentBSize = NS_CSS_MINMAX(
-      nscoord(largestLineMainSize.ToMinMaxClamped()),
-      aReflowInput.ComputedMinBSize(), aReflowInput.ComputedMaxBSize());
+  const nscoord contentBSize = aReflowInput.ApplyMinMaxBSize(
+      nscoord(largestLineMainSize.ToMinMaxClamped()));
+
   // If the clamped largest FlexLine length is larger than the tentative main
   // size (which is resolved by aspect-ratio), we extend it to contain the
   // entire FlexLine.
@@ -4411,16 +4409,14 @@ nscoord nsFlexContainerFrame::ComputeCrossSize(
   if (Maybe<nscoord> containBSize =
           aReflowInput.mFrame->ContainIntrinsicBSize()) {
     *aIsDefinite = true;
-    return NS_CSS_MINMAX(*containBSize, aReflowInput.ComputedMinBSize(),
-                         aReflowInput.ComputedMaxBSize());
+    return aReflowInput.ApplyMinMaxBSize(*containBSize);
   }
 
   // The cross size must not be definite in the following cases.
   *aIsDefinite = false;
 
   const nscoord contentBSize =
-      NS_CSS_MINMAX(aSumLineCrossSizes, aReflowInput.ComputedMinBSize(),
-                    aReflowInput.ComputedMaxBSize());
+      aReflowInput.ApplyMinMaxBSize(aSumLineCrossSizes);
   // If the content block-size is larger than the effective computed
   // block-size, we extend the block-size to contain all the content.
   // https://drafts.csswg.org/css-sizing-4/#aspect-ratio-minimum
