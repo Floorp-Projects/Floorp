@@ -34,13 +34,9 @@ AudioCaptureTrack::AudioCaptureTrack(TrackRate aRate)
       mStarted(false) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_COUNT_CTOR(AudioCaptureTrack);
-  mMixer.AddCallback(WrapNotNull(this));
 }
 
-AudioCaptureTrack::~AudioCaptureTrack() {
-  MOZ_COUNT_DTOR(AudioCaptureTrack);
-  mMixer.RemoveCallback(this);
-}
+AudioCaptureTrack::~AudioCaptureTrack() { MOZ_COUNT_DTOR(AudioCaptureTrack); }
 
 void AudioCaptureTrack::Start() {
   QueueControlMessageWithNoShutdown(
@@ -87,8 +83,10 @@ void AudioCaptureTrack::ProcessInput(GraphTime aFrom, GraphTime aTo,
       }
       toMix.Mix(mMixer, MONO, Graph()->GraphRate());
     }
-    // This calls MixerCallback below
-    mMixer.FinishMixing();
+    AudioChunk* mixed = mMixer.MixedChunk();
+    MOZ_ASSERT(mixed->ChannelCount() == MONO);
+    // Now we have mixed data, simply append it.
+    GetData<AudioSegment>()->AppendAndConsumeChunk(std::move(*mixed));
   }
 }
 
@@ -96,10 +94,4 @@ uint32_t AudioCaptureTrack::NumberOfChannels() const {
   return GetData<AudioSegment>()->MaxChannelCount();
 }
 
-void AudioCaptureTrack::MixerCallback(AudioChunk* aMixedBuffer,
-                                      uint32_t aSampleRate) {
-  MOZ_ASSERT(aMixedBuffer->ChannelCount() == MONO);
-  // Now we have mixed data, simply append it.
-  GetData<AudioSegment>()->AppendAndConsumeChunk(std::move(*aMixedBuffer));
-}
 }  // namespace mozilla
