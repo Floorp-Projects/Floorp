@@ -293,7 +293,8 @@ fn run(args: CliArgs) -> miette::Result<()> {
 
     log::info!("analyzing {cts_https_html_path}…");
     let cts_https_html_content = fs::read_to_string(&*cts_https_html_path)?;
-    let cts_boilerplate;
+    let cts_boilerplate_short_timeout;
+    let cts_boilerplate_long_timeout;
     let cts_cases;
     {
         {
@@ -304,7 +305,7 @@ fn run(args: CliArgs) -> miette::Result<()> {
                 cts_https_html_content.split_at(cases_start_idx)
             };
 
-            cts_boilerplate = {
+            {
                 if !boilerplate.is_empty() {
                     #[derive(Debug, Diagnostic, thiserror::Error)]
                     #[error("last character before test cases was not a newline; bug, or weird?")]
@@ -351,10 +352,8 @@ fn run(args: CliArgs) -> miette::Result<()> {
                     1,
                 );
 
-                // TODO: remove this?
-                log::info!(
-                    "  …adding long timeouts to WPT boilerplate to reduce timeout failures…"
-                );
+                cts_boilerplate_short_timeout = boilerplate.clone();
+
                 let timeout_insert_idx = {
                     let meta_charset_utf8 = "\n<meta charset=utf-8>\n";
                     let meta_charset_utf8_idx =
@@ -375,8 +374,7 @@ fn run(args: CliArgs) -> miette::Result<()> {
                         " -->\n"
                     ),
                 );
-
-                boilerplate
+                cts_boilerplate_long_timeout = boilerplate
             };
 
             log::info!("  …parsing test variants in {cts_https_html_path}…");
@@ -405,7 +403,7 @@ fn run(args: CliArgs) -> miette::Result<()> {
                 "one or more test case lines failed to parse, fix it and try again"
             );
         };
-        log::trace!("\"original\" HTML boilerplate:\n\n{cts_boilerplate}");
+        log::trace!("\"original\" HTML boilerplate:\n\n{cts_boilerplate_short_timeout}");
 
         ensure!(
             !cts_cases.is_empty(),
@@ -417,54 +415,76 @@ fn run(args: CliArgs) -> miette::Result<()> {
     cts_ckt.regen_dir(out_wpt_dir.join("cts"), |cts_tests_dir| {
         log::info!("re-distributing tests into single file per test path…");
         let mut failed_writing = false;
-        let cts_cases_by_spec_file_dir = {
-            let mut cts_cases_by_spec_file_dir = BTreeMap::<_, BTreeSet<_>>::new();
-            for (path, meta) in cts_cases {
-                let case_dir = {
-                    // Context: We want to mirror CTS upstream's `src/webgpu/**/*.spec.ts` paths as
-                    // entire WPT tests, with each subtest being a WPT variant. Here's a diagram of
-                    // a CTS path to explain why the logic below is correct:
-                    //
-                    // ```sh
-                    // webgpu:this,is,the,spec.ts,file,path:subtest_in_file:…
-                    // \____/ \___________________________/^\_____________/
-                    //  test      `*.spec.ts` file path    |       |
-                    // \__________________________________/|       |
-                    //                   |                 |       |
-                    //              We want this…          | …but not this. CTS upstream generates
-                    //                                     | this too, but we don't want to divide
-                    //         second ':' character here---/ here (yet).
-                    // ```
-                    let subtest_and_later_start_idx =
-                        match path.match_indices(':').nth(1).map(|(idx, _s)| idx) {
-                            Some(some) => some,
-                            None => {
-                                failed_writing = true;
-                                log::error!(
-                                    concat!(
-                                        "failed to split suite and test path segments ",
-                                        "from CTS path `{}`"
-                                    ),
-                                    path
-                                );
-                                continue;
-                            }
-                        };
-                    let slashed = path[..subtest_and_later_start_idx]
-                        .replace(|c| matches!(c, ':' | ','), "/");
-                    cts_tests_dir.child(slashed)
-                };
-                if !cts_cases_by_spec_file_dir
-                    .entry(case_dir)
-                    .or_default()
-                    .insert(meta)
-                {
-                    log::warn!("duplicate entry {meta:?} detected")
-                }
+        let mut cts_cases_by_spec_file_dir = BTreeMap::<_, BTreeSet<_>>::new();
+        for (path, meta) in cts_cases {
+            let case_dir = {
+                // Context: We want to mirror CTS upstream's `src/webgpu/**/*.spec.ts` paths as
+                // entire WPT tests, with each subtest being a WPT variant. Here's a diagram of
+                // a CTS path to explain why the logic below is correct:
+                //
+                // ```sh
+                // webgpu:this,is,the,spec.ts,file,path:subtest_in_file:…
+                // \____/ \___________________________/^\_____________/
+                //  test      `*.spec.ts` file path    |       |
+                // \__________________________________/|       |
+                //                   |                 |       |
+                //              We want this…          | …but not this. CTS upstream generates
+                //                                     | this too, but we don't want to divide
+                //         second ':' character here---/ here (yet).
+                // ```
+                let subtest_and_later_start_idx =
+                    match path.match_indices(':').nth(1).map(|(idx, _s)| idx) {
+                        Some(some) => some,
+                        None => {
+                            failed_writing = true;
+                            log::error!(
+                                concat!(
+                                    "failed to split suite and test path segments ",
+                                    "from CTS path `{}`"
+                                ),
+                                path
+                            );
+                            continue;
+                        }
+                    };
+                let slashed =
+                    path[..subtest_and_later_start_idx].replace(|c| matches!(c, ':' | ','), "/");
+                cts_tests_dir.child(slashed)
+            };
+            if !cts_cases_by_spec_file_dir
+                .entry(case_dir)
+                .or_default()
+                .insert(meta)
+            {
+                log::warn!("duplicate entry {meta:?} detected")
             }
-            cts_cases_by_spec_file_dir
+        }
+
+        struct WptEntry<'a> {
+            cases: BTreeSet<&'a str>,
+        }
+        enum TimeoutLength {
+            Short,
+            Long,
+        }
+        let split_cases = {
+            let mut split_cases = BTreeMap::new();
+            fn insert_with_default_name<'a>(
+                split_cases: &mut BTreeMap<fs::Child<'a>, WptEntry<'a>>,
+                spec_file_dir: fs::Child<'a>,
+                cases: WptEntry<'a>,
+            ) {
+                let path = spec_file_dir.child("cts.https.html");
+                assert!(split_cases.insert(path, cases).is_none());
+            }
+            for (spec_file_dir, cases) in cts_cases_by_spec_file_dir {
+                insert_with_default_name(&mut split_cases, spec_file_dir, WptEntry { cases });
+            }
+            split_cases
         };
-        for (dir, cases) in cts_cases_by_spec_file_dir {
+
+        for (path, entry) in split_cases {
+            let dir = path.parent().expect("no parent found for ");
             match create_dir_all(&dir) {
                 Ok(()) => log::trace!("made directory {}", dir.display()),
                 Err(e) => {
@@ -473,9 +493,9 @@ fn run(args: CliArgs) -> miette::Result<()> {
                     continue;
                 }
             }
-            let path = dir.child("cts.https.html");
             let file_contents = {
-                let mut content = cts_boilerplate.as_bytes().to_vec();
+                let WptEntry { cases } = entry;
+                let mut content = cts_boilerplate_long_timeout.as_bytes().to_vec();
                 for meta in cases {
                     content.extend(meta.as_bytes());
                     content.extend(b"\n");

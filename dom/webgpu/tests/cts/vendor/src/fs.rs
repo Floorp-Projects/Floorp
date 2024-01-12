@@ -202,7 +202,7 @@ impl Child<'_> {
     }
 
     #[track_caller]
-    pub(crate) fn child<P>(&self, path: P) -> Child<'_>
+    pub(crate) fn child<P>(&self, path: P) -> Self
     where
         P: AsRef<Path>,
     {
