@@ -102,6 +102,26 @@ override the default behavior of finding a recent candidate build with
 the required artifacts, and will cause builds to fail if the specified
 revision does not contain the required artifacts.
 
+Pulling artifacts from local build / remote URL
+-----------------------------------------------
+
+If you need to do an artifact build against a local build or one hosted
+somewhere, you need to make use of respectively ``MOZ_ARTIFACT_FILE`` or
+``MOZ_ARTIFACT_URL``. In case of a local build, you will have to make sure you
+
+- produce a package using ``./mach package``
+- point to it via ``MOZ_ARTIFACT_FILE=path/to/firefox.tar.bz2`` on your
+  ``./mach build`` command line. The path needs to be absolute, and the package
+  is under your object directory within ``dist/``.
+
+Using ``MOZ_ARTIFACT_URL`` will download the package at the given URL and then
+follow the same process as the local build case.
+
+``MOZ_ARTIFACT_FILE`` and ``MOZ_ARTIFACT_URL`` only provide the package, they
+do not provide sibling artifacts including the test artifacts, extra archives
+such as XPT data, etc.  In general, prefer ``MOZ_ARTIFACT_REVISION``, which
+will can provide these sibling artifacts.
+
 Restrictions
 ------------
 
