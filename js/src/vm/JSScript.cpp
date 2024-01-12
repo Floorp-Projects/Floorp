@@ -2465,12 +2465,7 @@ bool JSScript::fullyInitFromStencil(
       script->setMemberInitializers(lazyData.get()->getMemberInitializers());
     }
   }
-
   auto* scriptData = stencil.sharedData.get(scriptIndex);
-  MOZ_ASSERT_IF(
-      script->isGenerator() || script->isAsync(),
-      scriptData->nfixed() <= frontend::ParseContext::Scope::FixedSlotLimit);
-
   script->initSharedData(scriptData);
 
   // NOTE: JSScript is now constructed and should be linked in.
