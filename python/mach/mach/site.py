@@ -562,9 +562,10 @@ class CommandSiteManager:
         """
         result = self._up_to_date()
         if not result.is_up_to_date:
-            print(f"Site not up-to-date reason: {result.reason}", file=sys.stderr)
+            print(f"Site not up-to-date reason: {result.reason}")
             active_site = MozSiteMetadata.from_runtime()
             if active_site.site_name == self._site_name:
+                print(result.reason, file=sys.stderr)
                 raise Exception(
                     f'The "{self._site_name}" site is out-of-date, even though it has '
                     f"already been activated. Was it modified while this Mach process "
