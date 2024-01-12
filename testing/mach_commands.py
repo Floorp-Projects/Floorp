@@ -1279,6 +1279,13 @@ def manifest(_command_context):
     dest="use_failures",
     help="Use failures from file",
 )
+@CommandArgument(
+    "-M",
+    "--max-failures",
+    default=-1,
+    dest="max_failures",
+    help="Maximum number of failures to skip (-1 == no limit)",
+)
 @CommandArgument("-v", "--verbose", action="store_true", help="Verbose mode")
 @CommandArgument(
     "-d",
@@ -1296,6 +1303,7 @@ def skipfails(
     use_tasks=None,
     save_failures=None,
     use_failures=None,
+    max_failures=-1,
     verbose=False,
     dry_run=False,
 ):
@@ -1307,10 +1315,19 @@ def skipfails(
         except ValueError:
             meta_bug_id = None
 
+    if max_failures is not None:
+        try:
+            max_failures = int(max_failures)
+        except ValueError:
+            max_failures = -1
+    else:
+        max_failures = -1
+
     Skipfails(command_context, try_url, verbose, bugzilla, dry_run, turbo).run(
         meta_bug_id,
         save_tasks,
         use_tasks,
         save_failures,
         use_failures,
+        max_failures,
     )

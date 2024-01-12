@@ -2,16 +2,20 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import gzip
 import io
 import json
 import logging
 import os
 import os.path
 import pprint
+import re
 import sys
+import tempfile
 import urllib.parse
 from enum import Enum
 from pathlib import Path
+from xmlrpc.client import Fault
 
 from yaml import load
 
@@ -29,6 +33,14 @@ from mozci.task import TestTask
 from mozci.util.taskcluster import get_task
 
 BUGZILLA_AUTHENTICATION_HELP = "Must create a Bugzilla API key per https://github.com/mozilla/mozci-tools/blob/main/citools/test_triage_bug_filer.py"
+TASK_LOG = "live_backing.log"
+TASK_ARTIFACT = "public/logs/" + TASK_LOG
+ATTACHMENT_DESCRIPTION = "Compressed " + TASK_ARTIFACT + " for task "
+ATTACHMENT_REGEX = (
+    r".*Created attachment ([0-9]+)\n.*"
+    + ATTACHMENT_DESCRIPTION
+    + "([A-Za-z0-9_-]+)\n.*"
+)
 
 
 class MockResult(object):
@@ -137,6 +149,7 @@ class Skipfails(object):
                 self.bugzilla = Skipfails.BUGZILLA_SERVER_DEFAULT
         self.component = "skip-fails"
         self._bzapi = None
+        self._attach_rx = None
         self.variants = {}
         self.tasks = {}
         self.pp = None
@@ -151,6 +164,7 @@ class Skipfails(object):
         """Lazily initializes the Bugzilla API"""
         if self._bzapi is None:
             self._bzapi = bugzilla.Bugzilla(self.bugzilla)
+            self._attach_rx = re.compile(ATTACHMENT_REGEX, flags=re.M)
 
     def pprint(self, obj):
         if self.pp is None:
@@ -182,6 +196,10 @@ class Skipfails(object):
         else:
             print(f"INFO: {e}", file=sys.stderr, flush=True)
 
+    def vinfo(self, e):
+        if self.verbose:
+            self.info(e)
+
     def run(
         self,
         meta_bug_id=None,
@@ -189,6 +207,7 @@ class Skipfails(object):
         use_tasks=None,
         save_failures=None,
         use_failures=None,
+        max_failures=-1,
     ):
         "Run skip-fails on try_url, return True on success"
 
@@ -197,7 +216,7 @@ class Skipfails(object):
 
         if use_tasks is not None:
             if os.path.exists(use_tasks):
-                self.info(f"use tasks: {use_tasks}")
+                self.vinfo(f"use tasks: {use_tasks}")
                 tasks = self.read_json(use_tasks)
                 tasks = [MockTask(task) for task in tasks]
             else:
@@ -208,7 +227,7 @@ class Skipfails(object):
 
         if use_failures is not None:
             if os.path.exists(use_failures):
-                self.info(f"use failures: {use_failures}")
+                self.vinfo(f"use failures: {use_failures}")
                 failures = self.read_json(use_failures)
             else:
                 self.error(f"use failures JSON file does not exist: {use_failures}")
@@ -216,13 +235,14 @@ class Skipfails(object):
         else:
             failures = self.get_failures(tasks)
             if save_failures is not None:
-                self.info(f"save failures: {save_failures}")
+                self.vinfo(f"save failures: {save_failures}")
                 self.write_json(save_failures, failures)
 
         if save_tasks is not None:
-            self.info(f"save tasks: {save_tasks}")
+            self.vinfo(f"save tasks: {save_tasks}")
             self.write_tasks(save_tasks, tasks)
 
+        num_failures = 0
         for manifest in failures:
             if not manifest.endswith(".toml"):
                 self.warning(f"cannot process skip-fails on INI manifests: {manifest}")
@@ -249,6 +269,12 @@ class Skipfails(object):
                                     repo,
                                     meta_bug_id,
                                 )
+                                num_failures += 1
+                                if max_failures >= 0 and num_failures >= max_failures:
+                                    self.warning(
+                                        f"max_failures={max_failures} threshold reached. stopping."
+                                    )
+                                    return True
                                 break  # just use the first task_id
         return True
 
@@ -268,8 +294,7 @@ class Skipfails(object):
             repo = query[Skipfails.REPO][0]
         else:
             repo = "try"
-        if self.verbose:
-            self.info(f"considering {repo} revision={revision}")
+        self.vinfo(f"considering {repo} revision={revision}")
         return revision, repo
 
     def get_tasks(self, revision, repo):
@@ -284,8 +309,8 @@ class Skipfails(object):
             * True (passed)
            classification: Classification
             * unknown (default) < 3 runs
-            * intermittent (not enough failures) >3 runs < 0.5 failure rate
-            * disable_recommended (enough repeated failures) >3 runs >= 0.5
+            * intermittent (not enough failures) >3 runs < 0.4 failure rate
+            * disable_recommended (enough repeated failures) >3 runs >= 0.4
             * disable_manifest (disable DEFAULT if no other failures)
             * secondary (not first failure in group)
             * success
@@ -397,7 +422,7 @@ class Skipfails(object):
                         "classification"
                     ]
                     if total_runs >= 3:
-                        if failed_runs / total_runs < 0.5:
+                        if failed_runs / total_runs < 0.4:
                             if failed_runs == 0:
                                 classification = Classification.SUCCESS
                             else:
@@ -551,6 +576,7 @@ class Skipfails(object):
     ):
         """Skip a failure"""
 
+        self.vinfo(f"===== Skip failure in manifest: {manifest} =====")
         skip_if = self.task_to_skip_if(task_id)
         if skip_if is None:
             self.warning(
@@ -583,10 +609,14 @@ class Skipfails(object):
                 )
                 if log_url is not None:
                     comment += f"\n\nBug suggestions: {suggestions_url}"
-                    comment += f"\nSpecifically see at line {line_number}:\n"
-                    comment += f'\n  "{line}"'
-                    comment += f"\n\nIn the log: {log_url}"
+                    comment += f"\nSpecifically see at line {line_number} in the attached log: {log_url}"
+                    comment += f'\n\n  "{line}"\n'
+        platform, testname = self.label_to_platform_testname(label)
+        if platform is not None:
+            comment += "\n\nCommand line to reproduce:\n\n"
+            comment += f"  \"mach try fuzzy -q '{platform}' {testname}\""
         bug_summary = f"MANIFEST {manifest}"
+        attachments = {}
         bugs = self.get_bugs_by_summary(bug_summary)
         if len(bugs) == 0:
             description = (
@@ -602,7 +632,7 @@ class Skipfails(object):
             else:
                 bug = self.create_bug(bug_summary, description, product, component)
                 bugid = bug.id
-                self.info(
+                self.vinfo(
                     f'Created Bug {bugid} {product}::{component} : "{bug_summary}"'
                 )
             bug_reference = f"Bug {bugid}" + bug_reference
@@ -611,11 +641,22 @@ class Skipfails(object):
             bug_reference = f"Bug {bugid}" + bug_reference
             product = bugs[0].product
             component = bugs[0].component
-            self.info(f'Found Bug {bugid} {product}::{component} "{bug_summary}"')
+            self.vinfo(f'Found Bug {bugid} {product}::{component} "{bug_summary}"')
             if meta_bug_id is not None:
                 if meta_bug_id in bugs[0].blocks:
-                    self.info(f"  Bug {bugid} already blocks meta bug {meta_bug_id}")
+                    self.vinfo(f"  Bug {bugid} already blocks meta bug {meta_bug_id}")
                     meta_bug_id = None  # no need to add again
+            comments = bugs[0].getcomments()
+            for i in range(len(comments)):
+                text = comments[i]["text"]
+                m = self._attach_rx.findall(text)
+                if len(m) == 1:
+                    a_task_id = m[0][1]
+                    attachments[a_task_id] = m[0][0]
+                    if a_task_id == task_id:
+                        self.vinfo(
+                            f"  Bug {bugid} already has the compressed log attached for this task"
+                        )
         else:
             self.error(f'More than one bug found for summary: "{bug_summary}"')
             return
@@ -623,11 +664,16 @@ class Skipfails(object):
             self.warning(f"Dry-run NOT adding comment to Bug {bugid}: {comment}")
             self.info(f'Dry-run NOT editing ["{filename}"] manifest: "{manifest}"')
             self.info(f'would add skip-if condition: "{skip_if}" # {bug_reference}')
+            if task_id not in attachments:
+                self.info("would add compressed log for this task")
             return
         self.add_bug_comment(bugid, comment, meta_bug_id)
         self.info(f"Added comment to Bug {bugid}: {comment}")
         if meta_bug_id is not None:
             self.info(f"  Bug {bugid} blocks meta Bug: {meta_bug_id}")
+        if task_id not in attachments:
+            self.add_attachment_log_for_task(bugid, task_id)
+            self.info("Added compressed log for this task")
         mp = ManifestParser(use_toml=True, document=True)
         manifest_path = os.path.join(self.topsrcdir, os.path.normpath(manifest))
         mp.read(manifest_path)
@@ -745,7 +791,7 @@ class Skipfails(object):
         Provide defaults (in case command_context is not defined
         or there isn't file info available).
         """
-        if self.command_context is not None:
+        if path != "DEFAULT" and self.command_context is not None:
             reader = self.command_context.mozbuild_reader(config_mode="empty")
             info = reader.files_info([path])
             cp = info[path]["BUG_COMPONENT"]
@@ -774,7 +820,7 @@ class Skipfails(object):
     def get_push_id(self, revision, repo):
         """Return the push_id for revision and repo (or None)"""
 
-        self.info(f"Retrieving push_id for {repo} revision: {revision} ...")
+        self.vinfo(f"Retrieving push_id for {repo} revision: {revision} ...")
         if revision in self.push_ids:  # if cached
             push_id = self.push_ids[revision]
         else:
@@ -801,7 +847,7 @@ class Skipfails(object):
     def get_job_id(self, push_id, task_id):
         """Return the job_id for push_id, task_id (or None)"""
 
-        self.info(f"Retrieving job_id for push_id: {push_id}, task_id: {task_id} ...")
+        self.vinfo(f"Retrieving job_id for push_id: {push_id}, task_id: {task_id} ...")
         if push_id in self.job_ids:  # if cached
             job_id = self.job_ids[push_id]
         else:
@@ -829,7 +875,7 @@ class Skipfails(object):
         Return the (suggestions_url, line_number, line, log_url)
         for the given repo and job_id
         """
-        self.info(
+        self.vinfo(
             f"Retrieving bug_suggestions for {repo} job_id: {job_id}, path: {path} ..."
         )
         suggestions_url = f"https://treeherder.mozilla.org/api/project/{repo}/jobs/{job_id}/bug_suggestions/"
@@ -844,7 +890,7 @@ class Skipfails(object):
             if len(response) > 0:
                 for sugg in response:
                     if sugg["path_end"] == path:
-                        line_number = sugg["line_number"]
+                        line_number = sugg["line_number"] + 1
                         line = sugg["search"]
                         log_url = f"https://treeherder.mozilla.org/logviewer?repo={repo}&job_id={job_id}&lineNumber={line_number}"
                         break
@@ -895,3 +941,54 @@ class Skipfails(object):
             jtask["failure_types"] = jft
             jtasks.append(jtask)
         self.write_json(save_tasks, jtasks)
+
+    def label_to_platform_testname(self, label):
+        """convert from label to platform, testname for mach command line"""
+        platform = None
+        testname = None
+        platform_details = label.split("/")
+        if len(platform_details) == 2:
+            platform, details = platform_details
+            words = details.split("-")
+            if len(words) > 2:
+                platform += "/" + words.pop(0)  # opt or debug
+                try:
+                    _chunk = int(words[-1])
+                    words.pop()
+                except ValueError:
+                    pass
+                words.pop()  # remove test suffix
+                testname = "-".join(words)
+            else:
+                platform = None
+        return platform, testname
+
+    def add_attachment_log_for_task(self, bugid, task_id):
+        """Adds compressed log for this task to bugid"""
+
+        log_url = f"https://firefox-ci-tc.services.mozilla.com/api/queue/v1/task/{task_id}/artifacts/public/logs/live_backing.log"
+        r = requests.get(log_url, headers=self.headers)
+        if r.status_code != 200:
+            self.error(f"Unable get log for task: {task_id}")
+            return
+        attach_fp = tempfile.NamedTemporaryFile()
+        fp = gzip.open(attach_fp, "wb")
+        fp.write(r.text.encode("utf-8"))
+        fp.close()
+        self._initialize_bzapi()
+        description = ATTACHMENT_DESCRIPTION + task_id
+        file_name = TASK_LOG + ".gz"
+        comment = "Added compressed log"
+        content_type = "application/gzip"
+        try:
+            self._bzapi.attachfile(
+                [bugid],
+                attach_fp.name,
+                description,
+                file_name=file_name,
+                comment=comment,
+                content_type=content_type,
+                is_private=False,
+            )
+        except Fault:
+            pass  # Fault expected: Failed to fetch key 9372091 from network storage: The specified key does not exist.

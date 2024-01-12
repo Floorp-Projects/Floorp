@@ -166,5 +166,15 @@ def test_get_filename_in_manifest():
     )
 
 
+def test_label_to_platform_testname():
+    """Test label_to_platform_testname"""
+
+    sf = Skipfails()
+    label = "test-linux2204-64-wayland/opt-mochitest-browser-chrome-swr-13"
+    platform, testname = sf.label_to_platform_testname(label)
+    assert platform == "test-linux2204-64-wayland/opt"
+    assert testname == "mochitest-browser-chrome"
+
+
 if __name__ == "__main__":
     main()
