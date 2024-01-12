@@ -1420,6 +1420,8 @@ interface nsILoadInfo : nsISupports
   const uint32_t BLOCKING_REASON_NOT_SAME_ORIGIN = 5000;
   // The reason used when an extension cancels the request via the WebRequest api.
   const uint32_t BLOCKING_REASON_EXTENSION_WEBREQUEST = 6000;
+  // The reason used when a request is cancelled via WebDriver BiDi network interception.
+  const uint32_t BLOCKING_REASON_WEBDRIVER_BIDI = 7000;
 
   /**
    * If the request associated with this load info was blocked by some of
