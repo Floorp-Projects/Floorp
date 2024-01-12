@@ -153,6 +153,7 @@ struct GraphHasher {  // for HashSet
 using GraphHashSet =
     HashSet<MediaTrackGraphImpl*, GraphHasher, InfallibleAllocPolicy>;
 GraphHashSet* Graphs() {
+  MOZ_ASSERT(NS_IsMainThread());
   static GraphHashSet sGraphs(4);  // 4 is minimum HashSet capacity
   return &sGraphs;
 }
@@ -3595,6 +3596,7 @@ CrossGraphReceiver* MediaTrackGraph::CreateCrossGraphReceiver(
 
 void MediaTrackGraph::AddTrack(MediaTrack* aTrack) {
   MediaTrackGraphImpl* graph = static_cast<MediaTrackGraphImpl*>(this);
+  MOZ_ASSERT(NS_IsMainThread());
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   if (graph->mRealtime) {
     GraphHashSet::Ptr p = Graphs()->lookup(*graph);
