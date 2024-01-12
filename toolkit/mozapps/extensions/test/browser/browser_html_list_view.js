@@ -745,7 +745,13 @@ add_task(async function testSideloadRemoveButton() {
 
   // Remove but cancel.
   let prevented = BrowserTestUtils.waitForEvent(card, "remove-disabled");
+  // We intentionally turn off this a11y check, because the following click
+  // is purposefully targeting a disabled control to confirm the click event
+  // won't come through. It is not meant to be interactive and is not expected
+  // to be accessible, therefore the rule check shall be ignored by a11y_checks.
+  AccessibilityUtils.setEnv({ mustHaveAccessibleRule: false });
   removeButton.click();
+  AccessibilityUtils.resetEnv();
   await prevented;
 
   // reopen the panel
