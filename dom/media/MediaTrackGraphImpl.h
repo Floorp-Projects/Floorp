@@ -414,11 +414,6 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
                                              GraphTime aTime) const;
 
   /**
-   * If aTrack needs an audio track but doesn't have one, create it.
-   * If aTrack doesn't need an audio track but has one, destroy it.
-   */
-  void CreateOrDestroyAudioTracks(MediaTrack* aTrack);
-  /**
    * Queue audio (mix of track audio and silence for blocked intervals)
    * to the audio output track. Returns the number of frames played.
    */
