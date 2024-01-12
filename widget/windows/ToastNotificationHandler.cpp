@@ -140,14 +140,8 @@ static bool AddActionNode(ComPtr<IXmlDocument>& toastXml,
                            activationType);
     NS_ENSURE_TRUE(success, false);
 
-    // No special argument handling: when `activationType="system"`, `arguments`
-    // should be a Windows-specific keyword, namely "dismiss" or "snooze", which
-    // are supposed to make a system handled dismiss/snooze buttons.
-    // https://learn.microsoft.com/en-us/windows/apps/design/shell/tiles-and-notifications/adaptive-interactive-toasts?tabs=xml#snoozedismiss
-    //
-    // Note that while using it prevents calling our notification COM server,
-    // it somehow still calls OnActivate instead of OnDismiss. Thus, we still
-    // need to handle such callbacks manually by checking `arguments`.
+    // No special argument handling: when `activationType="system"`, `action` is
+    // a Windows-specific keyword, generally "dismiss" or "snooze".
     success = SetAttribute(action, HStringReference(L"arguments"), actionArgs);
     NS_ENSURE_TRUE(success, false);
   }
@@ -670,11 +664,8 @@ ComPtr<IXmlDocument> ToastNotificationHandler::CreateToastXmlDocument() {
   }
 
   // Windows ignores scenario=reminder added by mRequiredInteraction if
-  // there's no non-contextmenu action.
+  // there's no non-contextmenu activationType=background action.
   if (mRequireInteraction && !mActions.Length()) {
-    // `activationType="system" arguments="dismiss" content=""` provides
-    // localized text from Windows, but we support more locales than Windows
-    // does, so let's have our own.
     nsTArray<nsCString> resIds = {
         "toolkit/global/alert.ftl"_ns,
     };
@@ -687,7 +678,7 @@ ComPtr<IXmlDocument> ToastNotificationHandler::CreateToastXmlDocument() {
 
     NS_ENSURE_TRUE(
         AddActionNode(toastXml, actionsNode, NS_ConvertUTF8toUTF16(closeTitle),
-                      u""_ns, u"dismiss"_ns, u""_ns, u"system"_ns),
+                      launchArg, u""_ns, u""_ns, u"background"_ns),
         nullptr);
   }
 
@@ -857,7 +848,6 @@ ToastNotificationHandler::OnActivate(
 
   if (mAlertListener) {
     // Extract the `action` value from the argument string.
-    nsAutoString argumentsString;
     nsAutoString actionString;
     if (inspectable) {
       ComPtr<IToastActivatedEventArgs> eventArgs;
@@ -872,7 +862,6 @@ ToastNotificationHandler::OnActivate(
             MOZ_LOG(sWASLog, LogLevel::Info,
                     ("OnActivate: arguments: %s",
                      NS_ConvertUTF16toUTF8(buffer).get()));
-            argumentsString.Assign(buffer);
 
             // Toast arguments are a newline separated key/value combination of
             // launch arguments and an optional action argument provided as an
@@ -899,14 +888,7 @@ ToastNotificationHandler::OnActivate(
       }
     }
 
-    if (argumentsString.EqualsLiteral("dismiss")) {
-      // XXX: Somehow Windows still fires OnActivate instead of OnDismiss for
-      // supposedly system managed dismiss button (with activationType=system
-      // and arguments=dismiss). We have to manually treat such callback as a
-      // dismiss action. For this case `arguments` only includes a keyword so we
-      // don't need to compare with a parsed result.
-      SendFinished();
-    } else if (actionString.EqualsLiteral("settings")) {
+    if (actionString.EqualsLiteral("settings")) {
       mAlertListener->Observe(nullptr, "alertsettingscallback", mCookie.get());
     } else if (actionString.EqualsLiteral("snooze")) {
       mAlertListener->Observe(nullptr, "alertdisablecallback", mCookie.get());
