@@ -40,17 +40,6 @@ class AbstractGeneratorObject : public NativeObject {
     RESERVED_SLOTS
   };
 
-  // Maximum number of fixed stack slots in a generator or async function
-  // script. If a script would have more, we instead store some variables in
-  // heap EnvironmentObjects.
-  //
-  // This limit is a performance heuristic. Stack slots reduce allocations,
-  // and `Local` opcodes are a bit faster than `AliasedVar` ones; but at each
-  // `yield` or `await` the stack slots must be memcpy'd into a
-  // GeneratorObject. At some point the memcpy is too much. The limit is
-  // plenty for typical human-authored code.
-  static constexpr uint32_t FixedSlotLimit = 256;
-
  private:
   static JSObject* createModuleGenerator(JSContext* cx, AbstractFramePtr frame);
 
