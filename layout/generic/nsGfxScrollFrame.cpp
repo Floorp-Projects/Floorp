@@ -599,29 +599,31 @@ ScrollReflowInput::ScrollReflowInput(nsHTMLScrollFrame* aFrame,
 
 }  // namespace mozilla
 
-// XXXldb Can this go away?
 static nsSize ComputeInsideBorderSize(const ScrollReflowInput& aState,
                                       const nsSize& aDesiredInsideBorderSize) {
   // aDesiredInsideBorderSize is the frame size; i.e., it includes
   // borders and padding (but the scrolled child doesn't have
   // borders). The scrolled child has the same padding as us.
-  nscoord contentWidth = aState.mReflowInput.ComputedWidth();
-  if (contentWidth == NS_UNCONSTRAINEDSIZE) {
-    contentWidth = aDesiredInsideBorderSize.width -
-                   aState.mReflowInput.ComputedPhysicalPadding().LeftRight();
+  const WritingMode wm = aState.mReflowInput.GetWritingMode();
+  const LogicalSize desiredInsideBorderSize(wm, aDesiredInsideBorderSize);
+  LogicalSize contentSize = aState.mReflowInput.ComputedSize();
+  const LogicalMargin padding = aState.mReflowInput.ComputedLogicalPadding(wm);
+
+  if (contentSize.ISize(wm) == NS_UNCONSTRAINEDSIZE) {
+    contentSize.ISize(wm) =
+        desiredInsideBorderSize.ISize(wm) - padding.IStartEnd(wm);
   }
-  nscoord contentHeight = aState.mReflowInput.ComputedHeight();
-  if (contentHeight == NS_UNCONSTRAINEDSIZE) {
-    contentHeight = aDesiredInsideBorderSize.height -
-                    aState.mReflowInput.ComputedPhysicalPadding().TopBottom();
+  if (contentSize.BSize(wm) == NS_UNCONSTRAINEDSIZE) {
+    contentSize.BSize(wm) =
+        desiredInsideBorderSize.BSize(wm) - padding.BStartEnd(wm);
   }
 
-  contentWidth = aState.mReflowInput.ApplyMinMaxWidth(contentWidth);
-  contentHeight = aState.mReflowInput.ApplyMinMaxHeight(contentHeight);
-  return nsSize(
-      contentWidth + aState.mReflowInput.ComputedPhysicalPadding().LeftRight(),
-      contentHeight +
-          aState.mReflowInput.ComputedPhysicalPadding().TopBottom());
+  contentSize.ISize(wm) =
+      aState.mReflowInput.ApplyMinMaxISize(contentSize.ISize(wm));
+  contentSize.BSize(wm) =
+      aState.mReflowInput.ApplyMinMaxBSize(contentSize.BSize(wm));
+
+  return (contentSize + padding.Size(wm)).GetPhysicalSize(wm);
 }
 
 /**
@@ -682,7 +684,6 @@ bool nsHTMLScrollFrame::TryLayout(ScrollReflowInput& aState,
                                    scrollbarGutter.TopBottom());
 
   // First, compute our inside-border size and scrollport size
-  // XXXldb Can we depend more on ComputeSize here?
   nsSize kidSize = GetContainSizeAxes().ContainSize(
       aKidMetrics->PhysicalSize(), *aState.mReflowInput.mFrame);
   const nsSize desiredInsideBorderSize = kidSize + scrollbarGutterSize;
