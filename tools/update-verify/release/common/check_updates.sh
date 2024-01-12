@@ -22,20 +22,20 @@ check_updates () {
     echo "FAILED: cannot unpack_build $update_platform source $source_package"
     return 1
   fi
-  unpack_build $update_platform target "$target_package" $locale 
+  unpack_build $update_platform target "$target_package" $locale
   if [ "$?" != "0" ]; then
     echo "FAILED: cannot unpack_build $update_platform target $target_package"
     return 1
   fi
-  
+
   case $update_platform in
-      Darwin_ppc-gcc | Darwin_Universal-gcc3 | Darwin_x86_64-gcc3 | Darwin_x86-gcc3-u-ppc-i386 | Darwin_x86-gcc3-u-i386-x86_64 | Darwin_x86_64-gcc3-u-i386-x86_64 | Darwin_aarch64-gcc3) 
+      Darwin_ppc-gcc | Darwin_Universal-gcc3 | Darwin_x86_64-gcc3 | Darwin_x86-gcc3-u-ppc-i386 | Darwin_x86-gcc3-u-i386-x86_64 | Darwin_x86_64-gcc3-u-i386-x86_64 | Darwin_aarch64-gcc3)
           platform_dirname="*.app"
           ;;
-      WINNT*) 
+      WINNT*)
           platform_dirname="bin"
           ;;
-      Linux_x86-gcc | Linux_x86-gcc3 | Linux_x86_64-gcc3) 
+      Linux_x86-gcc | Linux_x86-gcc3 | Linux_x86_64-gcc3)
           platform_dirname=`echo $product | tr '[A-Z]' '[a-z]'`
           ;;
   esac
@@ -103,8 +103,9 @@ check_updates () {
   # If we are testing an OSX mar to update from a production-signed/notarized
   # build to a dep-signed one, ignore Contents/CodeResources which won't be
   # present in the target, to avoid spurious failures
+  # Same applies to provisioning profiles, since we don't have them outside of prod
   if ${update_to_dep}; then
-    ignore_coderesources=--ignore-missing=Contents/CodeResources
+    ignore_coderesources="--ignore-missing=Contents/CodeResources --ignore-missing=Contents/embedded.provisionprofile"
   else
     ignore_coderesources=
   fi
