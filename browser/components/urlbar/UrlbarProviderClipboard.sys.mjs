@@ -55,7 +55,7 @@ class ProviderClipboard extends UrlbarProvider {
       return false;
     }
     let textFromClipboard = controller.browserWindow.readFromClipboard();
-    if (!textFromClipboard) {
+    if (!textFromClipboard || textFromClipboard.length > 2048) {
       return false;
     }
     textFromClipboard =
