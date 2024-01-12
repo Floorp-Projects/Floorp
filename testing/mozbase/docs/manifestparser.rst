@@ -75,8 +75,8 @@ advantages:
 
 .. code-block:: text
 
-     ['test_broken.js']
-     disabled = 'https://bugzilla.mozilla.org/show_bug.cgi?id=123456'
+     ["test_broken.js"]
+     disabled = "https://bugzilla.mozilla.org/show_bug.cgi?id=123456"
 
 * ability to run different (subsets of) tests on different
   platforms. Traditionally, we've done a bit of magic or had the test
@@ -86,10 +86,8 @@ advantages:
 
 .. code-block:: text
 
-     ['test_works_on_windows_only.js']
-     skip-if = [
-        "os != 'win'",
-     ]
+     ["test_works_on_windows_only.js"]
+     skip-if = ["os != 'win'"]
 
 * ability to markup tests with metadata. We have a large, complicated,
   and always changing infrastructure.  key, value metadata may be used
@@ -98,7 +96,7 @@ advantages:
   number, if it were desirable.
 
 * ability to have sane and well-defined test-runs. You can keep
-  different manifests for different test runs and ``['include:FILENAME.toml']``
+  different manifests for different test runs and ``["include:FILENAME.toml"]``
   (sub)manifests as appropriate to your needs.
 
 Manifest Format
@@ -109,9 +107,9 @@ relative to the manifest:
 
 .. code-block:: text
 
-    ['foo.js']
-    ['bar.js']
-    ['fleem.js']
+    ["foo.js"]
+    ["bar.js"]
+    ["fleem.js"]
 
 The sections are read in order. In addition, tests may include
 arbitrary key, value metadata to be used by the harness.  You may also
@@ -121,31 +119,31 @@ be inherited by each test unless overridden:
 .. code-block:: text
 
     [DEFAULT]
-    type = 'restart'
+    type = "restart"
 
-    ['lilies.js']
-    color = 'white'
+    ["lilies.js"]
+    color = "white"
 
-    ['daffodils.js']
-    color = 'yellow'
-    type = 'other'
+    ["daffodils.js"]
+    color = "yellow"
+    type = "other"
     # override type from DEFAULT
 
-    ['roses.js']
-    color = 'red'
+    ["roses.js"]
+    color = "red"
 
 You can also include other manifests:
 
 .. code-block:: text
 
-    ['include:subdir/anothermanifest.toml']
+    ["include:subdir/anothermanifest.toml"]
 
 And reference parent manifests to inherit keys and values from the DEFAULT
 section, without adding possible included tests.
 
 .. code-block:: text
 
-    ['parent:../manifest.toml']
+    ["parent:../manifest.toml"]
 
 Manifests are included relative to the directory of the manifest with
 the `[include:]` directive unless they are absolute paths.
@@ -155,17 +153,17 @@ new line, or be inline.
 
 .. code-block:: text
 
-    ['roses.js']
+    ["roses.js"]
     # a valid comment
-    color = 'red' # another valid comment
+    color = "red" # another valid comment
 
 Because in TOML all values must be quoted there is no risk of an anchor in
 an URL being interpreted as a comment.
 
 .. code-block:: text
 
-    ['test1.js']
-    url = 'https://foo.com/bar#baz' # Bug 1234
+    ["test1.js"]
+    url = "https://foo.com/bar#baz" # Bug 1234
 
 
 Manifest Conditional Expressions
@@ -198,7 +196,7 @@ This data corresponds to a one-line manifest:
 
 .. code-block:: text
 
-    ['testToolbar/testBackForwardButtons.js']
+    ["testToolbar/testBackForwardButtons.js"]
 
 If additional key, values were specified, they would be in this dict
 as well.
@@ -241,7 +239,7 @@ Additional manifest files may be included with an `[include:]` directive:
 
 .. code-block:: text
 
-    ['include:path-to-additional-file-manifest.toml']
+    ["include:path-to-additional-file-manifest.toml"]
 
 The path to included files is relative to the current manifest.
 
@@ -317,10 +315,8 @@ files will look like this:
 
 .. code-block:: text
 
-    ['test_foo.py']
-    timeout-if = [
-      "300, os == 'win'",
-    ]
+    ["test_foo.py"]
+    timeout-if = ["300, os == 'win'"]
 
 The value is <timeout>, <condition> where condition is the same format as the one in
 `skip-if`. In the above case, if os == 'win', a timeout of 300 seconds will be
@@ -498,6 +494,108 @@ manifestparser includes a suite of tests.
 
 `test_manifest.txt` is a doctest that may be helpful in figuring out
 how to use the API.  Tests are run via `mach python-test testing/mozbase/manifestparser`.
+
+Using mach manifest skip-fails
+``````````````````````````````
+
+The first of the ``mach manifest`` subcommands is ``skip-fails``. This command
+can be used to *automatically* edit manifests to skip tests that are failing
+as well as file the corresponding bugs for the failures. This is particularly
+useful when "greening up" a new platform.
+
+You may verify the proposed changes from ``skip-fails`` output and examine
+any local manifest changes with ``hg status``.
+
+Here is the usage:
+
+.. code-block:: text
+
+    $ ./mach manifest skip-fails --help
+    usage: mach [global arguments] manifest skip-fails [command arguments]
+
+    Sub Command Arguments:
+    try_url               Treeherder URL for try (please use quotes)
+    -b BUGZILLA, --bugzilla BUGZILLA
+                            Bugzilla instance
+    -m META_BUG_ID, --meta-bug-id META_BUG_ID
+                            Meta Bug id
+    -s, --turbo           Skip all secondary failures
+    -t SAVE_TASKS, --save-tasks SAVE_TASKS
+                            Save tasks to file
+    -T USE_TASKS, --use-tasks USE_TASKS
+                            Use tasks from file
+    -f SAVE_FAILURES, --save-failures SAVE_FAILURES
+                            Save failures to file
+    -F USE_FAILURES, --use-failures USE_FAILURES
+                            Use failures from file
+    -M MAX_FAILURES, --max-failures MAX_FAILURES
+                            Maximum number of failures to skip (-1 == no limit)
+    -v, --verbose         Verbose mode
+    -d, --dry-run         Determine manifest changes, but do not write them
+    $
+
+``try_url`` --- Treeherder URL
+------------------------------
+This is the url (usually in single quotes) from running tests in try, for example:
+'https://treeherder.mozilla.org/jobs?repo=try&revision=babc28f495ee8af2e4f059e9cbd23e84efab7d0d'
+
+``--bugzilla BUGZILLA`` --- Bugzilla instance
+---------------------------------------------
+
+By default the Bugzilla instance is ``bugzilla.allizom.org``, but you may set it on the command
+line to another value such as ``bugzilla.mozilla.org`` (or by setting the environment variable
+``BUGZILLA``).
+
+``--meta-bug-id META_BUG_ID`` --- Meta Bug id
+---------------------------------------------
+
+Any new bugs that are filed will block (be dependents of) this "meta" bug (optional).
+
+``--turbo`` --- Skip all secondary failures
+-------------------------------------------
+
+The default ``skip-fails`` behavior is to skip only the first failure (for a given label) for each test.
+In `turbo` mode, all failures for this manifest + label will skipped.
+
+``--save-tasks SAVE_TASKS`` --- Save tasks to file
+--------------------------------------------------
+
+This feature is primarily for ``skip-fails`` development and debugging.
+It will save the tasks (downloaded via mozci) to the specified JSON file
+(which may be used in a future ``--use-tasks`` option)
+
+``--use-tasks USE_TASKS`` --- Use tasks from file
+-------------------------------------------------
+This feature is primarily for ``skip-fails`` development and debugging.
+It will uses the tasks from the specified JSON file (instead of downloading them via mozci).
+See also ``--save-tasks``.
+
+``--save-failures SAVE_FAILURES`` --- Save failures to file
+-----------------------------------------------------------
+
+This feature is primarily for ``skip-fails`` development and debugging.
+It will save the failures (calculated from the tasks) to the specified JSON file
+(which may be used in a future ``--use-failures`` option)
+
+``--use-failures USE_FAILURES`` --- Use failures from file
+----------------------------------------------------------
+This feature is primarily for ``skip-fails`` development and debugging.
+It will uses the failures from the specified JSON file (instead of downloading them via mozci).
+See also ``--save-failures``.
+
+``--max-failures MAX_FAILURES`` --- Maximum number of failures to skip
+----------------------------------------------------------------------
+This feature is primarily for ``skip-fails`` development and debugging.
+It will limit the number of failures that are skipped (default is -1 == no limit).
+
+``--verbose`` --- Verbose mode
+------------------------------
+Increase verbosity of output.
+
+``--dry-run`` --- Dry run
+-------------------------
+In dry run mode, the manifest changes (and bugs top be filed) are determined, but not written.
+
 
 Bugs
 ````
