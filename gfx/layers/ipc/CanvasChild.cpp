@@ -435,17 +435,23 @@ already_AddRefed<gfx::DataSourceSurface> CanvasChild::GetDataSurface(
 
   RefPtr<gfx::DataSourceSurface> dataSurface =
       gfx::Factory::CreateWrappingDataSourceSurface(
-          data, stride, ssSize, ssFormat,
-          [](void* aClosure) {
-            auto* shmemHolder = static_cast<DataShmemHolder*>(aClosure);
-            shmemHolder->canvasChild->ReturnDataSurfaceShmem(
-                shmemHolder->shmem.forget());
-            delete shmemHolder;
-          },
-          closure);
+          data, stride, ssSize, ssFormat, ReleaseDataShmemHolder, closure);
 
   mRecorder->WaitForCheckpoint(checkpoint);
   return dataSurface.forget();
+}
+
+/* static */ void CanvasChild::ReleaseDataShmemHolder(void* aClosure) {
+  if (!NS_IsMainThread()) {
+    NS_DispatchToMainThread(NS_NewRunnableFunction(
+        "CanvasChild::ReleaseDataShmemHolder",
+        [aClosure]() { ReleaseDataShmemHolder(aClosure); }));
+    return;
+  }
+
+  auto* shmemHolder = static_cast<DataShmemHolder*>(aClosure);
+  shmemHolder->canvasChild->ReturnDataSurfaceShmem(shmemHolder->shmem.forget());
+  delete shmemHolder;
 }
 
 already_AddRefed<gfx::SourceSurface> CanvasChild::WrapSurface(
