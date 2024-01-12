@@ -143,7 +143,6 @@ https_first_disabled = true
 ["browser_manage_shortcuts_hidden.js"]
 
 ["browser_manage_shortcuts_remove.js"]
-fail-if = ["a11y_checks"] # Bug 1854646 clicked button.shortcut-remove-button may not be labeled
 
 ["browser_menu_button_accessibility.js"]
 
