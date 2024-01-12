@@ -463,6 +463,53 @@ class NetworkModule extends Module {
   }
 
   /**
+   * Fails a request that is blocked by a network intercept.
+   *
+   * @param {object=} options
+   * @param {string} options.request
+   *     The id of the blocked request that should be continued.
+   *
+   * @throws {InvalidArgumentError}
+   *     Raised if an argument is of an invalid type or value.
+   * @throws {NoSuchRequestError}
+   *     Raised if the request id does not match any request in the blocked
+   *     requests map.
+   */
+  async failRequest(options = {}) {
+    this.assertExperimentalCommandsEnabled("network.failRequest");
+    const { request: requestId } = options;
+
+    lazy.assert.string(
+      requestId,
+      `Expected "request" to be a string, got ${requestId}`
+    );
+
+    if (!this.#blockedRequests.has(requestId)) {
+      throw new lazy.error.NoSuchRequestError(
+        `Blocked request with id ${requestId} not found`
+      );
+    }
+
+    const { phase, request, resolveBlockedEvent } =
+      this.#blockedRequests.get(requestId);
+
+    if (phase === InterceptPhase.AuthRequired) {
+      throw new lazy.error.InvalidArgumentError(
+        `Expected blocked request not to be in "authRequired" phase`
+      );
+    }
+
+    const wrapper = ChannelWrapper.get(request);
+    wrapper.resume();
+    wrapper.cancel(
+      Cr.NS_ERROR_ABORT,
+      Ci.nsILoadInfo.BLOCKING_REASON_WEBDRIVER_BIDI
+    );
+
+    resolveBlockedEvent();
+  }
+
+  /**
    * Removes an existing network intercept.
    *
    * @param {object=} options
@@ -573,6 +620,10 @@ class NetworkModule extends Module {
       contextId: browsingContext.id,
       type: lazy.WindowGlobalMessageHandler.type,
     };
+  }
+
+  #getSuspendMarkerText(requestData, phase) {
+    return `Request (id: ${requestData.request}) suspended by WebDriver BiDi in ${phase} phase`;
   }
 
   #getNetworkIntercepts(event, requestData) {
@@ -809,7 +860,10 @@ class NetworkModule extends Module {
     if (beforeRequestSentEvent.isBlocked) {
       // TODO: Requests suspended in beforeRequestSent still reach the server at
       // the moment. https://bugzilla.mozilla.org/show_bug.cgi?id=1849686
-      requestChannel.suspend();
+      const wrapper = ChannelWrapper.get(requestChannel);
+      wrapper.suspend(
+        this.#getSuspendMarkerText(requestData, "beforeRequestSent")
+      );
 
       this.#addBlockedRequest(
         beforeRequestSentEvent.request.request,
@@ -982,7 +1036,10 @@ class NetworkModule extends Module {
       protocolEventName === "network.responseStarted" &&
       responseEvent.isBlocked
     ) {
-      requestChannel.suspend();
+      const wrapper = ChannelWrapper.get(requestChannel);
+      wrapper.suspend(
+        this.#getSuspendMarkerText(requestData, "responseStarted")
+      );
 
       this.#addBlockedRequest(
         responseEvent.request.request,
