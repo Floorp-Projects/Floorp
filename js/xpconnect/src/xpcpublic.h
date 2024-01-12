@@ -257,6 +257,9 @@ class XPCStringConvert {
   static bool Latin1ToJSVal(JSContext* cx, const nsACString& latin1,
                             nsStringBuffer** sharedBuffer,
                             JS::MutableHandle<JS::Value> vp);
+  static bool UTF8ToJSVal(JSContext* cx, const nsACString& utf8,
+                          nsStringBuffer** sharedBuffer,
+                          JS::MutableHandle<JS::Value> vp);
 
   // Convert the given stringbuffer/length pair to a jsval
   static MOZ_ALWAYS_INLINE bool UCStringBufferToJSVal(
@@ -277,6 +280,19 @@ class XPCStringConvert {
       JS::MutableHandle<JS::Value> rval, bool* sharedBuffer) {
     JSString* str = JS_NewMaybeExternalStringLatin1(
         cx, static_cast<const JS::Latin1Char*>(buf->Data()), length,
+        &sDOMStringExternalString, sharedBuffer);
+    if (!str) {
+      return false;
+    }
+    rval.setString(str);
+    return true;
+  }
+
+  static MOZ_ALWAYS_INLINE bool UTF8StringBufferToJSVal(
+      JSContext* cx, nsStringBuffer* buf, uint32_t length,
+      JS::MutableHandle<JS::Value> rval, bool* sharedBuffer) {
+    JSString* str = JS_NewMaybeExternalStringUTF8(
+        cx, {static_cast<const char*>(buf->Data()), length},
         &sDOMStringExternalString, sharedBuffer);
     if (!str) {
       return false;
@@ -306,6 +322,19 @@ class XPCStringConvert {
     bool ignored;
     JSString* str = JS_NewMaybeExternalStringLatin1(
         cx, literal, length, &sLiteralExternalString, &ignored);
+    if (!str) {
+      return false;
+    }
+    rval.setString(str);
+    return true;
+  }
+
+  static inline bool UTF8StringLiteralToJSVal(
+      JSContext* cx, const JS::UTF8Chars& chars,
+      JS::MutableHandle<JS::Value> rval) {
+    bool ignored;
+    JSString* str = JS_NewMaybeExternalStringUTF8(
+        cx, chars, &sLiteralExternalString, &ignored);
     if (!str) {
       return false;
     }
