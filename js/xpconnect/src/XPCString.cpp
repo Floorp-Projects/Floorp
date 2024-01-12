@@ -251,4 +251,33 @@ bool NonVoidLatin1StringToJsval(JSContext* cx, const nsACString& str,
   return true;
 }
 
+bool NonVoidUTF8StringToJsval(JSContext* cx, nsACString& str,
+                              MutableHandleValue rval) {
+  nsStringBuffer* sharedBuffer;
+  if (!XPCStringConvert::UTF8ToJSVal(cx, str, &sharedBuffer, rval)) {
+    return false;
+  }
+
+  if (sharedBuffer) {
+    // The string was shared but UTF8ToJSVal didn't addref it.
+    // Move the ownership from str to jsstr.
+    str.ForgetSharedBuffer();
+  }
+  return true;
+}
+
+bool NonVoidUTF8StringToJsval(JSContext* cx, const nsACString& str,
+                              MutableHandleValue rval) {
+  nsStringBuffer* sharedBuffer;
+  if (!XPCStringConvert::UTF8ToJSVal(cx, str, &sharedBuffer, rval)) {
+    return false;
+  }
+
+  if (sharedBuffer) {
+    // The string was shared but UTF8ToJSVal didn't addref it.
+    sharedBuffer->AddRef();
+  }
+  return true;
+}
+
 }  // namespace xpc
