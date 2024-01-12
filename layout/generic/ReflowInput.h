@@ -78,6 +78,10 @@ struct StyleSizeOverrides {
  * @note This function needs to handle aMinValue > aMaxValue. In that case,
  *       aMinValue is returned. That's why we cannot use std::clamp() and
  *       mozilla::clamped() since they both assert max >= min.
+ * @note If aMinValue and aMaxValue are computed min block-size and max
+ *       block-size, it is simpler to use ReflowInput::ApplyMinMaxBSize().
+ *       Similarly, there is ReflowInput::ApplyMinMaxISize() for clamping an
+ *       inline-size.
  * @see http://www.w3.org/TR/CSS21/visudet.html#min-max-widths
  * @see http://www.w3.org/TR/CSS21/visudet.html#min-max-heights
  */

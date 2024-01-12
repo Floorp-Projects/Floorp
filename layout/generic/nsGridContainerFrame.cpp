@@ -7525,8 +7525,7 @@ nsGridContainerFrame::GetNearestFragmentainer(
       if (data->mIsAutoBSize) {
         bSize = gridRI->ComputedMinBSize();
       } else {
-        bSize = NS_CSS_MINMAX(bSize, gridRI->ComputedMinBSize(),
-                              gridRI->ComputedMaxBSize());
+        bSize = gridRI->ApplyMinMaxBSize(bSize);
       }
       nscoord gridEnd =
           aState.mRows.GridLineEdge(numRows, GridLineSide::BeforeGridGap);
@@ -7889,13 +7888,11 @@ nscoord nsGridContainerFrame::ReflowInFragmentainer(
         bpBEnd = 0;
       }
     } else {
-      bSize = NS_CSS_MINMAX(bEndRow, aState.mReflowInput->ComputedMinBSize(),
-                            aState.mReflowInput->ComputedMaxBSize());
+      bSize = aState.mReflowInput->ApplyMinMaxBSize(bEndRow);
     }
   } else {
-    bSize = NS_CSS_MINMAX(aState.mReflowInput->ComputedBSize(),
-                          aState.mReflowInput->ComputedMinBSize(),
-                          aState.mReflowInput->ComputedMaxBSize());
+    bSize = aState.mReflowInput->ApplyMinMaxBSize(
+        aState.mReflowInput->ComputedBSize());
   }
 
   // Check for overflow and set aStatus INCOMPLETE if so.
@@ -8108,9 +8105,8 @@ nscoord nsGridContainerFrame::ReflowRowsInFragmentainer(
           if (aFragmentainer.mIsAutoBSize) {
             aBSize = ClampToCSSMaxBSize(bEndRow, aState.mReflowInput, &aStatus);
           } else if (aStatus.IsIncomplete()) {
-            aBSize = NS_CSS_MINMAX(aState.mReflowInput->ComputedBSize(),
-                                   aState.mReflowInput->ComputedMinBSize(),
-                                   aState.mReflowInput->ComputedMaxBSize());
+            aBSize = aState.mReflowInput->ApplyMinMaxBSize(
+                aState.mReflowInput->ComputedBSize());
             aBSize = std::min(bEndRow, aBSize);
           }
           continue;
@@ -8761,8 +8757,7 @@ nscoord nsGridContainerFrame::ReflowChildren(GridReflowInput& aState,
     if (IsMasonry(eLogicalAxisBlock)) {
       bSize = aState.mReflowInput->ComputedBSize();
       if (bSize == NS_UNCONSTRAINEDSIZE) {
-        bSize = NS_CSS_MINMAX(sz, aState.mReflowInput->ComputedMinBSize(),
-                              aState.mReflowInput->ComputedMaxBSize());
+        bSize = aState.mReflowInput->ApplyMinMaxBSize(sz);
       }
     }
   } else if (MOZ_UNLIKELY(fragmentainer.isSome())) {
@@ -8921,8 +8916,7 @@ void nsGridContainerFrame::Reflow(nsPresContext* aPresContext,
     const nscoord trackSizingBSize = [&] {
       // This clamping only applies to auto sizes.
       if (containBSize && computedBSize == NS_UNCONSTRAINEDSIZE) {
-        return NS_CSS_MINMAX(*containBSize, aReflowInput.ComputedMinBSize(),
-                             aReflowInput.ComputedMaxBSize());
+        return aReflowInput.ApplyMinMaxBSize(*containBSize);
       }
       return computedBSize;
     }();
@@ -8966,11 +8960,9 @@ void nsGridContainerFrame::Reflow(nsPresContext* aPresContext,
     }
   }
   if (computedBSize == NS_UNCONSTRAINEDSIZE) {
-    bSize = NS_CSS_MINMAX(bSize, aReflowInput.ComputedMinBSize(),
-                          aReflowInput.ComputedMaxBSize());
+    bSize = aReflowInput.ApplyMinMaxBSize(bSize);
   } else if (aReflowInput.ShouldApplyAutomaticMinimumOnBlockAxis()) {
-    nscoord contentBSize = NS_CSS_MINMAX(bSize, aReflowInput.ComputedMinBSize(),
-                                         aReflowInput.ComputedMaxBSize());
+    nscoord contentBSize = aReflowInput.ApplyMinMaxBSize(bSize);
     bSize = std::max(contentBSize, computedBSize);
   } else {
     bSize = computedBSize;

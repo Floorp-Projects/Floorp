@@ -248,18 +248,14 @@ void nsHTMLButtonControlFrame::ReflowButtonContents(
     // aButtonReflowInput.ComputedBSize()).  Note that we do this before
     // adjusting for borderpadding, since mComputedMaxBSize and
     // mComputedMinBSize are content bSizes.
-    buttonContentBox.BSize(wm) =
-        NS_CSS_MINMAX(bSize, aButtonReflowInput.ComputedMinBSize(),
-                      aButtonReflowInput.ComputedMaxBSize());
+    buttonContentBox.BSize(wm) = aButtonReflowInput.ApplyMinMaxBSize(bSize);
   }
   if (aButtonReflowInput.ComputedISize() != NS_UNCONSTRAINEDSIZE) {
     buttonContentBox.ISize(wm) = aButtonReflowInput.ComputedISize();
   } else {
     nscoord iSize = aButtonReflowInput.mFrame->ContainIntrinsicISize().valueOr(
         contentsDesiredSize.ISize(wm));
-    buttonContentBox.ISize(wm) =
-        NS_CSS_MINMAX(iSize, aButtonReflowInput.ComputedMinISize(),
-                      aButtonReflowInput.ComputedMaxISize());
+    buttonContentBox.ISize(wm) = aButtonReflowInput.ApplyMinMaxISize(iSize);
   }
 
   // Center child in the block-direction in the button
