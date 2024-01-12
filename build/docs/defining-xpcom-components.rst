@@ -1,8 +1,8 @@
 .. _defining_xpcom_components:
 
-=========================================
-Defining XPCOM C++-implemented Components
-=========================================
+=========================
+Defining XPCOM Components
+=========================
 
 This document explains how to write a :code:`components.conf` file. For
 documentation on the idl format see :ref:`XPIDL`. For a tutorial on writing
@@ -121,11 +121,16 @@ Class definitions may have the following properties:
 
   This property is incompatible with ``legacy_constructor``.
 
-``jsm`` (optional)
-  If provided, must be the URL of a JavaScript module which contains a
-  JavaScript implementation of the component. The ``constructor`` property
-  must contain the name of an exported function which can be constructed to
-  create a new instance of the component.
+``esModule`` (optional)
+  If provided, must be the URL of a
+  `JavaScript module <https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Modules>`_
+  which contains a JavaScript implementation of the component.
+  The ``constructor`` property must contain the name of an exported
+  function which can be constructed to create a new instance of the component.
+
+
+``jsm`` (deprecated, optional)
+  Do not use. Use ``esModule`` instead.
 
 ``legacy_constructor`` (optional)
   This property is deprecated, and should not be used in new code.
