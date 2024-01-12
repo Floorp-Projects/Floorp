@@ -35,7 +35,7 @@ add_task(async function () {
     matches: [
       makeVisitResult(context, {
         uri: `https://www.${host}/`,
-        fallbackTitle: `https://www.${host}`,
+        fallbackTitle: UrlbarTestUtils.trimURL(`https://www.${host}`),
         heuristic: true,
       }),
       makeBookmarkResult(context, {
@@ -64,7 +64,7 @@ add_task(async function () {
     matches: [
       makeVisitResult(context, {
         uri: `https://${host}/`,
-        fallbackTitle: `https://${host}`,
+        fallbackTitle: UrlbarTestUtils.trimURL(`https://${host}`),
         heuristic: true,
       }),
       makeBookmarkResult(context, {

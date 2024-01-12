@@ -1036,20 +1036,26 @@ export var UrlbarTestUtils = {
    *
    * @param {string} url
    *  The url that is supposed to be sanitizied.
+   * @param {{removeSingleTrailingSlash: (boolean)}} options
+   *    removeSingleTrailingSlash: Remove trailing slash, when trimming enabled.
    * @returns {string}
    *  The sanitized URL.
    */
-  trimURL(url) {
+  trimURL(url, { removeSingleTrailingSlash = true } = {}) {
     if (!lazy.UrlbarPrefs.get("trimURLs")) {
       return url;
     }
 
     let sanitizedURL = url;
+    if (removeSingleTrailingSlash) {
+      sanitizedURL =
+        lazy.BrowserUIUtils.removeSingleTrailingSlashFromURL(sanitizedURL);
+    }
 
     if (lazy.UrlbarPrefs.get("trimHttps")) {
-      sanitizedURL = url.replace("https://", "");
+      sanitizedURL = sanitizedURL.replace("https://", "");
     } else {
-      sanitizedURL = url.replace("http://", "");
+      sanitizedURL = sanitizedURL.replace("http://", "");
     }
 
     // Remove empty emphasis markers in case the protocol was trimmed.

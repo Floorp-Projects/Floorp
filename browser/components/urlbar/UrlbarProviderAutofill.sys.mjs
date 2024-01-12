@@ -867,12 +867,17 @@ class ProviderAutofill extends UrlbarProvider {
     if (title) {
       payload.title = [title, UrlbarUtils.HIGHLIGHT.TYPED];
     } else {
-      let [autofilled] = UrlbarUtils.stripPrefixAndTrim(finalCompleteValue, {
-        stripHttp: true,
+      let trimHttps = lazy.UrlbarPrefs.get("trimHttps");
+      let displaySpec = UrlbarUtils.prepareUrlForDisplay(finalCompleteValue, {
+        trimURL: false,
+      });
+      let [fallbackTitle] = UrlbarUtils.stripPrefixAndTrim(displaySpec, {
+        stripHttp: !trimHttps,
+        stripHttps: trimHttps,
         trimEmptyQuery: true,
         trimSlash: !this._searchString.includes("/"),
       });
-      payload.fallbackTitle = [autofilled, UrlbarUtils.HIGHLIGHT.TYPED];
+      payload.fallbackTitle = [fallbackTitle, UrlbarUtils.HIGHLIGHT.TYPED];
     }
 
     let result = new lazy.UrlbarResult(

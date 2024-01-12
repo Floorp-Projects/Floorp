@@ -132,7 +132,7 @@ add_task(async function test_prefix_autofill() {
     matches: [
       makeVisitResult(context, {
         uri: "http://mozilla.org/",
-        fallbackTitle: "mozilla.org",
+        fallbackTitle: UrlbarTestUtils.trimURL("http://mozilla.org"),
         heuristic: true,
       }),
       makeVisitResult(context, {
