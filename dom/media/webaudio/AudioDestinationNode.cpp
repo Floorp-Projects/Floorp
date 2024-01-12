@@ -315,7 +315,7 @@ AudioDestinationNode::AudioDestinationNode(AudioContext* aContext,
   mTrack = AudioNodeTrack::Create(aContext, engine, kTrackFlags, graph);
   mTrack->AddMainThreadListener(this);
   // null key is fine: only one output per mTrack
-  mTrack->AddAudioOutput(nullptr);
+  mTrack->AddAudioOutput(nullptr, nullptr);
 }
 
 void AudioDestinationNode::Init() {
