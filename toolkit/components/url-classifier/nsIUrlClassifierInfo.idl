@@ -48,7 +48,7 @@ interface nsIUrlClassifierCacheEntry : nsISupports {
 /**
  * Cache information for a given table.
  */
-[scriptable, function, uuid(69384f24-d9c5-4462-b24e-351c69e3b46a)]
+[scriptable, uuid(69384f24-d9c5-4462-b24e-351c69e3b46a)]
 interface nsIUrlClassifierCacheInfo : nsISupports {
   /**
    * Table name.
@@ -61,7 +61,7 @@ interface nsIUrlClassifierCacheInfo : nsISupports {
   readonly attribute nsIArray entries;
 };
 
-[scriptable, uuid(26e12ea4-14ff-4c77-858f-6745998b7659)]
+[scriptable, function, uuid(26e12ea4-14ff-4c77-858f-6745998b7659)]
 interface nsIUrlClassifierGetCacheCallback : nsISupports {
 
   void onGetCacheComplete(in nsIUrlClassifierCacheInfo info);
@@ -70,7 +70,7 @@ interface nsIUrlClassifierGetCacheCallback : nsISupports {
 /**
  * Interface to query url-classifier information.
  */
-[scriptable, function, uuid(411bbff4-1b88-4687-aa36-e2bbdd93f6e8)]
+[scriptable, uuid(411bbff4-1b88-4687-aa36-e2bbdd93f6e8)]
 interface nsIUrlClassifierInfo : nsISupports {
   /**
    * An asynchronous call to return cache information for the table.

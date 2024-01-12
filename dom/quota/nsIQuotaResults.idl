@@ -15,7 +15,7 @@ class UsageInfo;
 [ref] native UsageInfoRef(mozilla::dom::quota::UsageInfo);
 
 
-[scriptable, function, uuid(4d8def75-014e-404d-bf30-e2f0Bfcf4d89)]
+[scriptable, uuid(4d8def75-014e-404d-bf30-e2f0Bfcf4d89)]
 interface nsIQuotaFullOriginMetadataResult : nsISupports
 {
   readonly attribute ACString suffix;
@@ -33,7 +33,7 @@ interface nsIQuotaFullOriginMetadataResult : nsISupports
   readonly attribute long long lastAccessTime;
 };
 
-[scriptable, function, uuid(d8c9328b-9aa8-4f5d-90e6-482de4a6d5b8)]
+[scriptable, uuid(d8c9328b-9aa8-4f5d-90e6-482de4a6d5b8)]
 interface nsIQuotaUsageResult : nsISupports
 {
   readonly attribute ACString origin;
@@ -45,7 +45,7 @@ interface nsIQuotaUsageResult : nsISupports
   readonly attribute unsigned long long lastAccessed;
 };
 
-[scriptable, builtinclass, function, uuid(96df03d2-116a-493f-bb0b-118c212a6b32)]
+[scriptable, builtinclass, uuid(96df03d2-116a-493f-bb0b-118c212a6b32)]
 interface nsIQuotaOriginUsageResult : nsISupports
 {
   readonly attribute unsigned long long databaseUsage;
@@ -64,7 +64,7 @@ interface nsIQuotaOriginUsageResult : nsISupports
   [notxpcom, nostdcall] readonly attribute UsageInfoRef usageInfo;
 };
 
-[scriptable, function, uuid(9827fc69-7ea9-48ef-b30d-2e2ae0451ec0)]
+[scriptable, uuid(9827fc69-7ea9-48ef-b30d-2e2ae0451ec0)]
 interface nsIQuotaEstimateResult : nsISupports
 {
   readonly attribute unsigned long long usage;
