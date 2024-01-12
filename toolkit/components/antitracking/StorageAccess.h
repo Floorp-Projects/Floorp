@@ -105,13 +105,6 @@ bool StorageDisabledByAntiTracking(nsPIDOMWindowInner* aWindow,
                                    nsIPrincipal* aPrincipal, nsIURI* aURI,
                                    uint32_t& aRejectedReason);
 
-/*
- * Returns true if this document should disable storages because of the
- * anti-tracking feature.
- */
-bool StorageDisabledByAntiTracking(dom::Document* aDocument, nsIURI* aURI,
-                                   uint32_t& aRejectedReason);
-
 bool ShouldPartitionStorage(StorageAccess aAccess);
 
 bool ShouldPartitionStorage(uint32_t aRejectedReason);

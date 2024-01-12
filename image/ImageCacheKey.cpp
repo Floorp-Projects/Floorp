@@ -143,9 +143,10 @@ nsCString ImageCacheKey::GetIsolationKey(Document* aDocument, nsIURI* aURI) {
                                             nullptr)) {
     uint32_t rejectedReason = 0;
     Unused << rejectedReason;
-    return StorageDisabledByAntiTracking(aDocument, aURI, rejectedReason)
-               ? aDocument->GetBaseDomain()
-               : ""_ns;
+    return ShouldAllowAccessFor(aDocument->GetInnerWindow(), aURI,
+                                &rejectedReason)
+               ? ""_ns
+               : aDocument->GetBaseDomain();
   }
 
   // Another scenario is if this image is a 3rd party resource loaded by a
