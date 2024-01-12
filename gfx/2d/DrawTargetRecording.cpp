@@ -780,6 +780,7 @@ void DrawTargetRecording::FlushItem(const IntRect& aBounds) {
   // Reinitialize the recorder (FlushItem will write a new recording header)
   // Tell the new recording about our draw target
   // This code should match what happens in the DrawTargetRecording constructor.
+  MOZ_DIAGNOSTIC_ASSERT(mRecorder->GetRecorderType() != RecorderType::CANVAS);
   mRecorder->RecordEvent(
       RecordedDrawTargetCreation(this, mFinalDT->GetBackendType(), mRect,
                                  mFinalDT->GetFormat(), false, nullptr));
