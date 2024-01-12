@@ -158,39 +158,6 @@ bool XPCStringConvert::Latin1ToJSVal(JSContext* cx, const nsACString& latin1,
   return true;
 }
 
-bool XPCStringConvert::UTF8ToJSVal(JSContext* cx, const nsACString& utf8,
-                                   nsStringBuffer** sharedBuffer,
-                                   MutableHandleValue vp) {
-  *sharedBuffer = nullptr;
-
-  uint32_t length = utf8.Length();
-
-  if (utf8.IsLiteral()) {
-    return UTF8StringLiteralToJSVal(
-        cx, JS::UTF8Chars(utf8.BeginReading(), length), vp);
-  }
-
-  nsStringBuffer* buf = nsStringBuffer::FromString(utf8);
-  if (buf) {
-    bool shared;
-    if (!UTF8StringBufferToJSVal(cx, buf, length, vp, &shared)) {
-      return false;
-    }
-    if (shared) {
-      *sharedBuffer = buf;
-    }
-    return true;
-  }
-
-  JSString* str =
-      JS_NewStringCopyUTF8N(cx, JS::UTF8Chars(utf8.BeginReading(), length));
-  if (!str) {
-    return false;
-  }
-  vp.setString(str);
-  return true;
-}
-
 namespace xpc {
 
 bool NonVoidStringToJsval(JSContext* cx, nsAString& str,
@@ -246,35 +213,6 @@ bool NonVoidLatin1StringToJsval(JSContext* cx, const nsACString& str,
 
   if (sharedBuffer) {
     // The string was shared but Latin1ToJSVal didn't addref it.
-    sharedBuffer->AddRef();
-  }
-  return true;
-}
-
-bool NonVoidUTF8StringToJsval(JSContext* cx, nsACString& str,
-                              MutableHandleValue rval) {
-  nsStringBuffer* sharedBuffer;
-  if (!XPCStringConvert::UTF8ToJSVal(cx, str, &sharedBuffer, rval)) {
-    return false;
-  }
-
-  if (sharedBuffer) {
-    // The string was shared but UTF8ToJSVal didn't addref it.
-    // Move the ownership from str to jsstr.
-    str.ForgetSharedBuffer();
-  }
-  return true;
-}
-
-bool NonVoidUTF8StringToJsval(JSContext* cx, const nsACString& str,
-                              MutableHandleValue rval) {
-  nsStringBuffer* sharedBuffer;
-  if (!XPCStringConvert::UTF8ToJSVal(cx, str, &sharedBuffer, rval)) {
-    return false;
-  }
-
-  if (sharedBuffer) {
-    // The string was shared but UTF8ToJSVal didn't addref it.
     sharedBuffer->AddRef();
   }
   return true;

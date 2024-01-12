@@ -120,11 +120,6 @@ template <typename T, typename std::enable_if_t<std::is_same<
 inline bool AssignJSString(JSContext* cx, T& dest, JSString* s) {
   using namespace mozilla;
   CheckedInt<size_t> bufLen(JS::GetStringLength(s));
-
-  if (XPCStringConvert::MaybeAssignUTF8StringChars(s, bufLen.value(), dest)) {
-    return true;
-  }
-
   // From the contract for JS_EncodeStringToUTF8BufferPartial, to guarantee that
   // the whole string is converted.
   if (JS::StringHasLatin1Chars(s)) {
