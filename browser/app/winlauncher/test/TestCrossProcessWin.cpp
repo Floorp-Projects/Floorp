@@ -34,11 +34,12 @@ const char* kTestDependentModulePaths[] = {
     "\\Device\\HarddiskVolume3\\A B c.exe",
     "\\Device\\HarddiskVolume4\\X y Z.dll",
 };
-const wchar_t kExpectedDependentModules[] =
-    L"A B C\0"
-    L"a b c.dll\0"
-    L"A B C.exe\0"
-    L"X Y Z.dll\0";
+const wchar_t* kExpectedDependentModules[] = {
+    L"A B C",
+    L"a b c.dll",
+    L"A B C.exe",
+    L"X Y Z.dll",
+};
 
 const UNICODE_STRING kStringNotInBlocklist =
     MOZ_LITERAL_UNICODE_STRING(L"Test_NotInBlocklist.dll");
@@ -125,17 +126,29 @@ static bool VerifySharedSection(SharedSection& aSharedSection) {
   VERIFY_FUNCTION_RESOLVED(k32mod, k32Exports, GetSystemInfo);
   VERIFY_FUNCTION_RESOLVED(k32mod, k32Exports, VirtualProtect);
 
-  Span<const wchar_t> modulesArray = aSharedSection.GetDependentModules();
-  bool matched = memcmp(modulesArray.data(), kExpectedDependentModules,
-                        sizeof(kExpectedDependentModules)) == 0;
+  Maybe<Vector<const wchar_t*>> modulesArray =
+      aSharedSection.GetDependentModules();
+  if (modulesArray.isNothing()) {
+    printf(
+        "TEST-FAILED | TestCrossProcessWin | GetDependentModules returned "
+        "Nothing");
+    return false;
+  }
+  bool matched =
+      modulesArray->length() ==
+      sizeof(kExpectedDependentModules) / sizeof(kExpectedDependentModules[0]);
+  if (matched) {
+    for (size_t i = 0; i < modulesArray->length(); ++i) {
+      if (wcscmp((*modulesArray)[i], kExpectedDependentModules[i])) {
+        matched = false;
+        break;
+      }
+    }
+  }
   if (!matched) {
     // Print actual strings on error
-    for (const wchar_t* p = modulesArray.data(); *p;) {
+    for (const wchar_t* p : *modulesArray) {
       printf("%p: %S\n", p, p);
-      while (*p) {
-        ++p;
-      }
-      ++p;
     }
     return false;
   }

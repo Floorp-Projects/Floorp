@@ -192,7 +192,7 @@ class MOZ_TRIVIAL_CTOR_DTOR SharedSection final : public nt::SharedSection {
   // Map |sSectionHandle| to a copy-on-write page and return a writable pointer
   // to each structure, or null if Layout failed to resolve exports.
   Kernel32ExportsSolver* GetKernel32Exports();
-  Span<const wchar_t> GetDependentModules() final override;
+  Maybe<Vector<const wchar_t*>> GetDependentModules() final override;
   Span<const DllBlockInfo> GetDynamicBlocklist() final override;
 
   static bool IsDisabled();
