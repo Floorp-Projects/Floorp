@@ -229,13 +229,18 @@ nsresult nsCookieBannerService::Shutdown() {
   if (!mIsInitialized) {
     return NS_OK;
   }
-  mIsInitialized = false;
 
   // Shut down the list service which will stop updating mRules.
   mListService->Shutdown();
 
   // Clear all stored cookie banner rules. They will be imported again on Init.
   mRules.Clear();
+
+  // Clear executed records for normal and private browsing.
+  nsresult rv = RemoveAllExecutedRecords(false);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = RemoveAllExecutedRecords(true);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIObserverService> obsSvc = mozilla::services::GetObserverService();
   NS_ENSURE_TRUE(obsSvc, NS_ERROR_FAILURE);
@@ -244,6 +249,8 @@ nsresult nsCookieBannerService::Shutdown() {
   obsSvc->RemoveObserver(this, OBSERVER_TOPIC_BC_DISCARDED);
 
   obsSvc->RemoveObserver(this, "last-pb-context-exited");
+
+  mIsInitialized = false;
 
   return NS_OK;
 }
