@@ -103,7 +103,6 @@ support-files = ["head_disco.js"]
 ["browser_html_discover_view_prefs.js"]
 
 ["browser_html_list_view.js"]
-fail-if = ["a11y_checks"] # Bug 1854646 clicked panel-item may not be focusable
 
 ["browser_html_list_view_recommendations.js"]
 skip-if = ["a11y_checks"] # Bug 1858037 to investigate intermittent a11y_checks results
