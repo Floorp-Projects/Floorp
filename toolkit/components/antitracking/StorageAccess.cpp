@@ -141,8 +141,36 @@ static StorageAccess InternalStorageAllowedCheck(
     return access;
   }
 
-  if (!StorageDisabledByAntiTracking(aWindow, aChannel, aPrincipal, aURI,
-                                     aRejectedReason)) {
+  bool disabled = true;
+  if (aWindow) {
+    nsIURI* documentURI = aURI ? aURI : aWindow->GetDocumentURI();
+    disabled = !documentURI ||
+               !ShouldAllowAccessFor(aWindow, documentURI, &aRejectedReason);
+    ContentBlockingNotifier::OnDecision(
+        aWindow,
+        disabled ? ContentBlockingNotifier::BlockingDecision::eBlock
+                 : ContentBlockingNotifier::BlockingDecision::eAllow,
+        aRejectedReason);
+  } else if (aChannel) {
+    disabled = false;
+    nsCOMPtr<nsIURI> uri;
+    nsresult rv = aChannel->GetURI(getter_AddRefs(uri));
+    if (!NS_WARN_IF(NS_FAILED(rv))) {
+      disabled = !ShouldAllowAccessFor(aChannel, uri, &aRejectedReason);
+    }
+    ContentBlockingNotifier::OnDecision(
+        aChannel,
+        disabled ? ContentBlockingNotifier::BlockingDecision::eBlock
+                 : ContentBlockingNotifier::BlockingDecision::eAllow,
+        aRejectedReason);
+  } else {
+    MOZ_ASSERT(aPrincipal);
+    nsCOMPtr<nsICookieJarSettings> cookieJarSettings =
+        net::CookieJarSettings::Create(aPrincipal);
+    disabled = !ShouldAllowAccessFor(aPrincipal, cookieJarSettings);
+  }
+
+  if (!disabled) {
     return access;
   }
 
@@ -310,54 +338,6 @@ StorageAccess StorageAllowedForServiceWorker(
   uint32_t rejectedReason = 0;
   return InternalStorageAllowedCheck(aPrincipal, nullptr, nullptr, nullptr,
                                      aCookieJarSettings, rejectedReason);
-}
-
-bool StorageDisabledByAntiTracking(nsPIDOMWindowInner* aWindow,
-                                   nsIChannel* aChannel,
-                                   nsIPrincipal* aPrincipal, nsIURI* aURI,
-                                   uint32_t& aRejectedReason) {
-  MOZ_ASSERT(aWindow || aChannel || aPrincipal);
-  nsCOMPtr<nsICookieJarSettings> cookieJarSettings;
-  if (aWindow) {
-    if (aWindow->GetExtantDoc()) {
-      cookieJarSettings = aWindow->GetExtantDoc()->CookieJarSettings();
-    }
-  } else if (aChannel) {
-    nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
-    Unused << loadInfo->GetCookieJarSettings(getter_AddRefs(cookieJarSettings));
-  }
-  if (!cookieJarSettings) {
-    cookieJarSettings = net::CookieJarSettings::Create(aPrincipal);
-  }
-
-  bool disabled = true;
-  if (aWindow) {
-    nsIURI* documentURI = aURI ? aURI : aWindow->GetDocumentURI();
-    disabled = !documentURI ||
-           !ShouldAllowAccessFor(aWindow, documentURI, &aRejectedReason);
-    ContentBlockingNotifier::OnDecision(
-        aWindow,
-        disabled ? ContentBlockingNotifier::BlockingDecision::eBlock
-                 : ContentBlockingNotifier::BlockingDecision::eAllow,
-        aRejectedReason);
-  } else if (aChannel) {
-    disabled = false;
-    nsCOMPtr<nsIURI> uri;
-    nsresult rv = aChannel->GetURI(getter_AddRefs(uri));
-    if (!NS_WARN_IF(NS_FAILED(rv))) {
-      disabled = !ShouldAllowAccessFor(aChannel, uri, &aRejectedReason);;
-    }
-    ContentBlockingNotifier::OnDecision(
-        aChannel,
-        disabled ? ContentBlockingNotifier::BlockingDecision::eBlock
-                 : ContentBlockingNotifier::BlockingDecision::eAllow,
-        aRejectedReason);
-  } else {
-    MOZ_ASSERT(aPrincipal);
-    disabled = !ShouldAllowAccessFor(aPrincipal, cookieJarSettings);
-  }
-
-  return disabled;
 }
 
 bool ShouldPartitionStorage(StorageAccess aAccess) {
