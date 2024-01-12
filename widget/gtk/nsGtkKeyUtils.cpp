@@ -1004,11 +1004,14 @@ uint32_t KeymapWrapper::ComputeCurrentKeyModifiers() {
 
 /* static */
 uint32_t KeymapWrapper::ComputeKeyModifiers(guint aGdkModifierState) {
-  KeymapWrapper* keymapWrapper = GetInstance();
-
   uint32_t keyModifiers = 0;
+  if (!aGdkModifierState) {
+    return keyModifiers;
+  }
+
   // DOM Meta key should be TRUE only on Mac.  We need to discuss this
   // issue later.
+  KeymapWrapper* keymapWrapper = GetInstance();
   if (keymapWrapper->AreModifiersActive(SHIFT, aGdkModifierState)) {
     keyModifiers |= MODIFIER_SHIFT;
   }
