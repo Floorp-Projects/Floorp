@@ -7573,17 +7573,9 @@ pub unsafe extern "C" fn Servo_GetCustomPropertyValue(
     let stylist = &doc_data.stylist;
     let custom_registration = stylist.get_custom_property_registration(&name);
     let computed_value = if custom_registration.map_or(true, |r| r.inherits()) {
-        computed_values
-            .custom_properties
-            .inherited
-            .as_ref()
-            .and_then(|m| m.get(&name))
+        computed_values.custom_properties.inherited.get(&name)
     } else {
-        computed_values
-            .custom_properties
-            .non_inherited
-            .as_ref()
-            .and_then(|m| m.get(&name))
+        computed_values.custom_properties.non_inherited.get(&name)
     };
 
     if let Some(v) = computed_value {
@@ -7599,8 +7591,7 @@ pub extern "C" fn Servo_GetCustomPropertiesCount(computed_values: &ComputedValue
     // Just expose the custom property items from custom_properties.inherited
     // and custom_properties.non_inherited.
     let properties = computed_values.custom_properties();
-    (properties.inherited.as_ref().map_or(0, |m| m.len()) +
-        properties.non_inherited.as_ref().map_or(0, |m| m.len())) as u32
+    properties.inherited.len() as u32 + properties.non_inherited.len() as u32
 }
 
 #[no_mangle]

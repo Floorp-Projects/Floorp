@@ -9,7 +9,7 @@ use crate::applicable_declarations::{
 };
 use crate::computed_value_flags::ComputedValueFlags;
 use crate::context::{CascadeInputs, QuirksMode};
-use crate::custom_properties::{ComputedCustomProperties, CustomPropertiesMap};
+use crate::custom_properties::ComputedCustomProperties;
 use crate::dom::TElement;
 #[cfg(feature = "gecko")]
 use crate::gecko_bindings::structs::{ServoStyleSetSizes, StyleRuleInclusion};
@@ -702,8 +702,7 @@ impl Stylist {
     /// Rebuild custom properties with their registered initial values.
     /// https://drafts.css-houdini.org/css-properties-values-api-1/#determining-registration
     pub fn rebuild_initial_values_for_custom_properties(&mut self) {
-        let mut inherited_map = CustomPropertiesMap::default();
-        let mut non_inherited_map = CustomPropertiesMap::default();
+        let mut initial_values = ComputedCustomProperties::default();
         let initial_values_flags;
         {
             let mut seen_names = PrecomputedHashSet::default();
@@ -719,11 +718,11 @@ impl Stylist {
                     continue;
                 };
                 let map = if v.inherits() {
-                    &mut inherited_map
+                    &mut initial_values.inherited
                 } else {
-                    &mut non_inherited_map
+                    &mut initial_values.non_inherited
                 };
-                map.insert(k.clone(), value);
+                map.insert(k, value);
             }
             for (data, _) in self.iter_origins() {
                 for (k, v) in data.custom_property_registrations.iter() {
@@ -733,31 +732,18 @@ impl Stylist {
                             continue;
                         };
                         let map = if last_value.inherits() {
-                            &mut inherited_map
+                            &mut initial_values.inherited
                         } else {
-                            &mut non_inherited_map
+                            &mut initial_values.non_inherited
                         };
-                        map.insert(k.clone(), value);
+                        map.insert(k, value);
                     }
                 }
             }
             initial_values_flags = context.builder.flags();
         }
         self.initial_values_for_custom_properties_flags = initial_values_flags;
-        self.initial_values_for_custom_properties = ComputedCustomProperties {
-            inherited: if inherited_map.is_empty() {
-                None
-            } else {
-                inherited_map.shrink_to_fit();
-                Some(Arc::new(inherited_map))
-            },
-            non_inherited: if non_inherited_map.is_empty() {
-                None
-            } else {
-                non_inherited_map.shrink_to_fit();
-                Some(Arc::new(non_inherited_map))
-            },
-        }
+        self.initial_values_for_custom_properties = initial_values;
     }
 
     /// Rebuilds (if needed) the CascadeData given a sheet collection.
