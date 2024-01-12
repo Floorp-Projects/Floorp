@@ -547,6 +547,7 @@ void WaylandProxy::SetWaylandProxyDisplay() {
 void WaylandProxy::SetWaylandDisplay() {
   Info("[%d] WaylandProxy [%p] set display %s\n", getpid(), this, mWaylandDisplay);
   setenv("WAYLAND_DISPLAY", mWaylandDisplay, true);
+  unlink(mWaylandProxy);
 }
 
 bool WaylandProxy::IsChildAppTerminated() {
@@ -677,7 +678,6 @@ WaylandProxy::~WaylandProxy() {
     pthread_cancel(mThread);
     pthread_join(mThread, nullptr);
   }
-  unlink(mWaylandProxy);
   if (mProxyServerSocket != -1) {
     close(mProxyServerSocket);
   }
