@@ -307,7 +307,7 @@ guint KeymapWrapper::GetGdkModifierMask(MappedModifier aModifier) const {
     case ALT:
       return mModifierMasks[INDEX_ALT];
     case SUPER:
-      return mModifierMasks[INDEX_SUPER];
+      return GDK_SUPER_MASK;
     case HYPER:
       return mModifierMasks[INDEX_HYPER];
     case META:
@@ -583,6 +583,7 @@ void KeymapWrapper::InitBySystemSettingsX11() {
         case CAPS_LOCK:
         case SHIFT:
         case CTRL:
+        case SUPER:
           // Ignore the modifiers defined in GDK spec. They shouldn't
           // be mapped to Mod1-5 because they must not work on native
           // GTK applications.
@@ -620,9 +621,6 @@ void KeymapWrapper::InitBySystemSettingsX11() {
         break;
       case INDEX_META:
         modifier = META;
-        break;
-      case INDEX_SUPER:
-        modifier = SUPER;
         break;
       case INDEX_HYPER:
         modifier = HYPER;
@@ -669,7 +667,6 @@ void KeymapWrapper::SetModifierMasks(xkb_keymap* aKeymap) {
   keymapWrapper->SetModifierMask(aKeymap, INDEX_NUM_LOCK, XKB_MOD_NAME_NUM);
   keymapWrapper->SetModifierMask(aKeymap, INDEX_ALT, XKB_MOD_NAME_ALT);
   keymapWrapper->SetModifierMask(aKeymap, INDEX_META, "Meta");
-  keymapWrapper->SetModifierMask(aKeymap, INDEX_SUPER, "Super");
   keymapWrapper->SetModifierMask(aKeymap, INDEX_HYPER, "Hyper");
 
   keymapWrapper->SetModifierMask(aKeymap, INDEX_SCROLL_LOCK, "ScrollLock");
