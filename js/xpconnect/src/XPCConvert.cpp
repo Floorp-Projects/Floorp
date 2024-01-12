@@ -320,15 +320,14 @@ bool XPCConvert::NativeData2JS(JSContext* cx, MutableHandleValue d,
         return true;
       }
 
-      // c-strings (binary blobs) are deliberately not converted from
-      // UTF-8 to UTF-16. T_UTF8Sting is for UTF-8 encoded strings
-      // with automatic conversion.
-      JSString* str = JS_NewStringCopyN(cx, cString->Data(), cString->Length());
-      if (!str) {
+      // c-strings (binary blobs) are Latin1 string in JSAPI.
+      nsStringBuffer* buf;
+      if (!XPCStringConvert::Latin1ToJSVal(cx, *cString, &buf, d)) {
         return false;
       }
-
-      d.setString(str);
+      if (buf) {
+        buf->AddRef();
+      }
       return true;
     }
 
