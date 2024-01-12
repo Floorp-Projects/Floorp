@@ -129,6 +129,12 @@ def getAppVersionWithoutMilestone() {
 
 // Mimic Python: open(os.path.join(buildconfig.topobjdir, 'buildid.h')).readline().split()[2]
 def getBuildId() {
+    if (System.env.MOZ_BUILD_DATE) {
+        if (System.env.MOZ_BUILD_DATE.length() == 14) {
+            return System.env.MOZ_BUILD_DATE
+        }
+        logger.warn("Ignoring invalid MOZ_BUILD_DATE: ${System.env.MOZ_BUILD_DATE}")
+    }
     return file("${gradle.mozconfig.topobjdir}/buildid.h").getText('utf-8').split()[2]
 }
 
