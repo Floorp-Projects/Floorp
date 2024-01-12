@@ -34,15 +34,6 @@
 #define MAX_DATA_SIZE 4096
 #define POLL_TIMEOUT 30000
 
-// sockaddr_un has hardcoded max len of sun_path
-#define MAX_WAYLAND_DISPLAY_NAME_LEN 108
-
-// Name of Wayland display provided by compositor
-char sWaylandDisplay[MAX_WAYLAND_DISPLAY_NAME_LEN];
-
-// Name of Wayland display provided by us
-char sWaylandProxy[MAX_WAYLAND_DISPLAY_NAME_LEN];
-
 bool sPrintInfo = false;
 
 void Info(const char* aFormat, ...) {
@@ -95,7 +86,7 @@ class WaylandMessage {
 
 class ProxiedConnection {
  public:
-  bool Init(int aChildSocket);
+  bool Init(int aChildSocket, char* aWaylandDisplay);
   bool IsConnected() { return mCompositorConnected; }
 
   struct pollfd* AddToPollFd(struct pollfd* aPfds);
@@ -116,6 +107,10 @@ class ProxiedConnection {
       std::vector<std::unique_ptr<WaylandMessage>>* aMessageQueue);
   bool FlushQueue(int aDestSocket, int aDestPollFlags,
                   std::vector<std::unique_ptr<WaylandMessage>>& aMessageQueue);
+
+  // Where we should connect.
+  // Weak pointer to parent WaylandProxy class.
+  char* mWaylandDisplay = nullptr;
 
   // We don't have connected compositor yet. Try to connect
   bool mCompositorConnected = false;
@@ -278,7 +273,8 @@ ProxiedConnection::~ProxiedConnection() {
   }
 }
 
-bool ProxiedConnection::Init(int aApplicationSocket) {
+bool ProxiedConnection::Init(int aApplicationSocket, char* aWaylandDisplay) {
+  mWaylandDisplay = aWaylandDisplay;
   mApplicationSocket = aApplicationSocket;
   mCompositorSocket =
       socket(AF_UNIX, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, 0);
@@ -333,7 +329,7 @@ bool ProxiedConnection::ConnectToCompositor() {
 
   struct sockaddr_un addr = {};
   addr.sun_family = AF_UNIX;
-  strcpy(addr.sun_path, sWaylandDisplay);
+  strcpy(addr.sun_path, mWaylandDisplay);
 
   mCompositorConnected =
       connect(mCompositorSocket, (const struct sockaddr*)&addr,
@@ -483,27 +479,27 @@ bool WaylandProxy::SetupWaylandDisplays() {
 
   // WAYLAND_DISPLAY can be absolute path
   if (waylandDisplay[0] == '/') {
-    if (strlen(sWaylandDisplay) >= MAX_WAYLAND_DISPLAY_NAME_LEN) {
+    if (strlen(mWaylandDisplay) >= sMaxDisplayNameLen) {
       Error("Init() WAYLAND_DISPLAY is too large.", false);
       return false;
     }
-    strcpy(sWaylandDisplay, waylandDisplay);
+    strcpy(mWaylandDisplay, waylandDisplay);
   } else {
-    int ret = snprintf(sWaylandDisplay, MAX_WAYLAND_DISPLAY_NAME_LEN, "%s/%s",
+    int ret = snprintf(mWaylandDisplay, sMaxDisplayNameLen, "%s/%s",
                        XDGRuntimeDir, waylandDisplay);
-    if (ret < 0 || ret >= MAX_WAYLAND_DISPLAY_NAME_LEN) {
+    if (ret < 0 || ret >= sMaxDisplayNameLen) {
       Error("Init() WAYLAND_DISPLAY/XDG_RUNTIME_DIR is too large.", false);
       return false;
     }
   }
-  int ret = snprintf(sWaylandProxy, MAX_WAYLAND_DISPLAY_NAME_LEN,
+  int ret = snprintf(mWaylandProxy, sMaxDisplayNameLen,
                      "%s/wayland-proxy-%d", XDGRuntimeDir, getpid());
-  if (ret < 0 || ret >= MAX_WAYLAND_DISPLAY_NAME_LEN) {
+  if (ret < 0 || ret >= sMaxDisplayNameLen) {
     Error("Init() WAYLAND_DISPLAY/XDG_RUNTIME_DIR is too large.", false);
     return false;
   }
 
-  Info("WaylandProxy Wayland '%s' proxy '%s'\n", sWaylandDisplay, sWaylandProxy);
+  Info("WaylandProxy Wayland '%s' proxy '%s'\n", mWaylandDisplay, mWaylandProxy);
   return true;
 }
 
@@ -517,7 +513,7 @@ bool WaylandProxy::StartProxyServer() {
 
   struct sockaddr_un serverName = {0};
   serverName.sun_family = AF_UNIX;
-  strcpy(serverName.sun_path, sWaylandProxy);
+  strcpy(serverName.sun_path, mWaylandProxy);
 
   if (bind(mProxyServerSocket, (struct sockaddr*)&serverName,
            sizeof(serverName)) == -1) {
@@ -540,15 +536,17 @@ bool WaylandProxy::Init() {
   if (!StartProxyServer()) {
     return false;
   }
+
   return true;
 }
 
 void WaylandProxy::SetWaylandProxyDisplay() {
-  setenv("WAYLAND_DISPLAY", sWaylandProxy, true);
+  setenv("WAYLAND_DISPLAY", mWaylandProxy, true);
 }
 
 void WaylandProxy::SetWaylandDisplay() {
-  setenv("WAYLAND_DISPLAY", sWaylandDisplay, true);
+  Info("[%d] WaylandProxy [%p] set display %s\n", getpid(), this, mWaylandDisplay);
+  setenv("WAYLAND_DISPLAY", mWaylandDisplay, true);
 }
 
 bool WaylandProxy::IsChildAppTerminated() {
@@ -639,7 +637,7 @@ bool WaylandProxy::PollConnections() {
       }
     } else {
       auto connection = std::make_unique<ProxiedConnection>();
-      if (connection->Init(applicationSocket)) {
+      if (connection->Init(applicationSocket, mWaylandDisplay)) {
         mConnections.push_back(std::move(connection));
       }
     }
@@ -672,14 +670,14 @@ void WaylandProxy::Run() {
 }
 
 WaylandProxy::~WaylandProxy() {
-  Info("WaylandProxy terminated\n");
+  Info("[%d] WaylandProxy [%p] terminated\n", getpid(), this);
   if (mThreadRunning) {
-    Info("WaylandProxy thread is still running, terminating.\n");
+    Info("[%d] WaylandProxy [%p] thread is still running, terminating.\n", getpid(), this);
     mThreadRunning = false;
     pthread_cancel(mThread);
     pthread_join(mThread, nullptr);
   }
-  unlink(sWaylandProxy);
+  unlink(mWaylandProxy);
   if (mProxyServerSocket != -1) {
     close(mProxyServerSocket);
   }
@@ -701,7 +699,7 @@ std::unique_ptr<WaylandProxy> WaylandProxy::Create() {
     return nullptr;
   }
 
-  Info("WaylandProxyCreated, display %s\n", sWaylandProxy);
+  Info("WaylandProxyCreated, display %s\n", proxy->mWaylandProxy);
   return proxy;
 }
 
