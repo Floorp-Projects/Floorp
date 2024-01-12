@@ -414,6 +414,49 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
         }
     }
 
+    private fun initReloadAction(context: Context) {
+        if (!IncompleteRedesignToolbarFeature(context.settings()).isEnabled || refreshAction != null) {
+            return
+        }
+
+        refreshAction =
+            BrowserToolbar.TwoStateButton(
+                primaryImage = AppCompatResources.getDrawable(
+                    context,
+                    R.drawable.mozac_ic_arrow_clockwise_24,
+                )!!,
+                primaryContentDescription = context.getString(R.string.browser_menu_refresh),
+                primaryImageTintResource = ThemeManager.resolveAttribute(R.attr.textPrimary, context),
+                isInPrimaryState = {
+                    getCurrentTab()?.content?.loading == false
+                },
+                secondaryImage = AppCompatResources.getDrawable(
+                    context,
+                    R.drawable.mozac_ic_stop,
+                )!!,
+                secondaryContentDescription = context.getString(R.string.browser_menu_stop),
+                disableInSecondaryState = false,
+                longClickListener = {
+                    browserToolbarInteractor.onBrowserToolbarMenuItemTapped(
+                        ToolbarMenu.Item.Reload(bypassCache = true),
+                    )
+                },
+                listener = {
+                    if (getCurrentTab()?.content?.loading == true) {
+                        browserToolbarInteractor.onBrowserToolbarMenuItemTapped(ToolbarMenu.Item.Stop)
+                    } else {
+                        browserToolbarInteractor.onBrowserToolbarMenuItemTapped(
+                            ToolbarMenu.Item.Reload(bypassCache = false),
+                        )
+                    }
+                },
+            )
+
+        refreshAction?.let {
+            browserToolbarView.view.addPageAction(it)
+        }
+    }
+
     private fun initReviewQualityCheck(context: Context, view: View) {
         val reviewQualityCheck =
             BrowserToolbar.ToggleButton(
