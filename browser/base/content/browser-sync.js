@@ -821,6 +821,7 @@ var gSync = {
       // we should show the PXI panel instead of taking the user
       // straight to FxA sign-in
       if (this.PXI_TOOLBAR_ENABLED) {
+        this.updateFxAPanel(UIState.get());
         this.updateCTAPanel();
         PanelUI.showSubView("PanelUI-fxa", anchor, aEvent);
       } else {

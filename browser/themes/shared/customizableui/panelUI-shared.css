@@ -806,7 +806,7 @@ toolbarbutton[constrain-size="true"][cui-areatype="panel"] > .toolbarbutton-badg
 }
 
 #PanelUI-fxa-menu-vpn-button {
-  list-style-image: url(chrome://browser/content/logos/vpn-dark.svg);
+  list-style-image: url("chrome://browser/skin/preferences/vpn-logo.svg");
 }
 
 :root:not([fxastatus="signedin"]) #PanelUI-fxa-menu-connect-device-button {
