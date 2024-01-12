@@ -18004,16 +18004,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-tp6m-essential-fenix-facebook-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-essential-geckoview-facebook-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6m-live-fenix-facebook-nofis**
         - ❌
         - ❌
@@ -18035,21 +18025,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-tp6m-essential-chrome-m-facebook-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-essential-fenix-facebook-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-essential-geckoview-facebook-nofis**
-        - ✅
-        - ✅
-        - ❌
-        - ❌
       * - **browsertime-tp6m-live-chrome-m-facebook-nofis**
         - ❌
         - ❌
@@ -32522,16 +32497,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-tp6m-essential-fenix-facebook-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-essential-geckoview-facebook-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6m-live-fenix-facebook-nofis**
         - ❌
         - ❌
@@ -32553,21 +32518,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-tp6m-essential-chrome-m-facebook-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-essential-fenix-facebook-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-essential-geckoview-facebook-nofis**
-        - ✅
-        - ✅
-        - ❌
-        - ❌
       * - **browsertime-tp6m-live-chrome-m-facebook-nofis**
         - ❌
         - ❌
@@ -36849,16 +36799,6 @@ These tests aren't used in standard testing, they are only used in the Raptor un
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-tp6m-essential-fenix-facebook-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-essential-geckoview-facebook-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6m-live-fenix-facebook-nofis**
         - ❌
         - ❌
@@ -36880,21 +36820,6 @@ These tests aren't used in standard testing, they are only used in the Raptor un
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-tp6m-essential-chrome-m-facebook-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-essential-fenix-facebook-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-essential-geckoview-facebook-nofis**
-        - ✅
-        - ✅
-        - ❌
-        - ❌
       * - **browsertime-tp6m-live-chrome-m-facebook-nofis**
         - ❌
         - ❌
