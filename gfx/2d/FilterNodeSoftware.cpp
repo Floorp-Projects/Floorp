@@ -2578,7 +2578,7 @@ IntRect FilterNodeConvolveMatrixSoftware::InflatedDestRect(
 IntRect FilterNodeConvolveMatrixSoftware::GetOutputRectInRect(
     const IntRect& aRect) {
   IntRect srcRequest = InflatedSourceRect(aRect);
-  IntRect srcOutput = GetInputRectInRect(IN_COLOR_MATRIX_IN, srcRequest);
+  IntRect srcOutput = GetInputRectInRect(IN_CONVOLVE_MATRIX_IN, srcRequest);
   return InflatedDestRect(srcOutput).Intersect(aRect);
 }
 
