@@ -139,20 +139,12 @@ function audioTestData() {
           decoder: "ffvpx audio decoder",
         },
         WINNT: {
-          process: SpecialPowers.getBoolPref("media.ffvpx.mp3.enabled")
-            ? "Utility Generic"
-            : "Utility WMF",
-          decoder: SpecialPowers.getBoolPref("media.ffvpx.mp3.enabled")
-            ? "ffvpx audio decoder"
-            : "wmf audio decoder",
+          process: "Utility Generic",
+          decoder: "ffvpx audio decoder",
         },
         Darwin: {
-          process: SpecialPowers.getBoolPref("media.ffvpx.mp3.enabled")
-            ? "Utility Generic"
-            : "Utility AppleMedia",
-          decoder: SpecialPowers.getBoolPref("media.ffvpx.mp3.enabled")
-            ? "ffvpx audio decoder"
-            : "apple coremedia decoder",
+          process: "Utility Generic",
+          decoder: "ffvpx audio decoder",
         },
       },
     },

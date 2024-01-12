@@ -425,41 +425,23 @@ MediaResult FFmpegAudioDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample,
 
 AVCodecID FFmpegAudioDecoder<LIBAV_VER>::GetCodecId(const nsACString& aMimeType,
                                                     const AudioInfo& aInfo) {
-  if (aMimeType.EqualsLiteral("audio/mpeg")) {
+  if (aMimeType.EqualsLiteral("audio/mp4a-latm")) {
+    return AV_CODEC_ID_AAC;
+  }
 #ifdef FFVPX_VERSION
-    if (!StaticPrefs::media_ffvpx_mp3_enabled()) {
-      return AV_CODEC_ID_NONE;
-    }
-#endif
+  if (aMimeType.EqualsLiteral("audio/mpeg")) {
     return AV_CODEC_ID_MP3;
   }
   if (aMimeType.EqualsLiteral("audio/flac")) {
     return AV_CODEC_ID_FLAC;
   }
-  if (aMimeType.EqualsLiteral("audio/mp4a-latm")) {
-    return AV_CODEC_ID_AAC;
-  }
   if (aMimeType.EqualsLiteral("audio/vorbis")) {
-#ifdef FFVPX_VERSION
-    if (!StaticPrefs::media_ffvpx_vorbis_enabled()) {
-      return AV_CODEC_ID_NONE;
-    }
-#endif
     return AV_CODEC_ID_VORBIS;
   }
-#ifdef FFVPX_VERSION
   if (aMimeType.EqualsLiteral("audio/opus")) {
-    if (!StaticPrefs::media_ffvpx_opus_enabled()) {
-      return AV_CODEC_ID_NONE;
-    }
     return AV_CODEC_ID_OPUS;
   }
-#endif
-#ifdef FFVPX_VERSION
   if (aMimeType.Find("wav") != kNotFound) {
-    if (!StaticPrefs::media_ffvpx_wav_enabled()) {
-      return AV_CODEC_ID_NONE;
-    }
     if (aMimeType.EqualsLiteral("audio/x-wav") ||
         aMimeType.EqualsLiteral("audio/wave; codecs=1") ||
         aMimeType.EqualsLiteral("audio/wave; codecs=65534")) {

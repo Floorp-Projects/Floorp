@@ -303,12 +303,9 @@ bool WMFDecoderModule::CanCreateMFTDecoder(const WMFStreamType& aType) {
         return false;
       }
       break;
+    // Always use ffvpx for mp3
     case WMFStreamType::MP3:
-      // Prefer ffvpx mp3 decoder over WMF.
-      if (StaticPrefs::media_ffvpx_mp3_enabled()) {
-        return false;
-      }
-      break;
+      return false;
     default:
       break;
   }

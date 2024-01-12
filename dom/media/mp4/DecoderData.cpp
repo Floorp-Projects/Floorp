@@ -13,8 +13,6 @@
 #include "MP4Metadata.h"
 #include "mozilla/Logging.h"
 
-// OpusDecoder header is really needed only by MP4 in rust
-#include "OpusDecoder.h"
 #include "mp4parse.h"
 
 #define LOG(...) \
