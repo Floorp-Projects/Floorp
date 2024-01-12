@@ -466,25 +466,7 @@ static const Maybe<Vector<const wchar_t*>>& GetPrespawnCigExceptionModules() {
       return Nothing();
     }
 
-    Span<const wchar_t> dependentModules = sharedSection->GetDependentModules();
-    if (dependentModules.IsEmpty()) {
-      return Nothing();
-    }
-
-    // Convert a null-delimited string set to a string vector.
-    Vector<const wchar_t*> paths;
-    for (const wchar_t* p = dependentModules.data();
-         (p - dependentModules.data() <
-              static_cast<long long>(dependentModules.size()) &&
-          *p);) {
-      Unused << paths.append(p);
-      while (*p) {
-        ++p;
-      }
-      ++p;
-    }
-
-    return Some(std::move(paths));
+    return sharedSection->GetDependentModules();
   }();
 
   return sDependentModules;

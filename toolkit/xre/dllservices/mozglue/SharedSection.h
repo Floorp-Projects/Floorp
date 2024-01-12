@@ -9,7 +9,8 @@
 
 #include <winternl.h>
 #include "nscore.h"
-#include "mozilla/Span.h"
+#include "mozilla/Maybe.h"
+#include "mozilla/Vector.h"
 #include "mozilla/WindowsDllBlocklistInfo.h"
 
 namespace mozilla::nt {
@@ -17,7 +18,9 @@ namespace mozilla::nt {
 // This interface provides a way to access winlauncher's shared section
 // through DllServices.
 struct NS_NO_VTABLE SharedSection {
-  virtual Span<const wchar_t> GetDependentModules() = 0;
+  // Returns the recorded dependent modules. A return value of Nothing()
+  // indicates an error. (for example, if the launcher process isn't active)
+  virtual Maybe<Vector<const wchar_t*>> GetDependentModules() = 0;
   // Returns a span of the whole space for dynamic blocklist entries.
   // Use IsValidDynamicBlocklistEntry() to determine the end of the list.
   virtual Span<const DllBlockInfoT<UNICODE_STRING>> GetDynamicBlocklist() = 0;

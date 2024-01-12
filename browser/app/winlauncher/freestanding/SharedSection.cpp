@@ -329,9 +329,29 @@ Kernel32ExportsSolver* SharedSection::GetKernel32Exports() {
   return writeCopyView ? &writeCopyView->mK32Exports : nullptr;
 }
 
-Span<const wchar_t> SharedSection::GetDependentModules() {
+Maybe<Vector<const wchar_t*>> SharedSection::GetDependentModules() {
   Layout* writeCopyView = EnsureWriteCopyView();
-  return writeCopyView ? writeCopyView->GetDependentModules() : nullptr;
+  if (!writeCopyView) {
+    return Nothing();
+  }
+
+  mozilla::Span<wchar_t> dependentModules =
+      writeCopyView->GetDependentModules();
+  // Convert a null-delimited string set to a string vector.
+  Vector<const wchar_t*> paths;
+  for (const wchar_t* p = dependentModules.data();
+       (p - dependentModules.data() <
+            static_cast<long long>(dependentModules.size()) &&
+        *p);) {
+    if (MOZ_UNLIKELY(!paths.append(p))) {
+      return Nothing();
+    }
+    while (*p) {
+      ++p;
+    }
+    ++p;
+  }
+  return Some(std::move(paths));
 }
 
 Span<const DllBlockInfo> SharedSection::GetDynamicBlocklist() {
