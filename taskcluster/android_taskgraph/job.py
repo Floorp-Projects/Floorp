@@ -89,6 +89,7 @@ def configure_gradlew(config, job, taskdesc):
                 topsrc_dir,
                 "mobile/android/config/mozconfigs/android-arm/nightly-android-lints",
             ),
+            "MOZ_BUILD_DATE": config.params["moz_build_date"],
         }
     )
 
