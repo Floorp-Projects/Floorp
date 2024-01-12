@@ -98,6 +98,7 @@ import org.mozilla.fenix.components.appstate.bindings.BrowserStoreBinding
 import org.mozilla.fenix.components.metrics.BreadcrumbsRecorder
 import org.mozilla.fenix.components.metrics.GrowthDataWorker
 import org.mozilla.fenix.components.metrics.fonts.FontEnumerationWorker
+import org.mozilla.fenix.customtabs.ExternalAppBrowserActivity
 import org.mozilla.fenix.databinding.ActivityHomeBinding
 import org.mozilla.fenix.debugsettings.data.DefaultDebugSettingsRepository
 import org.mozilla.fenix.debugsettings.ui.FenixOverlay
@@ -662,7 +663,10 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         components.core.pocketStoriesService.stopPeriodicSponsoredStoriesRefresh()
         privateNotificationObserver?.stop()
         components.notificationsDelegate.unBindActivity(this)
-        stopMediaSession()
+
+        if (this !is ExternalAppBrowserActivity) {
+            stopMediaSession()
+        }
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
