@@ -137,11 +137,11 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
                                nsISerialEventTarget* aMainThread);
   static MediaTrackGraphImpl* GetInstance(
       GraphDriverType aGraphDriverRequested, uint64_t aWindowID,
-      TrackRate aSampleRate, CubebUtils::AudioDeviceID aOutputDeviceID,
+      TrackRate aSampleRate, CubebUtils::AudioDeviceID aPrimaryOutputDeviceID,
       nsISerialEventTarget* aMainThread);
   static MediaTrackGraphImpl* GetInstanceIfExists(
       uint64_t aWindowID, TrackRate aSampleRate,
-      CubebUtils::AudioDeviceID aOutputDeviceID);
+      CubebUtils::AudioDeviceID aPrimaryOutputDeviceID);
   // For GraphHashSet:
   struct Lookup;
   operator Lookup() const;
@@ -515,8 +515,9 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
     mTrackOrderDirty = true;
   }
 
-  // Get the current maximum channel count. Graph thread only.
-  uint32_t AudioOutputChannelCount() const;
+  // Get the current maximum channel count for audio output through an
+  // AudioCallbackDriver.  Graph thread only.
+  uint32_t PrimaryOutputChannelCount() const;
   // Set a new maximum channel count. Graph thread only.
   void SetMaxOutputChannelCount(uint32_t aMaxChannelCount);
 
@@ -645,6 +646,11 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
 
   // Data members
 
+  /**
+   * The ID of the inner Window which uses this graph, or zero for offline
+   * graphs.
+   */
+  const uint64_t mWindowID;
   /*
    * If set, the GraphRunner class handles handing over data from audio
    * callbacks to a common single thread, shared across GraphDrivers.
@@ -741,19 +747,6 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
    * still waiting for the next iteration to finish.
    */
   nsTArray<nsCOMPtr<nsIRunnable>> mPendingUpdateRunnables;
-
-  /**
-   * The ID of the inner Window which uses this graph, or zero for offline
-   * graphs.
-   */
-  const uint64_t mWindowID;
-  /**
-   * Devices to use for cubeb output, or nullptr for default device.
-   * A MediaTrackGraph always has an output (even if silent).
-   *
-   * All mOutputDeviceID access is on the graph thread.
-   */
-  const CubebUtils::AudioDeviceID mOutputDeviceID;
 
   /**
    * List of resume operations waiting for a switch to an AudioCallbackDriver.
