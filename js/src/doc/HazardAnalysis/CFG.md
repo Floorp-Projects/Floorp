@@ -46,7 +46,7 @@ A loop body (a body with BlockId.Kind == "Loop") will additionally have:
 
 Note that a loop may appear in more than one parent body. I believe this will not be used for regular structured code, but could be necessary to properly disentangle loops when using `goto`.
 
-`Name`: a 2-tuple containing a variable or function name. For non-functions, both elements are the same. For functions, .Name[0] is the full name of the function (in format "mangled\$unmangled") and .Name[1] is the base name of the function (unqualified, with no type or parameters):
+`Name`: a 2-tuple containing a variable or function name. The first element is a raw, internal name, and the second is a more user-facing name. For non-functions, both elements are normally the same, but `.Name[0]` could have a `:<n>` suffix if there are multiple variables of that name in different scopes within the same function, or a `<file>:` prefix for static variables. For functions, `.Name[0]` is the full name of the function (in format "mangled\$unmangled") and .Name[1] is the base name of the function (unqualified, with no type or parameters):
 
     "Variable": {
       "Kind": "Func",
