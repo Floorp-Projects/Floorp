@@ -258,17 +258,18 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
    * Proxy method called by GraphDriver to iterate the graph.
    * If this graph was created with GraphRunType SINGLE_THREAD, mGraphRunner
    * will take care of calling OneIterationImpl from its thread. Otherwise,
-   * OneIterationImpl is called directly. Output from the graph gets mixed into
-   * aMixer, if it is non-null.
+   * OneIterationImpl is called directly. Mixed audio output from the graph is
+   * passed into aMixerReceiver, if it is non-null.
    */
   IterationResult OneIteration(GraphTime aStateTime, GraphTime aIterationEnd,
-                               AudioMixer* aMixer) override;
+                               MixerCallbackReceiver* aMixerReceiver) override;
 
   /**
    * Returns true if this MediaTrackGraph should keep running
    */
   IterationResult OneIterationImpl(GraphTime aStateTime,
-                                   GraphTime aIterationEnd, AudioMixer* aMixer);
+                                   GraphTime aIterationEnd,
+                                   MixerCallbackReceiver* aMixerReceiver);
 
   /**
    * Called from the driver, when the graph thread is about to stop, to tell
@@ -340,7 +341,7 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
    * Do all the processing and play the audio and video, from
    * mProcessedTime to mStateComputedTime.
    */
-  void Process(AudioMixer* aMixer);
+  void Process(MixerCallbackReceiver* aMixerReceiver);
 
   /**
    * For use during ProcessedMediaTrack::ProcessInput() or
@@ -430,8 +431,7 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
     void* mKey;
     float mVolume;
   };
-  TrackTime PlayAudio(AudioMixer* aMixer, const TrackKeyAndVolume& aTkv,
-                      GraphTime aPlayedTime);
+  TrackTime PlayAudio(const TrackKeyAndVolume& aTkv, GraphTime aPlayedTime);
 
   /* Runs off a message on the graph thread when something requests audio from
    * an input audio device of ID aID, and delivers the input audio frames to
@@ -1049,6 +1049,12 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
    * Manage the native or non-native input device in graph. Graph thread only.
    */
   DeviceInputTrackManager mDeviceInputTrackManagerGraphThread;
+  /**
+   * The mixer that the graph mixes into during an iteration. This is here
+   * rather than on the stack so that its buffer is not allocated each
+   * iteration. Graph thread only.
+   */
+  AudioMixer mMixer;
 };
 
 }  // namespace mozilla

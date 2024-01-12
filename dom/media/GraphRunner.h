@@ -36,7 +36,7 @@ class GraphRunner final : public Runnable {
    * the iteration there.
    */
   IterationResult OneIteration(GraphTime aStateTime, GraphTime aIterationEnd,
-                               AudioMixer* aMixer);
+                               MixerCallbackReceiver* aMixerReceiver);
 
   /**
    * Runs mGraph until it shuts down.
@@ -64,18 +64,18 @@ class GraphRunner final : public Runnable {
   class IterationState {
     GraphTime mStateTime;
     GraphTime mIterationEnd;
-    AudioMixer* MOZ_NON_OWNING_REF mMixer;
+    MixerCallbackReceiver* MOZ_NON_OWNING_REF mMixerReceiver;
 
    public:
     IterationState(GraphTime aStateTime, GraphTime aIterationEnd,
-                   AudioMixer* aMixer)
+                   MixerCallbackReceiver* aMixerReceiver)
         : mStateTime(aStateTime),
           mIterationEnd(aIterationEnd),
-          mMixer(aMixer) {}
+          mMixerReceiver(aMixerReceiver) {}
     IterationState& operator=(const IterationState& aOther) = default;
     GraphTime StateTime() const { return mStateTime; }
     GraphTime IterationEnd() const { return mIterationEnd; }
-    AudioMixer* Mixer() const { return mMixer; }
+    MixerCallbackReceiver* MixerReceiver() const { return mMixerReceiver; }
   };
 
   // Monitor used for yielding mThread through Wait(), and scheduling mThread

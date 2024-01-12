@@ -653,12 +653,10 @@ void MediaTrackGraphImpl::UpdateTrackOrder() {
   MOZ_ASSERT(orderedTrackCount == mFirstCycleBreaker);
 }
 
-TrackTime MediaTrackGraphImpl::PlayAudio(AudioMixer* aMixer,
-                                         const TrackKeyAndVolume& aTkv,
+TrackTime MediaTrackGraphImpl::PlayAudio(const TrackKeyAndVolume& aTkv,
                                          GraphTime aPlayedTime) {
   MOZ_ASSERT(OnGraphThread());
   MOZ_ASSERT(mRealtime, "Should only attempt to play audio in realtime mode");
-  MOZ_ASSERT(aMixer, "Can only play audio if there's a mixer");
 
   TrackTime ticksWritten = 0;
 
@@ -745,7 +743,7 @@ TrackTime MediaTrackGraphImpl::PlayAudio(AudioMixer* aMixer,
     } else {
       outputChannels = AudioOutputChannelCount();
     }
-    output.Mix(*aMixer, outputChannels, mSampleRate);
+    output.Mix(mMixer, outputChannels, mSampleRate);
   }
   return ticksWritten;
 }
@@ -1428,7 +1426,7 @@ void MediaTrackGraphImpl::UpdateGraph(GraphTime aEndBlockingDecisions) {
   }
 }
 
-void MediaTrackGraphImpl::Process(AudioMixer* aMixer) {
+void MediaTrackGraphImpl::Process(MixerCallbackReceiver* aMixerReceiver) {
   TRACE("MTG::Process");
   MOZ_ASSERT(OnGraphThread());
   // Play track contents.
@@ -1477,15 +1475,14 @@ void MediaTrackGraphImpl::Process(AudioMixer* aMixer) {
   }
   mProcessedTime = mStateComputedTime;
 
-  if (aMixer) {
+  if (aMixerReceiver) {
     MOZ_ASSERT(mRealtime, "If there's a mixer, this graph must be realtime");
-    aMixer->StartMixing();
+    mMixer.StartMixing();
     // This is the number of frames that are written to the output buffer, for
     // this iteration.
     TrackTime ticksPlayed = 0;
     for (auto& t : mAudioOutputs) {
-      TrackTime ticksPlayedForThisTrack =
-          PlayAudio(aMixer, t, oldProcessedTime);
+      TrackTime ticksPlayedForThisTrack = PlayAudio(t, oldProcessedTime);
       if (ticksPlayed == 0) {
         ticksPlayed = ticksPlayedForThisTrack;
       } else {
@@ -1499,12 +1496,11 @@ void MediaTrackGraphImpl::Process(AudioMixer* aMixer) {
       // Nothing was played, so the mixer doesn't know how many frames were
       // processed. We still tell it so AudioCallbackDriver knows how much has
       // been processed. (bug 1406027)
-      aMixer->Mix(
-          nullptr,
-          CurrentDriver()->AsAudioCallbackDriver()->OutputChannelCount(),
-          mStateComputedTime - oldProcessedTime, mSampleRate);
+      mMixer.Mix(nullptr,
+                 CurrentDriver()->AsAudioCallbackDriver()->OutputChannelCount(),
+                 mStateComputedTime - oldProcessedTime, mSampleRate);
     }
-    aMixer->FinishMixing();
+    aMixerReceiver->MixerCallback(mMixer.MixedChunk(), mSampleRate);
   }
 
   if (!allBlockedForever) {
@@ -1541,18 +1537,19 @@ bool MediaTrackGraphImpl::UpdateMainThreadState() {
 
 auto MediaTrackGraphImpl::OneIteration(GraphTime aStateTime,
                                        GraphTime aIterationEnd,
-                                       AudioMixer* aMixer) -> IterationResult {
+                                       MixerCallbackReceiver* aMixerReceiver)
+    -> IterationResult {
   if (mGraphRunner) {
-    return mGraphRunner->OneIteration(aStateTime, aIterationEnd, aMixer);
+    return mGraphRunner->OneIteration(aStateTime, aIterationEnd,
+                                      aMixerReceiver);
   }
 
-  return OneIterationImpl(aStateTime, aIterationEnd, aMixer);
+  return OneIterationImpl(aStateTime, aIterationEnd, aMixerReceiver);
 }
 
-auto MediaTrackGraphImpl::OneIterationImpl(GraphTime aStateTime,
-                                           GraphTime aIterationEnd,
-                                           AudioMixer* aMixer)
-    -> IterationResult {
+auto MediaTrackGraphImpl::OneIterationImpl(
+    GraphTime aStateTime, GraphTime aIterationEnd,
+    MixerCallbackReceiver* aMixerReceiver) -> IterationResult {
   TRACE("MTG::OneIterationImpl");
 
   mIterationEndTime = aIterationEnd;
@@ -1596,7 +1593,7 @@ auto MediaTrackGraphImpl::OneIterationImpl(GraphTime aStateTime,
   mStateComputedTime = stateTime;
 
   GraphTime oldProcessedTime = mProcessedTime;
-  Process(aMixer);
+  Process(aMixerReceiver);
   MOZ_ASSERT(mProcessedTime == stateTime);
 
   UpdateCurrentTimeForTracks(oldProcessedTime);

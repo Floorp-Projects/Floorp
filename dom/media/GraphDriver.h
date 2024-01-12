@@ -193,11 +193,11 @@ struct GraphInterface : public nsISupports {
    * plug/unplug etc. This can be called on any thread, and posts a message to
    * the main thread so that it can post a message to the graph thread. */
   virtual void DeviceChanged() = 0;
-  /* Called by GraphDriver to iterate the graph. Output from the graph gets
-   * mixed into aMixer, if it is non-null. */
-  virtual IterationResult OneIteration(GraphTime aStateComputedEnd,
-                                       GraphTime aIterationEnd,
-                                       AudioMixer* aMixer) = 0;
+  /* Called by GraphDriver to iterate the graph. Mixed audio output from the
+   * graph is passed into aMixerReceiver, if it is non-null. */
+  virtual IterationResult OneIteration(
+      GraphTime aStateComputedEnd, GraphTime aIterationEnd,
+      MixerCallbackReceiver* aMixerReceiver) = 0;
 #ifdef DEBUG
   /* True if we're on aDriver's thread, or if we're on mGraphRunner's thread
    * and mGraphRunner is currently run by aDriver. */
@@ -719,9 +719,6 @@ class AudioCallbackDriver : public GraphDriver, public MixerCallbackReceiver {
    * must run serially for access to mAudioStream. */
   const RefPtr<SharedThreadPool> mCubebOperationThread;
   cubeb_device_pref mInputDevicePreference;
-  /* The mixer that the graph mixes into during an iteration. Audio thread only.
-   */
-  AudioMixer mMixer;
   /* Contains the id of the audio thread, from profiler_current_thread_id. */
   std::atomic<ProfilerThreadId> mAudioThreadId;
   /* This allows implementing AutoInCallback. This is equal to the current

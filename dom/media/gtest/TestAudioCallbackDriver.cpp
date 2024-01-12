@@ -35,14 +35,13 @@ class MockGraphInterface : public GraphInterface {
   /* OneIteration cannot be mocked because IterationResult is non-memmovable and
    * cannot be passed as a parameter, which GMock does internally. */
   IterationResult OneIteration(GraphTime aStateComputedTime, GraphTime,
-                               AudioMixer* aMixer) {
+                               MixerCallbackReceiver* aMixerReceiver) {
     GraphDriver* driver = mCurrentDriver;
-    if (aMixer) {
-      aMixer->StartMixing();
-      aMixer->Mix(nullptr,
-                  driver->AsAudioCallbackDriver()->OutputChannelCount(),
-                  aStateComputedTime - mStateComputedTime, mSampleRate);
-      aMixer->FinishMixing();
+    if (aMixerReceiver) {
+      mMixer.StartMixing();
+      mMixer.Mix(nullptr, driver->AsAudioCallbackDriver()->OutputChannelCount(),
+                 aStateComputedTime - mStateComputedTime, mSampleRate);
+      aMixerReceiver->MixerCallback(mMixer.MixedChunk(), mSampleRate);
     }
     if (aStateComputedTime != mStateComputedTime) {
       mFramesIteratedEvent.Notify(aStateComputedTime - mStateComputedTime);
@@ -93,6 +92,7 @@ class MockGraphInterface : public GraphInterface {
   Atomic<bool> mKeepProcessing{true};
   Atomic<GraphDriver*> mNextDriver{nullptr};
   MediaEventProducer<uint32_t> mFramesIteratedEvent;
+  AudioMixer mMixer;
   virtual ~MockGraphInterface() = default;
 };
 

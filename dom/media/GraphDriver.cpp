@@ -356,15 +356,15 @@ class AudioCallbackDriver::FallbackWrapper : public GraphInterface {
 #endif
   IterationResult OneIteration(GraphTime aStateComputedEnd,
                                GraphTime aIterationEnd,
-                               AudioMixer* aMixer) override {
-    MOZ_ASSERT(!aMixer);
+                               MixerCallbackReceiver* aMixerReceiver) override {
+    MOZ_ASSERT(!aMixerReceiver);
 
 #ifdef DEBUG
     AutoInCallback aic(mOwner);
 #endif
 
     IterationResult result =
-        mGraph->OneIteration(aStateComputedEnd, aIterationEnd, aMixer);
+        mGraph->OneIteration(aStateComputedEnd, aIterationEnd, aMixerReceiver);
 
     AudioStreamState audioState = mOwner->mAudioStreamState;
 
@@ -475,8 +475,6 @@ AudioCallbackDriver::AudioCallbackDriver(
   } else {
     mInputDevicePreference = CUBEB_DEVICE_PREF_ALL;
   }
-
-  mMixer.AddCallback(WrapNotNull(this));
 }
 
 AudioCallbackDriver::~AudioCallbackDriver() {
@@ -948,7 +946,7 @@ long AudioCallbackDriver::DataCallback(const AudioDataValue* aInputBuffer,
   }
 
   IterationResult result =
-      Graph()->OneIteration(nextStateComputedTime, mIterationEnd, &mMixer);
+      Graph()->OneIteration(nextStateComputedTime, mIterationEnd, this);
 
   mStateComputedTime = nextStateComputedTime;
 

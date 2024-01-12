@@ -10,7 +10,6 @@
 #include "AudioSegment.h"
 #include "AudioStream.h"
 #include "nsTArray.h"
-#include "mozilla/LinkedList.h"
 #include "mozilla/NotNull.h"
 #include "mozilla/PodOperations.h"
 
@@ -31,7 +30,7 @@ struct MixerCallbackReceiver {
  * length, sample rate, sample format and channel count. This class works with
  * planar buffers.
  *
- * When all the tracks have been mixed, calling FinishMixing will call back with
+ * When all the tracks have been mixed, calling MixedChunk() will provide
  * a buffer containing the mixed audio data.
  *
  * This class is not thread safe.
@@ -40,12 +39,7 @@ class AudioMixer {
  public:
   AudioMixer() { mChunk.mBufferFormat = AUDIO_OUTPUT_FORMAT; }
 
-  ~AudioMixer() {
-    MixerCallback* cb;
-    while ((cb = mCallbacks.popFirst())) {
-      delete cb;
-    }
-  }
+  ~AudioMixer() = default;
 
   void StartMixing() {
     mChunk.mDuration = 0;
@@ -53,18 +47,13 @@ class AudioMixer {
   }
 
   /* Get the data from the mixer. This is supposed to be called when all the
-   * tracks have been mixed in. The caller should not hold onto the data. */
-  void FinishMixing() {
+   * tracks have been mixed in. The caller MAY modify the chunk but MUST clear
+   * mBuffer if its data needs to survive the next call to Mix(). */
+  AudioChunk* MixedChunk() {
     MOZ_ASSERT(mSampleRate, "Mix not called for this cycle?");
-    for (MixerCallback* cb = mCallbacks.getFirst(); cb != nullptr;
-         cb = cb->getNext()) {
-      MixerCallbackReceiver* receiver = cb->mReceiver;
-      MOZ_ASSERT(receiver);
-      receiver->MixerCallback(&mChunk, mSampleRate);
-    }
-    mChunk.mDuration = 0;
     mSampleRate = 0;
-  }
+    return &mChunk;
+  };
 
   /* Add a buffer to the mix. The buffer can be null if there's nothing to mix
    * but the callback is still needed. */
@@ -91,32 +80,6 @@ class AudioMixer {
     }
   }
 
-  void AddCallback(NotNull<MixerCallbackReceiver*> aReceiver) {
-    mCallbacks.insertBack(new MixerCallback(aReceiver));
-  }
-
-  bool FindCallback(MixerCallbackReceiver* aReceiver) {
-    for (MixerCallback* cb = mCallbacks.getFirst(); cb != nullptr;
-         cb = cb->getNext()) {
-      if (cb->mReceiver == aReceiver) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  bool RemoveCallback(MixerCallbackReceiver* aReceiver) {
-    for (MixerCallback* cb = mCallbacks.getFirst(); cb != nullptr;
-         cb = cb->getNext()) {
-      if (cb->mReceiver == aReceiver) {
-        cb->remove();
-        delete cb;
-        return true;
-      }
-    }
-    return false;
-  }
-
  private:
   void EnsureCapacityAndSilence() {
     uint32_t sampleCount = mChunk.mDuration * mChunk.ChannelCount();
@@ -136,15 +99,6 @@ class AudioMixer {
     PodZero(mChunk.ChannelDataForWrite<AudioDataValue>(0), sampleCount);
   }
 
-  class MixerCallback : public LinkedListElement<MixerCallback> {
-   public:
-    explicit MixerCallback(NotNull<MixerCallbackReceiver*> aReceiver)
-        : mReceiver(aReceiver) {}
-    NotNull<MixerCallbackReceiver*> mReceiver;
-  };
-
-  /* Function that is called when the mixing is done. */
-  LinkedList<MixerCallback> mCallbacks;
   /* Buffer containing the mixed audio data. */
   AudioChunk mChunk;
   /* Size allocated for mChunk.mBuffer. */
