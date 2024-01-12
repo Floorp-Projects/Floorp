@@ -69,7 +69,7 @@ TEST(TestAudioInputSource, StartAndStop)
     EXPECT_FALSE(stream->mHasOutput);
     EXPECT_EQ(stream->GetInputDeviceID(), deviceId);
     EXPECT_EQ(stream->InputChannels(), channels);
-    EXPECT_EQ(stream->InputSampleRate(), static_cast<uint32_t>(sourceRate));
+    EXPECT_EQ(stream->SampleRate(), static_cast<uint32_t>(sourceRate));
 
     Unused << WaitFor(stream->FramesProcessedEvent());
 
@@ -85,7 +85,7 @@ TEST(TestAudioInputSource, StartAndStop)
     EXPECT_FALSE(stream->mHasOutput);
     EXPECT_EQ(stream->GetInputDeviceID(), deviceId);
     EXPECT_EQ(stream->InputChannels(), channels);
-    EXPECT_EQ(stream->InputSampleRate(), static_cast<uint32_t>(sourceRate));
+    EXPECT_EQ(stream->SampleRate(), static_cast<uint32_t>(sourceRate));
 
     Unused << WaitFor(stream->FramesProcessedEvent());
 

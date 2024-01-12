@@ -182,7 +182,7 @@ class MockCubebStream {
 
   uint32_t InputChannels() const;
   uint32_t OutputChannels() const;
-  uint32_t InputSampleRate() const;
+  uint32_t SampleRate() const;
   uint32_t InputFrequency() const;
 
   void SetDriftFactor(float aDriftFactor);
