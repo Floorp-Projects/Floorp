@@ -854,23 +854,6 @@ void MediaTrackGraphImpl::RegisterAudioOutput(MediaTrack* aTrack, void* aKey) {
   tkv->mTrack = aTrack;
   tkv->mKey = aKey;
   tkv->mVolume = 1.0;
-
-  if (!CurrentDriver()->AsAudioCallbackDriver() && !Switching()) {
-    NativeInputTrack* native =
-        mDeviceInputTrackManagerGraphThread.GetNativeInputTrack();
-    CubebUtils::AudioDeviceID inputDevice =
-        native ? native->mDeviceId : nullptr;
-    uint32_t inputChannelCount =
-        native ? AudioInputChannelCount(native->mDeviceId) : 0;
-    AudioInputType inputPreference =
-        native ? AudioInputDevicePreference(native->mDeviceId)
-               : AudioInputType::Unknown;
-
-    AudioCallbackDriver* driver = new AudioCallbackDriver(
-        this, CurrentDriver(), mSampleRate, AudioOutputChannelCount(),
-        inputChannelCount, mOutputDeviceID, inputDevice, inputPreference);
-    SwitchAtNextIteration(driver);
-  }
 }
 
 void MediaTrackGraphImpl::UnregisterAllAudioOutputs(MediaTrack* aTrack) {
