@@ -189,6 +189,7 @@ export class FormAutofillChild extends JSWindowActorChild {
 
     // acted on page navigation, remove progress listener
     this.#webProgress.removeProgressListener(observer);
+    this.#webProgress = null;
   }
 
   /**
