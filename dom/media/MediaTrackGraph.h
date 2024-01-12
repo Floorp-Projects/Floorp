@@ -401,9 +401,6 @@ class MediaTrack : public mozilla::LinkedListElement<MediaTrack> {
    */
   virtual void DestroyImpl();
   TrackTime GetEnd() const;
-  void SetAudioOutputVolumeImpl(void* aKey, float aVolume);
-  void AddAudioOutputImpl(void* aKey);
-  void RemoveAudioOutputImpl(void* aKey);
 
   /**
    * Removes all direct listeners and signals to them that they have been

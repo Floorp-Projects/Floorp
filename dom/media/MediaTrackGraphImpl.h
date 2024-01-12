@@ -202,7 +202,15 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
     AppendMessage(WrapUnique(new MediaTrack::ControlMessageWithNoShutdown(
         std::forward<Function>(aFunction))));
   }
+  /* Add or remove an audio output for this track.  At most one output may be
+   * registered per key. */
+  void RegisterAudioOutput(MediaTrack* aTrack, void* aKey);
+  void UnregisterAudioOutput(MediaTrack* aTrack, void* aKey);
 
+  void SetAudioOutputVolume(MediaTrack* aTrack, void* aKey, float aVolume);
+  /* Send a control message to update mAudioOutputs for main thread changes to
+   * mAudioOutputParams. */
+  void UpdateAudioOutput(MediaTrack* aTrack);
   /**
    * Dispatches a runnable from any thread to the correct main thread for this
    * MediaTrackGraph.
@@ -413,22 +421,16 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
   TrackTime GraphTimeToTrackTimeWithBlocking(const MediaTrack* aTrack,
                                              GraphTime aTime) const;
 
+ private:
   /**
    * Queue audio (mix of track audio and silence for blocked intervals)
    * to the audio output track. Returns the number of frames played.
    */
-  struct TrackAndKey {
-    MediaTrack* mTrack;
-    void* mKey;
-  };
-  struct TrackKeyAndVolume {
-    MediaTrack* mTrack;
-    void* mKey;
-    float mVolume;
-  };
-  TrackTime PlayAudio(const TrackKeyAndVolume& aTkv, GraphTime aPlayedTime,
+  struct TrackAndVolume;
+  TrackTime PlayAudio(const TrackAndVolume& aOutput, GraphTime aPlayedTime,
                       uint32_t aOutputChannelCount);
 
+ public:
   /* Runs off a message on the graph thread when something requests audio from
    * an input audio device of ID aID, and delivers the input audio frames to
    * aListener. */
@@ -446,12 +448,7 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
    * audio from this audio input device. */
   virtual void CloseAudioInput(DeviceInputTrack* aTrack) override;
 
-  /* Add or remove an audio output for this track. All tracks that have an
-   * audio output are mixed and written to a single audio output stream. */
-  void RegisterAudioOutput(MediaTrack* aTrack, void* aKey);
-  void UnregisterAudioOutput(MediaTrack* aTrack, void* aKey);
   void UnregisterAllAudioOutputs(MediaTrack* aTrack);
-  void SetAudioOutputVolume(MediaTrack* aTrack, void* aKey, float aVolume);
 
   /* Called on the graph thread when the input device settings should be
    * reevaluated, for example, if the channel count of the input track should
@@ -989,11 +986,40 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
    * Track for window audio capture.
    */
   nsTArray<WindowAndTrack> mWindowCaptureTracks;
+
   /**
-   * Tracks that have their audio output mixed and written to an audio output
-   * device.
+   * Main thread unordered record of audio outputs, keyed by Track and output
+   * key.  Used to record the volumes corresponding to each key.  An array is
+   * used as a simple hash table, on the assumption that the number of outputs
+   * is small.
    */
-  nsTArray<TrackKeyAndVolume> mAudioOutputs;
+  struct TrackAndKey {
+    MOZ_UNSAFE_REF("struct exists only if track exists") MediaTrack* mTrack;
+    void* mKey;
+  };
+  struct TrackKeyAndVolume {
+    MOZ_UNSAFE_REF("struct exists only if track exists")
+    MediaTrack* const mTrack;
+    void* const mKey;
+    float mVolume;
+
+    bool operator==(const TrackAndKey& aTrackAndKey) const {
+      return mTrack == aTrackAndKey.mTrack && mKey == aTrackAndKey.mKey;
+    }
+  };
+  nsTArray<TrackKeyAndVolume> mAudioOutputParams;
+  /**
+   * Mapping from MediaTrack to volume for all tracks that have their audio
+   * output mixed and written to an audio output device.  Graph thread.
+   */
+  struct TrackAndVolume {
+    MOZ_UNSAFE_REF("struct exists only if track exists")
+    MediaTrack* const mTrack;
+    float mVolume;
+
+    bool operator==(const MediaTrack* aTrack) const { return mTrack == aTrack; }
+  };
+  nsTArray<TrackAndVolume> mAudioOutputs;
 
   /**
    * Global volume scale. Used when running tests so that the output is not too
@@ -1054,17 +1080,5 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
 };
 
 }  // namespace mozilla
-
-template <>
-class nsDefaultComparator<mozilla::MediaTrackGraphImpl::TrackKeyAndVolume,
-                          mozilla::MediaTrackGraphImpl::TrackAndKey> {
- public:
-  bool Equals(
-      const mozilla::MediaTrackGraphImpl::TrackKeyAndVolume& aElement,
-      const mozilla::MediaTrackGraphImpl::TrackAndKey& aTrackAndKey) const {
-    return aElement.mTrack == aTrackAndKey.mTrack &&
-           aElement.mKey == aTrackAndKey.mKey;
-  }
-};
 
 #endif /* MEDIATRACKGRAPHIMPL_H_ */

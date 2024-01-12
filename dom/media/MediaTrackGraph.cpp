@@ -653,7 +653,7 @@ void MediaTrackGraphImpl::UpdateTrackOrder() {
   MOZ_ASSERT(orderedTrackCount == mFirstCycleBreaker);
 }
 
-TrackTime MediaTrackGraphImpl::PlayAudio(const TrackKeyAndVolume& aTkv,
+TrackTime MediaTrackGraphImpl::PlayAudio(const TrackAndVolume& aOutput,
                                          GraphTime aPlayedTime,
                                          uint32_t aOutputChannelCount) {
   MOZ_ASSERT(OnGraphThread());
@@ -662,7 +662,7 @@ TrackTime MediaTrackGraphImpl::PlayAudio(const TrackKeyAndVolume& aTkv,
   TrackTime ticksWritten = 0;
 
   ticksWritten = 0;
-  MediaTrack* track = aTkv.mTrack;
+  MediaTrack* track = aOutput.mTrack;
   AudioSegment* audio = track->GetData<AudioSegment>();
   AudioSegment output;
 
@@ -729,7 +729,7 @@ TrackTime MediaTrackGraphImpl::PlayAudio(const TrackKeyAndVolume& aTkv,
              MediaTimeToSeconds(end), offset, endTicksNeeded));
         ticksWritten += toWrite;
       }
-      output.ApplyVolume(mGlobalVolume * aTkv.mVolume);
+      output.ApplyVolume(mGlobalVolume * aOutput.mVolume);
     }
     t = end;
 
@@ -846,31 +846,12 @@ void MediaTrackGraphImpl::CloseAudioInputImpl(DeviceInputTrack* aTrack) {
   }  // else SystemClockDriver->SystemClockDriver, no switch
 }
 
-void MediaTrackGraphImpl::RegisterAudioOutput(MediaTrack* aTrack, void* aKey) {
-  MOZ_ASSERT(OnGraphThread());
-  MOZ_ASSERT(!mAudioOutputs.Contains(TrackAndKey{aTrack, aKey}));
-
-  TrackKeyAndVolume* tkv = mAudioOutputs.AppendElement();
-  tkv->mTrack = aTrack;
-  tkv->mKey = aKey;
-  tkv->mVolume = 1.0;
-}
-
 void MediaTrackGraphImpl::UnregisterAllAudioOutputs(MediaTrack* aTrack) {
   MOZ_ASSERT(OnGraphThreadOrNotRunning());
 
-  mAudioOutputs.RemoveElementsBy([aTrack](const TrackKeyAndVolume& aTkv) {
-    return aTkv.mTrack == aTrack;
+  mAudioOutputs.RemoveElementsBy([aTrack](const TrackAndVolume& aOutput) {
+    return aOutput.mTrack == aTrack;
   });
-}
-
-void MediaTrackGraphImpl::UnregisterAudioOutput(MediaTrack* aTrack,
-                                                void* aKey) {
-  MOZ_ASSERT(OnGraphThreadOrNotRunning());
-
-  DebugOnly<bool> removed =
-      mAudioOutputs.RemoveElement(TrackAndKey{aTrack, aKey});
-  MOZ_ASSERT(removed, "Audio output not found");
 }
 
 void MediaTrackGraphImpl::CloseAudioInput(DeviceInputTrack* aTrack) {
@@ -2278,58 +2259,92 @@ TrackTime MediaTrack::GetEnd() const {
 }
 
 void MediaTrack::AddAudioOutput(void* aKey) {
+  MOZ_ASSERT(NS_IsMainThread());
   if (mMainThreadDestroyed) {
     return;
   }
-  QueueControlMessageWithNoShutdown([self = RefPtr{this}, this, aKey] {
-    TRACE("MediaTrack::AddAudioOutputImpl ControlMessage");
-    AddAudioOutputImpl(aKey);
-  });
+  LOG(LogLevel::Info, ("MediaTrack %p adding AudioOutput", this));
+  GraphImpl()->RegisterAudioOutput(this, aKey);
 }
 
 void MediaTrackGraphImpl::SetAudioOutputVolume(MediaTrack* aTrack, void* aKey,
                                                float aVolume) {
-  for (auto& tkv : mAudioOutputs) {
-    if (tkv.mKey == aKey && aTrack == tkv.mTrack) {
-      tkv.mVolume = aVolume;
+  MOZ_ASSERT(NS_IsMainThread());
+  for (auto& params : mAudioOutputParams) {
+    if (params.mKey == aKey && aTrack == params.mTrack) {
+      params.mVolume = aVolume;
+      UpdateAudioOutput(aTrack);
       return;
     }
   }
-  MOZ_CRASH("Audio stream key not found when setting the volume.");
-}
-
-void MediaTrack::SetAudioOutputVolumeImpl(void* aKey, float aVolume) {
-  MOZ_ASSERT(GraphImpl()->OnGraphThread());
-  GraphImpl()->SetAudioOutputVolume(this, aKey, aVolume);
+  MOZ_CRASH("Audio output key not found when setting the volume.");
 }
 
 void MediaTrack::SetAudioOutputVolume(void* aKey, float aVolume) {
   if (mMainThreadDestroyed) {
     return;
   }
-  QueueControlMessageWithNoShutdown([self = RefPtr{this}, this, aKey, aVolume] {
-    TRACE("MediaTrack::SetAudioOutputVolumeImpl ControlMessage");
-    SetAudioOutputVolumeImpl(aKey, aVolume);
-  });
+  GraphImpl()->SetAudioOutputVolume(this, aKey, aVolume);
 }
 
-void MediaTrack::AddAudioOutputImpl(void* aKey) {
-  LOG(LogLevel::Info, ("MediaTrack %p adding AudioOutput", this));
-  GraphImpl()->RegisterAudioOutput(this, aKey);
-}
-
-void MediaTrack::RemoveAudioOutputImpl(void* aKey) {
+void MediaTrack::RemoveAudioOutput(void* aKey) {
+  MOZ_ASSERT(NS_IsMainThread());
+  if (mMainThreadDestroyed) {
+    return;
+  }
   LOG(LogLevel::Info, ("MediaTrack %p removing AudioOutput", this));
   GraphImpl()->UnregisterAudioOutput(this, aKey);
 }
 
-void MediaTrack::RemoveAudioOutput(void* aKey) {
-  if (mMainThreadDestroyed) {
-    return;
+void MediaTrackGraphImpl::RegisterAudioOutput(MediaTrack* aTrack, void* aKey) {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!mAudioOutputParams.Contains(TrackAndKey{aTrack, aKey}));
+
+  mAudioOutputParams.EmplaceBack(TrackKeyAndVolume{aTrack, aKey, 1.f});
+
+  UpdateAudioOutput(aTrack);
+}
+
+void MediaTrackGraphImpl::UnregisterAudioOutput(MediaTrack* aTrack,
+                                                void* aKey) {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  size_t index = mAudioOutputParams.IndexOf(TrackAndKey{aTrack, aKey});
+  MOZ_ASSERT(index != mAudioOutputParams.NoIndex);
+  mAudioOutputParams.UnorderedRemoveElementAt(index);
+
+  UpdateAudioOutput(aTrack);
+}
+
+void MediaTrackGraphImpl::UpdateAudioOutput(MediaTrack* aTrack) {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!aTrack->IsDestroyed());
+
+  float volume = 0.f;
+  bool found = false;
+  for (const auto& params : mAudioOutputParams) {
+    if (params.mTrack == aTrack) {
+      volume += params.mVolume;
+      found = true;
+    }
   }
-  QueueControlMessageWithNoShutdown([self = RefPtr{this}, this, aKey] {
-    TRACE("MediaTrack::RemoveAudioOutputImpl ControlMessage");
-    RemoveAudioOutputImpl(aKey);
+
+  QueueControlMessageWithNoShutdown([track = RefPtr{aTrack}, volume, found] {
+    TRACE("MediaTrack::UpdateAudioOutput ControlMessage");
+    MediaTrackGraphImpl* graph = track->GraphImpl();
+    auto& audioOutputsRef = graph->mAudioOutputs;
+    if (found) {
+      for (auto& outputRef : audioOutputsRef) {
+        if (outputRef.mTrack == track) {
+          outputRef.mVolume = volume;
+          return;
+        }
+      }
+      audioOutputsRef.EmplaceBack(TrackAndVolume{track, volume});
+    } else {
+      DebugOnly<bool> removed = audioOutputsRef.RemoveElement(track);
+      MOZ_ASSERT(removed);
+    }
   });
 }
 
@@ -3595,6 +3610,14 @@ void MediaTrackGraph::AddTrack(MediaTrack* aTrack) {
 void MediaTrackGraphImpl::RemoveTrack(MediaTrack* aTrack) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_DIAGNOSTIC_ASSERT(mMainThreadTrackCount > 0);
+
+  mAudioOutputParams.RemoveElementsBy([&](const TrackKeyAndVolume& aElement) {
+    if (aElement.mTrack != aTrack) {
+      return false;
+    };
+    return true;
+  });
+
   if (--mMainThreadTrackCount == 0) {
     LOG(LogLevel::Info, ("MediaTrackGraph %p, last track %p removed from "
                          "main thread. Graph will shut down.",
@@ -3815,8 +3838,8 @@ uint32_t MediaTrackGraphImpl::AudioOutputChannelCount() const {
   // channel count of all the tracks that are in mAudioOutputs, or the max audio
   // output channel count the machine can do, whichever is smaller.
   uint32_t channelCount = 0;
-  for (auto& tkv : mAudioOutputs) {
-    channelCount = std::max(channelCount, tkv.mTrack->NumberOfChannels());
+  for (const auto& output : mAudioOutputs) {
+    channelCount = std::max(channelCount, output.mTrack->NumberOfChannels());
   }
   channelCount = std::min(channelCount, mMaxOutputChannelCount);
   if (channelCount) {
