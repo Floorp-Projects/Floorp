@@ -5308,6 +5308,8 @@ var XULBrowserWindow = {
    *   nsIWebProgressListener.onLocationChange; see bug 1478348.
    */
   onLocationChange(aWebProgress, aRequest, aLocationURI, aFlags, aIsSimulated) {
+    // Floorp Injections
+    window.gFloorpOnLocationChange.onLocationChange(aWebProgress, aRequest, aLocationURI, aFlags, aIsSimulated);
     var location = aLocationURI ? aLocationURI.spec : "";
 
     UpdateBackForwardCommands(gBrowser.webNavigation);
