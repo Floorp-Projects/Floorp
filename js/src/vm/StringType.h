@@ -1716,11 +1716,11 @@ inline JSLinearString* NewStringCopyZ(
 }
 
 extern JSLinearString* NewStringCopyUTF8N(
-    JSContext* cx, const JS::UTF8Chars utf8, JS::SmallestEncoding encoding,
+    JSContext* cx, const JS::UTF8Chars& utf8, JS::SmallestEncoding encoding,
     js::gc::Heap heap = js::gc::Heap::Default);
 
 extern JSLinearString* NewStringCopyUTF8N(
-    JSContext* cx, const JS::UTF8Chars utf8,
+    JSContext* cx, const JS::UTF8Chars& utf8,
     js::gc::Heap heap = js::gc::Heap::Default);
 
 inline JSLinearString* NewStringCopyUTF8Z(

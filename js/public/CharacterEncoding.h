@@ -258,8 +258,8 @@ JS_PUBLIC_API char32_t Utf8ToOneUcs4Char(const uint8_t* utf8Buffer,
  *   its length;  the length value excludes the trailing null.
  */
 extern JS_PUBLIC_API TwoByteCharsZ
-UTF8CharsToNewTwoByteCharsZ(JSContext* cx, const UTF8Chars utf8, size_t* outlen,
-                            arena_id_t destArenaId);
+UTF8CharsToNewTwoByteCharsZ(JSContext* cx, const UTF8Chars& utf8,
+                            size_t* outlen, arena_id_t destArenaId);
 
 /*
  * Like UTF8CharsToNewTwoByteCharsZ, but for ConstUTF8CharsZ.
@@ -274,7 +274,7 @@ UTF8CharsToNewTwoByteCharsZ(JSContext* cx, const ConstUTF8CharsZ& utf8,
  * malformed UTF-8 input.
  */
 extern JS_PUBLIC_API TwoByteCharsZ
-LossyUTF8CharsToNewTwoByteCharsZ(JSContext* cx, const UTF8Chars utf8,
+LossyUTF8CharsToNewTwoByteCharsZ(JSContext* cx, const UTF8Chars& utf8,
                                  size_t* outlen, arena_id_t destArenaId);
 
 extern JS_PUBLIC_API TwoByteCharsZ
@@ -317,7 +317,7 @@ enum class SmallestEncoding { ASCII, Latin1, UTF16 };
  * codepoints are <128 then ASCII, otherwise if all codepoints are <256
  * Latin-1, else UTF16.
  */
-JS_PUBLIC_API SmallestEncoding FindSmallestEncoding(UTF8Chars utf8);
+JS_PUBLIC_API SmallestEncoding FindSmallestEncoding(const UTF8Chars& utf8);
 
 /*
  * Return a null-terminated Latin-1 string copied from the input string,
@@ -326,7 +326,7 @@ JS_PUBLIC_API SmallestEncoding FindSmallestEncoding(UTF8Chars utf8);
  * Latin1CharsZ() on failure.
  */
 extern JS_PUBLIC_API Latin1CharsZ
-UTF8CharsToNewLatin1CharsZ(JSContext* cx, const UTF8Chars utf8, size_t* outlen,
+UTF8CharsToNewLatin1CharsZ(JSContext* cx, const UTF8Chars& utf8, size_t* outlen,
                            arena_id_t destArenaId);
 
 /*
@@ -335,7 +335,7 @@ UTF8CharsToNewLatin1CharsZ(JSContext* cx, const UTF8Chars utf8, size_t* outlen,
  * codepoints are replaced by '?'.  Returns Latin1CharsZ() on failure.
  */
 extern JS_PUBLIC_API Latin1CharsZ
-LossyUTF8CharsToNewLatin1CharsZ(JSContext* cx, const UTF8Chars utf8,
+LossyUTF8CharsToNewLatin1CharsZ(JSContext* cx, const UTF8Chars& utf8,
                                 size_t* outlen, arena_id_t destArenaId);
 
 /*

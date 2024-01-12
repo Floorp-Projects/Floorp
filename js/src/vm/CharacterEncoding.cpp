@@ -264,7 +264,7 @@ enum class OnUTF8Error {
 // `dst`, in which case the output is discarded entirely--the only effect of
 // calling the template that way is error-checking.
 template <OnUTF8Error ErrorAction, typename OutputFn>
-static bool InflateUTF8ToUTF16(JSContext* cx, const UTF8Chars src,
+static bool InflateUTF8ToUTF16(JSContext* cx, const UTF8Chars& src,
                                OutputFn dst) {
   size_t srclen = src.length();
   for (uint32_t i = 0; i < srclen; i++) {
@@ -363,7 +363,7 @@ static bool InflateUTF8ToUTF16(JSContext* cx, const UTF8Chars src,
 }
 
 template <OnUTF8Error ErrorAction, typename CharT>
-static void CopyAndInflateUTF8IntoBuffer(JSContext* cx, const UTF8Chars src,
+static void CopyAndInflateUTF8IntoBuffer(JSContext* cx, const UTF8Chars& src,
                                          CharT* dst, size_t outlen,
                                          bool allASCII) {
   if (allASCII) {
@@ -384,7 +384,7 @@ static void CopyAndInflateUTF8IntoBuffer(JSContext* cx, const UTF8Chars src,
 }
 
 template <OnUTF8Error ErrorAction, typename CharsT>
-static CharsT InflateUTF8StringHelper(JSContext* cx, const UTF8Chars src,
+static CharsT InflateUTF8StringHelper(JSContext* cx, const UTF8Chars& src,
                                       size_t* outlen, arena_id_t destArenaId) {
   using CharT = typename CharsT::CharT;
   static_assert(
@@ -424,7 +424,7 @@ static CharsT InflateUTF8StringHelper(JSContext* cx, const UTF8Chars src,
 }
 
 TwoByteCharsZ JS::UTF8CharsToNewTwoByteCharsZ(JSContext* cx,
-                                              const UTF8Chars utf8,
+                                              const UTF8Chars& utf8,
                                               size_t* outlen,
                                               arena_id_t destArenaId) {
   return InflateUTF8StringHelper<OnUTF8Error::Throw, TwoByteCharsZ>(
@@ -441,7 +441,7 @@ TwoByteCharsZ JS::UTF8CharsToNewTwoByteCharsZ(JSContext* cx,
 }
 
 TwoByteCharsZ JS::LossyUTF8CharsToNewTwoByteCharsZ(JSContext* cx,
-                                                   const JS::UTF8Chars utf8,
+                                                   const JS::UTF8Chars& utf8,
                                                    size_t* outlen,
                                                    arena_id_t destArenaId) {
   return InflateUTF8StringHelper<OnUTF8Error::InsertReplacementCharacter,
@@ -471,8 +471,8 @@ static void UpdateSmallestEncodingForChar(char16_t c,
   }
 }
 
-JS::SmallestEncoding JS::FindSmallestEncoding(UTF8Chars utf8) {
-  Span<unsigned char> unsignedSpan = utf8;
+JS::SmallestEncoding JS::FindSmallestEncoding(const UTF8Chars& utf8) {
+  Span<const unsigned char> unsignedSpan = utf8;
   auto charSpan = AsChars(unsignedSpan);
   size_t upTo = AsciiValidUpTo(charSpan);
   if (upTo == charSpan.Length()) {
@@ -484,7 +484,8 @@ JS::SmallestEncoding JS::FindSmallestEncoding(UTF8Chars utf8) {
   return SmallestEncoding::UTF16;
 }
 
-Latin1CharsZ JS::UTF8CharsToNewLatin1CharsZ(JSContext* cx, const UTF8Chars utf8,
+Latin1CharsZ JS::UTF8CharsToNewLatin1CharsZ(JSContext* cx,
+                                            const UTF8Chars& utf8,
                                             size_t* outlen,
                                             arena_id_t destArenaId) {
   return InflateUTF8StringHelper<OnUTF8Error::Throw, Latin1CharsZ>(
@@ -492,7 +493,7 @@ Latin1CharsZ JS::UTF8CharsToNewLatin1CharsZ(JSContext* cx, const UTF8Chars utf8,
 }
 
 Latin1CharsZ JS::LossyUTF8CharsToNewLatin1CharsZ(JSContext* cx,
-                                                 const UTF8Chars utf8,
+                                                 const UTF8Chars& utf8,
                                                  size_t* outlen,
                                                  arena_id_t destArenaId) {
   return InflateUTF8StringHelper<OnUTF8Error::InsertQuestionMark, Latin1CharsZ>(
@@ -506,7 +507,7 @@ Latin1CharsZ JS::LossyUTF8CharsToNewLatin1CharsZ(JSContext* cx,
  * consumption.
  */
 
-bool GetUTF8AtomizationData(JSContext* cx, const JS::UTF8Chars utf8,
+bool GetUTF8AtomizationData(JSContext* cx, const JS::UTF8Chars& utf8,
                             size_t* outlen, JS::SmallestEncoding* encoding,
                             HashNumber* hashNum) {
   *outlen = 0;
@@ -528,7 +529,7 @@ bool GetUTF8AtomizationData(JSContext* cx, const JS::UTF8Chars utf8,
 }
 
 template <typename CharT>
-bool UTF8EqualsChars(const JS::UTF8Chars utfChars, const CharT* chars) {
+bool UTF8EqualsChars(const JS::UTF8Chars& utfChars, const CharT* chars) {
   size_t ind = 0;
   bool isEqual = true;
 
@@ -559,22 +560,22 @@ bool UTF8EqualsChars(const JS::UTF8Chars utfChars, const CharT* chars) {
   return isEqual;
 }
 
-template bool UTF8EqualsChars(const JS::UTF8Chars, const char16_t*);
-template bool UTF8EqualsChars(const JS::UTF8Chars, const JS::Latin1Char*);
+template bool UTF8EqualsChars(const JS::UTF8Chars&, const char16_t*);
+template bool UTF8EqualsChars(const JS::UTF8Chars&, const JS::Latin1Char*);
 
 template <typename CharT>
-void InflateUTF8CharsToBuffer(const JS::UTF8Chars src, CharT* dst,
+void InflateUTF8CharsToBuffer(const JS::UTF8Chars& src, CharT* dst,
                               size_t dstLen, JS::SmallestEncoding encoding) {
   CopyAndInflateUTF8IntoBuffer<OnUTF8Error::Crash>(
       /* cx = */ nullptr, src, dst, dstLen,
       encoding == JS::SmallestEncoding::ASCII);
 }
 
-template void InflateUTF8CharsToBuffer(const UTF8Chars src, char16_t* dst,
+template void InflateUTF8CharsToBuffer(const UTF8Chars& src, char16_t* dst,
                                        size_t dstLen,
                                        JS::SmallestEncoding encoding);
-template void InflateUTF8CharsToBuffer(const UTF8Chars src, JS::Latin1Char* dst,
-                                       size_t dstLen,
+template void InflateUTF8CharsToBuffer(const UTF8Chars& src,
+                                       JS::Latin1Char* dst, size_t dstLen,
                                        JS::SmallestEncoding encoding);
 
 #ifdef DEBUG
