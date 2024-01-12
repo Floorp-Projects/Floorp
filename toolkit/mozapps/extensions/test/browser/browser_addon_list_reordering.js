@@ -142,11 +142,18 @@ add_task(async function testReordering() {
   assertInSection(cardThree, "disabled", "cardThree stays in disabled");
 
   transitionsEnded = waitForTransitionEnd(cardOne, cardThree);
+  // We intentionally turn off this a11y check, because the following click
+  // is purposefully targeting a non-interactive element to clear the focused
+  // state with a mouse which can be done by assistive technology and keyboard
+  // by pressing `Esc` key, this rule check shall be ignored by a11y_checks suite.
+  AccessibilityUtils.setEnv({ mustHaveAccessibleRule: false });
+  // Click outside the list to clear any focus.
   EventUtils.synthesizeMouseAtCenter(
     win.document.querySelector(".header-name"),
     {},
     win
   );
+  AccessibilityUtils.resetEnv();
   await transitionsEnded;
 
   assertInSection(cardOne, "enabled", "cardOne is now in enabled");

@@ -397,12 +397,18 @@ add_task(async function testKeyboardSupport() {
   );
   isFocused(disableButton, "The disable button is still focused");
   let moved = BrowserTestUtils.waitForEvent(list, "move");
+  // We intentionally turn off this a11y check, because the following click
+  // is purposefully targeting a non-interactive element to clear the focused
+  // state with a mouse which can be done by assistive technology and keyboard
+  // by pressing `Esc`, this rule check shall be ignored by a11y_checks suite.
+  AccessibilityUtils.setEnv({ mustHaveAccessibleRule: false });
   // Click outside the list to clear any focus.
   EventUtils.synthesizeMouseAtCenter(
     doc.querySelector(".header-name"),
     {},
     win
   );
+  AccessibilityUtils.resetEnv();
   await moved;
   is(
     card.parentNode,
@@ -934,8 +940,14 @@ add_task(async function testDisabledDimming() {
   let doc = win.document;
   let pageHeader = doc.querySelector("addon-page-header");
 
+  // We intentionally turn off this a11y check, because the following click
+  // is purposefully targeting a non-interactive element to clear the focused
+  // state with a mouse which can be done by assistive technology and keyboard
+  // by pressing `Esc`, this rule check shall be ignored by a11y_checks suite.
+  AccessibilityUtils.setEnv({ mustHaveAccessibleRule: false });
   // Ensure there's no focus on the list.
   EventUtils.synthesizeMouseAtCenter(pageHeader, {}, win);
+  AccessibilityUtils.resetEnv();
 
   const checkOpacity = (card, expected, msg) => {
     let { opacity } = card.ownerGlobal.getComputedStyle(card.firstElementChild);
@@ -972,7 +984,13 @@ add_task(async function testDisabledDimming() {
 
   // Close the menu, opacity should return.
   transitionEnded = waitForTransition(card);
+  // We intentionally turn off this a11y check, because the following click
+  // is purposefully targeting a non-interactive element to dismiss the opened
+  // menu with a mouse which can be done by assistive technology and keyboard
+  // by pressing `Esc`, this rule check shall be ignored by a11y_checks suite.
+  AccessibilityUtils.setEnv({ mustHaveAccessibleRule: false });
   EventUtils.synthesizeMouseAtCenter(pageHeader, {}, win);
+  AccessibilityUtils.resetEnv();
   await transitionEnded;
   checkOpacity(card, "0.6", "The card is dimmed again");
 
