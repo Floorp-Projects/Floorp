@@ -542,7 +542,6 @@ const AVAILABLE_UA_OVERRIDES = [
     config: {
       matches: [
         "*://411.ca/", // #121332
-        "*://*.commerzbank.de/*", // Bug 1767630
         "*://*.mms.telekom.de/*", // #1800241
         "*://ubank.com.au/*", // #104099
         "*://wifi.sncf/*", // #100194
@@ -1071,23 +1070,6 @@ const AVAILABLE_UA_OVERRIDES = [
   },
   {
     /*
-     * Bug 1831441 - UA override for luna.amazon.com
-     *
-     * Games are unplayable unless a Chrome UA is used.
-     */
-    id: "bug1831441",
-    platform: "all",
-    domain: "luna.amazon.com",
-    bug: "1831441",
-    config: {
-      matches: ["*://luna.amazon.com/*"],
-      uaTransformer: originalUA => {
-        return UAHelpers.getDeviceAppropriateChromeUA();
-      },
-    },
-  },
-  {
-    /*
      * Bug 1836109 - UA override for watch.tonton.com.my
      *
      * The site's content is not loaded unless a Chrome UA is used.
@@ -1276,25 +1258,6 @@ const AVAILABLE_UA_OVERRIDES = [
       matches: ["*://my.southerncross.co.nz/*"],
       uaTransformer: originalUA => {
         return UAHelpers.getDeviceAppropriateChromeUA();
-      },
-    },
-  },
-  {
-    /*
-     * Bug 1858664 - UA override for tesco.com
-     *
-     * tesco.com shows access denied with a UA string with "rv:" segment
-     * higher than 109, and version higher than 120.
-     */
-    id: "bug1858664",
-    platform: "all",
-    domain: "tesco.com",
-    bug: "1858664",
-    config: {
-      matches: ["*://*.tesco.com/*"],
-      uaTransformer: originalUA => {
-        const cappedRv = UAHelpers.capRvTo109(originalUA);
-        return UAHelpers.capVersionToNumber(cappedRv);
       },
     },
   },
