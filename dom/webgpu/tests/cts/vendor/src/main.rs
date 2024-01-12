@@ -462,6 +462,7 @@ fn run(args: CliArgs) -> miette::Result<()> {
 
         struct WptEntry<'a> {
             cases: BTreeSet<&'a str>,
+            timeout_length: TimeoutLength,
         }
         enum TimeoutLength {
             Short,
@@ -478,7 +479,14 @@ fn run(args: CliArgs) -> miette::Result<()> {
                 assert!(split_cases.insert(path, cases).is_none());
             }
             for (spec_file_dir, cases) in cts_cases_by_spec_file_dir {
-                insert_with_default_name(&mut split_cases, spec_file_dir, WptEntry { cases });
+                insert_with_default_name(
+                    &mut split_cases,
+                    spec_file_dir,
+                    WptEntry {
+                        cases,
+                        timeout_length: TimeoutLength::Long,
+                    },
+                );
             }
             split_cases
         };
@@ -494,8 +502,15 @@ fn run(args: CliArgs) -> miette::Result<()> {
                 }
             }
             let file_contents = {
-                let WptEntry { cases } = entry;
-                let mut content = cts_boilerplate_long_timeout.as_bytes().to_vec();
+                let WptEntry {
+                    cases,
+                    timeout_length,
+                } = entry;
+                let content = match timeout_length {
+                    TimeoutLength::Short => &cts_boilerplate_short_timeout,
+                    TimeoutLength::Long => &cts_boilerplate_long_timeout,
+                };
+                let mut content = content.as_bytes().to_vec();
                 for meta in cases {
                     content.extend(meta.as_bytes());
                     content.extend(b"\n");
