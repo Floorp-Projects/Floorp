@@ -7794,7 +7794,7 @@ static bool GetThisDataObject(JSContext* cx, const CallArgs& args,
   return true;
 }
 
-typedef JS::TwoByteCharsZ (*InflateUTF8Method)(JSContext*, const JS::UTF8Chars,
+typedef JS::TwoByteCharsZ (*InflateUTF8Method)(JSContext*, const JS::UTF8Chars&,
                                                size_t*, arena_id_t);
 
 static bool ReadStringCommon(JSContext* cx, InflateUTF8Method inflateUTF8,

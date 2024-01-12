@@ -1873,7 +1873,7 @@ template JSAtom* NewAtomCopyNMaybeDeflateValidLength(JSContext* cx,
                                                      size_t n,
                                                      js::HashNumber hash);
 
-JSLinearString* NewStringCopyUTF8N(JSContext* cx, const JS::UTF8Chars utf8,
+JSLinearString* NewStringCopyUTF8N(JSContext* cx, const JS::UTF8Chars& utf8,
                                    JS::SmallestEncoding encoding,
                                    gc::Heap heap) {
   if (encoding == JS::SmallestEncoding::ASCII) {
@@ -1905,7 +1905,7 @@ JSLinearString* NewStringCopyUTF8N(JSContext* cx, const JS::UTF8Chars utf8,
   return NewString<js::CanGC>(cx, std::move(utf16), length, heap);
 }
 
-JSLinearString* NewStringCopyUTF8N(JSContext* cx, const JS::UTF8Chars utf8,
+JSLinearString* NewStringCopyUTF8N(JSContext* cx, const JS::UTF8Chars& utf8,
                                    gc::Heap heap) {
   JS::SmallestEncoding encoding = JS::FindSmallestEncoding(utf8);
   return NewStringCopyUTF8N(cx, utf8, encoding, heap);

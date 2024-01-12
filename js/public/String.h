@@ -67,7 +67,7 @@ extern JS_PUBLIC_API JSString* JS_NewStringCopyUTF8Z(
     JSContext* cx, const JS::ConstUTF8CharsZ s);
 
 extern JS_PUBLIC_API JSString* JS_NewStringCopyUTF8N(JSContext* cx,
-                                                     const JS::UTF8Chars s);
+                                                     const JS::UTF8Chars& s);
 
 extern JS_PUBLIC_API JSString* JS_AtomizeStringN(JSContext* cx, const char* s,
                                                  size_t length);

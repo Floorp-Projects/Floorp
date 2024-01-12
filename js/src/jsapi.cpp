@@ -3154,7 +3154,7 @@ JS_PUBLIC_API JSString* JS_NewStringCopyUTF8Z(JSContext* cx,
 }
 
 JS_PUBLIC_API JSString* JS_NewStringCopyUTF8N(JSContext* cx,
-                                              const JS::UTF8Chars s) {
+                                              const JS::UTF8Chars& s) {
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
   return NewStringCopyUTF8N(cx, s);
