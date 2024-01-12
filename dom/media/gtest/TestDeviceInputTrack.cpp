@@ -283,7 +283,7 @@ TEST_F(TestDeviceInputTrack, StartAndStop) {
     EXPECT_FALSE(stream->mHasOutput);
     EXPECT_EQ(stream->GetInputDeviceID(), deviceId);
     EXPECT_EQ(stream->InputChannels(), channels);
-    EXPECT_EQ(stream->InputSampleRate(), static_cast<uint32_t>(rate));
+    EXPECT_EQ(stream->SampleRate(), static_cast<uint32_t>(rate));
     EXPECT_EQ(track->NumberOfChannels(), channels);
     EXPECT_EQ(track->DevicePreference(), AudioInputType::Voice);
 
@@ -323,7 +323,7 @@ TEST_F(TestDeviceInputTrack, StartAndStop) {
     EXPECT_FALSE(stream->mHasOutput);
     EXPECT_EQ(stream->GetInputDeviceID(), deviceId);
     EXPECT_EQ(stream->InputChannels(), channels);
-    EXPECT_EQ(stream->InputSampleRate(), static_cast<uint32_t>(rate));
+    EXPECT_EQ(stream->SampleRate(), static_cast<uint32_t>(rate));
 
     // Wait for stream callbacks.
     Unused << WaitFor(stream->FramesProcessedEvent());
@@ -399,7 +399,7 @@ TEST_F(TestDeviceInputTrack, NonNativeInputTrackData) {
   EXPECT_FALSE(stream->mHasOutput);
   EXPECT_EQ(stream->GetInputDeviceID(), deviceId);
   EXPECT_EQ(stream->InputChannels(), channels);
-  EXPECT_EQ(stream->InputSampleRate(), static_cast<uint32_t>(rate));
+  EXPECT_EQ(stream->SampleRate(), static_cast<uint32_t>(rate));
 
   // Check audio data.
   Unused << WaitFor(stream->FramesProcessedEvent());
@@ -475,7 +475,7 @@ TEST_F(TestDeviceInputTrack, NonNativeDeviceChangedCallback) {
   EXPECT_FALSE(stream->mHasOutput);
   EXPECT_EQ(stream->GetInputDeviceID(), deviceId);
   EXPECT_EQ(stream->InputChannels(), channels);
-  EXPECT_EQ(stream->InputSampleRate(), static_cast<uint32_t>(rate));
+  EXPECT_EQ(stream->SampleRate(), static_cast<uint32_t>(rate));
 
   // Make sure the stream is running.
   Unused << WaitFor(stream->FramesProcessedEvent());
@@ -535,7 +535,7 @@ TEST_F(TestDeviceInputTrack, NonNativeErrorCallback) {
   EXPECT_FALSE(stream->mHasOutput);
   EXPECT_EQ(stream->GetInputDeviceID(), deviceId);
   EXPECT_EQ(stream->InputChannels(), channels);
-  EXPECT_EQ(stream->InputSampleRate(), static_cast<uint32_t>(rate));
+  EXPECT_EQ(stream->SampleRate(), static_cast<uint32_t>(rate));
 
   // Make sure the stream is running.
   Unused << WaitFor(stream->FramesProcessedEvent());

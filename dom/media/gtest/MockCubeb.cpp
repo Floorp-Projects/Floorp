@@ -176,6 +176,7 @@ MockCubebStream::MockCubebStream(
   }
   if (aOutputStreamParams) {
     mOutputParams = *aOutputStreamParams;
+    MOZ_ASSERT(SampleRate() == mOutputParams.rate);
   }
 }
 
@@ -291,7 +292,7 @@ uint32_t MockCubebStream::OutputChannels() const {
   return mOutputParams.channels;
 }
 
-uint32_t MockCubebStream::InputSampleRate() const {
+uint32_t MockCubebStream::SampleRate() const {
   return mAudioGenerator.mSampleRate;
 }
 
@@ -417,7 +418,7 @@ KeepProcessing MockCubebStream::Process(long aNrFrames) {
 
 KeepProcessing MockCubebStream::Process10Ms() {
   MOZ_ASSERT(mRunningMode == RunningMode::Automatic);
-  uint32_t rate = mHasOutput ? mOutputParams.rate : mInputParams.rate;
+  uint32_t rate = SampleRate();
   const long nrFrames =
       static_cast<long>(static_cast<float>(rate * 10) * mDriftFactor) /
       PR_MSEC_PER_SEC;

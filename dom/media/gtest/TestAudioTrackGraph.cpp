@@ -381,8 +381,7 @@ TEST(TestAudioTrackGraph, NonNativeInputTrackStartAndStop)
       EXPECT_FALSE(nonNativeStream->mHasOutput);
       EXPECT_EQ(nonNativeStream->GetInputDeviceID(), deviceId);
       EXPECT_EQ(nonNativeStream->InputChannels(), channels);
-      EXPECT_EQ(nonNativeStream->InputSampleRate(),
-                static_cast<uint32_t>(rate));
+      EXPECT_EQ(nonNativeStream->SampleRate(), static_cast<uint32_t>(rate));
 
       // Input channels and device preference should be set after start.
       {
@@ -442,8 +441,7 @@ TEST(TestAudioTrackGraph, NonNativeInputTrackStartAndStop)
       EXPECT_FALSE(nonNativeStream->mHasOutput);
       EXPECT_EQ(nonNativeStream->GetInputDeviceID(), deviceId);
       EXPECT_EQ(nonNativeStream->InputChannels(), channels);
-      EXPECT_EQ(nonNativeStream->InputSampleRate(),
-                static_cast<uint32_t>(rate));
+      EXPECT_EQ(nonNativeStream->SampleRate(), static_cast<uint32_t>(rate));
 
       Unused << WaitFor(nonNativeStream->FramesProcessedEvent());
 
@@ -512,7 +510,7 @@ TEST(TestAudioTrackGraph, NonNativeInputTrackErrorCallback)
     EXPECT_FALSE(nonNativeStream->mHasOutput);
     EXPECT_EQ(nonNativeStream->GetInputDeviceID(), deviceId);
     EXPECT_EQ(nonNativeStream->InputChannels(), channels);
-    EXPECT_EQ(nonNativeStream->InputSampleRate(), static_cast<uint32_t>(rate));
+    EXPECT_EQ(nonNativeStream->SampleRate(), static_cast<uint32_t>(rate));
 
     // Make sure the audio stream is running.
     Unused << WaitFor(nonNativeStream->FramesProcessedEvent());
@@ -1294,7 +1292,7 @@ TEST(TestAudioTrackGraph, AudioProcessingTrack)
     processingTrack->Destroy();
   });
 
-  uint32_t inputRate = stream->InputSampleRate();
+  uint32_t inputRate = stream->SampleRate();
   uint32_t inputFrequency = stream->InputFrequency();
   uint64_t preSilenceSamples;
   uint32_t estimatedFreq;
@@ -1434,7 +1432,7 @@ TEST(TestAudioTrackGraph, ReConnectDeviceInput)
     processingTrack->Destroy();
   });
 
-  uint32_t inputRate = stream->InputSampleRate();
+  uint32_t inputRate = stream->SampleRate();
   uint32_t inputFrequency = stream->InputFrequency();
   uint64_t preSilenceSamples;
   uint32_t estimatedFreq;
