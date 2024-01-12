@@ -9,6 +9,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <type_traits>
 #include "ErrorList.h"
 #include "js/BuildId.h"
 #include "js/ErrorReport.h"
@@ -25,6 +26,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/TextUtils.h"
 #include "mozilla/dom/DOMString.h"
 #include "mozilla/fallible.h"
 #include "nsAtom.h"
@@ -354,30 +356,58 @@ class XPCStringConvert {
     return JS::IsExternalStringLatin1(str, callbacks, chars);
   }
 
-  template <typename SrcCharT, typename DestCharT, typename T>
+  enum class AcceptedEncoding { All, ASCII };
+
+  template <typename SrcCharT, typename DestCharT, AcceptedEncoding encoding,
+            typename T>
   static MOZ_ALWAYS_INLINE bool MaybeAssignStringChars(JSString* s, size_t len,
                                                        T& dest) {
     MOZ_ASSERT(len == JS::GetStringLength(s));
+    static_assert(sizeof(SrcCharT) == sizeof(DestCharT));
+    if constexpr (encoding == AcceptedEncoding::ASCII) {
+      static_assert(
+          std::is_same_v<DestCharT, char>,
+          "AcceptedEncoding::ASCII can be used only with single byte");
+    }
 
     const JSExternalStringCallbacks* callbacks;
-    const SrcCharT* chars;
-    if (!MaybeGetExternalStringChars(s, &callbacks, &chars)) {
+    const DestCharT* chars;
+    if (!MaybeGetExternalStringChars(
+            s, &callbacks, reinterpret_cast<const SrcCharT**>(&chars))) {
       return false;
     }
 
+    auto isAscii = [&]() {
+      return mozilla::IsAscii(mozilla::Span(chars, len));
+    };
+
     if (callbacks == &sDOMStringExternalString) {
+      if constexpr (encoding == AcceptedEncoding::ASCII) {
+        if (!isAscii()) {
+          return false;
+        }
+      }
+
       // The characters represent an existing string buffer that we shared with
       // JS.  We can share that buffer ourselves if the string corresponds to
       // the whole buffer; otherwise we have to copy.
       if (chars[len] == '\0') {
+        // NOTE: No need to worry about SrcCharT vs DestCharT, given
+        //       nsStringBuffer::FromData takes void*.
         AssignFromStringBuffer(
-            nsStringBuffer::FromData(const_cast<SrcCharT*>(chars)), len, dest);
+            nsStringBuffer::FromData(const_cast<DestCharT*>(chars)), len, dest);
         return true;
       }
     } else if (callbacks == &sLiteralExternalString) {
+      if constexpr (encoding == AcceptedEncoding::ASCII) {
+        if (!isAscii()) {
+          return false;
+        }
+      }
+
       // The characters represent a literal string constant
       // compiled into libxul; we can just use it as-is.
-      dest.AssignLiteral(reinterpret_cast<const DestCharT*>(chars), len);
+      dest.AssignLiteral(chars, len);
       return true;
     }
 
@@ -388,14 +418,24 @@ class XPCStringConvert {
   template <typename T>
   static MOZ_ALWAYS_INLINE bool MaybeAssignUCStringChars(JSString* s,
                                                          size_t len, T& dest) {
-    return MaybeAssignStringChars<char16_t, char16_t>(s, len, dest);
+    return MaybeAssignStringChars<char16_t, char16_t, AcceptedEncoding::All>(
+        s, len, dest);
   }
 
   template <typename T>
   static MOZ_ALWAYS_INLINE bool MaybeAssignLatin1StringChars(JSString* s,
                                                              size_t len,
                                                              T& dest) {
-    return MaybeAssignStringChars<JS::Latin1Char, char>(s, len, dest);
+    return MaybeAssignStringChars<JS::Latin1Char, char, AcceptedEncoding::All>(
+        s, len, dest);
+  }
+
+  template <typename T>
+  static MOZ_ALWAYS_INLINE bool MaybeAssignUTF8StringChars(JSString* s,
+                                                           size_t len,
+                                                           T& dest) {
+    return MaybeAssignStringChars<JS::Latin1Char, char,
+                                  AcceptedEncoding::ASCII>(s, len, dest);
   }
 
  private:
