@@ -14,6 +14,7 @@
   <script class="testbody" type="text/javascript">
     "use strict";
 
+    var gAuthenticatorId;
     var gSameCredId;
     var gCrossCredId;
 
@@ -61,20 +62,56 @@
           .catch(e => Promise.reject(e.name));
     }
 
-    add_task(async function setup() {
-      let authenticatorId = await addVirtualAuthenticator();
-      gSameCredId = await addCredential(authenticatorId, document.domain).then(id => base64ToBytesUrlSafe(id));
-      gCrossCredId = await addCredential(authenticatorId, CROSS_DOMAIN).then(id => base64ToBytesUrlSafe(id));
-    });
+    function createCredential() {
+      const cose_alg_ECDSA_w_SHA256 = -7;
+      let publicKey = {
+        rp: {id: this.content.window.document.domain, name: "none"},
+        user: {id: new Uint8Array(), name: "none", displayName: "none"},
+        challenge: this.content.window.crypto.getRandomValues(new Uint8Array(16)),
+        pubKeyCredParams: [{type: "public-key", alg: cose_alg_ECDSA_w_SHA256}],
+      };
+
+      return this.content.window.navigator.credentials.create({publicKey})
+          .then(res => Promise.resolve(new Uint8Array(res.rawId)))
+          .catch(e => Promise.reject(e.name));
+    }
+
+    async function setup(preloadSame, preloadCross) {
+      if (!gAuthenticatorId) {
+          gAuthenticatorId = await addVirtualAuthenticator();
+      }
+      if (gSameCredId) {
+        removeCredential(gAuthenticatorId, bytesToBase64UrlSafe(gSameCredId));
+        gSameCredId = undefined;
+      }
+      if (gCrossCredId) {
+        removeCredential(gAuthenticatorId, bytesToBase64UrlSafe(gCrossCredId));
+        gCrossCredId = undefined;
+      }
+      if (preloadSame) {
+        gSameCredId = await addCredential(gAuthenticatorId, document.domain).then(id => base64ToBytesUrlSafe(id));
+      }
+      if (preloadCross) {
+        gCrossCredId = await addCredential(gAuthenticatorId, CROSS_DOMAIN).then(id => base64ToBytesUrlSafe(id));
+      }
+    }
 
     add_task(async function test_same_origin_iframe_allow() {
+      // Don't preload any credentials. We'll try to create one in content.
+      await setup(false, false);
+
       let iframe = document.createElement("iframe");
       iframe.setAttribute("src", "https://" + document.domain + "/tests/dom/webauthn/tests/empty.html");
       document.body.appendChild(iframe);
       await new Promise(resolve => iframe.addEventListener("load", resolve, {once: true}));
 
       ok("featurePolicy" in iframe, "we have iframe.featurePolicy");
+      ok(iframe.featurePolicy.allowsFeature("publickey-credentials-create"), "iframe allows publickey-credentials-create");
       ok(iframe.featurePolicy.allowsFeature("publickey-credentials-get"), "iframe allows publickey-credentials-get");
+
+      // We should be able to create a credential in a same-origin iframe by default.
+      is(gSameCredId, undefined);
+      gSameCredId = new Uint8Array(await SpecialPowers.spawn(iframe, [], createCredential));
 
       // We should be able to assert a credential in a same-origin iframe by default.
       await SpecialPowers.spawn(iframe, [gSameCredId], getAssertion)
@@ -83,14 +120,24 @@
     });
 
     add_task(async function test_same_origin_iframe_deny() {
+      // Preload same-origin credential to ensure we cannot assert it.
+      await setup(true, false);
+
       let iframe = document.createElement("iframe");
       iframe.setAttribute("src", "https://" + document.domain + "/tests/dom/webauthn/tests/empty.html");
-      iframe.setAttribute("allow", "publickey-credentials-get 'none'");
+      iframe.setAttribute("allow", "publickey-credentials-create 'none'; publickey-credentials-get 'none'");
       document.body.appendChild(iframe);
       await new Promise(resolve => iframe.addEventListener("load", resolve, {once: true}));
 
       ok("featurePolicy" in iframe, "we have iframe.featurePolicy");
+      ok(!iframe.featurePolicy.allowsFeature("publickey-credentials-create"), "iframe does not allow publickey-credentials-create");
       ok(!iframe.featurePolicy.allowsFeature("publickey-credentials-get"), "iframe does not allow publickey-credentials-get");
+
+      // We should not be able to create a credential in a same-origin iframe if
+      // the iframe does not allow publickey-credentials-create.
+      await SpecialPowers.spawn(iframe, [], createCredential)
+          .then(arrivingHereIsBad)
+          .catch(expectNotAllowedError);
 
       // We should not be able to assert a credential in a same-origin iframe if
       // the iframe does not allow publickey-credentials-get.
@@ -100,14 +147,23 @@
     });
 
     add_task(async function test_cross_origin_iframe_allow() {
+      // Don't preload any credentials. We'll try to create one in content.
+      await setup(false, false);
+
       let iframe = document.createElement("iframe");
       iframe.setAttribute("src", "https://" + CROSS_DOMAIN + "/tests/dom/webauthn/tests/empty.html");
-      iframe.setAttribute("allow", "publickey-credentials-get https://" + CROSS_DOMAIN);
+      iframe.setAttribute("allow", "publickey-credentials-create https://" + CROSS_DOMAIN + "; publickey-credentials-get https://" + CROSS_DOMAIN);
       document.body.appendChild(iframe);
       await new Promise(resolve => iframe.addEventListener("load", resolve, {once: true}));
 
       ok("featurePolicy" in iframe, "we have iframe.featurePolicy");
+      ok(iframe.featurePolicy.allowsFeature("publickey-credentials-create"), "iframe allows publickey-credentials-create");
       ok(iframe.featurePolicy.allowsFeature("publickey-credentials-get"), "iframe allows publickey-credentials-get");
+
+      // We should be able to create a credential in a same-origin iframe if
+      // the iframe allows publickey-credentials-create.
+      is(gCrossCredId, undefined);
+      gCrossCredId = new Uint8Array(await SpecialPowers.spawn(iframe, [], createCredential));
 
       // We should be able to assert a credential in a cross-origin iframe if
       // the iframe allows publickey-credentials-get.
@@ -117,19 +173,82 @@
     });
 
     add_task(async function test_cross_origin_iframe_deny() {
+      // Preload cross-origin credential to ensure we cannot assert it.
+      await setup(false, true);
+
       let iframe = document.createElement("iframe");
       iframe.setAttribute("src", "https://" + CROSS_DOMAIN + "/tests/dom/webauthn/tests/empty.html");
       document.body.appendChild(iframe);
       await new Promise(resolve => iframe.addEventListener("load", resolve, {once: true}));
 
       ok("featurePolicy" in iframe, "we have iframe.featurePolicy");
+      ok(!iframe.featurePolicy.allowsFeature("publickey-credentials-create"), "iframe does not allow publickey-credentials-create");
       ok(!iframe.featurePolicy.allowsFeature("publickey-credentials-get"), "iframe does not allow publickey-credentials-get");
+
+      // We should not be able to create a credential in a cross-origin iframe if
+      // the iframe does not allow publickey-credentials-create.
+      await SpecialPowers.spawn(iframe, [], createCredential)
+          .then(arrivingHereIsBad)
+          .catch(expectNotAllowedError);
 
       // We should not be able to assert a credential in a cross-origin iframe if
       // the iframe does not allow publickey-credentials-get.
       await SpecialPowers.spawn(iframe, [gCrossCredId], getAssertion)
           .then(arrivingHereIsBad)
           .catch(expectNotAllowedError);
+    });
+
+    add_task(async function test_cross_origin_iframe_create_but_not_get() {
+      // Don't preload any credentials. We'll try to create one in content.
+      await setup(false, false);
+
+      let iframe = document.createElement("iframe");
+      iframe.setAttribute("src", "https://" + CROSS_DOMAIN + "/tests/dom/webauthn/tests/empty.html");
+      iframe.setAttribute("allow", "publickey-credentials-create https://" + CROSS_DOMAIN);
+      document.body.appendChild(iframe);
+      await new Promise(resolve => iframe.addEventListener("load", resolve, {once: true}));
+
+      ok("featurePolicy" in iframe, "we have iframe.featurePolicy");
+      ok(iframe.featurePolicy.allowsFeature("publickey-credentials-create"), "iframe allows publickey-credentials-create");
+      ok(!iframe.featurePolicy.allowsFeature("publickey-credentials-get"), "iframe does not allow publickey-credentials-get");
+
+      // We should be able to create a credential in a cross-origin iframe if
+      // the iframe allows publickey-credentials-create.
+      is(gCrossCredId, undefined);
+      gCrossCredId = new Uint8Array(await SpecialPowers.spawn(iframe, [], createCredential));
+
+      // We should not be able to assert a credential in a cross-origin iframe if
+      // the iframe does not allow publickey-credentials-get.
+      await SpecialPowers.spawn(iframe, [gCrossCredId], getAssertion)
+          .then(arrivingHereIsBad)
+          .catch(expectNotAllowedError);
+    });
+
+    add_task(async function test_cross_origin_iframe_get_but_not_create() {
+      // Preload cross-origin credential so we can assert it.
+      await setup(false, true);
+
+      let iframe = document.createElement("iframe");
+      iframe.setAttribute("src", "https://" + CROSS_DOMAIN + "/tests/dom/webauthn/tests/empty.html");
+      iframe.setAttribute("allow", "publickey-credentials-get https://" + CROSS_DOMAIN);
+      document.body.appendChild(iframe);
+      await new Promise(resolve => iframe.addEventListener("load", resolve, {once: true}));
+
+      ok("featurePolicy" in iframe, "we have iframe.featurePolicy");
+      ok(!iframe.featurePolicy.allowsFeature("publickey-credentials-create"), "iframe does not publickey-credentials-create");
+      ok(iframe.featurePolicy.allowsFeature("publickey-credentials-get"), "iframe allows publickey-credentials-get");
+
+      // We should not be able to create a credential in a cross-origin iframe if
+      // the iframe does not allow publickey-credentials-create.
+      await SpecialPowers.spawn(iframe, [], createCredential)
+          .then(arrivingHereIsBad)
+          .catch(expectNotAllowedError);
+
+      // We should not be able to assert a credential in a cross-origin iframe if
+      // the iframe does not allow publickey-credentials-get.
+      await SpecialPowers.spawn(iframe, [gCrossCredId], getAssertion)
+          .then(arrivingHereIsGood)
+          .catch(arrivingHereIsBad);
     });
   </script>
 

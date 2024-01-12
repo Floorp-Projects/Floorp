@@ -36,6 +36,8 @@ static FeatureMap sSupportedFeatures[] = {
     {"fullscreen", FeaturePolicyUtils::FeaturePolicyValue::eSelf},
     {"web-share", FeaturePolicyUtils::FeaturePolicyValue::eSelf},
     {"gamepad", FeaturePolicyUtils::FeaturePolicyValue::eAll},
+    {"publickey-credentials-create",
+     FeaturePolicyUtils::FeaturePolicyValue::eSelf},
     {"publickey-credentials-get",
      FeaturePolicyUtils::FeaturePolicyValue::eSelf},
     {"speaker-selection", FeaturePolicyUtils::FeaturePolicyValue::eSelf},
