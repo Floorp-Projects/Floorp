@@ -6,3 +6,4 @@ Firefox on Windows
    :maxdepth: 2
 
    blocklist
+   windows-pointing-device/index
