@@ -24,7 +24,10 @@ endif
 include $(topsrcdir)/config/config.mk
 
 ifneq (mobile/android,$(MOZ_BUILD_APP))
+# We only want to generate buildid.h once, during the export phase.
+ifeq ($(MAKECMDGOALS),recurse_export)
 $(MDDEPDIR)/buildid.h.stub $(MDDEPDIR)/source-repo.h.stub: FORCE
+endif
 endif
 source-repo.h: $(MDDEPDIR)/source-repo.h.stub
 buildid.h: $(MDDEPDIR)/buildid.h.stub
