@@ -555,7 +555,7 @@ add_task(async function suggestHistoryFalse_bookmark_multiple() {
     matches: [
       makeVisitResult(context, {
         uri: baseURL,
-        fallbackTitle: "example.com",
+        fallbackTitle: UrlbarTestUtils.trimURL(baseURL),
         heuristic: true,
       }),
       makeBookmarkResult(context, {
@@ -658,7 +658,7 @@ add_task(async function suggestHistoryFalse_bookmark_prefix_multiple() {
     matches: [
       makeVisitResult(context, {
         uri: baseURL,
-        fallbackTitle: "example.com",
+        fallbackTitle: UrlbarTestUtils.trimURL(baseURL),
         heuristic: true,
       }),
       makeBookmarkResult(context, {

@@ -33,7 +33,12 @@ add_task(async function url() {
     let details = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
     Assert.ok(details.autofill);
     Assert.equal(details.url, "http://example.com/");
-    Assert.equal(gURLBar.value, UrlbarTestUtils.trimURL("http://example.com/"));
+    Assert.equal(
+      gURLBar.value,
+      UrlbarTestUtils.trimURL("http://example.com/", {
+        removeSingleTrailingSlash: false,
+      })
+    );
     await UrlbarTestUtils.promisePopupClose(window);
   });
 });

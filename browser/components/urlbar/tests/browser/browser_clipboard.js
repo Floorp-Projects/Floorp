@@ -44,6 +44,35 @@ async function checkClipboardSuggestionAbsent(startIdx) {
   }
 }
 
+add_task(async function testFormattingOfClipboardSuggestion() {
+  let unicodeURL = "https://пример.com/";
+  let punycodeURL = "https://xn--e1afmkfd.com/";
+
+  SpecialPowers.clipboardCopyString(unicodeURL);
+
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: "about:home" },
+    async browser => {
+      let { result } = await searchEmptyStringAndGetFirstRow();
+
+      Assert.equal(
+        result.providerName,
+        UrlbarProviderClipboard.name,
+        "The first result is a clipboard valid url suggestion."
+      );
+      Assert.equal(
+        result.payload.url,
+        punycodeURL,
+        "The Clipboard suggestion URL should not be decoded."
+      );
+      Assert.equal(
+        result.payload.fallbackTitle,
+        unicodeURL,
+        "The Clipboard suggestion fallback title should be decoded."
+      );
+    }
+  );
+});
 // Verifies that a valid URL copied to the clipboard results in the
 // display of a corresponding suggestion in the URL bar as the first
 // suggestion with accurate URL and icon. Also ensures that engaging

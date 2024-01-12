@@ -200,7 +200,7 @@ class ProviderHeuristicFallback extends UrlbarProvider {
     // pass the pretty, unescaped URL as the result's title, since it is
     // displayed to the user.
     let escapedURL = uri.toString();
-    let displayURL = decodeURI(uri);
+    let displayURL = UrlbarUtils.prepareUrlForDisplay(uri, { trimURL: false });
 
     // We don't know if this url is in Places or not, and checking that would
     // be expensive. Thus we also don't know if we may have an icon.
