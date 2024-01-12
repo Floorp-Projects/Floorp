@@ -1683,23 +1683,6 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     )
 
     /**
-     * Indicates if notification pre permission prompt feature is enabled.
-     */
-    var notificationPrePermissionPromptEnabled by lazyFeatureFlagPreference(
-        key = appContext.getPreferenceKey(R.string.pref_key_notification_pre_permission_prompt_enabled),
-        default = { FxNimbus.features.prePermissionNotificationPrompt.value().enabled },
-        featureFlag = true,
-    )
-
-    /**
-     * Indicates if notification permission prompt has been shown to the user.
-     */
-    var isNotificationPrePermissionShown by booleanPreference(
-        key = appContext.getPreferenceKey(R.string.pref_key_is_notification_pre_permission_prompt_shown),
-        default = false,
-    )
-
-    /**
      * Returns whether onboarding should be shown to the user.
      *
      * @param hasUserBeenOnboarded Boolean to indicate whether the user has been onboarded.

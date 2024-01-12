@@ -31,7 +31,6 @@ import androidx.annotation.RequiresApi
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.ActionBar
 import androidx.appcompat.widget.Toolbar
-import androidx.core.app.NotificationManagerCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
@@ -63,7 +62,6 @@ import mozilla.components.feature.media.ext.findActiveMediaTab
 import mozilla.components.feature.privatemode.notification.PrivateNotificationFeature
 import mozilla.components.feature.search.BrowserStoreSearchAdapter
 import mozilla.components.service.fxa.sync.SyncReason
-import mozilla.components.support.base.ext.areNotificationsEnabledSafe
 import mozilla.components.support.base.feature.ActivityResultHandler
 import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.base.log.logger.Logger
@@ -128,7 +126,6 @@ import org.mozilla.fenix.messaging.FenixNimbusMessagingController
 import org.mozilla.fenix.messaging.MessageNotificationWorker
 import org.mozilla.fenix.nimbus.FxNimbus
 import org.mozilla.fenix.onboarding.ReEngagementNotificationWorker
-import org.mozilla.fenix.onboarding.ensureMarketingChannelExists
 import org.mozilla.fenix.perf.MarkersActivityLifecycleCallbacks
 import org.mozilla.fenix.perf.MarkersFragmentLifecycleCallbacks
 import org.mozilla.fenix.perf.Performance
@@ -345,8 +342,6 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
             if (settings().showHomeOnboardingDialog && components.fenixOnboarding.userHasBeenOnboarded()) {
                 navHost.navController.navigate(NavGraphDirections.actionGlobalHomeOnboardingDialog())
             }
-
-            showNotificationPermissionPromptIfRequired()
         }
 
         Performance.processIntentIfPerformanceTest(intent, this)
@@ -441,30 +436,6 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         components.notificationsDelegate.bindToActivity(this)
 
         StartupTimeline.onActivityCreateEndHome(this) // DO NOT MOVE ANYTHING BELOW HERE.
-    }
-
-    /**
-     * On Android 13 or above, prompt the user for notification permission at the start.
-     * Show the pre permission dialog to the user once if the notification are not enabled.
-     */
-    private fun showNotificationPermissionPromptIfRequired() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-            !NotificationManagerCompat.from(applicationContext).areNotificationsEnabledSafe() &&
-            settings().numberOfAppLaunches <= 1
-        ) {
-            // Recording the exposure event here to capture all users who met all criteria to receive
-            // the pre permission notification prompt
-            FxNimbus.features.prePermissionNotificationPrompt.recordExposure()
-
-            if (settings().notificationPrePermissionPromptEnabled) {
-                if (!settings().isNotificationPrePermissionShown) {
-                    navHost.navController.navigate(NavGraphDirections.actionGlobalHomeNotificationPermissionDialog())
-                }
-            } else {
-                // This will trigger the notification permission system dialog as app targets sdk 32.
-                ensureMarketingChannelExists(applicationContext)
-            }
-        }
     }
 
     private fun maybeShowSplashScreen() {

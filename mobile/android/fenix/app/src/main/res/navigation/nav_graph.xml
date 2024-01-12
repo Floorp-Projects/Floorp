@@ -44,10 +44,6 @@
         app:destination="@id/homeOnboardingDialogFragment" />
 
     <action
-        android:id="@+id/action_global_home_notification_permission_dialog"
-        app:destination="@id/homeNotificationPermissionDialogFragment" />
-
-    <action
         android:id="@+id/action_global_wallpaper_onboarding_dialog"
         app:destination="@id/wallpaperOnboardingDialogFragment"
         app:popUpTo="@id/homeFragment" />
@@ -230,10 +226,6 @@
             app:nullable="true"
             app:argType="string" />
     </dialog>
-
-    <dialog
-        android:id="@+id/homeNotificationPermissionDialogFragment"
-        android:name="org.mozilla.fenix.onboarding.HomeNotificationPermissionDialogFragment" />
 
     <dialog
         android:id="@+id/wallpaperOnboardingDialogFragment"
