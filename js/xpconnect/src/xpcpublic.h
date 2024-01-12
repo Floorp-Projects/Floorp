@@ -528,6 +528,32 @@ inline bool Latin1StringToJsval(JSContext* cx, const nsACString& str,
   return NonVoidLatin1StringToJsval(cx, str, rval);
 }
 
+/**
+ * As above, but for nsACString with UTF-8 content.
+ */
+bool NonVoidUTF8StringToJsval(JSContext* cx, nsACString& str,
+                              JS::MutableHandle<JS::Value> rval);
+bool NonVoidUTF8StringToJsval(JSContext* cx, const nsACString& str,
+                              JS::MutableHandle<JS::Value> rval);
+
+inline bool UTF8StringToJsval(JSContext* cx, nsACString& str,
+                              JS::MutableHandle<JS::Value> rval) {
+  if (str.IsVoid()) {
+    rval.setNull();
+    return true;
+  }
+  return NonVoidUTF8StringToJsval(cx, str, rval);
+}
+
+inline bool UTF8StringToJsval(JSContext* cx, const nsACString& str,
+                              JS::MutableHandle<JS::Value> rval) {
+  if (str.IsVoid()) {
+    rval.setNull();
+    return true;
+  }
+  return NonVoidUTF8StringToJsval(cx, str, rval);
+}
+
 mozilla::BasePrincipal* GetRealmPrincipal(JS::Realm* realm);
 
 void NukeAllWrappersForRealm(JSContext* cx, JS::Realm* realm,
