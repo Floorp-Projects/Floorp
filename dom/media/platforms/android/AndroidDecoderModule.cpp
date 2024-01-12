@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+//* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -10,11 +10,9 @@
 #  include "AOMDecoder.h"
 #endif
 #include "MediaInfo.h"
-#include "OpusDecoder.h"
 #include "RemoteDataDecoder.h"
 #include "TheoraDecoder.h"
 #include "VPXDecoder.h"
-#include "VorbisDecoder.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Components.h"
 #include "mozilla/StaticPrefs_media.h"
@@ -101,35 +99,23 @@ DecodeSupportSet AndroidDecoderModule::SupportsMimeType(
       }
       break;
 
-    // Prefer the ffvpx mp3 software decoder if available.
-    case MediaCodec::MP3:
-      if (StaticPrefs::media_ffvpx_mp3_enabled()) {
-        return media::DecodeSupportSet{};
-      }
-      if (sSupportedCodecs &&
-          sSupportedCodecs->contains(MediaCodecsSupport::MP3SoftwareDecode)) {
-        return DecodeSupport::SoftwareDecode;
-      }
-      return media::DecodeSupportSet{};
-
     // Prefer the gecko decoder for theora/opus/vorbis; stagefright crashes
     // on content demuxed from mp4.
     // Not all android devices support FLAC/theora even when they say they do.
     case MediaCodec::Theora:
       SLOG("Rejecting video of type %s", aMimeType.Data());
       return media::DecodeSupportSet{};
+    // Always use our own software decoder (in ffvpx) for audio except for AAC
+    case MediaCodec::MP3:
+      [[fallthrough]];
     case MediaCodec::Opus:
       [[fallthrough]];
     case MediaCodec::Vorbis:
       [[fallthrough]];
+    case MediaCodec::Wave:
+      [[fallthrough]];
     case MediaCodec::FLAC:
       SLOG("Rejecting audio of type %s", aMimeType.Data());
-      return media::DecodeSupportSet{};
-
-    // When checking "audio/x-wav", CreateDecoder can cause a JNI ERROR by
-    // Accessing a stale local reference leading to a SIGSEGV crash.
-    // To avoid this we check for wav types here.
-    case MediaCodec::Wave:
       return media::DecodeSupportSet{};
 
     // H264 always reports software decode

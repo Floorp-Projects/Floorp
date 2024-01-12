@@ -576,6 +576,8 @@ inline gfx::YUVColorSpace DefaultColorSpace(const gfx::IntSize& aSize) {
                             : gfx::YUVColorSpace::BT709;
 }
 
+bool IsWaveMimetype(const nsACString& aMimeType);
+
 }  // end namespace mozilla
 
 #endif

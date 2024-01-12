@@ -16,9 +16,7 @@
 #  include "AOMDecoder.h"
 #endif
 #include "MP4Decoder.h"
-#include "OpusDecoder.h"
 #include "VideoUtils.h"
-#include "VorbisDecoder.h"
 #include "VPXDecoder.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/CheckedInt.h"
@@ -117,10 +115,10 @@ WMFStreamType GetStreamTypeFromMimeType(const nsCString& aMimeType) {
   if (aMimeType.EqualsLiteral("audio/mpeg")) {
     return WMFStreamType::MP3;
   }
-  if (OpusDataDecoder::IsOpus(aMimeType)) {
+  if (aMimeType.EqualsLiteral("audio/opus")) {
     return WMFStreamType::OPUS;
   }
-  if (VorbisDataDecoder::IsVorbis(aMimeType)) {
+  if (aMimeType.EqualsLiteral("audio/vorbis")) {
     return WMFStreamType::VORBIS;
   }
   return WMFStreamType::Unknown;
@@ -304,9 +302,9 @@ GUID AudioMimeTypeToMediaFoundationSubtype(const nsACString& aMimeType) {
     return MFAudioFormat_MP3;
   } else if (MP4Decoder::IsAAC(aMimeType)) {
     return MFAudioFormat_AAC;
-  } else if (VorbisDataDecoder::IsVorbis(aMimeType)) {
+  } else if (aMimeType.EqualsLiteral("audio/vorbis")) {
     return MFAudioFormat_Vorbis;
-  } else if (OpusDataDecoder::IsOpus(aMimeType)) {
+  } else if (aMimeType.EqualsLiteral("audio/opus")) {
     return MFAudioFormat_Opus;
   }
   NS_WARNING("Unsupport audio mimetype");
