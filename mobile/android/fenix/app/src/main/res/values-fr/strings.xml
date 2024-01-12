@@ -2294,17 +2294,17 @@
     <!-- Clickable text from the contextual onboarding card that links to review quality check support article. -->
     <string name="review_quality_check_contextual_onboarding_learn_more_link">En savoir plus</string>
     <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is the Fakespot product name. Following parameters are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy and review_quality_check_contextual_onboarding_terms_use. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
-    <string name="review_quality_check_contextual_onboarding_caption" moz:RemovedIn="121" tools:ignore="UnusedResources">En sélectionnant « Oui, l’essayer », vous acceptez la %2$s et les %3$s de %1$s par Mozilla.</string>
+    <string name="review_quality_check_contextual_onboarding_caption">En sélectionnant « Oui, l’essayer », vous acceptez la %2$s et les %3$s de %1$s par Mozilla.</string>
     <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. Parameter is the Fakespot product name. After the colon, what appears are two links, each on their own line. The first link is to a Privacy policy (review_quality_check_contextual_onboarding_privacy_policy_2). The second link is to Terms of use (review_quality_check_contextual_onboarding_terms_use_2). -->
-    <string name="review_quality_check_contextual_onboarding_caption_2">En sélectionnant « Oui, l’essayer » vous acceptez les éléments suivants de %1$s :</string>
+    <string name="review_quality_check_contextual_onboarding_caption_2" moz:RemovedIn="123" tools:ignore="UnusedResources">En sélectionnant « Oui, l’essayer » vous acceptez les éléments suivants de %1$s :</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
-    <string name="review_quality_check_contextual_onboarding_privacy_policy" moz:RemovedIn="121" tools:ignore="UnusedResources">politique de confidentialité</string>
+    <string name="review_quality_check_contextual_onboarding_privacy_policy">politique de confidentialité</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
-    <string name="review_quality_check_contextual_onboarding_privacy_policy_2">Politique de confidentialité</string>
+    <string name="review_quality_check_contextual_onboarding_privacy_policy_2" moz:RemovedIn="123" tools:ignore="UnusedResources">Politique de confidentialité</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
-    <string name="review_quality_check_contextual_onboarding_terms_use" moz:RemovedIn="121" tools:ignore="UnusedResources">conditions d’utilisation</string>
+    <string name="review_quality_check_contextual_onboarding_terms_use">conditions d’utilisation</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
-    <string name="review_quality_check_contextual_onboarding_terms_use_2">Conditions d’utilisation</string>
+    <string name="review_quality_check_contextual_onboarding_terms_use_2" moz:RemovedIn="123" tools:ignore="UnusedResources">Conditions d’utilisation</string>
     <!-- Text for opt-in button from the review quality check contextual onboarding card. -->
     <string name="review_quality_check_contextual_onboarding_primary_button_text">Oui, l’essayer</string>
     <!-- Text for opt-out button from the review quality check contextual onboarding card. -->
@@ -2361,6 +2361,11 @@
     <string name="a11y_action_label_pocket_learn_more">ouvrir le lien pour en savoir plus</string>
     <!-- Content description for headings announced by accessibility service. The first parameter is the text of the heading. Talkback will announce the first parameter and then speak the word "Heading" indicating to the user that this text is a heading for a section. -->
     <string name="a11y_heading">%s, titre</string>
+
+    <!-- Title for dialog displayed when trying to access links present in a text. -->
+    <string name="a11y_links_title">Liens</string>
+    <!-- Additional content description for text bodies that contain urls. -->
+    <string name="a11y_links_available">Liens disponibles</string>
 
     <!-- Translations feature-->
 
@@ -2531,8 +2536,10 @@
     <string name="download_language_file_dialog_negative_button_text">Annuler</string>
 
     <!-- Debug drawer -->
+    <!-- The user-facing title of the Debug Drawer feature. -->
+    <string name="debug_drawer_title">Outils de débogage</string>
     <!-- The title of the Tab Tools feature in the Debug Drawer. -->
-    <string name="debug_drawer_tab_tools_title" tools:ignore="UnusedResources">Outils d’onglets</string>
+    <string name="debug_drawer_tab_tools_title">Outils d’onglets</string>
     <!-- The title of the tab count section in Tab Tools. -->
     <string name="debug_drawer_tab_tools_tab_count_title">Nombre d’onglets</string>
     <!-- The active tab count category in the tab count section in Tab Tools. -->

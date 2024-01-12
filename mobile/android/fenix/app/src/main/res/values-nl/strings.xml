@@ -2273,18 +2273,18 @@
     <!-- Clickable text from the contextual onboarding card that links to review quality check support article. -->
     <string name="review_quality_check_contextual_onboarding_learn_more_link">Meer info</string>
     <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is the Fakespot product name. Following parameters are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy and review_quality_check_contextual_onboarding_terms_use. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
-    <string name="review_quality_check_contextual_onboarding_caption" moz:RemovedIn="121" tools:ignore="UnusedResources">Door ‘Ja, proberen’ te selecteren, gaat u akkoord met het %2$s en de %3$s van %1$s door Mozilla.</string>
+    <string name="review_quality_check_contextual_onboarding_caption">Door ‘Ja, proberen’ te selecteren, gaat u akkoord met het %2$s en de %3$s van %1$s door Mozilla.</string>
     <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. Parameter is the Fakespot product name. After the colon, what appears are two links, each on their own line. The first link is to a Privacy policy (review_quality_check_contextual_onboarding_privacy_policy_2). The second link is to Terms of use (review_quality_check_contextual_onboarding_terms_use_2). -->
-    <string name="review_quality_check_contextual_onboarding_caption_2">Door ‘Ja, proberen’ te selecteren, gaat u akkoord met het volgende van %1$s:</string>
+    <string name="review_quality_check_contextual_onboarding_caption_2" moz:RemovedIn="123" tools:ignore="UnusedResources">Door ‘Ja, proberen’ te selecteren, gaat u akkoord met het volgende van %1$s:</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
-    <string name="review_quality_check_contextual_onboarding_privacy_policy" moz:RemovedIn="121" tools:ignore="UnusedResources">privacybeleid</string>
+    <string name="review_quality_check_contextual_onboarding_privacy_policy">privacybeleid</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
-    <string name="review_quality_check_contextual_onboarding_privacy_policy_2">Privacybeleid</string>
+    <string name="review_quality_check_contextual_onboarding_privacy_policy_2" moz:RemovedIn="123" tools:ignore="UnusedResources">Privacybeleid</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
-    <string name="review_quality_check_contextual_onboarding_terms_use" moz:RemovedIn="121" tools:ignore="UnusedResources">gebruiksvoorwaarden</string>
+    <string name="review_quality_check_contextual_onboarding_terms_use">gebruiksvoorwaarden</string>
 
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
-    <string name="review_quality_check_contextual_onboarding_terms_use_2">Gebruiksvoorwaarden</string>
+    <string name="review_quality_check_contextual_onboarding_terms_use_2" moz:RemovedIn="123" tools:ignore="UnusedResources">Gebruiksvoorwaarden</string>
     <!-- Text for opt-in button from the review quality check contextual onboarding card. -->
     <string name="review_quality_check_contextual_onboarding_primary_button_text">Ja, proberen</string>
     <!-- Text for opt-out button from the review quality check contextual onboarding card. -->
@@ -2341,6 +2341,11 @@
     <string name="a11y_action_label_pocket_learn_more">de koppeling te openen voor meer info</string>
     <!-- Content description for headings announced by accessibility service. The first parameter is the text of the heading. Talkback will announce the first parameter and then speak the word "Heading" indicating to the user that this text is a heading for a section. -->
     <string name="a11y_heading">%s, koptekst</string>
+
+    <!-- Title for dialog displayed when trying to access links present in a text. -->
+    <string name="a11y_links_title">Koppelingen</string>
+    <!-- Additional content description for text bodies that contain urls. -->
+    <string name="a11y_links_available">Beschikbare koppelingen</string>
 
     <!-- Translations feature-->
 
@@ -2511,8 +2516,10 @@
     <string name="download_language_file_dialog_negative_button_text">Annuleren</string>
 
     <!-- Debug drawer -->
+    <!-- The user-facing title of the Debug Drawer feature. -->
+    <string name="debug_drawer_title">Hulpmiddelen voor debuggen</string>
     <!-- The title of the Tab Tools feature in the Debug Drawer. -->
-    <string name="debug_drawer_tab_tools_title" tools:ignore="UnusedResources">Tabbladhulpmiddelen</string>
+    <string name="debug_drawer_tab_tools_title">Tabbladhulpmiddelen</string>
     <!-- The title of the tab count section in Tab Tools. -->
     <string name="debug_drawer_tab_tools_tab_count_title">Aantal tabbladen</string>
     <!-- The active tab count category in the tab count section in Tab Tools. -->

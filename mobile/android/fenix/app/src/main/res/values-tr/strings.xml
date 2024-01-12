@@ -2339,6 +2339,9 @@
     <!-- Title for dialog displayed when trying to access links present in a text. -->
     <string name="a11y_links_title">Bağlantılar</string>
 
+    <!-- Additional content description for text bodies that contain urls. -->
+    <string name="a11y_links_available">Kullanılabilir bağlantılar</string>
+
     <!-- Translations feature-->
 
     <!-- Translation request dialog -->

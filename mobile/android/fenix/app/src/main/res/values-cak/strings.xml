@@ -215,6 +215,8 @@
     <string name="resync_button_content_description">Tixim chik</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">Tikanöx pa ruxaq</string>
+    <!-- Browser menu button that opens the translations dialog, which has options to translate the current browser page. -->
+    <string name="browser_menu_translations">Titzalq\'omïx ruxaq</string>
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">Tiyak pa mol</string>
     <!-- Browser menu button that open a share menu to share the current site -->
@@ -332,6 +334,8 @@
     <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_title_nimbus_2">Niqa chi qawäch chi atqajikib\'an</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_description_nimbus_2">Ri qokik\'amaya\'l majun ch\'akoj rojqan, yatruto\' chi ri ajk\'ayij taq moloj yatkitzeqelb\'ej pa ewan pa ajk\'amaya\'l.\n\nCh\'aqa\' chik taq na\'oj pa ri rutzijol ichinanem.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
     <string name="juno_onboarding_default_browser_description_link_text" tools:ignore="UnusedResources">ichinan na\'oj</string>
@@ -2101,9 +2105,9 @@ Achi\'el: \nhttps://www.google.com/search?q=%s</string>
     <!-- Clickable text from the contextual onboarding card that links to review quality check support article. -->
     <string name="review_quality_check_contextual_onboarding_learn_more_link">Tetamäx ch\'aqa\' chik</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
-    <string name="review_quality_check_contextual_onboarding_privacy_policy" moz:RemovedIn="121" tools:ignore="UnusedResources">ichinan na\'oj</string>
+    <string name="review_quality_check_contextual_onboarding_privacy_policy">ichinan na\'oj</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
-    <string name="review_quality_check_contextual_onboarding_privacy_policy_2">Ichinan na\'oj</string>
+    <string name="review_quality_check_contextual_onboarding_privacy_policy_2" moz:RemovedIn="123" tools:ignore="UnusedResources">Ichinan na\'oj</string>
     <!-- Text for opt-out button from the review quality check contextual onboarding card. -->
     <string name="review_quality_check_contextual_onboarding_secondary_button_text">Wakami mani</string>
     <!-- Flag showing that the review quality check feature is work in progress. -->

@@ -194,6 +194,16 @@
     <string name="mozac_feature_addons_failed_to_install">%1$s ایپ انسٹال کر نہیں سکی</string>
     <!-- Text shown after failing to install an add-on for which we don't have its name. -->
     <string name="mozac_feature_addons_failed_to_install_generic">ایہہ وادھے والا انسٹال کر نہیں سکیا۔</string>
+    <!-- Text shown when attempting to install an add-on and a network error happened. -->
+    <string name="mozac_feature_addons_failed_to_install_network_error">کنیکشن اسپھل ہوݨ کرکے ایس وادھے والے نوں ڈاؤن‌لوڈ نہیں کیتا جا سکیا۔</string>
+    <!-- Text shown when attempting to install an add-on and the downloaded file is corrupted. -->
+    <string name="mozac_feature_addons_failed_to_install_corrupt_error">ایس وادھے والے نوں انسٹال نہیں کیتا جا سکیا کیوں‌کہ ایہہ نکارہ جاپدی اے۔</string>
+    <!-- Text shown when attempting to install an add-on and an error occurred because the extension was not signed. -->
+    <string name="mozac_feature_addons_failed_to_install_not_signed_error">ایس وادھے والے نوں انسٹال نہیں کیتا جا سکیا کیوں‌کہ ایس دی تصدیق نہیں ہو سکی اے۔</string>
+    <!-- Text shown when attempting to install an add-on and an error occurred because the extension was incompatible. %1$s is the add-on name, %2$s is the app name and %3$s is the app version. -->
+    <string name="mozac_feature_addons_failed_to_install_incompatible_error">%2$s %3$s نال معافق نہ ہوݨ کرکے %1$s نوں انسٹال نہیں کیتا جا سکیا۔</string>
+    <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_blocklisted_1">ستھرتا جاں سرکھیا سمسیاواں کھڑھیاں کرن دے خطرے کرکے %1$s نوں انسٹال نہیں کیتا جا سکیا۔</string>
     <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_successfully_enabled">%1$s ایپ نوں چالو لا گیا</string>
     <!-- Text shown after failed to enable an add-on. %1$s is the add-on name. -->
@@ -236,4 +246,12 @@
     <string name="mozac_feature_addons_installed_dialog_description">نویں مینو چ کھولھو</string>
     <!-- Confirmation button text for the dialog when add-on installation is completed. -->
     <string name="mozac_feature_addons_installed_dialog_okay_button">ٹھیک اے، سمجھ گئے</string>
-    </resources>
+    <!-- "Learn more" link displayed below an add-on status message. -->
+    <string name="mozac_feature_addons_status_learn_more">ہور جاݨو</string>
+    <!-- Status message below an add-on in the add-ons manager when this add-on has been blocklisted. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_status_blocklisted">%1$s نوں سرکھیا جاں ستھرتا مسئلیاں کرکے اسمرتھ کیتا گیا اے۔</string>
+    <!-- Status message below an add-on in the add-ons manager when this add-on hasn't been signed correctly. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_status_unsigned">%1$s دے سرکھیت ہوݨ نوں تصدیق نہیں کیتا جا سکیا تے اسمرتھ کیتا گیا اے۔</string>
+    <!-- Status message below an add-on in the add-ons manager when this add-on isn't compatible with the application version. %1$s is the add-on name, %2$s is the app name and %3$s is the app version. -->
+    <string name="mozac_feature_addons_status_incompatible">%1$s %2$s دے تہاڈے ورژن (ورژن %3$s) دے معافق نہیں اے۔</string>
+</resources>
