@@ -221,10 +221,9 @@ ContentAnalysisRequest::ContentAnalysisRequest(
 
 nsresult ContentAnalysisRequest::GetFileDigest(const nsAString& aFilePath,
                                                nsCString& aDigestString) {
-  MOZ_DIAGNOSTIC_ASSERT(
-      !NS_IsMainThread(),
-      "ContentAnalysisRequest::GetFileDigest does file IO and should "
-      "not run on the main thread");
+  MOZ_ASSERT(!NS_IsMainThread(),
+             "ContentAnalysisRequest::GetFileDigest does file IO and should "
+             "not run on the main thread");
   nsresult rv;
   mozilla::Digest digest;
   digest.Begin(SEC_OID_SHA256);
@@ -236,16 +235,15 @@ nsresult ContentAnalysisRequest::GetFileDigest(const nsAString& aFilePath,
   rv = file->OpenNSPRFileDesc(PR_RDONLY | nsIFile::OS_READAHEAD, 0, &fd);
   NS_ENSURE_SUCCESS(rv, rv);
   auto closeFile = MakeScopeExit([fd]() { PR_Close(fd); });
-  auto buffer = mozilla::MakeUnique<std::array<uint8_t, 1024 * 1024>>();
-  PRInt32 bytesRead =
-      PR_Read(fd, buffer->data(), static_cast<PRInt32>(buffer->size()));
+  uint8_t buffer[4096];
+  PRInt32 bytesRead;
+  bytesRead = PR_Read(fd, buffer, sizeof(buffer) / sizeof(uint8_t));
   while (bytesRead != 0) {
     if (bytesRead == -1) {
       return NS_ERROR_DOM_FILE_NOT_READABLE_ERR;
     }
-    digest.Update(mozilla::Span<const uint8_t>(buffer->data(), bytesRead));
-    bytesRead =
-        PR_Read(fd, buffer->data(), static_cast<PRInt32>(buffer->size()));
+    digest.Update(mozilla::Span<const uint8_t>(buffer, bytesRead));
+    bytesRead = PR_Read(fd, buffer, sizeof(buffer) / sizeof(uint8_t));
   }
   nsTArray<uint8_t> digestResults;
   rv = digest.End(digestResults);
