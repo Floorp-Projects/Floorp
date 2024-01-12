@@ -34,6 +34,10 @@ async function waitForShortcutSet(input, expected) {
 function removeButtonForInput(input) {
   let removeButton = input.parentNode.querySelector(".shortcut-remove-button");
   ok(removeButton, "has remove button");
+  ok(
+    removeButton.hasAttribute("aria-label"),
+    "The remove button has an accessible name"
+  );
   return removeButton;
 }
 
