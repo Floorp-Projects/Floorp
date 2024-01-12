@@ -14,6 +14,7 @@
 #endif
 #if defined(MOZ_WAYLAND)
 #  include "nsClipboardWayland.h"
+#  include "nsWaylandDisplay.h"
 #endif
 #include "nsGtkUtils.h"
 #include "nsIURI.h"
@@ -194,7 +195,13 @@ nsRetrievalContext::~nsRetrievalContext() {
 
 nsClipboard::nsClipboard()
     : nsBaseClipboard(mozilla::dom::ClipboardCapabilities(
-          true /* supportsSelectionClipboard */,
+#ifdef MOZ_WAYLAND
+          widget::GdkIsWaylandDisplay()
+              ? widget::WaylandDisplayGet()->IsPrimarySelectionEnabled()
+              : true,
+#else
+          true, /* supportsSelectionClipboard */
+#endif
           false /* supportsFindClipboard */,
           false /* supportsSelectionCache */)) {
   g_signal_connect(gtk_clipboard_get(GDK_SELECTION_CLIPBOARD), "owner-change",
