@@ -126,6 +126,9 @@ def compare_listings(
     difference_found = False
     ignore_missing = ignore_missing or ()
 
+    if ignore_missing:
+        logging.warning("ignoring paths: {}".format(ignore_missing))
+
     left_diff = obj1 - obj2
     if left_diff:
         if left_diff - set(ignore_missing):
