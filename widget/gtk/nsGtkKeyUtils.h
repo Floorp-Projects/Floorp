@@ -282,7 +282,6 @@ class KeymapWrapper {
     INDEX_SCROLL_LOCK,
     INDEX_ALT,
     INDEX_META,
-    INDEX_SUPER,
     INDEX_HYPER,
     INDEX_LEVEL3,
     INDEX_LEVEL5,
