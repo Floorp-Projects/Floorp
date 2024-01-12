@@ -821,7 +821,6 @@ var gSync = {
       // we should show the PXI panel instead of taking the user
       // straight to FxA sign-in
       if (this.PXI_TOOLBAR_ENABLED) {
-        this.updateFxAPanel(UIState.get());
         this.updateCTAPanel();
         PanelUI.showSubView("PanelUI-fxa", anchor, aEvent);
       } else {
@@ -837,7 +836,6 @@ var gSync = {
     // If the user is signed in and we have the PXI pref enabled then add
     // the pxi panel to the existing toolbar
     if (this.PXI_TOOLBAR_ENABLED) {
-      this.updateFxAPanel(UIState.get());
       this.updateCTAPanel();
     }
 
