@@ -22,7 +22,7 @@ RefPtr<GenericPromise> AudioStreamTrack::AddAudioOutput(
   UniquePtr<CrossGraphPort> manager;
   if (!aSink || !(manager = CrossGraphPort::Connect(this, aSink, mWindow))) {
     // We are setting the default output device.
-    mTrack->AddAudioOutput(aKey);
+    mTrack->AddAudioOutput(aKey, nullptr);
     return GenericPromise::CreateAndResolve(true, __func__);
   }
 

@@ -29,6 +29,7 @@ class AudioDeviceInfo final : public nsIAudioDeviceInfo {
 
   AudioDeviceID DeviceID() const;
   const nsString& Name() const;
+  uint32_t DefaultRate() const { return mDefaultRate; }
   uint32_t MaxChannels() const;
   uint32_t Type() const;
   uint32_t State() const;

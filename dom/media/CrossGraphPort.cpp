@@ -70,7 +70,8 @@ UniquePtr<CrossGraphPort> CrossGraphPort::Connect(
 }
 
 void CrossGraphPort::AddAudioOutput(void* aKey) {
-  mReceiver->AddAudioOutput(aKey);
+  mReceiver->AddAudioOutput(aKey, mReceiver->Graph()->PrimaryOutputDeviceID(),
+                            0);
 }
 
 void CrossGraphPort::RemoveAudioOutput(void* aKey) {

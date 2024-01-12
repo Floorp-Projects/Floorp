@@ -1189,7 +1189,7 @@ TEST(TestAudioTrackGraph, ErrorCallback)
     processingTrack->ConnectDeviceInput(deviceId, listener,
                                         PRINCIPAL_HANDLE_NONE);
     EXPECT_EQ(processingTrack->DeviceId().value(), deviceId);
-    processingTrack->AddAudioOutput(reinterpret_cast<void*>(1));
+    processingTrack->AddAudioOutput(reinterpret_cast<void*>(1), nullptr);
     return graph->NotifyWhenDeviceStarted(processingTrack);
   });
 
@@ -1248,7 +1248,7 @@ TEST(TestAudioTrackGraph, AudioProcessingTrack)
     processingTrack = AudioProcessingTrack::Create(graph);
     outputTrack = graph->CreateForwardedInputTrack(MediaSegment::AUDIO);
     outputTrack->QueueSetAutoend(false);
-    outputTrack->AddAudioOutput(reinterpret_cast<void*>(1));
+    outputTrack->AddAudioOutput(reinterpret_cast<void*>(1), nullptr);
     port = outputTrack->AllocateInputPort(processingTrack);
     /* Primary graph: Open Audio Input through SourceMediaTrack */
     listener = new AudioInputProcessing(2);
@@ -1339,7 +1339,7 @@ TEST(TestAudioTrackGraph, ReConnectDeviceInput)
     processingTrack = AudioProcessingTrack::Create(graph);
     outputTrack = graph->CreateForwardedInputTrack(MediaSegment::AUDIO);
     outputTrack->QueueSetAutoend(false);
-    outputTrack->AddAudioOutput(reinterpret_cast<void*>(1));
+    outputTrack->AddAudioOutput(reinterpret_cast<void*>(1), nullptr);
     port = outputTrack->AllocateInputPort(processingTrack);
     listener = new AudioInputProcessing(2);
     processingTrack->SetInputProcessing(listener);
@@ -1495,7 +1495,7 @@ TEST(TestAudioTrackGraph, AudioProcessingTrackDisabling)
     processingTrack = AudioProcessingTrack::Create(graph);
     outputTrack = graph->CreateForwardedInputTrack(MediaSegment::AUDIO);
     outputTrack->QueueSetAutoend(false);
-    outputTrack->AddAudioOutput(reinterpret_cast<void*>(1));
+    outputTrack->AddAudioOutput(reinterpret_cast<void*>(1), nullptr);
     port = outputTrack->AllocateInputPort(processingTrack);
     /* Primary graph: Open Audio Input through SourceMediaTrack */
     listener = new AudioInputProcessing(2);
@@ -2410,7 +2410,7 @@ void TestCrossGraphPort(uint32_t aInputRate, uint32_t aOutputRate,
       /*OutputDeviceID*/ reinterpret_cast<cubeb_devid>(1),
       GetMainThreadSerialEventTarget());
 
-  const CubebUtils::AudioDeviceID deviceId = (CubebUtils::AudioDeviceID)1;
+  const CubebUtils::AudioDeviceID inputDeviceId = (CubebUtils::AudioDeviceID)1;
 
   RefPtr<AudioProcessingTrack> processingTrack;
   RefPtr<AudioInputProcessing> listener;
@@ -2424,7 +2424,7 @@ void TestCrossGraphPort(uint32_t aInputRate, uint32_t aOutputRate,
     processingTrack->SetInputProcessing(listener);
     processingTrack->GraphImpl()->AppendMessage(
         MakeUnique<StartInputProcessing>(processingTrack, listener));
-    processingTrack->ConnectDeviceInput(deviceId, listener,
+    processingTrack->ConnectDeviceInput(inputDeviceId, listener,
                                         PRINCIPAL_HANDLE_NONE);
     primaryFallbackListener = new OnFallbackListener(processingTrack);
     processingTrack->AddListener(primaryFallbackListener);
@@ -2455,7 +2455,7 @@ void TestCrossGraphPort(uint32_t aInputRate, uint32_t aOutputRate,
     /* How the input track connects to another ProcessedMediaTrack.
      * Check in MediaManager how it is connected to AudioStreamTrack. */
     port = transmitter->AllocateInputPort(processingTrack);
-    receiver->AddAudioOutput((void*)1);
+    receiver->AddAudioOutput((void*)1, partner->PrimaryOutputDeviceID(), 0);
 
     partnerFallbackListener = new OnFallbackListener(receiver);
     receiver->AddListener(partnerFallbackListener);
@@ -2621,6 +2621,112 @@ TEST(TestAudioTrackGraph, CrossGraphPortUnderrun)
 
   TestCrossGraphPort(52110, 17781, 1.01, 30, 1);
   TestCrossGraphPort(52110, 17781, 1.03, 40, 3);
+}
+
+TEST(TestAudioTrackGraph, SecondaryOutputDevice)
+{
+  MockCubeb* cubeb = new MockCubeb();
+  CubebUtils::ForceSetCubebContext(cubeb->AsCubebContext());
+
+  const TrackRate primaryRate = 48000;
+  const TrackRate secondaryRate = 44100;  // for secondary output device
+
+  MediaTrackGraph* graph = MediaTrackGraphImpl::GetInstance(
+      MediaTrackGraph::SYSTEM_THREAD_DRIVER,
+      /*Window ID*/ 1, primaryRate, nullptr, GetMainThreadSerialEventTarget());
+
+  RefPtr<AudioProcessingTrack> processingTrack;
+  RefPtr<AudioInputProcessing> listener;
+  DispatchFunction([&] {
+    /* Create an input track and connect it to a device */
+    processingTrack = AudioProcessingTrack::Create(graph);
+    listener = new AudioInputProcessing(2);
+    processingTrack->GraphImpl()->AppendMessage(
+        MakeUnique<SetPassThrough>(processingTrack, listener, true));
+    processingTrack->SetInputProcessing(listener);
+    processingTrack->GraphImpl()->AppendMessage(
+        MakeUnique<StartInputProcessing>(processingTrack, listener));
+    processingTrack->ConnectDeviceInput(nullptr, listener,
+                                        PRINCIPAL_HANDLE_NONE);
+  });
+  RefPtr<SmartMockCubebStream> primaryStream =
+      WaitFor(cubeb->StreamInitEvent());
+
+  const void* secondaryDeviceID = CubebUtils::AudioDeviceID(2);
+  DispatchFunction([&] {
+    processingTrack->AddAudioOutput(nullptr, secondaryDeviceID, secondaryRate);
+    processingTrack->SetAudioOutputVolume(nullptr, 0.f);
+  });
+  RefPtr<SmartMockCubebStream> secondaryStream =
+      WaitFor(cubeb->StreamInitEvent());
+  EXPECT_EQ(secondaryStream->GetOutputDeviceID(), secondaryDeviceID);
+  EXPECT_EQ(static_cast<TrackRate>(secondaryStream->SampleRate()),
+            secondaryRate);
+
+  nsIThread* currentThread = NS_GetCurrentThread();
+  uint32_t audioFrames = 0;  // excludes pre-silence
+  MediaEventListener audioListener =
+      secondaryStream->FramesVerifiedEvent().Connect(
+          currentThread, [&](uint32_t aFrames) { audioFrames += aFrames; });
+
+  // Wait for 100ms of pre-silence to verify that SetAudioOutputVolume() is
+  // effective.
+  uint32_t processedFrames = 0;
+  WaitUntil(secondaryStream->FramesProcessedEvent(), [&](uint32_t aFrames) {
+    processedFrames += aFrames;
+    return processedFrames > static_cast<uint32_t>(secondaryRate / 10);
+  });
+  EXPECT_EQ(audioFrames, 0U) << "audio frames at zero volume";
+
+  secondaryStream->SetOutputRecordingEnabled(true);
+  DispatchFunction(
+      [&] { processingTrack->SetAudioOutputVolume(nullptr, 1.f); });
+
+  // Wait for enough audio after initial silence to check the frequency.
+  SpinEventLoopUntil("200ms of audio"_ns, [&] {
+    return audioFrames > static_cast<uint32_t>(secondaryRate / 5);
+  });
+  audioListener.Disconnect();
+
+  // Stop recording now so as not to record the discontinuity when the
+  // CrossGraphReceiver is removed from the secondary graph before its
+  // AudioCallbackDriver is stopped.
+  secondaryStream->SetOutputRecordingEnabled(false);
+
+  DispatchFunction([&] { processingTrack->RemoveAudioOutput(nullptr); });
+  WaitFor(secondaryStream->OutputVerificationEvent());
+  // The frequency from OutputVerificationEvent() is estimated by
+  // AudioVerifier from a zero-crossing count.  When the discontinuity from
+  // the volume change is resampled, the discontinuity presents as
+  // oscillations, which increase the zero-crossing count and corrupt the
+  // frequency estimate.  Trim off sufficient leading from the output to
+  // remove this discontinuity.
+  uint32_t channelCount = secondaryStream->OutputChannels();
+  nsTArray<AudioDataValue> output = secondaryStream->TakeRecordedOutput();
+  size_t leadingIndex = 0;
+  for (; leadingIndex < output.Length() && output[leadingIndex] == 0.f;
+       leadingIndex += channelCount) {
+  };
+  leadingIndex += 10 * channelCount;  // skip discontinuity oscillations
+  EXPECT_LT(leadingIndex, output.Length());
+  auto trimmed = Span(output).From(std::min(leadingIndex, output.Length()));
+  size_t frameCount = trimmed.Length() / channelCount;
+  uint32_t inputFrequency = primaryStream->InputFrequency();
+  AudioVerifier<AudioDataValue> verifier(secondaryRate, inputFrequency);
+  verifier.AppendDataInterleaved(trimmed.Elements(), frameCount, channelCount);
+  EXPECT_EQ(verifier.EstimatedFreq(), inputFrequency);
+  // AudioVerifier considers the previous value before the initial sample to
+  // be zero and so considers any initial sample >> 0 to be a discontinuity.
+  EXPECT_EQ(verifier.CountDiscontinuities(), 1U);
+
+  DispatchFunction([&] {
+    // Clean up
+    processingTrack->GraphImpl()->AppendMessage(
+        MakeUnique<StopInputProcessing>(processingTrack, listener));
+    processingTrack->DisconnectDeviceInput();
+    processingTrack->Destroy();
+  });
+  WaitFor(primaryStream->OutputVerificationEvent());
 }
 #endif  // MOZ_WEBRTC
 

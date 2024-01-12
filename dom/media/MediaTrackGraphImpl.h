@@ -203,14 +203,25 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
         std::forward<Function>(aFunction))));
   }
   /* Add or remove an audio output for this track.  At most one output may be
-   * registered per key. */
-  void RegisterAudioOutput(MediaTrack* aTrack, void* aKey);
+   * registered per key.  aPreferredSampleRate is the rate preferred by the
+   * output device; it may be zero to indicate the preferred rate for the
+   * default device; it is unused when aDeviceID is the graph's primary output.
+   */
+  void RegisterAudioOutput(MediaTrack* aTrack, void* aKey,
+                           CubebUtils::AudioDeviceID aDeviceID,
+                           TrackRate aPreferredSampleRate);
   void UnregisterAudioOutput(MediaTrack* aTrack, void* aKey);
 
   void SetAudioOutputVolume(MediaTrack* aTrack, void* aKey, float aVolume);
-  /* Send a control message to update mAudioOutputs for main thread changes to
+  /* Manage the creation and destruction of CrossGraphReceivers.
+   * aPreferredSampleRate is the rate preferred by the output device. */
+  void IncrementOutputDeviceRefCnt(CubebUtils::AudioDeviceID aDeviceID,
+                                   TrackRate aPreferredSampleRate);
+  void DecrementOutputDeviceRefCnt(CubebUtils::AudioDeviceID aDeviceID);
+  /* Send a control message to update mOutputDevices for main thread changes to
    * mAudioOutputParams. */
-  void UpdateAudioOutput(MediaTrack* aTrack);
+  void UpdateAudioOutput(MediaTrack* aTrack,
+                         CubebUtils::AudioDeviceID aDeviceID);
   /**
    * Dispatches a runnable from any thread to the correct main thread for this
    * MediaTrackGraph.
@@ -515,9 +526,16 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
     mTrackOrderDirty = true;
   }
 
+ private:
+  // Get the current maximum channel count required for a device.
+  // aDevice is an element of mOutputDevices.  Graph thread only.
+  struct OutputDeviceEntry;
+  uint32_t AudioOutputChannelCount(const OutputDeviceEntry& aDevice) const;
   // Get the current maximum channel count for audio output through an
   // AudioCallbackDriver.  Graph thread only.
   uint32_t PrimaryOutputChannelCount() const;
+
+ public:
   // Set a new maximum channel count. Graph thread only.
   void SetMaxOutputChannelCount(uint32_t aMaxChannelCount);
 
@@ -982,28 +1000,52 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
 
   /**
    * Main thread unordered record of audio outputs, keyed by Track and output
-   * key.  Used to record the volumes corresponding to each key.  An array is
-   * used as a simple hash table, on the assumption that the number of outputs
-   * is small.
+   * key.  Used to determine when an output device is no longer in use and to
+   * record the volumes corresponding to each key.  An array is used as a
+   * simple hash table, on the assumption that the number of outputs is small.
    */
   struct TrackAndKey {
     MOZ_UNSAFE_REF("struct exists only if track exists") MediaTrack* mTrack;
     void* mKey;
   };
-  struct TrackKeyAndVolume {
+  struct TrackKeyDeviceAndVolume {
     MOZ_UNSAFE_REF("struct exists only if track exists")
     MediaTrack* const mTrack;
     void* const mKey;
+    const CubebUtils::AudioDeviceID mDeviceID;
     float mVolume;
 
     bool operator==(const TrackAndKey& aTrackAndKey) const {
       return mTrack == aTrackAndKey.mTrack && mKey == aTrackAndKey.mKey;
     }
   };
-  nsTArray<TrackKeyAndVolume> mAudioOutputParams;
+  nsTArray<TrackKeyDeviceAndVolume> mAudioOutputParams;
   /**
-   * Mapping from MediaTrack to volume for all tracks that have their audio
-   * output mixed and written to an audio output device.  Graph thread.
+   * Main thread record of which audio output devices are active, keyed by
+   * AudioDeviceID, and their CrossGraphReceivers if any.
+   * mOutputDeviceRefCnts[0] always exists and corresponds to the primary
+   * audio output device, which an AudioCallbackDriver will use if active.
+   * mCount may be zero for the first entry only.  */
+  struct DeviceReceiverAndCount {
+    const CubebUtils::AudioDeviceID mDeviceID;
+    // For secondary devices, mReceiver receives audio output.
+    // Null for the primary output device, fed by an AudioCallbackDriver.
+    const RefPtr<CrossGraphReceiver> mReceiver;
+    size_t mRefCnt;  // number of mAudioOutputParams entries with this device
+
+    bool operator==(CubebUtils::AudioDeviceID aDeviceID) const {
+      return mDeviceID == aDeviceID;
+    }
+  };
+  nsTArray<DeviceReceiverAndCount> mOutputDeviceRefCnts;
+  /**
+   * Graph thread record of devices to which audio outputs are mixed, keyed by
+   * AudioDeviceID.  All tracks that have an audio output to each device are
+   * grouped for mixing their outputs to a single stream.
+   * mOutputDevices[0] always exists and corresponds to the primary audio
+   * output device, which an AudioCallbackDriver will use if active.
+   * An AudioCallbackDriver may be active when no audio outputs have audio
+   * outputs.
    */
   struct TrackAndVolume {
     MOZ_UNSAFE_REF("struct exists only if track exists")
@@ -1012,7 +1054,22 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
 
     bool operator==(const MediaTrack* aTrack) const { return mTrack == aTrack; }
   };
-  nsTArray<TrackAndVolume> mAudioOutputs;
+  struct OutputDeviceEntry {
+    const CubebUtils::AudioDeviceID mDeviceID;
+    // For secondary devices, mReceiver receives audio output.
+    // Null for the primary output device, fed by an AudioCallbackDriver.
+    const RefPtr<CrossGraphReceiver> mReceiver;
+    /**
+     * Mapping from MediaTrack to volume for all tracks that have their audio
+     * output mixed and written to this output device.
+     */
+    nsTArray<TrackAndVolume> mTrackOutputs;
+
+    bool operator==(CubebUtils::AudioDeviceID aDeviceID) const {
+      return mDeviceID == aDeviceID;
+    }
+  };
+  nsTArray<OutputDeviceEntry> mOutputDevices;
 
   /**
    * Global volume scale. Used when running tests so that the output is not too
