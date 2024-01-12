@@ -113,20 +113,6 @@ const AVAILABLE_INJECTIONS = [
     customFunc: "noSniffFix",
   },
   {
-    id: "bug1570328",
-    platform: "android",
-    domain: "developer.apple.com",
-    bug: "1570328",
-    contentScripts: {
-      matches: ["*://developer.apple.com/*"],
-      css: [
-        {
-          file: "injections/css/bug1570328-developer-apple.com-transform-scale.css",
-        },
-      ],
-    },
-  },
-  {
     id: "bug1575000",
     platform: "all",
     domain: "apply.lloydsbank.co.uk",
@@ -605,20 +591,6 @@ const AVAILABLE_INJECTIONS = [
     },
   },
   {
-    id: "bug1800000",
-    platform: "desktop",
-    domain: "www.honda.co.uk",
-    bug: "1800000",
-    contentScripts: {
-      matches: ["*://www.honda.co.uk/cars/book-a-service.html*"],
-      css: [
-        {
-          file: "injections/css/bug1800000-www.honda.co.uk-choose-dealer-button-fix.css",
-        },
-      ],
-    },
-  },
-  {
     id: "bug1448747",
     platform: "android",
     domain: "FastClick breakage",
@@ -1083,6 +1055,23 @@ const AVAILABLE_INJECTIONS = [
         },
       ],
       allFrames: true,
+    },
+  },
+  {
+    id: "bug1868345",
+    platform: "desktop",
+    domain: "tvmovie.de",
+    bug: "1868345",
+    contentScripts: {
+      matches: [
+        "*://www.tvmovie.de/tv/fernsehprogramm",
+        "*://www.tvmovie.de/tv/fernsehprogramm*",
+      ],
+      css: [
+        {
+          file: "injections/css/bug1868345-tvmovie.de-scroll-fix.css",
+        },
+      ],
     },
   },
 ];
