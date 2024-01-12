@@ -234,7 +234,10 @@ already_AddRefed<Promise> CredentialsContainer::Create(
 
   if (aOptions.mPublicKey.WasPassed() &&
       StaticPrefs::security_webauth_webauthn()) {
-    if (!IsSameOriginWithAncestors(mParent) || !IsInActiveTab(mParent)) {
+    MOZ_ASSERT(mParent);
+    if (!FeaturePolicyUtils::IsFeatureAllowed(
+            mParent->GetExtantDoc(), u"publickey-credentials-create"_ns) ||
+        !IsInActiveTab(mParent)) {
       return CreateAndRejectWithNotAllowed(mParent, aRv);
     }
 
