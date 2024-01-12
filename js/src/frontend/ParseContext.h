@@ -269,6 +269,11 @@ class ParseContext : public Nestable<ParseContext> {
     // `yield` or `await` the stack slots must be memcpy'd into a
     // GeneratorObject. At some point the memcpy is too much. The limit is
     // plenty for typical human-authored code.
+    //
+    // NOTE: This just limits the number of fixed slots, not the entire stack
+    //       slots.  `yield` and `await` can happen with more slots if there
+    //       are many stack values, and the number of values copied to the
+    //       generator's stack storage array can be more than the limit.
     static constexpr uint32_t FixedSlotLimit = 256;
 
     // This is called as we leave a function, var, or lexical scope in a
