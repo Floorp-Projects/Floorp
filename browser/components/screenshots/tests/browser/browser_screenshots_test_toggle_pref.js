@@ -34,7 +34,7 @@ add_task(async function test() {
   await BrowserTestUtils.withNewTab(
     {
       gBrowser,
-      url: TEST_PAGE,
+      url: SHORT_TEST_PAGE,
     },
     async browser => {
       function awaitExtensionEvent(eventName, id) {
@@ -227,7 +227,7 @@ add_task(async function test() {
   await BrowserTestUtils.withNewTab(
     {
       gBrowser,
-      url: TEST_PAGE,
+      url: SHORT_TEST_PAGE,
     },
     async browser => {
       const SCREENSHOTS_PREF = "extensions.screenshots.disabled";
@@ -265,7 +265,7 @@ add_task(async function test() {
   await BrowserTestUtils.withNewTab(
     {
       gBrowser,
-      url: TEST_PAGE,
+      url: SHORT_TEST_PAGE,
     },
     async browser => {
       const SCREENSHOTS_PREF = "extensions.screenshots.disabled";

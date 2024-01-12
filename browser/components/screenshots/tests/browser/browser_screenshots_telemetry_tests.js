@@ -92,7 +92,7 @@ add_task(async function test_started_and_canceled_events() {
   await BrowserTestUtils.withNewTab(
     {
       gBrowser,
-      url: TEST_PAGE,
+      url: SHORT_TEST_PAGE,
     },
     async browser => {
       await clearAllTelemetryEvents();

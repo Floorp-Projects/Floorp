@@ -6,5 +6,22 @@
 </head>
 <body style="height:4000px; width:4000px; background-repeat: no-repeat; background-size: 4008px 4016px; background-color: rgb(111, 111, 111); background-image:linear-gradient(to right, transparent 50%, rgba(0, 200, 200, 0.5) 50%),linear-gradient(to bottom, transparent 50%, rgba(100, 0, 100, 0.5) 50%);">
     <div id="testPageElement" style="position:absolute; top:91px; left:93px; width:92px; height:94px; border:solid red;"></div>
+    <script>
+        // Make sure the screenshots overlay anonymous document always receives events
+        // that web content would normally be able to intercept, as that could break the
+        // overlay
+        function disabledEvent(event) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+        }
+
+        window.addEventListener("click", disabledEvent, true);
+        window.addEventListener("pointerdown", disabledEvent, true);
+        window.addEventListener("pointermove", disabledEvent, true);
+        window.addEventListener("mousemove", disabledEvent, true);
+        window.addEventListener("pointerup", disabledEvent, true);
+        window.addEventListener("keydown", disabledEvent, true);
+        window.addEventListener("keyup", disabledEvent, true);
+    </script>
 </body>
 </html>

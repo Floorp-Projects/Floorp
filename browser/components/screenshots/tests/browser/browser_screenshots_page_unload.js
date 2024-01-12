@@ -12,11 +12,11 @@ add_task(async function test() {
   await BrowserTestUtils.withNewTab(
     {
       gBrowser,
-      url: TEST_PAGE,
+      url: SHORT_TEST_PAGE,
     },
     async browser => {
       await clearAllTelemetryEvents();
-      await SpecialPowers.spawn(browser, [TEST_PAGE], url => {
+      await SpecialPowers.spawn(browser, [SHORT_TEST_PAGE], url => {
         let a = content.document.createElement("a");
         a.id = "clickMe";
         a.href = url;
