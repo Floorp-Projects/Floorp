@@ -2337,6 +2337,13 @@ var gBrowserInit = {
     });
 
     scheduleIdleTask(() => {
+      // load the tab preview component
+      import("chrome://browser/content/tabpreview/tabpreview.mjs").catch(
+        console.error
+      );
+    });
+
+    scheduleIdleTask(() => {
       // setup simple gestures support
       gGestureSupport.init(true);
 

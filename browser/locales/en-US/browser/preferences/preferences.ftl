@@ -253,6 +253,10 @@ containers-remove-alert-msg =
 containers-remove-ok-button = Remove this Container
 containers-remove-cancel-button = Don’t remove this Container
 
+settings-tabs-show-image-in-preview =
+    .label = Show an image preview when you hover on a tab
+    .accessKey = h
+
 ## General Section - Language & Appearance
 
 language-and-appearance-header = Language and Appearance
