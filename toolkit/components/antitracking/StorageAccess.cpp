@@ -202,32 +202,6 @@ static StorageAccess InternalStorageAllowedCheckCached(
   return result;
 }
 
-static bool StorageDisabledByAntiTrackingInternal(
-    nsPIDOMWindowInner* aWindow, nsIChannel* aChannel, nsIPrincipal* aPrincipal,
-    nsIURI* aURI, nsICookieJarSettings* aCookieJarSettings,
-    uint32_t& aRejectedReason) {
-  MOZ_ASSERT(aWindow || aChannel || aPrincipal);
-
-  if (aWindow) {
-    nsIURI* documentURI = aURI ? aURI : aWindow->GetDocumentURI();
-    return !documentURI ||
-           !ShouldAllowAccessFor(aWindow, documentURI, &aRejectedReason);
-  }
-
-  if (aChannel) {
-    nsCOMPtr<nsIURI> uri;
-    nsresult rv = aChannel->GetURI(getter_AddRefs(uri));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return false;
-    }
-
-    return !ShouldAllowAccessFor(aChannel, uri, &aRejectedReason);
-  }
-
-  MOZ_ASSERT(aPrincipal);
-  return !ShouldAllowAccessFor(aPrincipal, aCookieJarSettings);
-}
-
 namespace mozilla {
 
 StorageAccess StorageAllowedForWindow(nsPIDOMWindowInner* aWindow,
@@ -355,22 +329,34 @@ bool StorageDisabledByAntiTracking(nsPIDOMWindowInner* aWindow,
   if (!cookieJarSettings) {
     cookieJarSettings = net::CookieJarSettings::Create(aPrincipal);
   }
-  bool disabled = StorageDisabledByAntiTrackingInternal(
-      aWindow, aChannel, aPrincipal, aURI, cookieJarSettings, aRejectedReason);
 
+  bool disabled = true;
   if (aWindow) {
+    nsIURI* documentURI = aURI ? aURI : aWindow->GetDocumentURI();
+    disabled = !documentURI ||
+           !ShouldAllowAccessFor(aWindow, documentURI, &aRejectedReason);
     ContentBlockingNotifier::OnDecision(
         aWindow,
         disabled ? ContentBlockingNotifier::BlockingDecision::eBlock
                  : ContentBlockingNotifier::BlockingDecision::eAllow,
         aRejectedReason);
   } else if (aChannel) {
+    disabled = false;
+    nsCOMPtr<nsIURI> uri;
+    nsresult rv = aChannel->GetURI(getter_AddRefs(uri));
+    if (!NS_WARN_IF(NS_FAILED(rv))) {
+      disabled = !ShouldAllowAccessFor(aChannel, uri, &aRejectedReason);;
+    }
     ContentBlockingNotifier::OnDecision(
         aChannel,
         disabled ? ContentBlockingNotifier::BlockingDecision::eBlock
                  : ContentBlockingNotifier::BlockingDecision::eAllow,
         aRejectedReason);
+  } else {
+    MOZ_ASSERT(aPrincipal);
+    disabled = !ShouldAllowAccessFor(aPrincipal, cookieJarSettings);
   }
+
   return disabled;
 }
 
