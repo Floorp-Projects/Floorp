@@ -478,6 +478,21 @@ fn run(args: CliArgs) -> miette::Result<()> {
                 let path = spec_file_dir.child("cts.https.html");
                 assert!(split_cases.insert(path, cases).is_none());
             }
+            {
+                let dld_path =
+                    &cts_tests_dir.child("webgpu/api/validation/state/device_lost/destroy");
+                let (spec_file_dir, cases) = cts_cases_by_spec_file_dir
+                    .remove_entry(dld_path)
+                    .expect("no `device_lost/destroy` tests found; did they move?");
+                insert_with_default_name(
+                    &mut split_cases,
+                    spec_file_dir,
+                    WptEntry {
+                        cases,
+                        timeout_length: TimeoutLength::Short,
+                    },
+                );
+            }
             for (spec_file_dir, cases) in cts_cases_by_spec_file_dir {
                 insert_with_default_name(
                     &mut split_cases,
