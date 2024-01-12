@@ -698,19 +698,38 @@ bool XPCConvert::JSData2Native(JSContext* cx, void* d, HandleValue s,
       }
 
       // The JS val is neither null nor void...
-      JSString* str = ToString(cx, s);
-      if (!str) {
-        return false;
-      }
 
-      size_t length = JS_GetStringEncodingLength(cx, str);
-      if (length == size_t(-1)) {
-        return false;
-      }
+      JSString* str;
+      size_t length;
+      if (s.isString()) {
+        str = s.toString();
 
-      if (!length) {
-        rs->Truncate();
-        return true;
+        length = JS::GetStringLength(str);
+        if (!length) {
+          rs->Truncate();
+          return true;
+        }
+
+        // The string can be an external latin-1 string created in
+        // XPCConvert::NativeData2JS's nsXPTType::T_CSTRING case.
+        if (XPCStringConvert::MaybeAssignLatin1StringChars(str, length, *rs)) {
+          return true;
+        }
+      } else {
+        str = ToString(cx, s);
+        if (!str) {
+          return false;
+        }
+
+        length = JS_GetStringEncodingLength(cx, str);
+        if (length == size_t(-1)) {
+          return false;
+        }
+
+        if (!length) {
+          rs->Truncate();
+          return true;
+        }
       }
 
       if (!rs->SetLength(uint32_t(length), fallible)) {
