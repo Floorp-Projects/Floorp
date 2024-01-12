@@ -654,7 +654,8 @@ void MediaTrackGraphImpl::UpdateTrackOrder() {
 }
 
 TrackTime MediaTrackGraphImpl::PlayAudio(const TrackKeyAndVolume& aTkv,
-                                         GraphTime aPlayedTime) {
+                                         GraphTime aPlayedTime,
+                                         uint32_t aOutputChannelCount) {
   MOZ_ASSERT(OnGraphThread());
   MOZ_ASSERT(mRealtime, "Should only attempt to play audio in realtime mode");
 
@@ -732,18 +733,7 @@ TrackTime MediaTrackGraphImpl::PlayAudio(const TrackKeyAndVolume& aTkv,
     }
     t = end;
 
-    uint32_t outputChannels;
-    // Use the number of channel the driver expects: this is the number of
-    // channel that can be output by the underlying system level audio stream.
-    // Fall back to something sensible if this graph is being driven by a normal
-    // thread (this can happen when there are no output devices, etc.).
-    if (CurrentDriver()->AsAudioCallbackDriver()) {
-      outputChannels =
-          CurrentDriver()->AsAudioCallbackDriver()->OutputChannelCount();
-    } else {
-      outputChannels = AudioOutputChannelCount();
-    }
-    output.Mix(mMixer, outputChannels, mSampleRate);
+    output.Mix(mMixer, aOutputChannelCount, mSampleRate);
   }
   return ticksWritten;
 }
@@ -1477,12 +1467,19 @@ void MediaTrackGraphImpl::Process(MixerCallbackReceiver* aMixerReceiver) {
 
   if (aMixerReceiver) {
     MOZ_ASSERT(mRealtime, "If there's a mixer, this graph must be realtime");
+    MOZ_ASSERT(CurrentDriver()->AsAudioCallbackDriver(),
+               "Driver must be AudioCallbackDriver if aMixerReceiver");
+    // Use the number of channel the driver expects: this is the number of
+    // channel that can be output by the underlying system level audio stream.
+    uint32_t outputChannelCount =
+        CurrentDriver()->AsAudioCallbackDriver()->OutputChannelCount();
     mMixer.StartMixing();
     // This is the number of frames that are written to the output buffer, for
     // this iteration.
     TrackTime ticksPlayed = 0;
     for (auto& t : mAudioOutputs) {
-      TrackTime ticksPlayedForThisTrack = PlayAudio(t, oldProcessedTime);
+      TrackTime ticksPlayedForThisTrack =
+          PlayAudio(t, oldProcessedTime, outputChannelCount);
       if (ticksPlayed == 0) {
         ticksPlayed = ticksPlayedForThisTrack;
       } else {
@@ -1496,8 +1493,7 @@ void MediaTrackGraphImpl::Process(MixerCallbackReceiver* aMixerReceiver) {
       // Nothing was played, so the mixer doesn't know how many frames were
       // processed. We still tell it so AudioCallbackDriver knows how much has
       // been processed. (bug 1406027)
-      mMixer.Mix(nullptr,
-                 CurrentDriver()->AsAudioCallbackDriver()->OutputChannelCount(),
+      mMixer.Mix(nullptr, outputChannelCount,
                  mStateComputedTime - oldProcessedTime, mSampleRate);
     }
     aMixerReceiver->MixerCallback(mMixer.MixedChunk(), mSampleRate);

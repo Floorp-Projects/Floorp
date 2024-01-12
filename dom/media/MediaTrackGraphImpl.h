@@ -431,7 +431,8 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
     void* mKey;
     float mVolume;
   };
-  TrackTime PlayAudio(const TrackKeyAndVolume& aTkv, GraphTime aPlayedTime);
+  TrackTime PlayAudio(const TrackKeyAndVolume& aTkv, GraphTime aPlayedTime,
+                      uint32_t aOutputChannelCount);
 
   /* Runs off a message on the graph thread when something requests audio from
    * an input audio device of ID aID, and delivers the input audio frames to
