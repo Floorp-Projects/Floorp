@@ -135,8 +135,7 @@ nsCookieBannerService::Observe(nsISupports* aSubject, const char* aTopic,
   // Report the daily telemetry for the cookie banner service on "idle-daily".
   if (nsCRT::strcmp(aTopic, "idle-daily") == 0) {
     DailyReportTelemetry();
-    ResetDomainTelemetryRecord(""_ns);
-    return NS_OK;
+    return ResetDomainTelemetryRecord(""_ns);
   }
 
   // Initializing the cookie banner service on startup on
@@ -199,7 +198,8 @@ nsresult nsCookieBannerService::Init() {
                                if (!mIsInitialized) {
                                  return;
                                }
-                               mListService->Init();
+                               nsresult rv = mListService->Init();
+                               NS_ENSURE_SUCCESS_VOID(rv);
                                mDomainPrefService->Init();
                              }),
       EventQueuePriority::Idle);
@@ -211,10 +211,13 @@ nsresult nsCookieBannerService::Init() {
   nsCOMPtr<nsIObserverService> obsSvc = mozilla::services::GetObserverService();
   NS_ENSURE_TRUE(obsSvc, NS_ERROR_FAILURE);
 
-  obsSvc->AddObserver(this, OBSERVER_TOPIC_BC_ATTACHED, false);
-  obsSvc->AddObserver(this, OBSERVER_TOPIC_BC_DISCARDED, false);
+  rv = obsSvc->AddObserver(this, OBSERVER_TOPIC_BC_ATTACHED, false);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = obsSvc->AddObserver(this, OBSERVER_TOPIC_BC_DISCARDED, false);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  obsSvc->AddObserver(this, "last-pb-context-exited", false);
+  rv = obsSvc->AddObserver(this, "last-pb-context-exited", false);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
 }
@@ -231,13 +234,14 @@ nsresult nsCookieBannerService::Shutdown() {
   }
 
   // Shut down the list service which will stop updating mRules.
-  mListService->Shutdown();
+  nsresult rv = mListService->Shutdown();
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Clear all stored cookie banner rules. They will be imported again on Init.
   mRules.Clear();
 
   // Clear executed records for normal and private browsing.
-  nsresult rv = RemoveAllExecutedRecords(false);
+  rv = RemoveAllExecutedRecords(false);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = RemoveAllExecutedRecords(true);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -245,10 +249,13 @@ nsresult nsCookieBannerService::Shutdown() {
   nsCOMPtr<nsIObserverService> obsSvc = mozilla::services::GetObserverService();
   NS_ENSURE_TRUE(obsSvc, NS_ERROR_FAILURE);
 
-  obsSvc->RemoveObserver(this, OBSERVER_TOPIC_BC_ATTACHED);
-  obsSvc->RemoveObserver(this, OBSERVER_TOPIC_BC_DISCARDED);
+  rv = obsSvc->RemoveObserver(this, OBSERVER_TOPIC_BC_ATTACHED);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = obsSvc->RemoveObserver(this, OBSERVER_TOPIC_BC_DISCARDED);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  obsSvc->RemoveObserver(this, "last-pb-context-exited");
+  rv = obsSvc->RemoveObserver(this, "last-pb-context-exited");
+  NS_ENSURE_SUCCESS(rv, rv);
 
   mIsInitialized = false;
 
@@ -257,6 +264,8 @@ nsresult nsCookieBannerService::Shutdown() {
 
 NS_IMETHODIMP
 nsCookieBannerService::GetIsEnabled(bool* aResult) {
+  NS_ENSURE_ARG_POINTER(aResult);
+
   *aResult = mIsInitialized;
 
   return NS_OK;
@@ -902,10 +911,7 @@ nsCookieBannerService::RemoveDomainPref(nsIURI* aTopLevelURI,
   rv = eTLDService->GetBaseDomain(aTopLevelURI, 0, baseDomain);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = mDomainPrefService->RemovePref(baseDomain, aIsPrivate);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
+  return mDomainPrefService->RemovePref(baseDomain, aIsPrivate);
 }
 
 NS_IMETHODIMP
@@ -914,10 +920,7 @@ nsCookieBannerService::RemoveAllDomainPrefs(const bool aIsPrivate) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  nsresult rv = mDomainPrefService->RemoveAll(aIsPrivate);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
+  return mDomainPrefService->RemoveAll(aIsPrivate);
 }
 
 NS_IMETHODIMP
