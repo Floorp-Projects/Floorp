@@ -633,7 +633,7 @@ FT_Vector gfxFT2FontBase::GetEmboldenStrength(FT_Face aFace) const {
 }
 
 bool gfxFT2FontBase::GetFTGlyphExtents(uint16_t aGID, int32_t* aAdvance,
-                                       IntRect* aBounds) const {
+                                       IntRect* aBounds) {
   gfxFT2LockedFace face(this);
   MOZ_ASSERT(face.get());
   if (!face.get()) {
@@ -720,7 +720,26 @@ bool gfxFT2FontBase::GetFTGlyphExtents(uint16_t aGID, int32_t* aAdvance,
       }
     }
     *aBounds = IntRect(x, y, x2 - x, y2 - y);
+
+    // Color fonts may not have reported the right bounds here, if there wasn't
+    // an outline for the nominal glyph ID.
+    // In principle we could use COLRFonts::GetColorGlyphBounds to retrieve the
+    // true bounds of the rendering, but that's more expensive; probably better
+    // to just use the font-wide ascent/descent as a heuristic that will
+    // generally ensure everything gets rendered.
+    if (aBounds->IsEmpty() &&
+        GetFontEntry()->HasFontTable(TRUETYPE_TAG('C', 'O', 'L', 'R'))) {
+      const auto& fm = GetMetrics(nsFontMetrics::eHorizontal);
+      // aBounds is stored as FT_F26Dot6, so scale values from `fm` by 64.
+      aBounds->y = int32_t(-NS_round(fm.maxAscent * 64.0));
+      aBounds->height =
+          int32_t(NS_round((fm.maxAscent + fm.maxDescent) * 64.0));
+      aBounds->x = 0;
+      aBounds->width =
+          int32_t(aAdvance ? *aAdvance : NS_round(fm.maxAdvance * 64.0));
+    }
   }
+
   return true;
 }
 
@@ -729,7 +748,7 @@ bool gfxFT2FontBase::GetFTGlyphExtents(uint16_t aGID, int32_t* aAdvance,
  * FreeType for the glyph extents and initialize the glyph metrics.
  */
 const gfxFT2FontBase::GlyphMetrics& gfxFT2FontBase::GetCachedGlyphMetrics(
-    uint16_t aGID, IntRect* aBounds) const {
+    uint16_t aGID, IntRect* aBounds) {
   {
     // Try to read cached metrics without exclusive locking.
     AutoReadLock lock(mLock);
