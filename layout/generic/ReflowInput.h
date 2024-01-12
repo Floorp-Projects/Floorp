@@ -755,17 +755,6 @@ struct ReflowInput : public SizeComputationInput {
       nsPresContext* aPresContext, const ReflowInput* aContainingBlockRI) const;
 
   /**
-   * Apply the mComputed(Min/Max)Width constraints to the content
-   * size computed so far.
-   */
-  nscoord ApplyMinMaxWidth(nscoord aWidth) const {
-    if (NS_UNCONSTRAINEDSIZE != ComputedMaxWidth()) {
-      aWidth = std::min(aWidth, ComputedMaxWidth());
-    }
-    return std::max(aWidth, ComputedMinWidth());
-  }
-
-  /**
    * Apply the mComputed(Min/Max)ISize constraints to the content
    * size computed so far.
    */
@@ -774,29 +763,6 @@ struct ReflowInput : public SizeComputationInput {
       aISize = std::min(aISize, ComputedMaxISize());
     }
     return std::max(aISize, ComputedMinISize());
-  }
-
-  /**
-   * Apply the mComputed(Min/Max)Height constraints to the content
-   * size computed so far.
-   *
-   * @param aHeight The height that we've computed an to which we want to apply
-   *        min/max constraints.
-   * @param aConsumed The amount of the computed height that was consumed by
-   *        our prev-in-flows.
-   */
-  nscoord ApplyMinMaxHeight(nscoord aHeight, nscoord aConsumed = 0) const {
-    aHeight += aConsumed;
-
-    if (NS_UNCONSTRAINEDSIZE != ComputedMaxHeight()) {
-      aHeight = std::min(aHeight, ComputedMaxHeight());
-    }
-
-    if (NS_UNCONSTRAINEDSIZE != ComputedMinHeight()) {
-      aHeight = std::max(aHeight, ComputedMinHeight());
-    }
-
-    return aHeight - aConsumed;
   }
 
   /**
