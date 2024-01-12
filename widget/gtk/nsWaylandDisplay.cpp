@@ -149,6 +149,9 @@ static void global_registry_handler(void* data, wl_registry* registry,
     auto* manager = WaylandRegistryBind<wp_fractional_scale_manager_v1>(
         registry, id, &wp_fractional_scale_manager_v1_interface, 1);
     display->SetFractionalScaleManager(manager);
+  } else if (iface.EqualsLiteral("gtk_primary_selection_device_manager") ||
+             iface.EqualsLiteral("zwp_primary_selection_device_manager_v1")) {
+    display->EnablePrimarySelection();
   }
 }
 
