@@ -656,11 +656,9 @@ static void net_ParseMediaType(const nsACString& aMediaTypeStr,
   const char* start = flatStr.get();
   const char* end = start + flatStr.Length();
 
-  // Trim LWS leading and trailing whitespace from type.  We include '(' in
-  // the trailing trim set to catch media-type comments, which are not at all
-  // standard, but may occur in rare cases.
+  // Trim LWS leading and trailing whitespace from type.
   const char* type = net_FindCharNotInSet(start, end, HTTP_LWS);
-  const char* typeEnd = net_FindCharInSet(type, end, HTTP_LWS ";(");
+  const char* typeEnd = net_FindCharInSet(type, end, HTTP_LWS ";");
 
   const char* charset = "";
   const char* charsetEnd = charset;
@@ -698,9 +696,7 @@ static void net_ParseMediaType(const nsACString& aMediaTypeStr,
 
   bool charsetNeedsQuotedStringUnescaping = false;
   if (typeHasCharset) {
-    // Trim LWS leading and trailing whitespace from charset.  We include
-    // '(' in the trailing trim set to catch media-type comments, which are
-    // not at all standard, but may occur in rare cases.
+    // Trim LWS leading and trailing whitespace from charset.
     charset = net_FindCharNotInSet(charset, charsetEnd, HTTP_LWS);
     if (*charset == '"') {
       charsetNeedsQuotedStringUnescaping = true;
@@ -709,7 +705,7 @@ static void net_ParseMediaType(const nsACString& aMediaTypeStr,
       charset++;
       NS_ASSERTION(charsetEnd >= charset, "Bad charset parsing");
     } else {
-      charsetEnd = net_FindCharInSet(charset, charsetEnd, HTTP_LWS ";(");
+      charsetEnd = net_FindCharInSet(charset, charsetEnd, HTTP_LWS ";");
     }
   }
 

@@ -6,6 +6,7 @@
 #include "nsHttp.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
+#include "nsURLHelper.h"
 
 namespace mozilla {
 namespace net {
@@ -137,6 +138,45 @@ TEST(TestHttpResponseHead, atoms)
   ASSERT_EQ(atom1.get(), atom2.get());
   // Check that we get the expected pointer back.
   ASSERT_EQ(atom2.get(), header1.BeginReading());
+}
+
+TEST(ContentTypeParsing, CommentHandling1)
+{
+  bool dummy;
+  const nsAutoCString val("text/html;charset=gbk(");
+  nsCString contentType;
+  nsCString contentCharset;
+
+  net_ParseContentType(val, contentType, contentCharset, &dummy);
+
+  ASSERT_TRUE(contentType.EqualsLiteral("text/html"));
+  ASSERT_TRUE(contentCharset.EqualsLiteral("gbk("));
+}
+
+TEST(ContentTypeParsing, CommentHandling2)
+{
+  bool dummy;
+  const nsAutoCString val("text/html;x=(;charset=gbk");
+  nsCString contentType;
+  nsCString contentCharset;
+
+  net_ParseContentType(val, contentType, contentCharset, &dummy);
+
+  ASSERT_TRUE(contentType.EqualsLiteral("text/html"));
+  ASSERT_TRUE(contentCharset.EqualsLiteral("gbk"));
+}
+
+TEST(ContentTypeParsing, CommentHandling3)
+{
+  bool dummy;
+  const nsAutoCString val("text/html;test=test;(;charset=gbk");
+  nsCString contentType;
+  nsCString contentCharset;
+
+  net_ParseContentType(val, contentType, contentCharset, &dummy);
+
+  ASSERT_TRUE(contentType.EqualsLiteral("text/html"));
+  ASSERT_TRUE(contentCharset.EqualsLiteral("gbk"));
 }
 
 }  // namespace net
