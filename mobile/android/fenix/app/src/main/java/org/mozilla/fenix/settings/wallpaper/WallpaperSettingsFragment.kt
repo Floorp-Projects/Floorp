@@ -112,7 +112,7 @@ class WallpaperSettingsFragment : Fragment() {
                         requireComponents.appStore.dispatch(
                             AppAction.WallpaperAction.OpenToHome,
                         )
-                        findNavController().navigate(R.id.homeFragment)
+                        findNavController().popBackStack(R.id.homeFragment, false)
                     }
                     .show()
 
