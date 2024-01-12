@@ -63,37 +63,6 @@ async function searchWithTab(
   return { tab, expectedSearchUrl };
 }
 
-// Search terms should show up in the url bar if the pref is on
-// and the SERP url matches the one constructed in Firefox
-add_task(async function list_of_search_strings() {
-  const searches = [
-    {
-      // Single word
-      searchString: "chocolate",
-    },
-    {
-      // Word with space
-      searchString: "chocolate cake",
-    },
-    {
-      // Special characters
-      searchString: "chocolate;,?:@&=+$-_.!~*'()#cake",
-    },
-    {
-      searchString: '"chocolate cake" -recipes',
-    },
-    {
-      // Search with special characters
-      searchString: "site:example.com chocolate -cake",
-    },
-  ];
-
-  for (let { searchString } of searches) {
-    let { tab } = await searchWithTab(searchString);
-    BrowserTestUtils.removeTab(tab);
-  }
-});
-
 // If a user does a search, goes to another page, and then
 // goes back to the SERP, the search term should show.
 add_task(async function go_back() {

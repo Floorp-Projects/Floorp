@@ -49,6 +49,10 @@ skip-if = [
 
 ["browser_UrlbarInput_searchTerms_searchMode.js"]
 
+["browser_UrlbarInput_searchTerms_strings.js"]
+
+["browser_UrlbarInput_searchTerms_stringsUnsafe.js"]
+
 ["browser_UrlbarInput_searchTerms_switch_tab.js"]
 
 ["browser_UrlbarInput_searchTerms_telemetry.js"]

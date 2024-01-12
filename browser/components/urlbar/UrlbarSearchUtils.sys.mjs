@@ -300,9 +300,9 @@ class SearchUtils {
    *   The uri to check.
    * @returns {string}
    *   The search terms used.
-   *   Will return an empty string if it's not a default SERP, the string
-   *   exceeds the maximum characters, or the default engine hasn't been
-   *   initialized.
+   *   Will return an empty string if it's not a default SERP, the search term
+   *   looks too similar to a URL, the string exceeds the maximum characters,
+   *   or the default engine hasn't been initialized.
    */
   getSearchTermIfDefaultSerpUri(uri) {
     if (!Services.search.hasSuccessfullyInitialized || !uri) {
@@ -326,6 +326,12 @@ class SearchUtils {
 
     let searchTermWithSpacesRemoved = searchTerm.replaceAll(/\s/g, "");
 
+    // Check if the search string uses a commonly used URL protocol. This
+    // avoids doing a fixup if we already know it matches a URL. Additionally,
+    // it ensures neither http:// nor https:// will appear by themselves in
+    // UrlbarInput. This is important because http:// can be trimmed, which in
+    // the Persisted Search Terms case, will cause the UrlbarInput to appear
+    // blank.
     if (
       searchTermWithSpacesRemoved.startsWith("https://") ||
       searchTermWithSpacesRemoved.startsWith("http://")
@@ -333,6 +339,11 @@ class SearchUtils {
       return "";
     }
 
+    // We pass the search term to URIFixup to determine if it could be
+    // interpreted as a URL, including typos in the scheme and/or the domain
+    // suffix. This is to prevent search terms from persisting in the Urlbar if
+    // they look too similar to a URL, but still allow phrases with periods
+    // that are unlikely to be a URL.
     try {
       let info = Services.uriFixup.getFixupURIInfo(
         searchTermWithSpacesRemoved,
