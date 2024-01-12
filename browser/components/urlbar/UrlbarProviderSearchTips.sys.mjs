@@ -20,6 +20,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   AppMenuNotifications: "resource://gre/modules/AppMenuNotifications.sys.mjs",
   DefaultBrowserCheck: "resource:///modules/BrowserGlue.sys.mjs",
   LaterRun: "resource:///modules/LaterRun.sys.mjs",
+  SearchStaticData: "resource://gre/modules/SearchStaticData.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
   UrlbarProviderTopSites: "resource:///modules/UrlbarProviderTopSites.sys.mjs",
   UrlbarResult: "resource:///modules/UrlbarResult.sys.mjs",
@@ -46,26 +47,32 @@ const TIPS = {
   REDIRECT: "searchTip_redirect",
 };
 
-// This maps engine names to regexes matching their homepages. We show the
-// redirect tip on these pages. The Google domains are taken from
-// https://ipfs.io/ipfs/QmXoypizjW3WknFiJnKLwHCnL72vedxjQkDDP1mXWo6uco/wiki/List_of_Google_domains.html.
-const SUPPORTED_ENGINES = new Map([
-  ["Bing", { domainPath: /^www\.bing\.com\/$/ }],
-  [
-    "DuckDuckGo",
-    {
-      domainPath: /^(start\.)?duckduckgo\.com\/$/,
-      prohibitedSearchParams: ["q"],
-    },
-  ],
-  [
-    "Google",
-    {
-      domainPath:
-        /^www\.google\.(com|ac|ad|ae|com\.af|com\.ag|com\.ai|al|am|co\.ao|com\.ar|as|at|com\.au|az|ba|com\.bd|be|bf|bg|com\.bh|bi|bj|com\.bn|com\.bo|com\.br|bs|bt|co\.bw|by|com\.bz|ca|com\.kh|cc|cd|cf|cat|cg|ch|ci|co\.ck|cl|cm|cn|com\.co|co\.cr|com\.cu|cv|com\.cy|cz|de|dj|dk|dm|com\.do|dz|com\.ec|ee|com\.eg|es|com\.et|fi|com\.fj|fm|fr|ga|ge|gf|gg|com\.gh|com\.gi|gl|gm|gp|gr|com\.gt|gy|com\.hk|hn|hr|ht|hu|co\.id|iq|ie|co\.il|im|co\.in|io|is|it|je|com\.jm|jo|co\.jp|co\.ke|ki|kg|co\.kr|com\.kw|kz|la|com\.lb|com\.lc|li|lk|co\.ls|lt|lu|lv|com\.ly|co\.ma|md|me|mg|mk|ml|com\.mm|mn|ms|com\.mt|mu|mv|mw|com\.mx|com\.my|co\.mz|com\.na|ne|com\.nf|com\.ng|com\.ni|nl|no|com\.np|nr|nu|co\.nz|com\.om|com\.pk|com\.pa|com\.pe|com\.ph|pl|com\.pg|pn|com\.pr|ps|pt|com\.py|com\.qa|ro|rs|ru|rw|com\.sa|com\.sb|sc|se|com\.sg|sh|si|sk|com\.sl|sn|sm|so|st|sr|com\.sv|td|tg|co\.th|com\.tj|tk|tl|tm|to|tn|com\.tr|tt|com\.tw|co\.tz|com\.ua|co\.ug|co\.uk|com\.uy|co\.uz|com\.vc|co\.ve|vg|co\.vi|com\.vn|vu|ws|co\.za|co\.zm|co\.zw)\/(webhp)?$/,
-    },
-  ],
-]);
+ChromeUtils.defineLazyGetter(lazy, "SUPPORTED_ENGINES", () => {
+  // Converts a list of Google domains to a pipe separated string of escaped TLDs.
+  // [www.google.com, ..., www.google.co.uk] => "com|...|co\.uk"
+  const googleTLDs = lazy.SearchStaticData.getAlternateDomains("www.google.com")
+    .map(str => str.slice("www.google.".length).replaceAll(".", "\\."))
+    .join("|");
+
+  // This maps engine names to regexes matching their homepages. We show the
+  // redirect tip on these pages.
+  return new Map([
+    ["Bing", { domainPath: /^www\.bing\.com\/$/ }],
+    [
+      "DuckDuckGo",
+      {
+        domainPath: /^(start\.)?duckduckgo\.com\/$/,
+        prohibitedSearchParams: ["q"],
+      },
+    ],
+    [
+      "Google",
+      {
+        domainPath: new RegExp(`^www\.google\.(?:${googleTLDs})\/(webhp)?$`),
+      },
+    ],
+  ]);
+});
 
 // The maximum number of times we'll show a tip across all sessions.
 const MAX_SHOWN_COUNT = 4;
@@ -567,7 +574,7 @@ async function isDefaultEngineHomepage(urlStr) {
     return false;
   }
 
-  let homepageMatches = SUPPORTED_ENGINES.get(defaultEngine.name);
+  let homepageMatches = lazy.SUPPORTED_ENGINES.get(defaultEngine.name);
   if (!homepageMatches) {
     return false;
   }
