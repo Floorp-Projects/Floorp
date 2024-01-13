@@ -187,6 +187,9 @@ class RemoteTextureTxnScheduler final {
   std::deque<Wait> mWaits;
 };
 
+typedef std::unordered_set<RemoteTextureOwnerId, RemoteTextureOwnerId::HashFn>
+    RemoteTextureOwnerIdSet;
+
 /**
  * A class provides API for remote texture owners.
  */
@@ -202,8 +205,9 @@ class RemoteTextureOwnerClient final {
   void UnregisterTextureOwner(const RemoteTextureOwnerId aOwnerId);
   void UnregisterAllTextureOwners();
   void ClearRecycledTextures();
-  void NotifyContextLost();
-  void NotifyContextRestored();
+  void NotifyContextLost(const RemoteTextureOwnerIdSet* aOwnerIds = nullptr);
+  void NotifyContextRestored(
+      const RemoteTextureOwnerIdSet* aOwnerIds = nullptr);
   void PushTexture(const RemoteTextureId aTextureId,
                    const RemoteTextureOwnerId aOwnerId,
                    UniquePtr<TextureData>&& aTextureData);
@@ -243,8 +247,7 @@ class RemoteTextureOwnerClient final {
  protected:
   ~RemoteTextureOwnerClient();
 
-  std::unordered_set<RemoteTextureOwnerId, RemoteTextureOwnerId::HashFn>
-      mOwnerIds;
+  RemoteTextureOwnerIdSet mOwnerIds;
   RefPtr<RemoteTextureRecycleBin> mSharedRecycleBin;
 };
 
@@ -288,24 +291,16 @@ class RemoteTextureMap {
       const RefPtr<RemoteTextureRecycleBin>& aRecycleBin = nullptr);
   void UnregisterTextureOwner(const RemoteTextureOwnerId aOwnerId,
                               const base::ProcessId aForPid);
-  void UnregisterTextureOwners(
-      const std::unordered_set<RemoteTextureOwnerId,
-                               RemoteTextureOwnerId::HashFn>& aOwnerIds,
-      const base::ProcessId aForPid);
+  void UnregisterTextureOwners(const RemoteTextureOwnerIdSet& aOwnerIds,
+                               const base::ProcessId aForPid);
 
   void ClearRecycledTextures(
-      const std::unordered_set<RemoteTextureOwnerId,
-                               RemoteTextureOwnerId::HashFn>& aOwnerIds,
-      const base::ProcessId aForPid,
+      const RemoteTextureOwnerIdSet& aOwnerIds, const base::ProcessId aForPid,
       const RefPtr<RemoteTextureRecycleBin>& aRecycleBin = nullptr);
-  void NotifyContextLost(
-      const std::unordered_set<RemoteTextureOwnerId,
-                               RemoteTextureOwnerId::HashFn>& aOwnerIds,
-      const base::ProcessId aForPid);
-  void NotifyContextRestored(
-      const std::unordered_set<RemoteTextureOwnerId,
-                               RemoteTextureOwnerId::HashFn>& aOwnerIds,
-      const base::ProcessId aForPid);
+  void NotifyContextLost(const RemoteTextureOwnerIdSet& aOwnerIds,
+                         const base::ProcessId aForPid);
+  void NotifyContextRestored(const RemoteTextureOwnerIdSet& aOwnerIds,
+                             const base::ProcessId aForPid);
 
   // Get remote texture's TextureHost for RemoteTextureHostWrapper.
   //

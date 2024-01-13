@@ -194,6 +194,7 @@ ipc::IPCResult CanvasChild::RecvDeactivate() {
 }
 
 ipc::IPCResult CanvasChild::RecvBlockCanvas() {
+  mBlocked = true;
   if (auto* cm = gfx::CanvasManagerChild::Get()) {
     cm->BlockCanvas();
   }
@@ -492,6 +493,9 @@ ipc::IPCResult CanvasChild::RecvNotifyRequiresRefresh(int64_t aTextureId) {
 }
 
 bool CanvasChild::RequiresRefresh(int64_t aTextureId) const {
+  if (mBlocked) {
+    return true;
+  }
   auto it = mTextureInfo.find(aTextureId);
   if (it != mTextureInfo.end()) {
     return it->second.mRequiresRefresh;

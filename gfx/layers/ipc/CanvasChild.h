@@ -179,6 +179,7 @@ class CanvasChild final : public PCanvasChild, public SupportsWeakPtr {
   std::unordered_map<int64_t, TextureInfo> mTextureInfo;
   bool mIsInTransaction = false;
   bool mDormant = false;
+  bool mBlocked = false;
 };
 
 }  // namespace layers

@@ -502,7 +502,7 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr {
   void CopyToSwapChain(
       WebGLFramebuffer*, layers::TextureType,
       const webgl::SwapChainOptions& options = webgl::SwapChainOptions(),
-      base::ProcessId pid = base::kInvalidProcessId);
+      layers::RemoteTextureOwnerClient* ownerClient = nullptr);
   // In use cases where a framebuffer is used as an offscreen framebuffer and
   // does not need to be committed to the swap chain, it may still be useful
   // for the implementation to delineate distinct frames, such as when sharing
@@ -1261,10 +1261,10 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr {
 
   RefPtr<layers::RemoteTextureOwnerClient> mRemoteTextureOwner;
 
-  bool PushRemoteTexture(WebGLFramebuffer*, gl::SwapChain&,
-                         std::shared_ptr<gl::SharedSurface>,
-                         const webgl::SwapChainOptions& options,
-                         base::ProcessId pid = base::kInvalidProcessId);
+  bool PushRemoteTexture(
+      WebGLFramebuffer*, gl::SwapChain&, std::shared_ptr<gl::SharedSurface>,
+      const webgl::SwapChainOptions& options,
+      layers::RemoteTextureOwnerClient* ownerClient = nullptr);
 
   // --
 
