@@ -11749,6 +11749,9 @@ bool InitOptionParser(OptionParser& op) {
       !op.addStringOption('\0', "ion-iterator-indices", "on/off",
                           "Optimize property access in for-in loops "
                           "(default: on, off to disable)") ||
+      !op.addStringOption('\0', "ion-load-keys", "on/off",
+                          "Atomize property loads used as keys "
+                          "(default: on, off to disable)") ||
       !op.addBoolOption('\0', "ion-check-range-analysis",
                         "Range analysis checking") ||
       !op.addBoolOption('\0', "ion-extra-checks",
@@ -12734,6 +12737,16 @@ bool SetContextJITOptions(JSContext* cx, const OptionParser& op) {
       jit::JitOptions.disableIteratorIndices = true;
     } else {
       return OptionFailure("ion-iterator-indices", str);
+    }
+  }
+
+  if (const char* str = op.getStringOption("ion-load-keys")) {
+    if (strcmp(str, "on") == 0) {
+      jit::JitOptions.disableMarkLoadsUsedAsPropertyKeys = false;
+    } else if (strcmp(str, "off") == 0) {
+      jit::JitOptions.disableMarkLoadsUsedAsPropertyKeys = true;
+    } else {
+      return OptionFailure("ion-load-keys", str);
     }
   }
 

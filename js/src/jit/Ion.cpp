@@ -1378,7 +1378,7 @@ bool OptimizeMIR(MIRGenerator* mir) {
     }
   }
 
-  if (!mir->compilingWasm()) {
+  if (!JitOptions.disableMarkLoadsUsedAsPropertyKeys && !mir->compilingWasm()) {
     JitSpewCont(JitSpew_MarkLoadsUsedAsPropertyKeys, "\n");
     if (!MarkLoadsUsedAsPropertyKeys(graph)) {
       return false;
