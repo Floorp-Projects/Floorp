@@ -60,6 +60,10 @@
 #  include "sandbox/linux/system_headers/linux_ucontext.h"
 #endif
 
+#ifndef SECCOMP_FILTER_FLAG_SPEC_ALLOW
+#  define SECCOMP_FILTER_FLAG_SPEC_ALLOW (1UL << 2)
+#endif
+
 #ifdef MOZ_ASAN
 // Copy libsanitizer declarations to avoid depending on ASAN headers.
 // See also bug 1081242 comment #4.
@@ -228,8 +232,45 @@ static void InstallSigSysHandler(void) {
   }
 
   if (aUseTSync) {
-    if (syscall(__NR_seccomp, SECCOMP_SET_MODE_FILTER,
-                SECCOMP_FILTER_FLAG_TSYNC, aProg) != 0) {
+    // Try with SECCOMP_FILTER_FLAGS_SPEC_ALLOW, and then without if
+    // that fails with EINVAL (or if an env var is set, for testing
+    // purposes).
+    //
+    // Context: Linux 4.17 applied some Spectre mitigations (SSBD and
+    // STIBP) by default when seccomp-bpf is used, but also added that
+    // flag to opt out (and also sysadmin-level overrides).  Later,
+    // Linux 5.16 turned them off by default; the rationale seems to
+    // be, roughly: the attacks are impractical or were already
+    // mitigated in other ways, there are worse attacks that these
+    // measures don't stop, and the performance impact is severe
+    // enough that container software was already opting out.
+    //
+    // For the full rationale, see
+    // https://github.com/torvalds/linux/commit/2f46993d83ff4abb310e
+    //
+    // In our case, STIBP causes a noticeable performance hit: WASM
+    // microbenchmarks of indirect calls regress by up to 2x or 3x
+    // depending on CPU.  Given that upstream Linux has changed the
+    // default years ago, we opt out.
+
+    static const bool kSpecAllow = !PR_GetEnv("MOZ_SANDBOX_NO_SPEC_ALLOW");
+
+    const auto setSeccomp = [aProg](int aFlags) -> long {
+      return syscall(__NR_seccomp, SECCOMP_SET_MODE_FILTER,
+                     SECCOMP_FILTER_FLAG_TSYNC | aFlags, aProg);
+    };
+
+    long rv;
+    if (kSpecAllow) {
+      rv = setSeccomp(SECCOMP_FILTER_FLAG_SPEC_ALLOW);
+    } else {
+      rv = -1;
+      errno = EINVAL;
+    }
+    if (rv != 0 && errno == EINVAL) {
+      rv = setSeccomp(0);
+    }
+    if (rv != 0) {
       SANDBOX_LOG_ERRNO("thread-synchronized seccomp failed");
       MOZ_CRASH("seccomp+tsync failed, but kernel supports tsync");
     }
