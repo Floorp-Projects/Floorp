@@ -2575,13 +2575,7 @@ inline bool ByteStringToJsval(JSContext* cx, const nsACString& str,
 // TODO(bug 1606957): This could probably be better.
 inline bool NonVoidUTF8StringToJsval(JSContext* cx, const nsACString& str,
                                      JS::MutableHandle<JS::Value> rval) {
-  JSString* jsStr =
-      JS_NewStringCopyUTF8N(cx, {str.BeginReading(), str.Length()});
-  if (!jsStr) {
-    return false;
-  }
-  rval.setString(jsStr);
-  return true;
+  return xpc::NonVoidUTF8StringToJsval(cx, str, rval);
 }
 
 inline bool UTF8StringToJsval(JSContext* cx, const nsACString& str,
