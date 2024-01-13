@@ -92,6 +92,14 @@
     <!-- Header for the select login prompt to allow users to fill a form with a saved login -->
     <string name="mozac_feature_prompts_saved_logins">Предлагаемые пароли</string>
 
+    <!-- Content description for the suggest strong password prompt to allow users to fill a form with a suggested strong password -->
+    <string name="mozac_feature_prompts_suggest_strong_password_content_description">Предложить надежный пароль</string>
+    <!-- Header for the suggest strong password prompt to allow users to fill a form with a suggested strong password -->
+    <string name="mozac_feature_prompts_suggest_strong_password">Предложить надежный пароль</string>
+
+    <!-- Title for using the suggest strong password confirmation dialog. %1$s will be replaced with the generated password -->
+    <string name="mozac_feature_prompts_suggest_strong_password_message">Используйте надежный пароль: %1$s</string>
+
     <!-- Strings shown in a dialog that appear when users try to refresh a certain kind of webpages -->
     <string name="mozac_feature_prompt_repost_title">Отправить данные на этот сайт снова?</string>
     <string name="mozac_feature_prompt_repost_message">Обновление этой страницы может повторить последние выполненные действия, например, снова отправив платёж или комментарий.</string>
@@ -131,8 +139,6 @@
     <string name="mozac_feature_prompts_account_picture">Фото аккаунта</string>
     <!-- Title of the Identity Credential provider dialog chooser. -->
     <string name="mozac_feature_prompts_identity_credentials_choose_provider">Выберите провайдера входа</string>
-    <!-- Title of an account picker dialog for identity credentials. -->
-    <string name="mozac_feature_prompts_identity_credentials_choose_account" moz:removedIn="119" tools:ignore="UnusedResources">Выберите аккаунт</string>
     <!-- Title of an account picker dialog for identity credentials. The %1$s will be replaced with the name of the provider -->
     <string name="mozac_feature_prompts_identity_credentials_choose_account_for_provider">Войти с аккаунтом %1$s</string>
     <!-- Title of the Identity Credential privacy policy dialog title. The %1$s will be replaced with the name of the provider. -->

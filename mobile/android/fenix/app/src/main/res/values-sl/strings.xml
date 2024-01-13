@@ -1333,6 +1333,7 @@
     <!-- Notifications -->
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
     <string name="notification_pbm_delete_text_2">Zapri zasebne zavihke</string>
+
     <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_marketing_channel_name">Trženje</string>
 
@@ -2351,6 +2352,9 @@
     <!-- Title for dialog displayed when trying to access links present in a text. -->
     <string name="a11y_links_title">Povezave</string>
 
+    <!-- Additional content description for text bodies that contain urls. -->
+    <string name="a11y_links_available">Na voljo so povezave</string>
+
     <!-- Translations feature-->
 
     <!-- Translation request dialog -->
@@ -2433,6 +2437,12 @@
     <!-- Preference option for never translate. Radio button title text.-->
     <string name="automatic_translation_option_never_translate_title_preference">Nikoli ne prevajaj</string>
 
+    <!-- Preference option for never translate. Radio button summary text. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="automatic_translation_option_never_translate_summary_preference">%1$s naj nikoli ne ponuja prevoda strani v tem jeziku.</string>
+
+    <!-- Never translate site preference screen -->
+    <!-- Title of the never translate site preference screen that will appear on the toolbar.-->
+    <string name="never_translate_site_toolbar_title_preference">Nikoli ne prevajaj teh spletnih mest</string>
     <!-- The Delete site dialogue positive button will appear when the user clicks on a list item. The site will be deleted. -->
     <string name="never_translate_site_dialog_confirm_delete_preference">Izbriši</string>
     <!-- The Delete site dialogue negative button will appear when the user clicks on a list item. The dialog will be dismissed. -->

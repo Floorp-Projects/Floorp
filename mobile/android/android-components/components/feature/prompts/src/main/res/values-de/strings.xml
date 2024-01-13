@@ -104,6 +104,13 @@
     <!-- Header for the select login prompt to allow users to fill a form with a saved login -->
     <string name="mozac_feature_prompts_saved_logins">Vorgeschlagene Zugangsdaten</string>
 
+    <!-- Content description for the suggest strong password prompt to allow users to fill a form with a suggested strong password -->
+    <string name="mozac_feature_prompts_suggest_strong_password_content_description">Starkes Passwort vorschlagen</string>
+    <!-- Header for the suggest strong password prompt to allow users to fill a form with a suggested strong password -->
+    <string name="mozac_feature_prompts_suggest_strong_password">Starkes Passwort vorschlagen</string>
+    <!-- Title for using the suggest strong password confirmation dialog. %1$s will be replaced with the generated password -->
+    <string name="mozac_feature_prompts_suggest_strong_password_message">Verwenden Sie ein starkes Passwort: %1$s</string>
+
     <!-- Strings shown in a dialog that appear when users try to refresh a certain kind of webpages -->
     <string name="mozac_feature_prompt_repost_title">Daten erneut an diese Website senden?</string>
     <string name="mozac_feature_prompt_repost_message">Durch das Aktualisieren dieser Seite können die letzten Aktionen doppelt ausgeführt werden, z.&amp;thinsp;B. das Senden einer Zahlung oder das zweimalige Posten eines Kommentars.</string>
@@ -143,8 +150,6 @@
     <string name="mozac_feature_prompts_account_picture">Kontobild</string>
     <!-- Title of the Identity Credential provider dialog chooser. -->
     <string name="mozac_feature_prompts_identity_credentials_choose_provider">Wählen Sie einen Login-Anbieter</string>
-    <!-- Title of an account picker dialog for identity credentials. -->
-    <string name="mozac_feature_prompts_identity_credentials_choose_account" moz:removedIn="119" tools:ignore="UnusedResources">Konto auswählen</string>
     <!-- Title of an account picker dialog for identity credentials. The %1$s will be replaced with the name of the provider -->
     <string name="mozac_feature_prompts_identity_credentials_choose_account_for_provider">Melden Sie sich mit einem %1$s-Konto an</string>
     <!-- Title of the Identity Credential privacy policy dialog title. The %1$s will be replaced with the name of the provider. -->

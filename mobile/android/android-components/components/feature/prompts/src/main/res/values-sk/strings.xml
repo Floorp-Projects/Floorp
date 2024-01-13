@@ -92,6 +92,13 @@
     <!-- Header for the select login prompt to allow users to fill a form with a saved login -->
     <string name="mozac_feature_prompts_saved_logins">Navrhované prihlasovacie údaje</string>
 
+    <!-- Content description for the suggest strong password prompt to allow users to fill a form with a suggested strong password -->
+    <string name="mozac_feature_prompts_suggest_strong_password_content_description">Navrhnúť silné heslo</string>
+    <!-- Header for the suggest strong password prompt to allow users to fill a form with a suggested strong password -->
+    <string name="mozac_feature_prompts_suggest_strong_password">Navrhnúť silné heslo</string>
+    <!-- Title for using the suggest strong password confirmation dialog. %1$s will be replaced with the generated password -->
+    <string name="mozac_feature_prompts_suggest_strong_password_message">Použiť silné heslo: %1$s</string>
+
     <!-- Strings shown in a dialog that appear when users try to refresh a certain kind of webpages -->
     <string name="mozac_feature_prompt_repost_title">Znova odoslať údaje tejto stránke?</string>
     <string name="mozac_feature_prompt_repost_message">Obnovením tejto stránky môžete zopakovať posledné akcie, ako je odosielanie platby alebo opätovné uverejnenie komentára.</string>
@@ -131,8 +138,6 @@
     <string name="mozac_feature_prompts_account_picture">Obrázok účtu</string>
     <!-- Title of the Identity Credential provider dialog chooser. -->
     <string name="mozac_feature_prompts_identity_credentials_choose_provider">Vyberte poskytovateľa prihlásenia</string>
-    <!-- Title of an account picker dialog for identity credentials. -->
-    <string name="mozac_feature_prompts_identity_credentials_choose_account" moz:removedIn="119" tools:ignore="UnusedResources">Vyberte si účet</string>
     <!-- Title of an account picker dialog for identity credentials. The %1$s will be replaced with the name of the provider -->
     <string name="mozac_feature_prompts_identity_credentials_choose_account_for_provider">Prihláste sa pomocou účtu %1$s</string>
     <!-- Title of the Identity Credential privacy policy dialog title. The %1$s will be replaced with the name of the provider. -->

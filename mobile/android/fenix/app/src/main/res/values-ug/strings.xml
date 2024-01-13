@@ -211,6 +211,8 @@
     <string name="resync_button_content_description">قايتا قەدەمداشلا</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">بەتتىن ئىزدە</string>
+    <!-- Browser menu button that opens the translations dialog, which has options to translate the current browser page. -->
+    <string name="browser_menu_translations">بەت تەرجىمىسى</string>
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">يىغقۇچقا ساقلا</string>
     <!-- Browser menu button that open a share menu to share the current site -->
@@ -494,6 +496,8 @@
     <!--Message for the cookie banner re-engagement CFR -->
     <string name="cookie_banner_cfr_message">بۇ تور بېكەتتە دىققەتنى چاچىدىغان ئىشلار ئاز، ساقلانما ئاز.</string>
 
+    <!-- Description of the preference to enable "HTTPS-Only" mode. -->
+    <string name="preferences_https_only_summary">بىخەتەرلىكنى ئۆستۈرۈش ئۈچۈن HTTPS مەخپىيلەشتۈرۈش كېلىشىمنامىسى ئارقىلىق تور بېكەتلەرگە ئاپتوماتىك ئۇلىنىدۇ.</string>
     <!-- Summary of https only preference if https only is set to off -->
     <string name="preferences_https_only_off">تاقاق</string>
     <!-- Summary of https only preference if https only is set to on in all tabs -->
@@ -510,12 +514,16 @@
     <string name="errorpage_httpsonly_title">بىخەتەر تور بېكەت يوق</string>
     <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the first. -->
     <string name="errorpage_httpsonly_message_title">بەلكىم بو تور بېكەت HTTPS نى قوللىماسلىقى مۇمكىن.</string>
+    <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the second. -->
+    <string name="errorpage_httpsonly_message_summary">شۇنداقتىمۇ، تور ھۇجۇمچىلىرىنىڭ ھۇجۇمىغا ئۇچرىشى مۇمكىن. ئەگەر بۇ تور بېكەتنى زىيارت قىلىشنى داۋاملاشتۇرسىڭىز، ھېچقانداق سەزگۈر ئۇچۇرنى كىرگۈزمەڭ. ئەگەر داۋاملاشتۇرسىڭىز، بۇ تور بېكەت ئۈچۈن HTTPS لا ھالىتى ۋاقىتلىق تاقىلىدۇ.</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">قۇلايلىقلار</string>
     <!-- Preference to override the Mozilla account server -->
     <string name="preferences_override_account_server">ئىختىيارى Mozilla ھېسابات مۇلازىمېتىرى</string>
     <!-- Preference to override the Sync token server -->
     <string name="preferences_override_sync_tokenserver">ئىختىيارى قەدەمداش مۇلازىمېتىر</string>
+    <!-- Toast shown after updating the Mozilla account/Sync server override preferences -->
+    <string name="toast_override_account_sync_server_done">Mozilla ھېسابات/قەدەمداش مۇلازىمېتىر تەڭشىكى ئۆزگەردى. ئۆزگىرىشنى قوللىنىش ئۈچۈن پىروگراممىدىن چېكىنىۋاتىدۇ…</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">ھېسابات</string>
     <!-- Preference for changing where the toolbar is positioned -->
@@ -564,6 +572,9 @@
     <string name="preferences_enable_autocomplete_urls">ئۆزلۈكىدىن تاماملانغان تور ئادرېسلىرى</string>
     <!-- Preference title for switch preference to show sponsored Firefox Suggest search suggestions -->
     <string name="preferences_show_sponsored_suggestions">ياردەمچىنىڭ تەكلىپلىرى</string>
+    <!-- Summary for preference to show sponsored Firefox Suggest search suggestions.
+         The first parameter is the name of the application. -->
+    <string name="preferences_show_sponsored_suggestions_summary">قوللاش سودىگەرلىرىنىڭ ئېلانىنى ئانچە-مۇنچە كۆرسىتىشىگە يول قويۇپ %1$s نى قوللاڭ</string>
     <!-- Preference title for switch preference to show Firefox Suggest search suggestions for web content.
          The first parameter is the name of the application. -->
     <string name="preferences_show_nonsponsored_suggestions">%1$s نىڭ تەكلىپى</string>
@@ -674,6 +685,8 @@
     <!-- Add-on process crash dialog to user -->
     <!-- Title of a dialog shown to the user when enough errors have occurred with addons and they need to be temporarily disabled -->
     <string name="addon_process_crash_dialog_title" tools:ignore="UnusedResources">قوشۇلما ۋاقىتلىق چەكلەنگەن</string>
+    <!-- The first parameter is the application name. This is a message shown to the user when too many errors have occurred with the addons process and they have been disabled. The user can decide if they would like to continue trying to start add-ons or if they'd rather continue without them. -->
+    <string name="addon_process_crash_dialog_message" tools:ignore="UnusedResources">بىر ياكى بىر قانچە قوشۇلما ئىشلەشتىن توختاپ، سىستېمىنىڭ مۇقىملىقىغا تەسىر كۆرسەتتى. %1$s قوشۇلمىنى قايتا قوزغىتىشنى سىنىشى مەغلۇپ بولدى.\n\nقوشۇلما نۆۋەتتىكى سۆزلىشىشتە قايتا قوزغىتىلمايدۇ.\n\nبۇ مەسىلىنى قوشۇلمىنى چىقىرىۋېتىپ ياكى چەكلەپ ھەل قىلغىلى بولۇشى مۇمكىن.</string>
     <!-- This will cause the add-ons to try restarting but the dialog will reappear if it is unsuccessful again -->
     <string name="addon_process_crash_dialog_retry_button_text" tools:ignore="UnusedResources">قوشۇلمىنى قايتا قوزغىتىپ بېقىڭ</string>
     <!-- The user will continue with all add-ons disabled -->
@@ -744,8 +757,12 @@
     <!-- Preference switch for usage and technical data collection -->
     <string name="preference_usage_data">ئىشلىتىلىشى ۋە تېخنىكىلىق سانلىق مەلۇمات</string>
 
+    <!-- Preference description for usage and technical data collection -->
+    <string name="preferences_usage_data_description">تور كۆرگۈ ئىشلىتىش جەريانىدىكى ئىش ئۈنۈمى، ئىشلىتىش ئۇسۇلى، قاتتىق دېتال ۋە خاسلاشتۇرۇلغان سانلىق مەلۇماتنى Mozilla بىلەن ھەمبەھىرلەپ، %1$s نى ياخشىلىشىمىزغا ياردەم بېرىڭ</string>
     <!-- Preference switch for marketing data collection -->
     <string name="preferences_marketing_data">بازارچىلىق سانلىق مەلۇماتلىرى</string>
+    <!-- Preference description for marketing data collection -->
+    <string name="preferences_marketing_data_description2">كۆچمە بازارچىلىق سودىگىرىمىز Adjust بىلەن ئاساسىي ئىشلىتىش سانلىق مەلۇماتلىرىنى ئورتاقلىشىدۇ</string>
     <!-- Title for studies preferences -->
     <string name="preference_experiments_2">تەتقىقات</string>
 
@@ -817,6 +834,9 @@
     <!-- Title to show in alert when a lot of tabs are to be opened
     %d is a placeholder for the number of tabs that will be opened -->
     <string name="open_all_warning_title">بەتكۈچ %d نى ئاچامدۇ؟</string>
+    <!-- Message to warn users that a large number of tabs will be opened
+    %s will be replaced by app name. -->
+    <string name="open_all_warning_message">بىرلا ۋاقىتتا كۆپ بەتكۈچ يۈكلەنسە %s نىڭ ئىجرا قىلىنىشىنى ئاستىلىتىۋېتىشى مۇمكىن. راستىنلا داۋاملاشتۇرامسىز؟</string>
     <!-- Dialog button text for confirming open all tabs -->
     <string name="open_all_warning_confirm">بەتكۈچ ئاچ</string>
     <!-- Dialog button text for canceling open all tabs -->
@@ -1296,6 +1316,11 @@
     <!-- Notifications -->
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
     <string name="notification_pbm_delete_text_2">شەخسىي بەتكۈچنى ياپ</string>
+
+    <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active for Android 14+ -->
+    <string name="notification_erase_title_android_14">شەخسىي بەتكۈچنى ياپامدۇ؟</string>
+    <string name="notification_erase_text_android_14">بۇ ئۇقتۇرۇش چېكىلسە ياكى سۈرۈلسە شەخسىي بەتكۈچ تاقىلىدۇ.</string>
+
     <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_marketing_channel_name">بازارچىلىق</string>
     <!-- Title shown in the notification that pops up to remind the user to set fenix as default browser.
@@ -2193,17 +2218,17 @@
     <!-- Clickable text from the contextual onboarding card that links to review quality check support article. -->
     <string name="review_quality_check_contextual_onboarding_learn_more_link">تەپسىلاتى</string>
     <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is the Fakespot product name. Following parameters are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy and review_quality_check_contextual_onboarding_terms_use. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
-    <string name="review_quality_check_contextual_onboarding_caption" moz:RemovedIn="121" tools:ignore="UnusedResources">«ھەئە، سىناپ باقاي» تاللانسا سىز Mozilla نىڭ %2$s ۋە %3$s دىكى %1$s غا قوشۇلغان بولىسىز.</string>
+    <string name="review_quality_check_contextual_onboarding_caption">«ھەئە، سىناپ باقاي» تاللانسا سىز Mozilla نىڭ %2$s ۋە %3$s دىكى %1$s غا قوشۇلغان بولىسىز.</string>
     <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. Parameter is the Fakespot product name. After the colon, what appears are two links, each on their own line. The first link is to a Privacy policy (review_quality_check_contextual_onboarding_privacy_policy_2). The second link is to Terms of use (review_quality_check_contextual_onboarding_terms_use_2). -->
-    <string name="review_quality_check_contextual_onboarding_caption_2">«ھەئە، سىناپ باقاي» تاللانسا تۆۋەندىكى %1$s غا قوشۇلغان بولىسىز:</string>
+    <string name="review_quality_check_contextual_onboarding_caption_2" moz:RemovedIn="123" tools:ignore="UnusedResources">«ھەئە، سىناپ باقاي» تاللانسا تۆۋەندىكى %1$s غا قوشۇلغان بولىسىز:</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
-    <string name="review_quality_check_contextual_onboarding_privacy_policy" moz:RemovedIn="121" tools:ignore="UnusedResources">شەخسىيەت تۈزۈمى</string>
+    <string name="review_quality_check_contextual_onboarding_privacy_policy">شەخسىيەت تۈزۈمى</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
-    <string name="review_quality_check_contextual_onboarding_privacy_policy_2">شەخسىيەت تۈزۈمى</string>
+    <string name="review_quality_check_contextual_onboarding_privacy_policy_2" moz:RemovedIn="123" tools:ignore="UnusedResources">شەخسىيەت تۈزۈمى</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
-    <string name="review_quality_check_contextual_onboarding_terms_use" moz:RemovedIn="121" tools:ignore="UnusedResources">ئىشلىتىش شەرتلىرى</string>
+    <string name="review_quality_check_contextual_onboarding_terms_use">ئىشلىتىش شەرتلىرى</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
-    <string name="review_quality_check_contextual_onboarding_terms_use_2">ئىشلىتىش شەرتلىرى</string>
+    <string name="review_quality_check_contextual_onboarding_terms_use_2" moz:RemovedIn="123" tools:ignore="UnusedResources">ئىشلىتىش شەرتلىرى</string>
     <!-- Text for opt-in button from the review quality check contextual onboarding card. -->
     <string name="review_quality_check_contextual_onboarding_primary_button_text">ھەئە، سىناپ باقاي</string>
     <!-- Text for opt-out button from the review quality check contextual onboarding card. -->
@@ -2390,9 +2415,8 @@
     <!-- Button text on the data saving mode warning dialog used by the translations feature to allow users to cancel the action and not perform a download of the language file. -->
     <string name="download_language_file_dialog_negative_button_text">ۋاز كەچ</string>
 
-    <!-- Debug drawer -->
     <!-- The title of the Tab Tools feature in the Debug Drawer. -->
-    <string name="debug_drawer_tab_tools_title" tools:ignore="UnusedResources">بەتكۈچ قوراللىرى</string>
+    <string name="debug_drawer_tab_tools_title">بەتكۈچ قوراللىرى</string>
     <!-- The title of the tab count section in Tab Tools. -->
     <string name="debug_drawer_tab_tools_tab_count_title">بەتكۈچ سانى</string>
     <!-- The active tab count category in the tab count section in Tab Tools. -->
@@ -2403,4 +2427,4 @@
     <string name="debug_drawer_tab_tools_tab_count_private">شەخسىيەت</string>
     <!-- The total tab count category in the tab count section in Tab Tools. -->
     <string name="debug_drawer_tab_tools_tab_count_total">جەمئىي</string>
-</resources>
+    </resources>

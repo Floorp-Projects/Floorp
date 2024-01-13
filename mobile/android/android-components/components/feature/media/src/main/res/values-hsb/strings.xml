@@ -10,6 +10,21 @@
     <!-- Title of notification shown when the device's camera and microphone is shared with a website (WebRTC) -->
     <string name="mozac_feature_media_sharing_camera_and_microphone">Kamera a mikrofon stej zapinjenej</string>
 
+    <!-- Text of notification shown when the device's camera is shared with a website (WebRTC) -->
+    <string name="mozac_feature_media_sharing_camera_text">Podótkńće so, zo byšće rajtark wočinił, kotryž wašu kameru wužiwa. </string>
+    <!-- Text of notification shown when the device's microphone is shared with a website (WebRTC) -->
+    <string name="mozac_feature_media_sharing_microphone_text">Podótkńće so, zo byšće rajtark wočinił, kotryž waš mikrofon wužiwa. </string>
+    <!-- Text of notification shown when the device's camera and microphone is shared with a website (WebRTC) -->
+    <string name="mozac_feature_media_sharing_camera_and_microphone_text">Podótkńće so, zo byšće rajtark wočinił, kotryž waš mikrofon a wašu kameru wužiwa. </string>
+
+
+    <!-- Text of reminder notification shown when the device's camera is shared with a website (WebRTC). %1$s is a placeholder that will be replaced by the app name-->
+    <string name="mozac_feature_media_sharing_camera_reminder_text">Kedźbu: %1$s wašu kameru hižo wužiwa. Podótkńće so, zo byšće rajtark wočinił.</string>
+    <!-- Text of reminder notification shown when the device's microphone is shared with a website (WebRTC) %1$s is a placeholder that will be replaced by the app name-->
+    <string name="mozac_feature_media_sharing_microphone_reminder_text">Kedźbu: %1$s waš mikrofon hižo wužiwa. Podótkńće so, zo byšće rajtark wočinił</string>
+    <!-- Text of reminder notification shown when the device's camera and microphone is shared with a website (WebRTC) %1$s is a placeholder that will be replaced by the app name-->
+    <string name="mozac_feature_media_sharing_camera_and_microphone_reminder_text">Kedźbu: %1$s waš mikrofon a wašu kameru hižo wužiwa. Podótkńće so, zo byšće rajtark wočinił</string>
+
     <!--This is the title of the "play" action media shown in the media notification while web content is playing media. Clicking it will resume playing paused media. On most modern Android system only an icon is visible. But screen readers may read this title. -->
     <string name="mozac_feature_media_notification_action_play">Wothrać</string>
 

@@ -92,6 +92,13 @@
     <!-- Header for the select login prompt to allow users to fill a form with a saved login -->
     <string name="mozac_feature_prompts_saved_logins">Predlagane prijave</string>
 
+    <!-- Content description for the suggest strong password prompt to allow users to fill a form with a suggested strong password -->
+    <string name="mozac_feature_prompts_suggest_strong_password_content_description">Predlagaj močno geslo</string>
+    <!-- Header for the suggest strong password prompt to allow users to fill a form with a suggested strong password -->
+    <string name="mozac_feature_prompts_suggest_strong_password">Predlagaj močno geslo</string>
+    <!-- Title for using the suggest strong password confirmation dialog. %1$s will be replaced with the generated password -->
+    <string name="mozac_feature_prompts_suggest_strong_password_message">Uporabi močno geslo: %1$s</string>
+
     <!-- Strings shown in a dialog that appear when users try to refresh a certain kind of webpages -->
     <string name="mozac_feature_prompt_repost_title">Ponovno pošlji podatke spletnemu mestu?</string>
     <string name="mozac_feature_prompt_repost_message">Osvežitev te strani lahko podvoji nedavna dejanja, kot je pošiljanje plačila ali objava komentarja.</string>
@@ -131,8 +138,6 @@
     <string name="mozac_feature_prompts_account_picture">Slika računa</string>
     <!-- Title of the Identity Credential provider dialog chooser. -->
     <string name="mozac_feature_prompts_identity_credentials_choose_provider">Izberite ponudnika prijave</string>
-    <!-- Title of an account picker dialog for identity credentials. -->
-    <string name="mozac_feature_prompts_identity_credentials_choose_account" moz:removedIn="119" tools:ignore="UnusedResources">Izberite račun</string>
     <!-- Title of an account picker dialog for identity credentials. The %1$s will be replaced with the name of the provider -->
     <string name="mozac_feature_prompts_identity_credentials_choose_account_for_provider">Prijava z računom %1$s</string>
     <!-- Title of the Identity Credential privacy policy dialog title. The %1$s will be replaced with the name of the provider. -->

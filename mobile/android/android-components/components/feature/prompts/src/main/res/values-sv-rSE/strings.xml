@@ -92,6 +92,13 @@
     <!-- Header for the select login prompt to allow users to fill a form with a saved login -->
     <string name="mozac_feature_prompts_saved_logins">Föreslagna inloggningar</string>
 
+    <!-- Content description for the suggest strong password prompt to allow users to fill a form with a suggested strong password -->
+    <string name="mozac_feature_prompts_suggest_strong_password_content_description">Föreslå ett starkt lösenord</string>
+    <!-- Header for the suggest strong password prompt to allow users to fill a form with a suggested strong password -->
+    <string name="mozac_feature_prompts_suggest_strong_password">Föreslå ett starkt lösenord</string>
+    <!-- Title for using the suggest strong password confirmation dialog. %1$s will be replaced with the generated password -->
+    <string name="mozac_feature_prompts_suggest_strong_password_message">Använd starkt lösenord: %1$s</string>
+
     <!-- Strings shown in a dialog that appear when users try to refresh a certain kind of webpages -->
     <string name="mozac_feature_prompt_repost_title">Skicka data igen till den här webbplatsen?</string>
     <string name="mozac_feature_prompt_repost_message">Uppdatering av den här sidan kan duplicera senaste åtgärder, till exempel att skicka en betalning eller lägga upp en kommentar två gånger.</string>
@@ -131,8 +138,6 @@
     <string name="mozac_feature_prompts_account_picture">Kontobild</string>
     <!-- Title of the Identity Credential provider dialog chooser. -->
     <string name="mozac_feature_prompts_identity_credentials_choose_provider">Välj en inloggningsleverantör</string>
-    <!-- Title of an account picker dialog for identity credentials. -->
-    <string name="mozac_feature_prompts_identity_credentials_choose_account" moz:removedIn="119" tools:ignore="UnusedResources">Välj ett konto</string>
     <!-- Title of an account picker dialog for identity credentials. The %1$s will be replaced with the name of the provider -->
     <string name="mozac_feature_prompts_identity_credentials_choose_account_for_provider">Logga in med ett %1$s-konto</string>
     <!-- Title of the Identity Credential privacy policy dialog title. The %1$s will be replaced with the name of the provider. -->

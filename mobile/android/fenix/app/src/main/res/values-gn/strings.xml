@@ -1350,6 +1350,10 @@
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
     <string name="notification_pbm_delete_text_2">Emboty tendayke ñemigua</string>
 
+    <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active for Android 14+ -->
+    <string name="notification_erase_title_android_14">¿Emboty tendayke ñemigua?</string>
+    <string name="notification_erase_text_android_14">Eikutu ha embosyryry ko marandu’i emboty hag̃ua umi tendayke ñemigua.</string>
+
     <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_marketing_channel_name">Jehepyme’ẽrã</string>
 
@@ -2556,6 +2560,8 @@
     <!-- Debug drawer -->
     <!-- The user-facing title of the Debug Drawer feature. -->
     <string name="debug_drawer_title">Temiporu mopotĩha</string>
+    <!-- Content description (not visible, for screen readers etc.): Navigate back within the debug drawer. -->
+    <string name="debug_drawer_back_button_content_description">Eikundaha tapykuévo</string>
     <!-- The title of the Tab Tools feature in the Debug Drawer. -->
     <string name="debug_drawer_tab_tools_title">Tendayke rembiporu</string>
     <!-- The title of the tab count section in Tab Tools. -->

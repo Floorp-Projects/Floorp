@@ -10,6 +10,21 @@
     <!-- Title of notification shown when the device's camera and microphone is shared with a website (WebRTC) -->
     <string name="mozac_feature_media_sharing_camera_and_microphone">Camera a meicroffon ymlaen</string>
 
+    <!-- Text of notification shown when the device's camera is shared with a website (WebRTC) -->
+    <string name="mozac_feature_media_sharing_camera_text">Tapiwch i agor y tab sy\'n defnyddio\'ch camera.</string>
+    <!-- Text of notification shown when the device's microphone is shared with a website (WebRTC) -->
+    <string name="mozac_feature_media_sharing_microphone_text">Tapiwch i agor y tab sy\'n defnyddio\'ch meicroffon.</string>
+    <!-- Text of notification shown when the device's camera and microphone is shared with a website (WebRTC) -->
+    <string name="mozac_feature_media_sharing_camera_and_microphone_text">Tapiwch i agor y tab sy\'n defnyddio\'ch meicroffon a\'ch camera.</string>
+
+
+    <!-- Text of reminder notification shown when the device's camera is shared with a website (WebRTC). %1$s is a placeholder that will be replaced by the app name-->
+    <string name="mozac_feature_media_sharing_camera_reminder_text">Nodyn atgoffa: Mae %1$s yn dal i ddefnyddio\'ch camera. Tapiwch i agor y tab.</string>
+    <!-- Text of reminder notification shown when the device's microphone is shared with a website (WebRTC) %1$s is a placeholder that will be replaced by the app name-->
+    <string name="mozac_feature_media_sharing_microphone_reminder_text">Nodyn atgoffa: Mae %1$s yn dal i ddefnyddio\'ch meicroffon. Tapiwch i agor y tab</string>
+    <!-- Text of reminder notification shown when the device's camera and microphone is shared with a website (WebRTC) %1$s is a placeholder that will be replaced by the app name-->
+    <string name="mozac_feature_media_sharing_camera_and_microphone_reminder_text">Nodyn atgoffa: Mae %1$s yn dal i ddefnyddio\'ch meicroffon a\'ch camera. Tapiwch i agor y tab</string>
+
     <!--This is the title of the "play" action media shown in the media notification while web content is playing media. Clicking it will resume playing paused media. On most modern Android system only an icon is visible. But screen readers may read this title. -->
     <string name="mozac_feature_media_notification_action_play">Chwarae</string>
 

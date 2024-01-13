@@ -1349,7 +1349,7 @@
 
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active for Android 14+ -->
     <string name="notification_erase_title_android_14">¿Cerrar pestañas privadas?</string>
-    <string name="notification_erase_text_android_14">Toca o desliza esta notificación para cerrar las pestañas privadas.</string>
+    <string name="notification_erase_text_android_14">Tocá o deslizá esta notificación para cerrar las pestañas privadas.</string>
 
     <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_marketing_channel_name">Marketing</string>

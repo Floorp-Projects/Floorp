@@ -1337,6 +1337,11 @@
     <!-- Notifications -->
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
     <string name="notification_pbm_delete_text_2">Sulje yksityiset välilehdet</string>
+
+    <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active for Android 14+ -->
+    <string name="notification_erase_title_android_14">Suljetaanko yksityiset välilehdet?</string>
+    <string name="notification_erase_text_android_14">Sulje yksityiset välilehdet napauttamalla tai pyyhkäisemällä tätä ilmoitusta.</string>
+
     <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_marketing_channel_name">Markkintointi</string>
 
@@ -2320,6 +2325,8 @@
     <!-- Action label for links to the Firefox Pocket website. Talkback will append this to say "Double tap to open link to learn more". -->
     <string name="a11y_action_label_pocket_learn_more">avataksesi linkin ja lukeaksesi lisää</string>
 
+    <!-- Content description for headings announced by accessibility service. The first parameter is the text of the heading. Talkback will announce the first parameter and then speak the word "Heading" indicating to the user that this text is a heading for a section. -->
+    <string name="a11y_heading">%s, Otsikko</string>
     <!-- Title for dialog displayed when trying to access links present in a text. -->
     <string name="a11y_links_title">Linkit</string>
     <!-- Additional content description for text bodies that contain urls. -->
@@ -2500,6 +2507,8 @@
     <!-- Debug drawer -->
     <!-- The user-facing title of the Debug Drawer feature. -->
     <string name="debug_drawer_title">Vianjäljitystyökalut</string>
+    <!-- Content description (not visible, for screen readers etc.): Navigate back within the debug drawer. -->
+    <string name="debug_drawer_back_button_content_description">Siirry taaksepäin</string>
     <!-- The title of the Tab Tools feature in the Debug Drawer. -->
     <string name="debug_drawer_tab_tools_title">Välilehtityökalut</string>
     <!-- The title of the tab count section in Tab Tools. -->

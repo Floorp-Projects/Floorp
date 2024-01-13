@@ -92,6 +92,13 @@
     <!-- Header for the select login prompt to allow users to fill a form with a saved login -->
     <string name="mozac_feature_prompts_saved_logins">Ehdotetut kirjautumistiedot</string>
 
+    <!-- Content description for the suggest strong password prompt to allow users to fill a form with a suggested strong password -->
+    <string name="mozac_feature_prompts_suggest_strong_password_content_description">Ehdota vahvaa salasanaa</string>
+    <!-- Header for the suggest strong password prompt to allow users to fill a form with a suggested strong password -->
+    <string name="mozac_feature_prompts_suggest_strong_password">Ehdota vahvaa salasanaa</string>
+    <!-- Title for using the suggest strong password confirmation dialog. %1$s will be replaced with the generated password -->
+    <string name="mozac_feature_prompts_suggest_strong_password_message">Käytä vahvaa salasanaa: %1$s</string>
+
     <!-- Strings shown in a dialog that appear when users try to refresh a certain kind of webpages -->
     <string name="mozac_feature_prompt_repost_title">Lähetetäänkö tiedot uudelleen tälle sivustolle?</string>
     <string name="mozac_feature_prompt_repost_message">Tämän sivun päivittäminen saattaa kahdentaa viimeisimmät toiminnot, kuten maksun suorittamisen tai kommentin lähettämisen kahdesti.</string>
@@ -131,8 +138,6 @@
     <string name="mozac_feature_prompts_account_picture">Tilin kuva</string>
     <!-- Title of the Identity Credential provider dialog chooser. -->
     <string name="mozac_feature_prompts_identity_credentials_choose_provider">Valitse kirjautumispalvelu</string>
-    <!-- Title of an account picker dialog for identity credentials. -->
-    <string name="mozac_feature_prompts_identity_credentials_choose_account" moz:removedIn="119" tools:ignore="UnusedResources">Valitse tili</string>
     <!-- Title of an account picker dialog for identity credentials. The %1$s will be replaced with the name of the provider -->
     <string name="mozac_feature_prompts_identity_credentials_choose_account_for_provider">Kirjaudu sisään %1$s-tilillä</string>
     <!-- Title of the Identity Credential privacy policy dialog title. The %1$s will be replaced with the name of the provider. -->

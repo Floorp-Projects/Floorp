@@ -92,6 +92,11 @@
     <!-- Header for the select login prompt to allow users to fill a form with a saved login -->
     <string name="mozac_feature_prompts_saved_logins">Воридшавиҳои пешниҳодшуда</string>
 
+    <!-- Content description for the suggest strong password prompt to allow users to fill a form with a suggested strong password -->
+    <string name="mozac_feature_prompts_suggest_strong_password_content_description">Пешниҳод кардани ниҳонвожаи боқувват</string>
+    <!-- Header for the suggest strong password prompt to allow users to fill a form with a suggested strong password -->
+    <string name="mozac_feature_prompts_suggest_strong_password">Пешниҳод кардани ниҳонвожаи боқувват</string>
+
     <!-- Strings shown in a dialog that appear when users try to refresh a certain kind of webpages -->
     <string name="mozac_feature_prompt_repost_title">Маълумотро ба ин сомона аз нав мефиристонед?</string>
     <string name="mozac_feature_prompt_repost_message">Амали навсозии ин саҳифа метавонад амалҳои охиринро такрор намояд, масалан, амали пардохт ё интишори шарҳ метавонад дубора иҷро карда шавад.</string>
@@ -131,8 +136,6 @@
     <string name="mozac_feature_prompts_account_picture">Акси ҳисоб</string>
     <!-- Title of the Identity Credential provider dialog chooser. -->
     <string name="mozac_feature_prompts_identity_credentials_choose_provider">Интихоби таъминкунандаи воридшавӣ</string>
-    <!-- Title of an account picker dialog for identity credentials. -->
-    <string name="mozac_feature_prompts_identity_credentials_choose_account" moz:removedIn="119" tools:ignore="UnusedResources">Ҳисоберо интихоб кунед</string>
     <!-- Title of an account picker dialog for identity credentials. The %1$s will be replaced with the name of the provider -->
     <string name="mozac_feature_prompts_identity_credentials_choose_account_for_provider">Бо ҳисоби «%1$s» ворид шавед</string>
     <!-- Title of the Identity Credential privacy policy dialog title. The %1$s will be replaced with the name of the provider. -->

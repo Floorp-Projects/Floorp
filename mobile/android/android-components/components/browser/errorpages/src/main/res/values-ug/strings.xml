@@ -116,6 +116,15 @@
     <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
     <string name="mozac_browser_errorpages_redirect_loop_title">بۇ بەت توغرا قايتا نىشانلىيالمىدى</string>
 
+    <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[
+      <p> توركۆرگۈ تەلەپ قىلىنغان تۈرنى ئەسلىگە كەلتۈرۈشنى توختاتتى. تور بېكەت تەلەپنى ھەرگىز تاماملىمايدىغان ئۇسۇلدا قايتا نىشانلايدۇ. </p>
+      <ul>
+        <li> بۇ تور بېكەت تەلەپ قىلغان ساقلانمىلارنى چەكلەپ ياكى توستىڭىزمۇ؟ </li>
+        <li> ئەگەر تور بېكەتنىڭ ساقلانما تەلىپىگە قوشۇلۇپمۇ مەسىلە ھەل بولمىسا، ئۇ بەلكىم مۇلازىمېتىر سەپلەش مەسىلىسى بولۇشى مۇمكىن ، ئۈسكۈنىڭىز ئەمەس. </li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
     <string name="mozac_browser_errorpages_offline_title">تورسىز ھالەت</string>
 
