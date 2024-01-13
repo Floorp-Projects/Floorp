@@ -299,7 +299,8 @@ class CanvasTranslator final : public gfx::InlineTranslator,
                                            gfx::SurfaceFormat aFormat,
                                            bool aClear);
 
-  void EnsureRemoteTextureOwner(RemoteTextureOwnerId aOwnerId);
+  void EnsureRemoteTextureOwner(
+      RemoteTextureOwnerId aOwnerId = RemoteTextureOwnerId());
 
   UniquePtr<TextureData> CreateOrRecycleTextureData(const gfx::IntSize& aSize,
                                                     gfx::SurfaceFormat aFormat);
@@ -318,7 +319,8 @@ class CanvasTranslator final : public gfx::InlineTranslator,
   void NotifyDeviceChanged();
 
   bool EnsureSharedContextWebgl();
-  gfx::DrawTargetWebgl* GetDrawTargetWebgl(int64_t aTextureId) const;
+  gfx::DrawTargetWebgl* GetDrawTargetWebgl(int64_t aTextureId,
+                                           bool aCheckForFallback = true) const;
   void NotifyRequiresRefresh(int64_t aTextureId, bool aDispatch = true);
   void CacheSnapshotShmem(int64_t aTextureId, bool aDispatch = true);
 
@@ -373,7 +375,8 @@ class CanvasTranslator final : public gfx::InlineTranslator,
     int32_t mLocked = 1;
     OpenMode mTextureLockMode = OpenMode::OPEN_NONE;
 
-    gfx::DrawTargetWebgl* GetDrawTargetWebgl() const;
+    gfx::DrawTargetWebgl* GetDrawTargetWebgl(
+        bool aCheckForFallback = true) const;
   };
   std::unordered_map<int64_t, TextureInfo> mTextureInfo;
   nsRefPtrHashtable<nsPtrHashKey<void>, gfx::DataSourceSurface> mDataSurfaces;

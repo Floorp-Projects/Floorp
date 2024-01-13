@@ -1078,10 +1078,10 @@ void WebGLContext::Present(WebGLFramebuffer* const xrFb,
   }
 }
 
-void WebGLContext::CopyToSwapChain(WebGLFramebuffer* const srcFb,
-                                   const layers::TextureType consumerType,
-                                   const webgl::SwapChainOptions& options,
-                                   base::ProcessId pid) {
+void WebGLContext::CopyToSwapChain(
+    WebGLFramebuffer* const srcFb, const layers::TextureType consumerType,
+    const webgl::SwapChainOptions& options,
+    layers::RemoteTextureOwnerClient* ownerClient) {
   const FuncScope funcScope(*this, "<CopyToSwapChain>");
   if (IsContextLost()) return;
 
@@ -1104,7 +1104,7 @@ void WebGLContext::CopyToSwapChain(WebGLFramebuffer* const srcFb,
   // read back the WebGL framebuffer into and push it as a remote texture.
   if (useAsync && srcFb->mSwapChain.mFactory->GetConsumerType() ==
                       layers::TextureType::Unknown) {
-    PushRemoteTexture(srcFb, srcFb->mSwapChain, nullptr, options, pid);
+    PushRemoteTexture(srcFb, srcFb->mSwapChain, nullptr, options, ownerClient);
     return;
   }
 
@@ -1128,49 +1128,52 @@ void WebGLContext::CopyToSwapChain(WebGLFramebuffer* const srcFb,
 
   if (useAsync) {
     PushRemoteTexture(srcFb, srcFb->mSwapChain, srcFb->mSwapChain.FrontBuffer(),
-                      options, pid);
+                      options, ownerClient);
   }
 }
 
-bool WebGLContext::PushRemoteTexture(WebGLFramebuffer* fb,
-                                     gl::SwapChain& swapChain,
-                                     std::shared_ptr<gl::SharedSurface> surf,
-                                     const webgl::SwapChainOptions& options,
-                                     base::ProcessId pid) {
+bool WebGLContext::PushRemoteTexture(
+    WebGLFramebuffer* fb, gl::SwapChain& swapChain,
+    std::shared_ptr<gl::SharedSurface> surf,
+    const webgl::SwapChainOptions& options,
+    layers::RemoteTextureOwnerClient* ownerClient) {
   const auto onFailure = [&]() -> bool {
     GenerateWarning("Remote texture creation failed.");
     LoseContext();
-    if (mRemoteTextureOwner) {
-      mRemoteTextureOwner->PushDummyTexture(options.remoteTextureId,
-                                            options.remoteTextureOwnerId);
+    if (ownerClient && ownerClient == mRemoteTextureOwner) {
+      ownerClient->PushDummyTexture(options.remoteTextureId,
+                                    options.remoteTextureOwnerId);
     }
     return false;
   };
 
-  if (!mRemoteTextureOwner) {
-    // Ensure we have a remote texture owner client for WebGLParent.
-    const auto* outOfProcess = mHost ? mHost->mOwnerData.outOfProcess : nullptr;
-    if (outOfProcess) {
-      pid = outOfProcess->OtherPid();
-    } else if (pid == base::kInvalidProcessId) {
-      return onFailure();
+  if (!ownerClient) {
+    if (!mRemoteTextureOwner) {
+      // Ensure we have a remote texture owner client for WebGLParent.
+      const auto* outOfProcess =
+          mHost ? mHost->mOwnerData.outOfProcess : nullptr;
+      if (!outOfProcess) {
+        return onFailure();
+      }
+      auto pid = outOfProcess->OtherPid();
+      mRemoteTextureOwner = MakeRefPtr<layers::RemoteTextureOwnerClient>(pid);
     }
-    mRemoteTextureOwner = MakeRefPtr<layers::RemoteTextureOwnerClient>(pid);
+    ownerClient = mRemoteTextureOwner;
   }
 
   layers::RemoteTextureOwnerId ownerId = options.remoteTextureOwnerId;
   layers::RemoteTextureId textureId = options.remoteTextureId;
 
-  if (!mRemoteTextureOwner->IsRegistered(ownerId)) {
+  if (!ownerClient->IsRegistered(ownerId)) {
     // Register a texture owner to represent the swap chain.
-    RefPtr<layers::RemoteTextureOwnerClient> textureOwner = mRemoteTextureOwner;
+    RefPtr<layers::RemoteTextureOwnerClient> textureOwner = ownerClient;
     auto destroyedCallback = [textureOwner, ownerId]() {
       textureOwner->UnregisterTextureOwner(ownerId);
     };
 
     swapChain.SetDestroyedCallback(destroyedCallback);
-    mRemoteTextureOwner->RegisterTextureOwner(ownerId,
-                                              /* aSharedRecycling */ !!fb);
+    ownerClient->RegisterTextureOwner(ownerId,
+                                      /* aSharedRecycling */ !!fb);
   }
 
   MOZ_ASSERT(fb || surf);
@@ -1195,7 +1198,7 @@ bool WebGLContext::PushRemoteTexture(WebGLFramebuffer* fb,
     }
     // If we can't serialize to a surface descriptor, then we need to create
     // a buffer to read back into that will become the remote texture.
-    auto data = mRemoteTextureOwner->CreateOrRecycleBufferTextureData(
+    auto data = ownerClient->CreateOrRecycleBufferTextureData(
         size, surfaceFormat, ownerId);
     if (!data) {
       gfxCriticalNoteOnce << "Failed to allocate BufferTextureData";
@@ -1231,7 +1234,7 @@ bool WebGLContext::PushRemoteTexture(WebGLFramebuffer* fb,
       MOZ_RELEASE_ASSERT(rv, "SwizzleData failed!");
     }
 
-    mRemoteTextureOwner->PushTexture(textureId, ownerId, std::move(data));
+    ownerClient->PushTexture(textureId, ownerId, std::move(data));
     return true;
   }
 
@@ -1252,9 +1255,9 @@ bool WebGLContext::PushRemoteTexture(WebGLFramebuffer* fb,
       break;
   }
 
-  mRemoteTextureOwner->PushTexture(textureId, ownerId, keepAlive, size,
-                                   surfaceFormat, *desc);
-  auto recycledSurface = mRemoteTextureOwner->GetRecycledSharedSurface(
+  ownerClient->PushTexture(textureId, ownerId, keepAlive, size, surfaceFormat,
+                           *desc);
+  auto recycledSurface = ownerClient->GetRecycledSharedSurface(
       size, surfaceFormat, desc->type(), ownerId);
   if (recycledSurface) {
     swapChain.StoreRecycledSurface(recycledSurface);

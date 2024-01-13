@@ -39,6 +39,10 @@ namespace gl {
 class GLContext;
 }  // namespace gl
 
+namespace layers {
+class RemoteTextureOwnerClient;
+}  // namespace layers
+
 namespace gfx {
 
 class DataSourceSurface;
@@ -448,6 +452,9 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
   }
   BackendType GetBackendType() const override { return BackendType::WEBGL; }
   IntSize GetSize() const override { return mSize; }
+  const RefPtr<SharedContextWebgl>& GetSharedContext() const {
+    return mSharedContext;
+  }
 
   bool HasDataSnapshot() const;
   void PrepareData();
@@ -564,9 +571,9 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
   void SetTransform(const Matrix& aTransform) override;
   void* GetNativeSurface(NativeSurfaceType aType) override;
 
-  void CopyToSwapChain(layers::RemoteTextureId aId,
-                       layers::RemoteTextureOwnerId aOwnerId,
-                       base::ProcessId aPid = base::kInvalidProcessId);
+  void CopyToSwapChain(
+      layers::RemoteTextureId aId, layers::RemoteTextureOwnerId aOwnerId,
+      layers::RemoteTextureOwnerClient* aOwnerClient = nullptr);
 
   void OnMemoryPressure() { mSharedContext->OnMemoryPressure(); }
 

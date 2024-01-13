@@ -4693,9 +4693,9 @@ void DrawTargetWebgl::EndFrame() {
   mSharedContext->ClearCachesIfNecessary();
 }
 
-void DrawTargetWebgl::CopyToSwapChain(layers::RemoteTextureId aId,
-                                      layers::RemoteTextureOwnerId aOwnerId,
-                                      base::ProcessId aPid) {
+void DrawTargetWebgl::CopyToSwapChain(
+    layers::RemoteTextureId aId, layers::RemoteTextureOwnerId aOwnerId,
+    layers::RemoteTextureOwnerClient* aOwnerClient) {
   if (!mWebglValid && !FlushFromSkia()) {
     return;
   }
@@ -4712,7 +4712,8 @@ void DrawTargetWebgl::CopyToSwapChain(layers::RemoteTextureId aId,
   const RefPtr<layers::ImageBridgeChild> imageBridge =
       layers::ImageBridgeChild::GetSingleton();
   auto texType = layers::TexTypeForWebgl(imageBridge);
-  mSharedContext->mWebgl->CopyToSwapChain(mFramebuffer, texType, options, aPid);
+  mSharedContext->mWebgl->CopyToSwapChain(mFramebuffer, texType, options,
+                                          aOwnerClient);
 }
 
 already_AddRefed<DrawTarget> DrawTargetWebgl::CreateSimilarDrawTarget(

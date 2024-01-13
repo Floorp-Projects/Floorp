@@ -84,18 +84,40 @@ void RemoteTextureOwnerClient::ClearRecycledTextures() {
                                                  mSharedRecycleBin);
 }
 
-void RemoteTextureOwnerClient::NotifyContextLost() {
-  if (mOwnerIds.empty()) {
+void RemoteTextureOwnerClient::NotifyContextLost(
+    const RemoteTextureOwnerIdSet* aOwnerIds) {
+  if (aOwnerIds) {
+    for (const auto& id : *aOwnerIds) {
+      if (mOwnerIds.find(id) == mOwnerIds.end()) {
+        MOZ_ASSERT_UNREACHABLE("owner id not registered by client");
+        return;
+      }
+    }
+  } else {
+    aOwnerIds = &mOwnerIds;
+  }
+  if (aOwnerIds->empty()) {
     return;
   }
-  RemoteTextureMap::Get()->NotifyContextLost(mOwnerIds, mForPid);
+  RemoteTextureMap::Get()->NotifyContextLost(*aOwnerIds, mForPid);
 }
 
-void RemoteTextureOwnerClient::NotifyContextRestored() {
-  if (mOwnerIds.empty()) {
+void RemoteTextureOwnerClient::NotifyContextRestored(
+    const RemoteTextureOwnerIdSet* aOwnerIds) {
+  if (aOwnerIds) {
+    for (const auto& id : *aOwnerIds) {
+      if (mOwnerIds.find(id) == mOwnerIds.end()) {
+        MOZ_ASSERT_UNREACHABLE("owner id not registered by client");
+        return;
+      }
+    }
+  } else {
+    aOwnerIds = &mOwnerIds;
+  }
+  if (aOwnerIds->empty()) {
     return;
   }
-  RemoteTextureMap::Get()->NotifyContextRestored(mOwnerIds, mForPid);
+  RemoteTextureMap::Get()->NotifyContextRestored(*aOwnerIds, mForPid);
 }
 
 void RemoteTextureOwnerClient::PushTexture(
@@ -663,9 +685,7 @@ void RemoteTextureMap::UnregisterTextureOwner(
 }
 
 void RemoteTextureMap::UnregisterTextureOwners(
-    const std::unordered_set<RemoteTextureOwnerId,
-                             RemoteTextureOwnerId::HashFn>& aOwnerIds,
-    const base::ProcessId aForPid) {
+    const RemoteTextureOwnerIdSet& aOwnerIds, const base::ProcessId aForPid) {
   std::vector<UniquePtr<TextureOwner>>
       releasingOwners;  // Release outside the monitor
   std::vector<RefPtr<TextureHost>>
@@ -770,9 +790,7 @@ bool RemoteTextureTxnScheduler::WaitForTxn(const MonitorAutoLock& aProofOfLock,
 }
 
 void RemoteTextureMap::ClearRecycledTextures(
-    const std::unordered_set<RemoteTextureOwnerId,
-                             RemoteTextureOwnerId::HashFn>& aOwnerIds,
-    const base::ProcessId aForPid,
+    const RemoteTextureOwnerIdSet& aOwnerIds, const base::ProcessId aForPid,
     const RefPtr<RemoteTextureRecycleBin>& aRecycleBin) {
   std::list<RemoteTextureRecycleBin::RecycledTextureHolder>
       releasingTextures;  // Release outside the monitor
@@ -800,9 +818,7 @@ void RemoteTextureMap::ClearRecycledTextures(
 }
 
 void RemoteTextureMap::NotifyContextLost(
-    const std::unordered_set<RemoteTextureOwnerId,
-                             RemoteTextureOwnerId::HashFn>& aOwnerIds,
-    const base::ProcessId aForPid) {
+    const RemoteTextureOwnerIdSet& aOwnerIds, const base::ProcessId aForPid) {
   MonitorAutoLock lock(mMonitor);
 
   for (const auto& id : aOwnerIds) {
@@ -820,9 +836,7 @@ void RemoteTextureMap::NotifyContextLost(
 }
 
 void RemoteTextureMap::NotifyContextRestored(
-    const std::unordered_set<RemoteTextureOwnerId,
-                             RemoteTextureOwnerId::HashFn>& aOwnerIds,
-    const base::ProcessId aForPid) {
+    const RemoteTextureOwnerIdSet& aOwnerIds, const base::ProcessId aForPid) {
   MonitorAutoLock lock(mMonitor);
 
   for (const auto& id : aOwnerIds) {
