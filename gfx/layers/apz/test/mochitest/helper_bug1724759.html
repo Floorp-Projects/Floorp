@@ -15,21 +15,28 @@
 <button id="button">Button</button>
 <script>
 async function test() {
-  await synthesizeNativeTouch(button, 10, 10, SpecialPowers.DOMWindowUtils.TOUCH_CONTACT);
-  await promiseOneEvent(button, "touchstart");
-  await promiseApzFlushedRepaints();
-
-  ok(button.matches(":active"), "should be active");
-
   const contextmenuPromise = promiseOneEvent(button, "contextmenu", e => {
     e.preventDefault();
     return true;
   });
+  await synthesizeNativeTouch(button, 10, 10, SpecialPowers.DOMWindowUtils.TOUCH_CONTACT);
+
+  // In JS there's no way to ensure `APZStateChange::eStartTouch` notification
+  // has been processed. So we wait for `:active` state change here.
+  await SimpleTest.promiseWaitForCondition(
+    () => button.matches(":active"),
+    "Waiting for :active state change");
+
+  ok(button.matches(":active"), "should be active");
+
   await contextmenuPromise;
 
   await synthesizeNativeTouch(button, 10, 10, SpecialPowers.DOMWindowUtils.TOUCH_REMOVE);
-  await promiseOneEvent(button, "touchend");
-  await promiseApzFlushedRepaints();
+
+  // Same as above. We need to wait for not `:active` state here.
+  await SimpleTest.promiseWaitForCondition(
+    () => !button.matches(":active"),
+    "Waiting for :active state change");
 
   ok(!button.matches(":active"), "should not be active");
 }
