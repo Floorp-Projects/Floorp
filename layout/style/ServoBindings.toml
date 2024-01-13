@@ -366,6 +366,9 @@ opaque-types = [
     "std::namespace::atomic___base", "std::atomic__My_base",
     "std::atomic",
     "std::atomic___base",
+    "std::tuple.*", # Causes "Cannot find type _Pred in this scope" error on mac, like rust-skia#571
+    "std::.*::tuple.*",
+
     # We want everything but FontVariation and Float to be opaque but we don't
     # have negative regexes.
     "mozilla::gfx::(.{0,4}|.{6,12}|.{14,}|([^F][^o][^n][^t][^V][^a][^r][^i][^a][^t][^i][^o][^n])|([^F][^l][^o][^a][^t]))",
@@ -391,8 +394,6 @@ opaque-types = [
                             # for clang.
     "mozilla::SeenPtrs",
     "mozilla::SupportsWeakPtr",
-    "std::tuple",
-    "std::tuple_.*", # Causes "Cannot find type _Pred in this scope" error on mac, like rust-skia#571
     "SupportsWeakPtr",
     "mozilla::detail::WeakReference",
     "mozilla::WeakPtr",
