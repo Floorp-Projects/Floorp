@@ -369,10 +369,6 @@ already_AddRefed<gfx::DataSourceSurface> CanvasChild::GetDataSurface(
   mDataSurfaceShmemAvailable = false;
   RecordEvent(RecordedGetDataForSurface(aSurface));
   auto checkpoint = CreateCheckpoint();
-  struct DataShmemHolder {
-    RefPtr<ipc::SharedMemoryBasic> shmem;
-    RefPtr<CanvasChild> canvasChild;
-  };
 
   auto* data = static_cast<uint8_t*>(mDataSurfaceShmem->memory());
   auto* closure = new DataShmemHolder{do_AddRef(mDataSurfaceShmem), this};
@@ -380,17 +376,24 @@ already_AddRefed<gfx::DataSourceSurface> CanvasChild::GetDataSurface(
 
   RefPtr<gfx::DataSourceSurface> dataSurface =
       gfx::Factory::CreateWrappingDataSourceSurface(
-          data, dataFormatWidth, ssSize, ssFormat,
-          [](void* aClosure) {
-            auto* shmemHolder = static_cast<DataShmemHolder*>(aClosure);
-            shmemHolder->canvasChild->ReturnDataSurfaceShmem(
-                shmemHolder->shmem.forget());
-            delete shmemHolder;
-          },
+          data, dataFormatWidth, ssSize, ssFormat, ReleaseDataShmemHolder,
           closure);
 
   mRecorder->WaitForCheckpoint(checkpoint);
   return dataSurface.forget();
+}
+
+/* static */ void CanvasChild::ReleaseDataShmemHolder(void* aClosure) {
+  if (!NS_IsMainThread()) {
+    NS_DispatchToMainThread(NS_NewRunnableFunction(
+        "CanvasChild::ReleaseDataShmemHolder",
+        [aClosure]() { ReleaseDataShmemHolder(aClosure); }));
+    return;
+  }
+
+  auto* shmemHolder = static_cast<DataShmemHolder*>(aClosure);
+  shmemHolder->canvasChild->ReturnDataSurfaceShmem(shmemHolder->shmem.forget());
+  delete shmemHolder;
 }
 
 already_AddRefed<gfx::SourceSurface> CanvasChild::WrapSurface(
