@@ -623,7 +623,7 @@ class WorkerPrivate final
 
   PerformanceStorage* GetPerformanceStorage();
 
-  bool IsAcceptingEvents() {
+  bool IsAcceptingEvents() MOZ_EXCLUDES(mMutex) {
     AssertIsOnParentThread();
 
     MutexAutoLock lock(mMutex);

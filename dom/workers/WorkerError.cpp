@@ -92,18 +92,6 @@ class ReportErrorRunnable final : public WorkerDebuggeeRunnable {
     } else {
       AssertIsOnMainThread();
 
-      // Once a window has frozen its workers, their
-      // mMainThreadDebuggeeEventTargets should be paused, and their
-      // WorkerDebuggeeRunnables should not be being executed. The same goes for
-      // WorkerDebuggeeRunnables sent from child to parent workers, but since a
-      // frozen parent worker runs only control runnables anyway, that is taken
-      // care of naturally.
-      MOZ_ASSERT(!aWorkerPrivate->IsFrozen());
-
-      // Similarly for paused windows; all its workers should have been
-      // informed. (Subworkers are unaffected by paused windows.)
-      MOZ_ASSERT(!aWorkerPrivate->IsParentWindowPaused());
-
       if (aWorkerPrivate->IsSharedWorker()) {
         aWorkerPrivate->GetRemoteWorkerController()
             ->ErrorPropagationOnMainThread(mReport.get(),
@@ -175,17 +163,9 @@ class ReportGenericErrorRunnable final : public WorkerDebuggeeRunnable {
   }
 
   bool WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override {
-    // Once a window has frozen its workers, their
-    // mMainThreadDebuggeeEventTargets should be paused, and their
-    // WorkerDebuggeeRunnables should not be being executed. The same goes for
-    // WorkerDebuggeeRunnables sent from child to parent workers, but since a
-    // frozen parent worker runs only control runnables anyway, that is taken
-    // care of naturally.
-    MOZ_ASSERT(!aWorkerPrivate->IsFrozen());
-
-    // Similarly for paused windows; all its workers should have been informed.
-    // (Subworkers are unaffected by paused windows.)
-    MOZ_ASSERT(!aWorkerPrivate->IsParentWindowPaused());
+    if (!aWorkerPrivate->IsAcceptingEvents()) {
+      return true;
+    }
 
     if (aWorkerPrivate->IsSharedWorker()) {
       aWorkerPrivate->GetRemoteWorkerController()->ErrorPropagationOnMainThread(
@@ -203,10 +183,6 @@ class ReportGenericErrorRunnable final : public WorkerDebuggeeRunnable {
         actor->ErrorPropagationOnMainThread(nullptr, false);
       }
 
-      return true;
-    }
-
-    if (!aWorkerPrivate->IsAcceptingEvents()) {
       return true;
     }
 
