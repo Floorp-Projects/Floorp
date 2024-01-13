@@ -102,6 +102,9 @@ DefaultJitOptions::DefaultJitOptions() {
   // Toggles whether instruction reordering is globally disabled.
   SET_DEFAULT(disableInstructionReordering, false);
 
+  // Toggles whether atomizing loads used as property keys is globally disabled.
+  SET_DEFAULT(disableMarkLoadsUsedAsPropertyKeys, false);
+
   // Toggles whether Range Analysis is globally disabled.
   SET_DEFAULT(disableRangeAnalysis, false);
 
