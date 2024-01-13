@@ -1,0 +1,9 @@
+<script>
+document.addEventListener("DOMContentLoaded", async () => {
+  let a = document.createElementNS("http://www.w3.org/1999/xhtml", "canvas")
+  let bmp = await self.createImageBitmap(a.getContext("2d"), 100, -187, -214, 57, { })
+  let chan = new MessageChannel()
+  const worker = new Worker("none", { })
+  worker.postMessage([bmp, chan.port1], [bmp, chan.port1])
+})
+</script>
