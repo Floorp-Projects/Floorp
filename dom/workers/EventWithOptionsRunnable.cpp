@@ -138,18 +138,6 @@ bool EventWithOptionsRunnable::WorkerRun(JSContext* aCx,
       return true;
     }
 
-    // Once a window has frozen its workers, their
-    // mMainThreadDebuggeeEventTargets should be paused, and their
-    // WorkerDebuggeeRunnables should not be being executed. The same goes for
-    // WorkerDebuggeeRunnables sent from child to parent workers, but since a
-    // frozen parent worker runs only control runnables anyway, that is taken
-    // care of naturally.
-    MOZ_ASSERT(!aWorkerPrivate->IsFrozen());
-
-    // Similarly for paused windows; all its workers should have been informed.
-    // (Subworkers are unaffected by paused windows.)
-    MOZ_ASSERT(!aWorkerPrivate->IsParentWindowPaused());
-
     aWorkerPrivate->AssertInnerWindowIsCorrect();
 
     return BuildAndFireEvent(aCx, aWorkerPrivate,

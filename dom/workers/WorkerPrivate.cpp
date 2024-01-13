@@ -1779,6 +1779,14 @@ bool WorkerPrivate::Notify(WorkerStatus aStatus) {
     mCancelingTimer = nullptr;
   }
 
+  // The NotifyRunnable kicks off a series of events that need the
+  // CancelingOnParentRunnable to be executed always.
+  // Note that we already advanced mParentStatus above and we check that
+  // status in all other (asynchronous) call sites of SetIsPaused.
+  if (!mParent) {
+    MOZ_ALWAYS_SUCCEEDS(mMainThreadDebuggeeEventTarget->SetIsPaused(false));
+  }
+
   RefPtr<NotifyRunnable> runnable = new NotifyRunnable(this, aStatus);
   return runnable->Dispatch();
 }
@@ -1788,8 +1796,15 @@ bool WorkerPrivate::Freeze(const nsPIDOMWindowInner* aWindow) {
 
   mParentFrozen = true;
 
-  // WorkerDebuggeeRunnables sent from a worker to content must not be delivered
-  // while the worker is frozen.
+  bool isCanceling = false;
+  {
+    MutexAutoLock lock(mMutex);
+
+    isCanceling = mParentStatus >= Canceling;
+  }
+
+  // WorkerDebuggeeRunnables sent from a worker to content must not be
+  // delivered while the worker is frozen.
   //
   // Since a top-level worker and all its children share the same
   // mMainThreadDebuggeeEventTarget, it's sufficient to do this only in the
@@ -1799,16 +1814,13 @@ bool WorkerPrivate::Freeze(const nsPIDOMWindowInner* aWindow) {
     // allocated mMainThreadDebuggeeEventTarget yet.
     if (mMainThreadDebuggeeEventTarget) {
       // Pausing a ThrottledEventQueue is infallible.
-      MOZ_ALWAYS_SUCCEEDS(mMainThreadDebuggeeEventTarget->SetIsPaused(true));
+      MOZ_ALWAYS_SUCCEEDS(
+          mMainThreadDebuggeeEventTarget->SetIsPaused(!isCanceling));
     }
   }
 
-  {
-    MutexAutoLock lock(mMutex);
-
-    if (mParentStatus >= Canceling) {
-      return true;
-    }
+  if (isCanceling) {
+    return true;
   }
 
   DisableDebugger();
@@ -1823,26 +1835,32 @@ bool WorkerPrivate::Thaw(const nsPIDOMWindowInner* aWindow) {
 
   mParentFrozen = false;
 
-  // Delivery of WorkerDebuggeeRunnables to the window may resume.
-  //
-  // Since a top-level worker and all its children share the same
-  // mMainThreadDebuggeeEventTarget, it's sufficient to do this only in the
-  // top-level worker.
-  if (aWindow) {
-    // Since the worker is no longer frozen, only a paused parent window should
-    // require the queue to remain paused.
-    //
-    // This can only fail if the ThrottledEventQueue cannot dispatch its
-    // executor to the main thread, in which case the main thread was never
-    // going to draw runnables from it anyway, so the failure doesn't matter.
-    Unused << mMainThreadDebuggeeEventTarget->SetIsPaused(
-        IsParentWindowPaused());
-  }
-
   {
-    MutexAutoLock lock(mMutex);
+    bool isCanceling = false;
 
-    if (mParentStatus >= Canceling) {
+    {
+      MutexAutoLock lock(mMutex);
+
+      isCanceling = mParentStatus >= Canceling;
+    }
+
+    // Delivery of WorkerDebuggeeRunnables to the window may resume.
+    //
+    // Since a top-level worker and all its children share the same
+    // mMainThreadDebuggeeEventTarget, it's sufficient to do this only in the
+    // top-level worker.
+    if (aWindow) {
+      // Since the worker is no longer frozen, only a paused parent window
+      // should require the queue to remain paused.
+      //
+      // This can only fail if the ThrottledEventQueue cannot dispatch its
+      // executor to the main thread, in which case the main thread was never
+      // going to draw runnables from it anyway, so the failure doesn't matter.
+      Unused << mMainThreadDebuggeeEventTarget->SetIsPaused(
+          IsParentWindowPaused() && !isCanceling);
+    }
+
+    if (isCanceling) {
       return true;
     }
   }
@@ -1861,8 +1879,18 @@ void WorkerPrivate::ParentWindowPaused() {
   // This is called from WorkerPrivate construction, and we may not have
   // allocated mMainThreadDebuggeeEventTarget yet.
   if (mMainThreadDebuggeeEventTarget) {
-    // Pausing a ThrottledEventQueue is infallible.
-    MOZ_ALWAYS_SUCCEEDS(mMainThreadDebuggeeEventTarget->SetIsPaused(true));
+    bool isCanceling = false;
+
+    {
+      MutexAutoLock lock(mMutex);
+
+      isCanceling = mParentStatus >= Canceling;
+    }
+
+    // If we are already canceling we might wait for CancelingOnParentRunnable
+    // to be executed, so do not pause.
+    MOZ_ALWAYS_SUCCEEDS(
+        mMainThreadDebuggeeEventTarget->SetIsPaused(!isCanceling));
   }
 }
 
@@ -1872,12 +1900,11 @@ void WorkerPrivate::ParentWindowResumed() {
   MOZ_ASSERT(mParentWindowPaused);
   mParentWindowPaused = false;
 
+  bool isCanceling = false;
   {
     MutexAutoLock lock(mMutex);
 
-    if (mParentStatus >= Canceling) {
-      return;
-    }
+    isCanceling = mParentStatus >= Canceling;
   }
 
   // Since the window is no longer paused, the queue should only remain paused
@@ -1886,7 +1913,8 @@ void WorkerPrivate::ParentWindowResumed() {
   // This can only fail if the ThrottledEventQueue cannot dispatch its executor
   // to the main thread, in which case the main thread was never going to draw
   // runnables from it anyway, so the failure doesn't matter.
-  Unused << mMainThreadDebuggeeEventTarget->SetIsPaused(IsFrozen());
+  Unused << mMainThreadDebuggeeEventTarget->SetIsPaused(IsFrozen() &&
+                                                        !isCanceling);
 }
 
 void WorkerPrivate::PropagateStorageAccessPermissionGranted() {
