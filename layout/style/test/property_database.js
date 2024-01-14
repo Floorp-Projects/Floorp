@@ -5262,6 +5262,13 @@ var gCSSProperties = {
       "-moz-default-background-color",
       "-moz-hyperlinktext",
       "-moz-visitedhyperlinktext",
+      /* color-mix */
+      "color-mix(in srgb, red, blue)",
+      "color-mix(in srgb, highlight, rgba(0, 0, 0, .5))",
+      "color-mix(in srgb, color-mix(in srgb, red 10%, blue), green)",
+      "color-mix(in srgb, blue, red 80%)",
+      "color-mix(in srgb, rgba(0, 200, 32, .5) 90%, red 50%)",
+      "color-mix(in srgb, currentColor, red)",
     ],
     invalid_values: [
       "#f",
@@ -5293,6 +5300,11 @@ var gCSSProperties = {
       "rgb(0, 0, 0 /)",
       "hsl(0 0% 0% /)",
       "hsl(0, 0%, 0% /)",
+      /* color-mix */
+      "color-mix(red, blue)",
+      "color-mix(red blue)",
+      "color-mix(in srgb, red blue)",
+      "color-mix(in srgb, red 10% blue)",
     ],
     quirks_values: {
       "000000": "#000000",
@@ -13559,24 +13571,6 @@ if (IsCSSPropertyPrefEnabled("layout.css.math-style.enabled")) {
     other_values: ["compact"],
     invalid_values: [],
   };
-}
-
-if (IsCSSPropertyPrefEnabled("layout.css.color-mix.enabled")) {
-  gCSSProperties.color.other_values.push(
-    "color-mix(in srgb, red, blue)",
-    "color-mix(in srgb, highlight, rgba(0, 0, 0, .5))",
-    "color-mix(in srgb, color-mix(in srgb, red 10%, blue), green)",
-    "color-mix(in srgb, blue, red 80%)",
-    "color-mix(in srgb, rgba(0, 200, 32, .5) 90%, red 50%)",
-    "color-mix(in srgb, currentColor, red)"
-  );
-
-  gCSSProperties.color.invalid_values.push(
-    "color-mix(red, blue)",
-    "color-mix(red blue)",
-    "color-mix(in srgb, red blue)",
-    "color-mix(in srgb, red 10% blue)"
-  );
 }
 
 if (IsCSSPropertyPrefEnabled("layout.css.forced-color-adjust.enabled")) {
