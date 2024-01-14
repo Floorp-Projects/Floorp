@@ -8,7 +8,7 @@
 # documentation and how to modify this file.
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2023-12-28T19:54:40.695003'
+updated_at: '2024-01-12T16:58:39.972762'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -1162,16 +1162,16 @@ modules:
         - Ehsan Akhgari
         - Erica Wright
         - Gary Chen
+        - *baku
+        - *johannh
       group: dev-platform
       components:
         - 'Core::Privacy: Anti-Tracking'
     owners:
       - *timhuang
     peers:
-      - *baku
       - *dimi
       - *pbz
-      - *johannh
     machine_name: core_antitracking
 
   - name: 'Core: APZ (Graphics submodule)'
@@ -2364,14 +2364,15 @@ modules:
         - Christian Biesinger
         - Shawn Wilsher
         - Honza Bambas
+        - *baku
+        - *johannh
       group: dev-platform
       components:
         - 'Core :: Permission Manager'
+      review_group: permissions-reviewers
     owners:
       - *timhuang
     peers:
-      - *baku
-      - *johannh
       - *pbz
     machine_name: core_permissions
 
@@ -3577,6 +3578,7 @@ modules:
           peers_emeritus:
             - Erica Wright
             - Nihanth Subramanya
+            - *prathiksha
           owners_emeritus:
             - Johann Hofmann
           components:
@@ -3586,8 +3588,6 @@ modules:
             - Firefox::Site Permissions
         owners:
           - *pbz
-        peers:
-          - *prathiksha
         machine_name: security_and_privacy_ui
 
       - name: Session Restore
@@ -4250,5 +4250,5 @@ modules:
         - Ryan Tilder
       group: dev-platform
 hashes:
-  config: 59011c4f3e12e2579b4b9061c284ba1cf096b2c2
-  export: dbf9923c9edb3b8025ea33702ba9b29cecb27e33
+  config: f414cee39a9e64c11bd2a7b32b3174b4c51b227c
+  export: b022881a04f2eacf3c757d15ee25958b1bb9fcc9
