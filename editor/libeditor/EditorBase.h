@@ -196,6 +196,12 @@ class EditorBase : public nsIEditor,
     return false;
   }
 
+  /**
+   * This checks whether the call with aPrincipal should or should not be
+   * treated as user input.
+   */
+  [[nodiscard]] static bool TreatAsUserInput(nsIPrincipal* aPrincipal);
+
   PresShell* GetPresShell() const;
   nsPresContext* GetPresContext() const;
   already_AddRefed<nsCaret> GetCaret() const;

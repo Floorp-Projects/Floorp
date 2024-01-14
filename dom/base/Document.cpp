@@ -1385,7 +1385,8 @@ Document::Document(const char* aContentType)
       mPendingMaybeEditingStateChanged(false),
       mHasBeenEditable(false),
       mHasWarnedAboutZoom(false),
-      mIsRunningExecCommand(false),
+      mIsRunningExecCommandByContent(false),
+      mIsRunningExecCommandByChromeOrAddon(false),
       mSetCompleteAfterDOMContentLoaded(false),
       mDidHitCompleteSheetCache(false),
       mUseCountersInitialized(false),
@@ -5366,6 +5367,20 @@ nsresult Document::AutoEditorCommandTarget::GetCommandStateParams(
                               MOZ_KnownLive(targetEditor), nullptr);
 }
 
+Document::AutoRunningExecCommandMarker::AutoRunningExecCommandMarker(
+    Document& aDocument, nsIPrincipal* aPrincipal)
+    : mDocument(aDocument),
+      mTreatAsUserInput(EditorBase::TreatAsUserInput(aPrincipal)),
+      mHasBeenRunningByContent(aDocument.mIsRunningExecCommandByContent),
+      mHasBeenRunningByChromeOrAddon(
+          aDocument.mIsRunningExecCommandByChromeOrAddon) {
+  if (mTreatAsUserInput) {
+    aDocument.mIsRunningExecCommandByChromeOrAddon = true;
+  } else {
+    aDocument.mIsRunningExecCommandByContent = true;
+  }
+}
+
 bool Document::ExecCommand(const nsAString& aHTMLCommandName, bool aShowUI,
                            const nsAString& aValue,
                            nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv) {
@@ -5379,13 +5394,6 @@ bool Document::ExecCommand(const nsAString& aHTMLCommandName, bool aShowUI,
 
   // if they are requesting UI from us, let's fail since we have no UI
   if (aShowUI) {
-    return false;
-  }
-
-  // If we're running an execCommand, we should just return false.
-  // https://github.com/w3c/editing/issues/200#issuecomment-575241816
-  if (!StaticPrefs::dom_document_exec_command_nested_calls_allowed() &&
-      mIsRunningExecCommand) {
     return false;
   }
 
@@ -5416,6 +5424,16 @@ bool Document::ExecCommand(const nsAString& aHTMLCommandName, bool aShowUI,
       break;
   }
 
+  AutoRunningExecCommandMarker markRunningExecCommand(*this,
+                                                      &aSubjectPrincipal);
+
+  // If we're running an execCommand, we should just return false.
+  // https://github.com/w3c/editing/issues/200#issuecomment-575241816
+  if (!StaticPrefs::dom_document_exec_command_nested_calls_allowed() &&
+      !markRunningExecCommand.IsSafeToRun()) {
+    return false;
+  }
+
   // Do security check first.
   if (commandData.IsCutOrCopyCommand()) {
     if (!nsContentUtils::IsCutCopyAllowed(this, aSubjectPrincipal)) {
@@ -5432,8 +5450,6 @@ bool Document::ExecCommand(const nsAString& aHTMLCommandName, bool aShowUI,
       return false;
     }
   }
-
-  AutoRunningExecCommandMarker markRunningExecCommand(*this);
 
   // Next, consider context of command handling which is automatically resolved
   // by order of controllers in `nsCommandManager::GetControllerForCommand()`.

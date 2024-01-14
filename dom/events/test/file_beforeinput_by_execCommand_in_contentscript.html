@@ -1,2 +1,9 @@
 <!doctype html>
 <div contenteditable>abcdef</div>
+<div contenteditable>abcdef</div>
+<script>
+document.querySelectorAll("[contenteditable]")[1].addEventListener("beforeinput", event => {
+  document.execCommand("insertText", false, "ABCDEF");
+  event.preventDefault();
+});
+</script>

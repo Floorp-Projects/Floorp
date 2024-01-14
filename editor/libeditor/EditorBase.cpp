@@ -6448,16 +6448,20 @@ bool EditorBase::AutoEditActionDataSetter::IsBeforeInputEventEnabled() const {
   if (mEditorBase.IsSuppressingDispatchingInputEvent()) {
     return false;
   }
+  return EditorBase::TreatAsUserInput(mPrincipal);
+}
 
-  // If mPrincipal has set, it means that we're handling an edit action
-  // which is requested by JS.  If it's not chrome script, we shouldn't
+// static
+bool EditorBase::TreatAsUserInput(nsIPrincipal* aPrincipal) {
+  // If aPrincipal it not nullptr, it means that the caller is handling an edit
+  // action which is requested by JS.  If it's not chrome script, we shouldn't
   // dispatch "beforeinput" event.
-  if (mPrincipal && !mPrincipal->IsSystemPrincipal()) {
+  if (aPrincipal && !aPrincipal->IsSystemPrincipal()) {
     // But if it's content script of an addon, `execCommand` calls are a
     // part of browser's default action from point of view of web apps.
     // Therefore, we should dispatch `beforeinput` event.
     // https://github.com/w3c/input-events/issues/91
-    if (!mPrincipal->GetIsAddonOrExpandedAddonPrincipal()) {
+    if (!aPrincipal->GetIsAddonOrExpandedAddonPrincipal()) {
       return false;
     }
   }
