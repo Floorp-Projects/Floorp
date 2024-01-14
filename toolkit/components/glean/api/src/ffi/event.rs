@@ -59,6 +59,7 @@ pub extern "C" fn fog_event_record(
             Some(m) => m.record_raw(extra),
             None => panic!("No (dynamic) metric for event with id {}", id),
         }
+        return;
     } else {
         match metric_maps::record_event_by_id(id, extra) {
             Ok(()) => {}
@@ -147,7 +148,7 @@ pub extern "C" fn fog_event_test_get_value(
     };
 
     for event in events {
-        let extra = event.extra.unwrap_or_default();
+        let extra = event.extra.unwrap_or_else(HashMap::new);
         let extra_len = extra.len();
         let mut extras = ThinVec::with_capacity(extra_len * 2);
         for (k, v) in extra.into_iter() {
