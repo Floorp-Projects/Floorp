@@ -16,10 +16,6 @@ loadHelperScript("helper_style_attr_test_runner.js");
 
 const TEST_URL = URL_ROOT + "doc_markup_edit.html";
 
-const COLOR_MIX_ENABLED = SpecialPowers.getBoolPref(
-  "layout.css.color-mix.enabled"
-);
-
 // test data format :
 //  [
 //    what key to press,
@@ -61,66 +57,30 @@ const TEST_DATA = [
   ["VK_BACK_SPACE", 'style="display:  inherit; color  ', 32, 32, false],
   [":", 'style="display:  inherit; color :aliceblue ', 33, 42, true],
   ["c", 'style="display:  inherit; color :color ', 34, 38, true],
-  COLOR_MIX_ENABLED
-    ? ["VK_DOWN", 'style="display:  inherit; color :color-mix ', 34, 42, true]
-    : ["VK_DOWN", 'style="display:  inherit; color :coral ', 34, 38, true],
-  COLOR_MIX_ENABLED
-    ? ["VK_RIGHT", 'style="display:  inherit; color :color-mix ', 42, 42, false]
-    : ["VK_RIGHT", 'style="display:  inherit; color :coral ', 38, 38, false],
-  COLOR_MIX_ENABLED
-    ? [
-        " ",
-        'style="display:  inherit; color :color-mix aliceblue ',
-        43,
-        52,
-        true,
-      ]
-    : [" ", 'style="display:  inherit; color :coral aliceblue ', 39, 48, true],
-  COLOR_MIX_ENABLED
-    ? [
-        "!",
-        'style="display:  inherit; color :color-mix !important; ',
-        44,
-        54,
-        false,
-      ]
-    : [
-        "!",
-        'style="display:  inherit; color :coral !important; ',
-        40,
-        50,
-        false,
-      ],
-  COLOR_MIX_ENABLED
-    ? [
-        "VK_RIGHT",
-        'style="display:  inherit; color :color-mix !important; ',
-        54,
-        54,
-        false,
-      ]
-    : [
-        "VK_RIGHT",
-        'style="display:  inherit; color :coral !important; ',
-        50,
-        50,
-        false,
-      ],
-  COLOR_MIX_ENABLED
-    ? [
-        "VK_RETURN",
-        'style="display:  inherit; color :color-mix !important;"',
-        -1,
-        -1,
-        false,
-      ]
-    : [
-        "VK_RETURN",
-        'style="display:  inherit; color :coral !important;"',
-        -1,
-        -1,
-        false,
-      ],
+  ["VK_DOWN", 'style="display:  inherit; color :color-mix ', 34, 42, true],
+  ["VK_RIGHT", 'style="display:  inherit; color :color-mix ', 42, 42, false],
+  [" ", 'style="display:  inherit; color :color-mix aliceblue ', 43, 52, true],
+  [
+    "!",
+    'style="display:  inherit; color :color-mix !important; ',
+    44,
+    54,
+    false,
+  ],
+  [
+    "VK_RIGHT",
+    'style="display:  inherit; color :color-mix !important; ',
+    54,
+    54,
+    false,
+  ],
+  [
+    "VK_RETURN",
+    'style="display:  inherit; color :color-mix !important;"',
+    -1,
+    -1,
+    false,
+  ],
 ];
 
 add_task(async function () {
