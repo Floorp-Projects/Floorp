@@ -31,7 +31,7 @@ add_task(async function closing_last_tab_should_not_switch_to_fx_view() {
     win.gBrowser,
     URL
   );
-  info("Close all broswer tabs...");
+  info("Close all browser tabs...");
   await BrowserTestUtils.removeTab(firstTab);
   await BrowserTestUtils.removeTab(secondTab);
   isnot(
