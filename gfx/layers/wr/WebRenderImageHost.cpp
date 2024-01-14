@@ -147,6 +147,11 @@ void WebRenderImageHost::PushPendingRemoteTexture(
     }
   }
 
+  // Check if waiting for remote texture owner is allowed.
+  if (!(aFlags & TextureFlags::WAIT_FOR_REMOTE_TEXTURE_OWNER)) {
+    mWaitForRemoteTextureOwner = false;
+  }
+
   RefPtr<TextureHost> texture =
       RemoteTextureMap::Get()->GetOrCreateRemoteTextureHostWrapper(
           aTextureId, aOwnerId, aForPid, aSize, aFlags);
@@ -201,8 +206,8 @@ void WebRenderImageHost::UseRemoteTexture() {
     while (!mPendingRemoteTextureWrappers.empty()) {
       auto* wrapper =
           mPendingRemoteTextureWrappers.front()->AsRemoteTextureHostWrapper();
-      mWaitingReadyCallback =
-          RemoteTextureMap::Get()->GetRemoteTexture(wrapper, readyCallback);
+      mWaitingReadyCallback = RemoteTextureMap::Get()->GetRemoteTexture(
+          wrapper, readyCallback, mWaitForRemoteTextureOwner);
       MOZ_ASSERT_IF(mWaitingReadyCallback, !wrapper->IsReadyForRendering());
       if (!wrapper->IsReadyForRendering()) {
         break;
