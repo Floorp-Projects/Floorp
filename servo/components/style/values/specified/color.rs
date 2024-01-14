@@ -34,13 +34,6 @@ impl ColorMix {
         input: &mut Parser<'i, 't>,
         preserve_authored: PreserveAuthored,
     ) -> Result<Self, ParseError<'i>> {
-        let enabled =
-            context.chrome_rules_enabled() || static_prefs::pref!("layout.css.color-mix.enabled");
-
-        if !enabled {
-            return Err(input.new_custom_error(StyleParseErrorKind::UnspecifiedError));
-        }
-
         input.expect_function_matching("color-mix")?;
 
         input.parse_nested_block(|input| {
@@ -954,10 +947,8 @@ impl SpecifiedValueInfo for Color {
             "hwb",
             "currentColor",
             "transparent",
+            "color-mix",
         ]);
-        if static_prefs::pref!("layout.css.color-mix.enabled") {
-            f(&["color-mix"]);
-        }
         if static_prefs::pref!("layout.css.more_color_4.enabled") {
             f(&["color", "lab", "lch", "oklab", "oklch"]);
         }

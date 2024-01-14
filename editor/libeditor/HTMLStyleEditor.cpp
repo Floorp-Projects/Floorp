@@ -2147,12 +2147,14 @@ HTMLEditor::SplitAncestorStyledInlineElementsAt(
   AutoTArray<OwningNonNull<Element>, 24> arrayOfParents;
   for (Element* element :
        aPointToSplit.GetContainer()->InclusiveAncestorsOfType<Element>()) {
-    // XXX Cannot we stop if we meet a non-splittable element like <button>?
-    if (HTMLEditUtils::IsBlockElement(
+    if (element->IsAnyOfHTMLElements(nsGkAtoms::body, nsGkAtoms::head,
+                                     nsGkAtoms::html) ||
+        HTMLEditUtils::IsBlockElement(
             *element, BlockInlineCheck::UseComputedDisplayOutsideStyle) ||
         !element->GetParent() ||
         !EditorUtils::IsEditableContent(*element->GetParent(),
-                                        EditorType::HTML)) {
+                                        EditorType::HTML) ||
+        NS_WARN_IF(!HTMLEditUtils::IsSplittableNode(*element))) {
       break;
     }
     arrayOfParents.AppendElement(*element);

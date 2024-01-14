@@ -4334,21 +4334,35 @@ class Document : public nsINode,
     explicit AutoRunningExecCommandMarker(const AutoRunningExecCommandMarker&) =
         delete;
     // Guaranteeing the document's lifetime with `MOZ_CAN_RUN_SCRIPT`.
-    MOZ_CAN_RUN_SCRIPT explicit AutoRunningExecCommandMarker(
-        Document& aDocument)
-        : mDocument(aDocument),
-          mHasBeenRunning(aDocument.mIsRunningExecCommand) {
-      aDocument.mIsRunningExecCommand = true;
-    }
+    MOZ_CAN_RUN_SCRIPT AutoRunningExecCommandMarker(Document& aDocument,
+                                                    nsIPrincipal* aPrincipal);
     ~AutoRunningExecCommandMarker() {
-      if (!mHasBeenRunning) {
-        mDocument.mIsRunningExecCommand = false;
+      if (mTreatAsUserInput) {
+        mDocument.mIsRunningExecCommandByChromeOrAddon =
+            mHasBeenRunningByChromeOrAddon;
+      } else {
+        mDocument.mIsRunningExecCommandByContent = mHasBeenRunningByContent;
       }
+    }
+
+    [[nodiscard]] bool IsSafeToRun() const {
+      // We don't allow nested calls of execCommand even if the caller is chrome
+      // script.
+      if (mTreatAsUserInput) {
+        return !mHasBeenRunningByChromeOrAddon && !mHasBeenRunningByContent;
+      }
+      // If current call is by content, we should ignore whether nested with a
+      // call by addon (or chrome script) because the caller wants to emulate
+      // user input for making it undoable.  So, we should treat the first
+      // call as user input.
+      return !mHasBeenRunningByContent;
     }
 
    private:
     Document& mDocument;
-    bool mHasBeenRunning;
+    bool mTreatAsUserInput;
+    bool mHasBeenRunningByContent;
+    bool mHasBeenRunningByChromeOrAddon;
   };
 
   // Mapping table from HTML command name to internal command.
@@ -4809,8 +4823,12 @@ class Document : public nsINode,
   // also record this as a `CountedUnknownProperty`.
   bool mHasWarnedAboutZoom : 1;
 
-  // While we're handling an execCommand call, set to true.
-  bool mIsRunningExecCommand : 1;
+  // While we're handling an execCommand call by web app, set
+  // to true.
+  bool mIsRunningExecCommandByContent : 1;
+  // While we're handling an execCommand call by an addon (or chrome script),
+  // set to true.
+  bool mIsRunningExecCommandByChromeOrAddon : 1;
 
   // True if we should change the readystate to complete after we fire
   // DOMContentLoaded. This happens when we abort a load and
