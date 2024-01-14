@@ -58,6 +58,7 @@ jobs:
 
         - name: Generate 🔄
           run: |
+            $Env:USE_MINTTY = "0" 
             $currentDirectory = Get-Location          
             $linuxStylePath = $currentDirectory.ProviderPath -replace ':', ''          
             $linuxStylePath = '/' + $linuxStylePath.Replace('\', '/')          
