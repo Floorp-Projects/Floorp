@@ -107,7 +107,7 @@ impl<K: 'static + ExtraKeys + Send + Sync> Event for EventMetric<K> {
             EventMetric::Child(_) => {
                 let now = glean::get_timestamp_ms();
                 let extra = extra.into().map(|extra| extra.into_ffi_extra());
-                let extra = extra.unwrap_or_else(HashMap::new);
+                let extra = extra.unwrap_or_default();
                 self.record_with_time(now, extra);
             }
         }
