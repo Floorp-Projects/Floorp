@@ -109,6 +109,8 @@ class PersistentBufferProvider : public RefCounted<PersistentBufferProvider>,
   virtual Maybe<SurfaceDescriptor> GetFrontBuffer() { return Nothing(); }
 
   virtual void UseCompositableForwarder(CompositableForwarder* aForwarder) {}
+
+  virtual bool WaitForRemoteTextureOwner() const { return false; }
 };
 
 class PersistentBufferProviderBasic : public PersistentBufferProvider {
@@ -175,6 +177,8 @@ class PersistentBufferProviderAccelerated : public PersistentBufferProvider {
   bool RequiresRefresh() const override;
 
   void UseCompositableForwarder(CompositableForwarder* aForwarder) override;
+
+  bool WaitForRemoteTextureOwner() const override { return true; }
 
  protected:
   explicit PersistentBufferProviderAccelerated(

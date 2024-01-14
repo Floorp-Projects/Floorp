@@ -193,6 +193,9 @@ void ShareableCanvasRenderer::UpdateCompositableClient() {
       if (!mData.mIsAlphaPremult) {
         flags |= TextureFlags::NON_PREMULTIPLIED;
       }
+      if (provider && provider->WaitForRemoteTextureOwner()) {
+        flags |= TextureFlags::WAIT_FOR_REMOTE_TEXTURE_OWNER;
+      }
       EnsurePipeline();
       forwarder->UseRemoteTexture(mCanvasClient, textureDesc.textureId(),
                                   textureDesc.ownerId(), mData.mSize, flags);
