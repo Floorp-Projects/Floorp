@@ -25,10 +25,9 @@ tasks:
                     - fenix-beta
                     - fenix-release
                     - focus-nightly
-                    # coming soon!
-                    # - focus-beta
-                    # - focus-release
-                    # - klar-release
+                    - focus-beta
+                    - focus-release
+                    - klar-release
             group-by:
                 attribute: build-type
             copy-attributes: true

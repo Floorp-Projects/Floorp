@@ -10,7 +10,7 @@ transforms:
     - taskgraph.transforms.task:transforms
 
 kind-dependencies:
-    - push-apk
+    - push-bundle
     - post-beetmover
     - github-release-components
     - github-release-apks

@@ -11,8 +11,8 @@ transforms:
 
 kind-dependencies:
     - post-beetmover
-    # TODO: Make it depend on push-apk too. At the moment, it's okay to wait solely
-    # on post-beetmover because they're part of the ship graph while push-apk is in the
+    # TODO: Make it depend on push-bundle too. At the moment, it's okay to wait solely
+    # on post-beetmover because they're part of the ship graph while push-bundle is in the
     # promote one
 
 tasks:
