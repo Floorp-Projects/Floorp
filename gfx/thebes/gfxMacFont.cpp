@@ -479,7 +479,23 @@ bool gfxMacFont::GetGlyphBounds(uint16_t aGID, gfxRect* aBounds, bool aTight) {
   gfxRect bounds(bb.origin.x, -(bb.origin.y + bb.size.height), bb.size.width,
                  bb.size.height);
   bounds.Scale(mFUnitsConvFactor);
-  *aBounds = bounds;
+
+  // For bitmap fonts (like Apple Color Emoji), CoreGraphics does not return
+  // accurate bounds, so to try and avoid clipping when the bounds are used
+  // to determine the area to render (e.g. when implementing canvas2d filters),
+  // we inflate the bounds based on global metrics from the font.
+  if (GetFontEntry()->HasColorBitmapTable()) {
+    aBounds->x = std::min(bounds.x, 0.0);
+    aBounds->width = std::max(bounds.width, mMetrics.maxAdvance);
+    // Note that y-coordinates are downwards here, and bounds.y is MINUS the
+    // glyph ascent as it measures from the baseline.
+    aBounds->y = std::min(bounds.y, -mMetrics.maxAscent);
+    aBounds->height =
+        std::max(bounds.YMost(), mMetrics.maxDescent) - aBounds->y;
+  } else {
+    *aBounds = bounds;
+  }
+
   return true;
 }
 
