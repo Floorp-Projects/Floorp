@@ -2162,10 +2162,6 @@ static bool PlainDate_toPlainMonthDay(JSContext* cx, const CallArgs& args) {
       if (!IsBuiltinAccess(cx, builtinCalendar, fieldNames)) {
         break;
       }
-    } else {
-      if (!IsBuiltinAccessForStringCalendar(cx)) {
-        break;
-      }
     }
     if (!IsBuiltinAccess(cx, temporalDate, fieldNames)) {
       break;

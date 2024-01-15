@@ -128,6 +128,8 @@ enum class CalendarMethod {
 
 class CalendarRecord {
   CalendarValue receiver_;
+
+  // Null unless non-builtin calendar methods are used.
   JSObject* dateAdd_ = nullptr;
   JSObject* dateFromFields_ = nullptr;
   JSObject* dateUntil_ = nullptr;
@@ -817,12 +819,6 @@ inline bool CalendarMethodsRecordIsBuiltin(const CalendarRecord& calendar) {
  */
 bool IsBuiltinAccess(JSContext* cx, JS::Handle<CalendarObject*> calendar,
                      std::initializer_list<CalendarField> fieldNames);
-
-/**
- * Return true when accessing the calendar fields can be optimized.
- * Otherwise returns false.
- */
-bool IsBuiltinAccessForStringCalendar(JSContext* cx);
 
 // Helper for MutableWrappedPtrOperations.
 bool WrapCalendarValue(JSContext* cx, JS::MutableHandle<JS::Value> calendar);
