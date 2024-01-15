@@ -234,8 +234,8 @@ button.text-link .button-text {
   &.small-button {
     margin: 0;
     min-height: var(--size-item-medium);
-    padding: .6em 1em;
     font-size: var(--font-size-small);
+    align-items: center;
   }
 
   &[disabled] {
