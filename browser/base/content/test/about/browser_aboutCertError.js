@@ -193,7 +193,10 @@ add_task(async function checkAdvancedDetails() {
         return errorCode && errorCode.textContent != "";
       }, "error code has been set inside the advanced button panel");
 
-      return { textContent: errorCode.textContent, tagName: errorCode.tagName.toLowerCase() };
+      return {
+        textContent: errorCode.textContent,
+        tagName: errorCode.tagName.toLowerCase(),
+      };
     });
     is(
       message.textContent,
