@@ -2031,10 +2031,24 @@ var gPrivacyPane = {
    * Displays the Clear Private Data settings dialog.
    */
   showClearPrivateDataSettings() {
+    let dialogFile = useOldClearHistoryDialog
+      ? "chrome://browser/content/preferences/dialogs/sanitize.xhtml"
+      : "chrome://browser/content/sanitize_v2.xhtml";
+
     gSubDialog.open(
-      "chrome://browser/content/preferences/dialogs/sanitize.xhtml",
-      { features: "resizable=no" }
+      dialogFile,
+      {
+        features: "resizable=no",
+      },
+      {
+        mode: "clearOnShutdown",
+        updateUsageData: this.shouldUpdateSiteUsageDataForSanitizeDialog,
+      }
     );
+
+    // Since we've opened this once we should
+    // update sites within the dialog everytime now
+    this.shouldUpdateSiteUsageDataForSanitizeDialog = true;
   },
 
   /**
@@ -2490,10 +2504,25 @@ var gPrivacyPane = {
   },
 
   clearSiteData() {
+    // We have to use the full path name to avoid getting errors in
+    // browser/base/content/test/static/browser_all_files_referenced.js
+    let dialogFile = useOldClearHistoryDialog
+      ? "chrome://browser/content/preferences/dialogs/clearSiteData.xhtml"
+      : "chrome://browser/content/sanitize_v2.xhtml";
+
     gSubDialog.open(
-      "chrome://browser/content/preferences/dialogs/clearSiteData.xhtml",
-      { features: "resizable=no" }
+      dialogFile,
+      {
+        features: "resizable=no",
+      },
+      {
+        mode: "clearSiteData",
+        updateUsageData: this.shouldUpdateSiteUsageDataForSanitizeDialog,
+      }
     );
+    // Since we've opened this once we should
+    // update sites within the dialog everytime now
+    this.shouldUpdateSiteUsageDataForSanitizeDialog = true;
   },
 
   /**

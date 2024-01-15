@@ -69,20 +69,6 @@ async function promiseHistoryClearedState(aURIs, aShouldBeCleared) {
 }
 
 /**
- * Ensures that the given pref is the expected value.
- *
- * @param {String} aPrefName
- *        The pref's sub-branch under the privacy branch
- * @param {Boolean} aExpectedVal
- *        The pref's expected value
- * @param {String} aMsg
- *        Passed to is()
- */
-function boolPrefIs(aPrefName, aExpectedVal, aMsg) {
-  is(Services.prefs.getBoolPref("privacy." + aPrefName), aExpectedVal, aMsg);
-}
-
-/**
  * Checks to see if the download with the specified path exists.
  *
  * @param  aPath
@@ -329,13 +315,10 @@ DialogHelper.prototype = {
    *        True if the checkbox should be checked, false otherwise
    */
   checkPrefCheckbox(aPrefName, aCheckState) {
-    let prefType = "cpd.";
-
-    var pref = "privacy." + prefType + aPrefName;
     var cb = this.win.document.querySelectorAll(
-      "checkbox[preference='" + pref + "']"
+      "checkbox[id='" + aPrefName + "']"
     );
-    is(cb.length, 1, "found checkbox for " + pref + " preference");
+    is(cb.length, 1, "found checkbox for " + aPrefName + " id");
     if (cb[0].checked != aCheckState) {
       cb[0].click();
     }
@@ -345,13 +328,10 @@ DialogHelper.prototype = {
    * Makes sure all the checkboxes are checked.
    */
   _checkAllCheckboxesCustom(check) {
-    var cb = this.win.document.querySelectorAll("checkbox[preference]");
-    ok(cb.length > 1, "found checkboxes for preferences");
+    var cb = this.win.document.querySelectorAll("checkbox[id]");
+    ok(cb.length, "found checkboxes for ids");
     for (var i = 0; i < cb.length; ++i) {
-      var pref = this.win.Preferences.get(cb[i].getAttribute("preference"));
-      if (!!pref.value ^ check) {
-        cb[i].click();
-      }
+      cb[i].checked = check;
     }
   },
 
@@ -516,12 +496,10 @@ async function validateDataSizes(dialogHelper) {
 
     // get the elements
     let clearCookiesAndSiteDataCheckbox =
-      dialogHelper.win.document.getElementById("clearCookiesAndSiteData");
-    let clearCacheCheckbox =
-      dialogHelper.win.document.getElementById("clearCachedContent");
-    let clearDownloadsCheckbox = dialogHelper.win.document.getElementById(
-      "clearDownloadHistory"
-    );
+      dialogHelper.win.document.getElementById("cookies");
+    let clearCacheCheckbox = dialogHelper.win.document.getElementById("cache");
+    let clearDownloadsCheckbox =
+      dialogHelper.win.document.getElementById("downloads");
 
     let [convertedQuotaUsage] = DownloadUtils.convertByteUnits(
       quotaUsage[timespans[i]]
@@ -737,18 +715,6 @@ add_task(async function test_history_downloads_checked() {
       "timeSpan pref should be hour after accepting dialog with " +
         "hour selected"
     );
-    boolPrefIs(
-      "cpd.history",
-      true,
-      "history pref should be true after accepting dialog with " +
-        "history checkbox checked"
-    );
-    boolPrefIs(
-      "cpd.downloads",
-      true,
-      "downloads pref should be true after accepting dialog with " +
-        "history checkbox checked"
-    );
 
     await promiseSanitized;
 
@@ -790,9 +756,7 @@ add_task(async function test_cannot_clear_history() {
 
   let dh = new DialogHelper();
   dh.onload = function () {
-    var cb = this.win.document.querySelectorAll(
-      "checkbox[preference='privacy.cpd.history']"
-    );
+    var cb = this.win.document.querySelectorAll("checkbox[id='history']");
     ok(
       cb.length == 1 && !cb[0].disabled,
       "There is history, checkbox to clear history should be enabled."
@@ -817,16 +781,7 @@ add_task(async function test_no_formdata_history_to_clear() {
   let promiseSanitized = promiseSanitizationComplete();
   let dh = new DialogHelper();
   dh.onload = function () {
-    boolPrefIs(
-      "cpd.history",
-      true,
-      "history pref should be true after accepting dialog with " +
-        "history checkbox checked"
-    );
-
-    var cb = this.win.document.querySelectorAll(
-      "checkbox[preference='privacy.cpd.history']"
-    );
+    var cb = this.win.document.querySelectorAll("checkbox[id='history']");
     ok(
       cb.length == 1 && !cb[0].disabled && cb[0].checked,
       "There is no history, but history checkbox should always be enabled " +
@@ -847,9 +802,7 @@ add_task(async function test_form_entries() {
 
   let dh = new DialogHelper();
   dh.onload = function () {
-    var cb = this.win.document.querySelectorAll(
-      "checkbox[preference='privacy.cpd.history']"
-    );
+    var cb = this.win.document.querySelectorAll("checkbox[id='history']");
     is(cb.length, 1, "There is only one checkbox for history and form data");
     ok(!cb[0].disabled, "The checkbox is enabled");
     ok(cb[0].checked, "The checkbox is checked");
@@ -860,58 +813,6 @@ add_task(async function test_form_entries() {
     await promiseSanitized;
     let exists = await formNameExists(formEntry);
     ok(!exists, "form entry " + formEntry + " should no longer exist");
-  };
-  dh.open();
-  await dh.promiseClosed;
-});
-
-add_task(async function test_history_formdata() {
-  let promiseSanitized = promiseSanitizationComplete();
-
-  let dh = new DialogHelper();
-  dh.onload = function () {
-    this.uncheckAllCheckboxes();
-    this.checkPrefCheckbox("history", true);
-    this.acceptDialog();
-  };
-  dh.onunload = async function () {
-    await promiseSanitized;
-    // Check if form data follows history
-    boolPrefIs("cpd.formdata", true, `form data pref follows history pref`);
-
-    boolPrefIs("cpd.sessions", false, `sessions pref follows cookies prefs`);
-
-    boolPrefIs(
-      "cpd.offlineApps",
-      false,
-      `offlineapps pref follows cookies prefs`
-    );
-  };
-  dh.open();
-  await dh.promiseClosed;
-});
-
-add_task(async function test_cookies_sessions_offlineApps() {
-  let promiseSanitized = promiseSanitizationComplete();
-
-  let dh = new DialogHelper();
-  dh.onload = function () {
-    this.uncheckAllCheckboxes();
-    this.checkPrefCheckbox("cookies", true);
-    this.acceptDialog();
-  };
-  dh.onunload = async function () {
-    await promiseSanitized;
-    // Check if form data follows history
-    boolPrefIs("cpd.formdata", false, `form data pref follows history pref`);
-
-    boolPrefIs("cpd.sessions", true, `sessions pref follows cookies prefs`);
-
-    boolPrefIs(
-      "cpd.offlineApps",
-      true,
-      `offlineapps pref follows cookies prefs`
-    );
   };
   dh.open();
   await dh.promiseClosed;
@@ -1011,9 +912,7 @@ add_task(async function test_single_download() {
     this.uncheckAllCheckboxes();
     this.checkPrefCheckbox("downloads", true);
     this.selectDuration(Sanitizer.TIMESPAN_EVERYTHING);
-    let clearDownloadsCheckbox = dh.win.document.getElementById(
-      "clearDownloadHistory"
-    );
+    let clearDownloadsCheckbox = dh.win.document.getElementById("downloads");
     // Wait for the UI to update
     await dh.win.document.l10n.translateElements([clearDownloadsCheckbox]);
     ok(
