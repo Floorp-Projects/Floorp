@@ -1,25 +1,19 @@
-<?xml version="1.0" encoding="UTF-8"?>
-
 <!DOCTYPE html>
-
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-
-<html xmlns="http://www.w3.org/1999/xhtml" data-l10n-sync="true">
+<html data-l10n-sync="true">
   <head>
-    <meta http-equiv="Content-Security-Policy" content="default-src chrome:; object-src 'none'" />
-    <meta name="color-scheme" content="light dark" />
+    <meta http-equiv="Content-Security-Policy" content="default-src chrome:; object-src 'none'">
+    <meta name="color-scheme" content="light dark">
     <title data-l10n-id="neterror-page-title"></title>
-    <link rel="stylesheet" href="chrome://global/skin/aboutNetError.css" type="text/css" media="all" />
-    <link rel="icon" id="favicon"/>
-    <link rel="localization" href="branding/brand.ftl"/>
-    <link rel="localization" href="toolkit/neterror/certError.ftl" />
-    <link rel="localization" href="toolkit/neterror/netError.ftl"/>
+    <link rel="stylesheet" href="chrome://global/skin/aboutNetError.css" type="text/css" media="all">
+    <link rel="icon" id="favicon">
+    <link rel="localization" href="branding/brand.ftl">
+    <link rel="localization" href="toolkit/neterror/certError.ftl">
+    <link rel="localization" href="toolkit/neterror/netError.ftl">
   </head>
-
   <body>
-    <!-- PAGE CONTAINER (for styling purposes only) -->
     <div class="container">
       <div id="text-container">
         <!-- Error Title -->
@@ -40,7 +34,7 @@
         <!-- Long Description -->
         <div id="errorLongDesc"></div>
 
-        <p id="trrOnlyContainer" hidden="">
+        <div id="trrOnlyContainer" hidden="">
           <p id="trrOnlyMessage"></p>
           <div class="trr-message-container">
             <span id="trrOnlyDescription"></span>
@@ -49,9 +43,9 @@
             </p>
           </div>
           <p data-l10n-id="neterror-dns-not-found-trr-third-party-warning2"> </p>
-        </p>
+        </div>
 
-        <p id="nativeFallbackContainer" hidden="">
+        <div id="nativeFallbackContainer" hidden="">
           <p id="nativeFallbackMessage"></p>
           <div class="trr-message-container">
             <span id="nativeFallbackDescription"></span>
@@ -60,7 +54,7 @@
             </p>
           </div>
           <p data-l10n-id="neterror-dns-not-found-trr-third-party-warning2"> </p>
-        </p>
+        </div>
 
         <p id="tlsVersionNotice" hidden=""></p>
 
@@ -109,7 +103,7 @@
 
         <div id="blockingErrorReporting" class="advanced-panel" hidden="">
           <p class="toggle-container-with-text">
-            <input type="checkbox" id="automaticallyReportBlockingInFuture" role="checkbox"/>
+            <input type="checkbox" id="automaticallyReportBlockingInFuture" role="checkbox">
             <label for="automaticallyReportBlockingInFuture" data-l10n-id="neterror-error-reporting-automatic"></label>
           </p>
         </div>
@@ -121,7 +115,7 @@
         </div>
       </div>
     </div>
+    <script src="chrome://global/content/neterror/aboutNetErrorCodes.js"></script>
+    <script type="module" src="chrome://global/content/aboutNetError.mjs"></script>
   </body>
-  <script src="chrome://global/content/neterror/aboutNetErrorCodes.js"></script>
-  <script type="module" src="chrome://global/content/aboutNetError.mjs"></script>
 </html>
