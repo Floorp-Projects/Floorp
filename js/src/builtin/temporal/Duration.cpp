@@ -664,57 +664,6 @@ static bool MoveRelativeDate(
 }
 
 /**
- * MoveRelativeDate ( calendarRec, relativeTo, duration )
- */
-static bool MoveRelativeDate(
-    JSContext* cx, Handle<CalendarRecord> calendar,
-    Handle<Wrapped<PlainDateObject*>> relativeTo,
-    Handle<DurationObject*> duration,
-    MutableHandle<Wrapped<PlainDateObject*>> relativeToResult,
-    int32_t* daysResult) {
-  auto* unwrappedRelativeTo = relativeTo.unwrap(cx);
-  if (!unwrappedRelativeTo) {
-    return false;
-  }
-  auto relativeToDate = ToPlainDate(unwrappedRelativeTo);
-
-  // Step 1.
-  auto newDate = AddDate(cx, calendar, relativeTo, duration);
-  if (!newDate) {
-    return false;
-  }
-  auto later = ToPlainDate(&newDate.unwrap());
-  relativeToResult.set(newDate);
-
-  // Step 2.
-  *daysResult = DaysUntil(relativeToDate, later);
-  MOZ_ASSERT(std::abs(*daysResult) <= 200'000'000);
-
-  // Step 3.
-  return true;
-}
-
-static bool MoveRelativeDateLoop(
-    JSContext* cx, Handle<CalendarRecord> calendar,
-    Handle<Wrapped<PlainDateObject*>> dateRelativeTo,
-    Handle<DurationObject*> duration) {
-  Rooted<Wrapped<PlainDateObject*>> newRelativeTo(cx, dateRelativeTo.get());
-  while (true) {
-    // This loop can iterate indefinitely when given a specially crafted
-    // calendar object, so we need to check for interrupts.
-    if (!CheckForInterrupt(cx)) {
-      return false;
-    }
-
-    int32_t ignored;
-    if (!MoveRelativeDate(cx, calendar, newRelativeTo, duration, &newRelativeTo,
-                          &ignored)) {
-      return false;
-    }
-  }
-}
-
-/**
  * MoveRelativeZonedDateTime ( zonedDateTime, calendarRec, timeZoneRec, years,
  * months, weeks, days, precalculatedPlainDateTime )
  */
@@ -4160,24 +4109,21 @@ static BigInt* DaysFrom(JSContext* cx,
 
 static bool TruncateDays(JSContext* cx,
                          Handle<temporal::NanosecondsAndDays> nanosAndDays,
-                         double days, int32_t monthsWeeksInDays,
-                         double* result) {
-  double extraDays = nanosAndDays.daysNumber();
-
+                         double days, int32_t daysToAdd, double* result) {
   do {
     int64_t intDays;
     if (!mozilla::NumberEqualsInt64(days, &intDays)) {
       break;
     }
 
-    int64_t intExtraDays;
-    if (!mozilla::NumberEqualsInt64(extraDays, &intExtraDays)) {
+    auto nanoDays = DaysFrom(nanosAndDays);
+    if (!nanoDays) {
       break;
     }
 
     auto totalDays = mozilla::CheckedInt64(intDays);
-    totalDays += intExtraDays;
-    totalDays += monthsWeeksInDays;
+    totalDays += *nanoDays;
+    totalDays += daysToAdd;
     if (!totalDays.isValid()) {
       break;
     }
@@ -4206,23 +4152,22 @@ static bool TruncateDays(JSContext* cx,
     return false;
   }
 
-  Rooted<BigInt*> biExtraDays(cx, BigInt::createFromDouble(cx, extraDays));
-  if (!biExtraDays) {
+  Rooted<BigInt*> biNanoDays(cx, DaysFrom(cx, nanosAndDays));
+  if (!biNanoDays) {
     return false;
   }
 
-  Rooted<BigInt*> biMonthsWeeksInDays(
-      cx, BigInt::createFromInt64(cx, monthsWeeksInDays));
-  if (!biMonthsWeeksInDays) {
+  Rooted<BigInt*> biDaysToAdd(cx, BigInt::createFromInt64(cx, daysToAdd));
+  if (!biDaysToAdd) {
     return false;
   }
 
-  Rooted<BigInt*> truncatedDays(cx, BigInt::add(cx, biDays, biExtraDays));
+  Rooted<BigInt*> truncatedDays(cx, BigInt::add(cx, biDays, biNanoDays));
   if (!truncatedDays) {
     return false;
   }
 
-  truncatedDays = BigInt::add(cx, truncatedDays, biMonthsWeeksInDays);
+  truncatedDays = BigInt::add(cx, truncatedDays, biDaysToAdd);
   if (!truncatedDays) {
     return false;
   }
@@ -4251,63 +4196,95 @@ static bool TruncateDays(JSContext* cx,
   return true;
 }
 
-static bool RoundDurationYearSlow(
-    JSContext* cx, const Duration& duration, double yearsPassed,
-    int32_t monthsWeeksInDays, int32_t daysPassed,
-    Handle<temporal::NanosecondsAndDays> nanosAndDays, int32_t oneYearDays,
+static bool DaysIsNegative(double days,
+                           Handle<temporal::NanosecondsAndDays> nanosAndDays,
+                           int32_t daysToAdd) {
+  // Numbers of days between nsMinInstant and nsMaxInstant.
+  static constexpr int32_t epochDays = 200'000'000;
+
+  MOZ_ASSERT(std::abs(daysToAdd) <= epochDays * 2);
+
+  // We don't need the exact value, so it's safe to convert from BigInt.
+  double nanoDays = nanosAndDays.daysNumber();
+
+  // When non-zero |days| and |nanoDays| have oppositive signs, the absolute
+  // value of |days| is less-or-equal to |epochDays|. That means when adding
+  // |days + nanoDays| we don't have to worry about a case like:
+  //
+  // days = 9007199254740991 and
+  // nanoDays = 𝔽(-9007199254740993) = -9007199254740992
+  //
+  // ℝ(𝔽(days) + 𝔽(nanoDays)) is -1, whereas the correct result is -2.
+  MOZ_ASSERT((days <= 0 && nanoDays <= 0) || (days >= 0 && nanoDays >= 0) ||
+             std::abs(days) <= epochDays);
+
+  // This addition can be imprecise, so |daysApproximation| is only an
+  // approximation of the actual value.
+  double daysApproximation = days + nanoDays;
+
+  if (std::abs(daysApproximation) <= epochDays * 2) {
+    int32_t intDays = int32_t(daysApproximation) + daysToAdd;
+    return intDays < 0 ||
+           (intDays == 0 && nanosAndDays.nanoseconds() < InstantSpan{});
+  }
+
+  // |daysApproximation| is too large, adding |daysToAdd| and |daysToSubtract|
+  // doesn't change the sign.
+  return daysApproximation < 0;
+}
+
+struct RoundedNumber {
+  double rounded;
+  double total;
+};
+
+static bool RoundNumberToIncrementSlow(
+    JSContext* cx, double durationAmount, double amountPassed,
+    double durationDays, int32_t daysToAdd,
+    Handle<temporal::NanosecondsAndDays> nanosAndDays, int32_t oneUnitDays,
     Increment increment, TemporalRoundingMode roundingMode,
-    ComputeRemainder computeRemainder, RoundedDuration* result) {
+    ComputeRemainder computeRemainder, RoundedNumber* result) {
   MOZ_ASSERT(nanosAndDays.dayLength() > InstantSpan{});
   MOZ_ASSERT(nanosAndDays.nanoseconds().abs() < nanosAndDays.dayLength().abs());
+  MOZ_ASSERT(oneUnitDays != 0);
 
-  Rooted<BigInt*> years(cx, BigInt::createFromDouble(cx, duration.years));
-  if (!years) {
+  Rooted<BigInt*> biAmount(cx, BigInt::createFromDouble(cx, durationAmount));
+  if (!biAmount) {
     return false;
   }
 
-  Rooted<BigInt*> biYearsPassed(cx, BigInt::createFromDouble(cx, yearsPassed));
-  if (!biYearsPassed) {
+  Rooted<BigInt*> biAmountPassed(cx,
+                                 BigInt::createFromDouble(cx, amountPassed));
+  if (!biAmountPassed) {
     return false;
   }
 
-  years = BigInt::add(cx, years, biYearsPassed);
-  if (!years) {
+  biAmount = BigInt::add(cx, biAmount, biAmountPassed);
+  if (!biAmount) {
     return false;
   }
 
-  Rooted<BigInt*> days(cx, BigInt::createFromDouble(cx, duration.days));
+  Rooted<BigInt*> days(cx, BigInt::createFromDouble(cx, durationDays));
   if (!days) {
     return false;
   }
 
-  Rooted<BigInt*> extraDays(
-      cx, BigInt::createFromDouble(cx, nanosAndDays.daysNumber()));
-  if (!extraDays) {
+  Rooted<BigInt*> nanoDays(cx, DaysFrom(cx, nanosAndDays));
+  if (!nanoDays) {
     return false;
   }
 
-  Rooted<BigInt*> biMonthsWeeksInDays(
-      cx, BigInt::createFromInt64(cx, monthsWeeksInDays));
-  if (!biMonthsWeeksInDays) {
+  Rooted<BigInt*> biDaysToAdd(cx, BigInt::createFromInt64(cx, daysToAdd));
+  if (!biDaysToAdd) {
     return false;
   }
 
-  Rooted<BigInt*> biDaysPassed(cx, BigInt::createFromInt64(cx, daysPassed));
-  if (!biDaysPassed) {
-    return false;
-  }
-
-  days = BigInt::add(cx, days, extraDays);
+  days = BigInt::add(cx, days, nanoDays);
   if (!days) {
     return false;
   }
 
-  days = BigInt::add(cx, days, biMonthsWeeksInDays);
-  if (!days) {
-    return false;
-  }
-
-  days = BigInt::sub(cx, days, biDaysPassed);
+  days = BigInt::add(cx, days, biDaysToAdd);
   if (!days) {
     return false;
   }
@@ -4324,16 +4301,8 @@ static bool RoundDurationYearSlow(
     return false;
   }
 
-  // FIXME: spec bug division by zero not handled
-  // https://github.com/tc39/proposal-temporal/issues/2335
-  if (oneYearDays == 0) {
-    JS_ReportErrorASCII(cx, "division by zero");
-    return false;
-  }
-
-  // Steps 10.z-ab.
   Rooted<BigInt*> denominator(
-      cx, BigInt::createFromInt64(cx, std::abs(oneYearDays)));
+      cx, BigInt::createFromInt64(cx, std::abs(oneUnitDays)));
   if (!denominator) {
     return false;
   }
@@ -4353,43 +4322,173 @@ static bool RoundDurationYearSlow(
     return false;
   }
 
-  Rooted<BigInt*> yearNanos(cx, BigInt::mul(cx, years, denominator));
-  if (!yearNanos) {
+  Rooted<BigInt*> amountNanos(cx, BigInt::mul(cx, biAmount, denominator));
+  if (!amountNanos) {
     return false;
   }
 
-  totalNanoseconds = BigInt::add(cx, totalNanoseconds, yearNanos);
+  totalNanoseconds = BigInt::add(cx, totalNanoseconds, amountNanos);
   if (!totalNanoseconds) {
     return false;
   }
 
-  double numYears;
+  double rounded;
   double total = 0;
   if (computeRemainder == ComputeRemainder::No) {
     if (!temporal::RoundNumberToIncrement(cx, totalNanoseconds, denominator,
-                                          increment, roundingMode, &numYears)) {
+                                          increment, roundingMode, &rounded)) {
       return false;
     }
   } else {
-    if (!::TruncateNumber(cx, totalNanoseconds, denominator, &numYears,
+    if (!::TruncateNumber(cx, totalNanoseconds, denominator, &rounded,
                           &total)) {
       return false;
     }
   }
 
-  // Step 10.ac.
-  double numMonths = 0;
-  double numWeeks = 0;
-
-  // Step 20.
-  Duration resultDuration = {numYears, numMonths, numWeeks};
-  if (!ThrowIfInvalidDuration(cx, resultDuration)) {
-    return false;
-  }
-
-  // Step 21.
-  *result = {resultDuration, total};
+  *result = {rounded, total};
   return true;
+}
+
+static bool RoundNumberToIncrement(
+    JSContext* cx, double durationAmount, double amountPassed,
+    double durationDays, int32_t daysToAdd,
+    Handle<temporal::NanosecondsAndDays> nanosAndDays, int32_t oneUnitDays,
+    Increment increment, TemporalRoundingMode roundingMode,
+    ComputeRemainder computeRemainder, RoundedNumber* result) {
+  MOZ_ASSERT(nanosAndDays.dayLength() > InstantSpan{});
+  MOZ_ASSERT(nanosAndDays.nanoseconds().abs() < nanosAndDays.dayLength().abs());
+  MOZ_ASSERT(oneUnitDays != 0);
+
+  // TODO(anba): Rename variables.
+
+  // clang-format off
+  //
+  // Change the representation of |fractionalWeeks| from a real number to a
+  // rational number, because we don't support arbitrary precision real
+  // numbers.
+  //
+  // |fractionalWeeks| is defined as:
+  //
+  //   fractionalWeeks
+  // = weeks + days' / abs(oneWeekDays)
+  //
+  // where days' = days + nanoseconds / dayLength.
+  //
+  // The fractional part |nanoseconds / dayLength| is from step 4.
+  //
+  // The denominator for |fractionalWeeks| is |dayLength * abs(oneWeekDays)|.
+  //
+  //   fractionalWeeks
+  // = weeks + (days + nanoseconds / dayLength) / abs(oneWeekDays)
+  // = weeks + days / abs(oneWeekDays) + nanoseconds / (dayLength * abs(oneWeekDays))
+  // = (weeks * dayLength * abs(oneWeekDays) + days * dayLength + nanoseconds) / (dayLength * abs(oneWeekDays))
+  //
+  // clang-format on
+
+  do {
+    auto nanoseconds = nanosAndDays.nanoseconds().toNanoseconds();
+    if (!nanoseconds.isValid()) {
+      break;
+    }
+
+    auto dayLength = nanosAndDays.dayLength().toNanoseconds();
+    if (!dayLength.isValid()) {
+      break;
+    }
+
+    auto denominator = dayLength * std::abs(oneUnitDays);
+    if (!denominator.isValid()) {
+      break;
+    }
+
+    int64_t intDays;
+    if (!mozilla::NumberEqualsInt64(durationDays, &intDays)) {
+      break;
+    }
+
+    auto nanoDays = DaysFrom(nanosAndDays);
+    if (!nanoDays) {
+      break;
+    }
+
+    auto totalDays = mozilla::CheckedInt64(intDays);
+    totalDays += *nanoDays;
+    totalDays += daysToAdd;
+    if (!totalDays.isValid()) {
+      break;
+    }
+
+    auto totalNanoseconds = dayLength * totalDays;
+    if (!totalNanoseconds.isValid()) {
+      break;
+    }
+
+    totalNanoseconds += nanoseconds;
+    if (!totalNanoseconds.isValid()) {
+      break;
+    }
+
+    int64_t intAmount;
+    if (!mozilla::NumberEqualsInt64(durationAmount, &intAmount)) {
+      break;
+    }
+
+    int64_t intAmountPassed;
+    if (!mozilla::NumberEqualsInt64(amountPassed, &intAmountPassed)) {
+      break;
+    }
+
+    auto totalAmount = mozilla::CheckedInt64(intAmount) + intAmountPassed;
+    if (!totalAmount.isValid()) {
+      break;
+    }
+
+    auto amountNanos = denominator * totalAmount;
+    if (!amountNanos.isValid()) {
+      break;
+    }
+
+    totalNanoseconds += amountNanos;
+    if (!totalNanoseconds.isValid()) {
+      break;
+    }
+
+    double rounded;
+    double total = 0;
+    if (computeRemainder == ComputeRemainder::No) {
+      if (!temporal::RoundNumberToIncrement(cx, totalNanoseconds.value(),
+                                            denominator.value(), increment,
+                                            roundingMode, &rounded)) {
+        return false;
+      }
+    } else {
+      TruncateNumber(totalNanoseconds.value(), denominator.value(), &rounded,
+                     &total);
+    }
+
+    *result = {rounded, total};
+    return true;
+  } while (false);
+
+  return RoundNumberToIncrementSlow(
+      cx, durationAmount, amountPassed, durationDays, daysToAdd, nanosAndDays,
+      oneUnitDays, increment, roundingMode, computeRemainder, result);
+}
+
+static bool RoundNumberToIncrement(
+    JSContext* cx, double durationDays,
+    Handle<temporal::NanosecondsAndDays> nanosAndDays, Increment increment,
+    TemporalRoundingMode roundingMode, ComputeRemainder computeRemainder,
+    RoundedNumber* result) {
+  constexpr double daysAmount = 0;
+  constexpr double daysPassed = 0;
+  constexpr int32_t oneDayDays = 1;
+  constexpr int32_t daysToAdd = 0;
+
+  return RoundNumberToIncrement(cx, daysAmount, daysPassed, durationDays,
+                                daysToAdd, nanosAndDays, oneDayDays, increment,
+                                roundingMode, computeRemainder, result);
 }
 
 static bool RoundDurationYear(JSContext* cx, const Duration& duration,
@@ -4406,137 +4505,115 @@ static bool RoundDurationYear(JSContext* cx, const Duration& duration,
   double years = duration.years;
   double months = duration.months;
   double weeks = duration.weeks;
+  double days = duration.days;
 
   // Step 10.a.
-  MOZ_ASSERT(
-      CalendarMethodsRecordHasLookedUp(calendar, CalendarMethod::DateAdd));
-
-  // Step 10.b.
-  MOZ_ASSERT(
-      CalendarMethodsRecordHasLookedUp(calendar, CalendarMethod::DateUntil));
-
-  // Step 10.c.
   Duration yearsDuration = {years};
 
-  // Step 10.d.
+  // Step 10.b.
   auto yearsLater = AddDate(cx, calendar, dateRelativeTo, yearsDuration);
   if (!yearsLater) {
     return false;
   }
   auto yearsLaterDate = ToPlainDate(&yearsLater.unwrap());
 
-  // Step 10.h. (Reordered)
+  // Step 10.f. (Reordered)
   Rooted<Wrapped<PlainDateObject*>> newRelativeTo(cx, yearsLater);
 
-  // Step 10.e.
+  // Step 10.c.
   Duration yearsMonthsWeeks = {years, months, weeks};
 
-  // Step 10.f.
+  // Step 10.d.
   PlainDate yearsMonthsWeeksLater;
   if (!AddDate(cx, calendar, dateRelativeTo, yearsMonthsWeeks,
                &yearsMonthsWeeksLater)) {
     return false;
   }
 
-  // Step 10.g.
+  // Step 10.e.
   int32_t monthsWeeksInDays = DaysUntil(yearsLaterDate, yearsMonthsWeeksLater);
   MOZ_ASSERT(std::abs(monthsWeeksInDays) <= epochDays);
 
-  // Step 10.h. (Moved up)
+  // Step 10.f. (Moved up)
 
-  // Step 7.b.iii. (Reordered)
-  double days = duration.days;
-  double extraDays = nanosAndDays.daysNumber();
-
-  // Non-zero |days| and |extraDays| can't have oppositive signs. That means
-  // when adding |days + extraDays| we don't have to worry about a case like:
-  //
-  // days = 9007199254740991 and
-  // extraDays = 𝔽(-9007199254740993) = -9007199254740992
-  //
-  // ℝ(𝔽(days) + 𝔽(extraDays)) is -1, whereas the correct result is -2.
-  MOZ_ASSERT((days <= 0 && extraDays <= 0) || (days >= 0 && extraDays >= 0));
-
-  // This addition can be imprecise, so |daysApproximation| is only an
-  // approximation of the actual value.
-  double daysApproximation = days + extraDays;
-
-  // Step 10.i.
+  // Step 10.g.
   // Our implementation keeps |days| and |monthsWeeksInDays| separate.
 
   // FIXME: spec issue - truncation doesn't match the spec polyfill.
   // https://github.com/tc39/proposal-temporal/issues/2540
 
+  // Step 10.h.
   double truncatedDays;
   if (!TruncateDays(cx, nanosAndDays, days, monthsWeeksInDays,
                     &truncatedDays)) {
     return false;
   }
 
-  // TODO: This assertion may not hold with user-defined calendar and time zone
-  // objects, in which case |truncatedDays| could be Infinity.
-  MOZ_ASSERT(IsInteger(truncatedDays));
+  // FIXME: spec bug - truncated days can be infinity:
+  //
+  // Temporal.Duration.from({
+  //   days: Number.MAX_VALUE,
+  //   hours: Number.MAX_VALUE,
+  // }).round({
+  //   smallestUnit: "years",
+  //   relativeTo: "1970-01-01",
+  // });
+  if (!IsInteger(truncatedDays)) {
+    MOZ_ASSERT(std::isinf(truncatedDays));
+    JS_ReportErrorASCII(cx, "truncated days is infinity");
+    return false;
+  }
 
-  // Step 10.j.
   PlainDate isoResult;
   if (!AddISODate(cx, yearsLaterDate, {0, 0, 0, truncatedDays},
                   TemporalOverflow::Constrain, &isoResult)) {
     return false;
   }
 
-  // Step 10.k.
+  // Step 10.i.
   Rooted<PlainDateObject*> wholeDaysLater(
       cx, CreateTemporalDate(cx, isoResult, calendar.receiver()));
   if (!wholeDaysLater) {
     return false;
   }
 
-  // Steps 10.l-n.
+  // Steps 10.j-l.
   Duration timePassed;
   if (!DifferenceDate(cx, calendar, newRelativeTo, wholeDaysLater,
                       TemporalUnit::Year, &timePassed)) {
     return false;
   }
 
-  // Step 10.o.
+  // Step 10.m.
   double yearsPassed = timePassed.years;
 
-  // Step 10.p.
+  // Step 10.n.
   // Our implementation keeps |years| and |yearsPassed| separate.
 
-  // Step 10.q.
-  yearsDuration = {yearsPassed};
+  // Step 10.o.
+  Duration yearsPassedDuration = {yearsPassed};
 
-  // Steps 10.r-t.
+  // Steps 10.p-r.
   int32_t daysPassed;
-  if (!MoveRelativeDate(cx, calendar, newRelativeTo, yearsDuration,
+  if (!MoveRelativeDate(cx, calendar, newRelativeTo, yearsPassedDuration,
                         &newRelativeTo, &daysPassed)) {
     return false;
   }
   MOZ_ASSERT(std::abs(daysPassed) <= epochDays);
 
-  // Step 10.u.
+  // Step 10.s.
+  //
   // Our implementation keeps |days| and |daysPassed| separate.
+  int32_t daysToAdd = monthsWeeksInDays - daysPassed;
+  MOZ_ASSERT(std::abs(daysToAdd) <= epochDays * 2);
 
-  // Steps 10.v.
-  bool daysIsNegative;
-  if (std::abs(daysApproximation) <= epochDays * 2) {
-    int32_t intDays =
-        int32_t(daysApproximation) + monthsWeeksInDays - daysPassed;
-    daysIsNegative =
-        intDays < 0 ||
-        (intDays == 0 && nanosAndDays.nanoseconds() < InstantSpan{});
-  } else {
-    // |daysApproximation| is too large, adding |monthsWeeksInDays| and
-    // |daysPassed| doesn't change the sign.
-    daysIsNegative = daysApproximation < 0;
-  }
-  double sign = daysIsNegative ? -1 : 1;
+  // Steps 10.t.
+  double sign = DaysIsNegative(days, nanosAndDays, daysToAdd) ? -1 : 1;
 
-  // Step 10.w.
+  // Step 10.u.
   Duration oneYear = {sign};
 
-  // Steps 10.x-y.
+  // Steps 10.v-w.
   Rooted<Wrapped<PlainDateObject*>> moveResultIgnored(cx);
   int32_t oneYearDays;
   if (!MoveRelativeDate(cx, calendar, newRelativeTo, oneYear,
@@ -4544,213 +4621,30 @@ static bool RoundDurationYear(JSContext* cx, const Duration& duration,
     return false;
   }
 
-  do {
-    auto nanoseconds = nanosAndDays.nanoseconds().toNanoseconds();
-    if (!nanoseconds.isValid()) {
-      break;
-    }
+  // Step 10.x.
 
-    auto dayLength = nanosAndDays.dayLength().toNanoseconds();
-    if (!dayLength.isValid()) {
-      break;
-    }
-
-    // FIXME: spec bug division by zero not handled
-    // https://github.com/tc39/proposal-temporal/issues/2335
-    if (oneYearDays == 0) {
-      JS_ReportErrorASCII(cx, "division by zero");
-      return false;
-    }
-
-    // Steps 10.z-ab.
-    auto denominator = dayLength * std::abs(oneYearDays);
-    if (!denominator.isValid()) {
-      break;
-    }
-
-    int64_t intDays;
-    if (!mozilla::NumberEqualsInt64(days, &intDays)) {
-      break;
-    }
-
-    int64_t intExtraDays;
-    if (!mozilla::NumberEqualsInt64(extraDays, &intExtraDays)) {
-      break;
-    }
-
-    auto totalDays = mozilla::CheckedInt64(intDays);
-    totalDays += intExtraDays;
-    totalDays += monthsWeeksInDays;
-    totalDays -= daysPassed;
-    if (!totalDays.isValid()) {
-      break;
-    }
-
-    auto totalNanoseconds = dayLength * totalDays;
-    if (!totalNanoseconds.isValid()) {
-      break;
-    }
-
-    totalNanoseconds += nanoseconds;
-    if (!totalNanoseconds.isValid()) {
-      break;
-    }
-
-    int64_t intYears;
-    if (!mozilla::NumberEqualsInt64(years, &intYears)) {
-      break;
-    }
-
-    int64_t intYearsPassed;
-    if (!mozilla::NumberEqualsInt64(yearsPassed, &intYearsPassed)) {
-      break;
-    }
-
-    auto totalYears = mozilla::CheckedInt64(intYears) + intYearsPassed;
-    if (!totalYears.isValid()) {
-      break;
-    }
-
-    auto yearNanos = denominator * totalYears;
-    if (!yearNanos.isValid()) {
-      break;
-    }
-
-    totalNanoseconds += yearNanos;
-    if (!totalNanoseconds.isValid()) {
-      break;
-    }
-
-    double numYears;
-    double total = 0;
-    if (computeRemainder == ComputeRemainder::No) {
-      if (!temporal::RoundNumberToIncrement(cx, totalNanoseconds.value(),
-                                            denominator.value(), increment,
-                                            roundingMode, &numYears)) {
-        return false;
-      }
-    } else {
-      TruncateNumber(totalNanoseconds.value(), denominator.value(), &numYears,
-                     &total);
-    }
-
-    // Step 10.ac.
-    double numMonths = 0;
-    double numWeeks = 0;
-
-    // Step 20.
-    Duration resultDuration = {numYears, numMonths, numWeeks};
-    if (!ThrowIfInvalidDuration(cx, resultDuration)) {
-      return false;
-    }
-
-    // Step 21.
-    *result = {resultDuration, total};
-    return true;
-  } while (false);
-
-  // Steps 10.z-ac and 20-21.
-  return RoundDurationYearSlow(cx, duration, yearsPassed, monthsWeeksInDays,
-                               daysPassed, nanosAndDays, oneYearDays, increment,
-                               roundingMode, computeRemainder, result);
-}
-
-static bool RoundDurationMonthSlow(
-    JSContext* cx, const Duration& duration, int64_t monthsToAdd, int32_t days,
-    Handle<temporal::NanosecondsAndDays> nanosAndDays, int32_t oneMonthDays,
-    Increment increment, TemporalRoundingMode roundingMode,
-    ComputeRemainder computeRemainder, RoundedDuration* result) {
-  MOZ_ASSERT(nanosAndDays.dayLength() > InstantSpan{});
-  MOZ_ASSERT(nanosAndDays.nanoseconds().abs() < nanosAndDays.dayLength().abs());
-  MOZ_ASSERT(oneMonthDays != 0);
-
-  Rooted<BigInt*> months(cx, BigInt::createFromDouble(cx, duration.months));
-  if (!months) {
+  // FIXME: spec bug division by zero not handled
+  // https://github.com/tc39/proposal-temporal/issues/2335
+  if (oneYearDays == 0) {
+    JS_ReportErrorASCII(cx, "division by zero");
     return false;
   }
 
-  Rooted<BigInt*> biMonthsToAdd(cx, BigInt::createFromInt64(cx, monthsToAdd));
-  if (!biMonthsToAdd) {
+  // Steps 10.y-aa.
+  RoundedNumber rounded;
+  if (!RoundNumberToIncrement(cx, years, yearsPassed, days, daysToAdd,
+                              nanosAndDays, oneYearDays, increment,
+                              roundingMode, computeRemainder, &rounded)) {
     return false;
   }
+  auto [numYears, total] = rounded;
 
-  months = BigInt::add(cx, months, biMonthsToAdd);
-  if (!months) {
-    return false;
-  }
-
-  Rooted<BigInt*> biDays(cx, BigInt::createFromInt64(cx, days));
-  if (!biDays) {
-    return false;
-  }
-
-  Rooted<BigInt*> nanoseconds(
-      cx, ToEpochNanoseconds(cx, nanosAndDays.nanoseconds()));
-  if (!nanoseconds) {
-    return false;
-  }
-
-  Rooted<BigInt*> dayLength(cx,
-                            ToEpochNanoseconds(cx, nanosAndDays.dayLength()));
-  if (!dayLength) {
-    return false;
-  }
-
-  Rooted<BigInt*> biOneMonthDays(
-      cx, BigInt::createFromInt64(cx, std::abs(oneMonthDays)));
-  if (!biOneMonthDays) {
-    return false;
-  }
-
-  // Steps 11.o-q.
-  Rooted<BigInt*> denominator(cx, BigInt::mul(cx, biOneMonthDays, dayLength));
-  if (!denominator) {
-    return false;
-  }
-
-  Rooted<BigInt*> totalNanoseconds(cx, BigInt::mul(cx, biDays, dayLength));
-  if (!totalNanoseconds) {
-    return false;
-  }
-
-  totalNanoseconds = BigInt::add(cx, totalNanoseconds, nanoseconds);
-  if (!totalNanoseconds) {
-    return false;
-  }
-
-  Rooted<BigInt*> monthNanos(cx, BigInt::mul(cx, months, denominator));
-  if (!monthNanos) {
-    return false;
-  }
-
-  totalNanoseconds = BigInt::add(cx, totalNanoseconds, monthNanos);
-  if (!totalNanoseconds) {
-    return false;
-  }
-
-  double numMonths;
-  double total = 0;
-  if (computeRemainder == ComputeRemainder::No) {
-    if (!temporal::RoundNumberToIncrement(cx, totalNanoseconds, denominator,
-                                          increment, roundingMode,
-                                          &numMonths)) {
-      return false;
-    }
-  } else {
-    if (!::TruncateNumber(cx, totalNanoseconds, denominator, &numMonths,
-                          &total)) {
-      return false;
-    }
-  }
-
-  // Step 11.r.
+  // Step 10.ab.
+  double numMonths = 0;
   double numWeeks = 0;
 
-  // Step 7.d.
-  double numDays = 0;
-
   // Step 20.
-  Duration resultDuration = {duration.years, numMonths, numWeeks, numDays};
+  Duration resultDuration = {numYears, numMonths, numWeeks};
   if (!ThrowIfInvalidDuration(cx, resultDuration)) {
     return false;
   }
@@ -4773,370 +4667,144 @@ static bool RoundDurationMonth(
   double years = duration.years;
   double months = duration.months;
   double weeks = duration.weeks;
+  double days = duration.days;
 
   // Step 11.a.
-  MOZ_ASSERT(
-      CalendarMethodsRecordHasLookedUp(calendar, CalendarMethod::DateAdd));
+  Duration yearsMonths = {years, months};
 
   // Step 11.b.
-  Rooted<DurationObject*> yearsMonths(
-      cx, CreateTemporalDuration(cx, {years, months}));
-  if (!yearsMonths) {
-    return false;
-  }
-
-  // Step 11.c.
   auto yearsMonthsLater = AddDate(cx, calendar, dateRelativeTo, yearsMonths);
   if (!yearsMonthsLater) {
     return false;
   }
   auto yearsMonthsLaterDate = ToPlainDate(&yearsMonthsLater.unwrap());
 
-  // Step 11.g. (Reordered)
+  // Step 11.f. (Reordered)
   Rooted<Wrapped<PlainDateObject*>> newRelativeTo(cx, yearsMonthsLater);
 
-  // Step 11.d.
+  // Step 11.c.
   Duration yearsMonthsWeeks = {years, months, weeks};
 
-  // Step 11.e.
+  // Step 11.d.
   PlainDate yearsMonthsWeeksLater;
   if (!AddDate(cx, calendar, dateRelativeTo, yearsMonthsWeeks,
                &yearsMonthsWeeksLater)) {
     return false;
   }
 
-  // Step 11.f.
+  // Step 11.e.
   int32_t weeksInDays = DaysUntil(yearsMonthsLaterDate, yearsMonthsWeeksLater);
   MOZ_ASSERT(std::abs(weeksInDays) <= epochDays);
 
-  // Step 11.g. (Moved up)
+  // Step 11.f. (Moved up)
 
-  // Steps 7.b. (Reordered)
-  double days = duration.days;
-  double extraDays = nanosAndDays.daysNumber();
+  // Step 11.g.
+  // Our implementation keeps |days| and |weeksInDays| separate.
 
-  // Non-zero |days| and |extraDays| can't have oppositive signs. That means
-  // when adding |days + extraDays| we don't have to worry about a case like:
-  //
-  // days = 9007199254740991 and
-  // extraDays = 𝔽(-9007199254740993) = -9007199254740992
-  //
-  // ℝ(𝔽(days) + 𝔽(extraDays)) is -1, whereas the correct result is -2.
-  MOZ_ASSERT((days <= 0 && extraDays <= 0) || (days >= 0 && extraDays >= 0));
-
-  // This addition can be imprecise, so |daysApproximation| is only an
-  // approximation of the actual value.
-  double daysApproximation = days + extraDays;
-
-  // clang-format off
-  //
-  // When |daysApproximation| is too large, the loop condition in step 11.n is
-  // always true.
-  //
-  // Pre-condition:
-  // The absolute values of |weeksInDays|, |daysToSubtract|, and |oneMonthDays|
-  // are all smaller or equals to |epochDays|.
-  //
-  // The loop condition is:
-  // `abs(daysApproximation + weeksInDays - daysToSubtract) ≥ abs(oneMonthDays)`
-  //
-  // When `abs(daysApproximation)` is larger or equals to than `3 × epochDays`,
-  // the left-hand side expression is trivially always greater or equals to
-  // `abs(oneMonthDays)` and the loop will never exit.
-  //
-  // Furthermore `abs(weeksInDays + oneMonthDays) ≤ epochDays` holds, so the
-  // overall limit is `2 × epochDays`.
-  //
-  // clang-format on
-  if (MOZ_UNLIKELY(std::abs(daysApproximation) >= epochDays * 2)) {
-    // Step 11.i.
-    double sign = daysApproximation < 0 ? -1 : 1;
-
-    // Step 11.j.
-    Rooted<DurationObject*> oneMonth(cx, CreateTemporalDuration(cx, {0, sign}));
-    if (!oneMonth) {
-      return false;
-    }
-
-    // Steps 11.k-m and 11.n.iii-v.
-    return MoveRelativeDateLoop(cx, calendar, newRelativeTo, oneMonth);
-  }
-
-  // Otherwise |daysApproximation| is representable as an int32 value.
-  int32_t intDays = int32_t(daysApproximation);
+  // FIXME: spec issue - truncation doesn't match the spec polyfill.
+  // https://github.com/tc39/proposal-temporal/issues/2540
 
   // Step 11.h.
-  intDays += weeksInDays;
+  double truncatedDays;
+  if (!TruncateDays(cx, nanosAndDays, days, weeksInDays, &truncatedDays)) {
+    return false;
+  }
+
+  // FIXME: spec bug - truncated days can be infinity:
+  //
+  // Temporal.Duration.from({
+  //   days: Number.MAX_VALUE,
+  //   hours: Number.MAX_VALUE,
+  // }).round({
+  //   smallestUnit: "months",
+  //   relativeTo: "1970-01-01",
+  // });
+  if (!IsInteger(truncatedDays)) {
+    MOZ_ASSERT(std::isinf(truncatedDays));
+    JS_ReportErrorASCII(cx, "truncated days is infinity");
+    return false;
+  }
+
+  PlainDate isoResult;
+  if (!AddISODate(cx, yearsMonthsLaterDate, {0, 0, 0, truncatedDays},
+                  TemporalOverflow::Constrain, &isoResult)) {
+    return false;
+  }
 
   // Step 11.i.
-  bool daysIsNegative =
-      intDays < 0 ||
-      (intDays == 0 && nanosAndDays.nanoseconds() < InstantSpan{});
-  int32_t sign = daysIsNegative ? -1 : 1;
-
-  // Step 11.j.
-  Rooted<DurationObject*> oneMonth(
-      cx, CreateTemporalDuration(cx, {0, double(sign)}));
-  if (!oneMonth) {
+  Rooted<PlainDateObject*> wholeDaysLater(
+      cx, CreateTemporalDate(cx, isoResult, calendar.receiver()));
+  if (!wholeDaysLater) {
     return false;
   }
 
-  // Steps 11.k-m.
-  int32_t oneMonthDays;
-  if (!MoveRelativeDate(cx, calendar, newRelativeTo, oneMonth, &newRelativeTo,
-                        &oneMonthDays)) {
+  // Steps 11.j-l.
+  Duration timePassed;
+  if (!DifferenceDate(cx, calendar, newRelativeTo, wholeDaysLater,
+                      TemporalUnit::Month, &timePassed)) {
     return false;
   }
-  MOZ_ASSERT(std::abs(weeksInDays + oneMonthDays) <= epochDays);
 
-  // FIXME: spec issue - can this loop be unbounded with a user-controlled
-  // calendar?
-
-  // Sum up all days to subtract.
-  int32_t daysToSubtract = 0;
-
-  // Sum up all months to add to avoid imprecise floating-point arithmetic.
-  int64_t monthsToAdd = 0;
-
-  // Add the fractional part of `fractionalDays`, rounded away from zero, when
-  // the fractional part and |intDays| have different signs.
-  int32_t roundedDays;
-  if (intDays > 0 && nanosAndDays.nanoseconds() < InstantSpan{}) {
-    // The loop condition is: `abs(fractionalDays) >= abs(oneMonthDays)`
-    //
-    // With `fractionalDays = truncatedDays + fractionalPart`.
-    //
-    // When `truncatedDays = oneMonthDays = 30` and `fractionalPart = -0.5`,
-    // then
-    //   abs(truncatedDays) >= abs(oneMonthDays)
-    // = 30 >= 30
-    // = ⊤
-    //
-    // But the correct result is:
-    //   abs(truncatedDays + fractionalPart) >= abs(oneMonthDays)
-    // = 29.5 >= 30
-    // = ⊥
-    //
-    // Subtracting by one ensures the correct result.
-    roundedDays = intDays - 1;
-  } else if (intDays < 0 && nanosAndDays.nanoseconds() > InstantSpan{}) {
-    // Same case as above, but with reversed signs.
-    roundedDays = intDays + 1;
-  } else {
-    // No adjustments needed when the integer and fractional part have the same
-    // sign or when either the integer or the fractional part is zero.
-    roundedDays = intDays;
-  }
+  // Step 11.m.
+  double monthsPassed = timePassed.months;
 
   // Step 11.n.
-  while (std::abs(roundedDays - daysToSubtract) >= std::abs(oneMonthDays)) {
-    // This loop can iterate indefinitely when given a specially crafted
-    // calendar object, so we need to check for interrupts.
-    if (!CheckForInterrupt(cx)) {
-      return false;
-    }
+  // Our implementation keeps |months| and |monthsPassed| separate.
 
-    // Step 11.n.i.
-    monthsToAdd += sign;
+  // Step 11.o.
+  Duration monthsPassedDuration = {0, monthsPassed};
 
-    // Adding `oneMonthDays` to `daysToSubtract` doesn't switch the sign of the
-    // expression `(roundedDays - daysToSubtract)`.
-    MOZ_ASSERT_IF((roundedDays - daysToSubtract) >= 0,
-                  (roundedDays - (daysToSubtract + oneMonthDays)) >= 0);
-    MOZ_ASSERT_IF((roundedDays - daysToSubtract) <= 0,
-                  (roundedDays - (daysToSubtract + oneMonthDays)) <= 0);
-
-    // Step 11.n.ii.
-    daysToSubtract += oneMonthDays;
-    MOZ_ASSERT(std::abs(daysToSubtract) <= epochDays);
-
-    // Steps 11.n.iii-v.
-    if (!MoveRelativeDate(cx, calendar, newRelativeTo, oneMonth, &newRelativeTo,
-                          &oneMonthDays)) {
-      return false;
-    }
-    MOZ_ASSERT(std::abs(weeksInDays + oneMonthDays) <= epochDays);
+  // Steps 11.p-r.
+  int32_t daysPassed;
+  if (!MoveRelativeDate(cx, calendar, newRelativeTo, monthsPassedDuration,
+                        &newRelativeTo, &daysPassed)) {
+    return false;
   }
+  MOZ_ASSERT(std::abs(daysPassed) <= epochDays);
 
-  // The truncated days, excluding any (rounded) fractional parts.
-  int32_t truncatedDays = intDays - daysToSubtract;
+  // Step 11.s.
+  //
+  // Our implementation keeps |days| and |daysPassed| separate.
+  int32_t daysToAdd = weeksInDays - daysPassed;
+  MOZ_ASSERT(std::abs(daysToAdd) <= epochDays * 2);
 
-  do {
-    auto nanoseconds = nanosAndDays.nanoseconds().toNanoseconds();
-    if (!nanoseconds.isValid()) {
-      break;
-    }
+  // Steps 11.t.
+  double sign = DaysIsNegative(days, nanosAndDays, daysToAdd) ? -1 : 1;
 
-    auto dayLength = nanosAndDays.dayLength().toNanoseconds();
-    if (!dayLength.isValid()) {
-      break;
-    }
+  // Step 11.u.
+  Duration oneMonth = {0, sign};
 
-    // Steps 11.o-q.
-    auto denominator = dayLength * std::abs(oneMonthDays);
-    if (!denominator.isValid()) {
-      break;
-    }
-
-    auto totalNanoseconds = dayLength * truncatedDays;
-    if (!totalNanoseconds.isValid()) {
-      break;
-    }
-
-    totalNanoseconds += nanoseconds;
-    if (!totalNanoseconds.isValid()) {
-      break;
-    }
-
-    int64_t intMonths;
-    if (!mozilla::NumberEqualsInt64(months, &intMonths)) {
-      break;
-    }
-
-    auto totalMonths = mozilla::CheckedInt64(intMonths) + monthsToAdd;
-    if (!totalMonths.isValid()) {
-      break;
-    }
-
-    auto monthNanos = denominator * totalMonths;
-    if (!monthNanos.isValid()) {
-      break;
-    }
-
-    totalNanoseconds += monthNanos;
-    if (!totalNanoseconds.isValid()) {
-      break;
-    }
-
-    double numMonths;
-    double total = 0;
-    if (computeRemainder == ComputeRemainder::No) {
-      if (!temporal::RoundNumberToIncrement(cx, totalNanoseconds.value(),
-                                            denominator.value(), increment,
-                                            roundingMode, &numMonths)) {
-        return false;
-      }
-    } else {
-      TruncateNumber(totalNanoseconds.value(), denominator.value(), &numMonths,
-                     &total);
-    }
-
-    // Step 11.r.
-    double numWeeks = 0;
-
-    // Step 7.d.
-    double numDays = 0;
-
-    // Step 20.
-    Duration resultDuration = {duration.years, numMonths, numWeeks, numDays};
-    if (!ThrowIfInvalidDuration(cx, resultDuration)) {
-      return false;
-    }
-
-    // Step 21.
-    *result = {resultDuration, total};
-    return true;
-  } while (false);
-
-  // Steps 11.o-r and 20-21.
-  return RoundDurationMonthSlow(cx, duration, monthsToAdd, truncatedDays,
-                                nanosAndDays, oneMonthDays, increment,
-                                roundingMode, computeRemainder, result);
-}
-
-static bool RoundDurationWeekSlow(
-    JSContext* cx, const Duration& duration, int64_t weeksToAdd, int32_t days,
-    Handle<temporal::NanosecondsAndDays> nanosAndDays, int32_t oneWeekDays,
-    Increment increment, TemporalRoundingMode roundingMode,
-    ComputeRemainder computeRemainder, RoundedDuration* result) {
-  MOZ_ASSERT(nanosAndDays.dayLength() > InstantSpan{});
-  MOZ_ASSERT(nanosAndDays.nanoseconds().abs() < nanosAndDays.dayLength().abs());
-  MOZ_ASSERT(oneWeekDays != 0);
-
-  Rooted<BigInt*> weeks(cx, BigInt::createFromDouble(cx, duration.weeks));
-  if (!weeks) {
+  // Steps 11.v-w.
+  Rooted<Wrapped<PlainDateObject*>> moveResultIgnored(cx);
+  int32_t oneMonthDays;
+  if (!MoveRelativeDate(cx, calendar, newRelativeTo, oneMonth,
+                        &moveResultIgnored, &oneMonthDays)) {
     return false;
   }
 
-  Rooted<BigInt*> biWeeksToAdd(cx, BigInt::createFromInt64(cx, weeksToAdd));
-  if (!biWeeksToAdd) {
+  // Step 11.x.
+
+  // FIXME: spec bug division by zero not handled
+  // https://github.com/tc39/proposal-temporal/issues/2335
+  if (oneMonthDays == 0) {
+    JS_ReportErrorASCII(cx, "division by zero");
     return false;
   }
 
-  weeks = BigInt::add(cx, weeks, biWeeksToAdd);
-  if (!weeks) {
+  // Steps 11.y-aa.
+  RoundedNumber rounded;
+  if (!RoundNumberToIncrement(cx, months, monthsPassed, days, daysToAdd,
+                              nanosAndDays, oneMonthDays, increment,
+                              roundingMode, computeRemainder, &rounded)) {
     return false;
   }
+  auto [numMonths, total] = rounded;
 
-  Rooted<BigInt*> biDays(cx, BigInt::createFromInt64(cx, days));
-  if (!biDays) {
-    return false;
-  }
-
-  Rooted<BigInt*> nanoseconds(
-      cx, ToEpochNanoseconds(cx, nanosAndDays.nanoseconds()));
-  if (!nanoseconds) {
-    return false;
-  }
-
-  Rooted<BigInt*> dayLength(cx,
-                            ToEpochNanoseconds(cx, nanosAndDays.dayLength()));
-  if (!dayLength) {
-    return false;
-  }
-
-  Rooted<BigInt*> biOneWeekDays(
-      cx, BigInt::createFromInt64(cx, std::abs(oneWeekDays)));
-  if (!biOneWeekDays) {
-    return false;
-  }
-
-  // Steps 12.h-j.
-  Rooted<BigInt*> denominator(cx, BigInt::mul(cx, biOneWeekDays, dayLength));
-  if (!denominator) {
-    return false;
-  }
-
-  Rooted<BigInt*> totalNanoseconds(cx, BigInt::mul(cx, biDays, dayLength));
-  if (!totalNanoseconds) {
-    return false;
-  }
-
-  totalNanoseconds = BigInt::add(cx, totalNanoseconds, nanoseconds);
-  if (!totalNanoseconds) {
-    return false;
-  }
-
-  Rooted<BigInt*> weekNanos(cx, BigInt::mul(cx, weeks, denominator));
-  if (!weekNanos) {
-    return false;
-  }
-
-  totalNanoseconds = BigInt::add(cx, totalNanoseconds, weekNanos);
-  if (!totalNanoseconds) {
-    return false;
-  }
-
-  double numWeeks;
-  double total = 0;
-  if (computeRemainder == ComputeRemainder::No) {
-    if (!temporal::RoundNumberToIncrement(cx, totalNanoseconds, denominator,
-                                          increment, roundingMode, &numWeeks)) {
-      return false;
-    }
-  } else {
-    if (!::TruncateNumber(cx, totalNanoseconds, denominator, &numWeeks,
-                          &total)) {
-      return false;
-    }
-  }
-
-  // Step 7.d.
-  double numDays = 0;
+  // Step 11.ab.
+  double numWeeks = 0;
 
   // Step 20.
-  Duration resultDuration = {duration.years, duration.months, numWeeks,
-                             numDays};
+  Duration resultDuration = {years, numMonths, numWeeks};
   if (!ThrowIfInvalidDuration(cx, resultDuration)) {
     return false;
   }
@@ -5157,316 +4825,116 @@ static bool RoundDurationWeek(JSContext* cx, const Duration& duration,
   // Numbers of days between nsMinInstant and nsMaxInstant.
   static constexpr int32_t epochDays = 200'000'000;
 
-  // Step 12.a.
-  MOZ_ASSERT(
-      CalendarMethodsRecordHasLookedUp(calendar, CalendarMethod::DateAdd));
-
-  // Step 7.b.
+  double years = duration.years;
+  double months = duration.months;
+  double weeks = duration.weeks;
   double days = duration.days;
-  double extraDays = nanosAndDays.daysNumber();
 
-  // When non-zero |days| and |extraDays| have oppositive signs, the absolute
-  // value of |days| is less-or-equal to |epochDays|. That means when adding
-  // |days + extraDays| we don't have to worry about a case like:
-  //
-  // days = 9007199254740991 and
-  // extraDays = 𝔽(-9007199254740993) = -9007199254740992
-  //
-  // ℝ(𝔽(days) + 𝔽(extraDays)) is -1, whereas the correct result is -2.
-  MOZ_ASSERT((days <= 0 && extraDays <= 0) || (days >= 0 && extraDays >= 0) ||
-             std::abs(days) <= epochDays);
+  auto* unwrappedRelativeTo = dateRelativeTo.unwrap(cx);
+  if (!unwrappedRelativeTo) {
+    return false;
+  }
+  auto relativeToDate = ToPlainDate(unwrappedRelativeTo);
 
-  // This addition can be imprecise, so |daysApproximation| is only an
-  // approximation of the actual value.
-  double daysApproximation = days + extraDays;
+  // Step 12.a
+  double truncatedDays;
+  if (!TruncateDays(cx, nanosAndDays, days, 0, &truncatedDays)) {
+    return false;
+  }
+
+  // FIXME: spec bug - truncated days can be infinity:
+  //
+  // Temporal.Duration.from({
+  //   days: Number.MAX_VALUE,
+  //   hours: Number.MAX_VALUE,
+  // }).round({
+  //   smallestUnit: "weeks",
+  //   relativeTo: "1970-01-01",
+  // });
+  if (!IsInteger(truncatedDays)) {
+    MOZ_ASSERT(std::isinf(truncatedDays));
+    JS_ReportErrorASCII(cx, "truncated days is infinity");
+    return false;
+  }
+
+  PlainDate isoResult;
+  if (!AddISODate(cx, relativeToDate, {0, 0, 0, truncatedDays},
+                  TemporalOverflow::Constrain, &isoResult)) {
+    return false;
+  }
 
   // Step 12.b.
-  bool daysIsNegative =
-      daysApproximation < 0 ||
-      (daysApproximation == 0 && nanosAndDays.nanoseconds() < InstantSpan{});
-  int32_t sign = daysIsNegative ? -1 : 1;
-
-  // Step 12.c.
-  Rooted<DurationObject*> oneWeek(
-      cx, CreateTemporalDuration(cx, {0, 0, double(sign)}));
-  if (!oneWeek) {
+  Rooted<PlainDateObject*> wholeDaysLater(
+      cx, CreateTemporalDate(cx, isoResult, calendar.receiver()));
+  if (!wholeDaysLater) {
     return false;
   }
 
-  // clang-format off
-  //
-  // When |daysApproximation| is too large, the loop condition in step 12.g is
-  // always true.
-  //
-  // Pre-condition:
-  // The absolute values of |daysToSubtract| and |oneWeekDays| are both smaller
-  // or equals to |epochDays|.
-  //
-  // The loop condition is:
-  // `abs(daysApproximation - daysToSubtract) ≥ abs(oneWeekDays)`
-  //
-  // When `abs(daysApproximation)` is larger or equals to `2 × epochDays`, the
-  // left-hand side expression is always greater or equals to `abs(oneWeekDays)`
-  // and the loop will never exit.
-  //
-  // clang-format on
-  if (MOZ_UNLIKELY(std::abs(daysApproximation) >= epochDays * 2)) {
-    // Steps 12.d-f and 12.g.iii-v.
-    return MoveRelativeDateLoop(cx, calendar, dateRelativeTo, oneWeek);
-  }
-
-  // Otherwise |daysApproximation| is representable as an int32 value.
-  int32_t intDays = int32_t(daysApproximation);
-
-  // Steps 12.d-f.
-  Rooted<Wrapped<PlainDateObject*>> newRelativeTo(cx);
-  int32_t oneWeekDays;
-  if (!MoveRelativeDate(cx, calendar, dateRelativeTo, oneWeek, &newRelativeTo,
-                        &oneWeekDays)) {
+  // Steps 12.c-e.
+  Duration timePassed;
+  if (!DifferenceDate(cx, calendar, dateRelativeTo, wholeDaysLater,
+                      TemporalUnit::Week, &timePassed)) {
     return false;
   }
 
-  // FIXME: spec issue - can this loop be unbounded with a user-controlled
-  // calendar?
-
-  // Sum up all days to subtract.
-  int32_t daysToSubtract = 0;
-
-  // Sum up all weeks to add to avoid imprecise floating-point arithmetic.
-  int64_t weeksToAdd = 0;
-
-  // Add the fractional part of `fractionalDays`, rounded away from zero, when
-  // the fractional part and |intDays| have different signs.
-  int32_t roundedDays;
-  if (intDays > 0 && nanosAndDays.nanoseconds() < InstantSpan{}) {
-    // The loop condition is: `abs(fractionalDays) >= abs(oneWeekDays)`
-    //
-    // With `fractionalDays = truncatedDays + fractionalPart`.
-    //
-    // When `truncatedDays = oneWeekDays = 7` and `fractionalPart = -0.5`,
-    // then
-    //   abs(truncatedDays) >= abs(oneWeekDays)
-    // = 7 >= 7
-    // = ⊤
-    //
-    // But the correct result is:
-    //   abs(truncatedDays + fractionalPart) >= abs(oneWeekDays)
-    // = 6.5 >= 7
-    // = ⊥
-    //
-    // Subtracting by one ensures the correct result.
-    roundedDays = intDays - 1;
-  } else if (intDays < 0 && nanosAndDays.nanoseconds() > InstantSpan{}) {
-    // Same case as above, but with reversed signs.
-    roundedDays = intDays + 1;
-  } else {
-    // No adjustments needed when the integer and fractional part have the same
-    // sign or when either the integer or the fractional part is zero.
-    roundedDays = intDays;
-  }
+  // Step 12.f.
+  double weeksPassed = timePassed.weeks;
 
   // Step 12.g.
-  while (std::abs(roundedDays - daysToSubtract) >= std::abs(oneWeekDays)) {
-    // This loop can iterate indefinitely when given a specially crafted
-    // calendar object, so we need to check for interrupts.
-    if (!CheckForInterrupt(cx)) {
-      return false;
-    }
+  // Our implementation keeps |weeks| and |weeksPassed| separate.
 
-    // Step 12.g.i.
-    weeksToAdd += sign;
+  // Step 12.h.
+  Duration weeksPassedDuration = {0, 0, weeksPassed};
 
-    // Adding `oneWeekDays` to `daysToSubtract` doesn't switch the sign of the
-    // expression `(intDays - daysToSubtract)`.
-    MOZ_ASSERT_IF((intDays - daysToSubtract) >= 0,
-                  (intDays - (daysToSubtract + oneWeekDays)) >= 0);
-    MOZ_ASSERT_IF((intDays - daysToSubtract) <= 0,
-                  (intDays - (daysToSubtract + oneWeekDays)) <= 0);
-
-    // Step 12.g.ii.
-    daysToSubtract += oneWeekDays;
-    MOZ_ASSERT(std::abs(daysToSubtract) <= epochDays);
-
-    // Steps 12.g.iii-v.
-    if (!MoveRelativeDate(cx, calendar, newRelativeTo, oneWeek, &newRelativeTo,
-                          &oneWeekDays)) {
-      return false;
-    }
+  // Steps 12.i-k.
+  Rooted<Wrapped<PlainDateObject*>> newRelativeTo(cx);
+  int32_t daysPassed;
+  if (!MoveRelativeDate(cx, calendar, dateRelativeTo, weeksPassedDuration,
+                        &newRelativeTo, &daysPassed)) {
+    return false;
   }
+  MOZ_ASSERT(std::abs(daysPassed) <= epochDays);
 
-  // The truncated days, excluding any (rounded) fractional parts.
-  int32_t truncatedDays = intDays - daysToSubtract;
+  // Step 12.l.
+  //
+  // Our implementation keeps |days| and |daysPassed| separate.
+  int32_t daysToAdd = -daysPassed;
+  MOZ_ASSERT(std::abs(daysToAdd) <= epochDays);
 
-  do {
-    // clang-format off
-    //
-    // Change the representation of |fractionalWeeks| from a real number to a
-    // rational number, because we don't support arbitrary precision real
-    // numbers.
-    //
-    // |fractionalWeeks| is defined as:
-    //
-    //   fractionalWeeks
-    // = weeks + days' / abs(oneWeekDays)
-    //
-    // where days' = days + nanoseconds / dayLength.
-    //
-    // The fractional part |nanoseconds / dayLength| is from step 4.
-    //
-    // The denominator for |fractionalWeeks| is |dayLength * abs(oneWeekDays)|.
-    //
-    //   fractionalWeeks
-    // = weeks + (days + nanoseconds / dayLength) / abs(oneWeekDays)
-    // = weeks + days / abs(oneWeekDays) + nanoseconds / (dayLength * abs(oneWeekDays))
-    // = (weeks * dayLength * abs(oneWeekDays) + days * dayLength + nanoseconds) / (dayLength * abs(oneWeekDays))
-    //
-    // clang-format on
+  // Steps 12.m.
+  double sign = DaysIsNegative(days, nanosAndDays, daysToAdd) ? -1 : 1;
 
-    auto nanoseconds = nanosAndDays.nanoseconds().toNanoseconds();
-    if (!nanoseconds.isValid()) {
-      break;
-    }
+  // Step 12.n.
+  Duration oneWeek = {0, 0, sign};
 
-    auto dayLength = nanosAndDays.dayLength().toNanoseconds();
-    if (!dayLength.isValid()) {
-      break;
-    }
-
-    // Steps 12.h-j.
-    auto denominator = dayLength * std::abs(oneWeekDays);
-    if (!denominator.isValid()) {
-      break;
-    }
-
-    auto totalNanoseconds = dayLength * truncatedDays;
-    if (!totalNanoseconds.isValid()) {
-      break;
-    }
-
-    totalNanoseconds += nanoseconds;
-    if (!totalNanoseconds.isValid()) {
-      break;
-    }
-
-    int64_t intWeeks;
-    if (!mozilla::NumberEqualsInt64(duration.weeks, &intWeeks)) {
-      break;
-    }
-
-    auto totalWeeks = mozilla::CheckedInt64(intWeeks) + weeksToAdd;
-    if (!totalWeeks.isValid()) {
-      break;
-    }
-
-    auto weekNanos = denominator * totalWeeks;
-    if (!weekNanos.isValid()) {
-      break;
-    }
-
-    totalNanoseconds += weekNanos;
-    if (!totalNanoseconds.isValid()) {
-      break;
-    }
-
-    double numWeeks;
-    double total = 0;
-    if (computeRemainder == ComputeRemainder::No) {
-      if (!temporal::RoundNumberToIncrement(cx, totalNanoseconds.value(),
-                                            denominator.value(), increment,
-                                            roundingMode, &numWeeks)) {
-        return false;
-      }
-    } else {
-      TruncateNumber(totalNanoseconds.value(), denominator.value(), &numWeeks,
-                     &total);
-    }
-
-    // Step 5.d.
-    double numDays = 0;
-
-    // Step 20.
-    Duration resultDuration = {duration.years, duration.months, numWeeks,
-                               numDays};
-    if (!ThrowIfInvalidDuration(cx, resultDuration)) {
-      return false;
-    }
-
-    // Step 21.
-    *result = {resultDuration, total};
-    return true;
-  } while (false);
-
-  // Steps 12.h-j and 20-21.
-  return RoundDurationWeekSlow(cx, duration, weeksToAdd, truncatedDays,
-                               nanosAndDays, oneWeekDays, increment,
-                               roundingMode, computeRemainder, result);
-}
-
-static bool RoundDurationDaySlow(
-    JSContext* cx, const Duration& duration,
-    Handle<temporal::NanosecondsAndDays> nanosAndDays, Increment increment,
-    TemporalRoundingMode roundingMode, ComputeRemainder computeRemainder,
-    RoundedDuration* result) {
-  MOZ_ASSERT(nanosAndDays.dayLength() > InstantSpan{});
-  MOZ_ASSERT(nanosAndDays.nanoseconds().abs() < nanosAndDays.dayLength().abs());
-
-  Rooted<BigInt*> nanoseconds(
-      cx, ToEpochNanoseconds(cx, nanosAndDays.nanoseconds()));
-  if (!nanoseconds) {
+  // Steps 12.o-p.
+  Rooted<Wrapped<PlainDateObject*>> moveResultIgnored(cx);
+  int32_t oneWeekDays;
+  if (!MoveRelativeDate(cx, calendar, newRelativeTo, oneWeek,
+                        &moveResultIgnored, &oneWeekDays)) {
     return false;
   }
 
-  Rooted<BigInt*> dayLength(cx,
-                            ToEpochNanoseconds(cx, nanosAndDays.dayLength()));
-  if (!dayLength) {
+  // Step 12.q.
+
+  // FIXME: spec bug division by zero not handled
+  // https://github.com/tc39/proposal-temporal/issues/2335
+  if (oneWeekDays == 0) {
+    JS_ReportErrorASCII(cx, "division by zero");
     return false;
   }
 
-  Rooted<BigInt*> nanoDays(cx, DaysFrom(cx, nanosAndDays));
-  if (!nanoDays) {
+  // Steps 12.r-t.
+  RoundedNumber rounded;
+  if (!RoundNumberToIncrement(cx, weeks, weeksPassed, days, daysToAdd,
+                              nanosAndDays, oneWeekDays, increment,
+                              roundingMode, computeRemainder, &rounded)) {
     return false;
   }
-
-  Rooted<BigInt*> totalNanoseconds(cx,
-                                   BigInt::createFromDouble(cx, duration.days));
-  if (!totalNanoseconds) {
-    return false;
-  }
-
-  totalNanoseconds = BigInt::add(cx, totalNanoseconds, nanoDays);
-  if (!totalNanoseconds) {
-    return false;
-  }
-
-  totalNanoseconds = BigInt::mul(cx, totalNanoseconds, dayLength);
-  if (!totalNanoseconds) {
-    return false;
-  }
-
-  totalNanoseconds = BigInt::add(cx, totalNanoseconds, nanoseconds);
-  if (!totalNanoseconds) {
-    return false;
-  }
-
-  // Steps 13.a-b.
-  double days;
-  double total = 0;
-  if (computeRemainder == ComputeRemainder::No) {
-    if (!temporal::RoundNumberToIncrement(cx, totalNanoseconds, dayLength,
-                                          increment, roundingMode, &days)) {
-      return false;
-    }
-  } else {
-    if (!::TruncateNumber(cx, totalNanoseconds, dayLength, &days, &total)) {
-      return false;
-    }
-  }
-
-  MOZ_ASSERT(IsIntegerOrInfinity(days));
+  auto [numWeeks, total] = rounded;
 
   // Step 20.
-  Duration resultDuration = {duration.years, duration.months, duration.weeks,
-                             days};
+  Duration resultDuration = {years, months, numWeeks};
   if (!ThrowIfInvalidDuration(cx, resultDuration)) {
     return false;
   }
@@ -5482,61 +4950,28 @@ static bool RoundDurationDay(JSContext* cx, const Duration& duration,
                              TemporalRoundingMode roundingMode,
                              ComputeRemainder computeRemainder,
                              RoundedDuration* result) {
-  MOZ_ASSERT(nanosAndDays.dayLength() > InstantSpan{});
-  MOZ_ASSERT(nanosAndDays.nanoseconds().abs() < nanosAndDays.dayLength().abs());
+  double years = duration.years;
+  double months = duration.months;
+  double weeks = duration.weeks;
+  double days = duration.days;
 
-  do {
-    auto nanoseconds = nanosAndDays.nanoseconds().toNanoseconds();
-    auto dayLength = nanosAndDays.dayLength().toNanoseconds();
+  // Steps 13.a-b.
+  RoundedNumber rounded;
+  if (!RoundNumberToIncrement(cx, days, nanosAndDays, increment, roundingMode,
+                              computeRemainder, &rounded)) {
+    return false;
+  }
+  auto [numDays, total] = rounded;
 
-    auto nanoDays = DaysFrom(nanosAndDays);
-    if (!nanoDays) {
-      break;
-    }
+  // Step 20.
+  Duration resultDuration = {years, months, weeks, numDays};
+  if (!ThrowIfInvalidDuration(cx, resultDuration)) {
+    return false;
+  }
 
-    int64_t durationDays;
-    if (!mozilla::NumberEqualsInt64(duration.days, &durationDays)) {
-      break;
-    }
-
-    auto totalNanoseconds = mozilla::CheckedInt64(durationDays) + *nanoDays;
-    totalNanoseconds *= dayLength;
-    totalNanoseconds += nanoseconds;
-    if (!totalNanoseconds.isValid()) {
-      break;
-    }
-
-    // Steps 13.a-b.
-    double days;
-    double total = 0;
-    if (computeRemainder == ComputeRemainder::No) {
-      if (!temporal::RoundNumberToIncrement(cx, totalNanoseconds.value(),
-                                            dayLength.value(), increment,
-                                            roundingMode, &days)) {
-        return false;
-      }
-    } else {
-      ::TruncateNumber(totalNanoseconds.value(), dayLength.value(), &days,
-                       &total);
-    }
-
-    MOZ_ASSERT(IsIntegerOrInfinity(days));
-
-    // Step 20.
-    Duration resultDuration = {duration.years, duration.months, duration.weeks,
-                               days};
-    if (!ThrowIfInvalidDuration(cx, resultDuration)) {
-      return false;
-    }
-
-    // Step 21.
-    *result = {resultDuration, total};
-    return true;
-  } while (false);
-
-  // Steps 13 and 20-21.
-  return RoundDurationDaySlow(cx, duration, nanosAndDays, increment,
-                              roundingMode, computeRemainder, result);
+  // Step 21.
+  *result = {resultDuration, total};
+  return true;
 }
 
 /**
@@ -5570,8 +5005,20 @@ static bool RoundDuration(
   MOZ_ASSERT_IF(computeRemainder == ComputeRemainder::Yes,
                 roundingMode == TemporalRoundingMode::Trunc);
 
-  // Steps 1-6. (Not applicable in our implementation.)
+  // Steps 1-5. (Not applicable in our implementation.)
+
+  // Step 6.a. (Not applicable in our implementation.)
   MOZ_ASSERT_IF(unit <= TemporalUnit::Week, plainRelativeTo);
+
+  // Step 6.b.
+  MOZ_ASSERT_IF(
+      unit <= TemporalUnit::Week,
+      CalendarMethodsRecordHasLookedUp(calendar, CalendarMethod::DateAdd));
+
+  // Step 6.c.
+  MOZ_ASSERT_IF(
+      unit <= TemporalUnit::Week,
+      CalendarMethodsRecordHasLookedUp(calendar, CalendarMethod::DateUntil));
 
   switch (unit) {
     case TemporalUnit::Year:
