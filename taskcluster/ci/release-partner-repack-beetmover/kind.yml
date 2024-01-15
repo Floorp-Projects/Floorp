@@ -27,9 +27,4 @@ jobs:
         from-deps:
             group-by: single-with-filters
         shipping-phase: promote
-        partner-bucket-scope:
-            by-release-level:
-                production: beetmover:bucket:partner
-                staging: beetmover:bucket:dep-partner
-        partner-public-path: "partner-repacks/{partner}/{subpartner}/v{release_partner_build_number}/{platform}/{locale}"
-        partner-private-path: "{partner}/{version}-{build_number}/{subpartner}/{platform}/{locale}"
+        partner-path: "partner-repacks/{partner}/{subpartner}/v{release_partner_build_number}/{platform}/{locale}"

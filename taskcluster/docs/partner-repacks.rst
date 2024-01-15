@@ -91,12 +91,7 @@ containing the customizations needed. Here's `EME-free's repack.cfg <https://git
     win64=true
     output_dir="%(platform)s-EME-free/%(locale)s"
 
-    # Upload params
-    upload_to_candidates=true
-
-Note the list of locales and boolean toggles for enabling platforms. The ``output_dir`` and
-``upload_to_candidates`` parameters are only present for repacks which are uploaded into the
-`candidates directory <https://archive.mozilla.org/pub/firefox/candidates/>`_.
+Note the list of locales and boolean toggles for enabling platforms.
 
 All customizations will be placed in the ``distribution`` directory at the root of the Firefox
 install directory, or in the case of OS X in ``Firefox.app/Contents/Resources/distribution/``. A
@@ -126,7 +121,7 @@ Repacking process
 The stack of tasks to create partner repacks is broadly similar to localised nightlies and
 regular releases. The basic form is
 
-* partner repack - insert the customisations into the the regular builds
+* partner repack - insert the customisations into the regular builds
 * signing - sign the internals which will become the installer (Mac only)
 * repackage - create the "installer" (Mac and Windows)
 * chunking dummy - a linux only bridge to ...
@@ -139,7 +134,6 @@ Some key divergences are:
 * all intermediate artifacts are uploaded with a ``releng/partner`` prefix
 * we don't insert any binaries on Windows so no need for internal signing
 * there's no need to create any complete mar files at the repackage step
-* we support both public and private destinations in beetmover
 * we only need beetmover checksums for EME-free builds
 
 
@@ -221,11 +215,11 @@ Beetmover
 * upstreams: ``release-partner-repack-repackage-signing`` ``release-eme-free-repack-repackage-signing``
 
 Moves and renames the artifacts to their public location in the `candidates directory
-<https://archive.mozilla.org/pub/firefox/candidates/>`_, or a private S3 bucket. Each task will
-have the ``project:releng:beetmover:action:push-to-partner`` scope, with public uploads having
-``project:releng:beetmover:bucket:release`` and private uploads using
-``project:releng:beetmover:bucket:partner``. The ``upload_to_candidates`` key in the partner config
-controls the second scope. There's a separate partner code path in `beetmoverscript <https://github.com/mozilla-releng/scriptworker-scripts/tree/master/beetmoverscript>`_.
+<https://archive.mozilla.org/pub/firefox/candidates/>`_. Each task will
+have the ``project:releng:beetmover:action:push-to-partner`` and
+``project:releng:beetmover:bucket:release`` scopes. There's a separate partner
+code path in `beetmoverscript
+<https://github.com/mozilla-releng/scriptworker-scripts/tree/master/beetmoverscript>`_.
 
 Beetmover checksums
 ^^^^^^^^^^^^^^^^^^^

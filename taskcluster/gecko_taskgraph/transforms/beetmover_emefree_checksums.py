@@ -147,7 +147,6 @@ def make_beetmover_checksums_worker(config, jobs):
                 refs,
                 job["extra"]["partner_path"],
             ),
-            "partner-public": True,
         }
 
         job["worker"] = worker

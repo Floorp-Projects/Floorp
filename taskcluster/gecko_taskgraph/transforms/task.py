@@ -901,7 +901,6 @@ def build_scriptworker_signing_payload(config, task, task_def):
         Required("max-run-time"): int,
         # locale key, if this is a locale beetmover job
         Optional("locale"): str,
-        Optional("partner-public"): bool,
         Required("release-properties"): {
             "app-name": str,
             "app-version": str,
@@ -948,8 +947,6 @@ def build_beetmover_payload(config, task, task_def):
         task_def["payload"]["locale"] = worker["locale"]
     if worker.get("artifact-map"):
         task_def["payload"]["artifactMap"] = worker["artifact-map"]
-    if worker.get("partner-public"):
-        task_def["payload"]["is_partner_repack_public"] = worker["partner-public"]
     if release_config:
         task_def["payload"].update(release_config)
 
