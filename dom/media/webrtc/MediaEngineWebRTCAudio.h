@@ -159,8 +159,8 @@ class AudioInputProcessing : public AudioDataListener {
   TrackTime NumBufferedFrames(MediaTrackGraph* aGraph) const;
 
   // The packet size contains samples in 10ms. The unit of aRate is hz.
-  constexpr static uint32_t GetPacketSize(TrackRate aRate) {
-    return static_cast<uint32_t>(aRate) / 100u;
+  static uint32_t GetPacketSize(TrackRate aRate) {
+    return webrtc::AudioProcessing::GetFrameSize(aRate);
   }
 
   bool IsEnded() const { return mEnded; }
