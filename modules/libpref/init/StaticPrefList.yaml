@@ -11756,7 +11756,7 @@
 # Enable 103 Early Hint status code (RFC 8297)
 - name: network.early-hints.enabled
   type: RelaxedAtomicBool
-  value: @IS_EARLY_BETA_OR_EARLIER@
+  value: true
   mirror: always
 
 # Enable `Link: rel=preconnect` in 103 Early Hint response.
