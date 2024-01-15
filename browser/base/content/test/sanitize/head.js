@@ -359,3 +359,13 @@ function openPreferencesViaOpenPreferencesAPI(aPane, aOptions) {
     );
   });
 }
+
+async function createDummyDataForHost(host) {
+  let origin = "https://" + host;
+  let dummySWURL =
+    getRootDirectory(gTestPath).replace("chrome://mochitests/content", origin) +
+    "dummy.js";
+
+  await SiteDataTestUtils.addToIndexedDB(origin);
+  await SiteDataTestUtils.addServiceWorker(dummySWURL);
+}

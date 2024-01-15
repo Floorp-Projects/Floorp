@@ -69,6 +69,20 @@ async function promiseHistoryClearedState(aURIs, aShouldBeCleared) {
 }
 
 /**
+ * Ensures that the given pref is the expected value.
+ *
+ * @param {String} aPrefName
+ *        The pref's sub-branch under the privacy branch
+ * @param {Boolean} aExpectedVal
+ *        The pref's expected value
+ * @param {String} aMsg
+ *        Passed to is()
+ */
+function boolPrefIs(aPrefName, aExpectedVal, aMsg) {
+  is(Services.prefs.getBoolPref("privacy." + aPrefName), aExpectedVal, aMsg);
+}
+
+/**
  * Checks to see if the download with the specified path exists.
  *
  * @param  aPath
@@ -275,10 +289,15 @@ async function blankSlate() {
  * @param browserWin (optional)
  *        The browser window that the dialog is expected to open in. If not
  *        supplied, the initial browser window of the test run is used.
+ * @param mode (optional)
+ *        Open in the clear on shutdown settings context or
+ *        Open in the clear site data settings context
+ *        null by default
  */
-function DialogHelper(browserWin = window) {
+function DialogHelper(browserWin = window, mode = null) {
   this._browserWin = browserWin;
   this.win = null;
+  this._mode = mode;
   this.promiseClosed = new Promise(resolve => {
     this._resolveClosed = resolve;
   });
@@ -325,13 +344,33 @@ DialogHelper.prototype = {
   },
 
   /**
+   * @param {String} aCheckboxId
+   *        The checkbox id name
+   * @param {Boolean} aCheckState
+   *        True if the checkbox should be checked, false otherwise
+   */
+  validateCheckbox(aCheckboxId, aCheckState) {
+    let cb = this.win.document.querySelectorAll(
+      "checkbox[id='" + aCheckboxId + "']"
+    );
+    is(cb.length, 1, `found checkbox for id=${aCheckboxId}`);
+    is(
+      cb[0].checked,
+      aCheckState,
+      `checkbox for ${aCheckboxId} is ${aCheckState}`
+    );
+  },
+
+  /**
    * Makes sure all the checkboxes are checked.
    */
   _checkAllCheckboxesCustom(check) {
     var cb = this.win.document.querySelectorAll("checkbox[id]");
     ok(cb.length, "found checkboxes for ids");
     for (var i = 0; i < cb.length; ++i) {
-      cb[i].checked = check;
+      if (cb[i].checked != check) {
+        cb[i].click();
+      }
     }
   },
 
@@ -341,6 +380,10 @@ DialogHelper.prototype = {
 
   uncheckAllCheckboxes() {
     this._checkAllCheckboxesCustom(false);
+  },
+
+  setMode(value) {
+    this._mode = value;
   },
 
   /**
@@ -383,7 +426,7 @@ DialogHelper.prototype = {
     );
 
     executeSoon(() => {
-      Sanitizer.showUI(this._browserWin);
+      Sanitizer.showUI(this._browserWin, this._mode);
     });
 
     this.win = await dialogPromise;
@@ -927,6 +970,228 @@ add_task(async function test_single_download() {
   dh.open();
   await dh.promiseClosed;
   blankSlate();
+});
+
+// test the case when we open the dialog through the clear on shutdown settings
+add_task(async function test_clear_on_shutdown() {
+  await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
+
+  await SpecialPowers.pushPrefEnv({
+    set: [["privacy.sanitize.sanitizeOnShutdown", true]],
+  });
+
+  let dh = new DialogHelper();
+  dh.setMode("clearOnShutdown");
+  dh.onload = async function () {
+    this.uncheckAllCheckboxes();
+    this.checkPrefCheckbox("history", true);
+    this.checkPrefCheckbox("cookies", true);
+    this.acceptDialog();
+  };
+  dh.open();
+  await dh.promiseClosed;
+
+  // Add downloads (within the past hour).
+  let downloadIDs = [];
+  for (let i = 0; i < 5; i++) {
+    await addDownloadWithMinutesAgo(downloadIDs, i);
+  }
+  // Add downloads (over an hour ago).
+  let olderDownloadIDs = [];
+  for (let i = 0; i < 5; i++) {
+    await addDownloadWithMinutesAgo(olderDownloadIDs, 61 + i);
+  }
+
+  boolPrefIs(
+    "clearOnShutdown.history",
+    true,
+    "clearOnShutdown history should be true "
+  );
+
+  boolPrefIs(
+    "clearOnShutdown.cookies",
+    true,
+    "clearOnShutdown cookies should be true"
+  );
+
+  boolPrefIs(
+    "clearOnShutdown.formdata",
+    true,
+    "clearOnShutdown formdata should be true"
+  );
+
+  boolPrefIs(
+    "clearOnShutdown.offlineApps",
+    true,
+    "clearOnShutdown offlineApps should be true"
+  );
+
+  boolPrefIs(
+    "clearOnShutdown.sessions",
+    true,
+    "clearOnShutdown sessions should be true"
+  );
+
+  boolPrefIs(
+    "clearOnShutdown.downloads",
+    false,
+    "clearOnShutdown downloads should be false"
+  );
+
+  boolPrefIs(
+    "clearOnShutdown.cache",
+    false,
+    "clearOnShutdown cache should be false"
+  );
+
+  await createDummyDataForHost("example.org");
+  await createDummyDataForHost("example.com");
+
+  ok(
+    await SiteDataTestUtils.hasIndexedDB("https://example.org"),
+    "We have indexedDB data for example.org"
+  );
+  ok(
+    await SiteDataTestUtils.hasIndexedDB("https://example.com"),
+    "We have indexedDB data for example.com"
+  );
+
+  // Cleaning up
+  await Sanitizer.runSanitizeOnShutdown();
+
+  // Data for example.org should be cleared
+  ok(
+    !(await SiteDataTestUtils.hasIndexedDB("https://example.org")),
+    "We don't have indexedDB data for example.org"
+  );
+  // Data for example.com should be cleared
+  ok(
+    !(await SiteDataTestUtils.hasIndexedDB("https://example.com")),
+    "We don't have indexedDB data for example.com"
+  );
+
+  // Downloads shouldn't have cleared
+  await ensureDownloadsClearedState(downloadIDs, false);
+  await ensureDownloadsClearedState(olderDownloadIDs, false);
+
+  dh = new DialogHelper();
+  dh.setMode("clearOnShutdown");
+  dh.onload = async function () {
+    this.uncheckAllCheckboxes();
+    this.checkPrefCheckbox("downloads", true);
+    this.acceptDialog();
+  };
+  dh.open();
+  await dh.promiseClosed;
+
+  boolPrefIs(
+    "clearOnShutdown.history",
+    false,
+    "clearOnShutdown history should be false"
+  );
+
+  boolPrefIs(
+    "clearOnShutdown.cookies",
+    false,
+    "clearOnShutdown cookies should be false"
+  );
+
+  boolPrefIs(
+    "clearOnShutdown.formdata",
+    false,
+    "clearOnShutdown formdata should be false"
+  );
+
+  boolPrefIs(
+    "clearOnShutdown.offlineApps",
+    false,
+    "clearOnShutdown offlineApps should be false"
+  );
+
+  boolPrefIs(
+    "clearOnShutdown.sessions",
+    false,
+    "clearOnShutdown sessions should be false"
+  );
+
+  boolPrefIs(
+    "clearOnShutdown.downloads",
+    true,
+    "clearOnShutdown downloads should be true"
+  );
+
+  boolPrefIs(
+    "clearOnShutdown.cache",
+    false,
+    "clearOnShutdown cache should be false"
+  );
+
+  ok(
+    await SiteDataTestUtils.hasIndexedDB("https://example.org"),
+    "We have indexedDB data for example.org"
+  );
+  ok(
+    await SiteDataTestUtils.hasIndexedDB("https://example.com"),
+    "We have indexedDB data for example.com"
+  );
+
+  // Cleaning up
+  await Sanitizer.runSanitizeOnShutdown();
+
+  // Data for example.org should not be cleared
+  ok(
+    await SiteDataTestUtils.hasIndexedDB("https://example.org"),
+    "We have indexedDB data for example.org"
+  );
+  // Data for example.com should not be cleared
+  ok(
+    await SiteDataTestUtils.hasIndexedDB("https://example.com"),
+    "We have indexedDB data for example.com"
+  );
+
+  // downloads should have cleared
+  await ensureDownloadsClearedState(downloadIDs, true);
+  await ensureDownloadsClearedState(olderDownloadIDs, true);
+
+  // Clean up
+  await SiteDataTestUtils.clear();
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
+});
+
+// test default prefs for entry points
+add_task(async function test_defaults_prefs() {
+  let dh = new DialogHelper();
+  dh.setMode("clearSiteData");
+
+  dh.onload = function () {
+    // Default checked for clear site data
+    this.validateCheckbox("history", false);
+    this.validateCheckbox("cache", true);
+    this.validateCheckbox("cookies", true);
+    this.validateCheckbox("siteSettings", false);
+    this.validateCheckbox("downloads", false);
+
+    this.cancelDialog();
+  };
+  dh.open();
+  await dh.promiseClosed;
+
+  // We don't need to specify the mode again,
+  // as the default mode is taken (browser, clear history)
+
+  dh = new DialogHelper();
+  dh.onload = function () {
+    // Default checked for browser and clear history mode
+    this.validateCheckbox("history", true);
+    this.validateCheckbox("cache", true);
+    this.validateCheckbox("cookies", true);
+    this.validateCheckbox("siteSettings", false);
+    this.validateCheckbox("downloads", true);
+
+    this.cancelDialog();
+  };
+  dh.open();
+  await dh.promiseClosed;
 });
 
 /**
