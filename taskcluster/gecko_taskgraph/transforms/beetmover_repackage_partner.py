@@ -6,19 +6,17 @@ Transform the beetmover task into an actual task description.
 """
 
 import logging
-from copy import deepcopy
 
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.dependencies import get_primary_dependency
-from taskgraph.util.schema import Schema, optionally_keyed_by, resolve_keyed_by
+from taskgraph.util.schema import Schema
 from taskgraph.util.taskcluster import get_artifact_prefix
-from voluptuous import Any, Optional, Required
+from voluptuous import Optional, Required
 
 from gecko_taskgraph.transforms.beetmover import craft_release_properties
 from gecko_taskgraph.transforms.task import task_description_schema
 from gecko_taskgraph.util.attributes import (
     copy_attributes_from_dependent_job,
-    release_level,
 )
 from gecko_taskgraph.util.partners import get_ftp_platform, get_partner_config_by_kind
 from gecko_taskgraph.util.scriptworker import (
@@ -33,9 +31,7 @@ beetmover_description_schema = Schema(
     {
         # unique label to describe this beetmover task, defaults to {dep.label}-beetmover
         Optional("label"): str,
-        Required("partner-bucket-scope"): optionally_keyed_by("release-level", str),
-        Required("partner-public-path"): Any(None, str),
-        Required("partner-private-path"): Any(None, str),
+        Required("partner-path"): str,
         Optional("extra"): object,
         Optional("attributes"): task_description_schema["attributes"],
         Optional("dependencies"): task_description_schema["dependencies"],
@@ -58,18 +54,6 @@ def remove_name(config, jobs):
 
 
 transforms.add_validate(beetmover_description_schema)
-
-
-@transforms.add
-def resolve_keys(config, jobs):
-    for job in jobs:
-        resolve_keyed_by(
-            job,
-            "partner-bucket-scope",
-            item_name=job["label"],
-            **{"release-level": release_level(config.params["project"])},
-        )
-        yield job
 
 
 @transforms.add
@@ -124,9 +108,7 @@ def make_task_description(config, jobs):
             "run-on-projects": dep_job.attributes.get("run_on_projects"),
             "shipping-phase": job["shipping-phase"],
             "shipping-product": job.get("shipping-product"),
-            "partner-private-path": job["partner-private-path"],
-            "partner-public-path": job["partner-public-path"],
-            "partner-bucket-scope": job["partner-bucket-scope"],
+            "partner-path": job["partner-path"],
             "extra": {
                 "repack_id": repack_id,
             },
@@ -138,37 +120,15 @@ def make_task_description(config, jobs):
         yield task
 
 
-def populate_scopes_and_worker_type(config, job, bucket_scope, partner_public=False):
+@transforms.add
+def populate_scopes_and_worker_type(config, jobs):
+    bucket_scope = get_beetmover_bucket_scope(config)
     action_scope = add_scope_prefix(config, "beetmover:action:push-to-partner")
 
-    task = deepcopy(job)
-    task["scopes"] = [bucket_scope, action_scope]
-    task["worker-type"] = "beetmover"
-    task["partner_public"] = partner_public
-    if partner_public:
-        task["label"] = "{}-public".format(task["label"])
-    return task
-
-
-@transforms.add
-def split_public_and_private(config, jobs):
-    public_bucket_scope = get_beetmover_bucket_scope(config)
-    partner_config = get_partner_config_by_kind(config, config.kind)
-
     for job in jobs:
-        partner_bucket_scope = add_scope_prefix(config, job["partner-bucket-scope"])
-        partner, subpartner, _ = job["extra"]["repack_id"].split("/")
-
-        if partner_config[partner][subpartner].get("upload_to_candidates"):
-            # public
-            yield populate_scopes_and_worker_type(
-                config, job, public_bucket_scope, partner_public=True
-            )
-        else:
-            # private
-            yield populate_scopes_and_worker_type(
-                config, job, partner_bucket_scope, partner_public=False
-            )
+        job["scopes"] = [bucket_scope, action_scope]
+        job["worker-type"] = "beetmover"
+        yield job
 
 
 def generate_upstream_artifacts(
@@ -306,19 +266,8 @@ def make_task_worker(config, jobs):
             "subpartner": subpartner,
             "version": config.params["version"],
         }
-        partner_public = job["partner_public"]
-        if partner_public:
-            partner_path_key = "partner-public-path"
-        else:
-            partner_path_key = "partner-private-path"
-        # Kinds can set these to None
-        if not job[partner_path_key]:
-            continue
-        partner_path = job[partner_path_key].format(**repl_dict)
-        del job["partner_public"]
-        del job["partner-private-path"]
-        del job["partner-public-path"]
-        del job["partner-bucket-scope"]
+        partner_path = job["partner-path"].format(**repl_dict)
+        del job["partner-path"]
 
         worker = {
             "implementation": "beetmover",
@@ -333,7 +282,6 @@ def make_task_worker(config, jobs):
                 partner_path,
                 repack_stub_installer,
             ),
-            "partner-public": partner_public,
         }
         job["worker"] = worker
 

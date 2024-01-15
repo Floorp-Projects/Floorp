@@ -62,7 +62,6 @@ An example config looks like this:
             platforms:
             - win64-shippable
             - win32-shippable
-            upload_to_candidates: true
 
 The four main parameters are ``medium, source, campaign, content``, of which the first two are
 common to all attributions. The combination of ``campaign`` and ``content`` should be unique
@@ -73,9 +72,8 @@ The optional parameters of ``variation``, and ``experiment`` may also be specifi
 Non-empty lists of locales and platforms are required parameters (NB the `-shippable` suffix should be used on
 the platforms).
 
-``upload_to_candidates`` is an optional setting which controls whether the Firefox installers
-are uploaded into the `candidates directory <https://archive.mozilla.org/pub/firefox/candidates/>`_.
-If not set the files are uploaded to the private S3 bucket for partner builds.
+The Firefox installers are uploaded into the `candidates directory
+<https://archive.mozilla.org/pub/firefox/candidates/>`_.
 
 
 Repacking process
@@ -112,10 +110,9 @@ Beetmover
 * upstreams: ``release-partner-attribution``
 
 Moves and renames the artifacts to their public location in the `candidates directory
-<https://archive.mozilla.org/pub/firefox/candidates/>`_, or a private S3 bucket. There is one task
-for public artifacts and another for private.
+<https://archive.mozilla.org/pub/firefox/candidates/>`_.
 
-Each task will have the ``project:releng:beetmover:action:push-to-partner`` scope, with public uploads having
-``project:releng:beetmover:bucket:release`` and private uploads using
-``project:releng:beetmover:bucket:partner``. There's a partner-specific code path in
-`beetmoverscript <https://github.com/mozilla-releng/scriptworker-scripts/tree/master/beetmoverscript>`_.
+Each task will have the ``project:releng:beetmover:action:push-to-partner`` and
+``project:releng:beetmover:bucket:release`` scopes.  There's a partner-specific
+code path in `beetmoverscript
+<https://github.com/mozilla-releng/scriptworker-scripts/tree/master/beetmoverscript>`_.
