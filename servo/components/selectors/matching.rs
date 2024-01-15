@@ -1200,7 +1200,7 @@ where
 
     // It's useful to know whether this can only select the first/last element
     // child for optimization purposes, see the `HAS_EDGE_CHILD_SELECTOR` flag.
-    let is_edge_child_selector = a == 0 && b == 1 && !is_of_type && !has_selectors;
+    let is_edge_child_selector = nth_data.is_simple_edge() && !has_selectors;
 
     if context.needs_selector_flags() {
         let mut flags = if is_edge_child_selector {
