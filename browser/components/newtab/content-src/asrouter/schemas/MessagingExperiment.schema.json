@@ -788,98 +788,6 @@
         "targeting"
       ]
     },
-    "ProtectionsPanelMessage": {
-      "$schema": "https://json-schema.org/draft/2019-09/schema",
-      "$id": "file:///ProtectionsPanelMessage.schema.json",
-      "title": "ProtectionsPanelMessage",
-      "description": "A message shown in the protections panel.",
-      "allOf": [
-        {
-          "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/Message"
-        }
-      ],
-      "type": "object",
-      "properties": {
-        "content": {
-          "type": "object",
-          "properties": {
-            "title": {
-              "description": "The message title.",
-              "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/localizableText"
-            },
-            "body": {
-              "description": "The body of the message.",
-              "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/localizableText"
-            },
-            "link_text": {
-              "description": "The text of the call to action link.",
-              "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/localizableText"
-            },
-            "cta_type": {
-              "description": "The type of URL open action.",
-              "type": "string",
-              "enum": [
-                "OPEN_URL",
-                "OPEN_PROTECTION_REPORT",
-                "OPEN_ABOUT_PAGE"
-              ]
-            },
-            "cta_url": {
-              "description": "The URL to open when the call to action is clicked",
-              "type": "string",
-              "format": "moz-url-format"
-            },
-            "cta_where": {
-              "description": "How to open the cta.",
-              "type": "string",
-              "enum": [
-                "current",
-                "tabshifted",
-                "tab",
-                "save",
-                "window"
-              ]
-            }
-          },
-          "dependantSchemas": {
-            "link_text": [
-              "cta_type",
-              "cta_url"
-            ],
-            "cta_type": [
-              "link_text"
-            ],
-            "cta_url": [
-              "link_text"
-            ],
-            "cta_where": [
-              "link_text"
-            ]
-          },
-          "additionalProperties": false,
-          "required": [
-            "title",
-            "body"
-          ]
-        },
-        "template": {
-          "type": "string",
-          "const": "protections_panel"
-        },
-        "trigger": {
-          "description": "An action to trigger potentially showing the message. The action ID `protectionsPanelOpen` is required.",
-          "const": {
-            "id": "protectionsPanelOpen"
-          }
-        }
-      },
-      "required": [
-        "content",
-        "template",
-        "trigger"
-      ],
-      "additionalProperties": true
-    },
     "Spotlight": {
       "$schema": "https://json-schema.org/draft/2019-09/schema",
       "$id": "file:///Spotlight.schema.json",
@@ -1321,7 +1229,6 @@
             "milestone_message",
             "infobar",
             "pb_newtab",
-            "protections_panel",
             "spotlight",
             "feature_callout",
             "toast_notification",
@@ -1528,25 +1435,6 @@
           },
           "then": {
             "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/NewtabPromoMessage"
-          }
-        },
-        {
-          "if": {
-            "type": "object",
-            "properties": {
-              "template": {
-                "type": "string",
-                "enum": [
-                  "protections_panel"
-                ]
-              }
-            },
-            "required": [
-              "template"
-            ]
-          },
-          "then": {
-            "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/ProtectionsPanelMessage"
           }
         },
         {

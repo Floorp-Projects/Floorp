@@ -64,10 +64,6 @@ async function makeValidators() {
       "resource://testing-common/NewtabPromoMessage.schema.json",
       { common: true }
     ),
-    protections_panel: await schemaValidatorFor(
-      "resource://testing-common/ProtectionsPanelMessage.schema.json",
-      { common: true }
-    ),
     spotlight: await schemaValidatorFor(
       "resource://testing-common/Spotlight.schema.json",
       { common: true }
