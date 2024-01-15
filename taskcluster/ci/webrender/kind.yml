@@ -279,6 +279,7 @@ jobs:
                 - android-sdk-linux
                 - android-system-image-x86_64-linux
                 - android-avd-x86_64-linux
+                - linux64-cargo-apk
                 - linux64-jdk
                 - linux64-rust-android
                 - wrench-deps
@@ -329,6 +330,7 @@ jobs:
                 - android-sdk-linux
                 - android-system-image-x86_64-linux
                 - android-avd-x86_64-linux
+                - linux64-cargo-apk
                 - linux64-jdk
                 - linux64-rust-android
                 - wrench-deps
