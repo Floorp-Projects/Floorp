@@ -17,7 +17,6 @@ TESTING_JS_MODULES += [
     "content-src/asrouter/templates/CFR/templates/CFRUrlbarChiclet.schema.json",
     "content-src/asrouter/templates/CFR/templates/ExtensionDoorhanger.schema.json",
     "content-src/asrouter/templates/CFR/templates/InfoBar.schema.json",
-    "content-src/asrouter/templates/OnboardingMessage/ProtectionsPanelMessage.schema.json",
     "content-src/asrouter/templates/OnboardingMessage/Spotlight.schema.json",
     "content-src/asrouter/templates/OnboardingMessage/ToolbarBadgeMessage.schema.json",
     "content-src/asrouter/templates/OnboardingMessage/UpdateAction.schema.json",

@@ -64,20 +64,6 @@ const BASE_MESSAGES = () => [
     trigger: { id: "toolbarBadgeUpdate" },
   },
   {
-    id: "PROTECTIONS_PANEL_1",
-    template: "protections_panel",
-    content: {
-      title: { string_id: "cfr-protections-panel-header" },
-      body: { string_id: "cfr-protections-panel-body" },
-      link_text: { string_id: "cfr-protections-panel-link-text" },
-      cta_url: `${Services.urlFormatter.formatURLPref(
-        "app.support.baseURL"
-      )}etp-promotions?as=u&utm_source=inproduct`,
-      cta_type: "OPEN_URL",
-    },
-    trigger: { id: "protectionsPanelOpen" },
-  },
-  {
     id: "MILESTONE_MESSAGE_87",
     groups: ["cfr"],
     content: {
