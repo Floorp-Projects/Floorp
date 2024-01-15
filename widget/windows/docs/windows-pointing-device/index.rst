@@ -262,6 +262,7 @@ states, and some devices have multiple actuators that can have the three-state
 model individually applied.
 
 .. mermaid::
+
     stateDiagram-v2
         direction LR
         state "State 0" as s0
