@@ -568,7 +568,23 @@ export class FormAutofillParent extends JSWindowActorParent {
       }
     }
 
-    if (!this._shouldShowSaveAddressPrompt(newAddress.record)) {
+    if (
+      !FormAutofill.isAutofillAddressesCaptureEnabled &&
+      !FormAutofill.isAutofillAddressesCaptureV2Enabled
+    ) {
+      return false;
+    }
+
+    // Do not save address for regions that we don't support
+    if (
+      FormAutofill._isAutofillAddressesAvailable == "detect" &&
+      !FormAutofill.isAutofillAddressesAvailableInCountry(
+        newAddress.record.country
+      )
+    ) {
+      lazy.log.debug(
+        "Do not show the capture prompt for an unsupported region"
+      );
       return false;
     }
 
@@ -652,37 +668,5 @@ export class FormAutofillParent extends JSWindowActorParent {
           })()
         )
     );
-  }
-
-  _shouldShowSaveAddressPrompt(record) {
-    if (
-      !FormAutofill.isAutofillAddressesCaptureEnabled &&
-      !FormAutofill.isAutofillAddressesCaptureV2Enabled
-    ) {
-      return false;
-    }
-
-    // Do not save address for regions that we don't support
-    if (
-      FormAutofill._isAutofillAddressesAvailable == "detect" &&
-      !FormAutofill.isAutofillAddressesAvailableInCountry(record.country)
-    ) {
-      lazy.log.debug(
-        `Do not show the address capture prompt for unsupported regions - ${record.country}`
-      );
-      return false;
-    }
-
-    // Display the address capture doorhanger only when the submitted form contains all
-    // the required fields. This approach is implemented to prevent excessive prompting.
-    const requiredFields = FormAutofill.addressCaptureRequiredFields ?? [];
-    if (!requiredFields.every(field => field in record)) {
-      lazy.log.debug(
-        "Do not show the address capture prompt when the submitted form doesn't contain all the required fields"
-      );
-      return false;
-    }
-
-    return true;
   }
 }

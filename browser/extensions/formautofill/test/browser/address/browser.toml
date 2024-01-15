@@ -1,7 +1,6 @@
 [DEFAULT]
 prefs = [
   "extensions.formautofill.addresses.enabled=true",
-  "extensions.formautofill.addresses.capture.requiredFields=''",
   "toolkit.telemetry.ipcBatchTimeout=0", # lower the interval for event telemetry in the content process to update the parent process
 ]
 support-files = [

@@ -36,8 +36,6 @@ const ENABLED_AUTOFILL_CAPTURE_ON_FORM_REMOVAL =
   "extensions.formautofill.heuristics.captureOnFormRemoval";
 const ENABLED_AUTOFILL_CAPTURE_ON_PAGE_NAVIGATION =
   "extensions.formautofill.heuristics.captureOnPageNavigation";
-const ENABLED_AUTOFILL_ADDRESS_CAPTURE_REQUIRED_FIELDS =
-  "extensions.formautofill.addresses.capture.requiredFields";
 
 export const FormAutofill = {
   ENABLED_AUTOFILL_ADDRESSES_PREF,
@@ -269,14 +267,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
   FormAutofill,
   "captureOnPageNavigation",
   ENABLED_AUTOFILL_CAPTURE_ON_PAGE_NAVIGATION
-);
-XPCOMUtils.defineLazyPreferenceGetter(
-  FormAutofill,
-  "addressCaptureRequiredFields",
-  ENABLED_AUTOFILL_ADDRESS_CAPTURE_REQUIRED_FIELDS,
-  null,
-  null,
-  val => val?.split(",").filter(v => !!v)
 );
 
 // XXX: This should be invalidated on intl:app-locales-changed.
