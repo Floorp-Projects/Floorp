@@ -117,7 +117,7 @@ void js::temporal::CalendarRecord::trace(JSTracer* trc) {
 }
 
 bool js::temporal::WrapCalendarValue(JSContext* cx,
-                                     JS::MutableHandle<JS::Value> calendar) {
+                                     MutableHandle<JS::Value> calendar) {
   MOZ_ASSERT(calendar.isString() || calendar.isObject());
   return cx->compartment()->wrap(cx, calendar);
 }

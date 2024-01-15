@@ -1474,7 +1474,13 @@ static bool DifferenceTemporalZonedDateTime(JSContext* cx,
     return false;
   }
 
-  // Step 13. (Performed in RoundDuration in our implementation.)
+  // Step 13.
+  Rooted<PlainDateObject*> plainRelativeTo(
+      cx, CreateTemporalDate(cx, precalculatedPlainDateTime.date,
+                             calendar.receiver()));
+  if (!plainRelativeTo) {
+    return false;
+  }
 
   // Step 14.
   if (resolvedOptions) {
@@ -1519,22 +1525,37 @@ static bool DifferenceTemporalZonedDateTime(JSContext* cx,
   // Steps 18-19.
   Duration roundResult;
   if (!RoundDuration(cx, difference, settings.roundingIncrement,
-                     settings.smallestUnit, settings.roundingMode, calendar,
-                     zonedDateTime, &timeZone, precalculatedPlainDateTime,
-                     &roundResult)) {
+                     settings.smallestUnit, settings.roundingMode,
+                     plainRelativeTo, calendar, zonedDateTime, &timeZone,
+                     precalculatedPlainDateTime, &roundResult)) {
     return false;
   }
 
   // Step 20.
-  Duration result;
+  Duration adjustResult;
   if (!AdjustRoundedDurationDays(cx, roundResult, settings.roundingIncrement,
                                  settings.smallestUnit, settings.roundingMode,
                                  zonedDateTime, calendar, &timeZone,
-                                 precalculatedPlainDateTime, &result)) {
+                                 precalculatedPlainDateTime, &adjustResult)) {
     return false;
   }
 
   // Step 21.
+  DateDuration balanceResult;
+  if (!temporal::BalanceDateDurationRelative(
+          cx, adjustResult.date(), settings.largestUnit, plainRelativeTo,
+          calendar, &balanceResult)) {
+    return false;
+  }
+
+  // Step 22.
+  auto result = Duration{
+      balanceResult.years,       balanceResult.months,
+      balanceResult.weeks,       balanceResult.days,
+      adjustResult.hours,        adjustResult.minutes,
+      adjustResult.seconds,      adjustResult.milliseconds,
+      adjustResult.microseconds, adjustResult.nanoseconds,
+  };
   if (operation == TemporalDifference::Since) {
     result = result.negate();
   }

@@ -1035,7 +1035,7 @@ bool js::temporal::ToCalendarNameOption(JSContext* cx,
  * ToFractionalSecondDigits ( normalizedOptions )
  */
 bool js::temporal::ToFractionalSecondDigits(JSContext* cx,
-                                            JS::Handle<JSObject*> options,
+                                            Handle<JSObject*> options,
                                             Precision* precision) {
   // Step 1.
   Rooted<Value> digitsValue(cx);

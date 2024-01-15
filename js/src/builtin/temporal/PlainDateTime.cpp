@@ -1044,20 +1044,30 @@ static bool DifferenceTemporalPlainDateTime(JSContext* cx,
   }
 
   // Step 10.
-  if (settings.smallestUnit <= TemporalUnit::Week) {
-    if (!CalendarMethodsRecordLookup(cx, &calendar, CalendarMethod::DateAdd)) {
-      return false;
-    }
-  }
+  bool roundingGranularityIsNoop =
+      settings.smallestUnit == TemporalUnit::Nanosecond &&
+      settings.roundingIncrement == Increment{1};
 
   // Step 11.
   bool largestUnitIsCalendarUnit = settings.largestUnit <= TemporalUnit::Week;
 
   // Step 12.
+  bool roundingRequiresDateAddLookup =
+      !roundingGranularityIsNoop && largestUnitIsCalendarUnit;
+
+  // Step 13.
+  if (settings.smallestUnit <= TemporalUnit::Week ||
+      roundingRequiresDateAddLookup) {
+    if (!CalendarMethodsRecordLookup(cx, &calendar, CalendarMethod::DateAdd)) {
+      return false;
+    }
+  }
+
+  // Step 14.
   bool largestUnitRequiresDateUntilLookup =
       !datePartsIdentical && largestUnitIsCalendarUnit;
 
-  // Step 13.
+  // Step 15.
   if (largestUnitRequiresDateUntilLookup ||
       settings.smallestUnit == TemporalUnit::Year) {
     if (!CalendarMethodsRecordLookup(cx, &calendar,
@@ -1066,16 +1076,15 @@ static bool DifferenceTemporalPlainDateTime(JSContext* cx,
     }
   }
 
-  // Step 14.
+  // Step 16.
   Duration diff;
   if (!::DifferenceISODateTime(cx, dateTime, other, calendar,
                                settings.largestUnit, resolvedOptions, &diff)) {
     return false;
   }
 
-  // Step 15.
-  if (settings.smallestUnit == TemporalUnit::Nanosecond &&
-      settings.roundingIncrement == Increment{1}) {
+  // Step 17.
+  if (roundingGranularityIsNoop) {
     if (operation == TemporalDifference::Since) {
       diff = diff.negate();
     }
@@ -1089,14 +1098,14 @@ static bool DifferenceTemporalPlainDateTime(JSContext* cx,
     return true;
   }
 
-  // Step 16
+  // Step 18
   Rooted<PlainDateObject*> relativeTo(
       cx, CreateTemporalDate(cx, dateTime.date(), dateTime.calendar()));
   if (!relativeTo) {
     return false;
   }
 
-  // Steps 17-18.
+  // Steps 19-20.
   Duration roundResult;
   if (!temporal::RoundDuration(cx, diff, settings.roundingIncrement,
                                settings.smallestUnit, settings.roundingMode,
@@ -1104,17 +1113,31 @@ static bool DifferenceTemporalPlainDateTime(JSContext* cx,
     return false;
   }
 
-  // Step 19.
+  // Step 21.
   TimeDuration result;
   if (!BalanceTimeDuration(cx, roundResult, settings.largestUnit, &result)) {
     return false;
   }
 
-  // Step 20.
+  // Step 22.
+  auto toBalance = Duration{
+      roundResult.years,
+      roundResult.months,
+      roundResult.weeks,
+      result.days,
+  };
+  DateDuration balanceResult;
+  if (!temporal::BalanceDateDurationRelative(cx, toBalance,
+                                             settings.largestUnit, relativeTo,
+                                             calendar, &balanceResult)) {
+    return false;
+  }
+
+  // Step 23.
   Duration duration = {
-      roundResult.years,  roundResult.months,  roundResult.weeks,
-      result.days,        result.hours,        result.minutes,
-      result.seconds,     result.milliseconds, result.microseconds,
+      balanceResult.years, balanceResult.months, balanceResult.weeks,
+      balanceResult.days,  result.hours,         result.minutes,
+      result.seconds,      result.milliseconds,  result.microseconds,
       result.nanoseconds,
   };
   if (operation == TemporalDifference::Since) {
