@@ -4156,8 +4156,8 @@ void Element::SetOrRemoveNullableStringAttr(nsAtom* aName,
 Directionality Element::GetComputedDirectionality() const {
   if (nsIFrame* frame = GetPrimaryFrame()) {
     return frame->StyleVisibility()->mDirection == StyleDirection::Ltr
-               ? eDir_LTR
-               : eDir_RTL;
+               ? Directionality::Ltr
+               : Directionality::Rtl;
   }
 
   return GetDirectionality();

@@ -4375,16 +4375,16 @@ nsDOMWindowUtils::GetDirectionFromText(const nsAString& aString,
   Directionality dir =
       ::GetDirectionFromText(aString.BeginReading(), aString.Length(), nullptr);
   switch (dir) {
-    case eDir_NotSet:
+    case Directionality::Unset:
       *aRetval = nsIDOMWindowUtils::DIRECTION_NOT_SET;
       break;
-    case eDir_RTL:
+    case Directionality::Rtl:
       *aRetval = nsIDOMWindowUtils::DIRECTION_RTL;
       break;
-    case eDir_LTR:
+    case Directionality::Ltr:
       *aRetval = nsIDOMWindowUtils::DIRECTION_LTR;
       break;
-    case eDir_Auto:
+    case Directionality::Auto:
       MOZ_ASSERT_UNREACHABLE(
           "GetDirectionFromText should never return this value");
       return NS_ERROR_FAILURE;

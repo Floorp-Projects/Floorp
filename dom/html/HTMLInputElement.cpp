@@ -3849,14 +3849,16 @@ nsresult HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
               Decimal newValue;
               switch (keyEvent->mKeyCode) {
                 case NS_VK_LEFT:
-                  newValue =
-                      value +
-                      (GetComputedDirectionality() == eDir_RTL ? step : -step);
+                  newValue = value +
+                             (GetComputedDirectionality() == Directionality::Rtl
+                                  ? step
+                                  : -step);
                   break;
                 case NS_VK_RIGHT:
-                  newValue =
-                      value +
-                      (GetComputedDirectionality() == eDir_RTL ? -step : step);
+                  newValue = value +
+                             (GetComputedDirectionality() == Directionality::Rtl
+                                  ? -step
+                                  : step);
                   break;
                 case NS_VK_UP:
                   // Even for horizontal range, "up" means "increase"
@@ -4176,7 +4178,7 @@ nsresult HTMLInputElement::MaybeHandleRadioButtonNavigation(
         return RadioButtonMove::Forward;
       case NS_VK_LEFT:
       case NS_VK_RIGHT: {
-        const bool isRtl = GetComputedDirectionality() == eDir_RTL;
+        const bool isRtl = GetComputedDirectionality() == Directionality::Rtl;
         return isRtl == (aKeyCode == NS_VK_LEFT) ? RadioButtonMove::Forward
                                                  : RadioButtonMove::Back;
       }
