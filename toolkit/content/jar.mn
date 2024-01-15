@@ -8,7 +8,7 @@ toolkit.jar:
    content/global/aboutLogging.js
    content/global/aboutLogging.html
    content/global/aboutNetError.mjs
-   content/global/aboutNetError.xhtml
+   content/global/aboutNetError.html
    content/global/aboutNetworking.js
    content/global/aboutNetworking.html
 #ifndef ANDROID

@@ -892,14 +892,7 @@ static void RecordZeroLengthEvent(bool aIsSync, const nsCString& aSpec,
   // entire string, or 80 characters of it, to make sure we don't miss any
   // events.
   uint32_t from = findFilenameStart(aSpec);
-  nsAutoCString fileName(Substring(aSpec, from));
-
-  // Bug 1702937: Filter aboutNetError.xhtml.
-  // Note that aboutNetError.xhtml is causing ~90% of the XHTML error events. We
-  // should investigate this in the future.
-  if (StringEndsWith(fileName, "aboutNetError.xhtml"_ns)) {
-    return;
-  }
+  const auto fileName = Substring(aSpec, from);
 
   nsAutoCString errorCString;
   mozilla::GetErrorName(aStatus, errorCString);
@@ -1031,7 +1024,8 @@ static void RecordZeroLengthEvent(bool aIsSync, const nsCString& aSpec,
   res.SetCapacity(4);
   res.AppendElement(
       Telemetry::EventExtraEntry{"sync"_ns, aIsSync ? "true"_ns : "false"_ns});
-  res.AppendElement(Telemetry::EventExtraEntry{"file_name"_ns, fileName});
+  res.AppendElement(
+      Telemetry::EventExtraEntry{"file_name"_ns, nsCString(fileName)});
   res.AppendElement(Telemetry::EventExtraEntry{"status"_ns, errorCString});
   res.AppendElement(Telemetry::EventExtraEntry{
       "cancelled"_ns, aCanceled ? "true"_ns : "false"_ns});
