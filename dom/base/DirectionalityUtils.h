@@ -39,13 +39,21 @@ Directionality GetDirectionFromText(const char16_t* aText,
 
 /**
  * Set the directionality of an element according to the algorithm defined at
- * http://www.whatwg.org/specs/web-apps/current-work/multipage/elements.html#the-directionality,
- * not including elements with auto direction.
+ * https://html.spec.whatwg.org/#the-directionality, not including elements with
+ * auto direction.
  *
  * @return the directionality that the element was set to
  */
 Directionality RecomputeDirectionality(mozilla::dom::Element* aElement,
                                        bool aNotify = true);
+
+/**
+ * Conceptually https://html.spec.whatwg.org/#parent-directionality, but a bit
+ * different in how we deal with shadow DOM.
+ *
+ * FIXME(bug 1857719): Update directionality to the latest version of the spec.
+ */
+Directionality GetParentDirectionality(const mozilla::dom::Element* aElement);
 
 /**
  * Set the directionality of any descendants of a node that do not themselves

@@ -231,7 +231,7 @@ using mozilla::dom::HTMLSlotElement;
 using mozilla::dom::ShadowRoot;
 
 static nsIContent* GetParentOrHostOrSlot(
-    nsIContent* aContent, bool* aCrossedShadowBoundary = nullptr) {
+    const nsIContent* aContent, bool* aCrossedShadowBoundary = nullptr) {
   if (HTMLSlotElement* slot = aContent->GetAssignedSlot()) {
     if (aCrossedShadowBoundary) {
       *aCrossedShadowBoundary = true;
@@ -244,7 +244,7 @@ static nsIContent* GetParentOrHostOrSlot(
     return parent;
   }
 
-  ShadowRoot* sr = ShadowRoot::FromNode(aContent);
+  const ShadowRoot* sr = ShadowRoot::FromNode(aContent);
   if (sr) {
     if (aCrossedShadowBoundary) {
       *aCrossedShadowBoundary = true;
@@ -675,6 +675,24 @@ class nsTextNodeDirectionalityMap {
   }
 };
 
+Directionality GetParentDirectionality(const Element* aElement) {
+  if (nsIContent* parent = GetParentOrHostOrSlot(aElement)) {
+    if (ShadowRoot* shadow = ShadowRoot::FromNode(parent)) {
+      parent = shadow->GetHost();
+    }
+    if (parent && parent->IsElement()) {
+      // If the node doesn't have an explicit dir attribute with a valid value,
+      // the directionality is the same as the parent element (but don't
+      // propagate the parent directionality if it isn't set yet).
+      Directionality parentDir = parent->AsElement()->GetDirectionality();
+      if (parentDir != eDir_NotSet) {
+        return parentDir;
+      }
+    }
+  }
+  return eDir_LTR;
+}
+
 Directionality RecomputeDirectionality(Element* aElement, bool aNotify) {
   MOZ_ASSERT(!aElement->HasDirAuto(),
              "RecomputeDirectionality called with dir=auto");
@@ -682,8 +700,6 @@ Directionality RecomputeDirectionality(Element* aElement, bool aNotify) {
   if (aElement->HasValidDir()) {
     return aElement->GetDirectionality();
   }
-
-  Directionality dir = eDir_LTR;
 
   // https://html.spec.whatwg.org/multipage/dom.html#the-directionality:
   //
@@ -694,27 +710,12 @@ Directionality RecomputeDirectionality(Element* aElement, bool aNotify) {
   //     The directionality of the element is 'ltr'.
   if (auto* input = HTMLInputElement::FromNode(*aElement)) {
     if (input->ControlType() == FormControlType::InputTel) {
-      aElement->SetDirectionality(dir, aNotify);
-      return dir;
+      aElement->SetDirectionality(eDir_LTR, aNotify);
+      return eDir_LTR;
     }
   }
 
-  if (nsIContent* parent = GetParentOrHostOrSlot(aElement)) {
-    if (ShadowRoot* shadow = ShadowRoot::FromNode(parent)) {
-      parent = shadow->GetHost();
-    }
-
-    if (parent && parent->IsElement()) {
-      // If the node doesn't have an explicit dir attribute with a valid value,
-      // the directionality is the same as the parent element (but don't
-      // propagate the parent directionality if it isn't set yet).
-      Directionality parentDir = parent->AsElement()->GetDirectionality();
-      if (parentDir != eDir_NotSet) {
-        dir = parentDir;
-      }
-    }
-  }
-
+  const Directionality dir = GetParentDirectionality(aElement);
   aElement->SetDirectionality(dir, aNotify);
   return dir;
 }

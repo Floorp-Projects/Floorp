@@ -1510,7 +1510,7 @@ class nsINode : public mozilla::dom::EventTarget {
    *
    * @return The shadow host, if this is in shadow tree, or null.
    */
-  nsIContent* GetContainingShadowHost() const;
+  mozilla::dom::Element* GetContainingShadowHost() const;
 
   bool IsInSVGUseShadowTree() const {
     return !!GetContainingSVGUseShadowHost();
