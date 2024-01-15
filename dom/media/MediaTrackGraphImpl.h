@@ -202,6 +202,18 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
     AppendMessage(WrapUnique(new MediaTrack::ControlMessageWithNoShutdown(
         std::forward<Function>(aFunction))));
   }
+  /**
+   * Append to the message queue a control message to execute a given lambda
+   * function with a single IsInShutdown parameter.  A No argument indicates
+   * execution on the thread of a graph that is still running.  A Yes argument
+   * indicates execution on the main thread when the graph has been forced to
+   * shut down.
+   **/
+  template <typename Function>
+  void QueueControlOrShutdownMessage(Function&& aFunction) {
+    AppendMessage(WrapUnique(new MediaTrack::ControlOrShutdownMessage(
+        std::forward<Function>(aFunction))));
+  }
   /* Add or remove an audio output for this track.  At most one output may be
    * registered per key.  aPreferredSampleRate is the rate preferred by the
    * output device; it may be zero to indicate the preferred rate for the
