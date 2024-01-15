@@ -63,28 +63,6 @@ add_task(async function testNotificationPermission() {
     true
   );
 
-  Services.prefs.setIntPref(
-    "permissions.default.desktop-notification",
-    Ci.nsIPermissionManager.DENY_ACTION
-  );
-
-  // First test that all requests (even with user interaction) will cause a post-prompt
-  // if the global default is "deny".
-
-  await testPostPrompt(function () {
-    E10SUtils.wrapHandlingUserInput(content, true, function () {
-      content.document.getElementById("desktop-notification").click();
-    });
-  });
-
-  await testPostPrompt(function () {
-    E10SUtils.wrapHandlingUserInput(content, true, function () {
-      content.document.getElementById("push").click();
-    });
-  });
-
-  Services.prefs.clearUserPref("permissions.default.desktop-notification");
-
   // Now test that requests without user interaction will post-prompt when the
   // user interaction requirement is set.
 

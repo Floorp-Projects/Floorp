@@ -390,16 +390,6 @@ class PermissionPrompt {
       );
 
       if (state == lazy.SitePermissions.BLOCK) {
-        // If this block was done based on a global user setting, we want to show
-        // a post prompt to give the user some more granular control without
-        // annoying them too much.
-        if (
-          this.postPromptEnabled &&
-          lazy.SitePermissions.getDefault(this.permissionKey) ==
-            lazy.SitePermissions.BLOCK
-        ) {
-          this.postPrompt();
-        }
         this.cancel();
         return;
       }
