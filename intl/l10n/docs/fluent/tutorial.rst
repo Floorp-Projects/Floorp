@@ -651,7 +651,7 @@ click the three dot menu in the top right corner, and choose one of the followin
    and duplicates some vowels to create roughly 30% longer strings. Strings are
    wrapped in markers (square brackets), which help with detecting truncation.
 
-   This option sets the :js:`intl.l10n.pseudo` pref to :js:`accented`.
+   This option sets the ``intl.l10n.pseudo`` pref to ``accented``.
 
 
  - **Enable bidi locale** - ɥsıʅƃuƎ ıpıԐ
@@ -660,9 +660,69 @@ click the three dot menu in the top right corner, and choose one of the followin
    and enforces right to left text flow using Unicode UAX#9 `Explicit Directional Embeddings`__.
    In this mode, the UI directionality will also be set to right-to-left.
 
-   This option sets the :js:`intl.l10n.pseudo` pref to :js:`bidi`.
+   This option sets the ``intl.l10n.pseudo`` pref to ``bidi``.
 
 __ https://www.unicode.org/reports/tr9/#Explicit_Directional_Embeddings
+
+Testing other locales
+=====================
+
+.. important::
+
+  For Firefox engineering work, you should prefer using pseudolocales.
+  Especially on Nightly, localizations can be incomplete (as we add/remove
+  localized content all the time) and cause confusing behaviour due to how
+  fallback works.
+
+Installing Nightly in a different locale
+----------------------------------------
+
+Localized Nightly builds are `listed on the mozilla.org website`_.
+
+Installing language packs on local builds
+-----------------------------------------
+
+To fix bugs that only reproduce with a specific locale, you may need to run a
+development or nightly build with that locale. The UI language switcher in
+Settings is disabled by default on Nightly, because language packs can become
+incomplete and cause errors in the UI — there is no fallback to English for
+strings using legacy formats, like .properties.
+
+However, if you really need to use this, you can:
+
+1. Open ``about:config`` and flip the ``intl.multilingual.enabled`` and
+   ``intl.multilingual.liveReload`` preferences to ``true``
+2. Open `the FTP listing for langpacks`_ and click the XPI file corresponding
+   to your language and nightly version (note that, especially around merge days,
+   multiple versions may be present).
+
+   .. note::
+      This is a Linux listing because that's the platform on which we run the
+      l10n jobs, but the XPIs should work on macOS and Windows as well.
+      The only exception is the "special" Japanese-for-mac locale,
+      which is in the ``mac/xpi`` subdirectory under
+      ``latest-mozilla-central-l10n`` instead. (``ja-JP-mac`` and ``ja`` will
+      both "work" cross-platform, but use different terminology in some places.)
+
+3. Click through the prompts to install the language pack.
+4. Open the Firefox Settings UI.
+5. Switch to your chosen language.
+
+Finding a regression in a localized build
+-----------------------------------------
+
+You can run `mozregression`_ with localized builds!
+
+At the commandline, if you wanted to find a regression in a Dutch (``nl``)
+build, you could run something like:::
+
+    mozregression --app firefox-l10n --lang nl --good 2024-01-01
+
+and that should run localized nightlies.
+
+.. _listed on the mozilla.org website: https://www.mozilla.org/firefox/all/#product-desktop-nightly
+.. _the FTP listing for langpacks: https://ftp.mozilla.org/pub/firefox/nightly/latest-mozilla-central-l10n/linux-x86_64/xpi/
+.. _mozregression: https://mozilla.github.io/mozregression/
 
 Inner Structure of Fluent
 =========================
