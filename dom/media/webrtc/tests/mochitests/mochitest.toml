@@ -76,4 +76,7 @@ skip-if = ["os != 'linux'"] # the only platform with real devices
 
 ["test_setSinkId_preMutedElement.html"]
 
+["test_setSinkId-stream-source.html"]
+skip-if = ["os == 'android'"] # bug 1473346 - no setSinkId()
+
 ["test_unfocused_pref.html"]
