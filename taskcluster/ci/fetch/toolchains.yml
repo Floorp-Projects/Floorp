@@ -467,8 +467,8 @@ makecab:
     description: makecab source code
     fetch:
         type: git
-        repo: https://github.com/glandium/rust-makecab/
-        revision: 73a4605b97123bf7221533c671f27f234d974b02
+        repo: https://github.com/luser/rust-makecab/
+        revision: 236cd02baefa754fc7a61b161c71d2aa13a87c2a
 
 nodejs-12-linux64:
     description: nodejs 12 for x64 linux
