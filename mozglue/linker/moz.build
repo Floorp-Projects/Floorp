@@ -10,7 +10,6 @@ if CONFIG["MOZ_LINKER"]:
         "CustomElf.cpp",
         "ElfLoader.cpp",
         "Mappable.cpp",
-        "XZStream.cpp",
     ]
 
 # When the linker is disabled, we still need Zip for mozglue/android.
@@ -25,9 +24,3 @@ Library("linker")
 FINAL_LIBRARY = "mozglue"
 
 TEST_DIRS += ["tests"]
-
-DEFINES["XZ_USE_CRC64"] = 1
-
-USE_LIBS += [
-    "xz-embedded",
-]
