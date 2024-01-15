@@ -10,4 +10,4 @@ FINAL_TARGET_FILES.actors = [
 ]
 
 with Files("**"):
-    BUG_COMPONENT = ("Web Compatibility", "Desktop")
+    BUG_COMPONENT = ("Web Compatibility", "Tooling & Investigations")
