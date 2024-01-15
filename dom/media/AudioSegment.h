@@ -298,6 +298,9 @@ struct AudioChunk {
 
   const PrincipalHandle& GetPrincipalHandle() const { return mPrincipalHandle; }
 
+  // aOutputChannels must contain pointers to channel data of length mDuration.
+  void DownMixTo(Span<AudioDataValue* const> aOutputChannels) const;
+
   TrackTime mDuration = 0;             // in frames within the buffer
   RefPtr<ThreadSharedObject> mBuffer;  // the buffer object whose lifetime is
                                        // managed; null means data is all zeroes

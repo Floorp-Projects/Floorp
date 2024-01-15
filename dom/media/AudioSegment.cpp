@@ -210,6 +210,26 @@ static void DownMixChunk(const AudioChunk& aChunk,
   }
 }
 
+void AudioChunk::DownMixTo(
+    Span<AudioDataValue* const> aOutputChannelPtrs) const {
+  switch (mBufferFormat) {
+    case AUDIO_FORMAT_FLOAT32:
+      DownMixChunk<float>(*this, aOutputChannelPtrs);
+      return;
+    case AUDIO_FORMAT_S16:
+      DownMixChunk<int16_t>(*this, aOutputChannelPtrs);
+      return;
+    case AUDIO_FORMAT_SILENCE:
+      for (AudioDataValue* outChannel : aOutputChannelPtrs) {
+        std::fill_n(outChannel, mDuration, static_cast<AudioDataValue>(0));
+      }
+      return;
+      // Avoid `default:` so that `-Wswitch` catches missing enumerators at
+      // compile time.
+  }
+  MOZ_ASSERT_UNREACHABLE("buffer format");
+}
+
 void AudioSegment::Mix(AudioMixer& aMixer, uint32_t aOutputChannels,
                        uint32_t aSampleRate) {
   AutoTArray<AudioDataValue,
@@ -259,19 +279,7 @@ void AudioSegment::Mix(AudioMixer& aMixer, uint32_t aOutputChannels,
                                SilentChannel::gZeroChannel);
       downMixInput = &upMixChunk;
     }
-    switch (c.mBufferFormat) {
-      case AUDIO_FORMAT_FLOAT32:
-        DownMixChunk<float>(*downMixInput, outChannelPtrs);
-        continue;
-      case AUDIO_FORMAT_S16:
-        DownMixChunk<int16_t>(*downMixInput, outChannelPtrs);
-        continue;
-      case AUDIO_FORMAT_SILENCE:
-        break;
-        // Avoid `default:` so that `-Wswitch` catches missing enumerators at
-        // compile time.
-    }
-    MOZ_ASSERT_UNREACHABLE("buffer format");
+    downMixInput->DownMixTo(outChannelPtrs);
   }
 
   if (offsetSamples) {
