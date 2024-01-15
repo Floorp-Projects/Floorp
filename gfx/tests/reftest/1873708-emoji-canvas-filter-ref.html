@@ -1,0 +1,22 @@
+<!doctype html>
+
+<p>The same 5 gray emoji should be present and unclipped on all 3 lines:</p>
+<canvas id=c width=400 height=200></canvas>
+
+<script>
+const x = c.getContext('2d');
+x.filter = 'invert(.5)';
+x.font = '50px monospace';
+const chWidth = x.measureText('x').width;
+const emojiWidth = x.measureText('\u{1F41E}\u{1F98A}\u{1F41E}\u{1F98A}\u{1F41E}').width;
+// First line
+x.fillText('x', 0, 50);
+x.fillText('\u{1F41E}\u{1F98A}\u{1F41E}\u{1F98A}\u{1F41E}', chWidth, 50);
+// Second line
+x.fillText('\u{1F41E}\u{1F98A}\u{1F41E}\u{1F98A}\u{1F41E}', chWidth, 100);
+x.fillText('x', chWidth + emojiWidth, 100);
+// Third line
+x.fillText('x', 0, 150);
+x.fillText('\u{1F41E}\u{1F98A}\u{1F41E}\u{1F98A}\u{1F41E}', chWidth, 150);
+x.fillText('x', chWidth + emojiWidth, 150);
+</script>
