@@ -3952,8 +3952,6 @@ pref("extensions.formautofill.addresses.enabled", true);
 pref("extensions.formautofill.addresses.capture.enabled", false);
 // This preference should be removed entirely once address capture v2 developing is finished
 pref("extensions.formautofill.addresses.capture.v2.enabled", false);
-// Defies the required address form fields to trigger the display of the address capture doorhanger
-pref("extensions.formautofill.addresses.capture.requiredFields", "street-address,postal-code,address-level1,address-level2");
 pref("extensions.formautofill.addresses.ignoreAutocompleteOff", true);
 // Supported countries need to follow ISO 3166-1 to align with "browser.search.region"
 pref("extensions.formautofill.addresses.supportedCountries", "US,CA");
