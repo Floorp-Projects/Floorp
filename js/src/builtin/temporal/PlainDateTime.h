@@ -7,11 +7,14 @@
 #ifndef builtin_temporal_PlainDateTime_h
 #define builtin_temporal_PlainDateTime_h
 
+#include "mozilla/Assertions.h"
+
 #include <stdint.h>
 
 #include "builtin/temporal/Calendar.h"
 #include "builtin/temporal/TemporalTypes.h"
 #include "builtin/temporal/Wrapped.h"
+#include "js/RootingAPI.h"
 #include "js/TypeDecls.h"
 #include "js/Value.h"
 #include "vm/NativeObject.h"

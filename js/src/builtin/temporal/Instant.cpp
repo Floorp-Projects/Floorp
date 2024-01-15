@@ -7,7 +7,6 @@
 #include "builtin/temporal/Instant.h"
 
 #include "mozilla/Assertions.h"
-#include "mozilla/Casting.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/Maybe.h"

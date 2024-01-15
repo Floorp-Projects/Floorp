@@ -17,6 +17,7 @@
 #include "js/TypeDecls.h"
 
 class JSLinearString;
+class JS_PUBLIC_API JSTracer;
 
 namespace js::temporal {
 

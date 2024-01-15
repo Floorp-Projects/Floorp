@@ -7,6 +7,8 @@
 #ifndef builtin_temporal_PlainDate_h
 #define builtin_temporal_PlainDate_h
 
+#include "mozilla/Assertions.h"
+
 #include <initializer_list>
 #include <stdint.h>
 
@@ -14,13 +16,17 @@
 #include "builtin/temporal/PlainDateTime.h"
 #include "builtin/temporal/TemporalTypes.h"
 #include "builtin/temporal/Wrapped.h"
+#include "js/RootingAPI.h"
 #include "js/TypeDecls.h"
 #include "js/Value.h"
 #include "vm/NativeObject.h"
 
+class JS_PUBLIC_API JSTracer;
+
 namespace js {
 struct ClassSpec;
-}
+class PlainObject;
+}  // namespace js
 
 namespace js::temporal {
 

@@ -8,8 +8,8 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/CheckedInt.h"
+#include "mozilla/EnumSet.h"
 #include "mozilla/FloatingPoint.h"
-#include "mozilla/Likely.h"
 #include "mozilla/Maybe.h"
 
 #include <algorithm>
@@ -53,7 +53,6 @@
 #include "js/PropertySpec.h"
 #include "js/RootingAPI.h"
 #include "js/Value.h"
-#include "proxy/DeadObjectProxy.h"
 #include "util/StringBuffer.h"
 #include "vm/BigIntType.h"
 #include "vm/BytecodeUtil.h"
@@ -65,7 +64,6 @@
 #include "vm/PlainObject.h"
 #include "vm/StringType.h"
 
-#include "vm/JSContext-inl.h"
 #include "vm/JSObject-inl.h"
 #include "vm/NativeObject-inl.h"
 #include "vm/ObjectOperations-inl.h"
