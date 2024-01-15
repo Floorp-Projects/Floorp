@@ -13,7 +13,7 @@ class MozHandler extends window.MozElements.MozRichlistitem {
   static get markup() {
     return `
     <vbox pack="center">
-      <html:img height="32" width="32"/>
+      <html:img alt="" height="32" width="32" loading="lazy" />
     </vbox>
     <vbox flex="1">
       <label class="name"/>
@@ -47,10 +47,6 @@ customElements.define("mozapps-handler", MozHandler, {
 
 window.addEventListener("DOMContentLoaded", () => dialog.initialize(), {
   once: true,
-});
-
-let loadPromise = new Promise(resolve => {
-  window.addEventListener("load", resolve, { once: true });
 });
 
 let dialog = {
@@ -131,9 +127,7 @@ let dialog = {
       if (app instanceof Ci.nsILocalHandlerApp) {
         // See if we have an nsILocalHandlerApp and set the icon
         let uri = Services.io.newFileURI(app.executable);
-        loadPromise.then(() => {
-          elm.setAttribute("image", "moz-icon://" + uri.spec + "?size=32");
-        });
+        elm.setAttribute("image", "moz-icon://" + uri.spec + "?size=32");
       } else if (app instanceof Ci.nsIWebHandlerApp) {
         let uri = Services.io.newURI(app.uriTemplate);
         if (/^https?$/.test(uri.scheme)) {
@@ -143,9 +137,7 @@ let dialog = {
           // and users won't visit the handler's URL template, they'll only
           // visit URLs derived from that template (i.e. with %s in the template
           // replaced by the URL of the content being handled).
-          loadPromise.then(() => {
-            elm.setAttribute("image", uri.prePath + "/favicon.ico");
-          });
+          elm.setAttribute("image", uri.prePath + "/favicon.ico");
         }
         elm.setAttribute("description", uri.prePath);
 
