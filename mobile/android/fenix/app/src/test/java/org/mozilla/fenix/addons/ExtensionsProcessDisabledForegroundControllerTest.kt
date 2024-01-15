@@ -8,7 +8,6 @@ import android.view.View
 import android.widget.Button
 import androidx.appcompat.app.AlertDialog
 import mozilla.components.browser.state.action.ExtensionsProcessAction
-import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
@@ -29,7 +28,7 @@ import org.mozilla.fenix.components.appstate.AppState
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
 @RunWith(FenixRobolectricTestRunner::class)
-class ExtensionsProcessDisabledControllerTest {
+class ExtensionsProcessDisabledForegroundControllerTest {
 
     @get:Rule
     val coroutinesTestRule = MainCoroutineRule()
@@ -40,7 +39,7 @@ class ExtensionsProcessDisabledControllerTest {
         val browserStore = BrowserStore()
         val dialog: AlertDialog = mock()
         val builder: AlertDialog.Builder = mock()
-        val controller = ExtensionsProcessDisabledController(
+        val controller = ExtensionsProcessDisabledForegroundController(
             context = testContext,
             appStore = AppStore(AppState(isForeground = true)),
             browserStore = browserStore,
@@ -81,7 +80,7 @@ class ExtensionsProcessDisabledControllerTest {
         val browserStore = BrowserStore()
         val dialog: AlertDialog = mock()
         val builder: AlertDialog.Builder = mock()
-        val controller = ExtensionsProcessDisabledController(
+        val controller = ExtensionsProcessDisabledForegroundController(
             context = testContext,
             appStore = AppStore(AppState(isForeground = true)),
             browserStore = browserStore,
@@ -122,7 +121,7 @@ class ExtensionsProcessDisabledControllerTest {
         val browserStore = BrowserStore()
         val dialog: AlertDialog = mock()
         val builder: AlertDialog.Builder = mock()
-        val controller = ExtensionsProcessDisabledController(
+        val controller = ExtensionsProcessDisabledForegroundController(
             context = testContext,
             appStore = AppStore(AppState(isForeground = true)),
             browserStore = browserStore,
@@ -151,24 +150,5 @@ class ExtensionsProcessDisabledControllerTest {
         // Click a button to dismiss the dialog.
         buttonsContainerCaptor.value.findViewById<Button>(R.id.negative).performClick()
         browserStore.waitUntilIdle()
-    }
-
-    @Test
-    fun `WHEN app is backgrounded AND extension process spawning threshold is exceeded THEN kill the app`() {
-        val browserStore = BrowserStore(BrowserState())
-        val appStore = AppStore(AppState(isForeground = false))
-        val builder: AlertDialog.Builder = mock()
-        val appName = "TestApp"
-        val onKillApp: () -> Unit = mock()
-
-        val controller = ExtensionsProcessDisabledController(testContext, browserStore, appStore, builder, appName, onKillApp)
-
-        controller.start()
-
-        browserStore.dispatch(ExtensionsProcessAction.ShowPromptAction(show = true))
-        dispatcher.scheduler.advanceUntilIdle()
-        browserStore.waitUntilIdle()
-
-        verify(onKillApp).invoke()
     }
 }

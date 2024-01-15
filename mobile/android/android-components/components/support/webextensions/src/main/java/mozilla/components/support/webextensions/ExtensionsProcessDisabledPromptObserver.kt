@@ -5,6 +5,7 @@
 package mozilla.components.support.webextensions
 
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.distinctUntilChangedBy
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.lib.state.ext.flowScoped
@@ -15,12 +16,17 @@ import mozilla.components.support.base.feature.LifecycleAwareFeature
  * the user should be prompted. This requires running in both the foreground and background.
  *
  * @property store the application's [BrowserStore].
+ * @property shouldCancelOnStop If false, this observer will run indefinitely to be able to react
+ * to state changes when the app is either in the foreground or in the background.
+ * Please note to not have any references to Activity or it's context in an observer where this
+ * is false. Defaults to true.
  * @property onShowExtensionsProcessDisabledPrompt a callback invoked when the application should
  * open a prompt.
  */
 open class ExtensionsProcessDisabledPromptObserver(
     private val store: BrowserStore,
-    private val onShowExtensionsProcessDisabledPrompt: () -> Unit = { },
+    private val shouldCancelOnStop: Boolean = true,
+    private val onShowExtensionsProcessDisabledPrompt: () -> Unit,
 ) : LifecycleAwareFeature {
     private var scope: CoroutineScope? = null
 
@@ -37,11 +43,10 @@ open class ExtensionsProcessDisabledPromptObserver(
         }
     }
 
-    /**
-     * This observer needs to run indefinitely because we need to react to state changes when the
-     * app is either in the foreground or in the background.
-     */
     override fun stop() {
-        /** NO-OP */
+        if (shouldCancelOnStop) {
+            scope?.cancel()
+            scope = null
+        }
     }
 }

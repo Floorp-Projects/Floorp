@@ -86,7 +86,8 @@ import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.Metrics
 import org.mozilla.fenix.GleanMetrics.SplashScreen
 import org.mozilla.fenix.GleanMetrics.StartOnHome
-import org.mozilla.fenix.addons.ExtensionsProcessDisabledController
+import org.mozilla.fenix.addons.ExtensionsProcessDisabledBackgroundController
+import org.mozilla.fenix.addons.ExtensionsProcessDisabledForegroundController
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.components.appstate.bindings.BrowserStoreBinding
@@ -181,8 +182,15 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         )
     }
 
-    private val extensionsProcessDisabledPromptObserver by lazy {
-        ExtensionsProcessDisabledController(this@HomeActivity)
+    private val extensionsProcessDisabledForegroundController by lazy {
+        ExtensionsProcessDisabledForegroundController(this@HomeActivity)
+    }
+
+    private val extensionsProcessDisabledBackgroundController by lazy {
+        ExtensionsProcessDisabledBackgroundController(
+            browserStore = components.core.store,
+            appStore = components.appStore,
+        )
     }
 
     private val serviceWorkerSupport by lazy {
@@ -363,7 +371,8 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
 
         lifecycle.addObservers(
             webExtensionPopupObserver,
-            extensionsProcessDisabledPromptObserver,
+            extensionsProcessDisabledForegroundController,
+            extensionsProcessDisabledBackgroundController,
             serviceWorkerSupport,
             webExtensionPromptFeature,
             BrowserStoreBinding(components.core.store, components.appStore),
