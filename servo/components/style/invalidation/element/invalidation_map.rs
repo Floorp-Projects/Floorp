@@ -293,8 +293,11 @@ bitflags! {
     impl TSStateForInvalidation : u8 {
         /// :empty
         const EMPTY = 1 << 0;
-        /// :nth, :first-child, etc, without of.
+        /// :nth etc, without of.
         const NTH = 1 << 1;
+        /// "Simple" edge child selectors, like :first-child, :last-child, etc.
+        /// Excludes :*-of-type.
+        const NTH_EDGE = 1 << 2;
     }
 }
 
@@ -1159,10 +1162,15 @@ impl<'a> SelectorVisitor for RelativeSelectorDependencyCollector<'a> {
                     .insert(TSStateForInvalidation::EMPTY);
                 true
             },
-            Component::Nth(..) => {
+            Component::Nth(data) => {
+                let kind = if data.is_simple_edge() {
+                    TSStateForInvalidation::NTH_EDGE
+                } else {
+                    TSStateForInvalidation::NTH
+                };
                 self.compound_state
                     .ts_state
-                    .insert(TSStateForInvalidation::NTH);
+                    .insert(kind);
                 true
             },
             Component::RelativeSelectorAnchor => unreachable!("Should not visit this far"),
@@ -1385,10 +1393,15 @@ impl<'a, 'b> SelectorVisitor for RelativeSelectorInnerDependencyCollector<'a, 'b
                     .insert(TSStateForInvalidation::EMPTY);
                 true
             },
-            Component::Nth(..) => {
+            Component::Nth(data) => {
+                let kind = if data.is_simple_edge() {
+                    TSStateForInvalidation::NTH_EDGE
+                } else {
+                    TSStateForInvalidation::NTH
+                };
                 self.compound_state
                     .ts_state
-                    .insert(TSStateForInvalidation::NTH);
+                    .insert(kind);
                 true
             },
             Component::RelativeSelectorAnchor => unreachable!("Should not visit this far"),
