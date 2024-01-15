@@ -1622,8 +1622,8 @@ static bool DifferenceTemporalPlainDate(JSContext* cx,
     // Step 11.c.
     DateDuration balanceResult;
     if (!temporal::BalanceDateDurationRelative(
-            cx, roundResult.date(), settings.largestUnit, temporalDate,
-            calendar, &balanceResult)) {
+            cx, roundResult.date(), settings.largestUnit, settings.smallestUnit,
+            temporalDate, calendar, &balanceResult)) {
       return false;
     }
     duration = balanceResult.toDuration();

@@ -1104,9 +1104,9 @@ static bool DifferenceTemporalPlainDateTime(JSContext* cx,
       result.days,
   };
   DateDuration balanceResult;
-  if (!temporal::BalanceDateDurationRelative(cx, toBalance,
-                                             settings.largestUnit, relativeTo,
-                                             calendar, &balanceResult)) {
+  if (!temporal::BalanceDateDurationRelative(
+          cx, toBalance, settings.largestUnit, settings.smallestUnit,
+          relativeTo, calendar, &balanceResult)) {
     return false;
   }
 
