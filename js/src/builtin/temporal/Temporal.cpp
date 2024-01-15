@@ -1530,32 +1530,6 @@ bool js::temporal::GetMethod(JSContext* cx, Handle<JSObject*> object,
 /**
  * GetMethod ( V, P )
  */
-bool js::temporal::GetMethod(JSContext* cx, Handle<JSObject*> object,
-                             Handle<PropertyName*> name,
-                             MutableHandle<JSObject*> result) {
-  // Step 1.
-  Rooted<Value> value(cx);
-  if (!GetProperty(cx, object, object, name, &value)) {
-    return false;
-  }
-
-  // Steps 2-3.
-  if (!IsCallable(value)) {
-    if (auto chars = StringToNewUTF8CharsZ(cx, *name)) {
-      JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                               JSMSG_PROPERTY_NOT_CALLABLE, chars.get());
-    }
-    return false;
-  }
-
-  // Step 4.
-  result.set(&value.toObject());
-  return true;
-}
-
-/**
- * GetMethod ( V, P )
- */
 JSObject* js::temporal::GetMethod(JSContext* cx, Handle<JSObject*> object,
                                   Handle<PropertyName*> name) {
   // Step 1.
