@@ -25,31 +25,36 @@ const {
 } = require("resource://devtools/client/shared/source-map-loader/utils/index.js");
 
 class SourceMapLoader extends WorkerDispatcher {
+  constructor(targetCommand) {
+    super(SOURCE_MAP_WORKER_URL);
+    this.#targetCommand = targetCommand;
+  }
+
   #setSourceMapForGeneratedSources = this.task(
     "setSourceMapForGeneratedSources"
   );
   #getOriginalURLs = this.task("getOriginalURLs");
   #getOriginalSourceText = this.task("getOriginalSourceText");
-
-  constructor() {
-    super(SOURCE_MAP_WORKER_URL);
-  }
+  #targetCommand = null;
 
   async getOriginalURLs(urlInfo) {
     try {
       return await this.#getOriginalURLs(urlInfo);
     } catch (error) {
-      const message = L10N.getFormatStr(
-        "toolbox.sourceMapFailure",
-        error,
-        urlInfo.url,
-        urlInfo.sourceMapURL
-      );
-      this.emit("source-map-error", message);
+      // Note that tests may not pass the targetCommand
+      if (this.#targetCommand) {
+        // Catch all errors and log them to the Web Console for users to see.
+        const message = L10N.getFormatStr(
+          "toolbox.sourceMapFailure",
+          error,
+          urlInfo.url,
+          urlInfo.sourceMapURL
+        );
+        this.#targetCommand.targetFront.logWarningInPage(message, "source map");
+      }
 
-      // It's ok to swallow errors here, because a null
-      // result just means that no source map was found.
-      return null;
+      // And re-throw the error so that the debugger can also interpret the error
+      throw error;
     }
   }
 
@@ -80,7 +85,12 @@ class SourceMapLoader extends WorkerDispatcher {
         error.message,
         error.metadata ? error.metadata.url : "<unknown>"
       );
-      this.emit("source-map-error", message);
+
+      // Note that tests may not pass the targetCommand
+      if (this.#targetCommand) {
+        // Catch all errors and log them to the Web Console for users to see.
+        this.#targetCommand.targetFront.logWarningInPage(message, "source map");
+      }
 
       // Also replace the result with the error text.
       // Note that this result has to have the same form
@@ -109,7 +119,14 @@ class SourceMapLoader extends WorkerDispatcher {
     return rv;
   }
 
-  stopSourceMapWorker = this.stop.bind(this);
+  destroy() {
+    // Request to stop the underlying DOM Worker
+    this.stop();
+    // Unregister all listeners
+    this.clearEvents();
+    // SourceMapLoader may be leaked and so it is important to clear most outer references
+    this.#targetCommand = null;
+  }
 }
 EventEmitter.decorate(SourceMapLoader.prototype);
 

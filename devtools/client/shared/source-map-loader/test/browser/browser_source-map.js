@@ -154,16 +154,10 @@ add_task(async function testBaseURLErrorHandling() {
     sourceMapBaseURL: "http:://example.com/",
   };
 
-  const onError = gSourceMapLoader.once("source-map-error");
-  is(
-    await gSourceMapLoader.getOriginalURLs(source),
-    null,
-    "The error is silented..."
-  );
-  info("Wait for source-map-error event");
-  const error = await onError;
-  is(
-    error,
-    `Source map error: Error: URL constructor: http:://example.com/ is not a valid URL.\nResource URL: undefined\nSource Map URL: missingmap.js.map`
-  );
+  try {
+    await gSourceMapLoader.getOriginalURLs(source);
+    ok(false, "Should throw");
+  } catch (e) {
+    is(e.message, "URL constructor: http:://example.com/ is not a valid URL.");
+  }
 });
