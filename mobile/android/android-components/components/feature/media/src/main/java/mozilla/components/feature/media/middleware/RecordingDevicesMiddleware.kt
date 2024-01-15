@@ -9,6 +9,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.os.Binder
 import androidx.annotation.VisibleForTesting
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
@@ -157,7 +158,7 @@ class RecordingDevicesMiddleware(
         context.registerReceiverCompat(
             broadcastReceiver,
             IntentFilter(ACTION_RECORDING_DEVICES_NOTIFICATION_DISMISSED),
-            ContextCompat.RECEIVER_NOT_EXPORTED,
+            ContextCompat.RECEIVER_EXPORTED,
         )
 
         val textResource = if (isReminder) {
@@ -192,12 +193,15 @@ class RecordingDevicesMiddleware(
         private val processRecordingState: () -> Unit,
     ) : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
-            ThreadUtils.postToMainThreadDelayed(
-                {
-                    processRecordingState.invoke()
-                },
-                NOTIFICATION_REMINDER_DELAY_MS,
-            )
+            val callingAppInfo = context.packageManager.getNameForUid(Binder.getCallingUid())
+            if (callingAppInfo.equals(context.packageName)) {
+                ThreadUtils.postToMainThreadDelayed(
+                    {
+                        processRecordingState.invoke()
+                    },
+                    NOTIFICATION_REMINDER_DELAY_MS,
+                )
+            }
         }
     }
 }
@@ -215,21 +219,24 @@ internal sealed class RecordingState {
         override val iconResource = iconsR.drawable.mozac_ic_camera_24
         override val titleResource = R.string.mozac_feature_media_sharing_camera_and_microphone
         override val textResource = R.string.mozac_feature_media_sharing_camera_and_microphone_text
-        override val reminderTextResource = R.string.mozac_feature_media_sharing_camera_and_microphone_reminder_text
+        override val reminderTextResource =
+            R.string.mozac_feature_media_sharing_camera_and_microphone_reminder_text
     }
 
     object Camera : RecordingState() {
         override val iconResource = iconsR.drawable.mozac_ic_camera_24
         override val titleResource = R.string.mozac_feature_media_sharing_camera
         override val textResource = R.string.mozac_feature_media_sharing_camera_text
-        override val reminderTextResource = R.string.mozac_feature_media_sharing_camera_reminder_text
+        override val reminderTextResource =
+            R.string.mozac_feature_media_sharing_camera_reminder_text
     }
 
     object Microphone : RecordingState() {
         override val iconResource = iconsR.drawable.mozac_ic_microphone_24
         override val titleResource = R.string.mozac_feature_media_sharing_microphone
         override val textResource = R.string.mozac_feature_media_sharing_microphone_text
-        override val reminderTextResource = R.string.mozac_feature_media_sharing_microphone_reminder_text
+        override val reminderTextResource =
+            R.string.mozac_feature_media_sharing_microphone_reminder_text
     }
 
     object None : RecordingState() {
