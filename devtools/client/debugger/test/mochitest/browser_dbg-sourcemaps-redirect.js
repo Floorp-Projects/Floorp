@@ -48,7 +48,7 @@ add_task(async function () {
 
   is(
     value,
-    `Source map error: Error: NetworkError when attempting to fetch resource.\nResource URL: ${BASE_URL}/index.html\nSource Map URL: ${BASE_URL}/redirect[Learn More]`,
+    `Source map error: NetworkError when attempting to fetch resource.\nResource URL: ${BASE_URL}/index.html\nSource Map URL: ${BASE_URL}/redirect[Learn More]`,
     "A source map error message is logged indicating the redirect failed"
   );
 });

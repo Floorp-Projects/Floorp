@@ -6,7 +6,6 @@
  * Redux actions for the sources state
  * @module actions/sources
  */
-import { PROMISE } from "../utils/middleware/promise";
 import { insertSourceActors } from "../../actions/source-actors";
 import {
   makeSourceId,
@@ -69,36 +68,67 @@ function loadSourceMaps(sources) {
  * @static
  */
 function loadSourceMap(sourceActor) {
-  return async function ({ dispatch, getState, sourceMapLoader }) {
+  return async function ({ dispatch, getState, sourceMapLoader, panel }) {
     if (!prefs.clientSourceMapsEnabled || !sourceActor.sourceMapURL) {
       return [];
     }
 
-    let data = null;
+    let sources, ignoreListUrls, resolvedSourceMapURL, exception;
     try {
       // Ignore sourceMapURL on scripts that are part of HTML files, since
       // we currently treat sourcemaps as Source-wide, not SourceActor-specific.
       const source = getSourceByActorId(getState(), sourceActor.id);
       if (source) {
-        data = await sourceMapLoader.getOriginalURLs({
-          // Using source ID here is historical and eventually we'll want to
-          // switch to all of this being per-source-actor.
-          id: source.id,
-          url: sourceActor.url || "",
-          sourceMapBaseURL: sourceActor.sourceMapBaseURL || "",
-          sourceMapURL: sourceActor.sourceMapURL || "",
-          isWasm: sourceActor.introductionType === "wasm",
-        });
-        dispatch({
-          type: "ADD_SOURCEMAP_IGNORE_LIST_SOURCES",
-          [PROMISE]: sourceMapLoader.getSourceMapIgnoreList(source.id),
-        });
+        ({ sources, ignoreListUrls, resolvedSourceMapURL, exception } =
+          await sourceMapLoader.loadSourceMap({
+            // Using source ID here is historical and eventually we'll want to
+            // switch to all of this being per-source-actor.
+            id: source.id,
+            url: sourceActor.url || "",
+            sourceMapBaseURL: sourceActor.sourceMapBaseURL || "",
+            sourceMapURL: sourceActor.sourceMapURL || "",
+            isWasm: sourceActor.introductionType === "wasm",
+          }));
       }
     } catch (e) {
-      console.error(e);
+      exception = `Internal error: ${e.message}`;
     }
 
-    if (!data || !data.length) {
+    if (resolvedSourceMapURL) {
+      dispatch({
+        type: "RESOLVED_SOURCEMAP_URL",
+        sourceActor,
+        resolvedSourceMapURL,
+      });
+    }
+
+    if (ignoreListUrls?.length) {
+      dispatch({
+        type: "ADD_SOURCEMAP_IGNORE_LIST_SOURCES",
+        ignoreListUrls,
+      });
+    }
+
+    if (exception) {
+      // Catch all errors and log them to the Web Console for users to see.
+      const message = L10N.getFormatStr(
+        "toolbox.sourceMapFailure",
+        exception,
+        sourceActor.url,
+        sourceActor.sourceMapURL
+      );
+      panel.toolbox.commands.targetCommand.targetFront.logWarningInPage(
+        message,
+        "source map",
+        resolvedSourceMapURL
+      );
+
+      dispatch({
+        type: "SOURCE_MAP_ERROR",
+        sourceActor,
+        errorMessage: exception,
+      });
+
       // If this source doesn't have a sourcemap or there are no original files
       // existing, enable it for pretty printing
       dispatch({
@@ -110,7 +140,7 @@ function loadSourceMap(sourceActor) {
 
     // Before dispatching this action, ensure that the related sourceActor is still registered
     validateSourceActor(getState(), sourceActor);
-    return data;
+    return sources;
   };
 }
 

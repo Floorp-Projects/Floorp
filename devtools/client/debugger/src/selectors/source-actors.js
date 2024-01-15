@@ -40,6 +40,14 @@ export function isSourceActorWithSourceMap(state, sourceActorId) {
   return state.sourceActors.mutableSourceActorsWithSourceMap.has(sourceActorId);
 }
 
+export function getSourceMapErrorForSourceActor(state, sourceActorId) {
+  return state.sourceActors.mutableSourceMapErrors.get(sourceActorId);
+}
+
+export function getSourceMapResolvedURL(state, sourceActorId) {
+  return state.sourceActors.mutableResolvedSourceMapURL.get(sourceActorId);
+}
+
 // Used by threads selectors
 /**
  * Get all Source Actor objects for a given thread. See create.js:createSourceActor()
