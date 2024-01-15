@@ -4,9 +4,12 @@
 
 package mozilla.components.lib.crash
 
+import android.app.ActivityOptions
+import android.app.ActivityOptions.MODE_BACKGROUND_ACTIVITY_START_ALLOWED
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import androidx.annotation.StyleRes
 import androidx.annotation.VisibleForTesting
 import androidx.core.content.ContextCompat
@@ -243,7 +246,25 @@ class CrashReporter(
 
         val additionalIntent = Intent()
         crash.fillIn(additionalIntent)
-        nonFatalCrashIntent?.send(context, 0, additionalIntent)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            val onFinished = null
+            val handler = null
+            val requiredPermission = null
+            val activityOptions = ActivityOptions.makeBasic()
+            activityOptions.pendingIntentBackgroundActivityStartMode =
+                MODE_BACKGROUND_ACTIVITY_START_ALLOWED
+
+            nonFatalCrashIntent?.send(
+                context,
+                0,
+                additionalIntent,
+                onFinished,
+                handler,
+                requiredPermission,
+            )
+        } else {
+            nonFatalCrashIntent?.send(context, 0, additionalIntent)
+        }
     }
 
     private fun showPromptOrNotification(context: Context, crash: Crash) {
