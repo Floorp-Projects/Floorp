@@ -7242,7 +7242,7 @@ pub extern "C" fn Servo_StyleSet_MaybeInvalidateRelativeSelectorNthEdgeDependenc
     invalidate_relative_selector_ts_dependency(
         raw_data,
         GeckoElement(element),
-        TSStateForInvalidation::NTH,
+        TSStateForInvalidation::NTH_EDGE,
     );
 }
 
