@@ -6,10 +6,8 @@
 #include <jni.h>
 
 #include <stdlib.h>
-#include <fcntl.h>
+#include <string.h>
 #include "APKOpen.h"
-#include "Zip.h"
-#include "mozilla/RefPtr.h"
 
 extern "C" __attribute__((visibility("default"))) void MOZ_JNICALL
 Java_org_mozilla_gecko_mozglue_GeckoLoader_putenv(JNIEnv* jenv, jclass,
