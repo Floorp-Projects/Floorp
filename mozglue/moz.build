@@ -7,7 +7,7 @@
 with Files("**"):
     BUG_COMPONENT = ("Core", "mozglue")
 
-if CONFIG["MOZ_LINKER"] or CONFIG["MOZ_WIDGET_TOOLKIT"] == "android":
+if CONFIG["MOZ_LINKER"]:
     DIRS += ["linker"]
 
 if CONFIG["MOZ_WIDGET_TOOLKIT"] == "android":
