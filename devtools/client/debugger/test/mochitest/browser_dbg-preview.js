@@ -68,7 +68,7 @@ add_task(async function () {
     { line: 51, column: 39, expression: "#privateVar", result: 2 },
   ]);
 
-  await testHoveringPrimitiveTokens(dbg);
+  await testHoveringInvalidTargetTokens(dbg);
 
   info(
     "Check that closing the preview tooltip doesn't release the underlying object actor"
@@ -117,14 +117,16 @@ async function testPreviews(dbg, fnName, previews) {
   info(`Ran tests for ${fnName}`);
 }
 
-async function testHoveringPrimitiveTokens(dbg) {
-  invokeInTab("primitives");
+async function testHoveringInvalidTargetTokens(dbg) {
+  // Test hovering tokens for which we shouldn't have a preview popup displayed
+  invokeInTab("invalidTargets");
   await waitForPaused(dbg);
   await assertNoPreviews(dbg, `"a"`, 69, 4);
   await assertNoPreviews(dbg, `false`, 70, 4);
   await assertNoPreviews(dbg, `undefined`, 71, 4);
   await assertNoPreviews(dbg, `null`, 72, 4);
   await assertNoPreviews(dbg, `42`, 73, 4);
+  await assertNoPreviews(dbg, `const`, 74, 4);
   await resume(dbg);
 }
 
