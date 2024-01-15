@@ -10,6 +10,8 @@ import AccessibleImage from "./AccessibleImage";
 
 const classnames = require("devtools/client/shared/classnames.js");
 
+import { scrollList } from "../../utils/result-list";
+
 import "./ResultList.css";
 
 export default class ResultList extends Component {
@@ -28,6 +30,17 @@ export default class ResultList extends Component {
     };
   }
 
+  constructor(props) {
+    super(props);
+    this.ref = React.createRef();
+  }
+
+  componentDidUpdate() {
+    if (this.ref.current.childNodes) {
+      scrollList(this.ref.current.childNodes, this.props.selected);
+    }
+  }
+
   renderListItem = (item, index) => {
     if (item.value === "/" && item.title === "") {
       item.title = "(index)";
@@ -37,7 +50,6 @@ export default class ResultList extends Component {
     const props = {
       onClick: event => selectItem(event, item, index),
       key: `${item.id}${item.value}${index}`,
-      ref: React.createRef(),
       title: item.value,
       "aria-labelledby": `${item.id}-title`,
       "aria-describedby": `${item.id}-subtitle`,
@@ -80,6 +92,7 @@ export default class ResultList extends Component {
     const { size, items, role } = this.props;
     return ul(
       {
+        ref: this.ref,
         className: classnames("result-list", size),
         id: "result-list",
         role: role,

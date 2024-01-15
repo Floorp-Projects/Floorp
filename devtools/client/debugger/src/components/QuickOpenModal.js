@@ -24,7 +24,6 @@ import {
   getProjectDirectoryRoot,
 } from "../selectors";
 import { memoizeLast } from "../utils/memoizeLast";
-import { scrollList } from "../utils/result-list";
 import { searchKeys } from "../constants";
 import {
   formatSymbol,
@@ -109,10 +108,6 @@ export class QuickOpenModal extends Component {
 
   componentDidUpdate(prevProps) {
     const queryChanged = prevProps.query !== this.props.query;
-
-    if (this.refs.resultList && this.refs.resultList.refs) {
-      scrollList(this.refs.resultList.refs, this.state.selectedIndex);
-    }
 
     if (queryChanged) {
       this.updateResults(this.props.query);
