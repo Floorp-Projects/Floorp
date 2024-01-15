@@ -14,14 +14,13 @@
 using namespace mozilla;
 
 nsContainerFrame* NS_NewSelectsAreaFrame(PresShell* aShell,
-                                         ComputedStyle* aStyle,
-                                         nsFrameState aFlags) {
+                                         ComputedStyle* aStyle) {
   nsSelectsAreaFrame* it =
       new (aShell) nsSelectsAreaFrame(aStyle, aShell->GetPresContext());
 
   // We need NS_BLOCK_FLOAT_MGR to ensure that the options inside the select
   // aren't expanded by right floats outside the select.
-  it->AddStateBits(aFlags | NS_BLOCK_FLOAT_MGR);
+  it->AddStateBits(NS_BLOCK_FLOAT_MGR);
 
   return it;
 }

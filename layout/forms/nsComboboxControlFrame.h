@@ -54,8 +54,7 @@ class nsComboboxControlFrame final : public nsBlockFrame,
 
  public:
   friend nsComboboxControlFrame* NS_NewComboboxControlFrame(
-      mozilla::PresShell* aPresShell, ComputedStyle* aStyle,
-      nsFrameState aFlags);
+      mozilla::PresShell* aPresShell, ComputedStyle* aStyle);
   friend class nsComboboxDisplayFrame;
 
   explicit nsComboboxControlFrame(ComputedStyle* aStyle,

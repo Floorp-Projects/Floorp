@@ -3014,9 +3014,8 @@ nsIFrame* nsCSSFrameConstructor::ConstructSelectFrame(
     // through anonymous content. The drop-down list's frame is created
     // explicitly. The combobox frame shares its content with the drop-down
     // list.
-    nsFrameState flags = NS_BLOCK_FLOAT_MGR;
     nsComboboxControlFrame* comboboxFrame =
-        NS_NewComboboxControlFrame(mPresShell, computedStyle, flags);
+        NS_NewComboboxControlFrame(mPresShell, computedStyle);
 
     // Save the history state so we don't restore during construction
     // since the complete tree is required before we restore.
@@ -3088,7 +3087,7 @@ nsIFrame* nsCSSFrameConstructor::ConstructSelectFrame(
       NS_NewListControlFrame(mPresShell, computedStyle);
 
   nsContainerFrame* scrolledFrame =
-      NS_NewSelectsAreaFrame(mPresShell, computedStyle, NS_BLOCK_FLOAT_MGR);
+      NS_NewSelectsAreaFrame(mPresShell, computedStyle);
 
   // ******* this code stolen from Initialze ScrollFrame ********
   // please adjust this code to use BuildScrollFrame.
