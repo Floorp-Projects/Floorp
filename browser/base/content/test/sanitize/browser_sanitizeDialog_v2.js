@@ -303,7 +303,10 @@ DialogHelper.prototype = {
       "load",
       () => {
         // Run onload on next tick so that gSanitizePromptDialog.init can run first.
-        executeSoon(() => this.onload());
+        executeSoon(async () => {
+          await this.win.gSanitizePromptDialog.dataSizesFinishedUpdatingPromise;
+          this.onload();
+        });
       },
       { once: true }
     );

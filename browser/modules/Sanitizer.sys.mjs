@@ -86,6 +86,21 @@ export var Sanitizer = {
   TIMESPAN_24HOURS: 6,
 
   /**
+   * Mapping time span constants to get total time in ms from the selected
+   * time spans
+   */
+  timeSpanMsMap: {
+    TIMESPAN_5MIN: 300000, // 5*60*1000
+    TIMESPAN_HOUR: 3600000, // 60*60*1000
+    TIMESPAN_2HOURS: 7200000, // 2*60*60*1000
+    TIMESPAN_4HOURS: 14400000, // 4*60*60*1000
+    TIMESPAN_24HOURS: 86400000, // 24*60*60*1000
+    get TIMESPAN_TODAY() {
+      return Date.now() - new Date().setHours(0, 0, 0, 0);
+    }, // time spent today
+  },
+
+  /**
    * Whether we should sanitize on shutdown.
    * When this is set, a pending sanitization should also be added and removed
    * when shutdown sanitization is complete. This allows to retry incomplete
