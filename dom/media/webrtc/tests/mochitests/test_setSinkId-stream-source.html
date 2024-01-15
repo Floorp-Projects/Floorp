@@ -1,0 +1,138 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Test setSinkId() on an Audio element with MediaStream source</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<script>
+"use strict";
+
+SimpleTest.requestFlakyTimeout("delays to trigger races");
+
+function maybeTodoIs(a, b, msg) {
+  if (Object.is(a, b)) {
+    is(a, b, msg);
+  } else {
+    todo(false, msg, `got ${a}, wanted ${b}`);
+  }
+}
+
+add_task(async () => {
+  await SpecialPowers.pushPrefEnv({set: [
+    // skip selectAudioOutput/getUserMedia permission prompt
+    ["media.navigator.permission.disabled", true],
+    // enumerateDevices() without focus
+    ["media.devices.unfocused.enabled", true],
+  ]});
+
+  const audio = new Audio();
+  const stream1 = new AudioContext().createMediaStreamDestination().stream;
+  audio.srcObject = stream1;
+  audio.controls = true;
+  document.body.appendChild(audio);
+  await audio.play();
+
+  // Expose an audio output device.
+  SpecialPowers.wrap(document).notifyUserGestureActivation();
+  const {deviceId, label: label1} = await navigator.mediaDevices.selectAudioOutput();
+  isnot(deviceId, "", "deviceId from selectAudioOutput()");
+
+  // pre-fill devices cache to reduce delay until MediaStreamRenderer acts on
+  // setSinkId().
+  await navigator.mediaDevices.enumerateDevices();
+
+  SpecialPowers.pushPrefEnv({set: [
+    ["media.cubeb.slow_stream_init_ms", 200],
+  ]});
+
+  // When playback is stopped before setSinkId()'s parallel step "Switch the
+  // underlying audio output device for element to the audio device identified
+  // by sinkId" completes, then whether that step "failed" might be debatable.
+  // https://w3c.github.io/mediacapture-output/#dom-htmlmediaelement-setsinkid
+  // Gecko chooses to resolve the setSinkId() promise so that behavior does
+  // not depend on a race (assuming that switching would succeed if allowed to
+  // complete).
+  async function expectSetSinkIdResolutionWithSubsequentAction(
+    deviceId, action, actionLabel) {
+    let p = audio.setSinkId(deviceId);
+    // Wait long enough for MediaStreamRenderer to initiate a switch to the new
+    // device, but not so long as the new device's graph has started.
+    await new Promise(r => setTimeout(r, 100));
+    action();
+    const resolved = await p.then(() => true, () => false);
+    ok(resolved, `setSinkId before ${actionLabel}`);
+  }
+
+  await expectSetSinkIdResolutionWithSubsequentAction(
+    deviceId, () => audio.pause(), "pause");
+
+  await audio.setSinkId("");
+  await audio.play();
+  await expectSetSinkIdResolutionWithSubsequentAction(
+    deviceId, () => audio.srcObject = null, "null srcObject");
+
+  await audio.setSinkId("");
+  audio.srcObject = stream1;
+  await audio.play();
+  await expectSetSinkIdResolutionWithSubsequentAction(
+    deviceId, () => stream1.getTracks()[0].stop(), "stop");
+
+  const stream2 = new AudioContext().createMediaStreamDestination().stream;
+  audio.srcObject = stream2;
+  await audio.play();
+
+  let loopbackInputLabel =
+      SpecialPowers.getCharPref("media.audio_loopback_dev", "");
+  if (!navigator.userAgent.includes("Linux")) {
+    todo_isnot(loopbackInputLabel, "", "audio_loopback_dev");
+    return;
+  }
+  isnot(loopbackInputLabel, "",
+        "audio_loopback_dev. Use --use-test-media-devices.");
+
+  // Expose more output devices
+  SpecialPowers.pushPrefEnv({set: [
+    ["media.audio_loopback_dev", ""],
+  ]});
+  const inputStream = await navigator.mediaDevices.getUserMedia({audio: true});
+  inputStream.getTracks()[0].stop();
+  const devices = await navigator.mediaDevices.enumerateDevices();
+  const {deviceId: otherDeviceId} = devices.find(
+    ({kind, label}) => kind == "audiooutput" && label != label1);
+  ok(otherDeviceId, "id2");
+  isnot(otherDeviceId, deviceId, "other id is different");
+
+  // With multiple setSinkId() calls having `sinkId` parameters differing from
+  // the element's `sinkId` attribute, the order of each "switch the
+  // underlying audio output device" and each subsequent Promise settling is
+  // not clearly specified due to parallel steps for different calls not
+  // specifically running on the same task queue.
+  // https://w3c.github.io/mediacapture-output/#dom-htmlmediaelement-setsinkid
+  // Gecko aims to switch and settle in the same order as corresonding
+  // setSinkId() calls, but this does not necessarily happen - bug 1874629.
+  async function setSinkIdTwice(id1, id2, label) {
+    const p1 = audio.setSinkId(id1);
+    const p2 = audio.setSinkId(id2);
+    let p1Settled = false;
+    let p1SettledFirst;
+    const results = await Promise.allSettled([
+      p1.finally(() => p1Settled = true),
+      p2.finally(() => p1SettledFirst = p1Settled),
+    ]);
+    maybeTodoIs(results[0].status, "fulfilled", `${label}: results[0]`);
+    maybeTodoIs(results[1].status, "fulfilled", `${label}: results[1]`);
+    maybeTodoIs(p1SettledFirst, true,
+                `${label}: first promise should settle first`);
+  }
+
+  is(audio.sinkId, deviceId, "sinkId after stop");
+  await setSinkIdTwice(otherDeviceId, "", "other then empty");
+
+  maybeTodoIs(audio.sinkId, "", "sinkId after empty");
+  await setSinkIdTwice(deviceId, otherDeviceId, "both not empty");
+
+  stream2.getTracks()[0].stop()
+});
+</script>
+</html>
