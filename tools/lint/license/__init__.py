@@ -12,8 +12,6 @@ from mozlint.pathutils import expand_exclusions
 here = os.path.abspath(os.path.dirname(__file__))
 topsrcdir = os.path.join(here, "..", "..", "..")
 
-results = []
-
 # Official source: https://www.mozilla.org/en-US/MPL/headers/
 TEMPLATES = {
     "mpl2_license": """
@@ -88,7 +86,7 @@ def is_test(f):
     """
     is the file a test or not?
     """
-    if "lint/test/" in f:
+    if "lint/test/" in f or "lint_license_test_tmp_file.js" in f:
         # For the unit tests
         return False
     return (
@@ -148,13 +146,13 @@ def fix_me(log, filename):
             license.append(start + "* " + l.strip() + end + "\n")
 
         add_header(log, filename, license)
-        return
+        return True
 
     if ext in [".py", ".ftl", ".properties"] or filename.endswith(".inc.xul"):
         for l in license_template:
             license.append("# " + l.strip() + "\n")
         add_header(log, filename, license)
-        return
+        return True
 
     if ext in [".xml", ".xul", ".html", ".xhtml", ".dtd", ".svg"]:
         for i, l in enumerate(license_template):
@@ -172,7 +170,10 @@ def fix_me(log, filename):
                 # the license and the content
                 license.append("\n")
         add_header(log, filename, license)
-        return
+        return True
+
+    # In case we don't know how to handle a specific format.
+    return False
 
 
 class HTMLParseError(Exception):
@@ -220,6 +221,7 @@ def is_html_licence_summary(path):
 
 
 def lint(paths, config, fix=None, **lintargs):
+    results = []
     log = lintargs["log"]
     files = list(expand_exclusions(paths, config, lintargs["root"]))
     fixed = 0
@@ -231,15 +233,15 @@ def lint(paths, config, fix=None, **lintargs):
             continue
 
         if not is_valid_license(licenses, f):
-            res = {
-                "path": f,
-                "message": "No matching license strings found in tools/lint/license/valid-licenses.txt",  # noqa
-                "level": "error",
-            }
-            results.append(result.from_config(config, **res))
-            if fix:
-                fix_me(log, f)
+            if fix and fix_me(log, f):
                 fixed += 1
+            else:
+                res = {
+                    "path": f,
+                    "message": "No matching license strings found in tools/lint/license/valid-licenses.txt",  # noqa
+                    "level": "error",
+                }
+                results.append(result.from_config(config, **res))
 
         if is_html_licence_summary(f):
             try:
