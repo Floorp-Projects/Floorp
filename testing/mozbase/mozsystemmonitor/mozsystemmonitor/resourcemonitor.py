@@ -1055,11 +1055,26 @@ class SystemResourceMonitor(object):
                     sum(list(m.cpu_percent)) / len(m.cpu_percent)
                 ),
             }
+
+            # due to inconsistencies in the sampling rate, sometimes the
+            # cpu_times add up to more than 100%, causing annoying
+            # spikes in the CPU use charts. Avoid them by dividing the
+            # values by the total if it is above 1.
             total = 0
-            for field in ["nice", "user", "system", "iowait", "softirq"]:
+            for field in ["nice", "user", "system", "iowait", "softirq", "idle"]:
                 if hasattr(m.cpu_times[0], field):
                     total += sum(getattr(core, field) for core in m.cpu_times) / (
                         m.end - m.start
+                    )
+            divisor = total if total > 1 else 1
+
+            total = 0
+            for field in ["nice", "user", "system", "iowait", "softirq"]:
+                if hasattr(m.cpu_times[0], field):
+                    total += (
+                        sum(getattr(core, field) for core in m.cpu_times)
+                        / (m.end - m.start)
+                        / divisor
                     )
                     if total > 0:
                         valid_cpu_fields.add(field)
