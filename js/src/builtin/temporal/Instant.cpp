@@ -121,15 +121,6 @@ static constexpr auto NanosecondsMaxInstant() {
   }
 }
 
-// The epoch limit is 8.64 × 10^21 nanoseconds, which is 8.64 × 10^18 µs.
-static constexpr int64_t MicrosecondsMaxInstant = 8'640'000'000'000'000'000;
-
-// The epoch limit is 8.64 × 10^21 nanoseconds, which is 8.64 × 10^15 ms.
-static constexpr int64_t MillisecondsMaxInstant = 8'640'000'000'000'000;
-
-// The epoch limit is 8.64 × 10^21 nanoseconds, which is 8.64 × 10^12 seconds.
-static constexpr int64_t SecondsMaxInstant = 8'640'000'000'000;
-
 /**
  * IsValidEpochNanoseconds ( epochNanoseconds )
  */
@@ -145,18 +136,21 @@ static bool IsValidEpochMicroseconds(const BigInt* epochMicroseconds) {
     return false;
   }
 
+  constexpr int64_t MicrosecondsMaxInstant = Instant::max().toMicroseconds();
   return -MicrosecondsMaxInstant <= i && i <= MicrosecondsMaxInstant;
 }
 
 static bool IsValidEpochMilliseconds(double epochMilliseconds) {
   MOZ_ASSERT(IsInteger(epochMilliseconds));
 
+  constexpr int64_t MillisecondsMaxInstant = Instant::max().toMilliseconds();
   return std::abs(epochMilliseconds) <= double(MillisecondsMaxInstant);
 }
 
 static bool IsValidEpochSeconds(double epochSeconds) {
   MOZ_ASSERT(IsInteger(epochSeconds));
 
+  constexpr int64_t SecondsMaxInstant = Instant::max().toSeconds();
   return std::abs(epochSeconds) <= double(SecondsMaxInstant);
 }
 
@@ -167,10 +161,7 @@ bool js::temporal::IsValidEpochInstant(const Instant& instant) {
   MOZ_ASSERT(0 <= instant.nanoseconds && instant.nanoseconds <= 999'999'999);
 
   // Steps 1-3.
-  if (instant.seconds < SecondsMaxInstant) {
-    return instant.seconds >= -SecondsMaxInstant;
-  }
-  return instant.seconds == SecondsMaxInstant && instant.nanoseconds == 0;
+  return Instant::min() <= instant && instant <= Instant::max();
 }
 
 static constexpr auto NanosecondsMaxInstantSpan() {
@@ -207,13 +198,8 @@ bool js::temporal::IsValidInstantSpan(const BigInt* nanoseconds) {
 bool js::temporal::IsValidInstantSpan(const InstantSpan& span) {
   MOZ_ASSERT(0 <= span.nanoseconds && span.nanoseconds <= 999'999'999);
 
-  constexpr int64_t spanLimit = SecondsMaxInstant * 2;
-
   // Steps 1-3.
-  if (span.seconds < spanLimit) {
-    return span.seconds >= -spanLimit;
-  }
-  return span.seconds == spanLimit && span.nanoseconds == 0;
+  return InstantSpan::min() <= span && span <= InstantSpan::max();
 }
 
 /**
@@ -428,7 +414,7 @@ static mozilla::Maybe<InstantSpan> NanosecondsToInstantSpan(
     double nanoseconds) {
   MOZ_ASSERT(IsInteger(nanoseconds));
 
-  constexpr int64_t spanLimit = SecondsMaxInstant * 2;
+  constexpr int64_t spanLimit = InstantSpan::max().toSeconds();
   constexpr int64_t secToNanos = ToNanoseconds(TemporalUnit::Second);
 
   // Fast path for the common case.
@@ -495,7 +481,7 @@ static mozilla::Maybe<InstantSpan> MicrosecondsToInstantSpan(
     double microseconds) {
   MOZ_ASSERT(IsInteger(microseconds));
 
-  constexpr int64_t spanLimit = SecondsMaxInstant * 2;
+  constexpr int64_t spanLimit = InstantSpan::max().toSeconds();
   constexpr int64_t secToMicros = ToNanoseconds(TemporalUnit::Second) /
                                   ToNanoseconds(TemporalUnit::Microsecond);
   constexpr int32_t microToNanos = ToNanoseconds(TemporalUnit::Microsecond);
