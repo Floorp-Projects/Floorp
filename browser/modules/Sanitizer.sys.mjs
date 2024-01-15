@@ -119,9 +119,13 @@ export var Sanitizer = {
    *
    * @param parentWindow the browser window to use as parent for the created
    *        dialog.
+   * @param {string} mode - flag to let the dialog know if it is opened
+   *        using the clear on shutdown (clearOnShutdown) settings option
+   *        in about:preferences or in a clear site data context (clearSiteData)
+   *
    * @throws if parentWindow is undefined or doesn't have a gDialogBox.
    */
-  showUI(parentWindow) {
+  showUI(parentWindow, mode) {
     // Treat the hidden window as not being a parent window:
     if (
       parentWindow?.document.documentURI ==
@@ -137,6 +141,7 @@ export var Sanitizer = {
     if (parentWindow?.gDialogBox) {
       parentWindow.gDialogBox.open(`chrome://browser/content/${dialogFile}`, {
         inBrowserWindow: true,
+        mode,
       });
     } else {
       Services.ww.openWindow(
@@ -144,7 +149,7 @@ export var Sanitizer = {
         `chrome://browser/content/${dialogFile}`,
         "Sanitize",
         "chrome,titlebar,dialog,centerscreen,modal",
-        { needNativeUI: true }
+        { needNativeUI: true, mode }
       );
     }
   },

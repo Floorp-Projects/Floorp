@@ -25,6 +25,8 @@ sanitize-dialog-title-everything =
 
 clear-data-settings-label = When closed, { -brand-short-name } should automatically clear all
 
+sanitize-on-shutdown-description = Automatically clear all checked items when { -brand-short-name } closes.
+
 ## clear-time-duration-prefix is followed by a dropdown list, with
 ## values localized using clear-time-duration-value-* messages.
 ## clear-time-duration-suffix is left empty in English, but can be
@@ -153,6 +155,9 @@ sanitize-button-ok =
 
 sanitize-button-ok2 =
     .label = Clear
+
+sanitize-button-ok-on-shutdown =
+    .label = Save Changes
 
 # The label for the default button between the user clicking it and the window
 # closing.  Indicates the items are being cleared.
