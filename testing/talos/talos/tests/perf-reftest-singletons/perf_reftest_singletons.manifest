@@ -36,4 +36,5 @@
 % http://localhost/tests/perf-reftest-singletons/tiny-traversal-singleton.html
 % http://localhost/tests/perf-reftest-singletons/window-named-property-get.html
 % http://localhost/tests/perf-reftest-singletons/remove-children.html
+% http://localhost/tests/perf-reftest-singletons/remove-front-has-pseudo.html
 # When modifying this list, please also update build/pgo/index.html (If relevant to profile-guided optimzation).
