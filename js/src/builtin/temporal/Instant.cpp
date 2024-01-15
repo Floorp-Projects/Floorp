@@ -27,6 +27,7 @@
 
 #include "builtin/temporal/Calendar.h"
 #include "builtin/temporal/Duration.h"
+#include "builtin/temporal/Int96.h"
 #include "builtin/temporal/PlainDateTime.h"
 #include "builtin/temporal/Temporal.h"
 #include "builtin/temporal/TemporalParser.h"
@@ -203,10 +204,10 @@ bool js::temporal::IsValidInstantSpan(const InstantSpan& span) {
 }
 
 /**
- * Return the BigInt digits of the input as uint32_t values. The BigInt digits
- * mustn't consist of more than three uint32_t values.
+ * Return the BigInt as a 96-bit integer. The BigInt digits must not consist of
+ * more than 96-bits.
  */
-static std::array<uint32_t, 3> BigIntDigits(const BigInt* ns) {
+static Int96 ToInt96(const BigInt* ns) {
   static_assert(BigInt::DigitBits == 64 || BigInt::DigitBits == 32);
 
   auto digits = ns->digits();
@@ -224,7 +225,9 @@ static std::array<uint32_t, 3> BigIntDigits(const BigInt* ns) {
       default:
         MOZ_ASSERT_UNREACHABLE("unexpected digit length");
     }
-    return {uint32_t(x), uint32_t(x >> 32), uint32_t(y)};
+    return Int96{
+        Int96::Digits{Int96::Digit(x), Int96::Digit(x >> 32), Int96::Digit(y)},
+        ns->isNegative()};
   } else {
     BigInt::Digit x = 0, y = 0, z = 0;
     switch (digits.size()) {
@@ -242,57 +245,26 @@ static std::array<uint32_t, 3> BigIntDigits(const BigInt* ns) {
       default:
         MOZ_ASSERT_UNREACHABLE("unexpected digit length");
     }
-    return {uint32_t(x), uint32_t(y), uint32_t(z)};
+    return Int96{
+        Int96::Digits{Int96::Digit(x), Int96::Digit(y), Int96::Digit(z)},
+        ns->isNegative()};
   }
-}
-
-/**
- * Return the Instant from the input digits. The least significant digit of the
- * input is stored at index 0. The most significant digit of the input must be
- * less than 1'000'000'000.
- */
-static Instant ToInstant(std::array<uint32_t, 3> digits, bool isNegative) {
-  constexpr uint32_t divisor = ToNanoseconds(TemporalUnit::Second);
-
-  MOZ_ASSERT(digits[2] < divisor);
-
-  uint32_t quotient[2] = {};
-  uint32_t remainder = digits[2];
-  for (int32_t i = 1; i >= 0; i--) {
-    uint64_t n = (uint64_t(remainder) << 32) | digits[i];
-    quotient[i] = n / divisor;
-    remainder = n % divisor;
-  }
-
-  int64_t seconds = (uint64_t(quotient[1]) << 32) | quotient[0];
-  if (isNegative) {
-    seconds *= -1;
-    if (remainder != 0) {
-      seconds -= 1;
-      remainder = divisor - remainder;
-    }
-  }
-  return {seconds, int32_t(remainder)};
-}
-
-static InstantSpan ToInstantSpan(std::array<uint32_t, 3> digits,
-                                 bool isNegative) {
-  auto instant = ToInstant(digits, isNegative);
-  return InstantSpan{instant.seconds, instant.nanoseconds};
 }
 
 Instant js::temporal::ToInstant(const BigInt* epochNanoseconds) {
   MOZ_ASSERT(IsValidEpochNanoseconds(epochNanoseconds));
 
-  auto digits = BigIntDigits(epochNanoseconds);
-  return ::ToInstant(digits, epochNanoseconds->isNegative());
+  auto [seconds, nanos] =
+      ToInt96(epochNanoseconds) / ToNanoseconds(TemporalUnit::Second);
+  return {seconds, nanos};
 }
 
 InstantSpan js::temporal::ToInstantSpan(const BigInt* nanoseconds) {
   MOZ_ASSERT(IsValidInstantSpan(nanoseconds));
 
-  auto digits = BigIntDigits(nanoseconds);
-  return ::ToInstantSpan(digits, nanoseconds->isNegative());
+  auto [seconds, nanos] =
+      ToInt96(nanoseconds) / ToNanoseconds(TemporalUnit::Second);
+  return {seconds, nanos};
 }
 
 static BigInt* CreateBigInt(JSContext* cx,
@@ -414,63 +386,21 @@ static mozilla::Maybe<InstantSpan> NanosecondsToInstantSpan(
     double nanoseconds) {
   MOZ_ASSERT(IsInteger(nanoseconds));
 
-  constexpr int64_t spanLimit = InstantSpan::max().toSeconds();
-  constexpr int64_t secToNanos = ToNanoseconds(TemporalUnit::Second);
+  if (auto int96 = Int96::fromInteger(nanoseconds)) {
+    constexpr auto maximum = Int96{InstantSpan::max().toSeconds()} *
+                             ToNanoseconds(TemporalUnit::Second);
 
-  // Fast path for the common case.
-  if (nanoseconds == 0) {
-    return mozilla::Some(InstantSpan{});
-  }
+    // Accept if the value is less-or-equal to the maximum instant span.
+    if (int96->abs() <= maximum) {
+      // Split into seconds and nanoseconds.
+      auto [seconds, nanos] = *int96 / ToNanoseconds(TemporalUnit::Second);
 
-  // Reject if the value is larger than the maximum instant span.
-  if (std::abs(nanoseconds) > double(spanLimit) * double(secToNanos)) {
-    return mozilla::Nothing();
-  }
-
-  // Inlined version of |BigInt::createFromDouble()| for DigitBits=32. See the
-  // comments in |BigInt::createFromDouble()| for how this code works.
-  constexpr size_t DigitBits = 32;
-
-  // The number can't have more than three digits when it's below the maximum
-  // instant span.
-  std::array<uint32_t, 3> digits = {};
-
-  int exponent = mozilla::ExponentComponent(nanoseconds);
-  MOZ_ASSERT(0 <= exponent && exponent <= 73,
-             "exponent can't exceed exponent of maximum instant span");
-
-  int length = exponent / DigitBits + 1;
-  MOZ_ASSERT(1 <= length && length <= 3);
-
-  using Double = mozilla::FloatingPoint<double>;
-  uint64_t mantissa =
-      mozilla::BitwiseCast<uint64_t>(nanoseconds) & Double::kSignificandBits;
-
-  // Add implicit high bit.
-  mantissa |= 1ull << Double::kSignificandWidth;
-
-  // 0-indexed position of the double's most significant bit within the `msd`.
-  int msdTopBit = exponent % DigitBits;
-
-  // First, build the MSD by shifting the mantissa appropriately.
-  int remainingMantissaBits = Double::kSignificandWidth - msdTopBit;
-  digits[--length] = mantissa >> remainingMantissaBits;
-
-  // Fill in digits containing mantissa contributions.
-  mantissa = mantissa << (64 - remainingMantissaBits);
-  if (mantissa) {
-    MOZ_ASSERT(length > 0);
-    digits[--length] = uint32_t(mantissa >> 32);
-
-    if (uint32_t(mantissa)) {
-      MOZ_ASSERT(length > 0);
-      digits[--length] = uint32_t(mantissa);
+      auto result = InstantSpan{seconds, nanos};
+      MOZ_ASSERT(IsValidInstantSpan(result));
+      return mozilla::Some(result);
     }
   }
-
-  auto result = ToInstantSpan(digits, nanoseconds < 0);
-  MOZ_ASSERT(IsValidInstantSpan(result));
-  return mozilla::Some(result);
+  return mozilla::Nothing();
 }
 
 /**
