@@ -4883,7 +4883,7 @@ static bool testingFunc_inIon(JSContext* cx, unsigned argc, Value* vp) {
   // Use frame iterator to inspect caller.
   FrameIter iter(cx);
 
-  // We may be invoked directly, not in a JS context, e.g. if inJson is added as
+  // We may be invoked directly, not in a JS context, e.g. if inIon is added as
   // a callback on the event queue.
   if (iter.done()) {
     args.rval().setBoolean(false);
