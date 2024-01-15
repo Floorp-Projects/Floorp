@@ -2078,14 +2078,15 @@ void CanvasRenderingContext2D::Restore() {
 
   Matrix newMatrix = CurrentState().transform;
   Matrix adjustMatrix = mTarget->GetTransform();
+  if (!newMatrix.ExactlyEquals(adjustMatrix)) {
+    Matrix inverse = newMatrix;
+    if (inverse.Invert()) {
+      adjustMatrix = adjustMatrix * inverse;
+    }
+    TransformCurrentPath(adjustMatrix);
 
-  Matrix inverse = newMatrix;
-  if (inverse.Invert()) {
-    adjustMatrix = adjustMatrix * inverse;
+    mTarget->SetTransform(newMatrix);
   }
-  TransformCurrentPath(adjustMatrix);
-
-  mTarget->SetTransform(newMatrix);
 }
 
 //
@@ -4882,6 +4883,7 @@ UniquePtr<TextMetrics> CanvasRenderingContext2D::DrawOrMeasureText(
   }
 
   Matrix oldTransform = mTarget->GetTransform();
+  bool restoreTransform = false;
   // if text is over aMaxWidth, then scale the text horizontally such that its
   // width is precisely aMaxWidth
   if (aMaxWidth.WasPassed() && aMaxWidth.Value() > 0 &&
@@ -4896,6 +4898,7 @@ UniquePtr<TextMetrics> CanvasRenderingContext2D::DrawOrMeasureText(
     /* we do this to avoid an ICE in the android compiler */
     Matrix androidCompilerBug = newTransform;
     mTarget->SetTransform(androidCompilerBug);
+    restoreTransform = true;
   }
 
   // save the previous bounding box
@@ -4914,7 +4917,9 @@ UniquePtr<TextMetrics> CanvasRenderingContext2D::DrawOrMeasureText(
     return nullptr;
   }
 
-  mTarget->SetTransform(oldTransform);
+  if (restoreTransform) {
+    mTarget->SetTransform(oldTransform);
+  }
 
   if (aOp == CanvasRenderingContext2D::TextDrawOperation::FILL &&
       !doCalculateBounds) {
@@ -5265,21 +5270,16 @@ static void SwapScaleWidthHeightForRotation(gfx::Rect& aRect,
 static Matrix ComputeRotationMatrix(gfxFloat aRotatedWidth,
                                     gfxFloat aRotatedHeight,
                                     VideoRotation aDegrees) {
-  Matrix shiftVideoCenterToOrigin;
+  Point shiftVideoCenterToOrigin(-aRotatedWidth / 2.0, -aRotatedHeight / 2.0);
   if (aDegrees == VideoRotation::kDegree_90 ||
       aDegrees == VideoRotation::kDegree_270) {
-    shiftVideoCenterToOrigin =
-        Matrix::Translation(-aRotatedHeight / 2.0, -aRotatedWidth / 2.0);
-  } else {
-    shiftVideoCenterToOrigin =
-        Matrix::Translation(-aRotatedWidth / 2.0, -aRotatedHeight / 2.0);
+    std::swap(shiftVideoCenterToOrigin.x, shiftVideoCenterToOrigin.y);
   }
-
   auto angle = static_cast<double>(aDegrees) / 180.0 * M_PI;
   Matrix rotation = Matrix::Rotation(static_cast<gfx::Float>(angle));
-  Matrix shiftLeftTopToOrigin =
-      Matrix::Translation(aRotatedWidth / 2.0, aRotatedHeight / 2.0);
-  return shiftVideoCenterToOrigin * rotation * shiftLeftTopToOrigin;
+  Point shiftLeftTopToOrigin(aRotatedWidth / 2.0, aRotatedHeight / 2.0);
+  return rotation.PreTranslate(shiftVideoCenterToOrigin)
+      .PostTranslate(shiftLeftTopToOrigin);
 }
 
 // drawImage(in HTMLImageElement image, in float dx, in float dy);
@@ -5566,10 +5566,10 @@ void CanvasRenderingContext2D::DrawImage(const CanvasImageSource& aImage,
 
     gfx::Rect destRect(aDx, aDy, aDw, aDh);
 
-    Matrix transform;
+    Matrix currentTransform = tempTarget->GetTransform();
     if (rotationDeg != VideoRotation::kDegree_0) {
-      Matrix preTransform = ComputeRotationMatrix(aDw, aDh, rotationDeg);
-      transform = preTransform * Matrix::Translation(aDx, aDy);
+      tempTarget->ConcatTransform(
+          ComputeRotationMatrix(aDw, aDh, rotationDeg).PostTranslate(aDx, aDy));
 
       SwapScaleWidthHeightForRotation(destRect, rotationDeg);
       // When rotation exists, aDx, aDy is handled by transform, Since aDest.x
@@ -5577,17 +5577,15 @@ void CanvasRenderingContext2D::DrawImage(const CanvasImageSource& aImage,
       destRect.x = 0;
       destRect.y = 0;
     }
-    Matrix currentTransform = tempTarget->GetTransform();
-    transform *= currentTransform;
-
-    tempTarget->SetTransform(transform);
 
     tempTarget.DrawSurface(
         srcSurf, destRect, sourceRect,
         DrawSurfaceOptions(samplingFilter, SamplingBounds::UNBOUNDED),
         DrawOptions(CurrentState().globalAlpha, op, antialiasMode));
 
-    tempTarget->SetTransform(currentTransform);
+    if (rotationDeg != VideoRotation::kDegree_0) {
+      tempTarget->SetTransform(currentTransform);
+    }
 
   } else {
     DrawDirectlyToCanvas(drawInfo, &bounds, gfx::Rect(aDx, aDy, aDw, aDh),
