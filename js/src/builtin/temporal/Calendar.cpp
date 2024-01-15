@@ -857,58 +857,12 @@ JSObject* js::temporal::ToTemporalCalendarObject(
 }
 
 /**
- * CreateCalendarMethodsRecord ( calendar, methods )
- */
-bool js::temporal::CreateCalendarMethodsRecord(
-    JSContext* cx, Handle<CalendarValue> calendar,
-    mozilla::EnumSet<CalendarMethod> methods,
-    MutableHandle<CalendarRecord> result) {
-  // Step 1.
-  result.set(CalendarRecord{calendar});
-
-  // Built-in calendars don't perform observable lookups.
-  if (calendar.isString()) {
-#ifdef DEBUG
-    // Remember the looked up method for assertions.
-    result.get().lookedUpBuiltin() += methods;
-#endif
-    return true;
-  }
-
-  // Step 2.
-  for (auto method : methods) {
-    if (!CalendarMethodsRecordLookup(cx, result, method)) {
-      return false;
-    }
-  }
-
-  // Step 3.
-  return true;
-}
-
-/**
  * CalendarMethodsRecordLookup ( calendarRec, methodName )
  */
-bool js::temporal::CalendarMethodsRecordLookup(
-    JSContext* cx, MutableHandle<CalendarRecord> calendar,
-    CalendarMethod methodName) {
-  // Built-in calendars don't perform observable lookups.
-  if (CalendarMethodsRecordIsBuiltin(calendar)) {
-    // Step 1.
-    MOZ_ASSERT(!calendar.get().lookedUpBuiltin().contains(methodName));
-
-    // Steps 2-3.
-#ifdef DEBUG
-    // Remember the looked up method for assertions.
-    calendar.get().lookedUpBuiltin() += methodName;
-#endif
-
-    // Step 4.
-    return true;
-  }
-
-  // Step 1.
-  MOZ_ASSERT(!CalendarMethodsRecordHasLookedUp(calendar, methodName));
+static bool CalendarMethodsRecordLookup(JSContext* cx,
+                                        MutableHandle<CalendarRecord> calendar,
+                                        CalendarMethod methodName) {
+  // Step 1. (Not applicable in our implementation.)
 
   // Steps 2-10.
   Rooted<JSObject*> object(cx, calendar.receiver().toObject());
@@ -954,39 +908,36 @@ bool js::temporal::CalendarMethodsRecordLookup(
 }
 
 /**
- * CalendarMethodsRecordHasLookedUp ( calendarRec, methodName )
+ * CreateCalendarMethodsRecord ( calendar, methods )
  */
-bool js::temporal::CalendarMethodsRecordHasLookedUp(
-    const CalendarRecord& calendar, CalendarMethod methodName) {
-  // Built-in calendars don't perform observable lookups.
-  if (CalendarMethodsRecordIsBuiltin(calendar)) {
+bool js::temporal::CreateCalendarMethodsRecord(
+    JSContext* cx, Handle<CalendarValue> calendar,
+    mozilla::EnumSet<CalendarMethod> methods,
+    MutableHandle<CalendarRecord> result) {
+  MOZ_ASSERT(!methods.isEmpty());
+
+  // Step 1.
+  result.set(CalendarRecord{calendar});
+
 #ifdef DEBUG
-    return calendar.lookedUpBuiltin().contains(methodName);
-#else
-    return true;
+  // Remember the set of looked-up methods for assertions.
+  result.get().lookedUp() += methods;
 #endif
+
+  // Built-in calendars don't perform observable lookups.
+  if (calendar.isString()) {
+    return true;
   }
 
-  // Steps 1-10.
-  switch (methodName) {
-    case CalendarMethod::DateAdd:
-      return calendar.dateAdd();
-    case CalendarMethod::DateFromFields:
-      return calendar.dateFromFields();
-    case CalendarMethod::DateUntil:
-      return calendar.dateUntil();
-    case CalendarMethod::Day:
-      return calendar.day();
-    case CalendarMethod::Fields:
-      return calendar.fields();
-    case CalendarMethod::MergeFields:
-      return calendar.mergeFields();
-    case CalendarMethod::MonthDayFromFields:
-      return calendar.monthDayFromFields();
-    case CalendarMethod::YearMonthFromFields:
-      return calendar.yearMonthFromFields();
+  // Step 2.
+  for (auto method : methods) {
+    if (!CalendarMethodsRecordLookup(cx, result, method)) {
+      return false;
+    }
   }
-  MOZ_CRASH("invalid calendar method");
+
+  // Step 3.
+  return true;
 }
 
 static bool ToCalendarField(JSContext* cx, JSLinearString* linear,

@@ -6292,26 +6292,13 @@ static bool AddDurationToOrSubtractDurationFromDuration(
     }
 
     // Step 9.b.
-    if (!CreateCalendarMethodsRecord(cx, calendarValue, {}, &calendar)) {
+    if (!CreateCalendarMethodsRecord(cx, calendarValue,
+                                     {
+                                         CalendarMethod::DateAdd,
+                                         CalendarMethod::DateUntil,
+                                     },
+                                     &calendar)) {
       return false;
-    }
-
-    // Step 9.c.
-    if (duration.years != 0 || duration.months != 0 || duration.weeks != 0 ||
-        other.years != 0 || other.months != 0 || other.weeks != 0) {
-      // Step 9.c.i.
-      if (!CalendarMethodsRecordLookup(cx, &calendar,
-                                       CalendarMethod::DateAdd)) {
-        return false;
-      }
-
-      // Step 9.c.ii.
-      if (other != Duration{}) {
-        if (!CalendarMethodsRecordLookup(cx, &calendar,
-                                         CalendarMethod::DateUntil)) {
-          return false;
-        }
-      }
     }
   }
 
@@ -6554,17 +6541,12 @@ static bool Duration_compare(JSContext* cx, unsigned argc, Value* vp) {
     }
 
     // Step 12.b.
-    if (!CreateCalendarMethodsRecord(cx, calendarValue, {}, &calendar)) {
+    if (!CreateCalendarMethodsRecord(cx, calendarValue,
+                                     {
+                                         CalendarMethod::DateAdd,
+                                     },
+                                     &calendar)) {
       return false;
-    }
-
-    // Step 12.c.
-    if (calendarUnitsPresent) {
-      // Step 12.c.i.
-      if (!CalendarMethodsRecordLookup(cx, &calendar,
-                                       CalendarMethod::DateAdd)) {
-        return false;
-      }
     }
   }
 
@@ -7321,41 +7303,13 @@ static bool Duration_round(JSContext* cx, const CallArgs& args) {
     }
 
     // Step 36.b.
-    if (!CreateCalendarMethodsRecord(cx, calendarValue, {}, &calendar)) {
+    if (!CreateCalendarMethodsRecord(cx, calendarValue,
+                                     {
+                                         CalendarMethod::DateAdd,
+                                         CalendarMethod::DateUntil,
+                                     },
+                                     &calendar)) {
       return false;
-    }
-
-    // Step 36.c.
-    bool largestUnitIsCalendarUnit = largestUnit <= TemporalUnit::Week;
-
-    // Step 36.d.
-    bool smallestUnitIsCalendarUnit = smallestUnit <= TemporalUnit::Week;
-
-    // Step 36.e.
-    if (duration.years != 0 || duration.months != 0 || duration.weeks != 0 ||
-        largestUnitIsCalendarUnit || smallestUnitIsCalendarUnit) {
-      // Step 36.e.i.
-      if (!CalendarMethodsRecordLookup(cx, &calendar,
-                                       CalendarMethod::DateAdd)) {
-        return false;
-      }
-    }
-
-    // Steps 36.f-o.
-    bool dateUntilMayBeCalled =
-        largestUnit == TemporalUnit::Year ||
-        (largestUnit == TemporalUnit::Month && duration.years != 0) ||
-        smallestUnit == TemporalUnit::Year ||
-        !(!zonedRelativeTo || roundingGranularityIsNoop ||
-          smallestUnitIsCalendarUnit || !largestUnitIsCalendarUnit);
-
-    // Step 36.p.
-    if (dateUntilMayBeCalled) {
-      // Step 36.p.i.
-      if (!CalendarMethodsRecordLookup(cx, &calendar,
-                                       CalendarMethod::DateUntil)) {
-        return false;
-      }
     }
   }
 
@@ -7573,28 +7527,13 @@ static bool Duration_total(JSContext* cx, const CallArgs& args) {
     }
 
     // Step 16.b.
-    if (!CreateCalendarMethodsRecord(cx, calendarValue, {}, &calendar)) {
+    if (!CreateCalendarMethodsRecord(cx, calendarValue,
+                                     {
+                                         CalendarMethod::DateAdd,
+                                         CalendarMethod::DateUntil,
+                                     },
+                                     &calendar)) {
       return false;
-    }
-
-    // Step 16.c.
-    if (duration.years != 0 || duration.months != 0 || duration.weeks != 0 ||
-        unit <= TemporalUnit::Week) {
-      // Step 16.c.i.
-      if (!CalendarMethodsRecordLookup(cx, &calendar,
-                                       CalendarMethod::DateAdd)) {
-        return false;
-      }
-    }
-
-    // Step 16.d.
-    if (unit == TemporalUnit::Year ||
-        (unit == TemporalUnit::Month && duration.years != 0)) {
-      // Step 16.d.i.
-      if (!CalendarMethodsRecordLookup(cx, &calendar,
-                                       CalendarMethod::DateUntil)) {
-        return false;
-      }
     }
   }
 

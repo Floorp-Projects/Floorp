@@ -1597,20 +1597,15 @@ static bool AddDurationToOrSubtractDurationFromZonedDateTime(
 
   // Step 5.
   Rooted<CalendarRecord> calendar(cx);
-  if (!CreateCalendarMethodsRecord(cx, zonedDateTime.calendar(), {},
+  if (!CreateCalendarMethodsRecord(cx, zonedDateTime.calendar(),
+                                   {
+                                       CalendarMethod::DateAdd,
+                                   },
                                    &calendar)) {
     return false;
   }
 
   // Step 6.
-  if (duration.years != 0 || duration.months != 0 || duration.weeks != 0) {
-    // Step 6.a.
-    if (!CalendarMethodsRecordLookup(cx, &calendar, CalendarMethod::DateAdd)) {
-      return false;
-    }
-  }
-
-  // Step 7.
   if (operation == ZonedDateTimeDuration::Subtract) {
     duration = duration.negate();
   }
@@ -1622,7 +1617,7 @@ static bool AddDurationToOrSubtractDurationFromZonedDateTime(
   }
   MOZ_ASSERT(IsValidEpochInstant(resultInstant));
 
-  // Step 8.
+  // Step 7.
   auto* result = CreateTemporalZonedDateTime(
       cx, resultInstant, timeZone.receiver(), calendar.receiver());
   if (!result) {
