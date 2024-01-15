@@ -159,7 +159,7 @@ bool AdjustRoundedDurationDays(JSContext* cx, const Duration& duration,
                                TemporalRoundingMode roundingMode,
                                JS::Handle<ZonedDateTime> relativeTo,
                                JS::Handle<CalendarRecord> calendar,
-                               JS::MutableHandle<TimeZoneRecord> timeZone,
+                               JS::Handle<TimeZoneRecord> timeZone,
                                const PlainDateTime& precalculatedPlainDateTime,
                                Duration* result);
 
@@ -195,7 +195,7 @@ bool RoundDuration(JSContext* cx, const Duration& duration, Increment increment,
                    JS::Handle<PlainDateObject*> plainRelativeTo,
                    JS::Handle<CalendarRecord> calendar,
                    JS::Handle<ZonedDateTime> zonedRelativeTo,
-                   JS::MutableHandle<TimeZoneRecord> timeZone,
+                   JS::Handle<TimeZoneRecord> timeZone,
                    const PlainDateTime& precalculatedPlainDateTime,
                    Duration* result);
 
