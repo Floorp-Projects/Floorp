@@ -201,7 +201,6 @@ license:
             - '**/*.webidl'
             - '**/*.xhtml'
             - '**/*.xml'
-            - '**/*.xul'
             - 'tools/lint/license.yml'
 
 lintpref:
@@ -529,7 +528,6 @@ file-perm:
             - '**/*.webidl'
             - '**/*.xhtml'
             - '**/*.xml'
-            - '**/*.xul'
             - '**/*.yaml'
             - '**/*.yml'
 

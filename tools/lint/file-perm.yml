@@ -33,7 +33,6 @@ file-perm:
         - .webidl
         - .xhtml
         - .xml
-        - .xul
         - .yaml
         - .yml
     support-files:

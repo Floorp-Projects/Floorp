@@ -148,13 +148,13 @@ def fix_me(log, filename):
         add_header(log, filename, license)
         return True
 
-    if ext in [".py", ".ftl", ".properties"] or filename.endswith(".inc.xul"):
+    if ext in [".py", ".ftl", ".properties"]:
         for l in license_template:
             license.append("# " + l.strip() + "\n")
         add_header(log, filename, license)
         return True
 
-    if ext in [".xml", ".xul", ".html", ".xhtml", ".dtd", ".svg"]:
+    if ext in [".xml", ".html", ".xhtml", ".dtd", ".svg"]:
         for i, l in enumerate(license_template):
             start = "   - "
             end = ""
