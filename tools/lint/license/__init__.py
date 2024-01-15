@@ -130,6 +130,7 @@ def fix_me(log, filename):
         ".js",
         ".jsm",
         ".jsx",
+        ".mjs",
         ".css",
         ".idl",
         ".webidl",
