@@ -94,9 +94,11 @@ class PerformanceHintSession {
  * information.
  */
 struct HeterogeneousCpuInfo {
-  // We use a max of 32 because currently this is only implemented for Android
+  // We use a max of 32 because this was initially implemented only for Android
   // where we are unlikely to need more CPUs than that, and it simplifies
   // dealing with cpu_set_t as CPU_SETSIZE is 32 on 32-bit Android.
+  // If there are more than 32 CPU cores, the implementation should try to fill
+  // first mBigCpus before adding anything to mMediumCpus or mLittleCpus.
   static const size_t MAX_CPUS = 32;
   size_t mTotalNumCpus;
   mozilla::BitSet<MAX_CPUS> mLittleCpus;
