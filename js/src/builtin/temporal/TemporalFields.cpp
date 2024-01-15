@@ -30,7 +30,6 @@
 #include "js/ComparisonOperators.h"
 #include "js/ErrorReport.h"
 #include "js/friend/ErrorMessages.h"
-#include "js/GCAPI.h"
 #include "js/GCVector.h"
 #include "js/Id.h"
 #include "js/Printer.h"
@@ -49,7 +48,6 @@
 #include "vm/SymbolType.h"
 
 #include "vm/JSAtomUtils-inl.h"
-#include "vm/JSObject-inl.h"
 #include "vm/ObjectOperations-inl.h"
 
 using namespace js;

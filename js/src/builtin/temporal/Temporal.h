@@ -15,6 +15,7 @@
 
 #include "builtin/temporal/TemporalRoundingMode.h"
 #include "builtin/temporal/TemporalUnit.h"
+#include "js/RootingAPI.h"
 #include "js/TypeDecls.h"
 #include "vm/NativeObject.h"
 

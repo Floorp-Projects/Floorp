@@ -7,8 +7,6 @@
 #include "builtin/temporal/ZonedDateTime.h"
 
 #include "mozilla/Assertions.h"
-#include "mozilla/CheckedInt.h"
-#include "mozilla/FloatingPoint.h"
 #include "mozilla/Maybe.h"
 
 #include <cstdlib>
