@@ -1,6 +1,33 @@
 {
   "data": [
     {
+      "name": "Edge",
+      "schema": 1705104306985,
+      "status": "planned",
+      "version": "123",
+      "browserid": "edge",
+      "id": "d0c3d84f-8d27-455b-8746-7e25607e5b78",
+      "last_modified": 1705307946112
+    },
+    {
+      "name": "Edge",
+      "schema": 1704903174781,
+      "status": "beta",
+      "version": "121",
+      "browserid": "edge",
+      "id": "52bfc592-a35d-4208-ba7b-0810d88970d0",
+      "last_modified": 1705307946108
+    },
+    {
+      "name": "Edge",
+      "schema": 1705104306922,
+      "status": "nightly",
+      "version": "122",
+      "browserid": "edge",
+      "id": "5ad01f1f-b345-4f24-9b88-4f456a928c76",
+      "last_modified": 1705307946106
+    },
+    {
       "name": "Firefox",
       "schema": 1703376307846,
       "status": "planned",
@@ -190,15 +217,6 @@
       "last_modified": 1701778564556
     },
     {
-      "name": "Edge",
-      "schema": 1700957103696,
-      "status": "planned",
-      "version": "122",
-      "browserid": "edge",
-      "id": "5ad01f1f-b345-4f24-9b88-4f456a928c76",
-      "last_modified": 1701078578076
-    },
-    {
       "name": "Node.js",
       "schema": 1700957104515,
       "status": "current",
@@ -215,15 +233,6 @@
       "browserid": "opera",
       "id": "63669ffc-728c-4e8a-b761-6939841f9d61",
       "last_modified": 1701078578064
-    },
-    {
-      "name": "Edge",
-      "schema": 1700957103602,
-      "status": "nightly",
-      "version": "121",
-      "browserid": "edge",
-      "id": "52bfc592-a35d-4208-ba7b-0810d88970d0",
-      "last_modified": 1701078578061
     },
     {
       "name": "Opera",
@@ -316,5 +325,5 @@
       "last_modified": 1665656484764
     }
   ],
-  "timestamp": 1704181096583
+  "timestamp": 1705307946112
 }
