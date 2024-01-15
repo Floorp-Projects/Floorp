@@ -171,14 +171,8 @@ already_AddRefed<DrawTarget> Translator::CreateDrawTarget(
   return newDT.forget();
 }
 
-void Translator::DrawDependentSurface(ReferencePtr aDrawTarget, uint64_t aKey,
-                                      const Rect& aRect) {
-  if (!mDependentSurfaces) {
-    return;
-  }
-
-  DrawTarget* dt = LookupDrawTarget(aDrawTarget);
-  if (!dt) {
+void Translator::DrawDependentSurface(uint64_t aKey, const Rect& aRect) {
+  if (!mDependentSurfaces || !mCurrentDT) {
     return;
   }
 
@@ -188,21 +182,21 @@ void Translator::DrawDependentSurface(ReferencePtr aDrawTarget, uint64_t aKey,
     return;
   }
 
-  dt->PushClipRect(aRect);
+  mCurrentDT->PushClipRect(aRect);
 
   // Construct a new translator, so we can recurse into translating this
   // sub-recording into the same DT. Set an initial transform for the
   // translator, so that all commands get moved into the rect we want to draw.
-  Matrix transform = dt->GetTransform();
+  Matrix transform = mCurrentDT->GetTransform();
   transform.PreTranslate(aRect.TopLeft());
-  InlineTranslator translator(dt, nullptr);
+  InlineTranslator translator(mCurrentDT, nullptr);
   translator.SetReferenceDrawTargetTransform(transform);
 
   translator.SetDependentSurfaces(mDependentSurfaces);
   translator.TranslateRecording((char*)recordedSurface->mRecording.mData,
                                 recordedSurface->mRecording.mLen);
 
-  dt->PopClip();
+  mCurrentDT->PopClip();
 }
 
 }  // namespace gfx

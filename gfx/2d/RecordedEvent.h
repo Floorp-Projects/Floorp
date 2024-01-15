@@ -102,10 +102,10 @@ class Translator {
   virtual already_AddRefed<SourceSurface> LookupExternalSurface(uint64_t aKey) {
     return nullptr;
   }
-  void DrawDependentSurface(ReferencePtr aDrawTarget, uint64_t aKey,
-                            const Rect& aRect);
+  void DrawDependentSurface(uint64_t aKey, const Rect& aRect);
   virtual void AddDrawTarget(ReferencePtr aRefPtr, DrawTarget* aDT) = 0;
   virtual void RemoveDrawTarget(ReferencePtr aRefPtr) = 0;
+  virtual bool SetCurrentDrawTarget(ReferencePtr aRefPtr) = 0;
   virtual void AddPath(ReferencePtr aRefPtr, Path* aPath) = 0;
   virtual void RemovePath(ReferencePtr aRefPtr) = 0;
   virtual void AddSourceSurface(ReferencePtr aRefPtr, SourceSurface* aPath) = 0;
@@ -149,8 +149,11 @@ class Translator {
     mDependentSurfaces = aDependentSurfaces;
   }
 
+  DrawTarget* GetCurrentDrawTarget() const { return mCurrentDT; }
+
   nsRefPtrHashtable<nsUint64HashKey, RecordedDependentSurface>*
       mDependentSurfaces = nullptr;
+  DrawTarget* mCurrentDT = nullptr;
 };
 
 struct ColorPatternStorage {
@@ -366,6 +369,7 @@ class RecordedEvent {
   enum EventType : uint8_t {
     DRAWTARGETCREATION = 0,
     DRAWTARGETDESTRUCTION,
+    SETCURRENTDRAWTARGET,
     FILLRECT,
     STROKERECT,
     STROKELINE,

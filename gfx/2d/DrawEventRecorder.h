@@ -24,6 +24,7 @@
 namespace mozilla {
 namespace gfx {
 
+class DrawTargetRecording;
 class PathRecording;
 
 class DrawEventRecorderPrivate : public DrawEventRecorder {
@@ -69,6 +70,7 @@ class DrawEventRecorderPrivate : public DrawEventRecorder {
     mStoredObjects.Clear();
     mStoredFontData.Clear();
     mScaledFonts.clear();
+    mCurrentDT = nullptr;
   }
 
   template <class S>
@@ -80,6 +82,23 @@ class DrawEventRecorderPrivate : public DrawEventRecorder {
   }
 
   virtual void RecordEvent(const RecordedEvent& aEvent) = 0;
+
+  void RecordEvent(DrawTargetRecording* aDT, const RecordedEvent& aEvent) {
+    ReferencePtr dt = aDT;
+    if (mCurrentDT != dt) {
+      SetDrawTarget(dt);
+    }
+    RecordEvent(aEvent);
+  }
+
+  void SetDrawTarget(ReferencePtr aDT);
+
+  void ClearDrawTarget(DrawTargetRecording* aDT) {
+    ReferencePtr dt = aDT;
+    if (mCurrentDT == dt) {
+      mCurrentDT = nullptr;
+    }
+  }
 
   void AddStoredObject(const ReferencePtr aObject) {
     ProcessPendingDeletions();
@@ -232,6 +251,7 @@ class DrawEventRecorderPrivate : public DrawEventRecorder {
   // raw pointer to a ThreadSafeWeakPtr to protect against this.
   nsTHashMap<void*, ThreadSafeWeakPtr<SourceSurface>> mStoredSurfaces;
 
+  ReferencePtr mCurrentDT;
   ExternalSurfacesHolder mExternalSurfaces;
   bool mExternalFonts;
 };

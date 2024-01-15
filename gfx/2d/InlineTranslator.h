@@ -127,7 +127,16 @@ class InlineTranslator : public Translator {
   }
 
   void RemoveDrawTarget(ReferencePtr aRefPtr) override {
+    ReferencePtr currentDT = mCurrentDT;
+    if (currentDT == aRefPtr) {
+      mCurrentDT = nullptr;
+    }
     mDrawTargets.Remove(aRefPtr);
+  }
+
+  bool SetCurrentDrawTarget(ReferencePtr aRefPtr) override {
+    mCurrentDT = mDrawTargets.GetWeak(aRefPtr);
+    return !!mCurrentDT;
   }
 
   void RemovePath(ReferencePtr aRefPtr) final { mPaths.Remove(aRefPtr); }

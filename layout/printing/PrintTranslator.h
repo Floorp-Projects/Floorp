@@ -119,7 +119,16 @@ class PrintTranslator final : public Translator {
   }
 
   void RemoveDrawTarget(ReferencePtr aRefPtr) final {
+    ReferencePtr currentDT = mCurrentDT;
+    if (currentDT == aRefPtr) {
+      mCurrentDT = nullptr;
+    }
     mDrawTargets.Remove(aRefPtr);
+  }
+
+  bool SetCurrentDrawTarget(ReferencePtr aRefPtr) final {
+    mCurrentDT = mDrawTargets.GetWeak(aRefPtr);
+    return !!mCurrentDT;
   }
 
   void RemovePath(ReferencePtr aRefPtr) final { mPaths.Remove(aRefPtr); }

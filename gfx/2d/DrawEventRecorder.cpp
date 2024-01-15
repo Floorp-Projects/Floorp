@@ -20,6 +20,13 @@ DrawEventRecorderPrivate::~DrawEventRecorderPrivate() {
   NS_ASSERT_OWNINGTHREAD(DrawEventRecorderPrivate);
 }
 
+void DrawEventRecorderPrivate::SetDrawTarget(ReferencePtr aDT) {
+  NS_ASSERT_OWNINGTHREAD(DrawEventRecorderPrivate);
+
+  RecordEvent(RecordedSetCurrentDrawTarget(aDT));
+  mCurrentDT = aDT;
+}
+
 void DrawEventRecorderPrivate::StoreExternalSurfaceRecording(
     SourceSurface* aSurface, uint64_t aKey) {
   NS_ASSERT_OWNINGTHREAD(DrawEventRecorderPrivate);
