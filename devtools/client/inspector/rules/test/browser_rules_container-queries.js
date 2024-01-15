@@ -281,13 +281,16 @@ async function assertQueryContainerTooltip({
 
   const tooltip = view.tooltips.getTooltip("interactiveTooltip");
   const onTooltipReady = tooltip.once("shown");
+  info("synthesizing mousemove: " + tooltip.isVisible());
   EventUtils.synthesizeMouseAtCenter(
     tooltipTriggerEl,
     { type: "mousemove" },
     tooltipTriggerEl.ownerDocument.defaultView
   );
   await onTooltipReady;
+  info("tooltip was shown");
   await onNodeHighlight;
+  info("node was highlighted");
 
   is(
     tooltip.panel.querySelector("header").textContent,
