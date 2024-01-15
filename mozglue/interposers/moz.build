@@ -17,7 +17,7 @@ if CONFIG["MOZ_CRASHREPORTER"]:
         "pthread_create_interposer.cpp",
     ]
 
-if CONFIG["MOZ_LINKER"] and CONFIG["MOZ_WIDGET_TOOLKIT"] == "android":
+if CONFIG["MOZ_LINKER"]:
     LOCAL_INCLUDES += [
         "/mozglue/linker",
     ]
