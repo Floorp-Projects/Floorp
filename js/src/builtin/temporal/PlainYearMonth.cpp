@@ -532,14 +532,22 @@ static bool DifferenceTemporalPlainYearMonth(JSContext* cx,
   if (settings.smallestUnit != TemporalUnit::Month ||
       settings.roundingIncrement != Increment{1}) {
     // Steps 22.a-b.
-    Duration rounded;
+    Duration roundResult;
     if (!RoundDuration(cx, duration, settings.roundingIncrement,
                        settings.smallestUnit, settings.roundingMode, thisDate,
-                       calendarRec, &rounded)) {
+                       calendarRec, &roundResult)) {
       return false;
     }
 
-    duration = {rounded.years, rounded.months};
+    // Step 22.c.
+    auto toBalance = Duration{roundResult.years, roundResult.months};
+    DateDuration balanceResult;
+    if (!temporal::BalanceDateDurationRelative(cx, toBalance,
+                                               settings.largestUnit, thisDate,
+                                               calendarRec, &balanceResult)) {
+      return false;
+    }
+    duration = balanceResult.toDuration();
   }
 
   // Step 23.

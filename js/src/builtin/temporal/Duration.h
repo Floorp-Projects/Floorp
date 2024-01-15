@@ -140,6 +140,15 @@ bool BalanceTimeDuration(JSContext* cx, const InstantSpan& nanoseconds,
                          TemporalUnit largestUnit, TimeDuration* result);
 
 /**
+ * BalanceDateDurationRelative ( years, months, weeks, days, largestUnit,
+ * plainRelativeTo, calendarRec )
+ */
+bool BalanceDateDurationRelative(
+    JSContext* cx, const Duration& duration, TemporalUnit largestUnit,
+    JS::Handle<Wrapped<PlainDateObject*>> plainRelativeTo,
+    JS::Handle<CalendarRecord> calendar, DateDuration* result);
+
+/**
  * AdjustRoundedDurationDays ( years, months, weeks, days, hours, minutes,
  * seconds, milliseconds, microseconds, nanoseconds, increment, unit,
  * roundingMode, zonedRelativeTo, calendarRec, timeZoneRec,
@@ -183,6 +192,7 @@ bool RoundDuration(JSContext* cx, const Duration& duration, Increment increment,
  */
 bool RoundDuration(JSContext* cx, const Duration& duration, Increment increment,
                    TemporalUnit unit, TemporalRoundingMode roundingMode,
+                   JS::Handle<PlainDateObject*> plainRelativeTo,
                    JS::Handle<CalendarRecord> calendar,
                    JS::Handle<ZonedDateTime> zonedRelativeTo,
                    JS::MutableHandle<TimeZoneRecord> timeZone,

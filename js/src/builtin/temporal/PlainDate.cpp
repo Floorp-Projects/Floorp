@@ -1548,14 +1548,26 @@ static bool DifferenceTemporalPlainDate(JSContext* cx,
   }
 
   // Step 8.
-  if (settings.smallestUnit <= TemporalUnit::Week) {
+  bool roundingGranularityIsNoop = settings.smallestUnit == TemporalUnit::Day &&
+                                   settings.roundingIncrement == Increment{1};
+
+  // Step 9
+  bool largestUnitIsCalendarUnit = settings.largestUnit <= TemporalUnit::Week;
+
+  // Step 10.
+  bool roundingRequiresDateAddLookup =
+      !roundingGranularityIsNoop && largestUnitIsCalendarUnit;
+
+  // Step 11.
+  if (settings.smallestUnit <= TemporalUnit::Week ||
+      roundingRequiresDateAddLookup) {
     if (!CalendarMethodsRecordLookup(cx, &calendar, CalendarMethod::DateAdd)) {
       return false;
     }
   }
 
-  // Step 9.
-  if (settings.largestUnit <= TemporalUnit::Week ||
+  // Step 12.
+  if (largestUnitIsCalendarUnit ||
       settings.smallestUnit == TemporalUnit::Year) {
     if (!CalendarMethodsRecordLookup(cx, &calendar,
                                      CalendarMethod::DateUntil)) {
@@ -1563,10 +1575,10 @@ static bool DifferenceTemporalPlainDate(JSContext* cx,
     }
   }
 
-  // Steps 10-11.
+  // Steps 13-14.
   Duration duration;
   if (resolvedOptions) {
-    // Step 10.
+    // Step 13.
     Rooted<Value> largestUnitValue(
         cx, StringValue(TemporalUnitToString(cx, settings.largestUnit)));
     if (!DefineDataProperty(cx, resolvedOptions, cx->names().largestUnit,
@@ -1574,7 +1586,7 @@ static bool DifferenceTemporalPlainDate(JSContext* cx,
       return false;
     }
 
-    // Step 11.
+    // Step 14.
     Duration result;
     if (!DifferenceDate(cx, calendar, temporalDate, other, resolvedOptions,
                         &result)) {
@@ -1582,7 +1594,7 @@ static bool DifferenceTemporalPlainDate(JSContext* cx,
     }
     duration = result.date();
   } else {
-    // Steps 10-11.
+    // Steps 13-14.
     Duration result;
     if (!DifferenceDate(cx, calendar, temporalDate, other, settings.largestUnit,
                         &result)) {
@@ -1591,19 +1603,28 @@ static bool DifferenceTemporalPlainDate(JSContext* cx,
     duration = result.date();
   }
 
-  // Step 12.
-  if (settings.smallestUnit != TemporalUnit::Day ||
-      settings.roundingIncrement != Increment{1}) {
-    // Steps 12.a-b.
+  // Step 15.
+  if (!roundingGranularityIsNoop) {
+    // Steps 15.a-b.
+    Duration roundResult;
     if (!temporal::RoundDuration(cx, duration.date(),
                                  settings.roundingIncrement,
                                  settings.smallestUnit, settings.roundingMode,
-                                 temporalDate, calendar, &duration)) {
+                                 temporalDate, calendar, &roundResult)) {
       return false;
     }
+
+    // Step 15.c.
+    DateDuration balanceResult;
+    if (!temporal::BalanceDateDurationRelative(
+            cx, roundResult.date(), settings.largestUnit, temporalDate,
+            calendar, &balanceResult)) {
+      return false;
+    }
+    duration = balanceResult.toDuration();
   }
 
-  // Step 13.
+  // Step 16.
   if (operation == TemporalDifference::Since) {
     duration = duration.negate();
   }
@@ -2948,7 +2969,7 @@ static PlainDateNameAndNative GetPlainDateNameAndNative(
 }
 
 bool js::temporal::IsBuiltinAccess(
-    JSContext* cx, JS::Handle<PlainDateObject*> date,
+    JSContext* cx, Handle<PlainDateObject*> date,
     std::initializer_list<CalendarField> fieldNames) {
   // Don't optimize when the object has any own properties which may shadow the
   // built-in methods.
