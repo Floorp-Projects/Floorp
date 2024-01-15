@@ -50,10 +50,23 @@ esac
 
 PATH="$MOZ_FETCHES_DIR/rustc/bin:$PATH"
 
+CRATE_PATH=$MOZ_FETCHES_DIR/${FETCH-$project}
+WORKSPACE_ROOT=$(cd $CRATE_PATH; cargo metadata --format-version 1 --no-deps --locked 2> /dev/null | jq -r .workspace_root)
+
+if test ! -f $WORKSPACE_ROOT/Cargo.lock; then
+  CARGO_LOCK=taskcluster/scripts/misc/$project-Cargo.lock
+  if test -f $GECKO_PATH/$CARGO_LOCK; then
+    cp $GECKO_PATH/$CARGO_LOCK $WORKSPACE_ROOT/Cargo.lock
+  else
+    echo "Missing Cargo.lock for the crate. Please provide one in $CARGO_LOCK" >&2
+    exit 1
+  fi
+fi
+
 cargo install \
   --locked \
   --verbose \
-  --path $MOZ_FETCHES_DIR/${FETCH-$project} \
+  --path $CRATE_PATH \
   --target-dir $workspace/obj \
   --root $workspace/out \
   --target "$TARGET" \
