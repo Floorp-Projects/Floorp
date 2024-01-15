@@ -140,7 +140,7 @@ class HomeScreenRobot {
             ).assertExists()
 
             it.onNodeWithText(
-                getStringResource(R.string.juno_onboarding_default_browser_description_nimbus_2),
+                getStringResource(R.string.juno_onboarding_default_browser_description_nimbus_3),
             ).assertExists()
 
             it.onNodeWithText(

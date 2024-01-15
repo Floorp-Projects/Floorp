@@ -30,7 +30,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.LinkText
-import org.mozilla.fenix.compose.LinkTextState
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
 import org.mozilla.fenix.compose.button.PrimaryButton
 import org.mozilla.fenix.compose.button.SecondaryButton
@@ -61,6 +60,7 @@ private const val IMAGE_HEIGHT_RATIO_SMALL = 0.28f
  * it doesn't show the close button.
  */
 @Composable
+@Suppress("LongMethod")
 fun OnboardingPage(
     pageState: OnboardingPageState,
     modifier: Modifier = Modifier,
@@ -116,10 +116,21 @@ fun OnboardingPage(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                DescriptionText(
-                    description = pageState.description,
-                    linkTextState = pageState.linkTextState,
+                Text(
+                    text = pageState.description,
+                    color = FirefoxTheme.colors.textSecondary,
+                    textAlign = TextAlign.Center,
+                    style = FirefoxTheme.typography.body2,
                 )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                pageState.privacyCaption?.let { privacyCaption ->
+                    LinkText(
+                        text = privacyCaption.text,
+                        linkTextStates = listOf(privacyCaption.linkTextState),
+                    )
+                }
             }
 
             Column(
@@ -144,26 +155,6 @@ fun OnboardingPage(
                 pageState.onRecordImpressionEvent()
             }
         }
-    }
-}
-
-@Composable
-private fun DescriptionText(
-    description: String,
-    linkTextState: LinkTextState?,
-) {
-    if (linkTextState != null && description.contains(linkTextState.text, ignoreCase = true)) {
-        LinkText(
-            text = description,
-            linkTextStates = listOf(linkTextState),
-        )
-    } else {
-        Text(
-            text = description,
-            color = FirefoxTheme.colors.textSecondary,
-            textAlign = TextAlign.Center,
-            style = FirefoxTheme.typography.body2,
-        )
     }
 }
 

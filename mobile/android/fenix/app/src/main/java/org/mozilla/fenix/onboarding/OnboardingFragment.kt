@@ -18,21 +18,23 @@ import android.view.ViewGroup
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.platform.LocalContext
 import androidx.core.app.NotificationManagerCompat
 import androidx.fragment.app.Fragment
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.navigation.fragment.findNavController
 import mozilla.components.service.nimbus.evalJexlSafe
 import mozilla.components.support.base.ext.areNotificationsEnabledSafe
+import mozilla.components.support.utils.BrowsersCache
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.accounts.FenixFxAEntryPoint
+import org.mozilla.fenix.compose.LinkTextState
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.hideToolbar
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.openSetDefaultBrowserOption
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.nimbus.FxNimbus
+import org.mozilla.fenix.onboarding.view.Caption
 import org.mozilla.fenix.onboarding.view.OnboardingPageUiData
 import org.mozilla.fenix.onboarding.view.OnboardingScreen
 import org.mozilla.fenix.onboarding.view.sequencePosition
@@ -49,6 +51,7 @@ class OnboardingFragment : Fragment() {
 
     private val pagesToDisplay by lazy {
         pagesToDisplay(
+            shouldShowDefaultBrowserCard(requireContext()),
             canShowNotificationPage(requireContext()),
             canShowAddWidgetCard(),
         )
@@ -59,6 +62,11 @@ class OnboardingFragment : Fragment() {
     @SuppressLint("SourceLockedOrientationActivity")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if (pagesToDisplay.isEmpty()) {
+            /* do not continue if there's no onboarding pages to display */
+            onFinish(null)
+        }
+
         if (isNotATablet()) {
             activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         }
@@ -97,7 +105,6 @@ class OnboardingFragment : Fragment() {
     @Composable
     @Suppress("LongMethod")
     private fun ScreenContent() {
-        val context = LocalContext.current
         OnboardingScreen(
             pagesToDisplay = pagesToDisplay,
             onMakeFirefoxDefaultClick = {
@@ -109,18 +116,6 @@ class OnboardingFragment : Fragment() {
             },
             onSkipDefaultClick = {
                 telemetryRecorder.onSkipSetToDefaultClick(
-                    pagesToDisplay.telemetrySequenceId(),
-                    pagesToDisplay.sequencePosition(OnboardingPageUiData.Type.DEFAULT_BROWSER),
-                )
-            },
-            onPrivacyPolicyClick = { url ->
-                startActivity(
-                    SupportUtils.createSandboxCustomTabIntent(
-                        context = context,
-                        url = url,
-                    ),
-                )
-                telemetryRecorder.onPrivacyPolicyClick(
                     pagesToDisplay.telemetrySequenceId(),
                     pagesToDisplay.sequencePosition(OnboardingPageUiData.Type.DEFAULT_BROWSER),
                 )
@@ -172,10 +167,7 @@ class OnboardingFragment : Fragment() {
                 )
             },
             onFinish = {
-                onFinish(
-                    sequenceId = pagesToDisplay.telemetrySequenceId(),
-                    sequencePosition = pagesToDisplay.sequencePosition(it.type),
-                )
+                onFinish(it)
             },
             onImpression = {
                 telemetryRecorder.onImpression(
@@ -200,17 +192,27 @@ class OnboardingFragment : Fragment() {
         }
     }
 
-    private fun onFinish(sequenceId: String, sequencePosition: String) {
+    private fun onFinish(onboardingPageUiData: OnboardingPageUiData?) {
+        /* onboarding page UI data can be null if there was no pages to display */
+        if (onboardingPageUiData != null) {
+            val sequenceId = pagesToDisplay.telemetrySequenceId()
+            val sequencePosition = pagesToDisplay.sequencePosition(onboardingPageUiData.type)
+
+            telemetryRecorder.onOnboardingComplete(
+                sequenceId = sequenceId,
+                sequencePosition = sequencePosition,
+            )
+        }
+
         requireComponents.fenixOnboarding.finish()
         findNavController().nav(
             id = R.id.onboardingFragment,
             directions = OnboardingFragmentDirections.actionHome(),
         )
-        telemetryRecorder.onOnboardingComplete(
-            sequenceId = sequenceId,
-            sequencePosition = sequencePosition,
-        )
     }
+
+    private fun shouldShowDefaultBrowserCard(context: Context) =
+        !BrowsersCache.all(context.applicationContext).isDefaultBrowser
 
     private fun canShowNotificationPage(context: Context) =
         !NotificationManagerCompat.from(context.applicationContext)
@@ -221,13 +223,35 @@ class OnboardingFragment : Fragment() {
     private fun isNotATablet() = !resources.getBoolean(R.bool.tablet)
 
     private fun pagesToDisplay(
+        showDefaultBrowserPage: Boolean,
         showNotificationPage: Boolean,
         showAddWidgetPage: Boolean,
     ): List<OnboardingPageUiData> {
         val jexlConditions = FxNimbus.features.junoOnboarding.value().conditions
         val jexlHelper = requireContext().components.analytics.messagingStorage.helper
 
+        val privacyCaption = Caption(
+            text = getString(R.string.juno_onboarding_privacy_notice_text),
+            linkTextState = LinkTextState(
+                text = getString(R.string.juno_onboarding_privacy_notice_text),
+                url = SupportUtils.getMozillaPageUrl(SupportUtils.MozillaPage.PRIVATE_NOTICE),
+                onClick = {
+                    startActivity(
+                        SupportUtils.createSandboxCustomTabIntent(
+                            context = requireContext(),
+                            url = it,
+                        ),
+                    )
+                    telemetryRecorder.onPrivacyPolicyClick(
+                        pagesToDisplay.telemetrySequenceId(),
+                        pagesToDisplay.sequencePosition(OnboardingPageUiData.Type.DEFAULT_BROWSER),
+                    )
+                },
+            ),
+        )
         return FxNimbus.features.junoOnboarding.value().cards.values.toPageUiData(
+            privacyCaption,
+            showDefaultBrowserPage,
             showNotificationPage,
             showAddWidgetPage,
             jexlConditions,

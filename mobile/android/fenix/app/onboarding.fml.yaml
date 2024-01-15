@@ -25,8 +25,7 @@ features:
               card-type: default-browser
               title: juno_onboarding_default_browser_title_nimbus_2
               ordering: 10
-              body: juno_onboarding_default_browser_description_nimbus_2
-              link-text: juno_onboarding_default_browser_description_link_text
+              body: juno_onboarding_default_browser_description_nimbus_3
               image-res: ic_onboarding_welcome
               primary-button-label: juno_onboarding_default_browser_positive_button
               secondary-button-label: juno_onboarding_default_browser_negative_button
@@ -83,13 +82,6 @@ objects:
         description: The message text displayed to the user. May contain linkable text.
         # This should never be defaulted.
         default: ""
-      link-text:
-        type: Option<Text>
-        description: >
-          The text to link from the body text. This should match the linkable text from the body text exactly.
-          e.g. body: This is a policy link
-               link-text: policy link
-        default: null
       image-res:
         type: Image
         description: The resource id of the image to be displayed.

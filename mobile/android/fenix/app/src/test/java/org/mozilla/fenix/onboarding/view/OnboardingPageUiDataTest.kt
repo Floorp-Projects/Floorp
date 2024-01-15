@@ -56,9 +56,9 @@ private val defaultBrowserPageUiData = OnboardingPageUiData(
     imageRes = R.drawable.ic_onboarding_welcome,
     title = "default browser title",
     description = "default browser body with link text",
-    linkText = "link text",
     primaryButtonLabel = "default browser primary button text",
     secondaryButtonLabel = "default browser secondary button text",
+    privacyCaption = null,
 )
 
 private val syncPageUiData = OnboardingPageUiData(
@@ -68,6 +68,7 @@ private val syncPageUiData = OnboardingPageUiData(
     description = "sync body",
     primaryButtonLabel = "sync primary button text",
     secondaryButtonLabel = "sync secondary button text",
+    privacyCaption = null,
 )
 
 private val notificationPageUiData = OnboardingPageUiData(
@@ -77,6 +78,7 @@ private val notificationPageUiData = OnboardingPageUiData(
     description = "notification body",
     primaryButtonLabel = "notification primary button text",
     secondaryButtonLabel = "notification secondary button text",
+    privacyCaption = null,
 )
 
 private val allKnownPages = listOf(

@@ -7,8 +7,6 @@ package org.mozilla.fenix.onboarding.view
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.mozilla.fenix.R
-import org.mozilla.fenix.compose.LinkTextState
-import org.mozilla.fenix.settings.SupportUtils
 
 class OnboardingMapperTest {
 
@@ -18,11 +16,6 @@ class OnboardingMapperTest {
             imageRes = R.drawable.ic_onboarding_welcome,
             title = "default browser title",
             description = "default browser body with link text",
-            linkTextState = LinkTextState(
-                text = "link text",
-                url = SupportUtils.getMozillaPageUrl(SupportUtils.MozillaPage.PRIVATE_NOTICE),
-                onClick = stringLambda,
-            ),
             primaryButton = Action("default browser primary button text", unitLambda),
             secondaryButton = Action("default browser secondary button text", unitLambda),
         )
@@ -32,15 +25,14 @@ class OnboardingMapperTest {
             imageRes = R.drawable.ic_onboarding_welcome,
             title = "default browser title",
             description = "default browser body with link text",
-            linkText = "link text",
             primaryButtonLabel = "default browser primary button text",
             secondaryButtonLabel = "default browser secondary button text",
+            privacyCaption = null,
         )
         val actual = mapToOnboardingPageState(
             onboardingPageUiData = onboardingPageUiData,
             onMakeFirefoxDefaultClick = unitLambda,
             onMakeFirefoxDefaultSkipClick = unitLambda,
-            onPrivacyPolicyClick = stringLambda,
             onSignInButtonClick = {},
             onSignInSkipClick = {},
             onNotificationPermissionButtonClick = {},
@@ -67,15 +59,14 @@ class OnboardingMapperTest {
             imageRes = R.drawable.ic_onboarding_sync,
             title = "sync title",
             description = "sync body",
-            linkText = null,
             primaryButtonLabel = "sync primary button text",
             secondaryButtonLabel = "sync secondary button text",
+            privacyCaption = null,
         )
         val actual = mapToOnboardingPageState(
             onboardingPageUiData = onboardingPageUiData,
             onMakeFirefoxDefaultClick = {},
             onMakeFirefoxDefaultSkipClick = {},
-            onPrivacyPolicyClick = {},
             onSignInButtonClick = unitLambda,
             onSignInSkipClick = unitLambda,
             onNotificationPermissionButtonClick = {},
@@ -102,15 +93,14 @@ class OnboardingMapperTest {
             imageRes = R.drawable.ic_notification_permission,
             title = "notification title",
             description = "notification body",
-            linkText = null,
             primaryButtonLabel = "notification primary button text",
             secondaryButtonLabel = "notification secondary button text",
+            privacyCaption = null,
         )
         val actual = mapToOnboardingPageState(
             onboardingPageUiData = onboardingPageUiData,
             onMakeFirefoxDefaultClick = {},
             onMakeFirefoxDefaultSkipClick = {},
-            onPrivacyPolicyClick = {},
             onSignInButtonClick = {},
             onSignInSkipClick = {},
             onNotificationPermissionButtonClick = unitLambda,
@@ -128,11 +118,6 @@ class OnboardingMapperTest {
             imageRes = R.drawable.ic_onboarding_search_widget,
             title = "add search widget title",
             description = "add search widget body with link text",
-            linkTextState = LinkTextState(
-                text = "link text",
-                url = SupportUtils.getMozillaPageUrl(SupportUtils.MozillaPage.PRIVATE_NOTICE),
-                onClick = stringLambda,
-            ),
             primaryButton = Action("add search widget primary button text", unitLambda),
             secondaryButton = Action("add search widget secondary button text", unitLambda),
         )
@@ -142,15 +127,14 @@ class OnboardingMapperTest {
             imageRes = R.drawable.ic_onboarding_search_widget,
             title = "add search widget title",
             description = "add search widget body with link text",
-            linkText = "link text",
             primaryButtonLabel = "add search widget primary button text",
             secondaryButtonLabel = "add search widget secondary button text",
+            privacyCaption = null,
         )
         val actual = mapToOnboardingPageState(
             onboardingPageUiData = onboardingPageUiData,
             onMakeFirefoxDefaultClick = {},
             onMakeFirefoxDefaultSkipClick = {},
-            onPrivacyPolicyClick = stringLambda,
             onSignInButtonClick = {},
             onSignInSkipClick = {},
             onNotificationPermissionButtonClick = {},
@@ -164,7 +148,6 @@ class OnboardingMapperTest {
 }
 
 private val unitLambda = { dummyUnitFunc() }
-private val stringLambda = { s: String -> dummyStringArgFunc(s) }
 
 private fun dummyUnitFunc() {}
 

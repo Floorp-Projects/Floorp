@@ -37,6 +37,7 @@ import kotlinx.coroutines.launch
 import mozilla.components.lib.state.ext.observeAsComposableState
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.components
+import org.mozilla.fenix.compose.LinkTextState
 import org.mozilla.fenix.compose.PagerIndicator
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
 import org.mozilla.fenix.onboarding.WidgetPinnedReceiver.WidgetPinnedState
@@ -48,7 +49,6 @@ import org.mozilla.fenix.theme.FirefoxTheme
  * @param pagesToDisplay List of pages to be displayed in onboarding pager ui.
  * @param onMakeFirefoxDefaultClick Invoked when positive button on default browser page is clicked.
  * @param onSkipDefaultClick Invoked when negative button on default browser page is clicked.
- * @param onPrivacyPolicyClick Invoked when the privacy policy link text is clicked.
  * @param onSignInButtonClick Invoked when the positive button on the sign in page is clicked.
  * @param onSkipSignInClick Invoked when the negative button on the sign in page is clicked.
  * @param onNotificationPermissionButtonClick Invoked when positive button on notification page is
@@ -65,7 +65,6 @@ fun OnboardingScreen(
     pagesToDisplay: List<OnboardingPageUiData>,
     onMakeFirefoxDefaultClick: () -> Unit,
     onSkipDefaultClick: () -> Unit,
-    onPrivacyPolicyClick: (url: String) -> Unit,
     onSignInButtonClick: () -> Unit,
     onSkipSignInClick: () -> Unit,
     onNotificationPermissionButtonClick: () -> Unit,
@@ -127,9 +126,6 @@ fun OnboardingScreen(
             scrollToNextPageOrDismiss()
             onSkipDefaultClick()
         },
-        onPrivacyPolicyClick = {
-            onPrivacyPolicyClick(it)
-        },
         onSignInButtonClick = {
             onSignInButtonClick()
             scrollToNextPageOrDismiss()
@@ -167,7 +163,6 @@ private fun OnboardingContent(
     pagerState: PagerState,
     onMakeFirefoxDefaultClick: () -> Unit,
     onMakeFirefoxDefaultSkipClick: () -> Unit,
-    onPrivacyPolicyClick: (String) -> Unit,
     onSignInButtonClick: () -> Unit,
     onSignInSkipClick: () -> Unit,
     onNotificationPermissionButtonClick: () -> Unit,
@@ -195,7 +190,6 @@ private fun OnboardingContent(
                 onboardingPageUiData = pageUiState,
                 onMakeFirefoxDefaultClick = onMakeFirefoxDefaultClick,
                 onMakeFirefoxDefaultSkipClick = onMakeFirefoxDefaultSkipClick,
-                onPrivacyPolicyClick = onPrivacyPolicyClick,
                 onSignInButtonClick = onSignInButtonClick,
                 onSignInSkipClick = onSignInSkipClick,
                 onNotificationPermissionButtonClick = onNotificationPermissionButtonClick,
@@ -251,7 +245,6 @@ private fun OnboardingScreenPreview() {
             },
             onMakeFirefoxDefaultClick = {},
             onMakeFirefoxDefaultSkipClick = {},
-            onPrivacyPolicyClick = {},
             onSignInButtonClick = {},
             onSignInSkipClick = {},
             onNotificationPermissionButtonClick = {},
@@ -268,10 +261,17 @@ private fun defaultPreviewPages() = listOf(
         type = OnboardingPageUiData.Type.DEFAULT_BROWSER,
         imageRes = R.drawable.ic_onboarding_welcome,
         title = stringResource(R.string.juno_onboarding_default_browser_title_nimbus_2),
-        description = stringResource(R.string.juno_onboarding_default_browser_description_nimbus_2),
-        linkText = stringResource(R.string.juno_onboarding_default_browser_description_link_text),
+        description = stringResource(R.string.juno_onboarding_default_browser_description_nimbus_3),
         primaryButtonLabel = stringResource(R.string.juno_onboarding_default_browser_positive_button),
         secondaryButtonLabel = stringResource(R.string.juno_onboarding_default_browser_negative_button),
+        privacyCaption = Caption(
+            text = stringResource(R.string.juno_onboarding_privacy_notice_text),
+            linkTextState = LinkTextState(
+                text = stringResource(R.string.juno_onboarding_privacy_notice_text),
+                url = "",
+                onClick = {},
+            ),
+        ),
     ),
     OnboardingPageUiData(
         type = OnboardingPageUiData.Type.SYNC_SIGN_IN,
@@ -280,6 +280,14 @@ private fun defaultPreviewPages() = listOf(
         description = stringResource(R.string.juno_onboarding_sign_in_description_2),
         primaryButtonLabel = stringResource(R.string.juno_onboarding_sign_in_positive_button),
         secondaryButtonLabel = stringResource(R.string.juno_onboarding_sign_in_negative_button),
+        privacyCaption = Caption(
+            text = stringResource(R.string.juno_onboarding_privacy_notice_text),
+            linkTextState = LinkTextState(
+                text = stringResource(R.string.juno_onboarding_privacy_notice_text),
+                url = "",
+                onClick = {},
+            ),
+        ),
     ),
     OnboardingPageUiData(
         type = OnboardingPageUiData.Type.NOTIFICATION_PERMISSION,
@@ -288,5 +296,13 @@ private fun defaultPreviewPages() = listOf(
         description = stringResource(R.string.juno_onboarding_enable_notifications_description_nimbus_2),
         primaryButtonLabel = stringResource(R.string.juno_onboarding_enable_notifications_positive_button),
         secondaryButtonLabel = stringResource(R.string.juno_onboarding_enable_notifications_negative_button),
+        privacyCaption = Caption(
+            text = stringResource(R.string.juno_onboarding_privacy_notice_text),
+            linkTextState = LinkTextState(
+                text = stringResource(R.string.juno_onboarding_privacy_notice_text),
+                url = "",
+                onClick = {},
+            ),
+        ),
     ),
 )

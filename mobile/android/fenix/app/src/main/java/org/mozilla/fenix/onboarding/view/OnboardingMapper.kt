@@ -4,15 +4,15 @@
 
 package org.mozilla.fenix.onboarding.view
 
-import org.mozilla.fenix.compose.LinkTextState
 import org.mozilla.fenix.nimbus.OnboardingCardData
 import org.mozilla.fenix.nimbus.OnboardingCardType
-import org.mozilla.fenix.settings.SupportUtils
 
 /**
  * Returns a list of all the required Nimbus 'cards' that have been converted to [OnboardingPageUiData].
  */
 internal fun Collection<OnboardingCardData>.toPageUiData(
+    privacyCaption: Caption,
+    showDefaultBrowserPage: Boolean,
     showNotificationPage: Boolean,
     showAddWidgetPage: Boolean,
     jexlConditions: Map<String, String>,
@@ -21,16 +21,25 @@ internal fun Collection<OnboardingCardData>.toPageUiData(
     // we are first filtering the cards based on Nimbus configuration
     return filter { it.shouldDisplayCard(func, jexlConditions) }
         // we are then filtering again based on device capabilities
-        .filter { it.isCardEnabled(showNotificationPage, showAddWidgetPage) }
+        .filter { it.isCardEnabled(showDefaultBrowserPage, showNotificationPage, showAddWidgetPage) }
         .sortedBy { it.ordering }
-        .map { it.toPageUiData() }
+        .mapIndexed {
+                index, onboardingCardData ->
+            // only first onboarding card shows privacy caption
+            onboardingCardData.toPageUiData(if (index == 0) privacyCaption else null)
+        }
 }
 
 private fun OnboardingCardData.isCardEnabled(
+    showDefaultBrowserPage: Boolean,
     showNotificationPage: Boolean,
     showAddWidgetPage: Boolean,
 ): Boolean =
     when (cardType) {
+        OnboardingCardType.DEFAULT_BROWSER -> {
+            enabled && showDefaultBrowserPage
+        }
+
         OnboardingCardType.NOTIFICATION_PERMISSION -> {
             enabled && showNotificationPage
         }
@@ -91,14 +100,14 @@ private fun OnboardingCardData.shouldDisplayCard(
     return validPrerequisites && !hasDisqualifiers
 }
 
-private fun OnboardingCardData.toPageUiData() = OnboardingPageUiData(
+private fun OnboardingCardData.toPageUiData(privacyCaption: Caption?) = OnboardingPageUiData(
     type = cardType.toPageUiDataType(),
     imageRes = imageRes.resourceId,
     title = title,
     description = body,
-    linkText = linkText,
     primaryButtonLabel = primaryButtonLabel,
     secondaryButtonLabel = secondaryButtonLabel,
+    privacyCaption = privacyCaption,
 )
 
 private fun OnboardingCardType.toPageUiDataType() = when (this) {
@@ -117,7 +126,6 @@ internal fun mapToOnboardingPageState(
     onboardingPageUiData: OnboardingPageUiData,
     onMakeFirefoxDefaultClick: () -> Unit,
     onMakeFirefoxDefaultSkipClick: () -> Unit,
-    onPrivacyPolicyClick: (String) -> Unit,
     onSignInButtonClick: () -> Unit,
     onSignInSkipClick: () -> Unit,
     onNotificationPermissionButtonClick: () -> Unit,
@@ -129,14 +137,12 @@ internal fun mapToOnboardingPageState(
         onboardingPageUiData = onboardingPageUiData,
         onPositiveButtonClick = onMakeFirefoxDefaultClick,
         onNegativeButtonClick = onMakeFirefoxDefaultSkipClick,
-        onUrlClick = onPrivacyPolicyClick,
     )
 
     OnboardingPageUiData.Type.ADD_SEARCH_WIDGET -> createOnboardingPageState(
         onboardingPageUiData = onboardingPageUiData,
         onPositiveButtonClick = onAddFirefoxWidgetClick,
         onNegativeButtonClick = onAddFirefoxWidgetSkipClick,
-        onUrlClick = onPrivacyPolicyClick,
     )
 
     OnboardingPageUiData.Type.SYNC_SIGN_IN -> createOnboardingPageState(
@@ -156,18 +162,11 @@ private fun createOnboardingPageState(
     onboardingPageUiData: OnboardingPageUiData,
     onPositiveButtonClick: () -> Unit,
     onNegativeButtonClick: () -> Unit,
-    onUrlClick: (String) -> Unit = {},
 ): OnboardingPageState = OnboardingPageState(
     imageRes = onboardingPageUiData.imageRes,
     title = onboardingPageUiData.title,
     description = onboardingPageUiData.description,
-    linkTextState = onboardingPageUiData.linkText?.let {
-        LinkTextState(
-            text = it,
-            url = SupportUtils.getMozillaPageUrl(SupportUtils.MozillaPage.PRIVATE_NOTICE),
-            onClick = onUrlClick,
-        )
-    },
     primaryButton = Action(onboardingPageUiData.primaryButtonLabel, onPositiveButtonClick),
     secondaryButton = Action(onboardingPageUiData.secondaryButtonLabel, onNegativeButtonClick),
+    privacyCaption = onboardingPageUiData.privacyCaption,
 )

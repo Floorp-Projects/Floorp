@@ -15,9 +15,9 @@ data class OnboardingPageUiData(
     @DrawableRes val imageRes: Int,
     val title: String,
     val description: String,
-    val linkText: String? = null,
     val primaryButtonLabel: String,
     val secondaryButtonLabel: String,
+    val privacyCaption: Caption?,
 ) {
     /**
      * Model for different types of Onboarding Pages.

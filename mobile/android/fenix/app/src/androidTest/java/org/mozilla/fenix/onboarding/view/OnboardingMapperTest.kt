@@ -45,10 +45,12 @@ class OnboardingMapperTest {
 
     @Test
     fun showNotificationTrue_showAddWidgetFalse_pagesToDisplay_returnsSortedListOfAllConvertedPages_withoutAddWidgetPage() {
-        val expected = listOf(defaultBrowserPageUiData, syncPageUiData, notificationPageUiData)
+        val expected = listOf(defaultBrowserPageUiDataWithPrivacyCaption, syncPageUiData, notificationPageUiData)
         assertEquals(
             expected,
             unsortedAllKnownCardData.toPageUiData(
+                privacyCaption = privacyCaption,
+                showDefaultBrowserPage = true,
                 showNotificationPage = true,
                 showAddWidgetPage = false,
                 jexlConditions = jexlConditions,
@@ -59,10 +61,12 @@ class OnboardingMapperTest {
 
     @Test
     fun showNotificationFalse_showAddWidgetFalse_pagesToDisplay_returnsSortedListOfConvertedPages_withoutNotificationPage_and_addWidgetPage() {
-        val expected = listOf(defaultBrowserPageUiData, syncPageUiData)
+        val expected = listOf(defaultBrowserPageUiDataWithPrivacyCaption, syncPageUiData)
         assertEquals(
             expected,
             unsortedAllKnownCardData.toPageUiData(
+                privacyCaption = privacyCaption,
+                showDefaultBrowserPage = true,
                 showNotificationPage = false,
                 showAddWidgetPage = false,
                 jexlConditions = jexlConditions,
@@ -72,11 +76,76 @@ class OnboardingMapperTest {
     }
 
     @Test
-    fun showNotificationFalse_showAddWidgetTrue_pagesToDisplay_returnsSortedListOfAllConvertedPages_withoutNotificationPage() {
-        val expected = listOf(defaultBrowserPageUiData, addSearchWidgetPageUiData, syncPageUiData)
+    fun pagesToDisplay_returnsSortedListOfConvertedPages_withPrivacyCaption_alwaysOnFirstPage() {
+        var result = unsortedAllKnownCardData.toPageUiData(
+            privacyCaption = privacyCaption,
+            showDefaultBrowserPage = false,
+            showNotificationPage = false,
+            showAddWidgetPage = false,
+            jexlConditions = jexlConditions,
+            func = evalFunction,
+        )
+        assertEquals(result[0].privacyCaption, privacyCaption)
+
+        result = unsortedAllKnownCardData.toPageUiData(
+            privacyCaption = privacyCaption,
+            showDefaultBrowserPage = false,
+            showNotificationPage = true,
+            showAddWidgetPage = false,
+            jexlConditions = jexlConditions,
+            func = evalFunction,
+        )
+        assertEquals(result[0].privacyCaption, privacyCaption)
+        assertEquals(result[1].privacyCaption, null)
+
+        result = unsortedAllKnownCardData.toPageUiData(
+            privacyCaption = privacyCaption,
+            showDefaultBrowserPage = true,
+            showNotificationPage = true,
+            showAddWidgetPage = false,
+            jexlConditions = jexlConditions,
+            func = evalFunction,
+        )
+        assertEquals(result[0].privacyCaption, privacyCaption)
+        assertEquals(result[1].privacyCaption, null)
+        assertEquals(result[2].privacyCaption, null)
+
+        result = unsortedAllKnownCardData.toPageUiData(
+            privacyCaption = privacyCaption,
+            showDefaultBrowserPage = false,
+            showNotificationPage = false,
+            showAddWidgetPage = true,
+            jexlConditions = jexlConditions,
+            func = evalFunction,
+        )
+        assertEquals(result[0].privacyCaption, privacyCaption)
+        assertEquals(result[1].privacyCaption, null)
+    }
+
+    @Test
+    fun showDefaultBrowserPageFalse_showNotificationFalse_showAddWidgetTrue_pagesToDisplay_returnsSortedListOfAllConvertedPages() {
+        val expected = listOf(addSearchWidgetPageUiDataWithPrivacyCaption, syncPageUiData)
         assertEquals(
             expected,
             unsortedAllKnownCardData.toPageUiData(
+                privacyCaption = privacyCaption,
+                showDefaultBrowserPage = false,
+                showNotificationPage = false,
+                showAddWidgetPage = true,
+                jexlConditions = jexlConditions,
+                func = evalFunction,
+            ),
+        )
+    }
+
+    @Test
+    fun showNotificationFalse_showAddWidgetTrue_pagesToDisplay_returnsSortedListOfAllConvertedPages_withoutNotificationPage() {
+        val expected = listOf(defaultBrowserPageUiDataWithPrivacyCaption, addSearchWidgetPageUiData, syncPageUiData)
+        assertEquals(
+            expected,
+            unsortedAllKnownCardData.toPageUiData(
+                privacyCaption = privacyCaption,
+                showDefaultBrowserPage = true,
                 showNotificationPage = false,
                 showAddWidgetPage = true,
                 jexlConditions = jexlConditions,
@@ -88,7 +157,7 @@ class OnboardingMapperTest {
     @Test
     fun showNotificationTrue_and_showAddWidgetTrue_pagesToDisplay_returnsSortedListOfConvertedPages() {
         val expected = listOf(
-            defaultBrowserPageUiData,
+            defaultBrowserPageUiDataWithPrivacyCaption,
             addSearchWidgetPageUiData,
             syncPageUiData,
             notificationPageUiData,
@@ -96,6 +165,8 @@ class OnboardingMapperTest {
         assertEquals(
             expected,
             unsortedAllKnownCardData.toPageUiData(
+                privacyCaption = privacyCaption,
+                showDefaultBrowserPage = true,
                 showNotificationPage = true,
                 showAddWidgetPage = true,
                 jexlConditions = jexlConditions,
@@ -107,11 +178,13 @@ class OnboardingMapperTest {
     @Test
     fun cardConditionsMatchJexlConditions_shouldDisplayCard_returnsConvertedPage() {
         val jexlConditions = mapOf("ALWAYS" to "true", "NEVER" to "false")
-        val expected = listOf(defaultBrowserPageUiData)
+        val expected = listOf(defaultBrowserPageUiDataWithPrivacyCaption)
 
         assertEquals(
             expected,
             listOf(defaultBrowserCardData).toPageUiData(
+                privacyCaption = privacyCaption,
+                showDefaultBrowserPage = true,
                 showNotificationPage = false,
                 showAddWidgetPage = false,
                 jexlConditions = jexlConditions,
@@ -128,6 +201,8 @@ class OnboardingMapperTest {
         assertEquals(
             expected,
             listOf(addSearchWidgetCardDataNoConditions).toPageUiData(
+                privacyCaption = privacyCaption,
+                showDefaultBrowserPage = true,
                 showNotificationPage = false,
                 showAddWidgetPage = false,
                 jexlConditions = jexlConditions,
@@ -144,6 +219,8 @@ class OnboardingMapperTest {
         assertEquals(
             expected,
             listOf(defaultBrowserCardData).toPageUiData(
+                privacyCaption = privacyCaption,
+                showDefaultBrowserPage = true,
                 showNotificationPage = false,
                 showAddWidgetPage = false,
                 jexlConditions = jexlConditions,
@@ -155,11 +232,13 @@ class OnboardingMapperTest {
     @Test
     fun prerequisitesMatchJexlConditions_shouldDisplayCard_returnsConvertedPage() {
         val jexlConditions = mapOf("ALWAYS" to "true")
-        val expected = listOf(defaultBrowserPageUiData)
+        val expected = listOf(defaultBrowserPageUiDataWithPrivacyCaption)
 
         assertEquals(
             expected,
             listOf(defaultBrowserCardData).toPageUiData(
+                privacyCaption = privacyCaption,
+                showDefaultBrowserPage = true,
                 showNotificationPage = false,
                 showAddWidgetPage = false,
                 jexlConditions = jexlConditions,
@@ -176,6 +255,8 @@ class OnboardingMapperTest {
         assertEquals(
             expected,
             listOf(defaultBrowserCardData).toPageUiData(
+                privacyCaption = privacyCaption,
+                showDefaultBrowserPage = true,
                 showNotificationPage = false,
                 showAddWidgetPage = false,
                 jexlConditions = jexlConditions,
@@ -192,6 +273,8 @@ class OnboardingMapperTest {
         assertEquals(
             expected,
             listOf(addSearchWidgetCardDataNoConditions).toPageUiData(
+                privacyCaption = privacyCaption,
+                showDefaultBrowserPage = true,
                 showNotificationPage = false,
                 showAddWidgetPage = false,
                 jexlConditions = jexlConditions,
@@ -203,11 +286,13 @@ class OnboardingMapperTest {
     @Test
     fun noDisqualifiers_shouldDisplayCard_returnsConvertedPage() {
         val jexlConditions = mapOf("ALWAYS" to "true", "NEVER" to "false")
-        val expected = listOf(defaultBrowserPageUiData)
+        val expected = listOf(defaultBrowserPageUiDataWithPrivacyCaption)
 
         assertEquals(
             expected,
             listOf(defaultBrowserCardDataNoDisqualifiers).toPageUiData(
+                privacyCaption = privacyCaption,
+                showDefaultBrowserPage = true,
                 showNotificationPage = false,
                 showAddWidgetPage = false,
                 jexlConditions = jexlConditions,
@@ -219,11 +304,13 @@ class OnboardingMapperTest {
     @Test
     fun disqualifiersMatchJexlConditions_shouldDisplayCard_returnsConvertedPage() {
         val jexlConditions = mapOf("NEVER" to "false")
-        val expected = listOf(syncPageUiData)
+        val expected = listOf(syncPageUiDataWithPrivacyCaption)
 
         assertEquals(
             expected,
             listOf(syncCardData).toPageUiData(
+                privacyCaption = privacyCaption,
+                showDefaultBrowserPage = true,
                 showNotificationPage = false,
                 showAddWidgetPage = false,
                 jexlConditions = jexlConditions,
@@ -240,6 +327,8 @@ class OnboardingMapperTest {
         assertEquals(
             expected,
             listOf(notificationCardData).toPageUiData(
+                privacyCaption = privacyCaption,
+                showDefaultBrowserPage = true,
                 showNotificationPage = false,
                 showAddWidgetPage = false,
                 jexlConditions = jexlConditions,
@@ -251,11 +340,13 @@ class OnboardingMapperTest {
     @Test
     fun noPrerequisites_shouldDisplayCard_returnsConvertedPage() {
         val jexlConditions = mapOf("ALWAYS" to "true", "NEVER" to "false")
-        val expected = listOf(syncPageUiData)
+        val expected = listOf(syncPageUiDataWithPrivacyCaption)
 
         assertEquals(
             expected,
             listOf(syncCardData).toPageUiData(
+                privacyCaption = privacyCaption,
+                showDefaultBrowserPage = true,
                 showNotificationPage = false,
                 showAddWidgetPage = false,
                 jexlConditions = jexlConditions,
@@ -264,24 +355,34 @@ class OnboardingMapperTest {
         )
     }
 }
+val privacyCaption: Caption = mockk(relaxed = true)
 
-private val defaultBrowserPageUiData = OnboardingPageUiData(
+private val defaultBrowserPageUiDataWithPrivacyCaption = OnboardingPageUiData(
     type = OnboardingPageUiData.Type.DEFAULT_BROWSER,
     imageRes = R.drawable.ic_onboarding_welcome,
     title = "default browser title",
-    description = "default browser body with link text",
-    linkText = "link text",
+    description = "default browser body",
     primaryButtonLabel = "default browser primary button text",
     secondaryButtonLabel = "default browser secondary button text",
+    privacyCaption = privacyCaption,
 )
 private val addSearchWidgetPageUiData = OnboardingPageUiData(
     type = OnboardingPageUiData.Type.ADD_SEARCH_WIDGET,
     imageRes = R.drawable.ic_onboarding_search_widget,
     title = "add search widget title",
-    description = "add search widget body with link text",
-    linkText = "link text",
+    description = "add search widget body",
     primaryButtonLabel = "add search widget primary button text",
     secondaryButtonLabel = "add search widget secondary button text",
+    privacyCaption = null,
+)
+private val addSearchWidgetPageUiDataWithPrivacyCaption = OnboardingPageUiData(
+    type = OnboardingPageUiData.Type.ADD_SEARCH_WIDGET,
+    imageRes = R.drawable.ic_onboarding_search_widget,
+    title = "add search widget title",
+    description = "add search widget body",
+    primaryButtonLabel = "add search widget primary button text",
+    secondaryButtonLabel = "add search widget secondary button text",
+    privacyCaption = privacyCaption,
 )
 private val syncPageUiData = OnboardingPageUiData(
     type = OnboardingPageUiData.Type.SYNC_SIGN_IN,
@@ -290,6 +391,16 @@ private val syncPageUiData = OnboardingPageUiData(
     description = "sync body",
     primaryButtonLabel = "sync primary button text",
     secondaryButtonLabel = "sync secondary button text",
+    privacyCaption = null,
+)
+private val syncPageUiDataWithPrivacyCaption = OnboardingPageUiData(
+    type = OnboardingPageUiData.Type.SYNC_SIGN_IN,
+    imageRes = R.drawable.ic_onboarding_sync,
+    title = "sync title",
+    description = "sync body",
+    primaryButtonLabel = "sync primary button text",
+    secondaryButtonLabel = "sync secondary button text",
+    privacyCaption = privacyCaption,
 )
 private val notificationPageUiData = OnboardingPageUiData(
     type = OnboardingPageUiData.Type.NOTIFICATION_PERMISSION,
@@ -298,14 +409,14 @@ private val notificationPageUiData = OnboardingPageUiData(
     description = "notification body",
     primaryButtonLabel = "notification primary button text",
     secondaryButtonLabel = "notification secondary button text",
+    privacyCaption = null,
 )
 
 private val defaultBrowserCardData = OnboardingCardData(
     cardType = OnboardingCardType.DEFAULT_BROWSER,
     imageRes = R.drawable.ic_onboarding_welcome,
     title = StringHolder(null, "default browser title"),
-    body = StringHolder(null, "default browser body with link text"),
-    linkText = StringHolder(null, "link text"),
+    body = StringHolder(null, "default browser body"),
     primaryButtonLabel = StringHolder(null, "default browser primary button text"),
     secondaryButtonLabel = StringHolder(null, "default browser secondary button text"),
     ordering = 10,
@@ -317,8 +428,7 @@ private val defaultBrowserCardDataNoDisqualifiers = OnboardingCardData(
     cardType = OnboardingCardType.DEFAULT_BROWSER,
     imageRes = R.drawable.ic_onboarding_welcome,
     title = StringHolder(null, "default browser title"),
-    body = StringHolder(null, "default browser body with link text"),
-    linkText = StringHolder(null, "link text"),
+    body = StringHolder(null, "default browser body"),
     primaryButtonLabel = StringHolder(null, "default browser primary button text"),
     secondaryButtonLabel = StringHolder(null, "default browser secondary button text"),
     ordering = 10,
@@ -330,8 +440,7 @@ private val addSearchWidgetCardDataNoConditions = OnboardingCardData(
     cardType = OnboardingCardType.ADD_SEARCH_WIDGET,
     imageRes = R.drawable.ic_onboarding_search_widget,
     title = StringHolder(null, "add search widget title"),
-    body = StringHolder(null, "add search widget body with link text"),
-    linkText = StringHolder(null, "link text"),
+    body = StringHolder(null, "add search widget body"),
     primaryButtonLabel = StringHolder(null, "add search widget primary button text"),
     secondaryButtonLabel = StringHolder(null, "add search widget secondary button text"),
     ordering = 15,
@@ -343,8 +452,7 @@ private val addSearchWidgetCardData = OnboardingCardData(
     cardType = OnboardingCardType.ADD_SEARCH_WIDGET,
     imageRes = R.drawable.ic_onboarding_search_widget,
     title = StringHolder(null, "add search widget title"),
-    body = StringHolder(null, "add search widget body with link text"),
-    linkText = StringHolder(null, "link text"),
+    body = StringHolder(null, "add search widget body"),
     primaryButtonLabel = StringHolder(null, "add search widget primary button text"),
     secondaryButtonLabel = StringHolder(null, "add search widget secondary button text"),
     ordering = 15,
