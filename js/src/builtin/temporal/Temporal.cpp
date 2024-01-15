@@ -1506,30 +1506,6 @@ bool js::temporal::ToIntegerWithTruncation(JSContext* cx, Handle<Value> value,
 /**
  * GetMethod ( V, P )
  */
-bool js::temporal::GetMethod(JSContext* cx, Handle<JSObject*> object,
-                             Handle<PropertyName*> name,
-                             MutableHandle<Value> result) {
-  // Step 1.
-  if (!GetProperty(cx, object, object, name, result)) {
-    return false;
-  }
-
-  // Steps 2-3.
-  if (!IsCallable(result)) {
-    if (auto chars = StringToNewUTF8CharsZ(cx, *name)) {
-      JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                               JSMSG_PROPERTY_NOT_CALLABLE, chars.get());
-    }
-    return false;
-  }
-
-  // Step 4.
-  return true;
-}
-
-/**
- * GetMethod ( V, P )
- */
 JSObject* js::temporal::GetMethod(JSContext* cx, Handle<JSObject*> object,
                                   Handle<PropertyName*> name) {
   // Step 1.
