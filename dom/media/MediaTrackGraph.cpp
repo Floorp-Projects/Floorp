@@ -20,6 +20,7 @@
 #include "ForwardedInputTrack.h"
 #include "ImageContainer.h"
 #include "AudioCaptureTrack.h"
+#include "AudioDeviceInfo.h"
 #include "AudioNodeTrack.h"
 #include "AudioNodeExternalInputTrack.h"
 #if defined(MOZ_WEBRTC)
