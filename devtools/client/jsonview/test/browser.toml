@@ -53,6 +53,8 @@ support-files = ["chunked_json.sjs"]
 ["browser_jsonview_expand_collapse.js"]
 skip-if = ["os == 'linux' && bits == 64 && !debug"] # Bug 1794904
 
+["browser_jsonview_favicon.js"]
+
 ["browser_jsonview_filter.js"]
 
 ["browser_jsonview_filter_clear.js"]
