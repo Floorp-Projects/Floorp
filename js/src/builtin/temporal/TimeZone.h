@@ -233,7 +233,7 @@ class TimeZoneRecord {
   JSObject* getPossibleInstantsFor_ = nullptr;
 
 #ifdef DEBUG
-  mozilla::EnumSet<TimeZoneMethod> lookedUpBuiltin_{};
+  mozilla::EnumSet<TimeZoneMethod> lookedUp_{};
 #endif
 
  public:
@@ -250,8 +250,8 @@ class TimeZoneRecord {
   auto* getPossibleInstantsFor() const { return getPossibleInstantsFor_; }
 
 #ifdef DEBUG
-  auto& lookedUpBuiltin() const { return lookedUpBuiltin_; }
-  auto& lookedUpBuiltin() { return lookedUpBuiltin_; }
+  auto& lookedUp() const { return lookedUp_; }
+  auto& lookedUp() { return lookedUp_; }
 #endif
 
   // Helper methods for (Mutable)WrappedPtrOperations.
@@ -390,7 +390,7 @@ bool GetInstantFor(JSContext* cx, JS::Handle<TimeZoneValue> timeZone,
 /**
  * GetInstantFor ( timeZoneRec, dateTime, disambiguation )
  */
-bool GetInstantFor(JSContext* cx, JS::MutableHandle<TimeZoneRecord> timeZone,
+bool GetInstantFor(JSContext* cx, JS::Handle<TimeZoneRecord> timeZone,
                    JS::Handle<PlainDateTimeWithCalendar> dateTime,
                    TemporalDisambiguation disambiguation, Instant* result);
 
@@ -473,23 +473,22 @@ bool CreateTimeZoneMethodsRecord(JSContext* cx,
                                  mozilla::EnumSet<TimeZoneMethod> methods,
                                  JS::MutableHandle<TimeZoneRecord> result);
 
-/**
- * TimeZoneMethodsRecordLookup ( timeZoneRec, methodName )
- */
-bool TimeZoneMethodsRecordLookup(JSContext* cx,
-                                 JS::MutableHandle<TimeZoneRecord> timeZone,
-                                 TimeZoneMethod methodName);
-
+#ifdef DEBUG
 /**
  * TimeZoneMethodsRecordHasLookedUp ( timeZoneRec, methodName )
  */
-bool TimeZoneMethodsRecordHasLookedUp(const TimeZoneRecord& timeZone,
-                                      TimeZoneMethod methodName);
+inline bool TimeZoneMethodsRecordHasLookedUp(const TimeZoneRecord& timeZone,
+                                             TimeZoneMethod methodName) {
+  // Steps 1-4.
+  return timeZone.lookedUp().contains(methodName);
+}
+#endif
 
 /**
  * TimeZoneMethodsRecordIsBuiltin ( timeZoneRec )
  */
 inline bool TimeZoneMethodsRecordIsBuiltin(const TimeZoneRecord& timeZone) {
+  // Steps 1-2.
   return timeZone.receiver().isString();
 }
 

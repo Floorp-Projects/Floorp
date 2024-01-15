@@ -96,87 +96,84 @@ static int64_t RoundNanosecondsToMinutesIncrement(int64_t offsetNanoseconds) {
 bool js::temporal::InterpretISODateTimeOffset(
     JSContext* cx, const PlainDateTime& dateTime,
     OffsetBehaviour offsetBehaviour, int64_t offsetNanoseconds,
-    MutableHandle<TimeZoneRecord> timeZone,
-    TemporalDisambiguation disambiguation, TemporalOffset offsetOption,
-    MatchBehaviour matchBehaviour, Instant* result) {
+    Handle<TimeZoneRecord> timeZone, TemporalDisambiguation disambiguation,
+    TemporalOffset offsetOption, MatchBehaviour matchBehaviour,
+    Instant* result) {
   MOZ_ASSERT(std::abs(offsetNanoseconds) < ToNanoseconds(TemporalUnit::Day));
 
   // Step 1.
   MOZ_ASSERT(IsValidISODate(dateTime.date));
 
   // Step 2.
+  MOZ_ASSERT(TimeZoneMethodsRecordHasLookedUp(
+      timeZone, TimeZoneMethod::GetOffsetNanosecondsFor));
+
+  // Step 3.
+  MOZ_ASSERT(TimeZoneMethodsRecordHasLookedUp(
+      timeZone, TimeZoneMethod::GetPossibleInstantsFor));
+
+  // Step 4.
   Rooted<CalendarValue> calendar(cx, CalendarValue(cx->names().iso8601));
   Rooted<PlainDateTimeWithCalendar> temporalDateTime(cx);
   if (!CreateTemporalDateTime(cx, dateTime, calendar, &temporalDateTime)) {
     return false;
   }
 
-  // Step 3.
+  // Step 5.
   if (offsetBehaviour == OffsetBehaviour::Wall ||
       offsetOption == TemporalOffset::Ignore) {
-    // Step 3.a.
-    MOZ_ASSERT(TimeZoneMethodsRecordHasLookedUp(
-        timeZone, TimeZoneMethod::GetPossibleInstantsFor));
-
-    // Steps 3.b-c.
+    // Steps 5.a-b.
     return GetInstantFor(cx, timeZone, temporalDateTime, disambiguation,
                          result);
   }
 
-  // Step 4.
+  // Step 6.
   if (offsetBehaviour == OffsetBehaviour::Exact ||
       offsetOption == TemporalOffset::Use) {
-    // Step 4.a.
+    // Step 6.a.
     auto epochNanoseconds = GetUTCEpochNanoseconds(
         dateTime, InstantSpan::fromNanoseconds(offsetNanoseconds));
 
-    // Step 4.b.
+    // Step 6.b.
     if (!IsValidEpochInstant(epochNanoseconds)) {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                                 JSMSG_TEMPORAL_INSTANT_INVALID);
       return false;
     }
 
-    // Step 4.c.
+    // Step 6.c.
     *result = epochNanoseconds;
     return true;
   }
 
-  // Step 5.
+  // Step 7.
   MOZ_ASSERT(offsetBehaviour == OffsetBehaviour::Option);
 
-  // Step 6.
+  // Step 8.
   MOZ_ASSERT(offsetOption == TemporalOffset::Prefer ||
              offsetOption == TemporalOffset::Reject);
 
-  // Step 7.
+  // FIXME: spec issue - duplicate assertion
+
+  // Step 9.
   MOZ_ASSERT(TimeZoneMethodsRecordHasLookedUp(
       timeZone, TimeZoneMethod::GetPossibleInstantsFor));
 
-  // Step 8.
+  // Step 10.
   Rooted<InstantVector> possibleInstants(cx, InstantVector(cx));
   if (!GetPossibleInstantsFor(cx, timeZone, temporalDateTime,
                               &possibleInstants)) {
     return false;
   }
 
-  // Step 9.
+  // Step 11.
   if (!possibleInstants.empty()) {
-    // Step 9.a.
-    if (!TimeZoneMethodsRecordHasLookedUp(
-            timeZone, TimeZoneMethod::GetOffsetNanosecondsFor)) {
-      if (!TimeZoneMethodsRecordLookup(
-              cx, timeZone, TimeZoneMethod::GetOffsetNanosecondsFor)) {
-        return false;
-      }
-    }
-
-    // Step 9.b.
+    // Step 11.a.
     Rooted<Wrapped<InstantObject*>> candidate(cx);
     for (size_t i = 0; i < possibleInstants.length(); i++) {
       candidate = possibleInstants[i];
 
-      // Step 9.b.i.
+      // Step 11.a.i.
       int64_t candidateNanoseconds;
       if (!GetOffsetNanosecondsFor(cx, timeZone, candidate,
                                    &candidateNanoseconds)) {
@@ -185,7 +182,7 @@ bool js::temporal::InterpretISODateTimeOffset(
       MOZ_ASSERT(std::abs(candidateNanoseconds) <
                  ToNanoseconds(TemporalUnit::Day));
 
-      // Step 9.b.ii.
+      // Step 11.a.ii.
       if (candidateNanoseconds == offsetNanoseconds) {
         auto* unwrapped = candidate.unwrap(cx);
         if (!unwrapped) {
@@ -196,20 +193,20 @@ bool js::temporal::InterpretISODateTimeOffset(
         return true;
       }
 
-      // Step 9.b.iii.
+      // Step 11.a.iii.
       if (matchBehaviour == MatchBehaviour::MatchMinutes) {
-        // Step 9.b.iii.1.
+        // Step 11.a.iii.1.
         int64_t roundedCandidateNanoseconds =
             RoundNanosecondsToMinutesIncrement(candidateNanoseconds);
 
-        // Step 9.b.iii.2.
+        // Step 11.a.iii.2.
         if (roundedCandidateNanoseconds == offsetNanoseconds) {
           auto* unwrapped = candidate.unwrap(cx);
           if (!unwrapped) {
             return false;
           }
 
-          // Step 9.b.iii.2.a.
+          // Step 11.a.iii.2.a.
           *result = ToInstant(unwrapped);
           return true;
         }
@@ -217,23 +214,14 @@ bool js::temporal::InterpretISODateTimeOffset(
     }
   }
 
-  // Step 10.
+  // Step 12.
   if (offsetOption == TemporalOffset::Reject) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_TEMPORAL_ZONED_DATE_TIME_NO_TIME_FOUND);
     return false;
   }
 
-  // Step 11.
-  if (!TimeZoneMethodsRecordHasLookedUp(
-          timeZone, TimeZoneMethod::GetOffsetNanosecondsFor)) {
-    if (!TimeZoneMethodsRecordLookup(cx, timeZone,
-                                     TimeZoneMethod::GetOffsetNanosecondsFor)) {
-      return false;
-    }
-  }
-
-  // Step 12.
+  // Step 13.
   Rooted<Wrapped<InstantObject*>> instant(cx);
   if (!DisambiguatePossibleInstants(cx, possibleInstants, timeZone,
                                     ToPlainDateTime(temporalDateTime),
@@ -246,7 +234,7 @@ bool js::temporal::InterpretISODateTimeOffset(
     return false;
   }
 
-  // Step 13.
+  // Step 14.
   *result = ToInstant(unwrappedInstant);
   return true;
 }
@@ -512,28 +500,24 @@ static bool ToTemporalZonedDateTime(JSContext* cx, Handle<Value> item,
 
   // Step 9.
   Rooted<TimeZoneRecord> timeZoneRec(cx);
-  if (!CreateTimeZoneMethodsRecord(cx, timeZone, {}, &timeZoneRec)) {
+  if (!CreateTimeZoneMethodsRecord(cx, timeZone,
+                                   {
+                                       TimeZoneMethod::GetOffsetNanosecondsFor,
+                                       TimeZoneMethod::GetPossibleInstantsFor,
+                                   },
+                                   &timeZoneRec)) {
     return false;
   }
 
   // Step 10.
-  if (offsetBehaviour != OffsetBehaviour::Exact &&
-      offsetOption != TemporalOffset::Use) {
-    if (!TimeZoneMethodsRecordLookup(cx, &timeZoneRec,
-                                     TimeZoneMethod::GetPossibleInstantsFor)) {
-      return false;
-    }
-  }
-
-  // Step 11.
   Instant epochNanoseconds;
   if (!InterpretISODateTimeOffset(
-          cx, dateTime, offsetBehaviour, offsetNanoseconds, &timeZoneRec,
+          cx, dateTime, offsetBehaviour, offsetNanoseconds, timeZoneRec,
           disambiguation, offsetOption, matchBehaviour, &epochNanoseconds)) {
     return false;
   }
 
-  // Step 12.
+  // Step 11.
   result.set(ZonedDateTime{epochNanoseconds, timeZone, calendar});
   return true;
 }
@@ -641,7 +625,7 @@ struct PlainDateTimeAndInstant {
  */
 static bool AddDaysToZonedDateTime(JSContext* cx, const Instant& instant,
                                    const PlainDateTime& dateTime,
-                                   MutableHandle<TimeZoneRecord> timeZone,
+                                   Handle<TimeZoneRecord> timeZone,
                                    Handle<CalendarValue> calendar, double days,
                                    TemporalOverflow overflow,
                                    PlainDateTimeAndInstant* result) {
@@ -686,7 +670,7 @@ static bool AddDaysToZonedDateTime(JSContext* cx, const Instant& instant,
  */
 bool js::temporal::AddDaysToZonedDateTime(
     JSContext* cx, const Instant& instant, const PlainDateTime& dateTime,
-    MutableHandle<TimeZoneRecord> timeZone, Handle<CalendarValue> calendar,
+    Handle<TimeZoneRecord> timeZone, Handle<CalendarValue> calendar,
     double days, TemporalOverflow overflow, Instant* result) {
   // Steps 1-7.
   PlainDateTimeAndInstant dateTimeAndInstant;
@@ -703,10 +687,11 @@ bool js::temporal::AddDaysToZonedDateTime(
  * AddDaysToZonedDateTime ( instant, dateTime, timeZoneRec, calendar, days [ ,
  * overflow ] )
  */
-bool js::temporal::AddDaysToZonedDateTime(
-    JSContext* cx, const Instant& instant, const PlainDateTime& dateTime,
-    MutableHandle<TimeZoneRecord> timeZone, Handle<CalendarValue> calendar,
-    double days, Instant* result) {
+bool js::temporal::AddDaysToZonedDateTime(JSContext* cx, const Instant& instant,
+                                          const PlainDateTime& dateTime,
+                                          Handle<TimeZoneRecord> timeZone,
+                                          Handle<CalendarValue> calendar,
+                                          double days, Instant* result) {
   // Step 2.
   auto overflow = TemporalOverflow::Constrain;
 
@@ -721,7 +706,7 @@ bool js::temporal::AddDaysToZonedDateTime(
  * [ , precalculatedPlainDateTime [ , options ] ] )
  */
 static bool AddZonedDateTime(JSContext* cx, const Instant& epochNanoseconds,
-                             MutableHandle<TimeZoneRecord> timeZone,
+                             Handle<TimeZoneRecord> timeZone,
                              Handle<CalendarRecord> calendar,
                              const Duration& duration,
                              mozilla::Maybe<const PlainDateTime&> dateTime,
@@ -834,7 +819,7 @@ static bool AddZonedDateTime(JSContext* cx, const Instant& epochNanoseconds,
  * [ , precalculatedPlainDateTime [ , options ] ] )
  */
 static bool AddZonedDateTime(JSContext* cx, const Instant& epochNanoseconds,
-                             MutableHandle<TimeZoneRecord> timeZone,
+                             Handle<TimeZoneRecord> timeZone,
                              Handle<CalendarRecord> calendar,
                              const Duration& duration,
                              Handle<JSObject*> maybeOptions, Instant* result) {
@@ -849,7 +834,7 @@ static bool AddZonedDateTime(JSContext* cx, const Instant& epochNanoseconds,
  */
 bool js::temporal::AddZonedDateTime(JSContext* cx,
                                     const Instant& epochNanoseconds,
-                                    MutableHandle<TimeZoneRecord> timeZone,
+                                    Handle<TimeZoneRecord> timeZone,
                                     Handle<CalendarRecord> calendar,
                                     const Duration& duration, Instant* result) {
   return ::AddZonedDateTime(cx, epochNanoseconds, timeZone, calendar, duration,
@@ -863,7 +848,7 @@ bool js::temporal::AddZonedDateTime(JSContext* cx,
  */
 bool js::temporal::AddZonedDateTime(
     JSContext* cx, const Instant& epochNanoseconds,
-    MutableHandle<TimeZoneRecord> timeZone, Handle<CalendarRecord> calendar,
+    Handle<TimeZoneRecord> timeZone, Handle<CalendarRecord> calendar,
     const Duration& duration, const PlainDateTime& dateTime, Instant* result) {
   return ::AddZonedDateTime(cx, epochNanoseconds, timeZone, calendar, duration,
                             mozilla::SomeRef(dateTime), nullptr, result);
@@ -888,8 +873,7 @@ void js::temporal::NanosecondsAndDays::trace(JSTracer* trc) {
  */
 static bool NanosecondsToDays(
     JSContext* cx, const InstantSpan& nanoseconds,
-    Handle<ZonedDateTime> zonedRelativeTo,
-    MutableHandle<TimeZoneRecord> timeZone,
+    Handle<ZonedDateTime> zonedRelativeTo, Handle<TimeZoneRecord> timeZone,
     mozilla::Maybe<const PlainDateTime&> precalculatedPlainDateTime,
     MutableHandle<NanosecondsAndDays> result) {
   MOZ_ASSERT(IsValidInstantSpan(nanoseconds));
@@ -1129,7 +1113,7 @@ static bool NanosecondsToDays(
 bool js::temporal::NanosecondsToDays(JSContext* cx,
                                      const InstantSpan& nanoseconds,
                                      Handle<ZonedDateTime> zonedRelativeTo,
-                                     MutableHandle<TimeZoneRecord> timeZone,
+                                     Handle<TimeZoneRecord> timeZone,
                                      MutableHandle<NanosecondsAndDays> result) {
   return ::NanosecondsToDays(cx, nanoseconds, zonedRelativeTo, timeZone,
                              mozilla::Nothing(), result);
@@ -1141,8 +1125,7 @@ bool js::temporal::NanosecondsToDays(JSContext* cx,
  */
 bool js::temporal::NanosecondsToDays(
     JSContext* cx, const InstantSpan& nanoseconds,
-    Handle<ZonedDateTime> zonedRelativeTo,
-    MutableHandle<TimeZoneRecord> timeZone,
+    Handle<ZonedDateTime> zonedRelativeTo, Handle<TimeZoneRecord> timeZone,
     const PlainDateTime& precalculatedPlainDateTime,
     MutableHandle<NanosecondsAndDays> result) {
   return ::NanosecondsToDays(cx, nanoseconds, zonedRelativeTo, timeZone,
@@ -1156,7 +1139,7 @@ bool js::temporal::NanosecondsToDays(
  */
 static bool DifferenceZonedDateTime(
     JSContext* cx, const Instant& ns1, const Instant& ns2,
-    MutableHandle<TimeZoneRecord> timeZone, Handle<CalendarRecord> calendar,
+    Handle<TimeZoneRecord> timeZone, Handle<CalendarRecord> calendar,
     TemporalUnit largestUnit, Handle<PlainObject*> maybeOptions,
     mozilla::Maybe<const PlainDateTime&> precalculatedPlainDateTime,
     Duration* result) {
@@ -1254,7 +1237,7 @@ static bool DifferenceZonedDateTime(
  */
 bool js::temporal::DifferenceZonedDateTime(
     JSContext* cx, const Instant& ns1, const Instant& ns2,
-    MutableHandle<TimeZoneRecord> timeZone, Handle<CalendarRecord> calendar,
+    Handle<TimeZoneRecord> timeZone, Handle<CalendarRecord> calendar,
     TemporalUnit largestUnit, const PlainDateTime& precalculatedPlainDateTime,
     Duration* result) {
   return ::DifferenceZonedDateTime(
@@ -1495,7 +1478,7 @@ static bool DifferenceTemporalZonedDateTime(JSContext* cx,
   // Step 15.
   Duration difference;
   if (!::DifferenceZonedDateTime(
-          cx, zonedDateTime.instant(), other.instant(), &timeZone, calendar,
+          cx, zonedDateTime.instant(), other.instant(), timeZone, calendar,
           settings.largestUnit, resolvedOptions,
           mozilla::SomeRef<const PlainDateTime>(precalculatedPlainDateTime),
           &difference)) {
@@ -1526,7 +1509,7 @@ static bool DifferenceTemporalZonedDateTime(JSContext* cx,
   Duration roundResult;
   if (!RoundDuration(cx, difference, settings.roundingIncrement,
                      settings.smallestUnit, settings.roundingMode,
-                     plainRelativeTo, calendar, zonedDateTime, &timeZone,
+                     plainRelativeTo, calendar, zonedDateTime, timeZone,
                      precalculatedPlainDateTime, &roundResult)) {
     return false;
   }
@@ -1535,7 +1518,7 @@ static bool DifferenceTemporalZonedDateTime(JSContext* cx,
   Duration adjustResult;
   if (!AdjustRoundedDurationDays(cx, roundResult, settings.roundingIncrement,
                                  settings.smallestUnit, settings.roundingMode,
-                                 zonedDateTime, calendar, &timeZone,
+                                 zonedDateTime, calendar, timeZone,
                                  precalculatedPlainDateTime, &adjustResult)) {
     return false;
   }
@@ -1633,7 +1616,7 @@ static bool AddDurationToOrSubtractDurationFromZonedDateTime(
   }
 
   Instant resultInstant;
-  if (!::AddZonedDateTime(cx, zonedDateTime.instant(), &timeZone, calendar,
+  if (!::AddZonedDateTime(cx, zonedDateTime.instant(), timeZone, calendar,
                           duration, options, &resultInstant)) {
     return false;
   }
@@ -2413,15 +2396,15 @@ static bool ZonedDateTime_hoursInDay(JSContext* cx, const CallArgs& args) {
 
   // Step 12.
   Instant todayInstant;
-  if (!GetInstantFor(cx, &timeZone, today, TemporalDisambiguation::Compatible,
+  if (!GetInstantFor(cx, timeZone, today, TemporalDisambiguation::Compatible,
                      &todayInstant)) {
     return false;
   }
 
   // Step 13.
   Instant tomorrowInstant;
-  if (!GetInstantFor(cx, &timeZone, tomorrow,
-                     TemporalDisambiguation::Compatible, &tomorrowInstant)) {
+  if (!GetInstantFor(cx, timeZone, tomorrow, TemporalDisambiguation::Compatible,
+                     &tomorrowInstant)) {
     return false;
   }
 
@@ -2871,7 +2854,7 @@ static bool ZonedDateTime_with(JSContext* cx, const CallArgs& args) {
   Instant epochNanoseconds;
   if (!InterpretISODateTimeOffset(
           cx, dateTimeResult, OffsetBehaviour::Option, newOffsetNanoseconds,
-          &timeZone, disambiguation, offset, MatchBehaviour::MatchExactly,
+          timeZone, disambiguation, offset, MatchBehaviour::MatchExactly,
           &epochNanoseconds)) {
     return false;
   }
@@ -2942,7 +2925,7 @@ static bool ZonedDateTime_withPlainTime(JSContext* cx, const CallArgs& args) {
 
   // Step 10.
   Instant instant;
-  if (!GetInstantFor(cx, &timeZone, resultPlainDateTime,
+  if (!GetInstantFor(cx, timeZone, resultPlainDateTime,
                      TemporalDisambiguation::Compatible, &instant)) {
     return false;
   }
@@ -3017,7 +3000,7 @@ static bool ZonedDateTime_withPlainDate(JSContext* cx, const CallArgs& args) {
 
   // Step 9.
   Instant instant;
-  if (!GetInstantFor(cx, &timeZone, resultPlainDateTime,
+  if (!GetInstantFor(cx, timeZone, resultPlainDateTime,
                      TemporalDisambiguation::Compatible, &instant)) {
     return false;
   }
@@ -3306,14 +3289,14 @@ static bool ZonedDateTime_round(JSContext* cx, const CallArgs& args) {
 
   // Steps 20-21.
   Instant startNs;
-  if (!GetInstantFor(cx, &timeZone, dtStart, TemporalDisambiguation::Compatible,
+  if (!GetInstantFor(cx, timeZone, dtStart, TemporalDisambiguation::Compatible,
                      &startNs)) {
     return false;
   }
 
   // Step 22.
   Instant endNs;
-  if (!AddDaysToZonedDateTime(cx, startNs, ToPlainDateTime(dtStart), &timeZone,
+  if (!AddDaysToZonedDateTime(cx, startNs, ToPlainDateTime(dtStart), timeZone,
                               calendar, 1, &endNs)) {
     return false;
   }
@@ -3341,8 +3324,8 @@ static bool ZonedDateTime_round(JSContext* cx, const CallArgs& args) {
   // Step 26.
   Instant epochNanoseconds;
   if (!InterpretISODateTimeOffset(
-          cx, roundResult, OffsetBehaviour::Option, offsetNanoseconds,
-          &timeZone, TemporalDisambiguation::Compatible, TemporalOffset::Prefer,
+          cx, roundResult, OffsetBehaviour::Option, offsetNanoseconds, timeZone,
+          TemporalDisambiguation::Compatible, TemporalOffset::Prefer,
           MatchBehaviour::MatchExactly, &epochNanoseconds)) {
     return false;
   }
@@ -3598,7 +3581,7 @@ static bool ZonedDateTime_startOfDay(JSContext* cx, const CallArgs& args) {
 
   // Step 8.
   Instant startInstant;
-  if (!GetInstantFor(cx, &timeZone, startDateTime,
+  if (!GetInstantFor(cx, timeZone, startDateTime,
                      TemporalDisambiguation::Compatible, &startInstant)) {
     return false;
   }
