@@ -258,11 +258,11 @@ nsresult CharacterData::SetTextInternal(
     MutationObservers::NotifyCharacterDataWillChange(this, info);
   }
 
-  Directionality oldDir = eDir_NotSet;
-  bool dirAffectsAncestor =
-      (NodeType() == TEXT_NODE &&
-       TextNodeWillChangeDirection(static_cast<nsTextNode*>(this), &oldDir,
-                                   aOffset));
+  auto oldDir = Directionality::Unset;
+  const bool dirAffectsAncestor =
+      NodeType() == TEXT_NODE &&
+      TextNodeWillChangeDirection(static_cast<nsTextNode*>(this), &oldDir,
+                                  aOffset);
 
   if (aOffset == 0 && endOffset == textLength) {
     // Replacing whole text or old text was empty.

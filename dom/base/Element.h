@@ -483,25 +483,27 @@ class Element : public FragmentOrElement {
   inline Directionality GetDirectionality() const {
     ElementState state = State();
     if (state.HasState(ElementState::RTL)) {
-      return eDir_RTL;
+      return Directionality::Rtl;
     }
     if (state.HasState(ElementState::LTR)) {
-      return eDir_LTR;
+      return Directionality::Ltr;
     }
-    return eDir_NotSet;
+    return Directionality::Unset;
   }
 
   inline void SetDirectionality(Directionality aDir, bool aNotify) {
     AutoStateChangeNotifier notifier(*this, aNotify);
     RemoveStatesSilently(ElementState::DIR_STATES);
     switch (aDir) {
-      case eDir_RTL:
+      case Directionality::Rtl:
         AddStatesSilently(ElementState::RTL);
         break;
-      case eDir_LTR:
+      case Directionality::Ltr:
         AddStatesSilently(ElementState::LTR);
         break;
-      default:
+      case Directionality::Unset:
+      case Directionality::Auto:
+        MOZ_ASSERT_UNREACHABLE("Setting unresolved directionality?");
         break;
     }
   }

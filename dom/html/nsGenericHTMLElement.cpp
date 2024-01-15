@@ -174,7 +174,11 @@ nsresult nsGenericHTMLElement::CopyInnerTo(Element* aDst) {
 }
 
 static const nsAttrValue::EnumTable kDirTable[] = {
-    {"ltr", eDir_LTR}, {"rtl", eDir_RTL}, {"auto", eDir_Auto}, {nullptr, 0}};
+    {"ltr", Directionality::Ltr},
+    {"rtl", Directionality::Rtl},
+    {"auto", Directionality::Auto},
+    {nullptr, 0},
+};
 
 namespace {
 // See <https://html.spec.whatwg.org/#the-popover-attribute>.
@@ -768,7 +772,7 @@ void nsGenericHTMLElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
           NewRunnableMethod("nsGenericHTMLElement::AfterSetPopoverAttr", this,
                             &nsGenericHTMLElement::AfterSetPopoverAttr));
     } else if (aName == nsGkAtoms::dir) {
-      Directionality dir = eDir_LTR;
+      auto dir = Directionality::Ltr;
       // A boolean tracking whether we need to recompute our directionality.
       // This needs to happen after we update our internal "dir" attribute
       // state but before we call SetDirectionalityOnDescendants.
@@ -777,16 +781,16 @@ void nsGenericHTMLElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
       if (aValue && aValue->Type() == nsAttrValue::eEnum) {
         SetHasValidDir();
         dirStates |= ElementState::HAS_DIR_ATTR;
-        Directionality dirValue = (Directionality)aValue->GetEnumValue();
-        if (dirValue == eDir_Auto) {
+        auto dirValue = Directionality(aValue->GetEnumValue());
+        if (dirValue == Directionality::Auto) {
           dirStates |= ElementState::HAS_DIR_ATTR_LIKE_AUTO;
         } else {
           dir = dirValue;
           SetDirectionality(dir, aNotify);
-          if (dirValue == eDir_LTR) {
+          if (dirValue == Directionality::Ltr) {
             dirStates |= ElementState::HAS_DIR_ATTR_LTR;
           } else {
-            MOZ_ASSERT(dirValue == eDir_RTL);
+            MOZ_ASSERT(dirValue == Directionality::Rtl);
             dirStates |= ElementState::HAS_DIR_ATTR_RTL;
           }
         }
@@ -2769,11 +2773,11 @@ nsresult nsGenericHTMLFormControlElement::SubmitDirnameDir(
     nsAutoString dirname;
     GetAttr(nsGkAtoms::dirname, dirname);
     if (!dirname.IsEmpty()) {
-      const Directionality eDir = GetDirectionality();
-      MOZ_ASSERT(eDir == eDir_RTL || eDir == eDir_LTR,
+      const Directionality dir = GetDirectionality();
+      MOZ_ASSERT(dir == Directionality::Ltr || dir == Directionality::Rtl,
                  "The directionality of an element is either ltr or rtl");
-      const nsString dir = eDir == eDir_LTR ? u"ltr"_ns : u"rtl"_ns;
-      return aFormData->AddNameValuePair(dirname, dir);
+      return aFormData->AddNameValuePair(
+          dirname, dir == Directionality::Ltr ? u"ltr"_ns : u"rtl"_ns);
     }
   }
   return NS_OK;

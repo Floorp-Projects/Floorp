@@ -22,16 +22,16 @@ class HTMLSlotElement;
 
 namespace mozilla {
 
-enum Directionality : uint8_t { eDir_NotSet, eDir_RTL, eDir_LTR, eDir_Auto };
+enum class Directionality : uint8_t { Unset, Rtl, Ltr, Auto };
 
 /**
  * Various methods for returning the directionality of a string using the
  * first-strong algorithm defined in http://unicode.org/reports/tr9/#P2
  *
  * @param[out] aFirstStrong the offset to the first character in the string with
- *             strong directionality, or UINT32_MAX if there is none (return
-               value is eDir_NotSet).
- * @return the directionality of the string
+ *             strong directionality, or UINT32_MAX if there is none (in which
+ *             case the return value is Directionality::Unset).
+ * @return the directionality of the string, or Unset if not available.
  */
 Directionality GetDirectionFromText(const char16_t* aText,
                                     const uint32_t aLength,
