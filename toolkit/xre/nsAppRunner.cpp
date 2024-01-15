@@ -2527,6 +2527,12 @@ nsresult LaunchChild(bool aBlankCommandLine, bool aTryExec) {
   // Restart this process by exec'ing it into the current process
   // if supported by the platform.  Otherwise, use NSPR.
 
+#if defined(MOZ_WAYLAND)
+  // Shut down Wayland proxy before exec and restore WAYLAND_DISPLAY
+  // env variable.
+  gWaylandProxy = nullptr;
+#endif
+
 #ifdef MOZ_JPROF
   // make sure JPROF doesn't think we're E10s
   unsetenv("JPROF_ISCHILD");
@@ -2803,9 +2809,6 @@ static ReturnAbortOnError ProfileLockedDialog(nsIFile* aProfileDir,
           gRemoteService = nullptr;
         }
 #endif
-#if defined(MOZ_WAYLAND)
-        gWaylandProxy = nullptr;
-#endif
         return LaunchChild(false, true);
       }
     } else {
@@ -2919,9 +2922,6 @@ static ReturnAbortOnError ShowProfileManager(
     gRemoteService->UnlockStartup();
     gRemoteService = nullptr;
   }
-#endif
-#if defined(MOZ_WAYLAND)
-  gWaylandProxy = nullptr;
 #endif
   return LaunchChild(false, true);
 }
