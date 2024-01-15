@@ -4622,11 +4622,9 @@ static bool RoundDurationYear(JSContext* cx, const Duration& duration,
   }
 
   // Step 10.x.
-
-  // FIXME: spec bug division by zero not handled
-  // https://github.com/tc39/proposal-temporal/issues/2335
   if (oneYearDays == 0) {
-    JS_ReportErrorASCII(cx, "division by zero");
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_TEMPORAL_INVALID_NUMBER, "days");
     return false;
   }
 
@@ -4783,11 +4781,9 @@ static bool RoundDurationMonth(
   }
 
   // Step 11.x.
-
-  // FIXME: spec bug division by zero not handled
-  // https://github.com/tc39/proposal-temporal/issues/2335
   if (oneMonthDays == 0) {
-    JS_ReportErrorASCII(cx, "division by zero");
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_TEMPORAL_INVALID_NUMBER, "days");
     return false;
   }
 
@@ -4916,11 +4912,9 @@ static bool RoundDurationWeek(JSContext* cx, const Duration& duration,
   }
 
   // Step 12.q.
-
-  // FIXME: spec bug division by zero not handled
-  // https://github.com/tc39/proposal-temporal/issues/2335
   if (oneWeekDays == 0) {
-    JS_ReportErrorASCII(cx, "division by zero");
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_TEMPORAL_INVALID_NUMBER, "days");
     return false;
   }
 
