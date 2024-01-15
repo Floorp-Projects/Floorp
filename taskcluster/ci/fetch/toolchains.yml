@@ -334,6 +334,10 @@ android-ndk-rs:
     description: android-ndk-rs source code
     fetch:
         type: git
+        # Until there's a version of cargo-apk published on crates.io that has
+        # https://github.com/rust-windowing/android-ndk-rs/pull/236, we need to use
+        # an unpublished version. Additionally, until we update the NDK version used
+        # in gecko we must use our own patched version. See bug 1615148.
         repo: https://github.com/jamienicol/android-ndk-rs
         revision: 595f4e14a78371e3ab59b12f7bd8131f2ec5b4a1
 

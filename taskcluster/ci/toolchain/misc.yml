@@ -401,8 +401,6 @@ wrench-deps:
             - 'gfx/wr/ci-scripts/install-meson.sh'
         toolchain-artifact: public/build/wrench-deps.tar.zst
     fetches:
-        fetch:
-            - android-ndk-rs
         toolchain:
             - linux64-rust  # whatever m-c is built with
 
@@ -562,3 +560,24 @@ linux64-afl-instrumentation-4.0:
         toolchain:
             - linux64-clang
             - linux64-toolchain-sysroot
+
+linux64-cargo-apk:
+    description: "cargo-apk toolchain build"
+    treeherder:
+        symbol: TL(cargo-apk)
+    worker:
+        env:
+            FETCH: android-ndk-rs/cargo-apk
+    run:
+        script: build-rust-based-toolchain.sh
+        arguments: ['x86_64-unknown-linux-gnu']
+        resources:
+            - taskcluster/scripts/misc/cargo-apk-Cargo.lock
+        toolchain-artifact: public/build/cargo-apk.tar.zst
+    fetches:
+        fetch:
+            - android-ndk-rs
+        toolchain:
+            - linux64-clang-toolchain
+            - linux64-rust-toolchain
+            - sysroot-x86_64-linux-gnu
