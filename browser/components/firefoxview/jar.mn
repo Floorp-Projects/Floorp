@@ -5,8 +5,8 @@
 browser.jar:
     content/browser/firefoxview/card-container.css
     content/browser/firefoxview/card-container.mjs
-    content/browser/firefoxview/firefoxview-next.html
-    content/browser/firefoxview/firefoxview-next.mjs
+    content/browser/firefoxview/firefoxview.html
+    content/browser/firefoxview/firefoxview.mjs
     content/browser/firefoxview/history.css
     content/browser/firefoxview/history.mjs
     content/browser/firefoxview/opentabs.mjs
@@ -14,7 +14,7 @@ browser.jar:
     content/browser/firefoxview/syncedtabs.mjs
     content/browser/firefoxview/view-syncedtabs.css
     content/browser/firefoxview/recentbrowsing.mjs
-    content/browser/firefoxview/firefoxview-next.css
+    content/browser/firefoxview/firefoxview.css
     content/browser/firefoxview/fxview-category-button.css
     content/browser/firefoxview/fxview-category-navigation.css
     content/browser/firefoxview/fxview-category-navigation.mjs

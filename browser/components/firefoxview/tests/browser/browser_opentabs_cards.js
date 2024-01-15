@@ -1,8 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-/* import-globals-from ../head.js */
-
 const TEST_URL = "about:robots";
 const ROW_URL_ID = "fxview-tab-row-url";
 const ROW_DATE_ID = "fxview-tab-row-date";
