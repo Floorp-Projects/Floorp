@@ -9,6 +9,7 @@ dialog {
   color: var(--in-content-page-color);
   margin: 0;
   padding: 0;
+  min-height: 0;
 }
 
 /* Add some padding around the contents of the dialog */
@@ -21,6 +22,8 @@ dialog::part(content-box) {
   flex: 1;
   /* This allows the focus ring to display fully when scrolling is enabled. */
   padding: 4px;
+  /* This allows stuff inside to shrink even when not scrollable */
+  min-height: 0;
 }
 
 .contentPane.doScroll,
