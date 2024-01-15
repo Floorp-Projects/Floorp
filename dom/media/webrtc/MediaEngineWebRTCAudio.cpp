@@ -758,15 +758,9 @@ void AudioInputProcessing::ProcessOutputData(MediaTrackGraph* aGraph,
         interleavedFarend, framesPerPacketFarend, channelCountFarend,
         deinterleavedPacketDataChannelPointers.Elements());
 
-    // Having the same config for input and output means we potentially save
-    // some CPU.
-    StreamConfig inputConfig(aRate, channelCountFarend);
-    StreamConfig outputConfig = inputConfig;
-
-    // Passing the same pointers here saves a copy inside this function.
-    DebugOnly<int> err = mAudioProcessing->ProcessReverseStream(
-        deinterleavedPacketDataChannelPointers.Elements(), inputConfig,
-        outputConfig, deinterleavedPacketDataChannelPointers.Elements());
+    StreamConfig reverseConfig(aRate, channelCountFarend);
+    DebugOnly<int> err = mAudioProcessing->AnalyzeReverseStream(
+        deinterleavedPacketDataChannelPointers.Elements(), reverseConfig);
 
     MOZ_ASSERT(!err, "Could not process the reverse stream.");
   }
