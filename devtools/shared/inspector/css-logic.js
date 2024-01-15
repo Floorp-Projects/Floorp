@@ -153,35 +153,43 @@ exports.shortSource = function (sheet) {
     );
   }
 
+  let name = sheet.href;
+
   // If the sheet is a data URL, return a trimmed version of it.
   const dataUrl = sheet.href.trim().match(/^data:.*?,((?:.|\r|\n)*)$/);
   if (dataUrl) {
-    return dataUrl[1].length > MAX_DATA_URL_LENGTH
-      ? `${dataUrl[1].substr(0, MAX_DATA_URL_LENGTH - 1)}…`
-      : dataUrl[1];
-  }
-
-  // We try, in turn, the filename, filePath, query string, whole thing
-  let url = {};
-  try {
-    url = new URL(sheet.href);
-  } catch (ex) {
-    // Some UA-provided stylesheets are not valid URLs.
-  }
-
-  if (url.pathname) {
-    const index = url.pathname.lastIndexOf("/");
-    if (index !== -1 && index < url.pathname.length) {
-      return url.pathname.slice(index + 1);
+    name =
+      dataUrl[1].length > MAX_DATA_URL_LENGTH
+        ? `${dataUrl[1].substr(0, MAX_DATA_URL_LENGTH - 1)}…`
+        : dataUrl[1];
+  } else {
+    // We try, in turn, the filename, filePath, query string, whole thing
+    let url = {};
+    try {
+      url = new URL(sheet.href);
+    } catch (ex) {
+      // Some UA-provided stylesheets are not valid URLs.
     }
-    return url.pathname;
+
+    if (url.pathname) {
+      const index = url.pathname.lastIndexOf("/");
+      if (index !== -1 && index < url.pathname.length) {
+        name = url.pathname.slice(index + 1);
+      } else {
+        name = url.pathname;
+      }
+    } else if (url.query) {
+      name = url.query;
+    }
   }
 
-  if (url.query) {
-    return url.query;
+  try {
+    name = decodeURIComponent(name);
+  } catch (e) {
+    // This may still fail if the URL contains invalid % numbers (for ex)
   }
 
-  return sheet.href;
+  return name;
 };
 
 /**

@@ -105,6 +105,12 @@ add_task(async function testSystemStylesheet() {
   const formsToggle = formsEditor.summary.querySelector(".stylesheet-toggle");
   ok(formsToggle, "enabled toggle button exists");
   ok(formsToggle.disabled, "enabled toggle button is disabled");
+  // For some unexplained reason, this is updated asynchronously
+  await waitFor(
+    () =>
+      formsToggle.getAttribute("tooltiptext") ==
+      "System style sheets can’t be disabled"
+  );
   is(
     formsToggle.getAttribute("tooltiptext"),
     "System style sheets can’t be disabled"
