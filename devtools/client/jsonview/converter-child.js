@@ -26,7 +26,7 @@ const BufferStream = Components.Constructor(
   "setData"
 );
 
-const kCSP = "default-src 'none' ; script-src resource:; ";
+const kCSP = "default-src 'none'; script-src resource:; img-src 'self';";
 
 // Localization
 loader.lazyGetter(this, "jsonViewStrings", () => {
