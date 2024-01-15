@@ -20,7 +20,7 @@ nsContainerFrame* NS_NewSelectsAreaFrame(PresShell* aShell,
 
   // We need NS_BLOCK_FLOAT_MGR to ensure that the options inside the select
   // aren't expanded by right floats outside the select.
-  it->AddStateBits(NS_BLOCK_FLOAT_MGR);
+  it->AddStateBits(NS_BLOCK_FORMATTING_CONTEXT_STATE_BITS);
 
   return it;
 }
