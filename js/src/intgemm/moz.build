@@ -43,6 +43,13 @@ if CONFIG["INTEL_ARCHITECTURE"]:
         SOURCES[
             "/third_party/gemmology/kernels/GemmologyEngineAVXVNNI.cpp"
         ].flags += CONFIG["AVXVNNI_FLAGS"]
+    if CONFIG["AVX512BW_FLAGS"]:
+        DEFINES["USE_AVX512BW"] = True
+        SOURCES += ["/third_party/gemmology/kernels/GemmologyEngineAVX512BW.cpp"]
+        SOURCES[
+            "/third_party/gemmology/kernels/GemmologyEngineAVX512BW.cpp"
+        ].flags += CONFIG["AVX512BW_FLAGS"]
+
 
 if CONFIG["TARGET_CPU"] == "aarch64":
     DEFINES["USE_NEON"] = True
