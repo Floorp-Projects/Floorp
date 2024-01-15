@@ -10,6 +10,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.res.Configuration
 import android.os.Build
 import android.provider.Settings
 import androidx.annotation.RequiresApi
@@ -78,4 +79,11 @@ fun Context.registerReceiverCompat(
     } else {
         registerReceiver(broadcastReceiver, filter)
     }
+}
+
+/**
+ * @return True if the orientation is landscape,or false if it's not.
+ */
+fun Context.isLandscape(): Boolean {
+    return resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 }
