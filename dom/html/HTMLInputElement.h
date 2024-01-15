@@ -1112,7 +1112,7 @@ class HTMLInputElement final : public TextControlElement,
    * Sets the direction from the input value. if aKnownValue is provided, it
    * saves a GetValue call.
    */
-  void SetDirectionFromValue(bool aNotify,
+  void SetAutoDirectionality(bool aNotify,
                              const nsAString* aKnownValue = nullptr);
 
   /**
@@ -1600,8 +1600,8 @@ class HTMLInputElement final : public TextControlElement,
   /**
    * https://html.spec.whatwg.org/#auto-directionality-form-associated-elements
    */
-  bool IsAutoDirectionalityAssociated() const {
-    switch (mType) {
+  static bool IsAutoDirectionalityAssociated(FormControlType aType) {
+    switch (aType) {
       case FormControlType::InputHidden:
       case FormControlType::InputText:
       case FormControlType::InputSearch:
@@ -1616,6 +1616,10 @@ class HTMLInputElement final : public TextControlElement,
       default:
         return false;
     }
+  }
+
+  bool IsAutoDirectionalityAssociated() const {
+    return IsAutoDirectionalityAssociated(mType);
   }
 
   static bool CreatesDateTimeWidget(FormControlType aType) {

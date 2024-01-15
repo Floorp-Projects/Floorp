@@ -814,7 +814,7 @@ ShadowRoot* nsINode::GetContainingShadow() const {
   return AsContent()->GetContainingShadow();
 }
 
-nsIContent* nsINode::GetContainingShadowHost() const {
+Element* nsINode::GetContainingShadowHost() const {
   if (ShadowRoot* shadow = GetContainingShadow()) {
     return shadow->GetHost();
   }
