@@ -35,6 +35,7 @@ private const val DISABLED_ALPHA = 0.5f
  * UI for a switch with label that can be on or off.
  *
  * @param label Text to be displayed next to the switch.
+ * @param description An optional description text below the label.
  * @param checked Whether or not the switch is checked.
  * @param onCheckedChange Invoked when Switch is being clicked, therefore the change of checked
  * state is requested.
@@ -44,6 +45,7 @@ private const val DISABLED_ALPHA = 0.5f
 @Composable
 fun SwitchWithLabel(
     label: String,
+    description: String? = null,
     checked: Boolean,
     onCheckedChange: ((Boolean) -> Unit),
     modifier: Modifier = Modifier,
@@ -60,16 +62,28 @@ fun SwitchWithLabel(
         horizontalArrangement = Arrangement.spacedBy(16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(
-            text = label,
-            color = if (enabled) {
-                FirefoxTheme.colors.textPrimary
-            } else {
-                FirefoxTheme.colors.textDisabled
-            },
-            style = FirefoxTheme.typography.subtitle1,
-            modifier = Modifier.weight(1f),
-        )
+        Column(
+            modifier = Modifier
+                .weight(1f),
+        ) {
+            Text(
+                text = label,
+                color = if (enabled) {
+                    FirefoxTheme.colors.textPrimary
+                } else {
+                    FirefoxTheme.colors.textDisabled
+                },
+                style = FirefoxTheme.typography.subtitle1,
+            )
+
+            description?.let {
+                Text(
+                    text = description,
+                    color = FirefoxTheme.colors.textSecondary,
+                    style = FirefoxTheme.typography.body2,
+                )
+            }
+        }
 
         Switch(
             modifier = Modifier.clearAndSetSemantics {},
@@ -139,6 +153,7 @@ private fun SwitchWithLabelPreview() {
             var enabledSwitchState by remember { mutableStateOf(false) }
             SwitchWithLabel(
                 label = if (enabledSwitchState) "On" else "Off",
+                description = "Description text",
                 checked = enabledSwitchState,
                 onCheckedChange = { enabledSwitchState = it },
             )

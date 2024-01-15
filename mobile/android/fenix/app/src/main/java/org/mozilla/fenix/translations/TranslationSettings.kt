@@ -122,6 +122,7 @@ internal fun getTranslationSettingsSwitchList(): List<TranslationSwitchItem> {
                 textLabel = stringResource(R.string.translation_settings_offer_to_translate),
                 isChecked = true,
                 hasDivider = false,
+                isEnabled = true,
                 onStateChange = {},
             ),
         )
@@ -130,6 +131,7 @@ internal fun getTranslationSettingsSwitchList(): List<TranslationSwitchItem> {
                 textLabel = stringResource(R.string.translation_settings_always_download),
                 isChecked = false,
                 hasDivider = true,
+                isEnabled = true,
                 onStateChange = {},
             ),
         )

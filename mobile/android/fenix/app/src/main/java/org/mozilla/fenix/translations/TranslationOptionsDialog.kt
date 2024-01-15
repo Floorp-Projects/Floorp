@@ -17,6 +17,9 @@ import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.snapshots.SnapshotStateList
+import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -49,9 +52,42 @@ fun TranslationOptionsDialog(
 ) {
     TranslationOptionsDialogHeader(onBackClicked)
 
+    val translationOptionsListState = remember {
+        translationOptionsList.toMutableStateList()
+    }
+
+    EnabledTranslationOptionsItems(
+        translationOptionsListState,
+    )
+
     LazyColumn {
-        items(translationOptionsList) { item: TranslationSwitchItem ->
-            TranslationOptions(translationSwitchItem = item)
+        items(translationOptionsListState) { item: TranslationSwitchItem ->
+
+            val translationSwitchItem = TranslationSwitchItem(
+                textLabel = item.textLabel,
+                description = if (item.isChecked) item.description else null,
+                importance = item.importance,
+                isChecked = item.isChecked,
+                isEnabled = item.isEnabled,
+                hasDivider = item.hasDivider,
+                onStateChange = { checked ->
+                    // If the item has the same importance, only one switch should be enabled.
+                    val iterator = translationOptionsListState.iterator()
+                    iterator.forEach {
+                        if (it != item && it.importance == item.importance && it.isChecked) {
+                            it.isChecked = false
+                        }
+                    }
+
+                    val index = translationOptionsListState.indexOf(item)
+                    translationOptionsListState[index] = translationOptionsListState[index].copy(
+                        isChecked = checked,
+                    )
+                },
+            )
+            TranslationOptions(
+                translationSwitchItem = translationSwitchItem,
+            )
         }
 
         item {
@@ -79,14 +115,43 @@ fun TranslationOptionsDialog(
     }
 }
 
+/**
+ * If the item with the highest importance is checked, all other items should be disabled.
+ * If all items are unchecked, all of them are enabled.
+ * If the item with the highest importance is unchecked and a item with importance 1 is checked ,
+ * the item with importance 0 is disabled.
+ * If the item with importance 0 is checked all the items are enabled.
+ */
 @Composable
-private fun TranslationOptions(translationSwitchItem: TranslationSwitchItem) {
+private fun EnabledTranslationOptionsItems(
+    translationOptionsListState: SnapshotStateList<TranslationSwitchItem>,
+) {
+    val itemCheckedWithHighestImportance =
+        translationOptionsListState.sortedByDescending { listItem -> listItem.importance }
+            .firstOrNull { it.isChecked }
+
+    if (itemCheckedWithHighestImportance == null || itemCheckedWithHighestImportance.importance == 0) {
+        translationOptionsListState.forEach {
+            it.isEnabled = true
+        }
+    } else {
+        translationOptionsListState.forEach {
+            it.isEnabled = it.importance >= itemCheckedWithHighestImportance.importance
+        }
+    }
+}
+
+@Composable
+private fun TranslationOptions(
+    translationSwitchItem: TranslationSwitchItem,
+) {
     SwitchWithLabel(
+        label = translationSwitchItem.textLabel,
+        description = translationSwitchItem.description,
+        enabled = translationSwitchItem.isEnabled,
         checked = translationSwitchItem.isChecked,
         onCheckedChange = translationSwitchItem.onStateChange,
-        label = translationSwitchItem.textLabel,
-        modifier = Modifier
-            .padding(start = 72.dp, end = 16.dp),
+        modifier = Modifier.padding(start = 72.dp, end = 16.dp),
     )
 
     if (translationSwitchItem.hasDivider) {
@@ -106,8 +171,7 @@ private fun TranslationOptionsDialogHeader(
     ) {
         IconButton(
             onClick = { onBackClicked() },
-            modifier = Modifier
-                .size(24.dp),
+            modifier = Modifier.size(24.dp),
         ) {
             Icon(
                 painter = painterResource(id = R.drawable.mozac_ic_back_24),
@@ -140,7 +204,8 @@ fun getTranslationOptionsList(): List<TranslationSwitchItem> {
                 textLabel = stringResource(R.string.translation_option_bottom_sheet_always_translate),
                 isChecked = false,
                 hasDivider = true,
-                onStateChange = {},
+                isEnabled = true,
+                onStateChange = { },
             ),
         )
         add(
@@ -149,7 +214,10 @@ fun getTranslationOptionsList(): List<TranslationSwitchItem> {
                     id = R.string.translation_option_bottom_sheet_always_translate_in_language,
                     formatArgs = arrayOf(Locale("es").displayName),
                 ),
+                description = stringResource(id = R.string.translation_option_bottom_sheet_switch_description),
+                importance = 1,
                 isChecked = false,
+                isEnabled = true,
                 hasDivider = false,
                 onStateChange = {},
             ),
@@ -160,7 +228,10 @@ fun getTranslationOptionsList(): List<TranslationSwitchItem> {
                     id = R.string.translation_option_bottom_sheet_never_translate_in_language,
                     formatArgs = arrayOf(Locale("es").displayName),
                 ),
+                description = stringResource(id = R.string.translation_option_bottom_sheet_switch_description),
+                importance = 1,
                 isChecked = true,
+                isEnabled = true,
                 hasDivider = true,
                 onStateChange = {},
             ),
@@ -168,7 +239,12 @@ fun getTranslationOptionsList(): List<TranslationSwitchItem> {
         add(
             TranslationSwitchItem(
                 textLabel = stringResource(R.string.translation_option_bottom_sheet_never_translate_site),
+                description = stringResource(
+                    id = R.string.translation_option_bottom_sheet_switch_never_translate_site_description,
+                ),
+                importance = 2,
                 isChecked = true,
+                isEnabled = true,
                 hasDivider = true,
                 onStateChange = {},
             ),
