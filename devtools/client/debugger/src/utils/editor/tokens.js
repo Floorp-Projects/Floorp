@@ -8,42 +8,57 @@ function _isInvalidTarget(target) {
   }
 
   const tokenText = target.innerText.trim();
-  const cursorPos = target.getBoundingClientRect();
+
+  // exclude syntax where the expression would be a syntax error
+  const invalidToken =
+    tokenText === "" || tokenText.match(/^[(){}\|&%,.;=<>\+-/\*\s](?=)/);
+  if (invalidToken) {
+    return true;
+  }
 
   // exclude tokens for which it does not make sense to show a preview:
   // - literal
   // - primitives
   // - operators
   // - tags
-  const invalidType = [
-    "",
+  const INVALID_TARGET_CLASSES = [
     "cm-atom",
     "cm-number",
     "cm-operator",
     "cm-string",
     "cm-tag",
-  ].includes(target.className);
-
-  // exclude syntax where the expression would be a syntax error
-  const invalidToken =
-    tokenText === "" || tokenText.match(/^[(){}\|&%,.;=<>\+-/\*\s](?=)/);
-
-  // exclude codemirror elements that are not tokens
-  const invalidTarget =
-    (target.parentElement &&
-      !target.parentElement.closest(".CodeMirror-line, .CodeMirror-widget")) ||
-    cursorPos.top == 0;
-
-  const invalidClasses = ["editor-mount"];
-  if (invalidClasses.some(className => target.classList.contains(className))) {
+    // also exclude editor element (defined in Editor component)
+    "editor-mount",
+  ];
+  if (
+    target.className === "" ||
+    INVALID_TARGET_CLASSES.some(cls => target.classList.contains(cls))
+  ) {
     return true;
   }
 
+  // We need to exclude keywords, but since codeMirror tags "this" as a keyword, we need
+  // to check the tokenText as well.
+  // This seems to be the only case that we want to exclude (see devtools/client/shared/sourceeditor/codemirror/mode/javascript/javascript.js#24-41)
+  if (target.classList.contains("cm-keyword") && tokenText !== "this") {
+    return true;
+  }
+
+  // exclude codemirror elements that are not tokens
+  if (
+    (target.parentElement &&
+      !target.parentElement.closest(".CodeMirror-line, .CodeMirror-widget")) ||
+    target.getBoundingClientRect().top == 0
+  ) {
+    return true;
+  }
+
+  // exclude popup
   if (target.closest(".popover")) {
     return true;
   }
 
-  return !!(invalidTarget || invalidToken || invalidType);
+  return false;
 }
 
 function _dispatch(codeMirror, eventName, data) {

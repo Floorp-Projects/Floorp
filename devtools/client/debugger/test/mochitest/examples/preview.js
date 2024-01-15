@@ -65,11 +65,13 @@ function classPreview() {
   foo.breakFn();
 }
 
-function primitives() {
+function invalidTargets() {
   "a";
   false;
   undefined;
   null;
   42;
+  const myVar = "foo";
   debugger;
+  return myVar;
 }
