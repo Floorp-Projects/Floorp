@@ -70,7 +70,6 @@
 #include "vm/JSAtomState.h"
 #include "vm/JSContext.h"
 #include "vm/JSObject.h"
-#include "vm/PIC.h"
 #include "vm/PlainObject.h"
 #include "vm/Runtime.h"
 #include "vm/StringType.h"
@@ -1701,11 +1700,7 @@ static bool IsBuiltinGetPossibleInstantsFor(
   }
 
   // "Object" time zones need to ensure array iteration is still sane.
-  auto* stubChain = ForOfPIC::getOrCreate(cx);
-  if (!stubChain) {
-    return false;
-  }
-  return stubChain->tryOptimizeArray(cx, result);
+  return IsArrayIterationSane(cx, result);
 }
 
 /**

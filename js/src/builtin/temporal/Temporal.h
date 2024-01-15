@@ -336,6 +336,12 @@ bool GetMethod(JSContext* cx, JS::Handle<JSObject*> object,
                JS::MutableHandle<JSObject*> result);
 
 /**
+ * GetMethod ( V, P )
+ */
+JSObject* GetMethod(JSContext* cx, JS::Handle<JSObject*> object,
+                    JS::Handle<PropertyName*> name);
+
+/**
  * SnapshotOwnProperties ( source, proto [ , excludedKeys [ , excludedValues ] ]
  * )
  */
@@ -393,6 +399,11 @@ inline bool GetDifferenceSettings(JSContext* cx, TemporalDifference operation,
                                TemporalUnit::Nanosecond, fallbackSmallestUnit,
                                smallestLargestDefaultUnit, result);
 }
+
+/**
+ * Sets |result| to `true` when array iteration is still in its initial state.
+ */
+bool IsArrayIterationSane(JSContext* cx, bool* result);
 
 } /* namespace js::temporal */
 
