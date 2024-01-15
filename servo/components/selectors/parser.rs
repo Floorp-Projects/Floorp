@@ -1583,6 +1583,12 @@ impl NthSelectorData {
         }
     }
 
+    /// Returns true if this is an edge selector that is not `:*-of-type``
+    #[inline]
+    pub fn is_simple_edge(&self) -> bool {
+        self.a == 0 && self.b == 1 && !self.ty.is_of_type()
+    }
+
     /// Writes the beginning of the selector.
     #[inline]
     fn write_start<W: fmt::Write>(&self, dest: &mut W) -> fmt::Result {
