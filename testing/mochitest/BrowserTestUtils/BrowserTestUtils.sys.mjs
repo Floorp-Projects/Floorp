@@ -738,6 +738,8 @@ export var BrowserTestUtils = {
    * @param {boolean} [waitForAnyTab = false]
    *        True to wait for the url to be loaded in any new tab, not just the next
    *        one opened.
+   * @param {boolean} [maybeErrorPage = false]
+   *        See ``browserLoaded`` function.
    *
    * @return {Promise}
    * @resolves With the {xul:tab} when a tab is opened and its location changes
@@ -750,7 +752,8 @@ export var BrowserTestUtils = {
     tabbrowser,
     wantLoad = null,
     waitForLoad = false,
-    waitForAnyTab = false
+    waitForAnyTab = false,
+    maybeErrorPage = false
   ) {
     let urlMatches;
     if (wantLoad && typeof wantLoad == "function") {
@@ -779,7 +782,8 @@ export var BrowserTestUtils = {
             result = BrowserTestUtils.browserLoaded(
               newBrowser,
               false,
-              urlMatches
+              urlMatches,
+              maybeErrorPage
             ).then(() => newTab);
           } else {
             // If not waiting for load, just resolve with the new tab.
