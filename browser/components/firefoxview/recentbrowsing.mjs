@@ -40,7 +40,7 @@ class RecentBrowsingInView extends ViewPage {
     return html`
       <link
         rel="stylesheet"
-        href="chrome://browser/content/firefoxview/firefoxview-next.css"
+        href="chrome://browser/content/firefoxview/firefoxview.css"
       />
       <div class="sticky-container bottom-fade">
         <h2
