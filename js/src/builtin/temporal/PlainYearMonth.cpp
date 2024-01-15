@@ -1472,7 +1472,7 @@ static bool PlainYearMonth_toPlainDate(JSContext* cx, const CallArgs& args) {
   }
 
   // Step 13.
-  Rooted<Value> overflow(cx, StringValue(cx->names().reject));
+  Rooted<Value> overflow(cx, StringValue(cx->names().constrain));
   if (!DefineDataProperty(cx, options, cx->names().overflow, overflow)) {
     return false;
   }
