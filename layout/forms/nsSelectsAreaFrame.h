@@ -18,8 +18,7 @@ class nsSelectsAreaFrame final : public nsBlockFrame {
   NS_DECL_FRAMEARENA_HELPERS(nsSelectsAreaFrame)
 
   friend nsContainerFrame* NS_NewSelectsAreaFrame(mozilla::PresShell* aShell,
-                                                  ComputedStyle* aStyle,
-                                                  nsFrameState aFlags);
+                                                  ComputedStyle* aStyle);
 
   virtual void BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                 const nsDisplayListSet& aLists) override;

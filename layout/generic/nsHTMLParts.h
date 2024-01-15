@@ -55,8 +55,7 @@ nsresult NS_NewAttributeContent(nsNodeInfoManager* aNodeInfoManager,
 // By default, area frames will extend
 // their height to cover any children that "stick out".
 nsContainerFrame* NS_NewSelectsAreaFrame(mozilla::PresShell* aPresShell,
-                                         mozilla::ComputedStyle* aStyle,
-                                         nsFrameState aFlags);
+                                         mozilla::ComputedStyle* aStyle);
 
 // Create a block formatting context blockframe
 nsBlockFrame* NS_NewBlockFormattingContext(mozilla::PresShell* aPresShell,
@@ -147,8 +146,7 @@ nsIFrame* NS_NewTextControlFrame(mozilla::PresShell* aPresShell,
 nsListControlFrame* NS_NewListControlFrame(mozilla::PresShell* aPresShell,
                                            mozilla::ComputedStyle* aStyle);
 nsComboboxControlFrame* NS_NewComboboxControlFrame(
-    mozilla::PresShell* aPresShell, mozilla::ComputedStyle* aStyle,
-    nsFrameState aFlags);
+    mozilla::PresShell* aPresShell, mozilla::ComputedStyle* aStyle);
 nsIFrame* NS_NewProgressFrame(mozilla::PresShell* aPresShell,
                               mozilla::ComputedStyle* aStyle);
 nsIFrame* NS_NewMeterFrame(mozilla::PresShell* aPresShell,
