@@ -15,6 +15,11 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  DownloadUtils: "resource://gre/modules/DownloadUtils.sys.mjs",
+  SiteDataManager: "resource:///modules/SiteDataManager.sys.mjs",
+});
+
 XPCOMUtils.defineLazyPreferenceGetter(
   lazy,
   "USE_OLD_DIALOG",
@@ -48,7 +53,32 @@ var gSanitizePromptDialog = {
     // This is used by selectByTimespan() to determine if the window has loaded.
     this._inited = true;
     this._dialog = document.querySelector("dialog");
+    /**
+     * Variables to store data sizes to display to user
+     * for different timespans
+     */
+    this.siteDataSizes = {};
+    this.cacheSize = [];
+    this.downloadSizes = {};
+
+    if (!lazy.USE_OLD_DIALOG) {
+      this._cookiesAndSiteDataCheckbox = document.getElementById(
+        "clearCookiesAndSiteData"
+      );
+      this._cacheCheckbox = document.getElementById("clearCachedContent");
+      this._downloadHistoryCheckbox = document.getElementById(
+        "clearDownloadHistory"
+      );
+    }
+
     let arg = window.arguments?.[0] || {};
+
+    // The updateUsageData variable allows callers of the dialog to indicate
+    // whether site usage data should be refreshed on init.
+    let updateUsageData = true;
+    if (!lazy.USE_OLD_DIALOG && arg.updateUsageData != undefined) {
+      updateUsageData = arg.updateUsageData || arg.inBrowserWindow;
+    }
     if (arg.inBrowserWindow) {
       this._dialog.setAttribute("inbrowserwindow", "true");
       this._observeTitleForChanges();
@@ -60,6 +90,9 @@ var gSanitizePromptDialog = {
         cb.setAttribute("native", "true");
       }
     }
+
+    this.dataSizesFinishedUpdatingPromise =
+      this.getAndUpdateDataSizes(updateUsageData);
 
     let OKButton = this._dialog.getButton("accept");
     let okButtonLabel = lazy.USE_OLD_DIALOG
@@ -90,6 +123,8 @@ var gSanitizePromptDialog = {
     } else {
       this.warningBox.hidden = true;
     }
+
+    await this.dataSizesFinishedUpdatingPromise;
   },
 
   selectByTimespan() {
@@ -112,13 +147,17 @@ var gSanitizePromptDialog = {
         window.resizeBy(0, diff);
       }
 
+      // update title for the old dialog
       if (lazy.USE_OLD_DIALOG) {
         document.l10n.setAttributes(
           document.documentElement,
           "sanitize-dialog-title-everything"
         );
       }
-
+      // make sure the sizes are updated in the new dialog
+      else {
+        this.updateDataSizesInUI();
+      }
       return;
     }
 
@@ -134,6 +173,11 @@ var gSanitizePromptDialog = {
       ? "sanitize-dialog-title"
       : "sanitize-dialog-title2";
     document.l10n.setAttributes(document.documentElement, datal1OnId);
+
+    if (!lazy.USE_OLD_DIALOG) {
+      // We only update data sizes to display on the new dialog
+      this.updateDataSizesInUI();
+    }
   },
 
   sanitize(event) {
@@ -202,9 +246,9 @@ var gSanitizePromptDialog = {
    */
   onReadGeneric() {
     // Find any other pref that's checked and enabled (except for
-    // privacy.sanitize.timeSpan, which doesn't affect the button's status
-    // and privacy.cpd.downloads which is not controlled directly by a
-    // checkbox).
+    // privacy.sanitize.timeSpan, which doesn't affect the button's status.
+    // and (in the old dialog) privacy.cpd.downloads which is not controlled
+    // directly by a checkbox).
     var found = this._getItemPrefs().some(
       pref => !!pref.value && !pref.disabled
     );
@@ -217,6 +261,45 @@ var gSanitizePromptDialog = {
     this.prepareWarning();
 
     return undefined;
+  },
+
+  /**
+   * Gets the latest usage data and then updates the UI
+   *
+   * @param {boolean} doUpdateSites - if we need to trigger an
+   *        updateSites() to get the latest usage data
+   * @returns {Promise} resolves when updating the UI is complete
+   */
+  async getAndUpdateDataSizes(doUpdateSites) {
+    if (lazy.USE_OLD_DIALOG) {
+      return;
+    }
+    if (doUpdateSites) {
+      await lazy.SiteDataManager.updateSites();
+    }
+    // Current timespans used in the dialog box
+    const ALL_TIMESPANS = [
+      "TIMESPAN_HOUR",
+      "TIMESPAN_2HOURS",
+      "TIMESPAN_4HOURS",
+      "TIMESPAN_TODAY",
+      "TIMESPAN_EVERYTHING",
+    ];
+
+    let [quotaUsage, cacheSize, downloadCount] = await Promise.all([
+      lazy.SiteDataManager.getQuotaUsageForTimeRanges(ALL_TIMESPANS),
+      lazy.SiteDataManager.getCacheSize(),
+      lazy.SiteDataManager.getDownloadCountForTimeRanges(ALL_TIMESPANS),
+    ]);
+    // Convert sizes to [amount, unit]
+    for (const timespan in quotaUsage) {
+      this.siteDataSizes[timespan] = lazy.DownloadUtils.convertByteUnits(
+        quotaUsage[timespan]
+      );
+    }
+    this.cacheSize = lazy.DownloadUtils.convertByteUnits(cacheSize);
+    this.downloadSizes = downloadCount;
+    this.updateDataSizesInUI();
   },
 
   /**
@@ -298,6 +381,45 @@ var gSanitizePromptDialog = {
       attributes: true,
       attributeFilter: ["title"],
     });
+  },
+
+  /**
+   * Updates data sizes displayed based on new selected timespan
+   */
+  updateDataSizesInUI() {
+    const TIMESPAN_SELECTION_MAP = {
+      0: "TIMESPAN_EVERYTHING",
+      1: "TIMESPAN_HOUR",
+      2: "TIMESPAN_2HOURS",
+      3: "TIMESPAN_4HOURS",
+      4: "TIMESPAN_TODAY",
+      5: "TIMESPAN_5MINS",
+      6: "TIMESPAN_24HOURS",
+    };
+    let index = this.selectedTimespan;
+    let timeSpanSelected = TIMESPAN_SELECTION_MAP[index];
+    let [amount, unit] = this.siteDataSizes[timeSpanSelected];
+
+    document.l10n.setAttributes(
+      this._cookiesAndSiteDataCheckbox,
+      "item-cookies-site-data-with-size",
+      { amount, unit }
+    );
+
+    [amount, unit] = this.cacheSize;
+    document.l10n.setAttributes(
+      this._cacheCheckbox,
+      "item-cached-content-with-size",
+      { amount, unit }
+    );
+
+    const downloadcount = this.downloadSizes[timeSpanSelected];
+
+    document.l10n.setAttributes(
+      this._downloadHistoryCheckbox,
+      "item-download-history-with-size",
+      { count: downloadcount }
+    );
   },
 };
 
