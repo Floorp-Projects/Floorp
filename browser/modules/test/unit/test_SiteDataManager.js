@@ -3,15 +3,16 @@
  */
 "use strict";
 
-const { SiteDataManager } = ChromeUtils.importESModule(
-  "resource:///modules/SiteDataManager.sys.mjs"
-);
-const { SiteDataTestUtils } = ChromeUtils.importESModule(
-  "resource://testing-common/SiteDataTestUtils.sys.mjs"
-);
-const { PermissionTestUtils } = ChromeUtils.importESModule(
-  "resource://testing-common/PermissionTestUtils.sys.mjs"
-);
+// We intend to add tests that add real quota manager data to test
+// data size fetching in the new clear history dialog.
+// Bug 1874387 - Add a test to SiteDataManager to test data size display in the new clear
+// history dialog using real quota manager data
+
+ChromeUtils.defineESModuleGetters(this, {
+  SiteDataManager: "resource:///modules/SiteDataManager.sys.mjs",
+  SiteDataTestUtils: "resource://testing-common/SiteDataTestUtils.sys.mjs",
+  PermissionTestUtils: "resource://testing-common/PermissionTestUtils.sys.mjs",
+});
 
 const EXAMPLE_ORIGIN = "https://www.example.com";
 const EXAMPLE_ORIGIN_2 = "https://example.org";
