@@ -193,7 +193,7 @@ add_task(async function checkAdvancedDetails() {
         return errorCode && errorCode.textContent != "";
       }, "error code has been set inside the advanced button panel");
 
-      return { textContent: errorCode.textContent, tagName: errorCode.tagName };
+      return { textContent: errorCode.textContent, tagName: errorCode.tagName.toLowerCase() };
     });
     is(
       message.textContent,
@@ -271,9 +271,9 @@ add_task(async function checkAdvancedDetailsForHSTS() {
       let cdl = doc.getElementById("cert_domain_link");
       return {
         ecTextContent: ec.textContent,
-        ecTagName: ec.tagName,
+        ecTagName: ec.tagName.toLowerCase(),
         cdlTextContent: cdl.textContent,
-        cdlTagName: cdl.tagName,
+        cdlTagName: cdl.tagName.toLowerCase(),
       };
     });
 
@@ -470,7 +470,7 @@ add_task(async function checkSandboxedIframe() {
       "Correct error message found"
     );
     is(
-      doc.getElementById("errorCode").tagName,
+      doc.getElementById("errorCode").tagName.toLowerCase(),
       "a",
       "Error message contains a link"
     );
@@ -499,7 +499,7 @@ add_task(async function checkViewSource() {
       "Correct error message found"
     );
     is(
-      doc.getElementById("errorCode").tagName,
+      doc.getElementById("errorCode").tagName.toLowerCase(),
       "a",
       "Error message contains a link"
     );

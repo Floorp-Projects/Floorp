@@ -4,14 +4,22 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <html data-l10n-sync="true">
   <head>
-    <meta http-equiv="Content-Security-Policy" content="default-src chrome:; object-src 'none'">
-    <meta name="color-scheme" content="light dark">
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src chrome:; object-src 'none'"
+    />
+    <meta name="color-scheme" content="light dark" />
     <title data-l10n-id="neterror-page-title"></title>
-    <link rel="stylesheet" href="chrome://global/skin/aboutNetError.css" type="text/css" media="all">
-    <link rel="icon" id="favicon">
-    <link rel="localization" href="branding/brand.ftl">
-    <link rel="localization" href="toolkit/neterror/certError.ftl">
-    <link rel="localization" href="toolkit/neterror/netError.ftl">
+    <link
+      rel="stylesheet"
+      href="chrome://global/skin/aboutNetError.css"
+      type="text/css"
+      media="all"
+    />
+    <link rel="icon" id="favicon" />
+    <link rel="localization" href="branding/brand.ftl" />
+    <link rel="localization" href="toolkit/neterror/certError.ftl" />
+    <link rel="localization" href="toolkit/neterror/netError.ftl" />
   </head>
   <body>
     <div class="container">
@@ -26,7 +34,10 @@
         <p id="errorShortDesc2"></p>
 
         <div id="errorWhatToDo" hidden="">
-          <p id="errorWhatToDoTitle" data-l10n-id="certerror-what-can-you-do-about-it-title"></p>
+          <p
+            id="errorWhatToDoTitle"
+            data-l10n-id="certerror-what-can-you-do-about-it-title"
+          ></p>
           <p id="badStsCertExplanation" hidden=""></p>
           <p id="errorWhatToDoText"></p>
         </div>
@@ -39,10 +50,15 @@
           <div class="trr-message-container">
             <span id="trrOnlyDescription"></span>
             <p id="trrLearnMoreContainer" hidden="">
-              <a id="trrOnlylearnMoreLink" target="_blank" rel="noopener noreferrer" data-l10n-id="neterror-learn-more-link"></a>
+              <a
+                id="trrOnlylearnMoreLink"
+                target="_blank"
+                rel="noopener noreferrer"
+                data-l10n-id="neterror-learn-more-link"
+              ></a>
             </p>
           </div>
-          <p data-l10n-id="neterror-dns-not-found-trr-third-party-warning2"> </p>
+          <p data-l10n-id="neterror-dns-not-found-trr-third-party-warning2"></p>
         </div>
 
         <div id="nativeFallbackContainer" hidden="">
@@ -50,72 +66,185 @@
           <div class="trr-message-container">
             <span id="nativeFallbackDescription"></span>
             <p id="nativeFallbackLearnMoreContainer" hidden="">
-              <a id="nativeFallbackLearnMoreLink" target="_blank" rel="noopener noreferrer" data-l10n-id="neterror-learn-more-link"></a>
+              <a
+                id="nativeFallbackLearnMoreLink"
+                target="_blank"
+                rel="noopener noreferrer"
+                data-l10n-id="neterror-learn-more-link"
+              ></a>
             </p>
           </div>
-          <p data-l10n-id="neterror-dns-not-found-trr-third-party-warning2"> </p>
+          <p data-l10n-id="neterror-dns-not-found-trr-third-party-warning2"></p>
         </div>
 
         <p id="tlsVersionNotice" hidden=""></p>
 
         <p id="learnMoreContainer" hidden="">
-          <a id="learnMoreLink" target="_blank" rel="noopener noreferrer" data-telemetry-id="learn_more_link" data-l10n-id="neterror-learn-more-link"></a>
+          <a
+            id="learnMoreLink"
+            target="_blank"
+            rel="noopener noreferrer"
+            data-telemetry-id="learn_more_link"
+            data-l10n-id="neterror-learn-more-link"
+          ></a>
         </p>
 
         <div id="openInNewWindowContainer" class="button-container" hidden="">
-          <p><a id="openInNewWindowButton" target="_blank" rel="noopener noreferrer">
-          <button class="primary" data-l10n-id="open-in-new-window-for-csp-or-xfo-error"></button></a></p>
+          <p>
+            <a
+              id="openInNewWindowButton"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <button
+                class="primary"
+                data-l10n-id="open-in-new-window-for-csp-or-xfo-error"
+              ></button
+            ></a>
+          </p>
         </div>
 
         <!-- UI for option to report certificate errors to Mozilla. Removed on
              init for other error types .-->
         <div id="prefChangeContainer" class="button-container" hidden="">
           <p data-l10n-id="neterror-pref-reset"></p>
-          <button id="prefResetButton" class="primary" data-l10n-id="neterror-pref-reset-button"></button>
+          <button
+            id="prefResetButton"
+            class="primary"
+            data-l10n-id="neterror-pref-reset-button"
+          ></button>
         </div>
 
-        <div id="certErrorAndCaptivePortalButtonContainer" class="button-container" hidden="">
-          <button id="returnButton" class="primary" data-telemetry-id="return_button_top" data-l10n-id="neterror-return-to-previous-page-recommended-button"></button>
-          <button id="openPortalLoginPageButton" class="primary" data-l10n-id="neterror-open-portal-login-page-button" hidden=""></button>
-          <button id="certErrorTryAgainButton" class="primary try-again" data-l10n-id="neterror-try-again-button" hidden=""></button>
-          <button id="advancedButton" data-telemetry-id="advanced_button" data-l10n-id="neterror-advanced-button"></button>
+        <div
+          id="certErrorAndCaptivePortalButtonContainer"
+          class="button-container"
+          hidden=""
+        >
+          <button
+            id="returnButton"
+            class="primary"
+            data-telemetry-id="return_button_top"
+            data-l10n-id="neterror-return-to-previous-page-recommended-button"
+          ></button>
+          <button
+            id="openPortalLoginPageButton"
+            class="primary"
+            data-l10n-id="neterror-open-portal-login-page-button"
+            hidden=""
+          ></button>
+          <button
+            id="certErrorTryAgainButton"
+            class="primary try-again"
+            data-l10n-id="neterror-try-again-button"
+            hidden=""
+          ></button>
+          <button
+            id="advancedButton"
+            data-telemetry-id="advanced_button"
+            data-l10n-id="neterror-advanced-button"
+          ></button>
         </div>
       </div>
 
       <div id="netErrorButtonContainer" class="button-container" hidden="">
-        <button id="neterrorTryAgainButton" class="primary try-again" data-l10n-id="neterror-try-again-button" data-telemetry-id="try_again_button"></button>
-        <button id="trrExceptionButton" data-l10n-id="neterror-add-exception-button" data-telemetry-id="add_exception_button" hidden=""></button>
-        <button id="trrSettingsButton" data-l10n-id="neterror-settings-button" data-telemetry-id="settings_button" hidden=""></button>
-        <button id="nativeFallbackContinueThisTimeButton" data-l10n-id="neterror-trr-continue-this-time" data-telemetry-id="continue_button" hidden=""></button>
-        <button id="nativeFallbackIgnoreButton" data-l10n-id="neterror-disable-native-feedback-warning" data-telemetry-id="disable_warning" hidden=""></button>
+        <button
+          id="neterrorTryAgainButton"
+          class="primary try-again"
+          data-l10n-id="neterror-try-again-button"
+          data-telemetry-id="try_again_button"
+        ></button>
+        <button
+          id="trrExceptionButton"
+          data-l10n-id="neterror-add-exception-button"
+          data-telemetry-id="add_exception_button"
+          hidden=""
+        ></button>
+        <button
+          id="trrSettingsButton"
+          data-l10n-id="neterror-settings-button"
+          data-telemetry-id="settings_button"
+          hidden=""
+        ></button>
+        <button
+          id="nativeFallbackContinueThisTimeButton"
+          data-l10n-id="neterror-trr-continue-this-time"
+          data-telemetry-id="continue_button"
+          hidden=""
+        ></button>
+        <button
+          id="nativeFallbackIgnoreButton"
+          data-l10n-id="neterror-disable-native-feedback-warning"
+          data-telemetry-id="disable_warning"
+          hidden=""
+        ></button>
       </div>
 
       <div class="advanced-panel-container">
         <div id="badCertAdvancedPanel" class="advanced-panel" hidden="">
           <p id="badCertTechnicalInfo"></p>
-          <a id="viewCertificate" href="javascript:void(0)" data-l10n-id="neterror-view-certificate-link"></a>
+          <a
+            id="viewCertificate"
+            href="javascript:void(0)"
+            data-l10n-id="neterror-view-certificate-link"
+          ></a>
           <div id="advancedPanelButtonContainer" class="button-container">
-            <button id="advancedPanelReturnButton" class="primary" data-telemetry-id="return_button_adv" data-l10n-id="neterror-return-to-previous-page-recommended-button"></button>
-            <button id="advancedPanelTryAgainButton" class="primary try-again" data-l10n-id="neterror-try-again-button" hidden=""></button>
-            <button id="exceptionDialogButton" data-telemetry-id="exception_button" data-l10n-id="neterror-override-exception-button"></button>
+            <button
+              id="advancedPanelReturnButton"
+              class="primary"
+              data-telemetry-id="return_button_adv"
+              data-l10n-id="neterror-return-to-previous-page-recommended-button"
+            ></button>
+            <button
+              id="advancedPanelTryAgainButton"
+              class="primary try-again"
+              data-l10n-id="neterror-try-again-button"
+              hidden=""
+            ></button>
+            <button
+              id="exceptionDialogButton"
+              data-telemetry-id="exception_button"
+              data-l10n-id="neterror-override-exception-button"
+            ></button>
           </div>
         </div>
 
         <div id="blockingErrorReporting" class="advanced-panel" hidden="">
           <p class="toggle-container-with-text">
-            <input type="checkbox" id="automaticallyReportBlockingInFuture" role="checkbox">
-            <label for="automaticallyReportBlockingInFuture" data-l10n-id="neterror-error-reporting-automatic"></label>
+            <input
+              type="checkbox"
+              id="automaticallyReportBlockingInFuture"
+              role="checkbox"
+            />
+            <label
+              for="automaticallyReportBlockingInFuture"
+              data-l10n-id="neterror-error-reporting-automatic"
+            ></label>
           </p>
         </div>
 
-        <div id="certificateErrorDebugInformation" class="advanced-panel" hidden="">
-          <button id="copyToClipboardTop" data-telemetry-id="clipboard_button_top" data-l10n-id="neterror-copy-to-clipboard-button"></button>
+        <div
+          id="certificateErrorDebugInformation"
+          class="advanced-panel"
+          hidden=""
+        >
+          <button
+            id="copyToClipboardTop"
+            data-telemetry-id="clipboard_button_top"
+            data-l10n-id="neterror-copy-to-clipboard-button"
+          ></button>
           <div id="certificateErrorText"></div>
-          <button id="copyToClipboardBottom" data-telemetry-id="clipboard_button_bot" data-l10n-id="neterror-copy-to-clipboard-button"></button>
+          <button
+            id="copyToClipboardBottom"
+            data-telemetry-id="clipboard_button_bot"
+            data-l10n-id="neterror-copy-to-clipboard-button"
+          ></button>
         </div>
       </div>
     </div>
     <script src="chrome://global/content/neterror/aboutNetErrorCodes.js"></script>
-    <script type="module" src="chrome://global/content/aboutNetError.mjs"></script>
+    <script
+      type="module"
+      src="chrome://global/content/aboutNetError.mjs"
+    ></script>
   </body>
 </html>
