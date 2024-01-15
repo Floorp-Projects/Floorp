@@ -27,8 +27,7 @@
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
-XPCOMUtils.defineLazyPreferenceGetter(lazy, "supportPseudo",
-                                      "media.webvtt.pseudo.enabled", false);
+
 XPCOMUtils.defineLazyPreferenceGetter(lazy, "DEBUG_LOG",
                                       "media.webvtt.debug.logging", false);
 
@@ -325,7 +324,6 @@ var NEEDS_PARENT = {
 
 const PARSE_CONTENT_MODE = {
   NORMAL_CUE: "normal_cue",
-  PSUEDO_CUE: "pseudo_cue",
   DOCUMENT_FRAGMENT: "document_fragment",
   REGION_CUE: "region_cue",
 }
@@ -411,10 +409,9 @@ function parseContent(window, input, mode) {
 
   let root;
   switch (mode) {
-    case PARSE_CONTENT_MODE.PSUEDO_CUE:
+    case PARSE_CONTENT_MODE.NORMAL_CUE:
       root = window.document.createElement("span", {pseudo: "::cue"});
       break;
-    case PARSE_CONTENT_MODE.NORMAL_CUE:
     case PARSE_CONTENT_MODE.REGION_CUE:
       root = window.document.createElement("span");
       break;
@@ -523,8 +520,7 @@ class CueStyleBox extends StyleBoxBase {
     super();
     this.cue = cue;
     this.div = window.document.createElement("div");
-    this.cueDiv = parseContent(window, cue.text, lazy.supportPseudo ?
-      PARSE_CONTENT_MODE.PSUEDO_CUE : PARSE_CONTENT_MODE.NORMAL_CUE);
+    this.cueDiv = parseContent(window, cue.text, PARSE_CONTENT_MODE.NORMAL_CUE);
     this.div.appendChild(this.cueDiv);
 
     this.containerHeight = containerBox.height;
@@ -534,11 +530,7 @@ class CueStyleBox extends StyleBoxBase {
 
     // As pseudo element won't inherit the parent div's style, so we have to
     // set the font size explicitly.
-    if (lazy.supportPseudo) {
-      this._applyDefaultStylesOnPseudoBackgroundNode();
-    } else {
-      this._applyDefaultStylesOnNonPseudoBackgroundNode();
-    }
+    this._applyDefaultStylesOnBackgroundNode();
     this._applyDefaultStylesOnRootNode();
   }
 
@@ -594,24 +586,13 @@ class CueStyleBox extends StyleBoxBase {
     return containerBox.height * 0.05 + "px";
   }
 
-  _applyDefaultStylesOnPseudoBackgroundNode() {
+  _applyDefaultStylesOnBackgroundNode() {
     // most of the properties have been defined in `::cue` in `html.css`, but
     // there are some css properties we have to set them dynamically.
     // FIXME(emilio): These are observable by content. Ideally the style
     // attribute will work like for ::part() and we wouldn't need this.
     this.cueDiv.style.setProperty("--cue-font-size", this.fontSize, "important");
     this.cueDiv.style.setProperty("--cue-writing-mode", this._getCueWritingMode(), "important");
-  }
-
-  _applyDefaultStylesOnNonPseudoBackgroundNode() {
-    // If cue div is not a pseudo element, we should set the default css style
-    // for it, the reason we need to set these attributes to cueDiv is because
-    // if we set background on the root node directly, if would cause filling
-    // too large area for the background color as the size of root node won't
-    // be adjusted by cue size.
-    this.applyStyles({
-      "background-color": "rgba(0, 0, 0, 0.8)",
-    }, this.cueDiv);
   }
 
   // spec https://www.w3.org/TR/webvtt1/#applying-css-properties
