@@ -145,7 +145,7 @@ class WebTaskScheduler : public nsWrapperCache, public SupportsWeakPtr {
 
   WebTask* GetNextTask() const;
 
-  void Disconnect();
+  virtual void Disconnect();
 
   void RunTaskSignalPriorityChange(TaskSignal* aTaskSignal);
 
