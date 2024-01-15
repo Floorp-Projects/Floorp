@@ -85,12 +85,15 @@ def configure_gradlew(config, job, taskdesc):
             "GRADLE_USER_HOME": path.join(
                 topsrc_dir, "mobile/android/gradle/dotgradle-online"
             ),
-            "MOZCONFIG": path.join(
-                topsrc_dir,
-                "mobile/android/config/mozconfigs/android-arm/nightly-android-lints",
-            ),
             "MOZ_BUILD_DATE": config.params["moz_build_date"],
         }
+    )
+    worker["env"].setdefault(
+        "MOZCONFIG",
+        path.join(
+            topsrc_dir,
+            "mobile/android/config/mozconfigs/android-arm/nightly-android-lints",
+        ),
     )
 
     run["command"] = _extract_gradlew_command(run, fetches_dir)
