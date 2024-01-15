@@ -123,11 +123,11 @@ def _collect(pipe, poll_interval):
     try:
         # Establish initial values.
 
-        last_time = time.monotonic()
         io_last = get_disk_io_counters()
-        cpu_last = psutil.cpu_times(True)
         swap_last = psutil.swap_memory()
         psutil.cpu_percent(None, True)
+        cpu_last = psutil.cpu_times(True)
+        last_time = time.monotonic()
 
         sin_index = swap_last._fields.index("sin")
         sout_index = swap_last._fields.index("sout")
@@ -136,10 +136,14 @@ def _collect(pipe, poll_interval):
 
         while not _poll(pipe, poll_interval=sleep_interval):
             io = get_disk_io_counters()
-            cpu_times = psutil.cpu_times(True)
-            cpu_percent = psutil.cpu_percent(None, True)
             virt_mem = psutil.virtual_memory()
             swap_mem = psutil.swap_memory()
+            cpu_percent = psutil.cpu_percent(None, True)
+            cpu_times = psutil.cpu_times(True)
+            # Take the timestamp as soon as possible after getting cpu_times
+            # to reduce the likelihood of our process being interrupted between
+            # the two instructions. Having a delayed timestamp would cause the
+            # next sample to report more than 100% CPU time.
             measured_end_time = time.monotonic()
 
             # TODO Does this wrap? At 32 bits? At 64 bits?
