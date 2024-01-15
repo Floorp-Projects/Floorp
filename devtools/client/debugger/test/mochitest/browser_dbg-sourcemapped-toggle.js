@@ -71,8 +71,3 @@ function getOriginalScope(dbg) {
     dbg.selectors.getCurrentThread()
   );
 }
-
-function findFooterNotificationMessage(dbg) {
-  return dbg.win.document.querySelector(".editor-notification-footer")
-    ?.innerText;
-}
