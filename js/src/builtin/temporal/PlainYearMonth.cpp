@@ -524,9 +524,9 @@ static bool DifferenceTemporalPlainYearMonth(JSContext* cx,
     // Step 19.c.
     auto toBalance = Duration{roundResult.years, roundResult.months};
     DateDuration balanceResult;
-    if (!temporal::BalanceDateDurationRelative(cx, toBalance,
-                                               settings.largestUnit, thisDate,
-                                               calendarRec, &balanceResult)) {
+    if (!temporal::BalanceDateDurationRelative(
+            cx, toBalance, settings.largestUnit, settings.smallestUnit,
+            thisDate, calendarRec, &balanceResult)) {
       return false;
     }
     duration = balanceResult.toDuration();

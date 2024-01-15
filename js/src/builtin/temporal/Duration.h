@@ -141,10 +141,11 @@ bool BalanceTimeDuration(JSContext* cx, const InstantSpan& nanoseconds,
 
 /**
  * BalanceDateDurationRelative ( years, months, weeks, days, largestUnit,
- * plainRelativeTo, calendarRec )
+ * smallestUnit, plainRelativeTo, calendarRec )
  */
 bool BalanceDateDurationRelative(
     JSContext* cx, const Duration& duration, TemporalUnit largestUnit,
+    TemporalUnit smallestUnit,
     JS::Handle<Wrapped<PlainDateObject*>> plainRelativeTo,
     JS::Handle<CalendarRecord> calendar, DateDuration* result);
 

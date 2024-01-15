@@ -1526,8 +1526,8 @@ static bool DifferenceTemporalZonedDateTime(JSContext* cx,
   // Step 21.
   DateDuration balanceResult;
   if (!temporal::BalanceDateDurationRelative(
-          cx, adjustResult.date(), settings.largestUnit, plainRelativeTo,
-          calendar, &balanceResult)) {
+          cx, adjustResult.date(), settings.largestUnit, settings.smallestUnit,
+          plainRelativeTo, calendar, &balanceResult)) {
     return false;
   }
 
