@@ -22,7 +22,6 @@
 #include <sys/stat.h>
 #include <errno.h>
 #include "ElfLoader.h"
-#include "XZStream.h"
 #include "Logging.h"
 
 using mozilla::MakeUnique;
@@ -190,33 +189,6 @@ Mappable* MappableExtractFile::Create(const char* name, Zip* zip,
     if (zStream.total_out != stream->GetUncompressedSize()) {
       ERROR("File not fully uncompressed! %ld / %d", zStream.total_out,
             static_cast<unsigned int>(stream->GetUncompressedSize()));
-      return nullptr;
-    }
-  } else if (XZStream::IsXZ(stream->GetBuffer(), stream->GetSize())) {
-    XZStream xzStream(stream->GetBuffer(), stream->GetSize());
-
-    if (!xzStream.Init()) {
-      ERROR("Couldn't initialize XZ decoder");
-      return nullptr;
-    }
-    DEBUG_LOG("XZStream created, compressed=%" PRIuPTR
-              ", uncompressed=%" PRIuPTR,
-              xzStream.Size(), xzStream.UncompressedSize());
-
-    if (ftruncate(fd, xzStream.UncompressedSize()) == -1) {
-      ERROR("Couldn't ftruncate %s to decompress library", file.get());
-      return nullptr;
-    }
-    MappedPtr buffer(MemoryRange::mmap(nullptr, xzStream.UncompressedSize(),
-                                       PROT_WRITE, MAP_SHARED, fd, 0));
-    if (buffer == MAP_FAILED) {
-      ERROR("Couldn't map %s to decompress library", file.get());
-      return nullptr;
-    }
-    const size_t written = xzStream.Decode(buffer, buffer.GetLength());
-    DEBUG_LOG("XZStream decoded %" PRIuPTR, written);
-    if (written != buffer.GetLength()) {
-      ERROR("Error decoding XZ file %s", file.get());
       return nullptr;
     }
   } else {
