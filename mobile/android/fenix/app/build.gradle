@@ -636,12 +636,14 @@ dependencies {
     implementation FenixDependencies.androidx_navigation_ui
     implementation ComponentsDependencies.androidx_compose_navigation
     implementation ComponentsDependencies.androidx_recyclerview
+
     implementation ComponentsDependencies.androidx_lifecycle_common
     implementation ComponentsDependencies.androidx_lifecycle_livedata
     implementation ComponentsDependencies.androidx_lifecycle_process
     implementation ComponentsDependencies.androidx_lifecycle_runtime
-
     implementation ComponentsDependencies.androidx_lifecycle_viewmodel
+    implementation ComponentsDependencies.androidx_lifecycle_service
+
     implementation ComponentsDependencies.androidx_core
     implementation ComponentsDependencies.androidx_core_ktx
     implementation FenixDependencies.androidx_core_splashscreen
