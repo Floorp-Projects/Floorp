@@ -1519,6 +1519,10 @@
     <string name="etp_settings">قوغداش تەڭشەكلىرى</string>
     <!-- Preference title for enhanced tracking protection settings -->
     <string name="preference_enhanced_tracking_protection">كۈچەيتىلگەن ئىزلاشتىن قوغداش</string>
+    <!-- Preference summary for enhanced tracking protection settings on/off switch -->
+    <string name="preference_enhanced_tracking_protection_summary">ھازىر ئومۇمىيەت ساقلانما قوغداش ئىقتىدارى بار، تور بېكەت ھالقىغان ئىز قوغلىغۇچىلارغا قارشى ئەڭ كۈچلۈك توساق.</string>
+    <!-- Description of enhanced tracking protection. The parameter is the name of the application (For example: Firefox Fenix) -->
+    <string name="preference_enhanced_tracking_protection_explanation_2">%s سىزنى توردىكى ئىشلىرىڭىزغا ئەگىشىدىغان كۆپ ئۇچرايدىغان ئىزچىلاردىن قوغدايدۇ.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">تەپسىلاتى</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
@@ -1529,6 +1533,8 @@
     <string name="preference_enhanced_tracking_protection_standard_info_button">ئۆلچەملىك ئىز قوغلاشتىن قوغداشتا نېمىلەر توسۇلىدۇ</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">قاتتىق</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_description_4">ئىزلاشتىن قوغداش تېخىمۇ كۈچلۈك ۋە ئىقتىدارى تېخىمۇ تېز، ئەمما بەزى تور بېكەتلەر نورمال ئىشلىمەسلىكى مۇمكىن.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">ئىز قوغلاشتىن قاتتىق قوغداشتا نېمىلەر توسۇلىدۇ</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1576,14 +1582,22 @@
     <string name="etp_cookies_title">بېكەت ھالقىغان ئىزلاش cookie</string>
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_title_2">بېكەت ھالقىغان cookies</string>
+    <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_description">تور تەھلىل شىركەتلىرى ۋە ئېلان تورلىرى تور بېكەت ھالقىپ تور كۆرگۈ سانلىق مەلۇماتلىرىنى توپلايدىغان ساقلانمىلارنى توسىدۇ.</string>
+    <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_description_2">ئومۇمىيەت ساقلانما قوغداش ئىقتىدارى ھەر بىر تور بېكەتنىڭ ساقلانمىسىنى ئايرىۋېتىپ، ئېلان تورلىرىنىڭ تور بېكەت ھالقىپ بۇ خىل ئىزلىغۇچلارنى ئىشلىتىپ ئەگىشىشىنى چەكلەيدۇ.</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_title">شىفىرلىق پۇل قازغۇچ</string>
     <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_description">يامان غەرەزلىك قوليازمىلارنىڭ ئۈسكۈنىڭىزدە رەقەملىك پۇل قېزىشىنى توسىدۇ.</string>
     <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_fingerprinters_title">بارماق ئىزى ئىزلىغۇچ</string>
+    <!-- Description of fingerprinters that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_fingerprinters_description">ئىز قوغلاش مەقسىتىدە ئىشلىتىلىدىغان ئۈسكۈنىڭىزگە ئائىت بىردىنبىر پەرقلىنىدىغان سانلىق مەلۇماتلارنى توپلاشنى توختىتىدۇ.</string>
     <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_title">ئىز قوغلاش مەزمۇنى</string>
+    <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_tracking_content_description">ئىز قوغلاش كودى بار ئېلان، سىن ۋە باشقا مەزمۇنلارنى يۈكلەشتىن توختىتىدۇ. بەزى تور بېكەتلەرنىڭ ئىقتىدارىغا تەسىر كۆرسىتىشى مۇمكىن.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">قوغداش بۇ بېكەتكە ئوچۇق</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
@@ -1600,8 +1614,17 @@
     <string name="open_source_licenses_title">%s | ئوچۇق كودلۇق يۇمشاق دېتال ئامبارلىرى</string>
     <!-- Category of trackers (redirect trackers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_redirect_trackers_title">قايتا نىشانلايدىغان ئىز قوغلىغۇچ</string>
+    <!-- Description of redirect tracker cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_redirect_trackers_description">مەلۇملۇق ئىزلىغۇچى تور بېكەتلەرنىڭ قايتا نىشانلاش تەڭشىكى بار ساقلانمىلارنى تازىلايدۇ.</string>
+    <!-- Description of the SmartBlock Enhanced Tracking Protection feature. The * symbol is intentionally hardcoded here,
+         as we use it on the UI to indicate which trackers have been partially unblocked.  -->
+    <string name="preference_etp_smartblock_description">بۇ بەتتىكى تۆۋەندە بەلگە قويۇلغان بەزى ئىزچىلار قىسمەن قۇلۇپلانمىدى، چۈنكى سىز ئۇلار بىلەن تەسىرلەشتىڭىز*.</string>
     <!-- Text displayed that links to website about enhanced tracking protection SmartBlock -->
     <string name="preference_etp_smartblock_learn_more">تەپسىلاتى</string>
+
+    <!-- Content description (not visible, for screen readers etc.):
+    Enhanced tracking protection exception preference icon for ETP settings. -->
+    <string name="preference_etp_exceptions_icon_description">كۈچەيتىلگەن ئىز قوغلاشتىن قوغداش مۇستەسنا مايىللىق سىنبەلگىسى</string>
 
     <!-- About page link text to open support link -->
     <string name="about_support">قوللاش</string>
@@ -1644,6 +1667,9 @@
     <string name="add_to_homescreen_continue">توربېكەتنى داۋاملاشتۇر</string>
     <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
     <string name="add_to_homescreen_text_placeholder">تېزلەتمە ئىسمى</string>
+
+    <!-- Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description_2">تېز سۈرئەتتە زىيارەت قىلىش ۋە ئەپكە ئوخشاش زىيارەت تۇيغۇسىغا ئېرىشىش ئۈچۈن، مەزكۇر تور بېكەتنى باش ئېكرانغا ئاسانلا قوشالايسىز.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">كىرىش ۋە ئىم</string>
@@ -1715,6 +1741,8 @@
     <string name="logins_biometric_prompt_message">ساقلانغان كىرىشلىرىڭىزنى كۆرۈش ئۈچۈن قۇلۇپ ئېچىڭ</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_title">كىرىش ۋە ئىمنى قوغدايدۇ</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_message">ئۈسكۈنە قۇلۇپلاش ئەندىزىسى، PIN ياكى ئىم ئورنىتىشنى تەڭشىسىڭىز، ئۈسكۈنىڭىز باشقىلارنىڭ قولىدا بولسىمۇ ساقلانغان تىزىمغا كىرىش ئۇچۇرى ۋە ئىمنى زىيارەت قىلالمايدۇ.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">كېيىنچە</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -2215,6 +2243,12 @@
 
     <!-- Headline for review quality check contextual onboarding card. -->
     <string name="review_quality_check_contextual_onboarding_title">مەھسۇلات باھالىنىشغا قارىتا ئىشەنچلىك يېتەكچىمىزنى سىناپ بېقىڭ</string>
+    <!-- Description for review quality check contextual onboarding card. The first and last two parameters are for retailer names (e.g. Amazon, Walmart). The second parameter is for the name of the application (e.g. Firefox). -->
+    <string name="review_quality_check_contextual_onboarding_description">سېتىۋېلىشتىن ئىلگىرى %1$s دا مەھسۇلات باھالاش تەكشۈرۈشنىڭ قانچىلىك ئىشەنچلىك ئىكەنلىكىنى كۆرۈڭ. باھالاش تەكشۈرگۈچ، %2$s نىڭ تەجرىبە ئىقتىدارى تور كۆرگۈچكە قۇرۇلدى. ئۇ %3$s ۋە %4$s دىمۇ ئىشلەيدۇ.</string>
+    <!-- Description for review quality check contextual onboarding card. The first parameters is for retailer name (e.g. Amazon). The second parameter is for the name of the application (e.g. Firefox). -->
+    <string name="review_quality_check_contextual_onboarding_description_one_vendor">سېتىۋېلىشتىن ئىلگىرى %1$s دا مەھسۇلات باھالاش تەكشۈرۈشنىڭ قانچىلىك ئىشەنچلىك ئىكەنلىكىنى كۆرۈڭ. باھالاش تەكشۈرگۈچ، %2$s نىڭ تەجرىبە ئىقتىدارى تور كۆرگۈچكە قۇرۇلدى.</string>
+    <!-- Paragraph presenting review quality check feature. First parameter is the Fakespot product name. Second parameter is for clickable text defined in review_quality_check_contextual_onboarding_learn_more_link. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
+    <string name="review_quality_check_contextual_onboarding_learn_more">Mozilla قوللايدىغان %1$s بىر تەرەپلىمە ۋە ئىناۋەتسىز باھالاشلاردىن ساقلىنىشىڭىزغا ياردەم بېرىدۇ. بىزنىڭ سۈنئىي ئەقىل مودېلىمىز مال سېتىۋېلىشىڭىزنى قوغداش ئۈچۈن ھەمىشە ياخشىلىنىۋاتىدۇ. %2$s</string>
     <!-- Clickable text from the contextual onboarding card that links to review quality check support article. -->
     <string name="review_quality_check_contextual_onboarding_learn_more_link">تەپسىلاتى</string>
     <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is the Fakespot product name. Following parameters are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy and review_quality_check_contextual_onboarding_terms_use. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
@@ -2287,6 +2321,11 @@
     <!-- Content description for headings announced by accessibility service. The first parameter is the text of the heading. Talkback will announce the first parameter and then speak the word "Heading" indicating to the user that this text is a heading for a section. -->
     <string name="a11y_heading">%s، ماۋزۇ</string>
 
+    <!-- Title for dialog displayed when trying to access links present in a text. -->
+    <string name="a11y_links_title">ئۇلانما</string>
+    <!-- Additional content description for text bodies that contain urls. -->
+    <string name="a11y_links_available">ئۇلانما بار</string>
+
     <!-- Translations feature-->
 
     <!-- Translation request dialog -->
@@ -2304,13 +2343,26 @@
     <string name="translations_bottom_sheet_translate_to">نىشان تىل</string>
     <!-- Button text on the translations dialog to dismiss the dialog and return to the browser. -->
     <string name="translations_bottom_sheet_negative_button">ھازىر ئەمەس</string>
+    <!-- Button text on the translations dialog when a translation error appears, used to dismiss the dialog and return to the browser. -->
+    <string name="translations_bottom_sheet_negative_button_error">تامام</string>
     <!-- Button text on the translations dialog to begin a translation of the website. -->
     <string name="translations_bottom_sheet_positive_button">تەرجىمە</string>
+    <!-- Button text on the translations dialog when a translation error appears. -->
+    <string name="translations_bottom_sheet_positive_button_error">قايتا سىنا</string>
     <!-- Inactive button text on the translations dialog that indicates a translation is currently in progress. This button will be accompanied by a loading icon. -->
     <string name="translations_bottom_sheet_translating_in_progress">تەرجىمە قىلىۋاتىدۇ</string>
 
     <!-- Button content description (not visible, for screen readers etc.) for the translations dialog translate button that indicates a translation is currently in progress. -->
     <string name="translations_bottom_sheet_translating_in_progress_content_description">تەرجىمە قىلىنىۋاتىدۇ</string>
+
+    <!-- The title of the warning card informs the user that a translation could not be completed. -->
+    <string name="translation_error_could_not_translate_warning_text">تەرجىمە قىلىشتا مەسىلە كۆرۈلدى. قايتا سىناڭ.</string>
+    <!-- The title of the warning card informs the user that the list of languages cannot be loaded. -->
+    <string name="translation_error_could_not_load_languages_warning_text">تىلنى يۈكلىيەلمىدى. تور باغلىنىشىڭىزنى تەكشۈرۈپ قايتا سىناڭ.</string>
+    <!-- The title of the warning card informs the user that a language is not supported. The first parameter is the name of the language that is not supported. -->
+    <string name="translation_error_language_not_supported_warning_text">كەچۈرۈڭ، بىز تېخى %1$s نى قوللىمايمىز.</string>
+    <!-- Button text on the warning card when a language is not supported. The link will take the user to a page to a support page about translations. -->
+    <string name="translation_error_language_not_supported_learn_more">تەپسىلاتى</string>
 
     <!-- Translations options dialog -->
     <!-- Title of the translation options dialog that allows a user to set their translation options for the site the user is currently on. -->
@@ -2332,6 +2384,10 @@
     <!-- Translation settings dialog -->
     <!-- Title of the translation settings dialog that allows a user to set their preferred translation settings. -->
     <string name="translation_settings_toolbar_title">تەرجىمە</string>
+    <!-- Toggle switch label that indicates that the browser should signal or indicate when a translation is possible for any page. -->
+    <string name="translation_settings_offer_to_translate">مۇمكىن بولسا تەرجىمە قىلىش تەكلىپى سۇنىدۇ</string>
+    <!-- Toggle switch label that indicates that downloading files required for translating is permitted when using data saver mode in Android. -->
+    <string name="translation_settings_always_download">سانلىق مەلۇمات تېجەش ھالىتىدە ھەمىشە تىلنى چۈشۈرىدۇ</string>
     <!-- Section header text that begins the section of a list of different options the user may select to adjust their translation preferences. -->
     <string name="translation_settings_translation_preference">تەرجىمە مايىللىقى</string>
     <!-- Button text for the button that will take the user to the automatic translations settings dialog. On the automatic translations settings dialog, the user can set if translations should occur automatically for a given language. -->
@@ -2345,9 +2401,14 @@
     <!-- Title of the automatic translation preference screen that will appear on the toolbar.-->
     <string name="automatic_translation_toolbar_title_preference">ئاپتوماتىك تەرجىمە</string>
 
+    <!-- Screen header presenting the automatic translation preference feature. It will appear under the toolbar. -->
+    <string name="automatic_translation_header_preference">«ھەمىشە تەرجىمە قىل» ۋە «ھەرگىز تەرجىمە قىلما» مايىللىقىدىن باشقۇرىدىغان تىل تاللىنىدۇ.</string>
+
     <!-- Automatic translation options preference screen -->
     <!-- Preference option for offering to translate. Radio button title text.-->
     <string name="automatic_translation_option_offer_to_translate_title_preference">تەرجىمە قىلىش (كۆڭۈلدىكى)</string>
+    <!-- Preference option for offering to translate. Radio button summary text. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="automatic_translation_option_offer_to_translate_summary_preference">%1$s بۇ تىلدىكى تور بېكەتلەرنى تەرجىمە قىلىش تەكلىپى سۇنىدۇ.</string>
     <!-- Preference option for always translate. Radio button title text. -->
     <string name="automatic_translation_option_always_translate_title_preference">ھەمىشە تەرجىمە قىلسۇن</string>
     <!-- Preference option for always translate. Radio button summary text. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
@@ -2355,9 +2416,14 @@
     <!-- Preference option for never translate. Radio button title text.-->
     <string name="automatic_translation_option_never_translate_title_preference">ھەرگىز تەرجىمە قىلمىسۇن</string>
 
+    <!-- Preference option for never translate. Radio button summary text. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="automatic_translation_option_never_translate_summary_preference">%1$s بۇ تىلدىكى تور بېكەتلەرنى تەرجىمە قىلىش تەكلىپىنى ھەرگىز سۇنمايدۇ.</string>
+
     <!-- Never translate site preference screen -->
     <!-- Title of the never translate site preference screen that will appear on the toolbar.-->
     <string name="never_translate_site_toolbar_title_preference">بۇ تور بېكەتلەرنى تەرجىمە قىلمىسۇن</string>
+    <!-- Screen header presenting the never translate site preference feature. It will appear under the toolbar. -->
+    <string name="never_translate_site_header_preference">يېڭى تور بېكەت قوشۇش: تور بېكەتنى زىيارەت قىلىپ تەرجىمە تىزىملىكىدىن «بۇ تور بېكەتنى ھەرگىز تەرجىمە قىلما» تاللىنىدۇ.</string>
     <!-- Content description (not visible, for screen readers etc.): For a never-translated site list item that is selected.
              The first parameter is web site url (for example:"wikipedia.com") -->
     <string name="never_translate_site_item_list_content_description_preference">%1$s نى چىقىرىۋەت</string>
@@ -2372,6 +2438,8 @@
     <!-- Download languages preference screen -->
     <!-- Title of the download languages preference screen toolbar.-->
     <string name="download_languages_toolbar_title_preference">تىللارنى چۈشۈرۈش</string>
+    <!-- Screen header presenting the download language preference feature. It will appear under the toolbar.The first parameter is "Learn More," a clickable text with a link. Talkback will append this to say "Double tap to open link to learn more". -->
+    <string name="download_languages_header_preference">تېخىمۇ تېز ۋە تورسىز تەرجىمە قىلىش ئۈچۈن تىلنى تولۇق چۈشۈرۈڭ. %1$s</string>
     <!-- Clickable text from the screen header that links to a website. -->
     <string name="download_languages_header_learn_more_preference">تەپسىلاتى</string>
     <!-- The subhead of the download language preference screen will appear above the pivot language. -->
@@ -2399,15 +2467,28 @@
     The dialog will be presented when the user requests deletion of a language.
     The first parameter is the name of the language, for example, "Spanish" and the second parameter is the size in kilobytes or megabytes of the language file. -->
     <string name="delete_language_file_dialog_title"> %1$s (%2$s) نى ئۆچۈرەمدۇ؟</string>
+    <!-- Additional information for the dialog used by the translations feature to confirm deleting a language. The first parameter is the name of the application, for example, "Fenix". -->
+    <string name="delete_language_file_dialog_message">ئەگەر بۇ تىلنى ئۆچۈرسىڭىز، %1$s تەرجىمە قىلغاندا تىلنى قىسمەن ھالدا غەملەككە چۈشۈرىدۇ.</string>
     <!-- Title for the dialog used by the translations feature to confirm deleting all languages file.
     The dialog will be presented when the user requests deletion of all languages file.
     The first parameter is the size in kilobytes or megabytes of the language file. -->
     <string name="delete_language_all_languages_file_dialog_title">بارلىق تىللارنى ئۆچۈرەمدۇ (%1$s)؟</string>
+    <!-- Additional information for the dialog used by the translations feature to confirm deleting all languages file. The first parameter is the name of the application, for example, "Fenix". -->
+    <string name="delete_language_all_languages_file_dialog_message">ئەگەر ھەممە تىلنى ئۆچۈرسىڭىز، %1$s تەرجىمە قىلغاندا تىلنى قىسمەن ھالدا غەملەككە چۈشۈرىدۇ.</string>
     <!-- Button text on the dialog used by the translations feature to confirm deleting a language. -->
     <string name="delete_language_file_dialog_positive_button_text">ئۆچۈر</string>
     <!-- Button text on the dialog used by the translations feature to cancel deleting a language. -->
     <string name="delete_language_file_dialog_negative_button_text">ۋاز كەچ</string>
 
+    <!-- Title for the data saving mode warning dialog used by the translations feature.
+    This dialog will be presented when the user attempts to download a language or perform
+    a translation without the necessary language files downloaded first when Android's data saver mode is enabled and the user is not using WiFi.
+    The first parameter is the size in kilobytes or megabytes of the language file.-->
+    <string name="download_language_file_dialog_title">سانلىق مەلۇمات تېجەش ھالىتىدە چۈشۈرەمدۇ(%1$s)؟</string>
+    <!-- Additional information for the data saving mode warning dialog used by the translations feature. This text explains the reason a download is required for a translation. -->
+    <string name="download_language_file_dialog_message_all_languages">تەرجىمىنىڭ شەخسىيىتىنى قوغداش ئۈچۈن، تىل قىسمەن ھالدا غەملىكىڭىزگە چۈشۈرۈلىدۇ.</string>
+    <!-- Checkbox label text on the data saving mode warning dialog used by the translations feature. This checkbox allows users to ignore the data usage warnings. -->
+    <string name="download_language_file_dialog_checkbox_text">سانلىق مەلۇمات تېجەش ھالىتىدە ھەمىشە چۈشۈرىدۇ</string>
     <!-- Button text on the data saving mode warning dialog used by the translations feature to allow users to confirm they wish to continue and download the language file. -->
     <string name="download_language_file_dialog_positive_button_text">چۈشۈر</string>
     <!-- Button text on the data saving mode warning dialog used by the translations feature to allow users to confirm they wish to continue and download the language file and perform a translation. -->
@@ -2415,6 +2496,11 @@
     <!-- Button text on the data saving mode warning dialog used by the translations feature to allow users to cancel the action and not perform a download of the language file. -->
     <string name="download_language_file_dialog_negative_button_text">ۋاز كەچ</string>
 
+    <!-- Debug drawer -->
+    <!-- The user-facing title of the Debug Drawer feature. -->
+    <string name="debug_drawer_title">سازلاش قورالى</string>
+    <!-- Content description (not visible, for screen readers etc.): Navigate back within the debug drawer. -->
+    <string name="debug_drawer_back_button_content_description">كەينىگە قايت</string>
     <!-- The title of the Tab Tools feature in the Debug Drawer. -->
     <string name="debug_drawer_tab_tools_title">بەتكۈچ قوراللىرى</string>
     <!-- The title of the tab count section in Tab Tools. -->
@@ -2427,4 +2513,14 @@
     <string name="debug_drawer_tab_tools_tab_count_private">شەخسىيەت</string>
     <!-- The total tab count category in the tab count section in Tab Tools. -->
     <string name="debug_drawer_tab_tools_tab_count_total">جەمئىي</string>
-    </resources>
+    <!-- The title of the tab creation tool section in Tab Tools. -->
+    <string name="debug_drawer_tab_tools_tab_creation_tool_title">بەتكۈچ قۇرۇش قورالى</string>
+    <!-- The label of the text field in the tab creation tool. -->
+    <string name="debug_drawer_tab_tools_tab_creation_tool_text_field_label">قۇرىدىغان بەتكۈچ سانى</string>
+    <!-- The button text to add tabs to the active tab group in the tab creation tool. -->
+    <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_active">ئاكتىپ بەتكۈچكە قوش</string>
+    <!-- The button text to add tabs to the inactive tab group in the tab creation tool. -->
+    <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_inactive">ئاكتىپسىز بەتكۈچكە قوش</string>
+    <!-- The button text to add tabs to the private tab group in the tab creation tool. -->
+    <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_private">شەخسىي بەتكۈچكە قوش</string>
+</resources>

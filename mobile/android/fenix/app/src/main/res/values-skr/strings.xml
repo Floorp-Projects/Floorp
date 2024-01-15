@@ -301,13 +301,6 @@
     <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
     <string name="onboarding_home_enable_notifications_negative_button">ہݨ کائناں</string>
 
-    <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
-    <!-- Title for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
-        Note: The word "Firefox" should NOT be translated -->
-    <string name="juno_onboarding_default_browser_title_nimbus" moz:removedIn="120" tools:ignore="UnusedResources">فائرفوکس کوں آپݨاں ون٘ڄݨ آلا براؤزر بݨاؤ</string>
-    <!-- Description for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
-        Note: The word "Firefox" should NOT be translated -->
-    <string name="juno_onboarding_default_browser_description_nimbus" moz:removedIn="120" tools:ignore="UnusedResources">فائرفوکس لوکاں کوں منافع  کنوں ودھ رکھیندا ہے تے  کراس سائٹ ٹریکراں کوں بلاک کر تے تہاݙی رازداری دا دفاع کریند ہے۔\n\nساݙے رازداری نوٹس وچ ٻیا ڄاݨو۔</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
     <string name="juno_onboarding_default_browser_description_link_text" tools:ignore="UnusedResources">رازداری نوٹس</string>
@@ -315,20 +308,10 @@
     <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">پہلوں مقرر براؤز تے طور تے سیٹ کرو</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
     <string name="juno_onboarding_default_browser_negative_button" tools:ignore="UnusedResources">ہݨ کائناں</string>
-    <!-- Title for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_title" moz:removedIn="120" tools:ignore="UnusedResources">فون سیٹ کنوں لیپ ٹاپ تے ہاپ کرو تے ولدا واپس وی</string>
-    <!-- Description for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_description" moz:removedIn="120" tools:ignore="UnusedResources">تساں آپݨیاں ٻیاں ݙیوائساں نال ٹیباں تے پاس ورڈ گھنو، جتھوں تساں چھوڑیا ہائی۔</string>
     <!-- Text for the button to sign in to sync on the device -->
     <string name="juno_onboarding_sign_in_positive_button" tools:ignore="UnusedResources">سائن ان</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
     <string name="juno_onboarding_sign_in_negative_button" tools:ignore="UnusedResources">ہݨ کائناں</string>
-    <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
-        Note: The word "Firefox" should NOT be translated -->
-    <string name="juno_onboarding_enable_notifications_title_nimbus" moz:removedIn="120" tools:ignore="UnusedResources">اطلاع نامے فائرفوکس نال ودھیک کرݨ وچ تہاݙی مدد کریندن۔</string>
-    <!-- Description for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
-       Note: The word "Firefox" should NOT be translated -->
-    <string name="juno_onboarding_enable_notifications_description_nimbus" moz:removedIn="120" tools:ignore="UnusedResources">ڈیوائساں دے درمیان ٹیباں بھیڄو، ڈاؤن لوڈ منیج کرو، تے فائرفوکس کنوں ودھ کنوں ودھ فائدہ چاوݨ کیتے گُر گھنو۔</string>
     <!-- Text for the button to request notification permission on the device -->
     <string name="juno_onboarding_enable_notifications_positive_button" tools:ignore="UnusedResources">اطلاع نامے چالو کرو</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
@@ -360,16 +343,12 @@
     <string name="preferences_category_about">تعارف</string>
     <!-- Preference category for settings related to changing the default search engine -->
     <string name="preferences_category_select_default_search_engine">ہک چݨو</string>
-    <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
-    <string name="preferences_manage_search_shortcuts" moz:removedIn="120" tools:ignore="UnusedResources">ڳولݨ شارٹ کٹ منیج کرو</string>
     <!-- Preference for settings related to changing the default search engine -->
     <string name="preferences_default_search_engine">طےشدہ  ڳولݨ انجݨ</string>
     <!-- Preference for settings related to Search -->
     <string name="preferences_search">ڳولو</string>
     <!-- Preference for settings related to Search engines -->
     <string name="preferences_search_engines">ڳولݨ انجݨ</string>
-    <!-- Preference for settings related to Search address bar -->
-    <string name="preferences_search_address_bar" moz:removedIn="120" tools:ignore="UnusedResources">پتہ پٹی</string>
     <!-- Preference link to rating Fenix on the Play Store -->
     <string name="preferences_rate">گوگل پلے تے ریٹ</string>
     <!-- Preference linking to about page for Fenix
@@ -469,12 +448,8 @@
     <string name="errorpage_httpsonly_message_summary">تاہم، ایہ وی ممکن ہے جو کوئی حملہ آور ملوث ہووے۔ جے تساں ویب سائٹ کوں جاری رکھدے ہو، تاں تہاکوں کوئی حساس معلومات درج کائنی کرݨی چاہیدی ہے۔ جے تساں جاری رکھدے ہو، تاں سائٹ کیتے HTTPS-صرف موڈ کوں عارضی طور تے  بند کر ݙتا ویسی۔</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">رسائیت</string>
-    <!-- Preference to override the Firefox Account server -->
-    <string name="preferences_override_fxa_server" moz:RemovedIn="120" tools:ignore="UnusedResources">منپسند فائرفوکس کھاتہ سرور</string>
     <!-- Preference to override the Sync token server -->
     <string name="preferences_override_sync_tokenserver">من پسند ہم وقت سرور</string>
-    <!-- Toast shown after updating the FxA/Sync server override preferences -->
-    <string name="toast_override_fxa_sync_server_done" moz:RemovedIn="120" tools:ignore="UnusedResources">فائرفوکس کھاتہ/ہم وقت سرور دی تجدید تھی ڳئی ہے۔ تبدیلیان لاگو کرݨ کیتے ایپ چھوڑیندے پئے ہو۔۔۔</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">کھاتہ</string>
     <!-- Preference for changing where the toolbar is positioned -->
@@ -490,8 +465,6 @@
     <!-- Preference description for banner about signing in -->
     <string name="preferences_sign_in_description_2">ٹیباں، نشانیاں، پاس ورڈ تے ٻیا ٻہوں کجھ ہم وقت کرݨ کیتے سائن ان تھیوو۔</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
-    <string name="preferences_account_default_name" moz:RemovedIn="120" tools:ignore="UnusedResources">فائرفوکس کھاتہ</string>
-    <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name_2">Mozilla کھاتہ</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
     <string name="preferences_account_sync_error">ہم وقت کرݨ کوں ولدا شروع کرݨ کیتے ولدا کنکٹ کرو</string>
@@ -504,8 +477,6 @@
     <string name="preferences_data_collection">ڈیٹا مجموعہ</string>
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">یوایس بی دے ذریعے بعید ٹھیک کاری</string>
-    <!-- Preference title for switch preference to show search engines -->
-    <string name="preferences_show_search_engines" moz:RemovedIn="120" tools:ignore="UnusedResources">ڳولݨ انجݨ ݙکھاؤ</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">ڳولݨ تجویزاں ݙکھاؤ</string>
     <!-- Preference title for switch preference to show voice search button -->
@@ -614,12 +585,6 @@
     <string name="wallpapers_onboarding_dialog_body_text">ہک وال پیپر چُݨو جہڑا تہاݙے نال الاوے۔</string>
     <!-- Wallpaper onboarding dialog learn more button text. The button navigates to the wallpaper settings screen. -->
     <string name="wallpapers_onboarding_dialog_explore_more_button_text">ٻئے وال پیپر پھلورو</string>
-
-    <!-- Add-on Installation from AMO-->
-    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
-    <string name="addon_not_supported_error" moz:removedIn="120" tools:ignore="UnusedResources">ایڈ ــ آن سہارا تھیا کائنی</string>
-    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is already installed -->
-    <string name="addon_already_installed" moz:removedIn="120" tools:ignore="UnusedResources">ایڈ ــ آن پہلے ہی انسٹال تھیا ہویا ہے</string>
 
     <!-- Account Preferences -->
     <!-- Preference for managing your account via accounts.firefox.com -->
@@ -1249,6 +1214,7 @@
     <!-- Notifications -->
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
     <string name="notification_pbm_delete_text_2">نجی ٹیباں بند کرو</string>
+
     <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_marketing_channel_name">مارکیٹنگ</string>
 
@@ -1822,28 +1788,18 @@
     <string name="search_engine_add_custom_search_engine_button_content_description">نواں ڳولݨ انجݨ شامل کرو</string>
     <!-- Title of the Edit search engine screen -->
     <string name="search_engine_edit_custom_search_engine_title">ڳولݨ انجݨ وچ تبدیلی کرو</string>
-    <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
-    <string name="search_engine_add_button_content_description" moz:RemovedIn="120" tools:ignore="UnusedResources">شامل کرو</string>
-    <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
-    <string name="search_engine_add_custom_search_engine_edit_button_content_description" moz:RemovedIn="120" tools:ignore="UnusedResources">محفوظ</string>
     <!-- Text for the menu button to edit a search engine -->
     <string name="search_engine_edit">تبدیلی کرو</string>
     <!-- Text for the menu button to delete a search engine -->
     <string name="search_engine_delete">مٹاؤ</string>
 
-    <!-- Text for the button to create a custom search engine on the Add search engine screen -->
-    <string name="search_add_custom_engine_label_other" moz:RemovedIn="120" tools:ignore="UnusedResources">ٻیا</string>
     <!-- Label for the TextField in which user enters custom search engine name -->
     <string name="search_add_custom_engine_name_label">ناں</string>
-    <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
-    <string name="search_add_custom_engine_name_hint" moz:RemovedIn="120" tools:ignore="UnusedResources">ناں</string>
 
     <!-- Placeholder text shown in the Search Engine Name text field before a user enters text -->
     <string name="search_add_custom_engine_name_hint_2">ڳولݨ انجݨ ناں</string>
     <!-- Label for the TextField in which user enters custom search engine URL -->
     <string name="search_add_custom_engine_url_label">تند یوآرایل ڳولو</string>
-    <!-- Placeholder text shown in the Search String TextField before a user enters text -->
-    <string name="search_add_custom_engine_search_string_hint" moz:RemovedIn="120" tools:ignore="UnusedResources">ورتݨ کیتے تند ڳولو</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint_2">ڳولݨ دے ورتݨ کیتے یوآرایل</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
@@ -2076,19 +2032,25 @@
     <!-- Clickable text from the contextual onboarding card that links to review quality check support article. -->
     <string name="review_quality_check_contextual_onboarding_learn_more_link">ٻیا سِکھو</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
-    <string name="review_quality_check_contextual_onboarding_privacy_policy" moz:RemovedIn="121" tools:ignore="UnusedResources">رازداری پالیسی</string>
+    <string name="review_quality_check_contextual_onboarding_privacy_policy">رازداری پالیسی</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
-    <string name="review_quality_check_contextual_onboarding_privacy_policy_2">رازداری پالیسی</string>
+    <string name="review_quality_check_contextual_onboarding_privacy_policy_2" moz:RemovedIn="123" tools:ignore="UnusedResources">رازداری پالیسی</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
-    <string name="review_quality_check_contextual_onboarding_terms_use" moz:RemovedIn="121" tools:ignore="UnusedResources">ورتݨ شرطاں</string>
+    <string name="review_quality_check_contextual_onboarding_terms_use">ورتݨ شرطاں</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
-    <string name="review_quality_check_contextual_onboarding_terms_use_2">ورتݨ شرطاں</string>
+    <string name="review_quality_check_contextual_onboarding_terms_use_2" moz:RemovedIn="123" tools:ignore="UnusedResources">ورتݨ شرطاں</string>
     <!-- Text for opt-in button from the review quality check contextual onboarding card. -->
     <string name="review_quality_check_contextual_onboarding_primary_button_text">جیا، ایں کوں ازماؤ</string>
     <!-- Text for opt-out button from the review quality check contextual onboarding card. -->
     <string name="review_quality_check_contextual_onboarding_secondary_button_text">ہݨ کائناں</string>
+    <!-- Text displayed in the second CFR presenting the review quality check feature that opens the review checker when clicked. -->
+    <string name="review_quality_check_second_cfr_action" tools:ignore="UnusedResources">ریویو پڑتالی کھولو</string>
     <!-- Flag showing that the review quality check feature is work in progress. -->
     <string name="review_quality_check_beta_flag">Beta</string>
+    <!-- Content description (not visible, for screen readers etc.) for opening browser menu button to open review quality check bottom sheet. -->
+    <string name="review_quality_check_open_handle_content_description">ریویو پڑتالی کھولو</string>
+    <!-- Content description (not visible, for screen readers etc.) for closing browser menu button to open review quality check bottom sheet. -->
+    <string name="review_quality_check_close_handle_content_description">ریویو پڑتالی بند کرو</string>
     <!-- Text for minimize button from highlights card. When clicked the highlights card should reduce its size. -->
     <string name="review_quality_check_highlights_show_less">گھٹ ݙکھاؤ</string>
     <!-- Text for maximize button from highlights card. When clicked the highlights card should expand to its full size. -->
@@ -2100,6 +2062,9 @@
 
     <!-- Text for highlights card shipping category header. Reviews shown under this header should refer the product's shipping. -->
     <string name="review_quality_check_highlights_type_shipping">شِپنگ</string>
+
+    <!-- Text that is surrounded by quotes. The parameter is the actual text that is in quotes. An example of that text could be: Excellent craftsmanship, and that is displayed as “Excellent craftsmanship”. The text comes from a buyer's review that the feature is highlighting"   -->
+    <string name="surrounded_with_quotes">“%s”</string>
 
     <!-- Accessibility services actions labels. These will be appended to accessibility actions like "Double tap to.." but not by or applications but by services like Talkback. -->
     <!-- Action label for elements that can be collapsed if interacting with them. Talkback will append this to say "Double tap to collapse". -->
@@ -2114,4 +2079,79 @@
     <string name="a11y_action_label_read_article">مضمون پڑھو</string>
     <!-- Action label for links to the Firefox Pocket website. Talkback will append this to say "Double tap to open link to learn more". -->
     <string name="a11y_action_label_pocket_learn_more">ٻیا سکھݨ کیتے لنک کھولو</string>
+
+    <!-- Translations feature-->
+
+    <!-- Text that links to additional information about the Firefox translations feature. -->
+    <string name="translations_bottom_sheet_info_message_learn_more">ٻیا سِکھو</string>
+    <!-- Label for the dropdown to select which language to translate from on the translations dialog. Usually the translate from language selected will be the same as the page language. -->
+    <string name="translations_bottom_sheet_translate_from">کنوں ترجمہ کرو</string>
+    <!-- Label for the dropdown to select which language to translate to on the translations dialog. Usually the translate to language selected will be the user's preferred language. -->
+    <string name="translations_bottom_sheet_translate_to">وچ ترجمہ کرو</string>
+    <!-- Button text on the translations dialog to dismiss the dialog and return to the browser. -->
+    <string name="translations_bottom_sheet_negative_button">ہݨ کائناں</string>
+    <!-- Button text on the translations dialog when a translation error appears, used to dismiss the dialog and return to the browser. -->
+    <string name="translations_bottom_sheet_negative_button_error">تھی ڳیا</string>
+    <!-- Button text on the translations dialog to begin a translation of the website. -->
+    <string name="translations_bottom_sheet_positive_button">ترجمہ کرو</string>
+    <!-- Button text on the translations dialog when a translation error appears. -->
+    <string name="translations_bottom_sheet_positive_button_error">ولدا کوشش کرو</string>
+    <!-- Button text on the warning card when a language is not supported. The link will take the user to a page to a support page about translations. -->
+    <string name="translation_error_language_not_supported_learn_more">ٻیا سِکھو</string>
+
+    <!-- Translation settings dialog -->
+    <!-- Title of the translation settings dialog that allows a user to set their preferred translation settings. -->
+    <string name="translation_settings_toolbar_title">ترجمے</string>
+    <!-- Section header text that begins the section of a list of different options the user may select to adjust their translation preferences. -->
+    <string name="translation_settings_translation_preference">ترجمے دیاں ترجیحاں</string>
+
+    <!-- The Delete site dialogue title will appear when the user clicks on a list item.
+             The first parameter is web site url (for example:"wikipedia.com") -->
+    <string name="never_translate_site_dialog_title_preference">%1$s مٹاؤں؟</string>
+    <!-- The Delete site dialogue positive button will appear when the user clicks on a list item. The site will be deleted. -->
+    <string name="never_translate_site_dialog_confirm_delete_preference">مٹاؤ</string>
+    <!-- The Delete site dialogue negative button will appear when the user clicks on a list item. The dialog will be dismissed. -->
+    <string name="never_translate_site_dialog_cancel_preference">منسوخ</string>
+
+    <!-- Clickable text from the screen header that links to a website. -->
+    <string name="download_languages_header_learn_more_preference">ٻیا سِکھو</string>
+    <!-- The subhead of the download language preference screen will appear above the pivot language. -->
+    <string name="download_languages_available_languages_preference">دستیاب زباناں</string>
+    <!-- Text that will appear beside a core or pivot language package name to show that the language is necessary for the translation feature to function. -->
+    <string name="download_languages_default_system_language_require_preference">مطلوبہ</string>
+    <!-- A text for download language preference item.
+    The first parameter is the language name, for example, "Spanish".
+    The second parameter is the language file size, for example, "(3.91 KB)" or, if the language package name is a pivot language, "(required)". -->
+    <string name="download_languages_language_item_preference">%1$s (%2$s)</string>
+    <!-- All languages list item. When the user presses this item, they can download or delete all languages. -->
+    <string name="download_language_all_languages_item_preference">ساریاں زباناں</string>
+    <!-- Content description (not visible, for screen readers etc.): For a language list item that was downloaded, the user can now delete it. -->
+    <string name="download_languages_item_content_description_downloaded_state">مٹاؤ</string>
+    <!-- Content description (not visible, for screen readers etc.): For a language list item, downloading is in progress. -->
+    <string name="download_languages_item_content_description_in_progress_state">تھیندیاں پیاں</string>
+    <!-- Content description (not visible, for screen readers etc.): For a language list item that was not downloaded. -->
+    <string name="download_languages_item_content_description_not_downloaded_state">ڈاؤن لوڈ</string>
+    <!-- Content description (not visible, for screen readers etc.): For a language list item that is selected. -->
+    <string name="download_languages_item_content_description_selected_state">چُݨا ہویا</string>
+
+    <!-- Button text on the dialog used by the translations feature to confirm deleting a language. -->
+    <string name="delete_language_file_dialog_positive_button_text">مٹاؤ</string>
+    <!-- Button text on the dialog used by the translations feature to cancel deleting a language. -->
+    <string name="delete_language_file_dialog_negative_button_text">منسوخ</string>
+
+    <!-- Button text on the data saving mode warning dialog used by the translations feature to allow users to confirm they wish to continue and download the language file. -->
+    <string name="download_language_file_dialog_positive_button_text">ڈاؤن لوڈ</string>
+    <!-- Button text on the data saving mode warning dialog used by the translations feature to allow users to confirm they wish to continue and download the language file and perform a translation. -->
+    <string name="download_language_file_dialog_positive_button_text_all_languages">ڈاؤن لوڈ کرو تے ترجمہ کرو</string>
+    <!-- Button text on the data saving mode warning dialog used by the translations feature to allow users to cancel the action and not perform a download of the language file. -->
+    <string name="download_language_file_dialog_negative_button_text">منسوخ</string>
+
+    <!-- The active tab count category in the tab count section in Tab Tools. -->
+    <string name="debug_drawer_tab_tools_tab_count_normal">فعال</string>
+    <!-- The inactive tab count category in the tab count section in Tab Tools. -->
+    <string name="debug_drawer_tab_tools_tab_count_inactive">غیر فعال</string>
+    <!-- The private tab count category in the tab count section in Tab Tools. -->
+    <string name="debug_drawer_tab_tools_tab_count_private">نجی</string>
+    <!-- The total tab count category in the tab count section in Tab Tools. -->
+    <string name="debug_drawer_tab_tools_tab_count_total">کل</string>
     </resources>

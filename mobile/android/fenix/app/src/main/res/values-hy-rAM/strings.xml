@@ -211,6 +211,8 @@
     <string name="resync_button_content_description">Կրկնահամաժամեցում</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">Գտնել էջում</string>
+    <!-- Browser menu button that opens the translations dialog, which has options to translate the current browser page. -->
+    <string name="browser_menu_translations">Թարգմանել էջը</string>
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">Պահպանել հավաքածուում</string>
     <!-- Browser menu button that open a share menu to share the current site -->
@@ -1319,6 +1321,10 @@
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
     <string name="notification_pbm_delete_text_2">Փակել գաղտնի ներդիրները</string>
 
+    <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active for Android 14+ -->
+    <string name="notification_erase_title_android_14">Փակե՞լ գաղտնի ներդիրները</string>
+    <string name="notification_erase_text_android_14">Հպեք կամ սահեցրեք այս ծանուցումը՝ մասնավոր ներդիրները փակելու համար:</string>
+
     <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_marketing_channel_name">Մարկեթինգ</string>
 
@@ -2256,17 +2262,17 @@
     <string name="review_quality_check_contextual_onboarding_learn_more_link">Իմանալ ավելին</string>
 
     <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is the Fakespot product name. Following parameters are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy and review_quality_check_contextual_onboarding_terms_use. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
-    <string name="review_quality_check_contextual_onboarding_caption" moz:RemovedIn="121" tools:ignore="UnusedResources">Ընտրելով «Այո, փորձիր»՝ դուք համաձայնում եք %1$s-ը Mozilla-ի կողմիցի %2$s-ին և %3$s-ին:</string>
+    <string name="review_quality_check_contextual_onboarding_caption">Ընտրելով «Այո, փորձիր»՝ դուք համաձայնում եք %1$s-ը Mozilla-ի կողմիցի %2$s-ին և %3$s-ին:</string>
     <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. Parameter is the Fakespot product name. After the colon, what appears are two links, each on their own line. The first link is to a Privacy policy (review_quality_check_contextual_onboarding_privacy_policy_2). The second link is to Terms of use (review_quality_check_contextual_onboarding_terms_use_2). -->
-    <string name="review_quality_check_contextual_onboarding_caption_2">Ընտրելով «Այո, փորձիր»՝ դուք ընդունում եք %1$s-ը.</string>
+    <string name="review_quality_check_contextual_onboarding_caption_2" moz:RemovedIn="123" tools:ignore="UnusedResources">Ընտրելով «Այո, փորձիր»՝ դուք ընդունում եք %1$s-ը.</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
-    <string name="review_quality_check_contextual_onboarding_privacy_policy" moz:RemovedIn="121" tools:ignore="UnusedResources">գաղտնիության դրույթներ</string>
+    <string name="review_quality_check_contextual_onboarding_privacy_policy">գաղտնիության դրույթներ</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
-    <string name="review_quality_check_contextual_onboarding_privacy_policy_2">Գաղտնիության դրույթներ</string>
+    <string name="review_quality_check_contextual_onboarding_privacy_policy_2" moz:RemovedIn="123" tools:ignore="UnusedResources">Գաղտնիության դրույթներ</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
-    <string name="review_quality_check_contextual_onboarding_terms_use" moz:RemovedIn="121" tools:ignore="UnusedResources">օգտվելու կանոններ</string>
+    <string name="review_quality_check_contextual_onboarding_terms_use">օգտվելու կանոններ</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
-    <string name="review_quality_check_contextual_onboarding_terms_use_2">Օգտագործման պայմաններ</string>
+    <string name="review_quality_check_contextual_onboarding_terms_use_2" moz:RemovedIn="123" tools:ignore="UnusedResources">Օգտագործման պայմաններ</string>
     <!-- Text for opt-in button from the review quality check contextual onboarding card. -->
     <string name="review_quality_check_contextual_onboarding_primary_button_text">Այո, փորձիր</string>
     <!-- Text for opt-out button from the review quality check contextual onboarding card. -->
@@ -2323,6 +2329,11 @@
     <!-- Content description for headings announced by accessibility service. The first parameter is the text of the heading. Talkback will announce the first parameter and then speak the word "Heading" indicating to the user that this text is a heading for a section. -->
     <string name="a11y_heading">%s, վերնագիր</string>
 
+    <!-- Title for dialog displayed when trying to access links present in a text. -->
+    <string name="a11y_links_title">Հղումներ</string>
+    <!-- Additional content description for text bodies that contain urls. -->
+    <string name="a11y_links_available">Հղումներ են մատչելի</string>
+
     <!-- Translations feature-->
 
     <!-- Translation request dialog -->
@@ -2340,12 +2351,25 @@
     <string name="translations_bottom_sheet_translate_to">Թարգմանել հետևյալով՝</string>
     <!-- Button text on the translations dialog to dismiss the dialog and return to the browser. -->
     <string name="translations_bottom_sheet_negative_button">Ոչ հիմա</string>
+    <!-- Button text on the translations dialog when a translation error appears, used to dismiss the dialog and return to the browser. -->
+    <string name="translations_bottom_sheet_negative_button_error">Պատրաստ է</string>
     <!-- Button text on the translations dialog to begin a translation of the website. -->
     <string name="translations_bottom_sheet_positive_button">Թարգմանել</string>
+    <!-- Button text on the translations dialog when a translation error appears. -->
+    <string name="translations_bottom_sheet_positive_button_error">Կրկին փորձել</string>
     <!-- Inactive button text on the translations dialog that indicates a translation is currently in progress. This button will be accompanied by a loading icon. -->
     <string name="translations_bottom_sheet_translating_in_progress">Թարգմանում է</string>
     <!-- Button content description (not visible, for screen readers etc.) for the translations dialog translate button that indicates a translation is currently in progress. -->
     <string name="translations_bottom_sheet_translating_in_progress_content_description">Թարգմանությունն ընթացքի մեջ է</string>
+
+    <!-- The title of the warning card informs the user that a translation could not be completed. -->
+    <string name="translation_error_could_not_translate_warning_text">Թարգմանության հետ կապված խնդիր։ Կրկին փորձեք;</string>
+    <!-- The title of the warning card informs the user that the list of languages cannot be loaded. -->
+    <string name="translation_error_could_not_load_languages_warning_text">Չհաջողվեց բեռնել լեզուները: Ստուգեք համացանցային կապակցումը և նորից փորձեք:</string>
+    <!-- The title of the warning card informs the user that a language is not supported. The first parameter is the name of the language that is not supported. -->
+    <string name="translation_error_language_not_supported_warning_text">Մենք դեռ չենք աջակցում %1$s-ը:</string>
+    <!-- Button text on the warning card when a language is not supported. The link will take the user to a page to a support page about translations. -->
+    <string name="translation_error_language_not_supported_learn_more">Իմանալ ավելին</string>
 
     <!-- Translations options dialog -->
     <!-- Title of the translation options dialog that allows a user to set their translation options for the site the user is currently on. -->
@@ -2477,8 +2501,12 @@
     <string name="download_language_file_dialog_negative_button_text">Չեղարկել</string>
 
     <!-- Debug drawer -->
+    <!-- The user-facing title of the Debug Drawer feature. -->
+    <string name="debug_drawer_title">Վրիպազերծման գործիքներ</string>
+    <!-- Content description (not visible, for screen readers etc.): Navigate back within the debug drawer. -->
+    <string name="debug_drawer_back_button_content_description">Նավարկել հետ</string>
     <!-- The title of the Tab Tools feature in the Debug Drawer. -->
-    <string name="debug_drawer_tab_tools_title" tools:ignore="UnusedResources">Ներդիրի գործիքներ</string>
+    <string name="debug_drawer_tab_tools_title">Ներդիրի գործիքներ</string>
     <!-- The title of the tab count section in Tab Tools. -->
     <string name="debug_drawer_tab_tools_tab_count_title">Ներդիրների քանակը</string>
     <!-- The active tab count category in the tab count section in Tab Tools. -->
@@ -2489,4 +2517,14 @@
     <string name="debug_drawer_tab_tools_tab_count_private">Մասնավոր</string>
     <!-- The total tab count category in the tab count section in Tab Tools. -->
     <string name="debug_drawer_tab_tools_tab_count_total">Ընդամենը</string>
+    <!-- The title of the tab creation tool section in Tab Tools. -->
+    <string name="debug_drawer_tab_tools_tab_creation_tool_title">Ներդիրների ստեղծման գործիք</string>
+    <!-- The label of the text field in the tab creation tool. -->
+    <string name="debug_drawer_tab_tools_tab_creation_tool_text_field_label">Ներդիրների քանակ ստեղծելու համար</string>
+    <!-- The button text to add tabs to the active tab group in the tab creation tool. -->
+    <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_active">Հավելել ակտիվ ներդիրներին</string>
+    <!-- The button text to add tabs to the inactive tab group in the tab creation tool. -->
+    <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_inactive">Հավելել ոչ ակտիվ ներդիրներին</string>
+    <!-- The button text to add tabs to the private tab group in the tab creation tool. -->
+    <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_private">Հավելել մասնավոր ներդիրներին</string>
 </resources>

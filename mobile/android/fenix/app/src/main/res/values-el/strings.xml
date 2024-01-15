@@ -1337,6 +1337,9 @@
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
     <string name="notification_pbm_delete_text_2">Κλείσιμο ιδιωτικών καρτελών</string>
 
+    <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active for Android 14+ -->
+    <string name="notification_erase_title_android_14">Κλείσιμο ιδιωτικών καρτελών;</string>
+
     <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_marketing_channel_name">Μάρκετινγκ</string>
 
@@ -2383,6 +2386,8 @@
     <!-- Button content description (not visible, for screen readers etc.) for the translations dialog translate button that indicates a translation is currently in progress. -->
     <string name="translations_bottom_sheet_translating_in_progress_content_description">Μετάφραση σε εξέλιξη</string>
 
+    <!-- The title of the warning card informs the user that a translation could not be completed. -->
+    <string name="translation_error_could_not_translate_warning_text">Προέκυψε πρόβλημα με τη μετάφραση. Παρακαλούμε δοκιμάστε ξανά.</string>
     <!-- Button text on the warning card when a language is not supported. The link will take the user to a page to a support page about translations. -->
     <string name="translation_error_language_not_supported_learn_more">Μάθετε περισσότερα</string>
 
@@ -2517,6 +2522,11 @@
     <!-- Button text on the data saving mode warning dialog used by the translations feature to allow users to cancel the action and not perform a download of the language file. -->
     <string name="download_language_file_dialog_negative_button_text">Ακύρωση</string>
 
+    <!-- Debug drawer -->
+    <!-- The user-facing title of the Debug Drawer feature. -->
+    <string name="debug_drawer_title">Εργαλεία εντοπισμού σφαλμάτων</string>
+    <!-- Content description (not visible, for screen readers etc.): Navigate back within the debug drawer. -->
+    <string name="debug_drawer_back_button_content_description">Πλοήγηση προς τα πίσω</string>
     <!-- The title of the Tab Tools feature in the Debug Drawer. -->
     <string name="debug_drawer_tab_tools_title">Εργαλεία καρτελών</string>
     <!-- The title of the tab count section in Tab Tools. -->
@@ -2529,4 +2539,10 @@
     <string name="debug_drawer_tab_tools_tab_count_private">Ιδιωτικές</string>
     <!-- The total tab count category in the tab count section in Tab Tools. -->
     <string name="debug_drawer_tab_tools_tab_count_total">Σύνολο</string>
-    </resources>
+    <!-- The button text to add tabs to the active tab group in the tab creation tool. -->
+    <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_active">Προσθήκη στις ενεργές καρτέλες</string>
+    <!-- The button text to add tabs to the inactive tab group in the tab creation tool. -->
+    <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_inactive">Προσθήκη στις ανενεργές καρτέλες</string>
+    <!-- The button text to add tabs to the private tab group in the tab creation tool. -->
+    <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_private">Προσθήκη στις ιδιωτικές καρτέλες</string>
+</resources>
