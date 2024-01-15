@@ -80,7 +80,7 @@ class gfxFT2FontBase : public gfxFont {
   // Get advance (and optionally bounds) of a single glyph from FreeType,
   // and return true, or return false if we failed.
   bool GetFTGlyphExtents(uint16_t aGID, int32_t* aWidth,
-                         mozilla::gfx::IntRect* aBounds = nullptr) const;
+                         mozilla::gfx::IntRect* aBounds = nullptr);
 
  protected:
   ~gfxFT2FontBase() override;
@@ -143,10 +143,10 @@ class gfxFT2FontBase : public gfxFont {
   };
 
   const GlyphMetrics& GetCachedGlyphMetrics(
-      uint16_t aGID, mozilla::gfx::IntRect* aBounds = nullptr) const;
+      uint16_t aGID, mozilla::gfx::IntRect* aBounds = nullptr);
 
-  mutable mozilla::UniquePtr<nsTHashMap<nsUint32HashKey, GlyphMetrics>>
-      mGlyphMetrics MOZ_GUARDED_BY(mLock);
+  mozilla::UniquePtr<nsTHashMap<nsUint32HashKey, GlyphMetrics>> mGlyphMetrics
+      MOZ_GUARDED_BY(mLock);
 };
 
 #endif /* GFX_FT2FONTBASE_H */
