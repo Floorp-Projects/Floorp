@@ -1039,51 +1039,28 @@ static bool DifferenceTemporalPlainDateTime(JSContext* cx,
 
   // Step 9.
   Rooted<CalendarRecord> calendar(cx);
-  if (!CreateCalendarMethodsRecord(cx, dateTime.calendar(), {}, &calendar)) {
+  if (!CreateCalendarMethodsRecord(cx, dateTime.calendar(),
+                                   {
+                                       CalendarMethod::DateAdd,
+                                       CalendarMethod::DateUntil,
+                                   },
+                                   &calendar)) {
     return false;
   }
 
   // Step 10.
-  bool roundingGranularityIsNoop =
-      settings.smallestUnit == TemporalUnit::Nanosecond &&
-      settings.roundingIncrement == Increment{1};
-
-  // Step 11.
-  bool largestUnitIsCalendarUnit = settings.largestUnit <= TemporalUnit::Week;
-
-  // Step 12.
-  bool roundingRequiresDateAddLookup =
-      !roundingGranularityIsNoop && largestUnitIsCalendarUnit;
-
-  // Step 13.
-  if (settings.smallestUnit <= TemporalUnit::Week ||
-      roundingRequiresDateAddLookup) {
-    if (!CalendarMethodsRecordLookup(cx, &calendar, CalendarMethod::DateAdd)) {
-      return false;
-    }
-  }
-
-  // Step 14.
-  bool largestUnitRequiresDateUntilLookup =
-      !datePartsIdentical && largestUnitIsCalendarUnit;
-
-  // Step 15.
-  if (largestUnitRequiresDateUntilLookup ||
-      settings.smallestUnit == TemporalUnit::Year) {
-    if (!CalendarMethodsRecordLookup(cx, &calendar,
-                                     CalendarMethod::DateUntil)) {
-      return false;
-    }
-  }
-
-  // Step 16.
   Duration diff;
   if (!::DifferenceISODateTime(cx, dateTime, other, calendar,
                                settings.largestUnit, resolvedOptions, &diff)) {
     return false;
   }
 
-  // Step 17.
+  // Step 11.
+  bool roundingGranularityIsNoop =
+      settings.smallestUnit == TemporalUnit::Nanosecond &&
+      settings.roundingIncrement == Increment{1};
+
+  // Step 12.
   if (roundingGranularityIsNoop) {
     if (operation == TemporalDifference::Since) {
       diff = diff.negate();
@@ -1098,14 +1075,14 @@ static bool DifferenceTemporalPlainDateTime(JSContext* cx,
     return true;
   }
 
-  // Step 18
+  // Step 13.
   Rooted<PlainDateObject*> relativeTo(
       cx, CreateTemporalDate(cx, dateTime.date(), dateTime.calendar()));
   if (!relativeTo) {
     return false;
   }
 
-  // Steps 19-20.
+  // Steps 14-15.
   Duration roundResult;
   if (!temporal::RoundDuration(cx, diff, settings.roundingIncrement,
                                settings.smallestUnit, settings.roundingMode,
@@ -1113,13 +1090,13 @@ static bool DifferenceTemporalPlainDateTime(JSContext* cx,
     return false;
   }
 
-  // Step 21.
+  // Step 16.
   TimeDuration result;
   if (!BalanceTimeDuration(cx, roundResult, settings.largestUnit, &result)) {
     return false;
   }
 
-  // Step 22.
+  // Step 17.
   auto toBalance = Duration{
       roundResult.years,
       roundResult.months,
@@ -1133,7 +1110,7 @@ static bool DifferenceTemporalPlainDateTime(JSContext* cx,
     return false;
   }
 
-  // Step 23.
+  // Step 18.
   Duration duration = {
       balanceResult.years, balanceResult.months, balanceResult.weeks,
       balanceResult.days,  result.hours,         result.minutes,
@@ -1187,19 +1164,15 @@ static bool AddDurationToOrSubtractDurationFromPlainDateTime(
 
   // Step 4.
   Rooted<CalendarRecord> calendar(cx);
-  if (!CreateCalendarMethodsRecord(cx, dateTime.calendar(), {}, &calendar)) {
+  if (!CreateCalendarMethodsRecord(cx, dateTime.calendar(),
+                                   {
+                                       CalendarMethod::DateAdd,
+                                   },
+                                   &calendar)) {
     return false;
   }
 
   // Step 5.
-  if (duration.years != 0 || duration.months != 0 || duration.weeks != 0) {
-    // Step 5.a.
-    if (!CalendarMethodsRecordLookup(cx, &calendar, CalendarMethod::DateAdd)) {
-      return false;
-    }
-  }
-
-  // Step 6.
   if (operation == PlainDateTimeDuration::Subtract) {
     duration = duration.negate();
   }
@@ -1209,10 +1182,10 @@ static bool AddDurationToOrSubtractDurationFromPlainDateTime(
     return false;
   }
 
-  // Steps 7-8.
+  // Steps 6-7.
   MOZ_ASSERT(IsValidISODateTime(result));
 
-  // Step 9.
+  // Step 8.
   auto* obj = CreateTemporalDateTime(cx, result, dateTime.calendar());
   if (!obj) {
     return false;
