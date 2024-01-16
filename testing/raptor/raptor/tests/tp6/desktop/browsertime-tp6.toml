@@ -15,10 +15,12 @@ playback_version = "8.1.1"
 type = "pageload"
 unit = "ms"
 use_live_sites = false
+benchmark_page = true
 
 # Keep this list in alphabetical order
 
 ["amazon"]
+benchmark_page = false
 test_url = "https://www.amazon.com/s?k=laptop&ref=nb_sb_noss_1"
 secondary_url = "https://www.amazon.com/Acer-A515-46-R14K-Quad-Core-Processor-Backlit/dp/B08VKNVDDR/ref=sr_1_3?dchild=1&keywords=laptop&qid=1627047187&sr=8-3"
 
@@ -27,6 +29,7 @@ playback_pageset_manifest = "mitm5-linux-firefox-bing-search.manifest"
 test_url = "https://www.bing.com/search?q=barack+obama"
 
 ["buzzfeed"]
+benchmark_page = false
 secondary_url = "https://www.buzzfeed.com/quizzes"
 test_url = "https://www.buzzfeed.com/"
 
@@ -40,6 +43,7 @@ secondary_url = "https://www.ebay.com/deals"
 test_url = "https://www.ebay.com/"
 
 ["espn"]
+benchmark_page = false
 test_url = "http://www.espn.com/nba/story/_/page/allstarweekend25788027/the-comparison-lebron-james-michael-jordan-their-own-words"
 secondary_url = "https://www.espn.com/nba/draft/news"
 
@@ -53,6 +57,7 @@ secondary_url = "https://www.facebook.com/marketplace/?ref=bookmark"
 test_url = "https://www.facebook.com"
 
 ["fandom"]
+benchmark_page = false
 playback_pageset_manifest = "mitm5-linux-firefox-fandom.manifest"
 test_url = "https://www.fandom.com/articles/fallout-76-will-live-and-die-on-the-creativity-of-its-playerbase"
 
@@ -62,6 +67,7 @@ secondary_url = "https://docs.google.com/document/d/1vUnn0ePU-ynArE1OdxyEHXR2G0s
 test_url = "https://docs.google.com/document/d/1US-07msg12slQtI_xchzYxcKlTs6Fp7WqIc6W5GK5M8/edit?usp=sharing"
 
 ["google-mail"]
+benchmark_page = false
 playback_pageset_manifest = "mitm5-linux-firefox-google-mail.manifest"
 test_url = "https://mail.google.com/"
 
@@ -70,6 +76,7 @@ playback_pageset_manifest = "mitm5-linux-firefox-google-search.manifest"
 test_url = "https://www.google.com/search?hl=en&q=barack+obama&cad=h"
 
 ["google-slides"]
+benchmark_page = false
 playback_pageset_manifest = "mitm6-linux-firefox-google-slides.manifest"
 playback_version = "6.0.2"
 secondary_url = "https://docs.google.com/document/d/1vUnn0ePU-ynArE1OdxyEHXR2G0sl74ja_st_4OOzlgE/preview"
@@ -80,6 +87,7 @@ test_url = "https://www.imdb.com/title/tt0084967/?ref_=nv_sr_2"
 secondary_url = "https://www.imdb.com/title/tt0084967/episodes/?ref_=tt_ov_epl"
 
 ["imgur"]
+benchmark_page = false
 playback_pageset_manifest = "mitm8-linux-firefox-imgur.manifest"
 preferences = ['media.autoplay.default=5',
                'media.autoplay.ask-permission=true',
@@ -126,11 +134,13 @@ playback_pageset_manifest = "mitm5-linux-firefox-paypal.manifest"
 test_url = "https://www.paypal.com/myaccount/summary/"
 
 ["pinterest"]
+benchmark_page = false
 playback_pageset_manifest = "mitm6-linux-firefox-pinterest.manifest"
 secondary_url = "https://www.pinterest.com/today/best/halloween-costumes-for-your-furry-friends/75787/"
 test_url = "https://pinterest.com/"
 
 ["reddit"]
+benchmark_page = false
 playback_pageset_manifest = "mitm6-linux-firefox-reddit.manifest"
 secondary_url = "https://www.reddit.com/r/technology/"
 test_url = "https://www.reddit.com/r/technology/comments/9sqwyh/we_posed_as_100_senators_to_run_ads_on_facebook/"
@@ -154,10 +164,12 @@ preferences = ['media.autoplay.default=5',
 ]
 
 ["twitter"]
+benchmark_page = false
 playback_pageset_manifest = "mitm5-linux-firefox-twitter.manifest"
 test_url = "https://twitter.com/BarackObama"
 
 ["wikia"]
+benchmark_page = false
 secondary_url = "https://marvel.fandom.com/wiki/Celestials"
 test_url = "https://marvel.fandom.com/wiki/Black_Panther"
 
@@ -166,6 +178,7 @@ secondary_url = "https://en.wikipedia.org/wiki/Joe_Biden"
 test_url = "https://en.wikipedia.org/wiki/Barack_Obama"
 
 ["yahoo-mail"]
+benchmark_page = false
 playback_pageset_manifest = "mitm5-linux-firefox-yahoo-mail.manifest"
 test_url = "https://mail.yahoo.com/"
 
