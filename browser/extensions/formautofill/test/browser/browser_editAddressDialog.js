@@ -767,13 +767,16 @@ add_task(async function test_combined_name_fields_error() {
     let doc = win.document;
     let givenNameField = doc.querySelector("#given-name");
     info("mark the given name field as invalid");
-    givenNameField.value = "";
     givenNameField.focus();
+    EventUtils.synthesizeKey("X", {}, win);
+    givenNameField.value = "";
+    givenNameField.blur();
     ok(
       givenNameField.matches(":user-invalid"),
       "Check field is visually invalid"
     );
 
+    givenNameField.focus();
     let givenNameLabel = doc.querySelector("#given-name-container .label-text");
     // Override pointer-events so that we can use elementFromPoint to know if
     // the label text is visible.
