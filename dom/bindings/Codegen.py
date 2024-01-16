@@ -24065,6 +24065,8 @@ class CGEventGetter(CGNativeMember):
                 )
             else:
                 return "aRetVal = " + memberName + ".Clone();\n"
+        if type.isDictionary():
+            return "aRetVal = " + memberName + ";\n"
         raise TypeError("Event code generator does not support this type!")
 
     def declare(self, cgClass):
@@ -24561,6 +24563,15 @@ class CGEventClass(CGBindingImplClass):
             nativeType = CGGeneric("nsCString")
         elif type.isPromise():
             nativeType = CGGeneric("RefPtr<Promise>")
+        elif type.isDictionary():
+            if typeNeedsRooting(type):
+                raise TypeError(
+                    "We don't support event members that are dictionary types "
+                    "that need rooting (%s)" % type
+                )
+            nativeType = CGGeneric(CGDictionary.makeDictionaryName(type.unroll().inner))
+            if type.nullable():
+                nativeType = CGTemplatedType("Nullable", nativeType)
         elif type.isGeckoInterface():
             iface = type.unroll().inner
             nativeType = self.descriptor.getDescriptor(iface.identifier.name).nativeType
