@@ -5,8 +5,8 @@
 
 function* testSteps() {
   const invalidOrigin = {
-    url: "ftp://ftp.invalid.origin",
-    path: "storage/default/ftp+++ftp.invalid.origin",
+    url: "ws://ws.invalid.origin",
+    path: "storage/default/ws+++ws.invalid.origin",
   };
 
   info("Persisting an invalid origin");
