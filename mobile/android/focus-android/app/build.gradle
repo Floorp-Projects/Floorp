@@ -416,6 +416,11 @@ dependencies {
 //  Dynamically set versionCode (See tools/build/versionCode.gradle
 // -------------------------------------------------------------------------------------------------
 
+// Mimic Python: open(os.path.join(buildconfig.topobjdir, 'buildid.h')).readline().split()[2]
+def getBuildId() {
+    return file("${gradle.mozconfig.topobjdir}/buildid.h").getText('utf-8').split()[2]
+}
+
 android.applicationVariants.configureEach { variant ->
     def buildType = variant.buildType.name
 
@@ -427,7 +432,9 @@ android.applicationVariants.configureEach { variant ->
 
     if (buildType == "release" || buildType == "nightly" || buildType == "beta") {
         def baseVersionCode = generatedVersionCode
-        def versionName = buildType == "nightly" ? Config.nightlyVersionName(project) : Config.releaseVersionName(project)
+        def versionName = buildType == "nightly" ?
+                "${Config.nightlyVersionName(project)}-${getBuildId()}" :
+                "${Config.releaseVersionName(project)}-${getBuildId()}"
         println("versionName override: $versionName")
 
         // The Google Play Store does not allow multiple APKs for the same app that all have the
