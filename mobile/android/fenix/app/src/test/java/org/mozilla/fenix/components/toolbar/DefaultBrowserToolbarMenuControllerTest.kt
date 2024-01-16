@@ -835,7 +835,9 @@ class DefaultBrowserToolbarMenuControllerTest {
             verify {
                 navController.navigate(
                     directionsEq(
-                        BrowserFragmentDirections.actionBrowserFragmentToTranslationsDialogFragment(),
+                        BrowserFragmentDirections.actionBrowserFragmentToTranslationsDialogFragment(
+                            sessionId = selectedTab.id,
+                        ),
                     ),
                 )
             }

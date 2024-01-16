@@ -11,6 +11,7 @@ import android.view.ViewGroup
 import androidx.compose.ui.platform.ComposeView
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
+import androidx.navigation.fragment.navArgs
 import mozilla.components.support.base.feature.UserInteractionHandler
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.showToolbar
@@ -20,6 +21,7 @@ import org.mozilla.fenix.theme.FirefoxTheme
  * A fragment displaying the Firefox Translation settings screen.
  */
 class TranslationSettingsFragment : Fragment(), UserInteractionHandler {
+    private val args by navArgs<TranslationSettingsFragmentArgs>()
     override fun onResume() {
         super.onResume()
         showToolbar(getString(R.string.translation_settings_toolbar_title))
@@ -60,7 +62,8 @@ class TranslationSettingsFragment : Fragment(), UserInteractionHandler {
     override fun onBackPressed(): Boolean {
         findNavController().navigate(
             TranslationSettingsFragmentDirections.actionTranslationSettingsFragmentToTranslationsDialogFragment(
-                TranslationsDialogAccessPoint.TranslationsOptions,
+                sessionId = args.sessionId,
+                translationsDialogAccessPoint = TranslationsDialogAccessPoint.TranslationsOptions,
             ),
         )
         return true

@@ -1424,9 +1424,16 @@
     <navigation
         android:id="@+id/translations_graph"
         app:startDestination="@id/translationsDialogFragment">
+        <argument
+            android:name="sessionId"
+            app:argType="string"
+            app:nullable="true" />
         <dialog
             android:id="@+id/translationsDialogFragment"
             android:name="org.mozilla.fenix.translations.TranslationsDialogFragment">
+            <argument
+                android:name="sessionId"
+                app:argType="string" />
             <argument
                 android:name="translationsDialogAccessPoint"
                 android:defaultValue="Translations"
@@ -1438,6 +1445,9 @@
         <fragment
             android:id="@+id/translationSettingsFragment"
             android:name="org.mozilla.fenix.translations.TranslationSettingsFragment">
+            <argument
+                android:name="sessionId"
+                app:argType="string" />
             <action
                 android:id="@+id/action_translationSettingsFragment_to_translationsDialogFragment"
                 app:destination="@id/translationsDialogFragment"
