@@ -22,6 +22,7 @@
 #include "mozilla/AutoRestore.h"
 #include "mozilla/Tokenizer.h"
 #include "nsComponentManagerUtils.h"
+#include "mozilla/StaticPrefs_network.h"
 
 using namespace mozilla;
 
@@ -984,7 +985,8 @@ nsresult nsMultiMixedConv::ProcessHeader() {
       nsCOMPtr<nsIHttpChannelInternal> httpInternal =
           do_QueryInterface(mChannel);
       mResponseHeaderValue.CompressWhitespace();
-      if (httpInternal) {
+      if (!StaticPrefs::network_cookie_prevent_set_cookie_from_multipart() &&
+          httpInternal) {
         DebugOnly<nsresult> rv = httpInternal->SetCookie(mResponseHeaderValue);
         MOZ_ASSERT(NS_SUCCEEDED(rv));
       }
