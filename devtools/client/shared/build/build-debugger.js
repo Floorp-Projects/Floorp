@@ -8,9 +8,7 @@ const Babel = require("./babel");
 const fs = require("fs");
 const _path = require("path");
 
-const mappings = {
-  react: "devtools/client/shared/vendor/react",
-};
+const mappings = {};
 
 const mappingValues = Object.values(mappings);
 
