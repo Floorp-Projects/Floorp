@@ -330,6 +330,7 @@ const PrecisionMetrics = {
   gemm: {ULP: {float32: getGemmPrecisionTolerance, float16: getGemmPrecisionTolerance}},
   hardSigmoid: {ULP: {float32: 2, float16: 2}},
   hardSwish: {ULP: {float32: 4, float16: 4}},
+  layerNormalization: {ATOL: {float32: 1/1024, float16: 1/512}},
   leakyRelu: {ULP: {float32: 1, float16: 1}},
   linear: {ULP: {float32: 2, float16: 2}},
   matmul: {ULP: {float32: getMatmulPrecisionTolerance, float16: getMatmulPrecisionTolerance}},
@@ -661,6 +662,22 @@ const buildGemm = (operationName, builder, resources) => {
     }
   }
   namedOutputOperand[resources.expected.name] = builder[operationName](inputOperandA, inputOperandB, gemmOptions);
+  return namedOutputOperand;
+};
+
+const buildLayerNorm = (operationName, builder, resources) => {
+  // MLOperand layerNormalization(MLOperand input, optional MLLayerNormalizationOptions options = {});
+  const namedOutputOperand = {};
+  const inputOperand = createSingleInputOperand(builder, resources);
+  const layerNormOptions = {...resources.options};
+  if (layerNormOptions.scale) {
+    layerNormOptions.scale = createConstantOperand(builder, layerNormOptions.scale);
+  }
+  if (layerNormOptions.bias) {
+    layerNormOptions.bias = createConstantOperand(builder, layerNormOptions.bias);
+  }
+  // invoke builder.layerNormalization()
+  namedOutputOperand[resources.expected.name] = builder[operationName](inputOperand, layerNormOptions);
   return namedOutputOperand;
 };
 
