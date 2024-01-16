@@ -23,10 +23,10 @@ import {
   toggleDOMMutationBreakpointState,
 } from "devtools/client/framework/actions/index";
 
-import actions from "../../actions";
+import actions from "../../actions/index";
 import { connect } from "../../utils/connect";
 
-import { CloseButton } from "../shared/Button";
+import { CloseButton } from "../shared/Button/index";
 
 import "./DOMMutationBreakpoints.css";
 

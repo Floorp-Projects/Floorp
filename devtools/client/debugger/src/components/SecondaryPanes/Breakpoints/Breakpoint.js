@@ -11,11 +11,14 @@ import {
 import PropTypes from "devtools/client/shared/vendor/react-prop-types";
 import { connect } from "../../../utils/connect";
 import { createSelector } from "devtools/client/shared/vendor/reselect";
-import actions from "../../../actions";
+import actions from "../../../actions/index";
 
-import { CloseButton } from "../../shared/Button";
+import { CloseButton } from "../../shared/Button/index";
 
-import { getSelectedText, makeBreakpointId } from "../../../utils/breakpoint";
+import {
+  getSelectedText,
+  makeBreakpointId,
+} from "../../../utils/breakpoint/index";
 import { getSelectedLocation } from "../../../utils/selected-location";
 import { isLineBlackboxed } from "../../../utils/source";
 
@@ -26,7 +29,7 @@ import {
   isSourceMapIgnoreListEnabled,
   isSourceOnSourceMapIgnoreList,
   getBlackBoxRanges,
-} from "../../../selectors";
+} from "../../../selectors/index";
 
 const classnames = require("devtools/client/shared/classnames.js");
 

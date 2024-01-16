@@ -7,7 +7,7 @@ import { div, span } from "devtools/client/shared/vendor/react-dom-factories";
 import PropTypes from "devtools/client/shared/vendor/react-prop-types";
 
 import { connect } from "../../../utils/connect";
-import actions from "../../../actions";
+import actions from "../../../actions/index";
 
 import {
   getTruncatedFileName,
@@ -16,7 +16,7 @@ import {
   getFileURL,
 } from "../../../utils/source";
 import { createLocation } from "../../../utils/location";
-import { getFirstSourceActorForGeneratedSource } from "../../../selectors";
+import { getFirstSourceActorForGeneratedSource } from "../../../selectors/index";
 
 import SourceIcon from "../../shared/SourceIcon";
 

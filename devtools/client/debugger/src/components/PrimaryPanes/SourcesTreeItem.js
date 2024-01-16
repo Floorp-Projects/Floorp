@@ -14,8 +14,8 @@ import {
   getGeneratedSourceByURL,
   isSourceOverridden,
   getHideIgnoredSources,
-} from "../../selectors";
-import actions from "../../actions";
+} from "../../selectors/index";
+import actions from "../../actions/index";
 
 import { sourceTypes } from "../../utils/source";
 import { createLocation } from "../../utils/location";

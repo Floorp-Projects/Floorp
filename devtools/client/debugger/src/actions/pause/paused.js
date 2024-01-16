@@ -6,12 +6,12 @@ import {
   getHiddenBreakpoint,
   isEvaluatingExpression,
   getSelectedFrame,
-} from "../../selectors";
+} from "../../selectors/index";
 
-import { mapFrames, fetchFrames } from ".";
-import { removeBreakpoint } from "../breakpoints";
+import { mapFrames, fetchFrames } from "./index";
+import { removeBreakpoint } from "../breakpoints/index";
 import { evaluateExpressions } from "../expressions";
-import { selectLocation } from "../sources";
+import { selectLocation } from "../sources/index";
 import { validateSelectedFrame } from "../../utils/context";
 
 import { fetchScopes } from "./fetchScopes";

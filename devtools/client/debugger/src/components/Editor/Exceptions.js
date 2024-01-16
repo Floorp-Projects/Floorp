@@ -11,8 +11,8 @@ import Exception from "./Exception";
 import {
   getSelectedSource,
   getSelectedSourceExceptions,
-} from "../../selectors";
-import { getDocument } from "../../utils/editor";
+} from "../../selectors/index";
+import { getDocument } from "../../utils/editor/index";
 
 class Exceptions extends Component {
   static get propTypes() {

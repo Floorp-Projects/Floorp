@@ -11,8 +11,8 @@ import {
   startOperation,
   endOperation,
   getTokenEnd,
-} from "../../utils/editor";
-import { isException } from "../../utils/pause";
+} from "../../utils/editor/index";
+import { isException } from "../../utils/pause/index";
 import { getIndentation } from "../../utils/indentation";
 import { connect } from "../../utils/connect";
 import {
@@ -20,7 +20,7 @@ import {
   getPauseReason,
   getSourceTextContent,
   getCurrentThread,
-} from "../../selectors";
+} from "../../selectors/index";
 
 export class DebugLine extends PureComponent {
   debugExpression;

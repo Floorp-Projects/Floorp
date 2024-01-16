@@ -3,7 +3,7 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import { getSelectedLocation } from "./selected-location";
-import { getSource } from "../selectors";
+import { getSource } from "../selectors/index";
 
 /**
  * Note that arguments can be created via `createLocation`.

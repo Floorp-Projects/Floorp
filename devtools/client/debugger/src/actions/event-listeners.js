@@ -6,7 +6,7 @@ import {
   getActiveEventListeners,
   getEventListenerExpanded,
   shouldLogEventBreakpoints,
-} from "../selectors";
+} from "../selectors/index";
 
 async function updateBreakpoints(dispatch, client, newEvents) {
   await client.setEventListenerBreakpoints(newEvents);

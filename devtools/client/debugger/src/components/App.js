@@ -12,7 +12,7 @@ import PropTypes from "devtools/client/shared/vendor/react-prop-types";
 import { connect } from "../utils/connect";
 import { prefs } from "../utils/prefs";
 import { primaryPaneTabs } from "../constants";
-import actions from "../actions";
+import actions from "../actions/index";
 import AccessibleImage from "./shared/AccessibleImage";
 
 import {
@@ -24,7 +24,7 @@ import {
   getIsCurrentThreadPaused,
   isMapScopesEnabled,
   getSourceMapErrorForSourceActor,
-} from "../selectors";
+} from "../selectors/index";
 const KeyShortcuts = require("devtools/client/shared/key-shortcuts");
 
 const SplitBox = require("devtools/client/shared/components/splitter/SplitBox");
@@ -42,9 +42,9 @@ import "./App.css";
 import "./shared/menu.css";
 
 import { ShortcutsModal } from "./ShortcutsModal";
-import PrimaryPanes from "./PrimaryPanes";
-import Editor from "./Editor";
-import SecondaryPanes from "./SecondaryPanes";
+import PrimaryPanes from "./PrimaryPanes/index";
+import Editor from "./Editor/index";
+import SecondaryPanes from "./SecondaryPanes/index";
 import WelcomeBox from "./WelcomeBox";
 import EditorTabs from "./Editor/Tabs";
 import EditorFooter from "./Editor/Footer";

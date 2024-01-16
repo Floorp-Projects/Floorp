@@ -4,7 +4,11 @@
 
 import { Component } from "devtools/client/shared/vendor/react";
 import PropTypes from "devtools/client/shared/vendor/react-prop-types";
-import { toEditorLine, endOperation, startOperation } from "../../utils/editor";
+import {
+  toEditorLine,
+  endOperation,
+  startOperation,
+} from "../../utils/editor/index";
 import { getDocument, hasDocument } from "../../utils/editor/source-documents";
 
 import { connect } from "../../utils/connect";
@@ -14,7 +18,7 @@ import {
   getSelectedSourceTextContent,
   getPauseCommand,
   getCurrentThread,
-} from "../../selectors";
+} from "../../selectors/index";
 
 function isDebugLine(selectedFrame, selectedLocation) {
   if (!selectedFrame) {

@@ -12,7 +12,7 @@ import PropTypes from "devtools/client/shared/vendor/react-prop-types";
 import AccessibleImage from "../shared/AccessibleImage";
 import { showMenu } from "../../context-menu/menu";
 import { connect } from "../../utils/connect";
-import actions from "../../actions";
+import actions from "../../actions/index";
 
 import {
   getSelectedFrame,
@@ -24,7 +24,7 @@ import {
   isMapScopesEnabled,
   getLastExpandedScopes,
   getIsCurrentThreadPaused,
-} from "../../selectors";
+} from "../../selectors/index";
 import {
   getScopesItemsForSelectedFrame,
   getScopeItemPath,

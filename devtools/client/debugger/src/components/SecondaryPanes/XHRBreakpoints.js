@@ -15,12 +15,12 @@ import {
 } from "devtools/client/shared/vendor/react-dom-factories";
 import PropTypes from "devtools/client/shared/vendor/react-prop-types";
 import { connect } from "../../utils/connect";
-import actions from "../../actions";
+import actions from "../../actions/index";
 
-import { CloseButton } from "../shared/Button";
+import { CloseButton } from "../shared/Button/index";
 
 import "./XHRBreakpoints.css";
-import { getXHRBreakpoints, shouldPauseOnAnyXHR } from "../../selectors";
+import { getXHRBreakpoints, shouldPauseOnAnyXHR } from "../../selectors/index";
 import ExceptionOption from "./Breakpoints/ExceptionOption";
 
 const classnames = require("devtools/client/shared/classnames.js");

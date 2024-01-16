@@ -12,7 +12,7 @@ const {
   REPS: { StringRep },
 } = Reps;
 
-import actions from "../../../actions";
+import actions from "../../../actions/index";
 
 import AccessibleImage from "../../shared/AccessibleImage";
 const classnames = require("devtools/client/shared/classnames.js");

@@ -5,8 +5,8 @@
 import React, { Component } from "devtools/client/shared/vendor/react";
 import PropTypes from "devtools/client/shared/vendor/react-prop-types";
 
-import actions from "../../actions";
-import { getSelectedPrimaryPaneTab } from "../../selectors";
+import actions from "../../actions/index";
+import { getSelectedPrimaryPaneTab } from "../../selectors/index";
 import { prefs } from "../../utils/prefs";
 import { connect } from "../../utils/connect";
 import { primaryPaneTabs } from "../../constants";

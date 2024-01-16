@@ -10,14 +10,17 @@ import {
 } from "devtools/client/shared/vendor/react-dom-factories";
 import PropTypes from "devtools/client/shared/vendor/react-prop-types";
 import { connect } from "../../utils/connect";
-import actions from "../../actions";
+import actions from "../../actions/index";
 
-import { getEditor } from "../../utils/editor";
+import { getEditor } from "../../utils/editor/index";
 import { searchKeys } from "../../constants";
 
 import { getRelativePath } from "../../utils/sources-tree/utils";
 import { getFormattedSourceId } from "../../utils/source";
-import { getProjectSearchQuery, getNavigateCounter } from "../../selectors";
+import {
+  getProjectSearchQuery,
+  getNavigateCounter,
+} from "../../selectors/index";
 
 import SearchInput from "../shared/SearchInput";
 import AccessibleImage from "../shared/AccessibleImage";

@@ -11,8 +11,8 @@ import {
   getBreakpointsForSource,
   getSourceActorsForSource,
   getFirstSourceActorForGeneratedSource,
-} from "../../selectors";
-import { addBreakpoint } from "../breakpoints";
+} from "../../selectors/index";
+import { addBreakpoint } from "../breakpoints/index";
 
 import { prettyPrintSourceTextContent } from "./prettyPrint";
 import { isFulfilled, fulfilled } from "../../utils/async-value";

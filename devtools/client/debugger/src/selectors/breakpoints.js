@@ -4,7 +4,7 @@
 
 import { createSelector } from "devtools/client/shared/vendor/reselect";
 
-import { makeBreakpointId } from "../utils/breakpoint";
+import { makeBreakpointId } from "../utils/breakpoint/index";
 
 // This method is only used from the main test helper
 export function getBreakpointsMap(state) {

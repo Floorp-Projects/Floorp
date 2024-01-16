@@ -20,7 +20,7 @@ import AccessibleImage from "../shared/AccessibleImage";
 
 import { objectInspector } from "devtools/client/shared/components/reps/index";
 
-import actions from "../../actions";
+import actions from "../../actions/index";
 import {
   getExpressions,
   getExpressionError,
@@ -31,10 +31,10 @@ import {
   getSelectedFrame,
   getOriginalFrameScope,
   getCurrentThread,
-} from "../../selectors";
+} from "../../selectors/index";
 import { getExpressionResultGripAndFront } from "../../utils/expressions";
 
-import { CloseButton } from "../shared/Button";
+import { CloseButton } from "../shared/Button/index";
 
 import "./Expressions.css";
 

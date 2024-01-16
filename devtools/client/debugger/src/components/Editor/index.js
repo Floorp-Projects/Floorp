@@ -30,14 +30,14 @@ import {
   isSourceMapIgnoreListEnabled,
   isSourceOnSourceMapIgnoreList,
   isMapScopesEnabled,
-} from "../../selectors";
+} from "../../selectors/index";
 
 // Redux actions
-import actions from "../../actions";
+import actions from "../../actions/index";
 
 import SearchInFileBar from "./SearchInFileBar";
 import HighlightLines from "./HighlightLines";
-import Preview from "./Preview";
+import Preview from "./Preview/index";
 import Breakpoints from "./Breakpoints";
 import ColumnBreakpoints from "./ColumnBreakpoints";
 import DebugLine from "./DebugLine";
@@ -66,7 +66,7 @@ import {
   onMouseOver,
   startOperation,
   endOperation,
-} from "../../utils/editor";
+} from "../../utils/editor/index";
 
 import { resizeToggleButton, resizeBreakpointGutter } from "../../utils/ui";
 

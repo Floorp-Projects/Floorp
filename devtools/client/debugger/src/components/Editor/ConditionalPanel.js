@@ -11,15 +11,15 @@ import ReactDOM from "devtools/client/shared/vendor/react-dom";
 import PropTypes from "devtools/client/shared/vendor/react-prop-types";
 import { connect } from "../../utils/connect";
 import "./ConditionalPanel.css";
-import { toEditorLine } from "../../utils/editor";
+import { toEditorLine } from "../../utils/editor/index";
 import { prefs } from "../../utils/prefs";
-import actions from "../../actions";
+import actions from "../../actions/index";
 
 import {
   getClosestBreakpoint,
   getConditionalPanelLocation,
   getLogPointStatus,
-} from "../../selectors";
+} from "../../selectors/index";
 
 const classnames = require("devtools/client/shared/classnames.js");
 
