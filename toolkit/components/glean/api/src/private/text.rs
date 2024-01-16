@@ -79,7 +79,10 @@ impl glean::traits::Text for TextMetric {
                 p.set(value.into());
             }
             TextMetric::Child(_) => {
-                log::error!("Unable to set text metric in non-main process. Ignoring.")
+                log::error!("Unable to set text metric in non-main process. This operation will be ignored.");
+                // If we're in automation we can panic so the instrumentor knows they've gone wrong.
+                // This is a deliberate violation of Glean's "metric APIs must not throw" design.
+                assert!(!crate::ipc::is_in_automation(), "Attempted to set text metric in non-main process, which is forbidden. This panics in automation.");
             }
         }
     }
@@ -102,7 +105,7 @@ impl glean::traits::Text for TextMetric {
         match self {
             TextMetric::Parent(p) => p.test_get_value(ping_name),
             TextMetric::Child(_) => {
-                panic!("Cannot get test value for text metric in non-parent process!")
+                panic!("Cannot get test value for text metric in non-main process!")
             }
         }
     }
@@ -124,7 +127,7 @@ impl glean::traits::Text for TextMetric {
         match self {
             TextMetric::Parent(p) => p.test_get_num_recorded_errors(error),
             TextMetric::Child(_) => panic!(
-                "Cannot get the number of recorded errors for text metric in non-parent process!"
+                "Cannot get the number of recorded errors for text metric in non-main process!"
             ),
         }
     }

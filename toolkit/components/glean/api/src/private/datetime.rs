@@ -91,7 +91,10 @@ impl DatetimeMetric {
                 }
             }
             DatetimeMetric::Child(_) => {
-                log::error!("Unable to set datetime metric in non-parent process. Ignoring.");
+                log::error!("Unable to set datetime metric in non-main process. This operation will be ignored.");
+                // If we're in automation we can panic so the instrumentor knows they've gone wrong.
+                // This is a deliberate violation of Glean's "metric APIs must not throw" design.
+                assert!(!crate::ipc::is_in_automation(), "Attempted to set datetime in non-main process, which is forbidden. This panics in automation.");
                 // TODO: Record an error.
             }
         }
@@ -113,8 +116,11 @@ impl Datetime for DatetimeMetric {
             }
             DatetimeMetric::Child(_) => {
                 log::error!(
-                    "Unable to set datetime metric DatetimeMetric in non-parent process. Ignoring."
+                    "Unable to set datetime metric DatetimeMetric in non-main process. This operation will be ignored."
                 );
+                // If we're in automation we can panic so the instrumentor knows they've gone wrong.
+                // This is a deliberate violation of Glean's "metric APIs must not throw" design.
+                assert!(!crate::ipc::is_in_automation(), "Attempted to set datetime metric in non-main process, which is forbidden. This panics in automation.");
                 // TODO: Record an error.
             }
         }
@@ -140,7 +146,7 @@ impl Datetime for DatetimeMetric {
         match self {
             DatetimeMetric::Parent(p) => p.test_get_value(ping_name),
             DatetimeMetric::Child(_) => {
-                panic!("Cannot get test value for DatetimeMetric in non-parent process!")
+                panic!("Cannot get test value for DatetimeMetric in non-main process!")
             }
         }
     }
@@ -161,7 +167,9 @@ impl Datetime for DatetimeMetric {
     pub fn test_get_num_recorded_errors(&self, error: glean::ErrorType) -> i32 {
         match self {
             DatetimeMetric::Parent(p) => p.test_get_num_recorded_errors(error),
-            DatetimeMetric::Child(_) => panic!("Cannot get the number of recorded errors for DatetimeMetric in non-parent process!"),
+            DatetimeMetric::Child(_) => panic!(
+                "Cannot get the number of recorded errors for DatetimeMetric in non-main process!"
+            ),
         }
     }
 }
