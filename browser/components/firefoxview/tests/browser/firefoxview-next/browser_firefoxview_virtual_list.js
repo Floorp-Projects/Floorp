@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+/* import-globals-from ../head.js */
+
 const VIRTUAL_LIST_ENABLED_PREF = "browser.firefox-view.virtual-list.enabled";
 
 add_setup(async () => {

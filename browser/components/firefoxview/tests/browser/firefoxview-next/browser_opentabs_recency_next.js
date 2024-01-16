@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+/* import-globals-from ../head.js */
+
 /*
    This test checks the recent-browsing view of open tabs in about:firefoxview next
    presents the correct tab data in the correct order.
