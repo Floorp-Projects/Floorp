@@ -68,9 +68,9 @@ checkPseudoClass(select, true);
 content.appendChild(textarea);
 content.appendChild(input);
 content.appendChild(select);
-checkPseudoClass(textarea, false);
-checkPseudoClass(input, false);
-checkPseudoClass(select, false);
+checkPseudoClass(textarea, true);
+checkPseudoClass(input, true);
+checkPseudoClass(select, true);
 
 // Back in the form.
 form.appendChild(textarea);
@@ -95,9 +95,9 @@ checkPseudoClass(select, true);
 
 // Remove the form.
 document.getElementsByTagName('table')[0].removeChild(form);
-checkPseudoClass(textarea, false);
-checkPseudoClass(input, false);
-checkPseudoClass(select, false);
+checkPseudoClass(textarea, true);
+checkPseudoClass(input, true);
+checkPseudoClass(select, true);
 
 </script>
 </pre>
