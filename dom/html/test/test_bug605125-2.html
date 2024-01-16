@@ -32,7 +32,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=605125
 function checkPseudoClass(aElement, aExpected)
 {
   is(aElement.matches(":user-valid"), aExpected,
-     "matches(':user-valid') should return " + aExpected + " for " + aElement);
+     "matches(':user-valid') should return " + aExpected + " for " + aElement.outerHTML);
 }
 
 function checkElement(aElement)
@@ -95,6 +95,11 @@ function checkElement(aElement)
 function checkSelectElement(aElement)
 {
   checkPseudoClass(aElement, false);
+
+  if (!aElement.multiple && navigator.platform.startsWith("Mac")) {
+    // Arrow key on macOS opens the popup.
+    return;
+  }
 
   // Focusing while :user-valid doesn't apply,
   // the pseudo-class should not apply while changing selection.
