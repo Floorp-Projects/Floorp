@@ -7254,6 +7254,11 @@ static bool EvalStencil(JSContext* cx, uint32_t argc, Value* vp) {
   if (useDebugMetadata) {
     instantiateOptions.hideScriptFromDebugger = true;
   }
+
+  if (!js::ValidateLazinessOfStencilAndGlobal(cx, *stencilObj->stencil())) {
+    return false;
+  }
+
   RootedScript script(cx, JS::InstantiateGlobalStencil(cx, instantiateOptions,
                                                        stencilObj->stencil()));
   if (!script) {
@@ -7380,12 +7385,15 @@ static bool EvalStencilXDR(JSContext* cx, uint32_t argc, Value* vp) {
   }
 
   /* Prepare the input byte array. */
-  if (!args[0].isObject() || !args[0].toObject().is<StencilXDRBufferObject>()) {
+  if (!args[0].isObject()) {
+    JS_ReportErrorASCII(cx, "evalStencilXDR: stencil XDR object expected");
+  }
+  Rooted<StencilXDRBufferObject*> xdrObj(
+      cx, args[0].toObject().maybeUnwrapIf<StencilXDRBufferObject>());
+  if (!xdrObj) {
     JS_ReportErrorASCII(cx, "evalStencilXDR: stencil XDR object expected");
     return false;
   }
-  Rooted<StencilXDRBufferObject*> xdrObj(
-      cx, &args[0].toObject().as<StencilXDRBufferObject>());
   MOZ_ASSERT(xdrObj->hasBuffer());
 
   CompileOptions options(cx);
@@ -7431,6 +7439,10 @@ static bool EvalStencilXDR(JSContext* cx, uint32_t argc, Value* vp) {
     JS_ReportErrorASCII(cx,
                         "evalStencilXDR: Module stencil cannot be evaluated. "
                         "Use instantiateModuleStencilXDR instead");
+    return false;
+  }
+
+  if (!js::ValidateLazinessOfStencilAndGlobal(cx, stencil)) {
     return false;
   }
 

@@ -8,18 +8,22 @@
 
 #include <stdint.h>  // uint32_t
 
-#include "jsapi.h"                 // JS_NewPlainObject, JS_WrapValue
-#include "js/CharacterEncoding.h"  // JS_EncodeStringToUTF8
-#include "js/ColumnNumber.h"       // JS::ColumnNumberOneOrigin
-#include "js/CompileOptions.h"     // JS::CompileOptions
+#include "jsapi.h"  // JS_NewPlainObject, JS_WrapValue
+
+#include "frontend/CompilationStencil.h"  // js::frontend::CompilationStencil
+#include "js/CharacterEncoding.h"         // JS_EncodeStringToUTF8
+#include "js/ColumnNumber.h"              // JS::ColumnNumberOneOrigin
+#include "js/CompileOptions.h"            // JS::CompileOptions
 #include "js/Conversions.h"  // JS::ToBoolean, JS::ToString, JS::ToUint32, JS::ToInt32
 #include "js/PropertyAndElement.h"  // JS_GetProperty, JS_DefineProperty
 #include "js/PropertyDescriptor.h"  // JSPROP_ENUMERATE
+#include "js/RealmOptions.h"        // JS::RealmBehaviors
 #include "js/RootingAPI.h"          // JS::Rooted, JS::Handle
 #include "js/Utility.h"             // JS::UniqueChars
 #include "js/Value.h"               // JS::Value, JS::StringValue
 #include "vm/JSContext.h"           // JS::ReportUsageErrorASCII
 #include "vm/JSScript.h"
+#include "vm/Realm.h"  // JS::Realm
 
 bool js::ParseCompileOptions(JSContext* cx, JS::CompileOptions& options,
                              JS::Handle<JSObject*> opts,
@@ -291,4 +295,16 @@ JS::UniqueChars js::StringToLocale(JSContext* cx, JS::Handle<JSObject*> callee,
   }
 
   return locale;
+}
+
+bool js::ValidateLazinessOfStencilAndGlobal(
+    JSContext* cx, const js::frontend::CompilationStencil& stencil) {
+  if (cx->realm()->behaviors().discardSource() && stencil.canLazilyParse) {
+    JS_ReportErrorASCII(cx,
+                        "Stencil compiled with with lazy parse option cannot "
+                        "be used in a realm with discardSource");
+    return false;
+  }
+
+  return true;
 }
