@@ -153,6 +153,8 @@
 #include "mozilla/dom/ClientState.h"
 #include "mozilla/dom/Comment.h"
 #include "mozilla/dom/ContentChild.h"
+#include "mozilla/dom/CSSBinding.h"
+#include "mozilla/dom/CSSCustomPropertyRegisteredEvent.h"
 #include "mozilla/dom/DOMImplementation.h"
 #include "mozilla/dom/DOMIntersectionObserver.h"
 #include "mozilla/dom/DOMStringList.h"
@@ -186,6 +188,7 @@
 #include "mozilla/dom/HTMLSharedElement.h"
 #include "mozilla/dom/HTMLTextAreaElement.h"
 #include "mozilla/dom/ImageTracker.h"
+#include "mozilla/dom/InspectorUtils.h"
 #include "mozilla/dom/Link.h"
 #include "mozilla/dom/MediaQueryList.h"
 #include "mozilla/dom/MediaSource.h"
@@ -7473,14 +7476,36 @@ void Document::PostStyleSheetRemovedEvent(StyleSheet& aSheet) {
   asyncDispatcher->PostDOMEvent();
 }
 
-void Document::PostCustomPropertyRegistered() {
+void Document::PostCustomPropertyRegistered(
+    const PropertyDefinition& aDefinition) {
   if (!StyleSheetChangeEventsEnabled()) {
     return;
   }
 
+  CSSCustomPropertyRegisteredEventInit init;
+  init.mBubbles = true;
+  init.mCancelable = false;
+
+  InspectorCSSPropertyDefinition property;
+
+  property.mName.Append(aDefinition.mName);
+  property.mSyntax.Append(aDefinition.mSyntax);
+  property.mInherits = aDefinition.mInherits;
+  if (aDefinition.mInitialValue.WasPassed()) {
+    property.mInitialValue.Append(aDefinition.mInitialValue.Value());
+  } else {
+    property.mInitialValue.SetIsVoid(true);
+  }
+  property.mFromJS = true;
+  init.mPropertyDefinition = property;
+
+  RefPtr<CSSCustomPropertyRegisteredEvent> event =
+      CSSCustomPropertyRegisteredEvent::Constructor(
+          this, u"csscustompropertyregistered"_ns, init);
+  event->SetTrusted(true);
+  event->SetTarget(this);
   RefPtr<AsyncEventDispatcher> asyncDispatcher =
-      new AsyncEventDispatcher(this, u"CssCustomPropertyRegistered"_ns,
-                               CanBubble::eNo, ChromeOnlyDispatch::eYes);
+      new AsyncEventDispatcher(this, event.forget(), ChromeOnlyDispatch::eYes);
   asyncDispatcher->PostDOMEvent();
 }
 
