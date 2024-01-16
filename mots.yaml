@@ -8,7 +8,7 @@
 # documentation and how to modify this file.
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2024-01-12T16:58:39.972762'
+updated_at: '2024-01-16T17:14:53.714398'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -1170,6 +1170,7 @@ modules:
     owners:
       - *timhuang
     peers:
+      - *bvandersloot
       - *dimi
       - *pbz
     machine_name: core_antitracking
@@ -4250,5 +4251,5 @@ modules:
         - Ryan Tilder
       group: dev-platform
 hashes:
-  config: f414cee39a9e64c11bd2a7b32b3174b4c51b227c
-  export: b022881a04f2eacf3c757d15ee25958b1bb9fcc9
+  config: fb060c17e3de2c36297486934de8c2bd6b42aaa3
+  export: ef436c78e9aaead2c41a6331db4800928d144df0
