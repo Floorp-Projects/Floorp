@@ -2483,8 +2483,6 @@ nsresult HttpChannelChild::ContinueAsyncOpen() {
 
   openArgs.classicScriptHintCharset() = mClassicScriptHintCharset;
 
-  openArgs.isUserAgentHeaderModified() = LoadIsUserAgentHeaderModified();
-
   RefPtr<Document> doc;
   mLoadInfo->GetLoadingDocument(getter_AddRefs(doc));
 
@@ -2567,11 +2565,6 @@ HttpChannelChild::SetRequestHeader(const nsACString& aHeader,
   RequestHeaderTuple* tuple = mClientSetRequestHeaders.AppendElement();
   if (!tuple) return NS_ERROR_OUT_OF_MEMORY;
 
-  // Mark that the User-Agent header has been modified.
-  if (nsHttp::ResolveAtom(aHeader) == nsHttp::User_Agent) {
-    StoreIsUserAgentHeaderModified(true);
-  }
-
   tuple->mHeader = aHeader;
   tuple->mValue = aValue;
   tuple->mMerge = aMerge;
@@ -2587,11 +2580,6 @@ HttpChannelChild::SetEmptyRequestHeader(const nsACString& aHeader) {
 
   RequestHeaderTuple* tuple = mClientSetRequestHeaders.AppendElement();
   if (!tuple) return NS_ERROR_OUT_OF_MEMORY;
-
-  // Mark that the User-Agent header has been modified.
-  if (nsHttp::ResolveAtom(aHeader) == nsHttp::User_Agent) {
-    StoreIsUserAgentHeaderModified(true);
-  }
 
   tuple->mHeader = aHeader;
   tuple->mMerge = false;
