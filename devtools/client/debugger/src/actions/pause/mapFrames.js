@@ -6,7 +6,6 @@ import {
   getFrames,
   getBlackBoxRanges,
   getSelectedFrame,
-  getSymbols,
 } from "../../selectors";
 
 import { isFrameBlackBoxed } from "../../utils/source";
@@ -19,7 +18,8 @@ import {
 } from "../../utils/location";
 import { annotateFramesWithLibrary } from "../../utils/pause/frames/annotateFrames";
 import { createWasmOriginalFrame } from "../../client/firefox/create";
-import { getOriginalDisplayNameForOriginalLocation } from "../../reducers/pause";
+
+import { getOriginalFunctionDisplayName } from "../sources";
 
 function getSelectedFrameId(state, thread, frames) {
   let selectedFrame = getSelectedFrame(state, thread);
@@ -50,12 +50,10 @@ async function updateFrameLocationAndDisplayName(frame, thunkArgs) {
   }
 
   // As we now know that this frame relates to an original source...
-  // Check if we already fetched symbols for it and compute the frame's originalDisplayName.
-  // Otherwise it will be lazily computed by the reducer on source selection / symbols being fetched.
-  const symbols = getSymbols(thunkArgs.getState(), location);
-  const originalDisplayName = symbols
-    ? getOriginalDisplayNameForOriginalLocation(symbols, location)
-    : null;
+  // Fetch the symbols for it and compute the frame's originalDisplayName.
+  const originalDisplayName = await thunkArgs.dispatch(
+    getOriginalFunctionDisplayName(location)
+  );
 
   // As we modify frame object, fork it to force causing re-renders
   return {
