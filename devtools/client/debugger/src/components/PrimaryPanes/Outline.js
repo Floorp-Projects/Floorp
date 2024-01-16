@@ -4,7 +4,7 @@
 
 import React, { Component } from "react";
 import { div, ul, li, span, h2, button } from "react-dom-factories";
-import PropTypes from "prop-types";
+import PropTypes from "devtools/client/shared/vendor/react-prop-types";
 import { connect } from "../../utils/connect";
 
 import { containsPosition, positionAfter } from "../../utils/ast";

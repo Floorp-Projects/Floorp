@@ -4,7 +4,7 @@
 
 import React, { PureComponent } from "react";
 import { div, button, span } from "react-dom-factories";
-import PropTypes from "prop-types";
+import PropTypes from "devtools/client/shared/vendor/react-prop-types";
 import { connect } from "../../utils/connect";
 import actions from "../../actions";
 import {
