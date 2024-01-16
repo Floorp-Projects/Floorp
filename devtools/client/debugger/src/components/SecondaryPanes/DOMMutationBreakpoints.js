@@ -11,7 +11,7 @@ const {
   REPS: { Rep },
   MODE,
 } = Reps;
-import { translateNodeFrontToGrip } from "inspector-shared-utils";
+import { translateNodeFrontToGrip } from "devtools/client/inspector/shared/utils";
 
 import {
   deleteDOMMutationBreakpoint,
