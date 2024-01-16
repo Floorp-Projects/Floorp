@@ -481,7 +481,6 @@ module.exports = {
         "mozilla/use-services": "off",
         "no-array-constructor": "off",
         "no-caller": "off",
-        "no-cond-assign": "off",
         "no-control-regex": "off",
         "no-else-return": "off",
         "no-empty": "off",

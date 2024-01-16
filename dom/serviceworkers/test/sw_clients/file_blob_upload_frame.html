@@ -57,7 +57,7 @@ navigator.serviceWorker.ready.then(function() {
 var URL = '/tests/dom/serviceworkers/test/redirect_post.sjs';
 
 addEventListener('message', function(evt) {
-  if (evt.data.type = 'TEST') {
+  if (evt.data.type == 'TEST') {
     makeFileBlob(evt.data.body).then(function(blob) {
       return fetch(URL, { method: 'POST', body: blob });
     }).then(function(response) {

@@ -58,13 +58,13 @@
   var node;
 
   // forwards
-  while (node = iterator.nextNode())
+  while ((node = iterator.nextNode()))
     found.push(node.nodeType);
   compare_arrays(expected, found, 'basics forward');
 
   // backwards
   found.length = 0;
-  while (node = iterator.previousNode())
+  while ((node = iterator.previousNode()))
     found.unshift(node.nodeType);
   compare_arrays(expected, found, 'basics backward');
 
@@ -99,13 +99,13 @@
                                          filter);
 
   // forwards
-  while (node = iterator.nextNode())
+  while ((node = iterator.nextNode()))
     found.push(node.nodeType);
   compare_arrays(expect_f, found, 'filtered forward');
 
   // backwards
   found.length = 0;
-  while (node = iterator.previousNode())
+  while ((node = iterator.previousNode()))
     found.unshift(node.nodeType);
   compare_arrays(expect_f, found, 'filtered backward');
 

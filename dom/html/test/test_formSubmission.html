@@ -443,7 +443,7 @@ function onFilesOpened(files) {
   var addList = document.getElementsByClassName("setfile");
   let i = 0;
   var input;
-  while (input = addList[i++]) {
+  while ((input = addList[i++])) {
     if (input.classList.contains("multi")) {
       SpecialPowers.wrap(input).mozSetFileArray(multiFile);
     } else {

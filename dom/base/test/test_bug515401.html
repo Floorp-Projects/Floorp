@@ -117,7 +117,7 @@ is(basehref3.parentNode.parentNode, head, "base got inserted correctly");
 
 // Remove secondary bases
 var tmp, tmp2;
-for (tmp = head.firstChild; tmp = tmp.nextSibling; tmp) {
+for (tmp = head.firstChild; (tmp = tmp.nextSibling); tmp) {
   if (tmp.localName == "base" && tmp != basehref0) {
     tmp2 = tmp.previousSibling;
     head.removeChild(tmp);
