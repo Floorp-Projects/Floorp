@@ -209,6 +209,8 @@ add_task(async function testNonUrlClipboardSuggestion() {
         // Testing http because it is considered as a valid URL.
         // eslint-disable-next-line @microsoft/sdl/no-insecure-url
         "http://",
+        "https://example.com some text",
+        "https://example.com/ some text",
       ];
       for (let i = 0; i < malformedURLs.length; i++) {
         SpecialPowers.clipboardCopyString(malformedURLs[i]);

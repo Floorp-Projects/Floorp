@@ -12,6 +12,7 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   UrlbarResult: "resource:///modules/UrlbarResult.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
+  UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.sys.mjs",
 });
 
 const RESULT_MENU_COMMANDS = {
@@ -55,7 +56,14 @@ class ProviderClipboard extends UrlbarProvider {
       return false;
     }
     let textFromClipboard = controller.browserWindow.readFromClipboard();
-    if (!textFromClipboard || textFromClipboard.length > 2048) {
+
+    // Check for spaces in clipboard text to avoid suggesting
+    // clipboard content including both a url and the following text.
+    if (
+      !textFromClipboard ||
+      textFromClipboard.length > 2048 ||
+      lazy.UrlbarTokenizer.REGEXP_SPACES.test(textFromClipboard)
+    ) {
       return false;
     }
     textFromClipboard =
