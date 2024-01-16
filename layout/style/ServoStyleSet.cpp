@@ -1435,9 +1435,10 @@ void ServoStyleSet::MaybeInvalidateForElementInsertion(
                                                              &aElement);
 }
 
-void ServoStyleSet::MaybeInvalidateForElementAppend(const Element& aElement) {
+void ServoStyleSet::MaybeInvalidateForElementAppend(
+    const nsIContent& aFirstContent) {
   Servo_StyleSet_MaybeInvalidateRelativeSelectorForAppend(mRawData.get(),
-                                                          &aElement);
+                                                          &aFirstContent);
 }
 
 void ServoStyleSet::MaybeInvalidateForElementRemove(
