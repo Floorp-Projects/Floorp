@@ -2016,7 +2016,7 @@ void Document::AccumulatePageLoadTelemetry(
     glean::perf::PageLoadExtra& aEventTelemetryDataOut) {
   // Interested only in top level documents for real websites that are in the
   // foreground.
-  if (!ShouldIncludeInTelemetry(false) || !IsTopLevelContentDocument() ||
+  if (!ShouldIncludeInTelemetry() || !IsTopLevelContentDocument() ||
       !GetNavigationTiming() ||
       !GetNavigationTiming()->DocShellHasBeenActiveSinceNavigationStart()) {
     return;
@@ -2240,7 +2240,7 @@ void Document::AccumulatePageLoadTelemetry(
 
 void Document::AccumulateJSTelemetry(
     glean::perf::PageLoadExtra& aEventTelemetryDataOut) {
-  if (!IsTopLevelContentDocument() || !ShouldIncludeInTelemetry(false)) {
+  if (!IsTopLevelContentDocument() || !ShouldIncludeInTelemetry()) {
     return;
   }
 
@@ -16111,7 +16111,7 @@ void Document::InitUseCounters() {
 
   static_assert(Telemetry::HistogramUseCounterCount > 0);
 
-  if (!ShouldIncludeInTelemetry(/* aAllowExtensionURIs = */ true)) {
+  if (!ShouldIncludeInTelemetry()) {
     return;
   }
 
@@ -18913,7 +18913,7 @@ bool Document::IsLikelyContentInaccessibleTopLevelAboutBlank() const {
   return bc && bc->IsTop() && !bc->HadOriginalOpener();
 }
 
-bool Document::ShouldIncludeInTelemetry(bool aAllowExtensionURIs) {
+bool Document::ShouldIncludeInTelemetry() const {
   if (!IsContentDocument() && !IsResourceDoc()) {
     return false;
   }
@@ -18923,25 +18923,11 @@ bool Document::ShouldIncludeInTelemetry(bool aAllowExtensionURIs) {
   }
 
   nsIPrincipal* prin = NodePrincipal();
-  if (prin->GetIsAddonOrExpandedAddonPrincipal()) {
-    if (!aAllowExtensionURIs) {
-      return false;
-    }
-    RefPtr<extensions::WebExtensionPolicy> ap;
-    if (NS_SUCCEEDED(prin->GetAddonPolicy(getter_AddRefs(ap))) &&
-        ap->IsPrivileged()) {
-      return false;
-    }
-  }
-
   // TODO(emilio): Should this use GetIsContentPrincipal() +
   // GetPrecursorPrincipal() instead (accounting for add-ons separately)?
-  if (prin->IsSystemPrincipal() || prin->SchemeIs("about") ||
-      prin->SchemeIs("chrome") || prin->SchemeIs("resource")) {
-    return false;
-  }
-
-  return true;
+  return !(prin->GetIsAddonOrExpandedAddonPrincipal() ||
+           prin->IsSystemPrincipal() || prin->SchemeIs("about") ||
+           prin->SchemeIs("chrome") || prin->SchemeIs("resource"));
 }
 
 void Document::GetConnectedShadowRoots(
