@@ -119,10 +119,8 @@ HTMLSelectElement::HTMLSelectElement(
       mDisabledChanged(false),
       mMutating(false),
       mInhibitStateRestoration(!!(aFromParser & FROM_PARSER_FRAGMENT)),
-      mSelectionHasChanged(false),
+      mUserInteracted(false),
       mDefaultSelectionSet(false),
-      mCanShowInvalidUI(true),
-      mCanShowValidUI(true),
       mIsOpenInParentProcess(false),
       mNonOptionChildren(0),
       mOptGroupCount(0),
@@ -282,7 +280,7 @@ void HTMLSelectElement::InsertOptionsIntoList(nsIContent* aOptions,
     // Fix the currently selected index
     if (aListIndex <= mSelectedIndex) {
       mSelectedIndex += (insertIndex - aListIndex);
-      SetSelectionChanged(true, aNotify);
+      OnSelectionChanged();
     }
 
     // Get the frame stuff for notification. No need to flush here
@@ -382,7 +380,7 @@ nsresult HTMLSelectElement::RemoveOptionsFromList(nsIContent* aOptions,
         // If this is a Combobox, no other Item will be selected.
         if (IsCombobox()) {
           mSelectedIndex = -1;
-          SetSelectionChanged(true, aNotify);
+          OnSelectionChanged();
         } else {
           FindSelectedIndex(aListIndex, aNotify);
         }
@@ -390,7 +388,7 @@ nsresult HTMLSelectElement::RemoveOptionsFromList(nsIContent* aOptions,
         // Shift the selected index if something in front of it was removed
         // aListIndex+numRemoved <= mSelectedIndex
         mSelectedIndex -= numRemoved;
-        SetSelectionChanged(true, aNotify);
+        OnSelectionChanged();
       }
     }
 
@@ -701,7 +699,7 @@ void HTMLSelectElement::SetSelectedIndexInternal(int32_t aIndex, bool aNotify) {
     selectFrame->OnSetSelectedIndex(oldSelectedIndex, mSelectedIndex);
   }
 
-  SetSelectionChanged(true, aNotify);
+  OnSelectionChanged();
 }
 
 bool HTMLSelectElement::IsOptionSelectedByIndex(int32_t aIndex) const {
@@ -716,7 +714,7 @@ void HTMLSelectElement::OnOptionSelected(nsISelectControlFrame* aSelectFrame,
   // Set the selected index
   if (aSelected && (aIndex < mSelectedIndex || mSelectedIndex < 0)) {
     mSelectedIndex = aIndex;
-    SetSelectionChanged(true, aNotify);
+    OnSelectionChanged();
   } else if (!aSelected && aIndex == mSelectedIndex) {
     FindSelectedIndex(aIndex + 1, aNotify);
   }
@@ -741,15 +739,14 @@ void HTMLSelectElement::OnOptionSelected(nsISelectControlFrame* aSelectFrame,
 
 void HTMLSelectElement::FindSelectedIndex(int32_t aStartIndex, bool aNotify) {
   mSelectedIndex = -1;
-  SetSelectionChanged(true, aNotify);
   uint32_t len = Length();
   for (int32_t i = aStartIndex; i < int32_t(len); i++) {
     if (IsOptionSelectedByIndex(i)) {
       mSelectedIndex = i;
-      SetSelectionChanged(true, aNotify);
       break;
     }
   }
+  OnSelectionChanged();
 }
 
 // XXX Consider splitting this into two functions for ease of reading:
@@ -1270,27 +1267,6 @@ void HTMLSelectElement::GetEventTargetParent(EventChainPreVisitor& aVisitor) {
   nsGenericHTMLFormControlElementWithState::GetEventTargetParent(aVisitor);
 }
 
-nsresult HTMLSelectElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
-  if (aVisitor.mEvent->mMessage == eFocus) {
-    // If the invalid UI is shown, we should show it while focused and
-    // update the invalid/valid UI.
-    mCanShowInvalidUI = !IsValid() && ShouldShowValidityUI();
-
-    // If neither invalid UI nor valid UI is shown, we shouldn't show the valid
-    // UI while focused.
-    mCanShowValidUI = ShouldShowValidityUI();
-
-    // We don't have to update ElementState::USER_INVALID nor
-    // ElementState::USER_VALID given that the states should not change.
-  } else if (aVisitor.mEvent->mMessage == eBlur) {
-    mCanShowInvalidUI = true;
-    mCanShowValidUI = true;
-    UpdateValidityElementStates(true);
-  }
-
-  return nsGenericHTMLFormControlElementWithState::PostHandleEvent(aVisitor);
-}
-
 void HTMLSelectElement::UpdateValidityElementStates(bool aNotify) {
   AutoStateChangeNotifier notifier(*this, aNotify);
   RemoveStatesSilently(ElementState::VALIDITY_STATES);
@@ -1301,26 +1277,14 @@ void HTMLSelectElement::UpdateValidityElementStates(bool aNotify) {
   ElementState state;
   if (IsValid()) {
     state |= ElementState::VALID;
+    if (mUserInteracted) {
+      state |= ElementState::USER_VALID;
+    }
   } else {
     state |= ElementState::INVALID;
-
-    if (GetValidityState(VALIDITY_STATE_CUSTOM_ERROR) ||
-        (mCanShowInvalidUI && ShouldShowValidityUI())) {
+    if (mUserInteracted) {
       state |= ElementState::USER_INVALID;
     }
-  }
-
-  // :-moz-ui-valid applies if all the following are true:
-  // 1. The element is not focused, or had either :-moz-ui-valid or
-  //    :-moz-ui-invalid applying before it was focused ;
-  // 2. The element is either valid or isn't allowed to have
-  //    :-moz-ui-invalid applying ;
-  // 3. The element has already been modified or the user tried to submit the
-  //    form owner while invalid.
-  if (mCanShowValidUI && ShouldShowValidityUI() &&
-      (IsValid() ||
-       (state.HasState(ElementState::USER_INVALID) && !mCanShowInvalidUI))) {
-    state |= ElementState::USER_VALID;
   }
 
   AddStatesSilently(state);
@@ -1453,9 +1417,9 @@ HTMLSelectElement::Reset() {
     SelectSomething(true);
   }
 
-  SetSelectionChanged(false, true);
+  OnSelectionChanged();
+  SetUserInteracted(false);
 
-  //
   // Let the frame know we were reset
   //
   // Don't flush, if there's no frame yet it won't care about us being
@@ -1626,24 +1590,25 @@ void HTMLSelectElement::FieldSetDisabledChanged(bool aNotify) {
   UpdateValidityElementStates(aNotify);
 }
 
-void HTMLSelectElement::SetSelectionChanged(bool aValue, bool aNotify) {
+void HTMLSelectElement::OnSelectionChanged() {
   if (!mDefaultSelectionSet) {
     return;
   }
-
   UpdateSelectedOptions();
-
-  bool previousSelectionChangedValue = mSelectionHasChanged;
-  mSelectionHasChanged = aValue;
-  if (mSelectionHasChanged != previousSelectionChangedValue) {
-    UpdateValidityElementStates(aNotify);
-  }
 }
 
 void HTMLSelectElement::UpdateSelectedOptions() {
   if (mSelectedOptions) {
     mSelectedOptions->SetDirty();
   }
+}
+
+void HTMLSelectElement::SetUserInteracted(bool aInteracted) {
+  if (mUserInteracted == aInteracted) {
+    return;
+  }
+  mUserInteracted = aInteracted;
+  UpdateValidityElementStates(true);
 }
 
 void HTMLSelectElement::SetPreviewValue(const nsAString& aValue) {
@@ -1654,6 +1619,22 @@ void HTMLSelectElement::SetPreviewValue(const nsAString& aValue) {
   if (comboFrame) {
     comboFrame->RedisplaySelectedText();
   }
+}
+
+void HTMLSelectElement::UserFinishedInteracting(bool aChanged) {
+  SetUserInteracted(true);
+  if (!aChanged) {
+    return;
+  }
+
+  // Dispatch the input event.
+  DebugOnly<nsresult> rvIgnored = nsContentUtils::DispatchInputEvent(this);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
+                       "Failed to dispatch input event");
+
+  // Dispatch the change event.
+  nsContentUtils::DispatchTrustedEvent(OwnerDoc(), this, u"change"_ns,
+                                       CanBubble::eYes, Cancelable::eNo);
 }
 
 JSObject* HTMLSelectElement::WrapNode(JSContext* aCx,

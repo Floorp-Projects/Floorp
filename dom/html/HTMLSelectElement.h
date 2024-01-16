@@ -128,6 +128,9 @@ class HTMLSelectElement final : public nsGenericHTMLFormControlElementWithState,
 
   void GetAutocompleteInfo(AutocompleteInfo& aInfo);
 
+  // Sets the user interacted flag and fires input/change events if needed.
+  MOZ_CAN_RUN_SCRIPT void UserFinishedInteracting(bool aChanged);
+
   bool Disabled() const { return GetBoolAttr(nsGkAtoms::disabled); }
   void SetDisabled(bool aVal, ErrorResult& aRv) {
     SetHTMLBoolAttr(nsGkAtoms::disabled, aVal, aRv);
@@ -194,8 +197,6 @@ class HTMLSelectElement final : public nsGenericHTMLFormControlElementWithState,
 
   // nsIContent
   void GetEventTargetParent(EventChainPreVisitor& aVisitor) override;
-  MOZ_CAN_RUN_SCRIPT
-  nsresult PostHandleEvent(EventChainPostVisitor& aVisitor) override;
 
   bool IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
                        int32_t* aTabIndex) override;
@@ -300,7 +301,7 @@ class HTMLSelectElement final : public nsGenericHTMLFormControlElementWithState,
                                 ValidityStateType aType) override;
 
   void UpdateValueMissingValidityState();
-  void UpdateValidityElementStates(bool aNotify) final;
+  void UpdateValidityElementStates(bool aNotify);
   /**
    * Insert aElement before the node given by aBefore
    */
@@ -451,7 +452,7 @@ class HTMLSelectElement final : public nsGenericHTMLFormControlElementWithState,
 
   void SetSelectedIndexInternal(int32_t aIndex, bool aNotify);
 
-  void SetSelectionChanged(bool aValue, bool aNotify);
+  void OnSelectionChanged();
 
   /**
    * Marks the selectedOptions list as dirty, so that it'll populate itself
@@ -459,25 +460,7 @@ class HTMLSelectElement final : public nsGenericHTMLFormControlElementWithState,
    */
   void UpdateSelectedOptions();
 
-  /**
-   * Return whether an element should have a validity UI.
-   * (with :-moz-ui-invalid and :-moz-ui-valid pseudo-classes).
-   *
-   * @return Whether the element should have a validity UI.
-   */
-  bool ShouldShowValidityUI() const {
-    /**
-     * Always show the validity UI if the form has already tried to be submitted
-     * but was invalid.
-     *
-     * Otherwise, show the validity UI if the selection has been changed.
-     */
-    if (mForm && mForm->HasEverTriedInvalidSubmit()) {
-      return true;
-    }
-
-    return mSelectionHasChanged;
-  }
+  void SetUserInteracted(bool) final;
 
   /** The options[] array */
   RefPtr<HTMLOptionsCollection> mOptions;
@@ -495,23 +478,10 @@ class HTMLSelectElement final : public nsGenericHTMLFormControlElementWithState,
    * True if DoneAddingChildren will get called but shouldn't restore state.
    */
   bool mInhibitStateRestoration : 1;
-  /**
-   * True if the selection has changed since the element's creation.
-   */
-  bool mSelectionHasChanged : 1;
-  /**
-   * True if the default selected option has been set.
-   */
+  /** https://html.spec.whatwg.org/#user-interacted */
+  bool mUserInteracted : 1;
+  /** True if the default selected option has been set. */
   bool mDefaultSelectionSet : 1;
-  /**
-   * True if :-moz-ui-invalid can be shown.
-   */
-  bool mCanShowInvalidUI : 1;
-  /**
-   * True if :-moz-ui-valid can be shown.
-   */
-  bool mCanShowValidUI : 1;
-
   /** True if we're open in the parent process */
   bool mIsOpenInParentProcess : 1;
 

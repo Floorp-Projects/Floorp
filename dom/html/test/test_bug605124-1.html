@@ -37,8 +37,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=605124
 
 function checkPseudoClass(aElement, aExpected)
 {
-  is(aElement.matches(":-moz-ui-invalid"), aExpected,
-     "matches(':-moz-ui-invalid') should return " + aExpected + " for " + aElement);
+  is(aElement.matches(":user-invalid"), aExpected,
+     "matches(':user-invalid') should return " + aExpected + " for " + aElement);
 }
 
 var content = document.getElementById('content');
@@ -62,9 +62,9 @@ checkPseudoClass(select, true);
 content.appendChild(textarea);
 content.appendChild(input);
 content.appendChild(select);
-checkPseudoClass(textarea, false);
-checkPseudoClass(input, false);
-checkPseudoClass(select, false);
+checkPseudoClass(textarea, true);
+checkPseudoClass(input, true);
+checkPseudoClass(select, true);
 
 // Back in the form.
 form.appendChild(textarea);
@@ -89,10 +89,9 @@ checkPseudoClass(select, true);
 
 // Remove the form.
 document.getElementsByTagName('table')[0].removeChild(form);
-checkPseudoClass(textarea, false);
-checkPseudoClass(input, false);
-checkPseudoClass(select, false);
-
+checkPseudoClass(textarea, true);
+checkPseudoClass(input, true);
+checkPseudoClass(select, true);
 </script>
 </pre>
 </body>

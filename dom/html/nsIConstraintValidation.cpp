@@ -83,13 +83,6 @@ bool nsIConstraintValidation::ReportValidity() {
   event->WidgetEventPtr()->mFlags.mOnlyChromeDispatch = true;
 
   element->DispatchEvent(*event);
-
-  auto* inputElement = HTMLInputElement::FromNode(element);
-  if (inputElement && inputElement->State().HasState(ElementState::FOCUS)) {
-    inputElement->UpdateValidityUIBits(true);
-    inputElement->UpdateValidityElementStates(true);
-  }
-
   return false;
 }
 

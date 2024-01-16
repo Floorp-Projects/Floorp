@@ -49,7 +49,7 @@ class HTMLElement final : public nsGenericHTMLFormElement {
   void AfterClearForm(bool aUnbindOrDelete) override;
   void FieldSetDisabledChanged(bool aNotify) override;
   void SaveState() override;
-  void UpdateValidityElementStates(bool aNotify) final;
+  void UpdateValidityElementStates(bool aNotify);
 
   void UpdateFormOwner();
 

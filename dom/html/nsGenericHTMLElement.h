@@ -1022,10 +1022,9 @@ class nsGenericHTMLFormElement : public nsGenericHTMLElement {
    */
   already_AddRefed<nsILayoutHistoryState> GetLayoutHistory(bool aRead);
 
-  // Form changes (in particular whether our current form has been submitted
-  // invalidly) affect the user-valid/user-invalid pseudo-classes. Sub-classes
-  // can override this to react to it.
-  virtual void UpdateValidityElementStates(bool aNotify) {}
+  // Sets the user-interacted flag in
+  // https://html.spec.whatwg.org/#user-interacted, if it applies.
+  virtual void SetUserInteracted(bool aNotify) {}
 
  protected:
   virtual ~nsGenericHTMLFormElement() = default;

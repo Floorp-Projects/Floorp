@@ -1,41 +1,27 @@
 == input-valid.html input-ref.html
-fuzzy(0-64,0-4) == input-customerror.html input-ref.html
 fuzzy(0-1,0-3) == input-disabled.html input-ref.html
 fuzzy(0-1,0-3) == input-dyn-disabled.html input-ref.html
-fuzzy(0-1,0-3) == input-dyn-not-disabled.html input-ref.html
 fuzzy(0-1,0-3) == input-readonly.html input-ref.html
 fuzzy(0-1,0-3) == input-dyn-readonly.html input-ref.html
 fuzzy(0-1,0-3) == input-dyn-not-readonly-not-changed.html input-ref.html
-fuzzy(0-1,0-3) == input-dyn-not-readonly-changed.html input-ref.html
 == input-required-valid.html input-withtext-ref.html
 fuzzy(0-1,0-3) == input-required-invalid-default.html input-ref.html
-fuzzy(0-1,0-3) == input-required-invalid-changed.html input-ref.html
 fuzzy(0-2,0-5) == input-button.html input-button-ref.html
 fuzzy(0-2,0-5) == input-reset.html input-button-ref.html
 == input-email-invalid-default.html input-withtext-ref.html
-== input-email-invalid-changed.html input-withtext-ref.html
 fuzzy(0-2,0-5) == input-email-valid.html input-email-ref.html
-== input-url-invalid-changed.html input-withtext-ref.html
 == input-url-invalid-default.html input-withtext-ref.html
 == input-url-valid.html input-url-ref.html
 == input-pattern-valid.html input-withtext-ref.html
 == input-pattern-invalid-default.html input-withtext-ref.html
-== input-pattern-invalid-changed.html input-withtext-ref.html
 fuzzy(0-2,0-5) == input-type-barred.html input-button-ref.html
-fuzzy(0-64,0-4) == input-type-invalid.html input-ref.html
 == input-disabled-fieldset-1.html input-fieldset-ref.html
 fuzzy(0-1,0-3) == input-disabled-fieldset-2.html input-fieldset-ref.html
 fuzzy(0-1,0-3) == input-fieldset-legend.html input-fieldset-legend-ref.html
-== input-checkbox-required-invalid-changed.html success-ref.html
 == input-checkbox-required-invalid-default.html success-ref.html
-== input-radio-required-invalid-changed.html success-ref.html
 == input-radio-required-invalid-default.html success-ref.html
-== input-file-required-invalid-changed.html input-file-ref.html
 == input-file-required-invalid-default.html input-file-ref.html
-== input-radio-required.html success-ref.html
-== input-radio-customerror.html success-ref.html
 == input-radio-dyn-valid-1.html success-ref.html
 == input-radio-dyn-valid-2.html success-ref.html
-== input-radio-nogroup-required-valid.html success-ref.html
 == input-radio-nogroup-required-invalid.html success-ref.html
 # input type='hidden' shouldn't show

@@ -249,20 +249,12 @@ SelectContentHelper.prototype = {
         );
 
         // Fire input and change events when selected option changes
-        if (this.initialSelection !== selectedOption) {
-          let inputEvent = new win.Event("input", {
-            bubbles: true,
-            composed: true,
-          });
-
-          let changeEvent = new win.Event("change", {
-            bubbles: true,
-          });
-
+        {
           let handlingUserInput = win.windowUtils.setHandlingUserInput(true);
           try {
-            element.dispatchEvent(inputEvent);
-            element.dispatchEvent(changeEvent);
+            element.userFinishedInteracting(
+              this.initialSelection !== selectedOption
+            );
           } finally {
             handlingUserInput.destruct();
           }
