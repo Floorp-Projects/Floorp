@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<script src="apz_test_utils.js"></script>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/paint_listener.js"></script>
+<input id="target">
+<script>
+  const params = new URLSearchParams(location.search);
+  target.style.marginLeft = params.get("margin-left");
+  target.style.marginTop = params.get("margin-top");
+  target.focus();
+
+  // Silence SimpleTest warning about missing assertions by having it wait
+  // indefinitely. We don't need to give it an explicit finish because the
+  // entire window this test runs in will be closed after the main browser test
+  // finished.
+  SimpleTest.waitForExplicitFinish();
+</script>
+</html>

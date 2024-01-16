@@ -1,0 +1,95 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=2100,initial-scale=0.4"/>
+  <title>Tests that zoomToFocusedInput in iframe works regardless whether cross-origin or not</title>
+  <script src="apz_test_native_event_utils.js"></script>
+  <script src="apz_test_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <style>
+  html {
+    /* To avoid bug 1865573 */
+    scrollbar-width: none;
+  }
+  iframe {
+    position: absolute;
+    top: 100px;
+    left: 100px;
+    border: none;
+  }
+  </style>
+</head>
+<body>
+<iframe width="500" height="500"></iframe>
+<script>
+async function setupIframe(aURL) {
+  const iframe = document.querySelector("iframe");
+  const iframeLoadPromise = promiseOneEvent(iframe, "load", null);
+  iframe.src = aURL;
+  await iframeLoadPromise;
+  info(`${aURL} loaded`);
+
+  await SpecialPowers.spawn(iframe, [], async () => {
+    await content.wrappedJSObject.waitUntilApzStable();
+    await SpecialPowers.contentTransformsReceived(content);
+  });
+}
+
+async function test(aTestFile) {
+  let iframeURL = SimpleTest.getTestFileURL(aTestFile);
+
+  // Load the test document in the same origin.
+  await setupIframe(iframeURL);
+
+  let initial_resolution = await getResolution();
+  ok(initial_resolution > 0,
+     "The initial_resolution is " + initial_resolution + ", which is some sane value");
+
+  const iframe = document.querySelector("iframe");
+  let transformEndPromise = promiseTransformEnd();
+  await SpecialPowers.spawn(iframe, [], async () => {
+    SpecialPowers.DOMWindowUtils.zoomToFocusedInput();
+  });
+  await Promise.all([promiseApzFlushedRepaints(), transformEndPromise]);
+
+  const zoomedInState = cloneVisualViewport();
+
+  // Reset the scale to the initial value.
+  SpecialPowers.DOMWindowUtils.setResolutionAndScaleTo(initial_resolution);
+  await promiseApzFlushedRepaints();
+
+  // Now load the document in an OOP iframe.
+  iframeURL = iframeURL.replace(window.location.origin, "https://example.com");
+  await setupIframe(iframeURL);
+
+  transformEndPromise = promiseTransformEnd();
+  await SpecialPowers.spawn(iframe, [], async () => {
+    SpecialPowers.DOMWindowUtils.zoomToFocusedInput();
+  });
+  await Promise.all([promiseApzFlushedRepaints(), transformEndPromise]);
+
+  compareVisualViewport(zoomedInState, cloneVisualViewport(), "zoomed-in state");
+}
+
+async function moveIframe() {
+  const iframe = document.querySelector("iframe");
+  iframe.style.top = "500vh";
+
+  // Scroll to the bottom to make the layout scroll offset non-zero.
+  window.scrollTo(0, document.documentElement.scrollHeight);
+  ok(window.scrollY > 0, "The root scroll position should be non-zero");
+
+  await SpecialPowers.spawn(iframe, [], async () => {
+    await SpecialPowers.contentTransformsReceived(content);
+  });
+}
+
+waitUntilApzStable()
+// A test case where the layout scroll offset isn't zero.
+.then(async () => moveIframe())
+.then(async () => test("helper_zoomToFocusedInput_iframe_subframe.html"))
+.then(subtestDone, subtestFailed);
+</script>
+</body>
+</html>

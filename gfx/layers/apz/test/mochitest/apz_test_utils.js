@@ -1285,3 +1285,38 @@ function collectSampledScrollOffsets(aElement) {
       SpecialPowers.wrap(result).scrollId == scrollId
   );
 }
+
+function cloneVisualViewport() {
+  return {
+    offsetLeft: visualViewport.offsetLeft,
+    offsetTop: visualViewport.offsetTop,
+    pageLeft: visualViewport.pageLeft,
+    pageTop: visualViewport.pageTop,
+    width: visualViewport.width,
+    height: visualViewport.height,
+    scale: visualViewport.scale,
+  };
+}
+
+function compareVisualViewport(
+  aVisualViewportValue1,
+  aVisualViewportValue2,
+  aMessage
+) {
+  for (let p in aVisualViewportValue1) {
+    // Due to the method difference of the calculation for double-tap-zoom in
+    // OOP iframes, we allow 1.0 difference in each visualViewport value.
+    // NOTE: Because of our layer pixel snapping (bug 1774315 and bug 1852884)
+    // the visual viewport metrics can have one more pixel difference so we
+    // allow it here.
+    const tolerance = 1.0 + 1.0;
+    isfuzzy(
+      aVisualViewportValue1[p],
+      aVisualViewportValue2[p],
+      aVisualViewportValue1.scale > 1.0
+        ? tolerance
+        : tolerance / aVisualViewportValue1.scale,
+      `${p} should be same on ${aMessage}`
+    );
+  }
+}
