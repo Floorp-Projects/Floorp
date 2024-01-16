@@ -32,6 +32,7 @@ function do_test()
   walker.currentNode = body.firstChild;
   walker.nextNode();
 
+  // eslint-disable-next-line no-self-compare
   ok("A" == "A", "A is A");
 
   SimpleTest.finish();

@@ -140,6 +140,7 @@
     tests.push(function () {
       info("test 6");
       is(img.currentSrc, testPNG100, "Should now have testPNG100 as current request");
+      // eslint-disable-next-line no-self-assign
       img.src = img.src;
       is(img.currentSrc, testPNG100, "Should still have testPNG100 as current request");
 
@@ -149,6 +150,7 @@
     // img.srcset = img.srcset should be a no-op
     tests.push(function () {
       info("test 7");
+      // eslint-disable-next-line no-self-assign
       img.srcset = img.srcset;
       is(img.currentSrc, testPNG100, "Should still have testPNG100 as current request");
 
@@ -177,6 +179,7 @@
         SpecialPowers.pushPrefEnv({'set': [ ["layout.css.devPixelsPerPx", "2.0"] ] });
         expectEvents(1, 0, function() {
           is(img.currentSrc, testPNG200, "Should now have testPNG200 as current request");
+          // eslint-disable-next-line no-self-assign
           img.src = img.src;
           is(img.currentSrc, testPNG200, "Should still have testPNG200 as current request");
           // img.src = img.src is special-cased by the spec. It should always

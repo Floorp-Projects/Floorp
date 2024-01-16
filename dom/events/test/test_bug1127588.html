@@ -44,6 +44,7 @@ window.onload = function () {
   removedEventCount = 0;
   document.addEventListener('DOMNodeRemoved', removedListener);
   document.addEventListener('DOMNodeInserted', insertedListener);
+  // eslint-disable-next-line no-self-assign
   document.title = document.title;
   document.removeEventListener('DOMNodeInserted', insertedListener);
   document.removeEventListener('DOMNodeRemoved', removedListener);

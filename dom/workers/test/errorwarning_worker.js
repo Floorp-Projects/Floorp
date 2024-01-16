@@ -38,7 +38,9 @@ onmessage = function (event) {
 };
 
 onerror = errorHandler;
+// eslint-disable-next-line no-self-assign
 onerror = onerror;
+// eslint-disable-next-line no-self-compare
 if (!onerror || onerror != onerror) {
   throw "onerror wasn't set properly";
 }

@@ -20,6 +20,8 @@
 "use strict";
 
 add_task(async function() {
+  // This test intentionally compares items to themselves.
+  /* eslint-disable no-self-compare */
   await SpecialPowers.pushPrefEnv({"set": [["security.webauth.webauthn_testing_allow_direct_attestation", true]]});
   await addVirtualAuthenticator();
   is(navigator.authentication, undefined, "navigator.authentication does not exist any longer");

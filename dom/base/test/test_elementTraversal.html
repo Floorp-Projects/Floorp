@@ -36,6 +36,7 @@ function testContent() {
   is(i, c.children.length, "wrong number of child elements");
 
   // Nuke all elements to retest the child list.
+  // eslint-disable-next-line no-self-assign
   c.innerHTML = c.innerHTML;
 
   for(i--, e = c.lastElementChild; e; e = e.previousElementSibling, i--) {

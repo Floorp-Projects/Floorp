@@ -44,14 +44,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=829606
         results = compareSnapshots(baseSnapshot, selectionAtTheEndSnapshot, false);
         ok(results[0], "after appending a character, string should have changed");
 
+        // Re-setting value shouldn't change anything.
+        // eslint-disable-next-line no-self-assign
         element.value = element.value;
         var tmpSnapshot = await snapshotWindow(window);
 
         results = compareSnapshots(baseSnapshot, tmpSnapshot, false);
-        ok(results[0], "re-settig the value should change nothing");
+        ok(results[0], "re-setting the value should change nothing");
 
         results = compareSnapshots(selectionAtTheEndSnapshot, tmpSnapshot, true);
-        ok(results[0], "re-settig the value should change nothing");
+        ok(results[0], "re-setting the value should change nothing");
 
         element.selectionStart = element.selectionEnd = 0;
         element.blur();
