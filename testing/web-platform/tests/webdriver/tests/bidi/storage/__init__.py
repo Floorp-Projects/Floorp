@@ -2,7 +2,7 @@ from webdriver.bidi.modules.storage import StorageKeyPartitionDescriptor
 from .. import any_int, recursive_compare
 
 
-async def assert_cookie_is_set(bidi_session, name: str, str_value: str, domain: str, origin: str):
+async def assert_cookie_is_set(bidi_session, name: str, str_value: str, domain: str, origin: str, path: str = "/"):
     """
     Asserts the cookie is set.
     """
@@ -16,7 +16,7 @@ async def assert_cookie_is_set(bidi_session, name: str, str_value: str, domain: 
         'domain': domain,
         'httpOnly': False,
         'name': name,
-        'path': '/',
+        'path': path,
         'sameSite': 'none',
         'secure': True,
         # Varies depending on the cookie name and value.
