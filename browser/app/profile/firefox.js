@@ -2169,11 +2169,6 @@ pref("privacy.webrtc.sharedTabWarning", false);
 // before navigating to the actual meeting room page. Doesn't survive tab close.
 pref("privacy.webrtc.deviceGracePeriodTimeoutMs", 3600000);
 
-// Bug 1857254 - MacOS 14 displays two (microphone/camera/screen share) icons in
-// menu bar we hide the firefox camera icon on macos 14 and above to avoid
-// duplicating the macos camera icon. User's can flip it back on with this pref.
-pref("privacy.webrtc.showIndicatorsOnMacos14AndAbove", false);
-
 // Enable Fingerprinting Protection in private windows..
 pref("privacy.fingerprintingProtection.pbmode", true);
 

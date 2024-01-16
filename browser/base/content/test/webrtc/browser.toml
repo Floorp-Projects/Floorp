@@ -130,11 +130,6 @@ skip-if = [
   "apple_catalina",  # platform migration
 ]
 
-["browser_macos_indicator_hiding.js"]
-run-if = [
-  "os == 'mac' && os_version >= '14.0'"
-]
-
 ["browser_notification_silencing.js"]
 skip-if = [
   "apple_silicon",   # bug 1707735
