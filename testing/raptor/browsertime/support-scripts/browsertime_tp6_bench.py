@@ -1,6 +1,7 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+import copy
 import re
 
 import filters
@@ -79,9 +80,22 @@ class TP6BenchSupport(BasePythonSupport):
                 )
 
             load_time = cycle["timings"]["loadEventEnd"]
+            fcp = cycle["timings"]["paintTiming"]["first-contentful-paint"]
+            lcp = (
+                cycle["timings"]
+                .get("largestContentfulPaint", {})
+                .get("renderTime", None)
+            )
             measurements.setdefault(
                 f"{page_name} - {page_title} - loadTime", []
             ).append(load_time)
+
+            measurements.setdefault(f"{page_name} - {page_title} - fcp", []).append(fcp)
+
+            if lcp is not None:
+                measurements.setdefault(f"{page_name} - {page_title} - lcp", []).append(
+                    lcp
+                )
 
             load_times.append(load_time)
 
@@ -113,7 +127,7 @@ class TP6BenchSupport(BasePythonSupport):
             "alertThreshold": float(test.get("alert_threshold", 2.0)),
             "unit": unit,
             "replicates": replicates,
-            "value": filters.geometric_mean(replicates),
+            "value": round(filters.geometric_mean(replicates), 3),
         }
 
     def summarize_test(self, test, suite, **kwargs):
@@ -127,3 +141,71 @@ class TP6BenchSupport(BasePythonSupport):
                 self._build_subtest(measurement_name, replicates, test)
             )
         suite["subtests"].sort(key=lambda subtest: subtest["name"])
+
+    def _produce_suite_alts(self, suite_base, subtests, suite_name_prefix):
+        geomean_suite = copy.deepcopy(suite_base)
+        geomean_suite["subtests"] = copy.deepcopy(subtests)
+        median_suite = copy.deepcopy(geomean_suite)
+        median_suite["subtests"] = copy.deepcopy(subtests)
+
+        subtest_values = []
+        for subtest in subtests:
+            subtest_values.extend(subtest["replicates"])
+
+        geomean_suite["name"] = suite_name_prefix + "-geomean"
+        geomean_suite["value"] = filters.geometric_mean(subtest_values)
+        for subtest in geomean_suite["subtests"]:
+            subtest["value"] = filters.geometric_mean(subtest["replicates"])
+
+        median_suite["name"] = suite_name_prefix + "-median"
+        median_suite["value"] = filters.median(subtest_values)
+        for subtest in median_suite["subtests"]:
+            subtest["value"] = filters.median(subtest["replicates"])
+
+        return [
+            geomean_suite,
+            median_suite,
+        ]
+
+    def summarize_suites(self, suites):
+        fcp_subtests = []
+        lcp_subtests = []
+        load_time_subtests = []
+
+        for suite in suites:
+            for subtest in suite["subtests"]:
+                if "- fcp" in subtest["name"]:
+                    fcp_subtests.append(subtest)
+                elif "- lcp" in subtest["name"]:
+                    lcp_subtests.append(subtest)
+                elif "- loadTime" in subtest["name"]:
+                    load_time_subtests.append(subtest)
+
+        fcp_bench_suites = self._produce_suite_alts(
+            suites[0], fcp_subtests, "fcp-bench"
+        )
+
+        lcp_bench_suites = self._produce_suite_alts(
+            suites[0], lcp_subtests, "lcp-bench"
+        )
+
+        load_time_bench_suites = self._produce_suite_alts(
+            suites[0], load_time_subtests, "loadtime-bench"
+        )
+
+        overall_suite = copy.deepcopy(suites[0])
+        new_subtests = [
+            subtest
+            for subtest in suites[0]["subtests"]
+            if subtest["name"].startswith("total")
+        ]
+        overall_suite["subtests"] = new_subtests
+
+        new_suites = [
+            overall_suite,
+            *fcp_bench_suites,
+            *lcp_bench_suites,
+            *load_time_bench_suites,
+        ]
+        suites.pop()
+        suites.extend(new_suites)
