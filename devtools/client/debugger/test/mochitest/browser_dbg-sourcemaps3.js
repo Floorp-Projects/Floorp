@@ -73,7 +73,7 @@ add_task(async function () {
     "binaryLookup",
     "fancySort",
     "fancySort",
-    "test",
+    "originalTestName",
   ]);
 
   info(

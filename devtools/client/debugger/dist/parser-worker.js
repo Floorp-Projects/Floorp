@@ -39430,16 +39430,66 @@ Please specify the "importAttributesKeyword" generator option, whose value can b
       return symbols.classes;
     }
 
+    function containsPosition$1(a, b) {
+      const bColumn = b.column || 0;
+      const startsBefore =
+        a.start.line < b.line ||
+        (a.start.line === b.line && a.start.column <= bColumn);
+      const endsAfter =
+        a.end.line > b.line || (a.end.line === b.line && a.end.column >= bColumn);
+
+      return startsBefore && endsAfter;
+    }
+
+    function getClosestFunctionName(location) {
+      const symbols = getInternalSymbols(location.source.id);
+      if (!symbols || !symbols.functions) {
+        return "";
+      }
+
+      const closestFunction = symbols.functions.reduce((found, currNode) => {
+        if (
+          currNode.name === "anonymous" ||
+          !containsPosition$1(currNode.location, {
+            line: location.line,
+            column: location.column || 0,
+          })
+        ) {
+          return found;
+        }
+
+        if (!found) {
+          return currNode;
+        }
+
+        if (found.location.start.line > currNode.location.start.line) {
+          return found;
+        }
+        if (
+          found.location.start.line === currNode.location.start.line &&
+          found.location.start.column > currNode.location.start.column
+        ) {
+          return found;
+        }
+
+        return currNode;
+      }, null);
+
+      if (!closestFunction) {
+        return "";
+      }
+      return closestFunction.name;
+    }
+
     // This is only called from the main thread and we return a subset of attributes
     function getSymbols(sourceId) {
       const symbols = getInternalSymbols(sourceId);
       return {
         // This is used in the main thread by:
-        // - Outline panel
-        // - The `getFunctionSymbols` function
-        // - The mapping of frame function names
-        // And within the worker by `findOutOfScopeLocations`
-        functions: symbols.functions,
+        // * The `getFunctionSymbols` function which is used by the Outline, QuickOpen panels.
+        // * The `getClosestFunctionName` function used in the mapping of frame function names.
+        // * The `findOutOfScopeLocations` function use to determine in scope lines.
+        // functions: symbols.functions,
 
         // The three following attributes are only used by `findBestMatchExpression` within the worker thread
         // `memberExpressions`, `literals`
@@ -41388,6 +41438,7 @@ Please specify the "importAttributesKeyword" generator option, whose value can b
       getSymbols,
       getFunctionSymbols,
       getClassSymbols,
+      getClosestFunctionName,
       getScopes,
       clearSources: clearAllHelpersForSources,
       hasSyntaxError,

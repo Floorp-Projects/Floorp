@@ -6,6 +6,7 @@ import {
   getSymbols,
   getFunctionSymbols,
   getClassSymbols,
+  getClosestFunctionName,
   clearSymbols,
 } from "./getSymbols";
 import { clearASTs } from "./utils/ast";
@@ -31,6 +32,7 @@ self.onmessage = workerHandler({
   getSymbols,
   getFunctionSymbols,
   getClassSymbols,
+  getClosestFunctionName,
   getScopes,
   clearSources: clearAllHelpersForSources,
   hasSyntaxError,
