@@ -170,6 +170,10 @@ class HTMLInputElement final : public TextControlElement,
                       nsIPrincipal* aMaybeScriptedPrincipal,
                       nsAttrValue& aResult) override;
 
+  // Note: if this returns false, then attributes may not yet be sanitized
+  // (per SetValueInternal's dependence on mDoneCreating).
+  bool IsDoneCreating() const { return mDoneCreating; }
+
   bool LastValueChangeWasInteractive() const {
     return mLastValueChangeWasInteractive;
   }

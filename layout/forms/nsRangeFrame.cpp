@@ -315,7 +315,18 @@ a11y::AccType nsRangeFrame::AccessibleType() { return a11y::eHTMLRangeType; }
 #endif
 
 double nsRangeFrame::GetValueAsFractionOfRange() {
-  return GetDoubleAsFractionOfRange(InputElement().GetValueAsDecimal());
+  const auto& input = InputElement();
+  if (MOZ_UNLIKELY(!input.IsDoneCreating())) {
+    // Our element isn't done being created, so its values haven't yet been
+    // sanitized! (It's rare that we'd be reflowed when our element is in this
+    // state, but it can happen if the parser decides to yield while processing
+    // its tasks to build the element.)  We can't trust that any of our numeric
+    // values will make sense until they've been sanitized; so for now, just
+    // use 0.0 as a fallback fraction-of-range value here (i.e. behave as if
+    // we're at our minimum, which is how the spec handles some edge cases).
+    return 0.0;
+  }
+  return GetDoubleAsFractionOfRange(input.GetValueAsDecimal());
 }
 
 double nsRangeFrame::GetDoubleAsFractionOfRange(const Decimal& aValue) {
