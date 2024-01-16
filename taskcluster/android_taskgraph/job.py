@@ -96,36 +96,25 @@ def configure_gradlew(config, job, taskdesc):
         ),
     )
 
-    run["command"] = _extract_gradlew_command(run, fetches_dir)
-    _inject_secrets_scopes(run, taskdesc)
-    _set_run_task_attributes(job)
-    configure_taskdesc_for_run(config, job, taskdesc, job["worker"]["implementation"])
-
-
-def _extract_gradlew_command(run, fetches_dir):
-    pre_gradle_commands = [["./mach", "configure"]]
-    pre_gradle_commands += run.pop("pre-gradlew", [])
-    pre_gradle_commands += [
+    dummy_secrets = [
         _generate_dummy_secret_command(secret)
         for secret in run.pop("dummy-secrets", [])
     ]
-    pre_gradle_commands += [
-        _generate_secret_command(secret) for secret in run.get("secrets", [])
-    ]
-    maven_dependencies_dir = path.join(fetches_dir, "android-gradle-dependencies")
-    gradle_repos_args = [
-        "-P{repo_name}Repo=file://{dir}/{repo_name}".format(
-            dir=maven_dependencies_dir, repo_name=repo_name
-        )
-        for repo_name in ("google", "central")
-    ]
-    gradle_command = (
-        ["./gradlew"] + gradle_repos_args + ["listRepositories"] + run.pop("gradlew")
+    secrets = [_generate_secret_command(secret) for secret in run.get("secrets", [])]
+    worker["env"].update(
+        {
+            "PRE_GRADLEW": _convert_commands_to_string(run.pop("pre-gradlew", [])),
+            "GET_SECRETS": _convert_commands_to_string(dummy_secrets + secrets),
+            "GRADLEW_ARGS": " ".join(run.pop("gradlew")),
+            "POST_GRADLEW": _convert_commands_to_string(run.pop("post-gradlew", [])),
+        }
     )
-    post_gradle_commands = run.pop("post-gradlew", [])
-
-    commands = pre_gradle_commands + [gradle_command] + post_gradle_commands
-    return _convert_commands_to_string(commands)
+    run[
+        "command"
+    ] = "/builds/worker/checkouts/gecko/taskcluster/scripts/builder/build-android.sh"
+    _inject_secrets_scopes(run, taskdesc)
+    _set_run_task_attributes(job)
+    configure_taskdesc_for_run(config, job, taskdesc, job["worker"]["implementation"])
 
 
 def _generate_secret_command(secret):
