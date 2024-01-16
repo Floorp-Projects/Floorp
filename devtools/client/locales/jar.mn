@@ -10,4 +10,3 @@
 %   locale devtools @AB_CD@ %locale/@AB_CD@/devtools/client/
     locale/@AB_CD@/devtools/client/ (%*.properties)
     locale/@AB_CD@/devtools/client/ (%*.dtd)
-

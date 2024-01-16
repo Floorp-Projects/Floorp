@@ -21,6 +21,7 @@ file-perm:
         - .md
         - .mjs
         - .mm
+        - .mn
         - .mozbuild
         - .mp4
         - .png
