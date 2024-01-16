@@ -362,9 +362,6 @@ class HttpBaseChannel : public nsHashPropertyBag,
   NS_IMETHOD SetEarlyHintLinkType(uint32_t aEarlyHintLinkType) override;
   NS_IMETHOD GetEarlyHintLinkType(uint32_t* aEarlyHintLinkType) override;
 
-  NS_IMETHOD SetIsUserAgentHeaderModified(bool value) override;
-  NS_IMETHOD GetIsUserAgentHeaderModified(bool* value) override;
-
   NS_IMETHOD SetClassicScriptHintCharset(
       const nsAString& aClassicScriptHintCharset) override;
   NS_IMETHOD GetClassicScriptHintCharset(
@@ -959,11 +956,7 @@ class HttpBaseChannel : public nsHashPropertyBag,
 
     // Indicate whether the response of this channel is coming from
     // socket process.
-    (uint32_t, LoadedBySocketProcess, 1),
-
-    // Indicates whether the user-agent header has been modifed since the channel
-    // was created.
-    (uint32_t, IsUserAgentHeaderModified, 1)
+    (uint32_t, LoadedBySocketProcess, 1)
   ))
   // clang-format on
 
