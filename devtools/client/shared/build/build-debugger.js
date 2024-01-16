@@ -9,7 +9,6 @@ const fs = require("fs");
 const _path = require("path");
 
 const mappings = {
-  "./source-editor": "devtools/client/shared/sourceeditor/editor",
   react: "devtools/client/shared/vendor/react",
   "react-dom": "devtools/client/shared/vendor/react-dom",
   "react-dom-factories": "devtools/client/shared/vendor/react-dom-factories",
