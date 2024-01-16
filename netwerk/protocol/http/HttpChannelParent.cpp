@@ -177,7 +177,7 @@ bool HttpChannelParent::Init(const HttpChannelCreationArgs& aArgs) {
           a.handleFetchEventStart(), a.handleFetchEventEnd(),
           a.forceMainDocumentChannel(), a.navigationStartTimeStamp(),
           a.earlyHintPreloaderId(), a.classicScriptHintCharset(),
-          a.documentCharacterSet());
+          a.documentCharacterSet(), a.isUserAgentHeaderModified());
     }
     case HttpChannelCreationArgs::THttpChannelConnectArgs: {
       const HttpChannelConnectArgs& cArgs = aArgs.get_HttpChannelConnectArgs();
@@ -444,7 +444,8 @@ bool HttpChannelParent::DoAsyncOpen(
     const TimeStamp& aNavigationStartTimeStamp,
     const uint64_t& aEarlyHintPreloaderId,
     const nsAString& aClassicScriptHintCharset,
-    const nsAString& aDocumentCharacterSet) {
+    const nsAString& aDocumentCharacterSet,
+    const bool& aIsUserAgentHeaderModified) {
   MOZ_ASSERT(aURI, "aURI should not be NULL");
 
   if (aEarlyHintPreloaderId) {
@@ -576,6 +577,8 @@ bool HttpChannelParent::DoAsyncOpen(
                                     requestHeaders[i].mMerge);
     }
   }
+
+  httpChannel->SetIsUserAgentHeaderModified(aIsUserAgentHeaderModified);
 
   RefPtr<ParentChannelListener> parentListener = new ParentChannelListener(
       this, mBrowserParent ? mBrowserParent->GetBrowsingContext() : nullptr);
