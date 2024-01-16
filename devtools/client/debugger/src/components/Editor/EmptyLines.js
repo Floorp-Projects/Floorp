@@ -3,7 +3,7 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import { connect } from "../../utils/connect";
-import { Component } from "react";
+import { Component } from "devtools/client/shared/vendor/react";
 import PropTypes from "devtools/client/shared/vendor/react-prop-types";
 import { getSelectedSource, getSelectedBreakableLines } from "../../selectors";
 import { fromEditorLine } from "../../utils/editor";
