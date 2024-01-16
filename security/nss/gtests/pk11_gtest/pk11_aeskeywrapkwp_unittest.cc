@@ -9,9 +9,11 @@
 #include "pk11pub.h"
 
 #include "testvectors/kw-vectors.h"
-#include "testvectors/kwp-vectors.h"
 #include "gtest/gtest.h"
 #include "nss_scoped_ptrs.h"
+#include "json_reader.h"
+
+extern std::string g_source_dir;
 
 namespace nss_test {
 
@@ -107,17 +109,61 @@ class Pkcs11AESKeyWrapKwpTest
       }
     }
   }
+};
 
-  void WrapUnwrap(keywrap_vector testvector) {
+TEST_F(Pkcs11AESKeyWrapKwpTest, TestVectors) {
+  std::string testvectors =
+      ::g_source_dir + "/../common/testvectors/kwp-vectors.json";
+  JsonReader r(testvectors);
+
+  r.NextItem();
+  ASSERT_EQ("numberOfTests", r.ReadLabel());
+  uint64_t expected_count = r.ReadInt();
+  uint64_t count = 0;
+
+  r.NextItem();
+  ASSERT_EQ("tests", r.ReadLabel());
+
+  while (r.NextItemArray()) {
+    count++;
+    keywrap_vector testvector;
+
+    uint8_t seen = 0;
+    while (r.NextItem()) {
+      std::string n = r.ReadLabel();
+      if (n == "tcId") {
+        seen |= 1;
+        testvector.test_id = r.ReadInt();
+      } else if (n == "key") {
+        seen |= 2;
+        testvector.key = r.ReadHex();
+      } else if (n == "msg") {
+        seen |= 4;
+        testvector.msg = r.ReadHex();
+      } else if (n == "ct") {
+        seen |= 8;
+        testvector.ct = r.ReadHex();
+      } else if (n == "wrapRv") {
+        seen |= 16;
+        testvector.tests[Action::WRAP].expect_rv = r.ReadSECStatus();
+      } else if (n == "wrapMatch") {
+        seen |= 32;
+        testvector.tests[Action::WRAP].output_match = r.ReadBool();
+      } else if (n == "unwrapRv") {
+        seen |= 64;
+        testvector.tests[Action::UNWRAP].expect_rv = r.ReadSECStatus();
+      } else if (n == "unwrapMatch") {
+        seen |= 128;
+        testvector.tests[Action::UNWRAP].output_match = r.ReadBool();
+      }
+    }
+    EXPECT_EQ(seen, 255);
     WrapUnwrap(testvector.key.data(), testvector.key.size(),
                testvector.msg.data(), testvector.msg.size(),
                testvector.ct.data(), testvector.ct.size(), testvector.tests,
                testvector.test_id);
   }
-};
+  EXPECT_EQ(count, expected_count);
+}
 
-TEST_P(Pkcs11AESKeyWrapKwpTest, TestVectors) { WrapUnwrap(GetParam()); }
-
-INSTANTIATE_TEST_SUITE_P(Pkcs11NistAESKWPTest, Pkcs11AESKeyWrapKwpTest,
-                         ::testing::ValuesIn(kNistAesKWPVectors));
 }  // namespace nss_test

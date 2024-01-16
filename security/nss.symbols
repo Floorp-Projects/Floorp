@@ -731,6 +731,7 @@ _SGN_VerifyPKCS1DigestInfo
 __PK11_SetCertificateNickname
 # These symbols are not used by Firefox but are used across NSS library boundaries.
 NSS_SecureMemcmpZero
+NSS_SecureSelect
 PORT_ZAllocAlignedOffset_Util
 CERT_FindCertByNicknameOrEmailAddrCX
 SECKEY_GetPrivateKeyType

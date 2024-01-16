@@ -39,6 +39,8 @@ class JsonReader {
   std::string ReadLabel();
   std::vector<uint8_t> ReadHex();
   SECOidTag ReadHash();
+  SECStatus ReadSECStatus();
+  bool ReadBool();
 
   bool NextItem(uint8_t h = '{', uint8_t t = '}');
   bool NextItemArray() { return NextItem('[', ']'); }

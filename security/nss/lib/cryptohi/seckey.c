@@ -1255,6 +1255,11 @@ SECKEY_CopyPublicKey(const SECKEYPublicKey *pubk)
             break;
         case nullKey:
             return copyk;
+        case kyberKey:
+            copyk->u.kyber.params = pubk->u.kyber.params;
+            rv = SECITEM_CopyItem(arena, &copyk->u.kyber.publicValue,
+                                  &pubk->u.kyber.publicValue);
+            break;
         default:
             PORT_SetError(SEC_ERROR_INVALID_KEY);
             rv = SECFailure;

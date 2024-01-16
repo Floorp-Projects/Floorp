@@ -75,6 +75,11 @@ DEFINES += -DSHLIB_SUFFIX=\"$(DLL_SUFFIX)\" -DSHLIB_PREFIX=\"$(DLL_PREFIX)\" \
 	-DSHLIB_VERSION=\"$(LIBRARY_VERSION)\" \
 	-DSOFTOKEN_SHLIB_VERSION=\"$(SOFTOKEN_LIBRARY_VERSION)\"
 
+# We only support one parameter set, Kyber768, which has K=3. If we decide
+# to support more parameters, we'll need to build separate objects from
+# kyber-pqcrystals-ref.c using different values of KYBER_K.
+DEFINES += -DKYBER_K=3
+
 REQUIRES =
 
 EXPORTS = \
@@ -148,11 +153,14 @@ CSRCS = \
 	pqg.c \
 	dsa.c \
 	rsa.c \
+	rsa_blind.c \
 	rsapkcs.c \
 	shvfy.c \
 	tlsprfalg.c \
 	jpake.c \
 	secmpi.c \
+	kyber.c \
+	kyber-pqcrystals-ref.c \
 	$(MPI_SRCS) \
 	$(MPCPU_SRCS) \
 	$(ECL_SRCS) \

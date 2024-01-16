@@ -425,6 +425,11 @@ PK11SymKey *PK11_PubDeriveWithKDF(SECKEYPrivateKey *privKey,
                                   CK_ULONG kdf, SECItem *sharedData, void *wincx);
 
 /*
+ * Concatenate a pair of symmetric keys.
+ */
+PK11SymKey *PK11_ConcatSymKeys(PK11SymKey *left, PK11SymKey *right, CK_MECHANISM_TYPE target, CK_ATTRIBUTE_TYPE operation);
+
+/*
  * unwrap a new key with a symetric key.
  *  PK11_Unwrap returns a key which can do exactly one operation, and is
  * ephemeral (session key).
@@ -811,6 +816,42 @@ SECStatus PK11_VerifyWithMechanism(SECKEYPublicKey *key,
                                    CK_MECHANISM_TYPE mechanism,
                                    const SECItem *param, const SECItem *sig,
                                    const SECItem *hash, void *wincx);
+
+/**********************************************************************
+ * Key Encapsulation Mechanisms
+ **********************************************************************/
+
+/*
+ * Using the given |pubKey|, generate a shared secret in |outKey| and an
+ * encapsulation of it in |ciphertext|. |outKey| will have usage attributes as
+ * specified in |attrFlags| and operation attributes as specified in |opFlags|.
+ *
+ * The function asserts that |pubKey|, |outKey|, and |ciphertext| are not NULL.
+
+ * If an error occurs, no allocations are made to |outKey| and |ciphertext|;
+ * otherwise (if SECSuccess is returned) allocations are made to |outKey| and
+ * |ciphertext| and the caller is responsible for freeing the memory occupied
+ * by these structures.
+ */
+SECStatus PK11_Encapsulate(SECKEYPublicKey *pubKey, CK_MECHANISM_TYPE target,
+                           PK11AttrFlags attrFlags, CK_FLAGS opFlags,
+                           PK11SymKey **outKey, SECItem **outCiphertext);
+
+/*
+ * Using the given |privKey|, decapsulate |ciphertext| and put the resulting
+ * shared secret in |outKey|. |outKey| will have usage attributes as specified
+ * in |attrFlags| and operation attributes as specified in |opFlags|.
+ *
+ * The function asserts that |privKey|, |ciphertext|, and |outKey| are not NULL.
+
+ * If an error occurs, |outKey| is not allocated; otherwise (if SECSuccess is
+ * returned) |outKey| is allocated and the caller is responsible for freeing
+ * the memory occupied by it.
+ */
+SECStatus
+PK11_Decapsulate(SECKEYPrivateKey *privKey, const SECItem *ciphertext,
+                 CK_MECHANISM_TYPE target, PK11AttrFlags attrFlags,
+                 CK_FLAGS opFlags, PK11SymKey **outKey);
 
 /**********************************************************************
  *                   Crypto Contexts

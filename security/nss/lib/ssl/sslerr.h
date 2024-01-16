@@ -285,6 +285,8 @@ typedef enum {
     /* ECH rejected and public name authentication failed. */
     SSL_ERROR_ECH_FAILED = (SSL_ERROR_BASE + 190),
     SSL_ERROR_ECH_REQUIRED_ALERT     = (SSL_ERROR_BASE + 191),
+
+    SSL_ERROR_RX_MALFORMED_HYBRID_KEY_SHARE  = (SSL_ERROR_BASE + 192),
     SSL_ERROR_END_OF_LIST   /* let the c compiler determine the value of this. */
 } SSLErrorCodes;
 

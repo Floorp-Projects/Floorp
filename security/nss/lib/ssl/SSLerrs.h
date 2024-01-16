@@ -600,3 +600,6 @@ ER3(SSL_ERROR_ECH_FAILED, (SSL_ERROR_BASE + 190),
 
 ER3(SSL_ERROR_ECH_REQUIRED_ALERT, (SSL_ERROR_BASE + 191),
     "SSL peer reported ECH required.")
+
+ER3(SSL_ERROR_RX_MALFORMED_HYBRID_KEY_SHARE, (SSL_ERROR_BASE + 140),
+    "SSL received a malformed hybrid key share handshake extension.")

@@ -942,10 +942,10 @@
       [ 'target_arch=="arm"', {
         # When the compiler uses the softfloat ABI, we want to use the compatible softfp ABI when enabling NEON for these objects.
         # Confusingly, __SOFTFP__ is the name of the define for the softfloat ABI, not for the softfp ABI.
-        'softfp_cflags': '<!(${CC:-cc} -o - -E -dM - ${CFLAGS} < /dev/null | grep __SOFTFP__ > /dev/null && echo -mfloat-abi=softfp || true)',
+        'softfp_cflags': '<!(sh -c "${CC:-cc} -o - -E -dM - ${CFLAGS} < /dev/null | grep __SOFTFP__ > /dev/null && echo -mfloat-abi=softfp || true")',
       }],
       [ 'target_arch=="ppc64" or target_arch=="ppc64le"', {
-       'ppc_abi': '<!(${CC:-cc} -dM -E - < /dev/null | awk \'$2 == "_CALL_ELF" {print $3}\')',
+       'ppc_abi': '<!(sh -c "${CC:-cc} -dM -E - < /dev/null | awk \'\\$2 == \\"_CALL_ELF\\" {print \\$3}\'")',
       }],
     ],
   }

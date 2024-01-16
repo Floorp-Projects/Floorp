@@ -63,7 +63,7 @@
       'SHLIB_PREFIX=\"<(dll_prefix)\"',
       'NSS_SHLIB_VERSION=\"3\"',
       'SOFTOKEN_SHLIB_VERSION=\"3\"'
-    ]
+    ],
   },
   'variables': {
     'module': 'nss'

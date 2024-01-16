@@ -128,7 +128,7 @@ typedef enum { SSLAppOpRead = 0,
 #define DTLS_RETRANSMIT_FINISHED_MS 30000
 
 /* default number of entries in namedGroupPreferences */
-#define SSL_NAMED_GROUP_COUNT 31
+#define SSL_NAMED_GROUP_COUNT 32
 
 /* The maximum DH and RSA bit-length supported. */
 #define SSL_MAX_DH_KEY_BITS 8192
@@ -908,6 +908,8 @@ struct sslEphemeralKeyPairStr {
     PRCList link;
     const sslNamedGroupDef *group;
     sslKeyPair *keys;
+    sslKeyPair *kemKeys;
+    SECItem *kemCt;
 };
 
 struct ssl3DHParamsStr {

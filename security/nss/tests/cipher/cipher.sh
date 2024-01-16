@@ -58,7 +58,7 @@ cipher_init()
 # the function does not use the -1 -2 offsets
 # because ./bltest -T -m ecdsa -S -d returns the self-test of all test vectors provided
 ########################################################################
-cipher_ecdsa()
+cipher_without_offset()
 {
   echo "bltest -T -m $PARAM -d $CIPHERTESTDIR"
   ${PROFTOOL} ${BINDIR}/bltest${PROG_SUFFIX} -T -m $PARAM -d $CIPHERTESTDIR
@@ -66,17 +66,7 @@ cipher_ecdsa()
       html_msg 1 $EXP_RET "$TESTNAME"
       echo "$failedStr"
   fi
-}    
-
-cipher_sha3()
-{
-  echo "bltest -T -m $PARAM -d $CIPHERTESTDIR"
-  ${PROFTOOL} ${BINDIR}/bltest${PROG_SUFFIX} -T -m $PARAM -d $CIPHERTESTDIR
-  if [ $? -ne 0 ]; then
-      html_msg 1 $EXP_RET "$TESTNAME"
-      echo "$failedStr"
-  fi
-}  
+}
 
 ############################## cipher_main #############################
 # local shell function to test NSS ciphers
@@ -91,10 +81,10 @@ cipher_main()
           echo "$SCRIPTNAME: $TESTNAME --------------------------------"
           failedStr=""
           res=0
-          if [[ "$TESTNAME" == "ECDSA Sign"  || "$TESTNAME" == "ECDSA Verify" ]] ; then
-              cipher_ecdsa
-	  elif [[ "$TESTNAME" == "SHA3 224 Hash" || "$TESTNAME" == "SHA3 256 Hash" || "$TESTNAME" == "SHA3 384 Hash" || "$TESTNAME" == "SHA3 512 Hash" ]] ; then
-              cipher_sha3
+          if [[ "$TESTNAME" == "ECDSA Sign"  || "$TESTNAME" == "ECDSA Verify" 
+            || "$TESTNAME" == "SHA3 224 Hash" || "$TESTNAME" == "SHA3 256 Hash" 
+            || "$TESTNAME" == "SHA3 384 Hash" || "$TESTNAME" == "SHA3 512 Hash" ]] ; then
+              cipher_without_offset
 	  else
               inOff=0
               while [ $inOff -lt 8 ]

@@ -89,6 +89,8 @@ class Pk11KeyImportTestBase : public ::testing::Test {
         return pub_key->u.dh.publicValue;
       case ecKey:
         return pub_key->u.ec.publicValue;
+      case kyberKey:
+        return pub_key->u.kyber.publicValue;
       case fortezzaKey: /* depricated */
       case nullKey:
         /* didn't use default here so we can catch new key types at compile time

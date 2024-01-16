@@ -12,7 +12,7 @@
 #endif
 
 #include "blapi.h"
-#include "seccomon.h" /* Required for RSA and DSA. */
+#include "seccomon.h" /* Required for RSA. */
 #include "secerr.h"
 #include "prtypes.h"
 #include "secitem.h"
@@ -124,14 +124,6 @@ DllMain(
 #define FIPS_RSA_DECRYPT_LENGTH 256          /* 2048-bits */
 #define FIPS_RSA_SIGNATURE_LENGTH 256        /* 2048-bits */
 #define FIPS_RSA_MODULUS_LENGTH 256          /* 2048-bits */
-
-/* FIPS preprocessor directives for DSA.                        */
-#define FIPS_DSA_TYPE siBuffer
-#define FIPS_DSA_DIGEST_LENGTH 20    /*  160-bits */
-#define FIPS_DSA_SUBPRIME_LENGTH 20  /*  160-bits */
-#define FIPS_DSA_SIGNATURE_LENGTH 40 /*  320-bits */
-#define FIPS_DSA_PRIME_LENGTH 128    /* 1024-bits */
-#define FIPS_DSA_BASE_LENGTH 128     /* 1024-bits */
 
 /* FIPS preprocessor directives for RNG.                        */
 #define FIPS_RNG_XKEY_LENGTH 32 /* 256-bits */
@@ -1667,151 +1659,6 @@ freebl_fips_EC_PowerUpSelfTest()
 }
 
 static SECStatus
-freebl_fips_DSA_PowerUpSelfTest(void)
-{
-    /* DSA Known P (1024-bits), Q (160-bits), and G (1024-bits) Values. */
-    static const PRUint8 dsa_P[] = {
-        0x80, 0xb0, 0xd1, 0x9d, 0x6e, 0xa4, 0xf3, 0x28,
-        0x9f, 0x24, 0xa9, 0x8a, 0x49, 0xd0, 0x0c, 0x63,
-        0xe8, 0x59, 0x04, 0xf9, 0x89, 0x4a, 0x5e, 0xc0,
-        0x6d, 0xd2, 0x67, 0x6b, 0x37, 0x81, 0x83, 0x0c,
-        0xfe, 0x3a, 0x8a, 0xfd, 0xa0, 0x3b, 0x08, 0x91,
-        0x1c, 0xcb, 0xb5, 0x63, 0xb0, 0x1c, 0x70, 0xd0,
-        0xae, 0xe1, 0x60, 0x2e, 0x12, 0xeb, 0x54, 0xc7,
-        0xcf, 0xc6, 0xcc, 0xae, 0x97, 0x52, 0x32, 0x63,
-        0xd3, 0xeb, 0x55, 0xea, 0x2f, 0x4c, 0xd5, 0xd7,
-        0x3f, 0xda, 0xec, 0x49, 0x27, 0x0b, 0x14, 0x56,
-        0xc5, 0x09, 0xbe, 0x4d, 0x09, 0x15, 0x75, 0x2b,
-        0xa3, 0x42, 0x0d, 0x03, 0x71, 0xdf, 0x0f, 0xf4,
-        0x0e, 0xe9, 0x0c, 0x46, 0x93, 0x3d, 0x3f, 0xa6,
-        0x6c, 0xdb, 0xca, 0xe5, 0xac, 0x96, 0xc8, 0x64,
-        0x5c, 0xec, 0x4b, 0x35, 0x65, 0xfc, 0xfb, 0x5a,
-        0x1b, 0x04, 0x1b, 0xa1, 0x0e, 0xfd, 0x88, 0x15
-    };
-
-    static const PRUint8 dsa_Q[] = {
-        0xad, 0x22, 0x59, 0xdf, 0xe5, 0xec, 0x4c, 0x6e,
-        0xf9, 0x43, 0xf0, 0x4b, 0x2d, 0x50, 0x51, 0xc6,
-        0x91, 0x99, 0x8b, 0xcf
-    };
-
-    static const PRUint8 dsa_G[] = {
-        0x78, 0x6e, 0xa9, 0xd8, 0xcd, 0x4a, 0x85, 0xa4,
-        0x45, 0xb6, 0x6e, 0x5d, 0x21, 0x50, 0x61, 0xf6,
-        0x5f, 0xdf, 0x5c, 0x7a, 0xde, 0x0d, 0x19, 0xd3,
-        0xc1, 0x3b, 0x14, 0xcc, 0x8e, 0xed, 0xdb, 0x17,
-        0xb6, 0xca, 0xba, 0x86, 0xa9, 0xea, 0x51, 0x2d,
-        0xc1, 0xa9, 0x16, 0xda, 0xf8, 0x7b, 0x59, 0x8a,
-        0xdf, 0xcb, 0xa4, 0x67, 0x00, 0x44, 0xea, 0x24,
-        0x73, 0xe5, 0xcb, 0x4b, 0xaf, 0x2a, 0x31, 0x25,
-        0x22, 0x28, 0x3f, 0x16, 0x10, 0x82, 0xf7, 0xeb,
-        0x94, 0x0d, 0xdd, 0x09, 0x22, 0x14, 0x08, 0x79,
-        0xba, 0x11, 0x0b, 0xf1, 0xff, 0x2d, 0x67, 0xac,
-        0xeb, 0xb6, 0x55, 0x51, 0x69, 0x97, 0xa7, 0x25,
-        0x6b, 0x9c, 0xa0, 0x9b, 0xd5, 0x08, 0x9b, 0x27,
-        0x42, 0x1c, 0x7a, 0x69, 0x57, 0xe6, 0x2e, 0xed,
-        0xa9, 0x5b, 0x25, 0xe8, 0x1f, 0xd2, 0xed, 0x1f,
-        0xdf, 0xe7, 0x80, 0x17, 0xba, 0x0d, 0x4d, 0x38
-    };
-
-    /* DSA Known Random Values (known random key block       is 160-bits)  */
-    /*                     and (known random signature block is 160-bits). */
-    static const PRUint8 dsa_known_random_key_block[] = {
-        "Mozilla Rules World!"
-    };
-    static const PRUint8 dsa_known_random_signature_block[] = {
-        "Random DSA Signature"
-    };
-
-    /* DSA Known Digest (160-bits) */
-    static const PRUint8 dsa_known_digest[] = { "DSA Signature Digest" };
-
-    /* DSA Known Signature (320-bits). */
-    static const PRUint8 dsa_known_signature[] = {
-        0x25, 0x7c, 0x3a, 0x79, 0x32, 0x45, 0xb7, 0x32,
-        0x70, 0xca, 0x62, 0x63, 0x2b, 0xf6, 0x29, 0x2c,
-        0x22, 0x2a, 0x03, 0xce, 0x48, 0x15, 0x11, 0x72,
-        0x7b, 0x7e, 0xf5, 0x7a, 0xf3, 0x10, 0x3b, 0xde,
-        0x34, 0xc1, 0x9e, 0xd7, 0x27, 0x9e, 0x77, 0x38
-    };
-
-    /* DSA variables. */
-    DSAPrivateKey *dsa_private_key;
-    SECStatus dsa_status;
-    SECItem dsa_signature_item;
-    SECItem dsa_digest_item;
-    DSAPublicKey dsa_public_key;
-    PRUint8 dsa_computed_signature[FIPS_DSA_SIGNATURE_LENGTH];
-    static const PQGParams dsa_pqg = {
-        NULL,
-        { FIPS_DSA_TYPE, (unsigned char *)dsa_P, FIPS_DSA_PRIME_LENGTH },
-        { FIPS_DSA_TYPE, (unsigned char *)dsa_Q, FIPS_DSA_SUBPRIME_LENGTH },
-        { FIPS_DSA_TYPE, (unsigned char *)dsa_G, FIPS_DSA_BASE_LENGTH }
-    };
-
-    /*******************************************/
-    /* Generate a DSA public/private key pair. */
-    /*******************************************/
-
-    /* Generate a DSA public/private key pair. */
-    dsa_status = DSA_NewKeyFromSeed(&dsa_pqg, dsa_known_random_key_block,
-                                    &dsa_private_key);
-
-    if (dsa_status != SECSuccess) {
-        PORT_SetError(SEC_ERROR_NO_MEMORY);
-        return (SECFailure);
-    }
-
-    /* construct public key from private key. */
-    dsa_public_key.params = dsa_private_key->params;
-    dsa_public_key.publicValue = dsa_private_key->publicValue;
-
-    /*************************************************/
-    /* DSA Single-Round Known Answer Signature Test. */
-    /*************************************************/
-
-    dsa_signature_item.data = dsa_computed_signature;
-    dsa_signature_item.len = sizeof dsa_computed_signature;
-
-    dsa_digest_item.data = (unsigned char *)dsa_known_digest;
-    dsa_digest_item.len = SHA1_LENGTH;
-
-    /* Perform DSA signature process. */
-    dsa_status = DSA_SignDigestWithSeed(dsa_private_key,
-                                        &dsa_signature_item,
-                                        &dsa_digest_item,
-                                        dsa_known_random_signature_block);
-
-    if ((dsa_status != SECSuccess) ||
-        (dsa_signature_item.len != FIPS_DSA_SIGNATURE_LENGTH) ||
-        (PORT_Memcmp(dsa_computed_signature, dsa_known_signature,
-                     FIPS_DSA_SIGNATURE_LENGTH) != 0)) {
-        dsa_status = SECFailure;
-    } else {
-
-        /****************************************************/
-        /* DSA Single-Round Known Answer Verification Test. */
-        /****************************************************/
-
-        /* Perform DSA verification process. */
-        dsa_status = DSA_VerifyDigest(&dsa_public_key,
-                                      &dsa_signature_item,
-                                      &dsa_digest_item);
-    }
-
-    PORT_FreeArena(dsa_private_key->params.arena, PR_TRUE);
-    /* Don't free public key, it uses same arena as private key */
-
-    /* Verify DSA signature. */
-    if (dsa_status != SECSuccess) {
-        PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
-        return SECFailure;
-    }
-
-    return (SECSuccess);
-}
-
-static SECStatus
 freebl_fips_DH_PowerUpSelfTest(void)
 {
     /* DH Known P (2048-bits) */
@@ -1946,46 +1793,13 @@ loser:
 static SECStatus
 freebl_fips_RNG_PowerUpSelfTest(void)
 {
-    static const PRUint8 Q[] = {
-        0x85, 0x89, 0x9c, 0x77, 0xa3, 0x79, 0xff, 0x1a,
-        0x86, 0x6f, 0x2f, 0x3e, 0x2e, 0xf9, 0x8c, 0x9c,
-        0x9d, 0xef, 0xeb, 0xed
-    };
-    static const PRUint8 GENX[] = {
-        0x65, 0x48, 0xe3, 0xca, 0xac, 0x64, 0x2d, 0xf7,
-        0x7b, 0xd3, 0x4e, 0x79, 0xc9, 0x7d, 0xa6, 0xa8,
-        0xa2, 0xc2, 0x1f, 0x8f, 0xe9, 0xb9, 0xd3, 0xa1,
-        0x3f, 0xf7, 0x0c, 0xcd, 0xa6, 0xca, 0xbf, 0xce,
-        0x84, 0x0e, 0xb6, 0xf1, 0x0d, 0xbe, 0xa9, 0xa3
-    };
-    static const PRUint8 rng_known_DSAX[] = {
-        0x7a, 0x86, 0xf1, 0x7f, 0xbd, 0x4e, 0x6e, 0xd9,
-        0x0a, 0x26, 0x21, 0xd0, 0x19, 0xcb, 0x86, 0x73,
-        0x10, 0x1f, 0x60, 0xd7
-    };
-
     SECStatus rng_status = SECSuccess;
-    PRUint8 DSAX[FIPS_DSA_SUBPRIME_LENGTH];
 
     /*******************************************/
     /*   Run the SP 800-90 Health tests        */
     /*******************************************/
     rng_status = PRNGTEST_RunHealthTests();
     if (rng_status != SECSuccess) {
-        PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
-        return SECFailure;
-    }
-
-    /*******************************************/
-    /* Generate DSAX fow given Q.              */
-    /*******************************************/
-
-    rng_status = FIPS186Change_ReduceModQForDSA(GENX, Q, DSAX);
-
-    /* Verify DSAX to perform the RNG integrity check */
-    if ((rng_status != SECSuccess) ||
-        (PORT_Memcmp(DSAX, rng_known_DSAX,
-                     (FIPS_DSA_SUBPRIME_LENGTH)) != 0)) {
         PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
         return SECFailure;
     }
@@ -2076,12 +1890,6 @@ freebl_fipsPowerUpSelfTest(unsigned int tests)
          * the locking primitives */
         /* RSA Power-Up SelfTest(s). */
         rv = freebl_fips_RSA_PowerUpSelfTest();
-
-        if (rv != SECSuccess)
-            return rv;
-
-        /* DSA Power-Up SelfTest(s). */
-        rv = freebl_fips_DSA_PowerUpSelfTest();
 
         if (rv != SECSuccess)
             return rv;

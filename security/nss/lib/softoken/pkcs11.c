@@ -37,6 +37,7 @@
 #include "secasn1.h"
 #include "secerr.h"
 #include "lgglue.h"
+#include "kem.h"
 
 PRBool parentForkedAfterC_Initialize;
 
@@ -170,6 +171,12 @@ CK_NSS_FIPS_FUNCTIONS sftk_fips_funcList = {
     nsc_NSSGetFIPSStatus
 };
 
+CK_NSS_KEM_FUNCTIONS sftk_kem_funcList = {
+    { 1, 0 },
+    NSC_Encapsulate,
+    NSC_Decapsulate
+};
+
 /*
  * Array is orderd by default first
  */
@@ -177,10 +184,11 @@ static CK_INTERFACE nss_interfaces[] = {
     { (CK_UTF8CHAR_PTR) "PKCS 11", &sftk_funcList, NSS_INTERFACE_FLAGS },
     { (CK_UTF8CHAR_PTR) "PKCS 11", &sftk_funcList_v2, NSS_INTERFACE_FLAGS },
     { (CK_UTF8CHAR_PTR) "Vendor NSS Module Interface", &sftk_module_funcList, NSS_INTERFACE_FLAGS },
-    { (CK_UTF8CHAR_PTR) "Vendor NSS FIPS Interface", &sftk_fips_funcList, NSS_INTERFACE_FLAGS }
+    { (CK_UTF8CHAR_PTR) "Vendor NSS FIPS Interface", &sftk_fips_funcList, NSS_INTERFACE_FLAGS },
+    { (CK_UTF8CHAR_PTR) "Vendor NSS KEM Interface", &sftk_kem_funcList, NSS_INTERFACE_FLAGS }
 };
 /* must match the count of interfaces in nss_interfaces above */
-#define NSS_INTERFACE_COUNT 4
+#define NSS_INTERFACE_COUNT 5
 
 /* List of DES Weak Keys */
 typedef unsigned char desKey[8];
@@ -630,11 +638,14 @@ static const struct mechanismList mechanisms[] = {
     /* -------------------- Constant Time TLS MACs ----------------------- */
     { CKM_NSS_HMAC_CONSTANT_TIME, { 0, 0, CKF_DIGEST }, PR_TRUE },
     { CKM_NSS_SSL3_MAC_CONSTANT_TIME, { 0, 0, CKF_DIGEST }, PR_TRUE },
-    /* --------------------IPSEC ----------------------- */
+    /* -------------------- IPSEC ----------------------- */
     { CKM_NSS_IKE_PRF_PLUS_DERIVE, { 8, 255 * 64, CKF_DERIVE }, PR_TRUE },
     { CKM_NSS_IKE_PRF_DERIVE, { 8, 64, CKF_DERIVE }, PR_TRUE },
     { CKM_NSS_IKE1_PRF_DERIVE, { 8, 64, CKF_DERIVE }, PR_TRUE },
-    { CKM_NSS_IKE1_APP_B_PRF_DERIVE, { 8, 255 * 64, CKF_DERIVE }, PR_TRUE }
+    { CKM_NSS_IKE1_APP_B_PRF_DERIVE, { 8, 255 * 64, CKF_DERIVE }, PR_TRUE },
+    /* -------------------- Kyber Operations ----------------------- */
+    { CKM_NSS_KYBER_KEY_PAIR_GEN, { 0, 0, CKF_GENERATE_KEY_PAIR }, PR_TRUE },
+    { CKM_NSS_KYBER, { 0, 0, 0 }, PR_TRUE },
 };
 static const CK_ULONG mechanismCount = sizeof(mechanisms) / sizeof(mechanisms[0]);
 
@@ -1076,6 +1087,16 @@ sftk_handlePublicKeyObject(SFTKSession *session, SFTKObject *object,
             recover = CK_FALSE;
             wrap = CK_FALSE;
             break;
+        case CKK_NSS_KYBER:
+            if (!sftk_hasAttribute(object, CKA_NSS_PARAMETER_SET)) {
+                return CKR_TEMPLATE_INCOMPLETE;
+            }
+            derive = CK_FALSE;
+            verify = CK_FALSE;
+            encrypt = CK_FALSE;
+            recover = CK_FALSE;
+            wrap = CK_FALSE;
+            break;
         default:
             return CKR_ATTRIBUTE_VALUE_INVALID;
     }
@@ -1274,6 +1295,15 @@ sftk_handlePrivateKeyObject(SFTKSession *session, SFTKObject *object, CK_KEY_TYP
             encrypt = sign = recover = wrap = CK_FALSE;
             derive = CK_TRUE;
             createObjectInfo = PR_FALSE;
+            break;
+        case CKK_NSS_KYBER:
+            if (!sftk_hasAttribute(object, CKA_KEY_TYPE)) {
+                return CKR_TEMPLATE_INCOMPLETE;
+            }
+            if (!sftk_hasAttribute(object, CKA_VALUE)) {
+                return CKR_TEMPLATE_INCOMPLETE;
+            }
+            encrypt = sign = recover = wrap = CK_FALSE;
             break;
         default:
             return CKR_ATTRIBUTE_VALUE_INVALID;
@@ -1957,6 +1987,9 @@ sftk_GetPubKey(SFTKObject *object, CK_KEY_TYPE key_type,
                 crv = CKR_ATTRIBUTE_VALUE_INVALID;
             }
             break;
+        case CKK_NSS_KYBER:
+            crv = CKR_OK;
+            break;
         default:
             crv = CKR_KEY_TYPE_INCONSISTENT;
             break;
@@ -2109,6 +2142,9 @@ sftk_mkPrivKey(SFTKObject *object, CK_KEY_TYPE key_type, CK_RV *crvp)
                 break;
 #endif
             }
+            break;
+
+        case CKK_NSS_KYBER:
             break;
 
         default:

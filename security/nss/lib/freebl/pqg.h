@@ -11,6 +11,9 @@
 #ifndef _PQG_H_
 #define _PQG_H_ 1
 
+SECStatus
+PQG_HashBuf(HASH_HashType type, unsigned char *dest,
+            const unsigned char *src, PRUint32 src_len);
 /* PQG_GetLength returns the significant bytes in the SECItem object (that is
  * the length of the object minus any leading zeros. Any SECItem may be used,
  * though this function is usually used for P, Q, or G values */

@@ -49,60 +49,62 @@ tls13_ServerSendStatusRequestXtn(const sslSocket *ss, TLSExtensionData *xtnData,
 }
 
 /*
- *     [draft-ietf-tls-tls13-11] Section 6.3.2.3.
+ *     [RFC 8446] Section 4.2.8.
  *
  *     struct {
  *         NamedGroup group;
  *         opaque key_exchange<1..2^16-1>;
  *     } KeyShareEntry;
  *
- *     struct {
- *         select (role) {
- *             case client:
- *                 KeyShareEntry client_shares<4..2^16-1>;
- *
- *             case server:
- *                 KeyShareEntry server_share;
- *         }
- *     } KeyShare;
- *
- * DH is Section 6.3.2.3.1.
- *
- *     opaque dh_Y<1..2^16-1>;
- *
- * ECDH is Section 6.3.2.3.2.
- *
- *     opaque point <1..2^8-1>;
  */
 PRUint32
-tls13_SizeOfKeyShareEntry(const SECKEYPublicKey *pubKey)
+tls13_SizeOfKeyShareEntry(const sslEphemeralKeyPair *keyPair)
 {
     /* Size = NamedGroup(2) + length(2) + opaque<?> share */
+    PRUint32 size = 2 + 2;
+
+    const SECKEYPublicKey *pubKey = keyPair->keys->pubKey;
     switch (pubKey->keyType) {
         case ecKey:
-            return 2 + 2 + pubKey->u.ec.publicValue.len;
+            size += pubKey->u.ec.publicValue.len;
+            break;
         case dhKey:
-            return 2 + 2 + pubKey->u.dh.prime.len;
+            size += pubKey->u.dh.prime.len;
+            break;
         default:
             PORT_Assert(0);
+            return 0;
     }
-    return 0;
+
+    if (keyPair->kemKeys) {
+        PORT_Assert(!keyPair->kemCt);
+        PORT_Assert(keyPair->group->name == ssl_grp_kem_xyber768d00);
+        pubKey = keyPair->kemKeys->pubKey;
+        size += pubKey->u.kyber.publicValue.len;
+    }
+    if (keyPair->kemCt) {
+        PORT_Assert(!keyPair->kemKeys);
+        PORT_Assert(keyPair->group->name == ssl_grp_kem_xyber768d00);
+        size += keyPair->kemCt->len;
+    }
+
+    return size;
 }
 
 SECStatus
-tls13_EncodeKeyShareEntry(sslBuffer *buf, SSLNamedGroup group,
-                          SECKEYPublicKey *pubKey)
+tls13_EncodeKeyShareEntry(sslBuffer *buf, sslEphemeralKeyPair *keyPair)
 {
     SECStatus rv;
-    unsigned int size = tls13_SizeOfKeyShareEntry(pubKey);
+    unsigned int size = tls13_SizeOfKeyShareEntry(keyPair);
 
-    rv = sslBuffer_AppendNumber(buf, group, 2);
+    rv = sslBuffer_AppendNumber(buf, keyPair->group->name, 2);
     if (rv != SECSuccess)
         return rv;
     rv = sslBuffer_AppendNumber(buf, size - 4, 2);
     if (rv != SECSuccess)
         return rv;
 
+    const SECKEYPublicKey *pubKey = keyPair->keys->pubKey;
     switch (pubKey->keyType) {
         case ecKey:
             rv = sslBuffer_Append(buf, pubKey->u.ec.publicValue.data,
@@ -115,6 +117,22 @@ tls13_EncodeKeyShareEntry(sslBuffer *buf, SSLNamedGroup group,
             PORT_Assert(0);
             PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
             break;
+    }
+
+    if (rv != SECSuccess) {
+        return rv;
+    }
+
+    if (keyPair->kemKeys) {
+        PORT_Assert(!keyPair->kemCt);
+        PORT_Assert(keyPair->group->name == ssl_grp_kem_xyber768d00);
+        pubKey = keyPair->kemKeys->pubKey;
+        rv = sslBuffer_Append(buf, pubKey->u.kyber.publicValue.data, pubKey->u.kyber.publicValue.len);
+    }
+    if (keyPair->kemCt) {
+        PORT_Assert(!keyPair->kemKeys);
+        PORT_Assert(keyPair->group->name == ssl_grp_kem_xyber768d00);
+        rv = sslBuffer_Append(buf, keyPair->kemCt->data, keyPair->kemCt->len);
     }
 
     return rv;
@@ -147,9 +165,7 @@ tls13_ClientSendKeyShareXtn(const sslSocket *ss, TLSExtensionData *xtnData,
          cursor != &ss->ephemeralKeyPairs;
          cursor = PR_NEXT_LINK(cursor)) {
         sslEphemeralKeyPair *keyPair = (sslEphemeralKeyPair *)cursor;
-        rv = tls13_EncodeKeyShareEntry(buf,
-                                       keyPair->group->name,
-                                       keyPair->keys->pubKey);
+        rv = tls13_EncodeKeyShareEntry(buf, keyPair);
         if (rv != SECSuccess) {
             return SECFailure;
         }
@@ -392,8 +408,7 @@ tls13_ServerSendKeyShareXtn(const sslSocket *ss, TLSExtensionData *xtnData,
 
     keyPair = (sslEphemeralKeyPair *)PR_NEXT_LINK(&ss->ephemeralKeyPairs);
 
-    rv = tls13_EncodeKeyShareEntry(buf, keyPair->group->name,
-                                   keyPair->keys->pubKey);
+    rv = tls13_EncodeKeyShareEntry(buf, keyPair);
     if (rv != SECSuccess) {
         return SECFailure;
     }
