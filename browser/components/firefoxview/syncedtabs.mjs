@@ -549,7 +549,7 @@ class SyncedTabsInView extends ViewPage {
     />`);
     renderArray.push(html` <link
       rel="stylesheet"
-      href="chrome://browser/content/firefoxview/firefoxview.css"
+      href="chrome://browser/content/firefoxview/firefoxview-next.css"
     />`);
 
     if (!this.recentBrowsing) {

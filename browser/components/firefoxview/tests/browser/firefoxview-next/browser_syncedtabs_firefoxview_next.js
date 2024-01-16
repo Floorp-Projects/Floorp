@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+/* import-globals-from ../head.js */
+
 add_setup(async function () {
   registerCleanupFunction(() => {
     // reset internal state so it doesn't affect the next tests

@@ -17,6 +17,9 @@ TESTING_JS_MODULES += [
     "tests/browser/FirefoxViewTestUtils.sys.mjs",
 ]
 
-BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.toml"]
+BROWSER_CHROME_MANIFESTS += [
+    "tests/browser/browser.toml",
+    "tests/browser/firefoxview-next/browser.toml",
+]
 
 MOCHITEST_CHROME_MANIFESTS += ["tests/chrome/chrome.toml"]

@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+/* import-globals-from ../head.js */
+
 const CARD_COLLAPSED_EVENT = [
   ["firefoxview_next", "card_collapsed", "card_container", undefined],
 ];
@@ -299,7 +301,6 @@ add_task(async function test_context_menu_private_window_telemetry() {
 });
 
 add_task(async function test_context_menu_delete_from_history_telemetry() {
-  await PlacesUtils.history.clear();
   await PlacesUtils.history.insert({
     url: URLs[0],
     title: "Example Domain 1",
