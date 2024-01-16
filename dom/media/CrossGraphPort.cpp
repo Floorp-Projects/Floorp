@@ -90,7 +90,8 @@ CrossGraphPort::~CrossGraphPort() {
 
 RefPtr<GenericPromise> CrossGraphPort::EnsureConnected() {
   // The primary graph is already working check the partner (receiver's) graph.
-  return mReceiver->Graph()->NotifyWhenDeviceStarted(mReceiver.get());
+  return mReceiver->Graph()->NotifyWhenDeviceStarted(
+      mReceiver->Graph()->PrimaryOutputDeviceID());
 }
 
 /** CrossGraphTransmitter **/
