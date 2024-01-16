@@ -18,6 +18,7 @@
   min-height: fit-content;
   border-radius: 8px;
   box-shadow: 0 2px 6px rgba(58, 57, 68, 20%);
+  overflow-x: auto;
 
   @media (prefers-contrast: no-preference) and (prefers-color-scheme: dark) {
     box-shadow: 0 2px 6px rgba(21, 20, 26, 100%);

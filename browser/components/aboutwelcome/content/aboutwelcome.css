@@ -744,6 +744,7 @@ panel#feature-callout[arrow-position=inline-start-bottom] {
   min-height: fit-content;
   border-radius: 8px;
   box-shadow: 0 2px 6px rgba(58, 57, 68, 0.2);
+  overflow-x: auto;
 }
 @media (prefers-contrast: no-preference) and (prefers-color-scheme: dark) {
   .onboardingContainer.shopping .screen[pos=split] {
