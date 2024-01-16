@@ -1,6 +1,7 @@
 [DEFAULT]
 prefs = [
   "extensions.formautofill.addresses.enabled=true",
+  "extensions.formautofill.addresses.capture.requiredFields=''",
   "toolkit.telemetry.ipcBatchTimeout=0", # lower the interval for event telemetry in the content process to update the parent process
 ]
 support-files = [
@@ -15,9 +16,13 @@ support-files = [
 
 ["browser_address_capture_page_navigation.js"]
 
+["browser_address_doorhanger_confirmation_popup.js"]
+
 ["browser_address_doorhanger_display.js"]
 
 ["browser_address_doorhanger_invalid_fields.js"]
+
+["browser_address_doorhanger_multiple_tabs.js"]
 
 ["browser_address_doorhanger_not_shown.js"]
 
