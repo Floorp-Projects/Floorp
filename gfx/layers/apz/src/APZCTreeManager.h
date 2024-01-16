@@ -584,8 +584,9 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
       const AsyncTransformComponents& aComponents) const;
 
   /*
-   * Returns the transform matrix from |aApzc| to the root content APZC of
-   * |aApzc|.
+   * Returns the matrix which transforms coordinates relative to the layout
+   * viewport of |aApzc|, to be relative to the document origin of the root
+   * content APZC of |aApzc|.
    * |aApzc| must be the root APZC of an out-of-process iframe.
    */
   CSSToCSSMatrix4x4 GetOopifToRootContentTransform(
