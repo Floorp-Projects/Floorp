@@ -15,8 +15,11 @@ def moz_optimize(option):
     flags = None
 
     if len(option):
-        val = "2"
         flags = option[0]
+        if "-O0" in flags:
+            val = None
+        else:
+            val = "2"
     elif option:
         val = "1"
     else:
@@ -2293,19 +2296,25 @@ option(
 )
 
 
-@depends_if("--enable-undefined-sanitizer")
-def ubsan(options):
+@depends("--enable-undefined-sanitizer", moz_optimize.optimize)
+def ubsan(options, optimize):
+    if not options:
+        return
+
     default_checks = [
         "bool",
         "bounds",
         "enum",
         "function",
         "integer-divide-by-zero",
-        "object-size",
         "pointer-overflow",
         "return",
         "vla-bound",
     ]
+
+    # adding object-size generates a warning if -O0 is set
+    if optimize:
+        default_checks.append("object-size")
 
     checks = options if len(options) else default_checks
 
