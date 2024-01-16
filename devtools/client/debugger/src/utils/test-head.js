@@ -7,7 +7,7 @@
  * @module utils/test-head
  */
 
-import { combineReducers } from "redux";
+import { combineReducers } from "devtools/client/shared/vendor/redux";
 import reducers from "../reducers";
 import actions from "../actions";
 import * as selectors from "../selectors";

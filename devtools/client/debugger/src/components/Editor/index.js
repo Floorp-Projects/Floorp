@@ -5,7 +5,7 @@
 import PropTypes from "prop-types";
 import React, { PureComponent } from "react";
 import { div } from "react-dom-factories";
-import { bindActionCreators } from "redux";
+import { bindActionCreators } from "devtools/client/shared/vendor/redux";
 import ReactDOM from "react-dom";
 import { connect } from "../../utils/connect";
 
