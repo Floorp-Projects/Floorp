@@ -220,7 +220,10 @@ void SessionStoreChild::SessionStoreUpdate(
     const Maybe<nsCString>& aDocShellCaps, const Maybe<bool>& aPrivatedMode,
     const MaybeSessionStoreZoom& aZoom, const bool aNeedCollectSHistory,
     const uint32_t& aEpoch) {
-  if (XRE_IsContentProcess()) {
+  // Skipping an update here is acceptable, since it will only happen
+  // during actor teardown, and we're most likely in a final flush
+  // which expects that not all content processes manage to respond.
+  if (XRE_IsContentProcess() && CanSend()) {
     Unused << SendSessionStoreUpdate(aDocShellCaps, aPrivatedMode, aZoom,
                                      aNeedCollectSHistory, aEpoch);
   } else if (SessionStoreParent* sessionStoreParent =
@@ -235,7 +238,10 @@ void SessionStoreChild::IncrementalSessionStoreUpdate(
     const MaybeDiscarded<BrowsingContext>& aBrowsingContext,
     const Maybe<FormData>& aFormData, const Maybe<nsPoint>& aScrollPosition,
     uint32_t aEpoch) {
-  if (XRE_IsContentProcess()) {
+  // Skipping an update here is acceptable, since it will only happen
+  // during actor teardown, and we're most likely in a final flush
+  // which expects that not all content processes manage to respond.
+  if (XRE_IsContentProcess() && CanSend()) {
     Unused << SendIncrementalSessionStoreUpdate(aBrowsingContext, aFormData,
                                                 aScrollPosition, aEpoch);
   } else if (SessionStoreParent* sessionStoreParent =
