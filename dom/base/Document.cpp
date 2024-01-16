@@ -9302,7 +9302,6 @@ class Document::TitleChangeEvent final : public Runnable {
   // Otherwise, some window manager integrations don't work properly,
   // see bug 1874766.
   const bool mBlockOnload;
-  bool mRunning = false;
 };
 
 void Document::NotifyPossibleTitleChange(bool aBoundTitleElement) {
