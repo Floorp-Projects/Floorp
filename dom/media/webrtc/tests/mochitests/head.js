@@ -378,9 +378,10 @@ function getUserMedia(constraints) {
     );
   }
   info("Call getUserMedia for " + JSON.stringify(constraints));
-  return navigator.mediaDevices
-    .getUserMedia(constraints)
-    .then(stream => (checkMediaStreamTracks(constraints, stream), stream));
+  return navigator.mediaDevices.getUserMedia(constraints).then(stream => {
+    checkMediaStreamTracks(constraints, stream);
+    return stream;
+  });
 }
 
 // These are the promises we use to track that the prerequisites for the test
@@ -830,7 +831,10 @@ function haveEvents(target, name, count, cancel) {
         (listener = e => --counter < 1 && resolve(e))
       )
     ),
-  ]).then(e => (target.removeEventListener(name, listener), e));
+  ]).then(e => {
+    target.removeEventListener(name, listener);
+    return e;
+  });
 }
 
 /**

@@ -57,7 +57,10 @@ runTest(() => getUserMedia({audio: true, video: true})
   })
   .then(() => {
     info("Removing original tracks");
-    stream.getTracks().forEach(t => (stream.removeTrack(t), tracks.push(t)));
+    stream.getTracks().forEach(t => {
+      stream.removeTrack(t);
+      return tracks.push(t);
+    });
 
     return spinEventLoop();
   })

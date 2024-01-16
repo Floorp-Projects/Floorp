@@ -13,7 +13,7 @@
 function doTest() {
   document.getElementById("button").focus();
   is(window.scrollY, 0, "Scrolled position initially 0");
-  synthesizeKey("KEY_Tab"),
+  synthesizeKey("KEY_Tab");
   ok(window.scrollY > 200, "Scrolled child frame into view");
   SimpleTest.finish();
 }
