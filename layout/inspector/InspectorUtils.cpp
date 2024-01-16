@@ -877,8 +877,12 @@ void InspectorUtils::GetCSSRegisteredProperties(
     GlobalObject& aGlobalObject, Document& aDocument,
     nsTArray<InspectorCSSPropertyDefinition>& aResult) {
   nsTArray<StylePropDef> result;
-  Servo_GetRegisteredCustomProperties(aDocument.EnsureStyleSet().RawData(),
-                                      &result);
+
+  ServoStyleSet& styleSet = aDocument.EnsureStyleSet();
+  // Update the rules before looking up @property rules.
+  styleSet.UpdateStylistIfNeeded();
+
+  Servo_GetRegisteredCustomProperties(styleSet.RawData(), &result);
   for (const auto& propDef : result) {
     InspectorCSSPropertyDefinition& property = *aResult.AppendElement();
 
