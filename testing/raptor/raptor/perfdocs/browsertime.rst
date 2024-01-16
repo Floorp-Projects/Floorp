@@ -124,58 +124,6 @@ Or for Raptor-Browsertime (use ``chrome`` for desktop, and ``chrome-m`` for mobi
 
   ./mach raptor --browsertime -t amazon --app chrome --browsertime-chromedriver <PATH/TO/CHROMEDRIVER>
 
-Running Page-load tests with third party WebExtensions
-------------------------------------------------------
-Page-load tests can also be executed on both Firefox Desktop and Firefox for Android builds with a set of popular
-third party extensions installed (similarly to talos-realworld-webextensions, which runs tp5 tests with a set of third
-party extensions installed).
-
-Any of the page-load tests can be executed locally with the pre-selected set of third party extensions installed by just
-adding to the base raptor command the additional ``--conditioned-profile settled-webext`` command line option.
-
-Launch amazon tp6 page-load test on Firefox Desktop:
-
-::
-
-   ./mach raptor --browsertime -t amazon --conditioned-profile settled-webext
-
-Launch amazon tp6 mobile page-load test on Firefox for Android (the apk has to be pre-installed, mach raptor does detect if already installed but
-it does not install it):
-
-::
-
-   ./mach raptor --browsertime -t amazon --app fenix --binary org.mozilla.fenix --conditioned-profile settled-webext
-
-To run these jobs on try, make sure to select the tp6 jobs that include the string `webextensions`, as an example (add ``--no-push`` to force try fuzzy to only
-list the jobs selected by the try fuzzy query) to run all tp6 page-load webextensons jobs currently defined:
-
-::
-
-   ./mach try fuzzy -q "'tp6 'webextensions"
-
-Similarly for running tp6m on Firefox for Android builds:
-
-::
-
-   ./mach try fuzzy --full -q "'tp6m 'webextensions"
-
-The set of extensions installed are the ones listed in the ``"addons"`` property of the condprof customization file
-`webext.json`_ from the ``testing/condprofile/condprof/customization/`` directory.
-
-All extensions listed in the ``webext.json`` file are expected to have been predownloaded and included in the ``firefox-addons.tar`` archive
-defined in the CI fetch config named `firefox-addons`_, but they will be automatically downloaded from the url specified in the ``webext.json``
-file if they are not.
-
-In a try push we allow to run jobs on new extension xpi files not part of the firefox-addons.tar archive, the new extension needs to be just
-added in the `webext.json`_ condprof customization file in a patch part of the same stack of patches being pushed to try.
-
-On the contrary new extensions added to the `webext.json`_ condprof customization file on mozilla-central patches will require the xpi file to be
-added to the ``firefox-addons.tar`` archive and the `firefox-addons`_ CI fetch config updated accordingly (missing to update the archive will
-trigger explicit linter errors, :doc:`see condprof-addons linter docs </code-quality/lint/linters/condprof-addons>`).
-
-.. _webext.json: https://searchfox.org/mozilla-central/rev/bc6a50e6f08db0bb371ef7197c472555499e82c0/testing/condprofile/condprof/customization/webext.json
-.. _firefox-addons: https://searchfox.org/mozilla-central/rev/bc6a50e6f08db0bb371ef7197c472555499e82c0/taskcluster/ci/fetch/browsertime.yml#169-176
-
 More Examples
 -------------
 
