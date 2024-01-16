@@ -2705,6 +2705,10 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
       }
     }
 
+    if (!js::ValidateLazinessOfStencilAndGlobal(cx, *stencil)) {
+      return false;
+    }
+
     JS::InstantiateOptions instantiateOptions(options);
     RootedScript script(
         cx, JS::InstantiateGlobalStencil(cx, instantiateOptions, stencil));
@@ -5250,13 +5254,17 @@ static bool InstantiateModuleStencil(JSContext* cx, uint32_t argc, Value* vp) {
   }
 
   /* Prepare the input byte array. */
-  if (!args[0].isObject() || !args[0].toObject().is<js::StencilObject>()) {
+  if (!args[0].isObject()) {
+    JS_ReportErrorASCII(cx,
+                        "instantiateModuleStencil: Stencil object expected");
+  }
+  Rooted<js::StencilObject*> stencilObj(
+      cx, args[0].toObject().maybeUnwrapIf<js::StencilObject>());
+  if (!stencilObj) {
     JS_ReportErrorASCII(cx,
                         "instantiateModuleStencil: Stencil object expected");
     return false;
   }
-  Rooted<js::StencilObject*> stencilObj(
-      cx, &args[0].toObject().as<js::StencilObject>());
 
   if (!stencilObj->stencil()->isModule()) {
     JS_ReportErrorASCII(cx,
@@ -5287,6 +5295,10 @@ static bool InstantiateModuleStencil(JSContext* cx, uint32_t argc, Value* vp) {
     return false;
   }
 
+  if (!js::ValidateLazinessOfStencilAndGlobal(cx, *stencilObj->stencil())) {
+    return false;
+  }
+
   /* Instantiate the stencil. */
   Rooted<frontend::CompilationGCOutput> output(cx);
   if (!frontend::CompilationStencil::instantiateStencils(
@@ -5313,13 +5325,18 @@ static bool InstantiateModuleStencilXDR(JSContext* cx, uint32_t argc,
   }
 
   /* Prepare the input byte array. */
-  if (!args[0].isObject() || !args[0].toObject().is<StencilXDRBufferObject>()) {
+  if (!args[0].isObject()) {
     JS_ReportErrorASCII(
         cx, "instantiateModuleStencilXDR: stencil XDR object expected");
     return false;
   }
   Rooted<StencilXDRBufferObject*> xdrObj(
-      cx, &args[0].toObject().as<StencilXDRBufferObject>());
+      cx, args[0].toObject().maybeUnwrapIf<StencilXDRBufferObject>());
+  if (!xdrObj) {
+    JS_ReportErrorASCII(
+        cx, "instantiateModuleStencilXDR: stencil XDR object expected");
+    return false;
+  }
   MOZ_ASSERT(xdrObj->hasBuffer());
 
   CompileOptions options(cx);
@@ -5363,6 +5380,10 @@ static bool InstantiateModuleStencilXDR(JSContext* cx, uint32_t argc,
     fc.clearAutoReport();
     JS_ReportErrorASCII(cx,
                         "instantiateModuleStencilXDR: Module stencil expected");
+    return false;
+  }
+
+  if (!js::ValidateLazinessOfStencilAndGlobal(cx, stencil)) {
     return false;
   }
 
