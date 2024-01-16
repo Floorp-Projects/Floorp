@@ -17,6 +17,7 @@
         onmessage = function (e) {
           console.log("log-from-worker", e.data.msg, globalThis);
           console.log(Symbol("logged-symbol-from-worker"));
+          console.log(["array-item", 42, { key: "value" }]);
           console.log("sab-from-worker", e.data.sab);
         };
       `);

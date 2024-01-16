@@ -242,7 +242,7 @@ const previewers = {
             }
             items.push(item);
           }
-        } else if (raw && !Object.getOwnPropertyDescriptor(raw, i)) {
+        } else if (raw && !obj.getOwnPropertyDescriptor(i)) {
           items.push(null);
         } else {
           // Workers do not have access to Cu.
