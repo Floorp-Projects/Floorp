@@ -788,7 +788,7 @@ void nsFieldSetFrame::SetInitialChildList(ChildListID aListID,
   if (nsBlockFrame* legend = do_QueryFrame(GetLegend())) {
     // A rendered legend always establish a new formatting context.
     // https://html.spec.whatwg.org/multipage/rendering.html#rendered-legend
-    legend->AddStateBits(NS_BLOCK_FORMATTING_CONTEXT_STATE_BITS);
+    legend->AddStateBits(NS_BLOCK_STATIC_BFC);
   }
   MOZ_ASSERT(
       aListID != FrameChildListID::Principal || GetInner() || GetLegend(),
@@ -819,7 +819,7 @@ void nsFieldSetFrame::InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
   if (nsBlockFrame* legend = do_QueryFrame(GetLegend())) {
     // A rendered legend always establish a new formatting context.
     // https://html.spec.whatwg.org/multipage/rendering.html#rendered-legend
-    legend->AddStateBits(NS_BLOCK_FORMATTING_CONTEXT_STATE_BITS);
+    legend->AddStateBits(NS_BLOCK_STATIC_BFC);
   }
 }
 

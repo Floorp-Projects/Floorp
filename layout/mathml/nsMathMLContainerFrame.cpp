@@ -1444,7 +1444,7 @@ nsContainerFrame* NS_NewMathMLmathBlockFrame(PresShell* aPresShell,
                                              ComputedStyle* aStyle) {
   auto newFrame = new (aPresShell)
       nsMathMLmathBlockFrame(aStyle, aPresShell->GetPresContext());
-  newFrame->AddStateBits(NS_BLOCK_FORMATTING_CONTEXT_STATE_BITS);
+  newFrame->AddStateBits(NS_BLOCK_STATIC_BFC);
   return newFrame;
 }
 

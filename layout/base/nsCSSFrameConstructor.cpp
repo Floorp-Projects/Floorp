@@ -320,7 +320,7 @@ static bool ShouldSuppressColumnSpanDescendants(nsIFrame* aFrame) {
   }
 
   if (!aFrame->IsBlockFrameOrSubclass() ||
-      aFrame->HasAnyStateBits(NS_BLOCK_FLOAT_MGR | NS_FRAME_OUT_OF_FLOW) ||
+      aFrame->HasAnyStateBits(NS_BLOCK_BFC_STATE_BITS | NS_FRAME_OUT_OF_FLOW) ||
       aFrame->IsFixedPosContainingBlock()) {
     // Need to suppress column-span if we:
     // - Are a different block formatting context,
@@ -4602,7 +4602,7 @@ nsIFrame* nsCSSFrameConstructor::ConstructNonScrollableBlock(
        aDisplay->DisplayInside() == StyleDisplayInside::FlowRoot ||
        clipPaginatedOverflow) &&
       !aParentFrame->IsInSVGTextSubtree()) {
-    flags = NS_BLOCK_FORMATTING_CONTEXT_STATE_BITS;
+    flags = NS_BLOCK_STATIC_BFC;
     if (clipPaginatedOverflow) {
       flags |= NS_BLOCK_CLIP_PAGINATED_OVERFLOW;
     }
@@ -10738,7 +10738,7 @@ nsBlockFrame* nsCSSFrameConstructor::BeginBuildingColumns(
   aColumnContent->SetComputedStyleWithoutNotification(blockStyle);
   InitAndRestoreFrame(aState, aContent, columnSet, aColumnContent);
   aColumnContent->AddStateBits(NS_FRAME_HAS_MULTI_COLUMN_ANCESTOR |
-                               NS_BLOCK_FORMATTING_CONTEXT_STATE_BITS);
+                               NS_BLOCK_STATIC_BFC);
 
   // Set up the parent-child chain.
   SetInitialSingleChild(columnSetWrapper, columnSet);

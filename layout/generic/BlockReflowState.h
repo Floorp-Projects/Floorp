@@ -41,16 +41,16 @@ class BlockReflowState {
           mCanHaveOverflowMarkers(false) {}
 
     // Set in the BlockReflowState constructor when reflowing a "block margin
-    // root" frame (i.e. a frame with the NS_BLOCK_MARGIN_ROOT flag set, for
-    // which margins apply by default).
+    // root" frame (i.e. a frame with any of the NS_BLOCK_BFC_STATE_BITS flag
+    // set, for which margins apply by default).
     //
     // The flag is also set when reflowing a frame whose computed BStart border
     // padding is non-zero.
     bool mIsBStartMarginRoot : 1;
 
     // Set in the BlockReflowState constructor when reflowing a "block margin
-    // root" frame (i.e. a frame with the NS_BLOCK_MARGIN_ROOT flag set, for
-    // which margins apply by default).
+    // root" frame (i.e. a frame with any of the NS_BLOCK_BFC_STATE_BITS flag
+    // set, for which margins apply by default).
     //
     // The flag is also set when reflowing a frame whose computed BEnd border
     // padding is non-zero.
@@ -79,7 +79,7 @@ class BlockReflowState {
     // Set when mLineAdjacentToTop is valid.
     bool mHasLineAdjacentToTop : 1;
 
-    // Set when the block has the equivalent of NS_BLOCK_FLOAT_MGR.
+    // Set when the block has the equivalent of NS_BLOCK_*_BFC.
     bool mBlockNeedsFloatManager : 1;
 
     // Set when nsLineLayout::LineIsEmpty was true at the end of reflowing

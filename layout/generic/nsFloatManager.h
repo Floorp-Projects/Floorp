@@ -70,7 +70,7 @@ struct nsFlowAreaRect {
 /**
  * nsFloatManager is responsible for implementing CSS's rules for
  * positioning floats. An nsFloatManager object is created during reflow for
- * any block with NS_BLOCK_FLOAT_MGR. During reflow, the float manager for
+ * any block with NS_BLOCK_BFC_STATE_BITS. During reflow, the float manager for
  * the nearest such ancestor block is found in ReflowInput::mFloatManager.
  *
  * According to the line-relative mappings in CSS Writing Modes spec [1],

@@ -92,7 +92,7 @@ static void MarkAllDescendantLinesDirty(nsBlockFrame* aBlock) {
 
 static void MarkSameFloatManagerLinesDirty(nsBlockFrame* aBlock) {
   nsBlockFrame* blockWithFloatMgr = aBlock;
-  while (!blockWithFloatMgr->HasAnyStateBits(NS_BLOCK_FLOAT_MGR)) {
+  while (!blockWithFloatMgr->HasAnyStateBits(NS_BLOCK_BFC_STATE_BITS)) {
     nsBlockFrame* bf = do_QueryFrame(blockWithFloatMgr->GetParent());
     if (!bf) {
       break;
@@ -446,7 +446,7 @@ nsBlockFrame* NS_NewBlockFrame(PresShell* aPresShell, ComputedStyle* aStyle) {
 nsBlockFrame* NS_NewBlockFormattingContext(PresShell* aPresShell,
                                            ComputedStyle* aComputedStyle) {
   nsBlockFrame* blockFrame = NS_NewBlockFrame(aPresShell, aComputedStyle);
-  blockFrame->AddStateBits(NS_BLOCK_FORMATTING_CONTEXT_STATE_BITS);
+  blockFrame->AddStateBits(NS_BLOCK_STATIC_BFC);
   return blockFrame;
 }
 
@@ -1191,7 +1191,7 @@ static LogicalSize CalculateContainingBlockSizeForAbsolutes(
  */
 static const nsBlockFrame* GetAsLineClampDescendant(const nsIFrame* aFrame) {
   if (const nsBlockFrame* block = do_QueryFrame(aFrame)) {
-    if (!block->HasAllStateBits(NS_BLOCK_FORMATTING_CONTEXT_STATE_BITS)) {
+    if (!block->HasAnyStateBits(NS_BLOCK_BFC_STATE_BITS)) {
       return block;
     }
   }
@@ -1208,7 +1208,7 @@ static bool IsLineClampRoot(const nsBlockFrame* aFrame) {
     return false;
   }
 
-  if (!aFrame->HasAllStateBits(NS_BLOCK_FORMATTING_CONTEXT_STATE_BITS)) {
+  if (!aFrame->HasAnyStateBits(NS_BLOCK_BFC_STATE_BITS)) {
     return false;
   }
 
@@ -3855,7 +3855,7 @@ bool nsBlockFrame::IsSelfEmpty() {
   // Blocks which are margin-roots (including inline-blocks) cannot be treated
   // as empty for margin-collapsing and other purposes. They're more like
   // replaced elements.
-  if (HasAnyStateBits(NS_BLOCK_MARGIN_ROOT)) {
+  if (HasAnyStateBits(NS_BLOCK_BFC_STATE_BITS)) {
     return false;
   }
 
@@ -5161,7 +5161,7 @@ void nsBlockFrame::SplitFloat(BlockReflowState& aState, nsIFrame* aFloat,
   }
 
   aState.AppendPushedFloatChain(nextInFlow);
-  if (MOZ_LIKELY(!HasAnyStateBits(NS_BLOCK_FLOAT_MGR)) ||
+  if (MOZ_LIKELY(!HasAnyStateBits(NS_BLOCK_BFC_STATE_BITS)) ||
       MOZ_UNLIKELY(IsTrueOverflowContainer())) {
     aState.mReflowStatus.SetOverflowIncomplete();
   } else {
@@ -7714,10 +7714,9 @@ void nsBlockFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
   // the prev-in-flow to a newly created next-in-flow, except for the
   // NS_BLOCK_FLAGS_NON_INHERITED_MASK bits below.
   constexpr nsFrameState NS_BLOCK_FLAGS_MASK =
-      NS_BLOCK_FORMATTING_CONTEXT_STATE_BITS |
-      NS_BLOCK_CLIP_PAGINATED_OVERFLOW | NS_BLOCK_HAS_FIRST_LETTER_STYLE |
-      NS_BLOCK_FRAME_HAS_OUTSIDE_MARKER | NS_BLOCK_HAS_FIRST_LETTER_CHILD |
-      NS_BLOCK_FRAME_HAS_INSIDE_MARKER;
+      NS_BLOCK_BFC_STATE_BITS | NS_BLOCK_CLIP_PAGINATED_OVERFLOW |
+      NS_BLOCK_HAS_FIRST_LETTER_STYLE | NS_BLOCK_FRAME_HAS_OUTSIDE_MARKER |
+      NS_BLOCK_HAS_FIRST_LETTER_CHILD | NS_BLOCK_FRAME_HAS_INSIDE_MARKER;
 
   // This is the subset of NS_BLOCK_FLAGS_MASK that is NOT inherited
   // by default.  They should only be set on the first-in-flow.
@@ -7757,12 +7756,16 @@ void nsBlockFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
             GetParent()->GetWritingMode().GetBlockDir() ||
         GetWritingMode().IsVerticalSideways() !=
             GetParent()->GetWritingMode().IsVerticalSideways())) ||
-      StyleDisplay()->IsContainPaint() || StyleDisplay()->IsContainLayout() ||
       IsColumnSpan()) {
-    AddStateBits(NS_BLOCK_FORMATTING_CONTEXT_STATE_BITS);
+    AddStateBits(NS_BLOCK_STATIC_BFC);
   }
 
-  if (HasAllStateBits(NS_FRAME_FONT_INFLATION_CONTAINER | NS_BLOCK_FLOAT_MGR)) {
+  if (StyleDisplay()->IsContainPaint() || StyleDisplay()->IsContainLayout()) {
+    AddStateBits(NS_BLOCK_DYNAMIC_BFC);
+  }
+
+  if (HasAnyStateBits(NS_FRAME_FONT_INFLATION_CONTAINER) &&
+      HasAnyStateBits(NS_BLOCK_BFC_STATE_BITS)) {
     AddStateBits(NS_FRAME_FONT_INFLATION_FLOW_ROOT);
   }
 }
@@ -7818,7 +7821,7 @@ void nsBlockFrame::SetMarkerFrameForListItem(nsIFrame* aMarkerFrame) {
     if (nsBlockFrame* marker = do_QueryFrame(aMarkerFrame)) {
       // An outside ::marker needs to be an independent formatting context
       // to avoid being influenced by the float manager etc.
-      marker->AddStateBits(NS_BLOCK_FORMATTING_CONTEXT_STATE_BITS);
+      marker->AddStateBits(NS_BLOCK_STATIC_BFC);
     }
     SetProperty(OutsideMarkerProperty(),
                 new (PresShell()) nsFrameList(aMarkerFrame, aMarkerFrame));
@@ -8020,7 +8023,7 @@ void nsBlockFrame::CheckFloats(BlockReflowState& aState) {
 void nsBlockFrame::IsMarginRoot(bool* aBStartMarginRoot,
                                 bool* aBEndMarginRoot) {
   nsIFrame* parent = GetParent();
-  if (!HasAnyStateBits(NS_BLOCK_MARGIN_ROOT)) {
+  if (!HasAnyStateBits(NS_BLOCK_BFC_STATE_BITS)) {
     if (!parent || parent->IsFloatContainingBlock()) {
       *aBStartMarginRoot = false;
       *aBEndMarginRoot = false;
@@ -8047,14 +8050,14 @@ bool nsBlockFrame::BlockNeedsFloatManager(nsIFrame* aBlock) {
   NS_ASSERTION(aBlock->IsBlockFrameOrSubclass(), "aBlock must be a block");
 
   nsIFrame* parent = aBlock->GetParent();
-  return aBlock->HasAnyStateBits(NS_BLOCK_FLOAT_MGR) ||
+  return aBlock->HasAnyStateBits(NS_BLOCK_BFC_STATE_BITS) ||
          (parent && !parent->IsFloatContainingBlock());
 }
 
 /* static */
 bool nsBlockFrame::BlockCanIntersectFloats(nsIFrame* aFrame) {
   return aFrame->IsBlockFrameOrSubclass() && !aFrame->IsReplaced() &&
-         !aFrame->HasAnyStateBits(NS_BLOCK_FLOAT_MGR);
+         !aFrame->HasAnyStateBits(NS_BLOCK_BFC_STATE_BITS);
 }
 
 // Note that this width can vary based on the vertical position.

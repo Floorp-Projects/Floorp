@@ -82,7 +82,7 @@ nsComboboxControlFrame* NS_NewComboboxControlFrame(PresShell* aPresShell,
       nsComboboxControlFrame(aStyle, aPresShell->GetPresContext());
 
   if (it) {
-    it->AddStateBits(NS_BLOCK_FORMATTING_CONTEXT_STATE_BITS);
+    it->AddStateBits(NS_BLOCK_STATIC_BFC);
   }
 
   return it;
