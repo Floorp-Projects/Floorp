@@ -237,6 +237,11 @@ fn iter_declarations<'builder, 'decls: 'builder>(
         } else {
             let id = declaration.id().as_longhand().unwrap();
             declarations.note_declaration(declaration, priority, id);
+            if let Some(ref mut builder) = custom_builder {
+                if let PropertyDeclaration::WithVariables(ref v) = declaration {
+                    builder.note_potentially_cyclic_non_custom_dependency(id, v);
+                }
+            }
         }
     }
 }
@@ -310,15 +315,20 @@ where
             LonghandIdSet::visited_dependent()
         },
         CascadeMode::Unvisited { visited_rules } => {
-            context.builder.custom_properties = {
+            (
+                context.builder.custom_properties,
+                context.builder.invalid_non_custom_properties,
+            ) = {
                 let mut builder = CustomPropertiesBuilder::new(stylist, &context);
                 iter_declarations(iter, &mut declarations, Some(&mut builder));
                 builder.build()
             };
 
+            // Resolve prioritary properties - Guaranteed to not fall into a cycle with existing custom
+            // properties.
             cascade.apply_prioritary_properties(&mut context, &declarations, &mut shorthand_cache);
 
-            if let Some(visited_rules) = visited_rules {
+           if let Some(visited_rules) = visited_rules {
                 cascade.compute_visited_style_if_needed(
                     &mut context,
                     element,

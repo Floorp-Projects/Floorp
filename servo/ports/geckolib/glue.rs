@@ -6233,7 +6233,8 @@ pub extern "C" fn Servo_GetComputedKeyframeValues(
                 }
             }
             iter.reset();
-            builder.build()
+            let (result, _) = builder.build();
+            result
         };
 
         let mut property_index = 0;
