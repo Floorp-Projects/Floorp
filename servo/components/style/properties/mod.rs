@@ -1310,7 +1310,7 @@ pub struct SourcePropertyDeclarationDrain<'a> {
 #[derive(Debug, Eq, PartialEq, ToShmem)]
 pub struct UnparsedValue {
     /// The variable value, references and so on.
-    variable_value: custom_properties::VariableValue,
+    pub(super) variable_value: custom_properties::VariableValue,
     /// The shorthand this came from.
     from_shorthand: Option<ShorthandId>,
 }
@@ -1354,6 +1354,14 @@ impl UnparsedValue {
             };
             Cow::Owned(PropertyDeclaration::css_wide_keyword(longhand_id, keyword))
         };
+
+        if computed_context
+            .builder
+            .invalid_non_custom_properties
+            .contains(longhand_id)
+        {
+            return invalid_at_computed_value_time();
+        }
 
         if let Some(shorthand_id) = self.from_shorthand {
             let key = (shorthand_id, longhand_id);

@@ -45,7 +45,9 @@ pub const PX_PER_PT: CSSFloat = PX_PER_IN / 72.;
 /// Number of pixels per pica
 pub const PX_PER_PC: CSSFloat = PX_PER_PT * 12.;
 
-/// A font relative length.
+/// A font relative length. Note that if any new value is
+/// added here, `custom_properties::NonCustomReferences::from_unit`
+/// must also be updated. Consult the comment in that function as to why.
 #[derive(Clone, Copy, Debug, MallocSizeOf, PartialEq, ToCss, ToShmem)]
 pub enum FontRelativeLength {
     /// A "em" value: https://drafts.csswg.org/css-values/#em
@@ -103,6 +105,23 @@ impl FontBaseSize {
 }
 
 impl FontRelativeLength {
+    /// Unit identifier for `em`.
+    pub const EM: &'static str = "em";
+    /// Unit identifier for `ex`.
+    pub const EX: &'static str = "ex";
+    /// Unit identifier for `ch`.
+    pub const CH: &'static str = "ch";
+    /// Unit identifier for `cap`.
+    pub const CAP: &'static str = "cap";
+    /// Unit identifier for `ic`.
+    pub const IC: &'static str = "ic";
+    /// Unit identifier for `rem`.
+    pub const REM: &'static str = "rem";
+    /// Unit identifier for `lh`.
+    pub const LH: &'static str = "lh";
+    /// Unit identifier for `rlh`.
+    pub const RLH: &'static str = "rlh";
+
     /// Return the unitless, raw value.
     fn unitless_value(&self) -> CSSFloat {
         match *self {
@@ -120,14 +139,14 @@ impl FontRelativeLength {
     // Return the unit, as a string.
     fn unit(&self) -> &'static str {
         match *self {
-            Self::Em(_) => "em",
-            Self::Ex(_) => "ex",
-            Self::Ch(_) => "ch",
-            Self::Cap(_) => "cap",
-            Self::Ic(_) => "ic",
-            Self::Rem(_) => "rem",
-            Self::Lh(_) => "lh",
-            Self::Rlh(_) => "rlh",
+            Self::Em(_) => Self::EM,
+            Self::Ex(_) => Self::EX,
+            Self::Ch(_) => Self::CH,
+            Self::Cap(_) => Self::CAP,
+            Self::Ic(_) => Self::IC,
+            Self::Rem(_) => Self::REM,
+            Self::Lh(_) => Self::LH,
+            Self::Rlh(_) => Self::RLH,
         }
     }
 

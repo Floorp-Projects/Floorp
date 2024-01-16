@@ -87,6 +87,21 @@ impl Descriptor {
             specified,
         })
     }
+
+    /// Returns true if the syntax permits the value to be computed as a length.
+    pub fn may_compute_length(&self) -> bool {
+        for component in self.components.iter() {
+            match &component.name {
+                ComponentName::DataType(ref t) => {
+                    if matches!(t, DataType::Length | DataType::LengthPercentage) {
+                        return true;
+                    }
+                },
+                ComponentName::Ident(_) => (),
+            };
+        }
+        false
+    }
 }
 
 impl ToCss for Descriptor {
