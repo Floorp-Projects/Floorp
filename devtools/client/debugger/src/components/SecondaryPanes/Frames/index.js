@@ -4,7 +4,7 @@
 
 import React, { Component } from "react";
 import { connect } from "../../../utils/connect";
-import PropTypes from "prop-types";
+import PropTypes from "devtools/client/shared/vendor/react-prop-types";
 
 import FrameComponent from "./Frame";
 import Group from "./Group";

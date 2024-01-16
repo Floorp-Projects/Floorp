@@ -11,7 +11,6 @@ const _path = require("path");
 const mappings = {
   react: "devtools/client/shared/vendor/react",
   "react-dom-factories": "devtools/client/shared/vendor/react-dom-factories",
-  "prop-types": "devtools/client/shared/vendor/react-prop-types",
 };
 
 const mappingValues = Object.values(mappings);
