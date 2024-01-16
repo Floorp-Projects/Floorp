@@ -122,6 +122,9 @@ static BOOL sNeedToUnwindForMenuClosing = NO;
 
 - (void)cancelAsynchronousOpening:(NSInteger)aHandle {
   if (mPendingOpening && mPendingOpening.handle == aHandle) {
+    [NSObject cancelPreviousPerformRequestsWithTarget:self
+                                             selector:@selector(_runMenu)
+                                               object:nil];
     [mPendingOpening release];
     mPendingOpening = nil;
   }
