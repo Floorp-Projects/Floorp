@@ -3,7 +3,7 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import React, { PureComponent } from "react";
-import ReactDOM from "react-dom";
+import ReactDOM from "devtools/client/shared/vendor/react-dom";
 
 import actions from "../../actions";
 import assert from "../../utils/assert";

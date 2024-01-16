@@ -7,7 +7,7 @@ import {
   bindActionCreators,
   combineReducers,
 } from "devtools/client/shared/vendor/redux";
-import ReactDOM from "react-dom";
+import ReactDOM from "devtools/client/shared/vendor/react-dom";
 const { Provider } = require("devtools/client/shared/vendor/react-redux");
 
 import ToolboxProvider from "devtools/client/framework/store-provider";
