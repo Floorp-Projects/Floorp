@@ -11320,6 +11320,12 @@
   value: true
   mirror: always
 
+# If true content types of multipart/x-mixed-replace cannot set a cookie
+- name: network.cookie.prevent_set_cookie_from_multipart
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 # If we should attempt to race the cache and network.
 - name: network.http.rcwn.enabled
   type: bool
