@@ -160,6 +160,7 @@ file-whitespace:
         - .json
         - .kt
         - .md
+        - .mn
         - .properties
         - .py
         - .rs
