@@ -68,6 +68,13 @@ add_task(async function () {
     { line: 51, column: 39, expression: "#privateVar", result: 2 },
   ]);
 
+  await testPreviews(dbg, "multipleTokens", [
+    { line: 81, column: 4, expression: "foo", result: "Object" },
+    { line: 81, column: 11, expression: "blip", result: "Object" },
+    { line: 82, column: 8, expression: "bar", result: "Object" },
+    { line: 84, column: 16, expression: "boom", result: `0` },
+  ]);
+
   await testHoveringInvalidTargetTokens(dbg);
 
   info(
