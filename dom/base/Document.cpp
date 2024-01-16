@@ -9274,7 +9274,7 @@ class Document::TitleChangeEvent final : public Runnable {
     }
   }
 
-  nsresult Run() override {
+  NS_IMETHOD Run() final {
     const bool blockOnload = mBlockOnload;
     const RefPtr<Document> doc = mDoc;
     mDoc = nullptr;
