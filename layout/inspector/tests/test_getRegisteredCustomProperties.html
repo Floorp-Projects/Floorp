@@ -61,37 +61,37 @@ results.sort((a,b) => a.name < b.name ? -1 : 1)
 Assert.deepEqual(
   results,
   [{
-    name: "color-1",
+    name: "--color-1",
     syntax: "<color>",
     inherits: true,
     initialValue: "blue",
     fromJS: false,
   },{
-    name: "color-2",
+    name: "--color-2",
     syntax: "*",
     inherits: false,
     initialValue: null,
     fromJS: false,
   },{
-    name: "length-1",
+    name: "--length-1",
     syntax: "<length>",
     inherits: true,
     initialValue: "10px",
     fromJS: true,
   }, {
-    name: "length-2",
+    name: "--length-2",
     syntax: "foo | <integer>+ | <percentage> | <length># | auto",
     inherits: true,
     initialValue: "100vw",
     fromJS: true,
   }, {
-    name: "length-3",
+    name: "--length-3",
     syntax: "*",
     inherits: false,
     initialValue: null,
     fromJS: true,
   }, {
-    name: "length-4",
+    name: "--length-4",
     syntax: "*",
     inherits: false,
     initialValue: "",

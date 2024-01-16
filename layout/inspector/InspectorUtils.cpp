@@ -882,7 +882,10 @@ void InspectorUtils::GetCSSRegisteredProperties(
   for (const auto& propDef : result) {
     InspectorCSSPropertyDefinition& property = *aResult.AppendElement();
 
-    propDef.name.AsAtom()->ToUTF8String(property.mName);
+    // Servo does not include the "--" prefix in the property definition name.
+    // Add it back as it's easier for DevTools to handle them _with_ "--".
+    property.mName.AssignLiteral("--");
+    property.mName.Append(nsAtomCString(propDef.name.AsAtom()));
     property.mSyntax.Append(propDef.syntax);
     property.mInherits = propDef.inherits;
     if (propDef.has_initial_value) {
