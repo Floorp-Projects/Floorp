@@ -38,13 +38,18 @@ Preferences.addAll([
   { id: "privacy.cpd.siteSettings", type: "bool" },
   { id: "privacy.sanitize.timeSpan", type: "int" },
   { id: "privacy.clearOnShutdown.history", type: "bool" },
+  { id: "privacy.clearOnShutdown_v2.historyAndFormData", type: "bool" },
   { id: "privacy.clearOnShutdown.formdata", type: "bool" },
   { id: "privacy.clearOnShutdown.downloads", type: "bool" },
+  { id: "privacy.clearOnShutdown_v2.downloads", type: "bool" },
   { id: "privacy.clearOnShutdown.cookies", type: "bool" },
+  { id: "privacy.clearOnShutdown_v2.cookiesAndStorage", type: "bool" },
   { id: "privacy.clearOnShutdown.cache", type: "bool" },
+  { id: "privacy.clearOnShutdown_v2.cache", type: "bool" },
   { id: "privacy.clearOnShutdown.offlineApps", type: "bool" },
   { id: "privacy.clearOnShutdown.sessions", type: "bool" },
   { id: "privacy.clearOnShutdown.siteSettings", type: "bool" },
+  { id: "privacy.clearOnShutdown_v2.siteSettings", type: "bool" },
 ]);
 
 var gSanitizePromptDialog = {
@@ -70,7 +75,8 @@ var gSanitizePromptDialog = {
     this.downloadSizes = {};
 
     if (!lazy.USE_OLD_DIALOG) {
-      this._cookiesAndSiteDataCheckbox = document.getElementById("cookies");
+      this._cookiesAndSiteDataCheckbox =
+        document.getElementById("cookiesAndStorage");
       this._cacheCheckbox = document.getElementById("cache");
       this._downloadHistoryCheckbox = document.getElementById("downloads");
     }
@@ -382,24 +388,6 @@ var gSanitizePromptDialog = {
       Preferences.get("privacy.cpd.downloads").value = historyValue;
       Services.prefs.setBoolPref("privacy.cpd.downloads", historyValue);
     }
-    // Bug 1861450 - Create new prefs and categories in Sanitizer for the new dialog box
-    // We intend to migrate these into new prefs and categories
-    // sync the prefs for Form data, offline apps and sessions as they are merged
-    // into history and cookies for the new clear history dialog
-    else if (gSanitizePromptDialog._inClearOnShutdownNewDialog) {
-      let historyValue = Preferences.get(
-        `privacy.clearOnShutdown.history`
-      ).value;
-      Preferences.get(`privacy.clearOnShutdown.formdata`).value = historyValue;
-
-      let cookiesValue = Preferences.get(
-        "privacy.clearOnShutdown.cookies"
-      ).value;
-      // Keep the pref for the session history in sync with the cookies pref.
-      Preferences.get(`privacy.clearOnShutdown.sessions`).value = cookiesValue;
-      Preferences.get(`privacy.clearOnShutdown.offlineApps`).value =
-        cookiesValue;
-    }
 
     // Now manually set the prefs from their corresponding preference
     // elements.
@@ -494,7 +482,7 @@ var gSanitizePromptDialog = {
   /**
    * Get all items to clear based on checked boxes
    *
-   * @returns {string[]} array of items ["cache", "history"...]
+   * @returns {string[]} array of items ["cache", "historyAndFormData"...]
    */
   getItemsToClear() {
     // the old dialog uses the preferences to decide what to clear
@@ -509,14 +497,6 @@ var gSanitizePromptDialog = {
 
     for (let cb of clearPrivateDataGroupbox.querySelectorAll("checkbox")) {
       if (cb.checked) {
-        if (cb.id == "history") {
-          // formdata follows history
-          items.push("formdata");
-        } else if (cb.id == "cookies") {
-          // offlineApps and sessions follow cookies
-          items.push("offlineApps");
-          items.push("sessions");
-        }
         items.push(cb.id);
       }
     }
