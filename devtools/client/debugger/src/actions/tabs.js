@@ -6,10 +6,10 @@
  * Redux actions for the editor tabs
  */
 
-import { removeDocument } from "../utils/editor";
-import { selectSource } from "./sources";
+import { removeDocument } from "../utils/editor/index";
+import { selectSource } from "./sources/index";
 
-import { getSelectedLocation, getSourcesForTabs } from "../selectors";
+import { getSelectedLocation, getSourcesForTabs } from "../selectors/index";
 
 export function addTab(source, sourceActor) {
   return {

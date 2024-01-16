@@ -7,7 +7,7 @@ import { createSelector } from "devtools/client/shared/vendor/reselect";
 import { getBreakpointsList } from "./breakpoints";
 import { getSelectedSource } from "./sources";
 
-import { sortSelectedBreakpoints } from "../utils/breakpoint";
+import { sortSelectedBreakpoints } from "../utils/breakpoint/index";
 import { getSelectedLocation } from "../utils/selected-location";
 
 /*

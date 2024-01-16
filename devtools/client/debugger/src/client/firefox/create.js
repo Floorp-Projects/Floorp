@@ -9,7 +9,7 @@ import {
   hasSourceActor,
   getSourceActor,
   getSourceCount,
-} from "../../selectors";
+} from "../../selectors/index";
 import { features } from "../../utils/prefs";
 import { isUrlExtension } from "../../utils/source";
 import { createLocation } from "../../utils/location";

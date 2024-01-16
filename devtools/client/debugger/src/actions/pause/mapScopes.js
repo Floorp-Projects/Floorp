@@ -10,7 +10,7 @@ import {
   getOriginalFrameScope,
   getFirstSourceActorForGeneratedSource,
   getCurrentThread,
-} from "../../selectors";
+} from "../../selectors/index";
 import {
   loadOriginalSourceText,
   loadGeneratedSourceText,
@@ -20,7 +20,7 @@ import { PROMISE } from "../utils/middleware/promise";
 
 import { log } from "../../utils/log";
 
-import { buildMappedScopes } from "../../utils/pause/mapScopes";
+import { buildMappedScopes } from "../../utils/pause/mapScopes/index";
 import { isFulfilled } from "../../utils/async-value";
 
 import { getMappedLocation } from "../../utils/source-maps";

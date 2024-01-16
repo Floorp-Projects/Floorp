@@ -16,12 +16,12 @@ import {
 import PropTypes from "devtools/client/shared/vendor/react-prop-types";
 
 import { connect } from "../../utils/connect";
-import actions from "../../actions";
+import actions from "../../actions/index";
 import {
   getActiveEventListeners,
   getEventListenerBreakpointTypes,
   getEventListenerExpanded,
-} from "../../selectors";
+} from "../../selectors/index";
 
 import AccessibleImage from "../shared/AccessibleImage";
 

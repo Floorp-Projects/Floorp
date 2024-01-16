@@ -12,7 +12,7 @@ import { div, span } from "devtools/client/shared/vendor/react-dom-factories";
 import PropTypes from "devtools/client/shared/vendor/react-prop-types";
 import { connect } from "../../utils/connect";
 import AccessibleImage from "../shared/AccessibleImage";
-import actions from "../../actions";
+import actions from "../../actions/index";
 
 import Reps from "devtools/client/shared/components/reps/index";
 const {
@@ -20,12 +20,12 @@ const {
   MODE,
 } = Reps;
 
-import { getPauseReason } from "../../utils/pause";
+import { getPauseReason } from "../../utils/pause/index";
 import {
   getCurrentThread,
   getPaneCollapse,
   getPauseReason as getWhy,
-} from "../../selectors";
+} from "../../selectors/index";
 
 import "./WhyPaused.css";
 

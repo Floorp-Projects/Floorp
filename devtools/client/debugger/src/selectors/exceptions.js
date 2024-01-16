@@ -5,7 +5,7 @@
 import { createSelector } from "devtools/client/shared/vendor/reselect";
 import { shallowEqual, arrayShallowEqual } from "../utils/shallow-equal";
 
-import { getSelectedSource, getSourceActorsForSource } from "./";
+import { getSelectedSource, getSourceActorsForSource } from "./index";
 
 export const getSelectedSourceExceptions = createSelector(
   getSelectedSourceActors,

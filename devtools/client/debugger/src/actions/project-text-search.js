@@ -14,7 +14,7 @@ import {
   getSettledSourceTextContent,
   isSourceBlackBoxed,
   getSearchOptions,
-} from "../selectors";
+} from "../selectors/index";
 import { createLocation } from "../utils/location";
 import { matchesGlobPatterns } from "../utils/source";
 import { loadSourceText } from "./sources/loadSourceText";

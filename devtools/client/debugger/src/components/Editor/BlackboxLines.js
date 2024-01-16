@@ -4,7 +4,7 @@
 
 import PropTypes from "devtools/client/shared/vendor/react-prop-types";
 import { Component } from "devtools/client/shared/vendor/react";
-import { toEditorLine, fromEditorLine } from "../../utils/editor";
+import { toEditorLine, fromEditorLine } from "../../utils/editor/index";
 import { isLineBlackboxed } from "../../utils/source";
 import { isWasm } from "../../utils/wasm";
 

@@ -18,7 +18,7 @@ import { truncateMiddleText } from "../utils/text";
 import { parse as parseURL } from "../utils/url";
 import { memoizeLast } from "../utils/memoizeLast";
 import { renderWasmText } from "./wasm";
-import { toEditorLine } from "./editor";
+import { toEditorLine } from "./editor/index";
 export { isMinified } from "./isMinified";
 
 import { isFulfilled } from "./async-value";

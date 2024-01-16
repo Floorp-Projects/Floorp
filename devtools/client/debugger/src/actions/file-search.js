@@ -2,9 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-import { searchSourceForHighlight } from "../utils/editor";
+import { searchSourceForHighlight } from "../utils/editor/index";
 
-import { getSelectedSourceTextContent, getSearchOptions } from "../selectors";
+import {
+  getSelectedSourceTextContent,
+  getSearchOptions,
+} from "../selectors/index";
 
 import { closeActiveSearch, clearHighlightLineRange } from "./ui";
 

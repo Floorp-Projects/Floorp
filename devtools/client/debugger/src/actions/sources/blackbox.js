@@ -9,13 +9,13 @@
 
 import { originalToGeneratedId } from "devtools/client/shared/source-map-loader/index";
 import { recordEvent } from "../../utils/telemetry";
-import { toggleBreakpoints } from "../breakpoints";
+import { toggleBreakpoints } from "../breakpoints/index";
 import {
   getSourceActorsForSource,
   isSourceBlackBoxed,
   getBlackBoxRanges,
   getBreakpointsForSource,
-} from "../../selectors";
+} from "../../selectors/index";
 
 export async function blackboxSourceActorsForSource(
   thunkArgs,

@@ -10,7 +10,7 @@ import {
   hasSourceActor,
   getCurrentlyFetchedTopFrame,
   hasFrame,
-} from "../selectors";
+} from "../selectors/index";
 
 // Context encapsulates the main parameters of the current redux state, which
 // impact most other information tracked by the debugger.

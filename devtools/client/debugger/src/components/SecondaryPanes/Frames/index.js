@@ -9,8 +9,8 @@ import PropTypes from "devtools/client/shared/vendor/react-prop-types";
 import FrameComponent from "./Frame";
 import Group from "./Group";
 
-import actions from "../../../actions";
-import { collapseFrames } from "../../../utils/pause/frames";
+import actions from "../../../actions/index";
+import { collapseFrames } from "../../../utils/pause/frames/index";
 
 import {
   getFrameworkGroupingState,
@@ -18,7 +18,7 @@ import {
   getCurrentThreadFrames,
   getCurrentThread,
   getShouldSelectOriginalLocation,
-} from "../../../selectors";
+} from "../../../selectors/index";
 
 import "./Frames.css";
 

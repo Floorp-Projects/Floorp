@@ -5,7 +5,11 @@
 import { PureComponent } from "devtools/client/shared/vendor/react";
 import PropTypes from "devtools/client/shared/vendor/react-prop-types";
 
-import { toEditorPosition, getTokenEnd, hasDocument } from "../../utils/editor";
+import {
+  toEditorPosition,
+  getTokenEnd,
+  hasDocument,
+} from "../../utils/editor/index";
 
 import { getIndentation } from "../../utils/indentation";
 import { createLocation } from "../../utils/location";

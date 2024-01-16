@@ -11,15 +11,15 @@ import {
   getIgnoreListSourceUrls,
   getSourceByURL,
   getBreakpointsForSource,
-} from "../selectors";
+} from "../selectors/index";
 import { selectSource } from "../actions/sources/select";
 import {
   getEditor,
   getLocationsInViewport,
   updateDocuments,
-} from "../utils/editor";
+} from "../utils/editor/index";
 import { blackboxSourceActorsForSource } from "./sources/blackbox";
-import { toggleBreakpoints } from "./breakpoints";
+import { toggleBreakpoints } from "./breakpoints/index";
 import { copyToTheClipboard } from "../utils/clipboard";
 import { isFulfilled } from "../utils/async-value";
 import { primaryPaneTabs } from "../constants";

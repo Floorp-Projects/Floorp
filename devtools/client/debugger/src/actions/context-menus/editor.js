@@ -12,7 +12,7 @@ import {
   shouldBlackbox,
   findBlackBoxRange,
 } from "../../utils/source";
-import { toSourceLine } from "../../utils/editor";
+import { toSourceLine } from "../../utils/editor/index";
 import { downloadFile } from "../../utils/utils";
 import { features } from "../../utils/prefs";
 import { isFulfilled } from "../../utils/async-value";
@@ -27,7 +27,7 @@ import {
   isSourceOnSourceMapIgnoreList,
   isSourceMapIgnoreListEnabled,
   getEditorWrapping,
-} from "../../selectors";
+} from "../../selectors/index";
 
 import { continueToHere } from "../../actions/pause/continueToHere";
 import { jumpToMappedLocation } from "../../actions/sources/select";
