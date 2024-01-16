@@ -83,6 +83,7 @@ module.exports = {
     "use-cc-etc": require("../lib/rules/use-cc-etc"),
     "use-chromeutils-generateqi": require("../lib/rules/use-chromeutils-generateqi"),
     "use-chromeutils-import": require("../lib/rules/use-chromeutils-import"),
+    "use-console-createInstance": require("../lib/rules/use-console-createInstance"),
     "use-default-preference-values": require("../lib/rules/use-default-preference-values"),
     "use-ownerGlobal": require("../lib/rules/use-ownerGlobal"),
     "use-includes-instead-of-indexOf": require("../lib/rules/use-includes-instead-of-indexOf"),
