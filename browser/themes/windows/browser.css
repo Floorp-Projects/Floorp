@@ -357,37 +357,6 @@
   margin-bottom: -10px;
 }
 
-/* Make menu items larger when opened through touch. */
-panel[touchmode],
-menupopup[touchmode] {
-  --arrowpanel-menuitem-padding-block: 12px;
-  --arrowpanel-menuitem-padding: var(--arrowpanel-menuitem-padding-block) var(--arrowpanel-menuitem-padding-inline);
-  /* The value for the header back icon padding is selected in a way that the
-   * height of the header and its separator will be equal to the panel inner
-   * top padding plus standard menuitem, so that the header's separator will
-   * be located excatly where a normal toolbarseparator would be located after
-   * the first menuitem, in a menu without a header. */
-  --arrowpanel-header-back-icon-padding: 10px;
-}
-
-:root[uidensity="compact"] panel[touchmode] {
-  --arrowpanel-header-back-icon-padding: 12px;
-}
-
-menupopup[touchmode] :is(menu, menuitem, menucaption) {
-  /* Use the var set in the rule above to increase menu items height in menupopups when
-   * they are opened through touch.
-   * Panel menu items already have their padding set in panelUI-shared.css with the same var. */
-  padding-block: var(--arrowpanel-menuitem-padding-block);
-}
-
-#contentAreaContextMenu[touchmode] > #context-navigation > menuitem {
-  /* The navigation menuitems are bigger to begin with because of their inner padding,
-   * so calculate the padding-block to match normal menuitems height when in touchmode.
-   * 3.5em is the desired menuitem height (~42px), minus the menuitem actual height devided by 2. */
-  padding-block: calc((3.5em - 32px) / 2);
-}
-
 /* Other menu separators don't extend all the way to the menu edges, but the
    one below the navigation buttons in the content context menu should. */
 #context-sep-navigation {
