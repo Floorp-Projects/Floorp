@@ -126,6 +126,14 @@ class IMEStateManager {
   }
 
   /**
+   * Return a widget which is for handling text input. This should be valid
+   * while an editable element has focus or an editable document has focus.
+   */
+  static nsIWidget* GetWidgetForTextInputHandling() {
+    return sTextInputHandlingWidget;
+  }
+
+  /**
    * SetIMEContextForChildProcess() is called when aBrowserParent receives
    * SetInputContext() from the remote process.
    */

@@ -6,16 +6,17 @@
 
 #include "IMEStateManager.h"
 
-#include "mozilla/Logging.h"
-
+#include "IMEContentObserver.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/EditorBase.h"
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/HTMLEditor.h"
+#include "mozilla/Logging.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_intl.h"
 #include "mozilla/TextComposition.h"
@@ -27,12 +28,11 @@
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLFormElement.h"
+#include "mozilla/dom/HTMLInputElement.h"
 #include "mozilla/dom/HTMLTextAreaElement.h"
 #include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/dom/UserActivation.h"
-
-#include "HTMLInputElement.h"
-#include "IMEContentObserver.h"
+#include "mozilla/widget/IMEData.h"
 
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"
@@ -822,15 +822,9 @@ void IMEStateManager::OnClickInEditor(nsPresContext& aPresContext,
 
   const OwningNonNull<nsIWidget> textInputHandlingWidget =
       *sTextInputHandlingWidget;
-
-#ifdef DEBUG
-  {
-    nsCOMPtr<nsIWidget> currentTextInputHandlingWidget =
-        sFocusedPresContext->GetTextInputHandlingWidget();
-    MOZ_ASSERT(!currentTextInputHandlingWidget ||
-               currentTextInputHandlingWidget == textInputHandlingWidget);
-  }
-#endif  // DEBUG
+  MOZ_ASSERT_IF(sFocusedPresContext->GetTextInputHandlingWidget(),
+                sFocusedPresContext->GetTextInputHandlingWidget() ==
+                    textInputHandlingWidget.get());
 
   if (!aMouseEvent.IsTrusted()) {
     MOZ_LOG(sISMLog, LogLevel::Debug,
@@ -1103,15 +1097,9 @@ void IMEStateManager::MaybeOnEditableStateDisabled(nsPresContext& aPresContext,
 
   const OwningNonNull<nsIWidget> textInputHandlingWidget =
       *sTextInputHandlingWidget;
-
-#ifdef DEBUG
-  {
-    nsCOMPtr<nsIWidget> currentTextInputHandlingWidget =
-        aPresContext.GetTextInputHandlingWidget();
-    MOZ_ASSERT(!currentTextInputHandlingWidget ||
-               currentTextInputHandlingWidget == textInputHandlingWidget);
-  }
-#endif  // DEBUG
+  MOZ_ASSERT_IF(sFocusedPresContext->GetTextInputHandlingWidget(),
+                sFocusedPresContext->GetTextInputHandlingWidget() ==
+                    textInputHandlingWidget.get());
 
   const IMEState newIMEState = GetNewIMEState(aPresContext, aElement);
   // If IME state becomes editable, HTMLEditor should also be initialized with
@@ -1222,15 +1210,9 @@ void IMEStateManager::UpdateIMEState(const IMEState& aNewIMEState,
 
   const OwningNonNull<nsIWidget> textInputHandlingWidget =
       *sTextInputHandlingWidget;
-
-#ifdef DEBUG
-  {
-    nsCOMPtr<nsIWidget> currentTextInputHandlingWidget =
-        sFocusedPresContext->GetTextInputHandlingWidget();
-    MOZ_ASSERT(!currentTextInputHandlingWidget ||
-               currentTextInputHandlingWidget == textInputHandlingWidget);
-  }
-#endif  // DEBUG
+  MOZ_ASSERT_IF(sFocusedPresContext->GetTextInputHandlingWidget(),
+                sFocusedPresContext->GetTextInputHandlingWidget() ==
+                    textInputHandlingWidget.get());
 
   // TODO: Investigate if we could put off to initialize IMEContentObserver
   //       later because a lot of callers need to be marked as
@@ -1509,14 +1491,9 @@ void IMEStateManager::SetInputContextForChildProcess(
 
   const OwningNonNull<nsIWidget> textInputHandlingWidget =
       *sTextInputHandlingWidget;
-#ifdef DEBUG
-  {
-    nsCOMPtr<nsIWidget> currentTextInputHandlingWidget =
-        sFocusedPresContext->GetTextInputHandlingWidget();
-    MOZ_ASSERT(!currentTextInputHandlingWidget ||
-               currentTextInputHandlingWidget == textInputHandlingWidget);
-  }
-#endif  // DEBUG
+  MOZ_ASSERT_IF(sFocusedPresContext->GetTextInputHandlingWidget(),
+                sFocusedPresContext->GetTextInputHandlingWidget() ==
+                    textInputHandlingWidget.get());
   MOZ_ASSERT(aInputContext.mOrigin == InputContext::ORIGIN_CONTENT);
 
   sActiveChildInputContext = aInputContext;
@@ -2074,6 +2051,11 @@ nsresult IMEStateManager::NotifyIME(const IMENotification& aNotification,
         nsCOMPtr<nsIWidget> browserParentWidget =
             aBrowserParent->GetTextInputHandlingWidget();
         MOZ_ASSERT(browserParentWidget == aWidget);
+      } else {
+        MOZ_ASSERT(sFocusedPresContext);
+        MOZ_ASSERT_IF(
+            sFocusedPresContext->GetTextInputHandlingWidget(),
+            sFocusedPresContext->GetTextInputHandlingWidget() == aWidget);
       }
 #endif
       sFocusedIMEBrowserParent = aBrowserParent;
@@ -2197,16 +2179,30 @@ nsresult IMEStateManager::NotifyIME(IMEMessage aMessage,
   MOZ_LOG(sISMLog, LogLevel::Info,
           ("NotifyIME(aMessage=%s, aPresContext=0x%p, aBrowserParent=0x%p)",
            ToChar(aMessage), aPresContext, aBrowserParent));
+  // This assertion is just for clarify which message may be set, so feel free
+  // to add other messages if you want.
+  MOZ_ASSERT(aMessage == REQUEST_TO_CANCEL_COMPOSITION ||
+             aMessage == REQUEST_TO_COMMIT_COMPOSITION ||
+             aMessage == NOTIFY_IME_OF_COMPOSITION_EVENT_HANDLED);
+  // However, these messages require additional information.  Therefore, this
+  // overload shouldn't be used for them.
+  MOZ_ASSERT(aMessage != NOTIFY_IME_OF_FOCUS &&
+             aMessage != NOTIFY_IME_OF_BLUR &&
+             aMessage != NOTIFY_IME_OF_TEXT_CHANGE &&
+             aMessage != NOTIFY_IME_OF_SELECTION_CHANGE &&
+             aMessage != NOTIFY_IME_OF_MOUSE_BUTTON_EVENT);
 
   if (NS_WARN_IF(!CanHandleWith(aPresContext))) {
     return NS_ERROR_INVALID_ARG;
   }
 
-  nsCOMPtr<nsIWidget> widget = aPresContext->GetTextInputHandlingWidget();
+  nsCOMPtr<nsIWidget> widget =
+      aPresContext == sFocusedPresContext && sTextInputHandlingWidget
+          ? sTextInputHandlingWidget
+          : aPresContext->GetTextInputHandlingWidget();
   if (NS_WARN_IF(!widget)) {
     MOZ_LOG(sISMLog, LogLevel::Error,
-            ("  NotifyIME(), FAILED due to no widget for the "
-             "nsPresContext"));
+            ("  NotifyIME(), FAILED due to no widget for the nsPresContext"));
     return NS_ERROR_NOT_AVAILABLE;
   }
   return NotifyIME(aMessage, widget, aBrowserParent);
@@ -2314,14 +2310,9 @@ void IMEStateManager::CreateIMEContentObserver(EditorBase& aEditorBase,
 
   const OwningNonNull<nsIWidget> textInputHandlingWidget =
       *sTextInputHandlingWidget;
-
-#ifdef DEBUG
-  {
-    nsCOMPtr<nsIWidget> currentTextInputHandlingWidget =
-        sFocusedPresContext->GetTextInputHandlingWidget();
-    MOZ_ASSERT(currentTextInputHandlingWidget == textInputHandlingWidget);
-  }
-#endif  // DEBUG
+  MOZ_ASSERT_IF(sFocusedPresContext->GetTextInputHandlingWidget(),
+                sFocusedPresContext->GetTextInputHandlingWidget() ==
+                    textInputHandlingWidget.get());
 
   MOZ_LOG(sISMLog, LogLevel::Debug,
           ("  CreateIMEContentObserver() is creating an "

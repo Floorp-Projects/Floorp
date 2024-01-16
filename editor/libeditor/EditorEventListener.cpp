@@ -652,11 +652,7 @@ nsresult EditorEventListener::KeyPress(WidgetKeyboardEvent* aKeyboardEvent) {
       return aKeyboardEvent->mWidget;
     }
     // If the event is created by chrome script, the widget is always nullptr.
-    nsPresContext* presContext = GetPresContext();
-    if (NS_WARN_IF(!presContext)) {
-      return nullptr;
-    }
-    return presContext->GetTextInputHandlingWidget();
+    return IMEStateManager::GetWidgetForTextInputHandling();
   };
 
   if (DetachedFromEditor()) {
