@@ -18923,8 +18923,15 @@ bool Document::ShouldIncludeInTelemetry(bool aAllowExtensionURIs) {
   }
 
   nsIPrincipal* prin = NodePrincipal();
-  if (!aAllowExtensionURIs && prin->GetIsAddonOrExpandedAddonPrincipal()) {
-    return false;
+  if (prin->GetIsAddonOrExpandedAddonPrincipal()) {
+    if (!aAllowExtensionURIs) {
+      return false;
+    }
+    RefPtr<extensions::WebExtensionPolicy> ap;
+    if (NS_SUCCEEDED(prin->GetAddonPolicy(getter_AddRefs(ap))) &&
+        ap->IsPrivileged()) {
+      return false;
+    }
   }
 
   // TODO(emilio): Should this use GetIsContentPrincipal() +
