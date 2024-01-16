@@ -367,7 +367,8 @@ class EventStream {
 class RecordedEvent {
  public:
   enum EventType : uint8_t {
-    DRAWTARGETCREATION = 0,
+    INVALID = 0,
+    DRAWTARGETCREATION,
     DRAWTARGETDESTRUCTION,
     SETCURRENTDRAWTARGET,
     FILLRECT,

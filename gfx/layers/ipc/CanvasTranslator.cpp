@@ -538,7 +538,7 @@ void CanvasTranslator::TranslateRecording() {
   });
 
   mHeader->readerState = State::Processing;
-  EventType eventType;
+  EventType eventType = EventType::INVALID;
   while (ReadNextEvent(eventType)) {
     bool success = RecordedEvent::DoWithEventFromReader(
         mCurrentMemReader, eventType,
