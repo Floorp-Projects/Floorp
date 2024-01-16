@@ -229,4 +229,9 @@ impl CustomPropertiesMap {
             inner.own_properties.shrink_to_fit()
         }
     }
+
+    /// Return iterator to go through all properties.
+    pub fn iter(&self) -> Iter {
+        self.0.iter()
+    }
 }

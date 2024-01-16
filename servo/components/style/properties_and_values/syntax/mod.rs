@@ -102,6 +102,22 @@ impl Descriptor {
         }
         false
     }
+
+    /// Returns true if the syntax requires deferring computation to properly
+    /// resolve font-dependent lengths.
+    pub fn may_reference_font_relative_length(&self) -> bool {
+        for component in self.components.iter() {
+            match &component.name {
+                ComponentName::DataType(ref t) => {
+                    if t.may_reference_font_relative_length() {
+                        return true;
+                    }
+                },
+                ComponentName::Ident(_) => (),
+            };
+        }
+        false
+    }
 }
 
 impl ToCss for Descriptor {

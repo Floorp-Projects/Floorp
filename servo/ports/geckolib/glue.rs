@@ -14,6 +14,7 @@ use selectors::matching::{ElementSelectorFlags, MatchingForInvalidation, Selecto
 use selectors::{Element, OpaqueElement};
 use servo_arc::{Arc, ArcBorrow};
 use smallvec::SmallVec;
+use style::custom_properties::DeferFontRelativeCustomPropertyResolution;
 use std::collections::BTreeSet;
 use std::fmt::Write;
 use std::iter;
@@ -6206,11 +6207,11 @@ pub extern "C" fn Servo_GetComputedKeyframeValues(
 
         // FIXME: This is pretty much a hack. Instead, the AnimatedValue should be better
         // integrated in the cascade. This would allow us to fix revert() too.
-        context.builder.custom_properties = {
+        {
             let mut builder = CustomPropertiesBuilder::new_with_properties(
                 &data.stylist,
                 style.custom_properties().clone(),
-                &context,
+                &mut context,
             );
             let priority = CascadePriority::same_tree_author_normal_at_root_layer();
             for property in &mut iter {
@@ -6233,8 +6234,11 @@ pub extern "C" fn Servo_GetComputedKeyframeValues(
                 }
             }
             iter.reset();
-            let (result, _) = builder.build();
-            result
+            let _deferred= builder.build(DeferFontRelativeCustomPropertyResolution::No);
+            debug_assert!(
+                _deferred.is_none(),
+                "Custom property processing deferred despite specifying otherwise?"
+            );
         };
 
         let mut property_index = 0;

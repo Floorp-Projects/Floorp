@@ -82,6 +82,28 @@ impl DataType {
             _ => return None,
         })
     }
+
+    /// Returns true if this data type requires deferring computation to properly
+    /// resolve font-dependent lengths.
+    pub fn may_reference_font_relative_length(&self) -> bool {
+        match self {
+            DataType::Length |
+            DataType::LengthPercentage |
+            DataType::TransformFunction |
+            DataType::TransformList => true,
+            DataType::Number |
+            DataType::Percentage |
+            DataType::Color |
+            DataType::Image |
+            DataType::Url |
+            DataType::Integer |
+            DataType::Angle |
+            DataType::Time |
+            DataType::Resolution |
+            DataType::CustomIdent |
+            DataType::String => false,
+        }
+    }
 }
 
 impl ToCss for DataType {
