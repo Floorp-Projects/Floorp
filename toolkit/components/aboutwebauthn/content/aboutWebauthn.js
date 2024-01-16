@@ -89,6 +89,10 @@ var AboutWebauthnManagerJS = {
 
   uninit() {
     Services.obs.removeObserver(this, this._topic);
+    this._initialized = false;
+    this._l10n = null;
+    this._current_tab = "";
+    this._previous_tab = "";
   },
 
   observe(aSubject, aTopic, aData) {
@@ -97,8 +101,8 @@ var AboutWebauthnManagerJS = {
     // We have token
     if (data.type == "selected-device") {
       this._curr_data = data.auth_info;
-      fake_click_event_for_id("info-tab-button");
       this.show_ui_based_on_authenticator_info(data);
+      fake_click_event_for_id("info-tab-button");
     } else if (data.type == "select-device") {
       set_info_text("about-webauthn-text-select-device");
     } else if (data.type == "pin-required") {
@@ -268,8 +272,7 @@ var AboutWebauthnManagerJS = {
     document.getElementById("info-text-div").hidden = true;
     // Show options, based on what the token supports
     if (data.auth_info) {
-      document.getElementById("main-content").hidden = false;
-      document.getElementById("categories").hidden = false;
+      document.getElementById("ctap2-token-info").style.display = "flex";
       this.show_authenticator_options(
         data.auth_info.options,
         "authenticator-options",
@@ -432,10 +435,10 @@ function set_info_text(l10nId) {
   document.getElementById("info-text-div").hidden = false;
   let field = document.getElementById("info-text-field");
   field.setAttribute("data-l10n-id", l10nId);
+  document.getElementById("ctap2-token-info").style.display = "none";
 }
 
 function show_results_banner(result, l10n, l10n_args) {
-  document.getElementById("ctap-listen-div").hidden = false;
   let ctap_result = document.getElementById("ctap-listen-result");
   ctap_result.setAttribute("data-l10n-id", l10n);
   ctap_result.classList.add(result);
@@ -445,10 +448,11 @@ function show_results_banner(result, l10n, l10n_args) {
 }
 
 function hide_results_banner() {
-  document
-    .getElementById("ctap-listen-result")
-    .classList.remove("success", "error");
-  document.getElementById("ctap-listen-div").hidden = true;
+  let res_banner = document.getElementById("ctap-listen-result");
+  let res_div = document.getElementById("ctap-listen-div");
+  let empty_banner = document.createElement("label");
+  empty_banner.id = "ctap-listen-result";
+  res_div.replaceChild(empty_banner, res_banner);
 }
 
 function operation_in_progress(name, in_progress) {
@@ -487,9 +491,16 @@ function fake_click_event_for_id(id) {
 }
 
 function reset_page() {
-  // Hide all main sections
-  document.getElementById("main-content").hidden = true;
-  document.getElementById("categories").hidden = true;
+  // Hide everything that needs a device to know if it should be displayed
+  document.getElementById("ctap2-token-info").style.display = "none";
+  Array.from(document.getElementsByClassName("optional-category")).forEach(
+    div => {
+      div.style.display = "none";
+    }
+  );
+
+  // Only display the "please connect a device" - text
+  set_info_text("about-webauthn-text-connect-device");
 
   // Clear results and input fields
   hide_results_banner();
@@ -509,11 +520,19 @@ function reset_page() {
   document.getElementById("bio-enrollment-list-subsection").hidden = true;
   bio_enrollment_in_progress(false);
 
-  // Only display the "please connect a device" - text
-  set_info_text("about-webauthn-text-connect-device");
-
   AboutWebauthnManagerJS._previous_tab = "";
   AboutWebauthnManagerJS._current_tab = "";
+
+  // Not using `document.getElementById("info-tab-button").click();`
+  // here, because if we were focused on a category-button that got removed (e.g.
+  // when unplugging the device), we have to reset the ARIA-related attributes
+  // first, before we can click on the button, otherwise the a11y-tests
+  // will complain. So we fake the click again.
+  const evt = {
+    detail: {},
+    currentTarget: document.getElementById("info-tab-button"),
+  };
+  open_info_tab(evt);
 }
 
 function sidebar_set_disabled(disabled) {
@@ -619,14 +638,6 @@ function cancel_confirmation() {
 }
 
 async function onLoad() {
-  AboutWebauthnManagerJS.init();
-  try {
-    AboutWebauthnService.listen();
-  } catch (ex) {
-    set_info_text("about-webauthn-text-not-available");
-    AboutWebauthnManagerJS.uninit();
-    return;
-  }
   document.getElementById("set-pin-button").addEventListener("click", set_pin);
   document
     .getElementById("change-pin-button")
@@ -681,6 +692,13 @@ async function onLoad() {
   document
     .getElementById("confirm-deletion-button")
     .addEventListener("click", confirm_deletion);
+  AboutWebauthnManagerJS.init();
+  try {
+    AboutWebauthnService.listen();
+  } catch (ex) {
+    set_info_text("about-webauthn-text-not-available");
+    AboutWebauthnManagerJS.uninit();
+  }
 }
 
 function handle_keydowns(event) {

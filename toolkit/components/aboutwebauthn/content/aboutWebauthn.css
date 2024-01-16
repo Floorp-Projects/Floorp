@@ -29,6 +29,7 @@ label {
   font-weight: 600;
   font-size: 1.5em;
   padding-inline-start: 15px;
+  height: 1.5em;
 
   &.success {
     background-color: var(--green-50);
@@ -44,6 +45,10 @@ label {
   /* Center category names */
   display: flex;
   align-items: center;
+}
+
+.optional-category {
+  display: none;
 }
 
 .disabled-category {
@@ -74,8 +79,8 @@ label {
 }
 
 .bio-enrollment-sample {
- display: flex;
- gap: 0.5em;
+  display: flex;
+  gap: 0.5em;
 }
 
 .button-row {

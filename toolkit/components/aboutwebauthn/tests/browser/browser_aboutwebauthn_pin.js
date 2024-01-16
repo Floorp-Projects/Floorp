@@ -131,6 +131,8 @@ add_task(async function pin_switch_back_and_forth() {
   let info_tab_button = doc.getElementById("info-tab-button");
   let info_section = doc.getElementById("token-info-section");
 
+  // a11y-tree is racy here, so we have to wait a tick for it to get up to date
+  await TestUtils.waitForTick();
   // Now click the "info"-button and verify the correct buttons are highlighted
   info_tab_button.click();
   // await info_promise;
