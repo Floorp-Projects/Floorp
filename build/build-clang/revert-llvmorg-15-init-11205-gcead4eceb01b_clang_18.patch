@@ -173,7 +173,7 @@ index 19d7d659a86a..1bcfdecfd588 100644
 +  return getCompileUnitForOffset(CUOffset);
  }
  
- DWARFContext::DIEsForAddress DWARFContext::getDIEsForAddress(uint64_t Address) {
+ DWARFContext::DIEsForAddress DWARFContext::getDIEsForAddress(uint64_t Address,
 @@ -1141,6 +1123,64 @@ static bool getFunctionNameAndStartLineForAddress(
    return FoundResult;
  }
