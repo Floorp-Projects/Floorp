@@ -2,17 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-import React, { Component } from "devtools/client/shared/vendor/react";
-import {
-  div,
-  main,
-  span,
-} from "devtools/client/shared/vendor/react-dom-factories";
-import PropTypes from "devtools/client/shared/vendor/react-prop-types";
+import React, { Component } from "react";
+import { div, main, span } from "react-dom-factories";
+import PropTypes from "prop-types";
 import { connect } from "../utils/connect";
 import { prefs } from "../utils/prefs";
 import { primaryPaneTabs } from "../constants";
-import actions from "../actions/index";
+import actions from "../actions";
 import AccessibleImage from "./shared/AccessibleImage";
 
 import {
@@ -24,7 +20,7 @@ import {
   getIsCurrentThreadPaused,
   isMapScopesEnabled,
   getSourceMapErrorForSourceActor,
-} from "../selectors/index";
+} from "../selectors";
 const KeyShortcuts = require("devtools/client/shared/key-shortcuts");
 
 const SplitBox = require("devtools/client/shared/components/splitter/SplitBox");
@@ -42,9 +38,9 @@ import "./App.css";
 import "./shared/menu.css";
 
 import { ShortcutsModal } from "./ShortcutsModal";
-import PrimaryPanes from "./PrimaryPanes/index";
-import Editor from "./Editor/index";
-import SecondaryPanes from "./SecondaryPanes/index";
+import PrimaryPanes from "./PrimaryPanes";
+import Editor from "./Editor";
+import SecondaryPanes from "./SecondaryPanes";
 import WelcomeBox from "./WelcomeBox";
 import EditorTabs from "./Editor/Tabs";
 import EditorFooter from "./Editor/Footer";

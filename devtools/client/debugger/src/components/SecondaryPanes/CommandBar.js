@@ -2,9 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-import React, { Component } from "devtools/client/shared/vendor/react";
-import { div, button } from "devtools/client/shared/vendor/react-dom-factories";
-import PropTypes from "devtools/client/shared/vendor/react-prop-types";
+import React, { Component } from "react";
+import { div, button } from "react-dom-factories";
+import PropTypes from "prop-types";
 
 import { connect } from "../../utils/connect";
 import { features, prefs } from "../../utils/prefs";
@@ -18,9 +18,9 @@ import {
   getJavascriptTracingLogMethod,
   getJavascriptTracingValues,
   getJavascriptTracingOnNextInteraction,
-} from "../../selectors/index";
+} from "../../selectors";
 import { formatKeyShortcut } from "../../utils/text";
-import actions from "../../actions/index";
+import actions from "../../actions";
 import { debugBtn } from "../shared/Button/CommandBarButton";
 import AccessibleImage from "../shared/AccessibleImage";
 import "./CommandBar.css";

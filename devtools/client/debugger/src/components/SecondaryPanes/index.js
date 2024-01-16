@@ -4,18 +4,12 @@
 
 const SplitBox = require("devtools/client/shared/components/splitter/SplitBox");
 
-import React, { Component } from "devtools/client/shared/vendor/react";
-import {
-  div,
-  input,
-  label,
-  button,
-  a,
-} from "devtools/client/shared/vendor/react-dom-factories";
-import PropTypes from "devtools/client/shared/vendor/react-prop-types";
+import React, { Component } from "react";
+import { div, input, label, button, a } from "react-dom-factories";
+import PropTypes from "prop-types";
 import { connect } from "../../utils/connect";
 
-import actions from "../../actions/index";
+import actions from "../../actions";
 import {
   getTopFrame,
   getExpressions,
@@ -29,14 +23,14 @@ import {
   getShouldBreakpointsPaneOpenOnPause,
   getSkipPausing,
   shouldLogEventBreakpoints,
-} from "../../selectors/index";
+} from "../../selectors";
 
 import AccessibleImage from "../shared/AccessibleImage";
 import { prefs } from "../../utils/prefs";
 
-import Breakpoints from "./Breakpoints/index";
+import Breakpoints from "./Breakpoints";
 import Expressions from "./Expressions";
-import Frames from "./Frames/index";
+import Frames from "./Frames";
 import Threads from "./Threads";
 import Accordion from "../shared/Accordion";
 import CommandBar from "./CommandBar";

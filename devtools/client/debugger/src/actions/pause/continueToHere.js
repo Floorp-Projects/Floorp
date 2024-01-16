@@ -8,9 +8,9 @@ import {
   getClosestBreakpointPosition,
   getBreakpoint,
   getCurrentThread,
-} from "../../selectors/index";
+} from "../../selectors";
 import { createLocation } from "../../utils/location";
-import { addHiddenBreakpoint } from "../breakpoints/index";
+import { addHiddenBreakpoint } from "../breakpoints";
 import { setBreakpointPositions } from "../breakpoints/breakpointPositions";
 
 import { resume } from "./commands";

@@ -6,7 +6,7 @@ import { generatedToOriginalId } from "devtools/client/shared/source-map-loader/
 
 import assert from "../../utils/assert";
 import { recordEvent } from "../../utils/telemetry";
-import { updateBreakpointsForNewPrettyPrintedSource } from "../breakpoints/index";
+import { updateBreakpointsForNewPrettyPrintedSource } from "../breakpoints";
 
 import { getPrettySourceURL, isJavaScript } from "../../utils/source";
 import { isFulfilled, fulfilled } from "../../utils/async-value";
@@ -16,15 +16,15 @@ import {
   loadGeneratedSourceText,
   loadOriginalSourceText,
 } from "./loadSourceText";
-import { mapFrames } from "../pause/index";
-import { selectSpecificLocation } from "../sources/index";
+import { mapFrames } from "../pause";
+import { selectSpecificLocation } from "../sources";
 import { createPrettyPrintOriginalSource } from "../../client/firefox/create";
 
 import {
   getFirstSourceActorForGeneratedSource,
   getSourceFromId,
   getSelectedLocation,
-} from "../../selectors/index";
+} from "../../selectors";
 
 import { selectSource } from "./select";
 import { memoizeableAction } from "../../utils/memoizableAction";

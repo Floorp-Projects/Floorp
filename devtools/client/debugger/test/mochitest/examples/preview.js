@@ -75,12 +75,3 @@ function invalidTargets() {
   debugger;
   return myVar;
 }
-
-function multipleTokens() {
-  var foo = {bar: { baz: "bloop"}}, blip = {boom: 0};
-  foo || blip
-  foo.bar;
-  foo.bar.baz;
-  foo || blip.boom;
-  debugger;
-}

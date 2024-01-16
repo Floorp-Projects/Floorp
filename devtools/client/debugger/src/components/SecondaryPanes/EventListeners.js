@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-import React, { Component } from "devtools/client/shared/vendor/react";
+import React, { Component } from "react";
 import {
   div,
   input,
@@ -12,16 +12,16 @@ import {
   button,
   form,
   label,
-} from "devtools/client/shared/vendor/react-dom-factories";
-import PropTypes from "devtools/client/shared/vendor/react-prop-types";
+} from "react-dom-factories";
+import PropTypes from "prop-types";
 
 import { connect } from "../../utils/connect";
-import actions from "../../actions/index";
+import actions from "../../actions";
 import {
   getActiveEventListeners,
   getEventListenerBreakpointTypes,
   getEventListenerExpanded,
-} from "../../selectors/index";
+} from "../../selectors";
 
 import AccessibleImage from "../shared/AccessibleImage";
 

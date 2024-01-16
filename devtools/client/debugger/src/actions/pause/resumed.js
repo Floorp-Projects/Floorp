@@ -2,13 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-import {
-  isStepping,
-  getPauseReason,
-  getSelectedFrame,
-} from "../../selectors/index";
+import { isStepping, getPauseReason, getSelectedFrame } from "../../selectors";
 import { evaluateExpressions } from "../expressions";
-import { inDebuggerEval } from "../../utils/pause/index";
+import { inDebuggerEval } from "../../utils/pause";
 
 /**
  * Debugger has just resumed.

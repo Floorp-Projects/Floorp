@@ -2,13 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-import React, { Component } from "devtools/client/shared/vendor/react";
-import { div, span } from "devtools/client/shared/vendor/react-dom-factories";
-import PropTypes from "devtools/client/shared/vendor/react-prop-types";
+import React, { Component } from "react";
+import { div, span } from "react-dom-factories";
+import PropTypes from "prop-types";
 import { connect } from "../../utils/connect";
 
-import actions from "../../actions/index";
-import { getCurrentThread, getIsPaused } from "../../selectors/index";
+import actions from "../../actions";
+import { getCurrentThread, getIsPaused } from "../../selectors";
 import AccessibleImage from "../shared/AccessibleImage";
 
 const classnames = require("devtools/client/shared/classnames.js");

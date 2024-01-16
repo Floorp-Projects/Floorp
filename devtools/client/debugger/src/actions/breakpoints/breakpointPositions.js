@@ -9,9 +9,9 @@ import {
   getSourceFromId,
   getBreakpointPositionsForSource,
   getSourceActorsForSource,
-} from "../../selectors/index";
+} from "../../selectors";
 
-import { makeBreakpointId } from "../../utils/breakpoint/index";
+import { makeBreakpointId } from "../../utils/breakpoint";
 import { memoizeableAction } from "../../utils/memoizableAction";
 import { fulfilled } from "../../utils/async-value";
 import {

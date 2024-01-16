@@ -10,6 +10,7 @@ CompiledModules(
     "get-expression.js",
     "index.js",
     "source-documents.js",
+    "source-editor.js",
     "source-search.js",
     "tokens.js",
 )

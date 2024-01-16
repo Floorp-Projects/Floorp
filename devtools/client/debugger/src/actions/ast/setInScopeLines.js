@@ -6,7 +6,7 @@ import {
   hasInScopeLines,
   getSourceTextContent,
   getVisibleSelectedFrame,
-} from "../../selectors/index";
+} from "../../selectors";
 
 import { getSourceLineCount } from "../../utils/source";
 

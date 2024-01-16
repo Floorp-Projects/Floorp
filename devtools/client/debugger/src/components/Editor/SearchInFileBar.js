@@ -2,17 +2,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-import PropTypes from "devtools/client/shared/vendor/react-prop-types";
-import React, { Component } from "devtools/client/shared/vendor/react";
-import { div } from "devtools/client/shared/vendor/react-dom-factories";
+import PropTypes from "prop-types";
+import React, { Component } from "react";
+import { div } from "react-dom-factories";
 import { connect } from "../../utils/connect";
-import actions from "../../actions/index";
+import actions from "../../actions";
 import {
   getActiveSearch,
   getSelectedSource,
   getSelectedSourceTextContent,
   getSearchOptions,
-} from "../../selectors/index";
+} from "../../selectors";
 
 import { searchKeys } from "../../constants";
 import { scrollList } from "../../utils/result-list";
@@ -29,7 +29,7 @@ import {
   findNext,
   findPrev,
   removeOverlay,
-} from "../../utils/editor/index";
+} from "../../utils/editor";
 import { isFulfilled } from "../../utils/async-value";
 
 function getSearchShortcut() {

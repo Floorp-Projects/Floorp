@@ -17,8 +17,8 @@ import {
   getBreakpointAtLocation,
   getBreakpointsForSource,
   getBreakpointsAtLine,
-} from "../../selectors/index";
-import { createXHRBreakpoint } from "../../utils/breakpoint/index";
+} from "../../selectors";
+import { createXHRBreakpoint } from "../../utils/breakpoint";
 import {
   addBreakpoint,
   removeBreakpoint,

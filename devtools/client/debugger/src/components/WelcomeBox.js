@@ -2,19 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-import { Component } from "devtools/client/shared/vendor/react";
-import {
-  div,
-  p,
-  span,
-} from "devtools/client/shared/vendor/react-dom-factories";
-import PropTypes from "devtools/client/shared/vendor/react-prop-types";
+import { Component } from "react";
+import { div, p, span } from "react-dom-factories";
+import PropTypes from "prop-types";
 
 import { connect } from "../utils/connect";
 import { primaryPaneTabs } from "../constants";
 
-import actions from "../actions/index";
-import { getPaneCollapse } from "../selectors/index";
+import actions from "../actions";
+import { getPaneCollapse } from "../selectors";
 import { formatKeyShortcut } from "../utils/text";
 
 import "./WelcomeBox.css";

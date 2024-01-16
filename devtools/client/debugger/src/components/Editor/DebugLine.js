@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-import { PureComponent } from "devtools/client/shared/vendor/react";
-import PropTypes from "devtools/client/shared/vendor/react-prop-types";
+import { PureComponent } from "react";
+import PropTypes from "prop-types";
 import {
   toEditorPosition,
   getDocument,
@@ -11,8 +11,8 @@ import {
   startOperation,
   endOperation,
   getTokenEnd,
-} from "../../utils/editor/index";
-import { isException } from "../../utils/pause/index";
+} from "../../utils/editor";
+import { isException } from "../../utils/pause";
 import { getIndentation } from "../../utils/indentation";
 import { connect } from "../../utils/connect";
 import {
@@ -20,7 +20,7 @@ import {
   getPauseReason,
   getSourceTextContent,
   getCurrentThread,
-} from "../../selectors/index";
+} from "../../selectors";
 
 export class DebugLine extends PureComponent {
   debugExpression;

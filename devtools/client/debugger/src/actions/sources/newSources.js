@@ -14,11 +14,11 @@ import {
   createSourceActor,
 } from "../../client/firefox/create";
 import { toggleBlackBox } from "./blackbox";
-import { syncPendingBreakpoint } from "../breakpoints/index";
+import { syncPendingBreakpoint } from "../breakpoints";
 import { loadSourceText } from "./loadSourceText";
 import { prettyPrintAndSelectSource } from "./prettyPrint";
 import { toggleSourceMapIgnoreList } from "../ui";
-import { selectLocation, setBreakableLines } from "../sources/index";
+import { selectLocation, setBreakableLines } from "../sources";
 
 import { getRawSourceURL, isPrettyURL } from "../../utils/source";
 import { createLocation } from "../../utils/location";
@@ -30,7 +30,7 @@ import {
   getSourceByActorId,
   getPendingSelectedLocation,
   getPendingBreakpointsForSource,
-} from "../../selectors/index";
+} from "../../selectors";
 
 import { prefs } from "../../utils/prefs";
 import sourceQueue from "../../utils/source-queue";

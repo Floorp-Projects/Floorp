@@ -58,8 +58,6 @@ if (isNode()) {
   pref("devtools.debugger.features.inline-preview", true);
   pref("devtools.debugger.features.javascript-tracing", false);
   pref("devtools.editor.tabsize", 2);
-  pref("devtools.editor.expandtab", false);
-  pref("devtools.editor.autoclosebrackets", false);
 }
 
 export const prefs = new PrefsHelper("devtools", {

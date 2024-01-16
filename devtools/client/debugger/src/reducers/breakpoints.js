@@ -7,7 +7,7 @@
  * @module reducers/breakpoints
  */
 
-import { makeBreakpointId } from "../utils/breakpoint/index";
+import { makeBreakpointId } from "../utils/breakpoint";
 
 export function initialBreakpointsState(xhrBreakpoints = []) {
   return {

@@ -11,7 +11,7 @@ import {
   isSourceBlackBoxed,
   isSourceMapIgnoreListEnabled,
   isSourceOnSourceMapIgnoreList,
-} from "../../selectors/index";
+} from "../../selectors";
 
 import { toggleBlackBox } from "../sources/blackbox";
 import { prettyPrintAndSelectSource } from "../sources/prettyPrint";
