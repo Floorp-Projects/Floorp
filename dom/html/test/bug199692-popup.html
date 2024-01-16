@@ -160,14 +160,16 @@ function testPoints()
   // hidden
   c = $("hidden");
   pos = getCoords(c);
-  x = pos.x, y = pos.y;
+  x = pos.x;
+  y = pos.y;
   is(doc.pt(x, y), $("hidden-wrapper"),
      "Hit testing should bypass hidden elements.");
 
   // iframe nested
   var iframe = $("our-iframe");
   pos = getCoords(iframe);
-  x = pos.x, y = pos.y;
+  x = pos.x;
+  y = pos.y;
   is(doc.pt(x + 20, y + 20), $("our-iframe"),
      "Element from nested iframe returned is from calling document");
   // iframe, doubly nested

@@ -964,7 +964,7 @@ function testMoveFocus()
   setFocusTo("t6", window);
   var childroot = getById("t" + kChildDocumentRootIndex);
   gLastFocusMethod = 0;
-  newFocus = fm.moveFocus(gChildWindow, null, fm.MOVEFOCUS_ROOT, 0),
+  newFocus = fm.moveFocus(gChildWindow, null, fm.MOVEFOCUS_ROOT, 0);
   is(newFocus, childroot, "moveFocus to root child window null content return value");
   is(fm.focusedWindow, gChildWindow, "moveFocus to root child window null content focusedWindow");
   is(fm.focusedElement, childroot, "moveFocus to root child window null content focusedElement");

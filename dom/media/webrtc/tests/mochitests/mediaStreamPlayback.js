@@ -53,9 +53,10 @@ MediaStreamPlayback.prototype = {
         "ended",
         wait(ENDED_TIMEOUT_LENGTH, new Error("Timeout"))
       ),
-      ...this.mediaStream
-        .getTracks()
-        .map(t => (t.stop(), haveNoEvent(t, "ended"))),
+      ...this.mediaStream.getTracks().map(t => {
+        t.stop();
+        return haveNoEvent(t, "ended");
+      }),
     ]);
   },
 

@@ -74,11 +74,17 @@ runNetworkTest(async () => {
       // We're regarding black as disabled here, and we're setting the alpha
       // channel of the pixel to 255 to disregard alpha when testing.
       var checkVideoEnabled = video => h.waitForPixel(video,
-        px => (px[3] = 255, h.isPixelNot(px, h.black, threshold)),
+        px => {
+          px[3] = 255;
+          return h.isPixelNot(px, h.black, threshold);
+        },
         { offsetX, offsetY }
       );
       var checkVideoDisabled = video => h.waitForPixel(video,
-        px => (px[3] = 255, h.isPixel(px, h.black, threshold)),
+        px => {
+          px[3] = 255;
+          return h.isPixel(px, h.black, threshold);
+        },
         { offsetX, offsetY }
       );
 

@@ -497,7 +497,6 @@ module.exports = {
         "no-restricted-globals": "off",
         "no-self-assign": "off",
         "no-self-compare": "off",
-        "no-sequences": "off",
         "no-shadow": "off",
         "no-sparse-arrays": "off",
         "no-throw-literal": "off",

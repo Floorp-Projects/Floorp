@@ -16,9 +16,11 @@
     f().then(() => ok(false, msg),
              e => is(e.name, reason, msg));
 
-  var removeAllButCodec = (d, codec) =>
-    (d.sdp = d.sdp.replace(/m=video (\w) UDP\/TLS\/RTP\/SAVPF \w.*\r\n/,
-                           "m=video $1 UDP/TLS/RTP/SAVPF " + codec + "\r\n"), d);
+  var removeAllButCodec = (d, codec) => {
+    d.sdp = d.sdp.replace(/m=video (\w) UDP\/TLS\/RTP\/SAVPF \w.*\r\n/,
+                          "m=video $1 UDP/TLS/RTP/SAVPF " + codec + "\r\n");
+    return d;
+  };
 
   var mungeSDP = (d, forceH264) => {
     if (forceH264) {

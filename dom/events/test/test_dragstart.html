@@ -207,10 +207,10 @@ function test_DataTransfer(dt)
   // if the type is '', do nothing, or return ''
   dt.setData("", "Invalid Type");
   is(dt.types.length, 0, "invalid type setData");
-  is(dt.getData(""), "", "invalid type getData"),
+  is(dt.getData(""), "", "invalid type getData");
   dt.mozSetDataAt("", "Invalid Type", 0);
   is(dt.types.length, 0, "invalid type setDataAt");
-  is(dt.mozGetDataAt("", 0), null, "invalid type getDataAt"),
+  is(dt.mozGetDataAt("", 0), null, "invalid type getDataAt");
 
   // similar with clearDataAt and getDataAt
   expectError(() => dt.mozGetDataAt("text/plain", 1),

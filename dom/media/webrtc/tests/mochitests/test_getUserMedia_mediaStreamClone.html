@@ -82,8 +82,10 @@ runTest(async () => {
     let clones = Array(10).fill().map(() => clone = clone.clone());
     let inceptionClone = clones.pop();
     checkMediaStreamCloneAgainstOriginal(inceptionClone, stream);
-    stream.getTracks().forEach(t => (stream.removeTrack(t),
-                                     inceptionClone.addTrack(t)));
+    stream.getTracks().forEach(t => {
+      stream.removeTrack(t);
+      return inceptionClone.addTrack(t);
+    });
     is(inceptionClone.getAudioTracks().length, 2,
        "The inception clone should contain the original audio track and a track clone");
     is(inceptionClone.getVideoTracks().length, 2,
