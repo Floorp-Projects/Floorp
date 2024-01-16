@@ -7,6 +7,7 @@ package mozilla.components.browser.toolbar.edit
 import android.content.Context
 import android.graphics.Typeface
 import android.graphics.drawable.Drawable
+import android.os.Build
 import android.view.KeyEvent
 import android.view.View
 import android.widget.ImageView
@@ -215,6 +216,10 @@ class EditToolbar internal constructor(
     fun focus() {
         views.url.run {
             if (!hasFocus()) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                    // On Android 14 this needs to be called before requestFocus() in order to receive focus.
+                    isFocusableInTouchMode = true
+                }
                 requestFocus()
             }
         }
