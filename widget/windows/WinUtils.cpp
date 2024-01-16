@@ -1466,26 +1466,14 @@ static bool IsTabletDevice() {
   return false;
 }
 
-static bool IsMousePresent() {
-  if (!::GetSystemMetrics(SM_MOUSEPRESENT)) {
-    return false;
-  }
-
-  DWORD count = InputDeviceUtils::CountMouseDevices();
-  if (!count) {
-    return false;
-  }
-
-  // If there is a mouse device and if this machine is a tablet or has a
-  // digitizer, that's counted as the mouse device.
-  // FIXME: Bug 1495938:  We should drop this heuristic way once we find out a
-  // reliable way to tell there is no mouse or not.
-  if (count == 1 &&
-      (WinUtils::IsTouchDeviceSupportPresent() || IsTabletDevice())) {
-    return false;
-  }
-
-  return true;
+static bool SystemHasMouse() {
+  // As per MSDN, this value is rarely false because of virtual mice, and
+  // some machines report the existance of a mouse port as a mouse.
+  //
+  // We probably could try to distinguish if we wanted, but a virtual mouse
+  // might be there for a reason, and maybe we shouldn't assume we know
+  // better.
+  return !!::GetSystemMetrics(SM_MOUSEPRESENT);
 }
 
 /* static */
@@ -1494,7 +1482,7 @@ PointerCapabilities WinUtils::GetPrimaryPointerCapabilities() {
     return PointerCapabilities::Coarse;
   }
 
-  if (IsMousePresent()) {
+  if (SystemHasMouse()) {
     return PointerCapabilities::Fine | PointerCapabilities::Hover;
   }
 
@@ -1515,16 +1503,6 @@ static bool SystemHasPenDigitizer() {
   int digitizerMetrics = ::GetSystemMetrics(SM_DIGITIZER);
   return (digitizerMetrics & NID_INTEGRATED_PEN) ||
          (digitizerMetrics & NID_EXTERNAL_PEN);
-}
-
-static bool SystemHasMouse() {
-  // As per MSDN, this value is rarely false because of virtual mice, and
-  // some machines report the existance of a mouse port as a mouse.
-  //
-  // We probably could try to distinguish if we wanted, but a virtual mouse
-  // might be there for a reason, and maybe we shouldn't assume we know
-  // better.
-  return !!::GetSystemMetrics(SM_MOUSEPRESENT);
 }
 
 /* static */
