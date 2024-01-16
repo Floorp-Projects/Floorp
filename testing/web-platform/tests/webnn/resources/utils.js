@@ -361,7 +361,6 @@ const PrecisionMetrics = {
   softplus: {ULP: {float32: 18, float16: 18}},
   softsign: {ULP: {float32: 3, float16: 3}},
   split: {ULP: {float32: 0, float16: 0}},
-  squeeze: {ULP: {float32: 0, float16: 0}},
   tanh: {ATOL: {float32: 1/1024, float16: 1/512}},
   transpose: {ULP: {float32: 0, float16: 0}},
   where: {ULP: {float32: 0, float16: 0}},
