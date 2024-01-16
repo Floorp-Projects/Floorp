@@ -461,6 +461,11 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
 
  private:
   /**
+   * Set mOutputDeviceForAEC to indicate the audio output to be passed as the
+   * reverse stream for audio echo cancellation.  Graph thread.
+   */
+  void SelectOutputDeviceForAEC();
+  /**
    * Queue audio (mix of track audio and silence for blocked intervals)
    * to the audio output track. Returns the number of frames played.
    */
@@ -1096,6 +1101,12 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
     }
   };
   nsTArray<OutputDeviceEntry> mOutputDevices;
+  /**
+   * mOutputDeviceForAEC identifies the audio output to be passed as the
+   * reverse stream for audio echo cancellation.  Used only if a microphone is
+   * active.  Graph thread.
+   */
+  CubebUtils::AudioDeviceID mOutputDeviceForAEC = nullptr;
 
   /**
    * Global volume scale. Used when running tests so that the output is not too

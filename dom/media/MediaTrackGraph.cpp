@@ -1387,6 +1387,52 @@ void MediaTrackGraphImpl::UpdateGraph(GraphTime aEndBlockingDecisions) {
   }
 }
 
+void MediaTrackGraphImpl::SelectOutputDeviceForAEC() {
+  MOZ_ASSERT(OnGraphThread());
+  size_t currentDeviceIndex = mOutputDevices.IndexOf(mOutputDeviceForAEC);
+  if (currentDeviceIndex == mOutputDevices.NoIndex) {
+    // Outputs for this device have been removed.
+    // Fall back to the primary output device.
+    mOutputDeviceForAEC = PrimaryOutputDeviceID();
+    currentDeviceIndex = 0;
+    MOZ_ASSERT(mOutputDevices[0].mDeviceID == mOutputDeviceForAEC);
+  }
+  if (mOutputDevices.Length() == 1) {
+    // No other output devices so there is no choice.
+    return;
+  }
+
+  // The output is considered silent intentionally only if the whole duration
+  // (often more than just this processing interval) of audio data in the
+  // MediaSegment is null so as to reduce switching between output devices
+  // should there be short durations of silence.
+  auto HasNonNullAudio = [](const TrackAndVolume& aTV) {
+    return aTV.mVolume != 0 && !aTV.mTrack->IsSuspended() &&
+           !aTV.mTrack->GetData()->IsNull();
+  };
+  // Keep using the same output device stream if it has non-null data,
+  // so as to stay with a stream having ongoing audio.  If the output stream
+  // is switched, the echo cancellation algorithm can take some time to adjust
+  // to the change in delay, so there is less value in switching back and
+  // forth between output devices for very short sounds.
+  for (const auto& output : mOutputDevices[currentDeviceIndex].mTrackOutputs) {
+    if (HasNonNullAudio(output)) {
+      return;
+    }
+  }
+  // The current output device is silent.  Use another if it has non-null data.
+  for (const auto& outputDeviceEntry : mOutputDevices) {
+    for (const auto& output : outputDeviceEntry.mTrackOutputs) {
+      if (HasNonNullAudio(output)) {
+        // Switch to this device.
+        mOutputDeviceForAEC = outputDeviceEntry.mDeviceID;
+        return;
+      }
+    }
+  }
+  // Null data for all outputs.  Keep using the same device.
+}
+
 void MediaTrackGraphImpl::Process(MixerCallbackReceiver* aMixerReceiver) {
   TRACE("MTG::Process");
   MOZ_ASSERT(OnGraphThread());
@@ -1436,6 +1482,7 @@ void MediaTrackGraphImpl::Process(MixerCallbackReceiver* aMixerReceiver) {
   }
   mProcessedTime = mStateComputedTime;
 
+  SelectOutputDeviceForAEC();
   for (const auto& outputDeviceEntry : mOutputDevices) {
     uint32_t outputChannelCount;
     if (!outputDeviceEntry.mReceiver) {  // primary output
@@ -1478,12 +1525,13 @@ void MediaTrackGraphImpl::Process(MixerCallbackReceiver* aMixerReceiver) {
                  mStateComputedTime - oldProcessedTime, mSampleRate);
     }
     AudioChunk* outputChunk = mMixer.MixedChunk();
-    if (!outputDeviceEntry.mReceiver) {  // primary output
+    if (outputDeviceEntry.mDeviceID == mOutputDeviceForAEC) {
       // Callback any observers for the AEC speaker data.  Note that one
       // (maybe) of these will be full-duplex, the others will get their input
       // data off separate cubeb callbacks.
       NotifyOutputData(*outputChunk);
-
+    }
+    if (!outputDeviceEntry.mReceiver) {  // primary output
       aMixerReceiver->MixerCallback(outputChunk, mSampleRate);
     } else {
       outputDeviceEntry.mReceiver->EnqueueAudio(*outputChunk);
@@ -3962,8 +4010,8 @@ uint32_t MediaTrackGraphImpl::AudioOutputChannelCount(
     const OutputDeviceEntry& aDevice) const {
   MOZ_ASSERT(OnGraphThread());
   // The audio output channel count for a graph is the maximum of the output
-  // channel count of all the tracks that are in mAudioOutputs, or the max audio
-  // output channel count the machine can do, whichever is smaller.
+  // channel count of all the tracks with outputs to this device, or the max
+  // audio output channel count the machine can do, whichever is smaller.
   uint32_t channelCount = 0;
   for (const auto& output : aDevice.mTrackOutputs) {
     channelCount = std::max(channelCount, output.mTrack->NumberOfChannels());
