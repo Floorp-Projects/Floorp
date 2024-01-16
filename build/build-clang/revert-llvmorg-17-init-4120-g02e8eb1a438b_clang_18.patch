@@ -60,7 +60,7 @@ index a45ed0e56553..692304ac6774 100644
    //   1. .debug_aranges may not include global variables. On clang, it seems we
    //      put the globals in the aranges, but this isn't true for gcc.
 @@ -1523,7 +1520,7 @@ DWARFCompileUnit *DWARFContext::getCompileUnitForDataAddress(uint64_t Address) {
- DWARFContext::DIEsForAddress DWARFContext::getDIEsForAddress(uint64_t Address) {
+                                                              bool CheckDWO) {
    DIEsForAddress Result;
  
 -  DWARFCompileUnit *CU = getCompileUnitForCodeAddress(Address);
