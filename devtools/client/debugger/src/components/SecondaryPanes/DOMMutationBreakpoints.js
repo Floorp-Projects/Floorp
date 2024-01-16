@@ -3,7 +3,12 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import React, { Component } from "react";
-import { div, input, li, ul } from "react-dom-factories";
+import {
+  div,
+  input,
+  li,
+  ul,
+} from "devtools/client/shared/vendor/react-dom-factories";
 import PropTypes from "devtools/client/shared/vendor/react-prop-types";
 
 import Reps from "devtools/client/shared/components/reps/index";

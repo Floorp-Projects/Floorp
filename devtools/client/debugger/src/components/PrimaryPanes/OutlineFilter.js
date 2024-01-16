@@ -3,7 +3,11 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import { Component } from "react";
-import { form, div, input } from "react-dom-factories";
+import {
+  form,
+  div,
+  input,
+} from "devtools/client/shared/vendor/react-dom-factories";
 import PropTypes from "devtools/client/shared/vendor/react-prop-types";
 const classnames = require("devtools/client/shared/classnames.js");
 
