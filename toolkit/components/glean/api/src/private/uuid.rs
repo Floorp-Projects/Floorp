@@ -51,7 +51,10 @@ impl glean::traits::Uuid for UuidMetric {
         match self {
             UuidMetric::Parent(p) => p.set(value.to_string()),
             UuidMetric::Child(_c) => {
-                log::error!("Unable to set the uuid metric in non-main process. Ignoring.");
+                log::error!("Unable to set the uuid metric in non-main process. This operation will be ignored.");
+                // If we're in automation we can panic so the instrumentor knows they've gone wrong.
+                // This is a deliberate violation of Glean's "metric APIs must not throw" design.
+                assert!(!crate::ipc::is_in_automation(), "Attempted to set uuid metric in non-main process, which is forbidden. This panics in automation.");
                 // TODO: Record an error.
             }
         };
@@ -62,12 +65,15 @@ impl glean::traits::Uuid for UuidMetric {
     /// ## Return value
     ///
     /// Returns the stored UUID value or `Uuid::nil` if called from
-    /// a non-parent process.
+    /// a non-main process.
     pub fn generate_and_set(&self) -> Uuid {
         match self {
             UuidMetric::Parent(p) => Uuid::parse_str(&p.generate_and_set()).unwrap(),
             UuidMetric::Child(_c) => {
-                log::error!("Unable to set the uuid metric in non-main process. Ignoring.");
+                log::error!("Unable to set the uuid metric in non-main process. This operation will be ignored.");
+                // If we're in automation we can panic so the instrumentor knows they've gone wrong.
+                // This is a deliberate violation of Glean's "metric APIs must not throw" design.
+                assert!(!crate::ipc::is_in_automation(), "Attempted to set uuid metric in non-main process, which is forbidden. This panics in automation.");
                 // TODO: Record an error.
                 Uuid::nil()
             }
@@ -92,7 +98,7 @@ impl glean::traits::Uuid for UuidMetric {
             UuidMetric::Parent(p) => p
                 .test_get_value(storage_name)
                 .and_then(|s| Uuid::parse_str(&s).ok()),
-            UuidMetric::Child(_c) => panic!("Cannot get test value for in non-parent process!"),
+            UuidMetric::Child(_c) => panic!("Cannot get test value for in non-main process!"),
         }
     }
 
@@ -113,7 +119,7 @@ impl glean::traits::Uuid for UuidMetric {
         match self {
             UuidMetric::Parent(p) => p.test_get_num_recorded_errors(error),
             UuidMetric::Child(_c) => {
-                panic!("Cannot get test value for UuidMetric in non-parent process!")
+                panic!("Cannot get test value for UuidMetric in non-main process!")
             }
         }
     }

@@ -205,6 +205,21 @@ fn handle_payload_filling() {
     unsafe { FOG_IPCPayloadFull() };
 }
 
+#[cfg(not(feature = "with_gecko"))]
+pub fn is_in_automation() -> bool {
+    // Without Gecko IPC to drain the buffer, there's nothing we can do.
+    false
+}
+
+#[cfg(feature = "with_gecko")]
+pub fn is_in_automation() -> bool {
+    extern "C" {
+        fn FOG_IPCIsInAutomation() -> bool;
+    }
+    // SAFETY NOTE: Safe because it returns a primitive by value.
+    unsafe { FOG_IPCIsInAutomation() }
+}
+
 // Reason: We instrument the error counts,
 // but don't need more detailed error information at the moment.
 #[allow(clippy::result_unit_err)]

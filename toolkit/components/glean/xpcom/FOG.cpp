@@ -24,6 +24,7 @@
 #include "nsIFOG.h"
 #include "nsIUserIdleService.h"
 #include "nsServiceManagerUtils.h"
+#include "xpcpublic.h"
 
 namespace mozilla {
 
@@ -128,6 +129,9 @@ extern "C" bool FOG_EventTimestampsEnabled(void) {
   return NimbusFeatures::GetBool("gleanInternalSdk"_ns,
                                  "enableEventTimestamps"_ns, false);
 }
+
+// Called when knowing if we're in automation is necessary.
+extern "C" bool FOG_IPCIsInAutomation(void) { return xpc::IsInAutomation(); }
 
 NS_IMETHODIMP
 FOG::InitializeFOG(const nsACString& aDataPathOverride,

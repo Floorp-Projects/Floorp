@@ -120,7 +120,7 @@ impl<K: 'static + ExtraKeys + Send + Sync> Event for EventMetric<K> {
         match self {
             EventMetric::Parent { inner, .. } => inner.test_get_value(ping_name),
             EventMetric::Child(_) => {
-                panic!("Cannot get test value for event metric in non-parent process!",)
+                panic!("Cannot get test value for event metric in non-main process!",)
             }
         }
     }
@@ -129,7 +129,7 @@ impl<K: 'static + ExtraKeys + Send + Sync> Event for EventMetric<K> {
         match self {
             EventMetric::Parent { inner, .. } => inner.test_get_num_recorded_errors(error),
             EventMetric::Child(c) => panic!(
-                "Cannot get the number of recorded errors for {:?} in non-parent process!",
+                "Cannot get the number of recorded errors for {:?} in non-main process!",
                 c.0
             ),
         }

@@ -34,6 +34,14 @@ Sphinx will automagically transform that to an
 appropriately-base-url'd url with a `.html` suffix.
 
 
+## Use of "Main" versus "Parent" for processes
+
+When talking about Glean, it is helpeful to distinguish when we are on the main
+process specifically. This is because there is only one main process, and there is only one Glean.
+However, "parent" is a relative term, and it may refer to a process
+that is the parent of another process, but is not itself the main process.
+Prefer use of "main" when it is accurate.
+
 [semantic linefeeds]: https://rhodesmill.org/brandon/2012/one-sentence-per-line/
 [reference link]: https://spec.commonmark.org/0.29/#reference-link
 [Telemetry]: /toolkit/components/telemetry/index.rst
