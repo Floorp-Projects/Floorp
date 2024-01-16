@@ -167,10 +167,6 @@ void mozTXTToHTMLConv::CompleteAbbreviatedURL(const char16_t* aInString,
                            LT_IGNORE)) {
       aOutString.AssignLiteral("http://");
       aOutString += aInString;
-    } else if (ItMatchesDelimited(aInString, aInLength, u"ftp.", 4, LT_IGNORE,
-                                  LT_IGNORE)) {
-      aOutString.AssignLiteral("ftp://");
-      aOutString += aInString;
     }
   }
 }

@@ -369,9 +369,6 @@ nsresult nsUnixSystemProxySettings::GetProxyFromGSettings(
     if (rv != NS_OK)
       rv = SetProxyResultFromGSettings("org.gnome.system.proxy.http", "PROXY",
                                        aResult);
-  } else if (aScheme.LowerCaseEqualsLiteral("ftp")) {
-    rv = SetProxyResultFromGSettings("org.gnome.system.proxy.ftp", "PROXY",
-                                     aResult);
   } else {
     rv = NS_ERROR_FAILURE;
   }

@@ -40,8 +40,7 @@ nsNoDataProtocolContentPolicy::ShouldLoad(nsIURI* aContentLocation,
     nsAutoCString scheme;
     aContentLocation->GetScheme(scheme);
     if (scheme.EqualsLiteral("http") || scheme.EqualsLiteral("https") ||
-        scheme.EqualsLiteral("ftp") || scheme.EqualsLiteral("file") ||
-        scheme.EqualsLiteral("chrome")) {
+        scheme.EqualsLiteral("file") || scheme.EqualsLiteral("chrome")) {
       return NS_OK;
     }
 

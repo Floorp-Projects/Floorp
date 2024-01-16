@@ -3350,14 +3350,13 @@ nsresult PermissionManager::GetKeyForOrigin(const nsACString& aOrigin,
                                             nsACString& aKey) {
   aKey.Truncate();
 
-  // We only key origins for http, https, and ftp URIs. All origins begin with
+  // We only key origins for http, https URIs. All origins begin with
   // the URL which they apply to, which means that they should begin with their
   // scheme in the case where they are one of these interesting URIs. We don't
   // want to actually parse the URL here however, because this can be called on
   // hot paths.
   if (!StringBeginsWith(aOrigin, "http:"_ns) &&
-      !StringBeginsWith(aOrigin, "https:"_ns) &&
-      !StringBeginsWith(aOrigin, "ftp:"_ns)) {
+      !StringBeginsWith(aOrigin, "https:"_ns)) {
     return NS_OK;
   }
 
@@ -3378,8 +3377,7 @@ nsresult PermissionManager::GetKeyForOrigin(const nsACString& aOrigin,
   nsCOMPtr<nsIPrincipal> dbgPrincipal;
   MOZ_ALWAYS_SUCCEEDS(GetPrincipalFromOrigin(aOrigin, aForceStripOA,
                                              getter_AddRefs(dbgPrincipal)));
-  MOZ_ASSERT(dbgPrincipal->SchemeIs("http") ||
-             dbgPrincipal->SchemeIs("https") || dbgPrincipal->SchemeIs("ftp"));
+  MOZ_ASSERT(dbgPrincipal->SchemeIs("http") || dbgPrincipal->SchemeIs("https"));
   MOZ_ASSERT(dbgPrincipal->OriginAttributesRef() == attrs);
 #endif
 
