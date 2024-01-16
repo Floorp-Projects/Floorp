@@ -86,6 +86,7 @@ async function moveIframe() {
 }
 
 waitUntilApzStable()
+.then(async () => test("helper_zoomToFocusedInput_iframe_subframe.html?margin-top=200vh"))
 // A test case where the layout scroll offset isn't zero.
 .then(async () => moveIframe())
 .then(async () => test("helper_zoomToFocusedInput_iframe_subframe.html"))
