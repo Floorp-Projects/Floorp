@@ -153,7 +153,7 @@ nsChangeHint ComputedStyle::CalcStyleDifference(const ComputedStyle& aNewStyle,
   // FIXME: The order of these DO_STRUCT_DIFFERENCE calls is no longer
   // significant.  With a small amount of effort, we could replace them with a
   // #include "nsStyleStructList.h".
-  DO_STRUCT_DIFFERENCE_WITH_ARGS(Display, (, *StylePosition()));
+  DO_STRUCT_DIFFERENCE_WITH_ARGS(Display, (, *this));
   DO_STRUCT_DIFFERENCE(XUL);
   DO_STRUCT_DIFFERENCE(Column);
   DO_STRUCT_DIFFERENCE(Content);
@@ -164,10 +164,10 @@ nsChangeHint ComputedStyle::CalcStyleDifference(const ComputedStyle& aNewStyle,
   DO_STRUCT_DIFFERENCE(Table);
   DO_STRUCT_DIFFERENCE(UIReset);
   DO_STRUCT_DIFFERENCE(Text);
-  DO_STRUCT_DIFFERENCE_WITH_ARGS(List, (, *StyleDisplay()));
+  DO_STRUCT_DIFFERENCE_WITH_ARGS(List, (, *this));
   DO_STRUCT_DIFFERENCE(SVGReset);
   DO_STRUCT_DIFFERENCE(SVG);
-  DO_STRUCT_DIFFERENCE_WITH_ARGS(Position, (, *StyleVisibility()));
+  DO_STRUCT_DIFFERENCE_WITH_ARGS(Position, (, *this));
   DO_STRUCT_DIFFERENCE(Font);
   DO_STRUCT_DIFFERENCE(Margin);
   DO_STRUCT_DIFFERENCE(Padding);
