@@ -244,11 +244,9 @@ def accept_raptor_android_build(platform):
         return False
     if "shippable" not in platform:
         return False
-    if "p2" in platform and "aarch64" in platform:
-        return False
     if "p5" in platform and "aarch64" in platform:
         return False
-    if "g5" in platform:
+    if "p6" in platform and "aarch64" in platform:
         return False
     if "a51" in platform:
         return True
@@ -1222,8 +1220,6 @@ def target_tasks_daily_beta_perf(full_task_graph, parameters, graph_config):
         if platform and accept_raptor_android_build(platform):
             # Select browsertime & geckoview specific tests
             if "browsertime" and "geckoview" in try_name:
-                if "g5" in platform:
-                    return False
                 if "power" in try_name:
                     return False
                 if "cpu" in try_name:
@@ -1261,8 +1257,6 @@ def target_tasks_weekly_release_perf(full_task_graph, parameters, graph_config):
         if platform and accept_raptor_android_build(platform):
             # Select browsertime & geckoview specific tests
             if "browsertime" and "geckoview" in try_name:
-                if "g5" in platform:
-                    return False
                 if "power" in try_name:
                     return False
                 if "cpu" in try_name:
