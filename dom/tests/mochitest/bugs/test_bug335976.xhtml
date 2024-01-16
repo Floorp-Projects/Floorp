@@ -34,7 +34,7 @@ function lookAtTextboxesIn(root, numExpected)
   var i;
   var n;
   
-  for (i = 0; n = textboxes[i]; ++i) {
+  for (i = 0; (n = textboxes[i]); ++i) {
     threw = true;
     try { n.nodeType; threw = false; } catch(e) { }
     ok(!threw, "n.nodeType threw");

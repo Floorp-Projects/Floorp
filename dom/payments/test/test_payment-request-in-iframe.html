@@ -117,7 +117,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1318988
       var ifrr = document.createElement('iframe');
 
       let listener = function(event) {
-        if (ifrr.allow =! 'payment') {
+        if (ifrr.allow != 'payment') {
           is(event.data, "SecurityError",
             "Expected 'SecurityError' without allow=payment in nested iframe");
           ifrr.setAttribute('allow', "payment");

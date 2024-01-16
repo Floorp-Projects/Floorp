@@ -109,7 +109,7 @@ function waitForMessage(aRemoteTarget, aEventType, aTargetName, aLastExpectedEle
 function waitForMouseEnterMessages(aRemoteTarget, aTargetNames) {
   let promises = [];
   let targetName;
-  while (targetName = aTargetNames.shift()) {
+  while ((targetName = aTargetNames.shift())) {
     promises.push(
       waitForMessage(aRemoteTarget, "mouseenter", targetName, !aTargetNames.length)
     );
@@ -127,7 +127,7 @@ function waitForMouseEnterMessages(aRemoteTarget, aTargetNames) {
 function waitForMouseLeaveMessages(aRemoteTarget, aTargetNames) {
   let promises = [];
   let targetName;
-  while (targetName = aTargetNames.pop()) {
+  while ((targetName = aTargetNames.pop())) {
     promises.push(
       waitForMessage(aRemoteTarget, "mouseleave", targetName, !aTargetNames.length)
     );

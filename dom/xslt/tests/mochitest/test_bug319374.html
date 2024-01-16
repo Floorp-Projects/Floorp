@@ -37,7 +37,7 @@ customElements.define("custom-el", class extends HTMLElement {
                                XPathResult.UNORDERED_NODE_ITERATOR_TYPE,
                                null);
       var res = null;
-      while (res = result.iterateNext()) {
+      while ((res = result.iterateNext())) {
         ++counter;
         let anon = res.shadowRoot.childNodes;
         anon[0].firstChild.remove(); // Removing a child node

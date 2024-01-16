@@ -175,6 +175,8 @@ function checkInputRequiredValidity(type)
     SpecialPowers.wrap(element).value = '2010-10-10';
   } else if (element.type == 'time') {
     SpecialPowers.wrap(element).value = '21:21';
+  // TODO: Bug 1864327. This test is wrong, and needs fixing properly.
+  // eslint-disable-next-line no-cond-assign
   } else if (element.type = 'month') {
     SpecialPowers.wrap(element).value = '2010-10';
   } else {
