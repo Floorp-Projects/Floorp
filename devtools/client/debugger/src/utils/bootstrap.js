@@ -8,7 +8,7 @@ import {
   combineReducers,
 } from "devtools/client/shared/vendor/redux";
 import ReactDOM from "react-dom";
-const { Provider } = require("react-redux");
+const { Provider } = require("devtools/client/shared/vendor/react-redux");
 
 import ToolboxProvider from "devtools/client/framework/store-provider";
 import flags from "devtools/shared/flags";
