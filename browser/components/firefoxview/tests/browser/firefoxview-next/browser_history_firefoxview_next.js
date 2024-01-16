@@ -500,3 +500,47 @@ add_task(async function test_search_history() {
     );
   });
 });
+
+add_task(async function test_persist_collapse_card_after_view_change() {
+  await PlacesUtils.history.clear();
+  await addHistoryItems(today);
+  await withFirefoxView({}, async browser => {
+    const { document } = browser.contentWindow;
+    await navigateToCategoryAndWait(document, "history");
+    const historyComponent = document.querySelector("view-history");
+    historyComponent.profileAge = 8;
+    await TestUtils.waitForCondition(
+      () =>
+        [...historyComponent.allHistoryItems.values()].reduce(
+          (acc, { length }) => acc + length,
+          0
+        ) === 4
+    );
+    let firstHistoryCard = historyComponent.cards[0];
+    ok(
+      firstHistoryCard.isExpanded,
+      "The first history card is expanded initially."
+    );
+
+    // Collapse history card
+    EventUtils.synthesizeMouseAtCenter(firstHistoryCard.summaryEl, {}, content);
+    is(
+      firstHistoryCard.detailsEl.hasAttribute("open"),
+      false,
+      "The first history card is now collapsed."
+    );
+
+    // Switch to a new view and then back to History
+    await navigateToCategoryAndWait(document, "syncedtabs");
+    await navigateToCategoryAndWait(document, "history");
+
+    // Check that first history card is still collapsed after changing view
+    ok(
+      !firstHistoryCard.isExpanded,
+      "The first history card is still collapsed after changing view."
+    );
+
+    await PlacesUtils.history.clear();
+    gBrowser.removeTab(gBrowser.selectedTab);
+  });
+});
