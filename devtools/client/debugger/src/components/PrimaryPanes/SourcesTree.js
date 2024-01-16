@@ -5,7 +5,7 @@
 // Dependencies
 import React, { Component, Fragment } from "react";
 import { div, button, span, footer } from "react-dom-factories";
-import PropTypes from "prop-types";
+import PropTypes from "devtools/client/shared/vendor/react-prop-types";
 import { connect } from "../../utils/connect";
 
 // Selectors

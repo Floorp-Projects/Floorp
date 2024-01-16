@@ -4,7 +4,7 @@
 
 import { connect } from "../../utils/connect";
 import { Component } from "react";
-import PropTypes from "prop-types";
+import PropTypes from "devtools/client/shared/vendor/react-prop-types";
 import { getSelectedSource, getSelectedBreakableLines } from "../../selectors";
 import { fromEditorLine } from "../../utils/editor";
 import { isWasm } from "../../utils/wasm";

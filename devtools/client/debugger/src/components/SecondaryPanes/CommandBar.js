@@ -4,7 +4,7 @@
 
 import React, { Component } from "react";
 import { div, button } from "react-dom-factories";
-import PropTypes from "prop-types";
+import PropTypes from "devtools/client/shared/vendor/react-prop-types";
 
 import { connect } from "../../utils/connect";
 import { features, prefs } from "../../utils/prefs";
