@@ -7,6 +7,7 @@
  */
 
 #include <stddef.h>
+#include <limits.h>
 
 #include "seccomon.h"
 #include "secmod.h"
@@ -1847,6 +1848,32 @@ pk11_ConcatenateBaseAndKey(PK11SymKey *base,
                        &param, target, operation, keySize);
 }
 
+PK11SymKey *
+PK11_ConcatSymKeys(PK11SymKey *left, PK11SymKey *right, CK_MECHANISM_TYPE target, CK_ATTRIBUTE_TYPE operation)
+{
+    PK11SymKey *out = NULL;
+    PK11SymKey *copyOfLeft = NULL;
+    PK11SymKey *copyOfRight = NULL;
+
+    if ((left == NULL) || (right == NULL)) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return NULL;
+    }
+
+    SECStatus rv = PK11_SymKeysToSameSlot(target, operation, operation,
+                                          left, right,
+                                          &copyOfLeft, &copyOfRight);
+    if (rv != SECSuccess) {
+        /* error code already set */
+        return NULL;
+    }
+
+    out = pk11_ConcatenateBaseAndKey(copyOfLeft ? copyOfLeft : left, copyOfRight ? copyOfRight : right, target, operation, 0);
+    PK11_FreeSymKey(copyOfLeft);
+    PK11_FreeSymKey(copyOfRight);
+    return out;
+}
+
 /* Create a new key whose value is the hash of tobehashed.
  * type is the mechanism for the derived key.
  */
@@ -2104,6 +2131,7 @@ PK11_PubDerive(SECKEYPrivateKey *privKey, SECKEYPublicKey *pubKey,
         case rsaKey:
         case rsaPssKey:
         case rsaOaepKey:
+        case kyberKey:
         case nullKey:
             PORT_SetError(SEC_ERROR_BAD_KEY);
             break;
@@ -3044,4 +3072,226 @@ CK_OBJECT_HANDLE
 PK11_GetSymKeyHandle(PK11SymKey *symKey)
 {
     return symKey->objectID;
+}
+
+static CK_ULONG
+pk11_KyberCiphertextLength(SECKEYKyberPublicKey *pubKey)
+{
+    switch (pubKey->params) {
+        case params_kyber768_round3:
+        case params_kyber768_round3_test_mode:
+            return KYBER768_CIPHERTEXT_BYTES;
+        default:
+            // unreachable
+            return 0;
+    }
+}
+
+static CK_ULONG
+pk11_KEMCiphertextLength(SECKEYPublicKey *pubKey)
+{
+    switch (pubKey->keyType) {
+        case kyberKey:
+            return pk11_KyberCiphertextLength(&pubKey->u.kyber);
+        default:
+            // unreachable
+            PORT_Assert(0);
+            return 0;
+    }
+}
+
+SECStatus
+PK11_Encapsulate(SECKEYPublicKey *pubKey, CK_MECHANISM_TYPE target, PK11AttrFlags attrFlags, CK_FLAGS opFlags, PK11SymKey **outKey, SECItem **outCiphertext)
+{
+    PORT_Assert(pubKey);
+    PORT_Assert(outKey);
+    PORT_Assert(outCiphertext);
+
+    PK11SlotInfo *slot = pubKey->pkcs11Slot;
+
+    PK11SymKey *sharedSecret = NULL;
+    SECItem *ciphertext = NULL;
+
+    CK_ATTRIBUTE keyTemplate[MAX_TEMPL_ATTRS];
+    unsigned int templateCount;
+
+    CK_ATTRIBUTE *attrs;
+    CK_BBOOL cktrue = CK_TRUE;
+    CK_BBOOL ckfalse = CK_FALSE;
+    CK_OBJECT_CLASS keyClass = CKO_SECRET_KEY;
+    CK_KEY_TYPE keyType = CKK_GENERIC_SECRET;
+
+    CK_INTERFACE_PTR KEMInterface = NULL;
+    CK_UTF8CHAR_PTR KEMInterfaceName = (CK_UTF8CHAR_PTR) "Vendor NSS KEM Interface";
+    CK_VERSION KEMInterfaceVersion = { 1, 0 };
+    CK_NSS_KEM_FUNCTIONS *KEMInterfaceFunctions = NULL;
+
+    CK_RV crv;
+
+    *outKey = NULL;
+    *outCiphertext = NULL;
+
+    CK_MECHANISM_TYPE kemType;
+    switch (pubKey->keyType) {
+        case kyberKey:
+            kemType = CKM_NSS_KYBER;
+            break;
+        default:
+            PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+            return SECFailure;
+    }
+
+    CK_NSS_KEM_PARAMETER_SET_TYPE kemParameterSet = PK11_ReadULongAttribute(slot, pubKey->pkcs11ID, CKA_NSS_PARAMETER_SET);
+    CK_MECHANISM mech = { kemType, &kemParameterSet, sizeof(kemParameterSet) };
+
+    sharedSecret = pk11_CreateSymKey(slot, target, PR_TRUE, PR_TRUE, NULL);
+    if (sharedSecret == NULL) {
+        PORT_SetError(SEC_ERROR_NO_MEMORY);
+        return SECFailure;
+    }
+    sharedSecret->origin = PK11_OriginGenerated;
+
+    attrs = keyTemplate;
+    PK11_SETATTRS(attrs, CKA_CLASS, &keyClass, sizeof(keyClass));
+    attrs++;
+
+    PK11_SETATTRS(attrs, CKA_KEY_TYPE, &keyType, sizeof(keyType));
+    attrs++;
+
+    attrs += pk11_AttrFlagsToAttributes(attrFlags, attrs, &cktrue, &ckfalse);
+    attrs += pk11_OpFlagsToAttributes(opFlags, attrs, &cktrue);
+
+    templateCount = attrs - keyTemplate;
+    PR_ASSERT(templateCount <= sizeof(keyTemplate) / sizeof(CK_ATTRIBUTE));
+
+    crv = PK11_GETTAB(slot)->C_GetInterface(KEMInterfaceName, &KEMInterfaceVersion, &KEMInterface, 0);
+    if (crv != CKR_OK) {
+        goto error;
+    }
+    KEMInterfaceFunctions = (CK_NSS_KEM_FUNCTIONS *)(KEMInterface->pFunctionList);
+
+    CK_ULONG ciphertextLen = pk11_KEMCiphertextLength(pubKey);
+    ciphertext = SECITEM_AllocItem(NULL, NULL, ciphertextLen);
+    if (ciphertext == NULL) {
+        crv = CKR_HOST_MEMORY;
+        goto error;
+    }
+
+    pk11_EnterKeyMonitor(sharedSecret);
+    crv = KEMInterfaceFunctions->C_Encapsulate(sharedSecret->session,
+                                               &mech,
+                                               pubKey->pkcs11ID,
+                                               keyTemplate,
+                                               templateCount,
+                                               &sharedSecret->objectID,
+                                               ciphertext->data,
+                                               &ciphertextLen);
+    pk11_ExitKeyMonitor(sharedSecret);
+    if (crv != CKR_OK) {
+        goto error;
+    }
+
+    PORT_Assert(ciphertextLen == ciphertext->len);
+
+    *outKey = sharedSecret;
+    *outCiphertext = ciphertext;
+
+    return SECSuccess;
+
+error:
+    PORT_SetError(PK11_MapError(crv));
+    PK11_FreeSymKey(sharedSecret);
+    SECITEM_FreeItem(ciphertext, PR_TRUE);
+    return SECFailure;
+}
+
+SECStatus
+PK11_Decapsulate(SECKEYPrivateKey *privKey, const SECItem *ciphertext, CK_MECHANISM_TYPE target, PK11AttrFlags attrFlags, CK_FLAGS opFlags, PK11SymKey **outKey)
+{
+    PORT_Assert(privKey);
+    PORT_Assert(ciphertext);
+    PORT_Assert(outKey);
+
+    PK11SlotInfo *slot = privKey->pkcs11Slot;
+
+    PK11SymKey *sharedSecret;
+
+    CK_ATTRIBUTE keyTemplate[MAX_TEMPL_ATTRS];
+    unsigned int templateCount;
+
+    CK_ATTRIBUTE *attrs;
+    CK_BBOOL cktrue = CK_TRUE;
+    CK_BBOOL ckfalse = CK_FALSE;
+    CK_OBJECT_CLASS keyClass = CKO_SECRET_KEY;
+    CK_KEY_TYPE keyType = CKK_GENERIC_SECRET;
+
+    CK_INTERFACE_PTR KEMInterface = NULL;
+    CK_UTF8CHAR_PTR KEMInterfaceName = (CK_UTF8CHAR_PTR) "Vendor NSS KEM Interface";
+    CK_VERSION KEMInterfaceVersion = { 1, 0 };
+    CK_NSS_KEM_FUNCTIONS *KEMInterfaceFunctions = NULL;
+
+    CK_RV crv;
+
+    *outKey = NULL;
+
+    CK_MECHANISM_TYPE kemType;
+    switch (privKey->keyType) {
+        case kyberKey:
+            kemType = CKM_NSS_KYBER;
+            break;
+        default:
+            PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+            return SECFailure;
+    }
+
+    CK_NSS_KEM_PARAMETER_SET_TYPE kemParameterSet = PK11_ReadULongAttribute(slot, privKey->pkcs11ID, CKA_NSS_PARAMETER_SET);
+    CK_MECHANISM mech = { kemType, &kemParameterSet, sizeof(kemParameterSet) };
+
+    sharedSecret = pk11_CreateSymKey(slot, target, PR_TRUE, PR_TRUE, NULL);
+    if (sharedSecret == NULL) {
+        PORT_SetError(SEC_ERROR_NO_MEMORY);
+        return SECFailure;
+    }
+    sharedSecret->origin = PK11_OriginUnwrap;
+
+    attrs = keyTemplate;
+    PK11_SETATTRS(attrs, CKA_CLASS, &keyClass, sizeof(keyClass));
+    attrs++;
+
+    PK11_SETATTRS(attrs, CKA_KEY_TYPE, &keyType, sizeof(keyType));
+    attrs++;
+
+    attrs += pk11_AttrFlagsToAttributes(attrFlags, attrs, &cktrue, &ckfalse);
+    attrs += pk11_OpFlagsToAttributes(opFlags, attrs, &cktrue);
+
+    templateCount = attrs - keyTemplate;
+    PR_ASSERT(templateCount <= sizeof(keyTemplate) / sizeof(CK_ATTRIBUTE));
+
+    crv = PK11_GETTAB(slot)->C_GetInterface(KEMInterfaceName, &KEMInterfaceVersion, &KEMInterface, 0);
+    if (crv != CKR_OK) {
+        PORT_SetError(PK11_MapError(crv));
+        goto error;
+    }
+    KEMInterfaceFunctions = (CK_NSS_KEM_FUNCTIONS *)(KEMInterface->pFunctionList);
+
+    pk11_EnterKeyMonitor(sharedSecret);
+    crv = KEMInterfaceFunctions->C_Decapsulate(sharedSecret->session,
+                                               &mech,
+                                               privKey->pkcs11ID,
+                                               ciphertext->data,
+                                               ciphertext->len,
+                                               keyTemplate,
+                                               templateCount,
+                                               &sharedSecret->objectID);
+    pk11_ExitKeyMonitor(sharedSecret);
+    if (crv != CKR_OK) {
+        goto error;
+    }
+
+    *outKey = sharedSecret;
+    return SECSuccess;
+
+error:
+    PK11_FreeSymKey(sharedSecret);
+    return SECFailure;
 }

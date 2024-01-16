@@ -8,8 +8,9 @@ MODULE = nss
 
 # we'll need to figure out how to get these symbols linked
 # in before we include these tests:
-#     mpi_unittest.cc 
+#     mpi_unittest.cc
 #     ghash_unittest.cc
+#     kyber_unittest.cc
 CPPSRCS = \
         dh_unittest.cc \
         ecl_unittest.cc \

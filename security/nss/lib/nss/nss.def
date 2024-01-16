@@ -236,6 +236,9 @@ VFY_CreateContext;
 VFY_DestroyContext;
 VFY_End;
 VFY_Update;
+PK11_Encapsulate;
+PK11_Decapsulate;
+PK11_ConcatSymKeys;
 ;+#
 ;+# The following symbols are exported only to make libsmime3.so work. 
 ;+# These are still private!!!

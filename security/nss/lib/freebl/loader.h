@@ -10,7 +10,7 @@
 
 #include "blapi.h"
 
-#define FREEBL_VERSION 0x0326
+#define FREEBL_VERSION 0x0327
 
 struct FREEBLVectorStr {
 
@@ -338,8 +338,8 @@ struct FREEBLVectorStr {
     /* Version 3.006 came to here */
 
     /* no modification to FREEBLVectorStr itself
-   * but ECParamStr was modified
-   */
+     * but ECParamStr was modified
+     */
 
     /* Version 3.007 came to here */
 
@@ -910,6 +910,14 @@ struct FREEBLVectorStr {
 
     /* Version 3.026 came to here */
 
+    SECStatus (*p_Kyber_NewKey)(KyberParams params, const SECItem *seed, SECItem *privKey, SECItem *pubKey);
+
+    SECStatus (*p_Kyber_Encapsulate)(KyberParams params, const SECItem *seed, const SECItem *pubKey, SECItem *ciphertext, SECItem *secret);
+
+    SECStatus (*p_Kyber_Decapsulate)(KyberParams params, const SECItem *privKey, const SECItem *ciphertext, SECItem *secret);
+
+    /* Version 3.027 came to here */
+
     /* Add new function pointers at the end of this struct and bump
      * FREEBL_VERSION at the beginning of this file. */
 };
@@ -1012,3 +1020,9 @@ typedef SECStatus (*F_RC2_InitContext)(RC2Context *cx,
 
 typedef RC2Context *(*F_RC2_AllocateContext)(void);
 #endif
+
+typedef SECStatus (*F_Kyber_NewKey)(KyberParams params, const SECItem *seed, SECItem *privKey, SECItem *pubKey);
+
+typedef SECStatus (*F_Kyber_Encapsulate)(KyberParams params, const SECItem *seed, const SECItem *pubKey, SECItem *ciphertext, SECItem *secret);
+
+typedef SECStatus (*F_Kyber_Decapsulate)(KyberParams params, const SECItem *privKey, const SECItem *ciphertext, SECItem *secret);

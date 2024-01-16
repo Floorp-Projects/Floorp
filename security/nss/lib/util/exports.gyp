@@ -16,6 +16,7 @@
             'ciferfam.h',
             'eccutil.h',
             'hasht.h',
+            'kyber.h',
             'nssb64.h',
             'nssb64t.h',
             'nssilckt.h',

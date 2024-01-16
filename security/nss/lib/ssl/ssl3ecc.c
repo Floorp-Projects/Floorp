@@ -862,6 +862,7 @@ ssl_SendSupportedGroupsXtn(const sslSocket *ss, TLSExtensionData *xtnData,
 {
     unsigned int i;
     PRBool ec;
+    PRBool ec_hybrid = PR_FALSE;
     PRBool ff = PR_FALSE;
     PRBool found = PR_FALSE;
     SECStatus rv;
@@ -878,7 +879,7 @@ ssl_SendSupportedGroupsXtn(const sslSocket *ss, TLSExtensionData *xtnData,
             return SECSuccess;
         }
     } else {
-        ec = ff = PR_TRUE;
+        ec = ec_hybrid = ff = PR_TRUE;
     }
 
     /* Mark the location of the length. */
@@ -893,6 +894,9 @@ ssl_SendSupportedGroupsXtn(const sslSocket *ss, TLSExtensionData *xtnData,
             continue;
         }
         if (group->keaType == ssl_kea_ecdh && !ec) {
+            continue;
+        }
+        if (group->keaType == ssl_kea_ecdh_hybrid && !ec_hybrid) {
             continue;
         }
         if (group->keaType == ssl_kea_dh && !ff) {

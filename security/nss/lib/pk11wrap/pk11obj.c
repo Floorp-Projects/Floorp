@@ -134,7 +134,7 @@ PK11_ReadAttribute(PK11SlotInfo *slot, CK_OBJECT_HANDLE id,
 }
 
 /*
- * Read in a single attribute into As a Ulong.
+ * Read in a single attribute into a Ulong.
  */
 CK_ULONG
 PK11_ReadULongAttribute(PK11SlotInfo *slot, CK_OBJECT_HANDLE id,

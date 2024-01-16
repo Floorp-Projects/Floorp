@@ -490,16 +490,19 @@ void TlsAgent::DisableAllCiphers() {
   }
 }
 
-// Not actually all groups, just the onece that we are actually willing
+// Not actually all groups, just the ones that we are actually willing
 // to use.
 const std::vector<SSLNamedGroup> kAllDHEGroups = {
-    ssl_grp_ec_curve25519, ssl_grp_ec_secp256r1, ssl_grp_ec_secp384r1,
-    ssl_grp_ec_secp521r1,  ssl_grp_ffdhe_2048,   ssl_grp_ffdhe_3072,
-    ssl_grp_ffdhe_4096,    ssl_grp_ffdhe_6144,   ssl_grp_ffdhe_8192};
+    ssl_grp_ec_curve25519,   ssl_grp_ec_secp256r1, ssl_grp_ec_secp384r1,
+    ssl_grp_ec_secp521r1,    ssl_grp_ffdhe_2048,   ssl_grp_ffdhe_3072,
+    ssl_grp_ffdhe_4096,      ssl_grp_ffdhe_6144,   ssl_grp_ffdhe_8192,
+    ssl_grp_kem_xyber768d00,
+};
 
 const std::vector<SSLNamedGroup> kECDHEGroups = {
-    ssl_grp_ec_curve25519, ssl_grp_ec_secp256r1, ssl_grp_ec_secp384r1,
-    ssl_grp_ec_secp521r1};
+    ssl_grp_ec_curve25519, ssl_grp_ec_secp256r1,    ssl_grp_ec_secp384r1,
+    ssl_grp_ec_secp521r1,  ssl_grp_kem_xyber768d00,
+};
 
 const std::vector<SSLNamedGroup> kFFDHEGroups = {
     ssl_grp_ffdhe_2048, ssl_grp_ffdhe_3072, ssl_grp_ffdhe_4096,
@@ -508,7 +511,12 @@ const std::vector<SSLNamedGroup> kFFDHEGroups = {
 // Defined because the big DHE groups are ridiculously slow.
 const std::vector<SSLNamedGroup> kFasterDHEGroups = {
     ssl_grp_ec_curve25519, ssl_grp_ec_secp256r1, ssl_grp_ec_secp384r1,
-    ssl_grp_ffdhe_2048, ssl_grp_ffdhe_3072};
+    ssl_grp_ffdhe_2048,    ssl_grp_ffdhe_3072,   ssl_grp_kem_xyber768d00,
+};
+
+const std::vector<SSLNamedGroup> kEcdhHybridGroups = {
+    ssl_grp_kem_xyber768d00,
+};
 
 void TlsAgent::EnableCiphersByKeyExchange(SSLKEAType kea) {
   EXPECT_TRUE(EnsureTlsSetup());
@@ -535,6 +543,9 @@ void TlsAgent::EnableGroupsByKeyExchange(SSLKEAType kea) {
       break;
     case ssl_kea_ecdh:
       ConfigNamedGroups(kECDHEGroups);
+      break;
+    case ssl_kea_ecdh_hybrid:
+      ConfigNamedGroups(kEcdhHybridGroups);
       break;
     default:
       break;
@@ -672,6 +683,7 @@ void TlsAgent::CheckKEA(SSLKEAType kea, SSLNamedGroup kea_group,
   if (kea_size == 0) {
     switch (kea_group) {
       case ssl_grp_ec_curve25519:
+      case ssl_grp_kem_xyber768d00:
         kea_size = 255;
         break;
       case ssl_grp_ec_secp256r1:

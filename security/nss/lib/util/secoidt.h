@@ -512,6 +512,8 @@ typedef enum {
     SEC_OID_HMAC_SHA3_384 = 370,
     SEC_OID_HMAC_SHA3_512 = 371,
 
+    SEC_OID_XYBER768D00 = 372,
+
     SEC_OID_TOTAL
 } SECOidTag;
 

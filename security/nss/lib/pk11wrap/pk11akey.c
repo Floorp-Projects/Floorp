@@ -44,6 +44,9 @@ pk11_MakeIDFromPublicKey(SECKEYPublicKey *pubKey)
         case ecKey:
             pubKeyIndex = &pubKey->u.ec.publicValue;
             break;
+        case kyberKey:
+            pubKeyIndex = &pubKey->u.kyber.publicValue;
+            break;
         default:
             return NULL;
     }
@@ -73,6 +76,7 @@ PK11_ImportPublicKey(PK11SlotInfo *slot, SECKEYPublicKey *pubKey,
     CK_ATTRIBUTE theTemplate[11];
     CK_ATTRIBUTE *signedattr = NULL;
     CK_ATTRIBUTE *attrs = theTemplate;
+    CK_NSS_KEM_PARAMETER_SET_TYPE kemParams;
     SECItem *ckaId = NULL;
     SECItem *pubValue = NULL;
     int signedcount = 0;
@@ -216,6 +220,25 @@ PK11_ImportPublicKey(PK11SlotInfo *slot, SECKEYPublicKey *pubKey,
                     attrs++;
                 }
                 break;
+            case kyberKey:
+                keyType = CKK_NSS_KYBER;
+                switch (pubKey->u.kyber.params) {
+                    case params_kyber768_round3:
+                    case params_kyber768_round3_test_mode:
+                        kemParams = CKP_NSS_KYBER_768_ROUND3;
+                        break;
+                    default:
+                        kemParams = CKP_INVALID_ID;
+                        break;
+                }
+                PK11_SETATTRS(attrs, CKA_NSS_PARAMETER_SET,
+                              &kemParams,
+                              sizeof(CK_NSS_KEM_PARAMETER_SET_TYPE));
+                attrs++;
+                PK11_SETATTRS(attrs, CKA_VALUE, pubKey->u.kyber.publicValue.data,
+                              pubKey->u.kyber.publicValue.len);
+                attrs++;
+                break;
             default:
                 if (ckaId) {
                     SECITEM_FreeItem(ckaId, PR_TRUE);
@@ -225,7 +248,7 @@ PK11_ImportPublicKey(PK11SlotInfo *slot, SECKEYPublicKey *pubKey,
         }
         templateCount = attrs - theTemplate;
         PORT_Assert(templateCount <= (sizeof(theTemplate) / sizeof(CK_ATTRIBUTE)));
-        if (pubKey->keyType != ecKey) {
+        if (pubKey->keyType != ecKey && pubKey->keyType != kyberKey) {
             PORT_Assert(signedattr);
             signedcount = attrs - signedattr;
             for (attrs = signedattr; signedcount; attrs++, signedcount--) {
@@ -597,7 +620,7 @@ PK11_ExtractPublicKey(PK11SlotInfo *slot, KeyType keyType, CK_OBJECT_HANDLE id)
     CK_ATTRIBUTE template[8];
     CK_ATTRIBUTE *attrs = template;
     CK_ATTRIBUTE *modulus, *exponent, *base, *prime, *subprime, *value;
-    CK_ATTRIBUTE *ecparams;
+    CK_ATTRIBUTE *ecparams, *kemParams;
 
     /* if we didn't know the key type, get it */
     if (keyType == nullKey) {
@@ -618,6 +641,9 @@ PK11_ExtractPublicKey(PK11SlotInfo *slot, KeyType keyType, CK_OBJECT_HANDLE id)
                 break;
             case CKK_EC:
                 keyType = ecKey;
+                break;
+            case CKK_NSS_KYBER:
+                keyType = kyberKey;
                 break;
             default:
                 PORT_SetError(SEC_ERROR_BAD_KEY);
@@ -773,6 +799,40 @@ PK11_ExtractPublicKey(PK11SlotInfo *slot, KeyType keyType, CK_OBJECT_HANDLE id)
                                            &pubKey->u.ec.DEREncodedParams, value,
                                            &pubKey->u.ec.publicValue);
             break;
+        case kyberKey:
+            value = attrs;
+            PK11_SETATTRS(attrs, CKA_VALUE, NULL, 0);
+            attrs++;
+            kemParams = attrs;
+            PK11_SETATTRS(attrs, CKA_NSS_PARAMETER_SET, NULL, 0);
+            attrs++;
+            templateCount = attrs - template;
+            PR_ASSERT(templateCount <= sizeof(template) / sizeof(CK_ATTRIBUTE));
+
+            crv = PK11_GetAttributes(arena, slot, id, template, templateCount);
+            if (crv != CKR_OK)
+                break;
+
+            if ((keyClass != CKO_PUBLIC_KEY) || (pk11KeyType != CKK_NSS_KYBER)) {
+                crv = CKR_OBJECT_HANDLE_INVALID;
+                break;
+            }
+
+            if (kemParams->ulValueLen != sizeof(CK_NSS_KEM_PARAMETER_SET_TYPE)) {
+                crv = CKR_OBJECT_HANDLE_INVALID;
+                break;
+            }
+            CK_NSS_KEM_PARAMETER_SET_TYPE *pPK11Params = kemParams->pValue;
+            switch (*pPK11Params) {
+                case CKP_NSS_KYBER_768_ROUND3:
+                    pubKey->u.kyber.params = params_kyber768_round3;
+                    break;
+                default:
+                    pubKey->u.kyber.params = params_kyber_invalid;
+                    break;
+            }
+            crv = pk11_Attr2SecItem(arena, value, &pubKey->u.kyber.publicValue);
+            break;
         case fortezzaKey:
         case nullKey:
         default:
@@ -825,6 +885,9 @@ PK11_MakePrivKey(PK11SlotInfo *slot, KeyType keyType,
                 break;
             case CKK_EC:
                 keyType = ecKey;
+                break;
+            case CKK_NSS_KYBER:
+                keyType = kyberKey;
                 break;
             default:
                 break;
@@ -1209,6 +1272,17 @@ PK11_GenerateKeyPairWithOpFlags(PK11SlotInfo *slot, CK_MECHANISM_TYPE type,
     };
     SECKEYECParams *ecParams;
 
+    CK_ATTRIBUTE kyberPubTemplate[] = {
+        { CKA_NSS_PARAMETER_SET, NULL, 0 },
+        { CKA_TOKEN, NULL, 0 },
+        { CKA_DERIVE, NULL, 0 },
+        { CKA_WRAP, NULL, 0 },
+        { CKA_VERIFY, NULL, 0 },
+        { CKA_VERIFY_RECOVER, NULL, 0 },
+        { CKA_ENCRYPT, NULL, 0 },
+        { CKA_MODIFIABLE, NULL, 0 },
+    };
+
     /*CK_ULONG key_size = 0;*/
     CK_ATTRIBUTE *pubTemplate;
     int privCount = 0;
@@ -1216,6 +1290,7 @@ PK11_GenerateKeyPairWithOpFlags(PK11SlotInfo *slot, CK_MECHANISM_TYPE type,
     PK11RSAGenParams *rsaParams;
     SECKEYPQGParams *dsaParams;
     SECKEYDHParams *dhParams;
+    CK_NSS_KEM_PARAMETER_SET_TYPE *kemParams;
     CK_MECHANISM mechanism;
     CK_MECHANISM test_mech;
     CK_MECHANISM test_mech2;
@@ -1412,6 +1487,17 @@ PK11_GenerateKeyPairWithOpFlags(PK11SlotInfo *slot, CK_MECHANISM_TYPE type,
                 test_mech.mechanism = CKM_ECDH1_DERIVE;
                 test_mech2.mechanism = CKM_ECDSA;
             }
+            break;
+        case CKM_NSS_KYBER_KEY_PAIR_GEN:
+            kemParams = (CK_NSS_KEM_PARAMETER_SET_TYPE *)param;
+            attrs = kyberPubTemplate;
+            PK11_SETATTRS(attrs, CKA_NSS_PARAMETER_SET,
+                          kemParams,
+                          sizeof(CK_NSS_KEM_PARAMETER_SET_TYPE));
+            attrs++;
+            pubTemplate = kyberPubTemplate;
+            keyType = kyberKey;
+            test_mech.mechanism = CKM_NSS_KYBER;
             break;
         default:
             PORT_SetError(SEC_ERROR_BAD_KEY);

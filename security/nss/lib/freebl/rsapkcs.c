@@ -1234,15 +1234,15 @@ loser:
  * emBits from the RFC is just modBits - 1, see section 8.1.1.
  * We only support MGF1 as the MGF.
  */
-static SECStatus
-emsa_pss_encode(unsigned char *em,
-                unsigned int emLen,
-                unsigned int emBits,
-                const unsigned char *mHash,
-                HASH_HashType hashAlg,
-                HASH_HashType maskHashAlg,
-                const unsigned char *salt,
-                unsigned int saltLen)
+SECStatus
+RSA_EMSAEncodePSS(unsigned char *em,
+                  unsigned int emLen,
+                  unsigned int emBits,
+                  const unsigned char *mHash,
+                  HASH_HashType hashAlg,
+                  HASH_HashType maskHashAlg,
+                  const unsigned char *salt,
+                  unsigned int saltLen)
 {
     const SECHashObject *hash;
     void *hash_context;
@@ -1458,8 +1458,8 @@ RSA_SignPSS(RSAPrivateKey *key,
         emLen--;
         em++;
     }
-    rv = emsa_pss_encode(em, emLen, modulusBits - 1, input, hashAlg,
-                         maskHashAlg, salt, saltLength);
+    rv = RSA_EMSAEncodePSS(em, emLen, modulusBits - 1, input, hashAlg,
+                           maskHashAlg, salt, saltLength);
     if (rv != SECSuccess)
         goto done;
 

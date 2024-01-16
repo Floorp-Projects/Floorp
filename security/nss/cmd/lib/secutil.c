@@ -4206,6 +4206,11 @@ groupNameToNamedGroup(char *name)
             return ssl_grp_ffdhe_8192;
         }
     }
+    if (PL_strlen(name) == 11) {
+        if (!strncmp(name, "xyber768d00", 11)) {
+            return ssl_grp_kem_xyber768d00;
+        }
+    }
 
     return ssl_grp_none;
 }

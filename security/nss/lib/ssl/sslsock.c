@@ -167,6 +167,7 @@ const sslNamedGroupDef ssl_named_groups[] = {
     ECGROUP(secp256r1, 256, SECP256R1, PR_TRUE),
     ECGROUP(secp384r1, 384, SECP384R1, PR_TRUE),
     ECGROUP(secp521r1, 521, SECP521R1, PR_TRUE),
+    { ssl_grp_kem_xyber768d00, 256, ssl_kea_ecdh_hybrid, SEC_OID_XYBER768D00, PR_TRUE },
     FFGROUP(2048),
     FFGROUP(3072),
     FFGROUP(4096),
@@ -4096,6 +4097,8 @@ ssl_NewEphemeralKeyPair(const sslNamedGroupDef *group,
     PR_INIT_CLIST(&pair->link);
     pair->group = group;
     pair->keys = keys;
+    pair->kemKeys = NULL;
+    pair->kemCt = NULL;
 
     return pair;
 }
@@ -4110,9 +4113,19 @@ ssl_CopyEphemeralKeyPair(sslEphemeralKeyPair *keyPair)
         return NULL; /* error already set */
     }
 
+    pair->kemCt = NULL;
+    if (keyPair->kemCt) {
+        pair->kemCt = SECITEM_DupItem(keyPair->kemCt);
+        if (!pair->kemCt) {
+            PORT_Free(pair);
+            return NULL;
+        }
+    }
+
     PR_INIT_CLIST(&pair->link);
     pair->group = keyPair->group;
     pair->keys = ssl_GetKeyPairRef(keyPair->keys);
+    pair->kemKeys = keyPair->kemKeys ? ssl_GetKeyPairRef(keyPair->kemKeys) : NULL;
 
     return pair;
 }
@@ -4125,6 +4138,8 @@ ssl_FreeEphemeralKeyPair(sslEphemeralKeyPair *keyPair)
     }
 
     ssl_FreeKeyPair(keyPair->keys);
+    ssl_FreeKeyPair(keyPair->kemKeys);
+    SECITEM_FreeItem(keyPair->kemCt, PR_TRUE);
     PR_REMOVE_LINK(&keyPair->link);
     PORT_Free(keyPair);
 }

@@ -375,6 +375,8 @@ static const CK_MECHANISM_TYPE kea_alg_defs[] = {
     CKM_ECDH1_DERIVE,      /* ssl_kea_ecdh_psk */
     CKM_DH_PKCS_DERIVE,    /* ssl_kea_dh_psk */
     CKM_INVALID_MECHANISM, /* ssl_kea_tls13_any */
+    CKM_INVALID_MECHANISM, /* ssl_kea_ecdh_hybrid */
+    CKM_INVALID_MECHANISM, /* ssl_kea_ecdh_hybrid_psk */
 };
 PR_STATIC_ASSERT(PR_ARRAY_SIZE(kea_alg_defs) == ssl_kea_size);
 
@@ -732,6 +734,13 @@ ssl_KEAEnabled(const sslSocket *ss, SSLKEAType keaType)
         case ssl_kea_ecdh:
         case ssl_kea_ecdh_psk:
             return ssl_NamedGroupTypeEnabled(ss, ssl_kea_ecdh);
+
+        case ssl_kea_ecdh_hybrid:
+        case ssl_kea_ecdh_hybrid_psk:
+            if (ss->version < SSL_LIBRARY_VERSION_TLS_1_3) {
+                return PR_FALSE;
+            }
+            return ssl_NamedGroupTypeEnabled(ss, ssl_kea_ecdh_hybrid);
 
         case ssl_kea_tls13_any:
             return PR_TRUE;
@@ -3467,7 +3476,8 @@ ssl3_ComputeMasterSecretInt(sslSocket *ss, PK11SymKey *pms,
      * data into a 48-byte value, and does not expect to return the version.
      */
     PRBool isDH = (PRBool)((ss->ssl3.hs.kea_def->exchKeyType == ssl_kea_dh) ||
-                           (ss->ssl3.hs.kea_def->exchKeyType == ssl_kea_ecdh));
+                           (ss->ssl3.hs.kea_def->exchKeyType == ssl_kea_ecdh) ||
+                           (ss->ssl3.hs.kea_def->exchKeyType == ssl_kea_ecdh_hybrid));
     CK_MECHANISM_TYPE master_derive;
     CK_MECHANISM_TYPE key_derive;
     SECItem params;
@@ -3545,7 +3555,8 @@ tls_ComputeExtendedMasterSecretInt(sslSocket *ss, PK11SymKey *pms,
      * TODO(ekr@rtfm.com): Verify that the slot can handle this key expansion
      * mode. Bug 1198298 */
     PRBool isDH = (PRBool)((ss->ssl3.hs.kea_def->exchKeyType == ssl_kea_dh) ||
-                           (ss->ssl3.hs.kea_def->exchKeyType == ssl_kea_ecdh));
+                           (ss->ssl3.hs.kea_def->exchKeyType == ssl_kea_ecdh) ||
+                           (ss->ssl3.hs.kea_def->exchKeyType == ssl_kea_ecdh_hybrid));
     CK_MECHANISM_TYPE master_derive;
     CK_MECHANISM_TYPE key_derive;
     SECItem params;

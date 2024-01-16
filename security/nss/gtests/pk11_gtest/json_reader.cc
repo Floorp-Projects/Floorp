@@ -84,6 +84,30 @@ SECOidTag JsonReader::ReadHash() {
   return SEC_OID_UNKNOWN;
 }
 
+SECStatus JsonReader::ReadSECStatus() {
+  std::string s = ReadString();
+  if (s == "SECSuccess") {
+    return SECSuccess;
+  } else if (s == "SECFailure") {
+    return SECFailure;
+  } else if (s == "SECWouldBlock") {
+    return SECWouldBlock;
+  }
+  ADD_FAILURE() << "unknown SECStatus";
+  return SECFailure;
+}
+
+bool JsonReader::ReadBool() {
+  std::string s = ReadString();
+  if (s == "true") {
+    return true;
+  } else if (s == "false") {
+    return false;
+  }
+  ADD_FAILURE() << "not a bool";
+  return false;
+}
+
 bool JsonReader::NextItem(uint8_t h, uint8_t t) {
   SkipWhitespace();
   switch (uint8_t c = take()) {

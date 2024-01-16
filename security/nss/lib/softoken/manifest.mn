@@ -38,6 +38,7 @@ CSRCS = \
 	fipstest.c \
 	fipstokn.c \
 	kbkdf.c    \
+	kem.c      \
 	lowkey.c   \
 	lowpbe.c   \
 	padbuf.c   \

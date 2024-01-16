@@ -49,6 +49,7 @@
           'fipstokn.c',
           'jpakesftk.c',
           'kbkdf.c',
+          'kem.c',
           'lowkey.c',
           'lowpbe.c',
           'padbuf.c',
@@ -71,7 +72,7 @@
             'sources': [
               'lgglue.c',
             ]
-          }]
+          }],
         ]
       },
     },

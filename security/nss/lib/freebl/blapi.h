@@ -12,6 +12,7 @@
 #include "hasht.h"
 #include "cmac.h"
 #include "alghmac.h"
+#include "kyber.h"
 
 SEC_BEGIN_PROTOS
 
@@ -281,7 +282,7 @@ RSA_CheckSignRecover(RSAPublicKey *key,
 */
 
 /* Generate a new random value within the interval [2, q-1].
-*/
+ */
 extern SECStatus DSA_NewRandom(PLArenaPool *arena, const SECItem *q,
                                SECItem *random);
 
@@ -433,7 +434,7 @@ JPAKE_Verify(PLArenaPool *arena, const PQGParams *pqg,
  * base and x2s will be allocated in the arena. The arena is *not* optional so
  * do not pass NULL for the arena parameter. The arena should be zeroed when it
  * is freed.
-*/
+ */
 SECStatus
 JPAKE_Round2(PLArenaPool *arena, const SECItem *p, const SECItem *q,
              const SECItem *gx1, const SECItem *gx3, const SECItem *gx4,
@@ -1878,7 +1879,7 @@ extern void BL_SetForkState(PRBool forked);
 
 /*
 ** pepare an ECParam structure from DEREncoded params
- */
+*/
 extern SECStatus EC_FillParams(PLArenaPool *arena,
                                const SECItem *encodedParams, ECParams *params);
 extern SECStatus EC_DecodeParams(const SECItem *encodedParams,
@@ -1895,6 +1896,30 @@ extern int EC_GetPointSize(const ECParams *params);
  * use the internal table to get the size in bytes of a single EC coordinate
  */
 extern int EC_GetScalarSize(const ECParams *params);
+
+/* Generate a Kyber key pair with parameters given by |params|. If |seed| is
+ * null this function generates its own randomness internally, otherwise the
+ * key is derived from |seed| using the method defined by |params|. The caller
+ * is responsible for allocating appropriately sized `privKey` and `pubKey`
+ * items.
+ */
+extern SECStatus Kyber_NewKey(KyberParams params, const SECItem *seed, SECItem *privKey, SECItem *pubKey);
+
+/* Encapsulate a random secret to the Kyber public key `pubKey`. If `seed` is
+ * null this function generates its own randomness internally, otherwise the
+ * secret is derived from `seed` using the method defined by `params`. The
+ * caller is responsible for allocating appropriately sized `ciphertext` and
+ * `secret` items. Returns an error if any arguments' length is incompatible
+ * with `params`.
+ */
+extern SECStatus Kyber_Encapsulate(KyberParams params, const SECItem *seed, const SECItem *pubKey, SECItem *ciphertext, SECItem *secret);
+
+/* Decapsulate a secret from a Kyber ciphertext `ciphertext` using the private
+ * key `privKey`. The caller is responsible for allocating an appropriately sized
+ * `secret` item. Returns an error if any arguments' length is incompatible
+ * with `params`.
+ */
+extern SECStatus Kyber_Decapsulate(KyberParams params, const SECItem *privKey, const SECItem *ciphertext, SECItem *secret);
 
 SEC_END_PROTOS
 

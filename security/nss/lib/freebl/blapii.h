@@ -10,6 +10,7 @@
 
 #include "blapit.h"
 #include "mpi.h"
+#include "hasht.h"
 
 /* max block size of supported block ciphers */
 #define MAX_BLOCK_SIZE 16
@@ -81,6 +82,16 @@ SEC_END_PROTOS
 
 SECStatus RSA_Init();
 SECStatus generate_prime(mp_int *prime, int primeLen);
+
+SECStatus
+RSA_EMSAEncodePSS(unsigned char *em,
+                  unsigned int emLen,
+                  unsigned int emBits,
+                  const unsigned char *mHash,
+                  HASH_HashType hashAlg,
+                  HASH_HashType maskHashAlg,
+                  const unsigned char *salt,
+                  unsigned int saltLen);
 
 /* Freebl state. */
 PRBool aesni_support();

@@ -186,9 +186,9 @@ HASH_ResultLen(HASH_HashType type)
     return hash_obj->length;
 }
 
-static SECStatus
-HASH_HashBuf(HASH_HashType type, unsigned char *dest,
-             const unsigned char *src, PRUint32 src_len)
+SECStatus
+PQG_HashBuf(HASH_HashType type, unsigned char *dest,
+            const unsigned char *src, PRUint32 src_len)
 {
     const SECHashObject *hash_obj = HASH_GetRawHashObject(type);
     void *hashcx = NULL;
@@ -385,7 +385,7 @@ addToSeedThenHash(HASH_HashType hashtype,
     if (rv != SECSuccess) {
         return rv;
     }
-    rv = HASH_HashBuf(hashtype, hashOutBuf, str.data, str.len); /* hash result */
+    rv = PQG_HashBuf(hashtype, hashOutBuf, str.data, str.len); /* hash result */
     if (str.data)
         SECITEM_ZfreeItem(&str, PR_FALSE);
     return rv;
@@ -457,7 +457,7 @@ makeQ2fromSeed(
     ** Step 6.
     ** "Compute U = hash[SEED] mod 2**N-1]."
     **/
-    CHECK_SEC_OK(HASH_HashBuf(hashtype, U, seed->data, seed->len));
+    CHECK_SEC_OK(PQG_HashBuf(hashtype, U, seed->data, seed->len));
     /* mod 2**N . Step 7 will explicitly set the top bit to 1, so no need
      * to handle mod 2**N-1 */
     if (hashLen > N_bytes) {
@@ -784,7 +784,7 @@ makePrimefromSeedShaweTaylor(
 
 step_5:
     /* Step 5 c = Hash(prime_seed) xor Hash(prime_seed+1). */
-    CHECK_SEC_OK(HASH_HashBuf(hashtype, x, prime_seed->data, prime_seed->len));
+    CHECK_SEC_OK(PQG_HashBuf(hashtype, x, prime_seed->data, prime_seed->len));
     CHECK_SEC_OK(addToSeedThenHash(hashtype, prime_seed, 1, seedlen, &x[hashlen]));
     for (i = 0; i < hashlen; i++) {
         x[i] = x[i] ^ x[i + hashlen];
