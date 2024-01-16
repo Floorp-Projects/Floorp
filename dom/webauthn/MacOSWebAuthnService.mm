@@ -9,6 +9,7 @@
 #include "MacOSWebAuthnService.h"
 
 #include "CFTypeRefPtr.h"
+#include "WebAuthnAutoFillEntry.h"
 #include "WebAuthnEnumStrings.h"
 #include "WebAuthnResult.h"
 #include "WebAuthnTransportIdentifiers.h"
@@ -242,14 +243,17 @@ class API_AVAILABLE(macos(13.3)) MacOSWebAuthnService final
     uint64_t browsingContextId;
     Maybe<RefPtr<nsIWebAuthnSignArgs>> pendingSignArgs;
     Maybe<RefPtr<nsIWebAuthnSignPromise>> pendingSignPromise;
+    Maybe<nsTArray<RefPtr<nsIWebAuthnAutoFillEntry>>> autoFillEntries;
   };
 
   using TransactionStateMutex = DataMutex<Maybe<TransactionState>>;
-  void DoGetAssertion(const TransactionStateMutex::AutoLock& aGuard);
+  void DoGetAssertion(Maybe<nsTArray<uint8_t>>&& aSelectedCredentialId,
+                      const TransactionStateMutex::AutoLock& aGuard);
 
   TransactionStateMutex mTransactionState;
 
   // Main thread only:
+  ASAuthorizationWebBrowserPublicKeyCredentialManager* mCredentialManager = nil;
   nsCOMPtr<nsIWebAuthnRegisterPromise> mRegisterPromise;
   nsCOMPtr<nsIWebAuthnSignPromise> mSignPromise;
   MacOSAuthorizationController* mAuthorizationController = nil;
@@ -503,6 +507,7 @@ MacOSWebAuthnService::MakeCredential(uint64_t aTransactionId,
       aBrowsingContextId,
       Nothing(),
       Nothing(),
+      Nothing(),
   });
   NS_DispatchToMainThread(NS_NewRunnableFunction(
       "MacOSWebAuthnService::MakeCredential",
@@ -716,23 +721,82 @@ MacOSWebAuthnService::GetAssertion(uint64_t aTransactionId,
                                    nsIWebAuthnSignArgs* aArgs,
                                    nsIWebAuthnSignPromise* aPromise) {
   Reset();
+
   auto guard = mTransactionState.Lock();
   *guard = Some(TransactionState{
       aTransactionId,
       aBrowsingContextId,
       Some(RefPtr{aArgs}),
       Some(RefPtr{aPromise}),
+      Nothing(),
   });
 
   bool conditionallyMediated;
   Unused << aArgs->GetConditionallyMediated(&conditionallyMediated);
   if (!conditionallyMediated) {
-    DoGetAssertion(guard);
+    DoGetAssertion(Nothing(), guard);
+    return NS_OK;
   }
+
+  // Using conditional mediation, so dispatch a task to collect any available
+  // passkeys.
+  NS_DispatchToMainThread(NS_NewRunnableFunction(
+      "platformCredentialsForRelyingParty",
+      [self = RefPtr{this}, aTransactionId, aArgs = nsCOMPtr{aArgs}]() {
+        // This handler is called when platformCredentialsForRelyingParty
+        // completes.
+        auto credentialsCompletionHandler = ^(
+            NSArray<ASAuthorizationWebBrowserPlatformPublicKeyCredential*>*
+                credentials) {
+          nsTArray<RefPtr<nsIWebAuthnAutoFillEntry>> autoFillEntries;
+          for (NSUInteger i = 0; i < credentials.count; i++) {
+            const auto& credential = credentials[i];
+            nsAutoString userName;
+            nsCocoaUtils::GetStringForNSString(credential.name, userName);
+            nsAutoString rpId;
+            nsCocoaUtils::GetStringForNSString(credential.relyingParty, rpId);
+            autoFillEntries.AppendElement(new WebAuthnAutoFillEntry(
+                nsIWebAuthnAutoFillEntry::PROVIDER_PLATFORM_MACOS, userName,
+                rpId, NSDataToArray(credential.credentialID)));
+          }
+          auto guard = self->mTransactionState.Lock();
+          if (guard->isSome() && guard->ref().transactionId == aTransactionId) {
+            guard->ref().autoFillEntries.emplace(std::move(autoFillEntries));
+          }
+        };
+        // This handler is called when
+        // requestAuthorizationForPublicKeyCredentials completes.
+        auto authorizationHandler = ^(
+            ASAuthorizationWebBrowserPublicKeyCredentialManagerAuthorizationState
+                authorizationState) {
+          // If authorized, list any available passkeys.
+          if (authorizationState ==
+              ASAuthorizationWebBrowserPublicKeyCredentialManagerAuthorizationStateAuthorized) {
+            nsAutoString rpId;
+            Unused << aArgs->GetRpId(rpId);
+            [self->mCredentialManager
+                platformCredentialsForRelyingParty:nsCocoaUtils::ToNSString(
+                                                       rpId)
+                                 completionHandler:
+                                     credentialsCompletionHandler];
+          }
+        };
+        if (!self->mCredentialManager) {
+          self->mCredentialManager =
+              [[ASAuthorizationWebBrowserPublicKeyCredentialManager alloc]
+                  init];
+        }
+        // Request authorization to examine any available passkeys. This will
+        // cause a permission prompt to appear once.
+        [self->mCredentialManager
+            requestAuthorizationForPublicKeyCredentials:authorizationHandler];
+      }));
+
   return NS_OK;
 }
 
 void MacOSWebAuthnService::DoGetAssertion(
+    Maybe<nsTArray<uint8_t>>&& aSelectedCredentialId,
     const TransactionStateMutex::AutoLock& aGuard) {
   if (aGuard->isNothing() || aGuard->ref().pendingSignArgs.isNothing() ||
       aGuard->ref().pendingSignPromise.isNothing()) {
@@ -749,7 +813,8 @@ void MacOSWebAuthnService::DoGetAssertion(
   NS_DispatchToMainThread(NS_NewRunnableFunction(
       "MacOSWebAuthnService::MakeCredential",
       [self = RefPtr{this}, browsingContextId(aBrowsingContextId), aArgs,
-       aPromise]() {
+       aPromise,
+       aSelectedCredentialId = std::move(aSelectedCredentialId)]() mutable {
         self->mSignPromise = aPromise;
 
         nsAutoString rpId;
@@ -762,9 +827,15 @@ void MacOSWebAuthnService::DoGetAssertion(
                                              length:challenge.Length()];
 
         nsTArray<nsTArray<uint8_t>> allowList;
-        Unused << aArgs->GetAllowList(allowList);
         nsTArray<uint8_t> allowListTransports;
-        Unused << aArgs->GetAllowListTransports(allowListTransports);
+        if (aSelectedCredentialId.isSome()) {
+          allowList.AppendElement(aSelectedCredentialId.extract());
+          allowListTransports.AppendElement(
+              MOZ_WEBAUTHN_AUTHENTICATOR_TRANSPORT_ID_INTERNAL);
+        } else {
+          Unused << aArgs->GetAllowList(allowList);
+          Unused << aArgs->GetAllowListTransports(allowListTransports);
+        }
         NSMutableArray* platformAllowedCredentials =
             [[NSMutableArray alloc] init];
         for (const auto& allowedCredentialId : allowList) {
@@ -872,6 +943,8 @@ void MacOSWebAuthnService::FinishGetAssertion(
 
 void MacOSWebAuthnService::ReleasePlatformResources() {
   MOZ_ASSERT(NS_IsMainThread());
+  [mCredentialManager release];
+  mCredentialManager = nil;
   [mAuthorizationController release];
   mAuthorizationController = nil;
   [mRequestDelegate release];
@@ -940,18 +1013,35 @@ MacOSWebAuthnService::GetAutoFillEntries(
     uint64_t aTransactionId, nsTArray<RefPtr<nsIWebAuthnAutoFillEntry>>& aRv) {
   auto guard = mTransactionState.Lock();
   if (guard->isNothing() || guard->ref().transactionId != aTransactionId ||
-      guard->ref().pendingSignArgs.isNothing()) {
+      guard->ref().pendingSignArgs.isNothing() ||
+      guard->ref().autoFillEntries.isNothing()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
-  // Bug 1865379: discover credentials from the macOS keychain and return them.
-  aRv.Clear();
+  aRv.Assign(guard->ref().autoFillEntries.ref());
   return NS_OK;
 }
 
 NS_IMETHODIMP
 MacOSWebAuthnService::SelectAutoFillEntry(
     uint64_t aTransactionId, const nsTArray<uint8_t>& aCredentialId) {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  auto guard = mTransactionState.Lock();
+  if (guard->isNothing() || guard->ref().transactionId != aTransactionId ||
+      guard->ref().pendingSignArgs.isNothing()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  nsTArray<nsTArray<uint8_t>> allowList;
+  Unused << guard->ref().pendingSignArgs.ref()->GetAllowList(allowList);
+  if (!allowList.IsEmpty() && !allowList.Contains(aCredentialId)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  Maybe<nsTArray<uint8_t>> id;
+  id.emplace();
+  id.ref().Assign(aCredentialId);
+  DoGetAssertion(std::move(id), guard);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -961,7 +1051,7 @@ MacOSWebAuthnService::ResumeConditionalGet(uint64_t aTransactionId) {
       guard->ref().pendingSignArgs.isNothing()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
-  DoGetAssertion(guard);
+  DoGetAssertion(Nothing(), guard);
   return NS_OK;
 }
 
