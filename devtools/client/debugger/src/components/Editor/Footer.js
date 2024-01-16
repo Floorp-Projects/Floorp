@@ -10,7 +10,7 @@ import {
 } from "devtools/client/shared/vendor/react-dom-factories";
 import PropTypes from "devtools/client/shared/vendor/react-prop-types";
 import { connect } from "../../utils/connect";
-import actions from "../../actions";
+import actions from "../../actions/index";
 import {
   getSelectedSource,
   getSelectedLocation,
@@ -23,11 +23,11 @@ import {
   isSourceOnSourceMapIgnoreList,
   isSourceMapIgnoreListEnabled,
   getSelectedMappedSource,
-} from "../../selectors";
+} from "../../selectors/index";
 
 import { isPretty, getFilename, shouldBlackbox } from "../../utils/source";
 
-import { PaneToggleButton } from "../shared/Button";
+import { PaneToggleButton } from "../shared/Button/index";
 import AccessibleImage from "../shared/AccessibleImage";
 
 const classnames = require("devtools/client/shared/classnames.js");

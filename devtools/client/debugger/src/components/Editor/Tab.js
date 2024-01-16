@@ -8,9 +8,9 @@ import PropTypes from "devtools/client/shared/vendor/react-prop-types";
 import { connect } from "../../utils/connect";
 
 import SourceIcon from "../shared/SourceIcon";
-import { CloseButton } from "../shared/Button";
+import { CloseButton } from "../shared/Button/index";
 
-import actions from "../../actions";
+import actions from "../../actions/index";
 
 import {
   getDisplayPath,
@@ -25,7 +25,7 @@ import {
   getSelectedLocation,
   getSourcesForTabs,
   isSourceBlackBoxed,
-} from "../../selectors";
+} from "../../selectors/index";
 
 const classnames = require("devtools/client/shared/classnames.js");
 

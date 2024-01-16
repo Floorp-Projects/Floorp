@@ -14,7 +14,7 @@ import {
   getSelectedFrame,
   getCurrentThread,
   getSelectedException,
-} from "../selectors";
+} from "../selectors/index";
 
 import { getMappedExpression } from "./expressions";
 

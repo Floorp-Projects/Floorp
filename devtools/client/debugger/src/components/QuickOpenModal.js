@@ -12,7 +12,7 @@ import { createLocation } from "../utils/location";
 const fuzzyAldrin = require("devtools/client/shared/vendor/fuzzaldrin-plus.js");
 const { throttle } = require("devtools/shared/throttle");
 
-import actions from "../actions";
+import actions from "../actions/index";
 import {
   getDisplayedSourcesList,
   getQuickOpenQuery,
@@ -22,7 +22,7 @@ import {
   getSourceTabs,
   getBlackBoxRanges,
   getProjectDirectoryRoot,
-} from "../selectors";
+} from "../selectors/index";
 import { memoizeLast } from "../utils/memoizeLast";
 import { searchKeys } from "../constants";
 import {

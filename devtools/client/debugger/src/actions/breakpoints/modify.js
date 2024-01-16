@@ -6,7 +6,7 @@ import { createBreakpoint } from "../../client/firefox/create";
 import {
   makeBreakpointServerLocation,
   makeBreakpointId,
-} from "../../utils/breakpoint";
+} from "../../utils/breakpoint/index";
 import {
   getBreakpoint,
   getBreakpointPositionsForLocation,
@@ -18,7 +18,7 @@ import {
   getBlackBoxRanges,
   isSourceMapIgnoreListEnabled,
   isSourceOnSourceMapIgnoreList,
-} from "../../selectors";
+} from "../../selectors/index";
 
 import { setBreakpointPositions } from "./breakpointPositions";
 import { setSkipPausing } from "../pause/skipPausing";

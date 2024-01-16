@@ -10,7 +10,11 @@ import { connect } from "../../utils/connect";
 import AccessibleImage from "./AccessibleImage";
 
 import { getSourceClassnames } from "../../utils/source";
-import { getSymbols, isSourceBlackBoxed, hasPrettyTab } from "../../selectors";
+import {
+  getSymbols,
+  isSourceBlackBoxed,
+  hasPrettyTab,
+} from "../../selectors/index";
 
 import "./SourceIcon.css";
 

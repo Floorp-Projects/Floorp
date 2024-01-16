@@ -11,7 +11,7 @@ import { flashLineRange } from "../../actions/ui";
 import {
   getSelectedSource,
   getSelectedSourceTextContent,
-} from "../../selectors";
+} from "../../selectors/index";
 
 export function showOutlineContextMenu(event, func, symbols) {
   return async ({ dispatch, getState }) => {

@@ -5,7 +5,7 @@
 import sourceQueue from "../utils/source-queue";
 
 import { clearWasmStates } from "../utils/wasm";
-import { getMainThread } from "../selectors";
+import { getMainThread } from "../selectors/index";
 import { evaluateExpressionsForCurrentContext } from "../actions/expressions";
 
 /**

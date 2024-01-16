@@ -5,7 +5,6 @@
 "use strict";
 
 const Babel = require("./babel");
-const fs = require("fs");
 const _path = require("path");
 
 function isRequire(t, node) {
@@ -47,24 +46,6 @@ function transformMC({ types: t }) {
 
         if (!isRequire(t, path.parent)) {
           return;
-        }
-
-        // Handle implicit index.js requires:
-        // in a node environment, require("my/folder") will automatically load
-        // my/folder/index.js if available. The DevTools load does not handle
-        // this case, so we need to explicitly transform such requires to point
-        // to the index.js file.
-        const dir = _path.dirname(filePath);
-        const depPath = _path.join(dir, `${value}.js`);
-        const exists = fs.existsSync(depPath);
-        if (
-          !exists &&
-          !value.endsWith("index") &&
-          !value.endsWith(".jsm") &&
-          !value.startsWith("devtools")
-        ) {
-          value = `${value}/index`;
-          path.replaceWith(t.stringLiteral(value));
         }
 
         if (shouldLazyLoad(value)) {

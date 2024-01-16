@@ -17,12 +17,12 @@ import { connect } from "../../utils/connect";
 import { containsPosition, positionAfter } from "../../utils/ast";
 import { createLocation } from "../../utils/location";
 
-import actions from "../../actions";
+import actions from "../../actions/index";
 import {
   getSelectedLocation,
   getCursorPosition,
   getSelectedSourceTextContent,
-} from "../../selectors";
+} from "../../selectors/index";
 
 import OutlineFilter from "./OutlineFilter";
 import "./Outline.css";

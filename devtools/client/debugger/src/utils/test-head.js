@@ -8,9 +8,9 @@
  */
 
 import { combineReducers } from "devtools/client/shared/vendor/redux";
-import reducers from "../reducers";
-import actions from "../actions";
-import * as selectors from "../selectors";
+import reducers from "../reducers/index";
+import actions from "../actions/index";
+import * as selectors from "../selectors/index";
 import {
   searchWorker,
   prettyPrintWorker,

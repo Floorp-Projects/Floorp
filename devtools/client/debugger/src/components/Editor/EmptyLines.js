@@ -5,8 +5,11 @@
 import { connect } from "../../utils/connect";
 import { Component } from "devtools/client/shared/vendor/react";
 import PropTypes from "devtools/client/shared/vendor/react-prop-types";
-import { getSelectedSource, getSelectedBreakableLines } from "../../selectors";
-import { fromEditorLine } from "../../utils/editor";
+import {
+  getSelectedSource,
+  getSelectedBreakableLines,
+} from "../../selectors/index";
+import { fromEditorLine } from "../../utils/editor/index";
 import { isWasm } from "../../utils/wasm";
 
 class EmptyLines extends Component {

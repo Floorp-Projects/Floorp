@@ -6,13 +6,13 @@ import PropTypes from "devtools/client/shared/vendor/react-prop-types";
 import React, { Component } from "devtools/client/shared/vendor/react";
 import { div } from "devtools/client/shared/vendor/react-dom-factories";
 import { connect } from "../../utils/connect";
-import actions from "../../actions";
+import actions from "../../actions/index";
 import {
   getActiveSearch,
   getSelectedSource,
   getSelectedSourceTextContent,
   getSearchOptions,
-} from "../../selectors";
+} from "../../selectors/index";
 
 import { searchKeys } from "../../constants";
 import { scrollList } from "../../utils/result-list";
@@ -29,7 +29,7 @@ import {
   findNext,
   findPrev,
   removeOverlay,
-} from "../../utils/editor";
+} from "../../utils/editor/index";
 import { isFulfilled } from "../../utils/async-value";
 
 function getSearchShortcut() {

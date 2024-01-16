@@ -13,8 +13,8 @@ import PropTypes from "devtools/client/shared/vendor/react-prop-types";
 import { connect } from "../utils/connect";
 import { primaryPaneTabs } from "../constants";
 
-import actions from "../actions";
-import { getPaneCollapse } from "../selectors";
+import actions from "../actions/index";
+import { getPaneCollapse } from "../selectors/index";
 import { formatKeyShortcut } from "../utils/text";
 
 import "./WelcomeBox.css";

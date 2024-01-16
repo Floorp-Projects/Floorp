@@ -22,7 +22,7 @@ const {
 
 import ExceptionPopup from "./ExceptionPopup";
 
-import actions from "../../../actions";
+import actions from "../../../actions/index";
 import Popover from "../../shared/Popover";
 
 import "./Popup.css";

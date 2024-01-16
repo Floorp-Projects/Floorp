@@ -7,10 +7,13 @@ import React, { Component } from "devtools/client/shared/vendor/react";
 import { div } from "devtools/client/shared/vendor/react-dom-factories";
 import Breakpoint from "./Breakpoint";
 
-import { getSelectedSource, getFirstVisibleBreakpoints } from "../../selectors";
-import { makeBreakpointId } from "../../utils/breakpoint";
+import {
+  getSelectedSource,
+  getFirstVisibleBreakpoints,
+} from "../../selectors/index";
+import { makeBreakpointId } from "../../utils/breakpoint/index";
 import { connect } from "../../utils/connect";
-import actions from "../../actions";
+import actions from "../../actions/index";
 
 class Breakpoints extends Component {
   static get propTypes() {

@@ -8,8 +8,8 @@ import { connect } from "../../../utils/connect";
 
 import Popup from "./Popup";
 
-import { getIsCurrentThreadPaused } from "../../../selectors";
-import actions from "../../../actions";
+import { getIsCurrentThreadPaused } from "../../../selectors/index";
+import actions from "../../../actions/index";
 
 const EXCEPTION_MARKER = "mark-text-exception";
 

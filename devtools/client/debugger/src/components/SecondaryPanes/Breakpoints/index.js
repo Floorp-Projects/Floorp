@@ -12,11 +12,11 @@ import ExceptionOption from "./ExceptionOption";
 import Breakpoint from "./Breakpoint";
 import BreakpointHeading from "./BreakpointHeading";
 
-import actions from "../../../actions";
+import actions from "../../../actions/index";
 import { getSelectedLocation } from "../../../utils/selected-location";
 import { createHeadlessEditor } from "../../../utils/editor/create-editor";
 
-import { makeBreakpointId } from "../../../utils/breakpoint";
+import { makeBreakpointId } from "../../../utils/breakpoint/index";
 
 import {
   getSelectedSource,
@@ -24,7 +24,7 @@ import {
   getShouldPauseOnDebuggerStatement,
   getShouldPauseOnExceptions,
   getShouldPauseOnCaughtExceptions,
-} from "../../../selectors";
+} from "../../../selectors/index";
 
 const classnames = require("devtools/client/shared/classnames.js");
 

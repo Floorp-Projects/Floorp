@@ -6,7 +6,7 @@ import {
   getFrames,
   getBlackBoxRanges,
   getSelectedFrame,
-} from "../../selectors";
+} from "../../selectors/index";
 
 import { isFrameBlackBoxed } from "../../utils/source";
 
@@ -19,7 +19,7 @@ import {
 import { annotateFramesWithLibrary } from "../../utils/pause/frames/annotateFrames";
 import { createWasmOriginalFrame } from "../../client/firefox/create";
 
-import { getOriginalFunctionDisplayName } from "../sources";
+import { getOriginalFunctionDisplayName } from "../sources/index";
 
 function getSelectedFrameId(state, thread, frames) {
   let selectedFrame = getSelectedFrame(state, thread);
