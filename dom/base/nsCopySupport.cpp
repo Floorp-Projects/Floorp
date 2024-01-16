@@ -22,6 +22,7 @@
 #include "nsServiceManagerUtils.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/dom/DataTransfer.h"
+#include "mozilla/dom/BrowsingContext.h"
 
 #include "nsIDocShell.h"
 #include "nsIDocumentViewerEdit.h"
