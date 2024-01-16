@@ -480,8 +480,7 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
 
   /* Called on the graph thread when there is new output data for listeners.
    * This is the mixed audio output of this MediaTrackGraph. */
-  void NotifyOutputData(AudioDataValue* aBuffer, size_t aFrames,
-                        TrackRate aRate, uint32_t aChannels) override;
+  void NotifyOutputData(const AudioChunk& aChunk);
   /* Called on the graph thread after an AudioCallbackDriver with an input
    * stream has stopped. */
   void NotifyInputStopped() override;

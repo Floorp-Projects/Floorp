@@ -681,89 +681,65 @@ void AudioInputProcessing::Process(MediaTrackGraph* aGraph, GraphTime aFrom,
 }
 
 void AudioInputProcessing::ProcessOutputData(MediaTrackGraph* aGraph,
-                                             AudioDataValue* aBuffer,
-                                             size_t aFrames, TrackRate aRate,
-                                             uint32_t aChannels) {
+                                             const AudioChunk& aChunk) {
+  MOZ_ASSERT(aChunk.ChannelCount() > 0);
   aGraph->AssertOnGraphThread();
 
   if (!mEnabled || PassThrough(aGraph)) {
     return;
   }
 
-  if (!mPacketizerOutput ||
-      mPacketizerOutput->mPacketSize != GetPacketSize(aRate) ||
-      mPacketizerOutput->mChannels != aChannels) {
+  TrackRate sampleRate = aGraph->GraphRate();
+  uint32_t framesPerPacket = GetPacketSize(sampleRate);  // in frames
+  // Downmix from aChannels to MAX_CHANNELS if needed.
+  uint32_t channelCount =
+      std::min<uint32_t>(aChunk.ChannelCount(), MAX_CHANNELS);
+  if (channelCount != mOutputBufferChannelCount ||
+      channelCount * framesPerPacket != mOutputBuffer.Length()) {
+    mOutputBuffer.SetLength(channelCount * framesPerPacket);
+    mOutputBufferChannelCount = channelCount;
     // It's ok to drop the audio still in the packetizer here: if this changes,
     // we changed devices or something.
-    mPacketizerOutput = Nothing();
-    mPacketizerOutput.emplace(GetPacketSize(aRate), aChannels);
+    mOutputBufferFrameCount = 0;
   }
 
-  mPacketizerOutput->Input(aBuffer, aFrames);
+  TrackTime chunkOffset = 0;
+  AutoTArray<float*, MAX_CHANNELS> channelPtrs;
+  channelPtrs.SetLength(channelCount);
+  do {
+    MOZ_ASSERT(mOutputBufferFrameCount < framesPerPacket);
+    uint32_t packetRemainder = framesPerPacket - mOutputBufferFrameCount;
+    mSubChunk = aChunk;
+    mSubChunk.SliceTo(
+        chunkOffset, std::min(chunkOffset + packetRemainder, aChunk.mDuration));
+    MOZ_ASSERT(mSubChunk.mDuration <= packetRemainder);
 
-  while (mPacketizerOutput->PacketsAvailable()) {
-    uint32_t samplesPerPacket =
-        mPacketizerOutput->mPacketSize * mPacketizerOutput->mChannels;
-    if (mOutputBuffer.Length() < samplesPerPacket) {
-      mOutputBuffer.SetLength(samplesPerPacket);
+    for (uint32_t channel = 0; channel < channelCount; channel++) {
+      channelPtrs[channel] =
+          &mOutputBuffer[channel * framesPerPacket + mOutputBufferFrameCount];
     }
-    if (mDeinterleavedBuffer.Length() < samplesPerPacket) {
-      mDeinterleavedBuffer.SetLength(samplesPerPacket);
+    mSubChunk.DownMixTo(channelPtrs);
+
+    chunkOffset += mSubChunk.mDuration;
+    MOZ_ASSERT(chunkOffset <= aChunk.mDuration);
+    mOutputBufferFrameCount += mSubChunk.mDuration;
+    MOZ_ASSERT(mOutputBufferFrameCount <= framesPerPacket);
+
+    if (mOutputBufferFrameCount == framesPerPacket) {
+      // Have a complete packet.  Analyze it.
+      for (uint32_t channel = 0; channel < channelCount; channel++) {
+        channelPtrs[channel] = &mOutputBuffer[channel * framesPerPacket];
+      }
+      StreamConfig reverseConfig(sampleRate, channelCount);
+      DebugOnly<int> err = mAudioProcessing->AnalyzeReverseStream(
+          channelPtrs.Elements(), reverseConfig);
+      MOZ_ASSERT(!err, "Could not process the reverse stream.");
+
+      mOutputBufferFrameCount = 0;
     }
-    float* packet = mOutputBuffer.Data();
-    mPacketizerOutput->Output(packet);
+  } while (chunkOffset < aChunk.mDuration);
 
-    AutoTArray<float*, MAX_CHANNELS> deinterleavedPacketDataChannelPointers;
-    float* interleavedFarend = nullptr;
-    uint32_t channelCountFarend = 0;
-    uint32_t framesPerPacketFarend = 0;
-
-    // Downmix from aChannels to MAX_CHANNELS if needed. We always have
-    // floats here, the packetized performed the conversion.
-    if (aChannels > MAX_CHANNELS) {
-      AudioConverter converter(
-          AudioConfig(aChannels, 0, AudioConfig::FORMAT_FLT),
-          AudioConfig(MAX_CHANNELS, 0, AudioConfig::FORMAT_FLT));
-      framesPerPacketFarend = mPacketizerOutput->mPacketSize;
-      framesPerPacketFarend =
-          converter.Process(mInputDownmixBuffer, packet, framesPerPacketFarend);
-      interleavedFarend = mInputDownmixBuffer.Data();
-      channelCountFarend = MAX_CHANNELS;
-      deinterleavedPacketDataChannelPointers.SetLength(MAX_CHANNELS);
-    } else {
-      interleavedFarend = packet;
-      channelCountFarend = aChannels;
-      framesPerPacketFarend = mPacketizerOutput->mPacketSize;
-      deinterleavedPacketDataChannelPointers.SetLength(aChannels);
-    }
-
-    MOZ_ASSERT(interleavedFarend &&
-               (channelCountFarend == 1 || channelCountFarend == 2) &&
-               framesPerPacketFarend);
-
-    if (mInputBuffer.Length() < framesPerPacketFarend * channelCountFarend) {
-      mInputBuffer.SetLength(framesPerPacketFarend * channelCountFarend);
-    }
-
-    size_t offset = 0;
-    for (size_t i = 0; i < deinterleavedPacketDataChannelPointers.Length();
-         ++i) {
-      deinterleavedPacketDataChannelPointers[i] = mInputBuffer.Data() + offset;
-      offset += framesPerPacketFarend;
-    }
-
-    // Deinterleave, prepare a channel pointers array, with enough storage for
-    // the frames.
-    DeinterleaveAndConvertBuffer(
-        interleavedFarend, framesPerPacketFarend, channelCountFarend,
-        deinterleavedPacketDataChannelPointers.Elements());
-
-    StreamConfig reverseConfig(aRate, channelCountFarend);
-    DebugOnly<int> err = mAudioProcessing->AnalyzeReverseStream(
-        deinterleavedPacketDataChannelPointers.Elements(), reverseConfig);
-
-    MOZ_ASSERT(!err, "Could not process the reverse stream.");
-  }
+  mSubChunk.SetNull(0);
 }
 
 // Only called if we're not in passthrough mode
@@ -1162,14 +1138,11 @@ void AudioProcessingTrack::ProcessInput(GraphTime aFrom, GraphTime aTo,
 }
 
 void AudioProcessingTrack::NotifyOutputData(MediaTrackGraph* aGraph,
-                                            AudioDataValue* aBuffer,
-                                            size_t aFrames, TrackRate aRate,
-                                            uint32_t aChannels) {
+                                            const AudioChunk& aChunk) {
   MOZ_ASSERT(mGraph == aGraph, "Cannot feed audio output to another graph");
   AssertOnGraphThread();
   if (mInputProcessing) {
-    mInputProcessing->ProcessOutputData(aGraph, aBuffer, aFrames, aRate,
-                                        aChannels);
+    mInputProcessing->ProcessOutputData(aGraph, aChunk);
   }
 }
 
