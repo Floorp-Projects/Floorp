@@ -80,6 +80,7 @@ onconnect = function (event) {
   // at us.
   (function () {
     return;
+    // eslint-disable-next-line no-unreachable
     1;
   });
 

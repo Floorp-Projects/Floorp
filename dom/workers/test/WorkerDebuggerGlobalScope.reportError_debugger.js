@@ -7,6 +7,5 @@ this.onmessage = function (event) {
       break;
     case "throw":
       throw new Error("thrown");
-      break;
   }
 };

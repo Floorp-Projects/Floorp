@@ -10,6 +10,5 @@ onmessage = function (event) {
       break;
     default:
       throw new Error("Bad message: " + event.data);
-      break;
   }
 };
