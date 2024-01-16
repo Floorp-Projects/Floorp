@@ -12,8 +12,6 @@ const mappings = {
   react: "devtools/client/shared/vendor/react",
   "react-dom-factories": "devtools/client/shared/vendor/react-dom-factories",
   "prop-types": "devtools/client/shared/vendor/react-prop-types",
-  "wasmparser/dist/cjs/WasmParser": "devtools/client/shared/vendor/WasmParser",
-  "wasmparser/dist/cjs/WasmDis": "devtools/client/shared/vendor/WasmDis",
 };
 
 const mappingValues = Object.values(mappings);
