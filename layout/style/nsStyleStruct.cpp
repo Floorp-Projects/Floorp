@@ -628,8 +628,8 @@ void nsStyleList::TriggerImageLoads(Document& aDocument,
       aDocument, aOldStyle ? &aOldStyle->mListStyleImage : nullptr);
 }
 
-nsChangeHint nsStyleList::CalcDifference(
-    const nsStyleList& aNewData, const nsStyleDisplay& aOldDisplay) const {
+nsChangeHint nsStyleList::CalcDifference(const nsStyleList& aNewData,
+                                         const ComputedStyle& aOldStyle) const {
   // If the quotes implementation is ever going to change we might not need
   // a framechange here and a reflow should be sufficient.  See bug 35768.
   if (mQuotes != aNewData.mQuotes) {
@@ -637,25 +637,18 @@ nsChangeHint nsStyleList::CalcDifference(
   }
   nsChangeHint hint = nsChangeHint(0);
   // Only elements whose display value is list-item can be affected by
-  // list-style-position and list-style-type. If the old display struct
-  // doesn't exist, assume it isn't affected by display value at all,
-  // and thus these properties should not affect it either. This also
-  // relies on that when the display value changes from something else
-  // to list-item, that change itself would cause ReconstructFrame.
-  if (aOldDisplay.IsListItem()) {
-    if (mListStylePosition != aNewData.mListStylePosition ||
-        mCounterStyle != aNewData.mCounterStyle ||
-        mListStyleImage != aNewData.mListStyleImage) {
+  // list-style-{position,type,image}. This also relies on that when the display
+  // value changes from something else to list-item, that change itself would
+  // cause ReconstructFrame.
+  if (mListStylePosition != aNewData.mListStylePosition ||
+      mCounterStyle != aNewData.mCounterStyle ||
+      mListStyleImage != aNewData.mListStyleImage) {
+    if (aOldStyle.StyleDisplay()->IsListItem()) {
       return nsChangeHint_ReconstructFrame;
     }
-  } else if (mListStylePosition != aNewData.mListStylePosition ||
-             mCounterStyle != aNewData.mCounterStyle) {
+    // list-style-image may affect nsImageFrame for XUL elements, but that is
+    // dealt with explicitly in nsImageFrame::DidSetComputedStyle.
     hint = nsChangeHint_NeutralChange;
-  }
-  // list-style-image and -moz-image-region may affect some XUL elements
-  // regardless of display value, so we still need to check them.
-  if (mListStyleImage != aNewData.mListStyleImage) {
-    return NS_STYLE_HINT_REFLOW;
   }
   return hint;
 }
@@ -1152,8 +1145,7 @@ static bool IsAutonessEqual(const StyleRect<LengthPercentageOrAuto>& aSides1,
 }
 
 nsChangeHint nsStylePosition::CalcDifference(
-    const nsStylePosition& aNewData,
-    const nsStyleVisibility& aOldStyleVisibility) const {
+    const nsStylePosition& aNewData, const ComputedStyle& aOldStyle) const {
   if (mGridTemplateColumns.IsMasonry() !=
           aNewData.mGridTemplateColumns.IsMasonry() ||
       mGridTemplateRows.IsMasonry() != aNewData.mGridTemplateRows.IsMasonry()) {
@@ -1271,17 +1263,18 @@ nsChangeHint nsStylePosition::CalcDifference(
                        mMinHeight != aNewData.mMinHeight ||
                        mMaxHeight != aNewData.mMaxHeight;
 
-  // It doesn't matter whether we're looking at the old or new visibility
-  // struct, since a change between vertical and horizontal writing-mode will
-  // cause a reframe.
-  bool isVertical = aOldStyleVisibility.mWritingMode !=
-                    StyleWritingModeProperty::HorizontalTb;
-  if (isVertical ? widthChanged : heightChanged) {
-    hint |= nsChangeHint_ReflowHintsForBSizeChange;
-  }
-
-  if (isVertical ? heightChanged : widthChanged) {
-    hint |= nsChangeHint_ReflowHintsForISizeChange;
+  if (widthChanged || heightChanged) {
+    // It doesn't matter whether we're looking at the old or new visibility
+    // struct, since a change between vertical and horizontal writing-mode will
+    // cause a reframe.
+    const bool isVertical = aOldStyle.StyleVisibility()->mWritingMode !=
+                            StyleWritingModeProperty::HorizontalTb;
+    if (isVertical ? widthChanged : heightChanged) {
+      hint |= nsChangeHint_ReflowHintsForBSizeChange;
+    }
+    if (isVertical ? heightChanged : widthChanged) {
+      hint |= nsChangeHint_ReflowHintsForISizeChange;
+    }
   }
 
   if (mAspectRatio != aNewData.mAspectRatio) {
@@ -2254,7 +2247,7 @@ static bool AppearanceValueAffectsFrames(StyleAppearance aAppearance,
 }
 
 nsChangeHint nsStyleDisplay::CalcDifference(
-    const nsStyleDisplay& aNewData, const nsStylePosition& aOldPosition) const {
+    const nsStyleDisplay& aNewData, const ComputedStyle& aOldStyle) const {
   if (mDisplay != aNewData.mDisplay || mContain != aNewData.mContain ||
       (mFloat == StyleFloat::None) != (aNewData.mFloat == StyleFloat::None) ||
       mTopLayer != aNewData.mTopLayer || mResize != aNewData.mResize) {
@@ -2489,7 +2482,7 @@ nsChangeHint nsStyleDisplay::CalcDifference(
     // since a change on whether we need a hypothetical position would trigger
     // reflow anyway.
     if (IsAbsolutelyPositionedStyle() &&
-        aOldPosition.NeedsHypotheticalPositionIfAbsPos()) {
+        aOldStyle.StylePosition()->NeedsHypotheticalPositionIfAbsPos()) {
       hint |=
           nsChangeHint_NeedReflow | nsChangeHint_ReflowChangesSizeOrPosition;
     } else {

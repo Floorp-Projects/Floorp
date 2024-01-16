@@ -632,7 +632,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleList {
 
   nsStyleList& operator=(const nsStyleList& aOther) = delete;
   nsChangeHint CalcDifference(const nsStyleList& aNewData,
-                              const nsStyleDisplay& aOldDisplay) const;
+                              const mozilla::ComputedStyle& aOldStyle) const;
 
   already_AddRefed<nsIURI> GetListStyleImageURI() const;
 
@@ -676,9 +676,8 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStylePosition {
   using StyleAlignSelf = mozilla::StyleAlignSelf;
   using StyleJustifySelf = mozilla::StyleJustifySelf;
 
-  nsChangeHint CalcDifference(
-      const nsStylePosition& aNewData,
-      const nsStyleVisibility& aOldStyleVisibility) const;
+  nsChangeHint CalcDifference(const nsStylePosition& aNewData,
+                              const ComputedStyle& aOldStyle) const;
 
   // Returns whether we need to compute an hypothetical position if we were
   // absolutely positioned.
@@ -1225,7 +1224,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
   using StyleContentVisibility = mozilla::StyleContentVisibility;
 
   nsChangeHint CalcDifference(const nsStyleDisplay& aNewData,
-                              const nsStylePosition& aOldPosition) const;
+                              const mozilla::ComputedStyle& aOldStyle) const;
 
   nsChangeHint CalcTransformPropertyDifference(
       const nsStyleDisplay& aNewData) const;
