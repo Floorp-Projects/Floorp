@@ -327,6 +327,7 @@ const PrecisionMetrics = {
   // End Element-wise unary operations
   elu: {ULP: {float32: 18, float16: 18}},
   expand: {ULP: {float32: 0, float16: 0}},
+  gather: {ULP: {float32: 0, float16: 0}},
   gemm: {ULP: {float32: getGemmPrecisionTolerance, float16: getGemmPrecisionTolerance}},
   hardSigmoid: {ULP: {float32: 2, float16: 2}},
   hardSwish: {ULP: {float32: 4, float16: 4}},
