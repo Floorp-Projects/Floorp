@@ -3,7 +3,10 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import { Component } from "react";
-import { span, button } from "react-dom-factories";
+import {
+  span,
+  button,
+} from "devtools/client/shared/vendor/react-dom-factories";
 import PropTypes from "devtools/client/shared/vendor/react-prop-types";
 
 import { formatDisplayName } from "../../utils/pause/frames";
