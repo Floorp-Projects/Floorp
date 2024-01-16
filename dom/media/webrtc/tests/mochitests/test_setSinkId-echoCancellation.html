@@ -1,0 +1,110 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title></title>
+<script src="mediaStreamPlayback.js"></script>
+</head>
+<script>
+"use strict";
+
+createHTML({
+  title: "Test echoCancellation with setSinkId()",
+  bug: "1849108",
+  visible: true,
+});
+/**
+This test captures audio from a loopback device to test echo cancellation.
+ **/
+runTest(async () => {
+  await SpecialPowers.pushPrefEnv({set: [
+    // skip selectAudioOutput/getUserMedia permission prompt
+    ["media.navigator.permission.disabled", true],
+    // enumerateDevices() without focus
+    ["media.devices.unfocused.enabled", true],
+  ]});
+
+  const ac = new AudioContext();
+  const dest = new MediaStreamAudioDestinationNode(ac);
+  const gain = new GainNode(ac, {gain: 0.5});
+  gain.connect(dest);
+  // Use a couple of triangle waves for audio with some bandwidth.
+  // Pick incommensurable frequencies so that the audio is aperiodic.
+  // Perhaps that might help the AEC determine the delay.
+  const osc1 =
+        new OscillatorNode(ac, {type: "triangle", frequency: 200});
+  const osc2 =
+        new OscillatorNode(ac, {type: "triangle", frequency: Math.PI * 100});
+  osc1.connect(gain);
+  osc2.connect(gain);
+  osc1.start();
+  osc2.start();
+  const audio = new Audio();
+  audio.srcObject = dest.stream;
+  audio.controls = true;
+  document.body.appendChild(audio);
+
+  // The loopback device is currenly only available on Linux.
+  let loopbackInputLabel =
+      SpecialPowers.getCharPref("media.audio_loopback_dev", "");
+  if (!navigator.userAgent.includes("Linux")) {
+    todo_isnot(loopbackInputLabel, "", "audio_loopback_dev");
+    return;
+  }
+  isnot(loopbackInputLabel, "",
+        "audio_loopback_dev. Use --use-test-media-devices.");
+
+  const loopbackStream = await navigator.mediaDevices.getUserMedia({ audio: {
+    echoCancellation: false,
+    autoGainControl: false,
+    noiseSuppression: false,
+  }});
+  is(loopbackStream.getTracks()[0].label, loopbackInputLabel,
+     "loopback track label");
+
+  // Check that the loopback stream contains silence now.
+  const loopbackNode = ac.createMediaStreamSource(loopbackStream);
+  const processor1 = ac.createScriptProcessor(4096, 1, 0);
+  loopbackNode.connect(processor1);
+  const {inputBuffer} = await new Promise(r => processor1.onaudioprocess = r);
+  loopbackNode.disconnect();
+  is(inputBuffer.getChannelData(0).find(value => value != 0.0), undefined,
+     "should have silence in loopback input");
+
+  // Find the loopback output device
+  const devices = await navigator.mediaDevices.enumerateDevices();
+  let loopbackOutputLabel =
+      SpecialPowers.getCharPref("media.cubeb.output_device", "");
+  const outputDeviceInfo = devices.find(
+    ({kind, label}) => kind == "audiooutput" && label == loopbackOutputLabel
+  );
+  ok(outputDeviceInfo, `found "${loopbackOutputLabel}"`);
+
+  await audio.setSinkId(outputDeviceInfo.deviceId);
+  await audio.play();
+
+  const analyser = new AudioStreamAnalyser(ac, loopbackStream);
+  const bin1 = analyser.binIndexForFrequency(osc1.frequency.value);
+  const bin2 = analyser.binIndexForFrequency(osc2.frequency.value);
+  try {
+    analyser.enableDebugCanvas();
+    // Check for audio with AEC.
+    await analyser.waitForAnalysisSuccess(array => {
+      return array[bin1] > 200 && array[bin2] > 200;
+    });
+
+    // Check echo cancellation.
+    await loopbackStream.getTracks()[0].applyConstraints({
+      echoCancellation: true,
+      autoGainControl: false,
+      noiseSuppression: false,
+    });
+    await analyser.waitForAnalysisSuccess(array => {
+      return !array.find(bin => bin > 50);
+    });
+  } finally {
+    await ac.close();
+    loopbackStream.getTracks()[0].stop();
+  }
+});
+</script>
+</html>
