@@ -6,7 +6,7 @@ import React, { PureComponent } from "react";
 import { div, input, span } from "react-dom-factories";
 import PropTypes from "prop-types";
 import { connect } from "../../../utils/connect";
-import { createSelector } from "reselect";
+import { createSelector } from "devtools/client/shared/vendor/reselect";
 import actions from "../../../actions";
 
 import { CloseButton } from "../../shared/Button";
