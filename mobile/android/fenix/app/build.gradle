@@ -289,6 +289,11 @@ android {
     namespace 'org.mozilla.fenix'
 }
 
+// Mimic Python: open(os.path.join(buildconfig.topobjdir, 'buildid.h')).readline().split()[2]
+def getBuildId() {
+    return file("${gradle.mozconfig.topobjdir}/buildid.h").getText('utf-8').split()[2]
+}
+
 android.applicationVariants.configureEach { variant ->
 
 // -------------------------------------------------------------------------------------------------
@@ -310,7 +315,9 @@ android.applicationVariants.configureEach { variant ->
         // same version code. Therefore we need to have different version codes for our ARM and x86
         // builds.
 
-        def versionName = variant.buildType.name == 'nightly' ? Config.nightlyVersionName(project) : Config.releaseVersionName(project)
+        def versionName = variant.buildType.name == 'nightly' ?
+                "${Config.nightlyVersionName(project)}-${getBuildId()}" :
+                "${Config.releaseVersionName(project)}-${getBuildId()}"
         println("versionName override: $versionName")
 
         variant.outputs.each { output ->
