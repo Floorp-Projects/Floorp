@@ -4,7 +4,7 @@
 
 import { PureComponent } from "react";
 import { div, textarea } from "react-dom-factories";
-import ReactDOM from "react-dom";
+import ReactDOM from "devtools/client/shared/vendor/react-dom";
 import PropTypes from "prop-types";
 import { connect } from "../../utils/connect";
 import "./ConditionalPanel.css";
