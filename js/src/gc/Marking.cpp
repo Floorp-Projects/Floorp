@@ -231,7 +231,7 @@ template void CheckTracedThing<wasm::AnyRef>(JSTracer*, const wasm::AnyRef&);
 #endif
 
 static inline bool ShouldMarkCrossCompartment(GCMarker* marker, JSObject* src,
-                                              Cell* dstCell) {
+                                              Cell* dstCell, const char* name) {
   MarkColor color = marker->markColor();
 
   if (!dstCell->isTenured()) {
@@ -239,13 +239,15 @@ static inline bool ShouldMarkCrossCompartment(GCMarker* marker, JSObject* src,
     // Bug 1743098: This shouldn't be possible but it does seem to happen. Log
     // some useful information in debug builds.
     if (color != MarkColor::Black) {
-      fprintf(stderr,
-              "ShouldMarkCrossCompartment: cross compartment edge from gray "
-              "object to nursery thing\n");
-      fprintf(stderr, "src: ");
-      src->dump();
-      fprintf(stderr, "dst: ");
-      dstCell->dump();
+      SEprinter printer;
+      printer.printf(
+          "ShouldMarkCrossCompartment: cross compartment edge '%s' from gray "
+          "object to nursery thing\n",
+          name);
+      printer.put("src: ");
+      src->dump(printer);
+      printer.put("dst: ");
+      dstCell->dump(printer);
     }
 #endif
     MOZ_ASSERT(color == MarkColor::Black);
@@ -309,18 +311,19 @@ static inline bool ShouldMarkCrossCompartment(GCMarker* marker, JSObject* src,
 }
 
 static bool ShouldTraceCrossCompartment(JSTracer* trc, JSObject* src,
-                                        Cell* dstCell) {
+                                        Cell* dstCell, const char* name) {
   if (!trc->isMarkingTracer()) {
     return true;
   }
 
-  return ShouldMarkCrossCompartment(GCMarker::fromTracer(trc), src, dstCell);
+  return ShouldMarkCrossCompartment(GCMarker::fromTracer(trc), src, dstCell,
+                                    name);
 }
 
 static bool ShouldTraceCrossCompartment(JSTracer* trc, JSObject* src,
-                                        const Value& val) {
+                                        const Value& val, const char* name) {
   return val.isGCThing() &&
-         ShouldTraceCrossCompartment(trc, src, val.toGCThing());
+         ShouldTraceCrossCompartment(trc, src, val.toGCThing(), name);
 }
 
 #ifdef DEBUG
@@ -486,7 +489,7 @@ void js::TraceManuallyBarrieredCrossCompartmentEdge(JSTracer* trc,
   // Clear expected compartment for cross-compartment edge.
   AutoClearTracingSource acts(trc);
 
-  if (ShouldTraceCrossCompartment(trc, src, *dst)) {
+  if (ShouldTraceCrossCompartment(trc, src, *dst, name)) {
     TraceEdgeInternal(trc, dst, name);
   }
 }
