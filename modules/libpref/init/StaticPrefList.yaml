@@ -10357,7 +10357,7 @@
 # This pref controls whether dispatch testing-only events.
 - name: media.webvtt.testing.events
   type: bool
-  value: true
+  value: false
   mirror: always
 
 - name: media.webspeech.synth.force_global_queue
