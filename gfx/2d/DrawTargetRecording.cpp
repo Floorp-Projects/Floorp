@@ -441,7 +441,7 @@ already_AddRefed<FilterNode> DrawTargetRecording::CreateFilter(
     FilterType aType) {
   RefPtr<FilterNode> retNode = new FilterNodeRecording(mRecorder);
 
-  mRecorder->RecordEvent(RecordedFilterNodeCreation(retNode, aType));
+  mRecorder->RecordEvent(RecordedFilterNodeCreation(this, retNode, aType));
 
   return retNode.forget();
 }
@@ -617,7 +617,7 @@ already_AddRefed<DrawTarget> DrawTargetRecording::CreateSimilarDrawTarget(
     similarDT =
         new DrawTargetRecording(this, IntRect(IntPoint(0, 0), aSize), aFormat);
     mRecorder->RecordEvent(
-        RecordedCreateSimilarDrawTarget(similarDT.get(), aSize, aFormat));
+        RecordedCreateSimilarDrawTarget(this, similarDT.get(), aSize, aFormat));
   } else if (XRE_IsContentProcess()) {
     // Crash any content process that calls this function with arguments that
     // would fail to create a similar draw target. We do this to root out bad
@@ -675,8 +675,8 @@ already_AddRefed<GradientStops> DrawTargetRecording::CreateGradientStops(
     GradientStop* aStops, uint32_t aNumStops, ExtendMode aExtendMode) const {
   RefPtr<GradientStops> retStops = new GradientStopsRecording(mRecorder);
 
-  mRecorder->RecordEvent(
-      RecordedGradientStopsCreation(retStops, aStops, aNumStops, aExtendMode));
+  mRecorder->RecordEvent(RecordedGradientStopsCreation(this, retStops, aStops,
+                                                       aNumStops, aExtendMode));
 
   return retStops.forget();
 }
@@ -709,7 +709,7 @@ already_AddRefed<PathRecording> DrawTargetRecording::EnsurePathStored(
   // It's important that AddStoredObject or TryAddStoredObject is called before
   // this because that will run any pending processing required by recorded
   // objects that have been deleted off the main thread.
-  mRecorder->RecordEvent(RecordedPathCreation(pathRecording.get()));
+  mRecorder->RecordEvent(RecordedPathCreation(this, pathRecording.get()));
   pathRecording->mStoredRecorders.push_back(mRecorder);
 
   return pathRecording.forget();

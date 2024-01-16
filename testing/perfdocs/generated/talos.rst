@@ -538,11 +538,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-linux1804-64-shippable-qr/opt**
@@ -564,11 +559,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
 
 
    .. list-table:: **test-macosx1015-64-shippable-qr/opt**
@@ -590,11 +580,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
 
 
    .. list-table:: **test-windows10-32-qr/opt**
@@ -607,11 +592,6 @@ For the sample commands found below, note that the capitalization used is import
         - mozilla-release
         - mozilla-beta
       * - **talos-other**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **talos-other-swr**
         - ❌
         - ❌
         - ❌
@@ -632,11 +612,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-windows10-64-qr/opt**
@@ -653,11 +628,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-windows10-64-shippable-qr/opt**
@@ -670,11 +640,6 @@ For the sample commands found below, note that the capitalization used is import
         - mozilla-release
         - mozilla-beta
       * - **talos-other**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
-      * - **talos-other-swr**
         - ✅
         - ✅
         - ❌
@@ -755,11 +720,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-chrome-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-linux1804-64-shippable-qr/opt**
@@ -781,11 +741,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-chrome-swr**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
 
 
    .. list-table:: **test-macosx1015-64-shippable-qr/opt**
@@ -807,11 +762,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-chrome-swr**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
 
 
    .. list-table:: **test-windows10-32-qr/opt**
@@ -824,11 +774,6 @@ For the sample commands found below, note that the capitalization used is import
         - mozilla-release
         - mozilla-beta
       * - **talos-chrome**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **talos-chrome-swr**
         - ❌
         - ❌
         - ❌
@@ -849,11 +794,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-chrome-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-windows10-64-qr/opt**
@@ -870,11 +810,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-chrome-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-windows10-64-shippable-qr/opt**
@@ -887,11 +822,6 @@ For the sample commands found below, note that the capitalization used is import
         - mozilla-release
         - mozilla-beta
       * - **talos-chrome**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
-      * - **talos-chrome-swr**
         - ✅
         - ✅
         - ❌
@@ -971,11 +901,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-bcv-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-linux1804-64-shippable-qr/opt**
@@ -997,11 +922,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-bcv-swr**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
 
 
    .. list-table:: **test-macosx1015-64-shippable-qr/opt**
@@ -1023,11 +943,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-bcv-swr**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
 
 
    .. list-table:: **test-windows10-32-qr/opt**
@@ -1040,11 +955,6 @@ For the sample commands found below, note that the capitalization used is import
         - mozilla-release
         - mozilla-beta
       * - **talos-bcv**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **talos-bcv-swr**
         - ❌
         - ❌
         - ❌
@@ -1065,11 +975,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-bcv-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-windows10-64-qr/opt**
@@ -1086,11 +991,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-bcv-swr**
-        - ✅
-        - ✅
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-windows10-64-shippable-qr/opt**
@@ -1103,11 +1003,6 @@ For the sample commands found below, note that the capitalization used is import
         - mozilla-release
         - mozilla-beta
       * - **talos-bcv**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
-      * - **talos-bcv-swr**
         - ✅
         - ✅
         - ❌
@@ -1161,11 +1056,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-linux1804-64-shippable-qr/opt**
@@ -1187,11 +1077,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
 
 
    .. list-table:: **test-macosx1015-64-shippable-qr/opt**
@@ -1213,11 +1098,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
 
 
    .. list-table:: **test-windows10-32-qr/opt**
@@ -1230,11 +1110,6 @@ For the sample commands found below, note that the capitalization used is import
         - mozilla-release
         - mozilla-beta
       * - **talos-other**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **talos-other-swr**
         - ❌
         - ❌
         - ❌
@@ -1255,11 +1130,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-windows10-64-qr/opt**
@@ -1276,11 +1146,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-windows10-64-shippable-qr/opt**
@@ -1293,11 +1158,6 @@ For the sample commands found below, note that the capitalization used is import
         - mozilla-release
         - mozilla-beta
       * - **talos-other**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
-      * - **talos-other-swr**
         - ✅
         - ✅
         - ❌
@@ -1350,11 +1210,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-linux1804-64-shippable-qr/opt**
@@ -1376,11 +1231,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
 
 
    .. list-table:: **test-macosx1015-64-shippable-qr/opt**
@@ -1402,11 +1252,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
 
 
    .. list-table:: **test-windows10-32-qr/opt**
@@ -1419,11 +1264,6 @@ For the sample commands found below, note that the capitalization used is import
         - mozilla-release
         - mozilla-beta
       * - **talos-other**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **talos-other-swr**
         - ❌
         - ❌
         - ❌
@@ -1444,11 +1284,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-windows10-64-qr/opt**
@@ -1465,11 +1300,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-windows10-64-shippable-qr/opt**
@@ -1482,11 +1312,6 @@ For the sample commands found below, note that the capitalization used is import
         - mozilla-release
         - mozilla-beta
       * - **talos-other**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
-      * - **talos-other-swr**
         - ✅
         - ✅
         - ❌
@@ -1591,27 +1416,12 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-damp-inspector-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **talos-damp-other**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-damp-other-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **talos-damp-webconsole**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **talos-damp-webconsole-swr**
         - ❌
         - ❌
         - ❌
@@ -1632,27 +1442,12 @@ For the sample commands found below, note that the capitalization used is import
         - ✅
         - ❌
         - ✅
-      * - **talos-damp-inspector-swr**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
       * - **talos-damp-other**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-damp-other-swr**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
       * - **talos-damp-webconsole**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
-      * - **talos-damp-webconsole-swr**
         - ✅
         - ✅
         - ❌
@@ -1673,27 +1468,12 @@ For the sample commands found below, note that the capitalization used is import
         - ✅
         - ❌
         - ✅
-      * - **talos-damp-inspector-swr**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
       * - **talos-damp-other**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-damp-other-swr**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
       * - **talos-damp-webconsole**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
-      * - **talos-damp-webconsole-swr**
         - ✅
         - ✅
         - ❌
@@ -1714,27 +1494,12 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-damp-inspector-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **talos-damp-other**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-damp-other-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **talos-damp-webconsole**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **talos-damp-webconsole-swr**
         - ❌
         - ❌
         - ❌
@@ -1755,27 +1520,12 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-damp-inspector-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **talos-damp-other**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-damp-other-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **talos-damp-webconsole**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **talos-damp-webconsole-swr**
         - ❌
         - ❌
         - ❌
@@ -1796,27 +1546,12 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-damp-inspector-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **talos-damp-other**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-damp-other-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **talos-damp-webconsole**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **talos-damp-webconsole-swr**
         - ❌
         - ❌
         - ❌
@@ -1837,27 +1572,12 @@ For the sample commands found below, note that the capitalization used is import
         - ✅
         - ❌
         - ✅
-      * - **talos-damp-inspector-swr**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
       * - **talos-damp-other**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-damp-other-swr**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
       * - **talos-damp-webconsole**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
-      * - **talos-damp-webconsole-swr**
         - ✅
         - ✅
         - ❌
@@ -1920,11 +1640,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-g4-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-linux1804-64-shippable-qr/opt**
@@ -1946,11 +1661,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-g4-swr**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
 
 
    .. list-table:: **test-macosx1015-64-shippable-qr/opt**
@@ -1972,11 +1682,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-g4-swr**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
 
 
    .. list-table:: **test-windows10-32-qr/opt**
@@ -1989,11 +1694,6 @@ For the sample commands found below, note that the capitalization used is import
         - mozilla-release
         - mozilla-beta
       * - **talos-g4**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **talos-g4-swr**
         - ❌
         - ❌
         - ❌
@@ -2014,11 +1714,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-g4-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-windows10-64-qr/opt**
@@ -2035,11 +1730,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-g4-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-windows10-64-shippable-qr/opt**
@@ -2052,11 +1742,6 @@ For the sample commands found below, note that the capitalization used is import
         - mozilla-release
         - mozilla-beta
       * - **talos-g4**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
-      * - **talos-g4-swr**
         - ✅
         - ✅
         - ❌
@@ -2315,11 +2000,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-g3-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-linux1804-64-shippable-qr/opt**
@@ -2341,11 +2021,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-g3-swr**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
 
 
    .. list-table:: **test-macosx1015-64-shippable-qr/opt**
@@ -2429,16 +2104,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-webgl-gli**
-        - ✅
-        - ✅
-        - ❌
-        - ❌
-      * - **talos-webgl-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-linux1804-64-shippable-qr/opt**
@@ -2455,26 +2120,11 @@ For the sample commands found below, note that the capitalization used is import
         - ✅
         - ❌
         - ✅
-      * - **talos-webgl-gli**
-        - ✅
-        - ✅
-        - ❌
-        - ❌
       * - **talos-webgl-profiling**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-webgl-profiling-gli**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **talos-webgl-swr**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
 
 
    .. list-table:: **test-macosx1015-64-shippable-qr/opt**
@@ -2491,26 +2141,11 @@ For the sample commands found below, note that the capitalization used is import
         - ✅
         - ❌
         - ✅
-      * - **talos-webgl-gli**
-        - ✅
-        - ✅
-        - ❌
-        - ❌
       * - **talos-webgl-profiling**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-webgl-profiling-gli**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **talos-webgl-swr**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
 
 
    .. list-table:: **test-windows10-32-qr/opt**
@@ -2523,16 +2158,6 @@ For the sample commands found below, note that the capitalization used is import
         - mozilla-release
         - mozilla-beta
       * - **talos-webgl**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **talos-webgl-gli**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **talos-webgl-swr**
         - ❌
         - ❌
         - ❌
@@ -2553,16 +2178,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-webgl-gli**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **talos-webgl-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-windows10-64-qr/opt**
@@ -2575,16 +2190,6 @@ For the sample commands found below, note that the capitalization used is import
         - mozilla-release
         - mozilla-beta
       * - **talos-webgl**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **talos-webgl-gli**
-        - ✅
-        - ✅
-        - ❌
-        - ❌
-      * - **talos-webgl-swr**
         - ❌
         - ❌
         - ❌
@@ -2605,16 +2210,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-webgl-gli**
-        - ✅
-        - ✅
-        - ❌
-        - ❌
-      * - **talos-webgl-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-windows10-64-shippable-qr/opt**
@@ -2627,16 +2222,6 @@ For the sample commands found below, note that the capitalization used is import
         - mozilla-release
         - mozilla-beta
       * - **talos-webgl**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
-      * - **talos-webgl-gli**
-        - ✅
-        - ✅
-        - ❌
-        - ❌
-      * - **talos-webgl-swr**
         - ✅
         - ✅
         - ❌
@@ -2704,16 +2289,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-webgl-gli**
-        - ✅
-        - ✅
-        - ❌
-        - ❌
-      * - **talos-webgl-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-linux1804-64-shippable-qr/opt**
@@ -2730,26 +2305,11 @@ For the sample commands found below, note that the capitalization used is import
         - ✅
         - ❌
         - ✅
-      * - **talos-webgl-gli**
-        - ✅
-        - ✅
-        - ❌
-        - ❌
       * - **talos-webgl-profiling**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-webgl-profiling-gli**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **talos-webgl-swr**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
 
 
    .. list-table:: **test-macosx1015-64-shippable-qr/opt**
@@ -2766,26 +2326,11 @@ For the sample commands found below, note that the capitalization used is import
         - ✅
         - ❌
         - ✅
-      * - **talos-webgl-gli**
-        - ✅
-        - ✅
-        - ❌
-        - ❌
       * - **talos-webgl-profiling**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-webgl-profiling-gli**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **talos-webgl-swr**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
 
 
    .. list-table:: **test-windows10-32-qr/opt**
@@ -2798,16 +2343,6 @@ For the sample commands found below, note that the capitalization used is import
         - mozilla-release
         - mozilla-beta
       * - **talos-webgl**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **talos-webgl-gli**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **talos-webgl-swr**
         - ❌
         - ❌
         - ❌
@@ -2828,16 +2363,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-webgl-gli**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **talos-webgl-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-windows10-64-qr/opt**
@@ -2850,16 +2375,6 @@ For the sample commands found below, note that the capitalization used is import
         - mozilla-release
         - mozilla-beta
       * - **talos-webgl**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **talos-webgl-gli**
-        - ✅
-        - ✅
-        - ❌
-        - ❌
-      * - **talos-webgl-swr**
         - ❌
         - ❌
         - ❌
@@ -2880,16 +2395,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-webgl-gli**
-        - ✅
-        - ✅
-        - ❌
-        - ❌
-      * - **talos-webgl-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-windows10-64-shippable-qr/opt**
@@ -2902,16 +2407,6 @@ For the sample commands found below, note that the capitalization used is import
         - mozilla-release
         - mozilla-beta
       * - **talos-webgl**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
-      * - **talos-webgl-gli**
-        - ✅
-        - ✅
-        - ❌
-        - ❌
-      * - **talos-webgl-swr**
         - ✅
         - ✅
         - ❌
@@ -3232,16 +2727,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-webgl-gli**
-        - ✅
-        - ✅
-        - ❌
-        - ❌
-      * - **talos-webgl-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-linux1804-64-shippable-qr/opt**
@@ -3258,26 +2743,11 @@ For the sample commands found below, note that the capitalization used is import
         - ✅
         - ❌
         - ✅
-      * - **talos-webgl-gli**
-        - ✅
-        - ✅
-        - ❌
-        - ❌
       * - **talos-webgl-profiling**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-webgl-profiling-gli**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **talos-webgl-swr**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
 
 
    .. list-table:: **test-macosx1015-64-shippable-qr/opt**
@@ -3294,26 +2764,11 @@ For the sample commands found below, note that the capitalization used is import
         - ✅
         - ❌
         - ✅
-      * - **talos-webgl-gli**
-        - ✅
-        - ✅
-        - ❌
-        - ❌
       * - **talos-webgl-profiling**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-webgl-profiling-gli**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **talos-webgl-swr**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
 
 
    .. list-table:: **test-windows10-32-qr/opt**
@@ -3326,16 +2781,6 @@ For the sample commands found below, note that the capitalization used is import
         - mozilla-release
         - mozilla-beta
       * - **talos-webgl**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **talos-webgl-gli**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **talos-webgl-swr**
         - ❌
         - ❌
         - ❌
@@ -3356,16 +2801,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-webgl-gli**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **talos-webgl-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-windows10-64-qr/opt**
@@ -3378,16 +2813,6 @@ For the sample commands found below, note that the capitalization used is import
         - mozilla-release
         - mozilla-beta
       * - **talos-webgl**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **talos-webgl-gli**
-        - ✅
-        - ✅
-        - ❌
-        - ❌
-      * - **talos-webgl-swr**
         - ❌
         - ❌
         - ❌
@@ -3408,16 +2833,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-webgl-gli**
-        - ✅
-        - ✅
-        - ❌
-        - ❌
-      * - **talos-webgl-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-windows10-64-shippable-qr/opt**
@@ -3430,16 +2845,6 @@ For the sample commands found below, note that the capitalization used is import
         - mozilla-release
         - mozilla-beta
       * - **talos-webgl**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
-      * - **talos-webgl-gli**
-        - ✅
-        - ✅
-        - ❌
-        - ❌
-      * - **talos-webgl-swr**
         - ✅
         - ✅
         - ❌
@@ -3484,11 +2889,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-linux1804-64-shippable-qr/opt**
@@ -3510,11 +2910,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
 
 
    .. list-table:: **test-macosx1015-64-shippable-qr/opt**
@@ -3536,11 +2931,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
 
 
    .. list-table:: **test-windows10-32-qr/opt**
@@ -3553,11 +2943,6 @@ For the sample commands found below, note that the capitalization used is import
         - mozilla-release
         - mozilla-beta
       * - **talos-other**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **talos-other-swr**
         - ❌
         - ❌
         - ❌
@@ -3578,11 +2963,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-windows10-64-qr/opt**
@@ -3599,11 +2979,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-windows10-64-shippable-qr/opt**
@@ -3616,11 +2991,6 @@ For the sample commands found below, note that the capitalization used is import
         - mozilla-release
         - mozilla-beta
       * - **talos-other**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
-      * - **talos-other-swr**
         - ✅
         - ✅
         - ❌
@@ -3714,11 +3084,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-perf-reftest-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-linux1804-64-shippable-qr/opt**
@@ -3740,11 +3105,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-perf-reftest-swr**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
 
 
    .. list-table:: **test-macosx1015-64-shippable-qr/opt**
@@ -3766,11 +3126,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-perf-reftest-swr**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
 
 
    .. list-table:: **test-windows10-32-qr/opt**
@@ -3783,11 +3138,6 @@ For the sample commands found below, note that the capitalization used is import
         - mozilla-release
         - mozilla-beta
       * - **talos-perf-reftest**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **talos-perf-reftest-swr**
         - ❌
         - ❌
         - ❌
@@ -3808,11 +3158,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-perf-reftest-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-windows10-64-qr/opt**
@@ -3829,11 +3174,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-perf-reftest-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-windows10-64-shippable-qr/opt**
@@ -3846,11 +3186,6 @@ For the sample commands found below, note that the capitalization used is import
         - mozilla-release
         - mozilla-beta
       * - **talos-perf-reftest**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
-      * - **talos-perf-reftest-swr**
         - ✅
         - ✅
         - ❌
@@ -4090,11 +3425,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-g4-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-linux1804-64-shippable-qr/opt**
@@ -4116,11 +3446,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-g4-swr**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
 
 
    .. list-table:: **test-macosx1015-64-shippable-qr/opt**
@@ -4142,11 +3467,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-g4-swr**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
 
 
    .. list-table:: **test-windows10-32-qr/opt**
@@ -4159,11 +3479,6 @@ For the sample commands found below, note that the capitalization used is import
         - mozilla-release
         - mozilla-beta
       * - **talos-g4**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **talos-g4-swr**
         - ❌
         - ❌
         - ❌
@@ -4184,11 +3499,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-g4-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-windows10-64-qr/opt**
@@ -4205,11 +3515,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-g4-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-windows10-64-shippable-qr/opt**
@@ -4222,11 +3527,6 @@ For the sample commands found below, note that the capitalization used is import
         - mozilla-release
         - mozilla-beta
       * - **talos-g4**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
-      * - **talos-g4-swr**
         - ✅
         - ✅
         - ❌
@@ -4293,11 +3593,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-g4-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-linux1804-64-shippable-qr/opt**
@@ -4319,11 +3614,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-g4-swr**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
 
 
    .. list-table:: **test-macosx1015-64-shippable-qr/opt**
@@ -4345,11 +3635,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-g4-swr**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
 
 
    .. list-table:: **test-windows10-32-qr/opt**
@@ -4362,11 +3647,6 @@ For the sample commands found below, note that the capitalization used is import
         - mozilla-release
         - mozilla-beta
       * - **talos-g4**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **talos-g4-swr**
         - ❌
         - ❌
         - ❌
@@ -4387,11 +3667,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-g4-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-windows10-64-qr/opt**
@@ -4408,11 +3683,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-g4-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-windows10-64-shippable-qr/opt**
@@ -4425,11 +3695,6 @@ For the sample commands found below, note that the capitalization used is import
         - mozilla-release
         - mozilla-beta
       * - **talos-g4**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
-      * - **talos-g4-swr**
         - ✅
         - ✅
         - ❌
@@ -4506,11 +3771,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-linux1804-64-shippable-qr/opt**
@@ -4532,11 +3792,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
 
 
    .. list-table:: **test-macosx1015-64-shippable-qr/opt**
@@ -4558,11 +3813,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
 
 
    .. list-table:: **test-windows10-32-qr/opt**
@@ -4575,11 +3825,6 @@ For the sample commands found below, note that the capitalization used is import
         - mozilla-release
         - mozilla-beta
       * - **talos-other**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **talos-other-swr**
         - ❌
         - ❌
         - ❌
@@ -4600,11 +3845,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-windows10-64-qr/opt**
@@ -4621,11 +3861,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-windows10-64-shippable-qr/opt**
@@ -4638,11 +3873,6 @@ For the sample commands found below, note that the capitalization used is import
         - mozilla-release
         - mozilla-beta
       * - **talos-other**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
-      * - **talos-other-swr**
         - ✅
         - ✅
         - ❌
@@ -4677,11 +3907,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-sessionrestore-many-windows-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-linux1804-64-shippable-qr/opt**
@@ -4701,11 +3926,6 @@ For the sample commands found below, note that the capitalization used is import
       * - **talos-sessionrestore-many-windows-profiling**
         - ❌
         - ❌
-        - ❌
-        - ❌
-      * - **talos-sessionrestore-many-windows-swr**
-        - ✅
-        - ✅
         - ❌
         - ❌
 
@@ -4729,11 +3949,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-sessionrestore-many-windows-swr**
-        - ✅
-        - ✅
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-windows10-32-qr/opt**
@@ -4746,11 +3961,6 @@ For the sample commands found below, note that the capitalization used is import
         - mozilla-release
         - mozilla-beta
       * - **talos-sessionrestore-many-windows**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **talos-sessionrestore-many-windows-swr**
         - ❌
         - ❌
         - ❌
@@ -4771,11 +3981,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-sessionrestore-many-windows-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-windows10-64-qr/opt**
@@ -4792,11 +3997,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-sessionrestore-many-windows-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-windows10-64-shippable-qr/opt**
@@ -4809,11 +4009,6 @@ For the sample commands found below, note that the capitalization used is import
         - mozilla-release
         - mozilla-beta
       * - **talos-sessionrestore-many-windows**
-        - ✅
-        - ✅
-        - ❌
-        - ❌
-      * - **talos-sessionrestore-many-windows-swr**
         - ✅
         - ✅
         - ❌
@@ -4849,11 +4044,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-linux1804-64-shippable-qr/opt**
@@ -4875,11 +4065,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
 
 
    .. list-table:: **test-macosx1015-64-shippable-qr/opt**
@@ -4901,11 +4086,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
 
 
    .. list-table:: **test-windows10-32-qr/opt**
@@ -4918,11 +4098,6 @@ For the sample commands found below, note that the capitalization used is import
         - mozilla-release
         - mozilla-beta
       * - **talos-other**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **talos-other-swr**
         - ❌
         - ❌
         - ❌
@@ -4943,11 +4118,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-windows10-64-qr/opt**
@@ -4964,11 +4134,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-windows10-64-shippable-qr/opt**
@@ -4981,11 +4146,6 @@ For the sample commands found below, note that the capitalization used is import
         - mozilla-release
         - mozilla-beta
       * - **talos-other**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
-      * - **talos-other-swr**
         - ✅
         - ✅
         - ❌
@@ -5037,11 +4197,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-linux1804-64-shippable-qr/opt**
@@ -5063,11 +4218,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
 
 
    .. list-table:: **test-macosx1015-64-shippable-qr/opt**
@@ -5089,11 +4239,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
 
 
    .. list-table:: **test-windows10-32-qr/opt**
@@ -5106,11 +4251,6 @@ For the sample commands found below, note that the capitalization used is import
         - mozilla-release
         - mozilla-beta
       * - **talos-other**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **talos-other-swr**
         - ❌
         - ❌
         - ❌
@@ -5131,11 +4271,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-windows10-64-qr/opt**
@@ -5152,11 +4287,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-windows10-64-shippable-qr/opt**
@@ -5169,11 +4299,6 @@ For the sample commands found below, note that the capitalization used is import
         - mozilla-release
         - mozilla-beta
       * - **talos-other**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
-      * - **talos-other-swr**
         - ✅
         - ✅
         - ❌
@@ -5216,11 +4341,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-linux1804-64-shippable-qr/opt**
@@ -5242,11 +4362,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
 
 
    .. list-table:: **test-macosx1015-64-shippable-qr/opt**
@@ -5268,11 +4383,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
 
 
    .. list-table:: **test-windows10-32-qr/opt**
@@ -5285,11 +4395,6 @@ For the sample commands found below, note that the capitalization used is import
         - mozilla-release
         - mozilla-beta
       * - **talos-other**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **talos-other-swr**
         - ❌
         - ❌
         - ❌
@@ -5310,11 +4415,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-windows10-64-qr/opt**
@@ -5331,11 +4431,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-windows10-64-shippable-qr/opt**
@@ -5348,11 +4443,6 @@ For the sample commands found below, note that the capitalization used is import
         - mozilla-release
         - mozilla-beta
       * - **talos-other**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
-      * - **talos-other-swr**
         - ✅
         - ✅
         - ❌
@@ -5588,11 +4678,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-linux1804-64-shippable-qr/opt**
@@ -5614,11 +4699,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
 
 
    .. list-table:: **test-macosx1015-64-shippable-qr/opt**
@@ -5640,11 +4720,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
 
 
    .. list-table:: **test-windows10-32-qr/opt**
@@ -5657,11 +4732,6 @@ For the sample commands found below, note that the capitalization used is import
         - mozilla-release
         - mozilla-beta
       * - **talos-other**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **talos-other-swr**
         - ❌
         - ❌
         - ❌
@@ -5682,11 +4752,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-windows10-64-qr/opt**
@@ -5703,11 +4768,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-windows10-64-shippable-qr/opt**
@@ -5720,11 +4780,6 @@ For the sample commands found below, note that the capitalization used is import
         - mozilla-release
         - mozilla-beta
       * - **talos-other**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
-      * - **talos-other-swr**
         - ✅
         - ✅
         - ❌
@@ -5833,11 +4888,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-tabswitch-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-linux1804-64-shippable-qr/opt**
@@ -5859,11 +4909,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-tabswitch-swr**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
 
 
    .. list-table:: **test-macosx1015-64-shippable-qr/opt**
@@ -5896,11 +4941,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-tabswitch-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-windows10-32-shippable-qr/opt**
@@ -5913,11 +4953,6 @@ For the sample commands found below, note that the capitalization used is import
         - mozilla-release
         - mozilla-beta
       * - **talos-tabswitch**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **talos-tabswitch-swr**
         - ❌
         - ❌
         - ❌
@@ -5938,11 +4973,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-tabswitch-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-windows10-64-shippable-qr/opt**
@@ -5955,11 +4985,6 @@ For the sample commands found below, note that the capitalization used is import
         - mozilla-release
         - mozilla-beta
       * - **talos-tabswitch**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
-      * - **talos-tabswitch-swr**
         - ✅
         - ✅
         - ❌
@@ -6069,11 +5094,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-svgr-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-linux1804-64-shippable-qr/opt**
@@ -6095,11 +5115,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-svgr-swr**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
 
 
    .. list-table:: **test-macosx1015-64-shippable-qr/opt**
@@ -6121,11 +5136,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-svgr-swr**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
 
 
    .. list-table:: **test-windows10-32-qr/opt**
@@ -6138,11 +5148,6 @@ For the sample commands found below, note that the capitalization used is import
         - mozilla-release
         - mozilla-beta
       * - **talos-svgr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **talos-svgr-swr**
         - ❌
         - ❌
         - ❌
@@ -6163,11 +5168,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-svgr-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-windows10-64-qr/opt**
@@ -6184,11 +5184,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-svgr-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-windows10-64-shippable-qr/opt**
@@ -6201,11 +5196,6 @@ For the sample commands found below, note that the capitalization used is import
         - mozilla-release
         - mozilla-beta
       * - **talos-svgr**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
-      * - **talos-svgr-swr**
         - ✅
         - ✅
         - ❌
@@ -6278,11 +5268,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-xperf-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-windows11-64-2009-shippable-qr/opt**
@@ -6295,11 +5280,6 @@ For the sample commands found below, note that the capitalization used is import
         - mozilla-release
         - mozilla-beta
       * - **talos-xperf**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
-      * - **talos-xperf-swr**
         - ✅
         - ✅
         - ❌
@@ -6438,11 +5418,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-tp5o-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-linux1804-64-shippable-qr/opt**
@@ -6464,11 +5439,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-tp5o-swr**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
 
 
    .. list-table:: **test-macosx1015-64-shippable-qr/opt**
@@ -6490,11 +5460,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-tp5o-swr**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
 
 
    .. list-table:: **test-windows10-32-qr/opt**
@@ -6507,11 +5472,6 @@ For the sample commands found below, note that the capitalization used is import
         - mozilla-release
         - mozilla-beta
       * - **talos-tp5o**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **talos-tp5o-swr**
         - ❌
         - ❌
         - ❌
@@ -6532,11 +5492,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-tp5o-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-windows10-64-qr/opt**
@@ -6553,11 +5508,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-tp5o-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-windows10-64-shippable-qr/opt**
@@ -6570,11 +5520,6 @@ For the sample commands found below, note that the capitalization used is import
         - mozilla-release
         - mozilla-beta
       * - **talos-tp5o**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
-      * - **talos-tp5o-swr**
         - ✅
         - ✅
         - ❌
@@ -6698,11 +5643,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-g1-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-linux1804-64-shippable-qr/opt**
@@ -6724,11 +5664,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-g1-swr**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
 
 
    .. list-table:: **test-macosx1015-64-shippable-qr/opt**
@@ -6750,11 +5685,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-g1-swr**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
 
 
    .. list-table:: **test-windows10-32-qr/opt**
@@ -6767,11 +5697,6 @@ For the sample commands found below, note that the capitalization used is import
         - mozilla-release
         - mozilla-beta
       * - **talos-g1**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **talos-g1-swr**
         - ❌
         - ❌
         - ❌
@@ -6792,11 +5717,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-g1-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-windows10-64-qr/opt**
@@ -6813,11 +5733,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-g1-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-windows10-64-shippable-qr/opt**
@@ -6830,11 +5745,6 @@ For the sample commands found below, note that the capitalization used is import
         - mozilla-release
         - mozilla-beta
       * - **talos-g1**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
-      * - **talos-g1-swr**
         - ✅
         - ✅
         - ❌
@@ -6870,11 +5780,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-g5-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-linux1804-64-shippable-qr/opt**
@@ -6896,11 +5801,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-g5-swr**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
 
 
    .. list-table:: **test-macosx1015-64-shippable-qr/opt**
@@ -6922,11 +5822,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-g5-swr**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
 
 
    .. list-table:: **test-windows10-32-qr/opt**
@@ -6939,11 +5834,6 @@ For the sample commands found below, note that the capitalization used is import
         - mozilla-release
         - mozilla-beta
       * - **talos-g5**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **talos-g5-swr**
         - ❌
         - ❌
         - ❌
@@ -6964,11 +5854,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-g5-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-windows10-64-qr/opt**
@@ -6985,11 +5870,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-g5-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-windows10-64-shippable-qr/opt**
@@ -7002,11 +5882,6 @@ For the sample commands found below, note that the capitalization used is import
         - mozilla-release
         - mozilla-beta
       * - **talos-g5**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
-      * - **talos-g5-swr**
         - ✅
         - ✅
         - ❌
@@ -7078,11 +5953,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-chrome-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-linux1804-64-shippable-qr/opt**
@@ -7104,11 +5974,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-chrome-swr**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
 
 
    .. list-table:: **test-macosx1015-64-shippable-qr/opt**
@@ -7130,11 +5995,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-chrome-swr**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
 
 
    .. list-table:: **test-windows10-32-qr/opt**
@@ -7147,11 +6007,6 @@ For the sample commands found below, note that the capitalization used is import
         - mozilla-release
         - mozilla-beta
       * - **talos-chrome**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **talos-chrome-swr**
         - ❌
         - ❌
         - ❌
@@ -7172,11 +6027,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-chrome-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-windows10-64-qr/opt**
@@ -7193,11 +6043,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-chrome-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-windows10-64-shippable-qr/opt**
@@ -7210,11 +6055,6 @@ For the sample commands found below, note that the capitalization used is import
         - mozilla-release
         - mozilla-beta
       * - **talos-chrome**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
-      * - **talos-chrome-swr**
         - ✅
         - ✅
         - ❌
@@ -7282,11 +6122,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-linux1804-64-shippable-qr/opt**
@@ -7308,11 +6143,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
 
 
    .. list-table:: **test-macosx1015-64-shippable-qr/opt**
@@ -7334,11 +6164,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
 
 
    .. list-table:: **test-windows10-32-qr/opt**
@@ -7351,11 +6176,6 @@ For the sample commands found below, note that the capitalization used is import
         - mozilla-release
         - mozilla-beta
       * - **talos-other**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **talos-other-swr**
         - ❌
         - ❌
         - ❌
@@ -7376,11 +6196,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-windows10-64-qr/opt**
@@ -7397,11 +6212,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-windows10-64-shippable-qr/opt**
@@ -7414,11 +6224,6 @@ For the sample commands found below, note that the capitalization used is import
         - mozilla-release
         - mozilla-beta
       * - **talos-other**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
-      * - **talos-other-swr**
         - ✅
         - ✅
         - ❌
@@ -7467,11 +6272,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-g5-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-linux1804-64-shippable-qr/opt**
@@ -7493,11 +6293,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-g5-swr**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
 
 
    .. list-table:: **test-macosx1015-64-shippable-qr/opt**
@@ -7519,11 +6314,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-g5-swr**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
 
 
    .. list-table:: **test-windows10-32-qr/opt**
@@ -7536,11 +6326,6 @@ For the sample commands found below, note that the capitalization used is import
         - mozilla-release
         - mozilla-beta
       * - **talos-g5**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **talos-g5-swr**
         - ❌
         - ❌
         - ❌
@@ -7561,11 +6346,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-g5-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-windows10-64-qr/opt**
@@ -7582,11 +6362,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-g5-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-windows10-64-shippable-qr/opt**
@@ -7599,11 +6374,6 @@ For the sample commands found below, note that the capitalization used is import
         - mozilla-release
         - mozilla-beta
       * - **talos-g5**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
-      * - **talos-g5-swr**
         - ✅
         - ✅
         - ❌
@@ -7678,11 +6448,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-svgr-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-linux1804-64-shippable-qr/opt**
@@ -7704,11 +6469,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-svgr-swr**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
 
 
    .. list-table:: **test-macosx1015-64-shippable-qr/opt**
@@ -7730,11 +6490,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-svgr-swr**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
 
 
    .. list-table:: **test-windows10-32-qr/opt**
@@ -7747,11 +6502,6 @@ For the sample commands found below, note that the capitalization used is import
         - mozilla-release
         - mozilla-beta
       * - **talos-svgr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **talos-svgr-swr**
         - ❌
         - ❌
         - ❌
@@ -7772,11 +6522,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-svgr-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-windows10-64-qr/opt**
@@ -7793,11 +6538,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-svgr-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-windows10-64-shippable-qr/opt**
@@ -7810,11 +6550,6 @@ For the sample commands found below, note that the capitalization used is import
         - mozilla-release
         - mozilla-beta
       * - **talos-svgr**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
-      * - **talos-svgr-swr**
         - ✅
         - ✅
         - ❌
@@ -7874,11 +6609,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-svgr-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-linux1804-64-shippable-qr/opt**
@@ -7900,11 +6630,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-svgr-swr**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
 
 
    .. list-table:: **test-macosx1015-64-shippable-qr/opt**
@@ -7926,11 +6651,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-svgr-swr**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
 
 
    .. list-table:: **test-windows10-32-qr/opt**
@@ -7943,11 +6663,6 @@ For the sample commands found below, note that the capitalization used is import
         - mozilla-release
         - mozilla-beta
       * - **talos-svgr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **talos-svgr-swr**
         - ❌
         - ❌
         - ❌
@@ -7968,11 +6683,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-svgr-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-windows10-64-qr/opt**
@@ -7989,11 +6699,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-svgr-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-windows10-64-shippable-qr/opt**
@@ -8006,11 +6711,6 @@ For the sample commands found below, note that the capitalization used is import
         - mozilla-release
         - mozilla-beta
       * - **talos-svgr**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
-      * - **talos-svgr-swr**
         - ✅
         - ✅
         - ❌
@@ -8102,11 +6802,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-svgr-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-linux1804-64-shippable-qr/opt**
@@ -8128,11 +6823,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-svgr-swr**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
 
 
    .. list-table:: **test-macosx1015-64-shippable-qr/opt**
@@ -8154,11 +6844,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-svgr-swr**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
 
 
    .. list-table:: **test-windows10-32-qr/opt**
@@ -8171,11 +6856,6 @@ For the sample commands found below, note that the capitalization used is import
         - mozilla-release
         - mozilla-beta
       * - **talos-svgr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **talos-svgr-swr**
         - ❌
         - ❌
         - ❌
@@ -8196,11 +6876,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-svgr-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-windows10-64-qr/opt**
@@ -8217,11 +6892,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-svgr-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-windows10-64-shippable-qr/opt**
@@ -8234,11 +6904,6 @@ For the sample commands found below, note that the capitalization used is import
         - mozilla-release
         - mozilla-beta
       * - **talos-svgr**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
-      * - **talos-svgr-swr**
         - ✅
         - ✅
         - ❌
@@ -8318,11 +6983,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-svgr-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-linux1804-64-shippable-qr/opt**
@@ -8344,11 +7004,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-svgr-swr**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
 
 
    .. list-table:: **test-macosx1015-64-shippable-qr/opt**
@@ -8370,11 +7025,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-svgr-swr**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
 
 
    .. list-table:: **test-windows10-32-qr/opt**
@@ -8387,11 +7037,6 @@ For the sample commands found below, note that the capitalization used is import
         - mozilla-release
         - mozilla-beta
       * - **talos-svgr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **talos-svgr-swr**
         - ❌
         - ❌
         - ❌
@@ -8412,11 +7057,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-svgr-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-windows10-64-qr/opt**
@@ -8433,11 +7073,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-svgr-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-windows10-64-shippable-qr/opt**
@@ -8450,11 +7085,6 @@ For the sample commands found below, note that the capitalization used is import
         - mozilla-release
         - mozilla-beta
       * - **talos-svgr**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
-      * - **talos-svgr-swr**
         - ✅
         - ✅
         - ❌
@@ -8516,11 +7146,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-linux1804-64-shippable-qr/opt**
@@ -8542,11 +7167,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
 
 
    .. list-table:: **test-macosx1015-64-shippable-qr/opt**
@@ -8568,11 +7188,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
 
 
    .. list-table:: **test-windows10-32-qr/opt**
@@ -8585,11 +7200,6 @@ For the sample commands found below, note that the capitalization used is import
         - mozilla-release
         - mozilla-beta
       * - **talos-other**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **talos-other-swr**
         - ❌
         - ❌
         - ❌
@@ -8610,11 +7220,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-windows10-64-qr/opt**
@@ -8631,11 +7236,6 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-windows10-64-shippable-qr/opt**
@@ -8648,11 +7248,6 @@ For the sample commands found below, note that the capitalization used is import
         - mozilla-release
         - mozilla-beta
       * - **talos-other**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
-      * - **talos-other-swr**
         - ✅
         - ✅
         - ❌

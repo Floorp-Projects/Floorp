@@ -284,10 +284,49 @@ class CycleCollectedJSContext::SavedMicroTaskQueue
   }
 
   ~SavedMicroTaskQueue() {
-    MOZ_RELEASE_ASSERT(ccjs->mPendingMicroTaskRunnables.empty());
+    // The JS Debugger attempts to maintain the invariant that microtasks which
+    // occur durring debugger operation are completely flushed from the task
+    // queue before returning control to the debuggee, in order to avoid
+    // micro-tasks generated during debugging from interfering with regular
+    // operation.
+    //
+    // While the vast majority of microtasks can be reliably flushed,
+    // synchronous operations (see nsAutoSyncOperation) such as printing and
+    // alert diaglogs suppress the execution of some microtasks.
+    //
+    // When PerformMicroTaskCheckpoint is run while microtasks are suppressed,
+    // any suppressed microtasks are gathered into a new SuppressedMicroTasks
+    // runnable, which is enqueued on exit from PerformMicroTaskCheckpoint. As a
+    // result, AutoDebuggerJobQueueInterruption::runJobs is not able to
+    // correctly guarantee that the microtask queue is totally empty in the
+    // presence of sync operations.
+    //
+    // Previous versions of this code release-asserted that the queue was empty,
+    // causing user observable crashes (Bug 1849675). To avoid this, we instead
+    // choose to move suspended microtasks from the SavedMicroTaskQueue to the
+    // main microtask queue in this destructor. This means that jobs enqueued
+    // during synchnronous events under debugger control may produce events
+    // which run outside the debugger, but this is viewed as strictly
+    // preferrable to crashing.
+    MOZ_RELEASE_ASSERT(ccjs->mPendingMicroTaskRunnables.size() <= 1);
     MOZ_RELEASE_ASSERT(ccjs->mDebuggerRecursionDepth);
+    RefPtr<MicroTaskRunnable> maybeSuppressedTasks;
+
+    // Handle the case where there is a SuppressedMicroTask still in the queue.
+    if (!ccjs->mPendingMicroTaskRunnables.empty()) {
+      maybeSuppressedTasks = ccjs->mPendingMicroTaskRunnables.front();
+      ccjs->mPendingMicroTaskRunnables.pop_front();
+    }
+
+    MOZ_RELEASE_ASSERT(ccjs->mPendingMicroTaskRunnables.empty());
     ccjs->mDebuggerRecursionDepth--;
     ccjs->mPendingMicroTaskRunnables.swap(mQueue);
+
+    // Re-enqueue the suppressed task now that we've put the original microtask
+    // queue back.
+    if (maybeSuppressedTasks) {
+      ccjs->mPendingMicroTaskRunnables.push_back(maybeSuppressedTasks);
+    }
   }
 
  private:

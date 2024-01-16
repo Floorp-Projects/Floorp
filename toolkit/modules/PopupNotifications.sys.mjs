@@ -245,6 +245,7 @@ export function PopupNotifications(tabbrowser, panel, iconBox, options = {}) {
   this.iconBox = iconBox;
 
   this.panel.addEventListener("popuphidden", this, true);
+  this.panel.addEventListener("popuppositioned", this);
   this.panel.classList.add("popup-notification-panel", "panel-no-padding");
 
   // This listener will be attached to the chrome window whenever a notification
@@ -813,6 +814,7 @@ PopupNotifications.prototype = {
         this._onPopupHidden(aEvent);
         break;
       case "activate":
+      case "popuppositioned":
         if (this.isPanelOpen) {
           for (let elt of this.panel.children) {
             elt.notification.timeShown = Math.max(

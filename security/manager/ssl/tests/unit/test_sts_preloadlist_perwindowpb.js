@@ -162,8 +162,11 @@ function test_part1() {
   // Here's what we have now:
   // |-- includesubdomains.preloaded.test (in preload list, includes subdomains) IS sts host
   //     |-- subdomain.includesubdomains.preloaded.test (include subdomains is false) IS sts host
-  //     |   `-- another.subdomain.includesubdomains.preloaded.test              IS NOT sts host
+  //     |   `-- another.subdomain.includesubdomains.preloaded.test              IS sts host
   //     `-- sibling.includesubdomains.preloaded.test                            IS sts host
+  // Note that another.subdomain.includesubdomains.preloaded.test IS still an sts host, because
+  // there exists a superdomain that is sts and asserts includeSubdomains (namely,
+  // includesubdomains.preloaded.test)
   ok(
     gSSService.isSecureURI(
       Services.io.newURI("https://subdomain.includesubdomains.preloaded.test")
@@ -175,7 +178,7 @@ function test_part1() {
     )
   );
   ok(
-    !gSSService.isSecureURI(
+    gSSService.isSecureURI(
       Services.io.newURI(
         "https://another.subdomain.includesubdomains.preloaded.test"
       )

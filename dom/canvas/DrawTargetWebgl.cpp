@@ -3398,6 +3398,10 @@ void DrawTargetWebgl::DrawShadow(const Path* aPath, const Pattern& aPattern,
                                  const ShadowOptions& aShadow,
                                  const DrawOptions& aOptions,
                                  const StrokeOptions* aStrokeOptions) {
+  if (!aPath || aPath->GetBackendType() != BackendType::SKIA) {
+    return;
+  }
+
   // If there is a WebGL context, then try to cache the path to avoid slow
   // fallbacks.
   if (ShouldAccelPath(aOptions, aStrokeOptions) &&

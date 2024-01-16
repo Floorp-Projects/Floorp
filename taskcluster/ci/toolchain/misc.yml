@@ -183,11 +183,14 @@ linux64-custom-v8:
 
 linux64-custom-car:
     description: "Custom chromium-as-release build for Linux"
+    attributes:
+        cached_task: false
     treeherder:
         symbol: TL(custom-car)
     worker:
         docker-image: {in-tree: custom-car-linux}
         max-run-time: 16200
+    run-on-projects: []
     run:
         script: build-custom-car-linux.sh
         arguments: [
@@ -210,6 +213,8 @@ linux64-custom-car:
 
 win64-custom-car:
     description: "Custom chromium-as-release build for Windows"
+    attributes:
+        cached_task: false
     treeherder:
         symbol: TW64(custom-car)
     worker-type: b-win2012
@@ -217,6 +222,7 @@ win64-custom-car:
         max-run-time: 16200
         env:
             MSYSTEM: "MINGW64"
+    run-on-projects: []
     run:
         script: build-custom-car-win64.sh
         arguments: [

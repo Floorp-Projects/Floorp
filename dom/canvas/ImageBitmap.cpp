@@ -668,6 +668,7 @@ void ImageBitmap::OnShutdown() {
 
 void ImageBitmap::SetPictureRect(const IntRect& aRect, ErrorResult& aRv) {
   mPictureRect = FixUpNegativeDimension(aRect, aRv);
+  mSurface = nullptr;
 }
 
 /*
@@ -688,15 +689,35 @@ already_AddRefed<SourceSurface> ImageBitmap::PrepareForDrawTarget(
     return nullptr;
   }
 
-  if (!mSurface) {
-    mSurface = mData->GetAsSourceSurface();
-
-    if (!mSurface) {
-      return nullptr;
+  // We may have a cached surface optimized for the last DrawTarget. If it was
+  // created via DrawTargetRecording, it may not be suitable for use with the
+  // current DrawTarget, as we can only do readbacks via the
+  // PersistentBufferProvider for the canvas, and not for individual
+  // SourceSurfaceRecording objects. In such situations, the only thing we can
+  // do is clear our cache and extract a new SourceSurface from mData.
+  if (mSurface && mSurface->GetType() == gfx::SurfaceType::RECORDING &&
+      !aTarget->IsRecording()) {
+    RefPtr<gfx::DataSourceSurface> dataSurface = mSurface->GetDataSurface();
+    if (!dataSurface) {
+      mSurface = nullptr;
     }
   }
 
-  IntRect surfRect(0, 0, mSurface->GetSize().width, mSurface->GetSize().height);
+  // If we have a surface, then it is already cropped and premultiplied.
+  if (mSurface) {
+    return do_AddRef(mSurface);
+  }
+
+  RefPtr<gfx::SourceSurface> surface = mData->GetAsSourceSurface();
+  if (NS_WARN_IF(!surface)) {
+    return nullptr;
+  }
+
+  IntRect surfRect(0, 0, surface->GetSize().width, surface->GetSize().height);
+  SurfaceFormat format = surface->GetFormat();
+  bool isOpaque = IsOpaque(format);
+  bool mustPremultiply = mAlphaType == gfxAlphaType::NonPremult && !isOpaque;
+  bool hasCopied = false;
 
   // Check if we still need to crop our surface
   if (!mPictureRect.IsEqualEdges(surfRect)) {
@@ -704,7 +725,6 @@ already_AddRefed<SourceSurface> ImageBitmap::PrepareForDrawTarget(
 
     // the crop lies entirely outside the surface area, nothing to draw
     if (surfPortion.IsEmpty()) {
-      mSurface = nullptr;
       return nullptr;
     }
 
@@ -719,72 +739,99 @@ already_AddRefed<SourceSurface> ImageBitmap::PrepareForDrawTarget(
     // any pixels outside the surface portion must be filled with transparent
     // black, even if the surface is opaque, so force to an alpha format in
     // that case.
-    SurfaceFormat format = mSurface->GetFormat();
-    if (!surfPortion.IsEqualEdges(mPictureRect) && IsOpaque(format)) {
+    if (!surfPortion.IsEqualEdges(mPictureRect) && isOpaque) {
       format = SurfaceFormat::B8G8R8A8;
     }
-    RefPtr<DrawTarget> cropped =
-        aTarget->CreateSimilarDrawTarget(mPictureRect.Size(), format);
-    if (!cropped) {
-      mSurface = nullptr;
+
+    // If we need to pre-multiply the alpha, then we need to be able to
+    // read/write the pixel data, and as such, we want to avoid creating a
+    // SourceSurfaceRecording for the same reasons earlier in this method.
+    RefPtr<DrawTarget> cropped;
+    if (mustPremultiply && aTarget->IsRecording()) {
+      cropped = Factory::CreateDrawTarget(BackendType::SKIA,
+                                          mPictureRect.Size(), format);
+    } else {
+      cropped = aTarget->CreateSimilarDrawTarget(mPictureRect.Size(), format);
+    }
+
+    if (NS_WARN_IF(!cropped)) {
       return nullptr;
     }
 
-    cropped->CopySurface(mSurface, surfPortion, dest);
-    mSurface = cropped->Snapshot();
-    if (!mSurface) {
+    cropped->CopySurface(surface, surfPortion, dest);
+    surface = cropped->GetBackingSurface();
+    hasCopied = true;
+    if (NS_WARN_IF(!surface)) {
       return nullptr;
     }
-
-    // Make mCropRect match new surface we've cropped to
-    mPictureRect.MoveTo(0, 0);
   }
 
   // Pre-multiply alpha here.
   // Ignore this step if the source surface does not have alpha channel; this
-  // kind of source surfaces might come form layers::PlanarYCbCrImage.
-  if (mAlphaType == gfxAlphaType::NonPremult &&
-      !IsOpaque(mSurface->GetFormat())) {
-    MOZ_ASSERT(mSurface->GetFormat() == SurfaceFormat::R8G8B8A8 ||
-               mSurface->GetFormat() == SurfaceFormat::B8G8R8A8 ||
-               mSurface->GetFormat() == SurfaceFormat::A8R8G8B8);
+  // kind of source surfaces might come form layers::PlanarYCbCrImage. If the
+  // crop rect imputed transparency, and the original surface was opaque, we
+  // can skip doing the pre-multiply here as the only transparent pixels are
+  // already transparent black.
+  if (mustPremultiply) {
+    MOZ_ASSERT(surface->GetFormat() == SurfaceFormat::R8G8B8A8 ||
+               surface->GetFormat() == SurfaceFormat::B8G8R8A8 ||
+               surface->GetFormat() == SurfaceFormat::A8R8G8B8);
 
-    RefPtr<DataSourceSurface> srcSurface = mSurface->GetDataSurface();
+    RefPtr<DataSourceSurface> srcSurface = surface->GetDataSurface();
     if (NS_WARN_IF(!srcSurface)) {
       return nullptr;
     }
-    RefPtr<DataSourceSurface> dstSurface = Factory::CreateDataSourceSurface(
-        srcSurface->GetSize(), srcSurface->GetFormat());
-    if (NS_WARN_IF(!dstSurface)) {
-      return nullptr;
+
+    if (hasCopied) {
+      // If we are using our own local copy, then we can safely premultiply in
+      // place without an additional allocation.
+      DataSourceSurface::ScopedMap map(srcSurface,
+                                       DataSourceSurface::READ_WRITE);
+      if (!map.IsMapped()) {
+        gfxCriticalError() << "Failed to map surface for premultiplying alpha.";
+        return nullptr;
+      }
+
+      PremultiplyData(map.GetData(), map.GetStride(), srcSurface->GetFormat(),
+                      map.GetData(), map.GetStride(), srcSurface->GetFormat(),
+                      surface->GetSize());
+    } else {
+      RefPtr<DataSourceSurface> dstSurface = Factory::CreateDataSourceSurface(
+          srcSurface->GetSize(), srcSurface->GetFormat());
+      if (NS_WARN_IF(!dstSurface)) {
+        return nullptr;
+      }
+
+      DataSourceSurface::ScopedMap srcMap(srcSurface, DataSourceSurface::READ);
+      if (!srcMap.IsMapped()) {
+        gfxCriticalError()
+            << "Failed to map source surface for premultiplying alpha.";
+        return nullptr;
+      }
+
+      DataSourceSurface::ScopedMap dstMap(dstSurface, DataSourceSurface::WRITE);
+      if (!dstMap.IsMapped()) {
+        gfxCriticalError()
+            << "Failed to map destination surface for premultiplying alpha.";
+        return nullptr;
+      }
+
+      PremultiplyData(srcMap.GetData(), srcMap.GetStride(),
+                      srcSurface->GetFormat(), dstMap.GetData(),
+                      dstMap.GetStride(), dstSurface->GetFormat(),
+                      dstSurface->GetSize());
+
+      surface = std::move(dstSurface);
     }
-
-    DataSourceSurface::ScopedMap srcMap(srcSurface, DataSourceSurface::READ);
-    if (!srcMap.IsMapped()) {
-      gfxCriticalError()
-          << "Failed to map source surface for premultiplying alpha.";
-      return nullptr;
-    }
-
-    DataSourceSurface::ScopedMap dstMap(dstSurface, DataSourceSurface::WRITE);
-    if (!dstMap.IsMapped()) {
-      gfxCriticalError()
-          << "Failed to map destination surface for premultiplying alpha.";
-      return nullptr;
-    }
-
-    PremultiplyData(srcMap.GetData(), srcMap.GetStride(), mSurface->GetFormat(),
-                    dstMap.GetData(), dstMap.GetStride(), mSurface->GetFormat(),
-                    dstSurface->GetSize());
-
-    mAlphaType = gfxAlphaType::Premult;
-    mSurface = dstSurface;
   }
 
   // Replace our surface with one optimized for the target we're about to draw
   // to, under the assumption it'll likely be drawn again to that target.
   // This call should be a no-op for already-optimized surfaces
-  mSurface = aTarget->OptimizeSourceSurface(mSurface);
+  mSurface = aTarget->OptimizeSourceSurface(surface);
+  if (!mSurface) {
+    mSurface = std::move(surface);
+  }
   return do_AddRef(mSurface);
 }
 
@@ -1321,15 +1368,21 @@ already_AddRefed<ImageBitmap> ImageBitmap::CreateInternal(
     return nullptr;
   }
 
-  IntRect cropRect = aImageBitmap.mPictureRect;
+  IntRect cropRect;
   RefPtr<SourceSurface> surface;
+  RefPtr<DataSourceSurface> dataSurface;
+  gfxAlphaType alphaType;
 
   bool needToReportMemoryAllocation = false;
 
-  if (aImageBitmap.mSurface) {
-    // the source imageBitmap already has a cropped surface, just use this
+  if (aImageBitmap.mSurface &&
+      (dataSurface = aImageBitmap.mSurface->GetDataSurface())) {
+    // the source imageBitmap already has a cropped surface, and we can get a
+    // DataSourceSurface from it, so just use it directly
     surface = aImageBitmap.mSurface;
-    cropRect = aCropRect.valueOr(cropRect);
+    cropRect = aCropRect.valueOr(IntRect(IntPoint(0, 0), surface->GetSize()));
+    alphaType = IsOpaque(surface->GetFormat()) ? gfxAlphaType::Opaque
+                                               : gfxAlphaType::Premult;
   } else {
     RefPtr<layers::Image> data = aImageBitmap.mData;
     surface = data->GetAsSourceSurface();
@@ -1338,6 +1391,8 @@ already_AddRefed<ImageBitmap> ImageBitmap::CreateInternal(
       return nullptr;
     }
 
+    cropRect = aImageBitmap.mPictureRect;
+    alphaType = aImageBitmap.mAlphaType;
     if (aCropRect.isSome()) {
       // get new crop rect relative to original uncropped surface
       IntRect newCropRect = aCropRect.ref();
@@ -1367,7 +1422,7 @@ already_AddRefed<ImageBitmap> ImageBitmap::CreateInternal(
 
   return CreateImageBitmapInternal(
       aGlobal, surface, Some(cropRect), aOptions, aImageBitmap.mWriteOnly,
-      needToReportMemoryAllocation, false, aImageBitmap.mAlphaType, aRv);
+      needToReportMemoryAllocation, false, alphaType, aRv);
 }
 
 class FulfillImageBitmapPromise {

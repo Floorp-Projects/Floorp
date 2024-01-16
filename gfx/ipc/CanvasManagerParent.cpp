@@ -10,6 +10,7 @@
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/ipc/Endpoint.h"
 #include "mozilla/layers/CompositorThread.h"
+#include "mozilla/StaticPrefs_webgl.h"
 #include "mozilla/webgpu/WebGPUParent.h"
 #include "mozilla/webrender/RenderThread.h"
 #include "nsIThread.h"
@@ -97,12 +98,18 @@ void CanvasManagerParent::ActorDestroy(ActorDestroyReason aWhy) {
 }
 
 already_AddRefed<dom::PWebGLParent> CanvasManagerParent::AllocPWebGLParent() {
+  if (NS_WARN_IF(!gfxVars::AllowWebglOop() &&
+                 !StaticPrefs::webgl_out_of_process_force())) {
+    MOZ_ASSERT_UNREACHABLE("AllocPWebGLParent without remote WebGL");
+    return nullptr;
+  }
   return MakeAndAddRef<dom::WebGLParent>();
 }
 
 already_AddRefed<webgpu::PWebGPUParent>
 CanvasManagerParent::AllocPWebGPUParent() {
-  if (!gfxVars::AllowWebGPU()) {
+  if (NS_WARN_IF(!gfxVars::AllowWebGPU())) {
+    MOZ_ASSERT_UNREACHABLE("AllocPWebGPUParent without WebGPU");
     return nullptr;
   }
 

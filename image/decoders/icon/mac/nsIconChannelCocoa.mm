@@ -28,6 +28,7 @@
 #include "nsContentSecurityManager.h"
 #include "nsNetUtil.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/UniquePtrExtensions.h"
 
 #include <Cocoa/Cocoa.h>
 
@@ -307,7 +308,11 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, bool aNonBlock
   //  - 1 byte for the image height, as u8
   //  - the raw image data as BGRA, width * height * 4 bytes.
   size_t bufferCapacity = 4 + width * height * 4;
-  UniquePtr<uint8_t[]> fileBuf = MakeUnique<uint8_t[]>(bufferCapacity);
+  UniquePtr<uint8_t[]> fileBuf = MakeUniqueFallible<uint8_t[]>(bufferCapacity);
+  if (NS_WARN_IF(!fileBuf)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
   fileBuf[0] = uint8_t(width);
   fileBuf[1] = uint8_t(height);
   fileBuf[2] = uint8_t(mozilla::gfx::SurfaceFormat::B8G8R8A8);

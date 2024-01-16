@@ -233,48 +233,6 @@ add_task(async function test_error_inspectedWindowEval_result() {
   await teardown({ commands, extension });
 });
 
-add_task(
-  async function test_system_principal_denied_error_inspectedWindowEval_result() {
-    const { commands, extension, fakeExtCallerInfo } = await setup(
-      "about:addons"
-    );
-
-    const result = await commands.inspectedWindowCommand.eval(
-      fakeExtCallerInfo,
-      "window",
-      {}
-    );
-
-    ok(!result.value, "Got a null result from inspectedWindow eval");
-    ok(
-      result.exceptionInfo.isError,
-      "Got an API Error result from inspectedWindow eval on a system principal page"
-    );
-    is(
-      result.exceptionInfo.code,
-      "E_PROTOCOLERROR",
-      "Got the expected 'code' property in the error result"
-    );
-    is(
-      result.exceptionInfo.description,
-      "Inspector protocol error: %s",
-      "Got the expected 'description' property in the error result"
-    );
-    is(
-      result.exceptionInfo.details.length,
-      1,
-      "The 'details' array property should contains 1 element"
-    );
-    is(
-      result.exceptionInfo.details[0],
-      "This target has a system principal. inspectedWindow.eval denied.",
-      "Got the expected content in the error results's details"
-    );
-
-    await teardown({ commands, extension });
-  }
-);
-
 add_task(async function test_exception_inspectedWindowEval_result() {
   const { commands, extension, fakeExtCallerInfo } = await setup(URL_ROOT_SSL);
 
