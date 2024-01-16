@@ -23,14 +23,6 @@ use std::fmt::{self, Write};
 use style_traits::values::specified::AllowedNumericType;
 use style_traits::{CssWriter, ParseError, SpecifiedValueInfo, StyleParseErrorKind, ToCss};
 
-fn trig_enabled() -> bool {
-    static_prefs::pref!("layout.css.trig.enabled")
-}
-
-fn nan_inf_enabled() -> bool {
-    static_prefs::pref!("layout.css.nan-inf.enabled")
-}
-
 /// The name of the mathematical function that we're parsing.
 #[derive(Clone, Copy, Debug, Parse)]
 pub enum MathFunction {
@@ -468,11 +460,11 @@ impl CalcNode {
             },
             &Token::Ident(ref ident) => {
                 let number = match_ignore_ascii_case! { &**ident,
-                    "e" if trig_enabled() => std::f32::consts::E,
-                    "pi" if trig_enabled() => std::f32::consts::PI,
-                    "infinity" if nan_inf_enabled() => f32::INFINITY,
-                    "-infinity" if nan_inf_enabled() => f32::NEG_INFINITY,
-                    "nan" if nan_inf_enabled() => f32::NAN,
+                    "e" => std::f32::consts::E,
+                    "pi" => std::f32::consts::PI,
+                    "infinity" => f32::INFINITY,
+                    "-infinity" => f32::NEG_INFINITY,
+                    "nan" => f32::NAN,
                     _ => return Err(location.new_unexpected_token_error(Token::Ident(ident.clone()))),
                 };
                 Ok(CalcNode::Leaf(Leaf::Number(number)))
@@ -891,11 +883,7 @@ impl CalcNode {
         };
 
         Ok(Time::from_seconds_with_calc_clamping_mode(
-            if nan_inf_enabled() {
-                seconds
-            } else {
-                crate::values::normalize(seconds)
-            },
+            seconds,
             clamping_mode,
         ))
     }
@@ -908,11 +896,7 @@ impl CalcNode {
             return Err(());
         };
 
-        Ok(Resolution::from_dppx_calc(if nan_inf_enabled() {
-            dppx
-        } else {
-            crate::values::normalize(dppx)
-        }))
+        Ok(Resolution::from_dppx_calc(dppx))
     }
 
     /// Tries to simplify this expression into an `Angle` value.
@@ -923,11 +907,7 @@ impl CalcNode {
             return Err(());
         };
 
-        let result = Angle::from_calc(if nan_inf_enabled() {
-            degrees
-        } else {
-            crate::values::normalize(degrees)
-        });
+        let result = Angle::from_calc(degrees);
         Ok(result)
     }
 
@@ -939,11 +919,8 @@ impl CalcNode {
             return Err(());
         };
 
-        let result = if nan_inf_enabled() {
-            number
-        } else {
-            crate::values::normalize(number)
-        };
+        let result = number;
+
         Ok(result)
     }
 
@@ -960,38 +937,16 @@ impl CalcNode {
     /// return a mathematical function corresponding to that name or an error.
     #[inline]
     pub fn math_function<'i>(
-        context: &ParserContext,
+        _: &ParserContext,
         name: &CowRcStr<'i>,
         location: cssparser::SourceLocation,
     ) -> Result<MathFunction, ParseError<'i>> {
-        use self::MathFunction::*;
-
         let function = match MathFunction::from_ident(&*name) {
             Ok(f) => f,
             Err(()) => {
                 return Err(location.new_unexpected_token_error(Token::Function(name.clone())))
             },
         };
-
-        let enabled = if context.chrome_rules_enabled() {
-            true
-        } else if matches!(function, Sin | Cos | Tan | Asin | Acos | Atan | Atan2) {
-            trig_enabled()
-        } else if matches!(function, Round) {
-            static_prefs::pref!("layout.css.round.enabled")
-        } else if matches!(function, Mod | Rem) {
-            static_prefs::pref!("layout.css.mod-rem.enabled")
-        } else if matches!(function, Pow | Sqrt | Hypot | Log | Exp) {
-            static_prefs::pref!("layout.css.exp.enabled")
-        } else if matches!(function, Abs | Sign) {
-            static_prefs::pref!("layout.css.abs-sign.enabled")
-        } else {
-            true
-        };
-
-        if !enabled {
-            return Err(location.new_unexpected_token_error(Token::Function(name.clone())));
-        }
 
         Ok(function)
     }
