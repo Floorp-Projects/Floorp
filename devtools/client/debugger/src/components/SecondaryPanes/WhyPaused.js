@@ -7,7 +7,7 @@ const {
   Localized,
 } = require("devtools/client/shared/vendor/fluent-react");
 
-import React, { PureComponent } from "react";
+import React, { PureComponent } from "devtools/client/shared/vendor/react";
 import { div, span } from "devtools/client/shared/vendor/react-dom-factories";
 import PropTypes from "devtools/client/shared/vendor/react-prop-types";
 import { connect } from "../../utils/connect";
