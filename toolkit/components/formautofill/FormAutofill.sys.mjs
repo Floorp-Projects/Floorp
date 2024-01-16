@@ -19,6 +19,8 @@ const ENABLED_AUTOFILL_ADDRESSES_CAPTURE_PREF =
   "extensions.formautofill.addresses.capture.enabled";
 const ENABLED_AUTOFILL_ADDRESSES_CAPTURE_V2_PREF =
   "extensions.formautofill.addresses.capture.v2.enabled";
+const ENABLED_AUTOFILL_ADDRESSES_CAPTURE_REQUIRED_FIELDS_PREF =
+  "extensions.formautofill.addresses.capture.requiredFields";
 const ENABLED_AUTOFILL_ADDRESSES_SUPPORTED_COUNTRIES_PREF =
   "extensions.formautofill.addresses.supportedCountries";
 const ENABLED_AUTOFILL_CREDITCARDS_PREF =
@@ -267,6 +269,14 @@ XPCOMUtils.defineLazyPreferenceGetter(
   FormAutofill,
   "captureOnPageNavigation",
   ENABLED_AUTOFILL_CAPTURE_ON_PAGE_NAVIGATION
+);
+XPCOMUtils.defineLazyPreferenceGetter(
+  FormAutofill,
+  "addressCaptureRequiredFields",
+  ENABLED_AUTOFILL_ADDRESSES_CAPTURE_REQUIRED_FIELDS_PREF,
+  null,
+  null,
+  val => val?.split(",").filter(v => !!v)
 );
 
 // XXX: This should be invalidated on intl:app-locales-changed.

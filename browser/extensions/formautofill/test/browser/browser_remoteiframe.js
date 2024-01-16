@@ -9,6 +9,8 @@ add_task(async function setup_storage() {
       [AUTOFILL_ADDRESSES_AVAILABLE_PREF, "on"],
       [ENABLED_AUTOFILL_ADDRESSES_PREF, true],
       [ENABLED_AUTOFILL_ADDRESSES_CAPTURE_PREF, true],
+      // set capture required fields to empty to make testcase simpler
+      ["extensions.formautofill.addresses.capture.requiredFields", ""],
     ],
   });
   await setStorage(TEST_ADDRESS_2, TEST_ADDRESS_4, TEST_ADDRESS_5);
@@ -51,7 +53,7 @@ add_task(async function test_iframe_autocomplete() {
     });
   });
 
-  let onPopupShown = waitForPopupShown();
+  const onPopupShown = waitForPopupShown();
   await focusUpdateSubmitForm(iframeBC, {
     focusSelector: "#organization",
     newValues: {

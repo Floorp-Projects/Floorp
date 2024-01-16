@@ -18,7 +18,6 @@ add_setup(async function () {
     set: [
       ["extensions.formautofill.addresses.capture.v2.enabled", true],
       ["extensions.formautofill.addresses.supported", "on"],
-      ["extensions.formautofill.loglevel", "debug"],
     ],
   });
 });
@@ -75,7 +74,6 @@ add_task(async function test_update_doorhanger_show_confirmation() {
       });
       await onUpdatePopupShown;
 
-      await sleep(5000);
       // click the main button and expect seeing the confirmation
       const hintShownAndVerified = verifyConfirmationHint(browser, false);
       await clickDoorhangerButton(MAIN_BUTTON, 0);
