@@ -11,7 +11,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=610687
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=610687">Mozilla Bug 610687</a>
 <p id="display"></p>
-<div id="content" style="display: none">
+<div id="content">
   <form>
     <input type='radio' name='a'>
     <input type='radio' name='a'>
@@ -34,14 +34,14 @@ function checkPseudoClasses(aElement, aValid, aValidUI, aInvalidUI)
     ok(aElement.matches(":invalid"), ":invalid should apply");
   }
 
-  is(aElement.matches(":-moz-ui-valid"), aValidUI,
-     aValid ? ":-moz-ui-valid should apply" : ":-moz-ui-valid should not apply");
+  is(aElement.matches(":user-valid"), aValidUI,
+     aValid ? ":user-valid should apply" : ":user-valid should not apply");
 
-  is(aElement.matches(":-moz-ui-invalid"), aInvalidUI,
-     aInvalidUI ? ":-moz-ui-invalid should apply" : ":-moz-ui-invalid should not apply");
+  is(aElement.matches(":user-invalid"), aInvalidUI,
+     aInvalidUI ? ":user-invalid should apply" : ":user-invalid should not apply");
 
   if (aInvalidUI && (aValid || aValidUI)) {
-    ok(false, ":invalid can't apply with :valid or :-moz-valid-ui");
+    ok(false, ":invalid can't apply with :valid or :user-valid");
   }
 }
 
@@ -63,23 +63,17 @@ function checkRadios(r1, r2, r3, form)
   checkPseudoClasses(r2, false, false, false);
   checkPseudoClasses(r3, true, false, false);
 
-  // Suffering from being missing (with ui-invalid).
-  r1.checked = false;
-  checkPseudoClasses(r1, false, false, true);
-  checkPseudoClasses(r2, false, false, true);
-  checkPseudoClasses(r3, true, false, false);
-
   // Do not suffer from being missing (with ui-valid).
-  r1.checked = true;
+  r1.click();
   checkPseudoClasses(r1, true, true, false);
-  checkPseudoClasses(r2, true, true, false);
+  checkPseudoClasses(r2, true, false, false);
   checkPseudoClasses(r3, true, false, false);
 
   // Do not suffer from being missing (with ui-valid).
   r1.checked = false;
   r1.required = false;
   checkPseudoClasses(r1, true, true, false);
-  checkPseudoClasses(r2, true, true, false);
+  checkPseudoClasses(r2, true, false, false);
   checkPseudoClasses(r3, true, false, false);
 
   // Suffering from being missing (with ui-invalid) with required set on one radio
@@ -87,35 +81,35 @@ function checkRadios(r1, r2, r3, form)
   r1.required = true;
   r2.checked = false;
   checkPseudoClasses(r1, false, false, true);
-  checkPseudoClasses(r2, false, false, true);
+  checkPseudoClasses(r2, false, false, false);
   checkPseudoClasses(r3, true, false, false);
 
   // Do not suffer from being missing (with ui-valid) by checking the radio which
   // hasn't the required attribute.
   r2.checked = true;
   checkPseudoClasses(r1, true, true, false);
-  checkPseudoClasses(r2, true, true, false);
+  checkPseudoClasses(r2, true, false, false);
   checkPseudoClasses(r3, true, false, false);
 
   // .setCustomValidity() should not affect the entire group.
-  r1.checked = r2.checked = r3.checked = false;
+  r1.checked = false; r2.checked = false; r3.checked = false;
   r1.required = false;
   r1.setCustomValidity('foo');
   checkPseudoClasses(r1, false, false, true);
-  checkPseudoClasses(r2, true, true, false);
-  checkPseudoClasses(r3, true, true, false);
+  checkPseudoClasses(r2, true, false, false);
+  checkPseudoClasses(r3, true, false, false);
 
   r1.setCustomValidity('');
   r2.setCustomValidity('foo');
   checkPseudoClasses(r1, true, true, false);
-  checkPseudoClasses(r2, false, false, true);
-  checkPseudoClasses(r3, true, true, false);
+  checkPseudoClasses(r2, false, false, false);
+  checkPseudoClasses(r3, true, false, false);
 
   r2.setCustomValidity('');
   r3.setCustomValidity('foo');
   checkPseudoClasses(r1, true, true, false);
-  checkPseudoClasses(r2, true, true, false);
-  checkPseudoClasses(r3, false, false, true);
+  checkPseudoClasses(r2, true, false, false);
+  checkPseudoClasses(r3, false, false, false);
 
   // Removing the radio with the required attribute should make the group valid.
   r1.setCustomValidity('');
@@ -124,64 +118,64 @@ function checkRadios(r1, r2, r3, form)
   r2.required = true;
   r1.checked = r2.checked = false;
   checkPseudoClasses(r1, false, false, true);
-  checkPseudoClasses(r2, false, false, true);
+  checkPseudoClasses(r2, false, false, false);
 
   var p = r2.parentNode;
   p.removeChild(r2);
   checkPseudoClasses(r1, true, true, false);
-  checkPseudoClasses(r2, false, false, true);
+  checkPseudoClasses(r2, false, false, false);
 
   p.appendChild(r2);
   checkPseudoClasses(r1, false, false, true);
-  checkPseudoClasses(r2, false, false, true);
+  checkPseudoClasses(r2, false, false, false);
 
   // Adding a radio element to an invalid group should make it invalid.
   p.removeChild(r1);
   checkPseudoClasses(r1, true, true, false);
-  checkPseudoClasses(r2, false, false, true);
+  checkPseudoClasses(r2, false, false, false);
 
   p.appendChild(r1);
   checkPseudoClasses(r1, false, false, true);
-  checkPseudoClasses(r2, false, false, true);
+  checkPseudoClasses(r2, false, false, false);
 
   // Adding a checked radio element to an invalid group should make it valid.
   p.removeChild(r1);
   checkPseudoClasses(r1, true, true, false);
-  checkPseudoClasses(r2, false, false, true);
+  checkPseudoClasses(r2, false, false, false);
 
   r1.checked = true;
   p.appendChild(r1);
   checkPseudoClasses(r1, true, true, false);
-  checkPseudoClasses(r2, true, true, false);
+  checkPseudoClasses(r2, true, false, false);
   r1.checked = false;
 
   // Adding an invalid radio element by changing the name attribute.
   r2.name = 'c';
   checkPseudoClasses(r1, true, true, false);
-  checkPseudoClasses(r2, false, false, true);
+  checkPseudoClasses(r2, false, false, false);
 
   r2.name = 'a';
   checkPseudoClasses(r1, false, false, true);
-  checkPseudoClasses(r2, false, false, true);
+  checkPseudoClasses(r2, false, false, false);
 
   // Adding an element to an invalid radio group by changing the name attribute.
   r1.name = 'c';
   checkPseudoClasses(r1, true, true, false);
-  checkPseudoClasses(r2, false, false, true);
+  checkPseudoClasses(r2, false, false, false);
 
   r1.name = 'a';
   checkPseudoClasses(r1, false, false, true);
-  checkPseudoClasses(r2, false, false, true);
+  checkPseudoClasses(r2, false, false, false);
 
   // Adding a checked element to an invalid radio group with the name attribute.
   r1.name = 'c';
   checkPseudoClasses(r1, true, true, false);
-  checkPseudoClasses(r2, false, false, true);
+  checkPseudoClasses(r2, false, false, false);
 
   r1.checked = true;
   r1.name = 'a';
   checkPseudoClasses(r1, true, true, false);
-  checkPseudoClasses(r2, true, true, false);
+  checkPseudoClasses(r2, true, false, false);
   r1.checked = false;
 }
 

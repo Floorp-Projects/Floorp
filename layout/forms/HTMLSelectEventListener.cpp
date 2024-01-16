@@ -377,15 +377,7 @@ void HTMLSelectEventListener::ComboboxMightHaveChanged() {
 
 void HTMLSelectEventListener::FireOnInputAndOnChange() {
   RefPtr<HTMLSelectElement> element = mElement;
-  // Dispatch the input event.
-  DebugOnly<nsresult> rvIgnored = nsContentUtils::DispatchInputEvent(element);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
-                       "Failed to dispatch input event");
-
-  // Dispatch the change event.
-  nsContentUtils::DispatchTrustedEvent(element->OwnerDoc(), element,
-                                       u"change"_ns, CanBubble::eYes,
-                                       Cancelable::eNo);
+  element->UserFinishedInteracting(/* aChanged = */ true);
 }
 
 static void FireDropDownEvent(HTMLSelectElement* aElement, bool aShow,

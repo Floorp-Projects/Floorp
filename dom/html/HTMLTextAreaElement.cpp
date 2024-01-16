@@ -48,15 +48,8 @@ HTMLTextAreaElement::HTMLTextAreaElement(
     FromParser aFromParser)
     : TextControlElement(std::move(aNodeInfo), aFromParser,
                          FormControlType::Textarea),
-      mValueChanged(false),
-      mLastValueChangeWasInteractive(false),
-      mHandlingSelect(false),
       mDoneAddingChildren(!aFromParser),
       mInhibitStateRestoration(!!(aFromParser & FROM_PARSER_FRAGMENT)),
-      mDisabledChanged(false),
-      mCanShowInvalidUI(true),
-      mCanShowValidUI(true),
-      mIsPreviewEnabled(false),
       mAutocompleteAttrState(nsContentUtils::eAutocompleteAttrState_Unknown),
       mState(TextControlState::Construct(this)) {
   AddMutationObserver(this);
@@ -465,6 +458,13 @@ void HTMLTextAreaElement::FireChangeEventIfNeeded() {
   nsString value;
   GetValueInternal(value, true);
 
+  // NOTE(emilio): This is not quite on the spec, but matches <input>, see
+  // https://github.com/whatwg/html/issues/10011 and
+  // https://github.com/whatwg/html/issues/10013
+  if (mValueChanged) {
+    SetUserInteracted(true);
+  }
+
   if (mFocusedValue.Equals(value)) {
     return;
   }
@@ -478,24 +478,6 @@ void HTMLTextAreaElement::FireChangeEventIfNeeded() {
 nsresult HTMLTextAreaElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
   if (aVisitor.mEvent->mMessage == eFormSelect) {
     mHandlingSelect = false;
-  }
-
-  if (aVisitor.mEvent->mMessage == eFocus ||
-      aVisitor.mEvent->mMessage == eBlur) {
-    if (aVisitor.mEvent->mMessage == eFocus) {
-      // If the invalid UI is shown, we should show it while focusing (and
-      // update). Otherwise, we should not.
-      GetValueInternal(mFocusedValue, true);
-      mCanShowInvalidUI = !IsValid() && ShouldShowValidityUI();
-
-      // If neither invalid UI nor valid UI is shown, we shouldn't show the
-      // valid UI while typing.
-      mCanShowValidUI = ShouldShowValidityUI();
-    } else {  // eBlur
-      mCanShowInvalidUI = true;
-      mCanShowValidUI = true;
-    }
-    UpdateValidityElementStates(true);
   }
 
   return NS_OK;
@@ -654,6 +636,7 @@ nsresult HTMLTextAreaElement::Reset() {
   nsAutoString resetVal;
   GetDefaultValue(resetVal, IgnoreErrors());
   SetValueChanged(false);
+  SetUserInteracted(false);
 
   nsresult rv = SetValueInternal(resetVal, ValueSetterOption::ByInternalAPI);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -751,27 +734,14 @@ void HTMLTextAreaElement::UpdateValidityElementStates(bool aNotify) {
   ElementState state;
   if (IsValid()) {
     state |= ElementState::VALID;
+    if (mUserInteracted) {
+      state |= ElementState::USER_VALID;
+    }
   } else {
     state |= ElementState::INVALID;
-    // :-moz-ui-invalid always apply if the element suffers from a custom
-    // error.
-    if (GetValidityState(VALIDITY_STATE_CUSTOM_ERROR) ||
-        (mCanShowInvalidUI && ShouldShowValidityUI())) {
+    if (mUserInteracted) {
       state |= ElementState::USER_INVALID;
     }
-  }
-
-  // :-moz-ui-valid applies if all the following are true:
-  // 1. The element is not focused, or had either :-moz-ui-valid or
-  //    :-moz-ui-invalid applying before it was focused ;
-  // 2. The element is either valid or isn't allowed to have
-  //    :-moz-ui-invalid applying ;
-  // 3. The element has already been modified or the user tried to submit the
-  //    form owner while invalid.
-  if (mCanShowValidUI && ShouldShowValidityUI() &&
-      (IsValid() ||
-       (state.HasState(ElementState::USER_INVALID) && !mCanShowInvalidUI))) {
-    state |= ElementState::USER_VALID;
   }
   AddStatesSilently(state);
 }
@@ -1154,6 +1124,14 @@ void HTMLTextAreaElement::OnValueChanged(ValueChangeKind aKind,
 bool HTMLTextAreaElement::HasCachedSelection() {
   MOZ_ASSERT(mState);
   return mState->IsSelectionCached();
+}
+
+void HTMLTextAreaElement::SetUserInteracted(bool aInteracted) {
+  if (mUserInteracted == aInteracted) {
+    return;
+  }
+  mUserInteracted = aInteracted;
+  UpdateValidityElementStates(true);
 }
 
 void HTMLTextAreaElement::FieldSetDisabledChanged(bool aNotify) {

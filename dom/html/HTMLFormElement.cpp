@@ -121,7 +121,6 @@ HTMLFormElement::HTMLFormElement(
       mDeferSubmission(false),
       mNotifiedObservers(false),
       mNotifiedObserversResult(false),
-      mEverTriedInvalidSubmit(false),
       mIsConstructingEntryList(false),
       mIsFiringSubmissionEvents(false) {
   // We start out valid.
@@ -261,16 +260,28 @@ void HTMLFormElement::MaybeSubmit(Element* aSubmitter) {
     return;
   }
 
-  // 6.1. If form's firing submission events is true, then return.
+  // 5.1. If form's firing submission events is true, then return.
   if (mIsFiringSubmissionEvents) {
     return;
   }
 
-  // 6.2. Set form's firing submission events to true.
+  // 5.2. Set form's firing submission events to true.
   AutoRestore<bool> resetFiringSubmissionEventsFlag(mIsFiringSubmissionEvents);
   mIsFiringSubmissionEvents = true;
 
-  // 6.3. If the submitter element's no-validate state is false, then
+  // Flag elements as user-interacted.
+  // FIXME: Should be specified, see:
+  // https://github.com/whatwg/html/issues/10066
+  {
+    for (nsGenericHTMLFormElement* el : mControls->mElements) {
+      el->SetUserInteracted(true);
+    }
+    for (nsGenericHTMLFormElement* el : mControls->mNotInElements) {
+      el->SetUserInteracted(true);
+    }
+  }
+
+  // 5.3. If the submitter element's no-validate state is false, then
   //      interactively validate the constraints of form and examine the result.
   //      If the result is negative (i.e., the constraint validation concluded
   //      that there were invalid fields and probably informed the user of this)
@@ -635,7 +646,6 @@ nsresult HTMLFormElement::DoReset() {
     doc->FlushPendingNotifications(FlushType::ContentAndNotify);
   }
 
-  mEverTriedInvalidSubmit = false;
   // JBK walk the elements[] array instead of form frame controls - bug 34297
   uint32_t numElements = mControls->Length();
   for (uint32_t elementX = 0; elementX < numElements; ++elementX) {
@@ -1051,15 +1061,11 @@ nsresult HTMLFormElement::ConstructEntryList(FormData* aFormData) {
   nsresult rv = mControls->GetSortedControls(sortedControls);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  uint32_t len = sortedControls.Length();
-
-  //
   // Walk the list of nodes and call SubmitNamesValues() on the controls
-  //
-  for (uint32_t i = 0; i < len; ++i) {
+  for (nsGenericHTMLFormElement* control : sortedControls) {
     // Disabled elements don't submit
-    if (!sortedControls[i]->IsDisabled()) {
-      nsCOMPtr<nsIFormControl> fc = do_QueryInterface(sortedControls[i]);
+    if (!control->IsDisabled()) {
+      nsCOMPtr<nsIFormControl> fc = do_QueryInterface(control);
       MOZ_ASSERT(fc);
       // Tell the control to submit its name/value pairs to the submission
       fc->SubmitNamesValues(aFormData);
@@ -1766,44 +1772,6 @@ bool HTMLFormElement::CheckValidFormSubmission() {
   AutoTArray<RefPtr<Element>, 32> invalidElements;
   if (CheckFormValidity(&invalidElements)) {
     return true;
-  }
-
-  // For the first invalid submission, we should update element states.
-  // We have to do that _before_ calling the observers so we are sure they
-  // will not interfere (like focusing the element).
-  if (!mEverTriedInvalidSubmit) {
-    mEverTriedInvalidSubmit = true;
-
-    /*
-     * We are going to call update states assuming elements want to
-     * be notified because we can't know.
-     * Submissions shouldn't happen during parsing so it _should_ be safe.
-     */
-
-    nsAutoScriptBlocker scriptBlocker;
-
-    for (nsGenericHTMLFormElement* element : mControls->mElements) {
-      // Input elements can trigger a form submission and we want to
-      // update the style in that case.
-      if (auto* input = HTMLInputElement::FromNode(*element)) {
-        // We don't use nsContentUtils::IsFocusedContent here, because it
-        // doesn't really do what we want for number controls: it's true
-        // for the anonymous textnode inside, but not the number control
-        // itself.  We can use the focus state, though, because that gets
-        // synced to the number control by the anonymous text control.
-        if (input->State().HasState(ElementState::FOCUS)) {
-          input->UpdateValidityUIBits(true);
-        }
-      }
-      element->UpdateValidityElementStates(true);
-    }
-
-    // Because of backward compatibility, <input type='image'> is not in
-    // elements but can be invalid.
-    // TODO: should probably be removed when bug 606491 will be fixed.
-    for (nsGenericHTMLFormElement* element : mControls->mNotInElements) {
-      element->UpdateValidityElementStates(true);
-    }
   }
 
   AutoJSAPI jsapi;

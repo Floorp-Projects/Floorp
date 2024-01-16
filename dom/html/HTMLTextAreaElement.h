@@ -288,25 +288,23 @@ class HTMLTextAreaElement final : public TextControlElement,
   JSObject* WrapNode(JSContext*, JS::Handle<JSObject*> aGivenProto) override;
 
   nsCOMPtr<nsIControllers> mControllers;
+  /** https://html.spec.whatwg.org/#user-interacted */
+  bool mUserInteracted = false;
   /** Whether or not the value has changed since its default value was given. */
-  bool mValueChanged;
+  bool mValueChanged = false;
   /** Whether or not the last change to the value was made interactively by the
    * user. */
-  bool mLastValueChangeWasInteractive;
+  bool mLastValueChangeWasInteractive = false;
   /** Whether or not we are already handling select event. */
-  bool mHandlingSelect;
+  bool mHandlingSelect = false;
   /** Whether or not we are done adding children (always true if not
       created by a parser */
   bool mDoneAddingChildren;
   /** Whether state restoration should be inhibited in DoneAddingChildren. */
   bool mInhibitStateRestoration;
   /** Whether our disabled state has changed from the default **/
-  bool mDisabledChanged;
-  /** Whether we should make :-moz-ui-invalid apply on the element. **/
-  bool mCanShowInvalidUI;
-  /** Whether we should make :-moz-ui-valid apply on the element. **/
-  bool mCanShowValidUI;
-  bool mIsPreviewEnabled;
+  bool mDisabledChanged = false;
+  bool mIsPreviewEnabled = false;
 
   nsContentUtils::AutocompleteAttrState mAutocompleteAttrState;
 
@@ -351,27 +349,6 @@ class HTMLTextAreaElement final : public TextControlElement,
                              const nsAString* aKnownValue = nullptr);
 
   /**
-   * Return if an element should have a specific validity UI
-   * (with :-moz-ui-invalid and :-moz-ui-valid pseudo-classes).
-   *
-   * @return Whether the element should have a validity UI.
-   */
-  bool ShouldShowValidityUI() const {
-    /**
-     * Always show the validity UI if the form has already tried to be submitted
-     * but was invalid.
-     *
-     * Otherwise, show the validity UI if the element's value has been changed.
-     */
-
-    if (mForm && mForm->HasEverTriedInvalidSubmit()) {
-      return true;
-    }
-
-    return mValueChanged;
-  }
-
-  /**
    * Get the mutable state of the element.
    */
   bool IsMutable() const;
@@ -392,7 +369,8 @@ class HTMLTextAreaElement final : public TextControlElement,
   void GetSelectionRange(uint32_t* aSelectionStart, uint32_t* aSelectionEnd,
                          ErrorResult& aRv);
 
-  void UpdateValidityElementStates(bool aNotify) final;
+  void SetUserInteracted(bool) final;
+  void UpdateValidityElementStates(bool aNotify);
 
  private:
   static void MapAttributesIntoRule(MappedDeclarationsBuilder&);

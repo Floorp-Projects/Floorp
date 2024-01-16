@@ -1795,7 +1795,6 @@ void nsGenericHTMLFormElement::ClearForm(bool aRemoveFromForm,
   UnsetFlags(ADDED_TO_FORM);
   SetFormInternal(nullptr, false);
   AfterClearForm(aUnbindOrDelete);
-  UpdateValidityElementStates(true);
 }
 
 nsresult nsGenericHTMLFormElement::BindToTree(BindContext& aContext,
@@ -2147,11 +2146,6 @@ void nsGenericHTMLFormElement::UpdateFormOwner(bool aBindToTree,
     if (!idVal.IsEmpty()) {
       form->AddElementToTable(this, idVal);
     }
-  }
-
-  if (form != oldForm) {
-    // ui-valid / invalid depends on the form for some elements
-    UpdateValidityElementStates(true);
   }
 }
 

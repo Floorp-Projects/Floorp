@@ -31,15 +31,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=605125
 
 function checkPseudoClass(aElement, aExpected)
 {
-  is(aElement.matches(":-moz-ui-valid"), aExpected,
-     "matches(':-moz-ui-valid') should return " + aExpected + " for " + aElement);
+  is(aElement.matches(":user-valid"), aExpected,
+     "matches(':user-valid') should return " + aExpected + " for " + aElement);
 }
 
 function checkElement(aElement)
 {
   checkPseudoClass(aElement, false);
 
-  // Focusing while :-moz-ui-valid doesn't apply,
+  // Focusing while :user-valid doesn't apply,
   // the pseudo-class should not apply while typing.
   aElement.focus();
   checkPseudoClass(aElement, false);
@@ -57,7 +57,7 @@ function checkElement(aElement)
   aElement.blur();
   checkPseudoClass(aElement, true);
 
-  // Focusing while :-moz-ui-valid applies,
+  // Focusing while :user-valid applies,
   // the pseudo-class should apply while typing if appropriate.
   aElement.focus();
   checkPseudoClass(aElement, true);
@@ -76,7 +76,7 @@ function checkElement(aElement)
   aElement.required = true;
   checkPseudoClass(aElement, false);
 
-  // Focusing while :-moz-ui-invalid applies,
+  // Focusing while :user-invalid applies,
   // the pseudo-class should apply while typing if appropriate.
   aElement.focus();
   checkPseudoClass(aElement, false);
@@ -96,20 +96,15 @@ function checkSelectElement(aElement)
 {
   checkPseudoClass(aElement, false);
 
-  // Focusing while :-moz-ui-valid doesn't apply,
+  // Focusing while :user-valid doesn't apply,
   // the pseudo-class should not apply while changing selection.
   aElement.focus();
   checkPseudoClass(aElement, false);
 
-  aElement.selectedIndex = 1;
-  checkPseudoClass(aElement, false);
-  aElement.selectedIndex = 0;
-  checkPseudoClass(aElement, false);
-
-  aElement.blur();
+  synthesizeKey("KEY_ArrowDown");
   checkPseudoClass(aElement, true);
 
-  // Focusing while :-moz-ui-valid applies,
+  // Focusing while :user-valid applies,
   // the pseudo-class should apply while changing selection if appropriate.
   aElement.focus();
   checkPseudoClass(aElement, true);
@@ -127,12 +122,12 @@ function checkSelectElement(aElement)
   }
   checkPseudoClass(aElement, false);
 
-  // Focusing while :-moz-ui-invalid applies,
+  // Focusing while :user-invalid applies,
   // the pseudo-class should apply while changing selection if appropriate.
   aElement.focus();
   checkPseudoClass(aElement, false);
 
-  aElement.selectedIndex = 1;
+  synthesizeKey("KEY_ArrowDown");
   checkPseudoClass(aElement, true);
   aElement.selectedIndex = 0;
   checkPseudoClass(aElement, aElement.multiple);

@@ -248,7 +248,7 @@ class DispatchChangeEventCallback final : public GetFilesCallback {
     RefPtr<HTMLInputElement> inputElement(mInputElement);
     nsresult rv = nsContentUtils::DispatchInputEvent(inputElement);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to dispatch input event");
-
+    mInputElement->SetUserInteracted(true);
     rv = nsContentUtils::DispatchTrustedEvent(mInputElement->OwnerDoc(),
                                               mInputElement, u"change"_ns,
                                               CanBubble::eYes, Cancelable::eNo);
@@ -667,6 +667,7 @@ nsColorPickerShownCallback::Done(const nsAString& aColor) {
   }
 
   if (mValueChanged) {
+    mInput->SetUserInteracted(true);
     rv = nsContentUtils::DispatchTrustedEvent(
         mInput->OwnerDoc(), static_cast<Element*>(mInput.get()), u"change"_ns,
         CanBubble::eYes, Cancelable::eNo);
@@ -995,6 +996,7 @@ HTMLInputElement::HTMLInputElement(already_AddRefed<dom::NodeInfo>&& aNodeInfo,
       mAutocompleteInfoState(nsContentUtils::eAutocompleteAttrState_Unknown),
       mDisabledChanged(false),
       mValueChanged(false),
+      mUserInteracted(false),
       mLastValueChangeWasInteractive(false),
       mCheckedChanged(false),
       mChecked(false),
@@ -1006,8 +1008,6 @@ HTMLInputElement::HTMLInputElement(already_AddRefed<dom::NodeInfo>&& aNodeInfo,
       mCheckedIsToggled(false),
       mIndeterminate(false),
       mInhibitRestoration(aFromParser & FROM_PARSER_FRAGMENT),
-      mCanShowValidUI(true),
-      mCanShowInvalidUI(true),
       mHasRange(false),
       mIsDraggingRange(false),
       mNumberControlSpinnerIsSpinning(false),
@@ -2613,15 +2613,25 @@ void HTMLInputElement::AfterSetFilesOrDirectories(bool aSetValueChanged) {
 }
 
 void HTMLInputElement::FireChangeEventIfNeeded() {
+  if (!MayFireChangeOnBlur()) {
+    return;
+  }
+
   // We're not exposing the GetValue return value anywhere here, so it's safe to
   // claim to be a system caller.
   nsAutoString value;
   GetValue(value, CallerType::System);
 
-  if (!MayFireChangeOnBlur() || mFocusedValue.Equals(value)) {
+  // NOTE(emilio): Per spec we should not set this if we don't fire the change
+  // event, but that seems like a bug. Using mValueChanged seems reasonable to
+  // keep the expected behavior while
+  // https://github.com/whatwg/html/issues/10013 is resolved.
+  if (mValueChanged) {
+    SetUserInteracted(true);
+  }
+  if (mFocusedValue.Equals(value)) {
     return;
   }
-
   // Dispatch the change event.
   mFocusedValue = value;
   nsContentUtils::DispatchTrustedEvent(
@@ -3146,9 +3156,9 @@ bool HTMLInputElement::CheckActivationBehaviorPreconditions(
       // we're a DOMActivate dispatched from click handling, it will not be set.
       WidgetMouseEvent* mouseEvent = aVisitor.mEvent->AsMouseEvent();
       bool outerActivateEvent =
-          ((mouseEvent && mouseEvent->IsLeftClickEvent()) ||
-           (aVisitor.mEvent->mMessage == eLegacyDOMActivate &&
-            !mInInternalActivate));
+          (mouseEvent && mouseEvent->IsLeftClickEvent()) ||
+          (aVisitor.mEvent->mMessage == eLegacyDOMActivate &&
+           !mInInternalActivate);
       if (outerActivateEvent) {
         aVisitor.mItemFlags |= NS_OUTER_ACTIVATE_EVENT;
       }
@@ -3505,11 +3515,9 @@ void HTMLInputElement::StepNumberControlForUserEvent(int32_t aDirection) {
     // the user. (IsValid() can return false if the 'required' attribute is
     // set and the value is the empty string.)
     if (!IsValueEmpty()) {
-      // We pass 'true' for UpdateValidityUIBits' aIsFocused argument
-      // regardless because we need the UI to update _now_ or the user will
-      // wonder why the step behavior isn't functioning.
-      UpdateValidityUIBits(true);
-      UpdateValidityElementStates(true);
+      // We pass 'true' for SetUserInteracted because we need the UI to update
+      // _now_ or the user will wonder why the step behavior isn't functioning.
+      SetUserInteracted(true);
       return;
     }
   }
@@ -3664,18 +3672,12 @@ static bool ActivatesWithKeyboard(FormControlType aType, uint32_t aKeyCode) {
 }
 
 nsresult HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
-  if (aVisitor.mEvent->mMessage == eFocus ||
-      aVisitor.mEvent->mMessage == eBlur) {
-    if (aVisitor.mEvent->mMessage == eBlur) {
-      if (mIsDraggingRange) {
-        FinishRangeThumbDrag();
-      } else if (mNumberControlSpinnerIsSpinning) {
-        StopNumberControlSpinnerSpin();
-      }
+  if (aVisitor.mEvent->mMessage == eBlur) {
+    if (mIsDraggingRange) {
+      FinishRangeThumbDrag();
+    } else if (mNumberControlSpinnerIsSpinning) {
+      StopNumberControlSpinnerSpin();
     }
-
-    UpdateValidityUIBits(aVisitor.mEvent->mMessage == eFocus);
-    UpdateValidityElementStates(true);
   }
 
   nsresult rv = NS_OK;
@@ -4076,11 +4078,14 @@ void HTMLInputElement::ActivationBehavior(EventChainPostVisitor& aVisitor) {
   }
 
   if (mCheckedIsToggled) {
+    SetUserInteracted(true);
+
     // Fire input event and then change event.
     DebugOnly<nsresult> rvIgnored = nsContentUtils::DispatchInputEvent(this);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
                          "Failed to dispatch input event");
 
+    // FIXME: Why is this different than every other change event?
     nsContentUtils::DispatchTrustedEvent<WidgetEvent>(
         OwnerDoc(), static_cast<Element*>(this), eFormChange, CanBubble::eYes,
         Cancelable::eNo);
@@ -4094,8 +4099,7 @@ void HTMLInputElement::ActivationBehavior(EventChainPostVisitor& aVisitor) {
       FireEventForAccessibility(this, eFormRadioStateChange);
       // Fire event for the previous selected radio.
       nsCOMPtr<nsIContent> content = do_QueryInterface(aVisitor.mItemData);
-      if (HTMLInputElement* previous =
-              HTMLInputElement::FromNodeOrNull(content)) {
+      if (auto* previous = HTMLInputElement::FromNodeOrNull(content)) {
         FireEventForAccessibility(previous, eFormRadioStateChange);
       }
     }
@@ -5927,6 +5931,7 @@ HTMLInputElement::Reset() {
   SetCheckedChanged(false);
   SetValueChanged(false);
   SetLastValueChangeWasInteractive(false);
+  SetUserInteracted(false);
 
   switch (GetValueMode()) {
     case VALUE_MODE_VALUE: {
@@ -6222,24 +6227,14 @@ void HTMLInputElement::UpdateValidityElementStates(bool aNotify) {
   ElementState state;
   if (IsValid()) {
     state |= ElementState::VALID;
+    if (mUserInteracted) {
+      state |= ElementState::USER_VALID;
+    }
   } else {
     state |= ElementState::INVALID;
-    if (GetValidityState(VALIDITY_STATE_CUSTOM_ERROR) ||
-        (mCanShowInvalidUI && ShouldShowValidityUI())) {
+    if (mUserInteracted) {
       state |= ElementState::USER_INVALID;
     }
-  }
-  // :-moz-ui-valid applies if all of the following conditions are true:
-  // 1. The element is not focused, or had either :-moz-ui-valid or
-  //    :-moz-ui-invalid applying before it was focused ;
-  // 2. The element is either valid or isn't allowed to have
-  //    :-moz-ui-invalid applying ;
-  // 3. The element has already been modified or the user tried to submit the
-  //    form owner while invalid.
-  if (mCanShowValidUI && ShouldShowValidityUI() &&
-      (IsValid() ||
-       (!state.HasState(ElementState::USER_INVALID) && !mCanShowInvalidUI))) {
-    state |= ElementState::USER_VALID;
   }
   AddStatesSilently(state);
 }
@@ -7251,19 +7246,12 @@ Decimal HTMLInputElement::GetDefaultStep() const {
   }
 }
 
-void HTMLInputElement::UpdateValidityUIBits(bool aIsFocused) {
-  if (aIsFocused) {
-    // If the invalid UI is shown, we should show it while focusing (and
-    // update). Otherwise, we should not.
-    mCanShowInvalidUI = !IsValid() && ShouldShowValidityUI();
-
-    // If neither invalid UI nor valid UI is shown, we shouldn't show the valid
-    // UI while typing.
-    mCanShowValidUI = ShouldShowValidityUI();
-  } else {
-    mCanShowInvalidUI = true;
-    mCanShowValidUI = true;
+void HTMLInputElement::SetUserInteracted(bool aInteracted) {
+  if (mUserInteracted == aInteracted) {
+    return;
   }
+  mUserInteracted = aInteracted;
+  UpdateValidityElementStates(true);
 }
 
 void HTMLInputElement::UpdateInRange(bool aNotify) {
