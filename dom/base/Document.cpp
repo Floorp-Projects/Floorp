@@ -7473,6 +7473,17 @@ void Document::PostStyleSheetRemovedEvent(StyleSheet& aSheet) {
   asyncDispatcher->PostDOMEvent();
 }
 
+void Document::PostCustomPropertyRegistered() {
+  if (!StyleSheetChangeEventsEnabled()) {
+    return;
+  }
+
+  RefPtr<AsyncEventDispatcher> asyncDispatcher =
+      new AsyncEventDispatcher(this, u"CssCustomPropertyRegistered"_ns,
+                               CanBubble::eNo, ChromeOnlyDispatch::eYes);
+  asyncDispatcher->PostDOMEvent();
+}
+
 static int32_t FindSheet(const nsTArray<RefPtr<StyleSheet>>& aSheets,
                          nsIURI* aSheetURI) {
   for (int32_t i = aSheets.Length() - 1; i >= 0; i--) {

@@ -1,4 +1,7 @@
 [DEFAULT]
+prefs = [
+  "layout.css.properties-and-values.enabled=true",
+]
 
 ["browser_bug1701027-1.js"]
 support-files = ["helper_bug1701027-1.html"]
@@ -19,6 +22,8 @@ run-if = ["os == 'win' && processor == 'x86_64' && debug"]
 skip-if = ["!sessionHistoryInParent"]
 
 ["browser_bug617076.js"]
+
+["browser_css_registered_property.js"]
 
 ["browser_disableDialogs_onbeforeunload.js"]
 

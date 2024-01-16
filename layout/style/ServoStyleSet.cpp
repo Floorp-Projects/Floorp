@@ -1510,6 +1510,7 @@ void ServoStyleSet::RegisterProperty(const PropertyDefinition& aDefinition,
               root, RestyleHint::RecascadeSubtree(), nsChangeHint(0));
         }
       }
+      mDocument->PostCustomPropertyRegistered();
       break;
     case Result::InvalidName:
       return aRv.ThrowSyntaxError("Invalid name");
