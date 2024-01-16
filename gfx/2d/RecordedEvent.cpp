@@ -182,20 +182,30 @@ void Translator::DrawDependentSurface(uint64_t aKey, const Rect& aRect) {
     return;
   }
 
-  mCurrentDT->PushClipRect(aRect);
-
   // Construct a new translator, so we can recurse into translating this
   // sub-recording into the same DT. Set an initial transform for the
   // translator, so that all commands get moved into the rect we want to draw.
-  Matrix transform = mCurrentDT->GetTransform();
-  transform.PreTranslate(aRect.TopLeft());
-  InlineTranslator translator(mCurrentDT, nullptr);
-  translator.SetReferenceDrawTargetTransform(transform);
+  //
+  // Because the recording may have filtered out SetTransform calls with the
+  // same value, we need to call SetTransform here to ensure it gets called at
+  // least once with the translated matrix.
+  const Matrix oldTransform = mCurrentDT->GetTransform();
 
-  translator.SetDependentSurfaces(mDependentSurfaces);
-  translator.TranslateRecording((char*)recordedSurface->mRecording.mData,
-                                recordedSurface->mRecording.mLen);
+  Matrix dependentTransform = oldTransform;
+  dependentTransform.PreTranslate(aRect.TopLeft());
 
+  mCurrentDT->PushClipRect(aRect);
+  mCurrentDT->SetTransform(dependentTransform);
+
+  {
+    InlineTranslator translator(mCurrentDT, nullptr);
+    translator.SetReferenceDrawTargetTransform(dependentTransform);
+    translator.SetDependentSurfaces(mDependentSurfaces);
+    translator.TranslateRecording((char*)recordedSurface->mRecording.mData,
+                                  recordedSurface->mRecording.mLen);
+  }
+
+  mCurrentDT->SetTransform(oldTransform);
   mCurrentDT->PopClip();
 }
 
