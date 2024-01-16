@@ -123,6 +123,7 @@
 
 ::slotted([slot=header]) {
   flex: 1;
+  width: 0;
 }
 
 ::slotted([slot=secondary-header]) {
