@@ -42,5 +42,6 @@ onmessage = function (event) {
       throw "Weird number of messages: " + messageCount;
   }
 
+  // eslint-disable-next-line no-unreachable
   throw "Impossible to get here!";
 };

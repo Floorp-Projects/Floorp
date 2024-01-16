@@ -497,7 +497,6 @@ module.exports = {
         "no-shadow": "off",
         "no-sparse-arrays": "off",
         "no-throw-literal": "off",
-        "no-unreachable": "off",
         "no-useless-call": "off",
         "no-useless-concat": "off",
       },

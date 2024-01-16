@@ -19,10 +19,9 @@ var path = "/tests/dom/security/test/csp/";
 
 // debugging
 function log(s) {
-  return;
-  dump("**" + s + "\n");
-  var log = document.getElementById("log");
-  log.textContent = log.textContent+s+"\n";
+  // dump("**" + s + "\n");
+  // var log = document.getElementById("log");
+  // log.textContent = log.textContent+s+"\n";
 }
 
 SpecialPowers.registerObservers("csp-on-violate-policy");

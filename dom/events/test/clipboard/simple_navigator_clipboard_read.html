@@ -18,7 +18,6 @@
         let items = await navigator.clipboard.read();
         if (items.length != 1) {
           throw Error(`incorrect number of clipboard item (${items.length})`);
-          return;
         }
 
         let item = items[0];

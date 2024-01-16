@@ -40,14 +40,12 @@ that audio is being properly encoded
     while (true) {
       if (performance.now() - start > 10000) {
         return false;
-        break;
       }
       analyser.getByteFrequencyData(data);
       if (data[binIndexForFrequency(200)] < 50 &&
           data[binIndexForFrequency(440)] > 180 &&
           data[binIndexForFrequency(1000)] < 50) {
         return true;
-        break;
       }
       await new Promise(r => requestAnimationFrame(r));
     }
