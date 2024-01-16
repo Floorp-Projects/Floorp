@@ -3,7 +3,10 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import { PureComponent } from "react";
-import { div, textarea } from "react-dom-factories";
+import {
+  div,
+  textarea,
+} from "devtools/client/shared/vendor/react-dom-factories";
 import ReactDOM from "devtools/client/shared/vendor/react-dom";
 import PropTypes from "devtools/client/shared/vendor/react-prop-types";
 import { connect } from "../../utils/connect";
