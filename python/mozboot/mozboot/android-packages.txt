@@ -1,4 +1,4 @@
 emulator
 platform-tools
-build-tools;33.0.1
-platforms;android-33
+build-tools;34.0.0
+platforms;android-34
