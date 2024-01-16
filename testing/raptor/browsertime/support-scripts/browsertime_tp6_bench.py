@@ -4,6 +4,7 @@
 import re
 
 import filters
+from base_python_support import BasePythonSupport
 
 DOMAIN_MATCHER = re.compile(r"(?:https?:\/\/)?(?:[^@\n]+@)?(?:www\.)?([^:\/\n]+)")
 VARIANCE_THRESHOLD = 0.2
@@ -16,7 +17,7 @@ def extract_domain(link):
     raise Exception(f"Could not find domain for {link}")
 
 
-class TP6BenchSupport:
+class TP6BenchSupport(BasePythonSupport):
     def __init__(self, **kwargs):
         self._load_times = []
         self._total_times = []
@@ -51,30 +52,7 @@ class TP6BenchSupport:
         test["test_url"] = ",".join(test_urls)
         test["playback_pageset_manifest"] = ",".join(playback_pageset_manifests)
 
-    def modify_command(self, cmd):
-        pass
-
     def handle_result(self, bt_result, raw_result, last_result=False, **kwargs):
-        """Parse a result for the required results.
-
-        This method handles parsing a new result from Browsertime. The
-        expected data returned should follow the following format:
-        {
-            "custom_data": True,
-            "measurements": {
-                "fcp": [0, 1, 1, 2, ...],
-                "custom-metric-name": [9, 9, 9, 8, ...]
-            }
-        }
-
-        `bt_result` holds that current results that have been parsed. Add
-        new measurements as a dictionary to `bt_result["measurements"]`. Watch
-        out for overriding other measurements.
-
-        `raw_result` is a single browser-cycle/iteration from Browsertime. Use object
-        attributes to store values across browser-cycles, and produce overall results
-        on the last run (denoted by `last_result`).
-        """
         measurements = {"totalTime": []}
 
         # Find new results to add
@@ -139,46 +117,6 @@ class TP6BenchSupport:
         }
 
     def summarize_test(self, test, suite, **kwargs):
-        """Summarize the measurements found in the test as a suite with subtests.
-
-        Note that the same suite will be passed when the test is the same.
-
-        Here's a small example of an expected suite result
-        (see performance-artifact-schema.json for more information):
-            {
-                "name": "pageload-benchmark",
-                "type": "pageload",
-                "extraOptions": ["fission", "cold", "webrender"],
-                "tags": ["fission", "cold", "webrender"],
-                "lowerIsBetter": true,
-                "unit": "ms",
-                "alertThreshold": 2.0,
-                "subtests": [{
-                    "name": "totalTimePerSite",
-                    "lowerIsBetter": true,
-                    "alertThreshold": 2.0,
-                    "unit": "ms",
-                    "shouldAlert": false,
-                    "replicates": [
-                        6490.47, 6700.73, 6619.47,
-                        6823.07, 6541.53, 7152.67,
-                        6553.4, 6471.53, 6548.8, 6548.87
-                    ],
-                    "value": 6553.4
-            }
-
-        Some fields are setup by default for the suite:
-            {
-                "name": test["name"],
-                "type": test["type"],
-                "extraOptions": extra_options,
-                "tags": test.get("tags", []) + extra_options,
-                "lowerIsBetter": test["lower_is_better"],
-                "unit": test["unit"],
-                "alertThreshold": float(test["alert_threshold"]),
-                "subtests": {},
-            }
-        """
         suite["type"] = "pageload"
         if suite["subtests"] == {}:
             suite["subtests"] = []

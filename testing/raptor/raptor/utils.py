@@ -11,6 +11,7 @@ from collections.abc import Iterable
 from distutils.util import strtobool
 
 import yaml
+from base_python_support import BasePythonSupport
 from logger.logger import RaptorLogger
 from mozgeckoprofiler import view_gecko_profile
 
@@ -170,10 +171,8 @@ def import_support_class(path):
     members = inspect.getmembers(
         module,
         lambda c: inspect.isclass(c)
-        and (hasattr(c, "setup_test") and callable(c.setup_test))
-        and (hasattr(c, "modify_command") and callable(c.modify_command))
-        and (hasattr(c, "handle_result") and callable(c.handle_result))
-        and (hasattr(c, "summarize_test") and callable(c.summarize_test)),
+        and c != BasePythonSupport
+        and issubclass(c, BasePythonSupport),
     )
 
     if not members:

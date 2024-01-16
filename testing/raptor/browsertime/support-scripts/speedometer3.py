@@ -3,23 +3,15 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import filters
+from base_python_support import BasePythonSupport
 from utils import flatten
 
 
-class Speedometer3Support:
-    def __init__(self, **kwargs):
-        pass
-
-    def setup_test(self, test, args):
-        pass
-
-    def modify_command(self, cmd):
-        pass
-
+class Speedometer3Support(BasePythonSupport):
     def handle_result(self, bt_result, raw_result, **kwargs):
         """Parse a result for the required results.
 
-        See browsertime_tp6_bench.py for what's expected from this method.
+        See base_python_support.py for what's expected from this method.
         """
         for res in raw_result["extras"]:
             sp3_mean_score = round(res["s3"]["score"]["mean"], 3)
@@ -72,7 +64,7 @@ class Speedometer3Support:
     def summarize_test(self, test, suite, **kwargs):
         """Summarize the measurements found in the test as a suite with subtests.
 
-        See browsertime_tp6_bench.py for what's expected from this method.
+        See base_python_support.py for what's expected from this method.
         """
         suite["type"] = "benchmark"
         if suite["subtests"] == {}:
