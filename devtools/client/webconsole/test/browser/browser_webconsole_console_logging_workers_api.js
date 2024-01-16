@@ -102,6 +102,12 @@ async function testWorkerMessage(directConnectionToWorkerThread = false) {
   );
   ok(sabMessage.textContent.includes("SharedArrayBuffer"));
 
+  info("Check that Arrays are properly logged");
+  const arrayMessage = await waitFor(() =>
+    findConsoleAPIMessage(hud, '[ "array-item", 42, {…} ]')
+  );
+  ok(arrayMessage, "Array logged from worker is visible in the console");
+
   info("Click on the clear button and wait for messages to be removed");
   const onMessagesCacheCleared = hud.ui.once("messages-cache-cleared");
   hud.ui.window.document.querySelector(".devtools-clear-icon").click();
