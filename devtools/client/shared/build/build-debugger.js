@@ -145,7 +145,6 @@ Babel.registerPlugin("transform-mc", transformMC);
 
 module.exports = function (filePath) {
   return [
-    "proposal-optional-chaining",
     "proposal-class-properties",
     "transform-modules-commonjs",
     ["transform-mc", { mappings, filePath }],
