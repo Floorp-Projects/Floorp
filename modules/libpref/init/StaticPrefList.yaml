@@ -11429,6 +11429,13 @@
   value: true
   mirror: always
 
+# If true, cross origin fetch (or XHR) requests would be keyed
+# with a different cache key.
+- name: network.fetch.cache_partition_cross_origin
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 # Whether to strip auth headers for redirected http channels
 # https://fetch.spec.whatwg.org/#http-redirect-fetch
 - name: network.http.redirect.stripAuthHeader

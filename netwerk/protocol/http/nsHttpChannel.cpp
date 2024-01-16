@@ -3762,6 +3762,18 @@ nsresult nsHttpChannel::OpenCacheEntryInternal(bool isHttps) {
   if (mRequestHead.IsHead()) {
     mCacheIdExtension.Append("HEAD");
   }
+  bool isThirdParty = false;
+  if (StaticPrefs::network_fetch_cache_partition_cross_origin() &&
+      (NS_FAILED(mLoadInfo->TriggeringPrincipal()->IsThirdPartyChannel(
+           this, &isThirdParty)) ||
+       isThirdParty) &&
+      (mLoadInfo->InternalContentPolicyType() == nsIContentPolicy::TYPE_FETCH ||
+       mLoadInfo->InternalContentPolicyType() ==
+           nsIContentPolicy::TYPE_XMLHTTPREQUEST ||
+       mLoadInfo->InternalContentPolicyType() ==
+           nsIContentPolicy::TYPE_INTERNAL_XMLHTTPREQUEST)) {
+    mCacheIdExtension.Append("FETCH");
+  }
 
   mCacheOpenWithPriority = cacheEntryOpenFlags & nsICacheStorage::OPEN_PRIORITY;
   mCacheQueueSizeWhenOpen =
