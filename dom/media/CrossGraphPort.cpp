@@ -24,28 +24,6 @@ extern LazyLogModule gMediaTrackGraphLog;
 #define LOG_TEST(type) MOZ_LOG_TEST(gMediaTrackGraphLog, type)
 
 UniquePtr<CrossGraphPort> CrossGraphPort::Connect(
-    const RefPtr<dom::AudioStreamTrack>& aStreamTrack, AudioDeviceInfo* aSink,
-    nsPIDOMWindowInner* aWindow) {
-  MOZ_ASSERT(aSink);
-  MOZ_ASSERT(aStreamTrack);
-  uint32_t defaultRate;
-  aSink->GetDefaultRate(&defaultRate);
-  LOG(LogLevel::Debug,
-      ("CrossGraphPort::Connect: sink id: %p at rate %u, primary rate %d",
-       aSink->DeviceID(), defaultRate, aStreamTrack->Graph()->GraphRate()));
-
-  if (!aSink->DeviceID()) {
-    return nullptr;
-  }
-
-  MediaTrackGraph* newGraph =
-      MediaTrackGraph::GetInstance(MediaTrackGraph::AUDIO_THREAD_DRIVER,
-                                   aWindow, defaultRate, aSink->DeviceID());
-
-  return CrossGraphPort::Connect(aStreamTrack, newGraph);
-}
-
-UniquePtr<CrossGraphPort> CrossGraphPort::Connect(
     const RefPtr<dom::AudioStreamTrack>& aStreamTrack,
     MediaTrackGraph* aPartnerGraph) {
   MOZ_ASSERT(aStreamTrack);
@@ -69,29 +47,10 @@ UniquePtr<CrossGraphPort> CrossGraphPort::Connect(
                                        std::move(receiver)));
 }
 
-void CrossGraphPort::AddAudioOutput(void* aKey) {
-  mReceiver->AddAudioOutput(aKey, mReceiver->Graph()->PrimaryOutputDeviceID(),
-                            0);
-}
-
-void CrossGraphPort::RemoveAudioOutput(void* aKey) {
-  mReceiver->RemoveAudioOutput(aKey);
-}
-
-void CrossGraphPort::SetAudioOutputVolume(void* aKey, float aVolume) {
-  mReceiver->SetAudioOutputVolume(aKey, aVolume);
-}
-
 CrossGraphPort::~CrossGraphPort() {
   mTransmitter->Destroy();
   mReceiver->Destroy();
   mTransmitterPort->Destroy();
-}
-
-RefPtr<GenericPromise> CrossGraphPort::EnsureConnected() {
-  // The primary graph is already working check the partner (receiver's) graph.
-  return mReceiver->Graph()->NotifyWhenDeviceStarted(
-      mReceiver->Graph()->PrimaryOutputDeviceID());
 }
 
 /** CrossGraphTransmitter **/

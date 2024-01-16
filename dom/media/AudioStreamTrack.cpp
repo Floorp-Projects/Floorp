@@ -12,39 +12,19 @@ namespace mozilla::dom {
 
 RefPtr<GenericPromise> AudioStreamTrack::AddAudioOutput(
     void* aKey, AudioDeviceInfo* aSink) {
-  MOZ_ASSERT(!mCrossGraphs.Get(aKey),
-             "A previous audio output for this aKey should have been removed");
-
   if (Ended()) {
     return GenericPromise::CreateAndResolve(true, __func__);
   }
 
-  UniquePtr<CrossGraphPort> manager;
-  if (!aSink || !(manager = CrossGraphPort::Connect(this, aSink, mWindow))) {
-    // We are setting the default output device.
-    mTrack->AddAudioOutput(aKey, nullptr);
-    return GenericPromise::CreateAndResolve(true, __func__);
-  }
-
-  // We are setting a non-default output device.
-  const UniquePtr<CrossGraphPort>& crossGraph = mCrossGraphs.WithEntryHandle(
-      aKey, [&manager](auto entry) -> UniquePtr<CrossGraphPort>& {
-        return entry.Insert(std::move(manager));
-      });
-  crossGraph->AddAudioOutput(aKey);
-  return crossGraph->EnsureConnected();
+  mTrack->AddAudioOutput(aKey, aSink);
+  return mTrack->Graph()->NotifyWhenDeviceStarted(aSink);
 }
 
 void AudioStreamTrack::RemoveAudioOutput(void* aKey) {
   if (Ended()) {
     return;
   }
-  if (auto entry = mCrossGraphs.Lookup(aKey)) {
-    // The audio output for this track is directed to a non-default device.
-    // The CrossGraphPort for this output is no longer required so remove it.
-    entry.Remove();
-    return;
-  }
+
   mTrack->RemoveAudioOutput(aKey);
 }
 
@@ -52,10 +32,7 @@ void AudioStreamTrack::SetAudioOutputVolume(void* aKey, float aVolume) {
   if (Ended()) {
     return;
   }
-  if (CrossGraphPort* cgm = mCrossGraphs.Get(aKey)) {
-    cgm->SetAudioOutputVolume(aKey, aVolume);
-    return;
-  }
+
   mTrack->SetAudioOutputVolume(aKey, aVolume);
 }
 
@@ -73,15 +50,6 @@ void AudioStreamTrack::GetLabel(nsAString& aLabel, CallerType aCallerType) {
 already_AddRefed<MediaStreamTrack> AudioStreamTrack::CloneInternal() {
   return do_AddRef(new AudioStreamTrack(mWindow, mInputTrack, mSource,
                                         ReadyState(), Muted(), mConstraints));
-}
-
-void AudioStreamTrack::SetReadyState(MediaStreamTrackState aState) {
-  if (!mCrossGraphs.IsEmpty() && !Ended() &&
-      mReadyState == MediaStreamTrackState::Live &&
-      aState == MediaStreamTrackState::Ended) {
-    mCrossGraphs.Clear();
-  }
-  MediaStreamTrack::SetReadyState(aState);
 }
 
 }  // namespace mozilla::dom
