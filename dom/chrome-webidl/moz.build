@@ -50,6 +50,7 @@ WEBIDL_FILES = [
     "ChromeNodeList.webidl",
     "ClonedErrorHolder.webidl",
     "CommandEvent.webidl",
+    "CSSCustomPropertyRegisteredEvent.webidl",
     "DebuggerNotification.webidl",
     "DebuggerNotificationObserver.webidl",
     "DebuggerUtils.webidl",
@@ -110,6 +111,7 @@ WEBIDL_FILES = [
 ]
 
 GENERATED_EVENTS_WEBIDL_FILES = [
+    "CSSCustomPropertyRegisteredEvent.webidl",
     "PluginCrashedEvent.webidl",
     "PopupPositionedEvent.webidl",
     "StyleSheetApplicableStateChangeEvent.webidl",

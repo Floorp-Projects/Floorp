@@ -32,9 +32,13 @@ async function testRegisterProperty() {
     );
   }
 
-  function checkCssCustomPropertyRegisteredEvent(event) {
+  function checkCssCustomPropertyRegisteredEvent(
+    event,
+    expectedPropertyDefinition
+  ) {
     is(event.type, EVENT_NAME, "event.type has expected value");
     is(event.target, doc, "event targets correct document");
+    Assert.deepEqual(event.propertyDefinition, expectedPropertyDefinition);
   }
 
   let onCustomPropertyRegistered, evt;
@@ -44,14 +48,31 @@ async function testRegisterProperty() {
   content.CSS.registerProperty({ name: "--a", syntax: "*", inherits: false });
   evt = await onCustomPropertyRegistered;
   ok(true, `Received ${EVENT_NAME} event after registering --a`);
-  checkCssCustomPropertyRegisteredEvent(evt);
+  checkCssCustomPropertyRegisteredEvent(evt, {
+    name: "--a",
+    syntax: "*",
+    inherits: false,
+    initialValue: null,
+    fromJS: true,
+  });
 
   info("Register another property and wait for a new event");
   onCustomPropertyRegistered = waitForCssCustomPropertyRegistered();
-  content.CSS.registerProperty({ name: "--b", syntax: "*", inherits: false });
+  content.CSS.registerProperty({
+    name: "--b",
+    syntax: "<color>",
+    inherits: true,
+    initialValue: "tomato",
+  });
   evt = await onCustomPropertyRegistered;
   ok(true, `Received ${EVENT_NAME} event after registering --b`);
-  checkCssCustomPropertyRegisteredEvent(evt);
+  checkCssCustomPropertyRegisteredEvent(evt, {
+    name: "--b",
+    syntax: "<color>",
+    inherits: true,
+    initialValue: "tomato",
+    fromJS: true,
+  });
 
   info("Register existing property and assert that we don't get an event");
   onCustomPropertyRegistered = waitForCssCustomPropertyRegistered();

@@ -39,6 +39,7 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/Result.h"
 #include "mozilla/SegmentedVector.h"
+#include "mozilla/ServoStyleSet.h"
 #include "mozilla/StorageAccessAPIHelper.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
@@ -1652,7 +1653,7 @@ class Document : public nsINode,
   void StyleSheetApplicableStateChanged(StyleSheet&);
   void PostStyleSheetApplicableStateChangeEvent(StyleSheet&);
   void PostStyleSheetRemovedEvent(StyleSheet&);
-  void PostCustomPropertyRegistered();
+  void PostCustomPropertyRegistered(const dom::PropertyDefinition&);
 
   enum additionalSheetType {
     eAgentSheet,
