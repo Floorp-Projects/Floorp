@@ -5137,8 +5137,8 @@ class Document : public nsINode,
 
   nsTArray<net::EarlyHintConnectArgs> mEarlyHints;
 
-  nsRevocableEventPtr<nsRunnableMethod<Document, void, false>>
-      mPendingTitleChangeEvent;
+  class TitleChangeEvent;
+  nsRevocableEventPtr<TitleChangeEvent> mPendingTitleChangeEvent;
 
   RefPtr<nsDOMNavigationTiming> mTiming;
 
