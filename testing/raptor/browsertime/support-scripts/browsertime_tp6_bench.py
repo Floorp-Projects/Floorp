@@ -25,6 +25,7 @@ class TP6BenchSupport(BasePythonSupport):
         self._total_times = []
         self._geomean_load_times = []
         self._sites_tested = 0
+        self._test_pages = {}
 
     def setup_test(self, test, args):
         from cmdline import DESKTOP_APPS
@@ -43,12 +44,14 @@ class TP6BenchSupport(BasePythonSupport):
             if manifest_to_find in parsed_test["manifest"]:
                 if not bool_from_str(parsed_test.get("benchmark_page", "false")):
                     continue
-                test_urls.append(parsed_test["test_url"])
+                test_url = parsed_test["test_url"]
+                test_urls.append(test_url)
                 playback_pageset_manifests.append(
                     transform_subtest(
                         parsed_test["playback_pageset_manifest"], parsed_test["name"]
                     )
                 )
+                self._test_pages[test_url] = parsed_test
 
         if len(playback_pageset_manifests) == 0:
             raise Exception("Could not find any manifests for testing.")
@@ -70,17 +73,21 @@ class TP6BenchSupport(BasePythonSupport):
 
         # Gather the load times of each page/cycle to help with diagnosing issues
         load_times = []
-        page_name = None
-        page_title = None
+        result_name = None
         for cycle in raw_result["browserScripts"]:
-            if not page_name:
-                page_name = extract_domain(cycle["pageinfo"].get("url", ""))
-
-                # Use the page title to differentiate pages with similar domains, and
+            if not result_name:
+                # When the test name is unknown, we use the url TLD combined
+                # with the page title to differentiate pages with similar domains, and
                 # limit it to 35 characters
-                page_title = (
-                    cycle["pageinfo"].get("documentTitle", "")[:35].replace(" ", "")
-                )
+                page_url = cycle["pageinfo"].get("url", "")
+                if self._test_pages.get(page_url, None) is not None:
+                    result_name = self._test_pages[page_url]["name"]
+                else:
+                    page_name = extract_domain(page_url)
+                    page_title = (
+                        cycle["pageinfo"].get("documentTitle", "")[:35].replace(" ", "")
+                    )
+                    result_name = f"{page_name} - {page_title}"
 
             load_time = cycle["timings"]["loadEventEnd"]
             fcp = cycle["timings"]["paintTiming"]["first-contentful-paint"]
@@ -89,16 +96,12 @@ class TP6BenchSupport(BasePythonSupport):
                 .get("largestContentfulPaint", {})
                 .get("renderTime", None)
             )
-            measurements.setdefault(
-                f"{page_name} - {page_title} - loadTime", []
-            ).append(load_time)
+            measurements.setdefault(f"{result_name} - loadTime", []).append(load_time)
 
-            measurements.setdefault(f"{page_name} - {page_title} - fcp", []).append(fcp)
+            measurements.setdefault(f"{result_name} - fcp", []).append(fcp)
 
             if lcp is not None:
-                measurements.setdefault(f"{page_name} - {page_title} - lcp", []).append(
-                    lcp
-                )
+                measurements.setdefault(f"{result_name} - lcp", []).append(lcp)
 
             load_times.append(load_time)
 
