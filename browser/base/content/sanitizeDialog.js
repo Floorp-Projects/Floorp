@@ -98,6 +98,18 @@ var gSanitizePromptDialog = {
       this._inClearSiteDataNewDialog = arg.mode == "clearSiteData";
     }
 
+    // Clear site data has it's own default checked boxes, all other entry points
+    // follow the clear history default prefs
+    this.defaultCheckedByContext = {
+      clearHistory: [
+        "historyAndFormData",
+        "cookiesAndStorage",
+        "cache",
+        "downloads",
+      ],
+      clearSiteData: ["cookiesAndStorage", "cache"],
+    };
+
     if (arg.inBrowserWindow) {
       this._dialog.setAttribute("inbrowserwindow", "true");
       this._observeTitleForChanges();
@@ -141,23 +153,18 @@ var gSanitizePromptDialog = {
       let checkboxes = document.querySelectorAll(
         "#clearPrivateDataGroupbox .clearingItemCheckbox"
       );
+      let defaults = this.defaultCheckedByContext.clearHistory;
+      if (this._inClearSiteDataNewDialog) {
+        defaults = this.defaultCheckedByContext.clearSiteData;
+      }
+
       for (let checkbox of checkboxes) {
-        let pref = checkbox.getAttribute("data-l10n-id");
-        let value = true;
-        // Site settings is checked off by default for all contexts
-        if (pref == "item-site-prefs") {
-          value = false;
+        let pref = checkbox.id;
+        let value = false;
+        if (defaults.includes(pref)) {
+          value = true;
+          checkbox.checked = value;
         }
-        // Clear site data context doesnt have browsing history and downloads
-        // history checked by default
-        else if (
-          this._inClearSiteDataNewDialog &&
-          (pref == "item-browsing-and-search" ||
-            pref == "item-download-history")
-        ) {
-          value = false;
-        }
-        checkbox.checked = value;
       }
     }
 
