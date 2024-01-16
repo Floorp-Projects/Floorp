@@ -10,6 +10,7 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   EventDispatcher: "resource://gre/modules/Messaging.sys.mjs",
+  PushCrypto: "resource://gre/modules/PushCrypto.sys.mjs",
 });
 
 // Observer notification topics for push messages and subscription status
@@ -67,13 +68,24 @@ export class PushService {
   }
 
   async subscribeWithKey(scope, principal, appServerKey, callback) {
+    const keyView = new Uint8Array(appServerKey);
+
+    if (appServerKey != null) {
+      try {
+        await lazy.PushCrypto.validateAppServerKey(keyView);
+      } catch (error) {
+        callback.onPushSubscription(Cr.NS_ERROR_DOM_PUSH_INVALID_KEY_ERR, null);
+        return;
+      }
+    }
+
     try {
       const response = await lazy.EventDispatcher.instance.sendRequestForResult(
         {
           type: "GeckoView:PushSubscribe",
           scope: scopeWithAttrs(scope, principal.originAttributes),
           appServerKey: appServerKey
-            ? ChromeUtils.base64URLEncode(new Uint8Array(appServerKey), {
+            ? ChromeUtils.base64URLEncode(keyView, {
                 pad: true,
               })
             : null,
