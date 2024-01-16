@@ -8,7 +8,7 @@ const {
 } = require("devtools/client/shared/vendor/fluent-react");
 
 import React, { PureComponent } from "react";
-import { div, span } from "react-dom-factories";
+import { div, span } from "devtools/client/shared/vendor/react-dom-factories";
 import PropTypes from "devtools/client/shared/vendor/react-prop-types";
 import { connect } from "../../utils/connect";
 import AccessibleImage from "../shared/AccessibleImage";

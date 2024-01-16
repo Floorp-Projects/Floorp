@@ -10,7 +10,6 @@ const _path = require("path");
 
 const mappings = {
   react: "devtools/client/shared/vendor/react",
-  "react-dom-factories": "devtools/client/shared/vendor/react-dom-factories",
 };
 
 const mappingValues = Object.values(mappings);

@@ -12,7 +12,7 @@ import {
   datalist,
   option,
   span,
-} from "react-dom-factories";
+} from "devtools/client/shared/vendor/react-dom-factories";
 import PropTypes from "devtools/client/shared/vendor/react-prop-types";
 import { connect } from "../../utils/connect";
 import { features } from "../../utils/prefs";

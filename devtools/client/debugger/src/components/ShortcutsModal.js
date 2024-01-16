@@ -3,7 +3,13 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import React, { Component } from "react";
-import { div, ul, h2, span, li } from "react-dom-factories";
+import {
+  div,
+  ul,
+  h2,
+  span,
+  li,
+} from "devtools/client/shared/vendor/react-dom-factories";
 import PropTypes from "devtools/client/shared/vendor/react-prop-types";
 import Modal from "./shared/Modal";
 import { formatKeyShortcut } from "../utils/text";
