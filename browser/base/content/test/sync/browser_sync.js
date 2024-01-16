@@ -44,8 +44,8 @@ add_task(async function test_navBar_button_visibility() {
   };
   gSync.updateAllUI(state);
   ok(
-    BrowserTestUtils.is_hidden(button),
-    "Button should be hidden with STATUS_NOT_CONFIGURED"
+    BrowserTestUtils.is_visible(button),
+    "Check button visibility with STATUS_NOT_CONFIGURED"
   );
 
   state.email = "foo@bar.com";
@@ -117,8 +117,8 @@ add_task(async function test_overflow_navBar_button_visibility() {
   gSync.updateAllUI(state);
 
   ok(
-    BrowserTestUtils.is_hidden(button),
-    "Button should be hidden with STATUS_NOT_CONFIGURED"
+    BrowserTestUtils.is_visible(button),
+    "Button should still be visable even if user sync not configured"
   );
 
   let hidePanelPromise = BrowserTestUtils.waitForEvent(
