@@ -510,4 +510,13 @@ interface nsIHttpChannelInternal : nsISupports
      * 103 response.
      */
     [must_use] attribute unsigned long earlyHintLinkType;
+
+    /**
+     * Indicates whether the User-Agent request header has been modified since
+     * the channel was created. This value will be used to decide if we need to
+     * recalculate the User-Agent header for fingerprinting protection. We won't
+     * recalculate the User-Agent header if it has been modified to preserve the
+     * overridden header value.
+     */
+    [must_use] attribute boolean isUserAgentHeaderModified;
 };
