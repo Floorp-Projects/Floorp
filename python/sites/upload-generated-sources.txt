@@ -1,1 +1,1 @@
-pypi:boto3==1.4.4
+pypi:boto3==1.34.19
