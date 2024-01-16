@@ -5552,6 +5552,7 @@ function test_2d_getcontext_unique() {
 var canvas = document.getElementById('c208');
 var ctx = canvas.getContext('2d');
 
+// eslint-disable-next-line no-self-compare
 ok(canvas.getContext('2d') === canvas.getContext('2d'), "canvas.getContext('2d') === canvas.getContext('2d')");
 
 

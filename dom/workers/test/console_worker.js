@@ -9,6 +9,7 @@ onmessage = function (event) {
 
   postMessage({
     event: "console is the same object",
+    // eslint-disable-next-line no-self-compare
     status: console === console,
     last: false,
   });

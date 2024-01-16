@@ -123,6 +123,7 @@ function waitForDebuggerMessage(dbg, message) {
 function waitForWindowMessage(window, message) {
   return new Promise(function (resolve) {
     let onmessage = function (event) {
+      // eslint-disable-next-line no-self-compare
       if (event.data !== event.data) {
         return;
       }

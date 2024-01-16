@@ -10,6 +10,7 @@
 
     // Set document.domain to itself, so we trigger the
     // "set effective script origin" cases.
+    // eslint-disable-next-line no-self-assign
     document.domain = document.domain
     var ctx = document.getElementById("c").getContext("2d");
     ctx.drawImage(document.getElementById("img"), 0, 0);

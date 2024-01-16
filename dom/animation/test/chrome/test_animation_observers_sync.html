@@ -481,6 +481,7 @@ function runTest() {
         animations[0][aChangeTest.prop] = aChangeTest.val;
 
         // Make a redundant change.
+        // eslint-disable-next-line no-self-assign
         animations[0][aChangeTest.prop] = animations[0][aChangeTest.prop];
 
         assert_equals_records(observer.takeRecords(),
@@ -512,6 +513,7 @@ function runTest() {
       // We are now pause-pending. Even if we make a redundant change to the
       // currentTime, we should still get a change record because setting the
       // currentTime while pause-pending has the effect of cancelling a pause.
+      // eslint-disable-next-line no-self-assign
       animations[0].currentTime = animations[0].currentTime;
 
       // Two MutationRecords for the Animation changes: one for pausing, one
