@@ -75,7 +75,7 @@
     <!-- The author of an add-on. -->
     <string name="mozac_feature_addons_author">Autur(a)</string>
     <!-- The authors of an add-on. -->
-    <string name="mozac_feature_addons_authors" moz:removedIn="120" tools:ignore="UnusedResources">Auturs</string>
+    <string name="mozac_feature_addons_authors" moz:removedIn="123" tools:ignore="UnusedResources">Auturs</string>
     <!-- The last date that the add-on was updated. -->
     <string name="mozac_feature_addons_last_updated">Ultima actualisaziun</string>
     <!-- The developer website (Homepage) of the add-on. -->
@@ -251,7 +251,7 @@
     <!-- Status message below an add-on in the add-ons manager when this add-on has been blocklisted. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_status_blocklisted">%1$s è vegnì deactivà pervia da problems da segirezza u da stabilitad.</string>
     <!-- Status message below an add-on in the add-ons manager when this add-on hasn't been signed correctly. %1$s is the add-on name. -->
-    <string name="mozac_feature_addons_status_unsigned">Impussibel da verifitgar che %1$s è segir. %1$s è vegnì deactivà.</string>
+    <string name="mozac_feature_addons_status_unsigned">%1$s n’ha betg pudì vegnir verifitgà sco segir ed è vegnì deactivà.</string>
     <!-- Status message below an add-on in the add-ons manager when this add-on isn't compatible with the application version. %1$s is the add-on name, %2$s is the app name and %3$s is the app version. -->
     <string name="mozac_feature_addons_status_incompatible">%1$s n\'è betg cumpatibel cun tia versiun da %2$s (versiun %3$s).</string>
 </resources>
