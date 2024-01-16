@@ -25,7 +25,7 @@
 //! }
 //! ```
 
-use crate::alsa;
+use crate::{alsa, Card};
 use std::ffi::{CStr, CString};
 use super::error::*;
 use std::ptr;
@@ -55,6 +55,12 @@ impl HCtl {
         let flags = if nonblock { 1 } else { 0 }; // FIXME: alsa::SND_CTL_NONBLOCK does not exist in alsa-sys
         acheck!(snd_hctl_open(&mut r, c.as_ptr(), flags))
             .map(|_| HCtl(r))
+    }
+
+    /// Wrapper around open. You probably want to call `load` afterwards.
+    pub fn from_card(c: &Card, nonblock: bool) -> Result<HCtl> {
+        let s = format!("hw:{}", c.get_index());
+        HCtl::new(&s, nonblock)
     }
 
     pub fn load(&self) -> Result<()> { acheck!(snd_hctl_load(self.0)).map(|_| ()) }

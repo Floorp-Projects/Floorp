@@ -1,6 +1,6 @@
 [package]
 name = "nix"
-version = "0.24.99"
+version = "0.26.99"
 edition = "2018"
 license = "MPL-2.0"
 

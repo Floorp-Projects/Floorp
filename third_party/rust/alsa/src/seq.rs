@@ -425,6 +425,8 @@ impl<'a> Iterator for PortIter<'a> {
 }
 
 bitflags! {
+    #[repr(transparent)]
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
     /// [SND_SEQ_PORT_CAP_xxx](http://www.alsa-project.org/alsa-doc/alsa-lib/group___seq_port.html) constants
     pub struct PortCap: u32 {
         const READ = 1<<0;
@@ -439,6 +441,8 @@ bitflags! {
 }
 
 bitflags! {
+    #[repr(transparent)]
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
     /// [SND_SEQ_PORT_TYPE_xxx](http://www.alsa-project.org/alsa-doc/alsa-lib/group___seq_port.html) constants
     pub struct PortType: u32 {
         const SPECIFIC = (1<<0);
@@ -460,6 +464,8 @@ bitflags! {
 }
 
 bitflags! {
+    #[repr(transparent)]
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
     /// [SND_SEQ_REMOVE_xxx](https://www.alsa-project.org/alsa-doc/alsa-lib/group___seq_event.html) constants
     pub struct Remove: u32 {
         const INPUT = (1<<0);
@@ -851,10 +857,15 @@ impl<'a> fmt::Debug for Event<'a> {
     }
 }
 
-/// Low level methods to set/get data on an Event. Don't use these directly, use generic methods on Event instead.
+/// Internal trait implemented for different event type structs (`EvNote`, `EvCtrl`, etc).
+///
+/// Use it through `Event::get_data` and `Event::new`.
 pub trait EventData {
+    #[doc(hidden)]
     fn get_data(ev: &Event) -> Self;
+    #[doc(hidden)]
     fn has_data(e: EventType) -> bool;
+    #[doc(hidden)]
     fn set_data(&self, ev: &mut Event);
 }
 

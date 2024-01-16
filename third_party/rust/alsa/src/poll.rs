@@ -9,6 +9,8 @@ pub use libc::pollfd;
 
 
 bitflags! {
+    #[repr(transparent)]
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
     pub struct Flags: ::libc::c_short {
         const IN  = ::libc::POLLIN;
         const PRI = ::libc::POLLPRI;

@@ -46,6 +46,11 @@ impl $name {
         Self::all().iter().find(|&&x| c == x as ::libc::c_int).map(|&x| x)
             .ok_or_else(|| Error::unsupported(s))
     }
+
+    #[allow(dead_code)]
+    fn to_c_int(&self) -> ::libc::c_int {
+        return *self as ::libc::c_int;
+    }
 }
 
 }
@@ -96,7 +101,7 @@ pub use crate::card::Card as Card;
 mod ctl_int;
 pub mod ctl {
     //! Control device API
-    pub use super::ctl_int::{Ctl, CardInfo, ElemIface, ElemId, ElemType, ElemValue, ElemInfo};
+    pub use super::ctl_int::{Ctl, CardInfo, DeviceIter, ElemIface, ElemId, ElemType, ElemValue, ElemInfo};
 }
 
 pub use crate::ctl::Ctl as Ctl;

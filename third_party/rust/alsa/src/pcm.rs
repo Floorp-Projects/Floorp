@@ -45,9 +45,11 @@
 
 use libc::{c_int, c_uint, c_void, ssize_t, c_short, timespec, pollfd};
 use crate::alsa;
+use std::convert::Infallible;
 use std::marker::PhantomData;
 use std::mem::size_of;
 use std::ffi::{CStr, CString};
+use std::str::FromStr;
 use std::{io, fmt, ptr, cell};
 use super::error::*;
 use super::{Direction, Output, poll, ValueOr, chmap};
@@ -57,7 +59,8 @@ pub use super::chmap::{Chmap, ChmapPosition, ChmapType, ChmapsQuery};
 /// [snd_pcm_sframes_t](http://www.alsa-project.org/alsa-doc/alsa-lib/group___p_c_m.html)
 pub type Frames = alsa::snd_pcm_sframes_t;
 
-pub struct Info(*mut alsa::snd_pcm_info_t);
+/// [snd_pcm_info_t](http://www.alsa-project.org/alsa-doc/alsa-lib/group___p_c_m.html) wrapper - PCM generic info container
+pub struct Info(pub(crate) *mut alsa::snd_pcm_info_t);
 
 impl Info {
     pub fn new() -> Result<Info> {
@@ -98,6 +101,30 @@ impl Info {
             alsa::SND_PCM_STREAM_PLAYBACK => Direction::Playback,
             n @ _ => panic!("snd_pcm_info_get_stream invalid direction '{}'", n),
         }
+    }
+
+    pub fn get_subdevices_count(&self) -> u32 {
+        unsafe { alsa::snd_pcm_info_get_subdevices_count(self.0) }
+    }
+
+    pub fn get_subdevices_avail(&self) -> u32 {
+        unsafe { alsa::snd_pcm_info_get_subdevices_avail(self.0) }
+    }
+
+    pub(crate) fn set_device(&mut self, device: u32) {
+        unsafe { alsa::snd_pcm_info_set_device(self.0, device) }
+    }
+
+    pub(crate) fn set_stream(&mut self, direction: Direction) {
+        let stream = match direction {
+            Direction::Capture => alsa::SND_PCM_STREAM_CAPTURE,
+            Direction::Playback => alsa::SND_PCM_STREAM_PLAYBACK,
+        };
+        unsafe { alsa::snd_pcm_info_set_stream(self.0, stream) }
+    }
+
+    pub(crate) fn set_subdevice(&mut self, subdevice: u32) {
+        unsafe { alsa::snd_pcm_info_set_subdevice(self.0, subdevice) }
     }
 }
 
@@ -205,6 +232,15 @@ impl PCM {
 
     pub fn io_checked<S: IoFormat>(&self) -> Result<IO<S>> {
         self.verify_format(S::FORMAT).map(|_| IO::new(self))
+    }
+
+    /// Creates IO without checking [`S`] is valid type.
+    ///
+    /// SAFETY: Caller must guarantee [`S`] is valid type for this PCM stream
+    /// and that no other IO objects exist at the same time for the same stream
+    /// (or in some other way guarantee mmap safety)
+    pub unsafe fn io_unchecked<S: IoFormat>(&self) -> IO<S> {
+        IO::new_unchecked(self)
     }
 
     #[deprecated(note = "renamed to io_bytes")]
@@ -328,6 +364,11 @@ impl<'a, S: Copy> IO<'a, S> {
 
     fn new(a: &'a PCM) -> IO<'a, S> {
         a.check_has_io();
+        a.1.set(true);
+        IO(a, PhantomData)
+    }
+
+    unsafe fn new_unchecked(a: &'a PCM) -> IO<'a, S> {
         a.1.set(true);
         IO(a, PhantomData)
     }
@@ -533,6 +574,64 @@ impl fmt::Display for Format {
     }
 }
 
+impl FromStr for Format {
+    type Err = Infallible;
+
+    fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
+        use Format::*;
+        Ok(match s.to_ascii_uppercase().as_str() {
+            "S8" => S8,
+            "U8" => U8,
+            "S16_LE" => S16LE,
+            "S16_BE" => S16BE,
+            "U16_LE" => U16LE,
+            "U16_BE" => U16BE,
+            "S24_LE" => S24LE,
+            "S24_BE" => S24BE,
+            "U24_LE" => U24LE,
+            "U24_BE" => U24BE,
+            "S32_LE" => S32LE,
+            "S32_BE" => S32BE,
+            "U32_LE" => U32LE,
+            "U32_BE" => U32BE,
+            "FLOAT_LE" => FloatLE,
+            "FLOAT_BE" => FloatBE,
+            "FLOAT64_LE" => Float64LE,
+            "FLOAT64_BE" => Float64BE,
+            "IEC958_SUBFRAME_LE" => IEC958SubframeLE,
+            "IEC958_SUBFRAME_BE" => IEC958SubframeBE,
+            "MU_LAW" => MuLaw,
+            "A_LAW" => ALaw,
+            "IMA_ADPCM" => ImaAdPCM,
+            "MPEG" => MPEG,
+            "GSM" => GSM,
+            "SPECIAL" => Special,
+            "S24_3LE" => S243LE,
+            "S24_3BE" => S243BE,
+            "U24_3LE" => U243LE,
+            "U24_3BE" => U243BE,
+            "S20_3LE" => S203LE,
+            "S20_3BE" => S203BE,
+            "U20_3LE" => U203LE,
+            "U20_3BE" => U203BE,
+            "S18_3LE" => S183LE,
+            "S18_3BE" => S183BE,
+            "U18_3LE" => U183LE,
+            "U18_3BE" => U183BE,
+            "G723_24" => G72324,
+            "G723_24_1B" => G723241B,
+            "G723_40" => G72340,
+            "G723_40_1B" => G723401B,
+            "DSD_U8" => DSDU8,
+            "DSD_U16_LE" => DSDU16LE,
+            "DSD_U32_LE" => DSDU32LE,
+            "DSD_U16_BE" => DSDU16BE,
+            "DSD_U32_BE" => DSDU32BE,
+            _ => Unknown,
+        })
+    }
+}
+
 impl Format {
     pub const fn s16() -> Format { <i16 as IoFormat>::FORMAT }
     pub const fn u16() -> Format { <u16 as IoFormat>::FORMAT }
@@ -573,6 +672,22 @@ impl Format {
 
     #[cfg(target_endian = "little")] pub const fn iec958_subframe() -> Format { Format::IEC958SubframeLE }
     #[cfg(target_endian = "big")] pub const fn iec958_subframe() -> Format { Format::IEC958SubframeBE }
+
+    pub fn physical_width(&self) -> Result<i32> {
+        acheck!(snd_pcm_format_physical_width(self.to_c_int()))
+    }
+
+    pub fn width(&self) -> Result<i32> {
+        acheck!(snd_pcm_format_width(self.to_c_int()))
+    }
+
+    pub fn silence_16(&self) -> u16 {
+        unsafe { alsa::snd_pcm_format_silence_16(self.to_c_int()) }
+    }
+
+    pub fn little_endian(&self) -> Result<bool> {
+        acheck!(snd_pcm_format_little_endian(self.to_c_int())).map(|v| v != 0)
+    }
 }
 
 
@@ -1148,4 +1263,11 @@ fn print_sizeof() {
     println!("Status size: {}", s);
 
     assert!(s <= STATUS_SIZE);
+}
+
+#[test]
+fn format_display_from_str() {
+    for format in ALL_FORMATS {
+        assert_eq!(format, format.to_string().parse().unwrap());
+    }
 }
