@@ -19,6 +19,7 @@
 #import <Carbon/Carbon.h>
 
 #include "CustomCocoaEvents.h"
+#include "gfxPlatform.h"
 #include "nsCOMPtr.h"
 #include "nsINativeAppSupport.h"
 #include "nsAppRunner.h"
@@ -41,6 +42,7 @@
 #include "nsStandaloneNativeMenu.h"
 #include "nsCocoaUtils.h"
 #include "nsMenuBarX.h"
+#include "mozilla/NeverDestroyed.h"
 
 class AutoAutoreleasePool {
  public:
@@ -64,11 +66,16 @@ class AutoAutoreleasePool {
 enum class LaunchStatus {
   Initial,
   DelegateIsSetup,
-  ProcessingURLs,
-  ProcessedURLs
+  CollectingURLs,
+  CollectedURLs
 };
 
 static LaunchStatus sLaunchStatus = LaunchStatus::Initial;
+
+static nsTArray<nsCString>& StartupURLs() {
+  static mozilla::NeverDestroyed<nsTArray<nsCString>> sStartupURLs;
+  return *sStartupURLs;
+}
 
 // Methods that can be called from non-Objective-C code.
 
@@ -102,7 +109,7 @@ void SetupMacApplicationDelegate(bool* gRestartedByOS) {
   // needs an autorelease pool to avoid cocoa object leakage (bug 559075)
   AutoAutoreleasePool pool;
 
-  // Ensure that ProcessPendingGetURLAppleEvents() doesn't regress bug 377166.
+  // Ensure that InitializeMacApp() doesn't regress bug 377166.
   [GeckoNSApplication sharedApplication];
 
   // This call makes it so that application:openFile: doesn't get bogus calls
@@ -126,23 +133,24 @@ void SetupMacApplicationDelegate(bool* gRestartedByOS) {
   NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
-// Indirectly make the OS process any pending GetURL Apple events.  This is
-// done via _DPSNextEvent() (an undocumented AppKit function called from
-// [NSApplication nextEventMatchingMask:untilDate:inMode:dequeue:]).  Apple
-// events are only processed if 'dequeue' is 'YES' -- so we need to call
-// [NSApplication sendEvent:] on any event that gets returned.  'event' will
-// never itself be an Apple event, and it may be 'nil' even when Apple events
-// are processed.
-void ProcessPendingGetURLAppleEvents() {
+// Run the mac app and stop it immediately after launch. This allows us to
+// (a) Initialize accessibility early enough for modals that appear before
+//     the main app and nest their own event loop to be accessible.
+// (b) Collect URLs that were provided to the app at open time.
+void InitializeMacApp() {
   if (sLaunchStatus != LaunchStatus::DelegateIsSetup) {
     // Delegate has not been set up or NSApp has been launched already.
     return;
   }
 
-  sLaunchStatus = LaunchStatus::ProcessingURLs;
-  [NSApp run];
-  sLaunchStatus = LaunchStatus::ProcessedURLs;
+  sLaunchStatus = LaunchStatus::CollectingURLs;
+  if (!gfxPlatform::IsHeadless()) {
+    [NSApp run];
+  }
+  sLaunchStatus = LaunchStatus::CollectedURLs;
 }
+
+nsTArray<nsCString> TakeStartupURLs() { return std::move(StartupURLs()); }
 
 @implementation MacApplicationDelegate
 
@@ -255,7 +263,7 @@ void ProcessPendingGetURLAppleEvents() {
 }
 
 - (void)applicationDidFinishLaunching:(NSNotification*)notification {
-  if (sLaunchStatus == LaunchStatus::ProcessingURLs) {
+  if (sLaunchStatus == LaunchStatus::CollectingURLs) {
     // We are in an inner `run` loop that we are spinning in order to get
     // URLs that were requested while launching. `application:openURLs:` will
     // have been called by this point and we will have finished reconstructing
@@ -352,8 +360,8 @@ void ProcessPendingGetURLAppleEvents() {
     }
 
     const char* const urlString = [[url absoluteString] UTF8String];
-    // Add the URL to any command line we're currently setting up.
-    if (CommandLineServiceMac::AddURLToCurrentCommandLine(urlString)) {
+    if (sLaunchStatus == LaunchStatus::CollectingURLs) {
+      StartupURLs().AppendElement(urlString);
       continue;
     }
 
