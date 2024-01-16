@@ -404,9 +404,10 @@ class CustomTabsToolbarFeatureTest {
     }
 
     @Test
-    fun `action button is scaled to 24 width and 24 height`() {
+    fun `action button is scaled to 48 width and 24 height`() {
         val captor = argumentCaptor<Toolbar.ActionButton>()
-        val size = 48
+        val originalWidth = 86
+        val originalHeight = 48
         val pendingIntent: PendingIntent = mock()
         val tab = createCustomTab(
             "https://www.mozilla.org",
@@ -414,7 +415,7 @@ class CustomTabsToolbarFeatureTest {
             config = CustomTabConfig(
                 actionButtonConfig = CustomTabActionButtonConfig(
                     description = "Button",
-                    icon = Bitmap.createBitmap(IntArray(size * size), size, size, Bitmap.Config.ARGB_8888),
+                    icon = Bitmap.createBitmap(IntArray(originalWidth * originalHeight), originalWidth, originalHeight, Bitmap.Config.ARGB_8888),
                     pendingIntent = pendingIntent,
                 ),
             ),
@@ -438,7 +439,7 @@ class CustomTabsToolbarFeatureTest {
 
         val button = captor.value.createView(FrameLayout(testContext))
         assertEquals(24, (button as ImageButton).drawable.intrinsicHeight)
-        assertEquals(24, button.drawable.intrinsicWidth)
+        assertEquals(48, button.drawable.intrinsicWidth)
     }
 
     @Test
