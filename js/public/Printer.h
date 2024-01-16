@@ -81,6 +81,10 @@
 //    `exportInto` to serialize its content to a Sprinter or a Fprinter. This is
 //    useful to avoid reallocation copies, while using an existing LifoAlloc.
 //
+//  - SEPrinter: Roughly the same as Fprinter for stderr, except it goes through
+//    printf_stderr, which makes sure the output goes to a useful place: the
+//    Android log or the Windows debug output.
+//
 //  - EscapePrinter: Wrapper around other printers, to escape characters when
 //    necessary.
 //
