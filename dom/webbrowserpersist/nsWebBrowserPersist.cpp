@@ -15,7 +15,6 @@
 #include "nsNetUtil.h"
 #include "nsIClassOfService.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsILoadContext.h"
 #include "nsIPrivateBrowsingChannel.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIStorageStream.h"
@@ -26,9 +25,7 @@
 #include "nsICacheInfoChannel.h"
 #include "nsIFileChannel.h"
 #include "nsEscape.h"
-#include "nsUnicharUtils.h"
 #include "nsIStringEnumerator.h"
-#include "nsContentCID.h"
 #include "nsStreamUtils.h"
 
 #include "nsCExternalHandlerService.h"
@@ -38,7 +35,6 @@
 #include "nsIWebProgressListener.h"
 #include "nsIAuthPrompt.h"
 #include "nsIPrompt.h"
-#include "nsIFormControl.h"
 #include "nsIThreadRetargetableRequest.h"
 #include "nsContentUtils.h"
 
@@ -50,8 +46,7 @@
 
 #include "nsIContent.h"
 #include "nsIMIMEInfo.h"
-#include "mozilla/dom/HTMLInputElement.h"
-#include "mozilla/dom/HTMLSharedElement.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/net/CookieJarSettings.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/Printf.h"
