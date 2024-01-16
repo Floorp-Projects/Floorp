@@ -9,7 +9,7 @@ import { getBlackBoxRanges } from "./source-blackbox";
 // eslint-disable-next-line
 import { getSelectedLocation as _getSelectedLocation } from "../utils/selected-location";
 import { isFrameBlackBoxed } from "../utils/source";
-import { createSelector } from "reselect";
+import { createSelector } from "devtools/client/shared/vendor/reselect";
 
 export const getSelectedFrame = createSelector(
   (state, thread) => state.pause.threads[thread],
