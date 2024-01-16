@@ -382,12 +382,27 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
    */
   void RunMessageAfterProcessing(UniquePtr<ControlMessageInterface> aMessage);
 
+  /* From the main thread, ask the MTG to resolve the returned promise when
+   * the device specified has started.
+   * A null aDeviceID indicates the default audio output device.
+   * The promise is rejected with NS_ERROR_INVALID_ARG if aSink does not
+   * correspond to any output devices used by the graph, or
+   * NS_ERROR_NOT_AVAILABLE if outputs to the device are removed or
+   * NS_ERROR_ILLEGAL_DURING_SHUTDOWN if the graph is force shut down
+   * before the promise could be resolved.
+   */
+  using GraphStartedPromise = GenericPromise;
+  RefPtr<GraphStartedPromise> NotifyWhenDeviceStarted(
+      CubebUtils::AudioDeviceID aDeviceID) override;
+
   /**
    * Resolve the GraphStartedPromise when the driver has started processing on
    * the audio thread after the device has started.
+   * (Audio is initially processed in the FallbackDriver's thread while the
+   * device is starting up.)
    */
-  void NotifyWhenGraphStarted(RefPtr<MediaTrack> aTrack,
-                              MozPromiseHolder<GraphStartedPromise>&& aHolder);
+  void NotifyWhenPrimaryDeviceStarted(
+      MozPromiseHolder<GraphStartedPromise>&& aHolder);
 
   /**
    * Apply an AudioContext operation (suspend/resume/close), on the graph

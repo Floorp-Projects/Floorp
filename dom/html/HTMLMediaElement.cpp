@@ -859,11 +859,12 @@ class HTMLMediaElement::MediaStreamRenderer
                  MOZ_ASSERT(!mSetAudioDevicePromise.IsEmpty());
                  mDeviceStartedRequest.Complete();
                  // The AudioStreamTrack::AddAudioOutput() promise is rejected
-                 // either when the track ends or the graph is force shutdown.
-                 // Rejection is treated in the same way as resolution for
-                 // consistency with the synchronous resolution when
-                 // AddAudioOutput() is called on a track that has already
-                 // ended.
+                 // either when the graph no longer needs the device, in which
+                 // case this handler would have already been disconnected, or
+                 // the graph is force shutdown.
+                 // mSetAudioDevicePromise is resolved regardless of whether
+                 // the AddAudioOutput() promises resolve or reject because
+                 // the underlying device has been changed.
                  mSetAudioDevicePromise.Resolve(true, __func__);
                })
         ->Track(mDeviceStartedRequest);
