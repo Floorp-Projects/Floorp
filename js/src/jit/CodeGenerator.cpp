@@ -1822,10 +1822,11 @@ static void StepBackToLeadSurrogate(MacroAssembler& masm, Register regexpShared,
                                     Register temp1, Register temp2) {
   Label done;
 
-  // If the unicode flag is not set, there is nothing to do.
-  masm.branchTest32(Assembler::Zero,
-                    Address(regexpShared, RegExpShared::offsetOfFlags()),
-                    Imm32(int32_t(JS::RegExpFlag::Unicode)), &done);
+  // If neither unicode flag is set, there is nothing to do.
+  masm.branchTest32(
+      Assembler::Zero, Address(regexpShared, RegExpShared::offsetOfFlags()),
+      Imm32(int32_t(JS::RegExpFlag::Unicode | JS::RegExpFlag::UnicodeSets)),
+      &done);
 
   // If the input is latin1, there can't be any surrogates.
   masm.branchLatin1String(input, &done);
@@ -2066,6 +2067,9 @@ static bool PrepareAndExecuteRegExp(MacroAssembler& masm, Register regexp,
   masm.branchTestUndefined(Assembler::Equal, sharedSlot, failure);
   masm.unboxNonDouble(sharedSlot, regexpReg, JSVAL_TYPE_PRIVATE_GCTHING);
 
+  // Update lastIndex if necessary.
+  StepBackToLeadSurrogate(masm, regexpReg, input, lastIndex, temp2, temp3);
+
   // Handle Atom matches
   Label notAtom, checkSuccess;
   masm.branchPtr(Assembler::Equal,
@@ -2099,9 +2103,6 @@ static bool PrepareAndExecuteRegExp(MacroAssembler& masm, Register regexp,
 
   // Fill in the pair count in the MatchPairs on the stack.
   masm.store32(temp2, pairCountAddress);
-
-  // Update lastIndex if necessary.
-  StepBackToLeadSurrogate(masm, regexpReg, input, lastIndex, temp2, temp3);
 
   // Load code pointer and length of input (in bytes).
   // Store the input start in the InputOutputData.

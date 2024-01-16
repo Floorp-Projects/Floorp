@@ -1123,7 +1123,7 @@ static RegExpRunStatus ExecuteRegExp(JSContext* cx, HandleObject regexp,
   /* Steps 4-8 performed by the caller. */
 
   /* Step 10. */
-  if (reobj->unicode()) {
+  if (reobj->unicode() || reobj->unicodeSets()) {
     /*
      * ES 2017 draft rev 6a13789aa9e7c6de4e96b7d3e24d9e6eba6584ad
      * 21.2.2.2 step 2.
