@@ -6,7 +6,7 @@ import PropTypes from "prop-types";
 import React, { PureComponent } from "react";
 import { div } from "react-dom-factories";
 import { bindActionCreators } from "devtools/client/shared/vendor/redux";
-import ReactDOM from "react-dom";
+import ReactDOM from "devtools/client/shared/vendor/react-dom";
 import { connect } from "../../utils/connect";
 
 import { getLineText, isLineBlackboxed } from "./../../utils/source";
