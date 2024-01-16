@@ -334,10 +334,6 @@ class AudioCallbackDriver::FallbackWrapper : public GraphInterface {
   bool OnThread() { return mFallbackDriver->OnThread(); }
 
   /* GraphInterface methods */
-  void NotifyOutputData(AudioDataValue* aBuffer, size_t aFrames,
-                        TrackRate aRate, uint32_t aChannels) override {
-    MOZ_CRASH("Unexpected NotifyOutputData from fallback SystemClockDriver");
-  }
   void NotifyInputStopped() override {
     MOZ_CRASH("Unexpected NotifyInputStopped from fallback SystemClockDriver");
   }
@@ -960,14 +956,6 @@ long AudioCallbackDriver::DataCallback(const AudioDataValue* aInputBuffer,
   // stream of the AEC.
   NaNToZeroInPlace(aOutputBuffer, aFrames * mOutputChannelCount);
 #endif
-
-  // Callback any observers for the AEC speaker data.  Note that one
-  // (maybe) of these will be full-duplex, the others will get their input
-  // data off separate cubeb callbacks.  Take care with how stuff is
-  // removed/added to this list and TSAN issues, but input and output will
-  // use separate callback methods.
-  Graph()->NotifyOutputData(aOutputBuffer, static_cast<size_t>(aFrames),
-                            mSampleRate, mOutputChannelCount);
 
 #ifdef XP_MACOSX
   // This only happens when the output is on a macbookpro's external speaker,

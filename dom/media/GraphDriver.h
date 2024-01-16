@@ -177,10 +177,6 @@ struct GraphInterface : public nsISupports {
     }
   };
 
-  /* Called on the graph thread when there is new output data for listeners.
-   * This is the mixed audio output of this MediaTrackGraph. */
-  virtual void NotifyOutputData(AudioDataValue* aBuffer, size_t aFrames,
-                                TrackRate aRate, uint32_t aChannels) = 0;
   /* Called on the graph thread after an AudioCallbackDriver with an input
    * stream has stopped. */
   virtual void NotifyInputStopped() = 0;

@@ -26,8 +26,6 @@ class MockGraphInterface : public GraphInterface {
   NS_DECL_THREADSAFE_ISUPPORTS
   explicit MockGraphInterface(TrackRate aSampleRate)
       : mSampleRate(aSampleRate) {}
-  MOCK_METHOD4(NotifyOutputData,
-               void(AudioDataValue*, size_t, TrackRate, uint32_t));
   MOCK_METHOD0(NotifyInputStopped, void());
   MOCK_METHOD5(NotifyInputData, void(const AudioDataValue*, size_t, TrackRate,
                                      uint32_t, uint32_t));
@@ -107,8 +105,6 @@ MOZ_CAN_RUN_SCRIPT_FOR_DEFINITION {
   RefPtr<AudioCallbackDriver> driver;
   auto graph = MakeRefPtr<NiceMock<MockGraphInterface>>(rate);
   EXPECT_CALL(*graph, NotifyInputStopped).Times(0);
-  ON_CALL(*graph, NotifyOutputData)
-      .WillByDefault([&](AudioDataValue*, size_t, TrackRate, uint32_t) {});
 
   driver = MakeRefPtr<AudioCallbackDriver>(graph, nullptr, rate, 2, 0, nullptr,
                                            nullptr, AudioInputType::Unknown);
@@ -144,7 +140,6 @@ void TestSlowStart(const TrackRate aRate) MOZ_CAN_RUN_SCRIPT_FOR_DEFINITION {
   Maybe<int64_t> audioStart;
   Maybe<uint32_t> alreadyBuffered;
   int64_t inputFrameCount = 0;
-  int64_t outputFrameCount = 0;
   int64_t processedFrameCount = 0;
   ON_CALL(*graph, NotifyInputData)
       .WillByDefault([&](const AudioDataValue*, size_t aFrames, TrackRate,
@@ -152,6 +147,9 @@ void TestSlowStart(const TrackRate aRate) MOZ_CAN_RUN_SCRIPT_FOR_DEFINITION {
         if (!audioStart) {
           audioStart = Some(graph->StateComputedTime());
           alreadyBuffered = Some(aAlreadyBuffered);
+          // Reset processedFrameCount to ignore frames processed while waiting
+          // for the fallback driver to stop.
+          processedFrameCount = 0;
         }
         EXPECT_NEAR(inputFrameCount,
                     static_cast<int64_t>(graph->StateComputedTime() -
@@ -163,9 +161,6 @@ void TestSlowStart(const TrackRate aRate) MOZ_CAN_RUN_SCRIPT_FOR_DEFINITION {
             << ", alreadyBuffered=" << *alreadyBuffered;
         inputFrameCount += aFrames;
       });
-  ON_CALL(*graph, NotifyOutputData)
-      .WillByDefault([&](AudioDataValue*, size_t aFrames, TrackRate aRate,
-                         uint32_t) { outputFrameCount += aFrames; });
 
   driver = MakeRefPtr<AudioCallbackDriver>(graph, nullptr, aRate, 2, 2, nullptr,
                                            (void*)1, AudioInputType::Voice);
@@ -198,18 +193,22 @@ void TestSlowStart(const TrackRate aRate) MOZ_CAN_RUN_SCRIPT_FOR_DEFINITION {
         << "Fallback driver iteration <1s (sanity)";
     return graph->IterationCount() >= fallbackIterations;
   });
+
+  MediaEventListener processedListener = stream->FramesProcessedEvent().Connect(
+      AbstractThread::GetCurrent(),
+      [&](uint32_t aFrames) { processedFrameCount += aFrames; });
   stream->Thaw();
 
-  // Wait for at least 100ms of audio data.
-  WaitUntil(stream->FramesProcessedEvent(), [&](uint32_t aFrames) {
-    processedFrameCount += aFrames;
-    return processedFrameCount >= aRate / 10;
-  });
+  SpinEventLoopUntil(
+      "processed at least 100ms of audio data from stream callback"_ns, [&] {
+        return inputFrameCount != 0 && processedFrameCount >= aRate / 10;
+      });
 
   // This will block untill all events have been executed.
   MOZ_KnownLive(driver)->Shutdown();
+  processedListener.Disconnect();
 
-  EXPECT_EQ(inputFrameCount, outputFrameCount);
+  EXPECT_EQ(inputFrameCount, processedFrameCount);
   EXPECT_NEAR(graph->StateComputedTime() - *audioStart,
               inputFrameCount + *alreadyBuffered, WEBAUDIO_BLOCK_SIZE)
       << "Graph progresses while audio driver runs. stateComputedTime="

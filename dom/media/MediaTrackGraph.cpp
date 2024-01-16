@@ -897,9 +897,7 @@ void MediaTrackGraphImpl::CloseAudioInput(DeviceInputTrack* aTrack) {
 }
 
 // All AudioInput listeners get the same speaker data (at least for now).
-void MediaTrackGraphImpl::NotifyOutputData(AudioDataValue* aBuffer,
-                                           size_t aFrames, TrackRate aRate,
-                                           uint32_t aChannels) {
+void MediaTrackGraphImpl::NotifyOutputData(const AudioChunk& aChunk) {
   if (!mDeviceInputTrackManagerGraphThread.GetNativeInputTrack()) {
     return;
   }
@@ -907,7 +905,7 @@ void MediaTrackGraphImpl::NotifyOutputData(AudioDataValue* aBuffer,
 #if defined(MOZ_WEBRTC)
   for (const auto& track : mTracks) {
     if (const auto& t = track->AsAudioProcessingTrack()) {
-      t->NotifyOutputData(this, aBuffer, aFrames, aRate, aChannels);
+      t->NotifyOutputData(this, aChunk);
     }
   }
 #endif
@@ -1481,6 +1479,11 @@ void MediaTrackGraphImpl::Process(MixerCallbackReceiver* aMixerReceiver) {
     }
     AudioChunk* outputChunk = mMixer.MixedChunk();
     if (!outputDeviceEntry.mReceiver) {  // primary output
+      // Callback any observers for the AEC speaker data.  Note that one
+      // (maybe) of these will be full-duplex, the others will get their input
+      // data off separate cubeb callbacks.
+      NotifyOutputData(*outputChunk);
+
       aMixerReceiver->MixerCallback(outputChunk, mSampleRate);
     } else {
       outputDeviceEntry.mReceiver->EnqueueAudio(*outputChunk);
