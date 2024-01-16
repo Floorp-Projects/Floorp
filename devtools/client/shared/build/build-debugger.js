@@ -12,7 +12,6 @@ const mappings = {
   react: "devtools/client/shared/vendor/react",
   "react-dom": "devtools/client/shared/vendor/react-dom",
   "react-dom-factories": "devtools/client/shared/vendor/react-dom-factories",
-  "react-redux": "devtools/client/shared/vendor/react-redux",
   "prop-types": "devtools/client/shared/vendor/react-prop-types",
   "wasmparser/dist/cjs/WasmParser": "devtools/client/shared/vendor/WasmParser",
   "wasmparser/dist/cjs/WasmDis": "devtools/client/shared/vendor/WasmDis",
