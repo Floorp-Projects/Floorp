@@ -4,7 +4,7 @@
 
 import { cloneElement, Component } from "react";
 import { aside, button, div, h2 } from "react-dom-factories";
-import PropTypes from "prop-types";
+import PropTypes from "devtools/client/shared/vendor/react-prop-types";
 
 import "./Accordion.css";
 

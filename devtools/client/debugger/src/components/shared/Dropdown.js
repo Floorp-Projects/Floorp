@@ -4,7 +4,7 @@
 
 import { Component } from "react";
 import { button, div } from "react-dom-factories";
-import PropTypes from "prop-types";
+import PropTypes from "devtools/client/shared/vendor/react-prop-types";
 import "./Dropdown.css";
 
 export class Dropdown extends Component {

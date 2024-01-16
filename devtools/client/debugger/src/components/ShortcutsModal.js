@@ -4,7 +4,7 @@
 
 import React, { Component } from "react";
 import { div, ul, h2, span, li } from "react-dom-factories";
-import PropTypes from "prop-types";
+import PropTypes from "devtools/client/shared/vendor/react-prop-types";
 import Modal from "./shared/Modal";
 import { formatKeyShortcut } from "../utils/text";
 const classnames = require("devtools/client/shared/classnames.js");
