@@ -1497,7 +1497,7 @@ class Document : public nsINode,
 
   bool HasThirdPartyChannel();
 
-  bool ShouldIncludeInTelemetry(bool aAllowExtensionURIs);
+  bool ShouldIncludeInTelemetry() const;
 
   void AddMediaElementWithMSE();
   void RemoveMediaElementWithMSE();
