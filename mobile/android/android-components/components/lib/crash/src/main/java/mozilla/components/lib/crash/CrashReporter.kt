@@ -261,6 +261,7 @@ class CrashReporter(
                 onFinished,
                 handler,
                 requiredPermission,
+                activityOptions.toBundle(),
             )
         } else {
             nonFatalCrashIntent?.send(context, 0, additionalIntent)
