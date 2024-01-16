@@ -2347,12 +2347,13 @@ nsChangeHint nsStyleDisplay::CalcDifference(
   }
 
   if (mScrollbarGutter != aNewData.mScrollbarGutter) {
-    if (IsScrollableOverflow()) {
+    if (IsScrollableOverflow() || aOldStyle.IsRootElementStyle()) {
       // Changing scrollbar-gutter affects available inline-size of a inner
-      // scrolled frame, so we need a reflow for scrollbar change.
+      // scrolled frame, so we need a reflow for scrollbar change. Note that the
+      // root is always scrollable in HTML, even if its style doesn't say so.
       hint |= nsChangeHint_ReflowHintsForScrollbarChange;
     } else {
-      // scrollbar-gutter only applies to the scroll containers.
+      // scrollbar-gutter only applies to scroll containers.
       hint |= nsChangeHint_NeutralChange;
     }
   }
