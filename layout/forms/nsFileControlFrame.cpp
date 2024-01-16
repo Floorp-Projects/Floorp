@@ -49,7 +49,7 @@ NS_IMPL_FRAMEARENA_HELPERS(nsFileControlFrame)
 nsFileControlFrame::nsFileControlFrame(ComputedStyle* aStyle,
                                        nsPresContext* aPresContext)
     : nsBlockFrame(aStyle, aPresContext, kClassID) {
-  AddStateBits(NS_BLOCK_FORMATTING_CONTEXT_STATE_BITS);
+  AddStateBits(NS_BLOCK_STATIC_BFC);
 }
 
 void nsFileControlFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,

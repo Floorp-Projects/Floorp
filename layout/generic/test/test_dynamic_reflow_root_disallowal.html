@@ -641,7 +641,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1508420
 
     // We use 'display:block' on the candidate (overriding 'display:flow-root')
     // so that it won't be a block formatting context. (See usage/definition of
-    // NS_BLOCK_FORMATTING_CONTEXT_STATE_BITS in our c++ layout code.)
+    // NS_BLOCK_BFC_STATE_BITS in our c++ layout code.)
     let cand = createStyledDiv(gReflowRootCandidateStyles +
                                "display: block; \
                                 background: purple;");
@@ -679,7 +679,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1508420
 
     // We use 'display:block' on the candidate (overriding 'display:flow-root')
     // so that it won't be a block formatting context. (See usage/definition of
-    // NS_BLOCK_FORMATTING_CONTEXT_STATE_BITS in our c++ layout code.)
+    // NS_BLOCK_BFC_STATE_BITS in our c++ layout code.)
     // This allows floats inside the candidate to affect the position of
     // inline-level content outside of it.
     let cand = createStyledDiv(gReflowRootCandidateStyles +

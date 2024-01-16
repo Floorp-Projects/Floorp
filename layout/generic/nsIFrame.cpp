@@ -2473,8 +2473,7 @@ bool nsIFrame::CanBeDynamicReflowRoot() const {
 
   // If we participate in a container's block reflow context, or margins
   // can collapse through us, we can't be a dynamic reflow root.
-  if (IsBlockFrameOrSubclass() &&
-      !HasAllStateBits(NS_BLOCK_FORMATTING_CONTEXT_STATE_BITS)) {
+  if (IsBlockFrameOrSubclass() && !HasAnyStateBits(NS_BLOCK_BFC_STATE_BITS)) {
     return false;
   }
 

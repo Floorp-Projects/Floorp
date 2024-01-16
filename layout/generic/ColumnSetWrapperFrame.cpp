@@ -23,7 +23,7 @@ nsBlockFrame* NS_NewColumnSetWrapperFrame(PresShell* aPresShell,
   // CSS Multi-column level 1 section 2: A multi-column container
   // establishes a new block formatting context, as per CSS 2.1 section
   // 9.4.1.
-  frame->AddStateBits(aStateFlags | NS_BLOCK_FORMATTING_CONTEXT_STATE_BITS);
+  frame->AddStateBits(aStateFlags | NS_BLOCK_STATIC_BFC);
   return frame;
 }
 
