@@ -46,6 +46,7 @@ var SMILUtil = {
       // for other attributes.
       return SMILUtil.getComputedStyleWrapper(elem, attr.attrName);
     }
+    throw new Error(`Unexpected attribute value ${attr.attrType}`);
   },
 
   // Smart wrapper for getComputedStyle, which will generate a "fake" computed

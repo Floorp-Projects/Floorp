@@ -11,6 +11,7 @@ function testFormDataParsing(fn) {
         if (testFn) {
           return testFn(fd);
         }
+        return undefined;
       },
       function (e) {
         if (shouldPass) {

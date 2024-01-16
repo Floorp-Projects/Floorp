@@ -22,7 +22,8 @@ export class ForceRefreshParent extends JSWindowActorParent {
           "cached load should occur before second base load"
         );
         done = true;
-        return ForceRefreshParent.done();
+        ForceRefreshParent.done();
+        return;
       }
       if (baseLoadCount !== 1) {
         ForceRefreshParent.SimpleTest.ok(
@@ -30,7 +31,7 @@ export class ForceRefreshParent extends JSWindowActorParent {
           "base load without cached load should only occur once"
         );
         done = true;
-        return ForceRefreshParent.done();
+        ForceRefreshParent.done();
       }
     } else if (msg.data.type === "base-register") {
       ForceRefreshParent.SimpleTest.ok(
@@ -65,7 +66,8 @@ export class ForceRefreshParent extends JSWindowActorParent {
       );
       cachedLoadCount += 1;
       if (cachedLoadCount < maxCacheLoadCount) {
-        return ForceRefreshParent.refresh();
+        ForceRefreshParent.refresh();
+        return;
       }
       ForceRefreshParent.forceRefresh();
     } else if (msg.data.type === "cached-failure") {

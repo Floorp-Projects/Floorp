@@ -24,19 +24,6 @@ const CROSSIMAGEURL = `${CROSSORIGIN}/${DIRPATH}image.png`;
 const DOCUMENTURL = `${ORIGIN}/${DIRPATH}dummy_page.html`;
 const CROSSDOCUMENTURL = `${CROSSORIGIN}/${DIRPATH}dummy_page.html`;
 
-async function createElements({ element, attribute }, url1, url2) {
-  for (let url of [url1, url2]) {
-    const object = content.document.createElement(element);
-    object[attribute] = url;
-    const onloadPromise = new Promise(res => {
-      object.onload = res;
-    });
-    content.document.body.appendChild(object);
-    await onloadPromise;
-    return object;
-  }
-}
-
 function getPids(browser) {
   return browser.browsingContext.children.map(
     child => child.currentWindowContext.osPid

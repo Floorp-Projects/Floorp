@@ -14,12 +14,13 @@
 function wait_until_controlled() {
   return new Promise(function(resolve) {
     if (navigator.serviceWorker.controller) {
-      return resolve('controlled');
+      resolve('controlled');
+      return;
     }
     navigator.serviceWorker.addEventListener('controllerchange', function onController() {
       if (navigator.serviceWorker.controller) {
         navigator.serviceWorker.removeEventListener('controllerchange', onController);
-        return resolve('controlled');
+        resolve('controlled');
       }
     });
   });

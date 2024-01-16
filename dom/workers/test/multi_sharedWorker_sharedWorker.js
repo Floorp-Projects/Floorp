@@ -69,4 +69,5 @@ self.onerror = function (message, filename, lineno) {
     // Prevent the error from propagating the first time only.
     return true;
   }
+  return undefined;
 };

@@ -26,6 +26,7 @@ function apply_compartment(compartment, data) {
   }
 
   ok(false, "Invalid compartment value");
+  return undefined;
 }
 
 async function test_nativeStream(compartment) {

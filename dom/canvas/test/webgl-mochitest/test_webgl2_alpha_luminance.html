@@ -79,7 +79,7 @@ void main() {
     var prog = WebGLUtil.createProgramByIds(gl, 'vs', 'fs');
     if (!prog) {
       ok(false, 'Program linking should succeed.');
-      return false;
+      return;
     }
 
     gl.disable(gl.DEPTH_TEST);
