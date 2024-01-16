@@ -74,14 +74,19 @@
 
 <script>
 
+    function unset_dimension(element = ref) {
+        element.style.fontSize = '';
+        element.style.marginBottom = '';
+    }
+
     // Compute a dimension (e.g. 1em) given a certain fontSize.
     function compute_dimension(dimension, fontSize, element = ref) {
         try {
-            element.attributeStyleMap.set('font-size', fontSize);
-            element.attributeStyleMap.set('margin-bottom', dimension);
+            element.style.fontSize = fontSize;
+            element.style.marginBottom = dimension;
             return getComputedStyle(element).marginBottom;
         } finally {
-            element.attributeStyleMap.clear();
+            unset_dimension(element);
         }
     }
 
@@ -94,8 +99,8 @@
     const unsetLineHeight = "normal";
 
     add_result_callback(function(){
-        target.attributeStyleMap.clear();
-        document.documentElement.attributeStyleMap.clear();
+        unset_dimension(target);
+        unset_dimension(document.documentElement);
     });
 
     test(function() {
