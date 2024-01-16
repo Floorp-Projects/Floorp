@@ -16,7 +16,10 @@ support-files = [
   "!/accessible/tests/mochitest/letters.gif",
   "!/accessible/tests/mochitest/moz.png",
 ]
-prefs = ["javascript.options.asyncstack_capture_debuggee_only=false"]
+prefs = [
+  "javascript.options.asyncstack_capture_debuggee_only=false",
+  "dom.element.popover.enabled=true"
+]
 
 # Caching tests
 ["browser_caching_actions.js"]
