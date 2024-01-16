@@ -154,16 +154,16 @@ def set_worker_type(config, tasks):
 
             # now we have the right platform set the worker type accordingly
             task["worker-type"] = win_worker_type_platform[task["virtualization"]]
-        elif test_platform.startswith("android-hw-g5"):
-            if task["suite"] != "raptor":
-                task["worker-type"] = "t-bitbar-gw-unit-g5"
-            else:
-                task["worker-type"] = "t-bitbar-gw-perf-g5"
         elif test_platform.startswith("android-hw-p5"):
             if task["suite"] != "raptor":
                 task["worker-type"] = "t-bitbar-gw-unit-p5"
             else:
                 task["worker-type"] = "t-bitbar-gw-perf-p5"
+        elif test_platform.startswith("android-hw-p6"):
+            if task["suite"] != "raptor":
+                task["worker-type"] = "t-bitbar-gw-unit-p6"
+            else:
+                task["worker-type"] = "t-bitbar-gw-perf-p6"
         elif test_platform.startswith("android-hw-a51"):
             if task["suite"] != "raptor":
                 task["worker-type"] = "t-bitbar-gw-unit-a51"
