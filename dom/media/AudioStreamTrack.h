@@ -29,8 +29,7 @@ class AudioStreamTrack : public MediaStreamTrack {
 
   // Direct output to aSink, or the default output device if aSink is null.
   // No more than one output may exist for a single aKey at any one time.
-  // Returns a promise that resolves immediately for the default device or
-  // when a non-default device is processing audio.
+  // Returns a promise that resolves when the device is processing audio.
   RefPtr<GenericPromise> AddAudioOutput(void* aKey, AudioDeviceInfo* aSink);
   void RemoveAudioOutput(void* aKey);
   void SetAudioOutputVolume(void* aKey, float aVolume);
@@ -42,13 +41,6 @@ class AudioStreamTrack : public MediaStreamTrack {
 
  protected:
   already_AddRefed<MediaStreamTrack> CloneInternal() override;
-  void SetReadyState(MediaStreamTrackState aState) override;
-
- private:
-  // Track CrossGraphPort per AudioOutput key. This is required in order to
-  // redirect all AudioOutput requests (add, remove, set volume) to the
-  // receiver track, which belongs to the remote graph. MainThread only.
-  nsClassHashtable<nsPtrHashKey<void>, CrossGraphPort> mCrossGraphs;
 };
 
 }  // namespace mozilla::dom

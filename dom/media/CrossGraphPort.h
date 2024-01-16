@@ -23,7 +23,11 @@ class AudioStreamTrack;
 namespace mozilla {
 
 /**
- * See MediaTrackGraph::CreateCrossGraphTransmitter()
+ * CrossGraphTransmitter and CrossGraphPort are currently unused, but intended
+ * for connecting MediaTracks of different MediaTrackGraphs with different
+ * sample rates or clock sources for bug 1674892.
+ *
+ * Create with MediaTrackGraph::CreateCrossGraphTransmitter()
  */
 class CrossGraphTransmitter : public ProcessedMediaTrack {
  public:
@@ -41,7 +45,7 @@ class CrossGraphTransmitter : public ProcessedMediaTrack {
 };
 
 /**
- * See MediaTrackGraph::CreateCrossGraphReceiver()
+ * Create with MediaTrackGraph::CreateCrossGraphReceiver()
  */
 class CrossGraphReceiver : public ProcessedMediaTrack {
  public:
@@ -70,16 +74,7 @@ class CrossGraphPort final {
   static UniquePtr<CrossGraphPort> Connect(
       const RefPtr<dom::AudioStreamTrack>& aStreamTrack,
       MediaTrackGraph* aPartnerGraph);
-  static UniquePtr<CrossGraphPort> Connect(
-      const RefPtr<dom::AudioStreamTrack>& aStreamTrack, AudioDeviceInfo* aSink,
-      nsPIDOMWindowInner* aWindow);
   ~CrossGraphPort();
-
-  void AddAudioOutput(void* aKey);
-  void RemoveAudioOutput(void* aKey);
-  void SetAudioOutputVolume(void* aKey, float aVolume);
-
-  RefPtr<GenericPromise> EnsureConnected();
 
   const RefPtr<CrossGraphTransmitter> mTransmitter;
   const RefPtr<CrossGraphReceiver> mReceiver;

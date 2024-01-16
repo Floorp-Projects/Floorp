@@ -539,7 +539,7 @@ class MediaStreamTrack : public DOMEventTargetHelper, public SupportsWeakPtr {
    * Forces the ready state to a particular value, for instance when we're
    * cloning an already ended track.
    */
-  virtual void SetReadyState(MediaStreamTrackState aState);
+  void SetReadyState(MediaStreamTrackState aState);
 
   /**
    * Notified by the MediaTrackGraph, through our owning MediaStream on the
