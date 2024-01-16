@@ -398,6 +398,15 @@ impl<T> IndexMut<SingleNonCustomReference> for NonCustomReferenceMap<T> {
     }
 }
 
+/// Whether to defer resolving custom properties referencing font relative units.
+#[derive(Clone, Copy, PartialEq, Eq)]
+#[allow(missing_docs)]
+pub enum DeferFontRelativeCustomPropertyResolution {
+    Yes,
+    No,
+}
+
+
 /// A struct holding information about the external references to that a custom
 /// property value may have.
 #[derive(Clone, Debug, Default, MallocSizeOf, PartialEq, ToShmem)]
@@ -882,7 +891,7 @@ pub struct CustomPropertiesBuilder<'a, 'b: 'a> {
     custom_properties: ComputedCustomProperties,
     reverted: PrecomputedHashMap<&'a Name, (CascadePriority, bool)>,
     stylist: &'a Stylist,
-    computed_context: &'a computed::Context<'b>,
+    computed_context: &'a mut computed::Context<'b>,
     references_from_non_custom_properties: NonCustomReferenceMap<Vec<Name>>,
 }
 
@@ -890,7 +899,7 @@ impl<'a, 'b: 'a> CustomPropertiesBuilder<'a, 'b> {
     /// Create a new builder, inheriting from a given custom properties map.
     ///
     /// We expose this publicly mostly for @keyframe blocks.
-    pub fn new_with_properties(stylist: &'a Stylist, custom_properties: ComputedCustomProperties, computed_context: &'a computed::Context<'b>) -> Self {
+    pub fn new_with_properties(stylist: &'a Stylist, custom_properties: ComputedCustomProperties, computed_context: &'a mut computed::Context<'b>) -> Self {
         Self {
             seen: PrecomputedHashSet::default(),
             reverted: Default::default(),
@@ -903,7 +912,7 @@ impl<'a, 'b: 'a> CustomPropertiesBuilder<'a, 'b> {
     }
 
     /// Create a new builder, inheriting from the right style given context.
-    pub fn new(stylist: &'a Stylist, context: &'a computed::Context<'b>) -> Self {
+    pub fn new(stylist: &'a Stylist, context: &'a mut computed::Context<'b>) -> Self {
         let is_root_element = context.is_root_element();
 
         let inherited = context.inherited_custom_properties();
@@ -1182,26 +1191,41 @@ impl<'a, 'b: 'a> CustomPropertiesBuilder<'a, 'b> {
         true
     }
 
-    /// Returns the final map of applicable custom properties, along with
-    /// any longhand property that is now considered invalid-and-compute-time.
+    /// Computes the map of applicable custom properties, as well as
+    /// longhand properties that are now considered invalid-at-compute time.
+    /// The result is saved into the computed context.
     ///
     /// If there was any specified property or non-inherited custom property
     /// with an initial value, we've created a new map and now we
-    /// need to remove any potential cycles, and wrap it in an arc. Note that
-    /// non-custom longhand properties may participate in such cycles.
+    /// need to remove any potential cycles (And marking non-custom
+    /// properties), and wrap it in an arc.
     ///
-    /// Otherwise, just use the inherited custom properties map.
-    pub fn build(mut self) -> (ComputedCustomProperties, LonghandIdSet) {
-        let mut invalid_non_custom_properties = LonghandIdSet::default();
+    /// Some registered custom properties may require font-related properties
+    /// be resolved to resolve. If these properties are not resolved at this time,
+    /// `defer` should be set to `Yes`, which will leave such custom properties,
+    /// and other properties referencing them, untouched. These properties are
+    /// returned separately, to be resolved by `build_deferred` to fully resolve
+    /// all custom properties after all necessary non-custom properties are resolved.
+    pub fn build(
+        mut self,
+        defer: DeferFontRelativeCustomPropertyResolution,
+    ) -> Option<ComputedCustomProperties> {
+        let mut deferred_custom_properties = None;
         if self.may_have_cycles {
+            if defer == DeferFontRelativeCustomPropertyResolution::Yes {
+                deferred_custom_properties = Some(ComputedCustomProperties::default());
+            }
+            let mut invalid_non_custom_properties = LonghandIdSet::default();
             substitute_all(
                 &mut self.custom_properties,
+                deferred_custom_properties.as_mut(),
                 &mut invalid_non_custom_properties,
                 &self.seen,
                 &self.references_from_non_custom_properties,
                 self.stylist,
                 self.computed_context,
             );
+            self.computed_context.builder.invalid_non_custom_properties = invalid_non_custom_properties;
         }
 
         self.custom_properties.shrink_to_fit();
@@ -1211,28 +1235,100 @@ impl<'a, 'b: 'a> CustomPropertiesBuilder<'a, 'b> {
         // haven't really changed, and save some memory by reusing the inherited
         // map in that case.
         let initial_values = self.stylist.get_custom_property_initial_values();
-        (
-            ComputedCustomProperties {
-                inherited: if self
-                    .computed_context
+        self.computed_context.builder.custom_properties = ComputedCustomProperties {
+            inherited: if self
+                .computed_context
+                .inherited_custom_properties()
+                .inherited == self.custom_properties.inherited
+            {
+                self.computed_context
                     .inherited_custom_properties()
-                    .inherited == self.custom_properties.inherited
-                {
-                    self.computed_context
-                        .inherited_custom_properties()
-                        .inherited
-                        .clone()
-                } else {
-                    self.custom_properties.inherited
-                },
-                non_inherited: if initial_values.non_inherited == self.custom_properties.non_inherited {
-                    initial_values.non_inherited.clone()
-                } else {
-                    self.custom_properties.non_inherited
-                },
+                    .inherited
+                    .clone()
+            } else {
+                self.custom_properties.inherited
             },
-            invalid_non_custom_properties,
-        )
+            non_inherited: if initial_values.non_inherited == self.custom_properties.non_inherited {
+                initial_values.non_inherited.clone()
+            } else {
+                self.custom_properties.non_inherited
+            },
+        };
+
+        deferred_custom_properties
+    }
+
+    /// Fully resolve all deferred custom properties, assuming that the incoming context
+    /// has necessary properties resolved.
+    pub fn build_deferred(
+        deferred: ComputedCustomProperties,
+        stylist: &Stylist,
+        computed_context: &mut computed::Context,
+    ) {
+        if deferred.is_empty() {
+            return;
+        }
+        // Guaranteed to not have cycles at this point.
+        let substitute =
+            |deferred: &CustomPropertiesMap,
+             stylist: &Stylist,
+             context: &computed::Context,
+             custom_properties: &mut ComputedCustomProperties| {
+                // Since `CustomPropertiesMap` preserves insertion order, we shouldn't
+                // have to worry about resolving in a wrong order.
+                for (k, v) in deferred.iter() {
+                    let v = match v {
+                        None => continue,
+                        Some(v) => v,
+                    };
+                    if v.has_references() {
+                        substitute_references_in_value_and_apply(
+                            k,
+                            v.as_ref(),
+                            custom_properties,
+                            stylist,
+                            context,
+                        );
+                    } else {
+                        let mut input = ParserInput::new(&v.css);
+                        let mut input = Parser::new(&mut input);
+                        let registration =
+                            stylist.get_custom_property_registration(k)
+                            .expect("No references, must be registered custom property depending on font-relative properties");
+                        if let Ok(value) = SpecifiedRegisteredValue::compute(
+                            &mut input,
+                            registration,
+                            &v.url_data,
+                            context,
+                            AllowComputationallyDependent::Yes,
+                        ) {
+                            custom_properties.insert(Some(registration), k, value);
+                        } else {
+                            handle_invalid_at_computed_value_time(
+                                k,
+                                custom_properties,
+                                context.inherited_custom_properties(),
+                                stylist,
+                                context.is_root_element(),
+                            );
+                        }
+                    }
+                }
+            };
+        let mut custom_properties = std::mem::take(&mut computed_context.builder.custom_properties);
+        substitute(
+            &deferred.inherited,
+            stylist,
+            computed_context,
+            &mut custom_properties,
+        );
+        substitute(
+            &deferred.non_inherited,
+            stylist,
+            computed_context,
+            &mut custom_properties,
+        );
+        computed_context.builder.custom_properties = custom_properties;
     }
 }
 
@@ -1242,6 +1338,7 @@ impl<'a, 'b: 'a> CustomPropertiesBuilder<'a, 'b> {
 /// It does cycle dependencies removal at the same time as substitution.
 fn substitute_all(
     custom_properties_map: &mut ComputedCustomProperties,
+    mut deferred_properties_map: Option<&mut ComputedCustomProperties>,
     invalid_non_custom_properties: &mut LonghandIdSet,
     seen: &PrecomputedHashSet<&Name>,
     references_from_non_custom_properties: &NonCustomReferenceMap<Vec<Name>>,
@@ -1300,6 +1397,8 @@ fn substitute_all(
         computed_context: &'a computed::Context<'b>,
         /// Longhand IDs that became invalid due to dependency cycle(s).
         invalid_non_custom_properties: &'a mut LonghandIdSet,
+        /// Properties that cannot yet be substituted.
+        deferred_properties: Option<&'a mut ComputedCustomProperties>,
     }
 
     /// This function combines the traversal for cycle removal and value
@@ -1521,21 +1620,46 @@ fn substitute_all(
             context.non_custom_references = NonCustomReferences::default();
             return None;
         }
-        context.non_custom_references = NonCustomReferences::default();
 
         if let Some(ref v) = value.as_ref() {
-            if should_substitute {
-                // Now we have shown that this variable is not in a loop, and all of its dependencies
-                // should have been resolved. We can perform substitution now.
-                substitute_references_in_value_and_apply(
-                    &name,
-                    v,
-                    &mut context.map,
-                    context.stylist,
-                    context.computed_context,
-                );
+            let registration = context.stylist.get_custom_property_registration(&name);
+            let registered_length_property = registration.map_or(
+                false,
+                |r| r.syntax.may_reference_font_relative_length()
+            );
+            let mut defer = false;
+            if !context.non_custom_references.is_empty() && registered_length_property {
+                if let Some(deferred) = &mut context.deferred_properties {
+                    // This property directly depends on a non-custom property, defer resolving it.
+                    deferred.insert(registration, &name, (*v).clone());
+                    context.map.remove(registration, &name);
+                    defer = true;
+                }
+            }
+            if should_substitute && !defer {
+                for e in v.references.custom_properties.iter() {
+                    if let Some(deferred) = &mut context.deferred_properties {
+                        if deferred.get(context.stylist, e).is_some() {
+                            // This property depends on a custom property that depends on a non-custom property, defer.
+                            deferred.insert(registration, &name, (*v).clone());
+                            context.map.remove(registration, &name);
+                            defer = true;
+                            break;
+                        }
+                    }
+                }
+                if !defer {
+                    substitute_references_in_value_and_apply(
+                        &name,
+                        v,
+                        &mut context.map,
+                        context.stylist,
+                        context.computed_context,
+                    );
+                }
             }
         }
+        context.non_custom_references = NonCustomReferences::default();
 
         // All resolved, so return the signal value.
         None
@@ -1556,6 +1680,7 @@ fn substitute_all(
             stylist,
             computed_context,
             invalid_non_custom_properties,
+            deferred_properties: deferred_properties_map.as_deref_mut(),
         };
         traverse(
             VarType::Custom((*name).clone()),
