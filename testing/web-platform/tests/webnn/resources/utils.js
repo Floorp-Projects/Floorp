@@ -527,7 +527,13 @@ const createConstantOperand = (builder, resources) => {
 const createSingleInputOperand = (builder, resources, inputOperandName) => {
   inputOperandName = inputOperandName ? inputOperandName : Object.keys(resources.inputs)[0];
   const inputResources = resources.inputs[inputOperandName];
-  return builder.input(inputOperandName, {dataType: inputResources.type, type: inputResources.type, dimensions: inputResources.shape});
+  let operand;
+  if (resources.inputs[inputOperandName].hasOwnProperty('constant') && resources.inputs[inputOperandName]['constant']) {
+    operand = createConstantOperand(builder, resources.inputs[inputOperandName]);
+  } else {
+    operand = builder.input(inputOperandName, {dataType: inputResources.type, type: inputResources.type, dimensions: inputResources.shape});
+  }
+  return operand;
 };
 
 /**
@@ -540,12 +546,7 @@ const createMultiInputOperands = (builder, resources) => {
   let inputOperands = [];
   const inputOperandNameArray = Object.keys(resources.inputs);
   inputOperandNameArray.forEach(inputOperandName => {
-    let operand;
-    if (resources.inputs[inputOperandName].hasOwnProperty('constant') && resources.inputs[inputOperandName]['constant']) {
-      operand = createConstantOperand(builder, resources.inputs[inputOperandName]);
-    } else {
-      operand = createSingleInputOperand(builder, resources, inputOperandName);
-    }
+    const operand = createSingleInputOperand(builder, resources, inputOperandName);
     inputOperands.push(operand);
   });
   return inputOperands;
@@ -609,8 +610,14 @@ const buildConcat = (operationName, builder, resources) => {
   // MLOperand concat(sequence<MLOperand> inputs, unsigned long axis);
   const namedOutputOperand = {};
   const inputOperands = [];
+  let operand;
   for (let input of resources.inputs) {
-    inputOperands.push(builder.input(input.name, {dataType: input.type, type: input.type, dimensions: input.shape}));
+    if (input.hasOwnProperty('constant') && input['constant']) {
+      operand = createConstantOperand(builder, input);
+    } else {
+      operand = builder.input(input.name, {dataType: input.type, type: input.type, dimensions: input.shape});
+    }
+    inputOperands.push(operand);
   }
   // invoke builder.concat()
   namedOutputOperand[resources.expected.name] = builder[operationName](inputOperands, resources.axis);
