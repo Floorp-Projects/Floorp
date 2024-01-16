@@ -9275,8 +9275,11 @@ class Document::TitleChangeEvent final : public Runnable {
   }
 
   NS_IMETHOD Run() final {
-    const bool blockOnload = mBlockOnload;
+    if (!mDoc) {
+      return NS_OK;
+    }
     const RefPtr<Document> doc = mDoc;
+    const bool blockOnload = mBlockOnload;
     mDoc = nullptr;
     doc->DoNotifyPossibleTitleChange();
     if (blockOnload) {
