@@ -73,6 +73,7 @@ nsresult HTMLElement::BindToTree(BindContext& aContext, nsINode& aParent) {
   NS_ENSURE_SUCCESS(rv, rv);
 
   UpdateBarredFromConstraintValidation();
+  UpdateValidityElementStates(false);
   return rv;
 }
 
@@ -80,6 +81,7 @@ void HTMLElement::UnbindFromTree(bool aNullParent) {
   nsGenericHTMLFormElement::UnbindFromTree(aNullParent);
 
   UpdateBarredFromConstraintValidation();
+  UpdateValidityElementStates(false);
 }
 
 void HTMLElement::DoneCreatingElement() {
@@ -303,6 +305,7 @@ void HTMLElement::UpdateFormOwner() {
   UpdateFieldSet(true);
   UpdateDisabledState(true);
   UpdateBarredFromConstraintValidation();
+  UpdateValidityElementStates(true);
 
   MaybeRestoreFormAssociatedCustomElementState();
 }
@@ -417,6 +420,7 @@ void HTMLElement::FieldSetDisabledChanged(bool aNotify) {
   nsGenericHTMLFormElement::FieldSetDisabledChanged(aNotify);
 
   UpdateBarredFromConstraintValidation();
+  UpdateValidityElementStates(aNotify);
 }
 
 ElementInternals* HTMLElement::GetElementInternals() const {
