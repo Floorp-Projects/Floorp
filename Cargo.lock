@@ -38,14 +38,14 @@ dependencies = [
 
 [[package]]
 name = "alsa"
-version = "0.7.0"
+version = "0.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8512c9117059663fb5606788fbca3619e2a91dac0e3fe516242eab1fa6be5e44"
+checksum = "ce34de545ad29bcc00cb1b87a94c132256dcf83aa7eeb9674482568405a6ff0a"
 dependencies = [
  "alsa-sys",
- "bitflags 1.999.999",
+ "bitflags 2.4.0",
  "libc",
- "nix 0.24.99",
+ "nix 0.26.99",
 ]
 
 [[package]]
@@ -3418,10 +3418,9 @@ dependencies = [
 [[package]]
 name = "midir"
 version = "0.7.0"
-source = "git+https://github.com/mozilla/midir.git?rev=519e651241e867af3391db08f9ae6400bc023e18#519e651241e867af3391db08f9ae6400bc023e18"
+source = "git+https://github.com/mozilla/midir.git?rev=85156e360a37d851734118104619f86bd18e94c6#85156e360a37d851734118104619f86bd18e94c6"
 dependencies = [
  "alsa",
- "bitflags 1.999.999",
  "coremidi",
  "js-sys",
  "libc",
@@ -3929,7 +3928,7 @@ checksum = "e4a24736216ec316047a1fc4252e27dabb04218aa4a3f37c6e7ddbf1f9782b54"
 
 [[package]]
 name = "nix"
-version = "0.24.99"
+version = "0.26.99"
 dependencies = [
  "nix 0.27.1",
 ]

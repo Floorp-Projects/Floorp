@@ -110,7 +110,7 @@ oslog = { path = "build/rust/oslog" }
 # Override terminal_size with a dummy crate that returns a fixed 80x25 terminal size.
 terminal_size = { path = "build/rust/terminal_size" }
 
-# Patch bitflags 2.0 to 1.0 while not too many crates use 2.0 features
+# Patch bitflags 1.0 to 2.0
 bitflags = { path = "build/rust/bitflags" }
 
 # Patch memmap2 0.5.x to 0.8.0
@@ -146,7 +146,7 @@ backtrace = { path = "build/rust/backtrace" }
 bindgen_0_63 = { package = "bindgen", path = "build/rust/bindgen-0.63" }
 bindgen_0_64 = { package = "bindgen", path = "build/rust/bindgen-0.64" }
 
-# Patch nix 0.24 to 0.27
+# Patch nix 0.26 to 0.27
 nix = { path = "build/rust/nix" }
 
 # Patch indexmap 2.0 to 1.0
@@ -194,7 +194,7 @@ firefox-on-glean = { path = "toolkit/components/glean/api" }
 icu_capi = { path = "intl/icu_capi" }
 icu_segmenter_data = { path = "intl/icu_segmenter_data" }
 libudev-sys = { path = "dom/webauthn/libudev-sys" }
-midir = { git = "https://github.com/mozilla/midir.git", rev = "519e651241e867af3391db08f9ae6400bc023e18" }
+midir = { git = "https://github.com/mozilla/midir.git", rev = "85156e360a37d851734118104619f86bd18e94c6" }
 # warp 0.3.6 + https://github.com/seanmonstar/warp/pull/1069
 warp = { git = "https://github.com/seanmonstar/warp", rev = "9d081461ae1167eb321585ce424f4fef6cf0092b" }
 # Allow webrender to have a versioned dependency on the older crate on crates.io

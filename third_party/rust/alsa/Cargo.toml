@@ -12,7 +12,7 @@
 [package]
 edition = "2021"
 name = "alsa"
-version = "0.7.0"
+version = "0.8.1"
 authors = ["David Henningsson <coding@diwic.se>"]
 include = [
     "README.md",
@@ -34,19 +34,18 @@ categories = [
 ]
 license = "Apache-2.0/MIT"
 repository = "https://github.com/diwic/alsa-rs"
-resolver = "2"
 
 [dependencies.alsa-sys]
 version = "0.3.1"
 
 [dependencies.bitflags]
-version = "1.3.2"
+version = "2.4.0"
 
 [dependencies.libc]
 version = "0.2"
 
 [dependencies.nix]
-version = "^0.24"
+version = "^0.26"
 features = ["ioctl"]
 default-features = false
 
