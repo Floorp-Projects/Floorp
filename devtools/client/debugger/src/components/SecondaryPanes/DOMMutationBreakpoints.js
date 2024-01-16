@@ -2,31 +2,26 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-import React, { Component } from "devtools/client/shared/vendor/react";
-import {
-  div,
-  input,
-  li,
-  ul,
-} from "devtools/client/shared/vendor/react-dom-factories";
-import PropTypes from "devtools/client/shared/vendor/react-prop-types";
+import React, { Component } from "react";
+import { div, input, li, ul } from "react-dom-factories";
+import PropTypes from "prop-types";
 
 import Reps from "devtools/client/shared/components/reps/index";
 const {
   REPS: { Rep },
   MODE,
 } = Reps;
-import { translateNodeFrontToGrip } from "devtools/client/inspector/shared/utils";
+import { translateNodeFrontToGrip } from "inspector-shared-utils";
 
 import {
   deleteDOMMutationBreakpoint,
   toggleDOMMutationBreakpointState,
-} from "devtools/client/framework/actions/index";
+} from "framework-actions";
 
-import actions from "../../actions/index";
+import actions from "../../actions";
 import { connect } from "../../utils/connect";
 
-import { CloseButton } from "../shared/Button/index";
+import { CloseButton } from "../shared/Button";
 
 import "./DOMMutationBreakpoints.css";
 

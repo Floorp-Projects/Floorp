@@ -2,10 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-import { createSelector } from "devtools/client/shared/vendor/reselect";
+import { createSelector } from "reselect";
 import { shallowEqual, arrayShallowEqual } from "../utils/shallow-equal";
 
-import { getSelectedSource, getSourceActorsForSource } from "./index";
+import { getSelectedSource, getSourceActorsForSource } from "./";
 
 export const getSelectedSourceExceptions = createSelector(
   getSelectedSourceActors,

@@ -2,15 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-import React, { PureComponent } from "devtools/client/shared/vendor/react";
-import { div, span } from "devtools/client/shared/vendor/react-dom-factories";
-import PropTypes from "devtools/client/shared/vendor/react-prop-types";
+import React, { PureComponent } from "react";
+import { div, span } from "react-dom-factories";
+import PropTypes from "prop-types";
 import { connect } from "../../utils/connect";
 
 import SourceIcon from "../shared/SourceIcon";
-import { CloseButton } from "../shared/Button/index";
+import { CloseButton } from "../shared/Button";
 
-import actions from "../../actions/index";
+import actions from "../../actions";
 
 import {
   getDisplayPath,
@@ -25,7 +25,7 @@ import {
   getSelectedLocation,
   getSourcesForTabs,
   isSourceBlackBoxed,
-} from "../../selectors/index";
+} from "../../selectors";
 
 const classnames = require("devtools/client/shared/classnames.js");
 

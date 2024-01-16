@@ -5,7 +5,7 @@
 import {
   getBreakableLines,
   getSourceActorBreakableLines,
-} from "../../selectors/index";
+} from "../../selectors";
 import { setBreakpointPositions } from "../breakpoints/breakpointPositions";
 
 function calculateBreakableLines(positions) {

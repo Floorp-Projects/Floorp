@@ -7,7 +7,7 @@ import {
   getGeneratedFrameScope,
   getInlinePreviews,
   getSelectedLocation,
-} from "../../selectors/index";
+} from "../../selectors";
 import { features } from "../../utils/prefs";
 import { validateSelectedFrame } from "../../utils/context";
 

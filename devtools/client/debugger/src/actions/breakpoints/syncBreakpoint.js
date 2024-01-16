@@ -6,13 +6,13 @@ import { setBreakpointPositions } from "./breakpointPositions";
 import {
   findPosition,
   makeBreakpointServerLocation,
-} from "../../utils/breakpoint/index";
+} from "../../utils/breakpoint";
 
 import { comparePosition, createLocation } from "../../utils/location";
 
 import { originalToGeneratedId } from "devtools/client/shared/source-map-loader/index";
-import { getSource } from "../../selectors/index";
-import { addBreakpoint, removeBreakpointAtGeneratedLocation } from "./modify";
+import { getSource } from "../../selectors";
+import { addBreakpoint, removeBreakpointAtGeneratedLocation } from ".";
 
 async function findBreakpointPosition({ getState, dispatch }, location) {
   const positions = await dispatch(setBreakpointPositions(location));

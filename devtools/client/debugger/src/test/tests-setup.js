@@ -10,11 +10,11 @@ import Adapter from "enzyme-adapter-react-16";
 import { setupHelper } from "../utils/dbg";
 import { prefs } from "../utils/prefs";
 
-import { PrettyPrintDispatcher } from "../workers/pretty-print/index";
+import { PrettyPrintDispatcher } from "../workers/pretty-print";
 import { ParserDispatcher } from "../workers/parser";
-import { SearchDispatcher } from "../workers/search/index";
+import { SearchDispatcher } from "../workers/search";
 
-import { clearDocuments } from "../utils/editor/index";
+import { clearDocuments } from "../utils/editor";
 
 const rootPath = path.join(__dirname, "../../");
 

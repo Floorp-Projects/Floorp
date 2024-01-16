@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-import React, { Component } from "devtools/client/shared/vendor/react";
+import React, { Component } from "react";
 import {
   div,
   form,
@@ -12,15 +12,15 @@ import {
   ul,
   option,
   select,
-} from "devtools/client/shared/vendor/react-dom-factories";
-import PropTypes from "devtools/client/shared/vendor/react-prop-types";
+} from "react-dom-factories";
+import PropTypes from "prop-types";
 import { connect } from "../../utils/connect";
-import actions from "../../actions/index";
+import actions from "../../actions";
 
-import { CloseButton } from "../shared/Button/index";
+import { CloseButton } from "../shared/Button";
 
 import "./XHRBreakpoints.css";
-import { getXHRBreakpoints, shouldPauseOnAnyXHR } from "../../selectors/index";
+import { getXHRBreakpoints, shouldPauseOnAnyXHR } from "../../selectors";
 import ExceptionOption from "./Breakpoints/ExceptionOption";
 
 const classnames = require("devtools/client/shared/classnames.js");

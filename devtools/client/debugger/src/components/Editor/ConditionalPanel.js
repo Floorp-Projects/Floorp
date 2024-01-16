@@ -2,24 +2,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-import { PureComponent } from "devtools/client/shared/vendor/react";
-import {
-  div,
-  textarea,
-} from "devtools/client/shared/vendor/react-dom-factories";
-import ReactDOM from "devtools/client/shared/vendor/react-dom";
-import PropTypes from "devtools/client/shared/vendor/react-prop-types";
+import { PureComponent } from "react";
+import { div, textarea } from "react-dom-factories";
+import ReactDOM from "react-dom";
+import PropTypes from "prop-types";
 import { connect } from "../../utils/connect";
 import "./ConditionalPanel.css";
-import { toEditorLine } from "../../utils/editor/index";
+import { toEditorLine } from "../../utils/editor";
 import { prefs } from "../../utils/prefs";
-import actions from "../../actions/index";
+import actions from "../../actions";
 
 import {
   getClosestBreakpoint,
   getConditionalPanelLocation,
   getLogPointStatus,
-} from "../../selectors/index";
+} from "../../selectors";
 
 const classnames = require("devtools/client/shared/classnames.js");
 

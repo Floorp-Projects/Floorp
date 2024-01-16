@@ -2,9 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-import PropTypes from "devtools/client/shared/vendor/react-prop-types";
-import { Component } from "devtools/client/shared/vendor/react";
-import { toEditorLine, fromEditorLine } from "../../utils/editor/index";
+import PropTypes from "prop-types";
+import { Component } from "react";
+import { toEditorLine, fromEditorLine } from "../../utils/editor";
 import { isLineBlackboxed } from "../../utils/source";
 import { isWasm } from "../../utils/wasm";
 

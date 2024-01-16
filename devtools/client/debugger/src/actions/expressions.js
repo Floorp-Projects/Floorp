@@ -12,7 +12,7 @@ import {
   getSelectedFrame,
   getCurrentThread,
   isMapScopesEnabled,
-} from "../selectors/index";
+} from "../selectors";
 import { PROMISE } from "./utils/middleware/promise";
 import { wrapExpression } from "../utils/expressions";
 import { features } from "../utils/prefs";

@@ -7,10 +7,10 @@ import {
   getCurrentThread,
   getIsCurrentThreadPaused,
   getIsPaused,
-} from "../../selectors/index";
+} from "../../selectors";
 import { PROMISE } from "../utils/middleware/promise";
 import { evaluateExpressions } from "../expressions";
-import { selectLocation } from "../sources/index";
+import { selectLocation } from "../sources";
 import { fetchScopes } from "./fetchScopes";
 import { fetchFrames } from "./fetchFrames";
 import { recordEvent } from "../../utils/telemetry";

@@ -6,7 +6,7 @@ import {
   getFrames,
   getBlackBoxRanges,
   getSelectedFrame,
-} from "../../selectors/index";
+} from "../../selectors";
 
 import { isFrameBlackBoxed } from "../../utils/source";
 

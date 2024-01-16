@@ -3,17 +3,9 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 // Dependencies
-import React, {
-  Component,
-  Fragment,
-} from "devtools/client/shared/vendor/react";
-import {
-  div,
-  button,
-  span,
-  footer,
-} from "devtools/client/shared/vendor/react-dom-factories";
-import PropTypes from "devtools/client/shared/vendor/react-prop-types";
+import React, { Component, Fragment } from "react";
+import { div, button, span, footer } from "react-dom-factories";
+import PropTypes from "prop-types";
 import { connect } from "../../utils/connect";
 
 // Selectors
@@ -25,10 +17,10 @@ import {
   getSourcesTreeSources,
   getFocusedSourceItem,
   getHideIgnoredSources,
-} from "../../selectors/index";
+} from "../../selectors";
 
 // Actions
-import actions from "../../actions/index";
+import actions from "../../actions";
 
 // Components
 import SourcesTreeItem from "./SourcesTreeItem";

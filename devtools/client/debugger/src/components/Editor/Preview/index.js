@@ -2,14 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-import PropTypes from "devtools/client/shared/vendor/react-prop-types";
-import React, { PureComponent } from "devtools/client/shared/vendor/react";
+import PropTypes from "prop-types";
+import React, { PureComponent } from "react";
 import { connect } from "../../../utils/connect";
 
 import Popup from "./Popup";
 
-import { getIsCurrentThreadPaused } from "../../../selectors/index";
-import actions from "../../../actions/index";
+import { getIsCurrentThreadPaused } from "../../../selectors";
+import actions from "../../../actions";
 
 const EXCEPTION_MARKER = "mark-text-exception";
 

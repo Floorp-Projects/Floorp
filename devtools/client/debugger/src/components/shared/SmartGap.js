@@ -2,11 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-import {
-  svg,
-  polygon,
-} from "devtools/client/shared/vendor/react-dom-factories";
-import PropTypes from "devtools/client/shared/vendor/react-prop-types";
+import { svg, polygon } from "react-dom-factories";
+import PropTypes from "prop-types";
 
 function shorten(coordinates) {
   // In cases where the token is wider than the preview, the smartGap

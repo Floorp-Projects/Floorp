@@ -2,11 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-import { BinaryReader } from "devtools/client/shared/vendor/WasmParser";
+/*       */
+
+import { BinaryReader } from "wasmparser/dist/cjs/WasmParser";
 import {
   WasmDisassembler,
   NameSectionReader,
-} from "devtools/client/shared/vendor/WasmDis";
+} from "wasmparser/dist/cjs/WasmDis";
 
 var wasmStates = Object.create(null);
 

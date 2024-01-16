@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-import { getIsPaused } from "../../selectors/index";
+import { getIsPaused } from "../../selectors";
 
 export function fetchFrames(thread) {
   return async function ({ dispatch, client, getState }) {

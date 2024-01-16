@@ -11,9 +11,9 @@ import {
   getProjectDirectoryRoot,
   getSourcesTreeSources,
   getBlackBoxRanges,
-} from "../../selectors/index";
+} from "../../selectors";
 
-import { setOverrideSource, removeOverrideSource } from "../sources/index";
+import { setOverrideSource, removeOverrideSource } from "../sources";
 import { loadSourceText } from "../sources/loadSourceText";
 import { toggleBlackBox, blackBoxSources } from "../sources/blackbox";
 import {

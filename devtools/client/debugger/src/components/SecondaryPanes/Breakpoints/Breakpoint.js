@@ -2,23 +2,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-import React, { PureComponent } from "devtools/client/shared/vendor/react";
-import {
-  div,
-  input,
-  span,
-} from "devtools/client/shared/vendor/react-dom-factories";
-import PropTypes from "devtools/client/shared/vendor/react-prop-types";
+import React, { PureComponent } from "react";
+import { div, input, span } from "react-dom-factories";
+import PropTypes from "prop-types";
 import { connect } from "../../../utils/connect";
-import { createSelector } from "devtools/client/shared/vendor/reselect";
-import actions from "../../../actions/index";
+import { createSelector } from "reselect";
+import actions from "../../../actions";
 
-import { CloseButton } from "../../shared/Button/index";
+import { CloseButton } from "../../shared/Button";
 
-import {
-  getSelectedText,
-  makeBreakpointId,
-} from "../../../utils/breakpoint/index";
+import { getSelectedText, makeBreakpointId } from "../../../utils/breakpoint";
 import { getSelectedLocation } from "../../../utils/selected-location";
 import { isLineBlackboxed } from "../../../utils/source";
 
@@ -29,7 +22,7 @@ import {
   isSourceMapIgnoreListEnabled,
   isSourceOnSourceMapIgnoreList,
   getBlackBoxRanges,
-} from "../../../selectors/index";
+} from "../../../selectors";
 
 const classnames = require("devtools/client/shared/classnames.js");
 
