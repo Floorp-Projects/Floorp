@@ -834,7 +834,11 @@ class SystemResourceMonitor(object):
                         "tooltipLabel": "{marker.data.phase}",
                         "tableLabel": "{marker.name} — {marker.data.phase} — CPU time: {marker.data.cpuTime} ({marker.data.cpuPercent})",
                         "chartLabel": "{marker.data.phase}",
-                        "display": ["marker-chart", "marker-table"],
+                        "display": [
+                            "marker-chart",
+                            "marker-table",
+                            "timeline-overview",
+                        ],
                         "data": [
                             {
                                 "key": "cpuTime",
@@ -924,6 +928,7 @@ class SystemResourceMonitor(object):
                     "registerTime": 0,
                     "unregisterTime": None,
                     "pausedRanges": [],
+                    "showMarkersInTimeline": True,
                     "name": "",
                     "isMainThread": False,
                     "pid": "0",
