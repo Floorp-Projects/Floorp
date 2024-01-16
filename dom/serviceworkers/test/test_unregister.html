@@ -69,21 +69,20 @@
     });
   }
 
-  function unregister() {
-    return navigator.serviceWorker.getRegistration("unregister/")
-           .then(function(reg) {
-             if (!reg) {
-               info("Registration already removed");
-               return;
-             }
+  async function unregister() {
+    let reg = await navigator.serviceWorker.getRegistration("unregister/")
+    if (!reg) {
+      info("Registration already removed");
+      return;
+    }
 
-             info("getRegistration() succeeded " + reg.scope);
-             return reg.unregister().then(function(v) {
-               ok(v, "Unregister should resolve to true");
-             }, function(e) {
-               ok(false, "Unregister failed with " + e.name);
-             });
-           });
+    info("getRegistration() succeeded " + reg.scope);
+    try {
+      let v = await reg.unregister();
+      ok(v, "Unregister should resolve to true");
+    } catch (e) {
+      ok(false, "Unregister failed with " + e.name);
+    }
   }
 
   function testUncontrolled() {

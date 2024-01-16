@@ -81,7 +81,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=667388
     var p = win1.wrappedJSObject.tryToClone(win2.wrappedJSObject.testObject,
                                             shouldSucceed, msg);
     if (!shouldSucceed)
-      return;
+      return Promise.resolve();
     return new Promise(function(resolve) {
       p.then(function(cloneResult) {
         is(JSON.stringify(Cu.waiveXrays(cloneResult)),

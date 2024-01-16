@@ -12,6 +12,7 @@ onerror = function (message, filename, lineno) {
     });
     return true;
   }
+  return undefined;
 };
 
 onmessage = function (event) {

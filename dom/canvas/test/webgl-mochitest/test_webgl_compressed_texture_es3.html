@@ -434,6 +434,7 @@ function getBlockSize(format) {
     case ext.COMPRESSED_SRGB8_ALPHA8_ETC2_EAC:
         return 16
     }
+    throw new Error(`Unexpected format ${format}`);
 }
 
 function copyRect(data, srcX, srcY, dstX, dstY, width, height, stride) {

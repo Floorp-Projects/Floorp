@@ -9,6 +9,7 @@ async function getSwContainer() {
       return client;
     }
   }
+  return undefined;
 }
 
 self.addEventListener("message", async e => {

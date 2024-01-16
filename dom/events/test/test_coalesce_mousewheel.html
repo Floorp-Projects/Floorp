@@ -89,7 +89,7 @@
         // as sum of the synthesized ones.
         if (!checkWheelEvents(WheelEvent.DOM_DELTA_LINE, 6,
                               "synthesizing 2 wheel events via the parent process")) {
-          return false;
+          return;
         }
         continue;  // retry
       }
@@ -125,7 +125,7 @@
         // as sum of the synthesized ones.
         if (!checkWheelEvents(WheelEvent.DOM_DELTA_LINE, 15,
                               "synthesizing 5 wheel events via the parent process")) {
-          return false;
+          return;
         }
         continue;  // retry
       }
@@ -196,7 +196,7 @@
         // as sum of the synthesized ones and the wheel events shouldn't be
         // reordered.
         if (!checkGroupsOfWheelEvents()) {
-          return false;
+          return;
         }
         continue;  // retry
       }

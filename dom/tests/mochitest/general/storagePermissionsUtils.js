@@ -104,6 +104,7 @@ function chromePower(allowed, blockSessionStorage) {
     });
   } catch (e) {
     ok(false, "getting caches from chrome threw");
+    return undefined;
   }
 }
 

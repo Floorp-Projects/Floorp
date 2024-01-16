@@ -472,7 +472,6 @@ module.exports = {
         "dom/xul/test/**",
       ],
       rules: {
-        "consistent-return": "off",
         "mozilla/avoid-removeChild": "off",
         "mozilla/consistent-if-bracing": "off",
         "mozilla/no-compare-against-boolean-literals": "off",

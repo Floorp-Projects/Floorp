@@ -156,19 +156,21 @@ async function registerSWAndWaitForActive(aServiceWorker) {
   await new Promise(resolve => {
     let worker = swr.installing || swr.waiting || swr.active;
     if (worker.state === "activated") {
-      return resolve();
+      resolve();
+      return;
     }
 
     worker.addEventListener("statechange", () => {
       if (worker.state === "activated") {
-        return resolve();
+        resolve();
       }
     });
   });
 
   await new Promise(resolve => {
     if (content.navigator.serviceWorker.controller) {
-      return resolve();
+      resolve();
+      return;
     }
 
     content.navigator.serviceWorker.addEventListener(

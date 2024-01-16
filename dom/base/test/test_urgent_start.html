@@ -98,6 +98,7 @@ function testSimple() {
   }
 
   ok(false, "Shouldn't go here.");
+  return Promise.reject();
 }
 
 function sendRequsetAndCheckUrgentStart(aEventToTest) {

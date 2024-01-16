@@ -125,6 +125,7 @@
         if (delay > 0) {
           return new Promise(r => setTimeout(r, delay));
         }
+        return Promise.resolve();
       })
       .then(() => {
         ok(expiredCert.expires <= Date.now(), 'Cert should be at or past expiration');

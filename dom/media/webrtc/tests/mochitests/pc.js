@@ -290,6 +290,7 @@ PeerConnectionTest.prototype.send = async function (data, options) {
       return new TextEncoder().encode(d).length;
     } else {
       ok(false);
+      throw new Error("Could not get size");
     }
   };
 
@@ -1155,7 +1156,7 @@ PeerConnectionWrapper.prototype = {
   senderReplaceTrack(sender, withTrack, stream) {
     const info = this.expectedLocalTrackInfo.find(i => i.sender == sender);
     if (!info) {
-      return; // replaceTrack on a null track, probably
+      return undefined; // replaceTrack on a null track, probably
     }
     info.track = withTrack;
     this.addSendStream(stream);
@@ -1212,7 +1213,7 @@ PeerConnectionWrapper.prototype = {
   async getAllUserMediaAndAddStreams(constraintsList) {
     var streams = await this.getAllUserMedia(constraintsList);
     if (!streams) {
-      return;
+      return undefined;
     }
     return Promise.all(streams.map(stream => this.attachLocalStream(stream)));
   },
@@ -1220,7 +1221,7 @@ PeerConnectionWrapper.prototype = {
   async getAllUserMediaAndAddTransceivers(constraintsList) {
     var streams = await this.getAllUserMedia(constraintsList);
     if (!streams) {
-      return;
+      return undefined;
     }
     return Promise.all(
       streams.map(stream => this.attachLocalStream(stream, true))

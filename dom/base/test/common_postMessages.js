@@ -263,7 +263,7 @@ function runTests(obj) {
     // transfering tests
     .then(function () {
       if (!obj.transferableObjects) {
-        return;
+        return Promise.resolve();
       }
 
       // MessagePort
@@ -283,7 +283,7 @@ function runTests(obj) {
     // no dup transfering
     .then(function () {
       if (!obj.transferableObjects) {
-        return;
+        return Promise.resolve();
       }
 
       // MessagePort
@@ -306,7 +306,7 @@ function runTests(obj) {
     // maintaining order of transferred ports
     .then(function () {
       if (!obj.transferableObjects) {
-        return;
+        return Promise.resolve();
       }
 
       // MessagePort
@@ -354,7 +354,7 @@ function runTests(obj) {
     // non transfering tests
     .then(function () {
       if (obj.transferableObjects) {
-        return;
+        return Promise.resolve();
       }
 
       // MessagePort
