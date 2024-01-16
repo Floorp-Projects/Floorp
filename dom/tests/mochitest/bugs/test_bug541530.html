@@ -26,11 +26,13 @@ ok(window.location === location, "properties are properly aliased");
 ok(document.location === location, "properties are properly aliased");
 
 var canDefine = false;
+/* eslint-disable no-useless-call */
 try {
     this.__defineGetter__.call(this, 'bar', function() {});
     this.__defineSetter__.call(this, 'bar', function() {});
     canDefine = true;
 } catch (e) {}
+/* eslint-enable no-useless-call */
 ok(canDefine, "Should have access to __defineGetter__ and __defineSetter__");
 
 try {
