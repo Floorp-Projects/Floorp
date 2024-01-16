@@ -1,0 +1,4 @@
+ac_add_options --target=x86_64-apple-darwin
+ac_add_options --enable-optimize="-O3 -march=nehalem -mtune=haswell -w"
+
+export RUSTFLAGS="-Ctarget-cpu=nehalem"

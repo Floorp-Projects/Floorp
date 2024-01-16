@@ -250,7 +250,36 @@ var SessionSaverInternal = {
     }
 
     stopWatchStart("COLLECT_DATA_MS");
+
+    // Floorp Injections
     let state = lazy.SessionStore.getCurrentState(forceUpdateAllWindows);
+  
+    function shouldUpdateLastSaveTime(ssbEnabled, windows) {
+      return ssbEnabled && windows.length === 1;
+    }
+  
+    function shouldRemoveWindow(ssbEnabled) {
+      return ssbEnabled;
+    }
+  
+    function removeWindowFromState(windowKey) {
+      delete state.windows[windowKey];
+      delete state._closedWindows[windowKey];
+      delete state.windows.empty_slot;
+    }
+  
+    for (let window of state.windows) {
+      for (let tab of window.tabs) {
+        let ssbEnabled = tab.floorpSSB === "true";
+        if (shouldUpdateLastSaveTime(ssbEnabled, state.windows)) {
+          this.updateLastSaveTime();
+          return Promise.resolve();
+        } else if (shouldRemoveWindow(ssbEnabled)) {
+          removeWindowFromState(window.key);
+        }
+      }
+    }
+  
     lazy.PrivacyFilter.filterPrivateWindowsAndTabs(state);
 
     // Make sure we only write worth saving tabs to disk.

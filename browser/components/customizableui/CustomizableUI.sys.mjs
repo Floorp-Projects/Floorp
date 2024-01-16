@@ -3255,7 +3255,7 @@ var CustomizableUIInternal = {
     Services.prefs.clearUserPref(kPrefUIDensity);
     Services.prefs.clearUserPref(kPrefAutoTouchMode);
     Services.prefs.clearUserPref(kPrefAutoHideDownloadsButton);
-    gDefaultTheme.enable();
+    // gDefaultTheme.enable();
     gNewElementCount = 0;
     lazy.log.debug("State reset");
 

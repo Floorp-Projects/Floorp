@@ -67,12 +67,12 @@ let ShellServiceInternal = {
     if (AppConstants.platform == "win") {
       let optOutValue = lazy.WindowsRegistry.readRegKey(
         Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
-        "Software\\Mozilla\\Firefox",
+        "Software\\Ablaze\\Floorp",
         "DefaultBrowserOptOut"
       );
       lazy.WindowsRegistry.removeRegKey(
         Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
-        "Software\\Mozilla\\Firefox",
+        "Software\\Ablaze\\Floorp",
         "DefaultBrowserOptOut"
       );
       if (optOutValue == "True") {

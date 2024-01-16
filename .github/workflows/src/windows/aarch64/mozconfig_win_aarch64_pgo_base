@@ -1,0 +1,34 @@
+ac_add_options --with-app-name=floorp
+ac_add_options --with-app-basename=Floorp
+ac_add_options --disable-crashreporter
+ac_add_options --disable-maintenance-service
+ac_add_options --enable-proxy-bypass-protection
+ac_add_options --enable-unverified-updates
+ac_add_options --enable-update-channel=release
+ac_add_options --enable-optimize="-O2 -march=armv8-a -mtune=cortex-a53"
+ac_add_options --disable-tests
+ac_add_options --enable-rust-simd
+ac_add_options --enable-release
+ac_add_options RUSTC_OPT_LEVEL=3
+MOZ_REQUIRE_SIGNING=
+MOZ_DATA_REPORTING=
+MOZ_TELEMETRY_REPORTING=
+
+ac_add_options --enable-bootstrap
+
+ac_add_options --without-wasm-sandboxed-libraries
+
+ac_add_options --with-mozilla-api-keyfile="$PWD/floorp/apis/api-mozilla-key"
+ac_add_options --with-google-location-service-api-keyfile="$PWD/floorp/apis/api-google-location-service-key"
+ac_add_options --with-google-safebrowsing-api-keyfile="$PWD/floorp/apis/api-google-safe-browsing-key"
+
+export WINSYSROOT="$(echo ~)/win-cross/vs2019"
+
+export WINE="$(echo ~)/win-cross/wine/bin/wine64"
+export WINEDEBUG=-all
+
+ac_add_options --target=aarch64-pc-windows-msvc
+
+export MOZ_LTO=cross
+
+export MOZ_STUB_INSTALLER=1

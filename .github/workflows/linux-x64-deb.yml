@@ -1,0 +1,118 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Please write our copyright if you use this file.
+# © 2023 Floorp Projects & Contributors
+
+name: "(d) 📦 linux x86_64 deb(-ppa) pack"
+
+on:
+  workflow_dispatch:
+    inputs:
+      tarball-url-x86-64:
+        type: string
+        required: true
+        description: URL of target tarball file (x86_64)
+      ppa:
+        type: boolean
+        required: true
+        description: Do upload deb to ppa
+
+jobs:
+  build:
+    runs-on: ${{ matrix.runs-on }}
+    strategy:
+      matrix:
+        runs-on: ['ubuntu-latest']
+
+    steps:
+    - name: Checkout 🛎️
+      uses: actions/checkout@v3
+
+    - name: Change PPA mirror servers
+      run: |
+        sudo perl -p -i -e 's%(deb(?:-src|)\s+)https?://(?!archive\.canonical\.com|security\.ubuntu\.com)[^\s]+%$1http://archive.ubuntu.com/ubuntu/%' /etc/apt/sources.list
+        sudo apt update
+
+    - name: download Artifact 📦
+      run: |
+        mkdir -p /home/runner/artifact
+        wget -P /home/runner/artifact ${{ inputs.tarball-url-x86-64 }}
+
+    - name: Package 📦
+      run: |
+        export WORKDIR=`pwd`
+        export DISPVER=`cat browser/config/version_display.txt`
+        export VER=`cat browser/config/version.txt`
+        export DEBWORK=$WORKDIR/floorp-$DISPVER
+        mkdir -p $DEBWORK/usr/lib/
+        cd $DEBWORK/usr/lib/
+        mkdir -p floorp-addons/distribution/extensions
+        mkdir floorp-addons/extensions
+        mkdir floorp-addons/plugins
+        cp /home/runner/artifact/*.tar.bz2 $WORKDIR/floorp-$DISPVER.en-US.linux-x86_64.tar.bz2
+        tar -xjvf $WORKDIR/floorp-$DISPVER.en-US.linux-x86_64.tar.bz2
+        cd ..
+        mkdir bin
+        cd bin
+        ln -s ../lib/floorp/floorp.sh floorp
+        cd ..
+        mkdir -p share/applications
+        cp $WORKDIR/.github/floorp-debian.desktop share/applications/floorp.desktop
+        cd $DEBWORK
+        cd ../
+        inst_size=$(du -ks floorp-$DISPVER|awk '{print $1}')
+        cd $DEBWORK
+        mkdir DEBIAN
+        cd DEBIAN
+        echo -e "Package: floorp\\nVersion: $DISPVER\\nArchitecture: amd64\\nMaintainer: Floorp project\\nInstalled-Size: ${inst_size}\\nDepends: curl, lsb-release, libasound2 (>= 1.0.16), libatk1.0-0 (>= 1.12.4), libc6 (>= 2.30), libcairo-gobject2 (>= 1.10.0), libcairo2 (>= 1.10.0), libdbus-1-3 (>= 1.9.14), libdbus-glib-1-2 (>= 0.78), libfontconfig1 (>= 2.12.6), libfreetype6 (>= 2.10.1), libgcc-s1 (>= 3.3), libgdk-pixbuf2.0-0 (>= 2.22.0), libglib2.0-0 (>= 2.42), libgtk-3-0 (>= 3.14), libharfbuzz0b (>= 0.6.0), libpango-1.0-0 (>= 1.14.0), libpangocairo-1.0-0 (>= 1.14.0), libstdc++6 (>= 9), libx11-6, libx11-xcb1 (>= 2:1.6.9), libxcb-shm0, libxcb1, libxcomposite1 (>= 1:0.4.5), libxcursor1 (>> 1.1.2), libxdamage1 (>= 1:1.1), libxext6, libxfixes3, libxi6, libxrandr2 (>= 2:1.4.0), libxrender1, libxtst6, fonts-noto-cjk\\nRecommends: libcanberra0, libdbusmenu-glib4, libdbusmenu-gtk3-4\\nSuggests: fonts-lyx, fonts-mplus\\nProvides: gnome-www-browser, www-browser\\nSection: web\\nPriority: optional\\nDescription: Floorp is a new Firefox-based,\\n privacy-preserving browser developed by the Japanese student community.\\nXul-Appid: {ec8030f7-c20a-464f-9b0e-13a3a9e97384}" > control
+        cd $DEBWORK
+        unzip $WORKDIR/.github/debian-data-ppa.zip
+        find $DEBWORK -type f -print0 | xargs -0 chmod 644
+        find $DEBWORK -type d -print0 | xargs -0 chmod +x
+        cd DEBIAN
+        chmod +x postinst postrm preinst prerm
+        cd ../usr/lib/floorp
+        chmod +x floorp floorp-bin glxtest vaapitest floorp.sh lib*.so plugin-container gmp-clearkey/0.1/libclearkey.so
+        sudo chown -R root:root $DEBWORK
+        cd $WORKDIR
+        sudo dpkg-deb -b $DEBWORK
+
+    - name: Compress artifacts 🤖
+      run: |
+        export WORKDIR=`pwd`
+        export DISPVER=`cat browser/config/version_display.txt`
+        export DEBWORK=$WORKDIR/floorp-$DISPVER
+        sudo touch floorp-$DISPVER.deb
+        sudo chmod +r floorp-$DISPVER.deb
+        zip -r dist.zip floorp-$DISPVER.deb
+
+    - name: Update PPA 👻
+      if: inputs.ppa
+      run: |
+        echo "::add-mask::${{ secrets.KEYMASK }}"
+        export DISPVER=`cat browser/config/version_display.txt`
+        mkdir publish
+        echo "${{ secrets.GPG_SEC }}" > Floorp_sec.asc
+        gpg --import Floorp_sec.asc
+        echo "${{ secrets.FTP_INIT_SCRIPT }}" > init_script.txt
+        echo "${{ secrets.FTP_FINISH_SCRIPT }}" > finish_script.txt
+        cd publish
+        ftp -n -p < ../init_script.txt
+        cp ../floorp-$DISPVER.deb ./
+        dpkg-scanpackages --multiversion . > Packages
+        gzip -k -f Packages
+        apt-ftparchive release . > Release
+        gpg --default-key "${{ secrets.GPG_SSB }}" -abs -o - Release > Release.gpg
+        gpg --default-key "${{ secrets.GPG_SSB }}" --clearsign -o - Release > InRelease
+        ftp -n -p < ../finish_script.txt
+        cd ../
+        rm init_script.txt finish_script.txt Floorp_sec.asc
+
+    - name: Publish 🎁
+      uses: actions/upload-artifact@v1
+      with:
+        name: floorp-debian-amd64
+        path: dist.zip
+

@@ -283,13 +283,13 @@ static bool IsFileLeafEqualToASCII(const nsCOMPtr<nsIFile>& aFile,
 #endif
 
 #if defined(XP_WIN)
-#  define FIREFOX_FILE u"firefox.exe"_ns
+#  define FIREFOX_FILE u"floorp.exe"_ns
 #  define XUL_LIB_FILE u"xul.dll"_ns
 #elif defined(XP_MACOSX)
-#  define FIREFOX_FILE u"firefox"_ns
+#  define FIREFOX_FILE u"floorp"_ns
 #  define XUL_LIB_FILE u"XUL"_ns
 #else
-#  define FIREFOX_FILE u"firefox"_ns
+#  define FIREFOX_FILE u"floorp"_ns
 #  define XUL_LIB_FILE u"libxul.so"_ns
 #endif
 

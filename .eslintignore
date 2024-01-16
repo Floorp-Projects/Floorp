@@ -268,3 +268,8 @@ browser/extensions/translations/extension/
 # "scaffolding" used by uniffi which isn't valid JS in its original form.
 toolkit/components/uniffi-bindgen-gecko-js/src/templates/js/
 toolkit/components/uniffi-bindgen-gecko-js/components/generated/*
+
+# Floorp's exclusion list
+# userChrome.js
+floorp/browser/extensions/userChromejs/*
+floorp/browser/components/calendar/*

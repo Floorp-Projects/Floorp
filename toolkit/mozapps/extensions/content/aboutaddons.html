@@ -31,9 +31,10 @@
       href="chrome://mozapps/skin/extensions/extension.svg"
     />
 
-    <link rel="localization" href="branding/brand.ftl" />
-    <link rel="localization" href="toolkit/about/aboutAddons.ftl" />
-    <link rel="localization" href="toolkit/about/abuseReports.ftl" />
+    <link rel="localization" href="branding/brand.ftl">
+    <link rel="localization" href="browser/floorp.ftl">
+    <link rel="localization" href="toolkit/about/aboutAddons.ftl">
+    <link rel="localization" href="toolkit/about/abuseReports.ftl">
 
     <!-- Defer scripts so all the templates are loaded by the time they run. -->
     <script
@@ -252,29 +253,15 @@
 
     <template name="addon-options">
       <panel-list>
-        <panel-item
-          data-l10n-id="remove-addon-button"
-          action="remove"
-        ></panel-item>
-        <panel-item
-          data-l10n-id="install-update-button"
-          action="install-update"
-          badged
-        ></panel-item>
-        <panel-item
-          data-l10n-id="preferences-addon-button"
-          action="preferences"
-        ></panel-item>
-        <hr />
-        <panel-item
-          data-l10n-id="report-addon-button"
-          action="report"
-        ></panel-item>
-        <hr />
-        <panel-item
-          data-l10n-id="manage-addon-button"
-          action="expand"
-        ></panel-item>
+        <panel-item data-l10n-id="remove-addon-button" action="remove"></panel-item>
+        <panel-item data-l10n-id="dual-theme-enable-addon-button" action="dual_theme_enable"></panel-item>
+        <panel-item data-l10n-id="dual-theme-disable-addon-button" action="dual_theme_disable"></panel-item>
+        <panel-item data-l10n-id="install-update-button" action="install-update" badged></panel-item>
+        <panel-item data-l10n-id="preferences-addon-button" action="preferences"></panel-item>
+        <hr>
+        <panel-item data-l10n-id="report-addon-button" action="report"></panel-item>
+        <hr>
+        <panel-item data-l10n-id="manage-addon-button" action="expand"></panel-item>
       </panel-list>
     </template>
 
