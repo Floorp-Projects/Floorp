@@ -35,7 +35,7 @@ UNQUOTED_TOKENS_RE = _tokens2re(
 DOUBLY_QUOTED_TOKENS_RE = _tokens2re(
     quote='"',
     backslashedquote=r'\\"',
-    special="\$",
+    special=r"\$",
     backslashed=r'\\[^\\"]',
 )
 

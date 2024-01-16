@@ -1259,7 +1259,7 @@ def pairwise(iterable):
     return zip(a, b)
 
 
-VARIABLES_RE = re.compile("\$\((\w+)\)")
+VARIABLES_RE = re.compile(r"\$\((\w+)\)")
 
 
 def expand_variables(s, variables):

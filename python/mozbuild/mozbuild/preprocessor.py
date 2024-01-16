@@ -1,7 +1,7 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-"""
+r"""
 This is a very primitive line based preprocessor, for times when using
 a C preprocessor isn't an option.
 
@@ -145,7 +145,7 @@ class Expression:
         Production: '!'? value
         """
         # eat whitespace right away, too
-        not_ws = re.match("!\s*", self.content)
+        not_ws = re.match(r"!\s*", self.content)
         if not not_ws:
             return self.__get_value()
         rv = Expression.__AST("not")
@@ -155,14 +155,14 @@ class Expression:
         return rv
 
     def __get_value(self):
-        """
+        r"""
         Production: ( [0-9]+ | 'defined(' \w+ ')' | \w+ )
         Note that the order is important, and the expression is kind-of
         ambiguous as \w includes 0-9. One could make it unambiguous by
         removing 0-9 from the first char of a string literal.
         """
         rv = None
-        m = re.match("defined\s*\(\s*(\w+)\s*\)", self.content)
+        m = re.match(r"defined\s*\(\s*(\w+)\s*\)", self.content)
         if m:
             word_len = m.end()
             rv = Expression.__ASTLeaf("defined", m.group(1))
@@ -172,7 +172,7 @@ class Expression:
                 value = int(self.content[:word_len])
                 rv = Expression.__ASTLeaf("int", value)
             else:
-                word_len = re.match("\w*", self.content).end()
+                word_len = re.match(r"\w*", self.content).end()
                 if word_len:
                     rv = Expression.__ASTLeaf("string", self.content[:word_len])
                 else:
@@ -182,7 +182,7 @@ class Expression:
         return rv
 
     def __ignore_whitespace(self):
-        ws_len = re.match("\s*", self.content).end()
+        ws_len = re.match(r"\s*", self.content).end()
         self.__strip(ws_len)
         return
 
@@ -352,7 +352,7 @@ class Preprocessor:
             self.cmds[cmd] = (level, getattr(self, "do_" + cmd))
         self.out = sys.stdout
         self.setMarker(marker)
-        self.varsubst = re.compile("@(?P<VAR>\w+)@", re.U)
+        self.varsubst = re.compile(r"@(?P<VAR>\w+)@", re.U)
         self.includes = set()
         self.silenceMissingDirectiveWarnings = False
         if defines:
@@ -384,10 +384,10 @@ class Preprocessor:
         """
         self.marker = aMarker
         if aMarker:
-            instruction_prefix = "\s*{0}"
-            instruction_cmd = "(?P<cmd>[a-z]+)(?:\s+(?P<args>.*?))?\s*$"
+            instruction_prefix = r"\s*{0}"
+            instruction_cmd = r"(?P<cmd>[a-z]+)(?:\s+(?P<args>.*?))?\s*$"
             instruction_fmt = instruction_prefix + instruction_cmd
-            ambiguous_fmt = instruction_prefix + "\s+" + instruction_cmd
+            ambiguous_fmt = instruction_prefix + r"\s+" + instruction_cmd
 
             self.instruction = re.compile(instruction_fmt.format(aMarker))
             self.comment = re.compile(aMarker, re.U)
@@ -551,7 +551,7 @@ class Preprocessor:
 
     def getCommandLineParser(self, unescapeDefines=False):
         escapedValue = re.compile('".*"$')
-        numberValue = re.compile("\d+$")
+        numberValue = re.compile(r"\d+$")
 
         def handleD(option, opt, value, parser):
             vals = value.split("=", 1)
@@ -675,7 +675,7 @@ class Preprocessor:
 
     # Variables
     def do_define(self, args):
-        m = re.match("(?P<name>\w+)(?:\s(?P<value>.*))?", args, re.U)
+        m = re.match(r"(?P<name>\w+)(?:\s(?P<value>.*))?", args, re.U)
         if not m:
             raise Preprocessor.Error(self, "SYNTAX_DEF", args)
         val = ""
@@ -688,7 +688,7 @@ class Preprocessor:
         self.context[m.group("name")] = val
 
     def do_undef(self, args):
-        m = re.match("(?P<name>\w+)$", args, re.U)
+        m = re.match(r"(?P<name>\w+)$", args, re.U)
         if not m:
             raise Preprocessor.Error(self, "SYNTAX_DEF", args)
         if args in self.context:
@@ -728,7 +728,7 @@ class Preprocessor:
         if self.disableLevel and not replace:
             self.disableLevel += 1
             return
-        if re.search("\W", args, re.U):
+        if re.search(r"\W", args, re.U):
             raise Preprocessor.Error(self, "INVALID_VAR", args)
         if args not in self.context:
             self.disableLevel = 1
@@ -743,7 +743,7 @@ class Preprocessor:
         if self.disableLevel and not replace:
             self.disableLevel += 1
             return
-        if re.search("\W", args, re.U):
+        if re.search(r"\W", args, re.U):
             raise Preprocessor.Error(self, "INVALID_VAR", args)
         if args in self.context:
             self.disableLevel = 1
@@ -792,7 +792,7 @@ class Preprocessor:
 
     # output processing
     def do_expand(self, args):
-        lst = re.split("__(\w+)__", args, re.U)
+        lst = re.split(r"__(\w+)__", args, re.U)
 
         def vsubst(v):
             if v in self.context:
@@ -837,7 +837,7 @@ class Preprocessor:
     # dumbComments: Empties out lines that consists of optional whitespace
     # followed by a `//`.
     def filter_dumbComments(self, aLine):
-        return re.sub("^\s*//.*", "", aLine)
+        return re.sub(r"^\s*//.*", "", aLine)
 
     # substitution: variables wrapped in @ are replaced with their value.
     def filter_substitution(self, aLine, fatal=True):
@@ -879,7 +879,7 @@ class Preprocessor:
             except Exception:
                 raise Preprocessor.Error(self, "FILE_NOT_FOUND", _to_text(args))
         self.checkLineNumbers = bool(
-            re.search("\.(js|jsm|java|webidl)(?:\.in)?$", args.name)
+            re.search(r"\.(js|jsm|java|webidl)(?:\.in)?$", args.name)
         )
         oldFile = self.context["FILE"]
         oldLine = self.context["LINE"]

@@ -932,7 +932,7 @@ class ConfigureSandbox(dict):
     def wraps(self, func):
         return wraps(func)
 
-    RE_MODULE = re.compile("^[a-zA-Z0-9_\.]+$")
+    RE_MODULE = re.compile("^[a-zA-Z0-9_.]+$")
 
     def imports_impl(self, _import, _from=None, _as=None):
         """Implementation of @imports.
