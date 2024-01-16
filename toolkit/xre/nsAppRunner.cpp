@@ -2556,6 +2556,7 @@ nsresult LaunchChild(bool aBlankCommandLine, bool aTryExec) {
 
 #if !defined(MOZ_WIDGET_ANDROID)  // Android has separate restart code.
 #  if defined(XP_MACOSX)
+  InitializeMacApp();
   CommandLineServiceMac::SetupMacCommandLine(gRestartArgc, gRestartArgv, true);
   LaunchChildMac(gRestartArgc, gRestartArgv);
 #  else
@@ -2840,6 +2841,7 @@ static ReturnAbortOnError ShowProfileManager(
     NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
 #ifdef XP_MACOSX
+    InitializeMacApp();
     CommandLineServiceMac::SetupMacCommandLine(gRestartArgc, gRestartArgv,
                                                true);
 #endif
@@ -5394,6 +5396,10 @@ nsresult XREMain::XRE_mainRun() {
         }
       }
     }
+
+#ifdef XP_MACOSX
+    InitializeMacApp();
+#endif
 
     // We'd like to initialize the JSContext *after* reading the user prefs.
     // Unfortunately that's not possible if we have to do profile migration
