@@ -96,9 +96,7 @@ void RestyleManager::ContentAppended(nsIContent* aFirstNewContent) {
     }
   }
 #endif
-  if (aFirstNewContent->IsElement()) {
-    StyleSet()->MaybeInvalidateForElementAppend(*aFirstNewContent->AsElement());
-  }
+  StyleSet()->MaybeInvalidateForElementAppend(*aFirstNewContent);
 
   const auto selectorFlags = container->GetSelectorFlags() &
                              NodeSelectorFlags::AllSimpleRestyleFlagsForAppend;

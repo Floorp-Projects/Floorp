@@ -520,10 +520,11 @@ class ServoStyleSet {
   void MaybeInvalidateForElementInsertion(const dom::Element&);
 
   /**
-   * Maybe invalidate if a DOM element append might require us to restyle
-   * the relative selector to ancestors/previous siblings.
+   * Maybe invalidate if a series of nodes is appended, among which may
+   * be element(s) that might require us to restyle the relative selector
+   * to ancestors/previous siblings.
    */
-  void MaybeInvalidateForElementAppend(const dom::Element&);
+  void MaybeInvalidateForElementAppend(const nsIContent&);
 
   /**
    * Maybe invalidate if a DOM element removal might require us to restyle
