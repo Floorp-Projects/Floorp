@@ -175,7 +175,7 @@ def ensure_manifest_directories(logger, test_paths):
 def read_local_config(wpt_dir):
     src_config_path = os.path.join(wpt_dir, "wptrunner.ini")
 
-    parser = configparser.SafeConfigParser()
+    parser = configparser.ConfigParser()
     success = parser.read(src_config_path)
     assert src_config_path in success
     return parser
