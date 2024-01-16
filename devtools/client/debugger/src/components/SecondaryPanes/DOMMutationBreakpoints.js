@@ -16,7 +16,7 @@ import { translateNodeFrontToGrip } from "inspector-shared-utils";
 import {
   deleteDOMMutationBreakpoint,
   toggleDOMMutationBreakpointState,
-} from "framework-actions";
+} from "devtools/client/framework/actions/index";
 
 import actions from "../../actions";
 import { connect } from "../../utils/connect";
