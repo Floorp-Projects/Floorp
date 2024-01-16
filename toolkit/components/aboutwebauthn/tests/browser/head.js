@@ -30,9 +30,6 @@ async function send_auth_info_and_check_categories(doc, ops) {
   Services.obs.notifyObservers(null, "about-webauthn-prompt", msg);
   await promise;
 
-  let categories = doc.getElementById("categories");
-  is(categories.hidden, false, "categories sidebar not visible");
-
   // Info should be shown always, so we use it as a canary
   let info_tab_button = doc.getElementById("info-tab-button");
   isnot(

@@ -18,14 +18,7 @@
   </head>
 
   <body id="body">
-    <div id="info-text-div">
-      <label
-        id="info-text-field"
-        data-l10n-id="about-webauthn-text-connect-device"
-      ></label>
-    </div>
-
-    <div hidden id="categories" role="tablist" aria-labelledby="page-title">
+    <div id="categories" role="tablist" aria-labelledby="page-title">
       <div
         id="info-tab-button"
         class="category"
@@ -41,9 +34,8 @@
         ></span>
       </div>
       <div
-        hidden
         id="pin-tab-button"
-        class="category"
+        class="category optional-category"
         role="tab"
         tabindex="-1"
         aria-selected="false"
@@ -56,7 +48,7 @@
       </div>
       <div
         id="credentials-tab-button"
-        class="category"
+        class="category optional-category"
         role="tab"
         tabindex="-1"
         aria-selected="false"
@@ -69,7 +61,7 @@
       </div>
       <div
         id="bio-enrollments-tab-button"
-        class="category"
+        class="category optional-category"
         role="tab"
         tabindex="-1"
         aria-selected="false"
@@ -82,13 +74,12 @@
       </div>
     </div>
 
-    <div hidden id="main-content">
+    <div id="main-content">
       <div id="ctap-listen-div">
         <label id="ctap-listen-result"></label>
       </div>
 
       <div
-        hidden
         class="tabcontent token-info-section"
         id="token-info-section"
         role="tabpanel"
@@ -98,7 +89,15 @@
           class="categoryTitle"
           data-l10n-id="about-webauthn-info-section-title"
         ></h2>
-        <div id="ctap2-token-info" class="token-info-flex-box" display="flex">
+
+        <div id="info-text-div">
+          <label
+            id="info-text-field"
+            data-l10n-id="about-webauthn-text-connect-device"
+          ></label>
+        </div>
+
+        <div id="ctap2-token-info" class="token-info-flex-box" display="none">
           <div id="ctap2-token-info-options" class="token-info-flex-child">
             <h3 data-l10n-id="about-webauthn-options-subsection-title"></h3>
             <table id="authenticator-options"></table>

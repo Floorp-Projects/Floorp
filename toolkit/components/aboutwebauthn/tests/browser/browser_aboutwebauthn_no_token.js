@@ -25,7 +25,15 @@ add_task(async function verify_page_no_token() {
   let info_text = doc.getElementById("info-text-div");
   is(info_text.hidden, false, "info-text-div should be visible");
   let categories = doc.getElementById("categories");
-  is(categories.hidden, true, "categories-sidebar should be invisible");
+  is(categories.hidden, false, "categories-sidebar should be invisible");
+  let dev_info = doc.getElementById("info-tab-button");
+  is(
+    dev_info.getAttribute("selected"),
+    "true",
+    "token-info-section not selected by default"
+  );
+  let ctap2_info = doc.getElementById("ctap2-token-info");
+  is(ctap2_info.style.display, "none", "ctap2-info-table is visible");
 });
 
 add_task(async function verify_no_auth_info() {
