@@ -1009,27 +1009,27 @@ add_task(async function test_clear_on_shutdown() {
   }
 
   boolPrefIs(
-    "clearOnShutdown.historyAndFormData",
+    "clearOnShutdown_v2.historyAndFormData",
     true,
-    "clearOnShutdown history should be true "
+    "clearOnShutdown_v2 history should be true "
   );
 
   boolPrefIs(
-    "clearOnShutdown.cookiesAndStorage",
+    "clearOnShutdown_v2.cookiesAndStorage",
     true,
-    "clearOnShutdown cookies should be true"
+    "clearOnShutdown_v2 cookies should be true"
   );
 
   boolPrefIs(
-    "clearOnShutdown.downloads",
+    "clearOnShutdown_v2.downloads",
     false,
-    "clearOnShutdown downloads should be false"
+    "clearOnShutdown_v2 downloads should be false"
   );
 
   boolPrefIs(
-    "clearOnShutdown.cache",
+    "clearOnShutdown_v2.cache",
     false,
-    "clearOnShutdown cache should be false"
+    "clearOnShutdown_v2 cache should be false"
   );
 
   await createDummyDataForHost("example.org");
@@ -1066,6 +1066,7 @@ add_task(async function test_clear_on_shutdown() {
   dh.setMode("clearOnShutdown");
   dh.onload = async function () {
     this.uncheckAllCheckboxes();
+    this.checkPrefCheckbox("historyAndFormData", true);
     this.checkPrefCheckbox("downloads", true);
     this.acceptDialog();
   };
@@ -1073,27 +1074,27 @@ add_task(async function test_clear_on_shutdown() {
   await dh.promiseClosed;
 
   boolPrefIs(
-    "clearOnShutdown.historyAndFormData",
-    false,
-    "clearOnShutdown history should be false"
-  );
-
-  boolPrefIs(
-    "clearOnShutdown.cookiesAndStorage",
-    false,
-    "clearOnShutdown cookies should be false"
-  );
-
-  boolPrefIs(
-    "clearOnShutdown.downloads",
+    "clearOnShutdown_v2.historyAndFormData",
     true,
-    "clearOnShutdown downloads should be true"
+    "clearOnShutdown_v2 history should be true"
   );
 
   boolPrefIs(
-    "clearOnShutdown.cache",
+    "clearOnShutdown_v2.cookiesAndStorage",
     false,
-    "clearOnShutdown cache should be false"
+    "clearOnShutdown_v2 cookies should be false"
+  );
+
+  boolPrefIs(
+    "clearOnShutdown_v2.downloads",
+    true,
+    "clearOnShutdown_v2 downloads should be true"
+  );
+
+  boolPrefIs(
+    "clearOnShutdown_v2.cache",
+    false,
+    "clearOnShutdown_v2 cache should be false"
   );
 
   ok(

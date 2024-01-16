@@ -14,6 +14,8 @@ support-files = [
 
 ["browser_cookiePermission_subDomains.js"]
 
+["browser_cookiePermission_subDomains_v2.js"]
+
 ["browser_purgehistory_clears_sh.js"]
 
 ["browser_sanitize-cookie-exceptions.js"]
