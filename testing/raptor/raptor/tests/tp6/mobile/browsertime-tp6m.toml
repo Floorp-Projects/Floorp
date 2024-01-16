@@ -13,6 +13,8 @@ playback_version = "8.1.1"
 type = "pageload"
 unit = "ms"
 use_live_sites = false
+# TODO: Determine tests that should be included on mobile tp6-bench
+benchmark_page = true
 
 ## Keep this test list in alphabetical order
 

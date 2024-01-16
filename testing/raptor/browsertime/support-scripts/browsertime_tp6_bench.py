@@ -6,6 +6,7 @@ import re
 
 import filters
 from base_python_support import BasePythonSupport
+from utils import bool_from_str
 
 DOMAIN_MATCHER = re.compile(r"(?:https?:\/\/)?(?:[^@\n]+@)?(?:www\.)?([^:\/\n]+)")
 VARIANCE_THRESHOLD = 0.2
@@ -40,6 +41,8 @@ class TP6BenchSupport(BasePythonSupport):
         playback_pageset_manifests = []
         for parsed_test in all_tests:
             if manifest_to_find in parsed_test["manifest"]:
+                if not bool_from_str(parsed_test.get("benchmark_page", "false")):
+                    continue
                 test_urls.append(parsed_test["test_url"])
                 playback_pageset_manifests.append(
                     transform_subtest(

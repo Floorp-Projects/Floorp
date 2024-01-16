@@ -15370,6 +15370,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium, safari, custom-car
+   * **benchmark page**: false
    * **browser cycles**: 25
    * **expected**: pass
    * **gecko profile entries**: 14000000
@@ -15945,6 +15946,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium, safari, custom-car
+   * **benchmark page**: true
    * **browser cycles**: 25
    * **expected**: pass
    * **gecko profile entries**: 14000000
@@ -16342,6 +16344,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium, safari, custom-car
+   * **benchmark page**: false
    * **browser cycles**: 25
    * **expected**: pass
    * **gecko profile entries**: 14000000
@@ -16580,6 +16583,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium, safari, custom-car
+   * **benchmark page**: true
    * **browser cycles**: 25
    * **expected**: pass
    * **gecko profile entries**: 14000000
@@ -17060,6 +17064,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium, safari, custom-car
+   * **benchmark page**: true
    * **browser cycles**: 25
    * **expected**: pass
    * **gecko profile entries**: 14000000
@@ -17383,6 +17388,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium, safari, custom-car
+   * **benchmark page**: false
    * **browser cycles**: 25
    * **expected**: pass
    * **gecko profile entries**: 14000000
@@ -17693,6 +17699,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium, safari, custom-car
+   * **benchmark page**: true
    * **browser cycles**: 25
    * **expected**: pass
    * **gecko profile entries**: 14000000
@@ -17978,6 +17985,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium, safari, custom-car
+   * **benchmark page**: true
    * **browser cycles**: 25
    * **expected**: pass
    * **gecko profile entries**: 14000000
@@ -18343,6 +18351,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium, safari, custom-car
+   * **benchmark page**: false
    * **browser cycles**: 25
    * **expected**: pass
    * **gecko profile entries**: 14000000
@@ -18740,6 +18749,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium, safari, custom-car
+   * **benchmark page**: true
    * **browser cycles**: 25
    * **expected**: pass
    * **gecko profile entries**: 14000000
@@ -19064,6 +19074,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium, safari, custom-car
+   * **benchmark page**: false
    * **browser cycles**: 25
    * **expected**: pass
    * **gecko profile entries**: 14000000
@@ -19386,6 +19397,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium, safari, custom-car
+   * **benchmark page**: true
    * **browser cycles**: 25
    * **expected**: pass
    * **gecko profile entries**: 14000000
@@ -19708,6 +19720,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium, safari, custom-car
+   * **benchmark page**: false
    * **browser cycles**: 25
    * **expected**: pass
    * **gecko profile entries**: 14000000
@@ -20106,6 +20119,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium, safari, custom-car
+   * **benchmark page**: true
    * **browser cycles**: 25
    * **expected**: pass
    * **gecko profile entries**: 14000000
@@ -20536,6 +20550,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium, safari, custom-car
+   * **benchmark page**: false
    * **browser cycles**: 25
    * **expected**: pass
    * **gecko profile entries**: 14000000
@@ -20840,6 +20855,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium, safari, custom-car
+   * **benchmark page**: true
    * **browser cycles**: 25
    * **expected**: pass
    * **gecko profile entries**: 14000000
@@ -21340,6 +21356,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium, safari, custom-car
+   * **benchmark page**: true
    * **browser cycles**: 25
    * **expected**: pass
    * **gecko profile entries**: 14000000
@@ -21663,6 +21680,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium, safari, custom-car
+   * **benchmark page**: true
    * **browser cycles**: 25
    * **expected**: pass
    * **gecko profile entries**: 14000000
@@ -21986,6 +22004,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium, safari, custom-car
+   * **benchmark page**: true
    * **browser cycles**: 25
    * **expected**: pass
    * **gecko profile entries**: 14000000
@@ -22304,6 +22323,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium, safari, custom-car
+   * **benchmark page**: true
    * **browser cycles**: 25
    * **expected**: pass
    * **gecko profile entries**: 14000000
@@ -22589,6 +22609,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium, safari, custom-car
+   * **benchmark page**: true
    * **browser cycles**: 25
    * **expected**: pass
    * **gecko profile entries**: 14000000
@@ -22827,6 +22848,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium, safari, custom-car
+   * **benchmark page**: true
    * **browser cycles**: 25
    * **expected**: pass
    * **gecko profile entries**: 14000000
@@ -23144,6 +23166,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium, safari, custom-car
+   * **benchmark page**: true
    * **browser cycles**: 25
    * **expected**: pass
    * **gecko profile entries**: 14000000
@@ -23466,6 +23489,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium, safari, custom-car
+   * **benchmark page**: false
    * **browser cycles**: 25
    * **expected**: pass
    * **gecko profile entries**: 14000000
@@ -23789,6 +23813,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium, safari, custom-car
+   * **benchmark page**: false
    * **browser cycles**: 25
    * **expected**: pass
    * **gecko profile entries**: 14000000
@@ -24219,6 +24244,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium, safari, custom-car
+   * **benchmark page**: true
    * **browser cycles**: 25
    * **expected**: pass
    * **gecko profile entries**: 14000000
@@ -24542,6 +24568,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium, safari, custom-car
+   * **benchmark page**: true
    * **browser cycles**: 25
    * **expected**: pass
    * **gecko profile entries**: 14000000
@@ -24867,6 +24894,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium, safari, custom-car
+   * **benchmark page**: false
    * **browser cycles**: 25
    * **expected**: pass
    * **gecko profile entries**: 14000000
@@ -25259,6 +25287,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium, safari, custom-car
+   * **benchmark page**: false
    * **browser cycles**: 25
    * **expected**: pass
    * **gecko profile entries**: 14000000
@@ -25497,6 +25526,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium, safari, custom-car
+   * **benchmark page**: true
    * **browser cycles**: 25
    * **expected**: pass
    * **gecko profile entries**: 14000000
@@ -26002,6 +26032,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium, safari, custom-car
+   * **benchmark page**: false
    * **browser cycles**: 25
    * **expected**: pass
    * **gecko profile entries**: 14000000
@@ -26399,6 +26430,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium, safari, custom-car
+   * **benchmark page**: true
    * **browser cycles**: 25
    * **expected**: pass
    * **gecko profile entries**: 14000000
@@ -30007,6 +30039,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m
+   * **benchmark page**: true
    * **browser cycles**: 15
    * **expected**: pass
    * **lower is better**: true
@@ -30102,6 +30135,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m
+   * **benchmark page**: true
    * **browser cycles**: 15
    * **expected**: pass
    * **lower is better**: true
@@ -30674,6 +30708,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m
+   * **benchmark page**: true
    * **browser cycles**: 15
    * **expected**: pass
    * **lower is better**: true
@@ -30779,6 +30814,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m
+   * **benchmark page**: true
    * **browser cycles**: 15
    * **expected**: pass
    * **lower is better**: true
@@ -30909,6 +30945,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m
+   * **benchmark page**: true
    * **browser cycles**: 15
    * **expected**: pass
    * **lower is better**: true
@@ -31039,6 +31076,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m
+   * **benchmark page**: true
    * **browser cycles**: 15
    * **expected**: pass
    * **lower is better**: true
@@ -31169,6 +31207,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m
+   * **benchmark page**: true
    * **browser cycles**: 15
    * **expected**: pass
    * **lower is better**: true
@@ -31646,6 +31685,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m
+   * **benchmark page**: true
    * **browser cycles**: 15
    * **expected**: pass
    * **lower is better**: true
@@ -31776,6 +31816,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m
+   * **benchmark page**: true
    * **browser cycles**: 15
    * **expected**: pass
    * **lower is better**: true
@@ -31906,6 +31947,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m
+   * **benchmark page**: true
    * **browser cycles**: 15
    * **expected**: pass
    * **lower is better**: true
@@ -32036,6 +32078,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m
+   * **benchmark page**: true
    * **browser cycles**: 15
    * **expected**: pass
    * **lower is better**: true
@@ -32166,6 +32209,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m
+   * **benchmark page**: true
    * **browser cycles**: 15
    * **expected**: pass
    * **lower is better**: true
@@ -32473,6 +32517,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m
+   * **benchmark page**: true
    * **browser cycles**: 15
    * **expected**: pass
    * **login**: true
@@ -32836,6 +32881,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m
+   * **benchmark page**: true
    * **browser cycles**: 15
    * **expected**: pass
    * **lower is better**: true
@@ -32966,6 +33012,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m
+   * **benchmark page**: true
    * **browser cycles**: 15
    * **expected**: pass
    * **login**: true
@@ -33062,6 +33109,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m
+   * **benchmark page**: true
    * **browser cycles**: 15
    * **expected**: pass
    * **lower is better**: true
@@ -33192,6 +33240,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m
+   * **benchmark page**: true
    * **browser cycles**: 15
    * **expected**: pass
    * **login**: true
@@ -33323,6 +33372,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m
+   * **benchmark page**: true
    * **browser cycles**: 15
    * **expected**: pass
    * **lower is better**: true
@@ -33750,6 +33800,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m
+   * **benchmark page**: true
    * **browser cycles**: 15
    * **expected**: pass
    * **login**: true
@@ -34248,6 +34299,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m
+   * **benchmark page**: true
    * **browser cycles**: 15
    * **expected**: pass
    * **lower is better**: true
@@ -34343,6 +34395,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m
+   * **benchmark page**: true
    * **browser cycles**: 15
    * **expected**: pass
    * **lower is better**: true
@@ -34770,6 +34823,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m
+   * **benchmark page**: true
    * **browser cycles**: 15
    * **expected**: pass
    * **lower is better**: true
@@ -34875,6 +34929,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m
+   * **benchmark page**: true
    * **browser cycles**: 15
    * **expected**: pass
    * **lower is better**: true
@@ -35005,6 +35060,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m
+   * **benchmark page**: true
    * **browser cycles**: 15
    * **expected**: pass
    * **lower is better**: true
@@ -35135,6 +35191,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m
+   * **benchmark page**: true
    * **browser cycles**: 15
    * **expected**: pass
    * **lower is better**: true
@@ -35637,6 +35694,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m
+   * **benchmark page**: true
    * **browser cycles**: 15
    * **expected**: pass
    * **lower is better**: true
@@ -36064,6 +36122,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m
+   * **benchmark page**: true
    * **browser cycles**: 15
    * **expected**: pass
    * **lower is better**: true
