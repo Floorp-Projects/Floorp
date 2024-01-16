@@ -12,9 +12,11 @@ import androidx.appcompat.content.res.AppCompatResources
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
 import androidx.coordinatorlayout.widget.CoordinatorLayout
+import androidx.core.view.isVisible
 import androidx.core.view.updateLayoutParams
 import mozilla.components.support.ktx.android.content.res.resolveAttribute
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.toolbar.IncompleteRedesignToolbarFeature
 import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.databinding.FragmentHomeBinding
 import org.mozilla.fenix.ext.settings
@@ -57,6 +59,10 @@ class ToolbarView(
     }
 
     private fun updateLayout(view: View) {
+        val redesignEnabled = IncompleteRedesignToolbarFeature(context.settings()).isEnabled
+        binding.menuButton.isVisible = !redesignEnabled
+        binding.tabButton.isVisible = !redesignEnabled
+
         when (context.settings().toolbarPosition) {
             ToolbarPosition.TOP -> {
                 binding.toolbarLayout.layoutParams = CoordinatorLayout.LayoutParams(
