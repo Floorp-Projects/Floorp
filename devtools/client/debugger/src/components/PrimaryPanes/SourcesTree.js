@@ -3,7 +3,10 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 // Dependencies
-import React, { Component, Fragment } from "react";
+import React, {
+  Component,
+  Fragment,
+} from "devtools/client/shared/vendor/react";
 import {
   div,
   button,

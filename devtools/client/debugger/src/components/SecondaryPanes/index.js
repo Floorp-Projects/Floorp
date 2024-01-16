@@ -4,7 +4,7 @@
 
 const SplitBox = require("devtools/client/shared/components/splitter/SplitBox");
 
-import React, { Component } from "react";
+import React, { Component } from "devtools/client/shared/vendor/react";
 import {
   div,
   input,
