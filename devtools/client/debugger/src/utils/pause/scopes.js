@@ -6,7 +6,7 @@
 // scopes information in Scopes panel.
 
 import { objectInspector } from "devtools/client/shared/components/reps/index";
-import { simplifyDisplayName } from "../pause/frames";
+import { simplifyDisplayName } from "../pause/frames/index";
 
 const {
   utils: {

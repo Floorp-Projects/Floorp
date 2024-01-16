@@ -18,9 +18,9 @@ import {
   getJavascriptTracingLogMethod,
   getJavascriptTracingValues,
   getJavascriptTracingOnNextInteraction,
-} from "../../selectors";
+} from "../../selectors/index";
 import { formatKeyShortcut } from "../../utils/text";
-import actions from "../../actions";
+import actions from "../../actions/index";
 import { debugBtn } from "../shared/Button/CommandBarButton";
 import AccessibleImage from "../shared/AccessibleImage";
 import "./CommandBar.css";

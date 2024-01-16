@@ -11,7 +11,7 @@ import {
   getSelectedFrame,
   getCurrentThread,
   getInlinePreviews,
-} from "../../selectors";
+} from "../../selectors/index";
 
 function hasPreviews(previews) {
   return !!previews && !!Object.keys(previews).length;

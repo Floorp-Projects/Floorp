@@ -12,10 +12,10 @@ import {
   getSelectedSource,
   visibleColumnBreakpoints,
   isSourceBlackBoxed,
-} from "../../selectors";
-import actions from "../../actions";
+} from "../../selectors/index";
+import actions from "../../actions/index";
 import { connect } from "../../utils/connect";
-import { makeBreakpointId } from "../../utils/breakpoint";
+import { makeBreakpointId } from "../../utils/breakpoint/index";
 
 // eslint-disable-next-line max-len
 

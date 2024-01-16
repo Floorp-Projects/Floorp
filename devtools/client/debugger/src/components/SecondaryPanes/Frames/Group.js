@@ -5,7 +5,7 @@
 import React, { Component } from "devtools/client/shared/vendor/react";
 import PropTypes from "devtools/client/shared/vendor/react-prop-types";
 
-import { getLibraryFromUrl } from "../../../utils/pause/frames";
+import { getLibraryFromUrl } from "../../../utils/pause/frames/index";
 
 import AccessibleImage from "../../shared/AccessibleImage";
 import FrameComponent from "./Frame";

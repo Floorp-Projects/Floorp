@@ -9,7 +9,7 @@ import {
 } from "devtools/client/shared/vendor/react-dom-factories";
 import PropTypes from "devtools/client/shared/vendor/react-prop-types";
 
-import { formatDisplayName } from "../../utils/pause/frames";
+import { formatDisplayName } from "../../utils/pause/frames/index";
 
 import "./PreviewFunction.css";
 

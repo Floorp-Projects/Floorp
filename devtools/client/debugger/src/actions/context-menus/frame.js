@@ -8,10 +8,10 @@ import {
   getShouldSelectOriginalLocation,
   getCurrentThreadFrames,
   getFrameworkGroupingState,
-} from "../../selectors";
+} from "../../selectors/index";
 import { toggleFrameworkGrouping } from "../../actions/ui";
-import { restart, toggleBlackBox } from "../../actions/pause";
-import { formatCopyName } from "../../utils/pause/frames";
+import { restart, toggleBlackBox } from "../../actions/pause/index";
+import { formatCopyName } from "../../utils/pause/frames/index";
 
 function formatMenuElement(labelString, click, disabled = false) {
   const label = L10N.getStr(labelString);

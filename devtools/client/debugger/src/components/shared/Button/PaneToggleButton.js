@@ -5,7 +5,7 @@
 import React, { PureComponent } from "devtools/client/shared/vendor/react";
 import PropTypes from "devtools/client/shared/vendor/react-prop-types";
 import AccessibleImage from "../AccessibleImage";
-import { CommandBarButton } from "./";
+import { CommandBarButton } from "./index";
 
 const classnames = require("devtools/client/shared/classnames.js");
 

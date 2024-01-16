@@ -13,7 +13,7 @@ import {
   getBlackBoxRanges,
   isSourceMapIgnoreListEnabled,
   isSourceOnSourceMapIgnoreList,
-} from "../../selectors";
+} from "../../selectors/index";
 import {
   addBreakpoint,
   removeBreakpoint,

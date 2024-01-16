@@ -8,11 +8,11 @@
  */
 
 import { setSymbols } from "./symbols";
-import { setInScopeLines } from "../ast";
+import { setInScopeLines } from "../ast/index";
 import { prettyPrintAndSelectSource } from "./prettyPrint";
 import { addTab, closeTab } from "../tabs";
 import { loadSourceText } from "./loadSourceText";
-import { setBreakableLines } from ".";
+import { setBreakableLines } from "./breakableLines";
 
 import { prefs } from "../../utils/prefs";
 import { isMinified } from "../../utils/source";
@@ -36,7 +36,7 @@ import {
   hasSourceActor,
   hasPrettyTab,
   isSourceActorWithSourceMap,
-} from "../../selectors";
+} from "../../selectors/index";
 
 // This is only used by jest tests (and within this module)
 export const setSelectedLocation = (

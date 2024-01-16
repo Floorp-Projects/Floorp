@@ -20,12 +20,12 @@ const { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs"
 );
 
-import { SearchDispatcher } from "../workers/search";
-import { PrettyPrintDispatcher } from "../workers/pretty-print";
+import { SearchDispatcher } from "../workers/search/index";
+import { PrettyPrintDispatcher } from "../workers/pretty-print/index";
 
 import configureStore from "../actions/utils/create-store";
-import reducers from "../reducers";
-import * as selectors from "../selectors";
+import reducers from "../reducers/index";
+import * as selectors from "../selectors/index";
 import App from "../components/App";
 import { asyncStore, prefs } from "./prefs";
 import { persistTabs } from "../utils/tabs";
@@ -47,7 +47,7 @@ export function bootstrapStore(client, workers, panel, initialState) {
   registerStoreObserver(store, updatePrefs);
 
   const actions = bindActionCreators(
-    require("../actions").default,
+    require("../actions/index").default,
     store.dispatch
   );
 

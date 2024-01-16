@@ -4,7 +4,7 @@
 
 import { buildMenu, showMenu } from "../../context-menu/menu";
 
-import { getBreakpointsForSource } from "../../selectors";
+import { getBreakpointsForSource } from "../../selectors/index";
 
 import {
   disableBreakpointsInSource,
