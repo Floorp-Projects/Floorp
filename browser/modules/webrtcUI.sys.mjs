@@ -94,6 +94,12 @@ export var webrtcUI = {
         "deviceGracePeriodTimeoutMs",
         "privacy.webrtc.deviceGracePeriodTimeoutMs"
       );
+      XPCOMUtils.defineLazyPreferenceGetter(
+        this,
+        "showIndicatorsOnMacos14AndAbove",
+        "privacy.webrtc.showIndicatorsOnMacos14AndAbove",
+        true
+      );
 
       Services.telemetry.setEventRecordingEnabled("webrtc.ui", true);
     }
@@ -155,6 +161,15 @@ export var webrtcUI = {
   },
 
   get showCameraIndicator() {
+    // Bug 1857254 - MacOS 14 displays two camera icons in menu bar
+    // temporarily disabled the firefox camera icon until a better fix comes around
+    if (
+      AppConstants.isPlatformAndVersionAtLeast("macosx", 14.0) &&
+      !this.showIndicatorsOnMacos14AndAbove
+    ) {
+      return false;
+    }
+
     for (let [, indicators] of this.perTabIndicators) {
       if (indicators.showCameraIndicator) {
         return true;
@@ -164,6 +179,15 @@ export var webrtcUI = {
   },
 
   get showMicrophoneIndicator() {
+    // Bug 1857254 - MacOS 14 displays two microphone icons in menu bar
+    // temporarily disabled the firefox camera icon until a better fix comes around
+    if (
+      AppConstants.isPlatformAndVersionAtLeast("macosx", 14.0) &&
+      !this.showIndicatorsOnMacos14AndAbove
+    ) {
+      return false;
+    }
+
     for (let [, indicators] of this.perTabIndicators) {
       if (indicators.showMicrophoneIndicator) {
         return true;
@@ -173,6 +197,15 @@ export var webrtcUI = {
   },
 
   get showScreenSharingIndicator() {
+    // Bug 1857254 - MacOS 14 displays two screen share icons in menu bar
+    // temporarily disabled the firefox camera icon until a better fix comes around
+    if (
+      AppConstants.isPlatformAndVersionAtLeast("macosx", 14.0) &&
+      !this.showIndicatorsOnMacos14AndAbove
+    ) {
+      return false;
+    }
+
     let list = [""];
     for (let [, indicators] of this.perTabIndicators) {
       if (indicators.showScreenSharingIndicator) {
