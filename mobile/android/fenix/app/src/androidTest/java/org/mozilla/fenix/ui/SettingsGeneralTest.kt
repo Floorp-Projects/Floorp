@@ -14,6 +14,7 @@ import org.mozilla.fenix.FenixApplication
 import org.mozilla.fenix.R
 import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
+import org.mozilla.fenix.helpers.AppAndSystemHelper
 import org.mozilla.fenix.helpers.AppAndSystemHelper.registerAndCleanupIdlingResources
 import org.mozilla.fenix.helpers.AppAndSystemHelper.runWithSystemLocaleChanged
 import org.mozilla.fenix.helpers.DataGenerationHelper.getStringResource
@@ -51,6 +52,7 @@ class SettingsGeneralTest {
     @After
     fun tearDown() {
         mockWebServer.shutdown()
+        AppAndSystemHelper.resetSystemLocaleToEnUS()
     }
 
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2092697

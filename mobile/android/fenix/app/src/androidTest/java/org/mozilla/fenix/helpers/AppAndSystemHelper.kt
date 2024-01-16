@@ -249,6 +249,7 @@ object AppAndSystemHelper {
      * Runs on Debug variant as we don't want to adjust Release permission manifests
      * Runs the test in its testBlock.
      * Cleans up and sets the default locale after it's done.
+     * As a safety measure, always add the resetSystemLocaleToEnUS() method in the tearDown method of your Class.
      */
     fun runWithSystemLocaleChanged(locale: Locale, testRule: ActivityTestRule<HomeActivity>, testBlock: () -> Unit) {
         if (Config.channel.isDebug) {
@@ -271,6 +272,21 @@ object AppAndSystemHelper {
             } finally {
                 setSystemLocale(defaultLocale)
             }
+        }
+    }
+
+    /**
+     * Resets the default language of the entire device back to EN-US.
+     * In case of a test instrumentation crash, the finally statement in the
+     * runWithSystemLocaleChanged(locale: Locale) method, will not be reached.
+     * Add this method inside the tearDown method of your test class, where the above method is used.
+     * Note: If set inside the ActivityTestRule's afterActivityFinished() method, this also won't work,
+     * as the methods inside it are not always executed: https://github.com/android/android-test/issues/498
+     */
+    fun resetSystemLocaleToEnUS() {
+        if (Locale.getDefault() != Locale.US) {
+            Log.i(TAG, "Resetting system locale to EN US")
+            setSystemLocale(Locale.US)
         }
     }
 
