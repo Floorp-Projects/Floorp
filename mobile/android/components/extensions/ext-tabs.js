@@ -140,7 +140,7 @@ this.tabs = class extends ExtensionAPIPersistent {
         });
       },
     }),
-    onUpdated({ fire, context }, params) {
+    onUpdated({ fire }, params) {
       const { tabManager } = this.extension;
       const restricted = ["url", "favIconUrl", "title"];
 
@@ -220,9 +220,8 @@ this.tabs = class extends ExtensionAPIPersistent {
           windowTracker.removeListener("status", statusListener);
           windowTracker.removeListener("pagetitlechanged", listener);
         },
-        convert(_fire, _context) {
+        convert(_fire) {
           fire = _fire;
-          context = _context;
         },
       };
     },
