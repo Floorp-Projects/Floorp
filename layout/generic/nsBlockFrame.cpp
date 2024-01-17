@@ -7760,7 +7760,7 @@ void nsBlockFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
     AddStateBits(NS_BLOCK_STATIC_BFC);
   }
 
-  if (StyleDisplay()->IsContainPaint() || StyleDisplay()->IsContainLayout()) {
+  if (IsDynamicBFC()) {
     AddStateBits(NS_BLOCK_DYNAMIC_BFC);
   }
 

@@ -1093,9 +1093,20 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
     return mFontPaletteValueSet;
   }
 
-  void UpdateHiddenByContentVisibilityForAnimations();
+  bool NeedsToUpdateHiddenByContentVisibilityForAnimations() const {
+    return mNeedsToUpdateHiddenByContentVisibilityForAnimations;
+  }
+  void SetNeedsToUpdateHiddenByContentVisibilityForAnimations() {
+    mNeedsToUpdateHiddenByContentVisibilityForAnimations = true;
+  }
+  void UpdateHiddenByContentVisibilityForAnimationsIfNeeded() {
+    if (mNeedsToUpdateHiddenByContentVisibilityForAnimations) {
+      DoUpdateHiddenByContentVisibilityForAnimations();
+    }
+  }
 
  protected:
+  void DoUpdateHiddenByContentVisibilityForAnimations();
   friend class nsRunnableMethod<nsPresContext>;
   void ThemeChangedInternal();
   void RefreshSystemMetrics();
@@ -1388,6 +1399,9 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
 
   // Has NotifyDidPaintForSubtree been called for a contentful paint?
   unsigned mHadContentfulPaintComposite : 1;
+
+  // Whether we might need to update c-v state for animations.
+  unsigned mNeedsToUpdateHiddenByContentVisibilityForAnimations : 1;
 
   unsigned mUserInputEventsAllowed : 1;
 #ifdef DEBUG

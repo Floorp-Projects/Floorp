@@ -1748,6 +1748,9 @@ class PresShell final : public nsStubDocumentObserver,
   void RegisterContentVisibilityAutoFrame(nsIFrame* aFrame) {
     mContentVisibilityAutoFrames.Insert(aFrame);
   }
+  void UnregisterContentVisibilityAutoFrame(nsIFrame* aFrame) {
+    mContentVisibilityAutoFrames.Remove(aFrame);
+  }
   bool HasContentVisibilityAutoFrames() const {
     return !mContentVisibilityAutoFrames.IsEmpty();
   }

@@ -236,6 +236,11 @@ enum nsChangeHint : uint32_t {
    */
   nsChangeHint_VisibilityChange = 1u << 28,
 
+  /**
+   * Indicates that NS_BLOCK_DYNAMIC_BFC should be updated.
+   */
+  nsChangeHint_UpdateBFC = 1u << 29,
+
   // IMPORTANT NOTE: When adding a new hint, you will need to add it to
   // one of:
   //
@@ -251,7 +256,7 @@ enum nsChangeHint : uint32_t {
   /**
    * Dummy hint value for all hints. It exists for compile time check.
    */
-  nsChangeHint_AllHints = uint32_t((1ull << 29) - 1),
+  nsChangeHint_AllHints = uint32_t((1ull << 30) - 1),
 };
 
 // Redefine these operators to return nothing. This will catch any use
@@ -332,7 +337,8 @@ inline nsChangeHint operator^=(nsChangeHint& aLeft, nsChangeHint aRight) {
    nsChangeHint_UpdateOverflow | nsChangeHint_UpdateParentOverflow |          \
    nsChangeHint_UpdatePostTransformOverflow |                                 \
    nsChangeHint_UpdateTableCellSpans | nsChangeHint_UpdateTransformLayer |    \
-   nsChangeHint_UpdateUsesOpacity | nsChangeHint_AddOrRemoveTransform)
+   nsChangeHint_UpdateUsesOpacity | nsChangeHint_AddOrRemoveTransform |       \
+   nsChangeHint_UpdateBFC)
 
 // The change hints that are sometimes considered to be handled for descendants.
 #define nsChangeHint_Hints_SometimesHandledForDescendants           \
