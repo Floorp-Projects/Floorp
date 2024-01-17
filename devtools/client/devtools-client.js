@@ -142,19 +142,6 @@ DevToolsClient.prototype = {
   },
 
   /**
-   * Release an object actor.
-   *
-   * @param string actor
-   *        The actor ID to send the request to.
-   */
-  release(to) {
-    return this.request({
-      to,
-      type: "release",
-    });
-  },
-
-  /**
    * Send a request to the debugging server.
    *
    * @param packet object
