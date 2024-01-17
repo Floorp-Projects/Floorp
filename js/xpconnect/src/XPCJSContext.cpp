@@ -853,7 +853,9 @@ void xpc::SetPrefableContextOptions(JS::ContextOptions& options) {
       .setWasmVerbose(Preferences::GetBool(JS_OPTIONS_DOT_STR "wasm_verbose"))
       .setAsyncStack(Preferences::GetBool(JS_OPTIONS_DOT_STR "asyncstack"))
       .setAsyncStackCaptureDebuggeeOnly(Preferences::GetBool(
-          JS_OPTIONS_DOT_STR "asyncstack_capture_debuggee_only"));
+          JS_OPTIONS_DOT_STR "asyncstack_capture_debuggee_only"))
+      .setEnableDestructuringFuse(
+          StaticPrefs::javascript_options_destructuring_fuse());
 
   SetPrefableCompileOptions(options.compileOptions());
 }
