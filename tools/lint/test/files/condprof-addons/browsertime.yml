@@ -1,0 +1,10 @@
+---
+firefox-addons:
+    description: "fixture for the expected firefox-addons.tar ci fetch config"
+    fetch:
+        type: static-url
+        artifact-name: firefox-addons.tar.zst
+        add-prefix: firefox-addons/
+        url: https://localhost/fake-firefox-addons.tar
+        sha256: 20372ff1d58fc33d1568f8922fe66e2e2e01c77663820344d2a364a8ddd68281
+        size: 3584000
