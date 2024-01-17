@@ -12,6 +12,7 @@ const BASE_URL = BASE_ORIGIN + SJS_PATH + SJS;
 const SHARED_KEY = SJS;
 const SAME_ORIGIN = "mochi.test:8888" + SJS_PATH + SJS;
 const CROSS_ORIGIN_URL = "test1.example.com" + SJS_PATH + SJS;
+const HSTS_URL = "includesubdomains.preloaded.test" + SJS_PATH + SJS;
 
 const IMG_BYTES = atob(
   "iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12" +
@@ -266,7 +267,7 @@ function createTargetBlankRefferer(
 }
 
 // creates test page with img that is a redirect
-function createRedirectImgTestCase(aParams, aAttributePolicy) {
+function createImgTestCase(aParams, aAttributePolicy, aRedirect) {
   var metaString = "";
   if (aParams.has("META_POLICY")) {
     metaString = `<meta name="referrer" content="${aParams.get(
@@ -274,8 +275,16 @@ function createRedirectImgTestCase(aParams, aAttributePolicy) {
     )}">`;
   }
   aParams.delete("ACTION");
-  aParams.append("ACTION", "redirectImg");
-  var imgUrl = "http://" + CROSS_ORIGIN_URL + aParams.toString();
+  if (aRedirect) {
+    aParams.append("ACTION", "redirectImg");
+  } else {
+    aParams.append("ACTION", "test");
+    aParams.append("type", "img");
+  }
+  var imgUrl =
+    "http://" +
+    (aParams.get("HSTS") ? HSTS_URL : CROSS_ORIGIN_URL) +
+    aParams.toString();
 
   return `<!DOCTYPE HTML>
           <html>
@@ -637,7 +646,7 @@ function handleRequest(request, response) {
 
   // redirect tests with img and iframe
   if (action === "generate-img-redirect-policy-test") {
-    response.write(createRedirectImgTestCase(params, attributePolicy));
+    response.write(createImgTestCase(params, attributePolicy, true));
     return;
   }
   if (action === "generate-iframe-redirect-policy-test") {
@@ -652,6 +661,11 @@ function handleRequest(request, response) {
         schemeTo
       )
     );
+    return;
+  }
+
+  if (action === "generate-img-policy-test") {
+    response.write(createImgTestCase(params, attributePolicy, false));
     return;
   }
 

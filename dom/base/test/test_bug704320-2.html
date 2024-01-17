@@ -13,6 +13,15 @@ This Test is split into two for Bug 1453396
 
 <script type="application/javascript">
 
+// We do not want HTTPS upgrades to interfere with this test. For that,
+// see dom/security/test/referrer-policy/test_referrer_redirect.html.
+SpecialPowers.pushPrefEnv({
+  set: [
+    ["dom.security.https_first", false],
+    ["security.mixed_content.upgrade_display_content", false]
+  ],
+});
+
 //generates URLs to test
 var generateURLArray = (function(from, to){
   const baseURL = '://example.com/tests/dom/base/test/bug704320.sjs?action=create-1st-level-iframe&scheme-from=';
