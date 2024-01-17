@@ -1412,8 +1412,6 @@ nsXPCComponents_Utils::ReportError(HandleValue error, HandleValue stack,
     nsAutoString fileUni;
     CopyUTF8toUTF16(mozilla::MakeStringSpan(err->filename.c_str()), fileUni);
 
-    uint32_t column = err->tokenOffset();
-
     const char16_t* linebuf = err->linebuf();
     uint32_t flags = err->isWarning() ? nsIScriptError::warningFlag
                                       : nsIScriptError::errorFlag;
@@ -1424,7 +1422,8 @@ nsXPCComponents_Utils::ReportError(HandleValue error, HandleValue stack,
         fileUni,
         linebuf ? nsDependentString(linebuf, err->linebufLength())
                 : EmptyString(),
-        err->lineno, column, flags, "XPConnect JavaScript", innerWindowID,
+        err->lineno, err->column.oneOriginValue(), flags,
+        "XPConnect JavaScript", innerWindowID,
         innerWindowID == 0 ? true : false);
     NS_ENSURE_SUCCESS(rv, NS_OK);
 

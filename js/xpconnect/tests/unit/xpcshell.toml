@@ -70,6 +70,8 @@ support-files = [
 
 ["test_ComponentEnvironment.js"]
 
+["test_Cu_reportError_column.js"]
+
 ["test_FrameScriptEnvironment.js"]
 
 ["test_ReadableStream_from.js"]
