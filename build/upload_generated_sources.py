@@ -147,7 +147,7 @@ def do_work(artifact, region, bucket):
     while q.unfinished_tasks:
         if event.wait(0.1):
             log.error("Worker thread encountered exception, exiting...")
-            break
+            sys.exit(1)
 
 
 def main(argv):
