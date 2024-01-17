@@ -4934,7 +4934,8 @@ nsresult nsIFrame::SelectByTypeAtPoint(nsPresContext* aPresContext,
     return NS_OK;
   }
 
-  ContentOffsets offsets = GetContentOffsetsFromPoint(aPoint, SKIP_HIDDEN);
+  ContentOffsets offsets = GetContentOffsetsFromPoint(
+      aPoint, SKIP_HIDDEN | IGNORE_NATIVE_ANONYMOUS_SUBTREE);
   if (!offsets.content) {
     return NS_ERROR_FAILURE;
   }
@@ -5382,7 +5383,7 @@ static bool SelfIsSelectable(nsIFrame* aFrame, uint32_t aFlags) {
          aFrame->Style()->UserSelect() != StyleUserSelect::None;
 }
 
-static bool SelectionDescendToKids(nsIFrame* aFrame) {
+static bool FrameContentCanHaveParentSelectionRange(nsIFrame* aFrame) {
   // If we are only near (not directly over) then don't traverse
   // frames with independent selection (e.g. text and list controls, see bug
   // 268497).  Note that this prevents any of the users of this method from
@@ -5403,10 +5404,13 @@ static bool SelectionDescendToKids(nsIFrame* aFrame) {
       aFrame->HasAnyStateBits(NS_FRAME_INDEPENDENT_SELECTION),
       aFrame->GetParent()->HasAnyStateBits(NS_FRAME_INDEPENDENT_SELECTION));
 
-  if (aFrame->IsGeneratedContentFrame()) {
+  return !aFrame->IsGeneratedContentFrame();
+}
+
+static bool SelectionDescendToKids(nsIFrame* aFrame) {
+  if (!FrameContentCanHaveParentSelectionRange(aFrame)) {
     return false;
   }
-
   auto style = aFrame->Style()->UserSelect();
   return style != StyleUserSelect::All && style != StyleUserSelect::None;
 }
@@ -5647,11 +5651,18 @@ static FrameTarget GetSelectionClosestFrame(nsIFrame* aFrame,
     return target;
   }
 
+  if (aFlags & nsIFrame::IGNORE_NATIVE_ANONYMOUS_SUBTREE &&
+      !FrameContentCanHaveParentSelectionRange(aFrame)) {
+    return LastResortFrameTargetForFrame(aFrame, aPoint);
+  }
+
   if (nsIFrame* kid = aFrame->PrincipalChildList().FirstChild()) {
     // Go through all the child frames to find the closest one
     nsIFrame::FrameWithDistance closest = {nullptr, nscoord_MAX, nscoord_MAX};
     for (; kid; kid = kid->GetNextSibling()) {
-      if (!SelfIsSelectable(kid, aFlags) || kid->IsEmpty()) continue;
+      if (!SelfIsSelectable(kid, aFlags) || kid->IsEmpty()) {
+        continue;
+      }
 
       kid->FindCloserFrameForSelection(aPoint, &closest);
     }
@@ -8700,7 +8711,8 @@ static nsresult GetNextPrevLineFromBlockFrame(PeekOffsetStruct* aPos,
           nsPoint offset;
           resultFrame->GetOffsetFromView(offset, &view);
           nsIFrame::ContentOffsets offsets =
-              resultFrame->GetContentOffsetsFromPoint(point - offset);
+              resultFrame->GetContentOffsetsFromPoint(
+                  point - offset, nsIFrame::IGNORE_NATIVE_ANONYMOUS_SUBTREE);
           aPos->mResultContent = offsets.content;
           aPos->mContentOffset = offsets.offset;
           aPos->mAttach = offsets.associate;
@@ -8742,7 +8754,8 @@ static nsresult GetNextPrevLineFromBlockFrame(PeekOffsetStruct* aPos,
         nsPoint offset;
         resultFrame->GetOffsetFromView(offset, &view);
         nsIFrame::ContentOffsets offsets =
-            resultFrame->GetContentOffsetsFromPoint(point - offset);
+            resultFrame->GetContentOffsetsFromPoint(
+                point - offset, nsIFrame::IGNORE_NATIVE_ANONYMOUS_SUBTREE);
         aPos->mResultContent = offsets.content;
         aPos->mContentOffset = offsets.offset;
         aPos->mAttach = offsets.associate;
