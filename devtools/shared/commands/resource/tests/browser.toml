@@ -54,6 +54,8 @@ support-files = [
 
 ["browser_resources_css_messages.js"]
 
+["browser_resources_css_registered_properties.js"]
+
 ["browser_resources_document_events.js"]
 skip-if = [
   "win10_2004", # Bug 1723573

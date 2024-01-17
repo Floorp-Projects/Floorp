@@ -13,6 +13,7 @@ DevToolsModules(
     "console-messages.js",
     "css-changes.js",
     "css-messages.js",
+    "css-registered-properties.js",
     "document-event.js",
     "error-messages.js",
     "extensions-backgroundscript-status.js",
