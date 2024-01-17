@@ -170,14 +170,6 @@ class DrawTargetRecording : public DrawTarget {
                           const Pattern& aPattern,
                           const DrawOptions& aOptions = DrawOptions()) override;
 
-  /**
-   * Stroke a series of glyphs on the draw target with a certain source pattern.
-   */
-  virtual void StrokeGlyphs(
-      ScaledFont* aFont, const GlyphBuffer& aBuffer, const Pattern& aPattern,
-      const StrokeOptions& aStrokeOptions = StrokeOptions(),
-      const DrawOptions& aOptions = DrawOptions()) override;
-
   /*
    * This takes a source pattern and a mask, and composites the source pattern
    * onto the destination surface using the alpha channel of the mask pattern
@@ -377,11 +369,6 @@ class DrawTargetRecording : public DrawTarget {
   Path* GetPathForPathRecording(const Path* aPath) const;
   already_AddRefed<PathRecording> EnsurePathStored(const Path* aPath);
   void EnsurePatternDependenciesStored(const Pattern& aPattern);
-
-  void DrawGlyphs(ScaledFont* aFont, const GlyphBuffer& aBuffer,
-                  const Pattern& aPattern,
-                  const DrawOptions& aOptions = DrawOptions(),
-                  const StrokeOptions* aStrokeOptions = nullptr);
 
   RefPtr<DrawEventRecorderPrivate> mRecorder;
   RefPtr<DrawTarget> mFinalDT;
