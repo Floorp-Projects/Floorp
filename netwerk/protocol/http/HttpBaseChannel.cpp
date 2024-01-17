@@ -4561,14 +4561,25 @@ HttpBaseChannel::CloneReplacementChannelConfig(bool aPreserveMethod,
             dom::ReferrerInfo::ReferrerPolicyFromHeaderString(tRPHeaderValue);
       }
 
-      if (referrerPolicy != dom::ReferrerPolicy::_empty) {
-        // We may reuse computed referrer in redirect, so if referrerPolicy
-        // changes, we must not use the old computed value, and have to compute
-        // again.
-        nsCOMPtr<nsIReferrerInfo> referrerInfo =
-            dom::ReferrerInfo::CreateFromOtherAndPolicyOverride(mReferrerInfo,
-                                                                referrerPolicy);
-        config.referrerInfo = referrerInfo;
+      // In case we are here because an upgrade happened through mixed content
+      // upgrading, CSP upgrade-insecure-requests, HTTPS-Only or HTTPS-First, we
+      // have to recalculate the referrer based on the original referrer to
+      // account for the different scheme. This does NOT apply to HSTS.
+      // See Bug 1857894 and order of https://fetch.spec.whatwg.org/#main-fetch.
+      // Otherwise, if we have a new referrer policy, we want to recalculate the
+      // referrer based on the old computed referrer (Bug 1678545).
+      bool wasNonHSTSUpgrade =
+          (aRedirectFlags & nsIChannelEventSink::REDIRECT_STS_UPGRADE) &&
+          (!mLoadInfo->GetHstsStatus());
+      if (wasNonHSTSUpgrade) {
+        nsCOMPtr<nsIURI> referrer = mReferrerInfo->GetOriginalReferrer();
+        config.referrerInfo =
+            new dom::ReferrerInfo(referrer, mReferrerInfo->ReferrerPolicy(),
+                                  mReferrerInfo->GetSendReferrer());
+      } else if (referrerPolicy != dom::ReferrerPolicy::_empty) {
+        nsCOMPtr<nsIURI> referrer = mReferrerInfo->GetComputedReferrer();
+        config.referrerInfo = new dom::ReferrerInfo(
+            referrer, referrerPolicy, mReferrerInfo->GetSendReferrer());
       } else {
         config.referrerInfo = mReferrerInfo;
       }

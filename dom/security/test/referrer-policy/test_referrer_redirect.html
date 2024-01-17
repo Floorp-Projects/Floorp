@@ -14,7 +14,7 @@
   <script type="application/javascript">
 
   const SJS = "://example.com/tests/dom/security/test/referrer-policy/referrer_testserver.sjs?";
-  const PARAMS = ["ATTRIBUTE_POLICY", "NEW_ATTRIBUTE_POLICY", "META_POLICY", "RP_HEADER"];
+  const PARAMS = ["ATTRIBUTE_POLICY", "NEW_ATTRIBUTE_POLICY", "META_POLICY", "RP_HEADER", "HSTS"];
 
   const testCases = [
     {ACTION: ["generate-img-redirect-policy-test", "generate-iframe-redirect-policy-test"],
@@ -110,6 +110,51 @@
           DESC: "origin-when-cross-origin in meta, unsafe-url Referrer-Policy redirect header",
           RESULT: "origin"
         }
+      ]
+    },
+    // Check that "internal" redirects for mixed content upgrading
+    // are invisible, but not for HSTS upgrades (Bug 1857894).
+    {
+      ACTION: ["generate-img-policy-test"],
+      PREFS: [["security.mixed_content.upgrade_display_content", true]],
+      TESTS: [
+        {
+          META_POLICY: "strict-origin",
+          NAME: "img-strict-origin-mixed-content-upgrade",
+          DESC: "img-strict-origin-mixed-content-upgrade",
+          SCHEME_FROM: "https",
+          RESULT: "other-origin",
+        },
+      ]
+    },
+    {
+      ACTION: ["generate-img-policy-test"],
+      PREFS: [["security.mixed_content.upgrade_display_content", false]],
+      TESTS: [
+        {
+          META_POLICY: "strict-origin",
+          NAME: "img-strict-origin-mixed-content-no-upgrade",
+          DESC: "img-strict-origin-mixed-content-no-upgrade",
+          SCHEME_FROM: "https",
+          RESULT: "none",
+        },
+      ]
+    },
+    {
+      ACTION: ["generate-img-policy-test"],
+      PREFS: [
+        ["security.mixed_content.upgrade_display_content", false],
+        ["network.stricttransportsecurity.preloadlist", true],
+      ],
+      TESTS: [
+        {
+          META_POLICY: "strict-origin",
+          NAME: "img-strict-origin-hsts-upgrade",
+          DESC: "img-strict-origin-hsts-upgrade",
+          SCHEME_FROM: "https",
+          RESULT: "none",
+          HSTS: true,
+        },
       ]
     }
   ];

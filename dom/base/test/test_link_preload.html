@@ -18,6 +18,10 @@
 
   const testCases = [
     {ACTION: ["generate-link-policy-test"],
+      PREFS: [
+        ["dom.security.https_first", false],
+        ["security.mixed_content.upgrade_display_content", false]
+      ],
       TESTS: [
         {ATTRIBUTE_POLICY: 'unsafe-url',
          NAME: 'preload-unsafe-url-with-origin-in-meta',
@@ -209,6 +213,76 @@
          DESC: "preload-unsafe-url-property (orginally origin) with no-referrer in meta",
          RESULT: 'full'},
       ]},
+    {
+      // All previos tests with SCHEME_FROM: 'https' and SCHEME_TO: 'http',
+      // this time with mixed content upgrading enabled.
+      ACTION: ["generate-link-policy-test"],
+      PREFS: [
+        ["dom.security.https_first", false],
+        ["security.mixed_content.upgrade_display_content", true]
+      ],
+      TESTS: [
+         // Downgrade.
+         {ATTRIBUTE_POLICY: 'no-referrer-when-downgrade',
+         NAME: 'preload-origin-in-meta-downgrade-in-attr-upgraded',
+         META_POLICY: 'origin',
+         DESC: 'preload-origin in meta downgrade in attr (upgraded)',
+         REL: 'preload',
+         SCHEME_FROM: 'https',
+         SCHEME_TO: 'http',
+         RESULT: 'full'},
+        {ATTRIBUTE_POLICY: 'strict-origin',
+         NAME: 'preload-origin-in-meta-strict-origin-in-attr-upgraded',
+         META_POLICY: 'origin',
+         DESC: 'preload-origin in meta strict-origin in attr (upgraded)',
+         REL: 'preload',
+         SCHEME_FROM: 'https',
+         SCHEME_TO: 'http',
+         RESULT: 'origin'},
+        {ATTRIBUTE_POLICY: 'strict-origin-when-cross-origin',
+         NAME: 'preload-origin-in-meta-strict-origin-when-cross-origin-in-attr-upgraded',
+         META_POLICY: 'origin',
+         DESC: 'preload-origin in meta strict-origin-when-cross-origin in attr (upgraded)',
+         REL: 'preload',
+         SCHEME_FROM: 'https',
+         SCHEME_TO: 'http',
+         RESULT: 'full'},
+
+        // Cross origin
+        {ATTRIBUTE_POLICY: 'origin-when-cross-origin',
+         NAME: 'preload-origin-when-cross-origin-with-no-meta-upgraded',
+         META_POLICY: '',
+         SCHEME_FROM: 'https',
+         SCHEME_TO: 'http',
+         REL: 'preload',
+         DESC: "preload-origin-when-cross-origin with no meta (upgraded)",
+         RESULT: 'full'},
+        {ATTRIBUTE_POLICY: 'origin-when-cross-origin',
+         NAME: 'preload-origin-when-cross-origin-with-no-referrer-in-meta-upgraded',
+         META_POLICY: 'no-referrer',
+         SCHEME_FROM: 'https',
+         SCHEME_TO: 'http',
+         REL: 'preload',
+         DESC: "preload-origin-when-cross-origin with no-referrer in meta (upgraded)",
+         RESULT: 'full'},
+        {ATTRIBUTE_POLICY: 'origin-when-cross-origin',
+         NAME: 'preload-origin-when-cross-origin-with-unsafe-url-in-meta-upgraded-upgraded',
+         META_POLICY: 'unsafe-url',
+         SCHEME_FROM: 'https',
+         SCHEME_TO: 'http',
+         REL: 'preload',
+         DESC: "preload-origin-when-cross-origin with unsafe-url in meta (upgraded)",
+         RESULT: 'full'},
+        {ATTRIBUTE_POLICY: 'origin-when-cross-origin',
+         NAME: 'preload-origin-when-cross-origin-with-origin-in-meta-upgraded-upgraded',
+         META_POLICY: 'origin',
+         SCHEME_FROM: 'https',
+         SCHEME_TO: 'http',
+         REL: 'preload',
+         DESC: "preload-origin-when-cross-origin with origin in meta (upgraded)",
+         RESULT: 'full'},
+      ]
+    }
   ];
 
   </script>

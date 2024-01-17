@@ -1230,21 +1230,6 @@ ReferrerInfo::InitWithElement(const Element* aElement) {
 
 /* static */
 already_AddRefed<nsIReferrerInfo>
-ReferrerInfo::CreateFromOtherAndPolicyOverride(
-    nsIReferrerInfo* aOther, ReferrerPolicyEnum aPolicyOverride) {
-  MOZ_ASSERT(aOther);
-  ReferrerPolicyEnum policy = aPolicyOverride != ReferrerPolicy::_empty
-                                  ? aPolicyOverride
-                                  : aOther->ReferrerPolicy();
-
-  nsCOMPtr<nsIURI> referrer = aOther->GetComputedReferrer();
-  nsCOMPtr<nsIReferrerInfo> referrerInfo =
-      new ReferrerInfo(referrer, policy, aOther->GetSendReferrer());
-  return referrerInfo.forget();
-}
-
-/* static */
-already_AddRefed<nsIReferrerInfo>
 ReferrerInfo::CreateFromDocumentAndPolicyOverride(
     Document* aDoc, ReferrerPolicyEnum aPolicyOverride) {
   MOZ_ASSERT(aDoc);
