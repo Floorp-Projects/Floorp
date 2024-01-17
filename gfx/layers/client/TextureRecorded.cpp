@@ -65,6 +65,9 @@ bool RecordedTextureData::Lock(OpenMode aMode) {
     mUsedRemoteTexture = false;
   }
 
+  bool wasInvalidContents = mInvalidContents;
+  mInvalidContents = false;
+
   if (!mDT) {
     mTextureId = sNextRecordedTextureId++;
     mDT = mCanvasChild->CreateDrawTarget(mTextureId, mRemoteTextureOwnerId,
@@ -79,9 +82,8 @@ bool RecordedTextureData::Lock(OpenMode aMode) {
   }
 
   mCanvasChild->RecordEvent(
-      RecordedTextureLock(mTextureId, aMode, mInvalidContents));
+      RecordedTextureLock(mTextureId, aMode, wasInvalidContents));
   mLockedMode = aMode;
-  mInvalidContents = false;
   return true;
 }
 
