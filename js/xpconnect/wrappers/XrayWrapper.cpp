@@ -1792,17 +1792,25 @@ bool DOMXrayTraits::call(JSContext* cx, HandleObject wrapper,
                          const JS::CallArgs& args,
                          const js::Wrapper& baseInstance) {
   RootedObject obj(cx, getTargetObject(wrapper));
-  const JSClass* clasp = JS::GetClass(obj);
   // What we have is either a WebIDL interface object, a WebIDL prototype
-  // object, or a WebIDL instance object.  WebIDL prototype objects never have
-  // a clasp->call.  WebIDL interface objects we want to invoke on the xray
-  // compartment.  WebIDL instance objects either don't have a clasp->call or
-  // are using "legacycaller".  At this time for all the legacycaller users it
-  // makes more sense to invoke on the xray compartment, so we just go ahead
-  // and do that for everything.
-  if (JSNative call = clasp->getCall()) {
-    // call it on the Xray compartment
-    return call(cx, args.length(), args.base());
+  // object, or a WebIDL instance object. WebIDL interface objects we want to
+  // invoke on the xray compartment. WebIDL prototype objects never have a
+  // clasp->call. WebIDL instance objects either don't have a clasp->call or are
+  // using "legacycaller". At this time for all the legacycaller users it makes
+  // more sense to invoke on the xray compartment, so we just go ahead and do
+  // that for everything.
+  if (js::IsProxy(obj)) {
+    if (JS::IsCallable(obj)) {
+      // Passing obj here, but it doesn't really matter because legacycaller
+      // uses args.callee() anyway.
+      return GetProxyHandler(obj)->call(cx, obj, args);
+    }
+  } else {
+    const JSClass* clasp = JS::GetClass(obj);
+    if (JSNative call = clasp->getCall()) {
+      // call it on the Xray compartment
+      return call(cx, args.length(), args.base());
+    }
   }
 
   RootedValue v(cx, ObjectValue(*wrapper));
