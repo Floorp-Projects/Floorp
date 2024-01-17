@@ -79,6 +79,7 @@ class nsHTMLScrollFrame : public nsContainerFrame,
   using InScrollingGesture = nsIScrollableFrame::InScrollingGesture;
 
   using CSSIntPoint = mozilla::CSSIntPoint;
+  using CSSPoint = mozilla::CSSPoint;
   using ScrollReflowInput = mozilla::ScrollReflowInput;
   using ScrollAnchorContainer = mozilla::layout::ScrollAnchorContainer;
   friend nsHTMLScrollFrame* NS_NewHTMLScrollFrame(
@@ -700,6 +701,10 @@ class nsHTMLScrollFrame : public nsContainerFrame,
     }
     ScheduleScrollAnimations();
     mMayScheduleScrollAnimations = false;
+  }
+
+  CSSPoint GetScrollPositionCSSPixels() const {
+    return CSSPoint::FromAppUnits(GetScrollPosition());
   }
 
  public:
