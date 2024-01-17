@@ -406,6 +406,7 @@ async function focusUpdateSubmitForm(target, args, submit = true) {
   if (alreadyFocused) {
     // If the element is already focused, assume the FieldsIdentified message
     // was sent before.
+    FormAutofillParent.removeMessageObserver(fieldsIdentifiedObserver);
     fieldsIdentifiedPromiseResolver();
   }
 
