@@ -41,10 +41,10 @@ add_task(async function () {
   const EXPECTED_REQUEST_HEADERS = [
     `${method} ${SIMPLE_URL.split("example.com")[1]} ${httpVersion}`,
     "Host: example.com",
-    "User-Agent: " + navigator.userAgent + "",
     "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
     "Accept-Language: " + navigator.languages.join(",") + ";q=0.5",
     "Accept-Encoding: gzip, deflate",
+    "User-Agent: " + navigator.userAgent + "",
     "Connection: keep-alive",
     "Upgrade-Insecure-Requests: 1",
     "Pragma: no-cache",

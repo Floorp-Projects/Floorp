@@ -258,6 +258,7 @@ HttpBaseChannel::HttpBaseChannel()
   StoreAllRedirectsSameOrigin(true);
   StoreAllRedirectsPassTimingAllowCheck(true);
   StoreUpgradableToSecure(true);
+  StoreIsUserAgentHeaderModified(false);
 
   this->mSelfAddr.inet = {};
   this->mPeerAddr.inet = {};
@@ -1944,6 +1945,11 @@ HttpBaseChannel::SetRequestHeader(const nsACString& aHeader,
     return NS_ERROR_INVALID_ARG;
   }
 
+  // Mark that the User-Agent header has been modified.
+  if (nsHttp::ResolveAtom(aHeader) == nsHttp::User_Agent) {
+    StoreIsUserAgentHeaderModified(true);
+  }
+
   return mRequestHead.SetHeader(aHeader, flatValue, aMerge);
 }
 
@@ -1975,6 +1981,11 @@ HttpBaseChannel::SetEmptyRequestHeader(const nsACString& aHeader) {
   // close to whats allowed in RFC 2616.
   if (!nsHttp::IsValidToken(flatHeader)) {
     return NS_ERROR_INVALID_ARG;
+  }
+
+  // Mark that the User-Agent header has been modified.
+  if (nsHttp::ResolveAtom(aHeader) == nsHttp::User_Agent) {
+    StoreIsUserAgentHeaderModified(true);
   }
 
   return mRequestHead.SetEmptyHeader(aHeader);
@@ -2089,6 +2100,19 @@ NS_IMETHODIMP
 HttpBaseChannel::SetIsOCSP(bool value) {
   ENSURE_CALLED_BEFORE_CONNECT();
   StoreIsOCSP(value);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::GetIsUserAgentHeaderModified(bool* value) {
+  NS_ENSURE_ARG_POINTER(value);
+  *value = LoadIsUserAgentHeaderModified();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::SetIsUserAgentHeaderModified(bool value) {
+  StoreIsUserAgentHeaderModified(value);
   return NS_OK;
 }
 
@@ -4976,6 +5000,13 @@ nsresult HttpBaseChannel::SetupReplacementChannel(nsIURI* newURI,
       rv = httpChannel->SetRequestHeader("User-Agent"_ns, oldUserAgent, false);
       MOZ_ASSERT(NS_SUCCEEDED(rv));
     }
+  }
+
+  // convery the IsUserAgentHeaderModified value.
+  if (httpInternal) {
+    rv = httpInternal->SetIsUserAgentHeaderModified(
+        LoadIsUserAgentHeaderModified());
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
   }
 
   // share the request context - see bug 1236650
