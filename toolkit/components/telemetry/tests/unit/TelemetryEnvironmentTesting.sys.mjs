@@ -605,6 +605,9 @@ export var TelemetryEnvironmentTesting = {
       }
     } else if (gIsAndroid) {
       lazy.Assert.ok(this.checkNullOrString(osData.kernelVersion));
+    } else if (gIsLinux) {
+      lazy.Assert.ok(this.checkNullOrString(osData.distro));
+      lazy.Assert.ok(this.checkNullOrString(osData.distroVersion));
     }
 
     for (let disk of EXPECTED_HDD_FIELDS) {
