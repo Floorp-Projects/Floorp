@@ -1,3 +1,15 @@
+diff --git a/Makefile b/Makefile
+index d2ccff6..95f395b 100644
+--- a/Makefile
++++ b/Makefile
+@@ -178,6 +178,7 @@ LIBCXX_CMAKE_FLAGS = \
+     -DLIBCXXABI_BUILD_EXTERNAL_THREAD_LIBRARY:BOOL=OFF \
+     -DLIBCXXABI_HAS_WIN32_THREAD_API:BOOL=OFF \
+     -DLIBCXXABI_ENABLE_PIC:BOOL=OFF \
++    -DLIBCXXABI_USE_LLVM_UNWINDER:BOOL=OFF \
+     -DWASI_SDK_PREFIX=$(BUILD_PREFIX) \
+     -DUNIX:BOOL=ON \
+     --debug-trycompile
 diff --git a/src/wasi-libc/Makefile b/src/wasi-libc/Makefile
 index f350ecb..9a5c940 100644
 --- a/src/wasi-libc/Makefile
