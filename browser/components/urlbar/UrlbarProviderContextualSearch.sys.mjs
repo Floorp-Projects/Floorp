@@ -257,11 +257,7 @@ class ProviderContextualSearch extends UrlbarProvider {
     if (result.payload.shouldAddEngine) {
       let newEngine = new lazy.OpenSearchEngine({ shouldPersist: false });
       newEngine._setIcon(result.payload.icon, false);
-      await new Promise(resolve => {
-        newEngine.install(result.payload.url, errorCode => {
-          resolve(errorCode);
-        });
-      });
+      await newEngine.install(Services.io.newURI(result.payload.url));
       this.engines.set(result.payload.hostname, newEngine);
       const [url] = UrlbarUtils.getSearchQueryUrl(
         newEngine,
