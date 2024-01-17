@@ -62,6 +62,7 @@ class ErrorSummaryFormatter(BaseFormatter):
         known_intermittent = item.get("known_intermittent", [])
 
         if test_status == "SKIP":
+            self.groups[group]["start"] = None
             if result is None:
                 result = "SKIP"
         elif test_status == test_expected or test_status in known_intermittent:
