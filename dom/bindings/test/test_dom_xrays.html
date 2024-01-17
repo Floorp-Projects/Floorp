@@ -355,6 +355,20 @@ function test() {
            Object.getOwnPropertyDescriptor(CSS, Symbol.toStringTag),
            "Getting @@toStringTag on a namespace object through an Xray should give the same result as getting it directly");
 
+  // legacyCaller should work.
+  ok(win.HTMLAllCollection.isInstance(doc.all),
+     "HTMLDocument.all should be an instance of HTMLAllCollection");
+  let element, threw;
+  try {
+    threw = false;
+    element = doc.all(0);
+  } catch (e) {
+    threw = true;
+  }
+  ok(!threw,
+     "Calling an instance object for an interface marked with legacycaller shouldn't throw");
+  checkXrayProperty(doc.all, 0, [ element ]);
+
   SimpleTest.finish();
 }
 
