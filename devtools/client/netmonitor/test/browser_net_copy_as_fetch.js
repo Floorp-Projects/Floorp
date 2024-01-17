@@ -18,12 +18,12 @@ add_task(async function () {
   await testClipboardContent(`await fetch("https://example.com/browser/devtools/client/netmonitor/test/sjs_simple-test-server.sjs", {
     "credentials": "omit",
     "headers": {
-        "User-Agent": "${navigator.userAgent}",
         "Accept": "*/*",
         "Accept-Language": "en-US",
         "X-Custom-Header-1": "Custom value",
         "X-Custom-Header-2": "8.8.8.8",
         "X-Custom-Header-3": "Mon, 3 Mar 2014 11:11:11 GMT",
+        "User-Agent": "${navigator.userAgent}",
         "Sec-Fetch-Dest": "empty",
         "Sec-Fetch-Mode": "cors",
         "Sec-Fetch-Site": "same-origin",

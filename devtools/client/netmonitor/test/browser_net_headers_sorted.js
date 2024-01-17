@@ -134,10 +134,10 @@ async function verifyRawHeaders(monitor) {
 
   const expectedRequestHeaders = [
     "Host",
-    "User-Agent",
     "Accept",
     "Accept-Language",
     "Accept-Encoding",
+    "User-Agent",
     "Connection",
     "Cookie",
     "Upgrade-Insecure-Requests",

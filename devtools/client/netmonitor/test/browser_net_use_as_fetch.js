@@ -18,12 +18,12 @@ add_task(async function () {
   await testConsoleInput(`await fetch("http://example.com/browser/devtools/client/netmonitor/test/sjs_simple-test-server.sjs", {
     "credentials": "omit",
     "headers": {
-        "User-Agent": "${navigator.userAgent}",
         "Accept": "*/*",
         "Accept-Language": "en-US",
         "X-Custom-Header-1": "Custom value",
         "X-Custom-Header-2": "8.8.8.8",
         "X-Custom-Header-3": "Mon, 3 Mar 2014 11:11:11 GMT",
+        "User-Agent": "${navigator.userAgent}",
         "Pragma": "no-cache",
         "Cache-Control": "no-cache"
     },
