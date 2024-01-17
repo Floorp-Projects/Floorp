@@ -16978,7 +16978,7 @@ void Document::MaybeAllowStorageForOpenerAfterUserInteraction() {
   }
 
   // We don't care when the asynchronous work finishes here.
-  Unused << StorageAccessAPIHelper::AllowAccessFor(
+  Unused << StorageAccessAPIHelper::AllowAccessForOnChildProcess(
       NodePrincipal(), openerBC,
       ContentBlockingNotifier::eOpenerAfterUserInteraction);
 }
@@ -17900,68 +17900,72 @@ already_AddRefed<mozilla::dom::Promise> Document::RequestStorageAccessForOrigin(
   // permission, but this can't be done in this process. We needs the cookie
   // permission of the URL as if it were embedded on this page, so we need to
   // make this check in the ContentParent.
-  StorageAccessAPIHelper::AsyncCheckCookiesPermittedDecidesStorageAccessAPI(
-      GetBrowsingContext(), principal)
-      ->Then(
-          GetCurrentSerialEventTarget(), __func__,
-          [inner, thirdPartyURI, bc, principal, hasUserActivation,
-           aRequireUserActivation, self, promise](Maybe<bool> cookieResult) {
-            // Handle the result of the cookie permission check that took place
-            // in the ContentParent.
-            if (cookieResult.isSome()) {
-              if (cookieResult.value()) {
-                return MozPromise<int, bool, true>::CreateAndResolve(true,
-                                                                     __func__);
-              }
-              return MozPromise<int, bool, true>::CreateAndReject(false,
-                                                                  __func__);
-            }
+  StorageAccessAPIHelper::
+      AsyncCheckCookiesPermittedDecidesStorageAccessAPIOnChildProcess(
+          GetBrowsingContext(), principal)
+          ->Then(
+              GetCurrentSerialEventTarget(), __func__,
+              [inner, thirdPartyURI, bc, principal, hasUserActivation,
+               aRequireUserActivation, self,
+               promise](Maybe<bool> cookieResult) {
+                // Handle the result of the cookie permission check that took
+                // place in the ContentParent.
+                if (cookieResult.isSome()) {
+                  if (cookieResult.value()) {
+                    return MozPromise<int, bool, true>::CreateAndResolve(
+                        true, __func__);
+                  }
+                  return MozPromise<int, bool, true>::CreateAndReject(false,
+                                                                      __func__);
+                }
 
-            // Step 4b: Check for the existing storage access permission
-            nsAutoCString type;
-            bool ok =
-                AntiTrackingUtils::CreateStoragePermissionKey(principal, type);
-            if (!ok) {
-              return MozPromise<int, bool, true>::CreateAndReject(false,
-                                                                  __func__);
-            }
-            if (AntiTrackingUtils::CheckStoragePermission(
-                    self->NodePrincipal(), type,
-                    nsContentUtils::IsInPrivateBrowsing(self), nullptr, 0)) {
-              return MozPromise<int, bool, true>::CreateAndResolve(true,
-                                                                   __func__);
-            }
+                // Step 4b: Check for the existing storage access permission
+                nsAutoCString type;
+                bool ok = AntiTrackingUtils::CreateStoragePermissionKey(
+                    principal, type);
+                if (!ok) {
+                  return MozPromise<int, bool, true>::CreateAndReject(false,
+                                                                      __func__);
+                }
+                if (AntiTrackingUtils::CheckStoragePermission(
+                        self->NodePrincipal(), type,
+                        nsContentUtils::IsInPrivateBrowsing(self), nullptr,
+                        0)) {
+                  return MozPromise<int, bool, true>::CreateAndResolve(
+                      true, __func__);
+                }
 
-            // Step 4c: Try to request storage access, either automatically or
-            // with a user-prompt. This is the part that is async in the
-            // typical requestStorageAccess function.
-            return StorageAccessAPIHelper::RequestStorageAccessAsyncHelper(
-                self, inner, bc, principal, hasUserActivation,
-                aRequireUserActivation, false,
-                ContentBlockingNotifier::ePrivilegeStorageAccessForOriginAPI,
-                true);
-          },
-          // If the IPC rejects, we should reject our promise here which will
-          // cause a rejection of the promise we already returned
-          [promise]() {
-            return MozPromise<int, bool, true>::CreateAndReject(false,
-                                                                __func__);
-          })
-      ->Then(
-          GetCurrentSerialEventTarget(), __func__,
-          // If the previous handlers resolved, we should reinstate user
-          // activation and resolve the promise we returned in Step 5.
-          [self, inner, promise] {
-            inner->SaveStorageAccessPermissionGranted();
-            self->NotifyUserGestureActivation();
-            promise->MaybeResolveWithUndefined();
-          },
-          // If the previous handler rejected, we should reject the promise
-          // returned by this function.
-          [promise] {
-            promise->MaybeRejectWithNotAllowedError(
-                "requestStorageAccess not allowed"_ns);
-          });
+                // Step 4c: Try to request storage access, either automatically
+                // or with a user-prompt. This is the part that is async in the
+                // typical requestStorageAccess function.
+                return StorageAccessAPIHelper::RequestStorageAccessAsyncHelper(
+                    self, inner, bc, principal, hasUserActivation,
+                    aRequireUserActivation, false,
+                    ContentBlockingNotifier::
+                        ePrivilegeStorageAccessForOriginAPI,
+                    true);
+              },
+              // If the IPC rejects, we should reject our promise here which
+              // will cause a rejection of the promise we already returned
+              [promise]() {
+                return MozPromise<int, bool, true>::CreateAndReject(false,
+                                                                    __func__);
+              })
+          ->Then(
+              GetCurrentSerialEventTarget(), __func__,
+              // If the previous handlers resolved, we should reinstate user
+              // activation and resolve the promise we returned in Step 5.
+              [self, inner, promise] {
+                inner->SaveStorageAccessPermissionGranted();
+                self->NotifyUserGestureActivation();
+                promise->MaybeResolveWithUndefined();
+              },
+              // If the previous handler rejected, we should reject the promise
+              // returned by this function.
+              [promise] {
+                promise->MaybeRejectWithNotAllowedError(
+                    "requestStorageAccess not allowed"_ns);
+              });
 
   // Step 5: While the async stuff is happening, we should return the promise so
   // our caller can continue executing.
@@ -18222,8 +18226,8 @@ already_AddRefed<Promise> Document::CompleteStorageAccessRequestFromSite(
               // If that resolved with true, check that we don't already have a
               // permission that gives cookie access.
               return StorageAccessAPIHelper::
-                  AsyncCheckCookiesPermittedDecidesStorageAccessAPI(bc,
-                                                                    principal);
+                  AsyncCheckCookiesPermittedDecidesStorageAccessAPIOnChildProcess(
+                      bc, principal);
             }
             return MozPromise<Maybe<bool>, nsresult, true>::CreateAndReject(
                 NS_ERROR_FAILURE, __func__);
