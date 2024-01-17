@@ -1,0 +1,5 @@
+{
+  "addons": {
+    "non-existing": "http://localhost/non-existing.xpi"
+  }
+}

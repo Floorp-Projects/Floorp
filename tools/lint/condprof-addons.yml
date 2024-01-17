@@ -1,0 +1,10 @@
+---
+condprof-addons:
+    description: Lint condprof customizations json files sideloading addons
+    include:
+        - 'testing/condprofile/condprof/customization'
+    exclude: []
+    extensions: ['json']
+    support-files: ['taskcluster/ci/fetch/browsertime.yml']
+    type: structured_log
+    payload: condprof-addons:lint
