@@ -149,8 +149,8 @@ class NSSCertDBTrustDomain : public mozilla::pkix::TrustDomain {
       unsigned int minRSABits, ValidityCheckingMode validityCheckingMode,
       NetscapeStepUpPolicy netscapeStepUpPolicy, CRLiteMode crliteMode,
       const OriginAttributes& originAttributes,
-      const Vector<mozilla::pkix::Input>& thirdPartyRootInputs,
-      const Vector<mozilla::pkix::Input>& thirdPartyIntermediateInputs,
+      const nsTArray<mozilla::pkix::Input>& thirdPartyRootInputs,
+      const nsTArray<mozilla::pkix::Input>& thirdPartyIntermediateInputs,
       const Maybe<nsTArray<nsTArray<uint8_t>>>& extraCertificates,
       /*out*/ nsTArray<nsTArray<uint8_t>>& builtChain,
       /*optional*/ PinningTelemetryInfo* pinningTelemetryInfo = nullptr,
@@ -303,8 +303,8 @@ class NSSCertDBTrustDomain : public mozilla::pkix::TrustDomain {
   CRLiteMode mCRLiteMode;
   bool mSawDistrustedCAByPolicyError;
   const OriginAttributes& mOriginAttributes;
-  const Vector<mozilla::pkix::Input>& mThirdPartyRootInputs;  // non-owning
-  const Vector<mozilla::pkix::Input>&
+  const nsTArray<mozilla::pkix::Input>& mThirdPartyRootInputs;  // non-owning
+  const nsTArray<mozilla::pkix::Input>&
       mThirdPartyIntermediateInputs;                             // non-owning
   const Maybe<nsTArray<nsTArray<uint8_t>>>& mExtraCertificates;  // non-owning
   nsTArray<nsTArray<uint8_t>>& mBuiltChain;                      // non-owning
