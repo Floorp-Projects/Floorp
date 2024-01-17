@@ -85,11 +85,6 @@
          sharing an URL. -->
     <string name="share_dialog_title">Share via</string>
 
-    <!-- While a browsing session is active (in the foreground or background) we will show a notification
-         so that the user doesn't forget about the website still being open. This text is shown in
-         the notification. Clicking the notification will have the same effect as clicking the "erase"
-         button in the application. -->
-
     <string name="notification_erase_title_android_14">Erase browsing history?</string>
     <string name="notification_erase_text_android_14">Tap or clear this notification to securely erase your browsing history.</string>
 
