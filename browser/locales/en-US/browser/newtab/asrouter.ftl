@@ -191,8 +191,9 @@ firefoxview-spotlight-promo-secondarybutton = Skip
 
 ## Cookie Banner Handling CFR
 
-cookie-banner-blocker-cfr-header = { -brand-short-name } just blocked cookies for you
-cookie-banner-blocker-cfr-body = We automatically refuse many cookie pop-ups to make it tough for sites to track you.
+cookie-banner-blocker-onboarding-header = { -brand-short-name } just refused a cookie banner for you
+cookie-banner-blocker-onboarding-body = Less distractions, less cookies tracking you on this site.
+cookie-banner-blocker-onboarding-learn-more = Learn more
 
 ## These strings are used in the Fox doodle Pin/set default spotlights
 

@@ -366,6 +366,10 @@
         // add 4px of margin to the action buttons.
         margin-top: 4px;
 
+        &[alignment='start'] {
+          justify-content: start;
+        }
+
         .secondary-cta {
           font-size: inherit;
         }
