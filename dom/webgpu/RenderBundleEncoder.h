@@ -6,7 +6,6 @@
 #ifndef GPU_RenderBundleEncoder_H_
 #define GPU_RenderBundleEncoder_H_
 
-#include "mozilla/Scoped.h"
 #include "mozilla/dom/TypedArray.h"
 #include "ObjectModel.h"
 
@@ -18,10 +17,8 @@ struct WGPURenderBundleEncoder;
 class Device;
 class RenderBundle;
 
-struct ScopedFfiBundleTraits {
-  using type = ffi::WGPURenderBundleEncoder*;
-  static type empty();
-  static void release(type raw);
+struct ffiWGPURenderBundleEncoderDeleter {
+  void operator()(ffi::WGPURenderBundleEncoder*);
 };
 
 class RenderBundleEncoder final : public ObjectBase, public ChildOf<Device> {
@@ -36,7 +33,7 @@ class RenderBundleEncoder final : public ObjectBase, public ChildOf<Device> {
   ~RenderBundleEncoder();
   void Cleanup();
 
-  Scoped<ScopedFfiBundleTraits> mEncoder;
+  std::unique_ptr<ffi::WGPURenderBundleEncoder, ffiWGPURenderBundleEncoderDeleter> mEncoder;
   // keep all the used objects alive while the encoder is finished
   nsTArray<RefPtr<const BindGroup>> mUsedBindGroups;
   nsTArray<RefPtr<const Buffer>> mUsedBuffers;
