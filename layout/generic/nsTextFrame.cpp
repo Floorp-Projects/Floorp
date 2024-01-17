@@ -4070,7 +4070,7 @@ void nsTextFrame::Destroy(DestroyContext& aContext) {
   // type might be changing.  Not clear whether it's worth it.
   ClearTextRuns();
   if (mNextContinuation) {
-    SetNextInFlow(nullptr);
+    mNextContinuation->SetPrevInFlow(nullptr);
   }
   // Let the base class destroy the frame
   nsIFrame::Destroy(aContext);
@@ -4109,7 +4109,6 @@ class nsContinuingTextFrame final : public nsTextFrame {
  public:
   NS_DECL_FRAMEARENA_HELPERS(nsContinuingTextFrame)
 
-  friend class nsTextFrame;
   friend nsIFrame* NS_NewContinuingTextFrame(mozilla::PresShell* aPresShell,
                                              ComputedStyle* aStyle);
 
@@ -4120,9 +4119,31 @@ class nsContinuingTextFrame final : public nsTextFrame {
 
   nsTextFrame* GetPrevContinuation() const final { return mPrevContinuation; }
 
+  void SetPrevContinuation(nsIFrame* aPrevContinuation) final {
+    NS_ASSERTION(!aPrevContinuation || Type() == aPrevContinuation->Type(),
+                 "setting a prev continuation with incorrect type!");
+    NS_ASSERTION(
+        !nsSplittableFrame::IsInPrevContinuationChain(aPrevContinuation, this),
+        "creating a loop in continuation chain!");
+    mPrevContinuation = static_cast<nsTextFrame*>(aPrevContinuation);
+    RemoveStateBits(NS_FRAME_IS_FLUID_CONTINUATION);
+    UpdateCachedContinuations();
+  }
+
   nsTextFrame* GetPrevInFlow() const final {
     return HasAnyStateBits(NS_FRAME_IS_FLUID_CONTINUATION) ? mPrevContinuation
                                                            : nullptr;
+  }
+
+  void SetPrevInFlow(nsIFrame* aPrevInFlow) final {
+    NS_ASSERTION(!aPrevInFlow || Type() == aPrevInFlow->Type(),
+                 "setting a prev in flow with incorrect type!");
+    NS_ASSERTION(
+        !nsSplittableFrame::IsInPrevContinuationChain(aPrevInFlow, this),
+        "creating a loop in continuation chain!");
+    mPrevContinuation = static_cast<nsTextFrame*>(aPrevInFlow);
+    AddStateBits(NS_FRAME_IS_FLUID_CONTINUATION);
+    UpdateCachedContinuations();
   }
 
   // Call this helper to update cache after mPrevContinuation is changed.
@@ -4194,6 +4215,7 @@ void nsContinuingTextFrame::Init(nsIContent* aContent,
   // Hook the frame into the flow
   nsTextFrame* prev = static_cast<nsTextFrame*>(aPrevInFlow);
   nsTextFrame* nextContinuation = prev->GetNextContinuation();
+  SetPrevInFlow(aPrevInFlow);
   aPrevInFlow->SetNextInFlow(this);
 
   // NOTE: bypassing nsTextFrame::Init!!!
@@ -4225,6 +4247,7 @@ void nsContinuingTextFrame::Init(nsIContent* aContent,
 
     if (nextContinuation) {
       SetNextContinuation(nextContinuation);
+      nextContinuation->SetPrevContinuation(this);
       // Adjust next-continuations' content offset as needed.
       while (nextContinuation &&
              nextContinuation->GetContentOffset() < mContentOffset) {
@@ -4359,73 +4382,6 @@ Maybe<nsIFrame::Cursor> nsTextFrame::GetCursor(const nsPoint& aPoint) {
     }
   }
   return Some(Cursor{kind, AllowCustomCursorImage::Yes});
-}
-
-void nsTextFrame::SetNextContinuation(nsIFrame* aFrame) {
-  MOZ_ASSERT(!aFrame || Type() == aFrame->Type(),
-             "Setting a next-continuation with an incorrect type!");
-  MOZ_ASSERT(!nsSplittableFrame::IsInNextContinuationChain(aFrame, this),
-             "We shouldn't be in aFrame's next-continuation chain!");
-  MOZ_ASSERT(!nsSplittableFrame::IsInPrevContinuationChain(this, aFrame),
-             "aFrame shouldn't be in our prev-continuation chain!");
-
-  if (mNextContinuation && mNextContinuation != aFrame) {
-    // We have an existing non-null next-continuation. Break the link.
-    MOZ_ASSERT(mNextContinuation->GetPrevContinuation() == this,
-               "The existing link is wrong!");
-    auto* next = static_cast<nsContinuingTextFrame*>(mNextContinuation);
-    next->mPrevContinuation = nullptr;
-    next->UpdateCachedContinuations();
-  }
-
-  auto* next = static_cast<nsContinuingTextFrame*>(aFrame);
-  mNextContinuation = next;
-  if (next) {
-    next->RemoveStateBits(NS_FRAME_IS_FLUID_CONTINUATION);
-    next->mPrevContinuation = this;
-    next->UpdateCachedContinuations();
-  }
-
-  // Setting a non-fluid continuation might affect our flow length (they're
-  // quite rare so we assume it always does) so we delete our cached value:
-  if (GetContent()->HasFlag(NS_HAS_FLOWLENGTH_PROPERTY)) {
-    GetContent()->RemoveProperty(nsGkAtoms::flowlength);
-    GetContent()->UnsetFlags(NS_HAS_FLOWLENGTH_PROPERTY);
-  }
-}
-
-void nsTextFrame::SetNextInFlow(nsIFrame* aFrame) {
-  MOZ_ASSERT(!aFrame || Type() == aFrame->Type(),
-             "Setting a next-in-flow with an incorrect type!");
-  MOZ_ASSERT(!nsSplittableFrame::IsInNextContinuationChain(aFrame, this),
-             "We shouldn't be in aFrame's next-continuation chain!");
-  MOZ_ASSERT(!nsSplittableFrame::IsInPrevContinuationChain(this, aFrame),
-             "aFrame shouldn't be in our prev-continuation chain!");
-
-  if (mNextContinuation && mNextContinuation != aFrame) {
-    // We have an existing non-null next-continuation. Break the link.
-    MOZ_ASSERT(mNextContinuation->GetPrevContinuation() == this,
-               "The existing link is wrong!");
-    auto* next = static_cast<nsContinuingTextFrame*>(mNextContinuation);
-    next->mPrevContinuation = nullptr;
-    next->UpdateCachedContinuations();
-  }
-
-  auto* next = static_cast<nsContinuingTextFrame*>(aFrame);
-  mNextContinuation = next;
-  if (next) {
-    if (!next->HasAnyStateBits(NS_FRAME_IS_FLUID_CONTINUATION)) {
-      // Changing from non-fluid to fluid continuation might affect our flow
-      // length, so we delete our cached value:
-      if (GetContent()->HasFlag(NS_HAS_FLOWLENGTH_PROPERTY)) {
-        GetContent()->RemoveProperty(nsGkAtoms::flowlength);
-        GetContent()->UnsetFlags(NS_HAS_FLOWLENGTH_PROPERTY);
-      }
-    }
-    next->AddStateBits(NS_FRAME_IS_FLUID_CONTINUATION);
-    next->mPrevContinuation = this;
-    next->UpdateCachedContinuations();
-  }
 }
 
 nsTextFrame* nsTextFrame::LastInFlow() const {
@@ -9085,13 +9041,16 @@ static void RemoveEmptyInFlows(nsTextFrame* aFrame,
     }
   }
 
-  // Note: it is important here that we disconnect lastRemoved and its
-  // next-continuation BEFORE connecting prevContinuation and aFirstToNotRemove,
-  // because SetNextInFlow() will follow the Next pointers, wiping out the
-  // cached mFirstContinuation field from each following frame in the list. We
-  // need this to stop when it reaches lastRemoved!
-  lastRemoved->SetNextInFlow(nullptr);
   prevContinuation->SetNextInFlow(aFirstToNotRemove);
+  aFirstToNotRemove->SetPrevInFlow(prevContinuation);
+
+  // **Note: it is important here that we clear the Next link from lastRemoved
+  // BEFORE clearing the Prev link from aFrame, because SetPrevInFlow() will
+  // follow the Next pointers, wiping out the cached mFirstContinuation field
+  // from each following frame in the list. We need this to stop when it
+  // reaches lastRemoved!
+  lastRemoved->SetNextInFlow(nullptr);
+  aFrame->SetPrevInFlow(nullptr);
 
   nsContainerFrame* parent = aFrame->GetParent();
   nsIFrame::DestroyContext context(aFrame->PresShell());
