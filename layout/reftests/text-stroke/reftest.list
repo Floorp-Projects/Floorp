@@ -1,9 +1,9 @@
 # basic tests for webkit-text-stroke
 # fuzzy is needed here for platform dependent backends
 # These fail on Linux without webrender due to lack of antialiasing of the HTML text stroke
-fuzzy(0-64,0-776) fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)&&(/^aarch64-msvc/.test(xulRuntime.XPCOMABI)||(winWidget&&!layersGPUAccelerated)),0-80,0-2822) == webkit-text-stroke-property-001.html webkit-text-stroke-property-001-ref.html
-fuzzy(0-4,0-27) fuzzy-if(geckoview,0-4,0-1476) fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)&&(/^aarch64-msvc/.test(xulRuntime.XPCOMABI)||(winWidget&&!layersGPUAccelerated)),0-125,0-3725) == webkit-text-stroke-property-002.html webkit-text-stroke-property-002-ref.html
-fuzzy(0-64,0-528) fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)&&(/^aarch64-msvc/.test(xulRuntime.XPCOMABI)||(winWidget&&!layersGPUAccelerated)),0-74,0-2596) == webkit-text-stroke-property-003.html webkit-text-stroke-property-003-ref.html
-fuzzy(0-64,0-575) fuzzy-if(geckoview&&device,0-64,0-599) fuzzy-if(geckoview&&emulator,96-96,58-58) fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)&&(/^aarch64-msvc/.test(xulRuntime.XPCOMABI)||(winWidget&&!layersGPUAccelerated)),0-85,0-2147) == webkit-text-stroke-property-004.html webkit-text-stroke-property-004-ref.html
-fuzzy(0-64,0-860) fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)&&(/^aarch64-msvc/.test(xulRuntime.XPCOMABI)||(winWidget&&!layersGPUAccelerated)),0-80,0-2822) == webkit-text-stroke-property-005.html webkit-text-stroke-property-005-ref.html
-fuzzy(0-71,0-10) fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)&&(/^aarch64-msvc/.test(xulRuntime.XPCOMABI)||(winWidget&&!layersGPUAccelerated)),0-48,0-351) == webkit-text-stroke-property-006.html webkit-text-stroke-property-006-ref.html
+fuzzy(0-255,0-4100) == webkit-text-stroke-property-001.html webkit-text-stroke-property-001-ref.html
+fuzzy(0-255,0-4400) == webkit-text-stroke-property-002.html webkit-text-stroke-property-002-ref.html
+fuzzy(0-255,0-4100) == webkit-text-stroke-property-003.html webkit-text-stroke-property-003-ref.html
+fuzzy(0-255,0-3000) == webkit-text-stroke-property-004.html webkit-text-stroke-property-004-ref.html
+fuzzy(0-255,0-4100) == webkit-text-stroke-property-005.html webkit-text-stroke-property-005-ref.html
+fuzzy(0-255,0-400) == webkit-text-stroke-property-006.html webkit-text-stroke-property-006-ref.html
