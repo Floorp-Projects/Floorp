@@ -19,19 +19,6 @@ const COOKIE_NAME = "userContextId";
 // Support functions.
 //
 
-async function openTabInUserContext(uri, userContextId) {
-  // Open the tab in the correct userContextId.
-  let tab = BrowserTestUtils.addTab(gBrowser, uri, { userContextId });
-
-  // Select tab and make sure its browser is focused.
-  gBrowser.selectedTab = tab;
-  tab.ownerGlobal.focus();
-
-  let browser = gBrowser.getBrowserForTab(tab);
-  await BrowserTestUtils.browserLoaded(browser);
-  return { tab, browser };
-}
-
 function getCookiesForOA(host, userContextId) {
   return Services.cookies.getCookiesFromHost(host, { userContextId });
 }

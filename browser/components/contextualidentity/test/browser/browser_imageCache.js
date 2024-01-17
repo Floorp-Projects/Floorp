@@ -40,28 +40,13 @@ add_setup(async function () {
   });
 });
 
-// opens `uri' in a new tab with the provided userContextId and focuses it.
-// returns the newly opened tab
-async function openTabInUserContext(uri, userContextId) {
-  // open the tab in the correct userContextId
-  let tab = BrowserTestUtils.addTab(gBrowser, uri, { userContextId });
-
-  // select tab and make sure its browser is focused
-  gBrowser.selectedTab = tab;
-  tab.ownerGlobal.focus();
-
-  let browser = gBrowser.getBrowserForTab(tab);
-  await BrowserTestUtils.browserLoaded(browser);
-  return tab;
-}
-
 add_task(async function test() {
   for (
     let userContextId = 0;
     userContextId < NUM_USER_CONTEXTS;
     userContextId++
   ) {
-    let tab = await openTabInUserContext(FILE_URI, userContextId);
+    let { tab } = await openTabInUserContext(FILE_URI, userContextId);
     gBrowser.removeTab(tab);
   }
   is(

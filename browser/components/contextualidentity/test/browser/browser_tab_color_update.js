@@ -9,7 +9,7 @@ async function openTabInUserContext(uri, userContextId) {
 
   let browser = gBrowser.getBrowserForTab(tab);
   await BrowserTestUtils.browserLoaded(browser, false, uri);
-  return { tab };
+  return tab;
 }
 
 /**
@@ -17,7 +17,7 @@ async function openTabInUserContext(uri, userContextId) {
  */
 add_task(async function test_tab_color_updates() {
   const kId = 2;
-  let { tab } = await openTabInUserContext("https://example.com/", kId);
+  let tab = await openTabInUserContext("https://example.com/", kId);
   let contextIdInfo = ContextualIdentityService.getPublicIdentityFromId(kId);
   ok(
     tab.classList.contains("identity-color-" + contextIdInfo.color),
