@@ -146,7 +146,7 @@ class DownloadItem {
 
 this.downloads = class extends ExtensionAPIPersistent {
   PERSISTENT_EVENTS = {
-    onChanged({ fire, context }, params) {
+    onChanged({ fire }, params) {
       const listener = (eventName, event) => {
         const { delta, downloadItem } = event;
         const { extension } = this;
@@ -160,9 +160,8 @@ this.downloads = class extends ExtensionAPIPersistent {
         unregister() {
           DownloadTracker.off("download-changed", listener);
         },
-        convert(_fire, _context) {
+        convert(_fire) {
           fire = _fire;
-          context = _context;
         },
       };
     },

@@ -108,7 +108,7 @@ this.browserAction = class extends ExtensionAPIPersistent {
   }
 
   PERSISTENT_EVENTS = {
-    onClicked({ context, fire }) {
+    onClicked({ fire }) {
       const { extension } = this;
       const { tabManager } = extension;
       async function listener(_event, tab) {
@@ -124,9 +124,8 @@ this.browserAction = class extends ExtensionAPIPersistent {
         unregister: () => {
           this.off("click", listener);
         },
-        convert(newFire, extContext) {
+        convert(newFire) {
           fire = newFire;
-          context = extContext;
         },
       };
     },
