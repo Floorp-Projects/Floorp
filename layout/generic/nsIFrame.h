@@ -2250,9 +2250,12 @@ class nsIFrame : public nsQueryFrame {
     mozilla::CaretAssociationHint associate{0};  // Before
   };
   enum {
-    IGNORE_SELECTION_STYLE = 0x01,
+    IGNORE_SELECTION_STYLE = 1 << 0,
     // Treat visibility:hidden frames as non-selectable
-    SKIP_HIDDEN = 0x02
+    SKIP_HIDDEN = 1 << 1,
+    // Do not return content in native anonymous subtree (if the frame is in a
+    // native anonymous subtree, the method may return content in same subtree).
+    IGNORE_NATIVE_ANONYMOUS_SUBTREE = 1 << 2,
   };
   /**
    * This function calculates the content offsets for selection relative to
