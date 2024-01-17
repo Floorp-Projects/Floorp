@@ -300,10 +300,9 @@ AutofillProfileAutoCompleteSearch.prototype = {
 
     let actor = getActorFromWindow(input.ownerGlobal);
     return actor.sendQuery("FormAutofill:GetRecords", {
-      scenarioName:
-        "signUpForm" in lazy.FormScenarios.detect({ input })
-          ? "SignUpFormScenario"
-          : "",
+      scenarioName: lazy.FormScenarios.detect({ input }).signUpForm
+        ? "SignUpFormScenario"
+        : "",
       ...data,
     });
   },

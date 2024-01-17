@@ -549,7 +549,7 @@ export class FormAutoComplete {
         client,
         aInputName,
         searchString,
-        "signUpForm" in lazy.FormScenarios.detect({ input: aField })
+        lazy.FormScenarios.detect({ input: aField }).signUpForm
           ? "SignUpFormScenario"
           : "",
         ({ formHistoryEntries, externalEntries }) => {
