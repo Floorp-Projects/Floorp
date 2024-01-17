@@ -12,6 +12,7 @@
 #include "GeckoProfiler.h"
 #include "mozilla/BackgroundHangMonitor.h"
 #include "mozilla/EventQueue.h"
+#include "mozilla/Hal.h"
 #include "mozilla/InputTaskManager.h"
 #include "mozilla/VsyncTaskManager.h"
 #include "mozilla/IOInterposer.h"
@@ -39,7 +40,16 @@ int32_t TaskController::GetPoolThreadCount() {
     return strtol(PR_GetEnv("MOZ_TASKCONTROLLER_THREADCOUNT"), nullptr, 0);
   }
 
-  int32_t numCores = std::max<int32_t>(1, PR_GetNumberOfProcessors());
+  int32_t numCores = 0;
+#if defined(XP_MACOSX) && defined(__aarch64__)
+  if (const auto& cpuInfo = hal::GetHeterogeneousCpuInfo()) {
+    // -1 because of the main thread.
+    numCores = cpuInfo->mBigCpus.Count() + cpuInfo->mMediumCpus.Count() - 1;
+  } else
+#endif
+  {
+    numCores = std::max<int32_t>(1, PR_GetNumberOfProcessors());
+  }
 
   return std::clamp<int32_t>(numCores, kMinimumPoolThreadCount,
                              kMaximumPoolThreadCount);
