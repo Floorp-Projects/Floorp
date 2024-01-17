@@ -1038,7 +1038,8 @@ export class SearchEngine {
 
     return (
       existingSubmission.uri.equals(newSubmission.uri) &&
-      existingSubmission.postData == newSubmission.postData
+      existingSubmission.postData?.data.data ==
+        newSubmission.postData?.data.data
     );
   }
 

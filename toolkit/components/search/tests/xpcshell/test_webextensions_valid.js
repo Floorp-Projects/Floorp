@@ -10,6 +10,7 @@ const { TelemetryTestUtils } = ChromeUtils.importESModule(
 const { promiseShutdownManager, promiseStartupManager } = AddonTestUtils;
 
 let extension;
+let extensionPostData;
 let oldRemoveEngineFunc;
 
 add_setup(async function () {
@@ -25,7 +26,15 @@ add_setup(async function () {
     {},
     { skipUnload: true }
   );
+  extensionPostData = await SearchTestUtils.installSearchExtension(
+    {
+      name: "PostData",
+      search_url_post_params: "?q={searchTerms}&post=1",
+    },
+    { skipUnload: true }
+  );
   await extension.awaitStartup();
+  await extensionPostData.awaitStartup();
 
   // For these tests, stub-out the removeEngine function, so that when we
   // remove it from the add-on manager, the engine is left in the search
@@ -46,6 +55,10 @@ add_task(async function test_valid_extensions_do_nothing() {
   Assert.ok(
     Services.search.getEngineByName("Example"),
     "Should have installed the engine"
+  );
+  Assert.ok(
+    !!Services.search.getEngineByName("PostData"),
+    "Should have installed the PostData engine"
   );
 
   await Services.search.runBackgroundChecks();
@@ -91,6 +104,27 @@ add_task(async function test_different_url() {
     TelemetryTestUtils.getProcessScalars("parent", true, true),
     "browser.searchinit.engine_invalid_webextension",
     extension.id,
+    6
+  );
+});
+
+add_task(async function test_different_url_post_data() {
+  Services.telemetry.clearScalars();
+
+  let engine = Services.search.getEngineByName("PostData");
+
+  engine.wrappedJSObject._urls = [];
+  engine.wrappedJSObject._setUrls({
+    search_url: "https://example.com/123",
+    search_url_post_params: "?q={searchTerms}",
+  });
+
+  await Services.search.runBackgroundChecks();
+
+  TelemetryTestUtils.assertKeyedScalar(
+    TelemetryTestUtils.getProcessScalars("parent", true, true),
+    "browser.searchinit.engine_invalid_webextension",
+    extensionPostData.id,
     6
   );
 });
