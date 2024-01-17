@@ -1,3 +1,5 @@
+// |jit-test| skip-if: isLcovEnabled()
+
 load(libdir + "asserts.js");
 
 const gWithSource = newGlobal({discardSource: false});
