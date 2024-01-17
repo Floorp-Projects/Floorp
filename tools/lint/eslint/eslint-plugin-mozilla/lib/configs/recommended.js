@@ -293,9 +293,6 @@ module.exports = {
     // Disallow use of event global.
     "no-restricted-globals": ["error", "event"],
 
-    // Disallows unnecessary `return await ...`.
-    "no-return-await": "error",
-
     // No unnecessary comparisons
     "no-self-compare": "error",
 
