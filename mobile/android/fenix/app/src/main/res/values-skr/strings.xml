@@ -192,6 +192,8 @@
     <string name="resync_button_content_description">ولدا ہم وقت کرو</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">ورقے وچ لبھو</string>
+    <!-- Browser menu button that opens the translations dialog, which has options to translate the current browser page. -->
+    <string name="browser_menu_translations">ورقے دا ترجمہ کرو</string>
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">مجموعے وچ محفوظ کرو</string>
     <!-- Browser menu button that open a share menu to share the current site -->
@@ -1214,6 +1216,9 @@
     <!-- Notifications -->
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
     <string name="notification_pbm_delete_text_2">نجی ٹیباں بند کرو</string>
+
+    <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active for Android 14+ -->
+    <string name="notification_erase_title_android_14">نجی ٹیباں بند کروں؟</string>
 
     <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_marketing_channel_name">مارکیٹنگ</string>
