@@ -20,6 +20,7 @@ import {
 
 import { inferClassName } from "./utils/inferClassName";
 import getFunctionName from "./utils/getFunctionName";
+import { getFramework } from "./frameworks";
 
 const symbolDeclarations = new Map();
 
@@ -104,6 +105,7 @@ function extractSymbols(sourceId) {
     literals: [],
     hasJsx: false,
     hasTypes: false,
+    framework: undefined,
     importsReact: false,
   };
 
@@ -126,6 +128,7 @@ function extractSymbols(sourceId) {
 
   // comments are extracted separately from the AST
   symbols.comments = getComments(ast);
+  symbols.framework = getFramework(symbols);
 
   return symbols;
 }
@@ -398,7 +401,9 @@ export function getSymbols(sourceId) {
     // functions: symbols.functions,
 
     // The three following attributes are only used by `findBestMatchExpression` within the worker thread
-    // `memberExpressions`, `literals`, `identifiers`
+    // `memberExpressions`, `literals`
+    // This one is also used within the worker for framework computation
+    // `identifiers`
     //
     // These three memberExpressions, literals and identifiers attributes are arrays containing objects whose attributes are:
     // * name: string
@@ -409,13 +414,20 @@ export function getSymbols(sourceId) {
     // `findBestMatchExpression` uses `location`, `computed` and `expression` (not name).
     //    `expression` isn't used from the worker thread implementation of `findBestMatchExpression`.
     //    The main thread only uses `expression` and `location`.
+    // framework computation uses only:
+    // * `name` for identifiers
+    // * `expression` for memberExpression
 
-    // This is used by the `getClassSymbols` function in the Outline panel
+    // This is used within the worker for framework computation,
+    // and in the `getClassSymbols` function
     // `classes`
 
     // The two following are only used by the main thread for computing CodeMirror "mode"
     hasJsx: symbols.hasJsx,
     hasTypes: symbols.hasTypes,
+
+    // This is used in the main thread only to compute the source icon
+    framework: symbols.framework,
 
     // This is only used by `findOutOfScopeLocations`:
     // `comments`

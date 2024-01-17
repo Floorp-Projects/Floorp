@@ -365,7 +365,7 @@ add_task(async function testSourceTreeOnTheIntegrationTestPage() {
   // which happens when we select the source
   assertSourceIcon(dbg, "react-component-module.js", "javascript");
   await selectSource(dbg, "react-component-module.js");
-  assertSourceIcon(dbg, "react-component-module.js", "javascript");
+  assertSourceIcon(dbg, "react-component-module.js", "react");
 
   info("Verify blackbox source icon");
   await selectSource(dbg, "script.js");
