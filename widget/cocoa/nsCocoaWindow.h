@@ -115,15 +115,7 @@ typedef struct _nsCocoaWindowList {
 @end
 
 @interface NSWindow (Undocumented)
-
-// If a window has been explicitly removed from the "window cache" (to
-// deactivate it), it's sometimes necessary to "reset" it to reactivate it
-// (and put it back in the "window cache").  One way to do this, which Apple
-// often uses, is to set the "window number" to '-1' and then back to its
-// original value.
-- (void)_setWindowNumber:(NSInteger)aNumber;
-
-- (BOOL)bottomCornerRounded;
+- (NSDictionary*)shadowParameters;
 
 // Present in the same form on OS X since at least OS X 10.5.
 - (NSRect)contentRectForFrameRect:(NSRect)windowFrame
