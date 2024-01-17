@@ -43,7 +43,7 @@ class RecentlyClosedTabsInView extends ViewPage {
     this.fullyUpdated = false;
     this.maxTabsLength = this.recentBrowsing
       ? MAX_TABS_FOR_RECENT_BROWSING
-      : 25;
+      : -1;
     this.recentlyClosedTabs = [];
     this.searchQuery = "";
     this.searchResults = null;
@@ -375,7 +375,9 @@ class RecentlyClosedTabsInView extends ViewPage {
                 <fxview-tab-list
                   class="with-dismiss-button"
                   slot="main"
-                  .maxTabsLength=${this.showAll ? -1 : this.maxTabsLength}
+                  .maxTabsLength=${!this.recentBrowsing || this.showAll
+                    ? -1
+                    : MAX_TABS_FOR_RECENT_BROWSING}
                   .searchQuery=${ifDefined(
                     this.searchResults && this.searchQuery
                   )}
@@ -426,7 +428,7 @@ class RecentlyClosedTabsInView extends ViewPage {
     return (
       this.recentBrowsing &&
       this.searchQuery &&
-      this.searchResults.length > this.maxTabsLength &&
+      this.searchResults.length > MAX_TABS_FOR_RECENT_BROWSING &&
       !this.showAll
     );
   }
