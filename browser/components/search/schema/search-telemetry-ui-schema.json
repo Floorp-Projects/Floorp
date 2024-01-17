@@ -16,6 +16,8 @@
     "components",
     "nonAdsLinkRegexps",
     "shoppingTab",
-    "domainExtraction"
+    "domainExtraction",
+    "isSPA",
+    "defaultPageQueryParam"
   ]
 }
