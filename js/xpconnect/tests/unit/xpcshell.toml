@@ -200,6 +200,8 @@ support-files = [
 
 ["test_envChain_subscript_in_JSM.js"]
 
+["test_error_to_exception.js"]
+
 ["test_eventSource.js"]
 
 ["test_exportFunction.js"]
