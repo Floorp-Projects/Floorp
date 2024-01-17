@@ -861,6 +861,10 @@ export class ShoppingProduct extends EventEmitter {
         requestBody.event_name = "trusted_deals_link_clicked";
         requestBody.aid = aid;
         break;
+      case "placement":
+        requestBody.event_name = "trusted_deals_placement";
+        requestBody.aidvs = [aid];
+        break;
       default:
         throw new Error(`"${eventName}" is not a valid event name`);
     }
