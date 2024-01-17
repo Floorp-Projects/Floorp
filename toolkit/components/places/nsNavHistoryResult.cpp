@@ -4202,13 +4202,12 @@ void nsNavHistoryResult::HandlePlacesEvent(const PlacesEventSequence& aEvents) {
           continue;
         }
         nsCOMPtr<nsIURI> uri, faviconUri;
-        MOZ_ALWAYS_SUCCEEDS(NS_NewURI(getter_AddRefs(uri), faviconEvent->mUrl));
-        if (!uri) {
+        if (NS_WARN_IF(NS_FAILED(
+                NS_NewURI(getter_AddRefs(uri), faviconEvent->mUrl)))) {
           continue;
         }
-        MOZ_ALWAYS_SUCCEEDS(
-            NS_NewURI(getter_AddRefs(faviconUri), faviconEvent->mFaviconUrl));
-        if (!faviconUri) {
+        if (NS_WARN_IF(NS_FAILED(NS_NewURI(getter_AddRefs(faviconUri),
+                                           faviconEvent->mFaviconUrl)))) {
           continue;
         }
         OnIconChanged(uri, faviconUri, faviconEvent->mPageGuid);
@@ -4221,8 +4220,8 @@ void nsNavHistoryResult::HandlePlacesEvent(const PlacesEventSequence& aEvents) {
         }
 
         nsCOMPtr<nsIURI> uri;
-        MOZ_ALWAYS_SUCCEEDS(NS_NewURI(getter_AddRefs(uri), visit->mUrl));
-        if (!uri) {
+        if (NS_WARN_IF(
+                NS_FAILED(NS_NewURI(getter_AddRefs(uri), visit->mUrl)))) {
           continue;
         }
         OnVisit(uri, static_cast<int64_t>(visit->mVisitId),
@@ -4240,8 +4239,8 @@ void nsNavHistoryResult::HandlePlacesEvent(const PlacesEventSequence& aEvents) {
 
         nsCOMPtr<nsIURI> uri;
         if (item->mItemType == nsINavBookmarksService::TYPE_BOOKMARK) {
-          MOZ_ALWAYS_SUCCEEDS(NS_NewURI(getter_AddRefs(uri), item->mUrl));
-          if (!uri) {
+          if (NS_WARN_IF(
+                  NS_FAILED(NS_NewURI(getter_AddRefs(uri), item->mUrl)))) {
             continue;
           }
         }
@@ -4410,8 +4409,8 @@ void nsNavHistoryResult::HandlePlacesEvent(const PlacesEventSequence& aEvents) {
         }
 
         nsCOMPtr<nsIURI> uri;
-        MOZ_ALWAYS_SUCCEEDS(NS_NewURI(getter_AddRefs(uri), titleEvent->mUrl));
-        if (!uri) {
+        if (NS_WARN_IF(
+                NS_FAILED(NS_NewURI(getter_AddRefs(uri), titleEvent->mUrl)))) {
           continue;
         }
 
@@ -4430,8 +4429,8 @@ void nsNavHistoryResult::HandlePlacesEvent(const PlacesEventSequence& aEvents) {
         }
 
         nsCOMPtr<nsIURI> uri;
-        MOZ_ALWAYS_SUCCEEDS(NS_NewURI(getter_AddRefs(uri), removeEvent->mUrl));
-        if (!uri) {
+        if (NS_WARN_IF(
+                NS_FAILED(NS_NewURI(getter_AddRefs(uri), removeEvent->mUrl)))) {
           continue;
         }
 
