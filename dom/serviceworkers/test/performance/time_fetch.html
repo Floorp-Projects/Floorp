@@ -5,30 +5,44 @@
 
   "use strict";
 
-  async function time_fetch(url) {
-    let start = performance.now();
-    let res = await fetch(url);
-    let elapsed = performance.now() - start;
-
-    return {
-      elapsed_ms : elapsed,
-      status : res.status,
-      data : await res.text()
-    };
+  function assert_is(a, b) {
+    // Throw if we fail to avoid repeated messages in the log
+    if (!Object.is(a, b)) {
+      throw new Error(`${a} != ${b}`);
+    }
   }
 
-  async function time_xhr(url) {
-    let xhr = new XMLHttpRequest();
-    xhr.open("GET", url, false);
-    let start = performance.now();
-    xhr.send();
-    let elapsed = performance.now() - start;
+  async function time_fetch(url, num_fetches, expected) {
+    let elapsed_ms = 0;
 
-    return {
-      elapsed_ms : elapsed,
-      status : xhr.status,
-      data : xhr.responseText
+    while (num_fetches--) {
+      let start = performance.now();
+      let res = await fetch(url, {cache: "no-store"});
+      elapsed_ms += performance.now() - start;
+
+      assert_is(res.status, 200);
+      assert_is(await res.text(), expected);
     }
+
+    return elapsed_ms;
+  }
+
+  async function time_xhr(url, num_fetches, expected) {
+    url += "?" + new Date().getTime(); // cache-buster
+    let elapsed_ms = 0;
+
+    while (num_fetches--) {
+      let xhr = new XMLHttpRequest();
+      xhr.open("GET", url, false);
+      let start = performance.now();
+      xhr.send();
+      elapsed_ms += performance.now() - start;
+
+      assert_is(xhr.status, 200);
+      assert_is(xhr.responseText, expected);
+    }
+
+    return elapsed_ms;
   }
 
 </script>
