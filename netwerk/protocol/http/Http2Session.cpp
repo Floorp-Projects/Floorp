@@ -4107,7 +4107,13 @@ nsresult Http2Session::ConfirmTLSProfile() {
   }
 
   uint16_t kea = ssl->GetKEAUsed();
-  if (kea != ssl_kea_dh && kea != ssl_kea_ecdh) {
+  if (kea == ssl_kea_ecdh_hybrid && !StaticPrefs::security_tls_enable_kyber()) {
+    LOG3(("Http2Session::ConfirmTLSProfile %p FAILED due to disabled KEA %d\n",
+          this, kea));
+    return SessionError(INADEQUATE_SECURITY);
+  }
+
+  if (kea != ssl_kea_dh && kea != ssl_kea_ecdh && kea != ssl_kea_ecdh_hybrid) {
     LOG3(("Http2Session::ConfirmTLSProfile %p FAILED due to invalid KEA %d\n",
           this, kea));
     return SessionError(INADEQUATE_SECURITY);

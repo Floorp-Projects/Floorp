@@ -1430,19 +1430,39 @@ static nsresult nsSSLIOLayerSetOptions(PRFileDesc* fd, bool forSTARTTLS,
   }
 
   // Include a modest set of named groups.
-  // Please change getKeaGroupName in nsNSSCallbacks.cpp when changing the list
+  // Please change getKeaGroupName in nsNSSCallbacks.cpp when changing the lists
   // here.
-  const SSLNamedGroup namedGroups[] = {
-      ssl_grp_ec_curve25519, ssl_grp_ec_secp256r1, ssl_grp_ec_secp384r1,
-      ssl_grp_ec_secp521r1,  ssl_grp_ffdhe_2048,   ssl_grp_ffdhe_3072};
-  if (SECSuccess != SSL_NamedGroupConfig(fd, namedGroups,
-                                         mozilla::ArrayLength(namedGroups))) {
-    return NS_ERROR_FAILURE;
-  }
-  // This ensures that we send key shares for X25519 and P-256 in TLS 1.3, so
-  // that servers are less likely to use HelloRetryRequest.
-  if (SECSuccess != SSL_SendAdditionalKeyShares(fd, 1)) {
-    return NS_ERROR_FAILURE;
+  if (StaticPrefs::security_tls_enable_kyber() &&
+      range.max >= SSL_LIBRARY_VERSION_TLS_1_3 &&
+      !(infoObject->GetProviderFlags() &
+        (nsISocketProvider::BE_CONSERVATIVE | nsISocketTransport::IS_RETRY))) {
+    const SSLNamedGroup namedGroups[] = {
+        ssl_grp_kem_xyber768d00, ssl_grp_ec_curve25519, ssl_grp_ec_secp256r1,
+        ssl_grp_ec_secp384r1,    ssl_grp_ec_secp521r1,  ssl_grp_ffdhe_2048,
+        ssl_grp_ffdhe_3072};
+    if (SECSuccess != SSL_NamedGroupConfig(fd, namedGroups,
+                                           mozilla::ArrayLength(namedGroups))) {
+      return NS_ERROR_FAILURE;
+    }
+    // This ensures that we send key shares for Xyber768D00, X25519, and P-256
+    // in TLS 1.3, so that servers are less likely to use HelloRetryRequest.
+    if (SECSuccess != SSL_SendAdditionalKeyShares(fd, 2)) {
+      return NS_ERROR_FAILURE;
+    }
+  } else {
+    const SSLNamedGroup namedGroups[] = {
+        ssl_grp_ec_curve25519, ssl_grp_ec_secp256r1, ssl_grp_ec_secp384r1,
+        ssl_grp_ec_secp521r1,  ssl_grp_ffdhe_2048,   ssl_grp_ffdhe_3072};
+    // Skip the |ssl_grp_kem_xyber768d00| entry.
+    if (SECSuccess != SSL_NamedGroupConfig(fd, namedGroups,
+                                           mozilla::ArrayLength(namedGroups))) {
+      return NS_ERROR_FAILURE;
+    }
+    // This ensures that we send key shares for X25519 and P-256 in TLS 1.3, so
+    // that servers are less likely to use HelloRetryRequest.
+    if (SECSuccess != SSL_SendAdditionalKeyShares(fd, 1)) {
+      return NS_ERROR_FAILURE;
+    }
   }
 
   // NOTE: Should this list ever include ssl_sig_rsa_pss_pss_sha* (or should

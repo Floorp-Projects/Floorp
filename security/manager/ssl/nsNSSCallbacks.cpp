@@ -656,6 +656,9 @@ nsCString getKeaGroupName(uint32_t aKeaGroup) {
     case ssl_grp_ec_curve25519:
       groupName = "x25519"_ns;
       break;
+    case ssl_grp_kem_xyber768d00:
+      groupName = "xyber768d00"_ns;
+      break;
     case ssl_grp_ffdhe_2048:
       groupName = "FF 2048"_ns;
       break;
@@ -820,6 +823,8 @@ SECStatus CanFalseStartCallback(PRFileDesc* fd, void* client_data,
   }
 
   // See bug 952863 for why ECDHE is allowed, but DHE (and RSA) are not.
+  // Also note that ecdh_hybrid groups are not supported in TLS 1.2 and are out
+  // of scope.
   if (channelInfo.keaType != ssl_kea_ecdh) {
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
             ("CanFalseStartCallback [%p] failed - "
@@ -1019,7 +1024,7 @@ void HandshakeCallback(PRFileDesc* fd, void* client_data) {
   if (rv != SECSuccess) {
     return;
   }
-  // keyExchange null=0, rsa=1, dh=2, fortezza=3, ecdh=4
+  // keyExchange null=0, rsa=1, dh=2, fortezza=3, ecdh=4, ecdh_hybrid=5
   Telemetry::Accumulate(infoObject->IsFullHandshake()
                             ? Telemetry::SSL_KEY_EXCHANGE_ALGORITHM_FULL
                             : Telemetry::SSL_KEY_EXCHANGE_ALGORITHM_RESUMED,
@@ -1038,6 +1043,9 @@ void HandshakeCallback(PRFileDesc* fd, void* client_data) {
       case ssl_kea_ecdh:
         AccumulateECCCurve(Telemetry::SSL_KEA_ECDHE_CURVE_FULL,
                            channelInfo.keaKeyBits);
+        break;
+      case ssl_kea_ecdh_hybrid:
+        // Bug 1874963: Add probes for Xyber768d00
         break;
       default:
         MOZ_CRASH("impossible KEA");
