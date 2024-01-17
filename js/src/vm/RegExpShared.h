@@ -18,6 +18,7 @@
 
 #include "gc/Barrier.h"
 #include "gc/Policy.h"
+#include "gc/SweepingAPI.h"
 #include "gc/ZoneAllocator.h"
 #include "irregexp/RegExpTypes.h"
 #include "jit/JitCode.h"
