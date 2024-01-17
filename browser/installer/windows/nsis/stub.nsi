@@ -65,6 +65,9 @@ Var EndPreInstallPhaseTickCount
 Var EndInstallPhaseTickCount
 Var EndFinishPhaseTickCount
 
+Var DistributionID
+Var DistributionVersion
+
 Var InitialInstallRequirementsCode
 Var ExistingProfile
 Var ExistingVersion
@@ -88,7 +91,7 @@ Var ArchToInstall
 ; the stub installer
 ;!define STUB_DEBUG
 
-!define StubURLVersion "v8"
+!define StubURLVersion "v9"
 
 ; Successful install exit code
 !define ERR_SUCCESS 0
@@ -1042,6 +1045,15 @@ Function SendPing
       StrCpy $R6 "0"
     ${EndIf}
 
+    ; Capture the distribution ID and version if it exists.
+    ${If} ${FileExists} "$INSTDIR\distribution\distribution.ini"
+      ReadINIStr $DistributionID "$INSTDIR\distribution\distribution.ini" "Global" "id"
+      ReadINIStr $DistributionVersion "$INSTDIR\distribution\distribution.ini" "Global" "version"
+    ${Else}
+      StrCpy $DistributionID "0"
+      StrCpy $DistributionVersion "0"
+    ${EndIf}
+
     ; Whether installed into the default installation directory
     ${GetLongPath} "$INSTDIR" $R7
     ${GetLongPath} "$InitialInstallDir" $R8
@@ -1150,14 +1162,16 @@ Function SendPing
                       $\nDownload Server IP = $DownloadServerIP \
                       $\nPost-Signing Data = $PostSigningData \
                       $\nProfile cleanup prompt shown = $ProfileCleanupPromptType \
-                      $\nDid profile cleanup = $CheckboxCleanupProfile"
+                      $\nDid profile cleanup = $CheckboxCleanupProfile \
+                      $\nDistribution ID = $DistributionID \
+                      $\nDistribution Version = $DistributionVersion"
     ; The following will exit the installer
     SetAutoClose true
     StrCpy $R9 "2"
     Call RelativeGotoPage
 !else
     ${StartTimer} ${DownloadIntervalMS} OnPing
-    InetBgDL::Get "${BaseURLStubPing}/${StubURLVersion}${StubURLVersionAppend}/${Channel}/${UpdateChannel}/${AB_CD}/$R0/$R1/$5/$6/$7/$8/$9/$ExitCode/$FirefoxLaunchCode/$DownloadRetryCount/$DownloadedBytes/$DownloadSizeBytes/$IntroPhaseSeconds/$OptionsPhaseSeconds/$0/$1/$DownloadFirstTransferSeconds/$2/$3/$4/$InitialInstallRequirementsCode/$OpenedDownloadPage/$ExistingProfile/$ExistingVersion/$ExistingBuildID/$R5/$R6/$R7/$R8/$R2/$R3/$DownloadServerIP/$PostSigningData/$ProfileCleanupPromptType/$CheckboxCleanupProfile" \
+    InetBgDL::Get "${BaseURLStubPing}/${StubURLVersion}${StubURLVersionAppend}/${Channel}/${UpdateChannel}/${AB_CD}/$R0/$R1/$5/$6/$7/$8/$9/$ExitCode/$FirefoxLaunchCode/$DownloadRetryCount/$DownloadedBytes/$DownloadSizeBytes/$IntroPhaseSeconds/$OptionsPhaseSeconds/$0/$1/$DownloadFirstTransferSeconds/$2/$3/$4/$InitialInstallRequirementsCode/$OpenedDownloadPage/$ExistingProfile/$ExistingVersion/$ExistingBuildID/$R5/$R6/$R7/$R8/$R2/$R3/$DownloadServerIP/$PostSigningData/$ProfileCleanupPromptType/$CheckboxCleanupProfile/$DistributionID/$DistributionVersion" \
                   "$PLUGINSDIR\_temp" /END
 !endif
   ${Else}
