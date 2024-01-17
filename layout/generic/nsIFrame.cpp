@@ -7142,6 +7142,10 @@ nsresult nsIFrame::AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
 
 nsIFrame* nsIFrame::GetPrevContinuation() const { return nullptr; }
 
+void nsIFrame::SetPrevContinuation(nsIFrame* aPrevContinuation) {
+  MOZ_ASSERT(false, "not splittable");
+}
+
 nsIFrame* nsIFrame::GetNextContinuation() const { return nullptr; }
 
 void nsIFrame::SetNextContinuation(nsIFrame*) {
@@ -7149,6 +7153,10 @@ void nsIFrame::SetNextContinuation(nsIFrame*) {
 }
 
 nsIFrame* nsIFrame::GetPrevInFlow() const { return nullptr; }
+
+void nsIFrame::SetPrevInFlow(nsIFrame* aPrevInFlow) {
+  MOZ_ASSERT(false, "not splittable");
+}
 
 nsIFrame* nsIFrame::GetNextInFlow() const { return nullptr; }
 

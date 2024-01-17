@@ -46,14 +46,9 @@ class nsSplittableFrame : public nsIFrame {
   nsIFrame* GetPrevContinuation() const final;
   nsIFrame* GetNextContinuation() const final;
 
-  // Establish a non-fluid continuation relationship by making aFrame the
-  // next-continuation of this frame.
-  //
-  // Note: if this frame has an existing non-null next-continuation, this method
-  // disconnect from it before connecting aFrame.
-  void SetNextContinuation(nsIFrame* aFrame) final {
-    SetNextContinuation(aFrame, false);
-  }
+  // Set a previous/next non-fluid continuation.
+  void SetPrevContinuation(nsIFrame*) final;
+  void SetNextContinuation(nsIFrame*) final;
 
   // Get the first/last continuation for this frame.
   nsIFrame* FirstContinuation() const override;
@@ -69,14 +64,9 @@ class nsSplittableFrame : public nsIFrame {
   nsIFrame* GetPrevInFlow() const final;
   nsIFrame* GetNextInFlow() const final;
 
-  // Establish a fluid continuation relationship by making aFrame the
-  // next-in-flow of this frame.
-  //
-  // Note: if this frame has an existing non-null next-in-flow, this method
-  // disconnect from it before connecting aFrame.
-  void SetNextInFlow(nsIFrame* aFrame) final {
-    SetNextContinuation(aFrame, true);
-  }
+  // Set a previous/next fluid continuation.
+  void SetPrevInFlow(nsIFrame*) final;
+  void SetNextInFlow(nsIFrame*) final;
 
   // Get the first/last frame in the current flow.
   nsIFrame* FirstInFlow() const final;
@@ -149,12 +139,6 @@ class nsSplittableFrame : public nsIFrame {
   LogicalSides PreReflowBlockLevelLogicalSkipSides() const {
     return GetBlockLevelLogicalSkipSides(false);
   };
-
-  /**
-   * A helper method implementing public SetNextInFlow() and
-   * SetNextContinuation().
-   */
-  void SetNextContinuation(nsIFrame* aFrame, bool aIsFluid);
 
   nsIFrame* mPrevContinuation = nullptr;
   nsIFrame* mNextContinuation = nullptr;
