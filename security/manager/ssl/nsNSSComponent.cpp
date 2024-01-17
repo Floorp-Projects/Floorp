@@ -1032,6 +1032,15 @@ void SetDeprecatedTLS1CipherPrefs() {
   }
 }
 
+// static
+void SetKyberPolicy() {
+  if (StaticPrefs::security_tls_enable_kyber()) {
+    NSS_SetAlgorithmPolicy(SEC_OID_XYBER768D00, NSS_USE_ALG_IN_SSL_KX, 0);
+  } else {
+    NSS_SetAlgorithmPolicy(SEC_OID_XYBER768D00, 0, NSS_USE_ALG_IN_SSL_KX);
+  }
+}
+
 nsresult CipherSuiteChangeObserver::Observe(nsISupports* /*aSubject*/,
                                             const char* aTopic,
                                             const char16_t* someData) {
@@ -1048,6 +1057,7 @@ nsresult CipherSuiteChangeObserver::Observe(nsISupports* /*aSubject*/,
       }
     }
     SetDeprecatedTLS1CipherPrefs();
+    SetKyberPolicy();
     nsNSSComponent::DoClearSSLExternalAndInternalSessionCache();
   } else if (nsCRT::strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0) {
     Preferences::RemoveObserver(this, "security.");
@@ -2484,6 +2494,8 @@ nsresult InitializeCipherSuite() {
   // devices like wifi routers with woefully small keys (they would have to add
   // an override to do so, but they already do for such devices).
   NSS_OptionSet(NSS_RSA_MIN_KEY_SIZE, 512);
+
+  SetKyberPolicy();
 
   // Observe preference change around cipher suite setting.
   return CipherSuiteChangeObserver::StartObserve();
