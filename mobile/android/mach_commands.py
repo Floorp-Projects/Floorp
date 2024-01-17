@@ -179,6 +179,8 @@ def android_gradle_dependencies(command_context, args):
 
 def get_maven_archive_paths(maven_folder):
     for subdir, _, files in os.walk(maven_folder):
+        if "-SNAPSHOT" in subdir:
+            continue
         for file in files:
             yield os.path.join(subdir, file)
 
@@ -215,7 +217,8 @@ def android_archive_geckoview(command_context, args):
 
     if ret != 0:
         return ret
-    create_maven_archive(command_context.topobjdir)
+    if "MOZ_AUTOMATION" in os.environ:
+        create_maven_archive(command_context.topobjdir)
 
     return 0
 
