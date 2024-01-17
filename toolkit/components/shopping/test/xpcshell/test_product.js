@@ -716,6 +716,40 @@ add_task(async function test_product_sendAttributionEvent_click_OHTTP() {
   disableOHTTP();
 });
 
+add_task(async function test_product_sendAttributionEvent_placement_OHTTP() {
+  let uri = new URL("https://www.walmart.com/ip/926485654");
+  let product = new ShoppingProduct(uri, { allowValidationFailure: false });
+
+  Assert.ok(product.isProduct(), "Should recognize a valid product.");
+
+  gExpectedProductDetails = JSON.stringify({
+    event_source: "firefox_toolkit_tests",
+    event_name: "trusted_deals_placement",
+    aidvs: [TEST_AID],
+  });
+
+  enableOHTTP();
+
+  let event = await ShoppingProduct.sendAttributionEvent(
+    "placement",
+    TEST_AID,
+    "firefox_toolkit_tests",
+    {
+      url: ATTRIBUTION_API_MOCK,
+      requestSchema: ATTRIBUTION_REQUEST_SCHEMA,
+      responseSchema: ATTRIBUTION_RESPONSE_SCHEMA,
+    }
+  );
+
+  Assert.deepEqual(
+    event,
+    await fetch(ATTRIBUTION_API_MOCK).then(r => r.json()),
+    "Events object is loaded from JSON and validated"
+  );
+
+  disableOHTTP();
+});
+
 add_task(async function test_product_requestAnalysis_poll() {
   let uri = new URL("https://www.walmart.com/ip/926485654");
   let product = new ShoppingProduct(uri, { allowValidationFailure: false });

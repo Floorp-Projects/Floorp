@@ -7,7 +7,11 @@
     "event_name": {
       "description": "Event name string",
       "type": "string",
-      "examples": ["trusted_deals_impression", "trusted_deals_link_clicked"]
+      "examples": [
+        "trusted_deals_impression",
+        "trusted_deals_link_clicked",
+        "trusted_deals_placement"
+      ]
     },
     "event_source": {
       "description": "Where event was dispatched from",
