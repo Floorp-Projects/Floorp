@@ -145,7 +145,7 @@ class BrowsingContextGroup final : public nsWrapperCache {
     }
   }
 
-  nsresult QueuePostMessageEvent(already_AddRefed<nsIRunnable>&& aRunnable);
+  nsresult QueuePostMessageEvent(nsIRunnable* aRunnable);
 
   void FlushPostMessageEvents();
 
