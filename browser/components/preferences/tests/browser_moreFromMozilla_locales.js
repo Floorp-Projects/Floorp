@@ -37,11 +37,13 @@ async function getPromoCards() {
 
   let doc = gBrowser.contentDocument;
   let vpnPromoCard = doc.getElementById("mozilla-vpn");
+  let monitorPromoCard = doc.getElementById("mozilla-monitor");
   let mobileCard = doc.getElementById("firefox-mobile");
   let relayPromoCard = doc.getElementById("firefox-relay");
 
   return {
     vpnPromoCard,
+    monitorPromoCard,
     mobileCard,
     relayPromoCard,
   };
@@ -328,4 +330,42 @@ add_task(async function test_relay_promo_with_unsupported_fxa_server() {
 
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
   mockFxA();
+});
+
+add_task(async function test_Monitor_US_region_desc() {
+  const supportedRegion = "US";
+  setupRegions(supportedRegion);
+
+  let { monitorPromoCard } = await getPromoCards();
+  ok(monitorPromoCard, "The Monitor promo is visible");
+
+  let monitorDescElement =
+    monitorPromoCard.nextElementSibling.querySelector(".description");
+  is(
+    monitorDescElement.getAttribute("data-l10n-id"),
+    "more-from-moz-mozilla-monitor-us-description",
+    "US Region desc set"
+  );
+
+  setupRegions(initialHomeRegion, initialCurrentRegion); // revert changes to regions
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
+});
+
+add_task(async function test_Monitor_global_region_desc() {
+  const supportedRegion = "UK";
+  setupRegions(supportedRegion);
+
+  let { monitorPromoCard } = await getPromoCards();
+  ok(monitorPromoCard, "The Monitor promo is visible");
+
+  let monitorDescElement =
+    monitorPromoCard.nextElementSibling.querySelector(".description");
+  is(
+    monitorDescElement.getAttribute("data-l10n-id"),
+    "more-from-moz-mozilla-monitor-global-description",
+    "Global Region desc set"
+  );
+
+  setupRegions(initialHomeRegion, initialCurrentRegion); // revert changes to regions
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });

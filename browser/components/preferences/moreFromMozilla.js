@@ -80,6 +80,7 @@ var gMoreFromMozillaPane = {
   },
 
   renderProducts() {
+    const isRegionUS = Region.home.toLowerCase() === "us";
     let products = [
       {
         id: "firefox-mobile",
@@ -109,6 +110,19 @@ var gMoreFromMozillaPane = {
               ? "https://www.firefox.com.cn/mobile/get-app/"
               : "https://www.mozilla.org/firefox/mobile/get-app/?v=mfm",
           },
+        },
+      },
+      {
+        id: "mozilla-monitor",
+        title_string_id: "more-from-moz-mozilla-monitor-title",
+        description_string_id: isRegionUS
+          ? "more-from-moz-mozilla-monitor-us-description"
+          : "more-from-moz-mozilla-monitor-global-description",
+        region: isRegionUS ? "us" : "global",
+        button: {
+          id: "mozillaMonitor",
+          label_string_id: "more-from-moz-mozilla-monitor-button",
+          actionURL: "https://monitor.mozilla.org/",
         },
       },
     ];

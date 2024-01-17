@@ -124,6 +124,7 @@
   skin/classic/browser/preferences/dialog.css                  (../shared/preferences/dialog.css)
   skin/classic/browser/preferences/fxaPairDevice.css           (../shared/preferences/fxaPairDevice.css)
   skin/classic/browser/preferences/ios-menu.svg                (../shared/preferences/ios-menu.svg)
+  skin/classic/browser/preferences/monitor-logo.svg            (../shared/preferences/monitor-logo.svg)
   skin/classic/browser/preferences/mozilla-logo.svg            (../shared/preferences/mozilla-logo.svg)
   skin/classic/browser/preferences/preferences.css             (../shared/preferences/preferences.css)
   skin/classic/browser/preferences/privacy.css                 (../shared/preferences/privacy.css)
