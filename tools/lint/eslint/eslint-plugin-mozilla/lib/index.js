@@ -55,6 +55,7 @@ module.exports = {
     "no-arbitrary-setTimeout": require("../lib/rules/no-arbitrary-setTimeout"),
     "no-browser-refs-in-toolkit": require("../lib/rules/no-browser-refs-in-toolkit"),
     "no-compare-against-boolean-literals": require("../lib/rules/no-compare-against-boolean-literals"),
+    "no-comparison-or-assignment-inside-ok": require("../lib/rules/no-comparison-or-assignment-inside-ok"),
     "no-cu-reportError": require("../lib/rules/no-cu-reportError"),
     "no-define-cc-etc": require("../lib/rules/no-define-cc-etc"),
     "no-redeclare-with-import-autofix": require("../lib/rules/no-redeclare-with-import-autofix"),
