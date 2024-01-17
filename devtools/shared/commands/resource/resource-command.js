@@ -414,9 +414,15 @@ class ResourceCommand {
   async _startLegacyListenersForExistingTargets(resourceType) {
     // If we were already listening to targets, we want to start the legacy listeners
     // for all already existing targets.
+    //
+    // Only try instantiating the legacy listener, if this resource type:
+    //   - has legacy listener implementation
+    // (new resource types may not be supported by old runtime and just not be received without breaking anything)
+    //   - isn't supported by the server, or, the target type requires the a legacy listener implementation.
     const shouldRunLegacyListeners =
-      !this.hasResourceCommandSupport(resourceType) ||
-      this._shouldRunLegacyListenerEvenWithWatcherSupport(resourceType);
+      resourceType in LegacyListeners &&
+      (!this.hasResourceCommandSupport(resourceType) ||
+        this._shouldRunLegacyListenerEvenWithWatcherSupport(resourceType));
     if (shouldRunLegacyListeners) {
       const promises = [];
       const targets = this.targetCommand.getAllTargets(
