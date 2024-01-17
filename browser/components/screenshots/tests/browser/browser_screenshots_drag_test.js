@@ -135,16 +135,14 @@ add_task(async function clickOverlayResetState() {
       // click outside overlay
       mouse.click(200, 200);
 
-      await helper.waitForStateChange("crosshairs");
-      let state = await helper.getOverlayState();
-      Assert.equal(state, "crosshairs", "The state is back to crosshairs");
+      await helper.assertStateChange("crosshairs");
     }
   );
 });
 
 /**
  * This function drags an area and clicks the
- * cancel button to cancel the overlay
+ * cancel button to restart the overlay
  */
 add_task(async function overlayCancelButton() {
   await BrowserTestUtils.withNewTab(
@@ -166,9 +164,7 @@ add_task(async function overlayCancelButton() {
 
       await helper.clickCancelButton();
 
-      await helper.waitForOverlayClosed();
-
-      ok(!(await helper.isOverlayInitialized()), "Overlay is not initialized");
+      await helper.assertStateChange("crosshairs");
     }
   );
 });
@@ -208,9 +204,7 @@ add_task(async function preserveBoxSizeWhenMovingOutOfWindowBounds() {
         Math.floor((endY - startY) / 2)
       );
 
-      await helper.waitForStateChange("resizing");
-      let state = await helper.getOverlayState();
-      Assert.equal(state, "resizing", "The overlay is in the resizing state");
+      await helper.assertStateChange("resizing");
 
       mouse.move(10, 10);
 
@@ -221,9 +215,7 @@ add_task(async function preserveBoxSizeWhenMovingOutOfWindowBounds() {
         Math.floor((endY - startY) / 2)
       );
 
-      await helper.waitForStateChange("selected");
-      state = await helper.getOverlayState();
-      Assert.equal(state, "selected", "The overlay is in the selected state");
+      await helper.assertStateChange("selected");
 
       let clipboardChanged = helper.waitForRawClipboardChange(
         expected,
@@ -286,59 +278,43 @@ add_task(async function resizeAllEdges() {
       // drag top
       mouse.down(x, 10);
 
-      await helper.waitForStateChange("resizing");
-      let state = await helper.getOverlayState();
-      Assert.equal(state, "resizing", "The overlay is in the resizing state");
+      await helper.assertStateChange("resizing");
 
       mouse.move(x, 100);
       mouse.up(x, 100);
 
-      await helper.waitForStateChange("selected");
-      state = await helper.getOverlayState();
-      Assert.equal(state, "selected", "The overlay is in the selected state");
+      await helper.assertStateChange("selected");
 
       // drag bottom
       mouse.down(x, 500);
 
-      await helper.waitForStateChange("resizing");
-      state = await helper.getOverlayState();
-      Assert.equal(state, "resizing", "The overlay is in the resizing state");
+      await helper.assertStateChange("resizing");
 
       mouse.move(x, 400);
       mouse.up(x, 400);
 
-      await helper.waitForStateChange("selected");
-      state = await helper.getOverlayState();
-      Assert.equal(state, "selected", "The overlay is in the selected state");
+      await helper.assertStateChange("selected");
 
       // drag right
       let y = Math.floor((endY - startY) / 2);
       mouse.down(500, y);
 
-      await helper.waitForStateChange("resizing");
-      state = await helper.getOverlayState();
-      Assert.equal(state, "resizing", "The overlay is in the resizing state");
+      await helper.assertStateChange("resizing");
 
       mouse.move(400, y);
       mouse.up(400, y);
 
-      await helper.waitForStateChange("selected");
-      state = await helper.getOverlayState();
-      Assert.equal(state, "selected", "The overlay is in the selected state");
+      await helper.assertStateChange("selected");
 
       // drag left
       mouse.down(10, y);
 
-      await helper.waitForStateChange("resizing");
-      state = await helper.getOverlayState();
-      Assert.equal(state, "resizing", "The overlay is in the resizing state");
+      await helper.assertStateChange("resizing");
 
       mouse.move(100, y);
       mouse.up(100, y);
 
-      await helper.waitForStateChange("selected");
-      state = await helper.getOverlayState();
-      Assert.equal(state, "selected", "The overlay is in the selected state");
+      await helper.assertStateChange("selected");
 
       let clipboardChanged = helper.waitForRawClipboardChange(
         expected,
@@ -397,58 +373,42 @@ add_task(async function resizeAllCorners() {
       // drag topright
       mouse.down(500, 10);
 
-      await helper.waitForStateChange("resizing");
-      let state = await helper.getOverlayState();
-      Assert.equal(state, "resizing", "The overlay is in the resizing state");
+      await helper.assertStateChange("resizing");
 
       mouse.move(450, 50);
       mouse.up(450, 50);
 
-      await helper.waitForStateChange("selected");
-      state = await helper.getOverlayState();
-      Assert.equal(state, "selected", "The overlay is in the selected state");
+      await helper.assertStateChange("selected");
 
       // drag bottomright
       mouse.down(450, 500);
 
-      await helper.waitForStateChange("resizing");
-      state = await helper.getOverlayState();
-      Assert.equal(state, "resizing", "The overlay is in the resizing state");
+      await helper.assertStateChange("resizing");
 
       mouse.move(400, 450);
       mouse.up(400, 450);
 
-      await helper.waitForStateChange("selected");
-      state = await helper.getOverlayState();
-      Assert.equal(state, "selected", "The overlay is in the selected state");
+      await helper.assertStateChange("selected");
 
       // drag bottomleft
       mouse.down(10, 450);
 
-      await helper.waitForStateChange("resizing");
-      state = await helper.getOverlayState();
-      Assert.equal(state, "resizing", "The overlay is in the resizing state");
+      await helper.assertStateChange("resizing");
 
       mouse.move(50, 400);
       mouse.up(50, 400);
 
-      await helper.waitForStateChange("selected");
-      state = await helper.getOverlayState();
-      Assert.equal(state, "selected", "The overlay is in the selected state");
+      await helper.assertStateChange("selected");
 
       // drag topleft
       mouse.down(50, 50);
 
-      await helper.waitForStateChange("resizing");
-      state = await helper.getOverlayState();
-      Assert.equal(state, "resizing", "The overlay is in the resizing state");
+      await helper.assertStateChange("resizing");
 
       mouse.move(100, 100);
       mouse.up(100, 100);
 
-      await helper.waitForStateChange("selected");
-      state = await helper.getOverlayState();
-      Assert.equal(state, "selected", "The overlay is in the selected state");
+      await helper.assertStateChange("selected");
 
       let clipboardChanged = helper.waitForRawClipboardChange(
         expected,
@@ -502,19 +462,11 @@ add_task(async function test_otherMouseButtons() {
 
       await TestUtils.waitForTick();
 
-      await helper.waitForStateChange("selected");
-      let state = await helper.getOverlayState();
-      Assert.equal(
-        state,
-        "selected",
-        "The state is still in the selected state"
-      );
+      await helper.assertStateChange("selected");
 
       mouse.click(200, 200);
 
-      await helper.waitForStateChange("crosshairs");
-      state = await helper.getOverlayState();
-      Assert.equal(state, "crosshairs", "The state is in the crosshairs state");
+      await helper.assertStateChange("crosshairs");
 
       mouse.down(10, 10, { button: 1 });
       mouse.move(100, 100, { button: 1 });
@@ -522,13 +474,7 @@ add_task(async function test_otherMouseButtons() {
 
       await TestUtils.waitForTick();
 
-      await helper.waitForStateChange("crosshairs");
-      state = await helper.getOverlayState();
-      Assert.equal(
-        state,
-        "crosshairs",
-        "The state is still in the crosshairs state"
-      );
+      await helper.assertStateChange("crosshairs");
 
       mouse.down(10, 10, { button: 2 });
       mouse.move(100, 100, { button: 2 });
@@ -536,13 +482,7 @@ add_task(async function test_otherMouseButtons() {
 
       await TestUtils.waitForTick();
 
-      await helper.waitForStateChange("crosshairs");
-      state = await helper.getOverlayState();
-      Assert.equal(
-        state,
-        "crosshairs",
-        "The state is still in the crosshairs state"
-      );
+      await helper.assertStateChange("crosshairs");
     }
   );
 });

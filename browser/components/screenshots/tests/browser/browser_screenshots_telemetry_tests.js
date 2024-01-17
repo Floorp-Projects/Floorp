@@ -270,9 +270,8 @@ add_task(async function test_canceled() {
       helper.triggerUIFromToolbar();
       await helper.waitForOverlay();
 
-      await helper.dragOverlay(50, 50, 300, 300);
       screenshotExit = TestUtils.topicObserved("screenshots-exit");
-      await helper.clickCancelButton();
+      await helper.clickPreviewCancelButton();
 
       await helper.waitForOverlayClosed();
       await screenshotExit;
@@ -384,7 +383,7 @@ add_task(async function test_content_events() {
       await helper.dragOverlay(150, 150, 200, 200, "selected");
 
       mouse.click(11, 11);
-      await helper.waitForStateChange("crosshairs");
+      await helper.assertStateChange("crosshairs");
 
       await helper.clickTestPageElement();
 

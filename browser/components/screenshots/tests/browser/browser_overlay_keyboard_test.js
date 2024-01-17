@@ -160,10 +160,10 @@ add_task(async function test_moveRegionWithKeyboard() {
       // it to get the region to 10px x 10px
       await helper.dragOverlay(10, 10, 100, 100);
       mouse.down(100, 100);
-      await helper.waitForStateChange("resizing");
+      await helper.assertStateChange("resizing");
       mouse.move(20, 20);
       mouse.up(20, 20);
-      await helper.waitForStateChange("selected");
+      await helper.assertStateChange("selected");
 
       await SpecialPowers.spawn(
         browser,
@@ -529,7 +529,7 @@ add_task(async function test_moveRegionWithKeyboardWithAccelKey() {
       );
 
       mouse.click(300, 300);
-      await helper.waitForStateChange("crosshairs");
+      await helper.assertStateChange("crosshairs");
 
       await helper.dragOverlay(200, 200, 300, 300);
 
@@ -637,7 +637,7 @@ add_task(async function test_moveRegionWithKeyboardWithAccelKey() {
       );
 
       mouse.click(400, 400);
-      await helper.waitForStateChange("crosshairs");
+      await helper.assertStateChange("crosshairs");
 
       await helper.dragOverlay(200, 200, 300, 300);
 
