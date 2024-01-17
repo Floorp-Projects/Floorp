@@ -165,41 +165,13 @@ function testConstructorEncodingOption(aData, aExpectedString) {
  * - ArrayBufferView is modified for this test.
  */
 function testDecodeStreamOption(data, expectedString) {
-  const streamData = [
-    [
-      0xa0, 0xa1, 0xa2, 0xa3, 0xa4, 0xa5, 0xa6, 0xa7, 0xa8, 0xa9, 0xaa, 0xab,
-      0xac, 0xad, 0xae, 0xaf, 0xb0, 0xb1, 0xb2, 0xb3, 0xb4, 0xb5, 0xb6, 0xb7,
-      0xb8, 0xb9, 0xba, 0xbb, 0xbc, 0xbd,
-    ],
-    [
-      0xbe, 0xbf, 0xc0, 0xc1, 0xc2, 0xc3, 0xc4, 0xc5, 0xc6, 0xc7, 0xc8, 0xc9,
-      0xca, 0xcb, 0xcc, 0xcd, 0xce, 0xcf, 0xd0, 0xd1, 0xd2, 0xd3, 0xd4, 0xd5,
-      0xd6, 0xd7, 0xd8, 0xd9, 0xda, 0xdf, 0xe0, 0xe1, 0xe2,
-    ],
-    [
-      0xe3, 0xe4, 0xe5, 0xe6, 0xe7, 0xe8, 0xe9, 0xea, 0xeb, 0xec, 0xed, 0xee,
-      0xef, 0xf0, 0xf1, 0xf2, 0xf3, 0xf4, 0xf5, 0xf6, 0xf7, 0xf8, 0xf9, 0xfa,
-      0xfb,
-    ],
-  ];
-
-  const expectedStringOne =
-    "\u00a0\u0e01\u0e02\u0e03\u0e04\u0e05\u0e06\u0e07" +
-    "\u0e08\u0e09\u0e0a\u0e0b\u0e0c\u0e0d\u0e0e\u0e0f" +
-    "\u0e10\u0e11\u0e12\u0e13\u0e14\u0e15\u0e16\u0e17" +
-    "\u0e18\u0e19\u0e1a\u0e1b\u0e1c\u0e1d";
-  const expectedStringTwo =
-    "\u0e1e\u0e1f\u0e20\u0e21\u0e22\u0e23\u0e24\u0e25" +
-    "\u0e26\u0e27\u0e28\u0e29\u0e2a\u0e2b\u0e2c\u0e2d" +
-    "\u0e2e\u0e2f\u0e30\u0e31\u0e32\u0e33\u0e34\u0e35" +
-    "\u0e36\u0e37\u0e38\u0e39\u0e3a\u0e3f\u0e40\u0e41" +
-    "\u0e42";
-  const expectedStringThree =
-    "\u0e43\u0e44\u0e45\u0e46\u0e47\u0e48\u0e49\u0e4a" +
-    "\u0e4b\u0e4c\u0e4d\u0e4e\u0e4f\u0e50\u0e51" +
-    "\u0e52\u0e53\u0e54\u0e55\u0e56\u0e57\u0e58" +
-    "\u0e59\u0e5a\u0e5b";
-  expectedString = [expectedStringOne, expectedStringTwo, expectedStringThree];
+  const streamData = [];
+  const expectedStreamString = [];
+  const chunkSize = data.length / 3;
+  for (let i = 0; i < data.length; i += chunkSize) {
+    streamData.push(data.slice(i, i + chunkSize));
+    expectedStreamString.push(expectedString.slice(i, i + chunkSize));
+  }
 
   // streaming test
 
@@ -209,9 +181,9 @@ function testDecodeStreamOption(data, expectedString) {
   testCharset({
     encoding: "iso-8859-11",
     array: [
-      { input: streamData[0], expected: expectedStringOne },
-      { input: streamData[1], expected: expectedStringTwo },
-      { input: streamData[2], expected: expectedStringThree },
+      { input: streamData[0], expected: expectedStreamString[0] },
+      { input: streamData[1], expected: expectedStreamString[1] },
+      { input: streamData[2], expected: expectedStreamString[2] },
     ],
     msg: "decode() stream test zero.",
   });
@@ -219,9 +191,9 @@ function testDecodeStreamOption(data, expectedString) {
   testCharset({
     encoding: "iso-8859-11",
     array: [
-      { input: streamData[0], expected: expectedStringOne, stream: true },
-      { input: streamData[1], expected: expectedStringTwo, stream: true },
-      { input: streamData[2], expected: expectedStringThree, stream: true },
+      { input: streamData[0], expected: expectedStreamString[0], stream: true },
+      { input: streamData[1], expected: expectedStreamString[1], stream: true },
+      { input: streamData[2], expected: expectedStreamString[2], stream: true },
     ],
     msg: "decode() stream test one.",
   });
@@ -229,9 +201,9 @@ function testDecodeStreamOption(data, expectedString) {
   testCharset({
     encoding: "iso-8859-11",
     array: [
-      { input: streamData[0], expected: expectedStringOne, stream: true },
-      { input: streamData[1], expected: expectedStringTwo },
-      { input: streamData[2], expected: expectedStringThree },
+      { input: streamData[0], expected: expectedStreamString[0], stream: true },
+      { input: streamData[1], expected: expectedStreamString[1] },
+      { input: streamData[2], expected: expectedStreamString[2] },
     ],
     msg: "decode() stream test two.",
   });
