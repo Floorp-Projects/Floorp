@@ -51,14 +51,17 @@ function assertRange(before, after, key, range) {
   }
 }
 
-async function test_once({ counters, toplevel_docs, docs }, callback) {
+async function test_once(
+  { counters, toplevel_docs, docs, ignore_sentinel },
+  callback
+) {
   // Hold on to the current values of the telemetry histograms we're
   // interested in. Opening an about:blank tab shouldn't change those.
   let before = await grabCounters(counters);
 
   await callback();
 
-  let after = await grabCounters(counters, before);
+  let after = await grabCounters(counters, ignore_sentinel ? null : before);
 
   // Compare before and after.
   for (let counter of counters) {
@@ -94,7 +97,7 @@ async function test_once({ counters, toplevel_docs, docs }, callback) {
   assertRange(before, after, "glean_docs_destroyed", docs);
 }
 
-add_task(async function () {
+add_task(async function test_page_counters() {
   const TESTS = [
     // Check that use counters are incremented by SVGs loaded directly in iframes.
     {
@@ -331,6 +334,48 @@ add_task(async function () {
       await BrowserTestUtils.removeTab(newTab);
     });
   }
+});
+
+add_task(async function test_extension_counters() {
+  let options = {
+    counters: [],
+    docs: 0,
+    toplevel_docs: 0,
+    ignore_sentinel: true,
+  };
+  await test_once(options, async function () {
+    let extension = ExtensionTestUtils.loadExtension({
+      manifest: {
+        page_action: {
+          default_popup: "page.html",
+          browser_style: false,
+        },
+      },
+      async background() {
+        let [tab] = await browser.tabs.query({
+          active: true,
+          currentWindow: true,
+        });
+        await browser.pageAction.show(tab.id);
+        browser.test.sendMessage("ready");
+      },
+      files: {
+        "page.html": `<!DOCTYPE html>
+          <meta charset="utf-8">
+          <!-- Enough to trigger the use counter -->
+          <style>:root { opacity: .5 }</style>
+        `,
+      },
+    });
+
+    await extension.startup();
+    info("Extension started up");
+
+    await extension.awaitMessage("ready");
+
+    await extension.unload();
+    info("Extension unloaded");
+  });
 });
 
 async function grabHistogramsFromContent(names, prev_sentinel = null) {
