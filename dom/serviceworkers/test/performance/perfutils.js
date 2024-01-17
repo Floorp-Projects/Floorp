@@ -1,9 +1,5 @@
 "use strict";
 
-/*
- * Perf test utilities.
- */
-
 /**
  * Given a map from test names to arrays of results, report perfherder metrics
  * and log full results.

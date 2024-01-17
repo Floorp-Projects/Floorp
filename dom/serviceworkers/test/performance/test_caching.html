@@ -19,8 +19,7 @@
   journal[CACHED] = [];
   journal[NO_CACHE_AGAIN] = [];
 
-  const ITERATIONS = 11;
-  const SUB_ITERATIONS = 40;
+  const ITERATIONS = 10;
 
   var perfMetadata = {
     owner: "DOM LWS",
@@ -60,11 +59,10 @@
 
   async function time_fetch(journal, iframe, filename) {
     for (let i = 0; i < ITERATIONS; i++) {
-      let elapsed_ms = await iframe.contentWindow.time_fetch(filename,
-                                                             SUB_ITERATIONS,
-                                                             filename);
-      ok(elapsed_ms > 0, "time_fetch");
-      journal.push(elapsed_ms);
+      let result = await iframe.contentWindow.time_fetch(filename);
+      is(result.status, 200);
+      is(result.data, filename);
+      journal.push(result.elapsed_ms);
     }
   }
 
