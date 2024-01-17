@@ -2384,7 +2384,7 @@ void nsHTMLScrollFrame::ScrollToInternal(
 
 void nsHTMLScrollFrame::ScrollToCSSPixels(const CSSIntPoint& aScrollPosition,
                                           ScrollMode aMode) {
-  CSSIntPoint currentCSSPixels = GetScrollPositionCSSPixels();
+  CSSIntPoint currentCSSPixels = GetRoundedScrollPositionCSSPixels();
   // Transmogrify this scroll to a relative one if there's any on-going
   // animation in APZ triggered by __user__.
   // Bug 1740164: We will apply it for cases there's no animation in APZ.
@@ -2446,7 +2446,7 @@ void nsHTMLScrollFrame::ScrollToCSSPixelsForApz(
   // 'this' might be destroyed here
 }
 
-CSSIntPoint nsHTMLScrollFrame::GetScrollPositionCSSPixels() {
+CSSIntPoint nsHTMLScrollFrame::GetRoundedScrollPositionCSSPixels() {
   return CSSIntPoint::FromAppUnitsRounded(GetScrollPosition());
 }
 
@@ -5006,7 +5006,7 @@ void nsHTMLScrollFrame::ScrollByCSSPixelsInternal(const CSSIntPoint& aDelta,
   // the previous scrolling operation, but there may be some edge cases where
   // the current position in CSS pixels differs from the given position, the
   // cases should be fixed in bug 1556685.
-  CSSIntPoint currentCSSPixels = GetScrollPositionCSSPixels();
+  CSSIntPoint currentCSSPixels = GetRoundedScrollPositionCSSPixels();
   nsPoint pt = CSSPoint::ToAppUnits(currentCSSPixels + aDelta);
 
   nscoord halfPixel = nsPresContext::CSSPixelsToAppUnits(0.5f);

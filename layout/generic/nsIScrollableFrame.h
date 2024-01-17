@@ -262,21 +262,21 @@ class nsIScrollableFrame : public nsIScrollbarMediator {
    * aScrollPosition.x/y is different from the current CSS pixel position,
    * makes sure we only move in the direction given by the difference.
    *
-   * When aMode is SMOOTH, INSTANT, or NORMAL, GetScrollPositionCSSPixels (the
-   * scroll position after rounding to CSS pixels) will be exactly
+   * When aMode is SMOOTH, INSTANT, or NORMAL, GetRoundedScrollPositionCSSPixels
+   * (the scroll position after rounding to CSS pixels) will be exactly
    * aScrollPosition at the end of the scroll animation.
    *
    * When aMode is SMOOTH_MSD, intermediate animation frames may be outside the
-   * range and / or moving in any direction; GetScrollPositionCSSPixels will be
-   * exactly aScrollPosition at the end of the scroll animation unless the
-   * SMOOTH_MSD animation is interrupted.
+   * range and / or moving in any direction; GetRoundedScrollPositionCSSPixels
+   * will be exactly aScrollPosition at the end of the scroll animation unless
+   * the SMOOTH_MSD animation is interrupted.
    */
   virtual void ScrollToCSSPixels(const CSSIntPoint& aScrollPosition,
                                  ScrollMode aMode = ScrollMode::Instant) = 0;
   /**
    * @note This method might destroy the frame, pres shell and other objects.
    * Scrolls to a particular position in float CSS pixels.
-   * This does not guarantee that GetScrollPositionCSSPixels equals
+   * This does not guarantee that GetRoundedScrollPositionCSSPixels equals
    * aScrollPosition afterward. It tries to scroll as close to
    * aScrollPosition as possible while scrolling by an integer
    * number of layer pixels (so the operation is fast and looks clean).
@@ -289,7 +289,7 @@ class nsIScrollableFrame : public nsIScrollbarMediator {
    * Returns the scroll position in integer CSS pixels, rounded to the nearest
    * pixel.
    */
-  virtual CSSIntPoint GetScrollPositionCSSPixels() = 0;
+  virtual CSSIntPoint GetRoundedScrollPositionCSSPixels() = 0;
   /**
    * @note This method might destroy the frame, pres shell and other objects.
    * Modifies the current scroll position by aDelta units given by aUnit,

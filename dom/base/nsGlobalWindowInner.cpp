@@ -3827,7 +3827,7 @@ void nsGlobalWindowInner::ScrollTo(const ScrollToOptions& aOptions) {
   nsIScrollableFrame* sf = GetScrollFrame();
 
   if (sf) {
-    CSSIntPoint scrollPos = sf->GetScrollPositionCSSPixels();
+    CSSIntPoint scrollPos = sf->GetRoundedScrollPositionCSSPixels();
     if (aOptions.mLeft.WasPassed()) {
       scrollPos.x = static_cast<int32_t>(
           mozilla::ToZeroIfNonfinite(aOptions.mLeft.Value()));

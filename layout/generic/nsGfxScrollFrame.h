@@ -271,7 +271,8 @@ class nsHTMLScrollFrame : public nsContainerFrame,
   /**
    * @note This method might destroy the frame, pres shell and other objects.
    */
-  CSSIntPoint GetScrollPositionCSSPixels() final;
+  CSSIntPoint GetRoundedScrollPositionCSSPixels() final;
+
   /**
    * @note This method might destroy the frame, pres shell and other objects.
    */

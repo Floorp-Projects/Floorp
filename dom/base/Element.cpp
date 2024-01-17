@@ -822,7 +822,7 @@ void Element::Scroll(double aXScroll, double aYScroll) {
 void Element::Scroll(const ScrollToOptions& aOptions) {
   nsIScrollableFrame* sf = GetScrollFrame();
   if (sf) {
-    CSSIntPoint scrollPos = sf->GetScrollPositionCSSPixels();
+    CSSIntPoint scrollPos = sf->GetRoundedScrollPositionCSSPixels();
     if (aOptions.mLeft.WasPassed()) {
       scrollPos.x = static_cast<int32_t>(
           mozilla::ToZeroIfNonfinite(aOptions.mLeft.Value()));
@@ -874,7 +874,7 @@ void Element::ScrollBy(const ScrollToOptions& aOptions) {
 
 int32_t Element::ScrollTop() {
   nsIScrollableFrame* sf = GetScrollFrame();
-  return sf ? sf->GetScrollPositionCSSPixels().y.value : 0;
+  return sf ? sf->GetRoundedScrollPositionCSSPixels().y.value : 0;
 }
 
 void Element::SetScrollTop(int32_t aScrollTop) {
@@ -892,14 +892,14 @@ void Element::SetScrollTop(int32_t aScrollTop) {
         sf->IsSmoothScroll() ? ScrollMode::SmoothMsd : ScrollMode::Instant;
 
     sf->ScrollToCSSPixels(
-        CSSIntPoint(sf->GetScrollPositionCSSPixels().x, aScrollTop),
+        CSSIntPoint(sf->GetRoundedScrollPositionCSSPixels().x, aScrollTop),
         scrollMode);
   }
 }
 
 int32_t Element::ScrollLeft() {
   nsIScrollableFrame* sf = GetScrollFrame();
-  return sf ? sf->GetScrollPositionCSSPixels().x.value : 0;
+  return sf ? sf->GetRoundedScrollPositionCSSPixels().x.value : 0;
 }
 
 void Element::SetScrollLeft(int32_t aScrollLeft) {
@@ -912,7 +912,7 @@ void Element::SetScrollLeft(int32_t aScrollLeft) {
         sf->IsSmoothScroll() ? ScrollMode::SmoothMsd : ScrollMode::Instant;
 
     sf->ScrollToCSSPixels(
-        CSSIntPoint(aScrollLeft, sf->GetScrollPositionCSSPixels().y),
+        CSSIntPoint(aScrollLeft, sf->GetRoundedScrollPositionCSSPixels().y),
         scrollMode);
   }
 }
