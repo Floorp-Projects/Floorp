@@ -7,29 +7,29 @@
 #ifndef EnterpriseRoots_h
 #define EnterpriseRoots_h
 
-#include "mozilla/Vector.h"
 #include "mozpkix/Input.h"
 #include "mozpkix/Result.h"
 #include "nsTArray.h"
 
 class EnterpriseCert {
  public:
-  EnterpriseCert() : mIsRoot(false) {}
+  EnterpriseCert(const uint8_t* data, size_t len, bool isRoot)
+      : mDER(data, len), mIsRoot(isRoot) {}
+  EnterpriseCert(const EnterpriseCert& other)
+      : mDER(other.mDER.Clone()), mIsRoot(other.mIsRoot) {}
+  EnterpriseCert(EnterpriseCert&& other)
+      : mDER(std::move(other.mDER)), mIsRoot(other.mIsRoot) {}
 
-  nsresult Init(const uint8_t* data, size_t len, bool isRoot);
-  // Like a copy constructor but able to return a result.
-  nsresult Init(const EnterpriseCert& orig);
-
-  nsresult CopyBytes(nsTArray<uint8_t>& dest) const;
+  void CopyBytes(nsTArray<uint8_t>& dest) const;
   mozilla::pkix::Result GetInput(mozilla::pkix::Input& input) const;
   bool GetIsRoot() const;
 
  private:
-  mozilla::Vector<uint8_t> mDER;
+  nsTArray<uint8_t> mDER;
   bool mIsRoot;
 };
 
 // This may block and must not be called from the main thread.
-nsresult GatherEnterpriseCerts(mozilla::Vector<EnterpriseCert>& certs);
+nsresult GatherEnterpriseCerts(nsTArray<EnterpriseCert>& certs);
 
 #endif  // EnterpriseRoots_h

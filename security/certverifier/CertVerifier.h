@@ -200,7 +200,7 @@ class CertVerifier {
                uint32_t certShortLifetimeInDays,
                NetscapeStepUpPolicy netscapeStepUpPolicy,
                CertificateTransparencyMode ctMode, CRLiteMode crliteMode,
-               const Vector<EnterpriseCert>& thirdPartyCerts);
+               const nsTArray<EnterpriseCert>& thirdPartyCerts);
   ~CertVerifier();
 
   void ClearOCSPCache() { mOCSPCache.Clear(); }
@@ -217,12 +217,12 @@ class CertVerifier {
  private:
   OCSPCache mOCSPCache;
   // We keep a copy of the bytes of each third party root to own.
-  Vector<EnterpriseCert> mThirdPartyCerts;
+  nsTArray<EnterpriseCert> mThirdPartyCerts;
   // This is a reusable, precomputed list of Inputs corresponding to each root
   // in mThirdPartyCerts that wasn't too long to make an Input out of.
-  Vector<mozilla::pkix::Input> mThirdPartyRootInputs;
+  nsTArray<mozilla::pkix::Input> mThirdPartyRootInputs;
   // Similarly, but with intermediates.
-  Vector<mozilla::pkix::Input> mThirdPartyIntermediateInputs;
+  nsTArray<mozilla::pkix::Input> mThirdPartyIntermediateInputs;
 
   // We only have a forward declarations of these classes (see above)
   // so we must allocate dynamically.

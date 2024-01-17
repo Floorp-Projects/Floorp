@@ -309,7 +309,7 @@ void nsNSSComponent::UnloadEnterpriseRoots() {
   }
   MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("UnloadEnterpriseRoots"));
   MutexAutoLock lock(mMutex);
-  mEnterpriseCerts.clear();
+  mEnterpriseCerts.Clear();
   setValidationOptions(false, lock);
   ClearSSLExternalAndInternalSessionCache();
 }
@@ -357,7 +357,7 @@ void nsNSSComponent::ImportEnterpriseRoots() {
     return;
   }
 
-  Vector<EnterpriseCert> enterpriseCerts;
+  nsTArray<EnterpriseCert> enterpriseCerts;
   nsresult rv = GatherEnterpriseCerts(enterpriseCerts);
   if (NS_SUCCEEDED(rv)) {
     MutexAutoLock lock(mMutex);
@@ -374,18 +374,13 @@ nsresult nsNSSComponent::CommonGetEnterpriseCerts(
     return rv;
   }
 
-  MutexAutoLock nsNSSComponentLock(mMutex);
   enterpriseCerts.Clear();
+  MutexAutoLock nsNSSComponentLock(mMutex);
   for (const auto& cert : mEnterpriseCerts) {
     nsTArray<uint8_t> certCopy;
     // mEnterpriseCerts includes both roots and intermediates.
     if (cert.GetIsRoot() == getRoots) {
-      nsresult rv = cert.CopyBytes(certCopy);
-      if (NS_FAILED(rv)) {
-        return rv;
-      }
-      // XXX(Bug 1631371) Check if this should use a fallible operation as it
-      // pretended earlier.
+      cert.CopyBytes(certCopy);
       enterpriseCerts.AppendElement(std::move(certCopy));
     }
   }
@@ -411,18 +406,11 @@ nsNSSComponent::AddEnterpriseIntermediate(
   if (NS_FAILED(rv)) {
     return rv;
   }
-  EnterpriseCert intermediate;
-  rv = intermediate.Init(intermediateBytes.Elements(),
-                         intermediateBytes.Length(), false);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
+  EnterpriseCert intermediate(intermediateBytes.Elements(),
+                              intermediateBytes.Length(), false);
   {
     MutexAutoLock nsNSSComponentLock(mMutex);
-    if (!mEnterpriseCerts.append(std::move(intermediate))) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
+    mEnterpriseCerts.AppendElement(std::move(intermediate));
   }
 
   UpdateCertVerifierWithEnterpriseRoots();

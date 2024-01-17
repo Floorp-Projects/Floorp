@@ -26,7 +26,7 @@ class SharedCertVerifier : public mozilla::psm::CertVerifier {
                      uint32_t certShortLifetimeInDays,
                      NetscapeStepUpPolicy netscapeStepUpPolicy,
                      CertificateTransparencyMode ctMode, CRLiteMode crliteMode,
-                     const Vector<EnterpriseCert>& thirdPartyCerts)
+                     const nsTArray<EnterpriseCert>& thirdPartyCerts)
       : mozilla::psm::CertVerifier(
             odc, osc, ocspSoftTimeout, ocspHardTimeout, certShortLifetimeInDays,
             netscapeStepUpPolicy, ctMode, crliteMode, thirdPartyCerts) {}
