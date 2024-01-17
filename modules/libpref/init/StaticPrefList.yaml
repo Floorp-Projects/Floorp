@@ -7431,6 +7431,12 @@
   value: true
   mirror: always
 
+# Enable fuse based destructuring
+- name: javascript.options.destructuring_fuse
+  type: bool
+  value: true
+  mirror: always
+
 # The default amount of time to wait from the user being idle to starting a
 # shrinking GC. Measured in milliseconds.
 - name: javascript.options.compact_on_user_inactive_delay
