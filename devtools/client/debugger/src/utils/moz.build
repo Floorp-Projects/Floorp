@@ -17,7 +17,6 @@ CompiledModules(
     "bootstrap.js",
     "build-query.js",
     "clipboard.js",
-    "connect.js",
     "context.js",
     "dbg.js",
     "DevToolsUtils.js",

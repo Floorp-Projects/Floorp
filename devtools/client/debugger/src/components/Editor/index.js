@@ -7,7 +7,7 @@ import React, { PureComponent } from "devtools/client/shared/vendor/react";
 import { div } from "devtools/client/shared/vendor/react-dom-factories";
 import { bindActionCreators } from "devtools/client/shared/vendor/redux";
 import ReactDOM from "devtools/client/shared/vendor/react-dom";
-import { connect } from "../../utils/connect";
+import { connect } from "devtools/client/shared/vendor/react-redux";
 
 import { getLineText, isLineBlackboxed } from "./../../utils/source";
 import { createLocation } from "./../../utils/location";

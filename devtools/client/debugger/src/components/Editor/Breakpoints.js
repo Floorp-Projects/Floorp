@@ -12,7 +12,7 @@ import {
   getFirstVisibleBreakpoints,
 } from "../../selectors/index";
 import { makeBreakpointId } from "../../utils/breakpoint/index";
-import { connect } from "../../utils/connect";
+import { connect } from "devtools/client/shared/vendor/react-redux";
 import actions from "../../actions/index";
 
 class Breakpoints extends Component {

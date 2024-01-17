@@ -11,7 +11,7 @@ import {
 import PropTypes from "devtools/client/shared/vendor/react-prop-types";
 import AccessibleImage from "../shared/AccessibleImage";
 import { showMenu } from "../../context-menu/menu";
-import { connect } from "../../utils/connect";
+import { connect } from "devtools/client/shared/vendor/react-redux";
 import actions from "../../actions/index";
 
 import {

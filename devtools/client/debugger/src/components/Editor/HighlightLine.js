@@ -11,7 +11,7 @@ import {
 } from "../../utils/editor/index";
 import { getDocument, hasDocument } from "../../utils/editor/source-documents";
 
-import { connect } from "../../utils/connect";
+import { connect } from "devtools/client/shared/vendor/react-redux";
 import {
   getVisibleSelectedFrame,
   getSelectedLocation,

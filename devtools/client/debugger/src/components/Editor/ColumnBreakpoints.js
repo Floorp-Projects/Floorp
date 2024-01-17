@@ -14,7 +14,7 @@ import {
   isSourceBlackBoxed,
 } from "../../selectors/index";
 import actions from "../../actions/index";
-import { connect } from "../../utils/connect";
+import { connect } from "devtools/client/shared/vendor/react-redux";
 import { makeBreakpointId } from "../../utils/breakpoint/index";
 
 // eslint-disable-next-line max-len

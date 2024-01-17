@@ -14,7 +14,7 @@ import {
 } from "../../utils/editor/index";
 import { isException } from "../../utils/pause/index";
 import { getIndentation } from "../../utils/indentation";
-import { connect } from "../../utils/connect";
+import { connect } from "devtools/client/shared/vendor/react-redux";
 import {
   getVisibleSelectedFrame,
   getPauseReason,
