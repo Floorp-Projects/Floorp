@@ -27,7 +27,8 @@
   journal[INTERCEPTED_XHR] = [];
   journal[LIBERATED_XHR] = [];
 
-  const ITERATIONS = 10;
+  const ITERATIONS = 11;
+  const SUB_ITERATIONS = 40;
 
   var perfMetadata = {
     owner: "DOM LWS",
@@ -79,12 +80,11 @@
 
       let iframe = await create_iframe("time_fetch.html");
 
-      let result = await iframe.contentWindow.time_fetch("target.txt");
-      is(result.status, 200);
-      is(result.data, "intercepted\n");
-      journal[COLD_FETCH].push(result.elapsed_ms);
+      let elapsed_ms = await iframe.contentWindow.time_fetch("target.txt", 1, "intercepted\n");
+      ok(elapsed_ms > 0, "cold time_fetch");
+      journal[COLD_FETCH].push(elapsed_ms);
 
-      ok(document.body.removeChild(iframe), "Failed to remove child iframe");
+      ok(document.body.removeChild(iframe), "remove child iframe");
 
       await reg.unregister();
     }
@@ -104,15 +104,17 @@
       });
 
       let iframe = await create_iframe("time_fetch.html");
+      let expected = sw_enabled ? "intercepted\n" : "target\n";
 
       for (let i = 0; i < ITERATIONS; i++) {
-        let result = await iframe.contentWindow.time_fetch("target.txt");
-        is(result.status, 200);
-        is(result.data, sw_enabled ? "intercepted\n" : "target\n");
-        journal.push(result.elapsed_ms);
+        let elapsed_ms = await iframe.contentWindow.time_fetch("target.txt",
+                                                               SUB_ITERATIONS,
+                                                               expected);
+        ok(elapsed_ms > 0, `time_fetch sw_enabled=${sw_enabled}`);
+        journal.push(elapsed_ms);
       }
 
-      ok(document.body.removeChild(iframe), "Failed to remove child iframe");
+      ok(document.body.removeChild(iframe), "remove child iframe");
 
       await SpecialPowers.popPrefEnv();
     }
@@ -138,15 +140,17 @@
       });
 
       let iframe = await create_iframe("time_fetch.html");
+      let expected = sw_enabled ? "intercepted\n" : "target\n";
 
       for (let i = 0; i < ITERATIONS; i++) {
-        let result = await iframe.contentWindow.time_xhr("target.txt");
-        is(result.status, 200);
-        is(result.data, sw_enabled ? "intercepted\n" : "target\n");
-        journal.push(result.elapsed_ms);
+        let elapsed_ms = await iframe.contentWindow.time_xhr("target.txt",
+                                                             SUB_ITERATIONS,
+                                                             expected);
+        ok(elapsed_ms > 0, `time_xhr sw_enabled=${sw_enabled}`);
+        journal.push(elapsed_ms);
       }
 
-      ok(document.body.removeChild(iframe), "Failed to remove child iframe");
+      ok(document.body.removeChild(iframe), "remove child iframe");
 
       await SpecialPowers.popPrefEnv();
     }
