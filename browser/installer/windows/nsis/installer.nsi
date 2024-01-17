@@ -1029,6 +1029,15 @@ Function SendPing
   ReadINIStr $0 "$INSTDIR\application.ini" "App" "BuildID"
   nsJSON::Set /tree ping "Data" "build_id" /value '"$0"'
 
+  ; Capture the distribution ID and version if they exist.
+  StrCpy $1 "$INSTDIR\distribution\distribution.ini"
+  ${If} ${FileExists} "$1"
+    ReadINIStr $0 "$1" "Global" "id"
+    nsJSON::Set /tree ping "Data" "distribution_id" /value '"$0"'
+    ReadINIStr $0 "$1" "Global" "version"
+    nsJSON::Set /tree ping "Data" "distribution_version" /value '"$0"'
+  ${EndIf}
+
   ${GetParameters} $0
   ${GetOptions} $0 "/LaunchedFromMSI" $0
   ${IfNot} ${Errors}
