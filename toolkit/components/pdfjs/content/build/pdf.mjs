@@ -3044,6 +3044,8 @@ class AnnotationEditor {
   #isInEditMode = false;
   #isResizerEnabledForKeyboard = false;
   #moveInDOMTimeout = null;
+  #prevDragX = 0;
+  #prevDragY = 0;
   _initialOptions = Object.create(null);
   _uiManager = null;
   _focusEventsAllowed = true;
@@ -3698,12 +3700,21 @@ class AnnotationEditor {
     this._uiManager.setUpDragSession();
     let pointerMoveOptions, pointerMoveCallback;
     if (isSelected) {
+      this.div.classList.add("moving");
       pointerMoveOptions = {
         passive: true,
         capture: true
       };
+      this.#prevDragX = event.clientX;
+      this.#prevDragY = event.clientY;
       pointerMoveCallback = e => {
-        const [tx, ty] = this.screenToPageTranslation(e.movementX, e.movementY);
+        const {
+          clientX: x,
+          clientY: y
+        } = e;
+        const [tx, ty] = this.screenToPageTranslation(x - this.#prevDragX, y - this.#prevDragY);
+        this.#prevDragX = x;
+        this.#prevDragY = y;
         this._uiManager.dragSelectedEditors(tx, ty);
       };
       window.addEventListener("pointermove", pointerMoveCallback, pointerMoveOptions);
@@ -3712,6 +3723,7 @@ class AnnotationEditor {
       window.removeEventListener("pointerup", pointerUpCallback);
       window.removeEventListener("blur", pointerUpCallback);
       if (isSelected) {
+        this.div.classList.remove("moving");
         window.removeEventListener("pointermove", pointerMoveCallback, pointerMoveOptions);
       }
       this.#hasBeenClicked = false;
@@ -7583,9 +7595,28 @@ function updateTextLayer({
 }
 
 ;// CONCATENATED MODULE: ./src/display/worker_options.js
-const GlobalWorkerOptions = Object.create(null);
-GlobalWorkerOptions.workerPort = null;
-GlobalWorkerOptions.workerSrc = "";
+class GlobalWorkerOptions {
+  static #port = null;
+  static #src = "";
+  static get workerPort() {
+    return this.#port;
+  }
+  static set workerPort(val) {
+    if (!(typeof Worker !== "undefined" && val instanceof Worker) && val !== null) {
+      throw new Error("Invalid `workerPort` type.");
+    }
+    this.#port = val;
+  }
+  static get workerSrc() {
+    return this.#src;
+  }
+  static set workerSrc(val) {
+    if (typeof val !== "string") {
+      throw new Error("Invalid `workerSrc` type.");
+    }
+    this.#src = val;
+  }
+}
 
 ;// CONCATENATED MODULE: ./src/shared/message_handler.js
 
@@ -8616,7 +8647,7 @@ function getDocument(src) {
   }
   const fetchDocParams = {
     docId,
-    apiVersion: '4.0.396',
+    apiVersion: '4.1.30',
     data,
     password,
     disableAutoFetch,
@@ -10261,8 +10292,8 @@ class InternalRenderTask {
     }
   }
 }
-const version = '4.0.396';
-const build = '903af4ee0';
+const version = '4.1.30';
+const build = 'a22b5a4f0';
 
 ;// CONCATENATED MODULE: ./src/shared/scripting_utils.js
 function makeColorComp(n) {
@@ -13146,13 +13177,12 @@ class FreeTextEditor extends AnnotationEditor {
     super.remove();
   }
   #extractText() {
-    const divs = this.editorDiv.getElementsByTagName("div");
-    if (divs.length === 0) {
-      return this.editorDiv.innerText;
-    }
     const buffer = [];
-    for (const div of divs) {
-      buffer.push(div.innerText.replace(/\r\n?|\n/, ""));
+    this.editorDiv.normalize();
+    const EOL_PATTERN = /\r\n?|\n/g;
+    for (const child of this.editorDiv.childNodes) {
+      const content = child.nodeType === Node.TEXT_NODE ? child.nodeValue : child.innerText;
+      buffer.push(content.replaceAll(EOL_PATTERN, ""));
     }
     return buffer.join("\n");
   }
@@ -13458,6 +13488,7 @@ class ColorPicker {
   #isMainColorPicker = false;
   #eventBus;
   #uiManager = null;
+  #type;
   static get _keyboardManager() {
     return shadow(this, "_keyboardManager", new KeyboardManager([[["Escape", "mac+Escape"], ColorPicker.prototype._hideDropdownFromKeyboard], [[" ", "mac+ "], ColorPicker.prototype._colorSelectFromKeyboard], [["ArrowDown", "ArrowRight", "mac+ArrowDown", "mac+ArrowRight"], ColorPicker.prototype._moveToNext], [["ArrowUp", "ArrowLeft", "mac+ArrowUp", "mac+ArrowLeft"], ColorPicker.prototype._moveToPrevious], [["Home", "mac+Home"], ColorPicker.prototype._moveToBeginning], [["End", "mac+End"], ColorPicker.prototype._moveToEnd]]));
   }
@@ -13465,7 +13496,13 @@ class ColorPicker {
     editor = null,
     uiManager = null
   }) {
-    this.#isMainColorPicker = !editor;
+    if (editor) {
+      this.#isMainColorPicker = false;
+      this.#type = AnnotationEditorParamsType.HIGHLIGHT_COLOR;
+    } else {
+      this.#isMainColorPicker = true;
+      this.#type = AnnotationEditorParamsType.HIGHLIGHT_DEFAULT_COLOR;
+    }
     this.#uiManager = editor?._uiManager || uiManager;
     this.#eventBus = this.#uiManager._eventBus;
     this.#defaultColor = editor?.color || this.#uiManager?.highlightColors.values().next().value || "#FFFF98";
@@ -13484,12 +13521,12 @@ class ColorPicker {
     return button;
   }
   renderMainDropdown() {
-    const dropdown = this.#dropdown = this.#getDropdownRoot(AnnotationEditorParamsType.HIGHLIGHT_DEFAULT_COLOR);
+    const dropdown = this.#dropdown = this.#getDropdownRoot();
     dropdown.setAttribute("aria-orientation", "horizontal");
     dropdown.setAttribute("aria-labelledby", "highlightColorPickerLabel");
     return dropdown;
   }
-  #getDropdownRoot(paramType) {
+  #getDropdownRoot() {
     const div = document.createElement("div");
     div.addEventListener("contextmenu", noContextMenu);
     div.className = "dropdown";
@@ -13509,17 +13546,17 @@ class ColorPicker {
       swatch.className = "swatch";
       swatch.style.backgroundColor = color;
       button.setAttribute("aria-selected", color === this.#defaultColor);
-      button.addEventListener("click", this.#colorSelect.bind(this, paramType, color));
+      button.addEventListener("click", this.#colorSelect.bind(this, color));
       div.append(button);
     }
     div.addEventListener("keydown", this.#boundKeyDown);
     return div;
   }
-  #colorSelect(type, color, event) {
+  #colorSelect(color, event) {
     event.stopPropagation();
     this.#eventBus.dispatch("switchannotationeditorparams", {
       source: this,
-      type,
+      type: this.#type,
       value: color
     });
   }
@@ -13707,10 +13744,7 @@ class Outliner {
       }
       outline.push(lastPointX, lastPointY);
     }
-    return {
-      outlines,
-      box: this.#box
-    };
+    return new HighlightOutline(outlines, this.#box);
   }
   #binarySearch(y) {
     const array = this.#intervals;
@@ -13790,6 +13824,63 @@ class Outliner {
     return results;
   }
 }
+class Outline {
+  toSVGPath() {
+    throw new Error("Abstract method `toSVGPath` must be implemented.");
+  }
+  get box() {
+    throw new Error("Abstract getter `box` must be implemented.");
+  }
+  serialize(_bbox, _rotation) {
+    throw new Error("Abstract method `serialize` must be implemented.");
+  }
+}
+class HighlightOutline extends Outline {
+  #box;
+  #outlines;
+  constructor(outlines, box) {
+    super();
+    this.#outlines = outlines;
+    this.#box = box;
+  }
+  toSVGPath() {
+    const buffer = [];
+    for (const polygon of this.#outlines) {
+      let [prevX, prevY] = polygon;
+      buffer.push(`M${prevX} ${prevY}`);
+      for (let i = 2; i < polygon.length; i += 2) {
+        const x = polygon[i];
+        const y = polygon[i + 1];
+        if (x === prevX) {
+          buffer.push(`V${y}`);
+          prevY = y;
+        } else if (y === prevY) {
+          buffer.push(`H${x}`);
+          prevX = x;
+        }
+      }
+      buffer.push("Z");
+    }
+    return buffer.join(" ");
+  }
+  serialize([blX, blY, trX, trY], _rotation) {
+    const outlines = [];
+    const width = trX - blX;
+    const height = trY - blY;
+    for (const outline of this.#outlines) {
+      const points = new Array(outline.length);
+      for (let i = 0; i < outline.length; i += 2) {
+        points[i] = blX + outline[i] * width;
+        points[i + 1] = trY - outline[i + 1] * height;
+      }
+      outlines.push(points);
+    }
+    return outlines;
+  }
+  get box() {
+    return this.#box;
+  }
+}
 
 ;// CONCATENATED MODULE: ./src/display/editor/highlight.js
 
@@ -13853,6 +13944,7 @@ class HighlightEditor extends AnnotationEditor {
         break;
     }
   }
+  translateInPage(x, y) {}
   get toolbarPosition() {
     return this.#lastPoint;
   }
@@ -13874,12 +13966,12 @@ class HighlightEditor extends AnnotationEditor {
     this.addCommands({
       cmd: () => {
         this.color = color;
-        this.parent.drawLayer.changeColor(this.#id, color);
+        this.parent?.drawLayer.changeColor(this.#id, color);
         this.#colorPicker?.updateColor(color);
       },
       undo: () => {
         this.color = savedColor;
-        this.parent.drawLayer.changeColor(this.#id, savedColor);
+        this.parent?.drawLayer.changeColor(this.#id, savedColor);
         this.#colorPicker?.updateColor(savedColor);
       },
       mustExec: true,
@@ -14069,20 +14161,7 @@ class HighlightEditor extends AnnotationEditor {
     return quadPoints;
   }
   #serializeOutlines(rect) {
-    const [pageWidth, pageHeight] = this.pageDimensions;
-    const width = this.width * pageWidth;
-    const height = this.height * pageHeight;
-    const [tx, ty] = rect;
-    const outlines = [];
-    for (const outline of this.#highlightOutlines.outlines) {
-      const points = new Array(outline.length);
-      for (let i = 0; i < outline.length; i += 2) {
-        points[i] = tx + outline[i] * width;
-        points[i + 1] = ty + (1 - outline[i + 1]) * height;
-      }
-      outlines.push(points);
-    }
-    return outlines;
+    return this.#highlightOutlines.serialize(rect, 0);
   }
   static deserialize(data, parent, uiManager) {
     const editor = super.deserialize(data, parent, uiManager);
@@ -14783,6 +14862,13 @@ class InkEditor extends AnnotationEditor {
       const points = [];
       for (let j = 0, jj = bezier.length; j < jj; j++) {
         const [first, control1, control2, second] = bezier[j];
+        if (first[0] === second[0] && first[1] === second[1] && jj === 1) {
+          const p0 = s * first[0] + shiftX;
+          const p1 = s * first[1] + shiftY;
+          buffer.push(p0, p1);
+          points.push(p0, p1);
+          break;
+        }
         const p10 = s * first[0] + shiftX;
         const p11 = s * first[1] + shiftY;
         const p20 = s * control1[0] + shiftX;
@@ -15966,20 +16052,7 @@ class DrawLayer {
     DrawLayer.#setBox(svg, box);
     return svg;
   }
-  highlight({
-    outlines,
-    box
-  }, color, opacity) {
-    const id = this.#id++;
-    const root = this.#createSVG(box);
-    root.classList.add("highlight");
-    const defs = DrawLayer._svgFactory.createElement("defs");
-    root.append(defs);
-    const path = DrawLayer._svgFactory.createElement("path");
-    defs.append(path);
-    const pathId = `path_p${this.pageIndex}_${id}`;
-    path.setAttribute("id", pathId);
-    path.setAttribute("d", DrawLayer.#extractPathFromHighlightOutlines(outlines));
+  #createClipPath(defs, pathId) {
     const clipPath = DrawLayer._svgFactory.createElement("clipPath");
     defs.append(clipPath);
     const clipPathId = `clip_${pathId}`;
@@ -15989,6 +16062,20 @@ class DrawLayer {
     clipPath.append(clipPathUse);
     clipPathUse.setAttribute("href", `#${pathId}`);
     clipPathUse.classList.add("clip");
+    return clipPathId;
+  }
+  highlight(outlines, color, opacity) {
+    const id = this.#id++;
+    const root = this.#createSVG(outlines.box);
+    root.classList.add("highlight");
+    const defs = DrawLayer._svgFactory.createElement("defs");
+    root.append(defs);
+    const path = DrawLayer._svgFactory.createElement("path");
+    defs.append(path);
+    const pathId = `path_p${this.pageIndex}_${id}`;
+    path.setAttribute("id", pathId);
+    path.setAttribute("d", outlines.toSVGPath());
+    const clipPathId = this.#createClipPath(defs, pathId);
     const use = DrawLayer._svgFactory.createElement("use");
     root.append(use);
     root.setAttribute("fill", color);
@@ -16000,12 +16087,9 @@ class DrawLayer {
       clipPathId: `url(#${clipPathId})`
     };
   }
-  highlightOutline({
-    outlines,
-    box
-  }) {
+  highlightOutline(outlines) {
     const id = this.#id++;
-    const root = this.#createSVG(box);
+    const root = this.#createSVG(outlines.box);
     root.classList.add("highlightOutline");
     const defs = DrawLayer._svgFactory.createElement("defs");
     root.append(defs);
@@ -16013,7 +16097,7 @@ class DrawLayer {
     defs.append(path);
     const pathId = `path_p${this.pageIndex}_${id}`;
     path.setAttribute("id", pathId);
-    path.setAttribute("d", DrawLayer.#extractPathFromHighlightOutlines(outlines));
+    path.setAttribute("d", outlines.toSVGPath());
     path.setAttribute("vector-effect", "non-scaling-stroke");
     const use1 = DrawLayer._svgFactory.createElement("use");
     root.append(use1);
@@ -16024,26 +16108,6 @@ class DrawLayer {
     use2.classList.add("secondaryOutline");
     this.#mapping.set(id, root);
     return id;
-  }
-  static #extractPathFromHighlightOutlines(polygons) {
-    const buffer = [];
-    for (const polygon of polygons) {
-      let [prevX, prevY] = polygon;
-      buffer.push(`M${prevX} ${prevY}`);
-      for (let i = 2; i < polygon.length; i += 2) {
-        const x = polygon[i];
-        const y = polygon[i + 1];
-        if (x === prevX) {
-          buffer.push(`V${y}`);
-          prevY = y;
-        } else if (y === prevY) {
-          buffer.push(`H${x}`);
-          prevX = x;
-        }
-      }
-      buffer.push("Z");
-    }
-    return buffer.join(" ");
   }
   updateBox(id, box) {
     DrawLayer.#setBox(this.#mapping.get(id), box);
@@ -16092,8 +16156,8 @@ class DrawLayer {
 
 
 
-const pdfjsVersion = '4.0.396';
-const pdfjsBuild = '903af4ee0';
+const pdfjsVersion = '4.1.30';
+const pdfjsBuild = 'a22b5a4f0';
 
 var __webpack_exports__AbortException = __webpack_exports__.AbortException;
 var __webpack_exports__AnnotationEditorLayer = __webpack_exports__.AnnotationEditorLayer;
