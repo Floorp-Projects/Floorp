@@ -3353,22 +3353,16 @@ CSSToCSSMatrix4x4 APZCTreeManager::GetOopifToRootContentTransform(
     result.PostScale(1.0 / rootZoom.scale, 1.0 / rootZoom.scale, 1.0);
   }
 
-  CSSPoint rootScrollPosition = rootContentApzc->GetLayoutScrollOffset();
   return ViewAs<CSSToCSSMatrix4x4>(result,
-                                   PixelCastJustification::UntypedPrePostScale)
-      .PostTranslate(rootScrollPosition.x, rootScrollPosition.y, 0);
+                                   PixelCastJustification::UntypedPrePostScale);
 }
 
 CSSRect APZCTreeManager::ConvertRectInApzcToRoot(AsyncPanZoomController* aApzc,
                                                  const CSSRect& aRect) const {
   MOZ_ASSERT(aApzc->IsRootForLayersId());
   RefPtr<AsyncPanZoomController> rootContentApzc = FindZoomableApzc(aApzc);
-  if (!rootContentApzc) {
+  if (!rootContentApzc || rootContentApzc == aApzc) {
     return aRect;
-  }
-
-  if (rootContentApzc == aApzc) {
-    return aRect + rootContentApzc->GetLayoutScrollOffset();
   }
 
   return GetOopifToRootContentTransform(aApzc).TransformBounds(aRect);
