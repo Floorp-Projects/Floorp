@@ -1052,19 +1052,15 @@ void nsBaseWidget::UpdateZoomConstraints(
     const uint32_t& aPresShellId, const ScrollableLayerGuid::ViewID& aViewId,
     const Maybe<ZoomConstraints>& aConstraints) {
   if (!mCompositorSession || !mAPZC) {
-    if (mInitialZoomConstraints) {
-      MOZ_ASSERT(mInitialZoomConstraints->mPresShellID == aPresShellId);
-      MOZ_ASSERT(mInitialZoomConstraints->mViewID == aViewId);
-      if (!aConstraints) {
-        mInitialZoomConstraints.reset();
-      }
-    }
-
+    MOZ_ASSERT_IF(mInitialZoomConstraints,
+                  mInitialZoomConstraints->mViewID == aViewId);
     if (aConstraints) {
-      // We have some constraints, but the compositor and APZC aren't created
-      // yet. Save these so we can use them later.
+      // We have some constraints, but the compositor and APZC aren't
+      // created yet. Save these so we can use them later.
       mInitialZoomConstraints = Some(
           InitialZoomConstraints(aPresShellId, aViewId, aConstraints.ref()));
+    } else {
+      mInitialZoomConstraints.reset();
     }
     return;
   }
