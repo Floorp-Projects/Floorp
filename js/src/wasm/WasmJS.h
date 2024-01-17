@@ -25,7 +25,7 @@
 #include <stdint.h>  // int32_t, int64_t, uint32_t
 
 #include "gc/Barrier.h"        // HeapPtr
-#include "gc/SweepingAPI.h"    // JS::WeakCache
+#include "gc/SweepingAPI.h"    // WeakCache
 #include "gc/ZoneAllocator.h"  // ZoneAllocPolicy
 #include "js/AllocPolicy.h"    // SystemAllocPolicy
 #include "js/Class.h"          // JSClassOps, ClassSpec
@@ -280,9 +280,10 @@ class WasmMemoryObject : public NativeObject {
   static bool discard(JSContext* cx, unsigned argc, Value* vp);
   static uint64_t growShared(Handle<WasmMemoryObject*> memory, uint64_t delta);
 
-  using InstanceSet = JS::WeakCache<GCHashSet<
-      WeakHeapPtr<WasmInstanceObject*>,
-      StableCellHasher<WeakHeapPtr<WasmInstanceObject*>>, CellAllocPolicy>>;
+  using InstanceSet =
+      WeakCache<GCHashSet<WeakHeapPtr<WasmInstanceObject*>,
+                          StableCellHasher<WeakHeapPtr<WasmInstanceObject*>>,
+                          CellAllocPolicy>>;
   bool hasObservers() const;
   InstanceSet& observers() const;
   InstanceSet* getOrCreateObservers(JSContext* cx);

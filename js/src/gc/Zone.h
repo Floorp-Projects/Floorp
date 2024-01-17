@@ -264,7 +264,7 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
 
   // List of non-ephemeron weak containers to sweep during
   // beginSweepingSweepGroup.
-  js::MainThreadOrGCTaskData<mozilla::LinkedList<detail::WeakCacheBase>>
+  js::MainThreadOrGCTaskData<mozilla::LinkedList<js::gc::WeakCacheBase>>
       weakCaches_;
 
   // Mapping from not yet marked keys to a vector of all values that the key
@@ -559,10 +559,10 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
     }
   }
 
-  mozilla::LinkedList<detail::WeakCacheBase>& weakCaches() {
+  mozilla::LinkedList<js::gc::WeakCacheBase>& weakCaches() {
     return weakCaches_.ref();
   }
-  void registerWeakCache(detail::WeakCacheBase* cachep) {
+  void registerWeakCache(js::gc::WeakCacheBase* cachep) {
     weakCaches().insertBack(cachep);
   }
 
