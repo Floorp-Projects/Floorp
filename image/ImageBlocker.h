@@ -25,6 +25,8 @@ class ImageBlocker final : public nsIContentPolicy {
  public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSICONTENTPOLICY
+
+  static bool ShouldBlock(nsIURI* aContentLocation);
 };
 
 }  // namespace image
