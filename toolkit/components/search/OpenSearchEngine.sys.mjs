@@ -236,9 +236,6 @@ export class OpenSearchEngine extends SearchEngine {
         lazy.SearchUtils.sanitizeName(this.name),
         this._uri
       );
-      if (this._extensionID) {
-        this._loadPath += ":" + this._extensionID;
-      }
       this.setAttr(
         "loadPathHash",
         lazy.SearchUtils.getVerificationHash(this._loadPath)
@@ -416,9 +413,6 @@ export class OpenSearchEngine extends SearchEngine {
           break;
         case "IconUpdateUrl":
           this._iconUpdateURL = child.textContent;
-          break;
-        case "ExtensionID":
-          this._extensionID = child.textContent;
           break;
       }
     }
