@@ -753,24 +753,34 @@ void nsIFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
 
 void nsIFrame::InitPrimaryFrame() {
   MOZ_ASSERT(IsPrimaryFrame());
+  HandlePrimaryFrameStyleChange(nullptr);
+}
+
+void nsIFrame::HandlePrimaryFrameStyleChange(ComputedStyle* aOldStyle) {
   const nsStyleDisplay* disp = StyleDisplay();
-
-  if (disp->mContainerType != StyleContainerType::Normal) {
-    PresContext()->RegisterContainerQueryFrame(this);
+  const nsStyleDisplay* oldDisp =
+      aOldStyle ? aOldStyle->StyleDisplay() : nullptr;
+  if (!oldDisp || oldDisp->mContainerType != disp->mContainerType) {
+    auto* pc = PresContext();
+    if (disp->mContainerType != StyleContainerType::Normal) {
+      pc->RegisterContainerQueryFrame(this);
+    } else {
+      pc->UnregisterContainerQueryFrame(this);
+    }
   }
 
-  if (StyleDisplay()->ContentVisibility(*this) ==
-      StyleContentVisibility::Auto) {
-    PresShell()->RegisterContentVisibilityAutoFrame(this);
-  } else if (auto* element = Element::FromNodeOrNull(GetContent())) {
-    element->ClearContentRelevancy();
+  const auto cv = disp->ContentVisibility(*this);
+  if (!oldDisp || oldDisp->ContentVisibility(*this) != cv) {
+    if (cv == StyleContentVisibility::Auto) {
+      PresShell()->RegisterContentVisibilityAutoFrame(this);
+    } else {
+      if (auto* element = Element::FromNodeOrNull(GetContent())) {
+        element->ClearContentRelevancy();
+      }
+      PresShell()->UnregisterContentVisibilityAutoFrame(this);
+    }
+    PresContext()->SetNeedsToUpdateHiddenByContentVisibilityForAnimations();
   }
-
-  // TODO(mrobinson): Once bug 1765615 is fixed, this should be called on
-  // layout changes. In addition, when `content-visibility: auto` is implemented
-  // this should also be called when scrolling or focus causes content to be
-  // skipped or unskipped.
-  UpdateAnimationVisibility();
 
   HandleLastRememberedSize();
 }
@@ -796,19 +806,21 @@ void nsIFrame::Destroy(DestroyContext& aContext) {
     }
   }
 
-  if (disp->mContainerType != StyleContainerType::Normal) {
-    PresContext()->UnregisterContainerQueryFrame(this);
-  }
-
-  nsPresContext* presContext = PresContext();
-  mozilla::PresShell* presShell = presContext->GetPresShell();
   if (HasAnyStateBits(NS_FRAME_OUT_OF_FLOW)) {
     if (nsPlaceholderFrame* placeholder = GetPlaceholderFrame()) {
       placeholder->SetOutOfFlowFrame(nullptr);
     }
   }
 
+  nsPresContext* pc = PresContext();
+  mozilla::PresShell* ps = pc->GetPresShell();
   if (IsPrimaryFrame()) {
+    if (disp->mContainerType != StyleContainerType::Normal) {
+      pc->UnregisterContainerQueryFrame(this);
+    }
+    if (disp->ContentVisibility(*this) == StyleContentVisibility::Auto) {
+      ps->UnregisterContentVisibilityAutoFrame(this);
+    }
     // This needs to happen before we clear our Properties() table.
     ActiveLayerTracker::TransferActivityToContent(this, mContent);
   }
@@ -826,7 +838,7 @@ void nsIFrame::Destroy(DestroyContext& aContext) {
     // If no new frame for this element is created by the end of the
     // restyling process, stop animations and transitions for this frame
     RestyleManager::AnimationsWithDestroyedFrame* adf =
-        presContext->RestyleManager()->GetAnimationsWithDestroyedFrame();
+        pc->RestyleManager()->GetAnimationsWithDestroyedFrame();
     // AnimationsWithDestroyedFrame only lives during the restyling process.
     if (adf) {
       adf->Put(mContent, mComputedStyle);
@@ -841,12 +853,12 @@ void nsIFrame::Destroy(DestroyContext& aContext) {
   DisableVisibilityTracking();
 
   // Ensure that we're not in the approximately visible list anymore.
-  PresContext()->GetPresShell()->RemoveFrameFromApproximatelyVisibleList(this);
+  ps->RemoveFrameFromApproximatelyVisibleList(this);
 
-  presShell->NotifyDestroyingFrame(this);
+  ps->NotifyDestroyingFrame(this);
 
   if (HasAnyStateBits(NS_FRAME_EXTERNAL_REFERENCE)) {
-    presShell->ClearFrameRefs(this);
+    ps->ClearFrameRefs(this);
   }
 
   nsView* view = GetView();
@@ -884,7 +896,7 @@ void nsIFrame::Destroy(DestroyContext& aContext) {
 
 #ifdef DEBUG
   {
-    nsIFrame* rootFrame = presShell->GetRootFrame();
+    nsIFrame* rootFrame = ps->GetRootFrame();
     MOZ_ASSERT(rootFrame);
     if (this != rootFrame) {
       auto* builder = nsLayoutUtils::GetRetainedDisplayListBuilder(rootFrame);
@@ -904,7 +916,7 @@ void nsIFrame::Destroy(DestroyContext& aContext) {
 
   // Now that we're totally cleaned out, we need to add ourselves to
   // the presshell's recycler.
-  presShell->FreeFrame(id, this);
+  ps->FreeFrame(id, this);
 }
 
 std::pair<int32_t, int32_t> nsIFrame::GetOffsets() const {
@@ -1375,7 +1387,8 @@ void nsIFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle) {
   }
 
   if (IsPrimaryFrame()) {
-    HandleLastRememberedSize();
+    MOZ_ASSERT(aOldComputedStyle);
+    HandlePrimaryFrameStyleChange(aOldComputedStyle);
   }
 
   RemoveStateBits(NS_FRAME_SIMPLE_EVENT_REGIONS | NS_FRAME_SIMPLE_DISPLAYLIST);
@@ -7107,6 +7120,7 @@ bool nsIFrame::UpdateIsRelevantContent(
   }
 
   HandleLastRememberedSize();
+  PresContext()->SetNeedsToUpdateHiddenByContentVisibilityForAnimations();
   PresShell()->FrameNeedsReflow(
       this, IntrinsicDirty::FrameAncestorsAndDescendants, NS_FRAME_IS_DIRTY);
   InvalidateFrame();
@@ -11442,29 +11456,6 @@ void nsIFrame::UpdateVisibleDescendantsState() {
     }
   } else {
     mAllDescendantsAreInvisible = HasNoVisibleDescendants(this);
-  }
-}
-
-void nsIFrame::UpdateAnimationVisibility() {
-  auto* animationCollection = AnimationCollection<CSSAnimation>::Get(this);
-  auto* transitionCollection = AnimationCollection<CSSTransition>::Get(this);
-
-  if ((!animationCollection || animationCollection->mAnimations.IsEmpty()) &&
-      (!transitionCollection || transitionCollection->mAnimations.IsEmpty())) {
-    return;
-  }
-
-  bool hidden = IsHiddenByContentVisibilityOnAnyAncestor();
-  if (animationCollection) {
-    for (auto& animation : animationCollection->mAnimations) {
-      animation->SetHiddenByContentVisibility(hidden);
-    }
-  }
-
-  if (transitionCollection) {
-    for (auto& transition : transitionCollection->mAnimations) {
-      transition->SetHiddenByContentVisibility(hidden);
-    }
   }
 }
 

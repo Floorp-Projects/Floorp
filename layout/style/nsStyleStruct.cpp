@@ -2248,21 +2248,9 @@ static bool AppearanceValueAffectsFrames(StyleAppearance aAppearance,
 
 nsChangeHint nsStyleDisplay::CalcDifference(
     const nsStyleDisplay& aNewData, const ComputedStyle& aOldStyle) const {
-  if (mDisplay != aNewData.mDisplay || mContain != aNewData.mContain ||
+  if (mDisplay != aNewData.mDisplay ||
       (mFloat == StyleFloat::None) != (aNewData.mFloat == StyleFloat::None) ||
       mTopLayer != aNewData.mTopLayer || mResize != aNewData.mResize) {
-    return nsChangeHint_ReconstructFrame;
-  }
-
-  // `content-visibility` can impact whether or not this frame has containment,
-  // so we reconstruct the frame like we do above.
-  // TODO: We should avoid reconstruction here, per bug 1765615.
-  if (mContentVisibility != aNewData.mContentVisibility) {
-    return nsChangeHint_ReconstructFrame;
-  }
-
-  // Same issue as above for now.
-  if (mContainerType != aNewData.mContainerType) {
     return nsChangeHint_ReconstructFrame;
   }
 
@@ -2279,6 +2267,21 @@ nsChangeHint nsStyleDisplay::CalcDifference(
   }
 
   auto hint = nsChangeHint(0);
+  const auto containmentDiff =
+      mEffectiveContainment ^ aNewData.mEffectiveContainment;
+  if (containmentDiff) {
+    if (containmentDiff & StyleContain::STYLE) {
+      // Style containment affects counters so we need to re-frame.
+      return nsChangeHint_ReconstructFrame;
+    }
+    if (containmentDiff & (StyleContain::PAINT | StyleContain::LAYOUT)) {
+      // Paint and layout containment boxes are absolutely/fixed positioning
+      // containers and establishes an independent formatting context.
+      hint |= nsChangeHint_UpdateContainingBlock | nsChangeHint_UpdateBFC;
+    }
+    // The other container types only need a reflow.
+    hint |= nsChangeHint_AllReflowHints | nsChangeHint_RepaintFrame;
+  }
   if (mPosition != aNewData.mPosition) {
     if (IsAbsolutelyPositionedStyle() ||
         aNewData.IsAbsolutelyPositionedStyle()) {
@@ -2511,8 +2514,13 @@ nsChangeHint nsStyleDisplay::CalcDifference(
   // TODO(emilio): Figure out change hints for container-name, maybe it needs to
   // be handled by the style system as a special-case (since it changes
   // container-query selection on descendants).
+  // container-type / contain / content-visibility are handled by the
+  // mEffectiveContainment check.
   if (!hint && (mWillChange != aNewData.mWillChange ||
                 mOverflowAnchor != aNewData.mOverflowAnchor ||
+                mContentVisibility != aNewData.mContentVisibility ||
+                mContainerType != aNewData.mContainerType ||
+                mContain != aNewData.mContain ||
                 mContainerName != aNewData.mContainerName)) {
     hint |= nsChangeHint_NeutralChange;
   }

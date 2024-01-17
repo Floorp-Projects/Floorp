@@ -34,6 +34,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1131371
   #tableCellWithAbsPosChild {
     display: table-cell;
   }
+  .blockmargin {
+    margin: 25px 0;
+  }
 </style>
 <div id="display">
   <div id="content">
@@ -75,6 +78,24 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1131371
   <div id="tableCell"></div>
   <div id="tableCellWithAbsPosChild">
     <div style="position: absolute"></div>
+  </div>
+  <div id="containNode">
+    <div></div>
+  </div>
+  <div id="containNodeWithAbsPosChild">
+    <div style="position: absolute"></div>
+  </div>
+  <div id="containNodeWithFixedPosChild">
+    <div style="position: fixed"></div>
+  </div>
+  <div id="containNodeWithFloatingChild">
+    <div style="float: left"></div>
+  </div>
+  <div id="containNodeWithMarginCollapsing" class="blockmargin">
+    <div class="blockmargin"></div>
+  </div>
+  <div id="contentVisibilityNode">
+    <div></div>
   </div>
 </div>
 <pre id="test">
@@ -632,6 +653,284 @@ const gTestcases = [
     afterStyle: "transform: translateX(-100px)",
     expectConstruction: false,
     expectReflow: false,
+  },
+  // Style containment affects counters so we need to re-frame.
+  // For other containments, we only need to reflow.
+  {
+    elem: containNode,
+    beforeStyle: "contain: none",
+    afterStyle: "contain: style",
+    expectConstruction: true,
+    expectReflow: true,
+  },
+  {
+    elem: containNode,
+    beforeStyle: "contain: style",
+    afterStyle: "contain: none",
+    expectConstruction: true,
+    expectReflow: true,
+  },
+  {
+    elem: containNode,
+    beforeStyle: "contain: none",
+    afterStyle: "contain: paint",
+    expectConstruction: false,
+    expectReflow: true,
+  },
+  {
+    elem: containNode,
+    beforeStyle: "contain: paint",
+    afterStyle: "contain: none",
+    expectConstruction: false,
+    expectReflow: true,
+  },
+  {
+    elem: containNode,
+    beforeStyle: "contain: none",
+    afterStyle: "contain: layout",
+    expectConstruction: false,
+    expectReflow: true,
+  },
+  {
+    elem: containNode,
+    beforeStyle: "contain: layout",
+    afterStyle: "contain: none",
+    expectConstruction: false,
+    expectReflow: true,
+  },
+  {
+    elem: containNode,
+    beforeStyle: "contain: none",
+    afterStyle: "contain: size",
+    expectConstruction: false,
+    expectReflow: true,
+  },
+  {
+    elem: containNode,
+    beforeStyle: "contain: size",
+    afterStyle: "contain: none",
+    expectConstruction: false,
+    expectReflow: true,
+  },
+  // paint/layout containment boxes establish an absolute positioning
+  // containing block, so need a re-frame to handle abs/fixed positioned boxes.
+  {
+    elem: containNodeWithAbsPosChild,
+    beforeStyle: "contain: none",
+    afterStyle: "contain: paint",
+    expectConstruction: true,
+    expectReflow: true,
+  },
+  {
+    elem: containNodeWithAbsPosChild,
+    beforeStyle: "contain: paint",
+    afterStyle: "contain: none",
+    expectConstruction: true,
+    expectReflow: true,
+  },
+  {
+    elem: containNodeWithAbsPosChild,
+    beforeStyle: "contain: none",
+    afterStyle: "contain: layout",
+    expectConstruction: true,
+    expectReflow: true,
+  },
+  {
+    elem: containNodeWithAbsPosChild,
+    beforeStyle: "contain: layout",
+    afterStyle: "contain: none",
+    expectConstruction: true,
+    expectReflow: true,
+  },
+  {
+    elem: containNodeWithAbsPosChild,
+    beforeStyle: "contain: none",
+    afterStyle: "contain: size",
+    expectConstruction: false,
+    expectReflow: true,
+  },
+  {
+    elem: containNodeWithAbsPosChild,
+    beforeStyle: "contain: size",
+    afterStyle: "contain: none",
+    expectConstruction: false,
+    expectReflow: true,
+  },
+  {
+    elem: containNodeWithFixedPosChild,
+    beforeStyle: "contain: none",
+    afterStyle: "contain: paint",
+    expectConstruction: true,
+    expectReflow: true,
+  },
+  {
+    elem: containNodeWithFixedPosChild,
+    beforeStyle: "contain: paint",
+    afterStyle: "contain: none",
+    expectConstruction: true,
+    expectReflow: true,
+  },
+  {
+    elem: containNodeWithFixedPosChild,
+    beforeStyle: "contain: none",
+    afterStyle: "contain: layout",
+    expectConstruction: true,
+    expectReflow: true,
+  },
+  {
+    elem: containNodeWithFixedPosChild,
+    beforeStyle: "contain: layout",
+    afterStyle: "contain: none",
+    expectConstruction: true,
+    expectReflow: true,
+  },
+  {
+    elem: containNodeWithFixedPosChild,
+    beforeStyle: "contain: none",
+    afterStyle: "contain: size",
+    expectConstruction: false,
+    expectReflow: true,
+  },
+  {
+    elem: containNodeWithFixedPosChild,
+    beforeStyle: "contain: size",
+    afterStyle: "contain: none",
+    expectConstruction: false,
+    expectReflow: true,
+  },
+  // paint/layout containment boxes establish an independent formatting context,
+  // so need a re-frame to handle floated boxes.
+  // FIXME(bug 1874826): Try and avoid a full construction.
+  {
+    elem: containNodeWithFloatingChild,
+    beforeStyle: "contain: none",
+    afterStyle: "contain: paint",
+    expectConstruction: true,
+    expectReflow: true,
+  },
+  {
+    elem: containNodeWithFloatingChild,
+    beforeStyle: "contain: paint",
+    afterStyle: "contain: none",
+    expectConstruction: true,
+    expectReflow: true,
+  },
+  {
+    elem: containNodeWithFloatingChild,
+    beforeStyle: "contain: none",
+    afterStyle: "contain: layout",
+    expectConstruction: true,
+    expectReflow: true,
+  },
+  {
+    elem: containNodeWithFloatingChild,
+    beforeStyle: "contain: layout",
+    afterStyle: "contain: none",
+    expectConstruction: true,
+    expectReflow: true,
+  },
+  {
+    elem: containNodeWithFloatingChild,
+    beforeStyle: "contain: none",
+    afterStyle: "contain: size",
+    expectConstruction: false,
+    expectReflow: true,
+  },
+  {
+    elem: containNodeWithFloatingChild,
+    beforeStyle: "contain: size",
+    afterStyle: "contain: none",
+    expectConstruction: false,
+    expectReflow: true,
+  },
+  // However, a reflow is enough to update margin collapsing.
+  {
+    elem: containNodeWithMarginCollapsing,
+    beforeStyle: "contain: none",
+    afterStyle: "contain: paint",
+    expectConstruction: false,
+    expectReflow: true,
+  },
+  {
+    elem: containNodeWithMarginCollapsing,
+    beforeStyle: "contain: paint",
+    afterStyle: "contain: none",
+    expectConstruction: false,
+    expectReflow: true,
+  },
+  {
+    elem: containNodeWithMarginCollapsing,
+    beforeStyle: "contain: none",
+    afterStyle: "contain: layout",
+    expectConstruction: false,
+    expectReflow: true,
+  },
+  {
+    elem: containNodeWithMarginCollapsing,
+    beforeStyle: "contain: layout",
+    afterStyle: "contain: none",
+    expectConstruction: false,
+    expectReflow: true,
+  },
+  // content-visibility: auto/hidden implies style containment contrary to
+  // content-visibility: visible, so  we generally need a re-frame (see above)
+  // when going from one case to the other.
+  {
+    elem: contentVisibilityNode,
+    beforeStyle: "content-visibility: visible",
+    afterStyle: "content-visibility: hidden",
+    expectConstruction: true,
+    expectReflow: true,
+  },
+  {
+    elem: contentVisibilityNode,
+    beforeStyle: "content-visibility: hidden",
+    afterStyle: "content-visibility: visible",
+    expectConstruction: true,
+    expectReflow: true,
+  },
+  {
+    elem: contentVisibilityNode,
+    beforeStyle: "content-visibility: visible",
+    afterStyle: "content-visibility: auto",
+    expectConstruction: true,
+    expectReflow: true,
+  },
+  {
+    elem: contentVisibilityNode,
+    beforeStyle: "content-visibility: auto",
+    afterStyle: "content-visibility: visible",
+    expectConstruction: true,
+    expectReflow: true,
+  },
+  {
+    elem: contentVisibilityNode,
+    beforeStyle: "content-visibility: hidden",
+    afterStyle: "content-visibility: auto",
+    expectConstruction: false,
+    expectReflow: true,
+  },
+  {
+    elem: contentVisibilityNode,
+    beforeStyle: "content-visibility: auto",
+    afterStyle: "content-visibility: hidden",
+    expectConstruction: false,
+    expectReflow: true,
+  },
+  // However that's not the case if we force style containment explicitly.
+  {
+    elem: contentVisibilityNode,
+    beforeStyle: "content-visibility: visible; contain: style",
+    afterStyle: "content-visibility: hidden; contain: style",
+    expectConstruction: false,
+    expectReflow: true,
+  },
+  {
+    elem: contentVisibilityNode,
+    beforeStyle: "content-visibility: hidden; contain: style",
+    afterStyle: "content-visibility: visible; contain: style",
+    expectConstruction: false,
+    expectReflow: true,
   },
 ];
 
