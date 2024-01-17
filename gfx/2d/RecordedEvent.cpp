@@ -60,8 +60,6 @@ std::string RecordedEvent::GetEventName(EventType aType) {
       return "Fill";
     case FILLGLYPHS:
       return "FillGlyphs";
-    case STROKEGLYPHS:
-      return "StrokeGlyphs";
     case MASK:
       return "Mask";
     case STROKE:

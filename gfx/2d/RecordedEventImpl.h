@@ -404,22 +404,21 @@ class RecordedFillCircle : public RecordedEventDerived<RecordedFillCircle> {
   DrawOptions mOptions;
 };
 
-template <class Derived>
-class RecordedDrawGlyphs : public RecordedEventDerived<Derived> {
+class RecordedFillGlyphs : public RecordedEventDerived<RecordedFillGlyphs> {
  public:
-  RecordedDrawGlyphs(RecordedEvent::EventType aType, ReferencePtr aScaledFont,
-                     const Pattern& aPattern, const DrawOptions& aOptions,
-                     const Glyph* aGlyphs, uint32_t aNumGlyphs)
-      : RecordedEventDerived<Derived>(aType),
+  RecordedFillGlyphs(ReferencePtr aScaledFont, const Pattern& aPattern,
+                     const DrawOptions& aOptions, const Glyph* aGlyphs,
+                     uint32_t aNumGlyphs)
+      : RecordedEventDerived(FILLGLYPHS),
         mScaledFont(aScaledFont),
         mPattern(),
         mOptions(aOptions) {
-    RecordedEventDerived<Derived>::StorePattern(mPattern, aPattern);
+    StorePattern(mPattern, aPattern);
     mNumGlyphs = aNumGlyphs;
     mGlyphs = new Glyph[aNumGlyphs];
     memcpy(mGlyphs, aGlyphs, sizeof(Glyph) * aNumGlyphs);
   }
-  virtual ~RecordedDrawGlyphs();
+  virtual ~RecordedFillGlyphs();
 
   bool PlayEvent(Translator* aTranslator) const override;
 
@@ -427,81 +426,19 @@ class RecordedDrawGlyphs : public RecordedEventDerived<Derived> {
   void Record(S& aStream) const;
   void OutputSimpleEventInfo(std::stringstream& aStringStream) const override;
 
- protected:
-  friend class RecordedEvent;
-
-  template <class S>
-  RecordedDrawGlyphs(RecordedEvent::EventType aType, S& aStream);
-
-  virtual void DrawGlyphs(DrawTarget* aDT, ScaledFont* aScaledFont,
-                          const GlyphBuffer& aBuffer,
-                          const Pattern& aPattern) const = 0;
-
-  ReferencePtr mScaledFont;
-  PatternStorage mPattern;
-  DrawOptions mOptions;
-  Glyph* mGlyphs = nullptr;
-  uint32_t mNumGlyphs = 0;
-};
-
-class RecordedFillGlyphs : public RecordedDrawGlyphs<RecordedFillGlyphs> {
- public:
-  RecordedFillGlyphs(ReferencePtr aScaledFont, const Pattern& aPattern,
-                     const DrawOptions& aOptions, const Glyph* aGlyphs,
-                     uint32_t aNumGlyphs)
-      : RecordedDrawGlyphs(FILLGLYPHS, aScaledFont, aPattern, aOptions, aGlyphs,
-                           aNumGlyphs) {}
-
   std::string GetName() const override { return "FillGlyphs"; }
 
  private:
   friend class RecordedEvent;
 
   template <class S>
-  MOZ_IMPLICIT RecordedFillGlyphs(S& aStream)
-      : RecordedDrawGlyphs(FILLGLYPHS, aStream) {}
+  MOZ_IMPLICIT RecordedFillGlyphs(S& aStream);
 
-  void DrawGlyphs(DrawTarget* aDT, ScaledFont* aScaledFont,
-                  const GlyphBuffer& aBuffer,
-                  const Pattern& aPattern) const override {
-    aDT->FillGlyphs(aScaledFont, aBuffer, aPattern, mOptions);
-  }
-};
-
-class RecordedStrokeGlyphs : public RecordedDrawGlyphs<RecordedStrokeGlyphs> {
- public:
-  RecordedStrokeGlyphs(ReferencePtr aScaledFont, const Pattern& aPattern,
-                       const StrokeOptions& aStrokeOptions,
-                       const DrawOptions& aOptions, const Glyph* aGlyphs,
-                       uint32_t aNumGlyphs)
-      : RecordedDrawGlyphs(STROKEGLYPHS, aScaledFont, aPattern, aOptions,
-                           aGlyphs, aNumGlyphs),
-        mStrokeOptions(aStrokeOptions) {}
-
-  std::string GetName() const override { return "StrokeGlyphs"; }
-
-  template <class S>
-  void Record(S& aStream) const {
-    RecordedDrawGlyphs::Record(aStream);
-    RecordStrokeOptions(aStream, mStrokeOptions);
-  }
-
- private:
-  friend class RecordedEvent;
-
-  template <class S>
-  MOZ_IMPLICIT RecordedStrokeGlyphs(S& aStream)
-      : RecordedDrawGlyphs(STROKEGLYPHS, aStream) {
-    ReadStrokeOptions(aStream, mStrokeOptions);
-  }
-
-  void DrawGlyphs(DrawTarget* aDT, ScaledFont* aScaledFont,
-                  const GlyphBuffer& aBuffer,
-                  const Pattern& aPattern) const override {
-    aDT->StrokeGlyphs(aScaledFont, aBuffer, aPattern, mStrokeOptions, mOptions);
-  }
-
-  StrokeOptions mStrokeOptions;
+  ReferencePtr mScaledFont;
+  PatternStorage mPattern;
+  DrawOptions mOptions;
+  Glyph* mGlyphs = nullptr;
+  uint32_t mNumGlyphs = 0;
 };
 
 class RecordedMask : public RecordedEventDerived<RecordedMask> {
@@ -2592,18 +2529,14 @@ RecordedFillCircle::RecordedFillCircle(S& aStream)
 
 inline void RecordedFillCircle::OutputSimpleEventInfo(
     std::stringstream& aStringStream) const {
-  aStringStream << "FillCircle (" << mCircle.origin.x << ", "
+  aStringStream << "StrokeCircle (" << mCircle.origin.x << ", "
                 << mCircle.origin.y << " - " << mCircle.radius << ")";
   OutputSimplePatternInfo(mPattern, aStringStream);
 }
 
-template <class T>
-inline RecordedDrawGlyphs<T>::~RecordedDrawGlyphs() {
-  delete[] mGlyphs;
-}
+inline RecordedFillGlyphs::~RecordedFillGlyphs() { delete[] mGlyphs; }
 
-template <class T>
-inline bool RecordedDrawGlyphs<T>::PlayEvent(Translator* aTranslator) const {
+inline bool RecordedFillGlyphs::PlayEvent(Translator* aTranslator) const {
   if (mNumGlyphs > 0 && !mGlyphs) {
     // Glyph allocation failed
     return false;
@@ -2622,18 +2555,17 @@ inline bool RecordedDrawGlyphs<T>::PlayEvent(Translator* aTranslator) const {
   GlyphBuffer buffer;
   buffer.mGlyphs = mGlyphs;
   buffer.mNumGlyphs = mNumGlyphs;
-  DrawGlyphs(dt, scaledFont, buffer, *GenericPattern(mPattern, aTranslator));
+  dt->FillGlyphs(scaledFont, buffer, *GenericPattern(mPattern, aTranslator),
+                 mOptions);
   return true;
 }
 
-template <class T>
 template <class S>
-RecordedDrawGlyphs<T>::RecordedDrawGlyphs(RecordedEvent::EventType aType,
-                                          S& aStream)
-    : RecordedEventDerived<T>(aType) {
+RecordedFillGlyphs::RecordedFillGlyphs(S& aStream)
+    : RecordedEventDerived(FILLGLYPHS) {
   ReadElement(aStream, mScaledFont);
   ReadDrawOptions(aStream, mOptions);
-  this->ReadPatternData(aStream, mPattern);
+  ReadPatternData(aStream, mPattern);
   ReadElement(aStream, mNumGlyphs);
   if (!aStream.good() || mNumGlyphs <= 0) {
     return;
@@ -2641,7 +2573,7 @@ RecordedDrawGlyphs<T>::RecordedDrawGlyphs(RecordedEvent::EventType aType,
 
   mGlyphs = new (fallible) Glyph[mNumGlyphs];
   if (!mGlyphs) {
-    gfxCriticalNote << "RecordedDrawGlyphs failed to allocate glyphs of size "
+    gfxCriticalNote << "RecordedFillGlyphs failed to allocate glyphs of size "
                     << mNumGlyphs;
     aStream.SetIsBad();
   } else {
@@ -2649,21 +2581,19 @@ RecordedDrawGlyphs<T>::RecordedDrawGlyphs(RecordedEvent::EventType aType,
   }
 }
 
-template <class T>
 template <class S>
-void RecordedDrawGlyphs<T>::Record(S& aStream) const {
+void RecordedFillGlyphs::Record(S& aStream) const {
   WriteElement(aStream, mScaledFont);
   WriteElement(aStream, mOptions);
-  this->RecordPatternData(aStream, mPattern);
+  RecordPatternData(aStream, mPattern);
   WriteElement(aStream, mNumGlyphs);
   aStream.write((char*)mGlyphs, sizeof(Glyph) * mNumGlyphs);
 }
 
-template <class T>
-inline void RecordedDrawGlyphs<T>::OutputSimpleEventInfo(
+inline void RecordedFillGlyphs::OutputSimpleEventInfo(
     std::stringstream& aStringStream) const {
-  aStringStream << this->GetName() << " (" << mScaledFont << ") ";
-  this->OutputSimplePatternInfo(mPattern, aStringStream);
+  aStringStream << "FillGlyphs (" << mScaledFont << ") ";
+  OutputSimplePatternInfo(mPattern, aStringStream);
 }
 
 inline bool RecordedMask::PlayEvent(Translator* aTranslator) const {
@@ -4250,7 +4180,6 @@ inline void RecordedDestination::OutputSimpleEventInfo(
   f(FILL, RecordedFill);                                           \
   f(FILLCIRCLE, RecordedFillCircle);                               \
   f(FILLGLYPHS, RecordedFillGlyphs);                               \
-  f(STROKEGLYPHS, RecordedStrokeGlyphs);                           \
   f(MASK, RecordedMask);                                           \
   f(STROKE, RecordedStroke);                                       \
   f(DRAWSURFACE, RecordedDrawSurface);                             \
