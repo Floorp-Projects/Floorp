@@ -36,6 +36,7 @@ async function createDoc(html, options) {
     return new TranslationsDocument(
       document,
       "en",
+      "EN",
       0, // This is a fake innerWindowID
       options?.mockedTranslatorPort ?? createMockedTranslatorPort(),
       () => {
@@ -1029,6 +1030,28 @@ add_task(async function test_attributes() {
       <input type="text" placeholder="THIS IS A PLACEHOLDER">
     `
   );
+
+  cleanup();
+});
+
+add_task(async function test_html_attributes() {
+  const { translate, document, cleanup } = await createDoc(/* html */ `
+    <!DOCTYPE html>
+    <html lang="en" >
+    <head>
+      <meta charset="utf-8" />
+    </head>
+    <body>
+    </body>
+    </html>
+  `);
+
+  translate();
+
+  try {
+    await waitForCondition(() => document.documentElement.lang === "EN");
+  } catch (error) {}
+  is(document.documentElement.lang, "EN", "The lang attribute was changed");
 
   cleanup();
 });

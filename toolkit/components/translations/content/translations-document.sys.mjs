@@ -337,7 +337,8 @@ export class TranslationsDocument {
    * manage the life cycle of the translations engines.
    *
    * @param {Document} document
-   * @param {string} documentLanguage - The BCP 47 language tag.
+   * @param {string} documentLanguage - The BCP 47 tag of the source language.
+   * @param {string} toLanguage - The BCP 47 tag of the destination language.
    * @param {number} innerWindowId - This is used for better profiler marker reporting.
    * @param {MessagePort} port - The port to the translations engine.
    * @param {() => void} requestNewPort - Used when an engine times out and a new
@@ -349,6 +350,7 @@ export class TranslationsDocument {
   constructor(
     document,
     documentLanguage,
+    toLanguage,
     innerWindowId,
     port,
     requestNewPort,
@@ -365,8 +367,14 @@ export class TranslationsDocument {
     this.documentLanguage = documentLanguage;
     if (documentLanguage.length !== 2) {
       throw new Error(
-        "Expected the language to be a valid 2 letter BCP 47 language tag: " +
+        "Expected the document language to be a valid 2 letter BCP 47 language tag: " +
           documentLanguage
+      );
+    }
+    if (toLanguage.length !== 2) {
+      throw new Error(
+        "Expected the destination language to be a valid 2 letter BCP 47 language tag: " +
+          toLanguage
       );
     }
 
@@ -455,6 +463,8 @@ export class TranslationsDocument {
         "Time to first translation"
       );
     });
+
+    document.documentElement.lang = toLanguage;
 
     lazy.console.log(
       "Beginning to translate.",
