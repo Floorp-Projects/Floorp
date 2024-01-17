@@ -940,6 +940,29 @@ add_task(async function test_getScopedKeys_misconfigured_fxa_server() {
   );
 });
 
+add_task(async function test_setScopedKeys() {
+  const fxa = new MockFxAccounts();
+  const user = {
+    ...getTestUser("foo"),
+    verified: true,
+  };
+  await fxa.setSignedInUser(user);
+  await fxa.keys.setScopedKeys(MOCK_ACCOUNT_KEYS.scopedKeys);
+  const key = await fxa.keys.getKeyForScope(SCOPE_OLD_SYNC);
+  Assert.deepEqual(key, {
+    scope: SCOPE_OLD_SYNC,
+    ...MOCK_ACCOUNT_KEYS.scopedKeys[SCOPE_OLD_SYNC],
+  });
+});
+
+add_task(async function test_setScopedKeys_user_not_signed_in() {
+  const fxa = new MockFxAccounts();
+  await Assert.rejects(
+    fxa.keys.setScopedKeys(MOCK_ACCOUNT_KEYS.scopedKeys),
+    /Cannot persist keys, no user signed in/
+  );
+});
+
 // _fetchAndUnwrapAndDeriveKeys with no keyFetchToken should trigger signOut
 // XXX - actually, it probably shouldn't - bug 1572313.
 add_test(function test_fetchAndUnwrapAndDeriveKeys_no_token() {
