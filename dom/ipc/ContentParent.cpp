@@ -6810,7 +6810,7 @@ mozilla::ipc::IPCResult ContentParent::RecvCompleteAllowAccessFor(
     return IPC_OK();
   }
 
-  StorageAccessAPIHelper::CompleteAllowAccessFor(
+  StorageAccessAPIHelper::CompleteAllowAccessForOnParentProcess(
       aParentContext.get_canonical(), aTopLevelWindowId, aTrackingPrincipal,
       aTrackingOrigin, aCookieBehavior, aReason, nullptr)
       ->Then(GetCurrentSerialEventTarget(), __func__,
