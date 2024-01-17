@@ -25,6 +25,7 @@
 #include <stdint.h>  // int32_t, int64_t, uint32_t
 
 #include "gc/Barrier.h"        // HeapPtr
+#include "gc/SweepingAPI.h"    // JS::WeakCache
 #include "gc/ZoneAllocator.h"  // ZoneAllocPolicy
 #include "js/AllocPolicy.h"    // SystemAllocPolicy
 #include "js/Class.h"          // JSClassOps, ClassSpec
@@ -32,7 +33,6 @@
 #include "js/GCVector.h"       // GCVector
 #include "js/PropertySpec.h"   // JSPropertySpec, JSFunctionSpec
 #include "js/RootingAPI.h"     // StableCellHasher
-#include "js/SweepingAPI.h"    // JS::WeakCache
 #include "js/TypeDecls.h"  // HandleValue, HandleObject, MutableHandleObject, MutableHandleFunction
 #include "js/Vector.h"  // JS::Vector
 #include "js/WasmFeatures.h"
