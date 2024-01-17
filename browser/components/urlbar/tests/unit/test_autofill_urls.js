@@ -193,7 +193,7 @@ add_task(async function caseInsensitiveFromBookmark() {
 });
 
 // should *not* autofill if the URI fragment does not match with case-sensitive.
-add_task(async function uriFragmentCaseSensitive() {
+add_task(async function uriFragmentCaseSensitiveNoMatch() {
   await PlacesTestUtils.addVisits([
     {
       uri: "http://example.com/#TEST",
@@ -206,7 +206,7 @@ add_task(async function uriFragmentCaseSensitive() {
       makeVisitResult(context, {
         source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: "http://example.com/#t",
-        fallbackTitle: UrlbarTestUtils.trimURL("http://example.com/#t"),
+        fallbackTitle: "http://example.com/#t",
         heuristic: true,
       }),
       makeVisitResult(context, {
