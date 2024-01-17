@@ -548,10 +548,9 @@ class nsFocusManager final : public nsIFocusManager,
    * Retrieves the start and end points of the current selection for
    * aDocument and stores them in aStartContent and aEndContent.
    */
-  nsresult GetSelectionLocation(Document* aDocument,
-                                mozilla::PresShell* aPresShell,
-                                nsIContent** aStartContent,
-                                nsIContent** aEndContent);
+  void GetSelectionLocation(Document* aDocument, mozilla::PresShell* aPresShell,
+                            nsIContent** aStartContent,
+                            nsIContent** aEndContent);
 
   /**
    * Retrieve the next tabbable element in scope owned by aOwner, using
