@@ -4,7 +4,7 @@ requestLongerTimeout(2);
 
 const gHttpTestRoot = "https://example.com/browser/dom/base/test/";
 
-add_task(async function test_initialize() {
+add_setup(async function test_initialize() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["layout.css.use-counters.enabled", true],
@@ -12,6 +12,87 @@ add_task(async function test_initialize() {
     ],
   });
 });
+
+async function grabCounters(counters, before) {
+  let result = await grabHistogramsFromContent(
+    counters.map(c => c.name),
+    before?.sentinel
+  );
+  await Services.fog.testFlushAllChildren();
+  result.gleanPage = Object.fromEntries(
+    counters.map(c => [
+      c.name,
+      Glean[`useCounter${c.glean[0]}Page`][c.glean[1]].testGetValue() ?? 0,
+    ])
+  );
+  result.gleanDoc = Object.fromEntries(
+    counters.map(c => [
+      c.name,
+      Glean[`useCounter${c.glean[0]}Doc`][c.glean[1]].testGetValue() ?? 0,
+    ])
+  );
+  result.glean_docs_destroyed =
+    Glean.useCounter.contentDocumentsDestroyed.testGetValue();
+  result.glean_toplevel_destroyed =
+    Glean.useCounter.topLevelContentDocumentsDestroyed.testGetValue();
+  return result;
+}
+
+function assertRange(before, after, key, range) {
+  before = before[key];
+  after = after[key];
+  let desc = key + " are correct";
+  if (Array.isArray(range)) {
+    let [min, max] = range;
+    Assert.greaterOrEqual(after, before + min, desc);
+    Assert.lessOrEqual(after, before + max, desc);
+  } else {
+    Assert.equal(after, before + range, desc);
+  }
+}
+
+async function test_once({ counters, toplevel_docs, docs }, callback) {
+  // Hold on to the current values of the telemetry histograms we're
+  // interested in. Opening an about:blank tab shouldn't change those.
+  let before = await grabCounters(counters);
+
+  await callback();
+
+  let after = await grabCounters(counters, before);
+
+  // Compare before and after.
+  for (let counter of counters) {
+    let name = counter.name;
+    let value = counter.value ?? 1;
+    if (!counter.xfail) {
+      is(
+        after.page[name],
+        before.page[name] + value,
+        `page counts for ${name} after are correct`
+      );
+      is(
+        after.document[name],
+        before.document[name] + value,
+        `document counts for ${name} after are correct`
+      );
+      is(
+        after.gleanPage[name],
+        before.gleanPage[name] + value,
+        `Glean page counts for ${name} are correct`
+      );
+      is(
+        after.gleanDoc[name],
+        before.gleanDoc[name] + value,
+        `Glean document counts for ${name} are correct`
+      );
+    }
+  }
+
+  assertRange(before, after, "toplevel_docs", toplevel_docs);
+  assertRange(before, after, "glean_toplevel_destroyed", toplevel_docs);
+  assertRange(before, after, "docs", docs);
+  assertRange(before, after, "glean_docs_destroyed", docs);
+}
 
 add_task(async function () {
   const TESTS = [
@@ -172,187 +253,83 @@ add_task(async function () {
     let file = test.filename;
     info(`checking ${file} (${test.type})`);
 
-    // Hold on to the current values of the telemetry histograms we're
-    // interested in. Opening an about:blank tab shouldn't change those.
-    let before = await grabHistogramsFromContent(
-      test.counters.map(c => c.name)
-    );
+    let options = {
+      counters: test.counters,
+      // bfcache test navigates a bunch of times and thus creates multiple top
+      // level document entries, as expected. Whether the last document is
+      // destroyed is a bit racy, see bug 1842800, so for now we allow it
+      // with +/- 1.
+      toplevel_docs: file == "file_use_counter_bfcache.html" ? [5, 6] : 1,
+      docs: [test.type == "img" ? 2 : 1, Infinity],
+    };
 
-    await Services.fog.testFlushAllChildren();
-    before.gleanPage = Object.fromEntries(
-      test.counters.map(c => [
-        c.name,
-        Glean[`useCounter${c.glean[0]}Page`][c.glean[1]].testGetValue() ?? 0,
-      ])
-    );
-    before.gleanDoc = Object.fromEntries(
-      test.counters.map(c => [
-        c.name,
-        Glean[`useCounter${c.glean[0]}Doc`][c.glean[1]].testGetValue() ?? 0,
-      ])
-    );
-    before.glean_docs_destroyed =
-      Glean.useCounter.contentDocumentsDestroyed.testGetValue();
-    before.glean_toplevel_destroyed =
-      Glean.useCounter.topLevelContentDocumentsDestroyed.testGetValue();
+    await test_once(options, async function () {
+      // Load the test file in the new tab, either directly or via
+      // file_use_counter_outer{,_display_none}.html, depending on the test type.
+      let url, targetElement;
+      switch (test.type) {
+        case "iframe":
+          url = gHttpTestRoot + "file_use_counter_outer.html";
+          targetElement = "content";
+          break;
+        case "undisplayed-iframe":
+          url = gHttpTestRoot + "file_use_counter_outer_display_none.html";
+          targetElement = "content";
+          break;
+        case "img":
+          url = gHttpTestRoot + "file_use_counter_outer.html";
+          targetElement = "display";
+          break;
+        case "direct":
+          url = gHttpTestRoot + file;
+          targetElement = null;
+          break;
+        default:
+          throw `unexpected type ${test.type}`;
+      }
 
-    // Load the test file in the new tab, either directly or via
-    // file_use_counter_outer{,_display_none}.html, depending on the test type.
-    let url, targetElement;
-    switch (test.type) {
-      case "iframe":
-        url = gHttpTestRoot + "file_use_counter_outer.html";
-        targetElement = "content";
-        break;
-      case "undisplayed-iframe":
-        url = gHttpTestRoot + "file_use_counter_outer_display_none.html";
-        targetElement = "content";
-        break;
-      case "img":
-        url = gHttpTestRoot + "file_use_counter_outer.html";
-        targetElement = "display";
-        break;
-      case "direct":
-        url = gHttpTestRoot + file;
-        targetElement = null;
-        break;
-      default:
-        throw `unexpected type ${test.type}`;
-    }
-
-    let waitForFinish = null;
-    if (test.waitForExplicitFinish) {
-      is(
-        test.type,
-        "direct",
-        `cannot use waitForExplicitFinish with test type ${test.type}`
-      );
-      // Wait until the tab changes its hash to indicate it has finished.
-      waitForFinish = BrowserTestUtils.waitForLocationChange(
-        gBrowser,
-        url + "#finished"
-      );
-    }
-
-    let newTab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
-    if (waitForFinish) {
-      await waitForFinish;
-    }
-
-    if (targetElement) {
-      // Inject our desired file into the target element of the newly-loaded page.
-      await SpecialPowers.spawn(
-        gBrowser.selectedBrowser,
-        [{ file, targetElement }],
-        function (opts) {
-          let target = content.document.getElementById(opts.targetElement);
-          target.src = opts.file;
-
-          return new Promise(resolve => {
-            let listener = event => {
-              event.target.removeEventListener("load", listener, true);
-              resolve();
-            };
-            target.addEventListener("load", listener, true);
-          });
-        }
-      );
-    }
-
-    // Tear down the page.
-    await BrowserTestUtils.removeTab(newTab);
-
-    // Grab histograms again.
-    let after = await grabHistogramsFromContent(
-      test.counters.map(c => c.name),
-      before.sentinel
-    );
-    await Services.fog.testFlushAllChildren();
-    after.gleanPage = Object.fromEntries(
-      test.counters.map(c => [
-        c.name,
-        Glean[`useCounter${c.glean[0]}Page`][c.glean[1]].testGetValue() ?? 0,
-      ])
-    );
-    after.gleanDoc = Object.fromEntries(
-      test.counters.map(c => [
-        c.name,
-        Glean[`useCounter${c.glean[0]}Doc`][c.glean[1]].testGetValue() ?? 0,
-      ])
-    );
-    after.glean_docs_destroyed =
-      Glean.useCounter.contentDocumentsDestroyed.testGetValue();
-    after.glean_toplevel_destroyed =
-      Glean.useCounter.topLevelContentDocumentsDestroyed.testGetValue();
-
-    // Compare before and after.
-    for (let counter of test.counters) {
-      let name = counter.name;
-      let value = counter.value ?? 1;
-      if (!counter.xfail) {
+      let waitForFinish = null;
+      if (test.waitForExplicitFinish) {
         is(
-          after.page[name],
-          before.page[name] + value,
-          `page counts for ${name} after are correct`
+          test.type,
+          "direct",
+          `cannot use waitForExplicitFinish with test type ${test.type}`
         );
-        is(
-          after.document[name],
-          before.document[name] + value,
-          `document counts for ${name} after are correct`
-        );
-        is(
-          after.gleanPage[name],
-          before.gleanPage[name] + value,
-          `Glean page counts for ${name} are correct`
-        );
-        is(
-          after.gleanDoc[name],
-          before.gleanDoc[name] + value,
-          `Glean document counts for ${name} are correct`
+        // Wait until the tab changes its hash to indicate it has finished.
+        waitForFinish = BrowserTestUtils.waitForLocationChange(
+          gBrowser,
+          url + "#finished"
         );
       }
-    }
 
-    if (test.filename == "file_use_counter_bfcache.html") {
-      // This test navigates a bunch of times and thus creates multiple top
-      // level document entries, as expected.
-      // Whether the last document is destroyed is a bit racy, see bug 1842800,
-      // so for now we allow it with +/- 1.
-      ok(
-        after.toplevel_docs == before.toplevel_docs + 5 ||
-          after.toplevel_docs == before.toplevel_docs + 6,
-        `top level destroyed document counts are correct: ${before.toplevel_docs} vs ${after.toplevel_docs}`
-      );
-      ok(
-        after.glean_toplevel_destroyed == before.glean_toplevel_destroyed + 5 ||
-          after.glean_toplevel_destroyed == before.glean_toplevel_destroyed + 6,
-        `Glean top level destroyed docs counts are correct: ${before.glean_toplevel_destroyed} vs ${after.glean_toplevel_destroyed}`
-      );
-    } else {
-      is(
-        after.toplevel_docs,
-        before.toplevel_docs + 1,
-        "top level destroyed document counts are correct"
-      );
-      is(
-        after.glean_toplevel_destroyed,
-        before.glean_toplevel_destroyed + 1,
-        "Glean top level destroyed document counts are correct"
-      );
-    }
+      let newTab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
+      if (waitForFinish) {
+        await waitForFinish;
+      }
 
-    // 2 documents for "img" tests: one for the outer html page containing the
-    // <img> element, and one for the SVG image itself.
-    // FIXME: iframe tests and so on probably should get two at least.
-    ok(
-      after.docs >= before.docs + (test.type == "img" ? 2 : 1),
-      "destroyed document counts are correct"
-    );
-    Assert.greaterOrEqual(
-      after.glean_docs_destroyed,
-      before.glean_docs_destroyed + (test.type == "img" ? 2 : 1),
-      "Glean destroyed doc counts are correct"
-    );
+      if (targetElement) {
+        // Inject our desired file into the target element of the newly-loaded page.
+        await SpecialPowers.spawn(
+          gBrowser.selectedBrowser,
+          [{ file, targetElement }],
+          function (opts) {
+            let target = content.document.getElementById(opts.targetElement);
+            target.src = opts.file;
+
+            return new Promise(resolve => {
+              let listener = event => {
+                event.target.removeEventListener("load", listener, true);
+                resolve();
+              };
+              target.addEventListener("load", listener, true);
+            });
+          }
+        );
+      }
+
+      // Tear down the page.
+      await BrowserTestUtils.removeTab(newTab);
+    });
   }
 });
 
