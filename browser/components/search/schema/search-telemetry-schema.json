@@ -294,6 +294,26 @@
           }
         }
       }
+    },
+    "isSPA": {
+      "type": "boolean",
+      "title": "Is Single Page App",
+      "description": "Whether the provider exhibits tendencies of a single page app, namely changes the entire contents of the page without having to reload."
+    },
+    "defaultPageQueryParam": {
+      "type": "object",
+      "title": "Default page query parameter",
+      "properties": {
+        "key": {
+          "type": "string",
+          "description": "The key corresponding to the query parameter that contains what type of search page is being shown."
+        },
+        "value": {
+          "type": "string",
+          "description": "The value corresponding to the query parameter that should be matched against."
+        }
+      },
+      "required": ["key", "value"]
     }
   },
   "$defs": {
