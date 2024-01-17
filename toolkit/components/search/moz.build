@@ -21,7 +21,6 @@ EXTRA_JS_MODULES += [
     "AddonSearchEngine.sys.mjs",
     "AppProvidedSearchEngine.sys.mjs",
     "OpenSearchEngine.sys.mjs",
-    "OpenSearchLoader.sys.mjs",
     "PolicySearchEngine.sys.mjs",
     "SearchEngine.sys.mjs",
     "SearchEngineSelector.sys.mjs",
