@@ -885,6 +885,10 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
   RefPtr<mozilla::gfx::Path> mPath;
   RefPtr<mozilla::gfx::PathBuilder> mPathBuilder;
   bool mPathPruned = false;
+  mozilla::gfx::Matrix mPathTransform;
+  bool mPathTransformDirty = false;
+
+  void FlushPathTransform();
 
   /**
    * Number of times we've invalidated before calling redraw
