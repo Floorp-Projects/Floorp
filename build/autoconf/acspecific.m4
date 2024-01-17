@@ -260,7 +260,7 @@ cat > conftest.c <<EOF
   yes;
 #endif
 EOF
-if AC_TRY_COMMAND(${CC-cc} -E conftest.c) | egrep yes >/dev/null 2>&1; then
+if AC_TRY_COMMAND(${CC-cc} -E conftest.c) | grep -E yes >/dev/null 2>&1; then
   ac_cv_prog_gcc=yes
 else
   ac_cv_prog_gcc=no
@@ -274,7 +274,7 @@ cat > conftest.C <<EOF
   yes;
 #endif
 EOF
-if AC_TRY_COMMAND(${CXX-g++} -E conftest.C) | egrep yes >/dev/null 2>&1; then
+if AC_TRY_COMMAND(${CXX-g++} -E conftest.C) | grep -E yes >/dev/null 2>&1; then
   ac_cv_prog_gxx=yes
 else
   ac_cv_prog_gxx=no
@@ -292,7 +292,7 @@ AC_DEFUN(AC_PROG_F77_GNU,
   yes
 #endif
 EOF
-if AC_TRY_COMMAND($F77 -E conftest.fpp) | egrep yes >/dev/null 2>&1; then
+if AC_TRY_COMMAND($F77 -E conftest.fpp) | grep -E yes >/dev/null 2>&1; then
   ac_cv_prog_g77=yes
 else
   ac_cv_prog_g77=no

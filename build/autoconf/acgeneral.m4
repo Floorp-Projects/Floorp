@@ -1704,7 +1704,7 @@ dnl Ultrix and Pyramid sh refuse to redirect output of eval, so use subshell.
 if (eval "$ac_cpp conftest.$ac_ext") 2>&AC_FD_CC |
 dnl Prevent m4 from eating character classes:
 changequote(, )dnl
-  egrep "$1" >/dev/null 2>&1; then
+  grep -E "$1" >/dev/null 2>&1; then
 changequote([, ])dnl
   ifelse([$3], , :, [rm -rf conftest*
   $3])
