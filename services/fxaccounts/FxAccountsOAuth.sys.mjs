@@ -168,7 +168,6 @@ export class FxAccountsOAuth {
   }
 
   /** Completes an OAuth flow and invalidates any other ongoing flows
-   * @param { string } sessionTokenHex: The session token encoded in hexadecimal
    * @param { string } code: OAuth authorization code provided by running an OAuth flow
    * @param { string } state: The state first provided by `beginOAuthFlow`, then roundtripped through the server
    *
@@ -178,19 +177,14 @@ export class FxAccountsOAuth {
    *     - 'refreshToken': The refresh token provided by the server
    *     - 'accessToken': The access token provided by the server
    * */
-  async completeOAuthFlow(sessionTokenHex, code, state) {
+  async completeOAuthFlow(code, state) {
     const flow = this.getFlow(state);
     if (!flow) {
       throw new Error(ERROR_INVALID_STATE);
     }
     const { key, verifier, requestedScopes } = flow;
     const { keys_jwe, refresh_token, access_token, scope } =
-      await this.#fxaClient.oauthToken(
-        sessionTokenHex,
-        code,
-        verifier,
-        FX_OAUTH_CLIENT_ID
-      );
+      await this.#fxaClient.oauthToken(code, verifier, FX_OAUTH_CLIENT_ID);
     if (
       requestedScopes.includes(SCOPE_OLD_SYNC) &&
       !scope.includes(SCOPE_OLD_SYNC)

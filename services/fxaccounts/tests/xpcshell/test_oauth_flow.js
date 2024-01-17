@@ -99,9 +99,8 @@ add_task(function test_complete_oauth_flow() {
     const oauth = new FxAccountsOAuth();
     const code = "foo";
     const state = "bar";
-    const sessionToken = "01abcef12";
     try {
-      await oauth.completeOAuthFlow(sessionToken, code, state);
+      await oauth.completeOAuthFlow(code, state);
       Assert.fail("Should have thrown an error");
     } catch (err) {
       Assert.equal(err.message, ERROR_INVALID_STATE);
@@ -119,10 +118,9 @@ add_task(function test_complete_oauth_flow() {
     };
     const oauth = new FxAccountsOAuth(fxaClient);
     const scopes = [SCOPE_PROFILE, SCOPE_OLD_SYNC];
-    const sessionToken = "01abcef12";
     const queryParams = await oauth.beginOAuthFlow(scopes);
     try {
-      await oauth.completeOAuthFlow(sessionToken, "foo", queryParams.state);
+      await oauth.completeOAuthFlow("foo", queryParams.state);
       Assert.fail(
         "Should have thrown an error because the sync scope was not authorized"
       );
@@ -142,9 +140,8 @@ add_task(function test_complete_oauth_flow() {
     };
     const oauth = new FxAccountsOAuth(fxaClient);
     const queryParams = await oauth.beginOAuthFlow(scopes);
-    const sessionToken = "01abcef12";
     try {
-      await oauth.completeOAuthFlow(sessionToken, "foo", queryParams.state);
+      await oauth.completeOAuthFlow("foo", queryParams.state);
       Assert.fail(
         "Should have thrown an error because we didn't get back a keys_nwe"
       );
@@ -157,7 +154,6 @@ add_task(function test_complete_oauth_flow() {
     // from outside our system
     const scopes = [SCOPE_PROFILE, SCOPE_OLD_SYNC];
     const oauthCode = "fake oauth code";
-    const sessionToken = "01abcef12";
     const plainTextScopedKeys = {
       kid: "fake key id",
       k: "fake key",
@@ -208,8 +204,7 @@ add_task(function test_complete_oauth_flow() {
 
     // Now we initialize our mock of the HTTP request, it verifies we passed in all the correct
     // parameters and returns what we'd expect a healthy HTTP Response would look like
-    fxaClient.oauthToken = (sessionTokenHex, code, verifier, clientId) => {
-      Assert.equal(sessionTokenHex, sessionToken);
+    fxaClient.oauthToken = (code, verifier, clientId) => {
       Assert.equal(code, oauthCode);
       Assert.equal(verifier, storedVerifier);
       Assert.equal(clientId, queryParams.client_id);
@@ -231,7 +226,7 @@ add_task(function test_complete_oauth_flow() {
     // A slow one that will start first, but finish last
     // And a fast one that will beat the slow one
     const firstCompleteOAuthFlow = oauth
-      .completeOAuthFlow(sessionToken, oauthCode, queryParams.state)
+      .completeOAuthFlow(oauthCode, queryParams.state)
       .then(res => {
         // To mimic the slow network connection on the slowCompleteOAuthFlow
         // We resume the slow completeOAuthFlow once this one is complete
@@ -239,7 +234,7 @@ add_task(function test_complete_oauth_flow() {
         return res;
       });
     const secondCompleteOAuthFlow = oauth
-      .completeOAuthFlow(sessionToken, oauthCode, queryParams.state)
+      .completeOAuthFlow(oauthCode, queryParams.state)
       .then(res => {
         // since we can't fully gaurentee which oauth flow finishes first, we also resolve here
         slowResolve();

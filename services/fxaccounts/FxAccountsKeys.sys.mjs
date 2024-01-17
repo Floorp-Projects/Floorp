@@ -216,25 +216,6 @@ export class FxAccountsKeys {
   }
 
   /**
-   * Set externally derived scoped keys in internal storage
-   * @param { Object } scopedKeys: The scoped keys object derived by the oauth flow
-   *
-   * @return { Promise }: A promise that resolves if the keys were successfully stored,
-   *    or rejects if we failed to persist the keys, or if the user is not signed in already
-   */
-  async setScopedKeys(scopedKeys) {
-    return this._fxai.withCurrentAccountState(async currentState => {
-      const userData = await currentState.getUserAccountData();
-      if (!userData) {
-        throw new Error("Cannot persist keys, no user signed in");
-      }
-      await currentState.updateUserAccountData({
-        scopedKeys,
-      });
-    });
-  }
-
-  /**
    * Key storage migration or fetching logic.
    *
    * This method contains the doing-expensive-operations part of the logic of

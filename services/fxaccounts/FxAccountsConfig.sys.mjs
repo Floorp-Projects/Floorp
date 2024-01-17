@@ -4,11 +4,7 @@
 
 import { RESTRequest } from "resource://services-common/rest.sys.mjs";
 
-import {
-  log,
-  SCOPE_OLD_SYNC,
-  SCOPE_PROFILE,
-} from "resource://gre/modules/FxAccountsCommon.sys.mjs";
+import { log } from "resource://gre/modules/FxAccountsCommon.sys.mjs";
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
@@ -55,33 +51,25 @@ const SYNC_PARAM = "sync";
 
 export var FxAccountsConfig = {
   async promiseEmailURI(email, entrypoint, extraParams = {}) {
-    const authParams = await this._getAuthParam();
     return this._buildURL("", {
-      extraParams: {
-        entrypoint,
-        email,
-        ...authParams,
-        ...extraParams,
-      },
+      extraParams: { entrypoint, email, service: SYNC_PARAM, ...extraParams },
     });
   },
 
   async promiseConnectAccountURI(entrypoint, extraParams = {}) {
-    const authParams = await this._getAuthParams();
     return this._buildURL("", {
       extraParams: {
         entrypoint,
         action: "email",
-        ...authParams,
+        service: SYNC_PARAM,
         ...extraParams,
       },
     });
   },
 
   async promiseForceSigninURI(entrypoint, extraParams = {}) {
-    const authParams = await this._getAuthParams();
     return this._buildURL("force_auth", {
-      extraParams: { entrypoint, ...authParams, ...extraParams },
+      extraParams: { entrypoint, service: SYNC_PARAM, ...extraParams },
       addAccountIdentifiers: true,
     });
   },
@@ -341,20 +329,5 @@ export var FxAccountsConfig = {
   // For test purposes, returns a Promise.
   getSignedInUser() {
     return lazy.fxAccounts.getSignedInUser();
-  },
-
-  _isOAuthFlow() {
-    return Services.prefs.getBoolPref(
-      "identity.fxaccounts.oauth.enabled",
-      false
-    );
-  },
-
-  async _getAuthParams() {
-    if (this._isOAuthFlow()) {
-      const scopes = [SCOPE_OLD_SYNC, SCOPE_PROFILE];
-      return lazy.fxAccounts._internal.beginOAuthFlow(scopes);
-    }
-    return { service: SYNC_PARAM };
   },
 };

@@ -170,7 +170,7 @@ export var makeFxAccountsInternalMock = function (config) {
       return accountState;
     },
     getOAuthToken: () => Promise.resolve("some-access-token"),
-    destroyOAuthToken: () => Promise.resolve(),
+    _destroyOAuthToken: () => Promise.resolve(),
     keys: {
       getScopedKeys: () =>
         Promise.resolve({
