@@ -5,8 +5,6 @@
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  Preferences: "resource://gre/modules/Preferences.sys.mjs",
-
   Deferred: "chrome://remote/content/shared/Sync.sys.mjs",
   EnvironmentPrefs: "chrome://remote/content/marionette/prefs.sys.mjs",
   Log: "chrome://remote/content/shared/Log.sys.mjs",
@@ -156,7 +154,19 @@ class MarionetteParentProcess {
           for (let [pref, value] of lazy.EnvironmentPrefs.from(
             ENV_PRESERVE_PREFS
           )) {
-            lazy.Preferences.set(pref, value);
+            switch (typeof value) {
+              case "string":
+                Services.prefs.setStringPref(pref, value);
+                break;
+              case "boolean":
+                Services.prefs.setBoolPref(pref, value);
+                break;
+              case "number":
+                Services.prefs.setIntPref(pref, value);
+                break;
+              default:
+                throw new TypeError(`Invalid preference type: ${typeof value}`);
+            }
           }
         }
         break;
