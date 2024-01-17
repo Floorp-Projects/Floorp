@@ -5006,7 +5006,12 @@ void nsHTMLScrollFrame::ScrollByCSSPixelsInternal(const CSSIntPoint& aDelta,
   // the previous scrolling operation, but there may be some edge cases where
   // the current position in CSS pixels differs from the given position, the
   // cases should be fixed in bug 1556685.
-  CSSIntPoint currentCSSPixels = GetRoundedScrollPositionCSSPixels();
+  CSSPoint currentCSSPixels;
+  if (StaticPrefs::layout_scroll_disable_pixel_alignment()) {
+    currentCSSPixels = GetScrollPositionCSSPixels();
+  } else {
+    currentCSSPixels = GetRoundedScrollPositionCSSPixels();
+  }
   nsPoint pt = CSSPoint::ToAppUnits(currentCSSPixels + aDelta);
 
   nscoord halfPixel = nsPresContext::CSSPixelsToAppUnits(0.5f);
