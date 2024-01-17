@@ -4388,6 +4388,22 @@ static const NSUInteger kWindowShadowOptionsNoShadow = 0;
 static const NSUInteger kWindowShadowOptionsMenu = 2;
 static const NSUInteger kWindowShadowOptionsTooltip = 4;
 
+- (NSDictionary*)shadowParameters {
+  NSDictionary* parent = [super shadowParameters];
+  // NSLog(@"%@", parent);
+  if (self.shadowStyle != WindowShadow::Panel) {
+    return parent;
+  }
+  NSMutableDictionary* copy = [parent mutableCopy];
+  for (auto* key : {@"com.apple.WindowShadowRimDensityActive",
+                    @"com.apple.WindowShadowRimDensityInactive"}) {
+    if ([parent objectForKey:key] != nil) {
+      [copy setValue:@(0) forKey:key];
+    }
+  }
+  return copy;
+}
+
 - (NSUInteger)shadowOptions {
   if (!self.hasShadow) {
     return kWindowShadowOptionsNoShadow;
