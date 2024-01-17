@@ -12,6 +12,30 @@ const WRITE_DELAY_MS = (debugMode ? 3 : 30) * 1000;
 const XULSTORE_CID = Components.ID("{6f46b6f4-c8b1-4bd4-a4fa-9ebbed0753ea}");
 const STOREDB_FILENAME = "xulstore.json";
 
+/**
+ * The XULStore retains XULElement attributes such as the sizing and styling. These are
+ * stored in the user's profile directory inside of "xulstore.json". The JSON is
+ * stored based on the chrome URL of the resource.
+ *
+ * For instance the "chrome://browser/content/browser.xhtml" main window sizing could be
+ * stored like so:
+ *
+ * {
+ *   "chrome://browser/content/browser.xhtml": {
+ *     "main-window": {
+ *       "screenX": "1104",
+ *       "screenY": "25",
+ *       "width": "1904",
+ *       "height": "1612",
+ *       "sizemode": "normal"
+ *     },
+ *     ...
+ *   }
+ * }
+ *
+ * The XULStore can only be loaded in the parent process. See the XULStore
+ * and XULPersist C++ classes for how this is integrated from the C++ side.
+ */
 export function XULStore() {
   if (!Services.appinfo.inSafeMode) {
     this.load();
