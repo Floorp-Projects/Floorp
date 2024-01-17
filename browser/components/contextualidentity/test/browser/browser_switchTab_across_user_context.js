@@ -32,9 +32,9 @@ add_task(async function test_switch_tab() {
   let contextIdTabB = 2;
   let contextIdTabC = 3;
 
-  let tabA = await openTabInUserContext(urlA, contextIdTabA);
-  let tabB = await openTabInUserContext(urlA, contextIdTabB);
-  let tabC = await openTabInUserContext(urlB, contextIdTabC);
+  let { tab: tabA } = await openTabInUserContext(urlA, contextIdTabA);
+  let { tab: tabB } = await openTabInUserContext(urlA, contextIdTabB);
+  let { tab: tabC } = await openTabInUserContext(urlB, contextIdTabC);
 
   let searchContext = await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
@@ -111,8 +111,8 @@ add_task(async function test_chiclet_disabled_on_update() {
   let contextIdTabB = 3;
 
   let initialTab = gBrowser.selectedTab;
-  let tabA = await openTabInUserContext(urlA, contextIdTabA);
-  let tabB = await openTabInUserContext(urlA, contextIdTabB);
+  let { tab: tabA } = await openTabInUserContext(urlA, contextIdTabA);
+  let { tab: tabB } = await openTabInUserContext(urlA, contextIdTabB);
 
   await BrowserTestUtils.switchTab(gBrowser, initialTab);
   await UrlbarTestUtils.promiseAutocompleteResultPopup({

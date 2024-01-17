@@ -3,21 +3,6 @@ const URI =
   BASE_ORIGIN +
   "/browser/browser/components/contextualidentity/test/browser/empty_file.html";
 
-// Opens `uri' in a new tab with the provided userContextId and focuses it.
-// Returns the newly opened tab and browser.
-async function openTabInUserContext(uri, userContextId) {
-  // open the tab in the correct userContextId
-  let tab = BrowserTestUtils.addTab(gBrowser, uri, { userContextId });
-
-  // select tab and make sure its browser is focused
-  gBrowser.selectedTab = tab;
-  tab.ownerGlobal.focus();
-
-  let browser = gBrowser.getBrowserForTab(tab);
-  await BrowserTestUtils.browserLoaded(browser);
-  return { tab, browser };
-}
-
 async function runTestForReceiver(receiver) {
   let channelName = "contextualidentity-broadcastchannel";
 

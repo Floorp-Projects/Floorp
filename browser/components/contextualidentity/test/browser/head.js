@@ -53,7 +53,8 @@ function loadTestSubscript(filePath) {
  * @param {string} uri The uri which should be opened in the new tab.
  * @param {number} userContextId The id of the user context in which the tab
  *                               should be opened.
- * @returns {MozTabbrowserTab} The newly opened tab
+ * @returns {object} Keys are `tab` (the newly-opened tab) and `browser` (the
+ *                   browser associated with the tab).
  */
 async function openTabInUserContext(uri, userContextId) {
   let tab = BrowserTestUtils.addTab(gBrowser, uri, { userContextId });
@@ -63,5 +64,5 @@ async function openTabInUserContext(uri, userContextId) {
 
   let browser = gBrowser.getBrowserForTab(tab);
   await BrowserTestUtils.browserLoaded(browser);
-  return tab;
+  return { tab, browser };
 }

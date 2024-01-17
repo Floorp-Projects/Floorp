@@ -24,19 +24,6 @@ const TEST_EME_KEY = {
 // Support functions.
 //
 
-async function openTabInUserContext(uri, userContextId) {
-  // Open the tab in the correct userContextId.
-  let tab = BrowserTestUtils.addTab(gBrowser, uri, { userContextId });
-
-  // Select tab and make sure its browser is focused.
-  gBrowser.selectedTab = tab;
-  tab.ownerGlobal.focus();
-
-  let browser = gBrowser.getBrowserForTab(tab);
-  await BrowserTestUtils.browserLoaded(browser);
-  return { tab, browser };
-}
-
 function HexToBase64(hex) {
   var bin = "";
   for (var i = 0; i < hex.length; i += 2) {
