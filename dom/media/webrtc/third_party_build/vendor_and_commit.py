@@ -2,6 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import argparse
+import atexit
 import os
 import re
 
@@ -10,6 +11,18 @@ from run_operations import get_last_line, run_hg, run_shell, update_resume_state
 
 # This script vendors moz-libwebrtc, handles add/deletes/renames and
 # commits the newly vendored code with the provided commit message.
+
+error_help = None
+script_name = os.path.basename(__file__)
+
+
+def early_exit_handler():
+    print("*** ERROR *** {} did not complete successfully".format(script_name))
+    if error_help is not None:
+        print(error_help)
+        print(
+            "Please resolve the error and then continue running {}".format(script_name)
+        )
 
 
 def log_output_lines(lines, log_dir, filename):
@@ -123,6 +136,10 @@ def vendor_and_commit(
     log_dir,
     commit_msg_filename,
 ):
+    # register the exit handler after the arg parser completes so '--help' doesn't exit with
+    # an error.
+    atexit.register(early_exit_handler)
+
     print("script_dir: {}".format(script_dir))
     print("github_path: {}".format(github_path))
     print("github_branch: {}".format(github_branch))
@@ -150,6 +167,7 @@ def vendor_and_commit(
         print("*** commit.")
         print("***")
 
+    global error_help
     resume_state = ""
     if os.path.exists(resume_state_filename):
         resume_state = get_last_line(resume_state_filename).strip()
@@ -157,38 +175,75 @@ def vendor_and_commit(
 
     if len(resume_state) == 0:
         update_resume_state("resume2", resume_state_filename)
+        error_help = (
+            "Running script '{}/vendor-libwebrtc.py' failed.\n"
+            "Please manually confirm that all changes from git ({})\n"
+            "are reflected in the output of 'hg diff'"
+        ).format(script_dir, github_path)
         vendor_current_stack(github_branch, github_path, script_dir)
+        error_help = None
 
     if len(resume_state) == 0 or resume_state == "resume2":
         resume_state = ""
         update_resume_state("resume3", resume_state_filename)
+        error_help = (
+            "An error occurred while restoring moz.build files after vendoring.\n"
+            "Verify no moz.build files are modified, missing, or changed."
+        )
         restore_mozbuild_files(target_dir, log_dir)
+        error_help = None
 
     if len(resume_state) == 0 or resume_state == "resume3":
         resume_state = ""
         update_resume_state("resume4", resume_state_filename)
+        error_help = (
+            "An error occurred while removing deleted upstream files.\n"
+            "Verify files deleted in the newest upstream commit are also\n"
+            "shown as deleted in the output of 'hg status'"
+        )
         remove_deleted_upstream_files(
             github_path, github_sha, target_dir, log_dir, handle_noop_commit
         )
+        error_help = None
 
     if len(resume_state) == 0 or resume_state == "resume4":
         resume_state = ""
         update_resume_state("resume5", resume_state_filename)
+        error_help = (
+            "An error occurred while adding new upstream files.\n"
+            "Verify files added in the newest upstream commit are also\n"
+            "shown as added in the output of 'hg status'"
+        )
         add_new_upstream_files(
             github_path, github_sha, target_dir, log_dir, handle_noop_commit
         )
+        error_help = None
 
     if len(resume_state) == 0 or resume_state == "resume5":
         resume_state = ""
         update_resume_state("resume6", resume_state_filename)
+        error_help = (
+            "An error occurred while adding handling renamed upstream files.\n"
+            "Verify files renamed in the newest upstream commit are also\n"
+            "shown as renamed/moved in the output of 'hg status'"
+        )
         handle_renamed_upstream_files(
             github_path, github_sha, target_dir, log_dir, handle_noop_commit
         )
+        error_help = None
 
     if len(resume_state) == 0 or resume_state == "resume6":
         resume_state = ""
         update_resume_state("", resume_state_filename)
+        error_help = (
+            "An error occurred while committing the vendored changes to Mercurial.\n"
+        )
         commit_all_changes(github_sha, commit_msg_filename, target_dir)
+        error_help = None
+
+    # unregister the exit handler so the normal exit doesn't falsely
+    # report as an error.
+    atexit.unregister(early_exit_handler)
 
 
 if __name__ == "__main__":
