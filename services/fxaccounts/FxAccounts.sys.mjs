@@ -831,7 +831,7 @@ FxAccountsInternal.prototype = {
   _oauth: null,
   get oauth() {
     if (!this._oauth) {
-      this._oauth = new lazy.FxAccountsOAuth(this.fxAccountsClient);
+      this._oauth = new lazy.FxAccountsOAuth();
     }
     return this._oauth;
   },
@@ -842,18 +842,6 @@ FxAccountsInternal.prototype = {
       this._telemetry = new lazy.FxAccountsTelemetry(this);
     }
     return this._telemetry;
-  },
-
-  beginOAuthFlow(scopes) {
-    return this.oauth.beginOAuthFlow(scopes);
-  },
-
-  completeOAuthFlow(sessionToken, code, state) {
-    return this.oauth.completeOAuthFlow(sessionToken, code, state);
-  },
-
-  setScopedKeys(scopedKeys) {
-    return this.keys.setScopedKeys(scopedKeys);
   },
 
   // A hook-point for tests who may want a mocked AccountState or mocked storage.
@@ -1043,10 +1031,7 @@ FxAccountsInternal.prototype = {
     return this.startPollEmailStatus(state, data.sessionToken, "push");
   },
 
-  /** Destroyes an OAuth Token by sending a request to the FxA server
-   * @param { Object } tokenData: The token's data, with `tokenData.token` being the token itself
-   **/
-  destroyOAuthToken(tokenData) {
+  _destroyOAuthToken(tokenData) {
     return this.fxAccountsClient.oauthDestroy(
       FX_OAUTH_CLIENT_ID,
       tokenData.token
@@ -1060,7 +1045,7 @@ FxAccountsInternal.prototype = {
     // let's just destroy them all in parallel...
     let promises = [];
     for (let tokenInfo of Object.values(tokenInfos)) {
-      promises.push(this.destroyOAuthToken(tokenInfo));
+      promises.push(this._destroyOAuthToken(tokenInfo));
     }
     return Promise.all(promises);
   },
@@ -1434,21 +1419,9 @@ FxAccountsInternal.prototype = {
       let existing = currentState.removeCachedToken(options.token);
       if (existing) {
         // background destroy.
-        this.destroyOAuthToken(existing).catch(err => {
+        this._destroyOAuthToken(existing).catch(err => {
           log.warn("FxA failed to revoke a cached token", err);
         });
-      }
-    });
-  },
-
-  /** Sets the user to be verified in the account state,
-   * This prevents any polling for the user's verification state from the FxA server
-   **/
-  setUserVerified() {
-    return this.withCurrentAccountState(async currentState => {
-      const userData = await currentState.getUserAccountData();
-      if (!userData.verified) {
-        await currentState.updateAccountData({ verified: true });
       }
     });
   },
