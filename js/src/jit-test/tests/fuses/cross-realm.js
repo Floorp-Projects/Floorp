@@ -1,4 +1,4 @@
-// |jit-test| --enable-destructuring-fuse
+// |jit-test|
 
 function f(x) {
     let [a, b, c] = x;
