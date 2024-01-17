@@ -76,7 +76,7 @@ def _get_build_gradle_paths(gradle_project):
 
 
 def _get_gradle_project_dir(gradle_project):
-    if gradle_project in ("focus"):
+    if gradle_project == "focus":
         project_dir = "focus-android"
     elif gradle_project == "fenix":
         project_dir = "fenix"
