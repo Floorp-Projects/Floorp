@@ -582,8 +582,8 @@ class NotifyManyVisitsObservers : public Runnable {
     PRTime now = PR_Now();
     for (uint32_t i = 0; i < mPlaces.Length(); ++i) {
       nsCOMPtr<nsIURI> uri;
-      MOZ_ALWAYS_SUCCEEDS(NS_NewURI(getter_AddRefs(uri), mPlaces[i].spec));
-      if (!uri) {
+      if (NS_WARN_IF(
+              NS_FAILED(NS_NewURI(getter_AddRefs(uri), mPlaces[i].spec)))) {
         return NS_ERROR_UNEXPECTED;
       }
       AddPlaceForNotify(mPlaces[i], events);
@@ -673,14 +673,14 @@ class NotifyPlaceInfoCallback : public Runnable {
     bool hasValidURIs = true;
     nsCOMPtr<nsIURI> referrerURI;
     if (!mPlace.referrerSpec.IsEmpty()) {
-      MOZ_ALWAYS_SUCCEEDS(
-          NS_NewURI(getter_AddRefs(referrerURI), mPlace.referrerSpec));
-      hasValidURIs = !!referrerURI;
+      hasValidURIs = !NS_WARN_IF(NS_FAILED(
+          NS_NewURI(getter_AddRefs(referrerURI), mPlace.referrerSpec)));
     }
 
     nsCOMPtr<nsIURI> uri;
-    MOZ_ALWAYS_SUCCEEDS(NS_NewURI(getter_AddRefs(uri), mPlace.spec));
-    hasValidURIs = hasValidURIs && !!uri;
+    hasValidURIs =
+        hasValidURIs &&
+        !NS_WARN_IF(NS_FAILED(NS_NewURI(getter_AddRefs(uri), mPlace.spec)));
 
     nsCOMPtr<mozIPlaceInfo> place;
     if (mIsSingleVisit) {
@@ -1413,9 +1413,7 @@ void NotifyEmbedVisit(VisitData& aPlace,
   MOZ_ASSERT(NS_IsMainThread(), "Must be called on the main thread!");
 
   nsCOMPtr<nsIURI> uri;
-  MOZ_ALWAYS_SUCCEEDS(NS_NewURI(getter_AddRefs(uri), aPlace.spec));
-
-  if (!uri) {
+  if (NS_WARN_IF(NS_FAILED(NS_NewURI(getter_AddRefs(uri), aPlace.spec)))) {
     return;
   }
 
