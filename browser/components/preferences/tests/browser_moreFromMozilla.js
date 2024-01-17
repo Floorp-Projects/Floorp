@@ -11,6 +11,8 @@ let { TelemetryTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/TelemetryTestUtils.sys.mjs"
 );
 
+const TOTAL_PROMO_CARDS_COUNT = 4;
+
 async function clearPolicies() {
   // Ensure no active policies are set
   await EnterprisePolicyTesting.setupPolicyEngineWithJson("");
@@ -40,7 +42,11 @@ add_task(async function testDefaultUIWithoutTemplatePref() {
 
   let productCards = doc.querySelectorAll(".mozilla-product-item.simple");
   Assert.ok(productCards, "Default UI uses simple template");
-  Assert.equal(productCards.length, 3, "3 product cards displayed");
+  Assert.equal(
+    productCards.length,
+    TOTAL_PROMO_CARDS_COUNT,
+    "All product cards displayed"
+  );
 
   const expectedUrl = "https://www.mozilla.org/firefox/browsers/mobile/";
   let tabOpened = BrowserTestUtils.waitForNewTab(gBrowser, url =>
@@ -191,7 +197,11 @@ add_task(async function test_aboutpreferences_simple_template() {
 
   let productCards = doc.querySelectorAll(".mozilla-product-item");
   Assert.ok(productCards, "The product cards from simple template found");
-  Assert.equal(productCards.length, 3, "3 product cards displayed");
+  Assert.equal(
+    productCards.length,
+    TOTAL_PROMO_CARDS_COUNT,
+    "All product cards displayed"
+  );
 
   let qrCodeButtons = doc.querySelectorAll('.qr-code-box[hidden="false"]');
   Assert.equal(qrCodeButtons.length, 1, "1 qr-code box displayed");
@@ -329,9 +339,14 @@ add_task(async function test_aboutpreferences_search() {
   let tab = gBrowser.selectedTab;
 
   let productCards = doc.querySelectorAll(".mozilla-product-item");
-  Assert.equal(productCards.length, 3, "All products in the group are found");
-  let [mobile, vpn, relay] = productCards;
+  Assert.equal(
+    productCards.length,
+    TOTAL_PROMO_CARDS_COUNT,
+    "All products in the group are found"
+  );
+  let [mobile, monitor, vpn, relay] = productCards;
   Assert.ok(BrowserTestUtils.is_hidden(mobile), "Mobile hidden");
+  Assert.ok(BrowserTestUtils.is_hidden(monitor), "Monitor hidden");
   Assert.ok(BrowserTestUtils.is_hidden(vpn), "VPN hidden");
   Assert.ok(BrowserTestUtils.is_visible(relay), "Relay shown");
 
