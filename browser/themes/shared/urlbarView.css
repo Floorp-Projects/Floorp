@@ -134,7 +134,7 @@
 .urlbarView-no-wrap {
   display: inline-flex;
   flex-wrap: nowrap;
-  align-items: center;
+  align-items: baseline;
   justify-content: start;
 }
 
@@ -266,6 +266,7 @@
 .urlbarView-favicon {
   width: var(--urlbarView-favicon-width);
   height: var(--urlbarView-favicon-width);
+  align-self: center;
   margin-inline-start: var(--urlbarView-icon-margin-start);
   margin-inline-end: var(--urlbarView-icon-margin-end);
   background-repeat: no-repeat;
@@ -293,6 +294,7 @@
   position: absolute;
   width: 12px;
   height: 12px;
+  align-self: center;
   margin-top: var(--urlbarView-favicon-width);
   margin-inline-start: calc(var(--urlbarView-icon-margin-start) + var(--urlbarView-favicon-width) - 6px);
   background-repeat: no-repeat;
@@ -732,11 +734,6 @@
 
 /* Rich suggestions */
 
-.urlbarView-row[rich-suggestion] > .urlbarView-row-inner {
-  align-items: center;
-  justify-content: start;
-}
-
 .urlbarView-row[rich-suggestion] > .urlbarView-row-inner > .urlbarView-favicon {
   width: var(--urlbarView-rich-suggestion-default-icon-size);
   height: var(--urlbarView-rich-suggestion-default-icon-size);
@@ -773,15 +770,12 @@
     display: flex;
     flex-wrap: nowrap;
     flex-direction: row;
-    align-items: baseline;
-    justify-content: start;
 
     > .urlbarView-row-body-top-no-wrap {
       display: flex;
       flex-wrap: nowrap;
       flex-direction: row;
       align-items: baseline;
-      justify-content: start;
       flex-shrink: 0;
       min-width: 0;
 
