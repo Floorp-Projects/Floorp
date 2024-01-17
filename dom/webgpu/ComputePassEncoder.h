@@ -6,7 +6,6 @@
 #ifndef GPU_ComputePassEncoder_H_
 #define GPU_ComputePassEncoder_H_
 
-#include "mozilla/Scoped.h"
 #include "mozilla/dom/TypedArray.h"
 #include "ObjectModel.h"
 
@@ -27,10 +26,8 @@ class Buffer;
 class CommandEncoder;
 class ComputePipeline;
 
-struct ScopedFfiComputeTraits {
-  using type = ffi::WGPUComputePass*;
-  static type empty();
-  static void release(type raw);
+struct ffiWGPUComputePassDeleter {
+  void operator()(ffi::WGPUComputePass*);
 };
 
 class ComputePassEncoder final : public ObjectBase,
@@ -46,7 +43,7 @@ class ComputePassEncoder final : public ObjectBase,
   virtual ~ComputePassEncoder();
   void Cleanup() {}
 
-  Scoped<ScopedFfiComputeTraits> mPass;
+  std::unique_ptr<ffi::WGPUComputePass, ffiWGPUComputePassDeleter> mPass;
   // keep all the used objects alive while the pass is recorded
   nsTArray<RefPtr<const BindGroup>> mUsedBindGroups;
   nsTArray<RefPtr<const ComputePipeline>> mUsedPipelines;
