@@ -7,6 +7,7 @@
 #ifndef EnterpriseRoots_h
 #define EnterpriseRoots_h
 
+#include "ScopedNSSTypes.h"
 #include "mozpkix/Input.h"
 #include "mozpkix/Result.h"
 #include "nsTArray.h"
@@ -23,6 +24,8 @@ class EnterpriseCert {
   void CopyBytes(nsTArray<uint8_t>& dest) const;
   mozilla::pkix::Result GetInput(mozilla::pkix::Input& input) const;
   bool GetIsRoot() const;
+  // Is this certificate a known, built-in root?
+  bool IsKnownRoot(mozilla::UniqueSECMODModule& rootsModule);
 
  private:
   nsTArray<uint8_t> mDER;
