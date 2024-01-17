@@ -11855,6 +11855,10 @@ bool InitOptionParser(OptionParser& op) {
           "Wait for COUNT calls or iterations before trial-inlining "
           "(default: 500)",
           -1) ||
+      !op.addStringOption(
+          '\0', "monomorphic-inlining", "default/always/never",
+          "Whether monomorphic inlining is used instead of trial inlining "
+          "always, never, or based on heuristics (default)") ||
       !op.addBoolOption(
           '\0', "non-writable-jitcode",
           "(NOP for fuzzers) Allocate JIT code as non-writable memory.") ||
@@ -12460,6 +12464,19 @@ bool SetContextJITOptions(JSContext* cx, const OptionParser& op) {
       jit::JitOptions.maybeSetWriteProtectCode(false);
     } else {
       return OptionFailure("write-protect-code", str);
+    }
+  }
+
+  if (const char* str = op.getStringOption("monomorphic-inlining")) {
+    if (strcmp(str, "default") == 0) {
+      jit::JitOptions.monomorphicInlining =
+          jit::UseMonomorphicInlining::Default;
+    } else if (strcmp(str, "always") == 0) {
+      jit::JitOptions.monomorphicInlining = jit::UseMonomorphicInlining::Always;
+    } else if (strcmp(str, "never") == 0) {
+      jit::JitOptions.monomorphicInlining = jit::UseMonomorphicInlining::Never;
+    } else {
+      return OptionFailure("monomorphic-inlining", str);
     }
   }
 
