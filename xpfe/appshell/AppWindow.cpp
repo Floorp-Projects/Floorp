@@ -1704,6 +1704,11 @@ static void ConvertWindowSize(nsIAppWindow* aWin, const nsAtom* aAttr,
 }
 
 nsresult AppWindow::GetPersistentValue(const nsAtom* aAttr, nsAString& aValue) {
+  if (!XRE_IsParentProcess()) {
+    // The XULStore is only available in the parent process.
+    return NS_ERROR_UNEXPECTED;
+  }
+
   nsCOMPtr<dom::Element> docShellElement = GetWindowDOMElement();
   if (!docShellElement) {
     return NS_ERROR_FAILURE;
@@ -1941,6 +1946,11 @@ nsresult AppWindow::MaybeSaveEarlyWindowPersistentValues(
 
 nsresult AppWindow::SetPersistentValue(const nsAtom* aAttr,
                                        const nsAString& aValue) {
+  if (!XRE_IsParentProcess()) {
+    // The XULStore is only available in the parent process.
+    return NS_ERROR_UNEXPECTED;
+  }
+
   nsAutoString uri;
   nsAutoString windowElementId;
   nsresult rv = GetDocXulStoreKeys(uri, windowElementId);

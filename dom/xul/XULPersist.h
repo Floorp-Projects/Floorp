@@ -19,6 +19,13 @@ class nsCOMArray;
 
 namespace mozilla::dom {
 
+/**
+ * This class synchronizes element attributes (such as window sizing) with the
+ * live elements in a Document and with the XULStore. The XULStore persists
+ * these attributes to the file system. This class is created and owned by the
+ * Document and must only be created in the parent process. It only presists
+ * chrome document element attributes.
+ */
 class XULPersist final : public nsStubDocumentObserver {
  public:
   NS_DECL_ISUPPORTS
