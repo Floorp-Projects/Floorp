@@ -42,7 +42,7 @@ class JS_PUBLIC_API ContextOptions {
         trySmoosh_(false),
 #endif
         fuzzing_(false),
-        enableDestructuringFuse_(false) {
+        enableDestructuringFuse_(true) {
   }
   // clang-format on
 
