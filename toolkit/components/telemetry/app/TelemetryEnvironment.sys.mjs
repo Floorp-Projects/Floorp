@@ -1924,6 +1924,13 @@ EnvironmentCache.prototype = {
       this._osData.kernelVersion = forceToStringOrNull(
         getSysinfoProperty("kernel_version", null)
       );
+    } else if (AppConstants.platform == "linux") {
+      this._osData.distro = forceToStringOrNull(
+        getSysinfoProperty("distro", null)
+      );
+      this._osData.distroVersion = forceToStringOrNull(
+        getSysinfoProperty("distroVersion", null)
+      );
     } else if (AppConstants.platform === "win") {
       // The path to the "UBR" key, queried to get additional version details on Windows.
       const WINDOWS_UBR_KEY_PATH =
