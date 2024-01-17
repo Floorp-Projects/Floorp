@@ -3,10 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-
 const PROVIDER_PREF_BRANCH =
   "browser.newtabpage.activity-stream.asrouter.providers.";
 const DEVTOOLS_PREF =
@@ -53,7 +49,7 @@ class _ASRouterPreferences {
     Object.assign(this, DEFAULT_STATE);
     this._callbacks = new Set();
 
-    XPCOMUtils.defineLazyGetter(this, "console", () => {
+    ChromeUtils.defineLazyGetter(this, "console", () => {
       let { ConsoleAPI } = ChromeUtils.importESModule(
         "resource://gre/modules/Console.sys.mjs"
       );

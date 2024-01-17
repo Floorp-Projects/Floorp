@@ -6,7 +6,7 @@
 // We explicitly need HTTP URLs in this test
 /* eslint-disable @microsoft/sdl/no-insecure-url */
 
-XPCOMUtils.defineLazyGetter(this, "UrlbarTestUtils", () => {
+ChromeUtils.defineLazyGetter(this, "UrlbarTestUtils", () => {
   const { UrlbarTestUtils: module } = ChromeUtils.importESModule(
     "resource://testing-common/UrlbarTestUtils.sys.mjs"
   );

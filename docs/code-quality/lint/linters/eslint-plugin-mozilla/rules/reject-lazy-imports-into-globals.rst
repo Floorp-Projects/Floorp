@@ -21,8 +21,6 @@ Examples of incorrect code for this rule:
 
     ChromeUtils.defineESModuleGetters(globalThis, { foo: "foo.sys.mjs" });
     ChromeUtils.defineESModuleGetters(window, { "foo": "foo.sys.mjs" });
-    XPCOMUtils.defineLazyGetter(globalThis, "foo", () => {});
-    XPCOMUtils.defineLazyGetter(window, "foo", () => {});
     ChromeUtils.defineLazyGetter(globalThis, "foo", () => {});
     ChromeUtils.defineLazyGetter(window, "foo", () => {});
 
@@ -32,5 +30,4 @@ Examples of correct code for this rule:
 .. code-block:: js
 
     const lazy = {};
-    XPCOMUtils.defineLazyGetter(lazy, "foo", () => {});
-    ChromeUtils.defineLazyGetter(lazy, "bar", () => {});
+    ChromeUtils.defineLazyGetter(lazy, "foo", () => {});

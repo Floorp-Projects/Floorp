@@ -16,7 +16,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
     "resource:///modules/aboutwelcome/AboutWelcomeDefaults.jsm",
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "log", () => {
+ChromeUtils.defineLazyGetter(lazy, "log", () => {
   const { Logger } = ChromeUtils.importESModule(
     "resource://messaging-system/lib/Logger.sys.mjs"
   );

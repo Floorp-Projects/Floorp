@@ -11,7 +11,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 });
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-XPCOMUtils.defineLazyGetter(lazy, "logConsole", () => {
+ChromeUtils.defineLazyGetter(lazy, "logConsole", () => {
   return console.createInstance({
     prefix: "FingerprintingWebCompatService",
     maxLogLevelPref:

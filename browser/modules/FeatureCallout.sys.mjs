@@ -22,7 +22,7 @@ const CONTENT_BOX_ID = "multi-stage-message-root";
 const BUNDLE_SRC =
   "chrome://browser/content/aboutwelcome/aboutwelcome.bundle.js";
 
-XPCOMUtils.defineLazyGetter(lazy, "log", () => {
+ChromeUtils.defineLazyGetter(lazy, "log", () => {
   const { Logger } = ChromeUtils.importESModule(
     "resource://messaging-system/lib/Logger.sys.mjs"
   );

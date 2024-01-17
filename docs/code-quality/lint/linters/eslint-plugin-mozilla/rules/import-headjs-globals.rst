@@ -23,5 +23,4 @@ The following patterns are supported:
 -  ``loader.lazyRequireGetter(this, "name2"``
 -  ``loader.lazyServiceGetter(this, "name3"``
 -  ``loader.lazyGetter(this, "toolboxStrings"``
--  ``XPCOMUtils.defineLazyGetter(this, "clipboardHelper"``
 -  ``ChromeUtils.defineLazyGetter(this, "clipboardHelper"``

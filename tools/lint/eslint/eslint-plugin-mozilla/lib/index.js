@@ -82,6 +82,7 @@ module.exports = {
     "reject-top-level-await": require("../lib/rules/reject-top-level-await"),
     "rejects-requires-await": require("../lib/rules/rejects-requires-await"),
     "use-cc-etc": require("../lib/rules/use-cc-etc"),
+    "use-chromeutils-definelazygetter": require("../lib/rules/use-chromeutils-definelazygetter"),
     "use-chromeutils-generateqi": require("../lib/rules/use-chromeutils-generateqi"),
     "use-chromeutils-import": require("../lib/rules/use-chromeutils-import"),
     "use-console-createInstance": require("../lib/rules/use-console-createInstance"),

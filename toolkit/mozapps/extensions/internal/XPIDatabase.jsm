@@ -55,7 +55,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
 // WARNING: BuiltInThemes.sys.mjs may be provided by the host application (e.g.
 // Firefox), or it might not exist at all. Use with caution, as we don't
 // want things to completely fail if that module can't be loaded.
-XPCOMUtils.defineLazyGetter(lazy, "BuiltInThemes", () => {
+ChromeUtils.defineLazyGetter(lazy, "BuiltInThemes", () => {
   try {
     let { BuiltInThemes } = ChromeUtils.importESModule(
       "resource:///modules/BuiltInThemes.sys.mjs"

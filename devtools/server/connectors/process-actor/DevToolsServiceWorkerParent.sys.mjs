@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { EventEmitter } from "resource://gre/modules/EventEmitter.sys.mjs";
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const { WatcherRegistry } = ChromeUtils.importESModule(
   "resource://devtools/server/actors/watcher/WatcherRegistry.sys.mjs",
@@ -19,7 +18,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   loader: "resource://devtools/shared/loader/Loader.sys.mjs",
 });
 
-XPCOMUtils.defineLazyGetter(
+ChromeUtils.defineLazyGetter(
   lazy,
   "JsWindowActorTransport",
   () =>
