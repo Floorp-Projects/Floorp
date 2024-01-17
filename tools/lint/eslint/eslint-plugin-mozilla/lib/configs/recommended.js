@@ -188,6 +188,7 @@ module.exports = {
     "mozilla/reject-scriptableunicodeconverter": "warn",
     "mozilla/rejects-requires-await": "error",
     "mozilla/use-cc-etc": "error",
+    "mozilla/use-chromeutils-definelazygetter": "error",
     "mozilla/use-chromeutils-generateqi": "error",
     "mozilla/use-chromeutils-import": "error",
     "mozilla/use-console-createInstance": "error",

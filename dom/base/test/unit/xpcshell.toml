@@ -40,6 +40,8 @@ skip-if = [
 
 ["test_chromeutils_base64.js"]
 
+["test_chromeutils_defineLazyGetter.js"]
+
 ["test_chromeutils_getXPCOMErrorName.js"]
 
 ["test_chromeutils_shallowclone.js"]

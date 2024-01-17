@@ -14,7 +14,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
     "resource:///modules/aboutwelcome/AboutWelcomeTelemetry.jsm",
 });
 
-XPCOMUtils.defineLazyGetter(
+ChromeUtils.defineLazyGetter(
   lazy,
   "AWTelemetry",
   () => new lazy.AboutWelcomeTelemetry()

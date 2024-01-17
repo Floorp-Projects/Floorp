@@ -44,6 +44,9 @@ export var XPCOMUtils = {
    *        only ever be called once.
    */
   defineLazyGetter(aObject, aName, aLambda) {
+    console.warn(
+      "Please use ChromeUtils.defineLazyGetter instead of XPCOMUtils.defineLazyGetter. XPCOMUtils.defineLazyGetter will be removed soon."
+    );
     ChromeUtils.defineLazyGetter(aObject, aName, aLambda);
   },
 
@@ -107,7 +110,7 @@ export var XPCOMUtils = {
    */
   defineLazyGlobalGetters(aObject, aNames) {
     for (let name of aNames) {
-      this.defineLazyGetter(aObject, name, () => {
+      ChromeUtils.defineLazyGetter(aObject, name, () => {
         if (!(name in global)) {
           let importName = EXTRA_GLOBAL_NAME_TO_IMPORT_NAME[name] || name;
           // eslint-disable-next-line mozilla/reject-importGlobalProperties, no-unused-vars
@@ -132,7 +135,7 @@ export var XPCOMUtils = {
    *        The name of the interface to query the service to.
    */
   defineLazyServiceGetter(aObject, aName, aContract, aInterfaceName) {
-    this.defineLazyGetter(aObject, aName, () => {
+    ChromeUtils.defineLazyGetter(aObject, aName, () => {
       if (aInterfaceName) {
         return Cc[aContract].getService(Ci[aInterfaceName]);
       }

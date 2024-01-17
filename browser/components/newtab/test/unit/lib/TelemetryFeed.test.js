@@ -45,7 +45,7 @@ describe("TelemetryFeed", () => {
   // `ActivityStream.test.js` are run together.
   //
   // The `TelemetryFeed` module defines a lazy `contextId` getter, which the
-  // `XPCOMUtils.defineLazyGetter` mock (defined in `unit-entry.js`) executes
+  // `ChromeUtils.defineLazyGetter` mock (defined in `unit-entry.js`) executes
   // immediately, as soon as the module is imported.
   //
   // If this test runs first, there's no coverage miss: this test will load

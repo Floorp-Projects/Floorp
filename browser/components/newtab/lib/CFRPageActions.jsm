@@ -88,7 +88,7 @@ class PageAction {
     // Saved timeout IDs for scheduled state changes, so they can be cancelled
     this.stateTransitionTimeoutIDs = [];
 
-    XPCOMUtils.defineLazyGetter(this, "isDarkTheme", () => {
+    ChromeUtils.defineLazyGetter(this, "isDarkTheme", () => {
       try {
         return this.window.document.documentElement.hasAttribute(
           "lwt-toolbar-field-brighttext"

@@ -155,6 +155,9 @@ const TEST_GLOBAL = {
   browserSearchRegion: "US",
   BrowserWindowTracker: { getTopWindow() {} },
   ChromeUtils: {
+    defineLazyGetter(object, name, f) {
+      updateGlobalOrObject(object)[name] = f();
+    },
     defineModuleGetter: updateGlobalOrObject,
     defineESModuleGetters: updateGlobalOrObject,
     generateQI() {
@@ -494,9 +497,6 @@ const TEST_GLOBAL = {
     },
   },
   XPCOMUtils: {
-    defineLazyGetter(object, name, f) {
-      updateGlobalOrObject(object)[name] = f();
-    },
     defineLazyGlobalGetters: updateGlobalOrObject,
     defineLazyModuleGetters: updateGlobalOrObject,
     defineLazyServiceGetter: updateGlobalOrObject,

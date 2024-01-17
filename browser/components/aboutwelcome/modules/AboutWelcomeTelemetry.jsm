@@ -16,16 +16,16 @@ ChromeUtils.defineESModuleGetters(lazy, {
   TelemetrySession: "resource://gre/modules/TelemetrySession.sys.mjs",
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "telemetryClientId", () =>
+ChromeUtils.defineLazyGetter(lazy, "telemetryClientId", () =>
   lazy.ClientID.getClientID()
 );
-XPCOMUtils.defineLazyGetter(
+ChromeUtils.defineLazyGetter(
   lazy,
   "browserSessionId",
   () => lazy.TelemetrySession.getMetadata("").sessionId
 );
 
-XPCOMUtils.defineLazyGetter(lazy, "log", () => {
+ChromeUtils.defineLazyGetter(lazy, "log", () => {
   const { Logger } = ChromeUtils.importESModule(
     "resource://messaging-system/lib/Logger.sys.mjs"
   );

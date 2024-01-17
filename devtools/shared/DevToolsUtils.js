@@ -128,7 +128,7 @@ exports.waitForTime = function (delay) {
 };
 
 /**
- * Like XPCOMUtils.defineLazyGetter, but with a |this| sensitive getter that
+ * Like ChromeUtils.defineLazyGetter, but with a |this| sensitive getter that
  * allows the lazy getter to be defined on a prototype and work correctly with
  * instances.
  *

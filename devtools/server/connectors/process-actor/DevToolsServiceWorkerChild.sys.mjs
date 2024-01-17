@@ -22,7 +22,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
     "resource://devtools/server/actors/watcher/SessionDataHelpers.jsm",
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "DevToolsUtils", () =>
+ChromeUtils.defineLazyGetter(lazy, "DevToolsUtils", () =>
   lazy.loader.require("devtools/shared/DevToolsUtils")
 );
 

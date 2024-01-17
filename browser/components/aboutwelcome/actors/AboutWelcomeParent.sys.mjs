@@ -25,14 +25,14 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   AWScreenUtils: "resource:///modules/aboutwelcome/AWScreenUtils.jsm",
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "log", () => {
+ChromeUtils.defineLazyGetter(lazy, "log", () => {
   const { Logger } = ChromeUtils.importESModule(
     "resource://messaging-system/lib/Logger.sys.mjs"
   );
   return new Logger("AboutWelcomeParent");
 });
 
-XPCOMUtils.defineLazyGetter(
+ChromeUtils.defineLazyGetter(
   lazy,
   "Telemetry",
   () => new lazy.AboutWelcomeTelemetry()

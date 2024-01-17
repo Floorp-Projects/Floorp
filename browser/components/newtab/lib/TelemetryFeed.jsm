@@ -41,7 +41,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   AboutWelcomeTelemetry:
     "resource:///modules/aboutwelcome/AboutWelcomeTelemetry.jsm",
 });
-XPCOMUtils.defineLazyGetter(
+ChromeUtils.defineLazyGetter(
   lazy,
   "Telemetry",
   () => new lazy.AboutWelcomeTelemetry()
@@ -82,7 +82,7 @@ const ONBOARDING_ALLOWED_PAGE_VALUES = [
   "about:newtab",
 ];
 
-XPCOMUtils.defineLazyGetter(
+ChromeUtils.defineLazyGetter(
   lazy,
   "browserSessionId",
   () => lazy.TelemetrySession.getMetadata("").sessionId
@@ -92,7 +92,7 @@ XPCOMUtils.defineLazyGetter(
 const SCALAR_CATEGORY_TOPSITES = "contextual.services.topsites";
 // `contextId` is a unique identifier used by Contextual Services
 const CONTEXT_ID_PREF = "browser.contextual-services.contextId";
-XPCOMUtils.defineLazyGetter(lazy, "contextId", () => {
+ChromeUtils.defineLazyGetter(lazy, "contextId", () => {
   let _contextId = Services.prefs.getStringPref(CONTEXT_ID_PREF, null);
   if (!_contextId) {
     _contextId = String(Services.uuid.generateUUID());

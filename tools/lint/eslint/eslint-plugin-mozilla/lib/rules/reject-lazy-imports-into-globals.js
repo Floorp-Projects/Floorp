@@ -12,7 +12,6 @@ const callExpressionDefinitions = [
   /^loader\.lazyGetter\((?:globalThis|window), "(\w+)"/,
   /^loader\.lazyServiceGetter\((?:globalThis|window), "(\w+)"/,
   /^loader\.lazyRequireGetter\((?:globalThis|window), "(\w+)"/,
-  /^XPCOMUtils\.defineLazyGetter\((?:globalThis|window), "(\w+)"/,
   /^ChromeUtils\.defineLazyGetter\((?:globalThis|window), "(\w+)"/,
   /^ChromeUtils\.defineModuleGetter\((?:globalThis|window), "(\w+)"/,
   /^XPCOMUtils\.defineLazyPreferenceGetter\((?:globalThis|window), "(\w+)"/,

@@ -171,7 +171,7 @@ class MigrationUtils {
       ],
     });
 
-    XPCOMUtils.defineLazyGetter(this, "IS_LINUX_SNAP_PACKAGE", () => {
+    ChromeUtils.defineLazyGetter(this, "IS_LINUX_SNAP_PACKAGE", () => {
       if (
         AppConstants.platform != "linux" ||
         !Cc["@mozilla.org/gio-service;1"]
