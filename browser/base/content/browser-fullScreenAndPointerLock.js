@@ -255,6 +255,9 @@ var PointerlockFsWarning = {
         if (this._state == "hiding") {
           this._element.hidden = true;
         }
+        if (this._state == "onscreen") {
+          window.dispatchEvent(new CustomEvent("FullscreenWarningOnScreen"));
+        }
         break;
       }
       case "activate": {
