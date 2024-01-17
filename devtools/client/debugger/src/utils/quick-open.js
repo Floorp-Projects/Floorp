@@ -75,7 +75,7 @@ export function formatSourceForList(
     subtitle,
     icon: hasTabOpened
       ? "tab result-item-icon"
-      : `result-item-icon ${getSourceClassnames(source, null, isBlackBoxed)}`,
+      : `result-item-icon ${getSourceClassnames(source, isBlackBoxed)}`,
     id: source.id,
     url: source.url,
     source,

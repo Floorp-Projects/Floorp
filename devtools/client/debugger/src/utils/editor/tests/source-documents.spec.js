@@ -19,7 +19,6 @@ const defaultSymbolDeclarations = {
   literals: [],
   hasJsx: false,
   hasTypes: false,
-  framework: undefined,
 };
 
 describe("source-documents", () => {
