@@ -59,9 +59,6 @@ export class ScreenshotsComponentChild extends JSWindowActorChild {
         if (!this.overlay?.initialized) {
           return;
         }
-        if (event.type === "keydown" && event.key === "Escape") {
-          this.requestCancelScreenshot("escape");
-        }
         this.overlay.handleEvent(event);
         break;
       case "beforeunload":

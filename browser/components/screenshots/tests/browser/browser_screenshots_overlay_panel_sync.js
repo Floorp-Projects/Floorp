@@ -27,17 +27,13 @@ add_task(async function test_overlay_and_panel_state() {
 
   await helper.dragOverlay(10, 10, 500, 500);
 
-  await helper.waitForStateChange("selected");
-  let state = await helper.getOverlayState();
-  is(state, "selected", "The overlay is in the selected state");
+  await helper.assertStateChange("selected");
 
   helper.assertPanelNotVisible();
 
   mouse.click(600, 600);
 
-  await helper.waitForStateChange("crosshairs");
-  state = await helper.getOverlayState();
-  is(state, "crosshairs", "The overlay is in the crosshairs state");
+  await helper.assertStateChange("crosshairs");
 
   await helper.waitForOverlay();
 
@@ -59,17 +55,13 @@ add_task(async function test_overlay_and_panel_state() {
 
   await helper.dragOverlay(10, 10, 500, 500);
 
-  await helper.waitForStateChange("selected");
-  state = await helper.getOverlayState();
-  is(state, "selected", "The overlay is in the selected state");
+  await helper.assertStateChange("selected");
 
   await BrowserTestUtils.switchTab(gBrowser, tab1);
   await BrowserTestUtils.switchTab(gBrowser, screenshotsTab);
 
   Assert.ok(await helper.isOverlayInitialized(), "Overlay is open");
   helper.assertPanelNotVisible();
-  state = await helper.getOverlayState();
-  is(state, "selected", "The overlay is in the selected state");
 
   helper.triggerUIFromToolbar();
   await helper.waitForOverlayClosed();

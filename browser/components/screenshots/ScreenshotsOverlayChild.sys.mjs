@@ -308,7 +308,7 @@ export class ScreenshotsOverlay {
     switch (event.originalTarget.id) {
       case "screenshots-cancel-button":
       case "cancel":
-        this.#dispatchEvent("Screenshots:Close", { reason: "overlay_cancel" });
+        this.maybeCancelScreenshots();
         break;
       case "copy":
         this.#dispatchEvent("Screenshots:Copy", {
@@ -320,6 +320,16 @@ export class ScreenshotsOverlay {
           region: this.selectionRegion.dimensions,
         });
         break;
+    }
+  }
+
+  maybeCancelScreenshots() {
+    if (this.#state === STATES.CROSSHAIRS) {
+      this.#dispatchEvent("Screenshots:Close", {
+        reason: "overlay_cancel",
+      });
+    } else {
+      this.#setState(STATES.CROSSHAIRS);
     }
   }
 
@@ -424,6 +434,9 @@ export class ScreenshotsOverlay {
         break;
       case "Tab":
         this.maybeLockFocus(event);
+        break;
+      case "Escape":
+        this.maybeCancelScreenshots();
         break;
     }
   }

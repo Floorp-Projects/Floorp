@@ -71,9 +71,7 @@ add_task(async function test_draggingBoxOffTopLeft() {
         startY + Math.floor((endY - startY) / 2)
       );
 
-      await helper.waitForStateChange("resizing");
-      let state = await helper.getOverlayState();
-      is(state, "resizing", "The overlay is in the resizing state");
+      await helper.assertStateChange("resizing");
 
       mouse.move(10, 10);
 
@@ -152,9 +150,7 @@ add_task(async function test_draggingBoxOffBottomRight() {
         startY + 50 + Math.floor((endY - startY) / 2)
       );
 
-      await helper.waitForStateChange("resizing");
-      let state = await helper.getOverlayState();
-      is(state, "resizing", "The overlay is in the resizing state");
+      await helper.assertStateChange("resizing");
 
       mouse.move(endX, endY);
 
@@ -232,7 +228,7 @@ add_task(async function test_scrollingScreenshotsOpen() {
 
       // reset screenshots box
       mouse.click(scrollX + startX, scrollY + endY);
-      await helper.waitForStateChange("crosshairs");
+      await helper.assertStateChange("crosshairs");
 
       await helper.dragOverlay(
         scrollX + startX,
@@ -252,7 +248,7 @@ add_task(async function test_scrollingScreenshotsOpen() {
 
       // reset screenshots box
       mouse.click(10, 10);
-      await helper.waitForStateChange("crosshairs");
+      await helper.assertStateChange("crosshairs");
 
       await helper.dragOverlay(
         startX,
@@ -268,7 +264,7 @@ add_task(async function test_scrollingScreenshotsOpen() {
 
       mouse.down(contentInfo.clientWidth - 10, contentInfo.clientHeight - 10);
 
-      await helper.waitForStateChange("resizing");
+      await helper.assertStateChange("resizing");
 
       mouse.move(
         contentInfo.clientWidth * 2 - 30,
@@ -280,7 +276,7 @@ add_task(async function test_scrollingScreenshotsOpen() {
         contentInfo.clientHeight * 2 - 30
       );
 
-      await helper.waitForStateChange("selected");
+      await helper.assertStateChange("selected");
 
       let { left, top, right, bottom, width, height } =
         await helper.getSelectionRegionDimensions();
@@ -358,12 +354,12 @@ add_task(async function test_scrollIfByEdge() {
       // The window won't scroll if the state is draggingReady so we move to
       // get into the dragging state and then move again to scroll the window
       mouse.down(startX, startY);
-      await helper.waitForStateChange("draggingReady");
+      await helper.assertStateChange("draggingReady");
       mouse.move(1050, 1050);
-      await helper.waitForStateChange("dragging");
+      await helper.assertStateChange("dragging");
       mouse.move(endX, endY);
       mouse.up(endX, endY);
-      await helper.waitForStateChange("selected");
+      await helper.assertStateChange("selected");
 
       windowX = 990;
       windowY = 990;
@@ -385,10 +381,10 @@ add_task(async function test_scrollIfByEdge() {
         )}\n`
       );
       mouse.down(startX, startY);
-      await helper.waitForStateChange("resizing");
+      await helper.assertStateChange("resizing");
       mouse.move(endX, endY);
       mouse.up(endX, endY);
-      await helper.waitForStateChange("selected");
+      await helper.assertStateChange("selected");
 
       windowX = 1000;
       windowY = 1000;
@@ -453,7 +449,7 @@ add_task(async function test_scrollIfByEdgeWithKeyboard() {
       is(scrollY, windowY, "Window y position is 989");
 
       mouse.click(1200, 1200);
-      await helper.waitForStateChange("crosshairs");
+      await helper.assertStateChange("crosshairs");
       await helper.dragOverlay(
         scrollX + clientWidth - 100 - 20,
         scrollY + clientHeight - 100 - 20,

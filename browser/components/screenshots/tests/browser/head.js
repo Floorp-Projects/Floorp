@@ -163,8 +163,18 @@ class ScreenshotsHelper {
   async waitForStateChange(newState) {
     return BrowserTestUtils.waitForCondition(async () => {
       let state = await this.getOverlayState();
-      return state === newState;
+      return state === newState ? state : "";
     }, `Waiting for state change to ${newState}`);
+  }
+
+  async assertStateChange(newState) {
+    let currentState = await this.waitForStateChange(newState);
+
+    is(
+      currentState,
+      newState,
+      `The current state is ${currentState}, expected ${newState}`
+    );
   }
 
   async getHoverElementRect() {
@@ -229,13 +239,7 @@ class ScreenshotsHelper {
     endY,
     expectedStartingState = "crosshairs"
   ) {
-    await this.waitForStateChange(expectedStartingState);
-    let state = await this.getOverlayState();
-    Assert.equal(
-      state,
-      expectedStartingState,
-      `The overlay is in the ${state} state`
-    );
+    await this.assertStateChange(expectedStartingState);
 
     mouse.down(startX, startY);
 
@@ -255,9 +259,7 @@ class ScreenshotsHelper {
 
     mouse.up(endX, endY);
 
-    await this.waitForStateChange("selected");
-    state = await this.getOverlayState();
-    Assert.equal(state, "selected", "The overlay is in the selected state");
+    await this.assertStateChange("selected");
 
     this.endX = endX;
     this.endY = endY;
@@ -350,6 +352,26 @@ class ScreenshotsHelper {
     mouse.click(x, y);
   }
 
+  async clickPreviewCancelButton() {
+    let { centerX: x, centerY: y } = await ContentTask.spawn(
+      this.browser,
+      null,
+      async () => {
+        let screenshotsChild = content.windowGlobalChild.getActor(
+          "ScreenshotsComponent"
+        );
+        let { left, top, width, height } =
+          screenshotsChild.overlay.previewCancelButton.getBoundingClientRect();
+        let centerX = left + width / 2;
+        let centerY = top + height / 2;
+        return { centerX, centerY };
+      }
+    );
+
+    info(`clicking cancel button at ${x}, ${y}`);
+    mouse.click(x, y);
+  }
+
   async clickTestPageElement() {
     let rect = await ContentTask.spawn(this.browser, [], async () => {
       let ele = content.document.getElementById("testPageElement");
@@ -362,9 +384,9 @@ class ScreenshotsHelper {
     mouse.move(x, y);
     await this.waitForHoverElementRect();
     mouse.down(x, y);
-    await this.waitForStateChange("draggingReady");
+    await this.assertStateChange("draggingReady");
     mouse.up(x, y);
-    await this.waitForStateChange("selected");
+    await this.assertStateChange("selected");
   }
 
   async zoomBrowser(zoom) {
