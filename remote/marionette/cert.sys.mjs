@@ -6,10 +6,6 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
-ChromeUtils.defineESModuleGetters(lazy, {
-  Preferences: "resource://gre/modules/Preferences.sys.mjs",
-});
-
 XPCOMUtils.defineLazyServiceGetter(
   lazy,
   "sss",
@@ -36,8 +32,8 @@ export const allowAllCerts = {};
 allowAllCerts.enable = function () {
   // make it possible to register certificate overrides for domains
   // that use HSTS or HPKP
-  lazy.Preferences.set(HSTS_PRELOAD_LIST_PREF, false);
-  lazy.Preferences.set(CERT_PINNING_ENFORCEMENT_PREF, 0);
+  Services.prefs.setBoolPref(HSTS_PRELOAD_LIST_PREF, false);
+  Services.prefs.setIntPref(CERT_PINNING_ENFORCEMENT_PREF, 0);
 
   lazy.certOverrideService.setDisableAllSecurityChecksAndLetAttackersInterceptMyData(
     true
@@ -52,8 +48,8 @@ allowAllCerts.disable = function () {
     false
   );
 
-  lazy.Preferences.reset(HSTS_PRELOAD_LIST_PREF);
-  lazy.Preferences.reset(CERT_PINNING_ENFORCEMENT_PREF);
+  Services.prefs.clearUserPref(HSTS_PRELOAD_LIST_PREF);
+  Services.prefs.clearUserPref(CERT_PINNING_ENFORCEMENT_PREF);
 
   // clear collected HSTS and HPKP state
   // through the site security service

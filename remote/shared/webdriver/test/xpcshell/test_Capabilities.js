@@ -4,10 +4,6 @@
 
 "use strict";
 
-const { Preferences } = ChromeUtils.importESModule(
-  "resource://gre/modules/Preferences.sys.mjs"
-);
-
 const { AppInfo } = ChromeUtils.importESModule(
   "chrome://remote/content/shared/AppInfo.sys.mjs"
 );
@@ -112,16 +108,16 @@ add_task(function test_Proxy_init() {
 
   // no changed made, and 5 (system) is default
   equal(p.init(), false);
-  equal(Preferences.get("network.proxy.type"), 5);
+  equal(Services.prefs.getIntPref("network.proxy.type"), 5);
 
   // pac
   p.proxyType = "pac";
   p.proxyAutoconfigUrl = "http://localhost:1234";
   ok(p.init());
 
-  equal(Preferences.get("network.proxy.type"), 2);
+  equal(Services.prefs.getIntPref("network.proxy.type"), 2);
   equal(
-    Preferences.get("network.proxy.autoconfig_url"),
+    Services.prefs.getStringPref("network.proxy.autoconfig_url"),
     "http://localhost:1234"
   );
 
@@ -129,19 +125,19 @@ add_task(function test_Proxy_init() {
   p = new Proxy();
   p.proxyType = "direct";
   ok(p.init());
-  equal(Preferences.get("network.proxy.type"), 0);
+  equal(Services.prefs.getIntPref("network.proxy.type"), 0);
 
   // autodetect
   p = new Proxy();
   p.proxyType = "autodetect";
   ok(p.init());
-  equal(Preferences.get("network.proxy.type"), 4);
+  equal(Services.prefs.getIntPref("network.proxy.type"), 4);
 
   // system
   p = new Proxy();
   p.proxyType = "system";
   ok(p.init());
-  equal(Preferences.get("network.proxy.type"), 5);
+  equal(Services.prefs.getIntPref("network.proxy.type"), 5);
 
   // manual
   for (let proxy of ["http", "ssl", "socks"]) {
@@ -155,12 +151,15 @@ add_task(function test_Proxy_init() {
     }
 
     ok(p.init());
-    equal(Preferences.get("network.proxy.type"), 1);
-    equal(Preferences.get("network.proxy.no_proxies_on"), "foo, bar");
-    equal(Preferences.get(`network.proxy.${proxy}`), "foo");
-    equal(Preferences.get(`network.proxy.${proxy}_port`), 42);
+    equal(Services.prefs.getIntPref("network.proxy.type"), 1);
+    equal(
+      Services.prefs.getStringPref("network.proxy.no_proxies_on"),
+      "foo, bar"
+    );
+    equal(Services.prefs.getStringPref(`network.proxy.${proxy}`), "foo");
+    equal(Services.prefs.getIntPref(`network.proxy.${proxy}_port`), 42);
     if (proxy === "socks") {
-      equal(Preferences.get(`network.proxy.${proxy}_version`), 4);
+      equal(Services.prefs.getIntPref(`network.proxy.${proxy}_version`), 4);
     }
   }
 
@@ -169,7 +168,7 @@ add_task(function test_Proxy_init() {
   p.proxyType = "manual";
   p.noProxy = [];
   ok(p.init());
-  equal(Preferences.get("network.proxy.no_proxies_on"), "");
+  equal(Services.prefs.getStringPref("network.proxy.no_proxies_on"), "");
 });
 
 add_task(function test_Proxy_toString() {

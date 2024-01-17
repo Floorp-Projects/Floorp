@@ -5,8 +5,6 @@
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  Preferences: "resource://gre/modules/Preferences.sys.mjs",
-
   AppInfo: "chrome://remote/content/shared/AppInfo.sys.mjs",
   assert: "chrome://remote/content/shared/webdriver/Assert.sys.mjs",
   error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
@@ -146,40 +144,46 @@ export class Proxy {
   init() {
     switch (this.proxyType) {
       case "autodetect":
-        lazy.Preferences.set("network.proxy.type", 4);
+        Services.prefs.setIntPref("network.proxy.type", 4);
         return true;
 
       case "direct":
-        lazy.Preferences.set("network.proxy.type", 0);
+        Services.prefs.setIntPref("network.proxy.type", 0);
         return true;
 
       case "manual":
-        lazy.Preferences.set("network.proxy.type", 1);
+        Services.prefs.setIntPref("network.proxy.type", 1);
 
         if (this.httpProxy) {
-          lazy.Preferences.set("network.proxy.http", this.httpProxy);
+          Services.prefs.setStringPref("network.proxy.http", this.httpProxy);
           if (Number.isInteger(this.httpProxyPort)) {
-            lazy.Preferences.set("network.proxy.http_port", this.httpProxyPort);
+            Services.prefs.setIntPref(
+              "network.proxy.http_port",
+              this.httpProxyPort
+            );
           }
         }
 
         if (this.sslProxy) {
-          lazy.Preferences.set("network.proxy.ssl", this.sslProxy);
+          Services.prefs.setStringPref("network.proxy.ssl", this.sslProxy);
           if (Number.isInteger(this.sslProxyPort)) {
-            lazy.Preferences.set("network.proxy.ssl_port", this.sslProxyPort);
+            Services.prefs.setIntPref(
+              "network.proxy.ssl_port",
+              this.sslProxyPort
+            );
           }
         }
 
         if (this.socksProxy) {
-          lazy.Preferences.set("network.proxy.socks", this.socksProxy);
+          Services.prefs.setStringPref("network.proxy.socks", this.socksProxy);
           if (Number.isInteger(this.socksProxyPort)) {
-            lazy.Preferences.set(
+            Services.prefs.setIntPref(
               "network.proxy.socks_port",
               this.socksProxyPort
             );
           }
           if (this.socksVersion) {
-            lazy.Preferences.set(
+            Services.prefs.setIntPref(
               "network.proxy.socks_version",
               this.socksVersion
             );
@@ -187,7 +191,7 @@ export class Proxy {
         }
 
         if (this.noProxy) {
-          lazy.Preferences.set(
+          Services.prefs.setStringPref(
             "network.proxy.no_proxies_on",
             this.noProxy.join(", ")
           );
@@ -195,15 +199,15 @@ export class Proxy {
         return true;
 
       case "pac":
-        lazy.Preferences.set("network.proxy.type", 2);
-        lazy.Preferences.set(
+        Services.prefs.setIntPref("network.proxy.type", 2);
+        Services.prefs.setStringPref(
           "network.proxy.autoconfig_url",
           this.proxyAutoconfigUrl
         );
         return true;
 
       case "system":
-        lazy.Preferences.set("network.proxy.type", 5);
+        Services.prefs.setIntPref("network.proxy.type", 5);
         return true;
 
       default:
