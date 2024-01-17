@@ -524,48 +524,79 @@ export class FormAutofillParent extends JSWindowActorParent {
       { ignoreInvalid: true }
     );
 
-    let oldRecord = {};
-    let mergeableFields = [];
-
     // Exams all stored record to determine whether to show the prompt or not.
+    let mergeableFields = [];
+    let preserveFields = [];
+    let oldRecord = {};
+
     for (const record of await storage.getAll()) {
       const savedAddress = new lazy.AddressComponent(record);
       // filter invalid field
       const result = newAddress.compare(savedAddress);
 
+      // If any of the fields in the new address are different from the corresponding fields
+      // in the saved address, the two addresses are considered different. For example, if
+      // the name, email, country are the same but the street address is different, the two
+      // addresses are not considered the same.
       if (Object.values(result).includes("different")) {
-        // If any of the fields in the new address are different from the corresponding fields
-        // in the saved address, the two addresses are considered different. For example, if
-        // the name, email, country are the same but the street address is different, the two
-        // addresses are not considered the same.
         continue;
-      } else if (
-        // If every field of the new address is either the same or is subset of the corresponding
-        // field in the saved address, the new address is duplicated. We don't need capture
-        // the new address.
-        Object.values(result).every(r => ["same", "subset"].includes(r))
-      ) {
+      }
+
+      // If none of the fields in the new address are mergeable, the new address is considered
+      // a duplicate of a local address. Therefore, we don't need to capture this address.
+      const fields = Object.entries(result)
+        .filter(v => ["superset", "similar"].includes(v[1]))
+        .map(v => v[0]);
+      if (!fields.length) {
         lazy.log.debug(
           "A duplicated address record is found, do not show the prompt"
         );
         storage.notifyUsed(record.guid);
         return false;
-      } else {
-        // If the new address is neither a duplicate of the saved address nor a different address.
-        // There must be at least one field we can merge, show the update doorhanger
-        lazy.log.debug(
-          "A mergeable address record is found, show the update prompt"
-        );
-        // If we find multiple mergeable records, choose the record with fewest mergeable fields.
-        // TODO: Bug 1830841. Add a testcase
-        let fields = Object.entries(result)
-          .filter(v => ["superset", "similar"].includes(v[1]))
-          .map(v => v[0]);
-        if (!mergeableFields.length || mergeableFields.length > fields.length) {
-          oldRecord = record;
-          mergeableFields = fields;
-        }
       }
+
+      // If the new address is neither a duplicate of the saved address nor a different address.
+      // There must be at least one field we can merge, show the update doorhanger
+      lazy.log.debug(
+        "A mergeable address record is found, show the update prompt"
+      );
+
+      // If one record has fewer mergeable fields compared to another, it suggests greater similarity
+      // to the merged record. In such cases, we opt for the record with the fewest mergeable fields.
+      // TODO: Bug 1830841. Add a testcase
+      if (!mergeableFields.length || mergeableFields > fields.length) {
+        mergeableFields = fields;
+        preserveFields = Object.entries(result)
+          .filter(v => ["same", "subset"].includes(v[1]))
+          .map(v => v[0]);
+        oldRecord = record;
+      }
+    }
+
+    // Find a mergeable old record, construct the new record by only copying mergeable fields
+    // from the new address.
+    let newRecord = {};
+    if (mergeableFields.length) {
+      // TODO: This is only temporarily, should be removed after Bug 1836438 is fixed
+      if (mergeableFields.includes("name")) {
+        mergeableFields.push("given-name", "additional-name", "family-name");
+      }
+      mergeableFields.forEach(f => {
+        if (f in newAddress.record) {
+          newRecord[f] = newAddress.record[f];
+        }
+      });
+
+      if (preserveFields.includes("name")) {
+        preserveFields.push("given-name", "additional-name", "family-name");
+      }
+      preserveFields.forEach(f => {
+        if (f in oldRecord) {
+          newRecord[f] = oldRecord[f];
+        }
+      });
+    } else {
+      newRecord = newAddress.record;
     }
 
     if (!this._shouldShowSaveAddressPrompt(newAddress.record)) {
@@ -577,7 +608,7 @@ export class FormAutofillParent extends JSWindowActorParent {
         browser,
         storage,
         address.flowId,
-        { oldRecord, newRecord: newAddress.record }
+        { oldRecord, newRecord }
       );
     };
   }
