@@ -384,6 +384,7 @@ class RecordedEvent {
     FILL,
     FILLCIRCLE,
     FILLGLYPHS,
+    STROKEGLYPHS,
     MASK,
     STROKE,
     DRAWSURFACE,

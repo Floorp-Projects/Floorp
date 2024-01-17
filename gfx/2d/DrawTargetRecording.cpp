@@ -303,10 +303,11 @@ static void RecordingFontUserDataDestroyFunc(void* aUserData) {
   delete userData;
 }
 
-void DrawTargetRecording::FillGlyphs(ScaledFont* aFont,
+void DrawTargetRecording::DrawGlyphs(ScaledFont* aFont,
                                      const GlyphBuffer& aBuffer,
                                      const Pattern& aPattern,
-                                     const DrawOptions& aOptions) {
+                                     const DrawOptions& aOptions,
+                                     const StrokeOptions* aStrokeOptions) {
   if (!aFont) {
     return;
   }
@@ -354,9 +355,29 @@ void DrawTargetRecording::FillGlyphs(ScaledFont* aFont,
     userData->recorder->AddScaledFont(aFont);
   }
 
-  mRecorder->RecordEvent(
-      this, RecordedFillGlyphs(aFont, aPattern, aOptions, aBuffer.mGlyphs,
-                               aBuffer.mNumGlyphs));
+  if (aStrokeOptions) {
+    mRecorder->RecordEvent(
+        this, RecordedStrokeGlyphs(aFont, aPattern, *aStrokeOptions, aOptions,
+                                   aBuffer.mGlyphs, aBuffer.mNumGlyphs));
+  } else {
+    mRecorder->RecordEvent(RecordedFillGlyphs(
+        aFont, aPattern, aOptions, aBuffer.mGlyphs, aBuffer.mNumGlyphs));
+  }
+}
+
+void DrawTargetRecording::FillGlyphs(ScaledFont* aFont,
+                                     const GlyphBuffer& aBuffer,
+                                     const Pattern& aPattern,
+                                     const DrawOptions& aOptions) {
+  DrawGlyphs(aFont, aBuffer, aPattern, aOptions);
+}
+
+void DrawTargetRecording::StrokeGlyphs(ScaledFont* aFont,
+                                       const GlyphBuffer& aBuffer,
+                                       const Pattern& aPattern,
+                                       const StrokeOptions& aStrokeOptions,
+                                       const DrawOptions& aOptions) {
+  DrawGlyphs(aFont, aBuffer, aPattern, aOptions, &aStrokeOptions);
 }
 
 void DrawTargetRecording::Mask(const Pattern& aSource, const Pattern& aMask,
