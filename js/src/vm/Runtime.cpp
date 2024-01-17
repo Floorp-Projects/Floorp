@@ -793,8 +793,8 @@ JS_PUBLIC_API void JS::DisableRecordingAllocations(JSContext* cx) {
   cx->runtime()->stopRecordingAllocations();
 }
 
-JS_PUBLIC_API void JS::shadow::RegisterWeakCache(
-    JSRuntime* rt, detail::WeakCacheBase* cachep) {
+JS_PUBLIC_API void js::gc::RegisterWeakCache(JSRuntime* rt,
+                                             gc::WeakCacheBase* cachep) {
   rt->registerWeakCache(cachep);
 }
 

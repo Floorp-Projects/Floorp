@@ -548,14 +548,13 @@ struct JSRuntime {
  private:
   // List of non-ephemeron weak containers to sweep during
   // beginSweepingSweepGroup.
-  js::MainThreadData<mozilla::LinkedList<JS::detail::WeakCacheBase>>
-      weakCaches_;
+  js::MainThreadData<mozilla::LinkedList<js::gc::WeakCacheBase>> weakCaches_;
 
  public:
-  mozilla::LinkedList<JS::detail::WeakCacheBase>& weakCaches() {
+  mozilla::LinkedList<js::gc::WeakCacheBase>& weakCaches() {
     return weakCaches_.ref();
   }
-  void registerWeakCache(JS::detail::WeakCacheBase* cachep) {
+  void registerWeakCache(js::gc::WeakCacheBase* cachep) {
     weakCaches().insertBack(cachep);
   }
 
