@@ -373,11 +373,8 @@ JSObject* BrowsingContextGroup::WrapObject(JSContext* aCx,
   return BrowsingContextGroup_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-nsresult BrowsingContextGroup::QueuePostMessageEvent(
-    already_AddRefed<nsIRunnable>&& aRunnable) {
-  if (!StaticPrefs::dom_separate_event_queue_for_post_message_enabled()) {
-    return NS_ERROR_FAILURE;
-  }
+nsresult BrowsingContextGroup::QueuePostMessageEvent(nsIRunnable* aRunnable) {
+  MOZ_ASSERT(StaticPrefs::dom_separate_event_queue_for_post_message_enabled());
 
   if (!mPostMessageEventQueue) {
     nsCOMPtr<nsISerialEventTarget> target = GetMainThreadSerialEventTarget();
@@ -394,8 +391,7 @@ nsresult BrowsingContextGroup::QueuePostMessageEvent(
     MOZ_ALWAYS_SUCCEEDS(rv);
   }
 
-  mPostMessageEventQueue->Dispatch(std::move(aRunnable), NS_DISPATCH_NORMAL);
-  return NS_OK;
+  return mPostMessageEventQueue->Dispatch(aRunnable, NS_DISPATCH_NORMAL);
 }
 
 void BrowsingContextGroup::FlushPostMessageEvents() {

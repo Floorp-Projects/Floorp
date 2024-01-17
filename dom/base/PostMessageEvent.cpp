@@ -257,20 +257,33 @@ void PostMessageEvent::Dispatch(nsGlobalWindowInner* aTargetWindow,
                             &status);
 }
 
-void PostMessageEvent::DispatchToTargetThread(ErrorResult& aError) {
-  nsCOMPtr<nsIRunnable> event = this;
-  if (StaticPrefs::dom_separate_event_queue_for_post_message_enabled()) {
-    BrowsingContext* bc = mTargetWindow->GetBrowsingContext();
-    bc = bc ? bc->Top() : nullptr;
-    if (bc && bc->IsLoading()) {
-      // As long as the top level is loading, we can dispatch events to the
-      // queue because the queue will be flushed eventually
-      aError = bc->Group()->QueuePostMessageEvent(event.forget());
-      return;
-    }
+static nsresult MaybeThrottle(nsGlobalWindowOuter* aTargetWindow,
+                              PostMessageEvent* aEvent) {
+  BrowsingContext* bc = aTargetWindow->GetBrowsingContext();
+  if (!bc) {
+    return NS_ERROR_FAILURE;
   }
+  bc = bc->Top();
+  if (!bc->IsLoading()) {
+    return NS_ERROR_FAILURE;
+  }
+  if (nsContentUtils::IsPDFJS(aTargetWindow->GetPrincipal())) {
+    // pdf.js is known to block the load event on a worker's postMessage event.
+    // Avoid throttling postMessage for pdf.js to avoid pathological wait times,
+    // see bug 1840762.
+    return NS_ERROR_FAILURE;
+  }
+  if (!StaticPrefs::dom_separate_event_queue_for_post_message_enabled()) {
+    return NS_ERROR_FAILURE;
+  }
+  return bc->Group()->QueuePostMessageEvent(aEvent);
+}
 
-  aError = mTargetWindow->Dispatch(event.forget());
+void PostMessageEvent::DispatchToTargetThread(ErrorResult& aError) {
+  if (NS_SUCCEEDED(MaybeThrottle(mTargetWindow, this))) {
+    return;
+  }
+  aError = mTargetWindow->Dispatch(do_AddRef(this));
 }
 
 }  // namespace mozilla::dom
