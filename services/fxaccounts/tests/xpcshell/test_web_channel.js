@@ -257,6 +257,31 @@ add_test(function test_login_message() {
   channel._channelCallback(WEBCHANNEL_ID, mockMessage, mockSendingContext);
 });
 
+add_test(function test_oauth_login() {
+  const mockData = {
+    code: "oauth code",
+    state: "state parameter",
+    declinedSyncEngines: ["tabs", "creditcards"],
+    offeredSyncEngines: ["tabs", "creditcards", "history"],
+  };
+  const mockMessage = {
+    command: "fxaccounts:oauth_login",
+    data: mockData,
+  };
+  const channel = new FxAccountsWebChannel({
+    channel_id: WEBCHANNEL_ID,
+    content_uri: URL_STRING,
+    helpers: {
+      oauthLogin(data) {
+        Assert.deepEqual(data, mockData);
+        run_next_test();
+        return Promise.resolve();
+      },
+    },
+  });
+  channel._channelCallback(WEBCHANNEL_ID, mockMessage, mockSendingContext);
+});
+
 add_test(function test_logout_message() {
   let mockMessage = {
     command: "fxaccounts:logout",

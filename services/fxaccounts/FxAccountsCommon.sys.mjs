@@ -115,6 +115,7 @@ export let COMMAND_PAIR_COMPLETE = "fxaccounts:pair_complete";
 export let COMMAND_PROFILE_CHANGE = "profile:change";
 export let COMMAND_CAN_LINK_ACCOUNT = "fxaccounts:can_link_account";
 export let COMMAND_LOGIN = "fxaccounts:login";
+export let COMMAND_OAUTH = "fxaccounts:oauth_login";
 export let COMMAND_LOGOUT = "fxaccounts:logout";
 export let COMMAND_DELETE = "fxaccounts:delete";
 export let COMMAND_SYNC_PREFERENCES = "fxaccounts:sync_preferences";
