@@ -3182,6 +3182,10 @@ nsEventStatus AsyncPanZoomController::OnDoubleTap(
         MOZ_ASSERT(this == treeManagerLocal->FindRootApzcFor(GetLayersId()));
         transformToRootContentApzc =
             treeManagerLocal->GetOopifToRootContentTransform(this);
+
+        CSSPoint rootScrollPosition = rootContentApzc->GetLayoutScrollOffset();
+        transformToRootContentApzc.PostTranslate(rootScrollPosition.x,
+                                                 rootScrollPosition.y, 0);
       }
     }
   }

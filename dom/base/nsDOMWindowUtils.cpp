@@ -3106,8 +3106,6 @@ nsDOMWindowUtils::ZoomToFocusedInput() {
     return NS_OK;
   }
 
-  bounds -= CSSPoint::FromAppUnits(rootScrollFrame->GetScrollPosition());
-
   bool waitForRefresh = false;
   for (nsIScrollableFrame* scrollAncestor :
        CollectScrollableAncestors(element->GetPrimaryFrame())) {
