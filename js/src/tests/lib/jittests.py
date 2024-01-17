@@ -585,8 +585,15 @@ def print_automation_format(ok, res, slog):
     print("INFO timed-out       : {}".format(res.timed_out))
     for line in res.out.splitlines():
         print("INFO stdout          > " + line.strip())
+    warnings = []
     for line in res.err.splitlines():
-        print("INFO stderr         2> " + line.strip())
+        # See Bug 1868693
+        if line.startswith("WARNING") and "unused DT entry" in line:
+            warnings.append(line)
+        else:
+            print("INFO stderr         2> " + line.strip())
+    for line in warnings:
+        print("INFO (warn-stderr)  2> " + line.strip())
 
 
 def print_test_summary(num_tests, failures, complete, doing, options):
