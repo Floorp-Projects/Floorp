@@ -1094,7 +1094,8 @@ static nsresult JSErrorToXPCException(JSContext* cx, const char* toStringResult,
         bestMessage, NS_ConvertUTF8toUTF16(report->filename.c_str()),
         linebuf ? nsDependentString(linebuf, report->linebufLength())
                 : EmptyString(),
-        report->lineno, report->tokenOffset(), flags, "XPConnect JavaScript"_ns,
+        report->lineno, report->column.oneOriginValue(), flags,
+        "XPConnect JavaScript"_ns,
         nsJSUtils::GetCurrentlyRunningCodeInnerWindowID(cx));
   }
 
