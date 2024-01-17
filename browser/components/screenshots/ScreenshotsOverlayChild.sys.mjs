@@ -850,6 +850,8 @@ export class ScreenshotsOverlay {
     this.showPreviewContainer();
     this.#dispatchEvent("Screenshots:ShowPanel");
     this.#previousDimensions = null;
+    this.#cachedEle = null;
+    this.hoverElementRegion.resetDimensions();
   }
 
   /**

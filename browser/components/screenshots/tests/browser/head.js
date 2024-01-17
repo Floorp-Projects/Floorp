@@ -177,12 +177,21 @@ class ScreenshotsHelper {
     );
   }
 
-  async getHoverElementRect() {
+  getHoverElementRect() {
     return ContentTask.spawn(this.browser, null, async () => {
       let screenshotsChild = content.windowGlobalChild.getActor(
         "ScreenshotsComponent"
       );
       return screenshotsChild.overlay.hoverElementRegion.dimensions;
+    });
+  }
+
+  isHoverElementRegionValid() {
+    return ContentTask.spawn(this.browser, null, async () => {
+      let screenshotsChild = content.windowGlobalChild.getActor(
+        "ScreenshotsComponent"
+      );
+      return screenshotsChild.overlay.hoverElementRegion.isRegionValid;
     });
   }
 
@@ -203,7 +212,6 @@ class ScreenshotsHelper {
         );
 
         let dimensions = screenshotsChild.overlay.selectionRegion.dimensions;
-        // return dimensions.boxWidth;
         await ContentTaskUtils.waitForCondition(() => {
           dimensions = screenshotsChild.overlay.selectionRegion.dimensions;
           return dimensions.width !== currWidth;
@@ -372,11 +380,15 @@ class ScreenshotsHelper {
     mouse.click(x, y);
   }
 
-  async clickTestPageElement() {
-    let rect = await ContentTask.spawn(this.browser, [], async () => {
+  getTestPageElementRect() {
+    return ContentTask.spawn(this.browser, [], async () => {
       let ele = content.document.getElementById("testPageElement");
       return ele.getBoundingClientRect();
     });
+  }
+
+  async clickTestPageElement() {
+    let rect = await this.getTestPageElementRect();
 
     let x = Math.floor(rect.x + rect.width / 2);
     let y = Math.floor(rect.y + rect.height / 2);

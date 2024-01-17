@@ -43,3 +43,5 @@ skip-if = ["!crashreporter"]
 ["browser_screenshots_test_toolbar_button.js"]
 
 ["browser_screenshots_test_visible.js"]
+
+["browser_test_element_picker.js"]
