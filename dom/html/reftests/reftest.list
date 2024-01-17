@@ -60,6 +60,9 @@ fuzzy(0-3,0-7544) fuzzy-if(!geckoview,2-3,50-7544) == bug917595-exif-rotated.jpg
 # Test imageset is using permissions.default.image
 pref(permissions.default.image,1) HTTP == bug1196784-with-srcset.html bug1196784-no-srcset.html
 pref(permissions.default.image,2) HTTP == bug1196784-with-srcset.html bug1196784-no-srcset.html
+# Test <iframe src=image>
+pref(permissions.default.image,1) HTTP == iframe-with-image-src.html bug1196784-no-srcset.html
+pref(permissions.default.image,2) HTTP == iframe-with-image-src.html about:blank
 
 # Test video with rotation information can be rotated.
 fails-if(geckoview&&!swgl) == bug1228601-video-rotation-90.html bug1228601-video-rotated-ref.html # bug 1558285 for geckoview
