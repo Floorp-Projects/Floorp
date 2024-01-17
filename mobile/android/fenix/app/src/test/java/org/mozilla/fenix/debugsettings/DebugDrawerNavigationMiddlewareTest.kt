@@ -9,14 +9,21 @@ import io.mockk.called
 import io.mockk.mockk
 import io.mockk.verify
 import mozilla.components.support.test.ext.joinBlocking
+import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.debugsettings.navigation.DebugDrawerRoute
 import org.mozilla.fenix.debugsettings.store.DebugDrawerAction
 import org.mozilla.fenix.debugsettings.store.DebugDrawerNavigationMiddleware
 import org.mozilla.fenix.debugsettings.store.DebugDrawerStore
+import org.mozilla.fenix.debugsettings.ui.DEBUG_DRAWER_HOME_ROUTE
 
 class DebugDrawerNavigationMiddlewareTest {
+
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule()
+    private val testCoroutineScope = coroutinesTestRule.scope
 
     private val navController: NavHostController = mockk(relaxed = true)
     private lateinit var store: DebugDrawerStore
@@ -27,16 +34,17 @@ class DebugDrawerNavigationMiddlewareTest {
             middlewares = listOf(
                 DebugDrawerNavigationMiddleware(
                     navController = navController,
+                    scope = testCoroutineScope,
                 ),
             ),
         )
     }
 
     @Test
-    fun `WHEN home is the next destination THEN home is navigated to`() {
+    fun `WHEN home is the next destination THEN the back stack is cleared and the user is returned to home`() {
         store.dispatch(DebugDrawerAction.NavigateTo.Home).joinBlocking()
 
-        verify { navController.navigate(DebugDrawerRoute.Home.route) }
+        verify { navController.popBackStack(route = DEBUG_DRAWER_HOME_ROUTE, inclusive = false) }
     }
 
     @Test

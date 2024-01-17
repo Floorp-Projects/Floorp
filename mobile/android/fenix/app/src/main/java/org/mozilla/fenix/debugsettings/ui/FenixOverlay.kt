@@ -7,10 +7,13 @@ package org.mozilla.fenix.debugsettings.ui
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.navigation.compose.rememberNavController
 import mozilla.components.lib.state.ext.observeAsState
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
+import org.mozilla.fenix.debugsettings.navigation.DebugDrawerRoute
 import org.mozilla.fenix.debugsettings.store.DebugDrawerAction
+import org.mozilla.fenix.debugsettings.store.DebugDrawerNavigationMiddleware
 import org.mozilla.fenix.debugsettings.store.DebugDrawerStore
 import org.mozilla.fenix.debugsettings.store.DrawerStatus
 import org.mozilla.fenix.theme.FirefoxTheme
@@ -22,7 +25,22 @@ import org.mozilla.fenix.theme.Theme
 @Composable
 fun FenixOverlay() {
     val navController = rememberNavController()
-    val debugDrawerStore = remember { DebugDrawerStore() }
+    val coroutineScope = rememberCoroutineScope()
+    val debugDrawerStore = remember {
+        DebugDrawerStore(
+            middlewares = listOf(
+                DebugDrawerNavigationMiddleware(
+                    navController = navController,
+                    scope = coroutineScope,
+                ),
+            ),
+        )
+    }
+    val debugDrawerDestinations = remember {
+        DebugDrawerRoute.generateDebugDrawerDestinations(
+            debugDrawerStore = debugDrawerStore,
+        )
+    }
     val drawerStatus by debugDrawerStore.observeAsState(initialValue = DrawerStatus.Closed) { state ->
         state.drawerStatus
     }
@@ -31,13 +49,16 @@ fun FenixOverlay() {
         DebugOverlay(
             navController = navController,
             drawerStatus = drawerStatus,
+            debugDrawerDestinations = debugDrawerDestinations,
             onDrawerOpen = {
                 debugDrawerStore.dispatch(DebugDrawerAction.DrawerOpened)
             },
             onDrawerClose = {
                 debugDrawerStore.dispatch(DebugDrawerAction.DrawerClosed)
             },
-            onBackButtonClick = {},
+            onDrawerBackButtonClick = {
+                debugDrawerStore.dispatch(DebugDrawerAction.OnBackPressed)
+            },
         )
     }
 }

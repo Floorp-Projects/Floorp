@@ -10,12 +10,15 @@ import androidx.compose.runtime.Composable
 /**
  * A navigation destination for screens within the Debug Drawer.
  *
- * @property route The navigation route of the destination.
+ * @property route The unique route used to navigate to the destination. This string can also contain
+ * optional parameters for arguments or deep linking.
  * @property title The string ID of the destination's title.
+ * @property onClick Invoked when the destination is clicked to be navigated to.
  * @property content The destination's [Composable].
  */
 data class DebugDrawerDestination(
     val route: String,
     @StringRes val title: Int,
+    val onClick: () -> Unit,
     val content: @Composable () -> Unit,
 )

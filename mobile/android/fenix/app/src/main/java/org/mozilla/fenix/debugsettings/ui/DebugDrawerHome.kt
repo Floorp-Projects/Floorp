@@ -24,24 +24,32 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import mozilla.components.support.ktx.android.content.appName
 import mozilla.components.support.ktx.android.content.appVersionName
+import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.Divider
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
 import org.mozilla.fenix.compose.inComposePreview
 import org.mozilla.fenix.compose.list.TextListItem
+import org.mozilla.fenix.debugsettings.navigation.DebugDrawerDestination
 import org.mozilla.fenix.theme.FirefoxTheme
+
+/**
+ * The navigation route for [DebugDrawerHome].
+ */
+const val DEBUG_DRAWER_HOME_ROUTE = "debug_drawer_home"
 
 /**
  * The home screen of the [DebugDrawer].
  *
- * @param menuItems The list of [DebugDrawerMenuItem]s.
+ * @param destinations The list of [DebugDrawerDestination]s to display.
  */
 @Composable
 fun DebugDrawerHome(
-    menuItems: List<DebugDrawerMenuItem>,
+    destinations: List<DebugDrawerDestination>,
 ) {
     val lazyListState = rememberLazyListState()
 
@@ -85,14 +93,14 @@ fun DebugDrawerHome(
         }
 
         items(
-            items = menuItems,
-            key = { menuItem ->
-                menuItem.label
+            items = destinations,
+            key = { destination ->
+                destination.route
             },
-        ) { menuItem ->
+        ) { destination ->
             TextListItem(
-                label = menuItem.label,
-                onClick = menuItem.onClick,
+                label = stringResource(id = destination.title),
+                onClick = destination.onClick,
             )
 
             Divider()
@@ -102,21 +110,23 @@ fun DebugDrawerHome(
 
 @Composable
 @LightDarkPreview
-private fun DebugDrawerPreview() {
+private fun DebugDrawerHomePreview() {
     val scope = rememberCoroutineScope()
     val snackbarState = remember { SnackbarHostState() }
 
     FirefoxTheme {
         Box {
             DebugDrawerHome(
-                menuItems = List(size = 30) {
-                    DebugDrawerMenuItem(
-                        label = "Navigation $it",
+                destinations = List(size = 30) {
+                    DebugDrawerDestination(
+                        route = "screen_$it",
+                        title = R.string.debug_drawer_title,
                         onClick = {
                             scope.launch {
-                                snackbarState.showSnackbar("$it clicked")
+                                snackbarState.showSnackbar("item $it clicked")
                             }
                         },
+                        content = {},
                     )
                 },
             )

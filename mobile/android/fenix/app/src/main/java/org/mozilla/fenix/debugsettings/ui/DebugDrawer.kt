@@ -27,31 +27,25 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
+import org.mozilla.fenix.debugsettings.navigation.DebugDrawerDestination
 import org.mozilla.fenix.theme.FirefoxTheme
 
 /**
  * The debug drawer UI.
  *
  * @param navController [NavHostController] used to perform navigation actions on the [NavHost].
+ * @param destinations The list of [DebugDrawerDestination]s (excluding home) used to populate
+ * the [NavHost] with screens.
  * @param onBackButtonClick Invoked when the user taps on the back button in the app bar.
  */
 @Composable
 fun DebugDrawer(
     navController: NavHostController,
+    destinations: List<DebugDrawerDestination>,
     onBackButtonClick: () -> Unit,
 ) {
     var backButtonVisible by remember { mutableStateOf(false) }
     var toolbarTitle by remember { mutableStateOf("") }
-
-    // This is temporary until https://bugzilla.mozilla.org/show_bug.cgi?id=1864076
-    val homeMenuItems = List(size = 5) {
-        DebugDrawerMenuItem(
-            label = "Screen $it",
-            onClick = {
-                navController.navigate("screen_$it")
-            },
-        )
-    }
 
     Column(modifier = Modifier.fillMaxSize()) {
         TopAppBar(
@@ -73,25 +67,21 @@ fun DebugDrawer(
 
         NavHost(
             navController = navController,
-            startDestination = "home",
+            startDestination = DEBUG_DRAWER_HOME_ROUTE,
             modifier = Modifier.fillMaxSize(),
         ) {
-            composable(route = "home") {
+            composable(route = DEBUG_DRAWER_HOME_ROUTE) {
                 toolbarTitle = stringResource(id = R.string.debug_drawer_title)
                 backButtonVisible = false
-
-                DebugDrawerHome(menuItems = homeMenuItems)
+                DebugDrawerHome(destinations = destinations)
             }
 
-            homeMenuItems.forEachIndexed { index, item ->
-                composable(route = "screen_$index") {
-                    toolbarTitle = item.label
+            destinations.forEach { destination ->
+                composable(route = destination.route) {
+                    toolbarTitle = stringResource(id = destination.title)
                     backButtonVisible = true
-                    Text(
-                        text = "Screen $index",
-                        color = FirefoxTheme.colors.textPrimary,
-                        style = FirefoxTheme.typography.headline6,
-                    )
+
+                    destination.content()
                 }
             }
         }
@@ -115,11 +105,30 @@ private fun topBarBackButton(onClick: () -> Unit): @Composable () -> Unit = {
 @LightDarkPreview
 private fun DebugDrawerPreview() {
     val navController = rememberNavController()
+    val destinations = remember {
+        List(size = 15) { index ->
+            DebugDrawerDestination(
+                route = "screen_$index",
+                title = R.string.debug_drawer_title,
+                onClick = {
+                    navController.navigate(route = "screen_$index")
+                },
+                content = {
+                    Text(
+                        text = "Tool $index",
+                        color = FirefoxTheme.colors.textPrimary,
+                        style = FirefoxTheme.typography.headline6,
+                    )
+                },
+            )
+        }
+    }
 
     FirefoxTheme {
         Box(modifier = Modifier.background(color = FirefoxTheme.colors.layer1)) {
             DebugDrawer(
                 navController = navController,
+                destinations = destinations,
                 onBackButtonClick = {
                     navController.popBackStack()
                 },
