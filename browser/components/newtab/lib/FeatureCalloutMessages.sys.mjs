@@ -807,6 +807,80 @@ const MESSAGES = () => {
       trigger: { id: "shoppingProductPageWithSidebarClosed" },
       frequency: { lifetime: 1 },
     },
+
+    // cookie banner reduction onboarding
+    {
+      id: "CFR_COOKIEBANNER",
+      groups: ["cfr"],
+      template: "feature_callout",
+      content: {
+        id: "CFR_COOKIEBANNER",
+        template: "multistage",
+        backdrop: "transparent",
+        transitions: false,
+        disableHistoryUpdates: true,
+        screens: [
+          {
+            id: "COOKIEBANNER_CALLOUT",
+            anchors: [
+              {
+                selector: "#tracking-protection-icon-container",
+                panel_position: {
+                  callout_attachment: "topleft",
+                  anchor_attachment: "bottomcenter",
+                },
+              },
+            ],
+            content: {
+              position: "callout",
+              autohide: true,
+              title: {
+                string_id: "cookie-banner-blocker-onboarding-header",
+                paddingInline: "12px 0",
+              },
+              subtitle: {
+                string_id: "cookie-banner-blocker-onboarding-body",
+                paddingInline: "34px 0",
+              },
+              title_logo: {
+                alignment: "top",
+                height: "20px",
+                width: "20px",
+                imageURL:
+                  "chrome://browser/skin/controlcenter/3rdpartycookies-blocked.svg",
+              },
+              dismiss_button: {
+                size: "small",
+                action: { dismiss: true },
+              },
+              additional_button: {
+                label: {
+                  string_id: "cookie-banner-blocker-onboarding-learn-more",
+                  marginInline: "34px 0",
+                },
+                style: "link",
+                alignment: "start",
+                action: {
+                  type: "OPEN_URL",
+                  data: {
+                    args: "https://support.mozilla.org/1/firefox/%VERSION%/%OS%/%LOCALE%/cookie-banner-reduction",
+                    where: "tabshifted",
+                  },
+                },
+              },
+            },
+          },
+        ],
+      },
+      frequency: {
+        lifetime: 1,
+      },
+      skip_in_tests: "it's not tested in automation",
+      trigger: {
+        id: "cookieBannerHandled",
+      },
+      targeting: `'cookiebanners.ui.desktop.enabled'|preferenceValue == true && 'cookiebanners.ui.desktop.showCallout'|preferenceValue == true && 'browser.newtabpage.activity-stream.asrouter.userprefs.cfr.features' | preferenceValue != false`,
+    },
   ];
   messages = add24HourImpressionJEXLTargeting(
     ["FIREFOX_VIEW_TAB_PICKUP_REMINDER"],

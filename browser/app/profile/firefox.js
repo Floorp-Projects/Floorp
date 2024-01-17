@@ -2896,6 +2896,9 @@ pref("browser.pdfjs.feature-tour", "{\"screen\":\"\",\"complete\":false}");
   pref("cookiebanners.ui.desktop.enabled", false);
 #endif
 
+// When true, shows a one-time feature callout for cookie banner blocking.
+pref("cookiebanners.ui.desktop.showCallout", false);
+
 // Controls which variant of the cookie banner CFR the user is presented with.
 pref("cookiebanners.ui.desktop.cfrVariant", 0);
 

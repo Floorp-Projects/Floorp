@@ -417,6 +417,9 @@ div#feature-callout.hidden {
   gap: 10px;
   margin-top: 4px;
 }
+#feature-callout .screen[pos=callout] .action-buttons[alignment=start] {
+  justify-content: start;
+}
 #feature-callout .screen[pos=callout] .action-buttons .secondary-cta {
   font-size: inherit;
 }

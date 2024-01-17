@@ -870,7 +870,8 @@ const ProtonScreenActionButtons = props => {
   const isPrimaryDisabled = primaryDisabledValue => primaryDisabledValue === "hasActiveMultiSelect" ? !(activeMultiSelect?.length > 0) : primaryDisabledValue;
   return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
     className: `action-buttons ${content.additional_button ? "additional-cta-container" : ""}`,
-    flow: content.additional_button?.flow
+    flow: content.additional_button?.flow,
+    alignment: content.additional_button?.alignment
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__.Localized, {
     text: content.primary_button?.label
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", {

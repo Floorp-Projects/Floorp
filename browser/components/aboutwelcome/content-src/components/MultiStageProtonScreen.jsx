@@ -104,6 +104,7 @@ export const ProtonScreenActionButtons = props => {
         content.additional_button ? "additional-cta-container" : ""
       }`}
       flow={content.additional_button?.flow}
+      alignment={content.additional_button?.alignment}
     >
       <Localized text={content.primary_button?.label}>
         <button
