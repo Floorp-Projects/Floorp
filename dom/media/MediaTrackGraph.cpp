@@ -3541,12 +3541,6 @@ MediaTrackGraphImpl* MediaTrackGraphImpl::GetInstance(
       aPrimaryOutputDeviceID, aMainThread);
   MOZ_ALWAYS_TRUE(graphs->add(addPtr, graph));
 
-  nsCOMPtr<nsIObserverService> observerService =
-      mozilla::services::GetObserverService();
-  if (observerService) {
-    observerService->AddObserver(graph, "document-title-changed", false);
-  }
-
   LOG(LogLevel::Debug, ("Starting up MediaTrackGraph %p for window 0x%" PRIx64,
                         graph, aWindowID));
 
@@ -3766,6 +3760,14 @@ void MediaTrackGraph::AddTrack(MediaTrack* aTrack) {
     MOZ_DIAGNOSTIC_ASSERT(p, "Graph must not be shutting down");
   }
 #endif
+  if (graph->mMainThreadTrackCount == 0) {
+    nsCOMPtr<nsIObserverService> observerService =
+        mozilla::services::GetObserverService();
+    if (observerService) {
+      observerService->AddObserver(graph, "document-title-changed", false);
+    }
+  }
+
   NS_ADDREF(aTrack);
   aTrack->SetGraphImpl(graph);
   ++graph->mMainThreadTrackCount;
