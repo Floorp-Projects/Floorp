@@ -28,12 +28,11 @@ add_task(async function () {
     },
   ]);
 
-  info("Verify that the react file is flagged as a javascript module");
+  info("Verify that the file is flagged as a React module");
   const sourceTab = findElementWithSelector(dbg, ".source-tab.active");
-
   ok(
-    sourceTab.querySelector(".source-icon.javascript"),
-    "Source tab for a react file has a Javascript icon"
+    sourceTab.querySelector(".source-icon.react"),
+    "Source tab has a React icon"
   );
-  assertSourceIcon(dbg, "App.js", "javascript");
+  assertSourceIcon(dbg, "App.js", "react");
 });

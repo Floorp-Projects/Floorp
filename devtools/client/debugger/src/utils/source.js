@@ -396,6 +396,8 @@ export function getTextAtPosition(sourceId, asyncContent, location) {
  *
  * @param {Object} source
  *        The reducer source object.
+ * @param {Object} symbols
+ *        The reducer symbol object for the given source.
  * @param {Boolean} isBlackBoxed
  *        To be set to true, when the given source is blackboxed.
  * @param {Boolean} hasPrettyTab
@@ -406,6 +408,7 @@ export function getTextAtPosition(sourceId, asyncContent, location) {
  */
 export function getSourceClassnames(
   source,
+  symbols,
   isBlackBoxed,
   hasPrettyTab = false
 ) {
@@ -425,6 +428,10 @@ export function getSourceClassnames(
 
   if (isBlackBoxed) {
     return "blackBox";
+  }
+
+  if (symbols && symbols.framework) {
+    return symbols.framework.toLowerCase();
   }
 
   if (isUrlExtension(source.url)) {
