@@ -477,7 +477,7 @@ def _get_en_US_brand_fluent_filename(
     )
     if release_type == "nightly":
         return branding_fluent_filename_template.format(brand="nightly")
-    elif release_type == "release":
+    elif release_type == "release" or release_type == "release-rc":
         return branding_fluent_filename_template.format(brand="official")
     elif release_type == "beta" and release_product == "firefox":
         return branding_fluent_filename_template.format(brand="official")
