@@ -18,6 +18,9 @@ PopoverToggleEventTask::PopoverToggleEventTask(nsWeakPtr aElement,
 NS_IMETHODIMP
 PopoverToggleEventTask::Run() {
   nsCOMPtr<Element> element = do_QueryReferent(mElement);
+  if (!element) {
+    return NS_OK;
+  }
   if (auto* htmlElement = nsGenericHTMLElement::FromNode(element)) {
     MOZ_KnownLive(htmlElement)->RunPopoverToggleEventTask(this, mOldState);
   }
