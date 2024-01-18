@@ -814,6 +814,74 @@ describe("CFRPageActions", () => {
         assert.isFalse(CFRPageActions.RecommendationMap.has(fakeBrowser));
       });
     });
+
+    describe("#showMilestonePopup", () => {
+      let milestoneRecommendation;
+      let fakeTrackingDBService;
+      beforeEach(async () => {
+        fakeTrackingDBService = {
+          sumAllEvents: sandbox.stub(),
+        };
+        globals.set({ TrackingDBService: fakeTrackingDBService });
+        CFRPageActions.PageActionMap.set(fakeBrowser.ownerGlobal, pageAction);
+        sandbox
+          .stub(pageAction, "getStrings")
+          .callsFake(async a => a) // eslint-disable-line max-nested-callbacks
+          .resolves({ value: "element", attributes: { accesskey: "e" } });
+
+        milestoneRecommendation = (await CFRMessageProvider.getMessages()).find(
+          m => m.template === "milestone_message"
+        );
+      });
+
+      afterEach(() => {
+        sandbox.restore();
+        globals.restore();
+      });
+
+      it("Set current date in header when earliest date undefined", async () => {
+        fakeTrackingDBService.getEarliestRecordedDate = sandbox.stub();
+        await CFRPageActions.addRecommendation(
+          fakeBrowser,
+          fakeHost,
+          milestoneRecommendation,
+          dispatchStub
+        );
+        const [, , headerElementArgs] = fakeRemoteL10n.createElement.args.find(
+          /* eslint-disable-next-line max-nested-callbacks */
+          ([doc, el, args]) => args && args.content && args.attributes
+        );
+        assert.equal(
+          headerElementArgs.content.string_id,
+          milestoneRecommendation.content.heading_text.string_id
+        );
+        assert.equal(headerElementArgs.attributes.date, new Date().getTime());
+        assert.calledOnce(global.PopupNotifications.show);
+      });
+
+      it("Set date in header to earliest date timestamp by default", async () => {
+        let earliestDateTimeStamp = 1705601996435;
+        fakeTrackingDBService.getEarliestRecordedDate = sandbox
+          .stub()
+          .returns(earliestDateTimeStamp);
+        await CFRPageActions.addRecommendation(
+          fakeBrowser,
+          fakeHost,
+          milestoneRecommendation,
+          dispatchStub
+        );
+        const [, , headerElementArgs] = fakeRemoteL10n.createElement.args.find(
+          /* eslint-disable-next-line max-nested-callbacks */
+          ([doc, el, args]) => args && args.content && args.attributes
+        );
+        assert.equal(
+          headerElementArgs.content.string_id,
+          milestoneRecommendation.content.heading_text.string_id
+        );
+        assert.equal(headerElementArgs.attributes.date, earliestDateTimeStamp);
+        assert.calledOnce(global.PopupNotifications.show);
+      });
+    });
   });
 
   describe("CFRPageActions", () => {
