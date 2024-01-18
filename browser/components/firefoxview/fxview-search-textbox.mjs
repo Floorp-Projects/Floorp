@@ -90,6 +90,7 @@ export default class FxviewSearchTextbox extends MozLitElement {
   }
 
   #dispatchQueryEvent() {
+    window.scrollTo(0, 0);
     this.dispatchEvent(
       new CustomEvent("fxview-search-textbox-query", {
         bubbles: true,
