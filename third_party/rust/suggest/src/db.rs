@@ -115,7 +115,7 @@ impl SuggestDb {
 /// reference (`&mut self`).
 pub(crate) struct SuggestDao<'a> {
     pub conn: &'a Connection,
-    scope: SqlInterruptScope,
+    pub scope: SqlInterruptScope,
 }
 
 impl<'a> SuggestDao<'a> {
@@ -125,6 +125,10 @@ impl<'a> SuggestDao<'a> {
 
     /// Fetches suggestions that match the given query from the database.
     pub fn fetch_suggestions(&self, query: &SuggestionQuery) -> Result<Vec<Suggestion>> {
+        if let Some(suggestion) = self.fetch_yelp_suggestion(query)? {
+            return Ok(vec![suggestion]);
+        }
+
         let keyword_lowercased = &query.keyword.to_lowercase();
         let (keyword_prefix, keyword_suffix) = split_keyword(keyword_lowercased);
         let suggestions_limit = query.limit.unwrap_or(-1);
@@ -294,7 +298,8 @@ impl<'a> SuggestDao<'a> {
                         } else {
                             Ok(None)
                         }
-                    }
+                    },
+                    _ => Ok(None),
                 }
             }
         )?.flat_map(Result::transpose).collect::<Result<_>>()?;
@@ -615,6 +620,18 @@ impl<'a> SuggestDao<'a> {
     pub fn drop_suggestions(&mut self, record_id: &SuggestRecordId) -> Result<()> {
         self.conn.execute_cached(
             "DELETE FROM suggestions WHERE record_id = :record_id",
+            named_params! { ":record_id": record_id.as_str() },
+        )?;
+        self.conn.execute_cached(
+            "DELETE FROM yelp_subjects WHERE record_id = :record_id",
+            named_params! { ":record_id": record_id.as_str() },
+        )?;
+        self.conn.execute_cached(
+            "DELETE FROM yelp_modifiers WHERE record_id = :record_id",
+            named_params! { ":record_id": record_id.as_str() },
+        )?;
+        self.conn.execute_cached(
+            "DELETE FROM yelp_location_signs WHERE record_id = :record_id",
             named_params! { ":record_id": record_id.as_str() },
         )?;
         Ok(())

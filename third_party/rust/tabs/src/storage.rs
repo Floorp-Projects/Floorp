@@ -30,12 +30,13 @@ const FAR_FUTURE: i64 = 4_102_405_200_000; // 2100/01/01
 const MAX_PAYLOAD_SIZE: usize = 512 * 1024; // Twice as big as desktop, still smaller than server max (2MB)
 const MAX_TITLE_CHAR_LENGTH: usize = 512; // We put an upper limit on title sizes for tabs to reduce memory
 
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct RemoteTab {
     pub title: String,
     pub url_history: Vec<String>,
     pub icon: Option<String>,
     pub last_used: i64, // In ms.
+    pub inactive: bool,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -495,13 +496,10 @@ mod tests {
         assert_eq!(storage.prepare_local_tabs_for_upload(), None);
         storage.update_local_state(vec![
             RemoteTab {
-                title: "".to_owned(),
                 url_history: vec!["about:blank".to_owned(), "https://foo.bar".to_owned()],
-                icon: None,
-                last_used: 0,
+                ..Default::default()
             },
             RemoteTab {
-                title: "".to_owned(),
                 url_history: vec![
                     "https://foo.bar".to_owned(),
                     "about:blank".to_owned(),
@@ -512,11 +510,9 @@ mod tests {
                     "about:blank".to_owned(),
                     "about:blank".to_owned(),
                 ],
-                icon: None,
-                last_used: 0,
+                ..Default::default()
             },
             RemoteTab {
-                title: "".to_owned(),
                 url_history: vec![
                     "https://foo.bar".to_owned(),
                     "about:blank".to_owned(),
@@ -526,27 +522,20 @@ mod tests {
                     "https://foo5.bar".to_owned(),
                     "https://foo6.bar".to_owned(),
                 ],
-                icon: None,
-                last_used: 0,
+                ..Default::default()
             },
             RemoteTab {
-                title: "".to_owned(),
-                url_history: vec![],
-                icon: None,
-                last_used: 0,
+                ..Default::default()
             },
         ]);
         assert_eq!(
             storage.prepare_local_tabs_for_upload(),
             Some(vec![
                 RemoteTab {
-                    title: "".to_owned(),
                     url_history: vec!["https://foo.bar".to_owned()],
-                    icon: None,
-                    last_used: 0,
+                    ..Default::default()
                 },
                 RemoteTab {
-                    title: "".to_owned(),
                     url_history: vec![
                         "https://foo.bar".to_owned(),
                         "https://foo2.bar".to_owned(),
@@ -554,8 +543,7 @@ mod tests {
                         "https://foo4.bar".to_owned(),
                         "https://foo5.bar".to_owned()
                     ],
-                    icon: None,
-                    last_used: 0,
+                    ..Default::default()
                 },
             ])
         );
@@ -567,8 +555,7 @@ mod tests {
         storage.update_local_state(vec![RemoteTab {
             title: "a".repeat(MAX_TITLE_CHAR_LENGTH + 10), // Fill a string more than max
             url_history: vec!["https://foo.bar".to_owned()],
-            icon: None,
-            last_used: 0,
+            ..Default::default()
         }]);
         let ellipsis_char = '\u{2026}';
         let mut truncated_title = "a".repeat(MAX_TITLE_CHAR_LENGTH - ellipsis_char.len_utf8());
@@ -580,8 +567,7 @@ mod tests {
                 RemoteTab {
                     title: truncated_title, // title was trimmed to only max char length
                     url_history: vec!["https://foo.bar".to_owned()],
-                    icon: None,
-                    last_used: 0,
+                    ..Default::default()
                 },
             ])
         );
@@ -594,14 +580,12 @@ mod tests {
             RemoteTab {
                 title: "😍".repeat(MAX_TITLE_CHAR_LENGTH + 10), // Fill a string more than max
                 url_history: vec!["https://foo.bar".to_owned()],
-                icon: None,
-                last_used: 0,
+                ..Default::default()
             },
             RemoteTab {
                 title: "を".repeat(MAX_TITLE_CHAR_LENGTH + 5), // Fill a string more than max
                 url_history: vec!["https://foo_jp.bar".to_owned()],
-                icon: None,
-                last_used: 0,
+                ..Default::default()
             },
         ]);
         let ellipsis_char = '\u{2026}';
@@ -618,14 +602,12 @@ mod tests {
                 RemoteTab {
                     title: truncated_title, // title was trimmed to only max char length
                     url_history: vec!["https://foo.bar".to_owned()],
-                    icon: None,
-                    last_used: 0,
+                    ..Default::default()
                 },
                 RemoteTab {
                     title: truncated_jp_title, // title was trimmed to only max char length
                     url_history: vec!["https://foo_jp.bar".to_owned()],
-                    icon: None,
-                    last_used: 0,
+                    ..Default::default()
                 },
             ]
         );
@@ -643,8 +625,7 @@ mod tests {
                 title: "aaaa aaaa aaaa aaaa aaaa aaaa aaaa aaaa aaaa aaaa" //50 characters
                     .to_owned(),
                 url_history: vec![format!("https://foo{}.bar", n)],
-                icon: None,
-                last_used: 0,
+                ..Default::default()
             });
         }
         let tabs_mem_size = compute_serialized_size(&too_many_tabs);
@@ -681,6 +662,7 @@ mod tests {
                         url_history: vec!["https://mozilla.org/".to_string()],
                         icon: Some("https://mozilla.org/icon".to_string()),
                         last_used: 1643764207000,
+                        ..Default::default()
                     }],
                 },
                 last_modified: 1643764207000,
@@ -695,6 +677,7 @@ mod tests {
                         url_history: vec!["https://mozilla.org/".to_string()],
                         icon: Some("https://mozilla.org/icon".to_string()),
                         last_used: 1643764207000,
+                        ..Default::default()
                     }],
                 },
                 last_modified: 1443764207000, // old

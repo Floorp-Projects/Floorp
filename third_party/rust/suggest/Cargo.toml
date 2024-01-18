@@ -50,6 +50,10 @@ features = ["derive"]
 [dependencies.sql-support]
 path = "../support/sql"
 
+[dependencies.url]
+version = "2.1"
+features = ["serde"]
+
 [dev-dependencies]
 expect-test = "1.4"
 hex = "0.4"

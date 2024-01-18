@@ -37,6 +37,7 @@ dictionary RemoteTabRecord {
     string? icon;
     // Number of ms since the unix epoch (as reported by the client's clock)
     i64 last_used;
+    boolean inactive = false;
 };
 
 dictionary ClientRemoteTabs {

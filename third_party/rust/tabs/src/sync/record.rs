@@ -4,6 +4,11 @@
 
 use serde_derive::{Deserialize, Serialize};
 
+// copy/pasta...
+fn skip_if_default<T: PartialEq + Default>(v: &T) -> bool {
+    *v == T::default()
+}
+
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct TabsRecordTab {
@@ -11,6 +16,8 @@ pub struct TabsRecordTab {
     pub url_history: Vec<String>,
     pub icon: Option<String>,
     pub last_used: i64, // Seconds since epoch!
+    #[serde(default, skip_serializing_if = "skip_if_default")]
+    pub inactive: bool,
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Serialize, Deserialize)]
@@ -51,6 +58,7 @@ pub mod test {
         assert_eq!(tab.title, "the title");
         assert_eq!(tab.icon, Some("https://mozilla.org/icon".to_string()));
         assert_eq!(tab.last_used, 1643764207);
+        assert!(!tab.inactive);
     }
 
     #[test]
@@ -63,6 +71,7 @@ pub mod test {
                 url_history: vec!["https://mozilla.org/".into()],
                 icon: Some("https://mozilla.org/icon".into()),
                 last_used: 1643764207,
+                inactive: true,
             }],
         };
         let round_tripped =
