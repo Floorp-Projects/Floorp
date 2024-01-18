@@ -168,11 +168,6 @@ class LibHandle : public mozilla::external::AtomicRefCounted<LibHandle> {
 
  protected:
   /**
-   * Returns a mappable object for use by MappableMMap and related functions.
-   */
-  virtual Mappable* GetMappable() const = 0;
-
-  /**
    * Returns the instance, casted as the wanted type. Returns nullptr if
    * that's not the actual type. (short of a better way to do this without
    * RTTI)
@@ -248,8 +243,6 @@ class SystemElf : public LibHandle {
 #endif
 
  protected:
-  virtual Mappable* GetMappable() const;
-
   /**
    * Returns the instance, casted as SystemElf. (short of a better way to do
    * this without RTTI)

@@ -36,9 +36,6 @@ class CustomElf : public BaseElf, private ElfLoader::link_map {
    */
   virtual ~CustomElf();
 
- protected:
-  virtual Mappable* GetMappable() const;
-
  public:
   /**
    * Returns the instance, casted as BaseElf. (short of a better way to do
