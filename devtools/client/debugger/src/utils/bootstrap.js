@@ -8,13 +8,15 @@ import {
   combineReducers,
 } from "devtools/client/shared/vendor/redux";
 import ReactDOM from "devtools/client/shared/vendor/react-dom";
-const { Provider } = require("devtools/client/shared/vendor/react-redux");
+const {
+  Provider,
+} = require("resource://devtools/client/shared/vendor/react-redux.js");
 
 import ToolboxProvider from "devtools/client/framework/store-provider";
 import flags from "devtools/shared/flags";
 const {
   registerStoreObserver,
-} = require("devtools/client/shared/redux/subscriber");
+} = require("resource://devtools/client/shared/redux/subscriber.js");
 
 const { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs"
@@ -29,7 +31,9 @@ import * as selectors from "../selectors/index";
 import App from "../components/App";
 import { asyncStore, prefs } from "./prefs";
 import { persistTabs } from "../utils/tabs";
-const { sanitizeBreakpoints } = require("devtools/client/shared/thread-utils");
+const {
+  sanitizeBreakpoints,
+} = require("resource://devtools/client/shared/thread-utils.js");
 
 let gWorkers;
 

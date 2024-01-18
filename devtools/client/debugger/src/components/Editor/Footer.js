@@ -30,7 +30,7 @@ import { isPretty, getFilename, shouldBlackbox } from "../../utils/source";
 import { PaneToggleButton } from "../shared/Button/index";
 import AccessibleImage from "../shared/AccessibleImage";
 
-const classnames = require("devtools/client/shared/classnames.js");
+const classnames = require("resource://devtools/client/shared/classnames.js");
 
 class SourceFooter extends PureComponent {
   static get propTypes() {

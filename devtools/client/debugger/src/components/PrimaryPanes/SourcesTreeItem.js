@@ -21,7 +21,7 @@ import { sourceTypes } from "../../utils/source";
 import { createLocation } from "../../utils/location";
 import { safeDecodeItemName } from "../../utils/sources-tree/utils";
 
-const classnames = require("devtools/client/shared/classnames.js");
+const classnames = require("resource://devtools/client/shared/classnames.js");
 
 class SourceTreeItem extends Component {
   static get propTypes() {

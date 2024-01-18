@@ -25,15 +25,15 @@ import {
 import SearchInput from "../shared/SearchInput";
 import AccessibleImage from "../shared/AccessibleImage";
 
-const { PluralForm } = require("devtools/shared/plural-form");
-const classnames = require("devtools/client/shared/classnames.js");
-const Tree = require("devtools/client/shared/components/Tree");
-const { debounce } = require("devtools/shared/debounce");
-const { throttle } = require("devtools/shared/throttle");
+const { PluralForm } = require("resource://devtools/shared/plural-form.js");
+const classnames = require("resource://devtools/client/shared/classnames.js");
+const Tree = require("resource://devtools/client/shared/components/Tree.js");
+const { debounce } = require("resource://devtools/shared/debounce.js");
+const { throttle } = require("resource://devtools/shared/throttle.js");
 
 const {
   HTMLTooltip,
-} = require("devtools/client/shared/widgets/tooltip/HTMLTooltip");
+} = require("resource://devtools/client/shared/widgets/tooltip/HTMLTooltip.js");
 
 export const statusType = {
   initial: "INITIAL",

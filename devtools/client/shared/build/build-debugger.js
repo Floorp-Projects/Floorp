@@ -16,6 +16,7 @@ function shouldLazyLoad(value) {
     !value.includes("codemirror/") &&
     !value.endsWith(".properties") &&
     !value.startsWith("devtools/") &&
+    !value.startsWith("resource://devtools/") &&
     // XXX: the lazyRequire rewriter (in transformMC) fails for this module, it
     // evaluates `t.thisExpression()` as `void 0` instead of `this`. But the
     // rewriter still works for other call sites and seems mandatory for the

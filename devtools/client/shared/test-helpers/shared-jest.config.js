@@ -24,9 +24,9 @@ module.exports = {
     "^resource://devtools/client/shared/fluent-l10n/fluent-l10n.js": `${fixturesDir}/fluent-l10n`,
     "^resource://devtools/client/shared/unicode-url.js": `${fixturesDir}/unicode-url`,
     // This is needed for the Debugger, for some reason
-    "client/shared/unicode-url$": `${fixturesDir}/unicode-url`,
-    "^devtools/client/shared/telemetry": `${fixturesDir}/telemetry`,
-    "^resource://devtools/client/shared/telemetry": `${fixturesDir}/telemetry`,
+    "shared/unicode-url.js": `${fixturesDir}/unicode-url`,
+    "shared/telemetry.js": `${fixturesDir}/telemetry`,
+    "^resource://devtools/client/shared/telemetry.js": `${fixturesDir}/telemetry`,
     // This is needed for the Debugger, for some reason
     "client/shared/telemetry$": `${fixturesDir}/telemetry`,
     "devtools/shared/plural-form$": `${fixturesDir}/plural-form`,

@@ -7,10 +7,12 @@
  * @module utils/source
  */
 
-const { getUnicodeUrl } = require("devtools/client/shared/unicode-url");
+const {
+  getUnicodeUrl,
+} = require("resource://devtools/client/shared/unicode-url.js");
 const {
   micromatch,
-} = require("devtools/client/shared/vendor/micromatch/micromatch.js");
+} = require("resource://devtools/client/shared/vendor/micromatch/micromatch.js");
 
 import { getRelativePath } from "../utils/sources-tree/utils";
 import { endTruncateStr } from "./utils";

@@ -70,8 +70,8 @@ import {
 
 import { resizeToggleButton, resizeBreakpointGutter } from "../../utils/ui";
 
-const { debounce } = require("devtools/shared/debounce");
-const classnames = require("devtools/client/shared/classnames.js");
+const { debounce } = require("resource://devtools/shared/debounce.js");
+const classnames = require("resource://devtools/client/shared/classnames.js");
 
 const { appinfo } = Services;
 const isMacOS = appinfo.OS === "Darwin";

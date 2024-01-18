@@ -26,7 +26,7 @@ import {
   getShouldPauseOnCaughtExceptions,
 } from "../../../selectors/index";
 
-const classnames = require("devtools/client/shared/classnames.js");
+const classnames = require("resource://devtools/client/shared/classnames.js");
 
 class Breakpoints extends Component {
   static get propTypes() {

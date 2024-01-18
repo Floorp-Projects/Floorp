@@ -11,7 +11,7 @@ import actions from "../../actions/index";
 import { getCurrentThread, getIsPaused } from "../../selectors/index";
 import AccessibleImage from "../shared/AccessibleImage";
 
-const classnames = require("devtools/client/shared/classnames.js");
+const classnames = require("resource://devtools/client/shared/classnames.js");
 
 export class Thread extends Component {
   static get propTypes() {

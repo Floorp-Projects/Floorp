@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-const { throttle } = require("devtools/shared/throttle");
+const { throttle } = require("resource://devtools/shared/throttle.js");
 
 // This SourceQueue module is now only used for source mapped sources
 let newOriginalQueuedSources;

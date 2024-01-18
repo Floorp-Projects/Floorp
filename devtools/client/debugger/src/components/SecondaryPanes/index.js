@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-const SplitBox = require("devtools/client/shared/components/splitter/SplitBox");
+const SplitBox = require("resource://devtools/client/shared/components/splitter/SplitBox.js");
 
 import React, { Component } from "devtools/client/shared/vendor/react";
 import {
@@ -47,7 +47,7 @@ import WhyPaused from "./WhyPaused";
 
 import Scopes from "./Scopes";
 
-const classnames = require("devtools/client/shared/classnames.js");
+const classnames = require("resource://devtools/client/shared/classnames.js");
 
 function debugBtn(onClick, type, className, tooltip) {
   return button(

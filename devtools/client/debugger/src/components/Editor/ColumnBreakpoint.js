@@ -6,7 +6,7 @@ import { PureComponent } from "devtools/client/shared/vendor/react";
 import PropTypes from "devtools/client/shared/vendor/react-prop-types";
 
 import { getDocument } from "../../utils/editor/index";
-const classnames = require("devtools/client/shared/classnames.js");
+const classnames = require("resource://devtools/client/shared/classnames.js");
 
 // eslint-disable-next-line max-len
 

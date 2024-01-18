@@ -32,7 +32,7 @@ import Dropdown from "../shared/Dropdown";
 import AccessibleImage from "../shared/AccessibleImage";
 import CommandBar from "../SecondaryPanes/CommandBar";
 
-const { debounce } = require("devtools/shared/debounce");
+const { debounce } = require("resource://devtools/shared/debounce.js");
 
 function haveTabSourcesChanged(tabSources, prevTabSources) {
   if (tabSources.length !== prevTabSources.length) {

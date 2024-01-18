@@ -18,7 +18,7 @@ import ProjectSearch from "./ProjectSearch";
 const {
   TabPanel,
   Tabs,
-} = require("devtools/client/shared/components/tabs/Tabs.js");
+} = require("resource://devtools/client/shared/components/tabs/Tabs.js");
 
 const tabs = [
   primaryPaneTabs.SOURCES,
