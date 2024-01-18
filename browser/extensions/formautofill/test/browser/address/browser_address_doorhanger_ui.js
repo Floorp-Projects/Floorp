@@ -153,7 +153,6 @@ add_task(async function test_address_display_in_save_doorhanger() {
     {
       description: "Test submit a form without email and tel fields",
       form: {
-        "#given-name": "John",
         "#family-name": "Doe",
         "#organization": "Mozilla",
         "#street-address": "123 Sesame Street",
@@ -164,7 +163,6 @@ add_task(async function test_address_display_in_save_doorhanger() {
       description: "Test submit a form with email field",
       form: {
         "#given-name": "John",
-        "#family-name": "Doe",
         "#organization": "Mozilla",
         "#street-address": "123 Sesame Street",
         "#email": "test@mozilla.org",

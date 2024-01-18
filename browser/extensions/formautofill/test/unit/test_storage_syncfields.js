@@ -8,7 +8,9 @@
 const TEST_STORE_FILE_NAME = "test-profile.json";
 
 const TEST_ADDRESS_1 = {
-  name: "Timothy John Berners-Lee",
+  "given-name": "Timothy",
+  "additional-name": "John",
+  "family-name": "Berners-Lee",
   organization: "World Wide Web Consortium",
   "street-address": "32 Vassar Street\nMIT Room 32-G524",
   "address-level2": "Cambridge",
@@ -193,7 +195,7 @@ add_task(async function test_add_resurrects_tombstones() {
   equal(guid, guid3);
 
   let got = await profileStorage.addresses.get(guid);
-  equal(got.name, TEST_ADDRESS_1.name);
+  equal(got["given-name"], TEST_ADDRESS_1["given-name"]);
 });
 
 add_task(async function test_remove_sourceSync_localChanges() {

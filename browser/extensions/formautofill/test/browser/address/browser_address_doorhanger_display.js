@@ -30,8 +30,7 @@ add_task(async function test_save_doorhanger_shown_no_profile() {
       await focusUpdateSubmitForm(browser, {
         focusSelector: "#given-name",
         newValues: {
-          "#given-name": "John",
-          "#family-name": "Doe",
+          "#given-name": "Test User",
           "#organization": "Sesame Street",
           "#street-address": "123 Sesame Street",
           "#tel": "1-345-345-3456",
@@ -86,8 +85,7 @@ add_task(
         await focusUpdateSubmitForm(browser, {
           focusSelector: "#given-name",
           newValues: {
-            "#given-name": "John",
-            "#family-name": "Doe",
+            "#given-name": "Cena",
             "#street-address": TEST_ADDRESS_1["street-address"],
             "#country": TEST_ADDRESS_1.country,
             "#email": TEST_ADDRESS_1.email,

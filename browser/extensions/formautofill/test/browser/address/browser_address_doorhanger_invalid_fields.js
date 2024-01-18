@@ -50,7 +50,6 @@ add_task(async function test_do_not_save_invalid_fields() {
         focusSelector: "#given-name",
         newValues: {
           "#given-name": VALID_ADDRESS["given-name"],
-          "#family-name": VALID_ADDRESS["family-name"],
           "#street-address": VALID_ADDRESS["street-address"],
           "#address-level1": VALID_ADDRESS["address-level1"],
           "#address-level2": VALID_ADDRESS["address-level2"],
