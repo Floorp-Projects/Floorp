@@ -3,11 +3,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 buildscript {
     repositories {
-        maven {
-            url "https://maven.mozilla.org/maven2"
+        gradle.mozconfig.substs.GRADLE_MAVEN_REPOSITORIES.each { repository ->
+            maven {
+                url repository
+                if (gradle.mozconfig.substs.ALLOW_INSECURE_GRADLE_REPOSITORIES) {
+                    allowInsecureProtocol = true
+                }
+            }
         }
-
-        gradlePluginPortal()
     }
     dependencies {
         classpath  ComponentsDependencies.plugin_serialization

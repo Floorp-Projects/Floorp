@@ -9,38 +9,13 @@ import static org.gradle.api.tasks.testing.TestResult.ResultType
 
 buildscript {
     repositories {
-        if (!System.env.MOZ_AUTOMATION && gradle.mozconfig.substs.MOZ_ARTIFACT_BUILDS) {
-            mavenLocal()
-        }
-
         gradle.mozconfig.substs.GRADLE_MAVEN_REPOSITORIES.each { repository ->
-            rootProject.logger.lifecycle("Adding GRADLE_MAVEN_REPOSITORIES ${repository}")
             maven {
                 url repository
                 if (gradle.mozconfig.substs.ALLOW_INSECURE_GRADLE_REPOSITORIES) {
                     allowInsecureProtocol = true
                 }
             }
-        }
-
-        if (project.hasProperty("googleRepo")) {
-            maven {
-                name "Google"
-                url project.property("googleRepo")
-                allowInsecureProtocol true // Local Nexus in CI uses HTTP
-            }
-        } else {
-            google()
-        }
-
-        if (project.hasProperty("centralRepo")) {
-            maven {
-                name "MavenCentral"
-                url project.property("centralRepo")
-                allowInsecureProtocol true // Local Nexus in CI uses HTTP
-            }
-        } else {
-            mavenCentral()
         }
     }
 
@@ -65,49 +40,12 @@ plugins {
 
 allprojects {
     repositories {
-        if (!System.env.MOZ_AUTOMATION && gradle.mozconfig.substs.MOZ_ARTIFACT_BUILDS) {
-            mavenLocal()
-        }
-
         gradle.mozconfig.substs.GRADLE_MAVEN_REPOSITORIES.each { repository ->
-            rootProject.logger.lifecycle("Adding GRADLE_MAVEN_REPOSITORIES ${repository}")
             maven {
                 url repository
                 if (gradle.mozconfig.substs.ALLOW_INSECURE_GRADLE_REPOSITORIES) {
                     allowInsecureProtocol = true
                 }
-            }
-        }
-
-        if (project.hasProperty("googleRepo")) {
-            maven {
-                name "Google"
-                url project.property("googleRepo")
-                allowInsecureProtocol true // Local Nexus in CI uses HTTP
-            }
-        } else {
-            google()
-        }
-
-        if (project.hasProperty("centralRepo")) {
-            maven {
-                name "MavenCentral"
-                url project.property("centralRepo")
-                allowInsecureProtocol true // Local Nexus in CI uses HTTP
-            }
-        } else {
-            mavenCentral()
-        }
-
-        maven {
-            name "Mozilla"
-            url "https://maven.mozilla.org/maven2"
-        }
-
-        if (ExtraRepositories.mozillaStaging) {
-            maven {
-                name "Mozilla Staging"
-                url "https://maven-default.stage.mozaws.net/maven2"
             }
         }
     }

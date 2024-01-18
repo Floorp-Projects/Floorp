@@ -7,15 +7,14 @@ plugins {
 }
 
 repositories {
-    if (project.hasProperty("centralRepo")) {
-        maven {
-            name "MavenCentral"
-            url project.property("centralRepo")
-            allowInsecureProtocol true // Local Nexus in CI uses HTTP
+        gradle.mozconfig.substs.GRADLE_MAVEN_REPOSITORIES.each { repository ->
+            maven {
+                url repository
+                if (gradle.mozconfig.substs.ALLOW_INSECURE_GRADLE_REPOSITORIES) {
+                    allowInsecureProtocol = true
+                }
+            }
         }
-    } else {
-        mavenCentral()
-    }
 }
 
 dependencies {

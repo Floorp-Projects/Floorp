@@ -7,7 +7,14 @@ plugins {
 }
 
 repositories {
-    mavenCentral()
+    gradle.mozconfig.substs.GRADLE_MAVEN_REPOSITORIES.each { repository ->
+        maven {
+            url repository
+            if (gradle.mozconfig.substs.ALLOW_INSECURE_GRADLE_REPOSITORIES) {
+                allowInsecureProtocol = true
+            }
+        }
+    }
 }
 
 gradlePlugin {

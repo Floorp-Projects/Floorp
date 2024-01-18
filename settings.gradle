@@ -1,4 +1,17 @@
 pluginManagement {
+    apply from: file('mobile/android/gradle/mozconfig.gradle')
+
+    repositories {
+        gradle.mozconfig.substs.GRADLE_MAVEN_REPOSITORIES.each { repository ->
+            maven {
+                url repository
+                if (gradle.mozconfig.substs.ALLOW_INSECURE_GRADLE_REPOSITORIES) {
+                    allowInsecureProtocol = true
+                }
+            }
+        }
+    }
+
     includeBuild("${rootProject.projectDir.absolutePath}/mobile/android/android-components/plugins/config")
     includeBuild("${rootProject.projectDir.absolutePath}/mobile/android/android-components/plugins/dependencies")
     includeBuild("${rootProject.projectDir.absolutePath}/mobile/android/android-components/plugins/publicsuffixlist")

@@ -3,6 +3,19 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 pluginManagement {
+    apply from: file('../gradle/mozconfig.gradle')
+
+    repositories {
+        gradle.mozconfig.substs.GRADLE_MAVEN_REPOSITORIES.each { repository ->
+            maven {
+                url repository
+                if (gradle.mozconfig.substs.ALLOW_INSECURE_GRADLE_REPOSITORIES) {
+                    allowInsecureProtocol = true
+                }
+            }
+        }
+    }
+
     includeBuild("plugins/dependencies")
     includeBuild("plugins/publicsuffixlist")
 }
