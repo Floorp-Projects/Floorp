@@ -428,7 +428,7 @@ class PageAction {
     let { content, id } = message;
     let { primary, secondary } = content.buttons;
     let earliestDate = await lazy.TrackingDBService.getEarliestRecordedDate();
-    let timestamp = new Date().getTime(earliestDate);
+    let timestamp = earliestDate ?? new Date().getTime();
     let panelTitle = "";
     let headerLabel = this.window.document.getElementById(
       "cfr-notification-header-label"
