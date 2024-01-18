@@ -223,7 +223,7 @@ const MESSAGES = () => [
           content: {
             has_noodles: true,
             title: {
-              string_id: "mr2022-onboarding-welcome-pin-header",
+              string_id: "onboarding-easy-setup-security-and-privacy-title",
             },
             logo: {
               imageURL: "chrome://browser/content/callout-tab-pickup.svg",
