@@ -392,9 +392,10 @@ class VPXChangeMonitor : public MediaChangeMonitor::CodecChangeMonitor {
         info.mDisplay.Width(), info.mDisplay.Height(),
         info.mDisplayAndImageDifferent ? "specified" : "unspecified");
 
+    bool imageSizeEmpty = mCurrentConfig.mImage.IsEmpty();
     mInfo = Some(info);
     mCurrentConfig.mImage = info.mImage;
-    if (info.mDisplayAndImageDifferent) {
+    if (imageSizeEmpty || info.mDisplayAndImageDifferent) {
       // If the flag to change the display size is set in the sequence, we
       // set our original values to begin rescaling according to the new values.
       mCurrentConfig.mDisplay = info.mDisplay;
