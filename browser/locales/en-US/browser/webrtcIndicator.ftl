@@ -139,6 +139,20 @@ webrtc-allow-share-camera-and-audio-capture = Allow { $origin } to use your came
 webrtc-allow-share-screen-and-microphone = Allow { $origin } to use your microphone and see your screen?
 webrtc-allow-share-screen-and-audio-capture = Allow { $origin } to listen to this tab’s audio and see your screen?
 
+## Special phrasing for sharing devices when the origin is a file url.
+
+webrtc-allow-share-audio-capture-with-file = Allow this local file to listen to this tab’s audio?
+webrtc-allow-share-camera-with-file = Allow this local file to use your camera?
+webrtc-allow-share-microphone-with-file = Allow this local file to use your microphone?
+webrtc-allow-share-screen-with-file = Allow this local file to see your screen?
+# "Speakers" is used in a general sense that might include headphones or
+# another audio output connection.
+webrtc-allow-share-speaker-with-file = Allow this local file to use other speakers?
+webrtc-allow-share-camera-and-microphone-with-file = Allow this local file to use your camera and microphone?
+webrtc-allow-share-camera-and-audio-capture-with-file = Allow this local file to use your camera and listen to this tab’s audio?
+webrtc-allow-share-screen-and-microphone-with-file = Allow this local file to use your microphone and see your screen?
+webrtc-allow-share-screen-and-audio-capture-with-file = Allow this local file to listen to this tab’s audio and see your screen?
+
 ## Variables:
 ##   $origin (String): the first party origin.
 ##   $thirdParty (String): the third party origin.
