@@ -146,15 +146,14 @@ class nsIScrollableFrame : public nsIScrollbarMediator {
    * GetScrolledRect is designed to encapsulate deciding which
    * directions of overflow should be reachable by scrolling and which
    * should not.  Callers should NOT depend on it having any particular
-   * behavior (although nsXULScrollFrame currently does).
+   * behavior.
    *
    * This should only be called when the scrolled frame has been
    * reflowed with the scroll port size given in mScrollPort.
    *
    * Currently it allows scrolling down and to the right for
-   * nsHTMLScrollFrames with LTR directionality and for all
-   * nsXULScrollFrames, and allows scrolling down and to the left for
-   * nsHTMLScrollFrames with RTL directionality.
+   * nsHTMLScrollFrames with LTR directionality, and allows scrolling down and
+   * to the left for nsHTMLScrollFrames with RTL directionality.
    */
   virtual nsRect GetScrolledRect() const = 0;
   /**
@@ -170,7 +169,11 @@ class nsIScrollableFrame : public nsIScrollbarMediator {
    */
   virtual nsPoint GetScrollPosition() const = 0;
   /**
-   * As GetScrollPosition(), but uses the top-right as origin for RTL frames.
+   * For LTR frames, the logical scroll position is the offset of the top left
+   * corner of the frame from the top left corner of the scroll port (same as
+   * GetScrollPosition).
+   * For RTL frames, it is the offset of the top right corner of the frame from
+   * the top right corner of the scroll port.
    */
   virtual nsPoint GetLogicalScrollPosition() const = 0;
 
