@@ -4,7 +4,7 @@
 // Tests that sanitizing history will clear storage access permissions
 // for sites without cookies or site data.
 add_task(async function sanitizeStorageAccessPermissions() {
-  let categories = ["history", "historyAndFormData"];
+  let categories = ["history", "historyFormDataAndDownloads"];
 
   for (let pref of categories) {
     await new Promise(resolve => {
