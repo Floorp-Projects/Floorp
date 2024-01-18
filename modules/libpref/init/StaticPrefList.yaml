@@ -4805,13 +4805,6 @@
   value: true
   mirror: always
 
-# Use compatible range computation when applying inline style.  This is used
-# for making it possible to backout with Normandy Pref Rollout.
-- name: editor.inline_style.range.compatible_with_the_other_browsers
-  type: bool
-  value: true
-  mirror: always
-
 # Delay to mask last input character in password fields.
 # If negative value, to use platform's default behavior.
 # If 0, no delay to mask password.

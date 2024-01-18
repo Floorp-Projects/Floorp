@@ -23,7 +23,6 @@
 #include "mozilla/EditorForwards.h"
 #include "mozilla/mozalloc.h"
 #include "mozilla/SelectionState.h"
-#include "mozilla/StaticPrefs_editor.h"
 #include "mozilla/dom/AncestorIterator.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLBRElement.h"
@@ -303,22 +302,13 @@ nsresult HTMLEditor::SetInlinePropertiesAroundRanges(
     AutoRangeArray& aRanges,
     const AutoTArray<EditorInlineStyleAndValue, N>& aStylesToSet,
     const Element& aEditingHost) {
+  MOZ_ASSERT(!aRanges.HasSavedRanges());
   for (const EditorInlineStyleAndValue& styleToSet : aStylesToSet) {
-    if (!StaticPrefs::
-            editor_inline_style_range_compatible_with_the_other_browsers() &&
-        !aRanges.IsCollapsed()) {
-      MOZ_ALWAYS_TRUE(aRanges.SaveAndTrackRanges(*this));
-    }
     AutoInlineStyleSetter inlineStyleSetter(styleToSet);
     for (OwningNonNull<nsRange>& domRange : aRanges.Ranges()) {
       inlineStyleSetter.Reset();
       auto rangeOrError =
           [&]() MOZ_CAN_RUN_SCRIPT -> Result<EditorDOMRange, nsresult> {
-        if (aRanges.HasSavedRanges()) {
-          return EditorDOMRange(
-              GetExtendedRangeWrappingEntirelySelectedElements(
-                  EditorRawDOMRange(domRange)));
-        }
         EditorDOMRange range(domRange);
         // If we're setting <font>, we want to remove ancestors which set
         // `font-size` or <font size="..."> recursively.  Therefore, for
@@ -406,9 +396,6 @@ nsresult HTMLEditor::SetInlinePropertiesAroundRanges(
       AutoTrackDOMRange trackRange(RangeUpdaterRef(),
                                    const_cast<EditorDOMRange*>(&range));
       auto UpdateSelectionRange = [&]() MOZ_CAN_RUN_SCRIPT {
-        if (aRanges.HasSavedRanges()) {
-          return;
-        }
         // If inlineStyleSetter creates elements or setting styles, we should
         // select between start of first element and end of last element.
         if (inlineStyleSetter.FirstHandledPointRef().IsInContentNode()) {
@@ -555,9 +542,6 @@ nsresult HTMLEditor::SetInlinePropertiesAroundRanges(
         wrapTextInStyledElementResult.inspect().IgnoreCaretPointSuggestion();
       }
       UpdateSelectionRange();
-    }
-    if (aRanges.HasSavedRanges()) {
-      aRanges.RestoreFromSavedRanges();
     }
   }
   return NS_OK;
@@ -3557,50 +3541,51 @@ nsresult HTMLEditor::RemoveInlinePropertiesAsSubAction(
         }  // for-loop for arrayOfContentsAroundRange
       }
 
-      auto FlushAndStopTrackingAndShrinkSelectionRange = [&]() MOZ_CAN_RUN_SCRIPT {
-        trackSelectionRange.FlushAndStopTracking();
-        if (NS_WARN_IF(!selectionRange->IsPositioned()) ||
-            !StaticPrefs::
-                editor_inline_style_range_compatible_with_the_other_browsers()) {
-          return;
-        }
-        EditorRawDOMRange range(selectionRange);
-        nsINode* const commonAncestor =
-            range.GetClosestCommonInclusiveAncestor();
-        // Shrink range for compatibility between browsers.
-        nsIContent* const maybeNextContent =
-            range.StartRef().IsInContentNode() &&
-                    range.StartRef().IsEndOfContainer()
-                ? AutoInlineStyleSetter::GetNextEditableInlineContent(
-                      *range.StartRef().ContainerAs<nsIContent>(),
-                      commonAncestor)
-                : nullptr;
-        nsIContent* const maybePreviousContent =
-            range.EndRef().IsInContentNode() &&
-                    range.EndRef().IsStartOfContainer()
-                ? AutoInlineStyleSetter::GetPreviousEditableInlineContent(
-                      *range.EndRef().ContainerAs<nsIContent>(), commonAncestor)
-                : nullptr;
-        if (!maybeNextContent && !maybePreviousContent) {
-          return;
-        }
-        const auto startPoint =
-            maybeNextContent &&
-                    maybeNextContent != selectionRange->GetStartContainer()
-                ? HTMLEditUtils::GetDeepestEditableStartPointOf<
-                      EditorRawDOMPoint>(*maybeNextContent)
-                : range.StartRef();
-        const auto endPoint =
-            maybePreviousContent &&
-                    maybePreviousContent != selectionRange->GetEndContainer()
-                ? HTMLEditUtils::GetDeepestEditableEndPointOf<
-                      EditorRawDOMPoint>(*maybePreviousContent)
-                : range.EndRef();
-        DebugOnly<nsresult> rvIgnored = selectionRange->SetStartAndEnd(
-            startPoint.ToRawRangeBoundary(), endPoint.ToRawRangeBoundary());
-        NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
-                             "nsRange::SetStartAndEnd() failed, but ignored");
-      };
+      auto FlushAndStopTrackingAndShrinkSelectionRange =
+          [&]() MOZ_CAN_RUN_SCRIPT {
+            trackSelectionRange.FlushAndStopTracking();
+            if (NS_WARN_IF(!selectionRange->IsPositioned())) {
+              return;
+            }
+            EditorRawDOMRange range(selectionRange);
+            nsINode* const commonAncestor =
+                range.GetClosestCommonInclusiveAncestor();
+            // Shrink range for compatibility between browsers.
+            nsIContent* const maybeNextContent =
+                range.StartRef().IsInContentNode() &&
+                        range.StartRef().IsEndOfContainer()
+                    ? AutoInlineStyleSetter::GetNextEditableInlineContent(
+                          *range.StartRef().ContainerAs<nsIContent>(),
+                          commonAncestor)
+                    : nullptr;
+            nsIContent* const maybePreviousContent =
+                range.EndRef().IsInContentNode() &&
+                        range.EndRef().IsStartOfContainer()
+                    ? AutoInlineStyleSetter::GetPreviousEditableInlineContent(
+                          *range.EndRef().ContainerAs<nsIContent>(),
+                          commonAncestor)
+                    : nullptr;
+            if (!maybeNextContent && !maybePreviousContent) {
+              return;
+            }
+            const auto startPoint =
+                maybeNextContent &&
+                        maybeNextContent != selectionRange->GetStartContainer()
+                    ? HTMLEditUtils::GetDeepestEditableStartPointOf<
+                          EditorRawDOMPoint>(*maybeNextContent)
+                    : range.StartRef();
+            const auto endPoint =
+                maybePreviousContent && maybePreviousContent !=
+                                            selectionRange->GetEndContainer()
+                    ? HTMLEditUtils::GetDeepestEditableEndPointOf<
+                          EditorRawDOMPoint>(*maybePreviousContent)
+                    : range.EndRef();
+            DebugOnly<nsresult> rvIgnored = selectionRange->SetStartAndEnd(
+                startPoint.ToRawRangeBoundary(), endPoint.ToRawRangeBoundary());
+            NS_WARNING_ASSERTION(
+                NS_SUCCEEDED(rvIgnored),
+                "nsRange::SetStartAndEnd() failed, but ignored");
+          };
 
       if (arrayOfContentsToInvertStyle.IsEmpty()) {
         FlushAndStopTrackingAndShrinkSelectionRange();
