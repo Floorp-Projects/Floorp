@@ -25,7 +25,8 @@ add_setup(async function () {
 add_task(async function test_save_doorhanger_tel_invalid() {
   const EXPECTED = [
     {
-      "given-name": "Test User",
+      "given-name": "John",
+      "family-name": "Doe",
       organization: "Mozilla",
       "street-address": "123 Sesame Street",
       tel: "",
@@ -49,7 +50,8 @@ add_task(async function test_save_doorhanger_tel_invalid() {
         await focusUpdateSubmitForm(browser, {
           focusSelector: "#given-name",
           newValues: {
-            "#given-name": "Test User",
+            "#given-name": "John",
+            "#family-name": "Doe",
             "#organization": "Mozilla",
             "#street-address": "123 Sesame Street",
             "#tel": TEST,
@@ -69,7 +71,8 @@ add_task(async function test_save_doorhanger_tel_invalid() {
 add_task(async function test_save_doorhanger_tel_concatenated() {
   const EXPECTED = [
     {
-      "given-name": "Test User",
+      "given-name": "John",
+      "family-name": "Doe",
       organization: "Mozilla",
       tel: "+15202486621",
     },
@@ -77,6 +80,7 @@ add_task(async function test_save_doorhanger_tel_concatenated() {
 
   const MARKUP = `<form id="form">
     <input id="given-name" autocomplete="given-name">
+    <input id="family-name" autocomplete="family-name">
     <input id="organization" autocomplete="organization">
     <input id="tel-country-code" autocomplete="tel-country-code">
     <input id="tel-national" autocomplete="tel-national">
@@ -97,7 +101,8 @@ add_task(async function test_save_doorhanger_tel_concatenated() {
       await focusUpdateSubmitForm(browser, {
         focusSelector: "#given-name",
         newValues: {
-          "#given-name": "Test User",
+          "#given-name": "John",
+          "#family-name": "Doe",
           "#organization": "Mozilla",
           "#tel-country-code": "+1",
           "#tel-national": "5202486621",

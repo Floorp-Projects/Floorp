@@ -20,6 +20,7 @@
  *       given-name,
  *       additional-name,
  *       family-name,
+ *       name,
  *       organization,         // Company
  *       street-address,       // (Multiline)
  *       address-level3,       // Suburb/Sublocality
@@ -32,7 +33,9 @@
  *
  *       // computed fields (These fields are computed based on the above fields
  *       // and are not allowed to be modified directly.)
- *       name,
+ *       given-name,
+ *       additional-name,
+ *       family-name,
  *       address-line1,
  *       address-line2,
  *       address-line3,
@@ -163,20 +166,7 @@ export const ADDRESS_SCHEMA_VERSION = 1;
 // Please talk to the sync team before changing this!
 export const CREDIT_CARD_SCHEMA_VERSION = 3;
 
-const VALID_ADDRESS_FIELDS = [
-  "given-name",
-  "additional-name",
-  "family-name",
-  "organization",
-  "street-address",
-  "address-level3",
-  "address-level2",
-  "address-level1",
-  "postal-code",
-  "country",
-  "tel",
-  "email",
-];
+const NAME_COMPONENTS = ["given-name", "additional-name", "family-name"];
 
 const STREET_ADDRESS_COMPONENTS = [
   "address-line1",
@@ -193,10 +183,25 @@ const TEL_COMPONENTS = [
   "tel-local-suffix",
 ];
 
-const VALID_ADDRESS_COMPUTED_FIELDS = ["name", "country-name"].concat(
-  STREET_ADDRESS_COMPONENTS,
-  TEL_COMPONENTS
-);
+const VALID_ADDRESS_FIELDS = [
+  "name",
+  "organization",
+  "street-address",
+  "address-level3",
+  "address-level2",
+  "address-level1",
+  "postal-code",
+  "country",
+  "tel",
+  "email",
+];
+
+const VALID_ADDRESS_COMPUTED_FIELDS = [
+  "country-name",
+  ...NAME_COMPONENTS,
+  ...STREET_ADDRESS_COMPONENTS,
+  ...TEL_COMPONENTS,
+];
 
 const VALID_CREDIT_CARD_FIELDS = [
   "billingAddressGUID",
@@ -665,7 +670,13 @@ class AutofillRecords {
     // The record is cloned to avoid accidental modifications from outside.
     let clonedRecord = this._cloneAndCleanUp(recordFound);
     if (rawData) {
-      await this._stripComputedFields(clonedRecord);
+      // The *-name fields, previously listed in VALID_FIELDS, have been moved to
+      // COMPUTED_FIELDS. By default, the sync payload includes only those fields in VALID_FIELDS.
+      // Excluding *-name fields from the sync payload would prevent older devices from
+      // synchronizing with newer devices. To maintain backward compatibility, keep those deprecated
+      // ields in the payload, ensuring that older devices can still sync with newer devices.
+      const fieldsToKeep = NAME_COMPONENTS;
+      await this._stripComputedFields(clonedRecord, fieldsToKeep);
     } else {
       this._recordReadProcessor(clonedRecord);
     }
@@ -692,7 +703,8 @@ class AutofillRecords {
     await Promise.all(
       clonedRecords.map(async record => {
         if (rawData) {
-          await this._stripComputedFields(record);
+          const fieldsToKeep = NAME_COMPONENTS;
+          await this._stripComputedFields(record, fieldsToKeep);
         } else {
           this._recordReadProcessor(record);
         }
@@ -1367,7 +1379,7 @@ class AutofillRecords {
       record.version = 0;
     }
 
-    if (this._isMigrationNeeded(record.version)) {
+    if (this._isMigrationNeeded(record)) {
       hasChanges = true;
 
       record = await this._computeMigratedRecord(record);
@@ -1441,8 +1453,8 @@ class AutofillRecords {
     );
   }
 
-  _isMigrationNeeded(recordVersion) {
-    return recordVersion < this.version;
+  _isMigrationNeeded(record) {
+    return record.version < this.version;
   }
 
   /**
@@ -1464,8 +1476,13 @@ class AutofillRecords {
     return record;
   }
 
-  async _stripComputedFields(record) {
-    this.VALID_COMPUTED_FIELDS.forEach(field => delete record[field]);
+  async _stripComputedFields(record, fieldsToKeep = []) {
+    for (const field of this.VALID_COMPUTED_FIELDS) {
+      if (fieldsToKeep.includes(field)) {
+        continue;
+      }
+      delete record[field];
+    }
   }
 
   // An interface to be inherited.
@@ -1496,6 +1513,9 @@ class AutofillRecords {
    * @throws
    */
   _validateFields(record) {}
+
+  // An interface to be inherited.
+  migrateRemoteRecord(remoteRecord) {}
 }
 
 export class AddressesBase extends AutofillRecords {
@@ -1516,6 +1536,40 @@ export class AddressesBase extends AutofillRecords {
     }
   }
 
+  _isMigrationNeeded(record) {
+    if (super._isMigrationNeeded(record)) {
+      return true;
+    }
+
+    if (
+      !record.name &&
+      (record["given-name"] ||
+        record["additional-name"] ||
+        record["family-name"])
+    ) {
+      return true;
+    }
+    return false;
+  }
+
+  async _computeMigratedRecord(address) {
+    // Bug 1836438 - `name` field was moved from computed fields to valid fields.
+    if (
+      !address.name &&
+      (address["given-name"] ||
+        address["additional-name"] ||
+        address["family-name"])
+    ) {
+      address.name = lazy.FormAutofillNameUtils.joinNameParts({
+        given: address["given-name"] ?? "",
+        middle: address["additional-name"] ?? "",
+        family: address["family-name"] ?? "",
+      });
+    }
+
+    return super._computeMigratedRecord(address);
+  }
+
   async computeFields(address) {
     // NOTE: Remember to bump the schema version number if any of the existing
     //       computing algorithm changes. (No need to bump when just adding new
@@ -1530,14 +1584,12 @@ export class AddressesBase extends AutofillRecords {
       return hasNewComputedFields;
     }
 
-    // Compute name
-    if (!("name" in address)) {
-      let name = lazy.FormAutofillNameUtils.joinNameParts({
-        given: address["given-name"],
-        middle: address["additional-name"],
-        family: address["family-name"],
-      });
-      address.name = name;
+    // Compute split names
+    if (!("given-name" in address)) {
+      const nameParts = lazy.FormAutofillNameUtils.splitName(address.name);
+      address["given-name"] = nameParts.given;
+      address["additional-name"] = nameParts.middle;
+      address["family-name"] = nameParts.family;
       hasNewComputedFields = true;
     }
 
@@ -1629,19 +1681,22 @@ export class AddressesBase extends AutofillRecords {
   }
 
   _normalizeNameFields(address) {
-    if (address.name) {
-      let nameParts = lazy.FormAutofillNameUtils.splitName(address.name);
-      if (!address["given-name"] && nameParts.given) {
-        address["given-name"] = nameParts.given;
-      }
-      if (!address["additional-name"] && nameParts.middle) {
-        address["additional-name"] = nameParts.middle;
-      }
-      if (!address["family-name"] && nameParts.family) {
-        address["family-name"] = nameParts.family;
-      }
+    if (
+      !address.name &&
+      (address["given-name"] ||
+        address["additional-name"] ||
+        address["family-name"])
+    ) {
+      address.name = lazy.FormAutofillNameUtils.joinNameParts({
+        given: address["given-name"] ?? "",
+        middle: address["additional-name"] ?? "",
+        family: address["family-name"] ?? "",
+      });
     }
-    delete address.name;
+
+    delete address["given-name"];
+    delete address["additional-name"];
+    delete address["family-name"];
   }
 
   _normalizeAddressFields(address) {
@@ -1711,6 +1766,57 @@ export class AddressesBase extends AutofillRecords {
     }
     TEL_COMPONENTS.forEach(c => delete address[c]);
   }
+
+  /**
+   * Migrate the remote record to the expected format.
+   *
+   * @param {object} remoteRecord The remote record.
+   */
+  migrateRemoteRecord(remoteRecord) {
+    // When a remote record lacks the `name` field but includes any `*-name` fields, we can
+    // assume that the record originates from an older device. This is because even if an older
+    // device pulls the `name` field from a newer record from the sync server, the `name` field,
+    // being a computed field for an older device, will always be stripped.
+
+    // If the remote record comes from an older device, we compare the `*-name` fields in the
+    // remote record with those in the corresponding local record. If the values of the `*-name`
+    // fields differ, it indicates that the remote record has updated these fields. If the
+    // values are the same, we replace the name field of the remote record with the local
+    // name field to ensure the completeness of the name field when reconciling.
+    //
+    // Here is an example:
+    // Assume the local record is {"name": "Mr. John Doe"}. If an updated remote record
+    // has {"given-name": "John", "family-name": "Doe"}, we will NOT join the `*-name` fields
+    // and replace the local `name` field with "John Doe". This allows us to retain the complete
+    // name - "Mr. John Doe".
+    // However, if the updated remote record has {"given-name": "Jane", "family-name": "Poe"},
+    // we will rebuild it and replace the local `name` field with "Jane Poe".
+    if (
+      !("name" in remoteRecord) &&
+      NAME_COMPONENTS.some(c => c in remoteRecord)
+    ) {
+      const localRecord = this._findByGUID(remoteRecord.guid);
+      if (
+        localRecord &&
+        NAME_COMPONENTS.every(c => remoteRecord[c] == localRecord[c])
+      ) {
+        remoteRecord.name = localRecord.name;
+      } else {
+        remoteRecord.name = lazy.FormAutofillNameUtils.joinNameParts({
+          given: remoteRecord["given-name"],
+          middle: remoteRecord["additional-name"],
+          family: remoteRecord["family-name"],
+        });
+      }
+    }
+
+    // To enable new devices to sync name field changes with older devices, we still
+    // include the computed *-name fields in the sync payload while uploading.
+    // This also means that the incoming remote record will also contain *-name fields.
+    // However, since the autofill storage does not expect remote records to contain
+    // computed fields while merging, we remove them from the remote record.
+    NAME_COMPONENTS.forEach(f => delete remoteRecord[f]);
+  }
 }
 
 export class CreditCardsBase extends AutofillRecords {
@@ -1745,7 +1851,7 @@ export class CreditCardsBase extends AutofillRecords {
 
     // Compute split names
     if (!("cc-given-name" in creditCard)) {
-      let nameParts = lazy.FormAutofillNameUtils.splitName(
+      const nameParts = lazy.FormAutofillNameUtils.splitName(
         creditCard["cc-name"]
       );
       creditCard["cc-given-name"] = nameParts.given;
@@ -1777,10 +1883,10 @@ export class CreditCardsBase extends AutofillRecords {
     throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
   }
 
-  _isMigrationNeeded(recordVersion) {
+  _isMigrationNeeded(record) {
     return (
       // version 4 is deprecated and is rolled back to version 3
-      recordVersion == 4 || recordVersion < this.version
+      record.version == 4 || record.version < this.version
     );
   }
 

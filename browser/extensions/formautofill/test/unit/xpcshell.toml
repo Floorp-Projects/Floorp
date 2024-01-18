@@ -40,13 +40,8 @@ head = "head_addressComponent.js"
 ["test_addressDataLoader.js"]
 
 ["test_addressRecords.js"]
-skip-if = ["apple_silicon"] # bug 1729554
 
 ["test_autofillFormFields.js"]
-skip-if = [
-  "tsan", # Times out, bug 1612707
-  "apple_silicon", # bug 1729554
-]
 
 ["test_clearPopulatedForm.js"]
 
@@ -55,10 +50,6 @@ skip-if = [
 ["test_createRecords.js"]
 
 ["test_creditCardRecords.js"]
-skip-if = [
-  "tsan", # Times out, bug 1612707
-  "apple_silicon", # bug 1729554
-]
 
 ["test_extractLabelStrings.js"]
 
@@ -77,10 +68,6 @@ skip-if = [
 ["test_getInfo.js"]
 
 ["test_getRecords.js"]
-skip-if = [
-  "tsan", # Times out, bug 1612707
-  "apple_silicon", # bug 1729554
-]
 
 ["test_isAddressAutofillAvailable.js"]
 
@@ -113,26 +100,14 @@ skip-if = ["tsan"] # Times out, bug 1612707
 ["test_profileAutocompleteResult.js"]
 
 ["test_reconcile.js"]
-skip-if = [
-  "tsan", # Times out, bug 1612707
-  "apple_silicon", # bug 1729554
-]
 
 ["test_savedFieldNames.js"]
 
 ["test_storage_remove.js"]
-skip-if = [
-  "tsan", # Times out, bug 1612707
-  "apple_silicon", # bug 1729554
-]
 
 ["test_storage_syncfields.js"]
 
 ["test_storage_tombstones.js"]
-skip-if = [
-  "tsan", # Times out, bug 1612707
-  "apple_silicon", # bug 1729554
-]
 
 ["test_sync.js"]
 head = "head.js ../../../../../services/sync/tests/unit/head_appinfo.js ../../../../../services/common/tests/unit/head_helpers.js ../../../../../services/sync/tests/unit/head_helpers.js ../../../../../services/sync/tests/unit/head_http_server.js"
@@ -140,15 +115,10 @@ skip-if = ["tsan"] # Times out, bug 1612707
 
 ["test_sync_deprecate_credit_card_v4.js"]
 head = "head.js ../../../../../services/sync/tests/unit/head_appinfo.js ../../../../../services/common/tests/unit/head_helpers.js ../../../../../services/sync/tests/unit/head_helpers.js ../../../../../services/sync/tests/unit/head_http_server.js"
-skip-if = [
-  "tsan", # Times out, bug 1612707
-  "apple_silicon", # bug 1729554
-]
+
+["test_sync_deprecate_address_x_name_fields.js"]
+head = "head.js ../../../../../services/sync/tests/unit/head_appinfo.js ../../../../../services/common/tests/unit/head_helpers.js ../../../../../services/sync/tests/unit/head_helpers.js ../../../../../services/sync/tests/unit/head_http_server.js"
 
 ["test_toOneLineAddress.js"]
 
 ["test_transformFields.js"]
-skip-if = [
-  "tsan", # Times out, bug 1612707
-  "apple_silicon", # bug 1729554
-]

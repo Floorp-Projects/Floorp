@@ -18,8 +18,6 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   CreditCard: "resource://gre/modules/CreditCard.sys.mjs",
-  FormAutofillNameUtils:
-    "resource://gre/modules/shared/FormAutofillNameUtils.sys.mjs",
   formAutofillStorage: "resource://autofill/FormAutofillStorage.sys.mjs",
 });
 
@@ -463,13 +461,6 @@ export class AddressSaveDoorhanger extends AutofillDoorhanger {
   #formatTextByAddressCategory(fieldName) {
     let data = [];
     switch (fieldName) {
-      case "name":
-        data = ["given-name", "additional-name", "family-name"].map(field => [
-          field,
-          this.oldRecord[field],
-          this.newRecord[field],
-        ]);
-        break;
       case "street-address":
         data = [
           [
@@ -488,6 +479,7 @@ export class AddressSaveDoorhanger extends AutofillDoorhanger {
           field => [field, this.oldRecord[field], this.newRecord[field]]
         );
         break;
+      case "name":
       case "country":
       case "tel":
       case "email":
@@ -684,17 +676,6 @@ export class AddressEditDoorhanger extends AutofillDoorhanger {
     );
   }
 
-  #getFieldDisplayData(field) {
-    if (field == "name") {
-      return lazy.FormAutofillNameUtils.joinNameParts({
-        given: this.newRecord["given-name"],
-        middle: this.newRecord["additional-name"],
-        family: this.newRecord["family-name"],
-      });
-    }
-    return this.newRecord[field];
-  }
-
   #buildCountryMenupopup() {
     const menupopup = this.doc.createXULElement("menupopup");
 
@@ -806,7 +787,7 @@ export class AddressEditDoorhanger extends AutofillDoorhanger {
 
     input.setAttribute("id", inputId);
 
-    const value = this.#getFieldDisplayData(fieldName) ?? null;
+    const value = this.newRecord[fieldName] ?? "";
     if (popup) {
       const menuitem = Array.from(popup.childNodes).find(
         item =>

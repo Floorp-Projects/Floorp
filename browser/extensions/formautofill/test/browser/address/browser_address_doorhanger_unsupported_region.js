@@ -22,7 +22,8 @@ add_task(async function test_save_doorhanger_supported_region() {
       await focusUpdateSubmitForm(browser, {
         focusSelector: "#given-name",
         newValues: {
-          "#given-name": "John Doe",
+          "#given-name": "John",
+          "#family-name": "Doe",
           "#organization": "Mozilla",
           "#street-address": "123 Sesame Street",
           "#country": "US",
@@ -44,7 +45,8 @@ add_task(async function test_save_doorhanger_unsupported_region_from_record() {
       await focusUpdateSubmitForm(browser, {
         focusSelector: "#given-name",
         newValues: {
-          "#given-name": "John Doe",
+          "#given-name": "John",
+          "#family-name": "Doe",
           "#organization": "Mozilla",
           "#street-address": "123 Sesame Street",
           "#country": "DE",
@@ -70,7 +72,8 @@ add_task(async function test_save_doorhanger_unsupported_region_from_pref() {
       await focusUpdateSubmitForm(browser, {
         focusSelector: "#given-name",
         newValues: {
-          "#given-name": "John Doe",
+          "#given-name": "John",
+          "#family-name": "Doe",
           "#organization": "Mozilla",
           "#street-address": "123 Sesame Street",
         },
