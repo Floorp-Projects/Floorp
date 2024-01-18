@@ -3,6 +3,29 @@
     {
       "stash": {
         "blocked": [
+          "LightspeedHelper@lightspeedsystems.com:1.4.2203.16197",
+          "LightspeedHelper@lightspeedsystems.com:1.2.2108.10069",
+          "LightspeedHelper@lightspeedsystems.com:1.9.2307.6082",
+          "LightspeedHelper@lightspeedsystems.com:1.1.2102.18114",
+          "LightspeedHelper@lightspeedsystems.com:1.8.2303.30076",
+          "LightspeedHelper@lightspeedsystems.com:1.1.2103.2115",
+          "LightspeedHelper@lightspeedsystems.com:1.1.2102.12155",
+          "LightspeedHelper@lightspeedsystems.com:1.4.2203.14144",
+          "LightspeedHelper@lightspeedsystems.com:1.3.2201.4104",
+          "LightspeedHelper@lightspeedsystems.com:1.1.2102.16158",
+          "LightspeedHelper@lightspeedsystems.com:1.4.2203.16165"
+        ],
+        "unblocked": []
+      },
+      "schema": 1704911757706,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1705343704656,
+      "id": "6fb30dab-5bb6-4c8f-819a-eaca9fdb32e8",
+      "last_modified": 1705343757476
+    },
+    {
+      "stash": {
+        "blocked": [
           "{4a53adf1-5b2b-4a2d-a912-46c74932eea6}:1.2.32.3",
           "Aternity-WebExt-12.1.4@aternity.com:12.1.4.2",
           "Aternity-WebExt-12.1.4@aternity.com:12.1.4.15",
@@ -3395,5 +3418,5 @@
       "last_modified": 1690223886167
     }
   ],
-  "timestamp": 1704911757478
+  "timestamp": 1705343757476
 }
