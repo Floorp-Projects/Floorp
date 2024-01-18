@@ -9,7 +9,7 @@ var { Assert } = ChromeUtils.importESModule(
   "resource://testing-common/Assert.sys.mjs"
 );
 
-function run_test() {
+add_task(function test_basic_asserts() {
   let assert = new Assert();
 
   function makeBlock(f, ...args) {
@@ -378,34 +378,49 @@ function run_test() {
   assert.equal(message, "AssertionError: 1 >= 2");
 
   assert.less(1, 2);
-  try {
-    assert.less(2, 2);
-  } catch (e) {
-    message = e.toString().split("\n")[0];
-  }
-  assert.equal(message, "AssertionError: 2 < 2");
+  assert.throws(
+    () => assert.less(2, 2),
+    e => e == "AssertionError: 2 < 2"
+  );
 
   assert.lessOrEqual(2, 2);
-  try {
-    assert.lessOrEqual(2, 1);
-  } catch (e) {
-    message = e.toString().split("\n")[0];
-  }
-  assert.equal(message, "AssertionError: 2 <= 1");
+  assert.throws(
+    () => assert.lessOrEqual(2, 1),
+    e => e == "AssertionError: 2 <= 1"
+  );
 
-  try {
-    assert.greater(NaN, 0);
-  } catch (e) {
-    message = e.toString().split("\n")[0];
-  }
-  assert.equal(message, "AssertionError: 'NaN' is not a number");
+  assert.throws(
+    () => assert.greater(NaN, 0),
+    e => e == "AssertionError: 'NaN' is not a number or date."
+  );
 
-  try {
-    assert.greater(0, NaN);
-  } catch (e) {
-    message = e.toString().split("\n")[0];
-  }
-  assert.equal(message, "AssertionError: 'NaN' is not a number");
+  assert.throws(
+    () => assert.greater(0, NaN),
+    e => e == "AssertionError: 'NaN' is not a number or date."
+  );
+
+  let now = new Date();
+  let firefoxReleaseDate = new Date("2004-11-09");
+  assert.less(firefoxReleaseDate, now);
+  assert.throws(
+    () => assert.less(now, now),
+    e => e == `AssertionError: "${now.toJSON()}" < "${now.toJSON()}"`
+  );
+
+  assert.lessOrEqual(now, now);
+  assert.greaterOrEqual(now, now);
+  assert.throws(
+    () => assert.greaterOrEqual(firefoxReleaseDate, now),
+    e =>
+      e ==
+      `AssertionError: "${firefoxReleaseDate.toJSON()}" >= "${now.toJSON()}"`
+  );
+
+  // Invalid date:
+  assert.throws(
+    () => assert.greater(firefoxReleaseDate, new Date("invalid")),
+    e => e == "AssertionError: 'Invalid Date' is not a number or date."
+  );
 
   /* ---- stringMatches ---- */
   assert.stringMatches("hello world", /llo\s/);
@@ -429,9 +444,7 @@ function run_test() {
     () => assert.stringContains(5, "foo"),
     /^AssertionError: Expected a string for both lhs and rhs, but either "5" or "foo" is not a string./
   );
-
-  run_next_test();
-}
+});
 
 add_task(async function test_rejects() {
   let assert = new Assert();
