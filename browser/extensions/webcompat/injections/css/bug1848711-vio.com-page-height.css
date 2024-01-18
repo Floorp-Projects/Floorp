@@ -1,0 +1,16 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/**
+ * vio.com - Map is not displayed
+ * Bug #1848711 - https://bugzilla.mozilla.org/show_bug.cgi?id=1848711
+ * WebCompat issue #118126 - https://github.com/webcompat/web-bugs/issues/118126
+ *
+ * vio.com uses min-height: -webkit-fill-available; on the canvas map parent
+ * element, which is not supported in Firefox, so the element has zero height.
+ */
+
+.ec-44lvm8 {
+  height: 100%;
+}

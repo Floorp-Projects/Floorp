@@ -9,7 +9,7 @@
  */
 
 .gnb-alerts.gnb-old-browser {
-  height: 0;
+  max-height: 0;
 }
 
 .isCampaign .gnb-stove.gnb-default-fixed,

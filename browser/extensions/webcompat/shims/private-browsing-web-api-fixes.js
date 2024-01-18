@@ -13,5 +13,7 @@
  * browsing mode for those sites.
  */
 
+// caches.keys() rejects in private browsing mode:
+// https://bugzilla.mozilla.org/show_bug.cgi?id=1742344#c4
+// Can be removed once bug 1714354 is fixed.
 delete window.wrappedJSObject.caches;
-delete window.wrappedJSObject.indexedDB;

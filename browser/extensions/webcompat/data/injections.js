@@ -113,20 +113,6 @@ const AVAILABLE_INJECTIONS = [
     customFunc: "noSniffFix",
   },
   {
-    id: "bug1570328",
-    platform: "android",
-    domain: "developer.apple.com",
-    bug: "1570328",
-    contentScripts: {
-      matches: ["*://developer.apple.com/*"],
-      css: [
-        {
-          file: "injections/css/bug1570328-developer-apple.com-transform-scale.css",
-        },
-      ],
-    },
-  },
-  {
     id: "bug1575000",
     platform: "all",
     domain: "apply.lloydsbank.co.uk",
@@ -136,28 +122,6 @@ const AVAILABLE_INJECTIONS = [
       css: [
         {
           file: "injections/css/bug1575000-apply.lloydsbank.co.uk-radio-buttons-fix.css",
-        },
-      ],
-    },
-  },
-  {
-    id: "bug1605611",
-    platform: "android",
-    domain: "maps.google.com",
-    bug: "1605611",
-    contentScripts: {
-      matches: InterventionHelpers.matchPatternsForGoogle(
-        "*://www.google.",
-        "/maps*"
-      ),
-      css: [
-        {
-          file: "injections/css/bug1605611-maps.google.com-directions-time.css",
-        },
-      ],
-      js: [
-        {
-          file: "injections/js/bug1605611-maps.google.com-directions-time.js",
         },
       ],
     },
@@ -255,7 +219,10 @@ const AVAILABLE_INJECTIONS = [
     domain: "datastudio.google.com",
     bug: "1631811",
     contentScripts: {
-      matches: ["https://datastudio.google.com/embed/reporting/*"],
+      matches: [
+        "https://datastudio.google.com/embed/reporting/*",
+        "https://lookerstudio.google.com/embed/reporting/*",
+      ],
       js: [
         {
           file: "injections/js/bug1631811-datastudio.google.com-indexedDB.js",
@@ -276,26 +243,6 @@ const AVAILABLE_INJECTIONS = [
           file: "injections/css/bug1694470-myvidster.com-content-not-shown.css",
         },
       ],
-    },
-  },
-  {
-    id: "bug1731825",
-    platform: "desktop",
-    domain: "Office 365 email handling prompt",
-    bug: "1731825",
-    contentScripts: {
-      matches: [
-        "*://*.live.com/*",
-        "*://*.office.com/*",
-        "*://*.sharepoint.com/*",
-        "*://*.office365.com/*",
-      ],
-      js: [
-        {
-          file: "injections/js/bug1731825-office365-email-handling-prompt-autohide.js",
-        },
-      ],
-      allFrames: true,
     },
   },
   {
@@ -347,22 +294,6 @@ const AVAILABLE_INJECTIONS = [
         },
       ],
       allFrames: true,
-    },
-  },
-  {
-    id: "bug1724764",
-    platform: "android",
-    domain: "Issues related to missing window.print",
-    bug: "1724764",
-    contentScripts: {
-      matches: [
-        "*://*.edupage.org/*", // 1804477 and 1800118
-      ],
-      js: [
-        {
-          file: "injections/js/bug1724764-window-print.js",
-        },
-      ],
     },
   },
   {
@@ -495,17 +426,20 @@ const AVAILABLE_INJECTIONS = [
     },
   },
   {
-    id: "bug1784302",
-    platform: "android",
-    domain: "open.toutiao.com",
-    bug: "1784302",
+    id: "bug1859617",
+    platform: "all",
+    domain: "Sites relying on there being no window.InstallTrigger",
+    bug: "1859617",
     contentScripts: {
-      matches: ["*://open.toutiao.com/*"],
+      matches: [
+        "*://*.stallionexpress.ca/*", // Bug 1859617
+      ],
       js: [
         {
-          file: "injections/js/bug1784302-effectiveType-shim.js",
+          file: "injections/js/bug1859617-installtrigger-removal-shim.js",
         },
       ],
+      allFrames: true,
     },
   },
   {
@@ -601,37 +535,31 @@ const AVAILABLE_INJECTIONS = [
     bug: "1784199",
     contentScripts: {
       matches: [
+        "*://*.7streetbrownstones.com/*", // #129553
         "*://*.aptsovation.com/*",
         "*://*.avanabayview.com/*", // #118617
         "*://*.breakpointeandcoronado.com/*", // #117735
+        "*://*.courtsatspringmill.com/*", // #128404
+        "*://*.gslbriarcreek.com/*", // #126401
         "*://*.liveatlasathens.com/*", // #111189
         "*://*.liveobserverpark.com/*", // #105244
+        "*://*.liveupark.com/*", // #121083
+        "*://*.metropolisapt.com/*", // #129105
         "*://*.midwayurban.com/*", // #116523
         "*://*.nhcalaska.com/*",
         "*://*.prospectportal.com/*", // #115206
         "*://*.securityproperties.com/*",
+        "*://*.thefoundryat41st.com/*", // #128994
         "*://*.theloftsorlando.com/*",
         "*://*.vanallenapartments.com/*", // #120056
+        "*://*.waterfordapartmentstulsa.com/*", // #125870
       ],
       css: [
         {
           file: "injections/css/bug1784199-entrata-platform-unsupported.css",
         },
       ],
-    },
-  },
-  {
-    id: "bug1795490",
-    platform: "android",
-    domain: "www.china-airlines.com",
-    bug: "1795490",
-    contentScripts: {
-      matches: ["*://www.china-airlines.com/*"],
-      js: [
-        {
-          file: "injections/js/bug1795490-www.china-airlines.com-undisable-date-fields-on-mobile.js",
-        },
-      ],
+      allFrames: true,
     },
   },
   {
@@ -640,7 +568,7 @@ const AVAILABLE_INJECTIONS = [
     domain: "www.samsung.com",
     bug: "1799968",
     contentScripts: {
-      matches: ["*://www.samsung.com/*/watches/*/*"],
+      matches: ["*://www.samsung.com/*"],
       js: [
         {
           file: "injections/js/bug1799968-www.samsung.com-appVersion-linux-fix.js",
@@ -658,34 +586,6 @@ const AVAILABLE_INJECTIONS = [
       js: [
         {
           file: "injections/js/bug1799980-healow.com-infinite-loop-fix.js",
-        },
-      ],
-    },
-  },
-  {
-    id: "bug1799994",
-    platform: "desktop",
-    domain: "www.vivobarefoot.com",
-    bug: "1799994",
-    contentScripts: {
-      matches: ["*://www.vivobarefoot.com/*"],
-      css: [
-        {
-          file: "injections/css/bug1799994-www.vivobarefoot.com-product-filters-fix.css",
-        },
-      ],
-    },
-  },
-  {
-    id: "bug1800000",
-    platform: "desktop",
-    domain: "www.honda.co.uk",
-    bug: "1800000",
-    contentScripts: {
-      matches: ["*://www.honda.co.uk/cars/book-a-service.html*"],
-      css: [
-        {
-          file: "injections/css/bug1800000-www.honda.co.uk-choose-dealer-button-fix.css",
         },
       ],
     },
@@ -714,6 +614,9 @@ const AVAILABLE_INJECTIONS = [
         "*://*.discountcoffee.co.uk/*", // 118757
         "*://torguard.net/*", // 120113
         "*://*.arcsivr.com/*", // 120716
+        "*://drafthouse.com/*", // 126385
+        "*://*.lafoodbank.org/*", // 127006
+        "*://rutamayacoffee.com/*", // 129353
       ],
       js: [
         {
@@ -763,20 +666,6 @@ const AVAILABLE_INJECTIONS = [
       js: [
         {
           file: "injections/js/bug1819450-cmbchina.com-ua-change.js",
-        },
-      ],
-    },
-  },
-  {
-    id: "bug1819678",
-    platform: "android",
-    domain: "cnki.net",
-    bug: "1819678",
-    contentScripts: {
-      matches: ["*://*.cnki.net/*"],
-      js: [
-        {
-          file: "injections/js/bug1819678-cnki.net-undisable-search-field.js",
         },
       ],
     },
@@ -833,20 +722,6 @@ const AVAILABLE_INJECTIONS = [
       css: [
         {
           file: "injections/css/bug1829949-tomshardware.com-scrollbar-width.css",
-        },
-      ],
-    },
-  },
-  {
-    id: "bug1829952",
-    platform: "android",
-    domain: "eventer.co.il",
-    bug: "1829952",
-    contentScripts: {
-      matches: ["*://*.eventer.co.il/*"],
-      css: [
-        {
-          file: "injections/css/bug1829952-eventer.co.il-button-height.css",
         },
       ],
     },
@@ -987,7 +862,7 @@ const AVAILABLE_INJECTIONS = [
     domain: "thai-masszazs.net",
     bug: "1836157",
     contentScripts: {
-      matches: ["*://www.thai-masszazs.net/en/*"],
+      matches: ["*://*.thai-masszazs.net/*"],
       js: [
         {
           file: "injections/js/bug1836157-thai-masszazs-niceScroll-disable.js",
@@ -1024,23 +899,6 @@ const AVAILABLE_INJECTIONS = [
     },
   },
   {
-    id: "bug1836177",
-    platform: "desktop",
-    domain: "clalit.co.il",
-    bug: "1836177",
-    contentScripts: {
-      matches: [
-        "*://e-services.clalit.co.il/OnlineWeb/General/InfoFullLogin.aspx*",
-      ],
-      css: [
-        {
-          file: "injections/css/bug1836177-clalit.co.il-hide-number-input-spinners.css",
-        },
-      ],
-      allFrames: true,
-    },
-  },
-  {
     id: "bug1842437",
     platform: "desktop",
     domain: "www.youtube.com",
@@ -1050,6 +908,168 @@ const AVAILABLE_INJECTIONS = [
       js: [
         {
           file: "injections/js/bug1842437-www.youtube.com-performance-now-precision.js",
+        },
+      ],
+    },
+  },
+  {
+    id: "bug1848711",
+    platform: "android",
+    domain: "vio.com",
+    bug: "1848711",
+    contentScripts: {
+      matches: ["*://*.vio.com/*"],
+      css: [
+        {
+          file: "injections/css/bug1848711-vio.com-page-height.css",
+        },
+      ],
+    },
+  },
+  {
+    id: "bug1848713",
+    platform: "all",
+    domain: "cleanrider.com",
+    bug: "1848713",
+    contentScripts: {
+      matches: ["*://*.cleanrider.com/*"],
+      css: [
+        {
+          file: "injections/css/bug1848713-cleanrider.com-slider.css",
+        },
+      ],
+    },
+  },
+  {
+    id: "bug1848716",
+    platform: "desktop",
+    domain: "elal.com",
+    bug: "1848716",
+    contentScripts: {
+      matches: ["*://*.elal.com/*"],
+      css: [
+        {
+          file: "injections/css/bug1848716-elal.com-unsupported-banner.css",
+        },
+      ],
+    },
+  },
+  {
+    id: "bug1848849",
+    platform: "all",
+    domain: "theaa.com",
+    bug: "1848849",
+    contentScripts: {
+      matches: ["*://*.theaa.com/route-planner/*"],
+      css: [
+        {
+          file: "injections/css/bug1848849-theaa.com-printing-mode-fix.css",
+        },
+      ],
+    },
+  },
+  {
+    id: "bug1849019",
+    platform: "android",
+    domain: "axa-assistance.pl",
+    bug: "1849019",
+    contentScripts: {
+      matches: ["*://*.axa-assistance.pl/*"],
+      css: [
+        {
+          file: "injections/css/bug1849019-axa-assistance.pl-datepicker-fix.css",
+        },
+      ],
+    },
+  },
+  {
+    id: "bug1849058",
+    platform: "all",
+    domain: "nicochannel.jp",
+    bug: "1849058",
+    contentScripts: {
+      matches: ["*://nicochannel.jp/*", "*://gs-ch.com/*"],
+      js: [
+        {
+          file: "injections/js/bug1849058-nicochannel.jp-picture-in-picture-shim.js",
+        },
+      ],
+    },
+  },
+  {
+    id: "bug1849388",
+    platform: "android",
+    domain: "kucharkaprodceru.cz",
+    bug: "1849388",
+    contentScripts: {
+      matches: ["*://*.kucharkaprodceru.cz/*"],
+      css: [
+        {
+          file: "injections/css/bug1849388-kucharkaprodceru.cz-scroll-fix.css",
+        },
+      ],
+    },
+  },
+  {
+    id: "bug1855014",
+    platform: "android",
+    domain: "eksiseyler.com",
+    bug: "1855014",
+    contentScripts: {
+      matches: ["*://eksiseyler.com/*"],
+      js: [
+        {
+          file: "injections/js/bug1855014-eksiseyler.com.js",
+        },
+      ],
+    },
+  },
+  {
+    id: "bug1855071",
+    platform: "android",
+    domain: "www.meteoam.it",
+    bug: "1855071",
+    contentScripts: {
+      matches: ["*://www.meteoam.it/*"],
+      js: [
+        {
+          file: "injections/js/bug1855071-www.meteoam.it.js",
+        },
+      ],
+    },
+  },
+  {
+    id: "bug1864564",
+    platform: "all",
+    domain: "Esri breakage",
+    bug: "1864564",
+    contentScripts: {
+      matches: [
+        "*://*.ncep.noaa.gov/*",
+        "*://*.northumberland.gov.uk/*",
+        "*://webmap.gis.gov.mo/*",
+      ],
+      js: [
+        {
+          file: "injections/js/bug1864564-esri-transfrom-names-shim.js",
+        },
+      ],
+      allFrames: true,
+    },
+  },
+  {
+    id: "bug1868345",
+    platform: "desktop",
+    domain: "tvmovie.de",
+    bug: "1868345",
+    contentScripts: {
+      matches: [
+        "*://www.tvmovie.de/tv/fernsehprogramm",
+        "*://www.tvmovie.de/tv/fernsehprogramm*",
+      ],
+      css: [
+        {
+          file: "injections/css/bug1868345-tvmovie.de-scroll-fix.css",
         },
       ],
     },
