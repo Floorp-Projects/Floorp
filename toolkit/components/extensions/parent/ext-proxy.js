@@ -9,6 +9,19 @@
 ChromeUtils.defineESModuleGetters(this, {
   ProxyChannelFilter: "resource://gre/modules/ProxyChannelFilter.sys.mjs",
 });
+
+// Delayed wakeup is tied to ExtensionParent.browserPaintedPromise, which is
+// when the first browser window has been painted. On Android, parts of the
+// browser can trigger requests without browser "window" (geckoview.xhtml).
+// Therefore we allow such proxy events to trigger wakeup.
+// On desktop, we do not wake up early, to minimize the amount of work before
+// a browser window is painted.
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "isEarlyWakeupOnRequestEnabled",
+  "extensions.webextensions.early_background_wakeup_on_request",
+  false
+);
 var { ExtensionPreferencesManager } = ChromeUtils.importESModule(
   "resource://gre/modules/ExtensionPreferencesManager.sys.mjs"
 );
@@ -86,6 +99,10 @@ function registerProxyFilterEvent(
   extraInfoSpec = []
 ) {
   let listener = data => {
+    if (isEarlyWakeupOnRequestEnabled && fire.wakeup) {
+      // Starts the background script if it has not started, no-op otherwise.
+      extension.emit("start-background-script");
+    }
     return fire.sync(data);
   };
 

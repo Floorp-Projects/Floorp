@@ -39,6 +39,14 @@ function trackEvents(wrapper) {
   return events;
 }
 
+add_setup(() => {
+  // In case the prefs have a different value by default.
+  Services.prefs.setBoolPref(
+    "extensions.webextensions.early_background_wakeup_on_request",
+    false
+  );
+});
+
 // Test that a proxy listener during startup does not immediately
 // start the background page, but the event is queued until the background
 // page is started.
@@ -120,9 +128,8 @@ add_task(async function test_proxy_startup() {
   equal(
     events.get("start-background-script"),
     false,
-    "Should have gotten a background script event"
+    "Should not have started the background page yet"
   );
-
   AddonTestUtils.notifyEarlyStartup();
   await new Promise(executeSoon);
 
@@ -137,6 +144,22 @@ add_task(async function test_proxy_startup() {
   await request;
   equal(2, proxiedRequests, "proxied request ok");
   equal(2, nonProxiedRequests, "non proxied requests ok");
+
+  // Retry, but now with early_background_wakeup_on_request=true.
+  Services.prefs.setBoolPref(
+    "extensions.webextensions.early_background_wakeup_on_request",
+    true
+  );
+  await promiseRestartManager({ earlyStartup: false });
+  await extension.awaitStartup();
+  let request2 = Promise.all([
+    extension.awaitMessage("saw-request"),
+    ExtensionTestUtils.fetch("http://proxied.example.com/?a=2"),
+  ]);
+  info("Expecting background page to be awakened by the proxy event");
+  await extension.awaitBackgroundStarted();
+  await request2;
+  equal(3, proxiedRequests, "proxied request ok");
 
   await extension.unload();
 

@@ -261,6 +261,11 @@ pref("extensions.update.url", "https://versioncheck.addons.mozilla.org/update/Ve
 // Enable prompts for browser.permissions.request() (bug 1392176)
 pref("extensions.webextOptionalPermissionPrompts", true);
 
+// Start (proxy) extensions as soon as a network request is observed, instead
+// of waiting until the first browser window has opened. This is needed because
+// GeckoView can trigger requests without opening geckoview.xhtml.
+pref("extensions.webextensions.early_background_wakeup_on_request", true);
+
 // Scroll and zoom into editable form fields (bug 834613)
 pref("formhelper.autozoom", true);
 
