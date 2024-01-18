@@ -72,12 +72,33 @@ export const DAPVisitCounter = new (class {
     );
 
     this.counters = [];
-    for (const experiment of experiments) {
-      let counter = { experiment, count: 0, patterns: [] };
-      this.counters.push(counter);
-      for (const url of experiment.urls) {
-        let mpattern = new MatchPattern(url);
-        counter.patterns.push(mpattern);
+    // This allows two different formats for distributing the URLs for the
+    // experiment. The experiments get quite large and over 4096 bytes they
+    // result in a warning (when mirrored in a pref as in this case).
+    if (Array.isArray(experiments)) {
+      for (const experiment of experiments) {
+        let counter = { experiment, count: 0, patterns: [] };
+        this.counters.push(counter);
+        for (const url of experiment.urls) {
+          let mpattern = new MatchPattern(url);
+          counter.patterns.push(mpattern);
+        }
+      }
+    } else {
+      for (const [task, urls] of Object.entries(experiments)) {
+        for (const [idx, url] of urls.entries()) {
+          const fullUrl = `*://${url}/*`;
+
+          this.counters.push({
+            experiment: {
+              task_id: task,
+              task_veclen: 20,
+              bucket: idx,
+            },
+            count: 0,
+            patterns: [new MatchPattern(fullUrl)],
+          });
+        }
       }
     }
   }
@@ -131,7 +152,7 @@ export const DAPVisitCounter = new (class {
   show() {
     for (const counter of this.counters) {
       lazy.logConsole.info(
-        `Experiment: ${counter.experiment.name} -> ${counter.count}`
+        `Experiment: ${counter.experiment.url} -> ${counter.count}`
       );
     }
     return this.counters;
