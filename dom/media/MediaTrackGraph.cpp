@@ -1712,8 +1712,8 @@ void MediaTrackGraphImpl::ForceShutDown() {
 NS_IMETHODIMP
 MediaTrackGraphImpl::Notify(nsITimer* aTimer) {
   MOZ_ASSERT(NS_IsMainThread());
-  NS_ASSERTION(!mShutdownBlocker,
-               "MediaTrackGraph took too long to shut down!");
+  MOZ_DIAGNOSTIC_ASSERT(!mShutdownBlocker,
+                        "MediaTrackGraph took too long to shut down!");
   // Sigh, graph took too long to shut down.  Stop blocking system
   // shutdown and hope all is well.
   RemoveShutdownBlocker();
