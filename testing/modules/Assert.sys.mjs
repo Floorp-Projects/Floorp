@@ -561,12 +561,26 @@ function compareNumbers(expression, lhs, rhs, message, operator) {
     this.report(expression, lhs, rhs, message, operator);
     return;
   }
+  let lhsIsDate =
+    typeof lhs == "object" && lhs.constructor.name == "Date" && !isNaN(lhs);
+  let rhsIsDate =
+    typeof rhs == "object" && rhs.constructor.name == "Date" && !isNaN(rhs);
+  if (lhsIsDate && rhsIsDate) {
+    this.report(expression, lhs, rhs, message, operator);
+    return;
+  }
 
   let errorMessage;
-  if (!lhsIsNumber && !rhsIsNumber) {
-    errorMessage = "Neither '" + lhs + "' nor '" + rhs + "' are numbers";
+  if (!lhsIsNumber && !rhsIsNumber && !lhsIsDate && !rhsIsDate) {
+    errorMessage = `Neither '${lhs}' nor '${rhs}' are numbers or dates.`;
+  } else if ((lhsIsNumber && rhsIsDate) || (lhsIsDate && rhsIsNumber)) {
+    errorMessage = `'${lhsIsNumber ? lhs : rhs}' is a number and '${
+      rhsIsDate ? rhs : lhs
+    }' is a date.`;
   } else {
-    errorMessage = "'" + (lhsIsNumber ? rhs : lhs) + "' is not a number";
+    errorMessage = `'${
+      lhsIsNumber || lhsIsDate ? rhs : lhs
+    }' is not a number or date.`;
   }
   this.report(true, lhs, rhs, errorMessage);
 }
