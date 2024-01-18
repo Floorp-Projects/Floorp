@@ -21,6 +21,7 @@ import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.GleanMetrics.Wallpapers
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
+import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.ext.requireComponents
@@ -110,7 +111,7 @@ class WallpaperSettingsFragment : Fragment() {
                     .setText(view.context.getString(R.string.wallpaper_updated_snackbar_message))
                     .setAction(requireContext().getString(R.string.wallpaper_updated_snackbar_action)) {
                         requireComponents.appStore.dispatch(
-                            AppAction.WallpaperAction.OpenToHome,
+                            AppAction.HomeAction.OpenToHome(BrowsingMode.Normal),
                         )
                         findNavController().popBackStack(R.id.homeFragment, false)
                     }

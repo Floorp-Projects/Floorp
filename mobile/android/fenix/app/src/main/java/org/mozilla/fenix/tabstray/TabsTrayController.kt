@@ -31,6 +31,7 @@ import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.TabsTray
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
+import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.collections.CollectionsDialog
 import org.mozilla.fenix.collections.show
 import org.mozilla.fenix.components.AppStore
@@ -241,12 +242,7 @@ class DefaultTabsTrayController(
      */
     private fun openNewTab(isPrivate: Boolean) {
         val startTime = profiler?.getProfilerTime()
-        val action = if (isPrivate) {
-            AppAction.TabsTrayAction.NewPrivateTab
-        } else {
-            AppAction.TabsTrayAction.NewTab
-        }
-        appStore.dispatch(action)
+        appStore.dispatch(AppAction.HomeAction.OpenToHome(BrowsingMode.fromBoolean(isPrivate)))
         navController.navigate(
             TabsTrayFragmentDirections.actionGlobalHome(focusOnAddressBar = true),
         )

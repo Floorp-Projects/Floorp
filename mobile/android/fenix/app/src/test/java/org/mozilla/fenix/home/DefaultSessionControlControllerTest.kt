@@ -1121,7 +1121,7 @@ class DefaultSessionControlControllerTest {
         val wallpaperState = WallpaperState.default.copy(
             availableWallpapers = makeFakeRemoteWallpapers(
                 THUMBNAILS_SELECTION_COUNT,
-                true,
+                false,
             ),
         )
 

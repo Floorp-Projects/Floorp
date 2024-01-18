@@ -19,9 +19,9 @@ import org.mozilla.fenix.theme.ThemeManager
 import org.mozilla.fenix.utils.Settings
 
 /**
- * Binding to react to [BrowsingMode] changes in [AppState].
+ * Binding to react to Private Browsing Mode changes in AppState.
  *
- * @param appStore [AppStore] to observe state changes from.
+ * @param appStore AppStore to observe state changes from.
  * @param themeManager Theme will be updated based on state changes.
  * @param retrieveWindow Get window to update privacy flags for.
  * @param settings Determine user settings for privacy features.

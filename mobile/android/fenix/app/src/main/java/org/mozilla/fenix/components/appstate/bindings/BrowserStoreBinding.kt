@@ -26,8 +26,8 @@ class BrowserStoreBinding(
         flow.distinctUntilChangedBy { it.selectedTabId }
             .collectLatest { state ->
                 state.selectedTab?.let { tab ->
-                    // Ignore re-emissions of the selected tab from BrowserStore when re-observing due
-                    // to lifecycle events, otherwise pieces of state like [mode] may get overwritten.
+                    // Ignore re-emissions due to lifecycle events, or other pieces of state like
+                    // [mode] may get overwritten
                     if (appStore.state.selectedTabId != tab.id) {
                         appStore.dispatch(AppAction.SelectedTabChanged(tab))
                     }

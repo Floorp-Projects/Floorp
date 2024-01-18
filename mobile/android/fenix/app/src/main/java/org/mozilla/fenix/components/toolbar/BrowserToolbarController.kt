@@ -23,6 +23,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.BrowserAnimator
 import org.mozilla.fenix.browser.BrowserAnimator.Companion.getToolbarNavOptions
 import org.mozilla.fenix.browser.BrowserFragmentDirections
+import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.readermode.ReaderModeController
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.appstate.AppAction
@@ -177,13 +178,13 @@ class DefaultBrowserToolbarController(
                 }
             }
             is TabCounterMenu.Item.NewTab -> {
-                appStore.dispatch(AppAction.ToolbarAction.NewTab)
+                appStore.dispatch(AppAction.HomeAction.OpenToHome(BrowsingMode.Normal))
                 navController.navigate(
                     BrowserFragmentDirections.actionGlobalHome(focusOnAddressBar = true),
                 )
             }
             is TabCounterMenu.Item.NewPrivateTab -> {
-                appStore.dispatch(AppAction.ToolbarAction.NewPrivateTab)
+                appStore.dispatch(AppAction.HomeAction.OpenToHome(BrowsingMode.Private))
                 navController.navigate(
                     BrowserFragmentDirections.actionGlobalHome(focusOnAddressBar = true),
                 )

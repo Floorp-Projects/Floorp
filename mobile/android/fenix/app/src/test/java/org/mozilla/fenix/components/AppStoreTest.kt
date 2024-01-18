@@ -20,6 +20,7 @@ import mozilla.components.service.pocket.PocketStory
 import mozilla.components.service.pocket.PocketStory.PocketRecommendedStory
 import mozilla.components.service.pocket.PocketStory.PocketSponsoredStory
 import mozilla.components.service.pocket.PocketStory.PocketSponsoredStoryCaps
+import mozilla.components.support.test.ext.joinBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertSame
@@ -27,6 +28,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
+import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
 import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.components.appstate.AppAction.MessagingAction.UpdateMessageToShow
 import org.mozilla.fenix.components.appstate.AppState
@@ -49,6 +51,7 @@ class AppStoreTest {
     private lateinit var context: Context
     private lateinit var accountManager: FxaAccountManager
     private lateinit var onboarding: FenixOnboarding
+    private lateinit var browsingModeManager: BrowsingModeManager
     private lateinit var appState: AppState
     private lateinit var appStore: AppStore
     private lateinit var recentSyncedTabsList: List<RecentSyncedTab>
@@ -58,6 +61,7 @@ class AppStoreTest {
         context = mockk(relaxed = true)
         accountManager = mockk(relaxed = true)
         onboarding = mockk(relaxed = true)
+        browsingModeManager = mockk(relaxed = true)
         recentSyncedTabsList = listOf(
             RecentSyncedTab(
                 deviceDisplayName = "",
@@ -70,10 +74,12 @@ class AppStoreTest {
 
         every { context.components.backgroundServices.accountManager } returns accountManager
         every { onboarding.userHasBeenOnboarded() } returns true
+        every { browsingModeManager.mode } returns BrowsingMode.Normal
 
         appState = AppState(
             collections = emptyList(),
             expandedCollections = emptySet(),
+            mode = browsingModeManager.mode,
             topSites = emptyList(),
             showCollectionPlaceholder = true,
             recentTabs = emptyList(),
@@ -532,5 +538,23 @@ class AppStoreTest {
         assertEquals(recentHistory, recentHistory.filterOut(" "))
         assertEquals(recentHistory - group2, recentHistory.filterOut("Title2"))
         assertEquals(recentHistory - group3, recentHistory.filterOut("title3"))
+    }
+
+    @Test
+    fun `WHEN new tab clicked THEN mode is updated to normal`() {
+        appStore = AppStore(AppState(mode = BrowsingMode.Private))
+
+        appStore.dispatch(AppAction.HomeAction.OpenToHome(BrowsingMode.Normal)).joinBlocking()
+
+        assertEquals(BrowsingMode.Normal, appStore.state.mode)
+    }
+
+    @Test
+    fun `WHEN new private tab clicked THEN mode is updated to private`() {
+        appStore = AppStore(AppState(mode = BrowsingMode.Normal))
+
+        appStore.dispatch(AppAction.HomeAction.OpenToHome(BrowsingMode.Private)).joinBlocking()
+
+        assertEquals(BrowsingMode.Private, appStore.state.mode)
     }
 }

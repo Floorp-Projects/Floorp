@@ -554,12 +554,9 @@ class HomeFragment : Fragment() {
             navController = findNavController(),
             tabCounter = binding.tabButton,
             mode = requireComponents.appStore.state.mode,
-            onBrowsingModeChanged = { newMode ->
-                val action = when (newMode) {
-                    BrowsingMode.Normal -> AppAction.ToolbarAction.NewTab
-                    BrowsingMode.Private -> AppAction.ToolbarAction.NewPrivateTab
-                }
-                requireComponents.appStore.dispatch(action)
+            itemTapped = {
+                    newMode ->
+                requireComponents.appStore.dispatch(AppAction.HomeAction.OpenToHome(newMode))
             },
         )
 
@@ -812,7 +809,7 @@ class HomeFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        if (requireComponents.appStore.state.mode.isPrivate) {
+        if (requireComponents.appStore.state.mode == BrowsingMode.Private) {
             activity?.window?.setBackgroundDrawableResource(R.drawable.private_home_background_gradient)
         }
 
@@ -828,7 +825,7 @@ class HomeFragment : Fragment() {
 
     override fun onPause() {
         super.onPause()
-        if (requireComponents.appStore.state.mode.isPrivate) {
+        if (requireComponents.appStore.state.mode == BrowsingMode.Private) {
             activity?.window?.setBackgroundDrawable(
                 ColorDrawable(
                     ContextCompat.getColor(

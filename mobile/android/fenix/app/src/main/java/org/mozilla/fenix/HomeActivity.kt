@@ -140,6 +140,7 @@ import org.mozilla.fenix.shortcut.NewTabShortcutIntentProcessor.Companion.ACTION
 import org.mozilla.fenix.tabhistory.TabHistoryDialogFragment
 import org.mozilla.fenix.tabstray.TabsTrayFragment
 import org.mozilla.fenix.theme.DefaultThemeManager
+import org.mozilla.fenix.theme.ThemeManager
 import org.mozilla.fenix.utils.Settings
 import java.lang.ref.WeakReference
 import java.util.Locale
@@ -160,7 +161,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
 
     private lateinit var binding: ActivityHomeBinding
     val themeManager by lazy {
-        DefaultThemeManager(components.appStore.state.mode, this)
+        createThemeManager()
     }
 
     private var isVisuallyComplete = false
@@ -1147,6 +1148,10 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
             return inflater
         }
         return super.getSystemService(name)
+    }
+
+    protected open fun createThemeManager(): ThemeManager {
+        return DefaultThemeManager(components.appStore.state.mode, this)
     }
 
     private fun openPopup(webExtensionState: WebExtensionState) {
