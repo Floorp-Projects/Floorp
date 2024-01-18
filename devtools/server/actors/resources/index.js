@@ -10,7 +10,6 @@ const TYPES = {
   CONSOLE_MESSAGE: "console-message",
   CSS_CHANGE: "css-change",
   CSS_MESSAGE: "css-message",
-  CSS_REGISTERED_PROPERTIES: "css-registered-properties",
   DOCUMENT_EVENT: "document-event",
   ERROR_MESSAGE: "error-message",
   LAST_PRIVATE_CONTEXT_EXIT: "last-private-context-exit",
@@ -67,9 +66,6 @@ const FrameTargetResources = augmentResourceDictionary({
   },
   [TYPES.CSS_MESSAGE]: {
     path: "devtools/server/actors/resources/css-messages",
-  },
-  [TYPES.CSS_REGISTERED_PROPERTIES]: {
-    path: "devtools/server/actors/resources/css-registered-properties",
   },
   [TYPES.DOCUMENT_EVENT]: {
     path: "devtools/server/actors/resources/document-event",
