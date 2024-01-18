@@ -3,12 +3,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use crate::common::{WebElement, ELEMENT_KEY};
+use icu_segmenter::GraphemeClusterSegmenter;
 use serde::de::{self, Deserialize, Deserializer};
 use serde::ser::{Serialize, Serializer};
 use serde_json::Value;
 use std::default::Default;
 use std::f64;
-use unicode_segmentation::UnicodeSegmentation;
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct ActionSequence {
@@ -91,7 +91,7 @@ where
 {
     String::deserialize(deserializer).map(|value| {
         // Only a single Unicode grapheme cluster is allowed
-        if value.graphemes(true).count() != 1 {
+        if GraphemeClusterSegmenter::new().segment_str(&value).count() != 2 {
             return Err(de::Error::custom(format!(
                 "'{}' should only contain a single Unicode code point",
                 value

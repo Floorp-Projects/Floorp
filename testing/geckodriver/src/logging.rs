@@ -31,12 +31,12 @@
 //! [`init`]: fn.init.html
 //! [`init_with_level`]: fn.init_with_level.html
 
+use icu_segmenter::GraphemeClusterSegmenter;
 use std::fmt;
 use std::io;
 use std::io::Write;
 use std::str;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
-use unicode_segmentation::UnicodeSegmentation;
 
 use mozprofile::preferences::Pref;
 
@@ -246,7 +246,15 @@ fn truncate_message(args: &fmt::Arguments) -> Option<(String, String)> {
     }
 
     let message = format!("{}", args);
-    let chars = message.graphemes(true).collect::<Vec<&str>>();
+    if message.is_empty() || message.len() < MAX_STRING_LENGTH {
+        return None;
+    }
+    let chars = GraphemeClusterSegmenter::new()
+        .segment_str(&message)
+        .collect::<Vec<_>>()
+        .windows(2)
+        .map(|i| &message[i[0]..i[1]])
+        .collect::<Vec<&str>>();
 
     if chars.len() > MAX_STRING_LENGTH {
         let middle: usize = MAX_STRING_LENGTH / 2;

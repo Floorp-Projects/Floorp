@@ -6,6 +6,7 @@
 
 extern crate base64;
 extern crate cookie;
+extern crate icu_segmenter;
 #[macro_use]
 extern crate log;
 extern crate http;
@@ -16,7 +17,6 @@ extern crate serde_json;
 extern crate time;
 #[cfg(feature = "server")]
 extern crate tokio;
-extern crate unicode_segmentation;
 extern crate url;
 #[cfg(feature = "server")]
 extern crate warp;
