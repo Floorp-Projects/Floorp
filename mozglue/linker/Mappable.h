@@ -5,8 +5,8 @@
 #ifndef Mappable_h
 #define Mappable_h
 
-#include "Zip.h"
-#include "zlib.h"
+#include "mozilla/RefCounted.h"
+#include "Utils.h"
 
 /**
  * Abstract class to handle mmap()ing from various kind of entities, such as
@@ -24,7 +24,6 @@ class Mappable : public mozilla::RefCounted<Mappable> {
 
   enum Kind {
     MAPPABLE_FILE,
-    MAPPABLE_DEFLATE,
     MAPPABLE_SEEKABLE_ZSTREAM
   };
 
@@ -79,41 +78,5 @@ class MappableFile : public Mappable {
 };
 
 class _MappableBuffer;
-
-/**
- * Mappable implementation for deflated stream in a Zip archive.
- * Inflates the mapped bits in a temporary buffer.
- */
-class MappableDeflate : public Mappable {
- public:
-  ~MappableDeflate();
-
-  /**
-   * Create a MappableDeflate instance for the given Zip stream. The name
-   * argument is used for an appropriately named temporary file, and the Zip
-   * instance is given for the MappableDeflate to keep a reference of it.
-   */
-  static Mappable* Create(const char* name, Zip* zip, Zip::Stream* stream);
-
-  /* Inherited from Mappable */
-  virtual MemoryRange mmap(const void* addr, size_t length, int prot, int flags,
-                           off_t offset);
-  virtual void finalize();
-  virtual size_t GetLength() const;
-
-  virtual Kind GetKind() const { return MAPPABLE_DEFLATE; };
-
- private:
-  MappableDeflate(_MappableBuffer* buf, Zip* zip, Zip::Stream* stream);
-
-  /* Zip reference */
-  RefPtr<Zip> zip;
-
-  /* Decompression buffer */
-  mozilla::UniquePtr<_MappableBuffer> buffer;
-
-  /* Zlib data */
-  z_stream zStream;
-};
 
 #endif /* Mappable_h */
