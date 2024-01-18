@@ -177,19 +177,6 @@ add_task(async function nimbus() {
   await QuickSuggestTestUtils.forceSync();
 });
 
-add_task(async function mixedCaseQuery() {
-  const suggestion = REMOTE_SETTINGS_DATA[0].attachment[1];
-  const keyword = "InPuT";
-
-  await check_results({
-    context: createContext(keyword, {
-      providers: [UrlbarProviderQuickSuggest.name],
-      isPrivate: false,
-    }),
-    matches: [makeExpectedResult({ searchString: keyword, suggestion })],
-  });
-});
-
 function makeExpectedResult({
   searchString,
   suggestion,

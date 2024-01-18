@@ -287,29 +287,6 @@ export class FfiConverterI64 extends FfiConverter {
 }
 
 // Export the FFIConverter object to make external types work.
-export class FfiConverterBool extends FfiConverter {
-    static computeSize() {
-        return 1;
-    }
-    static lift(value) {
-        return value == 1;
-    }
-    static lower(value) {
-        if (value) {
-            return 1;
-        } else {
-            return 0;
-        }
-    }
-    static write(dataStream, value) {
-        dataStream.writeUint8(this.lower(value))
-    }
-    static read(dataStream) {
-        return this.lift(dataStream.readUint8())
-    }
-}
-
-// Export the FFIConverter object to make external types work.
 export class FfiConverterString extends FfiConverter {
     static checkType(value) {
         super.checkType(value);
@@ -921,7 +898,7 @@ export class FfiConverterTypeClientRemoteTabs extends FfiConverterArrayBuffer {
 }
 
 export class RemoteTabRecord {
-    constructor(title,urlHistory,icon,lastUsed,inactive = false) {
+    constructor(title,urlHistory,icon,lastUsed) {
         try {
             FfiConverterString.checkType(title)
         } catch (e) {
@@ -954,27 +931,17 @@ export class RemoteTabRecord {
             }
             throw e;
         }
-        try {
-            FfiConverterBool.checkType(inactive)
-        } catch (e) {
-            if (e instanceof UniFFITypeError) {
-                e.addItemDescriptionPart("inactive");
-            }
-            throw e;
-        }
         this.title = title;
         this.urlHistory = urlHistory;
         this.icon = icon;
         this.lastUsed = lastUsed;
-        this.inactive = inactive;
     }
     equals(other) {
         return (
             this.title == other.title &&
             this.urlHistory == other.urlHistory &&
             this.icon == other.icon &&
-            this.lastUsed == other.lastUsed &&
-            this.inactive == other.inactive
+            this.lastUsed == other.lastUsed
         )
     }
 }
@@ -986,8 +953,7 @@ export class FfiConverterTypeRemoteTabRecord extends FfiConverterArrayBuffer {
             FfiConverterString.read(dataStream), 
             FfiConverterSequencestring.read(dataStream), 
             FfiConverterOptionalstring.read(dataStream), 
-            FfiConverterI64.read(dataStream), 
-            FfiConverterBool.read(dataStream)
+            FfiConverterI64.read(dataStream)
         );
     }
     static write(dataStream, value) {
@@ -995,7 +961,6 @@ export class FfiConverterTypeRemoteTabRecord extends FfiConverterArrayBuffer {
         FfiConverterSequencestring.write(dataStream, value.urlHistory);
         FfiConverterOptionalstring.write(dataStream, value.icon);
         FfiConverterI64.write(dataStream, value.lastUsed);
-        FfiConverterBool.write(dataStream, value.inactive);
     }
 
     static computeSize(value) {
@@ -1004,7 +969,6 @@ export class FfiConverterTypeRemoteTabRecord extends FfiConverterArrayBuffer {
         totalSize += FfiConverterSequencestring.computeSize(value.urlHistory);
         totalSize += FfiConverterOptionalstring.computeSize(value.icon);
         totalSize += FfiConverterI64.computeSize(value.lastUsed);
-        totalSize += FfiConverterBool.computeSize(value.inactive);
         return totalSize
     }
 
@@ -1039,14 +1003,6 @@ export class FfiConverterTypeRemoteTabRecord extends FfiConverterArrayBuffer {
         } catch (e) {
             if (e instanceof UniFFITypeError) {
                 e.addItemDescriptionPart(".lastUsed");
-            }
-            throw e;
-        }
-        try {
-            FfiConverterBool.checkType(value.inactive);
-        } catch (e) {
-            if (e instanceof UniFFITypeError) {
-                e.addItemDescriptionPart(".inactive");
             }
             throw e;
         }

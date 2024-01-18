@@ -97,6 +97,8 @@ export class SuggestBackendRust extends BaseFeature {
       return [];
     }
 
+    searchString = searchString.toLocaleLowerCase();
+
     // Build the list of Rust providers to query. Each provider is identified by
     // an integer value defined on the `SuggestionProvider` object. Here we
     // convert the Rust suggestion types of our registered features to their

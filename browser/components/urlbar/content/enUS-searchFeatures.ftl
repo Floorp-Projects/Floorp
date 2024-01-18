@@ -141,12 +141,6 @@ firefox-suggest-mdn-bottom-text = { -mdn-brand-name }
 #   $keywordSubstringNotTyped (string) - The part of the suggestion keyword that the user did not yet type
 firefox-suggest-pocket-bottom-text = { -pocket-brand-name } · Related to <strong>{ $keywordSubstringTyped }</strong>{ $keywordSubstringNotTyped }
 
-## These strings are used for Yelp suggestions in the urlbar.
-
-# This string is shown in Yelp suggestions and indicates the suggestion is for
-# Yelp.
-firefox-suggest-yelp-bottom-text = Yelp
-
 ## These strings are used in the preferences UI (about:preferences). Their names
 ## follow the naming conventions of other strings used in the preferences UI.
 

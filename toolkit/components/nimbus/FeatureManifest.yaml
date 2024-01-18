@@ -400,12 +400,6 @@ urlbar:
         If neither Nimbus nor remote settings defines a cap, no cap will be
         used, and the user will be able to increment the minimum length without
         any limit.
-    yelpFeatureGate:
-      type: boolean
-      fallbackPref: browser.urlbar.yelp.featureGate
-      description: >-
-        Feature gate that controls whether all aspects of the Yelp suggestion
-        feature are exposed to the user.
 
 frecency:
   description: "The address bar ranking algorithm"

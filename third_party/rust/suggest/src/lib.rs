@@ -13,7 +13,6 @@ mod rs;
 mod schema;
 mod store;
 mod suggestion;
-mod yelp;
 
 pub use error::SuggestApiError;
 pub use provider::SuggestionProvider;
