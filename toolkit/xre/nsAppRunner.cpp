@@ -4740,9 +4740,13 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
         WaylandProxy::SetVerbose(true);
       }
 #    endif
-      gWaylandProxy = WaylandProxy::Create();
-      if (gWaylandProxy) {
-        gWaylandProxy->RunThread();
+      // Wayland proxy may be already running by update, no need to terminate
+      // it and start again.
+      if (!gWaylandProxy) {
+        gWaylandProxy = WaylandProxy::Create();
+        if (gWaylandProxy) {
+          gWaylandProxy->RunThread();
+        }
       }
     }
 #  endif
