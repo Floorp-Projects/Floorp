@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 add_task(async function test() {
-  let prefs = ["history", "historyFormDataAndDownloads"];
+  let prefs = ["history", "historyAndFormData"];
 
   for (let pref of prefs) {
     // This test relies on the form history being empty to start with delete

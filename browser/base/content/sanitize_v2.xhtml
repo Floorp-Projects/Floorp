@@ -107,13 +107,8 @@
         <vbox>
           <checkbox
             class="clearingItemCheckbox"
-            data-l10n-id="item-history-form-data-downloads"
-            id="historyFormDataAndDownloads"
-          />
-          <description
-            id="history-form-data-description"
-            data-l10n-id="item-history-form-data-downloads-description"
-            class="sanitizeCheckboxDescription text-deemphasized"
+            data-l10n-id="item-browsing-and-search"
+            id="historyAndFormData"
           />
         </vbox>
       </hbox>
@@ -162,20 +157,24 @@
           />
         </vbox>
       </hbox>
+      <hbox class="checkboxWithDescription">
+        <vbox>
+          <checkbox
+            class="clearingItemCheckbox"
+            data-l10n-id="item-download-history"
+            id="downloads"
+          />
+        </vbox>
+      </hbox>
     </groupbox>
     <groupbox id="clearOnShutdownGroupbox">
       <hbox class="checkboxWithDescription">
         <vbox>
           <checkbox
             class="clearingItemCheckbox"
-            data-l10n-id="item-history-form-data-downloads"
-            preference="privacy.clearOnShutdown_v2.historyFormDataAndDownloads"
-            id="historyFormDataAndDownloads"
-          />
-          <description
-            class="sanitizeCheckboxDescription text-deemphasized"
-            data-l10n-id="item-history-form-data-downloads-description"
-            id="history-form-data-downloads-description"
+            data-l10n-id="item-browsing-and-search"
+            preference="privacy.clearOnShutdown_v2.historyAndFormData"
+            id="historyAndFormData"
           />
         </vbox>
       </hbox>
@@ -224,6 +223,16 @@
             class="sanitizeCheckboxDescription text-deemphasized"
             data-l10n-id="item-site-prefs-description"
             id="site-prefs-description"
+          />
+        </vbox>
+      </hbox>
+      <hbox class="checkboxWithDescription">
+        <vbox>
+          <checkbox
+            class="clearingItemCheckbox"
+            data-l10n-id="item-download-history"
+            preference="privacy.clearOnShutdown_v2.downloads"
+            id="downloads"
           />
         </vbox>
       </hbox>
