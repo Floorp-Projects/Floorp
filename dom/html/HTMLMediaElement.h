@@ -1000,6 +1000,9 @@ class HTMLMediaElement : public nsGenericHTMLElement,
    * When aType is CAPTURE_AUDIO, we stop playout of audio and instead route it
    * to the DOMMediaStream. Volume and mute state will be applied to the audio
    * reaching the stream. No video tracks will be captured in this case.
+   *
+   * aGraph may be null if the stream's tracks do not need to use a
+   * specific graph.
    */
   already_AddRefed<DOMMediaStream> CaptureStreamInternal(
       StreamCaptureBehavior aFinishBehavior,

@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<title>crashtest for bug 1872787</title>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  let a = document.createElementNS("http://www.w3.org/1999/xhtml", "video");
+  document.documentElement.appendChild(a);
+  let b = new AudioContext({"sampleRate": 12000});
+  let _ = new MediaElementAudioSourceNode(b, {"mediaElement": a});
+  a.mozCaptureStreamUntilEnded();
+  // There is nothing to wait for but that no exceptions are thrown.
+  document.documentElement.removeAttribute("class");
+})
+</script>
