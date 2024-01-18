@@ -47,6 +47,11 @@ class WaylandProxy {
   bool PollConnections();
   bool ProcessConnections();
 
+  void Info(const char* aFormat, ...);
+  void Warning(const char* aOperation, bool aPrintErrno = true);
+  void Error(const char* aOperation, bool aPrintErrno = true);
+  void ErrorPlain(const char* aFormat, ...);
+
  private:
   // List of all Compositor <-> Application connections
   std::vector<std::unique_ptr<ProxiedConnection>> mConnections;
