@@ -305,9 +305,9 @@ static RegExpRunStatus ExecuteRegExpImpl(JSContext* cx, RegExpStatics* res,
       RegExpShared::execute(cx, re, input, searchIndex, matches);
 
   /* Out of spec: Update RegExpStatics. */
-  if (status == RegExpRunStatus_Success && res) {
+  if (status == RegExpRunStatus::Success && res) {
     if (!res->updateFromMatchPairs(cx, input, *matches)) {
-      return RegExpRunStatus_Error;
+      return RegExpRunStatus::Error;
     }
   }
   return status;
@@ -329,11 +329,11 @@ bool js::ExecuteRegExpLegacy(JSContext* cx, RegExpStatics* res,
 
   RegExpRunStatus status =
       ExecuteRegExpImpl(cx, res, &shared, input, *lastIndex, &matches);
-  if (status == RegExpRunStatus_Error) {
+  if (status == RegExpRunStatus::Error) {
     return false;
   }
 
-  if (status == RegExpRunStatus_Success_NotFound) {
+  if (status == RegExpRunStatus::Success_NotFound) {
     /* ExecuteRegExp() previously returned an array or null. */
     rval.setNull();
     return true;
@@ -1081,17 +1081,17 @@ static RegExpRunStatus ExecuteRegExp(JSContext* cx, HandleObject regexp,
 
   RootedRegExpShared re(cx, RegExpObject::getShared(cx, reobj));
   if (!re) {
-    return RegExpRunStatus_Error;
+    return RegExpRunStatus::Error;
   }
 
   RegExpStatics* res = GlobalObject::getRegExpStatics(cx, cx->global());
   if (!res) {
-    return RegExpRunStatus_Error;
+    return RegExpRunStatus::Error;
   }
 
   Rooted<JSLinearString*> input(cx, string->ensureLinear(cx));
   if (!input) {
-    return RegExpRunStatus_Error;
+    return RegExpRunStatus::Error;
   }
 
   /* Handled by caller */
@@ -1102,8 +1102,8 @@ static RegExpRunStatus ExecuteRegExp(JSContext* cx, HandleObject regexp,
   /* Steps 3, 10-14, except 12.a.i, 12.c.i.1. */
   RegExpRunStatus status =
       ExecuteRegExpImpl(cx, res, &re, input, lastIndex, matches);
-  if (status == RegExpRunStatus_Error) {
-    return RegExpRunStatus_Error;
+  if (status == RegExpRunStatus::Error) {
+    return RegExpRunStatus::Error;
   }
 
   /* Steps 12.a.i, 12.c.i.i, 15 are done by Self-hosted function. */
@@ -1124,12 +1124,12 @@ static bool RegExpMatcherImpl(JSContext* cx, HandleObject regexp,
   /* Steps 3, 9-14, except 12.a.i, 12.c.i.1. */
   RegExpRunStatus status =
       ExecuteRegExp(cx, regexp, string, lastIndex, &matches);
-  if (status == RegExpRunStatus_Error) {
+  if (status == RegExpRunStatus::Error) {
     return false;
   }
 
   /* Steps 12.a, 12.c. */
-  if (status == RegExpRunStatus_Success_NotFound) {
+  if (status == RegExpRunStatus::Success_NotFound) {
     rval.setNull();
     return true;
   }
@@ -1199,12 +1199,12 @@ static bool RegExpSearcherImpl(JSContext* cx, HandleObject regexp,
   /* Steps 3, 9-14, except 12.a.i, 12.c.i.1. */
   RegExpRunStatus status =
       ExecuteRegExp(cx, regexp, string, lastIndex, &matches);
-  if (status == RegExpRunStatus_Error) {
+  if (status == RegExpRunStatus::Error) {
     return false;
   }
 
   /* Steps 12.a, 12.c. */
-  if (status == RegExpRunStatus_Success_NotFound) {
+  if (status == RegExpRunStatus::Success_NotFound) {
     *result = -1;
     return true;
   }
@@ -1302,10 +1302,10 @@ static bool RegExpBuiltinExecMatchRaw(JSContext* cx,
     VectorMatchPairs matches;
     RegExpRunStatus status =
         ExecuteRegExp(cx, regexp, input, lastIndex, &matches);
-    if (status == RegExpRunStatus_Error) {
+    if (status == RegExpRunStatus::Error) {
       return false;
     }
-    if (status == RegExpRunStatus_Success_NotFound) {
+    if (status == RegExpRunStatus::Success_NotFound) {
       output.setNull();
       lastIndexNew = 0;
     } else {
@@ -1354,11 +1354,11 @@ static bool RegExpBuiltinExecTestRaw(JSContext* cx,
   VectorMatchPairs matches;
   RegExpRunStatus status =
       ExecuteRegExp(cx, regexp, input, lastIndex, &matches);
-  if (status == RegExpRunStatus_Error) {
+  if (status == RegExpRunStatus::Error) {
     return false;
   }
 
-  *result = (status == RegExpRunStatus_Success);
+  *result = (status == RegExpRunStatus::Success);
 
   RegExpFlags flags = regexp->getFlags();
   if (!flags.global() && !flags.sticky()) {

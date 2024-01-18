@@ -650,7 +650,7 @@ RegExpRunStatus RegExpShared::execute(JSContext* cx,
 
   /* Compile the code at point-of-use. */
   if (!compileIfNecessary(cx, re, input, RegExpShared::CodeKind::Any)) {
-    return RegExpRunStatus_Error;
+    return RegExpRunStatus::Error;
   }
 
   /*
@@ -659,7 +659,7 @@ RegExpRunStatus RegExpShared::execute(JSContext* cx,
    */
   if (!matches->allocOrExpandArray(re->pairCount())) {
     ReportOutOfMemory(cx);
-    return RegExpRunStatus_Error;
+    return RegExpRunStatus::Error;
   }
 
   if (re->kind() == RegExpShared::Kind::Atom) {
@@ -672,7 +672,7 @@ RegExpRunStatus RegExpShared::execute(JSContext* cx,
    */
   if (!matches->allocOrExpandArray(re->pairCount())) {
     ReportOutOfMemory(cx);
-    return RegExpRunStatus_Error;
+    return RegExpRunStatus::Error;
   }
 
   uint32_t interruptRetries = 0;
@@ -687,8 +687,8 @@ RegExpRunStatus RegExpShared::execute(JSContext* cx,
       cx->requestInterrupt(InterruptReason::CallbackUrgent);
     }
 #endif
-    if (result == RegExpRunStatus_Error) {
-      /* Execute can return RegExpRunStatus_Error:
+    if (result == RegExpRunStatus::Error) {
+      /* Execute can return RegExpRunStatus::Error:
        *
        *  1. If the native stack overflowed
        *  2. If the backtrack stack overflowed
@@ -704,11 +704,11 @@ RegExpRunStatus RegExpShared::execute(JSContext* cx,
         // be an exception pending. If so, just return that exception
         // instead of reporting a new one.
         MOZ_ASSERT(alreadyThrowing);
-        return RegExpRunStatus_Error;
+        return RegExpRunStatus::Error;
       }
       if (cx->hasAnyPendingInterrupt()) {
         if (!CheckForInterrupt(cx)) {
-          return RegExpRunStatus_Error;
+          return RegExpRunStatus::Error;
         }
         if (interruptRetries++ < maxInterruptRetries) {
           // The initial execution may have been interpreted, or the
@@ -717,18 +717,18 @@ RegExpRunStatus RegExpShared::execute(JSContext* cx,
           // interrupted again, we want to ensure we are compiled.
           if (!compileIfNecessary(cx, re, input,
                                   RegExpShared::CodeKind::Jitcode)) {
-            return RegExpRunStatus_Error;
+            return RegExpRunStatus::Error;
           }
           continue;
         }
       }
       // If we have run out of retries, this regexp takes too long to execute.
       ReportOverRecursed(cx);
-      return RegExpRunStatus_Error;
+      return RegExpRunStatus::Error;
     }
 
-    MOZ_ASSERT(result == RegExpRunStatus_Success ||
-               result == RegExpRunStatus_Success_NotFound);
+    MOZ_ASSERT(result == RegExpRunStatus::Success ||
+               result == RegExpRunStatus::Success_NotFound);
 
     return result;
   } while (true);
@@ -837,27 +837,27 @@ static RegExpRunStatus ExecuteAtomImpl(RegExpShared* re, JSLinearString* input,
   if (re->sticky()) {
     // First part checks size_t overflow.
     if (searchLength + start < searchLength || searchLength + start > length) {
-      return RegExpRunStatus_Success_NotFound;
+      return RegExpRunStatus::Success_NotFound;
     }
     if (!HasSubstringAt(input, re->patternAtom(), start)) {
-      return RegExpRunStatus_Success_NotFound;
+      return RegExpRunStatus::Success_NotFound;
     }
 
     (*matches)[0].start = start;
     (*matches)[0].limit = start + searchLength;
     matches->checkAgainst(input->length());
-    return RegExpRunStatus_Success;
+    return RegExpRunStatus::Success;
   }
 
   int res = StringFindPattern(input, re->patternAtom(), start);
   if (res == -1) {
-    return RegExpRunStatus_Success_NotFound;
+    return RegExpRunStatus::Success_NotFound;
   }
 
   (*matches)[0].start = res;
   (*matches)[0].limit = res + searchLength;
   matches->checkAgainst(input->length());
-  return RegExpRunStatus_Success;
+  return RegExpRunStatus::Success;
 }
 
 RegExpRunStatus js::ExecuteRegExpAtomRaw(RegExpShared* re,

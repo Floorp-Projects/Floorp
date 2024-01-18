@@ -2095,8 +2095,9 @@ static bool PrepareAndExecuteRegExp(MacroAssembler& masm, Register regexp,
 
   masm.bind(&checkSuccess);
   masm.branch32(Assembler::Equal, temp1,
-                Imm32(RegExpRunStatus_Success_NotFound), notFound);
-  masm.branch32(Assembler::Equal, temp1, Imm32(RegExpRunStatus_Error), failure);
+                Imm32(int32_t(RegExpRunStatus::Success_NotFound)), notFound);
+  masm.branch32(Assembler::Equal, temp1, Imm32(int32_t(RegExpRunStatus::Error)),
+                failure);
 
   // Lazily update the RegExpStatics.
   size_t offset = GlobalObjectData::offsetOfRegExpRealm() +

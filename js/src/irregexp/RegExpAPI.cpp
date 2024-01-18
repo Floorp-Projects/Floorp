@@ -805,11 +805,11 @@ RegExpRunStatus ExecuteRaw(jit::JitCode* code, const CharT* chars,
                            VectorMatchPairs* matches) {
   InputOutputData data(chars, chars + length, startIndex, matches);
 
-  static_assert(RegExpRunStatus_Error ==
+  static_assert(static_cast<int32_t>(RegExpRunStatus::Error) ==
                 v8::internal::RegExp::kInternalRegExpException);
-  static_assert(RegExpRunStatus_Success ==
+  static_assert(static_cast<int32_t>(RegExpRunStatus::Success) ==
                 v8::internal::RegExp::kInternalRegExpSuccess);
-  static_assert(RegExpRunStatus_Success_NotFound ==
+  static_assert(static_cast<int32_t>(RegExpRunStatus::Success_NotFound) ==
                 v8::internal::RegExp::kInternalRegExpFailure);
 
   typedef int (*RegExpCodeSignature)(InputOutputData*);
@@ -829,11 +829,11 @@ RegExpRunStatus Interpret(JSContext* cx, MutableHandleRegExpShared re,
   V8HandleRegExp wrappedRegExp(v8::internal::JSRegExp(re), cx->isolate);
   V8HandleString wrappedInput(v8::internal::String(input), cx->isolate);
 
-  static_assert(RegExpRunStatus_Error ==
+  static_assert(static_cast<int32_t>(RegExpRunStatus::Error) ==
                 v8::internal::RegExp::kInternalRegExpException);
-  static_assert(RegExpRunStatus_Success ==
+  static_assert(static_cast<int32_t>(RegExpRunStatus::Success) ==
                 v8::internal::RegExp::kInternalRegExpSuccess);
-  static_assert(RegExpRunStatus_Success_NotFound ==
+  static_assert(static_cast<int32_t>(RegExpRunStatus::Success_NotFound) ==
                 v8::internal::RegExp::kInternalRegExpFailure);
 
   RegExpRunStatus status =
@@ -841,9 +841,9 @@ RegExpRunStatus Interpret(JSContext* cx, MutableHandleRegExpShared re,
           cx->isolate, wrappedRegExp, wrappedInput, matches->pairsRaw(),
           uint32_t(matches->pairCount() * 2), uint32_t(startIndex));
 
-  MOZ_ASSERT(status == RegExpRunStatus_Error ||
-             status == RegExpRunStatus_Success ||
-             status == RegExpRunStatus_Success_NotFound);
+  MOZ_ASSERT(status == RegExpRunStatus::Error ||
+             status == RegExpRunStatus::Success ||
+             status == RegExpRunStatus::Success_NotFound);
 
   return status;
 }
@@ -878,7 +878,7 @@ RegExpRunStatus ExecuteForFuzzing(JSContext* cx, Handle<JSAtom*> pattern,
                                   RegExpShared::CodeKind codeKind) {
   RootedRegExpShared re(cx, cx->zone()->regExps().get(cx, pattern, flags));
   if (!RegExpShared::compileIfNecessary(cx, &re, input, codeKind)) {
-    return RegExpRunStatus_Error;
+    return RegExpRunStatus::Error;
   }
   return RegExpShared::execute(cx, &re, input, startIndex, matches);
 }
