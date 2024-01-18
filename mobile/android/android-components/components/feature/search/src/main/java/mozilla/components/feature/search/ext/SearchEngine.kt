@@ -25,6 +25,7 @@ fun createSearchEngine(
     name: String,
     url: String,
     icon: Bitmap,
+    inputEncoding: String? = null,
     suggestUrl: String? = null,
     isGeneral: Boolean = false,
 ): SearchEngine {
@@ -36,6 +37,7 @@ fun createSearchEngine(
         id = UUID.randomUUID().toString(),
         name = name,
         icon = icon,
+        inputEncoding = inputEncoding,
         type = SearchEngine.Type.CUSTOM,
         resultUrls = listOf(url),
         suggestUrl = suggestUrl,
@@ -50,6 +52,7 @@ fun createApplicationSearchEngine(
     id: String? = null,
     name: String,
     url: String,
+    inputEncoding: String? = null,
     icon: Bitmap,
     suggestUrl: String? = null,
 ): SearchEngine {
@@ -57,6 +60,7 @@ fun createApplicationSearchEngine(
         id = id ?: UUID.randomUUID().toString(),
         name = name,
         icon = icon,
+        inputEncoding = inputEncoding,
         type = SearchEngine.Type.APPLICATION,
         resultUrls = listOf(url),
         suggestUrl = suggestUrl,

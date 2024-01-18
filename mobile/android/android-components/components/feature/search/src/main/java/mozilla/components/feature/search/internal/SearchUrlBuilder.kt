@@ -8,6 +8,8 @@ import android.net.Uri
 import android.text.TextUtils
 import mozilla.components.browser.state.search.OS_SEARCH_ENGINE_TERMS_PARAM
 import mozilla.components.browser.state.search.SearchEngine
+import java.io.UnsupportedEncodingException
+import java.net.URLEncoder
 import java.util.Locale
 
 // We are using string concatenation here to avoid the Kotlin compiler interpreting this
@@ -44,7 +46,14 @@ internal class SearchUrlBuilder(
 
     private fun buildUrl(template: String, searchTerms: String): String {
         val templateUri = Uri.decode(template)
-        val urlWithSubstitutions = paramSubstitution(templateUri, Uri.encode(searchTerms))
+        val inputEncoding = searchEngine.inputEncoding ?: "UTF-8"
+        val query = try {
+            // Although android.net.Uri.encode convert space (U+0x20) to "%20", java.net.URLEncoder convert it to "+".
+            URLEncoder.encode(searchTerms, inputEncoding).replace("+", "%20")
+        } catch (e: UnsupportedEncodingException) {
+            Uri.encode(searchTerms)
+        }
+        val urlWithSubstitutions = paramSubstitution(templateUri, query, inputEncoding)
         return normalize(urlWithSubstitutions) // User-entered search engines may need normalization.
     }
 }
@@ -52,7 +61,7 @@ internal class SearchUrlBuilder(
 /**
  * Formats template string with proper parameters. Modeled after ParamSubstitution in nsSearchService.js
  */
-private fun paramSubstitution(template: String, query: String): String {
+private fun paramSubstitution(template: String, query: String, inputEncoding: String): String {
     var result = template
     val locale = Locale.getDefault().toString()
 
@@ -61,7 +70,7 @@ private fun paramSubstitution(template: String, query: String): String {
     result = result.replace(MOZ_PARAM_OFFICIAL, "unofficial")
 
     result = result.replace(OS_PARAM_USER_DEFINED, query)
-    result = result.replace(OS_PARAM_INPUT_ENCODING, "UTF-8")
+    result = result.replace(OS_PARAM_INPUT_ENCODING, inputEncoding)
 
     result = result.replace(OS_PARAM_LANGUAGE, locale)
     result = result.replace(OS_PARAM_OUTPUT_ENCODING, "UTF-8")

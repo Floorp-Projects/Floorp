@@ -78,6 +78,12 @@ internal class SearchEngineWriter {
         imageElement.textContent = searchEngine.icon.toBase64()
         rootElement.appendChild(imageElement)
 
+        searchEngine.inputEncoding?.let { inputEncoding ->
+            val inputEncodingElement = xmlDocument.createElement("InputEncoding")
+            inputEncodingElement.textContent = inputEncoding
+            rootElement.appendChild(inputEncodingElement)
+        }
+
         searchEngine.resultUrls.forEach { url ->
             val urlElement = xmlDocument.createElement("Url")
             urlElement.setAttribute("type", URL_TYPE_SEARCH_HTML)

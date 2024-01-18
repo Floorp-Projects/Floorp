@@ -40,6 +40,7 @@ class SearchEngineWriterTest {
             name = "example",
             icon = mock(),
             type = SearchEngine.Type.CUSTOM,
+            inputEncoding = "UTF-8",
             resultUrls = listOf("https://www.example.com/search?q={searchTerms}'"),
         )
 
@@ -50,6 +51,7 @@ class SearchEngineWriterTest {
         assertTrue(searchXML.contains(IMAGE_URI_PREFIX))
         assertTrue(searchXML.contains(URL_TYPE_SEARCH_HTML))
         assertTrue(searchXML.contains("https://www.example.com/search?q={searchTerms}"))
+        assertTrue(searchXML.contains("UTF-8"))
         assertFalse(searchXML.contains(URL_TYPE_SUGGEST_JSON))
     }
 

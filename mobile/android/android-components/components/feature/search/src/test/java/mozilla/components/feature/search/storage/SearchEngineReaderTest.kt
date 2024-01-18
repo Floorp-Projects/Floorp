@@ -24,6 +24,7 @@ class SearchEngineReaderTest {
             id = "id1",
             name = "example",
             icon = mock(),
+            inputEncoding = "ISO-8859-1",
             type = SearchEngine.Type.CUSTOM,
             resultUrls = listOf("https://www.example.com/search"),
         )
@@ -31,6 +32,7 @@ class SearchEngineReaderTest {
 
         assertEquals(searchEngine.id, readSearchEngine.id)
         assertEquals(searchEngine.name, readSearchEngine.name)
+        assertEquals(searchEngine.inputEncoding, readSearchEngine.inputEncoding)
         assertEquals(searchEngine.type, readSearchEngine.type)
         assertEquals(searchEngine.resultUrls, readSearchEngine.resultUrls)
         assertTrue(readSearchEngine.isGeneral)

@@ -16,6 +16,7 @@ const val OS_SEARCH_ENGINE_TERMS_PARAM = "{" + "searchTerms" + "}"
  * @property id the ID of this search engine.
  * @property name the name of this search engine.
  * @property icon the icon of this search engine.
+ * @property inputEncoding the input encoding of this search engine.
  * @property type the type of this search engine.
  * @property resultUrls the list of the queried suggestions result urls.
  * @property suggestUrl the search suggestion url.
@@ -25,6 +26,7 @@ data class SearchEngine(
     val id: String,
     val name: String,
     val icon: Bitmap,
+    val inputEncoding: String? = null,
     val type: Type,
     val resultUrls: List<String> = emptyList(),
     val suggestUrl: String? = null,

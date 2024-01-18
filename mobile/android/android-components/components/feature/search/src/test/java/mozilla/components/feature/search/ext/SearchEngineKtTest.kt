@@ -163,4 +163,34 @@ class SearchEngineKtTest {
 
         assertNull(searchState.parseSearchTerms("https://mozilla.org/search/?q=test"))
     }
+
+    @Test
+    fun `GIVEN a search state and a set of input encoding THEN search terms are encoded by input encoding parameter`() {
+        val searchEngine = createSearchEngine(
+            name = "Yahoo! Auctions",
+            icon = mock(),
+            url = "https://auctions.yahoo.co.jp/search/search&p={searchTerms}",
+            inputEncoding = "EUC-JP",
+        )
+
+        assertEquals(
+            "https://auctions.yahoo.co.jp/search/search&p=%A5%D5%A5%A1%A5%A4%A5%E4%A1%BC%A5%D5%A5%A9%A5%C3%A5%AF%A5%B9",
+            searchEngine.buildSearchUrl("ファイヤーフォックス"),
+        )
+    }
+
+    @Test
+    fun `GIVEN invalid input encoding THEN encoding of search terms are determined as UTF-8`() {
+        val searchEngine = createSearchEngine(
+            name = "name",
+            icon = mock(),
+            url = "https://www.example.com/search?q={searchTerms}",
+            inputEncoding = "INVALID-ENOCODING",
+        )
+
+        assertEquals(
+            "https://www.example.com/search?q=%E7%81%AB%E7%8B%90",
+            searchEngine.buildSearchUrl("火狐"),
+        )
+    }
 }
