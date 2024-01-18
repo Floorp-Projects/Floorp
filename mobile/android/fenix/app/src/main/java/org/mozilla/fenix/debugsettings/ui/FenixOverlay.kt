@@ -9,6 +9,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.navigation.compose.rememberNavController
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.lib.state.ext.observeAsState
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
 import org.mozilla.fenix.debugsettings.navigation.DebugDrawerRoute
@@ -16,14 +17,21 @@ import org.mozilla.fenix.debugsettings.store.DebugDrawerAction
 import org.mozilla.fenix.debugsettings.store.DebugDrawerNavigationMiddleware
 import org.mozilla.fenix.debugsettings.store.DebugDrawerStore
 import org.mozilla.fenix.debugsettings.store.DrawerStatus
+import org.mozilla.fenix.debugsettings.tabs.TabTools
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.theme.Theme
 
 /**
  * Overlay for presenting Fenix-wide debugging content.
+ *
+ * @param browserStore [BrowserStore] used to access tab data for [TabTools].
+ * @param inactiveTabsEnabled Whether the inactive tabs feature is enabled.
  */
 @Composable
-fun FenixOverlay() {
+fun FenixOverlay(
+    browserStore: BrowserStore,
+    inactiveTabsEnabled: Boolean,
+) {
     val navController = rememberNavController()
     val coroutineScope = rememberCoroutineScope()
     val debugDrawerStore = remember {
@@ -39,6 +47,8 @@ fun FenixOverlay() {
     val debugDrawerDestinations = remember {
         DebugDrawerRoute.generateDebugDrawerDestinations(
             debugDrawerStore = debugDrawerStore,
+            browserStore = browserStore,
+            inactiveTabsEnabled = inactiveTabsEnabled,
         )
     }
     val drawerStatus by debugDrawerStore.observeAsState(initialValue = DrawerStatus.Closed) { state ->
@@ -66,5 +76,8 @@ fun FenixOverlay() {
 @LightDarkPreview
 @Composable
 private fun FenixOverlayPreview() {
-    FenixOverlay()
+    FenixOverlay(
+        browserStore = BrowserStore(),
+        inactiveTabsEnabled = true,
+    )
 }

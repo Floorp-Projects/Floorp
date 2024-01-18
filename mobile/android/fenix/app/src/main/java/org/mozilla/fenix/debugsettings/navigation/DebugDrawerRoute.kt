@@ -5,12 +5,11 @@
 package org.mozilla.fenix.debugsettings.navigation
 
 import androidx.annotation.StringRes
-import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import mozilla.components.browser.state.store.BrowserStore
 import org.mozilla.fenix.R
 import org.mozilla.fenix.debugsettings.store.DebugDrawerAction
 import org.mozilla.fenix.debugsettings.store.DebugDrawerStore
-import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.debugsettings.tabs.TabTools as TabToolsScreen
 
 /**
@@ -35,9 +34,13 @@ enum class DebugDrawerRoute(val route: String, @StringRes val title: Int) {
          * Transforms the values of [DebugDrawerRoute] into a list of [DebugDrawerDestination]s.
          *
          * @param debugDrawerStore [DebugDrawerStore] used to dispatch navigation actions.
+         * @param browserStore [BrowserStore] used to add tabs in [TabToolsScreen].
+         * @param inactiveTabsEnabled Whether the inactive tabs feature is enabled.
          */
         fun generateDebugDrawerDestinations(
             debugDrawerStore: DebugDrawerStore,
+            browserStore: BrowserStore,
+            inactiveTabsEnabled: Boolean,
         ): List<DebugDrawerDestination> =
             DebugDrawerRoute.values().map { debugDrawerRoute ->
                 val onClick: () -> Unit
@@ -48,10 +51,9 @@ enum class DebugDrawerRoute(val route: String, @StringRes val title: Int) {
                             debugDrawerStore.dispatch(DebugDrawerAction.NavigateTo.TabTools)
                         }
                         content = {
-                            Text(
-                                text = "Tab tools",
-                                color = FirefoxTheme.colors.textPrimary,
-                                style = FirefoxTheme.typography.headline6,
+                            TabToolsScreen(
+                                store = browserStore,
+                                inactiveTabsEnabled = inactiveTabsEnabled,
                             )
                         }
                     }
