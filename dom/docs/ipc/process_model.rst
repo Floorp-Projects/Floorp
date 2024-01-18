@@ -296,7 +296,7 @@ Fork Server
 -----------
 
 :platform: Linux only
-:pref: ``dom.ipc.forkserver.enable`` (enabled by default in Nightly)
+:pref: ``dom.ipc.forkserver.enable`` (disabled by default)
 :primary protocol: *none*
 :sandboxed?: no (processes forked by the fork server are sandboxed)
 
