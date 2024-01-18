@@ -26,7 +26,6 @@ support-files = [
 ]
 
 ["test_blockParsing.js"]
-disable_e10s = true
 skip-if = [
   "debug", # We fail an assertion if we block parsing on a self-closing element
   "os == 'android'",
