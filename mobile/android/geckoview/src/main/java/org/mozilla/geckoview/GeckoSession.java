@@ -3072,6 +3072,19 @@ public class GeckoSession {
   }
 
   /**
+   * Send a placement event to the Ad Attribution API.
+   *
+   * @param aid Ad id of the recommended product.
+   * @return a {@link GeckoResult} result of whether or not sending the event was successful.
+   */
+  @AnyThread
+  public @NonNull GeckoResult<Boolean> sendPlacementAttributionEvent(@NonNull final String aid) {
+    final GeckoBundle bundle = new GeckoBundle(1);
+    bundle.putString("aid", aid);
+    return mEventDispatcher.queryBoolean("GeckoView:SendPlacementAttributionEvent", bundle);
+  }
+
+  /**
    * Request product recommendations given a specific product url.
    *
    * @param url The URL of the product page.

@@ -26,6 +26,7 @@ export class GeckoViewContent extends GeckoViewModule {
       "GeckoView:PollForAnalysisCompleted",
       "GeckoView:SendClickAttributionEvent",
       "GeckoView:SendImpressionAttributionEvent",
+      "GeckoView:SendPlacementAttributionEvent",
       "GeckoView:RequestAnalysis",
       "GeckoView:RequestRecommendations",
       "GeckoView:ReportBackInStock",
@@ -257,6 +258,9 @@ export class GeckoViewContent extends GeckoViewModule {
         break;
       case "GeckoView:SendImpressionAttributionEvent":
         this._sendAttributionEvent("impression", aData, aCallback);
+        break;
+      case "GeckoView:SendPlacementAttributionEvent":
+        this._sendAttributionEvent("placement", aData, aCallback);
         break;
       case "GeckoView:RequestRecommendations":
         this._requestRecommendations(aData, aCallback);

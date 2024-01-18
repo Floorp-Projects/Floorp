@@ -1037,6 +1037,7 @@ package org.mozilla.geckoview {
     method @AnyThread @NonNull public GeckoResult<InputStream> saveAsPdf();
     method @AnyThread @NonNull public GeckoResult<Boolean> sendClickAttributionEvent(@NonNull String);
     method @AnyThread @NonNull public GeckoResult<Boolean> sendImpressionAttributionEvent(@NonNull String);
+    method @AnyThread @NonNull public GeckoResult<Boolean> sendPlacementAttributionEvent(@NonNull String);
     method @AnyThread public void setActive(boolean);
     method @UiThread public void setAutofillDelegate(@Nullable Autofill.Delegate);
     method @AnyThread public void setContentBlockingDelegate(@Nullable ContentBlocking.Delegate);

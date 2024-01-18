@@ -2511,7 +2511,6 @@ public class GeckoViewActivity extends AppCompatActivity
                         return null;
                       }
                     });
-
             session
                 .sendImpressionAttributionEvent(aids.get(0))
                 .then(
@@ -2521,6 +2520,18 @@ public class GeckoViewActivity extends AppCompatActivity
                         Log.d(
                             LOGTAG,
                             "Success of shopping impression attribution event: " + isSuccessful);
+                        return null;
+                      }
+                    });
+            session
+                .sendPlacementAttributionEvent(aids.get(0))
+                .then(
+                    new GeckoResult.OnValueListener<Boolean, Void>() {
+                      @Override
+                      public GeckoResult<Void> onValue(final Boolean isSuccessful) {
+                        Log.d(
+                            LOGTAG,
+                            "Success of shopping placement attribution event: " + isSuccessful);
                         return null;
                       }
                     });

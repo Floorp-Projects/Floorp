@@ -17,9 +17,11 @@ exclude: true
 - For Translations, added [`checkPairDownloadSize`][123.1] and [`TranslationsException.ERROR_MODEL_LANGUAGE_REQUIRED`][123.2] as an error state.
 - ⚠️ Deprecated [`GeckoSession.requestAnalysisCreationStatus`][119.2] by 124, please use [`GeckoSession.requestCreateAnalysis`][122.2] instead.
 - ⚠️ Removed deprecated [`GeckoSession.requestAnalysisCreationStatus`][119.2]
+- Added [`GeckoSession.sendPlacementAttributionEvent`][123.3] for sending placement attribution event for a given product recommendation.
 
 [123.1]: {{javadoc_uri}}/TranslationsController.RuntimeTranslation.html#checkPairDownloadSize(java.lang.String,java.lang.String)
 [123.2]: {{javadoc_uri}}/TranslationsController.TranslationsException.html#ERROR_MODEL_LANGUAGE_REQUIRED
+[121.3]: {{javadoc_uri}}/GeckoSession.html#sendPlacementAttributionEvent(String)
 
 ## v122
 - ⚠️ Removed [`onGetNimbusFeature`][115.5], please use `ExperimentDelegate.onGetExperimentFeature` instead.
@@ -1502,4 +1504,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport(android.content.Context,android.os.Bundle,java.lang.String)
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 37c99c6944c474d502ea836194b93fae8d1d25e0
+[api-version]: 2aa9a3cb60f30cdb5f9ec1550486a12a595b544f

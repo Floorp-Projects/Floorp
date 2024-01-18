@@ -219,6 +219,12 @@ class ReviewQualityCheckerTest : BaseSessionTest() {
             sessionRule.waitForResult(validImpressionResult),
             equalTo(true),
         )
+        val validPlacementResult = mainSession.sendPlacementAttributionEvent(aid)
+        assertThat(
+            "Placement event success result should be true",
+            sessionRule.waitForResult(validPlacementResult),
+            equalTo(true),
+        )
     }
 
     @Test
