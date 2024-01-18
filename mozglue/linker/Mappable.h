@@ -9,28 +9,18 @@
 #include "Utils.h"
 
 /**
- * Abstract class to handle mmap()ing from various kind of entities, such as
- * plain files or Zip entries. The virtual members are meant to act as the
- * equivalent system functions, except mapped memory is always MAP_PRIVATE,
- * even though a given implementation may use something different internally.
+ * Helper class to mmap plain files.
  */
 class Mappable : public mozilla::RefCounted<Mappable> {
  public:
   MOZ_DECLARE_REFCOUNTED_TYPENAME(Mappable)
-  virtual ~Mappable() {}
+  ~Mappable() {}
 
-  virtual MemoryRange mmap(const void* addr, size_t length, int prot, int flags,
-                           off_t offset) = 0;
-
-  enum Kind {
-    MAPPABLE_FILE,
-    MAPPABLE_SEEKABLE_ZSTREAM
-  };
-
-  virtual Kind GetKind() const = 0;
+  MemoryRange mmap(const void* addr, size_t length, int prot, int flags,
+                   off_t offset);
 
  private:
-  virtual void munmap(void* addr, size_t length) { ::munmap(addr, length); }
+  void munmap(void* addr, size_t length) { ::munmap(addr, length); }
   /* Limit use of Mappable::munmap to classes that keep track of the address
    * and size of the mapping. This allows to ignore ::munmap return value. */
   friend class Mappable1stPagePtr;
@@ -40,37 +30,21 @@ class Mappable : public mozilla::RefCounted<Mappable> {
   /**
    * Indicate to a Mappable instance that no further mmap is going to happen.
    */
-  virtual void finalize() = 0;
+  void finalize();
 
   /**
    * Returns the maximum length that can be mapped from this Mappable for
    * offset = 0.
    */
-  virtual size_t GetLength() const = 0;
-};
-
-/**
- * Mappable implementation for plain files
- */
-class MappableFile : public Mappable {
- public:
-  ~MappableFile() {}
+  size_t GetLength() const;
 
   /**
-   * Create a MappableFile instance for the given file path.
+   * Create a Mappable instance for the given file path.
    */
   static Mappable* Create(const char* path);
 
-  /* Inherited from Mappable */
-  virtual MemoryRange mmap(const void* addr, size_t length, int prot, int flags,
-                           off_t offset);
-  virtual void finalize();
-  virtual size_t GetLength() const;
-
-  virtual Kind GetKind() const { return MAPPABLE_FILE; };
-
  protected:
-  explicit MappableFile(int fd) : fd(fd) {}
+  explicit Mappable(int fd) : fd(fd) {}
 
  private:
   /* File descriptor */
