@@ -26,8 +26,6 @@ import { getHiddenTabs } from "../../utils/tabs";
 import { getFilename, isPretty, getFileURL } from "../../utils/source";
 import actions from "../../actions/index";
 
-import "./Tabs.css";
-
 import Tab from "./Tab";
 import { PaneToggleButton } from "../shared/Button/index";
 import Dropdown from "../shared/Dropdown";

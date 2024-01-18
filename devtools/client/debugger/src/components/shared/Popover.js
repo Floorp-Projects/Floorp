@@ -10,8 +10,6 @@ import SmartGap from "./SmartGap";
 
 const classnames = require("devtools/client/shared/classnames.js");
 
-import "./Popover.css";
-
 class Popover extends Component {
   state = {
     coords: {

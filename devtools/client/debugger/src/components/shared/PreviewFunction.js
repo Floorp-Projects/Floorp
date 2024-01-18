@@ -11,8 +11,6 @@ import PropTypes from "devtools/client/shared/vendor/react-prop-types";
 
 import { formatDisplayName } from "../../utils/pause/frames/index";
 
-import "./PreviewFunction.css";
-
 const IGNORED_SOURCE_URLS = ["debugger eval code"];
 
 export default class PreviewFunction extends Component {

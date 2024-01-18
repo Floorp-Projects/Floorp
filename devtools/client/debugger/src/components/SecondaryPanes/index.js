@@ -49,8 +49,6 @@ import Scopes from "./Scopes";
 
 const classnames = require("devtools/client/shared/classnames.js");
 
-import "./SecondaryPanes.css";
-
 function debugBtn(onClick, type, className, tooltip) {
   return button(
     {

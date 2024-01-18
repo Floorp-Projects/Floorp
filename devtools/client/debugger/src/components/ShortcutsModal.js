@@ -15,8 +15,6 @@ import Modal from "./shared/Modal";
 import { formatKeyShortcut } from "../utils/text";
 const classnames = require("devtools/client/shared/classnames.js");
 
-import "./ShortcutsModal.css";
-
 const isMacOS = Services.appinfo.OS === "Darwin";
 
 export class ShortcutsModal extends Component {

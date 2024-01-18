@@ -5,7 +5,6 @@
 import { Component } from "devtools/client/shared/vendor/react";
 import { button, div } from "devtools/client/shared/vendor/react-dom-factories";
 import PropTypes from "devtools/client/shared/vendor/react-prop-types";
-import "./Dropdown.css";
 
 export class Dropdown extends Component {
   constructor(props) {

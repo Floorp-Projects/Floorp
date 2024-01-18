@@ -32,9 +32,6 @@ import {
 import { clientCommands } from "../../client/firefox";
 
 import { objectInspector } from "devtools/client/shared/components/reps/index";
-
-import "./Scopes.css";
-
 const { ObjectInspector } = objectInspector;
 
 class Scopes extends PureComponent {

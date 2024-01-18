@@ -10,8 +10,6 @@ import assert from "../../utils/assert";
 import { connect } from "devtools/client/shared/vendor/react-redux";
 import InlinePreview from "./InlinePreview";
 
-import "./InlinePreview.css";
-
 // Handles rendering for each line ( row )
 // * Renders single widget for each line in codemirror
 // * Renders InlinePreview for each preview inside the widget

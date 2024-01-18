@@ -36,8 +36,6 @@ import { getExpressionResultGripAndFront } from "../../utils/expressions";
 
 import { CloseButton } from "../shared/Button/index";
 
-import "./Expressions.css";
-
 const { debounce } = require("devtools/shared/debounce");
 const classnames = require("devtools/client/shared/classnames.js");
 

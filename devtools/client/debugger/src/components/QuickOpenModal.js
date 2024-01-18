@@ -35,8 +35,6 @@ import Modal from "./shared/Modal";
 import SearchInput from "./shared/SearchInput";
 import ResultList from "./shared/ResultList";
 
-import "./QuickOpenModal.css";
-
 const maxResults = 100;
 
 const SIZE_BIG = { size: "big" };

@@ -25,7 +25,6 @@ import {
 } from "../../selectors/index";
 
 import OutlineFilter from "./OutlineFilter";
-import "./Outline.css";
 import PreviewFunction from "../shared/PreviewFunction";
 
 import { isFulfilled } from "../../utils/async-value";

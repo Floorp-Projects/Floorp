@@ -37,10 +37,6 @@ const verticalLayoutBreakpoint = window.matchMedia(
   "(min-width: 10px) and (max-width: 799px)"
 );
 
-import "./variables.css";
-import "./App.css";
-import "./shared/menu.css";
-
 import { ShortcutsModal } from "./ShortcutsModal";
 import PrimaryPanes from "./PrimaryPanes/index";
 import Editor from "./Editor/index";

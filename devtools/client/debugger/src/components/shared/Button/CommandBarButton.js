@@ -10,8 +10,6 @@ import AccessibleImage from "../AccessibleImage";
 
 const classnames = require("devtools/client/shared/classnames.js");
 
-import "./styles/CommandBarButton.css";
-
 export function debugBtn(
   onClick,
   type,

@@ -18,7 +18,6 @@ import { searchKeys } from "../../constants";
 import { scrollList } from "../../utils/result-list";
 
 import SearchInput from "../shared/SearchInput";
-import "./SearchInFileBar.css";
 
 const { PluralForm } = require("devtools/shared/plural-form");
 const { debounce } = require("devtools/shared/debounce");

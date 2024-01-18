@@ -11,8 +11,6 @@ import {
 } from "devtools/client/shared/vendor/react-dom-factories";
 import PropTypes from "devtools/client/shared/vendor/react-prop-types";
 
-import "./Accordion.css";
-
 class Accordion extends Component {
   static get propTypes() {
     return {

@@ -27,8 +27,6 @@ import AccessibleImage from "../shared/AccessibleImage";
 
 const classnames = require("devtools/client/shared/classnames.js");
 
-import "./EventListeners.css";
-
 class EventListeners extends Component {
   state = {
     searchText: "",
