@@ -2,6 +2,7 @@
 
 include protocol compressCtor;
 
+[ChildProc=any]
 async protocol PCompressInvalid {
 child:
     [Compress=Invalid] async Message();

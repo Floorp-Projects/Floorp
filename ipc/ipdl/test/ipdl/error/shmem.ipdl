@@ -3,6 +3,7 @@
 
 using class mozilla::ipc::Shmem from "mozilla/ipc/Shmem.h";      // redeclaration
 
+[ChildProc=any]
 protocol shmem {
 child: async Msg(Shmem s);
 };

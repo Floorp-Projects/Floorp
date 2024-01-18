@@ -14,6 +14,7 @@ struct Z {
     Y y;
 };
 
+[ChildProc=any]
 protocol PmutualRecStructUnion {
 child:
     async Test(X x, Y y, Z z);

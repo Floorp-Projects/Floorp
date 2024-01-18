@@ -1,5 +1,6 @@
 //error: bad syntax near `['
 
+[ChildProc=any]
 protocol array_Recursive {
 child: async Msg(int[][] aa);
 };

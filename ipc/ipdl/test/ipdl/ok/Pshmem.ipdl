@@ -3,6 +3,7 @@ union Foo {
     Shmem;
 };
 
+[ChildProc=any]
 intr protocol Pshmem {
 parent:
     async Msg(Shmem s, Foo f);

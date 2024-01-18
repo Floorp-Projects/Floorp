@@ -6,6 +6,7 @@ struct X { Y y; };
 union Y { Z; };
 struct Z { X x; };
 
+[ChildProc=any]
 protocol undefMutualRecStructUnion {
 child: async __delete__(X x);
 };

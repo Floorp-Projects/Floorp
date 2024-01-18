@@ -1,5 +1,6 @@
 //error: invalid value for attribute `Nested', expected one of: not, inside_sync, inside_cpow
 
+[ChildProc=any]
 protocol ExtendedAttrInvalidNestedValue {
 child:
   [Nested=invalid] async __delete__();

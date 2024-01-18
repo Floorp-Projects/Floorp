@@ -3,6 +3,7 @@
     double;
 };
 
+[ChildProc=any]
 sync protocol Punion_Comparable {
 
 parent:

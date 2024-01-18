@@ -6,6 +6,7 @@ namespace mozilla {
 namespace dom {
 namespace quota {
 
+[ParentProc=any, ChildProc=any]
 sync protocol PQuotaTest {
  parent:
   sync Try_Success_CustomErr_QmIpcFail()

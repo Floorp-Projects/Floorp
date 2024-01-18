@@ -2,6 +2,7 @@
 
 union X { X?; };
 
+[ChildProc=any]
 protocol maybe_SelfRecUnion {
 child: async Msg(X? aa);
 };

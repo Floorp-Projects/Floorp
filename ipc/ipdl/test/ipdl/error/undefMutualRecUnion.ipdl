@@ -6,6 +6,7 @@ union X { Y; };
 union Y { Z; };
 union Z { X; };
 
+[ChildProc=any]
 protocol undefMutualRecUnion {
 child: async __delete__(X x);
 };

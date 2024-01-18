@@ -1,3 +1,4 @@
+[ChildProc=any]
 protocol PnoRedeclCrossMessage {
 
     // each message has its own scope for param/return names

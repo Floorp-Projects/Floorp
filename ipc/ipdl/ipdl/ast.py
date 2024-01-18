@@ -316,6 +316,15 @@ class Protocol(NamespacedNode):
             return attr.value
         return None
 
+    def procAttribute(self, side):
+        assert side in ("parent", "child")
+        attr = self.attributes.get(side.capitalize() + "Proc")
+        if attr is not None:
+            return attr.value
+        elif side == "parent" and len(self.managers) == 0:
+            return "Parent"  # Default for toplevel actors
+        return None
+
 
 class StructField(Node):
     def __init__(self, loc, type, name):
