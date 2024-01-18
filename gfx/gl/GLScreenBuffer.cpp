@@ -75,9 +75,16 @@ void SwapChain::ClearPool() {
   mPrevFrontBuffer = nullptr;
 }
 
-void SwapChain::StoreRecycledSurface(
+bool SwapChain::StoreRecycledSurface(
     const std::shared_ptr<SharedSurface>& surf) {
+  MOZ_ASSERT(mFactory);
+  if (!mFactory || NS_WARN_IF(surf->mDesc.gl != mFactory->mDesc.gl)) {
+    // Ensure we don't accidentally store an expired shared surface or from a
+    // different context.
+    return false;
+  }
   mPool.push(surf);
+  return true;
 }
 
 // -

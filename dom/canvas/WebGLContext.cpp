@@ -1257,10 +1257,13 @@ bool WebGLContext::PushRemoteTexture(
 
   ownerClient->PushTexture(textureId, ownerId, keepAlive, size, surfaceFormat,
                            *desc);
-  auto recycledSurface = ownerClient->GetRecycledSharedSurface(
-      size, surfaceFormat, desc->type(), ownerId);
-  if (recycledSurface) {
-    swapChain.StoreRecycledSurface(recycledSurface);
+
+  // Look for a recycled surface that matches the swap chain.
+  while (auto recycledSurface = ownerClient->GetRecycledSharedSurface(
+             size, surfaceFormat, desc->type(), ownerId)) {
+    if (swapChain.StoreRecycledSurface(recycledSurface)) {
+      break;
+    }
   }
   return true;
 }
