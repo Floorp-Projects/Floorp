@@ -3445,7 +3445,9 @@ void RestyleManager::ElementStateChanged(Element* aElement,
   // undisplayed elements, since we don't know if it is needed.
   IncrementUndisplayedRestyleGeneration();
 
-  if (!aElement->HasServoData()) {
+  if (!aElement->HasServoData() &&
+      !(aElement->GetSelectorFlags() &
+        NodeSelectorFlags::RelativeSelectorSearchDirectionAncestorSibling)) {
     return;
   }
 
