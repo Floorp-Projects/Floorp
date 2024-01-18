@@ -95,9 +95,7 @@ run-sequentially = "hardcoded ports"
 ["test_cert_embedded_null.js"]
 
 ["test_cert_expiration_canary.js"]
-# Bug 1874627 - in-tree certificates will expire soon, need to be updated
-skip-if = true
-# run-if = ["nightly_build"]
+run-if = ["nightly_build"]
 
 ["test_cert_keyUsage.js"]
 
