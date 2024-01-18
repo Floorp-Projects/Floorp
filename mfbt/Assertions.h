@@ -145,6 +145,25 @@ MOZ_MAYBE_UNUSED static MOZ_COLD MOZ_NEVER_INLINE void MOZ_ReportCrash(
 #endif
 }
 
+/*
+ * MOZ_ASSUME_UNREACHABLE_MARKER() expands to an expression which states that
+ * it is undefined behavior for execution to reach this point.  No guarantees
+ * are made about what will happen if this is reached at runtime.  Most code
+ * should use MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE because it has extra
+ * asserts.
+ */
+#if defined(__clang__) || defined(__GNUC__)
+#  define MOZ_ASSUME_UNREACHABLE_MARKER() __builtin_unreachable()
+#elif defined(_MSC_VER)
+#  define MOZ_ASSUME_UNREACHABLE_MARKER() __assume(0)
+#else
+#  ifdef __cplusplus
+#    define MOZ_ASSUME_UNREACHABLE_MARKER() ::abort()
+#  else
+#    define MOZ_ASSUME_UNREACHABLE_MARKER() abort()
+#  endif
+#endif
+
 /**
  * MOZ_REALLY_CRASH is used in the implementation of MOZ_CRASH().  You should
  * call MOZ_CRASH instead.
@@ -176,6 +195,7 @@ MOZ_MAYBE_UNUSED static MOZ_COLD MOZ_NORETURN MOZ_NEVER_INLINE void
 MOZ_NoReturn(int aLine) {
   *((volatile int*)NULL) = aLine;
   TerminateProcess(GetCurrentProcess(), 3);
+  MOZ_ASSUME_UNREACHABLE_MARKER();
 }
 
 #  define MOZ_REALLY_CRASH(line) \
@@ -499,25 +519,6 @@ struct AssertionConditionType {
 #  define MOZ_DIAGNOSTIC_ASSERT_IF(cond, expr) \
     do {                                       \
     } while (false)
-#endif
-
-/*
- * MOZ_ASSUME_UNREACHABLE_MARKER() expands to an expression which states that
- * it is undefined behavior for execution to reach this point.  No guarantees
- * are made about what will happen if this is reached at runtime.  Most code
- * should use MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE because it has extra
- * asserts.
- */
-#if defined(__clang__) || defined(__GNUC__)
-#  define MOZ_ASSUME_UNREACHABLE_MARKER() __builtin_unreachable()
-#elif defined(_MSC_VER)
-#  define MOZ_ASSUME_UNREACHABLE_MARKER() __assume(0)
-#else
-#  ifdef __cplusplus
-#    define MOZ_ASSUME_UNREACHABLE_MARKER() ::abort()
-#  else
-#    define MOZ_ASSUME_UNREACHABLE_MARKER() abort()
-#  endif
 #endif
 
 /*
