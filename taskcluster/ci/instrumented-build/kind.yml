@@ -135,6 +135,43 @@ jobs:
                 - sysroot-x86_64-linux-gnu
                 - sysroot-wasm32-wasi
 
+    macosx64-aarch64-shippable/opt:
+        description: "MacOS X aarch64 Cross-compile Instrumented"
+        shipping-phase: build
+        shipping-product: firefox
+        treeherder:
+            platform: osx-aarch64-shippable/opt
+        worker-type: b-linux-gcp
+        worker:
+            max-run-time: 7200
+            env:
+                PERFHERDER_EXTRA_OPTIONS: instrumented
+        run:
+            using: mozharness
+            actions: [get-secrets, build]
+            config:
+                - builds/releng_base_firefox.py
+                - builds/releng_base_mac_64_cross_builds.py
+            script: "mozharness/scripts/fx_desktop_build.py"
+            secrets: true
+            mozconfig-variant: profile-generate
+            extra-config:
+                mozconfig_platform: macosx64-aarch64
+        fetches:
+            toolchain:
+                - linux64-clang
+                - linux64-hfsplus
+                - linux64-libdmg
+                - linux64-rust-macos
+                - linux64-rust-size
+                - linux64-cbindgen
+                - linux64-dump_syms
+                - linux64-nasm
+                - linux64-node
+                - macosx64-sdk
+                - sysroot-x86_64-linux-gnu
+                - sysroot-wasm32-wasi
+
     android-x86-shippable/opt:
         description: "Android 5.0 x86 PGO instrumented"
         index:

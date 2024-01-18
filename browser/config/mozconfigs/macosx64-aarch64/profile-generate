@@ -1,0 +1,6 @@
+. $topsrcdir/browser/config/mozconfigs/macosx64-aarch64/nightly
+
+mk_add_options "export MOZ_AUTOMATION_PACKAGE_GENERATED_SOURCES=0"
+
+ac_add_options --enable-profile-generate=cross
+ac_add_options --disable-tests
