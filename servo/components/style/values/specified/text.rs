@@ -14,12 +14,12 @@ use crate::values::generics::text::{GenericTextDecorationLength, GenericTextInde
 use crate::values::specified::length::{Length, LengthPercentage};
 use crate::values::specified::{AllowQuirks, Integer, Number};
 use cssparser::{Parser, Token};
+use icu_segmenter::GraphemeClusterSegmenter;
 use selectors::parser::SelectorParseErrorKind;
 use std::fmt::{self, Write};
 use style_traits::values::SequenceWriter;
 use style_traits::{CssWriter, ParseError, StyleParseErrorKind, ToCss};
 use style_traits::{KeywordsCollectFn, SpecifiedValueInfo};
-use unicode_segmentation::UnicodeSegmentation;
 
 /// A specified type for the `initial-letter` property.
 pub type InitialLetter = GenericInitialLetter<Number, Integer>;
@@ -663,14 +663,13 @@ impl ToComputedValue for TextEmphasisStyle {
             },
             TextEmphasisStyle::None => ComputedTextEmphasisStyle::None,
             TextEmphasisStyle::String(ref s) => {
-                // Passing `true` to iterate over extended grapheme clusters, following
-                // recommendation at http://www.unicode.org/reports/tr29/#Grapheme_Cluster_Boundaries
-                //
                 // FIXME(emilio): Doing this at computed value time seems wrong.
                 // The spec doesn't say that this should be a computed-value
                 // time operation. This is observable from getComputedStyle().
-                let s = s.graphemes(true).next().unwrap_or("").to_string();
-                ComputedTextEmphasisStyle::String(s.into())
+                //
+                // Note that the first grapheme cluster boundary should always be the start of the string.
+                let first_grapheme_end = GraphemeClusterSegmenter::new().segment_str(s).nth(1).unwrap_or(0);
+                ComputedTextEmphasisStyle::String(s[0..first_grapheme_end].to_string().into())
             },
         }
     }
