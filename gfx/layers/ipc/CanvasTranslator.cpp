@@ -114,6 +114,10 @@ bool CanvasTranslator::EnsureSharedContextWebgl() {
   if (!mSharedContext || mSharedContext->IsContextLost()) {
     if (mSharedContext) {
       ForceDrawTargetWebglFallback();
+      if (mRemoteTextureOwner) {
+        // Ensure any shared surfaces referring to the old context go away.
+        mRemoteTextureOwner->ClearRecycledTextures();
+      }
     }
     mSharedContext = gfx::SharedContextWebgl::Create();
     if (!mSharedContext || mSharedContext->IsContextLost()) {

@@ -71,7 +71,7 @@ class SwapChain final {
   virtual ~SwapChain();
 
   void ClearPool();
-  void StoreRecycledSurface(const std::shared_ptr<SharedSurface>& surf);
+  bool StoreRecycledSurface(const std::shared_ptr<SharedSurface>& surf);
   const auto& FrontBuffer() const { return mFrontBuffer; }
   UniquePtr<SwapChainPresenter> Acquire(const gfx::IntSize&, gfx::ColorSpace2);
 
