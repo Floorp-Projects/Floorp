@@ -1549,7 +1549,8 @@ messaging_experiments:
       "cfr",
       "moments_page",
       "infobar",
-      "spotlight"
+      "spotlight",
+      "featureCallout"
     ]
     methods: ["reach"]
     release_channel_collection: opt-out
