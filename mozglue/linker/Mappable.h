@@ -77,6 +77,4 @@ class MappableFile : public Mappable {
   AutoCloseFD fd;
 };
 
-class _MappableBuffer;
-
 #endif /* Mappable_h */
