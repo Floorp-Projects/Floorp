@@ -12,7 +12,6 @@
 #include "mozilla/RefCounted.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtr.h"
-#include "Zip.h"
 #include "Elfxx.h"
 #include "Mappable.h"
 

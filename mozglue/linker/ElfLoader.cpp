@@ -532,27 +532,7 @@ already_AddRefed<LibHandle> ElfLoader::GetHandleByPtr(void* addr) {
 }
 
 Mappable* ElfLoader::GetMappableFromPath(const char* path) {
-  const char* name = LeafName(path);
-  Mappable* mappable = nullptr;
-  RefPtr<Zip> zip;
-  const char* subpath;
-  if ((subpath = strchr(path, '!'))) {
-    char* zip_path = strndup(path, subpath - path);
-    while (*(++subpath) == '/') {
-    }
-    zip = ZipCollection::GetZip(zip_path);
-    free(zip_path);
-    Zip::Stream s;
-    if (zip && zip->GetStream(subpath, &s)) {
-      if (s.GetType() == Zip::Stream::DEFLATE) {
-        mappable = MappableDeflate::Create(name, zip, &s);
-      }
-    }
-  }
-  /* If we couldn't load above, try with a MappableFile */
-  if (!mappable && !zip) mappable = MappableFile::Create(path);
-
-  return mappable;
+  return MappableFile::Create(path);
 }
 
 void ElfLoader::Register(LibHandle* handle) {
