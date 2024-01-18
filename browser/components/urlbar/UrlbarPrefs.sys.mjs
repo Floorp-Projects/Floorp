@@ -299,6 +299,13 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // recentsearches are turned on.
   ["suggest.recentsearches", true],
 
+  // If `browser.urlbar.yelp.featureGate` is true, this controls whether
+  // Yelp suggestions are turned on.
+  ["suggest.yelp", true],
+
+  // Feature gate pref for Yelp suggestions in the urlbar.
+  ["yelp.featureGate", false],
+
   // JSON'ed array of blocked quick suggest URL digests.
   ["quicksuggest.blockedDigests", ""],
 

@@ -200,6 +200,10 @@ browser.urlbar.suggest.pocket (boolean, default: true)
   If ``browser.urlbar.pocket.featureGate`` is true, this controls whether Pocket
   suggestions are turned on. Otherwise they won't be shown.
 
+browser.urlbar.suggest.yelp (boolean, default: true)
+  If ``browser.urlbar.yelp.featureGate`` is true, this controls whether Yelp
+  suggestions are turned on. Otherwise they won't be shown.
+
 browser.urlbar.switchTabs.adoptIntoActiveWindow (boolean, default: false)
   When using switch to tabs, if set to true this will move the tab into the
   active window, instead of just switching to it.
