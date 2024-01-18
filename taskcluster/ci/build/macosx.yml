@@ -739,7 +739,7 @@ macosx64-x64-shippable/opt:
 
 macosx64-aarch64-shippable/opt:
     description: "MacOS X aarch64 Cross-compile"
-    use-pgo: macosx64-shippable/opt
+    use-pgo: macosx64-aarch64-shippable/opt
     attributes:
         enable-full-crashsymbols: true
         skip-verify-test-packaging: true
