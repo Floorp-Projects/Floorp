@@ -112,8 +112,11 @@ import org.mozilla.fenix.session.VisibilityLifecycleCallback
 import org.mozilla.fenix.utils.Settings
 import org.mozilla.fenix.utils.Settings.Companion.TOP_SITES_PROVIDER_MAX_THRESHOLD
 import org.mozilla.fenix.wallpapers.Wallpaper
+import java.io.File
+import java.io.FileInputStream
 import java.util.UUID
 import java.util.concurrent.TimeUnit
+import java.util.zip.ZipInputStream
 import kotlin.math.roundToLong
 
 private const val RAM_THRESHOLD_MEGABYTES = 1024
@@ -521,13 +524,76 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
      * thread, early in the app startup sequence.
      */
     private fun beginSetupMegazord() {
-        // Note: Megazord.init() must be called as soon as possible ...
-        Megazord.init()
+        try {
+            // Note: Megazord.init() must be called as soon as possible ...
+            Megazord.init()
 
-        initializeRustErrors(components.analytics.crashReporter)
-        // ... but RustHttpConfig.setClient() and RustLog.enable() can be called later.
+            initializeRustErrors(components.analytics.crashReporter)
+            // ... but RustHttpConfig.setClient() and RustLog.enable() can be called later.
 
-        RustLog.enable()
+            RustLog.enable()
+        } catch (e: UnsatisfiedLinkError) {
+            @Suppress("TooGenericExceptionCaught")
+            try {
+                reportUnsatisfiedLinkErrorBreadcrumbs()
+            } catch (e: Throwable) {
+                // This shouldn't happen, but if it does it's better to ignore the exception from
+                // the breadcrumb code and rethrow the initial exception.
+            }
+            throw e
+        }
+    }
+
+    private fun reportUnsatisfiedLinkErrorBreadcrumbs() {
+        val breadcrumbStrings = mutableListOf<String>()
+        val apkPath = applicationContext.getApplicationInfo().sourceDir
+        breadcrumbStrings.add("APK: $apkPath")
+        val apkDir = File(apkPath).getParentFile()
+        val installSourcePackage = if (SDK_INT >= Build.VERSION_CODES.R) {
+            packageManager.getInstallSourceInfo(packageName).installingPackageName
+        } else {
+            @Suppress("DEPRECATION")
+            packageManager.getInstallerPackageName(packageName)
+        }
+        breadcrumbStrings.add("Installer package name: $installSourcePackage")
+
+        val installDirFileSet = if (apkDir != null) {
+            apkDir.walk()
+                .filter { it != apkDir && !it.isDirectory() }
+                .map { it.relativeTo(apkDir).toString() }
+                .filter { it.startsWith("lib/") }
+                .toHashSet()
+        } else {
+            HashSet()
+        }
+        val apkFileSet = ZipInputStream(FileInputStream(apkPath)).use {
+            generateSequence { it.nextEntry }
+                .map { it.name }
+                .filter { it.startsWith("lib/") }
+                .toHashSet()
+        }
+        fun formatFileSet(filenames: Set<String>) = if (filenames.size > 0) {
+            filenames.joinToString(", ")
+        } else {
+            "<none>"
+        }
+        val installDirOnly = formatFileSet(installDirFileSet - apkFileSet)
+        val apkFileOnly = formatFileSet(apkFileSet - installDirFileSet)
+        val both = formatFileSet(installDirFileSet union apkFileSet)
+
+        breadcrumbStrings.add("Files only inside lib/ dir: $installDirOnly")
+        breadcrumbStrings.add("Files only inside APK lib/ dir: $apkFileOnly")
+        breadcrumbStrings.add("Files inside both lib/ dirs: $both")
+
+        for (breadcrumbString in breadcrumbStrings) {
+            components.analytics.crashReporter.recordCrashBreadcrumb(
+                Breadcrumb(
+                    category = "Startup",
+                    message = breadcrumbString,
+                    level = Breadcrumb.Level.INFO,
+                ),
+            )
+        }
     }
 
     @OptIn(DelicateCoroutinesApi::class) // GlobalScope usage
