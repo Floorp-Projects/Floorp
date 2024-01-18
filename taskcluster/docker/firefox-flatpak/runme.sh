@@ -71,9 +71,6 @@ done
 
 envsubst < "$SCRIPT_DIRECTORY/org.mozilla.firefox.appdata.xml.in" > "${WORKSPACE}/org.mozilla.firefox.appdata.xml"
 cp -v "$SCRIPT_DIRECTORY/org.mozilla.firefox.desktop" "$WORKSPACE"
-# Add a group policy file to disable app updates, as those are handled by Flathub
-cp -v "$SCRIPT_DIRECTORY/policies.json" "$WORKSPACE"
-cp -v "$SCRIPT_DIRECTORY/default-preferences.js" "$WORKSPACE"
 cp -v "$SCRIPT_DIRECTORY/launch-script.sh" "$WORKSPACE"
 cp -v "$SCRIPT_DIRECTORY/firefox-symbolic.svg" "$WORKSPACE"
 cd "${WORKSPACE}"
@@ -144,8 +141,6 @@ for locale in $locales; do
     ln -sf "/app/share/runtime/langpack/${locale%%-*}/langpack-${locale}@firefox.mozilla.org.xpi" "${appdir}/lib/firefox/distribution/extensions/langpack-${locale}@firefox.mozilla.org.xpi"
 done
 install -D -m644 -t "${appdir}/lib/firefox/distribution" "$DISTRIBUTION_DIR/distribution.ini"
-install -D -m644 -t "${appdir}/lib/firefox/distribution" policies.json
-install -D -m644 -t "${appdir}/lib/firefox/browser/defaults/preferences" default-preferences.js
 install -D -m755 launch-script.sh "${appdir}/bin/firefox"
 
 # We use features=devel to enable ptrace, which we need for the crash
