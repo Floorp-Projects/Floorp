@@ -3154,6 +3154,7 @@ void nsHTMLScrollFrame::ScrollToImpl(
     mApzScrollPos = pt;
   } else if (aOrigin == ScrollOrigin::AnchorAdjustment) {
     AppendScrollUpdate(ScrollPositionUpdate::NewMergeableScroll(aOrigin, pt));
+    mApzScrollPos = pt;
   } else if (aOrigin != ScrollOrigin::Apz) {
     AppendScrollUpdate(ScrollPositionUpdate::NewScroll(mLastScrollOrigin, pt));
   }
