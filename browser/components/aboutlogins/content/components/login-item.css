@@ -101,6 +101,7 @@ input[type="url"]:read-only {
   display: flex;
   align-items: center;
   margin-bottom: 40px;
+  margin-top: 5px;
 }
 
 .title {
