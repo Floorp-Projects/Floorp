@@ -710,13 +710,6 @@ user-id = 3618
 user-login = "dtolnay"
 user-name = "David Tolnay"
 
-[[publisher.unicode-segmentation]]
-version = "1.10.0"
-when = "2022-09-13"
-user-id = 1139
-user-login = "Manishearth"
-user-name = "Manish Goregaokar"
-
 [[publisher.unicode-width]]
 version = "0.1.10"
 when = "2022-09-13"
