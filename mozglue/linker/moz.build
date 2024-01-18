@@ -10,11 +10,8 @@ SOURCES += [
     "ElfLoader.cpp",
     "Logging.cpp",
     "Mappable.cpp",
-    "Zip.cpp",
 ]
 
 Library("linker")
 
 FINAL_LIBRARY = "mozglue"
-
-TEST_DIRS += ["tests"]
