@@ -48,14 +48,6 @@ int __wrap_dl_iterate_phdr(dl_phdr_cb callback, void* data);
 const void* __wrap___gnu_Unwind_Find_exidx(void* pc, int* pcount);
 #endif
 
-/**
- * faulty.lib public API
- */
-MFBT_API size_t __dl_get_mappable_length(void* handle);
-
-MFBT_API void* __dl_mmap(void* handle, void* addr, size_t length, off_t offset);
-
-MFBT_API void __dl_munmap(void* handle, void* addr, size_t length);
 }
 
 /* Forward declarations for use in LibHandle */
@@ -165,24 +157,6 @@ class LibHandle : public mozilla::external::AtomicRefCounted<LibHandle> {
    * Returns the number of direct references
    */
   MozRefCountType DirectRefCount() { return directRefCnt; }
-
-  /**
-   * Returns the complete size of the file or stream behind the library
-   * handle.
-   */
-  size_t GetMappableLength() const;
-
-  /**
-   * Returns a memory mapping of the file or stream behind the library
-   * handle.
-   */
-  void* MappableMMap(void* addr, size_t length, off_t offset) const;
-
-  /**
-   * Unmaps a memory mapping of the file or stream behind the library
-   * handle.
-   */
-  void MappableMUnmap(void* addr, size_t length) const;
 
 #ifdef __ARM_EABI__
   /**
