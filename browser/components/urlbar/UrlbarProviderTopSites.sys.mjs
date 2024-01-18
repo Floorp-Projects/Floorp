@@ -307,7 +307,7 @@ class ProviderTopSites extends UrlbarProvider {
 
   onEngagement(state, queryContext, details, controller) {
     if (
-      !controller.input.isPrivate &&
+      !queryContext.isPrivate &&
       this.sponsoredSites &&
       ["engagement", "abandonment"].includes(state)
     ) {

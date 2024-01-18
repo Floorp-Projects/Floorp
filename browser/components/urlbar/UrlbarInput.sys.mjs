@@ -1598,11 +1598,11 @@ export class UrlbarInput {
    *   will record engagement event telemetry for the query.
    */
   startQuery({
-    allowAutofill = true,
+    allowAutofill,
     autofillIgnoresSelection = false,
-    searchString = null,
+    searchString,
     resetSearchState = true,
-    event = null,
+    event,
   } = {}) {
     if (!searchString) {
       searchString =
@@ -1611,8 +1611,14 @@ export class UrlbarInput {
       throw new Error("The current value doesn't start with the search string");
     }
 
+    let queryContext = this.#makeQueryContext({
+      allowAutofill,
+      event,
+      searchString,
+    });
+
     if (event) {
-      this.controller.engagementEvent.start(event, searchString);
+      this.controller.engagementEvent.start(event, queryContext, searchString);
     }
 
     if (this._suppressStartQuery) {
@@ -1624,39 +1630,17 @@ export class UrlbarInput {
       this._resetSearchState();
     }
 
-    this._lastSearchString = searchString;
-    this._valueOnLastSearch = this.value;
-
-    let options = {
-      allowAutofill,
-      isPrivate: this.isPrivate,
-      maxResults: lazy.UrlbarPrefs.get("maxRichResults"),
-      searchString,
-      userContextId:
-        this.window.gBrowser.selectedBrowser.getAttribute("usercontextid"),
-      currentPage: this.window.gBrowser.currentURI.spec,
-      formHistoryName: this.formHistoryName,
-      prohibitRemoteResults:
-        event &&
-        lazy.UrlbarUtils.isPasteEvent(event) &&
-        lazy.UrlbarPrefs.get("maxCharsForSearchSuggestions") <
-          event.data?.length,
-    };
-
     if (this.searchMode) {
       this.confirmSearchMode();
-      options.searchMode = this.searchMode;
-      if (this.searchMode.source) {
-        options.sources = [this.searchMode.source];
-      }
     }
+
+    this._lastSearchString = searchString;
+    this._valueOnLastSearch = this.value;
 
     // TODO (Bug 1522902): This promise is necessary for tests, because some
     // tests are not listening for completion when starting a query through
     // other methods than startQuery (input events for example).
-    this.lastQueryContextPromise = this.controller.startQuery(
-      new lazy.UrlbarQueryContext(options)
-    );
+    this.lastQueryContextPromise = this.controller.startQuery(queryContext);
   }
 
   /**
@@ -3819,6 +3803,47 @@ export class UrlbarInput {
     return lazy.UrlbarUtils.stripUnsafeProtocolOnPaste(pasteData);
   }
 
+  /**
+   * Generate a UrlbarQueryContext from the current context.
+   *
+   * @param {object} [options]               Optional params
+   * @param {boolean} options.allowAutofill  Whether autofill is enabled.
+   * @param {string}  options.searchString   The string being searched.
+   * @param {object}  options.event          The event triggering the query.
+   * @returns {UrlbarQueryContext}
+   *   The queryContext object.
+   */
+  #makeQueryContext({
+    allowAutofill = true,
+    searchString = null,
+    event = null,
+  } = {}) {
+    let options = {
+      allowAutofill,
+      isPrivate: this.isPrivate,
+      maxResults: lazy.UrlbarPrefs.get("maxRichResults"),
+      searchString,
+      userContextId:
+        this.window.gBrowser.selectedBrowser.getAttribute("usercontextid"),
+      currentPage: this.window.gBrowser.currentURI.spec,
+      formHistoryName: this.formHistoryName,
+      prohibitRemoteResults:
+        event &&
+        lazy.UrlbarUtils.isPasteEvent(event) &&
+        lazy.UrlbarPrefs.get("maxCharsForSearchSuggestions") <
+          event.data?.length,
+    };
+
+    if (this.searchMode) {
+      options.searchMode = this.searchMode;
+      if (this.searchMode.source) {
+        options.sources = [this.searchMode.source];
+      }
+    }
+
+    return new lazy.UrlbarQueryContext(options);
+  }
+
   _on_scrollend(event) {
     this.updateTextOverflow();
   }
@@ -4003,8 +4028,9 @@ export class UrlbarInput {
       this.focus();
       // To simplify tracking of events, register an initial event for event
       // telemetry, to replace the missing input event.
-      this.controller.engagementEvent.start(event);
-      this.controller.clearLastQueryContextCache();
+      let queryContext = this.#makeQueryContext({ searchString: droppedURL });
+      this.controller.setLastQueryContextCache(queryContext);
+      this.controller.engagementEvent.start(event, queryContext);
       this.handleNavigation({ triggeringPrincipal: principal });
       // For safety reasons, in the drop case we don't want to immediately show
       // the the dropped value, instead we want to keep showing the current page
