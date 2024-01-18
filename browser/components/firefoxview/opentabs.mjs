@@ -205,7 +205,7 @@ class OpenTabsInView extends ViewPage {
       />
       <link
         rel="stylesheet"
-        href="chrome://browser/content/firefoxview/firefoxview-next.css"
+        href="chrome://browser/content/firefoxview/firefoxview.css"
       />
       <div class="sticky-container bottom-fade">
         <h2
@@ -498,7 +498,7 @@ class OpenTabsInViewCard extends ViewPageContent {
     return html`
       <link
         rel="stylesheet"
-        href="chrome://browser/content/firefoxview/firefoxview-next.css"
+        href="chrome://browser/content/firefoxview/firefoxview.css"
       />
       <card-container
         ?preserveCollapseState=${this.recentBrowsing}
@@ -725,7 +725,7 @@ class OpenTabsContextMenu extends MozLitElement {
     return html`
       <link
         rel="stylesheet"
-        href="chrome://browser/content/firefoxview/firefoxview-next.css"
+        href="chrome://browser/content/firefoxview/firefoxview.css"
       />
       <panel-list data-tab-type="opentabs">
         <panel-item

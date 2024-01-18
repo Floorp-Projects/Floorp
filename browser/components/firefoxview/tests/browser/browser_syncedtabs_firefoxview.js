@@ -1,8 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-/* import-globals-from ../head.js */
-
 add_setup(async function () {
   registerCleanupFunction(() => {
     // reset internal state so it doesn't affect the next tests
@@ -684,6 +682,7 @@ add_task(async function search_synced_tabs_recent_browsing() {
         ),
       "Synced Tabs component is done updating."
     );
+    slot.tabLists[0].scrollIntoView();
     await TestUtils.waitForCondition(
       () => slot.tabLists[0]?.rowEls.length === 5,
       "Not all search results are shown yet."
