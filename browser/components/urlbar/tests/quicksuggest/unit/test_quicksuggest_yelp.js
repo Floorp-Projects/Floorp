@@ -46,12 +46,8 @@ add_task(async function basic() {
       description: "With upper case",
       query: "BeSt RaMeN dElIvErY iN tOkYo",
       expected: {
-        // TODO: After fixing bug 1868922, need to change the value to case-sensitive.
-        //       This value should be "https://www.yelp.com/search?find_desc=BeSt+RaMeN+dElIvErY&find_loc=tOkYo".
-        url: "https://www.yelp.com/search?find_desc=best+ramen+delivery&find_loc=tokyo",
-        // TODO: After fixing bug 1868922, need to change the value to case-sensitive.
-        //       This value should be "BeSt RaMeN dElIvErY iN tOkYo".
-        title: "best ramen delivery in tokyo",
+        url: "https://www.yelp.com/search?find_desc=BeSt+RaMeN+dElIvErY&find_loc=tOkYo",
+        title: "BeSt RaMeN dElIvErY iN tOkYo",
       },
     },
   ];
