@@ -17,6 +17,7 @@ ChromeUtils.defineLazyGetter(lazy, "gBrandBundle", function () {
 });
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  DownloadHistory: "resource://gre/modules/DownloadHistory.sys.mjs",
   Sanitizer: "resource:///modules/Sanitizer.sys.mjs",
 });
 
@@ -413,6 +414,40 @@ export var SiteDataManager = {
       }
     }
     return usage;
+  },
+
+  /**
+   * Fetches number of downloads for all timespans in timeSpanArr
+   *
+   * @param {String[]} timeSpanArr - Array of timespan options to get downloads count
+   *              from Sanitizer, e.g. ["TIMESPAN_HOUR", "TIMESPAN_2HOURS"]
+   * @returns {Object} downloads counted for each timespan
+   */
+  async getDownloadCountForTimeRanges(timeSpanArr) {
+    let downloads = await lazy.DownloadHistory.getList();
+
+    let downloadSizes = {};
+    timeSpanArr.forEach(timespan => {
+      downloadSizes[timespan] = 0;
+    });
+
+    let timeNow = Date.now();
+
+    for (let download of downloads._downloads) {
+      let startTime = new Date(download.startTime);
+      for (let timeSpan of timeSpanArr) {
+        let compareTime = new Date(
+          timeNow - lazy.Sanitizer.timeSpanMsMap[timeSpan]
+        );
+
+        if (timeSpan === "TIMESPAN_EVERYTHING") {
+          downloadSizes[timeSpan] += 1;
+        } else if (startTime >= compareTime) {
+          downloadSizes[timeSpan] += 1;
+        }
+      }
+    }
+    return downloadSizes;
   },
 
   /**

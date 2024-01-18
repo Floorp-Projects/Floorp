@@ -529,6 +529,9 @@ async function validateDataSizes(dialogHelper) {
   // get current data sizes from siteDataManager
   let cacheUsage = await SiteDataManager.getCacheSize();
   let quotaUsage = await SiteDataManager.getQuotaUsageForTimeRanges(timespans);
+  let downloadUsage = await SiteDataManager.getDownloadCountForTimeRanges(
+    timespans
+  );
 
   for (let i = 0; i < timespans.length; i++) {
     // select timespan to check
@@ -538,6 +541,8 @@ async function validateDataSizes(dialogHelper) {
     let clearCookiesAndSiteDataCheckbox =
       dialogHelper.win.document.getElementById("cookiesAndStorage");
     let clearCacheCheckbox = dialogHelper.win.document.getElementById("cache");
+    let clearDownloadsCheckbox =
+      dialogHelper.win.document.getElementById("downloads");
 
     let [convertedQuotaUsage] = DownloadUtils.convertByteUnits(
       quotaUsage[timespans[i]]
@@ -548,6 +553,7 @@ async function validateDataSizes(dialogHelper) {
     await dialogHelper.win.document.l10n.translateElements([
       clearCookiesAndSiteDataCheckbox,
       clearCacheCheckbox,
+      clearDownloadsCheckbox,
     ]);
     ok(
       clearCacheCheckbox.label.includes(convertedCacheUnit),
@@ -556,6 +562,10 @@ async function validateDataSizes(dialogHelper) {
     ok(
       clearCookiesAndSiteDataCheckbox.label.includes(convertedQuotaUsage),
       `Should show the quota usage as ${convertedQuotaUsage}`
+    );
+    ok(
+      clearDownloadsCheckbox.label.includes(downloadUsage[timespans[i]]),
+      `Should show the downloads usage as ${downloadUsage[timespans[i]]}`
     );
   }
 }
@@ -592,7 +602,7 @@ add_task(async function test_cancel() {
   let dh = new DialogHelper();
   dh.onload = function () {
     this.selectDuration(Sanitizer.TIMESPAN_HOUR);
-    this.checkPrefCheckbox("historyFormDataAndDownloads", false);
+    this.checkPrefCheckbox("historyAndFormData", false);
     this.cancelDialog();
   };
   dh.onunload = async function () {
@@ -632,7 +642,7 @@ add_task(async function test_everything() {
         "with a predefined timespan"
     );
     this.selectDuration(Sanitizer.TIMESPAN_EVERYTHING);
-    this.checkPrefCheckbox("historyFormDataAndDownloads", true);
+    this.checkPrefCheckbox("historyAndFormData", true);
     this.acceptDialog();
   };
   dh.onunload = async function () {
@@ -679,7 +689,7 @@ add_task(async function test_everything_warning() {
         "with clearing everything"
     );
     this.selectDuration(Sanitizer.TIMESPAN_EVERYTHING);
-    this.checkPrefCheckbox("historyFormDataAndDownloads", true);
+    this.checkPrefCheckbox("historyAndFormData", true);
     this.acceptDialog();
   };
   dh.onunload = async function () {
@@ -737,7 +747,8 @@ add_task(async function test_history_downloads_checked() {
   let dh = new DialogHelper();
   dh.onload = function () {
     this.selectDuration(Sanitizer.TIMESPAN_HOUR);
-    this.checkPrefCheckbox("historyFormDataAndDownloads", true);
+    this.checkPrefCheckbox("downloads", true);
+    this.checkPrefCheckbox("historyAndFormData", true);
     this.acceptDialog();
   };
   dh.onunload = async function () {
@@ -789,7 +800,7 @@ add_task(async function test_cannot_clear_history() {
   let dh = new DialogHelper();
   dh.onload = function () {
     var cb = this.win.document.querySelectorAll(
-      "checkbox[id='historyFormDataAndDownloads']"
+      "checkbox[id='historyAndFormData']"
     );
     ok(
       cb.length == 1 && !cb[0].disabled,
@@ -816,7 +827,7 @@ add_task(async function test_no_formdata_history_to_clear() {
   let dh = new DialogHelper();
   dh.onload = function () {
     var cb = this.win.document.querySelectorAll(
-      "checkbox[id='historyFormDataAndDownloads']"
+      "checkbox[id='historyAndFormData']"
     );
     ok(
       cb.length == 1 && !cb[0].disabled && cb[0].checked,
@@ -839,7 +850,7 @@ add_task(async function test_form_entries() {
   let dh = new DialogHelper();
   dh.onload = function () {
     var cb = this.win.document.querySelectorAll(
-      "checkbox[id='historyFormDataAndDownloads']"
+      "checkbox[id='historyAndFormData']"
     );
     is(cb.length, 1, "There is only one checkbox for history and form data");
     ok(!cb[0].disabled, "The checkbox is enabled");
@@ -940,6 +951,33 @@ add_task(async function test_all_data_sizes() {
   });
 });
 
+add_task(async function test_single_download() {
+  // add download
+  let downloadIDs = [];
+  await addDownloadWithMinutesAgo(downloadIDs, 100000000000);
+
+  let dh = new DialogHelper();
+  dh.onload = async function () {
+    this.uncheckAllCheckboxes();
+    this.checkPrefCheckbox("downloads", true);
+    this.selectDuration(Sanitizer.TIMESPAN_EVERYTHING);
+    let clearDownloadsCheckbox = dh.win.document.getElementById("downloads");
+    // Wait for the UI to update
+    await dh.win.document.l10n.translateElements([clearDownloadsCheckbox]);
+    ok(
+      clearDownloadsCheckbox.label.includes("1 file)"),
+      "Should show singular file"
+    );
+    this.acceptDialog();
+  };
+  dh.onunload = async function () {
+    await ensureDownloadsClearedState(downloadIDs, true);
+  };
+  dh.open();
+  await dh.promiseClosed;
+  blankSlate();
+});
+
 // test the case when we open the dialog through the clear on shutdown settings
 add_task(async function test_clear_on_shutdown() {
   await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
@@ -952,7 +990,7 @@ add_task(async function test_clear_on_shutdown() {
   dh.setMode("clearOnShutdown");
   dh.onload = async function () {
     this.uncheckAllCheckboxes();
-    this.checkPrefCheckbox("historyFormDataAndDownloads", false);
+    this.checkPrefCheckbox("historyAndFormData", true);
     this.checkPrefCheckbox("cookiesAndStorage", true);
     this.acceptDialog();
   };
@@ -971,7 +1009,7 @@ add_task(async function test_clear_on_shutdown() {
   }
 
   boolPrefIs(
-    "clearOnShutdown_v2.historyAndFormDataAndDownloads",
+    "clearOnShutdown_v2.historyAndFormData",
     true,
     "clearOnShutdown_v2 history should be true "
   );
@@ -980,6 +1018,12 @@ add_task(async function test_clear_on_shutdown() {
     "clearOnShutdown_v2.cookiesAndStorage",
     true,
     "clearOnShutdown_v2 cookies should be true"
+  );
+
+  boolPrefIs(
+    "clearOnShutdown_v2.downloads",
+    false,
+    "clearOnShutdown_v2 downloads should be false"
   );
 
   boolPrefIs(
@@ -1022,14 +1066,15 @@ add_task(async function test_clear_on_shutdown() {
   dh.setMode("clearOnShutdown");
   dh.onload = async function () {
     this.uncheckAllCheckboxes();
-    this.checkPrefCheckbox("historyFormDataAndDownloads", true);
+    this.checkPrefCheckbox("historyAndFormData", true);
+    this.checkPrefCheckbox("downloads", true);
     this.acceptDialog();
   };
   dh.open();
   await dh.promiseClosed;
 
   boolPrefIs(
-    "clearOnShutdown_v2.historyAndFormDataAndDownloads",
+    "clearOnShutdown_v2.historyAndFormData",
     true,
     "clearOnShutdown_v2 history should be true"
   );
@@ -1038,6 +1083,12 @@ add_task(async function test_clear_on_shutdown() {
     "clearOnShutdown_v2.cookiesAndStorage",
     false,
     "clearOnShutdown_v2 cookies should be false"
+  );
+
+  boolPrefIs(
+    "clearOnShutdown_v2.downloads",
+    true,
+    "clearOnShutdown_v2 downloads should be true"
   );
 
   boolPrefIs(
@@ -1084,10 +1135,11 @@ add_task(async function test_defaults_prefs() {
   dh.setMode("clearSiteData");
 
   dh.onload = function () {
-    this.validateCheckbox("historyFormDataAndDownloads", false);
+    this.validateCheckbox("historyAndFormData", false);
     this.validateCheckbox("cache", true);
     this.validateCheckbox("cookiesAndStorage", true);
     this.validateCheckbox("siteSettings", false);
+    this.validateCheckbox("downloads", false);
 
     this.cancelDialog();
   };
@@ -1100,10 +1152,11 @@ add_task(async function test_defaults_prefs() {
   dh = new DialogHelper();
   dh.onload = function () {
     // Default checked for browser and clear history mode
-    this.validateCheckbox("historyFormDataAndDownloads", true);
+    this.validateCheckbox("historyAndFormData", true);
     this.validateCheckbox("cache", true);
     this.validateCheckbox("cookiesAndStorage", true);
     this.validateCheckbox("siteSettings", false);
+    this.validateCheckbox("downloads", true);
 
     this.cancelDialog();
   };
@@ -1140,7 +1193,7 @@ async function clearAndValidateDataSizes({
     await validateDataSizes(this);
     this.checkPrefCheckbox("cache", clearCache);
     this.checkPrefCheckbox("cookiesAndStorage", clearCookies);
-    this.checkPrefCheckbox("historyFormDataAndDownloads", clearDownloads);
+    this.checkPrefCheckbox("downloads", clearDownloads);
     this.selectDuration(timespan);
     this.acceptDialog();
   };

@@ -6,7 +6,7 @@ const url =
 
 // We will be removing the ["history"] option once we remove the
 // old clear history dialog in Bug 1856418 - Remove all old clear data dialog boxes
-let prefs = [["history"], ["historyFormDataAndDownloads"]];
+let prefs = [["history"], ["historyAndFormData"]];
 
 for (let itemsToClear of prefs) {
   add_task(async function purgeHistoryTest() {
