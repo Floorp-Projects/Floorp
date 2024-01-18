@@ -44,24 +44,10 @@
       document.l10n.disconnectRoot(this.shadowRoot);
     }
 
-    /**
-     * Focus the last used button.
-     * This will default to the visible page button.
-     * @param {String} buttonToFocus
-     */
-    focusButton(buttonToFocus) {
-      if (buttonToFocus === "fullpage") {
-        this.shadowRoot
-          .querySelector(".full-page")
-          .focus({ focusVisible: true });
-      } else {
-        this.shadowRoot
-          .querySelector(".visible-page")
-          .focus({ focusVisible: true });
-      }
+    focusFirst(focusOptions) {
+      this.shadowRoot.querySelector("button:enabled").focus(focusOptions);
     }
   }
-
   customElements.define("screenshots-buttons", ScreenshotsButtons, {
     extends: "toolbar",
   });
