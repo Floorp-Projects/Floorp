@@ -31,7 +31,6 @@ skip-if = [
   "os == 'android'",
   "appname == 'thunderbird'",
 ] # The test needs to run without e10s, can't do that.
-disable_e10s = true
 
 ["test_bug553888.js"]
 

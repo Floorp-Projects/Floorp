@@ -2,4 +2,7 @@
 
 /* globals ExtensionTestUtils */
 
-// TODO bug 1863223: Remove head_e10s.js and remoteContentScripts (XPCShellContentUtils.sys.mjs)
+// xpcshell disables e10s by default. Turn it on.
+Services.prefs.setBoolPref("browser.tabs.remote.autostart", true);
+
+ExtensionTestUtils.remoteContentScripts = true;
