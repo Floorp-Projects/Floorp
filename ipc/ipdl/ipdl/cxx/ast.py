@@ -594,7 +594,7 @@ def make_enum(name, members_str):
     return type(name, (), members_dict)
 
 
-MethodSpec = make_enum("MethodSpec", "NONE VIRTUAL PURE OVERRIDE STATIC")
+MethodSpec = make_enum("MethodSpec", "NONE VIRTUAL PURE OVERRIDE STATIC FINAL")
 
 
 class MethodDecl(Node):

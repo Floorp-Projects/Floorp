@@ -1,4 +1,5 @@
-[NestedUpTo=inside_sync, NeedsOtherPid] async protocol PExtendedAttrMultipleAttributes {
+[NestedUpTo=inside_sync, NeedsOtherPid, ChildProc=any]
+async protocol PExtendedAttrMultipleAttributes {
 parent:
     async Msg();
 };

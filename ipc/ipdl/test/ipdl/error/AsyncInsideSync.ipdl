@@ -3,6 +3,7 @@
 //error: inside_sync nested messages must be sync (here, message `Msg' in protocol `AsyncInsideSync')
 //error: message `Msg' requires more powerful send semantics than its protocol `AsyncInsideSync' provides
 
+[ChildProc=any]
 protocol AsyncInsideSync {
 child:
     [Nested=inside_sync] async Msg();

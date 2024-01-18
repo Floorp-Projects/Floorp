@@ -5,7 +5,7 @@
 namespace mozilla {
 namespace _ipdltest {
 
-[ParentImpl=virtual, ChildImpl=virtual]
+[ParentImpl=virtual, ChildImpl=virtual, ChildProc=any]
 async protocol PTestInduceConnectionError {
 child:
     async Begin();

@@ -1,5 +1,6 @@
 //error: missing message direction
 
+[ChildProc=any]
 protocol messageNoDirection {
     async NoDirection();
 };

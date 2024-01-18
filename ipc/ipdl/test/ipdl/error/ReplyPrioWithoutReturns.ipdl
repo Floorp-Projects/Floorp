@@ -1,4 +1,6 @@
 //error: non-returns message `NormalPrio' cannot specify [ReplyPriority]
+
+[ChildProc=any]
 async protocol ReplyPrioWithoutReturns
 {
 child:

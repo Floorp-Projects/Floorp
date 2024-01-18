@@ -3,6 +3,7 @@ union Basic {
     double;
 };
 
+[ChildProc=any]
 sync protocol Punion_Basic {
 
 parent:

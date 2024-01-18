@@ -1,5 +1,6 @@
 //error: lexically invalid characters `~SomeMsg();
 
+[ChildProc=any]
 protocol dtorReserved {
 
     // it's an error to use old-style dtor syntax

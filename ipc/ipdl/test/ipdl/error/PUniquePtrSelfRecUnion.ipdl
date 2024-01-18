@@ -2,6 +2,7 @@
 
 union X { UniquePtr<X>; };
 
+[ChildProc=any]
 protocol PUniquePtrSelfRecUnion {
 child: async Msg(UniquePtr<X> aa);
 };
