@@ -112,7 +112,7 @@ class AlignedBuffer {
     return mData[aIndex];
   }
   // Set length of buffer, allocating memory as required.
-  // If length is increased, new buffer area is filled with 0.
+  // If memory is allocated, additional buffer area is filled with 0.
   bool SetLength(size_t aLength) {
     if (aLength > mLength && !EnsureCapacity(aLength)) {
       return false;
@@ -644,7 +644,7 @@ class MediaRawDataWriter {
   // Data manipulation methods. mData and mSize may be updated accordingly.
 
   // Set size of buffer, allocating memory as required.
-  // If size is increased, new buffer area is filled with 0.
+  // If memory is allocated, additional buffer area is filled with 0.
   [[nodiscard]] bool SetSize(size_t aSize);
   // Add aData at the beginning of buffer.
   [[nodiscard]] bool Prepend(const uint8_t* aData, size_t aSize);
