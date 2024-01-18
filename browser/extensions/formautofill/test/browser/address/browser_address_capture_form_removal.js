@@ -17,7 +17,7 @@ async function expectSavedAddresses(expectedAddresses) {
 }
 
 const ADDRESS_FIELD_VALUES = {
-  "given-name": "Test User",
+  "given-name": "John",
   organization: "Sesame Street",
   "street-address": "123 Sesame Street",
 };
