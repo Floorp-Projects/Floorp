@@ -149,14 +149,14 @@ mod tests {
             RemoteTab {
                 title: "my first tab".to_string(),
                 url_history: vec!["http://1.com".to_string()],
-                icon: None,
                 last_used: 2,
+                ..Default::default()
             },
             RemoteTab {
                 title: "my second tab".to_string(),
                 url_history: vec!["http://2.com".to_string()],
-                icon: None,
                 last_used: 1,
+                ..Default::default()
             },
         ];
         store.set_local_tabs(my_tabs.clone());
