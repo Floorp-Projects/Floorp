@@ -5,6 +5,11 @@
 import { getFilename } from "chrome://browser/content/screenshots/fileHelpers.mjs";
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
+const SCREENSHOTS_LAST_SCREENSHOT_METHOD_PREF =
+  "screenshots.browser.component.last-screenshot-method";
+const SCREENSHOTS_LAST_SAVED_METHOD_PREF =
+  "screenshots.browser.component.last-saved-method";
+
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -16,6 +21,20 @@ ChromeUtils.defineESModuleGetters(lazy, {
 XPCOMUtils.defineLazyServiceGetters(lazy, {
   AlertsService: ["@mozilla.org/alerts-service;1", "nsIAlertsService"],
 });
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "SCREENSHOTS_LAST_SAVED_METHOD",
+  SCREENSHOTS_LAST_SAVED_METHOD_PREF,
+  "download"
+);
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "SCREENSHOTS_LAST_SCREENSHOT_METHOD",
+  SCREENSHOTS_LAST_SCREENSHOT_METHOD_PREF,
+  "visible"
+);
 
 ChromeUtils.defineLazyGetter(lazy, "screenshotsLocalization", () => {
   return new Localization(["browser/screenshots.ftl"], true);
@@ -473,9 +492,10 @@ export var ScreenshotsUtils = {
     }
     buttonsPanel.hidden = false;
     buttonsPanel.ownerDocument.addEventListener("keydown", this);
+
     buttonsPanel
       .querySelector("screenshots-buttons")
-      .focusFirst({ focusVisible: true });
+      .focusButton(lazy.SCREENSHOTS_LAST_SCREENSHOT_METHOD);
   },
 
   /**
@@ -698,14 +718,23 @@ export var ScreenshotsUtils = {
       dialog._frame.contentDocument.createElement("screenshots-ui");
     dialog._frame.contentDocument.body.appendChild(screenshotsUI);
 
+    screenshotsUI.focusButton(lazy.SCREENSHOTS_LAST_SAVED_METHOD);
+
     let rect;
+    let lastUsedMethod;
     if (type === "full_page") {
       rect = await this.fetchFullPageBounds(browser);
-      this.methodsUsed.fullpage += 1;
+      lastUsedMethod = "fullpage";
     } else {
       rect = await this.fetchVisibleBounds(browser);
-      this.methodsUsed.visible += 1;
+      lastUsedMethod = "visible";
     }
+
+    Services.prefs.setStringPref(
+      SCREENSHOTS_LAST_SCREENSHOT_METHOD_PREF,
+      "fullpage"
+    );
+    this.methodsUsed[lastUsedMethod] += 1;
     this.recordTelemetryEvent("selected", type, {});
     return this.takeScreenshot(browser, dialog, rect);
   },
@@ -860,6 +889,8 @@ export var ScreenshotsUtils = {
       ...this.methodsUsed,
     });
     this.resetMethodsUsed();
+
+    Services.prefs.setStringPref(SCREENSHOTS_LAST_SAVED_METHOD_PREF, "copy");
   },
 
   /**
@@ -923,6 +954,11 @@ export var ScreenshotsUtils = {
       ...this.methodsUsed,
     });
     this.resetMethodsUsed();
+
+    Services.prefs.setStringPref(
+      SCREENSHOTS_LAST_SAVED_METHOD_PREF,
+      "download"
+    );
   },
 
   recordTelemetryEvent(type, object, args) {
