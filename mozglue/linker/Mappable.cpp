@@ -7,14 +7,14 @@
 
 #include "Mappable.h"
 
-Mappable* MappableFile::Create(const char* path) {
+Mappable* Mappable::Create(const char* path) {
   int fd = open(path, O_RDONLY);
-  if (fd != -1) return new MappableFile(fd);
+  if (fd != -1) return new Mappable(fd);
   return nullptr;
 }
 
-MemoryRange MappableFile::mmap(const void* addr, size_t length, int prot,
-                               int flags, off_t offset) {
+MemoryRange Mappable::mmap(const void* addr, size_t length, int prot, int flags,
+                           off_t offset) {
   MOZ_ASSERT(fd != -1);
   MOZ_ASSERT(!(flags & MAP_SHARED));
   flags |= MAP_PRIVATE;
@@ -23,12 +23,12 @@ MemoryRange MappableFile::mmap(const void* addr, size_t length, int prot,
                            offset);
 }
 
-void MappableFile::finalize() {
+void Mappable::finalize() {
   /* Close file ; equivalent to close(fd.forget()) */
   fd = -1;
 }
 
-size_t MappableFile::GetLength() const {
+size_t Mappable::GetLength() const {
   struct stat st;
   return fstat(fd, &st) ? 0 : st.st_size;
 }

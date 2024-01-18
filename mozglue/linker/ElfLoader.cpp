@@ -428,7 +428,7 @@ Mappable* SystemElf::GetMappable() const {
   }
 #endif
 
-  return MappableFile::Create(path);
+  return Mappable::Create(path);
 }
 
 #ifdef __ARM_EABI__
@@ -532,7 +532,7 @@ already_AddRefed<LibHandle> ElfLoader::GetHandleByPtr(void* addr) {
 }
 
 Mappable* ElfLoader::GetMappableFromPath(const char* path) {
-  return MappableFile::Create(path);
+  return Mappable::Create(path);
 }
 
 void ElfLoader::Register(LibHandle* handle) {
