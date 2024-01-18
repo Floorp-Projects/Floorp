@@ -6,6 +6,7 @@
 
 #include "WebRenderAPI.h"
 
+#include "mozilla/Logging.h"
 #include "mozilla/ipc/ByteBuf.h"
 #include "mozilla/webrender/RendererOGL.h"
 #include "mozilla/gfx/gfxVars.h"
@@ -21,11 +22,9 @@
 #include "malloc_decls.h"
 #include "GLContext.h"
 
-// clang-format off
-#define WRDL_LOG(...)
-//#define WRDL_LOG(...) printf_stderr("WRDL(%p): " __VA_ARGS__)
-//#define WRDL_LOG(...) if (XRE_IsContentProcess()) printf_stderr("WRDL(%p): " __VA_ARGS__)
-// clang-format on
+static mozilla::LazyLogModule sWrDLLog("wr.dl");
+#define WRDL_LOG(...) \
+  MOZ_LOG(sWrDLLog, LogLevel::Debug, ("WRDL(%p): " __VA_ARGS__))
 
 namespace mozilla {
 using namespace layers;
