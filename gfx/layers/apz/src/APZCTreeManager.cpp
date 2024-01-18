@@ -3363,8 +3363,12 @@ CSSRect APZCTreeManager::ConvertRectInApzcToRoot(AsyncPanZoomController* aApzc,
                                                  const CSSRect& aRect) const {
   MOZ_ASSERT(aApzc->IsRootForLayersId());
   RefPtr<AsyncPanZoomController> rootContentApzc = FindZoomableApzc(aApzc);
-  if (!rootContentApzc || rootContentApzc == aApzc) {
+  if (!rootContentApzc) {
     return aRect;
+  }
+
+  if (rootContentApzc == aApzc) {
+    return aRect + rootContentApzc->GetLayoutScrollOffset();
   }
 
   return GetOopifToRootContentTransform(aApzc).TransformBounds(aRect);

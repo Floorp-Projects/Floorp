@@ -2032,6 +2032,11 @@ class nsIWidget : public nsISupports {
   virtual TextEventDispatcherListener*
   GetNativeTextEventDispatcherListener() = 0;
 
+  /**
+   * Trigger an animation to zoom to the given |aRect|.
+   * |aRect| should be relative to the layout viewport of the widget's root
+   * document
+   */
   virtual void ZoomToRect(const uint32_t& aPresShellId,
                           const ScrollableLayerGuid::ViewID& aViewId,
                           const CSSRect& aRect, const uint32_t& aFlags) = 0;
