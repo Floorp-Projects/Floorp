@@ -25,10 +25,10 @@ import {
   isMapScopesEnabled,
   getSourceMapErrorForSourceActor,
 } from "../selectors/index";
-const KeyShortcuts = require("devtools/client/shared/key-shortcuts");
+const KeyShortcuts = require("resource://devtools/client/shared/key-shortcuts.js");
 
-const SplitBox = require("devtools/client/shared/components/splitter/SplitBox");
-const AppErrorBoundary = require("devtools/client/shared/components/AppErrorBoundary");
+const SplitBox = require("resource://devtools/client/shared/components/splitter/SplitBox.js");
+const AppErrorBoundary = require("resource://devtools/client/shared/components/AppErrorBoundary.js");
 
 const shortcuts = new KeyShortcuts({ window });
 

@@ -5,7 +5,7 @@
 const {
   LocalizationProvider,
   Localized,
-} = require("devtools/client/shared/vendor/fluent-react");
+} = require("resource://devtools/client/shared/vendor/fluent-react.js");
 
 import React, { PureComponent } from "devtools/client/shared/vendor/react";
 import { div, span } from "devtools/client/shared/vendor/react-dom-factories";

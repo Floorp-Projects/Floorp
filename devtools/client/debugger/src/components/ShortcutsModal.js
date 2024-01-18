@@ -13,7 +13,7 @@ import {
 import PropTypes from "devtools/client/shared/vendor/react-prop-types";
 import Modal from "./shared/Modal";
 import { formatKeyShortcut } from "../utils/text";
-const classnames = require("devtools/client/shared/classnames.js");
+const classnames = require("resource://devtools/client/shared/classnames.js");
 
 const isMacOS = Services.appinfo.OS === "Darwin";
 

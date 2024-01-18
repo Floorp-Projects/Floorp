@@ -25,7 +25,7 @@ import {
 
 import AccessibleImage from "../shared/AccessibleImage";
 
-const classnames = require("devtools/client/shared/classnames.js");
+const classnames = require("resource://devtools/client/shared/classnames.js");
 
 class EventListeners extends Component {
   state = {

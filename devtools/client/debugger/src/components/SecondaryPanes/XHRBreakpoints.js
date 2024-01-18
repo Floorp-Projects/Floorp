@@ -22,7 +22,7 @@ import { CloseButton } from "../shared/Button/index";
 import { getXHRBreakpoints, shouldPauseOnAnyXHR } from "../../selectors/index";
 import ExceptionOption from "./Breakpoints/ExceptionOption";
 
-const classnames = require("devtools/client/shared/classnames.js");
+const classnames = require("resource://devtools/client/shared/classnames.js");
 
 // At present, the "Pause on any URL" checkbox creates an xhrBreakpoint
 // of "ANY" with no path, so we can remove that before creating the list

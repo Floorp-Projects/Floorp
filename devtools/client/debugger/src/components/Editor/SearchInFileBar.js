@@ -19,8 +19,8 @@ import { scrollList } from "../../utils/result-list";
 
 import SearchInput from "../shared/SearchInput";
 
-const { PluralForm } = require("devtools/shared/plural-form");
-const { debounce } = require("devtools/shared/debounce");
+const { PluralForm } = require("resource://devtools/shared/plural-form.js");
+const { debounce } = require("resource://devtools/shared/debounce.js");
 import { renderWasmText } from "../../utils/wasm";
 import {
   clearSearch,

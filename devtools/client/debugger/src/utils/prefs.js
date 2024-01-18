@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-const { PrefsHelper } = require("devtools/client/shared/prefs");
+const { PrefsHelper } = require("resource://devtools/client/shared/prefs.js");
 
 import { isNode } from "./environment";
 
@@ -139,7 +139,7 @@ export const features = new PrefsHelper("devtools.debugger.features", {
 });
 
 // Import the asyncStore already spawned by the TargetMixin class
-const ThreadUtils = require("devtools/client/shared/thread-utils");
+const ThreadUtils = require("resource://devtools/client/shared/thread-utils.js");
 export const asyncStore = ThreadUtils.asyncStore;
 
 export function resetSchemaVersion() {

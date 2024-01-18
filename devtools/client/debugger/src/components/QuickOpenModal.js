@@ -9,8 +9,8 @@ import { connect } from "devtools/client/shared/vendor/react-redux";
 import { basename } from "../utils/path";
 import { createLocation } from "../utils/location";
 
-const fuzzyAldrin = require("devtools/client/shared/vendor/fuzzaldrin-plus.js");
-const { throttle } = require("devtools/shared/throttle");
+const fuzzyAldrin = require("resource://devtools/client/shared/vendor/fuzzaldrin-plus.js");
+const { throttle } = require("resource://devtools/shared/throttle.js");
 
 import actions from "../actions/index";
 import {

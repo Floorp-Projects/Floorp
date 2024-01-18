@@ -18,8 +18,8 @@ import AccessibleImage from "./AccessibleImage";
 import actions from "../../actions/index";
 import { getSearchOptions } from "../../selectors/index";
 
-const classnames = require("devtools/client/shared/classnames.js");
-const SearchModifiers = require("devtools/client/shared/components/SearchModifiers");
+const classnames = require("resource://devtools/client/shared/classnames.js");
+const SearchModifiers = require("resource://devtools/client/shared/components/SearchModifiers.js");
 
 const arrowBtn = (onClick, type, className, tooltip) => {
   const props = {

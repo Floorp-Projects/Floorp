@@ -5,7 +5,7 @@
 import React from "devtools/client/shared/vendor/react";
 import PropTypes from "devtools/client/shared/vendor/react-prop-types";
 
-const classnames = require("devtools/client/shared/classnames.js");
+const classnames = require("resource://devtools/client/shared/classnames.js");
 
 const AccessibleImage = props => {
   return React.createElement("span", {

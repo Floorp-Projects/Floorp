@@ -7,7 +7,7 @@ import { parse } from "../url";
 const {
   getUnicodeHostname,
   getUnicodeUrlPath,
-} = require("devtools/client/shared/unicode-url");
+} = require("resource://devtools/client/shared/unicode-url.js");
 
 export function getFilenameFromPath(pathname) {
   let filename = "";

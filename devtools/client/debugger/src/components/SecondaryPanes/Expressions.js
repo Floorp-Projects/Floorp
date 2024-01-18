@@ -36,8 +36,8 @@ import { getExpressionResultGripAndFront } from "../../utils/expressions";
 
 import { CloseButton } from "../shared/Button/index";
 
-const { debounce } = require("devtools/shared/debounce");
-const classnames = require("devtools/client/shared/classnames.js");
+const { debounce } = require("resource://devtools/shared/debounce.js");
+const classnames = require("resource://devtools/client/shared/classnames.js");
 
 const { ObjectInspector } = objectInspector;
 

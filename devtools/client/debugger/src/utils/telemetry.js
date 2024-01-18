@@ -47,7 +47,7 @@ import { isNode } from "./environment";
 let telemetry;
 
 if (isNode()) {
-  const Telemetry = require("devtools/client/shared/telemetry");
+  const Telemetry = require("resource://devtools/client/shared/telemetry.js");
   telemetry = new Telemetry();
 }
 

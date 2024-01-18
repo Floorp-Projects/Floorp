@@ -20,7 +20,7 @@ import {
   getLogPointStatus,
 } from "../../selectors/index";
 
-const classnames = require("devtools/client/shared/classnames.js");
+const classnames = require("resource://devtools/client/shared/classnames.js");
 
 function addNewLine(doc) {
   const cursor = doc.getCursor();

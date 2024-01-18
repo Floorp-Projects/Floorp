@@ -25,10 +25,10 @@ import { debugBtn } from "../shared/Button/CommandBarButton";
 import AccessibleImage from "../shared/AccessibleImage";
 import { showMenu } from "../../context-menu/menu";
 
-const classnames = require("devtools/client/shared/classnames.js");
-const MenuButton = require("devtools/client/shared/components/menu/MenuButton");
-const MenuItem = require("devtools/client/shared/components/menu/MenuItem");
-const MenuList = require("devtools/client/shared/components/menu/MenuList");
+const classnames = require("resource://devtools/client/shared/classnames.js");
+const MenuButton = require("resource://devtools/client/shared/components/menu/MenuButton.js");
+const MenuItem = require("resource://devtools/client/shared/components/menu/MenuItem.js");
+const MenuList = require("resource://devtools/client/shared/components/menu/MenuList.js");
 
 const isMacOS = Services.appinfo.OS === "Darwin";
 

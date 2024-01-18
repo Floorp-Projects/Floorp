@@ -27,7 +27,7 @@ import {
   isSourceBlackBoxed,
 } from "../../selectors/index";
 
-const classnames = require("devtools/client/shared/classnames.js");
+const classnames = require("resource://devtools/client/shared/classnames.js");
 
 class Tab extends PureComponent {
   static get propTypes() {

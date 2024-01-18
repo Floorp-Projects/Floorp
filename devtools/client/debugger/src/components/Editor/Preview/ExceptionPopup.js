@@ -15,7 +15,7 @@ const {
 import actions from "../../../actions/index";
 
 import AccessibleImage from "../../shared/AccessibleImage";
-const classnames = require("devtools/client/shared/classnames.js");
+const classnames = require("resource://devtools/client/shared/classnames.js");
 const ANONYMOUS_FN_NAME = "<anonymous>";
 
 // The exception popup works in two modes:
