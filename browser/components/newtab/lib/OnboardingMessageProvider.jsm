@@ -264,10 +264,12 @@ const BASE_MESSAGES = () => [
             progress_bar: true,
             logo: {},
             title: {
-              string_id: "mr2022-onboarding-mobile-download-title",
+              string_id:
+                "onboarding-mobile-download-security-and-privacy-title",
             },
             subtitle: {
-              string_id: "mr2022-onboarding-mobile-download-subtitle",
+              string_id:
+                "onboarding-mobile-download-security-and-privacy-subtitle",
             },
             hero_image: {
               url: "chrome://activity-stream/content/data/content/assets/mobile-download-qr-existing-user.svg",
