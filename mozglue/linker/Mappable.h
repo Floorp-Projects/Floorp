@@ -6,8 +6,6 @@
 #define Mappable_h
 
 #include "Zip.h"
-#include "mozilla/RefPtr.h"
-#include "mozilla/UniquePtr.h"
 #include "zlib.h"
 
 /**
@@ -26,7 +24,6 @@ class Mappable : public mozilla::RefCounted<Mappable> {
 
   enum Kind {
     MAPPABLE_FILE,
-    MAPPABLE_EXTRACT_FILE,
     MAPPABLE_DEFLATE,
     MAPPABLE_SEEKABLE_ZSTREAM
   };
@@ -79,45 +76,6 @@ class MappableFile : public Mappable {
  private:
   /* File descriptor */
   AutoCloseFD fd;
-};
-
-/**
- * Mappable implementation for deflated stream in a Zip archive
- * Inflates the complete stream into a cache file.
- */
-class MappableExtractFile : public MappableFile {
- public:
-  ~MappableExtractFile() = default;
-
-  /**
-   * Create a MappableExtractFile instance for the given Zip stream. The name
-   * argument is used to create the cache file in the cache directory.
-   */
-  static Mappable* Create(const char* name, Zip* zip, Zip::Stream* stream);
-
-  /* Override finalize from MappableFile */
-  virtual void finalize() {}
-
-  virtual Kind GetKind() const { return MAPPABLE_EXTRACT_FILE; };
-
- private:
-  /**
-   * AutoUnlinkFile keeps track of a file name and removes (unlinks) the file
-   * when the instance is destroyed.
-   */
-  struct UnlinkFile {
-    void operator()(char* value) {
-      unlink(value);
-      delete[] value;
-    }
-  };
-  typedef mozilla::UniquePtr<char[], UnlinkFile> AutoUnlinkFile;
-
-  MappableExtractFile(int fd, const char* path)
-      : MappableFile(fd), path(path) {}
-
-  /* Extracted file path */
-  mozilla::UniquePtr<const char[]> path;
 };
 
 class _MappableBuffer;
