@@ -6,7 +6,6 @@ run-if = [
 headless = true
 
 ["test_headless.js"]
-disable_e10s = true
 skip-if = ["appname == 'thunderbird'"]
 support-files = [
   "headless.html",
