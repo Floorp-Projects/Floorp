@@ -38,7 +38,10 @@ Preferences.addAll([
   { id: "privacy.cpd.siteSettings", type: "bool" },
   { id: "privacy.sanitize.timeSpan", type: "int" },
   { id: "privacy.clearOnShutdown.history", type: "bool" },
-  { id: "privacy.clearOnShutdown_v2.historyAndFormData", type: "bool" },
+  {
+    id: "privacy.clearOnShutdown_v2.historyFormDataAndDownloads",
+    type: "bool",
+  },
   { id: "privacy.clearOnShutdown.formdata", type: "bool" },
   { id: "privacy.clearOnShutdown.downloads", type: "bool" },
   { id: "privacy.clearOnShutdown_v2.downloads", type: "bool" },
@@ -72,13 +75,11 @@ var gSanitizePromptDialog = {
      */
     this.siteDataSizes = {};
     this.cacheSize = [];
-    this.downloadSizes = {};
 
     if (!lazy.USE_OLD_DIALOG) {
       this._cookiesAndSiteDataCheckbox =
         document.getElementById("cookiesAndStorage");
       this._cacheCheckbox = document.getElementById("cache");
-      this._downloadHistoryCheckbox = document.getElementById("downloads");
     }
 
     let arg = window.arguments?.[0] || {};
@@ -102,10 +103,9 @@ var gSanitizePromptDialog = {
     // follow the clear history default prefs
     this.defaultCheckedByContext = {
       clearHistory: [
-        "historyAndFormData",
+        "historyFormDataAndDownloads",
         "cookiesAndStorage",
         "cache",
-        "downloads",
       ],
       clearSiteData: ["cookiesAndStorage", "cache"],
     };
@@ -363,10 +363,9 @@ var gSanitizePromptDialog = {
       "TIMESPAN_EVERYTHING",
     ];
 
-    let [quotaUsage, cacheSize, downloadCount] = await Promise.all([
+    let [quotaUsage, cacheSize] = await Promise.all([
       lazy.SiteDataManager.getQuotaUsageForTimeRanges(ALL_TIMESPANS),
       lazy.SiteDataManager.getCacheSize(),
-      lazy.SiteDataManager.getDownloadCountForTimeRanges(ALL_TIMESPANS),
     ]);
     // Convert sizes to [amount, unit]
     for (const timespan in quotaUsage) {
@@ -375,7 +374,6 @@ var gSanitizePromptDialog = {
       );
     }
     this.cacheSize = lazy.DownloadUtils.convertByteUnits(cacheSize);
-    this.downloadSizes = downloadCount;
     this.updateDataSizesInUI();
   },
 
@@ -476,20 +474,12 @@ var gSanitizePromptDialog = {
       "item-cached-content-with-size",
       { amount, unit }
     );
-
-    const downloadcount = this.downloadSizes[timeSpanSelected];
-
-    document.l10n.setAttributes(
-      this._downloadHistoryCheckbox,
-      "item-download-history-with-size",
-      { count: downloadcount }
-    );
   },
 
   /**
    * Get all items to clear based on checked boxes
    *
-   * @returns {string[]} array of items ["cache", "historyAndFormData"...]
+   * @returns {string[]} array of items ["cache", "historyFormDataAndDownloads"...]
    */
   getItemsToClear() {
     // the old dialog uses the preferences to decide what to clear
