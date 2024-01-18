@@ -15,6 +15,9 @@
 var h3Port;
 var host;
 
+/* eslint no-unused-vars: 0 */
+const dns = Services.dns;
+
 registerCleanupFunction(async () => {
   Services.prefs.clearUserPref("network.dns.localDomains");
   Services.prefs.clearUserPref("network.webtransport.enabled");
