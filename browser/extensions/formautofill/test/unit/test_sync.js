@@ -25,7 +25,9 @@ initTestLogging("Trace");
 const TEST_STORE_FILE_NAME = "test-profile.json";
 
 const TEST_PROFILE_1 = {
-  name: "Timothy John Berners-Lee",
+  "given-name": "Timothy",
+  "additional-name": "John",
+  "family-name": "Berners-Lee",
   organization: "World Wide Web Consortium",
   "street-address": "32 Vassar Street\nMIT Room 32-G524",
   "address-level2": "Cambridge",
@@ -270,7 +272,7 @@ add_task(async function test_incoming_existing() {
     // now server records that modify the existing items.
     let modifiedEntry1 = Object.assign({}, TEST_PROFILE_1, {
       version: 1,
-      name: "NewName",
+      "given-name": "NewName",
     });
 
     let lastSync = await engine.getLastSync();
@@ -480,7 +482,8 @@ add_task(async function test_applyIncoming_incoming_restored() {
     let localRecord = await profileStorage.addresses.get(guid);
     ok(
       objectMatches(localRecord, {
-        name: "Timothy John Berners-Lee",
+        "given-name": "Timothy",
+        "family-name": "Berners-Lee",
         "street-address": "I moved!",
       })
     );
@@ -534,7 +537,8 @@ add_task(async function test_applyIncoming_outgoing_restored() {
     ok(!serverPayload.deleted, "Should resurrect record on server");
     ok(
       objectMatches(serverPayload.entry, {
-        name: "Timothy John Berners-Lee",
+        "given-name": "Timothy",
+        "family-name": "Berners-Lee",
         "street-address": "I moved!",
         // resurrection also beings back any unknown fields we had
         "unknown-1": "some unknown data from another client",
@@ -746,7 +750,8 @@ add_task(async function test_dedupe_multiple_candidates() {
     // overwrite that tombstone when we see A.
 
     let localRecord = {
-      name: "Mark Hammond",
+      "given-name": "Mark",
+      "family-name": "Hammond",
       organization: "Mozilla",
       country: "AU",
       tel: "+12345678910",
@@ -794,14 +799,16 @@ add_task(async function test_dedupe_multiple_candidates() {
     await expectLocalProfiles(profileStorage, [
       {
         guid: aGuid,
-        name: "Mark Hammond",
+        "given-name": "Mark",
+        "family-name": "Hammond",
         organization: "Mozilla",
         country: "AU",
         tel: "+12345678910",
       },
       {
         guid: bGuid,
-        name: "Mark Hammond",
+        "given-name": "Mark",
+        "family-name": "Hammond",
         organization: "Mozilla",
         country: "AU",
         tel: "+12345678910",
@@ -868,12 +875,14 @@ add_task(async function test_reconcile_both_modified_conflict() {
     await expectLocalProfiles(profileStorage, [
       {
         guid,
-        name: "Timothy John Berners-Lee",
+        "given-name": "Timothy",
+        "family-name": "Berners-Lee",
         "street-address": "I moved, too!",
       },
       {
         guid: forkedPayload.id,
-        name: "Timothy John Berners-Lee",
+        "given-name": "Timothy",
+        "family-name": "Berners-Lee",
         "street-address": "I moved!",
       },
     ]);

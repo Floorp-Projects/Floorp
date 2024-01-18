@@ -24,8 +24,7 @@ add_setup(async function () {
 
 add_task(async function test_save_doorhanger_state_invalid() {
   const DEFAULT = {
-    "given-name": "John",
-    "family-name": "Doe",
+    "given-name": "Test User",
     organization: "Mozilla",
     "street-address": "123 Sesame Street",
     country: "US",
@@ -54,7 +53,6 @@ add_task(async function test_save_doorhanger_state_invalid() {
           focusSelector: "#given-name",
           newValues: {
             "#given-name": DEFAULT["given-name"],
-            "#family-name": DEFAULT["family-name"],
             "#organization": DEFAULT.organization,
             "#street-address": DEFAULT["street-address"],
             "#address-level1": TEST.filled["address-level1"],
@@ -73,8 +71,7 @@ add_task(async function test_save_doorhanger_state_invalid() {
 
 add_task(async function test_save_doorhanger_state_valid() {
   const DEFAULT = {
-    "given-name": "John",
-    "family-name": "Doe",
+    "given-name": "Test User",
     organization: "Mozilla",
     "street-address": "123 Sesame Street",
     country: "US",
@@ -111,7 +108,6 @@ add_task(async function test_save_doorhanger_state_valid() {
           focusSelector: "#given-name",
           newValues: {
             "#given-name": DEFAULT["given-name"],
-            "#family-name": DEFAULT["family-name"],
             "#organization": DEFAULT.organization,
             "#street-address": DEFAULT["street-address"],
             "#address-level1": TEST.filled["address-level1"],

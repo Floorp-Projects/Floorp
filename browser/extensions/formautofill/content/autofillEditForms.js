@@ -340,10 +340,12 @@ class EditAddress extends EditAutofillForm {
       containerInputs.forEach(function (input) {
         input.disabled = false;
         // libaddressinput doesn't list 'country' or 'name' as required.
+        // The additional-name field should never get marked as required.
         input.required =
-          fieldId == "country" ||
-          fieldId == "name" ||
-          requiredFields.has(fieldId);
+          (fieldId == "country" ||
+            fieldId == "name" ||
+            requiredFields.has(fieldId)) &&
+          input.id != "additional-name";
       });
       inputs.push(...containerInputs);
       container.style.display = "flex";
