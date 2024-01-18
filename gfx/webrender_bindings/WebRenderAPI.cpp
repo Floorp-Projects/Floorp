@@ -1198,8 +1198,17 @@ wr::WrClipChainId DisplayListBuilder::DefineClipChain(
   }
   uint64_t clipchainId = wr_dp_define_clipchain(
       mWrState, parent, aClips.Elements(), aClips.Length());
-  WRDL_LOG("DefineClipChain id=%" PRIu64 " clips=%zu\n", mWrState, clipchainId,
-           aClips.Length());
+  if (MOZ_LOG_TEST(sWrDLLog, LogLevel::Debug)) {
+    nsCString message;
+    message.AppendPrintf("DefineClipChain id=%" PRIu64
+                         " clipCount=%zu clipIds=[",
+                         clipchainId, aClips.Length());
+    for (const auto& clip : aClips) {
+      message.AppendPrintf("%" PRIuPTR ",", clip.id);
+    }
+    message.Append("]");
+    WRDL_LOG("%s", mWrState, message.get());
+  }
   return wr::WrClipChainId{clipchainId};
 }
 
