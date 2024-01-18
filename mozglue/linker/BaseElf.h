@@ -47,8 +47,6 @@ class BaseElf : public LibHandle {
   virtual const void* FindExidx(int* pcount) const;
 #endif
 
-  virtual Mappable* GetMappable() const { return NULL; };
-
  public:
   /* private: */
   /**
