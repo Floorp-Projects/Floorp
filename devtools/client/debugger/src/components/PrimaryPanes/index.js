@@ -20,8 +20,6 @@ const {
   Tabs,
 } = require("devtools/client/shared/components/tabs/Tabs.js");
 
-import "./Sources.css";
-
 const tabs = [
   primaryPaneTabs.SOURCES,
   primaryPaneTabs.OUTLINE,

@@ -25,8 +25,6 @@ import ExceptionPopup from "./ExceptionPopup";
 import actions from "../../../actions/index";
 import Popover from "../../shared/Popover";
 
-import "./Popup.css";
-
 export class Popup extends Component {
   constructor(props) {
     super(props);

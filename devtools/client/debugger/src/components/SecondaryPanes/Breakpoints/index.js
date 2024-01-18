@@ -28,8 +28,6 @@ import {
 
 const classnames = require("devtools/client/shared/classnames.js");
 
-import "./Breakpoints.css";
-
 class Breakpoints extends Component {
   static get propTypes() {
     return {

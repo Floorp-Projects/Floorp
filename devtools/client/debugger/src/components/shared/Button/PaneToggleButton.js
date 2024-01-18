@@ -9,8 +9,6 @@ import { CommandBarButton } from "./index";
 
 const classnames = require("devtools/client/shared/classnames.js");
 
-import "./styles/PaneToggleButton.css";
-
 class PaneToggleButton extends PureComponent {
   static defaultProps = {
     horizontal: false,

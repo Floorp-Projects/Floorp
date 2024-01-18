@@ -16,8 +16,6 @@ import {
   hasPrettyTab,
 } from "../../selectors/index";
 
-import "./SourceIcon.css";
-
 class SourceIcon extends PureComponent {
   static get propTypes() {
     return {

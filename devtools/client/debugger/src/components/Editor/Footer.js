@@ -32,8 +32,6 @@ import AccessibleImage from "../shared/AccessibleImage";
 
 const classnames = require("devtools/client/shared/classnames.js");
 
-import "./Footer.css";
-
 class SourceFooter extends PureComponent {
   static get propTypes() {
     return {

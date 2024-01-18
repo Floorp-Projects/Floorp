@@ -7,8 +7,6 @@ import PropTypes from "devtools/client/shared/vendor/react-prop-types";
 
 const classnames = require("devtools/client/shared/classnames.js");
 
-import "./BracketArrow.css";
-
 const BracketArrow = ({ orientation, left, top, bottom }) => {
   return div({
     className: classnames("bracket-arrow", orientation || "up"),

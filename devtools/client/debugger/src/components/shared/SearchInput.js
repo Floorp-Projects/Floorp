@@ -16,7 +16,6 @@ import { CloseButton } from "./Button/index";
 
 import AccessibleImage from "./AccessibleImage";
 import actions from "../../actions/index";
-import "./SearchInput.css";
 import { getSearchOptions } from "../../selectors/index";
 
 const classnames = require("devtools/client/shared/classnames.js");

@@ -35,8 +35,6 @@ const {
   HTMLTooltip,
 } = require("devtools/client/shared/widgets/tooltip/HTMLTooltip");
 
-import "./ProjectSearch.css";
-
 export const statusType = {
   initial: "INITIAL",
   fetching: "FETCHING",

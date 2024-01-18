@@ -17,8 +17,6 @@ import actions from "../actions/index";
 import { getPaneCollapse } from "../selectors/index";
 import { formatKeyShortcut } from "../utils/text";
 
-import "./WelcomeBox.css";
-
 export class WelcomeBox extends Component {
   static get propTypes() {
     return {

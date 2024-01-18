@@ -28,8 +28,6 @@ import { connect } from "devtools/client/shared/vendor/react-redux";
 
 import { CloseButton } from "../shared/Button/index";
 
-import "./DOMMutationBreakpoints.css";
-
 const localizationTerms = {
   subtree: L10N.getStr("domMutationTypes.subtree"),
   attribute: L10N.getStr("domMutationTypes.attribute"),

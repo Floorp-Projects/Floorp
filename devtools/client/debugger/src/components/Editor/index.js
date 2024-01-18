@@ -84,10 +84,6 @@ function isCmd(ev) {
   return isMacOS ? ev.metaKey : ev.ctrlKey;
 }
 
-import "./Editor.css";
-import "./Breakpoints.css";
-import "./InlinePreview.css";
-
 const cssVars = {
   searchbarHeight: "var(--editor-searchbar-height)",
 };

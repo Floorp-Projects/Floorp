@@ -12,8 +12,6 @@ const classnames = require("devtools/client/shared/classnames.js");
 
 import { scrollList } from "../../utils/result-list";
 
-import "./ResultList.css";
-
 export default class ResultList extends Component {
   static defaultProps = {
     size: "small",

@@ -9,9 +9,6 @@ import { getLibraryFromUrl } from "../../../utils/pause/frames/index";
 
 import AccessibleImage from "../../shared/AccessibleImage";
 import FrameComponent from "./Frame";
-
-import "./Group.css";
-
 import Badge from "../../shared/Badge";
 import FrameIndent from "./FrameIndent";
 

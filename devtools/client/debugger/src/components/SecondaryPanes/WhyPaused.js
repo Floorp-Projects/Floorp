@@ -27,8 +27,6 @@ import {
   getPauseReason as getWhy,
 } from "../../selectors/index";
 
-import "./WhyPaused.css";
-
 class WhyPaused extends PureComponent {
   constructor(props) {
     super(props);

@@ -19,7 +19,6 @@ import actions from "../../actions/index";
 
 import { CloseButton } from "../shared/Button/index";
 
-import "./XHRBreakpoints.css";
 import { getXHRBreakpoints, shouldPauseOnAnyXHR } from "../../selectors/index";
 import ExceptionOption from "./Breakpoints/ExceptionOption";
 

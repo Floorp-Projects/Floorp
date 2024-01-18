@@ -10,7 +10,6 @@ import {
 import ReactDOM from "devtools/client/shared/vendor/react-dom";
 import PropTypes from "devtools/client/shared/vendor/react-prop-types";
 import { connect } from "devtools/client/shared/vendor/react-redux";
-import "./ConditionalPanel.css";
 import { toEditorLine } from "../../utils/editor/index";
 import { prefs } from "../../utils/prefs";
 import actions from "../../actions/index";

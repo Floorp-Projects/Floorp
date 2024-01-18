@@ -23,7 +23,6 @@ import { formatKeyShortcut } from "../../utils/text";
 import actions from "../../actions/index";
 import { debugBtn } from "../shared/Button/CommandBarButton";
 import AccessibleImage from "../shared/AccessibleImage";
-import "./CommandBar.css";
 import { showMenu } from "../../context-menu/menu";
 
 const classnames = require("devtools/client/shared/classnames.js");
