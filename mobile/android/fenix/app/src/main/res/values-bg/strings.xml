@@ -213,6 +213,8 @@
     <string name="resync_button_content_description">Повторно синхронизиране</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">Търсене в страницата</string>
+    <!-- Browser menu button that opens the translations dialog, which has options to translate the current browser page. -->
+    <string name="browser_menu_translations">Превеждане на страницатa</string>
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">Добавяне към списък</string>
     <!-- Browser menu button that open a share menu to share the current site -->
@@ -2274,6 +2276,8 @@
     <string name="review_quality_check_contextual_onboarding_learn_more">Използвайки мощта на %1$s от Mozilla, ние ви помагаме да избегнете необективни и недостоверни рецензии. Нашият AI модел винаги се подобрява, за да ви защитава, докато пазарувате. %2$s</string>
     <!-- Clickable text from the contextual onboarding card that links to review quality check support article. -->
     <string name="review_quality_check_contextual_onboarding_learn_more_link">Научете повече</string>
+    <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is the Fakespot product name. Following parameters are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy and review_quality_check_contextual_onboarding_terms_use. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
+    <string name="review_quality_check_contextual_onboarding_caption">Избирайки „Да, пробвайте“ вие се съгласявате с  %1$s на Mozilla %2$s и %3$s</string>
     <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. Parameter is the Fakespot product name. After the colon, what appears are two links, each on their own line. The first link is to a Privacy policy (review_quality_check_contextual_onboarding_privacy_policy_2). The second link is to Terms of use (review_quality_check_contextual_onboarding_terms_use_2). -->
     <string name="review_quality_check_contextual_onboarding_caption_2" moz:RemovedIn="123" tools:ignore="UnusedResources">С избирането на „Да, изпробвайте“ вие се съгласявате със следното от %1$s:</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
@@ -2284,6 +2288,8 @@
     <string name="review_quality_check_contextual_onboarding_terms_use">условия за ползване</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
     <string name="review_quality_check_contextual_onboarding_terms_use_2" moz:RemovedIn="123" tools:ignore="UnusedResources">Условия за употреба</string>
+    <!-- Text for opt-in button from the review quality check contextual onboarding card. -->
+    <string name="review_quality_check_contextual_onboarding_primary_button_text">Да, пробване</string>
     <!-- Text for opt-out button from the review quality check contextual onboarding card. -->
     <string name="review_quality_check_contextual_onboarding_secondary_button_text">Не сега</string>
     <!-- Text for the first CFR presenting the review quality check feature. -->
@@ -2359,12 +2365,25 @@
     <string name="translations_bottom_sheet_translate_to">Превеждане на</string>
     <!-- Button text on the translations dialog to dismiss the dialog and return to the browser. -->
     <string name="translations_bottom_sheet_negative_button">Не сега</string>
+    <!-- Button text on the translations dialog when a translation error appears, used to dismiss the dialog and return to the browser. -->
+    <string name="translations_bottom_sheet_negative_button_error">Готово</string>
     <!-- Button text on the translations dialog to begin a translation of the website. -->
     <string name="translations_bottom_sheet_positive_button">Превеждане</string>
+    <!-- Button text on the translations dialog when a translation error appears. -->
+    <string name="translations_bottom_sheet_positive_button_error">Нов опит</string>
     <!-- Inactive button text on the translations dialog that indicates a translation is currently in progress. This button will be accompanied by a loading icon. -->
     <string name="translations_bottom_sheet_translating_in_progress">Превеждане</string>
     <!-- Button content description (not visible, for screen readers etc.) for the translations dialog translate button that indicates a translation is currently in progress. -->
     <string name="translations_bottom_sheet_translating_in_progress_content_description">Превеждането е в процес на изпълнение</string>
+
+    <!-- The title of the warning card informs the user that a translation could not be completed. -->
+    <string name="translation_error_could_not_translate_warning_text">Възникна проблем при превода. Моля, опитайте отново.</string>
+    <!-- The title of the warning card informs the user that the list of languages cannot be loaded. -->
+    <string name="translation_error_could_not_load_languages_warning_text">Езиците не можаха да бъдат заредени. Проверете връзката си с интернет и опитайте отново.</string>
+    <!-- The title of the warning card informs the user that a language is not supported. The first parameter is the name of the language that is not supported. -->
+    <string name="translation_error_language_not_supported_warning_text">За съжаление, все още не поддържаме %1$s.</string>
+    <!-- Button text on the warning card when a language is not supported. The link will take the user to a page to a support page about translations. -->
+    <string name="translation_error_language_not_supported_learn_more">Научете повече</string>
 
     <!-- Translations options dialog -->
     <!-- Title of the translation options dialog that allows a user to set their translation options for the site the user is currently on. -->
@@ -2512,4 +2531,14 @@
     <string name="debug_drawer_tab_tools_tab_count_private">Лични</string>
     <!-- The total tab count category in the tab count section in Tab Tools. -->
     <string name="debug_drawer_tab_tools_tab_count_total">Всичко</string>
-    </resources>
+    <!-- The title of the tab creation tool section in Tab Tools. -->
+    <string name="debug_drawer_tab_tools_tab_creation_tool_title">Инструмент за създаване на раздели</string>
+    <!-- The label of the text field in the tab creation tool. -->
+    <string name="debug_drawer_tab_tools_tab_creation_tool_text_field_label">Количество на разделите за създаване</string>
+    <!-- The button text to add tabs to the active tab group in the tab creation tool. -->
+    <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_active">Добавяне към активните раздели</string>
+    <!-- The button text to add tabs to the inactive tab group in the tab creation tool. -->
+    <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_inactive">Добавяне към неактивните раздели</string>
+    <!-- The button text to add tabs to the private tab group in the tab creation tool. -->
+    <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_private">Добавяне към поверителните раздели</string>
+</resources>

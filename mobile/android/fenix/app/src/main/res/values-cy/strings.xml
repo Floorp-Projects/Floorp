@@ -1327,7 +1327,7 @@
 
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active for Android 14+ -->
     <string name="notification_erase_title_android_14">Cau tabiau preifat?</string>
-    <string name="notification_erase_text_android_14">Tapiwch neu swipe yr hysbysiad hwn i gau tabiau preifat.</string>
+    <string name="notification_erase_text_android_14">Tapiwch neu lusgo\'r hysbysiad hwn i gau tabiau preifat.</string>
 
     <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_marketing_channel_name">Marchnata</string>

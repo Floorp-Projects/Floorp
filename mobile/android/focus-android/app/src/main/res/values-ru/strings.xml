@@ -54,7 +54,6 @@
     <string name="menu_remove_from_shortcuts">Удалить из ярлыков</string>
 
     <!-- Menu item: Shows information about features and changes that are new to this version -->
-    <string name="menu_whats_new">Что нового</string>
     <string name="menu_settings">Настройки</string>
     <string name="menu_about">О приложении</string>
     <string name="menu_help">Справка</string>
@@ -85,10 +84,10 @@
          sharing an URL. -->
     <string name="share_dialog_title">Поделиться через</string>
 
-    <!-- While a browsing session is active (in the foreground or background) we will show a notification
-         so that the user doesn't forget about the website still being open. This text is shown in
-         the notification. Clicking the notification will have the same effect as clicking the "erase"
-         button in the application. -->
+    <string name="notification_erase_title_android_14">Удалить историю просмотра?</string>
+
+    <string name="notification_erase_text_android_14">Нажмите или снимите это уведомление, чтобы надежно удалить свою историю просмотра.</string>
+
     <string name="notification_erase_text">Удалить историю просмотра сети</string>
 
     <!-- Notification action to open Focus and resume the current browsing session. -->

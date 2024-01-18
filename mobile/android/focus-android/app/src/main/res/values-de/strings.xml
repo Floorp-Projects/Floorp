@@ -53,7 +53,6 @@
     <string name="menu_remove_from_shortcuts">Aus Verknüpfungen entfernen</string>
 
     <!-- Menu item: Shows information about features and changes that are new to this version -->
-    <string name="menu_whats_new" moz:RemovedIn="116" tools:ignore="UnusedResources">Was ist neu</string>
     <string name="menu_settings">Einstellungen</string>
     <string name="menu_about">Über</string>
     <string name="menu_help">Hilfe</string>
@@ -84,10 +83,9 @@
          sharing an URL. -->
     <string name="share_dialog_title">Teilen über</string>
 
-    <!-- While a browsing session is active (in the foreground or background) we will show a notification
-         so that the user doesn't forget about the website still being open. This text is shown in
-         the notification. Clicking the notification will have the same effect as clicking the "erase"
-         button in the application. -->
+    <string name="notification_erase_title_android_14">Browser-Chronik löschen?</string>
+    <string name="notification_erase_text_android_14">Tippen oder löschen Sie diese Benachrichtigung, um Ihre Browser-Chronik sicher zu löschen.</string>
+
     <string name="notification_erase_text">Browser-Chronik löschen</string>
 
     <!-- Notification action to open Focus and resume the current browsing session. -->

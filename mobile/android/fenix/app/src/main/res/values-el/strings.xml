@@ -1340,6 +1340,8 @@
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active for Android 14+ -->
     <string name="notification_erase_title_android_14">Κλείσιμο ιδιωτικών καρτελών;</string>
 
+    <string name="notification_erase_text_android_14">Πατήστε ή σύρετε αυτήν την ειδοποίηση για να κλείσετε τις ιδιωτικές καρτέλες.</string>
+
     <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_marketing_channel_name">Μάρκετινγκ</string>
 
@@ -2358,6 +2360,9 @@
     <!-- Title for dialog displayed when trying to access links present in a text. -->
     <string name="a11y_links_title">Σύνδεσμοι</string>
 
+    <!-- Additional content description for text bodies that contain urls. -->
+    <string name="a11y_links_available">Διαθέσιμοι σύνδεσμοι</string>
+
     <!-- Translations feature-->
 
     <!-- Translation request dialog -->
@@ -2388,6 +2393,10 @@
 
     <!-- The title of the warning card informs the user that a translation could not be completed. -->
     <string name="translation_error_could_not_translate_warning_text">Προέκυψε πρόβλημα με τη μετάφραση. Παρακαλούμε δοκιμάστε ξανά.</string>
+    <!-- The title of the warning card informs the user that the list of languages cannot be loaded. -->
+    <string name="translation_error_could_not_load_languages_warning_text">Αδυναμία φόρτωσης γλωσσών. Ελέγξτε τη σύνδεσή σας στο διαδίκτυο και δοκιμάστε ξανά.</string>
+    <!-- The title of the warning card informs the user that a language is not supported. The first parameter is the name of the language that is not supported. -->
+    <string name="translation_error_language_not_supported_warning_text">Δυστυχώς, δεν υποστηρίζουμε ακόμα τα %1$s.</string>
     <!-- Button text on the warning card when a language is not supported. The link will take the user to a page to a support page about translations. -->
     <string name="translation_error_language_not_supported_learn_more">Μάθετε περισσότερα</string>
 
@@ -2539,6 +2548,10 @@
     <string name="debug_drawer_tab_tools_tab_count_private">Ιδιωτικές</string>
     <!-- The total tab count category in the tab count section in Tab Tools. -->
     <string name="debug_drawer_tab_tools_tab_count_total">Σύνολο</string>
+    <!-- The title of the tab creation tool section in Tab Tools. -->
+    <string name="debug_drawer_tab_tools_tab_creation_tool_title">Εργαλείο δημιουργίας καρτελών</string>
+    <!-- The label of the text field in the tab creation tool. -->
+    <string name="debug_drawer_tab_tools_tab_creation_tool_text_field_label">Πλήθος καρτελών προς δημιουργία</string>
     <!-- The button text to add tabs to the active tab group in the tab creation tool. -->
     <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_active">Προσθήκη στις ενεργές καρτέλες</string>
     <!-- The button text to add tabs to the inactive tab group in the tab creation tool. -->
