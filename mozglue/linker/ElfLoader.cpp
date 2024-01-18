@@ -283,27 +283,6 @@ const void* __wrap___gnu_Unwind_Find_exidx(void* pc, int* pcount) {
 }
 #endif
 
-/**
- * faulty.lib public API
- */
-
-MFBT_API size_t __dl_get_mappable_length(void* handle) {
-  if (!handle) return 0;
-  return reinterpret_cast<LibHandle*>(handle)->GetMappableLength();
-}
-
-MFBT_API void* __dl_mmap(void* handle, void* addr, size_t length,
-                         off_t offset) {
-  if (!handle) return nullptr;
-  return reinterpret_cast<LibHandle*>(handle)->MappableMMap(addr, length,
-                                                            offset);
-}
-
-MFBT_API void __dl_munmap(void* handle, void* addr, size_t length) {
-  if (!handle) return;
-  return reinterpret_cast<LibHandle*>(handle)->MappableMUnmap(addr, length);
-}
-
 namespace {
 
 /**
@@ -355,23 +334,6 @@ LibHandle::~LibHandle() { free(path); }
 
 const char* LibHandle::GetName() const {
   return path ? LeafName(path) : nullptr;
-}
-
-size_t LibHandle::GetMappableLength() const {
-  if (!mappable) mappable = GetMappable();
-  if (!mappable) return 0;
-  return mappable->GetLength();
-}
-
-void* LibHandle::MappableMMap(void* addr, size_t length, off_t offset) const {
-  if (!mappable) mappable = GetMappable();
-  if (!mappable) return MAP_FAILED;
-  void* mapped = mappable->mmap(addr, length, PROT_READ, MAP_PRIVATE, offset);
-  return mapped;
-}
-
-void LibHandle::MappableMUnmap(void* addr, size_t length) const {
-  if (mappable) mappable->munmap(addr, length);
 }
 
 /**
