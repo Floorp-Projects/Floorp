@@ -3,101 +3,17 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <fcntl.h>
-#include <unistd.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
-#include <cstring>
-#include <cstdlib>
-#include <cstdio>
-#include <string>
 
 #include "Mappable.h"
 
 #include "mozilla/IntegerPrintfMacros.h"
-#include "mozilla/UniquePtr.h"
 
 #ifdef ANDROID
 #  include "mozilla/Ashmem.h"
 #endif
-#include <sys/stat.h>
-#include <errno.h>
-#include "ElfLoader.h"
 #include "Logging.h"
-
-using mozilla::MakeUnique;
-using mozilla::UniquePtr;
-
-class CacheValidator {
- public:
-  CacheValidator(const char* aCachedLibPath, Zip* aZip, Zip::Stream* aStream)
-      : mCachedLibPath(aCachedLibPath) {
-    static const char kChecksumSuffix[] = ".crc";
-
-    mCachedChecksumPath =
-        MakeUnique<char[]>(strlen(aCachedLibPath) + sizeof(kChecksumSuffix));
-    sprintf(mCachedChecksumPath.get(), "%s%s", aCachedLibPath, kChecksumSuffix);
-    DEBUG_LOG("mCachedChecksumPath: %s", mCachedChecksumPath.get());
-
-    mChecksum = aStream->GetCRC32();
-    DEBUG_LOG("mChecksum: %x", mChecksum);
-  }
-
-  // Returns whether the cache is valid and up-to-date.
-  bool IsValid() const {
-    // Validate based on checksum.
-    RefPtr<Mappable> checksumMap =
-        MappableFile::Create(mCachedChecksumPath.get());
-    if (!checksumMap) {
-      // Force caching if checksum is missing in cache.
-      return false;
-    }
-
-    DEBUG_LOG("Comparing %x with %s", mChecksum, mCachedChecksumPath.get());
-    MappedPtr checksumBuf = checksumMap->mmap(nullptr, checksumMap->GetLength(),
-                                              PROT_READ, MAP_PRIVATE, 0);
-    if (checksumBuf == MAP_FAILED) {
-      WARN("Couldn't map %s to validate checksum", mCachedChecksumPath.get());
-      return false;
-    }
-    if (memcmp(checksumBuf, &mChecksum, sizeof(mChecksum))) {
-      return false;
-    }
-    return !access(mCachedLibPath.c_str(), R_OK);
-  }
-
-  // Caches the APK-provided checksum used in future cache validations.
-  void CacheChecksum() const {
-    AutoCloseFD fd(open(mCachedChecksumPath.get(),
-                        O_TRUNC | O_RDWR | O_CREAT | O_NOATIME,
-                        S_IRUSR | S_IWUSR));
-    if (fd == -1) {
-      WARN("Couldn't open %s to update checksum", mCachedChecksumPath.get());
-      return;
-    }
-
-    DEBUG_LOG("Updating checksum %s", mCachedChecksumPath.get());
-
-    const size_t size = sizeof(mChecksum);
-    size_t written = 0;
-    while (written < size) {
-      ssize_t ret =
-          write(fd, reinterpret_cast<const uint8_t*>(&mChecksum) + written,
-                size - written);
-      if (ret >= 0) {
-        written += ret;
-      } else if (errno != EINTR) {
-        WARN("Writing checksum %s failed with errno %d",
-             mCachedChecksumPath.get(), errno);
-        break;
-      }
-    }
-  }
-
- private:
-  const std::string mCachedLibPath;
-  UniquePtr<char[]> mCachedChecksumPath;
-  uint32_t mChecksum;
-};
 
 Mappable* MappableFile::Create(const char* path) {
   int fd = open(path, O_RDONLY);
@@ -123,80 +39,6 @@ void MappableFile::finalize() {
 size_t MappableFile::GetLength() const {
   struct stat st;
   return fstat(fd, &st) ? 0 : st.st_size;
-}
-
-Mappable* MappableExtractFile::Create(const char* name, Zip* zip,
-                                      Zip::Stream* stream) {
-  MOZ_ASSERT(zip && stream);
-
-  const char* cachePath = getenv("MOZ_LINKER_CACHE");
-  if (!cachePath || !*cachePath) {
-    WARN(
-        "MOZ_LINKER_EXTRACT is set, but not MOZ_LINKER_CACHE; "
-        "not extracting");
-    return nullptr;
-  }
-
-  // Ensure that the cache dir is private.
-  chmod(cachePath, 0770);
-
-  UniquePtr<char[]> path =
-      MakeUnique<char[]>(strlen(cachePath) + strlen(name) + 2);
-  sprintf(path.get(), "%s/%s", cachePath, name);
-
-  CacheValidator validator(path.get(), zip, stream);
-  if (validator.IsValid()) {
-    DEBUG_LOG("Reusing %s", static_cast<char*>(path.get()));
-    return MappableFile::Create(path.get());
-  }
-  DEBUG_LOG("Extracting to %s", static_cast<char*>(path.get()));
-  AutoCloseFD fd;
-  fd = open(path.get(), O_TRUNC | O_RDWR | O_CREAT | O_NOATIME,
-            S_IRUSR | S_IWUSR);
-  if (fd == -1) {
-    ERROR("Couldn't open %s to decompress library", path.get());
-    return nullptr;
-  }
-  AutoUnlinkFile file(path.release());
-  if (stream->GetType() == Zip::Stream::DEFLATE) {
-    if (ftruncate(fd, stream->GetUncompressedSize()) == -1) {
-      ERROR("Couldn't ftruncate %s to decompress library", file.get());
-      return nullptr;
-    }
-    /* Map the temporary file for use as inflate buffer */
-    MappedPtr buffer(MemoryRange::mmap(nullptr, stream->GetUncompressedSize(),
-                                       PROT_WRITE, MAP_SHARED, fd, 0));
-    if (buffer == MAP_FAILED) {
-      ERROR("Couldn't map %s to decompress library", file.get());
-      return nullptr;
-    }
-
-    z_stream zStream = stream->GetZStream(buffer);
-
-    /* Decompress */
-    if (inflateInit2(&zStream, -MAX_WBITS) != Z_OK) {
-      ERROR("inflateInit failed: %s", zStream.msg);
-      return nullptr;
-    }
-    if (inflate(&zStream, Z_FINISH) != Z_STREAM_END) {
-      ERROR("inflate failed: %s", zStream.msg);
-      return nullptr;
-    }
-    if (inflateEnd(&zStream) != Z_OK) {
-      ERROR("inflateEnd failed: %s", zStream.msg);
-      return nullptr;
-    }
-    if (zStream.total_out != stream->GetUncompressedSize()) {
-      ERROR("File not fully uncompressed! %ld / %d", zStream.total_out,
-            static_cast<unsigned int>(stream->GetUncompressedSize()));
-      return nullptr;
-    }
-  } else {
-    return nullptr;
-  }
-
-  validator.CacheChecksum();
-  return new MappableExtractFile(fd.forget(), file.release());
 }
 
 /**

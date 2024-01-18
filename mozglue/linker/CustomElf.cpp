@@ -675,6 +675,5 @@ void CustomElf::CallFini() {
 
 Mappable* CustomElf::GetMappable() const {
   if (!mappable) return nullptr;
-  if (mappable->GetKind() == Mappable::MAPPABLE_EXTRACT_FILE) return mappable;
   return ElfLoader::GetMappableFromPath(GetPath());
 }
