@@ -3353,8 +3353,10 @@ CSSToCSSMatrix4x4 APZCTreeManager::GetOopifToRootContentTransform(
     result.PostScale(1.0 / rootZoom.scale, 1.0 / rootZoom.scale, 1.0);
   }
 
+  CSSPoint rootScrollPosition = rootContentApzc->GetLayoutScrollOffset();
   return ViewAs<CSSToCSSMatrix4x4>(result,
-                                   PixelCastJustification::UntypedPrePostScale);
+                                   PixelCastJustification::UntypedPrePostScale)
+      .PostTranslate(rootScrollPosition.x, rootScrollPosition.y, 0);
 }
 
 CSSRect APZCTreeManager::ConvertRectInApzcToRoot(AsyncPanZoomController* aApzc,
