@@ -80,7 +80,7 @@ ac_add_options --enable-lto
 ac_add_options --enable-update-channel=release
 ac_add_options --with-branding=browser/branding/official
 ac_add_options --disable-default-browser-agent
-ac_add_options --with-google-safebrowsing-api-keyfile={Floorp 用の Google API のファイルパス}
+ac_add_options --with-google-safebrowsing-api-keyfile={Google API file path for Floorp}
 MOZ_REQUIRE_SIGNING=
 MOZ_TELEMETRY_REPORTING=
 MOZ_DATA_REPORTING=
@@ -98,9 +98,9 @@ ac_add_options --disable-tests
 ac_add_options --disable-debug
 ac_add_options --disable-verify-mar
 ac_add_options --enable-proxy-bypass-protection
-ac_add_options --with-google-safebrowsing-api-keyfile={Floorp 用の Google API のファイルパス}
-ac_add_options --with-mozilla-api-keyfile{ファイルパス}
-ac_add_options --with-google-location-service-api-keyfile={ファイルパス}
+ac_add_options --with-google-safebrowsing-api-keyfile={Google API file path for Floorp}
+ac_add_options --with-mozilla-api-keyfile{File Path}
+ac_add_options --with-google-location-service-api-keyfile={File Path}
 ac_add_options --enable-update-channel=release
 MOZ_REQUIRE_SIGNING=
 MOZ_TELEMETRY_REPORTING=
