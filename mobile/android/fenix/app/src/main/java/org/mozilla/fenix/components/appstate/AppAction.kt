@@ -4,7 +4,6 @@
 
 package org.mozilla.fenix.components.appstate
 
-import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.lib.crash.Crash.NativeCodeCrash
@@ -128,11 +127,6 @@ sealed class AppAction : Action {
      * from the recent synced tabs list.
      */
     data class RemoveRecentSyncedTab(val syncedTab: RecentSyncedTab) : AppAction()
-
-    /**
-     * Action indicating that the selected tab has been changed.
-     */
-    data class SelectedTabChanged(val tab: TabSessionState) : AppAction()
 
     /**
      * [Action]s related to interactions with the Messaging Framework.

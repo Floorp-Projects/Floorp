@@ -8,7 +8,6 @@ import androidx.annotation.VisibleForTesting
 import mozilla.components.service.pocket.PocketStory.PocketRecommendedStory
 import mozilla.components.service.pocket.PocketStory.PocketSponsoredStory
 import mozilla.components.service.pocket.ext.recordNewImpression
-import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.appstate.shopping.ShoppingStateReducer
 import org.mozilla.fenix.ext.filterOutTab
@@ -100,10 +99,6 @@ internal object AppStoreReducer {
                 )
                 else -> state.recentSyncedTabState
             },
-        )
-        is AppAction.SelectedTabChanged -> state.copy(
-            selectedTabId = action.tab.id,
-            mode = BrowsingMode.fromBoolean(action.tab.content.private),
         )
         is AppAction.DisbandSearchGroupAction -> state.copy(
             recentHistory = state.recentHistory.filterNot {
