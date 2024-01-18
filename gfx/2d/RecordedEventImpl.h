@@ -773,6 +773,30 @@ class RecordedPopLayer : public RecordedEventDerived<RecordedPopLayer> {
   MOZ_IMPLICIT RecordedPopLayer(S& aStream);
 };
 
+class RecordedSetPermitSubpixelAA
+    : public RecordedEventDerived<RecordedSetPermitSubpixelAA> {
+ public:
+  explicit RecordedSetPermitSubpixelAA(bool aPermitSubpixelAA)
+      : RecordedEventDerived(SETPERMITSUBPIXELAA),
+        mPermitSubpixelAA(aPermitSubpixelAA) {}
+
+  bool PlayEvent(Translator* aTranslator) const override;
+
+  template <class S>
+  void Record(S& aStream) const;
+  void OutputSimpleEventInfo(std::stringstream& aStringStream) const override;
+
+  std::string GetName() const override { return "SetPermitSubpixelAA"; }
+
+ private:
+  friend class RecordedEvent;
+
+  template <class S>
+  MOZ_IMPLICIT RecordedSetPermitSubpixelAA(S& aStream);
+
+  bool mPermitSubpixelAA = false;
+};
+
 class RecordedSetTransform : public RecordedEventDerived<RecordedSetTransform> {
  public:
   explicit RecordedSetTransform(const Matrix& aTransform)
@@ -2985,6 +3009,33 @@ inline void RecordedPopLayer::OutputSimpleEventInfo(
   aStringStream << "PopLayer";
 }
 
+inline bool RecordedSetPermitSubpixelAA::PlayEvent(
+    Translator* aTranslator) const {
+  DrawTarget* dt = aTranslator->GetCurrentDrawTarget();
+  if (!dt) {
+    return false;
+  }
+
+  dt->SetPermitSubpixelAA(mPermitSubpixelAA);
+  return true;
+}
+
+template <class S>
+void RecordedSetPermitSubpixelAA::Record(S& aStream) const {
+  WriteElement(aStream, mPermitSubpixelAA);
+}
+
+template <class S>
+RecordedSetPermitSubpixelAA::RecordedSetPermitSubpixelAA(S& aStream)
+    : RecordedEventDerived(SETPERMITSUBPIXELAA) {
+  ReadElement(aStream, mPermitSubpixelAA);
+}
+
+inline void RecordedSetPermitSubpixelAA::OutputSimpleEventInfo(
+    std::stringstream& aStringStream) const {
+  aStringStream << "SetPermitSubpixelAA (" << mPermitSubpixelAA << ")";
+}
+
 inline bool RecordedSetTransform::PlayEvent(Translator* aTranslator) const {
   DrawTarget* dt = aTranslator->GetCurrentDrawTarget();
   if (!dt) {
@@ -4243,6 +4294,7 @@ inline void RecordedDestination::OutputSimpleEventInfo(
   f(STROKECIRCLE, RecordedStrokeCircle);                           \
   f(CLEARRECT, RecordedClearRect);                                 \
   f(COPYSURFACE, RecordedCopySurface);                             \
+  f(SETPERMITSUBPIXELAA, RecordedSetPermitSubpixelAA);             \
   f(SETTRANSFORM, RecordedSetTransform);                           \
   f(PUSHCLIPRECT, RecordedPushClipRect);                           \
   f(PUSHCLIP, RecordedPushClip);                                   \

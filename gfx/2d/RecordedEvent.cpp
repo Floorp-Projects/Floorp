@@ -48,6 +48,8 @@ std::string RecordedEvent::GetEventName(EventType aType) {
       return "ClearRect";
     case COPYSURFACE:
       return "CopySurface";
+    case SETPERMITSUBPIXELAA:
+      return "SetPermitSubpixelAA";
     case SETTRANSFORM:
       return "SetTransform";
     case PUSHCLIP:
