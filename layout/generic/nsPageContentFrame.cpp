@@ -404,20 +404,30 @@ void nsPageContentFrame::AppendDirectlyOwnedAnonBoxes(
 void nsPageContentFrame::EnsurePageName() {
   MOZ_ASSERT(HasAnyStateBits(NS_FRAME_FIRST_REFLOW),
              "Should only have been called on first reflow");
+
   if (mPageName) {
+    // The page name will be non-null only if
+    // nsCSSFrameConstructor::mNextPageContentFramePageName was set when this
+    // page was created. In that case, that value should be the same as what we
+    // will find with nsPageContentFrame::ComputePageValue() to be correct.
+
+    // XXX alaskanemily: Bug 1872292 to enable this assert or understand why
+    // it doesn't always hold. Sometimes ComputePageValue is wrong.
+    // MOZ_ASSERT(
+    //     mPageName == ComputePageValue(),
+    //     "Computed page value should be the same as during page creation");
     return;
   }
-  MOZ_ASSERT(!GetPrevInFlow(),
-             "Only the first page should initially have a null page name.");
-  // This was the first page, we need to find our own page name and then set
-  // our computed style based on that.
+
   mPageName = ComputePageValue();
 
   MOZ_ASSERT(mPageName, "Page name should never be null");
   // Resolve the computed style given this page-name and the :first pseudo.
+  const StylePagePseudoClassFlags pseudoFlags =
+      GetPrevInFlow() ? StylePagePseudoClassFlags::NONE
+                      : StylePagePseudoClassFlags::FIRST;
   RefPtr<ComputedStyle> pageContentPseudoStyle =
-      PresShell()->StyleSet()->ResolvePageContentStyle(
-          mPageName, StylePagePseudoClassFlags::FIRST);
+      PresShell()->StyleSet()->ResolvePageContentStyle(mPageName, pseudoFlags);
   SetComputedStyleWithoutNotification(pageContentPseudoStyle);
 }
 
