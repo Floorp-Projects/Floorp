@@ -1,10 +1,20 @@
 "use strict";
 
+const { CreditCard } = ChromeUtils.importESModule(
+  "resource://gre/modules/CreditCard.sys.mjs"
+);
+
 const CC_URL =
   "https://example.org/browser/browser/extensions/formautofill/test/browser/creditCard/autocomplete_creditcard_basic.html";
 
+const TEST_CREDIT_CARDS = [
+  TEST_CREDIT_CARD_1,
+  TEST_CREDIT_CARD_2,
+  TEST_CREDIT_CARD_3,
+];
+
 add_task(async function setup_storage() {
-  await setStorage(TEST_CREDIT_CARD_1, TEST_CREDIT_CARD_2, TEST_CREDIT_CARD_3);
+  await setStorage(...TEST_CREDIT_CARDS);
 });
 
 async function reopenPopupWithResizedInput(browser, selector, newSize) {
@@ -51,6 +61,36 @@ add_task(async function test_credit_card_dropdown() {
         "Show one-line layout"
       );
 
+      await closePopup(browser);
+    }
+  );
+});
+
+add_task(async function test_credit_card_dropdown_icon_invalid_types_select() {
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: CC_URL },
+    async function (browser) {
+      // Clear all options for cc-type select
+      await SpecialPowers.spawn(browser, [], async function () {
+        content.document.getElementById("cc-type").innerHTML = "";
+      });
+
+      await openPopupOn(browser, "#cc-number");
+
+      const creditCardItems = getDisplayedPopupItems(
+        browser,
+        "[originaltype='autofill-profile']"
+      );
+
+      for (const [index, creditCardItem] of creditCardItems.entries()) {
+        const creditCardItemIcon = creditCardItem.getAttribute("ac-image");
+        ok(
+          creditCardItemIcon.includes(
+            CreditCard.getType(TEST_CREDIT_CARDS[index]["cc-number"])
+          ),
+          "Should use correct credit card type icon"
+        );
+      }
       await closePopup(browser);
     }
   );
