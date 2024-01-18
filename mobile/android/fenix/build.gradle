@@ -10,69 +10,11 @@ import java.nio.file.StandardCopyOption
 buildscript {
     // This logic is duplicated in the allprojects block: I don't know how to fix that.
     repositories {
-        if (!System.env.MOZ_AUTOMATION && gradle.mozconfig.substs.MOZ_ARTIFACT_BUILDS) {
-            mavenLocal()
-        }
-
-        maven {
-            name "Mozilla Nightly"
-            url "https://nightly.maven.mozilla.org/maven2"
-            content {
-                // Improve performance: only check moz maven for mozilla deps.
-                includeGroupByRegex RepoMatching.mozilla
-            }
-        }
-
-        maven {
-            name "Mozilla"
-            url "https://maven.mozilla.org/maven2"
-            content {
-                // Improve performance: only check moz maven for mozilla deps.
-                includeGroupByRegex RepoMatching.mozilla
-            }
-        }
-
-        if (ExtraRepositories.mozillaStaging) {
+        gradle.mozconfig.substs.GRADLE_MAVEN_REPOSITORIES.each { repository ->
             maven {
-                name "Mozilla Staging"
-                url "https://maven-default.stage.mozaws.net/maven2"
-                content {
-                    // Improve performance: only check moz maven for mozilla deps.
-                    includeGroupByRegex RepoMatching.mozilla
-                }
-            }
-        }
-
-        if (project.hasProperty("googleRepo")) {
-            maven {
-                name "Google"
-                allowInsecureProtocol true // Local Nexus in CI uses HTTP
-                url project.property("googleRepo")
-            }
-        } else {
-            google() {
-                content {
-                    // Improve performance: only check google maven for google deps.
-                    includeGroupByRegex RepoMatching.androidx
-                    includeGroupByRegex RepoMatching.comAndroid
-                    includeGroupByRegex RepoMatching.comGoogle
-                }
-            }
-        }
-
-        if (project.hasProperty("centralRepo")) {
-            maven {
-                name "MavenCentral"
-                url project.property("centralRepo")
-                allowInsecureProtocol true // Local Nexus in CI uses HTTP
-            }
-        } else {
-            mavenCentral() {
-                content {
-                    // Improve security: don't search deps with known repos.
-                    excludeGroupByRegex RepoMatching.mozilla
-                    excludeGroupByRegex RepoMatching.androidx
-                    excludeGroupByRegex RepoMatching.comAndroid
+                url repository
+                if (gradle.mozconfig.substs.ALLOW_INSECURE_GRADLE_REPOSITORIES) {
+                    allowInsecureProtocol = true
                 }
             }
         }
@@ -109,69 +51,11 @@ plugins {
 allprojects {
     // This logic is duplicated in the buildscript block: I don't know how to fix that.
     repositories {
-        if (!System.env.MOZ_AUTOMATION && gradle.mozconfig.substs.MOZ_ARTIFACT_BUILDS) {
-            mavenLocal()
-        }
-
-        maven {
-            name "Mozilla Nightly"
-            url "https://nightly.maven.mozilla.org/maven2"
-            content {
-                // Improve performance: only check moz maven for mozilla deps.
-                includeGroupByRegex RepoMatching.mozilla
-            }
-        }
-
-        maven {
-            name "Mozilla"
-            url "https://maven.mozilla.org/maven2"
-            content {
-                // Improve performance: only check moz maven for mozilla deps.
-                includeGroupByRegex RepoMatching.mozilla
-            }
-        }
-
-        if (ExtraRepositories.mozillaStaging) {
+        gradle.mozconfig.substs.GRADLE_MAVEN_REPOSITORIES.each { repository ->
             maven {
-                name "Mozilla Staging"
-                url "https://maven-default.stage.mozaws.net/maven2"
-                content {
-                    // Improve performance: only check moz maven for mozilla deps.
-                    includeGroupByRegex RepoMatching.mozilla
-                }
-            }
-        }
-
-        if (project.hasProperty("googleRepo")) {
-            maven {
-                name "Google"
-                url project.property("googleRepo")
-                allowInsecureProtocol true // Local Nexus in CI uses HTTP
-            }
-        } else {
-            google() {
-                content {
-                    // Improve performance: only check google maven for google deps.
-                    includeGroupByRegex RepoMatching.androidx
-                    includeGroupByRegex RepoMatching.comAndroid
-                    includeGroupByRegex RepoMatching.comGoogle
-                }
-            }
-        }
-
-        if (project.hasProperty("centralRepo")) {
-            maven {
-                name "MavenCentral"
-                url project.property("centralRepo")
-                allowInsecureProtocol true // Local Nexus in CI uses HTTP
-            }
-        } else {
-            mavenCentral() {
-                content {
-                    // Improve security: don't search deps with known repos.
-                    excludeGroupByRegex RepoMatching.mozilla
-                    excludeGroupByRegex RepoMatching.androidx
-                    excludeGroupByRegex RepoMatching.comAndroid
+                url repository
+                if (gradle.mozconfig.substs.ALLOW_INSECURE_GRADLE_REPOSITORIES) {
+                    allowInsecureProtocol = true
                 }
             }
         }

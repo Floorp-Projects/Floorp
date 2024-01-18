@@ -5,24 +5,12 @@ import io.gitlab.arturbosch.detekt.DetektCreateBaselineTask
 
 buildscript {
     repositories {
-        if (!System.env.MOZ_AUTOMATION && gradle.mozconfig.substs.MOZ_ARTIFACT_BUILDS) {
-            mavenLocal()
-        }
-
-        google()
-        mavenCentral()
-        maven {
-            // We will always need this repository for retrieving stable dependencies (like Glean).
-            url "https://maven.mozilla.org/maven2"
-        }
-        maven {
-            url "https://nightly.maven.mozilla.org/maven2"
-        }
-
-        if (ExtraRepositories.mozillaStaging) {
+        gradle.mozconfig.substs.GRADLE_MAVEN_REPOSITORIES.each { repository ->
             maven {
-                name "Mozilla Staging"
-                url "https://maven-default.stage.mozaws.net/maven2"
+                url repository
+                if (gradle.mozconfig.substs.ALLOW_INSECURE_GRADLE_REPOSITORIES) {
+                    allowInsecureProtocol = true
+                }
             }
         }
     }
@@ -92,23 +80,12 @@ tasks.withType(DetektCreateBaselineTask).configureEach() {
 
 allprojects {
     repositories {
-        if (!System.env.MOZ_AUTOMATION && gradle.mozconfig.substs.MOZ_ARTIFACT_BUILDS) {
-            mavenLocal()
-        }
-
-        google()
-        mavenCentral()
-        maven {
-            url "https://nightly.maven.mozilla.org/maven2"
-        }
-        maven {
-            url "https://maven.mozilla.org/maven2"
-        }
-
-        if (ExtraRepositories.mozillaStaging) {
+        gradle.mozconfig.substs.GRADLE_MAVEN_REPOSITORIES.each { repository ->
             maven {
-                name "Mozilla Staging"
-                url "https://maven-default.stage.mozaws.net/maven2"
+                url repository
+                if (gradle.mozconfig.substs.ALLOW_INSECURE_GRADLE_REPOSITORIES) {
+                    allowInsecureProtocol = true
+                }
             }
         }
     }

@@ -5,6 +5,19 @@
 // Prevents gradle builds from looking for a root settings.gradle
 
 pluginManagement {
+    apply from: file('../../../gradle/mozconfig.gradle')
+
+    repositories {
+        gradle.mozconfig.substs.GRADLE_MAVEN_REPOSITORIES.each { repository ->
+            maven {
+                url repository
+                if (gradle.mozconfig.substs.ALLOW_INSECURE_GRADLE_REPOSITORIES) {
+                    allowInsecureProtocol = true
+                }
+            }
+        }
+    }
+
     includeBuild("../dependencies")
 }
 

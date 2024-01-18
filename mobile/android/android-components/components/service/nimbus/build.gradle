@@ -4,14 +4,12 @@
 
 buildscript {
     repositories {
-        maven {
-            url "https://maven.mozilla.org/maven2"
-        }
-
-        if (ExtraRepositories.mozillaStaging) {
+        gradle.mozconfig.substs.GRADLE_MAVEN_REPOSITORIES.each { repository ->
             maven {
-                name "Mozilla Staging"
-                url "https://maven-default.stage.mozaws.net/maven2"
+                url repository
+                if (gradle.mozconfig.substs.ALLOW_INSECURE_GRADLE_REPOSITORIES) {
+                    allowInsecureProtocol = true
+                }
             }
         }
     }
