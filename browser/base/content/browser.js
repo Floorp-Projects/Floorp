@@ -2430,10 +2430,11 @@ var gBrowserInit = {
         );
 
         try {
-          SiteSpecificBrowserIdUtils.runSsbById(id);
-          // hide window
-          window.minimize();
-          Services.prefs.clearUserPref(SsbPrefName);
+          window.setTimeout(() => {
+            SiteSpecificBrowserIdUtils.runSsbById(id);
+            Services.prefs.clearUserPref(SsbPrefName);
+            window.minimize();
+          }, 2000);
         } catch (e) {
           console.error(e);
         }
