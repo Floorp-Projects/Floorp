@@ -163,11 +163,13 @@ bool moz_container_wayland_egl_window_set_size(MozContainer* container,
     moz_container_wayland_set_scale_factor_locked(lock, container, aScale);
   }
 
-  LOGCONTAINER(
-      "moz_container_wayland_egl_window_set_size [%p] %d x %d scale %d "
-      "(unscaled %d x %d)",
-      (void*)moz_container_get_nsWindow(container), aSize.width, aSize.height,
-      aScale, aSize.width / aScale, aSize.height / aScale);
+  /* Enable for size changes logging
+    LOGCONTAINER(
+        "moz_container_wayland_egl_window_set_size [%p] %d x %d scale %d "
+        "(unscaled %d x %d)",
+        (void*)moz_container_get_nsWindow(container), aSize.width, aSize.height,
+        aScale, aSize.width / aScale, aSize.height / aScale);
+  */
   wl_egl_window_resize(wl_container->eglwindow, aSize.width, aSize.height, 0,
                        0);
 
