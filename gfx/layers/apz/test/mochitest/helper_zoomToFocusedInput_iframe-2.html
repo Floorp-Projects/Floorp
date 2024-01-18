@@ -36,13 +36,14 @@ async function setupIframe(aURL) {
   });
 }
 
+let initial_resolution;
 async function test(aTestFile) {
   let iframeURL = SimpleTest.getTestFileURL(aTestFile);
 
   // Load the test document in the same origin.
   await setupIframe(iframeURL);
 
-  let initial_resolution = await getResolution();
+  initial_resolution = await getResolution();
   ok(initial_resolution > 0,
      "The initial_resolution is " + initial_resolution + ", which is some sane value");
 
@@ -88,6 +89,12 @@ async function moveIframe() {
 }
 
 waitUntilApzStable()
+.then(async () => test("helper_zoomToFocusedInput_iframe_subframe.html?margin-top=200vh"))
+.then(async () => {
+  // Reset the scale to the initial value.
+  SpecialPowers.DOMWindowUtils.setResolutionAndScaleTo(initial_resolution);
+  await promiseApzFlushedRepaints();
+})
 // A test case where the layout scroll offset isn't zero.
 .then(async () => moveIframe())
 .then(async () => test("helper_zoomToFocusedInput_iframe_subframe.html"))
