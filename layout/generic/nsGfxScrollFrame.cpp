@@ -1691,9 +1691,9 @@ nsMargin nsHTMLScrollFrame::GetDesiredScrollbarSizes() const {
   auto size = GetNonOverlayScrollbarSize(pc, scrollbarWidth);
   if (styles.mVertical != StyleOverflow::Hidden) {
     if (IsScrollbarOnRight()) {
-      result.left = size;
-    } else {
       result.right = size;
+    } else {
+      result.left = size;
     }
   }
 
