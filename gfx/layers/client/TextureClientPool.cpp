@@ -189,7 +189,7 @@ void TextureClientPool::ReturnTextureClientDeferred(TextureClient* aClient) {
   if (!aClient || mDestroyed) {
     return;
   }
-  MOZ_ASSERT(aClient->GetReadLock());
+  MOZ_ASSERT(aClient->HasReadLock());
 #ifdef GFX_DEBUG_TRACK_CLIENTS_IN_POOL
   DebugOnly<bool> ok = TestClientPool("defer", aClient, this);
   MOZ_ASSERT(ok);
@@ -258,7 +258,7 @@ void TextureClientPool::ReturnDeferredClients() {
 void TextureClientPool::ReturnUnlockedClients() {
   for (auto it = mTextureClientsDeferred.begin();
        it != mTextureClientsDeferred.end();) {
-    MOZ_ASSERT((*it)->GetReadLock()->AsNonBlockingLock()->GetReadCount() >= 1);
+    MOZ_ASSERT((*it)->GetNonBlockingReadLockCount() >= 1);
     // Last count is held by the lock itself.
     if (!(*it)->IsReadLocked()) {
       mTextureClients.push(*it);
