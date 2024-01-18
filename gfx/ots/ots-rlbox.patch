@@ -1,6 +1,6 @@
-diff --git a/gfx/ots/src/ots.cc b/gfx/ots/src/ots.cc
---- a/gfx/ots/src/ots.cc
-+++ b/gfx/ots/src/ots.cc
+diff --git a/src/ots.cc b/src/ots.cc
+--- a/src/ots.cc
++++ b/src/ots.cc
 @@ -14,7 +14,7 @@
  #include <map>
  #include <vector>

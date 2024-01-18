@@ -1,6 +1,6 @@
-diff --git a/gfx/ots/src/glat.cc b/gfx/ots/src/glat.cc
---- a/gfx/ots/src/glat.cc
-+++ b/gfx/ots/src/glat.cc
+diff --git a/src/glat.cc b/src/glat.cc
+--- a/src/glat.cc
++++ b/src/glat.cc
 @@ -4,9 +4,9 @@
  
  #include "glat.h"
@@ -35,9 +35,9 @@ diff --git a/gfx/ots/src/glat.cc b/gfx/ots/src/glat.cc
        return this->Parse(decompressed.get(), decompressed_size, true);
      }
      default:
-diff --git a/gfx/ots/src/silf.cc b/gfx/ots/src/silf.cc
---- a/gfx/ots/src/silf.cc
-+++ b/gfx/ots/src/silf.cc
+diff --git a/src/silf.cc b/src/silf.cc
+--- a/src/silf.cc
++++ b/src/silf.cc
 @@ -4,9 +4,9 @@
  
  #include "silf.h"
