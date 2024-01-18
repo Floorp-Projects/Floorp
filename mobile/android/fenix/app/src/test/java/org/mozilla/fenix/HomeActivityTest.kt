@@ -10,11 +10,11 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
-import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.utils.toSafeIntent
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -22,8 +22,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.HomeActivity.Companion.PRIVATE_BROWSING_MODE
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
-import org.mozilla.fenix.components.AppStore
-import org.mozilla.fenix.components.appstate.AppState
+import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getIntentSource
 import org.mozilla.fenix.ext.settings
@@ -34,13 +33,11 @@ import org.mozilla.fenix.utils.Settings
 @RunWith(FenixRobolectricTestRunner::class)
 class HomeActivityTest {
 
-    private var appStore = AppStore()
     private lateinit var activity: HomeActivity
 
     @Before
     fun setup() {
         activity = spyk(HomeActivity())
-        every { activity.components.appStore } returns appStore
     }
 
     @Test
@@ -58,29 +55,24 @@ class HomeActivityTest {
     }
 
     @Test
-    fun `GIVEN intent not set WHEN setModeFromIntent THEN mode not updated`() {
+    fun `getModeFromIntentOrLastKnown returns mode from settings when intent does not set`() {
         every { testContext.settings() } returns Settings(testContext)
         every { activity.applicationContext } returns testContext
-        testContext.settings().lastKnownMode = BrowsingMode.Normal
+        testContext.settings().lastKnownMode = BrowsingMode.Private
 
-        activity.setModeFromIntent(null)
-
-        assertEquals(BrowsingMode.Normal, appStore.state.mode)
+        assertEquals(testContext.settings().lastKnownMode, activity.getModeFromIntentOrLastKnown(null))
     }
 
     @Test
-    fun `GIVEN intent set WHEN setModeFromIntent THEN mode updated`() {
+    fun `getModeFromIntentOrLastKnown returns mode from intent when set`() {
         every { testContext.settings() } returns Settings(testContext)
-        every { testContext.components.appStore } returns appStore
-        every { activity.applicationContext } returns testContext
         testContext.settings().lastKnownMode = BrowsingMode.Normal
 
         val intent = Intent()
         intent.putExtra(PRIVATE_BROWSING_MODE, true)
-        activity.setModeFromIntent(intent)
-        appStore.waitUntilIdle()
 
-        assertEquals(BrowsingMode.Private, appStore.state.mode)
+        assertNotEquals(testContext.settings().lastKnownMode, activity.getModeFromIntentOrLastKnown(intent))
+        assertEquals(BrowsingMode.Private, activity.getModeFromIntentOrLastKnown(intent))
     }
 
     @Test
@@ -104,11 +96,15 @@ class HomeActivityTest {
 
     @Test
     fun `navigateToBrowserOnColdStart in normal mode navigates to browser`() {
+        val browsingModeManager: BrowsingModeManager = mockk()
+        every { browsingModeManager.mode } returns BrowsingMode.Normal
+
         val settings: Settings = mockk()
         every { settings.shouldReturnToBrowser } returns true
-        every { activity.components.settings } returns settings
+        every { activity.components.settings.shouldReturnToBrowser } returns true
         every { activity.openToBrowser(any(), any()) } returns Unit
 
+        activity.browsingModeManager = browsingModeManager
         activity.navigateToBrowserOnColdStart()
 
         verify(exactly = 1) { activity.openToBrowser(BrowserDirection.FromGlobal, null) }
@@ -116,13 +112,15 @@ class HomeActivityTest {
 
     @Test
     fun `navigateToBrowserOnColdStart in private mode does not navigate to browser`() {
-        val privateAppStore = AppStore(AppState(mode = BrowsingMode.Private))
+        val browsingModeManager: BrowsingModeManager = mockk()
+        every { browsingModeManager.mode } returns BrowsingMode.Private
+
         val settings: Settings = mockk()
         every { settings.shouldReturnToBrowser } returns true
-        every { activity.components.appStore } returns privateAppStore
         every { activity.components.settings.shouldReturnToBrowser } returns true
         every { activity.openToBrowser(any(), any()) } returns Unit
 
+        activity.browsingModeManager = browsingModeManager
         activity.navigateToBrowserOnColdStart()
 
         verify(exactly = 0) { activity.openToBrowser(BrowserDirection.FromGlobal, null) }
