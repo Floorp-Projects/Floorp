@@ -29,6 +29,7 @@ const FEATURES = {
   SuggestBackendRust:
     "resource:///modules/urlbar/private/SuggestBackendRust.sys.mjs",
   Weather: "resource:///modules/urlbar/private/Weather.sys.mjs",
+  YelpSuggestions: "resource:///modules/urlbar/private/YelpSuggestions.sys.mjs",
 };
 
 const TIMESTAMP_TEMPLATE = "%YYYYMMDDHH%";
