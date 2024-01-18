@@ -104,6 +104,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1131371
 
 /** Test for Bug 1131371 **/
 
+const contentVisibilityEnabled = SpecialPowers.getBoolPref("layout.css.content-visibility.enabled");
 const elemWithAbsPosChild = document.getElementById("elemWithAbsPosChild");
 const elemWithFixedPosChild = document.getElementById("elemWithFixedPosChild");
 const elemWithScrollbars = document.getElementById("elemWithScrollbars");
@@ -879,43 +880,43 @@ const gTestcases = [
     elem: contentVisibilityNode,
     beforeStyle: "content-visibility: visible",
     afterStyle: "content-visibility: hidden",
-    expectConstruction: true,
-    expectReflow: true,
+    expectConstruction: contentVisibilityEnabled,
+    expectReflow: contentVisibilityEnabled,
   },
   {
     elem: contentVisibilityNode,
     beforeStyle: "content-visibility: hidden",
     afterStyle: "content-visibility: visible",
-    expectConstruction: true,
-    expectReflow: true,
+    expectConstruction: contentVisibilityEnabled,
+    expectReflow: contentVisibilityEnabled,
   },
   {
     elem: contentVisibilityNode,
     beforeStyle: "content-visibility: visible",
     afterStyle: "content-visibility: auto",
-    expectConstruction: true,
-    expectReflow: true,
+    expectConstruction: contentVisibilityEnabled,
+    expectReflow: contentVisibilityEnabled,
   },
   {
     elem: contentVisibilityNode,
     beforeStyle: "content-visibility: auto",
     afterStyle: "content-visibility: visible",
-    expectConstruction: true,
-    expectReflow: true,
+    expectConstruction: contentVisibilityEnabled,
+    expectReflow: contentVisibilityEnabled,
   },
   {
     elem: contentVisibilityNode,
     beforeStyle: "content-visibility: hidden",
     afterStyle: "content-visibility: auto",
     expectConstruction: false,
-    expectReflow: true,
+    expectReflow: contentVisibilityEnabled,
   },
   {
     elem: contentVisibilityNode,
     beforeStyle: "content-visibility: auto",
     afterStyle: "content-visibility: hidden",
     expectConstruction: false,
-    expectReflow: true,
+    expectReflow: contentVisibilityEnabled,
   },
   // However that's not the case if we force style containment explicitly.
   {
@@ -923,14 +924,14 @@ const gTestcases = [
     beforeStyle: "content-visibility: visible; contain: style",
     afterStyle: "content-visibility: hidden; contain: style",
     expectConstruction: false,
-    expectReflow: true,
+    expectReflow: contentVisibilityEnabled,
   },
   {
     elem: contentVisibilityNode,
     beforeStyle: "content-visibility: hidden; contain: style",
     afterStyle: "content-visibility: visible; contain: style",
     expectConstruction: false,
-    expectReflow: true,
+    expectReflow: contentVisibilityEnabled,
   },
 ];
 
