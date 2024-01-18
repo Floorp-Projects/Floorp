@@ -2910,21 +2910,17 @@ nsContainerFrame* nsCSSFrameConstructor::ConstructPageFrame(
   // of the pages easier and faster.
   pageFrame->Init(nullptr, aParentFrame, aPrevPageFrame);
 
-  // If we were given a new page name for the next page, we can use it right
-  // here and avoid computing the page name during reflow.
-  // This should have the same resulting page name, but avoids traversing the
-  // frame tree an extra time.
-  // XXX alaskanemily: this isn't quite true, bug 1872292
-  RefPtr<const nsAtom> pageName = mNextPageContentFramePageName.forget();
-
-  // Ensure the pseudoclass flags are set correctly. Currently, this won't end
-  // up mattering because we only support none or :first, and
-  // mNextPageContentFramePageName is always left as null for the first page.
-  const StylePagePseudoClassFlags pseudoFlags =
-      aPrevPageFrame ? StylePagePseudoClassFlags::NONE
-                     : StylePagePseudoClassFlags::FIRST;
+  RefPtr<const nsAtom> pageName;
+  if (mNextPageContentFramePageName) {
+    pageName = mNextPageContentFramePageName.forget();
+  } else if (aPrevPageFrame) {
+    pageName = aPrevPageFrame->ComputePageValue();
+    MOZ_ASSERT(pageName,
+               "Page name from prev-in-flow should not have been null");
+  }
   RefPtr<ComputedStyle> pageContentPseudoStyle =
-      styleSet->ResolvePageContentStyle(pageName, pseudoFlags);
+      styleSet->ResolvePageContentStyle(pageName,
+                                        StylePagePseudoClassFlags::NONE);
 
   nsContainerFrame* pageContentFrame = NS_NewPageContentFrame(
       aPresShell, pageContentPseudoStyle, pageName.forget());
