@@ -1814,70 +1814,6 @@ static Address RegExpPairCountAddress(MacroAssembler& masm,
                                    MatchPairs::offsetOfPairCount());
 }
 
-// When the unicode flag is set, if lastIndex points to a trail
-// surrogate, we should step back to the corresponding lead surrogate.
-// See ExecuteRegExp in builtin/RegExp.cpp for more detail.
-static void StepBackToLeadSurrogate(MacroAssembler& masm, Register regexpShared,
-                                    Register input, Register lastIndex,
-                                    Register temp1, Register temp2) {
-  Label done;
-
-  // If neither unicode flag is set, there is nothing to do.
-  masm.branchTest32(
-      Assembler::Zero, Address(regexpShared, RegExpShared::offsetOfFlags()),
-      Imm32(int32_t(JS::RegExpFlag::Unicode | JS::RegExpFlag::UnicodeSets)),
-      &done);
-
-  // If the input is latin1, there can't be any surrogates.
-  masm.branchLatin1String(input, &done);
-
-  // Check if |lastIndex > 0 && lastIndex < input->length()|.
-  // lastIndex should already have no sign here.
-  masm.branchTest32(Assembler::Zero, lastIndex, lastIndex, &done);
-  masm.loadStringLength(input, temp1);
-  masm.branch32(Assembler::AboveOrEqual, lastIndex, temp1, &done);
-
-  // For TrailSurrogateMin ≤ x ≤ TrailSurrogateMax and
-  // LeadSurrogateMin ≤ x ≤ LeadSurrogateMax, the following
-  // equations hold.
-  //
-  //    SurrogateMin ≤ x ≤ SurrogateMax
-  // <> SurrogateMin ≤ x ≤ SurrogateMin + 2^10 - 1
-  // <> ((x - SurrogateMin) >>> 10) = 0    where >>> is an unsigned-shift
-  // See Hacker's Delight, section 4-1 for details.
-  //
-  //    ((x - SurrogateMin) >>> 10) = 0
-  // <> floor((x - SurrogateMin) / 1024) = 0
-  // <> floor((x / 1024) - (SurrogateMin / 1024)) = 0
-  // <> floor(x / 1024) = SurrogateMin / 1024
-  // <> floor(x / 1024) * 1024 = SurrogateMin
-  // <> (x >>> 10) << 10 = SurrogateMin
-  // <> x & ~(2^10 - 1) = SurrogateMin
-
-  constexpr char16_t SurrogateMask = 0xFC00;
-
-  Register charsReg = temp1;
-  masm.loadStringChars(input, charsReg, CharEncoding::TwoByte);
-
-  // Check if input[lastIndex] is trail surrogate.
-  masm.loadChar(charsReg, lastIndex, temp2, CharEncoding::TwoByte);
-  masm.and32(Imm32(SurrogateMask), temp2);
-  masm.branch32(Assembler::NotEqual, temp2, Imm32(unicode::TrailSurrogateMin),
-                &done);
-
-  // Check if input[lastIndex-1] is lead surrogate.
-  masm.loadChar(charsReg, lastIndex, temp2, CharEncoding::TwoByte,
-                -int32_t(sizeof(char16_t)));
-  masm.and32(Imm32(SurrogateMask), temp2);
-  masm.branch32(Assembler::NotEqual, temp2, Imm32(unicode::LeadSurrogateMin),
-                &done);
-
-  // Move lastIndex back to lead surrogate.
-  masm.sub32(Imm32(1), lastIndex);
-
-  masm.bind(&done);
-}
-
 static void UpdateRegExpStatics(MacroAssembler& masm, Register regexp,
                                 Register input, Register lastIndex,
                                 Register staticsReg, Register temp1,
@@ -2066,9 +2002,6 @@ static bool PrepareAndExecuteRegExp(MacroAssembler& masm, Register regexp,
       regexp, NativeObject::getFixedSlotOffset(RegExpObject::SHARED_SLOT));
   masm.branchTestUndefined(Assembler::Equal, sharedSlot, failure);
   masm.unboxNonDouble(sharedSlot, regexpReg, JSVAL_TYPE_PRIVATE_GCTHING);
-
-  // Update lastIndex if necessary.
-  StepBackToLeadSurrogate(masm, regexpReg, input, lastIndex, temp2, temp3);
 
   // Handle Atom matches
   Label notAtom, checkSuccess;
