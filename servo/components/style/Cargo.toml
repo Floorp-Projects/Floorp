@@ -40,6 +40,7 @@ encoding_rs = {version = "0.8", optional = true}
 euclid = "0.22"
 fxhash = "0.2"
 html5ever = {version = "0.24", optional = true}
+icu_segmenter = { version = "1.4", default-features = false, features = ["auto", "compiled_data"] }
 indexmap = {version = "1.0", features = ["std"]}
 itertools = "0.10"
 itoa = "1.0"
@@ -77,7 +78,6 @@ time = "0.1"
 thin-vec = { version = "0.2.1", features = ["gecko-ffi"] }
 uluru = "3.0"
 unicode-bidi = { version = "0.3", default-features = false }
-unicode-segmentation = "1.0"
 void = "1.0.2"
 gecko-profiler = { path = "../../../tools/profiler/rust-api" }
 

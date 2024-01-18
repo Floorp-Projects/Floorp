@@ -5272,6 +5272,7 @@ dependencies = [
  "euclid",
  "fxhash",
  "gecko-profiler",
+ "icu_segmenter",
  "indexmap 1.9.3",
  "itertools",
  "itoa",
@@ -5309,7 +5310,6 @@ dependencies = [
  "toml",
  "uluru",
  "unicode-bidi",
- "unicode-segmentation",
  "void",
  "walkdir",
 ]
