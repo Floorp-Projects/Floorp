@@ -496,10 +496,12 @@ skip-if = ["os == 'android'"] # Bug 1700483
 ["test_cookies_sync_failure.js"]
 
 ["test_cookies_thirdparty.js"]
+disable_e10s = true
 skip-if = ["appname == 'thunderbird'"]
 reason = "Thunderbird runs with fission enabled. This test requires fission.autostart=false. Bug 1749403."
 
 ["test_cookies_thirdparty_session.js"]
+disable_e10s = true
 skip-if = ["appname == 'thunderbird'"]
 reason = "Thunderbird runs with fission enabled. This test requires fission.autostart=false. Bug 1749403."
 

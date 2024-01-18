@@ -40,10 +40,10 @@ REMOTE_REFTEST = rm -f ./$@.log && $(PYTHON3) _tests/reftest/remotereftest.py \
 
 ifeq ($(OS_ARCH),WINNT) #{
 # GPU-rendered shadow layers are unsupported here
-OOP_CONTENT = --setpref=layers.async-pan-zoom.enabled=true --setpref=browser.tabs.remote.autostart=true --setpref=layers.acceleration.disabled=true
+OOP_CONTENT = --setpref=layers.async-pan-zoom.enabled=true --setpref=layers.acceleration.disabled=true
 GPU_RENDERING =
 else
-OOP_CONTENT = --setpref=layers.async-pan-zoom.enabled=true --setpref=browser.tabs.remote.autostart=true
+OOP_CONTENT = --setpref=layers.async-pan-zoom.enabled=true
 GPU_RENDERING = --setpref=layers.acceleration.force-enabled=true
 endif #}
 

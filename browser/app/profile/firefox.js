@@ -2178,9 +2178,6 @@ pref("privacy.fingerprintingProtection.pbmode", true);
 pref("privacy.exposeContentTitleInWindow", true);
 pref("privacy.exposeContentTitleInWindow.pbm", true);
 
-// Start the browser in e10s mode
-pref("browser.tabs.remote.autostart", true);
-
 // Run media transport in a separate process?
 pref("media.peerconnection.mtransport_process", true);
 
