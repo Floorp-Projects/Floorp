@@ -206,6 +206,12 @@ bool WaylandMessage::Write(int aSocket) {
   msg.msg_iov = &iov;
   msg.msg_iovlen = 1;
 
+  union {
+    char buf[CMSG_SPACE(sizeof(int) * MAX_LIBWAY_FDS)];
+    struct cmsghdr align;
+  } cmsgu;
+  memset(cmsgu.buf, 0, sizeof(cmsgu.buf));
+
   int filenum = mFds.size();
   if (filenum) {
     if (filenum >= MAX_LIBWAY_FDS) {
@@ -220,14 +226,7 @@ bool WaylandMessage::Write(int aSocket) {
       }
     }
 #endif
-    union {
-      char buf[CMSG_SPACE(sizeof(int) * MAX_LIBWAY_FDS)];
-      struct cmsghdr align;
-    } cmsgu;
-    memset(cmsgu.buf, 0, sizeof(cmsgu.buf));
-
     msg.msg_control = cmsgu.buf;
-    msg.msg_controllen = sizeof(cmsgu.buf);
     msg.msg_controllen = CMSG_SPACE(filenum * sizeof(int));
 
     struct cmsghdr* cmsg = CMSG_FIRSTHDR(&msg);
