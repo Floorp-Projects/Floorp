@@ -249,12 +249,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
         result = this.#getVisibleResultFromLastQuery(controller.view);
       }
 
-      this.#recordEngagement(
-        queryContext,
-        controller.input.isPrivate,
-        result,
-        details
-      );
+      this.#recordEngagement(queryContext, result, details);
     }
 
     if (details.result?.providerName == this.name) {
@@ -477,8 +472,6 @@ class ProviderQuickSuggest extends UrlbarProvider {
    *
    * @param {UrlbarQueryContext} queryContext
    *   The query context.
-   * @param {boolean} isPrivate
-   *   Whether the engagement is in a private context.
    * @param {UrlbarResult} result
    *   The quick suggest result that was present (and possibly picked) at the
    *   end of the engagement or that was dismissed. Null if no quick suggest
@@ -487,7 +480,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
    *   The `details` object that was passed to `onEngagement()`. It must look
    *   like this: `{ selType, selIndex }`
    */
-  #recordEngagement(queryContext, isPrivate, result, details) {
+  #recordEngagement(queryContext, result, details) {
     let resultSelType = "";
     let resultClicked = false;
     if (result && details.result == result) {
@@ -507,7 +500,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
       // Record engagement scalars, event, and pings.
       this.#recordEngagementScalars({ result, resultSelType, resultClicked });
       this.#recordEngagementEvent({ result, resultSelType, resultClicked });
-      if (!isPrivate) {
+      if (!queryContext.isPrivate) {
         this.#recordEngagementPings({ result, resultSelType, resultClicked });
       }
     }

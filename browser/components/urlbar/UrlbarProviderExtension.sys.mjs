@@ -250,7 +250,7 @@ export class UrlbarProviderExtension extends UrlbarProvider {
       this.#pickResult(result, element);
     }
 
-    this._notifyListener("engagement", controller.input.isPrivate, state);
+    this._notifyListener("engagement", queryContext.isPrivate, state);
   }
 
   /**
