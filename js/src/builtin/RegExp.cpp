@@ -19,7 +19,6 @@
 #include "js/PropertySpec.h"
 #include "js/RegExpFlags.h"  // JS::RegExpFlag, JS::RegExpFlags
 #include "util/StringBuffer.h"
-#include "util/Unicode.h"
 #include "vm/Interpreter.h"
 #include "vm/JSContext.h"
 #include "vm/RegExpObject.h"
@@ -1064,28 +1063,6 @@ const JSPropertySpec js::regexp_static_props[] = {
     JS_SELF_HOSTED_SYM_GET(species, "$RegExpSpecies", 0),
     JS_PS_END};
 
-template <typename CharT>
-static bool IsTrailSurrogateWithLeadSurrogateImpl(Handle<JSLinearString*> input,
-                                                  size_t index) {
-  JS::AutoCheckCannotGC nogc;
-  MOZ_ASSERT(index > 0 && index < input->length());
-  const CharT* inputChars = input->chars<CharT>(nogc);
-
-  return unicode::IsTrailSurrogate(inputChars[index]) &&
-         unicode::IsLeadSurrogate(inputChars[index - 1]);
-}
-
-static bool IsTrailSurrogateWithLeadSurrogate(Handle<JSLinearString*> input,
-                                              int32_t index) {
-  if (index <= 0 || size_t(index) >= input->length()) {
-    return false;
-  }
-
-  return input->hasLatin1Chars()
-             ? IsTrailSurrogateWithLeadSurrogateImpl<Latin1Char>(input, index)
-             : IsTrailSurrogateWithLeadSurrogateImpl<char16_t>(input, index);
-}
-
 /*
  * ES 2017 draft rev 6a13789aa9e7c6de4e96b7d3e24d9e6eba6584ad 21.2.5.2.2
  * steps 3, 9-14, except 12.a.i, 12.c.i.1.
@@ -1122,36 +1099,7 @@ static RegExpRunStatus ExecuteRegExp(JSContext* cx, HandleObject regexp,
 
   /* Steps 4-8 performed by the caller. */
 
-  /* Step 10. */
-  if (reobj->unicode() || reobj->unicodeSets()) {
-    /*
-     * ES 2017 draft rev 6a13789aa9e7c6de4e96b7d3e24d9e6eba6584ad
-     * 21.2.2.2 step 2.
-     *   Let listIndex be the index into Input of the character that was
-     *   obtained from element index of str.
-     *
-     * In the spec, pattern match is performed with decoded Unicode code
-     * points, but our implementation performs it with UTF-16 encoded
-     * string.  In step 2, we should decrement lastIndex (index) if it
-     * points the trail surrogate that has corresponding lead surrogate.
-     *
-     *   var r = /\uD83D\uDC38/ug;
-     *   r.lastIndex = 1;
-     *   var str = "\uD83D\uDC38";
-     *   var result = r.exec(str); // pattern match starts from index 0
-     *   print(result.index);      // prints 0
-     *
-     * Note: this doesn't match the current spec text and result in
-     * different values for `result.index` under certain conditions.
-     * However, the spec will change to match our implementation's
-     * behavior. See https://github.com/tc39/ecma262/issues/128.
-     */
-    if (IsTrailSurrogateWithLeadSurrogate(input, lastIndex)) {
-      lastIndex--;
-    }
-  }
-
-  /* Steps 3, 11-14, except 12.a.i, 12.c.i.1. */
+  /* Steps 3, 10-14, except 12.a.i, 12.c.i.1. */
   RegExpRunStatus status =
       ExecuteRegExpImpl(cx, res, &re, input, lastIndex, matches);
   if (status == RegExpRunStatus_Error) {

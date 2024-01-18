@@ -23,6 +23,7 @@
 #include "js/RegExp.h"
 #include "js/RegExpFlags.h"  // JS::RegExpFlags
 #include "util/StringBuffer.h"
+#include "util/Unicode.h"
 #include "vm/MatchPairs.h"
 #include "vm/PlainObject.h"
 #include "vm/RegExpStatics.h"
@@ -782,11 +783,56 @@ bool RegExpShared::markedForTierUp() const {
   return ticks_ == 0;
 }
 
+// When either unicode flag is set and if |index| points to a trail surrogate,
+// step back to the corresponding lead surrogate.
+static size_t StepBackToLeadSurrogate(const JSLinearString* input,
+                                      size_t index) {
+  // |index| must be a position within a two-byte string, otherwise it can't
+  // point to the trail surrogate of a surrogate pair.
+  if (index == 0 || index >= input->length() || input->hasLatin1Chars()) {
+    return index;
+  }
+
+  /*
+   * ES 2017 draft rev 6a13789aa9e7c6de4e96b7d3e24d9e6eba6584ad
+   * 21.2.2.2 step 2.
+   *   Let listIndex be the index into Input of the character that was obtained
+   *   from element index of str.
+   *
+   * In the spec, pattern match is performed with decoded Unicode code points,
+   * but our implementation performs it with UTF-16 encoded strings. In step 2,
+   * we should decrement lastIndex (index) if it points to a trail surrogate
+   * that has a corresponding lead surrogate.
+   *
+   *   var r = /\uD83D\uDC38/ug;
+   *   r.lastIndex = 1;
+   *   var str = "\uD83D\uDC38";
+   *   var result = r.exec(str); // pattern match starts from index 0
+   *   print(result.index);      // prints 0
+   *
+   * Note: This doesn't match the current spec text and result in different
+   * values for `result.index` under certain conditions. However, the spec will
+   * change to match our implementation's behavior.
+   * See https://github.com/tc39/ecma262/issues/128.
+   */
+  JS::AutoCheckCannotGC nogc;
+  const auto* chars = input->twoByteChars(nogc);
+  if (unicode::IsTrailSurrogate(chars[index]) &&
+      unicode::IsLeadSurrogate(chars[index - 1])) {
+    index--;
+  }
+  return index;
+}
+
 static RegExpRunStatus ExecuteAtomImpl(RegExpShared* re, JSLinearString* input,
                                        size_t start, MatchPairs* matches) {
   MOZ_ASSERT(re->pairCount() == 1);
   size_t length = input->length();
   size_t searchLength = re->patternAtom()->length();
+
+  if (re->unicode() || re->unicodeSets()) {
+    start = StepBackToLeadSurrogate(input, start);
+  }
 
   if (re->sticky()) {
     // First part checks size_t overflow.
