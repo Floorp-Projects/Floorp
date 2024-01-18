@@ -100,7 +100,7 @@
         <activity android:name=".activity.MainActivity"
             android:launchMode="singleTask"
             android:exported="true"
-            android:windowSoftInputMode="adjustResize|stateAlwaysHidden"
+            android:windowSoftInputMode="adjustResize"
             android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize"
             android:resizeableActivity="true"
             android:supportsPictureInPicture="true"
