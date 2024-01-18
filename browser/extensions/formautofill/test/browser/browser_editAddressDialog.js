@@ -10,7 +10,7 @@ ChromeUtils.defineESModuleGetters(this, {
 
 requestLongerTimeout(6);
 
-add_task(async function setup_supportedCountries() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [[SUPPORTED_COUNTRIES_PREF, "US,CA,DE"]],
   });
@@ -76,11 +76,11 @@ add_task(async function test_saveAddress() {
     // Input address info and verify move through form with tab keys
     let keypresses = [
       "VK_TAB",
-      TEST_ADDRESS_1["given-name"],
-      "VK_TAB",
-      TEST_ADDRESS_1["additional-name"],
-      "VK_TAB",
-      TEST_ADDRESS_1["family-name"],
+      [
+        TEST_ADDRESS_1["given-name"],
+        TEST_ADDRESS_1["additional-name"],
+        TEST_ADDRESS_1["family-name"],
+      ].join(" "),
       "VK_TAB",
       TEST_ADDRESS_1.organization,
       "VK_TAB",
@@ -121,11 +121,6 @@ add_task(async function test_saveAddress() {
   let addresses = await getAddresses();
 
   is(addresses.length, 1, "only one address is in storage");
-  is(
-    Object.keys(TEST_ADDRESS_1).length,
-    11,
-    "Sanity check number of properties"
-  );
   for (let [fieldName, fieldValue] of Object.entries(TEST_ADDRESS_1)) {
     is(addresses[0][fieldName], fieldValue, "check " + fieldName);
   }
@@ -156,11 +151,12 @@ add_task(async function test_editAddress() {
   addresses = await getAddresses();
 
   is(addresses.length, 1, "only one address is in storage");
-  is(
-    addresses[0]["given-name"],
-    TEST_ADDRESS_1["given-name"] + "test",
-    "given-name changed"
-  );
+  const name = [
+    TEST_ADDRESS_1["given-name"],
+    TEST_ADDRESS_1["additional-name"],
+    TEST_ADDRESS_1["family-name"],
+  ].join(" ");
+  is(addresses[0].name, name + "test", "name changed");
   await removeAddresses([addresses[0].guid]);
 
   addresses = await getAddresses();
@@ -261,13 +257,13 @@ add_task(async function test_saveAddressCA() {
     );
 
     // Input address info and verify move through form with tab keys
-    doc.querySelector("#given-name").focus();
+    doc.querySelector("#name").focus();
     let keyInputs = [
-      TEST_ADDRESS_CA_1["given-name"],
-      "VK_TAB",
-      TEST_ADDRESS_CA_1["additional-name"],
-      "VK_TAB",
-      TEST_ADDRESS_CA_1["family-name"],
+      [
+        TEST_ADDRESS_CA_1["given-name"],
+        TEST_ADDRESS_CA_1["additional-name"],
+        TEST_ADDRESS_CA_1["family-name"],
+      ].join(" "),
       "VK_TAB",
       TEST_ADDRESS_CA_1.organization,
       "VK_TAB",
@@ -328,13 +324,13 @@ add_task(async function test_saveAddressDE() {
       "DE address-level3 should be hidden"
     );
     // Input address info and verify move through form with tab keys
-    doc.querySelector("#given-name").focus();
+    doc.querySelector("#name").focus();
     let keyInputs = [
-      TEST_ADDRESS_DE_1["given-name"],
-      "VK_TAB",
-      TEST_ADDRESS_DE_1["additional-name"],
-      "VK_TAB",
-      TEST_ADDRESS_DE_1["family-name"],
+      [
+        TEST_ADDRESS_DE_1["given-name"],
+        TEST_ADDRESS_DE_1["additional-name"],
+        TEST_ADDRESS_DE_1["family-name"],
+      ].join(" "),
       "VK_TAB",
       TEST_ADDRESS_DE_1.organization,
       "VK_TAB",
@@ -412,13 +408,13 @@ add_task(async function test_saveAddress_nolibaddressinput() {
       "XG address-level2 should be an <input>"
     );
     // Input address info and verify move through form with tab keys
-    doc.querySelector("#given-name").focus();
+    doc.querySelector("#name").focus();
     let keyInputs = [
-      TEST_ADDRESS["given-name"],
-      "VK_TAB",
-      TEST_ADDRESS["additional-name"],
-      "VK_TAB",
-      TEST_ADDRESS["family-name"],
+      [
+        TEST_ADDRESS["given-name"],
+        TEST_ADDRESS["additional-name"],
+        TEST_ADDRESS["family-name"],
+      ].join(" "),
       "VK_TAB",
       TEST_ADDRESS.organization,
       "VK_TAB",
@@ -480,13 +476,13 @@ add_task(async function test_saveAddressIE() {
     );
 
     // Input address info and verify move through form with tab keys
-    doc.querySelector("#given-name").focus();
+    doc.querySelector("#name").focus();
     let keyInputs = [
-      TEST_ADDRESS_IE_1["given-name"],
-      "VK_TAB",
-      TEST_ADDRESS_IE_1["additional-name"],
-      "VK_TAB",
-      TEST_ADDRESS_IE_1["family-name"],
+      [
+        TEST_ADDRESS_IE_1["given-name"],
+        TEST_ADDRESS_IE_1["additional-name"],
+        TEST_ADDRESS_IE_1["family-name"],
+      ].join(" "),
       "VK_TAB",
       TEST_ADDRESS_IE_1.organization,
       "VK_TAB",
@@ -624,180 +620,6 @@ add_task(async function test_countryAndStateFieldLabels() {
       EventUtils.synthesizeKey("VK_ACCEPT", {}, win);
     }
 
-    doc.querySelector("#cancel").click();
-  });
-});
-
-add_task(async function test_combined_name_fields() {
-  await testDialog(EDIT_ADDRESS_DIALOG_URL, async win => {
-    let doc = win.document;
-    let givenNameField = doc.querySelector("#given-name");
-    let addtlNameField = doc.querySelector("#additional-name");
-    let familyNameField = doc.querySelector("#family-name");
-
-    function getComputedPropertyValue(field, property) {
-      return win.getComputedStyle(field).getPropertyValue(property);
-    }
-    function checkNameComputedPropertiesMatch(
-      field,
-      property,
-      value,
-      checkFn = is
-    ) {
-      checkFn(
-        getComputedPropertyValue(field, property),
-        value,
-        `Check ${field.id}'s ${property} is ${value}`
-      );
-    }
-    function checkNameFieldBorders(borderColorUnfocused, borderColorFocused) {
-      info("checking the perimeter colors");
-      checkNameComputedPropertiesMatch(
-        givenNameField,
-        "border-top-color",
-        borderColorFocused
-      );
-      checkNameComputedPropertiesMatch(
-        addtlNameField,
-        "border-top-color",
-        borderColorFocused
-      );
-      checkNameComputedPropertiesMatch(
-        familyNameField,
-        "border-top-color",
-        borderColorFocused
-      );
-      checkNameComputedPropertiesMatch(
-        familyNameField,
-        "border-right-color",
-        borderColorFocused
-      );
-      checkNameComputedPropertiesMatch(
-        givenNameField,
-        "border-bottom-color",
-        borderColorFocused
-      );
-      checkNameComputedPropertiesMatch(
-        addtlNameField,
-        "border-bottom-color",
-        borderColorFocused
-      );
-      checkNameComputedPropertiesMatch(
-        familyNameField,
-        "border-bottom-color",
-        borderColorFocused
-      );
-      checkNameComputedPropertiesMatch(
-        givenNameField,
-        "border-left-color",
-        borderColorFocused
-      );
-
-      info("checking the internal borders");
-      checkNameComputedPropertiesMatch(
-        givenNameField,
-        "border-right-width",
-        "0px"
-      );
-      checkNameComputedPropertiesMatch(
-        addtlNameField,
-        "border-left-width",
-        "2px"
-      );
-      checkNameComputedPropertiesMatch(
-        addtlNameField,
-        "border-left-color",
-        borderColorFocused,
-        isnot
-      );
-      checkNameComputedPropertiesMatch(
-        addtlNameField,
-        "border-right-width",
-        "2px"
-      );
-      checkNameComputedPropertiesMatch(
-        addtlNameField,
-        "border-right-color",
-        borderColorFocused,
-        isnot
-      );
-      checkNameComputedPropertiesMatch(
-        familyNameField,
-        "border-left-width",
-        "0px"
-      );
-    }
-
-    // Set these variables since the test doesn't run from a subdialog and
-    // therefore doesn't get the additional common CSS files injected.
-    let borderColor = "rgb(0, 255, 0)";
-    let borderColorFocused = "rgb(0, 0, 255)";
-    doc.body.style.setProperty("--in-content-box-border-color", borderColor);
-    doc.body.style.setProperty(
-      "--in-content-focus-outline-color",
-      borderColorFocused
-    );
-
-    givenNameField.focus();
-    checkNameFieldBorders(borderColor, borderColorFocused);
-
-    addtlNameField.focus();
-    checkNameFieldBorders(borderColor, borderColorFocused);
-
-    familyNameField.focus();
-    checkNameFieldBorders(borderColor, borderColorFocused);
-
-    info("unfocusing the name fields");
-    let cancelButton = doc.querySelector("#cancel");
-    cancelButton.focus();
-    borderColor = getComputedPropertyValue(givenNameField, "border-top-color");
-    isnot(
-      borderColor,
-      borderColorFocused,
-      "Check that the border color is different"
-    );
-    checkNameFieldBorders(borderColor, borderColor);
-
-    cancelButton.click();
-  });
-});
-
-add_task(async function test_combined_name_fields_error() {
-  await testDialog(EDIT_ADDRESS_DIALOG_URL, async win => {
-    let doc = win.document;
-    let givenNameField = doc.querySelector("#given-name");
-    info("mark the given name field as invalid");
-    givenNameField.focus();
-    EventUtils.synthesizeKey("X", {}, win);
-    givenNameField.value = "";
-    givenNameField.blur();
-    ok(
-      givenNameField.matches(":user-invalid"),
-      "Check field is visually invalid"
-    );
-
-    givenNameField.focus();
-    let givenNameLabel = doc.querySelector("#given-name-container .label-text");
-    // Override pointer-events so that we can use elementFromPoint to know if
-    // the label text is visible.
-    givenNameLabel.style.pointerEvents = "auto";
-    let givenNameLabelRect = givenNameLabel.getBoundingClientRect();
-    // Get the center of the label
-    let el = doc.elementFromPoint(
-      givenNameLabelRect.left + givenNameLabelRect.width / 2,
-      givenNameLabelRect.top + givenNameLabelRect.height / 2
-    );
-
-    is(
-      el,
-      givenNameLabel,
-      "Check that the label text is visible in the error state"
-    );
-    is(
-      win.getComputedStyle(givenNameField).getPropertyValue("border-top-color"),
-      "rgba(0, 0, 0, 0)",
-      "Border should be transparent so that only the error outline shows"
-    );
     doc.querySelector("#cancel").click();
   });
 });
