@@ -1,6 +1,6 @@
-diff --git a/gfx/ots/include/opentype-sanitiser.h b/gfx/ots/include/opentype-sanitiser.h
---- a/gfx/ots/include/opentype-sanitiser.h
-+++ b/gfx/ots/include/opentype-sanitiser.h
+diff --git a/include/opentype-sanitiser.h b/include/opentype-sanitiser.h
+--- a/include/opentype-sanitiser.h
++++ b/include/opentype-sanitiser.h
 @@ -4,8 +4,28 @@
  
  #ifndef OPENTYPE_SANITISER_H_
