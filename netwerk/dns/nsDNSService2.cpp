@@ -713,11 +713,11 @@ already_AddRefed<nsIDNSService> nsDNSService::GetXPCOMSingleton() {
       return nullptr;
     }
 
-    if (XRE_IsParentProcess() || XRE_IsSocketProcess()) {
+    if (XRE_IsParentProcess()) {
       return GetSingleton();
     }
 
-    if (XRE_IsContentProcess()) {
+    if (XRE_IsContentProcess() || XRE_IsSocketProcess()) {
       return ChildDNSService::GetSingleton();
     }
 
@@ -737,6 +737,7 @@ already_AddRefed<nsIDNSService> nsDNSService::GetXPCOMSingleton() {
 
 already_AddRefed<nsDNSService> nsDNSService::GetSingleton() {
   MOZ_ASSERT_IF(nsIOService::UseSocketProcess(), XRE_IsSocketProcess());
+  MOZ_ASSERT_IF(!nsIOService::UseSocketProcess(), XRE_IsParentProcess());
 
   if (!gDNSService) {
     if (!NS_IsMainThread()) {
