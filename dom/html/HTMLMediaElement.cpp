@@ -3884,16 +3884,31 @@ already_AddRefed<DOMMediaStream> HTMLMediaElement::CaptureStreamInternal(
   LogVisibility(CallerAPI::CAPTURE_STREAM);
   MarkAsTainted();
 
-  if (mTracksCaptured.Ref() &&
-      aGraph != mTracksCaptured.Ref()->mTrack->Graph()) {
-    return nullptr;
-  }
-
-  if (!mTracksCaptured.Ref()) {
+  if (mTracksCaptured.Ref()) {
+    // Already have an output stream.  Check whether the graph rate matches if
+    // specified.
+    if (aGraph && aGraph != mTracksCaptured.Ref()->mTrack->Graph()) {
+      return nullptr;
+    }
+  } else {
     // This is the first output stream, or there are no tracks. If the former,
     // start capturing all tracks. If the latter, they will be added later.
+    MediaTrackGraph* graph = aGraph;
+    if (!graph) {
+      nsPIDOMWindowInner* window = OwnerDoc()->GetInnerWindow();
+      if (!window) {
+        return nullptr;
+      }
+
+      MediaTrackGraph::GraphDriverType graphDriverType =
+          HasAudio() ? MediaTrackGraph::AUDIO_THREAD_DRIVER
+                     : MediaTrackGraph::SYSTEM_THREAD_DRIVER;
+      graph = MediaTrackGraph::GetInstance(
+          graphDriverType, window, MediaTrackGraph::REQUEST_DEFAULT_SAMPLE_RATE,
+          MediaTrackGraph::DEFAULT_OUTPUT_DEVICE);
+    }
     mTracksCaptured = MakeRefPtr<SharedDummyTrack>(
-        aGraph->CreateSourceTrack(MediaSegment::AUDIO));
+        graph->CreateSourceTrack(MediaSegment::AUDIO));
     UpdateOutputTrackSources();
   }
 
@@ -3992,28 +4007,14 @@ RefPtr<GenericNonExclusivePromise> HTMLMediaElement::GetAllowedToPlayPromise() {
 
 already_AddRefed<DOMMediaStream> HTMLMediaElement::MozCaptureStream(
     ErrorResult& aRv) {
-  MediaTrackGraph::GraphDriverType graphDriverType =
-      HasAudio() ? MediaTrackGraph::AUDIO_THREAD_DRIVER
-                 : MediaTrackGraph::SYSTEM_THREAD_DRIVER;
-
-  nsPIDOMWindowInner* window = OwnerDoc()->GetInnerWindow();
-  if (!window) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-
   if (!CanBeCaptured(StreamCaptureType::CAPTURE_ALL_TRACKS)) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
 
-  MediaTrackGraph* graph = MediaTrackGraph::GetInstance(
-      graphDriverType, window, MediaTrackGraph::REQUEST_DEFAULT_SAMPLE_RATE,
-      MediaTrackGraph::DEFAULT_OUTPUT_DEVICE);
-
   RefPtr<DOMMediaStream> stream =
       CaptureStreamInternal(StreamCaptureBehavior::CONTINUE_WHEN_ENDED,
-                            StreamCaptureType::CAPTURE_ALL_TRACKS, graph);
+                            StreamCaptureType::CAPTURE_ALL_TRACKS, nullptr);
   if (!stream) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
@@ -4024,28 +4025,14 @@ already_AddRefed<DOMMediaStream> HTMLMediaElement::MozCaptureStream(
 
 already_AddRefed<DOMMediaStream> HTMLMediaElement::MozCaptureStreamUntilEnded(
     ErrorResult& aRv) {
-  MediaTrackGraph::GraphDriverType graphDriverType =
-      HasAudio() ? MediaTrackGraph::AUDIO_THREAD_DRIVER
-                 : MediaTrackGraph::SYSTEM_THREAD_DRIVER;
-
-  nsPIDOMWindowInner* window = OwnerDoc()->GetInnerWindow();
-  if (!window) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-
   if (!CanBeCaptured(StreamCaptureType::CAPTURE_ALL_TRACKS)) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
 
-  MediaTrackGraph* graph = MediaTrackGraph::GetInstance(
-      graphDriverType, window, MediaTrackGraph::REQUEST_DEFAULT_SAMPLE_RATE,
-      MediaTrackGraph::DEFAULT_OUTPUT_DEVICE);
-
   RefPtr<DOMMediaStream> stream =
       CaptureStreamInternal(StreamCaptureBehavior::FINISH_WHEN_ENDED,
-                            StreamCaptureType::CAPTURE_ALL_TRACKS, graph);
+                            StreamCaptureType::CAPTURE_ALL_TRACKS, nullptr);
   if (!stream) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
