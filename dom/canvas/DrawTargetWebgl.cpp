@@ -4797,6 +4797,7 @@ void DrawTargetWebgl::PushLayerWithBlend(bool aOpaque, Float aOpacity,
   mSkia->PushLayerWithBlend(aOpaque, aOpacity, aMask, aMaskTransform, aBounds,
                             aCopyBackground, aCompositionOp);
   ++mLayerDepth;
+  SetPermitSubpixelAA(mSkia->GetPermitSubpixelAA());
 }
 
 void DrawTargetWebgl::PopLayer() {
@@ -4804,6 +4805,7 @@ void DrawTargetWebgl::PopLayer() {
   MOZ_ASSERT(mLayerDepth > 0);
   --mLayerDepth;
   mSkia->PopLayer();
+  SetPermitSubpixelAA(mSkia->GetPermitSubpixelAA());
 }
 
 }  // namespace mozilla::gfx

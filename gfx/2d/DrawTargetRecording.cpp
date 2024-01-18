@@ -201,6 +201,7 @@ DrawTargetRecording::DrawTargetRecording(
       this, aTextureId, aTextureOwnerId, mFinalDT->GetBackendType(), aSize,
       mFinalDT->GetFormat()));
   mFormat = mFinalDT->GetFormat();
+  DrawTarget::SetPermitSubpixelAA(IsOpaque(mFormat));
 }
 
 DrawTargetRecording::DrawTargetRecording(DrawEventRecorder* aRecorder,
@@ -215,12 +216,14 @@ DrawTargetRecording::DrawTargetRecording(DrawEventRecorder* aRecorder,
       RecordedDrawTargetCreation(this, mFinalDT->GetBackendType(), mRect,
                                  mFinalDT->GetFormat(), aHasData, snapshot));
   mFormat = mFinalDT->GetFormat();
+  DrawTarget::SetPermitSubpixelAA(IsOpaque(mFormat));
 }
 
 DrawTargetRecording::DrawTargetRecording(const DrawTargetRecording* aDT,
                                          IntRect aRect, SurfaceFormat aFormat)
     : mRecorder(aDT->mRecorder), mFinalDT(aDT->mFinalDT), mRect(aRect) {
   mFormat = aFormat;
+  DrawTarget::SetPermitSubpixelAA(IsOpaque(mFormat));
 }
 
 DrawTargetRecording::~DrawTargetRecording() {
@@ -587,6 +590,10 @@ void DrawTargetRecording::PushLayer(bool aOpaque, Float aOpacity,
   mRecorder->RecordEvent(
       this, RecordedPushLayer(aOpaque, aOpacity, aMask, aMaskTransform, aBounds,
                               aCopyBackground));
+
+  PushedLayer layer(GetPermitSubpixelAA());
+  mPushedLayers.push_back(layer);
+  DrawTarget::SetPermitSubpixelAA(aOpaque);
 }
 
 void DrawTargetRecording::PushLayerWithBlend(bool aOpaque, Float aOpacity,
@@ -602,10 +609,18 @@ void DrawTargetRecording::PushLayerWithBlend(bool aOpaque, Float aOpacity,
   mRecorder->RecordEvent(this, RecordedPushLayerWithBlend(
                                    aOpaque, aOpacity, aMask, aMaskTransform,
                                    aBounds, aCopyBackground, aCompositionOp));
+
+  PushedLayer layer(GetPermitSubpixelAA());
+  mPushedLayers.push_back(layer);
+  DrawTarget::SetPermitSubpixelAA(aOpaque);
 }
 
 void DrawTargetRecording::PopLayer() {
   mRecorder->RecordEvent(this, RecordedPopLayer());
+
+  const PushedLayer& layer = mPushedLayers.back();
+  DrawTarget::SetPermitSubpixelAA(layer.mOldPermitSubpixelAA);
+  mPushedLayers.pop_back();
 }
 
 already_AddRefed<SourceSurface>
@@ -774,6 +789,14 @@ void DrawTargetRecording::SetTransform(const Matrix& aTransform) {
   }
   DrawTarget::SetTransform(aTransform);
   mRecorder->RecordEvent(this, RecordedSetTransform(aTransform));
+}
+
+void DrawTargetRecording::SetPermitSubpixelAA(bool aPermitSubpixelAA) {
+  if (aPermitSubpixelAA == mPermitSubpixelAA) {
+    return;
+  }
+  DrawTarget::SetPermitSubpixelAA(aPermitSubpixelAA);
+  mRecorder->RecordEvent(this, RecordedSetPermitSubpixelAA(aPermitSubpixelAA));
 }
 
 already_AddRefed<PathRecording> DrawTargetRecording::EnsurePathStored(
