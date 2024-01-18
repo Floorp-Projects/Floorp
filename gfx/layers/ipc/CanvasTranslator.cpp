@@ -279,7 +279,13 @@ void CanvasTranslator::SetDataSurfaceBuffer(
     return;
   }
 
-  MOZ_RELEASE_ASSERT(mHeader->readerState == State::Paused);
+  if (mHeader->readerState != State::Paused) {
+    gfxCriticalNote << "CanvasTranslator::SetDataSurfaceBuffer bad state "
+                    << uint32_t(State(mHeader->readerState));
+    MOZ_DIAGNOSTIC_ASSERT(false, "mHeader->readerState == State::Paused");
+    Deactivate();
+    return;
+  }
 
   if (!CreateAndMapShmem(mDataSurfaceShmem, std::move(aBufferHandle),
                          ipc::SharedMemory::RightsReadWrite, aBufferSize)) {
