@@ -38,7 +38,6 @@ private val defaultHighlight = BrowserMenuHighlightableItem.Highlight(0, 0, 0, 0
  * @param isHighlighted Whether or not to display the highlight
  * @param listener Callback to be invoked when this menu item is clicked.
  */
-@Suppress("LongParameterList")
 class BrowserMenuHighlightableItem(
     private val label: String,
     @DrawableRes private val startImageResource: Int,

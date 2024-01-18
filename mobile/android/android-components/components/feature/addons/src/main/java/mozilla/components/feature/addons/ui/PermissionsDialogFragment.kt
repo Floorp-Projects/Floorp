@@ -223,7 +223,6 @@ class PermissionsDialogFragment : AddonDialogFragment() {
         return permissionsText
     }
 
-    @Suppress("LongParameterList")
     companion object {
         /**
          * Returns a new instance of [PermissionsDialogFragment].

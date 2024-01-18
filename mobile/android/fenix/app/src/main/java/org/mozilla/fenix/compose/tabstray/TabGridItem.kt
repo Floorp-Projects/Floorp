@@ -91,7 +91,7 @@ import org.mozilla.fenix.theme.FirefoxTheme
  */
 @OptIn(ExperimentalMaterialApi::class, ExperimentalFoundationApi::class)
 @Composable
-@Suppress("MagicNumber", "LongParameterList", "LongMethod")
+@Suppress("MagicNumber", "LongMethod")
 fun TabGridItem(
     tab: TabSessionState,
     storage: ThumbnailStorage,

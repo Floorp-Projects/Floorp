@@ -36,7 +36,6 @@ import mozilla.components.concept.menu.candidate.TextStyle
  * @param primaryStateAction Callback to be invoked when this menu item is clicked in primary state.
  * @param secondaryStateAction Callback to be invoked when this menu item is clicked in secondary state.
  */
-@Suppress("LongParameterList")
 class TwoStateBrowserMenuImageText(
     private val primaryLabel: String,
     private val secondaryLabel: String,

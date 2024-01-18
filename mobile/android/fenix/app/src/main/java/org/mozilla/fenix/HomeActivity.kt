@@ -148,7 +148,7 @@ import java.util.Locale
  * - home screen
  * - browser screen
  */
-@SuppressWarnings("TooManyFunctions", "LargeClass", "LongParameterList", "LongMethod")
+@SuppressWarnings("TooManyFunctions", "LargeClass", "LongMethod")
 open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
     // DO NOT MOVE ANYTHING ABOVE THIS, GETTING INIT TIME IS CRITICAL
     // we need to store startup timestamp for warm startup. we cant directly store
@@ -960,7 +960,6 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
      * was opened from history.
      * @param additionalHeaders The extra headers to use when loading the URL.
      */
-    @Suppress("LongParameterList")
     fun openToBrowserAndLoad(
         searchTermOrURL: String,
         newTab: Boolean,

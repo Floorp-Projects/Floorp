@@ -46,7 +46,6 @@ import mozilla.components.support.ktx.android.content.appName
  * @param failedToLaunchAction Action to perform when failing to launch in third party app.
  * @param loadUrlUseCase Used to load URL if user decides not to launch in third party app.
  **/
-@Suppress("LongParameterList")
 class AppLinksFeature(
     private val context: Context,
     private val store: BrowserStore,

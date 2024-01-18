@@ -140,7 +140,6 @@ data class SearchFragmentState(
 /**
  * Creates the initial state for the search fragment.
  */
-@Suppress("LongParameterList")
 fun createInitialSearchFragmentState(
     components: Components,
     tabId: String?,

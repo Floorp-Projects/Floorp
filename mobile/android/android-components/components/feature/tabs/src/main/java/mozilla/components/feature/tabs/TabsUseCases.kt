@@ -152,7 +152,6 @@ class TabsUseCases(
          * @param additionalHeaders The extra headers to use when loading the provided URL.
          * @return The ID of the created tab.
          */
-        @Suppress("LongParameterList")
         operator fun invoke(
             url: String = "about:blank",
             selectTab: Boolean = true,

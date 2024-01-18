@@ -75,7 +75,7 @@ typealias AppServerKey = String
  * @param crashReporter An optional instance of a [CrashReporting].
  */
 
-@Suppress("LargeClass", "LongParameterList")
+@Suppress("LargeClass")
 class AutoPushFeature(
     private val context: Context,
     private val service: PushService,

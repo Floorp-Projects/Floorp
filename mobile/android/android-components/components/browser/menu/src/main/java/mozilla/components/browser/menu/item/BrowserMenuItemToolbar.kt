@@ -93,7 +93,6 @@ class BrowserMenuItemToolbar(
      * @param longClickListener Callback to be invoked when the button is long clicked.
      * @param listener Callback to be invoked when the button is pressed.
      */
-    @Suppress("LongParameterList")
     open class Button(
         @DrawableRes val imageResource: Int,
         val contentDescription: String,
@@ -150,7 +149,6 @@ class BrowserMenuItemToolbar(
      * @param longClickListener Callback to be invoked when the button is long clicked.
      * @param listener Callback to be invoked when the button is pressed.
      */
-    @Suppress("LongParameterList")
     open class TwoStateButton(
         @DrawableRes val primaryImageResource: Int,
         val primaryContentDescription: String,

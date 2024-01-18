@@ -163,7 +163,6 @@ class NavigationInteractorTest {
         verify(exactly = 1) { navController.navigate(any<NavDirections>()) }
     }
 
-    @Suppress("LongParameterList")
     private fun createInteractor(
         browserStore: BrowserStore = store,
         dismissTabTray: () -> Unit = { },

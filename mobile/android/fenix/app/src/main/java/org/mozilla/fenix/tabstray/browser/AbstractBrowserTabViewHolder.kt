@@ -54,7 +54,6 @@ import org.mozilla.fenix.tabstray.ext.toDisplayTitle
  * @property featureName [String] representing the name of the feature displaying tabs. Used in telemetry reporting.
  * @param store [BrowserStore] containing the complete state of the browser and methods to update that.
  */
-@Suppress("LongParameterList")
 abstract class AbstractBrowserTabViewHolder(
     itemView: View,
     private val imageLoader: ImageLoader,

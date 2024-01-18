@@ -38,7 +38,6 @@ import org.mozilla.fenix.theme.FirefoxTheme
  * @param onClick Optional lambda for handling header clicks.
  * @param actions Optional Composable for adding UI to the end of the header.
  */
-@Suppress("LongParameterList")
 @Composable
 fun ExpandableListHeader(
     headerText: String,

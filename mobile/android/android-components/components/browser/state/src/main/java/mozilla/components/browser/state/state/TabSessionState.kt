@@ -79,7 +79,6 @@ data class TabSessionState(
 /**
  * Convenient function for creating a tab.
  */
-@Suppress("LongParameterList")
 fun createTab(
     url: String,
     private: Boolean = false,

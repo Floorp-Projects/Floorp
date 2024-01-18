@@ -43,7 +43,6 @@ import mozilla.components.support.utils.ext.registerReceiverCompat
  * @param manifest Web App Manifest reference used to populate the notification.
  * @param controlsBuilder Customizes the created notification.
  */
-@Suppress("LongParameterList")
 class WebAppSiteControlsFeature(
     private val applicationContext: Context,
     private val store: BrowserStore,

@@ -196,7 +196,6 @@ class AddonInstallationDialogFragment : AddonDialogFragment() {
         ft.commitAllowingStateLoss()
     }
 
-    @Suppress("LongParameterList")
     companion object {
         /**
          * Returns a new instance of [AddonInstallationDialogFragment].

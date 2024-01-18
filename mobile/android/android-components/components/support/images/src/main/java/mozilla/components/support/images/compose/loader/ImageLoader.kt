@@ -105,7 +105,6 @@ private suspend fun InternalImageLoaderScope.load() {
     }
 }
 
-@Suppress("LongParameterList")
 private suspend fun fetchAndDecode(
     client: Client,
     url: String,

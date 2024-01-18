@@ -44,7 +44,6 @@ fun Context.getUndoDelay(): Long {
  * @param elevation The elevation of the [FenixSnackbar].
  * @param paddedForBottomToolbar Whether or not [FenixSnackbar] is displayed with the bottom toolbar.
  */
-@Suppress("LongParameterList")
 fun CoroutineScope.allowUndo(
     view: View,
     message: String,

@@ -32,7 +32,6 @@ import mozilla.components.ui.icons.R as iconsR
  * Default to false (bottom). This is also used to decide the back press menu item placement at top or bottom.
  * @param showAddonsInMenu Whether to show the 'Add-ons' item in menu
  */
-@Suppress("LongParameterList")
 class WebExtensionBrowserMenuBuilder(
     items: List<BrowserMenuItem>,
     extras: Map<String, Any> = emptyMap(),

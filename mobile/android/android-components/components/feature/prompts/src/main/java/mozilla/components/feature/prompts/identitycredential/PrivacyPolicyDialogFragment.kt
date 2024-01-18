@@ -104,7 +104,6 @@ internal class PrivacyPolicyDialogFragment : AbstractPromptTextDialogFragment() 
          * @param message the message of the dialog.
          * @param icon an icon of the provider.
          */
-        @Suppress("LongParameterList")
         fun newInstance(
             sessionId: String,
             promptRequestUID: String,

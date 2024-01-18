@@ -61,7 +61,7 @@ interface NavigationInteractor {
 /**
  * A default implementation of [NavigationInteractor].
  */
-@Suppress("LongParameterList", "TooManyFunctions")
+@Suppress("TooManyFunctions")
 class DefaultNavigationInteractor(
     private val browserStore: BrowserStore,
     private val navController: NavController,

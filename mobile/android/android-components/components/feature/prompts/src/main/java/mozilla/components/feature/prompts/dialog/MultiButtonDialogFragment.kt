@@ -61,7 +61,6 @@ internal class MultiButtonDialogFragment : AbstractPromptTextDialogFragment() {
     }
 
     companion object {
-        @Suppress("LongParameterList")
         fun newInstance(
             sessionId: String,
             promptRequestUID: String,

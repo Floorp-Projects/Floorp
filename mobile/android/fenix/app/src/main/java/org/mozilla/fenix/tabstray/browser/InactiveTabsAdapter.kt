@@ -20,7 +20,6 @@ import org.mozilla.fenix.tabstray.TabsTrayStore
  * and the auto close dialog.
  * @property featureName [String] representing the name of the inactive tabs feature for telemetry reporting.
  */
-@Suppress("LongParameterList")
 class InactiveTabsAdapter(
     private val lifecycleOwner: LifecycleOwner,
     private val tabsTrayStore: TabsTrayStore,

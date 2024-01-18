@@ -32,7 +32,6 @@ import mozilla.components.concept.menu.candidate.TypefaceStyle
  * @param isSticky whether this item menu should not be scrolled offscreen (downwards or upwards
  * depending on the menu position).
  */
-@Suppress("LongParameterList")
 class BrowserMenuCategory(
     internal val label: String,
     private val textSize: Float = NO_ID.toFloat(),

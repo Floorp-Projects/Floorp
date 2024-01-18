@@ -75,7 +75,7 @@ import org.mozilla.fenix.theme.FirefoxTheme
  */
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterialApi::class)
 @Composable
-@Suppress("MagicNumber", "LongMethod", "LongParameterList")
+@Suppress("MagicNumber", "LongMethod")
 fun TabListItem(
     tab: TabSessionState,
     storage: ThumbnailStorage,
@@ -209,7 +209,6 @@ private fun clickableColor() = when (isSystemInDarkTheme()) {
 }
 
 @Composable
-@Suppress("LongParameterList")
 private fun Thumbnail(
     tab: TabSessionState,
     size: Int,

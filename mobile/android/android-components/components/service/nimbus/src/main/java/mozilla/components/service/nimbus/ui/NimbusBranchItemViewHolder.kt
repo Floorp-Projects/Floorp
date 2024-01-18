@@ -14,7 +14,6 @@ import org.mozilla.experiments.nimbus.Branch
 /**
  * A view holder for displaying a branch of a Nimbus experiment.
  */
-@Suppress("LongParameterList")
 class NimbusBranchItemViewHolder(
     view: View,
     private val nimbusBranchesDelegate: NimbusBranchesAdapterDelegate,

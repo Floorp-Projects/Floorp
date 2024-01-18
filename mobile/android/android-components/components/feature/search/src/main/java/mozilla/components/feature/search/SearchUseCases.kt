@@ -152,7 +152,6 @@ class SearchUseCases(
          * @param flags Flags that will be used when loading the URL.
          * @param additionalHeaders The extra headers to use when loading the URL.
          */
-        @Suppress("LongParameterList")
         operator fun invoke(
             searchTerms: String,
             source: SessionState.Source,

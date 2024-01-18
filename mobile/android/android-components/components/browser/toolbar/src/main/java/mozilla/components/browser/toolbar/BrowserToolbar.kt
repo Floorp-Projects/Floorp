@@ -440,7 +440,6 @@ class BrowserToolbar @JvmOverloads constructor(
      * @param longClickListener Callback that will be invoked whenever the button is long-pressed.
      * @param listener Callback that will be invoked whenever the button is pressed
      */
-    @Suppress("LongParameterList")
     open class Button(
         imageDrawable: Drawable,
         contentDescription: String,
@@ -516,7 +515,6 @@ class BrowserToolbar @JvmOverloads constructor(
      * @param longClickListener Callback that will be invoked whenever the button is long-pressed.
      * @param listener Callback that will be invoked whenever the button is pressed.
      */
-    @Suppress("LongParameterList")
     open class TwoStateButton(
         val primaryImage: Drawable,
         val primaryContentDescription: String,

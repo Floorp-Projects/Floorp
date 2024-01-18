@@ -310,7 +310,6 @@ class HistoryMetadataGroupControllerTest {
         )
     }
 
-    @Suppress("LongParameterList")
     private fun createController(
         deleteSnackbar: (
             items: Set<History.Metadata>,

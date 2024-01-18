@@ -42,7 +42,6 @@ interface SessionState {
     /**
      * Copy the class and override some parameters.
      */
-    @Suppress("LongParameterList")
     fun createCopy(
         id: String = this.id,
         content: ContentState = this.content,

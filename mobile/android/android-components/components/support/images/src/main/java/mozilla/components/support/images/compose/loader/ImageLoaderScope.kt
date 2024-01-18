@@ -66,7 +66,6 @@ fun ImageLoaderScope.Fallback(
     }
 }
 
-@Suppress("LongParameterList")
 internal class InternalImageLoaderScope(
     val client: Client,
     val url: String,

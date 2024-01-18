@@ -173,7 +173,6 @@ internal data class FilterExpression(
 
 // string representation helpers
 
-@SuppressWarnings("LongParameterList")
 private fun buildNodeDescription(
     value: String,
     name: String,

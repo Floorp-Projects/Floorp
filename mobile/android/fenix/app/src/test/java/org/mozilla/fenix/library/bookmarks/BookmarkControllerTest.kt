@@ -527,7 +527,6 @@ class BookmarkControllerTest {
         }
     }
 
-    @Suppress("LongParameterList")
     private fun createController(
         loadBookmarkNode: suspend (String, Boolean) -> BookmarkNode? = { _, _ -> null },
         showSnackbar: (String) -> Unit = { _ -> },

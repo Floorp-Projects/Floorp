@@ -33,7 +33,6 @@ internal class NativeNotificationBridge(
     /**
      * Create a system [Notification] from this [WebNotification].
      */
-    @Suppress("LongParameterList")
     suspend fun convertToAndroidNotification(
         notification: WebNotification,
         context: Context,

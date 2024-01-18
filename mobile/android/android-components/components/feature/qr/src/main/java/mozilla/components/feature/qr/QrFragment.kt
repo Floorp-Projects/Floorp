@@ -655,7 +655,7 @@ class QrFragment : Fragment() {
          * @param aspectRatio The aspect ratio
          * @return The optimal `Size`, or an arbitrary one if none were big enough.
          */
-        @Suppress("LongParameterList", "ComplexMethod")
+        @Suppress("ComplexMethod")
         internal fun chooseOptimalSize(
             choices: Array<Size>,
             textureViewWidth: Int,

@@ -51,7 +51,6 @@ private const val MAXIMUM_ALLOWED_SUGGESTIONS_LIMIT_REACHED =
  * @param showEditSuggestion optional parameter to specify if the suggestion should show the edit button.
  * @param suggestionsHeader optional parameter to specify if the suggestion should have a header
  */
-@Suppress("LongParameterList")
 class SearchTermSuggestionsProvider(
     private val historyStorage: PlacesHistoryStorage,
     private val searchUseCase: SearchUseCase,

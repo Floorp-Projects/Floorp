@@ -47,7 +47,6 @@ import org.mozilla.fenix.GleanMetrics.HomeMenu as HomeMenuMetrics
  * clicked.
  * @param fxaEntrypoint The source entry point to FxA.
  */
-@Suppress("LongParameterList")
 class HomeMenuView(
     private val view: View,
     private val context: Context,

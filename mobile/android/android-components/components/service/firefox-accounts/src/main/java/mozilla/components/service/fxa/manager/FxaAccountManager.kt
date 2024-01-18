@@ -95,7 +95,7 @@ const val MAX_NETWORK_RETRIES = 3
  * @param syncConfig Optional, initial sync behaviour configuration. Sync will be disabled if this is `null`.
  * @param applicationScopes A set of scopes which will be requested during account authentication.
  */
-@Suppress("TooManyFunctions", "LargeClass", "LongParameterList")
+@Suppress("TooManyFunctions", "LargeClass")
 open class FxaAccountManager(
     private val context: Context,
     @get:VisibleForTesting val serverConfig: ServerConfig,

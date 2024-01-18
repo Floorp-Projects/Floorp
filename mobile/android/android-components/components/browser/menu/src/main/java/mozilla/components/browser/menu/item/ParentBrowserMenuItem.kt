@@ -34,7 +34,6 @@ import mozilla.components.concept.menu.candidate.TextStyle
  * @param endOfMenuAlwaysVisible when is set to true makes sure the bottom of the menu is always visible
  * otherwise, the top of the menu is always visible.
  */
-@Suppress("LongParameterList")
 class ParentBrowserMenuItem(
     internal val label: String,
     @DrawableRes

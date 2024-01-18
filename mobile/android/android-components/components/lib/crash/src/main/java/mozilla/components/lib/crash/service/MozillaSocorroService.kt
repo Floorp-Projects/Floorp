@@ -78,7 +78,7 @@ private const val FILE_REGEX = "([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}
  * @param releaseChannel The release channel of the application.
  * @param distributionId The distribution id of the application.
  */
-@Suppress("LargeClass", "LongParameterList")
+@Suppress("LargeClass")
 class MozillaSocorroService(
     private val applicationContext: Context,
     private val appName: String,
@@ -171,7 +171,6 @@ class MozillaSocorroService(
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    @Suppress("LongParameterList")
     internal fun sendReport(
         timestamp: Long,
         throwable: Throwable?,

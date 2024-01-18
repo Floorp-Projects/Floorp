@@ -97,7 +97,6 @@ internal class SelectAccountDialogFragment : PromptDialogFragment() {
          * when a new page is loaded.
          * @param colorsProvider Provides [DialogColors] that define the colors in the Dialog
          */
-        @Suppress("LongParameterList")
         fun newInstance(
             sessionId: String,
             promptRequestUID: String,

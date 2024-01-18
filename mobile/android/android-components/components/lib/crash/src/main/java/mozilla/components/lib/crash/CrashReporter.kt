@@ -85,7 +85,6 @@ private class BreadcrumbList(val maxBreadCrumbs: Int) {
  *                            happened. This gives the app the opportunity to show an in-app confirmation UI before
  *                            sending a crash report. See component README for details.
  */
-@Suppress("LongParameterList")
 class CrashReporter(
     context: Context,
     private val services: List<CrashReporterService> = emptyList(),

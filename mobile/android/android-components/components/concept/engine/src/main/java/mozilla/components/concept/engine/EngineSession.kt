@@ -274,7 +274,6 @@ abstract class EngineSession(
          * @param response A response object associated with this request, when provided can be
          * used instead of performing a manual a download.
          */
-        @Suppress("LongParameterList")
         fun onExternalResource(
             url: String,
             fileName: String? = null,
@@ -423,7 +422,6 @@ abstract class EngineSession(
      * a [TrackingProtectionPolicy] is applicable to all session types (see
      * [TrackingProtectionPolicyForSessionTypes]).
      */
-    @Suppress("LongParameterList")
     open class TrackingProtectionPolicy internal constructor(
         val trackingCategories: Array<TrackingCategory> = arrayOf(TrackingCategory.RECOMMENDED),
         val useForPrivateSessions: Boolean = true,
@@ -586,7 +584,6 @@ abstract class EngineSession(
              *  @param cookiePurging Whether or not to automatically purge tracking cookies. This will
              *  purge cookies from tracking sites that do not have recent user interaction provided.
              */
-            @Suppress("LongParameterList")
             fun select(
                 trackingCategories: Array<TrackingCategory> = arrayOf(TrackingCategory.RECOMMENDED),
                 cookiePolicy: CookiePolicy = ACCEPT_FIRST_PARTY_AND_ISOLATE_OTHERS,

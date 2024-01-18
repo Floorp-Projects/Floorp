@@ -40,8 +40,6 @@ import org.mozilla.fenix.theme.FirefoxTheme
  * @param onExploreMoreButtonClicked Callback for when the bottom text button is clicked.
  * @param onSelectWallpaper Callback for when a new wallpaper is selected.
  */
-
-@Suppress("LongParameterList")
 @ExperimentalMaterialApi
 @Composable
 fun WallpaperOnboarding(

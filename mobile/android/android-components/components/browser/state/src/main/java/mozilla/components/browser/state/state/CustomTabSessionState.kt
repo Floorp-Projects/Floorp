@@ -63,7 +63,6 @@ data class CustomTabSessionState(
 /**
  * Convenient function for creating a custom tab.
  */
-@Suppress("LongParameterList")
 fun createCustomTab(
     url: String,
     id: String = UUID.randomUUID().toString(),

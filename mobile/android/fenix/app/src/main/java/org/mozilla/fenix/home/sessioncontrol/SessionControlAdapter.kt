@@ -190,7 +190,6 @@ class AdapterItemDiffCallback : DiffUtil.ItemCallback<AdapterItem>() {
     }
 }
 
-@Suppress("LongParameterList")
 class SessionControlAdapter(
     private val interactor: SessionControlInteractor,
     private val viewLifecycleOwner: LifecycleOwner,

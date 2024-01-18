@@ -600,7 +600,6 @@ data class ContextMenuCandidate(
             },
         )
 
-        @Suppress("LongParameterList")
         private fun clipPlainText(
             context: Context,
             label: String,

@@ -239,7 +239,7 @@ fun PocketSponsoredStory(
  * @param onDiscoverMoreClicked Callback for when the user taps an element which contains an
  */
 @OptIn(ExperimentalComposeUiApi::class)
-@Suppress("LongParameterList", "LongMethod")
+@Suppress("LongMethod")
 @Composable
 fun PocketStories(
     @PreviewParameter(PocketStoryProvider::class) stories: List<PocketStory>,
@@ -367,7 +367,6 @@ private fun alignColumnToTitlePadding(screenWidth: Dp, contentPadding: Dp) =
  * @param onCategoryClick Callback for when the user taps a category.
  */
 @OptIn(ExperimentalComposeUiApi::class)
-@Suppress("LongParameterList")
 @Composable
 fun PocketStoriesCategories(
     categories: List<PocketRecommendedStoriesCategory>,

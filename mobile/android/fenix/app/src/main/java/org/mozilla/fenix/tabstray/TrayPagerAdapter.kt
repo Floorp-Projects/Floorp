@@ -20,7 +20,6 @@ import org.mozilla.fenix.tabstray.viewholders.NormalBrowserPageViewHolder
 import org.mozilla.fenix.tabstray.viewholders.PrivateBrowserPageViewHolder
 import org.mozilla.fenix.tabstray.viewholders.SyncedTabsPageViewHolder
 
-@Suppress("LongParameterList")
 class TrayPagerAdapter(
     internal val context: Context,
     internal val lifecycleOwner: LifecycleOwner,

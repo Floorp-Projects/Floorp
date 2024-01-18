@@ -69,7 +69,7 @@ private const val THUMBNAIL_SIZE = 108
  * @param onRemoveSyncedTab Invoked when user clicks on the "Remove" dropdown menu option.
  */
 @OptIn(ExperimentalFoundationApi::class)
-@Suppress("LongMethod", "LongParameterList")
+@Suppress("LongMethod")
 @Composable
 fun RecentSyncedTab(
     tab: RecentSyncedTab?,

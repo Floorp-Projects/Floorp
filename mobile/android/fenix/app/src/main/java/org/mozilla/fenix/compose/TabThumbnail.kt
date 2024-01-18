@@ -42,7 +42,6 @@ private const val FALLBACK_ICON_SIZE = 36
  * @param alignment [Alignment] used to draw the image content.
  */
 @Composable
-@Suppress("LongParameterList")
 fun TabThumbnail(
     tab: TabSessionState,
     storage: ThumbnailStorage,

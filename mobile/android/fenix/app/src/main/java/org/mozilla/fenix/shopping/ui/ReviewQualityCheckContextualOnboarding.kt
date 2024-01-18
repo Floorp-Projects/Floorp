@@ -48,7 +48,7 @@ private const val MAX_SUPPORTED_VENDORS_PER_TLD = 3
  * @param onPrimaryButtonClick Invoked when a user clicks on the primary button.
  * @param onSecondaryButtonClick Invoked when a user clicks on the secondary button.
  */
-@Suppress("LongParameterList", "LongMethod")
+@Suppress("LongMethod")
 @Composable
 fun ReviewQualityCheckContextualOnboarding(
     productVendors: List<ProductVendor>,

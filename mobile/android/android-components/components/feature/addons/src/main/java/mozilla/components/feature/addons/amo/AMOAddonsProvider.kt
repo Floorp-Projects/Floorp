@@ -63,7 +63,6 @@ internal const val PAGE_SIZE = 50
  * should remain valid before a refresh is attempted. Defaults to -1, meaning no cache
  * is being used by default
  */
-@Suppress("LongParameterList")
 class AMOAddonsProvider(
     private val context: Context,
     private val client: Client,

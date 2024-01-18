@@ -25,7 +25,6 @@ import java.lang.ref.WeakReference
 /**
  * A [Toolbar.Action] implementation that shows a [TabCounter].
  */
-@Suppress("LongParameterList")
 open class TabCounterToolbarButton(
     private val lifecycleOwner: LifecycleOwner,
     private val countBasedOnSelectedTabType: Boolean = true,

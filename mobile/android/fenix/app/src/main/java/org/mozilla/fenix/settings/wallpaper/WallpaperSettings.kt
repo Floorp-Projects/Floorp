@@ -68,7 +68,6 @@ import org.mozilla.fenix.wallpapers.Wallpaper
  */
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
 @Composable
-@Suppress("LongParameterList")
 fun WallpaperSettings(
     wallpaperGroups: Map<Wallpaper.Collection, List<Wallpaper>>,
     defaultWallpaper: Wallpaper,
@@ -193,7 +192,6 @@ private fun WallpaperGroupHeading(
  * @param numColumns The number of columns that will occupy the grid.
  */
 @Composable
-@Suppress("LongParameterList")
 fun WallpaperThumbnails(
     wallpapers: List<Wallpaper>,
     defaultWallpaper: Wallpaper,
@@ -244,7 +242,6 @@ fun WallpaperThumbnails(
  * @param onSelect Action to take when a new wallpaper is selected.
  */
 @Composable
-@Suppress("LongParameterList")
 private fun WallpaperThumbnailItem(
     wallpaper: Wallpaper,
     defaultWallpaper: Wallpaper,

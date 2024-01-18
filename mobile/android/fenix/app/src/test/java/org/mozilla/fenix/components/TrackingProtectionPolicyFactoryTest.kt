@@ -675,7 +675,6 @@ class TrackingProtectionPolicyFactoryTest {
         every { shouldUseTrackingProtection } returns useTrackingProtection
     }
 
-    @Suppress("LongParameterList")
     private fun settingsForCustom(
         shouldBlockCookiesInCustom: Boolean,
         blockTrackingContentInCustom: String = all, // ["private", "all"]

@@ -34,7 +34,6 @@ import org.mozilla.fenix.GleanMetrics.TabsTray as TabsTrayMetrics
  * @param interactor [InactiveTabsInteractor] used to respond to interactions with the inactive tabs header
  * and the auto close dialog.
  */
-@Suppress("LongParameterList")
 class InactiveTabViewHolder(
     composeView: ComposeView,
     lifecycleOwner: LifecycleOwner,

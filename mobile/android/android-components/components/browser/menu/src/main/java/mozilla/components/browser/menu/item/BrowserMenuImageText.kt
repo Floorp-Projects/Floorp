@@ -48,7 +48,6 @@ internal fun TextView.setColorResource(@ColorRes textColorResource: Int) {
  * depending on the menu position).
  * @param listener Callback to be invoked when this menu item is clicked.
  */
-@Suppress("LongParameterList")
 open class BrowserMenuImageText(
     private val label: String,
     @DrawableRes

@@ -639,7 +639,6 @@ class TabsTrayFragment : AppCompatDialogFragment() {
     }
 
     @VisibleForTesting
-    @Suppress("LongParameterList")
     internal fun setupPager(
         context: Context,
         lifecycleOwner: LifecycleOwner,

@@ -24,7 +24,6 @@ import java.util.UUID
  * @property maxSuggestions the maximum number of suggestions to be provided
  * @property charactersThreshold the minimum typed characters used to match to a search engine name
  */
-@Suppress("LongParameterList")
 class SearchEngineSuggestionProvider(
     private val context: Context,
     private val searchEnginesList: List<SearchEngine>,

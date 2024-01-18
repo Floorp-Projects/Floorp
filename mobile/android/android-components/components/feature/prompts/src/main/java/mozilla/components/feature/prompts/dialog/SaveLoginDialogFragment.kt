@@ -397,7 +397,6 @@ internal class SaveLoginDialogFragment : PromptDialogFragment() {
          * @param hint a value that helps to determine the appropriate prompting behavior.
          * @param login represents login information on a given domain.
          * */
-        @Suppress("LongParameterList")
         fun newInstance(
             sessionId: String,
             promptRequestUID: String,

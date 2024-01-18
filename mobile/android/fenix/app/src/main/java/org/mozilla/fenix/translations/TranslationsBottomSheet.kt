@@ -126,7 +126,6 @@ internal fun TranslationsOptionsAnimation(
     }
 }
 
-@Suppress("LongParameterList")
 @Composable
 internal fun TranslationsDialog(
     learnMoreUrl: String,

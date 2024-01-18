@@ -32,7 +32,6 @@ private val customActions = arrayOf(CALL, EMAIL, SEARCH, SEARCH_PRIVATELY, SHARE
  * Adds normal and private search buttons to text selection context menus.
  * Also adds share, email, and call actions which are optionally displayed.
  */
-@Suppress("LongParameterList")
 class DefaultSelectionActionDelegate(
     private val searchAdapter: SearchAdapter,
     resources: Resources,

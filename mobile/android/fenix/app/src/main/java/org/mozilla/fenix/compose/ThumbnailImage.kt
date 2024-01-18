@@ -38,7 +38,6 @@ import org.mozilla.fenix.theme.FirefoxTheme
  * @param fallbackContent The content to display with a thumbnail is unable to be loaded.
  */
 @Composable
-@Suppress("LongParameterList")
 fun ThumbnailImage(
     request: ImageLoadRequest,
     storage: ThumbnailStorage,

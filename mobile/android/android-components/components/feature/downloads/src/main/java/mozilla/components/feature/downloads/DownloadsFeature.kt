@@ -104,7 +104,7 @@ value class NegativeActionCallback(val value: () -> Unit)
  * @property customThirdPartyDownloadDialog An optional delegate for showing a dialog for a download
  * that can be processed by multiple installed applications including the current one.
  */
-@Suppress("LongParameterList", "LargeClass")
+@Suppress("LargeClass")
 class DownloadsFeature(
     private val applicationContext: Context,
     private val store: BrowserStore,

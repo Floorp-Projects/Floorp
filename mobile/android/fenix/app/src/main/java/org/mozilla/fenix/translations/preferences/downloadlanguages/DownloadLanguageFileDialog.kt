@@ -44,7 +44,6 @@ import org.mozilla.fenix.theme.FirefoxTheme
  * @param onConfirmDownload Invoked when the user click on the "Download" dialog button.
  * @param onCancel Invoked when the user clicks on the "Cancel" dialog button.
  */
-@Suppress("LongParameterList")
 @Composable
 fun DownloadLanguageFileDialog(
     fileSize: Long,

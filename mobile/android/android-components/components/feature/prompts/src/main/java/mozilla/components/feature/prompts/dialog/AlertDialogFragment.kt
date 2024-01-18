@@ -53,7 +53,6 @@ internal class AlertDialogFragment : AbstractPromptTextDialogFragment() {
          * in a short period of time, if is true a checkbox will be part of the dialog, for the user
          * to choose if wants to prevent this [sessionId] continuing showing dialogs.
          */
-        @Suppress("LongParameterList")
         fun newInstance(
             sessionId: String,
             promptRequestUID: String,

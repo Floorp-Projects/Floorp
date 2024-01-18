@@ -843,7 +843,6 @@ class DefaultBrowserToolbarMenuControllerTest {
             }
         }
 
-    @Suppress("LongParameterList")
     private fun createController(
         scope: CoroutineScope,
         store: BrowserStore,

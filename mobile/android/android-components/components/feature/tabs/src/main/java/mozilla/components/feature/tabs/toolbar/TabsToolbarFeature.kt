@@ -18,7 +18,6 @@ import mozilla.components.ui.tabcounter.TabCounterMenu
  * tabs will be counted.
  */
 // TODO Refactor or remove this feature: https://github.com/mozilla-mobile/android-components/issues/9129
-@Suppress("LongParameterList")
 class TabsToolbarFeature(
     toolbar: Toolbar,
     store: BrowserStore,

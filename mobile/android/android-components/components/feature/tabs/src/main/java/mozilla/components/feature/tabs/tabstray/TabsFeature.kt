@@ -20,7 +20,6 @@ import mozilla.components.support.base.feature.LifecycleAwareFeature
  * tabs.
  * @param onCloseTray a callback invoked when the last tab is closed.
  */
-@Suppress("LongParameterList")
 class TabsFeature(
     private val tabsTray: TabsTray,
     private val store: BrowserStore,

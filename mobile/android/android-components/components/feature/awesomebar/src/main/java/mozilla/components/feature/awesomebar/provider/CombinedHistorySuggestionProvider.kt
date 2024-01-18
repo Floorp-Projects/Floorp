@@ -52,7 +52,6 @@ internal const val COMBINED_HISTORY_RESULTS_TO_FILTER_SCALE_FACTOR = 10
  * @param suggestionsHeader optional parameter to specify if the suggestion should have a header
  * @param resultsUriFilter Optional predicate to filter matching suggestions by URL.
  */
-@Suppress("LongParameterList")
 class CombinedHistorySuggestionProvider(
     private val historyStorage: HistoryStorage,
     private val historyMetadataStorage: HistoryMetadataStorage,

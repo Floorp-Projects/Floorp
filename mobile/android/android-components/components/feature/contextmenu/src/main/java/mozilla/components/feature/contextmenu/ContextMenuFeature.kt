@@ -45,7 +45,6 @@ internal const val FRAGMENT_TAG = "mozac_feature_contextmenu_dialog"
  * show only context menus for this tab if an id is provided.
  * @param additionalNote which it will be attached to the bottom of context menu but for a specific [HitResult]
  */
-@Suppress("LongParameterList")
 class ContextMenuFeature(
     private val fragmentManager: FragmentManager,
     private val store: BrowserStore,

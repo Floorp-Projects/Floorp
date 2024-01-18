@@ -76,7 +76,6 @@ abstract class ToolbarIntegration(
     }
 }
 
-@Suppress("LongParameterList")
 class DefaultToolbarIntegration(
     context: Context,
     toolbar: BrowserToolbar,

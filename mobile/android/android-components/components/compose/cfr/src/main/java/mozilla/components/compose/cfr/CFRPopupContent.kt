@@ -52,7 +52,7 @@ import mozilla.components.ui.icons.R as iconsR
  */
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
-@Suppress("LongParameterList", "LongMethod")
+@Suppress("LongMethod")
 fun CFRPopupContent(
     popupBodyColors: List<Int>,
     showDismissButton: Boolean,

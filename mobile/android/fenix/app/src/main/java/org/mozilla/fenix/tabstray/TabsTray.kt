@@ -481,7 +481,7 @@ private fun TabsTrayAutoCloseBannerPreview() {
     )
 }
 
-@Suppress("LongMethod", "LongParameterList")
+@Suppress("LongMethod")
 @Composable
 private fun TabsTrayPreviewRoot(
     displayTabsInGrid: Boolean = true,

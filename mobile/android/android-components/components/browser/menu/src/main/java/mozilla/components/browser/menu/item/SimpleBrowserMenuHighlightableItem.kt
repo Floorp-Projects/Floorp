@@ -33,7 +33,6 @@ import mozilla.components.concept.menu.candidate.TextStyle
  * @param isHighlighted Whether or not to display the highlight
  * @param listener Callback to be invoked when this menu item is clicked.
  */
-@Suppress("LongParameterList")
 class SimpleBrowserMenuHighlightableItem(
     private val label: String,
     @ColorRes private val textColorResource: Int = NO_ID,

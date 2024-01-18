@@ -60,7 +60,6 @@ import org.mozilla.fenix.theme.FirefoxTheme
  * @param onDeleteEngineClicked Invoked when the user clicks on the delete item of the three dot menu.
  * @param onAddEngineClicked Invoked when the user clicks on the add search engine button.
  */
-@Suppress("LongParameterList")
 @Composable
 fun SearchEngineShortcuts(
     categoryTitle: String,
@@ -125,7 +124,7 @@ private fun Title(title: String) {
     }
 }
 
-@Suppress("LongParameterList", "LongMethod")
+@Suppress("LongMethod")
 @Composable
 private fun SearchItem(
     engine: SearchEngine,

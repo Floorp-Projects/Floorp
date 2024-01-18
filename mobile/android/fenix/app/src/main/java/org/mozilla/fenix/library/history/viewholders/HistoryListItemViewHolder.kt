@@ -54,7 +54,6 @@ class HistoryListItemViewHolder(
      * @param groupPendingDeletionCount allows to properly display the number of items inside a
      * history group, taking into account pending removal of items inside.
      */
-    @Suppress("LongParameterList")
     fun bind(
         item: History,
         timeGroup: HistoryItemTimeGroup?,

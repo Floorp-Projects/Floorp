@@ -57,7 +57,7 @@ import mozilla.components.ui.icons.R as iconsR
  * @property shareListener Invoked when the share button is pressed.
  * @property closeListener Invoked when the close button is pressed.
  */
-@Suppress("LargeClass", "LongParameterList")
+@Suppress("LargeClass")
 class CustomTabsToolbarFeature(
     private val store: BrowserStore,
     private val toolbar: BrowserToolbar,

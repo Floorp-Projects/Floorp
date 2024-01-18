@@ -98,7 +98,6 @@ private fun createWebExtensionSubMenuItems(
  * Can be used to emit telemetry.
  * @param onAddonsManagerTapped Callback to be invoked when add-ons manager menu item is selected.
  */
-@Suppress("LongParameterList")
 fun BrowserState.createWebExtensionMenuCandidate(
     context: Context,
     tabId: String? = null,

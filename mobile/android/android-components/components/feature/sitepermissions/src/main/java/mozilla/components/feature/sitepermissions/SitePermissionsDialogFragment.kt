@@ -203,7 +203,6 @@ internal open class SitePermissionsDialogFragment : AppCompatDialogFragment() {
     }
 
     companion object {
-        @Suppress("LongParameterList")
         fun newInstance(
             sessionId: String,
             title: String,

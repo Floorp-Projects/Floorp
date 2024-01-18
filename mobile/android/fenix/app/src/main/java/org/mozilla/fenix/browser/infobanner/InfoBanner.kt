@@ -26,7 +26,6 @@ import org.mozilla.fenix.ext.settings
  * @property dismissAction  Optional callback invoked when the user dismisses the banner.
  * @param actionToPerform The action to be performed on action button press.
  */
-@SuppressWarnings("LongParameterList")
 open class InfoBanner(
     private val context: Context,
     private val container: ViewGroup,

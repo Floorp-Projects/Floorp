@@ -35,7 +35,6 @@ import mozilla.components.browser.state.store.BrowserStore
  * [MDN docs](https://developer.mozilla.org/en-US/Add-ons/WebExtensions/user_interface/Browser_action)
  */
 @Composable
-@Suppress("LongParameterList")
 fun BrowserToolbar(
     store: BrowserStore,
     target: Target,

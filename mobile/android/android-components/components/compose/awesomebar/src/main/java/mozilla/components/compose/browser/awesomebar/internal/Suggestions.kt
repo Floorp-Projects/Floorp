@@ -26,7 +26,6 @@ import mozilla.components.compose.browser.awesomebar.AwesomeBarOrientation
 import mozilla.components.concept.awesomebar.AwesomeBar
 
 @Composable
-@Suppress("LongParameterList")
 internal fun Suggestions(
     suggestions: Map<AwesomeBar.SuggestionProviderGroup, List<AwesomeBar.Suggestion>>,
     colors: AwesomeBarColors,

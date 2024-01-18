@@ -22,7 +22,6 @@ import androidx.coordinatorlayout.widget.CoordinatorLayout
  * @param dismissAction  Optional callback invoked when the user dismisses the banner.
  * @param actionToPerform The action to be performed on action button press.
  */
-@Suppress("LongParameterList")
 class DynamicInfoBanner(
     private val context: Context,
     container: ViewGroup,

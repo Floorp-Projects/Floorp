@@ -22,7 +22,6 @@ typealias SearchUseCase = (String) -> Unit
 /**
  * Feature implementation for connecting a toolbar implementation with the session module.
  */
-@Suppress("LongParameterList")
 class ToolbarFeature(
     private val toolbar: Toolbar,
     store: BrowserStore,

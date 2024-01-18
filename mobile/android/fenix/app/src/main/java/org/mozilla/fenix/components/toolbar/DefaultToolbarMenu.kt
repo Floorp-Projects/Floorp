@@ -54,7 +54,7 @@ import org.mozilla.fenix.theme.ThemeManager
  * @param pinnedSiteStorage Used to check if the current url is a pinned site.
  * @property isPinningSupported true if the launcher supports adding shortcuts.
  */
-@Suppress("LargeClass", "LongParameterList", "TooManyFunctions")
+@Suppress("LargeClass", "TooManyFunctions")
 open class DefaultToolbarMenu(
     private val context: Context,
     private val store: BrowserStore,

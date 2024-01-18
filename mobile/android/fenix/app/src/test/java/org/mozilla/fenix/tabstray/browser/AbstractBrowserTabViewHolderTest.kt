@@ -159,7 +159,6 @@ class AbstractBrowserTabViewHolderTest {
         verify { mediaSessionController.pause() }
     }
 
-    @Suppress("LongParameterList")
     class TestTabTrayViewHolder(
         itemView: View,
         imageLoader: ImageLoader,

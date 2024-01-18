@@ -239,7 +239,7 @@ data class TopSiteColors(
  * @param onTopSiteLongClick Invoked when the user long clicks on a top site.
  * @param onTopSitesItemBound Invoked during the composition of a top site item.
  */
-@Suppress("LongParameterList", "LongMethod")
+@Suppress("LongMethod")
 @OptIn(ExperimentalFoundationApi::class, ExperimentalComposeUiApi::class)
 @Composable
 private fun TopSiteItem(
@@ -401,7 +401,6 @@ private fun TopSiteFavicon(url: String, imageUrl: String? = null) {
 }
 
 @Composable
-@Suppress("LongParameterList")
 private fun getMenuItems(
     topSite: TopSite,
     onOpenInPrivateTabClicked: (topSite: TopSite) -> Unit,

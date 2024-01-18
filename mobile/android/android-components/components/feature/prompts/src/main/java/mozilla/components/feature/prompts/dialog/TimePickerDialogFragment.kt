@@ -307,7 +307,6 @@ internal class TimePickerDialogFragment :
          *
          * @return a new instance of [TimePickerDialogFragment]
          */
-        @Suppress("LongParameterList")
         fun newInstance(
             sessionId: String,
             promptRequestUID: String,

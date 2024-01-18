@@ -30,7 +30,6 @@ import mozilla.components.feature.tabs.TabsUseCases
 /**
  * Connects an [AwesomeBar] with a [Toolbar] and allows adding multiple [AwesomeBar.SuggestionProvider] implementations.
  */
-@Suppress("LongParameterList")
 class AwesomeBarFeature(
     private val awesomeBar: AwesomeBar,
     private val toolbar: Toolbar,
@@ -80,7 +79,6 @@ class AwesomeBarFeature(
      * highest scored search suggestion URL.
      * @param filterExactMatch If true filters out suggestions that exactly match the entered text.
      */
-    @Suppress("LongParameterList")
     fun addSearchProvider(
         searchEngine: SearchEngine,
         searchUseCase: SearchUseCases.SearchUseCase,
@@ -120,7 +118,6 @@ class AwesomeBarFeature(
      * highest scored search suggestion URL.
      * @param filterExactMatch If true filters out suggestions that exactly match the entered text.
      */
-    @Suppress("LongParameterList")
     fun addSearchProvider(
         context: Context,
         store: BrowserStore,

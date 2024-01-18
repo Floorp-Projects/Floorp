@@ -184,7 +184,7 @@ fun TabsTrayBanner(
     }
 }
 
-@Suppress("LongMethod", "LongParameterList")
+@Suppress("LongMethod")
 @Composable
 private fun SingleSelectBanner(
     menuItems: List<MenuItem>,
@@ -381,7 +381,7 @@ private fun NormalTabsTabIcon(normalTabCount: Int) {
  * @param onSaveToCollectionsClick Invoked when the user clicks on the save to collection button.
  * @param onShareSelectedTabs Invoked when the user clicks on the share button.
  */
-@Suppress("LongMethod", "LongParameterList")
+@Suppress("LongMethod")
 @Composable
 private fun MultiSelectBanner(
     menuItems: List<MenuItem>,

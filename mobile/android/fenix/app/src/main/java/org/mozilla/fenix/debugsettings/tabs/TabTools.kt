@@ -104,7 +104,6 @@ private fun generateTabList(
 }
 
 @Composable
-@Suppress("LongParameterList")
 private fun TabToolsContent(
     activeTabCount: Int,
     inactiveTabCount: Int,

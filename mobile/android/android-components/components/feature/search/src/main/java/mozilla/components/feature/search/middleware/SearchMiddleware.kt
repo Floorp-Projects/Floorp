@@ -50,7 +50,6 @@ data class SearchExtraParams(
  * @param searchExtraParams Optional search extra params.
  * @param ioDispatcher The coroutine dispatcher to be used when loading.
  */
-@Suppress("LongParameterList")
 class SearchMiddleware(
     context: Context,
     private val additionalBundledSearchEngineIds: List<String> = emptyList(),

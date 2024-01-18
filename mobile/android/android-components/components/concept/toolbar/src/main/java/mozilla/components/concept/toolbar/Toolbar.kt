@@ -281,7 +281,6 @@ interface Toolbar {
      * @param longClickListener Callback that will be invoked whenever the button is long-pressed.
      * @param listener Callback that will be invoked whenever the button is pressed
      */
-    @Suppress("LongParameterList")
     open class ActionButton(
         val imageDrawable: Drawable? = null,
         val contentDescription: String,

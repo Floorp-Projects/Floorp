@@ -98,7 +98,7 @@ internal const val STORAGE_ACCESS_DOCUMENTATION_URL =
  * @property shouldShowDoNotAskAgainCheckBox optional Visibility for Do not ask again Checkbox
  **/
 
-@Suppress("TooManyFunctions", "LargeClass", "LongParameterList")
+@Suppress("TooManyFunctions", "LargeClass")
 class SitePermissionsFeature(
     private val context: Context,
     @set:VisibleForTesting
@@ -857,7 +857,6 @@ class SitePermissionsFeature(
         }
     }
 
-    @Suppress("LongParameterList")
     @VisibleForTesting
     internal fun createSinglePermissionPrompt(
         context: Context,

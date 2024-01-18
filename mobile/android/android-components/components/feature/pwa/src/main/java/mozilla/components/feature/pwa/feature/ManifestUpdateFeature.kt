@@ -30,7 +30,6 @@ import mozilla.components.support.base.feature.LifecycleAwareFeature
  * @param sessionId ID of the web app session to observe.
  * @param initialManifest Loaded manifest for the current web app.
  */
-@Suppress("LongParameterList")
 class ManifestUpdateFeature(
     private val applicationContext: Context,
     private val store: BrowserStore,

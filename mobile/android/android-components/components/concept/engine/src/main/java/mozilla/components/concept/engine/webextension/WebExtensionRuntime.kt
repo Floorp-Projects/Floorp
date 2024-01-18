@@ -26,7 +26,6 @@ interface WebExtensionRuntime {
      * This callback is invoked with an [UnsupportedOperationException] in case the engine doesn't
      * have web extension support.
      */
-    @Suppress("LongParameterList")
     fun installBuiltInWebExtension(
         id: String,
         url: String,
@@ -48,7 +47,6 @@ interface WebExtensionRuntime {
      * This callback is invoked with an [UnsupportedOperationException] in case the engine doesn't
      * have web extension support.
      */
-    @Suppress("LongParameterList")
     fun installWebExtension(
         url: String,
         installationMethod: InstallationMethod? = null,

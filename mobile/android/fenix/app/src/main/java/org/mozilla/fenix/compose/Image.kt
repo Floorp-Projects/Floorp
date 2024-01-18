@@ -41,7 +41,6 @@ import org.mozilla.fenix.theme.FirefoxTheme
  * By default set to a solid color in [DefaultImagePlaceholder].
  */
 @Composable
-@Suppress("LongParameterList")
 fun Image(
     url: String,
     modifier: Modifier = Modifier,
