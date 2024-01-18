@@ -74,6 +74,7 @@ bool FixedSizeSmallShmemSectionAllocator::AllocShmemSection(
     uint32_t aSize, ShmemSection* aShmemSection) {
   // For now we only support sizes of 4. If we want to support different sizes
   // some more complicated bookkeeping should be added.
+  NS_ASSERT_OWNINGTHREAD(FixedSizeSmallShmemSectionAllocator);
   MOZ_ASSERT(aSize == sSupportedBlockSize);
   MOZ_ASSERT(aShmemSection);
 
@@ -178,6 +179,8 @@ void FixedSizeSmallShmemSectionAllocator::FreeShmemSection(
 
 void FixedSizeSmallShmemSectionAllocator::DeallocShmemSection(
     mozilla::layers::ShmemSection& aShmemSection) {
+  NS_ASSERT_OWNINGTHREAD(FixedSizeSmallShmemSectionAllocator);
+
   if (!IPCOpen()) {
     gfxCriticalNote << "Attempt to dealloc a ShmemSections after shutdown.";
     return;
@@ -188,6 +191,8 @@ void FixedSizeSmallShmemSectionAllocator::DeallocShmemSection(
 }
 
 void FixedSizeSmallShmemSectionAllocator::ShrinkShmemSectionHeap() {
+  NS_ASSERT_OWNINGTHREAD(FixedSizeSmallShmemSectionAllocator);
+
   if (!IPCOpen()) {
     mUsedShmems.clear();
     return;
