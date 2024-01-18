@@ -177,7 +177,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
                 this@SearchDialogFragment.onBackPressed()
             }
         }.apply {
-            if (requireComponents.appStore.state.mode.isPrivate) {
+            if ((requireActivity() as HomeActivity).browsingModeManager.mode.isPrivate) {
                 this.secure(requireActivity())
             }
         }
@@ -193,10 +193,11 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
         val args by navArgs<SearchDialogFragmentArgs>()
         _binding = FragmentSearchDialogBinding.inflate(inflater, container, false)
         val activity = requireActivity() as HomeActivity
-        val isPrivate = requireComponents.appStore.state.mode.isPrivate
+        val isPrivate = activity.browsingModeManager.mode.isPrivate
 
         store = SearchDialogFragmentStore(
             createInitialSearchFragmentState(
+                activity,
                 requireComponents,
                 tabId = args.sessionId,
                 pastedText = args.pastedText,
@@ -211,7 +212,6 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
             SearchDialogController(
                 activity = activity,
                 store = requireComponents.core.store,
-                appStore = requireComponents.appStore,
                 tabsUseCases = requireComponents.useCases.tabsUseCases,
                 fragmentStore = store,
                 navController = findNavController(),
@@ -904,7 +904,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
             } else {
                 val clipboardUrl = context?.components?.clipboardHandler?.extractURL()
 
-                if (clipboardUrl != null && !(requireComponents.appStore.state.mode.isPrivate)) {
+                if (clipboardUrl != null && !((activity as HomeActivity).browsingModeManager.mode.isPrivate)) {
                     requireComponents.core.engine.speculativeConnect(clipboardUrl)
                 }
                 binding.clipboardUrl.text = clipboardUrl

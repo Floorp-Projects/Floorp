@@ -25,7 +25,6 @@ import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.UnifiedSearch
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
-import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.Core
 import org.mozilla.fenix.components.metrics.MetricsUtils
 import org.mozilla.fenix.crashes.CrashListActivity
@@ -63,7 +62,6 @@ interface SearchController {
 class SearchDialogController(
     private val activity: HomeActivity,
     private val store: BrowserStore,
-    private val appStore: AppStore,
     private val tabsUseCases: TabsUseCases,
     private val fragmentStore: SearchFragmentStore,
     private val navController: NavController,
@@ -159,7 +157,7 @@ class SearchDialogController(
             fragmentStore.dispatch(
                 SearchFragmentAction.AllowSearchSuggestionsInPrivateModePrompt(
                     text.isNotEmpty() &&
-                        appStore.state.mode.isPrivate &&
+                        activity.browsingModeManager.mode.isPrivate &&
                         settings.shouldShowSearchSuggestions &&
                         !settings.shouldShowSearchSuggestionsInPrivate &&
                         !settings.showSearchSuggestionsInPrivateOnboardingFinished,
@@ -230,7 +228,7 @@ class SearchDialogController(
                 fragmentStore.dispatch(
                     SearchFragmentAction.SearchDefaultEngineSelected(
                         engine = searchEngine,
-                        browsingMode = appStore.state.mode,
+                        browsingMode = activity.browsingModeManager.mode,
                         settings = settings,
                     ),
                 )
@@ -239,7 +237,7 @@ class SearchDialogController(
                 fragmentStore.dispatch(
                     SearchFragmentAction.SearchShortcutEngineSelected(
                         engine = searchEngine,
-                        browsingMode = appStore.state.mode,
+                        browsingMode = activity.browsingModeManager.mode,
                         settings = settings,
                     ),
                 )

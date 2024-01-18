@@ -9,7 +9,7 @@ import androidx.viewpager2.widget.ViewPager2
 import com.google.android.material.tabs.TabLayout
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.support.base.feature.LifecycleAwareFeature
-import org.mozilla.fenix.components.AppStore
+import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
 import org.mozilla.fenix.tabstray.TrayPagerAdapter.Companion.POSITION_NORMAL_TABS
 import org.mozilla.fenix.tabstray.TrayPagerAdapter.Companion.POSITION_PRIVATE_TABS
 import org.mozilla.fenix.tabstray.TrayPagerAdapter.Companion.POSITION_SYNCED_TABS
@@ -22,7 +22,7 @@ class TabLayoutMediator(
     private val tabLayout: TabLayout,
     private val tabPager: ViewPager2,
     interactor: TabsTrayInteractor,
-    private val appStore: AppStore,
+    private val browsingModeManager: BrowsingModeManager,
     private val tabsTrayStore: TabsTrayStore,
 ) : LifecycleAwareFeature {
 
@@ -45,7 +45,7 @@ class TabLayoutMediator(
     internal fun selectActivePage() {
         val selectedPagerPosition =
             when {
-                appStore.state.mode.isPrivate -> POSITION_PRIVATE_TABS
+                browsingModeManager.mode.isPrivate -> POSITION_PRIVATE_TABS
                 tabsTrayStore.state.selectedPage == Page.SyncedTabs -> POSITION_SYNCED_TABS
                 else -> POSITION_NORMAL_TABS
             }

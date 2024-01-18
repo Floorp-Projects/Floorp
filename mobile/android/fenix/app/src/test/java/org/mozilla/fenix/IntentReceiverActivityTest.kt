@@ -8,7 +8,6 @@ import android.app.Activity
 import android.content.Intent
 import android.content.Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY
 import android.net.Uri
-import androidx.core.text.isDigitsOnly
 import io.mockk.Runs
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -60,7 +59,6 @@ class IntentReceiverActivityTest {
         mockkStatic("org.mozilla.fenix.ext.ContextKt")
         settings = mockk()
         intentProcessors = mockk()
-        "".isDigitsOnly()
 
         every { settings.openLinksInAPrivateTab } returns false
         every { intentProcessors.intentProcessor } returns mockIntentProcessor()

@@ -361,12 +361,11 @@ abstract class BaseBrowserFragment :
         val readerMenuController = DefaultReaderModeController(
             readerViewFeature,
             binding.readerViewControlsBar,
-            isPrivate = requireComponents.appStore.state.mode.isPrivate,
+            isPrivate = activity.browsingModeManager.mode.isPrivate,
             onReaderModeChanged = { activity.finishActionMode() },
         )
         val browserToolbarController = DefaultBrowserToolbarController(
             store = store,
-            appStore = requireComponents.appStore,
             tabsUseCases = requireComponents.useCases.tabsUseCases,
             activity = activity,
             navController = findNavController(),
@@ -380,7 +379,7 @@ abstract class BaseBrowserFragment :
                 findNavController().nav(
                     R.id.browserFragment,
                     BrowserFragmentDirections.actionGlobalTabsTrayFragment(
-                        page = when (requireComponents.appStore.state.mode) {
+                        page = when (activity.browsingModeManager.mode) {
                             BrowsingMode.Normal -> Page.NormalTabs
                             BrowsingMode.Private -> Page.PrivateTabs
                         },
@@ -1160,6 +1159,7 @@ abstract class BaseBrowserFragment :
 
     @VisibleForTesting
     internal fun observeRestoreComplete(store: BrowserStore, navController: NavController) {
+        val activity = activity as HomeActivity
         consumeFlow(store) { flow ->
             flow.map { state -> state.restoreComplete }
                 .distinctUntilChanged()
@@ -1168,7 +1168,7 @@ abstract class BaseBrowserFragment :
                         // Once tab restoration is complete, if there are no tabs to show in the browser, go home
                         val tabs =
                             store.state.getNormalOrPrivateTabs(
-                                requireComponents.appStore.state.mode.isPrivate,
+                                activity.browsingModeManager.mode.isPrivate,
                             )
                         if (tabs.isEmpty() || store.state.selectedTabId == null) {
                             navController.popBackStack(R.id.homeFragment, false)
@@ -1214,6 +1214,10 @@ abstract class BaseBrowserFragment :
     }
 
     private fun handleTabSelected(selectedTab: TabSessionState) {
+        if (!this.isRemoving) {
+            updateThemeForSession(selectedTab)
+        }
+
         if (browserInitialized) {
             view?.let {
                 fullScreenChanged(false)
@@ -1402,6 +1406,15 @@ abstract class BaseBrowserFragment :
                 navToQuickSettingsSheet(tab, sitePermissions)
             }
         }
+    }
+
+    /**
+     * Set the activity normal/private theme to match the current session.
+     */
+    @VisibleForTesting
+    internal fun updateThemeForSession(session: SessionState) {
+        val sessionMode = BrowsingMode.fromBoolean(session.content.private)
+        (activity as HomeActivity).browsingModeManager.mode = sessionMode
     }
 
     @VisibleForTesting

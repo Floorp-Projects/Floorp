@@ -1117,11 +1117,15 @@ class DefaultSessionControlControllerTest {
 
     @Test
     fun `GIVEN app is in private browsing mode WHEN handling wallpaper dialog THEN the dialog is not shown`() {
-        every { appStore.state.mode } returns BrowsingMode.Private
+        every { activity.browsingModeManager } returns mockk {
+            every { mode } returns mockk {
+                every { isPrivate } returns true
+            }
+        }
         val wallpaperState = WallpaperState.default.copy(
             availableWallpapers = makeFakeRemoteWallpapers(
                 THUMBNAILS_SELECTION_COUNT,
-                false,
+                true,
             ),
         )
 

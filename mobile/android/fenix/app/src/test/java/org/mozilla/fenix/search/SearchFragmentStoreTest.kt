@@ -27,16 +27,18 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
-import org.mozilla.fenix.components.AppStore
+import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
 import org.mozilla.fenix.components.Components
-import org.mozilla.fenix.components.appstate.AppState
 import org.mozilla.fenix.components.metrics.MetricsUtils
 import org.mozilla.fenix.utils.Settings
 
 class SearchFragmentStoreTest {
 
     @MockK private lateinit var searchEngine: SearchEngine
+
+    @MockK private lateinit var activity: HomeActivity
 
     @MockK(relaxed = true)
     private lateinit var components: Components
@@ -47,12 +49,15 @@ class SearchFragmentStoreTest {
     @Before
     fun setup() {
         MockKAnnotations.init(this)
+        every { activity.browsingModeManager } returns object : BrowsingModeManager {
+            override var mode: BrowsingMode = BrowsingMode.Normal
+        }
         every { components.settings } returns settings
-        every { components.appStore } returns AppStore()
     }
 
     @Test
     fun `createInitialSearchFragmentState with no tab in normal browsing mode`() {
+        activity.browsingModeManager.mode = BrowsingMode.Normal
         every { components.core.store.state } returns BrowserState()
         every { settings.shouldShowSearchShortcuts } returns true
         every { settings.showUnifiedSearchFeature } returns true
@@ -95,6 +100,7 @@ class SearchFragmentStoreTest {
             assertEquals(
                 expected,
                 createInitialSearchFragmentState(
+                    activity,
                     components,
                     tabId = null,
                     pastedText = "pastedText",
@@ -104,6 +110,7 @@ class SearchFragmentStoreTest {
             assertEquals(
                 expected.copy(tabId = "tabId"),
                 createInitialSearchFragmentState(
+                    activity,
                     components,
                     tabId = "tabId",
                     pastedText = "pastedText",
@@ -117,8 +124,8 @@ class SearchFragmentStoreTest {
 
     @Test
     fun `createInitialSearchFragmentState with no tab in private browsing mode`() {
+        activity.browsingModeManager.mode = BrowsingMode.Private
         every { components.core.store.state } returns BrowserState()
-        every { components.appStore } returns AppStore(AppState(mode = BrowsingMode.Private))
         every { settings.shouldShowSearchShortcuts } returns true
         every { settings.showUnifiedSearchFeature } returns true
         every { settings.shouldShowHistorySuggestions } returns true
@@ -159,6 +166,7 @@ class SearchFragmentStoreTest {
         assertEquals(
             expected,
             createInitialSearchFragmentState(
+                activity,
                 components,
                 tabId = null,
                 pastedText = "pastedText",
@@ -169,6 +177,7 @@ class SearchFragmentStoreTest {
 
     @Test
     fun `createInitialSearchFragmentState with tab`() {
+        activity.browsingModeManager.mode = BrowsingMode.Private
         every { components.core.store.state } returns BrowserState(
             tabs = listOf(
                 TabSessionState(
@@ -210,6 +219,7 @@ class SearchFragmentStoreTest {
                 searchAccessPoint = MetricsUtils.Source.SHORTCUT,
             ),
             createInitialSearchFragmentState(
+                activity,
                 components,
                 tabId = "tabId",
                 pastedText = "",
@@ -220,13 +230,14 @@ class SearchFragmentStoreTest {
 
     @Test
     fun `GIVEN sponsored and non-sponsored suggestions are enabled and Firefox Suggest is disabled WHEN the initial state is created THEN neither are displayed`() {
-        every { components.appStore } returns AppStore()
+        activity.browsingModeManager.mode = BrowsingMode.Normal
         every { components.core.store.state } returns BrowserState()
         every { settings.enableFxSuggest } returns false
         every { settings.showSponsoredSuggestions } returns true
         every { settings.showNonSponsoredSuggestions } returns true
 
         val initialState = createInitialSearchFragmentState(
+            activity,
             components,
             tabId = null,
             pastedText = "pastedText",

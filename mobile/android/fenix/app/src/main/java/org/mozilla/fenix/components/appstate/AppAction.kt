@@ -32,15 +32,6 @@ import org.mozilla.fenix.wallpapers.Wallpaper
  * [Action] implementation related to [AppStore].
  */
 sealed class AppAction : Action {
-
-    /**
-     * NOTE: This action is not yet functional and will require https://bugzilla.mozilla.org/show_bug.cgi?id=1845409
-     * to be resolved. This is part of an ongoing lib-state refactor.
-     * Open a tab in the browser.
-     *
-     * @property mode Which [BrowsingMode] the tab should be opened in.
-     */
-    data class OpenTabInBrowser(val mode: BrowsingMode) : AppAction()
     data class UpdateInactiveExpanded(val expanded: Boolean) : AppAction()
 
     /**
@@ -273,25 +264,5 @@ sealed class AppAction : Action {
         data class ProductRecommendationImpression(
             val key: ShoppingState.ProductRecommendationImpressionKey,
         ) : ShoppingAction()
-    }
-
-    /**
-     * Actions related to the home screen.
-     */
-    sealed class HomeAction : AppAction() {
-        /**
-         * App should be opened to the home screen in [mode].
-         */
-        data class OpenToHome(val mode: BrowsingMode) : HomeAction()
-    }
-
-    /**
-     * Actions related to Intents.
-     */
-    sealed class IntentAction : AppAction() {
-        /**
-         * Private browsing mode should be entered.
-         */
-        object EnterPrivateBrowsing : IntentAction()
     }
 }

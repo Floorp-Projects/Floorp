@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.fenix.components.appstate.bindings
+package org.mozilla.fenix.bindings
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest

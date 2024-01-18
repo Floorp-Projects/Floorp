@@ -563,13 +563,9 @@ class HomeFragment : Fragment() {
 
         tabCounterView = TabCounterView(
             context = requireContext(),
+            browsingModeManager = browsingModeManager,
             navController = findNavController(),
             tabCounter = binding.tabButton,
-            mode = requireComponents.appStore.state.mode,
-            itemTapped = {
-                    newMode ->
-                requireComponents.appStore.dispatch(AppAction.HomeAction.OpenToHome(newMode))
-            },
         )
 
         toolbarView?.build()

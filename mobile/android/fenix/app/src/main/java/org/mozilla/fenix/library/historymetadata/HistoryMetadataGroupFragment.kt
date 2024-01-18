@@ -32,6 +32,7 @@ import mozilla.components.ui.widgets.withCenterAlignedButtons
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.addons.showSnackBar
+import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.databinding.FragmentHistoryMetadataGroupBinding
 import org.mozilla.fenix.ext.components
@@ -187,7 +188,10 @@ class HistoryMetadataGroupFragment :
                     selectedItem.url
                 }
 
-                (activity as HomeActivity).supportActionBar?.hide()
+                (activity as HomeActivity).apply {
+                    browsingModeManager.mode = BrowsingMode.Private
+                    supportActionBar?.hide()
+                }
 
                 showTabTray(openInPrivate = true)
                 true

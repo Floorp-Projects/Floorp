@@ -317,7 +317,10 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler, 
                 (selectedItem as? History.Regular)?.url ?: (selectedItem as? History.Metadata)?.url
             }
 
-            (activity as HomeActivity).supportActionBar?.hide()
+            (activity as HomeActivity).apply {
+                browsingModeManager.mode = BrowsingMode.Private
+                supportActionBar?.hide()
+            }
 
             showTabTray(openInPrivate = true)
             historyStore.dispatch(HistoryFragmentAction.ExitEditMode)
@@ -385,7 +388,7 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler, 
             GleanHistory.OpenedItemExtra(
                 isRemote = item.isRemote,
                 timeGroup = item.historyTimeGroup.toString(),
-                isPrivate = requireComponents.appStore.state.mode == BrowsingMode.Private,
+                isPrivate = (activity as HomeActivity).browsingModeManager.mode == BrowsingMode.Private,
             ),
         )
 

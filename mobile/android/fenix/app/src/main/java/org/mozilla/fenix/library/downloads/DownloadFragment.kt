@@ -26,10 +26,11 @@ import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.feature.downloads.AbstractFetchDownloadService
 import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.support.base.feature.UserInteractionHandler
+import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
+import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.StoreProvider
-import org.mozilla.fenix.components.components
 import org.mozilla.fenix.databinding.FragmentDownloadsBinding
 import org.mozilla.fenix.downloads.DynamicDownloadDialog
 import org.mozilla.fenix.ext.components
@@ -210,7 +211,8 @@ class DownloadFragment : LibraryPageFragment<DownloadItem>(), UserInteractionHan
         return downloadView.onBackPressed()
     }
 
-    private fun openItem(item: DownloadItem) {
+    private fun openItem(item: DownloadItem, mode: BrowsingMode? = null) {
+        mode?.let { (activity as HomeActivity).browsingModeManager.mode = it }
         context?.let {
             val contentLength = if (item.size.isNotEmpty()) {
                 item.size.toLong()

@@ -29,9 +29,6 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.HomeActivity
-import org.mozilla.fenix.browser.browsingmode.BrowsingMode
-import org.mozilla.fenix.components.AppStore
-import org.mozilla.fenix.components.appstate.AppState
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
@@ -39,13 +36,11 @@ import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 internal class SearchDialogFragmentTest {
     private val navController: NavController = mockk()
     private val fragment = SearchDialogFragment()
-    private var appStore: AppStore = AppStore()
 
     @Before
     fun setup() {
         mockkStatic("androidx.navigation.fragment.FragmentKt")
         every { any<Fragment>().findNavController() } returns navController
-        every { testContext.components.appStore } returns appStore
     }
 
     @After
@@ -161,18 +156,17 @@ internal class SearchDialogFragmentTest {
 
     @Test
     fun `GIVEN app is in private mode WHEN search dialog is created THEN the dialog is secure`() {
-        appStore = AppStore(AppState(mode = BrowsingMode.Private))
         val activity: HomeActivity = mockk(relaxed = true)
         val fragment = spyk(SearchDialogFragment())
         val layoutParams = LayoutParams()
         layoutParams.flags = LayoutParams.FLAG_SECURE
 
+        every { activity.browsingModeManager.mode.isPrivate } returns true
         every { activity.window } returns mockk(relaxed = true) {
             every { attributes } returns LayoutParams().apply { flags = LayoutParams.FLAG_SECURE }
         }
         every { fragment.requireActivity() } returns activity
         every { fragment.requireContext() } returns testContext
-        every { testContext.components.appStore } returns appStore
 
         val dialog = fragment.onCreateDialog(null)
 
@@ -182,11 +176,11 @@ internal class SearchDialogFragmentTest {
     @Test
     fun `GIVEN app is in normal mode WHEN search dialog is created THEN the dialog is not secure`() {
         val activity: HomeActivity = mockk(relaxed = true)
-        appStore = AppStore(AppState(mode = BrowsingMode.Normal))
         val fragment = spyk(SearchDialogFragment())
         val layoutParams = LayoutParams()
         layoutParams.flags = LayoutParams.FLAG_SECURE
 
+        every { activity.browsingModeManager.mode.isPrivate } returns false
         every { activity.window } returns mockk(relaxed = true) {
             every { attributes } returns LayoutParams().apply { flags = LayoutParams.FLAG_SECURE }
         }

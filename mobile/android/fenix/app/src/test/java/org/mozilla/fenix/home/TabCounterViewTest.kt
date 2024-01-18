@@ -29,6 +29,8 @@ import org.mozilla.fenix.GleanMetrics.StartOnHome
 import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
+import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
+import org.mozilla.fenix.browser.browsingmode.DefaultBrowsingModeManager
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
@@ -41,7 +43,9 @@ class TabCounterViewTest {
     val gleanTestRule = GleanTestRule(testContext)
 
     private lateinit var navController: NavController
+    private lateinit var browsingModeManager: BrowsingModeManager
     private lateinit var settings: Settings
+    private lateinit var modeDidChange: (BrowsingMode) -> Unit
     private lateinit var tabCounterView: TabCounterView
     private lateinit var tabCounter: TabCounter
 
@@ -49,16 +53,30 @@ class TabCounterViewTest {
     fun setup() {
         navController = mockk(relaxed = true)
         settings = mockk(relaxed = true)
+        modeDidChange = mockk(relaxed = true)
 
         tabCounter = spyk(TabCounter(testContext))
+
+        browsingModeManager = DefaultBrowsingModeManager(
+            _mode = BrowsingMode.Normal,
+            settings = settings,
+            modeDidChange = modeDidChange,
+        )
+
+        tabCounterView = TabCounterView(
+            context = testContext,
+            browsingModeManager = browsingModeManager,
+            navController = navController,
+            tabCounter = tabCounter,
+        )
     }
 
     @Test
     fun `WHEN tab counter is clicked THEN navigate to tabs tray and record metrics`() {
         every { navController.currentDestination?.id } returns R.id.homeFragment
+
         assertNull(StartOnHome.openTabsTray.testGetValue())
 
-        tabCounterView = createTabCounterView()
         tabCounter.performClick()
 
         assertNotNull(StartOnHome.openTabsTray.testGetValue())
@@ -73,26 +91,16 @@ class TabCounterViewTest {
 
     @Test
     fun `WHEN New tab menu item is tapped THEN set browsing mode to normal`() {
-        var capture: BrowsingMode? = null
-        tabCounterView = createTabCounterView {
-            capture = it
-        }
-
         tabCounterView.onItemTapped(TabCounterMenu.Item.NewTab)
 
-        assertEquals(BrowsingMode.Normal, capture)
+        assertEquals(BrowsingMode.Normal, browsingModeManager.mode)
     }
 
     @Test
     fun `WHEN New private tab menu item is tapped THEN set browsing mode to private`() {
-        var capture: BrowsingMode? = null
-        tabCounterView = createTabCounterView {
-            capture = it
-        }
-
         tabCounterView.onItemTapped(TabCounterMenu.Item.NewPrivateTab)
 
-        assertEquals(BrowsingMode.Private, capture)
+        assertEquals(BrowsingMode.Private, browsingModeManager.mode)
     }
 
     @Test
@@ -107,7 +115,6 @@ class TabCounterViewTest {
             ),
             selectedTabId = "mozilla",
         )
-        tabCounterView = createTabCounterView()
 
         tabCounterView.update(browserState)
 
@@ -115,7 +122,7 @@ class TabCounterViewTest {
             tabCounter.setCountWithAnimation(browserState.normalTabs.size)
         }
 
-        tabCounterView = createTabCounterView(mode = BrowsingMode.Private)
+        browsingModeManager.mode = BrowsingMode.Private
 
         tabCounterView.update(browserState)
 
@@ -137,10 +144,10 @@ class TabCounterViewTest {
             selectedTabId = "mozilla",
         )
 
-        tabCounterView = createTabCounterView(mode = BrowsingMode.Private)
+        browsingModeManager.mode = BrowsingMode.Private
         tabCounterView.update(browserState)
 
-        verify {
+        verifyOrder {
             tabCounter.toggleCounterMask(true)
         }
     }
@@ -158,22 +165,10 @@ class TabCounterViewTest {
             selectedTabId = "mozilla",
         )
 
-        tabCounterView = createTabCounterView()
         tabCounterView.update(browserState)
 
         verifyOrder {
             tabCounter.toggleCounterMask(false)
         }
     }
-
-    private fun createTabCounterView(
-        mode: BrowsingMode = BrowsingMode.Normal,
-        itemTapped: (BrowsingMode) -> Unit = {},
-    ) = TabCounterView(
-        context = testContext,
-        navController = navController,
-        tabCounter = tabCounter,
-        mode = mode,
-        itemTapped = itemTapped,
-    )
 }

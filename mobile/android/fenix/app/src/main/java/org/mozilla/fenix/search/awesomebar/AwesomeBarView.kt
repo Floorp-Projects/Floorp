@@ -117,7 +117,7 @@ class AwesomeBarView(
     init {
         val primaryTextColor = activity.getColorFromAttr(R.attr.textPrimary)
 
-        engineForSpeculativeConnects = when (components.appStore.state.mode) {
+        engineForSpeculativeConnects = when (activity.browsingModeManager.mode) {
             BrowsingMode.Normal -> components.core.engine
             BrowsingMode.Private -> null
         }
@@ -162,7 +162,7 @@ class AwesomeBarView(
                 showDescription = false,
                 engine = engineForSpeculativeConnects,
                 filterExactMatch = true,
-                private = when (components.appStore.state.mode) {
+                private = when (activity.browsingModeManager.mode) {
                     BrowsingMode.Normal -> false
                     BrowsingMode.Private -> true
                 },
@@ -328,12 +328,12 @@ class AwesomeBarView(
             }
         }
 
-        if (components.appStore.state.mode == BrowsingMode.Normal && state.showAllSessionSuggestions) {
+        if (activity.browsingModeManager.mode == BrowsingMode.Normal && state.showAllSessionSuggestions) {
             // Unlike other providers, we don't exclude sponsored suggestions for open tabs.
             providersToAdd.add(getLocalTabsProvider())
         }
 
-        if (components.appStore.state.mode == BrowsingMode.Normal && state.showSessionSuggestionsForCurrentEngine) {
+        if (activity.browsingModeManager.mode == BrowsingMode.Normal && state.showSessionSuggestionsForCurrentEngine) {
             getFilterForCurrentEngineResults(state)?.let {
                 providersToAdd.add(getLocalTabsProvider(it))
             }
@@ -448,7 +448,7 @@ class AwesomeBarView(
                 colorFilter = createBlendModeColorFilterCompat(primaryTextColor, SRC_IN)
             }.toBitmap()
 
-            val engineForSpeculativeConnects = when (components.appStore.state.mode) {
+            val engineForSpeculativeConnects = when (activity.browsingModeManager.mode) {
                 BrowsingMode.Normal -> components.core.engine
                 BrowsingMode.Private -> null
             }
@@ -469,7 +469,7 @@ class AwesomeBarView(
                     icon = searchBitmap,
                     engine = engineForSpeculativeConnects,
                     filterExactMatch = true,
-                    private = when (components.appStore.state.mode) {
+                    private = when (activity.browsingModeManager.mode) {
                         BrowsingMode.Normal -> false
                         BrowsingMode.Private -> true
                     },

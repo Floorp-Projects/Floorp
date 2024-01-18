@@ -24,6 +24,7 @@ import mozilla.components.feature.addons.AddonManager
 import mozilla.components.feature.addons.AddonManagerException
 import mozilla.components.feature.addons.ui.translateName
 import org.mozilla.fenix.BuildConfig
+import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.databinding.FragmentInstalledAddOnDetailsBinding
 import org.mozilla.fenix.ext.components
@@ -262,7 +263,7 @@ class InstalledAddonDetailsFragment : Fragment() {
 
     private fun bindReportButton() {
         binding.reportAddOn.setOnClickListener {
-            val shouldCreatePrivateSession = it.context.components.appStore.state.mode.isPrivate
+            val shouldCreatePrivateSession = (activity as HomeActivity).browsingModeManager.mode.isPrivate
 
             it.context.components.useCases.tabsUseCases.selectOrAddTab(
                 url = "${BuildConfig.AMO_BASE_URL}/android/feedback/addon/${addon.id}/",
@@ -285,7 +286,7 @@ class InstalledAddonDetailsFragment : Fragment() {
                 val directions = if (addon.installedState?.openOptionsPageInTab == true) {
                     val components = it.context.components
                     val shouldCreatePrivateSession =
-                        components.appStore.state.mode.isPrivate
+                        (activity as HomeActivity).browsingModeManager.mode.isPrivate
 
                     // If the addon settings page is already open in a tab, select that one
                     components.useCases.tabsUseCases.selectOrAddTab(

@@ -29,7 +29,6 @@ import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.components.StoreProvider
-import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.databinding.FragmentRecentlyClosedTabsBinding
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.setTextColor
@@ -139,7 +138,7 @@ class RecentlyClosedFragment :
     }
 
     private fun openItem(url: String, mode: BrowsingMode? = null) {
-        mode?.let { requireComponents.appStore.dispatch(AppAction.OpenTabInBrowser(it)) }
+        mode?.let { (activity as HomeActivity).browsingModeManager.mode = it }
 
         (activity as HomeActivity).openToBrowserAndLoad(
             searchTermOrURL = url,
