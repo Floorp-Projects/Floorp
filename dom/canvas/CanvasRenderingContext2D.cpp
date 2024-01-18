@@ -97,6 +97,7 @@
 #include "mozilla/gfx/DataSurfaceHelpers.h"
 #include "mozilla/gfx/PatternHelpers.h"
 #include "mozilla/gfx/Swizzle.h"
+#include "mozilla/layers/ImageBridgeChild.h"
 #include "mozilla/layers/PersistentBufferProvider.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Preferences.h"
@@ -1707,10 +1708,6 @@ bool CanvasRenderingContext2D::TrySharedTarget(
   aOutDT = nullptr;
   aOutProvider = nullptr;
 
-  if (!mCanvasElement) {
-    return false;
-  }
-
   if (mBufferProvider && mBufferProvider->IsShared()) {
     // we are already using a shared buffer provider, we are allocating a new
     // one because the current one failed so let's just fall back to the basic
@@ -1719,15 +1716,26 @@ bool CanvasRenderingContext2D::TrySharedTarget(
     return false;
   }
 
-  WindowRenderer* renderer = WindowRendererFromCanvasElement(mCanvasElement);
+  if (mCanvasElement) {
+    WindowRenderer* renderer = WindowRendererFromCanvasElement(mCanvasElement);
+    if (!renderer) {
+      return false;
+    }
 
-  if (!renderer) {
-    return false;
+    aOutProvider = renderer->CreatePersistentBufferProvider(
+        GetSize(), GetSurfaceFormat(),
+        !mAllowAcceleration || GetEffectiveWillReadFrequently());
+  } else if (mOffscreenCanvas) {
+    RefPtr<layers::ImageBridgeChild> imageBridge =
+        layers::ImageBridgeChild::GetSingleton();
+    if (NS_WARN_IF(!imageBridge)) {
+      return false;
+    }
+
+    aOutProvider = layers::PersistentBufferProviderShared::Create(
+        GetSize(), GetSurfaceFormat(), imageBridge,
+        !mAllowAcceleration || GetEffectiveWillReadFrequently());
   }
-
-  aOutProvider = renderer->CreatePersistentBufferProvider(
-      GetSize(), GetSurfaceFormat(),
-      !mAllowAcceleration || GetEffectiveWillReadFrequently());
 
   if (!aOutProvider) {
     return false;
