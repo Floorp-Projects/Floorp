@@ -64,16 +64,6 @@ add_task(async function nonsponsoredDisabled() {
   UrlbarPrefs.clear("suggest.quicksuggest.sponsored");
 });
 
-add_task(async function mixedCaseQuery() {
-  await check_results({
-    context: createContext("TeSt", {
-      providers: [UrlbarProviderQuickSuggest.name],
-      isPrivate: false,
-    }),
-    matches: [makeExpectedResult()],
-  });
-});
-
 function makeExpectedResult() {
   return {
     type: UrlbarUtils.RESULT_TYPE.URL,

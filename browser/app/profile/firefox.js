@@ -641,10 +641,6 @@ pref("browser.urlbar.suggest.addons", true);
 // mdn suggestions are turned on.
 pref("browser.urlbar.suggest.mdn", true);
 
-// If `browser.urlbar.yelp.featureGate` is true, this controls whether
-// Yelp suggestions are turned on.
-pref("browser.urlbar.suggest.yelp", true);
-
 // The minimum prefix length of addons keyword the user must type to trigger
 // the suggestion. 0 means the min length should be taken from Nimbus.
 pref("browser.urlbar.addons.minKeywordLength", 0);

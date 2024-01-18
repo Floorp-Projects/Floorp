@@ -849,16 +849,6 @@ Suggestion.Amo = class extends Suggestion{
             this.score = score;
         }
 }
-Suggestion.Yelp = class extends Suggestion{
-    constructor(
-        url,
-        title
-        ) {
-            super();
-            this.url = url;
-            this.title = title;
-        }
-}
 
 // Export the FFIConverter object to make external types work.
 export class FfiConverterTypeSuggestion extends FfiConverterArrayBuffer {
@@ -902,11 +892,6 @@ export class FfiConverterTypeSuggestion extends FfiConverterArrayBuffer {
                     FfiConverterI64.read(dataStream),
                     FfiConverterString.read(dataStream),
                     FfiConverterF64.read(dataStream)
-                    );
-            case 5:
-                return new Suggestion.Yelp(
-                    FfiConverterString.read(dataStream),
-                    FfiConverterString.read(dataStream)
                     );
             default:
                 return new Error("Unknown Suggestion variant");
@@ -957,12 +942,6 @@ export class FfiConverterTypeSuggestion extends FfiConverterArrayBuffer {
             FfiConverterF64.write(dataStream, value.score);
             return;
         }
-        if (value instanceof Suggestion.Yelp) {
-            dataStream.writeInt32(5);
-            FfiConverterString.write(dataStream, value.url);
-            FfiConverterString.write(dataStream, value.title);
-            return;
-        }
         return new Error("Unknown Suggestion variant");
     }
 
@@ -1008,11 +987,6 @@ export class FfiConverterTypeSuggestion extends FfiConverterArrayBuffer {
             totalSize += FfiConverterF64.computeSize(value.score);
             return totalSize;
         }
-        if (value instanceof Suggestion.Yelp) {
-            totalSize += FfiConverterString.computeSize(value.url);
-            totalSize += FfiConverterString.computeSize(value.title);
-            return totalSize;
-        }
         return new Error("Unknown Suggestion variant");
     }
 
@@ -1030,7 +1004,6 @@ export const SuggestionProvider = {
     POCKET: 2,
     WIKIPEDIA: 3,
     AMO: 4,
-    YELP: 5,
 };
 
 Object.freeze(SuggestionProvider);
@@ -1046,8 +1019,6 @@ export class FfiConverterTypeSuggestionProvider extends FfiConverterArrayBuffer 
                 return SuggestionProvider.WIKIPEDIA
             case 4:
                 return SuggestionProvider.AMO
-            case 5:
-                return SuggestionProvider.YELP
             default:
                 return new Error("Unknown SuggestionProvider variant");
         }
@@ -1070,10 +1041,6 @@ export class FfiConverterTypeSuggestionProvider extends FfiConverterArrayBuffer 
             dataStream.writeInt32(4);
             return;
         }
-        if (value === SuggestionProvider.YELP) {
-            dataStream.writeInt32(5);
-            return;
-        }
         return new Error("Unknown SuggestionProvider variant");
     }
 
@@ -1082,7 +1049,7 @@ export class FfiConverterTypeSuggestionProvider extends FfiConverterArrayBuffer 
     }
 
     static checkType(value) {
-      if (!Number.isInteger(value) || value < 1 || value > 5) {
+      if (!Number.isInteger(value) || value < 1 || value > 4) {
           throw new UniFFITypeError(`${value} is not a valid value for SuggestionProvider`);
       }
     }

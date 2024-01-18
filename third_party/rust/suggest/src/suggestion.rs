@@ -52,10 +52,6 @@ pub enum Suggestion {
         guid: String,
         score: f64,
     },
-    Yelp {
-        url: String,
-        title: String,
-    },
 }
 
 /// Replaces all template parameters in a "raw" sponsored suggestion URL,

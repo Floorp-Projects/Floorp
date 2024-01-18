@@ -423,14 +423,6 @@ add_tasks_with_rust(async function remoteSettings() {
         setUtmParams: false,
       }),
     },
-    {
-      input: "FoUrTh",
-      expected: makeExpectedResult({
-        suggestion: REMOTE_SETTINGS_RESULTS[0].attachment[3],
-        source: "remote-settings",
-        setUtmParams: false,
-      }),
-    },
   ];
 
   // Disable Merino so we trigger only remote settings suggestions.

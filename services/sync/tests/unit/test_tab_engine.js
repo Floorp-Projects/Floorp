@@ -179,7 +179,6 @@ add_task(async function test_tab_engine_skips_incoming_local_record() {
           title: "title2",
           urlHistory: ["http://bar.com/"],
           icon: "",
-          inactive: false,
           lastUsed: 3000,
         },
       ]);

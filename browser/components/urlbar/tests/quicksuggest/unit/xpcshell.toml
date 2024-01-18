@@ -37,8 +37,6 @@ firefox-appdir = "browser"
 
 ["test_quicksuggest_topPicks.js"]
 
-["test_quicksuggest_yelp.js"]
-
 ["test_rust_ingest.js"]
 
 ["test_suggestionsMap.js"]
