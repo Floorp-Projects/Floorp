@@ -687,6 +687,14 @@ workers:
                 by-level:
                     '3': 'gecko-3-b-osx-1015'
                     default: 'gecko-1-b-osx-1015'
+        b-osx-arm64:
+            provisioner: releng-hardware
+            implementation: generic-worker
+            os: macosx
+            worker-type:
+                by-level:
+                    '3': 'gecko-3-b-osx-arm64'
+                    default: 'gecko-1-b-osx-arm64'
         t-win10-64(|-gpu-s|-source):
             provisioner: '{trust-domain}-t'
             implementation: generic-worker

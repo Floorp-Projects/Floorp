@@ -250,3 +250,32 @@ jobs:
             toolchain:
                 - macosx64-clang
                 - macosx64-minidump-stackwalk
+
+    macosx64-aarch64-shippable/opt:
+        description: "macosx64 aarch64 Profile Generation"
+        shipping-phase: build
+        shipping-product: firefox
+        index:
+            product: firefox
+            job-name: macosx64-aarch64-profile
+        treeherder:
+            platform: macosx1100-64-shippable/opt
+        worker-type: b-osx-arm64
+        worker:
+            chain-of-trust: true
+            max-run-time: 7200
+            env:
+                SHELL: "/bin/bash"
+            artifacts:
+                - type: directory
+                  name: public/build
+                  path: artifacts/
+        run:
+            using: run-task
+            sparse-profile: profile-generate
+            cwd: '{checkout}'
+            command: ./taskcluster/scripts/misc/run-profileserver-macos.sh
+        fetches:
+            toolchain:
+                - macosx64-clang
+                - macosx64-minidump-stackwalk
