@@ -1,16 +1,16 @@
-// |reftest| skip-if(!xulRuntime.shell)  shell-option(--enable-import-attributes)
+// |reftest| skip-if(!xulRuntime.shell) shell-option(--enable-import-assertions)
 
-function moduleRequest(source, assertions) {
+function moduleRequest(source, attributes) {
   return {
     type: "ModuleRequest",
     source,
-    assertions,
+    attributes,
   };
 }
 
-function importAssertion(key, value) {
+function importAttribute(key, value) {
   return {
-    type: "ImportAssertion",
+    type: "ImportAttribute",
     key,
     value,
   };
@@ -104,12 +104,16 @@ assertModule(`
 `, [
   exportDecl(null, [exportNamespaceSpec(literal("x"))], moduleRequest(literal("module"), []), false),
 ]);
-
 if (getRealmConfiguration("importAttributes")) {
+  assertModule(`
+    import {"x" as y} from "module" with {type: "json"};
+  `, [
+    importDecl([importSpec(literal("x"), ident("y"))], moduleRequest(literal("module"), [importAttribute(ident("type"), literal("json"))])),
+  ]);
   assertModule(`
     import {"x" as y} from "module" assert {type: "json"};
   `, [
-    importDecl([importSpec(literal("x"), ident("y"))], moduleRequest(literal("module"), [importAssertion(ident("type"), literal("json"))])),
+    importDecl([importSpec(literal("x"), ident("y"))], moduleRequest(literal("module"), [importAttribute(ident("type"), literal("json"))])),
   ]);
 }
 

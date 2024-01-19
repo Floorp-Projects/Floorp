@@ -1092,7 +1092,7 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
 
   NameNodeResult moduleExportName();
 
-  bool assertClause(ListNodeType assertionsSet);
+  bool withClause(ListNodeType attributesSet);
 
   BinaryNodeResult importDeclaration();
   NodeResult importDeclarationOrImportExpr(YieldHandling yieldHandling);
