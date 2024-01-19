@@ -856,6 +856,7 @@ panel#feature-callout[arrow-position=inline-start-bottom] {
   font-size: 1em;
   font-weight: 590;
   margin: 0;
+  margin-inline-end: 28px;
 }
 .onboardingContainer.shopping .screen[pos=split][layout=survey] .main-content .main-content-inner .welcome-text h2 {
   color: inherit;
