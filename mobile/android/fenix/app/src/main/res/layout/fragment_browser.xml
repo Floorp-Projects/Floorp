@@ -13,6 +13,14 @@
         android:id="@+id/browserWindow"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
+        
+        <androidx.compose.ui.platform.ComposeView
+            android:id="@+id/tabStripView"
+            app:layout_constraintBottom_toTopOf="@+id/browserLayout"
+            app:layout_constraintTop_toTopOf="parent"
+            android:layout_width="match_parent"
+            android:visibility="gone"
+            android:layout_height="@dimen/tab_strip_height" />
 
         <androidx.coordinatorlayout.widget.CoordinatorLayout
             android:id="@+id/browserLayout"
@@ -20,7 +28,7 @@
             android:layout_height="0dp"
             app:layout_constraintHeight_min="1dp"
             app:layout_constraintBottom_toTopOf="@+id/addressSelectBar"
-            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/tabStripView"
             tools:context="browser.BrowserFragment">
 
             <mozilla.components.ui.widgets.VerticalSwipeRefreshLayout

@@ -109,6 +109,14 @@
         android:layout_gravity="bottom"
         tools:context=".home.HomeFragment">
 
+        <androidx.compose.ui.platform.ComposeView
+            android:id="@+id/tabStripView"
+            android:layout_width="match_parent"
+            app:layout_constraintBottom_toTopOf="@id/bottom_bar"
+            app:layout_constraintTop_toTopOf="parent"
+            android:visibility="gone"
+            android:layout_height="@dimen/tab_strip_height" />
+
         <View
             android:id="@+id/bottom_bar"
             android:layout_width="0dp"

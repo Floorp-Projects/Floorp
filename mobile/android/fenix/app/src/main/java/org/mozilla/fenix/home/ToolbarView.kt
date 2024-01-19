@@ -66,16 +66,27 @@ class ToolbarView(
                     gravity = Gravity.TOP
                 }
 
+                val isTabletAndTabStripEnabled = context.resources.getBoolean(R.bool.tablet)
                 ConstraintSet().apply {
                     clone(binding.toolbarLayout)
                     clear(binding.bottomBar.id, ConstraintSet.BOTTOM)
                     clear(binding.bottomBarShadow.id, ConstraintSet.BOTTOM)
-                    connect(
-                        binding.bottomBar.id,
-                        ConstraintSet.TOP,
-                        ConstraintSet.PARENT_ID,
-                        ConstraintSet.TOP,
-                    )
+
+                    if (isTabletAndTabStripEnabled) {
+                        connect(
+                            binding.bottomBar.id,
+                            ConstraintSet.TOP,
+                            binding.tabStripView.id,
+                            ConstraintSet.BOTTOM,
+                        )
+                    } else {
+                        connect(
+                            binding.bottomBar.id,
+                            ConstraintSet.TOP,
+                            ConstraintSet.PARENT_ID,
+                            ConstraintSet.TOP,
+                        )
+                    }
                     connect(
                         binding.bottomBarShadow.id,
                         ConstraintSet.TOP,
@@ -98,7 +109,12 @@ class ToolbarView(
 
                 binding.homeAppBar.updateLayoutParams<ViewGroup.MarginLayoutParams> {
                     topMargin =
-                        context.resources.getDimensionPixelSize(R.dimen.home_fragment_top_toolbar_header_margin)
+                        context.resources.getDimensionPixelSize(R.dimen.home_fragment_top_toolbar_header_margin) +
+                        if (isTabletAndTabStripEnabled) {
+                            context.resources.getDimensionPixelSize(R.dimen.tab_strip_height)
+                        } else {
+                            0
+                        }
                 }
             }
 

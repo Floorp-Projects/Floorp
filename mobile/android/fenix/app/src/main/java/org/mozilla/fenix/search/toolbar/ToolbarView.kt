@@ -4,9 +4,11 @@
 
 package org.mozilla.fenix.search.toolbar
 
+import android.view.ViewGroup
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.content.ContextCompat
+import androidx.core.view.updateMargins
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.feature.toolbar.ToolbarAutocompleteFeature
@@ -123,6 +125,12 @@ class ToolbarView(
                     }
                 },
             )
+
+            if (settings.isTabletAndTabStripEnabled) {
+                (layoutParams as ViewGroup.MarginLayoutParams).updateMargins(
+                    top = context.resources.getDimensionPixelSize(R.dimen.tab_strip_height),
+                )
+            }
         }
     }
 
