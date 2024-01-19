@@ -2178,11 +2178,21 @@ static bool EvaluateDynamicImportOptions(
   RootedObject assertWrapperObject(cx, &optionsArg.toObject());
   RootedValue assertValue(cx);
 
-  // Step 10.b. Let assertionsObj be Get(options, "assert").
-  RootedId assertId(cx, NameToId(cx->names().assert_));
-  if (!GetProperty(cx, assertWrapperObject, assertWrapperObject, assertId,
+  // Step 10.b. Let attributesObj be Completion(Get(options, "with")).
+  RootedId withId(cx, NameToId(cx->names().with));
+  if (!GetProperty(cx, assertWrapperObject, assertWrapperObject, withId,
                    &assertValue)) {
     return false;
+  }
+
+  if (assertValue.isUndefined() &&
+      cx->options().importAttributesAssertSyntax()) {
+    // Step 10.b. Let assertionsObj be Get(options, "assert").
+    RootedId assertId(cx, NameToId(cx->names().assert_));
+    if (!GetProperty(cx, assertWrapperObject, assertWrapperObject, assertId,
+                     &assertValue)) {
+      return false;
+    }
   }
 
   // Step 10.d. If assertionsObj is not undefined.
