@@ -1305,12 +1305,6 @@ def _subtreeUsesShmem(p):
 
 
 class Protocol(ipdl.ast.Protocol):
-    def managerInterfaceType(self, ptr=False):
-        return Type("mozilla::ipc::IProtocol", ptr=ptr)
-
-    def openedProtocolInterfaceType(self, ptr=False):
-        return Type("mozilla::ipc::IToplevelProtocol", ptr=ptr)
-
     def _ipdlmgrtype(self):
         assert 1 == len(self.decl.type.managers)
         for mgr in self.decl.type.managers:
@@ -3625,11 +3619,12 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 hasAsyncReturns = True
                 break
 
-        inherits = []
         if ptype.isToplevel():
-            inherits.append(Inherit(p.openedProtocolInterfaceType(), viz="public"))
+            inherits = [Inherit(Type("mozilla::ipc::IToplevelProtocol"))]
+        elif ptype.isRefcounted():
+            inherits = [Inherit(Type("mozilla::ipc::IRefCountedProtocol"))]
         else:
-            inherits.append(Inherit(p.managerInterfaceType(), viz="public"))
+            inherits = [Inherit(Type("mozilla::ipc::IProtocol"))]
 
         if ptype.isToplevel() and self.side == "parent":
             self.hdrfile.addthings(
@@ -3812,11 +3807,12 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 )
             ]
         else:
-            ctor.memberinits = [
-                ExprMemberInit(
-                    ExprVar("mozilla::ipc::IProtocol"), [_protocolId(ptype), side]
-                )
-            ]
+            baseCtor = (
+                ExprVar("mozilla::ipc::IRefCountedProtocol")
+                if ptype.isRefcounted()
+                else ExprVar("mozilla::ipc::IProtocol")
+            )
+            ctor.memberinits = [ExprMemberInit(baseCtor, [_protocolId(ptype), side])]
 
         ctor.addcode("MOZ_COUNT_CTOR(${clsname});\n", clsname=self.clsname)
         self.cls.addstmts([ctor, Whitespace.NL])
@@ -3853,12 +3849,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             )
 
         if ptype.isRefcounted():
-            if not ptype.isToplevel():
-                self.cls.addcode(
-                    """
-                    NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
-                    """
-                )
             # Perform AddRef/Release in ActorAlloc/ActorDealloc if refcounted.
             actoralloc.addcode("AddRef();\n")
             actordealloc.addcode("Release();\n")
