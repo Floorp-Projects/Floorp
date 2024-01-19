@@ -1002,7 +1002,10 @@ SyncEngine.prototype = {
     if (existingSyncID == newSyncID) {
       return existingSyncID;
     }
-    this._log.debug("Engine syncIDs: " + [newSyncID, existingSyncID]);
+    this._log.debug(
+      `Engine syncIDs differ (old="${existingSyncID}", new="${newSyncID}") - resetting the engine`
+    );
+    await this.resetClient();
     Svc.PrefBranch.setStringPref(this.name + ".syncID", newSyncID);
     Svc.PrefBranch.setCharPref(this.name + ".lastSync", "0");
     return newSyncID;
