@@ -187,11 +187,7 @@
   display: block;
   unicode-bidi: inherit;
   text-overflow: inherit;
-  overflow: inherit;
   overflow-clip-box: inherit;
-  resize: inherit;
-  padding: inherit;
-  box-decoration-break: inherit;
 }
 
 *|*::-moz-block-inside-inline-wrapper {
@@ -219,8 +215,7 @@
   z-index: inherit;
 }
 
-*|*::-moz-scrolled-content,
-*|*::-moz-scrolled-canvas {
+*|*::-moz-scrolled-content, *|*::-moz-scrolled-canvas {
   /* e.g., text inputs, select boxes */
   padding: inherit;
   /* The display doesn't affect the kind of frame constructed here.  This just
