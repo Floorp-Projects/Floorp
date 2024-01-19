@@ -306,6 +306,7 @@ FormAutofillEngine.prototype = {
   async _resetClient() {
     await lazy.formAutofillStorage.initialize();
     this._store.storage.resetSync();
+    await this.resetLastSync(0);
   },
 
   async _wipeClient() {
