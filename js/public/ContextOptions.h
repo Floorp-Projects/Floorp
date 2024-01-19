@@ -135,6 +135,14 @@ class JS_PUBLIC_API ContextOptions {
     return *this;
   }
 
+  bool importAttributesAssertSyntax() const {
+    return compileOptions_.importAttributesAssertSyntax();
+  }
+  ContextOptions& setImportAttributesAssertSyntax(bool enabled) {
+    compileOptions_.setImportAttributesAssertSyntax(enabled);
+    return *this;
+  }
+
   bool enableDestructuringFuse() const { return enableDestructuringFuse_; }
   ContextOptions& setEnableDestructuringFuse(bool enabled) {
     enableDestructuringFuse_ = enabled;

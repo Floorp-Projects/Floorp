@@ -750,6 +750,7 @@ bool shell::enableSymbolsAsWeakMapKeys = false;
 #endif
 bool shell::enableArrayBufferTransfer = true;
 bool shell::enableImportAttributes = false;
+bool shell::enableImportAttributesAssertSyntax = false;
 bool shell::enableDestructuringFuse = true;
 #ifdef JS_GC_ZEAL
 uint32_t shell::gZealBits = 0;
@@ -11710,7 +11711,7 @@ bool InitOptionParser(OptionParser& op) {
       !op.addBoolOption('\0', "enable-class-static-blocks",
                         "(no-op) Enable class static blocks") ||
       !op.addBoolOption('\0', "enable-import-assertions",
-                        "Alias for --enable-import-attributes") ||
+                        "Enable import attributes with old assert syntax") ||
       !op.addBoolOption('\0', "enable-import-attributes",
                         "Enable import attributes") ||
       !op.addBoolOption('\0', "disable-destructuring-fuse",
@@ -12234,8 +12235,10 @@ bool SetContextOptions(JSContext* cx, const OptionParser& op) {
       op.getBoolOption("enable-symbols-as-weakmap-keys");
 #endif
   enableArrayBufferTransfer = !op.getBoolOption("disable-arraybuffer-transfer");
-  enableImportAttributes = op.getBoolOption("enable-import-assertions") ||
-                           op.getBoolOption("enable-import-attributes");
+  enableImportAttributesAssertSyntax =
+      op.getBoolOption("enable-import-assertions");
+  enableImportAttributes = op.getBoolOption("enable-import-attributes") ||
+                           enableImportAttributesAssertSyntax;
   enableDestructuringFuse = !op.getBoolOption("disable-destructuring-fuse");
   useFdlibmForSinCosTan = op.getBoolOption("use-fdlibm-for-sin-cos-tan");
 
@@ -12244,6 +12247,7 @@ bool SetContextOptions(JSContext* cx, const OptionParser& op) {
       .setAsyncStack(enableAsyncStacks)
       .setAsyncStackCaptureDebuggeeOnly(enableAsyncStackCaptureDebuggeeOnly)
       .setImportAttributes(enableImportAttributes)
+      .setImportAttributesAssertSyntax(enableImportAttributesAssertSyntax)
       .setEnableDestructuringFuse(enableDestructuringFuse);
 
   JS::SetUseFdlibmForSinCosTan(useFdlibmForSinCosTan);

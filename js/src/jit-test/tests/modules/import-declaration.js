@@ -1,4 +1,4 @@
-// |jit-test| --enable-import-attributes
+// |jit-test| --enable-import-assertions
 
 load(libdir + "match.js");
 load(libdir + "asserts.js");

@@ -1,4 +1,4 @@
-// |jit-test| --enable-import-attributes
+// |jit-test| --enable-import-assertions
 
 // Test importEntries property
 
