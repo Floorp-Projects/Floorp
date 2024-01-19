@@ -441,6 +441,14 @@ function waitForPageWithCategorizedDomains() {
   return TestUtils.topicObserved("reported-page-with-categorized-domains");
 }
 
+function waitForSingleCategorizedEvent() {
+  return TestUtils.topicObserved("recorded-single-categorization-event");
+}
+
+function waitForAllCategorizedEvents() {
+  return TestUtils.topicObserved("recorded-all-categorization-events");
+}
+
 function waitForDomainToCategoriesUpdate() {
   return TestUtils.topicObserved("domain-to-categories-map-update-complete");
 }
