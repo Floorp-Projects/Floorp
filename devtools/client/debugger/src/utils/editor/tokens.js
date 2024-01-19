@@ -46,8 +46,10 @@ function _isInvalidTarget(target) {
 
   // exclude codemirror elements that are not tokens
   if (
-    (target.parentElement &&
-      !target.parentElement.closest(".CodeMirror-line, .CodeMirror-widget")) ||
+    // exclude inline preview
+    target.closest(".CodeMirror-widget") ||
+    // exclude in-line "empty" space, as well as the gutter
+    target.matches(".CodeMirror-line, .CodeMirror-gutter-elt") ||
     target.getBoundingClientRect().top == 0
   ) {
     return true;

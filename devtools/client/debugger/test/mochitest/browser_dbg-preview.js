@@ -128,17 +128,51 @@ async function testHoveringInvalidTargetTokens(dbg) {
   // Test hovering tokens for which we shouldn't have a preview popup displayed
   invokeInTab("invalidTargets");
   await waitForPaused(dbg);
+  // CodeMirror refreshes after inline previews are displayed, so wait until they're rendered.
+  await waitForInlinePreviews(dbg);
+
   await assertNoPreviews(dbg, `"a"`, 69, 4);
   await assertNoPreviews(dbg, `false`, 70, 4);
   await assertNoPreviews(dbg, `undefined`, 71, 4);
   await assertNoPreviews(dbg, `null`, 72, 4);
   await assertNoPreviews(dbg, `42`, 73, 4);
   await assertNoPreviews(dbg, `const`, 74, 4);
+
+  // checking inline preview widget
+  // Move the cursor to the top left corner to have a clean state
+  resetCursorPositionToTopLeftCorner(dbg);
+
+  const inlinePreviewEl = findElementWithSelector(
+    dbg,
+    ".CodeMirror-code .CodeMirror-widget"
+  );
+  is(inlinePreviewEl.innerText, `myVar:"foo"`, "got expected inline preview");
+
+  const racePromise = Promise.any([
+    waitForElement(dbg, "previewPopup"),
+    wait(500).then(() => "TIMEOUT"),
+  ]);
+  // Hover over the inline preview element
+  hoverToken(inlinePreviewEl);
+  const raceResult = await racePromise;
+  is(raceResult, "TIMEOUT", "No popup was displayed over the inline preview");
+
   await resume(dbg);
 }
 
 async function assertNoPreviews(dbg, expression, line, column) {
   // Move the cursor to the top left corner to have a clean state
+  resetCursorPositionToTopLeftCorner(dbg);
+
+  // Hover the token
+  const result = await Promise.race([
+    tryHoverTokenAtLine(dbg, expression, line, column, "previewPopup"),
+    wait(500).then(() => "TIMEOUT"),
+  ]);
+  is(result, "TIMEOUT", `No popup was displayed when hovering "${expression}"`);
+}
+
+function resetCursorPositionToTopLeftCorner(dbg) {
   EventUtils.synthesizeMouse(
     findElement(dbg, "codeMirror"),
     0,
@@ -148,16 +182,6 @@ async function assertNoPreviews(dbg, expression, line, column) {
     },
     dbg.win
   );
-
-  // CodeMirror refreshes after inline previews are displayed, so wait until they're rendered.
-  await waitForInlinePreviews(dbg);
-
-  // Hover the token
-  const result = await Promise.race([
-    tryHoverTokenAtLine(dbg, expression, line, column, "previewPopup"),
-    wait(1000).then(() => "TIMEOUT"),
-  ]);
-  is(result, "TIMEOUT", `No popup was displayed when hovering "${expression}"`);
 }
 
 async function testMovingFromATokenToAnother(dbg) {
