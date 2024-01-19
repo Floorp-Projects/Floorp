@@ -20,6 +20,7 @@ import mozilla.components.support.ktx.android.content.getColorFromAttr
 import org.mozilla.fenix.GleanMetrics.UnifiedSearch
 import org.mozilla.fenix.R
 import org.mozilla.fenix.databinding.FragmentHomeBinding
+import org.mozilla.fenix.ext.increaseTapAreaVertically
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.search.toolbar.SearchSelectorMenu
 
@@ -51,6 +52,8 @@ class SearchSelectorBinding(
                     orientation = orientation,
                 )
             }
+
+            increaseTapAreaVertically(SEARCH_SELECTOR_INCREASE_HEIGHT_DPS)
         }
     }
 
@@ -75,5 +78,9 @@ class SearchSelectorBinding(
 
                 binding.searchSelectorButton.setIcon(icon, name)
             }
+    }
+
+    companion object {
+        const val SEARCH_SELECTOR_INCREASE_HEIGHT_DPS = 10
     }
 }
