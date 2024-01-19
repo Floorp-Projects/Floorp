@@ -3124,10 +3124,10 @@ bool ContentChild::DeallocPContentPermissionRequestChild(
   return true;
 }
 
-PWebBrowserPersistDocumentChild*
+already_AddRefed<PWebBrowserPersistDocumentChild>
 ContentChild::AllocPWebBrowserPersistDocumentChild(
     PBrowserChild* aBrowser, const MaybeDiscarded<BrowsingContext>& aContext) {
-  return new WebBrowserPersistDocumentChild();
+  return MakeAndAddRef<WebBrowserPersistDocumentChild>();
 }
 
 mozilla::ipc::IPCResult ContentChild::RecvPWebBrowserPersistDocumentConstructor(
@@ -3150,12 +3150,6 @@ mozilla::ipc::IPCResult ContentChild::RecvPWebBrowserPersistDocumentConstructor(
     static_cast<WebBrowserPersistDocumentChild*>(aActor)->Start(foundDoc);
   }
   return IPC_OK();
-}
-
-bool ContentChild::DeallocPWebBrowserPersistDocumentChild(
-    PWebBrowserPersistDocumentChild* aActor) {
-  delete aActor;
-  return true;
 }
 
 mozilla::ipc::IPCResult ContentChild::RecvInvokeDragSession(

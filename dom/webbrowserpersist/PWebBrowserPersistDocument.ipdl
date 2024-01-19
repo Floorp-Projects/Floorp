@@ -57,7 +57,6 @@ struct WebBrowserPersistURIMap {
 // because that would impose a lifetime relationship that doesn't
 // exist in the XPIDL; instead they're all managed by the enclosing
 // PContent.
-[ManualDealloc]
 protocol PWebBrowserPersistDocument {
   manager PContent;
   manages PWebBrowserPersistResources;

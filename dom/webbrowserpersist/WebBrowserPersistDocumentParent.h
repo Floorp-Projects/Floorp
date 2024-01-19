@@ -33,8 +33,9 @@ class WebBrowserPersistRemoteDocument;
 class WebBrowserPersistDocumentParent final
     : public PWebBrowserPersistDocumentParent {
  public:
+  NS_INLINE_DECL_REFCOUNTING(WebBrowserPersistDocumentParent, override)
+
   WebBrowserPersistDocumentParent();
-  virtual ~WebBrowserPersistDocumentParent();
 
   // Set a callback to be invoked when the actor leaves the START
   // state.  This method must be called exactly once while the actor
@@ -62,6 +63,8 @@ class WebBrowserPersistDocumentParent final
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
  private:
+  virtual ~WebBrowserPersistDocumentParent();
+
   // This is reset to nullptr when the callback is invoked.
   nsCOMPtr<nsIWebBrowserPersistDocumentReceiver> mOnReady;
   WebBrowserPersistRemoteDocument* mReflection;

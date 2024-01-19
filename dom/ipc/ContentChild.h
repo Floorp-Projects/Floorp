@@ -203,15 +203,13 @@ class ContentChild final : public PContentChild,
       PCycleCollectWithLogsChild* aChild, const bool& aDumpAllTraces,
       const FileDescriptor& aGCLog, const FileDescriptor& aCCLog) override;
 
-  PWebBrowserPersistDocumentChild* AllocPWebBrowserPersistDocumentChild(
+  already_AddRefed<PWebBrowserPersistDocumentChild>
+  AllocPWebBrowserPersistDocumentChild(
       PBrowserChild* aBrowser, const MaybeDiscarded<BrowsingContext>& aContext);
 
   virtual mozilla::ipc::IPCResult RecvPWebBrowserPersistDocumentConstructor(
       PWebBrowserPersistDocumentChild* aActor, PBrowserChild* aBrowser,
       const MaybeDiscarded<BrowsingContext>& aContext) override;
-
-  bool DeallocPWebBrowserPersistDocumentChild(
-      PWebBrowserPersistDocumentChild* aActor);
 
   already_AddRefed<PTestShellChild> AllocPTestShellChild();
 

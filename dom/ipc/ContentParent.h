@@ -964,12 +964,10 @@ class ContentParent final : public PContentParent,
       PSpeechSynthesisParent* aActor) override;
 #endif
 
-  PWebBrowserPersistDocumentParent* AllocPWebBrowserPersistDocumentParent(
+  already_AddRefed<PWebBrowserPersistDocumentParent>
+  AllocPWebBrowserPersistDocumentParent(
       PBrowserParent* aBrowser,
       const MaybeDiscarded<BrowsingContext>& aContext);
-
-  bool DeallocPWebBrowserPersistDocumentParent(
-      PWebBrowserPersistDocumentParent* aActor);
 
   mozilla::ipc::IPCResult RecvSetClipboard(const IPCTransferable& aTransferable,
                                            const int32_t& aWhichClipboard);

@@ -31,7 +31,8 @@ NS_IMETHODIMP
 WebBrowserPersistResourcesChild::VisitDocument(
     nsIWebBrowserPersistDocument* aDocument,
     nsIWebBrowserPersistDocument* aSubDocument) {
-  auto* subActor = new WebBrowserPersistDocumentChild();
+  RefPtr<WebBrowserPersistDocumentChild> subActor =
+      new WebBrowserPersistDocumentChild();
   // As a consequence of how PWebBrowserPersistDocumentConstructor
   // can be sent by both the parent and the child, we must pass the
   // aBrowser and outerWindowID arguments here, but the values are
@@ -40,11 +41,8 @@ WebBrowserPersistResourcesChild::VisitDocument(
   // see bug 1203602.
   if (!Manager()->Manager()->SendPWebBrowserPersistDocumentConstructor(
           subActor, nullptr, nullptr)) {
-    // NOTE: subActor is freed at this point.
     return NS_ERROR_FAILURE;
   }
-  // ...but here, IPC won't free subActor until after this returns
-  // to the event loop.
 
   // The order of these two messages will be preserved, because
   // they're the same toplevel protocol and priority.

@@ -3866,7 +3866,8 @@ bool BrowserParent::AsyncPanZoomEnabled() const {
 void BrowserParent::StartPersistence(
     CanonicalBrowsingContext* aContext,
     nsIWebBrowserPersistDocumentReceiver* aRecv, ErrorResult& aRv) {
-  auto* actor = new WebBrowserPersistDocumentParent();
+  RefPtr<WebBrowserPersistDocumentParent> actor =
+      new WebBrowserPersistDocumentParent();
   actor->SetOnReady(aRecv);
   bool ok = Manager()->SendPWebBrowserPersistDocumentConstructor(actor, this,
                                                                  aContext);
