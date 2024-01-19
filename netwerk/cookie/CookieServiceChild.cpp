@@ -147,9 +147,16 @@ void CookieServiceChild::RemoveSingleCookie(const CookieStruct& aCookie,
 
   for (uint32_t i = 0; i < cookiesList->Length(); i++) {
     Cookie* cookie = cookiesList->ElementAt(i);
+    // bug 1858366: In the case that we are updating a stale cookie
+    // from the content process: the parent process will signal
+    // a batch deletion for the old cookie.
+    // When received by the content process we should not remove
+    // the new cookie since we have already updated the content
+    // process cookies. So we also check the expiry here.
     if (cookie->Name().Equals(aCookie.name()) &&
         cookie->Host().Equals(aCookie.host()) &&
-        cookie->Path().Equals(aCookie.path())) {
+        cookie->Path().Equals(aCookie.path()) &&
+        cookie->Expiry() <= aCookie.expiry()) {
       cookiesList->RemoveElementAt(i);
       break;
     }
