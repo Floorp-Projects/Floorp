@@ -1,0 +1,13 @@
+//error: [ManualDealloc] protocols cannot be managers
+
+include protocol PManagerManualDeallocTop;
+include protocol PManagerManualDeallocManaged;
+
+[ManualDealloc]
+async protocol PManagerManualDealloc {
+    manager PManagerManualDeallocTop;
+    manages PManagerManualDeallocManaged;
+
+child:
+    async __delete__();
+};
