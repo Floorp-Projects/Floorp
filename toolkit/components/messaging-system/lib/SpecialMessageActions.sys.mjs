@@ -554,6 +554,10 @@ export const SpecialMessageActions = {
       case "RELOAD_BROWSER":
         browser.reload();
         break;
+      case "FOCUS_URLBAR":
+        window.gURLBar.focus();
+        window.gURLBar.select();
+        break;
     }
     return undefined;
   },

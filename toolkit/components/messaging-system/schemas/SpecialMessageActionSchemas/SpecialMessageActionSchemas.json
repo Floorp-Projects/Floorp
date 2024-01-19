@@ -581,6 +581,18 @@
           "required": ["type"],
           "additionalProperties": false,
           "description": "Message action that reloads the current browser"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": ["FOCUS_URLBAR"]
+            }
+          },
+          "required": ["type"],
+          "additionalProperties": false,
+          "description": "Focuses the urlbar in the window the message was displayed in"
         }
       ]
     }
