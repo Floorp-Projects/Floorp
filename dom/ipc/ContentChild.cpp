@@ -2013,17 +2013,6 @@ bool ContentChild::DeallocPBenchmarkStorageChild(
   return true;
 }
 
-#ifdef MOZ_WEBSPEECH
-PSpeechSynthesisChild* ContentChild::AllocPSpeechSynthesisChild() {
-  MOZ_CRASH("No one should be allocating PSpeechSynthesisChild actors");
-}
-
-bool ContentChild::DeallocPSpeechSynthesisChild(PSpeechSynthesisChild* aActor) {
-  delete aActor;
-  return true;
-}
-#endif
-
 #ifdef MOZ_WEBRTC
 PWebrtcGlobalChild* ContentChild::AllocPWebrtcGlobalChild() {
   auto* child = new WebrtcGlobalChild();

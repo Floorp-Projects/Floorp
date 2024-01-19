@@ -21,6 +21,8 @@ class SpeechSynthesisChild : public PSpeechSynthesisChild {
   friend class PSpeechSynthesisChild;
 
  public:
+  NS_INLINE_DECL_REFCOUNTING(SpeechSynthesisChild, override)
+
   mozilla::ipc::IPCResult RecvInitialVoicesAndState(
       nsTArray<RemoteVoice>&& aVoices, nsTArray<nsString>&& aDefaults,
       const bool& aIsSpeaking);

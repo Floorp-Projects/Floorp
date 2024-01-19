@@ -87,7 +87,7 @@ class nsSynthVoiceRegistry final : public nsISynthVoiceRegistry {
 
   nsRefPtrHashtable<nsStringHashKey, VoiceData> mUriVoiceMap;
 
-  SpeechSynthesisChild* mSpeechSynthChild;
+  RefPtr<SpeechSynthesisChild> mSpeechSynthChild;
 
   bool mUseGlobalQueue;
 

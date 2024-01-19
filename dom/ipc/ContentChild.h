@@ -244,11 +244,6 @@ class ContentChild final : public PContentChild,
 
   mozilla::ipc::IPCResult RecvNotifyEmptyHTTPCache();
 
-#ifdef MOZ_WEBSPEECH
-  PSpeechSynthesisChild* AllocPSpeechSynthesisChild();
-  bool DeallocPSpeechSynthesisChild(PSpeechSynthesisChild* aActor);
-#endif
-
   mozilla::ipc::IPCResult RecvRegisterChrome(
       nsTArray<ChromePackage>&& packages,
       nsTArray<SubstitutionMapping>&& resources,

@@ -21,6 +21,8 @@ class SpeechSynthesisParent : public PSpeechSynthesisParent {
   friend class PSpeechSynthesisParent;
 
  public:
+  NS_INLINE_DECL_REFCOUNTING(SpeechSynthesisParent, override)
+
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
   bool SendInit();
