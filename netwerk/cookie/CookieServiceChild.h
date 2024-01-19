@@ -68,6 +68,9 @@ class CookieServiceChild final : public PCookieServiceChild,
   mozilla::ipc::IPCResult RecvAddCookie(const CookieStruct& aCookie,
                                         const OriginAttributes& aAttrs);
 
+  void RemoveSingleCookie(const CookieStruct& aCookie,
+                          const OriginAttributes& aAttrs);
+
   CookiesMap mCookiesMap;
   nsCOMPtr<mozIThirdPartyUtil> mThirdPartyUtil;
   nsCOMPtr<nsIEffectiveTLDService> mTLDService;
