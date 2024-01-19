@@ -1614,6 +1614,18 @@ UrlbarUtils.RESULT_PAYLOAD_SCHEMA = {
   [UrlbarUtils.RESULT_TYPE.SEARCH]: {
     type: "object",
     properties: {
+      blockL10n: {
+        type: "object",
+        required: ["id"],
+        properties: {
+          id: {
+            type: "string",
+          },
+          args: {
+            type: "array",
+          },
+        },
+      },
       description: {
         type: "string",
       },
@@ -1630,6 +1642,9 @@ UrlbarUtils.RESULT_PAYLOAD_SCHEMA = {
         type: "string",
       },
       inPrivateWindow: {
+        type: "boolean",
+      },
+      isBlockable: {
         type: "boolean",
       },
       isPinned: {

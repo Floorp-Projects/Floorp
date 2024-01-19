@@ -106,6 +106,11 @@ class ProviderRecentSearches extends UrlbarProvider {
         {
           engine: engine.name,
           suggestion: result.value,
+          isBlockable: true,
+          blockL10n: { id: "urlbar-result-menu-remove-from-history" },
+          helpUrl:
+            Services.urlFormatter.formatURLPref("app.support.baseURL") +
+            "awesome-bar-result-menu",
         }
       );
       addCallback(this, res);
