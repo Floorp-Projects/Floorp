@@ -282,6 +282,7 @@ where
                 })?;
                 continue;
             };
+
             match fields {
                 SuggestRecord::AmpWikipedia => {
                     self.ingest_suggestions_from_record(
@@ -328,6 +329,16 @@ where
                         record,
                         |dao, record_id, suggestions| {
                             dao.insert_pocket_suggestions(record_id, suggestions)
+                        },
+                    )?;
+                }
+                SuggestRecord::Yelp => {
+                    self.ingest_suggestions_from_record(
+                        writer,
+                        record,
+                        |dao, record_id, suggestions| match suggestions.first() {
+                            Some(suggestion) => dao.insert_yelp_suggestions(record_id, suggestion),
+                            None => Ok(()),
                         },
                     )?;
                 }
@@ -1705,6 +1716,17 @@ mod tests {
                 "size": 0,
             },
         }, {
+            "id": "data-4",
+            "type": "yelp-suggestions",
+            "last_modified": 15,
+            "attachment": {
+                "filename": "data-4.json",
+                "mimetype": "application/json",
+                "location": "data-4.json",
+                "hash": "",
+                "size": 0,
+            },
+        }, {
             "id": "icon-2",
             "type": "icon",
             "last_modified": 20,
@@ -1813,6 +1835,20 @@ mod tests {
                 },
             ]),
         )?
+        .with_data(
+            "data-4.json",
+            json!({
+                "subjects": ["ramen", "spicy ramen", "012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789", "012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789Z"],
+                "preModifiers": ["best", "super best", "same_modifier"],
+                "postModifiers": ["delivery", "super delivery", "same_modifier"],
+                "locationSigns": [
+                    { "keyword": "in", "needLocation": true },
+                    { "keyword": "near", "needLocation": true },
+                    { "keyword": "near by", "needLocation": false },
+                    { "keyword": "near me", "needLocation": false },
+                ]
+            }),
+        )?
         .with_icon("icon-2.png", "i-am-an-icon".as_bytes().into())
         .with_icon("icon-3.png", "also-an-icon".as_bytes().into());
 
@@ -1830,6 +1866,7 @@ mod tests {
                         SuggestionProvider::Wikipedia,
                         SuggestionProvider::Amo,
                         SuggestionProvider::Pocket,
+                        SuggestionProvider::Yelp,
                     ],
                     limit: None,
                 },
@@ -1846,6 +1883,7 @@ mod tests {
                         SuggestionProvider::Wikipedia,
                         SuggestionProvider::Amo,
                         SuggestionProvider::Pocket,
+                        SuggestionProvider::Yelp,
                     ],
                     limit: None,
                 },
@@ -2393,6 +2431,340 @@ mod tests {
                 []
                 "#]],
             ),
+            (
+                "keyword = `best spicy ramen delivery in tokyo`; Yelp only",
+                SuggestionQuery {
+                    keyword: "best spicy ramen delivery in tokyo".into(),
+                    providers: vec![SuggestionProvider::Yelp],
+                    limit: None,
+                },
+                expect![[r#"
+                [
+                    Yelp {
+                        url: "https://www.yelp.com/search?find_desc=best+spicy+ramen+delivery&find_loc=tokyo",
+                        title: "best spicy ramen delivery in tokyo",
+                    },
+                ]
+                "#]],
+            ),
+            (
+                "keyword = `BeSt SpIcY rAmEn DeLiVeRy In ToKyO`; Yelp only",
+                SuggestionQuery {
+                    keyword: "BeSt SpIcY rAmEn DeLiVeRy In ToKyO".into(),
+                    providers: vec![SuggestionProvider::Yelp],
+                    limit: None,
+                },
+                expect![[r#"
+                [
+                    Yelp {
+                        url: "https://www.yelp.com/search?find_desc=BeSt+SpIcY+rAmEn+DeLiVeRy&find_loc=ToKyO",
+                        title: "BeSt SpIcY rAmEn DeLiVeRy In ToKyO",
+                    },
+                ]
+                "#]],
+            ),
+            (
+                "keyword = `best ramen delivery in tokyo`; Yelp only",
+                SuggestionQuery {
+                    keyword: "best ramen delivery in tokyo".into(),
+                    providers: vec![SuggestionProvider::Yelp],
+                    limit: None,
+                },
+                expect![[r#"
+                [
+                    Yelp {
+                        url: "https://www.yelp.com/search?find_desc=best+ramen+delivery&find_loc=tokyo",
+                        title: "best ramen delivery in tokyo",
+                    },
+                ]
+                "#]],
+            ),
+            (
+                "keyword = `best invalid_ramen delivery in tokyo`; Yelp only",
+                SuggestionQuery {
+                    keyword: "best invalid_ramen delivery in tokyo".into(),
+                    providers: vec![SuggestionProvider::Yelp],
+                    limit: None,
+                },
+                expect![[r#"
+                []
+                "#]],
+            ),
+            (
+                "keyword = `best delivery in tokyo`; Yelp only",
+                SuggestionQuery {
+                    keyword: "best delivery in tokyo".into(),
+                    providers: vec![SuggestionProvider::Yelp],
+                    limit: None,
+                },
+                expect![[r#"
+                []
+                "#]],
+            ),
+            (
+                "keyword = `super best ramen delivery in tokyo`; Yelp only",
+                SuggestionQuery {
+                    keyword: "super best ramen delivery in tokyo".into(),
+                    providers: vec![SuggestionProvider::Yelp],
+                    limit: None,
+                },
+                expect![[r#"
+                [
+                    Yelp {
+                        url: "https://www.yelp.com/search?find_desc=super+best+ramen+delivery&find_loc=tokyo",
+                        title: "super best ramen delivery in tokyo",
+                    },
+                ]
+                "#]],
+            ),
+            (
+                "keyword = `invalid_best ramen delivery in tokyo`; Yelp only",
+                SuggestionQuery {
+                    keyword: "invalid_best ramen delivery in tokyo".into(),
+                    providers: vec![SuggestionProvider::Yelp],
+                    limit: None,
+                },
+                expect![[r#"
+                []
+                "#]],
+            ),
+            (
+                "keyword = `ramen delivery in tokyo`; Yelp only",
+                SuggestionQuery {
+                    keyword: "ramen delivery in tokyo".into(),
+                    providers: vec![SuggestionProvider::Yelp],
+                    limit: None,
+                },
+                expect![[r#"
+                [
+                    Yelp {
+                        url: "https://www.yelp.com/search?find_desc=ramen+delivery&find_loc=tokyo",
+                        title: "ramen delivery in tokyo",
+                    },
+                ]
+                "#]],
+            ),
+            (
+                "keyword = `ramen super delivery in tokyo`; Yelp only",
+                SuggestionQuery {
+                    keyword: "ramen super delivery in tokyo".into(),
+                    providers: vec![SuggestionProvider::Yelp],
+                    limit: None,
+                },
+                expect![[r#"
+                [
+                    Yelp {
+                        url: "https://www.yelp.com/search?find_desc=ramen+super+delivery&find_loc=tokyo",
+                        title: "ramen super delivery in tokyo",
+                    },
+                ]
+                "#]],
+            ),
+            (
+                "keyword = `ramen invalid_delivery in tokyo`; Yelp only",
+                SuggestionQuery {
+                    keyword: "ramen invalid_delivery in tokyo".into(),
+                    providers: vec![SuggestionProvider::Yelp],
+                    limit: None,
+                },
+                expect![[r#"
+                []
+                "#]],
+            ),
+            (
+                "keyword = `ramen in tokyo`; Yelp only",
+                SuggestionQuery {
+                    keyword: "ramen in tokyo".into(),
+                    providers: vec![SuggestionProvider::Yelp],
+                    limit: None,
+                },
+                expect![[r#"
+                [
+                    Yelp {
+                        url: "https://www.yelp.com/search?find_desc=ramen&find_loc=tokyo",
+                        title: "ramen in tokyo",
+                    },
+                ]
+                "#]],
+            ),
+            (
+                "keyword = `ramen near tokyo`; Yelp only",
+                SuggestionQuery {
+                    keyword: "ramen near tokyo".into(),
+                    providers: vec![SuggestionProvider::Yelp],
+                    limit: None,
+                },
+                expect![[r#"
+                [
+                    Yelp {
+                        url: "https://www.yelp.com/search?find_desc=ramen&find_loc=tokyo",
+                        title: "ramen near tokyo",
+                    },
+                ]
+                "#]],
+            ),
+            (
+                "keyword = `ramen invalid_in tokyo`; Yelp only",
+                SuggestionQuery {
+                    keyword: "ramen invalid_in tokyo".into(),
+                    providers: vec![SuggestionProvider::Yelp],
+                    limit: None,
+                },
+                expect![[r#"
+                []
+                "#]],
+            ),
+            (
+                "keyword = `ramen in San Francisco`; Yelp only",
+                SuggestionQuery {
+                    keyword: "ramen in San Francisco".into(),
+                    providers: vec![SuggestionProvider::Yelp],
+                    limit: None,
+                },
+                expect![[r#"
+                [
+                    Yelp {
+                        url: "https://www.yelp.com/search?find_desc=ramen&find_loc=San+Francisco",
+                        title: "ramen in San Francisco",
+                    },
+                ]
+                "#]],
+            ),
+            (
+                "keyword = `ramen in`; Yelp only",
+                SuggestionQuery {
+                    keyword: "ramen in".into(),
+                    providers: vec![SuggestionProvider::Yelp],
+                    limit: None,
+                },
+                expect![[r#"
+                [
+                    Yelp {
+                        url: "https://www.yelp.com/search?find_desc=ramen",
+                        title: "ramen in",
+                    },
+                ]
+                "#]],
+            ),
+            (
+                "keyword = `ramen near by`; Yelp only",
+                SuggestionQuery {
+                    keyword: "ramen near by".into(),
+                    providers: vec![SuggestionProvider::Yelp],
+                    limit: None,
+                },
+                expect![[r#"
+                [
+                    Yelp {
+                        url: "https://www.yelp.com/search?find_desc=ramen+near+by",
+                        title: "ramen near by",
+                    },
+                ]
+                "#]],
+            ),
+            (
+                "keyword = `ramen near me`; Yelp only",
+                SuggestionQuery {
+                    keyword: "ramen near me".into(),
+                    providers: vec![SuggestionProvider::Yelp],
+                    limit: None,
+                },
+                expect![[r#"
+                [
+                    Yelp {
+                        url: "https://www.yelp.com/search?find_desc=ramen+near+me",
+                        title: "ramen near me",
+                    },
+                ]
+                "#]],
+            ),
+            (
+                "keyword = `ramen near by tokyo`; Yelp only",
+                SuggestionQuery {
+                    keyword: "ramen near by tokyo".into(),
+                    providers: vec![SuggestionProvider::Yelp],
+                    limit: None,
+                },
+                expect![[r#"
+                []
+                "#]],
+            ),
+            (
+                "keyword = `ramen`; Yelp only",
+                SuggestionQuery {
+                    keyword: "ramen".into(),
+                    providers: vec![SuggestionProvider::Yelp],
+                    limit: None,
+                },
+                expect![[r#"
+                [
+                    Yelp {
+                        url: "https://www.yelp.com/search?find_desc=ramen",
+                        title: "ramen",
+                    },
+                ]
+                "#]],
+            ),
+            (
+                "keyword = maximum chars; Yelp only",
+                SuggestionQuery {
+                    keyword: "012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789".into(),
+                    providers: vec![SuggestionProvider::Yelp],
+                    limit: None,
+                },
+                expect![[r#"
+                [
+                    Yelp {
+                        url: "https://www.yelp.com/search?find_desc=012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789",
+                        title: "012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789",
+                    },
+                ]
+                "#]],
+            ),
+            (
+                "keyword = over chars; Yelp only",
+                SuggestionQuery {
+                    keyword: "012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789Z".into(),
+                    providers: vec![SuggestionProvider::Yelp],
+                    limit: None,
+                },
+                expect![[r#"
+                []
+                "#]],
+            ),
+            (
+                "keyword = `best delivery`; Yelp only",
+                SuggestionQuery {
+                    keyword: "best delivery".into(),
+                    providers: vec![SuggestionProvider::Yelp],
+                    limit: None,
+                },
+                expect![[r#"
+                []
+                "#]],
+            ),
+            (
+                "keyword = `same_modifier same_modifier`; Yelp only",
+                SuggestionQuery {
+                    keyword: "same_modifier same_modifier".into(),
+                    providers: vec![SuggestionProvider::Yelp],
+                    limit: None,
+                },
+                expect![[r#"
+                []
+                "#]],
+            ),
+            (
+                "keyword = `same_modifier `; Yelp only",
+                SuggestionQuery {
+                    keyword: "same_modifier ".into(),
+                    providers: vec![SuggestionProvider::Yelp],
+                    limit: None,
+                },
+                expect![[r#"
+                []
+                "#]],
+            ),
         ];
         for (what, query, expect) in table {
             expect.assert_debug_eq(
@@ -2483,10 +2855,10 @@ mod tests {
                     UnparsableRecords(
                         {
                             "clippy-2": UnparsableRecord {
-                                schema_version: 9,
+                                schema_version: 10,
                             },
                             "fancy-new-suggestions-1": UnparsableRecord {
-                                schema_version: 9,
+                                schema_version: 10,
                             },
                         },
                     ),
@@ -2551,10 +2923,10 @@ mod tests {
                     UnparsableRecords(
                         {
                             "clippy-2": UnparsableRecord {
-                                schema_version: 9,
+                                schema_version: 10,
                             },
                             "fancy-new-suggestions-1": UnparsableRecord {
-                                schema_version: 9,
+                                schema_version: 10,
                             },
                         },
                     ),
@@ -2657,10 +3029,10 @@ mod tests {
                     UnparsableRecords(
                         {
                             "clippy-2": UnparsableRecord {
-                                schema_version: 9,
+                                schema_version: 10,
                             },
                             "fancy-new-suggestions-1": UnparsableRecord {
-                                schema_version: 9,
+                                schema_version: 10,
                             },
                         },
                     ),

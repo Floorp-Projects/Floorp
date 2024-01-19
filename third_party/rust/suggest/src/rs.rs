@@ -90,6 +90,8 @@ pub(crate) enum SuggestRecord {
     Amo,
     #[serde(rename = "pocket-suggestions")]
     Pocket,
+    #[serde(rename = "yelp-suggestions")]
+    Yelp,
 }
 
 /// Represents either a single value, or a list of values. This is used to
@@ -265,4 +267,22 @@ pub(crate) struct DownloadedPocketSuggestion {
     #[serde(rename = "highConfidenceKeywords")]
     pub high_confidence_keywords: Vec<String>,
     pub score: f64,
+}
+/// A location sign for Yelp to ingest from a Yelp Attachment
+#[derive(Clone, Debug, Deserialize)]
+pub(crate) struct DownloadedYelpLocationSign {
+    pub keyword: String,
+    #[serde(rename = "needLocation")]
+    pub need_location: bool,
+}
+/// A Yelp suggestion to ingest from a Yelp Attachment
+#[derive(Clone, Debug, Deserialize)]
+pub(crate) struct DownloadedYelpSuggestion {
+    pub subjects: Vec<String>,
+    #[serde(rename = "preModifiers")]
+    pub pre_modifiers: Vec<String>,
+    #[serde(rename = "postModifiers")]
+    pub post_modifiers: Vec<String>,
+    #[serde(rename = "locationSigns")]
+    pub location_signs: Vec<DownloadedYelpLocationSign>,
 }

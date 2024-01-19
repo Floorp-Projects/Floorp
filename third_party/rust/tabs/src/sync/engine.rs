@@ -92,6 +92,7 @@ impl RemoteTab {
             url_history: tab.url_history.clone(),
             icon: tab.icon.clone(),
             last_used: tab.last_used.checked_mul(1000).unwrap_or_default(),
+            inactive: tab.inactive,
         }
     }
     pub(super) fn to_record_tab(&self) -> TabsRecordTab {
@@ -100,6 +101,7 @@ impl RemoteTab {
             url_history: self.url_history.clone(),
             icon: self.icon.clone(),
             last_used: self.last_used.checked_div(1000).unwrap_or_default(),
+            inactive: self.inactive,
         }
     }
 }
