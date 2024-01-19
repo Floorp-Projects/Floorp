@@ -9,6 +9,57 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
+///////////////////////////////////////////////////////////////////////////////
+// Internal implementation details
+///////////////////////////////////////////////////////////////////////////////
+//
+// There are two levels of interfaces used to access the AOM codec: the
+// aom_codec_iface and the aom_codec_ctx.
+//
+// 1. aom_codec_iface_t
+//    (Related files: aom/aom_codec.h, aom/src/aom_codec.c,
+//    aom/internal/aom_codec_internal.h, av1/av1_cx_iface.c,
+//    av1/av1_dx_iface.c)
+//
+// Used to initialize the codec context, which contains the configuration for
+// for modifying the encoder/decoder during run-time. See the other
+// documentation in this header file for more details. For the most part,
+// users will call helper functions, such as aom_codec_iface_name,
+// aom_codec_get_caps, etc., to interact with it.
+//
+// The main purpose of the aom_codec_iface_t is to provide a way to generate
+// a default codec config, find out what capabilities the implementation has,
+// and create an aom_codec_ctx_t (which is actually used to interact with the
+// codec).
+//
+// Note that the implementations for the AV1 algorithm are located in
+// av1/av1_cx_iface.c and av1/av1_dx_iface.c
+//
+//
+// 2. aom_codec_ctx_t
+//  (Related files: aom/aom_codec.h, av1/av1_cx_iface.c, av1/av1_dx_iface.c,
+//   aom/aomcx.h, aom/aomdx.h, aom/src/aom_encoder.c, aom/src/aom_decoder.c)
+//
+// The actual interface between user code and the codec. It stores the name
+// of the codec, a pointer back to the aom_codec_iface_t that initialized it,
+// initialization flags, a config for either encoder or the decoder, and a
+// pointer to internal data.
+//
+// The codec is configured / queried through calls to aom_codec_control,
+// which takes a control ID (listed in aomcx.h and aomdx.h) and a parameter.
+// In the case of "getter" control IDs, the parameter is modified to have
+// the requested value; in the case of "setter" control IDs, the codec's
+// configuration is changed based on the parameter. Note that a aom_codec_err_t
+// is returned, which indicates if the operation was successful or not.
+//
+// Note that for the encoder, the aom_codec_alg_priv_t points to the
+// the aom_codec_alg_priv structure in av1/av1_cx_iface.c, and for the decoder,
+// the struct in av1/av1_dx_iface.c. Variables such as AV1_COMP cpi are stored
+// here and also used in the core algorithm.
+//
+// At the end, aom_codec_destroy should be called for each initialized
+// aom_codec_ctx_t.
+
 /*!\defgroup codec Common Algorithm Interface
  * This abstraction allows applications to easily support multiple video
  * formats with minimal code duplication. This section describes the interface
@@ -23,13 +74,16 @@
  * video codec algorithm.
  *
  * An application instantiates a specific codec instance by using
- * aom_codec_init() and a pointer to the algorithm's interface structure:
+ * aom_codec_dec_init() or aom_codec_enc_init() and a pointer to the
+ * algorithm's interface structure:
  *     <pre>
  *     my_app.c:
  *       extern aom_codec_iface_t my_codec;
  *       {
  *           aom_codec_ctx_t algo;
- *           res = aom_codec_init(&algo, &my_codec);
+ *           int threads = 4;
+ *           aom_codec_dec_cfg_t cfg = { threads, 0, 0, 1 };
+ *           res = aom_codec_dec_init(&algo, &my_codec, &cfg, 0);
  *       }
  *     </pre>
  *
@@ -95,7 +149,7 @@ extern "C" {
  * types, removing or reassigning enums, adding/removing/rearranging
  * fields to structures
  */
-#define AOM_CODEC_ABI_VERSION (3 + AOM_IMAGE_ABI_VERSION) /**<\hideinitializer*/
+#define AOM_CODEC_ABI_VERSION (7 + AOM_IMAGE_ABI_VERSION) /**<\hideinitializer*/
 
 /*!\brief Algorithm return codes */
 typedef enum {
@@ -173,10 +227,29 @@ typedef long aom_codec_caps_t;
  */
 typedef long aom_codec_flags_t;
 
+/*!\brief Time Stamp Type
+ *
+ * An integer, which when multiplied by the stream's time base, provides
+ * the absolute time of a sample.
+ */
+typedef int64_t aom_codec_pts_t;
+
 /*!\brief Codec interface structure.
  *
  * Contains function pointers and other data private to the codec
- * implementation. This structure is opaque to the application.
+ * implementation. This structure is opaque to the application. Common
+ * functions used with this structure:
+ *   - aom_codec_iface_name(aom_codec_iface_t *iface): get the
+ *     name of the codec
+ *   - aom_codec_get_caps(aom_codec_iface_t *iface): returns
+ *     the capabilities of the codec
+ *   - aom_codec_enc_config_default: generate the default config for
+ *     initializing the encoder (see documentation in aom_encoder.h)
+ *   - aom_codec_dec_init, aom_codec_enc_init: initialize the codec context
+ *     structure (see documentation on aom_codec_ctx).
+ *
+ * To get access to the AV1 encoder and decoder, use aom_codec_av1_cx() and
+ *  aom_codec_av1_dx().
  */
 typedef const struct aom_codec_iface aom_codec_iface_t;
 
@@ -186,6 +259,27 @@ typedef const struct aom_codec_iface aom_codec_iface_t;
  * to the application.
  */
 typedef struct aom_codec_priv aom_codec_priv_t;
+
+/*!\brief Compressed Frame Flags
+ *
+ * This type represents a bitfield containing information about a compressed
+ * frame that may be useful to an application. The most significant 16 bits
+ * can be used by an algorithm to provide additional detail, for example to
+ * support frame types that are codec specific (MPEG-1 D-frames for example)
+ */
+typedef uint32_t aom_codec_frame_flags_t;
+#define AOM_FRAME_IS_KEY 0x1u /**< frame is the start of a GOP */
+/*!\brief frame can be dropped without affecting the stream (no future frame
+ * depends on this one) */
+#define AOM_FRAME_IS_DROPPABLE 0x2u
+/*!\brief this is an INTRA_ONLY frame */
+#define AOM_FRAME_IS_INTRAONLY 0x10u
+/*!\brief this is an S-frame */
+#define AOM_FRAME_IS_SWITCH 0x20u
+/*!\brief this is an error-resilient frame */
+#define AOM_FRAME_IS_ERROR_RESILIENT 0x40u
+/*!\brief this is a key-frame dependent recovery-point frame */
+#define AOM_FRAME_IS_DELAYED_RANDOM_ACCESS_POINT 0x80u
 
 /*!\brief Iterator
  *
@@ -251,31 +345,27 @@ typedef enum aom_superblock_size {
 /*!\brief Return the version information (as an integer)
  *
  * Returns a packed encoding of the library version number. This will only
- * include
- * the major.minor.patch component of the version number. Note that this encoded
- * value should be accessed through the macros provided, as the encoding may
- * change
- * in the future.
+ * include the major.minor.patch component of the version number. Note that this
+ * encoded value should be accessed through the macros provided, as the encoding
+ * may change in the future.
  *
  */
 int aom_codec_version(void);
 
-/*!\brief Return the version major number */
+/*!\brief Return the major version number */
 #define aom_codec_version_major() ((aom_codec_version() >> 16) & 0xff)
 
-/*!\brief Return the version minor number */
+/*!\brief Return the minor version number */
 #define aom_codec_version_minor() ((aom_codec_version() >> 8) & 0xff)
 
-/*!\brief Return the version patch number */
+/*!\brief Return the patch version number */
 #define aom_codec_version_patch() ((aom_codec_version() >> 0) & 0xff)
 
 /*!\brief Return the version information (as a string)
  *
  * Returns a printable string containing the full library version number. This
- * may
- * contain additional text following the three digit version number, as to
- * indicate
- * release candidates, prerelease versions, etc.
+ * may contain additional text following the three digit version number, as to
+ * indicate release candidates, pre-release versions, etc.
  *
  */
 const char *aom_codec_version_str(void);
@@ -283,8 +373,7 @@ const char *aom_codec_version_str(void);
 /*!\brief Return the version information (as a string)
  *
  * Returns a printable "extra string". This is the component of the string
- * returned
- * by aom_codec_version_str() following the three digit version number.
+ * returned by aom_codec_version_str() following the three digit version number.
  *
  */
 const char *aom_codec_version_extra_str(void);
@@ -328,19 +417,21 @@ const char *aom_codec_err_to_string(aom_codec_err_t err);
  * \param[in]    ctx     Pointer to this instance's context.
  *
  */
-const char *aom_codec_error(aom_codec_ctx_t *ctx);
+const char *aom_codec_error(const aom_codec_ctx_t *ctx);
 
 /*!\brief Retrieve detailed error information for codec context
  *
  * Returns a human readable string providing detailed information about
- * the last error.
+ * the last error. The returned string is only valid until the next
+ * aom_codec_* function call (except aom_codec_error and
+ * aom_codec_error_detail) on the codec context.
  *
  * \param[in]    ctx     Pointer to this instance's context.
  *
  * \retval NULL
  *     No detailed information is available.
  */
-const char *aom_codec_error_detail(aom_codec_ctx_t *ctx);
+const char *aom_codec_error_detail(const aom_codec_ctx_t *ctx);
 
 /* REQUIRED FUNCTIONS
  *
@@ -355,9 +446,11 @@ const char *aom_codec_error_detail(aom_codec_ctx_t *ctx);
  * \param[in] ctx   Pointer to this instance's context
  *
  * \retval #AOM_CODEC_OK
- *     The codec algorithm initialized.
- * \retval #AOM_CODEC_MEM_ERROR
- *     Memory allocation failed.
+ *     The codec instance has been destroyed.
+ * \retval #AOM_CODEC_INVALID_PARAM
+ *     ctx is a null pointer.
+ * \retval #AOM_CODEC_ERROR
+ *     Codec context not initialized.
  */
 aom_codec_err_t aom_codec_destroy(aom_codec_ctx_t *ctx);
 
@@ -370,109 +463,83 @@ aom_codec_err_t aom_codec_destroy(aom_codec_ctx_t *ctx);
  */
 aom_codec_caps_t aom_codec_get_caps(aom_codec_iface_t *iface);
 
-/*!\brief Control algorithm
+/*!\name Codec Control
  *
- * This function is used to exchange algorithm specific data with the codec
- * instance. This can be used to implement features specific to a particular
- * algorithm.
+ * The aom_codec_control function exchanges algorithm specific data with the
+ * codec instance. Additionally, the macro AOM_CODEC_CONTROL_TYPECHECKED is
+ * provided, which will type-check the parameter against the control ID before
+ * calling aom_codec_control - note that this macro requires the control ID
+ * to be directly encoded in it, e.g.,
+ * AOM_CODEC_CONTROL_TYPECHECKED(&ctx, AOME_SET_CPUUSED, 8).
  *
- * This wrapper function dispatches the request to the helper function
- * associated with the given ctrl_id. It tries to call this function
- * transparently, but will return #AOM_CODEC_ERROR if the request could not
- * be dispatched.
+ * The codec control IDs can be found in aom.h, aomcx.h, and aomdx.h
+ * (defined as aom_com_control_id, aome_enc_control_id, and aom_dec_control_id).
+ * @{
+ */
+/*!\brief Algorithm Control
  *
- * Note that this function should not be used directly. Call the
- * #aom_codec_control wrapper macro instead.
+ * aom_codec_control takes a context, a control ID, and a third parameter
+ * (with varying type). If the context is non-null and an error occurs,
+ * ctx->err will be set to the same value as the return value.
  *
  * \param[in]     ctx              Pointer to this instance's context
- * \param[in]     ctrl_id          Algorithm specific control identifier
+ * \param[in]     ctrl_id          Algorithm specific control identifier.
+ *                                 Must be nonzero.
  *
  * \retval #AOM_CODEC_OK
  *     The control request was processed.
  * \retval #AOM_CODEC_ERROR
  *     The control request was not processed.
  * \retval #AOM_CODEC_INVALID_PARAM
+ *     The control ID was zero, or the data was not valid.
+ */
+aom_codec_err_t aom_codec_control(aom_codec_ctx_t *ctx, int ctrl_id, ...);
+
+/*!\brief Key & Value API
+ *
+ * aom_codec_set_option() takes a context, a key (option name) and a value. If
+ * the context is non-null and an error occurs, ctx->err will be set to the same
+ * value as the return value.
+ *
+ * \param[in]     ctx              Pointer to this instance's context
+ * \param[in]     name             The name of the option (key)
+ * \param[in]     value            The value of the option
+ *
+ * \retval #AOM_CODEC_OK
+ *     The value of the option was set.
+ * \retval #AOM_CODEC_INVALID_PARAM
  *     The data was not valid.
+ * \retval #AOM_CODEC_ERROR
+ *     The option was not successfully set.
  */
-aom_codec_err_t aom_codec_control_(aom_codec_ctx_t *ctx, int ctrl_id, ...);
-#if defined(AOM_DISABLE_CTRL_TYPECHECKS) && AOM_DISABLE_CTRL_TYPECHECKS
-#define aom_codec_control(ctx, id, data) aom_codec_control_(ctx, id, data)
-#define AOM_CTRL_USE_TYPE(id, typ)
-#define AOM_CTRL_USE_TYPE_DEPRECATED(id, typ)
-#define AOM_CTRL_VOID(id, typ)
+aom_codec_err_t aom_codec_set_option(aom_codec_ctx_t *ctx, const char *name,
+                                     const char *value);
 
-#else
-/*!\brief aom_codec_control wrapper macro
+/*!\brief aom_codec_control wrapper macro (adds type-checking, less flexible)
  *
  * This macro allows for type safe conversions across the variadic parameter
- * to aom_codec_control_().
- *
- * \internal
- * It works by dispatching the call to the control function through a wrapper
- * function named with the id parameter.
+ * to aom_codec_control(). However, it requires the explicit control ID
+ * be passed in (it cannot be passed in via a variable) -- otherwise a compiler
+ * error will occur. After the type checking, it calls aom_codec_control.
  */
-#define aom_codec_control(ctx, id, data) \
-  aom_codec_control_##id(ctx, id, data) /**<\hideinitializer*/
+#define AOM_CODEC_CONTROL_TYPECHECKED(ctx, id, data) \
+  aom_codec_control_typechecked_##id(ctx, id, data) /**<\hideinitializer*/
 
-/*!\brief aom_codec_control type definition macro
+/*!\brief Creates type checking mechanisms for aom_codec_control
  *
- * This macro allows for type safe conversions across the variadic parameter
- * to aom_codec_control_(). It defines the type of the argument for a given
- * control identifier.
- *
- * \internal
- * It defines a static function with
- * the correctly typed arguments as a wrapper to the type-unsafe internal
- * function.
+ * It defines a static function with the correctly typed arguments as a wrapper
+ * to the type-unsafe aom_codec_control function. It also creates a typedef
+ * for each type.
  */
-#define AOM_CTRL_USE_TYPE(id, typ)                                           \
-  static aom_codec_err_t aom_codec_control_##id(aom_codec_ctx_t *, int, typ) \
-      AOM_UNUSED;                                                            \
-                                                                             \
-  static aom_codec_err_t aom_codec_control_##id(aom_codec_ctx_t *ctx,        \
-                                                int ctrl_id, typ data) {     \
-    return aom_codec_control_(ctx, ctrl_id, data);                           \
-  } /**<\hideinitializer*/
-
-/*!\brief aom_codec_control deprecated type definition macro
- *
- * Like #AOM_CTRL_USE_TYPE, but indicates that the specified control is
- * deprecated and should not be used. Consult the documentation for your
- * codec for more information.
- *
- * \internal
- * It defines a static function with the correctly typed arguments as a
- * wrapper to the type-unsafe internal function.
- */
-#define AOM_CTRL_USE_TYPE_DEPRECATED(id, typ)                            \
-  AOM_DECLSPEC_DEPRECATED static aom_codec_err_t aom_codec_control_##id( \
-      aom_codec_ctx_t *, int, typ) AOM_DEPRECATED AOM_UNUSED;            \
-                                                                         \
-  AOM_DECLSPEC_DEPRECATED static aom_codec_err_t aom_codec_control_##id( \
-      aom_codec_ctx_t *ctx, int ctrl_id, typ data) {                     \
-    return aom_codec_control_(ctx, ctrl_id, data);                       \
-  } /**<\hideinitializer*/
-
-/*!\brief aom_codec_control void type definition macro
- *
- * This macro allows for type safe conversions across the variadic parameter
- * to aom_codec_control_(). It indicates that a given control identifier takes
- * no argument.
- *
- * \internal
- * It defines a static function without a data argument as a wrapper to the
- * type-unsafe internal function.
- */
-#define AOM_CTRL_VOID(id)                                               \
-  static aom_codec_err_t aom_codec_control_##id(aom_codec_ctx_t *, int) \
-      AOM_UNUSED;                                                       \
-                                                                        \
-  static aom_codec_err_t aom_codec_control_##id(aom_codec_ctx_t *ctx,   \
-                                                int ctrl_id) {          \
-    return aom_codec_control_(ctx, ctrl_id);                            \
-  } /**<\hideinitializer*/
-
-#endif
+#define AOM_CTRL_USE_TYPE(id, typ)                           \
+  static aom_codec_err_t aom_codec_control_typechecked_##id( \
+      aom_codec_ctx_t *, int, typ) AOM_UNUSED;               \
+  static aom_codec_err_t aom_codec_control_typechecked_##id( \
+      aom_codec_ctx_t *ctx, int ctrl, typ data) {            \
+    return aom_codec_control(ctx, ctrl, data);               \
+  } /**<\hideinitializer*/                                   \
+  typedef typ aom_codec_control_type_##id;
+/*!@} end Codec Control group */
 
 /*!\brief OBU types. */
 typedef enum ATTRIBUTE_PACKED {
@@ -502,19 +569,6 @@ typedef enum {
  * \param[in]     type            The OBU_TYPE to convert to string.
  */
 const char *aom_obu_type_to_string(OBU_TYPE type);
-
-/*!\brief Config Options
- *
- * This type allows to enumerate and control options defined for control
- * via config file at runtime.
- */
-typedef struct cfg_options {
-  /*!\brief Reflects if ext_partition should be enabled
-   *
-   * If this value is non-zero it enabled the feature
-   */
-  unsigned int ext_partition;
-} cfg_options_t;
 
 /*!@} - end defgroup codec*/
 #ifdef __cplusplus

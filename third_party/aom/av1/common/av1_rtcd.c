@@ -15,8 +15,4 @@
 
 #include "aom_ports/aom_once.h"
 
-void av1_rtcd() {
-  // TODO(JBB): Remove this aom_once, by insuring that both the encoder and
-  // decoder setup functions are protected by aom_once();
-  aom_once(setup_rtcd_internal);
-}
+void av1_rtcd(void) { aom_once(setup_rtcd_internal); }

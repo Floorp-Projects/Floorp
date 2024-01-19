@@ -24,6 +24,7 @@ void aom_blend_a64_hmask_sse4_1(uint8_t *dst, uint32_t dst_stride,
                             src1_stride, mask, 0, w, h, 0, 0);
 }
 
+#if CONFIG_AV1_HIGHBITDEPTH
 void aom_highbd_blend_a64_hmask_sse4_1(
     uint8_t *dst_8, uint32_t dst_stride, const uint8_t *src0_8,
     uint32_t src0_stride, const uint8_t *src1_8, uint32_t src1_stride,
@@ -32,3 +33,4 @@ void aom_highbd_blend_a64_hmask_sse4_1(
                                    src1_8, src1_stride, mask, 0, w, h, 0, 0,
                                    bd);
 }
+#endif

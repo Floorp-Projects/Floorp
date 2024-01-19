@@ -39,80 +39,25 @@
  */
 
 #if CONFIG_MULTITHREAD && defined(_WIN32)
+#undef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#include <stdlib.h>
 /* Declare a per-compilation-unit state variable to track the progress
  * of calling func() only once. This must be at global scope because
  * local initializers are not thread-safe in MSVC prior to Visual
  * Studio 2015.
- *
- * As a static, aom_once_state will be zero-initialized as program start.
  */
-static LONG aom_once_state;
+static INIT_ONCE aom_init_once = INIT_ONCE_STATIC_INIT;
+
 static void aom_once(void (*func)(void)) {
-  /* Try to advance aom_once_state from its initial value of 0 to 1.
-   * Only one thread can succeed in doing so.
-   */
-  if (InterlockedCompareExchange(&aom_once_state, 1, 0) == 0) {
-    /* We're the winning thread, having set aom_once_state to 1.
-     * Call our function. */
-    func();
-    /* Now advance aom_once_state to 2, unblocking any other threads. */
-    InterlockedIncrement(&aom_once_state);
+  BOOL pending;
+  InitOnceBeginInitialize(&aom_init_once, 0, &pending, NULL);
+  if (!pending) {
+    // Initialization has already completed.
     return;
   }
-
-  /* We weren't the winning thread, but we want to block on
-   * the state variable so we don't return before func()
-   * has finished executing elsewhere.
-   *
-   * Try to advance aom_once_state from 2 to 2, which is only possible
-   * after the winning thead advances it from 1 to 2.
-   */
-  while (InterlockedCompareExchange(&aom_once_state, 2, 2) != 2) {
-    /* State isn't yet 2. Try again.
-     *
-     * We are used for singleton initialization functions,
-     * which should complete quickly. Contention will likewise
-     * be rare, so it's worthwhile to use a simple but cpu-
-     * intensive busy-wait instead of successive backoff,
-     * waiting on a kernel object, or another heavier-weight scheme.
-     *
-     * We can at least yield our timeslice.
-     */
-    Sleep(0);
-  }
-
-  /* We've seen aom_once_state advance to 2, so we know func()
-   * has been called. And we've left aom_once_state as we found it,
-   * so other threads will have the same experience.
-   *
-   * It's safe to return now.
-   */
-  return;
-}
-
-#elif CONFIG_MULTITHREAD && defined(__OS2__)
-#define INCL_DOS
-#include <os2.h>
-static void aom_once(void (*func)(void)) {
-  static int done;
-
-  /* If the initialization is complete, return early. */
-  if (done) return;
-
-  /* Causes all other threads in the process to block themselves
-   * and give up their time slice.
-   */
-  DosEnterCritSec();
-
-  if (!done) {
-    func();
-    done = 1;
-  }
-
-  /* Restores normal thread dispatching for the current process. */
-  DosExitCritSec();
+  func();
+  InitOnceComplete(&aom_init_once, 0, NULL);
 }
 
 #elif CONFIG_MULTITHREAD && HAVE_PTHREAD_H
@@ -126,7 +71,7 @@ static void aom_once(void (*func)(void)) {
 /* Default version that performs no synchronization. */
 
 static void aom_once(void (*func)(void)) {
-  static int done;
+  static volatile int done;
 
   if (!done) {
     func();

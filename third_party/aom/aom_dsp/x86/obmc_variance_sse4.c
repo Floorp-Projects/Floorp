@@ -13,6 +13,7 @@
 #include <immintrin.h>
 
 #include "config/aom_config.h"
+#include "config/aom_dsp_rtcd.h"
 
 #include "aom_ports/mem.h"
 #include "aom/aom_integer.h"
@@ -166,7 +167,7 @@ OBMC_SUBPIX_VAR(64, 16)
 ////////////////////////////////////////////////////////////////////////////////
 // High bit-depth
 ////////////////////////////////////////////////////////////////////////////////
-
+#if CONFIG_AV1_HIGHBITDEPTH
 static INLINE void hbd_obmc_variance_w4(
     const uint8_t *pre8, const int pre_stride, const int32_t *wsrc,
     const int32_t *mask, uint64_t *const sse, int64_t *const sum, const int h) {
@@ -258,10 +259,10 @@ static INLINE void hbd_obmc_variance_w8n(
   *sse += xx_hsum_epi32_si64(v_sse_d);
 }
 
-static INLINE void highbd_obmc_variance(const uint8_t *pre8, int pre_stride,
-                                        const int32_t *wsrc,
-                                        const int32_t *mask, int w, int h,
-                                        unsigned int *sse, int *sum) {
+static INLINE void highbd_8_obmc_variance(const uint8_t *pre8, int pre_stride,
+                                          const int32_t *wsrc,
+                                          const int32_t *mask, int w, int h,
+                                          unsigned int *sse, int *sum) {
   int64_t sum64 = 0;
   uint64_t sse64 = 0;
   if (w == 4) {
@@ -328,11 +329,11 @@ static INLINE void highbd_12_obmc_variance(const uint8_t *pre8, int pre_stride,
 }
 
 #define HBD_OBMCVARWXH(W, H)                                               \
-  unsigned int aom_highbd_obmc_variance##W##x##H##_sse4_1(                 \
+  unsigned int aom_highbd_8_obmc_variance##W##x##H##_sse4_1(               \
       const uint8_t *pre, int pre_stride, const int32_t *wsrc,             \
       const int32_t *mask, unsigned int *sse) {                            \
     int sum;                                                               \
-    highbd_obmc_variance(pre, pre_stride, wsrc, mask, W, H, sse, &sum);    \
+    highbd_8_obmc_variance(pre, pre_stride, wsrc, mask, W, H, sse, &sum);  \
     return *sse - (unsigned int)(((int64_t)sum * sum) / (W * H));          \
   }                                                                        \
                                                                            \
@@ -378,3 +379,4 @@ HBD_OBMCVARWXH(8, 32)
 HBD_OBMCVARWXH(32, 8)
 HBD_OBMCVARWXH(16, 64)
 HBD_OBMCVARWXH(64, 16)
+#endif  // CONFIG_AV1_HIGHBITDEPTH

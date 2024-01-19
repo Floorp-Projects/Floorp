@@ -18,7 +18,6 @@
 #include "aom/aom_integer.h"
 #include "aom_dsp/aom_filter.h"
 #include "aom_ports/mem.h"
-#include "aom_ports/system_state.h"
 
 static int horizontal_filter(const uint8_t *s) {
   return (s[1] - s[-2]) * 2 + (s[-1] - s[0]) * 6;
@@ -125,7 +124,6 @@ double av1_get_blockiness(const unsigned char *img1, int img1_pitch,
                           int height) {
   double blockiness = 0;
   int i, j;
-  aom_clear_system_state();
   for (i = 0; i < height;
        i += 4, img1 += img1_pitch * 4, img2 += img2_pitch * 4) {
     for (j = 0; j < width; j += 4) {

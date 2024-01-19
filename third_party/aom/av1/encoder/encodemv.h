@@ -18,12 +18,18 @@
 extern "C" {
 #endif
 
-void av1_encode_mv(AV1_COMP *cpi, aom_writer *w, const MV *mv, const MV *ref,
-                   nmv_context *mvctx, int usehp);
+void av1_encode_mv(AV1_COMP *cpi, aom_writer *w, ThreadData *td, const MV *mv,
+                   const MV *ref, nmv_context *mvctx, int usehp);
+
+void av1_update_mv_stats(const MV *mv, const MV *ref, nmv_context *mvctx,
+                         MvSubpelPrecision precision);
 
 void av1_build_nmv_cost_table(int *mvjoint, int *mvcost[2],
                               const nmv_context *mvctx,
                               MvSubpelPrecision precision);
+void av1_build_nmv_component_cost_table(int *mvcost,
+                                        const nmv_component *const mvcomp,
+                                        MvSubpelPrecision precision);
 
 void av1_update_mv_count(ThreadData *td);
 
@@ -41,13 +47,62 @@ void av1_find_best_ref_mvs_from_stack(int allow_hp,
                                       int is_integer);
 
 static INLINE MV_JOINT_TYPE av1_get_mv_joint(const MV *mv) {
-  if (mv->row == 0) {
-    return mv->col == 0 ? MV_JOINT_ZERO : MV_JOINT_HNZVZ;
-  } else {
-    return mv->col == 0 ? MV_JOINT_HZVNZ : MV_JOINT_HNZVNZ;
-  }
+  // row:  Z  col:  Z  | MV_JOINT_ZERO   (0)
+  // row:  Z  col: NZ  | MV_JOINT_HNZVZ  (1)
+  // row: NZ  col:  Z  | MV_JOINT_HZVNZ  (2)
+  // row: NZ  col: NZ  | MV_JOINT_HNZVNZ (3)
+  return (!!mv->col) | ((!!mv->row) << 1);
 }
 
+static INLINE int av1_mv_class_base(MV_CLASS_TYPE c) {
+  return c ? CLASS0_SIZE << (c + 2) : 0;
+}
+
+// If n != 0, returns the floor of log base 2 of n. If n == 0, returns 0.
+static INLINE uint8_t av1_log_in_base_2(unsigned int n) {
+  // get_msb() is only valid when n != 0.
+  return n == 0 ? 0 : get_msb(n);
+}
+
+static INLINE MV_CLASS_TYPE av1_get_mv_class(int z, int *offset) {
+  assert(z >= 0);
+  const MV_CLASS_TYPE c = (MV_CLASS_TYPE)av1_log_in_base_2(z >> 3);
+  assert(c <= MV_CLASS_10);
+  if (offset) *offset = z - av1_mv_class_base(c);
+  return c;
+}
+
+static INLINE int av1_check_newmv_joint_nonzero(const AV1_COMMON *cm,
+                                                MACROBLOCK *const x) {
+  (void)cm;
+  MACROBLOCKD *xd = &x->e_mbd;
+  MB_MODE_INFO *mbmi = xd->mi[0];
+  const PREDICTION_MODE this_mode = mbmi->mode;
+  if (this_mode == NEW_NEWMV) {
+    const int_mv ref_mv_0 = av1_get_ref_mv(x, 0);
+    const int_mv ref_mv_1 = av1_get_ref_mv(x, 1);
+    if (mbmi->mv[0].as_int == ref_mv_0.as_int ||
+        mbmi->mv[1].as_int == ref_mv_1.as_int) {
+      return 0;
+    }
+  } else if (this_mode == NEAREST_NEWMV || this_mode == NEAR_NEWMV) {
+    const int_mv ref_mv_1 = av1_get_ref_mv(x, 1);
+    if (mbmi->mv[1].as_int == ref_mv_1.as_int) {
+      return 0;
+    }
+  } else if (this_mode == NEW_NEARESTMV || this_mode == NEW_NEARMV) {
+    const int_mv ref_mv_0 = av1_get_ref_mv(x, 0);
+    if (mbmi->mv[0].as_int == ref_mv_0.as_int) {
+      return 0;
+    }
+  } else if (this_mode == NEWMV) {
+    const int_mv ref_mv_0 = av1_get_ref_mv(x, 0);
+    if (mbmi->mv[0].as_int == ref_mv_0.as_int) {
+      return 0;
+    }
+  }
+  return 1;
+}
 #ifdef __cplusplus
 }  // extern "C"
 #endif

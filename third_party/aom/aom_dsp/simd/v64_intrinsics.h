@@ -65,7 +65,7 @@ SIMD_INLINE v64 v64_align(v64 a, v64 b, unsigned int c) {
   return c_v64_align(a, b, c);
 }
 
-SIMD_INLINE v64 v64_zero() { return c_v64_zero(); }
+SIMD_INLINE v64 v64_zero(void) { return c_v64_zero(); }
 SIMD_INLINE v64 v64_dup_8(uint8_t x) { return c_v64_dup_8(x); }
 SIMD_INLINE v64 v64_dup_16(uint16_t x) { return c_v64_dup_16(x); }
 SIMD_INLINE v64 v64_dup_32(uint32_t x) { return c_v64_dup_32(x); }
@@ -128,20 +128,22 @@ SIMD_INLINE v64 v64_shuffle_8(v64 a, v64 pattern) {
   return c_v64_shuffle_8(a, pattern);
 }
 
-typedef uint32_t sad64_internal;
-SIMD_INLINE sad64_internal v64_sad_u8_init() { return c_v64_sad_u8_init(); }
-SIMD_INLINE sad64_internal v64_sad_u8(sad64_internal s, v64 a, v64 b) {
+SIMD_INLINE c_sad64_internal v64_sad_u8_init(void) {
+  return c_v64_sad_u8_init();
+}
+SIMD_INLINE c_sad64_internal v64_sad_u8(c_sad64_internal s, v64 a, v64 b) {
   return c_v64_sad_u8(s, a, b);
 }
-SIMD_INLINE uint32_t v64_sad_u8_sum(sad64_internal s) {
+SIMD_INLINE uint32_t v64_sad_u8_sum(c_sad64_internal s) {
   return c_v64_sad_u8_sum(s);
 }
-typedef uint32_t ssd64_internal;
-SIMD_INLINE ssd64_internal v64_ssd_u8_init() { return c_v64_ssd_u8_init(); }
-SIMD_INLINE ssd64_internal v64_ssd_u8(ssd64_internal s, v64 a, v64 b) {
+SIMD_INLINE c_ssd64_internal v64_ssd_u8_init(void) {
+  return c_v64_ssd_u8_init();
+}
+SIMD_INLINE c_ssd64_internal v64_ssd_u8(c_ssd64_internal s, v64 a, v64 b) {
   return c_v64_ssd_u8(s, a, b);
 }
-SIMD_INLINE uint32_t v64_ssd_u8_sum(ssd64_internal s) {
+SIMD_INLINE uint32_t v64_ssd_u8_sum(c_ssd64_internal s) {
   return c_v64_ssd_u8_sum(s);
 }
 SIMD_INLINE int64_t v64_dotp_su8(v64 a, v64 b) { return c_v64_dotp_su8(a, b); }

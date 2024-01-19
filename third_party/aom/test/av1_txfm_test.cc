@@ -9,10 +9,33 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#include <stdio.h>
 #include "test/av1_txfm_test.h"
 
+#include <stdio.h>
+
+#include <memory>
+#include <new>
+
 namespace libaom_test {
+
+const char *tx_type_name[] = {
+  "DCT_DCT",
+  "ADST_DCT",
+  "DCT_ADST",
+  "ADST_ADST",
+  "FLIPADST_DCT",
+  "DCT_FLIPADST",
+  "FLIPADST_FLIPADST",
+  "ADST_FLIPADST",
+  "FLIPADST_ADST",
+  "IDTX",
+  "V_DCT",
+  "H_DCT",
+  "V_ADST",
+  "H_ADST",
+  "V_FLIPADST",
+  "H_FLIPADST",
+};
 
 int get_txfm1d_size(TX_SIZE tx_size) { return tx_size_wide[tx_size]; }
 
@@ -94,7 +117,7 @@ double Sqrt2 = pow(2, 0.5);
 double invSqrt2 = 1 / pow(2, 0.5);
 
 double dct_matrix(double n, double k, int size) {
-  return cos(M_PI * (2 * n + 1) * k / (2 * size));
+  return cos(PI * (2 * n + 1) * k / (2 * size));
 }
 
 void reference_dct_1d(const double *in, double *out, int size) {
@@ -119,7 +142,7 @@ void reference_idct_1d(const double *in, double *out, int size) {
   }
 }
 
-// TODO(any): Copied from the old 'fadst4' (same as the new 'av1_fadst4_new'
+// TODO(any): Copied from the old 'fadst4' (same as the new 'av1_fadst4'
 // function). Should be replaced by a proper reference function that takes
 // 'double' input & output.
 static void fadst4_new(const tran_low_t *input, tran_low_t *output) {
@@ -179,7 +202,7 @@ void reference_adst_1d(const double *in, double *out, int size) {
   for (int k = 0; k < size; ++k) {
     out[k] = 0;
     for (int n = 0; n < size; ++n) {
-      out[k] += in[n] * sin(M_PI * (2 * n + 1) * (2 * k + 1) / (4 * size));
+      out[k] += in[n] * sin(PI * (2 * n + 1) * (2 * k + 1) / (4 * size));
     }
   }
 }
@@ -237,31 +260,35 @@ void reference_hybrid_2d(double *in, double *out, TX_TYPE tx_type,
   const int tx_width = tx_size_wide[tx_size];
   const int tx_height = tx_size_high[tx_size];
 
-  double *const temp_in = new double[AOMMAX(tx_width, tx_height)];
-  double *const temp_out = new double[AOMMAX(tx_width, tx_height)];
-  double *const out_interm = new double[tx_width * tx_height];
-  const int stride = tx_width;
+  std::unique_ptr<double[]> temp_in(
+      new (std::nothrow) double[AOMMAX(tx_width, tx_height)]);
+  std::unique_ptr<double[]> temp_out(
+      new (std::nothrow) double[AOMMAX(tx_width, tx_height)]);
+  std::unique_ptr<double[]> out_interm(
+      new (std::nothrow) double[tx_width * tx_height]);
+  ASSERT_NE(temp_in, nullptr);
+  ASSERT_NE(temp_out, nullptr);
+  ASSERT_NE(out_interm, nullptr);
 
   // Transform columns.
   for (int c = 0; c < tx_width; ++c) {
     for (int r = 0; r < tx_height; ++r) {
-      temp_in[r] = in[r * stride + c];
+      temp_in[r] = in[r * tx_width + c];
     }
-    reference_hybrid_1d(temp_in, temp_out, tx_height, type0);
+    reference_hybrid_1d(temp_in.get(), temp_out.get(), tx_height, type0);
     for (int r = 0; r < tx_height; ++r) {
-      out_interm[r * stride + c] = temp_out[r];
+      out_interm[r * tx_width + c] = temp_out[r];
     }
   }
 
   // Transform rows.
   for (int r = 0; r < tx_height; ++r) {
-    reference_hybrid_1d(out_interm + r * stride, out + r * stride, tx_width,
-                        type1);
+    reference_hybrid_1d(out_interm.get() + r * tx_width, temp_out.get(),
+                        tx_width, type1);
+    for (int c = 0; c < tx_width; ++c) {
+      out[c * tx_height + r] = temp_out[c];
+    }
   }
-
-  delete[] temp_in;
-  delete[] temp_out;
-  delete[] out_interm;
 
   // These transforms use an approximate 2D DCT transform, by only keeping the
   // top-left quarter of the coefficients, and repacking them in the first
@@ -269,48 +296,48 @@ void reference_hybrid_2d(double *in, double *out, TX_TYPE tx_type,
   // TODO(urvang): Refactor this code.
   if (tx_width == 64 && tx_height == 64) {  // tx_size == TX_64X64
     // Zero out top-right 32x32 area.
-    for (int row = 0; row < 32; ++row) {
-      memset(out + row * 64 + 32, 0, 32 * sizeof(*out));
+    for (int col = 0; col < 32; ++col) {
+      memset(out + col * 64 + 32, 0, 32 * sizeof(*out));
     }
     // Zero out the bottom 64x32 area.
     memset(out + 32 * 64, 0, 32 * 64 * sizeof(*out));
     // Re-pack non-zero coeffs in the first 32x32 indices.
-    for (int row = 1; row < 32; ++row) {
-      memcpy(out + row * 32, out + row * 64, 32 * sizeof(*out));
+    for (int col = 1; col < 32; ++col) {
+      memcpy(out + col * 32, out + col * 64, 32 * sizeof(*out));
     }
   } else if (tx_width == 32 && tx_height == 64) {  // tx_size == TX_32X64
+    // Zero out right 32x32 area.
+    for (int col = 0; col < 32; ++col) {
+      memset(out + col * 64 + 32, 0, 32 * sizeof(*out));
+    }
+    // Re-pack non-zero coeffs in the first 32x32 indices.
+    for (int col = 1; col < 32; ++col) {
+      memcpy(out + col * 32, out + col * 64, 32 * sizeof(*out));
+    }
+  } else if (tx_width == 64 && tx_height == 32) {  // tx_size == TX_64X32
     // Zero out the bottom 32x32 area.
     memset(out + 32 * 32, 0, 32 * 32 * sizeof(*out));
     // Note: no repacking needed here.
-  } else if (tx_width == 64 && tx_height == 32) {  // tx_size == TX_64X32
-    // Zero out right 32x32 area.
-    for (int row = 0; row < 32; ++row) {
-      memset(out + row * 64 + 32, 0, 32 * sizeof(*out));
-    }
-    // Re-pack non-zero coeffs in the first 32x32 indices.
-    for (int row = 1; row < 32; ++row) {
-      memcpy(out + row * 32, out + row * 64, 32 * sizeof(*out));
-    }
   } else if (tx_width == 16 && tx_height == 64) {  // tx_size == TX_16X64
-    // Zero out the bottom 16x32 area.
-    memset(out + 16 * 32, 0, 16 * 32 * sizeof(*out));
     // Note: no repacking needed here.
-  } else if (tx_width == 64 && tx_height == 16) {  // tx_size == TX_64X16
     // Zero out right 32x16 area.
-    for (int row = 0; row < 16; ++row) {
-      memset(out + row * 64 + 32, 0, 32 * sizeof(*out));
+    for (int col = 0; col < 16; ++col) {
+      memset(out + col * 64 + 32, 0, 32 * sizeof(*out));
     }
     // Re-pack non-zero coeffs in the first 32x16 indices.
-    for (int row = 1; row < 16; ++row) {
-      memcpy(out + row * 32, out + row * 64, 32 * sizeof(*out));
+    for (int col = 1; col < 16; ++col) {
+      memcpy(out + col * 32, out + col * 64, 32 * sizeof(*out));
     }
+  } else if (tx_width == 64 && tx_height == 16) {  // tx_size == TX_64X16
+    // Zero out the bottom 16x32 area.
+    memset(out + 16 * 32, 0, 16 * 32 * sizeof(*out));
   }
 
   // Apply appropriate scale.
   const double amplify_factor = get_amplification_factor(tx_type, tx_size);
   for (int c = 0; c < tx_width; ++c) {
     for (int r = 0; r < tx_height; ++r) {
-      out[r * stride + c] *= amplify_factor;
+      out[c * tx_height + r] *= amplify_factor;
     }
   }
 }

@@ -17,10 +17,16 @@
 #include "aom_dsp/aom_dsp_common.h"
 #include "aom_mem/aom_mem.h"
 #include "aom_ports/mem.h"
+#include "av1/common/av1_common_int.h"
 #include "av1/common/av1_loopfilter.h"
-#include "av1/common/onyxc_int.h"
 #include "av1/common/reconinter.h"
 #include "av1/common/seg_common.h"
+
+enum {
+  USE_SINGLE,
+  USE_DUAL,
+  USE_QUAD,
+} UENUM1BYTE(USE_FILTER_TYPE);
 
 static const SEG_LVL_FEATURES seg_lvl_lf_lut[MAX_MB_PLANE][2] = {
   { SEG_LVL_ALT_LF_Y_V, SEG_LVL_ALT_LF_Y_H },
@@ -28,404 +34,15 @@ static const SEG_LVL_FEATURES seg_lvl_lf_lut[MAX_MB_PLANE][2] = {
   { SEG_LVL_ALT_LF_V, SEG_LVL_ALT_LF_V }
 };
 
-static const int delta_lf_id_lut[MAX_MB_PLANE][2] = {
-  { 0, 1 }, { 2, 2 }, { 3, 3 }
-};
-
-typedef enum EDGE_DIR { VERT_EDGE = 0, HORZ_EDGE = 1, NUM_EDGE_DIRS } EDGE_DIR;
+static const int delta_lf_id_lut[MAX_MB_PLANE][2] = { { 0, 1 },
+                                                      { 2, 2 },
+                                                      { 3, 3 } };
 
 static const int mode_lf_lut[] = {
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  // INTRA_MODES
   1, 1, 0, 1,                             // INTER_MODES (GLOBALMV == 0)
   1, 1, 1, 1, 1, 1, 0, 1  // INTER_COMPOUND_MODES (GLOBAL_GLOBALMV == 0)
 };
-
-#if LOOP_FILTER_BITMASK
-// 256 bit masks (64x64 / 4x4) for left transform size for Y plane.
-// We use 4 uint64_t to represent the 256 bit.
-// Each 1 represents a position where we should apply a loop filter
-// across the left border of an 4x4 block boundary.
-//
-// In the case of TX_8x8->  ( in low order byte first we end up with
-// a mask that looks like this (-- and | are used for better view)
-//
-//    10101010|10101010
-//    10101010|10101010
-//    10101010|10101010
-//    10101010|10101010
-//    10101010|10101010
-//    10101010|10101010
-//    10101010|10101010
-//    10101010|10101010
-//    -----------------
-//    10101010|10101010
-//    10101010|10101010
-//    10101010|10101010
-//    10101010|10101010
-//    10101010|10101010
-//    10101010|10101010
-//    10101010|10101010
-//    10101010|10101010
-//
-// A loopfilter should be applied to every other 4x4 horizontally.
-
-// 256 bit masks (64x64 / 4x4) for above transform size for Y plane.
-// We use 4 uint64_t to represent the 256 bit.
-// Each 1 represents a position where we should apply a loop filter
-// across the top border of an 4x4 block boundary.
-//
-// In the case of TX_8x8->  ( in low order byte first we end up with
-// a mask that looks like this
-//
-//    11111111|11111111
-//    00000000|00000000
-//    11111111|11111111
-//    00000000|00000000
-//    11111111|11111111
-//    00000000|00000000
-//    11111111|11111111
-//    00000000|00000000
-//    -----------------
-//    11111111|11111111
-//    00000000|00000000
-//    11111111|11111111
-//    00000000|00000000
-//    11111111|11111111
-//    00000000|00000000
-//    11111111|11111111
-//    00000000|00000000
-//
-// A loopfilter should be applied to every other 4x4 horizontally.
-
-const int mask_id_table_tx_4x4[BLOCK_SIZES_ALL] = {
-  0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, -1, -1, -1, 13, 14, 15, 16, 17, 18
-};
-
-const int mask_id_table_tx_8x8[BLOCK_SIZES_ALL] = {
-  -1, -1, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, -1, -1, -1, -1, -1, 10, 11, 12, 13
-};
-
-const int mask_id_table_tx_16x16[BLOCK_SIZES_ALL] = {
-  -1, -1, -1, -1, -1, -1, 0, 1, 2, 3, 4, 5, 6, -1, -1, -1, -1, -1, -1, -1, 7, 8
-};
-
-const int mask_id_table_tx_32x32[BLOCK_SIZES_ALL] = { -1, -1, -1, -1, -1, -1,
-                                                      -1, -1, -1, 0,  1,  2,
-                                                      3,  -1, -1, -1, -1, -1,
-                                                      -1, -1, -1, -1 };
-
-const FilterMask left_mask_univariant_reordered[67] = {
-  // TX_4X4
-  { { 0x0000000000000001ULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 4X4, TX_4X4
-  { { 0x0000000000010001ULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 4X8, TX_4X4
-  { { 0x0000000000000003ULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 8X4, TX_4X4
-  { { 0x0000000000030003ULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 8X8, TX_4X4
-  { { 0x0003000300030003ULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 8X16, TX_4X4
-  { { 0x00000000000f000fULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 16X8, TX_4X4
-  { { 0x000f000f000f000fULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 16X16, TX_4X4
-  { { 0x000f000f000f000fULL, 0x000f000f000f000fULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 16X32, TX_4X4
-  { { 0x00ff00ff00ff00ffULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 32X16, TX_4X4
-  { { 0x00ff00ff00ff00ffULL, 0x00ff00ff00ff00ffULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 32X32, TX_4X4
-  { { 0x00ff00ff00ff00ffULL, 0x00ff00ff00ff00ffULL, 0x00ff00ff00ff00ffULL,
-      0x00ff00ff00ff00ffULL } },  // block size 32X64, TX_4X4
-  { { 0xffffffffffffffffULL, 0xffffffffffffffffULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 64X32, TX_4X4
-  { { 0xffffffffffffffffULL, 0xffffffffffffffffULL, 0xffffffffffffffffULL,
-      0xffffffffffffffffULL } },  // block size 64X64, TX_4X4
-  { { 0x0001000100010001ULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 4X16, TX_4X4
-  { { 0x000000000000000fULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 16X4, TX_4X4
-  { { 0x0003000300030003ULL, 0x0003000300030003ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 8X32, TX_4X4
-  { { 0x0000000000ff00ffULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 32X8, TX_4X4
-  { { 0x000f000f000f000fULL, 0x000f000f000f000fULL, 0x000f000f000f000fULL,
-      0x000f000f000f000fULL } },  // block size 16X64, TX_4X4
-  { { 0xffffffffffffffffULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 64X16, TX_4X4
-  // TX_8X8
-  { { 0x0000000000010001ULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 8X8, TX_8X8
-  { { 0x0001000100010001ULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 8X16, TX_8X8
-  { { 0x0000000000050005ULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 16X8, TX_8X8
-  { { 0x0005000500050005ULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 16X16, TX_8X8
-  { { 0x0005000500050005ULL, 0x0005000500050005ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 16X32, TX_8X8
-  { { 0x0055005500550055ULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 32X16, TX_8X8
-  { { 0x0055005500550055ULL, 0x0055005500550055ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 32X32, TX_8X8
-  { { 0x0055005500550055ULL, 0x0055005500550055ULL, 0x0055005500550055ULL,
-      0x0055005500550055ULL } },  // block size 32X64, TX_8X8
-  { { 0x5555555555555555ULL, 0x5555555555555555ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 64X32, TX_8X8
-  { { 0x5555555555555555ULL, 0x5555555555555555ULL, 0x5555555555555555ULL,
-      0x5555555555555555ULL } },  // block size 64X64, TX_8X8
-  { { 0x0001000100010001ULL, 0x0001000100010001ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 8X32, TX_8X8
-  { { 0x0000000000550055ULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 32X8, TX_8X8
-  { { 0x0005000500050005ULL, 0x0005000500050005ULL, 0x0005000500050005ULL,
-      0x0005000500050005ULL } },  // block size 16X64, TX_8X8
-  { { 0x5555555555555555ULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 64X16, TX_8X8
-  // TX_16X16
-  { { 0x0001000100010001ULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 16X16, TX_16X16
-  { { 0x0001000100010001ULL, 0x0001000100010001ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 16X32, TX_16X16
-  { { 0x0011001100110011ULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 32X16, TX_16X16
-  { { 0x0011001100110011ULL, 0x0011001100110011ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 32X32, TX_16X16
-  { { 0x0011001100110011ULL, 0x0011001100110011ULL, 0x0011001100110011ULL,
-      0x0011001100110011ULL } },  // block size 32X64, TX_16X16
-  { { 0x1111111111111111ULL, 0x1111111111111111ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 64X32, TX_16X16
-  { { 0x1111111111111111ULL, 0x1111111111111111ULL, 0x1111111111111111ULL,
-      0x1111111111111111ULL } },  // block size 64X64, TX_16X16
-  { { 0x0001000100010001ULL, 0x0001000100010001ULL, 0x0001000100010001ULL,
-      0x0001000100010001ULL } },  // block size 16X64, TX_16X16
-  { { 0x1111111111111111ULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 64X16, TX_16X16
-  // TX_32X32
-  { { 0x0001000100010001ULL, 0x0001000100010001ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 32X32, TX_32X32
-  { { 0x0101010101010101ULL, 0x0101010101010101ULL, 0x0101010101010101ULL,
-      0x0101010101010101ULL } },  // block size 32X64, TX_32X32
-  { { 0x0101010101010101ULL, 0x0101010101010101ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 64X32, TX_32X32
-  { { 0x0101010101010101ULL, 0x0101010101010101ULL, 0x0101010101010101ULL,
-      0x0101010101010101ULL } },  // block size 64X64, TX_32X32
-  // TX_64X64
-  { { 0x0001000100010001ULL, 0x0001000100010001ULL, 0x0001000100010001ULL,
-      0x0001000100010001ULL } },  // block size 64X64, TX_64X64
-  // 2:1, 1:2 transform sizes.
-  { { 0x0000000000010001ULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 4X8, TX_4X8
-  { { 0x0001000100010001ULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 4X16, TX_4X8
-  { { 0x0000000000000001ULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 8X4, TX_8X4
-  { { 0x0000000000000005ULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 16X4, TX_8X4
-  { { 0x0001000100010001ULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 8X16, TX_8X16
-  { { 0x0001000100010001ULL, 0x0001000100010001ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 8X32, TX_8X16
-  { { 0x0000000000010001ULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 16X8, TX_16X8
-  { { 0x0000000000110011ULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 32X8, TX_16X8
-  { { 0x0001000100010001ULL, 0x0001000100010001ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 16X32, TX_16X32
-  { { 0x0001000100010001ULL, 0x0001000100010001ULL, 0x0001000100010001ULL,
-      0x0001000100010001ULL } },  // block size 16X64, TX_16X32
-  { { 0x0001000100010001ULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 32X16, TX_32X16
-  { { 0x0101010101010101ULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 64X16, TX_32X16
-  { { 0x0001000100010001ULL, 0x0001000100010001ULL, 0x0001000100010001ULL,
-      0x0001000100010001ULL } },  // block size 32X64, TX_32X64
-  { { 0x0001000100010001ULL, 0x0001000100010001ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 64X32, TX_64X32
-  // 4:1, 1:4 transform sizes.
-  { { 0x0001000100010001ULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 4X16, TX_4X16
-  { { 0x0000000000000001ULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 16X4, TX_16X4
-  { { 0x0001000100010001ULL, 0x0001000100010001ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 8X32, TX_8X32
-  { { 0x0000000000010001ULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 32X8, TX_32X8
-  { { 0x0001000100010001ULL, 0x0001000100010001ULL, 0x0001000100010001ULL,
-      0x0001000100010001ULL } },  // block size 16X64, TX_16X64
-  { { 0x0001000100010001ULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 64X16, TX_64X16
-};
-
-const FilterMask above_mask_univariant_reordered[67] = {
-  // TX_4X4
-  { { 0x0000000000000001ULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 4X4, TX_4X4
-  { { 0x0000000000010001ULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 4X8, TX_4X4
-  { { 0x0000000000000003ULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 8X4, TX_4X4
-  { { 0x0000000000030003ULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 8X8, TX_4X4
-  { { 0x0003000300030003ULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 8X16, TX_4X4
-  { { 0x00000000000f000fULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 16X8, TX_4X4
-  { { 0x000f000f000f000fULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 16X16, TX_4X4
-  { { 0x000f000f000f000fULL, 0x000f000f000f000fULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 16X32, TX_4X4
-  { { 0x00ff00ff00ff00ffULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 32X16, TX_4X4
-  { { 0x00ff00ff00ff00ffULL, 0x00ff00ff00ff00ffULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 32X32, TX_4X4
-  { { 0x00ff00ff00ff00ffULL, 0x00ff00ff00ff00ffULL, 0x00ff00ff00ff00ffULL,
-      0x00ff00ff00ff00ffULL } },  // block size 32X64, TX_4X4
-  { { 0xffffffffffffffffULL, 0xffffffffffffffffULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 64X32, TX_4X4
-  { { 0xffffffffffffffffULL, 0xffffffffffffffffULL, 0xffffffffffffffffULL,
-      0xffffffffffffffffULL } },  // block size 64X64, TX_4x4
-  { { 0x0001000100010001ULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 4X16, TX_4X4
-  { { 0x000000000000000fULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 16X4, TX_4X4
-  { { 0x0003000300030003ULL, 0x0003000300030003ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 8X32, TX_4X4
-  { { 0x0000000000ff00ffULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 32X8, TX_4X4
-  { { 0x000f000f000f000fULL, 0x000f000f000f000fULL, 0x000f000f000f000fULL,
-      0x000f000f000f000fULL } },  // block size 16X64, TX_4X4
-  { { 0xffffffffffffffffULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 64X16, TX_4X4
-  // TX_8X8
-  { { 0x0000000000000003ULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 8X8, TX_8X8
-  { { 0x0000000300000003ULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 8X16, TX_8X8
-  { { 0x000000000000000fULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 16X8, TX_8X8
-  { { 0x0000000f0000000fULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 16X16, TX_8X8
-  { { 0x0000000f0000000fULL, 0x0000000f0000000fULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 16X32, TX_8X8
-  { { 0x000000ff000000ffULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 32X16, TX_8X8
-  { { 0x000000ff000000ffULL, 0x000000ff000000ffULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 32X32, TX_8X8
-  { { 0x000000ff000000ffULL, 0x000000ff000000ffULL, 0x000000ff000000ffULL,
-      0x000000ff000000ffULL } },  // block size 32X64, TX_8X8
-  { { 0x0000ffff0000ffffULL, 0x0000ffff0000ffffULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 64X32, TX_8X8
-  { { 0x0000ffff0000ffffULL, 0x0000ffff0000ffffULL, 0x0000ffff0000ffffULL,
-      0x0000ffff0000ffffULL } },  // block size 64X64, TX_8X8
-  { { 0x0000000300000003ULL, 0x0000000300000003ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 8X32, TX_8X8
-  { { 0x00000000000000ffULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 32X8, TX_8X8
-  { { 0x0000000f0000000fULL, 0x0000000f0000000fULL, 0x0000000f0000000fULL,
-      0x0000000f0000000fULL } },  // block size 16X64, TX_8X8
-  { { 0x0000ffff0000ffffULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 64X16, TX_8X8
-  // TX_16X16
-  { { 0x000000000000000fULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 16X16, TX_16X16
-  { { 0x000000000000000fULL, 0x000000000000000fULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 16X32, TX_16X16
-  { { 0x00000000000000ffULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 32X16, TX_16X16
-  { { 0x00000000000000ffULL, 0x00000000000000ffULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 32X32, TX_16X16
-  { { 0x00000000000000ffULL, 0x00000000000000ffULL, 0x00000000000000ffULL,
-      0x00000000000000ffULL } },  // block size 32X64, TX_16X16
-  { { 0x000000000000ffffULL, 0x000000000000ffffULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 64X32, TX_16X16
-  { { 0x000000000000ffffULL, 0x000000000000ffffULL, 0x000000000000ffffULL,
-      0x000000000000ffffULL } },  // block size 64X64, TX_16X16
-  { { 0x000000000000000fULL, 0x000000000000000fULL, 0x000000000000000fULL,
-      0x000000000000000fULL } },  // block size 16X64, TX_16X16
-  { { 0x000000000000ffffULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 64X16, TX_16X16
-  // TX_32X32
-  { { 0x00000000000000ffULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 32X32, TX_32X32
-  { { 0x00000000000000ffULL, 0x0000000000000000ULL, 0x00000000000000ffULL,
-      0x0000000000000000ULL } },  // block size 32X64, TX_32X32
-  { { 0x000000000000ffffULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 64X32, TX_32X32
-  { { 0x000000000000ffffULL, 0x0000000000000000ULL, 0x000000000000ffffULL,
-      0x0000000000000000ULL } },  // block size 64X64, TX_32X32
-  // TX_64X64
-  { { 0x000000000000ffffULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 64X64, TX_64X64
-  // 2:1, 1:2 transform sizes.
-  { { 0x0000000000000001ULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 4X8, TX_4X8
-  { { 0x0000000100000001ULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 4X16, TX_4X8
-  { { 0x0000000000000003ULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 8X4, TX_8X4
-  { { 0x000000000000000fULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 16X4, TX_8X4
-  { { 0x0000000000000003ULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 8X16, TX_8X16
-  { { 0x0000000000000003ULL, 0x0000000000000003ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 8X32, TX_8X16
-  { { 0x000000000000000fULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 16X8, TX_16X8
-  { { 0x00000000000000ffULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 32X8, TX_16X8
-  { { 0x000000000000000fULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 16X32, TX_16X32
-  { { 0x000000000000000fULL, 0x0000000000000000ULL, 0x000000000000000fULL,
-      0x0000000000000000ULL } },  // block size 16X64, TX_16X32
-  { { 0x00000000000000ffULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 32X16, TX_32X16
-  { { 0x000000000000ffffULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 64X16, TX_32X16
-  { { 0x00000000000000ffULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 32X64, TX_32X64
-  { { 0x000000000000ffffULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 64X32, TX_64X32
-  // 4:1, 1:4 transform sizes.
-  { { 0x0000000000000001ULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 4X16, TX_4X16
-  { { 0x000000000000000fULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 16X4, TX_16X4
-  { { 0x0000000000000003ULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 8X32, TX_8X32
-  { { 0x00000000000000ffULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 32X8, TX_32X8
-  { { 0x000000000000000fULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 16X64, TX_16X64
-  { { 0x000000000000ffffULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
-      0x0000000000000000ULL } },  // block size 64X16, TX_64X16
-};
-
-LoopFilterMask *get_loop_filter_mask(const AV1_COMMON *const cm, int mi_row,
-                                     int mi_col) {
-  assert(cm->lf.lfm != NULL);
-  const int row = mi_row >> MIN_MIB_SIZE_LOG2;  // 64x64
-  const int col = mi_col >> MIN_MIB_SIZE_LOG2;
-  return &cm->lf.lfm[row * cm->lf.lfm_stride + col];
-}
-
-typedef void (*LpfFunc)(uint8_t *s, int p, const uint8_t *blimit,
-                        const uint8_t *limit, const uint8_t *thresh);
-
-typedef void (*LpfDualFunc)(uint8_t *s, int p, const uint8_t *blimit0,
-                            const uint8_t *limit0, const uint8_t *thresh0,
-                            const uint8_t *blimit1, const uint8_t *limit1,
-                            const uint8_t *thresh1);
-
-typedef void (*HbdLpfFunc)(uint16_t *s, int p, const uint8_t *blimit,
-                           const uint8_t *limit, const uint8_t *thresh, int bd);
-
-typedef void (*HbdLpfDualFunc)(uint16_t *s, int p, const uint8_t *blimit0,
-                               const uint8_t *limit0, const uint8_t *thresh0,
-                               const uint8_t *blimit1, const uint8_t *limit1,
-                               const uint8_t *thresh1, int bd);
-#endif  // LOOP_FILTER_BITMASK
 
 static void update_sharpness(loop_filter_info_n *lfi, int sharpness_lvl) {
   int lvl;
@@ -448,13 +65,13 @@ static void update_sharpness(loop_filter_info_n *lfi, int sharpness_lvl) {
   }
 }
 
-uint8_t get_filter_level(const AV1_COMMON *cm, const loop_filter_info_n *lfi_n,
-                         const int dir_idx, int plane,
-                         const MB_MODE_INFO *mbmi) {
+uint8_t av1_get_filter_level(const AV1_COMMON *cm,
+                             const loop_filter_info_n *lfi_n, const int dir_idx,
+                             int plane, const MB_MODE_INFO *mbmi) {
   const int segment_id = mbmi->segment_id;
-  if (cm->delta_lf_present_flag) {
-    int delta_lf;
-    if (cm->delta_lf_multi) {
+  if (cm->delta_q_info.delta_lf_present_flag) {
+    int8_t delta_lf;
+    if (cm->delta_q_info.delta_lf_multi) {
       const int delta_lf_idx = delta_lf_id_lut[plane][dir_idx];
       delta_lf = mbmi->delta_lf[delta_lf_idx];
     } else {
@@ -495,8 +112,6 @@ void av1_loop_filter_init(AV1_COMMON *cm) {
   struct loopfilter *lf = &cm->lf;
   int lvl;
 
-  lf->combine_vert_horz_lf = 1;
-
   // init limits for given sharpness
   update_sharpness(lfi, lf->sharpness_level);
 
@@ -531,6 +146,9 @@ void av1_loop_filter_frame_init(AV1_COMMON *cm, int plane_start,
   filt_lvl_r[1] = cm->lf.filter_level_u;
   filt_lvl_r[2] = cm->lf.filter_level_v;
 
+  assert(plane_start >= AOM_PLANE_Y);
+  assert(plane_end <= MAX_MB_PLANE);
+
   for (plane = plane_start; plane < plane_end; plane++) {
     if (plane == 0 && !filt_lvl[0] && !filt_lvl_r[0])
       break;
@@ -542,7 +160,6 @@ void av1_loop_filter_frame_init(AV1_COMMON *cm, int plane_start,
     for (seg_id = 0; seg_id < MAX_SEGMENTS; seg_id++) {
       for (int dir = 0; dir < 2; ++dir) {
         int lvl_seg = (dir == 0) ? filt_lvl[plane] : filt_lvl_r[plane];
-        assert(plane >= 0 && plane <= 2);
         const int seg_lf_feature_id = seg_lvl_lf_lut[plane][dir];
         if (segfeature_active(seg, seg_id, seg_lf_feature_id)) {
           const int data = get_segdata(&cm->seg, seg_id, seg_lf_feature_id);
@@ -575,1337 +192,19 @@ void av1_loop_filter_frame_init(AV1_COMMON *cm, int plane_start,
   }
 }
 
-#if LOOP_FILTER_BITMASK
-// A 64x64 tx block requires 256 bits to represent each 4x4 tx block.
-// Every 4 rows is represented by one uint64_t mask. Hence,
-// there are 4 uint64_t bitmask[4] to represent the 64x64 block.
-//
-// Given a location by (mi_col, mi_row), This function returns the index
-// 0, 1, 2, 3 to select which bitmask[] to use, and the shift value.
-//
-// For example, mi_row is the offset of pixels in mi size (4),
-// (mi_row / 4) returns which uint64_t.
-// After locating which uint64_t, mi_row % 4 is the
-// row offset, and each row has 16 = 1 << stride_log2 4x4 units.
-// Therefore, shift = (row << stride_log2) + mi_col;
-int get_index_shift(int mi_col, int mi_row, int *index) {
-  // *index = mi_row >> 2;
-  // rows = mi_row % 4;
-  // stride_log2 = 4;
-  // shift = (rows << stride_log2) + mi_col;
-  *index = mi_row >> 2;
-  return ((mi_row & 3) << 4) | mi_col;
-}
-
-static void check_mask(const FilterMask *lfm) {
-#ifndef NDEBUG
-  for (int i = 0; i < 4; ++i) {
-    assert(!(lfm[TX_4X4].bits[i] & lfm[TX_8X8].bits[i]));
-    assert(!(lfm[TX_4X4].bits[i] & lfm[TX_16X16].bits[i]));
-    assert(!(lfm[TX_4X4].bits[i] & lfm[TX_32X32].bits[i]));
-    assert(!(lfm[TX_4X4].bits[i] & lfm[TX_64X64].bits[i]));
-    assert(!(lfm[TX_8X8].bits[i] & lfm[TX_16X16].bits[i]));
-    assert(!(lfm[TX_8X8].bits[i] & lfm[TX_32X32].bits[i]));
-    assert(!(lfm[TX_8X8].bits[i] & lfm[TX_64X64].bits[i]));
-    assert(!(lfm[TX_16X16].bits[i] & lfm[TX_32X32].bits[i]));
-    assert(!(lfm[TX_16X16].bits[i] & lfm[TX_64X64].bits[i]));
-    assert(!(lfm[TX_32X32].bits[i] & lfm[TX_64X64].bits[i]));
-  }
-#else
-  (void)lfm;
-#endif
-}
-
-static void check_loop_filter_masks(const LoopFilterMask *lfm, int plane) {
-  if (plane == 0) {
-    // Assert if we try to apply 2 different loop filters at the same
-    // position.
-    check_mask(lfm->left_y);
-    check_mask(lfm->above_y);
-  } else if (plane == 1) {
-    check_mask(lfm->left_u);
-    check_mask(lfm->above_u);
-  } else {
-    check_mask(lfm->left_v);
-    check_mask(lfm->above_v);
-  }
-}
-
-static void update_masks(EDGE_DIR dir, int plane, uint64_t *mask,
-                         TX_SIZE sqr_tx_size, LoopFilterMask *lfm) {
-  if (dir == VERT_EDGE) {
-    switch (plane) {
-      case 0:
-        for (int i = 0; i < 4; ++i) lfm->left_y[sqr_tx_size].bits[i] |= mask[i];
-        break;
-      case 1:
-        for (int i = 0; i < 4; ++i) lfm->left_u[sqr_tx_size].bits[i] |= mask[i];
-        break;
-      case 2:
-        for (int i = 0; i < 4; ++i) lfm->left_v[sqr_tx_size].bits[i] |= mask[i];
-        break;
-      default: assert(plane <= 2);
-    }
-  } else {
-    switch (plane) {
-      case 0:
-        for (int i = 0; i < 4; ++i)
-          lfm->above_y[sqr_tx_size].bits[i] |= mask[i];
-        break;
-      case 1:
-        for (int i = 0; i < 4; ++i)
-          lfm->above_u[sqr_tx_size].bits[i] |= mask[i];
-        break;
-      case 2:
-        for (int i = 0; i < 4; ++i)
-          lfm->above_v[sqr_tx_size].bits[i] |= mask[i];
-        break;
-      default: assert(plane <= 2);
-    }
-  }
-}
-
-static int is_frame_boundary(AV1_COMMON *const cm, int plane, int mi_row,
-                             int mi_col, int ssx, int ssy, EDGE_DIR dir) {
-  if (plane && (ssx || ssy)) {
-    if (ssx && ssy) {  // format 420
-      if ((mi_row << MI_SIZE_LOG2) > cm->height ||
-          (mi_col << MI_SIZE_LOG2) > cm->width)
-        return 1;
-    } else if (ssx) {  // format 422
-      if ((mi_row << MI_SIZE_LOG2) >= cm->height ||
-          (mi_col << MI_SIZE_LOG2) > cm->width)
-        return 1;
-    }
-  } else {
-    if ((mi_row << MI_SIZE_LOG2) >= cm->height ||
-        (mi_col << MI_SIZE_LOG2) >= cm->width)
-      return 1;
-  }
-
-  int row_or_col;
-  if (plane == 0) {
-    row_or_col = dir == VERT_EDGE ? mi_col : mi_row;
-  } else {
-    // chroma sub8x8 block uses bottom/right mi of co-located 8x8 luma block.
-    // So if mi_col == 1, it is actually the frame boundary.
-    if (dir == VERT_EDGE) {
-      row_or_col = ssx ? (mi_col & 0x0FFFFFFE) : mi_col;
-    } else {
-      row_or_col = ssy ? (mi_row & 0x0FFFFFFE) : mi_row;
-    }
-  }
-  return row_or_col == 0;
-}
-
-static void setup_masks(AV1_COMMON *const cm, int mi_row, int mi_col, int plane,
-                        int ssx, int ssy, TX_SIZE tx_size) {
-  LoopFilterMask *lfm = get_loop_filter_mask(cm, mi_row, mi_col);
-  const int x = (mi_col << (MI_SIZE_LOG2 - ssx));
-  const int y = (mi_row << (MI_SIZE_LOG2 - ssy));
-  // decide whether current vertical/horizontal edge needs loop filtering
-  for (EDGE_DIR dir = VERT_EDGE; dir <= HORZ_EDGE; ++dir) {
-    // chroma sub8x8 block uses bottom/right mi of co-located 8x8 luma block.
-    mi_row |= ssy;
-    mi_col |= ssx;
-
-    MB_MODE_INFO **mi = cm->mi_grid_visible + mi_row * cm->mi_stride + mi_col;
-    const MB_MODE_INFO *const mbmi = mi[0];
-    const int curr_skip = mbmi->skip && is_inter_block(mbmi);
-    const BLOCK_SIZE bsize = mbmi->sb_type;
-    const BLOCK_SIZE bsizec = scale_chroma_bsize(bsize, ssx, ssy);
-    const BLOCK_SIZE plane_bsize = ss_size_lookup[bsizec][ssx][ssy];
-    const uint8_t level = get_filter_level(cm, &cm->lf_info, dir, plane, mbmi);
-    const int prediction_masks = dir == VERT_EDGE
-                                     ? block_size_wide[plane_bsize] - 1
-                                     : block_size_high[plane_bsize] - 1;
-    const int is_coding_block_border =
-        dir == VERT_EDGE ? !(x & prediction_masks) : !(y & prediction_masks);
-
-    // TODO(chengchen): step can be optimized.
-    const int row_step = mi_size_high[TX_4X4] << ssy;
-    const int col_step = mi_size_wide[TX_4X4] << ssx;
-    const int mi_height =
-        dir == VERT_EDGE ? tx_size_high_unit[tx_size] << ssy : row_step;
-    const int mi_width =
-        dir == VERT_EDGE ? col_step : tx_size_wide_unit[tx_size] << ssx;
-
-    // assign filter levels
-    for (int r = mi_row; r < mi_row + mi_height; r += row_step) {
-      for (int c = mi_col; c < mi_col + mi_width; c += col_step) {
-        // do not filter frame boundary
-        // Note: when chroma planes' size are half of luma plane,
-        // chroma plane mi corresponds to even position.
-        // If frame size is not even, we still need to filter this chroma
-        // position. Therefore the boundary condition check needs to be
-        // separated to two cases.
-        if (plane && (ssx || ssy)) {
-          if (ssx && ssy) {  // format 420
-            if ((r << MI_SIZE_LOG2) > cm->height ||
-                (c << MI_SIZE_LOG2) > cm->width)
-              continue;
-          } else if (ssx) {  // format 422
-            if ((r << MI_SIZE_LOG2) >= cm->height ||
-                (c << MI_SIZE_LOG2) > cm->width)
-              continue;
-          }
-        } else {
-          if ((r << MI_SIZE_LOG2) >= cm->height ||
-              (c << MI_SIZE_LOG2) >= cm->width)
-            continue;
-        }
-
-        const int row = r % MI_SIZE_64X64;
-        const int col = c % MI_SIZE_64X64;
-        if (plane == 0) {
-          if (dir == VERT_EDGE)
-            lfm->lfl_y_ver[row][col] = level;
-          else
-            lfm->lfl_y_hor[row][col] = level;
-        } else if (plane == 1) {
-          lfm->lfl_u[row][col] = level;
-        } else {
-          lfm->lfl_v[row][col] = level;
-        }
-      }
-    }
-
-    for (int r = mi_row; r < mi_row + mi_height; r += row_step) {
-      for (int c = mi_col; c < mi_col + mi_width; c += col_step) {
-        // do not filter frame boundary
-        if (is_frame_boundary(cm, plane, r, c, ssx, ssy, dir)) continue;
-
-        uint64_t mask[4] = { 0 };
-        const int prev_row = dir == VERT_EDGE ? r : r - (1 << ssy);
-        const int prev_col = dir == VERT_EDGE ? c - (1 << ssx) : c;
-        MB_MODE_INFO **mi_prev =
-            cm->mi_grid_visible + prev_row * cm->mi_stride + prev_col;
-        const MB_MODE_INFO *const mbmi_prev = mi_prev[0];
-        const int prev_skip = mbmi_prev->skip && is_inter_block(mbmi_prev);
-        const uint8_t level_prev =
-            get_filter_level(cm, &cm->lf_info, dir, plane, mbmi_prev);
-        const int is_edge =
-            (level || level_prev) &&
-            (!curr_skip || !prev_skip || is_coding_block_border);
-
-        if (is_edge) {
-          const TX_SIZE prev_tx_size =
-              plane ? av1_get_max_uv_txsize(mbmi_prev->sb_type, ssx, ssy)
-                    : mbmi_prev->tx_size;
-          TX_SIZE min_tx_size = (dir == VERT_EDGE)
-                                    ? AOMMIN(txsize_horz_map[tx_size],
-                                             txsize_horz_map[prev_tx_size])
-                                    : AOMMIN(txsize_vert_map[tx_size],
-                                             txsize_vert_map[prev_tx_size]);
-          min_tx_size = AOMMIN(min_tx_size, TX_16X16);
-          assert(min_tx_size < TX_SIZES);
-          const int row = r % MI_SIZE_64X64;
-          const int col = c % MI_SIZE_64X64;
-          int index = 0;
-          const int shift = get_index_shift(col, row, &index);
-          assert(index < 4 && index >= 0);
-          mask[index] |= ((uint64_t)1 << shift);
-          // set mask on corresponding bit
-          update_masks(dir, plane, mask, min_tx_size, lfm);
-        }
-      }
-    }
-  }
-}
-
-static void setup_tx_block_mask(AV1_COMMON *const cm, int mi_row, int mi_col,
-                                int blk_row, int blk_col,
-                                BLOCK_SIZE plane_bsize, TX_SIZE tx_size,
-                                int plane, int ssx, int ssy) {
-  blk_row <<= ssy;
-  blk_col <<= ssx;
-  if (((mi_row + blk_row) << MI_SIZE_LOG2) >= cm->height ||
-      ((mi_col + blk_col) << MI_SIZE_LOG2) >= cm->width)
-    return;
-
-  // U/V plane, tx_size is always the largest size
-  if (plane) {
-    assert(tx_size_wide[tx_size] <= 32 && tx_size_high[tx_size] <= 32);
-    setup_masks(cm, mi_row + blk_row, mi_col + blk_col, plane, ssx, ssy,
-                tx_size);
-    return;
-  }
-
-  MB_MODE_INFO **mi = cm->mi_grid_visible + mi_row * cm->mi_stride + mi_col;
-  const MB_MODE_INFO *const mbmi = mi[0];
-  // For Y plane:
-  // If intra block, tx size is univariant.
-  // If inter block, tx size follows inter_tx_size.
-  TX_SIZE plane_tx_size = tx_size;
-  const int is_inter = is_inter_block(mbmi);
-
-  if (plane == 0) {
-    if (is_inter) {
-      if (mbmi->skip) {
-        // TODO(chengchen): change av1_get_transform_size() to be consistant.
-        // plane_tx_size = get_max_rect_tx_size(plane_bsize);
-        plane_tx_size = mbmi->tx_size;
-      } else {
-        plane_tx_size = mbmi->inter_tx_size[av1_get_txb_size_index(
-            plane_bsize, blk_row, blk_col)];
-      }
-    } else {
-      MB_MODE_INFO **mi_this = cm->mi_grid_visible +
-                               (mi_row + blk_row) * cm->mi_stride + mi_col +
-                               blk_col;
-      const MB_MODE_INFO *const mbmi_this = mi_this[0];
-      plane_tx_size = mbmi_this->tx_size;
-    }
-  }
-
-  assert(txsize_to_bsize[plane_tx_size] <= plane_bsize);
-
-  if (plane || plane_tx_size == tx_size) {
-    setup_masks(cm, mi_row + blk_row, mi_col + blk_col, plane, ssx, ssy,
-                tx_size);
-  } else {
-    const TX_SIZE sub_txs = sub_tx_size_map[tx_size];
-    const int bsw = tx_size_wide_unit[sub_txs];
-    const int bsh = tx_size_high_unit[sub_txs];
-    for (int row = 0; row < tx_size_high_unit[tx_size]; row += bsh) {
-      for (int col = 0; col < tx_size_wide_unit[tx_size]; col += bsw) {
-        const int offsetr = blk_row + row;
-        const int offsetc = blk_col + col;
-        setup_tx_block_mask(cm, mi_row, mi_col, offsetr, offsetc, plane_bsize,
-                            sub_txs, plane, ssx, ssy);
-      }
-    }
-  }
-}
-
-static void setup_fix_block_mask(AV1_COMMON *const cm, int mi_row, int mi_col,
-                                 int plane, int ssx, int ssy) {
-  MB_MODE_INFO **mi =
-      cm->mi_grid_visible + (mi_row | ssy) * cm->mi_stride + (mi_col | ssx);
-  const MB_MODE_INFO *const mbmi = mi[0];
-
-  const BLOCK_SIZE bsize = mbmi->sb_type;
-  const BLOCK_SIZE bsizec = scale_chroma_bsize(bsize, ssx, ssy);
-  const BLOCK_SIZE plane_bsize = ss_size_lookup[bsizec][ssx][ssy];
-
-  const int block_width = mi_size_wide[plane_bsize];
-  const int block_height = mi_size_high[plane_bsize];
-
-  TX_SIZE max_txsize = max_txsize_rect_lookup[plane_bsize];
-  // The decoder is designed so that it can process 64x64 luma pixels at a
-  // time. If this is a chroma plane with subsampling and bsize corresponds to
-  // a subsampled BLOCK_128X128 then the lookup above will give TX_64X64. That
-  // mustn't be used for the subsampled plane (because it would be bigger than
-  // a 64x64 luma block) so we round down to TX_32X32.
-  if (plane && txsize_sqr_up_map[max_txsize] == TX_64X64) {
-    if (max_txsize == TX_16X64)
-      max_txsize = TX_16X32;
-    else if (max_txsize == TX_64X16)
-      max_txsize = TX_32X16;
-    else
-      max_txsize = TX_32X32;
-  }
-
-  const BLOCK_SIZE txb_size = txsize_to_bsize[max_txsize];
-  const int bw = block_size_wide[txb_size] >> tx_size_wide_log2[0];
-  const int bh = block_size_high[txb_size] >> tx_size_wide_log2[0];
-  const BLOCK_SIZE max_unit_bsize = ss_size_lookup[BLOCK_64X64][ssx][ssy];
-  int mu_blocks_wide = block_size_wide[max_unit_bsize] >> tx_size_wide_log2[0];
-  int mu_blocks_high = block_size_high[max_unit_bsize] >> tx_size_high_log2[0];
-
-  mu_blocks_wide = AOMMIN(block_width, mu_blocks_wide);
-  mu_blocks_high = AOMMIN(block_height, mu_blocks_high);
-
-  // Y: Largest tx_size is 64x64, while superblock size can be 128x128.
-  // Here we ensure that setup_tx_block_mask process at most a 64x64 block.
-  // U/V: largest tx size is 32x32.
-  for (int idy = 0; idy < block_height; idy += mu_blocks_high) {
-    for (int idx = 0; idx < block_width; idx += mu_blocks_wide) {
-      const int unit_height = AOMMIN(mu_blocks_high + idy, block_height);
-      const int unit_width = AOMMIN(mu_blocks_wide + idx, block_width);
-      for (int blk_row = idy; blk_row < unit_height; blk_row += bh) {
-        for (int blk_col = idx; blk_col < unit_width; blk_col += bw) {
-          setup_tx_block_mask(cm, mi_row, mi_col, blk_row, blk_col, plane_bsize,
-                              max_txsize, plane, ssx, ssy);
-        }
-      }
-    }
-  }
-}
-
-static void setup_block_mask(AV1_COMMON *const cm, int mi_row, int mi_col,
-                             BLOCK_SIZE bsize, int plane, int ssx, int ssy) {
-  if ((mi_row << MI_SIZE_LOG2) >= cm->height ||
-      (mi_col << MI_SIZE_LOG2) >= cm->width)
-    return;
-
-  const PARTITION_TYPE partition = get_partition(cm, mi_row, mi_col, bsize);
-  const BLOCK_SIZE subsize = get_partition_subsize(bsize, partition);
-  const int hbs = mi_size_wide[bsize] / 2;
-  const int quarter_step = mi_size_wide[bsize] / 4;
-  const int allow_sub8x8 = (ssx || ssy) ? bsize > BLOCK_8X8 : 1;
-  const int has_next_row =
-      (((mi_row + hbs) << MI_SIZE_LOG2) < cm->height) & allow_sub8x8;
-  const int has_next_col =
-      (((mi_col + hbs) << MI_SIZE_LOG2) < cm->width) & allow_sub8x8;
-  int i;
-
-  switch (partition) {
-    case PARTITION_NONE:
-      setup_fix_block_mask(cm, mi_row, mi_col, plane, ssx, ssy);
-      break;
-    case PARTITION_HORZ:
-      setup_fix_block_mask(cm, mi_row, mi_col, plane, ssx, ssy);
-      if (has_next_row)
-        setup_fix_block_mask(cm, mi_row + hbs, mi_col, plane, ssx, ssy);
-      break;
-    case PARTITION_VERT:
-      setup_fix_block_mask(cm, mi_row, mi_col, plane, ssx, ssy);
-      if (has_next_col)
-        setup_fix_block_mask(cm, mi_row, mi_col + hbs, plane, ssx, ssy);
-      break;
-    case PARTITION_SPLIT:
-      setup_block_mask(cm, mi_row, mi_col, subsize, plane, ssx, ssy);
-      if (has_next_col)
-        setup_block_mask(cm, mi_row, mi_col + hbs, subsize, plane, ssx, ssy);
-      if (has_next_row)
-        setup_block_mask(cm, mi_row + hbs, mi_col, subsize, plane, ssx, ssy);
-      if (has_next_col & has_next_row)
-        setup_block_mask(cm, mi_row + hbs, mi_col + hbs, subsize, plane, ssx,
-                         ssy);
-      break;
-    case PARTITION_HORZ_A:
-      setup_fix_block_mask(cm, mi_row, mi_col, plane, ssx, ssy);
-      if (has_next_col)
-        setup_fix_block_mask(cm, mi_row, mi_col + hbs, plane, ssx, ssy);
-      if (has_next_row)
-        setup_fix_block_mask(cm, mi_row + hbs, mi_col, plane, ssx, ssy);
-      break;
-    case PARTITION_HORZ_B:
-      setup_fix_block_mask(cm, mi_row, mi_col, plane, ssx, ssy);
-      if (has_next_row)
-        setup_fix_block_mask(cm, mi_row + hbs, mi_col, plane, ssx, ssy);
-      if (has_next_col & has_next_row)
-        setup_fix_block_mask(cm, mi_row + hbs, mi_col + hbs, plane, ssx, ssy);
-      break;
-    case PARTITION_VERT_A:
-      setup_fix_block_mask(cm, mi_row, mi_col, plane, ssx, ssy);
-      if (has_next_row)
-        setup_fix_block_mask(cm, mi_row + hbs, mi_col, plane, ssx, ssy);
-      if (has_next_col)
-        setup_fix_block_mask(cm, mi_row, mi_col + hbs, plane, ssx, ssy);
-      break;
-    case PARTITION_VERT_B:
-      setup_fix_block_mask(cm, mi_row, mi_col, plane, ssx, ssy);
-      if (has_next_col)
-        setup_fix_block_mask(cm, mi_row, mi_col + hbs, plane, ssx, ssy);
-      if (has_next_row)
-        setup_fix_block_mask(cm, mi_row + hbs, mi_col + hbs, plane, ssx, ssy);
-      break;
-    case PARTITION_HORZ_4:
-      for (i = 0; i < 4; ++i) {
-        int this_mi_row = mi_row + i * quarter_step;
-        if (i > 0 && (this_mi_row << MI_SIZE_LOG2) >= cm->height) break;
-        // chroma plane filter the odd location
-        if (plane && bsize == BLOCK_16X16 && (i & 0x01)) continue;
-
-        setup_fix_block_mask(cm, this_mi_row, mi_col, plane, ssx, ssy);
-      }
-      break;
-    case PARTITION_VERT_4:
-      for (i = 0; i < 4; ++i) {
-        int this_mi_col = mi_col + i * quarter_step;
-        if (i > 0 && this_mi_col >= cm->mi_cols) break;
-        // chroma plane filter the odd location
-        if (plane && bsize == BLOCK_16X16 && (i & 0x01)) continue;
-
-        setup_fix_block_mask(cm, mi_row, this_mi_col, plane, ssx, ssy);
-      }
-      break;
-    default: assert(0);
-  }
-}
-
-// TODO(chengchen): if lossless, do not need to setup mask. But when
-// segments enabled, each segment has different lossless settings.
-void av1_setup_bitmask(AV1_COMMON *const cm, int mi_row, int mi_col, int plane,
-                       int subsampling_x, int subsampling_y, int row_end,
-                       int col_end) {
-  const int num_64x64 = cm->seq_params.mib_size >> MIN_MIB_SIZE_LOG2;
-  for (int y = 0; y < num_64x64; ++y) {
-    for (int x = 0; x < num_64x64; ++x) {
-      const int row = mi_row + y * MI_SIZE_64X64;
-      const int col = mi_col + x * MI_SIZE_64X64;
-      if (row >= row_end || col >= col_end) continue;
-      if ((row << MI_SIZE_LOG2) >= cm->height ||
-          (col << MI_SIZE_LOG2) >= cm->width)
-        continue;
-
-      LoopFilterMask *lfm = get_loop_filter_mask(cm, row, col);
-      if (lfm == NULL) return;
-
-      // init mask to zero
-      if (plane == 0) {
-        av1_zero(lfm->left_y);
-        av1_zero(lfm->above_y);
-        av1_zero(lfm->lfl_y_ver);
-        av1_zero(lfm->lfl_y_hor);
-      } else if (plane == 1) {
-        av1_zero(lfm->left_u);
-        av1_zero(lfm->above_u);
-        av1_zero(lfm->lfl_u);
-      } else {
-        av1_zero(lfm->left_v);
-        av1_zero(lfm->above_v);
-        av1_zero(lfm->lfl_v);
-      }
-    }
-  }
-
-  // set up bitmask for each superblock
-  setup_block_mask(cm, mi_row, mi_col, cm->seq_params.sb_size, plane,
-                   subsampling_x, subsampling_y);
-
-  for (int y = 0; y < num_64x64; ++y) {
-    for (int x = 0; x < num_64x64; ++x) {
-      const int row = mi_row + y * MI_SIZE_64X64;
-      const int col = mi_col + x * MI_SIZE_64X64;
-      if (row >= row_end || col >= col_end) continue;
-      if ((row << MI_SIZE_LOG2) >= cm->height ||
-          (col << MI_SIZE_LOG2) >= cm->width)
-        continue;
-
-      LoopFilterMask *lfm = get_loop_filter_mask(cm, row, col);
-      if (lfm == NULL) return;
-
-      // check if the mask is valid
-      check_loop_filter_masks(lfm, plane);
-
-      {
-        // Let 16x16 hold 32x32 (Y/U/V) and 64x64(Y only).
-        // Even tx size is greater, we only apply max length filter, which
-        // is 16.
-        if (plane == 0) {
-          for (int j = 0; j < 4; ++j) {
-            lfm->left_y[TX_16X16].bits[j] |= lfm->left_y[TX_32X32].bits[j];
-            lfm->left_y[TX_16X16].bits[j] |= lfm->left_y[TX_64X64].bits[j];
-            lfm->above_y[TX_16X16].bits[j] |= lfm->above_y[TX_32X32].bits[j];
-            lfm->above_y[TX_16X16].bits[j] |= lfm->above_y[TX_64X64].bits[j];
-
-            // set 32x32 and 64x64 to 0
-            lfm->left_y[TX_32X32].bits[j] = 0;
-            lfm->left_y[TX_64X64].bits[j] = 0;
-            lfm->above_y[TX_32X32].bits[j] = 0;
-            lfm->above_y[TX_64X64].bits[j] = 0;
-          }
-        } else if (plane == 1) {
-          for (int j = 0; j < 4; ++j) {
-            lfm->left_u[TX_16X16].bits[j] |= lfm->left_u[TX_32X32].bits[j];
-            lfm->above_u[TX_16X16].bits[j] |= lfm->above_u[TX_32X32].bits[j];
-
-            // set 32x32 to 0
-            lfm->left_u[TX_32X32].bits[j] = 0;
-            lfm->above_u[TX_32X32].bits[j] = 0;
-          }
-        } else {
-          for (int j = 0; j < 4; ++j) {
-            lfm->left_v[TX_16X16].bits[j] |= lfm->left_v[TX_32X32].bits[j];
-            lfm->above_v[TX_16X16].bits[j] |= lfm->above_v[TX_32X32].bits[j];
-
-            // set 32x32 to 0
-            lfm->left_v[TX_32X32].bits[j] = 0;
-            lfm->above_v[TX_32X32].bits[j] = 0;
-          }
-        }
-      }
-
-      // check if the mask is valid
-      check_loop_filter_masks(lfm, plane);
-    }
-  }
-}
-
-static void filter_selectively_vert_row2(
-    int subsampling_factor, uint8_t *s, int pitch, int plane,
-    uint64_t mask_16x16_0, uint64_t mask_8x8_0, uint64_t mask_4x4_0,
-    uint64_t mask_16x16_1, uint64_t mask_8x8_1, uint64_t mask_4x4_1,
-    const loop_filter_info_n *lfi_n, uint8_t *lfl, uint8_t *lfl2) {
-  uint64_t mask;
-  const int step = 1 << subsampling_factor;
-
-  for (mask = mask_16x16_0 | mask_8x8_0 | mask_4x4_0 | mask_16x16_1 |
-              mask_8x8_1 | mask_4x4_1;
-       mask; mask >>= step) {
-    const loop_filter_thresh *lfi0 = lfi_n->lfthr + *lfl;
-    const loop_filter_thresh *lfi1 = lfi_n->lfthr + *lfl2;
-
-    if (mask & 1) {
-      if ((mask_16x16_0 | mask_16x16_1) & 1) {
-        // chroma plane filters less pixels introduced in deblock_13tap
-        // experiment
-        LpfFunc lpf_vertical = plane ? aom_lpf_vertical_6 : aom_lpf_vertical_14;
-
-        if ((mask_16x16_0 & mask_16x16_1) & 1) {
-          if (plane) {
-            aom_lpf_vertical_6_dual(s, pitch, lfi0->mblim, lfi0->lim,
-                                    lfi0->hev_thr, lfi1->mblim, lfi1->lim,
-                                    lfi1->hev_thr);
-          } else {
-            aom_lpf_vertical_14_dual(s, pitch, lfi0->mblim, lfi0->lim,
-                                     lfi0->hev_thr, lfi1->mblim, lfi1->lim,
-                                     lfi1->hev_thr);
-          }
-        } else if (mask_16x16_0 & 1) {
-          lpf_vertical(s, pitch, lfi0->mblim, lfi0->lim, lfi0->hev_thr);
-        } else {
-          lpf_vertical(s + 4 * pitch, pitch, lfi1->mblim, lfi1->lim,
-                       lfi1->hev_thr);
-        }
-      }
-
-      if ((mask_8x8_0 | mask_8x8_1) & 1) {
-        // chroma plane filters less pixels introduced in deblock_13tap
-        // experiment
-        LpfFunc lpf_vertical = plane ? aom_lpf_vertical_6 : aom_lpf_vertical_8;
-
-        if ((mask_8x8_0 & mask_8x8_1) & 1) {
-          if (plane) {
-            aom_lpf_vertical_6_dual(s, pitch, lfi0->mblim, lfi0->lim,
-                                    lfi0->hev_thr, lfi1->mblim, lfi1->lim,
-                                    lfi1->hev_thr);
-          } else {
-            aom_lpf_vertical_8_dual(s, pitch, lfi0->mblim, lfi0->lim,
-                                    lfi0->hev_thr, lfi1->mblim, lfi1->lim,
-                                    lfi1->hev_thr);
-          }
-        } else if (mask_8x8_0 & 1) {
-          lpf_vertical(s, pitch, lfi0->mblim, lfi0->lim, lfi0->hev_thr);
-        } else {
-          lpf_vertical(s + 4 * pitch, pitch, lfi1->mblim, lfi1->lim,
-                       lfi1->hev_thr);
-        }
-      }
-
-      if ((mask_4x4_0 | mask_4x4_1) & 1) {
-        if ((mask_4x4_0 & mask_4x4_1) & 1) {
-          aom_lpf_vertical_4_dual(s, pitch, lfi0->mblim, lfi0->lim,
-                                  lfi0->hev_thr, lfi1->mblim, lfi1->lim,
-                                  lfi1->hev_thr);
-        } else if (mask_4x4_0 & 1) {
-          aom_lpf_vertical_4(s, pitch, lfi0->mblim, lfi0->lim, lfi0->hev_thr);
-        } else {
-          aom_lpf_vertical_4(s + 4 * pitch, pitch, lfi1->mblim, lfi1->lim,
-                             lfi1->hev_thr);
-        }
-      }
-    }
-
-    s += 4;
-    lfl += step;
-    lfl2 += step;
-    mask_16x16_0 >>= step;
-    mask_8x8_0 >>= step;
-    mask_4x4_0 >>= step;
-    mask_16x16_1 >>= step;
-    mask_8x8_1 >>= step;
-    mask_4x4_1 >>= step;
-  }
-}
-
-static void highbd_filter_selectively_vert_row2(
-    int subsampling_factor, uint16_t *s, int pitch, int plane,
-    uint64_t mask_16x16_0, uint64_t mask_8x8_0, uint64_t mask_4x4_0,
-    uint64_t mask_16x16_1, uint64_t mask_8x8_1, uint64_t mask_4x4_1,
-    const loop_filter_info_n *lfi_n, uint8_t *lfl, uint8_t *lfl2, int bd) {
-  uint64_t mask;
-  const int step = 1 << subsampling_factor;
-
-  for (mask = mask_16x16_0 | mask_8x8_0 | mask_4x4_0 | mask_16x16_1 |
-              mask_8x8_1 | mask_4x4_1;
-       mask; mask >>= step) {
-    const loop_filter_thresh *lfi0 = lfi_n->lfthr + *lfl;
-    const loop_filter_thresh *lfi1 = lfi_n->lfthr + *lfl2;
-
-    if (mask & 1) {
-      if ((mask_16x16_0 | mask_16x16_1) & 1) {
-        // chroma plane filters less pixels introduced in deblock_13tap
-        // experiment
-        HbdLpfFunc highbd_lpf_vertical =
-            plane ? aom_highbd_lpf_vertical_6 : aom_highbd_lpf_vertical_14;
-
-        if ((mask_16x16_0 & mask_16x16_1) & 1) {
-          if (plane) {
-            aom_highbd_lpf_vertical_6_dual(s, pitch, lfi0->mblim, lfi0->lim,
-                                           lfi0->hev_thr, lfi1->mblim,
-                                           lfi1->lim, lfi1->hev_thr, bd);
-          } else {
-            aom_highbd_lpf_vertical_14_dual(s, pitch, lfi0->mblim, lfi0->lim,
-                                            lfi0->hev_thr, lfi1->mblim,
-                                            lfi1->lim, lfi1->hev_thr, bd);
-          }
-        } else if (mask_16x16_0 & 1) {
-          highbd_lpf_vertical(s, pitch, lfi0->mblim, lfi0->lim, lfi0->hev_thr,
-                              bd);
-        } else {
-          highbd_lpf_vertical(s + 4 * pitch, pitch, lfi1->mblim, lfi1->lim,
-                              lfi1->hev_thr, bd);
-        }
-      }
-
-      if ((mask_8x8_0 | mask_8x8_1) & 1) {
-        HbdLpfFunc highbd_lpf_vertical =
-            plane ? aom_highbd_lpf_vertical_6 : aom_highbd_lpf_vertical_8;
-
-        if ((mask_8x8_0 & mask_8x8_1) & 1) {
-          if (plane) {
-            aom_highbd_lpf_vertical_6_dual(s, pitch, lfi0->mblim, lfi0->lim,
-                                           lfi0->hev_thr, lfi1->mblim,
-                                           lfi1->lim, lfi1->hev_thr, bd);
-          } else {
-            aom_highbd_lpf_vertical_8_dual(s, pitch, lfi0->mblim, lfi0->lim,
-                                           lfi0->hev_thr, lfi1->mblim,
-                                           lfi1->lim, lfi1->hev_thr, bd);
-          }
-        } else if (mask_8x8_0 & 1) {
-          highbd_lpf_vertical(s, pitch, lfi0->mblim, lfi0->lim, lfi0->hev_thr,
-                              bd);
-        } else {
-          highbd_lpf_vertical(s + 4 * pitch, pitch, lfi1->mblim, lfi1->lim,
-                              lfi1->hev_thr, bd);
-        }
-      }
-
-      if ((mask_4x4_0 | mask_4x4_1) & 1) {
-        if ((mask_4x4_0 & mask_4x4_1) & 1) {
-          aom_highbd_lpf_vertical_4_dual(s, pitch, lfi0->mblim, lfi0->lim,
-                                         lfi0->hev_thr, lfi1->mblim, lfi1->lim,
-                                         lfi1->hev_thr, bd);
-        } else if (mask_4x4_0 & 1) {
-          aom_highbd_lpf_vertical_4(s, pitch, lfi0->mblim, lfi0->lim,
-                                    lfi0->hev_thr, bd);
-        } else {
-          aom_highbd_lpf_vertical_4(s + 4 * pitch, pitch, lfi1->mblim,
-                                    lfi1->lim, lfi1->hev_thr, bd);
-        }
-      }
-    }
-
-    s += 4;
-    lfl += step;
-    lfl2 += step;
-    mask_16x16_0 >>= step;
-    mask_8x8_0 >>= step;
-    mask_4x4_0 >>= step;
-    mask_16x16_1 >>= step;
-    mask_8x8_1 >>= step;
-    mask_4x4_1 >>= step;
-  }
-}
-
-static void filter_selectively_horiz(uint8_t *s, int pitch, int plane,
-                                     int subsampling, uint64_t mask_16x16,
-                                     uint64_t mask_8x8, uint64_t mask_4x4,
-                                     const loop_filter_info_n *lfi_n,
-                                     const uint8_t *lfl) {
-  uint64_t mask;
-  int count;
-  const int step = 1 << subsampling;
-  const unsigned int two_block_mask = subsampling ? 5 : 3;
-
-  for (mask = mask_16x16 | mask_8x8 | mask_4x4; mask; mask >>= step * count) {
-    const loop_filter_thresh *lfi = lfi_n->lfthr + *lfl;
-    // Next block's thresholds.
-    const loop_filter_thresh *lfin = lfi_n->lfthr + *(lfl + step);
-
-    count = 1;
-    if (mask & 1) {
-      if (mask_16x16 & 1) {
-        // chroma plane filters less pixels introduced in deblock_13tap
-        // experiment
-        LpfFunc lpf_horizontal =
-            plane ? aom_lpf_horizontal_6 : aom_lpf_horizontal_14;
-
-        if ((mask_16x16 & two_block_mask) == two_block_mask) {
-          if (plane) {
-            aom_lpf_horizontal_6_dual(s, pitch, lfi->mblim, lfi->lim,
-                                      lfi->hev_thr, lfin->mblim, lfin->lim,
-                                      lfin->hev_thr);
-          } else {
-            aom_lpf_horizontal_14_dual(s, pitch, lfi->mblim, lfi->lim,
-                                       lfi->hev_thr, lfin->mblim, lfin->lim,
-                                       lfin->hev_thr);
-          }
-          count = 2;
-        } else {
-          lpf_horizontal(s, pitch, lfi->mblim, lfi->lim, lfi->hev_thr);
-        }
-      } else if (mask_8x8 & 1) {
-        // chroma plane filters less pixels introduced in deblock_13tap
-        // experiment
-        LpfFunc lpf_horizontal =
-            plane ? aom_lpf_horizontal_6 : aom_lpf_horizontal_8;
-
-        if ((mask_8x8 & two_block_mask) == two_block_mask) {
-          if (plane) {
-            aom_lpf_horizontal_6_dual(s, pitch, lfi->mblim, lfi->lim,
-                                      lfi->hev_thr, lfin->mblim, lfin->lim,
-                                      lfin->hev_thr);
-          } else {
-            aom_lpf_horizontal_8_dual(s, pitch, lfi->mblim, lfi->lim,
-                                      lfi->hev_thr, lfin->mblim, lfin->lim,
-                                      lfin->hev_thr);
-          }
-          count = 2;
-        } else {
-          lpf_horizontal(s, pitch, lfi->mblim, lfi->lim, lfi->hev_thr);
-        }
-      } else if (mask_4x4 & 1) {
-        if ((mask_4x4 & two_block_mask) == two_block_mask) {
-          aom_lpf_horizontal_4_dual(s, pitch, lfi->mblim, lfi->lim,
-                                    lfi->hev_thr, lfin->mblim, lfin->lim,
-                                    lfin->hev_thr);
-          count = 2;
-        } else {
-          aom_lpf_horizontal_4(s, pitch, lfi->mblim, lfi->lim, lfi->hev_thr);
-        }
-      }
-    }
-
-    s += 4 * count;
-    lfl += step * count;
-    mask_16x16 >>= step * count;
-    mask_8x8 >>= step * count;
-    mask_4x4 >>= step * count;
-  }
-}
-
-static void highbd_filter_selectively_horiz(
-    uint16_t *s, int pitch, int plane, int subsampling, uint64_t mask_16x16,
-    uint64_t mask_8x8, uint64_t mask_4x4, const loop_filter_info_n *lfi_n,
-    uint8_t *lfl, int bd) {
-  uint64_t mask;
-  int count;
-  const int step = 1 << subsampling;
-  const unsigned int two_block_mask = subsampling ? 5 : 3;
-
-  for (mask = mask_16x16 | mask_8x8 | mask_4x4; mask; mask >>= step * count) {
-    const loop_filter_thresh *lfi = lfi_n->lfthr + *lfl;
-    // Next block's thresholds.
-    const loop_filter_thresh *lfin = lfi_n->lfthr + *(lfl + step);
-
-    count = 1;
-    if (mask & 1) {
-      if (mask_16x16 & 1) {
-        HbdLpfFunc highbd_lpf_horizontal =
-            plane ? aom_highbd_lpf_horizontal_6 : aom_highbd_lpf_horizontal_14;
-
-        if ((mask_16x16 & two_block_mask) == two_block_mask) {
-          if (plane) {
-            aom_highbd_lpf_horizontal_6_dual(s, pitch, lfi->mblim, lfi->lim,
-                                             lfi->hev_thr, lfin->mblim,
-                                             lfin->lim, lfin->hev_thr, bd);
-          } else {
-            aom_highbd_lpf_horizontal_14_dual(s, pitch, lfi->mblim, lfi->lim,
-                                              lfi->hev_thr, lfin->mblim,
-                                              lfin->lim, lfin->hev_thr, bd);
-          }
-          count = 2;
-        } else {
-          highbd_lpf_horizontal(s, pitch, lfi->mblim, lfi->lim, lfi->hev_thr,
-                                bd);
-        }
-      } else if (mask_8x8 & 1) {
-        HbdLpfFunc highbd_lpf_horizontal =
-            plane ? aom_highbd_lpf_horizontal_6 : aom_highbd_lpf_horizontal_8;
-
-        if ((mask_8x8 & two_block_mask) == two_block_mask) {
-          if (plane) {
-            aom_highbd_lpf_horizontal_6_dual(s, pitch, lfi->mblim, lfi->lim,
-                                             lfi->hev_thr, lfin->mblim,
-                                             lfin->lim, lfin->hev_thr, bd);
-          } else {
-            aom_highbd_lpf_horizontal_8_dual(s, pitch, lfi->mblim, lfi->lim,
-                                             lfi->hev_thr, lfin->mblim,
-                                             lfin->lim, lfin->hev_thr, bd);
-          }
-          count = 2;
-        } else {
-          highbd_lpf_horizontal(s, pitch, lfi->mblim, lfi->lim, lfi->hev_thr,
-                                bd);
-        }
-      } else if (mask_4x4 & 1) {
-        if ((mask_4x4 & two_block_mask) == two_block_mask) {
-          aom_highbd_lpf_horizontal_4_dual(s, pitch, lfi->mblim, lfi->lim,
-                                           lfi->hev_thr, lfin->mblim, lfin->lim,
-                                           lfin->hev_thr, bd);
-          count = 2;
-        } else {
-          aom_highbd_lpf_horizontal_4(s, pitch, lfi->mblim, lfi->lim,
-                                      lfi->hev_thr, bd);
-        }
-      }
-    }
-
-    s += 4 * count;
-    lfl += step * count;
-    mask_16x16 >>= step * count;
-    mask_8x8 >>= step * count;
-    mask_4x4 >>= step * count;
-  }
-}
-
-void av1_build_bitmask_vert_info(
-    AV1_COMMON *const cm, const struct macroblockd_plane *const plane_ptr,
-    int plane) {
-  const int subsampling_x = plane_ptr->subsampling_x;
-  const int subsampling_y = plane_ptr->subsampling_y;
-  const int row_step = (MI_SIZE >> MI_SIZE_LOG2);
-  const int is_uv = plane > 0;
-  TX_SIZE tx_size = TX_16X16, prev_tx_size = TX_16X16;
-  uint8_t level, prev_level = 1;
-  int skip, prev_skip = 0;
-  int is_coding_block_border;
-
-  for (int r = 0; (r << MI_SIZE_LOG2) < plane_ptr->dst.height; r += row_step) {
-    const int mi_row = r << subsampling_y;
-    const int row = mi_row % MI_SIZE_64X64;
-    int index = 0;
-    const int shift = get_index_shift(0, row, &index);
-
-    for (int c = 0; (c << MI_SIZE_LOG2) < plane_ptr->dst.width;
-         c += (tx_size_wide_unit[TX_64X64] >> subsampling_x)) {
-      const int mi_col = c << subsampling_x;
-      LoopFilterMask *lfm = get_loop_filter_mask(cm, mi_row, mi_col);
-
-      for (int col_in_unit = 0;
-           col_in_unit < (tx_size_wide_unit[TX_64X64] >> subsampling_x);) {
-        const int x = (c + col_in_unit) << MI_SIZE_LOG2;
-        if (x >= plane_ptr->dst.width) break;
-        const int col = col_in_unit << subsampling_x;
-        const uint64_t mask = ((uint64_t)1 << (shift | col));
-        skip = lfm->skip.bits[index] & mask;
-        is_coding_block_border = lfm->is_vert_border.bits[index] & mask;
-        switch (plane) {
-          case 0: level = lfm->lfl_y_ver[row][col]; break;
-          case 1: level = lfm->lfl_u[row][col]; break;
-          case 2: level = lfm->lfl_v[row][col]; break;
-          default: assert(plane >= 0 && plane <= 2); return;
-        }
-        for (TX_SIZE ts = TX_4X4; ts <= TX_64X64; ++ts) {
-          if (is_uv && ts == TX_64X64) continue;
-          if (lfm->tx_size_ver[is_uv][ts].bits[index] & mask) {
-            tx_size = ts;
-            break;
-          }
-        }
-        if ((c + col_in_unit > 0) && (level || prev_level) &&
-            (!prev_skip || !skip || is_coding_block_border)) {
-          const TX_SIZE min_tx_size =
-              AOMMIN(TX_16X16, AOMMIN(tx_size, prev_tx_size));
-          const int tmp_row = (mi_row | subsampling_y) % MI_SIZE_64X64;
-          const int tmp_col = (col | subsampling_x) % MI_SIZE_64X64;
-          const int shift_1 = get_index_shift(tmp_col, tmp_row, &index);
-          const uint64_t mask_1 = ((uint64_t)1 << shift_1);
-          switch (plane) {
-            case 0: lfm->left_y[min_tx_size].bits[index] |= mask_1; break;
-            case 1: lfm->left_u[min_tx_size].bits[index] |= mask_1; break;
-            case 2: lfm->left_v[min_tx_size].bits[index] |= mask_1; break;
-            default: assert(plane >= 0 && plane <= 2); return;
-          }
-        }
-
-        // update prev info
-        prev_level = level;
-        prev_skip = skip;
-        prev_tx_size = tx_size;
-        // advance
-        col_in_unit += tx_size_wide_unit[tx_size];
-      }
-    }
-  }
-}
-
-void av1_build_bitmask_horz_info(
-    AV1_COMMON *const cm, const struct macroblockd_plane *const plane_ptr,
-    int plane) {
-  const int subsampling_x = plane_ptr->subsampling_x;
-  const int subsampling_y = plane_ptr->subsampling_y;
-  const int col_step = (MI_SIZE >> MI_SIZE_LOG2);
-  const int is_uv = plane > 0;
-  TX_SIZE tx_size = TX_16X16, prev_tx_size = TX_16X16;
-  uint8_t level, prev_level = 1;
-  int skip, prev_skip = 0;
-  int is_coding_block_border;
-
-  for (int c = 0; (c << MI_SIZE_LOG2) < plane_ptr->dst.width; c += col_step) {
-    const int mi_col = c << subsampling_x;
-    const int col = mi_col % MI_SIZE_64X64;
-
-    for (int r = 0; (r << MI_SIZE_LOG2) < plane_ptr->dst.height;
-         r += (tx_size_high_unit[TX_64X64] >> subsampling_y)) {
-      const int mi_row = r << subsampling_y;
-      LoopFilterMask *lfm = get_loop_filter_mask(cm, mi_row, mi_col);
-
-      for (int r_in_unit = 0;
-           r_in_unit < (tx_size_high_unit[TX_64X64] >> subsampling_y);) {
-        const int y = (r + r_in_unit) << MI_SIZE_LOG2;
-        if (y >= plane_ptr->dst.height) break;
-        const int row = r_in_unit << subsampling_y;
-        int index = 0;
-        const int shift = get_index_shift(col, row, &index);
-        const uint64_t mask = ((uint64_t)1 << shift);
-        skip = lfm->skip.bits[index] & mask;
-        is_coding_block_border = lfm->is_horz_border.bits[index] & mask;
-        switch (plane) {
-          case 0: level = lfm->lfl_y_hor[row][col]; break;
-          case 1: level = lfm->lfl_u[row][col]; break;
-          case 2: level = lfm->lfl_v[row][col]; break;
-          default: assert(plane >= 0 && plane <= 2); return;
-        }
-        for (TX_SIZE ts = TX_4X4; ts <= TX_64X64; ++ts) {
-          if (is_uv && ts == TX_64X64) continue;
-          if (lfm->tx_size_hor[is_uv][ts].bits[index] & mask) {
-            tx_size = ts;
-            break;
-          }
-        }
-        if ((r + r_in_unit > 0) && (level || prev_level) &&
-            (!prev_skip || !skip || is_coding_block_border)) {
-          const TX_SIZE min_tx_size =
-              AOMMIN(TX_16X16, AOMMIN(tx_size, prev_tx_size));
-          const int tmp_row = (row | subsampling_y) % MI_SIZE_64X64;
-          const int tmp_col = (mi_col | subsampling_x) % MI_SIZE_64X64;
-          const int shift_1 = get_index_shift(tmp_col, tmp_row, &index);
-          const uint64_t mask_1 = ((uint64_t)1 << shift_1);
-
-          switch (plane) {
-            case 0: lfm->above_y[min_tx_size].bits[index] |= mask_1; break;
-            case 1: lfm->above_u[min_tx_size].bits[index] |= mask_1; break;
-            case 2: lfm->above_v[min_tx_size].bits[index] |= mask_1; break;
-            default: assert(plane >= 0 && plane <= 2); return;
-          }
-        }
-
-        // update prev info
-        prev_level = level;
-        prev_skip = skip;
-        prev_tx_size = tx_size;
-        // advance
-        r_in_unit += tx_size_high_unit[tx_size];
-      }
-    }
-  }
-}
-
-void av1_filter_block_plane_bitmask_vert(
-    AV1_COMMON *const cm, struct macroblockd_plane *const plane_ptr, int pl,
-    int mi_row, int mi_col) {
-  struct buf_2d *const dst = &plane_ptr->dst;
-  uint8_t *const buf0 = dst->buf;
-  const int ssx = plane_ptr->subsampling_x;
-  const int ssy = plane_ptr->subsampling_y;
-  const int mask_cutoff = 0xffff;
-  const int row_step = 1 << ssy;
-  const int two_row_step = 2 << ssy;
-  const int row_stride = dst->stride << MI_SIZE_LOG2;
-  const int two_row_stride = row_stride << 1;
-  uint64_t mask_16x16 = 0;
-  uint64_t mask_8x8 = 0;
-  uint64_t mask_4x4 = 0;
-  uint8_t *lfl;
-  uint8_t *lfl2;
-  LoopFilterMask *lfm = get_loop_filter_mask(cm, mi_row, mi_col);
-  assert(lfm);
-
-  // 1. vertical filtering. filter two rows at a time
-  for (int r = 0;
-       ((mi_row + r) << MI_SIZE_LOG2) < cm->height && r < MI_SIZE_64X64;
-       r += two_row_step) {
-    const int row = r | ssy;
-    const int row_next = row + row_step;
-    const int col = ssx;
-    int index = 0;
-    const int shift = get_index_shift(col, row, &index);
-    int index_next = 0;
-    const int shift_next = get_index_shift(col, row_next, &index_next);
-    switch (pl) {
-      case 0:
-        mask_16x16 = lfm->left_y[TX_16X16].bits[index];
-        mask_8x8 = lfm->left_y[TX_8X8].bits[index];
-        mask_4x4 = lfm->left_y[TX_4X4].bits[index];
-        lfl = &lfm->lfl_y_ver[row][col];
-        lfl2 = &lfm->lfl_y_ver[row_next][col];
-        break;
-      case 1:
-        mask_16x16 = lfm->left_u[TX_16X16].bits[index];
-        mask_8x8 = lfm->left_u[TX_8X8].bits[index];
-        mask_4x4 = lfm->left_u[TX_4X4].bits[index];
-        lfl = &lfm->lfl_u[row][col];
-        lfl2 = &lfm->lfl_u[row_next][col];
-        break;
-      case 2:
-        mask_16x16 = lfm->left_v[TX_16X16].bits[index];
-        mask_8x8 = lfm->left_v[TX_8X8].bits[index];
-        mask_4x4 = lfm->left_v[TX_4X4].bits[index];
-        lfl = &lfm->lfl_v[row][col];
-        lfl2 = &lfm->lfl_v[row_next][col];
-        break;
-      default: assert(pl >= 0 && pl <= 2); return;
-    }
-    uint64_t mask_16x16_0 = (mask_16x16 >> shift) & mask_cutoff;
-    uint64_t mask_8x8_0 = (mask_8x8 >> shift) & mask_cutoff;
-    uint64_t mask_4x4_0 = (mask_4x4 >> shift) & mask_cutoff;
-    uint64_t mask_16x16_1 = (mask_16x16 >> shift_next) & mask_cutoff;
-    uint64_t mask_8x8_1 = (mask_8x8 >> shift_next) & mask_cutoff;
-    uint64_t mask_4x4_1 = (mask_4x4 >> shift_next) & mask_cutoff;
-
-    if (cm->seq_params.use_highbitdepth)
-      highbd_filter_selectively_vert_row2(
-          ssx, CONVERT_TO_SHORTPTR(dst->buf), dst->stride, pl, mask_16x16_0,
-          mask_8x8_0, mask_4x4_0, mask_16x16_1, mask_8x8_1, mask_4x4_1,
-          &cm->lf_info, lfl, lfl2, (int)cm->seq_params.bit_depth);
-    else
-      filter_selectively_vert_row2(
-          ssx, dst->buf, dst->stride, pl, mask_16x16_0, mask_8x8_0, mask_4x4_0,
-          mask_16x16_1, mask_8x8_1, mask_4x4_1, &cm->lf_info, lfl, lfl2);
-    dst->buf += two_row_stride;
-  }
-  // reset buf pointer for horizontal filtering
-  dst->buf = buf0;
-}
-
-void av1_filter_block_plane_bitmask_horz(
-    AV1_COMMON *const cm, struct macroblockd_plane *const plane_ptr, int pl,
-    int mi_row, int mi_col) {
-  struct buf_2d *const dst = &plane_ptr->dst;
-  uint8_t *const buf0 = dst->buf;
-  const int ssx = plane_ptr->subsampling_x;
-  const int ssy = plane_ptr->subsampling_y;
-  const int mask_cutoff = 0xffff;
-  const int row_step = 1 << ssy;
-  const int row_stride = dst->stride << MI_SIZE_LOG2;
-  uint64_t mask_16x16 = 0;
-  uint64_t mask_8x8 = 0;
-  uint64_t mask_4x4 = 0;
-  uint8_t *lfl;
-  LoopFilterMask *lfm = get_loop_filter_mask(cm, mi_row, mi_col);
-  assert(lfm);
-  for (int r = 0;
-       ((mi_row + r) << MI_SIZE_LOG2) < cm->height && r < MI_SIZE_64X64;
-       r += row_step) {
-    if (mi_row + r == 0) {
-      dst->buf += row_stride;
-      continue;
-    }
-    const int row = r | ssy;
-    const int col = ssx;
-    int index = 0;
-    const int shift = get_index_shift(col, row, &index);
-    switch (pl) {
-      case 0:
-        mask_16x16 = lfm->above_y[TX_16X16].bits[index];
-        mask_8x8 = lfm->above_y[TX_8X8].bits[index];
-        mask_4x4 = lfm->above_y[TX_4X4].bits[index];
-        lfl = &lfm->lfl_y_hor[row][col];
-        break;
-      case 1:
-        mask_16x16 = lfm->above_u[TX_16X16].bits[index];
-        mask_8x8 = lfm->above_u[TX_8X8].bits[index];
-        mask_4x4 = lfm->above_u[TX_4X4].bits[index];
-        lfl = &lfm->lfl_u[row][col];
-        break;
-      case 2:
-        mask_16x16 = lfm->above_v[TX_16X16].bits[index];
-        mask_8x8 = lfm->above_v[TX_8X8].bits[index];
-        mask_4x4 = lfm->above_v[TX_4X4].bits[index];
-        lfl = &lfm->lfl_v[row][col];
-        break;
-      default: assert(pl >= 0 && pl <= 2); return;
-    }
-    mask_16x16 = (mask_16x16 >> shift) & mask_cutoff;
-    mask_8x8 = (mask_8x8 >> shift) & mask_cutoff;
-    mask_4x4 = (mask_4x4 >> shift) & mask_cutoff;
-
-    if (cm->seq_params.use_highbitdepth)
-      highbd_filter_selectively_horiz(
-          CONVERT_TO_SHORTPTR(dst->buf), dst->stride, pl, ssx, mask_16x16,
-          mask_8x8, mask_4x4, &cm->lf_info, lfl, (int)cm->seq_params.bit_depth);
-    else
-      filter_selectively_horiz(dst->buf, dst->stride, pl, ssx, mask_16x16,
-                               mask_8x8, mask_4x4, &cm->lf_info, lfl);
-    dst->buf += row_stride;
-  }
-  // reset buf pointer for next block
-  dst->buf = buf0;
-}
-
-void av1_filter_block_plane_ver(AV1_COMMON *const cm,
-                                struct macroblockd_plane *const plane_ptr,
-                                int pl, int mi_row, int mi_col) {
-  struct buf_2d *const dst = &plane_ptr->dst;
-  int r, c;
-  const int ssx = plane_ptr->subsampling_x;
-  const int ssy = plane_ptr->subsampling_y;
-  const int mask_cutoff = 0xffff;
-  const int single_step = 1 << ssy;
-  const int r_step = 2 << ssy;
-  uint64_t mask_16x16 = 0;
-  uint64_t mask_8x8 = 0;
-  uint64_t mask_4x4 = 0;
-  uint8_t *lfl;
-  uint8_t *lfl2;
-
-  // filter two rows at a time
-  for (r = 0; r < cm->seq_params.mib_size &&
-              ((mi_row + r) << MI_SIZE_LOG2 < cm->height);
-       r += r_step) {
-    for (c = 0; c < cm->seq_params.mib_size &&
-                ((mi_col + c) << MI_SIZE_LOG2 < cm->width);
-         c += MI_SIZE_64X64) {
-      dst->buf += ((c << MI_SIZE_LOG2) >> ssx);
-      LoopFilterMask *lfm = get_loop_filter_mask(cm, mi_row + r, mi_col + c);
-      assert(lfm);
-      const int row = ((mi_row + r) | ssy) % MI_SIZE_64X64;
-      const int col = ((mi_col + c) | ssx) % MI_SIZE_64X64;
-      int index = 0;
-      const int shift = get_index_shift(col, row, &index);
-      // current and next row should belong to the same mask_idx and index
-      // next row's shift
-      const int row_next = row + single_step;
-      int index_next = 0;
-      const int shift_next = get_index_shift(col, row_next, &index_next);
-      switch (pl) {
-        case 0:
-          mask_16x16 = lfm->left_y[TX_16X16].bits[index];
-          mask_8x8 = lfm->left_y[TX_8X8].bits[index];
-          mask_4x4 = lfm->left_y[TX_4X4].bits[index];
-          lfl = &lfm->lfl_y_ver[row][col];
-          lfl2 = &lfm->lfl_y_ver[row_next][col];
-          break;
-        case 1:
-          mask_16x16 = lfm->left_u[TX_16X16].bits[index];
-          mask_8x8 = lfm->left_u[TX_8X8].bits[index];
-          mask_4x4 = lfm->left_u[TX_4X4].bits[index];
-          lfl = &lfm->lfl_u[row][col];
-          lfl2 = &lfm->lfl_u[row_next][col];
-          break;
-        case 2:
-          mask_16x16 = lfm->left_v[TX_16X16].bits[index];
-          mask_8x8 = lfm->left_v[TX_8X8].bits[index];
-          mask_4x4 = lfm->left_v[TX_4X4].bits[index];
-          lfl = &lfm->lfl_v[row][col];
-          lfl2 = &lfm->lfl_v[row_next][col];
-          break;
-        default: assert(pl >= 0 && pl <= 2); return;
-      }
-      uint64_t mask_16x16_0 = (mask_16x16 >> shift) & mask_cutoff;
-      uint64_t mask_8x8_0 = (mask_8x8 >> shift) & mask_cutoff;
-      uint64_t mask_4x4_0 = (mask_4x4 >> shift) & mask_cutoff;
-      uint64_t mask_16x16_1 = (mask_16x16 >> shift_next) & mask_cutoff;
-      uint64_t mask_8x8_1 = (mask_8x8 >> shift_next) & mask_cutoff;
-      uint64_t mask_4x4_1 = (mask_4x4 >> shift_next) & mask_cutoff;
-
-      if (cm->seq_params.use_highbitdepth)
-        highbd_filter_selectively_vert_row2(
-            ssx, CONVERT_TO_SHORTPTR(dst->buf), dst->stride, pl, mask_16x16_0,
-            mask_8x8_0, mask_4x4_0, mask_16x16_1, mask_8x8_1, mask_4x4_1,
-            &cm->lf_info, lfl, lfl2, (int)cm->seq_params.bit_depth);
-      else
-        filter_selectively_vert_row2(ssx, dst->buf, dst->stride, pl,
-                                     mask_16x16_0, mask_8x8_0, mask_4x4_0,
-                                     mask_16x16_1, mask_8x8_1, mask_4x4_1,
-                                     &cm->lf_info, lfl, lfl2);
-      dst->buf -= ((c << MI_SIZE_LOG2) >> ssx);
-    }
-    dst->buf += 2 * MI_SIZE * dst->stride;
-  }
-}
-
-void av1_filter_block_plane_hor(AV1_COMMON *const cm,
-                                struct macroblockd_plane *const plane_ptr,
-                                int pl, int mi_row, int mi_col) {
-  struct buf_2d *const dst = &plane_ptr->dst;
-  int r, c;
-  const int ssx = plane_ptr->subsampling_x;
-  const int ssy = plane_ptr->subsampling_y;
-  const int mask_cutoff = 0xffff;
-  const int r_step = 1 << ssy;
-  uint64_t mask_16x16 = 0;
-  uint64_t mask_8x8 = 0;
-  uint64_t mask_4x4 = 0;
-  uint8_t *lfl;
-
-  for (r = 0; r < cm->seq_params.mib_size &&
-              ((mi_row + r) << MI_SIZE_LOG2 < cm->height);
-       r += r_step) {
-    for (c = 0; c < cm->seq_params.mib_size &&
-                ((mi_col + c) << MI_SIZE_LOG2 < cm->width);
-         c += MI_SIZE_64X64) {
-      if (mi_row + r == 0) continue;
-
-      dst->buf += ((c << MI_SIZE_LOG2) >> ssx);
-      LoopFilterMask *lfm = get_loop_filter_mask(cm, mi_row + r, mi_col + c);
-      assert(lfm);
-      const int row = ((mi_row + r) | ssy) % MI_SIZE_64X64;
-      const int col = ((mi_col + c) | ssx) % MI_SIZE_64X64;
-      int index = 0;
-      const int shift = get_index_shift(col, row, &index);
-      switch (pl) {
-        case 0:
-          mask_16x16 = lfm->above_y[TX_16X16].bits[index];
-          mask_8x8 = lfm->above_y[TX_8X8].bits[index];
-          mask_4x4 = lfm->above_y[TX_4X4].bits[index];
-          lfl = &lfm->lfl_y_hor[row][col];
-          break;
-        case 1:
-          mask_16x16 = lfm->above_u[TX_16X16].bits[index];
-          mask_8x8 = lfm->above_u[TX_8X8].bits[index];
-          mask_4x4 = lfm->above_u[TX_4X4].bits[index];
-          lfl = &lfm->lfl_u[row][col];
-          break;
-        case 2:
-          mask_16x16 = lfm->above_v[TX_16X16].bits[index];
-          mask_8x8 = lfm->above_v[TX_8X8].bits[index];
-          mask_4x4 = lfm->above_v[TX_4X4].bits[index];
-          lfl = &lfm->lfl_v[row][col];
-          break;
-        default: assert(pl >= 0 && pl <= 2); return;
-      }
-      mask_16x16 = (mask_16x16 >> shift) & mask_cutoff;
-      mask_8x8 = (mask_8x8 >> shift) & mask_cutoff;
-      mask_4x4 = (mask_4x4 >> shift) & mask_cutoff;
-
-      if (cm->seq_params.use_highbitdepth)
-        highbd_filter_selectively_horiz(CONVERT_TO_SHORTPTR(dst->buf),
-                                        dst->stride, pl, ssx, mask_16x16,
-                                        mask_8x8, mask_4x4, &cm->lf_info, lfl,
-                                        (int)cm->seq_params.bit_depth);
-      else
-        filter_selectively_horiz(dst->buf, dst->stride, pl, ssx, mask_16x16,
-                                 mask_8x8, mask_4x4, &cm->lf_info, lfl);
-      dst->buf -= ((c << MI_SIZE_LOG2) >> ssx);
-    }
-    dst->buf += MI_SIZE * dst->stride;
-  }
-}
-#endif  // LOOP_FILTER_BITMASK
-
-static TX_SIZE get_transform_size(const MACROBLOCKD *const xd,
-                                  const MB_MODE_INFO *const mbmi,
-                                  const EDGE_DIR edge_dir, const int mi_row,
-                                  const int mi_col, const int plane,
-                                  const struct macroblockd_plane *plane_ptr) {
+static AOM_FORCE_INLINE TX_SIZE
+get_transform_size(const MACROBLOCKD *const xd, const MB_MODE_INFO *const mbmi,
+                   const int mi_row, const int mi_col, const int plane,
+                   const int ss_x, const int ss_y) {
   assert(mbmi != NULL);
   if (xd && xd->lossless[mbmi->segment_id]) return TX_4X4;
 
-  TX_SIZE tx_size =
-      (plane == AOM_PLANE_Y)
-          ? mbmi->tx_size
-          : av1_get_max_uv_txsize(mbmi->sb_type, plane_ptr->subsampling_x,
-                                  plane_ptr->subsampling_y);
+  TX_SIZE tx_size = (plane == AOM_PLANE_Y)
+                        ? mbmi->tx_size
+                        : av1_get_max_uv_txsize(mbmi->bsize, ss_x, ss_y);
   assert(tx_size < TX_SIZES_ALL);
-  if ((plane == AOM_PLANE_Y) && is_inter_block(mbmi) && !mbmi->skip) {
-    const BLOCK_SIZE sb_type = mbmi->sb_type;
+  if ((plane == AOM_PLANE_Y) && is_inter_block(mbmi) && !mbmi->skip_txfm) {
+    const BLOCK_SIZE sb_type = mbmi->bsize;
     const int blk_row = mi_row & (mi_size_high[sb_type] - 1);
     const int blk_col = mi_col & (mi_size_wide[sb_type] - 1);
     const TX_SIZE mb_tx_size =
@@ -1914,26 +213,13 @@ static TX_SIZE get_transform_size(const MACROBLOCKD *const xd,
     tx_size = mb_tx_size;
   }
 
-  // since in case of chrominance or non-square transorm need to convert
-  // transform size into transform size in particular direction.
-  // for vertical edge, filter direction is horizontal, for horizontal
-  // edge, filter direction is vertical.
-  tx_size = (VERT_EDGE == edge_dir) ? txsize_horz_map[tx_size]
-                                    : txsize_vert_map[tx_size];
   return tx_size;
 }
 
-typedef struct AV1_DEBLOCKING_PARAMETERS {
-  // length of the filter applied to the outer edge
-  uint32_t filter_length;
-  // deblocking limits
-  const uint8_t *lim;
-  const uint8_t *mblim;
-  const uint8_t *hev_thr;
-} AV1_DEBLOCKING_PARAMETERS;
+static const int tx_dim_to_filter_length[TX_SIZES] = { 4, 8, 14, 14, 14 };
 
 // Return TX_SIZE from get_transform_size(), so it is plane and direction
-// awared
+// aware
 static TX_SIZE set_lpf_parameters(
     AV1_DEBLOCKING_PARAMETERS *const params, const ptrdiff_t mode_step,
     const AV1_COMMON *const cm, const MACROBLOCKD *const xd,
@@ -1958,15 +244,16 @@ static TX_SIZE set_lpf_parameters(
   // and mi_col should be odd number for chroma plane.
   const int mi_row = scale_vert | ((y << scale_vert) >> MI_SIZE_LOG2);
   const int mi_col = scale_horz | ((x << scale_horz) >> MI_SIZE_LOG2);
-  MB_MODE_INFO **mi = cm->mi_grid_visible + mi_row * cm->mi_stride + mi_col;
+  MB_MODE_INFO **mi =
+      cm->mi_params.mi_grid_base + mi_row * cm->mi_params.mi_stride + mi_col;
   const MB_MODE_INFO *mbmi = mi[0];
   // If current mbmi is not correctly setup, return an invalid value to stop
   // filtering. One example is that if this tile is not coded, then its mbmi
   // it not set up.
   if (mbmi == NULL) return TX_INVALID;
 
-  const TX_SIZE ts =
-      get_transform_size(xd, mi[0], edge_dir, mi_row, mi_col, plane, plane_ptr);
+  const TX_SIZE ts = get_transform_size(xd, mi[0], mi_row, mi_col, plane,
+                                        scale_horz, scale_vert);
 
   {
     const uint32_t coord = (VERT_EDGE == edge_dir) ? (x) : (y);
@@ -1979,8 +266,8 @@ static TX_SIZE set_lpf_parameters(
     // prepare outer edge parameters. deblock the edge if it's an edge of a TU
     {
       const uint32_t curr_level =
-          get_filter_level(cm, &cm->lf_info, edge_dir, plane, mbmi);
-      const int curr_skipped = mbmi->skip && is_inter_block(mbmi);
+          av1_get_filter_level(cm, &cm->lf_info, edge_dir, plane, mbmi);
+      const int curr_skipped = mbmi->skip_txfm && is_inter_block(mbmi);
       uint32_t level = curr_level;
       if (coord) {
         {
@@ -1991,15 +278,16 @@ static TX_SIZE set_lpf_parameters(
           const int pv_col =
               (VERT_EDGE == edge_dir) ? (mi_col - (1 << scale_horz)) : (mi_col);
           const TX_SIZE pv_ts = get_transform_size(
-              xd, mi_prev, edge_dir, pv_row, pv_col, plane, plane_ptr);
+              xd, mi_prev, pv_row, pv_col, plane, scale_horz, scale_vert);
 
           const uint32_t pv_lvl =
-              get_filter_level(cm, &cm->lf_info, edge_dir, plane, mi_prev);
+              av1_get_filter_level(cm, &cm->lf_info, edge_dir, plane, mi_prev);
 
-          const int pv_skip = mi_prev->skip && is_inter_block(mi_prev);
-          const BLOCK_SIZE bsize =
-              get_plane_block_size(mbmi->sb_type, plane_ptr->subsampling_x,
-                                   plane_ptr->subsampling_y);
+          const int pv_skip_txfm =
+              mi_prev->skip_txfm && is_inter_block(mi_prev);
+          const BLOCK_SIZE bsize = get_plane_block_size(
+              mbmi->bsize, plane_ptr->subsampling_x, plane_ptr->subsampling_y);
+          assert(bsize < BLOCK_SIZES_ALL);
           const int prediction_masks = edge_dir == VERT_EDGE
                                            ? block_size_wide[bsize] - 1
                                            : block_size_high[bsize] - 1;
@@ -2007,21 +295,18 @@ static TX_SIZE set_lpf_parameters(
           // if the current and the previous blocks are skipped,
           // deblock the edge if the edge belongs to a PU's edge only.
           if ((curr_level || pv_lvl) &&
-              (!pv_skip || !curr_skipped || pu_edge)) {
-            const TX_SIZE min_ts = AOMMIN(ts, pv_ts);
-            if (TX_4X4 >= min_ts) {
-              params->filter_length = 4;
-            } else if (TX_8X8 == min_ts) {
-              if (plane != 0)
-                params->filter_length = 6;
-              else
-                params->filter_length = 8;
+              (!pv_skip_txfm || !curr_skipped || pu_edge)) {
+            const int dim = (VERT_EDGE == edge_dir)
+                                ? AOMMIN(tx_size_wide_unit_log2[ts],
+                                         tx_size_wide_unit_log2[pv_ts])
+                                : AOMMIN(tx_size_high_unit_log2[ts],
+                                         tx_size_high_unit_log2[pv_ts]);
+            if (plane) {
+              params->filter_length = (dim == 0) ? 4 : 6;
             } else {
-              params->filter_length = 14;
-              // No wide filtering for chroma plane
-              if (plane != 0) {
-                params->filter_length = 6;
-              }
+              assert(dim < TX_SIZES);
+              assert(dim >= 0);
+              params->filter_length = tx_dim_to_filter_length[dim];
             }
 
             // update the level if the current block is skipped,
@@ -2033,9 +318,7 @@ static TX_SIZE set_lpf_parameters(
       // prepare common parameters
       if (params->filter_length) {
         const loop_filter_thresh *const limits = cm->lf_info.lfthr + level;
-        params->lim = limits->lim;
-        params->mblim = limits->mblim;
-        params->hev_thr = limits->hev_thr;
+        params->lfthr = limits;
       }
     }
   }
@@ -2043,25 +326,1004 @@ static TX_SIZE set_lpf_parameters(
   return ts;
 }
 
+static const uint32_t vert_filter_length_luma[TX_SIZES_ALL][TX_SIZES_ALL] = {
+  // TX_4X4
+  {
+      4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+  },
+  // TX_8X8
+  {
+      4, 8, 8, 8, 8, 4, 8, 8, 8, 8, 8, 8, 8, 4, 8, 8, 8, 8, 8,
+  },
+  // TX_16X16
+  {
+      4, 8, 14, 14, 14, 4, 8, 8, 14, 14, 14, 14, 14, 4, 14, 8, 14, 14, 14,
+  },
+  // TX_32X32
+  {
+      4, 8, 14, 14, 14, 4, 8, 8, 14, 14, 14, 14, 14, 4, 14, 8, 14, 14, 14,
+  },
+  // TX_64X64
+  {
+      4, 8, 14, 14, 14, 4, 8, 8, 14, 14, 14, 14, 14, 4, 14, 8, 14, 14, 14,
+  },
+  // TX_4X8
+  {
+      4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+  },
+  // TX_8X4
+  {
+      4, 8, 8, 8, 8, 4, 8, 8, 8, 8, 8, 8, 8, 4, 8, 8, 8, 8, 8,
+  },
+  // TX_8X16
+  {
+      4, 8, 8, 8, 8, 4, 8, 8, 8, 8, 8, 8, 8, 4, 8, 8, 8, 8, 8,
+  },
+  // TX_16X8
+  {
+      4, 8, 14, 14, 14, 4, 8, 8, 14, 14, 14, 14, 14, 4, 14, 8, 14, 14, 14,
+  },
+  // TX_16X32
+  {
+      4, 8, 14, 14, 14, 4, 8, 8, 14, 14, 14, 14, 14, 4, 14, 8, 14, 14, 14,
+  },
+  // TX_32X16
+  {
+      4, 8, 14, 14, 14, 4, 8, 8, 14, 14, 14, 14, 14, 4, 14, 8, 14, 14, 14,
+  },
+  // TX_32X64
+  {
+      4, 8, 14, 14, 14, 4, 8, 8, 14, 14, 14, 14, 14, 4, 14, 8, 14, 14, 14,
+  },
+  // TX_64X32
+  {
+      4, 8, 14, 14, 14, 4, 8, 8, 14, 14, 14, 14, 14, 4, 14, 8, 14, 14, 14,
+  },
+  // TX_4X16
+  {
+      4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+  },
+  // TX_16X4
+  {
+      4, 8, 14, 14, 14, 4, 8, 8, 14, 14, 14, 14, 14, 4, 14, 8, 14, 14, 14,
+  },
+  // TX_8X32
+  {
+      4, 8, 8, 8, 8, 4, 8, 8, 8, 8, 8, 8, 8, 4, 8, 8, 8, 8, 8,
+  },
+  // TX_32X8
+  {
+      4, 8, 14, 14, 14, 4, 8, 8, 14, 14, 14, 14, 14, 4, 14, 8, 14, 14, 14,
+  },
+  // TX_16X64
+  {
+      4, 8, 14, 14, 14, 4, 8, 8, 14, 14, 14, 14, 14, 4, 14, 8, 14, 14, 14,
+  },
+  // TX_64X16
+  {
+      4, 8, 14, 14, 14, 4, 8, 8, 14, 14, 14, 14, 14, 4, 14, 8, 14, 14, 14,
+  },
+};
+
+static const uint32_t horz_filter_length_luma[TX_SIZES_ALL][TX_SIZES_ALL] = {
+  // TX_4X4
+  {
+      4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+  },
+  // TX_8X8
+  {
+      4, 8, 8, 8, 8, 8, 4, 8, 8, 8, 8, 8, 8, 8, 4, 8, 8, 8, 8,
+  },
+  // TX_16X16
+  {
+      4, 8, 14, 14, 14, 8, 4, 14, 8, 14, 14, 14, 14, 14, 4, 14, 8, 14, 14,
+  },
+  // TX_32X32
+  {
+      4, 8, 14, 14, 14, 8, 4, 14, 8, 14, 14, 14, 14, 14, 4, 14, 8, 14, 14,
+  },
+  // TX_64X64
+  {
+      4, 8, 14, 14, 14, 8, 4, 14, 8, 14, 14, 14, 14, 14, 4, 14, 8, 14, 14,
+  },
+  // TX_4X8
+  {
+      4, 8, 8, 8, 8, 8, 4, 8, 8, 8, 8, 8, 8, 8, 4, 8, 8, 8, 8,
+  },
+  // TX_8X4
+  {
+      4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+  },
+  // TX_8X16
+  {
+      4, 8, 14, 14, 14, 8, 4, 14, 8, 14, 14, 14, 14, 14, 4, 14, 8, 14, 14,
+  },
+  // TX_16X8
+  {
+      4, 8, 8, 8, 8, 8, 4, 8, 8, 8, 8, 8, 8, 8, 4, 8, 8, 8, 8,
+  },
+  // TX_16X32
+  {
+      4, 8, 14, 14, 14, 8, 4, 14, 8, 14, 14, 14, 14, 14, 4, 14, 8, 14, 14,
+  },
+  // TX_32X16
+  {
+      4, 8, 14, 14, 14, 8, 4, 14, 8, 14, 14, 14, 14, 14, 4, 14, 8, 14, 14,
+  },
+  // TX_32X64
+  {
+      4, 8, 14, 14, 14, 8, 4, 14, 8, 14, 14, 14, 14, 14, 4, 14, 8, 14, 14,
+  },
+  // TX_64X32
+  {
+      4, 8, 14, 14, 14, 8, 4, 14, 8, 14, 14, 14, 14, 14, 4, 14, 8, 14, 14,
+  },
+  // TX_4X16
+  {
+      4, 8, 14, 14, 14, 8, 4, 14, 8, 14, 14, 14, 14, 14, 4, 14, 8, 14, 14,
+  },
+  // TX_16X4
+  {
+      4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+  },
+  // TX_8X32
+  {
+      4, 8, 14, 14, 14, 8, 4, 14, 8, 14, 14, 14, 14, 14, 4, 14, 8, 14, 14,
+  },
+  // TX_32X8
+  {
+      4, 8, 8, 8, 8, 8, 4, 8, 8, 8, 8, 8, 8, 8, 4, 8, 8, 8, 8,
+  },
+  // TX_16X64
+  {
+      4, 8, 14, 14, 14, 8, 4, 14, 8, 14, 14, 14, 14, 14, 4, 14, 8, 14, 14,
+  },
+  // TX_64X16
+  {
+      4, 8, 14, 14, 14, 8, 4, 14, 8, 14, 14, 14, 14, 14, 4, 14, 8, 14, 14,
+  },
+};
+
+static const uint32_t vert_filter_length_chroma[TX_SIZES_ALL][TX_SIZES_ALL] = {
+  // TX_4X4
+  {
+      4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+  },
+  // TX_8X8
+  {
+      4, 6, 6, 6, 6, 4, 6, 6, 6, 6, 6, 6, 6, 4, 6, 6, 6, 6, 6,
+  },
+  // TX_16X16
+  {
+      4, 6, 6, 6, 6, 4, 6, 6, 6, 6, 6, 6, 6, 4, 6, 6, 6, 6, 6,
+  },
+  // TX_32X32
+  {
+      4, 6, 6, 6, 6, 4, 6, 6, 6, 6, 6, 6, 6, 4, 6, 6, 6, 6, 6,
+  },
+  // TX_64X64
+  {
+      4, 6, 6, 6, 6, 4, 6, 6, 6, 6, 6, 6, 6, 4, 6, 6, 6, 6, 6,
+  },
+  // TX_4X8
+  {
+      4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+  },
+  // TX_8X4
+  {
+      4, 6, 6, 6, 6, 4, 6, 6, 6, 6, 6, 6, 6, 4, 6, 6, 6, 6, 6,
+  },
+  // TX_8X16
+  {
+      4, 6, 6, 6, 6, 4, 6, 6, 6, 6, 6, 6, 6, 4, 6, 6, 6, 6, 6,
+  },
+  // TX_16X8
+  {
+      4, 6, 6, 6, 6, 4, 6, 6, 6, 6, 6, 6, 6, 4, 6, 6, 6, 6, 6,
+  },
+  // TX_16X32
+  {
+      4, 6, 6, 6, 6, 4, 6, 6, 6, 6, 6, 6, 6, 4, 6, 6, 6, 6, 6,
+  },
+  // TX_32X16
+  {
+      4, 6, 6, 6, 6, 4, 6, 6, 6, 6, 6, 6, 6, 4, 6, 6, 6, 6, 6,
+  },
+  // TX_32X64
+  {
+      4, 6, 6, 6, 6, 4, 6, 6, 6, 6, 6, 6, 6, 4, 6, 6, 6, 6, 6,
+  },
+  // TX_64X32
+  {
+      4, 6, 6, 6, 6, 4, 6, 6, 6, 6, 6, 6, 6, 4, 6, 6, 6, 6, 6,
+  },
+  // TX_4X16
+  {
+      4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+  },
+  // TX_16X4
+  {
+      4, 6, 6, 6, 6, 4, 6, 6, 6, 6, 6, 6, 6, 4, 6, 6, 6, 6, 6,
+  },
+  // TX_8X32
+  {
+      4, 6, 6, 6, 6, 4, 6, 6, 6, 6, 6, 6, 6, 4, 6, 6, 6, 6, 6,
+  },
+  // TX_32X8
+  {
+      4, 6, 6, 6, 6, 4, 6, 6, 6, 6, 6, 6, 6, 4, 6, 6, 6, 6, 6,
+  },
+  // TX_16X64
+  {
+      4, 6, 6, 6, 6, 4, 6, 6, 6, 6, 6, 6, 6, 4, 6, 6, 6, 6, 6,
+  },
+  // TX_64X16
+  {
+      4, 6, 6, 6, 6, 4, 6, 6, 6, 6, 6, 6, 6, 4, 6, 6, 6, 6, 6,
+  },
+};
+
+static const uint32_t horz_filter_length_chroma[TX_SIZES_ALL][TX_SIZES_ALL] = {
+  // TX_4X4
+  {
+      4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+  },
+  // TX_8X8
+  {
+      4, 6, 6, 6, 6, 6, 4, 6, 6, 6, 6, 6, 6, 6, 4, 6, 6, 6, 6,
+  },
+  // TX_16X16
+  {
+      4, 6, 6, 6, 6, 6, 4, 6, 6, 6, 6, 6, 6, 6, 4, 6, 6, 6, 6,
+  },
+  // TX_32X32
+  {
+      4, 6, 6, 6, 6, 6, 4, 6, 6, 6, 6, 6, 6, 6, 4, 6, 6, 6, 6,
+  },
+  // TX_64X64
+  {
+      4, 6, 6, 6, 6, 6, 4, 6, 6, 6, 6, 6, 6, 6, 4, 6, 6, 6, 6,
+  },
+  // TX_4X8
+  {
+      4, 6, 6, 6, 6, 6, 4, 6, 6, 6, 6, 6, 6, 6, 4, 6, 6, 6, 6,
+  },
+  // TX_8X4
+  {
+      4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+  },
+  // TX_8X16
+  {
+      4, 6, 6, 6, 6, 6, 4, 6, 6, 6, 6, 6, 6, 6, 4, 6, 6, 6, 6,
+  },
+  // TX_16X8
+  {
+      4, 6, 6, 6, 6, 6, 4, 6, 6, 6, 6, 6, 6, 6, 4, 6, 6, 6, 6,
+  },
+  // TX_16X32
+  {
+      4, 6, 6, 6, 6, 6, 4, 6, 6, 6, 6, 6, 6, 6, 4, 6, 6, 6, 6,
+  },
+  // TX_32X16
+  {
+      4, 6, 6, 6, 6, 6, 4, 6, 6, 6, 6, 6, 6, 6, 4, 6, 6, 6, 6,
+  },
+  // TX_32X64
+  {
+      4, 6, 6, 6, 6, 6, 4, 6, 6, 6, 6, 6, 6, 6, 4, 6, 6, 6, 6,
+  },
+  // TX_64X32
+  {
+      4, 6, 6, 6, 6, 6, 4, 6, 6, 6, 6, 6, 6, 6, 4, 6, 6, 6, 6,
+  },
+  // TX_4X16
+  {
+      4, 6, 6, 6, 6, 6, 4, 6, 6, 6, 6, 6, 6, 6, 4, 6, 6, 6, 6,
+  },
+  // TX_16X4
+  {
+      4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+  },
+  // TX_8X32
+  {
+      4, 6, 6, 6, 6, 6, 4, 6, 6, 6, 6, 6, 6, 6, 4, 6, 6, 6, 6,
+  },
+  // TX_32X8
+  {
+      4, 6, 6, 6, 6, 6, 4, 6, 6, 6, 6, 6, 6, 6, 4, 6, 6, 6, 6,
+  },
+  // TX_16X64
+  {
+      4, 6, 6, 6, 6, 6, 4, 6, 6, 6, 6, 6, 6, 6, 4, 6, 6, 6, 6,
+  },
+  // TX_64X16
+  {
+      4, 6, 6, 6, 6, 6, 4, 6, 6, 6, 6, 6, 6, 6, 4, 6, 6, 6, 6,
+  },
+};
+
+static AOM_FORCE_INLINE void set_one_param_for_line_luma(
+    AV1_DEBLOCKING_PARAMETERS *const params, TX_SIZE *tx_size,
+    const AV1_COMMON *const cm, const MACROBLOCKD *const xd,
+    const EDGE_DIR edge_dir, uint32_t mi_col, uint32_t mi_row,
+    const struct macroblockd_plane *const plane_ptr, int coord,
+    bool is_first_block, TX_SIZE prev_tx_size, const ptrdiff_t mode_step,
+    int *min_dim) {
+  (void)plane_ptr;
+  assert(mi_col << MI_SIZE_LOG2 < (uint32_t)plane_ptr->dst.width &&
+         mi_row << MI_SIZE_LOG2 < (uint32_t)plane_ptr->dst.height);
+  const int is_vert = edge_dir == VERT_EDGE;
+  // reset to initial values
+  params->filter_length = 0;
+
+  MB_MODE_INFO **mi =
+      cm->mi_params.mi_grid_base + mi_row * cm->mi_params.mi_stride + mi_col;
+  const MB_MODE_INFO *mbmi = mi[0];
+  assert(mbmi);
+
+  const TX_SIZE ts =
+      get_transform_size(xd, mi[0], mi_row, mi_col, AOM_PLANE_Y, 0, 0);
+
+#ifndef NDEBUG
+  const uint32_t transform_masks =
+      is_vert ? tx_size_wide[ts] - 1 : tx_size_high[ts] - 1;
+  const int32_t tu_edge = ((coord * MI_SIZE) & transform_masks) ? (0) : (1);
+  assert(tu_edge);
+#endif  // NDEBUG
+  // If we are not the first block, then coord is always true, so
+  // !is_first_block is technically redundant. But we are keeping it here so the
+  // compiler can compile away this conditional if we pass in is_first_block :=
+  // false
+  bool curr_skipped = false;
+  if (!is_first_block || coord) {
+    const MB_MODE_INFO *const mi_prev = *(mi - mode_step);
+    const int pv_row = is_vert ? mi_row : (mi_row - 1);
+    const int pv_col = is_vert ? (mi_col - 1) : mi_col;
+    const TX_SIZE pv_ts =
+        is_first_block
+            ? get_transform_size(xd, mi_prev, pv_row, pv_col, AOM_PLANE_Y, 0, 0)
+            : prev_tx_size;
+    if (is_first_block) {
+      *min_dim = is_vert ? block_size_high[mi_prev->bsize]
+                         : block_size_wide[mi_prev->bsize];
+    }
+    assert(mi_prev);
+    uint8_t level =
+        av1_get_filter_level(cm, &cm->lf_info, edge_dir, AOM_PLANE_Y, mbmi);
+    if (!level) {
+      level = av1_get_filter_level(cm, &cm->lf_info, edge_dir, AOM_PLANE_Y,
+                                   mi_prev);
+    }
+
+    const int32_t pu_edge = mi_prev != mbmi;
+
+    // The quad loop filter assumes that all the transform blocks within a
+    // 8x16/16x8/16x16 prediction block are of the same size.
+    assert(IMPLIES(
+        !pu_edge && (mbmi->bsize >= BLOCK_8X16 && mbmi->bsize <= BLOCK_16X16),
+        pv_ts == ts));
+
+    if (!pu_edge) {
+      curr_skipped = mbmi->skip_txfm && is_inter_block(mbmi);
+    }
+    if ((pu_edge || !curr_skipped) && level) {
+      params->filter_length = is_vert ? vert_filter_length_luma[ts][pv_ts]
+                                      : horz_filter_length_luma[ts][pv_ts];
+
+      // prepare common parameters
+      const loop_filter_thresh *const limits = cm->lf_info.lfthr + level;
+      params->lfthr = limits;
+    }
+  }
+  const int block_dim =
+      is_vert ? block_size_high[mbmi->bsize] : block_size_wide[mbmi->bsize];
+  *min_dim = AOMMIN(*min_dim, block_dim);
+
+  *tx_size = ts;
+}
+
+// Similar to set_lpf_parameters, but does so one row/col at a time to reduce
+// calls to \ref get_transform_size and \ref av1_get_filter_level
+static AOM_FORCE_INLINE void set_lpf_parameters_for_line_luma(
+    AV1_DEBLOCKING_PARAMETERS *const params_buf, TX_SIZE *tx_buf,
+    const AV1_COMMON *const cm, const MACROBLOCKD *const xd,
+    const EDGE_DIR edge_dir, uint32_t mi_col, uint32_t mi_row,
+    const struct macroblockd_plane *const plane_ptr, const uint32_t mi_range,
+    const ptrdiff_t mode_step, int *min_dim) {
+  const int is_vert = edge_dir == VERT_EDGE;
+
+  AV1_DEBLOCKING_PARAMETERS *params = params_buf;
+  TX_SIZE *tx_size = tx_buf;
+  uint32_t *counter_ptr = is_vert ? &mi_col : &mi_row;
+  TX_SIZE prev_tx_size = TX_INVALID;
+
+  // Unroll the first iteration of the loop
+  set_one_param_for_line_luma(params, tx_size, cm, xd, edge_dir, mi_col, mi_row,
+                              plane_ptr, *counter_ptr, true, prev_tx_size,
+                              mode_step, min_dim);
+
+  // Advance
+  int advance_units =
+      is_vert ? tx_size_wide_unit[*tx_size] : tx_size_high_unit[*tx_size];
+  prev_tx_size = *tx_size;
+  *counter_ptr += advance_units;
+  params += advance_units;
+  tx_size += advance_units;
+
+  while (*counter_ptr < mi_range) {
+    set_one_param_for_line_luma(params, tx_size, cm, xd, edge_dir, mi_col,
+                                mi_row, plane_ptr, *counter_ptr, false,
+                                prev_tx_size, mode_step, min_dim);
+
+    // Advance
+    advance_units =
+        is_vert ? tx_size_wide_unit[*tx_size] : tx_size_high_unit[*tx_size];
+    prev_tx_size = *tx_size;
+    *counter_ptr += advance_units;
+    params += advance_units;
+    tx_size += advance_units;
+  }
+}
+
+static AOM_FORCE_INLINE void set_one_param_for_line_chroma(
+    AV1_DEBLOCKING_PARAMETERS *const params, TX_SIZE *tx_size,
+    const AV1_COMMON *const cm, const MACROBLOCKD *const xd,
+    const EDGE_DIR edge_dir, uint32_t mi_col, uint32_t mi_row, int coord,
+    bool is_first_block, TX_SIZE prev_tx_size,
+    const struct macroblockd_plane *const plane_ptr, const ptrdiff_t mode_step,
+    const int scale_horz, const int scale_vert, int *min_dim, int plane,
+    int joint_filter_chroma) {
+  const int is_vert = edge_dir == VERT_EDGE;
+  (void)plane_ptr;
+  assert((mi_col << MI_SIZE_LOG2) <
+             (uint32_t)(plane_ptr->dst.width << scale_horz) &&
+         (mi_row << MI_SIZE_LOG2) <
+             (uint32_t)(plane_ptr->dst.height << scale_vert));
+  // reset to initial values
+  params->filter_length = 0;
+
+  // for sub8x8 block, chroma prediction mode is obtained from the
+  // bottom/right mi structure of the co-located 8x8 luma block. so for chroma
+  // plane, mi_row and mi_col should map to the bottom/right mi structure,
+  // i.e, both mi_row and mi_col should be odd number for chroma plane.
+  mi_row |= scale_vert;
+  mi_col |= scale_horz;
+  MB_MODE_INFO **mi =
+      cm->mi_params.mi_grid_base + mi_row * cm->mi_params.mi_stride + mi_col;
+  const MB_MODE_INFO *mbmi = mi[0];
+  assert(mbmi);
+
+  const TX_SIZE ts = get_transform_size(xd, mi[0], mi_row, mi_col, plane,
+                                        scale_horz, scale_vert);
+  *tx_size = ts;
+
+#ifndef NDEBUG
+  const uint32_t transform_masks =
+      is_vert ? tx_size_wide[ts] - 1 : tx_size_high[ts] - 1;
+  const int32_t tu_edge = ((coord * MI_SIZE) & transform_masks) ? (0) : (1);
+  assert(tu_edge);
+#endif  // NDEBUG
+
+  // If we are not the first block, then coord is always true, so
+  // !is_first_block is technically redundant. But we are keeping it here so the
+  // compiler can compile away this conditional if we pass in is_first_block :=
+  // false
+  bool curr_skipped = false;
+  if (!is_first_block || coord) {
+    const MB_MODE_INFO *const mi_prev = *(mi - mode_step);
+    assert(mi_prev);
+    const int pv_row = is_vert ? (mi_row) : (mi_row - (1 << scale_vert));
+    const int pv_col = is_vert ? (mi_col - (1 << scale_horz)) : (mi_col);
+    const TX_SIZE pv_ts =
+        is_first_block ? get_transform_size(xd, mi_prev, pv_row, pv_col, plane,
+                                            scale_horz, scale_vert)
+                       : prev_tx_size;
+    if (is_first_block) {
+      *min_dim = is_vert ? tx_size_high[pv_ts] : tx_size_wide[pv_ts];
+    }
+
+    uint8_t level =
+        av1_get_filter_level(cm, &cm->lf_info, edge_dir, plane, mbmi);
+    if (!level) {
+      level = av1_get_filter_level(cm, &cm->lf_info, edge_dir, plane, mi_prev);
+    }
+#ifndef NDEBUG
+    if (joint_filter_chroma) {
+      uint8_t v_level =
+          av1_get_filter_level(cm, &cm->lf_info, edge_dir, AOM_PLANE_V, mbmi);
+      if (!v_level) {
+        v_level = av1_get_filter_level(cm, &cm->lf_info, edge_dir, AOM_PLANE_V,
+                                       mi_prev);
+      }
+      assert(level == v_level);
+    }
+#else
+    (void)joint_filter_chroma;
+#endif  // NDEBUG
+    const int32_t pu_edge = mi_prev != mbmi;
+
+    if (!pu_edge) {
+      curr_skipped = mbmi->skip_txfm && is_inter_block(mbmi);
+    }
+    // For realtime mode, u and v have the same level
+    if ((!curr_skipped || pu_edge) && level) {
+      params->filter_length = is_vert ? vert_filter_length_chroma[ts][pv_ts]
+                                      : horz_filter_length_chroma[ts][pv_ts];
+
+      const loop_filter_thresh *const limits = cm->lf_info.lfthr;
+      params->lfthr = limits + level;
+    }
+  }
+  const int tx_dim = is_vert ? tx_size_high[ts] : tx_size_wide[ts];
+  *min_dim = AOMMIN(*min_dim, tx_dim);
+}
+
+static AOM_FORCE_INLINE void set_lpf_parameters_for_line_chroma(
+    AV1_DEBLOCKING_PARAMETERS *const params_buf, TX_SIZE *tx_buf,
+    const AV1_COMMON *const cm, const MACROBLOCKD *const xd,
+    const EDGE_DIR edge_dir, uint32_t mi_col, uint32_t mi_row,
+    const struct macroblockd_plane *const plane_ptr, const uint32_t mi_range,
+    const ptrdiff_t mode_step, const int scale_horz, const int scale_vert,
+    int *min_dim, int plane, int joint_filter_chroma) {
+  const int is_vert = edge_dir == VERT_EDGE;
+
+  AV1_DEBLOCKING_PARAMETERS *params = params_buf;
+  TX_SIZE *tx_size = tx_buf;
+  uint32_t *counter_ptr = is_vert ? &mi_col : &mi_row;
+  const uint32_t scale = is_vert ? scale_horz : scale_vert;
+  TX_SIZE prev_tx_size = TX_INVALID;
+
+  // Unroll the first iteration of the loop
+  set_one_param_for_line_chroma(params, tx_size, cm, xd, edge_dir, mi_col,
+                                mi_row, *counter_ptr, true, prev_tx_size,
+                                plane_ptr, mode_step, scale_horz, scale_vert,
+                                min_dim, plane, joint_filter_chroma);
+
+  // Advance
+  int advance_units =
+      is_vert ? tx_size_wide_unit[*tx_size] : tx_size_high_unit[*tx_size];
+  prev_tx_size = *tx_size;
+  *counter_ptr += advance_units << scale;
+  params += advance_units;
+  tx_size += advance_units;
+
+  while (*counter_ptr < mi_range) {
+    set_one_param_for_line_chroma(params, tx_size, cm, xd, edge_dir, mi_col,
+                                  mi_row, *counter_ptr, false, prev_tx_size,
+                                  plane_ptr, mode_step, scale_horz, scale_vert,
+                                  min_dim, plane, joint_filter_chroma);
+
+    // Advance
+    advance_units =
+        is_vert ? tx_size_wide_unit[*tx_size] : tx_size_high_unit[*tx_size];
+    prev_tx_size = *tx_size;
+    *counter_ptr += advance_units << scale;
+    params += advance_units;
+    tx_size += advance_units;
+  }
+}
+
+static AOM_INLINE void filter_vert(uint8_t *dst, int dst_stride,
+                                   const AV1_DEBLOCKING_PARAMETERS *params,
+                                   const SequenceHeader *seq_params,
+                                   USE_FILTER_TYPE use_filter_type) {
+  const loop_filter_thresh *limits = params->lfthr;
+#if CONFIG_AV1_HIGHBITDEPTH
+  const int use_highbitdepth = seq_params->use_highbitdepth;
+  const aom_bit_depth_t bit_depth = seq_params->bit_depth;
+  if (use_highbitdepth) {
+    uint16_t *dst_shortptr = CONVERT_TO_SHORTPTR(dst);
+    if (use_filter_type == USE_QUAD) {
+      switch (params->filter_length) {
+        // apply 4-tap filtering
+        case 4:
+          aom_highbd_lpf_vertical_4_dual(
+              dst_shortptr, dst_stride, limits->mblim, limits->lim,
+              limits->hev_thr, limits->mblim, limits->lim, limits->hev_thr,
+              bit_depth);
+          aom_highbd_lpf_vertical_4_dual(
+              dst_shortptr + (2 * MI_SIZE * dst_stride), dst_stride,
+              limits->mblim, limits->lim, limits->hev_thr, limits->mblim,
+              limits->lim, limits->hev_thr, bit_depth);
+          break;
+        case 6:  // apply 6-tap filter for chroma plane only
+          aom_highbd_lpf_vertical_6_dual(
+              dst_shortptr, dst_stride, limits->mblim, limits->lim,
+              limits->hev_thr, limits->mblim, limits->lim, limits->hev_thr,
+              bit_depth);
+          aom_highbd_lpf_vertical_6_dual(
+              dst_shortptr + (2 * MI_SIZE * dst_stride), dst_stride,
+              limits->mblim, limits->lim, limits->hev_thr, limits->mblim,
+              limits->lim, limits->hev_thr, bit_depth);
+          break;
+        // apply 8-tap filtering
+        case 8:
+          aom_highbd_lpf_vertical_8_dual(
+              dst_shortptr, dst_stride, limits->mblim, limits->lim,
+              limits->hev_thr, limits->mblim, limits->lim, limits->hev_thr,
+              bit_depth);
+          aom_highbd_lpf_vertical_8_dual(
+              dst_shortptr + (2 * MI_SIZE * dst_stride), dst_stride,
+              limits->mblim, limits->lim, limits->hev_thr, limits->mblim,
+              limits->lim, limits->hev_thr, bit_depth);
+          break;
+        // apply 14-tap filtering
+        case 14:
+          aom_highbd_lpf_vertical_14_dual(
+              dst_shortptr, dst_stride, limits->mblim, limits->lim,
+              limits->hev_thr, limits->mblim, limits->lim, limits->hev_thr,
+              bit_depth);
+          aom_highbd_lpf_vertical_14_dual(
+              dst_shortptr + (2 * MI_SIZE * dst_stride), dst_stride,
+              limits->mblim, limits->lim, limits->hev_thr, limits->mblim,
+              limits->lim, limits->hev_thr, bit_depth);
+          break;
+        // no filtering
+        default: break;
+      }
+    } else if (use_filter_type == USE_DUAL) {
+      switch (params->filter_length) {
+        // apply 4-tap filtering
+        case 4:
+          aom_highbd_lpf_vertical_4_dual(
+              dst_shortptr, dst_stride, limits->mblim, limits->lim,
+              limits->hev_thr, limits->mblim, limits->lim, limits->hev_thr,
+              bit_depth);
+          break;
+        case 6:  // apply 6-tap filter for chroma plane only
+          aom_highbd_lpf_vertical_6_dual(
+              dst_shortptr, dst_stride, limits->mblim, limits->lim,
+              limits->hev_thr, limits->mblim, limits->lim, limits->hev_thr,
+              bit_depth);
+          break;
+        // apply 8-tap filtering
+        case 8:
+          aom_highbd_lpf_vertical_8_dual(
+              dst_shortptr, dst_stride, limits->mblim, limits->lim,
+              limits->hev_thr, limits->mblim, limits->lim, limits->hev_thr,
+              bit_depth);
+          break;
+        // apply 14-tap filtering
+        case 14:
+          aom_highbd_lpf_vertical_14_dual(
+              dst_shortptr, dst_stride, limits->mblim, limits->lim,
+              limits->hev_thr, limits->mblim, limits->lim, limits->hev_thr,
+              bit_depth);
+          break;
+        // no filtering
+        default: break;
+      }
+    } else {
+      assert(use_filter_type == USE_SINGLE);
+      switch (params->filter_length) {
+        // apply 4-tap filtering
+        case 4:
+          aom_highbd_lpf_vertical_4(dst_shortptr, dst_stride, limits->mblim,
+                                    limits->lim, limits->hev_thr, bit_depth);
+          break;
+        case 6:  // apply 6-tap filter for chroma plane only
+          aom_highbd_lpf_vertical_6(dst_shortptr, dst_stride, limits->mblim,
+                                    limits->lim, limits->hev_thr, bit_depth);
+          break;
+        // apply 8-tap filtering
+        case 8:
+          aom_highbd_lpf_vertical_8(dst_shortptr, dst_stride, limits->mblim,
+                                    limits->lim, limits->hev_thr, bit_depth);
+          break;
+        // apply 14-tap filtering
+        case 14:
+          aom_highbd_lpf_vertical_14(dst_shortptr, dst_stride, limits->mblim,
+                                     limits->lim, limits->hev_thr, bit_depth);
+          break;
+        // no filtering
+        default: break;
+      }
+    }
+    return;
+  }
+#endif  // CONFIG_AV1_HIGHBITDEPTH
+  if (use_filter_type == USE_QUAD) {
+    // Only one set of loop filter parameters (mblim, lim and hev_thr) is
+    // passed as argument to quad loop filter because quad loop filter is
+    // called for those cases where all the 4 set of loop filter parameters
+    // are equal.
+    switch (params->filter_length) {
+      // apply 4-tap filtering
+      case 4:
+        aom_lpf_vertical_4_quad(dst, dst_stride, limits->mblim, limits->lim,
+                                limits->hev_thr);
+        break;
+      case 6:  // apply 6-tap filter for chroma plane only
+        aom_lpf_vertical_6_quad(dst, dst_stride, limits->mblim, limits->lim,
+                                limits->hev_thr);
+        break;
+      // apply 8-tap filtering
+      case 8:
+        aom_lpf_vertical_8_quad(dst, dst_stride, limits->mblim, limits->lim,
+                                limits->hev_thr);
+        break;
+      // apply 14-tap filtering
+      case 14:
+        aom_lpf_vertical_14_quad(dst, dst_stride, limits->mblim, limits->lim,
+                                 limits->hev_thr);
+        break;
+      // no filtering
+      default: break;
+    }
+  } else if (use_filter_type == USE_DUAL) {
+    switch (params->filter_length) {
+      // apply 4-tap filtering
+      case 4:
+        aom_lpf_vertical_4_dual(dst, dst_stride, limits->mblim, limits->lim,
+                                limits->hev_thr, limits->mblim, limits->lim,
+                                limits->hev_thr);
+        break;
+      case 6:  // apply 6-tap filter for chroma plane only
+        aom_lpf_vertical_6_dual(dst, dst_stride, limits->mblim, limits->lim,
+                                limits->hev_thr, limits->mblim, limits->lim,
+                                limits->hev_thr);
+        break;
+      // apply 8-tap filtering
+      case 8:
+        aom_lpf_vertical_8_dual(dst, dst_stride, limits->mblim, limits->lim,
+                                limits->hev_thr, limits->mblim, limits->lim,
+                                limits->hev_thr);
+        break;
+      // apply 14-tap filtering
+      case 14:
+        aom_lpf_vertical_14_dual(dst, dst_stride, limits->mblim, limits->lim,
+                                 limits->hev_thr, limits->mblim, limits->lim,
+                                 limits->hev_thr);
+        break;
+      // no filtering
+      default: break;
+    }
+  } else {
+    assert(use_filter_type == USE_SINGLE);
+    switch (params->filter_length) {
+      // apply 4-tap filtering
+      case 4:
+        aom_lpf_vertical_4(dst, dst_stride, limits->mblim, limits->lim,
+                           limits->hev_thr);
+        break;
+      case 6:  // apply 6-tap filter for chroma plane only
+        aom_lpf_vertical_6(dst, dst_stride, limits->mblim, limits->lim,
+                           limits->hev_thr);
+        break;
+      // apply 8-tap filtering
+      case 8:
+        aom_lpf_vertical_8(dst, dst_stride, limits->mblim, limits->lim,
+                           limits->hev_thr);
+        break;
+      // apply 14-tap filtering
+      case 14:
+        aom_lpf_vertical_14(dst, dst_stride, limits->mblim, limits->lim,
+                            limits->hev_thr);
+        break;
+      // no filtering
+      default: break;
+    }
+  }
+#if !CONFIG_AV1_HIGHBITDEPTH
+  (void)seq_params;
+#endif  // !CONFIG_AV1_HIGHBITDEPTH
+}
+
+static AOM_INLINE void filter_vert_chroma(
+    uint8_t *u_dst, uint8_t *v_dst, int dst_stride,
+    const AV1_DEBLOCKING_PARAMETERS *params, const SequenceHeader *seq_params,
+    USE_FILTER_TYPE use_filter_type) {
+  const loop_filter_thresh *u_limits = params->lfthr;
+  const loop_filter_thresh *v_limits = params->lfthr;
+#if CONFIG_AV1_HIGHBITDEPTH
+  const int use_highbitdepth = seq_params->use_highbitdepth;
+  const aom_bit_depth_t bit_depth = seq_params->bit_depth;
+  if (use_highbitdepth) {
+    uint16_t *u_dst_shortptr = CONVERT_TO_SHORTPTR(u_dst);
+    uint16_t *v_dst_shortptr = CONVERT_TO_SHORTPTR(v_dst);
+    if (use_filter_type == USE_QUAD) {
+      switch (params->filter_length) {
+        // apply 4-tap filtering
+        case 4:
+          aom_highbd_lpf_vertical_4_dual(
+              u_dst_shortptr, dst_stride, u_limits->mblim, u_limits->lim,
+              u_limits->hev_thr, u_limits->mblim, u_limits->lim,
+              u_limits->hev_thr, bit_depth);
+          aom_highbd_lpf_vertical_4_dual(
+              u_dst_shortptr + (2 * MI_SIZE * dst_stride), dst_stride,
+              u_limits->mblim, u_limits->lim, u_limits->hev_thr,
+              u_limits->mblim, u_limits->lim, u_limits->hev_thr, bit_depth);
+          aom_highbd_lpf_vertical_4_dual(
+              v_dst_shortptr, dst_stride, v_limits->mblim, v_limits->lim,
+              v_limits->hev_thr, v_limits->mblim, v_limits->lim,
+              v_limits->hev_thr, bit_depth);
+          aom_highbd_lpf_vertical_4_dual(
+              v_dst_shortptr + (2 * MI_SIZE * dst_stride), dst_stride,
+              v_limits->mblim, v_limits->lim, v_limits->hev_thr,
+              v_limits->mblim, v_limits->lim, v_limits->hev_thr, bit_depth);
+          break;
+        case 6:  // apply 6-tap filter for chroma plane only
+          aom_highbd_lpf_vertical_6_dual(
+              u_dst_shortptr, dst_stride, u_limits->mblim, u_limits->lim,
+              u_limits->hev_thr, u_limits->mblim, u_limits->lim,
+              u_limits->hev_thr, bit_depth);
+          aom_highbd_lpf_vertical_6_dual(
+              u_dst_shortptr + (2 * MI_SIZE * dst_stride), dst_stride,
+              u_limits->mblim, u_limits->lim, u_limits->hev_thr,
+              u_limits->mblim, u_limits->lim, u_limits->hev_thr, bit_depth);
+          aom_highbd_lpf_vertical_6_dual(
+              v_dst_shortptr, dst_stride, v_limits->mblim, v_limits->lim,
+              v_limits->hev_thr, v_limits->mblim, v_limits->lim,
+              v_limits->hev_thr, bit_depth);
+          aom_highbd_lpf_vertical_6_dual(
+              v_dst_shortptr + (2 * MI_SIZE * dst_stride), dst_stride,
+              v_limits->mblim, v_limits->lim, v_limits->hev_thr,
+              v_limits->mblim, v_limits->lim, v_limits->hev_thr, bit_depth);
+          break;
+        case 8:
+        case 14: assert(0);
+        // no filtering
+        default: break;
+      }
+    } else if (use_filter_type == USE_DUAL) {
+      switch (params->filter_length) {
+        // apply 4-tap filtering
+        case 4:
+          aom_highbd_lpf_vertical_4_dual(
+              u_dst_shortptr, dst_stride, u_limits->mblim, u_limits->lim,
+              u_limits->hev_thr, u_limits->mblim, u_limits->lim,
+              u_limits->hev_thr, bit_depth);
+          aom_highbd_lpf_vertical_4_dual(
+              v_dst_shortptr, dst_stride, v_limits->mblim, v_limits->lim,
+              v_limits->hev_thr, v_limits->mblim, v_limits->lim,
+              v_limits->hev_thr, bit_depth);
+          break;
+        case 6:  // apply 6-tap filter for chroma plane only
+          aom_highbd_lpf_vertical_6_dual(
+              u_dst_shortptr, dst_stride, u_limits->mblim, u_limits->lim,
+              u_limits->hev_thr, u_limits->mblim, u_limits->lim,
+              u_limits->hev_thr, bit_depth);
+          aom_highbd_lpf_vertical_6_dual(
+              v_dst_shortptr, dst_stride, v_limits->mblim, v_limits->lim,
+              v_limits->hev_thr, v_limits->mblim, v_limits->lim,
+              v_limits->hev_thr, bit_depth);
+          break;
+        case 8:
+        case 14: assert(0);
+        // no filtering
+        default: break;
+      }
+    } else {
+      assert(use_filter_type == USE_SINGLE);
+      switch (params->filter_length) {
+        // apply 4-tap filtering
+        case 4:
+          aom_highbd_lpf_vertical_4(u_dst_shortptr, dst_stride, u_limits->mblim,
+                                    u_limits->lim, u_limits->hev_thr,
+                                    bit_depth);
+          aom_highbd_lpf_vertical_4(v_dst_shortptr, dst_stride, v_limits->mblim,
+                                    v_limits->lim, v_limits->hev_thr,
+                                    bit_depth);
+          break;
+        case 6:  // apply 6-tap filter for chroma plane only
+          aom_highbd_lpf_vertical_6(u_dst_shortptr, dst_stride, u_limits->mblim,
+                                    u_limits->lim, u_limits->hev_thr,
+                                    bit_depth);
+          aom_highbd_lpf_vertical_6(v_dst_shortptr, dst_stride, v_limits->mblim,
+                                    v_limits->lim, v_limits->hev_thr,
+                                    bit_depth);
+          break;
+        case 8:
+        case 14: assert(0); break;
+        // no filtering
+        default: break;
+      }
+    }
+    return;
+  }
+#endif  // CONFIG_AV1_HIGHBITDEPTH
+  if (use_filter_type == USE_QUAD) {
+    // Only one set of loop filter parameters (mblim, lim and hev_thr) is
+    // passed as argument to quad loop filter because quad loop filter is
+    // called for those cases where all the 4 set of loop filter parameters
+    // are equal.
+    switch (params->filter_length) {
+      // apply 4-tap filtering
+      case 4:
+        aom_lpf_vertical_4_quad(u_dst, dst_stride, u_limits->mblim,
+                                u_limits->lim, u_limits->hev_thr);
+        aom_lpf_vertical_4_quad(v_dst, dst_stride, v_limits->mblim,
+                                v_limits->lim, v_limits->hev_thr);
+        break;
+      case 6:  // apply 6-tap filter for chroma plane only
+        aom_lpf_vertical_6_quad(u_dst, dst_stride, u_limits->mblim,
+                                u_limits->lim, u_limits->hev_thr);
+        aom_lpf_vertical_6_quad(v_dst, dst_stride, v_limits->mblim,
+                                v_limits->lim, v_limits->hev_thr);
+        break;
+      case 8:
+      case 14: assert(0);
+      // no filtering
+      default: break;
+    }
+  } else if (use_filter_type == USE_DUAL) {
+    switch (params->filter_length) {
+      // apply 4-tap filtering
+      case 4:
+        aom_lpf_vertical_4_dual(u_dst, dst_stride, u_limits->mblim,
+                                u_limits->lim, u_limits->hev_thr,
+                                u_limits->mblim, u_limits->lim,
+                                u_limits->hev_thr);
+        aom_lpf_vertical_4_dual(v_dst, dst_stride, v_limits->mblim,
+                                v_limits->lim, v_limits->hev_thr,
+                                v_limits->mblim, v_limits->lim,
+                                v_limits->hev_thr);
+        break;
+      case 6:  // apply 6-tap filter for chroma plane only
+        aom_lpf_vertical_6_dual(u_dst, dst_stride, u_limits->mblim,
+                                u_limits->lim, u_limits->hev_thr,
+                                u_limits->mblim, u_limits->lim,
+                                u_limits->hev_thr);
+        aom_lpf_vertical_6_dual(v_dst, dst_stride, v_limits->mblim,
+                                v_limits->lim, v_limits->hev_thr,
+                                v_limits->mblim, v_limits->lim,
+                                v_limits->hev_thr);
+        break;
+      case 8:
+      case 14: assert(0);
+      // no filtering
+      default: break;
+    }
+  } else {
+    assert(use_filter_type == USE_SINGLE);
+    switch (params->filter_length) {
+      // apply 4-tap filtering
+      case 4:
+        aom_lpf_vertical_4(u_dst, dst_stride, u_limits->mblim, u_limits->lim,
+                           u_limits->hev_thr);
+        aom_lpf_vertical_4(v_dst, dst_stride, v_limits->mblim, v_limits->lim,
+                           u_limits->hev_thr);
+        break;
+      case 6:  // apply 6-tap filter for chroma plane only
+        aom_lpf_vertical_6(u_dst, dst_stride, u_limits->mblim, u_limits->lim,
+                           u_limits->hev_thr);
+        aom_lpf_vertical_6(v_dst, dst_stride, v_limits->mblim, v_limits->lim,
+                           v_limits->hev_thr);
+        break;
+      case 8:
+      case 14: assert(0); break;
+      // no filtering
+      default: break;
+    }
+  }
+#if !CONFIG_AV1_HIGHBITDEPTH
+  (void)seq_params;
+#endif  // !CONFIG_AV1_HIGHBITDEPTH
+}
+
 void av1_filter_block_plane_vert(const AV1_COMMON *const cm,
                                  const MACROBLOCKD *const xd, const int plane,
                                  const MACROBLOCKD_PLANE *const plane_ptr,
                                  const uint32_t mi_row, const uint32_t mi_col) {
-  const int row_step = MI_SIZE >> MI_SIZE_LOG2;
   const uint32_t scale_horz = plane_ptr->subsampling_x;
   const uint32_t scale_vert = plane_ptr->subsampling_y;
   uint8_t *const dst_ptr = plane_ptr->dst.buf;
   const int dst_stride = plane_ptr->dst.stride;
-  const int y_range = (MAX_MIB_SIZE >> scale_vert);
-  const int x_range = (MAX_MIB_SIZE >> scale_horz);
-  const int use_highbitdepth = cm->seq_params.use_highbitdepth;
-  const aom_bit_depth_t bit_depth = cm->seq_params.bit_depth;
-  for (int y = 0; y < y_range; y += row_step) {
+  const int plane_mi_rows =
+      ROUND_POWER_OF_TWO(cm->mi_params.mi_rows, scale_vert);
+  const int plane_mi_cols =
+      ROUND_POWER_OF_TWO(cm->mi_params.mi_cols, scale_horz);
+  const int y_range = AOMMIN((int)(plane_mi_rows - (mi_row >> scale_vert)),
+                             (MAX_MIB_SIZE >> scale_vert));
+  const int x_range = AOMMIN((int)(plane_mi_cols - (mi_col >> scale_horz)),
+                             (MAX_MIB_SIZE >> scale_horz));
+
+  for (int y = 0; y < y_range; y++) {
     uint8_t *p = dst_ptr + y * MI_SIZE * dst_stride;
     for (int x = 0; x < x_range;) {
       // inner loop always filter vertical edges in a MI block. If MI size
       // is 8x8, it will filter the vertical edge aligned with a 8x8 block.
-      // If 4x4 trasnform is used, it will then filter the internal edge
+      // If 4x4 transform is used, it will then filter the internal edge
       //  aligned with a 4x4 block
       const uint32_t curr_x = ((mi_col * MI_SIZE) >> scale_horz) + x * MI_SIZE;
       const uint32_t curr_y = ((mi_row * MI_SIZE) >> scale_vert) + y * MI_SIZE;
@@ -2078,50 +1340,8 @@ void av1_filter_block_plane_vert(const AV1_COMMON *const cm,
         tx_size = TX_4X4;
       }
 
-      switch (params.filter_length) {
-        // apply 4-tap filtering
-        case 4:
-          if (use_highbitdepth)
-            aom_highbd_lpf_vertical_4(CONVERT_TO_SHORTPTR(p), dst_stride,
-                                      params.mblim, params.lim, params.hev_thr,
-                                      bit_depth);
-          else
-            aom_lpf_vertical_4(p, dst_stride, params.mblim, params.lim,
-                               params.hev_thr);
-          break;
-        case 6:  // apply 6-tap filter for chroma plane only
-          assert(plane != 0);
-          if (use_highbitdepth)
-            aom_highbd_lpf_vertical_6(CONVERT_TO_SHORTPTR(p), dst_stride,
-                                      params.mblim, params.lim, params.hev_thr,
-                                      bit_depth);
-          else
-            aom_lpf_vertical_6(p, dst_stride, params.mblim, params.lim,
-                               params.hev_thr);
-          break;
-        // apply 8-tap filtering
-        case 8:
-          if (use_highbitdepth)
-            aom_highbd_lpf_vertical_8(CONVERT_TO_SHORTPTR(p), dst_stride,
-                                      params.mblim, params.lim, params.hev_thr,
-                                      bit_depth);
-          else
-            aom_lpf_vertical_8(p, dst_stride, params.mblim, params.lim,
-                               params.hev_thr);
-          break;
-        // apply 14-tap filtering
-        case 14:
-          if (use_highbitdepth)
-            aom_highbd_lpf_vertical_14(CONVERT_TO_SHORTPTR(p), dst_stride,
-                                       params.mblim, params.lim, params.hev_thr,
-                                       bit_depth);
-          else
-            aom_lpf_vertical_14(p, dst_stride, params.mblim, params.lim,
-                                params.hev_thr);
-          break;
-        // no filtering
-        default: break;
-      }
+      filter_vert(p, dst_stride, &params, cm->seq_params, USE_SINGLE);
+
       // advance the destination pointer
       advance_units = tx_size_wide_unit[tx_size];
       x += advance_units;
@@ -2130,25 +1350,580 @@ void av1_filter_block_plane_vert(const AV1_COMMON *const cm,
   }
 }
 
+void av1_filter_block_plane_vert_opt(
+    const AV1_COMMON *const cm, const MACROBLOCKD *const xd,
+    const MACROBLOCKD_PLANE *const plane_ptr, const uint32_t mi_row,
+    const uint32_t mi_col, AV1_DEBLOCKING_PARAMETERS *params_buf,
+    TX_SIZE *tx_buf, int num_mis_in_lpf_unit_height_log2) {
+  uint8_t *const dst_ptr = plane_ptr->dst.buf;
+  const int dst_stride = plane_ptr->dst.stride;
+  // Ensure that mi_cols/mi_rows are calculated based on frame dimension aligned
+  // to MI_SIZE.
+  const int plane_mi_cols =
+      CEIL_POWER_OF_TWO(plane_ptr->dst.width, MI_SIZE_LOG2);
+  const int plane_mi_rows =
+      CEIL_POWER_OF_TWO(plane_ptr->dst.height, MI_SIZE_LOG2);
+  // Whenever 'pipeline_lpf_mt_with_enc' is enabled, height of the unit to
+  // filter (i.e., y_range) is calculated based on the size of the superblock
+  // used.
+  const int y_range = AOMMIN((int)(plane_mi_rows - mi_row),
+                             (1 << num_mis_in_lpf_unit_height_log2));
+  // Width of the unit to filter (i.e., x_range) should always be calculated
+  // based on maximum superblock size as this function is called for mi_col = 0,
+  // MAX_MIB_SIZE, 2 * MAX_MIB_SIZE etc.
+  const int x_range = AOMMIN((int)(plane_mi_cols - mi_col), MAX_MIB_SIZE);
+  const ptrdiff_t mode_step = 1;
+  for (int y = 0; y < y_range; y++) {
+    const uint32_t curr_y = mi_row + y;
+    const uint32_t x_start = mi_col;
+    const uint32_t x_end = mi_col + x_range;
+    int min_block_height = block_size_high[BLOCK_128X128];
+    set_lpf_parameters_for_line_luma(params_buf, tx_buf, cm, xd, VERT_EDGE,
+                                     x_start, curr_y, plane_ptr, x_end,
+                                     mode_step, &min_block_height);
+
+    AV1_DEBLOCKING_PARAMETERS *params = params_buf;
+    TX_SIZE *tx_size = tx_buf;
+    USE_FILTER_TYPE use_filter_type = USE_SINGLE;
+
+    uint8_t *p = dst_ptr + y * MI_SIZE * dst_stride;
+
+    if ((y & 3) == 0 && (y + 3) < y_range && min_block_height >= 16) {
+      // If we are on a row which is a multiple of 4, and the minimum height is
+      // 16 pixels, then the current and right 3 cols must contain the same
+      // prediction block. This is because dim 16 can only happen every unit of
+      // 4 mi's.
+      use_filter_type = USE_QUAD;
+      y += 3;
+    } else if ((y + 1) < y_range && min_block_height >= 8) {
+      use_filter_type = USE_DUAL;
+      y += 1;
+    }
+
+    for (int x = 0; x < x_range;) {
+      if (*tx_size == TX_INVALID) {
+        params->filter_length = 0;
+        *tx_size = TX_4X4;
+      }
+
+      filter_vert(p, dst_stride, params, cm->seq_params, use_filter_type);
+
+      // advance the destination pointer
+      const uint32_t advance_units = tx_size_wide_unit[*tx_size];
+      x += advance_units;
+      p += advance_units * MI_SIZE;
+      params += advance_units;
+      tx_size += advance_units;
+    }
+  }
+}
+
+void av1_filter_block_plane_vert_opt_chroma(
+    const AV1_COMMON *const cm, const MACROBLOCKD *const xd,
+    const MACROBLOCKD_PLANE *const plane_ptr, const uint32_t mi_row,
+    const uint32_t mi_col, AV1_DEBLOCKING_PARAMETERS *params_buf,
+    TX_SIZE *tx_buf, int plane, bool joint_filter_chroma,
+    int num_mis_in_lpf_unit_height_log2) {
+  const uint32_t scale_horz = plane_ptr->subsampling_x;
+  const uint32_t scale_vert = plane_ptr->subsampling_y;
+  const int dst_stride = plane_ptr->dst.stride;
+  // Ensure that mi_cols/mi_rows are calculated based on frame dimension aligned
+  // to MI_SIZE.
+  const int mi_cols =
+      ((plane_ptr->dst.width << scale_horz) + MI_SIZE - 1) >> MI_SIZE_LOG2;
+  const int mi_rows =
+      ((plane_ptr->dst.height << scale_vert) + MI_SIZE - 1) >> MI_SIZE_LOG2;
+  const int plane_mi_rows = ROUND_POWER_OF_TWO(mi_rows, scale_vert);
+  const int plane_mi_cols = ROUND_POWER_OF_TWO(mi_cols, scale_horz);
+  const int y_range =
+      AOMMIN((int)(plane_mi_rows - (mi_row >> scale_vert)),
+             ((1 << num_mis_in_lpf_unit_height_log2) >> scale_vert));
+  const int x_range = AOMMIN((int)(plane_mi_cols - (mi_col >> scale_horz)),
+                             (MAX_MIB_SIZE >> scale_horz));
+  const ptrdiff_t mode_step = (ptrdiff_t)1 << scale_horz;
+
+  for (int y = 0; y < y_range; y++) {
+    const uint32_t curr_y = mi_row + (y << scale_vert);
+    const uint32_t x_start = mi_col + (0 << scale_horz);
+    const uint32_t x_end = mi_col + (x_range << scale_horz);
+    int min_height = tx_size_high[TX_64X64];
+    set_lpf_parameters_for_line_chroma(params_buf, tx_buf, cm, xd, VERT_EDGE,
+                                       x_start, curr_y, plane_ptr, x_end,
+                                       mode_step, scale_horz, scale_vert,
+                                       &min_height, plane, joint_filter_chroma);
+
+    AV1_DEBLOCKING_PARAMETERS *params = params_buf;
+    TX_SIZE *tx_size = tx_buf;
+    int use_filter_type = USE_SINGLE;
+    int y_inc = 0;
+
+    if ((y & 3) == 0 && (y + 3) < y_range && min_height >= 16) {
+      // If we are on a row which is a multiple of 4, and the minimum height is
+      // 16 pixels, then the current and below 3 rows must contain the same tx
+      // block. This is because dim 16 can only happen every unit of 4 mi's.
+      use_filter_type = USE_QUAD;
+      y_inc = 3;
+    } else if (y % 2 == 0 && (y + 1) < y_range && min_height >= 8) {
+      // If we are on an even row, and the minimum height is 8 pixels, then the
+      // current and below rows must contain the same tx block. This is because
+      // dim 4 can only happen every unit of 2**0, and 8 every unit of 2**1,
+      // etc.
+      use_filter_type = USE_DUAL;
+      y_inc = 1;
+    }
+
+    for (int x = 0; x < x_range;) {
+      // inner loop always filter vertical edges in a MI block. If MI size
+      // is 8x8, it will filter the vertical edge aligned with a 8x8 block.
+      // If 4x4 transform is used, it will then filter the internal edge
+      //  aligned with a 4x4 block
+      if (*tx_size == TX_INVALID) {
+        params->filter_length = 0;
+        *tx_size = TX_4X4;
+      }
+
+      const int offset = y * MI_SIZE * dst_stride + x * MI_SIZE;
+      if (joint_filter_chroma) {
+        uint8_t *u_dst = plane_ptr[0].dst.buf + offset;
+        uint8_t *v_dst = plane_ptr[1].dst.buf + offset;
+        filter_vert_chroma(u_dst, v_dst, dst_stride, params, cm->seq_params,
+                           use_filter_type);
+      } else {
+        uint8_t *dst_ptr = plane_ptr->dst.buf + offset;
+        filter_vert(dst_ptr, dst_stride, params, cm->seq_params,
+                    use_filter_type);
+      }
+
+      // advance the destination pointer
+      const uint32_t advance_units = tx_size_wide_unit[*tx_size];
+      x += advance_units;
+      params += advance_units;
+      tx_size += advance_units;
+    }
+    y += y_inc;
+  }
+}
+
+static AOM_INLINE void filter_horz(uint8_t *dst, int dst_stride,
+                                   const AV1_DEBLOCKING_PARAMETERS *params,
+                                   const SequenceHeader *seq_params,
+                                   USE_FILTER_TYPE use_filter_type) {
+  const loop_filter_thresh *limits = params->lfthr;
+#if CONFIG_AV1_HIGHBITDEPTH
+  const int use_highbitdepth = seq_params->use_highbitdepth;
+  const aom_bit_depth_t bit_depth = seq_params->bit_depth;
+  if (use_highbitdepth) {
+    uint16_t *dst_shortptr = CONVERT_TO_SHORTPTR(dst);
+    if (use_filter_type == USE_QUAD) {
+      switch (params->filter_length) {
+        // apply 4-tap filtering
+        case 4:
+          aom_highbd_lpf_horizontal_4_dual(
+              dst_shortptr, dst_stride, limits->mblim, limits->lim,
+              limits->hev_thr, limits->mblim, limits->lim, limits->hev_thr,
+              bit_depth);
+          aom_highbd_lpf_horizontal_4_dual(
+              dst_shortptr + (2 * MI_SIZE), dst_stride, limits->mblim,
+              limits->lim, limits->hev_thr, limits->mblim, limits->lim,
+              limits->hev_thr, bit_depth);
+          break;
+        case 6:  // apply 6-tap filter for chroma plane only
+          aom_highbd_lpf_horizontal_6_dual(
+              dst_shortptr, dst_stride, limits->mblim, limits->lim,
+              limits->hev_thr, limits->mblim, limits->lim, limits->hev_thr,
+              bit_depth);
+          aom_highbd_lpf_horizontal_6_dual(
+              dst_shortptr + (2 * MI_SIZE), dst_stride, limits->mblim,
+              limits->lim, limits->hev_thr, limits->mblim, limits->lim,
+              limits->hev_thr, bit_depth);
+          break;
+        // apply 8-tap filtering
+        case 8:
+          aom_highbd_lpf_horizontal_8_dual(
+              dst_shortptr, dst_stride, limits->mblim, limits->lim,
+              limits->hev_thr, limits->mblim, limits->lim, limits->hev_thr,
+              bit_depth);
+          aom_highbd_lpf_horizontal_8_dual(
+              dst_shortptr + (2 * MI_SIZE), dst_stride, limits->mblim,
+              limits->lim, limits->hev_thr, limits->mblim, limits->lim,
+              limits->hev_thr, bit_depth);
+          break;
+        // apply 14-tap filtering
+        case 14:
+          aom_highbd_lpf_horizontal_14_dual(
+              dst_shortptr, dst_stride, limits->mblim, limits->lim,
+              limits->hev_thr, limits->mblim, limits->lim, limits->hev_thr,
+              bit_depth);
+          aom_highbd_lpf_horizontal_14_dual(
+              dst_shortptr + (2 * MI_SIZE), dst_stride, limits->mblim,
+              limits->lim, limits->hev_thr, limits->mblim, limits->lim,
+              limits->hev_thr, bit_depth);
+          break;
+        // no filtering
+        default: break;
+      }
+    } else if (use_filter_type == USE_DUAL) {
+      switch (params->filter_length) {
+        // apply 4-tap filtering
+        case 4:
+          aom_highbd_lpf_horizontal_4_dual(
+              dst_shortptr, dst_stride, limits->mblim, limits->lim,
+              limits->hev_thr, limits->mblim, limits->lim, limits->hev_thr,
+              bit_depth);
+          break;
+        case 6:  // apply 6-tap filter for chroma plane only
+          aom_highbd_lpf_horizontal_6_dual(
+              dst_shortptr, dst_stride, limits->mblim, limits->lim,
+              limits->hev_thr, limits->mblim, limits->lim, limits->hev_thr,
+              bit_depth);
+          break;
+        // apply 8-tap filtering
+        case 8:
+          aom_highbd_lpf_horizontal_8_dual(
+              dst_shortptr, dst_stride, limits->mblim, limits->lim,
+              limits->hev_thr, limits->mblim, limits->lim, limits->hev_thr,
+              bit_depth);
+          break;
+        // apply 14-tap filtering
+        case 14:
+          aom_highbd_lpf_horizontal_14_dual(
+              dst_shortptr, dst_stride, limits->mblim, limits->lim,
+              limits->hev_thr, limits->mblim, limits->lim, limits->hev_thr,
+              bit_depth);
+          break;
+        // no filtering
+        default: break;
+      }
+    } else {
+      assert(use_filter_type == USE_SINGLE);
+      switch (params->filter_length) {
+        // apply 4-tap filtering
+        case 4:
+          aom_highbd_lpf_horizontal_4(dst_shortptr, dst_stride, limits->mblim,
+                                      limits->lim, limits->hev_thr, bit_depth);
+          break;
+        case 6:  // apply 6-tap filter for chroma plane only
+          aom_highbd_lpf_horizontal_6(dst_shortptr, dst_stride, limits->mblim,
+                                      limits->lim, limits->hev_thr, bit_depth);
+          break;
+        // apply 8-tap filtering
+        case 8:
+          aom_highbd_lpf_horizontal_8(dst_shortptr, dst_stride, limits->mblim,
+                                      limits->lim, limits->hev_thr, bit_depth);
+          break;
+        // apply 14-tap filtering
+        case 14:
+          aom_highbd_lpf_horizontal_14(dst_shortptr, dst_stride, limits->mblim,
+                                       limits->lim, limits->hev_thr, bit_depth);
+          break;
+        // no filtering
+        default: break;
+      }
+    }
+    return;
+  }
+#endif  // CONFIG_AV1_HIGHBITDEPTH
+  if (use_filter_type == USE_QUAD) {
+    // Only one set of loop filter parameters (mblim, lim and hev_thr) is
+    // passed as argument to quad loop filter because quad loop filter is
+    // called for those cases where all the 4 set of loop filter parameters
+    // are equal.
+    switch (params->filter_length) {
+      // apply 4-tap filtering
+      case 4:
+        aom_lpf_horizontal_4_quad(dst, dst_stride, limits->mblim, limits->lim,
+                                  limits->hev_thr);
+        break;
+      case 6:  // apply 6-tap filter for chroma plane only
+        aom_lpf_horizontal_6_quad(dst, dst_stride, limits->mblim, limits->lim,
+                                  limits->hev_thr);
+        break;
+      // apply 8-tap filtering
+      case 8:
+        aom_lpf_horizontal_8_quad(dst, dst_stride, limits->mblim, limits->lim,
+                                  limits->hev_thr);
+        break;
+      // apply 14-tap filtering
+      case 14:
+        aom_lpf_horizontal_14_quad(dst, dst_stride, limits->mblim, limits->lim,
+                                   limits->hev_thr);
+        break;
+      // no filtering
+      default: break;
+    }
+  } else if (use_filter_type == USE_DUAL) {
+    switch (params->filter_length) {
+      // apply 4-tap filtering
+      case 4:
+        aom_lpf_horizontal_4_dual(dst, dst_stride, limits->mblim, limits->lim,
+                                  limits->hev_thr, limits->mblim, limits->lim,
+                                  limits->hev_thr);
+        break;
+      case 6:  // apply 6-tap filter for chroma plane only
+        aom_lpf_horizontal_6_dual(dst, dst_stride, limits->mblim, limits->lim,
+                                  limits->hev_thr, limits->mblim, limits->lim,
+                                  limits->hev_thr);
+        break;
+      // apply 8-tap filtering
+      case 8:
+        aom_lpf_horizontal_8_dual(dst, dst_stride, limits->mblim, limits->lim,
+                                  limits->hev_thr, limits->mblim, limits->lim,
+                                  limits->hev_thr);
+        break;
+      // apply 14-tap filtering
+      case 14:
+        aom_lpf_horizontal_14_dual(dst, dst_stride, limits->mblim, limits->lim,
+                                   limits->hev_thr, limits->mblim, limits->lim,
+                                   limits->hev_thr);
+        break;
+      // no filtering
+      default: break;
+    }
+  } else {
+    assert(use_filter_type == USE_SINGLE);
+    switch (params->filter_length) {
+      // apply 4-tap filtering
+      case 4:
+        aom_lpf_horizontal_4(dst, dst_stride, limits->mblim, limits->lim,
+                             limits->hev_thr);
+        break;
+      case 6:  // apply 6-tap filter for chroma plane only
+        aom_lpf_horizontal_6(dst, dst_stride, limits->mblim, limits->lim,
+                             limits->hev_thr);
+        break;
+      // apply 8-tap filtering
+      case 8:
+        aom_lpf_horizontal_8(dst, dst_stride, limits->mblim, limits->lim,
+                             limits->hev_thr);
+        break;
+      // apply 14-tap filtering
+      case 14:
+        aom_lpf_horizontal_14(dst, dst_stride, limits->mblim, limits->lim,
+                              limits->hev_thr);
+        break;
+      // no filtering
+      default: break;
+    }
+  }
+#if !CONFIG_AV1_HIGHBITDEPTH
+  (void)seq_params;
+#endif  // !CONFIG_AV1_HIGHBITDEPTH
+}
+
+static AOM_INLINE void filter_horz_chroma(
+    uint8_t *u_dst, uint8_t *v_dst, int dst_stride,
+    const AV1_DEBLOCKING_PARAMETERS *params, const SequenceHeader *seq_params,
+    USE_FILTER_TYPE use_filter_type) {
+  const loop_filter_thresh *u_limits = params->lfthr;
+  const loop_filter_thresh *v_limits = params->lfthr;
+#if CONFIG_AV1_HIGHBITDEPTH
+  const int use_highbitdepth = seq_params->use_highbitdepth;
+  const aom_bit_depth_t bit_depth = seq_params->bit_depth;
+  if (use_highbitdepth) {
+    uint16_t *u_dst_shortptr = CONVERT_TO_SHORTPTR(u_dst);
+    uint16_t *v_dst_shortptr = CONVERT_TO_SHORTPTR(v_dst);
+    if (use_filter_type == USE_QUAD) {
+      switch (params->filter_length) {
+        // apply 4-tap filtering
+        case 4:
+          aom_highbd_lpf_horizontal_4_dual(
+              u_dst_shortptr, dst_stride, u_limits->mblim, u_limits->lim,
+              u_limits->hev_thr, u_limits->mblim, u_limits->lim,
+              u_limits->hev_thr, bit_depth);
+          aom_highbd_lpf_horizontal_4_dual(
+              u_dst_shortptr + (2 * MI_SIZE), dst_stride, u_limits->mblim,
+              u_limits->lim, u_limits->hev_thr, u_limits->mblim, u_limits->lim,
+              u_limits->hev_thr, bit_depth);
+          aom_highbd_lpf_horizontal_4_dual(
+              v_dst_shortptr, dst_stride, v_limits->mblim, v_limits->lim,
+              v_limits->hev_thr, v_limits->mblim, v_limits->lim,
+              v_limits->hev_thr, bit_depth);
+          aom_highbd_lpf_horizontal_4_dual(
+              v_dst_shortptr + (2 * MI_SIZE), dst_stride, v_limits->mblim,
+              v_limits->lim, v_limits->hev_thr, v_limits->mblim, v_limits->lim,
+              v_limits->hev_thr, bit_depth);
+          break;
+        case 6:  // apply 6-tap filter for chroma plane only
+          aom_highbd_lpf_horizontal_6_dual(
+              u_dst_shortptr, dst_stride, u_limits->mblim, u_limits->lim,
+              u_limits->hev_thr, u_limits->mblim, u_limits->lim,
+              u_limits->hev_thr, bit_depth);
+          aom_highbd_lpf_horizontal_6_dual(
+              u_dst_shortptr + (2 * MI_SIZE), dst_stride, u_limits->mblim,
+              u_limits->lim, u_limits->hev_thr, u_limits->mblim, u_limits->lim,
+              u_limits->hev_thr, bit_depth);
+          aom_highbd_lpf_horizontal_6_dual(
+              v_dst_shortptr, dst_stride, v_limits->mblim, v_limits->lim,
+              v_limits->hev_thr, v_limits->mblim, v_limits->lim,
+              v_limits->hev_thr, bit_depth);
+          aom_highbd_lpf_horizontal_6_dual(
+              v_dst_shortptr + (2 * MI_SIZE), dst_stride, v_limits->mblim,
+              v_limits->lim, v_limits->hev_thr, v_limits->mblim, v_limits->lim,
+              v_limits->hev_thr, bit_depth);
+          break;
+        case 8:
+        case 14: assert(0);
+        // no filtering
+        default: break;
+      }
+    } else if (use_filter_type == USE_DUAL) {
+      switch (params->filter_length) {
+        // apply 4-tap filtering
+        case 4:
+          aom_highbd_lpf_horizontal_4_dual(
+              u_dst_shortptr, dst_stride, u_limits->mblim, u_limits->lim,
+              u_limits->hev_thr, u_limits->mblim, u_limits->lim,
+              u_limits->hev_thr, bit_depth);
+          aom_highbd_lpf_horizontal_4_dual(
+              v_dst_shortptr, dst_stride, v_limits->mblim, v_limits->lim,
+              v_limits->hev_thr, v_limits->mblim, v_limits->lim,
+              v_limits->hev_thr, bit_depth);
+          break;
+        case 6:  // apply 6-tap filter for chroma plane only
+          aom_highbd_lpf_horizontal_6_dual(
+              u_dst_shortptr, dst_stride, u_limits->mblim, u_limits->lim,
+              u_limits->hev_thr, u_limits->mblim, u_limits->lim,
+              u_limits->hev_thr, bit_depth);
+          aom_highbd_lpf_horizontal_6_dual(
+              v_dst_shortptr, dst_stride, v_limits->mblim, v_limits->lim,
+              v_limits->hev_thr, v_limits->mblim, v_limits->lim,
+              v_limits->hev_thr, bit_depth);
+          break;
+        case 8:
+        case 14: assert(0);
+        // no filtering
+        default: break;
+      }
+    } else {
+      assert(use_filter_type == USE_SINGLE);
+      switch (params->filter_length) {
+        // apply 4-tap filtering
+        case 4:
+          aom_highbd_lpf_horizontal_4(u_dst_shortptr, dst_stride,
+                                      u_limits->mblim, u_limits->lim,
+                                      u_limits->hev_thr, bit_depth);
+          aom_highbd_lpf_horizontal_4(v_dst_shortptr, dst_stride,
+                                      v_limits->mblim, v_limits->lim,
+                                      v_limits->hev_thr, bit_depth);
+          break;
+        case 6:  // apply 6-tap filter for chroma plane only
+          aom_highbd_lpf_horizontal_6(u_dst_shortptr, dst_stride,
+                                      u_limits->mblim, u_limits->lim,
+                                      u_limits->hev_thr, bit_depth);
+          aom_highbd_lpf_horizontal_6(v_dst_shortptr, dst_stride,
+                                      v_limits->mblim, v_limits->lim,
+                                      v_limits->hev_thr, bit_depth);
+          break;
+        case 8:
+        case 14: assert(0); break;
+        // no filtering
+        default: break;
+      }
+    }
+    return;
+  }
+#endif  // CONFIG_AV1_HIGHBITDEPTH
+  if (use_filter_type == USE_QUAD) {
+    // Only one set of loop filter parameters (mblim, lim and hev_thr) is
+    // passed as argument to quad loop filter because quad loop filter is
+    // called for those cases where all the 4 set of loop filter parameters
+    // are equal.
+    switch (params->filter_length) {
+      // apply 4-tap filtering
+      case 4:
+        aom_lpf_horizontal_4_quad(u_dst, dst_stride, u_limits->mblim,
+                                  u_limits->lim, u_limits->hev_thr);
+        aom_lpf_horizontal_4_quad(v_dst, dst_stride, v_limits->mblim,
+                                  v_limits->lim, v_limits->hev_thr);
+        break;
+      case 6:  // apply 6-tap filter for chroma plane only
+        aom_lpf_horizontal_6_quad(u_dst, dst_stride, u_limits->mblim,
+                                  u_limits->lim, u_limits->hev_thr);
+        aom_lpf_horizontal_6_quad(v_dst, dst_stride, v_limits->mblim,
+                                  v_limits->lim, v_limits->hev_thr);
+        break;
+      case 8:
+      case 14: assert(0);
+      // no filtering
+      default: break;
+    }
+  } else if (use_filter_type == USE_DUAL) {
+    switch (params->filter_length) {
+      // apply 4-tap filtering
+      case 4:
+        aom_lpf_horizontal_4_dual(u_dst, dst_stride, u_limits->mblim,
+                                  u_limits->lim, u_limits->hev_thr,
+                                  u_limits->mblim, u_limits->lim,
+                                  u_limits->hev_thr);
+        aom_lpf_horizontal_4_dual(v_dst, dst_stride, v_limits->mblim,
+                                  v_limits->lim, v_limits->hev_thr,
+                                  v_limits->mblim, v_limits->lim,
+                                  v_limits->hev_thr);
+        break;
+      case 6:  // apply 6-tap filter for chroma plane only
+        aom_lpf_horizontal_6_dual(u_dst, dst_stride, u_limits->mblim,
+                                  u_limits->lim, u_limits->hev_thr,
+                                  u_limits->mblim, u_limits->lim,
+                                  u_limits->hev_thr);
+        aom_lpf_horizontal_6_dual(v_dst, dst_stride, v_limits->mblim,
+                                  v_limits->lim, v_limits->hev_thr,
+                                  v_limits->mblim, v_limits->lim,
+                                  v_limits->hev_thr);
+        break;
+      case 8:
+      case 14: assert(0);
+      // no filtering
+      default: break;
+    }
+  } else {
+    assert(use_filter_type == USE_SINGLE);
+    switch (params->filter_length) {
+      // apply 4-tap filtering
+      case 4:
+        aom_lpf_horizontal_4(u_dst, dst_stride, u_limits->mblim, u_limits->lim,
+                             u_limits->hev_thr);
+        aom_lpf_horizontal_4(v_dst, dst_stride, v_limits->mblim, v_limits->lim,
+                             u_limits->hev_thr);
+        break;
+      case 6:  // apply 6-tap filter for chroma plane only
+        aom_lpf_horizontal_6(u_dst, dst_stride, u_limits->mblim, u_limits->lim,
+                             u_limits->hev_thr);
+        aom_lpf_horizontal_6(v_dst, dst_stride, v_limits->mblim, v_limits->lim,
+                             v_limits->hev_thr);
+        break;
+      case 8:
+      case 14: assert(0); break;
+      // no filtering
+      default: break;
+    }
+  }
+#if !CONFIG_AV1_HIGHBITDEPTH
+  (void)seq_params;
+#endif  // !CONFIG_AV1_HIGHBITDEPTH
+}
+
 void av1_filter_block_plane_horz(const AV1_COMMON *const cm,
                                  const MACROBLOCKD *const xd, const int plane,
                                  const MACROBLOCKD_PLANE *const plane_ptr,
                                  const uint32_t mi_row, const uint32_t mi_col) {
-  const int col_step = MI_SIZE >> MI_SIZE_LOG2;
   const uint32_t scale_horz = plane_ptr->subsampling_x;
   const uint32_t scale_vert = plane_ptr->subsampling_y;
   uint8_t *const dst_ptr = plane_ptr->dst.buf;
   const int dst_stride = plane_ptr->dst.stride;
-  const int y_range = (MAX_MIB_SIZE >> scale_vert);
-  const int x_range = (MAX_MIB_SIZE >> scale_horz);
-  const int use_highbitdepth = cm->seq_params.use_highbitdepth;
-  const aom_bit_depth_t bit_depth = cm->seq_params.bit_depth;
-  for (int x = 0; x < x_range; x += col_step) {
+  const int plane_mi_rows =
+      ROUND_POWER_OF_TWO(cm->mi_params.mi_rows, scale_vert);
+  const int plane_mi_cols =
+      ROUND_POWER_OF_TWO(cm->mi_params.mi_cols, scale_horz);
+  const int y_range = AOMMIN((int)(plane_mi_rows - (mi_row >> scale_vert)),
+                             (MAX_MIB_SIZE >> scale_vert));
+  const int x_range = AOMMIN((int)(plane_mi_cols - (mi_col >> scale_horz)),
+                             (MAX_MIB_SIZE >> scale_horz));
+  for (int x = 0; x < x_range; x++) {
     uint8_t *p = dst_ptr + x * MI_SIZE;
     for (int y = 0; y < y_range;) {
       // inner loop always filter vertical edges in a MI block. If MI size
       // is 8x8, it will first filter the vertical edge aligned with a 8x8
-      // block. If 4x4 trasnform is used, it will then filter the internal
+      // block. If 4x4 transform is used, it will then filter the internal
       // edge aligned with a 4x4 block
       const uint32_t curr_x = ((mi_col * MI_SIZE) >> scale_horz) + x * MI_SIZE;
       const uint32_t curr_y = ((mi_row * MI_SIZE) >> scale_vert) + y * MI_SIZE;
@@ -2157,59 +1932,15 @@ void av1_filter_block_plane_horz(const AV1_COMMON *const cm,
       AV1_DEBLOCKING_PARAMETERS params;
       memset(&params, 0, sizeof(params));
 
-      tx_size =
-          set_lpf_parameters(&params, (cm->mi_stride << scale_vert), cm, xd,
-                             HORZ_EDGE, curr_x, curr_y, plane, plane_ptr);
+      tx_size = set_lpf_parameters(
+          &params, (cm->mi_params.mi_stride << scale_vert), cm, xd, HORZ_EDGE,
+          curr_x, curr_y, plane, plane_ptr);
       if (tx_size == TX_INVALID) {
         params.filter_length = 0;
         tx_size = TX_4X4;
       }
 
-      switch (params.filter_length) {
-        // apply 4-tap filtering
-        case 4:
-          if (use_highbitdepth)
-            aom_highbd_lpf_horizontal_4(CONVERT_TO_SHORTPTR(p), dst_stride,
-                                        params.mblim, params.lim,
-                                        params.hev_thr, bit_depth);
-          else
-            aom_lpf_horizontal_4(p, dst_stride, params.mblim, params.lim,
-                                 params.hev_thr);
-          break;
-        // apply 6-tap filtering
-        case 6:
-          assert(plane != 0);
-          if (use_highbitdepth)
-            aom_highbd_lpf_horizontal_6(CONVERT_TO_SHORTPTR(p), dst_stride,
-                                        params.mblim, params.lim,
-                                        params.hev_thr, bit_depth);
-          else
-            aom_lpf_horizontal_6(p, dst_stride, params.mblim, params.lim,
-                                 params.hev_thr);
-          break;
-        // apply 8-tap filtering
-        case 8:
-          if (use_highbitdepth)
-            aom_highbd_lpf_horizontal_8(CONVERT_TO_SHORTPTR(p), dst_stride,
-                                        params.mblim, params.lim,
-                                        params.hev_thr, bit_depth);
-          else
-            aom_lpf_horizontal_8(p, dst_stride, params.mblim, params.lim,
-                                 params.hev_thr);
-          break;
-        // apply 14-tap filtering
-        case 14:
-          if (use_highbitdepth)
-            aom_highbd_lpf_horizontal_14(CONVERT_TO_SHORTPTR(p), dst_stride,
-                                         params.mblim, params.lim,
-                                         params.hev_thr, bit_depth);
-          else
-            aom_lpf_horizontal_14(p, dst_stride, params.mblim, params.lim,
-                                  params.hev_thr);
-          break;
-        // no filtering
-        default: break;
-      }
+      filter_horz(p, dst_stride, &params, cm->seq_params, USE_SINGLE);
 
       // advance the destination pointer
       advance_units = tx_size_high_unit[tx_size];
@@ -2219,159 +1950,150 @@ void av1_filter_block_plane_horz(const AV1_COMMON *const cm,
   }
 }
 
-static void loop_filter_rows(YV12_BUFFER_CONFIG *frame_buffer, AV1_COMMON *cm,
-                             MACROBLOCKD *xd, int start, int stop,
-#if LOOP_FILTER_BITMASK
-                             int is_decoding,
-#endif
-                             int plane_start, int plane_end) {
-  struct macroblockd_plane *pd = xd->plane;
-  const int col_start = 0;
-  const int col_end = cm->mi_cols;
-  int mi_row, mi_col;
-  int plane;
+void av1_filter_block_plane_horz_opt(
+    const AV1_COMMON *const cm, const MACROBLOCKD *const xd,
+    const MACROBLOCKD_PLANE *const plane_ptr, const uint32_t mi_row,
+    const uint32_t mi_col, AV1_DEBLOCKING_PARAMETERS *params_buf,
+    TX_SIZE *tx_buf, int num_mis_in_lpf_unit_height_log2) {
+  uint8_t *const dst_ptr = plane_ptr->dst.buf;
+  const int dst_stride = plane_ptr->dst.stride;
+  // Ensure that mi_cols/mi_rows are calculated based on frame dimension aligned
+  // to MI_SIZE.
+  const int plane_mi_cols =
+      CEIL_POWER_OF_TWO(plane_ptr->dst.width, MI_SIZE_LOG2);
+  const int plane_mi_rows =
+      CEIL_POWER_OF_TWO(plane_ptr->dst.height, MI_SIZE_LOG2);
+  const int y_range = AOMMIN((int)(plane_mi_rows - mi_row),
+                             (1 << num_mis_in_lpf_unit_height_log2));
+  const int x_range = AOMMIN((int)(plane_mi_cols - mi_col), MAX_MIB_SIZE);
 
-#if LOOP_FILTER_BITMASK
-  if (is_decoding) {
-    for (plane = plane_start; plane < plane_end; plane++) {
-      if (plane == 0 && !(cm->lf.filter_level[0]) && !(cm->lf.filter_level[1]))
-        break;
-      else if (plane == 1 && !(cm->lf.filter_level_u))
-        continue;
-      else if (plane == 2 && !(cm->lf.filter_level_v))
-        continue;
+  const ptrdiff_t mode_step = cm->mi_params.mi_stride;
+  for (int x = 0; x < x_range; x++) {
+    const uint32_t curr_x = mi_col + x;
+    const uint32_t y_start = mi_row;
+    const uint32_t y_end = mi_row + y_range;
+    int min_block_width = block_size_high[BLOCK_128X128];
+    set_lpf_parameters_for_line_luma(params_buf, tx_buf, cm, xd, HORZ_EDGE,
+                                     curr_x, y_start, plane_ptr, y_end,
+                                     mode_step, &min_block_width);
 
-      av1_setup_dst_planes(pd, cm->seq_params.sb_size, frame_buffer, 0, 0,
-                           plane, plane + 1);
-      av1_build_bitmask_vert_info(cm, &pd[plane], plane);
-      av1_build_bitmask_horz_info(cm, &pd[plane], plane);
+    AV1_DEBLOCKING_PARAMETERS *params = params_buf;
+    TX_SIZE *tx_size = tx_buf;
+    USE_FILTER_TYPE filter_type = USE_SINGLE;
 
-      // apply loop filtering which only goes through buffer once
-      for (mi_row = start; mi_row < stop; mi_row += MI_SIZE_64X64) {
-        for (mi_col = col_start; mi_col < col_end; mi_col += MI_SIZE_64X64) {
-          av1_setup_dst_planes(pd, MI_SIZE_64X64, frame_buffer, mi_row, mi_col,
-                               plane, plane + 1);
-          av1_filter_block_plane_bitmask_vert(cm, &pd[plane], plane, mi_row,
-                                              mi_col);
-          if (mi_col - MI_SIZE_64X64 >= 0) {
-            av1_setup_dst_planes(pd, MI_SIZE_64X64, frame_buffer, mi_row,
-                                 mi_col - MI_SIZE_64X64, plane, plane + 1);
-            av1_filter_block_plane_bitmask_horz(cm, &pd[plane], plane, mi_row,
-                                                mi_col - MI_SIZE_64X64);
-          }
-        }
-        av1_setup_dst_planes(pd, MI_SIZE_64X64, frame_buffer, mi_row,
-                             mi_col - MI_SIZE_64X64, plane, plane + 1);
-        av1_filter_block_plane_bitmask_horz(cm, &pd[plane], plane, mi_row,
-                                            mi_col - MI_SIZE_64X64);
-      }
-    }
-    return;
-  }
-#endif
+    uint8_t *p = dst_ptr + x * MI_SIZE;
 
-  for (plane = plane_start; plane < plane_end; plane++) {
-    if (plane == 0 && !(cm->lf.filter_level[0]) && !(cm->lf.filter_level[1]))
-      break;
-    else if (plane == 1 && !(cm->lf.filter_level_u))
-      continue;
-    else if (plane == 2 && !(cm->lf.filter_level_v))
-      continue;
-
-#if LOOP_FILTER_BITMASK
-    // filter all vertical edges every superblock (could be 128x128 or 64x64)
-    for (mi_row = start; mi_row < stop; mi_row += cm->seq_params.mib_size) {
-      for (mi_col = col_start; mi_col < col_end;
-           mi_col += cm->seq_params.mib_size) {
-        av1_setup_dst_planes(pd, cm->seq_params.sb_size, frame_buffer, mi_row,
-                             mi_col, plane, plane + 1);
-
-        av1_setup_bitmask(cm, mi_row, mi_col, plane, pd[plane].subsampling_x,
-                          pd[plane].subsampling_y, stop, col_end);
-        av1_filter_block_plane_ver(cm, &pd[plane], plane, mi_row, mi_col);
-      }
+    if ((x & 3) == 0 && (x + 3) < x_range && min_block_width >= 16) {
+      // If we are on a col which is a multiple of 4, and the minimum width is
+      // 16 pixels, then the current and right 3 cols must contain the same
+      // prediction block. This is because dim 16 can only happen every unit of
+      // 4 mi's.
+      filter_type = USE_QUAD;
+      x += 3;
+    } else if ((x + 1) < x_range && min_block_width >= 8) {
+      filter_type = USE_DUAL;
+      x += 1;
     }
 
-    // filter all horizontal edges every superblock
-    for (mi_row = start; mi_row < stop; mi_row += cm->seq_params.mib_size) {
-      for (mi_col = col_start; mi_col < col_end;
-           mi_col += cm->seq_params.mib_size) {
-        av1_setup_dst_planes(pd, cm->seq_params.sb_size, frame_buffer, mi_row,
-                             mi_col, plane, plane + 1);
-
-        av1_filter_block_plane_hor(cm, &pd[plane], plane, mi_row, mi_col);
-      }
-    }
-#else
-    if (cm->lf.combine_vert_horz_lf) {
-      // filter all vertical and horizontal edges in every 128x128 super block
-      for (mi_row = start; mi_row < stop; mi_row += MAX_MIB_SIZE) {
-        for (mi_col = col_start; mi_col < col_end; mi_col += MAX_MIB_SIZE) {
-          // filter vertical edges
-          av1_setup_dst_planes(pd, cm->seq_params.sb_size, frame_buffer, mi_row,
-                               mi_col, plane, plane + 1);
-          av1_filter_block_plane_vert(cm, xd, plane, &pd[plane], mi_row,
-                                      mi_col);
-          // filter horizontal edges
-          if (mi_col - MAX_MIB_SIZE >= 0) {
-            av1_setup_dst_planes(pd, cm->seq_params.sb_size, frame_buffer,
-                                 mi_row, mi_col - MAX_MIB_SIZE, plane,
-                                 plane + 1);
-            av1_filter_block_plane_horz(cm, xd, plane, &pd[plane], mi_row,
-                                        mi_col - MAX_MIB_SIZE);
-          }
-        }
-        // filter horizontal edges
-        av1_setup_dst_planes(pd, cm->seq_params.sb_size, frame_buffer, mi_row,
-                             mi_col - MAX_MIB_SIZE, plane, plane + 1);
-        av1_filter_block_plane_horz(cm, xd, plane, &pd[plane], mi_row,
-                                    mi_col - MAX_MIB_SIZE);
-      }
-    } else {
-      // filter all vertical edges in every 128x128 super block
-      for (mi_row = start; mi_row < stop; mi_row += MAX_MIB_SIZE) {
-        for (mi_col = col_start; mi_col < col_end; mi_col += MAX_MIB_SIZE) {
-          av1_setup_dst_planes(pd, cm->seq_params.sb_size, frame_buffer, mi_row,
-                               mi_col, plane, plane + 1);
-          av1_filter_block_plane_vert(cm, xd, plane, &pd[plane], mi_row,
-                                      mi_col);
-        }
+    for (int y = 0; y < y_range;) {
+      if (*tx_size == TX_INVALID) {
+        params->filter_length = 0;
+        *tx_size = TX_4X4;
       }
 
-      // filter all horizontal edges in every 128x128 super block
-      for (mi_row = start; mi_row < stop; mi_row += MAX_MIB_SIZE) {
-        for (mi_col = col_start; mi_col < col_end; mi_col += MAX_MIB_SIZE) {
-          av1_setup_dst_planes(pd, cm->seq_params.sb_size, frame_buffer, mi_row,
-                               mi_col, plane, plane + 1);
-          av1_filter_block_plane_horz(cm, xd, plane, &pd[plane], mi_row,
-                                      mi_col);
-        }
-      }
+      filter_horz(p, dst_stride, params, cm->seq_params, filter_type);
+
+      // advance the destination pointer
+      const uint32_t advance_units = tx_size_high_unit[*tx_size];
+      y += advance_units;
+      p += advance_units * dst_stride * MI_SIZE;
+      params += advance_units;
+      tx_size += advance_units;
     }
-#endif  // LOOP_FILTER_BITMASK
   }
 }
 
-void av1_loop_filter_frame(YV12_BUFFER_CONFIG *frame, AV1_COMMON *cm,
-                           MACROBLOCKD *xd,
-#if LOOP_FILTER_BITMASK
-                           int is_decoding,
-#endif
-                           int plane_start, int plane_end, int partial_frame) {
-  int start_mi_row, end_mi_row, mi_rows_to_filter;
+void av1_filter_block_plane_horz_opt_chroma(
+    const AV1_COMMON *const cm, const MACROBLOCKD *const xd,
+    const MACROBLOCKD_PLANE *const plane_ptr, const uint32_t mi_row,
+    const uint32_t mi_col, AV1_DEBLOCKING_PARAMETERS *params_buf,
+    TX_SIZE *tx_buf, int plane, bool joint_filter_chroma,
+    int num_mis_in_lpf_unit_height_log2) {
+  const uint32_t scale_horz = plane_ptr->subsampling_x;
+  const uint32_t scale_vert = plane_ptr->subsampling_y;
+  const int dst_stride = plane_ptr->dst.stride;
+  // Ensure that mi_cols/mi_rows are calculated based on frame dimension aligned
+  // to MI_SIZE.
+  const int mi_cols =
+      ((plane_ptr->dst.width << scale_horz) + MI_SIZE - 1) >> MI_SIZE_LOG2;
+  const int mi_rows =
+      ((plane_ptr->dst.height << scale_vert) + MI_SIZE - 1) >> MI_SIZE_LOG2;
+  const int plane_mi_rows = ROUND_POWER_OF_TWO(mi_rows, scale_vert);
+  const int plane_mi_cols = ROUND_POWER_OF_TWO(mi_cols, scale_horz);
+  const int y_range =
+      AOMMIN((int)(plane_mi_rows - (mi_row >> scale_vert)),
+             ((1 << num_mis_in_lpf_unit_height_log2) >> scale_vert));
+  const int x_range = AOMMIN((int)(plane_mi_cols - (mi_col >> scale_horz)),
+                             (MAX_MIB_SIZE >> scale_horz));
+  const ptrdiff_t mode_step = cm->mi_params.mi_stride << scale_vert;
+  for (int x = 0; x < x_range; x++) {
+    const uint32_t y_start = mi_row + (0 << scale_vert);
+    const uint32_t curr_x = mi_col + (x << scale_horz);
+    const uint32_t y_end = mi_row + (y_range << scale_vert);
+    int min_width = tx_size_wide[TX_64X64];
+    set_lpf_parameters_for_line_chroma(params_buf, tx_buf, cm, xd, HORZ_EDGE,
+                                       curr_x, y_start, plane_ptr, y_end,
+                                       mode_step, scale_horz, scale_vert,
+                                       &min_width, plane, joint_filter_chroma);
 
-  start_mi_row = 0;
-  mi_rows_to_filter = cm->mi_rows;
-  if (partial_frame && cm->mi_rows > 8) {
-    start_mi_row = cm->mi_rows >> 1;
-    start_mi_row &= 0xfffffff8;
-    mi_rows_to_filter = AOMMAX(cm->mi_rows / 8, 8);
+    AV1_DEBLOCKING_PARAMETERS *params = params_buf;
+    TX_SIZE *tx_size = tx_buf;
+    USE_FILTER_TYPE use_filter_type = USE_SINGLE;
+    int x_inc = 0;
+
+    if ((x & 3) == 0 && (x + 3) < x_range && min_width >= 16) {
+      // If we are on a col which is a multiple of 4, and the minimum width is
+      // 16 pixels, then the current and right 3 cols must contain the same tx
+      // block. This is because dim 16 can only happen every unit of 4 mi's.
+      use_filter_type = USE_QUAD;
+      x_inc = 3;
+    } else if (x % 2 == 0 && (x + 1) < x_range && min_width >= 8) {
+      // If we are on an even col, and the minimum width is 8 pixels, then the
+      // current and left cols must contain the same tx block. This is because
+      // dim 4 can only happen every unit of 2**0, and 8 every unit of 2**1,
+      // etc.
+      use_filter_type = USE_DUAL;
+      x_inc = 1;
+    }
+
+    for (int y = 0; y < y_range;) {
+      // inner loop always filter vertical edges in a MI block. If MI size
+      // is 8x8, it will first filter the vertical edge aligned with a 8x8
+      // block. If 4x4 transform is used, it will then filter the internal
+      // edge aligned with a 4x4 block
+      if (*tx_size == TX_INVALID) {
+        params->filter_length = 0;
+        *tx_size = TX_4X4;
+      }
+
+      const int offset = y * MI_SIZE * dst_stride + x * MI_SIZE;
+      if (joint_filter_chroma) {
+        uint8_t *u_dst = plane_ptr[0].dst.buf + offset;
+        uint8_t *v_dst = plane_ptr[1].dst.buf + offset;
+        filter_horz_chroma(u_dst, v_dst, dst_stride, params, cm->seq_params,
+                           use_filter_type);
+      } else {
+        uint8_t *dst_ptr = plane_ptr->dst.buf + offset;
+        filter_horz(dst_ptr, dst_stride, params, cm->seq_params,
+                    use_filter_type);
+      }
+
+      // advance the destination pointer
+      const int advance_units = tx_size_high_unit[*tx_size];
+      y += advance_units;
+      params += advance_units;
+      tx_size += advance_units;
+    }
+    x += x_inc;
   }
-  end_mi_row = start_mi_row + mi_rows_to_filter;
-  av1_loop_filter_frame_init(cm, plane_start, plane_end);
-  loop_filter_rows(frame, cm, xd, start_mi_row, end_mi_row,
-#if LOOP_FILTER_BITMASK
-                   is_decoding,
-#endif
-                   plane_start, plane_end);
 }

@@ -34,7 +34,7 @@
 extern "C" {
 #endif
 
-#include "aom_dsp/grain_synthesis.h"
+#include "aom_dsp/grain_params.h"
 #include "aom/internal/aom_codec_internal.h"
 
 typedef struct aom_film_grain_table_entry_t {
@@ -52,7 +52,7 @@ typedef struct {
 /*!\brief Add a mapping from [time_stamp, end_time) to the given grain
  * parameters
  *
- * \param[in/out] table      The grain table
+ * \param[in,out] table      The grain table
  * \param[in]     time_stamp The start time stamp
  * \param[in]     end_stamp  The end time_stamp
  * \param[in]     grain      The grain parameters

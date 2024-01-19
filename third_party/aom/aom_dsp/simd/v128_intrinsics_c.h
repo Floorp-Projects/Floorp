@@ -14,6 +14,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "config/aom_config.h"
 
@@ -63,10 +64,7 @@ SIMD_INLINE c_v128 c_v128_from_32(uint32_t a, uint32_t b, uint32_t c,
 
 SIMD_INLINE c_v128 c_v128_load_unaligned(const void *p) {
   c_v128 t;
-  uint8_t *pp = (uint8_t *)p;
-  uint8_t *q = (uint8_t *)&t;
-  int c;
-  for (c = 0; c < 16; c++) q[c] = pp[c];
+  memcpy(&t, p, 16);
   return t;
 }
 
@@ -79,10 +77,7 @@ SIMD_INLINE c_v128 c_v128_load_aligned(const void *p) {
 }
 
 SIMD_INLINE void c_v128_store_unaligned(void *p, c_v128 a) {
-  uint8_t *pp = (uint8_t *)p;
-  uint8_t *q = (uint8_t *)&a;
-  int c;
-  for (c = 0; c < 16; c++) pp[c] = q[c];
+  memcpy(p, &a, 16);
 }
 
 SIMD_INLINE void c_v128_store_aligned(void *p, c_v128 a) {
@@ -93,7 +88,7 @@ SIMD_INLINE void c_v128_store_aligned(void *p, c_v128 a) {
   c_v128_store_unaligned(p, a);
 }
 
-SIMD_INLINE c_v128 c_v128_zero() {
+SIMD_INLINE c_v128 c_v128_zero(void) {
   c_v128 t;
   t.u64[1] = t.u64[0] = 0;
   return t;
@@ -145,26 +140,39 @@ SIMD_INLINE uint64_t c_v128_hadd_u8(c_v128 a) {
   return c_v64_hadd_u8(a.v64[1]) + c_v64_hadd_u8(a.v64[0]);
 }
 
-typedef uint32_t c_sad128_internal;
+typedef struct {
+  uint32_t val;
+  int count;
+} c_sad128_internal;
 
-SIMD_INLINE c_sad128_internal c_v128_sad_u8_init() { return 0; }
+SIMD_INLINE c_sad128_internal c_v128_sad_u8_init(void) {
+  c_sad128_internal t;
+  t.val = t.count = 0;
+  return t;
+}
 
 /* Implementation dependent return value.  Result must be finalised with
-   v128_sad_u8_sum().
-   The result for more than 32 v128_sad_u8() calls is undefined. */
+ * v128_sad_u8_sum(). The result for more than 32 v128_sad_u8() calls is
+ * undefined. */
 SIMD_INLINE c_sad128_internal c_v128_sad_u8(c_sad128_internal s, c_v128 a,
                                             c_v128 b) {
   int c;
   for (c = 0; c < 16; c++)
-    s += a.u8[c] > b.u8[c] ? a.u8[c] - b.u8[c] : b.u8[c] - a.u8[c];
+    s.val += a.u8[c] > b.u8[c] ? a.u8[c] - b.u8[c] : b.u8[c] - a.u8[c];
+  s.count++;
+  if (SIMD_CHECK && s.count > 32) {
+    fprintf(stderr,
+            "Error: sad called 32 times returning an undefined result\n");
+    abort();
+  }
   return s;
 }
 
-SIMD_INLINE uint32_t c_v128_sad_u8_sum(c_sad128_internal s) { return s; }
+SIMD_INLINE uint32_t c_v128_sad_u8_sum(c_sad128_internal s) { return s.val; }
 
 typedef uint32_t c_ssd128_internal;
 
-SIMD_INLINE c_ssd128_internal c_v128_ssd_u8_init() { return 0; }
+SIMD_INLINE c_ssd128_internal c_v128_ssd_u8_init(void) { return 0; }
 
 /* Implementation dependent return value.  Result must be finalised with
  * v128_ssd_u8_sum(). */
@@ -720,6 +728,7 @@ SIMD_INLINE c_v128 c_v128_cmpeq_32(c_v128 a, c_v128 b) {
 }
 
 SIMD_INLINE c_v128 c_v128_shl_n_byte(c_v128 a, const unsigned int n) {
+  if (n == 0) return a;
   if (n < 8)
     return c_v128_from_v64(c_v64_or(c_v64_shl_n_byte(a.v64[1], n),
                                     c_v64_shr_n_byte(a.v64[0], 8 - n)),
@@ -729,6 +738,7 @@ SIMD_INLINE c_v128 c_v128_shl_n_byte(c_v128 a, const unsigned int n) {
 }
 
 SIMD_INLINE c_v128 c_v128_shr_n_byte(c_v128 a, const unsigned int n) {
+  if (n == 0) return a;
   if (n < 8)
     return c_v128_from_v64(c_v64_shr_n_byte(a.v64[1], n),
                            c_v64_or(c_v64_shr_n_byte(a.v64[0], n),
@@ -854,7 +864,7 @@ SIMD_INLINE c_v128 c_v128_shr_n_s64(c_v128 a, const unsigned int n) {
 
 typedef uint32_t c_sad128_internal_u16;
 
-SIMD_INLINE c_sad128_internal_u16 c_v128_sad_u16_init() { return 0; }
+SIMD_INLINE c_sad128_internal_u16 c_v128_sad_u16_init(void) { return 0; }
 
 /* Implementation dependent return value.  Result must be finalised with
  * v128_sad_u16_sum(). */
@@ -870,7 +880,7 @@ SIMD_INLINE uint32_t c_v128_sad_u16_sum(c_sad128_internal_u16 s) { return s; }
 
 typedef uint64_t c_ssd128_internal_s16;
 
-SIMD_INLINE c_ssd128_internal_s16 c_v128_ssd_s16_init() { return 0; }
+SIMD_INLINE c_ssd128_internal_s16 c_v128_ssd_s16_init(void) { return 0; }
 
 /* Implementation dependent return value.  Result must be finalised with
  * v128_ssd_s16_sum(). */

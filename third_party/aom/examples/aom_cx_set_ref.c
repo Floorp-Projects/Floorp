@@ -61,7 +61,7 @@
 
 static const char *exec_name;
 
-void usage_exit() {
+void usage_exit(void) {
   fprintf(stderr,
           "Usage: %s <codec> <width> <height> <infile> <outfile> "
           "<frame> <limit(optional)>\n",
@@ -108,7 +108,7 @@ static void testing_decode(aom_codec_ctx_t *encoder, aom_codec_ctx_t *decoder,
     }
 
     printf(
-        "Encode/decode mismatch on frame %d at"
+        "Encode/decode mismatch on frame %u at"
         " Y[%d, %d] {%d/%d},"
         " U[%d, %d] {%d/%d},"
         " V[%d, %d] {%d/%d}",
@@ -141,9 +141,7 @@ static int encode_frame(aom_codec_ctx_t *ecodec, aom_image_t *img,
     if (pkt->kind == AOM_CODEC_CX_FRAME_PKT) {
       const int keyframe = (pkt->data.frame.flags & AOM_FRAME_IS_KEY) != 0;
 
-      if (!(pkt->data.frame.flags & AOM_FRAME_IS_FRAGMENT)) {
-        *frame_out += 1;
-      }
+      ++*frame_out;
 
       if (!aom_video_writer_write_frame(writer, pkt->data.frame.buf,
                                         pkt->data.frame.sz,
@@ -188,7 +186,6 @@ int main(int argc, char **argv) {
   aom_codec_err_t res;
   AvxVideoInfo info;
   AvxVideoWriter *writer = NULL;
-  const AvxInterface *encoder = NULL;
   int flags = 0;
   int allocated_raw_shift = 0;
   aom_img_fmt_t raw_fmt = AOM_IMG_FMT_I420;
@@ -231,7 +228,7 @@ int main(int argc, char **argv) {
   outfile_arg = argv[5];
   update_frame_num_arg = argv[6];
 
-  encoder = get_aom_encoder_by_name(codec_arg);
+  aom_codec_iface_t *encoder = get_aom_encoder_by_short_name(codec_arg);
   if (!encoder) die("Unsupported codec.");
 
   update_frame_num = (unsigned int)strtoul(update_frame_num_arg, NULL, 0);
@@ -248,7 +245,7 @@ int main(int argc, char **argv) {
       die("Update frame number couldn't larger than limit\n");
   }
 
-  info.codec_fourcc = encoder->fourcc;
+  info.codec_fourcc = get_fourcc_by_aom_encoder(encoder);
   info.frame_width = (int)strtol(width_arg, NULL, 0);
   info.frame_height = (int)strtol(height_arg, NULL, 0);
   info.time_base.numerator = 1;
@@ -264,17 +261,21 @@ int main(int argc, char **argv) {
     die("Failed to allocate image.");
   }
 
-  if (!CONFIG_LOWBITDEPTH) ref_fmt |= AOM_IMG_FMT_HIGHBITDEPTH;
+  if (FORCE_HIGHBITDEPTH_DECODING) ref_fmt |= AOM_IMG_FMT_HIGHBITDEPTH;
   // Allocate memory with the border so that it can be used as a reference.
   if (!aom_img_alloc_with_border(&ext_ref, ref_fmt, info.frame_width,
                                  info.frame_height, 32, 8,
-                                 AOM_BORDER_IN_PIXELS)) {
+                                 AOM_DEC_BORDER_IN_PIXELS)) {
     die("Failed to allocate image.");
   }
 
-  printf("Using %s\n", aom_codec_iface_name(encoder->codec_interface()));
+  printf("Using %s\n", aom_codec_iface_name(encoder));
 
-  res = aom_codec_enc_config_default(encoder->codec_interface(), &cfg, 0);
+#if CONFIG_REALTIME_ONLY
+  res = aom_codec_enc_config_default(encoder, &cfg, 1);
+#else
+  res = aom_codec_enc_config_default(encoder, &cfg, 0);
+#endif
   if (res) die_codec(&ecodec, "Failed to get default codec config.");
 
   cfg.g_w = info.frame_width;
@@ -285,7 +286,7 @@ int main(int argc, char **argv) {
   cfg.g_lag_in_frames = 3;
   cfg.g_bit_depth = AOM_BITS_8;
 
-  flags |= (cfg.g_bit_depth > AOM_BITS_8 || !CONFIG_LOWBITDEPTH)
+  flags |= (cfg.g_bit_depth > AOM_BITS_8 || FORCE_HIGHBITDEPTH_DECODING)
                ? AOM_CODEC_USE_HIGHBITDEPTH
                : 0;
 
@@ -295,17 +296,17 @@ int main(int argc, char **argv) {
   if (!(infile = fopen(infile_arg, "rb")))
     die("Failed to open %s for reading.", infile_arg);
 
-  if (aom_codec_enc_init(&ecodec, encoder->codec_interface(), &cfg, flags))
-    die_codec(&ecodec, "Failed to initialize encoder");
+  if (aom_codec_enc_init(&ecodec, encoder, &cfg, flags))
+    die("Failed to initialize encoder");
 
   // Disable alt_ref.
   if (aom_codec_control(&ecodec, AOME_SET_ENABLEAUTOALTREF, 0))
     die_codec(&ecodec, "Failed to set enable auto alt ref");
 
   if (test_decode) {
-    const AvxInterface *decoder = get_aom_decoder_by_name(codec_arg);
-    if (aom_codec_dec_init(&dcodec, decoder->codec_interface(), NULL, 0))
-      die_codec(&dcodec, "Failed to initialize decoder.");
+    aom_codec_iface_t *decoder = get_aom_decoder_by_short_name(codec_arg);
+    if (aom_codec_dec_init(&dcodec, decoder, NULL, 0))
+      die("Failed to initialize decoder.");
   }
 
   // Encode frames.
@@ -313,7 +314,7 @@ int main(int argc, char **argv) {
     if (limit && frame_in >= limit) break;
     aom_image_t *frame_to_encode;
 
-    if (!CONFIG_LOWBITDEPTH) {
+    if (FORCE_HIGHBITDEPTH_DECODING) {
       // Need to allocate larger buffer to use hbd internal.
       int input_shift = 0;
       if (!allocated_raw_shift) {
@@ -336,6 +337,12 @@ int main(int argc, char **argv) {
       if (aom_codec_control(&ecodec, AV1_SET_REFERENCE, &ref))
         die_codec(&ecodec, "Failed to set encoder reference frame");
       printf(" <SET_REF>");
+
+#if CONFIG_REALTIME_ONLY
+      // Set cpu speed in encoder.
+      if (aom_codec_control(&ecodec, AOME_SET_CPUUSED, 7))
+        die_codec(&ecodec, "Failed to set cpu speed");
+#endif
 
       // If set_reference in decoder is commented out, the enc/dec mismatch
       // would be seen.
@@ -360,7 +367,7 @@ int main(int argc, char **argv) {
 
   printf("\n");
   fclose(infile);
-  printf("Processed %d frames.\n", frame_out);
+  printf("Processed %u frames.\n", frame_out);
 
   if (test_decode) {
     if (!mismatch_seen)

@@ -42,7 +42,7 @@ typedef struct {
 
 /** Dictionary for translating strings into id. */
 typedef struct {
-  char *(strs[MAX_SYMBOL_TYPES]);
+  char *strs[MAX_SYMBOL_TYPES];
   int num_strs;
 } AccountingDictionary;
 

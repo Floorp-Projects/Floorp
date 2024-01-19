@@ -20,10 +20,10 @@
 extern "C" {
 #endif
 
-void bitstream_queue_set_frame_write(int frame_idx);
-int bitstream_queue_get_frame_write(void);
-void bitstream_queue_set_frame_read(int frame_idx);
-int bitstream_queue_get_frame_read(void);
+void aom_bitstream_queue_set_frame_write(int frame_idx);
+int aom_bitstream_queue_get_frame_writee(void);
+void aom_bitstream_queue_set_frame_read(int frame_idx);
+int aom_bitstream_queue_get_frame_read(void);
 
 #if CONFIG_BITSTREAM_DEBUG
 /* This is a debug tool used to detect bitstream error. On encoder side, it

@@ -40,12 +40,6 @@ aomenc_can_encode_av1() {
   fi
 }
 
-aomenc_can_encode_av1() {
-  if [ "$(av1_encode_available)" = "yes" ]; then
-    echo yes
-  fi
-}
-
 # Utilities that echo aomenc input file parameters.
 y4m_input_non_square_par() {
   echo ""${Y4M_NOSQ_PAR_INPUT}""
@@ -89,7 +83,44 @@ aomenc_av1_ivf() {
     aomenc $(yuv_raw_input) \
       $(aomenc_encode_test_fast_params) \
       --ivf \
-      --output="${output}"
+      --output="${output}" || return 1
+
+    if [ ! -e "${output}" ]; then
+      elog "Output file does not exist."
+      return 1
+    fi
+  fi
+}
+
+aomenc_av1_ivf_rt() {
+  if [ "$(aomenc_can_encode_av1)" = "yes" ]; then
+    local output="${AV1_IVF_FILE}"
+    if [ -e "${AV1_IVF_FILE}" ]; then
+      output="${AOM_TEST_OUTPUT_DIR}/av1_test.ivf"
+    fi
+    aomenc $(yuv_raw_input) \
+      $(aomenc_encode_test_rt_params) \
+      --ivf \
+      --output="${output}" || return 1
+
+    if [ ! -e "${output}" ]; then
+      elog "Output file does not exist."
+      return 1
+    fi
+  fi
+}
+
+aomenc_av1_ivf_use_16bit_internal() {
+  if [ "$(aomenc_can_encode_av1)" = "yes" ]; then
+    local output="${AV1_IVF_FILE}"
+    if [ -e "${AV1_IVF_FILE}" ]; then
+      output="${AOM_TEST_OUTPUT_DIR}/av1_test_16bit.ivf"
+    fi
+    aomenc $(yuv_raw_input) \
+      $(aomenc_encode_test_fast_params) \
+      --ivf \
+      --use-16bit-internal \
+      --output="${output}" || return 1
 
     if [ ! -e "${output}" ]; then
       elog "Output file does not exist."
@@ -108,7 +139,7 @@ aomenc_av1_obu_annexb() {
       $(aomenc_encode_test_fast_params) \
       --obu \
       --annexb=1 \
-      --output="${output}"
+      --output="${output}" || return 1
 
     if [ ! -e "${output}" ]; then
       elog "Output file does not exist."
@@ -126,7 +157,7 @@ aomenc_av1_obu_section5() {
     aomenc $(yuv_raw_input) \
       $(aomenc_encode_test_fast_params) \
       --obu \
-      --output="${output}"
+      --output="${output}" || return 1
 
     if [ ! -e "${output}" ]; then
       elog "Output file does not exist."
@@ -144,7 +175,7 @@ aomenc_av1_webm() {
     fi
     aomenc $(yuv_raw_input) \
       $(aomenc_encode_test_fast_params) \
-      --output="${output}"
+      --output="${output}" || return 1
 
     if [ ! -e "${output}" ]; then
       elog "Output file does not exist."
@@ -160,7 +191,7 @@ aomenc_av1_webm_1pass() {
     aomenc $(yuv_raw_input) \
       $(aomenc_encode_test_fast_params) \
       --passes=1 \
-      --output="${output}"
+      --output="${output}" || return 1
 
     if [ ! -e "${output}" ]; then
       elog "Output file does not exist."
@@ -176,7 +207,7 @@ aomenc_av1_ivf_lossless() {
       $(aomenc_encode_test_fast_params) \
       --ivf \
       --output="${output}" \
-      --lossless=1
+      --lossless=1 || return 1
 
     if [ ! -e "${output}" ]; then
       elog "Output file does not exist."
@@ -193,7 +224,7 @@ aomenc_av1_ivf_minq0_maxq0() {
       --ivf \
       --output="${output}" \
       --min-q=0 \
-      --max-q=0
+      --max-q=0 || return 1
 
     if [ ! -e "${output}" ]; then
       elog "Output file does not exist."
@@ -212,7 +243,7 @@ aomenc_av1_webm_lag5_frames10() {
       $(aomenc_encode_test_fast_params) \
       --limit=${lag_total_frames} \
       --lag-in-frames=${lag_frames} \
-      --output="${output}"
+      --output="${output}" || return 1
 
     if [ ! -e "${output}" ]; then
       elog "Output file does not exist."
@@ -228,7 +259,7 @@ aomenc_av1_webm_non_square_par() {
     local output="${AOM_TEST_OUTPUT_DIR}/av1_non_square_par.webm"
     aomenc $(y4m_input_non_square_par) \
       $(aomenc_encode_test_fast_params) \
-      --output="${output}"
+      --output="${output}" || return 1
 
     if [ ! -e "${output}" ]; then
       elog "Output file does not exist."
@@ -245,7 +276,7 @@ aomenc_av1_webm_cdf_update_mode() {
       aomenc $(yuv_raw_input) \
         $(aomenc_encode_test_fast_params) \
         --cdf-update-mode=${mode} \
-        --output="${output}"
+        --output="${output}" || return 1
 
       if [ ! -e "${output}" ]; then
         elog "Output file does not exist."
@@ -255,15 +286,21 @@ aomenc_av1_webm_cdf_update_mode() {
   fi
 }
 
-aomenc_tests="aomenc_av1_ivf
-              aomenc_av1_obu_annexb
-              aomenc_av1_obu_section5
-              aomenc_av1_webm
-              aomenc_av1_webm_1pass
-              aomenc_av1_ivf_lossless
-              aomenc_av1_ivf_minq0_maxq0
-              aomenc_av1_webm_lag5_frames10
-              aomenc_av1_webm_non_square_par
-              aomenc_av1_webm_cdf_update_mode"
+if [ "$(realtime_only_build)" = "yes" ]; then
+  aomenc_tests="aomenc_av1_ivf_rt"
+else
+  aomenc_tests="aomenc_av1_ivf
+                aomenc_av1_ivf_rt
+                aomenc_av1_obu_annexb
+                aomenc_av1_obu_section5
+                aomenc_av1_webm
+                aomenc_av1_webm_1pass
+                aomenc_av1_ivf_lossless
+                aomenc_av1_ivf_minq0_maxq0
+                aomenc_av1_ivf_use_16bit_internal
+                aomenc_av1_webm_lag5_frames10
+                aomenc_av1_webm_non_square_par
+                aomenc_av1_webm_cdf_update_mode"
+fi
 
 run_tests aomenc_verify_environment "${aomenc_tests}"

@@ -164,6 +164,7 @@ class WedgeUtilsSSEOptTest : public FunctionEquivalenceTest<FSSE> {
  protected:
   static const int kIterations = 10000;
 };
+GTEST_ALLOW_UNINSTANTIATED_PARAMETERIZED_TEST(WedgeUtilsSSEOptTest);
 
 TEST_P(WedgeUtilsSSEOptTest, RandomValues) {
   DECLARE_ALIGNED(32, int16_t, r1[MAX_SB_SQUARE]);
@@ -181,7 +182,7 @@ TEST_P(WedgeUtilsSSEOptTest, RandomValues) {
 
     const uint64_t ref_res = params_.ref_func(r1, d, m, N);
     uint64_t tst_res;
-    ASM_REGISTER_STATE_CHECK(tst_res = params_.tst_func(r1, d, m, N));
+    API_REGISTER_STATE_CHECK(tst_res = params_.tst_func(r1, d, m, N));
 
     ASSERT_EQ(ref_res, tst_res);
   }
@@ -211,7 +212,7 @@ TEST_P(WedgeUtilsSSEOptTest, ExtremeValues) {
 
     const uint64_t ref_res = params_.ref_func(r1, d, m, N);
     uint64_t tst_res;
-    ASM_REGISTER_STATE_CHECK(tst_res = params_.tst_func(r1, d, m, N));
+    API_REGISTER_STATE_CHECK(tst_res = params_.tst_func(r1, d, m, N));
 
     ASSERT_EQ(ref_res, tst_res);
   }
@@ -221,7 +222,8 @@ TEST_P(WedgeUtilsSSEOptTest, ExtremeValues) {
 // av1_wedge_sign_from_residuals
 //////////////////////////////////////////////////////////////////////////////
 
-typedef int (*FSign)(const int16_t *ds, const uint8_t *m, int N, int64_t limit);
+typedef int8_t (*FSign)(const int16_t *ds, const uint8_t *m, int N,
+                        int64_t limit);
 typedef libaom_test::FuncParam<FSign> TestFuncsFSign;
 
 class WedgeUtilsSignOptTest : public FunctionEquivalenceTest<FSign> {
@@ -229,6 +231,7 @@ class WedgeUtilsSignOptTest : public FunctionEquivalenceTest<FSign> {
   static const int kIterations = 10000;
   static const int kMaxSize = 8196;  // Size limited by SIMD implementation.
 };
+GTEST_ALLOW_UNINSTANTIATED_PARAMETERIZED_TEST(WedgeUtilsSignOptTest);
 
 TEST_P(WedgeUtilsSignOptTest, RandomValues) {
   DECLARE_ALIGNED(32, int16_t, r0[MAX_SB_SQUARE]);
@@ -256,7 +259,7 @@ TEST_P(WedgeUtilsSignOptTest, RandomValues) {
 
     const int ref_res = params_.ref_func(ds, m, N, limit);
     int tst_res;
-    ASM_REGISTER_STATE_CHECK(tst_res = params_.tst_func(ds, m, N, limit));
+    API_REGISTER_STATE_CHECK(tst_res = params_.tst_func(ds, m, N, limit));
 
     ASSERT_EQ(ref_res, tst_res);
   }
@@ -311,7 +314,7 @@ TEST_P(WedgeUtilsSignOptTest, ExtremeValues) {
 
     const int ref_res = params_.ref_func(ds, m, N, limit);
     int tst_res;
-    ASM_REGISTER_STATE_CHECK(tst_res = params_.tst_func(ds, m, N, limit));
+    API_REGISTER_STATE_CHECK(tst_res = params_.tst_func(ds, m, N, limit));
 
     ASSERT_EQ(ref_res, tst_res);
   }
@@ -328,6 +331,7 @@ class WedgeUtilsDeltaSquaresOptTest : public FunctionEquivalenceTest<FDS> {
  protected:
   static const int kIterations = 10000;
 };
+GTEST_ALLOW_UNINSTANTIATED_PARAMETERIZED_TEST(WedgeUtilsDeltaSquaresOptTest);
 
 TEST_P(WedgeUtilsDeltaSquaresOptTest, RandomValues) {
   DECLARE_ALIGNED(32, int16_t, a[MAX_SB_SQUARE]);
@@ -337,7 +341,7 @@ TEST_P(WedgeUtilsDeltaSquaresOptTest, RandomValues) {
 
   for (int iter = 0; iter < kIterations && !HasFatalFailure(); ++iter) {
     for (int i = 0; i < MAX_SB_SQUARE; ++i) {
-      a[i] = rng_.Rand16();
+      a[i] = rng_.Rand16Signed();
       b[i] = rng_(2 * INT16_MAX + 1) - INT16_MAX;
     }
 
@@ -347,41 +351,58 @@ TEST_P(WedgeUtilsDeltaSquaresOptTest, RandomValues) {
     memset(&d_tst, INT16_MAX, sizeof(d_tst));
 
     params_.ref_func(d_ref, a, b, N);
-    ASM_REGISTER_STATE_CHECK(params_.tst_func(d_tst, a, b, N));
+    API_REGISTER_STATE_CHECK(params_.tst_func(d_tst, a, b, N));
 
     for (int i = 0; i < MAX_SB_SQUARE; ++i) ASSERT_EQ(d_ref[i], d_tst[i]);
   }
 }
 
 #if HAVE_SSE2
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     SSE2, WedgeUtilsSSEOptTest,
     ::testing::Values(TestFuncsFSSE(av1_wedge_sse_from_residuals_c,
                                     av1_wedge_sse_from_residuals_sse2)));
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     SSE2, WedgeUtilsSignOptTest,
     ::testing::Values(TestFuncsFSign(av1_wedge_sign_from_residuals_c,
                                      av1_wedge_sign_from_residuals_sse2)));
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     SSE2, WedgeUtilsDeltaSquaresOptTest,
     ::testing::Values(TestFuncsFDS(av1_wedge_compute_delta_squares_c,
                                    av1_wedge_compute_delta_squares_sse2)));
 #endif  // HAVE_SSE2
 
+#if HAVE_NEON
+INSTANTIATE_TEST_SUITE_P(
+    NEON, WedgeUtilsSSEOptTest,
+    ::testing::Values(TestFuncsFSSE(av1_wedge_sse_from_residuals_c,
+                                    av1_wedge_sse_from_residuals_neon)));
+
+INSTANTIATE_TEST_SUITE_P(
+    NEON, WedgeUtilsSignOptTest,
+    ::testing::Values(TestFuncsFSign(av1_wedge_sign_from_residuals_c,
+                                     av1_wedge_sign_from_residuals_neon)));
+
+INSTANTIATE_TEST_SUITE_P(
+    NEON, WedgeUtilsDeltaSquaresOptTest,
+    ::testing::Values(TestFuncsFDS(av1_wedge_compute_delta_squares_c,
+                                   av1_wedge_compute_delta_squares_neon)));
+#endif  // HAVE_NEON
+
 #if HAVE_AVX2
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     AVX2, WedgeUtilsSSEOptTest,
     ::testing::Values(TestFuncsFSSE(av1_wedge_sse_from_residuals_sse2,
                                     av1_wedge_sse_from_residuals_avx2)));
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     AVX2, WedgeUtilsSignOptTest,
     ::testing::Values(TestFuncsFSign(av1_wedge_sign_from_residuals_sse2,
                                      av1_wedge_sign_from_residuals_avx2)));
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     AVX2, WedgeUtilsDeltaSquaresOptTest,
     ::testing::Values(TestFuncsFDS(av1_wedge_compute_delta_squares_sse2,
                                    av1_wedge_compute_delta_squares_avx2)));

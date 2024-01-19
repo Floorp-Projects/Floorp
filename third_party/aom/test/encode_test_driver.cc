@@ -9,6 +9,7 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
+#include <memory>
 #include <string>
 
 #include "third_party/googletest/src/googletest/include/gtest/gtest.h"
@@ -38,7 +39,8 @@ void Encoder::InitEncoder(VideoSource *video) {
   }
 }
 
-void Encoder::EncodeFrame(VideoSource *video, const unsigned long frame_flags) {
+void Encoder::EncodeFrame(VideoSource *video,
+                          const aom_enc_frame_flags_t frame_flags) {
   if (video->img())
     EncodeFrameInternal(*video, frame_flags);
   else
@@ -55,7 +57,7 @@ void Encoder::EncodeFrame(VideoSource *video, const unsigned long frame_flags) {
 }
 
 void Encoder::EncodeFrameInternal(const VideoSource &video,
-                                  const unsigned long frame_flags) {
+                                  const aom_enc_frame_flags_t frame_flags) {
   aom_codec_err_t res;
   const aom_image_t *img = video.img();
 
@@ -75,30 +77,27 @@ void Encoder::EncodeFrameInternal(const VideoSource &video,
 }
 
 void Encoder::Flush() {
-  const aom_codec_err_t res = aom_codec_encode(&encoder_, NULL, 0, 0, 0);
+  const aom_codec_err_t res = aom_codec_encode(&encoder_, nullptr, 0, 0, 0);
   if (!encoder_.priv)
     ASSERT_EQ(AOM_CODEC_ERROR, res) << EncoderError();
   else
     ASSERT_EQ(AOM_CODEC_OK, res) << EncoderError();
 }
 
-void EncoderTest::InitializeConfig() {
-  const aom_codec_err_t res = codec_->DefaultEncoderConfig(&cfg_, 0);
-  ASSERT_EQ(AOM_CODEC_OK, res);
-}
-
-void EncoderTest::SetMode(TestMode mode) {
+void EncoderTest::InitializeConfig(TestMode mode) {
+  int usage = AOM_USAGE_GOOD_QUALITY;
   switch (mode) {
     case kOnePassGood:
     case kTwoPassGood: break;
-    case kRealTime: cfg_.g_lag_in_frames = 0; break;
+    case kRealTime: usage = AOM_USAGE_REALTIME; break;
+    case kAllIntra: usage = AOM_USAGE_ALL_INTRA; break;
     default: ASSERT_TRUE(false) << "Unexpected mode " << mode;
   }
   mode_ = mode;
-  if (mode == kTwoPassGood)
-    passes_ = 2;
-  else
-    passes_ = 1;
+  passes_ = (mode == kTwoPassGood) ? 2 : 1;
+
+  const aom_codec_err_t res = codec_->DefaultEncoderConfig(&cfg_, usage);
+  ASSERT_EQ(AOM_CODEC_OK, res);
 }
 
 static bool compare_plane(const uint8_t *const buf1, int stride1,
@@ -113,10 +112,10 @@ static bool compare_plane(const uint8_t *const buf1, int stride1,
       const int pix2 = buf2[r * stride2 + c];
 
       if (pix1 != pix2) {
-        if (mismatch_row != NULL) *mismatch_row = r;
-        if (mismatch_col != NULL) *mismatch_col = c;
-        if (mismatch_pix1 != NULL) *mismatch_pix1 = pix1;
-        if (mismatch_pix2 != NULL) *mismatch_pix2 = pix2;
+        if (mismatch_row != nullptr) *mismatch_row = r;
+        if (mismatch_col != nullptr) *mismatch_col = c;
+        if (mismatch_pix1 != nullptr) *mismatch_pix1 = pix1;
+        if (mismatch_pix2 != nullptr) *mismatch_pix2 = pix2;
         return false;
       }
     }
@@ -134,8 +133,8 @@ static bool compare_img(const aom_image_t *img1, const aom_image_t *img2,
   if (img1->fmt != img2->fmt || img1->cp != img2->cp || img1->tc != img2->tc ||
       img1->mc != img2->mc || img1->d_w != img2->d_w ||
       img1->d_h != img2->d_h || img1->monochrome != img2->monochrome) {
-    if (mismatch_row != NULL) *mismatch_row = -1;
-    if (mismatch_col != NULL) *mismatch_col = -1;
+    if (mismatch_row != nullptr) *mismatch_row = -1;
+    if (mismatch_col != nullptr) *mismatch_col = -1;
     return false;
   }
 
@@ -146,7 +145,7 @@ static bool compare_img(const aom_image_t *img1, const aom_image_t *img2,
                        aom_img_plane_width(img1, plane),
                        aom_img_plane_height(img1, plane), mismatch_row,
                        mismatch_col, mismatch_pix1, mismatch_pix2)) {
-      if (mismatch_plane != NULL) *mismatch_plane = plane;
+      if (mismatch_plane != nullptr) *mismatch_plane = plane;
       return false;
     }
   }
@@ -175,14 +174,11 @@ void EncoderTest::MismatchHook(const aom_image_t *img_enc,
 }
 
 void EncoderTest::RunLoop(VideoSource *video) {
-  aom_codec_dec_cfg_t dec_cfg = aom_codec_dec_cfg_t();
-  dec_cfg.allow_lowbitdepth = 1;
-
   stats_.Reset();
 
   ASSERT_TRUE(passes_ == 1 || passes_ == 2);
   for (unsigned int pass = 0; pass < passes_; pass++) {
-    last_pts_ = 0;
+    aom_codec_pts_t last_pts = 0;
 
     if (passes_ == 1)
       cfg_.g_pass = AOM_RC_ONE_PASS;
@@ -192,9 +188,9 @@ void EncoderTest::RunLoop(VideoSource *video) {
       cfg_.g_pass = AOM_RC_LAST_PASS;
 
     BeginPassHook(pass);
-    testing::internal::scoped_ptr<Encoder> encoder(
+    std::unique_ptr<Encoder> encoder(
         codec_->CreateEncoder(cfg_, init_flags_, &stats_));
-    ASSERT_TRUE(encoder.get() != NULL);
+    ASSERT_NE(encoder, nullptr);
 
     ASSERT_NO_FATAL_FAILURE(video->Begin());
     encoder->InitEncoder(video);
@@ -204,10 +200,11 @@ void EncoderTest::RunLoop(VideoSource *video) {
     }
 
     ASSERT_FALSE(::testing::Test::HasFatalFailure());
-
-    testing::internal::scoped_ptr<Decoder> decoder(
-        codec_->CreateDecoder(dec_cfg, 0 /* flags */));
 #if CONFIG_AV1_DECODER
+    aom_codec_dec_cfg_t dec_cfg = aom_codec_dec_cfg_t();
+    dec_cfg.allow_lowbitdepth = 1;
+    std::unique_ptr<Decoder> decoder(
+        codec_->CreateDecoder(dec_cfg, 0 /* flags */));
     if (decoder->IsAV1()) {
       // Set dec_cfg.tile_row = -1 and dec_cfg.tile_col = -1 so that the whole
       // frame is decoded.
@@ -218,65 +215,82 @@ void EncoderTest::RunLoop(VideoSource *video) {
     }
 #endif
 
+    int number_spatial_layers = GetNumSpatialLayers();
+
     bool again;
     for (again = true; again; video->Next()) {
-      again = (video->img() != NULL);
+      again = (video->img() != nullptr);
 
-      PreEncodeFrameHook(video);
-      PreEncodeFrameHook(video, encoder.get());
-      encoder->EncodeFrame(video, frame_flags_);
+      for (int sl = 0; sl < number_spatial_layers; sl++) {
+        PreEncodeFrameHook(video, encoder.get());
+        encoder->EncodeFrame(video, frame_flags_);
+        PostEncodeFrameHook(encoder.get());
+        CxDataIterator iter = encoder->GetCxData();
+        bool has_cxdata = false;
 
-      CxDataIterator iter = encoder->GetCxData();
+#if CONFIG_AV1_DECODER
+        bool has_dxdata = false;
+#endif
+        while (const aom_codec_cx_pkt_t *pkt = iter.Next()) {
+          pkt = MutateEncoderOutputHook(pkt);
+          again = true;
+          switch (pkt->kind) {
+            case AOM_CODEC_CX_FRAME_PKT:  //
+              has_cxdata = true;
+#if CONFIG_AV1_DECODER
+              if (decoder.get() != nullptr && DoDecode()) {
+                aom_codec_err_t res_dec;
+                if (DoDecodeInvisible()) {
+                  res_dec = decoder->DecodeFrame(
+                      (const uint8_t *)pkt->data.frame.buf, pkt->data.frame.sz);
+                } else {
+                  res_dec = decoder->DecodeFrame(
+                      (const uint8_t *)pkt->data.frame.buf +
+                          (pkt->data.frame.sz - pkt->data.frame.vis_frame_size),
+                      pkt->data.frame.vis_frame_size);
+                }
 
-      bool has_cxdata = false;
-      bool has_dxdata = false;
-      while (const aom_codec_cx_pkt_t *pkt = iter.Next()) {
-        pkt = MutateEncoderOutputHook(pkt);
-        again = true;
-        switch (pkt->kind) {
-          case AOM_CODEC_CX_FRAME_PKT:
-            has_cxdata = true;
-            if (decoder.get() != NULL && DoDecode()) {
-              aom_codec_err_t res_dec;
-              if (DoDecodeInvisible()) {
-                res_dec = decoder->DecodeFrame(
-                    (const uint8_t *)pkt->data.frame.buf, pkt->data.frame.sz);
-              } else {
-                res_dec = decoder->DecodeFrame(
-                    (const uint8_t *)pkt->data.frame.buf +
-                        (pkt->data.frame.sz - pkt->data.frame.vis_frame_size),
-                    pkt->data.frame.vis_frame_size);
+                if (!HandleDecodeResult(res_dec, decoder.get())) break;
+
+                has_dxdata = true;
               }
+#endif
+              ASSERT_GE(pkt->data.frame.pts, last_pts);
+              if (sl == number_spatial_layers - 1)
+                last_pts = pkt->data.frame.pts;
+              FramePktHook(pkt);
+              break;
 
-              if (!HandleDecodeResult(res_dec, decoder.get())) break;
+            case AOM_CODEC_PSNR_PKT: PSNRPktHook(pkt); break;
 
-              has_dxdata = true;
-            }
-            ASSERT_GE(pkt->data.frame.pts, last_pts_);
-            last_pts_ = pkt->data.frame.pts;
-            FramePktHook(pkt);
-            break;
+            case AOM_CODEC_STATS_PKT: StatsPktHook(pkt); break;
 
-          case AOM_CODEC_PSNR_PKT: PSNRPktHook(pkt); break;
-
-          default: break;
-        }
-      }
-
-      if (has_dxdata && has_cxdata) {
-        const aom_image_t *img_enc = encoder->GetPreviewFrame();
-        DxDataIterator dec_iter = decoder->GetDxData();
-        const aom_image_t *img_dec = dec_iter.Next();
-        if (img_enc && img_dec) {
-          const bool res =
-              compare_img(img_enc, img_dec, NULL, NULL, NULL, NULL, NULL);
-          if (!res) {  // Mismatch
-            MismatchHook(img_enc, img_dec);
+            default: break;
           }
         }
-        if (img_dec) DecompressedFrameHook(*img_dec, video->pts());
-      }
-      if (!Continue()) break;
+        if (has_cxdata) {
+          const aom_image_t *img_enc = encoder->GetPreviewFrame();
+          if (img_enc) {
+            CalculateFrameLevelSSIM(video->img(), img_enc, cfg_.g_bit_depth,
+                                    cfg_.g_input_bit_depth);
+          }
+#if CONFIG_AV1_DECODER
+          if (has_dxdata) {
+            DxDataIterator dec_iter = decoder->GetDxData();
+            const aom_image_t *img_dec = dec_iter.Next();
+            if (img_enc && img_dec) {
+              const bool res = compare_img(img_enc, img_dec, nullptr, nullptr,
+                                           nullptr, nullptr, nullptr);
+              if (!res) {  // Mismatch
+                MismatchHook(img_enc, img_dec);
+              }
+            }
+            if (img_dec) DecompressedFrameHook(*img_dec, video->pts());
+          }
+#endif
+        }
+        if (!Continue()) break;
+      }  // Loop over spatial layers
     }
 
     EndPassHook();

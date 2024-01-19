@@ -124,27 +124,27 @@ CFL_SUB_AVG_X(vsx, 32, 32, 512, 10)
 
 // Based on observation, for small blocks VSX does not outperform C (no 64bit
 // load and store intrinsics). So we call the C code for block widths 4.
-cfl_subtract_average_fn get_subtract_average_fn_vsx(TX_SIZE tx_size) {
+cfl_subtract_average_fn cfl_get_subtract_average_fn_vsx(TX_SIZE tx_size) {
   static const cfl_subtract_average_fn sub_avg[TX_SIZES_ALL] = {
-    subtract_average_4x4_c,     /* 4x4 */
-    subtract_average_8x8_vsx,   /* 8x8 */
-    subtract_average_16x16_vsx, /* 16x16 */
-    subtract_average_32x32_vsx, /* 32x32 */
-    cfl_subtract_average_null,  /* 64x64 (invalid CFL size) */
-    subtract_average_4x8_c,     /* 4x8 */
-    subtract_average_8x4_vsx,   /* 8x4 */
-    subtract_average_8x16_vsx,  /* 8x16 */
-    subtract_average_16x8_vsx,  /* 16x8 */
-    subtract_average_16x32_vsx, /* 16x32 */
-    subtract_average_32x16_vsx, /* 32x16 */
-    cfl_subtract_average_null,  /* 32x64 (invalid CFL size) */
-    cfl_subtract_average_null,  /* 64x32 (invalid CFL size) */
-    subtract_average_4x16_c,    /* 4x16 */
-    subtract_average_16x4_vsx,  /* 16x4 */
-    subtract_average_8x32_vsx,  /* 8x32 */
-    subtract_average_32x8_vsx,  /* 32x8 */
-    cfl_subtract_average_null,  /* 16x64 (invalid CFL size) */
-    cfl_subtract_average_null,  /* 64x16 (invalid CFL size) */
+    cfl_subtract_average_4x4_c,     /* 4x4 */
+    cfl_subtract_average_8x8_vsx,   /* 8x8 */
+    cfl_subtract_average_16x16_vsx, /* 16x16 */
+    cfl_subtract_average_32x32_vsx, /* 32x32 */
+    NULL,                           /* 64x64 (invalid CFL size) */
+    cfl_subtract_average_4x8_c,     /* 4x8 */
+    cfl_subtract_average_8x4_vsx,   /* 8x4 */
+    cfl_subtract_average_8x16_vsx,  /* 8x16 */
+    cfl_subtract_average_16x8_vsx,  /* 16x8 */
+    cfl_subtract_average_16x32_vsx, /* 16x32 */
+    cfl_subtract_average_32x16_vsx, /* 32x16 */
+    NULL,                           /* 32x64 (invalid CFL size) */
+    NULL,                           /* 64x32 (invalid CFL size) */
+    cfl_subtract_average_4x16_c,    /* 4x16 */
+    cfl_subtract_average_16x4_vsx,  /* 16x4 */
+    cfl_subtract_average_8x32_vsx,  /* 8x32 */
+    cfl_subtract_average_32x8_vsx,  /* 32x8 */
+    NULL,                           /* 16x64 (invalid CFL size) */
+    NULL,                           /* 64x16 (invalid CFL size) */
   };
   // Modulo TX_SIZES_ALL to ensure that an attacker won't be able to
   // index the function pointer array out of bounds.

@@ -15,11 +15,12 @@
 
 #include "config/aom_config.h"
 
-#include "aom_ports/mem.h"  // ROUND_POWER_OF_TWO
 #include "aom/aomcx.h"
 #include "aom/aomdx.h"
 #include "aom/aom_encoder.h"
 #include "aom/aom_decoder.h"
+
+#define NELEMENTS(x) static_cast<int>(sizeof(x) / sizeof(x[0]))
 
 using libaom_test::ACMRandom;
 namespace {
@@ -30,7 +31,11 @@ class CompressedSource {
     aom_codec_iface_t *algo = aom_codec_av1_cx();
 
     aom_codec_enc_cfg_t cfg;
+#if CONFIG_REALTIME_ONLY
+    aom_codec_enc_config_default(algo, &cfg, 1);
+#else
     aom_codec_enc_config_default(algo, &cfg, 0);
+#endif
 
     // force the quantizer, to reduce the sensitivity on encoding choices.
     // e.g, we don't want this test to break when the rate control is modified.
@@ -93,9 +98,9 @@ class CompressedSource {
     aom_img_wrap(&img, format_, width_, height_, 0, buf);
     aom_codec_encode(&enc_, &img, frame_count_++, 1, 0);
 
-    aom_codec_iter_t iter = NULL;
+    aom_codec_iter_t iter = nullptr;
 
-    const aom_codec_cx_pkt_t *pkt = NULL;
+    const aom_codec_cx_pkt_t *pkt = nullptr;
 
     do {
       pkt = aom_codec_get_cx_data(&enc_, &iter);
@@ -115,9 +120,9 @@ class CompressedSource {
   int width_, height_;
 };
 
-// lowers an aom_image_t to a easily comparable/printable form
-std::vector<int16_t> Serialize(const aom_image_t *img) {
-  std::vector<int16_t> bytes;
+// lowers an aom_image_t to an easily comparable/printable form
+std::vector<uint16_t> Serialize(const aom_image_t *img) {
+  std::vector<uint16_t> bytes;
   bytes.reserve(img->d_w * img->d_h * 3);
   for (int plane = 0; plane < 3; ++plane) {
     const int w = aom_img_plane_width(img, plane);
@@ -125,11 +130,13 @@ std::vector<int16_t> Serialize(const aom_image_t *img) {
 
     for (int r = 0; r < h; ++r) {
       for (int c = 0; c < w; ++c) {
-        unsigned char *row = img->planes[plane] + r * img->stride[plane];
-        if (img->fmt & AOM_IMG_FMT_HIGHBITDEPTH)
-          bytes.push_back(row[c * 2]);
-        else
+        const unsigned char *row = img->planes[plane] + r * img->stride[plane];
+        if (img->fmt & AOM_IMG_FMT_HIGHBITDEPTH) {
+          const uint16_t *row16 = reinterpret_cast<const uint16_t *>(row);
+          bytes.push_back(row16[c]);
+        } else {
           bytes.push_back(row[c]);
+        }
       }
     }
   }
@@ -150,11 +157,11 @@ class Decoder {
 
   ~Decoder() { aom_codec_destroy(&dec_); }
 
-  std::vector<int16_t> decode(const aom_codec_cx_pkt_t *pkt) {
+  std::vector<uint16_t> decode(const aom_codec_cx_pkt_t *pkt) {
     aom_codec_decode(&dec_, static_cast<uint8_t *>(pkt->data.frame.buf),
-                     pkt->data.frame.sz, NULL);
+                     pkt->data.frame.sz, nullptr);
 
-    aom_codec_iter_t iter = NULL;
+    aom_codec_iter_t iter = nullptr;
     return Serialize(aom_codec_get_frame(&dec_, &iter));
   }
 
@@ -174,8 +181,8 @@ TEST(CodingPathSync, SearchForHbdLbdMismatch) {
     for (int k = 0; k < 3; ++k) {
       const aom_codec_cx_pkt_t *frame = enc.ReadFrame();
 
-      std::vector<int16_t> lbd_yuv = dec_lbd.decode(frame);
-      std::vector<int16_t> hbd_yuv = dec_hbd.decode(frame);
+      std::vector<uint16_t> lbd_yuv = dec_lbd.decode(frame);
+      std::vector<uint16_t> hbd_yuv = dec_hbd.decode(frame);
 
       ASSERT_EQ(lbd_yuv, hbd_yuv);
     }
@@ -194,8 +201,8 @@ TEST(CodingPathSyncLarge, SearchForHbdLbdMismatchLarge) {
     for (int k = 0; k < 5; ++k) {
       const aom_codec_cx_pkt_t *frame = enc.ReadFrame();
 
-      std::vector<int16_t> lbd_yuv = dec_lbd.decode(frame);
-      std::vector<int16_t> hbd_yuv = dec_hbd.decode(frame);
+      std::vector<uint16_t> lbd_yuv = dec_lbd.decode(frame);
+      std::vector<uint16_t> hbd_yuv = dec_hbd.decode(frame);
 
       ASSERT_EQ(lbd_yuv, hbd_yuv);
     }

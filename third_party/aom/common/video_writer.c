@@ -41,8 +41,10 @@ AvxVideoWriter *aom_video_writer_open(const char *filename,
     if (!file) return NULL;
 
     writer = malloc(sizeof(*writer));
-    if (!writer) return NULL;
-
+    if (!writer) {
+      fclose(file);
+      return NULL;
+    }
     writer->frame_count = 0;
     writer->info = *info;
     writer->file = file;
@@ -74,4 +76,8 @@ int aom_video_writer_write_frame(AvxVideoWriter *writer, const uint8_t *buffer,
   ++writer->frame_count;
 
   return 1;
+}
+
+void aom_video_writer_set_fourcc(AvxVideoWriter *writer, uint32_t fourcc) {
+  writer->info.codec_fourcc = fourcc;
 }

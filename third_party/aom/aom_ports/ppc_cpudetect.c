@@ -45,7 +45,7 @@ int ppc_simd_caps(void) {
   unsigned int i;
   uint64_t buf[64];
 
-  // If VPX_SIMD_CAPS is set then allow only those capabilities.
+  // If AOM_SIMD_CAPS_MASK is set then allow only those capabilities.
   if (!cpu_env_flags(&flags)) {
     return flags;
   }

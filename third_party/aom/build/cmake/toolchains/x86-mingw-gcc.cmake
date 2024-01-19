@@ -15,17 +15,26 @@ set(AOM_BUILD_CMAKE_TOOLCHAINS_X86_MINGW_GCC_CMAKE_ 1)
 
 set(CMAKE_SYSTEM_PROCESSOR "x86")
 set(CMAKE_SYSTEM_NAME "Windows")
-set(CMAKE_C_COMPILER_ARG1 "-m32")
-set(CMAKE_CXX_COMPILER_ARG1 "-m32")
+set(CMAKE_C_FLAGS_INIT "-m32")
+set(CMAKE_CXX_FLAGS_INIT "-m32")
+set(CMAKE_EXE_LINKER_FLAGS_INIT "-m32")
 
 if("${CROSS}" STREQUAL "")
+
+  # Default the cross compiler prefix to one used by Debian and other package
+  # management systems.
   set(CROSS i686-w64-mingw32-)
 endif()
 
-set(CMAKE_C_COMPILER ${CROSS}gcc)
-set(CMAKE_CXX_COMPILER ${CROSS}g++)
-set(CMAKE_AR ${CROSS}ar CACHE FILEPATH Archiver)
-set(CMAKE_RANLIB ${CROSS}ranlib CACHE FILEPATH Indexer)
-
-# Disable the use of the gtest's CMake support.
-set(AOM_DISABLE_GTEST_CMAKE 1)
+if(NOT CMAKE_C_COMPILER)
+  set(CMAKE_C_COMPILER ${CROSS}gcc)
+endif()
+if(NOT CMAKE_CXX_COMPILER)
+  set(CMAKE_CXX_COMPILER ${CROSS}g++)
+endif()
+if(NOT CMAKE_AR)
+  set(CMAKE_AR ${CROSS}ar CACHE FILEPATH Archiver)
+endif()
+if(NOT CMAKE_RANLIB)
+  set(CMAKE_RANLIB ${CROSS}ranlib CACHE FILEPATH Indexer)
+endif()

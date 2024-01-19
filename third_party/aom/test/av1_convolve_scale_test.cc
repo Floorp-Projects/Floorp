@@ -9,6 +9,7 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
+#include <tuple>
 #include <vector>
 
 #include "third_party/googletest/src/googletest/include/gtest/gtest.h"
@@ -17,7 +18,6 @@
 
 #include "aom_ports/aom_timer.h"
 #include "test/acm_random.h"
-#include "test/clear_system_state.h"
 #include "test/register_state_check.h"
 #include "test/util.h"
 
@@ -32,9 +32,9 @@ const int kHPad = 32;
 const int kXStepQn = 16;
 const int kYStepQn = 20;
 
-using ::testing::make_tuple;
-using ::testing::tuple;
 using libaom_test::ACMRandom;
+using std::make_tuple;
+using std::tuple;
 
 enum NTaps { EIGHT_TAP, TEN_TAP, TWELVE_TAP };
 int NTapsToInt(NTaps ntaps) { return 8 + static_cast<int>(ntaps) * 2; }
@@ -103,7 +103,6 @@ void TestFilter::set(NTaps ntaps, bool backwards) {
   params_.filter_ptr = &coeffs_[0];
   params_.taps = n;
   // These are ignored by the functions being tested. Set them to whatever.
-  params_.subpel_shifts = SUBPEL_SHIFTS;
   params_.interp_filter = EIGHTTAP_REGULAR;
 }
 
@@ -245,8 +244,10 @@ void TestImage<SrcPixel>::Check() const {
 typedef tuple<int, int> BlockDimension;
 
 struct BaseParams {
-  BaseParams(BlockDimension dims, NTaps ntaps_x, NTaps ntaps_y, bool avg)
-      : dims(dims), ntaps_x(ntaps_x), ntaps_y(ntaps_y), avg(avg) {}
+  BaseParams(BlockDimension dimensions, NTaps num_taps_x, NTaps num_taps_y,
+             bool average)
+      : dims(dimensions), ntaps_x(num_taps_x), ntaps_y(num_taps_y),
+        avg(average) {}
 
   BlockDimension dims;
   NTaps ntaps_x, ntaps_y;
@@ -256,21 +257,20 @@ struct BaseParams {
 template <typename SrcPixel>
 class ConvolveScaleTestBase : public ::testing::Test {
  public:
-  ConvolveScaleTestBase() : image_(NULL) {}
-  virtual ~ConvolveScaleTestBase() { delete image_; }
-  virtual void TearDown() { libaom_test::ClearSystemState(); }
+  ConvolveScaleTestBase() : image_(nullptr) {}
+  ~ConvolveScaleTestBase() override { delete image_; }
 
   // Implemented by subclasses (SetUp depends on the parameters passed
   // in and RunOne depends on the function to be tested. These can't
   // be templated for low/high bit depths because they have different
   // numbers of parameters)
-  virtual void SetUp() = 0;
+  void SetUp() override = 0;
   virtual void RunOne(bool ref) = 0;
 
  protected:
   void SetParams(const BaseParams &params, int bd) {
-    width_ = ::testing::get<0>(params.dims);
-    height_ = ::testing::get<1>(params.dims);
+    width_ = std::get<0>(params.dims);
+    height_ = std::get<1>(params.dims);
     ntaps_x_ = params.ntaps_x;
     ntaps_y_ = params.ntaps_y;
     bd_ = bd;
@@ -279,22 +279,23 @@ class ConvolveScaleTestBase : public ::testing::Test {
     filter_x_.set(ntaps_x_, false);
     filter_y_.set(ntaps_y_, true);
     convolve_params_ =
-        get_conv_params_no_round(avg_ != false, 0, NULL, 0, 1, bd);
+        get_conv_params_no_round(avg_ != false, 0, nullptr, 0, 1, bd);
 
     delete image_;
     image_ = new TestImage<SrcPixel>(width_, height_, bd_);
+    ASSERT_NE(image_, nullptr);
   }
 
   void SetConvParamOffset(int i, int j, int is_compound, int do_average,
-                          int use_jnt_comp_avg) {
+                          int use_dist_wtd_comp_avg) {
     if (i == -1 && j == -1) {
-      convolve_params_.use_jnt_comp_avg = use_jnt_comp_avg;
+      convolve_params_.use_dist_wtd_comp_avg = use_dist_wtd_comp_avg;
       convolve_params_.is_compound = is_compound;
       convolve_params_.do_average = do_average;
     } else {
-      convolve_params_.use_jnt_comp_avg = use_jnt_comp_avg;
-      convolve_params_.fwd_offset = quant_dist_lookup_table[i][j][0];
-      convolve_params_.bck_offset = quant_dist_lookup_table[i][j][1];
+      convolve_params_.use_dist_wtd_comp_avg = use_dist_wtd_comp_avg;
+      convolve_params_.fwd_offset = quant_dist_lookup_table[j][i];
+      convolve_params_.bck_offset = quant_dist_lookup_table[j][1 - i];
       convolve_params_.is_compound = is_compound;
       convolve_params_.do_average = do_average;
     }
@@ -312,12 +313,12 @@ class ConvolveScaleTestBase : public ::testing::Test {
 
       is_compound = 1;
       for (int do_average = 0; do_average < 2; do_average++) {
-        for (int use_jnt_comp_avg = 0; use_jnt_comp_avg < 2;
-             use_jnt_comp_avg++) {
+        for (int use_dist_wtd_comp_avg = 0; use_dist_wtd_comp_avg < 2;
+             use_dist_wtd_comp_avg++) {
           for (int j = 0; j < 2; ++j) {
             for (int k = 0; k < 4; ++k) {
               SetConvParamOffset(j, k, is_compound, do_average,
-                                 use_jnt_comp_avg);
+                                 use_dist_wtd_comp_avg);
               Prep(&rnd);
               RunOne(true);
               RunOne(false);
@@ -405,9 +406,9 @@ class LowBDConvolveScaleTest
     : public ConvolveScaleTestBase<uint8_t>,
       public ::testing::WithParamInterface<LowBDParams> {
  public:
-  virtual ~LowBDConvolveScaleTest() {}
+  ~LowBDConvolveScaleTest() override = default;
 
-  void SetUp() {
+  void SetUp() override {
     tst_fun_ = GET_PARAM(0);
 
     const BlockDimension &block = GET_PARAM(1);
@@ -419,7 +420,7 @@ class LowBDConvolveScaleTest
     SetParams(BaseParams(block, ntaps_x, ntaps_y, avg), bd);
   }
 
-  void RunOne(bool ref) {
+  void RunOne(bool ref) override {
     const uint8_t *src = image_->GetSrcData(ref, false);
     uint8_t *dst = image_->GetDstData(ref, false);
     convolve_params_.dst = image_->GetDst16Data(ref, false);
@@ -454,13 +455,23 @@ const NTaps kNTaps[] = { EIGHT_TAP };
 TEST_P(LowBDConvolveScaleTest, Check) { Run(); }
 TEST_P(LowBDConvolveScaleTest, DISABLED_Speed) { SpeedTest(); }
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
+    C, LowBDConvolveScaleTest,
+    ::testing::Combine(::testing::Values(av1_convolve_2d_scale_c),
+                       ::testing::ValuesIn(kBlockDim),
+                       ::testing::ValuesIn(kNTaps), ::testing::ValuesIn(kNTaps),
+                       ::testing::Bool()));
+
+#if HAVE_SSE4_1
+INSTANTIATE_TEST_SUITE_P(
     SSE4_1, LowBDConvolveScaleTest,
     ::testing::Combine(::testing::Values(av1_convolve_2d_scale_sse4_1),
                        ::testing::ValuesIn(kBlockDim),
                        ::testing::ValuesIn(kNTaps), ::testing::ValuesIn(kNTaps),
                        ::testing::Bool()));
+#endif  // HAVE_SSE4_1
 
+#if CONFIG_AV1_HIGHBITDEPTH
 typedef void (*HighbdConvolveFunc)(const uint16_t *src, int src_stride,
                                    uint16_t *dst, int dst_stride, int w, int h,
                                    const InterpFilterParams *filter_params_x,
@@ -478,9 +489,9 @@ class HighBDConvolveScaleTest
     : public ConvolveScaleTestBase<uint16_t>,
       public ::testing::WithParamInterface<HighBDParams> {
  public:
-  virtual ~HighBDConvolveScaleTest() {}
+  ~HighBDConvolveScaleTest() override = default;
 
-  void SetUp() {
+  void SetUp() override {
     tst_fun_ = GET_PARAM(0);
 
     const BlockDimension &block = GET_PARAM(1);
@@ -492,7 +503,7 @@ class HighBDConvolveScaleTest
     SetParams(BaseParams(block, ntaps_x, ntaps_y, avg), bd);
   }
 
-  void RunOne(bool ref) {
+  void RunOne(bool ref) override {
     const uint16_t *src = image_->GetSrcData(ref, false);
     uint16_t *dst = image_->GetDstData(ref, false);
     convolve_params_.dst = image_->GetDst16Data(ref, false);
@@ -520,10 +531,31 @@ const int kBDs[] = { 8, 10, 12 };
 TEST_P(HighBDConvolveScaleTest, Check) { Run(); }
 TEST_P(HighBDConvolveScaleTest, DISABLED_Speed) { SpeedTest(); }
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
+    C, HighBDConvolveScaleTest,
+    ::testing::Combine(::testing::Values(av1_highbd_convolve_2d_scale_c),
+                       ::testing::ValuesIn(kBlockDim),
+                       ::testing::ValuesIn(kNTaps), ::testing::ValuesIn(kNTaps),
+                       ::testing::Bool(), ::testing::ValuesIn(kBDs)));
+
+#if HAVE_SSE4_1
+INSTANTIATE_TEST_SUITE_P(
     SSE4_1, HighBDConvolveScaleTest,
     ::testing::Combine(::testing::Values(av1_highbd_convolve_2d_scale_sse4_1),
                        ::testing::ValuesIn(kBlockDim),
                        ::testing::ValuesIn(kNTaps), ::testing::ValuesIn(kNTaps),
                        ::testing::Bool(), ::testing::ValuesIn(kBDs)));
+#endif  // HAVE_SSE4_1
+
+#if HAVE_NEON
+INSTANTIATE_TEST_SUITE_P(
+    NEON, HighBDConvolveScaleTest,
+    ::testing::Combine(::testing::Values(av1_highbd_convolve_2d_scale_neon),
+                       ::testing::ValuesIn(kBlockDim),
+                       ::testing::ValuesIn(kNTaps), ::testing::ValuesIn(kNTaps),
+                       ::testing::Bool(), ::testing::ValuesIn(kBDs)));
+
+#endif  // HAVE_NEON
+
+#endif  // CONFIG_AV1_HIGHBITDEPTH
 }  // namespace

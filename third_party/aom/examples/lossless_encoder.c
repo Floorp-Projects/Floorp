@@ -57,14 +57,12 @@ static int encode_frame(aom_codec_ctx_t *codec, aom_image_t *img,
 
 int main(int argc, char **argv) {
   FILE *infile = NULL;
-  aom_codec_ctx_t codec;
   aom_codec_enc_cfg_t cfg;
   int frame_count = 0;
   aom_image_t raw;
   aom_codec_err_t res;
   AvxVideoInfo info;
   AvxVideoWriter *writer = NULL;
-  const AvxInterface *encoder = NULL;
   const int fps = 30;
 
   exec_name = argv[0];
@@ -75,10 +73,10 @@ int main(int argc, char **argv) {
 
   if (argc < 5) die("Invalid number of arguments");
 
-  encoder = get_aom_encoder_by_name("av1");
+  aom_codec_iface_t *encoder = get_aom_encoder_by_short_name("av1");
   if (!encoder) die("Unsupported codec.");
 
-  info.codec_fourcc = encoder->fourcc;
+  info.codec_fourcc = get_fourcc_by_aom_encoder(encoder);
   info.frame_width = (int)strtol(argv[1], NULL, 0);
   info.frame_height = (int)strtol(argv[2], NULL, 0);
   info.time_base.numerator = 1;
@@ -94,9 +92,10 @@ int main(int argc, char **argv) {
     die("Failed to allocate image.");
   }
 
-  printf("Using %s\n", aom_codec_iface_name(encoder->codec_interface()));
+  printf("Using %s\n", aom_codec_iface_name(encoder));
 
-  res = aom_codec_enc_config_default(encoder->codec_interface(), &cfg, 0);
+  aom_codec_ctx_t codec;
+  res = aom_codec_enc_config_default(encoder, &cfg, 0);
   if (res) die_codec(&codec, "Failed to get default codec config.");
 
   cfg.g_w = info.frame_width;
@@ -110,10 +109,10 @@ int main(int argc, char **argv) {
   if (!(infile = fopen(argv[3], "rb")))
     die("Failed to open %s for reading.", argv[3]);
 
-  if (aom_codec_enc_init(&codec, encoder->codec_interface(), &cfg, 0))
-    die_codec(&codec, "Failed to initialize encoder");
+  if (aom_codec_enc_init(&codec, encoder, &cfg, 0))
+    die("Failed to initialize encoder");
 
-  if (aom_codec_control_(&codec, AV1E_SET_LOSSLESS, 1))
+  if (AOM_CODEC_CONTROL_TYPECHECKED(&codec, AV1E_SET_LOSSLESS, 1))
     die_codec(&codec, "Failed to use lossless mode");
 
   // Encode frames.

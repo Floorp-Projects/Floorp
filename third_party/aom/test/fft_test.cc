@@ -13,6 +13,7 @@
 
 #include <algorithm>
 #include <complex>
+#include <ostream>
 #include <vector>
 
 #include "aom_dsp/fft_common.h"
@@ -81,21 +82,25 @@ struct FFTTestArg {
 };
 
 std::ostream &operator<<(std::ostream &os, const FFTTestArg &test_arg) {
-  return os << "fft_arg { n:" << test_arg.n << " fft:" << test_arg.fft << " }";
+  return os << "fft_arg { n:" << test_arg.n
+            << " fft:" << reinterpret_cast<const void *>(test_arg.fft) << " }";
 }
 
 class FFT2DTest : public ::testing::TestWithParam<FFTTestArg> {
  protected:
-  void SetUp() {
+  void SetUp() override {
     int n = GetParam().n;
     input_ = (float *)aom_memalign(32, sizeof(*input_) * n * n);
     temp_ = (float *)aom_memalign(32, sizeof(*temp_) * n * n);
     output_ = (float *)aom_memalign(32, sizeof(*output_) * n * n * 2);
+    ASSERT_NE(input_, nullptr);
+    ASSERT_NE(temp_, nullptr);
+    ASSERT_NE(output_, nullptr);
     memset(input_, 0, sizeof(*input_) * n * n);
     memset(temp_, 0, sizeof(*temp_) * n * n);
     memset(output_, 0, sizeof(*output_) * n * n * 2);
   }
-  void TearDown() {
+  void TearDown() override {
     aom_free(input_);
     aom_free(temp_);
     aom_free(output_);
@@ -125,24 +130,26 @@ TEST_P(FFT2DTest, Correct) {
 TEST_P(FFT2DTest, Benchmark) {
   int n = GetParam().n;
   float sum = 0;
-  for (int i = 0; i < 1000 * (64 - n); ++i) {
+  const int num_trials = 1000 * (64 - n);
+  for (int i = 0; i < num_trials; ++i) {
     input_[i % (n * n)] = 1;
     GetParam().fft(&input_[0], &temp_[0], &output_[0]);
     sum += output_[0];
     input_[i % (n * n)] = 0;
   }
+  EXPECT_NEAR(sum, num_trials, 1e-3);
 }
 
-INSTANTIATE_TEST_CASE_P(C, FFT2DTest,
-                        ::testing::Values(FFTTestArg(2, aom_fft2x2_float_c),
-                                          FFTTestArg(4, aom_fft4x4_float_c),
-                                          FFTTestArg(8, aom_fft8x8_float_c),
-                                          FFTTestArg(16, aom_fft16x16_float_c),
-                                          FFTTestArg(32,
-                                                     aom_fft32x32_float_c)));
-#if ARCH_X86 || ARCH_X86_64
+INSTANTIATE_TEST_SUITE_P(C, FFT2DTest,
+                         ::testing::Values(FFTTestArg(2, aom_fft2x2_float_c),
+                                           FFTTestArg(4, aom_fft4x4_float_c),
+                                           FFTTestArg(8, aom_fft8x8_float_c),
+                                           FFTTestArg(16, aom_fft16x16_float_c),
+                                           FFTTestArg(32,
+                                                      aom_fft32x32_float_c)));
+#if AOM_ARCH_X86 || AOM_ARCH_X86_64
 #if HAVE_SSE2
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     SSE2, FFT2DTest,
     ::testing::Values(FFTTestArg(4, aom_fft4x4_float_sse2),
                       FFTTestArg(8, aom_fft8x8_float_sse2),
@@ -150,13 +157,13 @@ INSTANTIATE_TEST_CASE_P(
                       FFTTestArg(32, aom_fft32x32_float_sse2)));
 #endif  // HAVE_SSE2
 #if HAVE_AVX2
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     AVX2, FFT2DTest,
     ::testing::Values(FFTTestArg(8, aom_fft8x8_float_avx2),
                       FFTTestArg(16, aom_fft16x16_float_avx2),
                       FFTTestArg(32, aom_fft32x32_float_avx2)));
 #endif  // HAVE_AVX2
-#endif  // ARCH_X86 || ARCH_X86_64
+#endif  // AOM_ARCH_X86 || AOM_ARCH_X86_64
 
 struct IFFTTestArg {
   int n;
@@ -165,22 +172,25 @@ struct IFFTTestArg {
 };
 
 std::ostream &operator<<(std::ostream &os, const IFFTTestArg &test_arg) {
-  return os << "ifft_arg { n:" << test_arg.n << " fft:" << test_arg.ifft
-            << " }";
+  return os << "ifft_arg { n:" << test_arg.n
+            << " fft:" << reinterpret_cast<const void *>(test_arg.ifft) << " }";
 }
 
 class IFFT2DTest : public ::testing::TestWithParam<IFFTTestArg> {
  protected:
-  void SetUp() {
+  void SetUp() override {
     int n = GetParam().n;
     input_ = (float *)aom_memalign(32, sizeof(*input_) * n * n * 2);
     temp_ = (float *)aom_memalign(32, sizeof(*temp_) * n * n * 2);
     output_ = (float *)aom_memalign(32, sizeof(*output_) * n * n);
+    ASSERT_NE(input_, nullptr);
+    ASSERT_NE(temp_, nullptr);
+    ASSERT_NE(output_, nullptr);
     memset(input_, 0, sizeof(*input_) * n * n * 2);
     memset(temp_, 0, sizeof(*temp_) * n * n * 2);
     memset(output_, 0, sizeof(*output_) * n * n);
   }
-  void TearDown() {
+  void TearDown() override {
     aom_free(input_);
     aom_free(temp_);
     aom_free(output_);
@@ -215,28 +225,30 @@ TEST_P(IFFT2DTest, Correctness) {
       expected[y * n + x] = 0;
     }
   }
-};
+}
 
 TEST_P(IFFT2DTest, Benchmark) {
   int n = GetParam().n;
   float sum = 0;
-  for (int i = 0; i < 1000 * (64 - n); ++i) {
+  const int num_trials = 1000 * (64 - n);
+  for (int i = 0; i < num_trials; ++i) {
     input_[i % (n * n)] = 1;
     GetParam().ifft(&input_[0], &temp_[0], &output_[0]);
     sum += output_[0];
     input_[i % (n * n)] = 0;
   }
+  EXPECT_GE(sum, num_trials / 2);
 }
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     C, IFFT2DTest,
     ::testing::Values(IFFTTestArg(2, aom_ifft2x2_float_c),
                       IFFTTestArg(4, aom_ifft4x4_float_c),
                       IFFTTestArg(8, aom_ifft8x8_float_c),
                       IFFTTestArg(16, aom_ifft16x16_float_c),
                       IFFTTestArg(32, aom_ifft32x32_float_c)));
-#if ARCH_X86 || ARCH_X86_64
+#if AOM_ARCH_X86 || AOM_ARCH_X86_64
 #if HAVE_SSE2
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     SSE2, IFFT2DTest,
     ::testing::Values(IFFTTestArg(4, aom_ifft4x4_float_sse2),
                       IFFTTestArg(8, aom_ifft8x8_float_sse2),
@@ -245,12 +257,12 @@ INSTANTIATE_TEST_CASE_P(
 #endif  // HAVE_SSE2
 
 #if HAVE_AVX2
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     AVX2, IFFT2DTest,
     ::testing::Values(IFFTTestArg(8, aom_ifft8x8_float_avx2),
                       IFFTTestArg(16, aom_ifft16x16_float_avx2),
                       IFFTTestArg(32, aom_ifft32x32_float_avx2)));
 #endif  // HAVE_AVX2
-#endif  // ARCH_X86 || ARCH_X86_64
+#endif  // AOM_ARCH_X86 || AOM_ARCH_X86_64
 
 }  // namespace

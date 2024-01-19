@@ -9,7 +9,6 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -76,14 +75,14 @@ static const arg_def_t limitarg =
     ARG_DEF(NULL, "limit", 1, "Stop decoding after n frames");
 static const arg_def_t skiparg =
     ARG_DEF(NULL, "skip", 1, "Skip the first n input frames");
-static const arg_def_t postprocarg =
-    ARG_DEF(NULL, "postproc", 0, "Postprocess decoded frames");
 static const arg_def_t summaryarg =
     ARG_DEF(NULL, "summary", 0, "Show timing summary");
 static const arg_def_t outputfile =
     ARG_DEF("o", "output", 1, "Output file name pattern (see below)");
 static const arg_def_t threadsarg =
     ARG_DEF("t", "threads", 1, "Max threads to use");
+static const arg_def_t rowmtarg =
+    ARG_DEF(NULL, "row-mt", 1, "Enable row based multi-threading, default: 0");
 static const arg_def_t verbosearg =
     ARG_DEF("v", "verbose", 0, "Show version string");
 static const arg_def_t scalearg =
@@ -108,20 +107,28 @@ static const arg_def_t skipfilmgrain =
     ARG_DEF(NULL, "skip-film-grain", 0, "Skip film grain application");
 
 static const arg_def_t *all_args[] = {
-  &help,           &codecarg,   &use_yv12,      &use_i420,
-  &flipuvarg,      &rawvideo,   &noblitarg,     &progressarg,
-  &limitarg,       &skiparg,    &postprocarg,   &summaryarg,
-  &outputfile,     &threadsarg, &verbosearg,    &scalearg,
-  &fb_arg,         &md5arg,     &framestatsarg, &continuearg,
-  &outbitdeptharg, &isannexb,   &oppointarg,    &outallarg,
+  &help,           &codecarg, &use_yv12,      &use_i420,
+  &flipuvarg,      &rawvideo, &noblitarg,     &progressarg,
+  &limitarg,       &skiparg,  &summaryarg,    &outputfile,
+  &threadsarg,     &rowmtarg, &verbosearg,    &scalearg,
+  &fb_arg,         &md5arg,   &framestatsarg, &continuearg,
+  &outbitdeptharg, &isannexb, &oppointarg,    &outallarg,
   &skipfilmgrain,  NULL
 };
 
 #if CONFIG_LIBYUV
-static INLINE int libyuv_scale(aom_image_t *src, aom_image_t *dst,
+// Returns 0 on success and returns -1 on failure.
+static INLINE int libyuv_scale(const aom_image_t *src, aom_image_t *dst,
                                FilterModeEnum mode) {
+  if (src->fmt != dst->fmt) {
+    fprintf(stderr,
+            "%s failed to scale output frame because format changed from %s to "
+            "%s\n",
+            exec_name, image_format_to_string(dst->fmt),
+            image_format_to_string(src->fmt));
+    return -1;
+  }
   if (src->fmt == AOM_IMG_FMT_I42016) {
-    assert(dst->fmt == AOM_IMG_FMT_I42016);
     return I420Scale_16(
         (uint16_t *)src->planes[AOM_PLANE_Y], src->stride[AOM_PLANE_Y] / 2,
         (uint16_t *)src->planes[AOM_PLANE_U], src->stride[AOM_PLANE_U] / 2,
@@ -131,19 +138,22 @@ static INLINE int libyuv_scale(aom_image_t *src, aom_image_t *dst,
         dst->stride[AOM_PLANE_U] / 2, (uint16_t *)dst->planes[AOM_PLANE_V],
         dst->stride[AOM_PLANE_V] / 2, dst->d_w, dst->d_h, mode);
   }
-  assert(src->fmt == AOM_IMG_FMT_I420);
-  assert(dst->fmt == AOM_IMG_FMT_I420);
-  return I420Scale(src->planes[AOM_PLANE_Y], src->stride[AOM_PLANE_Y],
-                   src->planes[AOM_PLANE_U], src->stride[AOM_PLANE_U],
-                   src->planes[AOM_PLANE_V], src->stride[AOM_PLANE_V], src->d_w,
-                   src->d_h, dst->planes[AOM_PLANE_Y], dst->stride[AOM_PLANE_Y],
-                   dst->planes[AOM_PLANE_U], dst->stride[AOM_PLANE_U],
-                   dst->planes[AOM_PLANE_V], dst->stride[AOM_PLANE_V], dst->d_w,
-                   dst->d_h, mode);
+  if (src->fmt == AOM_IMG_FMT_I420) {
+    return I420Scale(src->planes[AOM_PLANE_Y], src->stride[AOM_PLANE_Y],
+                     src->planes[AOM_PLANE_U], src->stride[AOM_PLANE_U],
+                     src->planes[AOM_PLANE_V], src->stride[AOM_PLANE_V],
+                     src->d_w, src->d_h, dst->planes[AOM_PLANE_Y],
+                     dst->stride[AOM_PLANE_Y], dst->planes[AOM_PLANE_U],
+                     dst->stride[AOM_PLANE_U], dst->planes[AOM_PLANE_V],
+                     dst->stride[AOM_PLANE_V], dst->d_w, dst->d_h, mode);
+  }
+  fprintf(stderr, "%s cannot scale output frame of format %s\n", exec_name,
+          image_format_to_string(src->fmt));
+  return -1;
 }
 #endif
 
-void show_help(FILE *fout, int shorthelp) {
+static void show_help(FILE *fout, int shorthelp) {
   fprintf(fout, "Usage: %s <options> filename\n\n", exec_name);
 
   if (shorthelp) {
@@ -170,9 +180,9 @@ void show_help(FILE *fout, int shorthelp) {
   fprintf(fout, "\nIncluded decoders:\n\n");
 
   for (int i = 0; i < get_aom_decoder_count(); ++i) {
-    const AvxInterface *const decoder = get_aom_decoder_by_index(i);
-    fprintf(fout, "    %-6s - %s\n", decoder->name,
-            aom_codec_iface_name(decoder->codec_interface()));
+    aom_codec_iface_t *decoder = get_aom_decoder_by_index(i);
+    fprintf(fout, "    %-6s - %s\n", get_short_name_by_aom_decoder(decoder),
+            aom_codec_iface_name(decoder));
   }
 }
 
@@ -181,26 +191,30 @@ void usage_exit(void) {
   exit(EXIT_FAILURE);
 }
 
-static int raw_read_frame(FILE *infile, uint8_t **buffer, size_t *bytes_read,
-                          size_t *buffer_size) {
-  char raw_hdr[RAW_FRAME_HDR_SZ];
+static int raw_read_frame(struct AvxInputContext *input_ctx, uint8_t **buffer,
+                          size_t *bytes_read, size_t *buffer_size) {
+  unsigned char raw_hdr[RAW_FRAME_HDR_SZ];
   size_t frame_size = 0;
 
-  if (fread(raw_hdr, RAW_FRAME_HDR_SZ, 1, infile) != 1) {
-    if (!feof(infile)) warn("Failed to read RAW frame size\n");
+  if (read_from_input(input_ctx, RAW_FRAME_HDR_SZ, raw_hdr) !=
+      RAW_FRAME_HDR_SZ) {
+    if (!input_eof(input_ctx))
+      aom_tools_warn("Failed to read RAW frame size\n");
   } else {
     const size_t kCorruptFrameThreshold = 256 * 1024 * 1024;
     const size_t kFrameTooSmallThreshold = 256 * 1024;
     frame_size = mem_get_le32(raw_hdr);
 
     if (frame_size > kCorruptFrameThreshold) {
-      warn("Read invalid frame size (%u)\n", (unsigned int)frame_size);
+      aom_tools_warn("Read invalid frame size (%u)\n",
+                     (unsigned int)frame_size);
       frame_size = 0;
     }
 
     if (frame_size < kFrameTooSmallThreshold) {
-      warn("Warning: Read invalid frame size (%u) - not a raw file?\n",
-           (unsigned int)frame_size);
+      aom_tools_warn(
+          "Warning: Read invalid frame size (%u) - not a raw file?\n",
+          (unsigned int)frame_size);
     }
 
     if (frame_size > *buffer_size) {
@@ -209,15 +223,15 @@ static int raw_read_frame(FILE *infile, uint8_t **buffer, size_t *bytes_read,
         *buffer = new_buf;
         *buffer_size = 2 * frame_size;
       } else {
-        warn("Failed to allocate compressed data buffer\n");
+        aom_tools_warn("Failed to allocate compressed data buffer\n");
         frame_size = 0;
       }
     }
   }
 
-  if (!feof(infile)) {
-    if (fread(*buffer, 1, frame_size, infile) != frame_size) {
-      warn("Failed to read full frame\n");
+  if (!input_eof(input_ctx)) {
+    if (read_from_input(input_ctx, frame_size, *buffer) != frame_size) {
+      aom_tools_warn("Failed to read full frame\n");
       return 1;
     }
     *bytes_read = frame_size;
@@ -235,10 +249,10 @@ static int read_frame(struct AvxDecInputContext *input, uint8_t **buf,
                              buffer_size);
 #endif
     case FILE_TYPE_RAW:
-      return raw_read_frame(input->aom_input_ctx->file, buf, bytes_in_buffer,
+      return raw_read_frame(input->aom_input_ctx, buf, bytes_in_buffer,
                             buffer_size);
     case FILE_TYPE_IVF:
-      return ivf_read_frame(input->aom_input_ctx->file, buf, bytes_in_buffer,
+      return ivf_read_frame(input->aom_input_ctx, buf, bytes_in_buffer,
                             buffer_size, NULL);
     case FILE_TYPE_OBU:
       return obudec_read_temporal_unit(input->obu_ctx, buf, bytes_in_buffer,
@@ -253,16 +267,15 @@ static int file_is_raw(struct AvxInputContext *input) {
   aom_codec_stream_info_t si;
   memset(&si, 0, sizeof(si));
 
-  if (fread(buf, 1, 32, input->file) == 32) {
+  if (buffer_input(input, 32, buf, /*buffered=*/true) == 32) {
     int i;
 
     if (mem_get_le32(buf) < 256 * 1024 * 1024) {
       for (i = 0; i < get_aom_decoder_count(); ++i) {
-        const AvxInterface *const decoder = get_aom_decoder_by_index(i);
-        if (!aom_codec_peek_stream_info(decoder->codec_interface(), buf + 4,
-                                        32 - 4, &si)) {
+        aom_codec_iface_t *decoder = get_aom_decoder_by_index(i);
+        if (!aom_codec_peek_stream_info(decoder, buf + 4, 32 - 4, &si)) {
           is_raw = 1;
-          input->fourcc = decoder->fourcc;
+          input->fourcc = get_fourcc_by_aom_decoder(decoder);
           input->width = si.w;
           input->height = si.h;
           input->framerate.numerator = 30;
@@ -273,7 +286,7 @@ static int file_is_raw(struct AvxInputContext *input) {
     }
   }
 
-  rewind(input->file);
+  rewind_detect(input);
   return is_raw;
 }
 
@@ -368,7 +381,7 @@ static void generate_filename(const char *pattern, char *out, size_t q_len,
         case '7': snprintf(q, q_len - 1, "%07d", frame_in); break;
         case '8': snprintf(q, q_len - 1, "%08d", frame_in); break;
         case '9': snprintf(q, q_len - 1, "%09d", frame_in); break;
-        default: die("Unrecognized pattern %%%c\n", p[1]); break;
+        default: die("Unrecognized pattern %%%c\n", p[1]);
       }
 
       pat_len = strlen(q);
@@ -427,13 +440,6 @@ static FILE *open_outfile(const char *name) {
   }
 }
 
-static int img_shifted_realloc_required(const aom_image_t *img,
-                                        const aom_image_t *shifted,
-                                        aom_img_fmt_t required_fmt) {
-  return img->d_w != shifted->d_w || img->d_h != shifted->d_h ||
-         required_fmt != shifted->fmt;
-}
-
 static int main_loop(int argc, const char **argv_) {
   aom_codec_ctx_t decoder;
   char *fn = NULL;
@@ -444,11 +450,9 @@ static int main_loop(int argc, const char **argv_) {
   FILE *infile;
   int frame_in = 0, frame_out = 0, flipuv = 0, noblit = 0;
   int do_md5 = 0, progress = 0;
-  int stop_after = 0, postproc = 0, summary = 0, quiet = 1;
+  int stop_after = 0, summary = 0, quiet = 1;
   int arg_skip = 0;
   int keep_going = 0;
-  const AvxInterface *interface = NULL;
-  const AvxInterface *fourcc_interface = NULL;
   uint64_t dx_time = 0;
   struct arg arg;
   char **argv, **argi, **argj;
@@ -458,8 +462,8 @@ static int main_loop(int argc, const char **argv_) {
   int opt_yv12 = 0;
   int opt_i420 = 0;
   int opt_raw = 0;
-  aom_codec_dec_cfg_t cfg = { 0, 0, 0, CONFIG_LOWBITDEPTH, { 1 } };
-  unsigned int output_bit_depth = 0;
+  aom_codec_dec_cfg_t cfg = { 0, 0, 0, !FORCE_HIGHBITDEPTH_DECODING };
+  unsigned int fixed_output_bit_depth = 0;
   unsigned int is_annexb = 0;
   int frames_corrupted = 0;
   int dec_flags = 0;
@@ -467,6 +471,7 @@ static int main_loop(int argc, const char **argv_) {
   int operating_point = 0;
   int output_all_layers = 0;
   int skip_film_grain = 0;
+  int enable_row_mt = 0;
   aom_image_t *scaled_img = NULL;
   aom_image_t *img_shifted = NULL;
   int frame_avail, got_data, flush_decoder = 0;
@@ -491,6 +496,7 @@ static int main_loop(int argc, const char **argv_) {
   input.webm_ctx = &webm_ctx;
 #endif
   struct ObuDecInputContext obu_ctx = { NULL, NULL, 0, 0, 0 };
+  int is_ivf = 0;
 
   obu_ctx.avx_ctx = &aom_input_ctx;
   input.obu_ctx = &obu_ctx;
@@ -499,7 +505,12 @@ static int main_loop(int argc, const char **argv_) {
   /* Parse command line */
   exec_name = argv_[0];
   argv = argv_dup(argc - 1, argv_ + 1);
+  if (!argv) {
+    fprintf(stderr, "Error allocating argument list\n");
+    return EXIT_FAILURE;
+  }
 
+  aom_codec_iface_t *interface = NULL;
   for (argi = argj = argv; (*argj = *argi); argi += arg.argv_step) {
     memset(&arg, 0, sizeof(arg));
     arg.argv_step = 1;
@@ -508,7 +519,7 @@ static int main_loop(int argc, const char **argv_) {
       show_help(stdout, 0);
       exit(EXIT_SUCCESS);
     } else if (arg_match(&arg, &codecarg, argi)) {
-      interface = get_aom_decoder_by_name(arg.val);
+      interface = get_aom_decoder_by_short_name(arg.val);
       if (!interface)
         die("Error: Unrecognized argument (%s) to --codec\n", arg.val);
     } else if (arg_match(&arg, &looparg, argi)) {
@@ -542,8 +553,6 @@ static int main_loop(int argc, const char **argv_) {
       stop_after = arg_parse_uint(&arg);
     } else if (arg_match(&arg, &skiparg, argi)) {
       arg_skip = arg_parse_uint(&arg);
-    } else if (arg_match(&arg, &postprocarg, argi)) {
-      postproc = 1;
     } else if (arg_match(&arg, &md5arg, argi)) {
       do_md5 = 1;
     } else if (arg_match(&arg, &framestatsarg, argi)) {
@@ -563,6 +572,8 @@ static int main_loop(int argc, const char **argv_) {
             cfg.threads);
       }
 #endif
+    } else if (arg_match(&arg, &rowmtarg, argi)) {
+      enable_row_mt = arg_parse_uint(&arg);
     } else if (arg_match(&arg, &verbosearg, argi)) {
       quiet = 0;
     } else if (arg_match(&arg, &scalearg, argi)) {
@@ -572,7 +583,7 @@ static int main_loop(int argc, const char **argv_) {
     } else if (arg_match(&arg, &continuearg, argi)) {
       keep_going = 1;
     } else if (arg_match(&arg, &outbitdeptharg, argi)) {
-      output_bit_depth = arg_parse_uint(&arg);
+      fixed_output_bit_depth = arg_parse_uint(&arg);
     } else if (arg_match(&arg, &isannexb, argi)) {
       is_annexb = 1;
       input.obu_ctx->is_annexb = 1;
@@ -600,11 +611,13 @@ static int main_loop(int argc, const char **argv_) {
     fprintf(stderr, "No input file specified!\n");
     usage_exit();
   }
+
+  const bool using_file = strcmp(fn, "-") != 0;
   /* Open file */
-  infile = strcmp(fn, "-") ? fopen(fn, "rb") : set_binary_mode(stdin);
+  infile = using_file ? fopen(fn, "rb") : set_binary_mode(stdin);
 
   if (!infile) {
-    fatal("Failed to open input file '%s'", strcmp(fn, "-") ? fn : "stdin");
+    fatal("Failed to open input file '%s'", using_file ? fn : "stdin");
   }
 #if CONFIG_OS_SUPPORT
   /* Make sure we don't dump to the terminal, unless forced to with -o - */
@@ -612,26 +625,39 @@ static int main_loop(int argc, const char **argv_) {
     fprintf(stderr,
             "Not dumping raw video to your terminal. Use '-o -' to "
             "override.\n");
+    free(argv);
     return EXIT_FAILURE;
   }
 #endif
   input.aom_input_ctx->filename = fn;
   input.aom_input_ctx->file = infile;
-  if (file_is_ivf(input.aom_input_ctx))
-    input.aom_input_ctx->file_type = FILE_TYPE_IVF;
+
+  // TODO(https://crbug.com/aomedia/1706): webm type does not support reading
+  // from stdin yet, and file_is_webm is not using the detect buffer when
+  // determining the type. Therefore it should only be checked when using a file
+  // and needs to be checked prior to other types.
+  if (false) {
 #if CONFIG_WEBM_IO
-  else if (file_is_webm(input.webm_ctx, input.aom_input_ctx))
+  } else if (using_file && file_is_webm(input.webm_ctx, input.aom_input_ctx)) {
     input.aom_input_ctx->file_type = FILE_TYPE_WEBM;
 #endif
-  else if (file_is_obu(&obu_ctx))
+  } else if (file_is_ivf(input.aom_input_ctx)) {
+    input.aom_input_ctx->file_type = FILE_TYPE_IVF;
+    is_ivf = 1;
+  } else if (file_is_obu(&obu_ctx)) {
     input.aom_input_ctx->file_type = FILE_TYPE_OBU;
-  else if (file_is_raw(input.aom_input_ctx))
+  } else if (file_is_raw(input.aom_input_ctx)) {
     input.aom_input_ctx->file_type = FILE_TYPE_RAW;
-  else {
+  } else {
     fprintf(stderr, "Unrecognized input file type.\n");
-#if !CONFIG_WEBM_IO
+#if CONFIG_WEBM_IO
+    if (!using_file) {
+      fprintf(stderr, "aomdec does not support piped WebM input.\n");
+    }
+#else
     fprintf(stderr, "aomdec was built without WebM container support.\n");
 #endif
+    free(argv);
     return EXIT_FAILURE;
   }
 
@@ -667,17 +693,22 @@ static int main_loop(int argc, const char **argv_) {
 #endif
   }
 
-  fourcc_interface = get_aom_decoder_by_fourcc(aom_input_ctx.fourcc);
+  aom_codec_iface_t *fourcc_interface =
+      get_aom_decoder_by_fourcc(aom_input_ctx.fourcc);
+
+  if (is_ivf && !fourcc_interface)
+    fatal("Unsupported fourcc: %x\n", aom_input_ctx.fourcc);
+
   if (interface && fourcc_interface && interface != fourcc_interface)
-    warn("Header indicates codec: %s\n", fourcc_interface->name);
+    aom_tools_warn("Header indicates codec: %s\n",
+                   aom_codec_iface_name(fourcc_interface));
   else
     interface = fourcc_interface;
 
   if (!interface) interface = get_aom_decoder_by_index(0);
 
-  dec_flags = (postproc ? AOM_CODEC_USE_POSTPROC : 0);
-  if (aom_codec_dec_init(&decoder, interface->codec_interface(), &cfg,
-                         dec_flags)) {
+  dec_flags = 0;
+  if (aom_codec_dec_init(&decoder, interface, &cfg, dec_flags)) {
     fprintf(stderr, "Failed to initialize decoder: %s\n",
             aom_codec_error(&decoder));
     goto fail2;
@@ -685,26 +716,34 @@ static int main_loop(int argc, const char **argv_) {
 
   if (!quiet) fprintf(stderr, "%s\n", decoder.name);
 
-  if (aom_codec_control(&decoder, AV1D_SET_IS_ANNEXB, is_annexb)) {
+  if (AOM_CODEC_CONTROL_TYPECHECKED(&decoder, AV1D_SET_IS_ANNEXB, is_annexb)) {
     fprintf(stderr, "Failed to set is_annexb: %s\n", aom_codec_error(&decoder));
     goto fail;
   }
 
-  if (aom_codec_control(&decoder, AV1D_SET_OPERATING_POINT, operating_point)) {
+  if (AOM_CODEC_CONTROL_TYPECHECKED(&decoder, AV1D_SET_OPERATING_POINT,
+                                    operating_point)) {
     fprintf(stderr, "Failed to set operating_point: %s\n",
             aom_codec_error(&decoder));
     goto fail;
   }
 
-  if (aom_codec_control(&decoder, AV1D_SET_OUTPUT_ALL_LAYERS,
-                        output_all_layers)) {
+  if (AOM_CODEC_CONTROL_TYPECHECKED(&decoder, AV1D_SET_OUTPUT_ALL_LAYERS,
+                                    output_all_layers)) {
     fprintf(stderr, "Failed to set output_all_layers: %s\n",
             aom_codec_error(&decoder));
     goto fail;
   }
 
-  if (aom_codec_control(&decoder, AV1D_SET_SKIP_FILM_GRAIN, skip_film_grain)) {
+  if (AOM_CODEC_CONTROL_TYPECHECKED(&decoder, AV1D_SET_SKIP_FILM_GRAIN,
+                                    skip_film_grain)) {
     fprintf(stderr, "Failed to set skip_film_grain: %s\n",
+            aom_codec_error(&decoder));
+    goto fail;
+  }
+
+  if (AOM_CODEC_CONTROL_TYPECHECKED(&decoder, AV1D_SET_ROW_MT, enable_row_mt)) {
+    fprintf(stderr, "Failed to set row multithreading mode: %s\n",
             aom_codec_error(&decoder));
     goto fail;
   }
@@ -719,6 +758,10 @@ static int main_loop(int argc, const char **argv_) {
     ext_fb_list.num_external_frame_buffers = num_external_frame_buffers;
     ext_fb_list.ext_fb = (struct ExternalFrameBuffer *)calloc(
         num_external_frame_buffers, sizeof(*ext_fb_list.ext_fb));
+    if (!ext_fb_list.ext_fb) {
+      fprintf(stderr, "Failed to allocate ExternalFrameBuffer\n");
+      goto fail;
+    }
     if (aom_codec_set_frame_buffer_functions(&decoder, get_av1_frame_buffer,
                                              release_av1_frame_buffer,
                                              &ext_fb_list)) {
@@ -750,18 +793,19 @@ static int main_loop(int argc, const char **argv_) {
 
         if (aom_codec_decode(&decoder, buf, bytes_in_buffer, NULL)) {
           const char *detail = aom_codec_error_detail(&decoder);
-          warn("Failed to decode frame %d: %s", frame_in,
-               aom_codec_error(&decoder));
+          aom_tools_warn("Failed to decode frame %d: %s", frame_in,
+                         aom_codec_error(&decoder));
 
-          if (detail) warn("Additional information: %s", detail);
+          if (detail) aom_tools_warn("Additional information: %s", detail);
           if (!keep_going) goto fail;
         }
 
         if (framestats_file) {
           int qp;
-          if (aom_codec_control(&decoder, AOMD_GET_LAST_QUANTIZER, &qp)) {
-            warn("Failed AOMD_GET_LAST_QUANTIZER: %s",
-                 aom_codec_error(&decoder));
+          if (AOM_CODEC_CONTROL_TYPECHECKED(&decoder, AOMD_GET_LAST_QUANTIZER,
+                                            &qp)) {
+            aom_tools_warn("Failed AOMD_GET_LAST_QUANTIZER: %s",
+                           aom_codec_error(&decoder));
             if (!keep_going) goto fail;
           }
           fprintf(framestats_file, "%d,%d\r\n", (int)bytes_in_buffer, qp);
@@ -779,9 +823,10 @@ static int main_loop(int argc, const char **argv_) {
     aom_usec_timer_start(&timer);
 
     if (flush_decoder) {
-      // Flush the decoder in frame parallel decode.
+      // Flush the decoder.
       if (aom_codec_decode(&decoder, NULL, 0, NULL)) {
-        warn("Failed to flush decoder: %s", aom_codec_error(&decoder));
+        aom_tools_warn("Failed to flush decoder: %s",
+                       aom_codec_error(&decoder));
       }
     }
 
@@ -789,12 +834,16 @@ static int main_loop(int argc, const char **argv_) {
     dx_time += aom_usec_timer_elapsed(&timer);
 
     got_data = 0;
+    // TODO(aomedia:3519): Change the prototype of aom_codec_get_frame_fn_t to
+    // facilitate error handling.
     while ((img = aom_codec_get_frame(&decoder, &iter))) {
       ++frame_out;
       got_data = 1;
 
-      if (aom_codec_control(&decoder, AOMD_GET_FRAME_CORRUPTED, &corrupted)) {
-        warn("Failed AOM_GET_FRAME_CORRUPTED: %s", aom_codec_error(&decoder));
+      if (AOM_CODEC_CONTROL_TYPECHECKED(&decoder, AOMD_GET_FRAME_CORRUPTED,
+                                        &corrupted)) {
+        aom_tools_warn("Failed AOM_GET_FRAME_CORRUPTED: %s",
+                       aom_codec_error(&decoder));
         if (!keep_going) goto fail;
       }
       frames_corrupted += corrupted;
@@ -817,8 +866,8 @@ static int main_loop(int argc, const char **argv_) {
             int render_height = aom_input_ctx.height;
             if (!render_width || !render_height) {
               int render_size[2];
-              if (aom_codec_control(&decoder, AV1D_GET_DISPLAY_SIZE,
-                                    render_size)) {
+              if (AOM_CODEC_CONTROL_TYPECHECKED(&decoder, AV1D_GET_DISPLAY_SIZE,
+                                                render_size)) {
                 // As last resort use size of first frame as display size.
                 render_width = img->d_w;
                 render_height = img->d_h;
@@ -829,6 +878,11 @@ static int main_loop(int argc, const char **argv_) {
             }
             scaled_img =
                 aom_img_alloc(NULL, img->fmt, render_width, render_height, 16);
+            if (!scaled_img) {
+              fprintf(stderr, "Failed to allocate scaled image (%d x %d)\n",
+                      render_width, render_height);
+              goto fail;
+            }
             scaled_img->bit_depth = img->bit_depth;
             scaled_img->monochrome = img->monochrome;
             scaled_img->csp = img->csp;
@@ -836,7 +890,7 @@ static int main_loop(int argc, const char **argv_) {
 
           if (img->d_w != scaled_img->d_w || img->d_h != scaled_img->d_h) {
 #if CONFIG_LIBYUV
-            libyuv_scale(img, scaled_img, kFilterBox);
+            if (libyuv_scale(img, scaled_img, kFilterBox) != 0) goto fail;
             img = scaled_img;
 #else
             fprintf(
@@ -850,39 +904,17 @@ static int main_loop(int argc, const char **argv_) {
           }
         }
         // Default to codec bit depth if output bit depth not set
-        if (!output_bit_depth && single_file && !do_md5) {
+        unsigned int output_bit_depth;
+        if (!fixed_output_bit_depth && single_file) {
           output_bit_depth = img->bit_depth;
+        } else {
+          output_bit_depth = fixed_output_bit_depth;
         }
         // Shift up or down if necessary
         if (output_bit_depth != 0) {
-          const aom_img_fmt_t shifted_fmt =
-              output_bit_depth == 8 ? img->fmt & ~AOM_IMG_FMT_HIGHBITDEPTH
-                                    : img->fmt | AOM_IMG_FMT_HIGHBITDEPTH;
-
-          if (shifted_fmt != img->fmt || output_bit_depth != img->bit_depth) {
-            if (img_shifted &&
-                img_shifted_realloc_required(img, img_shifted, shifted_fmt)) {
-              aom_img_free(img_shifted);
-              img_shifted = NULL;
-            }
-            if (img_shifted) {
-              img_shifted->monochrome = img->monochrome;
-            }
-            if (!img_shifted) {
-              img_shifted =
-                  aom_img_alloc(NULL, shifted_fmt, img->d_w, img->d_h, 16);
-              img_shifted->bit_depth = output_bit_depth;
-              img_shifted->monochrome = img->monochrome;
-              img_shifted->csp = img->csp;
-            }
-            if (output_bit_depth > img->bit_depth) {
-              aom_img_upshift(img_shifted, img,
-                              output_bit_depth - img->bit_depth);
-            } else {
-              aom_img_downshift(img_shifted, img,
-                                img->bit_depth - output_bit_depth);
-            }
-            img = img_shifted;
+          if (!aom_shift_img(output_bit_depth, &img, &img_shifted)) {
+            fprintf(stderr, "Error allocating image\n");
+            goto fail;
           }
         }
 
@@ -899,7 +931,13 @@ static int main_loop(int argc, const char **argv_) {
               len = y4m_write_file_header(
                   y4m_buf, sizeof(y4m_buf), aom_input_ctx.width,
                   aom_input_ctx.height, &aom_input_ctx.framerate,
-                  img->monochrome, img->csp, img->fmt, img->bit_depth);
+                  img->monochrome, img->csp, img->fmt, img->bit_depth,
+                  img->range);
+              if (img->csp == AOM_CSP_COLOCATED) {
+                fprintf(stderr,
+                        "Warning: Y4M lacks a colorspace for colocated "
+                        "chroma. Using a placeholder.\n");
+              }
               if (do_md5) {
                 MD5Update(&md5_ctx, (md5byte *)y4m_buf, (unsigned int)len);
               } else {
@@ -1031,6 +1069,10 @@ int main(int argc, const char **argv_) {
   int error = 0;
 
   argv = argv_dup(argc - 1, argv_ + 1);
+  if (!argv) {
+    fprintf(stderr, "Error allocating argument list\n");
+    return EXIT_FAILURE;
+  }
   for (argi = argj = argv; (*argj = *argi); argi += arg.argv_step) {
     memset(&arg, 0, sizeof(arg));
     arg.argv_step = 1;

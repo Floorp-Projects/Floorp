@@ -16,30 +16,32 @@ set(AOM_BUILD_CMAKE_UTIL_CMAKE_ 1)
 # Directory where generated sources will be written.
 set(AOM_GEN_SRC_DIR "${AOM_CONFIG_DIR}/gen_src")
 
-# Creates dummy source file in $AOM_CONFIG_DIR named $basename.$extension and
-# returns the full path to the dummy source file via the $out_file_path
-# parameter.
-macro(create_dummy_source_file basename extension out_file_path)
-  set(dummy_source_file "${AOM_GEN_SRC_DIR}/${basename}_dummy.${extension}")
-  file(
-    WRITE
-      "${dummy_source_file}" "// Generated file. DO NOT EDIT!\n"
-      "// ${target_name} needs a ${extension} file to force link language, \n"
-      "// or to silence a harmless CMake warning: Ignore me.\n"
-      "void ${target_name}_dummy_function(void) {}\n")
+# Creates a no-op source file in $AOM_GEN_SRC_DIR named $basename.$extension and
+# returns the full path to the source file via appending it to the list variable
+# referred to by $out_file_list_var parameter.
+macro(create_no_op_source_file basename extension out_file_list_var)
+  set(no_op_source_file "${AOM_GEN_SRC_DIR}/${basename}_no_op.${extension}")
+  file(WRITE "${no_op_source_file}"
+       "// Generated file. DO NOT EDIT!\n"
+       "// ${target_name} needs a ${extension} file to force link language, \n"
+       "// or to silence a harmless CMake warning: Ignore me.\n"
+       "void aom_${target_name}_no_op_function(void);\n"
+       "void aom_${target_name}_no_op_function(void) {}\n")
+  list(APPEND "${out_file_list_var}" "${no_op_source_file}")
 endmacro()
 
-# Convenience function for adding a dummy source file to $target_name using
-# $extension as the file extension. Wraps create_dummy_source_file().
-function(add_dummy_source_file_to_target target_name extension)
-  create_dummy_source_file("${target_name}" "${extension}" "dummy_source_file")
-  target_sources(${target_name} PRIVATE ${dummy_source_file})
+# Convenience function for adding a no-op source file to $target_name using
+# $extension as the file extension. Wraps create_no_op_source_file().
+function(add_no_op_source_file_to_target target_name extension)
+  create_no_op_source_file("${target_name}" "${extension}"
+                           "no_op_source_file_list")
+  target_sources(${target_name} PRIVATE ${no_op_source_file_list})
 endfunction()
 
 # Sets the value of the variable referenced by $feature to $value, and reports
 # the change to the user via call to message(WARNING ...). $cause is expected to
 # be a configuration variable that conflicts with $feature in some way. This
-# function is a noop if $feature is already set to $value.
+# function is a no-op if $feature is already set to $value.
 function(change_config_and_warn feature value cause)
   if(${feature} EQUAL ${value})
     return()
@@ -83,8 +85,8 @@ function(set_compiler_launcher launcher_flag launcher_name)
     set(CMAKE_CXX_COMPILER_LAUNCHER "${launcher_path}" PARENT_SCOPE)
     message("--- Using ${launcher_name} as compiler launcher.")
   else()
-    message(WARNING
-              "--- Cannot find ${launcher_name}, ${launcher_flag} ignored.")
+    message(
+      WARNING "--- Cannot find ${launcher_name}, ${launcher_flag} ignored.")
   endif()
 endfunction()
 
@@ -99,8 +101,8 @@ set(cmake_cmdline_helpstring "No help, variable specified on the command line.")
 # already been set via the CMake command line.
 #
 # The names of variables defaulted through this macro are added to
-# $AOM_CONFIG_VARS to facilitate build logging and diagnostics.
-macro(set_aom_detect_var name value type helpstring)
+# $AOM_DETECT_VARS to facilitate build logging and diagnostics.
+macro(set_aom_detect_var name value helpstring)
   unset(list_index)
   list(FIND AOM_DETECT_VARS ${name} list_index)
   if(${list_index} EQUAL -1)
@@ -112,7 +114,7 @@ macro(set_aom_detect_var name value type helpstring)
   unset(cache_helpstring)
   get_property(cache_helpstring CACHE ${name} PROPERTY HELPSTRING)
   if(NOT "${cache_helpstring}" STREQUAL "${cmake_cmdline_helpstring}")
-    set(${name} ${value} CACHE ${type} "${helpstring}")
+    set(${name} ${value} CACHE STRING "${helpstring}")
     mark_as_advanced(${name})
   else()
     message(
@@ -130,7 +132,7 @@ endmacro()
 #
 # The names of variables defaulted through this macro are added to
 # $AOM_CONFIG_VARS to facilitate build logging and diagnostics.
-macro(set_aom_config_var name value type helpstring)
+macro(set_aom_config_var name value helpstring)
   unset(list_index)
   list(FIND AOM_CONFIG_VARS ${name} list_index)
   if(${list_index} EQUAL -1)
@@ -142,7 +144,7 @@ macro(set_aom_config_var name value type helpstring)
   unset(cache_helpstring)
   get_property(cache_helpstring CACHE ${name} PROPERTY HELPSTRING)
   if(NOT "${cache_helpstring}" STREQUAL "${cmake_cmdline_helpstring}")
-    set(${name} ${value} CACHE ${type} "${helpstring}")
+    set(${name} ${value} CACHE STRING "${helpstring}")
   endif()
 endmacro()
 

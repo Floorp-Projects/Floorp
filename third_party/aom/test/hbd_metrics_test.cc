@@ -12,6 +12,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include <new>
+#include <tuple>
 
 #include "third_party/googletest/src/googletest/include/gtest/gtest.h"
 #include "test/acm_random.h"
@@ -79,21 +80,21 @@ double compute_fastssim(const YV12_BUFFER_CONFIG *source,
 double compute_hbd_aomssim(const YV12_BUFFER_CONFIG *source,
                            const YV12_BUFFER_CONFIG *dest, uint32_t in_bd,
                            uint32_t bd) {
-  double ssim, weight;
-  ssim = aom_highbd_calc_ssim(source, dest, &weight, bd, in_bd);
-  return 100 * pow(ssim / weight, 8.0);
+  double ssim[2], weight[2];
+  aom_highbd_calc_ssim(source, dest, weight, bd, in_bd, ssim);
+  return 100 * pow(ssim[0] / weight[0], 8.0);
 }
 
 double compute_aomssim(const YV12_BUFFER_CONFIG *source,
                        const YV12_BUFFER_CONFIG *dest) {
   double ssim, weight;
-  ssim = aom_calc_ssim(source, dest, &weight);
+  aom_lowbd_calc_ssim(source, dest, &weight, &ssim);
   return 100 * pow(ssim / weight, 8.0);
 }
 
 class HBDMetricsTestBase {
  public:
-  virtual ~HBDMetricsTestBase() {}
+  virtual ~HBDMetricsTestBase() = default;
 
  protected:
   void RunAccuracyCheck() {
@@ -111,10 +112,10 @@ class HBDMetricsTestBase {
     memset(&hbd_src, 0, sizeof(hbd_src));
     memset(&hbd_dst, 0, sizeof(hbd_dst));
 
-    aom_alloc_frame_buffer(&lbd_src, width, height, 1, 1, 0, 32, 16);
-    aom_alloc_frame_buffer(&lbd_dst, width, height, 1, 1, 0, 32, 16);
-    aom_alloc_frame_buffer(&hbd_src, width, height, 1, 1, 1, 32, 16);
-    aom_alloc_frame_buffer(&hbd_dst, width, height, 1, 1, 1, 32, 16);
+    aom_alloc_frame_buffer(&lbd_src, width, height, 1, 1, 0, 32, 16, 0, 0);
+    aom_alloc_frame_buffer(&lbd_dst, width, height, 1, 1, 0, 32, 16, 0, 0);
+    aom_alloc_frame_buffer(&hbd_src, width, height, 1, 1, 1, 32, 16, 0, 0);
+    aom_alloc_frame_buffer(&hbd_dst, width, height, 1, 1, 1, 32, 16, 0, 0);
 
     memset(lbd_src.buffer_alloc, kPixFiller, lbd_src.buffer_alloc_sz);
     while (i < lbd_src.buffer_alloc_sz) {
@@ -173,19 +174,18 @@ class HBDMetricsTestBase {
   HBDMetricFunc hbd_metric_;
 };
 
-typedef ::testing::tuple<LBDMetricFunc, HBDMetricFunc, int, int, double>
+typedef std::tuple<LBDMetricFunc, HBDMetricFunc, int, int, double>
     MetricTestTParam;
 class HBDMetricsTest : public HBDMetricsTestBase,
                        public ::testing::TestWithParam<MetricTestTParam> {
  public:
-  virtual void SetUp() {
+  void SetUp() override {
     lbd_metric_ = GET_PARAM(0);
     hbd_metric_ = GET_PARAM(1);
     input_bit_depth_ = GET_PARAM(2);
     bit_depth_ = GET_PARAM(3);
     threshold_ = GET_PARAM(4);
   }
-  virtual void TearDown() {}
 };
 
 TEST_P(HBDMetricsTest, RunAccuracyCheck) { RunAccuracyCheck(); }
@@ -197,7 +197,7 @@ static const double kFSsim_thresh = 0.03;
 // Allow some extra variation due to rounding error accumulated in dct.
 static const double kPhvs_thresh = 0.3;
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     AOMSSIM, HBDMetricsTest,
     ::testing::Values(MetricTestTParam(&compute_aomssim, &compute_hbd_aomssim,
                                        8, 10, kSsim_thresh),
@@ -207,7 +207,7 @@ INSTANTIATE_TEST_CASE_P(
                                        8, 12, kSsim_thresh),
                       MetricTestTParam(&compute_aomssim, &compute_hbd_aomssim,
                                        12, 12, kPhvs_thresh)));
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     FASTSSIM, HBDMetricsTest,
     ::testing::Values(MetricTestTParam(&compute_fastssim, &compute_hbd_fastssim,
                                        8, 10, kFSsim_thresh),
@@ -217,7 +217,7 @@ INSTANTIATE_TEST_CASE_P(
                                        8, 12, kFSsim_thresh),
                       MetricTestTParam(&compute_fastssim, &compute_hbd_fastssim,
                                        12, 12, kFSsim_thresh)));
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     PSNRHVS, HBDMetricsTest,
     ::testing::Values(MetricTestTParam(&compute_psnrhvs, &compute_hbd_psnrhvs,
                                        8, 10, kPhvs_thresh),
@@ -227,7 +227,7 @@ INSTANTIATE_TEST_CASE_P(
                                        8, 12, kPhvs_thresh),
                       MetricTestTParam(&compute_psnrhvs, &compute_hbd_psnrhvs,
                                        12, 12, kPhvs_thresh)));
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     PSNR, HBDMetricsTest,
     ::testing::Values(
         MetricTestTParam(&compute_psnr, &compute_hbd_psnr, 8, 10, kPhvs_thresh),

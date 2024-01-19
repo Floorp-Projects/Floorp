@@ -20,8 +20,41 @@
 
 #include "aom/aom_integer.h"
 #include "aom_ports/mem.h"
+#include "av1/common/av1_common_int.h"
 #include "av1/common/cdef_block.h"
-#include "av1/common/onyxc_int.h"
+
+enum { TOP, LEFT, BOTTOM, RIGHT, BOUNDARIES } UENUM1BYTE(BOUNDARY);
+
+struct AV1CdefSyncData;
+
+/*!\brief Parameters related to CDEF Block */
+typedef struct {
+  uint16_t *src;                       /*!< CDEF intermediate buffer */
+  uint16_t *top_linebuf[MAX_MB_PLANE]; /*!< CDEF top line buffer */
+  uint16_t *bot_linebuf[MAX_MB_PLANE]; /*!< CDEF bottom line buffer */
+  uint8_t *dst;                        /*!< CDEF destination buffer */
+  cdef_list
+      dlist[MI_SIZE_64X64 * MI_SIZE_64X64]; /*!< CDEF 8x8 block positions */
+
+  int xdec;                       /*!< Sub-sampling X */
+  int ydec;                       /*!< Sub-sampling X */
+  int mi_wide_l2;                 /*!< Pixels per mi unit in width */
+  int mi_high_l2;                 /*!< Pixels per mi unit in height */
+  int frame_boundary[BOUNDARIES]; /*!< frame boundaries */
+
+  int damping;     /*!< CDEF damping factor */
+  int coeff_shift; /*!< Bit-depth based shift for calculating filter strength */
+  int level;       /*!< CDEF filtering level */
+  int sec_strength; /*!< CDEF secondary strength */
+  int cdef_count;   /*!< Number of CDEF sub-blocks in superblock */
+  int dir[CDEF_NBLOCKS]
+         [CDEF_NBLOCKS]; /*!< CDEF filter direction for all 8x8 sub-blocks*/
+  int var[CDEF_NBLOCKS][CDEF_NBLOCKS]; /*!< variance for all 8x8 sub-blocks */
+
+  int dst_stride; /*!< CDEF destination buffer stride */
+  int coffset;    /*!< current superblock offset in a row */
+  int roffset;    /*!< current row offset */
+} CdefBlockInfo;
 
 static INLINE int sign(int i) { return i < 0 ? -1 : 1; }
 
@@ -37,13 +70,41 @@ static INLINE int constrain(int diff, int threshold, int damping) {
 extern "C" {
 #endif
 
-int sb_all_skip(const AV1_COMMON *const cm, int mi_row, int mi_col);
-int sb_compute_cdef_list(const AV1_COMMON *const cm, int mi_row, int mi_col,
-                         cdef_list *dlist, BLOCK_SIZE bsize);
-void av1_cdef_frame(YV12_BUFFER_CONFIG *frame, AV1_COMMON *cm, MACROBLOCKD *xd);
+int av1_cdef_compute_sb_list(const CommonModeInfoParams *const mi_params,
+                             int mi_row, int mi_col, cdef_list *dlist,
+                             BLOCK_SIZE bsize);
 
-void av1_cdef_search(YV12_BUFFER_CONFIG *frame, const YV12_BUFFER_CONFIG *ref,
-                     AV1_COMMON *cm, MACROBLOCKD *xd, int fast);
+typedef void (*cdef_init_fb_row_t)(
+    const AV1_COMMON *const cm, const MACROBLOCKD *const xd,
+    CdefBlockInfo *const fb_info, uint16_t **const linebuf, uint16_t *const src,
+    struct AV1CdefSyncData *const cdef_sync, int fbr);
+
+/*!\brief Function for applying CDEF to a frame
+ *
+ * \ingroup in_loop_cdef
+ * This function applies CDEF to a frame.
+ *
+ * \param[in, out]  frame     Compressed frame buffer
+ * \param[in, out]  cm        Pointer to top level common structure
+ * \param[in]       xd        Pointer to common current coding block structure
+ * \param[in]       cdef_init_fb_row_fn   Function Pointer
+ *
+ * \remark Nothing is returned. Instead, the filtered frame is output in
+ * \c frame.
+ */
+void av1_cdef_frame(YV12_BUFFER_CONFIG *frame, AV1_COMMON *const cm,
+                    MACROBLOCKD *xd, cdef_init_fb_row_t cdef_init_fb_row_fn);
+void av1_cdef_fb_row(const AV1_COMMON *const cm, MACROBLOCKD *xd,
+                     uint16_t **const linebuf, uint16_t **const colbuf,
+                     uint16_t *const src, int fbr,
+                     cdef_init_fb_row_t cdef_init_fb_row_fn,
+                     struct AV1CdefSyncData *const cdef_sync,
+                     struct aom_internal_error_info *error_info);
+void av1_cdef_init_fb_row(const AV1_COMMON *const cm,
+                          const MACROBLOCKD *const xd,
+                          CdefBlockInfo *const fb_info,
+                          uint16_t **const linebuf, uint16_t *const src,
+                          struct AV1CdefSyncData *const cdef_sync, int fbr);
 
 #ifdef __cplusplus
 }  // extern "C"

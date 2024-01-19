@@ -41,7 +41,7 @@ aom_set_ref() {
 
   eval "${AOM_TEST_PREFIX}" "${encoder}" "${codec}" "${YUV_RAW_INPUT_WIDTH}" \
       "${YUV_RAW_INPUT_HEIGHT}" "${YUV_RAW_INPUT}" "${output_file}" \
-      "${ref_frame_num}" "${limit}" ${devnull}
+      "${ref_frame_num}" "${limit}" ${devnull} || return 1
 
   [ -e "${output_file}" ] || return 1
 }

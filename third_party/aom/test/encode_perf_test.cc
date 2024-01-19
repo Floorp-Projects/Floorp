@@ -63,11 +63,10 @@ class AV1EncodePerfTest
       : EncoderTest(GET_PARAM(0)), min_psnr_(kMaxPsnr), nframes_(0),
         encoding_mode_(GET_PARAM(1)), speed_(0), threads_(1) {}
 
-  virtual ~AV1EncodePerfTest() {}
+  ~AV1EncodePerfTest() override = default;
 
-  virtual void SetUp() {
-    InitializeConfig();
-    SetMode(encoding_mode_);
+  void SetUp() override {
+    InitializeConfig(encoding_mode_);
 
     cfg_.g_lag_in_frames = 0;
     cfg_.rc_min_quantizer = 2;
@@ -83,8 +82,8 @@ class AV1EncodePerfTest
     cfg_.g_threads = threads_;
   }
 
-  virtual void PreEncodeFrameHook(::libaom_test::VideoSource *video,
-                                  ::libaom_test::Encoder *encoder) {
+  void PreEncodeFrameHook(::libaom_test::VideoSource *video,
+                          ::libaom_test::Encoder *encoder) override {
     if (video->frame() == 0) {
       const int log2_tile_columns = 3;
       encoder->Control(AOME_SET_CPUUSED, speed_);
@@ -94,19 +93,19 @@ class AV1EncodePerfTest
     }
   }
 
-  virtual void BeginPassHook(unsigned int /*pass*/) {
+  void BeginPassHook(unsigned int /*pass*/) override {
     min_psnr_ = kMaxPsnr;
     nframes_ = 0;
   }
 
-  virtual void PSNRPktHook(const aom_codec_cx_pkt_t *pkt) {
+  void PSNRPktHook(const aom_codec_cx_pkt_t *pkt) override {
     if (pkt->data.psnr.psnr[0] < min_psnr_) {
       min_psnr_ = pkt->data.psnr.psnr[0];
     }
   }
 
   // for performance reasons don't decode
-  virtual bool DoDecode() { return 0; }
+  bool DoDecode() const override { return false; }
 
   double min_psnr() const { return min_psnr_; }
 
@@ -123,32 +122,29 @@ class AV1EncodePerfTest
 };
 
 TEST_P(AV1EncodePerfTest, PerfTest) {
-  for (size_t i = 0; i < NELEMENTS(kAV1EncodePerfTestVectors); ++i) {
-    for (size_t j = 0; j < NELEMENTS(kEncodePerfTestSpeeds); ++j) {
-      for (size_t k = 0; k < NELEMENTS(kEncodePerfTestThreads); ++k) {
-        if (kAV1EncodePerfTestVectors[i].width < 512 &&
-            kEncodePerfTestThreads[k] > 1)
+  for (const EncodePerfTestVideo &test_video : kAV1EncodePerfTestVectors) {
+    for (int speed : kEncodePerfTestSpeeds) {
+      for (int threads : kEncodePerfTestThreads) {
+        if (test_video.width < 512 && threads > 1)
           continue;
-        else if (kAV1EncodePerfTestVectors[i].width < 1024 &&
-                 kEncodePerfTestThreads[k] > 2)
+        else if (test_video.width < 1024 && threads > 2)
           continue;
 
-        set_threads(kEncodePerfTestThreads[k]);
+        set_threads(threads);
         SetUp();
 
         const aom_rational timebase = { 33333333, 1000000000 };
         cfg_.g_timebase = timebase;
-        cfg_.rc_target_bitrate = kAV1EncodePerfTestVectors[i].bitrate;
+        cfg_.rc_target_bitrate = test_video.bitrate;
 
         init_flags_ = AOM_CODEC_USE_PSNR;
 
-        const unsigned frames = kAV1EncodePerfTestVectors[i].frames;
-        const char *video_name = kAV1EncodePerfTestVectors[i].name;
-        libaom_test::I420VideoSource video(
-            video_name, kAV1EncodePerfTestVectors[i].width,
-            kAV1EncodePerfTestVectors[i].height, timebase.den, timebase.num, 0,
-            kAV1EncodePerfTestVectors[i].frames);
-        set_speed(kEncodePerfTestSpeeds[j]);
+        const unsigned frames = test_video.frames;
+        const char *video_name = test_video.name;
+        libaom_test::I420VideoSource video(video_name, test_video.width,
+                                           test_video.height, timebase.den,
+                                           timebase.num, 0, test_video.frames);
+        set_speed(speed);
 
         aom_usec_timer t;
         aom_usec_timer_start(&t);
@@ -160,10 +156,9 @@ TEST_P(AV1EncodePerfTest, PerfTest) {
         const double fps = frames / elapsed_secs;
         const double minimum_psnr = min_psnr();
         std::string display_name(video_name);
-        if (kEncodePerfTestThreads[k] > 1) {
+        if (threads > 1) {
           char thread_count[32];
-          snprintf(thread_count, sizeof(thread_count), "_t-%d",
-                   kEncodePerfTestThreads[k]);
+          snprintf(thread_count, sizeof(thread_count), "_t-%d", threads);
           display_name += thread_count;
         }
 
@@ -175,14 +170,14 @@ TEST_P(AV1EncodePerfTest, PerfTest) {
         printf("\t\"totalFrames\" : %u,\n", frames);
         printf("\t\"framesPerSecond\" : %f,\n", fps);
         printf("\t\"minPsnr\" : %f,\n", minimum_psnr);
-        printf("\t\"speed\" : %d,\n", kEncodePerfTestSpeeds[j]);
-        printf("\t\"threads\" : %d\n", kEncodePerfTestThreads[k]);
+        printf("\t\"speed\" : %d,\n", speed);
+        printf("\t\"threads\" : %d\n", threads);
         printf("}\n");
       }
     }
   }
 }
 
-AV1_INSTANTIATE_TEST_CASE(AV1EncodePerfTest,
-                          ::testing::Values(::libaom_test::kRealTime));
+AV1_INSTANTIATE_TEST_SUITE(AV1EncodePerfTest,
+                           ::testing::Values(::libaom_test::kRealTime));
 }  // namespace

@@ -37,17 +37,14 @@ int av1_check_trailing_bits(struct AV1Decoder *pbi,
 
 // On success, returns the frame header size. On failure, calls
 // aom_internal_error and does not return.
-// TODO(wtc): Figure out and document the p_data_end parameter.
 uint32_t av1_decode_frame_headers_and_setup(struct AV1Decoder *pbi,
                                             struct aom_read_bit_buffer *rb,
-                                            const uint8_t *data,
-                                            const uint8_t **p_data_end,
                                             int trailing_bits_present);
 
 void av1_decode_tg_tiles_and_wrapup(struct AV1Decoder *pbi, const uint8_t *data,
                                     const uint8_t *data_end,
-                                    const uint8_t **p_data_end, int startTile,
-                                    int endTile, int initialize_flag);
+                                    const uint8_t **p_data_end, int start_tile,
+                                    int end_tile, int initialize_flag);
 
 // Implements the color_config() function in the spec. Reports errors by
 // calling rb->error_handler() or aom_internal_error().
@@ -56,19 +53,21 @@ void av1_read_color_config(struct aom_read_bit_buffer *rb,
                            struct aom_internal_error_info *error_info);
 
 // Implements the timing_info() function in the spec. Reports errors by calling
-// rb->error_handler().
-void av1_read_timing_info_header(AV1_COMMON *cm,
+// rb->error_handler() or aom_internal_error().
+void av1_read_timing_info_header(aom_timing_info_t *timing_info,
+                                 struct aom_internal_error_info *error,
                                  struct aom_read_bit_buffer *rb);
 
 // Implements the decoder_model_info() function in the spec. Reports errors by
 // calling rb->error_handler().
-void av1_read_decoder_model_info(AV1_COMMON *cm,
+void av1_read_decoder_model_info(aom_dec_model_info_t *decoder_model_info,
                                  struct aom_read_bit_buffer *rb);
 
 // Implements the operating_parameters_info() function in the spec. Reports
-// errors by calling rb->error_handler() or aom_internal_error().
-void av1_read_op_parameters_info(AV1_COMMON *const cm,
-                                 struct aom_read_bit_buffer *rb, int op_num);
+// errors by calling rb->error_handler().
+void av1_read_op_parameters_info(aom_dec_model_op_parameters_t *op_params,
+                                 int buffer_delay_length,
+                                 struct aom_read_bit_buffer *rb);
 
 struct aom_read_bit_buffer *av1_init_read_bit_buffer(
     struct AV1Decoder *pbi, struct aom_read_bit_buffer *rb, const uint8_t *data,

@@ -11,7 +11,9 @@
 cmake_minimum_required(VERSION 3.5)
 
 set(REQUIRED_ARGS "AOM_ROOT" "AOM_CONFIG_DIR" "CMAKE_INSTALL_PREFIX"
-    "CMAKE_PROJECT_NAME" "CONFIG_MULTITHREAD" "HAVE_PTHREAD_H")
+                  "CMAKE_INSTALL_BINDIR" "CMAKE_INSTALL_INCLUDEDIR"
+                  "CMAKE_INSTALL_LIBDIR" "CMAKE_PROJECT_NAME"
+                  "CONFIG_MULTITHREAD")
 
 foreach(arg ${REQUIRED_ARGS})
   if("${${arg}}" STREQUAL "")
@@ -34,25 +36,34 @@ endif()
 
 # Write pkg-config info.
 set(prefix "${CMAKE_INSTALL_PREFIX}")
+set(bindir "${CMAKE_INSTALL_BINDIR}")
+set(includedir "${CMAKE_INSTALL_INCLUDEDIR}")
+set(libdir "${CMAKE_INSTALL_LIBDIR}")
 set(pkgconfig_file "${AOM_CONFIG_DIR}/aom.pc")
 string(TOLOWER ${CMAKE_PROJECT_NAME} pkg_name)
 file(WRITE "${pkgconfig_file}" "# libaom pkg-config.\n")
 file(APPEND "${pkgconfig_file}" "prefix=${prefix}\n")
-file(APPEND "${pkgconfig_file}" "exec_prefix=\${prefix}/bin\n")
-file(APPEND "${pkgconfig_file}" "libdir=\${prefix}/lib\n")
-file(APPEND "${pkgconfig_file}" "includedir=\${prefix}/include\n\n")
+file(APPEND "${pkgconfig_file}" "exec_prefix=\${prefix}\n")
+file(APPEND "${pkgconfig_file}" "includedir=\${prefix}/${includedir}\n")
+file(APPEND "${pkgconfig_file}" "libdir=\${exec_prefix}/${libdir}\n\n")
 file(APPEND "${pkgconfig_file}" "Name: ${pkg_name}\n")
-file(APPEND "${pkgconfig_file}"
-            "Description: AV1 codec library v${aom_version}.\n")
+file(
+  APPEND "${pkgconfig_file}"
+  "Description: Alliance for Open Media AV1 codec library v${aom_version}.\n")
 file(APPEND "${pkgconfig_file}" "Version: ${package_version}\n")
-file(APPEND "${pkgconfig_file}" "Requires:\n")
-file(APPEND "${pkgconfig_file}" "Conflicts:\n")
-if(CONFIG_MULTITHREAD AND HAVE_PTHREAD_H)
+file(APPEND "${pkgconfig_file}" "Requires:")
+if(CONFIG_TUNE_VMAF)
+  file(APPEND "${pkgconfig_file}" " libvmaf")
+endif()
+if(CONFIG_TUNE_BUTTERAUGLI)
+  file(APPEND "${pkgconfig_file}" " libjxl")
+endif()
+file(APPEND "${pkgconfig_file}" "\nConflicts:\n")
+file(APPEND "${pkgconfig_file}" "Libs: -L\${libdir} -l${pkg_name}\n")
+if(CONFIG_MULTITHREAD AND CMAKE_THREAD_LIBS_INIT)
   file(APPEND "${pkgconfig_file}"
-              "Libs: -L\${prefix}/lib -l${pkg_name} -lm -lpthread\n")
-  file(APPEND "${pkgconfig_file}" "Libs.private: -lm -lpthread\n")
+       "Libs.private: -lm ${CMAKE_THREAD_LIBS_INIT}\n")
 else()
-  file(APPEND "${pkgconfig_file}" "Libs: -L\${prefix}/lib -l${pkg_name} -lm\n")
   file(APPEND "${pkgconfig_file}" "Libs.private: -lm\n")
 endif()
-file(APPEND "${pkgconfig_file}" "Cflags: -I\${prefix}/include\n")
+file(APPEND "${pkgconfig_file}" "Cflags: -I\${includedir}\n")

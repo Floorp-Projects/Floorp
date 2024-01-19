@@ -12,33 +12,17 @@
 #define AOM_AOM_AOM_INTEGER_H_
 
 /* get ptrdiff_t, size_t, wchar_t, NULL */
-#include <stddef.h>
+#include <stddef.h>  // IWYU pragma: export
 
 #if defined(_MSC_VER)
 #define AOM_FORCE_INLINE __forceinline
 #define AOM_INLINE __inline
 #else
 #define AOM_FORCE_INLINE __inline__ __attribute__((always_inline))
-// TODO(jbb): Allow a way to force inline off for older compilers.
 #define AOM_INLINE inline
 #endif
 
-#if defined(AOM_EMULATE_INTTYPES)
-typedef signed char int8_t;
-typedef signed short int16_t;
-typedef signed int int32_t;
-
-typedef unsigned char uint8_t;
-typedef unsigned short uint16_t;
-typedef unsigned int uint32_t;
-
-#ifndef _UINTPTR_T_DEFINED
-typedef size_t uintptr_t;
-#endif
-
-#else
-
-/* Most platforms have the C99 standard integer types. */
+/* Assume platforms have the C99 standard integer types. */
 
 #if defined(__cplusplus)
 #if !defined(__STDC_FORMAT_MACROS)
@@ -49,30 +33,8 @@ typedef size_t uintptr_t;
 #endif
 #endif  // __cplusplus
 
-#include <stdint.h>
-
-#endif
-
-/* VS2010 defines stdint.h, but not inttypes.h */
-#if defined(_MSC_VER) && _MSC_VER < 1800
-#define PRId64 "I64d"
-#else
-#include <inttypes.h>
-#endif
-
-#if !defined(INT8_MAX)
-#define INT8_MAX 127
-#endif
-
-#if !defined(INT32_MAX)
-#define INT32_MAX 2147483647
-#endif
-
-#if !defined(INT32_MIN)
-#define INT32_MIN (-2147483647 - 1)
-#endif
-
-#define NELEMENTS(x) (int)(sizeof(x) / sizeof(x[0]))
+#include <stdint.h>    // IWYU pragma: export
+#include <inttypes.h>  // IWYU pragma: export
 
 #if defined(__cplusplus)
 extern "C" {

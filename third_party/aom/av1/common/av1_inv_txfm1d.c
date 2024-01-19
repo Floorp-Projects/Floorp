@@ -13,11 +13,8 @@
 #include "av1/common/av1_inv_txfm1d.h"
 #include "av1/common/av1_txfm.h"
 
-// TODO(angiebird): Make 1-d txfm functions static
-//
-
-void av1_idct4_new(const int32_t *input, int32_t *output, int8_t cos_bit,
-                   const int8_t *stage_range) {
+void av1_idct4(const int32_t *input, int32_t *output, int8_t cos_bit,
+               const int8_t *stage_range) {
   assert(output != input);
   const int32_t size = 4;
   const int32_t *cospi = cospi_arr(cos_bit);
@@ -57,8 +54,8 @@ void av1_idct4_new(const int32_t *input, int32_t *output, int8_t cos_bit,
   bf1[3] = clamp_value(bf0[0] - bf0[3], stage_range[stage]);
 }
 
-void av1_idct8_new(const int32_t *input, int32_t *output, int8_t cos_bit,
-                   const int8_t *stage_range) {
+void av1_idct8(const int32_t *input, int32_t *output, int8_t cos_bit,
+               const int8_t *stage_range) {
   assert(output != input);
   const int32_t size = 8;
   const int32_t *cospi = cospi_arr(cos_bit);
@@ -138,8 +135,8 @@ void av1_idct8_new(const int32_t *input, int32_t *output, int8_t cos_bit,
   bf1[7] = clamp_value(bf0[0] - bf0[7], stage_range[stage]);
 }
 
-void av1_idct16_new(const int32_t *input, int32_t *output, int8_t cos_bit,
-                    const int8_t *stage_range) {
+void av1_idct16(const int32_t *input, int32_t *output, int8_t cos_bit,
+                const int8_t *stage_range) {
   assert(output != input);
   const int32_t size = 16;
   const int32_t *cospi = cospi_arr(cos_bit);
@@ -303,8 +300,8 @@ void av1_idct16_new(const int32_t *input, int32_t *output, int8_t cos_bit,
   bf1[15] = clamp_value(bf0[0] - bf0[15], stage_range[stage]);
 }
 
-void av1_idct32_new(const int32_t *input, int32_t *output, int8_t cos_bit,
-                    const int8_t *stage_range) {
+void av1_idct32(const int32_t *input, int32_t *output, int8_t cos_bit,
+                const int8_t *stage_range) {
   assert(output != input);
   const int32_t size = 32;
   const int32_t *cospi = cospi_arr(cos_bit);
@@ -656,8 +653,8 @@ void av1_idct32_new(const int32_t *input, int32_t *output, int8_t cos_bit,
   bf1[31] = clamp_value(bf0[0] - bf0[31], stage_range[stage]);
 }
 
-void av1_iadst4_new(const int32_t *input, int32_t *output, int8_t cos_bit,
-                    const int8_t *stage_range) {
+void av1_iadst4(const int32_t *input, int32_t *output, int8_t cos_bit,
+                const int8_t *stage_range) {
   int bit = cos_bit;
   const int32_t *sinpi = sinpi_arr(bit);
   int32_t s0, s1, s2, s3, s4, s5, s6, s7;
@@ -713,8 +710,8 @@ void av1_iadst4_new(const int32_t *input, int32_t *output, int8_t cos_bit,
   output[3] = round_shift(x3, bit);
 }
 
-void av1_iadst8_new(const int32_t *input, int32_t *output, int8_t cos_bit,
-                    const int8_t *stage_range) {
+void av1_iadst8(const int32_t *input, int32_t *output, int8_t cos_bit,
+                const int8_t *stage_range) {
   assert(output != input);
   const int32_t size = 8;
   const int32_t *cospi = cospi_arr(cos_bit);
@@ -809,7 +806,6 @@ void av1_iadst8_new(const int32_t *input, int32_t *output, int8_t cos_bit,
   av1_range_check_buf(stage, input, bf1, size, stage_range[stage]);
 
   // stage 7
-  stage++;
   bf0 = step;
   bf1 = output;
   bf1[0] = bf0[0];
@@ -822,8 +818,8 @@ void av1_iadst8_new(const int32_t *input, int32_t *output, int8_t cos_bit,
   bf1[7] = -bf0[1];
 }
 
-void av1_iadst16_new(const int32_t *input, int32_t *output, int8_t cos_bit,
-                     const int8_t *stage_range) {
+void av1_iadst16(const int32_t *input, int32_t *output, int8_t cos_bit,
+                 const int8_t *stage_range) {
   assert(output != input);
   const int32_t size = 16;
   const int32_t *cospi = cospi_arr(cos_bit);
@@ -1010,7 +1006,6 @@ void av1_iadst16_new(const int32_t *input, int32_t *output, int8_t cos_bit,
   av1_range_check_buf(stage, input, bf1, size, stage_range[stage]);
 
   // stage 9
-  stage++;
   bf0 = step;
   bf1 = output;
   bf1[0] = bf0[0];
@@ -1064,8 +1059,8 @@ void av1_iidentity32_c(const int32_t *input, int32_t *output, int8_t cos_bit,
   for (int i = 0; i < 32; ++i) output[i] = (int32_t)((int64_t)input[i] * 4);
 }
 
-void av1_idct64_new(const int32_t *input, int32_t *output, int8_t cos_bit,
-                    const int8_t *stage_range) {
+void av1_idct64(const int32_t *input, int32_t *output, int8_t cos_bit,
+                const int8_t *stage_range) {
   assert(output != input);
   const int32_t size = 64;
   const int32_t *cospi = cospi_arr(cos_bit);

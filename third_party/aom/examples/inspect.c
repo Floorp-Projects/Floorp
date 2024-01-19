@@ -29,7 +29,7 @@
 
 #include "aom/aom_decoder.h"
 #include "aom/aomdx.h"
-#include "av1/common/onyxc_int.h"
+#include "av1/common/av1_common_int.h"
 
 #if CONFIG_ACCOUNTING
 #include "av1/decoder/accounting.h"
@@ -42,7 +42,7 @@
 #include "common/video_reader.h"
 
 // Max JSON buffer size.
-const int MAX_BUFFER = 1024 * 1024 * 32;
+const int MAX_BUFFER = 1024 * 1024 * 256;
 
 typedef enum {
   ACCOUNTING_LAYER = 1,
@@ -60,7 +60,12 @@ typedef enum {
   DUAL_FILTER_LAYER = 1 << 12,
   Q_INDEX_LAYER = 1 << 13,
   SEGMENT_ID_LAYER = 1 << 14,
-  ALL_LAYERS = (1 << 15) - 1
+  MOTION_MODE_LAYER = 1 << 15,
+  COMPOUND_TYPE_LAYER = 1 << 16,
+  INTRABC_LAYER = 1 << 17,
+  PALETTE_LAYER = 1 << 18,
+  UV_PALETTE_LAYER = 1 << 19,
+  ALL_LAYERS = (1 << 20) - 1
 } LayerType;
 
 static LayerType layers = 0;
@@ -84,6 +89,10 @@ static const arg_def_t dump_transform_size_arg =
 static const arg_def_t dump_transform_type_arg =
     ARG_DEF("tt", "transformType", 0, "Dump Transform Type");
 static const arg_def_t dump_mode_arg = ARG_DEF("m", "mode", 0, "Dump Mode");
+static const arg_def_t dump_motion_mode_arg =
+    ARG_DEF("mm", "motion_mode", 0, "Dump Motion Modes");
+static const arg_def_t dump_compound_type_arg =
+    ARG_DEF("ct", "compound_type", 0, "Dump Compound Types");
 static const arg_def_t dump_uv_mode_arg =
     ARG_DEF("uvm", "uv_mode", 0, "Dump UV Intra Prediction Modes");
 static const arg_def_t dump_skip_arg = ARG_DEF("s", "skip", 0, "Dump Skip");
@@ -100,7 +109,20 @@ static const arg_def_t dump_delta_q_arg =
     ARG_DEF("dq", "delta_q", 0, "Dump QIndex");
 static const arg_def_t dump_seg_id_arg =
     ARG_DEF("si", "seg_id", 0, "Dump Segment ID");
+static const arg_def_t dump_intrabc_arg =
+    ARG_DEF("ibc", "intrabc", 0, "Dump If IntraBC Is Used");
+static const arg_def_t dump_palette_arg =
+    ARG_DEF("plt", "palette", 0, "Dump Palette Size");
+static const arg_def_t dump_uv_palette_arg =
+    ARG_DEF("uvp", "uv_palette", 0, "Dump UV Palette Size");
 static const arg_def_t usage_arg = ARG_DEF("h", "help", 0, "Help");
+static const arg_def_t skip_non_transform_arg = ARG_DEF(
+    "snt", "skip_non_transform", 1, "Skip is counted as a non transform.");
+static const arg_def_t combined_arg =
+    ARG_DEF("comb", "combined", 1, "combinining parameters into one output.");
+
+int combined_parm_list[15];
+int combined_parm_count = 0;
 
 static const arg_def_t *main_args[] = { &limit_arg,
                                         &dump_all_arg,
@@ -113,6 +135,8 @@ static const arg_def_t *main_args[] = { &limit_arg,
                                         &dump_transform_type_arg,
                                         &dump_mode_arg,
                                         &dump_uv_mode_arg,
+                                        &dump_motion_mode_arg,
+                                        &dump_compound_type_arg,
                                         &dump_skip_arg,
                                         &dump_filter_arg,
                                         &dump_cdef_arg,
@@ -122,7 +146,12 @@ static const arg_def_t *main_args[] = { &limit_arg,
                                         &dump_motion_vectors_arg,
                                         &dump_delta_q_arg,
                                         &dump_seg_id_arg,
+                                        &dump_intrabc_arg,
+                                        &dump_palette_arg,
+                                        &dump_uv_palette_arg,
                                         &usage_arg,
+                                        &skip_non_transform_arg,
+                                        &combined_arg,
                                         NULL };
 #define ENUM(name) \
   { #name, name }
@@ -150,12 +179,14 @@ const map_entry block_size_map[] = {
   ENUM(BLOCK_64X16),   LAST_ENUM
 };
 
+#define TX_SKIP -1
+
 const map_entry tx_size_map[] = {
   ENUM(TX_4X4),   ENUM(TX_8X8),   ENUM(TX_16X16), ENUM(TX_32X32),
   ENUM(TX_64X64), ENUM(TX_4X8),   ENUM(TX_8X4),   ENUM(TX_8X16),
   ENUM(TX_16X8),  ENUM(TX_16X32), ENUM(TX_32X16), ENUM(TX_32X64),
   ENUM(TX_64X32), ENUM(TX_4X16),  ENUM(TX_16X4),  ENUM(TX_8X32),
-  ENUM(TX_32X8),  LAST_ENUM
+  ENUM(TX_32X8),  ENUM(TX_16X64), ENUM(TX_64X16), LAST_ENUM
 };
 
 const map_entry tx_type_map[] = { ENUM(DCT_DCT),
@@ -193,6 +224,15 @@ const map_entry prediction_mode_map[] = {
   ENUM(NEW_NEWMV),   ENUM(INTRA_INVALID), LAST_ENUM
 };
 
+const map_entry motion_mode_map[] = { ENUM(SIMPLE_TRANSLATION),
+                                      ENUM(OBMC_CAUSAL),    // 2-sided OBMC
+                                      ENUM(WARPED_CAUSAL),  // 2-sided WARPED
+                                      LAST_ENUM };
+
+const map_entry compound_type_map[] = { ENUM(COMPOUND_AVERAGE),
+                                        ENUM(COMPOUND_WEDGE),
+                                        ENUM(COMPOUND_DIFFWTD), LAST_ENUM };
+
 const map_entry uv_prediction_mode_map[] = {
   ENUM(UV_DC_PRED),       ENUM(UV_V_PRED),
   ENUM(UV_H_PRED),        ENUM(UV_D45_PRED),
@@ -208,9 +248,56 @@ const map_entry uv_prediction_mode_map[] = {
 
 const map_entry skip_map[] = { ENUM(SKIP), ENUM(NO_SKIP), LAST_ENUM };
 
+const map_entry intrabc_map[] = { { "INTRABC", 1 },
+                                  { "NO_INTRABC", 0 },
+                                  LAST_ENUM };
+
+const map_entry palette_map[] = {
+  { "ZERO_COLORS", 0 },  { "TWO_COLORS", 2 },   { "THREE_COLORS", 3 },
+  { "FOUR_COLORS", 4 },  { "FIVE_COLORS", 5 },  { "SIX_COLORS", 6 },
+  { "SEVEN_COLORS", 7 }, { "EIGHT_COLORS", 8 }, LAST_ENUM
+};
+
 const map_entry config_map[] = { ENUM(MI_SIZE), LAST_ENUM };
 
 static const char *exec_name;
+
+struct parm_offset {
+  char parm[60];
+  char offset;
+};
+struct parm_offset parm_offsets[] = {
+  { "blockSize", offsetof(insp_mi_data, bsize) },
+  { "transformSize", offsetof(insp_mi_data, tx_size) },
+  { "transformType", offsetof(insp_mi_data, tx_type) },
+  { "dualFilterType", offsetof(insp_mi_data, dual_filter_type) },
+  { "mode", offsetof(insp_mi_data, mode) },
+  { "uv_mode", offsetof(insp_mi_data, uv_mode) },
+  { "motion_mode", offsetof(insp_mi_data, motion_mode) },
+  { "compound_type", offsetof(insp_mi_data, compound_type) },
+  { "referenceFrame", offsetof(insp_mi_data, ref_frame) },
+  { "skip", offsetof(insp_mi_data, skip) },
+};
+int parm_count = sizeof(parm_offsets) / sizeof(parm_offsets[0]);
+
+int convert_to_indices(char *str, int *indices, int maxCount, int *count) {
+  *count = 0;
+  do {
+    char *comma = strchr(str, ',');
+    int length = (comma ? (int)(comma - str) : (int)strlen(str));
+    int i;
+    for (i = 0; i < parm_count; ++i) {
+      if (!strncmp(str, parm_offsets[i].parm, length)) {
+        break;
+      }
+    }
+    if (i == parm_count) return 0;
+    indices[(*count)++] = i;
+    if (*count > maxCount) return 0;
+    str += length + 1;
+  } while (strlen(str) > 0);
+  return 1;
+}
 
 insp_frame_data frame_data;
 int frame_count = 0;
@@ -382,6 +469,38 @@ int put_motion_vectors(char *buffer) {
   return (int)(buf - buffer);
 }
 
+int put_combined(char *buffer) {
+  const int mi_rows = frame_data.mi_rows;
+  const int mi_cols = frame_data.mi_cols;
+  char *buf = buffer;
+  int r, c, p;
+  buf += put_str(buf, "  \"");
+  for (p = 0; p < combined_parm_count; ++p) {
+    if (p) buf += put_str(buf, "&");
+    buf += put_str(buf, parm_offsets[combined_parm_list[p]].parm);
+  }
+  buf += put_str(buf, "\": [");
+  for (r = 0; r < mi_rows; ++r) {
+    *(buf++) = '[';
+    for (c = 0; c < mi_cols; ++c) {
+      insp_mi_data *mi = &frame_data.mi_grid[r * mi_cols + c];
+      *(buf++) = '[';
+      for (p = 0; p < combined_parm_count; ++p) {
+        if (p) *(buf++) = ',';
+        int16_t *v = (int16_t *)(((int8_t *)mi) +
+                                 parm_offsets[combined_parm_list[p]].offset);
+        buf += put_num(buf, 0, v[0], 0);
+      }
+      *(buf++) = ']';
+      if (c < mi_cols - 1) *(buf++) = ',';
+    }
+    *(buf++) = ']';
+    if (r < mi_rows - 1) *(buf++) = ',';
+  }
+  buf += put_str(buf, "],\n");
+  return (int)(buf - buffer);
+}
+
 int put_block_info(char *buffer, const map_entry *map, const char *name,
                    size_t offset, int len) {
   const int mi_rows = frame_data.mi_rows;
@@ -390,7 +509,6 @@ int put_block_info(char *buffer, const map_entry *map, const char *name,
   int r, c, t, i;
   if (compress && len == 1) {
     die("Can't encode scalars as arrays when RLE compression is enabled.");
-    return -1;
   }
   if (map) {
     buf += snprintf(buf, MAX_BUFFER, "  \"%sMap\": {", name);
@@ -490,18 +608,29 @@ int put_accounting(char *buffer) {
 }
 #endif
 
+int skip_non_transform = 0;
+
 void inspect(void *pbi, void *data) {
   /* Fetch frame data. */
-  ifd_inspect(&frame_data, pbi);
+  ifd_inspect(&frame_data, pbi, skip_non_transform);
+
+  // Show existing frames just show a reference buffer we've already decoded.
+  // There's no information to show.
+  if (frame_data.show_existing_frame) return;
+
   (void)data;
   // We allocate enough space and hope we don't write out of bounds. Totally
   // unsafe but this speeds things up, especially when compiled to Javascript.
   char *buffer = aom_malloc(MAX_BUFFER);
+  if (!buffer) {
+    fprintf(stderr, "Error allocating inspect info buffer\n");
+    abort();
+  }
   char *buf = buffer;
   buf += put_str(buf, "{\n");
   if (layers & BLOCK_SIZE_LAYER) {
     buf += put_block_info(buf, block_size_map, "blockSize",
-                          offsetof(insp_mi_data, sb_type), 0);
+                          offsetof(insp_mi_data, bsize), 0);
   }
   if (layers & TRANSFORM_SIZE_LAYER) {
     buf += put_block_info(buf, tx_size_map, "transformSize",
@@ -522,6 +651,14 @@ void inspect(void *pbi, void *data) {
   if (layers & UV_MODE_LAYER) {
     buf += put_block_info(buf, uv_prediction_mode_map, "uv_mode",
                           offsetof(insp_mi_data, uv_mode), 0);
+  }
+  if (layers & MOTION_MODE_LAYER) {
+    buf += put_block_info(buf, motion_mode_map, "motion_mode",
+                          offsetof(insp_mi_data, motion_mode), 0);
+  }
+  if (layers & COMPOUND_TYPE_LAYER) {
+    buf += put_block_info(buf, compound_type_map, "compound_type",
+                          offsetof(insp_mi_data, compound_type), 0);
   }
   if (layers & SKIP_LAYER) {
     buf +=
@@ -554,6 +691,19 @@ void inspect(void *pbi, void *data) {
   if (layers & MOTION_VECTORS_LAYER) {
     buf += put_motion_vectors(buf);
   }
+  if (layers & INTRABC_LAYER) {
+    buf += put_block_info(buf, intrabc_map, "intrabc",
+                          offsetof(insp_mi_data, intrabc), 0);
+  }
+  if (layers & PALETTE_LAYER) {
+    buf += put_block_info(buf, palette_map, "palette",
+                          offsetof(insp_mi_data, palette), 0);
+  }
+  if (layers & UV_PALETTE_LAYER) {
+    buf += put_block_info(buf, palette_map, "uv_palette",
+                          offsetof(insp_mi_data, uv_palette), 0);
+  }
+  if (combined_parm_count > 0) buf += put_combined(buf);
   if (layers & REFERENCE_FRAME_LAYER) {
     buf += put_block_info(buf, refs_map, "referenceFrame",
                           offsetof(insp_mi_data, ref_frame), 2);
@@ -563,7 +713,8 @@ void inspect(void *pbi, void *data) {
     buf += put_accounting(buf);
   }
 #endif
-  buf += snprintf(buf, MAX_BUFFER, "  \"frame\": %d,\n", decoded_frame_count);
+  buf +=
+      snprintf(buf, MAX_BUFFER, "  \"frame\": %d,\n", frame_data.frame_number);
   buf += snprintf(buf, MAX_BUFFER, "  \"showFrame\": %d,\n",
                   frame_data.show_frame);
   buf += snprintf(buf, MAX_BUFFER, "  \"frameType\": %d,\n",
@@ -591,7 +742,7 @@ void inspect(void *pbi, void *data) {
   aom_free(buffer);
 }
 
-void ifd_init_cb() {
+void ifd_init_cb(void) {
   aom_inspect_init ii;
   ii.inspect_cb = inspect;
   ii.inspect_ctx = NULL;
@@ -607,32 +758,62 @@ int open_file(char *file) {
   reader = aom_video_reader_open(file);
   if (!reader) die("Failed to open %s for reading.", file);
   info = aom_video_reader_get_info(reader);
-  const AvxInterface *decoder = get_aom_decoder_by_fourcc(info->codec_fourcc);
+  aom_codec_iface_t *decoder = get_aom_decoder_by_fourcc(info->codec_fourcc);
   if (!decoder) die("Unknown input codec.");
-  fprintf(stderr, "Using %s\n",
-          aom_codec_iface_name(decoder->codec_interface()));
-  if (aom_codec_dec_init(&codec, decoder->codec_interface(), NULL, 0))
-    die_codec(&codec, "Failed to initialize decoder.");
+  fprintf(stderr, "Using %s\n", aom_codec_iface_name(decoder));
+  if (aom_codec_dec_init(&codec, decoder, NULL, 0))
+    die("Failed to initialize decoder.");
   ifd_init(&frame_data, info->frame_width, info->frame_height);
   ifd_init_cb();
   return EXIT_SUCCESS;
 }
 
+Av1DecodeReturn adr;
+int have_frame = 0;
+const unsigned char *frame;
+const unsigned char *end_frame;
+size_t frame_size = 0;
+
 EMSCRIPTEN_KEEPALIVE
-int read_frame() {
-  if (!aom_video_reader_read_frame(reader)) return EXIT_FAILURE;
+int read_frame(void) {
   img = NULL;
-  aom_codec_iter_t iter = NULL;
-  size_t frame_size = 0;
-  const unsigned char *frame = aom_video_reader_get_frame(reader, &frame_size);
-  if (aom_codec_decode(&codec, frame, (unsigned int)frame_size, NULL) !=
-      AOM_CODEC_OK) {
-    die_codec(&codec, "Failed to decode frame.");
-  }
+
+  // This loop skips over any frames that are show_existing_frames,  as
+  // there is nothing to analyze.
+  do {
+    if (!have_frame) {
+      if (!aom_video_reader_read_frame(reader)) return EXIT_FAILURE;
+      frame = aom_video_reader_get_frame(reader, &frame_size);
+
+      have_frame = 1;
+      end_frame = frame + frame_size;
+    }
+
+    if (aom_codec_decode(&codec, frame, (unsigned int)frame_size, &adr) !=
+        AOM_CODEC_OK) {
+      die_codec(&codec, "Failed to decode frame.");
+    }
+
+    frame = adr.buf;
+    frame_size = end_frame - frame;
+    if (frame == end_frame) have_frame = 0;
+  } while (adr.show_existing);
+
   int got_any_frames = 0;
   aom_image_t *frame_img;
-  while ((frame_img = aom_codec_get_frame(&codec, &iter))) {
-    img = frame_img;
+  struct av1_ref_frame ref_dec;
+  ref_dec.idx = adr.idx;
+
+  // ref_dec.idx is the index to the reference buffer idx to AV1_GET_REFERENCE
+  // if its -1 the decoder didn't update any reference buffer and the only
+  // way to see the frame is aom_codec_get_frame.
+  if (ref_dec.idx == -1) {
+    aom_codec_iter_t iter = NULL;
+    img = frame_img = aom_codec_get_frame(&codec, &iter);
+    ++frame_count;
+    got_any_frames = 1;
+  } else if (!aom_codec_control(&codec, AV1_GET_REFERENCE, &ref_dec)) {
+    img = frame_img = &ref_dec.img;
     ++frame_count;
     got_any_frames = 1;
   }
@@ -643,16 +824,18 @@ int read_frame() {
 }
 
 EMSCRIPTEN_KEEPALIVE
-const char *get_aom_codec_build_config() { return aom_codec_build_config(); }
+const char *get_aom_codec_build_config(void) {
+  return aom_codec_build_config();
+}
 
 EMSCRIPTEN_KEEPALIVE
-int get_bit_depth() { return img->bit_depth; }
+int get_bit_depth(void) { return img->bit_depth; }
 
 EMSCRIPTEN_KEEPALIVE
-int get_bits_per_sample() { return img->bps; }
+int get_bits_per_sample(void) { return img->bps; }
 
 EMSCRIPTEN_KEEPALIVE
-int get_image_format() { return img->fmt; }
+int get_image_format(void) { return img->fmt; }
 
 EMSCRIPTEN_KEEPALIVE
 unsigned char *get_plane(int plane) { return img->planes[plane]; }
@@ -667,10 +850,10 @@ EMSCRIPTEN_KEEPALIVE
 int get_plane_height(int plane) { return aom_img_plane_height(img, plane); }
 
 EMSCRIPTEN_KEEPALIVE
-int get_frame_width() { return info->frame_width; }
+int get_frame_width(void) { return info->frame_width; }
 
 EMSCRIPTEN_KEEPALIVE
-int get_frame_height() { return info->frame_height; }
+int get_frame_height(void) { return info->frame_height; }
 
 static void parse_args(char **argv) {
   char **argi, **argj;
@@ -692,6 +875,10 @@ static void parse_args(char **argv) {
       layers |= MODE_LAYER;
     else if (arg_match(&arg, &dump_uv_mode_arg, argi))
       layers |= UV_MODE_LAYER;
+    else if (arg_match(&arg, &dump_motion_mode_arg, argi))
+      layers |= MOTION_MODE_LAYER;
+    else if (arg_match(&arg, &dump_compound_type_arg, argi))
+      layers |= COMPOUND_TYPE_LAYER;
     else if (arg_match(&arg, &dump_skip_arg, argi))
       layers |= SKIP_LAYER;
     else if (arg_match(&arg, &dump_filter_arg, argi))
@@ -710,6 +897,12 @@ static void parse_args(char **argv) {
       layers |= Q_INDEX_LAYER;
     else if (arg_match(&arg, &dump_seg_id_arg, argi))
       layers |= SEGMENT_ID_LAYER;
+    else if (arg_match(&arg, &dump_intrabc_arg, argi))
+      layers |= INTRABC_LAYER;
+    else if (arg_match(&arg, &dump_palette_arg, argi))
+      layers |= PALETTE_LAYER;
+    else if (arg_match(&arg, &dump_uv_palette_arg, argi))
+      layers |= UV_PALETTE_LAYER;
     else if (arg_match(&arg, &dump_all_arg, argi))
       layers |= ALL_LAYERS;
     else if (arg_match(&arg, &compress_arg, argi))
@@ -718,6 +911,13 @@ static void parse_args(char **argv) {
       usage_exit();
     else if (arg_match(&arg, &limit_arg, argi))
       stop_after = arg_parse_uint(&arg);
+    else if (arg_match(&arg, &skip_non_transform_arg, argi))
+      skip_non_transform = arg_parse_uint(&arg);
+    else if (arg_match(&arg, &combined_arg, argi))
+      convert_to_indices(
+          (char *)arg.val, combined_parm_list,
+          sizeof(combined_parm_list) / sizeof(combined_parm_list[0]),
+          &combined_parm_count);
     else
       argj++;
   }
@@ -751,7 +951,7 @@ int main(int argc, char **argv) {
 }
 
 EMSCRIPTEN_KEEPALIVE
-void quit() {
+void quit(void) {
   if (aom_codec_destroy(&codec)) die_codec(&codec, "Failed to destroy codec");
   aom_video_reader_close(reader);
 }

@@ -19,6 +19,9 @@ list(APPEND AOM_EXPORTS_SOURCES "${AOM_ROOT}/aom/exports_com"
 if(CONFIG_AV1_DECODER)
   list(APPEND AOM_EXPORTS_SOURCES "${AOM_ROOT}/aom/exports_dec"
               "${AOM_ROOT}/av1/exports_dec")
+  if(CONFIG_INSPECTION)
+    list(APPEND AOM_EXPORTS_SOURCES "${AOM_ROOT}/av1/exports_ident")
+  endif()
 endif()
 
 if(CONFIG_AV1_ENCODER)

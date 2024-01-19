@@ -53,14 +53,14 @@ Alliance for Open Media Patent License 1.0
      INCIDENTAL, OR CONSEQUENTIAL DAMAGES OF ANY CHARACTER FROM ANY CAUSES OF
      ACTION OF ANY KIND WITH RESPECT TO THIS LICENSE, WHETHER BASED ON BREACH
      OF CONTRACT, TORT (INCLUDING NEGLIGENCE), OR OTHERWISE, AND WHETHER OR
-     NOT THE OTHER PARTRY HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+     NOT THE OTHER PARTY HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 2. Definitions.
 
-2.1. Affiliate.  “Affiliate” means an entity that directly or indirectly
+2.1. Affiliate.  "Affiliate" means an entity that directly or indirectly
      Controls, is Controlled by, or is under common Control of that party.
 
-2.2. Control. “Control” means direct or indirect control of more than 50% of
+2.2. Control. "Control" means direct or indirect control of more than 50% of
      the voting power to elect directors of that corporation, or for any other
      entity, the power to direct management of such entity.
 
@@ -70,7 +70,7 @@ Alliance for Open Media Patent License 1.0
 2.4. Encoder.  "Encoder" means any encoder that produces a bitstream that can
      be decoded by a Decoder only to the extent it produces such a bitstream.
 
-2.5. Final Deliverable.  “Final Deliverable” means the final version of a
+2.5. Final Deliverable.  "Final Deliverable" means the final version of a
      deliverable approved by the Alliance for Open Media as a Final
      Deliverable.
 
@@ -79,9 +79,9 @@ Alliance for Open Media Patent License 1.0
      Implementation also includes components of an Implementation only to the
      extent they are used as part of an Implementation.
 
-2.7. License. “License” means this license.
+2.7. License. "License" means this license.
 
-2.8. Licensee. “Licensee” means any person or entity who exercises patent
+2.8. Licensee. "Licensee" means any person or entity who exercises patent
      rights granted under this License.
 
 2.9. Licensor.  "Licensor" means (i) any Licensee that makes, sells, offers
@@ -98,11 +98,11 @@ Alliance for Open Media Patent License 1.0
       as if the Specification was a W3C Recommendation; or (ii) are infringed
       by the Reference Implementation.
 
-2.11. Reference Implementation. “Reference Implementation” means an Encoder
+2.11. Reference Implementation. "Reference Implementation" means an Encoder
       and/or Decoder released by the Alliance for Open Media as a Final
       Deliverable.
 
-2.12. Specification. “Specification” means the specification designated by
+2.12. Specification. "Specification" means the specification designated by
       the Alliance for Open Media as a Final Deliverable for which this
       License was issued.
 

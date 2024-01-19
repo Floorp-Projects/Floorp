@@ -9,6 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
+#include <memory>
+
 #include "third_party/googletest/src/googletest/include/gtest/gtest.h"
 
 #include "test/codec_factory.h"
@@ -54,9 +56,13 @@ const TestVideoParam kTestVectors[] = {
 };
 
 const TestEncodeParam kEncodeVectors[] = {
-  { ::libaom_test::kOnePassGood, 2 }, { ::libaom_test::kOnePassGood, 5 },
-  { ::libaom_test::kTwoPassGood, 1 }, { ::libaom_test::kTwoPassGood, 2 },
-  { ::libaom_test::kTwoPassGood, 5 }, { ::libaom_test::kRealTime, 5 },
+#if CONFIG_REALTIME_ONLY
+  { ::libaom_test::kRealTime, 5 },
+#else
+  { ::libaom_test::kRealTime, 5 },    { ::libaom_test::kOnePassGood, 2 },
+  { ::libaom_test::kOnePassGood, 5 }, { ::libaom_test::kTwoPassGood, 1 },
+  { ::libaom_test::kTwoPassGood, 2 }, { ::libaom_test::kTwoPassGood, 5 },
+#endif
 };
 
 const int kMinArfVectors[] = {
@@ -64,14 +70,6 @@ const int kMinArfVectors[] = {
   //       av1_rc_get_default_min_gf_interval(...)
   0, 4, 8, 12, 15
 };
-
-int is_extension_y4m(const char *filename) {
-  const char *dot = strrchr(filename, '.');
-  if (!dot || dot == filename)
-    return 0;
-  else
-    return !strcmp(dot, ".y4m");
-}
 
 class ArfFreqTestLarge
     : public ::libaom_test::CodecTestWith3Params<TestVideoParam,
@@ -82,24 +80,20 @@ class ArfFreqTestLarge
       : EncoderTest(GET_PARAM(0)), test_video_param_(GET_PARAM(1)),
         test_encode_param_(GET_PARAM(2)), min_arf_requested_(GET_PARAM(3)) {}
 
-  virtual ~ArfFreqTestLarge() {}
+  ~ArfFreqTestLarge() override = default;
 
-  virtual void SetUp() {
-    InitializeConfig();
-    SetMode(test_encode_param_.mode);
+  void SetUp() override {
+    InitializeConfig(test_encode_param_.mode);
     if (test_encode_param_.mode != ::libaom_test::kRealTime) {
       cfg_.g_lag_in_frames = 25;
-      cfg_.rc_end_usage = AOM_VBR;
     } else {
-      cfg_.g_lag_in_frames = 0;
-      cfg_.rc_end_usage = AOM_CBR;
       cfg_.rc_buf_sz = 1000;
       cfg_.rc_buf_initial_sz = 500;
       cfg_.rc_buf_optimal_sz = 600;
     }
   }
 
-  virtual void BeginPassHook(unsigned int) {
+  void BeginPassHook(unsigned int) override {
     min_run_ = ARF_NOT_SEEN;
     run_of_visible_frames_ = 0;
   }
@@ -121,7 +115,7 @@ class ArfFreqTestLarge
     return frames;
   }
 
-  virtual void FramePktHook(const aom_codec_cx_pkt_t *pkt) {
+  void FramePktHook(const aom_codec_cx_pkt_t *pkt) override {
     if (pkt->kind != AOM_CODEC_CX_FRAME_PKT) return;
     const int frames = GetNumFramesInPkt(pkt);
     if (frames == 1) {
@@ -140,8 +134,8 @@ class ArfFreqTestLarge
     }
   }
 
-  virtual void PreEncodeFrameHook(::libaom_test::VideoSource *video,
-                                  ::libaom_test::Encoder *encoder) {
+  void PreEncodeFrameHook(::libaom_test::VideoSource *video,
+                          ::libaom_test::Encoder *encoder) override {
     if (video->frame() == 0) {
       encoder->Control(AV1E_SET_FRAME_PARALLEL_DECODING, 1);
       encoder->Control(AV1E_SET_TILE_COLUMNS, 4);
@@ -185,7 +179,7 @@ TEST_P(ArfFreqTestLarge, MinArfFreqTest) {
   init_flags_ = AOM_CODEC_USE_PSNR;
   if (cfg_.g_bit_depth > 8) init_flags_ |= AOM_CODEC_USE_HIGHBITDEPTH;
 
-  testing::internal::scoped_ptr<libaom_test::VideoSource> video;
+  std::unique_ptr<libaom_test::VideoSource> video;
   if (is_extension_y4m(test_video_param_.filename)) {
     video.reset(new libaom_test::Y4mVideoSource(test_video_param_.filename, 0,
                                                 kFrames));
@@ -196,6 +190,7 @@ TEST_P(ArfFreqTestLarge, MinArfFreqTest) {
         test_video_param_.framerate_num, test_video_param_.framerate_den, 0,
         kFrames));
   }
+  ASSERT_NE(video, nullptr);
 
   ASSERT_NO_FATAL_FAILURE(RunLoop(video.get()));
   const int min_run = GetMinVisibleRun();
@@ -212,7 +207,7 @@ TEST_P(ArfFreqTestLarge, MinArfFreqTest) {
 // BWDREF_FRAME is also a non-show frame, and the minimum run between two
 // consecutive BWDREF_FRAME's may vary between 1 and any arbitrary positive
 // number as long as it does not exceed the gf_group interval.
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     DISABLED_AV1, ArfFreqTestLarge,
     ::testing::Combine(
         ::testing::Values(

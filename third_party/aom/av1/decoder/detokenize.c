@@ -72,7 +72,7 @@ void av1_decode_palette_tokens(MACROBLOCKD *const xd, int plane,
                          : xd->tile_ctx->palette_y_color_index_cdf;
   const MB_MODE_INFO *const mbmi = xd->mi[0];
   params.n_colors = mbmi->palette_mode_info.palette_size[plane];
-  av1_get_block_dimensions(mbmi->sb_type, plane, xd, &params.plane_width,
+  av1_get_block_dimensions(mbmi->bsize, plane, xd, &params.plane_width,
                            &params.plane_height, &params.rows, &params.cols);
   decode_color_map_tokens(&params, r);
 }

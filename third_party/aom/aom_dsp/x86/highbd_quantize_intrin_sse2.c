@@ -14,6 +14,7 @@
 #include "aom_dsp/aom_dsp_common.h"
 #include "aom_mem/aom_mem.h"
 #include "aom_ports/mem.h"
+#include "config/aom_dsp_rtcd.h"
 
 void aom_highbd_quantize_b_sse2(const tran_low_t *coeff_ptr, intptr_t count,
                                 const int16_t *zbin_ptr,
@@ -80,7 +81,8 @@ void aom_highbd_quantize_b_sse2(const tran_low_t *coeff_ptr, intptr_t count,
         const int64_t tmp4 = ((tmp3 * quant_ptr[k != 0]) >> 16) + tmp3;
         const uint32_t abs_qcoeff =
             (uint32_t)((tmp4 * quant_shift_ptr[k != 0]) >> 16);
-        qcoeff_ptr[k] = (int)(abs_qcoeff ^ coeff_sign[j]) - coeff_sign[j];
+        qcoeff_ptr[k] =
+            (int)(abs_qcoeff ^ (uint32_t)coeff_sign[j]) - coeff_sign[j];
         dqcoeff_ptr[k] = qcoeff_ptr[k] * dequant_ptr[k != 0];
         if (abs_qcoeff) eob_i = iscan[k] > eob_i ? iscan[k] : eob_i;
       }
@@ -134,14 +136,72 @@ void aom_highbd_quantize_b_32x32_sse2(
   for (i = 0; i < idx; i++) {
     const int rc = idx_arr[i];
     const int coeff = coeff_ptr[rc];
-    const int coeff_sign = (coeff >> 31);
+    const int coeff_sign = AOMSIGN(coeff);
     const int abs_coeff = (coeff ^ coeff_sign) - coeff_sign;
     const int64_t tmp1 = abs_coeff + ROUND_POWER_OF_TWO(round_ptr[rc != 0], 1);
     const int64_t tmp2 = ((tmp1 * quant_ptr[rc != 0]) >> 16) + tmp1;
     const uint32_t abs_qcoeff =
         (uint32_t)((tmp2 * quant_shift_ptr[rc != 0]) >> 15);
-    qcoeff_ptr[rc] = (int)(abs_qcoeff ^ coeff_sign) - coeff_sign;
+    qcoeff_ptr[rc] = (int)(abs_qcoeff ^ (uint32_t)coeff_sign) - coeff_sign;
     dqcoeff_ptr[rc] = qcoeff_ptr[rc] * dequant_ptr[rc != 0] / 2;
+    if (abs_qcoeff) eob = iscan[idx_arr[i]] > eob ? iscan[idx_arr[i]] : eob;
+  }
+  *eob_ptr = eob + 1;
+}
+
+void aom_highbd_quantize_b_64x64_sse2(
+    const tran_low_t *coeff_ptr, intptr_t n_coeffs, const int16_t *zbin_ptr,
+    const int16_t *round_ptr, const int16_t *quant_ptr,
+    const int16_t *quant_shift_ptr, tran_low_t *qcoeff_ptr,
+    tran_low_t *dqcoeff_ptr, const int16_t *dequant_ptr, uint16_t *eob_ptr,
+    const int16_t *scan, const int16_t *iscan) {
+  __m128i zbins[2];
+  __m128i nzbins[2];
+  int idx = 0;
+  int idx_arr[1024];
+  int i, eob = -1;
+  const int zbin0_tmp = ROUND_POWER_OF_TWO(zbin_ptr[0], 2);
+  const int zbin1_tmp = ROUND_POWER_OF_TWO(zbin_ptr[1], 2);
+  (void)scan;
+  zbins[0] = _mm_set_epi32(zbin1_tmp, zbin1_tmp, zbin1_tmp, zbin0_tmp);
+  zbins[1] = _mm_set1_epi32(zbin1_tmp);
+
+  nzbins[0] = _mm_setzero_si128();
+  nzbins[1] = _mm_setzero_si128();
+  nzbins[0] = _mm_sub_epi32(nzbins[0], zbins[0]);
+  nzbins[1] = _mm_sub_epi32(nzbins[1], zbins[1]);
+
+  memset(qcoeff_ptr, 0, n_coeffs * sizeof(*qcoeff_ptr));
+  memset(dqcoeff_ptr, 0, n_coeffs * sizeof(*dqcoeff_ptr));
+
+  // Pre-scan pass
+  for (i = 0; i < n_coeffs / 4; i++) {
+    __m128i coeffs, cmp1, cmp2;
+    int test;
+    coeffs = _mm_load_si128((const __m128i *)(coeff_ptr + i * 4));
+    cmp1 = _mm_cmplt_epi32(coeffs, zbins[i != 0]);
+    cmp2 = _mm_cmpgt_epi32(coeffs, nzbins[i != 0]);
+    cmp1 = _mm_and_si128(cmp1, cmp2);
+    test = _mm_movemask_epi8(cmp1);
+    if (!(test & 0xf)) idx_arr[idx++] = i * 4;
+    if (!(test & 0xf0)) idx_arr[idx++] = i * 4 + 1;
+    if (!(test & 0xf00)) idx_arr[idx++] = i * 4 + 2;
+    if (!(test & 0xf000)) idx_arr[idx++] = i * 4 + 3;
+  }
+
+  // Quantization pass: only process the coefficients selected in
+  // pre-scan pass. Note: idx can be zero.
+  for (i = 0; i < idx; i++) {
+    const int rc = idx_arr[i];
+    const int coeff = coeff_ptr[rc];
+    const int coeff_sign = AOMSIGN(coeff);
+    const int abs_coeff = (coeff ^ coeff_sign) - coeff_sign;
+    const int64_t tmp1 = abs_coeff + ROUND_POWER_OF_TWO(round_ptr[rc != 0], 2);
+    const int64_t tmp2 = ((tmp1 * quant_ptr[rc != 0]) >> 16) + tmp1;
+    const uint32_t abs_qcoeff =
+        (uint32_t)((tmp2 * quant_shift_ptr[rc != 0]) >> 14);
+    qcoeff_ptr[rc] = (int)(abs_qcoeff ^ (uint32_t)coeff_sign) - coeff_sign;
+    dqcoeff_ptr[rc] = qcoeff_ptr[rc] * dequant_ptr[rc != 0] / 4;
     if (abs_qcoeff) eob = iscan[idx_arr[i]] > eob ? iscan[idx_arr[i]] : eob;
   }
   *eob_ptr = eob + 1;

@@ -8,13 +8,13 @@
 # License 1.0 was not distributed with this source code in the PATENTS file, you
 # can obtain it at www.aomedia.org/license/patent.
 #
-if(NOT GTEST_TOTAL_SHARDS OR "${GTEST_SHARD_INDEX}" STREQUAL "" OR NOT
-   TEST_LIBAOM)
+if(NOT GTEST_TOTAL_SHARDS
+   OR "${GTEST_SHARD_INDEX}" STREQUAL ""
+   OR NOT TEST_LIBAOM)
   message(
     FATAL_ERROR
       "The variables GTEST_SHARD_INDEX, GTEST_TOTAL_SHARDS and TEST_LIBAOM
-          must be defined."
-    )
+          must be defined.")
 endif()
 
 set($ENV{GTEST_SHARD_INDEX} ${GTEST_SHARD_INDEX})

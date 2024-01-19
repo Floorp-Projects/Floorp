@@ -27,16 +27,17 @@ const int kMaxSFrames = 12;
 const int kCpuUsed = 1;
 
 class ErrorResilienceTestLarge
-    : public ::libaom_test::CodecTestWithParam<libaom_test::TestMode>,
+    : public ::libaom_test::CodecTestWith2Params<libaom_test::TestMode, int>,
       public ::libaom_test::EncoderTest {
  protected:
   ErrorResilienceTestLarge()
       : EncoderTest(GET_PARAM(0)), psnr_(0.0), nframes_(0), mismatch_psnr_(0.0),
-        mismatch_nframes_(0), encoding_mode_(GET_PARAM(1)), allow_mismatch_(0) {
+        mismatch_nframes_(0), encoding_mode_(GET_PARAM(1)), allow_mismatch_(0),
+        enable_altref_(GET_PARAM(2)) {
     Reset();
   }
 
-  virtual ~ErrorResilienceTestLarge() {}
+  ~ErrorResilienceTestLarge() override = default;
 
   void Reset() {
     error_nframes_ = 0;
@@ -57,12 +58,9 @@ class ErrorResilienceTestLarge
     init_flags_ = AOM_CODEC_USE_PSNR;
   }
 
-  virtual void SetUp() {
-    InitializeConfig();
-    SetMode(encoding_mode_);
-  }
+  void SetUp() override { InitializeConfig(encoding_mode_); }
 
-  virtual void BeginPassHook(unsigned int /*pass*/) {
+  void BeginPassHook(unsigned int /*pass*/) override {
     psnr_ = 0.0;
     nframes_ = 0;
     decoded_nframes_ = 0;
@@ -70,14 +68,17 @@ class ErrorResilienceTestLarge
     mismatch_nframes_ = 0;
   }
 
-  virtual void PSNRPktHook(const aom_codec_cx_pkt_t *pkt) {
+  void PSNRPktHook(const aom_codec_cx_pkt_t *pkt) override {
     psnr_ += pkt->data.psnr.psnr[0];
     nframes_++;
   }
 
-  virtual void PreEncodeFrameHook(libaom_test::VideoSource *video,
-                                  libaom_test::Encoder *encoder) {
-    if (video->frame() == 0) encoder->Control(AOME_SET_CPUUSED, kCpuUsed);
+  void PreEncodeFrameHook(libaom_test::VideoSource *video,
+                          libaom_test::Encoder *encoder) override {
+    if (video->frame() == 0) {
+      encoder->Control(AOME_SET_CPUUSED, kCpuUsed);
+      encoder->Control(AOME_SET_ENABLEAUTOALTREF, enable_altref_);
+    }
     frame_flags_ &=
         ~(AOM_EFLAG_NO_UPD_LAST | AOM_EFLAG_NO_UPD_GF | AOM_EFLAG_NO_UPD_ARF |
           AOM_EFLAG_NO_REF_FRAME_MVS | AOM_EFLAG_ERROR_RESILIENT |
@@ -145,6 +146,26 @@ class ErrorResilienceTestLarge
     }
   }
 
+  void FramePktHook(const aom_codec_cx_pkt_t *pkt) override {
+    // Check that the encode frame flags are correctly reflected
+    // in the output frame flags.
+    const int encode_flags = pkt->data.frame.flags >> 16;
+    if ((encode_flags & (AOM_EFLAG_NO_UPD_LAST | AOM_EFLAG_NO_UPD_GF |
+                         AOM_EFLAG_NO_UPD_ARF)) ==
+        (AOM_EFLAG_NO_UPD_LAST | AOM_EFLAG_NO_UPD_GF | AOM_EFLAG_NO_UPD_ARF)) {
+      ASSERT_EQ(pkt->data.frame.flags & AOM_FRAME_IS_DROPPABLE,
+                AOM_FRAME_IS_DROPPABLE);
+    }
+    if (encode_flags & AOM_EFLAG_SET_S_FRAME) {
+      ASSERT_EQ(pkt->data.frame.flags & AOM_FRAME_IS_SWITCH,
+                AOM_FRAME_IS_SWITCH);
+    }
+    if (encode_flags & AOM_EFLAG_ERROR_RESILIENT) {
+      ASSERT_EQ(pkt->data.frame.flags & AOM_FRAME_IS_ERROR_RESILIENT,
+                AOM_FRAME_IS_ERROR_RESILIENT);
+    }
+  }
+
   double GetAveragePsnr() const {
     if (nframes_) return psnr_ / nframes_;
     return 0.0;
@@ -155,21 +176,21 @@ class ErrorResilienceTestLarge
     return 0.0;
   }
 
-  virtual bool DoDecode() const {
+  bool DoDecode() const override {
     if (error_nframes_ > 0 &&
         (cfg_.g_pass == AOM_RC_LAST_PASS || cfg_.g_pass == AOM_RC_ONE_PASS)) {
       for (unsigned int i = 0; i < error_nframes_; ++i) {
         if (error_frames_[i] == nframes_ - 1) {
           std::cout << "             Skipping decoding frame: "
                     << error_frames_[i] << "\n";
-          return 0;
+          return false;
         }
       }
     }
-    return 1;
+    return true;
   }
 
-  virtual bool DoDecodeInvisible() const {
+  bool DoDecodeInvisible() const override {
     if (invisible_error_nframes_ > 0 &&
         (cfg_.g_pass == AOM_RC_LAST_PASS || cfg_.g_pass == AOM_RC_ONE_PASS)) {
       for (unsigned int i = 0; i < invisible_error_nframes_; ++i) {
@@ -177,14 +198,14 @@ class ErrorResilienceTestLarge
           std::cout << "             Skipping decoding all invisible frames in "
                        "frame pkt: "
                     << invisible_error_frames_[i] << "\n";
-          return 0;
+          return false;
         }
       }
     }
-    return 1;
+    return true;
   }
 
-  virtual void MismatchHook(const aom_image_t *img1, const aom_image_t *img2) {
+  void MismatchHook(const aom_image_t *img1, const aom_image_t *img2) override {
     if (allow_mismatch_) {
       double mismatch_psnr = compute_psnr(img1, img2);
       mismatch_psnr_ += mismatch_psnr;
@@ -195,8 +216,8 @@ class ErrorResilienceTestLarge
     }
   }
 
-  virtual void DecompressedFrameHook(const aom_image_t &img,
-                                     aom_codec_pts_t pts) {
+  void DecompressedFrameHook(const aom_image_t &img,
+                             aom_codec_pts_t pts) override {
     (void)img;
     (void)pts;
     ++decoded_nframes_;
@@ -299,6 +320,7 @@ class ErrorResilienceTestLarge
   unsigned int s_frames_[kMaxSFrames];
   libaom_test::TestMode encoding_mode_;
   int allow_mismatch_;
+  int enable_altref_;
 };
 
 TEST_P(ErrorResilienceTestLarge, OnVersusOff) {
@@ -335,6 +357,10 @@ TEST_P(ErrorResilienceTestLarge, OnVersusOff) {
 // if we lose (i.e., drop before decoding) a set of droppable
 // frames (i.e., frames that don't update any reference buffers).
 TEST_P(ErrorResilienceTestLarge, DropFramesWithoutRecovery) {
+  if (GET_PARAM(1) == ::libaom_test::kOnePassGood && GET_PARAM(2) == 1) {
+    fprintf(stderr, "Skipping test case #1 because of bug aomedia:3002\n");
+    return;
+  }
   SetupEncoder(500, 10);
   libaom_test::I420VideoSource video("hantro_collage_w352h288.yuv", 352, 288,
                                      cfg_.g_timebase.den, cfg_.g_timebase.num,
@@ -342,7 +368,7 @@ TEST_P(ErrorResilienceTestLarge, DropFramesWithoutRecovery) {
 
   // Set an arbitrary set of error frames same as droppable frames.
   unsigned int num_droppable_frames = 3;
-  unsigned int droppable_frame_list[] = { 5, 10, 13 };
+  unsigned int droppable_frame_list[] = { 5, 11, 13 };
   SetDroppableFrames(num_droppable_frames, droppable_frame_list);
   SetErrorFrames(num_droppable_frames, droppable_frame_list);
   ASSERT_NO_FATAL_FAILURE(RunLoop(&video));
@@ -434,5 +460,6 @@ TEST_P(ErrorResilienceTestLarge, SFrameTest) {
   EXPECT_LE(GetMismatchFrames(), GetEncodedFrames() - s_frame_list[0]);
 }
 
-AV1_INSTANTIATE_TEST_CASE(ErrorResilienceTestLarge, NONREALTIME_TEST_MODES);
+AV1_INSTANTIATE_TEST_SUITE(ErrorResilienceTestLarge, NONREALTIME_TEST_MODES,
+                           ::testing::Values(0, 1));
 }  // namespace

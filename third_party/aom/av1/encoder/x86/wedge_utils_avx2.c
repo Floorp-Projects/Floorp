@@ -31,7 +31,7 @@ uint64_t av1_wedge_sse_from_residuals_avx2(const int16_t *r1, const int16_t *d,
   uint64_t csse;
 
   const __m256i v_mask_max_w = _mm256_set1_epi16(MAX_MASK_VALUE);
-  const __m256i v_zext_q = yy_set1_64_from_32i(0xffffffff);
+  const __m256i v_zext_q = yy_set1_64_from_32i(~0);
 
   __m256i v_acc0_q = _mm256_setzero_si256();
 
@@ -72,7 +72,7 @@ uint64_t av1_wedge_sse_from_residuals_avx2(const int16_t *r1, const int16_t *d,
   __m128i v_acc_q_0 = _mm256_castsi256_si128(v_acc0_q);
   __m128i v_acc_q_1 = _mm256_extracti128_si256(v_acc0_q, 1);
   v_acc_q_0 = _mm_add_epi64(v_acc_q_0, v_acc_q_1);
-#if ARCH_X86_64
+#if AOM_ARCH_X86_64
   csse = (uint64_t)_mm_extract_epi64(v_acc_q_0, 0);
 #else
   xx_storel_64(&csse, v_acc_q_0);
@@ -84,8 +84,8 @@ uint64_t av1_wedge_sse_from_residuals_avx2(const int16_t *r1, const int16_t *d,
 /**
  * See av1_wedge_sign_from_residuals_c
  */
-int av1_wedge_sign_from_residuals_avx2(const int16_t *ds, const uint8_t *m,
-                                       int N, int64_t limit) {
+int8_t av1_wedge_sign_from_residuals_avx2(const int16_t *ds, const uint8_t *m,
+                                          int N, int64_t limit) {
   int64_t acc;
   __m256i v_acc0_d = _mm256_setzero_si256();
 
@@ -141,8 +141,8 @@ int av1_wedge_sign_from_residuals_avx2(const int16_t *ds, const uint8_t *m,
   __m128i v_acc_q_1 = _mm256_extracti128_si256(v_acc_q, 1);
   v_acc_q_0 = _mm_add_epi64(v_acc_q_0, v_acc_q_1);
 
-#if ARCH_X86_64
-  acc = (uint64_t)_mm_extract_epi64(v_acc_q_0, 0);
+#if AOM_ARCH_X86_64
+  acc = _mm_extract_epi64(v_acc_q_0, 0);
 #else
   xx_storel_64(&acc, v_acc_q_0);
 #endif
@@ -155,7 +155,7 @@ int av1_wedge_sign_from_residuals_avx2(const int16_t *ds, const uint8_t *m,
  */
 void av1_wedge_compute_delta_squares_avx2(int16_t *d, const int16_t *a,
                                           const int16_t *b, int N) {
-  const __m256i v_neg_w = _mm256_set1_epi32(0xffff0001);
+  const __m256i v_neg_w = _mm256_set1_epi32((int)0xffff0001);
 
   assert(N % 64 == 0);
 

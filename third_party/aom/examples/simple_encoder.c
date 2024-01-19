@@ -100,6 +100,7 @@
 #include <string.h>
 
 #include "aom/aom_encoder.h"
+#include "aom/aomcx.h"
 #include "common/tools_common.h"
 #include "common/video_writer.h"
 
@@ -151,7 +152,6 @@ int main(int argc, char **argv) {
   aom_codec_err_t res;
   AvxVideoInfo info;
   AvxVideoWriter *writer = NULL;
-  const AvxInterface *encoder = NULL;
   const int fps = 30;
   const int bitrate = 200;
   int keyframe_interval = 0;
@@ -163,6 +163,13 @@ int main(int argc, char **argv) {
   const char *infile_arg = NULL;
   const char *outfile_arg = NULL;
   const char *keyframe_interval_arg = NULL;
+#if CONFIG_REALTIME_ONLY
+  const int usage = 1;
+  const int speed = 7;
+#else
+  const int usage = 0;
+  const int speed = 2;
+#endif
 
   exec_name = argv[0];
 
@@ -180,10 +187,10 @@ int main(int argc, char **argv) {
   keyframe_interval_arg = argv[6];
   max_frames = (int)strtol(argv[8], NULL, 0);
 
-  encoder = get_aom_encoder_by_name(codec_arg);
+  aom_codec_iface_t *encoder = get_aom_encoder_by_short_name(codec_arg);
   if (!encoder) die("Unsupported codec.");
 
-  info.codec_fourcc = encoder->fourcc;
+  info.codec_fourcc = get_fourcc_by_aom_encoder(encoder);
   info.frame_width = (int)strtol(width_arg, NULL, 0);
   info.frame_height = (int)strtol(height_arg, NULL, 0);
   info.time_base.numerator = 1;
@@ -202,9 +209,9 @@ int main(int argc, char **argv) {
   keyframe_interval = (int)strtol(keyframe_interval_arg, NULL, 0);
   if (keyframe_interval < 0) die("Invalid keyframe interval value.");
 
-  printf("Using %s\n", aom_codec_iface_name(encoder->codec_interface()));
+  printf("Using %s\n", aom_codec_iface_name(encoder));
 
-  res = aom_codec_enc_config_default(encoder->codec_interface(), &cfg, 0);
+  res = aom_codec_enc_config_default(encoder, &cfg, usage);
   if (res) die_codec(&codec, "Failed to get default codec config.");
 
   cfg.g_w = info.frame_width;
@@ -220,8 +227,11 @@ int main(int argc, char **argv) {
   if (!(infile = fopen(infile_arg, "rb")))
     die("Failed to open %s for reading.", infile_arg);
 
-  if (aom_codec_enc_init(&codec, encoder->codec_interface(), &cfg, 0))
-    die_codec(&codec, "Failed to initialize encoder");
+  if (aom_codec_enc_init(&codec, encoder, &cfg, 0))
+    die("Failed to initialize encoder");
+
+  if (aom_codec_control(&codec, AOME_SET_CPUUSED, speed))
+    die_codec(&codec, "Failed to set cpu-used");
 
   // Encode frames.
   while (aom_img_read(&raw, infile)) {

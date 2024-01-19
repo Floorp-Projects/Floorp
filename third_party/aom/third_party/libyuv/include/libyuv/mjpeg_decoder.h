@@ -1,15 +1,14 @@
 /*
- * Copyright (c) 2016, Alliance for Open Media. All rights reserved
+ *  Copyright 2012 The LibYuv Project Authors. All rights reserved.
  *
- * This source code is subject to the terms of the BSD 2 Clause License and
- * the Alliance for Open Media Patent License 1.0. If the BSD 2 Clause License
- * was not distributed with this source code in the LICENSE file, you can
- * obtain it at www.aomedia.org/license/software. If the Alliance for Open
- * Media Patent License 1.0 was not distributed with this source code in the
- * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
+ *  Use of this source code is governed by a BSD-style license
+ *  that can be found in the LICENSE file in the root of the source
+ *  tree. An additional intellectual property rights grant can be found
+ *  in the file PATENTS. All contributing project authors may
+ *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef INCLUDE_LIBYUV_MJPEG_DECODER_H_  // NOLINT
+#ifndef INCLUDE_LIBYUV_MJPEG_DECODER_H_
 #define INCLUDE_LIBYUV_MJPEG_DECODER_H_
 
 #include "libyuv/basic_types.h"
@@ -27,25 +26,24 @@ namespace libyuv {
 extern "C" {
 #endif
 
-LIBYUV_BOOL ValidateJpeg(const uint8* sample, size_t sample_size);
+LIBYUV_BOOL ValidateJpeg(const uint8_t* sample, size_t sample_size);
 
 #ifdef __cplusplus
 }  // extern "C"
 #endif
 
-static const uint32 kUnknownDataSize = 0xFFFFFFFF;
+static const uint32_t kUnknownDataSize = 0xFFFFFFFF;
 
 enum JpegSubsamplingType {
   kJpegYuv420,
   kJpegYuv422,
-  kJpegYuv411,
   kJpegYuv444,
   kJpegYuv400,
   kJpegUnknown
 };
 
 struct Buffer {
-  const uint8* data;
+  const uint8_t* data;
   int len;
 };
 
@@ -67,7 +65,7 @@ struct SetJmpErrorMgr;
 class LIBYUV_API MJpegDecoder {
  public:
   typedef void (*CallbackFunction)(void* opaque,
-                                   const uint8* const* data,
+                                   const uint8_t* const* data,
                                    const int* strides,
                                    int rows);
 
@@ -87,7 +85,7 @@ class LIBYUV_API MJpegDecoder {
   // If return value is LIBYUV_TRUE, then the values for all the following
   // getters are populated.
   // src_len is the size of the compressed mjpeg frame in bytes.
-  LIBYUV_BOOL LoadFrame(const uint8* src, size_t src_len);
+  LIBYUV_BOOL LoadFrame(const uint8_t* src, size_t src_len);
 
   // Returns width of the last loaded frame in pixels.
   int GetWidth();
@@ -140,18 +138,22 @@ class LIBYUV_API MJpegDecoder {
   // at least GetComponentSize(i). The pointers in planes are incremented
   // to point to after the end of the written data.
   // TODO(fbarchard): Add dst_x, dst_y to allow specific rect to be decoded.
-  LIBYUV_BOOL DecodeToBuffers(uint8** planes, int dst_width, int dst_height);
+  LIBYUV_BOOL DecodeToBuffers(uint8_t** planes, int dst_width, int dst_height);
 
   // Decodes the entire image and passes the data via repeated calls to a
   // callback function. Each call will get the data for a whole number of
   // image scanlines.
   // TODO(fbarchard): Add dst_x, dst_y to allow specific rect to be decoded.
-  LIBYUV_BOOL DecodeToCallback(CallbackFunction fn, void* opaque,
-                        int dst_width, int dst_height);
+  LIBYUV_BOOL DecodeToCallback(CallbackFunction fn,
+                               void* opaque,
+                               int dst_width,
+                               int dst_height);
 
   // The helper function which recognizes the jpeg sub-sampling type.
   static JpegSubsamplingType JpegSubsamplingTypeHelper(
-     int* subsample_x, int* subsample_y, int number_of_components);
+      int* subsample_x,
+      int* subsample_y,
+      int number_of_components);
 
  private:
   void AllocOutputBuffers(int num_outbufs);
@@ -160,7 +162,7 @@ class LIBYUV_API MJpegDecoder {
   LIBYUV_BOOL StartDecode();
   LIBYUV_BOOL FinishDecode();
 
-  void SetScanlinePointers(uint8** data);
+  void SetScanlinePointers(uint8_t** data);
   LIBYUV_BOOL DecodeImcuRow();
 
   int GetComponentScanlinePadding(int component);
@@ -179,15 +181,15 @@ class LIBYUV_API MJpegDecoder {
 
   // Temporaries used to point to scanline outputs.
   int num_outbufs_;  // Outermost size of all arrays below.
-  uint8*** scanlines_;
+  uint8_t*** scanlines_;
   int* scanlines_sizes_;
   // Temporary buffer used for decoding when we can't decode directly to the
   // output buffers. Large enough for just one iMCU row.
-  uint8** databuf_;
+  uint8_t** databuf_;
   int* databuf_strides_;
 };
 
 }  // namespace libyuv
 
 #endif  //  __cplusplus
-#endif  // INCLUDE_LIBYUV_MJPEG_DECODER_H_  NOLINT
+#endif  // INCLUDE_LIBYUV_MJPEG_DECODER_H_

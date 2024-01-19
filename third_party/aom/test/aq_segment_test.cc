@@ -19,27 +19,39 @@
 
 namespace {
 
+const libaom_test::TestMode kTestModeParams[] =
+#if CONFIG_REALTIME_ONLY
+    { ::libaom_test::kRealTime };
+#else
+    { ::libaom_test::kRealTime, ::libaom_test::kOnePassGood };
+#endif
+
 class AqSegmentTest
-    : public ::libaom_test::CodecTestWith2Params<libaom_test::TestMode, int>,
+    : public ::libaom_test::CodecTestWith3Params<libaom_test::TestMode, int,
+                                                 int>,
       public ::libaom_test::EncoderTest {
  protected:
   AqSegmentTest() : EncoderTest(GET_PARAM(0)) {}
-  virtual ~AqSegmentTest() {}
+  ~AqSegmentTest() override = default;
 
-  virtual void SetUp() {
-    InitializeConfig();
-    SetMode(GET_PARAM(1));
+  void SetUp() override {
+    InitializeConfig(GET_PARAM(1));
     set_cpu_used_ = GET_PARAM(2);
     aq_mode_ = 0;
   }
 
-  virtual void PreEncodeFrameHook(::libaom_test::VideoSource *video,
-                                  ::libaom_test::Encoder *encoder) {
-    if (video->frame() == 1) {
+  void PreEncodeFrameHook(::libaom_test::VideoSource *video,
+                          ::libaom_test::Encoder *encoder) override {
+    if (video->frame() == 0) {
       encoder->Control(AOME_SET_CPUUSED, set_cpu_used_);
       encoder->Control(AV1E_SET_AQ_MODE, aq_mode_);
       encoder->Control(AV1E_SET_DELTAQ_MODE, deltaq_mode_);
       encoder->Control(AOME_SET_MAX_INTRA_BITRATE_PCT, 100);
+      if (mode_ == ::libaom_test::kRealTime) {
+        encoder->Control(AV1E_SET_ALLOW_WARPED_MOTION, 0);
+        encoder->Control(AV1E_SET_ENABLE_GLOBAL_MOTION, 0);
+        encoder->Control(AV1E_SET_ENABLE_OBMC, 0);
+      }
     }
   }
 
@@ -65,26 +77,11 @@ class AqSegmentTest
   int deltaq_mode_;
 };
 
-// Validate that this AQ segmentation mode (AQ=1, variance_ap)
-// encodes and decodes without a mismatch.
-TEST_P(AqSegmentTest, TestNoMisMatchAQ1) { DoTest(1); }
+// Validate that this AQ segmentation mode (1-variance_aq, 2-complexity_aq,
+// 3-cyclic_refresh_aq) encodes and decodes without a mismatch.
+TEST_P(AqSegmentTest, TestNoMisMatch) { DoTest(GET_PARAM(3)); }
 
-// Validate that this AQ segmentation mode (AQ=2, complexity_aq)
-// encodes and decodes without a mismatch.
-TEST_P(AqSegmentTest, TestNoMisMatchAQ2) { DoTest(2); }
-
-// Validate that this AQ segmentation mode (AQ=3, cyclic_refresh_aq)
-// encodes and decodes without a mismatch.
-TEST_P(AqSegmentTest, TestNoMisMatchAQ3) { DoTest(3); }
-
-class AqSegmentTestLarge : public AqSegmentTest {};
-
-TEST_P(AqSegmentTestLarge, TestNoMisMatchAQ1) { DoTest(1); }
-
-TEST_P(AqSegmentTestLarge, TestNoMisMatchAQ2) { DoTest(2); }
-
-TEST_P(AqSegmentTestLarge, TestNoMisMatchAQ3) { DoTest(3); }
-
+#if !CONFIG_REALTIME_ONLY
 // Validate that this delta q mode
 // encodes and decodes without a mismatch.
 TEST_P(AqSegmentTest, TestNoMisMatchExtDeltaQ) {
@@ -96,13 +93,18 @@ TEST_P(AqSegmentTest, TestNoMisMatchExtDeltaQ) {
 
   ASSERT_NO_FATAL_FAILURE(RunLoop(&video));
 }
+#endif
 
-AV1_INSTANTIATE_TEST_CASE(AqSegmentTest,
-                          ::testing::Values(::libaom_test::kRealTime,
-                                            ::libaom_test::kOnePassGood),
-                          ::testing::Range(5, 9));
-AV1_INSTANTIATE_TEST_CASE(AqSegmentTestLarge,
-                          ::testing::Values(::libaom_test::kRealTime,
-                                            ::libaom_test::kOnePassGood),
-                          ::testing::Range(3, 5));
+AV1_INSTANTIATE_TEST_SUITE(AqSegmentTest, ::testing::ValuesIn(kTestModeParams),
+                           ::testing::Range(5, 9), ::testing::Range(0, 4));
+
+#if !CONFIG_REALTIME_ONLY
+class AqSegmentTestLarge : public AqSegmentTest {};
+
+TEST_P(AqSegmentTestLarge, TestNoMisMatch) { DoTest(GET_PARAM(3)); }
+
+AV1_INSTANTIATE_TEST_SUITE(AqSegmentTestLarge,
+                           ::testing::Values(::libaom_test::kOnePassGood),
+                           ::testing::Range(3, 5), ::testing::Range(0, 4));
+#endif
 }  // namespace

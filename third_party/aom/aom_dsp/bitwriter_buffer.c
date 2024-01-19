@@ -16,6 +16,8 @@
 #include "config/aom_config.h"
 
 #include "aom_dsp/bitwriter_buffer.h"
+#include "aom_dsp/recenter.h"
+#include "aom_ports/bitops.h"
 
 int aom_wb_is_byte_aligned(const struct aom_write_bit_buffer *wb) {
   return (wb->bit_offset % CHAR_BIT == 0);
@@ -84,4 +86,56 @@ void aom_wb_write_uvlc(struct aom_write_bit_buffer *wb, uint32_t v) {
 
   aom_wb_write_literal(wb, 0, leading_zeroes >> 1);
   aom_wb_write_unsigned_literal(wb, v, (leading_zeroes + 1) >> 1);
+}
+
+static void wb_write_primitive_quniform(struct aom_write_bit_buffer *wb,
+                                        uint16_t n, uint16_t v) {
+  if (n <= 1) return;
+  const int l = get_msb(n) + 1;
+  const int m = (1 << l) - n;
+  if (v < m) {
+    aom_wb_write_literal(wb, v, l - 1);
+  } else {
+    aom_wb_write_literal(wb, m + ((v - m) >> 1), l - 1);
+    aom_wb_write_bit(wb, (v - m) & 1);
+  }
+}
+
+static void wb_write_primitive_subexpfin(struct aom_write_bit_buffer *wb,
+                                         uint16_t n, uint16_t k, uint16_t v) {
+  int i = 0;
+  int mk = 0;
+  while (1) {
+    int b = (i ? k + i - 1 : k);
+    int a = (1 << b);
+    if (n <= mk + 3 * a) {
+      wb_write_primitive_quniform(wb, n - mk, v - mk);
+      break;
+    } else {
+      int t = (v >= mk + a);
+      aom_wb_write_bit(wb, t);
+      if (t) {
+        i = i + 1;
+        mk += a;
+      } else {
+        aom_wb_write_literal(wb, v - mk, b);
+        break;
+      }
+    }
+  }
+}
+
+static void wb_write_primitive_refsubexpfin(struct aom_write_bit_buffer *wb,
+                                            uint16_t n, uint16_t k,
+                                            uint16_t ref, uint16_t v) {
+  wb_write_primitive_subexpfin(wb, n, k, recenter_finite_nonneg(n, ref, v));
+}
+
+void aom_wb_write_signed_primitive_refsubexpfin(struct aom_write_bit_buffer *wb,
+                                                uint16_t n, uint16_t k,
+                                                int16_t ref, int16_t v) {
+  ref += n - 1;
+  v += n - 1;
+  const uint16_t scaled_n = (n << 1) - 1;
+  wb_write_primitive_refsubexpfin(wb, scaled_n, k, ref, v);
 }

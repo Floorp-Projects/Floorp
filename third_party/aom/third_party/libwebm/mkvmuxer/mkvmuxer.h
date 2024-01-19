@@ -330,7 +330,7 @@ class ContentEncoding {
 
  private:
   // Returns the size in bytes for the encoding elements.
-  uint64_t EncodingSize(uint64_t compresion_size,
+  uint64_t EncodingSize(uint64_t compression_size,
                         uint64_t encryption_size) const;
 
   // Returns the size in bytes for the encryption elements.
@@ -795,6 +795,8 @@ class VideoTrack : public Track {
   uint64_t alpha_mode() { return alpha_mode_; }
   void set_width(uint64_t width) { width_ = width; }
   uint64_t width() const { return width_; }
+  void set_colour_space(const char* colour_space);
+  const char* colour_space() const { return colour_space_; }
 
   Colour* colour() { return colour_; }
 
@@ -824,6 +826,7 @@ class VideoTrack : public Track {
   uint64_t stereo_mode_;
   uint64_t alpha_mode_;
   uint64_t width_;
+  char* colour_space_;
 
   Colour* colour_;
   Projection* projection_;
@@ -871,10 +874,9 @@ class Tracks {
 
   static const char kOpusCodecId[];
   static const char kVorbisCodecId[];
+  static const char kAv1CodecId[];
   static const char kVp8CodecId[];
   static const char kVp9CodecId[];
-  static const char kVp10CodecId[];
-  static const char kAV1CodecId[];
   static const char kWebVttCaptionsId[];
   static const char kWebVttDescriptionsId[];
   static const char kWebVttMetadataId[];
@@ -1423,7 +1425,7 @@ class SeekHead {
   bool Write(IMkvWriter* writer);
 
   // We are going to put a cap on the number of Seek Entries.
-  const static int32_t kSeekEntryCount = 5;
+  constexpr static int32_t kSeekEntryCount = 5;
 
  private:
   // Returns the maximum size in bytes of one seek entry.
@@ -1503,8 +1505,8 @@ class Segment {
     kBeforeClusters = 0x1  // Position Cues before Clusters
   };
 
-  static const uint32_t kDefaultDocTypeVersion = 4;
-  static const uint64_t kDefaultMaxClusterDuration = 30000000000ULL;
+  static constexpr uint32_t kDefaultDocTypeVersion = 4;
+  static constexpr uint64_t kDefaultMaxClusterDuration = 30000000000ULL;
 
   Segment();
   ~Segment();

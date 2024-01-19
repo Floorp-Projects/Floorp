@@ -35,7 +35,6 @@ static INLINE unsigned int masked_sad(const uint8_t *src, int src_stride,
     b += b_stride;
     m += m_stride;
   }
-  sad = (sad + 31) >> 6;
   return sad;
 }
 
@@ -50,6 +49,21 @@ static INLINE unsigned int masked_sad(const uint8_t *src, int src_stride,
     else                                                                       \
       return masked_sad(src, src_stride, second_pred, m, ref, ref_stride, msk, \
                         msk_stride, m, n);                                     \
+  }                                                                            \
+  void aom_masked_sad##m##x##n##x4d_c(                                         \
+      const uint8_t *src, int src_stride, const uint8_t *ref[4],               \
+      int ref_stride, const uint8_t *second_pred, const uint8_t *msk,          \
+      int msk_stride, int invert_mask, unsigned sads[4]) {                     \
+    if (!invert_mask)                                                          \
+      for (int i = 0; i < 4; i++) {                                            \
+        sads[i] = masked_sad(src, src_stride, ref[i], ref_stride, second_pred, \
+                             m, msk, msk_stride, m, n);                        \
+      }                                                                        \
+    else                                                                       \
+      for (int i = 0; i < 4; i++) {                                            \
+        sads[i] = masked_sad(src, src_stride, second_pred, m, ref[i],          \
+                             ref_stride, msk, msk_stride, m, n);               \
+      }                                                                        \
   }
 
 /* clang-format off */
@@ -75,10 +89,10 @@ MASKSADMxN(8, 32)
 MASKSADMxN(32, 8)
 MASKSADMxN(16, 64)
 MASKSADMxN(64, 16)
+/* clang-format on */
 
-    /* clang-format on */
-
-    static INLINE
+#if CONFIG_AV1_HIGHBITDEPTH
+                            static INLINE
     unsigned int highbd_masked_sad(const uint8_t *src8, int src_stride,
                                    const uint8_t *a8, int a_stride,
                                    const uint8_t *b8, int b_stride,
@@ -101,7 +115,6 @@ MASKSADMxN(64, 16)
     b += b_stride;
     m += m_stride;
   }
-  sad = (sad + 31) >> 6;
 
   return sad;
 }
@@ -141,7 +154,9 @@ HIGHBD_MASKSADMXN(8, 32)
 HIGHBD_MASKSADMXN(32, 8)
 HIGHBD_MASKSADMXN(16, 64)
 HIGHBD_MASKSADMXN(64, 16)
+#endif  // CONFIG_AV1_HIGHBITDEPTH
 
+#if !CONFIG_REALTIME_ONLY
 // pre: predictor being evaluated
 // wsrc: target weighted prediction (has been *4096 to keep precision)
 // mask: 2d weights (scaled by 4096)
@@ -193,9 +208,10 @@ OBMCSADMxN(8, 32)
 OBMCSADMxN(32, 8)
 OBMCSADMxN(16, 64)
 OBMCSADMxN(64, 16)
-    /* clang-format on */
+/* clang-format on */
 
-    static INLINE
+#if CONFIG_AV1_HIGHBITDEPTH
+                            static INLINE
     unsigned int highbd_obmc_sad(const uint8_t *pre8, int pre_stride,
                                  const int32_t *wsrc, const int32_t *mask,
                                  int width, int height) {
@@ -246,3 +262,5 @@ HIGHBD_OBMCSADMXN(32, 8)
 HIGHBD_OBMCSADMXN(16, 64)
 HIGHBD_OBMCSADMXN(64, 16)
 /* clang-format on */
+#endif  // CONFIG_AV1_HIGHBITDEPTH
+#endif  // !CONFIG_REALTIME_ONLY

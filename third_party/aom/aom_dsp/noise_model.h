@@ -17,7 +17,8 @@ extern "C" {
 #endif  // __cplusplus
 
 #include <stdint.h>
-#include "aom_dsp/grain_synthesis.h"
+#include "aom_dsp/grain_params.h"
+#include "aom_ports/mem.h"
 #include "aom_scale/yv12config.h"
 
 /*!\brief Wrapper of data required to represent linear system of eqns and soln.
@@ -158,10 +159,10 @@ int aom_flat_block_finder_run(const aom_flat_block_finder_t *block_finder,
                               int stride, uint8_t *flat_blocks);
 
 // The noise shape indicates the allowed coefficients in the AR model.
-typedef enum {
+enum {
   AOM_NOISE_SHAPE_DIAMOND = 0,
   AOM_NOISE_SHAPE_SQUARE = 1
-} aom_noise_shape;
+} UENUM1BYTE(aom_noise_shape);
 
 // The parameters of the noise model include the shape type, lag, the
 // bit depth of the input images provided, and whether the input images
@@ -202,13 +203,13 @@ typedef struct {
 } aom_noise_model_t;
 
 /*!\brief Result of a noise model update. */
-typedef enum {
+enum {
   AOM_NOISE_STATUS_OK = 0,
   AOM_NOISE_STATUS_INVALID_ARGUMENT,
   AOM_NOISE_STATUS_INSUFFICIENT_FLAT_BLOCKS,
   AOM_NOISE_STATUS_DIFFERENT_NOISE_TYPE,
   AOM_NOISE_STATUS_INTERNAL_ERROR,
-} aom_noise_status_t;
+} UENUM1BYTE(aom_noise_status_t);
 
 /*!\brief Initializes a noise model with the given parameters.
  *
@@ -292,14 +293,18 @@ struct aom_denoise_and_model_t;
  * parameter will be true when the input buffer was successfully denoised and
  * grain was modelled. Returns false on error.
  *
- * \param[in]      ctx   Struct allocated with aom_denoise_and_model_alloc
- *                       that holds some buffers for denoising and the current
- *                       noise estimate.
- * \param[in/out]   buf  The raw input buffer to be denoised.
- * \param[out]    grain  Output film grain parameters
+ * \param[in]     ctx           Struct allocated with
+ *                              aom_denoise_and_model_alloc that holds some
+ *                              buffers for denoising and the current noise
+ *                              estimate.
+ * \param[in,out] buf           The raw input buffer to be denoised.
+ * \param[out]    grain         Output film grain parameters
+ * \param[in]     apply_denoise Whether or not to apply the denoising to the
+ *                              frame that will be encoded
  */
 int aom_denoise_and_model_run(struct aom_denoise_and_model_t *ctx,
-                              YV12_BUFFER_CONFIG *buf, aom_film_grain_t *grain);
+                              YV12_BUFFER_CONFIG *buf, aom_film_grain_t *grain,
+                              int apply_denoise);
 
 /*!\brief Allocates a context that can be used for denoising and noise modeling.
  *

@@ -19,9 +19,13 @@
 
 #include "aom/aomdx.h"
 #include "aom/aom_integer.h"
-#include "aom_dsp/daalaboolreader.h"
+#include "aom_dsp/entdec.h"
+#include "aom_dsp/odintrin.h"
 #include "aom_dsp/prob.h"
-#include "av1/common/odintrin.h"
+
+#if CONFIG_BITSTREAM_DEBUG
+#include "aom_util/debug_util.h"
+#endif  // CONFIG_BITSTREAM_DEBUG
 
 #if CONFIG_ACCOUNTING
 #include "av1/decoder/accounting.h"
@@ -50,40 +54,33 @@
 extern "C" {
 #endif
 
-typedef struct daala_reader aom_reader;
+struct aom_reader {
+  const uint8_t *buffer;
+  const uint8_t *buffer_end;
+  od_ec_dec ec;
+#if CONFIG_ACCOUNTING
+  Accounting *accounting;
+#endif
+  uint8_t allow_update_cdf;
+};
 
-static INLINE int aom_reader_init(aom_reader *r, const uint8_t *buffer,
-                                  size_t size) {
-  return aom_daala_reader_init(r, buffer, (int)size);
-}
+typedef struct aom_reader aom_reader;
 
-static INLINE const uint8_t *aom_reader_find_begin(aom_reader *r) {
-  return aom_daala_reader_find_begin(r);
-}
+int aom_reader_init(aom_reader *r, const uint8_t *buffer, size_t size);
 
-static INLINE const uint8_t *aom_reader_find_end(aom_reader *r) {
-  return aom_daala_reader_find_end(r);
-}
+const uint8_t *aom_reader_find_begin(aom_reader *r);
 
-static INLINE int aom_reader_has_error(aom_reader *r) {
-  return aom_daala_reader_has_error(r);
-}
+const uint8_t *aom_reader_find_end(aom_reader *r);
 
 // Returns true if the bit reader has tried to decode more data from the buffer
 // than was actually provided.
-static INLINE int aom_reader_has_overflowed(const aom_reader *r) {
-  return aom_daala_reader_has_overflowed(r);
-}
+int aom_reader_has_overflowed(const aom_reader *r);
 
 // Returns the position in the bit reader in bits.
-static INLINE uint32_t aom_reader_tell(const aom_reader *r) {
-  return aom_daala_reader_tell(r);
-}
+uint32_t aom_reader_tell(const aom_reader *r);
 
 // Returns the position in the bit reader in 1/8th bits.
-static INLINE uint32_t aom_reader_tell_frac(const aom_reader *r) {
-  return aom_daala_reader_tell_frac(r);
-}
+uint32_t aom_reader_tell_frac(const aom_reader *r);
 
 #if CONFIG_ACCOUNTING
 static INLINE void aom_process_accounting(const aom_reader *r ACCT_STR_PARAM) {
@@ -105,13 +102,48 @@ static INLINE void aom_update_symb_counts(const aom_reader *r, int is_binary) {
 #endif
 
 static INLINE int aom_read_(aom_reader *r, int prob ACCT_STR_PARAM) {
-  int ret;
-  ret = aom_daala_read(r, prob);
+  int p = (0x7FFFFF - (prob << 15) + prob) >> 8;
+  int bit = od_ec_decode_bool_q15(&r->ec, p);
+
+#if CONFIG_BITSTREAM_DEBUG
+  {
+    int i;
+    int ref_bit, ref_nsymbs;
+    aom_cdf_prob ref_cdf[16];
+    const int queue_r = bitstream_queue_get_read();
+    const int frame_idx = aom_bitstream_queue_get_frame_read();
+    bitstream_queue_pop(&ref_bit, ref_cdf, &ref_nsymbs);
+    if (ref_nsymbs != 2) {
+      fprintf(stderr,
+              "\n *** [bit] nsymbs error, frame_idx_r %d nsymbs %d ref_nsymbs "
+              "%d queue_r %d\n",
+              frame_idx, 2, ref_nsymbs, queue_r);
+      assert(0);
+    }
+    if ((ref_nsymbs != 2) || (ref_cdf[0] != (aom_cdf_prob)p) ||
+        (ref_cdf[1] != 32767)) {
+      fprintf(stderr,
+              "\n *** [bit] cdf error, frame_idx_r %d cdf {%d, %d} ref_cdf {%d",
+              frame_idx, p, 32767, ref_cdf[0]);
+      for (i = 1; i < ref_nsymbs; ++i) fprintf(stderr, ", %d", ref_cdf[i]);
+      fprintf(stderr, "} queue_r %d\n", queue_r);
+      assert(0);
+    }
+    if (bit != ref_bit) {
+      fprintf(stderr,
+              "\n *** [bit] symb error, frame_idx_r %d symb %d ref_symb %d "
+              "queue_r %d\n",
+              frame_idx, bit, ref_bit, queue_r);
+      assert(0);
+    }
+  }
+#endif
+
 #if CONFIG_ACCOUNTING
   if (ACCT_STR_NAME) aom_process_accounting(r, ACCT_STR_NAME);
   aom_update_symb_counts(r, 1);
 #endif
-  return ret;
+  return bit;
 }
 
 static INLINE int aom_read_bit_(aom_reader *r ACCT_STR_PARAM) {
@@ -135,14 +167,54 @@ static INLINE int aom_read_literal_(aom_reader *r, int bits ACCT_STR_PARAM) {
 
 static INLINE int aom_read_cdf_(aom_reader *r, const aom_cdf_prob *cdf,
                                 int nsymbs ACCT_STR_PARAM) {
-  int ret;
-  ret = daala_read_symbol(r, cdf, nsymbs);
+  int symb;
+  assert(cdf != NULL);
+  symb = od_ec_decode_cdf_q15(&r->ec, cdf, nsymbs);
+
+#if CONFIG_BITSTREAM_DEBUG
+  {
+    int i;
+    int cdf_error = 0;
+    int ref_symb, ref_nsymbs;
+    aom_cdf_prob ref_cdf[16];
+    const int queue_r = bitstream_queue_get_read();
+    const int frame_idx = aom_bitstream_queue_get_frame_read();
+    bitstream_queue_pop(&ref_symb, ref_cdf, &ref_nsymbs);
+    if (nsymbs != ref_nsymbs) {
+      fprintf(stderr,
+              "\n *** nsymbs error, frame_idx_r %d nsymbs %d ref_nsymbs %d "
+              "queue_r %d\n",
+              frame_idx, nsymbs, ref_nsymbs, queue_r);
+      cdf_error = 0;
+      assert(0);
+    } else {
+      for (i = 0; i < nsymbs; ++i)
+        if (cdf[i] != ref_cdf[i]) cdf_error = 1;
+    }
+    if (cdf_error) {
+      fprintf(stderr, "\n *** cdf error, frame_idx_r %d cdf {%d", frame_idx,
+              cdf[0]);
+      for (i = 1; i < nsymbs; ++i) fprintf(stderr, ", %d", cdf[i]);
+      fprintf(stderr, "} ref_cdf {%d", ref_cdf[0]);
+      for (i = 1; i < ref_nsymbs; ++i) fprintf(stderr, ", %d", ref_cdf[i]);
+      fprintf(stderr, "} queue_r %d\n", queue_r);
+      assert(0);
+    }
+    if (symb != ref_symb) {
+      fprintf(
+          stderr,
+          "\n *** symb error, frame_idx_r %d symb %d ref_symb %d queue_r %d\n",
+          frame_idx, symb, ref_symb, queue_r);
+      assert(0);
+    }
+  }
+#endif
 
 #if CONFIG_ACCOUNTING
   if (ACCT_STR_NAME) aom_process_accounting(r, ACCT_STR_NAME);
   aom_update_symb_counts(r, (nsymbs == 2));
 #endif
-  return ret;
+  return symb;
 }
 
 static INLINE int aom_read_symbol_(aom_reader *r, aom_cdf_prob *cdf,

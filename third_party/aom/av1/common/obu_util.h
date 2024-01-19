@@ -22,9 +22,9 @@ typedef struct {
                 // optional OBU extension header) in the bitstream.
   OBU_TYPE type;
   int has_size_field;
-  int has_extension;
-  // The following fields come from the OBU extension header and therefore are
-  // only used if has_extension is true.
+  int has_extension;  // Whether the optional OBU extension header is present.
+  // The following fields come from the OBU extension header. They are set to 0
+  // if has_extension is false.
   int temporal_layer_id;
   int spatial_layer_id;
 } ObuHeader;

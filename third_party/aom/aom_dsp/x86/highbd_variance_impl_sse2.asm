@@ -25,7 +25,7 @@ SECTION .text
 ;    unsigned int    *  SSE,
 ;    int             *  Sum
 ;)
-global sym(aom_highbd_calc16x16var_sse2) PRIVATE
+globalsym(aom_highbd_calc16x16var_sse2)
 sym(aom_highbd_calc16x16var_sse2):
     push        rbp
     mov         rbp, rsp
@@ -178,7 +178,7 @@ sym(aom_highbd_calc16x16var_sse2):
 ;    unsigned int    *  SSE,
 ;    int             *  Sum
 ;)
-global sym(aom_highbd_calc8x8var_sse2) PRIVATE
+globalsym(aom_highbd_calc8x8var_sse2)
 sym(aom_highbd_calc8x8var_sse2):
     push        rbp
     mov         rbp, rsp

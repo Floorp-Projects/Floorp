@@ -28,8 +28,8 @@ static INLINE __m256i calc_mask_avx2(const __m256i mask_base, const __m256i s0,
 }
 void av1_build_compound_diffwtd_mask_avx2(uint8_t *mask,
                                           DIFFWTD_MASK_TYPE mask_type,
-                                          const uint8_t *src0, int stride0,
-                                          const uint8_t *src1, int stride1,
+                                          const uint8_t *src0, int src0_stride,
+                                          const uint8_t *src1, int src1_stride,
                                           int h, int w) {
   const int mb = (mask_type == DIFFWTD_38_INV) ? AOM_BLEND_A64_MAX_ALPHA : 0;
   const __m256i y_mask_base = _mm256_set1_epi16(38 - mb);
@@ -37,18 +37,18 @@ void av1_build_compound_diffwtd_mask_avx2(uint8_t *mask,
   if (4 == w) {
     do {
       const __m128i s0A = xx_loadl_32(src0);
-      const __m128i s0B = xx_loadl_32(src0 + stride0);
-      const __m128i s0C = xx_loadl_32(src0 + stride0 * 2);
-      const __m128i s0D = xx_loadl_32(src0 + stride0 * 3);
+      const __m128i s0B = xx_loadl_32(src0 + src0_stride);
+      const __m128i s0C = xx_loadl_32(src0 + src0_stride * 2);
+      const __m128i s0D = xx_loadl_32(src0 + src0_stride * 3);
       const __m128i s0AB = _mm_unpacklo_epi32(s0A, s0B);
       const __m128i s0CD = _mm_unpacklo_epi32(s0C, s0D);
       const __m128i s0ABCD = _mm_unpacklo_epi64(s0AB, s0CD);
       const __m256i s0ABCD_w = _mm256_cvtepu8_epi16(s0ABCD);
 
       const __m128i s1A = xx_loadl_32(src1);
-      const __m128i s1B = xx_loadl_32(src1 + stride1);
-      const __m128i s1C = xx_loadl_32(src1 + stride1 * 2);
-      const __m128i s1D = xx_loadl_32(src1 + stride1 * 3);
+      const __m128i s1B = xx_loadl_32(src1 + src1_stride);
+      const __m128i s1C = xx_loadl_32(src1 + src1_stride * 2);
+      const __m128i s1D = xx_loadl_32(src1 + src1_stride * 3);
       const __m128i s1AB = _mm_unpacklo_epi32(s1A, s1B);
       const __m128i s1CD = _mm_unpacklo_epi32(s1C, s1D);
       const __m128i s1ABCD = _mm_unpacklo_epi64(s1AB, s1CD);
@@ -58,40 +58,40 @@ void av1_build_compound_diffwtd_mask_avx2(uint8_t *mask,
       const __m128i x_m8 =
           _mm256_castsi256_si128(_mm256_permute4x64_epi64(m8, 0xd8));
       xx_storeu_128(mask, x_m8);
-      src0 += (stride0 << 2);
-      src1 += (stride1 << 2);
+      src0 += (src0_stride << 2);
+      src1 += (src1_stride << 2);
       mask += 16;
       i += 4;
     } while (i < h);
   } else if (8 == w) {
     do {
       const __m128i s0A = xx_loadl_64(src0);
-      const __m128i s0B = xx_loadl_64(src0 + stride0);
-      const __m128i s0C = xx_loadl_64(src0 + stride0 * 2);
-      const __m128i s0D = xx_loadl_64(src0 + stride0 * 3);
+      const __m128i s0B = xx_loadl_64(src0 + src0_stride);
+      const __m128i s0C = xx_loadl_64(src0 + src0_stride * 2);
+      const __m128i s0D = xx_loadl_64(src0 + src0_stride * 3);
       const __m256i s0AC_w = _mm256_cvtepu8_epi16(_mm_unpacklo_epi64(s0A, s0C));
       const __m256i s0BD_w = _mm256_cvtepu8_epi16(_mm_unpacklo_epi64(s0B, s0D));
       const __m128i s1A = xx_loadl_64(src1);
-      const __m128i s1B = xx_loadl_64(src1 + stride1);
-      const __m128i s1C = xx_loadl_64(src1 + stride1 * 2);
-      const __m128i s1D = xx_loadl_64(src1 + stride1 * 3);
+      const __m128i s1B = xx_loadl_64(src1 + src1_stride);
+      const __m128i s1C = xx_loadl_64(src1 + src1_stride * 2);
+      const __m128i s1D = xx_loadl_64(src1 + src1_stride * 3);
       const __m256i s1AB_w = _mm256_cvtepu8_epi16(_mm_unpacklo_epi64(s1A, s1C));
       const __m256i s1CD_w = _mm256_cvtepu8_epi16(_mm_unpacklo_epi64(s1B, s1D));
       const __m256i m16AC = calc_mask_avx2(y_mask_base, s0AC_w, s1AB_w);
       const __m256i m16BD = calc_mask_avx2(y_mask_base, s0BD_w, s1CD_w);
       const __m256i m8 = _mm256_packus_epi16(m16AC, m16BD);
       yy_storeu_256(mask, m8);
-      src0 += stride0 << 2;
-      src1 += stride1 << 2;
+      src0 += src0_stride << 2;
+      src1 += src1_stride << 2;
       mask += 32;
       i += 4;
     } while (i < h);
   } else if (16 == w) {
     do {
       const __m128i s0A = xx_load_128(src0);
-      const __m128i s0B = xx_load_128(src0 + stride0);
+      const __m128i s0B = xx_load_128(src0 + src0_stride);
       const __m128i s1A = xx_load_128(src1);
-      const __m128i s1B = xx_load_128(src1 + stride1);
+      const __m128i s1B = xx_load_128(src1 + src1_stride);
       const __m256i s0AL = _mm256_cvtepu8_epi16(s0A);
       const __m256i s0BL = _mm256_cvtepu8_epi16(s0B);
       const __m256i s1AL = _mm256_cvtepu8_epi16(s1A);
@@ -103,8 +103,8 @@ void av1_build_compound_diffwtd_mask_avx2(uint8_t *mask,
       const __m256i m8 =
           _mm256_permute4x64_epi64(_mm256_packus_epi16(m16AL, m16BL), 0xd8);
       yy_storeu_256(mask, m8);
-      src0 += stride0 << 1;
-      src1 += stride1 << 1;
+      src0 += src0_stride << 1;
+      src1 += src1_stride << 1;
       mask += 32;
       i += 2;
     } while (i < h);
@@ -127,8 +127,8 @@ void av1_build_compound_diffwtd_mask_avx2(uint8_t *mask,
         yy_storeu_256(mask + j, m8);
         j += 32;
       } while (j < w);
-      src0 += stride0;
-      src1 += stride1;
+      src0 += src0_stride;
+      src1 += src1_stride;
       mask += w;
       i += 1;
     } while (i < h);
@@ -514,6 +514,8 @@ void av1_build_compound_diffwtd_mask_d16_avx2(
   }
 }
 
+#if CONFIG_AV1_HIGHBITDEPTH
+
 void av1_build_compound_diffwtd_mask_highbd_avx2(
     uint8_t *mask, DIFFWTD_MASK_TYPE mask_type, const uint8_t *src0,
     int src0_stride, const uint8_t *src1, int src1_stride, int h, int w,
@@ -618,3 +620,5 @@ void av1_build_compound_diffwtd_mask_highbd_avx2(
     }
   }
 }
+
+#endif  // CONFIG_AV1_HIGHBITDEPTH

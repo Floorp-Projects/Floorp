@@ -90,7 +90,7 @@ static INLINE void highbd_filter_mask_dual(const __m128i *p, const __m128i *q,
 
   const __m128i zero = _mm_setzero_si128();
   const __m128i one = _mm_set1_epi16(1);
-  const __m128i ffff = _mm_set1_epi16(0xFFFF);
+  const __m128i ffff = _mm_set1_epi16((short)0xFFFF);
 
   __m128i max = _mm_subs_epu16(_mm_adds_epu16(abs_p0q0, abs_p1q1), *bl);
   max = _mm_xor_si128(_mm_cmpeq_epi16(max, zero), ffff);
@@ -112,7 +112,7 @@ static INLINE void highbd_hev_filter_mask_x_sse2(__m128i *pq, int x,
                                                  __m128i *hev, __m128i *mask) {
   const __m128i zero = _mm_setzero_si128();
   const __m128i one = _mm_set1_epi16(1);
-  const __m128i ffff = _mm_set1_epi16(0xFFFF);
+  const __m128i ffff = _mm_set1_epi16((short)0xFFFF);
   __m128i abs_p0q0_p1q1, abs_p0q0, abs_p1q1, abs_q1q0;
   __m128i max, max01, h;
 
@@ -497,8 +497,9 @@ static AOM_FORCE_INLINE void highbd_lpf_internal_14_sse2(
 }
 
 void aom_highbd_lpf_horizontal_14_sse2(uint16_t *s, int pitch,
-                                       const uint8_t *blt, const uint8_t *lt,
-                                       const uint8_t *thr, int bd) {
+                                       const uint8_t *blimit,
+                                       const uint8_t *limit,
+                                       const uint8_t *thresh, int bd) {
   __m128i p[7], q[7], pq[7];
   int i;
 
@@ -507,7 +508,7 @@ void aom_highbd_lpf_horizontal_14_sse2(uint16_t *s, int pitch,
     q[i] = _mm_loadl_epi64((__m128i *)(s + i * pitch));
   }
 
-  highbd_lpf_internal_14_sse2(p, q, pq, blt, lt, thr, bd);
+  highbd_lpf_internal_14_sse2(p, q, pq, blimit, limit, thresh, bd);
 
   for (i = 0; i < 6; i++) {
     _mm_storel_epi64((__m128i *)(s - (i + 1) * pitch), pq[i]);
@@ -727,8 +728,8 @@ void aom_highbd_lpf_horizontal_14_dual_sse2(
                                    _limit1, _thresh1, bd);
 
   for (i = 0; i < 6; i++) {
-    _mm_store_si128((__m128i *)(s - (i + 1) * pitch), p[i]);
-    _mm_store_si128((__m128i *)(s + i * pitch), q[i]);
+    _mm_storeu_si128((__m128i *)(s - (i + 1) * pitch), p[i]);
+    _mm_storeu_si128((__m128i *)(s + i * pitch), q[i]);
   }
 }
 

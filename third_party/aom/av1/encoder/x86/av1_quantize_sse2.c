@@ -15,6 +15,7 @@
 #include "config/av1_rtcd.h"
 
 #include "aom/aom_integer.h"
+#include "aom_dsp/x86/quantize_x86.h"
 
 static INLINE void read_coeff(const tran_low_t *coeff, intptr_t offset,
                               __m128i *c0, __m128i *c1) {
@@ -91,7 +92,7 @@ static INLINE void quantize(const int16_t *iscan_ptr,
                                      _mm_cmpeq_epi16(qcoeff0, *thr0));
   const __m128i mask1 = _mm_or_si128(_mm_cmpgt_epi16(qcoeff1, *thr1),
                                      _mm_cmpeq_epi16(qcoeff1, *thr1));
-  const int16_t nzflag = _mm_movemask_epi8(mask0) | _mm_movemask_epi8(mask1);
+  const int nzflag = _mm_movemask_epi8(mask0) | _mm_movemask_epi8(mask1);
 
   if (nzflag) {
     qcoeff0 = _mm_adds_epi16(qcoeff0, *round0);
@@ -186,4 +187,103 @@ void av1_quantize_fp_sse2(const tran_low_t *coeff_ptr, intptr_t n_coeffs,
     eob = _mm_max_epi16(eob, eob_shuffled);
     *eob_ptr = _mm_extract_epi16(eob, 1);
   }
+}
+
+static INLINE void quantize_lp(const int16_t *iscan_ptr,
+                               const int16_t *coeff_ptr, intptr_t n_coeffs,
+                               int16_t *qcoeff_ptr, int16_t *dqcoeff_ptr,
+                               const __m128i *round0, const __m128i *round1,
+                               const __m128i *quant0, const __m128i *quant1,
+                               const __m128i *dequant0, const __m128i *dequant1,
+                               __m128i *eob) {
+  const int16_t *read = coeff_ptr + n_coeffs;
+  __m128i coeff0 = _mm_load_si128((const __m128i *)read);
+  __m128i coeff1 = _mm_load_si128((const __m128i *)read + 1);
+
+  // Poor man's sign extract
+  const __m128i coeff0_sign = _mm_srai_epi16(coeff0, 15);
+  const __m128i coeff1_sign = _mm_srai_epi16(coeff1, 15);
+  __m128i qcoeff0 = _mm_xor_si128(coeff0, coeff0_sign);
+  __m128i qcoeff1 = _mm_xor_si128(coeff1, coeff1_sign);
+  qcoeff0 = _mm_sub_epi16(qcoeff0, coeff0_sign);
+  qcoeff1 = _mm_sub_epi16(qcoeff1, coeff1_sign);
+
+  qcoeff0 = _mm_adds_epi16(qcoeff0, *round0);
+  qcoeff1 = _mm_adds_epi16(qcoeff1, *round1);
+  const __m128i qtmp0 = _mm_mulhi_epi16(qcoeff0, *quant0);
+  const __m128i qtmp1 = _mm_mulhi_epi16(qcoeff1, *quant1);
+
+  // Reinsert signs
+  qcoeff0 = _mm_xor_si128(qtmp0, coeff0_sign);
+  qcoeff1 = _mm_xor_si128(qtmp1, coeff1_sign);
+  qcoeff0 = _mm_sub_epi16(qcoeff0, coeff0_sign);
+  qcoeff1 = _mm_sub_epi16(qcoeff1, coeff1_sign);
+
+  int16_t *addr = qcoeff_ptr + n_coeffs;
+  _mm_store_si128((__m128i *)addr, qcoeff0);
+  _mm_store_si128((__m128i *)addr + 1, qcoeff1);
+
+  coeff0 = _mm_mullo_epi16(qcoeff0, *dequant0);
+  coeff1 = _mm_mullo_epi16(qcoeff1, *dequant1);
+
+  addr = dqcoeff_ptr + n_coeffs;
+  _mm_store_si128((__m128i *)addr, coeff0);
+  _mm_store_si128((__m128i *)addr + 1, coeff1);
+
+  const __m128i zero = _mm_setzero_si128();
+  // Scan for eob
+  const __m128i zero_coeff0 = _mm_cmpeq_epi16(coeff0, zero);
+  const __m128i zero_coeff1 = _mm_cmpeq_epi16(coeff1, zero);
+  const __m128i nzero_coeff0 = _mm_cmpeq_epi16(zero_coeff0, zero);
+  const __m128i nzero_coeff1 = _mm_cmpeq_epi16(zero_coeff1, zero);
+
+  const __m128i iscan0 =
+      _mm_load_si128((const __m128i *)(iscan_ptr + n_coeffs));
+  const __m128i iscan1 =
+      _mm_load_si128((const __m128i *)(iscan_ptr + n_coeffs) + 1);
+
+  // Add one to convert from indices to counts
+  const __m128i iscan0_nz = _mm_sub_epi16(iscan0, nzero_coeff0);
+  const __m128i iscan1_nz = _mm_sub_epi16(iscan1, nzero_coeff1);
+  const __m128i eob0 = _mm_and_si128(iscan0_nz, nzero_coeff0);
+  const __m128i eob1 = _mm_and_si128(iscan1_nz, nzero_coeff1);
+  const __m128i eob2 = _mm_max_epi16(eob0, eob1);
+  *eob = _mm_max_epi16(*eob, eob2);
+}
+
+void av1_quantize_lp_sse2(const int16_t *coeff_ptr, intptr_t n_coeffs,
+                          const int16_t *round_ptr, const int16_t *quant_ptr,
+                          int16_t *qcoeff_ptr, int16_t *dqcoeff_ptr,
+                          const int16_t *dequant_ptr, uint16_t *eob_ptr,
+                          const int16_t *scan, const int16_t *iscan) {
+  (void)scan;
+  coeff_ptr += n_coeffs;
+  iscan += n_coeffs;
+  qcoeff_ptr += n_coeffs;
+  dqcoeff_ptr += n_coeffs;
+  n_coeffs = -n_coeffs;
+
+  // Setup global values
+  const __m128i round0 = _mm_load_si128((const __m128i *)round_ptr);
+  const __m128i round1 = _mm_unpackhi_epi64(round0, round0);
+  const __m128i quant0 = _mm_load_si128((const __m128i *)quant_ptr);
+  const __m128i quant1 = _mm_unpackhi_epi64(quant0, quant0);
+  const __m128i dequant0 = _mm_load_si128((const __m128i *)dequant_ptr);
+  const __m128i dequant1 = _mm_unpackhi_epi64(dequant0, dequant0);
+  __m128i eob = _mm_setzero_si128();
+
+  // DC and first 15 AC
+  quantize_lp(iscan, coeff_ptr, n_coeffs, qcoeff_ptr, dqcoeff_ptr, &round0,
+              &round1, &quant0, &quant1, &dequant0, &dequant1, &eob);
+  n_coeffs += 8 * 2;
+
+  // AC only loop
+  while (n_coeffs < 0) {
+    quantize_lp(iscan, coeff_ptr, n_coeffs, qcoeff_ptr, dqcoeff_ptr, &round1,
+                &round1, &quant1, &quant1, &dequant1, &dequant1, &eob);
+    n_coeffs += 8 * 2;
+  }
+
+  // Accumulate EOB
+  *eob_ptr = accumulate_eob(eob);
 }

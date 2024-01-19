@@ -11,6 +11,7 @@
 #ifndef AOM_COMMON_TOOLS_COMMON_H_
 #define AOM_COMMON_TOOLS_COMMON_H_
 
+#include <stdbool.h>
 #include <stdio.h>
 
 #include "config/aom_config.h"
@@ -18,6 +19,7 @@
 #include "aom/aom_codec.h"
 #include "aom/aom_image.h"
 #include "aom/aom_integer.h"
+#include "aom_ports/mem.h"
 #include "aom_ports/msvc.h"
 
 #if CONFIG_AV1_ENCODER
@@ -66,6 +68,9 @@ typedef long FileOffset; /* NOLINT */
 #define IVF_FILE_HDR_SZ 32
 
 #define RAW_FRAME_HDR_SZ sizeof(uint32_t)
+#define OBU_DETECTION_SZ 34  // See common/obudec.c
+
+#define DETECT_BUF_SZ 34  // Max of the above header sizes
 
 #define AV1_FOURCC 0x31305641
 
@@ -77,8 +82,11 @@ enum VideoFileType {
   FILE_TYPE_WEBM
 };
 
+// The fourcc for large_scale_tile encoding is "LSTC".
+#define LST_FOURCC 0x4354534c
+
 struct FileTypeDetectionBuffer {
-  char buf[4];
+  char buf[DETECT_BUF_SZ];
   size_t buf_read;
   size_t position;
 };
@@ -105,6 +113,7 @@ struct AvxInputContext {
 #if CONFIG_AV1_ENCODER
   y4m_input y4m;
 #endif
+  aom_color_range_t color_range;
 };
 
 #ifdef __cplusplus
@@ -113,49 +122,84 @@ extern "C" {
 
 #if defined(__GNUC__)
 #define AOM_NO_RETURN __attribute__((noreturn))
+#elif defined(_MSC_VER)
+#define AOM_NO_RETURN __declspec(noreturn)
 #else
 #define AOM_NO_RETURN
+#endif
+
+// Tells the compiler to perform `printf` format string checking if the
+// compiler supports it; see the 'format' attribute in
+// <https://gcc.gnu.org/onlinedocs/gcc/Common-Function-Attributes.html>.
+#define AOM_TOOLS_FORMAT_PRINTF(string_index, first_to_check)
+#if defined(__has_attribute)
+#if __has_attribute(format)
+#undef AOM_TOOLS_FORMAT_PRINTF
+#define AOM_TOOLS_FORMAT_PRINTF(string_index, first_to_check) \
+  __attribute__((__format__(__printf__, string_index, first_to_check)))
+#endif
 #endif
 
 /* Sets a stdio stream into binary mode */
 FILE *set_binary_mode(FILE *stream);
 
-void die(const char *fmt, ...) AOM_NO_RETURN;
-void fatal(const char *fmt, ...) AOM_NO_RETURN;
-void warn(const char *fmt, ...);
+AOM_NO_RETURN void die(const char *fmt, ...) AOM_TOOLS_FORMAT_PRINTF(1, 2);
+AOM_NO_RETURN void fatal(const char *fmt, ...) AOM_TOOLS_FORMAT_PRINTF(1, 2);
+void aom_tools_warn(const char *fmt, ...) AOM_TOOLS_FORMAT_PRINTF(1, 2);
 
-void die_codec(aom_codec_ctx_t *ctx, const char *s) AOM_NO_RETURN;
+AOM_NO_RETURN void die_codec(aom_codec_ctx_t *ctx, const char *s);
 
 /* The tool including this file must define usage_exit() */
-void usage_exit(void) AOM_NO_RETURN;
+AOM_NO_RETURN void usage_exit(void);
 
 #undef AOM_NO_RETURN
 
-int read_yuv_frame(struct AvxInputContext *input_ctx, aom_image_t *yuv_frame);
-
-typedef struct AvxInterface {
-  const char *const name;
-  const uint32_t fourcc;
-  aom_codec_iface_t *(*const codec_interface)();
-} AvxInterface;
-
+// The AOM library can support different encoders / decoders. These
+// functions provide different ways to lookup / iterate through them.
+// The return result may be NULL to indicate no codec was found.
 int get_aom_encoder_count(void);
-const AvxInterface *get_aom_encoder_by_index(int i);
-const AvxInterface *get_aom_encoder_by_name(const char *name);
+aom_codec_iface_t *get_aom_encoder_by_index(int i);
+aom_codec_iface_t *get_aom_encoder_by_short_name(const char *name);
+// If the interface is unknown, returns NULL.
+const char *get_short_name_by_aom_encoder(aom_codec_iface_t *encoder);
+// If the interface is unknown, returns 0.
+uint32_t get_fourcc_by_aom_encoder(aom_codec_iface_t *iface);
 
 int get_aom_decoder_count(void);
-const AvxInterface *get_aom_decoder_by_index(int i);
-const AvxInterface *get_aom_decoder_by_name(const char *name);
-const AvxInterface *get_aom_decoder_by_fourcc(uint32_t fourcc);
+aom_codec_iface_t *get_aom_decoder_by_index(int i);
+aom_codec_iface_t *get_aom_decoder_by_short_name(const char *name);
+aom_codec_iface_t *get_aom_decoder_by_fourcc(uint32_t fourcc);
+const char *get_short_name_by_aom_decoder(aom_codec_iface_t *decoder);
+// If the interface is unknown, returns 0.
+uint32_t get_fourcc_by_aom_decoder(aom_codec_iface_t *iface);
+
+const char *image_format_to_string(aom_img_fmt_t fmt);
+
+int read_yuv_frame(struct AvxInputContext *input_ctx, aom_image_t *yuv_frame);
 
 void aom_img_write(const aom_image_t *img, FILE *file);
-int aom_img_read(aom_image_t *img, FILE *file);
+// Returns true on success, false on failure.
+bool aom_img_read(aom_image_t *img, FILE *file);
 
 double sse_to_psnr(double samples, double peak, double mse);
 void aom_img_upshift(aom_image_t *dst, const aom_image_t *src, int input_shift);
 void aom_img_downshift(aom_image_t *dst, const aom_image_t *src,
                        int down_shift);
+// Returns true on success, false on failure.
+bool aom_shift_img(unsigned int output_bit_depth, aom_image_t **img_ptr,
+                   aom_image_t **img_shifted_ptr);
 void aom_img_truncate_16_to_8(aom_image_t *dst, const aom_image_t *src);
+
+// Output in NV12 format.
+void aom_img_write_nv12(const aom_image_t *img, FILE *file);
+
+size_t read_from_input(struct AvxInputContext *input_ctx, size_t n,
+                       unsigned char *buf);
+size_t input_to_detect_buf(struct AvxInputContext *input_ctx, size_t n);
+size_t buffer_input(struct AvxInputContext *input_ctx, size_t n,
+                    unsigned char *buf, bool buffered);
+void rewind_detect(struct AvxInputContext *input_ctx);
+bool input_eof(struct AvxInputContext *input_ctx);
 
 #ifdef __cplusplus
 } /* extern "C" */

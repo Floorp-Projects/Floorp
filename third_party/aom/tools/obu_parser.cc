@@ -112,7 +112,7 @@ void PrintObuHeader(const ObuHeader *header) {
     printf(
         "      temporal_id: %d\n"
         "      spatial_id:  %d\n",
-        header->temporal_layer_id, header->temporal_layer_id);
+        header->temporal_layer_id, header->spatial_layer_id);
   }
 }
 

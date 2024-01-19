@@ -10,8 +10,9 @@
 #
 cmake_minimum_required(VERSION 3.5)
 
-set(REQUIRED_ARGS "AOM_ROOT" "AOM_CONFIG_DIR" "AOM_TARGET_SYSTEM"
-    "AOM_SYM_FILE" "CONFIG_AV1_DECODER" "CONFIG_AV1_ENCODER")
+# CMAKE_SHARED_LIBRARY_PREFIX can be empty
+set(REQUIRED_ARGS "AOM_ROOT" "AOM_CONFIG_DIR" "AOM_TARGET_SYSTEM" "AOM_SYM_FILE"
+                  "CONFIG_AV1_DECODER" "CONFIG_AV1_ENCODER")
 
 foreach(arg ${REQUIRED_ARGS})
   if("${${arg}}" STREQUAL "")
@@ -23,8 +24,9 @@ include("${AOM_ROOT}/build/cmake/exports_sources.cmake")
 
 if("${AOM_TARGET_SYSTEM}" STREQUAL "Darwin")
   set(symbol_prefix "_")
-elseif("${AOM_TARGET_SYSTEM}" MATCHES "Windows\|MSYS" AND AOM_MSVC)
-  file(WRITE "${AOM_SYM_FILE}" "LIBRARY aom\n" "EXPORTS\n")
+elseif("${AOM_TARGET_SYSTEM}" MATCHES "Windows\|MSYS")
+  file(WRITE "${AOM_SYM_FILE}" "LIBRARY ${CMAKE_SHARED_LIBRARY_PREFIX}aom\n"
+                               "EXPORTS\n")
 else()
   set(symbol_suffix ";")
 endif()
@@ -33,8 +35,9 @@ set(aom_sym_file "${AOM_SYM_FILE}")
 
 if("${AOM_TARGET_SYSTEM}" STREQUAL "Darwin")
   file(REMOVE "${aom_sym_file}")
-elseif("${AOM_TARGET_SYSTEM}" MATCHES "Windows\|MSYS" AND AOM_MSVC)
-  file(WRITE "${aom_sym_file}" "LIBRARY aom\n" "EXPORTS\n")
+elseif("${AOM_TARGET_SYSTEM}" MATCHES "Windows\|MSYS")
+  file(WRITE "${aom_sym_file}" "LIBRARY ${CMAKE_SHARED_LIBRARY_PREFIX}aom\n"
+                               "EXPORTS\n")
 else()
   file(WRITE "${aom_sym_file}" "{\nglobal:\n")
 endif()
@@ -47,7 +50,7 @@ endforeach()
 
 foreach(exported_symbol ${exported_symbols})
   string(STRIP "${exported_symbol}" exported_symbol)
-  if("${AOM_TARGET_SYSTEM}" MATCHES "Windows\|MSYS" AND AOM_MSVC)
+  if("${AOM_TARGET_SYSTEM}" MATCHES "Windows\|MSYS")
     string(SUBSTRING ${exported_symbol} 0 4 export_type)
     string(COMPARE EQUAL "${export_type}" "data" is_data)
     if(is_data)

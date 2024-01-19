@@ -30,18 +30,29 @@
 extern "C" {
 #endif
 
-#include "aom/aom_codec.h"
+#include "aom/aom_codec.h"  // IWYU pragma: export
+#include "aom/aom_external_partition.h"
 
 /*!\brief Current ABI version number
  *
+ * \hideinitializer
  * \internal
  * If this file is altered in any way that changes the ABI, this value
  * must be bumped.  Examples include, but are not limited to, changing
  * types, removing or reassigning enums, adding/removing/rearranging
  * fields to structures
+ *
+ * Note: In the definition of AOM_ENCODER_ABI_VERSION, 3 is the value of
+ * AOM_EXT_PART_ABI_VERSION in libaom v3.2.0. The old value of
+ * AOM_EXT_PART_ABI_VERSION is used so as to not break the ABI version check in
+ * aom_codec_enc_init_ver() when an application compiled against libaom v3.2.0
+ * passes the old value of AOM_ENCODER_ABI_VERSION to aom_codec_enc_init_ver().
+ * The external partition API is still experimental. When it is declared stable,
+ * we will replace 3 with AOM_EXT_PART_ABI_VERSION in the definition of
+ * AOM_ENCODER_ABI_VERSION.
  */
 #define AOM_ENCODER_ABI_VERSION \
-  (5 + AOM_CODEC_ABI_VERSION) /**<\hideinitializer*/
+  (10 + AOM_CODEC_ABI_VERSION + /*AOM_EXT_PART_ABI_VERSION=*/3)
 
 /*! \brief Encoder capabilities bitfield
  *
@@ -65,8 +76,7 @@ extern "C" {
  *
  *  The available flags are specified by AOM_CODEC_USE_* defines.
  */
-#define AOM_CODEC_USE_PSNR 0x10000 /**< Calculate PSNR on each frame */
-/*!\brief Make the encoder output one  partition at a time. */
+#define AOM_CODEC_USE_PSNR 0x10000         /**< Calculate PSNR on each frame */
 #define AOM_CODEC_USE_HIGHBITDEPTH 0x40000 /**< Use high bitdepth */
 
 /*!\brief Generic fixed size buffer structure
@@ -74,33 +84,9 @@ extern "C" {
  * This structure is able to hold a reference to any fixed size buffer.
  */
 typedef struct aom_fixed_buf {
-  void *buf;       /**< Pointer to the data */
+  void *buf;       /**< Pointer to the data. Does NOT own the data! */
   size_t sz;       /**< Length of the buffer, in chars */
 } aom_fixed_buf_t; /**< alias for struct aom_fixed_buf */
-
-/*!\brief Time Stamp Type
- *
- * An integer, which when multiplied by the stream's time base, provides
- * the absolute time of a sample.
- */
-typedef int64_t aom_codec_pts_t;
-
-/*!\brief Compressed Frame Flags
- *
- * This type represents a bitfield containing information about a compressed
- * frame that may be useful to an application. The most significant 16 bits
- * can be used by an algorithm to provide additional detail, for example to
- * support frame types that are codec specific (MPEG-1 D-frames for example)
- */
-typedef uint32_t aom_codec_frame_flags_t;
-#define AOM_FRAME_IS_KEY 0x1 /**< frame is the start of a GOP */
-/*!\brief frame can be dropped without affecting the stream (no future frame
- * depends on this one) */
-#define AOM_FRAME_IS_DROPPABLE 0x2
-/*!\brief frame should be decoded but will not be shown */
-#define AOM_FRAME_IS_INVISIBLE 0x4
-/*!\brief this is a fragment of the encoded frame */
-#define AOM_FRAME_IS_FRAGMENT 0x8
 
 /*!\brief Error Resilient flags
  *
@@ -155,17 +141,19 @@ typedef struct aom_codec_cx_pkt {
       unsigned int samples[4]; /**< Number of samples, total/y/u/v */
       uint64_t sse[4];         /**< sum squared error, total/y/u/v */
       double psnr[4];          /**< PSNR, total/y/u/v */
-    } psnr;                    /**< data for PSNR packet */
-    aom_fixed_buf_t raw;       /**< data for arbitrary packets */
-
-    /* This packet size is fixed to allow codecs to extend this
-     * interface without having to manage storage for raw packets,
-     * i.e., if it's smaller than 128 bytes, you can store in the
-     * packet list directly.
-     */
-    char pad[128 - sizeof(enum aom_codec_cx_pkt_kind)]; /**< fixed sz */
-  } data;                                               /**< packet data */
-} aom_codec_cx_pkt_t; /**< alias for struct aom_codec_cx_pkt */
+      /*!\brief Number of samples, total/y/u/v when
+       * input bit-depth < stream bit-depth.*/
+      unsigned int samples_hbd[4];
+      /*!\brief sum squared error, total/y/u/v when
+       * input bit-depth < stream bit-depth.*/
+      uint64_t sse_hbd[4];
+      /*!\brief PSNR, total/y/u/v when
+       * input bit-depth < stream bit-depth.*/
+      double psnr_hbd[4];
+    } psnr;              /**< data for PSNR packet */
+    aom_fixed_buf_t raw; /**< data for arbitrary packets */
+  } data;                /**< packet data */
+} aom_codec_cx_pkt_t;    /**< alias for struct aom_codec_cx_pkt */
 
 /*!\brief Rational Number
  *
@@ -176,11 +164,19 @@ typedef struct aom_rational {
   int den;        /**< fraction denominator */
 } aom_rational_t; /**< alias for struct aom_rational */
 
-/*!\brief Multi-pass Encoding Pass */
+/*!\brief Multi-pass Encoding Pass
+ *
+ * AOM_RC_LAST_PASS is kept for backward compatibility.
+ * If passes is not given and pass==2, the codec will assume passes=2.
+ * For new code, it is recommended to use AOM_RC_SECOND_PASS and set
+ * the "passes" member to 2 via the key & val API for two-pass encoding.
+ */
 enum aom_enc_pass {
-  AOM_RC_ONE_PASS,   /**< Single pass mode */
-  AOM_RC_FIRST_PASS, /**< First pass of multi-pass mode */
-  AOM_RC_LAST_PASS   /**< Final pass of multi-pass mode */
+  AOM_RC_ONE_PASS = 0,    /**< Single pass mode */
+  AOM_RC_FIRST_PASS = 1,  /**< First pass of multi-pass mode */
+  AOM_RC_SECOND_PASS = 2, /**< Second pass of multi-pass mode */
+  AOM_RC_THIRD_PASS = 3,  /**< Third pass of multi-pass mode */
+  AOM_RC_LAST_PASS = 2,   /**< Final pass of two-pass mode */
 };
 
 /*!\brief Rate control mode */
@@ -205,6 +201,170 @@ enum aom_kf_mode {
   AOM_KF_DISABLED = 0 /**< Encoder does not place keyframes. */
 };
 
+/*!\brief Frame super-resolution mode. */
+typedef enum {
+  /**< Frame super-resolution is disabled for all frames. */
+  AOM_SUPERRES_NONE,
+  /**< All frames are coded at the specified scale and super-resolved. */
+  AOM_SUPERRES_FIXED,
+  /**< All frames are coded at a random scale and super-resolved. */
+  AOM_SUPERRES_RANDOM,
+  /**< Super-resolution scale for each frame is determined based on the q index
+     of that frame. */
+  AOM_SUPERRES_QTHRESH,
+  /**< Full-resolution or super-resolution and the scale (in case of
+     super-resolution) are automatically selected for each frame. */
+  AOM_SUPERRES_AUTO,
+} aom_superres_mode;
+
+/*!\brief Encoder Config Options
+ *
+ * This type allows to enumerate and control flags defined for encoder control
+ * via config file at runtime.
+ */
+typedef struct cfg_options {
+  /*!\brief Indicate init by cfg file
+   * 0 or 1
+   */
+  unsigned int init_by_cfg_file;
+  /*!\brief Superblock size
+   * 0, 64 or 128
+   */
+  unsigned int super_block_size;
+  /*!\brief max partition size
+   * 8, 16, 32, 64, 128
+   */
+  unsigned int max_partition_size;
+  /*!\brief min partition size
+   * 8, 16, 32, 64, 128
+   */
+  unsigned int min_partition_size;
+  /*!\brief disable AB Shape partition type
+   *
+   */
+  unsigned int disable_ab_partition_type;
+  /*!\brief disable rectangular partition type
+   *
+   */
+  unsigned int disable_rect_partition_type;
+  /*!\brief disable 1:4/4:1 partition type
+   *
+   */
+  unsigned int disable_1to4_partition_type;
+  /*!\brief disable flip and identity transform type
+   *
+   */
+  unsigned int disable_flip_idtx;
+  /*!\brief disable CDEF filter
+   *
+   */
+  unsigned int disable_cdef;
+  /*!\brief disable Loop Restoration Filter
+   *
+   */
+  unsigned int disable_lr;
+  /*!\brief disable OBMC
+   *
+   */
+  unsigned int disable_obmc;
+  /*!\brief disable Warped Motion
+   *
+   */
+  unsigned int disable_warp_motion;
+  /*!\brief disable global motion
+   *
+   */
+  unsigned int disable_global_motion;
+  /*!\brief disable dist weighted compound
+   *
+   */
+  unsigned int disable_dist_wtd_comp;
+  /*!\brief disable diff weighted compound
+   *
+   */
+  unsigned int disable_diff_wtd_comp;
+  /*!\brief disable inter/intra compound
+   *
+   */
+  unsigned int disable_inter_intra_comp;
+  /*!\brief disable masked compound
+   *
+   */
+  unsigned int disable_masked_comp;
+  /*!\brief disable one sided compound
+   *
+   */
+  unsigned int disable_one_sided_comp;
+  /*!\brief disable Palette
+   *
+   */
+  unsigned int disable_palette;
+  /*!\brief disable Intra Block Copy
+   *
+   */
+  unsigned int disable_intrabc;
+  /*!\brief disable chroma from luma
+   *
+   */
+  unsigned int disable_cfl;
+  /*!\brief disable intra smooth mode
+   *
+   */
+  unsigned int disable_smooth_intra;
+  /*!\brief disable filter intra
+   *
+   */
+  unsigned int disable_filter_intra;
+  /*!\brief disable dual filter
+   *
+   */
+  unsigned int disable_dual_filter;
+  /*!\brief disable intra angle delta
+   *
+   */
+  unsigned int disable_intra_angle_delta;
+  /*!\brief disable intra edge filter
+   *
+   */
+  unsigned int disable_intra_edge_filter;
+  /*!\brief disable 64x64 transform
+   *
+   */
+  unsigned int disable_tx_64x64;
+  /*!\brief disable smooth inter/intra
+   *
+   */
+  unsigned int disable_smooth_inter_intra;
+  /*!\brief disable inter/inter wedge comp
+   *
+   */
+  unsigned int disable_inter_inter_wedge;
+  /*!\brief disable inter/intra wedge comp
+   *
+   */
+  unsigned int disable_inter_intra_wedge;
+  /*!\brief disable paeth intra
+   *
+   */
+  unsigned int disable_paeth_intra;
+  /*!\brief disable trellis quantization
+   *
+   */
+  unsigned int disable_trellis_quant;
+  /*!\brief disable ref frame MV
+   *
+   */
+  unsigned int disable_ref_frame_mv;
+  /*!\brief use reduced reference frame set
+   *
+   */
+  unsigned int reduced_reference_set;
+  /*!\brief use reduced transform type set
+   *
+   */
+  unsigned int reduced_tx_type_set;
+} cfg_options_t;
+
 /*!\brief Encoded Frame Flags
  *
  * This type indicates a bitfield to be passed to aom_codec_encode(), defining
@@ -213,7 +373,8 @@ enum aom_kf_mode {
  * /algo/_eflag_*. The lower order 16 bits are reserved for common use.
  */
 typedef long aom_enc_frame_flags_t;
-#define AOM_EFLAG_FORCE_KF (1 << 0) /**< Force this frame to be a keyframe */
+/*!\brief Force this frame to be a keyframe */
+#define AOM_EFLAG_FORCE_KF (1 << 0)
 
 /*!\brief Encoder configuration structure
  *
@@ -273,6 +434,11 @@ typedef struct aom_codec_enc_cfg {
 
   /*!\brief Max number of frames to encode
    *
+   * If force video mode is off (the default) and g_limit is 1, the encoder
+   * will encode a still picture (still_picture is set to 1 in the sequence
+   * header OBU). If in addition full_still_picture_hdr is 0 (the default),
+   * the encoder will use a reduced header (reduced_still_picture_header is
+   * set to 1 in the sequence header OBU) for the still picture.
    */
   unsigned int g_limit;
 
@@ -401,11 +567,8 @@ typedef struct aom_codec_enc_cfg {
    * Similar to spatial resampling, frame super-resolution integrates
    * upscaling after the encode/decode process. Taking control of upscaling and
    * using restoration filters should allow it to outperform normal resizing.
-   *
-   * Mode 0 is SUPERRES_NONE, mode 1 is SUPERRES_FIXED, mode 2 is
-   * SUPERRES_RANDOM and mode 3 is SUPERRES_QTHRESH.
    */
-  unsigned int rc_superres_mode;
+  aom_superres_mode rc_superres_mode;
 
   /*!\brief Frame super-resolution denominator.
    *
@@ -415,7 +578,7 @@ typedef struct aom_codec_enc_cfg {
    *
    * Valid denominators are 8 to 16.
    *
-   * Used only by SUPERRES_FIXED.
+   * Used only by AOM_SUPERRES_FIXED.
    */
   unsigned int rc_superres_denominator;
 
@@ -434,7 +597,7 @@ typedef struct aom_codec_enc_cfg {
    * The q level threshold after which superres is used.
    * Valid values are 1 to 63.
    *
-   * Used only by SUPERRES_QTHRESH
+   * Used only by AOM_SUPERRES_QTHRESH
    */
   unsigned int rc_superres_qthresh;
 
@@ -443,7 +606,7 @@ typedef struct aom_codec_enc_cfg {
    * The q level threshold after which superres is used for key frames.
    * Valid values are 1 to 63.
    *
-   * Used only by SUPERRES_QTHRESH
+   * Used only by AOM_SUPERRES_QTHRESH
    */
   unsigned int rc_superres_kf_qthresh;
 
@@ -473,7 +636,7 @@ typedef struct aom_codec_enc_cfg {
 
   /*!\brief Target data rate
    *
-   * Target bandwidth to use for this stream, in kilobits per second.
+   * Target bitrate to use for this stream, in kilobits per second.
    */
   unsigned int rc_target_bitrate;
 
@@ -507,25 +670,19 @@ typedef struct aom_codec_enc_cfg {
 
   /*!\brief Rate control adaptation undershoot control
    *
-   * This value, expressed as a percentage of the target bitrate,
-   * controls the maximum allowed adaptation speed of the codec.
-   * This factor controls the maximum amount of bits that can
-   * be subtracted from the target bitrate in order to compensate
-   * for prior overshoot.
+   * This value, controls the tolerance of the VBR algorithm to undershoot
+   * and is used as a trigger threshold for more aggressive adaptation of Q.
    *
-   * Valid values in the range 0-1000.
+   * Valid values in the range 0-100.
    */
   unsigned int rc_undershoot_pct;
 
   /*!\brief Rate control adaptation overshoot control
    *
-   * This value, expressed as a percentage of the target bitrate,
-   * controls the maximum allowed adaptation speed of the codec.
-   * This factor controls the maximum amount of bits that can
-   * be added to the target bitrate in order to compensate for
-   * prior undershoot.
+   * This value, controls the tolerance of the VBR algorithm to overshoot
+   * and is used as a trigger threshold for more aggressive adaptation of Q.
    *
-   * Valid values in the range 0-1000.
+   * Valid values in the range 0-100.
    */
   unsigned int rc_overshoot_pct;
 
@@ -664,10 +821,12 @@ typedef struct aom_codec_enc_cfg {
 
   /*!\brief full_still_picture_hdr
    *
-   * If this is nonzero, the encoder will generate a full header even for
-   * still picture encoding. if zero, a reduced header is used for still
-   * picture. This flag has no effect when a regular video with more than
-   * a single frame is encoded.
+   * If this is nonzero, the encoder will generate a full header
+   * (reduced_still_picture_header is set to 0 in the sequence header OBU) even
+   * for still picture encoding. If this is zero (the default), a reduced
+   * header (reduced_still_picture_header is set to 1 in the sequence header
+   * OBU) is used for still picture encoding. This flag has no effect when a
+   * regular video with more than a single frame is encoded.
    */
   unsigned int full_still_picture_hdr;
 
@@ -721,22 +880,40 @@ typedef struct aom_codec_enc_cfg {
    */
   int tile_heights[MAX_TILE_HEIGHTS];
 
+  /*!\brief Whether encoder should use fixed QP offsets.
+   *
+   * If a value of 1 is provided, encoder will use fixed QP offsets for frames
+   * at different levels of the pyramid.
+   * If a value of 0 is provided, encoder will NOT use fixed QP offsets.
+   * Note: This option is only relevant for --end-usage=q.
+   */
+  unsigned int use_fixed_qp_offsets;
+
+  /*!\brief Deprecated and ignored. DO NOT USE.
+   *
+   * TODO(aomedia:3269): Remove fixed_qp_offsets in libaom v4.0.0.
+   */
+  int fixed_qp_offsets[5];
+
   /*!\brief Options defined per config file
    *
    */
-  cfg_options_t cfg;
+  cfg_options_t encoder_cfg;
 } aom_codec_enc_cfg_t; /**< alias for struct aom_codec_enc_cfg */
 
 /*!\brief Initialize an encoder instance
  *
- * Initializes a encoder context using the given interface. Applications
+ * Initializes an encoder context using the given interface. Applications
  * should call the aom_codec_enc_init convenience macro instead of this
  * function directly, to ensure that the ABI version number parameter
  * is properly initialized.
  *
- * If the library was configured with --disable-multithread, this call
+ * If the library was configured with -DCONFIG_MULTITHREAD=0, this call
  * is not thread safe and should be guarded with a lock if being used
  * in a multithreaded context.
+ *
+ * If aom_codec_enc_init_ver() fails, it is not necessary to call
+ * aom_codec_destroy() on the encoder context.
  *
  * \param[in]    ctx     Pointer to this instance's context.
  * \param[in]    iface   Pointer to the algorithm interface to use.
@@ -745,7 +922,7 @@ typedef struct aom_codec_enc_cfg {
  * \param[in]    ver     ABI version number. Must be set to
  *                       AOM_ENCODER_ABI_VERSION
  * \retval #AOM_CODEC_OK
- *     The decoder algorithm initialized.
+ *     The encoder algorithm has been initialized.
  * \retval #AOM_CODEC_MEM_ERROR
  *     Memory allocation failed.
  */
@@ -761,41 +938,9 @@ aom_codec_err_t aom_codec_enc_init_ver(aom_codec_ctx_t *ctx,
 #define aom_codec_enc_init(ctx, iface, cfg, flags) \
   aom_codec_enc_init_ver(ctx, iface, cfg, flags, AOM_ENCODER_ABI_VERSION)
 
-/*!\brief Initialize multi-encoder instance
+/*!\brief Get the default configuration for a usage.
  *
- * Initializes multi-encoder context using the given interface.
- * Applications should call the aom_codec_enc_init_multi convenience macro
- * instead of this function directly, to ensure that the ABI version number
- * parameter is properly initialized.
- *
- * \param[in]    ctx     Pointer to this instance's context.
- * \param[in]    iface   Pointer to the algorithm interface to use.
- * \param[in]    cfg     Configuration to use, if known.
- * \param[in]    num_enc Total number of encoders.
- * \param[in]    flags   Bitfield of AOM_CODEC_USE_* flags
- * \param[in]    dsf     Pointer to down-sampling factors.
- * \param[in]    ver     ABI version number. Must be set to
- *                       AOM_ENCODER_ABI_VERSION
- * \retval #AOM_CODEC_OK
- *     The decoder algorithm initialized.
- * \retval #AOM_CODEC_MEM_ERROR
- *     Memory allocation failed.
- */
-aom_codec_err_t aom_codec_enc_init_multi_ver(
-    aom_codec_ctx_t *ctx, aom_codec_iface_t *iface, aom_codec_enc_cfg_t *cfg,
-    int num_enc, aom_codec_flags_t flags, aom_rational_t *dsf, int ver);
-
-/*!\brief Convenience macro for aom_codec_enc_init_multi_ver()
- *
- * Ensures the ABI version parameter is properly set.
- */
-#define aom_codec_enc_init_multi(ctx, iface, cfg, num_enc, flags, dsf) \
-  aom_codec_enc_init_multi_ver(ctx, iface, cfg, num_enc, flags, dsf,   \
-                               AOM_ENCODER_ABI_VERSION)
-
-/*!\brief Get a default configuration
- *
- * Initializes a encoder configuration structure with default values. Supports
+ * Initializes an encoder configuration structure with default values. Supports
  * the notion of "usages" so that an algorithm may offer different default
  * settings depending on the user's intended goal. This function \ref SHOULD
  * be called by all applications to initialize the configuration structure
@@ -803,7 +948,9 @@ aom_codec_err_t aom_codec_enc_init_multi_ver(
  *
  * \param[in]    iface     Pointer to the algorithm interface to use.
  * \param[out]   cfg       Configuration buffer to populate.
- * \param[in]    reserved  Must set to 0.
+ * \param[in]    usage     Algorithm specific usage value. For AV1, must be
+ *                         set to AOM_USAGE_GOOD_QUALITY (0),
+ *                         AOM_USAGE_REALTIME (1), or AOM_USAGE_ALL_INTRA (2).
  *
  * \retval #AOM_CODEC_OK
  *     The configuration was populated.
@@ -814,7 +961,7 @@ aom_codec_err_t aom_codec_enc_init_multi_ver(
  */
 aom_codec_err_t aom_codec_enc_config_default(aom_codec_iface_t *iface,
                                              aom_codec_enc_cfg_t *cfg,
-                                             unsigned int reserved);
+                                             unsigned int usage);
 
 /*!\brief Set or change configuration
  *
@@ -858,21 +1005,37 @@ aom_codec_err_t aom_codec_enc_config_set(aom_codec_ctx_t *ctx,
  */
 aom_fixed_buf_t *aom_codec_get_global_headers(aom_codec_ctx_t *ctx);
 
+/*!\brief usage parameter analogous to AV1 GOOD QUALITY mode. */
+#define AOM_USAGE_GOOD_QUALITY 0u
+/*!\brief usage parameter analogous to AV1 REALTIME mode. */
+#define AOM_USAGE_REALTIME 1u
+/*!\brief usage parameter analogous to AV1 all intra mode. */
+#define AOM_USAGE_ALL_INTRA 2u
+
 /*!\brief Encode a frame
  *
  * Encodes a video frame at the given "presentation time." The presentation
  * time stamp (PTS) \ref MUST be strictly increasing.
  *
  * When the last frame has been passed to the encoder, this function should
- * continue to be called, with the img parameter set to NULL. This will
- * signal the end-of-stream condition to the encoder and allow it to encode
- * any held buffers. Encoding is complete when aom_codec_encode() is called
- * and aom_codec_get_cx_data() returns no data.
+ * continue to be called in a loop, with the img parameter set to NULL. This
+ * will signal the end-of-stream condition to the encoder and allow it to
+ * encode any held buffers. Encoding is complete when aom_codec_encode() is
+ * called with img set to NULL and aom_codec_get_cx_data() returns no data.
  *
  * \param[in]    ctx       Pointer to this instance's context
  * \param[in]    img       Image data to encode, NULL to flush.
- * \param[in]    pts       Presentation time stamp, in timebase units.
- * \param[in]    duration  Duration to show frame, in timebase units.
+ *                         Encoding sample values outside the range
+ *                         [0..(1<<img->bit_depth)-1] is undefined behavior.
+ *                         Note: Although img is declared as a const pointer,
+ *                         if AV1E_SET_DENOISE_NOISE_LEVEL is set to a nonzero
+ *                         value aom_codec_encode() modifies (denoises) the
+ *                         samples in img->planes[i] .
+ * \param[in]    pts       Presentation time stamp, in timebase units. If img
+ *                         is NULL, pts is ignored.
+ * \param[in]    duration  Duration to show frame, in timebase units. If img
+ *                         is not NULL, duration must be nonzero. If img is
+ *                         NULL, duration is ignored.
  * \param[in]    flags     Flags to use for encoding this frame.
  *
  * \retval #AOM_CODEC_OK

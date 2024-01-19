@@ -17,7 +17,7 @@
 #include "config/aom_config.h"
 
 static INLINE __m128i transpose_8bit_4x4(const __m128i *const in) {
-  // Unpack 16 bit elements. Goes from:
+  // Unpack 8 bit elements. Goes from:
   // in[0]: 00 01 02 03
   // in[1]: 10 11 12 13
   // in[2]: 20 21 22 23
@@ -28,7 +28,7 @@ static INLINE __m128i transpose_8bit_4x4(const __m128i *const in) {
   const __m128i a0 = _mm_unpacklo_epi8(in[0], in[1]);
   const __m128i a1 = _mm_unpacklo_epi8(in[2], in[3]);
 
-  // Unpack 32 bit elements resulting in:
+  // Unpack 16 bit elements resulting in:
   // 00 10 20 30  01 11 21 31  02 12 22 32  03 13 23 33
   return _mm_unpacklo_epi16(a0, a1);
 }
@@ -107,10 +107,14 @@ static INLINE void transpose_16bit_4x4(const __m128i *const in,
   const __m128i a1 = _mm_unpacklo_epi16(in[2], in[3]);
 
   // Unpack 32 bit elements resulting in:
-  // out[0]: 00 10 20 30
-  // out[1]: 01 11 21 31
-  // out[2]: 02 12 22 32
-  // out[3]: 03 13 23 33
+  // out[0]: 00 10 20 30  01 11 21 31
+  // out[1]: 01 11 21 31  __ __ __ __
+  // out[2]: 02 12 22 32  03 13 23 33
+  // out[3]: 03 13 23 33  __ __ __ __
+  //
+  // Note: The high 64 bits of the output registers are shown for informational
+  // purposes only. Callers should only use the low 64 bits of the output
+  // registers. "__" indicates zeros.
   out[0] = _mm_unpacklo_epi32(a0, a1);
   out[1] = _mm_srli_si128(out[0], 8);
   out[2] = _mm_unpackhi_epi32(a0, a1);

@@ -12,9 +12,10 @@
 #ifndef AOM_TEST_FUNCTION_EQUIVALENCE_TEST_H_
 #define AOM_TEST_FUNCTION_EQUIVALENCE_TEST_H_
 
+#include <ostream>
+
 #include "third_party/googletest/src/googletest/include/gtest/gtest.h"
 #include "test/acm_random.h"
-#include "test/clear_system_state.h"
 #include "test/util.h"
 
 using libaom_test::ACMRandom;
@@ -35,8 +36,8 @@ namespace libaom_test {
 
 template <typename T>
 struct FuncParam {
-  FuncParam(T ref = NULL, T tst = NULL, int bit_depth = 0)
-      : ref_func(ref), tst_func(tst), bit_depth(bit_depth) {}
+  FuncParam(T ref = nullptr, T tst = nullptr, int depth = 0)
+      : ref_func(ref), tst_func(tst), bit_depth(depth) {}
   T ref_func;
   T tst_func;
   int bit_depth;
@@ -54,11 +55,9 @@ class FunctionEquivalenceTest : public ::testing::TestWithParam<FuncParam<T> > {
  public:
   FunctionEquivalenceTest() : rng_(ACMRandom::DeterministicSeed()) {}
 
-  virtual ~FunctionEquivalenceTest() {}
+  ~FunctionEquivalenceTest() override = default;
 
-  virtual void SetUp() { params_ = this->GetParam(); }
-
-  virtual void TearDown() { libaom_test::ClearSystemState(); }
+  void SetUp() override { params_ = this->GetParam(); }
 
  protected:
   ACMRandom rng_;

@@ -13,10 +13,10 @@
 
 #include "aom/aom_integer.h"
 #include "aom_mem/aom_mem.h"
+#include "av1/common/av1_common_int.h"
 #include "av1/common/blockd.h"
 #include "av1/common/entropy.h"
 #include "av1/common/entropymode.h"
-#include "av1/common/onyxc_int.h"
 #include "av1/common/scan.h"
 #include "av1/common/token_cdfs.h"
 #include "av1/common/txb_common.h"
@@ -29,7 +29,7 @@ static int get_q_ctx(int q) {
 }
 
 void av1_default_coef_probs(AV1_COMMON *cm) {
-  const int index = get_q_ctx(cm->base_qindex);
+  const int index = get_q_ctx(cm->quant_params.base_qindex);
 #if CONFIG_ENTROPY_STATS
   cm->coef_cdf_category = index;
 #endif
@@ -50,8 +50,9 @@ void av1_default_coef_probs(AV1_COMMON *cm) {
   av1_copy(cm->fc->eob_flag_cdf1024, av1_default_eob_multi1024_cdfs[index]);
 }
 
-static void reset_cdf_symbol_counter(aom_cdf_prob *cdf_ptr, int num_cdfs,
-                                     int cdf_stride, int nsymbs) {
+static AOM_INLINE void reset_cdf_symbol_counter(aom_cdf_prob *cdf_ptr,
+                                                int num_cdfs, int cdf_stride,
+                                                int nsymbs) {
   for (int i = 0; i < num_cdfs; i++) {
     cdf_ptr[i * cdf_stride + nsymbs] = 0;
   }
@@ -68,7 +69,7 @@ static void reset_cdf_symbol_counter(aom_cdf_prob *cdf_ptr, int num_cdfs,
     reset_cdf_symbol_counter(cdf_ptr, num_cdfs, cdf_stride, nsymbs); \
   } while (0)
 
-static void reset_nmv_counter(nmv_context *nmv) {
+static AOM_INLINE void reset_nmv_counter(nmv_context *nmv) {
   RESET_CDF_COUNTER(nmv->joints_cdf, 4);
   for (int i = 0; i < 2; i++) {
     RESET_CDF_COUNTER(nmv->comps[i].classes_cdf, MV_CLASSES);
@@ -101,7 +102,7 @@ void av1_reset_cdf_symbol_counters(FRAME_CONTEXT *fc) {
   RESET_CDF_COUNTER(fc->refmv_cdf, 2);
   RESET_CDF_COUNTER(fc->drl_cdf, 2);
   RESET_CDF_COUNTER(fc->inter_compound_mode_cdf, INTER_COMPOUND_MODES);
-  RESET_CDF_COUNTER(fc->compound_type_cdf, COMPOUND_TYPES - 1);
+  RESET_CDF_COUNTER(fc->compound_type_cdf, MASKED_COMPOUND_TYPES);
   RESET_CDF_COUNTER(fc->wedge_idx_cdf, 16);
   RESET_CDF_COUNTER(fc->interintra_cdf, 2);
   RESET_CDF_COUNTER(fc->wedge_interintra_cdf, 2);
@@ -129,12 +130,11 @@ void av1_reset_cdf_symbol_counters(FRAME_CONTEXT *fc) {
   RESET_CDF_COUNTER(fc->compound_index_cdf, 2);
   RESET_CDF_COUNTER(fc->comp_group_idx_cdf, 2);
   RESET_CDF_COUNTER(fc->skip_mode_cdfs, 2);
-  RESET_CDF_COUNTER(fc->skip_cdfs, 2);
+  RESET_CDF_COUNTER(fc->skip_txfm_cdfs, 2);
   RESET_CDF_COUNTER(fc->intra_inter_cdf, 2);
   reset_nmv_counter(&fc->nmvc);
   reset_nmv_counter(&fc->ndvc);
   RESET_CDF_COUNTER(fc->intrabc_cdf, 2);
-  RESET_CDF_COUNTER(fc->seg.tree_cdf, MAX_SEGMENTS);
   RESET_CDF_COUNTER(fc->seg.pred_cdf, 2);
   RESET_CDF_COUNTER(fc->seg.spatial_pred_seg_cdf, MAX_SEGMENTS);
   RESET_CDF_COUNTER(fc->filter_intra_cdfs, 2);

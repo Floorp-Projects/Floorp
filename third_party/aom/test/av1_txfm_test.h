@@ -29,14 +29,17 @@
 #include "av1/common/enums.h"
 
 namespace libaom_test {
-typedef enum {
+
+extern const char *tx_type_name[];
+
+enum {
   TYPE_DCT = 0,
   TYPE_ADST,
   TYPE_IDTX,
   TYPE_IDCT,
   TYPE_IADST,
   TYPE_LAST
-} TYPE_TXFM;
+} UENUM1BYTE(TYPE_TXFM);
 
 int get_txfm1d_size(TX_SIZE tx_size);
 
@@ -97,7 +100,7 @@ static INLINE bool IsTxSizeTypeValid(TX_SIZE tx_size, TX_TYPE tx_type) {
 }
 
 #if CONFIG_AV1_ENCODER
-
+#if !CONFIG_REALTIME_ONLY
 static const FwdTxfm2dFunc fwd_txfm_func_ls[TX_SIZES_ALL] = {
   av1_fwd_txfm2d_4x4_c,   av1_fwd_txfm2d_8x8_c,   av1_fwd_txfm2d_16x16_c,
   av1_fwd_txfm2d_32x32_c, av1_fwd_txfm2d_64x64_c, av1_fwd_txfm2d_4x8_c,
@@ -107,6 +110,29 @@ static const FwdTxfm2dFunc fwd_txfm_func_ls[TX_SIZES_ALL] = {
   av1_fwd_txfm2d_8x32_c,  av1_fwd_txfm2d_32x8_c,  av1_fwd_txfm2d_16x64_c,
   av1_fwd_txfm2d_64x16_c,
 };
+#else
+static const FwdTxfm2dFunc fwd_txfm_func_ls[TX_SIZES_ALL] = {
+  av1_fwd_txfm2d_4x4_c,
+  av1_fwd_txfm2d_8x8_c,
+  av1_fwd_txfm2d_16x16_c,
+  av1_fwd_txfm2d_32x32_c,
+  av1_fwd_txfm2d_64x64_c,
+  av1_fwd_txfm2d_4x8_c,
+  av1_fwd_txfm2d_8x4_c,
+  av1_fwd_txfm2d_8x16_c,
+  av1_fwd_txfm2d_16x8_c,
+  av1_fwd_txfm2d_16x32_c,
+  av1_fwd_txfm2d_32x16_c,
+  av1_fwd_txfm2d_32x64_c,
+  av1_fwd_txfm2d_64x32_c,
+  nullptr,
+  av1_fwd_txfm2d_16x4_c,
+  nullptr,
+  nullptr,
+  nullptr,
+  nullptr,
+};
+#endif
 #endif
 
 static const InvTxfm2dFunc inv_txfm_func_ls[TX_SIZES_ALL] = {

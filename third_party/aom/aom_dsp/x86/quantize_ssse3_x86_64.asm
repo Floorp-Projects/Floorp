@@ -48,9 +48,6 @@ cglobal quantize_%1, 0, %2, 15, coeff, ncoeff, zbin, round, quant, \
   mov                             r3, qcoeffmp
   mov                             r4, dqcoeffmp
   mov                             r5, iscanmp
-%ifidn %1, b_32x32
-  psllw                           m4, 1
-%endif
   pxor                            m5, m5                   ; m5 = dedicated zero
   DEFINE_ARGS coeff, ncoeff, d1, qcoeff, dqcoeff, iscan, d2, d3, d4, eob
   lea                         coeffq, [  coeffq+ncoeffq*4]
@@ -78,9 +75,26 @@ cglobal quantize_%1, 0, %2, 15, coeff, ncoeff, zbin, round, quant, \
   pmulhw                         m13, m11, m2              ; m13 = m11*q>>16
   paddw                           m8, m6                   ; m8 += m6
   paddw                          m13, m11                  ; m13 += m11
+  %ifidn %1, b_32x32
+  pmullw                          m5, m8, m4               ; store the lower 16 bits of m8*qsh
+  %endif
   pmulhw                          m8, m4                   ; m8 = m8*qsh>>16
+  %ifidn %1, b_32x32
+  psllw                           m8, 1
+  psrlw                           m5, 15
+  por                             m8, m5
+  %endif
   punpckhqdq                      m4, m4
+  %ifidn %1, b_32x32
+  pmullw                          m5, m13, m4              ; store the lower 16 bits of m13*qsh
+  %endif
   pmulhw                         m13, m4                   ; m13 = m13*qsh>>16
+  %ifidn %1, b_32x32
+  psllw                          m13, 1
+  psrlw                           m5, 15
+  por                            m13, m5
+  pxor                            m5, m5                   ; reset m5 to zero register
+  %endif
   psignw                          m8, m9                   ; m8 = reinsert sign
   psignw                         m13, m10                  ; m13 = reinsert sign
   pand                            m8, m7
@@ -117,7 +131,7 @@ cglobal quantize_%1, 0, %2, 15, coeff, ncoeff, zbin, round, quant, \
   psignw                          m8, m9
   psignw                         m13, m10
 %endif
-  ; store 16bit numbers as 32bit numbers in array pointed to by qcoeff
+  ; store 16bit numbers as 32bit numbers in array pointed to by dqcoeff
   mova                            m11, m8
   mova                            m6, m8
   pcmpgtw                         m5, m8
@@ -169,12 +183,28 @@ cglobal quantize_%1, 0, %2, 15, coeff, ncoeff, zbin, round, quant, \
   pmulhw                         m13, m11, m2              ; m13 = m11*q>>16
   paddw                          m14, m6                   ; m14 += m6
   paddw                          m13, m11                  ; m13 += m11
+  %ifidn %1, b_32x32
+  pmullw                          m5, m14, m4              ; store the lower 16 bits of m14*qsh
+  %endif
   pmulhw                         m14, m4                   ; m14 = m14*qsh>>16
+  %ifidn %1, b_32x32
+  psllw                          m14, 1
+  psrlw                           m5, 15
+  por                            m14, m5
+  pmullw                          m5, m13, m4              ; store the lower 16 bits of m13*qsh
+  %endif
   pmulhw                         m13, m4                   ; m13 = m13*qsh>>16
+  %ifidn %1, b_32x32
+  psllw                          m13, 1
+  psrlw                           m5, 15
+  por                            m13, m5
+  pxor                            m5, m5                   ; reset m5 to zero register
+  %endif
   psignw                         m14, m9                   ; m14 = reinsert sign
   psignw                         m13, m10                  ; m13 = reinsert sign
   pand                           m14, m7
   pand                           m13, m12
+
   ; store 16bit numbers as 32bit numbers in array pointed to by qcoeff
   pxor                           m11, m11
   mova                           m11, m14
@@ -207,7 +237,7 @@ cglobal quantize_%1, 0, %2, 15, coeff, ncoeff, zbin, round, quant, \
   psignw                         m13, m10
 %endif
 
-  ; store 16bit numbers as 32bit numbers in array pointed to by qcoeff
+  ; store 16bit numbers as 32bit numbers in array pointed to by dqcoeff
   mova                           m11, m14
   mova                            m6, m14
   pcmpgtw                         m5, m14

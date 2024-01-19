@@ -28,4 +28,4 @@ include("${CMAKE_CURRENT_LIST_DIR}/arm-ios-common.cmake")
 set(AOM_NEON_INTRIN_FLAG "")
 
 # No runtime cpu detect for armv7s-ios.
-set(CONFIG_RUNTIME_CPU_DETECT 0 CACHE NUMBER "")
+set(CONFIG_RUNTIME_CPU_DETECT 0 CACHE STRING "")

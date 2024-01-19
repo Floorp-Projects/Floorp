@@ -21,11 +21,12 @@
 
 #if defined(_MSC_VER)
 // disable warning 4324: structure was padded due to __declspec(align())
-#pragma warning(disable:4324)
+#pragma warning(disable : 4324)
 #endif
 
 #endif
-struct FILE;  // For jpeglib.h.
+
+#include <stdio.h>  // For jpeglib.h.
 
 // C++ build requires extern C for jpeg internals.
 #ifdef __cplusplus
@@ -59,10 +60,10 @@ const int MJpegDecoder::kColorSpaceYCCK = JCS_YCCK;
 // Methods that are passed to jpeglib.
 boolean fill_input_buffer(jpeg_decompress_struct* cinfo);
 void init_source(jpeg_decompress_struct* cinfo);
-void skip_input_data(jpeg_decompress_struct* cinfo,
-                     long num_bytes);  // NOLINT
+void skip_input_data(jpeg_decompress_struct* cinfo, long num_bytes);  // NOLINT
 void term_source(jpeg_decompress_struct* cinfo);
 void ErrorHandler(jpeg_common_struct* cinfo);
+void OutputHandler(jpeg_common_struct* cinfo);
 
 MJpegDecoder::MJpegDecoder()
     : has_scanline_padding_(LIBYUV_FALSE),
@@ -78,6 +79,7 @@ MJpegDecoder::MJpegDecoder()
   decompress_struct_->err = jpeg_std_error(&error_mgr_->base);
   // Override standard exit()-based error handler.
   error_mgr_->base.error_exit = &ErrorHandler;
+  error_mgr_->base.output_message = &OutputHandler;
 #endif
   decompress_struct_->client_data = NULL;
   source_mgr_->init_source = &init_source;
@@ -101,7 +103,7 @@ MJpegDecoder::~MJpegDecoder() {
   DestroyOutputBuffers();
 }
 
-LIBYUV_BOOL MJpegDecoder::LoadFrame(const uint8* src, size_t src_len) {
+LIBYUV_BOOL MJpegDecoder::LoadFrame(const uint8_t* src, size_t src_len) {
   if (!ValidateJpeg(src, src_len)) {
     return LIBYUV_FALSE;
   }
@@ -128,7 +130,7 @@ LIBYUV_BOOL MJpegDecoder::LoadFrame(const uint8* src, size_t src_len) {
       if (scanlines_[i]) {
         delete scanlines_[i];
       }
-      scanlines_[i] = new uint8* [scanlines_size];
+      scanlines_[i] = new uint8_t*[scanlines_size];
       scanlines_sizes_[i] = scanlines_size;
     }
 
@@ -144,7 +146,7 @@ LIBYUV_BOOL MJpegDecoder::LoadFrame(const uint8* src, size_t src_len) {
       if (databuf_[i]) {
         delete databuf_[i];
       }
-      databuf_[i] = new uint8[databuf_size];
+      databuf_[i] = new uint8_t[databuf_size];
       databuf_strides_[i] = databuf_stride;
     }
 
@@ -194,13 +196,11 @@ int MJpegDecoder::GetVertSampFactor(int component) {
 }
 
 int MJpegDecoder::GetHorizSubSampFactor(int component) {
-  return decompress_struct_->max_h_samp_factor /
-      GetHorizSampFactor(component);
+  return decompress_struct_->max_h_samp_factor / GetHorizSampFactor(component);
 }
 
 int MJpegDecoder::GetVertSubSampFactor(int component) {
-  return decompress_struct_->max_v_samp_factor /
-      GetVertSampFactor(component);
+  return decompress_struct_->max_v_samp_factor / GetVertSampFactor(component);
 }
 
 int MJpegDecoder::GetImageScanlinesPerImcuRow() {
@@ -244,10 +244,10 @@ LIBYUV_BOOL MJpegDecoder::UnloadFrame() {
 }
 
 // TODO(fbarchard): Allow rectangle to be specified: x, y, width, height.
-LIBYUV_BOOL MJpegDecoder::DecodeToBuffers(
-    uint8** planes, int dst_width, int dst_height) {
-  if (dst_width != GetWidth() ||
-      dst_height > GetHeight()) {
+LIBYUV_BOOL MJpegDecoder::DecodeToBuffers(uint8_t** planes,
+                                          int dst_width,
+                                          int dst_height) {
+  if (dst_width != GetWidth() || dst_height > GetHeight()) {
     // ERROR: Bad dimensions
     return LIBYUV_FALSE;
   }
@@ -288,14 +288,13 @@ LIBYUV_BOOL MJpegDecoder::DecodeToBuffers(
       for (int i = 0; i < num_outbufs_; ++i) {
         // TODO(fbarchard): Compute skip to avoid this
         assert(skip % GetVertSubSampFactor(i) == 0);
-        int rows_to_skip =
-            DivideAndRoundDown(skip, GetVertSubSampFactor(i));
-        int scanlines_to_copy = GetComponentScanlinesPerImcuRow(i) -
-                                rows_to_skip;
+        int rows_to_skip = DivideAndRoundDown(skip, GetVertSubSampFactor(i));
+        int scanlines_to_copy =
+            GetComponentScanlinesPerImcuRow(i) - rows_to_skip;
         int data_to_skip = rows_to_skip * GetComponentStride(i);
-        CopyPlane(databuf_[i] + data_to_skip, GetComponentStride(i),
-                  planes[i], GetComponentWidth(i),
-                  GetComponentWidth(i), scanlines_to_copy);
+        CopyPlane(databuf_[i] + data_to_skip, GetComponentStride(i), planes[i],
+                  GetComponentWidth(i), GetComponentWidth(i),
+                  scanlines_to_copy);
         planes[i] += scanlines_to_copy * GetComponentWidth(i);
       }
       lines_left -= (GetImageScanlinesPerImcuRow() - skip);
@@ -304,16 +303,15 @@ LIBYUV_BOOL MJpegDecoder::DecodeToBuffers(
 
   // Read full MCUs but cropped horizontally
   for (; lines_left > GetImageScanlinesPerImcuRow();
-         lines_left -= GetImageScanlinesPerImcuRow()) {
+       lines_left -= GetImageScanlinesPerImcuRow()) {
     if (!DecodeImcuRow()) {
       FinishDecode();
       return LIBYUV_FALSE;
     }
     for (int i = 0; i < num_outbufs_; ++i) {
       int scanlines_to_copy = GetComponentScanlinesPerImcuRow(i);
-      CopyPlane(databuf_[i], GetComponentStride(i),
-                planes[i], GetComponentWidth(i),
-                GetComponentWidth(i), scanlines_to_copy);
+      CopyPlane(databuf_[i], GetComponentStride(i), planes[i],
+                GetComponentWidth(i), GetComponentWidth(i), scanlines_to_copy);
       planes[i] += scanlines_to_copy * GetComponentWidth(i);
     }
   }
@@ -327,19 +325,19 @@ LIBYUV_BOOL MJpegDecoder::DecodeToBuffers(
     for (int i = 0; i < num_outbufs_; ++i) {
       int scanlines_to_copy =
           DivideAndRoundUp(lines_left, GetVertSubSampFactor(i));
-      CopyPlane(databuf_[i], GetComponentStride(i),
-                planes[i], GetComponentWidth(i),
-                GetComponentWidth(i), scanlines_to_copy);
+      CopyPlane(databuf_[i], GetComponentStride(i), planes[i],
+                GetComponentWidth(i), GetComponentWidth(i), scanlines_to_copy);
       planes[i] += scanlines_to_copy * GetComponentWidth(i);
     }
   }
   return FinishDecode();
 }
 
-LIBYUV_BOOL MJpegDecoder::DecodeToCallback(CallbackFunction fn, void* opaque,
-    int dst_width, int dst_height) {
-  if (dst_width != GetWidth() ||
-      dst_height > GetHeight()) {
+LIBYUV_BOOL MJpegDecoder::DecodeToCallback(CallbackFunction fn,
+                                           void* opaque,
+                                           int dst_width,
+                                           int dst_height) {
+  if (dst_width != GetWidth() || dst_height > GetHeight()) {
     // ERROR: Bad dimensions
     return LIBYUV_FALSE;
   }
@@ -394,7 +392,7 @@ LIBYUV_BOOL MJpegDecoder::DecodeToCallback(CallbackFunction fn, void* opaque,
   }
   // Read full MCUs until we get to the crop point.
   for (; lines_left >= GetImageScanlinesPerImcuRow();
-         lines_left -= GetImageScanlinesPerImcuRow()) {
+       lines_left -= GetImageScanlinesPerImcuRow()) {
     if (!DecodeImcuRow()) {
       FinishDecode();
       return LIBYUV_FALSE;
@@ -419,7 +417,10 @@ void init_source(j_decompress_ptr cinfo) {
 boolean fill_input_buffer(j_decompress_ptr cinfo) {
   BufferVector* buf_vec = reinterpret_cast<BufferVector*>(cinfo->client_data);
   if (buf_vec->pos >= buf_vec->len) {
+    // Don't assert-fail when fuzzing.
+#ifndef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
     assert(0 && "No more data");
+#endif
     // ERROR: No more data
     return FALSE;
   }
@@ -429,28 +430,35 @@ boolean fill_input_buffer(j_decompress_ptr cinfo) {
   return TRUE;
 }
 
-void skip_input_data(j_decompress_ptr cinfo,
-                     long num_bytes) {  // NOLINT
-  cinfo->src->next_input_byte += num_bytes;
+void skip_input_data(j_decompress_ptr cinfo, long num_bytes) {  // NOLINT
+  jpeg_source_mgr* src = cinfo->src;
+  size_t bytes = static_cast<size_t>(num_bytes);
+  if (bytes > src->bytes_in_buffer) {
+    src->next_input_byte = nullptr;
+    src->bytes_in_buffer = 0;
+  } else {
+    src->next_input_byte += bytes;
+    src->bytes_in_buffer -= bytes;
+  }
 }
 
 void term_source(j_decompress_ptr cinfo) {
-  // Nothing to do.
+  (void)cinfo;  // Nothing to do.
 }
 
 #ifdef HAVE_SETJMP
 void ErrorHandler(j_common_ptr cinfo) {
-  // This is called when a jpeglib command experiences an error. Unfortunately
-  // jpeglib's error handling model is not very flexible, because it expects the
-  // error handler to not return--i.e., it wants the program to terminate. To
-  // recover from errors we use setjmp() as shown in their example. setjmp() is
-  // C's implementation for the "call with current continuation" functionality
-  // seen in some functional programming languages.
-  // A formatted message can be output, but is unsafe for release.
+// This is called when a jpeglib command experiences an error. Unfortunately
+// jpeglib's error handling model is not very flexible, because it expects the
+// error handler to not return--i.e., it wants the program to terminate. To
+// recover from errors we use setjmp() as shown in their example. setjmp() is
+// C's implementation for the "call with current continuation" functionality
+// seen in some functional programming languages.
+// A formatted message can be output, but is unsafe for release.
 #ifdef DEBUG
   char buf[JMSG_LENGTH_MAX];
   (*cinfo->err->format_message)(cinfo, buf);
-  // ERROR: Error in jpeglib: buf
+// ERROR: Error in jpeglib: buf
 #endif
 
   SetJmpErrorMgr* mgr = reinterpret_cast<SetJmpErrorMgr*>(cinfo->err);
@@ -458,7 +466,13 @@ void ErrorHandler(j_common_ptr cinfo) {
   // and causes it to return (for a second time) with value 1.
   longjmp(mgr->setjmp_buffer, 1);
 }
-#endif
+
+// Suppress fprintf warnings.
+void OutputHandler(j_common_ptr cinfo) {
+  (void)cinfo;
+}
+
+#endif  // HAVE_SETJMP
 
 void MJpegDecoder::AllocOutputBuffers(int num_outbufs) {
   if (num_outbufs != num_outbufs_) {
@@ -467,9 +481,9 @@ void MJpegDecoder::AllocOutputBuffers(int num_outbufs) {
     // it.
     DestroyOutputBuffers();
 
-    scanlines_ = new uint8** [num_outbufs];
+    scanlines_ = new uint8_t**[num_outbufs];
     scanlines_sizes_ = new int[num_outbufs];
-    databuf_ = new uint8* [num_outbufs];
+    databuf_ = new uint8_t*[num_outbufs];
     databuf_strides_ = new int[num_outbufs];
 
     for (int i = 0; i < num_outbufs; ++i) {
@@ -485,13 +499,13 @@ void MJpegDecoder::AllocOutputBuffers(int num_outbufs) {
 
 void MJpegDecoder::DestroyOutputBuffers() {
   for (int i = 0; i < num_outbufs_; ++i) {
-    delete [] scanlines_[i];
-    delete [] databuf_[i];
+    delete[] scanlines_[i];
+    delete[] databuf_[i];
   }
-  delete [] scanlines_;
-  delete [] databuf_;
-  delete [] scanlines_sizes_;
-  delete [] databuf_strides_;
+  delete[] scanlines_;
+  delete[] databuf_;
+  delete[] scanlines_sizes_;
+  delete[] databuf_strides_;
   scanlines_ = NULL;
   databuf_ = NULL;
   scanlines_sizes_ = NULL;
@@ -525,9 +539,9 @@ LIBYUV_BOOL MJpegDecoder::FinishDecode() {
   return LIBYUV_TRUE;
 }
 
-void MJpegDecoder::SetScanlinePointers(uint8** data) {
+void MJpegDecoder::SetScanlinePointers(uint8_t** data) {
   for (int i = 0; i < num_outbufs_; ++i) {
-    uint8* data_i = data[i];
+    uint8_t* data_i = data[i];
     for (int j = 0; j < scanlines_sizes_[i]; ++j) {
       scanlines_[i][j] = data_i;
       data_i += GetComponentStride(i);
@@ -537,26 +551,26 @@ void MJpegDecoder::SetScanlinePointers(uint8** data) {
 
 inline LIBYUV_BOOL MJpegDecoder::DecodeImcuRow() {
   return (unsigned int)(GetImageScanlinesPerImcuRow()) ==
-      jpeg_read_raw_data(decompress_struct_,
-                         scanlines_,
-                         GetImageScanlinesPerImcuRow());
+         jpeg_read_raw_data(decompress_struct_, scanlines_,
+                            GetImageScanlinesPerImcuRow());
 }
 
 // The helper function which recognizes the jpeg sub-sampling type.
 JpegSubsamplingType MJpegDecoder::JpegSubsamplingTypeHelper(
-    int* subsample_x, int* subsample_y, int number_of_components) {
+    int* subsample_x,
+    int* subsample_y,
+    int number_of_components) {
   if (number_of_components == 3) {  // Color images.
-    if (subsample_x[0] == 1 && subsample_y[0] == 1 &&
-        subsample_x[1] == 2 && subsample_y[1] == 2 &&
-        subsample_x[2] == 2 && subsample_y[2] == 2) {
+    if (subsample_x[0] == 1 && subsample_y[0] == 1 && subsample_x[1] == 2 &&
+        subsample_y[1] == 2 && subsample_x[2] == 2 && subsample_y[2] == 2) {
       return kJpegYuv420;
-    } else if (subsample_x[0] == 1 && subsample_y[0] == 1 &&
-        subsample_x[1] == 2 && subsample_y[1] == 1 &&
-        subsample_x[2] == 2 && subsample_y[2] == 1) {
+    }
+    if (subsample_x[0] == 1 && subsample_y[0] == 1 && subsample_x[1] == 2 &&
+        subsample_y[1] == 1 && subsample_x[2] == 2 && subsample_y[2] == 1) {
       return kJpegYuv422;
-    } else if (subsample_x[0] == 1 && subsample_y[0] == 1 &&
-        subsample_x[1] == 1 && subsample_y[1] == 1 &&
-        subsample_x[2] == 1 && subsample_y[2] == 1) {
+    }
+    if (subsample_x[0] == 1 && subsample_y[0] == 1 && subsample_x[1] == 1 &&
+        subsample_y[1] == 1 && subsample_x[2] == 1 && subsample_y[2] == 1) {
       return kJpegYuv444;
     }
   } else if (number_of_components == 1) {  // Grey-scale images.
@@ -569,4 +583,3 @@ JpegSubsamplingType MJpegDecoder::JpegSubsamplingTypeHelper(
 
 }  // namespace libyuv
 #endif  // HAVE_JPEG
-

@@ -20,7 +20,7 @@ extern "C" {
 #include "av1/decoder/accounting.h"
 #endif
 
-#ifndef AOM_AOMDX_H_
+#ifndef AOM_AOM_AOMDX_H_
 typedef void (*aom_inspect_cb)(void *decoder, void *data);
 #endif
 
@@ -38,7 +38,7 @@ struct insp_mi_data {
   int16_t ref_frame[2];
   int16_t mode;
   int16_t uv_mode;
-  int16_t sb_type;
+  int16_t bsize;
   int16_t skip;
   int16_t segment_id;
   int16_t dual_filter_type;
@@ -50,6 +50,11 @@ struct insp_mi_data {
   int16_t cfl_alpha_idx;
   int16_t cfl_alpha_sign;
   int16_t current_qindex;
+  int16_t compound_type;
+  int16_t motion_mode;
+  int16_t intrabc;
+  int16_t palette;
+  int16_t uv_palette;
 };
 
 typedef struct insp_frame_data insp_frame_data;
@@ -59,6 +64,7 @@ struct insp_frame_data {
   Accounting *accounting;
 #endif
   insp_mi_data *mi_grid;
+  int16_t frame_number;
   int show_frame;
   int frame_type;
   int base_qindex;
@@ -72,11 +78,12 @@ struct insp_frame_data {
   // TODO(negge): add per frame CDEF data
   int delta_q_present_flag;
   int delta_q_res;
+  int show_existing_frame;
 };
 
 void ifd_init(insp_frame_data *fd, int frame_width, int frame_height);
 void ifd_clear(insp_frame_data *fd);
-int ifd_inspect(insp_frame_data *fd, void *decoder);
+int ifd_inspect(insp_frame_data *fd, void *decoder, int skip_not_transform);
 
 #ifdef __cplusplus
 }  // extern "C"

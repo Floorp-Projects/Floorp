@@ -11,8 +11,9 @@
 set(CMAKE_SYSTEM_PROCESSOR "x86")
 set(CMAKE_SYSTEM_NAME "Darwin")
 set(CMAKE_OSX_ARCHITECTURES "i386")
-set(CMAKE_C_COMPILER_ARG1 "-arch i386")
-set(CMAKE_CXX_COMPILER_ARG1 "-arch i386")
+set(CMAKE_C_FLAGS_INIT "-arch i386")
+set(CMAKE_CXX_FLAGS_INIT "-arch i386")
+set(CMAKE_EXE_LINKER_FLAGS_INIT "-arch i386")
 
 # Apple tools always complain in 32 bit mode without PIC.
-set(CONFIG_PIC 1 CACHE NUMBER "")
+set(CONFIG_PIC 1 CACHE STRING "")

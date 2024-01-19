@@ -14,6 +14,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "config/aom_config.h"
 
@@ -70,10 +71,7 @@ SIMD_INLINE c_v256 c_v256_from_v64(c_v64 a, c_v64 b, c_v64 c, c_v64 d) {
 
 SIMD_INLINE c_v256 c_v256_load_unaligned(const void *p) {
   c_v256 t;
-  uint8_t *pp = (uint8_t *)p;
-  uint8_t *q = (uint8_t *)&t;
-  int c;
-  for (c = 0; c < 32; c++) q[c] = pp[c];
+  memcpy(&t, p, 32);
   return t;
 }
 
@@ -86,10 +84,7 @@ SIMD_INLINE c_v256 c_v256_load_aligned(const void *p) {
 }
 
 SIMD_INLINE void c_v256_store_unaligned(void *p, c_v256 a) {
-  uint8_t *pp = (uint8_t *)p;
-  uint8_t *q = (uint8_t *)&a;
-  int c;
-  for (c = 0; c < 32; c++) pp[c] = q[c];
+  memcpy(p, &a, 32);
 }
 
 SIMD_INLINE void c_v256_store_aligned(void *p, c_v256 a) {
@@ -100,7 +95,7 @@ SIMD_INLINE void c_v256_store_aligned(void *p, c_v256 a) {
   c_v256_store_unaligned(p, a);
 }
 
-SIMD_INLINE c_v256 c_v256_zero() {
+SIMD_INLINE c_v256 c_v256_zero(void) {
   c_v256 t;
   t.u64[3] = t.u64[2] = t.u64[1] = t.u64[0] = 0;
   return t;
@@ -149,9 +144,16 @@ SIMD_INLINE uint64_t c_v256_hadd_u8(c_v256 a) {
   return c_v128_hadd_u8(a.v128[1]) + c_v128_hadd_u8(a.v128[0]);
 }
 
-typedef uint32_t c_sad256_internal;
+typedef struct {
+  uint32_t val;
+  int count;
+} c_sad256_internal;
 
-SIMD_INLINE c_sad256_internal c_v256_sad_u8_init() { return 0; }
+SIMD_INLINE c_sad256_internal c_v256_sad_u8_init(void) {
+  c_sad256_internal t;
+  t.val = t.count = 0;
+  return t;
+}
 
 /* Implementation dependent return value.  Result must be finalised with
    v256_sad_u8_sum().
@@ -160,15 +162,21 @@ SIMD_INLINE c_sad256_internal c_v256_sad_u8(c_sad256_internal s, c_v256 a,
                                             c_v256 b) {
   int c;
   for (c = 0; c < 32; c++)
-    s += a.u8[c] > b.u8[c] ? a.u8[c] - b.u8[c] : b.u8[c] - a.u8[c];
+    s.val += a.u8[c] > b.u8[c] ? a.u8[c] - b.u8[c] : b.u8[c] - a.u8[c];
+  s.count++;
+  if (SIMD_CHECK && s.count > 32) {
+    fprintf(stderr,
+            "Error: sad called 32 times returning an undefined result\n");
+    abort();
+  }
   return s;
 }
 
-SIMD_INLINE uint32_t c_v256_sad_u8_sum(c_sad256_internal s) { return s; }
+SIMD_INLINE uint32_t c_v256_sad_u8_sum(c_sad256_internal s) { return s.val; }
 
 typedef uint32_t c_ssd256_internal;
 
-SIMD_INLINE c_ssd256_internal c_v256_ssd_u8_init() { return 0; }
+SIMD_INLINE c_ssd256_internal c_v256_ssd_u8_init(void) { return 0; }
 
 /* Implementation dependent return value.  Result must be finalised with
  * v256_ssd_u8_sum(). */
@@ -372,7 +380,7 @@ SIMD_INLINE c_v256 c_v256_min_s8(c_v256 a, c_v256 b) {
 }
 
 SIMD_INLINE uint32_t c_v256_movemask_8(c_v256 a) {
-  return ((a.s8[31] < 0) << 31) | ((a.s8[30] < 0) << 30) |
+  return ((uint32_t)(a.s8[31] < 0) << 31) | ((a.s8[30] < 0) << 30) |
          ((a.s8[29] < 0) << 29) | ((a.s8[28] < 0) << 28) |
          ((a.s8[27] < 0) << 27) | ((a.s8[26] < 0) << 26) |
          ((a.s8[25] < 0) << 25) | ((a.s8[24] < 0) << 24) |
@@ -746,6 +754,7 @@ SIMD_INLINE c_v256 c_v256_cmpeq_32(c_v256 a, c_v256 b) {
 }
 
 SIMD_INLINE c_v256 c_v256_shl_n_byte(c_v256 a, unsigned int n) {
+  if (n == 0) return a;
   if (n < 16)
     return c_v256_from_v128(c_v128_or(c_v128_shl_n_byte(a.v128[1], n),
                                       c_v128_shr_n_byte(a.v128[0], 16 - n)),
@@ -758,6 +767,7 @@ SIMD_INLINE c_v256 c_v256_shl_n_byte(c_v256 a, unsigned int n) {
 }
 
 SIMD_INLINE c_v256 c_v256_shr_n_byte(c_v256 a, unsigned int n) {
+  if (n == 0) return a;
   if (n < 16)
     return c_v256_from_v128(c_v128_shr_n_byte(a.v128[1], n),
                             c_v128_or(c_v128_shr_n_byte(a.v128[0], n),
@@ -919,7 +929,7 @@ SIMD_INLINE c_v256 c_v256_shl_n_word(c_v256 a, const unsigned int n) {
 
 typedef uint32_t c_sad256_internal_u16;
 
-SIMD_INLINE c_sad256_internal_u16 c_v256_sad_u16_init() { return 0; }
+SIMD_INLINE c_sad256_internal_u16 c_v256_sad_u16_init(void) { return 0; }
 
 /* Implementation dependent return value.  Result must be finalised with
    v256_sad_u16_sum(). */
@@ -935,7 +945,7 @@ SIMD_INLINE uint32_t c_v256_sad_u16_sum(c_sad256_internal_u16 s) { return s; }
 
 typedef uint64_t c_ssd256_internal_s16;
 
-SIMD_INLINE c_ssd256_internal_s16 c_v256_ssd_s16_init() { return 0; }
+SIMD_INLINE c_ssd256_internal_s16 c_v256_ssd_s16_init(void) { return 0; }
 
 /* Implementation dependent return value.  Result must be finalised with
  * v256_ssd_s16_sum(). */

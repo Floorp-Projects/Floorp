@@ -14,16 +14,11 @@
 
 #include "config/aom_config.h"
 #include "config/aom_dsp_rtcd.h"
-#include "config/av1_rtcd.h"
 
 #include "aom_dsp/blend.h"
+#include "aom_dsp/x86/mem_sse2.h"
 #include "aom_dsp/x86/synonyms.h"
-
 #include "aom_ports/mem.h"
-
-#include "av1/common/filter.h"
-#include "av1/common/onyxc_int.h"
-#include "av1/common/reconinter.h"
 
 unsigned int aom_get_mb_ss_sse2(const int16_t *src) {
   __m128i vsum = _mm_setzero_si128();
@@ -37,12 +32,12 @@ unsigned int aom_get_mb_ss_sse2(const int16_t *src) {
 
   vsum = _mm_add_epi32(vsum, _mm_srli_si128(vsum, 8));
   vsum = _mm_add_epi32(vsum, _mm_srli_si128(vsum, 4));
-  return _mm_cvtsi128_si32(vsum);
+  return (unsigned int)_mm_cvtsi128_si32(vsum);
 }
 
 static INLINE __m128i load4x2_sse2(const uint8_t *const p, const int stride) {
-  const __m128i p0 = _mm_cvtsi32_si128(*(const uint32_t *)(p + 0 * stride));
-  const __m128i p1 = _mm_cvtsi32_si128(*(const uint32_t *)(p + 1 * stride));
+  const __m128i p0 = _mm_cvtsi32_si128(loadu_int32(p + 0 * stride));
+  const __m128i p1 = _mm_cvtsi32_si128(loadu_int32(p + 1 * stride));
   return _mm_unpacklo_epi8(_mm_unpacklo_epi32(p0, p1), _mm_setzero_si128());
 }
 
@@ -51,11 +46,17 @@ static INLINE __m128i load8_8to16_sse2(const uint8_t *const p) {
   return _mm_unpacklo_epi8(p0, _mm_setzero_si128());
 }
 
+static INLINE void load16_8to16_sse2(const uint8_t *const p, __m128i *out) {
+  const __m128i p0 = _mm_loadu_si128((const __m128i *)p);
+  out[0] = _mm_unpacklo_epi8(p0, _mm_setzero_si128());  // lower 8 values
+  out[1] = _mm_unpackhi_epi8(p0, _mm_setzero_si128());  // upper 8 values
+}
+
 // Accumulate 4 32bit numbers in val to 1 32bit number
 static INLINE unsigned int add32x4_sse2(__m128i val) {
   val = _mm_add_epi32(val, _mm_srli_si128(val, 8));
   val = _mm_add_epi32(val, _mm_srli_si128(val, 4));
-  return _mm_cvtsi128_si32(val);
+  return (unsigned int)_mm_cvtsi128_si32(val);
 }
 
 // Accumulate 8 16bit in sum to 4 32bit number
@@ -108,7 +109,7 @@ static INLINE void variance_final_512_pel_sse2(__m128i vsse, __m128i vsum,
   vsum = _mm_add_epi16(vsum, _mm_srli_si128(vsum, 8));
   vsum = _mm_unpacklo_epi16(vsum, vsum);
   vsum = _mm_srai_epi32(vsum, 16);
-  *sum = add32x4_sse2(vsum);
+  *sum = (int)add32x4_sse2(vsum);
 }
 
 // Can handle 1024 pixels' diff sum (such as 32x32)
@@ -118,7 +119,7 @@ static INLINE void variance_final_1024_pel_sse2(__m128i vsse, __m128i vsum,
   *sse = add32x4_sse2(vsse);
 
   vsum = sum_to_32bit_sse2(vsum);
-  *sum = add32x4_sse2(vsum);
+  *sum = (int)add32x4_sse2(vsum);
 }
 
 static INLINE void variance4_sse2(const uint8_t *src, const int src_stride,
@@ -144,6 +145,7 @@ static INLINE void variance8_sse2(const uint8_t *src, const int src_stride,
                                   __m128i *const sum) {
   assert(h <= 128);  // May overflow for larger height.
   *sum = _mm_setzero_si128();
+  *sse = _mm_setzero_si128();
   for (int i = 0; i < h; i++) {
     const __m128i s = load8_8to16_sse2(src);
     const __m128i r = load8_8to16_sse2(ref);
@@ -236,6 +238,73 @@ static INLINE void variance128_sse2(const uint8_t *src, const int src_stride,
   }
 }
 
+void aom_get_var_sse_sum_8x8_quad_sse2(const uint8_t *src_ptr, int src_stride,
+                                       const uint8_t *ref_ptr, int ref_stride,
+                                       uint32_t *sse8x8, int *sum8x8,
+                                       unsigned int *tot_sse, int *tot_sum,
+                                       uint32_t *var8x8) {
+  // Loop over 4 8x8 blocks. Process one 8x32 block.
+  for (int k = 0; k < 4; k++) {
+    const uint8_t *src = src_ptr;
+    const uint8_t *ref = ref_ptr;
+    __m128i vsum = _mm_setzero_si128();
+    __m128i vsse = _mm_setzero_si128();
+    for (int i = 0; i < 8; i++) {
+      const __m128i s = load8_8to16_sse2(src + (k * 8));
+      const __m128i r = load8_8to16_sse2(ref + (k * 8));
+      const __m128i diff = _mm_sub_epi16(s, r);
+      vsse = _mm_add_epi32(vsse, _mm_madd_epi16(diff, diff));
+      vsum = _mm_add_epi16(vsum, diff);
+
+      src += src_stride;
+      ref += ref_stride;
+    }
+    variance_final_128_pel_sse2(vsse, vsum, &sse8x8[k], &sum8x8[k]);
+  }
+
+  // Calculate variance at 8x8 level and total sse, sum of 8x32 block.
+  *tot_sse += sse8x8[0] + sse8x8[1] + sse8x8[2] + sse8x8[3];
+  *tot_sum += sum8x8[0] + sum8x8[1] + sum8x8[2] + sum8x8[3];
+  for (int i = 0; i < 4; i++)
+    var8x8[i] = sse8x8[i] - (uint32_t)(((int64_t)sum8x8[i] * sum8x8[i]) >> 6);
+}
+
+void aom_get_var_sse_sum_16x16_dual_sse2(const uint8_t *src_ptr, int src_stride,
+                                         const uint8_t *ref_ptr, int ref_stride,
+                                         uint32_t *sse16x16,
+                                         unsigned int *tot_sse, int *tot_sum,
+                                         uint32_t *var16x16) {
+  int sum16x16[2] = { 0 };
+  // Loop over 2 16x16 blocks. Process one 16x32 block.
+  for (int k = 0; k < 2; k++) {
+    const uint8_t *src = src_ptr;
+    const uint8_t *ref = ref_ptr;
+    __m128i vsum = _mm_setzero_si128();
+    __m128i vsse = _mm_setzero_si128();
+    for (int i = 0; i < 16; i++) {
+      __m128i s[2];
+      __m128i r[2];
+      load16_8to16_sse2(src + (k * 16), s);
+      load16_8to16_sse2(ref + (k * 16), r);
+      const __m128i diff0 = _mm_sub_epi16(s[0], r[0]);
+      const __m128i diff1 = _mm_sub_epi16(s[1], r[1]);
+      vsse = _mm_add_epi32(vsse, _mm_madd_epi16(diff0, diff0));
+      vsse = _mm_add_epi32(vsse, _mm_madd_epi16(diff1, diff1));
+      vsum = _mm_add_epi16(vsum, _mm_add_epi16(diff0, diff1));
+      src += src_stride;
+      ref += ref_stride;
+    }
+    variance_final_256_pel_sse2(vsse, vsum, &sse16x16[k], &sum16x16[k]);
+  }
+
+  // Calculate variance at 16x16 level and total sse, sum of 16x32 block.
+  *tot_sse += sse16x16[0] + sse16x16[1];
+  *tot_sum += sum16x16[0] + sum16x16[1];
+  for (int i = 0; i < 2; i++)
+    var16x16[i] =
+        sse16x16[i] - (uint32_t)(((int64_t)sum16x16[i] * sum16x16[i]) >> 8);
+}
+
 #define AOM_VAR_NO_LOOP_SSE2(bw, bh, bits, max_pixels)                        \
   unsigned int aom_variance##bw##x##bh##_sse2(                                \
       const uint8_t *src, int src_stride, const uint8_t *ref, int ref_stride, \
@@ -250,24 +319,27 @@ static INLINE void variance128_sse2(const uint8_t *src, const int src_stride,
     return *sse - (uint32_t)(((int64_t)sum * sum) >> bits);                   \
   }
 
-AOM_VAR_NO_LOOP_SSE2(4, 4, 4, 128);
-AOM_VAR_NO_LOOP_SSE2(4, 8, 5, 128);
-AOM_VAR_NO_LOOP_SSE2(4, 16, 6, 128);
+AOM_VAR_NO_LOOP_SSE2(4, 4, 4, 128)
+AOM_VAR_NO_LOOP_SSE2(4, 8, 5, 128)
+AOM_VAR_NO_LOOP_SSE2(4, 16, 6, 128)
 
-AOM_VAR_NO_LOOP_SSE2(8, 4, 5, 128);
-AOM_VAR_NO_LOOP_SSE2(8, 8, 6, 128);
-AOM_VAR_NO_LOOP_SSE2(8, 16, 7, 128);
-AOM_VAR_NO_LOOP_SSE2(8, 32, 8, 256);
+AOM_VAR_NO_LOOP_SSE2(8, 4, 5, 128)
+AOM_VAR_NO_LOOP_SSE2(8, 8, 6, 128)
+AOM_VAR_NO_LOOP_SSE2(8, 16, 7, 128)
 
-AOM_VAR_NO_LOOP_SSE2(16, 4, 6, 128);
-AOM_VAR_NO_LOOP_SSE2(16, 8, 7, 128);
-AOM_VAR_NO_LOOP_SSE2(16, 16, 8, 256);
-AOM_VAR_NO_LOOP_SSE2(16, 32, 9, 512);
-AOM_VAR_NO_LOOP_SSE2(16, 64, 10, 1024);
+AOM_VAR_NO_LOOP_SSE2(16, 8, 7, 128)
+AOM_VAR_NO_LOOP_SSE2(16, 16, 8, 256)
+AOM_VAR_NO_LOOP_SSE2(16, 32, 9, 512)
 
-AOM_VAR_NO_LOOP_SSE2(32, 8, 8, 256);
-AOM_VAR_NO_LOOP_SSE2(32, 16, 9, 512);
-AOM_VAR_NO_LOOP_SSE2(32, 32, 10, 1024);
+AOM_VAR_NO_LOOP_SSE2(32, 8, 8, 256)
+AOM_VAR_NO_LOOP_SSE2(32, 16, 9, 512)
+AOM_VAR_NO_LOOP_SSE2(32, 32, 10, 1024)
+
+#if !CONFIG_REALTIME_ONLY
+AOM_VAR_NO_LOOP_SSE2(16, 4, 6, 128)
+AOM_VAR_NO_LOOP_SSE2(8, 32, 8, 256)
+AOM_VAR_NO_LOOP_SSE2(16, 64, 10, 1024)
+#endif
 
 #define AOM_VAR_LOOP_SSE2(bw, bh, bits, uh)                                   \
   unsigned int aom_variance##bw##x##bh##_sse2(                                \
@@ -284,21 +356,24 @@ AOM_VAR_NO_LOOP_SSE2(32, 32, 10, 1024);
       ref += (ref_stride * uh);                                               \
     }                                                                         \
     *sse = add32x4_sse2(vsse);                                                \
-    int sum = add32x4_sse2(vsum);                                             \
+    int sum = (int)add32x4_sse2(vsum);                                        \
     assert(sum <= 255 * bw * bh);                                             \
     assert(sum >= -255 * bw * bh);                                            \
     return *sse - (uint32_t)(((int64_t)sum * sum) >> bits);                   \
   }
 
-AOM_VAR_LOOP_SSE2(32, 64, 11, 32);  // 32x32 * ( 64/32 )
+AOM_VAR_LOOP_SSE2(32, 64, 11, 32)  // 32x32 * ( 64/32 )
 
-AOM_VAR_NO_LOOP_SSE2(64, 16, 10, 1024);
-AOM_VAR_LOOP_SSE2(64, 32, 11, 16);   // 64x16 * ( 32/16 )
-AOM_VAR_LOOP_SSE2(64, 64, 12, 16);   // 64x16 * ( 64/16 )
-AOM_VAR_LOOP_SSE2(64, 128, 13, 16);  // 64x16 * ( 128/16 )
+AOM_VAR_LOOP_SSE2(64, 32, 11, 16)   // 64x16 * ( 32/16 )
+AOM_VAR_LOOP_SSE2(64, 64, 12, 16)   // 64x16 * ( 64/16 )
+AOM_VAR_LOOP_SSE2(64, 128, 13, 16)  // 64x16 * ( 128/16 )
 
-AOM_VAR_LOOP_SSE2(128, 64, 13, 8);   // 128x8 * ( 64/8 )
-AOM_VAR_LOOP_SSE2(128, 128, 14, 8);  // 128x8 * ( 128/8 )
+AOM_VAR_LOOP_SSE2(128, 64, 13, 8)   // 128x8 * ( 64/8 )
+AOM_VAR_LOOP_SSE2(128, 128, 14, 8)  // 128x8 * ( 128/8 )
+
+#if !CONFIG_REALTIME_ONLY
+AOM_VAR_NO_LOOP_SSE2(64, 16, 10, 1024)
+#endif
 
 unsigned int aom_mse8x8_sse2(const uint8_t *src, int src_stride,
                              const uint8_t *ref, int ref_stride,
@@ -373,32 +448,52 @@ DECLS(ssse3);
     return sse - (unsigned int)(cast_prod(cast se * se) >> (wlog2 + hlog2));  \
   }
 
-#define FNS(opt)                                     \
-  FN(128, 128, 16, 7, 7, opt, (int64_t), (int64_t)); \
-  FN(128, 64, 16, 7, 6, opt, (int64_t), (int64_t));  \
-  FN(64, 128, 16, 6, 7, opt, (int64_t), (int64_t));  \
-  FN(64, 64, 16, 6, 6, opt, (int64_t), (int64_t));   \
-  FN(64, 32, 16, 6, 5, opt, (int64_t), (int64_t));   \
-  FN(32, 64, 16, 5, 6, opt, (int64_t), (int64_t));   \
-  FN(32, 32, 16, 5, 5, opt, (int64_t), (int64_t));   \
-  FN(32, 16, 16, 5, 4, opt, (int64_t), (int64_t));   \
-  FN(16, 32, 16, 4, 5, opt, (int64_t), (int64_t));   \
-  FN(16, 16, 16, 4, 4, opt, (uint32_t), (int64_t));  \
-  FN(16, 8, 16, 4, 3, opt, (int32_t), (int32_t));    \
-  FN(8, 16, 8, 3, 4, opt, (int32_t), (int32_t));     \
-  FN(8, 8, 8, 3, 3, opt, (int32_t), (int32_t));      \
-  FN(8, 4, 8, 3, 2, opt, (int32_t), (int32_t));      \
-  FN(4, 8, 4, 2, 3, opt, (int32_t), (int32_t));      \
-  FN(4, 4, 4, 2, 2, opt, (int32_t), (int32_t));      \
-  FN(4, 16, 4, 2, 4, opt, (int32_t), (int32_t));     \
-  FN(16, 4, 16, 4, 2, opt, (int32_t), (int32_t));    \
-  FN(8, 32, 8, 3, 5, opt, (uint32_t), (int64_t));    \
-  FN(32, 8, 16, 5, 3, opt, (uint32_t), (int64_t));   \
-  FN(16, 64, 16, 4, 6, opt, (int64_t), (int64_t));   \
+#if !CONFIG_REALTIME_ONLY
+#define FNS(opt)                                    \
+  FN(128, 128, 16, 7, 7, opt, (int64_t), (int64_t)) \
+  FN(128, 64, 16, 7, 6, opt, (int64_t), (int64_t))  \
+  FN(64, 128, 16, 6, 7, opt, (int64_t), (int64_t))  \
+  FN(64, 64, 16, 6, 6, opt, (int64_t), (int64_t))   \
+  FN(64, 32, 16, 6, 5, opt, (int64_t), (int64_t))   \
+  FN(32, 64, 16, 5, 6, opt, (int64_t), (int64_t))   \
+  FN(32, 32, 16, 5, 5, opt, (int64_t), (int64_t))   \
+  FN(32, 16, 16, 5, 4, opt, (int64_t), (int64_t))   \
+  FN(16, 32, 16, 4, 5, opt, (int64_t), (int64_t))   \
+  FN(16, 16, 16, 4, 4, opt, (uint32_t), (int64_t))  \
+  FN(16, 8, 16, 4, 3, opt, (int32_t), (int32_t))    \
+  FN(8, 16, 8, 3, 4, opt, (int32_t), (int32_t))     \
+  FN(8, 8, 8, 3, 3, opt, (int32_t), (int32_t))      \
+  FN(8, 4, 8, 3, 2, opt, (int32_t), (int32_t))      \
+  FN(4, 8, 4, 2, 3, opt, (int32_t), (int32_t))      \
+  FN(4, 4, 4, 2, 2, opt, (int32_t), (int32_t))      \
+  FN(4, 16, 4, 2, 4, opt, (int32_t), (int32_t))     \
+  FN(16, 4, 16, 4, 2, opt, (int32_t), (int32_t))    \
+  FN(8, 32, 8, 3, 5, opt, (uint32_t), (int64_t))    \
+  FN(32, 8, 16, 5, 3, opt, (uint32_t), (int64_t))   \
+  FN(16, 64, 16, 4, 6, opt, (int64_t), (int64_t))   \
   FN(64, 16, 16, 6, 4, opt, (int64_t), (int64_t))
+#else
+#define FNS(opt)                                    \
+  FN(128, 128, 16, 7, 7, opt, (int64_t), (int64_t)) \
+  FN(128, 64, 16, 7, 6, opt, (int64_t), (int64_t))  \
+  FN(64, 128, 16, 6, 7, opt, (int64_t), (int64_t))  \
+  FN(64, 64, 16, 6, 6, opt, (int64_t), (int64_t))   \
+  FN(64, 32, 16, 6, 5, opt, (int64_t), (int64_t))   \
+  FN(32, 64, 16, 5, 6, opt, (int64_t), (int64_t))   \
+  FN(32, 32, 16, 5, 5, opt, (int64_t), (int64_t))   \
+  FN(32, 16, 16, 5, 4, opt, (int64_t), (int64_t))   \
+  FN(16, 32, 16, 4, 5, opt, (int64_t), (int64_t))   \
+  FN(16, 16, 16, 4, 4, opt, (uint32_t), (int64_t))  \
+  FN(16, 8, 16, 4, 3, opt, (int32_t), (int32_t))    \
+  FN(8, 16, 8, 3, 4, opt, (int32_t), (int32_t))     \
+  FN(8, 8, 8, 3, 3, opt, (int32_t), (int32_t))      \
+  FN(8, 4, 8, 3, 2, opt, (int32_t), (int32_t))      \
+  FN(4, 8, 4, 2, 3, opt, (int32_t), (int32_t))      \
+  FN(4, 4, 4, 2, 2, opt, (int32_t), (int32_t))
+#endif
 
-FNS(sse2);
-FNS(ssse3);
+FNS(sse2)
+FNS(ssse3)
 
 #undef FNS
 #undef FN
@@ -452,250 +547,55 @@ DECLS(ssse3);
     return sse - (unsigned int)(cast_prod(cast se * se) >> (wlog2 + hlog2)); \
   }
 
-#define FNS(opt)                                     \
-  FN(128, 128, 16, 7, 7, opt, (int64_t), (int64_t)); \
-  FN(128, 64, 16, 7, 6, opt, (int64_t), (int64_t));  \
-  FN(64, 128, 16, 6, 7, opt, (int64_t), (int64_t));  \
-  FN(64, 64, 16, 6, 6, opt, (int64_t), (int64_t));   \
-  FN(64, 32, 16, 6, 5, opt, (int64_t), (int64_t));   \
-  FN(32, 64, 16, 5, 6, opt, (int64_t), (int64_t));   \
-  FN(32, 32, 16, 5, 5, opt, (int64_t), (int64_t));   \
-  FN(32, 16, 16, 5, 4, opt, (int64_t), (int64_t));   \
-  FN(16, 32, 16, 4, 5, opt, (int64_t), (int64_t));   \
-  FN(16, 16, 16, 4, 4, opt, (uint32_t), (int64_t));  \
-  FN(16, 8, 16, 4, 3, opt, (uint32_t), (int32_t));   \
-  FN(8, 16, 8, 3, 4, opt, (uint32_t), (int32_t));    \
-  FN(8, 8, 8, 3, 3, opt, (uint32_t), (int32_t));     \
-  FN(8, 4, 8, 3, 2, opt, (uint32_t), (int32_t));     \
-  FN(4, 8, 4, 2, 3, opt, (uint32_t), (int32_t));     \
-  FN(4, 4, 4, 2, 2, opt, (uint32_t), (int32_t));     \
-  FN(4, 16, 4, 2, 4, opt, (int32_t), (int32_t));     \
-  FN(16, 4, 16, 4, 2, opt, (int32_t), (int32_t));    \
-  FN(8, 32, 8, 3, 5, opt, (uint32_t), (int64_t));    \
-  FN(32, 8, 16, 5, 3, opt, (uint32_t), (int64_t));   \
-  FN(16, 64, 16, 4, 6, opt, (int64_t), (int64_t));   \
+#if !CONFIG_REALTIME_ONLY
+#define FNS(opt)                                    \
+  FN(128, 128, 16, 7, 7, opt, (int64_t), (int64_t)) \
+  FN(128, 64, 16, 7, 6, opt, (int64_t), (int64_t))  \
+  FN(64, 128, 16, 6, 7, opt, (int64_t), (int64_t))  \
+  FN(64, 64, 16, 6, 6, opt, (int64_t), (int64_t))   \
+  FN(64, 32, 16, 6, 5, opt, (int64_t), (int64_t))   \
+  FN(32, 64, 16, 5, 6, opt, (int64_t), (int64_t))   \
+  FN(32, 32, 16, 5, 5, opt, (int64_t), (int64_t))   \
+  FN(32, 16, 16, 5, 4, opt, (int64_t), (int64_t))   \
+  FN(16, 32, 16, 4, 5, opt, (int64_t), (int64_t))   \
+  FN(16, 16, 16, 4, 4, opt, (uint32_t), (int64_t))  \
+  FN(16, 8, 16, 4, 3, opt, (uint32_t), (int32_t))   \
+  FN(8, 16, 8, 3, 4, opt, (uint32_t), (int32_t))    \
+  FN(8, 8, 8, 3, 3, opt, (uint32_t), (int32_t))     \
+  FN(8, 4, 8, 3, 2, opt, (uint32_t), (int32_t))     \
+  FN(4, 8, 4, 2, 3, opt, (uint32_t), (int32_t))     \
+  FN(4, 4, 4, 2, 2, opt, (uint32_t), (int32_t))     \
+  FN(4, 16, 4, 2, 4, opt, (int32_t), (int32_t))     \
+  FN(16, 4, 16, 4, 2, opt, (int32_t), (int32_t))    \
+  FN(8, 32, 8, 3, 5, opt, (uint32_t), (int64_t))    \
+  FN(32, 8, 16, 5, 3, opt, (uint32_t), (int64_t))   \
+  FN(16, 64, 16, 4, 6, opt, (int64_t), (int64_t))   \
   FN(64, 16, 16, 6, 4, opt, (int64_t), (int64_t))
+#else
+#define FNS(opt)                                    \
+  FN(128, 128, 16, 7, 7, opt, (int64_t), (int64_t)) \
+  FN(128, 64, 16, 7, 6, opt, (int64_t), (int64_t))  \
+  FN(64, 128, 16, 6, 7, opt, (int64_t), (int64_t))  \
+  FN(64, 64, 16, 6, 6, opt, (int64_t), (int64_t))   \
+  FN(64, 32, 16, 6, 5, opt, (int64_t), (int64_t))   \
+  FN(32, 64, 16, 5, 6, opt, (int64_t), (int64_t))   \
+  FN(32, 32, 16, 5, 5, opt, (int64_t), (int64_t))   \
+  FN(32, 16, 16, 5, 4, opt, (int64_t), (int64_t))   \
+  FN(16, 32, 16, 4, 5, opt, (int64_t), (int64_t))   \
+  FN(16, 16, 16, 4, 4, opt, (uint32_t), (int64_t))  \
+  FN(16, 8, 16, 4, 3, opt, (uint32_t), (int32_t))   \
+  FN(8, 16, 8, 3, 4, opt, (uint32_t), (int32_t))    \
+  FN(8, 8, 8, 3, 3, opt, (uint32_t), (int32_t))     \
+  FN(8, 4, 8, 3, 2, opt, (uint32_t), (int32_t))     \
+  FN(4, 8, 4, 2, 3, opt, (uint32_t), (int32_t))     \
+  FN(4, 4, 4, 2, 2, opt, (uint32_t), (int32_t))
+#endif
 
-FNS(sse2);
-FNS(ssse3);
+FNS(sse2)
+FNS(ssse3)
 
 #undef FNS
 #undef FN
-
-void aom_upsampled_pred_sse2(MACROBLOCKD *xd, const struct AV1Common *const cm,
-                             int mi_row, int mi_col, const MV *const mv,
-                             uint8_t *comp_pred, int width, int height,
-                             int subpel_x_q3, int subpel_y_q3,
-                             const uint8_t *ref, int ref_stride,
-                             int subpel_search) {
-  // expect xd == NULL only in tests
-  if (xd != NULL) {
-    const MB_MODE_INFO *mi = xd->mi[0];
-    const int ref_num = 0;
-    const int is_intrabc = is_intrabc_block(mi);
-    const struct scale_factors *const sf =
-        is_intrabc ? &cm->sf_identity : &xd->block_refs[ref_num]->sf;
-    const int is_scaled = av1_is_scaled(sf);
-
-    if (is_scaled) {
-      // Note: This is mostly a copy from the >=8X8 case in
-      // build_inter_predictors() function, with some small tweaks.
-
-      // Some assumptions.
-      const int plane = 0;
-
-      // Get pre-requisites.
-      const struct macroblockd_plane *const pd = &xd->plane[plane];
-      const int ssx = pd->subsampling_x;
-      const int ssy = pd->subsampling_y;
-      assert(ssx == 0 && ssy == 0);
-      const struct buf_2d *const dst_buf = &pd->dst;
-      const struct buf_2d *const pre_buf =
-          is_intrabc ? dst_buf : &pd->pre[ref_num];
-      const int mi_x = mi_col * MI_SIZE;
-      const int mi_y = mi_row * MI_SIZE;
-
-      // Calculate subpel_x/y and x/y_step.
-      const int row_start = 0;  // Because ss_y is 0.
-      const int col_start = 0;  // Because ss_x is 0.
-      const int pre_x = (mi_x + MI_SIZE * col_start) >> ssx;
-      const int pre_y = (mi_y + MI_SIZE * row_start) >> ssy;
-      int orig_pos_y = pre_y << SUBPEL_BITS;
-      orig_pos_y += mv->row * (1 << (1 - ssy));
-      int orig_pos_x = pre_x << SUBPEL_BITS;
-      orig_pos_x += mv->col * (1 << (1 - ssx));
-      int pos_y = sf->scale_value_y(orig_pos_y, sf);
-      int pos_x = sf->scale_value_x(orig_pos_x, sf);
-      pos_x += SCALE_EXTRA_OFF;
-      pos_y += SCALE_EXTRA_OFF;
-
-      const int top = -AOM_LEFT_TOP_MARGIN_SCALED(ssy);
-      const int left = -AOM_LEFT_TOP_MARGIN_SCALED(ssx);
-      const int bottom = (pre_buf->height + AOM_INTERP_EXTEND)
-                         << SCALE_SUBPEL_BITS;
-      const int right = (pre_buf->width + AOM_INTERP_EXTEND)
-                        << SCALE_SUBPEL_BITS;
-      pos_y = clamp(pos_y, top, bottom);
-      pos_x = clamp(pos_x, left, right);
-
-      const uint8_t *const pre =
-          pre_buf->buf0 + (pos_y >> SCALE_SUBPEL_BITS) * pre_buf->stride +
-          (pos_x >> SCALE_SUBPEL_BITS);
-
-      const SubpelParams subpel_params = { sf->x_step_q4, sf->y_step_q4,
-                                           pos_x & SCALE_SUBPEL_MASK,
-                                           pos_y & SCALE_SUBPEL_MASK };
-
-      // Get warp types.
-      const WarpedMotionParams *const wm =
-          &xd->global_motion[mi->ref_frame[ref_num]];
-      const int is_global = is_global_mv_block(mi, wm->wmtype);
-      WarpTypesAllowed warp_types;
-      warp_types.global_warp_allowed = is_global;
-      warp_types.local_warp_allowed = mi->motion_mode == WARPED_CAUSAL;
-
-      // Get convolve parameters.
-      ConvolveParams conv_params = get_conv_params(0, plane, xd->bd);
-      const InterpFilters filters =
-          av1_broadcast_interp_filter(EIGHTTAP_REGULAR);
-
-      // Get the inter predictor.
-      const int build_for_obmc = 0;
-      av1_make_inter_predictor(pre, pre_buf->stride, comp_pred, width,
-                               &subpel_params, sf, width, height, &conv_params,
-                               filters, &warp_types, mi_x >> pd->subsampling_x,
-                               mi_y >> pd->subsampling_y, plane, ref_num, mi,
-                               build_for_obmc, xd, cm->allow_warped_motion);
-
-      return;
-    }
-  }
-
-  const InterpFilterParams *filter =
-      (subpel_search == 1)
-          ? av1_get_4tap_interp_filter_params(EIGHTTAP_REGULAR)
-          : av1_get_interp_filter_params_with_block_size(EIGHTTAP_REGULAR, 8);
-  int filter_taps = (subpel_search == 1) ? 4 : SUBPEL_TAPS;
-
-  if (!subpel_x_q3 && !subpel_y_q3) {
-    if (width >= 16) {
-      int i;
-      assert(!(width & 15));
-      /*Read 16 pixels one row at a time.*/
-      for (i = 0; i < height; i++) {
-        int j;
-        for (j = 0; j < width; j += 16) {
-          xx_storeu_128(comp_pred, xx_loadu_128(ref));
-          comp_pred += 16;
-          ref += 16;
-        }
-        ref += ref_stride - width;
-      }
-    } else if (width >= 8) {
-      int i;
-      assert(!(width & 7));
-      assert(!(height & 1));
-      /*Read 8 pixels two rows at a time.*/
-      for (i = 0; i < height; i += 2) {
-        __m128i s0 = xx_loadl_64(ref + 0 * ref_stride);
-        __m128i s1 = xx_loadl_64(ref + 1 * ref_stride);
-        xx_storeu_128(comp_pred, _mm_unpacklo_epi64(s0, s1));
-        comp_pred += 16;
-        ref += 2 * ref_stride;
-      }
-    } else {
-      int i;
-      assert(!(width & 3));
-      assert(!(height & 3));
-      /*Read 4 pixels four rows at a time.*/
-      for (i = 0; i < height; i++) {
-        const __m128i row0 = xx_loadl_64(ref + 0 * ref_stride);
-        const __m128i row1 = xx_loadl_64(ref + 1 * ref_stride);
-        const __m128i row2 = xx_loadl_64(ref + 2 * ref_stride);
-        const __m128i row3 = xx_loadl_64(ref + 3 * ref_stride);
-        const __m128i reg = _mm_unpacklo_epi64(_mm_unpacklo_epi32(row0, row1),
-                                               _mm_unpacklo_epi32(row2, row3));
-        xx_storeu_128(comp_pred, reg);
-        comp_pred += 16;
-        ref += 4 * ref_stride;
-      }
-    }
-  } else if (!subpel_y_q3) {
-    const int16_t *const kernel =
-        av1_get_interp_filter_subpel_kernel(filter, subpel_x_q3 << 1);
-    aom_convolve8_horiz(ref, ref_stride, comp_pred, width, kernel, 16, NULL, -1,
-                        width, height);
-  } else if (!subpel_x_q3) {
-    const int16_t *const kernel =
-        av1_get_interp_filter_subpel_kernel(filter, subpel_y_q3 << 1);
-    aom_convolve8_vert(ref, ref_stride, comp_pred, width, NULL, -1, kernel, 16,
-                       width, height);
-  } else {
-    DECLARE_ALIGNED(16, uint8_t,
-                    temp[((MAX_SB_SIZE * 2 + 16) + 16) * MAX_SB_SIZE]);
-    const int16_t *const kernel_x =
-        av1_get_interp_filter_subpel_kernel(filter, subpel_x_q3 << 1);
-    const int16_t *const kernel_y =
-        av1_get_interp_filter_subpel_kernel(filter, subpel_y_q3 << 1);
-    const uint8_t *ref_start = ref - ref_stride * ((filter_taps >> 1) - 1);
-    uint8_t *temp_start_horiz =
-        (subpel_search == 1) ? temp + (filter_taps >> 1) * MAX_SB_SIZE : temp;
-    uint8_t *temp_start_vert = temp + MAX_SB_SIZE * ((filter->taps >> 1) - 1);
-    int intermediate_height =
-        (((height - 1) * 8 + subpel_y_q3) >> 3) + filter_taps;
-    assert(intermediate_height <= (MAX_SB_SIZE * 2 + 16) + 16);
-    // TODO(Deepa): Remove the memset below when we have
-    // 4 tap simd for sse2 and ssse3.
-    if (subpel_search == 1) {
-      memset(temp_start_vert - 3 * MAX_SB_SIZE, 0, width);
-      memset(temp_start_vert - 2 * MAX_SB_SIZE, 0, width);
-      memset(temp_start_vert + (height + 2) * MAX_SB_SIZE, 0, width);
-      memset(temp_start_vert + (height + 3) * MAX_SB_SIZE, 0, width);
-    }
-    aom_convolve8_horiz(ref_start, ref_stride, temp_start_horiz, MAX_SB_SIZE,
-                        kernel_x, 16, NULL, -1, width, intermediate_height);
-    aom_convolve8_vert(temp_start_vert, MAX_SB_SIZE, comp_pred, width, NULL, -1,
-                       kernel_y, 16, width, height);
-  }
-}
-
-void aom_comp_avg_upsampled_pred_sse2(
-    MACROBLOCKD *xd, const struct AV1Common *const cm, int mi_row, int mi_col,
-    const MV *const mv, uint8_t *comp_pred, const uint8_t *pred, int width,
-    int height, int subpel_x_q3, int subpel_y_q3, const uint8_t *ref,
-    int ref_stride, int subpel_search) {
-  int n;
-  int i;
-  aom_upsampled_pred(xd, cm, mi_row, mi_col, mv, comp_pred, width, height,
-                     subpel_x_q3, subpel_y_q3, ref, ref_stride, subpel_search);
-  /*The total number of pixels must be a multiple of 16 (e.g., 4x4).*/
-  assert(!(width * height & 15));
-  n = width * height >> 4;
-  for (i = 0; i < n; i++) {
-    __m128i s0 = xx_loadu_128(comp_pred);
-    __m128i p0 = xx_loadu_128(pred);
-    xx_storeu_128(comp_pred, _mm_avg_epu8(s0, p0));
-    comp_pred += 16;
-    pred += 16;
-  }
-}
-
-void aom_comp_mask_upsampled_pred_sse2(
-    MACROBLOCKD *xd, const AV1_COMMON *const cm, int mi_row, int mi_col,
-    const MV *const mv, uint8_t *comp_pred, const uint8_t *pred, int width,
-    int height, int subpel_x_q3, int subpel_y_q3, const uint8_t *ref,
-    int ref_stride, const uint8_t *mask, int mask_stride, int invert_mask,
-    int subpel_search) {
-  if (subpel_x_q3 | subpel_y_q3) {
-    aom_upsampled_pred(xd, cm, mi_row, mi_col, mv, comp_pred, width, height,
-                       subpel_x_q3, subpel_y_q3, ref, ref_stride,
-                       subpel_search);
-    ref = comp_pred;
-    ref_stride = width;
-  }
-  aom_comp_mask_pred(comp_pred, pred, width, height, ref, ref_stride, mask,
-                     mask_stride, invert_mask);
-}
 
 static INLINE __m128i highbd_comp_mask_pred_line_sse2(const __m128i s0,
                                                       const __m128i s1,
@@ -776,31 +676,127 @@ void aom_highbd_comp_mask_pred_sse2(uint8_t *comp_pred8, const uint8_t *pred8,
       comp_pred += width;
       i += 1;
     } while (i < height);
-  } else if (width == 32) {
+  } else {
     do {
-      for (int j = 0; j < 2; j++) {
-        const __m128i s0 = _mm_loadu_si128((const __m128i *)(src0 + j * 16));
-        const __m128i s2 =
-            _mm_loadu_si128((const __m128i *)(src0 + 8 + j * 16));
-        const __m128i s1 = _mm_loadu_si128((const __m128i *)(src1 + j * 16));
-        const __m128i s3 =
-            _mm_loadu_si128((const __m128i *)(src1 + 8 + j * 16));
+      for (int x = 0; x < width; x += 32) {
+        for (int j = 0; j < 2; j++) {
+          const __m128i s0 =
+              _mm_loadu_si128((const __m128i *)(src0 + x + j * 16));
+          const __m128i s2 =
+              _mm_loadu_si128((const __m128i *)(src0 + x + 8 + j * 16));
+          const __m128i s1 =
+              _mm_loadu_si128((const __m128i *)(src1 + x + j * 16));
+          const __m128i s3 =
+              _mm_loadu_si128((const __m128i *)(src1 + x + 8 + j * 16));
 
-        const __m128i m_8 = _mm_loadu_si128((const __m128i *)(mask + j * 16));
-        const __m128i m01_16 = _mm_unpacklo_epi8(m_8, zero);
-        const __m128i m23_16 = _mm_unpackhi_epi8(m_8, zero);
+          const __m128i m_8 =
+              _mm_loadu_si128((const __m128i *)(mask + x + j * 16));
+          const __m128i m01_16 = _mm_unpacklo_epi8(m_8, zero);
+          const __m128i m23_16 = _mm_unpackhi_epi8(m_8, zero);
 
-        const __m128i comp = highbd_comp_mask_pred_line_sse2(s0, s1, m01_16);
-        const __m128i comp1 = highbd_comp_mask_pred_line_sse2(s2, s3, m23_16);
+          const __m128i comp = highbd_comp_mask_pred_line_sse2(s0, s1, m01_16);
+          const __m128i comp1 = highbd_comp_mask_pred_line_sse2(s2, s3, m23_16);
 
-        _mm_storeu_si128((__m128i *)(comp_pred + j * 16), comp);
-        _mm_storeu_si128((__m128i *)(comp_pred + 8 + j * 16), comp1);
+          _mm_storeu_si128((__m128i *)(comp_pred + j * 16), comp);
+          _mm_storeu_si128((__m128i *)(comp_pred + 8 + j * 16), comp1);
+        }
+        comp_pred += 32;
       }
       src0 += stride0;
       src1 += stride1;
       mask += mask_stride;
-      comp_pred += width;
       i += 1;
     } while (i < height);
   }
+}
+
+uint64_t aom_mse_4xh_16bit_sse2(uint8_t *dst, int dstride, uint16_t *src,
+                                int sstride, int h) {
+  uint64_t sum = 0;
+  __m128i dst0_8x8, dst1_8x8, dst_16x8;
+  __m128i src0_16x4, src1_16x4, src_16x8;
+  __m128i res0_32x4, res0_64x2, res1_64x2;
+  __m128i sub_result_16x8;
+  const __m128i zeros = _mm_setzero_si128();
+  __m128i square_result = _mm_setzero_si128();
+  for (int i = 0; i < h; i += 2) {
+    dst0_8x8 = _mm_cvtsi32_si128(*(int const *)(&dst[(i + 0) * dstride]));
+    dst1_8x8 = _mm_cvtsi32_si128(*(int const *)(&dst[(i + 1) * dstride]));
+    dst_16x8 = _mm_unpacklo_epi8(_mm_unpacklo_epi32(dst0_8x8, dst1_8x8), zeros);
+
+    src0_16x4 = _mm_loadl_epi64((__m128i const *)(&src[(i + 0) * sstride]));
+    src1_16x4 = _mm_loadl_epi64((__m128i const *)(&src[(i + 1) * sstride]));
+    src_16x8 = _mm_unpacklo_epi64(src0_16x4, src1_16x4);
+
+    sub_result_16x8 = _mm_sub_epi16(src_16x8, dst_16x8);
+
+    res0_32x4 = _mm_madd_epi16(sub_result_16x8, sub_result_16x8);
+
+    res0_64x2 = _mm_unpacklo_epi32(res0_32x4, zeros);
+    res1_64x2 = _mm_unpackhi_epi32(res0_32x4, zeros);
+
+    square_result =
+        _mm_add_epi64(square_result, _mm_add_epi64(res0_64x2, res1_64x2));
+  }
+  const __m128i sum_64x1 =
+      _mm_add_epi64(square_result, _mm_srli_si128(square_result, 8));
+  xx_storel_64(&sum, sum_64x1);
+  return sum;
+}
+
+uint64_t aom_mse_8xh_16bit_sse2(uint8_t *dst, int dstride, uint16_t *src,
+                                int sstride, int h) {
+  uint64_t sum = 0;
+  __m128i dst_8x8, dst_16x8;
+  __m128i src_16x8;
+  __m128i res0_32x4, res0_64x2, res1_64x2;
+  __m128i sub_result_16x8;
+  const __m128i zeros = _mm_setzero_si128();
+  __m128i square_result = _mm_setzero_si128();
+
+  for (int i = 0; i < h; i++) {
+    dst_8x8 = _mm_loadl_epi64((__m128i const *)(&dst[(i + 0) * dstride]));
+    dst_16x8 = _mm_unpacklo_epi8(dst_8x8, zeros);
+
+    src_16x8 = _mm_loadu_si128((__m128i *)&src[i * sstride]);
+
+    sub_result_16x8 = _mm_sub_epi16(src_16x8, dst_16x8);
+
+    res0_32x4 = _mm_madd_epi16(sub_result_16x8, sub_result_16x8);
+
+    res0_64x2 = _mm_unpacklo_epi32(res0_32x4, zeros);
+    res1_64x2 = _mm_unpackhi_epi32(res0_32x4, zeros);
+
+    square_result =
+        _mm_add_epi64(square_result, _mm_add_epi64(res0_64x2, res1_64x2));
+  }
+  const __m128i sum_64x1 =
+      _mm_add_epi64(square_result, _mm_srli_si128(square_result, 8));
+  xx_storel_64(&sum, sum_64x1);
+  return sum;
+}
+
+uint64_t aom_mse_wxh_16bit_sse2(uint8_t *dst, int dstride, uint16_t *src,
+                                int sstride, int w, int h) {
+  assert((w == 8 || w == 4) && (h == 8 || h == 4) &&
+         "w=8/4 and h=8/4 must satisfy");
+  switch (w) {
+    case 4: return aom_mse_4xh_16bit_sse2(dst, dstride, src, sstride, h);
+    case 8: return aom_mse_8xh_16bit_sse2(dst, dstride, src, sstride, h);
+    default: assert(0 && "unsupported width"); return -1;
+  }
+}
+
+uint64_t aom_mse_16xh_16bit_sse2(uint8_t *dst, int dstride, uint16_t *src,
+                                 int w, int h) {
+  assert((w == 8 || w == 4) && (h == 8 || h == 4) &&
+         "w=8/4 and h=8/4 must be satisfied");
+  const int num_blks = 16 / w;
+  uint64_t sum = 0;
+  for (int i = 0; i < num_blks; i++) {
+    sum += aom_mse_wxh_16bit_sse2(dst, dstride, src, w, w, h);
+    dst += w;
+    src += (w * h);
+  }
+  return sum;
 }

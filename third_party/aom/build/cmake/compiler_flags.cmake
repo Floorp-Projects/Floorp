@@ -59,6 +59,12 @@ function(add_c_flag_if_supported c_flag)
     return()
   endif()
 
+  # Between 3.17.0 and 3.18.2 check_c_compiler_flag() sets a normal variable at
+  # parent scope while check_cxx_source_compiles() continues to set an internal
+  # cache variable, so we unset both to avoid the failure / success state
+  # persisting between checks. See
+  # https://gitlab.kitware.com/cmake/cmake/-/issues/21207.
+  unset(C_FLAG_SUPPORTED)
   unset(C_FLAG_SUPPORTED CACHE)
   message("Checking C compiler flag support for: " ${c_flag})
   check_c_compiler_flag("${c_flag}" C_FLAG_SUPPORTED)
@@ -89,6 +95,12 @@ function(add_cxx_flag_if_supported cxx_flag)
     return()
   endif()
 
+  # Between 3.17.0 and 3.18.2 check_cxx_compiler_flag() sets a normal variable
+  # at parent scope while check_cxx_source_compiles() continues to set an
+  # internal cache variable, so we unset both to avoid the failure / success
+  # state persisting between checks. See
+  # https://gitlab.kitware.com/cmake/cmake/-/issues/21207.
+  unset(CXX_FLAG_SUPPORTED)
   unset(CXX_FLAG_SUPPORTED CACHE)
   message("Checking C++ compiler flag support for: " ${cxx_flag})
   check_cxx_compiler_flag("${cxx_flag}" CXX_FLAG_SUPPORTED)
@@ -131,8 +143,8 @@ function(require_c_flag c_flag update_c_flags)
   message("Checking C compiler flag support for: " ${c_flag})
   check_c_compiler_flag("${c_flag}" HAVE_C_FLAG)
   if(NOT HAVE_C_FLAG)
-    message(FATAL_ERROR
-              "${PROJECT_NAME} requires support for C flag: ${c_flag}.")
+    message(
+      FATAL_ERROR "${PROJECT_NAME} requires support for C flag: ${c_flag}.")
   endif()
 
   if(NOT "${AOM_EXE_LINKER_FLAGS}" STREQUAL "")
@@ -167,8 +179,8 @@ function(require_cxx_flag cxx_flag update_cxx_flags)
   message("Checking C compiler flag support for: " ${cxx_flag})
   check_cxx_compiler_flag("${cxx_flag}" HAVE_CXX_FLAG)
   if(NOT HAVE_CXX_FLAG)
-    message(FATAL_ERROR
-              "${PROJECT_NAME} requires support for C flag: ${cxx_flag}.")
+    message(
+      FATAL_ERROR "${PROJECT_NAME} requires support for C flag: ${cxx_flag}.")
   endif()
 
   if(NOT "${AOM_EXE_LINKER_FLAGS}" STREQUAL "")

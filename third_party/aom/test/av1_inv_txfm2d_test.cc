@@ -12,6 +12,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <tuple>
 #include <vector>
 
 #include "config/av1_rtcd.h"
@@ -24,11 +25,12 @@
 #include "test/util.h"
 
 using libaom_test::ACMRandom;
-using libaom_test::InvTxfm2dFunc;
-using libaom_test::LbdInvTxfm2dFunc;
 using libaom_test::bd;
 using libaom_test::compute_avg_abs_error;
 using libaom_test::input_base;
+using libaom_test::InvTxfm2dFunc;
+using libaom_test::LbdInvTxfm2dFunc;
+using libaom_test::tx_type_name;
 
 using ::testing::Combine;
 using ::testing::Range;
@@ -36,15 +38,18 @@ using ::testing::Values;
 
 using std::vector;
 
+typedef TX_TYPE TxType;
+typedef TX_SIZE TxSize;
+
 namespace {
 
 // AV1InvTxfm2dParam argument list:
 // tx_type_, tx_size_, max_error_, max_avg_error_
-typedef ::testing::tuple<TX_TYPE, TX_SIZE, int, double> AV1InvTxfm2dParam;
+typedef std::tuple<TxType, TxSize, int, double> AV1InvTxfm2dParam;
 
 class AV1InvTxfm2d : public ::testing::TestWithParam<AV1InvTxfm2dParam> {
  public:
-  virtual void SetUp() {
+  void SetUp() override {
     tx_type_ = GET_PARAM(0);
     tx_size_ = GET_PARAM(1);
     max_error_ = GET_PARAM(2);
@@ -86,7 +91,7 @@ class AV1InvTxfm2d : public ::testing::TestWithParam<AV1InvTxfm2dParam> {
         }
         double ref_coeffs[64 * 64] = { 0 };
         ASSERT_LE(txfm2d_size, NELEMENTS(ref_coeffs));
-        ASSERT_EQ(tx_type_, DCT_DCT);
+        ASSERT_EQ(tx_type_, static_cast<TxType>(DCT_DCT));
         libaom_test::reference_hybrid_2d(ref_input, ref_coeffs, tx_type_,
                                          tx_size_);
         DECLARE_ALIGNED(16, int32_t, ref_coeffs_int[64 * 64]) = { 0 };
@@ -116,7 +121,8 @@ class AV1InvTxfm2d : public ::testing::TestWithParam<AV1InvTxfm2dParam> {
         actual_max_error = AOMMAX(actual_max_error, this_error);
       }
       EXPECT_GE(max_error_, actual_max_error)
-          << " tx_w: " << tx_w << " tx_h " << tx_h << " tx_type: " << tx_type_;
+          << " tx_w: " << tx_w << " tx_h " << tx_h
+          << " tx_type: " << tx_type_name[tx_type_];
       if (actual_max_error > max_error_) {  // exit early.
         break;
       }
@@ -126,7 +132,8 @@ class AV1InvTxfm2d : public ::testing::TestWithParam<AV1InvTxfm2dParam> {
 
     avg_abs_error /= count;
     EXPECT_GE(max_avg_error_, avg_abs_error)
-        << " tx_w: " << tx_w << " tx_h " << tx_h << " tx_type: " << tx_type_;
+        << " tx_w: " << tx_w << " tx_h " << tx_h
+        << " tx_type: " << tx_type_name[tx_type_];
   }
 
  private:
@@ -139,8 +146,8 @@ class AV1InvTxfm2d : public ::testing::TestWithParam<AV1InvTxfm2dParam> {
 
   int max_error_;
   double max_avg_error_;
-  TX_TYPE tx_type_;
-  TX_SIZE tx_size_;
+  TxType tx_type_;
+  TxSize tx_size_;
 };
 
 static int max_error_ls[TX_SIZES_ALL] = {
@@ -193,8 +200,8 @@ vector<AV1InvTxfm2dParam> GetInvTxfm2dParamList() {
     const int max_error = max_error_ls[s];
     const double avg_error = avg_error_ls[s];
     for (int t = 0; t < TX_TYPES; ++t) {
-      const TX_TYPE tx_type = static_cast<TX_TYPE>(t);
-      const TX_SIZE tx_size = static_cast<TX_SIZE>(s);
+      const TxType tx_type = static_cast<TxType>(t);
+      const TxSize tx_size = static_cast<TxSize>(s);
       if (libaom_test::IsTxSizeTypeValid(tx_size, tx_type)) {
         param_list.push_back(
             AV1InvTxfm2dParam(tx_type, tx_size, max_error, avg_error));
@@ -204,8 +211,8 @@ vector<AV1InvTxfm2dParam> GetInvTxfm2dParamList() {
   return param_list;
 }
 
-INSTANTIATE_TEST_CASE_P(C, AV1InvTxfm2d,
-                        ::testing::ValuesIn(GetInvTxfm2dParamList()));
+INSTANTIATE_TEST_SUITE_P(C, AV1InvTxfm2d,
+                         ::testing::ValuesIn(GetInvTxfm2dParamList()));
 
 TEST_P(AV1InvTxfm2d, RunRoundtripCheck) { RunRoundtripCheck(); }
 
@@ -216,18 +223,18 @@ TEST(AV1InvTxfm2d, CfgTest) {
     int8_t high_range = libaom_test::high_range_arr[bd_idx];
     for (int tx_size = 0; tx_size < TX_SIZES_ALL; ++tx_size) {
       for (int tx_type = 0; tx_type < TX_TYPES; ++tx_type) {
-        if (libaom_test::IsTxSizeTypeValid(static_cast<TX_SIZE>(tx_size),
-                                           static_cast<TX_TYPE>(tx_type)) ==
+        if (libaom_test::IsTxSizeTypeValid(static_cast<TxSize>(tx_size),
+                                           static_cast<TxType>(tx_type)) ==
             false) {
           continue;
         }
         TXFM_2D_FLIP_CFG cfg;
-        av1_get_inv_txfm_cfg(static_cast<TX_TYPE>(tx_type),
-                             static_cast<TX_SIZE>(tx_size), &cfg);
+        av1_get_inv_txfm_cfg(static_cast<TxType>(tx_type),
+                             static_cast<TxSize>(tx_size), &cfg);
         int8_t stage_range_col[MAX_TXFM_STAGE_NUM];
         int8_t stage_range_row[MAX_TXFM_STAGE_NUM];
         av1_gen_inv_stage_range(stage_range_col, stage_range_row, &cfg,
-                                (TX_SIZE)tx_size, bd);
+                                static_cast<TxSize>(tx_size), bd);
         libaom_test::txfm_stage_range_check(stage_range_col, cfg.stage_num_col,
                                             cfg.cos_bit_col, low_range,
                                             high_range);
@@ -239,21 +246,23 @@ TEST(AV1InvTxfm2d, CfgTest) {
   }
 }
 
-typedef ::testing::tuple<const LbdInvTxfm2dFunc> AV1LbdInvTxfm2dParam;
+typedef std::tuple<const LbdInvTxfm2dFunc> AV1LbdInvTxfm2dParam;
 class AV1LbdInvTxfm2d : public ::testing::TestWithParam<AV1LbdInvTxfm2dParam> {
  public:
-  virtual void SetUp() { target_func_ = GET_PARAM(0); }
-  void RunAV1InvTxfm2dTest(TX_TYPE tx_type, TX_SIZE tx_size, int run_times);
+  void SetUp() override { target_func_ = GET_PARAM(0); }
+  void RunAV1InvTxfm2dTest(TxType tx_type, TxSize tx_size, int run_times,
+                           int gt_int16 = 0);
 
  private:
   LbdInvTxfm2dFunc target_func_;
 };
+GTEST_ALLOW_UNINSTANTIATED_PARAMETERIZED_TEST(AV1LbdInvTxfm2d);
 
-void AV1LbdInvTxfm2d::RunAV1InvTxfm2dTest(TX_TYPE tx_type, TX_SIZE tx_size,
-                                          int run_times) {
+void AV1LbdInvTxfm2d::RunAV1InvTxfm2dTest(TxType tx_type, TxSize tx_size,
+                                          int run_times, int gt_int16) {
   FwdTxfm2dFunc fwd_func_ = libaom_test::fwd_txfm_func_ls[tx_size];
   InvTxfm2dFunc ref_func_ = libaom_test::inv_txfm_func_ls[tx_size];
-  if (fwd_func_ == NULL || ref_func_ == NULL || target_func_ == NULL) {
+  if (fwd_func_ == nullptr || ref_func_ == nullptr || target_func_ == nullptr) {
     return;
   }
   const int bd = 8;
@@ -275,6 +284,7 @@ void AV1LbdInvTxfm2d::RunAV1InvTxfm2dTest(TX_TYPE tx_type, TX_SIZE tx_size,
   const int16_t eobmax = rows_nonezero * cols_nonezero;
   ACMRandom rnd(ACMRandom::DeterministicSeed());
   int randTimes = run_times == 1 ? (eobmax + 500) : 1;
+
   for (int cnt = 0; cnt < randTimes; ++cnt) {
     const int16_t max_in = (1 << (bd)) - 1;
     for (int r = 0; r < BLK_WIDTH; ++r) {
@@ -291,7 +301,9 @@ void AV1LbdInvTxfm2d::RunAV1InvTxfm2dTest(TX_TYPE tx_type, TX_SIZE tx_size,
     for (int i = eob; i < eobmax; i++) {
       inv_input[scan[i]] = 0;
     }
-
+    if (gt_int16) {
+      inv_input[scan[eob - 1]] = ((int32_t)INT16_MAX * 100 / 141);
+    }
     aom_usec_timer timer;
     aom_usec_timer_start(&timer);
     for (int i = 0; i < run_times; ++i) {
@@ -313,10 +325,13 @@ void AV1LbdInvTxfm2d::RunAV1InvTxfm2dTest(TX_TYPE tx_type, TX_SIZE tx_size,
     for (int r = 0; r < rows; ++r) {
       for (int c = 0; c < cols; ++c) {
         uint8_t ref_value = static_cast<uint8_t>(ref_output[r * stride + c]);
+        if (ref_value != output[r * stride + c]) {
+          printf(" ");
+        }
         ASSERT_EQ(ref_value, output[r * stride + c])
-            << "[" << r << "," << c << "] " << cnt
-            << " tx_size: " << static_cast<int>(tx_size)
-            << " tx_type: " << tx_type << " eob " << eob;
+            << "[" << r << "," << c << "] " << cnt << " tx_size: " << cols
+            << "x" << rows << " tx_type: " << tx_type_name[tx_type] << " eob "
+            << eob;
       }
     }
   }
@@ -325,21 +340,34 @@ void AV1LbdInvTxfm2d::RunAV1InvTxfm2dTest(TX_TYPE tx_type, TX_SIZE tx_size,
 TEST_P(AV1LbdInvTxfm2d, match) {
   for (int j = 0; j < (int)(TX_SIZES_ALL); ++j) {
     for (int i = 0; i < (int)TX_TYPES; ++i) {
-      if (libaom_test::IsTxSizeTypeValid(static_cast<TX_SIZE>(j),
-                                         static_cast<TX_TYPE>(i))) {
-        RunAV1InvTxfm2dTest(static_cast<TX_TYPE>(i), static_cast<TX_SIZE>(j),
-                            1);
+      if (libaom_test::IsTxSizeTypeValid(static_cast<TxSize>(j),
+                                         static_cast<TxType>(i))) {
+        RunAV1InvTxfm2dTest(static_cast<TxType>(i), static_cast<TxSize>(j), 1);
+      }
+    }
+  }
+}
+
+TEST_P(AV1LbdInvTxfm2d, gt_int16) {
+  static const TxType types[] = { DCT_DCT, ADST_DCT, FLIPADST_DCT, IDTX,
+                                  V_DCT,   H_DCT,    H_ADST,       H_FLIPADST };
+  for (int j = 0; j < (int)(TX_SIZES_ALL); ++j) {
+    const TxSize sz = static_cast<TxSize>(j);
+    for (uint8_t i = 0; i < sizeof(types) / sizeof(types[0]); ++i) {
+      const TxType tp = types[i];
+      if (libaom_test::IsTxSizeTypeValid(sz, tp)) {
+        RunAV1InvTxfm2dTest(tp, sz, 1, 1);
       }
     }
   }
 }
 
 TEST_P(AV1LbdInvTxfm2d, DISABLED_Speed) {
-  for (int j = 0; j < (int)(TX_SIZES_ALL); ++j) {
+  for (int j = 1; j < (int)(TX_SIZES_ALL); ++j) {
     for (int i = 0; i < (int)TX_TYPES; ++i) {
-      if (libaom_test::IsTxSizeTypeValid(static_cast<TX_SIZE>(j),
-                                         static_cast<TX_TYPE>(i))) {
-        RunAV1InvTxfm2dTest(static_cast<TX_TYPE>(i), static_cast<TX_SIZE>(j),
+      if (libaom_test::IsTxSizeTypeValid(static_cast<TxSize>(j),
+                                         static_cast<TxType>(i))) {
+        RunAV1InvTxfm2dTest(static_cast<TxType>(i), static_cast<TxSize>(j),
                             10000000);
       }
     }
@@ -347,32 +375,32 @@ TEST_P(AV1LbdInvTxfm2d, DISABLED_Speed) {
 }
 
 #if HAVE_SSSE3
-#if defined(_MSC_VER) || defined(__SSSE3__)
-#include "av1/common/x86/av1_inv_txfm_ssse3.h"
-INSTANTIATE_TEST_CASE_P(SSSE3, AV1LbdInvTxfm2d,
-                        ::testing::Values(av1_lowbd_inv_txfm2d_add_ssse3));
-#endif  // _MSC_VER || __SSSE3__
+extern "C" void av1_lowbd_inv_txfm2d_add_ssse3(const int32_t *input,
+                                               uint8_t *output, int stride,
+                                               TxType tx_type, TxSize tx_size,
+                                               int eob);
+INSTANTIATE_TEST_SUITE_P(SSSE3, AV1LbdInvTxfm2d,
+                         ::testing::Values(av1_lowbd_inv_txfm2d_add_ssse3));
 #endif  // HAVE_SSSE3
 
 #if HAVE_AVX2
 extern "C" void av1_lowbd_inv_txfm2d_add_avx2(const int32_t *input,
                                               uint8_t *output, int stride,
-                                              TX_TYPE tx_type, TX_SIZE tx_size,
+                                              TxType tx_type, TxSize tx_size,
                                               int eob);
 
-INSTANTIATE_TEST_CASE_P(AVX2, AV1LbdInvTxfm2d,
-                        ::testing::Values(av1_lowbd_inv_txfm2d_add_avx2));
+INSTANTIATE_TEST_SUITE_P(AVX2, AV1LbdInvTxfm2d,
+                         ::testing::Values(av1_lowbd_inv_txfm2d_add_avx2));
 #endif  // HAVE_AVX2
 
 #if HAVE_NEON
-
 extern "C" void av1_lowbd_inv_txfm2d_add_neon(const int32_t *input,
                                               uint8_t *output, int stride,
                                               TX_TYPE tx_type, TX_SIZE tx_size,
                                               int eob);
 
-INSTANTIATE_TEST_CASE_P(NEON, AV1LbdInvTxfm2d,
-                        ::testing::Values(av1_lowbd_inv_txfm2d_add_neon));
+INSTANTIATE_TEST_SUITE_P(NEON, AV1LbdInvTxfm2d,
+                         ::testing::Values(av1_lowbd_inv_txfm2d_add_neon));
 #endif  // HAVE_NEON
 
 }  // namespace

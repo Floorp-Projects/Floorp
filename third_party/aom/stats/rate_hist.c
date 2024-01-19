@@ -38,7 +38,12 @@ struct rate_hist {
 struct rate_hist *init_rate_histogram(const aom_codec_enc_cfg_t *cfg,
                                       const aom_rational_t *fps) {
   int i;
-  struct rate_hist *hist = malloc(sizeof(*hist));
+  struct rate_hist *hist = calloc(1, sizeof(*hist));
+
+  if (hist == NULL || cfg == NULL || fps == NULL || fps->num == 0 ||
+      fps->den == 0) {
+    goto fail;
+  }
 
   // Determine the number of samples in the buffer. Use the file's framerate
   // to determine the number of frames in rc_buf_sz milliseconds, with an
@@ -53,6 +58,7 @@ struct rate_hist *init_rate_histogram(const aom_codec_enc_cfg_t *cfg,
 
   hist->pts = calloc(hist->samples, sizeof(*hist->pts));
   hist->sz = calloc(hist->samples, sizeof(*hist->sz));
+  if (hist->pts == NULL || hist->sz == NULL) goto fail;
   for (i = 0; i < RATE_BINS; i++) {
     hist->bucket[i].low = INT_MAX;
     hist->bucket[i].high = 0;
@@ -60,6 +66,14 @@ struct rate_hist *init_rate_histogram(const aom_codec_enc_cfg_t *cfg,
   }
 
   return hist;
+
+fail:
+  fprintf(stderr,
+          "Warning: Unable to allocate buffers required for "
+          "show_rate_histogram().\n"
+          "Continuing without rate histogram feature...\n");
+  destroy_rate_histogram(hist);
+  return NULL;
 }
 
 void destroy_rate_histogram(struct rate_hist *hist) {
@@ -81,7 +95,11 @@ void update_rate_histogram(struct rate_hist *hist,
                       (uint64_t)cfg->g_timebase.num /
                       (uint64_t)cfg->g_timebase.den;
 
-  int idx = hist->frames++ % hist->samples;
+  int idx;
+
+  if (hist == NULL || cfg == NULL || pkt == NULL) return;
+
+  idx = hist->frames++ % hist->samples;
   hist->pts[idx] = now;
   hist->sz[idx] = (int)pkt->data.frame.sz;
 
@@ -117,8 +135,13 @@ void update_rate_histogram(struct rate_hist *hist,
 static int merge_hist_buckets(struct hist_bucket *bucket, int max_buckets,
                               int *num_buckets) {
   int small_bucket = 0, merge_bucket = INT_MAX, big_bucket = 0;
-  int buckets = *num_buckets;
+  int buckets;
   int i;
+
+  assert(bucket != NULL);
+  assert(num_buckets != NULL);
+
+  buckets = *num_buckets;
 
   /* Find the extrema for this list of buckets */
   big_bucket = small_bucket = 0;
@@ -179,38 +202,42 @@ static int merge_hist_buckets(struct hist_bucket *bucket, int max_buckets,
 
 static void show_histogram(const struct hist_bucket *bucket, int buckets,
                            int total, int scale) {
-  const char *pat1, *pat2;
+  int width1, width2;
   int i;
+
+  if (!buckets) return;
+  assert(bucket != NULL);
+  assert(buckets > 0);
 
   switch ((int)(log(bucket[buckets - 1].high) / log(10)) + 1) {
     case 1:
     case 2:
-      pat1 = "%4d %2s: ";
-      pat2 = "%4d-%2d: ";
+      width1 = 4;
+      width2 = 2;
       break;
     case 3:
-      pat1 = "%5d %3s: ";
-      pat2 = "%5d-%3d: ";
+      width1 = 5;
+      width2 = 3;
       break;
     case 4:
-      pat1 = "%6d %4s: ";
-      pat2 = "%6d-%4d: ";
+      width1 = 6;
+      width2 = 4;
       break;
     case 5:
-      pat1 = "%7d %5s: ";
-      pat2 = "%7d-%5d: ";
+      width1 = 7;
+      width2 = 5;
       break;
     case 6:
-      pat1 = "%8d %6s: ";
-      pat2 = "%8d-%6d: ";
+      width1 = 8;
+      width2 = 6;
       break;
     case 7:
-      pat1 = "%9d %7s: ";
-      pat2 = "%9d-%7d: ";
+      width1 = 9;
+      width2 = 7;
       break;
     default:
-      pat1 = "%12d %10s: ";
-      pat2 = "%12d-%10d: ";
+      width1 = 12;
+      width2 = 10;
       break;
   }
 
@@ -225,9 +252,10 @@ static void show_histogram(const struct hist_bucket *bucket, int buckets,
     assert(len <= HIST_BAR_MAX);
 
     if (bucket[i].low == bucket[i].high)
-      fprintf(stderr, pat1, bucket[i].low, "");
+      fprintf(stderr, "%*d %*s: ", width1, bucket[i].low, width2, "");
     else
-      fprintf(stderr, pat2, bucket[i].low, bucket[i].high);
+      fprintf(stderr, "%*d-%*d: ", width1, bucket[i].low, width2,
+              bucket[i].high);
 
     for (j = 0; j < HIST_BAR_MAX; j++) fprintf(stderr, j < len ? "=" : " ");
     fprintf(stderr, "\t%5d (%6.2f%%)\n", bucket[i].count, pct);
@@ -259,6 +287,8 @@ void show_rate_histogram(struct rate_hist *hist, const aom_codec_enc_cfg_t *cfg,
                          int max_buckets) {
   int i, scale;
   int buckets = 0;
+
+  if (hist == NULL || cfg == NULL) return;
 
   for (i = 0; i < RATE_BINS; i++) {
     if (hist->bucket[i].low == INT_MAX) continue;
