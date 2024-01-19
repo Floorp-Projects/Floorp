@@ -213,10 +213,12 @@ impl<'a, E: TElement> OptimizationContext<'a, E> {
                 // manual matching here. TODO(dshin): Worth changing selector matching for this?
 
                 // Try matching this compound, then...
+                // Note: We'll not hit the leftmost sequence (Since we would have returned early
+                // if we'd hit the relative selector anchor).
                 if matches!(
                     matches_compound_selector_from(
                         &dependency.selector,
-                        dependency.selector_offset,
+                        dependency.selector.len() - prev_offset + 1,
                         &mut matching_context,
                         &element
                     ),
