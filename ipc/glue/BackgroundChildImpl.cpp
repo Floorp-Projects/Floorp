@@ -404,16 +404,6 @@ bool BackgroundChildImpl::DeallocPMessagePortChild(PMessagePortChild* aActor) {
   return true;
 }
 
-BackgroundChildImpl::PQuotaChild* BackgroundChildImpl::AllocPQuotaChild() {
-  MOZ_CRASH("PQuotaChild actor should be manually constructed!");
-}
-
-bool BackgroundChildImpl::DeallocPQuotaChild(PQuotaChild* aActor) {
-  MOZ_ASSERT(aActor);
-  delete aActor;
-  return true;
-}
-
 dom::PWebAuthnTransactionChild*
 BackgroundChildImpl::AllocPWebAuthnTransactionChild() {
   MOZ_CRASH("PWebAuthnTransaction actor should be manually constructed!");

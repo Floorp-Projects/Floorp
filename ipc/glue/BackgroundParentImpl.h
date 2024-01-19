@@ -236,9 +236,7 @@ class BackgroundParentImpl : public PBackgroundParent {
       const nsID& aUUID, const nsID& aDestinationUUID,
       const uint32_t& aSequenceID) override;
 
-  PQuotaParent* AllocPQuotaParent() override;
-
-  bool DeallocPQuotaParent(PQuotaParent* aActor) override;
+  already_AddRefed<PQuotaParent> AllocPQuotaParent() override;
 
   mozilla::ipc::IPCResult RecvShutdownQuotaManager() override;
 
