@@ -112,9 +112,6 @@ struct SizeComputationInput {
   nsMargin ComputedPhysicalBorderPadding() const {
     return mComputedBorderPadding.GetPhysicalMargin(mWritingMode);
   }
-  nsMargin ComputedPhysicalBorder() const {
-    return ComputedLogicalBorder(mWritingMode).GetPhysicalMargin(mWritingMode);
-  }
   nsMargin ComputedPhysicalPadding() const {
     return mComputedPadding.GetPhysicalMargin(mWritingMode);
   }

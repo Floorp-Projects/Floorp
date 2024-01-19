@@ -17,63 +17,44 @@
      max-width:150px;
      padding: 4px;
  }
- .inner.clipped {
-     padding: 0;
- }
- .inner.clipped > .clip {
-     padding: 4px;
- }
  .clip {
     overflow:hidden;
-    width: 300px;
-    box-sizing: border-box;
+    width:-moz-fit-content;
  }
   </style>
 </head>
 <body>
 <h2>Testing CSS overflow on display:table-cell</h2>
 <div class="outer">
-  <div class="inner clipped">
-    <div class="clip">
-      <img width="400px" height="10px" src="data:image/gif;base64,R0lGODlhAQABAIABAAD/AP///ywAAAAAAQABAAACAkQBADs=">
+    <div class="inner">
+       <img width="400px" height="10px" src="data:image/gif;base64,R0lGODlhAQABAIABAAD/AP///ywAAAAAAQABAAACAkQBADs=">
     </div>
-  </div>
 </div>
 <div class="outer">
-  <div class="inner clipped">
-    <div class="clip" style="overflow-x: scroll">
-      <img width="400px" height="10px" src="data:image/gif;base64,R0lGODlhAQABAIABAAD/AP///ywAAAAAAQABAAACAkQBADs=">
+    <div class="inner">
+       <img width="400px" height="10px" src="data:image/gif;base64,R0lGODlhAQABAIABAAD/AP///ywAAAAAAQABAAACAkQBADs=">
     </div>
-  </div>
 </div>
+<div class="clip"><div class="outer">
+    <div class="inner">
+       <img width="400px" height="10px" src="data:image/gif;base64,R0lGODlhAQABAIABAAD/AP///ywAAAAAAQABAAACAkQBADs=">
+    </div>
+</div></div>
+<div class="clip"><div class="outer">
+    <div class="inner">
+       <img width="400px" height="10px" src="data:image/gif;base64,R0lGODlhAQABAIABAAD/AP///ywAAAAAAQABAAACAkQBADs=">
+    </div>
+</div></div>
 <div class="outer">
-  <div class="inner clipped">
-    <div class="clip" style="overflow-x: clip">
-      <img width="400px" height="10px" src="data:image/gif;base64,R0lGODlhAQABAIABAAD/AP///ywAAAAAAQABAAACAkQBADs=">
+    <div class="inner">
+       <img width="400px" height="10px" src="data:image/gif;base64,R0lGODlhAQABAIABAAD/AP///ywAAAAAAQABAAACAkQBADs=">
     </div>
-  </div>
 </div>
-<div class="outer">
-  <div class="inner clipped">
-    <div class="clip" style="overflow: hidden">
-      <img width="400px" height="10px" src="data:image/gif;base64,R0lGODlhAQABAIABAAD/AP///ywAAAAAAQABAAACAkQBADs=">
+<div class="clip"><div class="outer">
+    <div class="inner">
+       <img width="400px" height="10px" src="data:image/gif;base64,R0lGODlhAQABAIABAAD/AP///ywAAAAAAQABAAACAkQBADs=">
     </div>
-  </div>
-</div>
-<div class="outer">
-  <div class="inner clipped">
-    <div class="clip" style="overflow: scroll">
-      <img width="400px" height="10px" src="data:image/gif;base64,R0lGODlhAQABAIABAAD/AP///ywAAAAAAQABAAACAkQBADs=">
-    </div>
-  </div>
-</div>
-<div class="outer">
-  <div class="inner clipped">
-    <div class="clip" style="overflow: clip">
-      <img width="400px" height="10px" src="data:image/gif;base64,R0lGODlhAQABAIABAAD/AP///ywAAAAAAQABAAACAkQBADs=">
-    </div>
-  </div>
-</div>
+</div></div>
 <h2>Testing CSS overflow on display:table</h2>
 <div class="outer">
     <div class="inner">
