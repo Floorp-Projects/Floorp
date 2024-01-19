@@ -2106,13 +2106,6 @@ class Factory final : public PBackgroundIDBFactoryParent,
 
   bool DeallocPBackgroundIDBFactoryRequestParent(
       PBackgroundIDBFactoryRequestParent* aActor) override;
-
-  PBackgroundIDBDatabaseParent* AllocPBackgroundIDBDatabaseParent(
-      const DatabaseSpec& aSpec,
-      NotNull<PBackgroundIDBFactoryRequestParent*> aRequest) override;
-
-  bool DeallocPBackgroundIDBDatabaseParent(
-      PBackgroundIDBDatabaseParent* aActor) override;
 };
 
 class WaitForTransactionsHelper final : public Runnable {
@@ -2209,6 +2202,13 @@ class Database final
       MOZ_ASSERT(mInvalidated);
     }
 #endif
+  }
+
+  NS_IMETHOD_(MozExternalRefCountType) AddRef() override {
+    return AtomicSafeRefCounted<Database>::AddRef();
+  }
+  NS_IMETHOD_(MozExternalRefCountType) Release() override {
+    return AtomicSafeRefCounted<Database>::Release();
   }
 
   MOZ_DECLARE_REFCOUNTED_TYPENAME(mozilla::dom::indexedDB::Database)
@@ -9101,23 +9101,6 @@ bool Factory::DeallocPBackgroundIDBFactoryRequestParent(
   return true;
 }
 
-PBackgroundIDBDatabaseParent* Factory::AllocPBackgroundIDBDatabaseParent(
-    const DatabaseSpec& aSpec,
-    NotNull<PBackgroundIDBFactoryRequestParent*> aRequest) {
-  MOZ_CRASH(
-      "PBackgroundIDBDatabaseParent actors should be constructed "
-      "manually!");
-}
-
-bool Factory::DeallocPBackgroundIDBDatabaseParent(
-    PBackgroundIDBDatabaseParent* aActor) {
-  AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aActor);
-
-  RefPtr<Database> database = dont_AddRef(static_cast<Database*>(aActor));
-  return true;
-}
-
 /*******************************************************************************
  * WaitForTransactionsHelper
  ******************************************************************************/
@@ -9310,10 +9293,6 @@ void Database::SetActorAlive() {
   MOZ_ASSERT(!mActorDestroyed);
 
   mActorWasAlive.Flip();
-
-  // This reference will be absorbed by IPDL and released when the actor is
-  // destroyed.
-  AddRef();
 }
 
 void Database::MapBlob(const IPCBlob& aIPCBlob,
@@ -15985,7 +15964,6 @@ nsresult OpenDatabaseOp::EnsureDatabaseActorIsAlive() {
 
   QM_TRY_INSPECT(const auto& spec, MetadataToSpec());
 
-  // Transfer ownership to IPDL.
   mDatabase->SetActorAlive();
 
   if (!factory->SendPBackgroundIDBDatabaseConstructor(
