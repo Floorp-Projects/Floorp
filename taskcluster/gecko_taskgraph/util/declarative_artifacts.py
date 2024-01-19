@@ -11,10 +11,10 @@ from gecko_taskgraph.util.scriptworker import (
 )
 
 _ARTIFACT_ID_PER_PLATFORM = {
-    "android-aarch64-opt": "{package}-default-arm64-v8a",
-    "android-arm-opt": "{package}-default-armeabi-v7a",
-    "android-x86-opt": "{package}-default-x86",
-    "android-x86_64-opt": "{package}-default-x86_64",
+    "android-aarch64-opt": "{package}-default-omni-arm64-v8a",
+    "android-arm-opt": "{package}-default-omni-armeabi-v7a",
+    "android-x86-opt": "{package}-default-omni-x86",
+    "android-x86_64-opt": "{package}-default-omni-x86_64",
     "android-geckoview-fat-aar-opt": "{package}-default",
     "android-aarch64-shippable": "{package}{update_channel}-omni-arm64-v8a",
     "android-aarch64-shippable-lite": "{package}{update_channel}-arm64-v8a",

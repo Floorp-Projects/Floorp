@@ -168,3 +168,32 @@ jobs:
                 - android-gradle-dependencies-lite
         optimization:
             skip-unless-backstop: null
+
+    android-geckoview-fat-aar/opt:
+        description: "Android GeckoView multi-architecture fat AAR Opt"
+        attributes:
+            maven_packages:
+                - geckoview
+        index:
+            job-name: android-geckoview-fat-aar-opt
+        treeherder:
+            platform: android-5-0-geckoview-fat-aar/opt
+            symbol: Bgv
+        dependencies:
+            android-x86-opt: build-android-x86/opt
+            android-x86_64-opt: build-android-x86_64/opt
+            android-arm-opt: build-android-arm/opt
+            android-aarch64-opt: build-android-aarch64/opt
+        worker:
+            env:
+                PERFHERDER_EXTRA_OPTIONS: android-geckoview-fat-aar-opt
+                USE_ARTIFACT: '1'
+                MOZ_ARTIFACT_TASK: {task-reference: '<android-arm-opt>'}
+        run:
+            actions: [get-secrets, build]
+            config: ["builds/releng_base_android_64_builds.py"]
+            custom-build-variant-cfg: arm
+        fetches:
+            toolchain:
+                - linux64-sccache
+                - android-gradle-dependencies
