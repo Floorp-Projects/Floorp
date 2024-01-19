@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<style>
+/* This marks all elements as part of potential anchor. */
+:has(> nonexistent) {
+  color: black;
+}
+
+/* Mark container for nth-edge search. */
+.item:first-child {
+  color: green;
+}
+
+/* A lot of rules that should only really invalidate on .container. */
+foo .container:has(.item:first-child)::after, foo .container:has(.item:last-child)::before,
+bar .container:has(.item:first-child)::after, bar .container:has(.item:last-child)::before,
+baz .container:has(.item:first-child)::after, baz .container:has(.item:last-child)::before,
+beef .container:has(.item:first-child)::after, beef .container:has(.item:last-child)::before {
+  color: pink;
+}
+</style>
+<script src="util.js"></script>
+<script>
+window.onload = function() {
+  const N = 500;
+  flush_layout();
+  perf_start();
+  for (let i = 0; i < N; i++) {
+    const d = document.createElement("div");
+    d.classList.add("item");
+    dut.appendChild(d);
+  }
+  flush_layout();
+  perf_finish();
+};
+</script>
+<div class="top">
+<div><div><div><div><div><div><div>
+<div id="dut" class="container"><div class="item"></div></div>
+</div></div></div></div></div></div></div></div>
