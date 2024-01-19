@@ -298,12 +298,16 @@ add_task(async function testClipboardSuggestToggle() {
   );
 });
 
-add_task(async function testScalarTelemetry() {
+add_task(async function testScalarAndStopWatchTelemetry() {
   SpecialPowers.clipboardCopyString("https://example.com/6");
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:home" },
     async () => {
       Services.telemetry.clearScalars();
+      let histogram = Services.telemetry.getHistogramById(
+        "FX_URLBAR_PROVIDER_CLIPBOARD_READ_TIME_MS"
+      );
+      histogram.clear();
       await UrlbarTestUtils.promiseAutocompleteResultPopup({
         window,
         value: "",
@@ -327,6 +331,11 @@ add_task(async function testScalarTelemetry() {
         `urlbar.picked.clipboard`,
         0,
         1
+      );
+      Assert.deepEqual(
+        Object.values(histogram.snapshot().values).filter(v => v > 0),
+        [1],
+        "histogram updated after search"
       );
     }
   );
