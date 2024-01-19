@@ -1,7 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-use std::time::Duration;
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 /// Typesafe way to manage server timestamps without accidentally mixing them up with
 /// local ones.
@@ -81,6 +81,17 @@ impl serde::ser::Serialize for ServerTimestamp {
 impl<'de> serde::de::Deserialize<'de> for ServerTimestamp {
     fn deserialize<D: serde::de::Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
         f64::deserialize(d).map(Self::from_float_seconds)
+    }
+}
+
+/// Exposed only for tests that need to create a server timestamp from the system time
+/// Please be cautious when constructing the timestamp directly, as constructing the server
+/// timestamp from system time is almost certainly not what you'd want to do for non-test code
+impl TryFrom<SystemTime> for ServerTimestamp {
+    type Error = std::time::SystemTimeError;
+
+    fn try_from(value: SystemTime) -> Result<Self, Self::Error> {
+        Ok(Self(value.duration_since(UNIX_EPOCH)?.as_millis() as i64))
     }
 }
 
