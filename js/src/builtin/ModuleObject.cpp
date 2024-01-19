@@ -1649,21 +1649,12 @@ bool frontend::StencilModuleMetadata::initModule(
   return true;
 }
 
-bool ModuleBuilder::isAssertionSupported(JS::ImportAssertion supportedAssertion,
-                                         frontend::TaggedParserAtomIndex key) {
+bool ModuleBuilder::isAssertionSupported(frontend::TaggedParserAtomIndex key) {
   if (!key.isWellKnownAtomId()) {
     return false;
   }
 
-  bool result = false;
-
-  switch (supportedAssertion) {
-    case JS::ImportAssertion::Type:
-      result = key.toWellKnownAtomId() == WellKnownAtomId::type;
-      break;
-  }
-
-  return result;
+  return key.toWellKnownAtomId() == WellKnownAtomId::type;
 }
 
 bool ModuleBuilder::processAssertions(frontend::StencilModuleRequest& request,
@@ -1677,16 +1668,14 @@ bool ModuleBuilder::processAssertions(frontend::StencilModuleRequest& request,
     auto key = assertion->left()->as<NameNode>().atom();
     auto value = assertion->right()->as<NameNode>().atom();
 
-    for (JS::ImportAssertion assertion : fc_->getSupportedImportAssertions()) {
-      if (isAssertionSupported(assertion, key)) {
-        markUsedByStencil(key);
-        markUsedByStencil(value);
+    if (isAssertionSupported(key)) {
+      markUsedByStencil(key);
+      markUsedByStencil(value);
 
-        StencilModuleAssertion assertionStencil(key, value);
-        if (!request.assertions.append(assertionStencil)) {
-          js::ReportOutOfMemory(fc_);
-          return false;
-        }
+      StencilModuleAssertion assertionStencil(key, value);
+      if (!request.assertions.append(assertionStencil)) {
+        js::ReportOutOfMemory(fc_);
+        return false;
       }
     }
   }
@@ -2231,9 +2220,11 @@ static bool EvaluateDynamicImportOptions(
 
   // Step 10.d.iv. Let supportedAssertions be
   // !HostGetSupportedImportAssertions().
-  const JS::ImportAssertionVector& supportedAssertions =
-      cx->runtime()->supportedImportAssertions;
-
+  // Note: This should be driven by a host hook, howver the infrastructure of
+  //       said host hook is deeply unclear, and so right now embedders will
+  //       not have the ability to alter or extend the set of supported
+  //       assertion types.
+  //       See https://bugzilla.mozilla.org/show_bug.cgi?id=1840723.
   size_t numberOfValidAssertions = 0;
 
   // Step 10.d.v. For each String key of keys,
@@ -2257,29 +2248,22 @@ static bool EvaluateDynamicImportOptions(
 
     // Step 10.d.v.4. If supportedAssertions contains key, then Append {
     // [[Key]]: key, [[Value]]: value } to assertions.
-    for (JS::ImportAssertion assertion : supportedAssertions) {
-      bool supported = false;
-      switch (assertion) {
-        case JS::ImportAssertion::Type: {
-          supported = key.toAtom() == cx->names().type;
-        } break;
+    // Note: We only currently support the "type" assertion; this will need
+    // extension
+    bool supported = key.isAtom() ? key.toAtom() == cx->names().type : false;
+    if (supported) {
+      Rooted<PlainObject*> assertionObj(cx, NewPlainObject(cx));
+      if (!assertionObj) {
+        return false;
       }
 
-      if (supported) {
-        Rooted<PlainObject*> assertionObj(cx, NewPlainObject(cx));
-        if (!assertionObj) {
-          return false;
-        }
-
-        if (!DefineDataProperty(cx, assertionObj, key, value,
-                                JSPROP_ENUMERATE)) {
-          return false;
-        }
-
-        assertionArray->initDenseElement(numberOfValidAssertions,
-                                         ObjectValue(*assertionObj));
-        ++numberOfValidAssertions;
+      if (!DefineDataProperty(cx, assertionObj, key, value, JSPROP_ENUMERATE)) {
+        return false;
       }
+
+      assertionArray->initDenseElement(numberOfValidAssertions,
+                                       ObjectValue(*assertionObj));
+      ++numberOfValidAssertions;
     }
   }
 

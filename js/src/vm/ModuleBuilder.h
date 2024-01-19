@@ -104,9 +104,7 @@ class MOZ_STACK_CLASS ModuleBuilder {
   [[nodiscard]] bool processAssertions(frontend::StencilModuleRequest& request,
                                        frontend::ListNode* assertionList);
 
-  [[nodiscard]] bool isAssertionSupported(
-      JS::ImportAssertion supportedAssertion,
-      frontend::TaggedParserAtomIndex key);
+  [[nodiscard]] bool isAssertionSupported(frontend::TaggedParserAtomIndex key);
 };
 
 template <typename T>

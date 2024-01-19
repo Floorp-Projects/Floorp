@@ -15,7 +15,6 @@
 
 #include "js/AllocPolicy.h"  // SystemAllocPolicy, AllocFunction
 #include "js/ErrorReport.h"  // JSErrorCallback, JSErrorFormatString
-#include "js/Modules.h"      // JS::ImportAssertionVector
 #include "js/Stack.h"  // JS::NativeStackSize, JS::NativeStackLimit, JS::NativeStackLimitMax
 #include "js/Vector.h"          // Vector
 #include "vm/ErrorReporting.h"  // CompileError
@@ -82,8 +81,6 @@ class FrontendContext {
   bool ownNameCollectionPool_;
 
   js::SharedScriptDataTableHolder* scriptDataTableHolder_;
-
-  JS::ImportAssertionVector supportedImportAssertions_;
 
   // Limit pointer for checking native stack consumption.
   //
@@ -154,12 +151,6 @@ class FrontendContext {
   //   * Main-thread-specific operation, such as operating on JSAtom
   //   * Optional operation, such as providing better error message
   JSContext* maybeCurrentJSContext() { return maybeCx_; }
-
-  const JS::ImportAssertionVector& getSupportedImportAssertions() const {
-    return supportedImportAssertions_;
-  }
-  bool setSupportedImportAssertions(
-      const JS::ImportAssertionVector& supportedImportAssertions);
 
   enum class Warning { Suppress, Report };
 

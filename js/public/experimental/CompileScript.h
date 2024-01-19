@@ -105,15 +105,6 @@ JS_PUBLIC_API const JSErrorReport* GetFrontendWarningAt(
     JS::FrontendContext* fc, size_t index,
     const JS::ReadOnlyCompileOptions& options);
 
-/*
- * Set supported import assertions on a FrontendContext to be used with
- * CompileModuleScriptToStencil. May only be set once for each FrontendContext.
- * The default list of supported import assertions is empty.
- */
-JS_PUBLIC_API bool SetSupportedImportAssertions(
-    JS::FrontendContext* fc,
-    const JS::ImportAssertionVector& supportedImportAssertions);
-
 // Temporary storage used during compiling and preparing to instantiate a
 // Stencil.
 //
