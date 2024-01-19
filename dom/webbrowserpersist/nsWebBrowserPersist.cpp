@@ -1707,7 +1707,7 @@ nsWebBrowserPersist::OnWalk::VisitBrowsingContext(
     return NS_ERROR_FAILURE;
   }
 
-  UniquePtr<WebBrowserPersistDocumentParent> actor(
+  RefPtr<WebBrowserPersistDocumentParent> actor(
       new WebBrowserPersistDocumentParent());
 
   nsCOMPtr<nsIWebBrowserPersistDocumentReceiver> receiver =
@@ -1719,7 +1719,7 @@ nsWebBrowserPersist::OnWalk::VisitBrowsingContext(
 
   bool ok =
       context->GetContentParent()->SendPWebBrowserPersistDocumentConstructor(
-          actor.release(), browserParent, context);
+          actor, browserParent, context);
 
   if (NS_WARN_IF(!ok)) {
     // (The actor will be destroyed on constructor failure.)
