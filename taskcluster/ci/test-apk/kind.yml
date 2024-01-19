@@ -18,7 +18,7 @@ job-defaults:
     attributes:
         retrigger: true
     dependencies:
-        build-fat-aar: build-fat-aar-android-geckoview-fat-aar-shippable/opt
+        build-fat-aar: build-fat-aar-android-geckoview-fat-aar/opt
     fetches:
         toolchain:
             - android-sdk-linux
