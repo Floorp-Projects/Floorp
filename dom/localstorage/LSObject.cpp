@@ -933,7 +933,7 @@ nsresult LSObject::EnsureDatabase() {
 
   RefPtr<LSDatabase> database = new LSDatabase(mOrigin);
 
-  LSDatabaseChild* actor = new LSDatabaseChild(database);
+  RefPtr<LSDatabaseChild> actor = new LSDatabaseChild(database);
 
   MOZ_ALWAYS_TRUE(backgroundActor->SendPBackgroundLSDatabaseConstructor(
       actor, *mStoragePrincipalInfo, mPrivateBrowsingId, datastoreId));

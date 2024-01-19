@@ -1813,7 +1813,7 @@ class Database final
 
   void Stringify(nsACString& aResult) const;
 
-  NS_INLINE_DECL_REFCOUNTING(mozilla::dom::Database)
+  NS_INLINE_DECL_REFCOUNTING(mozilla::dom::Database, override)
 
  private:
   // Reference counted.
@@ -3190,7 +3190,7 @@ void InitializeLocalStorage() {
 #endif
 }
 
-PBackgroundLSDatabaseParent* AllocPBackgroundLSDatabaseParent(
+already_AddRefed<PBackgroundLSDatabaseParent> AllocPBackgroundLSDatabaseParent(
     const PrincipalInfo& aPrincipalInfo, const uint32_t& aPrivateBrowsingId,
     const uint64_t& aDatastoreId) {
   AssertIsOnBackgroundThread();
@@ -3221,7 +3221,7 @@ PBackgroundLSDatabaseParent* AllocPBackgroundLSDatabaseParent(
                    preparedDatastore->Origin(), aPrivateBrowsingId);
 
   // Transfer ownership to IPDL.
-  return database.forget().take();
+  return database.forget();
 }
 
 bool RecvPBackgroundLSDatabaseConstructor(PBackgroundLSDatabaseParent* aActor,
@@ -3252,16 +3252,6 @@ bool RecvPBackgroundLSDatabaseConstructor(PBackgroundLSDatabaseParent* aActor,
   if (preparedDatastore->IsInvalidated()) {
     database->RequestAllowToClose();
   }
-
-  return true;
-}
-
-bool DeallocPBackgroundLSDatabaseParent(PBackgroundLSDatabaseParent* aActor) {
-  AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aActor);
-
-  // Transfer ownership back from IPDL.
-  RefPtr<Database> actor = dont_AddRef(static_cast<Database*>(aActor));
 
   return true;
 }

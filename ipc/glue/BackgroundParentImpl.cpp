@@ -271,7 +271,7 @@ BackgroundParentImpl::RecvPBackgroundSDBConnectionConstructor(
   return IPC_OK();
 }
 
-BackgroundParentImpl::PBackgroundLSDatabaseParent*
+already_AddRefed<BackgroundParentImpl::PBackgroundLSDatabaseParent>
 BackgroundParentImpl::AllocPBackgroundLSDatabaseParent(
     const PrincipalInfo& aPrincipalInfo, const uint32_t& aPrivateBrowsingId,
     const uint64_t& aDatastoreId) {
@@ -295,15 +295,6 @@ BackgroundParentImpl::RecvPBackgroundLSDatabaseConstructor(
     return IPC_FAIL_NO_REASON(this);
   }
   return IPC_OK();
-}
-
-bool BackgroundParentImpl::DeallocPBackgroundLSDatabaseParent(
-    PBackgroundLSDatabaseParent* aActor) {
-  AssertIsInMainProcess();
-  AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aActor);
-
-  return mozilla::dom::DeallocPBackgroundLSDatabaseParent(aActor);
 }
 
 BackgroundParentImpl::PBackgroundLSObserverParent*

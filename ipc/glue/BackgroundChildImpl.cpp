@@ -177,21 +177,6 @@ bool BackgroundChildImpl::DeallocPBackgroundIndexedDBUtilsChild(
   return true;
 }
 
-BackgroundChildImpl::PBackgroundLSDatabaseChild*
-BackgroundChildImpl::AllocPBackgroundLSDatabaseChild(
-    const PrincipalInfo& aPrincipalInfo, const uint32_t& aPrivateBrowsingId,
-    const uint64_t& aDatastoreId) {
-  MOZ_CRASH("PBackgroundLSDatabaseChild actor should be manually constructed!");
-}
-
-bool BackgroundChildImpl::DeallocPBackgroundLSDatabaseChild(
-    PBackgroundLSDatabaseChild* aActor) {
-  MOZ_ASSERT(aActor);
-
-  delete aActor;
-  return true;
-}
-
 BackgroundChildImpl::PBackgroundLSObserverChild*
 BackgroundChildImpl::AllocPBackgroundLSObserverChild(
     const uint64_t& aObserverId) {

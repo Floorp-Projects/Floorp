@@ -36,7 +36,7 @@ class Client;
 
 void InitializeLocalStorage();
 
-PBackgroundLSDatabaseParent* AllocPBackgroundLSDatabaseParent(
+already_AddRefed<PBackgroundLSDatabaseParent> AllocPBackgroundLSDatabaseParent(
     const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
     const uint32_t& aPrivateBrowsingId, const uint64_t& aDatastoreId);
 
@@ -44,8 +44,6 @@ bool RecvPBackgroundLSDatabaseConstructor(
     PBackgroundLSDatabaseParent* aActor,
     const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
     const uint32_t& aPrivateBrowsingId, const uint64_t& aDatastoreId);
-
-bool DeallocPBackgroundLSDatabaseParent(PBackgroundLSDatabaseParent* aActor);
 
 PBackgroundLSObserverParent* AllocPBackgroundLSObserverParent(
     const uint64_t& aObserverId);
