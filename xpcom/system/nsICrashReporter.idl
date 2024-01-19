@@ -99,7 +99,7 @@ interface nsICrashReporter : nsISupports
   void removeCrashReportAnnotation(in AUTF8String key);
 
   /**
-   * Checks if an annotation is allowlisted for inclusion in the crash ping.
+   * Checks if an annotation is allowed for inclusion in the crash ping.
    *
    * @param key
    *        Name of a known crash annotation constant.
@@ -108,7 +108,7 @@ interface nsICrashReporter : nsISupports
              included in the crash ping, false otherwise.
    * @throw NS_ERROR_INVALID_ARG if key contains an invalid value.
    */
-  boolean isAnnotationAllowlistedForPing(in ACString value);
+  boolean isAnnotationAllowedForPing(in ACString value);
 
   /**
    * Append some data to the "Notes" field, to be submitted with a crash report.

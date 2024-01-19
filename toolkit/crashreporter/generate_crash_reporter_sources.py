@@ -72,8 +72,8 @@ def read_template(template_filename):
     return template
 
 
-def extract_crash_ping_allowlist(annotations):
-    """Extract an array holding the names of the annotations allowlisted for
+def extract_crash_ping_allowedlist(annotations):
+    """Extract an array holding the names of the annotations allowed for
     inclusion in the crash ping."""
 
     return [
@@ -123,13 +123,13 @@ def generate_header(template, annotations):
     """Generate a header by filling the template with the the list of
     annotations and return it as a string."""
 
-    allowlist = extract_crash_ping_allowlist(annotations)
+    allowedlist = extract_crash_ping_allowedlist(annotations)
 
     return template_header + string.Template(template).substitute(
         {
             "enum": generate_enum(annotations),
             "strings": generate_strings(annotations),
-            "allowlist": generate_array_initializer(allowlist),
+            "allowedlist": generate_array_initializer(allowedlist),
         }
     )
 
@@ -168,11 +168,11 @@ def generate_java_array_initializer(contents):
 def generate_class(template, annotations):
     """Fill the class template from the list of annotations."""
 
-    allowlist = extract_crash_ping_allowlist(annotations)
+    allowedlist = extract_crash_ping_allowedlist(annotations)
 
     return template_header + string.Template(template).substitute(
         {
-            "allowlist": generate_java_array_initializer(allowlist),
+            "allowedlist": generate_java_array_initializer(allowedlist),
         }
     )
 
@@ -189,8 +189,8 @@ def emit_class(output, annotations_filename):
      * are kept in sync with the other C++ and JS users.
      */
     public class CrashReporterConstants {
-        public static final String[] ANNOTATION_ALLOWLIST = {
-    ${allowlist}
+        public static final String[] ANNOTATION_ALLOWEDLIST = {
+    ${allowedlist}
         };
     }"""
     )
