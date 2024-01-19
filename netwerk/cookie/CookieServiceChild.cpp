@@ -113,11 +113,28 @@ void CookieServiceChild::TrackCookieLoad(nsIChannel* aChannel) {
 
 IPCResult CookieServiceChild::RecvRemoveAll() {
   mCookiesMap.Clear();
+
+  nsCOMPtr<nsIObserverService> obsService = services::GetObserverService();
+  if (obsService) {
+    obsService->NotifyObservers(nullptr, "content-removed-all-cookies",
+                                nullptr);
+  }
   return IPC_OK();
 }
 
 IPCResult CookieServiceChild::RecvRemoveCookie(const CookieStruct& aCookie,
                                                const OriginAttributes& aAttrs) {
+  RemoveSingleCookie(aCookie, aAttrs);
+
+  nsCOMPtr<nsIObserverService> obsService = services::GetObserverService();
+  if (obsService) {
+    obsService->NotifyObservers(nullptr, "content-removed-cookie", nullptr);
+  }
+  return IPC_OK();
+}
+
+void CookieServiceChild::RemoveSingleCookie(const CookieStruct& aCookie,
+                                            const OriginAttributes& aAttrs) {
   nsCString baseDomain;
   CookieCommons::GetBaseDomainFromHost(mTLDService, aCookie.host(), baseDomain);
   CookieKey key(baseDomain, aAttrs);
@@ -125,7 +142,7 @@ IPCResult CookieServiceChild::RecvRemoveCookie(const CookieStruct& aCookie,
   mCookiesMap.Get(key, &cookiesList);
 
   if (!cookiesList) {
-    return IPC_OK();
+    return;
   }
 
   for (uint32_t i = 0; i < cookiesList->Length(); i++) {
@@ -137,8 +154,6 @@ IPCResult CookieServiceChild::RecvRemoveCookie(const CookieStruct& aCookie,
       break;
     }
   }
-
-  return IPC_OK();
 }
 
 IPCResult CookieServiceChild::RecvAddCookie(const CookieStruct& aCookie,
@@ -149,7 +164,7 @@ IPCResult CookieServiceChild::RecvAddCookie(const CookieStruct& aCookie,
   // signal test code to check their cookie list
   nsCOMPtr<nsIObserverService> obsService = services::GetObserverService();
   if (obsService) {
-    obsService->NotifyObservers(nullptr, "cookie-content-filter-test", nullptr);
+    obsService->NotifyObservers(nullptr, "content-added-cookie", nullptr);
   }
 
   return IPC_OK();
@@ -161,7 +176,13 @@ IPCResult CookieServiceChild::RecvRemoveBatchDeletedCookies(
   MOZ_ASSERT(aCookiesList.Length() == aAttrsList.Length());
   for (uint32_t i = 0; i < aCookiesList.Length(); i++) {
     CookieStruct cookieStruct = aCookiesList.ElementAt(i);
-    RecvRemoveCookie(cookieStruct, aAttrsList.ElementAt(i));
+    RemoveSingleCookie(cookieStruct, aAttrsList.ElementAt(i));
+  }
+
+  nsCOMPtr<nsIObserverService> obsService = services::GetObserverService();
+  if (obsService) {
+    obsService->NotifyObservers(nullptr, "content-batch-deleted-cookies",
+                                nullptr);
   }
   return IPC_OK();
 }
@@ -172,6 +193,12 @@ IPCResult CookieServiceChild::RecvTrackCookiesLoad(
     RefPtr<Cookie> cookie = Cookie::Create(aCookiesList[i], aAttrs);
     cookie->SetIsHttpOnly(false);
     RecordDocumentCookie(cookie, aAttrs);
+  }
+
+  nsCOMPtr<nsIObserverService> obsService = services::GetObserverService();
+  if (obsService) {
+    obsService->NotifyObservers(nullptr, "content-track-cookies-loaded",
+                                nullptr);
   }
 
   return IPC_OK();

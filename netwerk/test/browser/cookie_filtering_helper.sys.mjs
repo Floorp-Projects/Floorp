@@ -113,7 +113,7 @@ export async function triggerSetCookieFromHttpPrivate(uri, cookie) {
 // observer/listener function that will be run on the content processes
 // listens and checks for the expected cookies
 export function checkExpectedCookies(expected, browserName) {
-  const COOKIE_FILTER_TEST_MESSAGE = "cookie-content-filter-test";
+  const COOKIE_FILTER_TEST_MESSAGE = "content-added-cookie";
   const COOKIE_FILTER_TEST_CLEANUP = "cookie-content-filter-cleanup";
 
   // Counting the expected number of tests is vital to the integrity of these
