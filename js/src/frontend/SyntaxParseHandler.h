@@ -462,10 +462,10 @@ class SyntaxParseHandler {
     return NodeEmptyStatement;
   }
 
-  BinaryNodeResult newImportAssertion(Node keyNode, Node valueNode) {
+  BinaryNodeResult newImportAttribute(Node keyNode, Node valueNode) {
     return NodeGeneric;
   }
-  BinaryNodeResult newModuleRequest(Node moduleSpec, Node importAssertionList,
+  BinaryNodeResult newModuleRequest(Node moduleSpec, Node importAttributeList,
                                     const TokenPos& pos) {
     return NodeGeneric;
   }

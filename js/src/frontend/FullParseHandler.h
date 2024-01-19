@@ -701,14 +701,14 @@ class FullParseHandler {
     return newResult<NullaryNode>(ParseNodeKind::EmptyStmt, pos);
   }
 
-  BinaryNodeResult newImportAssertion(Node keyNode, Node valueNode) {
-    return newBinary(ParseNodeKind::ImportAssertion, keyNode, valueNode);
+  BinaryNodeResult newImportAttribute(Node keyNode, Node valueNode) {
+    return newBinary(ParseNodeKind::ImportAttribute, keyNode, valueNode);
   }
 
-  BinaryNodeResult newModuleRequest(Node moduleSpec, Node importAssertionList,
+  BinaryNodeResult newModuleRequest(Node moduleSpec, Node importAttributeList,
                                     const TokenPos& pos) {
     return newResult<BinaryNode>(ParseNodeKind::ImportModuleRequest, pos,
-                                 moduleSpec, importAssertionList);
+                                 moduleSpec, importAttributeList);
   }
 
   BinaryNodeResult newImportDeclaration(Node importSpecSet, Node moduleRequest,

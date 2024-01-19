@@ -508,7 +508,7 @@ class NodeBuilder {
                                    NodeVector& assertions, TokenPos* pos,
                                    MutableHandleValue dst);
 
-  [[nodiscard]] bool importAssertion(HandleValue key, HandleValue value,
+  [[nodiscard]] bool importAttribute(HandleValue key, HandleValue value,
                                      TokenPos* pos, MutableHandleValue dst);
 
   [[nodiscard]] bool importDeclaration(NodeVector& elts, HandleValue moduleSpec,
@@ -1167,13 +1167,13 @@ bool NodeBuilder::moduleRequest(HandleValue moduleSpec, NodeVector& assertions,
     return false;
   }
 
-  return newNode(AST_MODULE_REQUEST, pos, "source", moduleSpec, "assertions",
+  return newNode(AST_MODULE_REQUEST, pos, "source", moduleSpec, "attributes",
                  array, dst);
 }
 
-bool NodeBuilder::importAssertion(HandleValue key, HandleValue value,
+bool NodeBuilder::importAttribute(HandleValue key, HandleValue value,
                                   TokenPos* pos, MutableHandleValue dst) {
-  return newNode(AST_IMPORT_ASSERTION, pos, "key", key, "value", value, dst);
+  return newNode(AST_IMPORT_ATTRIBUTE, pos, "key", key, "value", value, dst);
 }
 
 bool NodeBuilder::importDeclaration(NodeVector& elts, HandleValue moduleRequest,
@@ -1442,7 +1442,7 @@ class ASTSerializer {
   bool exportSpecifier(BinaryNode* exportSpec, MutableHandleValue dst);
   bool exportNamespaceSpecifier(UnaryNode* exportSpec, MutableHandleValue dst);
   bool classDefinition(ClassNode* pn, bool expr, MutableHandleValue dst);
-  bool importAssertions(ListNode* assertionList, NodeVector& assertions);
+  bool importAttributes(ListNode* assertionList, NodeVector& assertions);
 
   bool optStatement(ParseNode* pn, MutableHandleValue dst) {
     if (!pn) {
@@ -1813,8 +1813,8 @@ bool ASTSerializer::importDeclaration(BinaryNode* importNode,
   ParseNode* moduleSpecNode = moduleRequest->left();
   MOZ_ASSERT(moduleSpecNode->isKind(ParseNodeKind::StringExpr));
 
-  auto* assertionList = &moduleRequest->right()->as<ListNode>();
-  MOZ_ASSERT(assertionList->isKind(ParseNodeKind::ImportAssertionList));
+  auto* attributeList = &moduleRequest->right()->as<ListNode>();
+  MOZ_ASSERT(attributeList->isKind(ParseNodeKind::ImportAttributeList));
 
   NodeVector elts(cx);
   if (!elts.reserve(specList->count())) {
@@ -1842,13 +1842,13 @@ bool ASTSerializer::importDeclaration(BinaryNode* importNode,
     return false;
   }
 
-  NodeVector assertions(cx);
-  if (!importAssertions(assertionList, assertions)) {
+  NodeVector attributes(cx);
+  if (!importAttributes(attributeList, attributes)) {
     return false;
   }
 
   RootedValue moduleRequestValue(cx);
-  if (!builder.moduleRequest(moduleSpec, assertions, &importNode->pn_pos,
+  if (!builder.moduleRequest(moduleSpec, attributes, &importNode->pn_pos,
                              &moduleRequestValue)) {
     return false;
   }
@@ -1963,12 +1963,12 @@ bool ASTSerializer::exportDeclaration(ParseNode* exportNode,
       return false;
     }
 
-    auto* assertionList =
+    auto* attributeList =
         &moduleRequest->as<BinaryNode>().right()->as<ListNode>();
-    MOZ_ASSERT(assertionList->isKind(ParseNodeKind::ImportAssertionList));
+    MOZ_ASSERT(attributeList->isKind(ParseNodeKind::ImportAttributeList));
 
     NodeVector assertions(cx);
-    if (!importAssertions(assertionList, assertions)) {
+    if (!importAttributes(attributeList, assertions)) {
       return false;
     }
 
@@ -2011,14 +2011,14 @@ bool ASTSerializer::exportNamespaceSpecifier(UnaryNode* exportSpec,
          builder.exportNamespaceSpecifier(exportName, &exportSpec->pn_pos, dst);
 }
 
-bool ASTSerializer::importAssertions(ListNode* assertionList,
-                                     NodeVector& assertions) {
-  for (ParseNode* assertionItem : assertionList->contents()) {
-    BinaryNode* assertionNode = &assertionItem->as<BinaryNode>();
-    MOZ_ASSERT(assertionNode->isKind(ParseNodeKind::ImportAssertion));
+bool ASTSerializer::importAttributes(ListNode* attributeList,
+                                     NodeVector& attributes) {
+  for (ParseNode* attributeItem : attributeList->contents()) {
+    BinaryNode* attributeNode = &attributeItem->as<BinaryNode>();
+    MOZ_ASSERT(attributeNode->isKind(ParseNodeKind::ImportAttribute));
 
-    NameNode* keyNameNode = &assertionNode->left()->as<NameNode>();
-    NameNode* valueNameNode = &assertionNode->right()->as<NameNode>();
+    NameNode* keyNameNode = &attributeNode->left()->as<NameNode>();
+    NameNode* valueNameNode = &attributeNode->right()->as<NameNode>();
 
     RootedValue key(cx);
     if (!identifierOrLiteral(keyNameNode, &key)) {
@@ -2031,12 +2031,12 @@ bool ASTSerializer::importAssertions(ListNode* assertionList,
     }
 
     RootedValue assertion(cx);
-    if (!builder.importAssertion(key, value, &assertionNode->pn_pos,
+    if (!builder.importAttribute(key, value, &attributeNode->pn_pos,
                                  &assertion)) {
       return false;
     }
 
-    if (!assertions.append(assertion)) {
+    if (!attributes.append(assertion)) {
       return false;
     }
   }

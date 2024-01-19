@@ -16,13 +16,13 @@ exportDeclaration = (declaration, specifiers, moduleRequest, isDefault) => Patte
     moduleRequest: moduleRequest,
     isDefault: isDefault
 });
-moduleRequest = (specifier, assertions) => Pattern({
+moduleRequest = (specifier, attributes) => Pattern({
     type: "ModuleRequest",
     source: specifier,
-    assertions: assertions
+    attributes: attributes
 });
-importAssertion = (key, value) => Pattern({
-    type: "ImportAssertion",
+importAttribute = (key, value) => Pattern({
+    type: "ImportAttribute",
     key: key,
     value : value
 });
@@ -401,7 +401,7 @@ if (getRealmConfiguration("importAttributes")) {
             moduleRequest(
                 lit("b"),
                 [
-                    importAssertion(ident('type'), lit('js')),
+                    importAttribute(ident('type'), lit('js')),
                 ]
             ),
             false
@@ -420,7 +420,7 @@ if (getRealmConfiguration("importAttributes")) {
             moduleRequest(
                 lit("b"),
                 [
-                    importAssertion(ident('foo'), lit('bar')),
+                    importAttribute(ident('foo'), lit('bar')),
                 ],
             ),
             false
@@ -439,9 +439,9 @@ if (getRealmConfiguration("importAttributes")) {
             moduleRequest(
                 lit("b"),
                 [
-                    importAssertion(ident('type'), lit('js')),
-                    importAssertion(ident('foo'), lit('bar')),
-                    importAssertion(ident('test'), lit('123')),
+                    importAttribute(ident('type'), lit('js')),
+                    importAttribute(ident('foo'), lit('bar')),
+                    importAttribute(ident('test'), lit('123')),
                 ]
             ),
             false

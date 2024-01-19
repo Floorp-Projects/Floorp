@@ -1663,7 +1663,7 @@ bool ModuleBuilder::processAssertions(frontend::StencilModuleRequest& request,
 
   for (ParseNode* assertionItem : assertionList->contents()) {
     BinaryNode* assertion = &assertionItem->as<BinaryNode>();
-    MOZ_ASSERT(assertion->isKind(ParseNodeKind::ImportAssertion));
+    MOZ_ASSERT(assertion->isKind(ParseNodeKind::ImportAttribute));
 
     auto key = assertion->left()->as<NameNode>().atom();
     auto value = assertion->right()->as<NameNode>().atom();
@@ -1698,7 +1698,7 @@ bool ModuleBuilder::processImport(frontend::BinaryNode* importNode) {
   MOZ_ASSERT(moduleSpec->isKind(ParseNodeKind::StringExpr));
 
   auto* assertionList = &moduleRequest->right()->as<ListNode>();
-  MOZ_ASSERT(assertionList->isKind(ParseNodeKind::ImportAssertionList));
+  MOZ_ASSERT(assertionList->isKind(ParseNodeKind::ImportAttributeList));
 
   auto specifier = moduleSpec->atom();
   MaybeModuleRequestIndex moduleRequestIndex =
@@ -1943,7 +1943,7 @@ bool ModuleBuilder::processExportFrom(frontend::BinaryNode* exportNode) {
   MOZ_ASSERT(moduleSpec->isKind(ParseNodeKind::StringExpr));
 
   auto* assertionList = &moduleRequest->right()->as<ListNode>();
-  MOZ_ASSERT(assertionList->isKind(ParseNodeKind::ImportAssertionList));
+  MOZ_ASSERT(assertionList->isKind(ParseNodeKind::ImportAttributeList));
 
   auto specifier = moduleSpec->atom();
   MaybeModuleRequestIndex moduleRequestIndex =

@@ -4898,8 +4898,7 @@ GeneralParser<ParseHandler, Unit>::moduleExportName() {
 }
 
 template <class ParseHandler, typename Unit>
-bool GeneralParser<ParseHandler, Unit>::assertClause(
-    ListNodeType assertionsSet) {
+bool GeneralParser<ParseHandler, Unit>::withClause(ListNodeType assertionsSet) {
   MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::Assert) ||
              anyChars.isCurrentTokenType(TokenKind::With));
 
@@ -4968,12 +4967,12 @@ bool GeneralParser<ParseHandler, Unit>::assertClause(
     NameNodeType valueNode;
     MOZ_TRY_VAR_OR_RETURN(valueNode, stringLiteral(), false);
 
-    BinaryNodeType importAssertionNode;
-    MOZ_TRY_VAR_OR_RETURN(importAssertionNode,
-                          handler_.newImportAssertion(keyNode, valueNode),
+    BinaryNodeType importAttributeNode;
+    MOZ_TRY_VAR_OR_RETURN(importAttributeNode,
+                          handler_.newImportAttribute(keyNode, valueNode),
                           false);
 
-    handler_.addList(assertionsSet, importAssertionNode);
+    handler_.addList(assertionsSet, importAttributeNode);
 
     if (!tokenStream.getToken(&token)) {
       return false;
@@ -5259,15 +5258,15 @@ GeneralParser<ParseHandler, Unit>::importDeclaration() {
     }
   }
 
-  ListNodeType importAssertionList;
-  MOZ_TRY_VAR(importAssertionList,
-              handler_.newList(ParseNodeKind::ImportAssertionList, pos()));
+  ListNodeType importAttributeList;
+  MOZ_TRY_VAR(importAttributeList,
+              handler_.newList(ParseNodeKind::ImportAttributeList, pos()));
 
   if (tt == TokenKind::With ||
       (tt == TokenKind::Assert && options().importAttributesAssertSyntax())) {
     tokenStream.consumeKnownToken(tt, TokenStream::SlashIsRegExp);
 
-    if (!assertClause(importAssertionList)) {
+    if (!withClause(importAttributeList)) {
       return errorResult();
     }
   }
@@ -5278,7 +5277,7 @@ GeneralParser<ParseHandler, Unit>::importDeclaration() {
 
   BinaryNodeType moduleRequest;
   MOZ_TRY_VAR(moduleRequest,
-              handler_.newModuleRequest(moduleSpec, importAssertionList,
+              handler_.newModuleRequest(moduleSpec, importAttributeList,
                                         TokenPos(begin, pos().end)));
 
   BinaryNodeType node;
@@ -5630,14 +5629,14 @@ GeneralParser<ParseHandler, Unit>::exportFrom(uint32_t begin, Node specList) {
 
   uint32_t moduleSpecPos = pos().begin;
 
-  ListNodeType importAssertionList;
-  MOZ_TRY_VAR(importAssertionList,
-              handler_.newList(ParseNodeKind::ImportAssertionList, pos()));
+  ListNodeType importAttributeList;
+  MOZ_TRY_VAR(importAttributeList,
+              handler_.newList(ParseNodeKind::ImportAttributeList, pos()));
   if (tt == TokenKind::With ||
       (tt == TokenKind::Assert && options().importAttributesAssertSyntax())) {
     tokenStream.consumeKnownToken(tt, TokenStream::SlashIsRegExp);
 
-    if (!assertClause(importAssertionList)) {
+    if (!withClause(importAttributeList)) {
       return errorResult();
     }
   }
@@ -5648,7 +5647,7 @@ GeneralParser<ParseHandler, Unit>::exportFrom(uint32_t begin, Node specList) {
 
   BinaryNodeType moduleRequest;
   MOZ_TRY_VAR(moduleRequest,
-              handler_.newModuleRequest(moduleSpec, importAssertionList,
+              handler_.newModuleRequest(moduleSpec, importAttributeList,
                                         TokenPos(moduleSpecPos, pos().end)));
 
   BinaryNodeType node;
