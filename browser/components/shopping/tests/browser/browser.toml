@@ -65,7 +65,7 @@ prefs = [
 
 ["browser_ui_telemetry.js"]
 skip-if = [
-  "os == 'linux && os_version == '18.04''"
+  "os == 'linux' && os_version == '18.04'"
 ]
 
 ["browser_unanalyzed_product.js"]
