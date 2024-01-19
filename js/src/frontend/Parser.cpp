@@ -5263,7 +5263,8 @@ GeneralParser<ParseHandler, Unit>::importDeclaration() {
   MOZ_TRY_VAR(importAssertionList,
               handler_.newList(ParseNodeKind::ImportAssertionList, pos()));
 
-  if (tt == TokenKind::Assert || tt == TokenKind::With) {
+  if (tt == TokenKind::With ||
+      (tt == TokenKind::Assert && options().importAttributesAssertSyntax())) {
     tokenStream.consumeKnownToken(tt, TokenStream::SlashIsRegExp);
 
     if (!assertClause(importAssertionList)) {
