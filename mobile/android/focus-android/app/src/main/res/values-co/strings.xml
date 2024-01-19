@@ -83,10 +83,9 @@
          sharing an URL. -->
     <string name="share_dialog_title">Sparte cù</string>
 
-    <!-- While a browsing session is active (in the foreground or background) we will show a notification
-         so that the user doesn't forget about the website still being open. This text is shown in
-         the notification. Clicking the notification will have the same effect as clicking the "erase"
-         button in the application. -->
+    <string name="notification_erase_title_android_14">Squassà a cronolugia di navigazione ?</string>
+    <string name="notification_erase_text_android_14">Picchichjate o spazzate sta nutificazione per squassà di manera sicura a vostra cronolugia di navigazione.</string>
+
     <string name="notification_erase_text">Squassà a cronolugia di navigazione</string>
 
     <!-- Notification action to open Focus and resume the current browsing session. -->
@@ -1077,7 +1076,7 @@
     <string name="tool_tip_dismiss_button_content_description">Righjittà</string>
 
     <!-- CFR for Toolbar Delete Icon (Banner Info Message) -->
-    <string name="cfr_for_toolbar_delete_icon2">Picchicciate quì per squassà tuttu - cronolugia, canistrelli, ecc. - è principiate à zeru in un’unghjetta nova.</string>
+    <string name="cfr_for_toolbar_delete_icon2">Picchichjate quì per squassà tuttu - cronolugia, canistrelli, ecc. - è principiate à zeru in un’unghjetta nova.</string>
 
     <!-- Promote SearchWidget Dialog -->
 

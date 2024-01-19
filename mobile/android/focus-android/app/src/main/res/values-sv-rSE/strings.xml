@@ -53,7 +53,6 @@
     <string name="menu_remove_from_shortcuts">Ta bort från genvägar</string>
 
     <!-- Menu item: Shows information about features and changes that are new to this version -->
-    <string name="menu_whats_new">Vad är nytt</string>
     <string name="menu_settings">Inställningar</string>
     <string name="menu_about">Om</string>
     <string name="menu_help">Hjälp</string>
@@ -84,10 +83,9 @@
          sharing an URL. -->
     <string name="share_dialog_title">Dela via</string>
 
-    <!-- While a browsing session is active (in the foreground or background) we will show a notification
-         so that the user doesn't forget about the website still being open. This text is shown in
-         the notification. Clicking the notification will have the same effect as clicking the "erase"
-         button in the application. -->
+    <string name="notification_erase_title_android_14">Radera webbhistorik?</string>
+    <string name="notification_erase_text_android_14">Tryck på eller rensa den här aviseringen för att säkert radera din webbhistorik.</string>
+
     <string name="notification_erase_text">Radera webbhistorik</string>
 
     <!-- Notification action to open Focus and resume the current browsing session. -->

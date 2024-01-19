@@ -84,7 +84,7 @@
     <string name="share_dialog_title">Compartir vía</string>
 
     <string name="notification_erase_title_android_14">¿Borrar historial de navegación?</string>
-    <string name="notification_erase_text_android_14">Pulse o borre esta notificación para borrar de forma segura su historial de navegación.</string>
+    <string name="notification_erase_text_android_14">Tocá o borrá esta notificación para eliminar de forma segura tu historial de navegación.</string>
 
     <string name="notification_erase_text">Borrar historial de navegación</string>
 

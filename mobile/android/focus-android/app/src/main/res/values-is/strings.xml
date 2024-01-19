@@ -54,7 +54,6 @@
     <string name="menu_remove_from_shortcuts">Fjarlægja úr flýtileiðum</string>
 
     <!-- Menu item: Shows information about features and changes that are new to this version -->
-    <string name="menu_whats_new">Nýtt á döfinni</string>
     <string name="menu_settings">Stillingar</string>
     <string name="menu_about">Um hugbúnaðinn</string>
     <string name="menu_help">Hjálp</string>
@@ -88,10 +87,10 @@
          sharing an URL. -->
     <string name="share_dialog_title">Deila með</string>
 
-    <!-- While a browsing session is active (in the foreground or background) we will show a notification
-         so that the user doesn't forget about the website still being open. This text is shown in
-         the notification. Clicking the notification will have the same effect as clicking the "erase"
-         button in the application. -->
+    <string name="notification_erase_title_android_14">Eyða vafurferli?</string>
+
+    <string name="notification_erase_text_android_14">Ýttu á eða hreinsaðu þessa tilkynningu til að eyða vafurferli þínum á öruggan hátt.</string>
+
     <string name="notification_erase_text">Eyða vafraferli</string>
 
     <!-- Notification action to open Focus and resume the current browsing session. -->

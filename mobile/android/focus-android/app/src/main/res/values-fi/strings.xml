@@ -53,7 +53,6 @@
     <string name="menu_remove_from_shortcuts">Poista pikavalinnoista</string>
 
     <!-- Menu item: Shows information about features and changes that are new to this version -->
-    <string name="menu_whats_new">Mitä uutta</string>
     <string name="menu_settings">Asetukset</string>
     <string name="menu_about">Tietoja</string>
     <string name="menu_help">Ohje</string>
@@ -84,10 +83,9 @@
          sharing an URL. -->
     <string name="share_dialog_title">Jaa palvelulla</string>
 
-    <!-- While a browsing session is active (in the foreground or background) we will show a notification
-         so that the user doesn't forget about the website still being open. This text is shown in
-         the notification. Clicking the notification will have the same effect as clicking the "erase"
-         button in the application. -->
+    <string name="notification_erase_title_android_14">Poistetaanko selaushistoria?</string>
+    <string name="notification_erase_text_android_14">Napauta tai tyhjennä tämä ilmoitus tyhjentääksesi selaushistoriasi turvallisesti.</string>
+
     <string name="notification_erase_text">Tyhjennä selaushistoria</string>
 
     <!-- Notification action to open Focus and resume the current browsing session. -->
