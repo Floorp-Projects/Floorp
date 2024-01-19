@@ -24,7 +24,9 @@ aom_img_free
 aom_img_plane_height
 aom_img_plane_width
 aom_img_wrap
+#if defined(X86_WIN64)
 aom_winx64_fstcw
+#endif
 av1_apply_encoding_flags
 av1_change_config
 av1_convert_sect5obus_to_annexb
