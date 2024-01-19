@@ -629,7 +629,7 @@ void IProtocol::DestroySubtree(ActorDestroyReason aWhy) {
 
 IToplevelProtocol::IToplevelProtocol(const char* aName, ProtocolId aProtoId,
                                      Side aSide)
-    : IProtocol(aProtoId, aSide),
+    : IRefCountedProtocol(aProtoId, aSide),
       mOtherPid(base::kInvalidProcessId),
       mLastLocalId(0),
       mChannel(aName, this) {
