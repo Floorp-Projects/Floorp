@@ -1,3 +1,5 @@
+// |jit-test| --enable-import-attributes
+
 load(libdir + "match.js");
 load(libdir + "asserts.js");
 

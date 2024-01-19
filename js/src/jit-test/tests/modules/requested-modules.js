@@ -1,3 +1,5 @@
+// |jit-test| --enable-import-attributes
+
 // Test requestedModules property
 
 function testRequestedModules(source, expected) {

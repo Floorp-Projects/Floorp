@@ -1,4 +1,4 @@
-// |reftest| skip-if(!xulRuntime.shell)
+// |reftest| skip-if(!xulRuntime.shell)  shell-option(--enable-import-attributes)
 
 function moduleRequest(source, assertions) {
   return {
