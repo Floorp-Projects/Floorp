@@ -1798,6 +1798,20 @@ class TestPrefChromeOnlySCFuncConstructorForInterface : public nsISupports,
   Constructor(const GlobalObject&);
 };
 
+class TestCallbackDictUnionOverload : public nsISupports,
+                                      public nsWrapperCache {
+ public:
+  NS_DECL_ISUPPORTS
+  virtual nsISupports* GetParentObject();
+
+  void Overload1(bool);
+  void Overload1(TestCallback&);
+  void Overload1(const GrandparentDict&);
+  void Overload2(bool);
+  void Overload2(const GrandparentDict&);
+  void Overload2(TestCallback&);
+};
+
 }  // namespace dom
 }  // namespace mozilla
 
