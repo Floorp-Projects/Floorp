@@ -198,7 +198,9 @@ class AndroidProfileRun(TestingMixin, BaseScript, MozbaseMixin, AndroidMixin):
                 v = v.format(**interpolation)
             prefs[k] = Preferences.cast(v)
 
-        outputdir = self.config.get("output_directory", "/sdcard/pgo_profile")
+        adbdevice = ADBDeviceFactory(adb=adb, device="emulator-5554")
+
+        outputdir = posixpath.join(adbdevice.test_root, "pgo_profile")
         jarlog = posixpath.join(outputdir, "en-US.log")
         profdata = posixpath.join(outputdir, "default_%p_random_%m.profraw")
 
@@ -214,27 +216,6 @@ class AndroidProfileRun(TestingMixin, BaseScript, MozbaseMixin, AndroidMixin):
         if not self.symbols_path:
             self.symbols_path = os.environ.get("MOZ_FETCHES_DIR")
 
-        # Force test_root to be on the sdcard for android pgo
-        # builds which fail for Android 4.3 when profiles are located
-        # in /data/local/tmp/test_root with
-        # E AndroidRuntime: FATAL EXCEPTION: Gecko
-        # E AndroidRuntime: java.lang.IllegalArgumentException: \
-        #    Profile directory must be writable if specified: /data/local/tmp/test_root/profile
-        # This occurs when .can-write-sentinel is written to
-        # the profile in
-        # mobile/android/geckoview/src/main/java/org/mozilla/gecko/GeckoProfile.java.
-        # This is not a problem on later versions of Android. This
-        # over-ride of test_root should be removed when Android 4.3 is no
-        # longer supported.
-        sdcard_test_root = "/sdcard/test_root"
-        adbdevice = ADBDeviceFactory(
-            adb=adb, device="emulator-5554", test_root=sdcard_test_root
-        )
-        if adbdevice.test_root != sdcard_test_root:
-            # If the test_root was previously set and shared
-            # the initializer will not have updated the shared
-            # value. Force it to match the sdcard_test_root.
-            adbdevice.test_root = sdcard_test_root
         adbdevice.mkdir(outputdir, parents=True)
 
         try:
