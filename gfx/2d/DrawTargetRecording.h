@@ -18,7 +18,7 @@ struct RemoteTextureOwnerId;
 
 namespace gfx {
 
-class DrawTargetRecording : public DrawTarget {
+class DrawTargetRecording final : public DrawTarget {
  public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(DrawTargetRecording, override)
   DrawTargetRecording(DrawEventRecorder* aRecorder, DrawTarget* aDT,
@@ -346,12 +346,6 @@ class DrawTargetRecording : public DrawTarget {
 
   virtual already_AddRefed<FilterNode> CreateFilter(FilterType aType) override;
 
-  /*
-   * Set a transform on the surface, this transform is applied at drawing time
-   * to both the mask and source of the operation.
-   */
-  virtual void SetTransform(const Matrix& aTransform) override;
-
   virtual void SetPermitSubpixelAA(bool aPermitSubpixelAA) override;
 
   /* Tries to get a native surface for a DrawTarget, this may fail if the
@@ -376,6 +370,46 @@ class DrawTargetRecording : public DrawTarget {
   DrawTargetRecording(const DrawTargetRecording* aDT, IntRect aRect,
                       SurfaceFormat aFormat);
 
+  void RecordTransform(const Matrix& aTransform) const;
+
+  void FlushTransform() const {
+    if (mTransformDirty) {
+      if (!mRecordedTransform.ExactlyEquals(mTransform)) {
+        RecordTransform(mTransform);
+      }
+      mTransformDirty = false;
+    }
+  }
+
+  void RecordEvent(const RecordedEvent& aEvent) const {
+    FlushTransform();
+    mRecorder->RecordEvent(aEvent);
+  }
+
+  void RecordEventSelf(const RecordedEvent& aEvent) const {
+    FlushTransform();
+    mRecorder->RecordEvent(this, aEvent);
+  }
+
+  void RecordEventSelf(const FilterNodeRecording* aFilterNode,
+                       const RecordedEvent& aEvent) const {
+    FlushTransform();
+    mRecorder->RecordEvent(this, aFilterNode, aEvent);
+  }
+
+  void RecordEventSkipFlushTransform(const RecordedEvent& aEvent) const {
+    mRecorder->RecordEvent(aEvent);
+  }
+
+  void RecordEventSelfSkipFlushTransform(const RecordedEvent& aEvent) const {
+    mRecorder->RecordEvent(this, aEvent);
+  }
+
+  void RecordEventSelfSkipFlushTransform(const FilterNodeRecording* aFilterNode,
+                                         const RecordedEvent& aEvent) const {
+    mRecorder->RecordEvent(this, aFilterNode, aEvent);
+  }
+
   Path* GetPathForPathRecording(const Path* aPath) const;
   already_AddRefed<PathRecording> EnsurePathStored(const Path* aPath);
   void EnsurePatternDependenciesStored(const Pattern& aPattern);
@@ -395,6 +429,9 @@ class DrawTargetRecording : public DrawTarget {
     bool mOldPermitSubpixelAA;
   };
   std::vector<PushedLayer> mPushedLayers;
+
+  // Last transform that was used in the recording.
+  mutable Matrix mRecordedTransform;
 };
 
 }  // namespace gfx

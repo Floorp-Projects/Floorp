@@ -72,6 +72,7 @@ class DrawEventRecorderPrivate : public DrawEventRecorder {
     mStoredFontData.Clear();
     mScaledFonts.clear();
     mCurrentDT = nullptr;
+    mCurrentFilter = nullptr;
   }
 
   template <class S>
@@ -84,7 +85,8 @@ class DrawEventRecorderPrivate : public DrawEventRecorder {
 
   virtual void RecordEvent(const RecordedEvent& aEvent) = 0;
 
-  void RecordEvent(DrawTargetRecording* aDT, const RecordedEvent& aEvent) {
+  void RecordEvent(const DrawTargetRecording* aDT,
+                   const RecordedEvent& aEvent) {
     ReferencePtr dt = aDT;
     if (mCurrentDT != dt) {
       RecordSetCurrentDrawTarget(dt);
@@ -94,16 +96,19 @@ class DrawEventRecorderPrivate : public DrawEventRecorder {
 
   void RecordSetCurrentDrawTarget(ReferencePtr aDT);
 
-  void SetCurrentDrawTarget(DrawTargetRecording* aDT) { mCurrentDT = aDT; }
+  void SetCurrentDrawTarget(const DrawTargetRecording* aDT) {
+    mCurrentDT = aDT;
+  }
 
-  void ClearCurrentDrawTarget(DrawTargetRecording* aDT) {
+  void ClearCurrentDrawTarget(const DrawTargetRecording* aDT) {
     ReferencePtr dt = aDT;
     if (mCurrentDT == dt) {
       mCurrentDT = nullptr;
     }
   }
 
-  void RecordEvent(FilterNodeRecording* aFilter, const RecordedEvent& aEvent) {
+  void RecordEvent(const FilterNodeRecording* aFilter,
+                   const RecordedEvent& aEvent) {
     ReferencePtr filter = aFilter;
     if (mCurrentFilter != filter) {
       RecordSetCurrentFilterNode(filter);
@@ -113,18 +118,19 @@ class DrawEventRecorderPrivate : public DrawEventRecorder {
 
   void RecordSetCurrentFilterNode(ReferencePtr aFilter);
 
-  void SetCurrentFilterNode(FilterNodeRecording* aFilter) {
+  void SetCurrentFilterNode(const FilterNodeRecording* aFilter) {
     mCurrentFilter = aFilter;
   }
 
-  void ClearCurrentFilterNode(FilterNodeRecording* aFilter) {
+  void ClearCurrentFilterNode(const FilterNodeRecording* aFilter) {
     ReferencePtr filter = aFilter;
     if (mCurrentFilter == filter) {
       mCurrentFilter = nullptr;
     }
   }
 
-  void RecordEvent(DrawTargetRecording* aDT, FilterNodeRecording* aFilter,
+  void RecordEvent(const DrawTargetRecording* aDT,
+                   const FilterNodeRecording* aFilter,
                    const RecordedEvent& aEvent) {
     ReferencePtr dt = aDT;
     if (mCurrentDT != dt) {
