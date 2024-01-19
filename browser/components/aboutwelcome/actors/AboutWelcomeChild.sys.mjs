@@ -256,7 +256,15 @@ export class AboutWelcomeChild extends JSWindowActorChild {
   }
 
   AWFinish() {
+    const shouldFocusNewtabUrlBar =
+      lazy.NimbusFeatures.aboutwelcome.getVariable("newtabUrlBarFocus");
+
     this.contentWindow.location.href = "about:home";
+    if (shouldFocusNewtabUrlBar) {
+      this.AWSendToParent("SPECIAL_ACTION", {
+        type: "FOCUS_URLBAR",
+      });
+    }
   }
 
   AWEnsureLangPackInstalled(negotiated, screenContent) {

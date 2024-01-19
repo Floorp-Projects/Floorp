@@ -332,3 +332,10 @@ Selects an element in the current Window's document and triggers a click action
 * args: (none)
 
 Action for reloading the current browser.
+
+
+### `FOCUS_URLBAR`
+
+Focuses the urlbar in the window the message was displayed in
+
+* args: (none)
