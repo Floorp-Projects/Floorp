@@ -665,19 +665,8 @@ struct JSRuntime {
   /* Code coverage output. */
   js::UnprotectedData<js::coverage::LCovRuntime> lcovOutput_;
 
-  /* Functions to call, together with data, when the runtime is being torn down.
-   */
-  js::MainThreadData<std::vector<std::pair<void (*)(void*), void*>>>
-      cleanupClosures;
-
  public:
   js::coverage::LCovRuntime& lcovOutput() { return lcovOutput_.ref(); }
-
-  /* Register a cleanup function to be called during runtime shutdown. Do not
-   * depend on the ordering of cleanup calls. */
-  void atExit(void (*function)(void*), void* data) {
-    cleanupClosures.ref().push_back({function, data});
-  }
 
  private:
   js::UnprotectedData<js::jit::JitRuntime*> jitRuntime_;
