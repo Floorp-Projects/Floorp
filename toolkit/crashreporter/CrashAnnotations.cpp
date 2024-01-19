@@ -35,4 +35,19 @@ bool IsAnnotationAllowedForPing(Annotation aAnnotation) {
   return elem != end(kCrashPingAllowedList);
 }
 
+bool ShouldIncludeAnnotation(Annotation aAnnotation, const char* aValue) {
+  const auto* elem = find_if(begin(kSkipIfList), end(kSkipIfList),
+                             [&aAnnotation](AnnotationSkipValue aElement) {
+                               return aElement.annotation == aAnnotation;
+                             });
+
+  if (elem != end(kSkipIfList)) {
+    if (strcmp(aValue, elem->value) == 0) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 }  // namespace CrashReporter

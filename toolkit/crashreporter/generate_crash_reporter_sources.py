@@ -81,6 +81,17 @@ def extract_crash_ping_allowedlist(annotations):
     ]
 
 
+def extract_skiplist(annotations):
+    """Extract an array holding the names of the annotations that should be
+    skipped and the values which will cause them to be skipped."""
+
+    return [
+        (name, data.get("skip_if"))
+        for (name, data) in sorted(annotations.items())
+        if len(data.get("skip_if", "")) > 0
+    ]
+
+
 ###############################################################################
 # C++ code generation                                                         #
 ###############################################################################
@@ -111,10 +122,20 @@ def generate_enum(annotations):
     return enum
 
 
-def generate_array_initializer(contents):
+def generate_annotations_array_initializer(contents):
     """Generates the initializer for a C++ array of annotations."""
 
     initializer = ["  Annotation::" + name for name in contents]
+
+    return ",\n".join(initializer)
+
+
+def generate_skiplist_initializer(contents):
+    """Generates the initializer for a C++ array of AnnotationSkipValue structs."""
+
+    initializer = [
+        "  { Annotation::" + name + ', "' + value + '" }' for (name, value) in contents
+    ]
 
     return ",\n".join(initializer)
 
@@ -124,12 +145,14 @@ def generate_header(template, annotations):
     annotations and return it as a string."""
 
     allowedlist = extract_crash_ping_allowedlist(annotations)
+    skiplist = extract_skiplist(annotations)
 
     return template_header + string.Template(template).substitute(
         {
             "enum": generate_enum(annotations),
             "strings": generate_strings(annotations),
-            "allowedlist": generate_array_initializer(allowedlist),
+            "allowedlist": generate_annotations_array_initializer(allowedlist),
+            "skiplist": generate_skiplist_initializer(skiplist),
         }
     )
 

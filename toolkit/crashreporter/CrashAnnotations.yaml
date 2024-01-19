@@ -10,6 +10,8 @@
 #   .extra file instead of the annotation name
 # - ping: A boolean that indicates whether the annotation is allowed for
 #   inclusion in the crash ping, if not specified this defaults to false
+# - skip_if: A string that will cause the annotation not to be included in the
+#   crash report if the contents match it.
 
 AbortMessage:
   description: >
@@ -221,6 +223,7 @@ BlocklistInitFailed:
     Set to 1 if the DLL blocklist could not be initialized.
   type: boolean
   ping: true
+  skip_if: "0"
 
 Breadcrumbs:
   description: >
@@ -318,6 +321,7 @@ EventLoopNestingLevel:
     event loop and indicates the nesting level.
   type: integer
   ping: true
+  skip_if: "0"
 
 ExperimentalFeatures:
   description: >
@@ -508,6 +512,7 @@ IsGarbageCollecting:
     occurred.
   type: boolean
   ping: true
+  skip_if: "0"
 
 IsWayland:
   description: >
@@ -637,6 +642,7 @@ LowPhysicalMemoryEvents:
     physical memory is running low. This is a Windows-specific annotation.
   type: integer
   ping: true
+  skip_if: "0"
 
 MainThreadRunnableName:
   description: >
@@ -661,6 +667,7 @@ OOMAllocationSize:
     Size of the allocation that caused an out-of-memory condition.
   type: string
   ping: true
+  skip_if: "0"
 
 PluginFilename:
   description: >
@@ -870,6 +877,7 @@ TextureUsage:
     Amount of memory in bytes consumed by textures.
   type: string
   ping: true
+  skip_if: "0"
 
 Throttleable:
   description: >
@@ -938,6 +946,7 @@ User32BeforeBlocklist:
     Set to 1 if user32.dll was loaded before we could install the DLL blocklist.
   type: boolean
   ping: true
+  skip_if: "0"
 
 useragent_locale:
   description: >

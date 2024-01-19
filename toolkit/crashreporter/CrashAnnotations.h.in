@@ -25,6 +25,16 @@ const Annotation kCrashPingAllowedList[] = {
 ${allowedlist}
 };
 
+// Annotations which should be skipped when they have specific values
+struct AnnotationSkipValue {
+  Annotation annotation;
+  const char* value;
+};
+
+const AnnotationSkipValue kSkipIfList[] = {
+${skiplist}
+};
+
 /**
  * Return the string representation of a crash annotation.
  *
@@ -54,6 +64,16 @@ bool AnnotationFromString(Annotation& aResult, const char* aValue);
  *         otherwise
  */
 bool IsAnnotationAllowedForPing(Annotation aAnnotation);
+
+/**
+ * Checks if the annotation should be included. Some annotations are skipped if
+ * their value matches a specific one (like the value 0).
+ *
+ * @param aAnnotation the crash annotation to be checked
+ * @param aValue the contents of the annotation as a string
+ * @return true if the annotation should be included, false otherwise
+ */
+bool ShouldIncludeAnnotation(Annotation aAnnotation, const char* aValue);
 
 /**
  * Abstract annotation writer, this is needed only for code that writes out
