@@ -203,9 +203,9 @@ static bool GetRealmConfiguration(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  bool importAssertions = cx->options().importAssertions();
-  if (!JS_SetProperty(cx, info, "importAssertions",
-                      importAssertions ? TrueHandleValue : FalseHandleValue)) {
+  bool importAttributes = cx->options().importAttributes();
+  if (!JS_SetProperty(cx, info, "importAttributes",
+                      importAttributes ? TrueHandleValue : FalseHandleValue)) {
     return false;
   }
 

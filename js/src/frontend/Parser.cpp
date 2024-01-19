@@ -4902,7 +4902,7 @@ bool GeneralParser<ParseHandler, Unit>::assertClause(
     ListNodeType assertionsSet) {
   MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::Assert));
 
-  if (!options().importAssertions()) {
+  if (!options().importAttributes()) {
     error(JSMSG_IMPORT_ASSERTIONS_NOT_SUPPORTED);
     return false;
   }
@@ -12512,7 +12512,7 @@ GeneralParser<ParseHandler, Unit>::importExpr(YieldHandling yieldHandling,
     }
 
     Node optionalArg;
-    if (options().importAssertions()) {
+    if (options().importAttributes()) {
       if (next == TokenKind::Comma) {
         tokenStream.consumeKnownToken(TokenKind::Comma,
                                       TokenStream::SlashIsRegExp);

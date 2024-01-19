@@ -826,8 +826,8 @@ void xpc::SetPrefableCompileOptions(JS::PrefableCompileOptions& options) {
   options
       .setSourcePragmas(StaticPrefs::javascript_options_source_pragmas())
 #ifdef NIGHTLY_BUILD
-      .setImportAssertions(
-          StaticPrefs::javascript_options_experimental_import_assertions())
+      .setImportAttributes(
+          StaticPrefs::javascript_options_experimental_import_attributes())
 #endif
       .setAsmJS(StaticPrefs::javascript_options_asmjs())
       .setThrowOnAsmJSValidationFailure(
