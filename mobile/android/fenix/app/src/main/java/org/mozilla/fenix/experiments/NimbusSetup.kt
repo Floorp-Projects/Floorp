@@ -70,7 +70,9 @@ fun createNimbus(context: Context, urlString: String?): NimbusApi {
         onFetchCallback = {
             context.settings().nimbusExperimentsFetched = true
         }
-    }.build(appInfo)
+    }.build(appInfo).also { nimbusApi ->
+        nimbusApi.recordIsReady(FxNimbus.features.nimbusIsReady.value().eventCount)
+    }
 }
 
 private fun Context.reportError(message: String, e: Throwable) {

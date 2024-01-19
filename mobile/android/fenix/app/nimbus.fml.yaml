@@ -371,6 +371,17 @@ features:
       - channel: nightly
         value:
           enabled: true
+
+  nimbus-is-ready:
+    description: >
+      A feature that provides the number of Nimbus is_ready events to send
+      when Nimbus finishes launching.
+    variables:
+      event-count:
+        description: The number of events that should be sent.
+        type: Int
+        default: 1
+
 types:
   objects: {}
 
