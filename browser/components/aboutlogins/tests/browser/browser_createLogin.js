@@ -63,7 +63,7 @@ add_task(async function test_create_login() {
         );
         let createButton = loginList._createLoginButton;
         Assert.ok(
-          ContentTaskUtils.is_hidden(loginList._blankLoginListItem),
+          ContentTaskUtils.isHidden(loginList._blankLoginListItem),
           "the blank login list item should be hidden initially"
         );
         Assert.ok(
@@ -111,7 +111,7 @@ add_task(async function test_create_login() {
 
         // At this moment, the password input field is not focused so no warning should be displayed.
         Assert.ok(
-          ContentTaskUtils.is_hidden(loginItem._passwordWarning),
+          ContentTaskUtils.isHidden(loginItem._passwordWarning),
           "The password warning should not be visible if the password input field is not focused"
         );
 
@@ -138,7 +138,7 @@ add_task(async function test_create_login() {
 
         // Since the password field is focused, the origin warning should not be displayed.
         Assert.ok(
-          ContentTaskUtils.is_hidden(loginItem._originWarning),
+          ContentTaskUtils.isHidden(loginItem._originWarning),
           "The origin warning should not be visible if the origin input field is not focused"
         );
 
@@ -178,7 +178,7 @@ add_task(async function test_create_login() {
         "login-list should no longer be in no logins view"
       );
       Assert.ok(
-        ContentTaskUtils.is_hidden(loginList._blankLoginListItem),
+        ContentTaskUtils.isHidden(loginList._blankLoginListItem),
         "the blank login list item should be hidden after adding new login"
       );
       Assert.ok(
@@ -343,7 +343,7 @@ add_task(async function test_cancel_create_login() {
       "there should be a selected guid before create mode"
     );
     Assert.ok(
-      ContentTaskUtils.is_hidden(loginList._blankLoginListItem),
+      ContentTaskUtils.isHidden(loginList._blankLoginListItem),
       "the blank login list item should be hidden before create mode"
     );
 
@@ -368,7 +368,7 @@ add_task(async function test_cancel_create_login() {
       "there should be a selected guid after canceling create mode"
     );
     Assert.ok(
-      ContentTaskUtils.is_hidden(loginList._blankLoginListItem),
+      ContentTaskUtils.isHidden(loginList._blankLoginListItem),
       "the blank login list item should be hidden after canceling create mode"
     );
   });

@@ -23,7 +23,7 @@ add_task(async function test() {
         let aP = content.document.getElementById("badCertAdvancedPanel");
         Assert.ok(aP, "Advanced content should exist");
         Assert.ok(
-          ContentTaskUtils.is_hidden(aP),
+          ContentTaskUtils.isHidden(aP),
           "Advanced content should not be visible by default"
         );
       });

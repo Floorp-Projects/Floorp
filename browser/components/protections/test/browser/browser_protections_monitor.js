@@ -114,7 +114,7 @@ add_task(async function () {
     }, "Monitor card is not enabled.");
 
     const monitorCard = content.document.querySelector(".monitor-card");
-    ok(ContentTaskUtils.is_hidden(monitorCard), "Monitor card is hidden.");
+    ok(ContentTaskUtils.isHidden(monitorCard), "Monitor card is hidden.");
   });
 
   if (monitorCardEnabled) {
@@ -149,7 +149,7 @@ async function checkNoLoginsContentIsDisplayed(tab, expectedLinkContent) {
     const cardBody = content.document.querySelector(".monitor-card .card-body");
 
     ok(
-      ContentTaskUtils.is_hidden(cardBody),
+      ContentTaskUtils.isHidden(cardBody),
       "Card body is hidden for users with no logins."
     );
     is(

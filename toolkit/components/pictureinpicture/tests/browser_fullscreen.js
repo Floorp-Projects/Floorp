@@ -45,7 +45,7 @@ add_task(async () => {
             let video = this.content.document.getElementById(videoID);
             let toggle = video.openOrClosedShadowRoot.getElementById(toggleID);
             ok(
-              ContentTaskUtils.is_hidden(toggle),
+              ContentTaskUtils.isHidden(toggle),
               `Toggle should be hidden in video fullscreen mode for video ${videoID}.`
             );
             return this.content.document.exitFullscreen();
@@ -99,7 +99,7 @@ add_task(async () => {
           let video = this.content.document.getElementById(videoID);
           let toggle = video.openOrClosedShadowRoot.getElementById(toggleID);
           ok(
-            ContentTaskUtils.is_hidden(toggle),
+            ContentTaskUtils.isHidden(toggle),
             `Toggle should be hidden in body fullscreen mode for video ${videoID}.`
           );
         });

@@ -25,7 +25,7 @@ export var ContentTaskUtils = {
    *
    * @return {boolean}
    */
-  is_hidden(element) {
+  isHidden(element) {
     let style = element.ownerDocument.defaultView.getComputedStyle(element);
     if (style.display == "none") {
       return true;
@@ -39,12 +39,12 @@ export var ContentTaskUtils = {
       element.parentNode != element.ownerDocument &&
       element.parentNode.nodeType != Node.DOCUMENT_FRAGMENT_NODE
     ) {
-      return ContentTaskUtils.is_hidden(element.parentNode);
+      return ContentTaskUtils.isHidden(element.parentNode);
     }
 
     // Walk up the shadow DOM if we've reached the top of the shadow root
     if (element.parentNode.host) {
-      return ContentTaskUtils.is_hidden(element.parentNode.host);
+      return ContentTaskUtils.isHidden(element.parentNode.host);
     }
 
     return false;
@@ -59,7 +59,7 @@ export var ContentTaskUtils = {
    * @return {boolean}
    */
   is_visible(element) {
-    return !this.is_hidden(element);
+    return !this.isHidden(element);
   },
 
   /**

@@ -25,7 +25,7 @@ async function checkVPNCardVisibility(tab, shouldBeHidden, subscribed = false) {
         const subscribedStateCorrect =
           vpnCard.classList.contains("subscribed") == _subscribed;
         return (
-          ContentTaskUtils.is_hidden(vpnCard) === _shouldBeHidden &&
+          ContentTaskUtils.isHidden(vpnCard) === _shouldBeHidden &&
           subscribedStateCorrect
         );
       });
@@ -43,7 +43,7 @@ async function checkVPNPromoBannerVisibility(tab, shouldBeHidden) {
     async function ({ _shouldBeHidden }) {
       await ContentTaskUtils.waitForCondition(() => {
         const vpnBanner = content.document.querySelector(".vpn-banner");
-        return ContentTaskUtils.is_hidden(vpnBanner) === _shouldBeHidden;
+        return ContentTaskUtils.isHidden(vpnBanner) === _shouldBeHidden;
       });
 
       const visibilityState = _shouldBeHidden ? "hidden" : "shown";

@@ -142,7 +142,7 @@ add_task(async function test_review_highlights_no_highlights() {
           await reviewHighlights.updateComplete;
 
           ok(
-            ContentTaskUtils.is_hidden(reviewHighlights),
+            ContentTaskUtils.isHidden(reviewHighlights),
             "review-highlights should not be visible"
           );
 
@@ -184,7 +184,7 @@ add_task(async function test_review_highlights_invalid_type() {
           await reviewHighlights.updateComplete;
 
           ok(
-            ContentTaskUtils.is_hidden(reviewHighlights),
+            ContentTaskUtils.isHidden(reviewHighlights),
             "review-highlights should not be visible"
           );
         }
