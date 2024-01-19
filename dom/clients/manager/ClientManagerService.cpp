@@ -281,7 +281,7 @@ bool ClientManagerService::AddSource(ClientSourceParent* aSource) {
     return true;
   }
   if (!mSourceTable.WithEntryHandle(aSource->Info().Id(),
-                                    [aSource](auto&& entry) {
+                                    [&aSource](auto&& entry) {
                                       if (NS_WARN_IF(entry.HasEntry())) {
                                         return false;
                                       }
