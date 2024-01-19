@@ -1,0 +1,9 @@
+include protocol PManagerManualDealloc;
+
+[ManualDealloc]
+async protocol PManagerManualDeallocManaged {
+    manager PManagerManualDealloc;
+
+child:
+    async __delete__();
+};
