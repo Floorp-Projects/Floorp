@@ -134,6 +134,7 @@ import org.mozilla.fenix.components.toolbar.BrowserToolbarView
 import org.mozilla.fenix.components.toolbar.DefaultBrowserToolbarController
 import org.mozilla.fenix.components.toolbar.DefaultBrowserToolbarMenuController
 import org.mozilla.fenix.components.toolbar.ToolbarIntegration
+import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.components.toolbar.interactor.BrowserToolbarInteractor
 import org.mozilla.fenix.components.toolbar.interactor.DefaultBrowserToolbarInteractor
 import org.mozilla.fenix.crashes.CrashContentIntegration
@@ -463,7 +464,7 @@ abstract class BaseBrowserFragment :
                 toolbarInfo = FindInPageIntegration.ToolbarInfo(
                     browserToolbarView.view,
                     !context.settings().shouldUseFixedTopToolbar && context.settings().isDynamicToolbarEnabled,
-                    !context.settings().shouldUseBottomToolbar,
+                    context.settings().toolbarPosition == ToolbarPosition.TOP,
                 ),
             ),
             owner = this,
@@ -820,7 +821,7 @@ abstract class BaseBrowserFragment :
                 browserStore = requireComponents.core.store,
                 appStore = requireComponents.appStore,
                 toolbar = browserToolbarView.view,
-                isToolbarPlacedAtTop = !context.settings().shouldUseBottomToolbar,
+                isToolbarPlacedAtTop = context.settings().toolbarPosition == ToolbarPosition.TOP,
                 crashReporterView = binding.crashReporterView,
                 components = requireComponents,
                 settings = context.settings(),
@@ -1155,10 +1156,9 @@ abstract class BaseBrowserFragment :
         if (!context.settings().shouldUseFixedTopToolbar && context.settings().isDynamicToolbarEnabled) {
             getEngineView().setDynamicToolbarMaxHeight(toolbarHeight)
 
-            val toolbarPosition = if (context.settings().shouldUseBottomToolbar) {
-                MozacToolbarPosition.BOTTOM
-            } else {
-                MozacToolbarPosition.TOP
+            val toolbarPosition = when (context.settings().toolbarPosition) {
+                ToolbarPosition.BOTTOM -> MozacToolbarPosition.BOTTOM
+                ToolbarPosition.TOP -> MozacToolbarPosition.TOP
             }
             (getSwipeRefreshLayout().layoutParams as CoordinatorLayout.LayoutParams).behavior =
                 EngineViewClippingBehavior(
@@ -1175,10 +1175,10 @@ abstract class BaseBrowserFragment :
             // Effectively place the engineView on top/below of the toolbar if that is not dynamic.
             val swipeRefreshParams =
                 getSwipeRefreshLayout().layoutParams as CoordinatorLayout.LayoutParams
-            if (context.settings().shouldUseBottomToolbar) {
-                swipeRefreshParams.bottomMargin = toolbarHeight
-            } else {
+            if (context.settings().toolbarPosition == ToolbarPosition.TOP) {
                 swipeRefreshParams.topMargin = toolbarHeight
+            } else {
+                swipeRefreshParams.bottomMargin = toolbarHeight
             }
         }
     }

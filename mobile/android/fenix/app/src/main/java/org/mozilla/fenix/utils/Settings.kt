@@ -854,6 +854,9 @@ class Settings(private val appContext: Context) : PreferencesHolder {
             return touchExplorationIsEnabled || switchServiceIsEnabled
         }
 
+    private val isTablet: Boolean
+        get() = appContext.resources.getBoolean(R.bool.tablet)
+
     var lastKnownMode: BrowsingMode = BrowsingMode.Normal
         get() {
             val lastKnownModeWasPrivate = preferences.getBoolean(
@@ -922,7 +925,13 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     )
 
     val toolbarPosition: ToolbarPosition
-        get() = if (shouldUseBottomToolbar) ToolbarPosition.BOTTOM else ToolbarPosition.TOP
+        get() = if (isTablet) {
+            ToolbarPosition.TOP
+        } else if (shouldUseBottomToolbar) {
+            ToolbarPosition.BOTTOM
+        } else {
+            ToolbarPosition.TOP
+        }
 
     /**
      * Check each active accessibility service to see if it can perform gestures, if any can,
