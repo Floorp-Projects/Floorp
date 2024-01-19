@@ -751,7 +751,7 @@ export var Sanitizer = {
 
     // Combine History and Form Data clearing for the
     // new clear history dialog box.
-    historyAndFormData: {
+    historyFormDataAndDownloads: {
       async clear(range, { progress }) {
         progress.step = "getAllPrincipals";
         let principals = await gPrincipalsCollector.getAllPrincipals(progress);
@@ -836,6 +836,12 @@ export var Sanitizer = {
         if (seenException) {
           throw seenException;
         }
+
+        // clear Downloads
+        refObj = {};
+        TelemetryStopwatch.start("FX_SANITIZE_DOWNLOADS", refObj);
+        await clearData(range, Ci.nsIClearDataService.CLEAR_DOWNLOADS);
+        TelemetryStopwatch.finish("FX_SANITIZE_DOWNLOADS", refObj);
       },
     },
 
@@ -1025,17 +1031,15 @@ async function sanitizeOnShutdown(progress) {
       privacy_clearOnShutdown_v2_cookiesAndStorage: Services.prefs.getBoolPref(
         "privacy.clearOnShutdown_v2.cookiesAndStorage"
       ),
-      privacy_clearOnShutdown_v2_historyAndFormData: Services.prefs.getBoolPref(
-        "privacy.clearOnShutdown_v2.historyAndFormData"
-      ),
+      privacy_clearOnShutdown_v2_historyFormDataAndDownloads:
+        Services.prefs.getBoolPref(
+          "privacy.clearOnShutdown_v2.historyFormDataAndDownloads"
+        ),
       privacy_clearOnShutdown_v2_cache: Services.prefs.getBoolPref(
         "privacy.clearOnShutdown_v2.cache"
       ),
       privacy_clearOnShutdown_v2_siteSettings: Services.prefs.getBoolPref(
         "privacy.clearOnShutdown_v2.siteSettings"
-      ),
-      privacy_clearOnShutdown_v2_downloads: Services.prefs.getBoolPref(
-        "privacy.clearOnShutdown_v2.downloads"
       ),
     };
   }

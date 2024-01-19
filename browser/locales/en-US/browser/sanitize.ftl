@@ -70,9 +70,11 @@ item-history-and-downloads =
     .label = Browsing & download history
     .accesskey = B
 
-item-browsing-and-search =
-    .label = Visited sites, saved form info and searches
-    .accesskey = V
+item-history-form-data-downloads =
+    .label = History
+    .accesskey = H
+
+item-history-form-data-downloads-description = Clears site and download history, saved form info, and searches
 
 item-cookies =
     .label = Cookies
@@ -121,19 +123,6 @@ item-site-prefs =
     .accesskey = i
 
 item-site-prefs-description = Resets your permissions and site preferences to original settings
-
-# Variables:
-#   $count (Number) - Number of downloads recorded
-item-download-history-with-size =
-    .label = { $count ->
-        [one] Downloaded files list ({ $count } file)
-       *[other] Downloaded files list ({ $count } files)
-    }
-    .accesskey = D
-
-item-download-history =
-    .label = Downloaded files list
-    .accesskey = D
 
 data-section-label = Data
 
