@@ -15,6 +15,7 @@
   text-overflow: inherit;
   overflow: inherit;
   overflow-clip-box: inherit;
+  resize: inherit;
   /* Need to inherit border-radius too, so when the fieldset has rounded
      borders we don't leak out the corners for hit-testing purposes. */
   border-radius: inherit;

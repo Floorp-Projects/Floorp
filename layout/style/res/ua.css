@@ -187,7 +187,9 @@
   display: block;
   unicode-bidi: inherit;
   text-overflow: inherit;
+  overflow: inherit;
   overflow-clip-box: inherit;
+  resize: inherit;
   padding: inherit;
   box-decoration-break: inherit;
 }

@@ -571,6 +571,10 @@ int32_t nsTableCellFrame::GetColSpan() {
   return colSpan;
 }
 
+nsIScrollableFrame* nsTableCellFrame::GetScrollTargetFrame() const {
+  return do_QueryFrame(mFrames.FirstChild());
+}
+
 /* virtual */
 nscoord nsTableCellFrame::GetMinISize(gfxContext* aRenderingContext) {
   nscoord result = 0;
