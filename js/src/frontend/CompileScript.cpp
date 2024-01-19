@@ -87,12 +87,6 @@ JS_PUBLIC_API const JSErrorReport* JS::GetFrontendWarningAt(
   return &fc->warnings()[index];
 }
 
-JS_PUBLIC_API bool JS::SetSupportedImportAssertions(
-    FrontendContext* fc,
-    const JS::ImportAssertionVector& supportedImportAssertions) {
-  return fc->setSupportedImportAssertions(supportedImportAssertions);
-}
-
 JS::CompilationStorage::~CompilationStorage() {
   if (input_ && !isBorrowed_) {
     js_delete(input_);

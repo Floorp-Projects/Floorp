@@ -36,20 +36,6 @@ union Utf8Unit;
 
 namespace JS {
 
-enum class ImportAssertion { Type };
-
-using ImportAssertionVector =
-    js::Vector<ImportAssertion, 1, js::SystemAllocPolicy>;
-
-/**
- * Set the supported assertions for the runtime to the given vector.
- *
- * See:
- * https://tc39.es/proposal-import-assertions/#sec-hostgetsupportedimportassertions
- */
-extern JS_PUBLIC_API void SetSupportedImportAssertions(
-    JSRuntime* rt, const ImportAssertionVector& assertions);
-
 /**
  * The HostResolveImportedModule hook.
  *

@@ -349,8 +349,6 @@ class ModuleLoaderBase : public nsISupports {
   static bool HostImportModuleDynamically(
       JSContext* aCx, JS::Handle<JS::Value> aReferencingPrivate,
       JS::Handle<JSObject*> aModuleRequest, JS::Handle<JSObject*> aPromise);
-  static bool HostGetSupportedImportAssertions(
-      JSContext* aCx, JS::ImportAssertionVector& aValues);
 
   ResolveResult ResolveModuleSpecifier(LoadedScript* aScript,
                                        const nsAString& aSpecifier);

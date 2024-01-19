@@ -50,16 +50,6 @@ FrontendContext::~FrontendContext() {
   }
 }
 
-bool FrontendContext::setSupportedImportAssertions(
-    const JS::ImportAssertionVector& supportedImportAssertions) {
-  MOZ_ASSERT(supportedImportAssertions_.empty());
-  if (!supportedImportAssertions_.appendAll(supportedImportAssertions)) {
-    ReportOutOfMemory();
-    return false;
-  }
-  return true;
-}
-
 void FrontendContext::setStackQuota(JS::NativeStackSize stackSize) {
 #ifdef __wasi__
   stackLimit_ = JS::WASINativeStackLimit;

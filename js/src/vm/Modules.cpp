@@ -40,19 +40,6 @@ using mozilla::Utf8Unit;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Public API
-
-JS_PUBLIC_API void JS::SetSupportedImportAssertions(
-    JSRuntime* rt, const ImportAssertionVector& assertions) {
-  AssertHeapIsIdle();
-  MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
-  MOZ_ASSERT(rt->supportedImportAssertions.ref().empty());
-
-  AutoEnterOOMUnsafeRegion oomUnsafe;
-  if (!rt->supportedImportAssertions.ref().appendAll(assertions)) {
-    oomUnsafe.crash("SetSupportedImportAssertions");
-  }
-}
-
 JS_PUBLIC_API JS::ModuleResolveHook JS::GetModuleResolveHook(JSRuntime* rt) {
   AssertHeapIsIdle();
 

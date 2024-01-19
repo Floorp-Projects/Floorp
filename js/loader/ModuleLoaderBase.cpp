@@ -94,13 +94,6 @@ void ModuleLoaderBase::EnsureModuleHooksInitialized() {
   JS::SetScriptPrivateReferenceHooks(rt, HostAddRefTopLevelScript,
                                      HostReleaseTopLevelScript);
   JS::SetModuleDynamicImportHook(rt, HostImportModuleDynamically);
-
-  JS::ImportAssertionVector assertions;
-  // ImportAssertionVector has inline storage for one element so this cannot
-  // fail.
-  MOZ_ALWAYS_TRUE(assertions.reserve(1));
-  assertions.infallibleAppend(JS::ImportAssertion::Type);
-  JS::SetSupportedImportAssertions(rt, assertions);
 }
 
 // 8.1.3.8.1 HostResolveImportedModule(referencingModule, moduleRequest)

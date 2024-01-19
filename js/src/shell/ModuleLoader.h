@@ -36,8 +36,6 @@ class ModuleLoader {
                                       HandleValue referencingPrivate,
                                       HandleObject moduleRequest,
                                       HandleObject promise);
-  static bool GetSupportedImportAssertions(JSContext* cx,
-                                           JS::ImportAssertionVector& values);
 
   static bool DynamicImportDelayFulfilled(JSContext* cx, unsigned argc,
                                           Value* vp);
