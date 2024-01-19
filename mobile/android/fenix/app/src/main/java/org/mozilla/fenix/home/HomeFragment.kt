@@ -23,6 +23,7 @@ import androidx.compose.material.Text
 import androidx.compose.material.TextButton
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.semantics.testTagsAsResourceId
@@ -77,6 +78,7 @@ import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.service.glean.private.NoExtras
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.ui.colors.PhotonColors
+import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.GleanMetrics.HomeScreen
 import org.mozilla.fenix.GleanMetrics.Homepage
 import org.mozilla.fenix.GleanMetrics.PrivateBrowsingShortcutCfr
@@ -84,6 +86,7 @@ import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.addons.showSnackBar
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
+import org.mozilla.fenix.browser.tabstrip.TabStrip
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.PrivateShortcutCreateManager
 import org.mozilla.fenix.components.TabCollectionStorage
@@ -576,6 +579,7 @@ class HomeFragment : Fragment() {
         )
 
         toolbarView?.build()
+        initTabStrip()
 
         PrivateBrowsingButtonView(binding.privateBrowsingButton, browsingModeManager) { newMode ->
             sessionControlInteractor.onPrivateModeButtonClicked(newMode)
@@ -651,6 +655,31 @@ class HomeFragment : Fragment() {
             profilerStartTime,
             "HomeFragment.onViewCreated",
         )
+    }
+
+    private fun initTabStrip() {
+        if (!resources.getBoolean(R.bool.tablet)) {
+            return
+        }
+
+        binding.tabStripView.isVisible = true
+        binding.tabStripView.apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                FirefoxTheme {
+                    TabStrip(
+                        onHome = true,
+                        onAddTabClick = {
+                            sessionControlInteractor.onNavigateSearch()
+                        },
+                        onSelectedTabClick = {
+                            (requireActivity() as HomeActivity).openToBrowser(BrowserDirection.FromHome)
+                        },
+                        onLastTabClose = {},
+                    )
+                }
+            }
+        }
     }
 
     /**
