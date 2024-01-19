@@ -30,7 +30,8 @@ class Client;
 
 }  // namespace quota
 
-PBackgroundSDBConnectionParent* AllocPBackgroundSDBConnectionParent(
+already_AddRefed<PBackgroundSDBConnectionParent>
+AllocPBackgroundSDBConnectionParent(
     const mozilla::dom::quota::PersistenceType& aPersistenceType,
     const mozilla::ipc::PrincipalInfo& aPrincipalInfo);
 
@@ -38,9 +39,6 @@ bool RecvPBackgroundSDBConnectionConstructor(
     PBackgroundSDBConnectionParent* aActor,
     const mozilla::dom::quota::PersistenceType& aPersistenceType,
     const mozilla::ipc::PrincipalInfo& aPrincipalInfo);
-
-bool DeallocPBackgroundSDBConnectionParent(
-    PBackgroundSDBConnectionParent* aActor);
 
 namespace simpledb {
 

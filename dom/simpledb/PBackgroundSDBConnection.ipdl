@@ -41,7 +41,7 @@ union SDBRequestParams
   SDBRequestCloseParams;
 };
 
-[ManualDealloc, ChildImpl=virtual, ParentImpl=virtual]
+[ChildImpl=virtual, ParentImpl=virtual]
 protocol PBackgroundSDBConnection
 {
   manager PBackground;

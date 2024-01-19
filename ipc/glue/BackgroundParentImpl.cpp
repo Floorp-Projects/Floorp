@@ -244,7 +244,7 @@ mozilla::ipc::IPCResult BackgroundParentImpl::RecvFlushPendingFileDeletions() {
   return IPC_OK();
 }
 
-BackgroundParentImpl::PBackgroundSDBConnectionParent*
+already_AddRefed<BackgroundParentImpl::PBackgroundSDBConnectionParent>
 BackgroundParentImpl::AllocPBackgroundSDBConnectionParent(
     const PersistenceType& aPersistenceType,
     const PrincipalInfo& aPrincipalInfo) {
@@ -269,15 +269,6 @@ BackgroundParentImpl::RecvPBackgroundSDBConnectionConstructor(
     return IPC_FAIL_NO_REASON(this);
   }
   return IPC_OK();
-}
-
-bool BackgroundParentImpl::DeallocPBackgroundSDBConnectionParent(
-    PBackgroundSDBConnectionParent* aActor) {
-  AssertIsInMainProcess();
-  AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aActor);
-
-  return mozilla::dom::DeallocPBackgroundSDBConnectionParent(aActor);
 }
 
 BackgroundParentImpl::PBackgroundLSDatabaseParent*

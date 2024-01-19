@@ -128,7 +128,7 @@ class Connection final : public PBackgroundSDBConnectionParent {
   Connection(PersistenceType aPersistenceType,
              const PrincipalInfo& aPrincipalInfo);
 
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(mozilla::dom::Connection)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(mozilla::dom::Connection, override)
 
   Maybe<DirectoryLock&> MaybeDirectoryLockRef() const {
     AssertIsOnBackgroundThread();
@@ -525,9 +525,9 @@ void AllowToCloseConnectionsMatching(const Condition& aCondition) {
  * Exported functions
  ******************************************************************************/
 
-PBackgroundSDBConnectionParent* AllocPBackgroundSDBConnectionParent(
-    const PersistenceType& aPersistenceType,
-    const PrincipalInfo& aPrincipalInfo) {
+already_AddRefed<PBackgroundSDBConnectionParent>
+AllocPBackgroundSDBConnectionParent(const PersistenceType& aPersistenceType,
+                                    const PrincipalInfo& aPrincipalInfo) {
   AssertIsOnBackgroundThread();
 
   if (NS_WARN_IF(QuotaClient::IsShuttingDownOnBackgroundThread())) {
@@ -551,7 +551,7 @@ PBackgroundSDBConnectionParent* AllocPBackgroundSDBConnectionParent(
 
   RefPtr<Connection> actor = new Connection(aPersistenceType, aPrincipalInfo);
 
-  return actor.forget().take();
+  return actor.forget();
 }
 
 bool RecvPBackgroundSDBConnectionConstructor(
@@ -562,15 +562,6 @@ bool RecvPBackgroundSDBConnectionConstructor(
   MOZ_ASSERT(aActor);
   MOZ_ASSERT(!QuotaClient::IsShuttingDownOnBackgroundThread());
 
-  return true;
-}
-
-bool DeallocPBackgroundSDBConnectionParent(
-    PBackgroundSDBConnectionParent* aActor) {
-  AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aActor);
-
-  RefPtr<Connection> actor = dont_AddRef(static_cast<Connection*>(aActor));
   return true;
 }
 

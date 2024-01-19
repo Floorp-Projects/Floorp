@@ -177,23 +177,6 @@ bool BackgroundChildImpl::DeallocPBackgroundIndexedDBUtilsChild(
   return true;
 }
 
-BackgroundChildImpl::PBackgroundSDBConnectionChild*
-BackgroundChildImpl::AllocPBackgroundSDBConnectionChild(
-    const PersistenceType& aPersistenceType,
-    const PrincipalInfo& aPrincipalInfo) {
-  MOZ_CRASH(
-      "PBackgroundSDBConnectionChild actor should be manually "
-      "constructed!");
-}
-
-bool BackgroundChildImpl::DeallocPBackgroundSDBConnectionChild(
-    PBackgroundSDBConnectionChild* aActor) {
-  MOZ_ASSERT(aActor);
-
-  delete aActor;
-  return true;
-}
-
 BackgroundChildImpl::PBackgroundLSDatabaseChild*
 BackgroundChildImpl::AllocPBackgroundLSDatabaseChild(
     const PrincipalInfo& aPrincipalInfo, const uint32_t& aPrivateBrowsingId,
