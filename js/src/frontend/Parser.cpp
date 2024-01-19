@@ -5633,9 +5633,9 @@ GeneralParser<ParseHandler, Unit>::exportFrom(uint32_t begin, Node specList) {
   ListNodeType importAssertionList;
   MOZ_TRY_VAR(importAssertionList,
               handler_.newList(ParseNodeKind::ImportAssertionList, pos()));
-  if (tt == TokenKind::Assert) {
-    tokenStream.consumeKnownToken(TokenKind::Assert,
-                                  TokenStream::SlashIsRegExp);
+  if (tt == TokenKind::With ||
+      (tt == TokenKind::Assert && options().importAttributesAssertSyntax())) {
+    tokenStream.consumeKnownToken(tt, TokenStream::SlashIsRegExp);
 
     if (!assertClause(importAssertionList)) {
       return errorResult();
