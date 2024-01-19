@@ -57,7 +57,7 @@ add_task(async function localOneOff() {
     "A local one-off button should be selected"
   );
   Assert.ok(
-    BrowserTestUtils.is_visible(result.element.action),
+    BrowserTestUtils.isVisible(result.element.action),
     "The heuristic action should be visible"
   );
   let [actionHistory, actionBookmarks] = await document.l10n.formatValues([
@@ -85,7 +85,7 @@ add_task(async function localOneOff() {
   );
   result = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
   Assert.ok(
-    BrowserTestUtils.is_visible(result.element.action),
+    BrowserTestUtils.isVisible(result.element.action),
     "The heuristic action should be visible"
   );
   Assert.ok(
@@ -187,7 +187,7 @@ add_task(async function localOneOff_withVisit() {
     "The history one-off button should be selected"
   );
   Assert.ok(
-    BrowserTestUtils.is_visible(result.element.action),
+    BrowserTestUtils.isVisible(result.element.action),
     "The heuristic action should be visible"
   );
   Assert.equal(
@@ -216,7 +216,7 @@ add_task(async function localOneOff_withVisit() {
     "The tabs one-off button should be selected"
   );
   Assert.ok(
-    BrowserTestUtils.is_visible(result.element.action),
+    BrowserTestUtils.isVisible(result.element.action),
     "The heuristic action should be visible"
   );
   Assert.equal(
@@ -239,7 +239,7 @@ add_task(async function localOneOff_withVisit() {
     "The bookmarks one-off button should be selected"
   );
   Assert.ok(
-    BrowserTestUtils.is_visible(result.element.action),
+    BrowserTestUtils.isVisible(result.element.action),
     "The heuristic action should be visible"
   );
   Assert.equal(

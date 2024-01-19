@@ -35,22 +35,22 @@ add_task(async function test_preferences_section() {
     let showStr = show ? "visible" : "hidden";
 
     is(
-      BrowserTestUtils.is_visible(section),
+      BrowserTestUtils.isVisible(section),
       show,
       `Privacy Segmentation section should be ${showStr}.`
     );
     is(
-      BrowserTestUtils.is_visible(sectionHeader),
+      BrowserTestUtils.isVisible(sectionHeader),
       show,
       `Privacy Segmentation section header should be ${showStr}.`
     );
     is(
-      BrowserTestUtils.is_visible(sectionDescription),
+      BrowserTestUtils.isVisible(sectionDescription),
       show,
       `Privacy Segmentation section description should be ${showStr}.`
     );
     is(
-      BrowserTestUtils.is_visible(radioGroup),
+      BrowserTestUtils.isVisible(radioGroup),
       show,
       `Privacy Segmentation radio group should be ${showStr}.`
     );

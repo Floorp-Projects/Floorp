@@ -67,7 +67,7 @@ add_task(async function test_fakespot_callouts_opted_in_flow() {
   let pdpBrowserPanel = gBrowser.getPanel(pdpBrowser);
   let isSidebarVisible = () => {
     let sidebar = pdpBrowserPanel.querySelector("shopping-sidebar");
-    return sidebar && BrowserTestUtils.is_visible(sidebar);
+    return sidebar && BrowserTestUtils.isVisible(sidebar);
   };
   await BrowserTestUtils.waitForMutationCondition(
     pdpBrowserPanel,
@@ -228,7 +228,7 @@ add_task(async function test_fakespot_callouts_not_opted_in_flow() {
   let pdpBrowserPanel = gBrowser.getPanel(pdpBrowser);
   let isSidebarVisible = () => {
     let sidebar = pdpBrowserPanel.querySelector("shopping-sidebar");
-    return sidebar && BrowserTestUtils.is_visible(sidebar);
+    return sidebar && BrowserTestUtils.isVisible(sidebar);
   };
   await BrowserTestUtils.waitForMutationCondition(
     pdpBrowserPanel,

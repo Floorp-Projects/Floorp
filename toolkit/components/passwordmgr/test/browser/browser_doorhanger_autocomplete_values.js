@@ -220,7 +220,7 @@ add_task(async function test_edit_password() {
           USERNAME_DROPMARKER_SELECTOR
         );
         Assert.ok(
-          BrowserTestUtils.is_visible(usernameDropmarker) ==
+          BrowserTestUtils.isVisible(usernameDropmarker) ==
             testCase.expectUsernameDropmarker,
           "Confirm dropmarker visibility"
         );

@@ -28,7 +28,7 @@ add_task(async function searchBookmarksFromBooksmarksMenu() {
   // Click on 'Search Bookmarks'
   let searchBookmarksButton = document.getElementById("BMB_searchBookmarks");
   ok(
-    BrowserTestUtils.is_visible(
+    BrowserTestUtils.isVisible(
       searchBookmarksButton,
       "'Search Bookmarks Button' is visible."
     )

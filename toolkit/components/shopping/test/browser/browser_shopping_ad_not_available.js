@@ -25,7 +25,7 @@ add_task(async function test_no_ad_available_telemetry() {
     let sidebar = gBrowser.getPanel(browser).querySelector("shopping-sidebar");
     Assert.ok(sidebar, "Sidebar should exist");
     Assert.ok(
-      BrowserTestUtils.is_visible(sidebar),
+      BrowserTestUtils.isVisible(sidebar),
       "Sidebar should be visible."
     );
 

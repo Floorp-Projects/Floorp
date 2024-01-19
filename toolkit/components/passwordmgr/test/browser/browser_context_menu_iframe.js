@@ -66,7 +66,7 @@ add_task(async function test_context_menu_iframe_fill() {
       await TestUtils.waitForTick();
 
       Assert.ok(
-        BrowserTestUtils.is_visible(firstLoginItem),
+        BrowserTestUtils.isVisible(firstLoginItem),
         "First login menuitem is visible"
       );
 

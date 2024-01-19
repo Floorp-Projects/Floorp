@@ -32,7 +32,7 @@ add_task(async function test_open_sidebar_and_customize() {
     async function checkTreeIsFunctional() {
       Assert.ok(SidebarUI.isOpen, "Sidebar is open");
       Assert.ok(
-        BrowserTestUtils.is_visible(SidebarUI.browser),
+        BrowserTestUtils.isVisible(SidebarUI.browser),
         "sidebar browser is visible"
       );
       Assert.ok(tree.view.result, "View result is defined");
@@ -49,7 +49,7 @@ add_task(async function test_open_sidebar_and_customize() {
     await promiseCustomizeStart();
 
     Assert.ok(
-      !BrowserTestUtils.is_visible(SidebarUI.browser),
+      !BrowserTestUtils.isVisible(SidebarUI.browser),
       "sidebar browser is hidden"
     );
     Assert.ok(tree.view.result, "View result is defined");

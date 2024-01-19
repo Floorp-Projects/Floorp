@@ -9,7 +9,7 @@ async function locateBookmarkAndTestCtrlClick(menupopup) {
     node => node.label == "Test1"
   );
   ok(testMenuitem, "Found test bookmark.");
-  ok(BrowserTestUtils.is_visible(testMenuitem), "Should be visible");
+  ok(BrowserTestUtils.isVisible(testMenuitem), "Should be visible");
   let promiseTabOpened = BrowserTestUtils.waitForNewTab(gBrowser, null);
   EventUtils.synthesizeMouseAtCenter(testMenuitem, { accelKey: true });
   let newTab = await promiseTabOpened;

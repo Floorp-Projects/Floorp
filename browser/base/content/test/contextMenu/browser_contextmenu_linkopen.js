@@ -74,7 +74,7 @@ async function activateContextAndWaitFor(selector, where) {
   let domItem = contextMenu.querySelector("#context-" + contextMenuItem);
   info("Going to click item " + domItem.id);
   ok(
-    BrowserTestUtils.is_visible(domItem),
+    BrowserTestUtils.isVisible(domItem),
     "DOM context menu item " + where + " should be visible"
   );
   ok(

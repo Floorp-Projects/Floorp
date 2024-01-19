@@ -26,8 +26,7 @@ async function waitForPageStatusUpdate(elem, expected, message) {
 async function waitUntilVisible(elem, visible = true) {
   await TestUtils.waitForCondition(
     () =>
-      BrowserTestUtils.is_visible(elem) &&
-      getComputedStyle(elem).opacity == "1",
+      BrowserTestUtils.isVisible(elem) && getComputedStyle(elem).opacity == "1",
     "Waiting for element to be visible and have opacity:1"
   );
 }

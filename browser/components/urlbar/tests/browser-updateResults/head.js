@@ -487,7 +487,7 @@ async function doSuggestedIndexTest({ search1, search2, duringUpdate }) {
 
       // visible
       Assert.equal(
-        BrowserTestUtils.is_visible(row),
+        BrowserTestUtils.isVisible(row),
         !rowState.hidden,
         `Visible at index ${rowIndex} during update`
       );

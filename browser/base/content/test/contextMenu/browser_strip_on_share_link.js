@@ -170,7 +170,7 @@ async function testStripOnShare({
     let stripOnShare = contextMenu.querySelector("#context-stripOnShareLink");
     if (prefEnabled) {
       Assert.ok(
-        BrowserTestUtils.is_visible(stripOnShare),
+        BrowserTestUtils.isVisible(stripOnShare),
         "Menu item is visible"
       );
       // Make sure the stripped link will be copied to the clipboard
@@ -179,7 +179,7 @@ async function testStripOnShare({
       });
     } else {
       Assert.ok(
-        !BrowserTestUtils.is_visible(stripOnShare),
+        !BrowserTestUtils.isVisible(stripOnShare),
         "Menu item is not visible"
       );
       contextMenu.hidePopup();

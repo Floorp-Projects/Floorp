@@ -81,11 +81,11 @@ add_task(async function test_urlbar_toggle_multiple_contexts() {
       await BrowserTestUtils.waitForMutationCondition(
         pipUrlbarToggle,
         { attributeFilter: ["hidden"] },
-        () => BrowserTestUtils.is_visible(pipUrlbarToggle)
+        () => BrowserTestUtils.isVisible(pipUrlbarToggle)
       );
 
       ok(
-        BrowserTestUtils.is_visible(pipUrlbarToggle),
+        BrowserTestUtils.isVisible(pipUrlbarToggle),
         "PiP urlbar toggle is visible"
       );
 
@@ -164,7 +164,7 @@ add_task(async function test_urlbar_toggle_switch_tabs() {
         "picture-in-picture-button"
       );
       ok(
-        BrowserTestUtils.is_visible(pipUrlbarToggle),
+        BrowserTestUtils.isVisible(pipUrlbarToggle),
         "PiP urlbar toggle is visible because there is 1 video"
       );
 
@@ -258,7 +258,7 @@ add_task(async function test_pipDisabled() {
         "picture-in-picture-button"
       );
       ok(
-        BrowserTestUtils.is_visible(pipUrlbarToggle),
+        BrowserTestUtils.isVisible(pipUrlbarToggle),
         "PiP urlbar toggle is visible because PiP is disabled"
       );
 
@@ -269,7 +269,7 @@ add_task(async function test_pipDisabled() {
         if (!panel) {
           panel = browser.ownerDocument.querySelector("#PictureInPicturePanel");
         }
-        return BrowserTestUtils.is_visible(panel);
+        return BrowserTestUtils.isVisible(panel);
       });
 
       let respectPipDisableSwitch = panel.querySelector(
@@ -381,10 +381,10 @@ add_task(async function test_urlbar_toggle_telemetry() {
       await BrowserTestUtils.waitForMutationCondition(
         pipUrlbarToggle,
         { attributeFilter: ["hidden"] },
-        () => BrowserTestUtils.is_visible(pipUrlbarToggle)
+        () => BrowserTestUtils.isVisible(pipUrlbarToggle)
       );
       ok(
-        BrowserTestUtils.is_visible(pipUrlbarToggle),
+        BrowserTestUtils.isVisible(pipUrlbarToggle),
         "PiP urlbar toggle is visible"
       );
 

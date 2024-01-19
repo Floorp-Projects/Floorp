@@ -45,7 +45,7 @@ add_task(async function test_switchtab_override() {
   const allLabels = document.getElementById("urlbar-label-box").children;
   for (let label of allLabels) {
     if (label.id == "urlbar-label-switchtab") {
-      Assert.ok(BrowserTestUtils.is_visible(label));
+      Assert.ok(BrowserTestUtils.isVisible(label));
     } else {
       Assert.ok(BrowserTestUtils.isHidden(label));
     }

@@ -32,7 +32,7 @@ add_task(async function empty_message_on_non_empty_bookmarks_toolbar() {
   let newWin = await BrowserTestUtils.openNewBrowserWindow();
   let doc = newWin.document;
   ok(
-    BrowserTestUtils.is_visible(doc.getElementById("PersonalToolbar")),
+    BrowserTestUtils.isVisible(doc.getElementById("PersonalToolbar")),
     "Personal toolbar should be visible"
   );
   ok(
@@ -61,10 +61,7 @@ add_task(async function empty_message_after_customization() {
   let newWin = await BrowserTestUtils.openNewBrowserWindow();
   let doc = newWin.document;
   let toolbar = doc.getElementById("PersonalToolbar");
-  ok(
-    BrowserTestUtils.is_visible(toolbar),
-    "Personal toolbar should be visible"
-  );
+  ok(BrowserTestUtils.isVisible(toolbar), "Personal toolbar should be visible");
   await emptyToolbarMessageVisible(false, newWin);
 
   // Force a Places view uninit through customization.
@@ -72,10 +69,7 @@ add_task(async function empty_message_after_customization() {
   await resetCustomization();
   // Show the toolbar again.
   setToolbarVisibility(toolbar, true, false, false);
-  ok(
-    BrowserTestUtils.is_visible(toolbar),
-    "Personal toolbar should be visible"
-  );
+  ok(BrowserTestUtils.isVisible(toolbar), "Personal toolbar should be visible");
   // Wait for bookmarks to be visible.
   let placesItems = doc.getElementById("PlacesToolbarItems");
   await BrowserTestUtils.waitForMutationCondition(

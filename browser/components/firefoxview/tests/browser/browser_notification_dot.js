@@ -135,7 +135,7 @@ add_task(async function testNotificationDot() {
   await initTabSync();
 
   ok(
-    BrowserTestUtils.is_visible(fxViewBtn),
+    BrowserTestUtils.isVisible(fxViewBtn),
     "The Firefox View button is showing"
   );
 

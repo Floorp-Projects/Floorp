@@ -23,7 +23,7 @@ add_task(async function test_ads_requested_after_enabled() {
         .querySelector("shopping-sidebar");
       Assert.ok(sidebar, "Sidebar should exist");
       Assert.ok(
-        BrowserTestUtils.is_visible(sidebar),
+        BrowserTestUtils.isVisible(sidebar),
         "Sidebar should be visible."
       );
       info("Waiting for sidebar to update.");

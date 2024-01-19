@@ -84,7 +84,7 @@ async function testStripOnShare(validUrl, strippedUrl) {
     gURLBar.focus();
     gURLBar.select();
     let menuitem = await promiseContextualMenuitem("strip-on-share");
-    Assert.ok(BrowserTestUtils.is_visible(menuitem), "Menu item is visible");
+    Assert.ok(BrowserTestUtils.isVisible(menuitem), "Menu item is visible");
     let hidePromise = BrowserTestUtils.waitForEvent(
       menuitem.parentElement,
       "popuphidden"

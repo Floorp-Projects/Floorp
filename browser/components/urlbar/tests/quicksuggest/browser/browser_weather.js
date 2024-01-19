@@ -40,7 +40,7 @@ add_task(async function dom() {
   let { row } = details.element;
 
   Assert.ok(
-    BrowserTestUtils.is_visible(
+    BrowserTestUtils.isVisible(
       row.querySelector(".urlbarView-title-separator")
     ),
     "The title separator should be visible"

@@ -487,7 +487,7 @@ async function helper3rdPartyStoragePermissionTest(permissionID) {
 
     testPermListHasEntries(true);
     ok(
-      BrowserTestUtils.is_visible(storagePermissionAnchor.firstElementChild),
+      BrowserTestUtils.isVisible(storagePermissionAnchor.firstElementChild),
       "Anchor header is visible"
     );
 
@@ -514,7 +514,7 @@ async function helper3rdPartyStoragePermissionTest(permissionID) {
 
     testPermListHasEntries(true);
     ok(
-      BrowserTestUtils.is_visible(storagePermissionAnchor.firstElementChild),
+      BrowserTestUtils.isVisible(storagePermissionAnchor.firstElementChild),
       "Anchor header is visible"
     );
 
@@ -618,7 +618,7 @@ add_task(async function test3rdPartyBothStoragePermission() {
 
     testPermListHasEntries(true);
     ok(
-      BrowserTestUtils.is_visible(storagePermissionAnchor.firstElementChild),
+      BrowserTestUtils.isVisible(storagePermissionAnchor.firstElementChild),
       "Anchor header is visible"
     );
 
@@ -645,7 +645,7 @@ add_task(async function test3rdPartyBothStoragePermission() {
 
     testPermListHasEntries(true);
     ok(
-      BrowserTestUtils.is_visible(storagePermissionAnchor.firstElementChild),
+      BrowserTestUtils.isVisible(storagePermissionAnchor.firstElementChild),
       "Anchor header is visible"
     );
 

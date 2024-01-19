@@ -28,7 +28,7 @@ class ScreenshotsHelper {
   async triggerUIFromToolbar() {
     let button = this.toolbarButton;
     ok(
-      BrowserTestUtils.is_visible(button),
+      BrowserTestUtils.isVisible(button),
       "The screenshot toolbar button is visible"
     );
     EventUtils.synthesizeMouseAtCenter(button, {});

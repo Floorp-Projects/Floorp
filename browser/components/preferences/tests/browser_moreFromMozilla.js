@@ -348,7 +348,7 @@ add_task(async function test_aboutpreferences_search() {
   Assert.ok(BrowserTestUtils.isHidden(mobile), "Mobile hidden");
   Assert.ok(BrowserTestUtils.isHidden(monitor), "Monitor hidden");
   Assert.ok(BrowserTestUtils.isHidden(vpn), "VPN hidden");
-  Assert.ok(BrowserTestUtils.is_visible(relay), "Relay shown");
+  Assert.ok(BrowserTestUtils.isVisible(relay), "Relay shown");
 
   BrowserTestUtils.removeTab(tab);
 });

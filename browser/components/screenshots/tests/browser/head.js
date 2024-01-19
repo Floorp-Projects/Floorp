@@ -73,7 +73,7 @@ class ScreenshotsHelper {
   triggerUIFromToolbar() {
     let button = this.toolbarButton;
     ok(
-      BrowserTestUtils.is_visible(button),
+      BrowserTestUtils.isVisible(button),
       "The screenshot toolbar button is visible"
     );
     button.click();
@@ -94,14 +94,14 @@ class ScreenshotsHelper {
       if (!panel) {
         panel = this.panel;
       }
-      return panel && BrowserTestUtils.is_visible(panel);
+      return panel && BrowserTestUtils.isVisible(panel);
     });
     return panel;
   }
 
   async waitForOverlay() {
     const panel = await this.waitForPanel();
-    ok(BrowserTestUtils.is_visible(panel), "Panel buttons are visible");
+    ok(BrowserTestUtils.isVisible(panel), "Panel buttons are visible");
 
     await BrowserTestUtils.waitForCondition(async () => {
       let init = await this.isOverlayInitialized();
@@ -424,7 +424,7 @@ class ScreenshotsHelper {
   assertPanelVisible() {
     info("assertPanelVisible, panel.hidden:" + this.panel?.hidden);
     Assert.ok(
-      BrowserTestUtils.is_visible(this.panel),
+      BrowserTestUtils.isVisible(this.panel),
       "Screenshots panel is visible"
     );
   }

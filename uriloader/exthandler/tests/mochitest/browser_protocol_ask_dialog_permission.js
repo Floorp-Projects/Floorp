@@ -231,7 +231,7 @@ async function testOpenProto(
 
     let descriptionEl = dialogEl.querySelector("#description");
     ok(
-      descriptionEl && BrowserTestUtils.is_visible(descriptionEl),
+      descriptionEl && BrowserTestUtils.isVisible(descriptionEl),
       "Has a visible description element."
     );
 
@@ -327,14 +327,14 @@ async function testCheckbox(
   let checkbox = dialogEl.ownerDocument.getElementById("remember");
   if (typeof hasCheckbox == "boolean") {
     is(
-      checkbox && BrowserTestUtils.is_visible(checkbox),
+      checkbox && BrowserTestUtils.isVisible(checkbox),
       hasCheckbox,
       "Dialog checkbox has correct visibility."
     );
 
     let checkboxLabel = dialogEl.ownerDocument.getElementById("remember-label");
     is(
-      checkbox && BrowserTestUtils.is_visible(checkboxLabel),
+      checkbox && BrowserTestUtils.isVisible(checkboxLabel),
       hasCheckbox,
       "Dialog checkbox label has correct visibility."
     );

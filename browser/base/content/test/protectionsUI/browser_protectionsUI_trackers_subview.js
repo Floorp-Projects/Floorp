@@ -41,10 +41,10 @@ async function assertSitesListed(blocked) {
 
   // Explicitly waiting for the category item becoming visible.
   await TestUtils.waitForCondition(() => {
-    return BrowserTestUtils.is_visible(categoryItem);
+    return BrowserTestUtils.isVisible(categoryItem);
   });
 
-  ok(BrowserTestUtils.is_visible(categoryItem), "TP category item is visible");
+  ok(BrowserTestUtils.isVisible(categoryItem), "TP category item is visible");
   let trackersView = document.getElementById("protections-popup-trackersView");
   let viewShown = BrowserTestUtils.waitForEvent(trackersView, "ViewShown");
   categoryItem.click();
@@ -101,7 +101,7 @@ async function assertSitesListed(blocked) {
     item => item.querySelector("label").value == "http://trackertest.org"
   );
   ok(listItem, "Has an item for trackertest.org");
-  ok(BrowserTestUtils.is_visible(listItem), "List item is visible");
+  ok(BrowserTestUtils.isVisible(listItem), "List item is visible");
   is(
     listItem.classList.contains("allowed"),
     !blocked,
@@ -112,7 +112,7 @@ async function assertSitesListed(blocked) {
     item => item.querySelector("label").value == "https://itisatracker.org"
   );
   ok(listItem, "Has an item for itisatracker.org");
-  ok(BrowserTestUtils.is_visible(listItem), "List item is visible");
+  ok(BrowserTestUtils.isVisible(listItem), "List item is visible");
   is(
     listItem.classList.contains("allowed"),
     !blocked,

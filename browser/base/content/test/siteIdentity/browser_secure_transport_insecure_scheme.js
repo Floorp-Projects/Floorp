@@ -24,7 +24,7 @@ async function testPageInfoNotEncrypted(uri) {
   let pageInfoDoc = pageInfo.document;
   let securityTab = pageInfoDoc.getElementById("securityTab");
   await TestUtils.waitForCondition(
-    () => BrowserTestUtils.is_visible(securityTab),
+    () => BrowserTestUtils.isVisible(securityTab),
     "Security tab should be visible."
   );
 

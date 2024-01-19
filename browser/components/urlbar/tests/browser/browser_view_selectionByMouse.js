@@ -561,7 +561,7 @@ async function waitForElements(selectors) {
   let elements;
   await BrowserTestUtils.waitForCondition(() => {
     elements = selectors.map(s => document.querySelector(s));
-    return elements.every(e => e && BrowserTestUtils.is_visible(e));
+    return elements.every(e => e && BrowserTestUtils.isVisible(e));
   }, "Waiting for elements to become visible: " + JSON.stringify(selectors));
   return elements;
 }

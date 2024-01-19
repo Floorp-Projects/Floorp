@@ -45,7 +45,7 @@ async function waitForConfirmPanelShow(win) {
   }
 
   // Panel already visible, we can exit early.
-  if (BrowserTestUtils.is_visible(panelview)) {
+  if (BrowserTestUtils.isVisible(panelview)) {
     return;
   }
 
@@ -149,14 +149,14 @@ function assertPanelVisibility(win, selector, expectVisible) {
   if (expectVisible) {
     Assert.ok(panelview, `Panelview element ${selector} should exist.`);
     Assert.ok(
-      BrowserTestUtils.is_visible(panelview),
+      BrowserTestUtils.isVisible(panelview),
       `Panelview ${selector} should be visible.`
     );
     return;
   }
 
   Assert.ok(
-    !panelview || !BrowserTestUtils.is_visible(panelview),
+    !panelview || !BrowserTestUtils.isVisible(panelview),
     `Panelview ${selector} should be invisible or non-existent.`
   );
 }
@@ -215,7 +215,7 @@ add_task(async function test_toolbar_button_visibility() {
     );
     if (toolbarButtonNormalBrowsing) {
       Assert.ok(
-        !BrowserTestUtils.is_visible(toolbarButtonNormalBrowsing),
+        !BrowserTestUtils.isVisible(toolbarButtonNormalBrowsing),
         "Toolbar button is not visible in normal browsing"
       );
     }
@@ -237,7 +237,7 @@ add_task(async function test_toolbar_button_visibility() {
     );
     if (toolbarButtonPrivateBrowsing) {
       Assert.equal(
-        BrowserTestUtils.is_visible(toolbarButtonPrivateBrowsing),
+        BrowserTestUtils.isVisible(toolbarButtonPrivateBrowsing),
         isEnabled,
         "Toolbar button is visible in private browsing if enabled."
       );
@@ -292,7 +292,7 @@ add_task(async function test_panel() {
     Assert.ok(el, `Panel element ${elSelector} exists.`);
     if (el) {
       Assert.ok(
-        BrowserTestUtils.is_visible(el),
+        BrowserTestUtils.isVisible(el),
         `Panel element ${elSelector} is visible.`
       );
     }

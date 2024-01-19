@@ -20,7 +20,7 @@ add_task(async function testSystemDialogLinkState() {
       );
     } else {
       ok(
-        BrowserTestUtils.is_visible(systemLink),
+        BrowserTestUtils.isVisible(systemLink),
         "Link is visible on Linux/macOS"
       );
     }
@@ -95,7 +95,7 @@ add_task(async function testPrintDoesNotWaitForPreview() {
 
     let systemPrint = helper.get("system-print");
     await BrowserTestUtils.waitForCondition(
-      () => BrowserTestUtils.is_visible(systemPrint),
+      () => BrowserTestUtils.isVisible(systemPrint),
       "Wait for the system-print to be visible"
     );
 

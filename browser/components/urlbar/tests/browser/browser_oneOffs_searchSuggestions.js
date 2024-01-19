@@ -128,7 +128,7 @@ add_task(async function test_returnAfterSuggestion() {
 
     let heuristicResult = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
     Assert.ok(
-      !BrowserTestUtils.is_visible(heuristicResult.element.action),
+      !BrowserTestUtils.isVisible(heuristicResult.element.action),
       "The heuristic action should not be visible"
     );
 
@@ -222,7 +222,7 @@ add_task(async function test_selectOneOffThenSuggestion() {
 
     let heuristicResult = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
     Assert.ok(
-      BrowserTestUtils.is_visible(heuristicResult.element.action),
+      BrowserTestUtils.isVisible(heuristicResult.element.action),
       "The heuristic action should be visible because the result is selected"
     );
 

@@ -55,7 +55,7 @@ function sleep(ms) {
 
 async function blockedIconShown() {
   await TestUtils.waitForCondition(() => {
-    return BrowserTestUtils.is_visible(autoplayBlockedIcon());
+    return BrowserTestUtils.isVisible(autoplayBlockedIcon());
   }, "Blocked icon is shown");
 }
 

@@ -27,7 +27,7 @@ add_task(async function test_https() {
       "identity-popup-security-decription-custom-root"
     );
     ok(
-      BrowserTestUtils.is_visible(customRootWarning),
+      BrowserTestUtils.isVisible(customRootWarning),
       "custom root warning is visible"
     );
 
@@ -40,7 +40,7 @@ add_task(async function test_https() {
       "identity-popup-content-verifier-unknown"
     );
     ok(
-      BrowserTestUtils.is_visible(subPanelInfo),
+      BrowserTestUtils.isVisible(subPanelInfo),
       "custom root warning in sub panel is visible"
     );
   });

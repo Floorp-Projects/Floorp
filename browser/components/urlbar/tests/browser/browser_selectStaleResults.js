@@ -122,7 +122,7 @@ add_task(async function viewContainsStaleRows() {
   // But there should be maxResults visible rows in the view.
   let items = Array.from(
     UrlbarTestUtils.getResultsContainer(window).children
-  ).filter(r => BrowserTestUtils.is_visible(r));
+  ).filter(r => BrowserTestUtils.isVisible(r));
   Assert.equal(items.length, maxResults);
 
   // Arrow down through all the results.  After arrowing down from the last "xx"

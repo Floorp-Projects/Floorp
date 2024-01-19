@@ -60,7 +60,7 @@ async function testTCPSection({ dFPIEnabled }) {
 
   let etpStandardTCPBox = doc.getElementById("etpStandardTCPBox");
   is(
-    BrowserTestUtils.is_visible(etpStandardTCPBox),
+    BrowserTestUtils.isVisible(etpStandardTCPBox),
     uiEnabled,
     `TCP section in standard is ${uiEnabled ? " " : "not "}visible.`
   );
@@ -69,7 +69,7 @@ async function testTCPSection({ dFPIEnabled }) {
     // If visible, test the TCP section elements.
     let learnMoreLink = etpStandardTCPBox.querySelector("#tcp-learn-more-link");
     ok(learnMoreLink, "Should have a learn more link");
-    BrowserTestUtils.is_visible(
+    BrowserTestUtils.isVisible(
       learnMoreLink,
       "Learn more link should be visible."
     );
@@ -85,13 +85,13 @@ async function testTCPSection({ dFPIEnabled }) {
 
     let description = etpStandardTCPBox.querySelector(".tail-with-learn-more");
     ok(description, "Should have a description element.");
-    BrowserTestUtils.is_visible(description, "Description should be visible.");
+    BrowserTestUtils.isVisible(description, "Description should be visible.");
 
     let title = etpStandardTCPBox.querySelector(
       ".content-blocking-warning-title"
     );
     ok(title, "Should have a title element.");
-    BrowserTestUtils.is_visible(title, "Title should be visible.");
+    BrowserTestUtils.isVisible(title, "Title should be visible.");
   }
 
   info("Switch to ETP strict.");
@@ -99,7 +99,7 @@ async function testTCPSection({ dFPIEnabled }) {
   strictRadioOption.click();
   await categoryPrefChange;
   ok(
-    !BrowserTestUtils.is_visible(etpStandardTCPBox),
+    !BrowserTestUtils.isVisible(etpStandardTCPBox),
     "When strict is selected TCP UI is not visible."
   );
 
@@ -108,7 +108,7 @@ async function testTCPSection({ dFPIEnabled }) {
   customRadioOption.click();
   await categoryPrefChange;
   ok(
-    !BrowserTestUtils.is_visible(etpStandardTCPBox),
+    !BrowserTestUtils.isVisible(etpStandardTCPBox),
     "When custom is selected TCP UI is not visible."
   );
 
@@ -117,7 +117,7 @@ async function testTCPSection({ dFPIEnabled }) {
   standardRadioOption.click();
   await categoryPrefChange;
   is(
-    BrowserTestUtils.is_visible(etpStandardTCPBox),
+    BrowserTestUtils.isVisible(etpStandardTCPBox),
     uiEnabled,
     `TCP section in standard is ${uiEnabled ? " " : "not "}visible.`
   );

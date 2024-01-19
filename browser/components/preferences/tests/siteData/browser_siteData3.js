@@ -304,7 +304,7 @@ add_task(async function test_single_entry_removal() {
 
   let removalList = dialogWin.document.getElementById("removalList");
   is(
-    BrowserTestUtils.is_visible(removalList),
+    BrowserTestUtils.isVisible(removalList),
     false,
     "The removal list should be invisible"
   );

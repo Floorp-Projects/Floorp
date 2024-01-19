@@ -489,10 +489,7 @@ function checkIntervention({
 
     let menuButton = element._buttons.get("menu");
     Assert.ok(menuButton, "Menu button exists");
-    Assert.ok(
-      BrowserTestUtils.is_visible(menuButton),
-      "Menu button is visible"
-    );
+    Assert.ok(BrowserTestUtils.isVisible(menuButton), "Menu button is visible");
 
     let values = await Promise.all([awaitCallback(), pickTip()]);
     Assert.ok(true, "Refresh dialog opened");

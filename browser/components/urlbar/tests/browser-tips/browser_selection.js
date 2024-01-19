@@ -82,7 +82,7 @@ add_task(async function tipIsSecondResult() {
   await TestUtils.waitForCondition(() => {
     return (
       gURLBar.view.oneOffSearchButtons.buttons.firstElementChild &&
-      BrowserTestUtils.is_visible(
+      BrowserTestUtils.isVisible(
         gURLBar.view.oneOffSearchButtons.buttons.firstElementChild
       )
     );

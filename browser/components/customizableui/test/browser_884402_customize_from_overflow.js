@@ -22,7 +22,7 @@ add_task(async function () {
     registerCleanupFunction(() =>
       document.documentElement.setAttribute("fxastatus", initialFxaStatus)
     );
-    ok(BrowserTestUtils.is_visible(fxaButton), "FxA button is now visible");
+    ok(BrowserTestUtils.isVisible(fxaButton), "FxA button is now visible");
   }
 
   originalWindowWidth = window.outerWidth;

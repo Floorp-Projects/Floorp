@@ -149,7 +149,7 @@ add_task(async function dontTemporarilyShowAboutHome() {
   await loadPromise;
 
   let homeButton = win.document.getElementById("home-button");
-  ok(BrowserTestUtils.is_visible(homeButton), "home-button is visible");
+  ok(BrowserTestUtils.isVisible(homeButton), "home-button is visible");
 
   let changeListener;
   let locationChangePromise = new Promise(resolve => {

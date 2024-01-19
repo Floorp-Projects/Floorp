@@ -15,14 +15,14 @@ function testPostPrompt(task) {
     async function (browser) {
       let icon = document.getElementById("web-notifications-notification-icon");
       ok(
-        !BrowserTestUtils.is_visible(icon),
+        !BrowserTestUtils.isVisible(icon),
         "notifications icon is not visible at first"
       );
 
       await SpecialPowers.spawn(browser, [], task);
 
       await TestUtils.waitForCondition(
-        () => BrowserTestUtils.is_visible(icon),
+        () => BrowserTestUtils.isVisible(icon),
         "notifications icon is visible"
       );
       ok(

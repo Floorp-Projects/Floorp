@@ -589,7 +589,7 @@ add_task(async function addSpeakerPermission() {
   let speakerRow =
     gBrowser.contentDocument.getElementById("speakerSettingsRow");
   Assert.equal(
-    BrowserTestUtils.is_visible(speakerRow),
+    BrowserTestUtils.isVisible(speakerRow),
     enabled,
     "speakerRow visible"
   );

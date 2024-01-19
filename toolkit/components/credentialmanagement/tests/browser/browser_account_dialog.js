@@ -438,7 +438,7 @@ add_task(async function test_multiple_acccount_show_picture() {
     "Popup title appears as business short name"
   );
 
-  ok(BrowserTestUtils.is_visible(headerIcon), "Header Icon is showing");
+  ok(BrowserTestUtils.isVisible(headerIcon), "Header Icon is showing");
   ok(
     headerIcon.src.startsWith(
       "data:image/svg+xml;base64,PCEtLSBUaGlzIFNvdXJjZSBDb2RlIEZvcm0gaXMgc3ViamVjdCB0byB0aGUgdGVybXMgb2YgdGhlIE1vemlsbGEgUHVibGljCiAgIC0gTGljZW5zZSwgdi4gMi4wLiBJZiBhIGNvcHkgb2YgdGhlIE1QTCB3YXMgbm90IGRpc3RyaWJ1dGVkIHdpdGggdGhpcwogICAtIGZpbGUsIFlvdSBjYW4gb2J0YWluIG9uZSBhdCBodHRwOi8vbW96aWxsYS5vcmcvTVBMLzIuMC8uIC0tPgo8c3ZnIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgdmlld0JveD0iMCAwIDE2IDE2IiB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIGZpbGw9ImNvbnRleHQtZmlsbCIgZmlsbC1vcGFjaXR5PSJjb250ZXh0LWZpbGwtb3BhY2l0eSI+CiAgPHBhdGggZD0iTS42MjUgMTNhLjYyNS42MjUgMCAwIDEgMC0xLjI1bDMuMjUgMEE0Ljg4IDQuODggMCAwIDAgOC43NSA2Ljg3NWwwLS4yNWEuNjI1LjYyNSAwIDAgMSAxLjI1IDBsMCAuMjVBNi4xMzIgNi4xMzIgMCAwIDEgMy44NzUgMTNsLTMuMjUgMHoiLz"

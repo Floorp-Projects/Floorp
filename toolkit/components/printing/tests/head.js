@@ -179,7 +179,7 @@ class PrintHelper {
 
   assertDialogOpen() {
     is(this._dialogs.length, 1, "There is one print dialog");
-    ok(BrowserTestUtils.is_visible(this.dialog._box), "The dialog is visible");
+    ok(BrowserTestUtils.isVisible(this.dialog._box), "The dialog is visible");
   }
 
   assertDialogHidden() {
@@ -415,7 +415,7 @@ class PrintHelper {
     if (scroll) {
       el.scrollIntoView();
     }
-    ok(BrowserTestUtils.is_visible(el), "Element must be visible to click");
+    ok(BrowserTestUtils.isVisible(el), "Element must be visible to click");
     EventUtils.synthesizeMouseAtCenter(el, {}, this.win);
   }
 
@@ -548,6 +548,6 @@ class PrintHelper {
 function waitForPreviewVisible() {
   return BrowserTestUtils.waitForCondition(function () {
     let preview = document.querySelector(".printPreviewBrowser");
-    return preview && BrowserTestUtils.is_visible(preview);
+    return preview && BrowserTestUtils.isVisible(preview);
   });
 }

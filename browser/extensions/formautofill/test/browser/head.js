@@ -1206,7 +1206,7 @@ async function verifyConfirmationHint(
   try {
     Assert.equal(hintElem.state, "open", "hint popup is open");
     Assert.ok(
-      BrowserTestUtils.is_visible(hintElem.anchorNode),
+      BrowserTestUtils.isVisible(hintElem.anchorNode),
       "hint anchorNode is visible"
     );
     Assert.equal(

@@ -58,7 +58,7 @@ add_task(async function doTest() {
     await openProtectionsPanel();
 
     ok(
-      BrowserTestUtils.is_visible(
+      BrowserTestUtils.isVisible(
         gProtectionsHandler._protectionsPopupMilestonesText
       ),
       "Milestones section should be visible in the panel."
@@ -68,7 +68,7 @@ add_task(async function doTest() {
     await openProtectionsPanel();
 
     ok(
-      BrowserTestUtils.is_visible(
+      BrowserTestUtils.isVisible(
         gProtectionsHandler._protectionsPopupMilestonesText
       ),
       "Milestones section should still be visible in the panel."
@@ -88,7 +88,7 @@ add_task(async function doTest() {
     await openProtectionsPanel();
 
     ok(
-      !BrowserTestUtils.is_visible(
+      !BrowserTestUtils.isVisible(
         gProtectionsHandler._protectionsPopupMilestonesText
       ),
       "Milestones section should no longer be visible in the panel."

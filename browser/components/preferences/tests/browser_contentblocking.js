@@ -1565,7 +1565,7 @@ add_task(async function testRFPWarningBanner() {
 
   // Verify if the banner is hidden at the beginning.
   ok(
-    !BrowserTestUtils.is_visible(rfpWarningBanner),
+    !BrowserTestUtils.isVisible(rfpWarningBanner),
     "The RFP warning banner is hidden at the beginning."
   );
 
@@ -1576,7 +1576,7 @@ add_task(async function testRFPWarningBanner() {
 
   // Verify if the banner is shown.
   ok(
-    BrowserTestUtils.is_visible(rfpWarningBanner),
+    BrowserTestUtils.isVisible(rfpWarningBanner),
     "The RFP warning banner is shown."
   );
 
@@ -1590,7 +1590,7 @@ add_task(async function testRFPWarningBanner() {
 
   // Verify if the banner is shown.
   ok(
-    BrowserTestUtils.is_visible(rfpWarningBanner),
+    BrowserTestUtils.isVisible(rfpWarningBanner),
     "The RFP warning banner is shown."
   );
 
@@ -1604,7 +1604,7 @@ add_task(async function testRFPWarningBanner() {
 
   // Verify if the banner is shown.
   ok(
-    BrowserTestUtils.is_visible(rfpWarningBanner),
+    BrowserTestUtils.isVisible(rfpWarningBanner),
     "The RFP warning banner is shown."
   );
 

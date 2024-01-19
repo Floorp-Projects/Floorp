@@ -23,7 +23,7 @@ add_task(async function test_sidebar_error() {
     Assert.ok(sidebar, "Sidebar should exist");
 
     Assert.ok(
-      BrowserTestUtils.is_visible(sidebar),
+      BrowserTestUtils.isVisible(sidebar),
       "Sidebar should be visible."
     );
     info("Waiting for sidebar to update.");
@@ -69,7 +69,7 @@ add_task(async function test_sidebar_analysis_status_page_not_supported() {
     Assert.ok(sidebar, "Sidebar should exist");
 
     Assert.ok(
-      BrowserTestUtils.is_visible(sidebar),
+      BrowserTestUtils.isVisible(sidebar),
       "Sidebar should be visible."
     );
     info("Waiting for sidebar to update.");
@@ -115,7 +115,7 @@ add_task(async function test_sidebar_analysis_status_unprocessable() {
     Assert.ok(sidebar, "Sidebar should exist");
 
     Assert.ok(
-      BrowserTestUtils.is_visible(sidebar),
+      BrowserTestUtils.isVisible(sidebar),
       "Sidebar should be visible."
     );
     info("Waiting for sidebar to update.");
@@ -164,7 +164,7 @@ add_task(async function test_sidebar_analysis_status_not_enough_reviews() {
       Assert.ok(sidebar, "Sidebar should exist");
 
       Assert.ok(
-        BrowserTestUtils.is_visible(sidebar),
+        BrowserTestUtils.isVisible(sidebar),
         "Sidebar should be visible."
       );
       info("Waiting for sidebar to update.");

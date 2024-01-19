@@ -895,7 +895,7 @@ add_task(async function testSitePermission() {
 
   let sitepermissionsRow = card.querySelector(".addon-detail-sitepermissions");
   is(
-    BrowserTestUtils.is_visible(sitepermissionsRow),
+    BrowserTestUtils.isVisible(sitepermissionsRow),
     true,
     "AddonSitePermissionsList should be visible for this addon type"
   );
@@ -1368,7 +1368,7 @@ add_task(async function testQuarantinedDomainsUserAllowedUI() {
     );
 
     is(
-      BrowserTestUtils.is_visible(quarantinedUserAllowedControlsRow),
+      BrowserTestUtils.isVisible(quarantinedUserAllowedControlsRow),
       expectVisible,
       `Expect quarantineIgnoreByUser UI to ${
         expectVisible ? "be" : "NOT be"
@@ -1381,7 +1381,7 @@ add_task(async function testQuarantinedDomainsUserAllowedUI() {
       "Expect next sibling to be an addon-detail-help-row"
     );
     is(
-      BrowserTestUtils.is_visible(helpRow),
+      BrowserTestUtils.isVisible(helpRow),
       expectVisible,
       `Expect quarantineIgnoredByUser UI help to ${
         expectVisible ? "be" : "NOT be"

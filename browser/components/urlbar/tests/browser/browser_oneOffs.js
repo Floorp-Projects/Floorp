@@ -225,7 +225,7 @@ add_task(async function editedView() {
       )
     );
     Assert.ok(
-      !BrowserTestUtils.is_visible(heuristicResult.element.action),
+      !BrowserTestUtils.isVisible(heuristicResult.element.action),
       "The heuristic action should not be visible"
     );
   }
@@ -236,7 +236,7 @@ add_task(async function editedView() {
     EventUtils.synthesizeKey("KEY_ArrowDown");
     assertState(-1, i, typedValue);
     Assert.equal(
-      BrowserTestUtils.is_visible(heuristicResult.element.action),
+      BrowserTestUtils.isVisible(heuristicResult.element.action),
       !oneOffSearchButtons.selectedButton.classList.contains(
         "search-setting-button"
       ),
@@ -248,7 +248,7 @@ add_task(async function editedView() {
   EventUtils.synthesizeKey("KEY_ArrowDown");
   assertState(0, -1, typedValue);
   Assert.ok(
-    BrowserTestUtils.is_visible(heuristicResult.element.action),
+    BrowserTestUtils.isVisible(heuristicResult.element.action),
     "The heuristic action should be visible"
   );
 
@@ -258,7 +258,7 @@ add_task(async function editedView() {
     EventUtils.synthesizeKey("KEY_ArrowUp");
     assertState(-1, i, typedValue);
     Assert.equal(
-      BrowserTestUtils.is_visible(heuristicResult.element.action),
+      BrowserTestUtils.isVisible(heuristicResult.element.action),
       !oneOffSearchButtons.selectedButton.classList.contains(
         "search-setting-button"
       ),
@@ -277,7 +277,7 @@ add_task(async function editedView() {
       )
     );
     Assert.ok(
-      !BrowserTestUtils.is_visible(heuristicResult.element.action),
+      !BrowserTestUtils.isVisible(heuristicResult.element.action),
       "The heuristic action should not be visible"
     );
   }
@@ -286,7 +286,7 @@ add_task(async function editedView() {
   EventUtils.synthesizeKey("KEY_ArrowUp");
   assertState(0, -1, typedValue);
   Assert.ok(
-    BrowserTestUtils.is_visible(heuristicResult.element.action),
+    BrowserTestUtils.isVisible(heuristicResult.element.action),
     "The heuristic action should be visible"
   );
 

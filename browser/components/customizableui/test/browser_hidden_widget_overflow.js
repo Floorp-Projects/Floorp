@@ -109,7 +109,7 @@ add_task(async function test_hidden_widget_overflow() {
   let overflowButton = gWin.document.getElementById("nav-bar-overflow-button");
 
   Assert.ok(
-    !BrowserTestUtils.is_visible(overflowButton),
+    !BrowserTestUtils.isVisible(overflowButton),
     "Overflow panel button should be hidden."
   );
 });

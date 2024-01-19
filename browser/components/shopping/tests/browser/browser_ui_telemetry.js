@@ -131,7 +131,7 @@ add_task(async function test_shopping_sidebar_displayed() {
     await sidebar.complete;
 
     Assert.ok(
-      BrowserTestUtils.is_visible(sidebar),
+      BrowserTestUtils.isVisible(sidebar),
       "Sidebar should be visible."
     );
 

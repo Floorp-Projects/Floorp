@@ -55,7 +55,7 @@ add_task(async function print_selection() {
           .querySelector(".printSettingsBrowser")
           .contentDocument.querySelector("#source-version-selection-radio");
         ok(
-          BrowserTestUtils.is_visible(printSelect),
+          BrowserTestUtils.isVisible(printSelect),
           "Print selection checkbox is shown"
         );
         ok(printSelect.checked, "Print selection checkbox is checked");
@@ -112,7 +112,7 @@ add_task(async function print_selection_parent_process() {
       .querySelector(".printSettingsBrowser")
       .contentDocument.querySelector("#source-version-selection-radio");
     ok(
-      BrowserTestUtils.is_visible(printSelect),
+      BrowserTestUtils.isVisible(printSelect),
       "Print selection checkbox is shown"
     );
     ok(printSelect.checked, "Print selection checkbox is checked");
