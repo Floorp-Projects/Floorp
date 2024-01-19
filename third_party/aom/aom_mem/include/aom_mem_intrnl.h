@@ -26,8 +26,4 @@
 #endif
 #endif
 
-/*returns an addr aligned to the byte boundary specified by align*/
-#define align_addr(addr, align) \
-  (void *)(((size_t)(addr) + ((align)-1)) & ~(size_t)((align)-1))
-
 #endif  // AOM_AOM_MEM_INCLUDE_AOM_MEM_INTRNL_H_

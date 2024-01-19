@@ -16,7 +16,6 @@
 #include "av1/common/entropymv.h"
 #include "av1/common/filter.h"
 #include "av1/common/seg_common.h"
-#include "aom_dsp/aom_filter.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -32,7 +31,7 @@ extern "C" {
 // Number of possible contexts for a color index.
 // As can be seen from av1_get_palette_color_index_context(), the possible
 // contexts are (2,0,0), (2,2,1), (3,2,0), (4,1,0), (5,0,0). These are mapped to
-// a value from 0 to 4 using 'palette_color_index_context_lookup' table.
+// a value from 0 to 4 using 'av1_palette_color_index_context_lookup' table.
 #define PALETTE_COLOR_INDEX_CONTEXTS 5
 
 // Palette Y mode context for a block is determined by number of neighboring
@@ -56,6 +55,10 @@ extern "C" {
 // 4096(BLOCK_64X64)                        -> 6
 #define PALATTE_BSIZE_CTXS 7
 
+#define MAX_COLOR_CONTEXT_HASH 8
+
+#define NUM_PALETTE_NEIGHBORS 3  // left, top-left and top.
+
 #define KF_MODE_CONTEXTS 5
 
 struct AV1Common;
@@ -63,7 +66,6 @@ struct AV1Common;
 typedef struct {
   const int16_t *scan;
   const int16_t *iscan;
-  const int16_t *neighbors;
 } SCAN_ORDER;
 
 typedef struct frame_contexts {
@@ -92,7 +94,8 @@ typedef struct frame_contexts {
 
   aom_cdf_prob inter_compound_mode_cdf[INTER_MODE_CONTEXTS]
                                       [CDF_SIZE(INTER_COMPOUND_MODES)];
-  aom_cdf_prob compound_type_cdf[BLOCK_SIZES_ALL][CDF_SIZE(COMPOUND_TYPES - 1)];
+  aom_cdf_prob compound_type_cdf[BLOCK_SIZES_ALL]
+                                [CDF_SIZE(MASKED_COMPOUND_TYPES)];
   aom_cdf_prob wedge_idx_cdf[BLOCK_SIZES_ALL][CDF_SIZE(16)];
   aom_cdf_prob interintra_cdf[BLOCK_SIZE_GROUPS][CDF_SIZE(2)];
   aom_cdf_prob wedge_interintra_cdf[BLOCK_SIZES_ALL][CDF_SIZE(2)];
@@ -121,8 +124,8 @@ typedef struct frame_contexts {
   aom_cdf_prob txfm_partition_cdf[TXFM_PARTITION_CONTEXTS][CDF_SIZE(2)];
   aom_cdf_prob compound_index_cdf[COMP_INDEX_CONTEXTS][CDF_SIZE(2)];
   aom_cdf_prob comp_group_idx_cdf[COMP_GROUP_IDX_CONTEXTS][CDF_SIZE(2)];
-  aom_cdf_prob skip_mode_cdfs[SKIP_CONTEXTS][CDF_SIZE(2)];
-  aom_cdf_prob skip_cdfs[SKIP_CONTEXTS][CDF_SIZE(2)];
+  aom_cdf_prob skip_mode_cdfs[SKIP_MODE_CONTEXTS][CDF_SIZE(2)];
+  aom_cdf_prob skip_txfm_cdfs[SKIP_CONTEXTS][CDF_SIZE(2)];
   aom_cdf_prob intra_inter_cdf[INTRA_INTER_CONTEXTS][CDF_SIZE(2)];
   nmv_context nmvc;
   nmv_context ndvc;
@@ -187,11 +190,11 @@ void av1_setup_frame_contexts(struct AV1Common *cm);
 void av1_setup_past_independence(struct AV1Common *cm);
 
 // Returns (int)ceil(log2(n)).
-// NOTE: This implementation only works for n <= 2^30.
 static INLINE int av1_ceil_log2(int n) {
   if (n < 2) return 0;
-  int i = 1, p = 2;
-  while (p < n) {
+  int i = 1;
+  unsigned int p = 2;
+  while (p < (unsigned int)n) {
     i++;
     p = p << 1;
   }
@@ -204,6 +207,9 @@ static INLINE int av1_ceil_log2(int n) {
 int av1_get_palette_color_index_context(const uint8_t *color_map, int stride,
                                         int r, int c, int palette_size,
                                         uint8_t *color_order, int *color_idx);
+
+extern const int
+    av1_palette_color_index_context_lookup[MAX_COLOR_CONTEXT_HASH + 1];
 
 #ifdef __cplusplus
 }  // extern "C"

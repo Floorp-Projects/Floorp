@@ -143,6 +143,7 @@ void aom_blend_a64_vmask_sse4_1(uint8_t *dst, uint32_t dst_stride,
                  h);
 }
 
+#if CONFIG_AV1_HIGHBITDEPTH
 //////////////////////////////////////////////////////////////////////////////
 // Implementation - No sub-sampling
 //////////////////////////////////////////////////////////////////////////////
@@ -281,3 +282,4 @@ void aom_highbd_blend_a64_vmask_sse4_1(
                                   src1_stride, mask, w, h);
   }
 }
+#endif  // CONFIG_AV1_HIGHBITDEPTH

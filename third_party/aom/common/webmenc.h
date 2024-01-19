@@ -30,24 +30,39 @@ struct WebmOutputContext {
 };
 
 /* Stereo 3D packed frame format */
-typedef enum stereo_format {
+enum {
   STEREO_FORMAT_MONO = 0,
   STEREO_FORMAT_LEFT_RIGHT = 1,
   STEREO_FORMAT_BOTTOM_TOP = 2,
   STEREO_FORMAT_TOP_BOTTOM = 3,
   STEREO_FORMAT_RIGHT_LEFT = 11
-} stereo_format_t;
+} UENUM1BYTE(stereo_format_t);
 
-void write_webm_file_header(struct WebmOutputContext *webm_ctx,
-                            const aom_codec_enc_cfg_t *cfg,
-                            stereo_format_t stereo_fmt, unsigned int fourcc,
-                            const struct AvxRational *par);
+// Simplistic mechanism to extract encoder settings, without having
+// to re-invoke the entire flag-parsing logic. It lists the codec version
+// and then copies the arguments as-is from argv, but skips the binary name,
+// any arguments that match the input filename, and the output flags "-o"
+// and "--output" (and the following argument for those flags). The caller
+// is responsible for free-ing the returned string. If there is insufficient
+// memory, it returns nullptr.
+char *extract_encoder_settings(const char *version, const char **argv, int argc,
+                               const char *input_fname);
 
-void write_webm_block(struct WebmOutputContext *webm_ctx,
-                      const aom_codec_enc_cfg_t *cfg,
-                      const aom_codec_cx_pkt_t *pkt);
+// The following functions wrap libwebm's mkvmuxer. All functions return 0 upon
+// success, or -1 upon failure.
 
-void write_webm_file_footer(struct WebmOutputContext *webm_ctx);
+int write_webm_file_header(struct WebmOutputContext *webm_ctx,
+                           aom_codec_ctx_t *encoder_ctx,
+                           const aom_codec_enc_cfg_t *cfg,
+                           stereo_format_t stereo_fmt, unsigned int fourcc,
+                           const struct AvxRational *par,
+                           const char *encoder_settings);
+
+int write_webm_block(struct WebmOutputContext *webm_ctx,
+                     const aom_codec_enc_cfg_t *cfg,
+                     const aom_codec_cx_pkt_t *pkt);
+
+int write_webm_file_footer(struct WebmOutputContext *webm_ctx);
 
 #ifdef __cplusplus
 }  // extern "C"

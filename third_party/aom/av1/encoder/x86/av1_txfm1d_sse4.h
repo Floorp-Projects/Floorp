@@ -20,42 +20,44 @@
 extern "C" {
 #endif
 
-void av1_fdct4_new_sse4_1(const __m128i *input, __m128i *output,
-                          const int8_t cos_bit, const int8_t *stage_range);
-void av1_fdct8_new_sse4_1(const __m128i *input, __m128i *output,
-                          const int8_t cos_bit, const int8_t *stage_range);
-void av1_fdct16_new_sse4_1(const __m128i *input, __m128i *output,
-                           const int8_t cos_bit, const int8_t *stage_range);
-void av1_fdct32_new_sse4_1(const __m128i *input, __m128i *output,
-                           int8_t cos_bit);
-void av1_fdct64_new_sse4_1(const __m128i *input, __m128i *output,
-                           int8_t cos_bit, const int instride,
-                           const int outstride);
+void av1_fdct4_sse4_1(const __m128i *input, __m128i *output,
+                      const int8_t cos_bit, const int8_t *stage_range);
+void av1_fdct8_sse4_1(const __m128i *input, __m128i *output,
+                      const int8_t cos_bit, const int8_t *stage_range);
+void av1_fdct16_sse4_1(const __m128i *input, __m128i *output,
+                       const int8_t cos_bit, const int8_t *stage_range);
+void av1_fdct32_sse4_1(__m128i *input, __m128i *output, int cos_bit,
+                       const int stride);
+void av1_fdct64_sse4_1(__m128i *input, __m128i *output, int8_t cos_bit,
+                       const int instride, const int outstride);
+void av1_fadst4_sse4_1(const __m128i *input, __m128i *output,
+                       const int8_t cos_bit, const int8_t *stage_range);
+void av1_fadst8_sse4_1(const __m128i *input, __m128i *output,
+                       const int8_t cos_bit, const int8_t *stage_range);
+void av1_fadst16_sse4_1(const __m128i *input, __m128i *output,
+                        const int8_t cos_bit, const int8_t *stage_range);
 
-void av1_fadst4_new_sse4_1(const __m128i *input, __m128i *output,
-                           const int8_t cos_bit, const int8_t *stage_range);
-void av1_fadst8_new_sse4_1(const __m128i *input, __m128i *output,
-                           const int8_t cos_bit, const int8_t *stage_range);
-void av1_fadst16_new_sse4_1(const __m128i *input, __m128i *output,
-                            const int8_t cos_bit, const int8_t *stage_range);
+void av1_idct4_sse4_1(const __m128i *input, __m128i *output,
+                      const int8_t cos_bit, const int8_t *stage_range);
+void av1_idct8_sse4_1(const __m128i *input, __m128i *output,
+                      const int8_t cos_bit, const int8_t *stage_range);
+void av1_idct16_sse4_1(const __m128i *input, __m128i *output,
+                       const int8_t cos_bit, const int8_t *stage_range);
+void av1_idct32_sse4_1(const __m128i *input, __m128i *output,
+                       const int8_t cos_bit, const int8_t *stage_range);
+void av1_idct64_sse4_1(const __m128i *input, __m128i *output,
+                       const int8_t cos_bit, const int8_t *stage_range);
 
-void av1_idct4_new_sse4_1(const __m128i *input, __m128i *output,
-                          const int8_t cos_bit, const int8_t *stage_range);
-void av1_idct8_new_sse4_1(const __m128i *input, __m128i *output,
-                          const int8_t cos_bit, const int8_t *stage_range);
-void av1_idct16_new_sse4_1(const __m128i *input, __m128i *output,
-                           const int8_t cos_bit, const int8_t *stage_range);
-void av1_idct32_new_sse4_1(const __m128i *input, __m128i *output,
-                           const int8_t cos_bit, const int8_t *stage_range);
-void av1_idct64_new_sse4_1(const __m128i *input, __m128i *output,
-                           const int8_t cos_bit, const int8_t *stage_range);
+void av1_iadst4_sse4_1(const __m128i *input, __m128i *output,
+                       const int8_t cos_bit, const int8_t *stage_range);
+void av1_iadst8_sse4_1(const __m128i *input, __m128i *output,
+                       const int8_t cos_bit, const int8_t *stage_range);
+void av1_iadst16_sse4_1(const __m128i *input, __m128i *output,
+                        const int8_t cos_bit, const int8_t *stage_range);
 
-void av1_iadst4_new_sse4_1(const __m128i *input, __m128i *output,
-                           const int8_t cos_bit, const int8_t *stage_range);
-void av1_iadst8_new_sse4_1(const __m128i *input, __m128i *output,
-                           const int8_t cos_bit, const int8_t *stage_range);
-void av1_iadst16_new_sse4_1(const __m128i *input, __m128i *output,
-                            const int8_t cos_bit, const int8_t *stage_range);
+void av1_idtx32_sse4_1(__m128i *input, __m128i *output, int cos_bit,
+                       const int col_num);
+
 static INLINE void transpose_32_4x4(int stride, const __m128i *input,
                                     __m128i *output) {
   __m128i temp0 = _mm_unpacklo_epi32(input[0 * stride], input[2 * stride]);

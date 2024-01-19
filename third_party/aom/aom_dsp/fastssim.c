@@ -20,7 +20,6 @@
 #include "config/aom_dsp_rtcd.h"
 
 #include "aom_dsp/ssim.h"
-#include "aom_ports/system_state.h"
 
 typedef struct fs_level fs_level;
 typedef struct fs_ctx fs_ctx;
@@ -31,6 +30,7 @@ typedef struct fs_ctx fs_ctx;
 #define SSIM_C1_12 (4095 * 4095 * 0.01 * 0.01)
 #define SSIM_C2_10 (1023 * 1023 * 0.03 * 0.03)
 #define SSIM_C2_12 (4095 * 4095 * 0.03 * 0.03)
+#define MAX_SSIM_DB 100.0
 
 #define FS_MINI(_a, _b) ((_a) < (_b) ? (_a) : (_b))
 #define FS_MAXI(_a, _b) ((_a) > (_b) ? (_a) : (_b))
@@ -49,7 +49,7 @@ struct fs_ctx {
   unsigned *col_buf;
 };
 
-static void fs_ctx_init(fs_ctx *_ctx, int _w, int _h, int _nlevels) {
+static int fs_ctx_init(fs_ctx *_ctx, int _w, int _h, int _nlevels) {
   unsigned char *data;
   size_t data_size;
   int lw;
@@ -73,6 +73,7 @@ static void fs_ctx_init(fs_ctx *_ctx, int _w, int _h, int _nlevels) {
     lh = (lh + 1) >> 1;
   }
   data = (unsigned char *)malloc(data_size);
+  if (!data) return -1;
   _ctx->level = (fs_level *)data;
   _ctx->nlevels = _nlevels;
   data += _nlevels * sizeof(*_ctx->level);
@@ -97,6 +98,7 @@ static void fs_ctx_init(fs_ctx *_ctx, int _w, int _h, int _nlevels) {
     lh = (lh + 1) >> 1;
   }
   _ctx->col_buf = (unsigned *)data;
+  return 0;
 }
 
 static void fs_ctx_clear(fs_ctx *_ctx) { free(_ctx->level); }
@@ -446,7 +448,7 @@ static double calc_ssim(const uint8_t *_src, int _systride, const uint8_t *_dst,
   double ret;
   int l;
   ret = 1;
-  fs_ctx_init(&ctx, _w, _h, FS_NLEVELS);
+  if (fs_ctx_init(&ctx, _w, _h, FS_NLEVELS)) return 99.0;
   fs_downsample_level0(&ctx, _src, _systride, _dst, _dystride, _w, _h, _shift,
                        buf_is_hbd);
   for (l = 0; l < FS_NLEVELS - 1; l++) {
@@ -467,7 +469,6 @@ double aom_calc_fastssim(const YV12_BUFFER_CONFIG *source,
                          uint32_t in_bd) {
   double ssimv;
   uint32_t bd_shift = 0;
-  aom_clear_system_state();
   assert(bd >= in_bd);
   assert(source->flags == dest->flags);
   int buf_is_hbd = source->flags & YV12_FLAG_HIGHBITDEPTH;

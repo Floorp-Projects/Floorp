@@ -43,6 +43,9 @@ int aom_rb_read_inv_signed_literal(struct aom_read_bit_buffer *rb, int bits);
 
 uint32_t aom_rb_read_uvlc(struct aom_read_bit_buffer *rb);
 
+int16_t aom_rb_read_signed_primitive_refsubexpfin(
+    struct aom_read_bit_buffer *rb, uint16_t n, uint16_t k, int16_t ref);
+
 #ifdef __cplusplus
 }  // extern "C"
 #endif

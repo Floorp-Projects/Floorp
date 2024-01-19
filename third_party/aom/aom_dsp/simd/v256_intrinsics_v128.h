@@ -12,21 +12,21 @@
 #ifndef AOM_AOM_DSP_SIMD_V256_INTRINSICS_V128_H_
 #define AOM_AOM_DSP_SIMD_V256_INTRINSICS_V128_H_
 
+#include "config/aom_config.h"
+
 #if HAVE_NEON
-#include "aom_dsp/simd/v128_intrinsics_arm.h"
-#elif HAVE_SSE2
+#error "Do not use this file for Neon"
+#endif
+
+#if HAVE_SSE2
 #include "aom_dsp/simd/v128_intrinsics_x86.h"
 #else
 #include "aom_dsp/simd/v128_intrinsics.h"
 #endif
 
-#if HAVE_NEON
-typedef int64x2x2_t v256;
-#else
 typedef struct {
   v128 val[2];
 } v256;
-#endif
 
 SIMD_INLINE uint32_t v256_low_u32(v256 a) { return v128_low_u32(a.val[0]); }
 
@@ -73,7 +73,7 @@ SIMD_INLINE void v256_store_aligned(void *p, v256 a) {
   v128_store_aligned((uint8_t *)p + 16, a.val[1]);
 }
 
-SIMD_INLINE v256 v256_zero() {
+SIMD_INLINE v256 v256_zero(void) {
   return v256_from_v128(v128_zero(), v128_zero());
 }
 
@@ -117,7 +117,7 @@ typedef struct {
   sad128_internal val[2];
 } sad256_internal;
 
-SIMD_INLINE sad256_internal v256_sad_u8_init() {
+SIMD_INLINE sad256_internal v256_sad_u8_init(void) {
   sad256_internal t;
   t.val[1] = v128_sad_u8_init();
   t.val[0] = v128_sad_u8_init();
@@ -142,7 +142,7 @@ typedef struct {
   ssd128_internal val[2];
 } ssd256_internal;
 
-SIMD_INLINE ssd256_internal v256_ssd_u8_init() {
+SIMD_INLINE ssd256_internal v256_ssd_u8_init(void) {
   ssd256_internal t;
   t.val[1] = v128_ssd_u8_init();
   t.val[0] = v128_ssd_u8_init();
@@ -613,30 +613,6 @@ SIMD_INLINE v256 v256_cmpeq_32(v256 a, v256 b) {
 }
 
 SIMD_INLINE v256 v256_shuffle_8(v256 x, v256 pattern) {
-#if HAVE_NEON
-#if defined(__aarch64__)
-  uint8x16x2_t p = { { vreinterpretq_u8_s64(x.val[0]),
-                       vreinterpretq_u8_s64(x.val[1]) } };
-  return v256_from_v128(
-      vreinterpretq_s64_u8(vqtbl2q_u8(p, vreinterpretq_u8_s64(pattern.val[1]))),
-      vreinterpretq_s64_u8(
-          vqtbl2q_u8(p, vreinterpretq_u8_s64(pattern.val[0]))));
-#else
-  uint8x8x4_t p = { { vget_low_u8(vreinterpretq_u8_s64(x.val[0])),
-                      vget_high_u8(vreinterpretq_u8_s64(x.val[0])),
-                      vget_low_u8(vreinterpretq_u8_s64(x.val[1])),
-                      vget_high_u8(vreinterpretq_u8_s64(x.val[1])) } };
-  return v256_from_64(
-      (uint64_t)vreinterpret_s64_u8(
-          vtbl4_u8(p, vreinterpret_u8_s64(vget_high_s64(pattern.val[1])))),
-      (uint64_t)vreinterpret_s64_u8(
-          vtbl4_u8(p, vreinterpret_u8_s64(vget_low_s64(pattern.val[1])))),
-      (uint64_t)vreinterpret_s64_u8(
-          vtbl4_u8(p, vreinterpret_u8_s64(vget_high_s64(pattern.val[0])))),
-      (uint64_t)vreinterpret_s64_u8(
-          vtbl4_u8(p, vreinterpret_u8_s64(vget_low_s64(pattern.val[0])))));
-#endif
-#else
   v128 c16 = v128_dup_8(16);
   v128 maskhi = v128_cmplt_s8(pattern.val[1], c16);
   v128 masklo = v128_cmplt_s8(pattern.val[0], c16);
@@ -645,54 +621,9 @@ SIMD_INLINE v256 v256_shuffle_8(v256 x, v256 pattern) {
                    v128_shuffle_8(x.val[0], pattern.val[1]), maskhi),
       v128_blend_8(v128_shuffle_8(x.val[1], v128_sub_8(pattern.val[0], c16)),
                    v128_shuffle_8(x.val[0], pattern.val[0]), masklo));
-#endif
 }
 
 SIMD_INLINE v256 v256_wideshuffle_8(v256 x, v256 y, v256 pattern) {
-#if HAVE_NEON
-#if defined(__aarch64__)
-  uint8x16x4_t p = { {
-      vreinterpretq_u8_s64(y.val[0]),
-      vreinterpretq_u8_s64(y.val[1]),
-      vreinterpretq_u8_s64(x.val[0]),
-      vreinterpretq_u8_s64(x.val[1]),
-  } };
-  return v256_from_v128(
-      vreinterpretq_s64_u8(vqtbl4q_u8(p, vreinterpretq_u8_s64(pattern.val[1]))),
-      vreinterpretq_s64_u8(
-          vqtbl4q_u8(p, vreinterpretq_u8_s64(pattern.val[0]))));
-#else
-  v256 c32 = v256_dup_8(32);
-  v256 p32 = v256_sub_8(pattern, c32);
-  uint8x8x4_t p = { { vget_low_u8(vreinterpretq_u8_s64(x.val[0])),
-                      vget_high_u8(vreinterpretq_u8_s64(x.val[0])),
-                      vget_low_u8(vreinterpretq_u8_s64(x.val[1])),
-                      vget_high_u8(vreinterpretq_u8_s64(x.val[1])) } };
-  uint8x8x4_t q = { { vget_low_u8(vreinterpretq_u8_s64(y.val[0])),
-                      vget_high_u8(vreinterpretq_u8_s64(y.val[0])),
-                      vget_low_u8(vreinterpretq_u8_s64(y.val[1])),
-                      vget_high_u8(vreinterpretq_u8_s64(y.val[1])) } };
-  v256 r1 =
-      v256_from_64((uint64_t)vreinterpret_s64_u8(vtbl4_u8(
-                       p, vreinterpret_u8_s64(vget_high_s64(p32.val[1])))),
-                   (uint64_t)vreinterpret_s64_u8(vtbl4_u8(
-                       p, vreinterpret_u8_s64(vget_low_s64(p32.val[1])))),
-                   (uint64_t)vreinterpret_s64_u8(vtbl4_u8(
-                       p, vreinterpret_u8_s64(vget_high_s64(p32.val[0])))),
-                   (uint64_t)vreinterpret_s64_u8(vtbl4_u8(
-                       p, vreinterpret_u8_s64(vget_low_s64(p32.val[0])))));
-  v256 r2 =
-      v256_from_64((uint64_t)vreinterpret_s64_u8(vtbl4_u8(
-                       q, vreinterpret_u8_s64(vget_high_s64(pattern.val[1])))),
-                   (uint64_t)vreinterpret_s64_u8(vtbl4_u8(
-                       q, vreinterpret_u8_s64(vget_low_s64(pattern.val[1])))),
-                   (uint64_t)vreinterpret_s64_u8(vtbl4_u8(
-                       q, vreinterpret_u8_s64(vget_high_s64(pattern.val[0])))),
-                   (uint64_t)vreinterpret_s64_u8(vtbl4_u8(
-                       q, vreinterpret_u8_s64(vget_low_s64(pattern.val[0])))));
-  return v256_blend_8(r1, r2, v256_cmplt_s8(pattern, c32));
-#endif
-#else
   v128 c16 = v128_dup_8(16);
   v128 c32 = v128_dup_8(32);
   v128 c48 = v128_dup_8(48);
@@ -713,7 +644,6 @@ SIMD_INLINE v256 v256_wideshuffle_8(v256 x, v256 y, v256 pattern) {
       v128_blend_8(v128_shuffle_8(y.val[1], v128_sub_8(pattern.val[0], c16)),
                    v128_shuffle_8(y.val[0], pattern.val[0]), masklo16));
   return v256_blend_8(r1, r2, v256_cmpgt_s8(v256_from_v128(c32, c32), pattern));
-#endif
 }
 
 SIMD_INLINE v256 v256_pshuffle_8(v256 a, v256 pattern) {
@@ -780,13 +710,16 @@ SIMD_INLINE v256 v256_shr_s64(v256 a, const unsigned int c) {
                   (n) > 16 ? v128_shl_n_byte(a.val[0], (n)-16) : a.val[0], \
                   v128_zero()))
 
-#define v256_shr_n_byte(a, n)                                              \
-  ((n) < 16 ? v256_from_v128(v128_shr_n_byte(a.val[1], n),                 \
-                             v128_or(v128_shr_n_byte(a.val[0], n),         \
-                                     v128_shl_n_byte(a.val[1], 16 - (n)))) \
-            : v256_from_v128(                                              \
-                  v128_zero(),                                             \
-                  (n) > 16 ? v128_shr_n_byte(a.val[1], (n)-16) : a.val[1]))
+#define v256_shr_n_byte(a, n)                                                \
+  (n == 0                                                                    \
+       ? a                                                                   \
+       : ((n) < 16                                                           \
+              ? v256_from_v128(v128_shr_n_byte(a.val[1], n),                 \
+                               v128_or(v128_shr_n_byte(a.val[0], n),         \
+                                       v128_shl_n_byte(a.val[1], 16 - (n)))) \
+              : v256_from_v128(                                              \
+                    v128_zero(),                                             \
+                    (n) > 16 ? v128_shr_n_byte(a.val[1], (n)-16) : a.val[1])))
 
 #define v256_align(a, b, c) \
   ((c) ? v256_or(v256_shr_n_byte(b, c), v256_shl_n_byte(a, 32 - (c))) : b)
@@ -823,7 +756,7 @@ typedef struct {
   sad128_internal_u16 val[2];
 } sad256_internal_u16;
 
-SIMD_INLINE sad256_internal_u16 v256_sad_u16_init() {
+SIMD_INLINE sad256_internal_u16 v256_sad_u16_init(void) {
   sad256_internal_u16 t;
   t.val[1] = v128_sad_u16_init();
   t.val[0] = v128_sad_u16_init();
@@ -849,7 +782,7 @@ typedef struct {
   ssd128_internal_s16 val[2];
 } ssd256_internal_s16;
 
-SIMD_INLINE ssd256_internal_s16 v256_ssd_s16_init() {
+SIMD_INLINE ssd256_internal_s16 v256_ssd_s16_init(void) {
   ssd256_internal_s16 t;
   t.val[1] = v128_ssd_s16_init();
   t.val[0] = v128_ssd_s16_init();

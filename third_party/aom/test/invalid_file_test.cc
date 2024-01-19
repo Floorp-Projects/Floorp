@@ -10,6 +10,7 @@
  */
 
 #include <cstdio>
+#include <ostream>
 #include <string>
 
 #include "third_party/googletest/src/googletest/include/gtest/gtest.h"
@@ -23,32 +24,46 @@ namespace {
 struct DecodeParam {
   int threads;
   const char *filename;
+  const char *res_filename;  // If nullptr, the result filename is
+                             // filename + ".res".
 };
 
+// Constructs result file name.
+std::string GetResFilename(const DecodeParam &param) {
+  if (param.res_filename != nullptr) return param.res_filename;
+  const std::string filename = param.filename;
+  return filename + ".res";
+}
+
 std::ostream &operator<<(std::ostream &os, const DecodeParam &dp) {
-  return os << "threads: " << dp.threads << " file: " << dp.filename;
+  return os << "threads: " << dp.threads << " file: " << dp.filename
+            << " result file: " << GetResFilename(dp);
 }
 
 class InvalidFileTest : public ::libaom_test::DecoderTest,
                         public ::libaom_test::CodecTestWithParam<DecodeParam> {
  protected:
-  InvalidFileTest() : DecoderTest(GET_PARAM(0)), res_file_(NULL) {}
+  InvalidFileTest() : DecoderTest(GET_PARAM(0)), res_file_(nullptr) {}
 
-  virtual ~InvalidFileTest() {
-    if (res_file_ != NULL) fclose(res_file_);
+  ~InvalidFileTest() override {
+    if (res_file_ != nullptr) fclose(res_file_);
   }
 
   void OpenResFile(const std::string &res_file_name) {
     res_file_ = libaom_test::OpenTestDataFile(res_file_name);
-    ASSERT_TRUE(res_file_ != NULL)
+    ASSERT_NE(res_file_, nullptr)
         << "Result file open failed. Filename: " << res_file_name;
   }
 
-  virtual bool HandleDecodeResult(
-      const aom_codec_err_t res_dec,
-      const libaom_test::CompressedVideoSource &video,
-      libaom_test::Decoder *decoder) {
-    EXPECT_TRUE(res_file_ != NULL);
+  void DecompressedFrameHook(const aom_image_t &img,
+                             const unsigned int /*frame_number*/) override {
+    EXPECT_NE(img.fb_priv, nullptr);
+  }
+
+  bool HandleDecodeResult(const aom_codec_err_t res_dec,
+                          const libaom_test::CompressedVideoSource &video,
+                          libaom_test::Decoder *decoder) override {
+    EXPECT_NE(res_file_, nullptr);
     int expected_res_dec = -1;
 
     // Read integer result.
@@ -79,22 +94,21 @@ class InvalidFileTest : public ::libaom_test::DecoderTest,
     return !HasFailure();
   }
 
-  virtual void HandlePeekResult(libaom_test::Decoder *const /*decoder*/,
-                                libaom_test::CompressedVideoSource * /*video*/,
-                                const aom_codec_err_t /*res_peek*/) {}
+  void HandlePeekResult(libaom_test::Decoder *const /*decoder*/,
+                        libaom_test::CompressedVideoSource * /*video*/,
+                        const aom_codec_err_t /*res_peek*/) override {}
 
   void RunTest() {
     const DecodeParam input = GET_PARAM(1);
-    aom_codec_dec_cfg_t cfg = { 0, 0, 0, CONFIG_LOWBITDEPTH, { 1 } };
+    aom_codec_dec_cfg_t cfg = { 0, 0, 0, !FORCE_HIGHBITDEPTH_DECODING };
     cfg.threads = input.threads;
-    const std::string filename = input.filename;
-    libaom_test::IVFVideoSource decode_video(filename);
+    libaom_test::IVFVideoSource decode_video(input.filename);
     decode_video.Init();
 
-    // Construct result file name. The file holds a list of expected integer
-    // results, one for each decoded frame.  Any result that doesn't match
-    // the files list will cause a test failure.
-    const std::string res_filename = filename + ".res";
+    // The result file holds a list of expected integer results, one for each
+    // decoded frame.  Any result that doesn't match the file's list will
+    // cause a test failure.
+    const std::string res_filename = GetResFilename(input);
     OpenResFile(res_filename);
 
     ASSERT_NO_FATAL_FAILURE(RunLoop(&decode_video, cfg));
@@ -106,17 +120,50 @@ class InvalidFileTest : public ::libaom_test::DecoderTest,
 
 TEST_P(InvalidFileTest, ReturnCode) { RunTest(); }
 
+// If res_filename (the third field) is nullptr, then the result filename is
+// filename + ".res" by default. Set res_filename to a string if the result
+// filename differs from the default.
 const DecodeParam kAV1InvalidFileTests[] = {
-  { 1, "invalid-bug-1814.ivf" },
-  { 4, "invalid-oss-fuzz-9463.ivf" },
-  { 1, "invalid-oss-fuzz-9482.ivf" },
-  { 1, "invalid-oss-fuzz-9720.ivf" },
-  { 1, "invalid-oss-fuzz-10061.ivf" },
-  { 1, "invalid-oss-fuzz-10117-mc-buf-use-highbd.ivf" },
-  { 1, "invalid-oss-fuzz-10227.ivf" },
+  // { threads, filename, res_filename }
+  { 1, "invalid-bug-1814.ivf", nullptr },
+  { 1, "invalid-chromium-906381.ivf", nullptr },
+  { 1, "invalid-google-142530197.ivf", nullptr },
+  { 1, "invalid-google-142530197-1.ivf", nullptr },
+  { 4, "invalid-oss-fuzz-9463.ivf", "invalid-oss-fuzz-9463.ivf.res.2" },
+  { 1, "invalid-oss-fuzz-9720.ivf", nullptr },
+  { 1, "invalid-oss-fuzz-10389.ivf", "invalid-oss-fuzz-10389.ivf.res.4" },
+#if !CHROMIUM && !CONFIG_SIZE_LIMIT ||                  \
+    (CONFIG_SIZE_LIMIT && DECODE_WIDTH_LIMIT >= 5120 && \
+     DECODE_HEIGHT_LIMIT >= 180)
+  { 1, "invalid-oss-fuzz-11523.ivf", "invalid-oss-fuzz-11523.ivf.res.2" },
+#endif
+  { 4, "invalid-oss-fuzz-15363.ivf", nullptr },
+  { 1, "invalid-oss-fuzz-16437.ivf", "invalid-oss-fuzz-16437.ivf.res.2" },
+#if CONFIG_MAX_DECODE_PROFILE >= 1
+  { 1, "invalid-oss-fuzz-24706.ivf", nullptr },
+#endif
+#if CONFIG_AV1_HIGHBITDEPTH
+  // These test vectors contain 10-bit or 12-bit video.
+  { 1, "invalid-oss-fuzz-9288.ivf", nullptr },
+  { 1, "invalid-oss-fuzz-9482.ivf", nullptr },
+  { 1, "invalid-oss-fuzz-10061.ivf", nullptr },
+  { 1, "invalid-oss-fuzz-10117-mc-buf-use-highbd.ivf", nullptr },
+  { 1, "invalid-oss-fuzz-10227.ivf", nullptr },
+  { 4, "invalid-oss-fuzz-10555.ivf", nullptr },
+  { 1, "invalid-oss-fuzz-10705.ivf", nullptr },
+#if CONFIG_CWG_C013
+  { 1, "invalid-oss-fuzz-10723.ivf", "invalid-oss-fuzz-10723.ivf.res.3" },
+#else
+  { 1, "invalid-oss-fuzz-10723.ivf", "invalid-oss-fuzz-10723.ivf.res.2" },
+#endif
+  { 1, "invalid-oss-fuzz-10779.ivf", nullptr },
+  { 1, "invalid-oss-fuzz-11477.ivf", nullptr },
+  { 1, "invalid-oss-fuzz-11479.ivf", "invalid-oss-fuzz-11479.ivf.res.2" },
+  { 1, "invalid-oss-fuzz-33030.ivf", nullptr },
+#endif
 };
 
-AV1_INSTANTIATE_TEST_CASE(InvalidFileTest,
-                          ::testing::ValuesIn(kAV1InvalidFileTests));
+AV1_INSTANTIATE_TEST_SUITE(InvalidFileTest,
+                           ::testing::ValuesIn(kAV1InvalidFileTests));
 
 }  // namespace

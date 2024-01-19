@@ -93,8 +93,6 @@ int main(int argc, char **argv) {
   int frame_cnt = 0;
   FILE *outfile[MAX_LAYERS];
   char filename[80];
-  aom_codec_ctx_t codec;
-  const AvxInterface *decoder = NULL;
   FILE *inputfile = NULL;
   uint8_t *buf = NULL;
   size_t bytes_in_buffer = 0;
@@ -114,11 +112,12 @@ int main(int argc, char **argv) {
   obu_ctx.avx_ctx->file = inputfile;
   obu_ctx.avx_ctx->filename = argv[1];
 
-  decoder = get_aom_decoder_by_index(0);
-  printf("Using %s\n", aom_codec_iface_name(decoder->codec_interface()));
+  aom_codec_iface_t *decoder = get_aom_decoder_by_index(0);
+  printf("Using %s\n", aom_codec_iface_name(decoder));
 
-  if (aom_codec_dec_init(&codec, decoder->codec_interface(), NULL, 0))
-    die_codec(&codec, "Failed to initialize decoder.");
+  aom_codec_ctx_t codec;
+  if (aom_codec_dec_init(&codec, decoder, NULL, 0))
+    die("Failed to initialize decoder.");
 
   if (aom_codec_control(&codec, AV1D_SET_OUTPUT_ALL_LAYERS, 1)) {
     die_codec(&codec, "Failed to set output_all_layers control.");
@@ -128,7 +127,7 @@ int main(int argc, char **argv) {
   const size_t ret = fread(tmpbuf, 1, 32, inputfile);
   if (ret != 32) die_codec(&codec, "Input is not a valid obu file");
   si.is_annexb = 0;
-  if (aom_codec_peek_stream_info(decoder->codec_interface(), tmpbuf, 32, &si)) {
+  if (aom_codec_peek_stream_info(decoder, tmpbuf, 32, &si)) {
     die_codec(&codec, "Input is not a valid obu file");
   }
   fseek(inputfile, -32, SEEK_CUR);
@@ -143,7 +142,7 @@ int main(int argc, char **argv) {
 
   // open any enhancement layer output yuv files
   for (i = 1; i < si.number_spatial_layers; i++) {
-    snprintf(filename, sizeof(filename), "out_lyr%d.yuv", i);
+    snprintf(filename, sizeof(filename), "out_lyr%u.yuv", i);
     if (!(outfile[i] = fopen(filename, "wb")))
       die("Failed to open output for writing.");
   }

@@ -26,21 +26,19 @@
 extern "C" {
 #endif
 
-#define PI 3.141592653589793238462643383279502884
-
 // Only need this for fixed-size arrays, for structs just assign.
 #define av1_copy(dest, src)              \
-  {                                      \
+  do {                                   \
     assert(sizeof(dest) == sizeof(src)); \
     memcpy(dest, src, sizeof(src));      \
-  }
+  } while (0)
 
 // Use this for variably-sized arrays.
 #define av1_copy_array(dest, src, n)           \
-  {                                            \
+  do {                                         \
     assert(sizeof(*(dest)) == sizeof(*(src))); \
     memcpy(dest, src, n * sizeof(*(src)));     \
-  }
+  } while (0)
 
 #define av1_zero(dest) memset(&(dest), 0, sizeof(dest))
 #define av1_zero_array(dest, n) memset(dest, 0, n * sizeof(*(dest)))
@@ -50,7 +48,7 @@ static INLINE int get_unsigned_bits(unsigned int num_values) {
 }
 
 #define CHECK_MEM_ERROR(cm, lval, expr) \
-  AOM_CHECK_MEM_ERROR(&cm->error, lval, expr)
+  AOM_CHECK_MEM_ERROR((cm)->error, lval, expr)
 
 #define AOM_FRAME_MARKER 0x2
 

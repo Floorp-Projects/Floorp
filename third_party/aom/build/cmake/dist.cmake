@@ -17,8 +17,8 @@ function(listify_string in_string out_string)
   set(${out_string} "${${out_string}}" PARENT_SCOPE)
 endfunction()
 
-set(REQUIRED_ARGS "AOM_ROOT" "AOM_CONFIG_DIR" "AOM_DIST_DIR"
-    "AOM_DIST_INCLUDES" "AOM_DIST_LIBS" "ENABLE_DOCS")
+set(REQUIRED_ARGS "AOM_ROOT" "AOM_CONFIG_DIR" "AOM_DIST_DIR" "AOM_DIST_INCLUDES"
+                  "AOM_DIST_LIBS" "ENABLE_DOCS")
 
 foreach(arg ${REQUIRED_ARGS})
   if("${${arg}}" STREQUAL "")

@@ -24,49 +24,73 @@ namespace {
 const int kMaxPsnr = 100;
 
 class LosslessTestLarge
-    : public ::libaom_test::CodecTestWithParam<libaom_test::TestMode>,
+    : public ::libaom_test::CodecTestWith3Params<libaom_test::TestMode,
+                                                 aom_rc_mode, int>,
       public ::libaom_test::EncoderTest {
  protected:
   LosslessTestLarge()
       : EncoderTest(GET_PARAM(0)), psnr_(kMaxPsnr), nframes_(0),
-        encoding_mode_(GET_PARAM(1)) {}
+        encoding_mode_(GET_PARAM(1)), rc_end_usage_(GET_PARAM(2)),
+        cpu_used_(GET_PARAM(3)) {}
 
-  virtual ~LosslessTestLarge() {}
+  ~LosslessTestLarge() override = default;
 
-  virtual void SetUp() {
-    InitializeConfig();
-    SetMode(encoding_mode_);
+  void SetUp() override {
+    InitializeConfig(encoding_mode_);
+    cfg_.rc_end_usage = rc_end_usage_;
   }
 
-  virtual void PreEncodeFrameHook(::libaom_test::VideoSource *video,
-                                  ::libaom_test::Encoder *encoder) {
-    if (video->frame() == 1) {
+  void PreEncodeFrameHook(::libaom_test::VideoSource *video,
+                          ::libaom_test::Encoder *encoder) override {
+    if (video->frame() == 0) {
       // Only call Control if quantizer > 0 to verify that using quantizer
       // alone will activate lossless
       if (cfg_.rc_max_quantizer > 0 || cfg_.rc_min_quantizer > 0) {
         encoder->Control(AV1E_SET_LOSSLESS, 1);
       }
+      encoder->Control(AOME_SET_CPUUSED, cpu_used_);
     }
   }
 
-  virtual void BeginPassHook(unsigned int /*pass*/) {
+  void BeginPassHook(unsigned int /*pass*/) override {
     psnr_ = kMaxPsnr;
     nframes_ = 0;
   }
 
-  virtual void PSNRPktHook(const aom_codec_cx_pkt_t *pkt) {
+  void PSNRPktHook(const aom_codec_cx_pkt_t *pkt) override {
     if (pkt->data.psnr.psnr[0] < psnr_) psnr_ = pkt->data.psnr.psnr[0];
   }
 
   double GetMinPsnr() const { return psnr_; }
 
+  bool HandleDecodeResult(const aom_codec_err_t res_dec,
+                          libaom_test::Decoder *decoder) override {
+    EXPECT_EQ(AOM_CODEC_OK, res_dec) << decoder->DecodeError();
+    if (AOM_CODEC_OK == res_dec) {
+      aom_codec_ctx_t *ctx_dec = decoder->GetDecoder();
+      AOM_CODEC_CONTROL_TYPECHECKED(ctx_dec, AOMD_GET_LAST_QUANTIZER,
+                                    &base_qindex_);
+      EXPECT_EQ(base_qindex_, 0)
+          << "Error: Base_qindex is non zero for lossless coding";
+    }
+    return AOM_CODEC_OK == res_dec;
+  }
+
+  void TestLosslessEncoding();
+  void TestLosslessEncodingVGALag0();
+  void TestLosslessEncoding444();
+  void TestLosslessEncodingCtrl();
+
  private:
   double psnr_;
   unsigned int nframes_;
   libaom_test::TestMode encoding_mode_;
+  aom_rc_mode rc_end_usage_;
+  int cpu_used_;
+  int base_qindex_;
 };
 
-TEST_P(LosslessTestLarge, TestLossLessEncoding) {
+void LosslessTestLarge::TestLosslessEncoding() {
   const aom_rational timebase = { 33333333, 1000000000 };
   cfg_.g_timebase = timebase;
   cfg_.rc_target_bitrate = 2000;
@@ -84,7 +108,24 @@ TEST_P(LosslessTestLarge, TestLossLessEncoding) {
   EXPECT_GE(psnr_lossless, kMaxPsnr);
 }
 
-TEST_P(LosslessTestLarge, TestLossLessEncoding444) {
+void LosslessTestLarge::TestLosslessEncodingVGALag0() {
+  const aom_rational timebase = { 33333333, 1000000000 };
+  cfg_.g_timebase = timebase;
+  cfg_.rc_target_bitrate = 2000;
+  cfg_.g_lag_in_frames = 0;
+  cfg_.rc_min_quantizer = 0;
+  cfg_.rc_max_quantizer = 0;
+
+  init_flags_ = AOM_CODEC_USE_PSNR;
+
+  libaom_test::I420VideoSource video("niklas_640_480_30.yuv", 640, 480,
+                                     timebase.den, timebase.num, 0, 30);
+  ASSERT_NO_FATAL_FAILURE(RunLoop(&video));
+  const double psnr_lossless = GetMinPsnr();
+  EXPECT_GE(psnr_lossless, kMaxPsnr);
+}
+
+void LosslessTestLarge::TestLosslessEncoding444() {
   libaom_test::Y4mVideoSource video("rush_hour_444.y4m", 0, 5);
 
   cfg_.g_profile = 1;
@@ -101,7 +142,7 @@ TEST_P(LosslessTestLarge, TestLossLessEncoding444) {
   EXPECT_GE(psnr_lossless, kMaxPsnr);
 }
 
-TEST_P(LosslessTestLarge, TestLossLessEncodingCtrl) {
+void LosslessTestLarge::TestLosslessEncodingCtrl() {
   const aom_rational timebase = { 33333333, 1000000000 };
   cfg_.g_timebase = timebase;
   cfg_.rc_target_bitrate = 2000;
@@ -120,7 +161,70 @@ TEST_P(LosslessTestLarge, TestLossLessEncodingCtrl) {
   EXPECT_GE(psnr_lossless, kMaxPsnr);
 }
 
-AV1_INSTANTIATE_TEST_CASE(LosslessTestLarge,
-                          ::testing::Values(::libaom_test::kOnePassGood,
-                                            ::libaom_test::kTwoPassGood));
+TEST_P(LosslessTestLarge, TestLosslessEncoding) { TestLosslessEncoding(); }
+
+TEST_P(LosslessTestLarge, TestLosslessEncodingVGALag0) {
+  TestLosslessEncodingVGALag0();
+}
+
+TEST_P(LosslessTestLarge, TestLosslessEncoding444) {
+  TestLosslessEncoding444();
+}
+
+TEST_P(LosslessTestLarge, TestLosslessEncodingCtrl) {
+  TestLosslessEncodingCtrl();
+}
+
+class LosslessAllIntraTestLarge : public LosslessTestLarge {};
+
+TEST_P(LosslessAllIntraTestLarge, TestLosslessEncodingCtrl) {
+  const aom_rational timebase = { 33333333, 1000000000 };
+  cfg_.g_timebase = timebase;
+  // Intentionally set Q > 0, to make sure control can be used to activate
+  // lossless
+  cfg_.rc_min_quantizer = 10;
+  cfg_.rc_max_quantizer = 20;
+
+  init_flags_ = AOM_CODEC_USE_PSNR;
+
+  libaom_test::I420VideoSource video("hantro_collage_w352h288.yuv", 352, 288,
+                                     timebase.den, timebase.num, 0, 5);
+  ASSERT_NO_FATAL_FAILURE(RunLoop(&video));
+  const double psnr_lossless = GetMinPsnr();
+  EXPECT_GE(psnr_lossless, kMaxPsnr);
+}
+
+using LosslessRealtimeTestLarge = LosslessTestLarge;
+
+TEST_P(LosslessRealtimeTestLarge, TestLosslessEncoding) {
+  TestLosslessEncoding();
+}
+
+TEST_P(LosslessRealtimeTestLarge, TestLosslessEncodingVGALag0) {
+  TestLosslessEncodingVGALag0();
+}
+
+TEST_P(LosslessRealtimeTestLarge, TestLosslessEncoding444) {
+  TestLosslessEncoding444();
+}
+
+TEST_P(LosslessRealtimeTestLarge, TestLosslessEncodingCtrl) {
+  TestLosslessEncodingCtrl();
+}
+
+AV1_INSTANTIATE_TEST_SUITE(LosslessTestLarge,
+                           ::testing::Values(::libaom_test::kOnePassGood,
+                                             ::libaom_test::kTwoPassGood),
+                           ::testing::Values(AOM_Q, AOM_VBR, AOM_CBR, AOM_CQ),
+                           ::testing::Values(0));  // cpu_used
+
+AV1_INSTANTIATE_TEST_SUITE(LosslessAllIntraTestLarge,
+                           ::testing::Values(::libaom_test::kAllIntra),
+                           ::testing::Values(AOM_Q),
+                           ::testing::Values(6, 9));  // cpu_used
+
+AV1_INSTANTIATE_TEST_SUITE(LosslessRealtimeTestLarge,
+                           ::testing::Values(::libaom_test::kRealTime),
+                           ::testing::Values(AOM_Q, AOM_VBR, AOM_CBR, AOM_CQ),
+                           ::testing::Range(6, 11));  // cpu_used
 }  // namespace

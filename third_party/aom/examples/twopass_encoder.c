@@ -52,6 +52,7 @@
 #include <string.h>
 
 #include "aom/aom_encoder.h"
+#include "aom/aomcx.h"
 #include "common/tools_common.h"
 #include "common/video_writer.h"
 
@@ -82,6 +83,7 @@ static int get_frame_stats(aom_codec_ctx_t *ctx, const aom_image_t *img,
       const uint8_t *const pkt_buf = pkt->data.twopass_stats.buf;
       const size_t pkt_size = pkt->data.twopass_stats.sz;
       stats->buf = realloc(stats->buf, stats->sz + pkt_size);
+      if (!stats->buf) die("Failed to allocate frame stats buffer.");
       memcpy((uint8_t *)stats->buf + stats->sz, pkt_buf, pkt_size);
       stats->sz += pkt_size;
     }
@@ -117,14 +119,14 @@ static int encode_frame(aom_codec_ctx_t *ctx, const aom_image_t *img,
 }
 
 static aom_fixed_buf_t pass0(aom_image_t *raw, FILE *infile,
-                             const AvxInterface *encoder,
+                             aom_codec_iface_t *encoder,
                              const aom_codec_enc_cfg_t *cfg, int limit) {
   aom_codec_ctx_t codec;
   int frame_count = 0;
   aom_fixed_buf_t stats = { NULL, 0 };
 
-  if (aom_codec_enc_init(&codec, encoder->codec_interface(), cfg, 0))
-    die_codec(&codec, "Failed to initialize encoder");
+  if (aom_codec_enc_init(&codec, encoder, cfg, 0))
+    die("Failed to initialize encoder");
 
   // Calculate frame statistics.
   while (aom_img_read(raw, infile) && frame_count < limit) {
@@ -143,9 +145,9 @@ static aom_fixed_buf_t pass0(aom_image_t *raw, FILE *infile,
 }
 
 static void pass1(aom_image_t *raw, FILE *infile, const char *outfile_name,
-                  const AvxInterface *encoder, const aom_codec_enc_cfg_t *cfg,
+                  aom_codec_iface_t *encoder, const aom_codec_enc_cfg_t *cfg,
                   int limit) {
-  AvxVideoInfo info = { encoder->fourcc,
+  AvxVideoInfo info = { get_fourcc_by_aom_encoder(encoder),
                         cfg->g_w,
                         cfg->g_h,
                         { cfg->g_timebase.num, cfg->g_timebase.den },
@@ -157,8 +159,11 @@ static void pass1(aom_image_t *raw, FILE *infile, const char *outfile_name,
   writer = aom_video_writer_open(outfile_name, kContainerIVF, &info);
   if (!writer) die("Failed to open %s for writing", outfile_name);
 
-  if (aom_codec_enc_init(&codec, encoder->codec_interface(), cfg, 0))
-    die_codec(&codec, "Failed to initialize encoder");
+  if (aom_codec_enc_init(&codec, encoder, cfg, 0))
+    die("Failed to initialize encoder");
+
+  if (aom_codec_control(&codec, AOME_SET_CPUUSED, 2))
+    die_codec(&codec, "Failed to set cpu-used");
 
   // Encode frames.
   while (aom_img_read(raw, infile) && frame_count < limit) {
@@ -188,7 +193,6 @@ int main(int argc, char **argv) {
   aom_codec_err_t res;
   aom_fixed_buf_t stats;
 
-  const AvxInterface *encoder = NULL;
   const int fps = 30;       // TODO(dkovalev) add command line argument
   const int bitrate = 200;  // kbit/s TODO(dkovalev) add command line argument
   const char *const codec_arg = argv[1];
@@ -205,7 +209,7 @@ int main(int argc, char **argv) {
 
   if (limit == 0) limit = 100;
 
-  encoder = get_aom_encoder_by_name(codec_arg);
+  aom_codec_iface_t *encoder = get_aom_encoder_by_short_name(codec_arg);
   if (!encoder) die("Unsupported codec.");
 
   w = (int)strtol(width_arg, NULL, 0);
@@ -215,12 +219,12 @@ int main(int argc, char **argv) {
     die("Invalid frame size: %dx%d", w, h);
 
   if (!aom_img_alloc(&raw, AOM_IMG_FMT_I420, w, h, 1))
-    die("Failed to allocate image", w, h);
+    die("Failed to allocate image (%dx%d)", w, h);
 
-  printf("Using %s\n", aom_codec_iface_name(encoder->codec_interface()));
+  printf("Using %s\n", aom_codec_iface_name(encoder));
 
   // Configuration
-  res = aom_codec_enc_config_default(encoder->codec_interface(), &cfg, 0);
+  res = aom_codec_enc_config_default(encoder, &cfg, 0);
   if (res) die_codec(&codec, "Failed to get default codec config.");
 
   cfg.g_w = w;

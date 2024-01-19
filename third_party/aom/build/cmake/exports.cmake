@@ -17,9 +17,9 @@ include("${AOM_ROOT}/build/cmake/exports_sources.cmake")
 
 # Creates the custom target which handles generation of the symbol export lists.
 function(setup_exports_target)
-  if("${AOM_TARGET_SYSTEM}" STREQUAL "Darwin")
+  if(APPLE)
     set(symbol_file_ext "syms")
-  elseif("${AOM_TARGET_SYSTEM}" MATCHES "Windows\|MSYS" AND MSVC)
+  elseif(WIN32)
     set(symbol_file_ext "def")
   else()
     set(symbol_file_ext "ver")
@@ -27,39 +27,50 @@ function(setup_exports_target)
 
   set(aom_sym_file "${AOM_CONFIG_DIR}/libaom.${symbol_file_ext}")
 
-  add_custom_target(generate_exports
-                    COMMAND ${CMAKE_COMMAND} -DAOM_ROOT="${AOM_ROOT}"
-                            -DAOM_CONFIG_DIR="${AOM_CONFIG_DIR}"
-                            -DAOM_TARGET_SYSTEM=${AOM_TARGET_SYSTEM}
-                            -DAOM_SYM_FILE="${aom_sym_file}" -DAOM_MSVC=${MSVC}
-                            -DAOM_XCODE=${XCODE} -DCONFIG_NAME=$<CONFIG>
-                            -DCONFIG_AV1_DECODER=${CONFIG_AV1_DECODER}
-                            -DCONFIG_AV1_ENCODER=${CONFIG_AV1_ENCODER}
-                            -DENABLE_TESTS=${ENABLE_TESTS} -P
-                            "${AOM_ROOT}/build/cmake/generate_exports.cmake"
-                    SOURCES ${AOM_EXPORTS_SOURCES}
-                    DEPENDS ${AOM_EXPORTS_SOURCES})
+  add_custom_target(
+    generate_exports
+    COMMAND ${CMAKE_COMMAND}
+            -DAOM_ROOT="${AOM_ROOT}"
+            -DAOM_CONFIG_DIR="${AOM_CONFIG_DIR}"
+            -DAOM_TARGET_SYSTEM=${AOM_TARGET_SYSTEM}
+            -DAOM_SYM_FILE="${aom_sym_file}"
+            -DAOM_MSVC=${MSVC}
+            -DAOM_XCODE=${XCODE}
+            -DCMAKE_SHARED_LIBRARY_PREFIX="${CMAKE_SHARED_LIBRARY_PREFIX}"
+            -DCONFIG_NAME=$<CONFIG>
+            -DCONFIG_AV1_DECODER=${CONFIG_AV1_DECODER}
+            -DCONFIG_AV1_ENCODER=${CONFIG_AV1_ENCODER}
+            -DCONFIG_INSPECTION=${CONFIG_INSPECTION}
+            -DENABLE_TESTS=${ENABLE_TESTS}
+            -P
+            "${AOM_ROOT}/build/cmake/generate_exports.cmake"
+    SOURCES ${AOM_EXPORTS_SOURCES}
+    DEPENDS ${AOM_EXPORTS_SOURCES} BYPRODUCTS ${aom_sym_file})
 
   # Make libaom depend on the exports file, and set flags to pick it up when
   # creating the dylib.
   add_dependencies(aom generate_exports)
 
   if(APPLE)
-    set_property(TARGET aom APPEND_STRING
+    set_property(TARGET aom
+                 APPEND_STRING
                  PROPERTY LINK_FLAGS "-exported_symbols_list ${aom_sym_file}")
   elseif(WIN32)
-    if(NOT MSVC)
-      set_property(TARGET aom APPEND_STRING
-                   PROPERTY LINK_FLAGS "-Wl,--version-script ${aom_sym_file}")
-    else()
-      set_property(TARGET aom APPEND_STRING
+    if(MSVC)
+      set_property(TARGET aom
+                   APPEND_STRING
                    PROPERTY LINK_FLAGS "/DEF:${aom_sym_file}")
+    else()
+      # For MinGW and MSYS compilers, you can use either version scripts or
+      # module definition files. If the latter, it must be supplied as an
+      # "object".
+      set_property(TARGET aom
+                   APPEND_STRING
+                   PROPERTY LINK_FLAGS "${aom_sym_file}")
     endif()
-
-    # TODO(tomfinegan): Sort out the import lib situation and flags for MSVC.
-
   else()
-    set_property(TARGET aom APPEND_STRING
+    set_property(TARGET aom
+                 APPEND_STRING
                  PROPERTY LINK_FLAGS "-Wl,--version-script,${aom_sym_file}")
   endif()
 endfunction()

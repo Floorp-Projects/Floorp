@@ -11,10 +11,8 @@
 
 #include <math.h>
 
-#include "aom_ports/system_state.h"
-
+#include "av1/common/av1_common_int.h"
 #include "av1/common/blockd.h"
-#include "av1/common/onyxc_int.h"
 
 PREDICTION_MODE av1_left_block_mode(const MB_MODE_INFO *left_mi) {
   if (!left_mi) return DC_PRED;
@@ -28,11 +26,12 @@ PREDICTION_MODE av1_above_block_mode(const MB_MODE_INFO *above_mi) {
   return above_mi->mode;
 }
 
-void av1_set_contexts(const MACROBLOCKD *xd, struct macroblockd_plane *pd,
-                      int plane, BLOCK_SIZE plane_bsize, TX_SIZE tx_size,
-                      int has_eob, int aoff, int loff) {
-  ENTROPY_CONTEXT *const a = pd->above_context + aoff;
-  ENTROPY_CONTEXT *const l = pd->left_context + loff;
+void av1_set_entropy_contexts(const MACROBLOCKD *xd,
+                              struct macroblockd_plane *pd, int plane,
+                              BLOCK_SIZE plane_bsize, TX_SIZE tx_size,
+                              int has_eob, int aoff, int loff) {
+  ENTROPY_CONTEXT *const a = pd->above_entropy_context + aoff;
+  ENTROPY_CONTEXT *const l = pd->left_entropy_context + loff;
   const int txs_wide = tx_size_wide_unit[tx_size];
   const int txs_high = tx_size_high_unit[tx_size];
 
@@ -56,23 +55,18 @@ void av1_set_contexts(const MACROBLOCKD *xd, struct macroblockd_plane *pd,
     memset(l, has_eob, sizeof(*l) * txs_high);
   }
 }
-void av1_reset_skip_context(MACROBLOCKD *xd, int mi_row, int mi_col,
-                            BLOCK_SIZE bsize, const int num_planes) {
-  int i;
-  int nplanes;
-  int chroma_ref;
-  chroma_ref =
-      is_chroma_reference(mi_row, mi_col, bsize, xd->plane[1].subsampling_x,
-                          xd->plane[1].subsampling_y);
-  nplanes = 1 + (num_planes - 1) * chroma_ref;
-  for (i = 0; i < nplanes; i++) {
+void av1_reset_entropy_context(MACROBLOCKD *xd, BLOCK_SIZE bsize,
+                               const int num_planes) {
+  assert(bsize < BLOCK_SIZES_ALL);
+  const int nplanes = 1 + (num_planes - 1) * xd->is_chroma_ref;
+  for (int i = 0; i < nplanes; i++) {
     struct macroblockd_plane *const pd = &xd->plane[i];
     const BLOCK_SIZE plane_bsize =
         get_plane_block_size(bsize, pd->subsampling_x, pd->subsampling_y);
-    const int txs_wide = block_size_wide[plane_bsize] >> tx_size_wide_log2[0];
-    const int txs_high = block_size_high[plane_bsize] >> tx_size_high_log2[0];
-    memset(pd->above_context, 0, sizeof(ENTROPY_CONTEXT) * txs_wide);
-    memset(pd->left_context, 0, sizeof(ENTROPY_CONTEXT) * txs_high);
+    const int txs_wide = mi_size_wide[plane_bsize];
+    const int txs_high = mi_size_high[plane_bsize];
+    memset(pd->above_entropy_context, 0, sizeof(ENTROPY_CONTEXT) * txs_wide);
+    memset(pd->left_entropy_context, 0, sizeof(ENTROPY_CONTEXT) * txs_high);
   }
 }
 
@@ -104,37 +98,3 @@ void av1_setup_block_planes(MACROBLOCKD *xd, int ss_x, int ss_y,
     xd->plane[i].subsampling_y = 1;
   }
 }
-
-const int16_t dr_intra_derivative[90] = {
-  // More evenly spread out angles and limited to 10-bit
-  // Values that are 0 will never be used
-  //                    Approx angle
-  0,    0, 0,        //
-  1023, 0, 0,        // 3, ...
-  547,  0, 0,        // 6, ...
-  372,  0, 0, 0, 0,  // 9, ...
-  273,  0, 0,        // 14, ...
-  215,  0, 0,        // 17, ...
-  178,  0, 0,        // 20, ...
-  151,  0, 0,        // 23, ... (113 & 203 are base angles)
-  132,  0, 0,        // 26, ...
-  116,  0, 0,        // 29, ...
-  102,  0, 0, 0,     // 32, ...
-  90,   0, 0,        // 36, ...
-  80,   0, 0,        // 39, ...
-  71,   0, 0,        // 42, ...
-  64,   0, 0,        // 45, ... (45 & 135 are base angles)
-  57,   0, 0,        // 48, ...
-  51,   0, 0,        // 51, ...
-  45,   0, 0, 0,     // 54, ...
-  40,   0, 0,        // 58, ...
-  35,   0, 0,        // 61, ...
-  31,   0, 0,        // 64, ...
-  27,   0, 0,        // 67, ... (67 & 157 are base angles)
-  23,   0, 0,        // 70, ...
-  19,   0, 0,        // 73, ...
-  15,   0, 0, 0, 0,  // 76, ...
-  11,   0, 0,        // 81, ...
-  7,    0, 0,        // 84, ...
-  3,    0, 0,        // 87, ...
-};

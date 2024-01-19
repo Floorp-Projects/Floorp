@@ -42,21 +42,38 @@ lightfield_test() {
 
   eval "${AOM_TEST_PREFIX}" "${encoder}" "${img_width}" "${img_height}" \
       "${yuv_file}" "${lf_file}" "${lf_width}" \
-      "${lf_height}" "${lf_blocksize}" ${devnull}
+      "${lf_height}" "${lf_blocksize}" ${devnull} || return 1
 
   [ -e "${lf_file}" ] || return 1
+
+  # Check to ensure all camera frames have the identical frame header. If not identical, this test fails.
+  for i in ./fh*; do
+    diff ./fh004 $i > /dev/null
+      if [ $? -eq 1 ]; then
+      return 1
+    fi
+  done
+
+  # Check to ensure all camera frames use the identical frame context. If not identical, this test fails.
+  for i in ./fc*; do
+    diff ./fc004 $i > /dev/null
+      if [ $? -eq 1 ]; then
+      return 1
+    fi
+  done
 
   # Parse lightfield bitstream to construct and output a new bitstream that can
   # be decoded by an AV1 decoder.
   local bs_decoder="${LIBAOM_BIN_PATH}/lightfield_bitstream_parsing${AOM_TEST_EXE_SUFFIX}"
   local tl_file="${AOM_TEST_OUTPUT_DIR}/vase_tile_list.ivf"
+  local tl_text_file="${LIBAOM_TEST_DATA_PATH}/vase10x10_tiles.txt"
   if [ ! -x "${bs_decoder}" ]; then
     elog "${bs_decoder} does not exist or is not executable."
     return 1
   fi
 
   eval "${AOM_TEST_PREFIX}" "${bs_decoder}" "${lf_file}" "${tl_file}" \
-      "${num_references}" ${devnull}
+      "${num_references}" "${tl_text_file}" ${devnull} || return 1
 
   [ -e "${tl_file}" ] || return 1
 
@@ -69,7 +86,7 @@ lightfield_test() {
   fi
 
   eval "${AOM_TEST_PREFIX}" "${tl_decoder}" "${tl_file}" "${tl_outfile}" \
-      "${num_references}" "${num_tile_lists}" ${devnull}
+      "${num_references}" "${num_tile_lists}" ${devnull} || return 1
 
   [ -e "${tl_outfile}" ] || return 1
 
@@ -82,7 +99,7 @@ lightfield_test() {
   fi
 
   eval "${AOM_TEST_PREFIX}" "${ref_decoder}" "${lf_file}" "${tl_reffile}" \
-      "${num_references}" ${devnull}
+      "${num_references}" "${tl_text_file}" ${devnull} || return 1
 
   [ -e "${tl_reffile}" ] || return 1
 

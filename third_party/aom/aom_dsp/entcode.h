@@ -14,7 +14,7 @@
 
 #include <limits.h>
 #include <stddef.h>
-#include "av1/common/odintrin.h"
+#include "aom_dsp/odintrin.h"
 #include "aom_dsp/prob.h"
 
 #define EC_PROB_SHIFT 6
@@ -24,6 +24,7 @@
    on a larger type, you can speed up the decoder by using it here.*/
 typedef uint32_t od_ec_window;
 
+/*The size in bits of od_ec_window.*/
 #define OD_EC_WINDOW_SIZE ((int)sizeof(od_ec_window) * CHAR_BIT)
 
 /*The resolution of fractional-precision bit usage measurements, i.e.,

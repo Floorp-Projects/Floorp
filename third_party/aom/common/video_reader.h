@@ -50,6 +50,9 @@ FILE *aom_video_reader_get_file(AvxVideoReader *reader);
 // Fills AvxVideoInfo with information from opened video file.
 const AvxVideoInfo *aom_video_reader_get_info(AvxVideoReader *reader);
 
+// Set fourcc.
+void aom_video_reader_set_fourcc(AvxVideoReader *reader, uint32_t fourcc);
+
 #ifdef __cplusplus
 }  // extern "C"
 #endif

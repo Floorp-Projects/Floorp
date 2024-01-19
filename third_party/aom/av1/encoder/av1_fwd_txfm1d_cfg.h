@@ -13,7 +13,7 @@
 #define AOM_AV1_ENCODER_AV1_FWD_TXFM1D_CFG_H_
 #include "av1/common/enums.h"
 #include "av1/encoder/av1_fwd_txfm1d.h"
-extern const int8_t *fwd_txfm_shift_ls[TX_SIZES_ALL];
-extern const int8_t fwd_cos_bit_col[5][5];
-extern const int8_t fwd_cos_bit_row[5][5];
+extern const int8_t *av1_fwd_txfm_shift_ls[TX_SIZES_ALL];
+extern const int8_t av1_fwd_cos_bit_col[5][5];
+extern const int8_t av1_fwd_cos_bit_row[5][5];
 #endif  // AOM_AV1_ENCODER_AV1_FWD_TXFM1D_CFG_H_

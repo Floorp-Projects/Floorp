@@ -43,8 +43,8 @@ static const float
       -1.0533f, -0.3566f, 0.5294f,   -0.4335f,  0.1626f,
     };
 
-static const float av1_pustats_rate_hiddenlayer_0_bias[HIDDEN_LAYERS_0_NODES] =
-    {
+static const float
+    av1_pustats_rate_hiddenlayer_0_bias[HIDDEN_LAYERS_0_NODES] = {
       10.5266f, 5.3268f, -1.0678f, 7.7411f,  8.7164f,  -0.3235f,
       7.3028f,  9.0874f, -6.4594f, -1.0102f, -1.1146f, 10.8419f,
     };
@@ -72,8 +72,8 @@ static const float
       -2.7566f,
     };
 
-static const float av1_pustats_rate_hiddenlayer_1_bias[HIDDEN_LAYERS_1_NODES] =
-    {
+static const float
+    av1_pustats_rate_hiddenlayer_1_bias[HIDDEN_LAYERS_1_NODES] = {
       13.2435f, -8.5477f, -0.0998f, -1.5131f, -12.0187f,
       6.1715f,  0.5094f,  7.6433f,  -0.3992f, -1.3555f,
     };
@@ -124,8 +124,8 @@ static const float
       -0.0806f, 0.5231f,  0.3928f,  0.4146f,  2.0956f,
     };
 
-static const float av1_pustats_dist_hiddenlayer_0_bias[HIDDEN_LAYERS_0_NODES] =
-    {
+static const float
+    av1_pustats_dist_hiddenlayer_0_bias[HIDDEN_LAYERS_0_NODES] = {
       1.1597f, 0.0836f, -0.7471f, -0.2439f, -0.0438f, 2.4626f,
       0.f,     1.1485f, 2.7085f,  -4.7897f, 1.4093f,  -1.657f,
     };
@@ -153,8 +153,8 @@ static const float
       -0.4164f,
     };
 
-static const float av1_pustats_dist_hiddenlayer_1_bias[HIDDEN_LAYERS_1_NODES] =
-    {
+static const float
+    av1_pustats_dist_hiddenlayer_1_bias[HIDDEN_LAYERS_1_NODES] = {
       -2.3014f, -2.4292f, 1.3317f, -3.2361f, -1.918f,
       2.7149f,  -2.5649f, 2.7765f, 2.9617f,  2.7684f,
     };

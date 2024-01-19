@@ -9,6 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
+#include <memory>
+
 #include "third_party/googletest/src/googletest/include/gtest/gtest.h"
 
 #include "test/codec_factory.h"
@@ -41,26 +43,22 @@ class MotionVectorTestLarge
       : EncoderTest(GET_PARAM(0)), encoding_mode_(GET_PARAM(1)),
         cpu_used_(GET_PARAM(2)), mv_test_mode_(GET_PARAM(3)) {}
 
-  virtual ~MotionVectorTestLarge() {}
+  ~MotionVectorTestLarge() override = default;
 
-  virtual void SetUp() {
-    InitializeConfig();
-    SetMode(encoding_mode_);
+  void SetUp() override {
+    InitializeConfig(encoding_mode_);
     if (encoding_mode_ != ::libaom_test::kRealTime) {
       cfg_.g_lag_in_frames = 3;
-      cfg_.rc_end_usage = AOM_VBR;
     } else {
-      cfg_.g_lag_in_frames = 0;
-      cfg_.rc_end_usage = AOM_CBR;
       cfg_.rc_buf_sz = 1000;
       cfg_.rc_buf_initial_sz = 500;
       cfg_.rc_buf_optimal_sz = 600;
     }
   }
 
-  virtual void PreEncodeFrameHook(::libaom_test::VideoSource *video,
-                                  ::libaom_test::Encoder *encoder) {
-    if (video->frame() == 1) {
+  void PreEncodeFrameHook(::libaom_test::VideoSource *video,
+                          ::libaom_test::Encoder *encoder) override {
+    if (video->frame() == 0) {
       encoder->Control(AOME_SET_CPUUSED, cpu_used_);
       encoder->Control(AV1E_ENABLE_MOTION_VECTOR_UNIT_TEST, mv_test_mode_);
       if (encoding_mode_ != ::libaom_test::kRealTime) {
@@ -90,16 +88,16 @@ TEST_P(MotionVectorTestLarge, OverallTest) {
   cfg_.g_profile = 0;
   init_flags_ = AOM_CODEC_USE_PSNR;
 
-  testing::internal::scoped_ptr<libaom_test::VideoSource> video;
+  std::unique_ptr<libaom_test::VideoSource> video;
   video.reset(new libaom_test::YUVVideoSource(
       "niklas_640_480_30.yuv", AOM_IMG_FMT_I420, width, height, 30, 1, 0, 3));
 
-  ASSERT_TRUE(video.get() != NULL);
+  ASSERT_NE(video, nullptr);
   ASSERT_NO_FATAL_FAILURE(RunLoop(video.get()));
 }
 
-AV1_INSTANTIATE_TEST_CASE(MotionVectorTestLarge,
-                          ::testing::ValuesIn(kEncodingModeVectors),
-                          ::testing::ValuesIn(kCpuUsedVectors),
-                          ::testing::ValuesIn(kMVTestModes));
+AV1_INSTANTIATE_TEST_SUITE(MotionVectorTestLarge,
+                           ::testing::ValuesIn(kEncodingModeVectors),
+                           ::testing::ValuesIn(kCpuUsedVectors),
+                           ::testing::ValuesIn(kMVTestModes));
 }  // namespace

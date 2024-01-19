@@ -24,7 +24,7 @@ typedef void (*transform_1d_neon)(const int32_t *input, int32_t *output,
                                   const int8_t cos_bit,
                                   const int8_t *stage_ptr);
 typedef void (*transform_neon)(int16x8_t *input, int16x8_t *output,
-                               int8_t cos_bit, int bit);
+                               int8_t cos_bit);
 
 DECLARE_ALIGNED(16, static const int16_t, av1_eob_to_eobxy_8x8_default[8]) = {
   0x0707, 0x0707, 0x0707, 0x0707, 0x0707, 0x0707, 0x0707, 0x0707,

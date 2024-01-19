@@ -93,8 +93,8 @@ uint64_t av1_wedge_sse_from_residuals_c(const int16_t *r1, const int16_t *d,
  *  Note that for efficiency, ds is stored on 16 bits. Real input residuals
  *  being small, this should not cause a noticeable issue.
  */
-int av1_wedge_sign_from_residuals_c(const int16_t *ds, const uint8_t *m, int N,
-                                    int64_t limit) {
+int8_t av1_wedge_sign_from_residuals_c(const int16_t *ds, const uint8_t *m,
+                                       int N, int64_t limit) {
   int64_t acc = 0;
 
   do {

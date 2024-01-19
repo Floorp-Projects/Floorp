@@ -12,6 +12,8 @@
 #include "third_party/googletest/src/googletest/include/gtest/gtest.h"
 
 #include <cstdlib>
+#include <memory>
+#include <new>
 
 #include "aom_dsp/entenc.h"
 #include "aom_dsp/entdec.h"
@@ -22,7 +24,6 @@ TEST(EC_TEST, random_ec_test) {
   int sz;
   int i;
   int ret;
-  unsigned int sym;
   unsigned int seed;
   unsigned char *ptr;
   uint32_t ptr_sz;
@@ -38,18 +39,18 @@ TEST(EC_TEST, random_ec_test) {
   od_ec_enc_init(&enc, 1);
   /*Test compatibility between multiple different encode/decode routines.*/
   for (i = 0; i < 409600; i++) {
-    unsigned *fz;
-    unsigned *fts;
-    unsigned *data;
-    unsigned *tell;
-    unsigned *enc_method;
     int j;
     sz = rand() / ((RAND_MAX >> (rand() % 9U)) + 1U);
-    fz = (unsigned *)malloc(sz * sizeof(*fz));
-    fts = (unsigned *)malloc(sz * sizeof(*fts));
-    data = (unsigned *)malloc(sz * sizeof(*data));
-    tell = (unsigned *)malloc((sz + 1) * sizeof(*tell));
-    enc_method = (unsigned *)malloc(sz * sizeof(*enc_method));
+    std::unique_ptr<unsigned[]> fz(new (std::nothrow) unsigned[sz]);
+    ASSERT_NE(fz, nullptr);
+    std::unique_ptr<unsigned[]> fts(new (std::nothrow) unsigned[sz]);
+    ASSERT_NE(fts, nullptr);
+    std::unique_ptr<unsigned[]> data(new (std::nothrow) unsigned[sz]);
+    ASSERT_NE(data, nullptr);
+    std::unique_ptr<unsigned[]> tell(new (std::nothrow) unsigned[sz + 1]);
+    ASSERT_NE(tell, nullptr);
+    std::unique_ptr<unsigned[]> enc_method(new (std::nothrow) unsigned[sz]);
+    ASSERT_NE(enc_method, nullptr);
     od_ec_enc_reset(&enc);
     tell[0] = od_ec_enc_tell_frac(&enc);
     for (j = 0; j < sz; j++) {
@@ -77,6 +78,7 @@ TEST(EC_TEST, random_ec_test) {
       tell[j + 1] = od_ec_enc_tell_frac(&enc);
     }
     ptr = od_ec_enc_done(&enc, &ptr_sz);
+    ASSERT_NE(ptr, nullptr);
     EXPECT_GE(((od_ec_enc_tell(&enc) + 7U) >> 3), ptr_sz)
         << "od_ec_enc_tell() lied: "
            "there's "
@@ -90,11 +92,10 @@ TEST(EC_TEST, random_ec_test) {
         << " (Random seed: " << seed << ").\n";
     for (j = 0; j < sz; j++) {
       int dec_method;
-      if (CDF_SHIFT == 0) {
-        dec_method = 3 + (rand() & 1);
-      } else {
-        dec_method = enc_method[j];
-      }
+      unsigned int sym = data[j] + 1;  // Initialize sym to an invalid value.
+
+      dec_method = 3 + (rand() & 1);
+
       switch (dec_method) {
         case 3: {
           sym = od_ec_decode_bool_q15(
@@ -123,37 +124,31 @@ TEST(EC_TEST, random_ec_test) {
           << " instead of " << tell[j + 1] << " (Random seed: " << seed
           << ").\n";
     }
-    free(enc_method);
-    free(tell);
-    free(data);
-    free(fts);
-    free(fz);
   }
   od_ec_enc_reset(&enc);
-  if (CDF_SHIFT == 0) {
-    od_ec_encode_bool_q15(&enc, 0, OD_ICDF(16384));
-    od_ec_encode_bool_q15(&enc, 0, OD_ICDF(16384));
-    od_ec_encode_bool_q15(&enc, 0, OD_ICDF(16384));
-    od_ec_encode_bool_q15(&enc, 0, OD_ICDF(16384));
-    od_ec_encode_bool_q15(&enc, 0, OD_ICDF(24576));
-    od_ec_enc_patch_initial_bits(&enc, 3, 2);
-    EXPECT_FALSE(enc.error) << "od_ec_enc_patch_initial_bits() failed.\n";
-    od_ec_enc_patch_initial_bits(&enc, 0, 5);
-    EXPECT_TRUE(enc.error)
-        << "od_ec_enc_patch_initial_bits() didn't fail when it should have.\n";
-    od_ec_enc_reset(&enc);
-    od_ec_encode_bool_q15(&enc, 0, OD_ICDF(16384));
-    od_ec_encode_bool_q15(&enc, 0, OD_ICDF(16384));
-    od_ec_encode_bool_q15(&enc, 1, OD_ICDF(32256));
-    od_ec_encode_bool_q15(&enc, 0, OD_ICDF(24576));
-    od_ec_enc_patch_initial_bits(&enc, 0, 2);
-    EXPECT_FALSE(enc.error) << "od_ec_enc_patch_initial_bits() failed.\n";
-    ptr = od_ec_enc_done(&enc, &ptr_sz);
-    EXPECT_EQ(ptr_sz, 2u);
-    EXPECT_EQ(ptr[0], 63)
-        << "Got " << ptr[0]
-        << " when expecting 63 for od_ec_enc_patch_initial_bits().\n";
-  }
+  od_ec_encode_bool_q15(&enc, 0, OD_ICDF(16384));
+  od_ec_encode_bool_q15(&enc, 0, OD_ICDF(16384));
+  od_ec_encode_bool_q15(&enc, 0, OD_ICDF(16384));
+  od_ec_encode_bool_q15(&enc, 0, OD_ICDF(16384));
+  od_ec_encode_bool_q15(&enc, 0, OD_ICDF(24576));
+  od_ec_enc_patch_initial_bits(&enc, 3, 2);
+  EXPECT_FALSE(enc.error) << "od_ec_enc_patch_initial_bits() failed.\n";
+  od_ec_enc_patch_initial_bits(&enc, 0, 5);
+  EXPECT_TRUE(enc.error)
+      << "od_ec_enc_patch_initial_bits() didn't fail when it should have.\n";
+  od_ec_enc_reset(&enc);
+  od_ec_encode_bool_q15(&enc, 0, OD_ICDF(16384));
+  od_ec_encode_bool_q15(&enc, 0, OD_ICDF(16384));
+  od_ec_encode_bool_q15(&enc, 1, OD_ICDF(32256));
+  od_ec_encode_bool_q15(&enc, 0, OD_ICDF(24576));
+  od_ec_enc_patch_initial_bits(&enc, 0, 2);
+  EXPECT_FALSE(enc.error) << "od_ec_enc_patch_initial_bits() failed.\n";
+  ptr = od_ec_enc_done(&enc, &ptr_sz);
+  ASSERT_NE(ptr, nullptr);
+  EXPECT_EQ(ptr_sz, 2u);
+  EXPECT_EQ(ptr[0], 63)
+      << "Got " << ptr[0]
+      << " when expecting 63 for od_ec_enc_patch_initial_bits().\n";
   od_ec_enc_clear(&enc);
   EXPECT_EQ(ret, 0);
 }

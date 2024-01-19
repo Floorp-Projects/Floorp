@@ -13,8 +13,8 @@
 #include "av1/encoder/av1_fwd_txfm1d.h"
 #include "av1/common/av1_txfm.h"
 
-void av1_fdct4_new(const int32_t *input, int32_t *output, int8_t cos_bit,
-                   const int8_t *stage_range) {
+void av1_fdct4(const int32_t *input, int32_t *output, int8_t cos_bit,
+               const int8_t *stage_range) {
   const int32_t size = 4;
   const int32_t *cospi;
 
@@ -56,8 +56,8 @@ void av1_fdct4_new(const int32_t *input, int32_t *output, int8_t cos_bit,
   av1_range_check_buf(stage, input, bf1, size, stage_range[stage]);
 }
 
-void av1_fdct8_new(const int32_t *input, int32_t *output, int8_t cos_bit,
-                   const int8_t *stage_range) {
+void av1_fdct8(const int32_t *input, int32_t *output, int8_t cos_bit,
+               const int8_t *stage_range) {
   const int32_t size = 8;
   const int32_t *cospi;
 
@@ -141,8 +141,8 @@ void av1_fdct8_new(const int32_t *input, int32_t *output, int8_t cos_bit,
   av1_range_check_buf(stage, input, bf1, size, stage_range[stage]);
 }
 
-void av1_fdct16_new(const int32_t *input, int32_t *output, int8_t cos_bit,
-                    const int8_t *stage_range) {
+void av1_fdct16(const int32_t *input, int32_t *output, int8_t cos_bit,
+                const int8_t *stage_range) {
   const int32_t size = 16;
   const int32_t *cospi;
 
@@ -312,8 +312,8 @@ void av1_fdct16_new(const int32_t *input, int32_t *output, int8_t cos_bit,
   av1_range_check_buf(stage, input, bf1, size, stage_range[stage]);
 }
 
-void av1_fdct32_new(const int32_t *input, int32_t *output, int8_t cos_bit,
-                    const int8_t *stage_range) {
+void av1_fdct32(const int32_t *input, int32_t *output, int8_t cos_bit,
+                const int8_t *stage_range) {
   const int32_t size = 32;
   const int32_t *cospi;
 
@@ -673,8 +673,8 @@ void av1_fdct32_new(const int32_t *input, int32_t *output, int8_t cos_bit,
   av1_range_check_buf(stage, input, bf1, size, stage_range[stage]);
 }
 
-void av1_fadst4_new(const int32_t *input, int32_t *output, int8_t cos_bit,
-                    const int8_t *stage_range) {
+void av1_fadst4(const int32_t *input, int32_t *output, int8_t cos_bit,
+                const int8_t *stage_range) {
   int bit = cos_bit;
   const int32_t *sinpi = sinpi_arr(bit);
   int32_t x0, x1, x2, x3;
@@ -732,8 +732,8 @@ void av1_fadst4_new(const int32_t *input, int32_t *output, int8_t cos_bit,
   av1_range_check_buf(6, input, output, 4, stage_range[6]);
 }
 
-void av1_fadst8_new(const int32_t *input, int32_t *output, int8_t cos_bit,
-                    const int8_t *stage_range) {
+void av1_fadst8(const int32_t *input, int32_t *output, int8_t cos_bit,
+                const int8_t *stage_range) {
   const int32_t size = 8;
   const int32_t *cospi;
 
@@ -846,8 +846,8 @@ void av1_fadst8_new(const int32_t *input, int32_t *output, int8_t cos_bit,
   av1_range_check_buf(stage, input, bf1, size, stage_range[stage]);
 }
 
-void av1_fadst16_new(const int32_t *input, int32_t *output, int8_t cos_bit,
-                     const int8_t *stage_range) {
+void av1_fadst16(const int32_t *input, int32_t *output, int8_t cos_bit,
+                 const int8_t *stage_range) {
   const int32_t size = 16;
   const int32_t *cospi;
 
@@ -1093,8 +1093,8 @@ void av1_fidentity32_c(const int32_t *input, int32_t *output, int8_t cos_bit,
   av1_range_check_buf(0, input, output, 32, stage_range[0]);
 }
 
-void av1_fdct64_new(const int32_t *input, int32_t *output, int8_t cos_bit,
-                    const int8_t *stage_range) {
+void av1_fdct64(const int32_t *input, int32_t *output, int8_t cos_bit,
+                const int8_t *stage_range) {
   const int32_t size = 64;
   const int32_t *cospi;
 

@@ -29,7 +29,7 @@ if [[ -e $f.fpf ]]; then
     -p 2 \
     --pass=2 \
     --fpf=$f.fpf \
-    --best \
+    --good \
     --cpu-used=0 \
     --target-bitrate=$b \
     --auto-alt-ref=1 \
@@ -48,8 +48,7 @@ if [[ -e $f.fpf ]]; then
     --maxsection-pct=800 \
     --psnr \
     --arnr-maxframes=7 \
-    --arnr-strength=3 \
-    --arnr-type=3
+    --arnr-strength=3
 else
   # No first-pass file found, do 2-pass encode
   aomenc \
@@ -58,7 +57,7 @@ else
     -p 2 \
     --pass=1 \
     --fpf=$f.fpf \
-    --best \
+    --good \
     --cpu-used=0 \
     --target-bitrate=$b \
     --auto-alt-ref=1 \
@@ -79,7 +78,7 @@ else
     -p 2 \
     --pass=2 \
     --fpf=$f.fpf \
-    --best \
+    --good \
     --cpu-used=0 \
     --target-bitrate=$b \
     --auto-alt-ref=1 \
@@ -98,6 +97,5 @@ else
     --maxsection-pct=800 \
     --psnr \
     --arnr-maxframes=7 \
-    --arnr-strength=3 \
-    --arnr-type=3
+    --arnr-strength=3
 fi

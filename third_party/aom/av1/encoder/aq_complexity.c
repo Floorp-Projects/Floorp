@@ -18,7 +18,6 @@
 #include "av1/common/seg_common.h"
 #include "av1/encoder/segmentation.h"
 #include "aom_dsp/aom_dsp_common.h"
-#include "aom_ports/system_state.h"
 
 #define AQ_C_SEGMENTS 5
 #define DEFAULT_AQ2_SEG 3  // Neutral Q segment
@@ -41,42 +40,54 @@ static const double aq_c_var_thresholds[AQ_C_STRENGTHS][AQ_C_SEGMENTS] = {
 
 static int get_aq_c_strength(int q_index, aom_bit_depth_t bit_depth) {
   // Approximate base quatizer (truncated to int)
-  const int base_quant = av1_ac_quant_Q3(q_index, 0, bit_depth) / 4;
+  const int base_quant = av1_ac_quant_QTX(q_index, 0, bit_depth) / 4;
   return (base_quant > 10) + (base_quant > 25);
+}
+
+static bool is_frame_aq_enabled(const AV1_COMP *const cpi) {
+  const AV1_COMMON *const cm = &cpi->common;
+  const RefreshFrameInfo *const refresh_frame = &cpi->refresh_frame;
+
+  return frame_is_intra_only(cm) || cm->features.error_resilient_mode ||
+         refresh_frame->alt_ref_frame ||
+         (refresh_frame->golden_frame && !cpi->rc.is_src_frame_alt_ref);
+}
+
+// Segmentation only makes sense if the target bits per SB is above a threshold.
+// Below this the overheads will usually outweigh any benefit.
+static bool is_sb_aq_enabled(const AV1_COMP *const cpi) {
+  return cpi->rc.sb64_target_rate >= 256;
 }
 
 void av1_setup_in_frame_q_adj(AV1_COMP *cpi) {
   AV1_COMMON *const cm = &cpi->common;
+  const int base_qindex = cm->quant_params.base_qindex;
   struct segmentation *const seg = &cm->seg;
-  int resolution_change =
+  const int resolution_change =
       cm->prev_frame && (cm->width != cm->prev_frame->width ||
                          cm->height != cm->prev_frame->height);
 
   // Make SURE use of floating point in this function is safe.
-  aom_clear_system_state();
 
   if (resolution_change) {
-    memset(cpi->segmentation_map, 0, cm->mi_rows * cm->mi_cols);
+    memset(cpi->enc_seg.map, 0, cm->mi_params.mi_rows * cm->mi_params.mi_cols);
     av1_clearall_segfeatures(seg);
     av1_disable_segmentation(seg);
     return;
   }
 
-  if (frame_is_intra_only(cm) || cm->error_resilient_mode ||
-      cpi->refresh_alt_ref_frame ||
-      (cpi->refresh_golden_frame && !cpi->rc.is_src_frame_alt_ref)) {
+  if (is_frame_aq_enabled(cpi)) {
     int segment;
     const int aq_strength =
-        get_aq_c_strength(cm->base_qindex, cm->seq_params.bit_depth);
+        get_aq_c_strength(base_qindex, cm->seq_params->bit_depth);
 
     // Clear down the segment map.
-    memset(cpi->segmentation_map, DEFAULT_AQ2_SEG, cm->mi_rows * cm->mi_cols);
+    memset(cpi->enc_seg.map, DEFAULT_AQ2_SEG,
+           cm->mi_params.mi_rows * cm->mi_params.mi_cols);
 
     av1_clearall_segfeatures(seg);
 
-    // Segmentation only makes sense if the target bits per SB is above a
-    // threshold. Below this the overheads will usually outweigh any benefit.
-    if (cpi->rc.sb64_target_rate < 256) {
+    if (!is_sb_aq_enabled(cpi)) {
       av1_disable_segmentation(seg);
       return;
     }
@@ -93,17 +104,17 @@ void av1_setup_in_frame_q_adj(AV1_COMP *cpi) {
       if (segment == DEFAULT_AQ2_SEG) continue;
 
       qindex_delta = av1_compute_qdelta_by_rate(
-          &cpi->rc, cm->frame_type, cm->base_qindex,
-          aq_c_q_adj_factor[aq_strength][segment], cm->seq_params.bit_depth);
+          cpi, cm->current_frame.frame_type, base_qindex,
+          aq_c_q_adj_factor[aq_strength][segment]);
 
       // For AQ complexity mode, we dont allow Q0 in a segment if the base
       // Q is not 0. Q0 (lossless) implies 4x4 only and in AQ mode 2 a segment
       // Q delta is sometimes applied without going back around the rd loop.
       // This could lead to an illegal combination of partition size and q.
-      if ((cm->base_qindex != 0) && ((cm->base_qindex + qindex_delta) == 0)) {
-        qindex_delta = -cm->base_qindex + 1;
+      if ((base_qindex != 0) && ((base_qindex + qindex_delta) == 0)) {
+        qindex_delta = -base_qindex + 1;
       }
-      if ((cm->base_qindex + qindex_delta) > 0) {
+      if ((base_qindex + qindex_delta) > 0) {
         av1_enable_segfeature(seg, segment, SEG_LVL_ALT_Q);
         av1_set_segdata(seg, segment, SEG_LVL_ALT_Q, qindex_delta);
       }
@@ -118,55 +129,47 @@ void av1_setup_in_frame_q_adj(AV1_COMP *cpi) {
 // bits for the block vs a target average and its spatial complexity.
 void av1_caq_select_segment(const AV1_COMP *cpi, MACROBLOCK *mb, BLOCK_SIZE bs,
                             int mi_row, int mi_col, int projected_rate) {
+  if ((!is_frame_aq_enabled(cpi)) || (!is_sb_aq_enabled(cpi))) return;
   const AV1_COMMON *const cm = &cpi->common;
   const int num_planes = av1_num_planes(cm);
 
-  const int mi_offset = mi_row * cm->mi_cols + mi_col;
-  const int xmis = AOMMIN(cm->mi_cols - mi_col, mi_size_wide[bs]);
-  const int ymis = AOMMIN(cm->mi_rows - mi_row, mi_size_high[bs]);
-  int x, y;
+  const int mi_offset = mi_row * cm->mi_params.mi_cols + mi_col;
+  const int xmis = AOMMIN(cm->mi_params.mi_cols - mi_col, mi_size_wide[bs]);
+  const int ymis = AOMMIN(cm->mi_params.mi_rows - mi_row, mi_size_high[bs]);
   int i;
   unsigned char segment;
 
-  if (0) {
-    segment = DEFAULT_AQ2_SEG;
-  } else {
-    // Rate depends on fraction of a SB64 in frame (xmis * ymis / bw * bh).
-    // It is converted to bits << AV1_PROB_COST_SHIFT units.
-    const int64_t num = (int64_t)(cpi->rc.sb64_target_rate * xmis * ymis)
-                        << AV1_PROB_COST_SHIFT;
-    const int denom = cm->seq_params.mib_size * cm->seq_params.mib_size;
-    const int target_rate = (int)(num / denom);
-    double logvar;
-    double low_var_thresh;
-    const int aq_strength =
-        get_aq_c_strength(cm->base_qindex, cm->seq_params.bit_depth);
+  // Rate depends on fraction of a SB64 in frame (xmis * ymis / bw * bh).
+  // It is converted to bits << AV1_PROB_COST_SHIFT units.
+  const int64_t num = (int64_t)(cpi->rc.sb64_target_rate * xmis * ymis)
+                      << AV1_PROB_COST_SHIFT;
+  const int denom = cm->seq_params->mib_size * cm->seq_params->mib_size;
+  const int target_rate = (int)(num / denom);
+  double logvar;
+  double low_var_thresh;
+  const int aq_strength = get_aq_c_strength(cm->quant_params.base_qindex,
+                                            cm->seq_params->bit_depth);
 
-    aom_clear_system_state();
-    low_var_thresh =
-        (cpi->oxcf.pass == 2)
-            ? AOMMAX(exp(cpi->twopass.mb_av_energy), MIN_DEFAULT_LV_THRESH)
-            : DEFAULT_LV_THRESH;
+  low_var_thresh =
+      (is_stat_consumption_stage_twopass(cpi))
+          ? AOMMAX(exp(cpi->twopass_frame.mb_av_energy), MIN_DEFAULT_LV_THRESH)
+          : DEFAULT_LV_THRESH;
 
-    av1_setup_src_planes(mb, cpi->source, mi_row, mi_col, num_planes);
-    logvar = av1_log_block_var(cpi, mb, bs);
+  av1_setup_src_planes(mb, cpi->source, mi_row, mi_col, num_planes, bs);
+  logvar = av1_log_block_var(cpi, mb, bs);
 
-    segment = AQ_C_SEGMENTS - 1;  // Just in case no break out below.
-    for (i = 0; i < AQ_C_SEGMENTS; ++i) {
-      // Test rate against a threshold value and variance against a threshold.
-      // Increasing segment number (higher variance and complexity) = higher Q.
-      if ((projected_rate < target_rate * aq_c_transitions[aq_strength][i]) &&
-          (logvar < (low_var_thresh + aq_c_var_thresholds[aq_strength][i]))) {
-        segment = i;
-        break;
-      }
+  segment = AQ_C_SEGMENTS - 1;  // Just in case no break out below.
+  for (i = 0; i < AQ_C_SEGMENTS; ++i) {
+    // Test rate against a threshold value and variance against a threshold.
+    // Increasing segment number (higher variance and complexity) = higher Q.
+    if ((projected_rate < target_rate * aq_c_transitions[aq_strength][i]) &&
+        (logvar < (low_var_thresh + aq_c_var_thresholds[aq_strength][i]))) {
+      segment = i;
+      break;
     }
   }
 
   // Fill in the entires in the segment map corresponding to this SB64.
-  for (y = 0; y < ymis; y++) {
-    for (x = 0; x < xmis; x++) {
-      cpi->segmentation_map[mi_offset + y * cm->mi_cols + x] = segment;
-    }
-  }
+  const int mi_stride = cm->mi_params.mi_cols;
+  set_segment_id(cpi->enc_seg.map, mi_offset, xmis, ymis, mi_stride, segment);
 }

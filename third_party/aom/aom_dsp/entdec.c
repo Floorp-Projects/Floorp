@@ -87,11 +87,25 @@ static void od_ec_dec_refill(od_ec_dec *dec) {
   end = dec->end;
   s = OD_EC_WINDOW_SIZE - 9 - (cnt + 15);
   for (; s >= 0 && bptr < end; s -= 8, bptr++) {
+    /*Each time a byte is inserted into the window (dif), bptr advances and cnt
+       is incremented by 8, so the total number of consumed bits (the return
+       value of od_ec_dec_tell) does not change.*/
     assert(s <= OD_EC_WINDOW_SIZE - 8);
     dif ^= (od_ec_window)bptr[0] << s;
     cnt += 8;
   }
   if (bptr >= end) {
+    /*We've reached the end of the buffer. It is perfectly valid for us to need
+       to fill the window with additional bits past the end of the buffer (and
+       this happens in normal operation). These bits should all just be taken
+       as zero. But we cannot increment bptr past 'end' (this is undefined
+       behavior), so we start to increment dec->tell_offs. We also don't want
+       to keep testing bptr against 'end', so we set cnt to OD_EC_LOTS_OF_BITS
+       and adjust dec->tell_offs so that the total number of unconsumed bits in
+       the window (dec->cnt - dec->tell_offs) does not change. This effectively
+       puts lots of zero bits into the window, and means we won't try to refill
+       it from the buffer for a very long time (at which point we'll put lots
+       of zero bits into the window again).*/
     dec->tell_offs += OD_EC_LOTS_OF_BITS - cnt;
     cnt = OD_EC_LOTS_OF_BITS;
   }
@@ -112,8 +126,9 @@ static int od_ec_dec_normalize(od_ec_dec *dec, od_ec_window dif, unsigned rng,
                                int ret) {
   int d;
   assert(rng <= 65535U);
-  // The number of leading zeros in the 16-bit binary representation of rng.
+  /*The number of leading zeros in the 16-bit binary representation of rng.*/
   d = 16 - OD_ILOG_NZ(rng);
+  /*d bits in dec->dif are consumed.*/
   dec->cnt -= d;
   /*This is equivalent to shifting in 1's instead of 0's.*/
   dec->dif = ((dif + 1) << d) - 1;
@@ -124,7 +139,7 @@ static int od_ec_dec_normalize(od_ec_dec *dec, od_ec_window dif, unsigned rng,
 
 /*Initializes the decoder.
   buf: The input buffer to use.
-  Return: 0 on success, or a negative value on error.*/
+  storage: The size in bytes of the input buffer.*/
 void od_ec_dec_init(od_ec_dec *dec, const unsigned char *buf,
                     uint32_t storage) {
   dec->buf = buf;
@@ -134,7 +149,6 @@ void od_ec_dec_init(od_ec_dec *dec, const unsigned char *buf,
   dec->dif = ((od_ec_window)1 << (OD_EC_WINDOW_SIZE - 1)) - 1;
   dec->rng = 0x8000;
   dec->cnt = -15;
-  dec->error = 0;
   od_ec_dec_refill(dec);
 }
 
@@ -191,14 +205,14 @@ int od_ec_decode_cdf_q15(od_ec_dec *dec, const uint16_t *icdf, int nsyms) {
   assert(dif >> (OD_EC_WINDOW_SIZE - 16) < r);
   assert(icdf[nsyms - 1] == OD_ICDF(CDF_PROB_TOP));
   assert(32768U <= r);
-  assert(7 - EC_PROB_SHIFT - CDF_SHIFT >= 0);
+  assert(7 - EC_PROB_SHIFT >= 0);
   c = (unsigned)(dif >> (OD_EC_WINDOW_SIZE - 16));
   v = r;
   ret = -1;
   do {
     u = v;
     v = ((r >> 8) * (uint32_t)(icdf[++ret] >> EC_PROB_SHIFT) >>
-         (7 - EC_PROB_SHIFT - CDF_SHIFT));
+         (7 - EC_PROB_SHIFT));
     v += EC_MIN_PROB * (N - ret);
   } while (c < v);
   assert(v < u);
@@ -215,6 +229,10 @@ int od_ec_decode_cdf_q15(od_ec_dec *dec, const uint16_t *icdf, int nsyms) {
           This will always be slightly larger than the exact value (e.g., all
            rounding error is in the positive direction).*/
 int od_ec_dec_tell(const od_ec_dec *dec) {
+  /*There is a window of bits stored in dec->dif. The difference
+     (dec->bptr - dec->buf) tells us how many bytes have been read into this
+     window. The difference (dec->cnt - dec->tell_offs) tells us how many of
+     the bits in that window remain unconsumed.*/
   return (int)((dec->bptr - dec->buf) * 8 - dec->cnt + dec->tell_offs);
 }
 

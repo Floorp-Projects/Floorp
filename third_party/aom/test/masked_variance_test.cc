@@ -12,10 +12,10 @@
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
+#include <tuple>
 
 #include "third_party/googletest/src/googletest/include/gtest/gtest.h"
 #include "test/acm_random.h"
-#include "test/clear_system_state.h"
 #include "test/register_state_check.h"
 #include "test/util.h"
 
@@ -37,24 +37,23 @@ typedef unsigned int (*MaskedSubPixelVarianceFunc)(
     const uint8_t *ref, int ref_stride, const uint8_t *second_pred,
     const uint8_t *msk, int msk_stride, int invert_mask, unsigned int *sse);
 
-typedef ::testing::tuple<MaskedSubPixelVarianceFunc, MaskedSubPixelVarianceFunc>
+typedef std::tuple<MaskedSubPixelVarianceFunc, MaskedSubPixelVarianceFunc>
     MaskedSubPixelVarianceParam;
 
 class MaskedSubPixelVarianceTest
     : public ::testing::TestWithParam<MaskedSubPixelVarianceParam> {
  public:
-  virtual ~MaskedSubPixelVarianceTest() {}
-  virtual void SetUp() {
+  ~MaskedSubPixelVarianceTest() override = default;
+  void SetUp() override {
     opt_func_ = GET_PARAM(0);
     ref_func_ = GET_PARAM(1);
   }
-
-  virtual void TearDown() { libaom_test::ClearSystemState(); }
 
  protected:
   MaskedSubPixelVarianceFunc opt_func_;
   MaskedSubPixelVarianceFunc ref_func_;
 };
+GTEST_ALLOW_UNINSTANTIATED_PARAMETERIZED_TEST(MaskedSubPixelVarianceTest);
 
 TEST_P(MaskedSubPixelVarianceTest, OperationCheck) {
   unsigned int ref_ret, opt_ret;
@@ -92,7 +91,7 @@ TEST_P(MaskedSubPixelVarianceTest, OperationCheck) {
           ref_ret = ref_func_(src_ptr, src_stride, xoffset, yoffset, ref_ptr,
                               ref_stride, second_pred_ptr, msk_ptr, msk_stride,
                               invert_mask, &ref_sse);
-          ASM_REGISTER_STATE_CHECK(
+          API_REGISTER_STATE_CHECK(
               opt_ret = opt_func_(src_ptr, src_stride, xoffset, yoffset,
                                   ref_ptr, ref_stride, second_pred_ptr, msk_ptr,
                                   msk_stride, invert_mask, &opt_sse));
@@ -145,7 +144,7 @@ TEST_P(MaskedSubPixelVarianceTest, ExtremeValues) {
           ref_ret = ref_func_(src_ptr, src_stride, xoffset, yoffset, ref_ptr,
                               ref_stride, second_pred_ptr, msk_ptr, msk_stride,
                               invert_mask, &ref_sse);
-          ASM_REGISTER_STATE_CHECK(
+          API_REGISTER_STATE_CHECK(
               opt_ret = opt_func_(src_ptr, src_stride, xoffset, yoffset,
                                   ref_ptr, ref_stride, second_pred_ptr, msk_ptr,
                                   msk_stride, invert_mask, &opt_sse));
@@ -170,27 +169,27 @@ TEST_P(MaskedSubPixelVarianceTest, ExtremeValues) {
                           << " y_offset = " << first_failure_y;
 }
 
-typedef ::testing::tuple<MaskedSubPixelVarianceFunc, MaskedSubPixelVarianceFunc,
-                         aom_bit_depth_t>
+#if CONFIG_AV1_HIGHBITDEPTH
+typedef std::tuple<MaskedSubPixelVarianceFunc, MaskedSubPixelVarianceFunc,
+                   aom_bit_depth_t>
     HighbdMaskedSubPixelVarianceParam;
 
 class HighbdMaskedSubPixelVarianceTest
     : public ::testing::TestWithParam<HighbdMaskedSubPixelVarianceParam> {
  public:
-  virtual ~HighbdMaskedSubPixelVarianceTest() {}
-  virtual void SetUp() {
+  ~HighbdMaskedSubPixelVarianceTest() override = default;
+  void SetUp() override {
     opt_func_ = GET_PARAM(0);
     ref_func_ = GET_PARAM(1);
     bit_depth_ = GET_PARAM(2);
   }
-
-  virtual void TearDown() { libaom_test::ClearSystemState(); }
 
  protected:
   MaskedSubPixelVarianceFunc opt_func_;
   MaskedSubPixelVarianceFunc ref_func_;
   aom_bit_depth_t bit_depth_;
 };
+GTEST_ALLOW_UNINSTANTIATED_PARAMETERIZED_TEST(HighbdMaskedSubPixelVarianceTest);
 
 TEST_P(HighbdMaskedSubPixelVarianceTest, OperationCheck) {
   unsigned int ref_ret, opt_ret;
@@ -226,7 +225,7 @@ TEST_P(HighbdMaskedSubPixelVarianceTest, OperationCheck) {
           ref_ret = ref_func_(src8_ptr, src_stride, xoffset, yoffset, ref8_ptr,
                               ref_stride, second_pred8_ptr, msk_ptr, msk_stride,
                               invert_mask, &ref_sse);
-          ASM_REGISTER_STATE_CHECK(
+          API_REGISTER_STATE_CHECK(
               opt_ret = opt_func_(src8_ptr, src_stride, xoffset, yoffset,
                                   ref8_ptr, ref_stride, second_pred8_ptr,
                                   msk_ptr, msk_stride, invert_mask, &opt_sse));
@@ -287,7 +286,7 @@ TEST_P(HighbdMaskedSubPixelVarianceTest, ExtremeValues) {
           ref_ret = ref_func_(src8_ptr, src_stride, xoffset, yoffset, ref8_ptr,
                               ref_stride, second_pred8_ptr, msk_ptr, msk_stride,
                               invert_mask, &ref_sse);
-          ASM_REGISTER_STATE_CHECK(
+          API_REGISTER_STATE_CHECK(
               opt_ret = opt_func_(src8_ptr, src_stride, xoffset, yoffset,
                                   ref8_ptr, ref_stride, second_pred8_ptr,
                                   msk_ptr, msk_stride, invert_mask, &opt_sse));
@@ -311,8 +310,9 @@ TEST_P(HighbdMaskedSubPixelVarianceTest, ExtremeValues) {
                           << " x_offset = " << first_failure_x
                           << " y_offset = " << first_failure_y;
 }
+#endif  // CONFIG_AV1_HIGHBITDEPTH
 
-using ::testing::make_tuple;
+using std::make_tuple;
 
 #if HAVE_SSSE3
 
@@ -348,12 +348,27 @@ const MaskedSubPixelVarianceParam sub_pel_var_test[] = {
   make_tuple(&aom_masked_sub_pixel_variance4x8_ssse3,
              &aom_masked_sub_pixel_variance4x8_c),
   make_tuple(&aom_masked_sub_pixel_variance4x4_ssse3,
-             &aom_masked_sub_pixel_variance4x4_c)
+             &aom_masked_sub_pixel_variance4x4_c),
+#if !CONFIG_REALTIME_ONLY
+  make_tuple(&aom_masked_sub_pixel_variance64x16_ssse3,
+             &aom_masked_sub_pixel_variance64x16_c),
+  make_tuple(&aom_masked_sub_pixel_variance16x64_ssse3,
+             &aom_masked_sub_pixel_variance16x64_c),
+  make_tuple(&aom_masked_sub_pixel_variance32x8_ssse3,
+             &aom_masked_sub_pixel_variance32x8_c),
+  make_tuple(&aom_masked_sub_pixel_variance8x32_ssse3,
+             &aom_masked_sub_pixel_variance8x32_c),
+  make_tuple(&aom_masked_sub_pixel_variance16x4_ssse3,
+             &aom_masked_sub_pixel_variance16x4_c),
+  make_tuple(&aom_masked_sub_pixel_variance4x16_ssse3,
+             &aom_masked_sub_pixel_variance4x16_c),
+#endif
 };
 
-INSTANTIATE_TEST_CASE_P(SSSE3_C_COMPARE, MaskedSubPixelVarianceTest,
-                        ::testing::ValuesIn(sub_pel_var_test));
+INSTANTIATE_TEST_SUITE_P(SSSE3_C_COMPARE, MaskedSubPixelVarianceTest,
+                         ::testing::ValuesIn(sub_pel_var_test));
 
+#if CONFIG_AV1_HIGHBITDEPTH
 const HighbdMaskedSubPixelVarianceParam hbd_sub_pel_var_test[] = {
   make_tuple(&aom_highbd_8_masked_sub_pixel_variance128x128_ssse3,
              &aom_highbd_8_masked_sub_pixel_variance128x128_c, AOM_BITS_8),
@@ -450,10 +465,248 @@ const HighbdMaskedSubPixelVarianceParam hbd_sub_pel_var_test[] = {
   make_tuple(&aom_highbd_12_masked_sub_pixel_variance4x8_ssse3,
              &aom_highbd_12_masked_sub_pixel_variance4x8_c, AOM_BITS_12),
   make_tuple(&aom_highbd_12_masked_sub_pixel_variance4x4_ssse3,
-             &aom_highbd_12_masked_sub_pixel_variance4x4_c, AOM_BITS_12)
+             &aom_highbd_12_masked_sub_pixel_variance4x4_c, AOM_BITS_12),
+#if !CONFIG_REALTIME_ONLY
+  make_tuple(&aom_highbd_8_masked_sub_pixel_variance64x16_ssse3,
+             &aom_highbd_8_masked_sub_pixel_variance64x16_c, AOM_BITS_8),
+  make_tuple(&aom_highbd_8_masked_sub_pixel_variance16x64_ssse3,
+             &aom_highbd_8_masked_sub_pixel_variance16x64_c, AOM_BITS_8),
+  make_tuple(&aom_highbd_8_masked_sub_pixel_variance32x8_ssse3,
+             &aom_highbd_8_masked_sub_pixel_variance32x8_c, AOM_BITS_8),
+  make_tuple(&aom_highbd_8_masked_sub_pixel_variance8x32_ssse3,
+             &aom_highbd_8_masked_sub_pixel_variance8x32_c, AOM_BITS_8),
+  make_tuple(&aom_highbd_8_masked_sub_pixel_variance16x4_ssse3,
+             &aom_highbd_8_masked_sub_pixel_variance16x4_c, AOM_BITS_8),
+  make_tuple(&aom_highbd_8_masked_sub_pixel_variance4x16_ssse3,
+             &aom_highbd_8_masked_sub_pixel_variance4x16_c, AOM_BITS_8),
+  make_tuple(&aom_highbd_10_masked_sub_pixel_variance64x16_ssse3,
+             &aom_highbd_10_masked_sub_pixel_variance64x16_c, AOM_BITS_10),
+  make_tuple(&aom_highbd_10_masked_sub_pixel_variance16x64_ssse3,
+             &aom_highbd_10_masked_sub_pixel_variance16x64_c, AOM_BITS_10),
+  make_tuple(&aom_highbd_10_masked_sub_pixel_variance32x8_ssse3,
+             &aom_highbd_10_masked_sub_pixel_variance32x8_c, AOM_BITS_10),
+  make_tuple(&aom_highbd_10_masked_sub_pixel_variance8x32_ssse3,
+             &aom_highbd_10_masked_sub_pixel_variance8x32_c, AOM_BITS_10),
+  make_tuple(&aom_highbd_10_masked_sub_pixel_variance16x4_ssse3,
+             &aom_highbd_10_masked_sub_pixel_variance16x4_c, AOM_BITS_10),
+  make_tuple(&aom_highbd_10_masked_sub_pixel_variance4x16_ssse3,
+             &aom_highbd_10_masked_sub_pixel_variance4x16_c, AOM_BITS_10),
+  make_tuple(&aom_highbd_12_masked_sub_pixel_variance64x16_ssse3,
+             &aom_highbd_12_masked_sub_pixel_variance64x16_c, AOM_BITS_12),
+  make_tuple(&aom_highbd_12_masked_sub_pixel_variance16x64_ssse3,
+             &aom_highbd_12_masked_sub_pixel_variance16x64_c, AOM_BITS_12),
+  make_tuple(&aom_highbd_12_masked_sub_pixel_variance32x8_ssse3,
+             &aom_highbd_12_masked_sub_pixel_variance32x8_c, AOM_BITS_12),
+  make_tuple(&aom_highbd_12_masked_sub_pixel_variance8x32_ssse3,
+             &aom_highbd_12_masked_sub_pixel_variance8x32_c, AOM_BITS_12),
+  make_tuple(&aom_highbd_12_masked_sub_pixel_variance16x4_ssse3,
+             &aom_highbd_12_masked_sub_pixel_variance16x4_c, AOM_BITS_12),
+  make_tuple(&aom_highbd_12_masked_sub_pixel_variance4x16_ssse3,
+             &aom_highbd_12_masked_sub_pixel_variance4x16_c, AOM_BITS_12),
+#endif
 };
 
-INSTANTIATE_TEST_CASE_P(SSSE3_C_COMPARE, HighbdMaskedSubPixelVarianceTest,
-                        ::testing::ValuesIn(hbd_sub_pel_var_test));
+INSTANTIATE_TEST_SUITE_P(SSSE3_C_COMPARE, HighbdMaskedSubPixelVarianceTest,
+                         ::testing::ValuesIn(hbd_sub_pel_var_test));
+#endif  // CONFIG_AV1_HIGHBITDEPTH
 #endif  // HAVE_SSSE3
+
+#if HAVE_NEON
+
+const MaskedSubPixelVarianceParam sub_pel_var_test[] = {
+  make_tuple(&aom_masked_sub_pixel_variance128x128_neon,
+             &aom_masked_sub_pixel_variance128x128_c),
+  make_tuple(&aom_masked_sub_pixel_variance128x64_neon,
+             &aom_masked_sub_pixel_variance128x64_c),
+  make_tuple(&aom_masked_sub_pixel_variance64x128_neon,
+             &aom_masked_sub_pixel_variance64x128_c),
+  make_tuple(&aom_masked_sub_pixel_variance64x64_neon,
+             &aom_masked_sub_pixel_variance64x64_c),
+  make_tuple(&aom_masked_sub_pixel_variance64x32_neon,
+             &aom_masked_sub_pixel_variance64x32_c),
+  make_tuple(&aom_masked_sub_pixel_variance32x64_neon,
+             &aom_masked_sub_pixel_variance32x64_c),
+  make_tuple(&aom_masked_sub_pixel_variance32x32_neon,
+             &aom_masked_sub_pixel_variance32x32_c),
+  make_tuple(&aom_masked_sub_pixel_variance32x16_neon,
+             &aom_masked_sub_pixel_variance32x16_c),
+  make_tuple(&aom_masked_sub_pixel_variance16x32_neon,
+             &aom_masked_sub_pixel_variance16x32_c),
+  make_tuple(&aom_masked_sub_pixel_variance16x16_neon,
+             &aom_masked_sub_pixel_variance16x16_c),
+  make_tuple(&aom_masked_sub_pixel_variance16x8_neon,
+             &aom_masked_sub_pixel_variance16x8_c),
+  make_tuple(&aom_masked_sub_pixel_variance8x16_neon,
+             &aom_masked_sub_pixel_variance8x16_c),
+  make_tuple(&aom_masked_sub_pixel_variance8x8_neon,
+             &aom_masked_sub_pixel_variance8x8_c),
+  make_tuple(&aom_masked_sub_pixel_variance8x4_neon,
+             &aom_masked_sub_pixel_variance8x4_c),
+  make_tuple(&aom_masked_sub_pixel_variance4x8_neon,
+             &aom_masked_sub_pixel_variance4x8_c),
+  make_tuple(&aom_masked_sub_pixel_variance4x4_neon,
+             &aom_masked_sub_pixel_variance4x4_c),
+#if !CONFIG_REALTIME_ONLY
+  make_tuple(&aom_masked_sub_pixel_variance64x16_neon,
+             &aom_masked_sub_pixel_variance64x16_c),
+  make_tuple(&aom_masked_sub_pixel_variance16x64_neon,
+             &aom_masked_sub_pixel_variance16x64_c),
+  make_tuple(&aom_masked_sub_pixel_variance32x8_neon,
+             &aom_masked_sub_pixel_variance32x8_c),
+  make_tuple(&aom_masked_sub_pixel_variance8x32_neon,
+             &aom_masked_sub_pixel_variance8x32_c),
+  make_tuple(&aom_masked_sub_pixel_variance16x4_neon,
+             &aom_masked_sub_pixel_variance16x4_c),
+  make_tuple(&aom_masked_sub_pixel_variance4x16_neon,
+             &aom_masked_sub_pixel_variance4x16_c),
+#endif
+};
+
+INSTANTIATE_TEST_SUITE_P(NEON_C_COMPARE, MaskedSubPixelVarianceTest,
+                         ::testing::ValuesIn(sub_pel_var_test));
+
+#if CONFIG_AV1_HIGHBITDEPTH
+const HighbdMaskedSubPixelVarianceParam hbd_sub_pel_var_test_neon[] = {
+  make_tuple(&aom_highbd_8_masked_sub_pixel_variance128x128_neon,
+             &aom_highbd_8_masked_sub_pixel_variance128x128_c, AOM_BITS_8),
+  make_tuple(&aom_highbd_8_masked_sub_pixel_variance128x64_neon,
+             &aom_highbd_8_masked_sub_pixel_variance128x64_c, AOM_BITS_8),
+  make_tuple(&aom_highbd_8_masked_sub_pixel_variance64x128_neon,
+             &aom_highbd_8_masked_sub_pixel_variance64x128_c, AOM_BITS_8),
+  make_tuple(&aom_highbd_8_masked_sub_pixel_variance64x64_neon,
+             &aom_highbd_8_masked_sub_pixel_variance64x64_c, AOM_BITS_8),
+  make_tuple(&aom_highbd_8_masked_sub_pixel_variance64x32_neon,
+             &aom_highbd_8_masked_sub_pixel_variance64x32_c, AOM_BITS_8),
+  make_tuple(&aom_highbd_8_masked_sub_pixel_variance32x64_neon,
+             &aom_highbd_8_masked_sub_pixel_variance32x64_c, AOM_BITS_8),
+  make_tuple(&aom_highbd_8_masked_sub_pixel_variance32x32_neon,
+             &aom_highbd_8_masked_sub_pixel_variance32x32_c, AOM_BITS_8),
+  make_tuple(&aom_highbd_8_masked_sub_pixel_variance32x16_neon,
+             &aom_highbd_8_masked_sub_pixel_variance32x16_c, AOM_BITS_8),
+  make_tuple(&aom_highbd_8_masked_sub_pixel_variance16x32_neon,
+             &aom_highbd_8_masked_sub_pixel_variance16x32_c, AOM_BITS_8),
+  make_tuple(&aom_highbd_8_masked_sub_pixel_variance16x16_neon,
+             &aom_highbd_8_masked_sub_pixel_variance16x16_c, AOM_BITS_8),
+  make_tuple(&aom_highbd_8_masked_sub_pixel_variance16x8_neon,
+             &aom_highbd_8_masked_sub_pixel_variance16x8_c, AOM_BITS_8),
+  make_tuple(&aom_highbd_8_masked_sub_pixel_variance8x16_neon,
+             &aom_highbd_8_masked_sub_pixel_variance8x16_c, AOM_BITS_8),
+  make_tuple(&aom_highbd_8_masked_sub_pixel_variance8x8_neon,
+             &aom_highbd_8_masked_sub_pixel_variance8x8_c, AOM_BITS_8),
+  make_tuple(&aom_highbd_8_masked_sub_pixel_variance8x4_neon,
+             &aom_highbd_8_masked_sub_pixel_variance8x4_c, AOM_BITS_8),
+  make_tuple(&aom_highbd_8_masked_sub_pixel_variance4x8_neon,
+             &aom_highbd_8_masked_sub_pixel_variance4x8_c, AOM_BITS_8),
+  make_tuple(&aom_highbd_8_masked_sub_pixel_variance4x4_neon,
+             &aom_highbd_8_masked_sub_pixel_variance4x4_c, AOM_BITS_8),
+  make_tuple(&aom_highbd_10_masked_sub_pixel_variance128x128_neon,
+             &aom_highbd_10_masked_sub_pixel_variance128x128_c, AOM_BITS_10),
+  make_tuple(&aom_highbd_10_masked_sub_pixel_variance128x64_neon,
+             &aom_highbd_10_masked_sub_pixel_variance128x64_c, AOM_BITS_10),
+  make_tuple(&aom_highbd_10_masked_sub_pixel_variance64x128_neon,
+             &aom_highbd_10_masked_sub_pixel_variance64x128_c, AOM_BITS_10),
+  make_tuple(&aom_highbd_10_masked_sub_pixel_variance64x64_neon,
+             &aom_highbd_10_masked_sub_pixel_variance64x64_c, AOM_BITS_10),
+  make_tuple(&aom_highbd_10_masked_sub_pixel_variance64x32_neon,
+             &aom_highbd_10_masked_sub_pixel_variance64x32_c, AOM_BITS_10),
+  make_tuple(&aom_highbd_10_masked_sub_pixel_variance32x64_neon,
+             &aom_highbd_10_masked_sub_pixel_variance32x64_c, AOM_BITS_10),
+  make_tuple(&aom_highbd_10_masked_sub_pixel_variance32x32_neon,
+             &aom_highbd_10_masked_sub_pixel_variance32x32_c, AOM_BITS_10),
+  make_tuple(&aom_highbd_10_masked_sub_pixel_variance32x16_neon,
+             &aom_highbd_10_masked_sub_pixel_variance32x16_c, AOM_BITS_10),
+  make_tuple(&aom_highbd_10_masked_sub_pixel_variance16x32_neon,
+             &aom_highbd_10_masked_sub_pixel_variance16x32_c, AOM_BITS_10),
+  make_tuple(&aom_highbd_10_masked_sub_pixel_variance16x16_neon,
+             &aom_highbd_10_masked_sub_pixel_variance16x16_c, AOM_BITS_10),
+  make_tuple(&aom_highbd_10_masked_sub_pixel_variance16x8_neon,
+             &aom_highbd_10_masked_sub_pixel_variance16x8_c, AOM_BITS_10),
+  make_tuple(&aom_highbd_10_masked_sub_pixel_variance8x16_neon,
+             &aom_highbd_10_masked_sub_pixel_variance8x16_c, AOM_BITS_10),
+  make_tuple(&aom_highbd_10_masked_sub_pixel_variance8x8_neon,
+             &aom_highbd_10_masked_sub_pixel_variance8x8_c, AOM_BITS_10),
+  make_tuple(&aom_highbd_10_masked_sub_pixel_variance8x4_neon,
+             &aom_highbd_10_masked_sub_pixel_variance8x4_c, AOM_BITS_10),
+  make_tuple(&aom_highbd_10_masked_sub_pixel_variance4x8_neon,
+             &aom_highbd_10_masked_sub_pixel_variance4x8_c, AOM_BITS_10),
+  make_tuple(&aom_highbd_10_masked_sub_pixel_variance4x4_neon,
+             &aom_highbd_10_masked_sub_pixel_variance4x4_c, AOM_BITS_10),
+  make_tuple(&aom_highbd_12_masked_sub_pixel_variance128x128_neon,
+             &aom_highbd_12_masked_sub_pixel_variance128x128_c, AOM_BITS_12),
+  make_tuple(&aom_highbd_12_masked_sub_pixel_variance128x64_neon,
+             &aom_highbd_12_masked_sub_pixel_variance128x64_c, AOM_BITS_12),
+  make_tuple(&aom_highbd_12_masked_sub_pixel_variance64x128_neon,
+             &aom_highbd_12_masked_sub_pixel_variance64x128_c, AOM_BITS_12),
+  make_tuple(&aom_highbd_12_masked_sub_pixel_variance64x64_neon,
+             &aom_highbd_12_masked_sub_pixel_variance64x64_c, AOM_BITS_12),
+  make_tuple(&aom_highbd_12_masked_sub_pixel_variance64x32_neon,
+             &aom_highbd_12_masked_sub_pixel_variance64x32_c, AOM_BITS_12),
+  make_tuple(&aom_highbd_12_masked_sub_pixel_variance32x64_neon,
+             &aom_highbd_12_masked_sub_pixel_variance32x64_c, AOM_BITS_12),
+  make_tuple(&aom_highbd_12_masked_sub_pixel_variance32x32_neon,
+             &aom_highbd_12_masked_sub_pixel_variance32x32_c, AOM_BITS_12),
+  make_tuple(&aom_highbd_12_masked_sub_pixel_variance32x16_neon,
+             &aom_highbd_12_masked_sub_pixel_variance32x16_c, AOM_BITS_12),
+  make_tuple(&aom_highbd_12_masked_sub_pixel_variance16x32_neon,
+             &aom_highbd_12_masked_sub_pixel_variance16x32_c, AOM_BITS_12),
+  make_tuple(&aom_highbd_12_masked_sub_pixel_variance16x16_neon,
+             &aom_highbd_12_masked_sub_pixel_variance16x16_c, AOM_BITS_12),
+  make_tuple(&aom_highbd_12_masked_sub_pixel_variance16x8_neon,
+             &aom_highbd_12_masked_sub_pixel_variance16x8_c, AOM_BITS_12),
+  make_tuple(&aom_highbd_12_masked_sub_pixel_variance8x16_neon,
+             &aom_highbd_12_masked_sub_pixel_variance8x16_c, AOM_BITS_12),
+  make_tuple(&aom_highbd_12_masked_sub_pixel_variance8x8_neon,
+             &aom_highbd_12_masked_sub_pixel_variance8x8_c, AOM_BITS_12),
+  make_tuple(&aom_highbd_12_masked_sub_pixel_variance8x4_neon,
+             &aom_highbd_12_masked_sub_pixel_variance8x4_c, AOM_BITS_12),
+  make_tuple(&aom_highbd_12_masked_sub_pixel_variance4x8_neon,
+             &aom_highbd_12_masked_sub_pixel_variance4x8_c, AOM_BITS_12),
+  make_tuple(&aom_highbd_12_masked_sub_pixel_variance4x4_neon,
+             &aom_highbd_12_masked_sub_pixel_variance4x4_c, AOM_BITS_12),
+#if !CONFIG_REALTIME_ONLY
+  make_tuple(&aom_highbd_8_masked_sub_pixel_variance64x16_neon,
+             &aom_highbd_8_masked_sub_pixel_variance64x16_c, AOM_BITS_8),
+  make_tuple(&aom_highbd_8_masked_sub_pixel_variance16x64_neon,
+             &aom_highbd_8_masked_sub_pixel_variance16x64_c, AOM_BITS_8),
+  make_tuple(&aom_highbd_8_masked_sub_pixel_variance32x8_neon,
+             &aom_highbd_8_masked_sub_pixel_variance32x8_c, AOM_BITS_8),
+  make_tuple(&aom_highbd_8_masked_sub_pixel_variance8x32_neon,
+             &aom_highbd_8_masked_sub_pixel_variance8x32_c, AOM_BITS_8),
+  make_tuple(&aom_highbd_8_masked_sub_pixel_variance16x4_neon,
+             &aom_highbd_8_masked_sub_pixel_variance16x4_c, AOM_BITS_8),
+  make_tuple(&aom_highbd_8_masked_sub_pixel_variance4x16_neon,
+             &aom_highbd_8_masked_sub_pixel_variance4x16_c, AOM_BITS_8),
+  make_tuple(&aom_highbd_10_masked_sub_pixel_variance64x16_neon,
+             &aom_highbd_10_masked_sub_pixel_variance64x16_c, AOM_BITS_10),
+  make_tuple(&aom_highbd_10_masked_sub_pixel_variance16x64_neon,
+             &aom_highbd_10_masked_sub_pixel_variance16x64_c, AOM_BITS_10),
+  make_tuple(&aom_highbd_10_masked_sub_pixel_variance32x8_neon,
+             &aom_highbd_10_masked_sub_pixel_variance32x8_c, AOM_BITS_10),
+  make_tuple(&aom_highbd_10_masked_sub_pixel_variance8x32_neon,
+             &aom_highbd_10_masked_sub_pixel_variance8x32_c, AOM_BITS_10),
+  make_tuple(&aom_highbd_10_masked_sub_pixel_variance16x4_neon,
+             &aom_highbd_10_masked_sub_pixel_variance16x4_c, AOM_BITS_10),
+  make_tuple(&aom_highbd_10_masked_sub_pixel_variance4x16_neon,
+             &aom_highbd_10_masked_sub_pixel_variance4x16_c, AOM_BITS_10),
+  make_tuple(&aom_highbd_12_masked_sub_pixel_variance64x16_neon,
+             &aom_highbd_12_masked_sub_pixel_variance64x16_c, AOM_BITS_12),
+  make_tuple(&aom_highbd_12_masked_sub_pixel_variance16x64_neon,
+             &aom_highbd_12_masked_sub_pixel_variance16x64_c, AOM_BITS_12),
+  make_tuple(&aom_highbd_12_masked_sub_pixel_variance32x8_neon,
+             &aom_highbd_12_masked_sub_pixel_variance32x8_c, AOM_BITS_12),
+  make_tuple(&aom_highbd_12_masked_sub_pixel_variance8x32_neon,
+             &aom_highbd_12_masked_sub_pixel_variance8x32_c, AOM_BITS_12),
+  make_tuple(&aom_highbd_12_masked_sub_pixel_variance16x4_neon,
+             &aom_highbd_12_masked_sub_pixel_variance16x4_c, AOM_BITS_12),
+  make_tuple(&aom_highbd_12_masked_sub_pixel_variance4x16_neon,
+             &aom_highbd_12_masked_sub_pixel_variance4x16_c, AOM_BITS_12),
+#endif
+};
+
+INSTANTIATE_TEST_SUITE_P(NEON_C_COMPARE, HighbdMaskedSubPixelVarianceTest,
+                         ::testing::ValuesIn(hbd_sub_pel_var_test_neon));
+
+#endif  // CONFIG_AV1_HIGHBITDEPTH
+
+#endif  // HAVE_NEON
 }  // namespace

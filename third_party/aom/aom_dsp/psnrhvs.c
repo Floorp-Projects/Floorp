@@ -22,7 +22,6 @@
 
 #include "aom_dsp/psnr.h"
 #include "aom_dsp/ssim.h"
-#include "aom_ports/system_state.h"
 
 static void od_bin_fdct8x8(tran_low_t *y, int ystride, const int16_t *x,
                            int xstride) {
@@ -34,6 +33,7 @@ static void od_bin_fdct8x8(tran_low_t *y, int ystride, const int16_t *x,
       *(y + ystride * i + j) = (*(y + ystride * i + j) + 4) >> 3;
 }
 
+#if CONFIG_AV1_HIGHBITDEPTH
 static void hbd_od_bin_fdct8x8(tran_low_t *y, int ystride, const int16_t *x,
                                int xstride) {
   int i, j;
@@ -43,6 +43,7 @@ static void hbd_od_bin_fdct8x8(tran_low_t *y, int ystride, const int16_t *x,
     for (j = 0; j < 8; j++)
       *(y + ystride * i + j) = (*(y + ystride * i + j) + 4) >> 3;
 }
+#endif  // CONFIG_AV1_HIGHBITDEPTH
 
 /* Normalized inverse quantization matrix for 8x8 DCT at the point of
  * transparency. This is not the JPEG based matrix from the paper,
@@ -102,13 +103,8 @@ static const double csf_cr420[8][8] = {
     0.478717061273, 0.393021669543, 0.330555063063, 0.285345396658 }
 };
 
-static double convert_score_db(double _score, double _weight, int bit_depth) {
-  int16_t pix_max = 255;
+static double convert_score_db(double _score, double _weight, int16_t pix_max) {
   assert(_score * _weight >= 0.0);
-  if (bit_depth == 10)
-    pix_max = 1023;
-  else if (bit_depth == 12)
-    pix_max = 4095;
 
   if (_weight * _score < pix_max * pix_max * 1e-10) return MAX_PSNR;
   return 10 * (log10(pix_max * pix_max) - log10(_weight * _score));
@@ -117,7 +113,8 @@ static double convert_score_db(double _score, double _weight, int bit_depth) {
 static double calc_psnrhvs(const unsigned char *src, int _systride,
                            const unsigned char *dst, int _dystride, double _par,
                            int _w, int _h, int _step, const double _csf[8][8],
-                           uint32_t _shift, int buf_is_hbd) {
+                           uint32_t _shift, int buf_is_hbd, int16_t pix_max,
+                           int luma) {
   double ret;
   const uint8_t *_src8 = src;
   const uint8_t *_dst8 = dst;
@@ -131,8 +128,24 @@ static double calc_psnrhvs(const unsigned char *src, int _systride,
   int pixels;
   int x;
   int y;
+  float sum1;
+  float sum2;
+  float delt;
   (void)_par;
   ret = pixels = 0;
+  sum1 = sum2 = delt = 0.0f;
+  for (y = 0; y < _h; y++) {
+    for (x = 0; x < _w; x++) {
+      if (!buf_is_hbd) {
+        sum1 += _src8[y * _systride + x];
+        sum2 += _dst8[y * _dystride + x];
+      } else {
+        sum1 += _src16[y * _systride + x] >> _shift;
+        sum2 += _dst16[y * _dystride + x] >> _shift;
+      }
+    }
+  }
+  if (luma) delt = (sum1 - sum2) / (_w * _h);
   /*In the PSNR-HVS-M paper[1] the authors describe the construction of
    their masking table as "we have used the quantization table for the
    color component Y of JPEG [6] that has been also obtained on the
@@ -140,7 +153,7 @@ static double calc_psnrhvs(const unsigned char *src, int _systride,
    been normalized and then squared." Their CSF matrix (from PSNR-HVS)
    was also constructed from the JPEG matrices. I can not find any obvious
    scheme of normalizing to produce their table, but if I multiply their
-   CSF by 0.38857 and square the result I get their masking table.
+   CSF by 0.3885746225901003 and square the result I get their masking table.
    I have no idea where this constant comes from, but deviating from it
    too greatly hurts MOS agreement.
 
@@ -148,30 +161,28 @@ static double calc_psnrhvs(const unsigned char *src, int _systride,
    Jaakko Astola, Vladimir Lukin, "On between-coefficient contrast masking
    of DCT basis functions", CD-ROM Proceedings of the Third
    International Workshop on Video Processing and Quality Metrics for Consumer
-   Electronics VPQM-07, Scottsdale, Arizona, USA, 25-26 January, 2007, 4 p.*/
+   Electronics VPQM-07, Scottsdale, Arizona, USA, 25-26 January, 2007, 4 p.
+
+   Suggested in aomedia issue#2363:
+   0.3885746225901003 is a reciprocal of the maximum coefficient (2.573509)
+   of the old JPEG based matrix from the paper. Since you are not using that,
+   divide by actual maximum coefficient. */
   for (x = 0; x < 8; x++)
     for (y = 0; y < 8; y++)
-      mask[x][y] =
-          (_csf[x][y] * 0.3885746225901003) * (_csf[x][y] * 0.3885746225901003);
+      mask[x][y] = (_csf[x][y] / _csf[1][0]) * (_csf[x][y] / _csf[1][0]);
   for (y = 0; y < _h - 7; y += _step) {
     for (x = 0; x < _w - 7; x += _step) {
       int i;
       int j;
-      double s_means[4];
-      double d_means[4];
-      double s_vars[4];
-      double d_vars[4];
+      int n = 0;
+      double s_gx = 0;
+      double s_gy = 0;
+      double g = 0;
       double s_gmean = 0;
-      double d_gmean = 0;
       double s_gvar = 0;
-      double d_gvar = 0;
       double s_mask = 0;
-      double d_mask = 0;
-      for (i = 0; i < 4; i++)
-        s_means[i] = d_means[i] = s_vars[i] = d_vars[i] = 0;
       for (i = 0; i < 8; i++) {
         for (j = 0; j < 8; j++) {
-          int sub = ((i & 12) >> 2) + ((j & 12) >> 1);
           if (!buf_is_hbd) {
             dct_s[i * 8 + j] = _src8[(y + i) * _systride + (j + x)];
             dct_d[i * 8 + j] = _dst8[(y + i) * _dystride + (j + x)];
@@ -179,35 +190,28 @@ static double calc_psnrhvs(const unsigned char *src, int _systride,
             dct_s[i * 8 + j] = _src16[(y + i) * _systride + (j + x)] >> _shift;
             dct_d[i * 8 + j] = _dst16[(y + i) * _dystride + (j + x)] >> _shift;
           }
-          s_gmean += dct_s[i * 8 + j];
-          d_gmean += dct_d[i * 8 + j];
-          s_means[sub] += dct_s[i * 8 + j];
-          d_means[sub] += dct_d[i * 8 + j];
+          dct_d[i * 8 + j] += (int)(delt + 0.5f);
         }
       }
-      s_gmean /= 64.f;
-      d_gmean /= 64.f;
-      for (i = 0; i < 4; i++) s_means[i] /= 16.f;
-      for (i = 0; i < 4; i++) d_means[i] /= 16.f;
-      for (i = 0; i < 8; i++) {
-        for (j = 0; j < 8; j++) {
-          int sub = ((i & 12) >> 2) + ((j & 12) >> 1);
-          s_gvar += (dct_s[i * 8 + j] - s_gmean) * (dct_s[i * 8 + j] - s_gmean);
-          d_gvar += (dct_d[i * 8 + j] - d_gmean) * (dct_d[i * 8 + j] - d_gmean);
-          s_vars[sub] += (dct_s[i * 8 + j] - s_means[sub]) *
-                         (dct_s[i * 8 + j] - s_means[sub]);
-          d_vars[sub] += (dct_d[i * 8 + j] - d_means[sub]) *
-                         (dct_d[i * 8 + j] - d_means[sub]);
+      for (i = 1; i < 7; i++) {
+        for (j = 1; j < 7; j++) {
+          s_gx = (dct_s[(i - 1) * 8 + j - 1] * 3 -
+                  dct_s[(i - 1) * 8 + j + 1] * 3 + dct_s[i * 8 + j - 1] * 10 -
+                  dct_s[i * 8 + j + 1] * 10 + dct_s[(i + 1) * 8 + j - 1] * 3 -
+                  dct_s[(i + 1) * 8 + j + 1] * 3) /
+                 (pix_max * 16.f);
+          s_gy = (dct_s[(i - 1) * 8 + j - 1] * 3 -
+                  dct_s[(i + 1) * 8 + j - 1] * 3 + dct_s[(i - 1) * 8 + j] * 10 -
+                  dct_s[(i + 1) * 8 + j] * 10 + dct_s[(i - 1) * 8 + j + 1] * 3 -
+                  dct_s[(i + 1) * 8 + j + 1] * 3) /
+                 (pix_max * 16.f);
+          g = sqrt(s_gx * s_gx + s_gy * s_gy);
+          if (g > 0.1f) n++;
+          s_gmean += g;
         }
       }
-      s_gvar *= 1 / 63.f * 64;
-      d_gvar *= 1 / 63.f * 64;
-      for (i = 0; i < 4; i++) s_vars[i] *= 1 / 15.f * 16;
-      for (i = 0; i < 4; i++) d_vars[i] *= 1 / 15.f * 16;
-      if (s_gvar > 0)
-        s_gvar = (s_vars[0] + s_vars[1] + s_vars[2] + s_vars[3]) / s_gvar;
-      if (d_gvar > 0)
-        d_gvar = (d_vars[0] + d_vars[1] + d_vars[2] + d_vars[3]) / d_gvar;
+      s_gvar = 1.f / (36 - n + 1) * s_gmean / 36.f;
+#if CONFIG_AV1_HIGHBITDEPTH
       if (!buf_is_hbd) {
         od_bin_fdct8x8(dct_s_coef, 8, dct_s, 8);
         od_bin_fdct8x8(dct_d_coef, 8, dct_d, 8);
@@ -215,15 +219,14 @@ static double calc_psnrhvs(const unsigned char *src, int _systride,
         hbd_od_bin_fdct8x8(dct_s_coef, 8, dct_s, 8);
         hbd_od_bin_fdct8x8(dct_d_coef, 8, dct_d, 8);
       }
+#else
+      od_bin_fdct8x8(dct_s_coef, 8, dct_s, 8);
+      od_bin_fdct8x8(dct_d_coef, 8, dct_d, 8);
+#endif  // CONFIG_AV1_HIGHBITDEPTH
       for (i = 0; i < 8; i++)
         for (j = (i == 0); j < 8; j++)
           s_mask += dct_s_coef[i * 8 + j] * dct_s_coef[i * 8 + j] * mask[i][j];
-      for (i = 0; i < 8; i++)
-        for (j = (i == 0); j < 8; j++)
-          d_mask += dct_d_coef[i * 8 + j] * dct_d_coef[i * 8 + j] * mask[i][j];
-      s_mask = sqrt(s_mask * s_gvar) / 32.f;
-      d_mask = sqrt(d_mask * d_gvar) / 32.f;
-      if (d_mask > s_mask) s_mask = d_mask;
+      s_mask = sqrt(s_mask * s_gvar) / 8.f;
       for (i = 0; i < 8; i++) {
         for (j = 0; j < 8; j++) {
           double err;
@@ -238,6 +241,7 @@ static double calc_psnrhvs(const unsigned char *src, int _systride,
   }
   if (pixels <= 0) return 0;
   ret /= pixels;
+  ret += 0.04 * delt * delt;
   return ret;
 }
 
@@ -248,25 +252,31 @@ double aom_psnrhvs(const YV12_BUFFER_CONFIG *src, const YV12_BUFFER_CONFIG *dst,
   const double par = 1.0;
   const int step = 7;
   uint32_t bd_shift = 0;
-  aom_clear_system_state();
   assert(bd == 8 || bd == 10 || bd == 12);
   assert(bd >= in_bd);
   assert(src->flags == dst->flags);
   const int buf_is_hbd = src->flags & YV12_FLAG_HIGHBITDEPTH;
 
+  int16_t pix_max = 255;
+  if (in_bd == 10)
+    pix_max = 1023;
+  else if (in_bd == 12)
+    pix_max = 4095;
+
   bd_shift = bd - in_bd;
 
-  *y_psnrhvs = calc_psnrhvs(
-      src->y_buffer, src->y_stride, dst->y_buffer, dst->y_stride, par,
-      src->y_crop_width, src->y_crop_height, step, csf_y, bd_shift, buf_is_hbd);
+  *y_psnrhvs =
+      calc_psnrhvs(src->y_buffer, src->y_stride, dst->y_buffer, dst->y_stride,
+                   par, src->y_crop_width, src->y_crop_height, step, csf_y,
+                   bd_shift, buf_is_hbd, pix_max, 1);
   *u_psnrhvs =
       calc_psnrhvs(src->u_buffer, src->uv_stride, dst->u_buffer, dst->uv_stride,
                    par, src->uv_crop_width, src->uv_crop_height, step,
-                   csf_cb420, bd_shift, buf_is_hbd);
+                   csf_cb420, bd_shift, buf_is_hbd, pix_max, 0);
   *v_psnrhvs =
       calc_psnrhvs(src->v_buffer, src->uv_stride, dst->v_buffer, dst->uv_stride,
                    par, src->uv_crop_width, src->uv_crop_height, step,
-                   csf_cr420, bd_shift, buf_is_hbd);
+                   csf_cr420, bd_shift, buf_is_hbd, pix_max, 0);
   psnrhvs = (*y_psnrhvs) * .8 + .1 * ((*u_psnrhvs) + (*v_psnrhvs));
-  return convert_score_db(psnrhvs, 1.0, in_bd);
+  return convert_score_db(psnrhvs, 1.0, pix_max);
 }

@@ -14,31 +14,48 @@
 
 #define INVALID_IDX -1  // Invalid buffer index.
 
+#include <stdbool.h>
+
+#include "config/aom_config.h"
+
+#include "av1/common/enums.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 struct AV1Common;
 struct BufferPool;
+struct CommonContexts;
+struct CommonModeInfoParams;
+struct AV1CdefWorker;
+struct AV1CdefSyncData;
 
 void av1_remove_common(struct AV1Common *cm);
 
-int av1_alloc_above_context_buffers(struct AV1Common *cm,
-                                    int num_alloc_above_contexts);
-void av1_free_above_context_buffers(struct AV1Common *cm,
-                                    int num_free_above_contexts);
-int av1_alloc_context_buffers(struct AV1Common *cm, int width, int height);
-void av1_init_context_buffers(struct AV1Common *cm);
+int av1_alloc_above_context_buffers(struct CommonContexts *above_contexts,
+                                    int num_tile_rows, int num_mi_cols,
+                                    int num_planes);
+void av1_free_above_context_buffers(struct CommonContexts *above_contexts);
+int av1_alloc_context_buffers(struct AV1Common *cm, int width, int height,
+                              BLOCK_SIZE min_partition_size);
+void av1_init_mi_buffers(struct CommonModeInfoParams *mi_params);
 void av1_free_context_buffers(struct AV1Common *cm);
 
 void av1_free_ref_frame_buffers(struct BufferPool *pool);
-void av1_alloc_restoration_buffers(struct AV1Common *cm);
+void av1_alloc_cdef_buffers(struct AV1Common *const cm,
+                            struct AV1CdefWorker **cdef_worker,
+                            struct AV1CdefSyncData *cdef_sync, int num_workers,
+                            int init_worker);
+void av1_free_cdef_buffers(struct AV1Common *const cm,
+                           struct AV1CdefWorker **cdef_worker,
+                           struct AV1CdefSyncData *cdef_sync);
+void av1_alloc_restoration_buffers(struct AV1Common *cm, bool is_sgr_enabled);
 void av1_free_restoration_buffers(struct AV1Common *cm);
 
 int av1_alloc_state_buffers(struct AV1Common *cm, int width, int height);
 void av1_free_state_buffers(struct AV1Common *cm);
 
-void av1_set_mb_mi(struct AV1Common *cm, int width, int height);
 int av1_get_MBs(int width, int height);
 
 #ifdef __cplusplus

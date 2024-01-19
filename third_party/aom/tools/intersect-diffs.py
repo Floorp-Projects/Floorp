@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 ##
 ## Copyright (c) 2016, Alliance for Open Media. All rights reserved
 ##
@@ -71,7 +71,7 @@ def main():
                 break
 
     if out_hunks:
-        print FormatDiffHunks(out_hunks)
+        print(FormatDiffHunks(out_hunks))
         sys.exit(1)
 
 if __name__ == "__main__":

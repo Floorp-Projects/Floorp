@@ -39,7 +39,7 @@ decode_with_drops() {
   fi
 
   eval "${AOM_TEST_PREFIX}" "${decoder}" "${input_file}" "${output_file}" \
-      "${drop_mode}" ${devnull}
+      "${drop_mode}" ${devnull} || return 1
 
   [ -e "${output_file}" ] || return 1
 }
@@ -52,13 +52,13 @@ DISABLED_decode_with_drops_av1() {
     local file="${AV1_IVF_FILE}"
     if [ ! -e "${AV1_IVF_FILE}" ]; then
       file="${AOM_TEST_OUTPUT_DIR}/test_encode.ivf"
-      encode_yuv_raw_input_av1 "${file}" --ivf
+      encode_yuv_raw_input_av1 "${file}" --ivf || return 1
     fi
     # Drop frames 3 and 4.
-    decode_with_drops "${file}" "av1" "3-4"
+    decode_with_drops "${file}" "av1" "3-4" || return 1
 
     # Test pattern mode: Drop 3 of every 4 frames.
-    decode_with_drops "${file}" "av1" "3/4"
+    decode_with_drops "${file}" "av1" "3/4" || return 1
   fi
 }
 

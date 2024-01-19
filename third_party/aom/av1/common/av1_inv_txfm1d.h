@@ -29,22 +29,22 @@ static INLINE void clamp_buf(int32_t *buf, int32_t size, int8_t bit) {
   for (int i = 0; i < size; ++i) buf[i] = clamp_value(buf[i], bit);
 }
 
-void av1_idct4_new(const int32_t *input, int32_t *output, int8_t cos_bit,
-                   const int8_t *stage_range);
-void av1_idct8_new(const int32_t *input, int32_t *output, int8_t cos_bit,
-                   const int8_t *stage_range);
-void av1_idct16_new(const int32_t *input, int32_t *output, int8_t cos_bit,
-                    const int8_t *stage_range);
-void av1_idct32_new(const int32_t *input, int32_t *output, int8_t cos_bit,
-                    const int8_t *stage_range);
-void av1_idct64_new(const int32_t *input, int32_t *output, int8_t cos_bit,
-                    const int8_t *stage_range);
-void av1_iadst4_new(const int32_t *input, int32_t *output, int8_t cos_bit,
-                    const int8_t *stage_range);
-void av1_iadst8_new(const int32_t *input, int32_t *output, int8_t cos_bit,
-                    const int8_t *stage_range);
-void av1_iadst16_new(const int32_t *input, int32_t *output, int8_t cos_bit,
-                     const int8_t *stage_range);
+void av1_idct4(const int32_t *input, int32_t *output, int8_t cos_bit,
+               const int8_t *stage_range);
+void av1_idct8(const int32_t *input, int32_t *output, int8_t cos_bit,
+               const int8_t *stage_range);
+void av1_idct16(const int32_t *input, int32_t *output, int8_t cos_bit,
+                const int8_t *stage_range);
+void av1_idct32(const int32_t *input, int32_t *output, int8_t cos_bit,
+                const int8_t *stage_range);
+void av1_idct64(const int32_t *input, int32_t *output, int8_t cos_bit,
+                const int8_t *stage_range);
+void av1_iadst4(const int32_t *input, int32_t *output, int8_t cos_bit,
+                const int8_t *stage_range);
+void av1_iadst8(const int32_t *input, int32_t *output, int8_t cos_bit,
+                const int8_t *stage_range);
+void av1_iadst16(const int32_t *input, int32_t *output, int8_t cos_bit,
+                 const int8_t *stage_range);
 void av1_iidentity4_c(const int32_t *input, int32_t *output, int8_t cos_bit,
                       const int8_t *stage_range);
 void av1_iidentity8_c(const int32_t *input, int32_t *output, int8_t cos_bit,

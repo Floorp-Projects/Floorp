@@ -87,10 +87,12 @@ function(aom_check_c_compiles test_name test_source result_var)
     set(${result_var} ${C_TEST_COMPILED} PARENT_SCOPE)
 
     if(C_TEST_COMPILED)
-      set(AOM_C_PASSED_TESTS "${AOM_C_PASSED_TESTS} ${test_name}"
+      set(AOM_C_PASSED_TESTS
+          "${AOM_C_PASSED_TESTS} ${test_name}"
           CACHE STRING "" FORCE)
     else()
-      set(AOM_C_FAILED_TESTS "${AOM_C_FAILED_TESTS} ${test_name}"
+      set(AOM_C_FAILED_TESTS
+          "${AOM_C_FAILED_TESTS} ${test_name}"
           CACHE STRING "" FORCE)
       message("C Compiler test ${test_name} failed.")
     endif()
@@ -123,10 +125,12 @@ function(aom_check_cxx_compiles test_name test_source result_var)
     set(${result_var} ${CXX_TEST_COMPILED} PARENT_SCOPE)
 
     if(CXX_TEST_COMPILED)
-      set(AOM_CXX_PASSED_TESTS "${AOM_CXX_PASSED_TESTS} ${test_name}"
+      set(AOM_CXX_PASSED_TESTS
+          "${AOM_CXX_PASSED_TESTS} ${test_name}"
           CACHE STRING "" FORCE)
     else()
-      set(AOM_CXX_FAILED_TESTS "${AOM_CXX_FAILED_TESTS} ${test_name}"
+      set(AOM_CXX_FAILED_TESTS
+          "${AOM_CXX_FAILED_TESTS} ${test_name}"
           CACHE STRING "" FORCE)
       message("CXX Compiler test ${test_name} failed.")
     endif()

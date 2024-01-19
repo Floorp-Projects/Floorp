@@ -18,23 +18,19 @@
 
 #include "aom/aom_integer.h"
 
-// ASM_REGISTER_STATE_CHECK(asm_function)
-//   Minimally validates the environment pre & post function execution. This
-//   variant should be used with assembly functions which are not expected to
-//   fully restore the system state. See platform implementations of
-//   RegisterStateCheck for details.
-//
-// API_REGISTER_STATE_CHECK(api_function)
-//   Performs all the checks done by ASM_REGISTER_STATE_CHECK() and any
-//   additional checks to ensure the environment is in a consistent state pre &
-//   post function execution. This variant should be used with API functions.
-//   See platform implementations of RegisterStateCheckXXX for details.
-//
+// API_REGISTER_STATE_CHECK(function)
+//   Validates the environment pre & post function execution to ensure the
+//   environment is in a consistent state. This should be used with API
+//   function sand assembly functions which are not expected to fully restore
+//   the system state.
+//   See platform implementations of RegisterStateCheck and
+//   RegisterStateCheckMMX for details.
 
-#if defined(_WIN64) && ARCH_X86_64
+#if defined(_WIN64) && AOM_ARCH_X86_64
 
 #undef NOMINMAX
 #define NOMINMAX
+#undef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <winnt.h>
@@ -56,7 +52,7 @@ class RegisterStateCheck {
  private:
   static bool StoreRegisters(CONTEXT *const context) {
     const HANDLE this_thread = GetCurrentThread();
-    EXPECT_TRUE(this_thread != NULL);
+    EXPECT_NE(this_thread, nullptr);
     context->ContextFlags = CONTEXT_FLOATING_POINT;
     const bool context_saved = GetThreadContext(this_thread, context) == TRUE;
     EXPECT_TRUE(context_saved) << "GetLastError: " << GetLastError();
@@ -81,13 +77,6 @@ class RegisterStateCheck {
   bool initialized_;
   CONTEXT pre_context_;
 };
-
-#define ASM_REGISTER_STATE_CHECK(statement)    \
-  do {                                         \
-    libaom_test::RegisterStateCheck reg_check; \
-    statement;                                 \
-  } while (false)
-
 }  // namespace libaom_test
 
 #else
@@ -95,15 +84,11 @@ class RegisterStateCheck {
 namespace libaom_test {
 
 class RegisterStateCheck {};
-#define ASM_REGISTER_STATE_CHECK(statement) statement
-
 }  // namespace libaom_test
 
-#endif  // _WIN64 && ARCH_X86_64
+#endif  // _WIN64 && AOM_ARCH_X86_64
 
-#if ARCH_X86 || ARCH_X86_64
-#if defined(__GNUC__)
-
+#if (AOM_ARCH_X86 || AOM_ARCH_X86_64) && defined(__GNUC__)
 namespace libaom_test {
 
 // Checks the FPU tag word pre/post execution to ensure emms has been called.
@@ -129,20 +114,23 @@ class RegisterStateCheckMMX {
 
   uint16_t pre_fpu_env_[14];
 };
-
-#define API_REGISTER_STATE_CHECK(statement)       \
-  do {                                            \
-    libaom_test::RegisterStateCheckMMX reg_check; \
-    ASM_REGISTER_STATE_CHECK(statement);          \
-  } while (false)
-
 }  // namespace libaom_test
 
-#endif  // __GNUC__
-#endif  // ARCH_X86 || ARCH_X86_64
+#else
+namespace libaom_test {
 
-#ifndef API_REGISTER_STATE_CHECK
-#define API_REGISTER_STATE_CHECK ASM_REGISTER_STATE_CHECK
-#endif
+class RegisterStateCheckMMX {};
+}  // namespace libaom_test
+
+#endif  // (AOM_ARCH_X86 || AOM_ARCH_X86_64) && defined(__GNUC__)
+
+#define API_REGISTER_STATE_CHECK(statement)           \
+  do {                                                \
+    libaom_test::RegisterStateCheck reg_check;        \
+    libaom_test::RegisterStateCheckMMX reg_check_mmx; \
+    statement;                                        \
+    (void)reg_check_mmx;                              \
+    (void)reg_check;                                  \
+  } while (false)
 
 #endif  // AOM_TEST_REGISTER_STATE_CHECK_H_

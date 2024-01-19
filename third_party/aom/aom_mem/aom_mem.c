@@ -10,25 +10,31 @@
  */
 
 #include "aom_mem.h"
-#include <stdio.h>
+#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 #include "include/aom_mem_intrnl.h"
 #include "aom/aom_integer.h"
 
-#if defined(AOM_MAX_ALLOCABLE_MEMORY)
-// Returns 0 in case of overflow of nmemb * size.
-static int check_size_argument_overflow(uint64_t nmemb, uint64_t size) {
-  const uint64_t total_size = nmemb * size;
-  if (nmemb == 0) return 1;
-  if (size > AOM_MAX_ALLOCABLE_MEMORY / nmemb) return 0;
-  if (total_size != (size_t)total_size) return 0;
-  return 1;
+static size_t GetAllocationPaddingSize(size_t align) {
+  assert(align > 0);
+  assert(align < SIZE_MAX - ADDRESS_STORAGE_SIZE);
+  return align - 1 + ADDRESS_STORAGE_SIZE;
 }
-#endif
 
-static size_t GetAlignedMallocSize(size_t size, size_t align) {
-  return size + align - 1 + ADDRESS_STORAGE_SIZE;
+// Returns 0 in case of overflow of nmemb * size.
+static int check_size_argument_overflow(size_t nmemb, size_t size,
+                                        size_t align) {
+  if (nmemb == 0) return 1;
+  const size_t alloc_padding = GetAllocationPaddingSize(align);
+#if defined(AOM_MAX_ALLOCABLE_MEMORY)
+  assert(AOM_MAX_ALLOCABLE_MEMORY >= alloc_padding);
+  assert(AOM_MAX_ALLOCABLE_MEMORY <= SIZE_MAX);
+  if (size > (AOM_MAX_ALLOCABLE_MEMORY - alloc_padding) / nmemb) return 0;
+#else
+  if (size > (SIZE_MAX - alloc_padding) / nmemb) return 0;
+#endif
+  return 1;
 }
 
 static size_t *GetMallocAddressLocation(void *const mem) {
@@ -48,13 +54,11 @@ static void *GetActualMallocAddress(void *const mem) {
 
 void *aom_memalign(size_t align, size_t size) {
   void *x = NULL;
-  const size_t aligned_size = GetAlignedMallocSize(size, align);
-#if defined(AOM_MAX_ALLOCABLE_MEMORY)
-  if (!check_size_argument_overflow(1, aligned_size)) return NULL;
-#endif
+  if (!check_size_argument_overflow(1, size, align)) return NULL;
+  const size_t aligned_size = size + GetAllocationPaddingSize(align);
   void *const addr = malloc(aligned_size);
   if (addr) {
-    x = align_addr((unsigned char *)addr + ADDRESS_STORAGE_SIZE, align);
+    x = aom_align_addr((unsigned char *)addr + ADDRESS_STORAGE_SIZE, align);
     SetActualMallocAddress(x, addr);
   }
   return x;
@@ -63,6 +67,7 @@ void *aom_memalign(size_t align, size_t size) {
 void *aom_malloc(size_t size) { return aom_memalign(DEFAULT_ALIGNMENT, size); }
 
 void *aom_calloc(size_t num, size_t size) {
+  if (!check_size_argument_overflow(num, size, DEFAULT_ALIGNMENT)) return NULL;
   const size_t total_size = num * size;
   void *const x = aom_malloc(total_size);
   if (x) memset(x, 0, total_size);
@@ -74,11 +79,4 @@ void aom_free(void *memblk) {
     void *addr = GetActualMallocAddress(memblk);
     free(addr);
   }
-}
-
-void *aom_memset16(void *dest, int val, size_t length) {
-  size_t i;
-  uint16_t *dest16 = (uint16_t *)dest;
-  for (i = 0; i < length; i++) *dest16++ = val;
-  return dest;
 }

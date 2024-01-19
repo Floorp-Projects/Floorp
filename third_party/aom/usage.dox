@@ -59,7 +59,6 @@
 
     \if decoder
     Currently defined decoder features include:
-    - \ref usage_cb
     \endif
 
     \section usage_init Initialization
@@ -81,7 +80,6 @@
     The available initialization methods are:
     \if encoder
     \li #aom_codec_enc_init (calls aom_codec_enc_init_ver())
-    \li #aom_codec_enc_init_multi (calls aom_codec_enc_init_multi_ver())
     \endif
     \if decoder
     \li #aom_codec_dec_init (calls aom_codec_dec_init_ver())

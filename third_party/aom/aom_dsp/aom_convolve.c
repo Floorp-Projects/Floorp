@@ -74,7 +74,6 @@ static void convolve_vert(const uint8_t *src, ptrdiff_t src_stride,
 
 static const InterpKernel *get_filter_base(const int16_t *filter) {
   // NOTE: This assumes that the filter table is 256-byte aligned.
-  // TODO(agrange) Modify to make independent of table alignment.
   return (const InterpKernel *)(((intptr_t)filter) & ~((intptr_t)0xFF));
 }
 
@@ -112,24 +111,58 @@ void aom_convolve8_vert_c(const uint8_t *src, ptrdiff_t src_stride,
                 w, h);
 }
 
+void aom_convolve8_c(const uint8_t *src, ptrdiff_t src_stride, uint8_t *dst,
+                     ptrdiff_t dst_stride, const InterpKernel *filter,
+                     int x0_q4, int x_step_q4, int y0_q4, int y_step_q4, int w,
+                     int h) {
+  // Note: Fixed size intermediate buffer, temp, places limits on parameters.
+  // 2d filtering proceeds in 2 steps:
+  //   (1) Interpolate horizontally into an intermediate buffer, temp.
+  //   (2) Interpolate temp vertically to derive the sub-pixel result.
+  // Deriving the maximum number of rows in the temp buffer (135):
+  // --Smallest scaling factor is x1/2 ==> y_step_q4 = 32 (Normative).
+  // --Largest block size is 64x64 pixels.
+  // --64 rows in the downscaled frame span a distance of (64 - 1) * 32 in the
+  //   original frame (in 1/16th pixel units).
+  // --Must round-up because block may be located at sub-pixel position.
+  // --Require an additional SUBPEL_TAPS rows for the 8-tap filter tails.
+  // --((64 - 1) * 32 + 15) >> 4 + 8 = 135.
+  // When calling in frame scaling function, the smallest scaling factor is x1/4
+  // ==> y_step_q4 = 64. Since w and h are at most 16, the temp buffer is still
+  // big enough.
+  uint8_t temp[64 * 135];
+  const int intermediate_height =
+      (((h - 1) * y_step_q4 + y0_q4) >> SUBPEL_BITS) + SUBPEL_TAPS;
+
+  assert(w <= 64);
+  assert(h <= 64);
+  assert(y_step_q4 <= 32 || (y_step_q4 <= 64 && h <= 32));
+  assert(x_step_q4 <= 64);
+
+  convolve_horiz(src - src_stride * (SUBPEL_TAPS / 2 - 1), src_stride, temp, 64,
+                 filter, x0_q4, x_step_q4, w, intermediate_height);
+  convolve_vert(temp + 64 * (SUBPEL_TAPS / 2 - 1), 64, dst, dst_stride, filter,
+                y0_q4, y_step_q4, w, h);
+}
+
+void aom_scaled_2d_c(const uint8_t *src, ptrdiff_t src_stride, uint8_t *dst,
+                     ptrdiff_t dst_stride, const InterpKernel *filter,
+                     int x0_q4, int x_step_q4, int y0_q4, int y_step_q4, int w,
+                     int h) {
+  aom_convolve8_c(src, src_stride, dst, dst_stride, filter, x0_q4, x_step_q4,
+                  y0_q4, y_step_q4, w, h);
+}
+
 void aom_convolve_copy_c(const uint8_t *src, ptrdiff_t src_stride, uint8_t *dst,
-                         ptrdiff_t dst_stride, const int16_t *filter_x,
-                         int filter_x_stride, const int16_t *filter_y,
-                         int filter_y_stride, int w, int h) {
-  int r;
-
-  (void)filter_x;
-  (void)filter_x_stride;
-  (void)filter_y;
-  (void)filter_y_stride;
-
-  for (r = h; r > 0; --r) {
-    memcpy(dst, src, w);
+                         ptrdiff_t dst_stride, int w, int h) {
+  for (int r = h; r > 0; --r) {
+    memmove(dst, src, w);
     src += src_stride;
     dst += dst_stride;
   }
 }
 
+#if CONFIG_AV1_HIGHBITDEPTH
 static INLINE int highbd_vert_scalar_product(const uint16_t *a,
                                              ptrdiff_t a_stride,
                                              const int16_t *b) {
@@ -216,23 +249,13 @@ void aom_highbd_convolve8_vert_c(const uint8_t *src, ptrdiff_t src_stride,
                        y_step_q4, w, h, bd);
 }
 
-void aom_highbd_convolve_copy_c(const uint8_t *src8, ptrdiff_t src_stride,
-                                uint8_t *dst8, ptrdiff_t dst_stride,
-                                const int16_t *filter_x, int filter_x_stride,
-                                const int16_t *filter_y, int filter_y_stride,
-                                int w, int h, int bd) {
-  int r;
-  uint16_t *src = CONVERT_TO_SHORTPTR(src8);
-  uint16_t *dst = CONVERT_TO_SHORTPTR(dst8);
-  (void)filter_x;
-  (void)filter_y;
-  (void)filter_x_stride;
-  (void)filter_y_stride;
-  (void)bd;
-
-  for (r = h; r > 0; --r) {
-    memcpy(dst, src, w * sizeof(uint16_t));
+void aom_highbd_convolve_copy_c(const uint16_t *src, ptrdiff_t src_stride,
+                                uint16_t *dst, ptrdiff_t dst_stride, int w,
+                                int h) {
+  for (int y = 0; y < h; ++y) {
+    memmove(dst, src, w * sizeof(src[0]));
     src += src_stride;
     dst += dst_stride;
   }
 }
+#endif  // CONFIG_AV1_HIGHBITDEPTH

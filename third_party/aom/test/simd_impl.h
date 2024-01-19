@@ -9,9 +9,10 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
+#include <tuple>
+
 #define SIMD_CHECK 1
 #include "third_party/googletest/src/googletest/include/gtest/gtest.h"
-#include "test/clear_system_state.h"
 #include "test/register_state_check.h"
 #include "aom_dsp/aom_simd_inline.h"
 #include "aom_dsp/simd/v256_intrinsics_c.h"
@@ -21,14 +22,12 @@ namespace SIMD_NAMESPACE {
 template <typename param_signature>
 class TestIntrinsic : public ::testing::TestWithParam<param_signature> {
  public:
-  virtual ~TestIntrinsic() {}
-  virtual void SetUp() {
-    mask = ::testing::get<0>(this->GetParam());
-    maskwidth = ::testing::get<1>(this->GetParam());
-    name = ::testing::get<2>(this->GetParam());
+  ~TestIntrinsic() override = default;
+  void SetUp() override {
+    mask = std::get<0>(this->GetParam());
+    maskwidth = std::get<1>(this->GetParam());
+    name = std::get<2>(this->GetParam());
   }
-
-  virtual void TearDown() { libaom_test::ClearSystemState(); }
 
  protected:
   uint32_t mask, maskwidth;
@@ -36,8 +35,8 @@ class TestIntrinsic : public ::testing::TestWithParam<param_signature> {
 };
 
 // Create one typedef for each function signature
-#define TYPEDEF_SIMD(name)                                                    \
-  typedef TestIntrinsic< ::testing::tuple<uint32_t, uint32_t, const char *> > \
+#define TYPEDEF_SIMD(name)                                             \
+  typedef TestIntrinsic<std::tuple<uint32_t, uint32_t, const char *> > \
       ARCH_POSTFIX(name)
 
 TYPEDEF_SIMD(V64_U8);
@@ -350,16 +349,16 @@ MY_TEST_P(ARCH_POSTFIX(V64_V256), TestIntrinsics) {
   TestSimd1Arg<c_v64, c_v256>(kIterations, mask, maskwidth, name);
 }
 
-// Add a macro layer since INSTANTIATE_TEST_CASE_P will quote the name
+// Add a macro layer since INSTANTIATE_TEST_SUITE_P will quote the name
 // so we need to expand it first with the prefix
 #define INSTANTIATE(name, type, ...) \
-  INSTANTIATE_TEST_CASE_P(name, type, ::testing::Values(__VA_ARGS__))
+  INSTANTIATE_TEST_SUITE_P(name, type, ::testing::Values(__VA_ARGS__))
 
 #define SIMD_TUPLE(name, mask, maskwidth) \
-  ::testing::make_tuple(mask, maskwidth, static_cast<const char *>(#name))
+  std::make_tuple(mask, maskwidth, static_cast<const char *>(#name))
 
-INSTANTIATE(ARCH, ARCH_POSTFIX(U32_V64V64),
-            (SIMD_TUPLE(v64_sad_u8, 0U, 0U), SIMD_TUPLE(v64_ssd_u8, 0U, 0U)));
+INSTANTIATE(ARCH, ARCH_POSTFIX(U32_V64V64), SIMD_TUPLE(v64_sad_u8, 0U, 0U),
+            SIMD_TUPLE(v64_ssd_u8, 0U, 0U));
 
 INSTANTIATE(
     ARCH, ARCH_POSTFIX(V64_V64V64), SIMD_TUPLE(v64_add_8, 0U, 0U),

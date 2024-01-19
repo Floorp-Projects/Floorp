@@ -11,6 +11,7 @@
 #ifndef AOM_COMMON_IVFDEC_H_
 #define AOM_COMMON_IVFDEC_H_
 
+#include "aom/aom_codec.h"
 #include "common/tools_common.h"
 
 #ifdef __cplusplus
@@ -18,10 +19,9 @@ extern "C" {
 #endif
 
 int file_is_ivf(struct AvxInputContext *input);
-
-typedef int64_t aom_codec_pts_t;
-int ivf_read_frame(FILE *infile, uint8_t **buffer, size_t *bytes_read,
-                   size_t *buffer_size, aom_codec_pts_t *pts);
+int ivf_read_frame(struct AvxInputContext *input_ctx, uint8_t **buffer,
+                   size_t *bytes_read, size_t *buffer_size,
+                   aom_codec_pts_t *pts);
 
 #ifdef __cplusplus
 } /* extern "C" */

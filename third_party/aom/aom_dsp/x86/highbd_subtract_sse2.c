@@ -29,15 +29,15 @@ static void subtract_4x4(int16_t *diff, ptrdiff_t diff_stride,
   __m128i x0, x1, x2, x3;
   int64_t *store_diff = (int64_t *)(diff + 0 * diff_stride);
 
-  u0 = _mm_loadu_si128((__m128i const *)(src + 0 * src_stride));
-  u1 = _mm_loadu_si128((__m128i const *)(src + 1 * src_stride));
-  u2 = _mm_loadu_si128((__m128i const *)(src + 2 * src_stride));
-  u3 = _mm_loadu_si128((__m128i const *)(src + 3 * src_stride));
+  u0 = _mm_loadl_epi64((__m128i const *)(src + 0 * src_stride));
+  u1 = _mm_loadl_epi64((__m128i const *)(src + 1 * src_stride));
+  u2 = _mm_loadl_epi64((__m128i const *)(src + 2 * src_stride));
+  u3 = _mm_loadl_epi64((__m128i const *)(src + 3 * src_stride));
 
-  v0 = _mm_loadu_si128((__m128i const *)(pred + 0 * pred_stride));
-  v1 = _mm_loadu_si128((__m128i const *)(pred + 1 * pred_stride));
-  v2 = _mm_loadu_si128((__m128i const *)(pred + 2 * pred_stride));
-  v3 = _mm_loadu_si128((__m128i const *)(pred + 3 * pred_stride));
+  v0 = _mm_loadl_epi64((__m128i const *)(pred + 0 * pred_stride));
+  v1 = _mm_loadl_epi64((__m128i const *)(pred + 1 * pred_stride));
+  v2 = _mm_loadl_epi64((__m128i const *)(pred + 2 * pred_stride));
+  v3 = _mm_loadl_epi64((__m128i const *)(pred + 3 * pred_stride));
 
   x0 = _mm_sub_epi16(u0, v0);
   x1 = _mm_sub_epi16(u1, v1);
@@ -61,23 +61,23 @@ static void subtract_4x8(int16_t *diff, ptrdiff_t diff_stride,
   __m128i x0, x1, x2, x3, x4, x5, x6, x7;
   int64_t *store_diff = (int64_t *)(diff + 0 * diff_stride);
 
-  u0 = _mm_loadu_si128((__m128i const *)(src + 0 * src_stride));
-  u1 = _mm_loadu_si128((__m128i const *)(src + 1 * src_stride));
-  u2 = _mm_loadu_si128((__m128i const *)(src + 2 * src_stride));
-  u3 = _mm_loadu_si128((__m128i const *)(src + 3 * src_stride));
-  u4 = _mm_loadu_si128((__m128i const *)(src + 4 * src_stride));
-  u5 = _mm_loadu_si128((__m128i const *)(src + 5 * src_stride));
-  u6 = _mm_loadu_si128((__m128i const *)(src + 6 * src_stride));
-  u7 = _mm_loadu_si128((__m128i const *)(src + 7 * src_stride));
+  u0 = _mm_loadl_epi64((__m128i const *)(src + 0 * src_stride));
+  u1 = _mm_loadl_epi64((__m128i const *)(src + 1 * src_stride));
+  u2 = _mm_loadl_epi64((__m128i const *)(src + 2 * src_stride));
+  u3 = _mm_loadl_epi64((__m128i const *)(src + 3 * src_stride));
+  u4 = _mm_loadl_epi64((__m128i const *)(src + 4 * src_stride));
+  u5 = _mm_loadl_epi64((__m128i const *)(src + 5 * src_stride));
+  u6 = _mm_loadl_epi64((__m128i const *)(src + 6 * src_stride));
+  u7 = _mm_loadl_epi64((__m128i const *)(src + 7 * src_stride));
 
-  v0 = _mm_loadu_si128((__m128i const *)(pred + 0 * pred_stride));
-  v1 = _mm_loadu_si128((__m128i const *)(pred + 1 * pred_stride));
-  v2 = _mm_loadu_si128((__m128i const *)(pred + 2 * pred_stride));
-  v3 = _mm_loadu_si128((__m128i const *)(pred + 3 * pred_stride));
-  v4 = _mm_loadu_si128((__m128i const *)(pred + 4 * pred_stride));
-  v5 = _mm_loadu_si128((__m128i const *)(pred + 5 * pred_stride));
-  v6 = _mm_loadu_si128((__m128i const *)(pred + 6 * pred_stride));
-  v7 = _mm_loadu_si128((__m128i const *)(pred + 7 * pred_stride));
+  v0 = _mm_loadl_epi64((__m128i const *)(pred + 0 * pred_stride));
+  v1 = _mm_loadl_epi64((__m128i const *)(pred + 1 * pred_stride));
+  v2 = _mm_loadl_epi64((__m128i const *)(pred + 2 * pred_stride));
+  v3 = _mm_loadl_epi64((__m128i const *)(pred + 3 * pred_stride));
+  v4 = _mm_loadl_epi64((__m128i const *)(pred + 4 * pred_stride));
+  v5 = _mm_loadl_epi64((__m128i const *)(pred + 5 * pred_stride));
+  v6 = _mm_loadl_epi64((__m128i const *)(pred + 6 * pred_stride));
+  v7 = _mm_loadl_epi64((__m128i const *)(pred + 7 * pred_stride));
 
   x0 = _mm_sub_epi16(u0, v0);
   x1 = _mm_sub_epi16(u1, v1);
@@ -256,11 +256,10 @@ static SubtractWxHFuncType getSubtractFunc(int rows, int cols) {
 void aom_highbd_subtract_block_sse2(int rows, int cols, int16_t *diff,
                                     ptrdiff_t diff_stride, const uint8_t *src8,
                                     ptrdiff_t src_stride, const uint8_t *pred8,
-                                    ptrdiff_t pred_stride, int bd) {
+                                    ptrdiff_t pred_stride) {
   uint16_t *src = CONVERT_TO_SHORTPTR(src8);
   uint16_t *pred = CONVERT_TO_SHORTPTR(pred8);
   SubtractWxHFuncType func;
-  (void)bd;
 
   func = getSubtractFunc(rows, cols);
   func(diff, diff_stride, src, src_stride, pred, pred_stride);

@@ -17,6 +17,9 @@ extern "C" {
 void aom_extend_frame_borders_c(struct yv12_buffer_config *ybf, const int num_planes);
 #define aom_extend_frame_borders aom_extend_frame_borders_c
 
+void aom_extend_frame_borders_plane_row_c(const struct yv12_buffer_config *ybf, int plane, int v_start, int v_end);
+#define aom_extend_frame_borders_plane_row aom_extend_frame_borders_plane_row_c
+
 void aom_extend_frame_borders_y_c(struct yv12_buffer_config *ybf);
 #define aom_extend_frame_borders_y aom_extend_frame_borders_y_c
 
@@ -59,14 +62,26 @@ void aom_yv12_copy_y_c(const struct yv12_buffer_config *src_ybc, struct yv12_buf
 void aom_yv12_extend_frame_borders_c(struct yv12_buffer_config *ybf, const int num_planes);
 #define aom_yv12_extend_frame_borders aom_yv12_extend_frame_borders_c
 
-void aom_yv12_partial_copy_u_c(const struct yv12_buffer_config *src_bc, struct yv12_buffer_config *dst_bc, int hstart, int hend, int vstart, int vend);
+void aom_yv12_partial_coloc_copy_u_c(const struct yv12_buffer_config *src_bc, struct yv12_buffer_config *dst_bc, int hstart, int hend, int vstart, int vend);
+#define aom_yv12_partial_coloc_copy_u aom_yv12_partial_coloc_copy_u_c
+
+void aom_yv12_partial_coloc_copy_v_c(const struct yv12_buffer_config *src_bc, struct yv12_buffer_config *dst_bc, int hstart, int hend, int vstart, int vend);
+#define aom_yv12_partial_coloc_copy_v aom_yv12_partial_coloc_copy_v_c
+
+void aom_yv12_partial_coloc_copy_y_c(const struct yv12_buffer_config *src_ybc, struct yv12_buffer_config *dst_ybc, int hstart, int hend, int vstart, int vend);
+#define aom_yv12_partial_coloc_copy_y aom_yv12_partial_coloc_copy_y_c
+
+void aom_yv12_partial_copy_u_c(const struct yv12_buffer_config *src_bc, int hstart1, int hend1, int vstart1, int vend1, struct yv12_buffer_config *dst_bc, int hstart2, int vstart2);
 #define aom_yv12_partial_copy_u aom_yv12_partial_copy_u_c
 
-void aom_yv12_partial_copy_v_c(const struct yv12_buffer_config *src_bc, struct yv12_buffer_config *dst_bc, int hstart, int hend, int vstart, int vend);
+void aom_yv12_partial_copy_v_c(const struct yv12_buffer_config *src_bc, int hstart1, int hend1, int vstart1, int vend1, struct yv12_buffer_config *dst_bc, int hstart2, int vstart2);
 #define aom_yv12_partial_copy_v aom_yv12_partial_copy_v_c
 
-void aom_yv12_partial_copy_y_c(const struct yv12_buffer_config *src_ybc, struct yv12_buffer_config *dst_ybc, int hstart, int hend, int vstart, int vend);
+void aom_yv12_partial_copy_y_c(const struct yv12_buffer_config *src_ybc, int hstart1, int hend1, int vstart1, int vend1, struct yv12_buffer_config *dst_ybc, int hstart2, int vstart2);
 #define aom_yv12_partial_copy_y aom_yv12_partial_copy_y_c
+
+int aom_yv12_realloc_with_new_border_c(struct yv12_buffer_config *ybf, int new_border, int byte_alignment, int num_pyramid_levels, int num_planes);
+#define aom_yv12_realloc_with_new_border aom_yv12_realloc_with_new_border_c
 
 void aom_scale_rtcd(void);
 

@@ -16,9 +16,19 @@
 #include "config/av1_rtcd.h"
 
 #include "av1/common/cdef.h"
+/*
+This is Cdef_Directions (section 7.15.3) with 2 padding entries at the
+beginning and end of the table. The cdef direction range is [0, 7] and the
+first index is offset +/-2. This removes the need to constrain the first
+index to the same range using e.g., & 7.
+*/
+DECLARE_ALIGNED(16, const int, cdef_directions_padded[12][2]) = {
+  /* Padding: cdef_directions[6] */
+  { 1 * CDEF_BSTRIDE + 0, 2 * CDEF_BSTRIDE + 0 },
+  /* Padding: cdef_directions[7] */
+  { 1 * CDEF_BSTRIDE + 0, 2 * CDEF_BSTRIDE - 1 },
 
-/* Generated from gen_filter_tables.c. */
-DECLARE_ALIGNED(16, const int, cdef_directions[8][2]) = {
+  /* Begin cdef_directions */
   { -1 * CDEF_BSTRIDE + 1, -2 * CDEF_BSTRIDE + 2 },
   { 0 * CDEF_BSTRIDE + 1, -1 * CDEF_BSTRIDE + 2 },
   { 0 * CDEF_BSTRIDE + 1, 0 * CDEF_BSTRIDE + 2 },
@@ -26,8 +36,16 @@ DECLARE_ALIGNED(16, const int, cdef_directions[8][2]) = {
   { 1 * CDEF_BSTRIDE + 1, 2 * CDEF_BSTRIDE + 2 },
   { 1 * CDEF_BSTRIDE + 0, 2 * CDEF_BSTRIDE + 1 },
   { 1 * CDEF_BSTRIDE + 0, 2 * CDEF_BSTRIDE + 0 },
-  { 1 * CDEF_BSTRIDE + 0, 2 * CDEF_BSTRIDE - 1 }
+  { 1 * CDEF_BSTRIDE + 0, 2 * CDEF_BSTRIDE - 1 },
+  /* End cdef_directions */
+
+  /* Padding: cdef_directions[0] */
+  { -1 * CDEF_BSTRIDE + 1, -2 * CDEF_BSTRIDE + 2 },
+  /* Padding: cdef_directions[1] */
+  { 0 * CDEF_BSTRIDE + 1, -1 * CDEF_BSTRIDE + 2 },
 };
+
+const int (*const cdef_directions)[2] = cdef_directions_padded + 2;
 
 /* Detect direction. 0 means 45-degree up-right, 2 is horizontal, and so on.
    The search minimizes the weighted variance along all the lines in a
@@ -107,58 +125,159 @@ int cdef_find_dir_c(const uint16_t *img, int stride, int32_t *var,
   return best_dir;
 }
 
+void cdef_find_dir_dual_c(const uint16_t *img1, const uint16_t *img2,
+                          int stride, int32_t *var1, int32_t *var2,
+                          int coeff_shift, int *out1, int *out2) {
+  *out1 = cdef_find_dir_c(img1, stride, var1, coeff_shift);
+  *out2 = cdef_find_dir_c(img2, stride, var2, coeff_shift);
+}
+
 const int cdef_pri_taps[2][2] = { { 4, 2 }, { 3, 3 } };
-const int cdef_sec_taps[2][2] = { { 2, 1 }, { 2, 1 } };
+const int cdef_sec_taps[2] = { 2, 1 };
 
 /* Smooth in the direction detected. */
-void cdef_filter_block_c(uint8_t *dst8, uint16_t *dst16, int dstride,
-                         const uint16_t *in, int pri_strength, int sec_strength,
-                         int dir, int pri_damping, int sec_damping, int bsize,
-                         AOM_UNUSED int max_unused, int coeff_shift) {
+static void cdef_filter_block_internal(
+    uint8_t *dst8, uint16_t *dst16, int dstride, const uint16_t *in,
+    int pri_strength, int sec_strength, int dir, int pri_damping,
+    int sec_damping, int coeff_shift, int block_width, int block_height,
+    int enable_primary, int enable_secondary) {
+  const int clipping_required = (enable_primary && enable_secondary);
   int i, j, k;
   const int s = CDEF_BSTRIDE;
   const int *pri_taps = cdef_pri_taps[(pri_strength >> coeff_shift) & 1];
-  const int *sec_taps = cdef_sec_taps[(pri_strength >> coeff_shift) & 1];
-  for (i = 0; i < 4 << (bsize == BLOCK_8X8 || bsize == BLOCK_4X8); i++) {
-    for (j = 0; j < 4 << (bsize == BLOCK_8X8 || bsize == BLOCK_8X4); j++) {
+  const int *sec_taps = cdef_sec_taps;
+  for (i = 0; i < block_height; i++) {
+    for (j = 0; j < block_width; j++) {
       int16_t sum = 0;
       int16_t y;
       int16_t x = in[i * s + j];
       int max = x;
       int min = x;
       for (k = 0; k < 2; k++) {
-        int16_t p0 = in[i * s + j + cdef_directions[dir][k]];
-        int16_t p1 = in[i * s + j - cdef_directions[dir][k]];
-        sum += pri_taps[k] * constrain(p0 - x, pri_strength, pri_damping);
-        sum += pri_taps[k] * constrain(p1 - x, pri_strength, pri_damping);
-        if (p0 != CDEF_VERY_LARGE) max = AOMMAX(p0, max);
-        if (p1 != CDEF_VERY_LARGE) max = AOMMAX(p1, max);
-        min = AOMMIN(p0, min);
-        min = AOMMIN(p1, min);
-        int16_t s0 = in[i * s + j + cdef_directions[(dir + 2) & 7][k]];
-        int16_t s1 = in[i * s + j - cdef_directions[(dir + 2) & 7][k]];
-        int16_t s2 = in[i * s + j + cdef_directions[(dir + 6) & 7][k]];
-        int16_t s3 = in[i * s + j - cdef_directions[(dir + 6) & 7][k]];
-        if (s0 != CDEF_VERY_LARGE) max = AOMMAX(s0, max);
-        if (s1 != CDEF_VERY_LARGE) max = AOMMAX(s1, max);
-        if (s2 != CDEF_VERY_LARGE) max = AOMMAX(s2, max);
-        if (s3 != CDEF_VERY_LARGE) max = AOMMAX(s3, max);
-        min = AOMMIN(s0, min);
-        min = AOMMIN(s1, min);
-        min = AOMMIN(s2, min);
-        min = AOMMIN(s3, min);
-        sum += sec_taps[k] * constrain(s0 - x, sec_strength, sec_damping);
-        sum += sec_taps[k] * constrain(s1 - x, sec_strength, sec_damping);
-        sum += sec_taps[k] * constrain(s2 - x, sec_strength, sec_damping);
-        sum += sec_taps[k] * constrain(s3 - x, sec_strength, sec_damping);
+        if (enable_primary) {
+          int16_t p0 = in[i * s + j + cdef_directions[dir][k]];
+          int16_t p1 = in[i * s + j - cdef_directions[dir][k]];
+          sum += pri_taps[k] * constrain(p0 - x, pri_strength, pri_damping);
+          sum += pri_taps[k] * constrain(p1 - x, pri_strength, pri_damping);
+          if (clipping_required) {
+            if (p0 != CDEF_VERY_LARGE) max = AOMMAX(p0, max);
+            if (p1 != CDEF_VERY_LARGE) max = AOMMAX(p1, max);
+            min = AOMMIN(p0, min);
+            min = AOMMIN(p1, min);
+          }
+        }
+        if (enable_secondary) {
+          int16_t s0 = in[i * s + j + cdef_directions[dir + 2][k]];
+          int16_t s1 = in[i * s + j - cdef_directions[dir + 2][k]];
+          int16_t s2 = in[i * s + j + cdef_directions[dir - 2][k]];
+          int16_t s3 = in[i * s + j - cdef_directions[dir - 2][k]];
+          if (clipping_required) {
+            if (s0 != CDEF_VERY_LARGE) max = AOMMAX(s0, max);
+            if (s1 != CDEF_VERY_LARGE) max = AOMMAX(s1, max);
+            if (s2 != CDEF_VERY_LARGE) max = AOMMAX(s2, max);
+            if (s3 != CDEF_VERY_LARGE) max = AOMMAX(s3, max);
+            min = AOMMIN(s0, min);
+            min = AOMMIN(s1, min);
+            min = AOMMIN(s2, min);
+            min = AOMMIN(s3, min);
+          }
+          sum += sec_taps[k] * constrain(s0 - x, sec_strength, sec_damping);
+          sum += sec_taps[k] * constrain(s1 - x, sec_strength, sec_damping);
+          sum += sec_taps[k] * constrain(s2 - x, sec_strength, sec_damping);
+          sum += sec_taps[k] * constrain(s3 - x, sec_strength, sec_damping);
+        }
       }
-      y = clamp((int16_t)x + ((8 + sum - (sum < 0)) >> 4), min, max);
+      y = ((int16_t)x + ((8 + sum - (sum < 0)) >> 4));
+      if (clipping_required) {
+        y = clamp(y, min, max);
+      }
+
       if (dst8)
         dst8[i * dstride + j] = (uint8_t)y;
       else
         dst16[i * dstride + j] = (uint16_t)y;
     }
   }
+}
+
+void cdef_filter_8_0_c(void *dst8, int dstride, const uint16_t *in,
+                       int pri_strength, int sec_strength, int dir,
+                       int pri_damping, int sec_damping, int coeff_shift,
+                       int block_width, int block_height) {
+  cdef_filter_block_internal((uint8_t *)dst8, NULL, dstride, in, pri_strength,
+                             sec_strength, dir, pri_damping, sec_damping,
+                             coeff_shift, block_width, block_height,
+                             /*enable_primary=*/1, /*enable_secondary=*/1);
+}
+
+void cdef_filter_8_1_c(void *dst8, int dstride, const uint16_t *in,
+                       int pri_strength, int sec_strength, int dir,
+                       int pri_damping, int sec_damping, int coeff_shift,
+                       int block_width, int block_height) {
+  cdef_filter_block_internal((uint8_t *)dst8, NULL, dstride, in, pri_strength,
+                             sec_strength, dir, pri_damping, sec_damping,
+                             coeff_shift, block_width, block_height,
+                             /*enable_primary=*/1, /*enable_secondary=*/0);
+}
+
+void cdef_filter_8_2_c(void *dst8, int dstride, const uint16_t *in,
+                       int pri_strength, int sec_strength, int dir,
+                       int pri_damping, int sec_damping, int coeff_shift,
+                       int block_width, int block_height) {
+  cdef_filter_block_internal((uint8_t *)dst8, NULL, dstride, in, pri_strength,
+                             sec_strength, dir, pri_damping, sec_damping,
+                             coeff_shift, block_width, block_height,
+                             /*enable_primary=*/0, /*enable_secondary=*/1);
+}
+
+void cdef_filter_8_3_c(void *dst8, int dstride, const uint16_t *in,
+                       int pri_strength, int sec_strength, int dir,
+                       int pri_damping, int sec_damping, int coeff_shift,
+                       int block_width, int block_height) {
+  cdef_filter_block_internal((uint8_t *)dst8, NULL, dstride, in, pri_strength,
+                             sec_strength, dir, pri_damping, sec_damping,
+                             coeff_shift, block_width, block_height,
+                             /*enable_primary=*/0, /*enable_secondary=*/0);
+}
+
+void cdef_filter_16_0_c(void *dst16, int dstride, const uint16_t *in,
+                        int pri_strength, int sec_strength, int dir,
+                        int pri_damping, int sec_damping, int coeff_shift,
+                        int block_width, int block_height) {
+  cdef_filter_block_internal(NULL, (uint16_t *)dst16, dstride, in, pri_strength,
+                             sec_strength, dir, pri_damping, sec_damping,
+                             coeff_shift, block_width, block_height,
+                             /*enable_primary=*/1, /*enable_secondary=*/1);
+}
+
+void cdef_filter_16_1_c(void *dst16, int dstride, const uint16_t *in,
+                        int pri_strength, int sec_strength, int dir,
+                        int pri_damping, int sec_damping, int coeff_shift,
+                        int block_width, int block_height) {
+  cdef_filter_block_internal(NULL, (uint16_t *)dst16, dstride, in, pri_strength,
+                             sec_strength, dir, pri_damping, sec_damping,
+                             coeff_shift, block_width, block_height,
+                             /*enable_primary=*/1, /*enable_secondary=*/0);
+}
+
+void cdef_filter_16_2_c(void *dst16, int dstride, const uint16_t *in,
+                        int pri_strength, int sec_strength, int dir,
+                        int pri_damping, int sec_damping, int coeff_shift,
+                        int block_width, int block_height) {
+  cdef_filter_block_internal(NULL, (uint16_t *)dst16, dstride, in, pri_strength,
+                             sec_strength, dir, pri_damping, sec_damping,
+                             coeff_shift, block_width, block_height,
+                             /*enable_primary=*/0, /*enable_secondary=*/1);
+}
+
+void cdef_filter_16_3_c(void *dst16, int dstride, const uint16_t *in,
+                        int pri_strength, int sec_strength, int dir,
+                        int pri_damping, int sec_damping, int coeff_shift,
+                        int block_width, int block_height) {
+  cdef_filter_block_internal(NULL, (uint16_t *)dst16, dstride, in, pri_strength,
+                             sec_strength, dir, pri_damping, sec_damping,
+                             coeff_shift, block_width, block_height,
+                             /*enable_primary=*/0, /*enable_secondary=*/0);
 }
 
 /* Compute the primary filter strength for an 8x8 block based on the
@@ -173,25 +292,48 @@ static INLINE int adjust_strength(int strength, int32_t var) {
   return var ? (strength * (4 + i) + 8) >> 4 : 0;
 }
 
-void cdef_filter_fb(uint8_t *dst8, uint16_t *dst16, int dstride, uint16_t *in,
-                    int xdec, int ydec, int dir[CDEF_NBLOCKS][CDEF_NBLOCKS],
-                    int *dirinit, int var[CDEF_NBLOCKS][CDEF_NBLOCKS], int pli,
-                    cdef_list *dlist, int cdef_count, int level,
-                    int sec_strength, int pri_damping, int sec_damping,
-                    int coeff_shift) {
+static AOM_INLINE void aom_cdef_find_dir(const uint16_t *in, cdef_list *dlist,
+                                         int var[CDEF_NBLOCKS][CDEF_NBLOCKS],
+                                         int cdef_count, int coeff_shift,
+                                         int dir[CDEF_NBLOCKS][CDEF_NBLOCKS]) {
+  int bi;
+
+  // Find direction of two 8x8 blocks together.
+  for (bi = 0; bi < cdef_count - 1; bi += 2) {
+    const int by = dlist[bi].by;
+    const int bx = dlist[bi].bx;
+    const int by2 = dlist[bi + 1].by;
+    const int bx2 = dlist[bi + 1].bx;
+    const int pos1 = 8 * by * CDEF_BSTRIDE + 8 * bx;
+    const int pos2 = 8 * by2 * CDEF_BSTRIDE + 8 * bx2;
+    cdef_find_dir_dual(&in[pos1], &in[pos2], CDEF_BSTRIDE, &var[by][bx],
+                       &var[by2][bx2], coeff_shift, &dir[by][bx],
+                       &dir[by2][bx2]);
+  }
+
+  // Process remaining 8x8 blocks here. One 8x8 at a time.
+  if (cdef_count % 2) {
+    const int by = dlist[bi].by;
+    const int bx = dlist[bi].bx;
+    dir[by][bx] = cdef_find_dir(&in[8 * by * CDEF_BSTRIDE + 8 * bx],
+                                CDEF_BSTRIDE, &var[by][bx], coeff_shift);
+  }
+}
+
+void av1_cdef_filter_fb(uint8_t *dst8, uint16_t *dst16, int dstride,
+                        const uint16_t *in, int xdec, int ydec,
+                        int dir[CDEF_NBLOCKS][CDEF_NBLOCKS], int *dirinit,
+                        int var[CDEF_NBLOCKS][CDEF_NBLOCKS], int pli,
+                        cdef_list *dlist, int cdef_count, int level,
+                        int sec_strength, int damping, int coeff_shift) {
   int bi;
   int bx;
   int by;
-  int bsize, bsizex, bsizey;
-
-  int pri_strength = level << coeff_shift;
+  const int pri_strength = level << coeff_shift;
   sec_strength <<= coeff_shift;
-  sec_damping += coeff_shift - (pli != AOM_PLANE_Y);
-  pri_damping += coeff_shift - (pli != AOM_PLANE_Y);
-  bsize =
-      ydec ? (xdec ? BLOCK_4X4 : BLOCK_8X4) : (xdec ? BLOCK_4X8 : BLOCK_8X8);
-  bsizex = 3 - xdec;
-  bsizey = 3 - ydec;
+  damping += coeff_shift - (pli != AOM_PLANE_Y);
+  const int bw_log2 = 3 - xdec;
+  const int bh_log2 = 3 - ydec;
   if (dirinit && pri_strength == 0 && sec_strength == 0) {
     // If we're here, both primary and secondary strengths are 0, and
     // we still haven't written anything to y[] yet, so we just copy
@@ -200,24 +342,19 @@ void cdef_filter_fb(uint8_t *dst8, uint16_t *dst16, int dstride, uint16_t *in,
     for (bi = 0; bi < cdef_count; bi++) {
       by = dlist[bi].by;
       bx = dlist[bi].bx;
-      int iy, ix;
       // TODO(stemidts/jmvalin): SIMD optimisations
-      for (iy = 0; iy < 1 << bsizey; iy++)
-        for (ix = 0; ix < 1 << bsizex; ix++)
-          dst16[(bi << (bsizex + bsizey)) + (iy << bsizex) + ix] =
-              in[((by << bsizey) + iy) * CDEF_BSTRIDE + (bx << bsizex) + ix];
+      for (int iy = 0; iy < 1 << bh_log2; iy++) {
+        memcpy(&dst16[(bi << (bw_log2 + bh_log2)) + (iy << bw_log2)],
+               &in[((by << bh_log2) + iy) * CDEF_BSTRIDE + (bx << bw_log2)],
+               ((size_t)1 << bw_log2) * sizeof(*dst16));
+      }
     }
     return;
   }
 
   if (pli == 0) {
     if (!dirinit || !*dirinit) {
-      for (bi = 0; bi < cdef_count; bi++) {
-        by = dlist[bi].by;
-        bx = dlist[bi].bx;
-        dir[by][bx] = cdef_find_dir(&in[8 * by * CDEF_BSTRIDE + 8 * bx],
-                                    CDEF_BSTRIDE, &var[by][bx], coeff_shift);
-      }
+      aom_cdef_find_dir(in, dlist, var, cdef_count, coeff_shift, dir);
       if (dirinit) *dirinit = 1;
     }
   }
@@ -231,27 +368,59 @@ void cdef_filter_fb(uint8_t *dst8, uint16_t *dst16, int dstride, uint16_t *in,
     }
   }
 
-  for (bi = 0; bi < cdef_count; bi++) {
-    int t = dlist[bi].skip ? 0 : pri_strength;
-    int s = dlist[bi].skip ? 0 : sec_strength;
-    by = dlist[bi].by;
-    bx = dlist[bi].bx;
-    if (dst8)
-      cdef_filter_block(&dst8[(by << bsizey) * dstride + (bx << bsizex)], NULL,
-                        dstride,
-                        &in[(by * CDEF_BSTRIDE << bsizey) + (bx << bsizex)],
-                        (pli ? t : adjust_strength(t, var[by][bx])), s,
-                        t ? dir[by][bx] : 0, pri_damping, sec_damping, bsize,
-                        (256 << coeff_shift) - 1, coeff_shift);
-    else
-      cdef_filter_block(
-          NULL,
-          &dst16[dirinit ? bi << (bsizex + bsizey)
-                         : (by << bsizey) * dstride + (bx << bsizex)],
-          dirinit ? 1 << bsizex : dstride,
-          &in[(by * CDEF_BSTRIDE << bsizey) + (bx << bsizex)],
-          (pli ? t : adjust_strength(t, var[by][bx])), s, t ? dir[by][bx] : 0,
-          pri_damping, sec_damping, bsize, (256 << coeff_shift) - 1,
-          coeff_shift);
+  if (dst8) {
+    const int block_width = 8 >> xdec;
+    const int block_height = 8 >> ydec;
+    /*
+     * strength_index == 0 : enable_primary = 1, enable_secondary = 1
+     * strength_index == 1 : enable_primary = 1, enable_secondary = 0
+     * strength_index == 2 : enable_primary = 0, enable_secondary = 1
+     * strength_index == 3 : enable_primary = 0, enable_secondary = 0
+     */
+    const cdef_filter_block_func cdef_filter_fn[4] = {
+      cdef_filter_8_0, cdef_filter_8_1, cdef_filter_8_2, cdef_filter_8_3
+    };
+
+    for (bi = 0; bi < cdef_count; bi++) {
+      by = dlist[bi].by;
+      bx = dlist[bi].bx;
+      const int t =
+          (pli ? pri_strength : adjust_strength(pri_strength, var[by][bx]));
+      const int strength_index = (sec_strength == 0) | ((t == 0) << 1);
+
+      cdef_filter_fn[strength_index](
+          &dst8[(by << bh_log2) * dstride + (bx << bw_log2)], dstride,
+          &in[(by * CDEF_BSTRIDE << bh_log2) + (bx << bw_log2)], t,
+          sec_strength, pri_strength ? dir[by][bx] : 0, damping, damping,
+          coeff_shift, block_width, block_height);
+    }
+  } else {
+    const int block_width = 8 >> xdec;
+    const int block_height = 8 >> ydec;
+    /*
+     * strength_index == 0 : enable_primary = 1, enable_secondary = 1
+     * strength_index == 1 : enable_primary = 1, enable_secondary = 0
+     * strength_index == 2 : enable_primary = 0, enable_secondary = 1
+     * strength_index == 3 : enable_primary = 0, enable_secondary = 0
+     */
+    const cdef_filter_block_func cdef_filter_fn[4] = {
+      cdef_filter_16_0, cdef_filter_16_1, cdef_filter_16_2, cdef_filter_16_3
+    };
+
+    for (bi = 0; bi < cdef_count; bi++) {
+      by = dlist[bi].by;
+      bx = dlist[bi].bx;
+      const int t =
+          (pli ? pri_strength : adjust_strength(pri_strength, var[by][bx]));
+      const int strength_index = (sec_strength == 0) | ((t == 0) << 1);
+
+      cdef_filter_fn[strength_index](
+          &dst16[dirinit ? bi << (bw_log2 + bh_log2)
+                         : (by << bh_log2) * dstride + (bx << bw_log2)],
+          dirinit ? 1 << bw_log2 : dstride,
+          &in[(by * CDEF_BSTRIDE << bh_log2) + (bx << bw_log2)], t,
+          sec_strength, pri_strength ? dir[by][bx] : 0, damping, damping,
+          coeff_shift, block_width, block_height);
+    }
   }
 }

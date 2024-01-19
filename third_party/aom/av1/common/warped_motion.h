@@ -25,14 +25,18 @@
 #include "av1/common/mv.h"
 #include "av1/common/convolve.h"
 
-#define MAX_PARAMDIM 9
 #define LEAST_SQUARES_SAMPLES_MAX_BITS 3
 #define LEAST_SQUARES_SAMPLES_MAX (1 << LEAST_SQUARES_SAMPLES_MAX_BITS)
 #define SAMPLES_ARRAY_SIZE (LEAST_SQUARES_SAMPLES_MAX * 2)
 #define WARPED_MOTION_DEBUG 0
 #define DEFAULT_WMTYPE AFFINE
+#define WARP_ERROR_BLOCK_LOG 5
+#define WARP_ERROR_BLOCK (1 << WARP_ERROR_BLOCK_LOG)
 
-extern const int16_t warped_filter[WARPEDPIXEL_PREC_SHIFTS * 3 + 1][8];
+extern const int16_t av1_warped_filter[WARPEDPIXEL_PREC_SHIFTS * 3 + 1][8];
+
+DECLARE_ALIGNED(8, extern const int8_t,
+                av1_filter_8bit[WARPEDPIXEL_PREC_SHIFTS * 3 + 1][8]);
 
 static const uint8_t warp_pad_left[14][16] = {
   { 1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 },
@@ -68,18 +72,16 @@ static const uint8_t warp_pad_right[14][16] = {
   { 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 }
 };
 
-// Returns the error between the result of applying motion 'wm' to the frame
-// described by 'ref' and the frame described by 'dst'.
-int64_t av1_warp_error(WarpedMotionParams *wm, int use_hbd, int bd,
-                       const uint8_t *ref, int width, int height, int stride,
-                       uint8_t *dst, int p_col, int p_row, int p_width,
-                       int p_height, int p_stride, int subsampling_x,
-                       int subsampling_y, int64_t best_error);
+void highbd_warp_plane(WarpedMotionParams *wm, const uint16_t *const ref,
+                       int width, int height, int stride, uint16_t *const pred,
+                       int p_col, int p_row, int p_width, int p_height,
+                       int p_stride, int subsampling_x, int subsampling_y,
+                       int bd, ConvolveParams *conv_params);
 
-// Returns the error between the frame described by 'ref' and the frame
-// described by 'dst'.
-int64_t av1_frame_error(int use_hbd, int bd, const uint8_t *ref, int stride,
-                        uint8_t *dst, int p_width, int p_height, int p_stride);
+void warp_plane(WarpedMotionParams *wm, const uint8_t *const ref, int width,
+                int height, int stride, uint8_t *pred, int p_col, int p_row,
+                int p_width, int p_height, int p_stride, int subsampling_x,
+                int subsampling_y, ConvolveParams *conv_params);
 
 void av1_warp_plane(WarpedMotionParams *wm, int use_hbd, int bd,
                     const uint8_t *ref, int width, int height, int stride,
@@ -87,9 +89,9 @@ void av1_warp_plane(WarpedMotionParams *wm, int use_hbd, int bd,
                     int p_height, int p_stride, int subsampling_x,
                     int subsampling_y, ConvolveParams *conv_params);
 
-int find_projection(int np, int *pts1, int *pts2, BLOCK_SIZE bsize, int mvy,
-                    int mvx, WarpedMotionParams *wm_params, int mi_row,
-                    int mi_col);
+int av1_find_projection(int np, const int *pts1, const int *pts2,
+                        BLOCK_SIZE bsize, int mvy, int mvx,
+                        WarpedMotionParams *wm_params, int mi_row, int mi_col);
 
-int get_shear_params(WarpedMotionParams *wm);
+int av1_get_shear_params(WarpedMotionParams *wm);
 #endif  // AOM_AV1_COMMON_WARPED_MOTION_H_

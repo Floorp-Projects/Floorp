@@ -12,14 +12,20 @@
 #ifndef AOM_AV1_ENCODER_HASH_MOTION_H_
 #define AOM_AV1_ENCODER_HASH_MOTION_H_
 
+#include <stdbool.h>
+
 #include "config/aom_config.h"
 
 #include "aom/aom_integer.h"
 #include "aom_scale/yv12config.h"
+#include "av1/encoder/hash.h"
 #include "third_party/vector/vector.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+// Block size used for force_integer_mv decisions
+#define FORCE_INT_MV_DECISION_BLOCK_SIZE 8
 
 // store a block's hash info.
 // x and y are the position from the top left of the picture
@@ -34,26 +40,43 @@ typedef struct _hash_table {
   Vector **p_lookup_table;
 } hash_table;
 
-void av1_hash_table_init(hash_table *p_hash_table, struct macroblock *x);
+struct intrabc_hash_info;
+
+typedef struct intrabc_hash_info {
+  // buffer for hash value calculation of a block
+  // used only in av1_get_block_hash_value()
+  // [first hash/second hash]
+  // [two buffers used ping-pong]
+  uint32_t *hash_value_buffer[2][2];
+  hash_table intrabc_hash_table;
+
+  CRC_CALCULATOR crc_calculator1;
+  CRC_CALCULATOR crc_calculator2;
+  int g_crc_initialized;
+} IntraBCHashInfo;
+
+void av1_hash_table_init(IntraBCHashInfo *intra_bc_hash_info);
+void av1_hash_table_clear_all(hash_table *p_hash_table);
 void av1_hash_table_destroy(hash_table *p_hash_table);
-void av1_hash_table_create(hash_table *p_hash_table);
-int32_t av1_hash_table_count(hash_table *p_hash_table, uint32_t hash_value);
+bool av1_hash_table_create(hash_table *p_hash_table);
+int32_t av1_hash_table_count(const hash_table *p_hash_table,
+                             uint32_t hash_value);
 Iterator av1_hash_get_first_iterator(hash_table *p_hash_table,
                                      uint32_t hash_value);
 int32_t av1_has_exact_match(hash_table *p_hash_table, uint32_t hash_value1,
                             uint32_t hash_value2);
-void av1_generate_block_2x2_hash_value(const YV12_BUFFER_CONFIG *picture,
+void av1_generate_block_2x2_hash_value(IntraBCHashInfo *intra_bc_hash_info,
+                                       const YV12_BUFFER_CONFIG *picture,
                                        uint32_t *pic_block_hash[2],
-                                       int8_t *pic_block_same_info[3],
-                                       struct macroblock *x);
-void av1_generate_block_hash_value(const YV12_BUFFER_CONFIG *picture,
+                                       int8_t *pic_block_same_info[3]);
+void av1_generate_block_hash_value(IntraBCHashInfo *intra_bc_hash_info,
+                                   const YV12_BUFFER_CONFIG *picture,
                                    int block_size,
                                    uint32_t *src_pic_block_hash[2],
                                    uint32_t *dst_pic_block_hash[2],
                                    int8_t *src_pic_block_same_info[3],
-                                   int8_t *dst_pic_block_same_info[3],
-                                   struct macroblock *x);
-void av1_add_to_hash_map_by_row_with_precal_data(hash_table *p_hash_table,
+                                   int8_t *dst_pic_block_same_info[3]);
+bool av1_add_to_hash_map_by_row_with_precal_data(hash_table *p_hash_table,
                                                  uint32_t *pic_hash[2],
                                                  int8_t *pic_is_same,
                                                  int pic_width, int pic_height,
@@ -67,9 +90,11 @@ int av1_hash_is_horizontal_perfect(const YV12_BUFFER_CONFIG *picture,
 // block_size x block_size has the same color in all columns
 int av1_hash_is_vertical_perfect(const YV12_BUFFER_CONFIG *picture,
                                  int block_size, int x_start, int y_start);
-void av1_get_block_hash_value(uint8_t *y_src, int stride, int block_size,
+
+void av1_get_block_hash_value(IntraBCHashInfo *intrabc_hash_info,
+                              const uint8_t *y_src, int stride, int block_size,
                               uint32_t *hash_value1, uint32_t *hash_value2,
-                              int use_highbitdepth, struct macroblock *x);
+                              int use_highbitdepth);
 
 #ifdef __cplusplus
 }  // extern "C"

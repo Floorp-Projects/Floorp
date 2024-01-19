@@ -86,7 +86,7 @@ void check_encoder_config(int disable_prompt,
   /* Count and print warnings. */
   for (warning = warning_list.warning_node; warning != NULL;
        warning = warning->next_warning, ++num_warnings) {
-    warn(warning->warning_string);
+    aom_tools_warn("%s", warning->warning_string);
   }
 
   free_warning_list(&warning_list);

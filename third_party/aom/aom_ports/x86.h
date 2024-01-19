@@ -44,11 +44,11 @@ typedef enum {
 } aom_cpu_t;
 
 #if defined(__GNUC__) && __GNUC__ || defined(__ANDROID__)
-#if ARCH_X86_64
+#if AOM_ARCH_X86_64
 #define cpuid(func, func2, ax, bx, cx, dx)                      \
   __asm__ __volatile__("cpuid           \n\t"                   \
                        : "=a"(ax), "=b"(bx), "=c"(cx), "=d"(dx) \
-                       : "a"(func), "c"(func2));
+                       : "a"(func), "c"(func2))
 #else
 #define cpuid(func, func2, ax, bx, cx, dx)     \
   __asm__ __volatile__(                        \
@@ -56,11 +56,11 @@ typedef enum {
       "cpuid              \n\t"                \
       "xchg %%edi, %%ebx  \n\t"                \
       : "=a"(ax), "=D"(bx), "=c"(cx), "=d"(dx) \
-      : "a"(func), "c"(func2));
+      : "a"(func), "c"(func2))
 #endif
 #elif defined(__SUNPRO_C) || \
     defined(__SUNPRO_CC) /* end __GNUC__ or __ANDROID__*/
-#if ARCH_X86_64
+#if AOM_ARCH_X86_64
 #define cpuid(func, func2, ax, bx, cx, dx)     \
   asm volatile(                                \
       "xchg %rsi, %rbx \n\t"                   \
@@ -68,7 +68,7 @@ typedef enum {
       "movl %ebx, %edi \n\t"                   \
       "xchg %rsi, %rbx \n\t"                   \
       : "=a"(ax), "=D"(bx), "=c"(cx), "=d"(dx) \
-      : "a"(func), "c"(func2));
+      : "a"(func), "c"(func2))
 #else
 #define cpuid(func, func2, ax, bx, cx, dx)     \
   asm volatile(                                \
@@ -77,10 +77,10 @@ typedef enum {
       "movl %ebx, %edi  \n\t"                  \
       "popl %ebx        \n\t"                  \
       : "=a"(ax), "=D"(bx), "=c"(cx), "=d"(dx) \
-      : "a"(func), "c"(func2));
+      : "a"(func), "c"(func2))
 #endif
 #else /* end __SUNPRO__ */
-#if ARCH_X86_64
+#if AOM_ARCH_X86_64
 #if defined(_MSC_VER) && _MSC_VER > 1500
 #define cpuid(func, func2, a, b, c, d) \
   do {                                 \
@@ -148,6 +148,10 @@ static INLINE uint64_t xgetbv(void) {
 #endif
 
 #if defined(_MSC_VER) && _MSC_VER >= 1700
+#undef NOMINMAX
+#define NOMINMAX
+#undef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #if WINAPI_FAMILY_PARTITION(WINAPI_FAMILY_APP)
 #define getenv(x) NULL
@@ -164,15 +168,14 @@ static INLINE uint64_t xgetbv(void) {
 #define HAS_AVX2 0x80
 #define HAS_SSE4_2 0x100
 #ifndef BIT
-#define BIT(n) (1 << n)
+#define BIT(n) (1u << (n))
 #endif
 
 static INLINE int x86_simd_caps(void) {
   unsigned int flags = 0;
-  unsigned int mask = ~0;
+  unsigned int mask = ~0u;
   unsigned int max_cpuid_val, reg_eax, reg_ebx, reg_ecx, reg_edx;
   char *env;
-  (void)reg_ebx;
 
   /* See if the CPU capabilities are being overridden by the environment */
   env = getenv("AOM_SIMD_CAPS");
@@ -207,6 +210,7 @@ static INLINE int x86_simd_caps(void) {
 
   // bits 27 (OSXSAVE) & 28 (256-bit AVX)
   if ((reg_ecx & (BIT(27) | BIT(28))) == (BIT(27) | BIT(28))) {
+    // Check for OS-support of YMM state. Necessary for AVX and AVX2.
     if ((xgetbv() & 0x6) == 0x6) {
       flags |= HAS_AVX;
 
@@ -219,14 +223,31 @@ static INLINE int x86_simd_caps(void) {
     }
   }
 
+  (void)reg_eax;  // Avoid compiler warning on unused-but-set variable.
+
   return flags & mask;
 }
 
-// Note:
-//  32-bit CPU cycle counter is light-weighted for most function performance
-//  measurement. For large function (CPU time > a couple of seconds), 64-bit
-//  counter should be used.
-// 32-bit CPU cycle counter
+// Fine-Grain Measurement Functions
+//
+// If you are timing a small region of code, access the timestamp counter
+// (TSC) via:
+//
+// unsigned int start = x86_tsc_start();
+//   ...
+// unsigned int end = x86_tsc_end();
+// unsigned int diff = end - start;
+//
+// The start/end functions introduce a few more instructions than using
+// x86_readtsc directly, but prevent the CPU's out-of-order execution from
+// affecting the measurement (by having earlier/later instructions be evaluated
+// in the time interval). See the white paper, "How to Benchmark Code
+// Execution Times on Intel(R) IA-32 and IA-64 Instruction Set Architectures" by
+// Gabriele Paoloni for more information.
+//
+// If you are timing a large function (CPU time > a couple of seconds), use
+// x86_readtsc64 to read the timestamp counter in a 64-bit integer. The
+// out-of-order leakage that can occur is minimal compared to total runtime.
 static INLINE unsigned int x86_readtsc(void) {
 #if defined(__GNUC__) && __GNUC__
   unsigned int tsc;
@@ -237,7 +258,7 @@ static INLINE unsigned int x86_readtsc(void) {
   asm volatile("rdtsc\n\t" : "=a"(tsc) :);
   return tsc;
 #else
-#if ARCH_X86_64
+#if AOM_ARCH_X86_64
   return (unsigned int)__rdtsc();
 #else
   __asm rdtsc;
@@ -255,7 +276,7 @@ static INLINE uint64_t x86_readtsc64(void) {
   asm volatile("rdtsc\n\t" : "=a"(lo), "=d"(hi));
   return ((uint64_t)hi << 32) | lo;
 #else
-#if ARCH_X86_64
+#if AOM_ARCH_X86_64
   return (uint64_t)__rdtsc();
 #else
   __asm rdtsc;
@@ -263,12 +284,59 @@ static INLINE uint64_t x86_readtsc64(void) {
 #endif
 }
 
+// 32-bit CPU cycle counter with a partial fence against out-of-order execution.
+static INLINE unsigned int x86_readtscp(void) {
+#if defined(__GNUC__) && __GNUC__
+  unsigned int tscp;
+  __asm__ __volatile__("rdtscp\n\t" : "=a"(tscp) :);
+  return tscp;
+#elif defined(__SUNPRO_C) || defined(__SUNPRO_CC)
+  unsigned int tscp;
+  asm volatile("rdtscp\n\t" : "=a"(tscp) :);
+  return tscp;
+#elif defined(_MSC_VER)
+  unsigned int ui;
+  return (unsigned int)__rdtscp(&ui);
+#else
+#if AOM_ARCH_X86_64
+  return (unsigned int)__rdtscp();
+#else
+  __asm rdtscp;
+#endif
+#endif
+}
+
+static INLINE unsigned int x86_tsc_start(void) {
+  unsigned int reg_eax, reg_ebx, reg_ecx, reg_edx;
+  // This call should not be removed. See function notes above.
+  cpuid(0, 0, reg_eax, reg_ebx, reg_ecx, reg_edx);
+  // Avoid compiler warnings on unused-but-set variables.
+  (void)reg_eax;
+  (void)reg_ebx;
+  (void)reg_ecx;
+  (void)reg_edx;
+  return x86_readtsc();
+}
+
+static INLINE unsigned int x86_tsc_end(void) {
+  uint32_t v = x86_readtscp();
+  unsigned int reg_eax, reg_ebx, reg_ecx, reg_edx;
+  // This call should not be removed. See function notes above.
+  cpuid(0, 0, reg_eax, reg_ebx, reg_ecx, reg_edx);
+  // Avoid compiler warnings on unused-but-set variables.
+  (void)reg_eax;
+  (void)reg_ebx;
+  (void)reg_ecx;
+  (void)reg_edx;
+  return v;
+}
+
 #if defined(__GNUC__) && __GNUC__
 #define x86_pause_hint() __asm__ __volatile__("pause \n\t")
 #elif defined(__SUNPRO_C) || defined(__SUNPRO_CC)
 #define x86_pause_hint() asm volatile("pause \n\t")
 #else
-#if ARCH_X86_64
+#if AOM_ARCH_X86_64
 #define x86_pause_hint() _mm_pause();
 #else
 #define x86_pause_hint() __asm pause
@@ -293,7 +361,7 @@ static unsigned short x87_get_control_word(void) {
   asm volatile("fstcw %0\n\t" : "=m"(*&mode) :);
   return mode;
 }
-#elif ARCH_X86_64
+#elif AOM_ARCH_X86_64
 /* No fldcw intrinsics on Windows x64, punt to external asm */
 extern void aom_winx64_fldcw(unsigned short mode);
 extern unsigned short aom_winx64_fstcw(void);
@@ -312,11 +380,20 @@ static unsigned short x87_get_control_word(void) {
 
 static INLINE unsigned int x87_set_double_precision(void) {
   unsigned int mode = x87_get_control_word();
-  x87_set_control_word((mode & ~0x300) | 0x200);
+  // Intel 64 and IA-32 Architectures Developer's Manual: Vol. 1
+  // https://www.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-software-developer-vol-1-manual.pdf
+  // 8.1.5.2 Precision Control Field
+  // Bits 8 and 9 (0x300) of the x87 FPU Control Word ("Precision Control")
+  // determine the number of bits used in floating point calculations. To match
+  // later SSE instructions restrict x87 operations to Double Precision (0x200).
+  // Precision                     PC Field
+  // Single Precision (24-Bits)    00B
+  // Reserved                      01B
+  // Double Precision (53-Bits)    10B
+  // Extended Precision (64-Bits)  11B
+  x87_set_control_word((mode & ~0x300u) | 0x200u);
   return mode;
 }
-
-extern void aom_reset_mmx_state(void);
 
 #ifdef __cplusplus
 }  // extern "C"

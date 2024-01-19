@@ -1,6 +1,5 @@
 text aom_codec_enc_config_default
 text aom_codec_enc_config_set
-text aom_codec_enc_init_multi_ver
 text aom_codec_enc_init_ver
 text aom_codec_encode
 text aom_codec_get_cx_data

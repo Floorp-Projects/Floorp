@@ -11,6 +11,7 @@
 #ifndef AOM_TEST_Y4M_VIDEO_SOURCE_H_
 #define AOM_TEST_Y4M_VIDEO_SOURCE_H_
 #include <algorithm>
+#include <memory>
 #include <string>
 
 #include "common/y4minput.h"
@@ -23,11 +24,11 @@ namespace libaom_test {
 class Y4mVideoSource : public VideoSource {
  public:
   Y4mVideoSource(const std::string &file_name, unsigned int start, int limit)
-      : file_name_(file_name), input_file_(NULL), img_(new aom_image_t()),
+      : file_name_(file_name), input_file_(nullptr), img_(new aom_image_t()),
         start_(start), limit_(limit), frame_(0), framerate_numerator_(0),
         framerate_denominator_(0), y4m_() {}
 
-  virtual ~Y4mVideoSource() {
+  ~Y4mVideoSource() override {
     aom_img_free(img_.get());
     CloseSource();
   }
@@ -35,13 +36,14 @@ class Y4mVideoSource : public VideoSource {
   virtual void OpenSource() {
     CloseSource();
     input_file_ = OpenTestDataFile(file_name_);
-    ASSERT_TRUE(input_file_ != NULL)
+    ASSERT_NE(input_file_, nullptr)
         << "Input file open failed. Filename: " << file_name_;
   }
 
   virtual void ReadSourceToStart() {
-    ASSERT_TRUE(input_file_ != NULL);
-    ASSERT_FALSE(y4m_input_open(&y4m_, input_file_, NULL, 0, 0));
+    ASSERT_NE(input_file_, nullptr);
+    ASSERT_FALSE(
+        y4m_input_open(&y4m_, input_file_, nullptr, 0, AOM_CSP_UNKNOWN, 0));
     framerate_numerator_ = y4m_.fps_n;
     framerate_denominator_ = y4m_.fps_d;
     frame_ = 0;
@@ -51,36 +53,36 @@ class Y4mVideoSource : public VideoSource {
     FillFrame();
   }
 
-  virtual void Begin() {
+  void Begin() override {
     OpenSource();
     ReadSourceToStart();
   }
 
-  virtual void Next() {
+  void Next() override {
     ++frame_;
     FillFrame();
   }
 
-  virtual aom_image_t *img() const {
-    return (frame_ < limit_) ? img_.get() : NULL;
+  aom_image_t *img() const override {
+    return (frame_ < limit_) ? img_.get() : nullptr;
   }
 
   // Models a stream where Timebase = 1/FPS, so pts == frame.
-  virtual aom_codec_pts_t pts() const { return frame_; }
+  aom_codec_pts_t pts() const override { return frame_; }
 
-  virtual unsigned long duration() const { return 1; }
+  unsigned long duration() const override { return 1; }
 
-  virtual aom_rational_t timebase() const {
+  aom_rational_t timebase() const override {
     const aom_rational_t t = { framerate_denominator_, framerate_numerator_ };
     return t;
   }
 
-  virtual unsigned int frame() const { return frame_; }
+  unsigned int frame() const override { return frame_; }
 
-  virtual unsigned int limit() const { return limit_; }
+  unsigned int limit() const override { return limit_; }
 
   virtual void FillFrame() {
-    ASSERT_TRUE(input_file_ != NULL);
+    ASSERT_NE(input_file_, nullptr);
     // Read a frame from input_file.
     y4m_input_fetch_frame(&y4m_, input_file_, img_.get());
   }
@@ -101,15 +103,15 @@ class Y4mVideoSource : public VideoSource {
   void CloseSource() {
     y4m_input_close(&y4m_);
     y4m_ = y4m_input();
-    if (input_file_ != NULL) {
+    if (input_file_ != nullptr) {
       fclose(input_file_);
-      input_file_ = NULL;
+      input_file_ = nullptr;
     }
   }
 
   std::string file_name_;
   FILE *input_file_;
-  testing::internal::scoped_ptr<aom_image_t> img_;
+  std::unique_ptr<aom_image_t> img_;
   unsigned int start_;
   unsigned int limit_;
   unsigned int frame_;

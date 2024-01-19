@@ -12,6 +12,8 @@
 #include <stdint.h>
 #include <smmintrin.h>
 
+#include "config/av1_rtcd.h"
+
 // Byte-boundary alignment issues
 #define ALIGN_SIZE 8
 #define ALIGN_MASK (ALIGN_SIZE - 1)
@@ -41,11 +43,11 @@ uint32_t av1_get_crc32c_value_sse4_2(void *crc_calculator, uint8_t *p,
 
 #ifdef __x86_64__
   uint64_t crc64 = crc;
-  CALC_CRC(_mm_crc32_u64, crc64, uint64_t, buf, len);
+  CALC_CRC(_mm_crc32_u64, crc64, uint64_t, buf, len)
   crc = (uint32_t)crc64;
 #endif
-  CALC_CRC(_mm_crc32_u32, crc, uint32_t, buf, len);
-  CALC_CRC(_mm_crc32_u16, crc, uint16_t, buf, len);
-  CALC_CRC(_mm_crc32_u8, crc, uint8_t, buf, len);
-  return (crc ^= 0xFFFFFFFF);
+  CALC_CRC(_mm_crc32_u32, crc, uint32_t, buf, len)
+  CALC_CRC(_mm_crc32_u16, crc, uint16_t, buf, len)
+  CALC_CRC(_mm_crc32_u8, crc, uint8_t, buf, len)
+  return (crc ^ 0xFFFFFFFF);
 }

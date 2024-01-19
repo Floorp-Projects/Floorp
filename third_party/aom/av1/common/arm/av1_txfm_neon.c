@@ -12,8 +12,10 @@
 #include <arm_neon.h>
 #include <assert.h>
 
+#include "config/av1_rtcd.h"
+
+#include "aom_dsp/arm/mem_neon.h"
 #include "aom_ports/mem.h"
-#include "av1/common/arm/mem_neon.h"
 
 void av1_round_shift_array_neon(int32_t *arr, int size, int bit) {
   assert(!(size % 4));

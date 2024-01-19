@@ -12,14 +12,14 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <tuple>
 
-#include "config/aom_dsp_rtcd.h"
+#include "config/av1_rtcd.h"
 
 #include "aom_mem/aom_mem.h"
 #include "aom_ports/aom_timer.h"
 #include "aom_ports/mem.h"
 #include "test/acm_random.h"
-#include "test/clear_system_state.h"
 #include "test/util.h"
 #include "third_party/googletest/src/googletest/include/gtest/gtest.h"
 
@@ -33,16 +33,17 @@ const int kValidBitCheck[] = {
 };
 #endif  // HAVE_SSE4_1 || HAVE_NEON
 
-typedef ::testing::tuple<comp_round_shift_array_func, BLOCK_SIZE, int>
+typedef std::tuple<comp_round_shift_array_func, BLOCK_SIZE, int>
     CompRoundShiftParam;
 
 class AV1CompRoundShiftTest
     : public ::testing::TestWithParam<CompRoundShiftParam> {
  public:
-  ~AV1CompRoundShiftTest();
+  ~AV1CompRoundShiftTest() override;
 
-  void SetUp() { rnd_.Reset(libaom_test::ACMRandom::DeterministicSeed()); }
-  void TearDown() { libaom_test::ClearSystemState(); }
+  void SetUp() override {
+    rnd_.Reset(libaom_test::ACMRandom::DeterministicSeed());
+  }
 
  protected:
   void RunCheckOutput(comp_round_shift_array_func test_impl, BLOCK_SIZE bsize,
@@ -52,8 +53,9 @@ class AV1CompRoundShiftTest
 
   libaom_test::ACMRandom rnd_;
 };
+GTEST_ALLOW_UNINSTANTIATED_PARAMETERIZED_TEST(AV1CompRoundShiftTest);
 
-AV1CompRoundShiftTest::~AV1CompRoundShiftTest() { ; }
+AV1CompRoundShiftTest::~AV1CompRoundShiftTest() = default;
 
 void AV1CompRoundShiftTest::RunCheckOutput(
     comp_round_shift_array_func test_impl, BLOCK_SIZE bsize, int bit) {
@@ -111,7 +113,7 @@ TEST_P(AV1CompRoundShiftTest, DISABLED_Speed) {
 }
 
 #if HAVE_SSE4_1
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     SSE4_1, AV1CompRoundShiftTest,
     ::testing::Combine(::testing::Values(&av1_round_shift_array_sse4_1),
                        ::testing::ValuesIn(txsize_to_bsize),
@@ -119,11 +121,11 @@ INSTANTIATE_TEST_CASE_P(
 #endif
 
 #if HAVE_NEON
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     NEON, AV1CompRoundShiftTest,
     ::testing::Combine(::testing::Values(&av1_round_shift_array_neon),
                        ::testing::ValuesIn(txsize_to_bsize),
                        ::testing::ValuesIn(kValidBitCheck)));
 #endif
 
-};  // namespace AV1CompRoundShift
+}  // namespace AV1CompRoundShift

@@ -34,7 +34,7 @@ static INLINE __m128i k_packs_epi64(__m128i a, __m128i b) {
 static INLINE int check_epi16_overflow_x2(const __m128i *preg0,
                                           const __m128i *preg1) {
   const __m128i max_overflow = _mm_set1_epi16(0x7fff);
-  const __m128i min_overflow = _mm_set1_epi16(0x8000);
+  const __m128i min_overflow = _mm_set1_epi16((short)0x8000);
   __m128i cmp0 = _mm_or_si128(_mm_cmpeq_epi16(*preg0, max_overflow),
                               _mm_cmpeq_epi16(*preg0, min_overflow));
   __m128i cmp1 = _mm_or_si128(_mm_cmpeq_epi16(*preg1, max_overflow),
@@ -48,7 +48,7 @@ static INLINE int check_epi16_overflow_x4(const __m128i *preg0,
                                           const __m128i *preg2,
                                           const __m128i *preg3) {
   const __m128i max_overflow = _mm_set1_epi16(0x7fff);
-  const __m128i min_overflow = _mm_set1_epi16(0x8000);
+  const __m128i min_overflow = _mm_set1_epi16((short)0x8000);
   __m128i cmp0 = _mm_or_si128(_mm_cmpeq_epi16(*preg0, max_overflow),
                               _mm_cmpeq_epi16(*preg0, min_overflow));
   __m128i cmp1 = _mm_or_si128(_mm_cmpeq_epi16(*preg1, max_overflow),
@@ -136,16 +136,21 @@ static INLINE int check_epi16_overflow_x32(
 }
 
 static INLINE void store_output(const __m128i *poutput, tran_low_t *dst_ptr) {
-  if (sizeof(tran_low_t) == 4) {
-    const __m128i zero = _mm_setzero_si128();
-    const __m128i sign_bits = _mm_cmplt_epi16(*poutput, zero);
-    __m128i out0 = _mm_unpacklo_epi16(*poutput, sign_bits);
-    __m128i out1 = _mm_unpackhi_epi16(*poutput, sign_bits);
-    _mm_store_si128((__m128i *)(dst_ptr), out0);
-    _mm_store_si128((__m128i *)(dst_ptr + 4), out1);
-  } else {
-    _mm_store_si128((__m128i *)(dst_ptr), *poutput);
-  }
+  const __m128i zero = _mm_setzero_si128();
+  const __m128i sign_bits = _mm_cmplt_epi16(*poutput, zero);
+  __m128i out0 = _mm_unpacklo_epi16(*poutput, sign_bits);
+  __m128i out1 = _mm_unpackhi_epi16(*poutput, sign_bits);
+  _mm_store_si128((__m128i *)(dst_ptr), out0);
+  _mm_store_si128((__m128i *)(dst_ptr + 4), out1);
+}
+
+static INLINE void storeu_output(const __m128i *poutput, tran_low_t *dst_ptr) {
+  const __m128i zero = _mm_setzero_si128();
+  const __m128i sign_bits = _mm_cmplt_epi16(*poutput, zero);
+  __m128i out0 = _mm_unpacklo_epi16(*poutput, sign_bits);
+  __m128i out1 = _mm_unpackhi_epi16(*poutput, sign_bits);
+  _mm_storeu_si128((__m128i *)(dst_ptr), out0);
+  _mm_storeu_si128((__m128i *)(dst_ptr + 4), out1);
 }
 
 #ifdef __cplusplus

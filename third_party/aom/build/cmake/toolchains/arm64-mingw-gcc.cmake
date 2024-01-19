@@ -17,16 +17,20 @@ set(CMAKE_SYSTEM_PROCESSOR "arm64")
 set(CMAKE_SYSTEM_NAME "Windows")
 
 if("${CROSS}" STREQUAL "")
+
+  # Default the cross compiler prefix to one used by MSYS2.
   set(CROSS aarch64-w64-mingw32-)
 endif()
 
-set(CMAKE_C_COMPILER ${CROSS}gcc)
-set(CMAKE_CXX_COMPILER ${CROSS}g++)
-set(CMAKE_AR ${CROSS}ar CACHE FILEPATH Archiver)
-set(CMAKE_RANLIB ${CROSS}ranlib CACHE FILEPATH Indexer)
-
-# No runtime cpu detect for arm64-mingw-gcc.
-set(CONFIG_RUNTIME_CPU_DETECT 0 CACHE NUMBER "")
-
-# Disable the use of the gtest's CMake support.
-set(AOM_DISABLE_GTEST_CMAKE 1)
+if(NOT CMAKE_C_COMPILER)
+  set(CMAKE_C_COMPILER ${CROSS}gcc)
+endif()
+if(NOT CMAKE_CXX_COMPILER)
+  set(CMAKE_CXX_COMPILER ${CROSS}g++)
+endif()
+if(NOT CMAKE_AR)
+  set(CMAKE_AR ${CROSS}ar CACHE FILEPATH Archiver)
+endif()
+if(NOT CMAKE_RANLIB)
+  set(CMAKE_RANLIB ${CROSS}ranlib CACHE FILEPATH Indexer)
+endif()

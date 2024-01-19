@@ -26,6 +26,8 @@ if (aom_config("CONFIG_SPATIAL_RESAMPLING") eq "yes") {
   add_proto qw/void aom_vertical_band_2_1_scale_i/, "unsigned char *source, int src_pitch, unsigned char *dest, int dest_pitch, unsigned int dest_width";
 }
 
+add_proto qw/int aom_yv12_realloc_with_new_border/, "struct yv12_buffer_config *ybf, int new_border, int byte_alignment, int num_pyramid_levels, int num_planes";
+
 add_proto qw/void aom_yv12_extend_frame_borders/, "struct yv12_buffer_config *ybf, const int num_planes";
 
 add_proto qw/void aom_yv12_copy_frame/, "const struct yv12_buffer_config *src_bc, struct yv12_buffer_config *dst_bc, const int num_planes";
@@ -36,17 +38,18 @@ add_proto qw/void aom_yv12_copy_u/, "const struct yv12_buffer_config *src_bc, st
 
 add_proto qw/void aom_yv12_copy_v/, "const struct yv12_buffer_config *src_bc, struct yv12_buffer_config *dst_bc";
 
-add_proto qw/void aom_yv12_partial_copy_y/, "const struct yv12_buffer_config *src_ybc, struct yv12_buffer_config *dst_ybc, int hstart, int hend, int vstart, int vend";
+add_proto qw/void aom_yv12_partial_copy_y/, "const struct yv12_buffer_config *src_ybc, int hstart1, int hend1, int vstart1, int vend1, struct yv12_buffer_config *dst_ybc, int hstart2, int vstart2";
+add_proto qw/void aom_yv12_partial_coloc_copy_y/, "const struct yv12_buffer_config *src_ybc, struct yv12_buffer_config *dst_ybc, int hstart, int hend, int vstart, int vend";
+add_proto qw/void aom_yv12_partial_copy_u/, "const struct yv12_buffer_config *src_bc, int hstart1, int hend1, int vstart1, int vend1, struct yv12_buffer_config *dst_bc, int hstart2, int vstart2";
+add_proto qw/void aom_yv12_partial_coloc_copy_u/, "const struct yv12_buffer_config *src_bc, struct yv12_buffer_config *dst_bc, int hstart, int hend, int vstart, int vend";
+add_proto qw/void aom_yv12_partial_copy_v/, "const struct yv12_buffer_config *src_bc, int hstart1, int hend1, int vstart1, int vend1, struct yv12_buffer_config *dst_bc, int hstart2, int vstart2";
+add_proto qw/void aom_yv12_partial_coloc_copy_v/, "const struct yv12_buffer_config *src_bc, struct yv12_buffer_config *dst_bc, int hstart, int hend, int vstart, int vend";
 
-add_proto qw/void aom_yv12_partial_copy_u/, "const struct yv12_buffer_config *src_bc, struct yv12_buffer_config *dst_bc, int hstart, int hend, int vstart, int vend";
-
-add_proto qw/void aom_yv12_partial_copy_v/, "const struct yv12_buffer_config *src_bc, struct yv12_buffer_config *dst_bc, int hstart, int hend, int vstart, int vend";
+add_proto qw/void aom_extend_frame_borders_plane_row/, "const struct yv12_buffer_config *ybf, int plane, int v_start, int v_end";
 
 add_proto qw/void aom_extend_frame_borders/, "struct yv12_buffer_config *ybf, const int num_planes";
-specialize qw/aom_extend_frame_borders dspr2/;
 
 add_proto qw/void aom_extend_frame_inner_borders/, "struct yv12_buffer_config *ybf, const int num_planes";
-specialize qw/aom_extend_frame_inner_borders dspr2/;
 
 add_proto qw/void aom_extend_frame_borders_y/, "struct yv12_buffer_config *ybf";
 1;

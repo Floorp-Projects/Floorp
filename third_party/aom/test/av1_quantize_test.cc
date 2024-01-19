@@ -16,9 +16,9 @@
 #include "config/av1_rtcd.h"
 
 #include "test/acm_random.h"
-#include "test/clear_system_state.h"
 #include "test/register_state_check.h"
 #include "av1/common/scan.h"
+#include "av1/encoder/av1_quantize.h"
 
 namespace {
 
@@ -30,8 +30,8 @@ typedef void (*QuantizeFpFunc)(
     const int16_t *scan, const int16_t *iscan, int log_scale);
 
 struct QuantizeFuncParams {
-  QuantizeFuncParams(QuantizeFpFunc qF = NULL, QuantizeFpFunc qRefF = NULL,
-                     int count = 16)
+  QuantizeFuncParams(QuantizeFpFunc qF = nullptr,
+                     QuantizeFpFunc qRefF = nullptr, int count = 16)
       : qFunc(qF), qFuncRef(qRefF), coeffCount(count) {}
   QuantizeFpFunc qFunc;
   QuantizeFpFunc qFuncRef;
@@ -70,20 +70,20 @@ class AV1QuantizeTest : public ::testing::TestWithParam<QuantizeFuncParams> {
     QuantizeFpFunc quanFunc = params_.qFunc;
     QuantizeFpFunc quanFuncRef = params_.qFuncRef;
 
-    const SCAN_ORDER scanOrder = av1_default_scan_orders[txSize];
+    const SCAN_ORDER scanOrder = av1_scan_orders[txSize][DCT_DCT];
     for (int i = 0; i < numTests; i++) {
       int err_count = 0;
-      ref_eob = eob = -1;
+      ref_eob = eob = UINT16_MAX;
       for (int j = 0; j < count; j++) {
         coeff_ptr[j] = rnd(coeffRange);
       }
 
       for (int j = 0; j < 2; j++) {
-        zbin_ptr[j] = rnd.Rand16();
-        quant_shift_ptr[j] = rnd.Rand16();
+        zbin_ptr[j] = rnd.Rand16Signed();
+        quant_shift_ptr[j] = rnd.Rand16Signed();
         // int16_t positive
         dequant_ptr[j] = abs(rnd(dequantRange));
-        quant_ptr[j] = (1 << 16) / dequant_ptr[j];
+        quant_ptr[j] = static_cast<int16_t>((1 << 16) / dequant_ptr[j]);
         round_ptr[j] = (abs(rnd(roundFactorRange)) * dequant_ptr[j]) >> 7;
       }
       for (int j = 2; j < 8; ++j) {
@@ -97,7 +97,7 @@ class AV1QuantizeTest : public ::testing::TestWithParam<QuantizeFuncParams> {
                   quant_shift_ptr, ref_qcoeff_ptr, ref_dqcoeff_ptr, dequant_ptr,
                   &ref_eob, scanOrder.scan, scanOrder.iscan, log_scale);
 
-      ASM_REGISTER_STATE_CHECK(
+      API_REGISTER_STATE_CHECK(
           quanFunc(coeff_ptr, count, zbin_ptr, round_ptr, quant_ptr,
                    quant_shift_ptr, qcoeff_ptr, dqcoeff_ptr, dequant_ptr, &eob,
                    scanOrder.scan, scanOrder.iscan, log_scale));
@@ -142,10 +142,10 @@ class AV1QuantizeTest : public ::testing::TestWithParam<QuantizeFuncParams> {
     int log_scale = (txSize == TX_32X32);
     QuantizeFpFunc quanFunc = params_.qFunc;
     QuantizeFpFunc quanFuncRef = params_.qFuncRef;
-    const SCAN_ORDER scanOrder = av1_default_scan_orders[txSize];
+    const SCAN_ORDER scanOrder = av1_scan_orders[txSize][DCT_DCT];
 
     for (int i = 0; i < numTests; i++) {
-      ref_eob = eob = -1;
+      ref_eob = eob = UINT16_MAX;
       for (int j = 0; j < count; j++) {
         coeff_ptr[j] = 0;
       }
@@ -155,8 +155,8 @@ class AV1QuantizeTest : public ::testing::TestWithParam<QuantizeFuncParams> {
       coeff_ptr[rnd(count)] = rnd(coeffRange);
 
       for (int j = 0; j < 2; j++) {
-        zbin_ptr[j] = rnd.Rand16();
-        quant_shift_ptr[j] = rnd.Rand16();
+        zbin_ptr[j] = rnd.Rand16Signed();
+        quant_shift_ptr[j] = rnd.Rand16Signed();
         // int16_t positive
         dequant_ptr[j] = abs(rnd(dequantRange));
         quant_ptr[j] = (1 << 16) / dequant_ptr[j];
@@ -174,7 +174,7 @@ class AV1QuantizeTest : public ::testing::TestWithParam<QuantizeFuncParams> {
                   quant_shift_ptr, ref_qcoeff_ptr, ref_dqcoeff_ptr, dequant_ptr,
                   &ref_eob, scanOrder.scan, scanOrder.iscan, log_scale);
 
-      ASM_REGISTER_STATE_CHECK(
+      API_REGISTER_STATE_CHECK(
           quanFunc(coeff_ptr, count, zbin_ptr, round_ptr, quant_ptr,
                    quant_shift_ptr, qcoeff_ptr, dqcoeff_ptr, dequant_ptr, &eob,
                    scanOrder.scan, scanOrder.iscan, log_scale));
@@ -183,11 +183,9 @@ class AV1QuantizeTest : public ::testing::TestWithParam<QuantizeFuncParams> {
     }
   }
 
-  virtual void SetUp() { params_ = GetParam(); }
+  void SetUp() override { params_ = GetParam(); }
 
-  virtual void TearDown() { libaom_test::ClearSystemState(); }
-
-  virtual ~AV1QuantizeTest() {}
+  ~AV1QuantizeTest() override = default;
 
  private:
   TX_SIZE getTxSize(int count) {
@@ -202,9 +200,36 @@ class AV1QuantizeTest : public ::testing::TestWithParam<QuantizeFuncParams> {
 
   QuantizeFuncParams params_;
 };
+GTEST_ALLOW_UNINSTANTIATED_PARAMETERIZED_TEST(AV1QuantizeTest);
 
 TEST_P(AV1QuantizeTest, BitExactCheck) { RunQuantizeTest(); }
 TEST_P(AV1QuantizeTest, EobVerify) { RunEobTest(); }
+
+TEST(AV1QuantizeTest, QuantizeFpNoQmatrix) {
+  // Here we use a uniform quantizer as an example
+  const int16_t dequant_ptr[2] = { 78, 93 };  // quantize step
+  const int16_t round_ptr[2] = { 39, 46 };    // round ~= dequant / 2
+
+  // quant ~= 2^16 / dequant. This is a 16-bit fixed point representation of the
+  // inverse of quantize step.
+  const int16_t quant_ptr[2] = { 840, 704 };
+  int log_scale = 0;
+  int coeff_count = 4;
+  const tran_low_t coeff_ptr[4] = { -449, 624, -14, 24 };
+  const tran_low_t ref_qcoeff_ptr[4] = { -6, 7, 0, 0 };
+  const tran_low_t ref_dqcoeff_ptr[4] = { -468, 651, 0, 0 };
+  const int16_t scan[4] = { 0, 1, 2, 3 };
+  tran_low_t qcoeff_ptr[4];
+  tran_low_t dqcoeff_ptr[4];
+  int eob = av1_quantize_fp_no_qmatrix(quant_ptr, dequant_ptr, round_ptr,
+                                       log_scale, scan, coeff_count, coeff_ptr,
+                                       qcoeff_ptr, dqcoeff_ptr);
+  EXPECT_EQ(eob, 2);
+  for (int i = 0; i < coeff_count; ++i) {
+    EXPECT_EQ(qcoeff_ptr[i], ref_qcoeff_ptr[i]);
+    EXPECT_EQ(dqcoeff_ptr[i], ref_dqcoeff_ptr[i]);
+  }
+}
 
 #if HAVE_SSE4_1
 const QuantizeFuncParams qfps[4] = {
@@ -218,7 +243,7 @@ const QuantizeFuncParams qfps[4] = {
                      1024),
 };
 
-INSTANTIATE_TEST_CASE_P(SSE4_1, AV1QuantizeTest, ::testing::ValuesIn(qfps));
+INSTANTIATE_TEST_SUITE_P(SSE4_1, AV1QuantizeTest, ::testing::ValuesIn(qfps));
 #endif  // HAVE_SSE4_1
 
 #if HAVE_AVX2
@@ -233,7 +258,7 @@ const QuantizeFuncParams qfps_avx2[4] = {
                      1024),
 };
 
-INSTANTIATE_TEST_CASE_P(AVX2, AV1QuantizeTest, ::testing::ValuesIn(qfps_avx2));
+INSTANTIATE_TEST_SUITE_P(AVX2, AV1QuantizeTest, ::testing::ValuesIn(qfps_avx2));
 #endif  // HAVE_AVX2
 
 }  // namespace

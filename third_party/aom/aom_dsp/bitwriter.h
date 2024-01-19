@@ -16,7 +16,7 @@
 
 #include "config/aom_config.h"
 
-#include "aom_dsp/daalaboolwriter.h"
+#include "aom_dsp/entenc.h"
 #include "aom_dsp/prob.h"
 
 #if CONFIG_RD_DEBUG
@@ -24,11 +24,22 @@
 #include "av1/encoder/cost.h"
 #endif
 
+#if CONFIG_BITSTREAM_DEBUG
+#include "aom_util/debug_util.h"
+#endif  // CONFIG_BITSTREAM_DEBUG
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-typedef struct daala_writer aom_writer;
+struct aom_writer {
+  unsigned int pos;
+  uint8_t *buffer;
+  od_ec_enc ec;
+  uint8_t allow_update_cdf;
+};
+
+typedef struct aom_writer aom_writer;
 
 typedef struct TOKEN_STATS {
   int cost;
@@ -49,16 +60,22 @@ static INLINE void init_token_stats(TOKEN_STATS *token_stats) {
   token_stats->cost = 0;
 }
 
-static INLINE void aom_start_encode(aom_writer *bc, uint8_t *buffer) {
-  aom_daala_start_encode(bc, buffer);
-}
+void aom_start_encode(aom_writer *w, uint8_t *buffer);
 
-static INLINE int aom_stop_encode(aom_writer *bc) {
-  return aom_daala_stop_encode(bc);
-}
+// Returns a negative number on error. Caller must check the return value and
+// handle error.
+int aom_stop_encode(aom_writer *w);
 
-static INLINE void aom_write(aom_writer *br, int bit, int probability) {
-  aom_daala_write(br, bit, probability);
+int aom_tell_size(aom_writer *w);
+
+static INLINE void aom_write(aom_writer *w, int bit, int probability) {
+  int p = (0x7FFFFF - (probability << 15) + probability) >> 8;
+#if CONFIG_BITSTREAM_DEBUG
+  aom_cdf_prob cdf[2] = { (aom_cdf_prob)p, 32767 };
+  bitstream_queue_push(bit, cdf, 2);
+#endif
+
+  od_ec_encode_bool_q15(&w->ec, bit, p);
 }
 
 static INLINE void aom_write_bit(aom_writer *w, int bit) {
@@ -73,7 +90,11 @@ static INLINE void aom_write_literal(aom_writer *w, int data, int bits) {
 
 static INLINE void aom_write_cdf(aom_writer *w, int symb,
                                  const aom_cdf_prob *cdf, int nsymbs) {
-  daala_write_symbol(w, symb, cdf, nsymbs);
+#if CONFIG_BITSTREAM_DEBUG
+  bitstream_queue_push(symb, cdf, nsymbs);
+#endif
+
+  od_ec_encode_cdf_q15(&w->ec, symb, cdf, nsymbs);
 }
 
 static INLINE void aom_write_symbol(aom_writer *w, int symb, aom_cdf_prob *cdf,

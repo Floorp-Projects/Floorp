@@ -17,7 +17,7 @@
 #include "aom_dsp/blend.h"
 #include "aom/aom_integer.h"
 #include "aom_dsp/x86/synonyms.h"
-#include "aom_dsp/x86//masked_sad_intrin_ssse3.h"
+#include "aom_dsp/x86/masked_sad_intrin_ssse3.h"
 
 static INLINE unsigned int masked_sad32xh_avx2(
     const uint8_t *src_ptr, int src_stride, const uint8_t *a_ptr, int a_stride,
@@ -64,7 +64,7 @@ static INLINE unsigned int masked_sad32xh_avx2(
   res = _mm256_hadd_epi32(res, res);
   res = _mm256_hadd_epi32(res, res);
   int32_t sad = _mm256_extract_epi32(res, 0);
-  return (sad + 31) >> 6;
+  return sad;
 }
 
 static INLINE __m256i xx_loadu2_m128i(const void *hi, const void *lo) {
@@ -117,7 +117,7 @@ static INLINE unsigned int masked_sad16xh_avx2(
   res = _mm256_hadd_epi32(res, res);
   res = _mm256_hadd_epi32(res, res);
   int32_t sad = _mm256_extract_epi32(res, 0);
-  return (sad + 31) >> 6;
+  return sad;
 }
 
 static INLINE unsigned int aom_masked_sad_avx2(
@@ -253,7 +253,7 @@ static INLINE unsigned int highbd_masked_sad8xh_avx2(
   res = _mm256_hadd_epi32(res, res);
   res = _mm256_hadd_epi32(res, res);
   int sad = _mm256_extract_epi32(res, 0) + _mm256_extract_epi32(res, 4);
-  return (sad + 31) >> 6;
+  return sad;
 }
 
 static INLINE unsigned int highbd_masked_sad16xh_avx2(
@@ -311,7 +311,7 @@ static INLINE unsigned int highbd_masked_sad16xh_avx2(
   res = _mm256_hadd_epi32(res, res);
   res = _mm256_hadd_epi32(res, res);
   int sad = _mm256_extract_epi32(res, 0) + _mm256_extract_epi32(res, 4);
-  return (sad + 31) >> 6;
+  return sad;
 }
 
 static INLINE unsigned int aom_highbd_masked_sad_avx2(
@@ -365,25 +365,25 @@ static INLINE unsigned int aom_highbd_masked_sad_avx2(
                                       invert_mask, m, n);                 \
   }
 
-HIGHBD_MASKSADMXN_AVX2(4, 4);
-HIGHBD_MASKSADMXN_AVX2(4, 8);
-HIGHBD_MASKSADMXN_AVX2(8, 4);
-HIGHBD_MASKSADMXN_AVX2(8, 8);
-HIGHBD_MASKSADMXN_AVX2(8, 16);
-HIGHBD_MASKSADMXN_AVX2(16, 8);
-HIGHBD_MASKSADMXN_AVX2(16, 16);
-HIGHBD_MASKSADMXN_AVX2(16, 32);
-HIGHBD_MASKSADMXN_AVX2(32, 16);
-HIGHBD_MASKSADMXN_AVX2(32, 32);
-HIGHBD_MASKSADMXN_AVX2(32, 64);
-HIGHBD_MASKSADMXN_AVX2(64, 32);
-HIGHBD_MASKSADMXN_AVX2(64, 64);
-HIGHBD_MASKSADMXN_AVX2(64, 128);
-HIGHBD_MASKSADMXN_AVX2(128, 64);
-HIGHBD_MASKSADMXN_AVX2(128, 128);
-HIGHBD_MASKSADMXN_AVX2(4, 16);
-HIGHBD_MASKSADMXN_AVX2(16, 4);
-HIGHBD_MASKSADMXN_AVX2(8, 32);
-HIGHBD_MASKSADMXN_AVX2(32, 8);
-HIGHBD_MASKSADMXN_AVX2(16, 64);
-HIGHBD_MASKSADMXN_AVX2(64, 16);
+HIGHBD_MASKSADMXN_AVX2(4, 4)
+HIGHBD_MASKSADMXN_AVX2(4, 8)
+HIGHBD_MASKSADMXN_AVX2(8, 4)
+HIGHBD_MASKSADMXN_AVX2(8, 8)
+HIGHBD_MASKSADMXN_AVX2(8, 16)
+HIGHBD_MASKSADMXN_AVX2(16, 8)
+HIGHBD_MASKSADMXN_AVX2(16, 16)
+HIGHBD_MASKSADMXN_AVX2(16, 32)
+HIGHBD_MASKSADMXN_AVX2(32, 16)
+HIGHBD_MASKSADMXN_AVX2(32, 32)
+HIGHBD_MASKSADMXN_AVX2(32, 64)
+HIGHBD_MASKSADMXN_AVX2(64, 32)
+HIGHBD_MASKSADMXN_AVX2(64, 64)
+HIGHBD_MASKSADMXN_AVX2(64, 128)
+HIGHBD_MASKSADMXN_AVX2(128, 64)
+HIGHBD_MASKSADMXN_AVX2(128, 128)
+HIGHBD_MASKSADMXN_AVX2(4, 16)
+HIGHBD_MASKSADMXN_AVX2(16, 4)
+HIGHBD_MASKSADMXN_AVX2(8, 32)
+HIGHBD_MASKSADMXN_AVX2(32, 8)
+HIGHBD_MASKSADMXN_AVX2(16, 64)
+HIGHBD_MASKSADMXN_AVX2(64, 16)

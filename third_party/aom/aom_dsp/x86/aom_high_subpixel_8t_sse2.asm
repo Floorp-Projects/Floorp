@@ -211,7 +211,7 @@ SECTION .text
 ;    unsigned int   output_height,
 ;    short *filter
 ;)
-global sym(aom_highbd_filter_block1d4_v8_sse2) PRIVATE
+globalsym(aom_highbd_filter_block1d4_v8_sse2)
 sym(aom_highbd_filter_block1d4_v8_sse2):
     push        rbp
     mov         rbp, rsp
@@ -281,7 +281,7 @@ sym(aom_highbd_filter_block1d4_v8_sse2):
 ;    unsigned int   output_height,
 ;    short *filter
 ;)
-global sym(aom_highbd_filter_block1d8_v8_sse2) PRIVATE
+globalsym(aom_highbd_filter_block1d8_v8_sse2)
 sym(aom_highbd_filter_block1d8_v8_sse2):
     push        rbp
     mov         rbp, rsp
@@ -340,7 +340,7 @@ sym(aom_highbd_filter_block1d8_v8_sse2):
 ;    unsigned int   output_height,
 ;    short *filter
 ;)
-global sym(aom_highbd_filter_block1d16_v8_sse2) PRIVATE
+globalsym(aom_highbd_filter_block1d16_v8_sse2)
 sym(aom_highbd_filter_block1d16_v8_sse2):
     push        rbp
     mov         rbp, rsp
@@ -403,7 +403,7 @@ sym(aom_highbd_filter_block1d16_v8_sse2):
 ;    unsigned int    output_height,
 ;    short *filter
 ;)
-global sym(aom_highbd_filter_block1d4_h8_sse2) PRIVATE
+globalsym(aom_highbd_filter_block1d4_h8_sse2)
 sym(aom_highbd_filter_block1d4_h8_sse2):
     push        rbp
     mov         rbp, rsp
@@ -478,7 +478,7 @@ sym(aom_highbd_filter_block1d4_h8_sse2):
 ;    unsigned int    output_height,
 ;    short *filter
 ;)
-global sym(aom_highbd_filter_block1d8_h8_sse2) PRIVATE
+globalsym(aom_highbd_filter_block1d8_h8_sse2)
 sym(aom_highbd_filter_block1d8_h8_sse2):
     push        rbp
     mov         rbp, rsp
@@ -544,7 +544,7 @@ sym(aom_highbd_filter_block1d8_h8_sse2):
 ;    unsigned int    output_height,
 ;    short *filter
 ;)
-global sym(aom_highbd_filter_block1d16_h8_sse2) PRIVATE
+globalsym(aom_highbd_filter_block1d16_h8_sse2)
 sym(aom_highbd_filter_block1d16_h8_sse2):
     push        rbp
     mov         rbp, rsp

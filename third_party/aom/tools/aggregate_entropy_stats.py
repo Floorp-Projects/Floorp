@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 ## Copyright (c) 2017, Alliance for Open Media. All rights reserved
 ##
 ## This source code is subject to the terms of the BSD 2 Clause License and

@@ -13,11 +13,11 @@
 
 #include "config/aom_config.h"
 
+#include "av1/common/av1_common_int.h"
 #include "av1/common/blockd.h"
 #include "av1/common/enums.h"
 #include "av1/common/mv.h"
 #include "av1/common/mvref_common.h"
-#include "av1/common/onyxc_int.h"
 #include "av1/common/tile_common.h"
 
 namespace {
@@ -153,16 +153,20 @@ TEST(IntrabcTest, DvValidation) {
   xd.plane[2].subsampling_x = 1;
   xd.plane[2].subsampling_y = 1;
 
+  SequenceHeader seq_params = {};
   AV1_COMMON cm;
   memset(&cm, 0, sizeof(cm));
+  cm.seq_params = &seq_params;
 
-  for (int i = 0; i < static_cast<int>(GTEST_ARRAY_SIZE_(kDvCases)); ++i) {
-    EXPECT_EQ(static_cast<int>(kDvCases[i].valid),
-              av1_is_dv_valid(kDvCases[i].dv, &cm, &xd,
-                              xd.tile.mi_row_start + kDvCases[i].mi_row_offset,
-                              xd.tile.mi_col_start + kDvCases[i].mi_col_offset,
-                              kDvCases[i].bsize, MAX_MIB_SIZE_LOG2))
-        << "DvCases[" << i << "]";
+  for (const DvTestCase &dv_case : kDvCases) {
+    const int mi_row = xd.tile.mi_row_start + dv_case.mi_row_offset;
+    const int mi_col = xd.tile.mi_col_start + dv_case.mi_col_offset;
+    xd.is_chroma_ref = is_chroma_reference(mi_row, mi_col, dv_case.bsize,
+                                           xd.plane[1].subsampling_x,
+                                           xd.plane[1].subsampling_y);
+    EXPECT_EQ(static_cast<int>(dv_case.valid),
+              av1_is_dv_valid(dv_case.dv, &cm, &xd, mi_row, mi_col,
+                              dv_case.bsize, MAX_MIB_SIZE_LOG2));
   }
 }
 }  // namespace

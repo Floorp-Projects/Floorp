@@ -16,6 +16,8 @@
 #include "av1/common/av1_inv_txfm1d.h"
 #include "av1/encoder/av1_fwd_txfm1d.h"
 
+typedef TX_SIZE TxSize;
+
 using libaom_test::ACMRandom;
 using libaom_test::input_base;
 
@@ -24,19 +26,15 @@ const int txfm_type_num = 2;
 const int txfm_size_ls[] = { 4, 8, 16, 32, 64 };
 
 const TxfmFunc fwd_txfm_func_ls[][txfm_type_num] = {
-  { av1_fdct4_new, av1_fadst4_new },
-  { av1_fdct8_new, av1_fadst8_new },
-  { av1_fdct16_new, av1_fadst16_new },
-  { av1_fdct32_new, NULL },
-  { av1_fdct64_new, NULL },
+  { av1_fdct4, av1_fadst4 },   { av1_fdct8, av1_fadst8 },
+  { av1_fdct16, av1_fadst16 }, { av1_fdct32, nullptr },
+  { av1_fdct64, nullptr },
 };
 
 const TxfmFunc inv_txfm_func_ls[][txfm_type_num] = {
-  { av1_idct4_new, av1_iadst4_new },
-  { av1_idct8_new, av1_iadst8_new },
-  { av1_idct16_new, av1_iadst16_new },
-  { av1_idct32_new, NULL },
-  { av1_idct64_new, NULL },
+  { av1_idct4, av1_iadst4 },   { av1_idct8, av1_iadst8 },
+  { av1_idct16, av1_iadst16 }, { av1_idct32, nullptr },
+  { av1_idct64, nullptr },
 };
 
 // the maximum stage number of fwd/inv 1d dct/adst txfm is 12
@@ -75,29 +73,31 @@ TEST(av1_inv_txfm1d, InvAccuracyCheck) {
   const int max_error[] = { 6, 10, 19, 31, 40 };
   ASSERT_EQ(NELEMENTS(max_error), TX_SIZES);
   ASSERT_EQ(NELEMENTS(inv_txfm_func_ls), TX_SIZES);
-  for (int k = 0; k < count_test_block; ++k) {
+  for (int i = 0; i < count_test_block; ++i) {
     // choose a random transform to test
-    const TX_SIZE tx_size = static_cast<TX_SIZE>(rnd.Rand8() % TX_SIZES);
-    const int tx_size_pix = txfm_size_ls[tx_size];
+    const TxSize tx_size = static_cast<TxSize>(rnd.Rand8() % TX_SIZES);
+    const int txfm_size = txfm_size_ls[tx_size];
     const TxfmFunc inv_txfm_func = inv_txfm_func_ls[tx_size][0];
 
     int32_t input[64];
-    random_matrix(input, tx_size_pix, &rnd);
+    random_matrix(input, txfm_size, &rnd);
 
     // 64x64 transform assumes last 32 values are zero.
     memset(input + 32, 0, 32 * sizeof(input[0]));
 
     int32_t ref_output[64];
-    reference_idct_1d_int(input, ref_output, tx_size_pix);
+    memset(ref_output, 0, sizeof(ref_output));
+    reference_idct_1d_int(input, ref_output, txfm_size);
 
     int32_t output[64];
+    memset(output, 0, sizeof(output));
     inv_txfm_func(input, output, cos_bit, range_bit);
 
-    for (int i = 0; i < tx_size_pix; ++i) {
-      EXPECT_LE(abs(output[i] - ref_output[i]), max_error[tx_size])
-          << "tx_size = " << tx_size << ", i = " << i
-          << ", output[i] = " << output[i]
-          << ", ref_output[i] = " << ref_output[i];
+    for (int ni = 0; ni < txfm_size; ++ni) {
+      EXPECT_LE(abs(output[ni] - ref_output[ni]), max_error[tx_size])
+          << "tx_size = " << tx_size << ", ni = " << ni
+          << ", output[ni] = " << output[ni]
+          << ", ref_output[ni] = " << ref_output[ni];
     }
   }
 }
@@ -129,7 +129,7 @@ TEST(av1_inv_txfm1d, round_trip) {
       if (!fwd_txfm_func) continue;
 
       const int count_test_block = 5000;
-      for (int ci = 0; ci < count_test_block; ++ci) {
+      for (int i = 0; i < count_test_block; ++i) {
         int32_t input[64];
         int32_t output[64];
         int32_t round_trip_output[64];

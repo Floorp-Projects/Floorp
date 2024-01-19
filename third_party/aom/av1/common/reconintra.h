@@ -15,8 +15,8 @@
 #include <stdlib.h>
 
 #include "aom/aom_integer.h"
+#include "av1/common/av1_common_int.h"
 #include "av1/common/blockd.h"
-#include "av1/common/onyxc_int.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -26,13 +26,14 @@ void av1_init_intra_predictors(void);
 void av1_predict_intra_block_facade(const AV1_COMMON *cm, MACROBLOCKD *xd,
                                     int plane, int blk_col, int blk_row,
                                     TX_SIZE tx_size);
-void av1_predict_intra_block(const AV1_COMMON *cm, const MACROBLOCKD *xd,
-                             int bw, int bh, TX_SIZE tx_size,
-                             PREDICTION_MODE mode, int angle_delta,
-                             int use_palette,
+void av1_predict_intra_block(const MACROBLOCKD *xd, BLOCK_SIZE sb_size,
+                             int enable_intra_edge_filter, int wpx, int hpx,
+                             TX_SIZE tx_size, PREDICTION_MODE mode,
+                             int angle_delta, int use_palette,
                              FILTER_INTRA_MODE filter_intra_mode,
                              const uint8_t *ref, int ref_stride, uint8_t *dst,
-                             int dst_stride, int aoff, int loff, int plane);
+                             int dst_stride, int col_off, int row_off,
+                             int plane);
 
 // Mapping of interintra to intra mode for use in the intra component
 static const PREDICTION_MODE interintra_to_intra_mode[INTERINTRA_MODES] = {
@@ -51,18 +52,22 @@ static INLINE int av1_is_directional_mode(PREDICTION_MODE mode) {
   return mode >= V_PRED && mode <= D67_PRED;
 }
 
+static INLINE int av1_is_diagonal_mode(PREDICTION_MODE mode) {
+  return mode >= D45_PRED && mode <= D67_PRED;
+}
+
 static INLINE int av1_use_angle_delta(BLOCK_SIZE bsize) {
   return bsize >= BLOCK_8X8;
 }
 
 static INLINE int av1_allow_intrabc(const AV1_COMMON *const cm) {
-  return frame_is_intra_only(cm) && cm->allow_screen_content_tools &&
-         cm->allow_intrabc;
+  return frame_is_intra_only(cm) && cm->features.allow_screen_content_tools &&
+         cm->features.allow_intrabc;
 }
 
 static INLINE int av1_filter_intra_allowed_bsize(const AV1_COMMON *const cm,
                                                  BLOCK_SIZE bs) {
-  if (!cm->seq_params.enable_filter_intra || bs == BLOCK_INVALID) return 0;
+  if (!cm->seq_params->enable_filter_intra || bs == BLOCK_INVALID) return 0;
 
   return block_size_wide[bs] <= 32 && block_size_high[bs] <= 32;
 }
@@ -71,10 +76,44 @@ static INLINE int av1_filter_intra_allowed(const AV1_COMMON *const cm,
                                            const MB_MODE_INFO *mbmi) {
   return mbmi->mode == DC_PRED &&
          mbmi->palette_mode_info.palette_size[0] == 0 &&
-         av1_filter_intra_allowed_bsize(cm, mbmi->sb_type);
+         av1_filter_intra_allowed_bsize(cm, mbmi->bsize);
 }
 
 extern const int8_t av1_filter_intra_taps[FILTER_INTRA_MODES][8][8];
+
+static const int16_t dr_intra_derivative[90] = {
+  // More evenly spread out angles and limited to 10-bit
+  // Values that are 0 will never be used
+  //                    Approx angle
+  0,    0, 0,        //
+  1023, 0, 0,        // 3, ...
+  547,  0, 0,        // 6, ...
+  372,  0, 0, 0, 0,  // 9, ...
+  273,  0, 0,        // 14, ...
+  215,  0, 0,        // 17, ...
+  178,  0, 0,        // 20, ...
+  151,  0, 0,        // 23, ... (113 & 203 are base angles)
+  132,  0, 0,        // 26, ...
+  116,  0, 0,        // 29, ...
+  102,  0, 0, 0,     // 32, ...
+  90,   0, 0,        // 36, ...
+  80,   0, 0,        // 39, ...
+  71,   0, 0,        // 42, ...
+  64,   0, 0,        // 45, ... (45 & 135 are base angles)
+  57,   0, 0,        // 48, ...
+  51,   0, 0,        // 51, ...
+  45,   0, 0, 0,     // 54, ...
+  40,   0, 0,        // 58, ...
+  35,   0, 0,        // 61, ...
+  31,   0, 0,        // 64, ...
+  27,   0, 0,        // 67, ... (67 & 157 are base angles)
+  23,   0, 0,        // 70, ...
+  19,   0, 0,        // 73, ...
+  15,   0, 0, 0, 0,  // 76, ...
+  11,   0, 0,        // 81, ...
+  7,    0, 0,        // 84, ...
+  3,    0, 0,        // 87, ...
+};
 
 // Get the shift (up-scaled by 256) in X w.r.t a unit change in Y.
 // If angle > 0 && angle < 90, dx = -((int)(256 / t));
@@ -110,7 +149,7 @@ static INLINE int av1_use_intra_edge_upsample(int bs0, int bs1, int delta,
                                               int type) {
   const int d = abs(delta);
   const int blk_wh = bs0 + bs1;
-  if (d <= 0 || d >= 40) return 0;
+  if (d == 0 || d >= 40) return 0;
   return type ? (blk_wh <= 8) : (blk_wh <= 16);
 }
 #ifdef __cplusplus

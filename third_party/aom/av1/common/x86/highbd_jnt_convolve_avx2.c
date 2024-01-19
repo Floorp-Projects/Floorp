@@ -12,7 +12,7 @@
 #include <immintrin.h>
 #include <assert.h>
 
-#include "config/aom_dsp_rtcd.h"
+#include "config/av1_rtcd.h"
 
 #include "aom_dsp/x86/convolve_avx2.h"
 #include "aom_dsp/x86/convolve_common_intrin.h"
@@ -22,23 +22,19 @@
 #include "aom_dsp/aom_filter.h"
 #include "av1/common/convolve.h"
 
-void av1_highbd_jnt_convolve_2d_copy_avx2(
-    const uint16_t *src, int src_stride, uint16_t *dst0, int dst_stride0, int w,
-    int h, const InterpFilterParams *filter_params_x,
-    const InterpFilterParams *filter_params_y, const int subpel_x_q4,
-    const int subpel_y_q4, ConvolveParams *conv_params, int bd) {
+void av1_highbd_dist_wtd_convolve_2d_copy_avx2(const uint16_t *src,
+                                               int src_stride, uint16_t *dst0,
+                                               int dst_stride0, int w, int h,
+                                               ConvolveParams *conv_params,
+                                               int bd) {
   CONV_BUF_TYPE *dst = conv_params->dst;
   int dst_stride = conv_params->dst_stride;
-  (void)filter_params_x;
-  (void)filter_params_y;
-  (void)subpel_x_q4;
-  (void)subpel_y_q4;
 
   const int bits =
       FILTER_BITS * 2 - conv_params->round_1 - conv_params->round_0;
   const __m128i left_shift = _mm_cvtsi32_si128(bits);
   const int do_average = conv_params->do_average;
-  const int use_jnt_comp_avg = conv_params->use_jnt_comp_avg;
+  const int use_dist_wtd_comp_avg = conv_params->use_dist_wtd_comp_avg;
   const int w0 = conv_params->fwd_offset;
   const int w1 = conv_params->bck_offset;
   const __m256i wt0 = _mm256_set1_epi32(w0);
@@ -78,15 +74,17 @@ void av1_highbd_jnt_convolve_2d_copy_avx2(
           const __m256i res_unsigned_lo =
               _mm256_add_epi32(res_32b_lo, offset_const);
 
-          const __m256i comp_avg_res_lo = highbd_comp_avg(
-              &data_ref_0_lo, &res_unsigned_lo, &wt0, &wt1, use_jnt_comp_avg);
+          const __m256i comp_avg_res_lo =
+              highbd_comp_avg(&data_ref_0_lo, &res_unsigned_lo, &wt0, &wt1,
+                              use_dist_wtd_comp_avg);
 
           const __m256i res_32b_hi = _mm256_unpackhi_epi16(res, zero);
           const __m256i res_unsigned_hi =
               _mm256_add_epi32(res_32b_hi, offset_const);
 
-          const __m256i comp_avg_res_hi = highbd_comp_avg(
-              &data_ref_0_hi, &res_unsigned_hi, &wt0, &wt1, use_jnt_comp_avg);
+          const __m256i comp_avg_res_hi =
+              highbd_comp_avg(&data_ref_0_hi, &res_unsigned_hi, &wt0, &wt1,
+                              use_dist_wtd_comp_avg);
 
           const __m256i round_result_lo = highbd_convolve_rounding(
               &comp_avg_res_lo, &offset_const, &rounding_const, rounding_shift);
@@ -135,8 +133,9 @@ void av1_highbd_jnt_convolve_2d_copy_avx2(
             const __m256i res_unsigned_lo =
                 _mm256_add_epi32(res_32b, offset_const);
 
-            const __m256i comp_avg_res = highbd_comp_avg(
-                &data_ref_0, &res_unsigned_lo, &wt0, &wt1, use_jnt_comp_avg);
+            const __m256i comp_avg_res =
+                highbd_comp_avg(&data_ref_0, &res_unsigned_lo, &wt0, &wt1,
+                                use_dist_wtd_comp_avg);
 
             const __m256i round_result = highbd_convolve_rounding(
                 &comp_avg_res, &offset_const, &rounding_const, rounding_shift);
@@ -179,15 +178,17 @@ void av1_highbd_jnt_convolve_2d_copy_avx2(
             const __m256i res_unsigned_lo =
                 _mm256_add_epi32(res_32b_lo, offset_const);
 
-            const __m256i comp_avg_res_lo = highbd_comp_avg(
-                &data_ref_0_lo, &res_unsigned_lo, &wt0, &wt1, use_jnt_comp_avg);
+            const __m256i comp_avg_res_lo =
+                highbd_comp_avg(&data_ref_0_lo, &res_unsigned_lo, &wt0, &wt1,
+                                use_dist_wtd_comp_avg);
 
             const __m256i res_32b_hi = _mm256_unpackhi_epi16(res, zero);
             const __m256i res_unsigned_hi =
                 _mm256_add_epi32(res_32b_hi, offset_const);
 
-            const __m256i comp_avg_res_hi = highbd_comp_avg(
-                &data_ref_0_hi, &res_unsigned_hi, &wt0, &wt1, use_jnt_comp_avg);
+            const __m256i comp_avg_res_hi =
+                highbd_comp_avg(&data_ref_0_hi, &res_unsigned_hi, &wt0, &wt1,
+                                use_dist_wtd_comp_avg);
 
             const __m256i round_result_lo =
                 highbd_convolve_rounding(&comp_avg_res_lo, &offset_const,
@@ -223,11 +224,11 @@ void av1_highbd_jnt_convolve_2d_copy_avx2(
   }
 }
 
-void av1_highbd_jnt_convolve_2d_avx2(
+void av1_highbd_dist_wtd_convolve_2d_avx2(
     const uint16_t *src, int src_stride, uint16_t *dst0, int dst_stride0, int w,
     int h, const InterpFilterParams *filter_params_x,
-    const InterpFilterParams *filter_params_y, const int subpel_x_q4,
-    const int subpel_y_q4, ConvolveParams *conv_params, int bd) {
+    const InterpFilterParams *filter_params_y, const int subpel_x_qn,
+    const int subpel_y_qn, ConvolveParams *conv_params, int bd) {
   DECLARE_ALIGNED(32, int16_t, im_block[(MAX_SB_SIZE + MAX_FILTER_TAP) * 8]);
   CONV_BUF_TYPE *dst = conv_params->dst;
   int dst_stride = conv_params->dst_stride;
@@ -244,7 +245,7 @@ void av1_highbd_jnt_convolve_2d_avx2(
 
   __m256i s[8], coeffs_y[4], coeffs_x[4];
   const int do_average = conv_params->do_average;
-  const int use_jnt_comp_avg = conv_params->use_jnt_comp_avg;
+  const int use_dist_wtd_comp_avg = conv_params->use_dist_wtd_comp_avg;
 
   const int w0 = conv_params->fwd_offset;
   const int w1 = conv_params->bck_offset;
@@ -272,8 +273,8 @@ void av1_highbd_jnt_convolve_2d_avx2(
   const __m256i clip_pixel_to_bd =
       _mm256_set1_epi16(bd == 10 ? 1023 : (bd == 12 ? 4095 : 255));
 
-  prepare_coeffs(filter_params_x, subpel_x_q4, coeffs_x);
-  prepare_coeffs(filter_params_y, subpel_y_q4, coeffs_y);
+  prepare_coeffs(filter_params_x, subpel_x_qn, coeffs_x);
+  prepare_coeffs(filter_params_y, subpel_y_qn, coeffs_y);
 
   for (j = 0; j < w; j += 8) {
     /* Horizontal filter */
@@ -281,7 +282,7 @@ void av1_highbd_jnt_convolve_2d_avx2(
       for (i = 0; i < im_h; i += 2) {
         const __m256i row0 =
             _mm256_loadu_si256((__m256i *)&src_ptr[i * src_stride + j]);
-        __m256i row1 = _mm256_set1_epi16(0);
+        __m256i row1 = _mm256_setzero_si256();
         if (i + 1 < im_h)
           row1 =
               _mm256_loadu_si256((__m256i *)&src_ptr[(i + 1) * src_stride + j]);
@@ -364,8 +365,9 @@ void av1_highbd_jnt_convolve_2d_avx2(
 
             const __m256i data_ref_0 = _mm256_unpacklo_epi16(data_01, zero);
 
-            const __m256i comp_avg_res = highbd_comp_avg(
-                &data_ref_0, &res_unsigned_lo, &wt0, &wt1, use_jnt_comp_avg);
+            const __m256i comp_avg_res =
+                highbd_comp_avg(&data_ref_0, &res_unsigned_lo, &wt0, &wt1,
+                                use_dist_wtd_comp_avg);
 
             const __m256i round_result = highbd_convolve_rounding(
                 &comp_avg_res, &offset_const, &rounding_const, rounding_shift);
@@ -409,10 +411,12 @@ void av1_highbd_jnt_convolve_2d_avx2(
             const __m256i data_ref_0_lo = _mm256_unpacklo_epi16(data_01, zero);
             const __m256i data_ref_0_hi = _mm256_unpackhi_epi16(data_01, zero);
 
-            const __m256i comp_avg_res_lo = highbd_comp_avg(
-                &data_ref_0_lo, &res_unsigned_lo, &wt0, &wt1, use_jnt_comp_avg);
-            const __m256i comp_avg_res_hi = highbd_comp_avg(
-                &data_ref_0_hi, &res_unsigned_hi, &wt0, &wt1, use_jnt_comp_avg);
+            const __m256i comp_avg_res_lo =
+                highbd_comp_avg(&data_ref_0_lo, &res_unsigned_lo, &wt0, &wt1,
+                                use_dist_wtd_comp_avg);
+            const __m256i comp_avg_res_hi =
+                highbd_comp_avg(&data_ref_0_hi, &res_unsigned_hi, &wt0, &wt1,
+                                use_dist_wtd_comp_avg);
 
             const __m256i round_result_lo =
                 highbd_convolve_rounding(&comp_avg_res_lo, &offset_const,
@@ -456,24 +460,21 @@ void av1_highbd_jnt_convolve_2d_avx2(
   }
 }
 
-void av1_highbd_jnt_convolve_x_avx2(
+void av1_highbd_dist_wtd_convolve_x_avx2(
     const uint16_t *src, int src_stride, uint16_t *dst0, int dst_stride0, int w,
-    int h, const InterpFilterParams *filter_params_x,
-    const InterpFilterParams *filter_params_y, const int subpel_x_q4,
-    const int subpel_y_q4, ConvolveParams *conv_params, int bd) {
+    int h, const InterpFilterParams *filter_params_x, const int subpel_x_qn,
+    ConvolveParams *conv_params, int bd) {
   CONV_BUF_TYPE *dst = conv_params->dst;
   int dst_stride = conv_params->dst_stride;
   const int fo_horiz = filter_params_x->taps / 2 - 1;
   const uint16_t *const src_ptr = src - fo_horiz;
   const int bits = FILTER_BITS - conv_params->round_1;
-  (void)filter_params_y;
-  (void)subpel_y_q4;
 
   int i, j;
   __m256i s[4], coeffs_x[4];
 
   const int do_average = conv_params->do_average;
-  const int use_jnt_comp_avg = conv_params->use_jnt_comp_avg;
+  const int use_dist_wtd_comp_avg = conv_params->use_dist_wtd_comp_avg;
   const int w0 = conv_params->fwd_offset;
   const int w1 = conv_params->bck_offset;
   const __m256i wt0 = _mm256_set1_epi32(w0);
@@ -496,7 +497,7 @@ void av1_highbd_jnt_convolve_x_avx2(
       _mm256_set1_epi16(bd == 10 ? 1023 : (bd == 12 ? 4095 : 255));
 
   assert(bits >= 0);
-  prepare_coeffs(filter_params_x, subpel_x_q4, coeffs_x);
+  prepare_coeffs(filter_params_x, subpel_x_qn, coeffs_x);
 
   for (j = 0; j < w; j += 8) {
     /* Horizontal filter */
@@ -548,7 +549,7 @@ void av1_highbd_jnt_convolve_x_avx2(
           const __m256i data_ref_0 = _mm256_unpacklo_epi16(data_01, zero);
 
           const __m256i comp_avg_res = highbd_comp_avg(
-              &data_ref_0, &res_unsigned_lo, &wt0, &wt1, use_jnt_comp_avg);
+              &data_ref_0, &res_unsigned_lo, &wt0, &wt1, use_dist_wtd_comp_avg);
 
           const __m256i round_result = highbd_convolve_rounding(
               &comp_avg_res, &offset_const, &rounding_const, rounding_shift);
@@ -588,10 +589,12 @@ void av1_highbd_jnt_convolve_x_avx2(
           const __m256i data_ref_0_lo = _mm256_unpacklo_epi16(data_01, zero);
           const __m256i data_ref_0_hi = _mm256_unpackhi_epi16(data_01, zero);
 
-          const __m256i comp_avg_res_lo = highbd_comp_avg(
-              &data_ref_0_lo, &res_unsigned_lo, &wt0, &wt1, use_jnt_comp_avg);
-          const __m256i comp_avg_res_hi = highbd_comp_avg(
-              &data_ref_0_hi, &res_unsigned_hi, &wt0, &wt1, use_jnt_comp_avg);
+          const __m256i comp_avg_res_lo =
+              highbd_comp_avg(&data_ref_0_lo, &res_unsigned_lo, &wt0, &wt1,
+                              use_dist_wtd_comp_avg);
+          const __m256i comp_avg_res_hi =
+              highbd_comp_avg(&data_ref_0_hi, &res_unsigned_hi, &wt0, &wt1,
+                              use_dist_wtd_comp_avg);
 
           const __m256i round_result_lo = highbd_convolve_rounding(
               &comp_avg_res_lo, &offset_const, &rounding_const, rounding_shift);
@@ -623,24 +626,21 @@ void av1_highbd_jnt_convolve_x_avx2(
   }
 }
 
-void av1_highbd_jnt_convolve_y_avx2(
+void av1_highbd_dist_wtd_convolve_y_avx2(
     const uint16_t *src, int src_stride, uint16_t *dst0, int dst_stride0, int w,
-    int h, const InterpFilterParams *filter_params_x,
-    const InterpFilterParams *filter_params_y, const int subpel_x_q4,
-    const int subpel_y_q4, ConvolveParams *conv_params, int bd) {
+    int h, const InterpFilterParams *filter_params_y, const int subpel_y_qn,
+    ConvolveParams *conv_params, int bd) {
   CONV_BUF_TYPE *dst = conv_params->dst;
   int dst_stride = conv_params->dst_stride;
   const int fo_vert = filter_params_y->taps / 2 - 1;
   const uint16_t *const src_ptr = src - fo_vert * src_stride;
   const int bits = FILTER_BITS - conv_params->round_0;
-  (void)filter_params_x;
-  (void)subpel_x_q4;
 
   assert(bits >= 0);
   int i, j;
   __m256i s[8], coeffs_y[4];
   const int do_average = conv_params->do_average;
-  const int use_jnt_comp_avg = conv_params->use_jnt_comp_avg;
+  const int use_dist_wtd_comp_avg = conv_params->use_dist_wtd_comp_avg;
 
   const int w0 = conv_params->fwd_offset;
   const int w1 = conv_params->bck_offset;
@@ -662,7 +662,7 @@ void av1_highbd_jnt_convolve_y_avx2(
       _mm256_set1_epi16(bd == 10 ? 1023 : (bd == 12 ? 4095 : 255));
   const __m256i zero = _mm256_setzero_si256();
 
-  prepare_coeffs(filter_params_y, subpel_y_q4, coeffs_y);
+  prepare_coeffs(filter_params_y, subpel_y_qn, coeffs_y);
 
   for (j = 0; j < w; j += 8) {
     const uint16_t *data = &src_ptr[j];
@@ -753,8 +753,9 @@ void av1_highbd_jnt_convolve_y_avx2(
 
             const __m256i data_ref_0 = _mm256_unpacklo_epi16(data_01, zero);
 
-            const __m256i comp_avg_res = highbd_comp_avg(
-                &data_ref_0, &res_unsigned_lo, &wt0, &wt1, use_jnt_comp_avg);
+            const __m256i comp_avg_res =
+                highbd_comp_avg(&data_ref_0, &res_unsigned_lo, &wt0, &wt1,
+                                use_dist_wtd_comp_avg);
 
             const __m256i round_result = highbd_convolve_rounding(
                 &comp_avg_res, &offset_const, &rounding_const, rounding_shift);
@@ -799,10 +800,12 @@ void av1_highbd_jnt_convolve_y_avx2(
             const __m256i data_ref_0_lo = _mm256_unpacklo_epi16(data_01, zero);
             const __m256i data_ref_0_hi = _mm256_unpackhi_epi16(data_01, zero);
 
-            const __m256i comp_avg_res_lo = highbd_comp_avg(
-                &data_ref_0_lo, &res_unsigned_lo, &wt0, &wt1, use_jnt_comp_avg);
-            const __m256i comp_avg_res_hi = highbd_comp_avg(
-                &data_ref_0_hi, &res_unsigned_hi, &wt0, &wt1, use_jnt_comp_avg);
+            const __m256i comp_avg_res_lo =
+                highbd_comp_avg(&data_ref_0_lo, &res_unsigned_lo, &wt0, &wt1,
+                                use_dist_wtd_comp_avg);
+            const __m256i comp_avg_res_hi =
+                highbd_comp_avg(&data_ref_0_hi, &res_unsigned_hi, &wt0, &wt1,
+                                use_dist_wtd_comp_avg);
 
             const __m256i round_result_lo =
                 highbd_convolve_rounding(&comp_avg_res_lo, &offset_const,

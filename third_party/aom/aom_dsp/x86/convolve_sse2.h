@@ -12,9 +12,10 @@
 #ifndef AOM_AOM_DSP_X86_CONVOLVE_SSE2_H_
 #define AOM_AOM_DSP_X86_CONVOLVE_SSE2_H_
 
+#include "config/aom_scale_rtcd.h"
+
 // Note:
 //  This header file should be put below any x86 intrinsics head file
-
 static INLINE void prepare_coeffs(const InterpFilterParams *const filter_params,
                                   const int subpel_q4,
                                   __m128i *const coeffs /* [4] */) {
@@ -78,9 +79,9 @@ static INLINE __m128i convolve_hi_y(const __m128i *const s,
 static INLINE __m128i comp_avg(const __m128i *const data_ref_0,
                                const __m128i *const res_unsigned,
                                const __m128i *const wt,
-                               const int use_jnt_comp_avg) {
+                               const int use_dist_wtd_avg) {
   __m128i res;
-  if (use_jnt_comp_avg) {
+  if (use_dist_wtd_avg) {
     const __m128i data_lo = _mm_unpacklo_epi16(*data_ref_0, *res_unsigned);
     const __m128i data_hi = _mm_unpackhi_epi16(*data_ref_0, *res_unsigned);
 

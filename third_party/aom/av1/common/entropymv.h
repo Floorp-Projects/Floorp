@@ -30,12 +30,12 @@ void av1_init_mv_probs(struct AV1Common *cm);
 
 /* Symbols for coding which components are zero jointly */
 #define MV_JOINTS 4
-typedef enum {
+enum {
   MV_JOINT_ZERO = 0,   /* Zero vector */
   MV_JOINT_HNZVZ = 1,  /* Vert zero, hor nonzero */
   MV_JOINT_HZVNZ = 2,  /* Hor zero, vert nonzero */
   MV_JOINT_HNZVNZ = 3, /* Both components nonzero */
-} MV_JOINT_TYPE;
+} UENUM1BYTE(MV_JOINT_TYPE);
 
 static INLINE int mv_joint_vertical(MV_JOINT_TYPE type) {
   return type == MV_JOINT_HZVNZ || type == MV_JOINT_HNZVNZ;
@@ -47,7 +47,7 @@ static INLINE int mv_joint_horizontal(MV_JOINT_TYPE type) {
 
 /* Symbols for coding magnitude class of nonzero components */
 #define MV_CLASSES 11
-typedef enum {
+enum {
   MV_CLASS_0 = 0,   /* (0, 2]     integer pel */
   MV_CLASS_1 = 1,   /* (2, 4]     integer pel */
   MV_CLASS_2 = 2,   /* (4, 8]     integer pel */
@@ -59,7 +59,7 @@ typedef enum {
   MV_CLASS_8 = 8,   /* (256, 512] integer pel */
   MV_CLASS_9 = 9,   /* (512, 1024] integer pel */
   MV_CLASS_10 = 10, /* (1024,2048] integer pel */
-} MV_CLASS_TYPE;
+} UENUM1BYTE(MV_CLASS_TYPE);
 
 #define CLASS0_BITS 1 /* bits at integer precision for class 0 */
 #define CLASS0_SIZE (1 << CLASS0_BITS)
@@ -91,11 +91,11 @@ typedef struct {
   nmv_component comps[2];
 } nmv_context;
 
-typedef enum {
+enum {
   MV_SUBPEL_NONE = -1,
   MV_SUBPEL_LOW_PRECISION = 0,
   MV_SUBPEL_HIGH_PRECISION,
-} MvSubpelPrecision;
+} SENUM1BYTE(MvSubpelPrecision);
 
 #ifdef __cplusplus
 }  // extern "C"

@@ -72,8 +72,6 @@ void usage_exit(void) {
 int main(int argc, char **argv) {
   int frame_cnt = 0;
   FILE *outfile = NULL;
-  aom_codec_ctx_t codec;
-  const AvxInterface *decoder = NULL;
   AvxVideoReader *reader = NULL;
   const AvxVideoInfo *info = NULL;
   int n = 0;
@@ -99,13 +97,13 @@ int main(int argc, char **argv) {
 
   info = aom_video_reader_get_info(reader);
 
-  decoder = get_aom_decoder_by_fourcc(info->codec_fourcc);
+  aom_codec_iface_t *decoder = get_aom_decoder_by_fourcc(info->codec_fourcc);
   if (!decoder) die("Unknown input codec.");
 
-  printf("Using %s\n", aom_codec_iface_name(decoder->codec_interface()));
-
-  if (aom_codec_dec_init(&codec, decoder->codec_interface(), NULL, 0))
-    die_codec(&codec, "Failed to initialize decoder.");
+  printf("Using %s\n", aom_codec_iface_name(decoder));
+  aom_codec_ctx_t codec;
+  if (aom_codec_dec_init(&codec, decoder, NULL, 0))
+    die("Failed to initialize decoder.");
 
   while (aom_video_reader_read_frame(reader)) {
     aom_codec_iter_t iter = NULL;

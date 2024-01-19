@@ -1,5 +1,5 @@
 URL: https://github.com/google/googletest
-Version: 1.8.0
+Version: release-1.12.1
 License: BSD
 License File: LICENSE
 
@@ -13,14 +13,26 @@ generation.
 
 Local Modifications:
 - Remove everything but:
-  googletest-release-1.8.0/googletest/
-    cmake/
-    include/
-    src/
-    CHANGES
-    CMakelists.txt
-    CONTRIBUTORS
-    LICENSE
-    README.md
-- Suppress unsigned overflow instrumentation in the LCG
-  https://github.com/google/googletest/pull/1066
+  .clang-format
+  CMakeLists.txt
+  CONTRIBUTORS
+  googlemock/
+   cmake
+   CMakeLists.txt
+   include
+   README.md
+   src
+  googletest/
+   cmake
+   CMakeLists.txt
+   include
+   README.md
+   src
+  LICENSE
+  README.md
+- In googletest/include/gtest/internal/custom/gtest-port.h, define
+  GTEST_HAS_NOTIFICATION_ as 1 and use a stub Notification class to fix
+  the mingw32 g++ compilation errors caused by the lack of std::mutex
+  and std::condition_variable in the <mutex> and <condition_variable>
+  headers if mingw32 is configured with the win32 threads option. See
+  https://stackoverflow.com/questions/17242516/mingw-w64-threads-posix-vs-win32

@@ -12,7 +12,7 @@
 #include <assert.h>
 #include <smmintrin.h>
 
-#include "config/aom_dsp_rtcd.h"
+#include "config/av1_rtcd.h"
 
 #include "aom_dsp/aom_dsp_common.h"
 #include "aom_dsp/aom_filter.h"
@@ -22,7 +22,7 @@
 // av1_convolve_2d_scale_sse4_1. This version only supports 8 tap filters.
 static void hfilter8(const uint8_t *src, int src_stride, int16_t *dst, int w,
                      int h, int subpel_x_qn, int x_step_qn,
-                     const InterpFilterParams *filter_params, unsigned round) {
+                     const InterpFilterParams *filter_params, int round) {
   const int bd = 8;
   const int ntaps = 8;
 
@@ -129,8 +129,8 @@ static void vfilter8(const int16_t *src, int src_stride, uint8_t *dst,
 
   const int w0 = conv_params->fwd_offset;
   const int w1 = conv_params->bck_offset;
-  const __m128i wt0 = _mm_set1_epi16(w0);
-  const __m128i wt1 = _mm_set1_epi16(w1);
+  const __m128i wt0 = _mm_set1_epi16((short)w0);
+  const __m128i wt1 = _mm_set1_epi16((short)w1);
   const __m128i wt = _mm_unpacklo_epi16(wt0, wt1);
 
   int y_qn = subpel_y_qn;
@@ -168,14 +168,14 @@ static void vfilter8(const int16_t *src, int src_stride, uint8_t *dst,
           _mm_sra_epi32(_mm_add_epi32(conv, round_shift_add), round_shift);
 
       uint8_t *dst_x = dst + y * dst_stride + x;
-      CONV_BUF_TYPE *dst_16_x = dst16 + y * dst16_stride + x;
       __m128i result;
       __m128i shifted_16 = _mm_packus_epi32(shifted, shifted);
 
       if (conv_params->is_compound) {
+        CONV_BUF_TYPE *dst_16_x = dst16 + y * dst16_stride + x;
         if (conv_params->do_average) {
           const __m128i p_16 = _mm_loadl_epi64((__m128i *)dst_16_x);
-          if (conv_params->use_jnt_comp_avg) {
+          if (conv_params->use_dist_wtd_comp_avg) {
             const __m128i p_16_lo = _mm_unpacklo_epi16(p_16, shifted_16);
             const __m128i wt_res_lo = _mm_madd_epi16(p_16_lo, wt);
             const __m128i shifted_32 =
@@ -187,7 +187,7 @@ static void vfilter8(const int16_t *src, int src_stride, uint8_t *dst,
           const __m128i subbed = _mm_sub_epi16(shifted_16, sub);
           result = _mm_sra_epi16(_mm_add_epi16(subbed, bits_const), bits_shift);
           const __m128i result_8 = _mm_packus_epi16(result, result);
-          *(uint32_t *)dst_x = _mm_cvtsi128_si32(result_8);
+          *(int *)dst_x = _mm_cvtsi128_si32(result_8);
         } else {
           _mm_storel_epi64((__m128i *)dst_16_x, shifted_16);
         }
@@ -195,7 +195,7 @@ static void vfilter8(const int16_t *src, int src_stride, uint8_t *dst,
         const __m128i subbed = _mm_sub_epi16(shifted_16, sub);
         result = _mm_sra_epi16(_mm_add_epi16(subbed, bits_const), bits_shift);
         const __m128i result_8 = _mm_packus_epi16(result, result);
-        *(uint32_t *)dst_x = _mm_cvtsi128_si32(result_8);
+        *(int *)dst_x = _mm_cvtsi128_si32(result_8);
       }
     }
     for (; x < w; ++x) {
@@ -207,7 +207,7 @@ static void vfilter8(const int16_t *src, int src_stride, uint8_t *dst,
       if (conv_params->is_compound) {
         if (conv_params->do_average) {
           int32_t tmp = dst16[y * dst16_stride + x];
-          if (conv_params->use_jnt_comp_avg) {
+          if (conv_params->use_dist_wtd_comp_avg) {
             tmp = tmp * conv_params->fwd_offset + res * conv_params->bck_offset;
             tmp = tmp >> DIST_PRECISION_BITS;
           } else {
@@ -236,8 +236,7 @@ void av1_convolve_2d_scale_sse4_1(const uint8_t *src, int src_stride,
                                   const int subpel_x_qn, const int x_step_qn,
                                   const int subpel_y_qn, const int y_step_qn,
                                   ConvolveParams *conv_params) {
-  // TODO(yaowu): remove unnecessary initializations
-  int16_t tmp[(2 * MAX_SB_SIZE + MAX_FILTER_TAP) * MAX_SB_SIZE] = { 0 };
+  int16_t tmp[(2 * MAX_SB_SIZE + MAX_FILTER_TAP) * MAX_SB_SIZE];
   int im_h = (((h - 1) * y_step_qn + subpel_y_qn) >> SCALE_SUBPEL_BITS) +
              filter_params_y->taps;
 
@@ -261,8 +260,8 @@ void av1_convolve_2d_scale_sse4_1(const uint8_t *src, int src_stride,
 // filters.
 static void highbd_hfilter8(const uint16_t *src, int src_stride, int16_t *dst,
                             int w, int h, int subpel_x_qn, int x_step_qn,
-                            const InterpFilterParams *filter_params,
-                            unsigned round, int bd) {
+                            const InterpFilterParams *filter_params, int round,
+                            int bd) {
   const int ntaps = 8;
 
   src -= ntaps / 2 - 1;
@@ -400,35 +399,35 @@ static void highbd_vfilter8(const int16_t *src, int src_stride, uint16_t *dst,
           _mm_sra_epi32(_mm_add_epi32(conv, round_shift_add), round_shift);
 
       uint16_t *dst_x = dst + y * dst_stride + x;
-      CONV_BUF_TYPE *dst_16_x = dst16 + y * dst16_stride + x;
 
       __m128i result;
       if (conv_params->is_compound) {
+        CONV_BUF_TYPE *dst_16_x = dst16 + y * dst16_stride + x;
         if (conv_params->do_average) {
           __m128i p_32 =
               _mm_cvtepu16_epi32(_mm_loadl_epi64((__m128i *)dst_16_x));
 
-          if (conv_params->use_jnt_comp_avg) {
+          if (conv_params->use_dist_wtd_comp_avg) {
             shifted = _mm_add_epi32(_mm_mullo_epi32(p_32, wt0),
                                     _mm_mullo_epi32(shifted, wt1));
             shifted = _mm_srai_epi32(shifted, DIST_PRECISION_BITS);
           } else {
             shifted = _mm_srai_epi32(_mm_add_epi32(p_32, shifted), 1);
           }
-          __m128i res32 = _mm_sub_epi32(shifted, sub);
-          res32 = _mm_sra_epi32(_mm_add_epi32(res32, round_bits_const),
-                                round_bits_shift);
+          result = _mm_sub_epi32(shifted, sub);
+          result = _mm_sra_epi32(_mm_add_epi32(result, round_bits_const),
+                                 round_bits_shift);
 
-          __m128i res16 = _mm_packus_epi32(res32, res32);
-          res16 = _mm_min_epi16(res16, clip_pixel_);
-          _mm_storel_epi64((__m128i *)dst_x, res16);
+          result = _mm_packus_epi32(result, result);
+          result = _mm_min_epi16(result, clip_pixel_);
+          _mm_storel_epi64((__m128i *)dst_x, result);
         } else {
           __m128i shifted_16 = _mm_packus_epi32(shifted, shifted);
           _mm_storel_epi64((__m128i *)dst_16_x, shifted_16);
         }
       } else {
-        const __m128i subbed = _mm_sub_epi32(shifted, sub);
-        result = _mm_sra_epi16(_mm_add_epi32(subbed, bits_const), bits_shift);
+        result = _mm_sub_epi32(shifted, sub);
+        result = _mm_sra_epi16(_mm_add_epi32(result, bits_const), bits_shift);
         result = _mm_packus_epi32(result, result);
         result = _mm_min_epi16(result, clip_pixel_);
         _mm_storel_epi64((__m128i *)dst_x, result);
@@ -443,7 +442,7 @@ static void highbd_vfilter8(const int16_t *src, int src_stride, uint16_t *dst,
       if (conv_params->is_compound) {
         if (conv_params->do_average) {
           int32_t tmp = dst16[y * dst16_stride + x];
-          if (conv_params->use_jnt_comp_avg) {
+          if (conv_params->use_dist_wtd_comp_avg) {
             tmp = tmp * conv_params->fwd_offset + res * conv_params->bck_offset;
             tmp = tmp >> DIST_PRECISION_BITS;
           } else {

@@ -27,13 +27,13 @@ extern "C" {
 
 // half input is zero
 #define btf_16_w16_0_avx2(w0, w1, in, out0, out1)  \
-  {                                                \
+  do {                                             \
     const __m256i _w0 = _mm256_set1_epi16(w0 * 8); \
     const __m256i _w1 = _mm256_set1_epi16(w1 * 8); \
     const __m256i _in = in;                        \
     out0 = _mm256_mulhrs_epi16(_in, _w0);          \
     out1 = _mm256_mulhrs_epi16(_in, _w1);          \
-  }
+  } while (0)
 
 static INLINE void round_shift_avx2(const __m256i *input, __m256i *output,
                                     int size) {

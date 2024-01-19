@@ -10,13 +10,14 @@
  */
 
 #include "av1/encoder/hash.h"
+#include "config/av1_rtcd.h"
 
 static void crc_calculator_process_data(CRC_CALCULATOR *p_crc_calculator,
                                         uint8_t *pData, uint32_t dataLength) {
   for (uint32_t i = 0; i < dataLength; i++) {
-    const uint8_t index =
+    const uint8_t index = (uint8_t)(
         (p_crc_calculator->remainder >> (p_crc_calculator->bits - 8)) ^
-        pData[i];
+        pData[i]);
     p_crc_calculator->remainder <<= 8;
     p_crc_calculator->remainder ^= p_crc_calculator->table[index];
   }
@@ -61,8 +62,8 @@ void av1_crc_calculator_init(CRC_CALCULATOR *p_crc_calculator, uint32_t bits,
   crc_calculator_init_table(p_crc_calculator);
 }
 
-uint32_t av1_get_crc_value(void *crc_calculator, uint8_t *p, int length) {
-  CRC_CALCULATOR *p_crc_calculator = (CRC_CALCULATOR *)crc_calculator;
+uint32_t av1_get_crc_value(CRC_CALCULATOR *p_crc_calculator, uint8_t *p,
+                           int length) {
   crc_calculator_reset(p_crc_calculator);
   crc_calculator_process_data(p_crc_calculator, p, length);
   return crc_calculator_get_crc(p_crc_calculator);
@@ -99,10 +100,10 @@ void av1_crc32c_calculator_init(CRC32C *p_crc32c) {
 /* Table-driven software version as a fall-back.  This is about 15 times slower
  than using the hardware instructions.  This assumes little-endian integers,
  as is the case on Intel processors that the assembler code here is for. */
-uint32_t av1_get_crc32c_value_c(CRC32C *p, uint8_t *buf, size_t len) {
+uint32_t av1_get_crc32c_value_c(void *c, uint8_t *buf, size_t len) {
   const uint8_t *next = (const uint8_t *)(buf);
   uint64_t crc;
-
+  CRC32C *p = (CRC32C *)c;
   crc = 0 ^ 0xffffffff;
   while (len && ((uintptr_t)next & 7) != 0) {
     crc = p->table[0][(crc ^ *next++) & 0xff] ^ (crc >> 8);

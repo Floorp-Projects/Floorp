@@ -45,14 +45,21 @@ aomenc_available() {
 encode_test_file() {
   if [ "$(aomenc_available)" = "yes" ]; then
     local encoder="$(aom_tool_path aomenc)"
-
-    eval "${encoder}" \
-      $(aomenc_encode_test_fast_params) \
-      $(yuv_raw_input) \
-      --ivf \
-      --output=${dump_obu_test_file} \
-      ${devnull}
-
+    if [ "$(realtime_only_build)" = "yes" ]; then
+      eval "${encoder}" \
+        $(aomenc_encode_test_rt_params) \
+        $(yuv_raw_input) \
+        --ivf \
+        --output=${dump_obu_test_file} \
+        ${devnull} || return 1
+    else
+      eval "${encoder}" \
+        $(aomenc_encode_test_fast_params) \
+        $(yuv_raw_input) \
+        --ivf \
+        --output=${dump_obu_test_file} \
+        ${devnull} || return 1
+    fi
     if [ ! -e "${dump_obu_test_file}" ]; then
       elog "dump_obu test input encode failed."
       return 1
@@ -61,7 +68,7 @@ encode_test_file() {
 }
 
 dump_obu() {
-  encode_test_file
+  encode_test_file || return 1
   eval $(aom_tool_path dump_obu) "${dump_obu_test_file}" ${devnull}
 }
 

@@ -44,6 +44,10 @@ void aom_wb_write_inv_signed_literal(struct aom_write_bit_buffer *wb, int data,
 
 void aom_wb_write_uvlc(struct aom_write_bit_buffer *wb, uint32_t v);
 
+void aom_wb_write_signed_primitive_refsubexpfin(struct aom_write_bit_buffer *wb,
+                                                uint16_t n, uint16_t k,
+                                                int16_t ref, int16_t v);
+
 #ifdef __cplusplus
 }  // extern "C"
 #endif

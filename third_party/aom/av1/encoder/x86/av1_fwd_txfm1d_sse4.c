@@ -11,45 +11,78 @@
 
 #include "av1/encoder/x86/av1_txfm1d_sse4.h"
 
-void av1_fdct32_new_sse4_1(const __m128i *input, __m128i *output,
-                           int8_t cos_bit) {
+void av1_fdct32_sse4_1(__m128i *input, __m128i *output, int cos_bit,
+                       const int stride) {
   __m128i buf0[32];
   __m128i buf1[32];
   const int32_t *cospi;
+
+  int startidx = 0 * stride;
+  int endidx = 31 * stride;
   // stage 0
   // stage 1
-  buf1[0] = _mm_add_epi32(input[0], input[31]);
-  buf1[31] = _mm_sub_epi32(input[0], input[31]);
-  buf1[1] = _mm_add_epi32(input[1], input[30]);
-  buf1[30] = _mm_sub_epi32(input[1], input[30]);
-  buf1[2] = _mm_add_epi32(input[2], input[29]);
-  buf1[29] = _mm_sub_epi32(input[2], input[29]);
-  buf1[3] = _mm_add_epi32(input[3], input[28]);
-  buf1[28] = _mm_sub_epi32(input[3], input[28]);
-  buf1[4] = _mm_add_epi32(input[4], input[27]);
-  buf1[27] = _mm_sub_epi32(input[4], input[27]);
-  buf1[5] = _mm_add_epi32(input[5], input[26]);
-  buf1[26] = _mm_sub_epi32(input[5], input[26]);
-  buf1[6] = _mm_add_epi32(input[6], input[25]);
-  buf1[25] = _mm_sub_epi32(input[6], input[25]);
-  buf1[7] = _mm_add_epi32(input[7], input[24]);
-  buf1[24] = _mm_sub_epi32(input[7], input[24]);
-  buf1[8] = _mm_add_epi32(input[8], input[23]);
-  buf1[23] = _mm_sub_epi32(input[8], input[23]);
-  buf1[9] = _mm_add_epi32(input[9], input[22]);
-  buf1[22] = _mm_sub_epi32(input[9], input[22]);
-  buf1[10] = _mm_add_epi32(input[10], input[21]);
-  buf1[21] = _mm_sub_epi32(input[10], input[21]);
-  buf1[11] = _mm_add_epi32(input[11], input[20]);
-  buf1[20] = _mm_sub_epi32(input[11], input[20]);
-  buf1[12] = _mm_add_epi32(input[12], input[19]);
-  buf1[19] = _mm_sub_epi32(input[12], input[19]);
-  buf1[13] = _mm_add_epi32(input[13], input[18]);
-  buf1[18] = _mm_sub_epi32(input[13], input[18]);
-  buf1[14] = _mm_add_epi32(input[14], input[17]);
-  buf1[17] = _mm_sub_epi32(input[14], input[17]);
-  buf1[15] = _mm_add_epi32(input[15], input[16]);
-  buf1[16] = _mm_sub_epi32(input[15], input[16]);
+  buf1[0] = _mm_add_epi32(input[startidx], input[endidx]);
+  buf1[31] = _mm_sub_epi32(input[startidx], input[endidx]);
+  startidx += stride;
+  endidx -= stride;
+  buf1[1] = _mm_add_epi32(input[startidx], input[endidx]);
+  buf1[30] = _mm_sub_epi32(input[startidx], input[endidx]);
+  startidx += stride;
+  endidx -= stride;
+  buf1[2] = _mm_add_epi32(input[startidx], input[endidx]);
+  buf1[29] = _mm_sub_epi32(input[startidx], input[endidx]);
+  startidx += stride;
+  endidx -= stride;
+  buf1[3] = _mm_add_epi32(input[startidx], input[endidx]);
+  buf1[28] = _mm_sub_epi32(input[startidx], input[endidx]);
+  startidx += stride;
+  endidx -= stride;
+  buf1[4] = _mm_add_epi32(input[startidx], input[endidx]);
+  buf1[27] = _mm_sub_epi32(input[startidx], input[endidx]);
+  startidx += stride;
+  endidx -= stride;
+  buf1[5] = _mm_add_epi32(input[startidx], input[endidx]);
+  buf1[26] = _mm_sub_epi32(input[startidx], input[endidx]);
+  startidx += stride;
+  endidx -= stride;
+  buf1[6] = _mm_add_epi32(input[startidx], input[endidx]);
+  buf1[25] = _mm_sub_epi32(input[startidx], input[endidx]);
+  startidx += stride;
+  endidx -= stride;
+  buf1[7] = _mm_add_epi32(input[startidx], input[endidx]);
+  buf1[24] = _mm_sub_epi32(input[startidx], input[endidx]);
+  startidx += stride;
+  endidx -= stride;
+  buf1[8] = _mm_add_epi32(input[startidx], input[endidx]);
+  buf1[23] = _mm_sub_epi32(input[startidx], input[endidx]);
+  startidx += stride;
+  endidx -= stride;
+  buf1[9] = _mm_add_epi32(input[startidx], input[endidx]);
+  buf1[22] = _mm_sub_epi32(input[startidx], input[endidx]);
+  startidx += stride;
+  endidx -= stride;
+  buf1[10] = _mm_add_epi32(input[startidx], input[endidx]);
+  buf1[21] = _mm_sub_epi32(input[startidx], input[endidx]);
+  startidx += stride;
+  endidx -= stride;
+  buf1[11] = _mm_add_epi32(input[startidx], input[endidx]);
+  buf1[20] = _mm_sub_epi32(input[startidx], input[endidx]);
+  startidx += stride;
+  endidx -= stride;
+  buf1[12] = _mm_add_epi32(input[startidx], input[endidx]);
+  buf1[19] = _mm_sub_epi32(input[startidx], input[endidx]);
+  startidx += stride;
+  endidx -= stride;
+  buf1[13] = _mm_add_epi32(input[startidx], input[endidx]);
+  buf1[18] = _mm_sub_epi32(input[startidx], input[endidx]);
+  startidx += stride;
+  endidx -= stride;
+  buf1[14] = _mm_add_epi32(input[startidx], input[endidx]);
+  buf1[17] = _mm_sub_epi32(input[startidx], input[endidx]);
+  startidx += stride;
+  endidx -= stride;
+  buf1[15] = _mm_add_epi32(input[startidx], input[endidx]);
+  buf1[16] = _mm_sub_epi32(input[startidx], input[endidx]);
 
   // stage 2
   cospi = cospi_arr(cos_bit);
@@ -296,43 +329,75 @@ void av1_fdct32_new_sse4_1(const __m128i *input, __m128i *output,
   btf_32_sse4_1_type1(cospi[6], cospi[58], buf1[23], buf1[24], buf0[23],
                       buf0[24], cos_bit);
 
+  startidx = 0 * stride;
+  endidx = 31 * stride;
   // stage 9
-  output[0] = buf0[0];
-  output[1] = buf0[16];
-  output[2] = buf0[8];
-  output[3] = buf0[24];
-  output[4] = buf0[4];
-  output[5] = buf0[20];
-  output[6] = buf0[12];
-  output[7] = buf0[28];
-  output[8] = buf0[2];
-  output[9] = buf0[18];
-  output[10] = buf0[10];
-  output[11] = buf0[26];
-  output[12] = buf0[6];
-  output[13] = buf0[22];
-  output[14] = buf0[14];
-  output[15] = buf0[30];
-  output[16] = buf0[1];
-  output[17] = buf0[17];
-  output[18] = buf0[9];
-  output[19] = buf0[25];
-  output[20] = buf0[5];
-  output[21] = buf0[21];
-  output[22] = buf0[13];
-  output[23] = buf0[29];
-  output[24] = buf0[3];
-  output[25] = buf0[19];
-  output[26] = buf0[11];
-  output[27] = buf0[27];
-  output[28] = buf0[7];
-  output[29] = buf0[23];
-  output[30] = buf0[15];
-  output[31] = buf0[31];
+  output[startidx] = buf0[0];
+  output[endidx] = buf0[31];
+  startidx += stride;
+  endidx -= stride;
+  output[startidx] = buf0[16];
+  output[endidx] = buf0[15];
+  startidx += stride;
+  endidx -= stride;
+  output[startidx] = buf0[8];
+  output[endidx] = buf0[23];
+  startidx += stride;
+  endidx -= stride;
+  output[startidx] = buf0[24];
+  output[endidx] = buf0[7];
+  startidx += stride;
+  endidx -= stride;
+  output[startidx] = buf0[4];
+  output[endidx] = buf0[27];
+  startidx += stride;
+  endidx -= stride;
+  output[startidx] = buf0[20];
+  output[endidx] = buf0[11];
+  startidx += stride;
+  endidx -= stride;
+  output[startidx] = buf0[12];
+  output[endidx] = buf0[19];
+  startidx += stride;
+  endidx -= stride;
+  output[startidx] = buf0[28];
+  output[endidx] = buf0[3];
+  startidx += stride;
+  endidx -= stride;
+  output[startidx] = buf0[2];
+  output[endidx] = buf0[29];
+  startidx += stride;
+  endidx -= stride;
+  output[startidx] = buf0[18];
+  output[endidx] = buf0[13];
+  startidx += stride;
+  endidx -= stride;
+  output[startidx] = buf0[10];
+  output[endidx] = buf0[21];
+  startidx += stride;
+  endidx -= stride;
+  output[startidx] = buf0[26];
+  output[endidx] = buf0[5];
+  startidx += stride;
+  endidx -= stride;
+  output[startidx] = buf0[6];
+  output[endidx] = buf0[25];
+  startidx += stride;
+  endidx -= stride;
+  output[startidx] = buf0[22];
+  output[endidx] = buf0[9];
+  startidx += stride;
+  endidx -= stride;
+  output[startidx] = buf0[14];
+  output[endidx] = buf0[17];
+  startidx += stride;
+  endidx -= stride;
+  output[startidx] = buf0[30];
+  output[endidx] = buf0[1];
 }
 
-void av1_fadst4_new_sse4_1(const __m128i *input, __m128i *output,
-                           const int8_t cos_bit, const int8_t *stage_range) {
+void av1_fadst4_sse4_1(const __m128i *input, __m128i *output,
+                       const int8_t cos_bit, const int8_t *stage_range) {
   const int txfm_size = 4;
   const int num_per_128 = 4;
   const int32_t *cospi;
@@ -343,22 +408,18 @@ void av1_fadst4_new_sse4_1(const __m128i *input, __m128i *output,
   (void)stage_range;
   for (col = 0; col < col_num; col++) {
     // stage 0;
-    int32_t stage_idx = 0;
     int j;
     for (j = 0; j < 4; ++j) {
       buf0[j] = input[j * col_num + col];
     }
 
     // stage 1
-    stage_idx++;
     buf1[0] = buf0[3];
     buf1[1] = buf0[0];
     buf1[2] = buf0[1];
     buf1[3] = buf0[2];
 
     // stage 2
-    stage_idx++;
-
     cospi = cospi_arr(cos_bit);
     btf_32_sse4_1_type0(cospi[8], cospi[56], buf1[0], buf1[1], buf0[0], buf0[1],
                         cos_bit);
@@ -366,15 +427,12 @@ void av1_fadst4_new_sse4_1(const __m128i *input, __m128i *output,
                         buf0[3], cos_bit);
 
     // stage 3
-    stage_idx++;
     buf1[0] = _mm_add_epi32(buf0[0], buf0[2]);
     buf1[2] = _mm_sub_epi32(buf0[0], buf0[2]);
     buf1[1] = _mm_add_epi32(buf0[1], buf0[3]);
     buf1[3] = _mm_sub_epi32(buf0[1], buf0[3]);
 
     // stage 4
-    stage_idx++;
-
     cospi = cospi_arr(cos_bit);
     buf0[0] = buf1[0];
     buf0[1] = buf1[1];
@@ -382,7 +440,6 @@ void av1_fadst4_new_sse4_1(const __m128i *input, __m128i *output,
                         buf0[3], cos_bit);
 
     // stage 5
-    stage_idx++;
     buf1[0] = buf0[0];
     buf1[1] = _mm_sub_epi32(_mm_setzero_si128(), buf0[2]);
     buf1[2] = buf0[3];
@@ -394,9 +451,8 @@ void av1_fadst4_new_sse4_1(const __m128i *input, __m128i *output,
   }
 }
 
-void av1_fdct64_new_sse4_1(const __m128i *input, __m128i *output,
-                           int8_t cos_bit, const int instride,
-                           const int outstride) {
+void av1_fdct64_sse4_1(__m128i *input, __m128i *output, int8_t cos_bit,
+                       const int instride, const int outstride) {
   const int32_t *cospi = cospi_arr(cos_bit);
   const __m128i __rounding = _mm_set1_epi32(1 << (cos_bit - 1));
 
@@ -479,72 +535,136 @@ void av1_fdct64_new_sse4_1(const __m128i *input, __m128i *output,
   __m128i cospi_p03 = _mm_set1_epi32(cospi[3]);
   __m128i cospi_p61 = _mm_set1_epi32(cospi[61]);
 
+  int startidx = 0 * instride;
+  int endidx = 63 * instride;
   // stage 1
   __m128i x1[64];
-  x1[0] = _mm_add_epi32(input[0 * instride], input[63 * instride]);
-  x1[63] = _mm_sub_epi32(input[0 * instride], input[63 * instride]);
-  x1[1] = _mm_add_epi32(input[1 * instride], input[62 * instride]);
-  x1[62] = _mm_sub_epi32(input[1 * instride], input[62 * instride]);
-  x1[2] = _mm_add_epi32(input[2 * instride], input[61 * instride]);
-  x1[61] = _mm_sub_epi32(input[2 * instride], input[61 * instride]);
-  x1[3] = _mm_add_epi32(input[3 * instride], input[60 * instride]);
-  x1[60] = _mm_sub_epi32(input[3 * instride], input[60 * instride]);
-  x1[4] = _mm_add_epi32(input[4 * instride], input[59 * instride]);
-  x1[59] = _mm_sub_epi32(input[4 * instride], input[59 * instride]);
-  x1[5] = _mm_add_epi32(input[5 * instride], input[58 * instride]);
-  x1[58] = _mm_sub_epi32(input[5 * instride], input[58 * instride]);
-  x1[6] = _mm_add_epi32(input[6 * instride], input[57 * instride]);
-  x1[57] = _mm_sub_epi32(input[6 * instride], input[57 * instride]);
-  x1[7] = _mm_add_epi32(input[7 * instride], input[56 * instride]);
-  x1[56] = _mm_sub_epi32(input[7 * instride], input[56 * instride]);
-  x1[8] = _mm_add_epi32(input[8 * instride], input[55 * instride]);
-  x1[55] = _mm_sub_epi32(input[8 * instride], input[55 * instride]);
-  x1[9] = _mm_add_epi32(input[9 * instride], input[54 * instride]);
-  x1[54] = _mm_sub_epi32(input[9 * instride], input[54 * instride]);
-  x1[10] = _mm_add_epi32(input[10 * instride], input[53 * instride]);
-  x1[53] = _mm_sub_epi32(input[10 * instride], input[53 * instride]);
-  x1[11] = _mm_add_epi32(input[11 * instride], input[52 * instride]);
-  x1[52] = _mm_sub_epi32(input[11 * instride], input[52 * instride]);
-  x1[12] = _mm_add_epi32(input[12 * instride], input[51 * instride]);
-  x1[51] = _mm_sub_epi32(input[12 * instride], input[51 * instride]);
-  x1[13] = _mm_add_epi32(input[13 * instride], input[50 * instride]);
-  x1[50] = _mm_sub_epi32(input[13 * instride], input[50 * instride]);
-  x1[14] = _mm_add_epi32(input[14 * instride], input[49 * instride]);
-  x1[49] = _mm_sub_epi32(input[14 * instride], input[49 * instride]);
-  x1[15] = _mm_add_epi32(input[15 * instride], input[48 * instride]);
-  x1[48] = _mm_sub_epi32(input[15 * instride], input[48 * instride]);
-  x1[16] = _mm_add_epi32(input[16 * instride], input[47 * instride]);
-  x1[47] = _mm_sub_epi32(input[16 * instride], input[47 * instride]);
-  x1[17] = _mm_add_epi32(input[17 * instride], input[46 * instride]);
-  x1[46] = _mm_sub_epi32(input[17 * instride], input[46 * instride]);
-  x1[18] = _mm_add_epi32(input[18 * instride], input[45 * instride]);
-  x1[45] = _mm_sub_epi32(input[18 * instride], input[45 * instride]);
-  x1[19] = _mm_add_epi32(input[19 * instride], input[44 * instride]);
-  x1[44] = _mm_sub_epi32(input[19 * instride], input[44 * instride]);
-  x1[20] = _mm_add_epi32(input[20 * instride], input[43 * instride]);
-  x1[43] = _mm_sub_epi32(input[20 * instride], input[43 * instride]);
-  x1[21] = _mm_add_epi32(input[21 * instride], input[42 * instride]);
-  x1[42] = _mm_sub_epi32(input[21 * instride], input[42 * instride]);
-  x1[22] = _mm_add_epi32(input[22 * instride], input[41 * instride]);
-  x1[41] = _mm_sub_epi32(input[22 * instride], input[41 * instride]);
-  x1[23] = _mm_add_epi32(input[23 * instride], input[40 * instride]);
-  x1[40] = _mm_sub_epi32(input[23 * instride], input[40 * instride]);
-  x1[24] = _mm_add_epi32(input[24 * instride], input[39 * instride]);
-  x1[39] = _mm_sub_epi32(input[24 * instride], input[39 * instride]);
-  x1[25] = _mm_add_epi32(input[25 * instride], input[38 * instride]);
-  x1[38] = _mm_sub_epi32(input[25 * instride], input[38 * instride]);
-  x1[26] = _mm_add_epi32(input[26 * instride], input[37 * instride]);
-  x1[37] = _mm_sub_epi32(input[26 * instride], input[37 * instride]);
-  x1[27] = _mm_add_epi32(input[27 * instride], input[36 * instride]);
-  x1[36] = _mm_sub_epi32(input[27 * instride], input[36 * instride]);
-  x1[28] = _mm_add_epi32(input[28 * instride], input[35 * instride]);
-  x1[35] = _mm_sub_epi32(input[28 * instride], input[35 * instride]);
-  x1[29] = _mm_add_epi32(input[29 * instride], input[34 * instride]);
-  x1[34] = _mm_sub_epi32(input[29 * instride], input[34 * instride]);
-  x1[30] = _mm_add_epi32(input[30 * instride], input[33 * instride]);
-  x1[33] = _mm_sub_epi32(input[30 * instride], input[33 * instride]);
-  x1[31] = _mm_add_epi32(input[31 * instride], input[32 * instride]);
-  x1[32] = _mm_sub_epi32(input[31 * instride], input[32 * instride]);
+  x1[0] = _mm_add_epi32(input[startidx], input[endidx]);
+  x1[63] = _mm_sub_epi32(input[startidx], input[endidx]);
+  startidx += instride;
+  endidx -= instride;
+  x1[1] = _mm_add_epi32(input[startidx], input[endidx]);
+  x1[62] = _mm_sub_epi32(input[startidx], input[endidx]);
+  startidx += instride;
+  endidx -= instride;
+  x1[2] = _mm_add_epi32(input[startidx], input[endidx]);
+  x1[61] = _mm_sub_epi32(input[startidx], input[endidx]);
+  startidx += instride;
+  endidx -= instride;
+  x1[3] = _mm_add_epi32(input[startidx], input[endidx]);
+  x1[60] = _mm_sub_epi32(input[startidx], input[endidx]);
+  startidx += instride;
+  endidx -= instride;
+  x1[4] = _mm_add_epi32(input[startidx], input[endidx]);
+  x1[59] = _mm_sub_epi32(input[startidx], input[endidx]);
+  startidx += instride;
+  endidx -= instride;
+  x1[5] = _mm_add_epi32(input[startidx], input[endidx]);
+  x1[58] = _mm_sub_epi32(input[startidx], input[endidx]);
+  startidx += instride;
+  endidx -= instride;
+  x1[6] = _mm_add_epi32(input[startidx], input[endidx]);
+  x1[57] = _mm_sub_epi32(input[startidx], input[endidx]);
+  startidx += instride;
+  endidx -= instride;
+  x1[7] = _mm_add_epi32(input[startidx], input[endidx]);
+  x1[56] = _mm_sub_epi32(input[startidx], input[endidx]);
+  startidx += instride;
+  endidx -= instride;
+  x1[8] = _mm_add_epi32(input[startidx], input[endidx]);
+  x1[55] = _mm_sub_epi32(input[startidx], input[endidx]);
+  startidx += instride;
+  endidx -= instride;
+  x1[9] = _mm_add_epi32(input[startidx], input[endidx]);
+  x1[54] = _mm_sub_epi32(input[startidx], input[endidx]);
+  startidx += instride;
+  endidx -= instride;
+  x1[10] = _mm_add_epi32(input[startidx], input[endidx]);
+  x1[53] = _mm_sub_epi32(input[startidx], input[endidx]);
+  startidx += instride;
+  endidx -= instride;
+  x1[11] = _mm_add_epi32(input[startidx], input[endidx]);
+  x1[52] = _mm_sub_epi32(input[startidx], input[endidx]);
+  startidx += instride;
+  endidx -= instride;
+  x1[12] = _mm_add_epi32(input[startidx], input[endidx]);
+  x1[51] = _mm_sub_epi32(input[startidx], input[endidx]);
+  startidx += instride;
+  endidx -= instride;
+  x1[13] = _mm_add_epi32(input[startidx], input[endidx]);
+  x1[50] = _mm_sub_epi32(input[startidx], input[endidx]);
+  startidx += instride;
+  endidx -= instride;
+  x1[14] = _mm_add_epi32(input[startidx], input[endidx]);
+  x1[49] = _mm_sub_epi32(input[startidx], input[endidx]);
+  startidx += instride;
+  endidx -= instride;
+  x1[15] = _mm_add_epi32(input[startidx], input[endidx]);
+  x1[48] = _mm_sub_epi32(input[startidx], input[endidx]);
+  startidx += instride;
+  endidx -= instride;
+  x1[16] = _mm_add_epi32(input[startidx], input[endidx]);
+  x1[47] = _mm_sub_epi32(input[startidx], input[endidx]);
+  startidx += instride;
+  endidx -= instride;
+  x1[17] = _mm_add_epi32(input[startidx], input[endidx]);
+  x1[46] = _mm_sub_epi32(input[startidx], input[endidx]);
+  startidx += instride;
+  endidx -= instride;
+  x1[18] = _mm_add_epi32(input[startidx], input[endidx]);
+  x1[45] = _mm_sub_epi32(input[startidx], input[endidx]);
+  startidx += instride;
+  endidx -= instride;
+  x1[19] = _mm_add_epi32(input[startidx], input[endidx]);
+  x1[44] = _mm_sub_epi32(input[startidx], input[endidx]);
+  startidx += instride;
+  endidx -= instride;
+  x1[20] = _mm_add_epi32(input[startidx], input[endidx]);
+  x1[43] = _mm_sub_epi32(input[startidx], input[endidx]);
+  startidx += instride;
+  endidx -= instride;
+  x1[21] = _mm_add_epi32(input[startidx], input[endidx]);
+  x1[42] = _mm_sub_epi32(input[startidx], input[endidx]);
+  startidx += instride;
+  endidx -= instride;
+  x1[22] = _mm_add_epi32(input[startidx], input[endidx]);
+  x1[41] = _mm_sub_epi32(input[startidx], input[endidx]);
+  startidx += instride;
+  endidx -= instride;
+  x1[23] = _mm_add_epi32(input[startidx], input[endidx]);
+  x1[40] = _mm_sub_epi32(input[startidx], input[endidx]);
+  startidx += instride;
+  endidx -= instride;
+  x1[24] = _mm_add_epi32(input[startidx], input[endidx]);
+  x1[39] = _mm_sub_epi32(input[startidx], input[endidx]);
+  startidx += instride;
+  endidx -= instride;
+  x1[25] = _mm_add_epi32(input[startidx], input[endidx]);
+  x1[38] = _mm_sub_epi32(input[startidx], input[endidx]);
+  startidx += instride;
+  endidx -= instride;
+  x1[26] = _mm_add_epi32(input[startidx], input[endidx]);
+  x1[37] = _mm_sub_epi32(input[startidx], input[endidx]);
+  startidx += instride;
+  endidx -= instride;
+  x1[27] = _mm_add_epi32(input[startidx], input[endidx]);
+  x1[36] = _mm_sub_epi32(input[startidx], input[endidx]);
+  startidx += instride;
+  endidx -= instride;
+  x1[28] = _mm_add_epi32(input[startidx], input[endidx]);
+  x1[35] = _mm_sub_epi32(input[startidx], input[endidx]);
+  startidx += instride;
+  endidx -= instride;
+  x1[29] = _mm_add_epi32(input[startidx], input[endidx]);
+  x1[34] = _mm_sub_epi32(input[startidx], input[endidx]);
+  startidx += instride;
+  endidx -= instride;
+  x1[30] = _mm_add_epi32(input[startidx], input[endidx]);
+  x1[33] = _mm_sub_epi32(input[startidx], input[endidx]);
+  startidx += instride;
+  endidx -= instride;
+  x1[31] = _mm_add_epi32(input[startidx], input[endidx]);
+  x1[32] = _mm_sub_epi32(input[startidx], input[endidx]);
 
   // stage 2
   __m128i x2[64];
@@ -1149,69 +1269,141 @@ void av1_fdct64_new_sse4_1(const __m128i *input, __m128i *output,
   btf_32_type1_sse4_1_new(cospi_p03, cospi_p61, x9[47], x9[48], x10[47],
                           x10[48], __rounding, cos_bit);
 
+  startidx = 0 * outstride;
+  endidx = 63 * outstride;
   // stage 11
-  output[0 * outstride] = x10[0];
-  output[1 * outstride] = x10[32];
-  output[2 * outstride] = x10[16];
-  output[3 * outstride] = x10[48];
-  output[4 * outstride] = x10[8];
-  output[5 * outstride] = x10[40];
-  output[6 * outstride] = x10[24];
-  output[7 * outstride] = x10[56];
-  output[8 * outstride] = x10[4];
-  output[9 * outstride] = x10[36];
-  output[10 * outstride] = x10[20];
-  output[11 * outstride] = x10[52];
-  output[12 * outstride] = x10[12];
-  output[13 * outstride] = x10[44];
-  output[14 * outstride] = x10[28];
-  output[15 * outstride] = x10[60];
-  output[16 * outstride] = x10[2];
-  output[17 * outstride] = x10[34];
-  output[18 * outstride] = x10[18];
-  output[19 * outstride] = x10[50];
-  output[20 * outstride] = x10[10];
-  output[21 * outstride] = x10[42];
-  output[22 * outstride] = x10[26];
-  output[23 * outstride] = x10[58];
-  output[24 * outstride] = x10[6];
-  output[25 * outstride] = x10[38];
-  output[26 * outstride] = x10[22];
-  output[27 * outstride] = x10[54];
-  output[28 * outstride] = x10[14];
-  output[29 * outstride] = x10[46];
-  output[30 * outstride] = x10[30];
-  output[31 * outstride] = x10[62];
-  output[32 * outstride] = x10[1];
-  output[33 * outstride] = x10[33];
-  output[34 * outstride] = x10[17];
-  output[35 * outstride] = x10[49];
-  output[36 * outstride] = x10[9];
-  output[37 * outstride] = x10[41];
-  output[38 * outstride] = x10[25];
-  output[39 * outstride] = x10[57];
-  output[40 * outstride] = x10[5];
-  output[41 * outstride] = x10[37];
-  output[42 * outstride] = x10[21];
-  output[43 * outstride] = x10[53];
-  output[44 * outstride] = x10[13];
-  output[45 * outstride] = x10[45];
-  output[46 * outstride] = x10[29];
-  output[47 * outstride] = x10[61];
-  output[48 * outstride] = x10[3];
-  output[49 * outstride] = x10[35];
-  output[50 * outstride] = x10[19];
-  output[51 * outstride] = x10[51];
-  output[52 * outstride] = x10[11];
-  output[53 * outstride] = x10[43];
-  output[54 * outstride] = x10[27];
-  output[55 * outstride] = x10[59];
-  output[56 * outstride] = x10[7];
-  output[57 * outstride] = x10[39];
-  output[58 * outstride] = x10[23];
-  output[59 * outstride] = x10[55];
-  output[60 * outstride] = x10[15];
-  output[61 * outstride] = x10[47];
-  output[62 * outstride] = x10[31];
-  output[63 * outstride] = x10[63];
+  output[startidx] = x10[0];
+  output[endidx] = x10[63];
+  startidx += outstride;
+  endidx -= outstride;
+  output[startidx] = x10[32];
+  output[endidx] = x10[31];
+  startidx += outstride;
+  endidx -= outstride;
+  output[startidx] = x10[16];
+  output[endidx] = x10[47];
+  startidx += outstride;
+  endidx -= outstride;
+  output[startidx] = x10[48];
+  output[endidx] = x10[15];
+  startidx += outstride;
+  endidx -= outstride;
+  output[startidx] = x10[8];
+  output[endidx] = x10[55];
+  startidx += outstride;
+  endidx -= outstride;
+  output[startidx] = x10[40];
+  output[endidx] = x10[23];
+  startidx += outstride;
+  endidx -= outstride;
+  output[startidx] = x10[24];
+  output[endidx] = x10[39];
+  startidx += outstride;
+  endidx -= outstride;
+  output[startidx] = x10[56];
+  output[endidx] = x10[7];
+  startidx += outstride;
+  endidx -= outstride;
+  output[startidx] = x10[4];
+  output[endidx] = x10[59];
+  startidx += outstride;
+  endidx -= outstride;
+  output[startidx] = x10[36];
+  output[endidx] = x10[27];
+  startidx += outstride;
+  endidx -= outstride;
+  output[startidx] = x10[20];
+  output[endidx] = x10[43];
+  startidx += outstride;
+  endidx -= outstride;
+  output[startidx] = x10[52];
+  output[endidx] = x10[11];
+  startidx += outstride;
+  endidx -= outstride;
+  output[startidx] = x10[12];
+  output[endidx] = x10[51];
+  startidx += outstride;
+  endidx -= outstride;
+  output[startidx] = x10[44];
+  output[endidx] = x10[19];
+  startidx += outstride;
+  endidx -= outstride;
+  output[startidx] = x10[28];
+  output[endidx] = x10[35];
+  startidx += outstride;
+  endidx -= outstride;
+  output[startidx] = x10[60];
+  output[endidx] = x10[3];
+  startidx += outstride;
+  endidx -= outstride;
+  output[startidx] = x10[2];
+  output[endidx] = x10[61];
+  startidx += outstride;
+  endidx -= outstride;
+  output[startidx] = x10[34];
+  output[endidx] = x10[29];
+  startidx += outstride;
+  endidx -= outstride;
+  output[startidx] = x10[18];
+  output[endidx] = x10[45];
+  startidx += outstride;
+  endidx -= outstride;
+  output[startidx] = x10[50];
+  output[endidx] = x10[13];
+  startidx += outstride;
+  endidx -= outstride;
+  output[startidx] = x10[10];
+  output[endidx] = x10[53];
+  startidx += outstride;
+  endidx -= outstride;
+  output[startidx] = x10[42];
+  output[endidx] = x10[21];
+  startidx += outstride;
+  endidx -= outstride;
+  output[startidx] = x10[26];
+  output[endidx] = x10[37];
+  startidx += outstride;
+  endidx -= outstride;
+  output[startidx] = x10[58];
+  output[endidx] = x10[5];
+  startidx += outstride;
+  endidx -= outstride;
+  output[startidx] = x10[6];
+  output[endidx] = x10[57];
+  startidx += outstride;
+  endidx -= outstride;
+  output[startidx] = x10[38];
+  output[endidx] = x10[25];
+  startidx += outstride;
+  endidx -= outstride;
+  output[startidx] = x10[22];
+  output[endidx] = x10[41];
+  startidx += outstride;
+  endidx -= outstride;
+  output[startidx] = x10[54];
+  output[endidx] = x10[9];
+  startidx += outstride;
+  endidx -= outstride;
+  output[startidx] = x10[14];
+  output[endidx] = x10[49];
+  startidx += outstride;
+  endidx -= outstride;
+  output[startidx] = x10[46];
+  output[endidx] = x10[17];
+  startidx += outstride;
+  endidx -= outstride;
+  output[startidx] = x10[30];
+  output[endidx] = x10[33];
+  startidx += outstride;
+  endidx -= outstride;
+  output[startidx] = x10[62];
+  output[endidx] = x10[1];
+}
+
+void av1_idtx32_sse4_1(__m128i *input, __m128i *output, int cos_bit,
+                       const int col_num) {
+  (void)cos_bit;
+  for (int i = 0; i < 32; i++) {
+    output[i * col_num] = _mm_slli_epi32(input[i * col_num], 2);
+  }
 }

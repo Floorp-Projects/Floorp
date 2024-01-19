@@ -48,18 +48,18 @@ extern "C" {
 #define BR_CDF_SIZE (4)
 #define COEFF_BASE_RANGE (4 * (BR_CDF_SIZE - 1))
 
-#define COEFF_CONTEXT_BITS 6
+#define COEFF_CONTEXT_BITS 3
 #define COEFF_CONTEXT_MASK ((1 << COEFF_CONTEXT_BITS) - 1)
 #define MAX_BASE_BR_RANGE (COEFF_BASE_RANGE + NUM_BASE_LEVELS + 1)
 
 #define BASE_CONTEXT_POSITION_NUM 12
 
-typedef enum TX_CLASS {
+enum {
   TX_CLASS_2D = 0,
   TX_CLASS_HORIZ = 1,
   TX_CLASS_VERT = 2,
   TX_CLASSES = 3,
-} TX_CLASS;
+} UENUM1BYTE(TX_CLASS);
 
 #define DCT_MAX_VALUE 16384
 #define DCT_MAX_VALUE_HIGH10 65536
@@ -73,6 +73,7 @@ struct AV1Common;
 struct frame_contexts;
 void av1_reset_cdf_symbol_counters(struct frame_contexts *fc);
 void av1_default_coef_probs(struct AV1Common *cm);
+void av1_init_mode_probs(struct frame_contexts *fc);
 
 struct frame_contexts;
 

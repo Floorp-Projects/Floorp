@@ -15,6 +15,7 @@
 #include "aom/aom_integer.h"
 #include "aom_dsp/blend.h"
 #include "av1/common/blockd.h"
+#include "config/av1_rtcd.h"
 
 static INLINE __m128i calc_mask(const __m128i mask_base, const __m128i s0,
                                 const __m128i s1) {
@@ -33,21 +34,21 @@ void av1_build_compound_diffwtd_mask_sse4_1(uint8_t *mask,
   int i = 0;
   if (4 == w) {
     do {
-      const __m128i s0A = _mm_cvtsi32_si128(*(uint32_t *)src0);
-      const __m128i s0B = _mm_cvtsi32_si128(*(uint32_t *)(src0 + stride0));
+      const __m128i s0A = _mm_cvtsi32_si128(*(int *)src0);
+      const __m128i s0B = _mm_cvtsi32_si128(*(int *)(src0 + stride0));
       const __m128i s0AB = _mm_unpacklo_epi32(s0A, s0B);
       const __m128i s0 = _mm_cvtepu8_epi16(s0AB);
 
-      const __m128i s1A = _mm_cvtsi32_si128(*(uint32_t *)src1);
-      const __m128i s1B = _mm_cvtsi32_si128(*(uint32_t *)(src1 + stride1));
+      const __m128i s1A = _mm_cvtsi32_si128(*(int *)src1);
+      const __m128i s1B = _mm_cvtsi32_si128(*(int *)(src1 + stride1));
       const __m128i s1AB = _mm_unpacklo_epi32(s1A, s1B);
       const __m128i s1 = _mm_cvtepu8_epi16(s1AB);
 
       const __m128i m16 = calc_mask(mask_base, s0, s1);
       const __m128i m8 = _mm_packus_epi16(m16, m16);
 
-      *(uint32_t *)mask = _mm_cvtsi128_si32(m8);
-      *(uint32_t *)(mask + w) = _mm_extract_epi32(m8, 1);
+      *(int *)mask = _mm_cvtsi128_si32(m8);
+      *(int *)(mask + w) = _mm_extract_epi32(m8, 1);
       src0 += (stride0 << 1);
       src1 += (stride1 << 1);
       mask += 8;
@@ -146,7 +147,7 @@ void av1_build_compound_diffwtd_mask_d16_sse4_1(
       if ((w - j) > 4) {
         _mm_storel_epi64(dst, res_8);
       } else {  // w==4
-        *(uint32_t *)dst = _mm_cvtsi128_si32(res_8);
+        *(int *)dst = _mm_cvtsi128_si32(res_8);
       }
     }
   }

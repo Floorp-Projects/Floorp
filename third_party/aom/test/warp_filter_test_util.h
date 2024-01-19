@@ -12,13 +12,14 @@
 #ifndef AOM_TEST_WARP_FILTER_TEST_UTIL_H_
 #define AOM_TEST_WARP_FILTER_TEST_UTIL_H_
 
+#include <tuple>
+
 #include "config/av1_rtcd.h"
 #include "config/aom_dsp_rtcd.h"
 
 #include "third_party/googletest/src/googletest/include/gtest/gtest.h"
 #include "test/acm_random.h"
 #include "test/util.h"
-#include "test/clear_system_state.h"
 #include "test/register_state_check.h"
 
 #include "av1/common/mv.h"
@@ -41,18 +42,16 @@ typedef void (*warp_affine_func)(const int32_t *mat, const uint8_t *ref,
                                  ConvolveParams *conv_params, int16_t alpha,
                                  int16_t beta, int16_t gamma, int16_t delta);
 
-typedef ::testing::tuple<int, int, int, warp_affine_func> WarpTestParam;
-typedef ::testing::tuple<WarpTestParam, int, int, int, int> WarpTestParams;
+typedef std::tuple<int, int, int, warp_affine_func> WarpTestParam;
+typedef std::tuple<WarpTestParam, int, int, int, int> WarpTestParams;
 
 ::testing::internal::ParamGenerator<WarpTestParams> BuildParams(
     warp_affine_func filter);
 
 class AV1WarpFilterTest : public ::testing::TestWithParam<WarpTestParams> {
  public:
-  virtual ~AV1WarpFilterTest();
-  virtual void SetUp();
-
-  virtual void TearDown();
+  ~AV1WarpFilterTest() override;
+  void SetUp() override;
 
  protected:
   void RunCheckOutput(warp_affine_func test_impl);
@@ -63,6 +62,7 @@ class AV1WarpFilterTest : public ::testing::TestWithParam<WarpTestParams> {
 
 }  // namespace AV1WarpFilter
 
+#if CONFIG_AV1_HIGHBITDEPTH
 namespace AV1HighbdWarpFilter {
 typedef void (*highbd_warp_affine_func)(const int32_t *mat, const uint16_t *ref,
                                         int width, int height, int stride,
@@ -73,9 +73,9 @@ typedef void (*highbd_warp_affine_func)(const int32_t *mat, const uint16_t *ref,
                                         int16_t alpha, int16_t beta,
                                         int16_t gamma, int16_t delta);
 
-typedef ::testing::tuple<int, int, int, int, highbd_warp_affine_func>
+typedef std::tuple<int, int, int, int, highbd_warp_affine_func>
     HighbdWarpTestParam;
-typedef ::testing::tuple<HighbdWarpTestParam, int, int, int, int>
+typedef std::tuple<HighbdWarpTestParam, int, int, int, int>
     HighbdWarpTestParams;
 
 ::testing::internal::ParamGenerator<HighbdWarpTestParams> BuildParams(
@@ -84,10 +84,8 @@ typedef ::testing::tuple<HighbdWarpTestParam, int, int, int, int>
 class AV1HighbdWarpFilterTest
     : public ::testing::TestWithParam<HighbdWarpTestParams> {
  public:
-  virtual ~AV1HighbdWarpFilterTest();
-  virtual void SetUp();
-
-  virtual void TearDown();
+  ~AV1HighbdWarpFilterTest() override;
+  void SetUp() override;
 
  protected:
   void RunCheckOutput(highbd_warp_affine_func test_impl);
@@ -97,6 +95,7 @@ class AV1HighbdWarpFilterTest
 };
 
 }  // namespace AV1HighbdWarpFilter
+#endif  // CONFIG_AV1_HIGHBITDEPTH
 
 }  // namespace libaom_test
 

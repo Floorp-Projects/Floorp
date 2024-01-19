@@ -11,8 +11,10 @@
 
 #include <cstdio>
 #include <cstdlib>
+#include <memory>
 #include <set>
 #include <string>
+#include <tuple>
 #include "third_party/googletest/src/googletest/include/gtest/gtest.h"
 #include "common/tools_common.h"
 #include "config/aom_config.h"
@@ -32,32 +34,31 @@ const int kThreads = 0;
 const int kFileName = 1;
 const int kRowMT = 2;
 
-typedef ::testing::tuple<int, const char *, int> DecodeParam;
+typedef std::tuple<int, const char *, int> DecodeParam;
 
 class TestVectorTest : public ::libaom_test::DecoderTest,
                        public ::libaom_test::CodecTestWithParam<DecodeParam> {
  protected:
-  TestVectorTest() : DecoderTest(GET_PARAM(0)), md5_file_(NULL) {}
+  TestVectorTest() : DecoderTest(GET_PARAM(0)), md5_file_(nullptr) {}
 
-  virtual ~TestVectorTest() {
+  ~TestVectorTest() override {
     if (md5_file_) fclose(md5_file_);
   }
 
   void OpenMD5File(const std::string &md5_file_name_) {
     md5_file_ = libaom_test::OpenTestDataFile(md5_file_name_);
-    ASSERT_TRUE(md5_file_ != NULL)
+    ASSERT_NE(md5_file_, nullptr)
         << "Md5 file open failed. Filename: " << md5_file_name_;
   }
 
-  virtual void PreDecodeFrameHook(
-      const libaom_test::CompressedVideoSource &video,
-      libaom_test::Decoder *decoder) {
+  void PreDecodeFrameHook(const libaom_test::CompressedVideoSource &video,
+                          libaom_test::Decoder *decoder) override {
     if (video.frame_number() == 0) decoder->Control(AV1D_SET_ROW_MT, row_mt_);
   }
 
-  virtual void DecompressedFrameHook(const aom_image_t &img,
-                                     const unsigned int frame_number) {
-    ASSERT_TRUE(md5_file_ != NULL);
+  void DecompressedFrameHook(const aom_image_t &img,
+                             const unsigned int frame_number) override {
+    ASSERT_NE(md5_file_, nullptr);
     char expected_md5[33];
     char junk[128];
 
@@ -67,12 +68,12 @@ class TestVectorTest : public ::libaom_test::DecoderTest,
     expected_md5[32] = '\0';
 
     ::libaom_test::MD5 md5_res;
-#if !CONFIG_LOWBITDEPTH
+#if FORCE_HIGHBITDEPTH_DECODING
     const aom_img_fmt_t shifted_fmt =
         (aom_img_fmt)(img.fmt & ~AOM_IMG_FMT_HIGHBITDEPTH);
     if (img.bit_depth == 8 && shifted_fmt != img.fmt) {
       aom_image_t *img_shifted =
-          aom_img_alloc(NULL, shifted_fmt, img.d_w, img.d_h, 16);
+          aom_img_alloc(nullptr, shifted_fmt, img.d_w, img.d_h, 16);
       img_shifted->bit_depth = img.bit_depth;
       img_shifted->monochrome = img.monochrome;
       aom_img_downshift(img_shifted, &img, 0);
@@ -81,7 +82,7 @@ class TestVectorTest : public ::libaom_test::DecoderTest,
     } else {
 #endif
       md5_res.Add(&img);
-#if !CONFIG_LOWBITDEPTH
+#if FORCE_HIGHBITDEPTH_DECODING
     }
 #endif
 
@@ -103,20 +104,20 @@ class TestVectorTest : public ::libaom_test::DecoderTest,
 // the test failed.
 TEST_P(TestVectorTest, MD5Match) {
   const DecodeParam input = GET_PARAM(1);
-  const std::string filename = ::testing::get<kFileName>(input);
+  const std::string filename = std::get<kFileName>(input);
   aom_codec_flags_t flags = 0;
   aom_codec_dec_cfg_t cfg = aom_codec_dec_cfg_t();
   char str[256];
 
-  cfg.threads = ::testing::get<kThreads>(input);
-  row_mt_ = ::testing::get<kRowMT>(input);
+  cfg.threads = std::get<kThreads>(input);
+  row_mt_ = std::get<kRowMT>(input);
 
   snprintf(str, sizeof(str) / sizeof(str[0]) - 1, "file: %s threads: %d",
            filename.c_str(), cfg.threads);
   SCOPED_TRACE(str);
 
   // Open compressed video file.
-  testing::internal::scoped_ptr<libaom_test::CompressedVideoSource> video;
+  std::unique_ptr<libaom_test::CompressedVideoSource> video;
   if (filename.substr(filename.length() - 3, 3) == "ivf") {
     video.reset(new libaom_test::IVFVideoSource(filename));
   } else if (filename.substr(filename.length() - 4, 4) == "webm" ||
@@ -129,7 +130,7 @@ TEST_P(TestVectorTest, MD5Match) {
     return;
 #endif
   }
-  ASSERT_TRUE(video.get() != NULL);
+  ASSERT_NE(video, nullptr);
   video->Init();
 
   // Construct md5 file name.
@@ -137,7 +138,7 @@ TEST_P(TestVectorTest, MD5Match) {
   OpenMD5File(md5_filename);
 
   // Set decode config and flags.
-  cfg.allow_lowbitdepth = CONFIG_LOWBITDEPTH;
+  cfg.allow_lowbitdepth = !FORCE_HIGHBITDEPTH_DECODING;
   set_cfg(cfg);
   set_flags(flags);
 
@@ -146,7 +147,7 @@ TEST_P(TestVectorTest, MD5Match) {
 }
 
 #if CONFIG_AV1_DECODER
-AV1_INSTANTIATE_TEST_CASE(
+AV1_INSTANTIATE_TEST_SUITE(
     TestVectorTest,
     ::testing::Combine(::testing::Values(1),  // Single thread.
                        ::testing::ValuesIn(libaom_test::kAV1TestVectors,
@@ -155,7 +156,7 @@ AV1_INSTANTIATE_TEST_CASE(
                        ::testing::Values(0)));
 
 // Test AV1 decode in with different numbers of threads.
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     AV1MultiThreaded, TestVectorTest,
     ::testing::Combine(
         ::testing::Values(

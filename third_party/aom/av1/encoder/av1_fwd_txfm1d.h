@@ -18,22 +18,22 @@
 extern "C" {
 #endif
 
-void av1_fdct4_new(const int32_t *input, int32_t *output, int8_t cos_bit,
-                   const int8_t *stage_range);
-void av1_fdct8_new(const int32_t *input, int32_t *output, int8_t cos_bit,
-                   const int8_t *stage_range);
-void av1_fdct16_new(const int32_t *input, int32_t *output, int8_t cos_bit,
-                    const int8_t *stage_range);
-void av1_fdct32_new(const int32_t *input, int32_t *output, int8_t cos_bit,
-                    const int8_t *stage_range);
-void av1_fdct64_new(const int32_t *input, int32_t *output, int8_t cos_bit,
-                    const int8_t *stage_range);
-void av1_fadst4_new(const int32_t *input, int32_t *output, int8_t cos_bit,
-                    const int8_t *stage_range);
-void av1_fadst8_new(const int32_t *input, int32_t *output, int8_t cos_bit,
-                    const int8_t *stage_range);
-void av1_fadst16_new(const int32_t *input, int32_t *output, int8_t cos_bit,
-                     const int8_t *stage_range);
+void av1_fdct4(const int32_t *input, int32_t *output, int8_t cos_bit,
+               const int8_t *stage_range);
+void av1_fdct8(const int32_t *input, int32_t *output, int8_t cos_bit,
+               const int8_t *stage_range);
+void av1_fdct16(const int32_t *input, int32_t *output, int8_t cos_bit,
+                const int8_t *stage_range);
+void av1_fdct32(const int32_t *input, int32_t *output, int8_t cos_bit,
+                const int8_t *stage_range);
+void av1_fdct64(const int32_t *input, int32_t *output, int8_t cos_bit,
+                const int8_t *stage_range);
+void av1_fadst4(const int32_t *input, int32_t *output, int8_t cos_bit,
+                const int8_t *stage_range);
+void av1_fadst8(const int32_t *input, int32_t *output, int8_t cos_bit,
+                const int8_t *stage_range);
+void av1_fadst16(const int32_t *input, int32_t *output, int8_t cos_bit,
+                 const int8_t *stage_range);
 void av1_fidentity4_c(const int32_t *input, int32_t *output, int8_t cos_bit,
                       const int8_t *stage_range);
 void av1_fidentity8_c(const int32_t *input, int32_t *output, int8_t cos_bit,

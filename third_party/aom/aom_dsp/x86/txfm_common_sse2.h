@@ -26,4 +26,8 @@ static INLINE __m128i mm_reverse_epi16(const __m128i x) {
   return _mm_shuffle_epi32(b, 0x4e);
 }
 
+#define octa_set_epi16(a, b, c, d, e, f, g, h)                           \
+  _mm_setr_epi16((int16_t)(a), (int16_t)(b), (int16_t)(c), (int16_t)(d), \
+                 (int16_t)(e), (int16_t)(f), (int16_t)(g), (int16_t)(h))
+
 #endif  // AOM_AOM_DSP_X86_TXFM_COMMON_SSE2_H_

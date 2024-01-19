@@ -75,13 +75,20 @@ static INLINE void transpose_16x16(const __m128i *in, __m128i *out) {
                 out[63]);
 }
 
-static INLINE void transpose_32x32(const __m128i *input, __m128i *output) {
-  for (int j = 0; j < 8; j++) {
-    for (int i = 0; i < 8; i++) {
-      TRANSPOSE_4X4(input[i * 32 + j + 0], input[i * 32 + j + 8],
-                    input[i * 32 + j + 16], input[i * 32 + j + 24],
-                    output[j * 32 + i + 0], output[j * 32 + i + 8],
-                    output[j * 32 + i + 16], output[j * 32 + i + 24]);
+static INLINE void transpose_8nx8n(const __m128i *input, __m128i *output,
+                                   const int width, const int height) {
+  const int numcol = height >> 2;
+  const int numrow = width >> 2;
+  for (int j = 0; j < numrow; j++) {
+    for (int i = 0; i < numcol; i++) {
+      TRANSPOSE_4X4(input[i * width + j + (numrow * 0)],
+                    input[i * width + j + (numrow * 1)],
+                    input[i * width + j + (numrow * 2)],
+                    input[i * width + j + (numrow * 3)],
+                    output[j * height + i + (numcol * 0)],
+                    output[j * height + i + (numcol * 1)],
+                    output[j * height + i + (numcol * 2)],
+                    output[j * height + i + (numcol * 3)]);
     }
   }
 }
