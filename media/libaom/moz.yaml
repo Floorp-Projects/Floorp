@@ -44,5 +44,5 @@ vendoring:
     - action: delete-path
       path: '{yaml_dir}/config'
     - action: run-script
-      script: '{cwd}/generate_sources_mozbuild.sh'
+      script: '{yaml_dir}/generate_sources_mozbuild.sh'
       cwd: '{yaml_dir}'

@@ -57,8 +57,12 @@ function gen_rtcd_header {
 }
 
 echo "Generating config files."
-cd $BASE_DIR
-python generate_sources_mozbuild.py
+python3 -m venv temp
+. temp/bin/activate
+pip install pyparsing==2.4.7
+python3 generate_sources_mozbuild.py
+deactivate
+rm -r temp
 
 # Copy aom_version.h once. The file is the same for all platforms.
 cp aom_version.h $BASE_DIR/$LIBAOM_CONFIG_DIR
