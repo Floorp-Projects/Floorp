@@ -843,6 +843,17 @@ events:
     metadata:
       tags:
         - Search
+  first_session_ping_cancelled:
+    type: event
+    description: |
+      First session ping cancelled because Adjust metrics were empty.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1875514
+    data_reviews:
+      - https://github.com/mozilla-mobile/firefox-android/pull/5223
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: never
 
 splash_screen:
   first_launch_extended:

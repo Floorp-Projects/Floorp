@@ -10,8 +10,10 @@ import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import mozilla.components.service.glean.private.NoExtras
 import mozilla.components.support.base.log.logger.Logger
 import org.mozilla.fenix.Config
+import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.FirstSession
 import org.mozilla.fenix.GleanMetrics.Pings
 import org.mozilla.fenix.ext.settings
@@ -74,6 +76,8 @@ class FirstSessionPing(private val context: Context) {
                 Pings.firstSession.submit()
                 markAsTriggered()
             }
+        } else {
+            Events.firstSessionPingCancelled.record(NoExtras())
         }
     }
 
