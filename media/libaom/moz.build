@@ -86,6 +86,8 @@ for f in SOURCES:
         SOURCES[f].flags += CONFIG['SSE2_FLAGS']
     elif f.endswith('ssse3.c'):
         SOURCES[f].flags += ['-mssse3']
+    elif f.endswith('sse3.c'):
+        SOURCES[f].flags += ['-msse3']
     elif f.endswith('sse4.c'):
         SOURCES[f].flags += ['-msse4.1']
     elif f.endswith('sse42.c'):
