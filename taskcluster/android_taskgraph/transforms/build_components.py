@@ -24,6 +24,7 @@ def resolve_keys(config, tasks):
             "shipping-phase",
             "run.gradlew",
             "treeherder.symbol",
+            "dependencies.build-fat-aar",
         ):
             resolve_keyed_by(
                 task,
