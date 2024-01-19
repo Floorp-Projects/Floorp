@@ -6942,8 +6942,14 @@ void nsGlobalWindowOuter::MaybeAllowStorageForOpenedWindow(nsIURI* aURI) {
       aURI, doc->NodePrincipal()->OriginAttributesRef());
 
   // We don't care when the asynchronous work finishes here.
-  Unused << StorageAccessAPIHelper::AllowAccessFor(
-      principal, GetBrowsingContext(), ContentBlockingNotifier::eOpener);
+  // Without e10s or fission enabled this is run in the parent process.
+  if (XRE_IsParentProcess()) {
+    Unused << StorageAccessAPIHelper::AllowAccessForOnParentProcess(
+        principal, GetBrowsingContext(), ContentBlockingNotifier::eOpener);
+  } else {
+    Unused << StorageAccessAPIHelper::AllowAccessForOnChildProcess(
+        principal, GetBrowsingContext(), ContentBlockingNotifier::eOpener);
+  }
 }
 
 //*****************************************************************************
