@@ -2493,7 +2493,11 @@ void ContentParent::NotifyTabDestroyed(const TabId& aTabId,
 }
 
 TestShellParent* ContentParent::CreateTestShell() {
-  return static_cast<TestShellParent*>(SendPTestShellConstructor());
+  RefPtr<TestShellParent> actor = new TestShellParent();
+  if (!SendPTestShellConstructor(actor)) {
+    return nullptr;
+  }
+  return actor;
 }
 
 bool ContentParent::DestroyTestShell(TestShellParent* aTestShell) {
@@ -4671,15 +4675,6 @@ bool ContentParent::CycleCollectWithLogs(
     nsIDumpGCAndCCLogsCallback* aCallback) {
   return CycleCollectWithLogsParent::AllocAndSendConstructor(
       this, aDumpAllTraces, aSink, aCallback);
-}
-
-PTestShellParent* ContentParent::AllocPTestShellParent() {
-  return new TestShellParent();
-}
-
-bool ContentParent::DeallocPTestShellParent(PTestShellParent* shell) {
-  delete shell;
-  return true;
 }
 
 PScriptCacheParent* ContentParent::AllocPScriptCacheParent(

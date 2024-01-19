@@ -25,6 +25,8 @@ class TestShellParent : public PTestShellParent {
   friend class PTestShellParent;
 
  public:
+  NS_INLINE_DECL_REFCOUNTING(TestShellParent, override)
+
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
   PTestShellCommandParent* AllocPTestShellCommandParent(
@@ -33,6 +35,9 @@ class TestShellParent : public PTestShellParent {
   bool DeallocPTestShellCommandParent(PTestShellCommandParent* aActor);
 
   bool CommandDone(TestShellCommandParent* aActor, const nsAString& aResponse);
+
+ private:
+  ~TestShellParent() = default;
 };
 
 class TestShellCommandParent : public PTestShellCommandParent {

@@ -923,10 +923,6 @@ class ContentParent final : public PContentParent,
 
   bool DeallocPCycleCollectWithLogsParent(PCycleCollectWithLogsParent* aActor);
 
-  PTestShellParent* AllocPTestShellParent();
-
-  bool DeallocPTestShellParent(PTestShellParent* shell);
-
   PScriptCacheParent* AllocPScriptCacheParent(const FileDescOrError& cacheFile,
                                               const bool& wantCacheData);
 
