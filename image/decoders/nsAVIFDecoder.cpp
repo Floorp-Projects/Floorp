@@ -1065,8 +1065,6 @@ UniquePtr<AVIFDecodedData> AOMDecoder::AOMImageToToDecodedData(
   aom_image_t* alphaImage = aAlphaPlane ? aAlphaPlane->GetImage() : nullptr;
 
   MOZ_ASSERT(colorImage);
-  MOZ_ASSERT(colorImage->stride[AOM_PLANE_Y] ==
-             colorImage->stride[AOM_PLANE_ALPHA]);
   MOZ_ASSERT(colorImage->stride[AOM_PLANE_Y] >=
              aom_img_plane_width(colorImage, AOM_PLANE_Y));
   MOZ_ASSERT(colorImage->stride[AOM_PLANE_U] ==
