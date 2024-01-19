@@ -293,9 +293,7 @@ class BackgroundParentImpl : public PBackgroundParent {
       PHttpBackgroundChannelParent* aActor,
       const uint64_t& aChannelId) override;
 
-  PClientManagerParent* AllocPClientManagerParent() override;
-
-  bool DeallocPClientManagerParent(PClientManagerParent* aActor) override;
+  already_AddRefed<PClientManagerParent> AllocPClientManagerParent() override;
 
   mozilla::ipc::IPCResult RecvPClientManagerConstructor(
       PClientManagerParent* aActor) override;

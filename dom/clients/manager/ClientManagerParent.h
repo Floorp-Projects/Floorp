@@ -15,6 +15,8 @@ class ClientManagerService;
 class ClientManagerParent final : public PClientManagerParent {
   RefPtr<ClientManagerService> mService;
 
+  ~ClientManagerParent();
+
   // PClientManagerParent interface
   mozilla::ipc::IPCResult RecvTeardown() override;
 
@@ -56,8 +58,9 @@ class ClientManagerParent final : public PClientManagerParent {
       const IPCClientInfo& aClientInfo) override;
 
  public:
+  NS_INLINE_DECL_REFCOUNTING(ClientManagerParent, override)
+
   ClientManagerParent();
-  ~ClientManagerParent();
 
   void Init();
 };
