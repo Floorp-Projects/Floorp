@@ -25,6 +25,7 @@ namespace mozilla {
 namespace gfx {
 
 class DrawTargetRecording;
+class FilterNodeRecording;
 class PathRecording;
 
 class DrawEventRecorderPrivate : public DrawEventRecorder {
@@ -86,18 +87,54 @@ class DrawEventRecorderPrivate : public DrawEventRecorder {
   void RecordEvent(DrawTargetRecording* aDT, const RecordedEvent& aEvent) {
     ReferencePtr dt = aDT;
     if (mCurrentDT != dt) {
-      SetDrawTarget(dt);
+      RecordSetCurrentDrawTarget(dt);
     }
     RecordEvent(aEvent);
   }
 
-  void SetDrawTarget(ReferencePtr aDT);
+  void RecordSetCurrentDrawTarget(ReferencePtr aDT);
 
-  void ClearDrawTarget(DrawTargetRecording* aDT) {
+  void SetCurrentDrawTarget(DrawTargetRecording* aDT) { mCurrentDT = aDT; }
+
+  void ClearCurrentDrawTarget(DrawTargetRecording* aDT) {
     ReferencePtr dt = aDT;
     if (mCurrentDT == dt) {
       mCurrentDT = nullptr;
     }
+  }
+
+  void RecordEvent(FilterNodeRecording* aFilter, const RecordedEvent& aEvent) {
+    ReferencePtr filter = aFilter;
+    if (mCurrentFilter != filter) {
+      RecordSetCurrentFilterNode(filter);
+    }
+    RecordEvent(aEvent);
+  }
+
+  void RecordSetCurrentFilterNode(ReferencePtr aFilter);
+
+  void SetCurrentFilterNode(FilterNodeRecording* aFilter) {
+    mCurrentFilter = aFilter;
+  }
+
+  void ClearCurrentFilterNode(FilterNodeRecording* aFilter) {
+    ReferencePtr filter = aFilter;
+    if (mCurrentFilter == filter) {
+      mCurrentFilter = nullptr;
+    }
+  }
+
+  void RecordEvent(DrawTargetRecording* aDT, FilterNodeRecording* aFilter,
+                   const RecordedEvent& aEvent) {
+    ReferencePtr dt = aDT;
+    if (mCurrentDT != dt) {
+      RecordSetCurrentDrawTarget(dt);
+    }
+    ReferencePtr filter = aFilter;
+    if (mCurrentFilter != filter) {
+      RecordSetCurrentFilterNode(filter);
+    }
+    RecordEvent(aEvent);
   }
 
   void AddStoredObject(const ReferencePtr aObject) {
@@ -252,6 +289,7 @@ class DrawEventRecorderPrivate : public DrawEventRecorder {
   nsTHashMap<void*, ThreadSafeWeakPtr<SourceSurface>> mStoredSurfaces;
 
   ReferencePtr mCurrentDT;
+  ReferencePtr mCurrentFilter;
   ExternalSurfacesHolder mExternalSurfaces;
   bool mExternalFonts;
 };

@@ -20,11 +20,19 @@ DrawEventRecorderPrivate::~DrawEventRecorderPrivate() {
   NS_ASSERT_OWNINGTHREAD(DrawEventRecorderPrivate);
 }
 
-void DrawEventRecorderPrivate::SetDrawTarget(ReferencePtr aDT) {
+void DrawEventRecorderPrivate::RecordSetCurrentDrawTarget(ReferencePtr aDT) {
   NS_ASSERT_OWNINGTHREAD(DrawEventRecorderPrivate);
 
   RecordEvent(RecordedSetCurrentDrawTarget(aDT));
   mCurrentDT = aDT;
+}
+
+void DrawEventRecorderPrivate::RecordSetCurrentFilterNode(
+    ReferencePtr aFilter) {
+  NS_ASSERT_OWNINGTHREAD(DrawEventRecorderPrivate);
+
+  RecordEvent(RecordedSetCurrentFilterNode(aFilter));
+  mCurrentFilter = aFilter;
 }
 
 void DrawEventRecorderPrivate::StoreExternalSurfaceRecording(
