@@ -116,7 +116,10 @@
     // are invisible, but not for HSTS upgrades (Bug 1857894).
     {
       ACTION: ["generate-img-policy-test"],
-      PREFS: [["security.mixed_content.upgrade_display_content", true]],
+      PREFS: [
+        ["security.mixed_content.upgrade_display_content", true],
+        ["security.mixed_content.upgrade_display_content.image", true],
+      ],
       TESTS: [
         {
           META_POLICY: "strict-origin",
