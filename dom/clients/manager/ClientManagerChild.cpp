@@ -86,6 +86,8 @@ already_AddRefed<ClientManagerChild> ClientManagerChild::Create() {
 ClientManagerChild::ClientManagerChild()
     : mManager(nullptr), mTeardownStarted(false) {}
 
+ClientManagerChild::~ClientManagerChild() = default;
+
 void ClientManagerChild::SetOwner(ClientThing<ClientManagerChild>* aThing) {
   MOZ_DIAGNOSTIC_ASSERT(aThing);
   MOZ_DIAGNOSTIC_ASSERT(!mManager);

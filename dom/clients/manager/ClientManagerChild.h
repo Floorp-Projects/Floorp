@@ -21,7 +21,7 @@ class ClientManagerChild final : public PClientManagerChild {
   bool mTeardownStarted;
 
   ClientManagerChild();
-  ~ClientManagerChild() = default;
+  ~ClientManagerChild();
 
   // PClientManagerChild interface
   void ActorDestroy(ActorDestroyReason aReason) override;
