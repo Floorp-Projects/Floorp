@@ -27,7 +27,7 @@ const waitForAppMenu = async () => {
   const appMenu = document.getElementById("appMenu-popup");
   const appMenuButton = document.getElementById("PanelUI-menu-button");
   await TestUtils.waitForCondition(
-    () => BrowserTestUtils.is_visible(appMenuButton),
+    () => BrowserTestUtils.isVisible(appMenuButton),
     "App menu button should be visible."
   );
 

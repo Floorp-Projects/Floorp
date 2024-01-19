@@ -79,7 +79,7 @@ async function checkPreviewNavigationVisibility(expected) {
   await mouseMoveAndWait(previewStack);
 
   ok(
-    BrowserTestUtils.is_visible(paginationElem),
+    BrowserTestUtils.isVisible(paginationElem),
     "The preview pagination toolbar is visible"
   );
   for (let [id, visible] of Object.entries(expected)) {

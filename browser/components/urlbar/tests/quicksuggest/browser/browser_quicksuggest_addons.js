@@ -118,7 +118,7 @@ add_task(async function basic() {
     const bottom = row.querySelector(".urlbarView-row-body-bottom");
     Assert.equal(bottom.textContent, "Recommended");
     Assert.ok(
-      BrowserTestUtils.is_visible(
+      BrowserTestUtils.isVisible(
         row.querySelector(".urlbarView-title-separator")
       ),
       "The title separator should be visible"

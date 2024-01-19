@@ -98,7 +98,7 @@ add_task(async function test_CertificateError() {
   await BrowserTestUtils.waitForEvent(pageInfo, "load");
   let permissionTab = pageInfo.document.getElementById("permTab");
   await TestUtils.waitForCondition(
-    () => BrowserTestUtils.is_visible(permissionTab),
+    () => BrowserTestUtils.isVisible(permissionTab),
     "Permission tab should be visible."
   );
 
@@ -149,7 +149,7 @@ add_task(async function test_NetworkError() {
   await BrowserTestUtils.waitForEvent(pageInfo, "load");
   let permissionTab = pageInfo.document.getElementById("permTab");
   await TestUtils.waitForCondition(
-    () => BrowserTestUtils.is_visible(permissionTab),
+    () => BrowserTestUtils.isVisible(permissionTab),
     "Permission tab should be visible."
   );
 

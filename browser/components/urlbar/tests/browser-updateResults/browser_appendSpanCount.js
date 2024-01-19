@@ -142,7 +142,7 @@ add_task(async function viewUpdateAppendHidden() {
       `Result at index ${i} is a search result`
     );
     Assert.ok(
-      BrowserTestUtils.is_visible(row),
+      BrowserTestUtils.isVisible(row),
       `Search result at index ${i} is visible`
     );
     Assert.equal(
@@ -160,7 +160,7 @@ add_task(async function viewUpdateAppendHidden() {
       `Result at index ${i} is a URL result`
     );
     Assert.ok(
-      !BrowserTestUtils.is_visible(row),
+      !BrowserTestUtils.isVisible(row),
       `URL result at index ${i} is hidden`
     );
     Assert.ok(

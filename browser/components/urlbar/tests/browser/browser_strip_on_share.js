@@ -121,7 +121,7 @@ async function testMenuItemDisabled(url, prefEnabled, selection) {
     }
     let menuitem = await promiseContextualMenuitem("strip-on-share");
     Assert.ok(
-      !BrowserTestUtils.is_visible(menuitem),
+      !BrowserTestUtils.isVisible(menuitem),
       "Menu item is not visible"
     );
     let hidePromise = BrowserTestUtils.waitForEvent(
@@ -181,7 +181,7 @@ async function testMenuItemEnabled({
       gURLBar.select();
     }
     let menuitem = await promiseContextualMenuitem("strip-on-share");
-    Assert.ok(BrowserTestUtils.is_visible(menuitem), "Menu item is visible");
+    Assert.ok(BrowserTestUtils.isVisible(menuitem), "Menu item is visible");
     let hidePromise = BrowserTestUtils.waitForEvent(
       menuitem.parentElement,
       "popuphidden"

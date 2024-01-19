@@ -158,7 +158,7 @@ async function checkOriginText(browser, origin = null) {
   let dialogDoc = dialog._frame.contentWindow.document;
   let titleSelector = "#titleText";
   let infoTitle = dialogDoc.querySelector(titleSelector);
-  ok(BrowserTestUtils.is_visible(infoTitle), "Title text is visible");
+  ok(BrowserTestUtils.isVisible(infoTitle), "Title text is visible");
 
   info("Check the displayed origin text is correct.");
   if (origin) {

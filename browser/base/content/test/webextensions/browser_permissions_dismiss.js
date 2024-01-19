@@ -39,7 +39,7 @@ add_task(async function test_tab_switch_dismiss() {
 
   let permsLearnMore = document.getElementById("addon-webext-perm-info");
   ok(
-    BrowserTestUtils.is_visible(permsLearnMore),
+    BrowserTestUtils.isVisible(permsLearnMore),
     "Learn more link is shown on Permission popup"
   );
   is(

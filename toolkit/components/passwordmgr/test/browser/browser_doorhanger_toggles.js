@@ -350,14 +350,14 @@ async function verifyDoorhangerToggles(browser, notif, expected) {
   );
   Assert.equal(panel.state, "open", "Panel is open");
   Assert.ok(
-    BrowserTestUtils.is_visible(passwordTextbox),
+    BrowserTestUtils.isVisible(passwordTextbox),
     "The doorhanger password field is visible"
   );
 
   await checkDoorhangerUsernamePassword(expected.username, expected.password);
   if (expected.toggleVisible) {
     Assert.ok(
-      BrowserTestUtils.is_visible(toggleCheckbox),
+      BrowserTestUtils.isVisible(toggleCheckbox),
       "The visibility checkbox is shown"
     );
   } else {

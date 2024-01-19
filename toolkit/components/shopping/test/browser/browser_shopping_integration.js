@@ -16,7 +16,7 @@ add_task(async function test_sidebar_navigation() {
     let sidebar = gBrowser.getPanel(browser).querySelector("shopping-sidebar");
     Assert.ok(sidebar, "Sidebar should exist");
     Assert.ok(
-      BrowserTestUtils.is_visible(sidebar),
+      BrowserTestUtils.isVisible(sidebar),
       "Sidebar should be visible."
     );
     info("Waiting for sidebar to update.");
@@ -38,7 +38,7 @@ add_task(async function test_sidebar_navigation() {
     await loadedPromise;
     Assert.ok(sidebar, "Sidebar should exist.");
     Assert.ok(
-      BrowserTestUtils.is_visible(sidebar),
+      BrowserTestUtils.isVisible(sidebar),
       "Sidebar should be visible."
     );
     info("Verifying another product.");
@@ -74,7 +74,7 @@ add_task(async function test_sidebar_navigation() {
     await promiseSidebarUpdated(sidebar, PRODUCT_TEST_URL);
     Assert.ok(sidebar, "Sidebar should exist");
     Assert.ok(
-      BrowserTestUtils.is_visible(sidebar),
+      BrowserTestUtils.isVisible(sidebar),
       "Sidebar should be visible."
     );
 
@@ -128,7 +128,7 @@ add_task(async function test_button_visible_when_opted_out() {
       let shoppingButton = document.getElementById("shopping-sidebar-button");
 
       ok(
-        BrowserTestUtils.is_visible(shoppingButton),
+        BrowserTestUtils.isVisible(shoppingButton),
         "Shopping Button should be visible on a product page"
       );
 
@@ -137,7 +137,7 @@ add_task(async function test_button_visible_when_opted_out() {
         .querySelector("shopping-sidebar");
       Assert.ok(sidebar, "Sidebar should exist");
       Assert.ok(
-        BrowserTestUtils.is_visible(sidebar),
+        BrowserTestUtils.isVisible(sidebar),
         "Sidebar should be visible."
       );
       info("Waiting for sidebar to update.");
@@ -172,7 +172,7 @@ add_task(async function test_button_visible_when_opted_out() {
       );
 
       ok(
-        BrowserTestUtils.is_visible(shoppingButton),
+        BrowserTestUtils.isVisible(shoppingButton),
         "Shopping Button should be visible after opting out"
       );
 
@@ -198,12 +198,12 @@ add_task(async function test_sidebar_button_open_close() {
     let sidebar = gBrowser.getPanel(browser).querySelector("shopping-sidebar");
     Assert.ok(sidebar, "Sidebar should exist");
     Assert.ok(
-      BrowserTestUtils.is_visible(sidebar),
+      BrowserTestUtils.isVisible(sidebar),
       "Sidebar should be visible."
     );
     let shoppingButton = document.getElementById("shopping-sidebar-button");
     ok(
-      BrowserTestUtils.is_visible(shoppingButton),
+      BrowserTestUtils.isVisible(shoppingButton),
       "Shopping Button should be visible on a product page"
     );
 
@@ -224,7 +224,7 @@ add_task(async function test_sidebar_button_open_close() {
     // reopen the sidebar
     shoppingButton.click();
     Assert.ok(
-      BrowserTestUtils.is_visible(sidebar),
+      BrowserTestUtils.isVisible(sidebar),
       "Sidebar should be visible."
     );
 
@@ -257,7 +257,7 @@ add_task(async function test_no_reliability_available() {
     Assert.ok(sidebar, "Sidebar should exist");
 
     Assert.ok(
-      BrowserTestUtils.is_visible(sidebar),
+      BrowserTestUtils.isVisible(sidebar),
       "Sidebar should be visible."
     );
     info("Waiting for sidebar to update.");

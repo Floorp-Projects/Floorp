@@ -72,7 +72,7 @@ async function assertSubViewState(category, expectedState) {
 
   if (!expectedStateSorted.length) {
     ok(
-      BrowserTestUtils.is_visible(
+      BrowserTestUtils.isVisible(
         document.getElementById(
           "protections-popup-no-trackers-found-description"
         )
@@ -88,11 +88,11 @@ async function assertSubViewState(category, expectedState) {
 
   // Explicitly waiting for the category item becoming visible.
   await TestUtils.waitForCondition(() => {
-    return BrowserTestUtils.is_visible(categoryItem);
+    return BrowserTestUtils.isVisible(categoryItem);
   });
 
   ok(
-    BrowserTestUtils.is_visible(categoryItem),
+    BrowserTestUtils.isVisible(categoryItem),
     `${category} category item is visible`
   );
 
@@ -162,10 +162,7 @@ async function assertSubViewState(category, expectedState) {
   ok(shimAllowSection, `Category ${category} has shim-allow hint.`);
 
   if (Object.values(expectedState).some(entry => entry.shimAllow)) {
-    BrowserTestUtils.is_visible(
-      shimAllowSection,
-      "Shim allow hint is visible."
-    );
+    BrowserTestUtils.isVisible(shimAllowSection, "Shim allow hint is visible.");
   } else {
     BrowserTestUtils.isHidden(shimAllowSection, "Shim allow hint is hidden.");
   }

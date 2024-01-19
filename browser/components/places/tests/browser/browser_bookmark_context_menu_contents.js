@@ -55,7 +55,7 @@ let OptionItemExists = (elementId, doc = document) => {
 
   Assert.ok(optionItem, `Context menu contains the menuitem ${elementId}`);
   Assert.ok(
-    BrowserTestUtils.is_visible(optionItem),
+    BrowserTestUtils.isVisible(optionItem),
     `Context menu option ${elementId} is visible`
   );
 };
@@ -64,7 +64,7 @@ let OptionsMatchExpected = (contextMenu, expectedOptionItems) => {
   let idList = [];
   for (let elem of contextMenu.children) {
     if (
-      BrowserTestUtils.is_visible(elem) &&
+      BrowserTestUtils.isVisible(elem) &&
       elem.localName !== "menuseparator"
     ) {
       idList.push(elem.id);

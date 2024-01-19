@@ -56,7 +56,7 @@ function confirmExtensionPage() {
     "Extension (Test Extension)",
     "The correct label should be used"
   );
-  ok(BrowserTestUtils.is_visible(label), "No label should be visible");
+  ok(BrowserTestUtils.isVisible(label), "No label should be visible");
 }
 
 add_task(async function testIdentityIndication() {

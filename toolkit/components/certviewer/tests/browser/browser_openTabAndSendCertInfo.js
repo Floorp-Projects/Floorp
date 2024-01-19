@@ -199,13 +199,13 @@ add_task(async function testGoodCert() {
 
     let securityTab = pageInfo.document.getElementById("securityTab");
     await TestUtils.waitForCondition(
-      () => BrowserTestUtils.is_visible(securityTab),
+      () => BrowserTestUtils.isVisible(securityTab),
       "Security tab should be visible."
     );
     Assert.ok(securityTab, "Security tab is available");
     let viewCertButton = pageInfo.document.getElementById("security-view-cert");
     await TestUtils.waitForCondition(
-      () => BrowserTestUtils.is_visible(viewCertButton),
+      () => BrowserTestUtils.isVisible(viewCertButton),
       "view cert button should be visible."
     );
 

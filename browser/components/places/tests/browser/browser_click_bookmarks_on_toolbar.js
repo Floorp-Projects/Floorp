@@ -187,7 +187,7 @@ add_task(async function openInSameTabWithPrefSet() {
   await popupPromise;
 
   let openItem = document.getElementById("placesContext_open");
-  ok(BrowserTestUtils.is_visible(openItem), "Open item should be visible");
+  ok(BrowserTestUtils.isVisible(openItem), "Open item should be visible");
 
   info("Waiting for page to load");
   let promise = waitForLoad(gBrowser.selectedBrowser, TEST_PAGES[0]);

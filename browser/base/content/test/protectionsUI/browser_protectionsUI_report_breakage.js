@@ -88,7 +88,7 @@ add_task(async function testReportBreakageCancel() {
       "protections-popup-tp-switch-breakage-link"
     );
     ok(
-      BrowserTestUtils.is_visible(siteNotWorkingButton),
+      BrowserTestUtils.isVisible(siteNotWorkingButton),
       "site not working button is visible"
     );
     let siteNotWorkingView = document.getElementById(
@@ -142,7 +142,7 @@ add_task(async function testReportBreakageSiteException() {
       "protections-popup-tp-switch-breakage-fixed-link"
     );
     ok(
-      BrowserTestUtils.is_visible(siteFixedButton),
+      BrowserTestUtils.isVisible(siteFixedButton),
       "site fixed button is visible"
     );
     let sendReportView = document.getElementById(
@@ -263,7 +263,7 @@ async function openAndTestReportBreakage(url, tags, error = false) {
     "protections-popup-tp-switch-breakage-link"
   );
   ok(
-    BrowserTestUtils.is_visible(siteNotWorkingButton),
+    BrowserTestUtils.isVisible(siteNotWorkingButton),
     "site not working button is visible"
   );
   let siteNotWorkingView = document.getElementById(
@@ -394,7 +394,7 @@ async function testReportBreakageSubmit(url, tags, error, hasException) {
   );
   if (error) {
     await TestUtils.waitForCondition(() =>
-      BrowserTestUtils.is_visible(errorMessage)
+      BrowserTestUtils.isVisible(errorMessage)
     );
     is(
       comments.value,

@@ -36,21 +36,21 @@ add_task(async function test() {
   info("Check page action buttons are visible, the meatball button is not");
   let addonButton =
     win.BrowserPageActions.urlbarButtonNodeForActionID(actionId);
-  Assert.ok(BrowserTestUtils.is_visible(addonButton));
+  Assert.ok(BrowserTestUtils.isVisible(addonButton));
   let starButton =
     win.BrowserPageActions.urlbarButtonNodeForActionID("bookmark");
-  Assert.ok(BrowserTestUtils.is_visible(starButton));
+  Assert.ok(BrowserTestUtils.isVisible(starButton));
   let meatballButton = win.document.getElementById("pageActionButton");
-  Assert.ok(!BrowserTestUtils.is_visible(meatballButton));
+  Assert.ok(!BrowserTestUtils.isVisible(meatballButton));
 
   info(
     "Shrink the window, check page action buttons are not visible, the meatball menu is visible"
   );
   let originalOuterWidth = win.outerWidth;
   await promiseStableResize(500, win);
-  Assert.ok(!BrowserTestUtils.is_visible(addonButton));
-  Assert.ok(!BrowserTestUtils.is_visible(starButton));
-  Assert.ok(BrowserTestUtils.is_visible(meatballButton));
+  Assert.ok(!BrowserTestUtils.isVisible(addonButton));
+  Assert.ok(!BrowserTestUtils.isVisible(starButton));
+  Assert.ok(BrowserTestUtils.isVisible(meatballButton));
 
   info(
     "Remove the extension, check the only page action button is visible, the meatball menu is not visible"
@@ -58,8 +58,8 @@ add_task(async function test() {
   let promiseUninstalled = promiseAddonUninstalled(extension.id);
   await extension.unload();
   await promiseUninstalled;
-  Assert.ok(BrowserTestUtils.is_visible(starButton));
-  Assert.ok(!BrowserTestUtils.is_visible(meatballButton));
+  Assert.ok(BrowserTestUtils.isVisible(starButton));
+  Assert.ok(!BrowserTestUtils.isVisible(meatballButton));
   Assert.deepEqual(
     win.BrowserPageActions.urlbarButtonNodeForActionID(actionId),
     null
@@ -99,7 +99,7 @@ add_task(async function bookmark() {
   await promiseStableResize(500, win);
 
   let meatballButton = win.document.getElementById("pageActionButton");
-  Assert.ok(BrowserTestUtils.is_visible(meatballButton));
+  Assert.ok(BrowserTestUtils.isVisible(meatballButton));
 
   // Open the panel.
   await promisePageActionPanelOpen(win);
@@ -227,7 +227,7 @@ add_task(async function test_disabledPageAction_hidden_in_protonOverflowMenu() {
     let pageActionNode =
       win.BrowserPageActions.panelButtonNodeForActionID(widgetId);
     ok(
-      pageActionNode && BrowserTestUtils.is_visible(pageActionNode),
+      pageActionNode && BrowserTestUtils.isVisible(pageActionNode),
       "enabled pageAction should be visible in the urlbar overflow menu"
     );
 

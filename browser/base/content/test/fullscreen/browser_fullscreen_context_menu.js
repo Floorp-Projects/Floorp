@@ -109,7 +109,7 @@ async function testContextMenu() {
 function verifyContextMenu(contextMenu, itemSelectors) {
   // Ignore hidden nodes
   let items = Array.from(contextMenu.children).filter(n =>
-    BrowserTestUtils.is_visible(n)
+    BrowserTestUtils.isVisible(n)
   );
   let menuAsText = items
     .map(n => {

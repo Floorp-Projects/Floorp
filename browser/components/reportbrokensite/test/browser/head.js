@@ -121,7 +121,7 @@ function isMenuItemEnabled(menuItem, itemDesc) {
 
 function isMenuItemHidden(menuItem, itemDesc) {
   ok(
-    !menuItem || menuItem.hidden || !BrowserTestUtils.is_visible(menuItem),
+    !menuItem || menuItem.hidden || !BrowserTestUtils.isVisible(menuItem),
     `${itemDesc} menu item is hidden`
   );
 }
@@ -174,7 +174,7 @@ class ReportBrokenSiteHelper {
 
   async #assertClickAndViewChanges(button, view, newView, newFocus) {
     ok(view.closest("panel").hasAttribute("panelopen"), "Panel is open");
-    ok(BrowserTestUtils.is_visible(button), "Button is visible");
+    ok(BrowserTestUtils.isVisible(button), "Button is visible");
     ok(!button.disabled, "Button is enabled");
     const promises = [];
     if (newView) {
@@ -248,7 +248,7 @@ class ReportBrokenSiteHelper {
   }
 
   isBackButtonEnabled() {
-    ok(BrowserTestUtils.is_visible(this.backButton), "Back button is visible");
+    ok(BrowserTestUtils.isVisible(this.backButton), "Back button is visible");
     ok(!this.backButton.disabled, "Back button is enabled");
   }
 
@@ -353,52 +353,52 @@ class ReportBrokenSiteHelper {
 
   isURLInvalidMessageShown() {
     ok(
-      BrowserTestUtils.is_visible(this.URLInvalidMessage),
+      BrowserTestUtils.isVisible(this.URLInvalidMessage),
       "'Please enter a valid URL' message is shown"
     );
   }
 
   isURLInvalidMessageHidden() {
     ok(
-      !BrowserTestUtils.is_visible(this.URLInvalidMessage),
+      !BrowserTestUtils.isVisible(this.URLInvalidMessage),
       "'Please enter a valid URL' message is hidden"
     );
   }
 
   isReasonNeededMessageShown() {
     ok(
-      BrowserTestUtils.is_visible(this.reasonRequiredMessage),
+      BrowserTestUtils.isVisible(this.reasonRequiredMessage),
       "'Please choose a reason' message is shown"
     );
   }
 
   isReasonNeededMessageHidden() {
     ok(
-      !BrowserTestUtils.is_visible(this.reasonRequiredMessage),
+      !BrowserTestUtils.isVisible(this.reasonRequiredMessage),
       "'Please choose a reason' message is hidden"
     );
   }
 
   isSendButtonEnabled() {
-    ok(BrowserTestUtils.is_visible(this.sendButton), "Send button is visible");
+    ok(BrowserTestUtils.isVisible(this.sendButton), "Send button is visible");
     ok(!this.sendButton.disabled, "Send button is enabled");
   }
 
   isSendButtonDisabled() {
-    ok(BrowserTestUtils.is_visible(this.sendButton), "Send button is visible");
+    ok(BrowserTestUtils.isVisible(this.sendButton), "Send button is visible");
     ok(this.sendButton.disabled, "Send button is disabled");
   }
 
   isSendMoreInfoShown() {
     ok(
-      BrowserTestUtils.is_visible(this.sendMoreInfoLink),
+      BrowserTestUtils.isVisible(this.sendMoreInfoLink),
       "send more info is shown"
     );
   }
 
   isSendMoreInfoHidden() {
     ok(
-      !BrowserTestUtils.is_visible(this.sendMoreInfoLink),
+      !BrowserTestUtils.isVisible(this.sendMoreInfoLink),
       "send more info is hidden"
     );
   }
@@ -413,45 +413,45 @@ class ReportBrokenSiteHelper {
 
   isReasonHidden() {
     ok(
-      !BrowserTestUtils.is_visible(this.reasonInput),
+      !BrowserTestUtils.isVisible(this.reasonInput),
       "reason drop-down is hidden"
     );
     ok(
-      !BrowserTestUtils.is_visible(this.reasonLabelOptional),
+      !BrowserTestUtils.isVisible(this.reasonLabelOptional),
       "optional reason label is hidden"
     );
     ok(
-      !BrowserTestUtils.is_visible(this.reasonLabelRequired),
+      !BrowserTestUtils.isVisible(this.reasonLabelRequired),
       "required reason label is hidden"
     );
   }
 
   isReasonRequired() {
     ok(
-      BrowserTestUtils.is_visible(this.reasonInput),
+      BrowserTestUtils.isVisible(this.reasonInput),
       "reason drop-down is shown"
     );
     ok(
-      !BrowserTestUtils.is_visible(this.reasonLabelOptional),
+      !BrowserTestUtils.isVisible(this.reasonLabelOptional),
       "optional reason label is hidden"
     );
     ok(
-      BrowserTestUtils.is_visible(this.reasonLabelRequired),
+      BrowserTestUtils.isVisible(this.reasonLabelRequired),
       "required reason label is shown"
     );
   }
 
   isReasonOptional() {
     ok(
-      BrowserTestUtils.is_visible(this.reasonInput),
+      BrowserTestUtils.isVisible(this.reasonInput),
       "reason drop-down is shown"
     );
     ok(
-      BrowserTestUtils.is_visible(this.reasonLabelOptional),
+      BrowserTestUtils.isVisible(this.reasonLabelOptional),
       "optional reason label is shown"
     );
     ok(
-      !BrowserTestUtils.is_visible(this.reasonLabelRequired),
+      !BrowserTestUtils.isVisible(this.reasonLabelRequired),
       "required reason label is hidden"
     );
   }

@@ -51,7 +51,7 @@ add_task(async function testShowAndHidePaperSizeSectionWithPageSize() {
       usePageRuleSizeAsPaperSize: false,
     });
 
-    ok(BrowserTestUtils.is_visible(paperSize), "Paper size section is shown");
+    ok(BrowserTestUtils.isVisible(paperSize), "Paper size section is shown");
 
     await helper.closeDialog();
   }, "page_size.html");
@@ -77,7 +77,7 @@ add_task(async function testShowPaperSizeSectionWithoutPageSize() {
 
     let paperSize = helper.get("paper-size");
 
-    ok(BrowserTestUtils.is_visible(paperSize), "Paper size section is shown");
+    ok(BrowserTestUtils.isVisible(paperSize), "Paper size section is shown");
 
     await helper.waitForSettingsEvent(async () => {
       await changeDestination(helper, "down");
@@ -90,7 +90,7 @@ add_task(async function testShowPaperSizeSectionWithoutPageSize() {
     });
 
     ok(
-      BrowserTestUtils.is_visible(paperSize),
+      BrowserTestUtils.isVisible(paperSize),
       "Paper size section is still shown"
     );
 
@@ -214,8 +214,8 @@ add_task(async function testZeroSizePassedToPrinter() {
     let pageSize = helper.get("paper-size");
     let orientation = helper.get("orientation");
 
-    ok(BrowserTestUtils.is_visible(pageSize), "Fallback to page size section");
-    ok(BrowserTestUtils.is_visible(orientation), "Orientation picker is shown");
+    ok(BrowserTestUtils.isVisible(pageSize), "Fallback to page size section");
+    ok(BrowserTestUtils.isVisible(orientation), "Orientation picker is shown");
 
     await helper.closeDialog();
   });
@@ -234,8 +234,8 @@ add_task(async function testZeroWidthPassedToPrinter() {
     let pageSize = helper.get("paper-size");
     let orientation = helper.get("orientation");
 
-    ok(BrowserTestUtils.is_visible(pageSize), "Fallback to page size section");
-    ok(BrowserTestUtils.is_visible(orientation), "Orientation picker is shown");
+    ok(BrowserTestUtils.isVisible(pageSize), "Fallback to page size section");
+    ok(BrowserTestUtils.isVisible(orientation), "Orientation picker is shown");
 
     await helper.closeDialog();
   });

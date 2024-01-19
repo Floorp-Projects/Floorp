@@ -82,7 +82,7 @@ async function checkDialog(
       "Title should fit without overflowing."
     );
 
-    ok(BrowserTestUtils.is_visible(titleEl), "New title should be shown.");
+    ok(BrowserTestUtils.isVisible(titleEl), "New title should be shown.");
     ok(
       BrowserTestUtils.isHidden(doc.getElementById("infoTitle")),
       "Old title should be hidden."

@@ -92,7 +92,7 @@ async function do_test_shortcuts(activateTask) {
     );
 
     for (let button of addEngineButtons) {
-      Assert.ok(BrowserTestUtils.is_visible(button));
+      Assert.ok(BrowserTestUtils.isVisible(button));
       Assert.ok(button.hasAttribute("image"));
       await document.l10n.translateElements([button]);
       Assert.ok(

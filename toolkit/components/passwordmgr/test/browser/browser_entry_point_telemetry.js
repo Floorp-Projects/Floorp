@@ -14,7 +14,7 @@ add_task(async function mainMenu_entryPoint() {
   let mainMenu = document.getElementById("appMenu-popup");
   let target = document.getElementById("PanelUI-menu-button");
   await TestUtils.waitForCondition(
-    () => BrowserTestUtils.is_visible(target),
+    () => BrowserTestUtils.isVisible(target),
     "Main menu button should be visible."
   );
   info("mainMenu_entryPoint, Main menu button is visible");
@@ -36,7 +36,7 @@ add_task(async function mainMenu_entryPoint() {
 
   let item = document.getElementById(loginsButtonID);
   await TestUtils.waitForCondition(
-    () => BrowserTestUtils.is_visible(item),
+    () => BrowserTestUtils.isVisible(item),
     "Logins and passwords button is visible."
   );
 
@@ -78,7 +78,7 @@ add_task(async function pageInfo_entryPoint() {
       );
 
       await TestUtils.waitForCondition(
-        () => BrowserTestUtils.is_visible(passwordsButton),
+        () => BrowserTestUtils.isVisible(passwordsButton),
         "Show passwords button should be visible."
       );
       info("pageInfo_entryPoint, clicking the show passwords button...");

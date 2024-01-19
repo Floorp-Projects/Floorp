@@ -166,7 +166,7 @@ add_task(async function keyboardSelection_lastResult() {
   await TestUtils.waitForCondition(() => {
     return (
       gURLBar.view.oneOffSearchButtons.buttons.firstElementChild &&
-      BrowserTestUtils.is_visible(
+      BrowserTestUtils.isVisible(
         gURLBar.view.oneOffSearchButtons.buttons.firstElementChild
       )
     );

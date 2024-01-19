@@ -232,14 +232,14 @@ add_task(
       todo(
         notification &&
           !notification.dismissed &&
-          BrowserTestUtils.is_visible(PopupNotifications.panel.firstChild),
+          BrowserTestUtils.isVisible(PopupNotifications.panel.firstChild),
         "Notification should still be open because we clicked during the security delay."
       );
     } else {
       ok(
         notification &&
           !notification.dismissed &&
-          BrowserTestUtils.is_visible(PopupNotifications.panel.firstChild),
+          BrowserTestUtils.isVisible(PopupNotifications.panel.firstChild),
         "Notification should still be open because we clicked during the security delay."
       );
     }

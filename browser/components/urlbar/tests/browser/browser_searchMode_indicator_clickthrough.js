@@ -21,24 +21,24 @@ add_task(async function test() {
       value: "test",
     });
     const indicator = document.getElementById("urlbar-search-mode-indicator");
-    Assert.ok(!BrowserTestUtils.is_visible(indicator));
+    Assert.ok(!BrowserTestUtils.isVisible(indicator));
     const indicatorCloseButton = document.getElementById(
       "urlbar-search-mode-indicator-close"
     );
-    Assert.ok(!BrowserTestUtils.is_visible(indicatorCloseButton));
+    Assert.ok(!BrowserTestUtils.isVisible(indicatorCloseButton));
     const labelBox = document.getElementById("urlbar-label-box");
-    Assert.ok(!BrowserTestUtils.is_visible(labelBox));
+    Assert.ok(!BrowserTestUtils.isVisible(labelBox));
 
     await UrlbarTestUtils.enterSearchMode(window);
-    Assert.ok(BrowserTestUtils.is_visible(indicator));
-    Assert.ok(BrowserTestUtils.is_visible(indicatorCloseButton));
-    Assert.ok(!BrowserTestUtils.is_visible(labelBox));
+    Assert.ok(BrowserTestUtils.isVisible(indicator));
+    Assert.ok(BrowserTestUtils.isVisible(indicatorCloseButton));
+    Assert.ok(!BrowserTestUtils.isVisible(labelBox));
 
     info("Blur the urlbar");
     gURLBar.blur();
-    Assert.ok(BrowserTestUtils.is_visible(indicator));
-    Assert.ok(BrowserTestUtils.is_visible(indicatorCloseButton));
-    Assert.ok(!BrowserTestUtils.is_visible(labelBox));
+    Assert.ok(BrowserTestUtils.isVisible(indicator));
+    Assert.ok(BrowserTestUtils.isVisible(indicatorCloseButton));
+    Assert.ok(!BrowserTestUtils.isVisible(labelBox));
     Assert.notEqual(
       document.activeElement,
       gURLBar.inputField,
@@ -53,9 +53,9 @@ add_task(async function test() {
     AccessibilityUtils.setEnv({ mustHaveAccessibleRule: false });
     EventUtils.synthesizeMouseAtCenter(indicator, {});
     AccessibilityUtils.resetEnv();
-    Assert.ok(BrowserTestUtils.is_visible(indicator));
-    Assert.ok(BrowserTestUtils.is_visible(indicatorCloseButton));
-    Assert.ok(!BrowserTestUtils.is_visible(labelBox));
+    Assert.ok(BrowserTestUtils.isVisible(indicator));
+    Assert.ok(BrowserTestUtils.isVisible(indicatorCloseButton));
+    Assert.ok(!BrowserTestUtils.isVisible(labelBox));
     Assert.equal(
       document.activeElement,
       gURLBar.inputField,
@@ -64,9 +64,9 @@ add_task(async function test() {
 
     info("Leave search mode clicking on the close button");
     await UrlbarTestUtils.exitSearchMode(window, { clickClose: true });
-    Assert.ok(!BrowserTestUtils.is_visible(indicator));
-    Assert.ok(!BrowserTestUtils.is_visible(indicatorCloseButton));
-    Assert.ok(!BrowserTestUtils.is_visible(labelBox));
+    Assert.ok(!BrowserTestUtils.isVisible(indicator));
+    Assert.ok(!BrowserTestUtils.isVisible(indicatorCloseButton));
+    Assert.ok(!BrowserTestUtils.isVisible(labelBox));
   });
 
   await BrowserTestUtils.withNewTab("about:robots", async browser => {
@@ -75,20 +75,20 @@ add_task(async function test() {
       value: "test",
     });
     const indicator = document.getElementById("urlbar-search-mode-indicator");
-    Assert.ok(!BrowserTestUtils.is_visible(indicator));
+    Assert.ok(!BrowserTestUtils.isVisible(indicator));
     const indicatorCloseButton = document.getElementById(
       "urlbar-search-mode-indicator-close"
     );
-    Assert.ok(!BrowserTestUtils.is_visible(indicatorCloseButton));
+    Assert.ok(!BrowserTestUtils.isVisible(indicatorCloseButton));
 
     await UrlbarTestUtils.enterSearchMode(window);
-    Assert.ok(BrowserTestUtils.is_visible(indicator));
-    Assert.ok(BrowserTestUtils.is_visible(indicatorCloseButton));
+    Assert.ok(BrowserTestUtils.isVisible(indicator));
+    Assert.ok(BrowserTestUtils.isVisible(indicatorCloseButton));
 
     info("Blur the urlbar");
     gURLBar.blur();
-    Assert.ok(BrowserTestUtils.is_visible(indicator));
-    Assert.ok(BrowserTestUtils.is_visible(indicatorCloseButton));
+    Assert.ok(BrowserTestUtils.isVisible(indicator));
+    Assert.ok(BrowserTestUtils.isVisible(indicatorCloseButton));
     Assert.notEqual(
       document.activeElement,
       gURLBar.inputField,
@@ -100,7 +100,7 @@ add_task(async function test() {
       clickClose: true,
       waitForSearch: false,
     });
-    Assert.ok(!BrowserTestUtils.is_visible(indicator));
-    Assert.ok(!BrowserTestUtils.is_visible(indicatorCloseButton));
+    Assert.ok(!BrowserTestUtils.isVisible(indicator));
+    Assert.ok(!BrowserTestUtils.isVisible(indicatorCloseButton));
   });
 });

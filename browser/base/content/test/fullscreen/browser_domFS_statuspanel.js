@@ -40,7 +40,7 @@ add_task(async function test_overlink() {
   let setAndCheckOverLink = async info => {
     XULBrowserWindow.setOverLink(overlink);
     await TestUtils.waitForCondition(
-      () => BrowserTestUtils.is_visible(statuspanel),
+      () => BrowserTestUtils.isVisible(statuspanel),
       `statuspanel should become visible after setting overlink ${info}`
     );
     is(
@@ -55,7 +55,7 @@ add_task(async function test_overlink() {
     },
     async function () {
       await TestUtils.waitForCondition(
-        () => !BrowserTestUtils.is_visible(statuspanel),
+        () => !BrowserTestUtils.isVisible(statuspanel),
         "statuspanel with overlink should hide when entering DOM FS"
       );
       await setAndCheckOverLink("while in DOM FS");
@@ -70,7 +70,7 @@ add_task(async function test_networkstatus() {
       XULBrowserWindow.busyUI = true;
       StatusPanel.update();
       ok(
-        BrowserTestUtils.is_visible(statuspanel),
+        BrowserTestUtils.isVisible(statuspanel),
         "statuspanel is visible before entering DOM FS"
       );
       is(statuspanelLabel.value, "test1", "statuspanel has expected value");
@@ -87,7 +87,7 @@ add_task(async function test_networkstatus() {
         "network status cleared when entering DOM FS"
       );
       ok(
-        !BrowserTestUtils.is_visible(statuspanel),
+        !BrowserTestUtils.isVisible(statuspanel),
         "statuspanel with network status should should hide when entering DOM FS"
       );
     }

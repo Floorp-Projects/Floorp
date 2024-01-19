@@ -549,7 +549,7 @@ async function openAndVerifyDoorhanger(browser, type, expected) {
 
   if (expected.toggle == "visible") {
     // Bug 1692284
-    // Assert.ok(BrowserTestUtils.is_visible(checkbox), "Toggle checkbox visible as expected");
+    // Assert.ok(BrowserTestUtils.isVisible(checkbox), "Toggle checkbox visible as expected");
   } else if (expected.toggle == "hidden") {
     Assert.ok(
       BrowserTestUtils.isHidden(checkbox),

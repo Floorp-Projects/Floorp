@@ -59,7 +59,7 @@ add_task(async function test_open_iframe() {
   let domItem = contextMenu.querySelector("#context-openframeintab");
   info("Going to click item " + domItem.id);
   ok(
-    BrowserTestUtils.is_visible(domItem),
+    BrowserTestUtils.isVisible(domItem),
     "DOM context menu item tab should be visible"
   );
   ok(!domItem.disabled, "DOM context menu item tab shouldn't be disabled");

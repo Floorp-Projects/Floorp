@@ -129,7 +129,7 @@ async function testCategoryNotShown(win) {
   );
 
   ok(
-    !BrowserTestUtils.is_visible(categoryItem),
+    !BrowserTestUtils.isVisible(categoryItem),
     "Fingerprinting category item is not visible"
   );
 
@@ -223,11 +223,11 @@ add_task(async function testFingerprintingSubview() {
 
       // Explicitly waiting for the category item becoming visible.
       await BrowserTestUtils.waitForMutationCondition(categoryItem, {}, () =>
-        BrowserTestUtils.is_visible(categoryItem)
+        BrowserTestUtils.isVisible(categoryItem)
       );
 
       ok(
-        BrowserTestUtils.is_visible(categoryItem),
+        BrowserTestUtils.isVisible(categoryItem),
         "Fingerprinting category item is visible"
       );
 
@@ -255,7 +255,7 @@ add_task(async function testFingerprintingSubview() {
         item => item.querySelector("label").value == "https://example.org"
       );
       ok(listItem, "Has an item for example.org");
-      ok(BrowserTestUtils.is_visible(listItem), "List item is visible");
+      ok(BrowserTestUtils.isVisible(listItem), "List item is visible");
 
       // Back to the popup main view.
       let mainView = win.document.getElementById("protections-popup-mainView");
@@ -301,11 +301,11 @@ add_task(async function testFingerprintingSubviewInPBM() {
 
       // Explicitly waiting for the category item becoming visible.
       await BrowserTestUtils.waitForMutationCondition(categoryItem, {}, () =>
-        BrowserTestUtils.is_visible(categoryItem)
+        BrowserTestUtils.isVisible(categoryItem)
       );
 
       ok(
-        BrowserTestUtils.is_visible(categoryItem),
+        BrowserTestUtils.isVisible(categoryItem),
         "Fingerprinting category item is visible"
       );
 
@@ -333,7 +333,7 @@ add_task(async function testFingerprintingSubviewInPBM() {
         item => item.querySelector("label").value == "https://example.org"
       );
       ok(listItem, "Has an item for example.org");
-      ok(BrowserTestUtils.is_visible(listItem), "List item is visible");
+      ok(BrowserTestUtils.isVisible(listItem), "List item is visible");
 
       // Back to the popup main view.
       let mainView = win.document.getElementById("protections-popup-mainView");
@@ -371,7 +371,7 @@ add_task(async function testDynamicallyLoadFingerprinter() {
     );
 
     ok(
-      !BrowserTestUtils.is_visible(categoryItem),
+      !BrowserTestUtils.isVisible(categoryItem),
       "Fingerprinting category item is not visible"
     );
 
@@ -411,7 +411,7 @@ add_task(async function testDynamicallyLoadFingerprinter() {
       item => item.querySelector("label").value == "https://example.org"
     );
     ok(listItem, "Has an item for example.org");
-    ok(BrowserTestUtils.is_visible(listItem), "List item is visible");
+    ok(BrowserTestUtils.isVisible(listItem), "List item is visible");
 
     // Back to the popup main view.
     let mainView = win.document.getElementById("protections-popup-mainView");

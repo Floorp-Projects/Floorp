@@ -56,7 +56,7 @@ async function assertSitesListed(blocked) {
     );
 
     ok(
-      !BrowserTestUtils.is_visible(categoryItem),
+      !BrowserTestUtils.isVisible(categoryItem),
       "TP category item is not visible"
     );
     BrowserTestUtils.removeTab(tab);
@@ -68,10 +68,10 @@ async function assertSitesListed(blocked) {
 
   // Explicitly waiting for the category item becoming visible.
   await BrowserTestUtils.waitForMutationCondition(categoryItem, {}, () =>
-    BrowserTestUtils.is_visible(categoryItem)
+    BrowserTestUtils.isVisible(categoryItem)
   );
 
-  ok(BrowserTestUtils.is_visible(categoryItem), "TP category item is visible");
+  ok(BrowserTestUtils.isVisible(categoryItem), "TP category item is visible");
 
   // Click the tracker category and wait until the tracker view is shown.
   let trackersView = document.getElementById("protections-popup-trackersView");
@@ -92,7 +92,7 @@ async function assertSitesListed(blocked) {
       item.querySelector("label").value == "https://email-tracking.example.org"
   );
   ok(listItem, "Has an item for email-tracking.example.org");
-  ok(BrowserTestUtils.is_visible(listItem), "List item is visible");
+  ok(BrowserTestUtils.isVisible(listItem), "List item is visible");
 
   // Back to the popup main view.
   let mainView = document.getElementById("protections-popup-mainView");
@@ -134,13 +134,13 @@ async function assertSitesListed(blocked) {
       item.querySelector("label").value == "https://email-tracking.example.org"
   );
   ok(listItem, "Has an item for email-tracking.example.org");
-  ok(BrowserTestUtils.is_visible(listItem), "List item is visible");
+  ok(BrowserTestUtils.isVisible(listItem), "List item is visible");
 
   listItem = listItems.find(
     item => item.querySelector("label").value == "https://itisatracker.org"
   );
   ok(listItem, "Has an item for itisatracker.org");
-  ok(BrowserTestUtils.is_visible(listItem), "List item is visible");
+  ok(BrowserTestUtils.isVisible(listItem), "List item is visible");
 
   BrowserTestUtils.removeTab(tab);
 }

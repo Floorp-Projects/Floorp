@@ -50,7 +50,7 @@ add_task(async function test_closePanelESCMouseFocus() {
 
       let subtitlesPanel = pipWin.document.getElementById("settings");
       let panelVisiblePromise = BrowserTestUtils.waitForCondition(
-        () => BrowserTestUtils.is_visible(subtitlesPanel),
+        () => BrowserTestUtils.isVisible(subtitlesPanel),
         "Wait for panel to be visible"
       );
 
@@ -127,7 +127,7 @@ add_task(async function test_closePanelESCKeyboardFocus() {
       let subtitlesPanel = pipWin.document.getElementById("settings");
       let subtitlesToggle = pipWin.document.getElementById("subtitles-toggle");
       let panelVisiblePromise = BrowserTestUtils.waitForCondition(
-        () => BrowserTestUtils.is_visible(subtitlesPanel),
+        () => BrowserTestUtils.isVisible(subtitlesPanel),
         "Wait for panel to be visible"
       );
 
@@ -210,7 +210,7 @@ add_task(async function test_panelKeyboardButtons() {
       let subtitlesPanel = pipWin.document.getElementById("settings");
       let subtitlesToggle = pipWin.document.getElementById("subtitles-toggle");
       let panelVisiblePromise = BrowserTestUtils.waitForCondition(
-        () => BrowserTestUtils.is_visible(subtitlesPanel),
+        () => BrowserTestUtils.isVisible(subtitlesPanel),
         "Wait for panel to be visible"
       );
 

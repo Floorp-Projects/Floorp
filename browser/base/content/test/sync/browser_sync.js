@@ -44,7 +44,7 @@ add_task(async function test_navBar_button_visibility() {
   };
   gSync.updateAllUI(state);
   ok(
-    BrowserTestUtils.is_visible(button),
+    BrowserTestUtils.isVisible(button),
     "Check button visibility with STATUS_NOT_CONFIGURED"
   );
 
@@ -52,28 +52,28 @@ add_task(async function test_navBar_button_visibility() {
   state.status = UIState.STATUS_NOT_VERIFIED;
   gSync.updateAllUI(state);
   ok(
-    BrowserTestUtils.is_visible(button),
+    BrowserTestUtils.isVisible(button),
     "Check button visibility with STATUS_NOT_VERIFIED"
   );
 
   state.status = UIState.STATUS_LOGIN_FAILED;
   gSync.updateAllUI(state);
   ok(
-    BrowserTestUtils.is_visible(button),
+    BrowserTestUtils.isVisible(button),
     "Check button visibility with STATUS_LOGIN_FAILED"
   );
 
   state.status = UIState.STATUS_SIGNED_IN;
   gSync.updateAllUI(state);
   ok(
-    BrowserTestUtils.is_visible(button),
+    BrowserTestUtils.isVisible(button),
     "Check button visibility with STATUS_SIGNED_IN"
   );
 
   state.syncEnabled = false;
   gSync.updateAllUI(state);
   is(
-    BrowserTestUtils.is_visible(button),
+    BrowserTestUtils.isVisible(button),
     true,
     "Check button visibility when signed in, but sync disabled"
   );
@@ -117,7 +117,7 @@ add_task(async function test_overflow_navBar_button_visibility() {
   gSync.updateAllUI(state);
 
   ok(
-    BrowserTestUtils.is_visible(button),
+    BrowserTestUtils.isVisible(button),
     "Button should still be visable even if user sync not configured"
   );
 
@@ -178,7 +178,7 @@ add_task(async function test_ui_state_signedin() {
   checkMenuBarItem("sync-syncnowitem");
   checkPanelHeader();
   ok(
-    BrowserTestUtils.is_visible(
+    BrowserTestUtils.isVisible(
       document.getElementById("fxa-menu-header-title")
     ),
     "expected toolbar to be visible after opening"
@@ -675,7 +675,7 @@ add_task(async function test_experiment_ui_state_signedin() {
   checkMenuBarItem("sync-syncnowitem");
   checkPanelHeader();
   ok(
-    BrowserTestUtils.is_visible(
+    BrowserTestUtils.isVisible(
       document.getElementById("fxa-menu-header-title")
     ),
     "expected toolbar to be visible after opening"
@@ -844,7 +844,7 @@ async function checkFxABadged() {
   });
   const badge = button.querySelector("label.feature-callout");
   ok(badge, "expected feature-callout style badge");
-  ok(BrowserTestUtils.is_visible(badge), "expected the badge to be visible");
+  ok(BrowserTestUtils.isVisible(badge), "expected the badge to be visible");
 }
 
 // fxaStatus is one of 'not_configured', 'unverified', 'login-failed', or 'signedin'.

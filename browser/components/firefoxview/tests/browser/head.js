@@ -135,7 +135,7 @@ function testVisibility(browser, expected) {
     const elem = document.querySelector(selector);
     if (shouldBeVisible) {
       ok(
-        BrowserTestUtils.is_visible(elem),
+        BrowserTestUtils.isVisible(elem),
         `Expected ${selector} to be visible`
       );
     } else {
@@ -159,7 +159,7 @@ async function waitForElementVisible(browser, selector, isVisible = true) {
     },
     () => {
       return isVisible
-        ? BrowserTestUtils.is_visible(elem)
+        ? BrowserTestUtils.isVisible(elem)
         : BrowserTestUtils.isHidden(elem);
     }
   );
@@ -178,14 +178,14 @@ async function waitForVisibleSetupStep(browser, expected) {
       attributeFilter: ["selected-view"],
     },
     () => {
-      return BrowserTestUtils.is_visible(nextStepElem);
+      return BrowserTestUtils.isVisible(nextStepElem);
     }
   );
 
   for (let elem of stepElems) {
     if (elem == nextStepElem) {
       ok(
-        BrowserTestUtils.is_visible(elem),
+        BrowserTestUtils.isVisible(elem),
         `Expected ${elem.id || elem.className} to be visible`
       );
     } else {

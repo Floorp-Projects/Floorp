@@ -317,7 +317,7 @@ add_task(async function testFxViewEntryPointsInPrivateBrowsing() {
     toolsMenu.openMenu(true);
     await menuShown;
     Assert.equal(
-      BrowserTestUtils.is_visible(fxViewMenuItem),
+      BrowserTestUtils.isVisible(fxViewMenuItem),
       expectedEnabled,
       `Firefox view menu item is ${expectedEnabled ? "enabled" : "hidden"}`
     );
@@ -334,7 +334,7 @@ add_task(async function testFxViewEntryPointsInPrivateBrowsing() {
     }
     // check the tab button
     Assert.equal(
-      BrowserTestUtils.is_visible(fxViewBtn),
+      BrowserTestUtils.isVisible(fxViewBtn),
       expectedVisible,
       `#${fxViewBtn.id} is ${
         expectedVisible ? "visible" : "hidden"

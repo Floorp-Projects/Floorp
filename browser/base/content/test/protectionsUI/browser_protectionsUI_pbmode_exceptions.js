@@ -44,7 +44,7 @@ function testTrackingPage() {
   ok(!gProtectionsHandler.hasException, "content shows no exception");
 
   ok(
-    BrowserTestUtils.is_visible(gProtectionsHandler.iconBox),
+    BrowserTestUtils.isVisible(gProtectionsHandler.iconBox),
     "icon box is visible"
   );
   ok(gProtectionsHandler.iconBox.hasAttribute("active"), "shield is active");
@@ -80,7 +80,7 @@ function testTrackingPageUnblocked() {
   );
 
   ok(
-    BrowserTestUtils.is_visible(gProtectionsHandler.iconBox),
+    BrowserTestUtils.isVisible(gProtectionsHandler.iconBox),
     "icon box is visible"
   );
 }

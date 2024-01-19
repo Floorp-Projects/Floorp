@@ -73,7 +73,7 @@ async function assertTagsVisibility(libraryDocument, expectedVisible) {
 
   // Check the editor area.
   const tagInput = libraryDocument.getElementById("editBMPanel_tagsField");
-  Assert.equal(BrowserTestUtils.is_visible(tagInput), expectedVisible);
+  Assert.equal(BrowserTestUtils.isVisible(tagInput), expectedVisible);
   if (expectedVisible) {
     Assert.equal(tagInput.value, TAGS_TEXT);
   }

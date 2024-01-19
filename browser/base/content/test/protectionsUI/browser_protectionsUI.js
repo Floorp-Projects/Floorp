@@ -75,13 +75,13 @@ add_task(async function testPanelInfoMessage() {
 
   // Check the visibility of the info message.
   ok(
-    BrowserTestUtils.is_visible(container),
+    BrowserTestUtils.isVisible(container),
     "The message container should exist."
   );
 
-  ok(BrowserTestUtils.is_visible(message), "The message should be visible.");
+  ok(BrowserTestUtils.isVisible(message), "The message should be visible.");
 
-  ok(BrowserTestUtils.is_visible(learnMoreLink), "The link should be visible.");
+  ok(BrowserTestUtils.isVisible(learnMoreLink), "The link should be visible.");
 
   //TODO: Add a check for infomessage telemetry
 
@@ -116,7 +116,7 @@ add_task(async function testToggleSwitch() {
 
   // Check the visibility of the "Site not working?" link.
   ok(
-    BrowserTestUtils.is_visible(
+    BrowserTestUtils.isVisible(
       gProtectionsHandler._protectionsPopupTPSwitchBreakageLink
     ),
     "The 'Site not working?' link should be visible."
@@ -229,7 +229,7 @@ add_task(async function testToggleSwitch() {
 
   // The 'Site Fixed?' link should be shown if TP is off.
   ok(
-    BrowserTestUtils.is_visible(
+    BrowserTestUtils.isVisible(
       gProtectionsHandler._protectionsPopupTPSwitchBreakageFixedLink
     ),
     "The 'Site Fixed?' link should be visible."
@@ -407,12 +407,12 @@ add_task(async function testMiniPanel() {
   for (let item of mainView.childNodes) {
     if (item.id !== "protections-popup-mainView-panel-header-section") {
       ok(
-        !BrowserTestUtils.is_visible(item),
+        !BrowserTestUtils.isVisible(item),
         `The section '${item.id}' is hidden in the toast.`
       );
     } else {
       ok(
-        BrowserTestUtils.is_visible(item),
+        BrowserTestUtils.isVisible(item),
         "The panel header is displayed as the content of the toast."
       );
     }
@@ -622,7 +622,7 @@ add_task(async function testNumberOfBlockedTrackers() {
 
   // Check that the number of blocked trackers is shown.
   ok(
-    BrowserTestUtils.is_visible(trackerCounterBox),
+    BrowserTestUtils.isVisible(trackerCounterBox),
     "The blocked tracker counter is shown if there is one blocked tracker."
   );
   is(
@@ -658,7 +658,7 @@ add_task(async function testNumberOfBlockedTrackers() {
 
   // Check that the number of blocked trackers is shown.
   ok(
-    BrowserTestUtils.is_visible(trackerCounterBox),
+    BrowserTestUtils.isVisible(trackerCounterBox),
     "The blocked tracker counter is shown if there are more than one blocked tracker."
   );
   is(

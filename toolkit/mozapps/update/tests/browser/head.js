@@ -696,7 +696,7 @@ function runAboutDialogUpdateTest(params, steps) {
       let { selectedPanel } = aboutDialog.gAppUpdater;
       is(selectedPanel.id, panelId, "The panel ID should equal " + panelId);
       ok(
-        BrowserTestUtils.is_visible(selectedPanel),
+        BrowserTestUtils.isVisible(selectedPanel),
         "The panel should be visible"
       );
 
@@ -715,7 +715,7 @@ function runAboutDialogUpdateTest(params, steps) {
         selectedPanel = aboutDialog.gAppUpdater.selectedPanel;
         is(selectedPanel.id, panelId, "The panel ID should equal " + panelId);
         ok(
-          BrowserTestUtils.is_visible(selectedPanel),
+          BrowserTestUtils.isVisible(selectedPanel),
           "The panel should be visible"
         );
       }

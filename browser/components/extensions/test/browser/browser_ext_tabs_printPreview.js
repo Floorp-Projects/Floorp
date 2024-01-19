@@ -28,7 +28,7 @@ add_task(async function testPrintPreview() {
   // Ensure we're showing the preview...
   await BrowserTestUtils.waitForCondition(() => {
     let preview = document.querySelector(".printPreviewBrowser");
-    return preview && BrowserTestUtils.is_visible(preview);
+    return preview && BrowserTestUtils.isVisible(preview);
   });
 
   gBrowser.getTabDialogBox(gBrowser.selectedBrowser).abortAllDialogs();

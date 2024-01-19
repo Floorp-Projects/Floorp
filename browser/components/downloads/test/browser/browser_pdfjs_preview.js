@@ -377,7 +377,7 @@ async function verifyContextMenu(contextMenu, expected = {}) {
   );
   info("Waiting for the context menu to show up");
   await TestUtils.waitForCondition(
-    () => BrowserTestUtils.is_visible(contextMenu),
+    () => BrowserTestUtils.isVisible(contextMenu),
     "The context menu is visible"
   );
   await TestUtils.waitForTick();
@@ -588,7 +588,7 @@ async function testOpenPDFPreview({
         await TestUtils.waitForCondition(() => {
           return (
             listbox.itemChildren.length == expected.downloadCount &&
-            BrowserTestUtils.is_visible(listbox.itemChildren[0])
+            BrowserTestUtils.isVisible(listbox.itemChildren[0])
           );
         });
         itemTarget = listbox.itemChildren[0];

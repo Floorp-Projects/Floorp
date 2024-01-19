@@ -52,7 +52,7 @@ add_task(async function contextMenu_removeExtension_panel() {
   await promiseAnimationFrame(win);
 
   let meatballButton = win.document.getElementById("pageActionButton");
-  Assert.ok(BrowserTestUtils.is_visible(meatballButton));
+  Assert.ok(BrowserTestUtils.isVisible(meatballButton));
 
   // Open the panel.
   await promisePageActionPanelOpen(win);
@@ -256,7 +256,7 @@ add_task(async function contextMenu_removeExtension_disabled_in_panel() {
   await promiseAnimationFrame(win);
 
   let meatballButton = win.document.getElementById("pageActionButton");
-  Assert.ok(BrowserTestUtils.is_visible(meatballButton));
+  Assert.ok(BrowserTestUtils.isVisible(meatballButton));
 
   // Open the panel.
   await promisePageActionPanelOpen(win);

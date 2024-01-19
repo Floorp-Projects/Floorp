@@ -52,7 +52,7 @@ add_task(async function test_hidden_by_prefs() {
         "fill-login-generated-password"
       );
       Assert.ok(
-        !BrowserTestUtils.is_visible(generatedPasswordItem),
+        !BrowserTestUtils.isVisible(generatedPasswordItem),
         "generated password item is hidden"
       );
 
@@ -80,7 +80,7 @@ add_task(async function test_fill_hidden_by_login_saving_disabled() {
         "fill-login-generated-password"
       );
       Assert.ok(
-        !BrowserTestUtils.is_visible(generatedPasswordItem),
+        !BrowserTestUtils.isVisible(generatedPasswordItem),
         "generated password item is hidden"
       );
 
@@ -113,7 +113,7 @@ add_task(async function test_fill_hidden_by_locked_primary_password() {
         "fill-login-generated-password"
       );
       Assert.ok(
-        BrowserTestUtils.is_visible(generatedPasswordItem),
+        BrowserTestUtils.isVisible(generatedPasswordItem),
         "generated password item is visible"
       );
       Assert.ok(

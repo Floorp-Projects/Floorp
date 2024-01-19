@@ -908,7 +908,7 @@ async function doLayoutTest(variation) {
 
       if (variation.introductionSection) {
         info("Check the section visibility");
-        Assert.ok(BrowserTestUtils.is_visible(introductionSection));
+        Assert.ok(BrowserTestUtils.isVisible(introductionSection));
         Assert.ok(BrowserTestUtils.isHidden(mainSection));
 
         info("Check the introduction section");
@@ -919,12 +919,12 @@ async function doLayoutTest(variation) {
         await BrowserTestUtils.waitForCondition(
           () =>
             BrowserTestUtils.isHidden(introductionSection) &&
-            BrowserTestUtils.is_visible(mainSection)
+            BrowserTestUtils.isVisible(mainSection)
         );
       } else {
         info("Check the section visibility");
         Assert.ok(BrowserTestUtils.isHidden(introductionSection));
-        Assert.ok(BrowserTestUtils.is_visible(mainSection));
+        Assert.ok(BrowserTestUtils.isVisible(mainSection));
       }
 
       info("Check the main section");
@@ -1000,7 +1000,7 @@ function assertLogo(sectionElement, expectedLogoType) {
   }
 
   const logo = sectionElement.querySelector(".logo");
-  Assert.ok(BrowserTestUtils.is_visible(logo));
+  Assert.ok(BrowserTestUtils.isVisible(logo));
   const logoImage =
     sectionElement.ownerGlobal.getComputedStyle(logo).backgroundImage;
   Assert.equal(logoImage, expectedLogoImage);
@@ -1017,7 +1017,7 @@ function assertVisibility(sectionElement, expectedVisibility) {
   for (const [selector, visibility] of Object.entries(expectedVisibility)) {
     const element = sectionElement.querySelector(selector);
     if (visibility) {
-      Assert.ok(BrowserTestUtils.is_visible(element));
+      Assert.ok(BrowserTestUtils.isVisible(element));
     } else {
       if (!element) {
         Assert.ok(true);
@@ -1045,7 +1045,7 @@ async function onboardingClose(variation) {
     callback: async (win, userAction, maybeShowPromise) => {
       info("Check the status of the close button");
       const closeButton = win.document.getElementById("onboardingClose");
-      Assert.ok(BrowserTestUtils.is_visible(closeButton));
+      Assert.ok(BrowserTestUtils.isVisible(closeButton));
       Assert.equal(closeButton.getAttribute("title"), "Close");
 
       info("Commit the close button");
@@ -1083,7 +1083,7 @@ async function onboardingNext(variation) {
     callback: async (win, userAction, maybeShowPromise) => {
       info("Check the status of the next button");
       const nextButton = win.document.getElementById("onboardingNext");
-      Assert.ok(BrowserTestUtils.is_visible(nextButton));
+      Assert.ok(BrowserTestUtils.isVisible(nextButton));
 
       info("Commit the next button");
       userAction(nextButton);
@@ -1095,7 +1095,7 @@ async function onboardingNext(variation) {
       await BrowserTestUtils.waitForCondition(
         () =>
           BrowserTestUtils.isHidden(introductionSection) &&
-          BrowserTestUtils.is_visible(mainSection),
+          BrowserTestUtils.isVisible(mainSection),
         "Wait for the transition"
       );
 
@@ -1223,7 +1223,7 @@ async function onboardingSkipLink(variation, skipIntroduction) {
     callback: async (win, userAction, maybeShowPromise) => {
       info("Check the status of the skip link");
       const skipLink = win.document.getElementById("onboardingSkipLink");
-      Assert.ok(BrowserTestUtils.is_visible(skipLink));
+      Assert.ok(BrowserTestUtils.isVisible(skipLink));
 
       info("Commit the skip link");
       const tabCount = gBrowser.tabs.length;
@@ -1288,7 +1288,7 @@ async function doLearnMoreTest(variation, skipIntroduction, target, telemetry) {
     callback: async (win, userAction, maybeShowPromise) => {
       info("Check the status of the learn more link");
       const learnMoreLink = win.document.getElementById(target);
-      Assert.ok(BrowserTestUtils.is_visible(learnMoreLink));
+      Assert.ok(BrowserTestUtils.isVisible(learnMoreLink));
 
       info("Commit the learn more link");
       const loadPromise = BrowserTestUtils.waitForNewTab(
@@ -1530,7 +1530,7 @@ async function showOnboardingDialog({ skipIntroduction } = {}) {
   await BrowserTestUtils.waitForCondition(
     () =>
       BrowserTestUtils.isHidden(introductionSection) &&
-      BrowserTestUtils.is_visible(mainSection)
+      BrowserTestUtils.isVisible(mainSection)
   );
 
   return { win, maybeShowPromise };

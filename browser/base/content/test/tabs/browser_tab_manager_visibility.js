@@ -19,7 +19,7 @@ add_task(async function tab_manager_visibility_preference_on() {
     },
     async function (browser) {
       await Assert.ok(
-        BrowserTestUtils.is_visible(
+        BrowserTestUtils.isVisible(
           newWindow.document.getElementById("alltabs-button")
         ),
         "tab manage menu is visible when browser.tabs.tabmanager.enabled preference is set to true"

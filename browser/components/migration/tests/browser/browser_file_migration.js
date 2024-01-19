@@ -292,7 +292,7 @@ add_task(async function test_file_migration_error() {
 
     let errorMessageContainer = shadow.querySelector(".file-import-error");
     Assert.ok(
-      BrowserTestUtils.is_visible(errorMessageContainer),
+      BrowserTestUtils.isVisible(errorMessageContainer),
       "Should be showing the error message container"
     );
 

@@ -19,7 +19,7 @@ add_task(async function context_none() {
       info("The separator and the add engine item should not be present.");
       let elt = popup.parentNode.getMenuItem("add-engine-separator");
       Assert.ok(!!elt);
-      Assert.ok(!BrowserTestUtils.is_visible(elt));
+      Assert.ok(!BrowserTestUtils.isVisible(elt));
       Assert.ok(!popup.parentNode.getMenuItem("add-engine-menu"));
       Assert.ok(!popup.parentNode.getMenuItem("add-engine-0"));
     });
@@ -33,13 +33,13 @@ add_task(async function context_one() {
     await UrlbarTestUtils.withContextMenu(window, async popup => {
       info("The separator and the add engine item should be present.");
       let elt = popup.parentNode.getMenuItem("add-engine-separator");
-      Assert.ok(BrowserTestUtils.is_visible(elt));
+      Assert.ok(BrowserTestUtils.isVisible(elt));
 
       Assert.ok(!popup.parentNode.getMenuItem("add-engine-menu"));
       Assert.ok(!popup.parentNode.getMenuItem("add-engine-1"));
 
       elt = popup.parentNode.getMenuItem("add-engine-0");
-      Assert.ok(BrowserTestUtils.is_visible(elt));
+      Assert.ok(BrowserTestUtils.isVisible(elt));
       await document.l10n.translateElements([elt]);
       Assert.ok(elt.label.includes("add_search_engine_0"));
       Assert.ok(elt.hasAttribute("image"));
@@ -58,7 +58,7 @@ add_task(async function context_one() {
     await UrlbarTestUtils.withContextMenu(window, popup => {
       info("The separator and the add engine item should not be present.");
       let elt = popup.parentNode.getMenuItem("add-engine-separator");
-      Assert.ok(!BrowserTestUtils.is_visible(elt));
+      Assert.ok(!BrowserTestUtils.isVisible(elt));
       Assert.ok(!popup.parentNode.getMenuItem("add-engine-menu"));
       Assert.ok(!popup.parentNode.getMenuItem("add-engine-0"));
     });
@@ -70,13 +70,13 @@ add_task(async function context_one() {
     await UrlbarTestUtils.withContextMenu(window, async popup => {
       info("The separator and the add engine item should be present again.");
       let elt = popup.parentNode.getMenuItem("add-engine-separator");
-      Assert.ok(BrowserTestUtils.is_visible(elt));
+      Assert.ok(BrowserTestUtils.isVisible(elt));
 
       Assert.ok(!popup.parentNode.getMenuItem("add-engine-menu"));
       Assert.ok(!popup.parentNode.getMenuItem("add-engine-1"));
 
       elt = popup.parentNode.getMenuItem("add-engine-0");
-      Assert.ok(BrowserTestUtils.is_visible(elt));
+      Assert.ok(BrowserTestUtils.isVisible(elt));
       await document.l10n.translateElements([elt]);
       Assert.ok(elt.label.includes("add_search_engine_0"));
     });
@@ -98,7 +98,7 @@ add_task(async function context_invalid() {
       Assert.ok(!popup.parentNode.getMenuItem("add-engine-1"));
 
       let elt = popup.parentNode.getMenuItem("add-engine-0");
-      Assert.ok(BrowserTestUtils.is_visible(elt));
+      Assert.ok(BrowserTestUtils.isVisible(elt));
       await document.l10n.translateElements([elt]);
       Assert.ok(elt.label.includes("add_search_engine_404"));
       Assert.equal(
@@ -134,13 +134,13 @@ add_task(async function context_same_name() {
     await UrlbarTestUtils.withContextMenu(window, async popup => {
       info("The separator and the add engine item should be present.");
       let elt = popup.parentNode.getMenuItem("add-engine-separator");
-      Assert.ok(BrowserTestUtils.is_visible(elt));
+      Assert.ok(BrowserTestUtils.isVisible(elt));
 
       Assert.ok(!popup.parentNode.getMenuItem("add-engine-menu"));
       Assert.ok(!popup.parentNode.getMenuItem("add-engine-1"));
 
       elt = popup.parentNode.getMenuItem("add-engine-0");
-      Assert.ok(BrowserTestUtils.is_visible(elt));
+      Assert.ok(BrowserTestUtils.isVisible(elt));
       await document.l10n.translateElements([elt]);
       Assert.ok(elt.label.includes("add_search_engine_0"));
     });
@@ -154,16 +154,16 @@ add_task(async function context_two() {
     await UrlbarTestUtils.withContextMenu(window, async popup => {
       info("The separator and the add engine item should be present.");
       let elt = popup.parentNode.getMenuItem("add-engine-separator");
-      Assert.ok(BrowserTestUtils.is_visible(elt));
+      Assert.ok(BrowserTestUtils.isVisible(elt));
 
       Assert.ok(!popup.parentNode.getMenuItem("add-engine-menu"));
 
       elt = popup.parentNode.getMenuItem("add-engine-0");
-      Assert.ok(BrowserTestUtils.is_visible(elt));
+      Assert.ok(BrowserTestUtils.isVisible(elt));
       await document.l10n.translateElements([elt]);
       Assert.ok(elt.label.includes("add_search_engine_0"));
       elt = popup.parentNode.getMenuItem("add-engine-1");
-      Assert.ok(BrowserTestUtils.is_visible(elt));
+      Assert.ok(BrowserTestUtils.isVisible(elt));
       await document.l10n.translateElements([elt]);
       Assert.ok(elt.label.includes("add_search_engine_1"));
     });
@@ -177,11 +177,11 @@ add_task(async function context_many() {
     await UrlbarTestUtils.withContextMenu(window, async popup => {
       info("The separator and the add engine menu should be present.");
       let separator = popup.parentNode.getMenuItem("add-engine-separator");
-      Assert.ok(BrowserTestUtils.is_visible(separator));
+      Assert.ok(BrowserTestUtils.isVisible(separator));
 
       info("Engines should appear in sub menu");
       let menu = popup.parentNode.getMenuItem("add-engine-menu");
-      Assert.ok(BrowserTestUtils.is_visible(menu));
+      Assert.ok(BrowserTestUtils.isVisible(menu));
       Assert.ok(
         !menu.nextElementSibling
           ?.getAttribute("anonid")
@@ -200,7 +200,7 @@ add_task(async function context_many() {
       for (let i = 0; i < 4; ++i) {
         let elt = popup.parentNode.getMenuItem(`add-engine-${i}`);
         Assert.equal(elt.parentNode, menu.menupopup);
-        Assert.ok(BrowserTestUtils.is_visible(elt));
+        Assert.ok(BrowserTestUtils.isVisible(elt));
       }
 
       info("Click on the first engine to install it");
@@ -221,7 +221,7 @@ add_task(async function context_many() {
       for (let i = 0; i < 3; ++i) {
         let elt = popup.parentNode.getMenuItem(`add-engine-${i}`);
         Assert.equal(elt.parentNode, popup);
-        Assert.ok(BrowserTestUtils.is_visible(elt));
+        Assert.ok(BrowserTestUtils.isVisible(elt));
         await document.l10n.translateElements([elt]);
         Assert.ok(elt.label.includes(`add_search_engine_${i + 1}`));
       }
@@ -234,11 +234,11 @@ add_task(async function context_many() {
     await UrlbarTestUtils.withContextMenu(window, async popup => {
       info("The separator and the add engine menu should be present.");
       let separator = popup.parentNode.getMenuItem("add-engine-separator");
-      Assert.ok(BrowserTestUtils.is_visible(separator));
+      Assert.ok(BrowserTestUtils.isVisible(separator));
 
       info("Engines should appear in sub menu");
       let menu = popup.parentNode.getMenuItem("add-engine-menu");
-      Assert.ok(BrowserTestUtils.is_visible(menu));
+      Assert.ok(BrowserTestUtils.isVisible(menu));
       Assert.ok(
         !menu.nextElementSibling
           ?.getAttribute("anonid")
@@ -259,7 +259,7 @@ add_task(async function context_many() {
             false
           )
         ) {
-          Assert.ok(BrowserTestUtils.is_visible(elt));
+          Assert.ok(BrowserTestUtils.isVisible(elt));
         }
       }
     });
@@ -273,13 +273,13 @@ add_task(async function context_after_customize() {
     await UrlbarTestUtils.withContextMenu(window, async popup => {
       info("The separator and the add engine item should be present.");
       let elt = popup.parentNode.getMenuItem("add-engine-separator");
-      Assert.ok(BrowserTestUtils.is_visible(elt));
+      Assert.ok(BrowserTestUtils.isVisible(elt));
 
       Assert.ok(!popup.parentNode.getMenuItem("add-engine-menu"));
       Assert.ok(!popup.parentNode.getMenuItem("add-engine-1"));
 
       elt = popup.parentNode.getMenuItem("add-engine-0");
-      Assert.ok(BrowserTestUtils.is_visible(elt));
+      Assert.ok(BrowserTestUtils.isVisible(elt));
       await document.l10n.translateElements([elt]);
       Assert.ok(elt.label.includes("add_search_engine_0"));
     });
@@ -297,13 +297,13 @@ add_task(async function context_after_customize() {
     await UrlbarTestUtils.withContextMenu(window, async popup => {
       info("The separator and the add engine item should be present.");
       let elt = popup.parentNode.getMenuItem("add-engine-separator");
-      Assert.ok(BrowserTestUtils.is_visible(elt));
+      Assert.ok(BrowserTestUtils.isVisible(elt));
 
       Assert.ok(!popup.parentNode.getMenuItem("add-engine-menu"));
       Assert.ok(!popup.parentNode.getMenuItem("add-engine-1"));
 
       elt = popup.parentNode.getMenuItem("add-engine-0");
-      Assert.ok(BrowserTestUtils.is_visible(elt));
+      Assert.ok(BrowserTestUtils.isVisible(elt));
       await document.l10n.translateElements([elt]);
       Assert.ok(elt.label.includes("add_search_engine_0"));
     });

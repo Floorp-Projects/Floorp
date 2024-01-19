@@ -37,7 +37,7 @@ add_task(async function showSearchTermsVisibility_experiment_beforeOpen() {
       let doc = gBrowser.selectedBrowser.contentDocument;
       let container = doc.getElementById(CHECKBOX_ID);
       Assert.ok(
-        BrowserTestUtils.is_visible(container),
+        BrowserTestUtils.isVisible(container),
         "The option box is visible"
       );
       gBrowser.removeCurrentTab();
@@ -69,7 +69,7 @@ add_task(async function showSearchTermsVisibility_experiment_afterOpen() {
     },
     callback: async () => {
       Assert.ok(
-        BrowserTestUtils.is_visible(container),
+        BrowserTestUtils.isVisible(container),
         "The option box is visible"
       );
     },

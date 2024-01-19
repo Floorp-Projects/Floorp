@@ -214,7 +214,7 @@ add_task(async function testDuplicateShortcutOnMacOSCtrlKey() {
 
   const assertDuplicateShortcutWarning = async msg => {
     await TestUtils.waitForCondition(
-      () => BrowserTestUtils.is_visible(errorEl),
+      () => BrowserTestUtils.isVisible(errorEl),
       `Wait for the shortcut-duplicate error to be visible on ${msg}`
     );
     Assert.deepEqual(

@@ -55,12 +55,12 @@ add_task(async function test_ad_attribution() {
     let sidebar = gBrowser.getPanel(browser).querySelector("shopping-sidebar");
     Assert.ok(sidebar, "Sidebar should exist");
     Assert.ok(
-      BrowserTestUtils.is_visible(sidebar),
+      BrowserTestUtils.isVisible(sidebar),
       "Sidebar should be visible."
     );
     let shoppingButton = document.getElementById("shopping-sidebar-button");
     ok(
-      BrowserTestUtils.is_visible(shoppingButton),
+      BrowserTestUtils.isVisible(shoppingButton),
       "Shopping Button should be visible on a product page"
     );
 

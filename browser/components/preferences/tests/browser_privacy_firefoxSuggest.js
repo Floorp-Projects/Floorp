@@ -88,7 +88,7 @@ add_task(async function clickLearnMore() {
   );
   for (let link of learnMoreLinks) {
     Assert.ok(
-      BrowserTestUtils.is_visible(link),
+      BrowserTestUtils.isVisible(link),
       "Learn-more link is visible: " + link.id
     );
   }
@@ -127,7 +127,7 @@ function assertPrefUIState(stateByElementID) {
   let doc = gBrowser.selectedBrowser.contentDocument;
   let container = doc.getElementById(CONTAINER_ID);
   let attr;
-  Assert.ok(BrowserTestUtils.is_visible(container), "The container is visible");
+  Assert.ok(BrowserTestUtils.isVisible(container), "The container is visible");
   for (let [id, state] of Object.entries(stateByElementID)) {
     let element = doc.getElementById(id);
     if (element.tagName === "checkbox") {

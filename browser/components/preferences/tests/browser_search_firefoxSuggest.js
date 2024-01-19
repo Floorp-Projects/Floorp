@@ -152,7 +152,7 @@ async function doVisibilityTest({
   let doc = gBrowser.selectedBrowser.contentDocument;
   let container = doc.getElementById(CONTAINER_ID);
   Assert.equal(
-    BrowserTestUtils.is_visible(container),
+    BrowserTestUtils.isVisible(container),
     initialExpectedVisibility,
     `The container has the expected initial visibility, initialExpectedVisibility=${initialExpectedVisibility}`
   );
@@ -177,7 +177,7 @@ async function doVisibilityTest({
 
   // Check visibility again.
   Assert.equal(
-    BrowserTestUtils.is_visible(container),
+    BrowserTestUtils.isVisible(container),
     newExpectedVisibility,
     `The container has the expected visibility after setting new scenario, newExpectedVisibility=${newExpectedVisibility}`
   );
@@ -481,7 +481,7 @@ add_task(async function clickLearnMore() {
   );
   for (let link of learnMoreLinks) {
     Assert.ok(
-      BrowserTestUtils.is_visible(link),
+      BrowserTestUtils.isVisible(link),
       "Learn-more link is visible: " + link.id
     );
   }
@@ -574,7 +574,7 @@ function assertPrefUIState(stateByElementID) {
   let doc = gBrowser.selectedBrowser.contentDocument;
   let container = doc.getElementById(CONTAINER_ID);
   let attr;
-  Assert.ok(BrowserTestUtils.is_visible(container), "The container is visible");
+  Assert.ok(BrowserTestUtils.isVisible(container), "The container is visible");
   for (let [id, state] of Object.entries(stateByElementID)) {
     let element = doc.getElementById(id);
     if (element.tagName === "checkbox") {
@@ -598,13 +598,13 @@ async function assertInfoBox(expectedL10nID) {
   let doc = gBrowser.selectedBrowser.contentDocument;
   let infoBox = doc.getElementById(INFO_BOX_ID);
   await TestUtils.waitForCondition(
-    () => BrowserTestUtils.is_visible(infoBox) == !!expectedL10nID,
+    () => BrowserTestUtils.isVisible(infoBox) == !!expectedL10nID,
     "Waiting for expected info box visibility: " + !!expectedL10nID
   );
 
   let infoIcon = infoBox.querySelector(".info-icon");
   Assert.equal(
-    BrowserTestUtils.is_visible(infoIcon),
+    BrowserTestUtils.isVisible(infoIcon),
     !!expectedL10nID,
     "The info icon is visible iff a description should be shown"
   );
@@ -612,7 +612,7 @@ async function assertInfoBox(expectedL10nID) {
   let learnMore = infoBox.querySelector("." + LEARN_MORE_CLASS);
   Assert.ok(learnMore, "Found the info box learn more link");
   Assert.equal(
-    BrowserTestUtils.is_visible(learnMore),
+    BrowserTestUtils.isVisible(learnMore),
     !!expectedL10nID,
     "The info box learn more link is visible iff a description should be shown"
   );

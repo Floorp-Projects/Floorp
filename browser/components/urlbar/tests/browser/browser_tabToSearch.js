@@ -409,7 +409,7 @@ add_task(async function onboard() {
     "The correct description was set."
   );
   Assert.ok(
-    BrowserTestUtils.is_visible(
+    BrowserTestUtils.isVisible(
       onboardingDetails.element.row.querySelector(".urlbarView-title-separator")
     ),
     "The title separator should be visible."
