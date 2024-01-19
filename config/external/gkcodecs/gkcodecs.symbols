@@ -2,7 +2,7 @@
 aom_codec_av1_cx
 aom_codec_av1_dx
 aom_codec_build_config
-aom_codec_control_
+aom_codec_control
 aom_codec_dec_init_ver
 aom_codec_decode
 aom_codec_destroy
@@ -17,12 +17,14 @@ aom_codec_get_caps
 aom_codec_get_cx_data
 aom_codec_get_frame
 aom_codec_peek_stream_info
+aom_codec_set_option
 aom_codec_version
 aom_codec_version_str
 aom_img_free
 aom_img_plane_height
 aom_img_plane_width
 aom_img_wrap
+aom_winx64_fstcw
 av1_apply_encoding_flags
 av1_change_config
 av1_convert_sect5obus_to_annexb
@@ -44,10 +46,6 @@ av1_set_active_map
 av1_set_internal_size
 av1_set_reference_enc
 av1_use_as_reference
-ticks_to_timebase_units
-timebase_units_to_ticks
-write_obu_header
-write_uleb_obu_size
 # libogg symbols
 ogg_calloc_func
 ogg_free_func
