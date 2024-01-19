@@ -1156,14 +1156,6 @@ nsresult ServiceWorkerPrivate::SpawnWorkerIfNeeded() {
     return NS_ERROR_DOM_INVALID_STATE_ERR;
   }
 
-  /**
-   * Manually `AddRef()` because `DeallocPRemoteWorkerControllerChild()`
-   * calls `Release()` and the `AllocPRemoteWorkerControllerChild()` function
-   * is not called.
-   */
-  // NOLINTNEXTLINE(readability-redundant-smartptr-get)
-  controllerChild.get()->AddRef();
-
   mControllerChild = new RAIIActorPtrHolder(controllerChild.forget());
 
   // Update Running count here because we may Terminate before we get
