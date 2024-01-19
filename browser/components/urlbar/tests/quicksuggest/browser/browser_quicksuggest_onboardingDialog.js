@@ -909,7 +909,7 @@ async function doLayoutTest(variation) {
       if (variation.introductionSection) {
         info("Check the section visibility");
         Assert.ok(BrowserTestUtils.is_visible(introductionSection));
-        Assert.ok(BrowserTestUtils.is_hidden(mainSection));
+        Assert.ok(BrowserTestUtils.isHidden(mainSection));
 
         info("Check the introduction section");
         await assertSection(introductionSection, variation.introductionSection);
@@ -918,12 +918,12 @@ async function doLayoutTest(variation) {
         win.document.getElementById("onboardingNext").click();
         await BrowserTestUtils.waitForCondition(
           () =>
-            BrowserTestUtils.is_hidden(introductionSection) &&
+            BrowserTestUtils.isHidden(introductionSection) &&
             BrowserTestUtils.is_visible(mainSection)
         );
       } else {
         info("Check the section visibility");
-        Assert.ok(BrowserTestUtils.is_hidden(introductionSection));
+        Assert.ok(BrowserTestUtils.isHidden(introductionSection));
         Assert.ok(BrowserTestUtils.is_visible(mainSection));
       }
 
@@ -1023,7 +1023,7 @@ function assertVisibility(sectionElement, expectedVisibility) {
         Assert.ok(true);
         return;
       }
-      Assert.ok(BrowserTestUtils.is_hidden(element));
+      Assert.ok(BrowserTestUtils.isHidden(element));
     }
   }
 }
@@ -1094,7 +1094,7 @@ async function onboardingNext(variation) {
       const mainSection = win.document.getElementById("main-section");
       await BrowserTestUtils.waitForCondition(
         () =>
-          BrowserTestUtils.is_hidden(introductionSection) &&
+          BrowserTestUtils.isHidden(introductionSection) &&
           BrowserTestUtils.is_visible(mainSection),
         "Wait for the transition"
       );
@@ -1529,7 +1529,7 @@ async function showOnboardingDialog({ skipIntroduction } = {}) {
 
   await BrowserTestUtils.waitForCondition(
     () =>
-      BrowserTestUtils.is_hidden(introductionSection) &&
+      BrowserTestUtils.isHidden(introductionSection) &&
       BrowserTestUtils.is_visible(mainSection)
   );
 

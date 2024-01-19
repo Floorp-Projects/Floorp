@@ -146,7 +146,7 @@ async function showCol(id) {
   const column = table.tbody.querySelector(`#${id}`);
 
   info(`Showing ${id}`);
-  ok(BrowserTestUtils.is_hidden(column), "Column is hidden before showing it");
+  ok(BrowserTestUtils.isHidden(column), "Column is hidden before showing it");
 
   table.menupopup.activateItem(menuItem);
   const toShow = await event;
@@ -175,7 +175,7 @@ async function hideCol(id) {
   await onPopupHidden;
   is(toHide, id, `#${id} was selected to be hidden`);
   ok(
-    BrowserTestUtils.is_hidden(column),
+    BrowserTestUtils.isHidden(column),
     `Column #${id} is hidden after hiding it`
   );
 }

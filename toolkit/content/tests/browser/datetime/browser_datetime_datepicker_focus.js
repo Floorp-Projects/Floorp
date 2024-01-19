@@ -160,7 +160,7 @@ add_task(async function test_focus_after_selection() {
   EventUtils.synthesizeKey(" ", {});
 
   Assert.ok(
-    BrowserTestUtils.is_hidden(helper.getElement(MONTH_YEAR_VIEW)),
+    BrowserTestUtils.isHidden(helper.getElement(MONTH_YEAR_VIEW)),
     "Month-year selection panel is not visible"
   );
 

@@ -39,7 +39,7 @@ add_task(async function testShowAndHidePaperSizeSectionWithPageSize() {
 
     let paperSize = helper.get("paper-size");
 
-    ok(BrowserTestUtils.is_hidden(paperSize), "Paper size section is hidden");
+    ok(BrowserTestUtils.isHidden(paperSize), "Paper size section is hidden");
 
     await helper.waitForSettingsEvent(async () => {
       await changeDestination(helper, "down");

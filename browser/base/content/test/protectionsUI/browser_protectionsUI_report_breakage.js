@@ -176,7 +176,7 @@ add_task(async function testNoTracking() {
       "protections-popup-tp-switch-breakage-link"
     );
     ok(
-      BrowserTestUtils.is_hidden(siteNotWorkingButton),
+      BrowserTestUtils.isHidden(siteNotWorkingButton),
       "site not working button is not visible"
     );
   });
@@ -403,7 +403,7 @@ async function testReportBreakageSubmit(url, tags, error, hasException) {
     );
     gProtectionsHandler._protectionsPopup.hidePopup();
   } else {
-    ok(BrowserTestUtils.is_hidden(errorMessage), "Error message not shown");
+    ok(BrowserTestUtils.isHidden(errorMessage), "Error message not shown");
   }
 
   await popuphidden;

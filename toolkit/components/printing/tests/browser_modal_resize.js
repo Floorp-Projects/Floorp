@@ -68,7 +68,7 @@ async function waitForExpectedSize(helper, x, y) {
 
 async function checkPreviewNavigationVisibility(expected) {
   function isHidden(elem) {
-    // BTU.is_hidden can't handle shadow DOM elements
+    // BTU.isHidden can't handle shadow DOM elements
     return !elem.getBoundingClientRect().height;
   }
 

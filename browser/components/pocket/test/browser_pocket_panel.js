@@ -58,7 +58,7 @@ add_task(async function () {
     "#context-media-eme-learnmore"
   );
   ok(
-    BrowserTestUtils.is_hidden(emeLearnMoreContextItem),
+    BrowserTestUtils.isHidden(emeLearnMoreContextItem),
     "Unrelated context menu items should be hidden"
   );
 

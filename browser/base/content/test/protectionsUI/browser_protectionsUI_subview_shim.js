@@ -167,7 +167,7 @@ async function assertSubViewState(category, expectedState) {
       "Shim allow hint is visible."
     );
   } else {
-    BrowserTestUtils.is_hidden(shimAllowSection, "Shim allow hint is hidden.");
+    BrowserTestUtils.isHidden(shimAllowSection, "Shim allow hint is hidden.");
   }
 
   await closeProtectionsPanel();

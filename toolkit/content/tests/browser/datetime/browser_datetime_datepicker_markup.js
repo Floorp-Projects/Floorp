@@ -42,11 +42,11 @@ add_task(async function test_datepicker_markup() {
     "Month picker view toggle is a live region when it's not expanded"
   );
   Assert.ok(
-    BrowserTestUtils.is_hidden(helper.getElement(MONTH_YEAR_VIEW)),
+    BrowserTestUtils.isHidden(helper.getElement(MONTH_YEAR_VIEW)),
     "Month-year selection spinner is not visible"
   );
   Assert.ok(
-    BrowserTestUtils.is_hidden(helper.getElement(MONTH_YEAR_VIEW)),
+    BrowserTestUtils.isHidden(helper.getElement(MONTH_YEAR_VIEW)),
     "Month-year selection spinner is programmatically hidden"
   );
   Assert.equal(

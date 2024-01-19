@@ -101,7 +101,7 @@ add_task(async function () {
 
   // Test the dialog window opens
   ok(
-    BrowserTestUtils.is_hidden(dialogOverlay),
+    BrowserTestUtils.isHidden(dialogOverlay),
     "The dialog should be invisible"
   );
   let promiseSubDialogLoaded = promiseLoadSubDialog(
@@ -109,10 +109,7 @@ add_task(async function () {
   );
   showBtn.doCommand();
   await promiseSubDialogLoaded;
-  ok(
-    !BrowserTestUtils.is_hidden(dialogOverlay),
-    "The dialog should be visible"
-  );
+  ok(!BrowserTestUtils.isHidden(dialogOverlay), "The dialog should be visible");
 
   let dialogFrame = dialogOverlay.querySelector(".dialogFrame");
   let frameDoc = dialogFrame.contentDocument;
@@ -176,7 +173,7 @@ add_task(async function () {
   let closeBtn = dialogOverlay.querySelector(".dialogClose");
   closeBtn.doCommand();
   ok(
-    BrowserTestUtils.is_hidden(dialogOverlay),
+    BrowserTestUtils.isHidden(dialogOverlay),
     "The dialog should be invisible"
   );
 

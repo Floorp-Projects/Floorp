@@ -133,7 +133,7 @@ add_task(async function no_print_selection() {
 
     let printSelect = helper.get("source-version-selection");
     ok(
-      BrowserTestUtils.is_hidden(printSelect),
+      BrowserTestUtils.isHidden(printSelect),
       "Print selection checkbox is hidden"
     );
     await helper.closeDialog();

@@ -384,14 +384,14 @@ async function verifyContextMenu(contextMenu, expected = {}) {
 
   info("Checking visibility of the system viewer menu items");
   is(
-    BrowserTestUtils.is_hidden(useSystemMenuItem),
+    BrowserTestUtils.isHidden(useSystemMenuItem),
     expected.useSystemMenuItemDisabled,
     `The 'Use system viewer' menu item was ${
       expected.useSystemMenuItemDisabled ? "hidden" : "visible"
     }`
   );
   is(
-    BrowserTestUtils.is_hidden(alwaysMenuItem),
+    BrowserTestUtils.isHidden(alwaysMenuItem),
     expected.alwaysMenuItemDisabled,
     `The 'Use system viewer' menu item was ${
       expected.alwaysMenuItemDisabled ? "hidden" : "visible"

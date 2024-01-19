@@ -72,7 +72,7 @@ add_task(async function test_download_deleteFile() {
     '[command="downloadsCmd_deleteFile"]'
   );
   ok(
-    !BrowserTestUtils.is_hidden(deleteFileItem),
+    !BrowserTestUtils.isHidden(deleteFileItem),
     "deleteFileItem should be visible"
   );
 
@@ -103,7 +103,7 @@ add_task(async function test_download_deleteFile() {
   );
   let contextMenu2 = await openContextMenu(itemTarget2);
   ok(
-    !BrowserTestUtils.is_hidden(deleteFileItem),
+    !BrowserTestUtils.isHidden(deleteFileItem),
     "deleteFileItem should be visible"
   );
   let target2 = downloads[0].target;

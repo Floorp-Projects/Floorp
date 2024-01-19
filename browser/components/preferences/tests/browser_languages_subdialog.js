@@ -10,7 +10,7 @@ add_task(async function () {
     contentDocument.getElementById("chooseLanguage").click();
     const win = await promiseSubDialogLoaded;
     dialogOverlay = content.gSubDialog._topDialog._overlay;
-    ok(!BrowserTestUtils.is_hidden(dialogOverlay), "The dialog is visible.");
+    ok(!BrowserTestUtils.isHidden(dialogOverlay), "The dialog is visible.");
     return win;
   }
 
@@ -19,14 +19,14 @@ add_task(async function () {
     button.doCommand();
   }
 
-  ok(BrowserTestUtils.is_hidden(dialogOverlay), "The dialog is invisible.");
+  ok(BrowserTestUtils.isHidden(dialogOverlay), "The dialog is invisible.");
   let win = await languagesSubdialogOpened();
   ok(
     win.document.getElementById("spoofEnglish").hidden,
     "The 'Request English' checkbox is hidden."
   );
   acceptLanguagesSubdialog(win);
-  ok(BrowserTestUtils.is_hidden(dialogOverlay), "The dialog is invisible.");
+  ok(BrowserTestUtils.isHidden(dialogOverlay), "The dialog is invisible.");
 
   await SpecialPowers.pushPrefEnv({
     set: [["intl.accept_languages", "en-US,en-XX,foo"]],

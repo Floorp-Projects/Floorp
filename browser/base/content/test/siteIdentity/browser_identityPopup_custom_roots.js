@@ -62,7 +62,7 @@ add_task(async function test_http() {
       "identity-popup-security-decription-custom-root"
     );
     ok(
-      BrowserTestUtils.is_hidden(customRootWarning),
+      BrowserTestUtils.isHidden(customRootWarning),
       "custom root warning is hidden"
     );
 
@@ -75,7 +75,7 @@ add_task(async function test_http() {
       "identity-popup-content-verifier-unknown"
     );
     ok(
-      BrowserTestUtils.is_hidden(subPanelInfo),
+      BrowserTestUtils.isHidden(subPanelInfo),
       "custom root warning in sub panel is hidden"
     );
   });

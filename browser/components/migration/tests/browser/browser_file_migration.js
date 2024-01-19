@@ -185,7 +185,7 @@ add_task(async function test_file_migration() {
         Assert.equal(messageText, expectedMessageText);
       } else {
         Assert.ok(
-          BrowserTestUtils.is_hidden(progressGroup),
+          BrowserTestUtils.isHidden(progressGroup),
           `Resource progress group for ${progressGroup.dataset.resourceType}` +
             ` should be hidden.`
         );

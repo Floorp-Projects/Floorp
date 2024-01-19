@@ -60,7 +60,7 @@ async function testIdentityState(hasException) {
     "fingerprinters are not detected"
   );
   ok(
-    !BrowserTestUtils.is_hidden(gProtectionsHandler.iconBox),
+    !BrowserTestUtils.isHidden(gProtectionsHandler.iconBox),
     "icon box is visible regardless the exception"
   );
 

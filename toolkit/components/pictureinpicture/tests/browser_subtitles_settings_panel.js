@@ -62,7 +62,7 @@ add_task(async function test_closePanelESCMouseFocus() {
       audioButton.focus();
 
       let panelHiddenPromise = BrowserTestUtils.waitForCondition(
-        () => BrowserTestUtils.is_hidden(subtitlesPanel),
+        () => BrowserTestUtils.isHidden(subtitlesPanel),
         "Wait for panel to be hidden"
       );
 
@@ -143,7 +143,7 @@ add_task(async function test_closePanelESCKeyboardFocus() {
       );
 
       let panelHiddenPromise = BrowserTestUtils.waitForCondition(
-        () => BrowserTestUtils.is_hidden(subtitlesPanel),
+        () => BrowserTestUtils.isHidden(subtitlesPanel),
         "Wait for panel to be hidden"
       );
 
@@ -254,7 +254,7 @@ add_task(async function test_panelKeyboardButtons() {
       subtitlesButton.focus();
 
       let panelHiddenPromise = BrowserTestUtils.waitForCondition(
-        () => BrowserTestUtils.is_hidden(subtitlesPanel),
+        () => BrowserTestUtils.isHidden(subtitlesPanel),
         "Wait for panel to be hidden"
       );
 

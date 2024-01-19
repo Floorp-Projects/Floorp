@@ -84,7 +84,7 @@ async function checkDialog(
 
     ok(BrowserTestUtils.is_visible(titleEl), "New title should be shown.");
     ok(
-      BrowserTestUtils.is_hidden(doc.getElementById("infoTitle")),
+      BrowserTestUtils.isHidden(doc.getElementById("infoTitle")),
       "Old title should be hidden."
     );
     let iconCS = doc.ownerGlobal.getComputedStyle(

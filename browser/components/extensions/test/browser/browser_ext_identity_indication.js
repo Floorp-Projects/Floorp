@@ -19,7 +19,7 @@ function confirmDefaults() {
 
   let label = document.getElementById("identity-icon-label");
   ok(
-    BrowserTestUtils.is_hidden(label),
+    BrowserTestUtils.isHidden(label),
     "No label should be used before the extension is started"
   );
 }

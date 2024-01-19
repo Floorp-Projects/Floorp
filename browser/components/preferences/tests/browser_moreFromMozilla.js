@@ -345,9 +345,9 @@ add_task(async function test_aboutpreferences_search() {
     "All products in the group are found"
   );
   let [mobile, monitor, vpn, relay] = productCards;
-  Assert.ok(BrowserTestUtils.is_hidden(mobile), "Mobile hidden");
-  Assert.ok(BrowserTestUtils.is_hidden(monitor), "Monitor hidden");
-  Assert.ok(BrowserTestUtils.is_hidden(vpn), "VPN hidden");
+  Assert.ok(BrowserTestUtils.isHidden(mobile), "Mobile hidden");
+  Assert.ok(BrowserTestUtils.isHidden(monitor), "Monitor hidden");
+  Assert.ok(BrowserTestUtils.isHidden(vpn), "VPN hidden");
   Assert.ok(BrowserTestUtils.is_visible(relay), "Relay shown");
 
   BrowserTestUtils.removeTab(tab);

@@ -125,10 +125,10 @@ class ScreenshotsHelper {
       panel,
       { attributes: true },
       () => {
-        return BrowserTestUtils.is_hidden(panel);
+        return BrowserTestUtils.isHidden(panel);
       }
     );
-    ok(BrowserTestUtils.is_hidden(panel), "Panel buttons are hidden");
+    ok(BrowserTestUtils.isHidden(panel), "Panel buttons are hidden");
     info("waitForPanelClosed, panel is hidden: " + panel.hidden);
   }
 
@@ -432,7 +432,7 @@ class ScreenshotsHelper {
   assertPanelNotVisible() {
     info("assertPanelNotVisible, panel.hidden:" + this.panel?.hidden);
     Assert.ok(
-      !this.panel || BrowserTestUtils.is_hidden(this.panel),
+      !this.panel || BrowserTestUtils.isHidden(this.panel),
       "Screenshots panel is not visible"
     );
   }

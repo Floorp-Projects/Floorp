@@ -478,7 +478,7 @@ function assertQuantitiesShown(
       }
     } else {
       Assert.ok(
-        BrowserTestUtils.is_hidden(progressGroup),
+        BrowserTestUtils.isHidden(progressGroup),
         `Resource progress group for ${progressGroup.dataset.resourceType}` +
           ` should be hidden.`
       );

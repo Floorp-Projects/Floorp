@@ -124,12 +124,12 @@ async function assertMoveContextMenuItems(
   ok(moveDown, "expected 'move down' item in the context menu");
 
   is(
-    BrowserTestUtils.is_hidden(moveUp),
+    BrowserTestUtils.isHidden(moveUp),
     expectMoveUpHidden,
     `expected 'move up' item to be ${expectMoveUpHidden ? "hidden" : "visible"}`
   );
   is(
-    BrowserTestUtils.is_hidden(moveDown),
+    BrowserTestUtils.isHidden(moveDown),
     expectMoveDownHidden,
     `expected 'move down' item to be ${
       expectMoveDownHidden ? "hidden" : "visible"

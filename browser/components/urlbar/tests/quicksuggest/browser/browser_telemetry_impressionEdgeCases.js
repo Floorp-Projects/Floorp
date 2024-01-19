@@ -212,7 +212,7 @@ add_task(async function hiddenRow() {
   // the view, so the row should never appear.
   let quickSuggestRow = await mutationPromise;
   Assert.ok(
-    BrowserTestUtils.is_hidden(quickSuggestRow),
+    BrowserTestUtils.isHidden(quickSuggestRow),
     "Quick suggest row is hidden"
   );
 

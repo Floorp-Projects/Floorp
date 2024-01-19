@@ -221,7 +221,7 @@ add_task(async function test_send_to_device_email_link_for_supported_locale() {
   let doc = gBrowser.contentDocument;
   let emailLink = doc.getElementById("simple-qr-code-send-email");
 
-  ok(!BrowserTestUtils.is_hidden(emailLink), "Email link should be visible");
+  ok(!BrowserTestUtils.isHidden(emailLink), "Email link should be visible");
 
   await SpecialPowers.popPrefEnv();
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
@@ -246,7 +246,7 @@ add_task(
     let doc = gBrowser.contentDocument;
     let emailLink = doc.getElementById("simple-qr-code-send-email");
 
-    ok(BrowserTestUtils.is_hidden(emailLink), "Email link should be hidden");
+    ok(BrowserTestUtils.isHidden(emailLink), "Email link should be hidden");
 
     await SpecialPowers.popPrefEnv();
     BrowserTestUtils.removeTab(gBrowser.selectedTab);

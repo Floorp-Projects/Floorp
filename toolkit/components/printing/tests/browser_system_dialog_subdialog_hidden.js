@@ -15,7 +15,7 @@ add_task(async function testSystemDialogLinkState() {
     let systemLink = helper.get("open-dialog-link");
     if (AppConstants.platform == "win") {
       ok(
-        BrowserTestUtils.is_hidden(systemLink),
+        BrowserTestUtils.isHidden(systemLink),
         "Link is hidden on Windows with no extra printers"
       );
     } else {
