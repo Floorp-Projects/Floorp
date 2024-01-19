@@ -571,18 +571,11 @@ function prompt(aActor, aBrowser, aRequest) {
     reqAudioOutput,
     !!aRequest.secondOrigin
   );
-  let message;
-  let originToShow;
-  if (principal.schemeIs("file")) {
-    message = localization.formatValueSync(stringId + "-with-file");
-    originToShow = null;
-  } else {
-    message = localization.formatValueSync(stringId, {
-      origin: "<>",
-      thirdParty: "{}",
-    });
-    originToShow = lazy.webrtcUI.getHostOrExtensionName(principal.URI);
-  }
+  const message = localization.formatValueSync(stringId, {
+    origin: "<>",
+    thirdParty: "{}",
+  });
+
   let notification; // Used by action callbacks.
   const actionL10nIds = [{ id: "webrtc-action-allow" }];
 
@@ -721,7 +714,7 @@ function prompt(aActor, aBrowser, aRequest) {
   }
 
   let options = {
-    name: originToShow,
+    name: lazy.webrtcUI.getHostOrExtensionName(principal.URI),
     persistent: true,
     hideClose: true,
     eventCallback(aTopic, aNewBrowser, isCancel) {
