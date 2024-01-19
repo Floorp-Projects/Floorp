@@ -1,4 +1,4 @@
-// |reftest| skip -- import-attributes is not supported
+// |reftest| shell-option(--enable-import-attributes) skip-if(!xulRuntime.shell) -- requires shell-options
 // Copyright (C) 2021 the V8 project authors. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 /*---
