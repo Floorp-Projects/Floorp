@@ -463,6 +463,17 @@ function makeBookmarkResult(
       icon: [typeof iconUri != "undefined" ? iconUri : `page-icon:${uri}`],
       title: [title, UrlbarUtils.HIGHLIGHT.TYPED],
       tags: [tags, UrlbarUtils.HIGHLIGHT.TYPED],
+      isBlockable:
+        source == UrlbarUtils.RESULT_SOURCE.HISTORY ? true : undefined,
+      blockL10n:
+        source == UrlbarUtils.RESULT_SOURCE.HISTORY
+          ? { id: "urlbar-result-menu-remove-from-history" }
+          : undefined,
+      helpUrl:
+        source == UrlbarUtils.RESULT_SOURCE.HISTORY
+          ? Services.urlFormatter.formatURLPref("app.support.baseURL") +
+            "awesome-bar-result-menu"
+          : undefined,
     })
   );
 
@@ -491,6 +502,11 @@ function makeFormHistoryResult(queryContext, { suggestion, engineName }) {
       engine: engineName,
       suggestion: [suggestion, UrlbarUtils.HIGHLIGHT.SUGGESTED],
       lowerCaseSuggestion: suggestion.toLocaleLowerCase(),
+      isBlockable: true,
+      blockL10n: { id: "urlbar-result-menu-remove-from-history" },
+      helpUrl:
+        Services.urlFormatter.formatURLPref("app.support.baseURL") +
+        "awesome-bar-result-menu",
     })
   );
 }
@@ -865,6 +881,19 @@ function makeVisitResult(
 
   if (fallbackTitle) {
     payload.fallbackTitle = [fallbackTitle, UrlbarUtils.HIGHLIGHT.TYPED];
+  }
+
+  if (
+    !heuristic &&
+    providerName != "AboutPages" &&
+    providerName != "PreloadedSites" &&
+    source == UrlbarUtils.RESULT_SOURCE.HISTORY
+  ) {
+    payload.isBlockable = true;
+    payload.blockL10n = { id: "urlbar-result-menu-remove-from-history" };
+    payload.helpUrl =
+      Services.urlFormatter.formatURLPref("app.support.baseURL") +
+      "awesome-bar-result-menu";
   }
 
   if (iconUri) {

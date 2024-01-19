@@ -316,6 +316,11 @@ function makeUrlbarResult(tokens, info) {
           UrlbarUtils.RESULT_SOURCE.HISTORY,
           ...lazy.UrlbarResult.payloadAndSimpleHighlights(tokens, {
             engine: action.params.engineName,
+            isBlockable: true,
+            blockL10n: { id: "urlbar-result-menu-remove-from-history" },
+            helpUrl:
+              Services.urlFormatter.formatURLPref("app.support.baseURL") +
+              "awesome-bar-result-menu",
             suggestion: [
               action.params.searchSuggestion,
               UrlbarUtils.HIGHLIGHT.SUGGESTED,
@@ -355,6 +360,9 @@ function makeUrlbarResult(tokens, info) {
   let source;
   let tags = [];
   let comment = info.comment;
+  let isBlockable = undefined;
+  let blockL10n = undefined;
+  let helpUrl = undefined;
 
   // The legacy autocomplete result may return "bookmark", "bookmark-tag" or
   // "tag". In the last case it should not be considered a bookmark, but an
@@ -363,6 +371,11 @@ function makeUrlbarResult(tokens, info) {
     source = UrlbarUtils.RESULT_SOURCE.BOOKMARKS;
   } else {
     source = UrlbarUtils.RESULT_SOURCE.HISTORY;
+    isBlockable = true;
+    blockL10n = { id: "urlbar-result-menu-remove-from-history" };
+    helpUrl =
+      Services.urlFormatter.formatURLPref("app.support.baseURL") +
+      "awesome-bar-result-menu";
   }
 
   // If the style indicates that the result is tagged, then the tags are
@@ -393,6 +406,9 @@ function makeUrlbarResult(tokens, info) {
       icon: info.icon,
       title: [comment, UrlbarUtils.HIGHLIGHT.TYPED],
       tags: [tags, UrlbarUtils.HIGHLIGHT.TYPED],
+      isBlockable,
+      blockL10n,
+      helpUrl,
     })
   );
 }

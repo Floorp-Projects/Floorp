@@ -8,12 +8,22 @@ add_task(async function test() {
     new UrlbarResult(
       UrlbarUtils.RESULT_TYPE.URL,
       UrlbarUtils.RESULT_SOURCE.HISTORY,
-      { url: "http://mozilla.org/1" }
+      {
+        url: "http://mozilla.org/1",
+        helpUrl: "http://example.com/",
+        isBlockable: true,
+        blockL10n: { id: "urlbar-result-menu-remove-from-history" },
+      }
     ),
     new UrlbarResult(
       UrlbarUtils.RESULT_TYPE.URL,
       UrlbarUtils.RESULT_SOURCE.HISTORY,
-      { url: "http://mozilla.org/2" }
+      {
+        url: "http://mozilla.org/2",
+        helpUrl: "http://example.com/",
+        isBlockable: true,
+        blockL10n: { id: "urlbar-result-menu-remove-from-history" },
+      }
     ),
     new UrlbarResult(
       UrlbarUtils.RESULT_TYPE.TIP,

@@ -3040,21 +3040,6 @@ export class UrlbarView {
     }
 
     commands = [];
-    if (
-      result.source == lazy.UrlbarUtils.RESULT_SOURCE.HISTORY &&
-      !result.autofill
-    ) {
-      commands.push(
-        {
-          name: RESULT_MENU_COMMANDS.DISMISS,
-          l10n: { id: "urlbar-result-menu-remove-from-history" },
-        },
-        {
-          name: RESULT_MENU_COMMANDS.HELP,
-          l10n: { id: "urlbar-result-menu-learn-more" },
-        }
-      );
-    }
     if (result.payload.isBlockable) {
       commands.push({
         name: RESULT_MENU_COMMANDS.DISMISS,
@@ -3064,7 +3049,9 @@ export class UrlbarView {
     if (result.payload.helpUrl) {
       commands.push({
         name: RESULT_MENU_COMMANDS.HELP,
-        l10n: result.payload.helpL10n,
+        l10n: result.payload.helpL10n || {
+          id: "urlbar-result-menu-learn-more",
+        },
       });
     }
     let rv = commands.length ? commands : null;
