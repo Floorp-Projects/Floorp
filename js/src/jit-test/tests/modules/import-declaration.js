@@ -324,7 +324,7 @@ program([
     )
 ]).assert(parseAsModule("import 'a'"));
 
-if (getRealmConfiguration("importAssertions")) {
+if (getRealmConfiguration("importAttributes")) {
     program([
         importDeclaration(
             [

@@ -129,9 +129,9 @@ class JS_PUBLIC_API ContextOptions {
     return *this;
   }
 
-  bool importAssertions() const { return compileOptions_.importAssertions(); }
-  ContextOptions& setImportAssertions(bool enabled) {
-    compileOptions_.setImportAssertions(enabled);
+  bool importAttributes() const { return compileOptions_.importAttributes(); }
+  ContextOptions& setImportAttributes(bool enabled) {
+    compileOptions_.setImportAttributes(enabled);
     return *this;
   }
 
