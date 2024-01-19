@@ -35,6 +35,7 @@ import {
 } from "chrome://browser/content/screenshots/overlayHelpers.mjs";
 
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const STATES = {
   CROSSHAIRS: "crosshairs",
@@ -49,6 +50,16 @@ const lazy = {};
 ChromeUtils.defineLazyGetter(lazy, "overlayLocalization", () => {
   return new Localization(["browser/screenshotsOverlay.ftl"], true);
 });
+
+const SCREENSHOTS_LAST_SAVED_METHOD_PREF =
+  "screenshots.browser.component.last-saved-method";
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "SCREENSHOTS_LAST_SAVED_METHOD",
+  SCREENSHOTS_LAST_SAVED_METHOD_PREF,
+  "download"
+);
 
 const REGION_CHANGE_THRESHOLD = 5;
 const SCROLL_BY_EDGE = 20;
@@ -493,9 +504,9 @@ export class ScreenshotsOverlay {
           this.selectionRegion.left = this.windowDimensions.scrollX;
           this.selectionRegion.right = left;
           if (event.originalTarget.id === "mover-topRight") {
-            this.topLeftMover.focus();
+            this.topLeftMover.focus({ focusVisible: true });
           } else if (event.originalTarget.id === "mover-bottomRight") {
-            this.bottomLeftMover.focus();
+            this.bottomLeftMover.focus({ focusVisible: true });
           }
           break;
         }
@@ -504,9 +515,9 @@ export class ScreenshotsOverlay {
         if (this.selectionRegion.x1 >= this.selectionRegion.x2) {
           this.selectionRegion.sortCoords();
           if (event.originalTarget.id === "mover-topRight") {
-            this.topLeftMover.focus();
+            this.topLeftMover.focus({ focusVisible: true });
           } else if (event.originalTarget.id === "mover-bottomRight") {
-            this.bottomLeftMover.focus();
+            this.bottomLeftMover.focus({ focusVisible: true });
           }
         }
         break;
@@ -561,9 +572,9 @@ export class ScreenshotsOverlay {
           this.selectionRegion.top = this.windowDimensions.scrollY;
           this.selectionRegion.bottom = top;
           if (event.originalTarget.id === "mover-bottomLeft") {
-            this.topLeftMover.focus();
+            this.topLeftMover.focus({ focusVisible: true });
           } else if (event.originalTarget.id === "mover-bottomRight") {
-            this.topRightMover.focus();
+            this.topRightMover.focus({ focusVisible: true });
           }
           break;
         }
@@ -572,9 +583,9 @@ export class ScreenshotsOverlay {
         if (this.selectionRegion.y1 >= this.selectionRegion.y2) {
           this.selectionRegion.sortCoords();
           if (event.originalTarget.id === "mover-bottomLeft") {
-            this.topLeftMover.focus();
+            this.topLeftMover.focus({ focusVisible: true });
           } else if (event.originalTarget.id === "mover-bottomRight") {
-            this.topRightMover.focus();
+            this.topRightMover.focus({ focusVisible: true });
           }
         }
         break;
@@ -632,9 +643,9 @@ export class ScreenshotsOverlay {
             this.windowDimensions.scrollX + this.windowDimensions.clientWidth;
           this.selectionRegion.left = right;
           if (event.originalTarget.id === "mover-topLeft") {
-            this.topRightMover.focus();
+            this.topRightMover.focus({ focusVisible: true });
           } else if (event.originalTarget.id === "mover-bottomLeft") {
-            this.bottomRightMover.focus();
+            this.bottomRightMover.focus({ focusVisible: true });
           }
           break;
         }
@@ -643,9 +654,9 @@ export class ScreenshotsOverlay {
         if (this.selectionRegion.x1 >= this.selectionRegion.x2) {
           this.selectionRegion.sortCoords();
           if (event.originalTarget.id === "mover-topLeft") {
-            this.topRightMover.focus();
+            this.topRightMover.focus({ focusVisible: true });
           } else if (event.originalTarget.id === "mover-bottomLeft") {
-            this.bottomRightMover.focus();
+            this.bottomRightMover.focus({ focusVisible: true });
           }
         }
         break;
@@ -703,9 +714,9 @@ export class ScreenshotsOverlay {
             this.windowDimensions.scrollY + this.windowDimensions.clientHeight;
           this.selectionRegion.top = bottom;
           if (event.originalTarget.id === "mover-topLeft") {
-            this.bottomLeftMover.focus();
+            this.bottomLeftMover.focus({ focusVisible: true });
           } else if (event.originalTarget.id === "mover-topRight") {
-            this.bottomRightMover.focus();
+            this.bottomRightMover.focus({ focusVisible: true });
           }
           break;
         }
@@ -714,9 +725,9 @@ export class ScreenshotsOverlay {
         if (this.selectionRegion.y1 >= this.selectionRegion.y2) {
           this.selectionRegion.sortCoords();
           if (event.originalTarget.id === "mover-topLeft") {
-            this.bottomLeftMover.focus();
+            this.bottomLeftMover.focus({ focusVisible: true });
           } else if (event.originalTarget.id === "mover-topRight") {
-            this.bottomRightMover.focus();
+            this.bottomRightMover.focus({ focusVisible: true });
           }
         }
         break;
@@ -744,9 +755,9 @@ export class ScreenshotsOverlay {
 
     event.preventDefault();
     if (event.originalTarget.id === "highlight" && event.shiftKey) {
-      this.downloadButton.focus();
+      this.downloadButton.focus({ focusVisible: true });
     } else if (event.originalTarget.id === "download" && !event.shiftKey) {
-      this.highlightEl.focus();
+      this.highlightEl.focus({ focusVisible: true });
     } else {
       // The content document can listen for keydown events and prevent moving
       // focus so we manually move focus to the next element here.
@@ -754,6 +765,18 @@ export class ScreenshotsOverlay {
         ? Services.focus.MOVEFOCUS_BACKWARD
         : Services.focus.MOVEFOCUS_FORWARD;
       Services.focus.moveFocus(this.window, null, direction, 0);
+    }
+  }
+
+  /**
+   * Set the focus to the most recent saved method.
+   * This will default to the download button.
+   */
+  setFocusToActionButton() {
+    if (lazy.SCREENSHOTS_LAST_SAVED_METHOD === "copy") {
+      this.copyButton.focus({ focusVisible: true });
+    } else {
+      this.downloadButton.focus({ focusVisible: true });
     }
   }
 
@@ -1107,7 +1130,7 @@ export class ScreenshotsOverlay {
     if (this.hoverElementRegion.isRegionValid) {
       this.selectionRegion.dimensions = this.hoverElementRegion.dimensions;
       this.#setState(STATES.SELECTED);
-      this.downloadButton.focus();
+      this.setFocusToActionButton();
       this.#dispatchEvent("Screenshots:RecordEvent", {
         eventName: "selected",
         reason: "element",
@@ -1132,7 +1155,7 @@ export class ScreenshotsOverlay {
     this.#setState(STATES.SELECTED);
     this.maybeRecordRegionSelected();
     this.#methodsUsed.region += 1;
-    this.downloadButton.focus();
+    this.setFocusToActionButton();
   }
 
   /**
@@ -1145,6 +1168,7 @@ export class ScreenshotsOverlay {
     this.resizingDrag(pageX, pageY);
     this.selectionRegion.sortCoords();
     this.#setState(STATES.SELECTED);
+    this.setFocusToActionButton();
     this.maybeRecordRegionSelected();
     if (this.#moverId === "highlight") {
       this.#methodsUsed.move += 1;
