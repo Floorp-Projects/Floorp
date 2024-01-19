@@ -1,4 +1,5 @@
 [DEFAULT]
+
 support-files = [
   "file_empty.html",
   "file_empty.js",
@@ -8,6 +9,8 @@ support-files = [
 ["browser_broadcastChannel.js"]
 
 ["browser_cookie_insecure_overwrites_secure.js"]
+
+["browser_cookie_purge_sync.js"]
 
 ["browser_cookies.js"]
 support-files = ["server.sjs"]
