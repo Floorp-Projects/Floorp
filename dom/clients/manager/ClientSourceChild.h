@@ -19,6 +19,8 @@ class ClientSourceChild final : public PClientSourceChild {
   ClientSource* mSource;
   bool mTeardownStarted;
 
+  ~ClientSourceChild() = default;
+
   // PClientSourceChild interface
   void ActorDestroy(ActorDestroyReason aReason) override;
 
@@ -34,6 +36,8 @@ class ClientSourceChild final : public PClientSourceChild {
   mozilla::ipc::IPCResult RecvEvictFromBFCache() override;
 
  public:
+  NS_INLINE_DECL_REFCOUNTING(ClientSourceChild, override)
+
   explicit ClientSourceChild(const ClientSourceConstructorArgs& aArgs);
 
   void SetOwner(ClientThing<ClientSourceChild>* aThing);

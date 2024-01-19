@@ -42,10 +42,8 @@ class ClientManagerParent final : public PClientManagerParent {
 
   bool DeallocPClientNavigateOpParent(PClientNavigateOpParent* aActor) override;
 
-  PClientSourceParent* AllocPClientSourceParent(
+  already_AddRefed<PClientSourceParent> AllocPClientSourceParent(
       const ClientSourceConstructorArgs& aArgs) override;
-
-  bool DeallocPClientSourceParent(PClientSourceParent* aActor) override;
 
   mozilla::ipc::IPCResult RecvPClientSourceConstructor(
       PClientSourceParent* aActor,

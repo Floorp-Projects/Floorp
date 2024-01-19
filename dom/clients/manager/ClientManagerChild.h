@@ -40,11 +40,6 @@ class ClientManagerChild final : public PClientManagerChild {
       PClientNavigateOpChild* aActor,
       const ClientNavigateOpConstructorArgs& aArgs) override;
 
-  PClientSourceChild* AllocPClientSourceChild(
-      const ClientSourceConstructorArgs& aArgs) override;
-
-  bool DeallocPClientSourceChild(PClientSourceChild* aActor) override;
-
  public:
   NS_INLINE_DECL_REFCOUNTING(ClientManagerChild, override)
 

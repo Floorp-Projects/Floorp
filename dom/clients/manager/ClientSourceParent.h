@@ -30,6 +30,8 @@ class ClientSourceParent final : public PClientSourceParent {
 
   void KillInvalidChild();
 
+  ~ClientSourceParent();
+
   // PClientSourceParent
   mozilla::ipc::IPCResult RecvWorkerSyncPing() override;
 
@@ -55,9 +57,10 @@ class ClientSourceParent final : public PClientSourceParent {
   bool DeallocPClientSourceOpParent(PClientSourceOpParent* aActor) override;
 
  public:
+  NS_INLINE_DECL_REFCOUNTING(ClientSourceParent, override)
+
   explicit ClientSourceParent(const ClientSourceConstructorArgs& aArgs,
                               const Maybe<ContentParentId>& aContentParentId);
-  ~ClientSourceParent();
 
   void Init();
 

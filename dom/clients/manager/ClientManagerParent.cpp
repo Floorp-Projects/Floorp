@@ -72,7 +72,8 @@ bool ClientManagerParent::DeallocPClientNavigateOpParent(
   return true;
 }
 
-PClientSourceParent* ClientManagerParent::AllocPClientSourceParent(
+already_AddRefed<PClientSourceParent>
+ClientManagerParent::AllocPClientSourceParent(
     const ClientSourceConstructorArgs& aArgs) {
   Maybe<ContentParentId> contentParentId;
 
@@ -81,13 +82,7 @@ PClientSourceParent* ClientManagerParent::AllocPClientSourceParent(
     contentParentId = Some(ContentParentId(childID));
   }
 
-  return new ClientSourceParent(aArgs, contentParentId);
-}
-
-bool ClientManagerParent::DeallocPClientSourceParent(
-    PClientSourceParent* aActor) {
-  delete aActor;
-  return true;
+  return MakeAndAddRef<ClientSourceParent>(aArgs, contentParentId);
 }
 
 IPCResult ClientManagerParent::RecvPClientSourceConstructor(
