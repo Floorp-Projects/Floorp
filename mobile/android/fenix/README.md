@@ -25,8 +25,7 @@ Please read the [Community Participation Guidelines](https://www.mozilla.org/en-
 
 * Localization happens on [Pontoon](https://pontoon.mozilla.org/projects/firefox-for-android/). Please get in touch with delphine (at) mozilla (dot) com directly for more information.
 
-**Beginners!** - Watch out for [Issues with the "Good First Issue" label](https://github.com/mozilla-mobile/fenix/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22). These are easy bugs that have been left for first timers to have a go, get involved and make a positive contribution to the project!
-
+**Beginners!** - Visit [Codetribute's Fenix page](https://codetribute.mozilla.org/projects/fenix). These are easy bugs that have been left for first timers to have a go at, get involved and make a positive contribution to the project!
 
 ## I want to open a Pull Request!
 
