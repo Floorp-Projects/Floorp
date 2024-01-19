@@ -42,8 +42,11 @@ add_task(async function pasted() {
 });
 
 add_task(async function topsite_search() {
-  // TODO: https://bugzilla.mozilla.org/show_bug.cgi?id=1804010
-  // assertAbandonmentTelemetry([{ interaction: "topsite_search" }]);
+  await doTopsitesSearchTest({
+    trigger: () => doBlur(),
+    assert: () =>
+      assertAbandonmentTelemetry([{ interaction: "topsite_search" }]),
+  });
 });
 
 add_task(async function returned_restarted_refined() {
