@@ -132,9 +132,6 @@ class nsTableCellFrame : public nsContainerFrame,
            !GetContentEmpty();
   }
 
-  bool CellHasVisibleContent(nscoord aBSize, nsTableFrame* tableFrame,
-                             nsIFrame* kidFrame);
-
   /**
    * Get the first-line baseline of the cell relative to its block-start border
    * edge, as if the cell were vertically aligned to the top of the row.
