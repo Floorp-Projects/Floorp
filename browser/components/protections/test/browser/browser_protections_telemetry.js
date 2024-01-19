@@ -217,7 +217,7 @@ add_task(async function checkTelemetryClickEvents() {
       "Manage passwords button exists"
     );
     await ContentTaskUtils.waitForCondition(
-      () => ContentTaskUtils.is_visible(managePasswordsButton),
+      () => ContentTaskUtils.isVisible(managePasswordsButton),
       "manage passwords button is visible"
     );
     managePasswordsButton.click();
@@ -251,7 +251,7 @@ add_task(async function checkTelemetryClickEvents() {
       "Manage passwords button exists"
     );
     await ContentTaskUtils.waitForCondition(
-      () => ContentTaskUtils.is_visible(managePasswordsButton),
+      () => ContentTaskUtils.isVisible(managePasswordsButton),
       "manage passwords button is visible"
     );
     managePasswordsButton.click();
@@ -537,7 +537,7 @@ add_task(async function checkTelemetryClickEvents() {
     );
 
     await ContentTaskUtils.waitForCondition(
-      () => ContentTaskUtils.is_visible(resolveBreachesButton),
+      () => ContentTaskUtils.isVisible(resolveBreachesButton),
       "Resolve breaches button is visible"
     );
 
@@ -615,7 +615,7 @@ add_task(async function checkTelemetryClickEvents() {
     }, "Monitor manage breaches button exists");
 
     await ContentTaskUtils.waitForCondition(
-      () => ContentTaskUtils.is_visible(manageBreachesButton),
+      () => ContentTaskUtils.isVisible(manageBreachesButton),
       "Manage breaches button is visible"
     );
 
@@ -646,7 +646,7 @@ add_task(async function checkTelemetryClickEvents() {
       return content.document.getElementById("monitor-breaches-link");
     }, "Monitor view report button exists");
     await ContentTaskUtils.waitForCondition(
-      () => ContentTaskUtils.is_visible(viewReportButton),
+      () => ContentTaskUtils.isVisible(viewReportButton),
       "View report button is visible"
     );
 
@@ -677,7 +677,7 @@ add_task(async function checkTelemetryClickEvents() {
       return content.document.getElementById("monitor-breaches-link");
     }, "Monitor view report button exists");
     await ContentTaskUtils.waitForCondition(
-      () => ContentTaskUtils.is_visible(viewReportButton),
+      () => ContentTaskUtils.isVisible(viewReportButton),
       "View report button is visible"
     );
 
@@ -925,7 +925,7 @@ add_task(async function checkTelemetryClickEventsVPN() {
       return content.document.getElementById("get-vpn-link");
     }, "get vpn link exists");
     await ContentTaskUtils.waitForCondition(
-      () => ContentTaskUtils.is_visible(getVPNLink),
+      () => ContentTaskUtils.isVisible(getVPNLink),
       "get vpn link is visible"
     );
     EventUtils.sendMouseEvent(
@@ -956,7 +956,7 @@ add_task(async function checkTelemetryClickEventsVPN() {
       return content.document.getElementById("vpn-google-playstore-link");
     }, "android vpn link exists");
     await ContentTaskUtils.waitForCondition(
-      () => ContentTaskUtils.is_visible(androidVPNLink),
+      () => ContentTaskUtils.isVisible(androidVPNLink),
       "android vpn link is visible"
     );
     await ContentTaskUtils.waitForCondition(() => {
@@ -986,7 +986,7 @@ add_task(async function checkTelemetryClickEventsVPN() {
       return content.document.getElementById("vpn-app-store-link");
     }, "ios vpn link exists");
     await ContentTaskUtils.waitForCondition(
-      () => ContentTaskUtils.is_visible(iosVPNLink),
+      () => ContentTaskUtils.isVisible(iosVPNLink),
       "ios vpn link is visible"
     );
     await ContentTaskUtils.waitForCondition(() => {
@@ -1069,7 +1069,7 @@ add_task(async function checkTelemetryEventsVPNBanner() {
       return content.document.getElementById("vpn-banner-link");
     }, "vpn banner link exists");
     await ContentTaskUtils.waitForCondition(
-      () => ContentTaskUtils.is_visible(bannerVPNLink),
+      () => ContentTaskUtils.isVisible(bannerVPNLink),
       "vpn banner link is visible"
     );
     EventUtils.sendMouseEvent(
@@ -1099,7 +1099,7 @@ add_task(async function checkTelemetryEventsVPNBanner() {
       return content.document.querySelector(".vpn-banner .exit-icon");
     }, "vpn banner exit link exists");
     await ContentTaskUtils.waitForCondition(
-      () => ContentTaskUtils.is_visible(bannerExitLink),
+      () => ContentTaskUtils.isVisible(bannerExitLink),
       "vpn banner exit link is visible"
     );
     EventUtils.sendMouseEvent(

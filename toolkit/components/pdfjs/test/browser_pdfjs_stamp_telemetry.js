@@ -114,7 +114,7 @@ add_task(async function test() {
           content
         );
         await ContentTaskUtils.waitForCondition(
-          () => ContentTaskUtils.is_visible(altText.querySelector(".tooltip")),
+          () => ContentTaskUtils.isVisible(altText.querySelector(".tooltip")),
           "Wait for tooltip"
         );
       });

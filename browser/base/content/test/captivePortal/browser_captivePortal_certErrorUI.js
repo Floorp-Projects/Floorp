@@ -40,7 +40,7 @@ add_task(async function checkCaptivePortalCertErrorUI() {
     let doc = content.document;
     let loginButton = doc.getElementById("openPortalLoginPageButton");
     await ContentTaskUtils.waitForCondition(
-      () => ContentTaskUtils.is_visible(loginButton),
+      () => ContentTaskUtils.isVisible(loginButton),
       "Captive portal error page UI is visible"
     );
 
@@ -121,22 +121,22 @@ add_task(async function testCaptivePortalAdvancedPanel() {
     const doc = content.document;
     let advancedButton = doc.getElementById("advancedButton");
     await ContentTaskUtils.waitForCondition(
-      () => ContentTaskUtils.is_visible(advancedButton),
+      () => ContentTaskUtils.isVisible(advancedButton),
       "Captive portal UI is visible"
     );
 
     info("Clicking on the advanced button");
     const advPanel = doc.getElementById("badCertAdvancedPanel");
     ok(
-      !ContentTaskUtils.is_visible(advPanel),
+      !ContentTaskUtils.isVisible(advPanel),
       "Advanced panel is not yet visible"
     );
     await EventUtils.synthesizeMouseAtCenter(advancedButton, {}, content);
-    ok(ContentTaskUtils.is_visible(advPanel), "Advanced panel is now visible");
+    ok(ContentTaskUtils.isVisible(advPanel), "Advanced panel is now visible");
 
     let advPanelContent = doc.getElementById("badCertTechnicalInfo");
     ok(
-      ContentTaskUtils.is_visible(advPanelContent) &&
+      ContentTaskUtils.isVisible(advPanelContent) &&
         advPanelContent.textContent.includes("expired.example.com"),
       "Advanced panel text content is visible"
     );
@@ -152,7 +152,7 @@ add_task(async function testCaptivePortalAdvancedPanel() {
     const advPanelExceptionButton = doc.getElementById("exceptionDialogButton");
 
     function isOnCertErrorPage() {
-      return ContentTaskUtils.is_visible(advPanel);
+      return ContentTaskUtils.isVisible(advPanel);
     }
 
     ok(isOnCertErrorPage(), "On cert error page before adding exception");

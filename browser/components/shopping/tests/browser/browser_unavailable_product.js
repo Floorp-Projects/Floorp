@@ -43,7 +43,7 @@ add_task(async function test_unavailable_product() {
             ContentTaskUtils.waitForCondition(() => {
               return (
                 !!shoppingContainer.shoppingMessageBarEl &&
-                ContentTaskUtils.is_visible(
+                ContentTaskUtils.isVisible(
                   shoppingContainer.shoppingMessageBarEl
                 )
               );

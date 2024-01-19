@@ -95,7 +95,7 @@ add_task(async function test_adjusted_rating() {
           await adjustedRating.updateComplete;
           mozFiveStar = adjustedRating.ratingEl;
           ok(
-            ContentTaskUtils.is_visible(adjustedRating),
+            ContentTaskUtils.isVisible(adjustedRating),
             "adjusted rating should be visible"
           );
           is(

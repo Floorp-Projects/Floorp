@@ -201,7 +201,7 @@ add_task(async function test_new_login_url_has_correct_hash() {
 
         await ContentTaskUtils.waitForCondition(
           () =>
-            ContentTaskUtils.is_visible(
+            ContentTaskUtils.isVisible(
               loginList.querySelector("#new-login-list-item")
             ),
           "Wait for new login-list-item to become visible"

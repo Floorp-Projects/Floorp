@@ -61,7 +61,7 @@ add_task(async function test_query_parameter_filter() {
     );
 
     Assert.ok(
-      ContentTaskUtils.is_visible(loginItem),
+      ContentTaskUtils.isVisible(loginItem),
       "login-item should be visible when a login is selected"
     );
     const loginIntro = content.document.querySelector("login-intro");
@@ -166,7 +166,7 @@ add_task(async function test_query_parameter_filter_no_logins_for_site() {
       ".empty-search-message"
     );
     Assert.ok(
-      ContentTaskUtils.is_visible(emptySearchMessage),
+      ContentTaskUtils.isVisible(emptySearchMessage),
       "the empty search message should be visible when there is a search with no results"
     );
 
@@ -198,7 +198,7 @@ add_task(async function test_query_parameter_filter_no_logins_for_site() {
     Assert.ok(loginItem.dataset.isNewLogin, "should be in create mode");
     Assert.ok(loginItem.dataset.editing, "should be in edit mode");
     Assert.ok(
-      ContentTaskUtils.is_visible(loginItem),
+      ContentTaskUtils.isVisible(loginItem),
       "login-item should be visible in create mode"
     );
     Assert.ok(
@@ -287,7 +287,7 @@ add_task(async function test_query_parameter_filter_no_login_until_backspace() {
     Assert.ok(loginItem.dataset.isNewLogin, "should be in create mode");
     Assert.ok(loginItem.dataset.editing, "should be in edit mode");
     Assert.ok(
-      ContentTaskUtils.is_visible(loginItem),
+      ContentTaskUtils.isVisible(loginItem),
       "login-item should be visible in create mode"
     );
     Assert.ok(

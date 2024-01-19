@@ -31,7 +31,7 @@ add_task(async function test_in_progress_analysis_unanalyzed() {
             () => {
               return (
                 !!shoppingContainer.shoppingMessageBarEl &&
-                ContentTaskUtils.is_visible(
+                ContentTaskUtils.isVisible(
                   shoppingContainer.shoppingMessageBarEl
                 )
               );
@@ -93,7 +93,7 @@ add_task(async function test_in_progress_analysis_stale() {
             () => {
               return (
                 !!shoppingContainer.shoppingMessageBarEl &&
-                ContentTaskUtils.is_visible(
+                ContentTaskUtils.isVisible(
                   shoppingContainer.shoppingMessageBarEl
                 )
               );

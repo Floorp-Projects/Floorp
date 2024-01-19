@@ -77,7 +77,7 @@ add_task(async function clicking_make_default_checks_alwaysCheck_checkbox() {
       "The 'browser is default' pane should be hidden when not default"
     );
     Assert.ok(
-      ContentTaskUtils.is_visible(isNotDefaultPane),
+      ContentTaskUtils.isVisible(isNotDefaultPane),
       "The 'make default' pane should be visible when not default"
     );
 
@@ -97,7 +97,7 @@ add_task(async function clicking_make_default_checks_alwaysCheck_checkbox() {
     content.window.gMainPane.updateSetDefaultBrowser();
 
     await ContentTaskUtils.waitForCondition(
-      () => ContentTaskUtils.is_visible(isDefaultPane),
+      () => ContentTaskUtils.isVisible(isDefaultPane),
       "Browser is now default"
     );
 

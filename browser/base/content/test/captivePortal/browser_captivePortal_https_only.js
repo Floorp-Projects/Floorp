@@ -36,7 +36,7 @@ add_task(async function checkCaptivePortalExempt() {
     let doc = content.document;
     let loginButton = doc.getElementById("openPortalLoginPageButton");
     await ContentTaskUtils.waitForCondition(
-      () => ContentTaskUtils.is_visible(loginButton),
+      () => ContentTaskUtils.isVisible(loginButton),
       "Captive portal error page UI is visible"
     );
 

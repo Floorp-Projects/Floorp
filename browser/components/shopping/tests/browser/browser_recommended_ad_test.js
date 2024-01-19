@@ -61,7 +61,7 @@ add_task(async function test_ads_requested_after_enabled() {
           await recommendedCard.updateComplete;
           Assert.ok(recommendedCard, "Recommended card should exist");
           Assert.ok(
-            ContentTaskUtils.is_visible(recommendedCard),
+            ContentTaskUtils.isVisible(recommendedCard),
             "Recommended card is visible"
           );
         }
