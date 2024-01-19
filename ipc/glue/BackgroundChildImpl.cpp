@@ -265,23 +265,6 @@ IPCResult BackgroundChildImpl::RecvPRemoteWorkerConstructor(
   return IPC_OK();
 }
 
-dom::PRemoteWorkerControllerChild*
-BackgroundChildImpl::AllocPRemoteWorkerControllerChild(
-    const dom::RemoteWorkerData& aRemoteWorkerData) {
-  MOZ_CRASH(
-      "PRemoteWorkerControllerChild actors must be manually constructed!");
-  return nullptr;
-}
-
-bool BackgroundChildImpl::DeallocPRemoteWorkerControllerChild(
-    dom::PRemoteWorkerControllerChild* aActor) {
-  MOZ_ASSERT(aActor);
-
-  RefPtr<dom::RemoteWorkerControllerChild> actor =
-      dont_AddRef(static_cast<dom::RemoteWorkerControllerChild*>(aActor));
-  return true;
-}
-
 dom::PSharedWorkerChild* BackgroundChildImpl::AllocPSharedWorkerChild(
     const dom::RemoteWorkerData& aData, const uint64_t& aWindowID,
     const dom::MessagePortIdentifier& aPortIdentifier) {

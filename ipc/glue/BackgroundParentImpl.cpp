@@ -509,12 +509,12 @@ BackgroundParentImpl::AllocPIdleSchedulerParent() {
   return actor.forget();
 }
 
-dom::PRemoteWorkerControllerParent*
+already_AddRefed<dom::PRemoteWorkerControllerParent>
 BackgroundParentImpl::AllocPRemoteWorkerControllerParent(
     const dom::RemoteWorkerData& aRemoteWorkerData) {
   RefPtr<dom::RemoteWorkerControllerParent> actor =
       new dom::RemoteWorkerControllerParent(aRemoteWorkerData);
-  return actor.forget().take();
+  return actor.forget();
 }
 
 IPCResult BackgroundParentImpl::RecvPRemoteWorkerControllerConstructor(
@@ -523,13 +523,6 @@ IPCResult BackgroundParentImpl::RecvPRemoteWorkerControllerConstructor(
   MOZ_ASSERT(aActor);
 
   return IPC_OK();
-}
-
-bool BackgroundParentImpl::DeallocPRemoteWorkerControllerParent(
-    dom::PRemoteWorkerControllerParent* aActor) {
-  RefPtr<dom::RemoteWorkerControllerParent> actor =
-      dont_AddRef(static_cast<dom::RemoteWorkerControllerParent*>(aActor));
-  return true;
 }
 
 already_AddRefed<dom::PRemoteWorkerServiceParent>

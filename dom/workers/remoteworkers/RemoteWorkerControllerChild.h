@@ -23,7 +23,7 @@ class RemoteWorkerControllerChild final : public PRemoteWorkerControllerChild {
   friend class PRemoteWorkerControllerChild;
 
  public:
-  NS_INLINE_DECL_REFCOUNTING(RemoteWorkerControllerChild)
+  NS_INLINE_DECL_REFCOUNTING(RemoteWorkerControllerChild, override)
 
   explicit RemoteWorkerControllerChild(RefPtr<RemoteWorkerObserver> aObserver);
 

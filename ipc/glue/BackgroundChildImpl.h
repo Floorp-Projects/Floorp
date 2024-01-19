@@ -108,13 +108,6 @@ class BackgroundChildImpl : public PBackgroundChild {
   virtual mozilla::ipc::IPCResult RecvPRemoteWorkerConstructor(
       PRemoteWorkerChild* aActor, const RemoteWorkerData& aData) override;
 
-  virtual mozilla::dom::PRemoteWorkerControllerChild*
-  AllocPRemoteWorkerControllerChild(
-      const mozilla::dom::RemoteWorkerData& aRemoteWorkerData) override;
-
-  virtual bool DeallocPRemoteWorkerControllerChild(
-      mozilla::dom::PRemoteWorkerControllerChild* aActor) override;
-
   virtual mozilla::dom::PSharedWorkerChild* AllocPSharedWorkerChild(
       const mozilla::dom::RemoteWorkerData& aData, const uint64_t& aWindowID,
       const mozilla::dom::MessagePortIdentifier& aPortIdentifier) override;
