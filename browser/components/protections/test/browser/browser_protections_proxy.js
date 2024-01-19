@@ -32,7 +32,7 @@ add_task(async function () {
     }, "Proxy card is not enabled.");
 
     const proxyCard = content.document.querySelector(".proxy-card");
-    ok(ContentTaskUtils.is_hidden(proxyCard), "Proxy card is hidden.");
+    ok(ContentTaskUtils.isHidden(proxyCard), "Proxy card is hidden.");
   });
 
   info("Enable showing the Secure Proxy card");
@@ -97,7 +97,7 @@ async function checkProxyCardVisibility(tab, shouldBeHidden) {
     async function ({ _shouldBeHidden }) {
       await ContentTaskUtils.waitForCondition(() => {
         const proxyCard = content.document.querySelector(".proxy-card");
-        return ContentTaskUtils.is_hidden(proxyCard) === _shouldBeHidden;
+        return ContentTaskUtils.isHidden(proxyCard) === _shouldBeHidden;
       });
 
       const visibilityState = _shouldBeHidden ? "hidden" : "shown";

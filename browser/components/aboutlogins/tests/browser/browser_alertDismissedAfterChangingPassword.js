@@ -89,7 +89,7 @@ add_task(async function test_added_login_shows_breach_warning() {
         return loginItem._login && loginItem._login.guid == breachedLoginGuid;
       }, "waiting for breached login to get selected");
       Assert.ok(
-        !ContentTaskUtils.is_hidden(
+        !ContentTaskUtils.isHidden(
           loginItem.shadowRoot.querySelector("login-breach-alert")
         ),
         "the breach alert should be visible"
@@ -155,7 +155,7 @@ add_task(async function test_added_login_shows_breach_warning() {
       }, "waiting for stored login to get updated");
 
       Assert.ok(
-        ContentTaskUtils.is_hidden(
+        ContentTaskUtils.isHidden(
           loginItem.shadowRoot.querySelector("login-breach-alert")
         ),
         "the breach alert should be hidden now"
@@ -183,7 +183,7 @@ add_task(async function test_added_login_shows_breach_warning() {
         return loginItem._login && loginItem._login.guid == vulnerableLoginGuid;
       }, "waiting for vulnerable login to get selected");
       Assert.ok(
-        !ContentTaskUtils.is_hidden(
+        !ContentTaskUtils.isHidden(
           loginItem.shadowRoot.querySelector("login-vulnerable-password-alert")
         ),
         "the vulnerable alert should be visible"
@@ -205,7 +205,7 @@ add_task(async function test_added_login_shows_breach_warning() {
       }, "waiting for stored login to get updated");
 
       Assert.ok(
-        ContentTaskUtils.is_hidden(
+        ContentTaskUtils.isHidden(
           loginItem.shadowRoot.querySelector("login-vulnerable-password-alert")
         ),
         "the vulnerable alert should be hidden now"

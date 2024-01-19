@@ -13,12 +13,12 @@ add_task(async function clicking_make_default_checks_alwaysCheck_checkbox() {
       let isNotDefaultPane =
         content.document.getElementById("isNotDefaultPane");
       Assert.equal(
-        ContentTaskUtils.is_hidden(isDefaultPane),
+        ContentTaskUtils.isHidden(isDefaultPane),
         !isDefault,
         "The 'browser is default' pane should be hidden when browser is not default"
       );
       Assert.equal(
-        ContentTaskUtils.is_hidden(isNotDefaultPane),
+        ContentTaskUtils.isHidden(isNotDefaultPane),
         isDefault,
         "The 'make default' pane should be hidden when browser is default"
       );
@@ -73,7 +73,7 @@ add_task(async function clicking_make_default_checks_alwaysCheck_checkbox() {
     let isDefaultPane = content.document.getElementById("isDefaultPane");
     let isNotDefaultPane = content.document.getElementById("isNotDefaultPane");
     Assert.ok(
-      ContentTaskUtils.is_hidden(isDefaultPane),
+      ContentTaskUtils.isHidden(isDefaultPane),
       "The 'browser is default' pane should be hidden when not default"
     );
     Assert.ok(

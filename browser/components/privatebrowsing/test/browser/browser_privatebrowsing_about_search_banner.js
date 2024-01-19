@@ -237,7 +237,7 @@ add_task(async function test_show_banner_close_no_more() {
 
     await ContentTaskUtils.waitForCondition(
       () =>
-        ContentTaskUtils.is_hidden(
+        ContentTaskUtils.isHidden(
           content.document.getElementById("search-banner")
         ),
       "should have closed the in-content search banner after clicking close"

@@ -814,7 +814,7 @@ add_task(async function test_etp_custom_settings() {
     }, "The legend is visible");
 
     let label = content.document.getElementById("cookieLabel");
-    Assert.ok(ContentTaskUtils.is_hidden(label), "Cookie Label is hidden");
+    Assert.ok(ContentTaskUtils.isHidden(label), "Cookie Label is hidden");
 
     label = content.document.getElementById("trackerLabel");
     Assert.ok(ContentTaskUtils.is_visible(label), "Tracker Label is visible");
@@ -846,10 +846,10 @@ add_task(async function test_etp_custom_settings() {
     }, "The legend is visible");
 
     let label = content.document.querySelector("#trackerLabel");
-    Assert.ok(ContentTaskUtils.is_hidden(label), "Tracker Label is hidden");
+    Assert.ok(ContentTaskUtils.isHidden(label), "Tracker Label is hidden");
 
     label = content.document.querySelector("#socialLabel");
-    Assert.ok(ContentTaskUtils.is_hidden(label), "Social Label is hidden");
+    Assert.ok(ContentTaskUtils.isHidden(label), "Social Label is hidden");
   });
   BrowserTestUtils.removeTab(tab);
 
@@ -873,7 +873,7 @@ add_task(async function test_etp_custom_settings() {
     }, "The legend is visible");
 
     let label = content.document.querySelector("#socialLabel");
-    Assert.ok(ContentTaskUtils.is_hidden(label), "Social Label is hidden");
+    Assert.ok(ContentTaskUtils.isHidden(label), "Social Label is hidden");
   });
   BrowserTestUtils.removeTab(tab);
 
@@ -895,7 +895,7 @@ add_task(async function test_etp_custom_settings() {
 
     let label = content.document.querySelector("#fingerprinterLabel");
     Assert.ok(
-      ContentTaskUtils.is_hidden(label),
+      ContentTaskUtils.isHidden(label),
       "Fingerprinter Label is hidden"
     );
   });
@@ -922,7 +922,7 @@ add_task(async function test_etp_custom_settings() {
     }, "The legend is visible");
 
     let label = content.document.querySelector("#cryptominerLabel");
-    Assert.ok(ContentTaskUtils.is_hidden(label), "Cryptominer Label is hidden");
+    Assert.ok(ContentTaskUtils.isHidden(label), "Cryptominer Label is hidden");
   });
   Services.prefs.clearUserPref("browser.contentblocking.category");
   Services.prefs.clearUserPref(
@@ -1037,7 +1037,7 @@ add_task(async function test_etp_mobile_promotion_pref_on() {
     // Card should hide after the X is clicked.
     mobilePromotion.querySelector(".exit-icon").click();
     Assert.ok(
-      ContentTaskUtils.is_hidden(mobilePromotion),
+      ContentTaskUtils.isHidden(mobilePromotion),
       "Mobile promotions card is no longer displayed after clicking the X button"
     );
   });
@@ -1054,7 +1054,7 @@ add_task(async function test_etp_mobile_promotion_pref_on() {
   await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     let mobilePromotion = content.document.getElementById("mobile-hanger");
     Assert.ok(
-      ContentTaskUtils.is_hidden(mobilePromotion),
+      ContentTaskUtils.isHidden(mobilePromotion),
       "Mobile promotions card is hidden when pref is on if there are synced mobile devices"
     );
   });
@@ -1078,7 +1078,7 @@ add_task(async function test_etp_mobile_promotion_pref_on() {
   await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     let mobilePromotion = content.document.getElementById("mobile-hanger");
     Assert.ok(
-      ContentTaskUtils.is_hidden(mobilePromotion),
+      ContentTaskUtils.isHidden(mobilePromotion),
       "Mobile promotions card is not displayed when pref is off and there are no synced mobile devices"
     );
   });
@@ -1096,7 +1096,7 @@ add_task(async function test_etp_mobile_promotion_pref_on() {
   await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     let mobilePromotion = content.document.getElementById("mobile-hanger");
     Assert.ok(
-      ContentTaskUtils.is_hidden(mobilePromotion),
+      ContentTaskUtils.isHidden(mobilePromotion),
       "Mobile promotions card is not displayed when pref is off even if there are synced mobile devices"
     );
   });

@@ -57,7 +57,7 @@ add_task(async () => {
             for (let hiddenElement of toggleStylesForStage.hidden) {
               let el = shadowRoot.querySelector(hiddenElement);
               ok(
-                ContentTaskUtils.is_hidden(el),
+                ContentTaskUtils.isHidden(el),
                 `Expected ${hiddenElement} to be hidden.`
               );
             }

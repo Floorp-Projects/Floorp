@@ -34,7 +34,7 @@ add_task(async function testNoLoginsLockwiseCardUI() {
       "#lockwise-how-it-works"
     );
     ok(
-      ContentTaskUtils.is_hidden(lockwiseHowItWorks),
+      ContentTaskUtils.isHidden(lockwiseHowItWorks),
       "How it works link is hidden"
     );
 
@@ -52,7 +52,7 @@ add_task(async function testNoLoginsLockwiseCardUI() {
       ".lockwise-scanned-wrapper"
     );
     ok(
-      ContentTaskUtils.is_hidden(lockwiseScannedWrapper),
+      ContentTaskUtils.isHidden(lockwiseScannedWrapper),
       "Lockwise scanned wrapper is hidden"
     );
 
@@ -60,7 +60,7 @@ add_task(async function testNoLoginsLockwiseCardUI() {
       "#manage-passwords-button"
     );
     ok(
-      ContentTaskUtils.is_hidden(managePasswordsButton),
+      ContentTaskUtils.isHidden(managePasswordsButton),
       "Manage passwords button is hidden"
     );
 
@@ -156,7 +156,7 @@ add_task(async function testLockwiseCardUIWithLogins() {
       "#save-passwords-button"
     );
     ok(
-      ContentTaskUtils.is_hidden(savePasswordsButton),
+      ContentTaskUtils.isHidden(savePasswordsButton),
       "Save passwords button is hidden"
     );
 
@@ -278,7 +278,7 @@ add_task(async function testLockwiseCardPref() {
       return !lockwiseCard["data-enabled"];
     }, "Lockwise card is not enabled.");
 
-    ok(ContentTaskUtils.is_hidden(lockwiseCard), "Lockwise card is hidden.");
+    ok(ContentTaskUtils.isHidden(lockwiseCard), "Lockwise card is hidden.");
   });
 
   // Set the pref back to displaying the card.

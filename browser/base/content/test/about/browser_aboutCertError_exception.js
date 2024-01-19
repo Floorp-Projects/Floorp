@@ -122,7 +122,7 @@ add_task(async function checkBadStsCert() {
           : content.document;
         let exceptionButton = doc.getElementById("exceptionDialogButton");
         ok(
-          ContentTaskUtils.is_hidden(exceptionButton),
+          ContentTaskUtils.isHidden(exceptionButton),
           "Exception button is hidden."
         );
       }
@@ -191,7 +191,7 @@ add_task(async function checkhideAddExceptionButtonViaPref() {
 
         let exceptionButton = doc.getElementById("exceptionDialogButton");
         ok(
-          ContentTaskUtils.is_hidden(exceptionButton),
+          ContentTaskUtils.isHidden(exceptionButton),
           "Exception button is hidden."
         );
       }
@@ -212,7 +212,7 @@ add_task(async function checkhideAddExceptionButtonInFrames() {
     let doc = content.document.querySelector("iframe").contentDocument;
     let exceptionButton = doc.getElementById("exceptionDialogButton");
     ok(
-      ContentTaskUtils.is_hidden(exceptionButton),
+      ContentTaskUtils.isHidden(exceptionButton),
       "Exception button is hidden."
     );
   });
