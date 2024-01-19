@@ -1,4 +1,4 @@
-// |reftest| skip -- import-attributes is not supported
+// |reftest| shell-option(--enable-import-attributes) skip-if(!xulRuntime.shell) -- requires shell-options
 // This file was procedurally generated from the following sources:
 // - src/dynamic-import/import-attributes-trailing-comma-second.case
 // - src/dynamic-import/syntax/valid/nested-async-arrow-fn-await.template
