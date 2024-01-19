@@ -347,7 +347,7 @@ nsresult QuotaManagerService::EnsureBackgroundActor() {
     }
 
     {
-      QuotaChild* actor = new QuotaChild(this);
+      RefPtr<QuotaChild> actor = new QuotaChild(this);
 
       mBackgroundActor = static_cast<QuotaChild*>(
           backgroundActor->SendPQuotaConstructor(actor));

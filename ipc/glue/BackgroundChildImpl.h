@@ -148,10 +148,6 @@ class BackgroundChildImpl : public PBackgroundChild {
 
   virtual bool DeallocPMessagePortChild(PMessagePortChild* aActor) override;
 
-  virtual PQuotaChild* AllocPQuotaChild() override;
-
-  virtual bool DeallocPQuotaChild(PQuotaChild* aActor) override;
-
   virtual PWebAuthnTransactionChild* AllocPWebAuthnTransactionChild() override;
 
   virtual bool DeallocPWebAuthnTransactionChild(

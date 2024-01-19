@@ -20,7 +20,7 @@ class Quota final : public PQuotaParent {
  public:
   Quota();
 
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(mozilla::dom::quota::Quota)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(mozilla::dom::quota::Quota, override)
 
  private:
   ~Quota();
@@ -104,9 +104,7 @@ class Quota final : public PQuotaParent {
       const ContentParentId& aContentParentId) override;
 };
 
-PQuotaParent* AllocPQuotaParent();
-
-bool DeallocPQuotaParent(PQuotaParent* aActor);
+already_AddRefed<PQuotaParent> AllocPQuotaParent();
 
 }  // namespace mozilla::dom::quota
 

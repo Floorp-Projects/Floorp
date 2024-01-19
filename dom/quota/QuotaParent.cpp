@@ -77,7 +77,7 @@ class BoolPromiseResolveOrRejectCallback {
 
 }  // namespace
 
-PQuotaParent* AllocPQuotaParent() {
+already_AddRefed<PQuotaParent> AllocPQuotaParent() {
   AssertIsOnBackgroundThread();
 
   if (NS_WARN_IF(QuotaManager::IsShuttingDown())) {
@@ -86,15 +86,7 @@ PQuotaParent* AllocPQuotaParent() {
 
   auto actor = MakeRefPtr<Quota>();
 
-  return actor.forget().take();
-}
-
-bool DeallocPQuotaParent(PQuotaParent* aActor) {
-  AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aActor);
-
-  RefPtr<Quota> actor = dont_AddRef(static_cast<Quota*>(aActor));
-  return true;
+  return actor.forget();
 }
 
 Quota::Quota()
