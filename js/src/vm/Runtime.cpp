@@ -210,6 +210,11 @@ void JSRuntime::destroyRuntime() {
   MOZ_ASSERT(childRuntimeCount == 0);
   MOZ_ASSERT(initialized_);
 
+  for (auto [f, data] : cleanupClosures.ref()) {
+    f(data);
+  }
+  cleanupClosures.ref().clear();
+
 #ifdef JS_HAS_INTL_API
   sharedIntlData.ref().destroyInstance();
 #endif
