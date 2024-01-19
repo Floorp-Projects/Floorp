@@ -76,10 +76,8 @@ add_task(async function test_n_autocomplete_cancel() {
   firstHistogram.clear();
   sixthHistogram.clear();
 
-  let providerCanceledDeferred = Promise.withResolvers();
   let provider = new TestProvider({
     results: [],
-    onCancel: providerCanceledDeferred.resolve,
   });
   UrlbarProvidersManager.registerProvider(provider);
   const context = createContext(TEST_URL, { providers: [provider.name] });
@@ -93,7 +91,7 @@ add_task(async function test_n_autocomplete_cancel() {
     "Should not have started first 6 results stopwatch"
   );
 
-  controller.startQuery(context);
+  let startQueryPromise = controller.startQuery(context);
 
   Assert.ok(
     TelemetryStopwatch.running(TELEMETRY_1ST_RESULT, context),
@@ -105,8 +103,7 @@ add_task(async function test_n_autocomplete_cancel() {
   );
 
   controller.cancelQuery(context);
-
-  await providerCanceledDeferred.promise;
+  await startQueryPromise;
 
   Assert.ok(
     !TelemetryStopwatch.running(TELEMETRY_1ST_RESULT, context),
