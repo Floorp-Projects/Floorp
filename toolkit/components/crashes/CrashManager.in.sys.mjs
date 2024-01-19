@@ -674,7 +674,7 @@ CrashManager.prototype = Object.freeze({
 
     for (let line in annotations) {
       try {
-        if (Services.appinfo.isAnnotationAllowlistedForPing(line)) {
+        if (Services.appinfo.isAnnotationAllowedForPing(line)) {
           filteredAnnotations[line] = annotations[line];
         }
       } catch (e) {

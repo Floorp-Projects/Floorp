@@ -21,8 +21,8 @@ ${strings}
 };
 
 // Allowlist of crash annotations that can be included in a crash ping
-const Annotation kCrashPingAllowlist[] = {
-${allowlist}
+const Annotation kCrashPingAllowedList[] = {
+${allowedlist}
 };
 
 /**
@@ -46,14 +46,14 @@ static inline const char* AnnotationToString(Annotation aAnnotation) {
 bool AnnotationFromString(Annotation& aResult, const char* aValue);
 
 /**
- * Checks if the given crash annotation is allowlisted for inclusion in the
- * crash ping.
+ * Checks if the given crash annotation is allowed for inclusion in the crash
+ * ping.
  *
  * @param aAnnotation the crash annotation to be checked
  * @return true if the annotation can be included in the crash ping, false
  *         otherwise
  */
-bool IsAnnotationAllowlistedForPing(Annotation aAnnotation);
+bool IsAnnotationAllowedForPing(Annotation aAnnotation);
 
 /**
  * Abstract annotation writer, this is needed only for code that writes out
