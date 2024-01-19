@@ -32,6 +32,14 @@ origin:
   # A "LICENSE" file must exist containing the full license text
   license: BSD-2-Clause
 
+updatebot:
+    maintainer-phab: padenot
+    maintainer-bz: padenot@mozilla.com
+    tasks:
+      - type: vendoring
+        enabled: true
+        frequency: release
+
 vendoring:
   url: https://aomedia.googlesource.com/aom
   source-hosting: googlesource
