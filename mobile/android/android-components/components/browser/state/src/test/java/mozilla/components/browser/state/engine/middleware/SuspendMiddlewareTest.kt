@@ -5,8 +5,9 @@
 package mozilla.components.browser.state.engine.middleware
 
 import mozilla.components.browser.state.action.EngineAction
-import mozilla.components.browser.state.selector.findTab
+import mozilla.components.browser.state.selector.findTabOrCustomTab
 import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.state.createCustomTab
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.EngineSession
@@ -32,7 +33,7 @@ class SuspendMiddlewareTest {
     private val scope = coroutinesTestRule.scope
 
     @Test
-    fun `suspends engine session`() = runTestOnMain {
+    fun `suspends engine session for tab`() = runTestOnMain {
         val middleware = SuspendMiddleware(scope)
 
         val tab = createTab("https://www.mozilla.org", id = "1")
@@ -52,8 +53,34 @@ class SuspendMiddlewareTest {
         store.waitUntilIdle()
         dispatcher.scheduler.advanceUntilIdle()
 
-        assertNull(store.state.findTab(tab.id)?.engineState?.engineSession)
-        assertEquals(state, store.state.findTab(tab.id)?.engineState?.engineSessionState)
+        assertNull(store.state.findTabOrCustomTab(tab.id)?.engineState?.engineSession)
+        assertEquals(state, store.state.findTabOrCustomTab(tab.id)?.engineState?.engineSessionState)
+        verify(engineSession).close()
+    }
+
+    @Test
+    fun `suspends engine session for custom tab`() = runTestOnMain {
+        val middleware = SuspendMiddleware(scope)
+
+        val tab = createCustomTab("https://www.mozilla.org", id = "1")
+        val store = BrowserStore(
+            initialState = BrowserState(customTabs = listOf(tab)),
+            middleware = listOf(middleware),
+        )
+
+        val engineSession: EngineSession = mock()
+        store.dispatch(EngineAction.LinkEngineSessionAction(tab.id, engineSession)).joinBlocking()
+
+        val state: EngineSessionState = mock()
+        store.dispatch(EngineAction.UpdateEngineSessionStateAction(tab.id, state)).joinBlocking()
+
+        store.dispatch(EngineAction.SuspendEngineSessionAction(tab.id)).joinBlocking()
+
+        store.waitUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertNull(store.state.findTabOrCustomTab(tab.id)?.engineState?.engineSession)
+        assertEquals(state, store.state.findTabOrCustomTab(tab.id)?.engineState?.engineSessionState)
         verify(engineSession).close()
     }
 
@@ -117,11 +144,11 @@ class SuspendMiddlewareTest {
         killStore.waitUntilIdle()
         dispatcher.scheduler.advanceUntilIdle()
 
-        assertNull(suspendStore.state.findTab(tab.id)?.engineState?.engineSession)
-        assertEquals(state, suspendStore.state.findTab(tab.id)?.engineState?.engineSessionState)
+        assertNull(suspendStore.state.findTabOrCustomTab(tab.id)?.engineState?.engineSession)
+        assertEquals(state, suspendStore.state.findTabOrCustomTab(tab.id)?.engineState?.engineSessionState)
 
-        assertNull(killStore.state.findTab(tab.id)?.engineState?.engineSession)
-        assertEquals(state, killStore.state.findTab(tab.id)?.engineState?.engineSessionState)
+        assertNull(killStore.state.findTabOrCustomTab(tab.id)?.engineState?.engineSession)
+        assertEquals(state, killStore.state.findTabOrCustomTab(tab.id)?.engineState?.engineSessionState)
 
         assertEquals(suspendStore.state, killStore.state)
     }

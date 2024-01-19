@@ -234,8 +234,8 @@ class TrimMemoryMiddlewareTest {
         }
 
         store.state.findCustomTab("twitch")!!.engineState.apply {
-            assertNotNull(engineSession)
-            assertNotNull(engineObserver)
+            assertNull(engineSession)
+            assertNull(engineObserver)
             assertNotNull(engineSessionState)
         }
 
@@ -247,9 +247,9 @@ class TrimMemoryMiddlewareTest {
 
         verify(engineSessionTheVerge).close()
         verify(engineSessionYouTube).close()
+        verify(engineSessionTwitch).close()
 
         verify(engineSessionReddit, never()).close()
-        verify(engineSessionTwitch, never()).close()
         verify(engineSessionGoogleNews, never()).close()
         verify(engineSessionFacebook, never()).close()
         verify(engineSessionAmazon, never()).close()

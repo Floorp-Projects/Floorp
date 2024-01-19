@@ -8,7 +8,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.action.EngineAction
-import mozilla.components.browser.state.selector.findTab
+import mozilla.components.browser.state.selector.findTabOrCustomTab
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.EngineState
 import mozilla.components.concept.engine.EngineSession
@@ -43,7 +43,7 @@ internal class SuspendMiddleware(
         context: MiddlewareContext<BrowserState, BrowserAction>,
         sessionId: String,
     ) {
-        val tab = context.state.findTab(sessionId) ?: return
+        val tab = context.state.findTabOrCustomTab(sessionId) ?: return
 
         // First we unlink (which clearsEngineSession and state)
         context.dispatch(
