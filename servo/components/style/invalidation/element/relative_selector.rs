@@ -924,13 +924,54 @@ where
             "Not matching for invalidation?"
         );
 
-        let invalidated_self = add_blind_invalidation(
-            &element,
-            self.dependency,
-            self.host,
-            descendant_invalidations,
-            sibling_invalidations,
-        );
+        // Ok, this element can potentially an anchor to the given dependency.
+        // Before we do the potentially-costly ancestor/earlier sibling traversal,
+        // See if it can actuall be an anchor by trying to match the "rest" of the selector
+        // outside and to the left of `:has` in question.
+        // e.g. Element under consideration can only be the anchor to `:has` in
+        // `.foo .bar ~ .baz:has()`, iff it matches `.foo .bar ~ .baz`.
+        let invalidated_self = {
+            let mut d = self.dependency;
+            loop {
+                debug_assert!(
+                    matches!(
+                        d.invalidation_kind(),
+                        DependencyInvalidationKind::Normal(_)
+                    ),
+                    "Unexpected outer relative dependency"
+                );
+                if !dependency_may_be_relevant(d, &element, false) {
+                    break false;
+                }
+                if !matches_selector(
+                    &d.selector,
+                    d.selector_offset,
+                    None,
+                    &element,
+                    self.matching_context(),
+                ) {
+                    break false;
+                }
+                let invalidation_kind = d.normal_invalidation_kind();
+                if matches!(invalidation_kind, NormalDependencyInvalidationKind::Element) {
+                    if let Some(ref parent) = d.parent {
+                        d = parent;
+                        continue;
+                    }
+                    break true;
+                }
+                debug_assert_ne!(d.selector_offset, 0);
+                debug_assert_ne!(d.selector_offset, d.selector.len());
+                let invalidation = Invalidation::new(&d, self.host);
+                break push_invalidation(
+                    invalidation,
+                    invalidation_kind,
+                    descendant_invalidations,
+                    sibling_invalidations
+                );
+            }
+        };
+
         if invalidated_self {
             self.data.hint.insert(RestyleHint::RESTYLE_SELF);
         }
@@ -965,51 +1006,6 @@ where
         debug_assert_ne!(element, self.element);
         invalidated_sibling(element, of);
     }
-}
-
-/// Just add this dependency as invalidation without running any selector check.
-fn add_blind_invalidation<'a, E: TElement>(
-    element: &E,
-    dependency: &'a Dependency,
-    current_host: Option<OpaqueElement>,
-    descendant_invalidations: &mut DescendantInvalidationLists<'a>,
-    sibling_invalidations: &mut InvalidationVector<'a>,
-) -> bool {
-    debug_assert!(
-        matches!(
-            dependency.invalidation_kind(),
-            DependencyInvalidationKind::Normal(_)
-        ),
-        "Unexpected relative dependency"
-    );
-    if !dependency_may_be_relevant(dependency, element, false) {
-        return false;
-    }
-    let invalidation_kind = dependency.normal_invalidation_kind();
-    if matches!(invalidation_kind, NormalDependencyInvalidationKind::Element) {
-        if let Some(ref parent) = dependency.parent {
-            return add_blind_invalidation(
-                element,
-                parent,
-                current_host,
-                descendant_invalidations,
-                sibling_invalidations,
-            );
-        }
-        return true;
-    }
-
-    debug_assert_ne!(dependency.selector_offset, 0);
-    debug_assert_ne!(dependency.selector_offset, dependency.selector.len());
-
-    let invalidation = Invalidation::new(&dependency, current_host);
-
-    push_invalidation(
-        invalidation,
-        invalidation_kind,
-        descendant_invalidations,
-        sibling_invalidations,
-    )
 }
 
 /// Invalidation for the selector(s) inside a relative selector.
