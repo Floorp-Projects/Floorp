@@ -1056,6 +1056,7 @@ add_task(async function test_onQueryCanceled() {
     incognitoOverride: "spanning",
     background() {
       browser.urlbar.onBehaviorRequested.addListener(query => {
+        browser.test.sendMessage("onBehaviorRequested");
         return "active";
       }, "test");
       browser.urlbar.onQueryCanceled.addListener(query => {
@@ -1079,6 +1080,9 @@ add_task(async function test_onQueryCanceled() {
   let controller = UrlbarTestUtils.newMockController();
 
   let startPromise = controller.startQuery(context);
+  // Ensure the query has started, before trying to cancel it, otherwise we
+  // won't get a `canceled` notification, as there's nothing to cancel.
+  await ext.awaitMessage("onBehaviorRequested");
   controller.cancelQuery();
   await startPromise;
 
@@ -1381,6 +1385,10 @@ add_task(async function test_privateBrowsing_allowed_onQueryCanceled() {
   let controller = UrlbarTestUtils.newMockController();
 
   let startPromise = controller.startQuery(context);
+  // Ensure the query has started, before trying to cancel it, otherwise we
+  // won't get a `canceled` notification, as there's nothing to cancel.
+  await ext.awaitMessage("onBehaviorRequested");
+
   controller.cancelQuery();
   await startPromise;
 

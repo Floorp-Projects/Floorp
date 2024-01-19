@@ -11,6 +11,7 @@
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   UrlbarUtils: "resource:///modules/UrlbarUtils.sys.mjs",
+  PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
 });
 
 ChromeUtils.defineLazyGetter(lazy, "logger", () =>
@@ -310,7 +311,13 @@ function splitString(searchString) {
   // enforce restrictions, for example typing questions would restrict to
   // search results.
   const hasRestrictionToken = tokens.some(t => CHAR_TO_TYPE_MAP.has(t));
-  if (hasRestrictionToken) {
+
+  const firstToken = tokens[0];
+  const isFirstTokenAKeyword =
+    !Object.values(UrlbarTokenizer.RESTRICT).includes(firstToken) &&
+    lazy.PlacesUtils.keywords.isKeywordFromCache(firstToken);
+
+  if (hasRestrictionToken || isFirstTokenAKeyword) {
     return tokens;
   }
 
@@ -318,7 +325,6 @@ function splitString(searchString) {
   // token, or at the end of the last token. We only count trailing restriction
   // chars if they are the search restriction char, which is "?". This is to
   // allow for a typed question to yield only search results.
-  const firstToken = tokens[0];
   if (
     CHAR_TO_TYPE_MAP.has(firstToken[0]) &&
     !UrlbarTokenizer.REGEXP_PERCENT_ENCODED_START.test(firstToken)
@@ -356,6 +362,10 @@ function splitString(searchString) {
 function filterTokens(tokens) {
   let filtered = [];
   let restrictions = [];
+  const isFirstTokenAKeyword =
+    !Object.values(UrlbarTokenizer.RESTRICT).includes(tokens[0]) &&
+    lazy.PlacesUtils.keywords.isKeywordFromCache(tokens[0]);
+
   for (let i = 0; i < tokens.length; ++i) {
     let token = tokens[i];
     let tokenObj = {
@@ -368,6 +378,11 @@ function filterTokens(tokens) {
     if (tokens.length > 1 && token.length > 500) {
       filtered.push(tokenObj);
       break;
+    }
+
+    if (isFirstTokenAKeyword) {
+      filtered.push(tokenObj);
+      continue;
     }
 
     let restrictionType = CHAR_TO_TYPE_MAP.get(token);

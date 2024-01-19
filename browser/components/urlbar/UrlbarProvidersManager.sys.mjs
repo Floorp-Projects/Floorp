@@ -229,6 +229,24 @@ class ProvidersManager {
       ? this.providers.filter(p => queryContext.providers.includes(p.name))
       : this.providers;
 
+    queryContext.canceled = false;
+    try {
+      // The tokenizer needs to synchronously check whether the first token is a
+      // keyword, thus here we must ensure the keywords cache is up.
+      await lazy.PlacesUtils.keywords.ensureCacheInitialized();
+    } catch (ex) {
+      lazy.logger.error(
+        "Unable to ensure keyword cache is initialization. A keyword may not be \
+         detected at the beginning of the search string.",
+        ex
+      );
+    }
+
+    // The query may have been canceled while awaiting for asynchronous work.
+    if (queryContext.canceled) {
+      return;
+    }
+
     // Apply tokenization.
     lazy.UrlbarTokenizer.tokenize(queryContext);
 
@@ -299,9 +317,13 @@ class ProvidersManager {
    */
   cancelQuery(queryContext) {
     lazy.logger.info(`Query cancel "${queryContext.searchString}"`);
+    queryContext.canceled = true;
+
     let query = this.queries.get(queryContext);
     if (!query) {
-      throw new Error("Couldn't find a matching query for the given context");
+      // The query object may have not been created yet, if the query was
+      // canceled immediately.
+      return;
     }
     query.cancel();
     if (!this.interruptLevel) {

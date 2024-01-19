@@ -2822,7 +2822,26 @@ PlacesUtils.keywords = {
    */
   invalidateCachedKeywords() {
     gKeywordsCachePromise = gKeywordsCachePromise.then(_ => null);
+    this.ensureCacheInitialized();
     return gKeywordsCachePromise;
+  },
+
+  /**
+   * Ensures the keywords cache is initialized.
+   */
+  async ensureCacheInitialized() {
+    this._cache = await promiseKeywordsCache();
+  },
+
+  /**
+   * Checks from the cache if a given word is a bookmark keyword.
+   * We must make sure the cache is populated, and await ensureCacheInitialized()
+   * before calling this function.
+   *
+   * @return {Boolean} Whether the given word is a keyword.
+   */
+  isKeywordFromCache(keyword) {
+    return this._cache?.has(keyword);
   },
 };
 
