@@ -51,7 +51,10 @@ job-defaults:
         build-fat-aar:
             - target.maven.tar.xz
     dependencies:
-        build-fat-aar: build-fat-aar-android-geckoview-fat-aar-shippable/opt
+        build-fat-aar:
+            by-build-type:
+                release|nightly|beta: build-fat-aar-android-geckoview-fat-aar-shippable/opt
+                default: build-fat-aar-android-geckoview-fat-aar/opt
     include-coverage:
         by-build-type:
             release: false
