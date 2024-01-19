@@ -450,11 +450,14 @@ class BrowsingContextModule extends Module {
     const {
       background = false,
       referenceContext: referenceContextId = null,
-      type,
+      type: typeHint,
     } = options;
-    if (type !== CreateType.tab && type !== CreateType.window) {
+
+    if (![CreateType.tab, CreateType.window].includes(typeHint)) {
       throw new lazy.error.InvalidArgumentError(
-        `Expected "type" to be one of ${Object.values(CreateType)}, got ${type}`
+        `Expected "type" to be one of ${Object.values(
+          CreateType
+        )}, got ${typeHint}`
       );
     }
 
@@ -471,6 +474,10 @@ class BrowsingContextModule extends Module {
     const previousWindow = Services.wm.getMostRecentBrowserWindow();
     const previousTab =
       lazy.TabManager.getTabBrowser(previousWindow).selectedTab;
+
+    // On Android there is only a single window allowed. As such fallback to
+    // open a new tab instead.
+    const type = lazy.AppInfo.isAndroid ? "tab" : typeHint;
 
     switch (type) {
       case "window":
