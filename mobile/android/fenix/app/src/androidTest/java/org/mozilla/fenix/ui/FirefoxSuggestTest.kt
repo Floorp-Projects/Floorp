@@ -5,6 +5,7 @@
 package org.mozilla.fenix.ui
 
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.customannotations.SmokeTest
@@ -100,6 +101,7 @@ class FirefoxSuggestTest {
     private val nonSponsoredKeyWord = nonSponsoredKeyWords.keys.random()
 
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2348361
+    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1874831")
     @SmokeTest
     @Test
     fun verifyFirefoxSuggestSponsoredSearchResultsTest() {
@@ -121,6 +123,7 @@ class FirefoxSuggestTest {
     }
 
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2348362
+    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1874831")
     @Test
     fun verifyFirefoxSuggestSponsoredSearchResultsWithPartialKeywordTest() {
         runWithCondition(TestHelper.appContext.settings().enableFxSuggest) {
@@ -141,6 +144,7 @@ class FirefoxSuggestTest {
     }
 
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2348363
+    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1874831")
     @Test
     fun openFirefoxSuggestSponsoredSearchResultsTest() {
         runWithCondition(TestHelper.appContext.settings().enableFxSuggest) {
@@ -164,6 +168,7 @@ class FirefoxSuggestTest {
     }
 
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2348369
+    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1874831")
     @Test
     fun verifyFirefoxSuggestSponsoredSearchResultsWithEditedKeywordTest() {
         runWithCondition(TestHelper.appContext.settings().enableFxSuggest) {
