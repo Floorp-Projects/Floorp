@@ -64,7 +64,7 @@ class LSDatabaseChild final : public PBackgroundLSDatabaseChild {
 
   LSDatabase* mDatabase;
 
-  NS_DECL_OWNINGTHREAD
+  NS_INLINE_DECL_REFCOUNTING(LSDatabaseChild, override)
 
  public:
   void AssertIsOnOwningThread() const {
@@ -75,7 +75,6 @@ class LSDatabaseChild final : public PBackgroundLSDatabaseChild {
   // Only created by LSObject.
   explicit LSDatabaseChild(LSDatabase* aDatabase);
 
-  // Only destroyed by mozilla::ipc::BackgroundChildImpl.
   ~LSDatabaseChild();
 
   void SendDeleteMeInternal();

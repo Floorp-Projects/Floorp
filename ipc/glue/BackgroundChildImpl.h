@@ -57,13 +57,6 @@ class BackgroundChildImpl : public PBackgroundChild {
   virtual bool DeallocPBackgroundIndexedDBUtilsChild(
       PBackgroundIndexedDBUtilsChild* aActor) override;
 
-  virtual PBackgroundLSDatabaseChild* AllocPBackgroundLSDatabaseChild(
-      const PrincipalInfo& aPrincipalInfo, const uint32_t& aPrivateBrowsingId,
-      const uint64_t& aDatastoreId) override;
-
-  virtual bool DeallocPBackgroundLSDatabaseChild(
-      PBackgroundLSDatabaseChild* aActor) override;
-
   virtual PBackgroundLSObserverChild* AllocPBackgroundLSObserverChild(
       const uint64_t& aObserverId) override;
 
