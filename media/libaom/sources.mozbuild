@@ -1167,4 +1167,7 @@ files = {
     '../../third_party/aom/third_party/fastfeat/nonmax.c',
     '../../third_party/aom/third_party/vector/vector.c',
   ],
+  'X64_WIN_SOURCES': [
+    '../../third_party/aom/aom_ports/float.asm',
+  ],
 }

@@ -117,6 +117,14 @@ if __name__ == '__main__':
         # Disable HAVE_UNISTD_H.
         cache_variables.remove('HAVE_UNISTD_H')
         write_aom_config(system, arch, variables, cache_variables)
+
+        # Windows x86_64 needs this -- all other source files are shared
+        # between OSes
+        if cpu is 'x86_64' and system is 'win':
+          f.write('  \'X64_WIN_SOURCES\': [\n')
+          f.write('    \'%s\',\n' % variables['AOM_PORTS_ASM_X86'])
+          f.write("  ],\n")
+
         # Currently, the sources are the same for each supported cpu
         # regardless of operating system / compiler. If that changes, we'll
         # have to generate sources for each combination.
@@ -124,7 +132,6 @@ if __name__ == '__main__':
             # Remove spurious sources and perl files
             sources = list(filter(lambda x: x.startswith(AOM_DIR), sources))
             sources = list(filter(lambda x: not x.endswith('.pl'), sources))
-
 
             # Filter out exports
             exports = list(filter(lambda x: re.match(os.path.join(AOM_DIR, '(aom|aom_mem|aom_ports|aom_scale)/.*h$'), x), sources))
